@@ -423,7 +423,7 @@ bb:
 define amdgpu_ps <2 x i64> @s_shl_v2i64_zext_v2i32(<2 x i32> inreg %x) {
 ; GCN-LABEL: s_shl_v2i64_zext_v2i32:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_brev_b32 s2, -4
+; GCN-NEXT:    s_not_b32 s2, -2.0
 ; GCN-NEXT:    s_mov_b32 s3, s2
 ; GCN-NEXT:    s_and_b64 s[0:1], s[0:1], s[2:3]
 ; GCN-NEXT:    s_lshl_b32 s0, s0, 2
@@ -434,7 +434,7 @@ define amdgpu_ps <2 x i64> @s_shl_v2i64_zext_v2i32(<2 x i32> inreg %x) {
 ;
 ; GFX10PLUS-LABEL: s_shl_v2i64_zext_v2i32:
 ; GFX10PLUS:       ; %bb.0:
-; GFX10PLUS-NEXT:    s_brev_b32 s2, -4
+; GFX10PLUS-NEXT:    s_not_b32 s2, -2.0
 ; GFX10PLUS-NEXT:    s_mov_b32 s3, s2
 ; GFX10PLUS-NEXT:    s_and_b64 s[0:1], s[0:1], s[2:3]
 ; GFX10PLUS-NEXT:    s_mov_b32 s3, 0
