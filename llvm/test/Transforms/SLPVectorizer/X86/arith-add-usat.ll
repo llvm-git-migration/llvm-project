@@ -26,41 +26,6 @@ declare i16 @llvm.uadd.sat.i16(i16, i16)
 declare i8  @llvm.uadd.sat.i8 (i8 , i8 )
 
 define void @add_v8i64() {
-; SSE-LABEL: @add_v8i64(
-; SSE-NEXT:    [[A0:%.*]] = load i64, ptr @a64, align 8
-; SSE-NEXT:    [[A1:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 1), align 8
-; SSE-NEXT:    [[A2:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 2), align 8
-; SSE-NEXT:    [[A3:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 3), align 8
-; SSE-NEXT:    [[A4:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 4), align 8
-; SSE-NEXT:    [[A5:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 5), align 8
-; SSE-NEXT:    [[A6:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 6), align 8
-; SSE-NEXT:    [[A7:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @a64, i32 0, i64 7), align 8
-; SSE-NEXT:    [[B0:%.*]] = load i64, ptr @b64, align 8
-; SSE-NEXT:    [[B1:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 1), align 8
-; SSE-NEXT:    [[B2:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 2), align 8
-; SSE-NEXT:    [[B3:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 3), align 8
-; SSE-NEXT:    [[B4:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 4), align 8
-; SSE-NEXT:    [[B5:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 5), align 8
-; SSE-NEXT:    [[B6:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 6), align 8
-; SSE-NEXT:    [[B7:%.*]] = load i64, ptr getelementptr inbounds ([8 x i64], ptr @b64, i32 0, i64 7), align 8
-; SSE-NEXT:    [[R0:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A0]], i64 [[B0]])
-; SSE-NEXT:    [[R1:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A1]], i64 [[B1]])
-; SSE-NEXT:    [[R2:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A2]], i64 [[B2]])
-; SSE-NEXT:    [[R3:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A3]], i64 [[B3]])
-; SSE-NEXT:    [[R4:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A4]], i64 [[B4]])
-; SSE-NEXT:    [[R5:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A5]], i64 [[B5]])
-; SSE-NEXT:    [[R6:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A6]], i64 [[B6]])
-; SSE-NEXT:    [[R7:%.*]] = call i64 @llvm.uadd.sat.i64(i64 [[A7]], i64 [[B7]])
-; SSE-NEXT:    store i64 [[R0]], ptr @c64, align 8
-; SSE-NEXT:    store i64 [[R1]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 1), align 8
-; SSE-NEXT:    store i64 [[R2]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 2), align 8
-; SSE-NEXT:    store i64 [[R3]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 3), align 8
-; SSE-NEXT:    store i64 [[R4]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 4), align 8
-; SSE-NEXT:    store i64 [[R5]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 5), align 8
-; SSE-NEXT:    store i64 [[R6]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 6), align 8
-; SSE-NEXT:    store i64 [[R7]], ptr getelementptr inbounds ([8 x i64], ptr @c64, i32 0, i64 7), align 8
-; SSE-NEXT:    ret void
-;
 ; AVX-LABEL: @add_v8i64(
 ; AVX-NEXT:    [[TMP1:%.*]] = load <4 x i64>, ptr @a64, align 8
 ; AVX-NEXT:    [[TMP2:%.*]] = load <4 x i64>, ptr @b64, align 8
@@ -115,25 +80,6 @@ define void @add_v8i64() {
 }
 
 define void @add_v16i32() {
-; SSE-LABEL: @add_v16i32(
-; SSE-NEXT:    [[TMP1:%.*]] = load <4 x i32>, ptr @a32, align 4
-; SSE-NEXT:    [[TMP2:%.*]] = load <4 x i32>, ptr @b32, align 4
-; SSE-NEXT:    [[TMP3:%.*]] = call <4 x i32> @llvm.uadd.sat.v4i32(<4 x i32> [[TMP1]], <4 x i32> [[TMP2]])
-; SSE-NEXT:    store <4 x i32> [[TMP3]], ptr @c32, align 4
-; SSE-NEXT:    [[TMP4:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @a32, i32 0, i64 4), align 4
-; SSE-NEXT:    [[TMP5:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @b32, i32 0, i64 4), align 4
-; SSE-NEXT:    [[TMP6:%.*]] = call <4 x i32> @llvm.uadd.sat.v4i32(<4 x i32> [[TMP4]], <4 x i32> [[TMP5]])
-; SSE-NEXT:    store <4 x i32> [[TMP6]], ptr getelementptr inbounds ([16 x i32], ptr @c32, i32 0, i64 4), align 4
-; SSE-NEXT:    [[TMP7:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @a32, i32 0, i64 8), align 4
-; SSE-NEXT:    [[TMP8:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @b32, i32 0, i64 8), align 4
-; SSE-NEXT:    [[TMP9:%.*]] = call <4 x i32> @llvm.uadd.sat.v4i32(<4 x i32> [[TMP7]], <4 x i32> [[TMP8]])
-; SSE-NEXT:    store <4 x i32> [[TMP9]], ptr getelementptr inbounds ([16 x i32], ptr @c32, i32 0, i64 8), align 4
-; SSE-NEXT:    [[TMP10:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @a32, i32 0, i64 12), align 4
-; SSE-NEXT:    [[TMP11:%.*]] = load <4 x i32>, ptr getelementptr inbounds ([16 x i32], ptr @b32, i32 0, i64 12), align 4
-; SSE-NEXT:    [[TMP12:%.*]] = call <4 x i32> @llvm.uadd.sat.v4i32(<4 x i32> [[TMP10]], <4 x i32> [[TMP11]])
-; SSE-NEXT:    store <4 x i32> [[TMP12]], ptr getelementptr inbounds ([16 x i32], ptr @c32, i32 0, i64 12), align 4
-; SSE-NEXT:    ret void
-;
 ; AVX-LABEL: @add_v16i32(
 ; AVX-NEXT:    [[TMP1:%.*]] = load <8 x i32>, ptr @a32, align 4
 ; AVX-NEXT:    [[TMP2:%.*]] = load <8 x i32>, ptr @b32, align 4
