@@ -5498,6 +5498,20 @@ static void handleAbiTagAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
                  AbiTagAttr(S.Context, AL, Tags.data(), Tags.size()));
 }
 
+static void handleARMInterruptSaveFPAttr(Sema &S, Decl *D,
+                                         const ParsedAttr &AL) {
+  handleARMInterruptAttr(S, D, AL);
+
+  bool VFP = S.Context.getTargetInfo().hasFeature("vfp");
+
+  if (!VFP) {
+    S.Diag(D->getLocation(), diag::warn_arm_interrupt_save_fp_without_vfp_unit);
+    return;
+  }
+
+  D->addAttr(::new (S.Context) ARMSaveFPAttr(S.Context, AL));
+}
+
 static bool hasBTFDeclTagAttr(Decl *D, StringRef Tag) {
   for (const auto *I : D->specific_attrs<BTFDeclTagAttr>()) {
     if (I->getBTFDeclTag() == Tag)
@@ -6284,9 +6298,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
       !Options.IncludeCXX11Attributes)
     return;
 
-  // Unknown attributes are automatically warned on. Target-specific attributes
-  // which do not apply to the current target architecture are treated as
-  // though they were unknown attributes.
+  // Unknown attributes are automatically warned on. Target-specific
+  // attributes which do not apply to the current target architecture are
+  // treated as though they were unknown attributes.
   if (AL.getKind() == ParsedAttr::UnknownAttribute ||
       !AL.existsInTarget(S.Context.getTargetInfo())) {
     S.Diag(AL.getLoc(),
@@ -6390,6 +6404,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     break;
   case ParsedAttr::AT_Interrupt:
     handleInterruptAttr(S, D, AL);
+    break;
+  case ParsedAttr::AT_ARMInterruptSaveFP:
+    handleARMInterruptSaveFPAttr(S, D, AL);
     break;
   case ParsedAttr::AT_X86ForceAlignArgPointer:
     S.X86().handleForceAlignArgPointerAttr(D, AL);
