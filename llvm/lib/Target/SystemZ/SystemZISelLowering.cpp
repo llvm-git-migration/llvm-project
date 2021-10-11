@@ -34,6 +34,11 @@ using namespace llvm;
 
 #define DEBUG_TYPE "systemz-lower"
 
+static cl::opt<bool> VerifyIntArgExtensions(
+    "int-arg-ext-ver", cl::init(true),
+    cl::desc("Verify that narrow int args are properly extended per the ABI."),
+    cl::Hidden);
+
 namespace {
 // Represents information about a comparison.
 struct Comparison {
@@ -1476,6 +1481,27 @@ bool SystemZTargetLowering::mayBeEmittedAsTailCall(const CallInst *CI) const {
   return CI->isTailCall();
 }
 
+// Verify that a narrow integer argument is extended to 64 bits or marked
+// 'noext' (struct in reg).
+static void VerifyIntegerArg(MVT VT, ISD::ArgFlagsTy Flags) {
+  if (VT.isInteger()) {
+    assert((VT == MVT::i32 || VT.getSizeInBits() >= 64) &&
+           "Unexpected integer argument VT.");
+    assert((VT != MVT::i32 ||
+            (Flags.isSExt() || Flags.isZExt() || Flags.isNoExt())) &&
+           "Narrow integer without valid extension type! [-int-arg-ext-ver]");
+  }
+}
+
+// Verify that narrow integer arguments are extended as required by the ABI.
+static void CheckNarrowIntegerArgs(SmallVectorImpl<ISD::OutputArg> &Outs) {
+  if (VerifyIntArgExtensions) {
+    for (unsigned i = 0; i < Outs.size(); ++i)
+      VerifyIntegerArg(Outs[i].VT, Outs[i].Flags);
+    return;
+  }
+}
+
 // Value is a value that has been passed to us in the location described by VA
 // (and so has type VA.getLocVT()).  Convert Value to VA.getValVT(), chaining
 // any loads onto Chain.
@@ -1917,6 +1943,14 @@ SystemZTargetLowering::LowerCall(CallLoweringInfo &CLI,
   if (Subtarget.isTargetXPLINK64())
     IsTailCall = false;
 
+  // Integer args <=32 bits should have an extension attribute.
+  bool HasLocalLinkage = false;
+  if (auto *G = dyn_cast<GlobalAddressSDNode>(Callee))
+    if (const Function *Fn = dyn_cast<Function>(G->getGlobal()))
+      HasLocalLinkage = Fn->hasLocalLinkage();
+  if (!HasLocalLinkage && Subtarget.isTargetELF())
+    CheckNarrowIntegerArgs(Outs);
+
   // Analyze the operands of the call, assigning locations to each operand.
   SmallVector<CCValAssign, 16> ArgLocs;
   SystemZCCState ArgCCInfo(CallConv, IsVarArg, MF, ArgLocs, Ctx);
@@ -2177,6 +2211,10 @@ SystemZTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                    const SDLoc &DL, SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
 
+
+  // Integer args <=32 bits should have an extension attribute.
+  if (!MF.getFunction().hasLocalLinkage() && Subtarget.isTargetELF())
+    CheckNarrowIntegerArgs(const_cast<SmallVectorImpl<ISD::OutputArg> &>(Outs));
   // Assign locations to each returned value.
   SmallVector<CCValAssign, 16> RetLocs;
   CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
