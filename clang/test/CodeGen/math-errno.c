@@ -27,7 +27,7 @@ float f1(float x) {
 // CHECK: tail call float @sqrtf(float noundef {{.*}}) #[[ATTR4_O2:[0-9]+]]
 
 // FAST-LABEL: define {{.*}} nofpclass(nan inf) float @f1
-// FAST: call fast nofpclass(nan inf) float @sqrtf(float noundef nofpclass(nan inf) {{.*}}) #[[ATTR3_FAST:[0-9]+]]
+// FAST: call nofpclass(nan inf) float @sqrtf(float noundef nofpclass(nan inf) {{.*}}) #[[ATTR3_FAST:[0-9]+]]
 
 // NOOPT-LABEL: define {{.*}} float @f1
 // NOOPT: call float @sqrtf(float noundef {{.*}}) #[[ATTR4_NOOPT:[0-9]+]]
