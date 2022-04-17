@@ -38,7 +38,6 @@ void MachineModuleInfo::initialize() {
   ObjFileMMI = nullptr;
   CurCallSite = 0;
   NextFnNum = 0;
-  UsesMSVCFloatingPoint = false;
 }
 
 void MachineModuleInfo::finalize() {
