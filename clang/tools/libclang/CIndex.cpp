@@ -1886,6 +1886,12 @@ bool CursorVisitor::VisitDecltypeTypeLoc(DecltypeTypeLoc TL) {
   return false;
 }
 
+bool CursorVisitor::VisitPackIndexingTypeLoc(PackIndexingTypeLoc TL) {
+  if (Visit(TL.getPatternLoc()))
+    return true;
+  return Visit(MakeCXCursor(TL.getIndexExpr(), StmtParent, TU));
+}
+
 bool CursorVisitor::VisitInjectedClassNameTypeLoc(InjectedClassNameTypeLoc TL) {
   return Visit(MakeCursorTypeRef(TL.getDecl(), TL.getNameLoc(), TU));
 }
@@ -5711,6 +5717,8 @@ CXString clang_getCursorKindSpelling(enum CXCursorKind Kind) {
     return cxstring::createRef("PackExpansionExpr");
   case CXCursor_SizeOfPackExpr:
     return cxstring::createRef("SizeOfPackExpr");
+  case CXCursor_PackIndexingExpr:
+    return cxstring::createRef("PackIndexingExpr");
   case CXCursor_LambdaExpr:
     return cxstring::createRef("LambdaExpr");
   case CXCursor_UnexposedExpr:
