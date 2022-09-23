@@ -87,6 +87,8 @@ chrono stdexcept
 chrono string
 chrono string_view
 chrono tuple
+chrono variant
+chrono vector
 chrono version
 cinttypes cstdint
 cmath limits

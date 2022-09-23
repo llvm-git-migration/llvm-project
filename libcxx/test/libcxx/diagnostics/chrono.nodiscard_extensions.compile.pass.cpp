@@ -34,4 +34,20 @@ void test() {
   std::chrono::get_tzdb_list();
   std::chrono::get_tzdb();
   std::chrono::remote_version();
+
+  {
+    std::chrono::time_zone tz{"name"};
+    tz.name();
+    operator==(tz, tz);
+    operator<=>(tz, tz);
+  }
+
+  {
+    std::chrono::time_zone_link("name", "target");
+    std::chrono::time_zone_link link("name", "target");
+    link.name();
+    link.target();
+    operator==(link, link);
+    operator<=>(link, link);
+  }
 }

@@ -32,4 +32,23 @@ void test() {
   crno::get_tzdb_list();  // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   crno::get_tzdb();       // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   crno::remote_version(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+
+  {
+    crno::time_zone tz{"name"};
+    tz.name();           // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+    operator==(tz, tz);  // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+    operator<=>(tz, tz); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+  }
+
+  {
+    // expected-warning@+1 {{ignoring temporary created by a constructor declared with 'nodiscard' attribute}}
+    crno::time_zone_link("name", "target");
+    crno::time_zone_link link("name", "target");
+    link.name();   // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+    link.target(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+    // expected-warning@+1 {{ignoring return value of function declared with 'nodiscard' attribute}}
+    operator==(link, link);
+    // expected-warning@+1 {{ignoring return value of function declared with 'nodiscard' attribute}}
+    operator<=>(link, link);
+  }
 }

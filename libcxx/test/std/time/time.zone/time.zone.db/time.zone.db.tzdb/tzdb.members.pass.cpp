@@ -37,7 +37,14 @@ int main(int, const char**) {
   tzdb.version = "version";
   assert(tzdb.version == "version");
 
-  // TODO TZDB add the other data members
+  // TODO TZDB update the tests above to use this style.
+  { [[maybe_unused]] std::same_as<std::string> auto _ = tzdb.version = "version"; }
+  { [[maybe_unused]] std::same_as<std::vector<std::chrono::time_zone>> auto& _ = tzdb.zones; }
+  tzdb.zones.clear(); // is it a non-const member?
+  { [[maybe_unused]] std::same_as<std::vector<std::chrono::time_zone_link>> auto& _ = tzdb.links; }
+  tzdb.links.clear(); // is it a non-const member?
+
+  // TODO TZDB add the leap data member
 
   return 0;
 }
