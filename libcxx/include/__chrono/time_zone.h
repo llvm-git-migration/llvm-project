@@ -9,19 +9,18 @@
 
 // For information see https://libcxx.llvm.org/DesignDocs/TimeZone.html
 
-#ifndef _LIBCPP___CHRONO_TZDB_H
-#define _LIBCPP___CHRONO_TZDB_H
+#ifndef _LIBCPP___CHRONO_TIME_ZONE_H
+#define _LIBCPP___CHRONO_TIME_ZONE_H
 
 #include <version>
 // Enable the contents of the header only when libc++ was built with experimental features enabled.
 #if !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 
-#  include <__availability>
-#  include <__chrono/time_zone.h>
-#  include <__chrono/time_zone_link.h>
 #  include <__chrono/time_zone_types.h>
+#  include <__compare/strong_order.h>
 #  include <__config>
 #  include <string>
+#  include <string_view>
 #  include <vector>
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -35,12 +34,34 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace chrono {
 
-struct _LIBCPP_AVAILABILITY_TZDB tzdb {
-  string version;
-  vector<pair<string, vector<__tz::__rule>>> __rules;
-  vector<time_zone> zones;
-  vector<time_zone_link> links;
+class _LIBCPP_AVAILABILITY_TZDB time_zone {
+public:
+  explicit _LIBCPP_HIDE_FROM_ABI time_zone(string&& __name) : __name_(std::move(__name)) {}
+
+  _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI string_view name() const noexcept { return __name_; }
+
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI vector<__tz::__continuation>& __continuations() { return __continuations_; }
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const vector<__tz::__continuation>& __continuations() const {
+    return __continuations_;
+  }
+
+private:
+  string __name_;
+  // Note the first line has a name + __continuation, the other lines
+  // are just __continuations. So there is always at least one item in
+  // the vector.
+  vector<__tz::__continuation> __continuations_;
 };
+
+_LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline bool
+operator==(const time_zone& __x, const time_zone& __y) noexcept {
+  return __x.name() == __y.name();
+}
+
+_LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline strong_ordering
+operator<=>(const time_zone& __x, const time_zone& __y) noexcept {
+  return __x.name() <=> __y.name();
+}
 
 } // namespace chrono
 
@@ -51,4 +72,4 @@ _LIBCPP_END_NAMESPACE_STD
 
 #endif // !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 
-#endif // _LIBCPP___CHRONO_TZDB_H
+#endif // _LIBCPP___CHRONO_TIME_ZONE_H
