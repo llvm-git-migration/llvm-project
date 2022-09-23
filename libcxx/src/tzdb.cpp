@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "include/tzdb/leap_second_private.h"
 #include "include/tzdb/time_zone_link_private.h"
 #include "include/tzdb/time_zone_private.h"
 #include "include/tzdb/types_private.h"
@@ -622,6 +623,36 @@ static void __parse_tzdata(tzdb& __db, __tz::__rules_storage_type& __rules, istr
   }
 }
 
+static void __parse_leap_seconds(vector<leap_second>& __leap_seconds, istream&& __input) {
+  // The file stores dates since 1 January 1900, 00:00:00, we want
+  // seconds since 1 January 1970.
+  constexpr auto __offset = sys_days{1970y / January / 1} - sys_days{1900y / January / 1};
+
+  while (true) {
+    switch (__input.peek()) {
+    case istream::traits_type::eof():
+      return;
+
+    case ' ':
+    case '\t':
+    case '\n':
+      __input.get();
+      continue;
+
+    case '#':
+      chrono::__skip_line(__input);
+      continue;
+    }
+
+    sys_seconds __date = sys_seconds{seconds{chrono::__parse_integral(__input, false)}} - __offset;
+    chrono::__skip_mandatory_whitespace(__input);
+    seconds __value{chrono::__parse_integral(__input, false)};
+    chrono::__skip_line(__input);
+
+    __leap_seconds.emplace_back(leap_second::__constructor_tag{}, __date, __value);
+  }
+}
+
 void __init_tzdb(tzdb& __tzdb, __tz::__rules_storage_type& __rules) {
   filesystem::path __root = chrono::__libcpp_tzdb_directory();
   ifstream __tzdata{__root / "tzdata.zi"};
@@ -631,6 +662,16 @@ void __init_tzdb(tzdb& __tzdb, __tz::__rules_storage_type& __rules) {
   std::ranges::sort(__tzdb.zones);
   std::ranges::sort(__tzdb.links);
   std::ranges::sort(__rules, {}, [](const auto& p) { return p.first; });
+
+  // There are two files with the leap second information
+  // - leapseconds as specified by zic
+  // - leap-seconds.list the source data
+  // The latter is much easier to parse, it seems Howard shares that
+  // opinion.
+  chrono::__parse_leap_seconds(__tzdb.leap_seconds, ifstream{__root / "leap-seconds.list"});
+  // Note the input is sorted, but that does not seem to be are
+  // requirement, it is a requirement in the Standard.
+  std::ranges::sort(__tzdb.leap_seconds);
 }
 
 //===----------------------------------------------------------------------===//
