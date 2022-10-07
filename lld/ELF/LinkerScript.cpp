@@ -107,7 +107,8 @@ static StringRef getOutputSectionName(const InputSectionBase *s) {
   for (StringRef v :
        {".data.rel.ro", ".data", ".rodata", ".bss.rel.ro", ".bss", ".ldata",
         ".lrodata", ".lbss", ".gcc_except_table", ".init_array", ".fini_array",
-        ".tbss", ".tdata", ".ARM.exidx", ".ARM.extab", ".ctors", ".dtors"})
+        ".tbss", ".tdata", ".ARM.exidx", ".ARM.extab", ".ctors", ".dtors",
+        ".openbsd.randomdata", ".openbsd.mutable"})
     if (isSectionPrefix(v, s->name))
       return v;
 
