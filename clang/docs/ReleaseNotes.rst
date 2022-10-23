@@ -144,6 +144,7 @@ Improvements to Clang's diagnostics
 - Clang now diagnoses undefined behavior in constant expressions more consistently. This includes invalid shifts, and signed overflow in arithmetic.
 
 - -Wdangling-assignment-gsl is enabled by default.
+- Clang now does a better job preserving the type as written when specializing concepts.
 
 Improvements to Clang's time-trace
 ----------------------------------
