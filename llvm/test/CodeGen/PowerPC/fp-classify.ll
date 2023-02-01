@@ -57,18 +57,30 @@ entry:
 define zeroext i1 @abs_isinfq(fp128 %x) {
 ; P8-LABEL: abs_isinfq:
 ; P8:       # %bb.0: # %entry
+; P8-NEXT:    mflr 0
+; P8-NEXT:    stdu 1, -48(1)
+; P8-NEXT:    std 0, 64(1)
+; P8-NEXT:    .cfi_def_cfa_offset 48
+; P8-NEXT:    .cfi_offset lr, 16
 ; P8-NEXT:    xxswapd 0, 34
-; P8-NEXT:    addi 3, 1, -16
-; P8-NEXT:    li 5, 32767
+; P8-NEXT:    addi 3, 1, 32
 ; P8-NEXT:    stxvd2x 0, 0, 3
-; P8-NEXT:    rldic 5, 5, 48, 1
-; P8-NEXT:    ld 4, -8(1)
-; P8-NEXT:    ld 3, -16(1)
-; P8-NEXT:    clrldi 4, 4, 1
-; P8-NEXT:    xor 4, 4, 5
-; P8-NEXT:    or 3, 3, 4
-; P8-NEXT:    cntlzd 3, 3
-; P8-NEXT:    rldicl 3, 3, 58, 63
+; P8-NEXT:    lbz 4, 47(1)
+; P8-NEXT:    clrlwi 4, 4, 25
+; P8-NEXT:    stb 4, 47(1)
+; P8-NEXT:    lxvd2x 0, 0, 3
+; P8-NEXT:    addis 3, 2, .LCPI2_0@toc@ha
+; P8-NEXT:    addi 3, 3, .LCPI2_0@toc@l
+; P8-NEXT:    xxswapd 34, 0
+; P8-NEXT:    lxvd2x 0, 0, 3
+; P8-NEXT:    xxswapd 35, 0
+; P8-NEXT:    bl __eqkf2
+; P8-NEXT:    nop
+; P8-NEXT:    cntlzw 3, 3
+; P8-NEXT:    srwi 3, 3, 5
+; P8-NEXT:    addi 1, 1, 48
+; P8-NEXT:    ld 0, 16(1)
+; P8-NEXT:    mtlr 0
 ; P8-NEXT:    blr
 ;
 ; P9-LABEL: abs_isinfq:
