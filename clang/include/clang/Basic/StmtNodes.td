@@ -50,7 +50,7 @@ def CXXCatchStmt : StmtNode<Stmt>;
 def CXXTryStmt : StmtNode<Stmt>;
 def CXXForRangeStmt : StmtNode<Stmt>;
 
-// C++ Coroutines statements
+// C++ Coroutines TS statements
 def CoroutineBodyStmt : StmtNode<Stmt>;
 def CoreturnStmt : StmtNode<Stmt>;
 
@@ -162,7 +162,7 @@ def LambdaExpr : StmtNode<Expr>;
 def CXXFoldExpr : StmtNode<Expr>;
 def CXXParenListInitExpr: StmtNode<Expr>;
 
-// C++ Coroutines expressions
+// C++ Coroutines TS expressions
 def CoroutineSuspendExpr : StmtNode<Expr, 1>;
 def CoawaitExpr : StmtNode<CoroutineSuspendExpr>;
 def DependentCoawaitExpr : StmtNode<Expr>;

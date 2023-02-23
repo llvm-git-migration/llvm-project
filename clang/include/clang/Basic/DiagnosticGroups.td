@@ -60,8 +60,10 @@ def CompoundTokenSplit : DiagGroup<"compound-token-split",
                                     CompoundTokenSplitBySpace]>;
 def CoroutineMissingUnhandledException :
   DiagGroup<"coroutine-missing-unhandled-exception">;
+def DeprecatedExperimentalCoroutine :
+  DiagGroup<"deprecated-experimental-coroutine">;
 def DeprecatedCoroutine :
-  DiagGroup<"deprecated-coroutine">;
+  DiagGroup<"deprecated-coroutine", [DeprecatedExperimentalCoroutine]>;
 def AlwaysInlineCoroutine :
   DiagGroup<"always-inline-coroutine">;
 def CoroNonAlignedAllocationFunction :

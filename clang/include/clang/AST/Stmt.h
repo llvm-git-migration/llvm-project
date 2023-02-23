@@ -978,7 +978,7 @@ protected:
     SourceLocation RequiresKWLoc;
   };
 
-  //===--- C++ Coroutines bitfields classes ---===//
+  //===--- C++ Coroutines TS bitfields classes ---===//
 
   class CoawaitExprBitfields {
     friend class CoawaitExpr;
@@ -1082,7 +1082,7 @@ protected:
     LambdaExprBitfields LambdaExprBits;
     RequiresExprBitfields RequiresExprBits;
 
-    // C++ Coroutines expressions
+    // C++ Coroutines TS expressions
     CoawaitExprBitfields CoawaitBits;
 
     // Obj-C Expressions

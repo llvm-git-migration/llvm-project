@@ -2539,7 +2539,7 @@ void StmtPrinter::VisitRequiresExpr(RequiresExpr *E) {
   OS << "}";
 }
 
-// C++ Coroutines
+// C++ Coroutines TS
 
 void StmtPrinter::VisitCoroutineBodyStmt(CoroutineBodyStmt *S) {
   Visit(S->getBody());

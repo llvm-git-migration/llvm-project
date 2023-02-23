@@ -10879,7 +10879,7 @@ public:
   bool checkNSReturnsRetainedReturnType(SourceLocation loc, QualType type);
 
   //===--------------------------------------------------------------------===//
-  // C++ Coroutines
+  // C++ Coroutines TS
   //
   bool ActOnCoroutineBodyStart(Scope *S, SourceLocation KwLoc,
                                StringRef Keyword);

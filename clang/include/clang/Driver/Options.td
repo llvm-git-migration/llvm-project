@@ -1241,10 +1241,10 @@ defm autolink : BoolFOption<"autolink",
 def offload_EQ : CommaJoined<["--"], "offload=">, Flags<[NoXarchOption]>,
   HelpText<"Specify comma-separated list of offloading target triples (CUDA and HIP only)">;
 
-// C++ Coroutines
-defm coroutines : BoolFOption<"coroutines",
+// C++ Coroutines TS
+defm coroutines_ts : BoolFOption<"coroutines-ts",
   LangOpts<"Coroutines">, Default<cpp20.KeyPath>,
-  PosFlag<SetTrue, [CC1Option], "Enable support for the C++ Coroutines">,
+  PosFlag<SetTrue, [CC1Option], "Enable support for the C++ Coroutines TS">,
   NegFlag<SetFalse>>;
 
 defm coro_aligned_allocation : BoolFOption<"coro-aligned-allocation",
