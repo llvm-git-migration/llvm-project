@@ -54,7 +54,10 @@ enum class ScanningOptimizations {
   /// Remove warnings from system modules.
   SystemWarnings = 2,
 
-  LLVM_MARK_AS_BITMASK_ENUM(SystemWarnings),
+  /// Remove unused -ivfsoverlay arguments.
+  VFS = 4,
+
+  LLVM_MARK_AS_BITMASK_ENUM(VFS),
   All = HeaderSearch | SystemWarnings,
   Default = All
 };

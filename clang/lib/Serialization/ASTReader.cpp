@@ -4985,7 +4985,7 @@ ASTReader::ASTReadResult ASTReader::readUnhashedControlBlockImpl(
         F->PragmaDiagMappings.insert(F->PragmaDiagMappings.end(),
                                      Record.begin(), Record.end());
       break;
-    case HEADER_SEARCH_ENTRY_USAGE:
+    case HEADER_SEARCH_ENTRY_USAGE: {
       if (!F)
         break;
       unsigned Count = Record[0];
@@ -4996,6 +4996,19 @@ ASTReader::ASTReadResult ASTReader::readUnhashedControlBlockImpl(
           if (*Byte & (1 << Bit))
             F->SearchPathUsage[I] = true;
       break;
+    }
+    case VFS_USAGE: {
+      if (!F)
+        break;
+      unsigned Count = Record[0];
+      const char *Byte = Blob.data();
+      F->VFSUsage = llvm::BitVector(Count, false);
+      for (unsigned I = 0; I < Count; ++Byte)
+        for (unsigned Bit = 0; Bit < 8 && I < Count; ++Bit, ++I)
+          if (*Byte & (1 << Bit))
+            F->VFSUsage[I] = true;
+      break;
+    }
     }
   }
 }

@@ -142,6 +142,21 @@ std::vector<bool> HeaderSearch::computeUserEntryUsage() const {
   return UserEntryUsage;
 }
 
+std::vector<bool> HeaderSearch::computeVFSUsage() const {
+  std::vector<bool> VFSUsage;
+  llvm::vfs::FileSystem &RootFS = FileMgr.getVirtualFileSystem();
+  // TODO: This only works if the `RedirectingFileSystem`s were all created by
+  //       `createVFSFromOverlayFiles`.
+  RootFS.visit([&](const llvm::vfs::FileSystem &FS) {
+    if (auto *RFS = dyn_cast<const llvm::vfs::RedirectingFileSystem>(&FS)) {
+      VFSUsage.push_back(RFS->hasBeenUsed());
+    }
+  });
+  // VFS visit order is the opposite of VFSOverlayFiles order.
+  std::reverse(VFSUsage.begin(), VFSUsage.end());
+  return VFSUsage;
+}
+
 /// CreateHeaderMap - This method returns a HeaderMap for the specified
 /// FileEntry, uniquing them through the 'HeaderMaps' datastructure.
 const HeaderMap *HeaderSearch::CreateHeaderMap(FileEntryRef FE) {
@@ -303,6 +318,10 @@ Module *HeaderSearch::lookupModule(StringRef ModuleName, StringRef SearchName,
                                    bool AllowExtraModuleMapSearch) {
   Module *Module = nullptr;
 
+  // Modulemap search can touch lots of files that aren't actually relavant to
+  // if a VFS is used or not.
+  FileMgr.trackVFSUsage(false);
+
   // Look through the various header search paths to load any available module
   // maps, searching for a module map that describes this module.
   for (DirectoryLookup &Dir : search_dir_range()) {
@@ -371,6 +390,7 @@ Module *HeaderSearch::lookupModule(StringRef ModuleName, StringRef SearchName,
       break;
   }
 
+  FileMgr.trackVFSUsage(true);
   return Module;
 }
 
