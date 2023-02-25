@@ -1265,16 +1265,28 @@ void ASTWriter::writeUnhashedControlBlock(Preprocessor &PP,
     WritePragmaDiagnosticMappings(Diags, /* isModule = */ WritingModule);
 
   // Header search entry usage.
-  auto HSEntryUsage = PP.getHeaderSearchInfo().computeUserEntryUsage();
-  auto Abbrev = std::make_shared<BitCodeAbbrev>();
-  Abbrev->Add(BitCodeAbbrevOp(HEADER_SEARCH_ENTRY_USAGE));
-  Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 32)); // Number of bits.
-  Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Blob));      // Bit vector.
-  unsigned HSUsageAbbrevCode = Stream.EmitAbbrev(std::move(Abbrev));
   {
+    auto HSEntryUsage = PP.getHeaderSearchInfo().computeUserEntryUsage();
+    auto Abbrev = std::make_shared<BitCodeAbbrev>();
+    Abbrev->Add(BitCodeAbbrevOp(HEADER_SEARCH_ENTRY_USAGE));
+    Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 32)); // Number of bits.
+    Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Blob));      // Bit vector.
+    unsigned HSUsageAbbrevCode = Stream.EmitAbbrev(std::move(Abbrev));
     RecordData::value_type Record[] = {HEADER_SEARCH_ENTRY_USAGE,
                                        HSEntryUsage.size()};
     Stream.EmitRecordWithBlob(HSUsageAbbrevCode, Record, bytes(HSEntryUsage));
+  }
+
+  // VFS usage.
+  {
+    auto VFSUsage = PP.getHeaderSearchInfo().computeVFSUsageAndClear();
+    auto Abbrev = std::make_shared<BitCodeAbbrev>();
+    Abbrev->Add(BitCodeAbbrevOp(VFS_USAGE));
+    Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 32)); // Number of bits.
+    Abbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Blob));      // Bit vector.
+    unsigned VFSUsageAbbrevCode = Stream.EmitAbbrev(std::move(Abbrev));
+    RecordData::value_type Record[] = {VFS_USAGE, VFSUsage.size()};
+    Stream.EmitRecordWithBlob(VFSUsageAbbrevCode, Record, bytes(VFSUsage));
   }
 
   // Leave the options block.
@@ -4687,6 +4699,11 @@ void ASTWriter::collectNonAffectingInputFiles() {
   NonAffectingFileIDAdjustments.push_back(FileIDAdjustment);
   NonAffectingOffsetAdjustments.push_back(OffsetAdjustment);
 
+  FileManager &FileMgr = PP->getFileManager();
+  FileMgr.trackVFSUsage(true);
+  for (StringRef Path : PP->getHeaderSearchInfo().getHeaderSearchOpts().VFSOverlayFiles)
+    FileMgr.getVirtualFileSystem().exists(Path);
+
   for (unsigned I = 1; I != N; ++I) {
     const SrcMgr::SLocEntry *SLoc = &SrcMgr.getLocalSLocEntry(I);
     FileID FID = FileID::get(I);
@@ -4701,8 +4718,11 @@ void ASTWriter::collectNonAffectingInputFiles() {
 
     if (!isModuleMap(File.getFileCharacteristic()) ||
         AffectingModuleMaps.empty() ||
-        llvm::is_contained(AffectingModuleMaps, *Cache->OrigEntry))
+        llvm::is_contained(AffectingModuleMaps, *Cache->OrigEntry)) {
+      // Lookup the path in the VFS to trigger `-ivfsoverlay` usage tracking.
+      FileMgr.getVirtualFileSystem().exists(File.getContentCache().OrigEntry->getNameAsRequested());
       continue;
+    }
 
     IsSLocAffecting[I] = false;
 
@@ -4727,6 +4747,7 @@ void ASTWriter::collectNonAffectingInputFiles() {
     NonAffectingFileIDAdjustments.push_back(FileIDAdjustment);
     NonAffectingOffsetAdjustments.push_back(OffsetAdjustment);
   }
+  FileMgr.trackVFSUsage(false);
 }
 
 ASTFileSignature ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
