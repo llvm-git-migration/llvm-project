@@ -35,8 +35,8 @@ static void optimizeHeaderSearchOpts(HeaderSearchOptions &Opts,
                                      ScanningOptimizations OptimizeArgs) {
   if (any(OptimizeArgs & ScanningOptimizations::HeaderSearch)) {
     // Only preserve search paths that were used during the dependency scan.
-    std::vector<HeaderSearchOptions::Entry> Entries = Opts.UserEntries;
-    Opts.UserEntries.clear();
+    std::vector<HeaderSearchOptions::Entry> Entries;
+    std::swap(Opts.UserEntries, Entries);
 
     llvm::BitVector SearchPathUsage(Entries.size());
     llvm::DenseSet<const serialization::ModuleFile *> Visited;
@@ -50,12 +50,17 @@ static void optimizeHeaderSearchOpts(HeaderSearchOptions &Opts,
         };
     VisitMF(&MF);
 
+    if (SearchPathUsage.size() != Entries.size())
+      llvm::report_fatal_error(
+          "Inconsistent search path options between modules detected");
+
     for (auto Idx : SearchPathUsage.set_bits())
-      Opts.UserEntries.push_back(Entries[Idx]);
+      Opts.UserEntries.push_back(std::move(Entries[Idx]));
   }
   if (any(OptimizeArgs & ScanningOptimizations::VFS)) {
-    std::vector<std::string> VFSOverlayFiles = Opts.VFSOverlayFiles;
-    Opts.VFSOverlayFiles.clear();
+    std::vector<std::string> VFSOverlayFiles;
+    std::swap(Opts.VFSOverlayFiles, VFSOverlayFiles);
+
     llvm::BitVector VFSUsage(VFSOverlayFiles.size());
     llvm::DenseSet<const serialization::ModuleFile *> Visited;
     std::function<void(const serialization::ModuleFile *)> VisitMF =
@@ -68,8 +73,12 @@ static void optimizeHeaderSearchOpts(HeaderSearchOptions &Opts,
         };
     VisitMF(&MF);
 
+    if (VFSUsage.size() != VFSOverlayFiles.size())
+      llvm::report_fatal_error(
+          "Inconsistent -ivfsoverlay options between modules detected");
+
     for (auto Idx : VFSUsage.set_bits())
-      Opts.VFSOverlayFiles.push_back(VFSOverlayFiles[Idx]);
+      Opts.VFSOverlayFiles.push_back(std::move(VFSOverlayFiles[Idx]));
   }
 }
 

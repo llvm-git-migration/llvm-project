@@ -3,6 +3,7 @@
 // RUN: sed -e "s|DIR|%/t|g" %t/build/compile-commands.json.in > %t/build/compile-commands.json
 // RUN: sed -e "s|DIR|%/t|g" %t/build/vfs.yaml.in > %t/build/vfs.yaml
 // RUN: sed -e "s|DIR|%/t|g" %t/build/unused-vfs.yaml.in > %t/build/unused-vfs.yaml
+// RUN: sed -e "s|DIR|%/t|g" %t/build/unused-vfs.yaml.in > %t/build/unused2-vfs.yaml
 // RUN: clang-scan-deps -compilation-database %t/build/compile-commands.json \
 // RUN:   -j 1 -format experimental-full --optimize-args=vfs,header-search > %t/deps.db
 // RUN: cat %t/deps.db | sed 's:\\\\\?:/:g' | FileCheck %s -DPREFIX=%/t
@@ -68,6 +69,11 @@
 //--- build/compile-commands.json.in
 
 [
+{
+  "directory": "DIR",
+  "command": "clang -c DIR/0.m -Imodules/A -Imodules/B -fmodules -fmodules-cache-path=DIR/module-cache -fimplicit-module-maps -ivfsoverlay build/unused-vfs.yaml -ivfsoverlay build/unused2-vfs.yaml -ivfsoverlay build/vfs.yaml",
+  "file": "DIR/0.m"
+},
 {
   "directory": "DIR",
   "command": "clang -c DIR/A.m -Imodules/A -Imodules/B -fmodules -fmodules-cache-path=DIR/module-cache -fimplicit-module-maps -ivfsoverlay build/vfs.yaml -ivfsoverlay build/unused-vfs.yaml",
@@ -161,6 +167,12 @@ module C {
 @import B;
 
 typedef B_t C_t;
+
+//--- 0.m
+
+#include <A.h>
+
+A_t a = 0;
 
 //--- A.m
 
