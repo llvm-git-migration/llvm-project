@@ -2349,6 +2349,9 @@ StateType ProcessGDBRemote::SetThreadStopInfo(StringExtractor &stop_packet) {
         if (!value.getAsInteger(0, addressing_bits)) {
           addressable_bits.SetHighmemAddressableBits(addressing_bits);
         }
+      } else if (key.compare("swbreak") == 0 || key.compare("hwbreak") == 0) {
+        // There is nothing needs to be done for swbreak or hwbreak since
+        // the value is expected to be empty
       } else if (key.size() == 2 && ::isxdigit(key[0]) && ::isxdigit(key[1])) {
         uint32_t reg = UINT32_MAX;
         if (!key.getAsInteger(16, reg))
