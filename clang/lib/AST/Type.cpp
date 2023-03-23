@@ -3409,6 +3409,7 @@ StringRef FunctionType::getNameForCallConv(CallingConv CC) {
   case CC_PreserveMost: return "preserve_most";
   case CC_PreserveAll: return "preserve_all";
   case CC_M68kRTD: return "m68k_rtd";
+  case CC_RISCVVectorCall: return "riscv_vector_cc";
   }
 
   llvm_unreachable("Invalid calling convention.");
@@ -3896,6 +3897,7 @@ bool AttributedType::isCallingConv() const {
   case attr::PreserveMost:
   case attr::PreserveAll:
   case attr::M68kRTD:
+  case attr::RISCVVectorCC:
     return true;
   }
   llvm_unreachable("invalid attr kind");

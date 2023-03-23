@@ -251,6 +251,9 @@ namespace CallingConv {
     /// Used by GraalVM. Two additional registers are reserved.
     GRAAL = 107,
 
+    /// Calling convention used for RISC-V V-extension.
+    RISCV_VectorCall = 108,
+
     /// The highest possible ID. Must be some 2^k - 1.
     MaxID = 1023
   };
