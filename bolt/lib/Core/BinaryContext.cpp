@@ -123,6 +123,7 @@ void BinaryContext::logBOLTErrorsAndQuitOnFatal(Error E) {
 BinaryContext::BinaryContext(std::unique_ptr<MCContext> Ctx,
                              std::unique_ptr<DWARFContext> DwCtx,
                              std::unique_ptr<Triple> TheTriple,
+                             std::shared_ptr<orc::SymbolStringPool> SSP,
                              const Target *TheTarget, std::string TripleName,
                              std::unique_ptr<MCCodeEmitter> MCE,
                              std::unique_ptr<MCObjectFileInfo> MOFI,
@@ -159,8 +160,9 @@ BinaryContext::~BinaryContext() {
 /// Create BinaryContext for a given architecture \p ArchName and
 /// triple \p TripleName.
 Expected<std::unique_ptr<BinaryContext>> BinaryContext::createBinaryContext(
-    Triple TheTriple, StringRef InputFileName, SubtargetFeatures *Features,
-    bool IsPIC, std::unique_ptr<DWARFContext> DwCtx, JournalingStreams Logger) {
+    Triple TheTriple, std::shared_ptr<orc::SymbolStringPool> SSP,
+    StringRef InputFileName, SubtargetFeatures *Features, bool IsPIC,
+    std::unique_ptr<DWARFContext> DwCtx, JournalingStreams Logger) {
   StringRef ArchName = "";
   std::string FeaturesStr = "";
   switch (TheTriple.getArch()) {
@@ -283,7 +285,7 @@ Expected<std::unique_ptr<BinaryContext>> BinaryContext::createBinaryContext(
 
   auto BC = std::make_unique<BinaryContext>(
       std::move(Ctx), std::move(DwCtx), std::make_unique<Triple>(TheTriple),
-      TheTarget, std::string(TripleName), std::move(MCE), std::move(MOFI),
+      SSP, TheTarget, std::string(TripleName), std::move(MCE), std::move(MOFI),
       std::move(AsmInfo), std::move(MII), std::move(STI),
       std::move(InstructionPrinter), std::move(MIA), nullptr, std::move(MRI),
       std::move(DisAsm), Logger);
