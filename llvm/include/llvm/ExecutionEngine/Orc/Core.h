@@ -502,7 +502,7 @@ public:
 
   MissingSymbolDefinitions(std::shared_ptr<SymbolStringPool> SSP,
                            std::string ModuleName, SymbolNameVector Symbols)
-      : SSP(std::move(SSP)), ModuleName(std::move(ModuleName)),
+      : SSP(SSP), ModuleName(std::move(ModuleName)),
         Symbols(std::move(Symbols)) {}
   std::error_code convertToErrorCode() const override;
   void log(raw_ostream &OS) const override;
@@ -525,7 +525,7 @@ public:
 
   UnexpectedSymbolDefinitions(std::shared_ptr<SymbolStringPool> SSP,
                               std::string ModuleName, SymbolNameVector Symbols)
-      : SSP(std::move(SSP)), ModuleName(std::move(ModuleName)),
+      : SSP(SSP), ModuleName(std::move(ModuleName)),
         Symbols(std::move(Symbols)) {}
   std::error_code convertToErrorCode() const override;
   void log(raw_ostream &OS) const override;
@@ -1910,7 +1910,6 @@ template <typename MaterializationUnitType>
 Error JITDylib::define(std::unique_ptr<MaterializationUnitType> &&MU,
                        ResourceTrackerSP RT) {
   assert(MU && "Can not define with a null MU");
-
   if (MU->getSymbols().empty()) {
     // Empty MUs are allowable but pathological, so issue a warning.
     DEBUG_WITH_TYPE("orc", {
