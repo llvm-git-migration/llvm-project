@@ -502,7 +502,7 @@ public:
 
   MissingSymbolDefinitions(std::shared_ptr<SymbolStringPool> SSP,
                            std::string ModuleName, SymbolNameVector Symbols)
-      : SSP(std::move(SSP)), ModuleName(std::move(ModuleName)),
+      : SSP(SSP), ModuleName(std::move(ModuleName)),
         Symbols(std::move(Symbols)) {}
   std::error_code convertToErrorCode() const override;
   void log(raw_ostream &OS) const override;
@@ -525,7 +525,7 @@ public:
 
   UnexpectedSymbolDefinitions(std::shared_ptr<SymbolStringPool> SSP,
                               std::string ModuleName, SymbolNameVector Symbols)
-      : SSP(std::move(SSP)), ModuleName(std::move(ModuleName)),
+      : SSP(SSP), ModuleName(std::move(ModuleName)),
         Symbols(std::move(Symbols)) {}
   std::error_code convertToErrorCode() const override;
   void log(raw_ostream &OS) const override;
