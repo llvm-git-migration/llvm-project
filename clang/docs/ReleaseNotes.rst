@@ -260,6 +260,11 @@ Attribute Changes in Clang
 - Introduced a new attribute ``[[clang::coro_await_elidable_argument]]`` on function parameters
   to propagate safe elide context to arguments if such function is also under a safe elide context.
 
+- Introduced a new function attribute ``__attribute__((debug_transparent))``
+  which is intended as a hint to debuggers that they should not stop at the annotated
+  function, but instead step through it when stepping in, and continuing directly to 
+  its caller when stepping out.
+
 Improvements to Clang's diagnostics
 -----------------------------------
 
