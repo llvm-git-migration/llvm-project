@@ -314,6 +314,13 @@ static CombinerObjective getCombinerObjective(MachineCombinerPattern P) {
   case MachineCombinerPattern::FMADD_XA:
   case MachineCombinerPattern::FMSUB:
   case MachineCombinerPattern::FNMSUB:
+  case MachineCombinerPattern::FMA2_P1P0:
+  case MachineCombinerPattern::FMA2_P0P1:
+  case MachineCombinerPattern::FMA2:
+  case MachineCombinerPattern::FMA1_Add_L:
+  case MachineCombinerPattern::FMA1_Add_R:
+  case MachineCombinerPattern::FMA3:
+  case MachineCombinerPattern::FMA2_Add:
     return CombinerObjective::MustReduceDepth;
   case MachineCombinerPattern::REASSOC_XY_BCA:
   case MachineCombinerPattern::REASSOC_XY_BAC:

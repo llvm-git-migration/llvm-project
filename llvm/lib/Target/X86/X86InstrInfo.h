@@ -553,7 +553,7 @@ public:
                             const MachineRegisterInfo *MRI) const override;
 
   MachineInstr *optimizeLoadInstr(MachineInstr &MI,
-                                  const MachineRegisterInfo *MRI,
+                                  MachineRegisterInfo *MRI,
                                   Register &FoldAsLoadDefReg,
                                   MachineInstr *&DefMI) const override;
 
