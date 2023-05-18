@@ -850,7 +850,10 @@ struct DocumentRangeFormattingParams {
   TextDocumentIdentifier textDocument;
 
   /// The range to format
-  Range range;
+  std::optional<Range> range;
+
+  /// The list of ranges to format
+  std::optional<std::vector<Range>> ranges;
 };
 bool fromJSON(const llvm::json::Value &, DocumentRangeFormattingParams &,
               llvm::json::Path);

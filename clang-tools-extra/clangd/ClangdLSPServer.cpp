@@ -566,7 +566,10 @@ void ClangdLSPServer::onInitialize(const InitializeParams &Params,
            {"save", true},
        }},
       {"documentFormattingProvider", true},
-      {"documentRangeFormattingProvider", true},
+      {"documentRangeFormattingProvider",
+       llvm::json::Object{
+           {"multiRange", true},
+       }},
       {"documentOnTypeFormattingProvider",
        llvm::json::Object{
            {"firstTriggerCharacter", "\n"},
@@ -914,9 +917,14 @@ void ClangdLSPServer::onDocumentOnTypeFormatting(
 void ClangdLSPServer::onDocumentRangeFormatting(
     const DocumentRangeFormattingParams &Params,
     Callback<std::vector<TextEdit>> Reply) {
+  if (!Params.range && !Params.ranges)
+    Reply(llvm::make_error<LSPError>(
+        "Neither \"range\", nor \"ranges\" was provided",
+        ErrorCode::InvalidParams));
+
   auto File = Params.textDocument.uri.file();
   auto Code = Server->getDraft(File);
-  Server->formatFile(File, Params.range,
+  Server->formatFile(File, Params.ranges.value_or(std::vector{*Params.range}),
                      [Code = std::move(Code), Reply = std::move(Reply)](
                          llvm::Expected<tooling::Replacements> Result) mutable {
                        if (Result)
@@ -932,7 +940,7 @@ void ClangdLSPServer::onDocumentFormatting(
   auto File = Params.textDocument.uri.file();
   auto Code = Server->getDraft(File);
   Server->formatFile(File,
-                     /*Rng=*/std::nullopt,
+                     /*Rngs=*/{},
                      [Code = std::move(Code), Reply = std::move(Reply)](
                          llvm::Expected<tooling::Replacements> Result) mutable {
                        if (Result)
