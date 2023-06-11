@@ -1735,6 +1735,8 @@ static uint32_t getSecrelReloc(llvm::COFF::MachineTypes machine) {
   case ARMNT:
     return COFF::IMAGE_REL_ARM_SECREL;
   case ARM64:
+  case ARM64EC:
+  case ARM64X:
     return COFF::IMAGE_REL_ARM64_SECREL;
   default:
     llvm_unreachable("unknown machine type");
@@ -1752,7 +1754,7 @@ static bool findLineTable(const SectionChunk *c, uint32_t addr,
                           DebugLinesSubsectionRef &lines,
                           uint32_t &offsetInLinetable) {
   ExitOnError exitOnErr;
-  const uint32_t secrelReloc = getSecrelReloc(c->file->ctx.config.machine);
+  const uint32_t secrelReloc = getSecrelReloc(c->getMachine());
 
   for (SectionChunk *dbgC : c->file->getDebugChunks()) {
     if (dbgC->getSectionName() != ".debug$S")
