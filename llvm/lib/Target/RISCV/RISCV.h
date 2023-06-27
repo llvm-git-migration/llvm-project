@@ -102,6 +102,9 @@ void initializeRISCVPreLegalizerCombinerPass(PassRegistry &);
 
 FunctionPass *createRISCVPostLegalizerLowering();
 void initializeRISCVPostLegalizerLoweringPass(PassRegistry &);
+
+FunctionPass *createRISCVVLOptimizerPass();
+void initializeRISCVVLOptimizerPass(PassRegistry &);
 } // namespace llvm
 
 #endif
