@@ -151,6 +151,8 @@ Changes to the RISC-V Backend
   "SiFive Custom Instruction Extension" as SiFive defines it. The LLVM project
   needs to work with SiFive to define and document real extension names for
   individual CSRs and instructions.
+* CodeGen of RV32E/RV64E are supported experimentally.
+* CodeGen of ilp32e/lp64e are supported experimentally.
 
 Changes to the WebAssembly Backend
 ----------------------------------
