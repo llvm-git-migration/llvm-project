@@ -139,7 +139,7 @@ TEST_F(InterpreterExtensionsTest, DefaultCrossJIT) {
   if (!IsARMTargetRegistered())
     GTEST_SKIP();
 
-  IncrementalCompilerBuilder CB;
+  clang::IncrementalCompilerBuilder CB;
   CB.SetTargetTriple("armv6-none-eabi");
   auto CI = cantFail(CB.CreateCpp());
   llvm::Error ErrOut = llvm::Error::success();
@@ -153,7 +153,7 @@ TEST_F(InterpreterExtensionsTest, CustomCrossJIT) {
 
   std::string TargetTriple = "armv6-none-eabi";
 
-  IncrementalCompilerBuilder CB;
+  clang::IncrementalCompilerBuilder CB;
   CB.SetTargetTriple(TargetTriple);
   auto CI = cantFail(CB.CreateCpp());
 

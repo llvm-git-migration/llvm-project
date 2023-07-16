@@ -424,4 +424,5 @@ llvm::StringRef IncrementalParser::GetMangledName(GlobalDecl GD) const {
   assert(CG);
   return CG->GetMangledName(GD);
 }
+
 } // end namespace clang

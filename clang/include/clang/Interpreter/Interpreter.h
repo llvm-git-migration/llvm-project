@@ -38,6 +38,7 @@ class ThreadSafeContext;
 namespace clang {
 
 class CompilerInstance;
+
 class IncrementalExecutor;
 class IncrementalParser;
 
@@ -131,6 +132,14 @@ protected:
 public:
   virtual ~Interpreter();
 
+  // class SynthesizingCodeRAII {
+
+  // };
+
+  // SynthesizingCodeRAII EnterCodeSynthesisScope() {
+
+  // }
+
   static llvm::Expected<std::unique_ptr<Interpreter>>
   create(std::unique_ptr<CompilerInstance> CI);
   static llvm::Expected<std::unique_ptr<Interpreter>>
@@ -174,6 +183,8 @@ public:
   }
 
   Expr *SynthesizeExpr(Expr *E);
+
+  std::unique_ptr<llvm::Module> GenModule();
 
 private:
   size_t getEffectivePTUSize() const;

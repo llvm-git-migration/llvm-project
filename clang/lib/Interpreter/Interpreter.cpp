@@ -50,7 +50,6 @@
 #include <cstdarg>
 
 using namespace clang;
-
 // FIXME: Figure out how to unify with namespace init_convenience from
 //        tools/clang-import-test/clang-import-test.cpp
 namespace {
@@ -571,6 +570,10 @@ Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
 
   Dtors[CXXRD] = *AddrOrErr;
   return AddrOrErr;
+}
+
+std::unique_ptr<llvm::Module> Interpreter::GenModule() {
+  return IncrParser->GenModule();
 }
 
 static constexpr llvm::StringRef MagicRuntimeInterface[] = {

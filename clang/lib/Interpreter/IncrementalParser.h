@@ -31,9 +31,10 @@ namespace clang {
 class ASTConsumer;
 class CodeGenerator;
 class CompilerInstance;
+class Parser;
+
 class IncrementalAction;
 class Interpreter;
-class Parser;
 /// Provides support for incremental compilation. Keeps track of the state
 /// changes between the subsequent incremental input.
 ///
