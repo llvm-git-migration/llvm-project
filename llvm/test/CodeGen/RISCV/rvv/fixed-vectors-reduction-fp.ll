@@ -2058,6 +2058,7 @@ define float @vreduce_fminimum_v64f32(ptr %x) {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <64 x float>, ptr %x
@@ -2262,6 +2263,7 @@ define float @vreduce_fminimum_v128f32(ptr %x) {
 ; CHECK-NEXT:    slli a0, a0, 1
 ; CHECK-NEXT:    add a0, a0, a1
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <128 x float>, ptr %x
@@ -2674,6 +2676,7 @@ define double @vreduce_fminimum_v32f64(ptr %x) {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <32 x double>, ptr %x
@@ -2858,6 +2861,7 @@ define double @vreduce_fminimum_v64f64(ptr %x) {
 ; CHECK-NEXT:    slli a0, a0, 1
 ; CHECK-NEXT:    add a0, a0, a1
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <64 x double>, ptr %x
@@ -3386,6 +3390,7 @@ define float @vreduce_fmaximum_v64f32(ptr %x) {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <64 x float>, ptr %x
@@ -3590,6 +3595,7 @@ define float @vreduce_fmaximum_v128f32(ptr %x) {
 ; CHECK-NEXT:    slli a0, a0, 1
 ; CHECK-NEXT:    add a0, a0, a1
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <128 x float>, ptr %x
@@ -4002,6 +4008,7 @@ define double @vreduce_fmaximum_v32f64(ptr %x) {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <32 x double>, ptr %x
@@ -4186,6 +4193,7 @@ define double @vreduce_fmaximum_v64f64(ptr %x) {
 ; CHECK-NEXT:    slli a0, a0, 1
 ; CHECK-NEXT:    add a0, a0, a1
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %v = load <64 x double>, ptr %x
