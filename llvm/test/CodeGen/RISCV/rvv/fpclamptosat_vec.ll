@@ -497,6 +497,7 @@ define <4 x i32> @stest_f16i32(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -665,6 +666,7 @@ define <4 x i32> @utesth_f16i32(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -847,6 +849,7 @@ define <4 x i32> @ustest_f16i32(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -1489,6 +1492,7 @@ define <8 x i16> @stest_f16i16(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -1767,6 +1771,7 @@ define <8 x i16> @utesth_f16i16(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -2071,6 +2076,7 @@ define <8 x i16> @ustest_f16i16(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -2258,6 +2264,7 @@ define <2 x i64> @stest_f64i64(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -2346,6 +2353,7 @@ define <2 x i64> @utest_f64i64(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -2485,6 +2493,7 @@ define <2 x i64> @ustest_f64i64(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -2665,6 +2674,7 @@ define <2 x i64> @stest_f32i64(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -2753,6 +2763,7 @@ define <2 x i64> @utest_f32i64(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -2892,6 +2903,7 @@ define <2 x i64> @ustest_f32i64(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -3784,6 +3796,7 @@ define <4 x i32> @stest_f16i32_mm(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -3950,6 +3963,7 @@ define <4 x i32> @utesth_f16i32_mm(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -4131,6 +4145,7 @@ define <4 x i32> @ustest_f16i32_mm(<4 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 2
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 48
 ; CHECK-V-NEXT:    ld ra, 40(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 32(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 24(sp) # 8-byte Folded Reload
@@ -4761,6 +4776,7 @@ define <8 x i16> @stest_f16i16_mm(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -5035,6 +5051,7 @@ define <8 x i16> @utesth_f16i16_mm(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -5338,6 +5355,7 @@ define <8 x i16> @ustest_f16i16_mm(<8 x half> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 80
 ; CHECK-V-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 56(sp) # 8-byte Folded Reload
@@ -5529,6 +5547,7 @@ define <2 x i64> @stest_f64i64_mm(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -5615,6 +5634,7 @@ define <2 x i64> @utest_f64i64_mm(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -5731,6 +5751,7 @@ define <2 x i64> @ustest_f64i64_mm(<2 x double> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -5915,6 +5936,7 @@ define <2 x i64> @stest_f32i64_mm(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -6001,6 +6023,7 @@ define <2 x i64> @utest_f32i64_mm(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
@@ -6117,6 +6140,7 @@ define <2 x i64> @ustest_f32i64_mm(<2 x float> %x) {
 ; CHECK-V-NEXT:    csrr a0, vlenb
 ; CHECK-V-NEXT:    slli a0, a0, 1
 ; CHECK-V-NEXT:    add sp, sp, a0
+; CHECK-V-NEXT:    .cfi_def_cfa sp, 64
 ; CHECK-V-NEXT:    ld ra, 56(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s0, 48(sp) # 8-byte Folded Reload
 ; CHECK-V-NEXT:    ld s1, 40(sp) # 8-byte Folded Reload
