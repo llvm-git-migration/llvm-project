@@ -1102,6 +1102,8 @@ clang-format
   attributes (like ``nonatomic, strong, nullable``).
 - Add ``.clang-format-ignore`` files.
 - Add ``AlignFunctionPointers`` sub-option for ``AlignConsecutiveDeclarations``.
+- Add ``InAttributeSpecifiers`` style option to ``SpacesInParensOptions``
+  to control addition of spaces after the ``__attribute__`` keyword.
 
 libclang
 --------
