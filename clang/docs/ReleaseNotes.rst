@@ -895,6 +895,8 @@ clang-format
 - Handles Java ``switch`` expressions.
 - Adds ``AllowShortCaseExpressionOnASingleLine`` option.
 - Adds ``AlignCaseArrows`` suboption to ``AlignConsecutiveShortCaseStatements``.
+- Add ``InAttributeSpecifiers`` style option to ``SpacesInParensOptions``
+  to control addition of spaces after the ``__attribute__`` keyword.
 
 libclang
 --------
