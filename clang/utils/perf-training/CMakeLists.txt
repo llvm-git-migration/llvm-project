@@ -14,8 +14,33 @@ if(LLVM_BUILD_INSTRUMENTED)
     DEPENDS clang clear-profraw ${CLANG_PERF_TRAINING_DEPS}
     )
 
+  add_custom_target(generate-profdata-deps)
+  string(TOUPPER "${LLVM_BUILD_INSTRUMENTED}" uppercase_LLVM_BUILD_INSTRUMENTED)
+  if (uppercase_LLVM_BUILD_INSTRUMENTED STREQUAL "CSSPGO")
+    set(PROFDATA_SAMPLE "--sample")
+    if(NOT LLVM_PROFGEN)
+      find_program(LLVM_PROFGEN llvm-profgen)
+    endif()
+
+    if(NOT LLVM_PROFGEN)
+      message(STATUS "To enable converting CSSPGO samples LLVM_PROFGEN has to point to llvm-profgen")
+    endif()
+
+    # Convert perf profiles into profraw
+    add_custom_target(convert-perf-profraw
+      COMMAND "${Python3_EXECUTABLE}"
+      ${CMAKE_CURRENT_SOURCE_DIR}/perf-helper.py perf2prof ${LLVM_PROFGEN}
+      $<TARGET_FILE:clang> ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Converting perf profiles into profraw"
+      DEPENDS generate-profraw)
+    add_dependencies(generate-profdata-deps convert-perf-profraw)
+  else()
+    add_dependencies(generate-profdata-deps generate-profraw)
+  endif()
+
   add_custom_target(clear-profraw
     COMMAND "${Python3_EXECUTABLE}" ${CMAKE_CURRENT_SOURCE_DIR}/perf-helper.py clean ${CMAKE_CURRENT_BINARY_DIR} profraw
+    COMMAND "${Python3_EXECUTABLE}" ${CMAKE_CURRENT_SOURCE_DIR}/perf-helper.py clean ${CMAKE_CURRENT_BINARY_DIR} perf.data
     COMMENT "Clearing old profraw data")
 
   if(NOT LLVM_PROFDATA)
@@ -26,9 +51,12 @@ if(LLVM_BUILD_INSTRUMENTED)
     message(STATUS "To enable merging PGO data LLVM_PROFDATA has to point to llvm-profdata")
   else()
     add_custom_target(generate-profdata
-      COMMAND "${Python3_EXECUTABLE}" ${CMAKE_CURRENT_SOURCE_DIR}/perf-helper.py merge ${LLVM_PROFDATA} ${CMAKE_CURRENT_BINARY_DIR}/clang.profdata ${CMAKE_CURRENT_BINARY_DIR}
+      COMMAND "${Python3_EXECUTABLE}"
+      ${CMAKE_CURRENT_SOURCE_DIR}/perf-helper.py merge ${LLVM_PROFDATA}
+      ${CMAKE_CURRENT_BINARY_DIR}/clang.profdata ${CMAKE_CURRENT_BINARY_DIR}
+      ${PROFDATA_SAMPLE}
       COMMENT "Merging profdata"
-      DEPENDS generate-profraw)
+      DEPENDS generate-profdata-deps)
   endif()
 endif()
 
