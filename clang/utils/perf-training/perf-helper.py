@@ -45,7 +45,7 @@ def clean(args):
 def merge(args):
     parser = argparse.ArgumentParser(
         prog="perf-helper merge",
-        description="Merges all profraw files from path(s) into output"
+        description="Merges all profraw files from path(s) into output",
     )
     parser.add_argument("profdata", help="Path to llvm-profdata tool")
     parser.add_argument("output", help="Output filename")
@@ -79,17 +79,14 @@ def merge_fdata(args):
 def perf(args):
     parser = argparse.ArgumentParser(
         prog="perf-helper perf",
-        description="perf wrapper for BOLT/CSSPGO profile collection"
+        description="perf wrapper for BOLT/CSSPGO profile collection",
     )
     parser.add_argument(
         "--lbr", action="store_true", help="Use perf with branch stacks"
     )
+    parser.add_argument("--call-graph", action="store_true", help="Collect call graph")
     parser.add_argument(
-        "--call-graph", action="store_true", help="Collect call graph"
-    )
-    parser.add_argument(
-        "--event", help="PMU event name, defaults to cycles:u",
-        default="cycles:u"
+        "--event", help="PMU event name, defaults to cycles:u", default="cycles:u"
     )
     parser.add_argument("cmd", nargs=argparse.REMAINDER, help="")
 
@@ -144,9 +141,9 @@ def perf2bolt(args):
 
 def perf2prof(args):
     parser = argparse.ArgumentParser(
-            prog="perf-helper perf2prof",
-            description="perf to CSSPGO prof conversion wrapper",
-            )
+        prog="perf-helper perf2prof",
+        description="perf to CSSPGO prof conversion wrapper",
+    )
     parser.add_argument("profgen", help="Path to llvm-profgen binary")
     parser.add_argument("binary", help="Input binary")
     parser.add_argument("path", help="Path containing perf.data files")
@@ -154,8 +151,9 @@ def perf2prof(args):
 
     profgen_args = [opts.profgen, f"--binary={opts.binary}"]
     for filename in findFilesWithExtension(opts.path, "perf.data"):
-        subprocess.check_call(profgen_args + [f"--perfdata={filename}",
-                                              f"--output={filename}.profraw"])
+        subprocess.check_call(
+            profgen_args + [f"--perfdata={filename}", f"--output={filename}.profraw"]
+        )
     return 0
 
 
