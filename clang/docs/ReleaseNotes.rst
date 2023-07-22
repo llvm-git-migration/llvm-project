@@ -199,6 +199,8 @@ C++2c Feature Support
 
 Resolutions to C++ Defect Reports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Implemented `CWG2137 <https://wg21.link/CWG2137>`_ which allows
+  list-initialization from objects of the same type.
 
 C Language Changes
 ------------------
