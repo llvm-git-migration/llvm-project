@@ -203,7 +203,7 @@ XtensaMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
   if (MO.isImm()) {
     int32_t Res = MO.getImm();
     if (Res & 0x3) {
-      llvm_unreachable("Unexpected operand value!");
+      report_fatal_error("Unexpected operand value!");
     }
     Res >>= 2;
     return Res;
@@ -396,7 +396,7 @@ XtensaMCCodeEmitter::getB4constOpValue(const MCInst &MI, unsigned OpNo,
     Res = 15;
     break;
   default:
-    llvm_unreachable("Unexpected operand value!");
+    report_fatal_error("Unexpected operand value!");
   }
 
   return Res;
@@ -446,7 +446,7 @@ XtensaMCCodeEmitter::getB4constuOpValue(const MCInst &MI, unsigned OpNo,
     Res = 15;
     break;
   default:
-    llvm_unreachable("Unexpected operand value!");
+    report_fatal_error("Unexpected operand value!");
   }
 
   return Res;
