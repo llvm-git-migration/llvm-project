@@ -1381,6 +1381,11 @@ LogicalResult checkDeviceTypes(mlir::ArrayAttr deviceTypes) {
 }
 
 LogicalResult acc::LoopOp::verify() {
+  if (!getUpperbound().empty() && getInclusiveUpperbound() &&
+      (getUpperbound().size() != getInclusiveUpperbound()->size()))
+    return emitError() << "inclusiveUpperbound size is expected to be the same"
+                       << " as upperbound size";
+
   // Check collapse
   if (getCollapseAttr() && !getCollapseDeviceTypeAttr())
     return emitOpError() << "collapse device_type attr must be define when"
@@ -1494,7 +1499,9 @@ unsigned LoopOp::getNumDataOperands() {
 }
 
 Value LoopOp::getDataOperand(unsigned i) {
-  unsigned numOptional = getGangOperands().size();
+  unsigned numOptional =
+      getLowerbound().size() + getUpperbound().size() + getStep().size();
+  numOptional += getGangOperands().size();
   numOptional += getVectorOperands().size();
   numOptional += getWorkerNumOperands().size();
   numOptional += getTileOperands().size();
@@ -1635,6 +1642,58 @@ bool LoopOp::hasGang(mlir::acc::DeviceType deviceType) {
       return true;
   }
   return false;
+}
+
+llvm::SmallVector<mlir::Region *> acc::LoopOp::getLoopRegions() {
+  return {&getRegion()};
+}
+
+/// loop-control ::= `(` ssa-id-and-type-list `)` `=` `(` ssa-id-and-type-list
+/// `)` `to` `(` ssa-id-and-type-list `)` `step` `(` ssa-id-and-type-list `)`
+ParseResult
+parseLoopControl(OpAsmParser &parser, Region &region,
+                 SmallVectorImpl<OpAsmParser::UnresolvedOperand> &lowerbound,
+                 SmallVectorImpl<Type> &lowerboundType,
+                 SmallVectorImpl<OpAsmParser::UnresolvedOperand> &upperbound,
+                 SmallVectorImpl<Type> &upperboundType,
+                 SmallVectorImpl<OpAsmParser::UnresolvedOperand> &step,
+                 SmallVectorImpl<Type> &stepType) {
+
+  SmallVector<OpAsmParser::Argument> inductionVars;
+  if (succeeded(parser.parseOptionalLParen())) {
+    if (parser.parseArgumentList(inductionVars, OpAsmParser::Delimiter::None,
+                                 /*allowType=*/true) ||
+        parser.parseRParen() || parser.parseEqual() || parser.parseLParen() ||
+        parser.parseOperandList(lowerbound, inductionVars.size(),
+                                OpAsmParser::Delimiter::None) ||
+        parser.parseColonTypeList(lowerboundType) || parser.parseRParen() ||
+        parser.parseKeyword("to") || parser.parseLParen() ||
+        parser.parseOperandList(upperbound, inductionVars.size(),
+                                OpAsmParser::Delimiter::None) ||
+        parser.parseColonTypeList(upperboundType) || parser.parseRParen() ||
+        parser.parseKeyword("step") || parser.parseLParen() ||
+        parser.parseOperandList(step, inductionVars.size(),
+                                OpAsmParser::Delimiter::None) ||
+        parser.parseColonTypeList(stepType) || parser.parseRParen())
+      return failure();
+  }
+  return parser.parseRegion(region, inductionVars);
+}
+
+void printLoopControl(OpAsmPrinter &p, Operation *op, Region &region,
+                      ValueRange lowerbound, TypeRange lowerboundType,
+                      ValueRange upperbound, TypeRange upperboundType,
+                      ValueRange steps, TypeRange stepType) {
+  ValueRange regionArgs = region.front().getArguments();
+  if (!regionArgs.empty()) {
+    p << "(";
+    llvm::interleaveComma(regionArgs, p,
+                          [&p](Value v) { p << v << " : " << v.getType(); });
+    p << ") = (" << lowerbound << " : " << lowerboundType << ") to ("
+      << upperbound << " : " << upperboundType << ") "
+      << " step (" << steps << " : " << stepType << ") ";
+  }
+  p.printRegion(region, /*printEntryBlockArgs=*/false);
 }
 
 //===----------------------------------------------------------------------===//
