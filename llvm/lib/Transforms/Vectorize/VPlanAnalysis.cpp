@@ -26,6 +26,9 @@ Type *VPTypeAnalysis::inferScalarTypeForRecipe(const VPBlendRecipe *R) {
 }
 
 Type *VPTypeAnalysis::inferScalarTypeForRecipe(const VPInstruction *R) {
+  if (Instruction::isBinaryOp(R->getOpcode()))
+    return inferScalarType(R->getOperand(0));
+
   switch (R->getOpcode()) {
   case Instruction::Select: {
     Type *ResTy = inferScalarType(R->getOperand(1));

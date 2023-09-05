@@ -24,6 +24,7 @@ class VPWidenMemoryRecipe;
 struct VPWidenSelectRecipe;
 class VPReplicateRecipe;
 class Type;
+class VPlan;
 
 /// An analysis for type-inference for VPValues.
 /// It infers the scalar type for a given VPValue by bottom-up traversing
