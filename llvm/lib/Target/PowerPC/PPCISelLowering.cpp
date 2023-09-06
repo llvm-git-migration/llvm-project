@@ -14407,15 +14407,18 @@ SDValue PPCTargetLowering::DAGCombineExtBoolTrunc(SDNode *N,
       ShiftCst);
 }
 
-SDValue PPCTargetLowering::combineSetCC(SDNode *N,
-                                        DAGCombinerInfo &DCI) const {
-  assert(N->getOpcode() == ISD::SETCC &&
-         "Should be called with a SETCC node");
+SDValue PPCTargetLowering::combineSetCC(SDNode *N, DAGCombinerInfo &DCI) const {
+  assert(N->getOpcode() == ISD::SETCC && "Should be called with a SETCC node");
 
   ISD::CondCode CC = cast<CondCodeSDNode>(N->getOperand(2))->get();
+  SDValue LHS = N->getOperand(0);
+  SDValue RHS = N->getOperand(1);
+  SDLoc DL(N);
+  SelectionDAG &DAG = DCI.DAG;
+  EVT VT = N->getValueType(0);
+  EVT OpVT = LHS.getValueType();
+
   if (CC == ISD::SETNE || CC == ISD::SETEQ) {
-    SDValue LHS = N->getOperand(0);
-    SDValue RHS = N->getOperand(1);
 
     // If there is a '0 - y' pattern, canonicalize the pattern to the RHS.
     if (LHS.getOpcode() == ISD::SUB && isNullConstant(LHS.getOperand(0)) &&
@@ -14426,12 +14429,26 @@ SDValue PPCTargetLowering::combineSetCC(SDNode *N,
     // x != 0-y --> x+y != 0
     if (RHS.getOpcode() == ISD::SUB && isNullConstant(RHS.getOperand(0)) &&
         RHS.hasOneUse()) {
-      SDLoc DL(N);
-      SelectionDAG &DAG = DCI.DAG;
-      EVT VT = N->getValueType(0);
-      EVT OpVT = LHS.getValueType();
       SDValue Add = DAG.getNode(ISD::ADD, DL, OpVT, LHS, RHS.getOperand(1));
       return DAG.getSetCC(DL, VT, Add, DAG.getConstant(0, DL, OpVT), CC);
+    }
+  }
+
+  // Combine (a-2^(M-1)) => sext(trunc(a, M), 64)
+  if (CC == ISD::SETULT && LHS.getOpcode() == ISD::ADD && OpVT == MVT::i64 &&
+      isa<ConstantSDNode>(RHS) && isa<ConstantSDNode>(LHS.getOperand(1))) {
+    uint64_t ShiftVal =
+        ~(cast<ConstantSDNode>(LHS.getOperand(1))->getZExtValue()) + 1;
+    uint64_t CmpVal = ~(cast<ConstantSDNode>(RHS)->getZExtValue()) + 1;
+    if (isPowerOf2_64(ShiftVal) && ShiftVal << 1 == CmpVal) {
+      unsigned DestBits = Log2_64(CmpVal);
+      if (DestBits == 8 || DestBits == 16 || DestBits == 32) {
+        SDValue Conv =
+            DAG.getSExtOrTrunc(DAG.getSExtOrTrunc(LHS.getOperand(0), DL,
+                                                  MVT::getIntegerVT(DestBits)),
+                               DL, OpVT);
+        return DAG.getSetCC(DL, VT, LHS.getOperand(0), Conv, ISD::SETNE);
+      }
     }
   }
 
