@@ -10706,6 +10706,23 @@ calculateSrcByte(const SDValue Op, uint64_t DestByte, uint64_t SrcIndex = 0,
                             Depth + 1);
   }
 
+  case ISD::EXTRACT_VECTOR_ELT: {
+    auto IdxOp = dyn_cast<ConstantSDNode>(Op->getOperand(1));
+    if (!IdxOp)
+      return std::nullopt;
+    auto VecIdx = IdxOp->getZExtValue();
+    auto ScalarSize = Op.getScalarValueSizeInBits();
+    if (ScalarSize != 32) {
+      if ((VecIdx + 1) * ScalarSize > 32)
+        return std::nullopt;
+      SrcIndex = ScalarSize == 8 ? VecIdx : VecIdx * 2 + SrcIndex;
+      return calculateSrcByte(Op->getOperand(0), DestByte, SrcIndex, Depth + 1);
+    }
+
+    // The scalar is 32 bits, so just use the scalar
+    return ByteProvider<SDValue>::getSrc(Op, DestByte, SrcIndex);
+  }
+
   default: {
     if (auto A = dyn_cast<AtomicSDNode>(Op) || Op->isMemIntrinsic())
       return ByteProvider<SDValue>::getSrc(Op, DestByte, SrcIndex);
@@ -10983,6 +11000,9 @@ static bool addresses16Bits(int Mask) {
   int Low8 = Mask & 0xff;
   int Hi8 = (Mask & 0xff00) >> 8;
 
+  if (Low8 == 0x0c || Hi8 == 0x0c)
+    return false;
+
   assert(Low8 < 8 && Hi8 < 8);
   // Are the bytes contiguous in the order of increasing addresses.
   bool IsConsecutive = (Hi8 - Low8 == 1);
@@ -11099,12 +11119,33 @@ SDValue SITargetLowering::performOrCombine(SDNode *N,
     // If all the uses of an or need to extract the individual elements, do not
     // attempt to lower into v_perm
     auto usesCombinedOperand = [](SDNode *OrUse) {
-      // If we have any non-vectorized use, then it is a candidate for v_perm
-      if (OrUse->getOpcode() != ISD::BITCAST ||
-          !OrUse->getValueType(0).isVector())
-        return true;
+      //  The combined bytes seem to be getting extracted
+      if (OrUse->getOpcode() == ISD::SRL || OrUse->getOpcode() == ISD::TRUNCATE)
+        return false;
+
+      if (OrUse->getOpcode() == ISD::AND) {
+        auto SelectMask = dyn_cast<ConstantSDNode>(OrUse->getOperand(1));
+        if (SelectMask && (SelectMask->getZExtValue() == 0xFF))
+          return false;
+      }
+
+      if (OrUse->getOpcode() == AMDGPUISD::CVT_F32_UBYTE0 ||
+          OrUse->getOpcode() == AMDGPUISD::CVT_F32_UBYTE1 ||
+          OrUse->getOpcode() == AMDGPUISD::CVT_F32_UBYTE2 ||
+          OrUse->getOpcode() == AMDGPUISD::CVT_F32_UBYTE3) {
+        return false;
+      }
+
+      if (auto StoreUse = dyn_cast<StoreSDNode>(OrUse))
+        if (StoreUse->isTruncatingStore() &&
+            StoreUse->getMemoryVT().getSizeInBits() == 8)
+          return false;
 
       // If we have any non-vectorized use, then it is a candidate for v_perm
+      if (!(OrUse->getValueType(0).isVector() &&
+            OrUse->getOpcode() != ISD::BUILD_VECTOR))
+        return true;
+
       for (auto VUse : OrUse->uses()) {
         if (!VUse->getValueType(0).isVector())
           return true;
@@ -11166,8 +11207,7 @@ SDValue SITargetLowering::performOrCombine(SDNode *N,
         // Find the ByteProvider that provides the ith byte of the result of OR
         std::optional<ByteProvider<SDValue>> P =
             calculateByteProvider(SDValue(N, 0), i, 0, /*StartingIndex = */ i);
-        // TODO support constantZero
-        if (!P || P->isConstantZero())
+        if (!P)
           return SDValue();
 
         PermNodes.push_back(*P);
@@ -11180,6 +11220,14 @@ SDValue SITargetLowering::performOrCombine(SDNode *N,
       uint64_t PermMask = 0x00000000;
       for (size_t i = 0; i < PermNodes.size(); i++) {
         auto PermOp = PermNodes[i];
+        if (PermOp.isConstantZero()) {
+          if (FirstSrc.first == i) {
+            FirstSrc.first = i + 1;
+            FirstSrc.second = PermNodes[i].SrcOffset / 4;
+          }
+          PermMask |= 0x0c << (i * 8);
+          continue;
+        }
         // Since the mask is applied to Src1:Src2, Src1 bytes must be offset
         // by sizeof(Src2) = 4
         int SrcByteAdjust = 4;
@@ -11203,6 +11251,8 @@ SDValue SITargetLowering::performOrCombine(SDNode *N,
         PermMask |= ((PermOp.SrcOffset % 4) + SrcByteAdjust) << (i * 8);
       }
       SDLoc DL(N);
+      if (PermMask == 0x0c0c0c0c)
+        return DAG.getConstant(0, DL, MVT::i32);
       SDValue Op = *PermNodes[FirstSrc.first].Src;
       Op = getDWordFromOffset(DAG, DL, Op, FirstSrc.second);
       assert(Op.getValueSizeInBits() == 32);
@@ -11229,7 +11279,6 @@ SDValue SITargetLowering::performOrCombine(SDNode *N,
       assert(Op.getValueSizeInBits() == 32);
 
       if (hasNon16BitAccesses(PermMask, Op, OtherOp)) {
-
         assert(Op.getValueType().isByteSized() &&
                OtherOp.getValueType().isByteSized());
 
