@@ -89,6 +89,48 @@ entry:
   ret i1 %cmp.i5
 }
 
+define zeroext i1 @test5(i64 %a) {
+; CHECK-LABEL: test5:
+; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    extsw 4, 3
+; CHECK-NEXT:    xor 3, 3, 4
+; CHECK-NEXT:    addic 4, 3, -1
+; CHECK-NEXT:    subfe 3, 4, 3
+; CHECK-NEXT:    blr
+entry:
+  %0 = add i64 %a, -2147483648
+  %cmp = icmp ult i64 %0, -4294967296
+  ret i1 %cmp
+}
+
+define zeroext i1 @test6(i64 %a) {
+; CHECK-LABEL: test6:
+; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    extsh 4, 3
+; CHECK-NEXT:    xor 3, 3, 4
+; CHECK-NEXT:    addic 4, 3, -1
+; CHECK-NEXT:    subfe 3, 4, 3
+; CHECK-NEXT:    blr
+entry:
+  %0 = add i64 %a, -32768
+  %cmp = icmp ult i64 %0, -65536
+  ret i1 %cmp
+}
+
+define zeroext i1 @test7(i64 %a) {
+; CHECK-LABEL: test7:
+; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    extsb 4, 3
+; CHECK-NEXT:    xor 3, 3, 4
+; CHECK-NEXT:    addic 4, 3, -1
+; CHECK-NEXT:    subfe 3, 4, 3
+; CHECK-NEXT:    blr
+entry:
+  %0 = add i64 %a, -128
+  %cmp = icmp ult i64 %0, -256
+  ret i1 %cmp
+}
+
 !1 = !{!2, !2, i64 0}
 !2 = !{!"int", !3, i64 0}
 !3 = !{!"omnipotent char", !4, i64 0}
