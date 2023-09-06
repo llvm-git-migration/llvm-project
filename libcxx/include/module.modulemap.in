@@ -1692,6 +1692,7 @@ module std_private_ranges_filter_view                [system] {
   export std_private_ranges_range_adaptor
 }
 module std_private_ranges_from_range                 [system] { header "__ranges/from_range.h" }
+module std_private_ranges_helpers                    [system] { header "__ranges/helpers.h" }
 module std_private_ranges_iota_view                  [system] { header "__ranges/iota_view.h" }
 module std_private_ranges_istream_view               [system] {
   header "__ranges/istream_view.h"
@@ -1700,6 +1701,10 @@ module std_private_ranges_join_view                  [system] {
   header "__ranges/join_view.h"
   export std_private_iterator_iterator_with_data
   export std_private_iterator_segmented_iterator
+}
+module std_private_ranges_join_with_view             [system] {
+  header "__ranges/join_with_view.h"
+  export std_variant
 }
 module std_private_ranges_lazy_split_view            [system] {
   header "__ranges/lazy_split_view.h"

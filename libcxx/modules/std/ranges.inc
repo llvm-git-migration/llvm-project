@@ -211,13 +211,15 @@ export namespace std {
       using std::ranges::views::join;
     } // namespace views
 #endif // _LIBCPP_ENABLE_EXPERIMENTAL
-#if 0
+
+#if _LIBCPP_STD_VER >= 23
     using std::ranges::join_with_view;
 
     namespace views {
       using std::ranges::views::join_with;
     } // namespace views
-#endif
+#endif // _LIBCPP_STD_VER >= 23
+
     using std::ranges::lazy_split_view;
 
     // [range.split], split view

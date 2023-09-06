@@ -620,9 +620,11 @@ set(files
   __ranges/enable_view.h
   __ranges/filter_view.h
   __ranges/from_range.h
+  __ranges/helpers.h
   __ranges/iota_view.h
   __ranges/istream_view.h
   __ranges/join_view.h
+  __ranges/join_with_view.h
   __ranges/lazy_split_view.h
   __ranges/movable_box.h
   __ranges/non_propagating_cache.h
