@@ -42,6 +42,7 @@ add_custom_target(install-cxx-test-suite-prefix
                               cxx
                               cxx_experimental
                               cxx-modules
+                              check_output
                       COMMAND ${CMAKE_COMMAND} -E make_directory "${LIBCXX_TESTING_INSTALL_PREFIX}"
                       COMMAND "${CMAKE_COMMAND}"
                               -DCMAKE_INSTALL_COMPONENT=cxx-headers
