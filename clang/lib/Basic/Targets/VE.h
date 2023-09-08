@@ -40,6 +40,7 @@ public:
     Int64Type = SignedLong;
     RegParmMax = 8;
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 64;
+    HasCheapUnalignedBitfieldAccess = true;
 
     WCharType = UnsignedInt;
     WIntType = UnsignedInt;

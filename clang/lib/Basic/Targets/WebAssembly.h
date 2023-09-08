@@ -84,6 +84,7 @@ public:
     SizeType = UnsignedLong;
     PtrDiffType = SignedLong;
     IntPtrType = SignedLong;
+    HasCheapUnalignedBitfieldAccess = true;
   }
 
   StringRef getABI() const override;

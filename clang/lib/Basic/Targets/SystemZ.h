@@ -45,6 +45,7 @@ public:
     LongDoubleFormat = &llvm::APFloat::IEEEquad();
     DefaultAlignForAttributeAligned = 64;
     MinGlobalAlign = 16;
+    HasCheapUnalignedBitfieldAccess = true;
     if (Triple.isOSzOS()) {
       TLSSupported = false;
       // All vector types are default aligned on an 8-byte boundary, even if the
