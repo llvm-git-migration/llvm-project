@@ -185,7 +185,8 @@ struct CGRecordLowering {
   void lowerUnion(bool isNoUniqueAddress);
   void accumulateFields();
   void accumulateBitFields(RecordDecl::field_iterator Field,
-                           RecordDecl::field_iterator FieldEnd);
+                           RecordDecl::field_iterator FieldEnd,
+                           CharUnits Limit);
   void computeVolatileBitfields();
   void accumulateBases();
   void accumulateVPtrs();
@@ -376,33 +377,41 @@ void CGRecordLowering::lowerUnion(bool isNoUniqueAddress) {
 }
 
 void CGRecordLowering::accumulateFields() {
-  for (RecordDecl::field_iterator Field = D->field_begin(),
-                                  FieldEnd = D->field_end();
-    Field != FieldEnd;) {
+  RecordDecl::field_iterator FieldEnd = D->field_end();
+  RecordDecl::field_iterator BitField = FieldEnd;
+  for (RecordDecl::field_iterator Field = D->field_begin(); Field != FieldEnd;
+       ++Field) {
     if (Field->isBitField()) {
-      RecordDecl::field_iterator Start = Field;
-      // Iterate to gather the list of bitfields.
-      for (++Field; Field != FieldEnd && Field->isBitField(); ++Field);
-      accumulateBitFields(Start, Field);
+      if (BitField == FieldEnd)
+        // Start gathering bitfields
+        BitField = Field;
     } else if (!Field->isZeroSize(Context)) {
       // Use base subobject layout for the potentially-overlapping field,
       // as it is done in RecordLayoutBuilder
+      CharUnits Offset = bitsToCharUnits(getFieldBitOffset(*Field));
+      if (BitField != FieldEnd) {
+        // Gather the bitfields, now we know where they cannot be
+        // extended past.
+        accumulateBitFields(BitField, Field, Offset);
+        BitField = FieldEnd;
+      }
       Members.push_back(MemberInfo(
-          bitsToCharUnits(getFieldBitOffset(*Field)), MemberInfo::Field,
+          Offset, MemberInfo::Field,
           Field->isPotentiallyOverlapping()
               ? getStorageType(Field->getType()->getAsCXXRecordDecl())
               : getStorageType(*Field),
           *Field));
-      ++Field;
-    } else {
-      ++Field;
     }
   }
+  if (BitField != FieldEnd)
+    // Size as non-virtual base is what we want here.
+    accumulateBitFields(BitField, FieldEnd,
+                        RD ? Layout.getNonVirtualSize() : Layout.getDataSize());
 }
 
-void
-CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
-                                      RecordDecl::field_iterator FieldEnd) {
+void CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
+                                           RecordDecl::field_iterator FieldEnd,
+                                           CharUnits Limit) {
   // Run stores the first element of the current run of bitfields.  FieldEnd is
   // used as a special value to note that we don't have a current run.  A
   // bitfield run is a contiguous collection of bitfields that can be stored in
@@ -415,12 +424,16 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   uint64_t StartBitOffset, Tail = 0;
   if (isDiscreteBitFieldABI()) {
     for (; Field != FieldEnd; ++Field) {
-      uint64_t BitOffset = getFieldBitOffset(*Field);
+      if (!Field->isBitField()) {
+        assert(Field->isZeroSize(Context) && "non-zero sized non-bitfield");
+        continue;
+      }
       // Zero-width bitfields end runs.
       if (Field->isZeroLengthBitField(Context)) {
         Run = FieldEnd;
         continue;
       }
+      uint64_t BitOffset = getFieldBitOffset(*Field);
       llvm::Type *Type =
           Types.ConvertTypeForMem(Field->getType(), /*ForBitField=*/true);
       // If we don't have a run yet, or don't live within the previous run's
@@ -442,79 +455,235 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
     return;
   }
 
-  // Check if OffsetInRecord (the size in bits of the current run) is better
-  // as a single field run. When OffsetInRecord has legal integer width, and
-  // its bitfield offset is naturally aligned, it is better to make the
-  // bitfield a separate storage component so as it can be accessed directly
-  // with lower cost.
-  auto IsBetterAsSingleFieldRun = [&](uint64_t OffsetInRecord,
-                                      uint64_t StartBitOffset) {
-    if (!Types.getCodeGenOpts().FineGrainedBitfieldAccesses)
-      return false;
-    if (OffsetInRecord < 8 || !llvm::isPowerOf2_64(OffsetInRecord) ||
-        !DataLayout.fitsInLegalInteger(OffsetInRecord))
-      return false;
-    // Make sure StartBitOffset is naturally aligned if it is treated as an
-    // IType integer.
-    if (StartBitOffset %
-            Context.toBits(getAlignment(getIntNType(OffsetInRecord))) !=
-        0)
-      return false;
-    return true;
+  // The SysV ABI can overlap bitfield storage units with both other bitfield
+  // storage units /and/ other non-bitfield data members. Such overlap, in the
+  // absence of packing, is always complete -- one storage unit is entirely
+  // within another. However, llvm cannot represent that -- it's structures are
+  // entirely flat. We place bitfields in 'access units', which are similar to
+  // the SysV storage units, but a clang-specific concept.
+
+  // It can be advantageous to concatenate two adjacent access units, if the
+  // concenation can be read or written in a single instruction.
+
+  // We do two passes.
+
+  // a) allocate bitfields into the smallest access units they can
+  // fit. This results in a set of integral-typed access units.
+
+  // b) concatentate mergeable access units. This applies the
+  // above-mentioned optimization, and in general, requires lookahead
+  // to know the next access unit -- not merely the next bitfield.
+
+  class AccessUnit {
+    // Which bitfields are in the access
+    RecordDecl::field_iterator First;
+    RecordDecl::field_iterator Last;
+
+    CharUnits Start; // Starting offset within the record
+    CharUnits End;   // Finish offset (exclusive) within the record
+
+    bool ContainsVolatile = false;
+
+  public:
+    AccessUnit(RecordDecl::field_iterator F, RecordDecl::field_iterator L,
+               CharUnits S, CharUnits E, bool HasVolatile = false)
+        : First(F), Last(L), Start(S), End(E), ContainsVolatile(HasVolatile) {}
+    AccessUnit(RecordDecl::field_iterator F, CharUnits Place)
+        : AccessUnit(F, F, Place, Place) {}
+
+  public:
+    auto begin() const { return First; }
+    auto end() const { return Last; }
+
+  public:
+    void MergeFrom(AccessUnit const &Earlier) {
+      First = Earlier.First;
+      Start = Earlier.Start;
+    }
+
+  public:
+    // Accessors
+    CharUnits getSize() const { return getSize(*this); }
+    CharUnits getStart() const { return Start; }
+    CharUnits getSize(const AccessUnit &NotEarlier) const {
+      return NotEarlier.End - Start;
+    }
+
+    // Setter
+    void setEnd(CharUnits E) { End = E; }
+
+    // Predicates
+    bool isBarrier() const { return getSize().isZero(); }
+    bool hasVolatile() const { return ContainsVolatile; }
+
+    bool StartsBefore(CharUnits Offset, bool NonStrict = false) const {
+      if (NonStrict)
+        // Not strictly <, permit ==
+        ++Offset;
+      return Start < Offset;
+    }
+    bool ExtendsBeyond(CharUnits Offset) const { return End > Offset; }
+    bool EndsAt(CharUnits Offset) const { return End == Offset; }
   };
+  SmallVector<AccessUnit, 8> AUs;
+  bool SeenVolatile = false;
+  CharUnits StartOffset{};
+  for (; Field != FieldEnd; ++Field) {
+    if (!Field->isBitField()) {
+      assert(Field->isZeroSize(Context) && "non-zero sized non-bitfield");
+      continue;
+    }
 
-  // The start field is better as a single field run.
-  bool StartFieldAsSingleRun = false;
-  for (;;) {
-    // Check to see if we need to start a new run.
-    if (Run == FieldEnd) {
-      // If we're out of fields, return.
-      if (Field == FieldEnd)
-        break;
-      // Any non-zero-length bitfield can start a new run.
-      if (!Field->isZeroLengthBitField(Context)) {
-        Run = Field;
-        StartBitOffset = getFieldBitOffset(*Field);
-        Tail = StartBitOffset + Field->getBitWidthValue(Context);
-        StartFieldAsSingleRun = IsBetterAsSingleFieldRun(Tail - StartBitOffset,
-                                                         StartBitOffset);
+    if (Run != FieldEnd) {
+      // Accumlating.
+      uint64_t BitOffset = getFieldBitOffset(*Field);
+      if (uint64_t(Context.toBits(bitsToCharUnits(BitOffset))) != BitOffset) {
+        // This bitfield's start is not at a char boundary. It must
+        // share an access unit with the previous bitfield.
+        assert(Tail == BitOffset && "Packing non-contiguous bitfield");
+        Tail += Field->getBitWidthValue(Context);
+        if (Field->getType().isVolatileQualified())
+          SeenVolatile = true;
+        continue;
       }
-      ++Field;
-      continue;
+
+      // End run. Move the end to the next char boundary (bTCU truncates).
+      CharUnits EndOffset = bitsToCharUnits(Tail + Context.getCharWidth() - 1);
+      AUs.emplace_back(Run, Field, StartOffset, EndOffset, SeenVolatile);
+      Run = FieldEnd;
+
+      // Fallthrough -- this field will start a new run.
     }
 
-    // If the start field of a new run is better as a single run, or
-    // if current field (or consecutive fields) is better as a single run, or
-    // if current field has zero width bitfield and either
-    // UseZeroLengthBitfieldAlignment or UseBitFieldTypeAlignment is set to
-    // true, or
-    // if the offset of current field is inconsistent with the offset of
-    // previous field plus its offset,
-    // skip the block below and go ahead to emit the storage.
-    // Otherwise, try to add bitfields to the run.
-    if (!StartFieldAsSingleRun && Field != FieldEnd &&
-        !IsBetterAsSingleFieldRun(Tail - StartBitOffset, StartBitOffset) &&
-        (!Field->isZeroLengthBitField(Context) ||
-         (!Context.getTargetInfo().useZeroLengthBitfieldAlignment() &&
-          !Context.getTargetInfo().useBitFieldTypeAlignment())) &&
-        Tail == getFieldBitOffset(*Field)) {
-      Tail += Field->getBitWidthValue(Context);
-      ++Field;
-      continue;
+    assert(Run == FieldEnd);
+    // We're starting a new run.
+    if (!Field->isZeroLengthBitField(Context) ||
+        Context.getTargetInfo().useZeroLengthBitfieldAlignment() ||
+        Context.getTargetInfo().useBitFieldTypeAlignment()) {
+      // A non-zero length field starts a run, or a zero-length one might
+      // create a barrier (ABI-dependent).
+      StartBitOffset = getFieldBitOffset(*Field);
+      StartOffset = bitsToCharUnits(StartBitOffset);
+      assert(uint64_t(Context.toBits(StartOffset)) == StartBitOffset &&
+             "Bitrun doesn't start at a char unit");
+      Tail = StartBitOffset;
+      if (Field->isZeroLengthBitField(Context))
+        // Place a stop marker
+        AUs.emplace_back(Field, StartOffset);
+      else {
+        // Start a run
+        SeenVolatile = Field->getType().isVolatileQualified();
+        Tail += Field->getBitWidthValue(Context);
+        Run = Field;
+      }
     }
-
-    // We've hit a break-point in the run and need to emit a storage field.
-    llvm::Type *Type = getIntNType(Tail - StartBitOffset);
-    // Add the storage member to the record and set the bitfield info for all of
-    // the bitfields in the run.  Bitfields get the offset of their storage but
-    // come afterward and remain there after a stable sort.
-    Members.push_back(StorageInfo(bitsToCharUnits(StartBitOffset), Type));
-    for (; Run != Field; ++Run)
-      Members.push_back(MemberInfo(bitsToCharUnits(StartBitOffset),
-                                   MemberInfo::Field, nullptr, *Run));
-    Run = FieldEnd;
-    StartFieldAsSingleRun = false;
   }
+  if (Run != FieldEnd) {
+    // End run. Move the end to the next char boundary (bTCU truncates).
+    CharUnits EndOffset = bitsToCharUnits(Tail + Context.getCharWidth() - 1);
+    AUs.emplace_back(Run, Field, StartOffset, EndOffset, SeenVolatile);
+  }
+
+  if (!Types.getCodeGenOpts().FineGrainedBitfieldAccesses) {
+    // Append a stop marker -- we can extend up to this.
+    AUs.emplace_back(FieldEnd, Limit);
+
+    // Concatenate mergeable units. We can do this by only scanning forwards,
+    // finding a good point to merge and then repeating. there are two cases of
+    // interest.
+
+    // 1. Concatenating the next unit with the current accumulation results in a
+    // type no bigger than a register.
+
+    // 2. The current accumulation's underlying type extends into the next
+    // accumulation, and, iff this requires a bigger type, then its still no
+    // bigger than a register.
+
+    // If we're still nicely aligned (or unaligned accesses are ok), do the
+    // concatenation. The semantics of volatile bitfields aren't
+    // well-defined, but generally we want to not grow the access larger than
+    // necessary. We do not merge access units containing a volatile. (This
+    // means that the access units of a record with explicitly volatile
+    // bitfields will be different to the same one without, but accessed through
+    // a pointer to volatile. (See volatile bitfields are evil.)
+    CharUnits RecordAlign = Layout.getAlignment();
+    CharUnits RegSize =
+        bitsToCharUnits(Context.getTargetInfo().getRegisterWidth());
+    bool UnalignedOk =
+        Context.getTargetInfo().hasCheapUnalignedBitfieldAccess();
+    auto AlignmentOk = [&](SmallVector<AccessUnit, 8>::iterator AU,
+                           llvm::Type *T) -> bool {
+      if (UnalignedOk)
+        return true;
+      CharUnits Align = getAlignment(T);
+      if (Align > RecordAlign)
+        return false; // We're over-aligned within the record.
+      if (AU->getStart().isMultipleOf(Align))
+        return true; // We're placed at a suitable alignment.
+      return false;
+    };
+
+    for (auto U = AUs.begin(); U != AUs.end(); ++U) {
+      if (U->isBarrier())
+        continue;
+
+      llvm::Type *Type = getIntNType(Context.toBits(U->getSize()));
+      if (AlignmentOk(U, Type)) {
+        CharUnits Size = getSize(Type);
+        CharUnits End = U->getStart() + Size;
+        auto HWM = U, Probe = U + 1;
+
+        if (!U->hasVolatile())
+          // The final Unit is a barrier, so no need to check for end.
+          while (!(Probe->isBarrier() || Probe->hasVolatile()) &&
+                 Probe->StartsBefore(End, Size < RegSize)) {
+            // Absorb the next unit, either because we overlap it, or we abut
+            // and are currently smaller than a register.
+            if (Probe->ExtendsBeyond(End)) {
+              Type = getIntNType(Context.toBits(U->getSize(*Probe)));
+              Size = getSize(Type);
+              if (Size > RegSize)
+                break;
+              if (!AlignmentOk(U, Type))
+                break;
+              End = U->getStart() + Size;
+            }
+            if (Probe->EndsAt(End))
+              // This is a good place to stop, remember it.
+              HWM = Probe;
+            ++Probe;
+          }
+
+        if (!Probe->StartsBefore(End)) {
+          // We're doing bit manipulation anyway, there's no point working with
+          // an awkward size (unless we have to).
+          HWM = Probe - 1;
+          HWM->setEnd(End);
+        }
+
+        if (HWM != U) {
+          // Merge access units [U,HWM].
+          HWM->MergeFrom(*U);
+          AUs.erase(U, HWM);
+        }
+      }
+    }
+  }
+
+  // Insert the access units.
+  for (const auto &U : AUs)
+    if (!U.isBarrier()) {
+      llvm::Type *Type = getIntNType(Context.toBits(U.getSize()));
+      // Add the storage member for the access unit to the record and set the
+      // bitfield info for all of the bitfields in the run. Bitfields get the
+      // offset of their storage but come afterward and remain there after a
+      // stable sort.
+      CharUnits Offset = U.getStart();
+      Members.push_back(StorageInfo(Offset, Type));
+      for (auto F : U)
+        if (F->isBitField() && !F->isZeroLengthBitField(Context))
+          Members.push_back(MemberInfo(Offset, MemberInfo::Field, nullptr, F));
+    }
 }
 
 void CGRecordLowering::accumulateBases() {

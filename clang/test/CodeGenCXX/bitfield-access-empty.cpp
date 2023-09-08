@@ -46,13 +46,13 @@ struct P1 {
   unsigned b : 16;
 } p1;
 // CHECK-LABEL: LLVMType:%struct.P1 =
-// CHECK-SAME: type { i16, i16 }
+// CHECK-SAME: type { i32 }
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.P1 =
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:2
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:2
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECK-NEXT: ]>
 
 struct P2 {
@@ -61,13 +61,13 @@ struct P2 {
   unsigned b : 15;
 } p2;
 // CHECK-LABEL: LLVMType:%struct.P2 =
-// CHECK-SAME: type { i16, i16 }
+// CHECK-SAME: type { i32 }
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.P2 =
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:0 StorageSize:16 StorageOffset:2
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:1 Size:15 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:1 Size:15 IsSigned:0 StorageSize:16 StorageOffset:2
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:15 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:17 Size:15 IsSigned:0 StorageSize:32 StorageOffset:0
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:1 Size:15 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECK-NEXT: ]>
 
 struct P3 {
@@ -110,7 +110,7 @@ struct P6 {
   unsigned c;
 } p6;
 // CHECK-LABEL: LLVMType:%struct.P6 =
-// CHECK-SAME: type { i24, i32 }
+// CHECK-SAME: type { i32, i32 }
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.P6 =
 // CHECK: BitFields:[
 // CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:32 StorageOffset:0
@@ -126,11 +126,11 @@ struct P7 {
   unsigned c;
 } p7;
 // CHECK-LABEL: LLVMType:%struct.P7 =
-// CHECK-SAME: type { [3 x i8], %struct.Empty, i32 }
+// CHECK-SAME: type { i16, i8, %struct.Empty, i32 }
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.P7 =
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:24 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:0 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:0 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:24 StorageOffset:0
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>

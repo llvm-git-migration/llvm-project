@@ -35,7 +35,7 @@ struct P1 {
 // CHECK-LABEL: LLVMType:%struct.P1 =
 // CHECKT-SAME: type { i8, i8, [2 x i8] }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
@@ -43,18 +43,14 @@ struct P1 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P2 {
@@ -66,7 +62,7 @@ struct P2 {
 // CHECK-LABEL: LLVMType:%struct.P2 =
 // CHECKT-SAME: type { i8, i8, i8, i8 }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
@@ -74,22 +70,14 @@ struct P2 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P3 {
@@ -102,7 +90,7 @@ struct P3 {
 // CHECK-LABEL: LLVMType:%struct.P3 =
 // CHECKT-SAME: type { i8, [3 x i8], i8, [3 x i8] }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
@@ -110,26 +98,14 @@ struct P3 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P4 {
@@ -141,7 +117,7 @@ struct P4 {
 // CHECK-LABEL: LLVMType:%struct.P4 =
 // CHECKT-SAME: type { i8, [3 x i8], i8, [3 x i8] }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
@@ -149,22 +125,14 @@ struct P4 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P5 {
@@ -175,7 +143,7 @@ struct P5 {
 // CHECK-LABEL: LLVMType:%struct.P5 =
 // CHECKT-SAME: type { i8, [3 x i8], i8, [3 x i8] }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
@@ -183,18 +151,14 @@ struct P5 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P6 {
@@ -207,7 +171,7 @@ struct P6 {
 // CHECK-LABEL: LLVMType:%struct.P6 =
 // CHECKT-SAME: type { i8, [3 x i8], i8, [3 x i8] }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
@@ -215,26 +179,14 @@ struct P6 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:4
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 struct P7 {
@@ -245,7 +197,7 @@ struct P7 {
 // CHECK-LABEL: LLVMType:%struct.P7 =
 // CHECKT-SAME: type { i8, i8, i8, i8 }
 // CHECKNT-SAME: type { i16 }
-// CHECKNTZ-SAME: type { i16 }
+// CHECKNTZ-SAME: type { i8, i8 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
@@ -253,18 +205,14 @@ struct P7 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:0
+// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:1
 // CHECK-NEXT: ]>
 
 // And with forced alignment for !useZeroLengthBitfieldAlignment machines (eg
@@ -285,17 +233,13 @@ struct __attribute__ ((aligned (2))) P7_align {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:8 StorageOffset:2
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECK-NEXT: ]>
 
@@ -315,17 +259,13 @@ struct P8 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:0 StorageSize:8 StorageOffset:2
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:9 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:2 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:9 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:2 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECK-NEXT: ]>
 
@@ -345,17 +285,13 @@ struct P9 {
 // CHECKT-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:0 StorageSize:8 StorageOffset:1
 
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:9 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:2 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:9 Size:0 IsSigned:1 StorageSize:16 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:2 Size:7 IsSigned:0 StorageSize:16 StorageOffset:0
 // CHECK-NEXT: ]>
 
@@ -367,8 +303,8 @@ struct __attribute__((aligned(4))) P10 {
 } p10;
 // CHECK-LABEL: LLVMType:%struct.P10 =
 // CHECKT-SAME: type { i24 }
-// CHECKNT-SAME: type { i24 }
-// CHECKNTZ-SAME: type { i24 }
+// CHECKNT-SAME: type { i32 }
+// CHECKNTZ-SAME: type { i32 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
@@ -380,20 +316,16 @@ struct __attribute__((aligned(4))) P10 {
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:14 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:21 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:18 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:11 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:11 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:14 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:21 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:18 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:11 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:11 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECK-NEXT: ]>
 
 struct __attribute__((aligned(4))) P11 {
@@ -404,8 +336,8 @@ struct __attribute__((aligned(4))) P11 {
 } p11;
 // CHECK-LABEL: LLVMType:%struct.P11 =
 // CHECKT-SAME: type { i24 }
-// CHECKNT-SAME: type { i24 }
-// CHECKNTZ-SAME: type { i24 }
+// CHECKNT-SAME: type { i32 }
+// CHECKNTZ-SAME: type { i32 }
 // CHECK: BitFields:[
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
@@ -417,18 +349,14 @@ struct __attribute__((aligned(4))) P11 {
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:14 Size:10 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNT-LE-NEXT: <CGBitFieldInfo Offset:24 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:18 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:10 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:14 Size:10 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNTZ-LE-NEXT: <CGBitFieldInfo Offset:24 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:18 Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
 // CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:10 IsSigned:0 StorageSize:32 StorageOffset:0
-// CHECKNTZ-BE-NEXT: <CGBitFieldInfo Offset:8 Size:0 IsSigned:1 StorageSize:32 StorageOffset:0
 // CHECK-NEXT: ]>

@@ -44,7 +44,7 @@ struct Pod {
   int b : 8;
 } P;
 // CHECK-LABEL: LLVMType:%struct.Pod =
-// CHECK-SAME: type { i24 }
+// CHECK-SAME: type { i32 }
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.Pod =
 // CHECK: BitFields:[
 // CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:32 StorageOffset:0
@@ -59,13 +59,11 @@ struct __attribute__((packed)) PPod {
   int b : 8;
 } PP;
 // CHECK-LABEL: LLVMType:%struct.PPod =
-// CHECK-SAME: type { [3 x i8] }
+// CHECK-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.PPod =
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
 
 // Cannot use tail padding
@@ -75,13 +73,11 @@ struct NonPod {
   int b : 8;
 } NP;
 // CHECK-LABEL: LLVMType:%struct.NonPod =
-// CHECK-SAME: type { [3 x i8], i8 }
-// CHECK-NEXT: NonVirtualBaseLLVMType:%struct.NonPod.base = type { [3 x i8] }
+// CHECK-SAME: type <{ i16, i8, i8 }>
+// CHECK-NEXT: NonVirtualBaseLLVMType:%struct.NonPod.base = type <{ i16, i8 }>
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
 
 // No tail padding
@@ -91,11 +87,9 @@ struct __attribute__((packed)) PNonPod {
   int b : 8;
 } PNP;
 // CHECK-LABEL: LLVMType:%struct.PNonPod =
-// CHECK-SAME: type { [3 x i8] }
+// CHECK-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.PNonPod =
 // CHECK: BitFields:[
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// CHECK-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// CHECK-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
