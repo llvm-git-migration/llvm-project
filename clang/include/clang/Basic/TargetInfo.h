@@ -266,6 +266,9 @@ protected:
   LLVM_PREFERRED_TYPE(bool)
   unsigned AllowAMDGPUUnsafeFPAtomics : 1;
 
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned HasCheapUnalignedBitfieldAccess : 1;
+
   unsigned ARMCDECoprocMask : 8;
 
   unsigned MaxOpenCLWorkGroupSize;
@@ -856,6 +859,13 @@ public:
     // width, we can introduce a new variable for this if/when some target wants
     // it.
     return PointerWidth;
+  }
+
+  /// Return true, iff unaligned accesses are cheap. This affects placement and
+  /// accumlation of bitfield access units. (Not the ABI-mandated placement of
+  /// the bitfields themselves.)
+  bool hasCheapUnalignedBitfieldAccess() const {
+    return HasCheapUnalignedBitfieldAccess;
   }
 
   /// \brief Returns the default value of the __USER_LABEL_PREFIX__ macro,

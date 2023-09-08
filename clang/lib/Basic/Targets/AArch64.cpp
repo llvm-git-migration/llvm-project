@@ -186,6 +186,8 @@ AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
   assert(UseBitFieldTypeAlignment && "bitfields affect type alignment");
   UseZeroLengthBitfieldAlignment = true;
 
+  HasCheapUnalignedBitfieldAccess = true;
+
   // AArch64 targets default to using the ARM C++ ABI.
   TheCXXABI.set(TargetCXXABI::GenericAArch64);
 
@@ -907,8 +909,11 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
       FPU |= NeonMode;
       HasSM4 = true;
     }
-    if (Feature == "+strict-align")
+    if (Feature == "+strict-align") {
       HasUnaligned = false;
+      HasCheapUnalignedBitfieldAccess = false;
+    }
+
     // All predecessor archs are added but select the latest one for ArchKind.
     if (Feature == "+v8a" && ArchInfo->Version < llvm::AArch64::ARMV8A.Version)
       ArchInfo = &llvm::AArch64::ARMV8A;
