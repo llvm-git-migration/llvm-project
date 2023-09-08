@@ -186,6 +186,8 @@ AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
   assert(UseBitFieldTypeAlignment && "bitfields affect type alignment");
   UseZeroLengthBitfieldAlignment = true;
 
+  HasCheapUnalignedBitfieldAccess = true;
+
   // AArch64 targets default to using the ARM C++ ABI.
   TheCXXABI.set(TargetCXXABI::GenericAArch64);
 
@@ -1023,6 +1025,9 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
   }
   if (HasNoSVE)
     FPU &= ~SveMode;
+
+  if (!HasUnaligned)
+    HasCheapUnalignedBitfieldAccess = false;
 
   return true;
 }

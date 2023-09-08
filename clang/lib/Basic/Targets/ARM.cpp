@@ -134,6 +134,9 @@ void ARMTargetInfo::setArchInfo(llvm::ARM::ArchKind Kind) {
   // cache CPU related strings
   CPUAttr = getCPUAttr();
   CPUProfile = getCPUProfile();
+
+  if (ArchVersion < 7)
+    HasCheapUnalignedBitfieldAccess = false;
 }
 
 void ARMTargetInfo::setAtomic() {
@@ -352,6 +355,8 @@ ARMTargetInfo::ARMTargetInfo(const llvm::Triple &Triple,
   // that follows it, `bar', `bar' will be aligned as the  type of the
   // zero length bitfield.
   UseZeroLengthBitfieldAlignment = true;
+
+  HasCheapUnalignedBitfieldAccess = true;
 
   if (Triple.getOS() == llvm::Triple::Linux ||
       Triple.getOS() == llvm::Triple::UnknownOS)
@@ -639,6 +644,9 @@ bool ARMTargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
     Features.push_back("+neonfp");
   else if (FPMath == FP_VFP)
     Features.push_back("-neonfp");
+
+  if (!Unaligned)
+    HasCheapUnalignedBitfieldAccess = false;
 
   return true;
 }
