@@ -1,0 +1,42 @@
+REQUIRES: x86
+RUN: split-file %s %t.dir && cd %t.dir
+
+RUN: llvm-mc -filetype=obj -triple=x86_64-windows test.s -o test.obj
+RUN: llvm-mc -filetype=obj -triple=x86_64-windows weak2.s -o weak2.obj
+RUN: llvm-mc -filetype=obj -triple=x86_64-windows weak-def.s -o weak-def.obj
+
+RUN: not lld-link -machine:amd64 -dll -noentry -out:test.dll test.obj weak2.obj 2>&1 | FileCheck -check-prefix=ERR %s
+
+ERR:      error: undefined symbol: testsym
+ERR-NEXT: >>> referenced by test.obj
+ERR-EMPTY:
+ERR-NEXT: error: undefined symbol: weak1
+ERR-NEXT: >>> referenced by test.obj
+ERR-NEXT: >>> referenced by weak2.obj
+ERR-EMPTY:
+ERR-NEXT: error: undefined symbol: weak2
+ERR-NEXT: >>> referenced by test.obj
+ERR-NEXT: >>> referenced by weak2.obj
+
+Depending on symbol processing order, we may have temporary weak reference cycles:
+
+RUN: lld-link -machine:amd64 -dll -noentry -out:test.dll test.obj weak2.obj weak-def.obj
+RUN: lld-link -machine:amd64 -dll -noentry -out:test.dll test.obj weak-def.obj weak2.obj
+RUN: lld-link -machine:amd64 -dll -noentry -out:test.dll weak-def.obj test.obj weak2.obj
+
+#--- test.s
+    .weak testsym
+.set testsym, weak1
+    .weak weak1
+.set weak1, weak2
+    .section .test, "r"
+
+#--- weak2.s
+    .weak weak2
+.set weak2, weak1
+
+#--- weak-def.s
+    .globl weak1
+    .data
+weak1:
+    .word 0
