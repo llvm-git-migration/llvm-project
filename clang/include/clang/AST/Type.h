@@ -4578,6 +4578,10 @@ public:
     return static_cast<RefQualifierKind>(FunctionTypeBits.RefQualifier);
   }
 
+  bool isAbominable() const {
+    return !getMethodQuals().empty() || getRefQualifier() != RQ_None;
+  }
+
   using param_type_iterator = const QualType *;
 
   ArrayRef<QualType> param_types() const {
