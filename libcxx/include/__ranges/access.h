@@ -19,7 +19,6 @@
 #include <__type_traits/is_reference.h>
 #include <__type_traits/remove_cvref.h>
 #include <__type_traits/remove_reference.h>
-#include <__utility/auto_cast.h>
 #include <__utility/declval.h>
 #include <cstddef>
 
@@ -46,7 +45,7 @@ namespace __begin {
     __can_borrow<_Tp> &&
     __workaround_52970<_Tp> &&
     requires(_Tp&& __t) {
-      { _LIBCPP_AUTO_CAST(__t.begin()) } -> input_or_output_iterator;
+      { auto(__t.begin()) } -> input_or_output_iterator;
     };
 
   void begin(auto&) = delete;
@@ -58,7 +57,7 @@ namespace __begin {
     __can_borrow<_Tp> &&
     __class_or_enum<remove_cvref_t<_Tp>> &&
     requires(_Tp && __t) {
-      { _LIBCPP_AUTO_CAST(begin(__t)) } -> input_or_output_iterator;
+      { auto(begin(__t)) } -> input_or_output_iterator;
     };
 
   struct __fn {
@@ -79,17 +78,17 @@ namespace __begin {
     template <class _Tp>
       requires __member_begin<_Tp>
     [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-      noexcept(noexcept(_LIBCPP_AUTO_CAST(__t.begin())))
+      noexcept(noexcept(auto(__t.begin())))
     {
-      return _LIBCPP_AUTO_CAST(__t.begin());
+      return auto(__t.begin());
     }
 
     template <class _Tp>
       requires __unqualified_begin<_Tp>
     [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-      noexcept(noexcept(_LIBCPP_AUTO_CAST(begin(__t))))
+      noexcept(noexcept(auto(begin(__t))))
     {
-      return _LIBCPP_AUTO_CAST(begin(__t));
+      return auto(begin(__t));
     }
 
     void operator()(auto&&) const = delete;
@@ -118,7 +117,7 @@ namespace __end {
     __workaround_52970<_Tp> &&
     requires(_Tp&& __t) {
       typename iterator_t<_Tp>;
-      { _LIBCPP_AUTO_CAST(__t.end()) } -> sentinel_for<iterator_t<_Tp>>;
+      { auto(__t.end()) } -> sentinel_for<iterator_t<_Tp>>;
     };
 
   void end(auto&) = delete;
@@ -131,7 +130,7 @@ namespace __end {
     __class_or_enum<remove_cvref_t<_Tp>> &&
     requires(_Tp && __t) {
       typename iterator_t<_Tp>;
-      { _LIBCPP_AUTO_CAST(end(__t)) } -> sentinel_for<iterator_t<_Tp>>;
+      { auto(end(__t)) } -> sentinel_for<iterator_t<_Tp>>;
     };
 
   struct __fn {
@@ -145,17 +144,17 @@ namespace __end {
     template <class _Tp>
       requires __member_end<_Tp>
     [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-      noexcept(noexcept(_LIBCPP_AUTO_CAST(__t.end())))
+      noexcept(noexcept(auto(__t.end())))
     {
-      return _LIBCPP_AUTO_CAST(__t.end());
+      return auto(__t.end());
     }
 
     template <class _Tp>
       requires __unqualified_end<_Tp>
     [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-      noexcept(noexcept(_LIBCPP_AUTO_CAST(end(__t))))
+      noexcept(noexcept(auto(end(__t))))
     {
-      return _LIBCPP_AUTO_CAST(end(__t));
+      return auto(end(__t));
     }
 
     void operator()(auto&&) const = delete;

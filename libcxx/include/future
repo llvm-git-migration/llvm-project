@@ -383,7 +383,6 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 #include <__system_error/error_condition.h>
 #include <__type_traits/aligned_storage.h>
 #include <__type_traits/strip_signature.h>
-#include <__utility/auto_cast.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <mutex>
@@ -2198,16 +2197,16 @@ async(launch __policy, _Fp&& __f, _Args&&... __args)
     {
 #endif
         if (__does_policy_contain(__policy, launch::async))
-        return _VSTD::__make_async_assoc_state<_Rp>(_BF(_LIBCPP_AUTO_CAST(_VSTD::forward<_Fp>(__f)),
-                                                        _LIBCPP_AUTO_CAST(_VSTD::forward<_Args>(__args))...));
+        return _VSTD::__make_async_assoc_state<_Rp>(_BF(auto(_VSTD::forward<_Fp>(__f)),
+                                                        auto(_VSTD::forward<_Args>(__args))...));
 #ifndef _LIBCPP_HAS_NO_EXCEPTIONS
     }
     catch ( ... ) { if (__policy == launch::async) throw ; }
 #endif
 
     if (__does_policy_contain(__policy, launch::deferred))
-        return _VSTD::__make_deferred_assoc_state<_Rp>(_BF(_LIBCPP_AUTO_CAST(_VSTD::forward<_Fp>(__f)),
-                                                           _LIBCPP_AUTO_CAST(_VSTD::forward<_Args>(__args))...));
+        return _VSTD::__make_deferred_assoc_state<_Rp>(_BF(auto(_VSTD::forward<_Fp>(__f)),
+                                                           auto(_VSTD::forward<_Args>(__args))...));
     return future<_Rp>{};
 }
 

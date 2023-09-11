@@ -39,7 +39,6 @@
 #include <__type_traits/is_nothrow_constructible.h>
 #include <__type_traits/make_unsigned.h>
 #include <__type_traits/remove_cvref.h>
-#include <__utility/auto_cast.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <cstddef>
@@ -205,9 +204,9 @@ struct __fn {
     requires __is_empty_view<remove_cvref_t<_Range>>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI
   constexpr auto operator()(_Range&& __range, _Np&&) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(std::forward<_Range>(__range))))
-    -> decltype(      _LIBCPP_AUTO_CAST(std::forward<_Range>(__range)))
-    { return          _LIBCPP_AUTO_CAST(std::forward<_Range>(__range)); }
+    noexcept(noexcept(auto(std::forward<_Range>(__range))))
+    -> decltype(      auto(std::forward<_Range>(__range)))
+    { return          auto(std::forward<_Range>(__range)); }
 
   // [range.drop.overview]: the `span | basic_string_view | iota_view | subrange (StoreSize == false)` case.
   template <class _Range,
@@ -289,9 +288,9 @@ struct __fn {
     requires (__is_repeat_specialization<_RawRange> && !sized_range<_RawRange>)
   _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI
   constexpr auto operator()(_Range&& __range, _Np&&) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(std::forward<_Range>(__range))))
-    -> decltype(      _LIBCPP_AUTO_CAST(std::forward<_Range>(__range)))
-    { return          _LIBCPP_AUTO_CAST(std::forward<_Range>(__range)); }
+    noexcept(noexcept(auto(std::forward<_Range>(__range))))
+    -> decltype(      auto(std::forward<_Range>(__range)))
+    { return          auto(std::forward<_Range>(__range)); }
 #endif
 // clang-format on
 

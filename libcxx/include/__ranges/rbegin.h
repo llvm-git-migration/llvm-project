@@ -21,7 +21,6 @@
 #include <__type_traits/is_reference.h>
 #include <__type_traits/remove_cvref.h>
 #include <__type_traits/remove_reference.h>
-#include <__utility/auto_cast.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -40,7 +39,7 @@ concept __member_rbegin =
   __can_borrow<_Tp> &&
   __workaround_52970<_Tp> &&
   requires(_Tp&& __t) {
-    { _LIBCPP_AUTO_CAST(__t.rbegin()) } -> input_or_output_iterator;
+    { auto(__t.rbegin()) } -> input_or_output_iterator;
   };
 
 void rbegin(auto&) = delete;
@@ -52,7 +51,7 @@ concept __unqualified_rbegin =
   __can_borrow<_Tp> &&
   __class_or_enum<remove_cvref_t<_Tp>> &&
   requires(_Tp&& __t) {
-    { _LIBCPP_AUTO_CAST(rbegin(__t)) } -> input_or_output_iterator;
+    { auto(rbegin(__t)) } -> input_or_output_iterator;
   };
 
 template <class _Tp>
@@ -69,17 +68,17 @@ struct __fn {
   template <class _Tp>
     requires __member_rbegin<_Tp>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(__t.rbegin())))
+    noexcept(noexcept(auto(__t.rbegin())))
   {
-    return _LIBCPP_AUTO_CAST(__t.rbegin());
+    return auto(__t.rbegin());
   }
 
   template <class _Tp>
     requires __unqualified_rbegin<_Tp>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(rbegin(__t))))
+    noexcept(noexcept(auto(rbegin(__t))))
   {
-    return _LIBCPP_AUTO_CAST(rbegin(__t));
+    return auto(rbegin(__t));
   }
 
   template <class _Tp>

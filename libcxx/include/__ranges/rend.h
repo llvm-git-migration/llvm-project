@@ -22,7 +22,6 @@
 #include <__type_traits/is_reference.h>
 #include <__type_traits/remove_cvref.h>
 #include <__type_traits/remove_reference.h>
-#include <__utility/auto_cast.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -42,7 +41,7 @@ concept __member_rend =
   __workaround_52970<_Tp> &&
   requires(_Tp&& __t) {
     ranges::rbegin(__t);
-    { _LIBCPP_AUTO_CAST(__t.rend()) } -> sentinel_for<decltype(ranges::rbegin(__t))>;
+    { auto(__t.rend()) } -> sentinel_for<decltype(ranges::rbegin(__t))>;
   };
 
 void rend(auto&) = delete;
@@ -55,7 +54,7 @@ concept __unqualified_rend =
   __class_or_enum<remove_cvref_t<_Tp>> &&
   requires(_Tp&& __t) {
     ranges::rbegin(__t);
-    { _LIBCPP_AUTO_CAST(rend(__t)) } -> sentinel_for<decltype(ranges::rbegin(__t))>;
+    { auto(rend(__t)) } -> sentinel_for<decltype(ranges::rbegin(__t))>;
   };
 
 template <class _Tp>
@@ -73,17 +72,17 @@ public:
   template <class _Tp>
     requires __member_rend<_Tp>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(__t.rend())))
+    noexcept(noexcept(auto(__t.rend())))
   {
-    return _LIBCPP_AUTO_CAST(__t.rend());
+    return auto(__t.rend());
   }
 
   template <class _Tp>
     requires __unqualified_rend<_Tp>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto operator()(_Tp&& __t) const
-    noexcept(noexcept(_LIBCPP_AUTO_CAST(rend(__t))))
+    noexcept(noexcept(auto(rend(__t))))
   {
-    return _LIBCPP_AUTO_CAST(rend(__t));
+    return auto(rend(__t));
   }
 
   template <class _Tp>
