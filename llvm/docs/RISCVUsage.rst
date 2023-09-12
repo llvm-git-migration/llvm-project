@@ -203,6 +203,9 @@ The primary goal of experimental support is to assist in the process of ratifica
 ``experimental-zicfilp``
   LLVM implements the `0.2 draft specification <https://github.com/riscv/riscv-cfi/releases/tag/v0.2.0>`__.
 
+``experimental-zicfiss``
+  LLVM implements the `0.3.1 draft specification <https://github.com/riscv/riscv-cfi/releases/tag/v0.3.1>`__.
+
 ``experimental-zicond``
   LLVM implements the `1.0-rc1 draft specification <https://github.com/riscv/riscv-zicond/releases/tag/v1.0-rc1>`__.
 

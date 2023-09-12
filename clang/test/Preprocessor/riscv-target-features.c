@@ -115,6 +115,7 @@
 // CHECK-NOT: __riscv_zfa {{.*$}}
 // CHECK-NOT: __riscv_zfbfmin {{.*$}}
 // CHECK-NOT: __riscv_zicfilp {{.*$}}
+// CHECK-NOT: __riscv_zicfiss {{.*$}}
 // CHECK-NOT: __riscv_zicond {{.*$}}
 // CHECK-NOT: __riscv_ztso {{.*$}}
 // CHECK-NOT: __riscv_zvbb {{.*$}}
@@ -1246,3 +1247,11 @@
 // RUN: -march=rv64i_zve32x_zvkt1p0 -x c -E -dM %s \
 // RUN: -o - | FileCheck --check-prefix=CHECK-ZVKT-EXT %s
 // CHECK-ZVKT-EXT: __riscv_zvkt 1000000{{$}}
+
+// RUN: %clang -target riscv32 -menable-experimental-extensions \
+// RUN: -march=rv32izicfiss0p3 -x c -E -dM %s \
+// RUN: -o - | FileCheck --check-prefix=CHECK-ZICFISS-EXT %s
+// RUN: %clang -target riscv64 -menable-experimental-extensions \
+// RUN: -march=rv64izicfiss0p3 -x c -E -dM %s \
+// RUN: -o - | FileCheck --check-prefix=CHECK-ZICFISS-EXT %s
+// CHECK-ZICFISS-EXT: __riscv_zicfiss 3000{{$}}

@@ -1,0 +1,86 @@
+//===------ RISCVInstrInfoZicfiss.td - RISC-V Zicfiss -*- tablegen -*------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// Instruction class templates
+//===----------------------------------------------------------------------===//
+
+class RVC_SSInst<bits<5> rs1val, RegisterClass reg_class, string opcodestr> :
+  RVInst16<(outs), (ins reg_class:$rs1), opcodestr, "$rs1", [], InstFormatOther> {
+  let Inst{15-13} = 0b011;
+  let Inst{12} = 0;
+  let Inst{11-7} = rs1val;
+  let Inst{6-2} = 0b00000;
+  let Inst{1-0} = 0b01;
+  let DecoderMethod = "decodeCSSPushPopchk";
+}
+
+//===----------------------------------------------------------------------===//
+// Instructions
+//===----------------------------------------------------------------------===//
+
+let Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
+let DecoderNamespace = "RV32Zicfiss", Predicates = [HasStdExtZicfiss, IsRV32] in
+def SSLW : RVInstI<0b100, OPC_SYSTEM, (outs GPRRA:$rd), (ins), "sslw", "$rd"> {
+  let rs1 = 0;
+  let imm12 = 0b100000011100;
+}
+
+let Predicates = [HasStdExtZicfiss, IsRV64] in
+def SSLD : RVInstI<0b100, OPC_SYSTEM, (outs GPRRA:$rd), (ins), "ssld", "$rd"> {
+  let rs1 = 0;
+  let imm12 = 0b100000011100;
+}
+} // Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0
+
+let Predicates = [HasStdExtZicfiss] in {
+let Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
+def SSPOPCHK : RVInstI<0b100, OPC_SYSTEM, (outs), (ins GPRRA:$rs1), "sspopchk",
+                       "$rs1"> {
+  let rd = 0;
+  let imm12 = 0b100000011100;
+} // Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0
+
+let Uses = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
+def SSINCP : RVInstI<0b100, OPC_SYSTEM, (outs), (ins), "ssincp", ""> {
+  let imm12 = 0b100000011100;
+  let rs1 = 0b00000;
+  let rd = 0b00000;
+}
+
+def SSRDP : RVInstI<0b100, OPC_SYSTEM, (outs GPRNoX0:$rd), (ins), "ssrdp", "$rd"> {
+  let imm12 = 0b100000011101;
+  let rs1 = 0b00000;
+}
+} // Uses = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 0
+
+let Uses = [SSP], Defs = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def SSPUSH : RVInstR<0b1000001, 0b100, OPC_SYSTEM, (outs), (ins GPRRA:$rs2),
+                     "sspush", "$rs2"> {
+  let rd = 0b00000;
+  let rs1 = 0b00000;
+}
+} // Predicates = [HasStdExtZicfiss]
+
+let Predicates = [HasStdExtZicfiss, HasStdExtCOrZca] in {
+let Uses = [SSP], Defs = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def C_SSPUSH : RVC_SSInst<0b00001, GPRX1, "c.sspush">;
+
+let Uses = [SSP], Defs = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def C_SSPOPCHK : RVC_SSInst<0b00101, GPRX5, "c.sspopchk">;
+} // Predicates = [HasStdExtZicfiss, HasStdExtCOrZca]
+
+let Predicates = [HasStdExtZicfiss, HasStdExtC], Uses = [SSP], Defs = [SSP],
+    hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+def C_SSINCP : RVInst16<(outs), (ins), "c.ssincp", "", [], InstFormatOther> {
+  let Inst{15-13} = 0b011;
+  let Inst{12} = 0;
+  let Inst{11-7} = 0b00011;
+  let Inst{6-2} = 0b00000;
+  let Inst{1-0} = 0b01;
+}
