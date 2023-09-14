@@ -12,21 +12,17 @@ define amdgpu_kernel void @v3i8_liveout(ptr addrspace(1) %src1, ptr addrspace(1)
 ; GFX906-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX906-NEXT:    global_load_dword v2, v5, s[4:5]
 ; GFX906-NEXT:    s_waitcnt vmcnt(0)
-; GFX906-NEXT:    v_lshrrev_b32_e32 v3, 16, v2
-; GFX906-NEXT:    v_lshrrev_b32_e32 v4, 8, v2
+; GFX906-NEXT:    v_perm_b32 v2, v2, v2, s4
 ; GFX906-NEXT:    s_and_saveexec_b64 s[0:1], vcc
 ; GFX906-NEXT:    s_cbranch_execz .LBB0_2
 ; GFX906-NEXT:  ; %bb.1: ; %bb.1
 ; GFX906-NEXT:    global_load_dword v2, v5, s[6:7]
 ; GFX906-NEXT:    s_waitcnt vmcnt(0)
-; GFX906-NEXT:    v_lshrrev_b32_e32 v3, 16, v2
-; GFX906-NEXT:    v_lshrrev_b32_e32 v4, 8, v2
+; GFX906-NEXT:    v_perm_b32 v2, v0, v0, s4
 ; GFX906-NEXT:  .LBB0_2: ; %bb.2
 ; GFX906-NEXT:    s_or_b64 exec, exec, s[0:1]
-; GFX906-NEXT:    v_lshlrev_b16_e32 v0, 8, v4
-; GFX906-NEXT:    v_or_b32_sdwa v0, v2, v0 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:BYTE_0 src1_sel:DWORD
-; GFX906-NEXT:    global_store_byte v1, v3, s[2:3] offset:2
-; GFX906-NEXT:    global_store_short v1, v0, s[2:3]
+; GFX906-NEXT:    global_store_byte_d16_hi v1, v2, s[2:3] offset:2
+; GFX906-NEXT:    global_store_short v1, v2, s[2:3]
 ; GFX906-NEXT:    s_endpgm
 entry:
   %idx = call i32 @llvm.amdgcn.workitem.id.x()
@@ -69,12 +65,8 @@ define amdgpu_kernel void @v4i8_liveout(ptr addrspace(1) %src1, ptr addrspace(1)
 ; GFX906-NEXT:    v_lshrrev_b32_e32 v5, 8, v2
 ; GFX906-NEXT:  .LBB1_2: ; %bb.2
 ; GFX906-NEXT:    s_or_b64 exec, exec, s[0:1]
-; GFX906-NEXT:    v_lshlrev_b16_e32 v0, 8, v5
-; GFX906-NEXT:    v_or_b32_sdwa v0, v2, v0 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:BYTE_0 src1_sel:DWORD
-; GFX906-NEXT:    v_lshlrev_b16_e32 v2, 8, v3
-; GFX906-NEXT:    v_or_b32_sdwa v2, v4, v2 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:BYTE_0 src1_sel:DWORD
-; GFX906-NEXT:    v_or_b32_sdwa v0, v0, v2 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:WORD_0 src1_sel:DWORD
-; GFX906-NEXT:    global_store_dword v1, v0, s[2:3]
+; GFX906-NEXT:    s_waitcnt vmcnt(0)
+; GFX906-NEXT:    global_store_dword v1, v2, s[2:3]
 ; GFX906-NEXT:    s_endpgm
 entry:
   %idx = call i32 @llvm.amdgcn.workitem.id.x()
