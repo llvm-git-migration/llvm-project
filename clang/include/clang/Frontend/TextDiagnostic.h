@@ -15,6 +15,7 @@
 #ifndef LLVM_CLANG_FRONTEND_TEXTDIAGNOSTIC_H
 #define LLVM_CLANG_FRONTEND_TEXTDIAGNOSTIC_H
 
+#include "clang/Frontend/CodeSnippetHighlighter.h"
 #include "clang/Frontend/DiagnosticRenderer.h"
 
 namespace clang {
@@ -33,6 +34,7 @@ namespace clang {
 /// printing coming out of libclang.
 class TextDiagnostic : public DiagnosticRenderer {
   raw_ostream &OS;
+  CodeSnippetHighlighter SnippetHighlighter;
 
 public:
   TextDiagnostic(raw_ostream &OS,

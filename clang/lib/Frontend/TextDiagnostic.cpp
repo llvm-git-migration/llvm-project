@@ -11,6 +11,7 @@
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Frontend/CodeSnippetHighlighter.h"
 #include "clang/Lex/Lexer.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
@@ -1278,6 +1279,9 @@ void TextDiagnostic::emitSnippetAndCaret(
 void TextDiagnostic::emitSnippet(StringRef SourceLine,
                                  unsigned MaxLineNoDisplayWidth,
                                  unsigned LineNo) {
+  std::vector<StyleRange> Styles =
+      SnippetHighlighter.highlightLine(SourceLine, LangOpts);
+
   // Emit line number.
   if (MaxLineNoDisplayWidth > 0) {
     unsigned LineNoDisplayWidth = getNumDisplayWidth(LineNo);
@@ -1287,10 +1291,32 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
 
   // Print the source line one character at a time.
   bool PrintReversed = false;
+  bool HighlightingEnabled = DiagOpts->ShowColors;
   size_t I = 0;
   while (I < SourceLine.size()) {
     auto [Str, WasPrintable] =
         printableTextForNextCharacter(SourceLine, &I, DiagOpts->TabStop);
+
+    // Just stop highlighting anything for this line if we found a non-printable
+    // character.
+    if (!WasPrintable)
+      HighlightingEnabled = false;
+
+    // FIXME: I hope we can do this in some nicer way.
+    if (HighlightingEnabled) {
+      std::optional<enum raw_ostream::Colors> H;
+      for (auto &P : Styles) {
+        if (P.Start < I && P.End >= I) {
+          H = P.c;
+          break;
+        }
+      }
+
+      if (H) {
+        OS.changeColor(*H, false);
+      } else
+        OS.resetColor();
+    }
 
     // Toggle inverted colors on or off for this character.
     if (DiagOpts->ShowColors) {
