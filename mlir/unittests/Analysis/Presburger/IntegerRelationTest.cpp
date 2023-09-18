@@ -8,6 +8,7 @@
 
 #include "mlir/Analysis/Presburger/IntegerRelation.h"
 #include "Parser.h"
+#include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/Presburger/Simplex.h"
 
 #include <gmock/gmock.h>
@@ -166,4 +167,50 @@ TEST(IntegerRelationTest, symbolicLexmax) {
   EXPECT_TRUE(lexmax2.lexopt.isEqual(expectedLexmax2));
   EXPECT_TRUE(lexmax3.unboundedDomain.isIntegerEmpty());
   EXPECT_TRUE(lexmax3.lexopt.isEqual(expectedLexmax3));
+}
+
+TEST(IntegerRelationTest, convertVarKind) {
+  PresburgerSpace space = PresburgerSpace::getSetSpace(3, 3, 0);
+  space.resetIds();
+
+  // Attach identifiers.
+  int identifiers[6] = {0, 1, 2, 3, 4, 5};
+  space.getId(VarKind::SetDim, 0) = Identifier(&identifiers[0]);
+  space.getId(VarKind::SetDim, 1) = Identifier(&identifiers[1]);
+  space.getId(VarKind::SetDim, 2) = Identifier(&identifiers[2]);
+  space.getId(VarKind::Symbol, 0) = Identifier(&identifiers[3]);
+  space.getId(VarKind::Symbol, 1) = Identifier(&identifiers[4]);
+  space.getId(VarKind::Symbol, 2) = Identifier(&identifiers[5]);
+
+  // Cannot call parseIntegerRelation to test convertVarKind as
+  // parseIntegerRelation uses convertVarKind.
+  IntegerRelation rel = parseIntegerPolyhedron(
+      // 0  1  2  3  4  5
+      "(x, y, a)[U, V, W] : (x - U == 0, y + a - W == 0, U - V >= 0, y - a >= "
+      "0)");
+  rel.setSpace(space);
+
+  // Make a few kind conversions.
+  rel.convertVarKind(VarKind::Symbol, 1, 1, VarKind::Domain, 0);
+  rel.convertVarKind(VarKind::Range, 2, 1, VarKind::Domain, 0);
+  rel.convertVarKind(VarKind::Range, 0, 2, VarKind::Symbol, 1);
+  rel.convertVarKind(VarKind::Domain, 1, 1, VarKind::Range, 0);
+  rel.convertVarKind(VarKind::Domain, 0, 1, VarKind::Range, 1);
+
+  space = rel.getSpace();
+
+  // Expected rel.
+  IntegerRelation expectedRel = parseIntegerPolyhedron(
+      "(V, a)[U, x, y, W] : (x - U == 0, y + a - W == 0, U - V >= 0,"
+      "y - a >= 0)");
+  expectedRel.setSpace(space);
+
+  EXPECT_TRUE(rel.isEqual(expectedRel));
+
+  EXPECT_EQ(space.getId(VarKind::SetDim, 0), Identifier(&identifiers[4]));
+  EXPECT_EQ(space.getId(VarKind::SetDim, 1), Identifier(&identifiers[2]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 0), Identifier(&identifiers[3]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 1), Identifier(&identifiers[0]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 2), Identifier(&identifiers[1]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 3), Identifier(&identifiers[5]));
 }

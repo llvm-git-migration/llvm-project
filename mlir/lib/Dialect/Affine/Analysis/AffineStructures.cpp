@@ -34,7 +34,6 @@ using namespace mlir;
 using namespace affine;
 using namespace presburger;
 
-
 void FlatAffineValueConstraints::addInductionVarOrTerminalSymbol(Value val) {
   if (containsVar(val))
     return;
@@ -357,8 +356,7 @@ void FlatAffineValueConstraints::getIneqAsAffineValueMap(
 FlatAffineValueConstraints FlatAffineRelation::getDomainSet() const {
   FlatAffineValueConstraints domain = *this;
   // Convert all range variables to local variables.
-  domain.convertToLocal(VarKind::SetDim, getNumDomainDims(),
-                        getNumDomainDims() + getNumRangeDims());
+  domain.convertToLocal(VarKind::SetDim, getNumDomainDims(), getNumRangeDims());
   return domain;
 }
 
@@ -397,13 +395,11 @@ void FlatAffineRelation::compose(const FlatAffineRelation &other) {
   // Convert `rel` from [otherDomain] -> [otherRange thisRange] to
   // [otherDomain] -> [thisRange] by converting first otherRange range vars
   // to local vars.
-  rel.convertToLocal(VarKind::SetDim, rel.getNumDomainDims(),
-                     rel.getNumDomainDims() + removeDims);
+  rel.convertToLocal(VarKind::SetDim, rel.getNumDomainDims(), removeDims);
   // Convert `this` from [otherDomain thisDomain] -> [thisRange] to
   // [otherDomain] -> [thisRange] by converting last thisDomain domain vars
   // to local vars.
-  convertToLocal(VarKind::SetDim, getNumDomainDims() - removeDims,
-                 getNumDomainDims());
+  convertToLocal(VarKind::SetDim, getNumDomainDims() - removeDims, removeDims);
 
   auto thisMaybeValues = getMaybeValues(VarKind::SetDim);
   auto relMaybeValues = rel.getMaybeValues(VarKind::SetDim);

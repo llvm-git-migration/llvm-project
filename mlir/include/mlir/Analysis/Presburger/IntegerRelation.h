@@ -545,20 +545,19 @@ public:
 
   void removeDuplicateDivs();
 
-  /// Converts variables of kind srcKind in the range [varStart, varLimit) to
-  /// variables of kind dstKind. If `pos` is given, the variables are placed at
-  /// position `pos` of dstKind, otherwise they are placed after all the other
-  /// variables of kind dstKind. The internal ordering among the moved variables
-  /// is preserved.
-  void convertVarKind(VarKind srcKind, unsigned varStart, unsigned varLimit,
-                      VarKind dstKind, unsigned pos);
-  void convertVarKind(VarKind srcKind, unsigned varStart, unsigned varLimit,
+  /// Converts variables of the specified kind in the column range [srcPos,
+  /// srcPos + num) to variables of the specified kind at position dstPos. The
+  /// ranges are relative to the kind of variable.
+  ///
+  /// srcKind and dstKind must be different.
+  void convertVarKind(VarKind srcKind, unsigned srcPos, unsigned num,
+                      VarKind dstKind, unsigned dstPos);
+  void convertVarKind(VarKind srcKind, unsigned srcPos, unsigned num,
                       VarKind dstKind) {
-    convertVarKind(srcKind, varStart, varLimit, dstKind,
-                   getNumVarKind(dstKind));
+    convertVarKind(srcKind, srcPos, num, dstKind, getNumVarKind(dstKind));
   }
-  void convertToLocal(VarKind kind, unsigned varStart, unsigned varLimit) {
-    convertVarKind(kind, varStart, varLimit, VarKind::Local);
+  void convertToLocal(VarKind kind, unsigned varStart, unsigned num) {
+    convertVarKind(kind, varStart, num, VarKind::Local);
   }
 
   /// Adds additional local vars to the sets such that they both have the union

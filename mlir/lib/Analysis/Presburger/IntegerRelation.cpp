@@ -16,6 +16,7 @@
 #include "mlir/Analysis/Presburger/LinearTransform.h"
 #include "mlir/Analysis/Presburger/PWMAFunction.h"
 #include "mlir/Analysis/Presburger/PresburgerRelation.h"
+#include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/Presburger/Simplex.h"
 #include "mlir/Analysis/Presburger/Utils.h"
 #include "llvm/ADT/DenseMap.h"
@@ -1317,31 +1318,43 @@ void IntegerRelation::removeRedundantLocalVars() {
   }
 }
 
-void IntegerRelation::convertVarKind(VarKind srcKind, unsigned varStart,
-                                     unsigned varLimit, VarKind dstKind,
-                                     unsigned pos) {
-  assert(varLimit <= getNumVarKind(srcKind) && "Invalid id range");
+void IntegerRelation::convertVarKind(VarKind srcKind, unsigned srcPos,
+                                     unsigned num, VarKind dstKind,
+                                     unsigned dstPos) {
+  unsigned varLimit = srcPos + num;
+  assert(srcKind != dstKind && "cannot convert variables to the same kind");
+  assert(varLimit <= getNumVarKind(srcKind) &&
+         "invalid range for source variables");
+  assert(dstPos <= getNumVarKind(dstKind) &&
+         "invalid position for destination variables");
 
-  if (varStart >= varLimit)
+  if (srcPos >= varLimit)
     return;
 
+  // Save the space as the insert/delete vars operations affect the identifier
+  // information in the space.
+  PresburgerSpace oldSpace = space;
+
   // Append new local variables corresponding to the dimensions to be converted.
-  unsigned convertCount = varLimit - varStart;
-  unsigned newVarsBegin = insertVar(dstKind, pos, convertCount);
+  unsigned newVarsBegin = insertVar(dstKind, dstPos, num);
 
   // Swap the new local variables with dimensions.
   //
-  // Essentially, this moves the information corresponding to the specified ids
+  // Essentially, this moves the constraints corresponding to the specified ids
   // of kind `srcKind` to the `convertCount` newly created ids of kind
   // `dstKind`. In particular, this moves the columns in the constraint
   // matrices, and zeros out the initially occupied columns (because the newly
   // created ids we're swapping with were zero-initialized).
   unsigned offset = getVarKindOffset(srcKind);
-  for (unsigned i = 0; i < convertCount; ++i)
-    swapVar(offset + varStart + i, newVarsBegin + i);
+  for (unsigned i = 0; i < num; ++i)
+    swapVar(offset + srcPos + i, newVarsBegin + i);
 
-  // Complete the move by deleting the initially occupied columns.
-  removeVarRange(srcKind, varStart, varLimit);
+  // Delete the initially occupied columns.
+  removeVarRange(srcKind, srcPos, varLimit);
+
+  // Complete the move by updating the space.
+  space = oldSpace;
+  space.convertVarKind(srcKind, srcPos, num, dstKind, dstPos);
 }
 
 void IntegerRelation::addBound(BoundType type, unsigned pos,
@@ -2260,8 +2273,7 @@ void IntegerRelation::intersectRange(const IntegerPolyhedron &poly) {
 
 void IntegerRelation::inverse() {
   unsigned numRangeVars = getNumVarKind(VarKind::Range);
-  convertVarKind(VarKind::Domain, 0, getVarKindEnd(VarKind::Domain),
-                 VarKind::Range);
+  convertVarKind(VarKind::Domain, 0, getNumDomainVars(), VarKind::Range);
   convertVarKind(VarKind::Range, 0, numRangeVars, VarKind::Domain);
 }
 

@@ -455,7 +455,7 @@ TEST(SetTest, divisions) {
 
 void convertSuffixDimsToLocals(IntegerPolyhedron &poly, unsigned numLocals) {
   poly.convertVarKind(VarKind::SetDim, poly.getNumDimVars() - numLocals,
-                      poly.getNumDimVars(), VarKind::Local);
+                      numLocals, VarKind::Local);
 }
 
 inline IntegerPolyhedron
@@ -815,7 +815,7 @@ void testComputeReprAtPoints(IntegerPolyhedron poly,
                              ArrayRef<SmallVector<int64_t, 4>> points,
                              unsigned numToProject) {
   poly.convertVarKind(VarKind::SetDim, poly.getNumDimVars() - numToProject,
-                      poly.getNumDimVars(), VarKind::Local);
+                      numToProject, VarKind::Local);
   PresburgerRelation repr = poly.computeReprWithOnlyDivLocals();
   EXPECT_TRUE(repr.hasOnlyDivLocals());
   EXPECT_TRUE(repr.getSpace().isCompatible(poly.getSpace()));
@@ -828,7 +828,7 @@ void testComputeReprAtPoints(IntegerPolyhedron poly,
 void testComputeRepr(IntegerPolyhedron poly, const PresburgerSet &expected,
                      unsigned numToProject) {
   poly.convertVarKind(VarKind::SetDim, poly.getNumDimVars() - numToProject,
-                      poly.getNumDimVars(), VarKind::Local);
+                      numToProject, VarKind::Local);
   PresburgerRelation repr = poly.computeReprWithOnlyDivLocals();
   EXPECT_TRUE(repr.hasOnlyDivLocals());
   EXPECT_TRUE(repr.getSpace().isCompatible(poly.getSpace()));

@@ -299,10 +299,10 @@ TEST(PresburgerRelationTest, convertVarKind) {
 
   // Expected rel.
   disj1.convertVarKind(VarKind::Domain, 0, 1, VarKind::Range, 0);
-  disj1.convertVarKind(VarKind::Symbol, 1, 3, VarKind::Domain, 1);
+  disj1.convertVarKind(VarKind::Symbol, 1, 2, VarKind::Domain, 1);
   disj1.convertVarKind(VarKind::Symbol, 0, 1, VarKind::Range, 1);
   disj2.convertVarKind(VarKind::Domain, 0, 1, VarKind::Range, 0);
-  disj2.convertVarKind(VarKind::Symbol, 1, 3, VarKind::Domain, 1);
+  disj2.convertVarKind(VarKind::Symbol, 1, 2, VarKind::Domain, 1);
   disj2.convertVarKind(VarKind::Symbol, 0, 1, VarKind::Range, 1);
 
   PresburgerRelation expectedRel(disj1);
