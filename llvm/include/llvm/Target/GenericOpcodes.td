@@ -1277,6 +1277,34 @@ def G_INTRINSIC_CONVERGENT_W_SIDE_EFFECTS : GenericInstruction {
 }
 
 //------------------------------------------------------------------------------
+// Convergence control operations.
+//------------------------------------------------------------------------------
+
+// Capture the set of threads that are converged on entry to a function.
+def G_CONVERGENCECTRL_ENTRY : GenericInstruction {
+  let InOperandList = (ins);
+  let OutOperandList = (outs type0:$dst);
+  let isConvergent = true;
+  let hasSideEffects = false;
+}
+
+// Capture an implementation-defined subset of converged threads.
+def G_CONVERGENCECTRL_ANCHOR : GenericInstruction {
+  let InOperandList = (ins);
+  let OutOperandList = (outs type0:$dst);
+  let isConvergent = true;
+  let hasSideEffects = false;
+}
+
+// Capture the convergence of threads in a cycle.
+def G_CONVERGENCECTRL_LOOP : GenericInstruction {
+  let InOperandList = (ins type0:$src);
+  let OutOperandList = (outs type0:$dst);
+  let isConvergent = true;
+  let hasSideEffects = false;
+}
+
+//------------------------------------------------------------------------------
 // Branches.
 //------------------------------------------------------------------------------
 
