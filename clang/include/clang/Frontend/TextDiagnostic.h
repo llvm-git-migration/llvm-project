@@ -38,7 +38,7 @@ class TextDiagnostic : public DiagnosticRenderer {
 
 public:
   TextDiagnostic(raw_ostream &OS, const LangOptions &LangOpts,
-                 const Preprocessor *PP, DiagnosticOptions *DiagOpts);
+                 DiagnosticOptions *DiagOpts, const Preprocessor *PP = nullptr);
 
   ~TextDiagnostic() override;
 

@@ -646,8 +646,8 @@ static bool printWordWrapped(raw_ostream &OS, StringRef Str, unsigned Columns,
 }
 
 TextDiagnostic::TextDiagnostic(raw_ostream &OS, const LangOptions &LangOpts,
-                               const Preprocessor *PP,
-                               DiagnosticOptions *DiagOpts)
+                               DiagnosticOptions *DiagOpts,
+                               const Preprocessor *PP)
     : DiagnosticRenderer(LangOpts, DiagOpts), OS(OS), PP(PP) {}
 
 TextDiagnostic::~TextDiagnostic() {}

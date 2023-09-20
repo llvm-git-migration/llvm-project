@@ -25,6 +25,8 @@ static Lexer createTempLexer(llvm::MemoryBufferRef B, SourceManager &FakeSM,
 
 std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     StringRef SourceLine, const Preprocessor *PP, const LangOptions &LangOpts) {
+  if (!PP)
+    return {};
   constexpr raw_ostream::Colors CommentColor = raw_ostream::BLACK;
   constexpr raw_ostream::Colors LiteralColor = raw_ostream::GREEN;
   constexpr raw_ostream::Colors KeywordColor = raw_ostream::YELLOW;
