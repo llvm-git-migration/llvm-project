@@ -18,7 +18,7 @@
 func.func @test_erase() {
   %0 = "test.arg0"() : () -> (i32)
   %1 = "test.arg1"() : () -> (i32)
-  %erase = "test.erase_op"(%0, %1) : (i32, i32) -> (i32)
+  %erase = "test.erase_op"(%0, %1) {worklist} : (i32, i32) -> (i32)
   return
 }
 
@@ -29,7 +29,7 @@ func.func @test_erase() {
 //       CHECK-EN:   "test.insert_same_op"() {skip = true}
 //       CHECK-EN:   "test.insert_same_op"() {skip = true}
 func.func @test_insert_same_op() {
-  %0 = "test.insert_same_op"() : () -> (i32)
+  %0 = "test.insert_same_op"() {worklist} : () -> (i32)
   return
 }
 
@@ -41,7 +41,7 @@ func.func @test_insert_same_op() {
 //       CHECK-EN:   "test.dummy_user"(%[[n]])
 //       CHECK-EN:   "test.dummy_user"(%[[n]])
 func.func @test_replace_with_new_op() {
-  %0 = "test.replace_with_new_op"() : () -> (i32)
+  %0 = "test.replace_with_new_op"() {worklist} : () -> (i32)
   %1 = "test.dummy_user"(%0) : (i32) -> (i32)
   %2 = "test.dummy_user"(%0) : (i32) -> (i32)
   return
@@ -59,7 +59,7 @@ func.func @test_replace_with_new_op() {
 //   CHECK-EX-NOT:   "test.replace_with_new_op"
 //       CHECK-EX:   "test.erase_op"
 func.func @test_replace_with_erase_op() {
-  "test.replace_with_new_op"() {create_erase_op} : () -> ()
+  "test.replace_with_new_op"() {create_erase_op, worklist} : () -> ()
   return
 }
 
@@ -74,14 +74,14 @@ func.func @test_trigger_rewrite_through_block() {
   return
 ^bb1:
   // Uses bb1. ChangeBlockOp replaces that and all other usages of bb1 with bb2.
-  "test.change_block_op"() [^bb1, ^bb2] : () -> ()
+  "test.change_block_op"() [^bb1, ^bb2] {worklist} : () -> ()
 ^bb2:
   return
 ^bb3:
   // Also uses bb1. ChangeBlockOp replaces that usage with bb2. This triggers
   // this op being put on the worklist, which triggers ImplicitChangeOp, which,
   // in turn, replaces the successor with bb3.
-  "test.implicit_change_op"() [^bb1] : () -> ()
+  "test.implicit_change_op"() [^bb1] {worklist} : () -> ()
 }
 
 // -----
@@ -98,7 +98,7 @@ func.func @test_remove_graph_region() {
       %0 = "test.foo_a"(%1) : (i1) -> (i1)
       %1 = "test.foo_b"(%0) : (i1) -> (i1)
     }
-  }) : () -> ()
+  }) {worklist} : () -> ()
   return
 }
 
@@ -123,7 +123,7 @@ func.func @test_remove_cyclic_blocks() {
   ^bb2(%arg1: i1):
     "test.bar"(%x) : (i1) -> ()
     cf.br ^bb1(%arg1: i1)
-  }) : () -> ()
+  }) {worklist} : () -> ()
   return
 }
 
@@ -155,7 +155,7 @@ func.func @test_remove_dead_blocks() {
       "test.qux_unreachable"() : () -> ()
     }) : () -> ()
     "test.bar"() : () -> ()
-  }) : () -> ()
+  }) {worklist} : () -> ()
   return
 }
 
@@ -201,7 +201,7 @@ func.func @test_remove_nested_ops() {
   ^bb2(%arg1: i1):
     "test.bar"(%x) : (i1) -> ()
     cf.br ^bb1(%arg1: i1)
-  }) : () -> ()
+  }) {worklist} : () -> ()
   return
 }
 
@@ -226,6 +226,224 @@ func.func @test_remove_diamond(%c: i1) {
     cf.br ^bb3
   ^bb3:
     "test.qux"() : () -> ()
-  }) : () -> ()
+  }) {worklist} : () -> ()
   return
+}
+
+// -----
+
+// Make sure that test.erase_op is deleted.
+
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.inner_op
+// CHECK-AN: notifyOperationInserted: test.erase_op
+// CHECK-AN: notifyOperationRemoved: test.erase_op
+// CHECK-AN: notifyOperationRemoved: test.inner_op
+// CHECK-AN: notifyOperationRemoved: test.clone_region_in_parent
+// CHECK-AN: notifyOperationRemoved: test.erase_op
+// CHECK-AN-LABEL: func @test_add_cloned_ops_to_worklist
+
+// CHECK-EN-LABEL: func @test_add_cloned_ops_to_worklist
+//  CHECK-EN-NEXT:   "test.dummy_op"() ({
+//  CHECK-EN-NEXT:     "test.another_op"() : () -> ()
+//  CHECK-EN-NEXT:   ^bb1:  // no predecessors
+//  CHECK-EN-NEXT:     "test.inner_op"() : () -> ()
+//  CHECK-EN-NEXT:   }) : () -> ()
+//  CHECK-EN-NEXT:  }
+
+// When strictness=ExistingOps, test.erase_op is not deleted because it was not
+// on the initial worklist.
+
+// CHECK-EX-LABEL: func @test_add_cloned_ops_to_worklist
+//  CHECK-EX-NEXT:   "test.dummy_op"() ({
+//  CHECK-EX-NEXT:     "test.another_op"() : () -> ()
+//  CHECK-EX-NEXT:   ^bb1:  // no predecessors
+//  CHECK-EX-NEXT:     "test.inner_op"() : () -> ()
+//  CHECK-EX-NEXT:     "test.erase_op"() : () -> ()
+//  CHECK-EX-NEXT:   }) : () -> ()
+//  CHECK-EX-NEXT:  }
+func.func @test_add_cloned_ops_to_worklist() {
+  "test.dummy_op"() ({
+    ^bb0():
+    "test.clone_region_in_parent"() ({
+    ^bb1():
+      "test.inner_op"() : () -> ()
+      "test.erase_op"() {worklist} : () -> ()
+    }) {worklist} : () -> ()
+    "test.another_op"() : () -> ()
+  }) {worklist} : () -> ()
+}
+
+// -----
+
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.inner_op
+// CHECK-AN: notifyBlockCreated: block ^bb0 from region 0 from operation 'test.inner_op'
+// CHECK-AN: notifyOperationInserted: test.graph_region
+// CHECK-AN: notifyBlockCreated: block ^bb0 from region 0 from operation 'test.graph_region'
+// CHECK-AN: notifyOperationInserted: test.foo_a
+// CHECK-AN: notifyOperationInserted: test.foo_b
+// CHECK-AN: notifyOperationInserted: test.foo_c
+// The original op is removed.
+// CHECK-AN: notifyOperationRemoved: test.foo_c
+// CHECK-AN: notifyOperationRemoved: test.foo_b
+// CHECK-AN: notifyOperationRemoved: test.foo_a
+// CHECK-AN: notifyOperationRemoved: test.graph_region
+// CHECK-AN: notifyOperationRemoved: test.inner_op
+// CHECK-AN: notifyOperationRemoved: test.clone_region_in_parent
+// CHECK-AN-LABEL: func @test_clone_nested_graph_region
+//       CHECK-AN:   "test.dummy_op"() ({
+//  CHECK-AN-NEXT:     "test.another_op"() : () -> ()
+//  CHECK-AN-NEXT:     ^bb1:  // no predecessors
+//  CHECK-AN-NEXT:       "test.inner_op"() ({
+//  CHECK-AN-NEXT:         test.graph_region {
+//  CHECK-AN-NEXT:           %{{.*}} = "test.foo_a"(%{{.*}}) : (i1) -> i1
+//  CHECK-AN-NEXT:           %{{.*}} = "test.foo_b"(%{{.*}}) : (i1) -> i1
+//  CHECK-AN-NEXT:         }
+//  CHECK-AN-NEXT:         "test.foo_c"() : () -> ()
+//  CHECK-AN-NEXT:       }) : () -> ()
+//  CHECK-AN-NEXT:     }) : () -> ()
+func.func @test_clone_nested_graph_region() {
+  "test.dummy_op"() ({
+    ^bb0():
+    "test.clone_region_in_parent"() ({
+    ^bb1():
+      "test.inner_op"() ({
+        test.graph_region {
+          %0 = "test.foo_a"(%1) : (i1) -> (i1)
+          %1 = "test.foo_b"(%0) : (i1) -> (i1)
+        }
+        "test.foo_c"() : () -> ()
+      }): () -> ()
+    }) {worklist} : () -> ()
+    "test.another_op"() : () -> ()
+  }) {worklist} : () -> ()
+}
+
+// -----
+
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.dummy_op
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb2 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.foo
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb3 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.bar
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.bar
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.foo
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.dummy_op
+// CHECK-AN: notifyOperationRemoved: test.clone_region_in_parent
+// CHECK-AN-LABEL: func @test_clone_cyclic_blocks
+func.func @test_clone_cyclic_blocks() {
+  "test.dummy_op"() ({
+    ^bb0():
+    "test.clone_region_in_parent"() ({
+      %x = "test.dummy_op"() : () -> (i1)
+      cf.br ^bb1(%x: i1)
+      ^bb1(%arg0: i1):
+        "test.foo"(%x) : (i1) -> ()
+        cf.br ^bb2(%arg0: i1)
+      ^bb2(%arg1: i1):
+        "test.bar"(%x) : (i1) -> ()
+        cf.br ^bb1(%arg1: i1)
+      }) {worklist} : () -> ()
+      "test.qux"() : () -> ()
+    }) : () -> ()
+    "test.another_op"() : () -> ()
+  return
+}
+
+// -----
+
+// CHECK-AN: notifyBlockCreated: block ^bb3 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.nested_dummy
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.nested_dummy'
+// CHECK-AN: notifyOperationInserted: test.qux_unreachable
+// CHECK-AN: notifyBlockCreated: block ^bb0 from region 0 from operation 'test.nested_dummy'
+// CHECK-AN: notifyOperationInserted: test.qux_reachable
+// CHECK-AN: notifyOperationInserted: test.bar
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb2 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.foo
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.dummy_op
+// CHECK-AN: notifyOperationRemoved: test.dummy_op
+// CHECK-AN: notifyOperationRemoved: test.foo
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.bar
+// CHECK-AN: notifyOperationRemoved: test.qux_reachable
+// CHECK-AN: notifyOperationRemoved: test.qux_unreachable
+// CHECK-AN: notifyOperationRemoved: test.nested_dummy
+// CHECK-AN: notifyOperationRemoved: test.clone_region_in_parent
+// CHECK-AN-LABEL: func @test_clone_dead_blocks
+func.func @test_clone_dead_blocks() {
+  "test.dummy_op"() ({
+    ^bb0():
+    "test.clone_region_in_parent"() ({
+      "test.dummy_op"() : () -> (i1)
+      // The following blocks are not reachable. Still, ^bb2 should be notified
+      // before ^bb1.
+      ^bb1(%arg0: i1):
+        "test.foo"() : () -> ()
+      ^bb2(%arg1: i1):
+        "test.nested_dummy"() ({
+          "test.qux_reachable"() : () -> ()
+        // The following block is unreachable.
+        ^bb3:
+          "test.qux_unreachable"() : () -> ()
+        }) : () -> ()
+        "test.bar"() : () -> ()
+        cf.br ^bb1(%arg0: i1)
+      }) {worklist} : () -> ()
+      "test.qux"() : () -> ()
+    }) : () -> ()
+    "test.another_op"() : () -> ()
+  return
+}
+
+// -----
+
+// CHECK-AN: notifyBlockCreated: block ^bb1 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb5 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: cf.cond_br
+// CHECK-AN: notifyBlockCreated: block ^bb4 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.bar
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb3 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.foo
+// CHECK-AN: notifyOperationInserted: cf.br
+// CHECK-AN: notifyBlockCreated: block ^bb2 from region 0 from operation 'test.dummy_op'
+// CHECK-AN: notifyOperationInserted: test.qux
+// CHECK-AN: notifyOperationRemoved: test.qux
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.foo
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.bar
+// CHECK-AN: notifyOperationRemoved: cf.cond_br
+// CHECK-AN: notifyOperationRemoved: cf.br
+// CHECK-AN: notifyOperationRemoved: test.clone_region_in_parent
+// CHECK-AN-LABEL: func @test_clone_reverse_diamond
+func.func @test_clone_reverse_diamond(%c: i1) {
+  "test.dummy_op"() ({
+    "test.clone_region_in_parent"() ({
+      cf.br ^bb3
+    ^bb0:
+      "test.qux"() : () -> ()
+    ^bb1:
+      "test.foo"() : () -> ()
+      cf.br ^bb0
+    ^bb2:
+      "test.bar"() : () -> ()
+      cf.br ^bb0
+    ^bb3:
+      cf.cond_br %c, ^bb1, ^bb2
+    }) {worklist} : () -> ()
+    "test.another_op"() : () -> ()
+  }) {worklist} : () -> ()
 }

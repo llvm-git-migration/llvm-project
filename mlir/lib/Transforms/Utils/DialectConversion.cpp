@@ -1588,23 +1588,6 @@ void ConversionPatternRewriter::inlineRegionBefore(Region &region,
   PatternRewriter::inlineRegionBefore(region, parent, before);
 }
 
-void ConversionPatternRewriter::cloneRegionBefore(Region &region,
-                                                  Region &parent,
-                                                  Region::iterator before,
-                                                  IRMapping &mapping) {
-  if (region.empty())
-    return;
-
-  PatternRewriter::cloneRegionBefore(region, parent, before, mapping);
-
-  for (Block &b : ForwardDominanceIterator<>::makeIterable(region)) {
-    Block *cloned = mapping.lookup(&b);
-    impl->notifyCreatedBlock(cloned);
-    cloned->walk<WalkOrder::PreOrder, ForwardDominanceIterator<>>(
-        [&](Operation *op) { notifyOperationInserted(op); });
-  }
-}
-
 void ConversionPatternRewriter::notifyOperationInserted(Operation *op) {
   LLVM_DEBUG({
     impl->logger.startLine()

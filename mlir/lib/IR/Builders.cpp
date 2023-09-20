@@ -14,7 +14,11 @@
 #include "mlir/IR/IRMapping.h"
 #include "mlir/IR/IntegerSet.h"
 #include "mlir/IR/Matchers.h"
+#include "mlir/IR/RegionGraphTraits.h"
 #include "mlir/IR/SymbolTable.h"
+#include "llvm/ADT/PostOrderIterator.h"
+#include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVectorExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -525,22 +529,95 @@ LogicalResult OpBuilder::tryFold(Operation *op,
   return success();
 }
 
-Operation *OpBuilder::clone(Operation &op, IRMapping &mapper) {
-  Operation *newOp = op.clone(mapper);
-  // The `insert` call below handles the notification for inserting `newOp`
-  // itself. But if `newOp` has any regions, we need to notify the listener
-  // about any ops that got inserted inside those regions as part of cloning.
-  if (listener) {
-    auto walkFn = [&](Operation *walkedOp) {
-      listener->notifyOperationInserted(walkedOp);
-    };
-    for (Region &region : newOp->getRegions())
-      region.walk(walkFn);
+static void notifyOperationCloned(Operation *op, OpBuilder::Listener *listener);
+
+/// Notify the listener that the given range of regions was cloned.
+///
+/// Blocks and operations are enumerated in an order in which they could have
+/// been created separately (without using the `clone` API): Within a region,
+/// blocks are notified according to their successor relationship. Within a
+/// block, operations are notified in forward mode. This ensures that defining
+/// ops are notified before ops that use their results (unless there are
+/// cycles/graph regions).
+static void notifyRegionsCloned(iterator_range<Region::iterator> range,
+                                OpBuilder::Listener *listener) {
+  // Maintain a set of blocks that were not notified yet. This is needed because
+  // the inverse_post_order iterator does not enumerate dead blocks.
+  llvm::SetVector<Block *> remainingBlocks;
+  // The order in which the set is initialized does not matter for correctness.
+  // For better performance, "leaf" blocks with no successors should be starting
+  // point for the block traversal. (Then there are fewer iterations of the
+  // "while" loop.)
+  for (Block &b : llvm::reverse(range))
+    remainingBlocks.insert(&b);
+  // Set of visited blocks that is shared among all inverse_post_order
+  // iterations. This is to avoid that the same block is enumerated multiple
+  // times.
+  llvm::SmallPtrSet<Block *, 4> visited;
+  while (!remainingBlocks.empty()) {
+    // Enumerate predecessors before successors. I.e., reverse post-order.
+    for (Block *b :
+         llvm::inverse_post_order_ext(remainingBlocks.front(), visited)) {
+      auto it = llvm::find(remainingBlocks, b);
+      assert(it != remainingBlocks.end() &&
+             "expected that only remaining blocks are visited");
+      listener->notifyBlockCreated(b);
+      remainingBlocks.erase(it);
+      for (Operation &op : *b)
+        notifyOperationCloned(&op, listener);
+    }
   }
+}
+
+/// Notify the listener that the given op was cloned.
+static void notifyOperationCloned(Operation *op,
+                                  OpBuilder::Listener *listener) {
+  listener->notifyOperationInserted(op);
+  for (Region &r : op->getRegions())
+    notifyRegionsCloned(r.getBlocks(), listener);
+}
+
+Operation *OpBuilder::clone(Operation &op, IRMapping &mapper) {
+  // TODO: The listener notifications should be interleaved with `clone`.
+  Operation *newOp = op.clone(mapper);
+
+  // Fast path: If no listener is attached, the op can be inserted directly.
+  if (!listener)
+    return insert(newOp);
+
+  // The `insert` call below handles the notification for inserting `newOp`.
+  // Just notify about nested op/block insertion.
+  for (Region &r : newOp->getRegions())
+    notifyRegionsCloned(r.getBlocks(), listener);
   return insert(newOp);
 }
 
 Operation *OpBuilder::clone(Operation &op) {
   IRMapping mapper;
   return clone(op, mapper);
+}
+
+void OpBuilder::cloneRegionBefore(Region &region, Region &parent,
+                                  Region::iterator before, IRMapping &mapping) {
+  // TODO: The listener notifications should be interleaved with `clone`.
+  region.cloneInto(&parent, before, mapping);
+
+  // Fast path: If no listener is attached, there is no more work to do.
+  if (!listener)
+    return;
+
+  // Notify about op/block insertion.
+  Region::iterator clonedBeginIt =
+      mapping.lookup(&region.front())->getIterator();
+  notifyRegionsCloned(llvm::make_range(clonedBeginIt, before), listener);
+}
+
+void OpBuilder::cloneRegionBefore(Region &region, Region &parent,
+                                  Region::iterator before) {
+  IRMapping mapping;
+  cloneRegionBefore(region, parent, before, mapping);
+}
+
+void OpBuilder::cloneRegionBefore(Region &region, Block *before) {
+  cloneRegionBefore(region, *before->getParent(), before->getIterator());
 }

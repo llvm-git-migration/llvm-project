@@ -451,6 +451,16 @@ public:
   Block *createBlock(Block *insertBefore, TypeRange argTypes = std::nullopt,
                      ArrayRef<Location> locs = std::nullopt);
 
+  /// Clone the blocks that belong to "region" before the given position in
+  /// another region "parent". The two regions must be different. The caller is
+  /// responsible for creating or updating the operation transferring flow of
+  /// control to the region and passing it the correct block arguments.
+  void cloneRegionBefore(Region &region, Region &parent,
+                         Region::iterator before, IRMapping &mapping);
+  void cloneRegionBefore(Region &region, Region &parent,
+                         Region::iterator before);
+  void cloneRegionBefore(Region &region, Block *before);
+
   //===--------------------------------------------------------------------===//
   // Operation Creation
   //===--------------------------------------------------------------------===//

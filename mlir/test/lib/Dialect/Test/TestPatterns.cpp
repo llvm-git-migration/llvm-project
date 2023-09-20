@@ -239,7 +239,27 @@ struct TestPatternDriver
       llvm::cl::init(GreedyRewriteConfig().maxIterations)};
 };
 
+static void printRegion(Region *region) {
+  llvm::outs() << "region " << region->getRegionNumber() << " from operation '"
+               << region->getParentOp()->getName() << "'";
+}
+
+static void printBlock(Block *block) {
+  llvm::outs() << "block ";
+  block->printAsOperand(llvm::outs(), /*printType=*/false);
+  llvm::outs() << " from ";
+  printRegion(block->getParent());
+}
+
 struct DumpNotifications : public RewriterBase::Listener {
+  void notifyOperationInserted(Operation *op) override {
+    llvm::outs() << "notifyOperationInserted: " << op->getName() << "\n";
+  }
+  void notifyBlockCreated(Block *b) override {
+    llvm::outs() << "notifyBlockCreated: ";
+    printBlock(b);
+    llvm::outs() << "\n";
+  }
   void notifyOperationRemoved(Operation *op) override {
     llvm::outs() << "notifyOperationRemoved: " << op->getName() << "\n";
   }
@@ -269,14 +289,14 @@ public:
         ReplaceWithNewOp,
         EraseOp,
         ChangeBlockOp,
+        CloneRegionInParentOp,
         ImplicitChangeOp
         // clang-format on
         >(ctx);
     SmallVector<Operation *> ops;
     getOperation()->walk([&](Operation *op) {
-      StringRef opName = op->getName().getStringRef();
-      if (opName == "test.insert_same_op" || opName == "test.change_block_op" ||
-          opName == "test.replace_with_new_op" || opName == "test.erase_op") {
+      if (op->hasAttr("worklist")) {
+        op->removeAttr("worklist");
         ops.push_back(op);
       }
     });
@@ -313,6 +333,23 @@ public:
       llvm::cl::init("AnyOp")};
 
 private:
+  // Clone region into parent op.
+  class CloneRegionInParentOp : public RewritePattern {
+  public:
+    CloneRegionInParentOp(MLIRContext *context)
+        : RewritePattern("test.clone_region_in_parent", /*benefit=*/1,
+                         context) {}
+
+    LogicalResult matchAndRewrite(Operation *op,
+                                  PatternRewriter &rewriter) const override {
+      auto &parentRegion = *op->getParentRegion();
+      auto &opRegion = op->getRegion(0);
+      rewriter.cloneRegionBefore(opRegion, parentRegion, parentRegion.end());
+      rewriter.eraseOp(op);
+      return success();
+    }
+  };
+
   // New inserted operation is valid for further transformation.
   class InsertSameOp : public RewritePattern {
   public:
