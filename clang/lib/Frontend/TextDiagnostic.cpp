@@ -645,10 +645,10 @@ static bool printWordWrapped(raw_ostream &OS, StringRef Str, unsigned Columns,
   return Wrapped;
 }
 
-TextDiagnostic::TextDiagnostic(raw_ostream &OS,
-                               const LangOptions &LangOpts,
+TextDiagnostic::TextDiagnostic(raw_ostream &OS, const LangOptions &LangOpts,
+                               const Preprocessor *PP,
                                DiagnosticOptions *DiagOpts)
-  : DiagnosticRenderer(LangOpts, DiagOpts), OS(OS) {}
+    : DiagnosticRenderer(LangOpts, DiagOpts), OS(OS), PP(PP) {}
 
 TextDiagnostic::~TextDiagnostic() {}
 
@@ -1280,7 +1280,7 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
                                  unsigned MaxLineNoDisplayWidth,
                                  unsigned LineNo) {
   std::vector<StyleRange> Styles =
-      SnippetHighlighter.highlightLine(SourceLine, LangOpts);
+      SnippetHighlighter.highlightLine(SourceLine, PP, LangOpts);
 
   // Emit line number.
   if (MaxLineNoDisplayWidth > 0) {

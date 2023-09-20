@@ -3,58 +3,11 @@
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
-
-void CodeSnippetHighlighter::ensureTokenData() {
-  if (Initialized)
-    return;
-
-  // List of keywords, literals and types we want to highlight.
-  // These are best-effort, as is everything we do wrt. highlighting.
-  Keywords.insert("_Static_assert");
-  Keywords.insert("auto");
-  Keywords.insert("concept");
-  Keywords.insert("const");
-  Keywords.insert("consteval");
-  Keywords.insert("constexpr");
-  Keywords.insert("delete");
-  Keywords.insert("do");
-  Keywords.insert("else");
-  Keywords.insert("final");
-  Keywords.insert("for");
-  Keywords.insert("if");
-  Keywords.insert("mutable");
-  Keywords.insert("namespace");
-  Keywords.insert("new");
-  Keywords.insert("private");
-  Keywords.insert("public");
-  Keywords.insert("requires");
-  Keywords.insert("return");
-  Keywords.insert("static");
-  Keywords.insert("static_assert");
-  Keywords.insert("using");
-  Keywords.insert("void");
-  Keywords.insert("volatile");
-  Keywords.insert("while");
-
-  // Builtin types we highlight
-  Keywords.insert("void");
-  Keywords.insert("char");
-  Keywords.insert("short");
-  Keywords.insert("int");
-  Keywords.insert("unsigned");
-  Keywords.insert("long");
-  Keywords.insert("float");
-  Keywords.insert("double");
-
-  Literals.insert("true");
-  Literals.insert("false");
-  Literals.insert("nullptr");
-
-  Initialized = true;
-}
 
 static SourceManager createTempSourceManager() {
   FileSystemOptions FileOpts;
@@ -70,49 +23,51 @@ static Lexer createTempLexer(llvm::MemoryBufferRef B, SourceManager &FakeSM,
   return Lexer(FakeSM.createFileID(B), B, FakeSM, LangOpts);
 }
 
-std::vector<StyleRange>
-CodeSnippetHighlighter::highlightLine(StringRef SourceLine,
-                                      const LangOptions &LangOpts) {
-  ensureTokenData();
-
+std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
+    StringRef SourceLine, const Preprocessor *PP, const LangOptions &LangOpts) {
   constexpr raw_ostream::Colors CommentColor = raw_ostream::BLACK;
   constexpr raw_ostream::Colors LiteralColor = raw_ostream::GREEN;
   constexpr raw_ostream::Colors KeywordColor = raw_ostream::YELLOW;
 
-  const auto MemBuf = llvm::MemoryBuffer::getMemBuffer(SourceLine);
   SourceManager FakeSM = createTempSourceManager();
+  const auto MemBuf = llvm::MemoryBuffer::getMemBuffer(SourceLine);
   Lexer L = createTempLexer(MemBuf->getMemBufferRef(), FakeSM, LangOpts);
   L.SetKeepWhitespaceMode(true);
 
   std::vector<StyleRange> Styles;
   bool Stop = false;
   while (!Stop) {
-    Token tok;
-    Stop = L.LexFromRawLexer(tok);
-    if (tok.is(tok::unknown))
+    Token T;
+    Stop = L.LexFromRawLexer(T);
+    if (T.is(tok::unknown))
       continue;
 
     bool Invalid;
     unsigned Start =
-        FakeSM.getSpellingColumnNumber(tok.getLocation(), &Invalid) - 1;
+        FakeSM.getSpellingColumnNumber(T.getLocation(), &Invalid) - 1;
     if (Invalid)
       continue;
 
-    if (tok.is(tok::raw_identifier)) {
-      // Almost everything we lex is an identifier, since we use a raw lexer.
-      // Some should be highlightes as literals, others as keywords.
-      if (Keywords.contains(tok.getRawIdentifier()))
+    if (T.is(tok::raw_identifier)) {
+      StringRef RawIdent = T.getRawIdentifier();
+      // Special case true/false/nullptr literals, since they will otherwise be
+      // treated as keywords.
+      if (RawIdent == "true" || RawIdent == "false" || RawIdent == "nullptr") {
         Styles.push_back(
-            StyleRange{Start, Start + tok.getLength(), KeywordColor});
-      else if (Literals.contains(tok.getRawIdentifier()))
-        Styles.push_back(
-            StyleRange{Start, Start + tok.getLength(), LiteralColor});
-    } else if (tok::isLiteral(tok.getKind())) {
-      Styles.push_back(
-          StyleRange{Start, Start + tok.getLength(), LiteralColor});
-    } else if (tok.is(tok::comment)) {
-      Styles.push_back(
-          StyleRange{Start, Start + tok.getLength(), CommentColor});
+            StyleRange{Start, Start + T.getLength(), LiteralColor});
+      } else {
+        const IdentifierInfo *II = PP->getIdentifierInfo(RawIdent);
+        assert(II);
+
+        if (II->isKeyword(LangOpts)) {
+          Styles.push_back(
+              StyleRange{Start, Start + T.getLength(), KeywordColor});
+        }
+      }
+    } else if (tok::isLiteral(T.getKind())) {
+      Styles.push_back(StyleRange{Start, Start + T.getLength(), LiteralColor});
+    } else if (T.is(tok::comment)) {
+      Styles.push_back(StyleRange{Start, Start + T.getLength(), CommentColor});
     }
   }
 

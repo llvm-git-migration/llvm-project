@@ -19,7 +19,6 @@
 #include "clang/Frontend/DiagnosticRenderer.h"
 
 namespace clang {
-
 /// Class to encapsulate the logic for formatting and printing a textual
 /// diagnostic message.
 ///
@@ -34,12 +33,12 @@ namespace clang {
 /// printing coming out of libclang.
 class TextDiagnostic : public DiagnosticRenderer {
   raw_ostream &OS;
+  const Preprocessor *PP;
   CodeSnippetHighlighter SnippetHighlighter;
 
 public:
-  TextDiagnostic(raw_ostream &OS,
-                 const LangOptions &LangOpts,
-                 DiagnosticOptions *DiagOpts);
+  TextDiagnostic(raw_ostream &OS, const LangOptions &LangOpts,
+                 const Preprocessor *PP, DiagnosticOptions *DiagOpts);
 
   ~TextDiagnostic() override;
 

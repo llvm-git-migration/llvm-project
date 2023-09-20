@@ -22,6 +22,8 @@ struct StyleRange {
   const enum llvm::raw_ostream::Colors c;
 };
 
+class Preprocessor;
+
 class CodeSnippetHighlighter final {
 public:
   CodeSnippetHighlighter() = default;
@@ -30,15 +32,8 @@ public:
   /// The returned vector contains non-overlapping style ranges. They are sorted
   /// from beginning of the line to the end.
   std::vector<StyleRange> highlightLine(llvm::StringRef SourceLine,
+                                        const Preprocessor *PP,
                                         const LangOptions &LangOpts);
-
-private:
-  bool Initialized = false;
-  /// Fills Keywords and Literals.
-  void ensureTokenData();
-
-  llvm::SmallSet<StringRef, 12> Keywords;
-  llvm::SmallSet<StringRef, 12> Literals;
 };
 
 } // namespace clang
