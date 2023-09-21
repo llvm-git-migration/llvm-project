@@ -23,6 +23,8 @@ struct StyleRange {
 };
 
 class Preprocessor;
+class FileID;
+class SourceManager;
 
 class CodeSnippetHighlighter final {
 public:
@@ -31,9 +33,10 @@ public:
   /// Produce StyleRanges for the given line.
   /// The returned vector contains non-overlapping style ranges. They are sorted
   /// from beginning of the line to the end.
-  std::vector<StyleRange> highlightLine(llvm::StringRef SourceLine,
+  std::vector<StyleRange> highlightLine(unsigned LineNumber,
                                         const Preprocessor *PP,
-                                        const LangOptions &LangOpts);
+                                        const LangOptions &LangOpts, FileID FID,
+                                        const SourceManager &SM);
 };
 
 } // namespace clang

@@ -1249,7 +1249,8 @@ void TextDiagnostic::emitSnippetAndCaret(
     }
 
     // Emit what we have computed.
-    emitSnippet(SourceLine, MaxLineNoDisplayWidth, DisplayLineNo);
+    emitSnippet(SourceLine, MaxLineNoDisplayWidth, FID, SM, LineNo,
+                DisplayLineNo);
 
     if (!CaretLine.empty()) {
       indentForLineNumbers();
@@ -1278,16 +1279,17 @@ void TextDiagnostic::emitSnippetAndCaret(
 }
 
 void TextDiagnostic::emitSnippet(StringRef SourceLine,
-                                 unsigned MaxLineNoDisplayWidth,
-                                 unsigned LineNo) {
+                                 unsigned MaxLineNoDisplayWidth, FileID FID,
+                                 const SourceManager &SM, unsigned LineNo,
+                                 unsigned DisplayLineNo) {
   std::vector<StyleRange> Styles =
-      SnippetHighlighter.highlightLine(SourceLine, PP, LangOpts);
+      SnippetHighlighter.highlightLine(LineNo - 1, PP, LangOpts, FID, SM);
 
   // Emit line number.
   if (MaxLineNoDisplayWidth > 0) {
-    unsigned LineNoDisplayWidth = getNumDisplayWidth(LineNo);
+    unsigned LineNoDisplayWidth = getNumDisplayWidth(DisplayLineNo);
     OS.indent(MaxLineNoDisplayWidth - LineNoDisplayWidth + 1)
-        << LineNo << " | ";
+        << DisplayLineNo << " | ";
   }
 
   // Print the source line one character at a time.

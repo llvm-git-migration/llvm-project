@@ -105,7 +105,8 @@ private:
                            ArrayRef<FixItHint> Hints);
 
   void emitSnippet(StringRef SourceLine, unsigned MaxLineNoDisplayWidth,
-                   unsigned LineNo);
+                   FileID FID, const SourceManager &SM, unsigned LineNo,
+                   unsigned DisplayLineNo);
 
   void emitParseableFixits(ArrayRef<FixItHint> Hints, const SourceManager &SM);
 };
