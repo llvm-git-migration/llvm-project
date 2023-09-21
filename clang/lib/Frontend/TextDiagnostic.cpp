@@ -19,6 +19,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Locale.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <optional>
@@ -1307,14 +1308,14 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
       std::optional<enum raw_ostream::Colors> H;
       for (auto &P : Styles) {
         if (P.Start < I && P.End >= I) {
-          H = P.c;
+          H = P.color;
           break;
         }
       }
 
-      if (H) {
+      if (H)
         OS.changeColor(*H, false);
-      } else
+      else
         OS.resetColor();
     }
 

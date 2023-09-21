@@ -27,9 +27,9 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     StringRef SourceLine, const Preprocessor *PP, const LangOptions &LangOpts) {
   if (!PP)
     return {};
-  constexpr raw_ostream::Colors CommentColor = raw_ostream::BLACK;
-  constexpr raw_ostream::Colors LiteralColor = raw_ostream::GREEN;
-  constexpr raw_ostream::Colors KeywordColor = raw_ostream::YELLOW;
+  constexpr raw_ostream::Colors CommentColor = raw_ostream::GREEN;
+  constexpr raw_ostream::Colors LiteralColor = raw_ostream::CYAN;
+  constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
 
   SourceManager FakeSM = createTempSourceManager();
   const auto MemBuf = llvm::MemoryBuffer::getMemBuffer(SourceLine);
