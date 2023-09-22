@@ -1093,4 +1093,21 @@ void CHPERedirectionChunk::writeTo(uint8_t *buf) const {
   }
 }
 
+ImportThunkChunkARM64EC::ImportThunkChunkARM64EC(ImportFile *file)
+    : ImportThunkChunk(file->ctx, file->impSym), file(file) {}
+
+void ImportThunkChunkARM64EC::writeTo(uint8_t *buf) const {
+  memcpy(buf, importThunkARM64EC, sizeof(importThunkARM64EC));
+  applyArm64Addr(buf, file->impSym->getRVA(), rva, 12);
+  applyArm64Ldr(buf + 4, file->impSym->getRVA() & 0xfff);
+
+  uint32_t exitThunkRVA = exitThunk ? exitThunk->getRVA() : 0;
+  applyArm64Addr(buf + 8, exitThunkRVA, rva + 8, 12);
+  applyArm64Imm(buf + 12, exitThunkRVA & 0xfff, 0);
+
+  Defined *helper = dyn_cast<Defined>(file->ctx.config.arm64ECIcallHelper);
+  if (helper)
+    applyArm64Branch26(buf + 16, helper->getRVA() - rva - 16);
+}
+
 } // namespace lld::coff

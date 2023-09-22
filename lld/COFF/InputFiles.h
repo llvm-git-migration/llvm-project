@@ -55,6 +55,7 @@ class Defined;
 class DefinedImportData;
 class DefinedImportThunk;
 class DefinedRegular;
+class ImportThunkChunkARM64EC;
 class SectionChunk;
 class Symbol;
 class Undefined;
@@ -348,6 +349,7 @@ public:
 
   DefinedImportData *impSym = nullptr;
   Symbol *thunkSym = nullptr;
+  ImportThunkChunkARM64EC *impchkThunk = nullptr;
   std::string dllName;
 
 private:
