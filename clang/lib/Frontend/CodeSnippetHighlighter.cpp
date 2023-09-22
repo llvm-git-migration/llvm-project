@@ -19,6 +19,10 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
   if (!PP)
     return {};
 
+  // Might cause emission of another diagnostic.
+  if (PP->getIdentifierTable().getExternalIdentifierLookup())
+    return {};
+
   // Classify the given token and append it to the given vector.
   auto appendStyle = [PP, &LangOpts](std::vector<StyleRange> &Vec,
                                      const Token &T, unsigned Start,
