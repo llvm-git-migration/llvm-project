@@ -1535,7 +1535,12 @@ bool ValueObject::SetValueFromCString(const char *value_str, Status &error) {
     }
   } else {
     // We don't support setting things bigger than a scalar at present.
-    error.SetErrorString("unable to write aggregate data type");
+    // But maybe our frontend knows how to update the value.
+    if (auto *frontend = GetSyntheticFrontend()) {
+      return frontend->SetValueFromCString(value_str, error);
+    } else {
+      error.SetErrorString("unable to write aggregate data type");
+    }
     return false;
   }
 
