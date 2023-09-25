@@ -1340,7 +1340,7 @@ void IntegerRelation::convertVarKind(VarKind srcKind, unsigned srcPos,
 
   // Swap the new local variables with dimensions.
   //
-  // Essentially, this moves the constraints corresponding to the specified ids
+  // Essentially, this moves the information corresponding to the specified ids
   // of kind `srcKind` to the `convertCount` newly created ids of kind
   // `dstKind`. In particular, this moves the columns in the constraint
   // matrices, and zeros out the initially occupied columns (because the newly
@@ -2273,7 +2273,8 @@ void IntegerRelation::intersectRange(const IntegerPolyhedron &poly) {
 
 void IntegerRelation::inverse() {
   unsigned numRangeVars = getNumVarKind(VarKind::Range);
-  convertVarKind(VarKind::Domain, 0, getNumDomainVars(), VarKind::Range);
+  convertVarKind(VarKind::Domain, 0, getNumVarKind(VarKind::Domain),
+      VarKind::Range);
   convertVarKind(VarKind::Range, 0, numRangeVars, VarKind::Domain);
 }
 

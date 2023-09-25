@@ -547,7 +547,9 @@ public:
 
   /// Converts variables of the specified kind in the column range [srcPos,
   /// srcPos + num) to variables of the specified kind at position dstPos. The
-  /// ranges are relative to the kind of variable.
+  /// ranges are relative to the kind of variable. Omitting dstPos defaults to
+  /// placing the converted variables after all the other variables of kind
+  /// dstKind.
   ///
   /// srcKind and dstKind must be different.
   void convertVarKind(VarKind srcKind, unsigned srcPos, unsigned num,
