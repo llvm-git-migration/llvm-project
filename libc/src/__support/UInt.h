@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_LIBC_SRC_SUPPORT_UINT_H
-#define LLVM_LIBC_SRC_SUPPORT_UINT_H
+#ifndef LLVM_LIBC_SRC___SUPPORT_UINT_H
+#define LLVM_LIBC_SRC___SUPPORT_UINT_H
 
 #include "src/__support/CPP/array.h"
 #include "src/__support/CPP/limits.h"
@@ -116,7 +116,7 @@ template <size_t Bits, bool Signed> struct BigInt {
         return lo;
       }
     } else {
-      return (static_cast<T>(val[1]) << 64) + lo;
+      return static_cast<T>((static_cast<T>(val[1]) << 64) + lo);
     }
   }
 
@@ -929,4 +929,4 @@ struct make_signed<UInt<Bits>> : type_identity<Int<Bits>> {
 
 } // namespace __llvm_libc::cpp
 
-#endif // LLVM_LIBC_SRC_SUPPORT_UINT_H
+#endif // LLVM_LIBC_SRC___SUPPORT_UINT_H

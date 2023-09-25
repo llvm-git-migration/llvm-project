@@ -382,6 +382,8 @@ private:
   bool ForceEmitZeroWaitcnts;
   bool ForceEmitWaitcnt[NUM_INST_CNTS];
 
+  bool OptNone;
+
   // S_ENDPGM instructions before which we should insert a DEALLOC_VGPRS
   // message.
   DenseSet<MachineInstr *> ReleaseVGPRInsts;
@@ -676,7 +678,7 @@ void WaitcntBrackets::updateByEvent(const SIInstrInfo *TII,
       setRegScore(RegNo + NUM_ALL_VGPRS, t, CurrScore);
     }
 #endif
-  } else {
+  } else /* LGKM_CNT || EXP_CNT || VS_CNT || NUM_INST_CNTS */ {
     // Match the score to the destination registers.
     for (unsigned I = 0, E = Inst.getNumOperands(); I != E; ++I) {
       auto &Op = Inst.getOperand(I);
@@ -687,6 +689,10 @@ void WaitcntBrackets::updateByEvent(const SIInstrInfo *TII,
         if (Interval.first >= NUM_ALL_VGPRS)
           continue;
         if (updateVMCntOnly(Inst)) {
+          // updateVMCntOnly should only leave us with VGPRs
+          // MUBUF, MTBUF, MIMG, FlatGlobal, and FlatScratch only have VGPR/AGPR
+          // defs. That's required for a sane index into `VgprMemTypes` below
+          assert(TRI->isVectorRegister(*MRI, Op.getReg()));
           VmemType V = getVmemType(Inst);
           for (int RegNo = Interval.first; RegNo < Interval.second; ++RegNo)
             VgprVmemTypes[RegNo] |= 1 << V;
@@ -1035,7 +1041,7 @@ bool SIInsertWaitcnts::generateWaitcntInstBefore(MachineInstr &MI,
   // do this if there are no outstanding scratch stores.
   else if (MI.getOpcode() == AMDGPU::S_ENDPGM ||
            MI.getOpcode() == AMDGPU::S_ENDPGM_SAVED) {
-    if (ST->getGeneration() >= AMDGPUSubtarget::GFX11 &&
+    if (ST->getGeneration() >= AMDGPUSubtarget::GFX11 && !OptNone &&
         ScoreBrackets.getScoreRange(VS_CNT) != 0 &&
         !ScoreBrackets.hasPendingEvent(SCRATCH_WRITE_ACCESS))
       ReleaseVGPRInsts.insert(&MI);
@@ -1714,26 +1720,25 @@ bool SIInsertWaitcnts::insertWaitcntInBlock(MachineFunction &MF,
 // which we want to flush the vmcnt counter, and false otherwise.
 bool SIInsertWaitcnts::isPreheaderToFlush(MachineBasicBlock &MBB,
                                           WaitcntBrackets &ScoreBrackets) {
-  if (PreheadersToFlush.count(&MBB))
-    return PreheadersToFlush[&MBB];
-
-  auto UpdateCache = [&](bool val) {
-    PreheadersToFlush[&MBB] = val;
-    return val;
-  };
+  auto [Iterator, IsInserted] = PreheadersToFlush.try_emplace(&MBB, false);
+  if (!IsInserted)
+    return Iterator->second;
 
   MachineBasicBlock *Succ = MBB.getSingleSuccessor();
   if (!Succ)
-    return UpdateCache(false);
+    return false;
 
   MachineLoop *Loop = MLI->getLoopFor(Succ);
   if (!Loop)
-    return UpdateCache(false);
+    return false;
 
-  if (Loop->getLoopPreheader() == &MBB && shouldFlushVmCnt(Loop, ScoreBrackets))
-    return UpdateCache(true);
+  if (Loop->getLoopPreheader() == &MBB &&
+      shouldFlushVmCnt(Loop, ScoreBrackets)) {
+    Iterator->second = true;
+    return true;
+  }
 
-  return UpdateCache(false);
+  return false;
 }
 
 bool SIInsertWaitcnts::isVMEMOrFlatVMEM(const MachineInstr &MI) const {
@@ -1816,6 +1821,9 @@ bool SIInsertWaitcnts::runOnMachineFunction(MachineFunction &MF) {
   ForceEmitZeroWaitcnts = ForceEmitZeroFlag;
   for (auto T : inst_counter_types())
     ForceEmitWaitcnt[T] = false;
+
+  OptNone = MF.getFunction().hasOptNone() ||
+            MF.getTarget().getOptLevel() == CodeGenOptLevel::None;
 
   HardwareLimits Limits = {};
   Limits.VmcntMax = AMDGPU::getVmcntBitMask(IV);

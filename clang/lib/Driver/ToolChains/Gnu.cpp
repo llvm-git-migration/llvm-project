@@ -588,10 +588,10 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         CmdArgs.push_back("--start-group");
 
       if (NeedsSanitizerDeps)
-        linkSanitizerRuntimeDeps(ToolChain, CmdArgs);
+        linkSanitizerRuntimeDeps(ToolChain, Args, CmdArgs);
 
       if (NeedsXRayDeps)
-        linkXRayRuntimeDeps(ToolChain, CmdArgs);
+        linkXRayRuntimeDeps(ToolChain, Args, CmdArgs);
 
       bool WantPthread = Args.hasArg(options::OPT_pthread) ||
                          Args.hasArg(options::OPT_pthreads);
@@ -700,6 +700,10 @@ void tools::gnutools::Assembler::ConstructJob(Compilation &C,
   unsigned PICLevel;
   bool IsPIE;
   const char *DefaultAssembler = "as";
+  // Enforce GNU as on Solaris; the native assembler's input syntax isn't fully
+  // compatible.
+  if (getToolChain().getTriple().isOSSolaris())
+    DefaultAssembler = "gas";
   std::tie(RelocationModel, PICLevel, IsPIE) =
       ParsePICArgs(getToolChain(), Args);
 
@@ -1838,7 +1842,7 @@ static bool findBiarchMultilibs(const Driver &D,
 
   StringRef Suff64 = "/64";
   // Solaris uses platform-specific suffixes instead of /64.
-  if (TargetTriple.getOS() == llvm::Triple::Solaris) {
+  if (TargetTriple.isOSSolaris()) {
     switch (TargetTriple.getArch()) {
     case llvm::Triple::x86:
     case llvm::Triple::x86_64:
@@ -2071,8 +2075,7 @@ static llvm::StringRef getGCCToolchainDir(const ArgList &Args,
 /// necessary because the driver doesn't store the final version of the target
 /// triple.
 void Generic_GCC::GCCInstallationDetector::init(
-    const llvm::Triple &TargetTriple, const ArgList &Args,
-    ArrayRef<std::string> ExtraTripleAliases) {
+    const llvm::Triple &TargetTriple, const ArgList &Args) {
   llvm::Triple BiarchVariantTriple = TargetTriple.isArch32Bit()
                                          ? TargetTriple.get64BitArchVariant()
                                          : TargetTriple.get32BitArchVariant();
@@ -2084,6 +2087,10 @@ void Generic_GCC::GCCInstallationDetector::init(
   CollectLibDirsAndTriples(TargetTriple, BiarchVariantTriple, CandidateLibDirs,
                            CandidateTripleAliases, CandidateBiarchLibDirs,
                            CandidateBiarchTripleAliases);
+
+  TripleNoVendor = TargetTriple.getArchName().str() + "-" +
+                   TargetTriple.getOSAndEnvironmentName().str();
+  StringRef TripleNoVendorRef(TripleNoVendor);
 
   // If --gcc-install-dir= is specified, skip filesystem detection.
   if (const Arg *A =
@@ -2142,9 +2149,6 @@ void Generic_GCC::GCCInstallationDetector::init(
     // may pick the libraries for x86_64-pc-linux-gnu even when exact matching
     // triple x86_64-gentoo-linux-gnu is present.
     GentooTestTriples.push_back(TargetTriple.str());
-    // Check rest of triples.
-    GentooTestTriples.append(ExtraTripleAliases.begin(),
-                             ExtraTripleAliases.end());
     GentooTestTriples.append(CandidateTripleAliases.begin(),
                              CandidateTripleAliases.end());
     if (ScanGentooConfigs(TargetTriple, Args, GentooTestTriples,
@@ -2170,10 +2174,10 @@ void Generic_GCC::GCCInstallationDetector::init(
       // Try to match the exact target triple first.
       ScanLibDirForGCCTriple(TargetTriple, Args, LibDir, TargetTriple.str(),
                              false, GCCDirExists, GCCCrossDirExists);
-      // Try rest of possible triples.
-      for (StringRef Candidate : ExtraTripleAliases) // Try these first.
-        ScanLibDirForGCCTriple(TargetTriple, Args, LibDir, Candidate, false,
-                               GCCDirExists, GCCCrossDirExists);
+      // If vendor is unknown, let's try triple without vendor.
+      if (TargetTriple.getVendor() == llvm::Triple::UnknownVendor)
+        ScanLibDirForGCCTriple(TargetTriple, Args, LibDir, TripleNoVendorRef,
+                               false, GCCDirExists, GCCCrossDirExists);
       for (StringRef Candidate : CandidateTripleAliases)
         ScanLibDirForGCCTriple(TargetTriple, Args, LibDir, Candidate, false,
                                GCCDirExists, GCCCrossDirExists);
@@ -2220,13 +2224,20 @@ bool Generic_GCC::GCCInstallationDetector::getBiarchSibling(Multilib &M) const {
 void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
     const llvm::Triple &TargetTriple, SmallVectorImpl<std::string> &Prefixes,
     StringRef SysRoot) {
-  if (TargetTriple.getOS() == llvm::Triple::Solaris) {
+
+  if (TargetTriple.isOSHaiku()) {
+    Prefixes.push_back(concat(SysRoot, "/boot/system/develop/tools"));
+    return;
+  }
+
+  if (TargetTriple.isOSSolaris()) {
     // Solaris is a special case.
     // The GCC installation is under
     //   /usr/gcc/<major>.<minor>/lib/gcc/<triple>/<major>.<minor>.<patch>/
     // so we need to find those /usr/gcc/*/lib/gcc libdirs and go with
     // /usr/gcc/<version> as a prefix.
 
+    SmallVector<std::pair<GCCVersion, std::string>, 8> SolarisPrefixes;
     std::string PrefixDir = concat(SysRoot, "/usr/gcc");
     std::error_code EC;
     for (llvm::vfs::directory_iterator LI = D.getVFS().dir_begin(PrefixDir, EC),
@@ -2244,8 +2255,13 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
       if (!D.getVFS().exists(CandidateLibPath))
         continue;
 
-      Prefixes.push_back(CandidatePrefix);
+      SolarisPrefixes.emplace_back(
+          std::make_pair(CandidateVersion, CandidatePrefix));
     }
+    // Sort in reverse order so GCCInstallationDetector::init picks the latest.
+    std::sort(SolarisPrefixes.rbegin(), SolarisPrefixes.rend());
+    for (auto p : SolarisPrefixes)
+      Prefixes.emplace_back(p.second);
     return;
   }
 
@@ -2416,7 +2432,7 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
   using std::begin;
   using std::end;
 
-  if (TargetTriple.getOS() == llvm::Triple::Solaris) {
+  if (TargetTriple.isOSSolaris()) {
     static const char *const SolarisLibDirs[] = {"/lib"};
     static const char *const SolarisSparcV8Triples[] = {
         "sparc-sun-solaris2.11"};
@@ -2668,10 +2684,6 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
     // triple.
     break;
   }
-
-  // Always append the drivers target triple to the end, in case it doesn't
-  // match any of our aliases.
-  TripleAliases.push_back(TargetTriple.str());
 
   // Also include the multiarch variant if it's different.
   if (TargetTriple.str() != BiarchTriple.str())
@@ -2953,7 +2965,7 @@ bool Generic_GCC::IsIntegratedAssemblerDefault() const {
   case llvm::Triple::xcore:
     return false;
   default:
-    return getTriple().getVendor() != llvm::Triple::Myriad;
+    return true;
   }
 }
 
@@ -3094,34 +3106,53 @@ Generic_GCC::addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
                                    llvm::opt::ArgStringList &CC1Args) const {
   const Driver &D = getDriver();
   std::string SysRoot = computeSysRoot();
-  std::string Target = getTripleString();
+  if (SysRoot.empty())
+    SysRoot = llvm::sys::path::get_separator();
 
-  auto AddIncludePath = [&](std::string Path) {
+  auto AddIncludePath = [&](StringRef Path, bool TargetDirRequired = false) {
     std::string Version = detectLibcxxVersion(Path);
     if (Version.empty())
       return false;
 
     // First add the per-target include path if it exists.
-    std::string TargetDir = Path + "/" + Target + "/c++/" + Version;
-    if (D.getVFS().exists(TargetDir))
-      addSystemInclude(DriverArgs, CC1Args, TargetDir);
+    bool TargetDirExists = false;
+    std::optional<std::string> TargetIncludeDir = getTargetSubDirPath(Path);
+    if (TargetIncludeDir) {
+      SmallString<128> TargetDir(*TargetIncludeDir);
+      llvm::sys::path::append(TargetDir, "c++", Version);
+      if (D.getVFS().exists(TargetDir)) {
+        addSystemInclude(DriverArgs, CC1Args, TargetDir);
+        TargetDirExists = true;
+      }
+    }
+    if (TargetDirRequired && !TargetDirExists)
+      return false;
 
     // Second add the generic one.
-    addSystemInclude(DriverArgs, CC1Args, Path + "/c++/" + Version);
+    SmallString<128> GenericDir(Path);
+    llvm::sys::path::append(GenericDir, "c++", Version);
+    addSystemInclude(DriverArgs, CC1Args, GenericDir);
     return true;
   };
 
-  // Android never uses the libc++ headers installed alongside the toolchain,
-  // which are generally incompatible with the NDK libraries anyway.
-  if (!getTriple().isAndroid())
-    if (AddIncludePath(getDriver().Dir + "/../include"))
-      return;
+  // Android only uses the libc++ headers installed alongside the toolchain if
+  // they contain an Android-specific target include path, otherwise they're
+  // incompatible with the NDK libraries.
+  SmallString<128> DriverIncludeDir(getDriver().Dir);
+  llvm::sys::path::append(DriverIncludeDir, "..", "include");
+  if (AddIncludePath(DriverIncludeDir,
+                     /*TargetDirRequired=*/getTriple().isAndroid()))
+    return;
   // If this is a development, non-installed, clang, libcxx will
   // not be found at ../include/c++ but it likely to be found at
   // one of the following two locations:
-  if (AddIncludePath(concat(SysRoot, "/usr/local/include")))
+  SmallString<128> UsrLocalIncludeDir(SysRoot);
+  llvm::sys::path::append(UsrLocalIncludeDir, "usr", "local", "include");
+  if (AddIncludePath(UsrLocalIncludeDir))
     return;
-  if (AddIncludePath(concat(SysRoot, "/usr/include")))
+  SmallString<128> UsrIncludeDir(SysRoot);
+  llvm::sys::path::append(UsrIncludeDir, "usr", "include");
+  if (AddIncludePath(UsrIncludeDir))
     return;
 }
 
