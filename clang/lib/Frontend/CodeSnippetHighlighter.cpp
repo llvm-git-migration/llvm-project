@@ -6,6 +6,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
 #include "llvm/Support/raw_ostream.h"
+#include <chrono>
 
 using namespace clang;
 
@@ -16,6 +17,9 @@ static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
 std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,
     FileID FID, const SourceManager &SM) {
+  std::chrono::steady_clock::time_point begin =
+      std::chrono::steady_clock::now();
+
   if (!PP)
     return {};
 
@@ -23,6 +27,7 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
   if (PP->getIdentifierTable().getExternalIdentifierLookup())
     return {};
 
+  size_t NTokens = 0;
   // Classify the given token and append it to the given vector.
   auto appendStyle = [PP, &LangOpts](std::vector<StyleRange> &Vec,
                                      const Token &T, unsigned Start,
@@ -56,6 +61,7 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
 
   bool Stop = false;
   while (!Stop) {
+    ++NTokens;
     Token T;
     Stop = L.LexFromRawLexer(T);
     if (T.is(tok::unknown))
@@ -131,5 +137,23 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
 
   while (Lines.size() <= LineNumber)
     Lines.push_back({});
+
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  llvm::errs() << "Lexed " << Lines.size() << " lines and " << NTokens
+               << " Tokens\n";
+  llvm::errs() << "That took "
+               << std::chrono::duration_cast<std::chrono::microseconds>(end -
+                                                                        begin)
+                      .count()
+               << " microseconds\n";
+  llvm::errs() << "That took "
+               << std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                        begin)
+                      .count()
+               << " milliseconds\n";
+  llvm::errs()
+      << "That took "
+      << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()
+      << " seconds\n";
   return Lines[LineNumber];
 }
