@@ -41,14 +41,13 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
       } else {
         const IdentifierInfo *II = PP->getIdentifierInfo(RawIdent);
         assert(II);
-
-        if (II->isKeyword(LangOpts)) {
+        if (II->isKeyword(LangOpts))
           Vec.push_back(StyleRange{Start, Start + Length, KeywordColor});
-        }
       }
     } else if (tok::isLiteral(T.getKind())) {
       Vec.push_back(StyleRange{Start, Start + Length, LiteralColor});
-    } else if (T.is(tok::comment)) {
+    } else {
+      assert(T.is(tok::comment));
       Vec.push_back(StyleRange{Start, Start + Length, CommentColor});
     }
   };
@@ -65,6 +64,11 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     Token T;
     Stop = L.LexFromRawLexer(T);
     if (T.is(tok::unknown))
+      continue;
+
+    // We are only interested in identifiers, literals and comments.
+    if (!T.is(tok::raw_identifier) && !T.is(tok::comment) &&
+        !tok::isLiteral(T.getKind()))
       continue;
 
     bool Invalid;
@@ -138,6 +142,7 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
   while (Lines.size() <= LineNumber)
     Lines.push_back({});
 
+#if 0
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
   llvm::errs() << "Lexed " << Lines.size() << " lines and " << NTokens
                << " Tokens\n";
@@ -155,5 +160,6 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
       << "That took "
       << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()
       << " seconds\n";
+#endif
   return Lines[LineNumber];
 }
