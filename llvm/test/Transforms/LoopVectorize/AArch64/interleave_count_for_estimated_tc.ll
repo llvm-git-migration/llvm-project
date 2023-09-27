@@ -1,5 +1,4 @@
-; RUN: opt < %s -tiny-trip-count-interleave-threshold=16 -force-target-max-vector-interleave=8 -p loop-vectorize -S -pass-remarks=loop-vectorize -disable-output 2>&1 | FileCheck %s
-; TODO: remove -tiny-trip-count-interleave-threshold once the interleave threshold is removed
+; RUN: opt < %s -force-target-max-vector-interleave=8 -p loop-vectorize -S -pass-remarks=loop-vectorize -disable-output 2>&1 | FileCheck %s
 
 target triple = "aarch64-linux-gnu"
 
