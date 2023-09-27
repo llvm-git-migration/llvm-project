@@ -1310,7 +1310,7 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
       std::optional<enum raw_ostream::Colors> H;
       for (auto &P : Styles) {
         if (P.Start < I && P.End >= I) {
-          H = P.color;
+          H = P.Color;
           break;
         }
       }

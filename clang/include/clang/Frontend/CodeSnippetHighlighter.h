@@ -19,7 +19,7 @@ namespace clang {
 struct StyleRange {
   unsigned Start;
   unsigned End;
-  const enum llvm::raw_ostream::Colors color;
+  const enum llvm::raw_ostream::Colors Color;
 };
 
 class Preprocessor;

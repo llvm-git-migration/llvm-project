@@ -71,23 +71,30 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
         !tok::isLiteral(T.getKind()))
       continue;
 
-    bool Invalid;
-    unsigned StartCol =
-        SM.getSpellingColumnNumber(T.getLocation(), &Invalid) - 1;
+    bool Invalid = false;
+    unsigned EndLine = SM.getSpellingLineNumber(T.getEndLoc(), &Invalid) - 1;
     if (Invalid)
+      continue;
+
+    if (EndLine < LineNumber)
       continue;
     unsigned StartLine =
         SM.getSpellingLineNumber(T.getLocation(), &Invalid) - 1;
     if (Invalid)
       continue;
+    if (StartLine > LineNumber)
+      break;
 
-    while (Lines.size() <= StartLine)
-      Lines.push_back({});
+    // Must have an intersection at this point
+    assert(StartLine <= LineNumber && EndLine >= LineNumber);
 
-    unsigned EndLine = SM.getSpellingLineNumber(T.getEndLoc(), &Invalid) - 1;
+    unsigned StartCol =
+        SM.getSpellingColumnNumber(T.getLocation(), &Invalid) - 1;
     if (Invalid)
       continue;
 
+    while (Lines.size() <= StartLine)
+      Lines.push_back({});
     // Simple tokens.
     if (StartLine == EndLine) {
       appendStyle(Lines[StartLine], T, StartCol, T.getLength());
