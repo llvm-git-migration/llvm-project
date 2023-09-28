@@ -82,8 +82,7 @@ void MCSectionXCOFF::printSwitchToSection(const MCAsmInfo &MAI, const Triple &T,
   }
 
   if (isCsect() && getMappingClass() == XCOFF::XMC_TD) {
-    assert((getKind().isBSSExtern() || getKind().isBSSLocal()) &&
-           "Unexepected section kind for toc-data");
+    assert(getKind().isBSS() && "Unexepected section kind for toc-data");
     printCsectDirective(OS);
     return;
   }
