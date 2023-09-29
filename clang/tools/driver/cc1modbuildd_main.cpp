@@ -48,26 +48,33 @@ static raw_fd_ostream &unbuff_outs() {
 
 namespace {
 
+struct ClientConnection {
+  int ClientFD;
+  std::string Buffer;
+};
+
 class ModuleBuildDaemonServer {
 public:
-  SmallString<128> BasePath;
-  SmallString<128> SocketPath;
-  SmallString<128> PidPath;
+  SmallString<256> SocketPath;
+  SmallString<256> STDERR;
+  SmallString<256> STDOUT;
 
-  ModuleBuildDaemonServer(SmallString<128> Path, ArrayRef<const char *> Argv)
-      : BasePath(Path), SocketPath(Path) {
+  ModuleBuildDaemonServer(StringRef Path, ArrayRef<const char *> Argv)
+      : SocketPath(Path), STDERR(Path), STDOUT(Path) {
     llvm::sys::path::append(SocketPath, SOCKET_FILE_NAME);
+    llvm::sys::path::append(STDOUT, STDOUT_FILE_NAME);
+    llvm::sys::path::append(STDERR, STDERR_FILE_NAME);
   }
 
-  ~ModuleBuildDaemonServer() { shutdownDaemon(SIGTERM); }
+  ~ModuleBuildDaemonServer() { shutdownDaemon(); }
 
   int forkDaemon();
-  int launchDaemon();
+  int createDaemonSocket();
   int listenForClients();
 
-  static void handleClient(int Client);
+  static void handleClient(ClientConnection Connection);
 
-  void shutdownDaemon(int signal) {
+  void shutdownDaemon() {
     unlink(SocketPath.c_str());
     shutdown(ListenSocketFD, SHUT_RD);
     close(ListenSocketFD);
@@ -84,14 +91,14 @@ private:
 ModuleBuildDaemonServer *DaemonPtr = nullptr;
 void handleSignal(int Signal) {
   if (DaemonPtr != nullptr) {
-    DaemonPtr->shutdownDaemon(Signal);
+    DaemonPtr->shutdownDaemon();
   }
 }
 } // namespace
 
-static bool verbose = false;
-static void verbose_print(const llvm::Twine &message) {
-  if (verbose) {
+static bool VerboseLog = false;
+static void printVerboseLog(const llvm::Twine &message) {
+  if (VerboseLog) {
     unbuff_outs() << message << '\n';
   }
 }
@@ -114,12 +121,7 @@ int ModuleBuildDaemonServer::forkDaemon() {
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 
-  SmallString<128> STDOUT = BasePath;
-  llvm::sys::path::append(STDOUT, STDOUT_FILE_NAME);
   freopen(STDOUT.c_str(), "a", stdout);
-
-  SmallString<128> STDERR = BasePath;
-  llvm::sys::path::append(STDERR, STDERR_FILE_NAME);
   freopen(STDERR.c_str(), "a", stderr);
 
   if (signal(SIGTERM, handleSignal) == SIG_ERR) {
@@ -139,7 +141,7 @@ int ModuleBuildDaemonServer::forkDaemon() {
 }
 
 // Creates unix socket for IPC with module build daemon
-int ModuleBuildDaemonServer::launchDaemon() {
+int ModuleBuildDaemonServer::createDaemonSocket() {
 
   // new socket
   if ((ListenSocketFD = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -166,7 +168,7 @@ int ModuleBuildDaemonServer::launchDaemon() {
     std::perror("Socket bind error: ");
     exit(EXIT_FAILURE);
   }
-  verbose_print("mbd created and binded to socket address at: " + SocketPath);
+  printVerboseLog("mbd created and binded to socket address at: " + SocketPath);
 
   // set socket to accept incoming connection request
   unsigned MaxBacklog = llvm::hardware_concurrency().compute_thread_count();
@@ -180,27 +182,43 @@ int ModuleBuildDaemonServer::launchDaemon() {
 
 // Function submitted to thread pool with each client connection. Not
 // responsible for closing client connections
-void ModuleBuildDaemonServer::handleClient(int Client) {
+// TODO: Setup something like ScopedHandle to auto close client on return
+void ModuleBuildDaemonServer::handleClient(ClientConnection Connection) {
 
   // Read handshake from client
-  Expected<HandshakeMsg> MaybeHandshakeMsg =
-      readSocketMsgFromSocket<HandshakeMsg>(Client);
+  if (llvm::Error ReadErr =
+          readFromSocket(Connection.ClientFD, Connection.Buffer)) {
+    writeError(std::move(ReadErr), "Daemon failed to read buffer from socket");
+    close(Connection.ClientFD);
+    return;
+  }
 
+  // Wait for response from module build daemon
+  Expected<HandshakeMsg> MaybeHandshakeMsg =
+      getSocketMsgFromBuffer<HandshakeMsg>(Connection.Buffer);
   if (!MaybeHandshakeMsg) {
     writeError(MaybeHandshakeMsg.takeError(),
-               "Failed to read handshake message from socket: ");
+               "Failed to convert buffer to HandshakeMsg: ");
+    close(Connection.ClientFD);
     return;
   }
 
-  // Handle HANDSHAKE
+  // Have received HandshakeMsg - send HandshakeMsg response to clang invocation
   HandshakeMsg Msg(ActionType::HANDSHAKE, StatusType::SUCCESS);
-  llvm::Error WriteErr = writeSocketMsgToSocket(Msg, Client);
-
-  if (WriteErr) {
+  if (llvm::Error WriteErr = writeSocketMsgToSocket(Msg, Connection.ClientFD)) {
     writeError(std::move(WriteErr),
                "Failed to notify client that handshake was received");
+    close(Connection.ClientFD);
     return;
   }
+
+  // Remove HandshakeMsg from Buffer in preperation for next read. Not currently
+  // necessary but will be once Daemon increases communication
+  size_t Position = Connection.Buffer.find("...\n");
+  if (Position != std::string::npos)
+    Connection.Buffer = Connection.Buffer.substr(Position + 4);
+
+  close(Connection.ClientFD);
   return;
 }
 
@@ -216,7 +234,10 @@ int ModuleBuildDaemonServer::listenForClients() {
       continue;
     }
 
-    Pool.async(handleClient, Client);
+    ClientConnection Connection;
+    Connection.ClientFD = Client;
+
+    Pool.async(handleClient, Connection);
   }
   return 0;
 }
@@ -247,7 +268,7 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   // Where to store log files and socket address
   // TODO: Add check to confirm BasePath is directory
-  SmallString<128> BasePath(Argv[0]);
+  std::string BasePath(Argv[0]);
   llvm::sys::fs::create_directories(BasePath);
   ModuleBuildDaemonServer Daemon(BasePath, Argv);
 
@@ -255,10 +276,10 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
   DaemonPtr = &Daemon;
 
   if (find(Argv, StringRef("-v")) != Argv.end())
-    verbose = true;
+    VerboseLog = true;
 
   Daemon.forkDaemon();
-  Daemon.launchDaemon();
+  Daemon.createDaemonSocket();
   Daemon.listenForClients();
 
   return 0;

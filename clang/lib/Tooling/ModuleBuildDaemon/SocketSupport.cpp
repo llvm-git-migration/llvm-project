@@ -10,6 +10,7 @@
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Tooling/ModuleBuildDaemon/Client.h"
+#include "clang/Tooling/ModuleBuildDaemon/Utils.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallString.h"
@@ -61,37 +62,17 @@ Expected<int> cc1modbuildd::connectToSocket(StringRef SocketPath) {
   return FD;
 }
 
-Expected<int> cc1modbuildd::connectAndWriteToSocket(std::string Buffer,
-                                                    StringRef SocketPath) {
+llvm::Error cc1modbuildd::readFromSocket(int FD, std::string &BufferConsumer) {
 
-  Expected<int> MaybeConnectedFD = connectToSocket(SocketPath);
-  if (!MaybeConnectedFD)
-    return std::move(MaybeConnectedFD.takeError());
-
-  int ConnectedFD = std::move(*MaybeConnectedFD);
-  llvm::Error Err = writeToSocket(Buffer, ConnectedFD);
-  if (Err)
-    return std::move(Err);
-
-  return ConnectedFD;
-}
-
-Expected<std::string> cc1modbuildd::readFromSocket(int FD) {
-
-  const size_t BUFFER_SIZE = 4096;
-  std::vector<char> Buffer(BUFFER_SIZE);
-  size_t TotalBytesRead = 0;
-
+  char Buffer[MAX_BUFFER];
   ssize_t n;
-  while ((n = read(FD, Buffer.data() + TotalBytesRead,
-                   Buffer.size() - TotalBytesRead)) > 0) {
 
-    TotalBytesRead += n;
+  while ((n = read(FD, Buffer, MAX_BUFFER)) > 0) {
+
+    BufferConsumer.assign(Buffer, n);
     // Read until ...\n encountered (last line of YAML document)
-    if (std::string(&Buffer[TotalBytesRead - 4], 4) == "...\n")
+    if (BufferConsumer.find("...\n") != std::string::npos)
       break;
-    if (Buffer.size() - TotalBytesRead < BUFFER_SIZE)
-      Buffer.resize(Buffer.size() + BUFFER_SIZE);
   }
 
   if (n < 0) {
@@ -100,13 +81,13 @@ Expected<std::string> cc1modbuildd::readFromSocket(int FD) {
   }
   if (n == 0)
     return llvm::make_error<StringError>("EOF", inconvertibleErrorCode());
-  return std::string(Buffer.begin(), Buffer.end());
+  return llvm::Error::success();
 }
 
-llvm::Error cc1modbuildd::writeToSocket(std::string Buffer, int WriteFD) {
+llvm::Error cc1modbuildd::writeToSocket(StringRef Buffer, int WriteFD) {
 
   ssize_t BytesToWrite = static_cast<ssize_t>(Buffer.size());
-  const char *Bytes = Buffer.c_str();
+  const char *Bytes = Buffer.data();
 
   while (BytesToWrite) {
     ssize_t BytesWritten = write(WriteFD, Bytes, BytesToWrite);

@@ -22,9 +22,8 @@ namespace cc1modbuildd {
 
 Expected<int> createSocket();
 Expected<int> connectToSocket(StringRef SocketPath);
-Expected<int> connectAndWriteToSocket(std::string Buffer, StringRef SocketPath);
-Expected<std::string> readFromSocket(int FD);
-llvm::Error writeToSocket(std::string Buffer, int WriteFD);
+llvm::Error readFromSocket(int FD, std::string &BufferConsumer);
+llvm::Error writeToSocket(StringRef Buffer, int WriteFD);
 
 } // namespace cc1modbuildd
 

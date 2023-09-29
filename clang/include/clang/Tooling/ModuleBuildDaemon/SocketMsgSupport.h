@@ -47,7 +47,7 @@ template <typename T> std::string getBufferFromSocketMsg(T Msg) {
   return Buffer;
 }
 
-template <typename T> Expected<T> getSocketMsgFromBuffer(const char *Buffer) {
+template <typename T> Expected<T> getSocketMsgFromBuffer(StringRef Buffer) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
@@ -67,13 +67,13 @@ template <typename T> Expected<T> readSocketMsgFromSocket(int FD) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
-  Expected<std::string> MaybeResponseBuffer = readFromSocket(FD);
-  if (!MaybeResponseBuffer)
-    return std::move(MaybeResponseBuffer.takeError());
+  std::string BufferConsumer;
+  if (llvm::Error ReadErr = readFromSocket(FD, BufferConsumer))
+    return std::move(ReadErr);
 
   // Wait for response from module build daemon
   Expected<T> MaybeResponse =
-      getSocketMsgFromBuffer<T>(std::move(*MaybeResponseBuffer).c_str());
+      getSocketMsgFromBuffer<T>(std::move(BufferConsumer).c_str());
   if (!MaybeResponse)
     return std::move(MaybeResponse.takeError());
   return std::move(*MaybeResponse);

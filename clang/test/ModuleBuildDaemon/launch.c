@@ -11,4 +11,3 @@
 // CHECK: mbd created and binded to socket address at: mbd-launch/mbd.sock
 
 // RUN: if pgrep -f "cc1modbuildd mbd-launch"; then pkill -f "cc1modbuildd mbd-launch"; fi
-// RUN: rm -rf mbd-launch %t

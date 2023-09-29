@@ -45,7 +45,7 @@ std::string cc1modbuildd::getBasePath() {
           HashResult.data());
   std::string Key = toString(llvm::APInt(64, HashValue), 36, /*Signed*/ false);
 
-  // set paths
+  // Set paths
   SmallString<128> BasePath;
   llvm::sys::path::system_temp_directory(/*erasedOnReboot*/ true, BasePath);
   llvm::sys::path::append(BasePath, "clang-" + Key);
@@ -111,13 +111,12 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
     return std::move(Err);
 
   const unsigned int MICROSEC_IN_SEC = 1000000;
-  constexpr unsigned int MAX_TIME = 30 * MICROSEC_IN_SEC;
-  const unsigned short INTERVAL = 100;
+  constexpr unsigned int MAX_WAIT_TIME = 30 * MICROSEC_IN_SEC;
 
   unsigned int CumulativeTime = 0;
-  unsigned int WaitTime = 0;
+  unsigned int WaitTime = 10;
 
-  while (CumulativeTime <= MAX_TIME) {
+  while (CumulativeTime <= MAX_WAIT_TIME) {
     // Wait a bit then check to see if the module build daemon has initialized
     usleep(WaitTime);
 
@@ -128,7 +127,9 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
       consumeError(MaybeFD.takeError());
     }
 
-    CumulativeTime += INTERVAL;
+    CumulativeTime += WaitTime;
+    // Exponential backoff
+    WaitTime = WaitTime * 2;
   }
 
   // After waiting 30 seconds give up
@@ -136,9 +137,8 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
       "Module build daemon could not be spawned", inconvertibleErrorCode());
 }
 
-llvm::Error
-cc1modbuildd::handshakeModuleBuildDaemon(const CompilerInvocation &Clang,
-                                         const char *Argv0) {
+llvm::Error cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
+    const CompilerInvocation &Clang, const char *Argv0) {
 
   // The module build daemon stores all output files and its socket address
   // under BasePath. Either set BasePath to a user provided option or create an
