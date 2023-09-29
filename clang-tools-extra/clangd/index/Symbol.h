@@ -75,7 +75,9 @@ struct Symbol {
   /// (When snippets are disabled, the symbol name alone is used).
   /// Only set when the symbol is indexed for completion.
   llvm::StringRef CompletionSnippetSuffix;
-  /// Documentation including comment for the symbol declaration.
+  /// Comment for the symbol declaration.
+  llvm::StringRef DocComment;
+  /// Documentation including DocComment.
   llvm::StringRef Documentation;
   /// Type when this symbol is used in an expression. (Short display form).
   /// e.g. return type of a function, or type of a variable.
