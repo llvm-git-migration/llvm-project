@@ -29,6 +29,8 @@ constexpr uint8_t RecordLength = 80;
 constexpr uint8_t RecordPrefixLength = 3;
 constexpr uint8_t PayloadLength = 77;
 constexpr uint8_t RecordContentLength = RecordLength - RecordPrefixLength;
+constexpr uint8_t ESDMetadataLength = 69;
+constexpr uint8_t TXTMetadataLength = 21;
 
 /// \brief Maximum data length before starting a new card for RLD and TXT data.
 ///
@@ -65,12 +67,7 @@ enum ESDNameSpaceId : uint8_t {
   ESD_NS_Parts = 3
 };
 
-enum ESDReserveQwords : uint8_t {
-  ESD_RQ_0 = 0,
-  ESD_RQ_1 = 1,
-  ESD_RQ_2 = 2,
-  ESD_RQ_3 = 3
-};
+enum ESDReserveQwords : uint8_t { ESD_RQ_0 = 0, ESD_RQ_1 = 1 };
 
 enum ESDAmode : uint8_t {
   ESD_AMODE_None = 0,
@@ -155,6 +152,12 @@ enum ESDAlignment : uint8_t {
   ESD_ALIGN_1024byte = 10,
   ESD_ALIGN_2Kpage = 11,
   ESD_ALIGN_4Kpage = 12,
+};
+
+enum TXTRecordStyle : uint8_t {
+  TXT_RS_Byte = 0,
+  TXT_RS_Structured = 1,
+  TXT_RS_Unstructured = 2,
 };
 
 enum ENDEntryPointRequest : uint8_t {

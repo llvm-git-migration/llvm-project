@@ -19,6 +19,7 @@
 #include "TargetInfo/SystemZTargetInfo.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/BinaryFormat/GOFF.h"
 #include "llvm/CodeGen/MachineModuleInfoImpls.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/IR/Mangler.h"
@@ -26,6 +27,7 @@
 #include "llvm/MC/MCInstBuilder.h"
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCStreamer.h"
+#include "llvm/MC/MCSymbolGOFF.h"
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/ConvertEBCDIC.h"
 
@@ -1294,6 +1296,36 @@ void SystemZAsmPrinter::emitPPA1(MCSymbol *FnEndSym) {
   // Emit offset to entry point optional section (0x80 of flags 4).
   OutStreamer->emitAbsoluteSymbolDiff(CurrentFnEPMarkerSym, CurrentFnPPA1Sym,
                                       4);
+}
+
+void SystemZAsmPrinter::emitGlobalVariable(const GlobalVariable *GV) {
+  if (TM.getTargetTriple().isOSzOS()) {
+    auto *Sym = cast<MCSymbolGOFF>(getSymbol(GV));
+    Sym->setExecutable(GOFF::ESD_EXE_DATA);
+  }
+
+  return AsmPrinter::emitGlobalVariable(GV);
+}
+
+const MCExpr *SystemZAsmPrinter::lowerConstant(const Constant *CV) {
+  const Triple &TargetTriple = TM.getTargetTriple();
+  if (TargetTriple.isOSzOS()) {
+    const GlobalAlias *GA = dyn_cast<GlobalAlias>(CV);
+    const Function *FV = dyn_cast<Function>(CV);
+    bool IsFunc = FV || (GA && isa<Function>(GA->getAliaseeObject()));
+    MCSymbolGOFF *Sym = nullptr;
+
+    if (auto GValue = dyn_cast<GlobalValue>(CV))
+      Sym = cast<MCSymbolGOFF>(getSymbol(GValue));
+    // TODO: Is it necessary to assert if CV is of type GlobalIFunc?
+
+    if (!IsFunc && Sym) {
+      Sym->setExecutable(GOFF::ESD_EXE_DATA);
+      return MCSymbolRefExpr::create(Sym, OutContext);
+    }
+  }
+
+  return AsmPrinter::lowerConstant(CV);
 }
 
 void SystemZAsmPrinter::emitFunctionEntryLabel() {

@@ -24,9 +24,13 @@ public:
 
   ~MCGOFFStreamer() override;
 
-  bool emitSymbolAttribute(MCSymbol *Symbol, MCSymbolAttr Attribute) override {
-    return false;
-  }
+  // state management
+  void initSections(bool NoExecStack, const MCSubtargetInfo &STI) override;
+
+  void switchSection(MCSection *Section,
+                     const MCExpr *Subsection = nullptr) override;
+
+  bool emitSymbolAttribute(MCSymbol *Symbol, MCSymbolAttr Attribute) override;
   void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                         Align ByteAlignment) override {}
   void emitInstToData(const MCInst &Inst, const MCSubtargetInfo &) override {}

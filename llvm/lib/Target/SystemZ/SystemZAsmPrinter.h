@@ -113,6 +113,8 @@ public:
   }
   void emitFunctionEntryLabel() override;
   void emitFunctionBodyEnd() override;
+  void emitGlobalVariable(const GlobalVariable *GV) override;
+  const MCExpr *lowerConstant(const Constant *CV) override;
 
 private:
   void emitCallInformation(CallType CT);

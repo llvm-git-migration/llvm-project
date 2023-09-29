@@ -12,10 +12,16 @@
 
 #include "llvm/MC/MCGOFFStreamer.h"
 #include "llvm/MC/MCAsmBackend.h"
+#include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCContext.h"
+#include "llvm/MC/MCSection.h"
+#include "llvm/MC/MCSectionGOFF.h"
+#include "llvm/MC/MCSymbol.h"
+#include "llvm/MC/MCSymbolGOFF.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/Casting.h"
 
 using namespace llvm;
 
@@ -31,4 +37,48 @@ MCStreamer *llvm::createGOFFStreamer(MCContext &Context,
   if (RelaxAll)
     S->getAssembler().setRelaxAll(true);
   return S;
+}
+
+void MCGOFFStreamer::initSections(bool NoExecStack,
+                                  const MCSubtargetInfo &STI) {
+  MCContext &Ctx = getContext();
+  switchSection(Ctx.getObjectFileInfo()->getTextSection());
+
+  if (NoExecStack)
+    switchSection(Ctx.getAsmInfo()->getNonexecutableStackSection(Ctx));
+}
+
+void MCGOFFStreamer::switchSection(MCSection *S, const MCExpr *Subsection) {
+  auto Section = cast<MCSectionGOFF>(S);
+  MCSection *Parent = Section->getParent();
+
+  if (Parent) {
+    const MCExpr *Subsection = Section->getSubsectionId();
+    assert(Subsection && "No subsection associated with child section");
+    this->MCObjectStreamer::switchSection(Parent, Subsection);
+    return;
+  }
+
+  this->MCObjectStreamer::switchSection(Section, Subsection);
+}
+
+bool MCGOFFStreamer::emitSymbolAttribute(MCSymbol *S, MCSymbolAttr Attribute) {
+  auto *Symbol = cast<MCSymbolGOFF>(S);
+
+  getAssembler().registerSymbol(*Symbol);
+
+  switch (Attribute) {
+  case MCSA_Global:
+    Symbol->setExternal(true);
+    break;
+  case MCSA_Local:
+    Symbol->setExternal(false);
+    break;
+  case MCSA_Hidden:
+    Symbol->setHidden(true);
+    break;
+  default:
+    return false;
+  }
+  return true;
 }
