@@ -596,6 +596,20 @@ public:
   /// avoided.
   bool isJumpExpensive() const { return JumpIsExpensive; }
 
+  struct CondMergingParams {
+    int BaseCost;
+    int LikelyBias;
+    int UnlikelyBias;
+  };
+  // Return params for deciding if we should keep two branch conditions merged
+  // or split them into two seperate branches.
+  virtual CondMergingParams
+  getJumpConditionMergingParams(Instruction::BinaryOps, const Value *,
+                                const Value *) const {
+    // -1 will always result in splitting.
+    return {-1, -1, -1};
+  }
+
   /// Return true if selects are only cheaper than branches if the branch is
   /// unlikely to be predicted right.
   bool isPredictableSelectExpensive() const {
