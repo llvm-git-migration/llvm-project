@@ -262,6 +262,11 @@ def err_test_module_file_extension_version : Error<
   "test module file extension '%0' has different version (%1.%2) than expected "
   "(%3.%4)">;
 
+def warn_module_build_daemon : Warning<"%0">,
+  InGroup<ModuleBuildDaemon>;
+def remark_module_build_daemon : Remark<"%0">,
+  InGroup<ModuleBuildDaemon>;
+
 def warn_eagerly_load_for_standard_cplusplus_modules : Warning<
   "the form '-fmodule-file=<BMI-path>' is deprecated for standard C++ named modules;"
   "consider to use '-fmodule-file=<module-name>=<BMI-path>' instead">,
