@@ -12,7 +12,6 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
 
@@ -25,14 +24,17 @@ namespace cc1modbuildd {
 // /tmp/clang-<BLAKE3HashOfClagnFullVersion>/
 std::string getBasePath();
 
-llvm::Error attemptHandshake(int SocketFD);
+llvm::Error attemptHandshake(int SocketFD, DiagnosticsEngine &Diag);
 
-llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0);
+llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0,
+                                   DiagnosticsEngine &Diag);
 
-Expected<int> getModuleBuildDaemon(const char *Argv0, StringRef BasePath);
+Expected<int> getModuleBuildDaemon(const char *Argv0, StringRef BasePath,
+                                   DiagnosticsEngine &Diag);
 
-llvm::Error spawnModuleBuildDaemonAndHandshake(const CompilerInvocation &Clang,
-                                               const char *Argv0);
+void spawnModuleBuildDaemonAndHandshake(const CompilerInvocation &Clang,
+                                        DiagnosticsEngine &Diag,
+                                        const char *Argv0);
 
 } // namespace cc1modbuildd
 

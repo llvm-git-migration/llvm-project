@@ -292,16 +292,8 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
   // Handle module build daemon functionality if enabled
   if (Clang->getFrontendOpts().ModuleBuildDaemon) {
 #if LLVM_ON_UNIX
-    llvm::Error HandshakeErr = cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
-        Clang->getInvocation(), Argv0);
-    if (HandshakeErr) {
-      handleAllErrors(std::move(HandshakeErr), [&](ErrorInfoBase &EIB) {
-        errs() << EIB.message() << '\n';
-      });
-      return 1;
-    }
-    outs() << "Completed successfull handshake with module build daemon"
-           << '\n';
+    cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
+        Clang->getInvocation(), Clang->getDiagnostics(), Argv0);
 #else
     errs() << "-fmodule-build-daemon not supported by current platform" << '\n';
     return 1;

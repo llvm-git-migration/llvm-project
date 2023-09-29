@@ -1,4 +1,4 @@
-// Check that module build daemon can create unix socket
+// COM: Check that module build daemon can create unix socket
 
 // REQUIRES: !system-windows
 
