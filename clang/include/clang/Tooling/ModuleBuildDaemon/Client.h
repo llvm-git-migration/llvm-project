@@ -1,4 +1,4 @@
-//===----------------------------- Protocol.h -----------------------------===//
+//===------------------------------ Client.h ------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -16,11 +16,6 @@
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
 
-#define MAX_BUFFER 4096
-#define SOCKET_FILE_NAME "mbd.sock"
-#define STDOUT_FILE_NAME "mbd.out"
-#define STDERR_FILE_NAME "mbd.err"
-
 using namespace clang;
 using namespace llvm;
 
@@ -36,9 +31,9 @@ llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0);
 
 Expected<int> getModuleBuildDaemon(const char *Argv0, StringRef BasePath);
 
-llvm::Error handshakeModuleBuildDaemon(const CompilerInvocation &Clang,
-                                       const char *Argv0);
+llvm::Error spawnModuleBuildDaemonAndHandshake(const CompilerInvocation &Clang,
+                                               const char *Argv0);
 
 } // namespace cc1modbuildd
 
-#endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_PROTOCAL_H
+#endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_CLIENT_H

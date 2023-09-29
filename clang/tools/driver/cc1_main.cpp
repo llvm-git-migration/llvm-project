@@ -289,12 +289,11 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
     return 1;
   }
 
-#if LLVM_ON_UNIX
   // Handle module build daemon functionality if enabled
   if (Clang->getFrontendOpts().ModuleBuildDaemon) {
-
-    llvm::Error HandshakeErr =
-        cc1modbuildd::handshakeModuleBuildDaemon(Clang->getInvocation(), Argv0);
+#if LLVM_ON_UNIX
+    llvm::Error HandshakeErr = cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
+        Clang->getInvocation(), Argv0);
     if (HandshakeErr) {
       handleAllErrors(std::move(HandshakeErr), [&](ErrorInfoBase &EIB) {
         errs() << EIB.message() << '\n';
@@ -303,8 +302,11 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
     }
     outs() << "Completed successfull handshake with module build daemon"
            << '\n';
-  }
+#else
+    errs() << "-fmodule-build-daemon not supported by current platform" << '\n';
+    return 1;
 #endif
+  }
 
   // Execute the frontend actions.
   {

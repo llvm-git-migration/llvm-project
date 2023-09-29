@@ -15,4 +15,3 @@ int main() {return 0;}
 // CHECK: Completed successfull handshake with module build daemon
 
 // RUN: if pgrep -f "cc1modbuildd mbd-handshake"; then pkill -f "cc1modbuildd mbd-handshake"; fi
-// RUN: rm -rf mbd-handshake %t

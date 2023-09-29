@@ -2969,7 +2969,8 @@ def fmodule_build_daemon : Flag<["-"], "fmodule-build-daemon">, Group<f_Group>,
 def fmodule_build_daemon_EQ : Joined<["-"], "fmodule-build-daemon=">, Group<f_Group>,
   Flags<[NoXarchOption]>,
   Visibility<[ClangOption, CC1Option]>,
-  HelpText<"Enables module build daemon functionality and defines location of output files">,
+  HelpText<"Enables module build daemon functionality and defines the path to "
+           "where the module build daemon will write log and socket files">,
   MarshallingInfoString<FrontendOpts<"ModuleBuildDaemonPath">>;
 
 def fmodules_cache_path : Joined<["-"], "fmodules-cache-path=">, Group<i_Group>,
