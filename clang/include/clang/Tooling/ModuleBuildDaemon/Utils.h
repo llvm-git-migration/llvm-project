@@ -17,6 +17,11 @@
 #include "llvm/Support/Error.h"
 #include <string>
 
+#define MAX_BUFFER 4096
+#define SOCKET_FILE_NAME "mbd.sock"
+#define STDOUT_FILE_NAME "mbd.out"
+#define STDERR_FILE_NAME "mbd.err"
+
 namespace cc1modbuildd {
 
 void writeError(llvm::Error Err, std::string Msg);
