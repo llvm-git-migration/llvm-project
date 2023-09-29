@@ -75,16 +75,17 @@ public:
   static void handleClient(ClientConnection Connection);
 
   void shutdownDaemon() {
+    int SocketFD = ListenSocketFD.load();
+
     unlink(SocketPath.c_str());
-    shutdown(ListenSocketFD, SHUT_RD);
-    close(ListenSocketFD);
+    shutdown(SocketFD, SHUT_RD);
+    close(SocketFD);
     exit(EXIT_SUCCESS);
   }
 
 private:
-  // Initializes and returns DiagnosticsEngine
   pid_t Pid = -1;
-  int ListenSocketFD = -1;
+  std::atomic<int> ListenSocketFD = -1;
 };
 
 // Required to handle SIGTERM by calling Shutdown
@@ -143,8 +144,10 @@ int ModuleBuildDaemonServer::forkDaemon() {
 // Creates unix socket for IPC with module build daemon
 int ModuleBuildDaemonServer::createDaemonSocket() {
 
-  // new socket
-  if ((ListenSocketFD = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+  // New socket
+  int SocketFD = socket(AF_UNIX, SOCK_STREAM, 0);
+
+  if (SocketFD == -1) {
     std::perror("Socket create error: ");
     exit(EXIT_FAILURE);
   }
@@ -155,14 +158,14 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
   strncpy(addr.sun_path, SocketPath.c_str(), sizeof(addr.sun_path) - 1);
 
   // bind to local address
-  if (bind(ListenSocketFD, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+  if (bind(SocketFD, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 
     // If the socket address is already in use, exit because another module
     // build daemon has successfully launched. When translation units are
     // compiled in parallel, until the socket file is created, all clang
     // invocations will spawn a module build daemon.
     if (errno == EADDRINUSE) {
-      close(ListenSocketFD);
+      close(SocketFD);
       exit(EXIT_SUCCESS);
     }
     std::perror("Socket bind error: ");
@@ -172,11 +175,12 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
 
   // set socket to accept incoming connection request
   unsigned MaxBacklog = llvm::hardware_concurrency().compute_thread_count();
-  if (listen(ListenSocketFD, MaxBacklog) == -1) {
+  if (listen(SocketFD, MaxBacklog) == -1) {
     std::perror("Socket listen error: ");
     exit(EXIT_FAILURE);
   }
 
+  ListenSocketFD.store(SocketFD);
   return 0;
 }
 
@@ -229,7 +233,7 @@ int ModuleBuildDaemonServer::listenForClients() {
 
   while (true) {
 
-    if ((Client = accept(ListenSocketFD, NULL, NULL)) == -1) {
+    if ((Client = accept(ListenSocketFD.load(), NULL, NULL)) == -1) {
       std::perror("Socket accept error: ");
       continue;
     }
@@ -259,7 +263,7 @@ int ModuleBuildDaemonServer::listenForClients() {
 int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   if (Argv.size() < 1) {
-    outs() << "spawning a module build daemon requies a command line format of "
+    errs() << "spawning a module build daemon requies a command line format of "
               "`clang -cc1modbuildd <path>`. <path> defines where the module "
               "build daemon will create mbd.out, mbd.err, mbd.sock"
            << '\n';
@@ -269,6 +273,16 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
   // Where to store log files and socket address
   // TODO: Add check to confirm BasePath is directory
   std::string BasePath(Argv[0]);
+
+  // On most unix platforms a socket address cannot be over 108 characters
+  int MAX_ADDR = 108;
+  if (BasePath.length() >= MAX_ADDR - std::string(SOCKET_FILE_NAME).length()) {
+    errs() << "Provided socket path" + BasePath +
+                  " is too long. Socket path much be equal to or less then 100 "
+                  "characters. Module build daemon will not be spawned.";
+    return 1;
+  }
+
   llvm::sys::fs::create_directories(BasePath);
   ModuleBuildDaemonServer Daemon(BasePath, Argv);
 
