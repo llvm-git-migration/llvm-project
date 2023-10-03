@@ -74,9 +74,9 @@ static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint32_t RegNo,
   return MCDisassembler::Success;
 }
 
-static DecodeStatus DecodeGPRRARegisterClass(MCInst &Inst, uint32_t RegNo,
-                                             uint64_t Address,
-                                             const MCDisassembler *Decoder) {
+static DecodeStatus DecodeGPRX1X5RegisterClass(MCInst &Inst, uint32_t RegNo,
+                                               uint64_t Address,
+                                               const MCDisassembler *Decoder) {
   MCRegister Reg = RISCV::X0 + RegNo;
   if (Reg != RISCV::X1 && Reg != RISCV::X5)
     return MCDisassembler::Fail;
@@ -403,7 +403,7 @@ static DecodeStatus decodeCSSPushPopchk(MCInst &Inst, uint32_t Insn,
                                         uint64_t Address,
                                         const MCDisassembler *Decoder) {
   uint32_t Rs1 = fieldFromInstruction(Insn, 7, 5);
-  DecodeStatus Result = DecodeGPRRARegisterClass(Inst, Rs1, Address, Decoder);
+  DecodeStatus Result = DecodeGPRX1X5RegisterClass(Inst, Rs1, Address, Decoder);
   (void)Result;
   assert(Result == MCDisassembler::Success && "Invalid register");
   return MCDisassembler::Success;

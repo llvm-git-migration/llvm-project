@@ -26,13 +26,13 @@ class RVC_SSInst<bits<5> rs1val, RegisterClass reg_class, string opcodestr> :
 
 let Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
 let DecoderNamespace = "RV32Zicfiss", Predicates = [HasStdExtZicfiss, IsRV32] in
-def SSLW : RVInstI<0b100, OPC_SYSTEM, (outs GPRRA:$rd), (ins), "sslw", "$rd"> {
+def SSLW : RVInstI<0b100, OPC_SYSTEM, (outs GPRX1X5:$rd), (ins), "sslw", "$rd"> {
   let rs1 = 0;
   let imm12 = 0b100000011100;
 }
 
 let Predicates = [HasStdExtZicfiss, IsRV64] in
-def SSLD : RVInstI<0b100, OPC_SYSTEM, (outs GPRRA:$rd), (ins), "ssld", "$rd"> {
+def SSLD : RVInstI<0b100, OPC_SYSTEM, (outs GPRX1X5:$rd), (ins), "ssld", "$rd"> {
   let rs1 = 0;
   let imm12 = 0b100000011100;
 }
@@ -40,7 +40,7 @@ def SSLD : RVInstI<0b100, OPC_SYSTEM, (outs GPRRA:$rd), (ins), "ssld", "$rd"> {
 
 let Predicates = [HasStdExtZicfiss] in {
 let Uses = [SSP], hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
-def SSPOPCHK : RVInstI<0b100, OPC_SYSTEM, (outs), (ins GPRRA:$rs1), "sspopchk",
+def SSPOPCHK : RVInstI<0b100, OPC_SYSTEM, (outs), (ins GPRX1X5:$rs1), "sspopchk",
                        "$rs1"> {
   let rd = 0;
   let imm12 = 0b100000011100;
@@ -60,7 +60,7 @@ def SSRDP : RVInstI<0b100, OPC_SYSTEM, (outs GPRNoX0:$rd), (ins), "ssrdp", "$rd"
 } // Uses = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 0
 
 let Uses = [SSP], Defs = [SSP], hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def SSPUSH : RVInstR<0b1000001, 0b100, OPC_SYSTEM, (outs), (ins GPRRA:$rs2),
+def SSPUSH : RVInstR<0b1000001, 0b100, OPC_SYSTEM, (outs), (ins GPRX1X5:$rs2),
                      "sspush", "$rs2"> {
   let rd = 0b00000;
   let rs1 = 0b00000;

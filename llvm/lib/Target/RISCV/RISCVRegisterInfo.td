@@ -167,7 +167,7 @@ def SP : GPRRegisterClass<(add X2)>;
 def SR07 : GPRRegisterClass<(add (sequence "X%u", 8, 9),
                                  (sequence "X%u", 18, 23))>;
 
-def GPRRA : RegisterClass<"RISCV", [XLenVT], 32, (add X1, X5)> {
+def GPRX1X5 : RegisterClass<"RISCV", [XLenVT], 32, (add X1, X5)> {
   let RegInfos = XLenRI;
 }
 
