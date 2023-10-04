@@ -711,7 +711,7 @@ RecurrenceDescriptor::isFindLastIVPattern(Loop *Loop, PHINode *OrigPhi,
   else
     return InstDesc(false, I);
 
-  auto IsIncreasingLoopInduction = [&SE, &Loop](Value *V) {
+  auto IsIncreasingLoopInduction = [&](Value *V) {
     if (!SE)
       return false;
 
