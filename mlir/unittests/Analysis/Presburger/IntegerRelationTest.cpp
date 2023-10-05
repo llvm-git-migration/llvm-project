@@ -167,3 +167,76 @@ TEST(IntegerRelationTest, symbolicLexmax) {
   EXPECT_TRUE(lexmax3.unboundedDomain.isIntegerEmpty());
   EXPECT_TRUE(lexmax3.lexopt.isEqual(expectedLexmax3));
 }
+
+TEST(IntegerRelationTest, convertVarKind) {
+  PresburgerSpace space = PresburgerSpace::getSetSpace(3, 3, 0);
+  space.resetIds();
+
+  // Attach identifiers.
+  int identifiers[6] = {0, 1, 2, 3, 4, 5};
+  space.getId(VarKind::SetDim, 0) = Identifier(&identifiers[0]);
+  space.getId(VarKind::SetDim, 1) = Identifier(&identifiers[1]);
+  space.getId(VarKind::SetDim, 2) = Identifier(&identifiers[2]);
+  space.getId(VarKind::Symbol, 0) = Identifier(&identifiers[3]);
+  space.getId(VarKind::Symbol, 1) = Identifier(&identifiers[4]);
+  space.getId(VarKind::Symbol, 2) = Identifier(&identifiers[5]);
+
+  // Cannot call parseIntegerRelation to test convertVarKind as
+  // parseIntegerRelation uses convertVarKind.
+  IntegerRelation rel = parseIntegerPolyhedron(
+      // 0  1  2  3  4  5
+      "(x, y, a)[U, V, W] : (x - U == 0, y + a - W == 0, U - V >= 0,"
+      "y - a >= 0)");
+  rel.setSpace(space);
+
+  // Make a few kind conversions.
+  rel.convertVarKind(VarKind::Symbol, 1, 2, VarKind::Domain, 0);
+  rel.convertVarKind(VarKind::Range, 2, 3, VarKind::Domain, 0);
+  rel.convertVarKind(VarKind::Range, 0, 2, VarKind::Symbol, 1);
+  rel.convertVarKind(VarKind::Domain, 1, 2, VarKind::Range, 0);
+  rel.convertVarKind(VarKind::Domain, 0, 1, VarKind::Range, 1);
+
+  space = rel.getSpace();
+
+  // Expected rel.
+  IntegerRelation expectedRel = parseIntegerPolyhedron(
+      "(V, a)[U, x, y, W] : (x - U == 0, y + a - W == 0, U - V >= 0,"
+      "y - a >= 0)");
+  expectedRel.setSpace(space);
+
+  EXPECT_TRUE(rel.isEqual(expectedRel));
+
+  EXPECT_EQ(space.getId(VarKind::SetDim, 0), Identifier(&identifiers[4]));
+  EXPECT_EQ(space.getId(VarKind::SetDim, 1), Identifier(&identifiers[2]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 0), Identifier(&identifiers[3]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 1), Identifier(&identifiers[0]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 2), Identifier(&identifiers[1]));
+  EXPECT_EQ(space.getId(VarKind::Symbol, 3), Identifier(&identifiers[5]));
+}
+
+TEST(IntegerRelationTest, convertVarKindToLocal) {
+  // Convert all range variables to local variables
+  IntegerRelation rel =
+      parseRelationFromSet("(x, y, z) : (x >= 0, y >= 0, -z >= 0)", 1);
+  rel.convertToLocal(VarKind::Range, 0, rel.getNumRangeVars());
+  EXPECT_FALSE(rel.isEmptyByGCDTest());
+
+  // Convert all domain variables to local variables
+  IntegerRelation rel2 =
+      parseRelationFromSet("(x, y, z) : (x >= 0, y >= 0, -z >= 0)", 2);
+  rel2.convertToLocal(VarKind::Domain, 0, rel.getNumDomainVars());
+  EXPECT_FALSE(rel2.isEmptyByGCDTest());
+
+  // Convert a prefix of range variables to local variables
+  IntegerRelation rel3 = parseRelationFromSet(
+      "(x, y, u, v) : (x >= 0, y >= 0, -u >= 0, -v >= 0)", 2);
+  rel3.convertToLocal(VarKind::Range, rel.getNumDomainVars(), 1);
+  EXPECT_FALSE(rel3.isEmptyByGCDTest());
+
+  // Convert a suffix of domain variables to local variables
+  IntegerRelation rel4 = parseRelationFromSet(
+      "(x, y, u, v) : (x >= 0, y >= 0, -u >= 0, -v >= 0)", 2);
+  rel4.convertToLocal(VarKind::Domain, rel.getNumDomainVars() - 1,
+                      rel.getNumDomainVars());
+  EXPECT_FALSE(rel4.isEmptyByGCDTest());
+}
