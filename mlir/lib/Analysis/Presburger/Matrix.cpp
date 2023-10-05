@@ -231,6 +231,37 @@ void Matrix<T>::fillRow(unsigned row, const T &value) {
 }
 
 template <typename T>
+void Matrix<T>::moveColumns(unsigned srcPos, unsigned num, unsigned dstPos) {
+  if (num == 0)
+    return;
+
+  int offset = dstPos - srcPos;
+  if (offset == 0)
+    return;
+
+  assert(0 <= srcPos + offset && srcPos + num + offset <= getNumColumns() &&
+         "invalid move num");
+
+  unsigned insertCount = offset > 0 ? offset : -offset;
+  unsigned insertPos = offset > 0 ? srcPos : srcPos + num;
+  unsigned deletePos = offset > 0 ? srcPos + num : srcPos + offset;
+  // TODO: This can be done using std::rotate.
+  // Insert new zero columns in the positions where the adjacent columns are to
+  // be moved.
+  insertColumns(insertPos, insertCount);
+  // Update deletePos if insertion of new columns invalidates it.
+  if (insertPos < deletePos)
+    deletePos += insertCount;
+
+  // Swap the adjacent columns with inserted zero columns.
+  for (unsigned i = 0; i < insertCount; ++i)
+    swapColumns(insertPos + i, deletePos + i);
+
+  // Delete the now redundant zero columns.
+  removeColumns(deletePos, insertCount);
+}
+
+template <typename T>
 void Matrix<T>::addToRow(unsigned sourceRow, unsigned targetRow,
                          const T &scale) {
   addToRow(targetRow, getRow(sourceRow), scale);
