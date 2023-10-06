@@ -235,6 +235,7 @@ static bool isRegisterVectorType(LLT Ty) {
          EltSize == 128 || EltSize == 256;
 }
 
+// TODO: replace all uses of isRegisterType with isRegisterClassType
 static bool isRegisterType(LLT Ty) {
   if (!isRegisterSize(Ty.getSizeInBits()))
     return false;
@@ -342,7 +343,8 @@ static LLT GetAddrSpacePtr(unsigned AS, const GCNTargetMachine &TM) {
   return LLT::pointer(AS, TM.getPointerSizeInBits(AS));
 }
 
-static bool isRegType(LLT Ty, const GCNTargetMachine &TM) {
+// Checks whether a type is in the list of legal register types.
+static bool isRegisterClassType(LLT Ty, const GCNTargetMachine &TM) {
   const LLT GlobalPtr = GetAddrSpacePtr(AMDGPUAS::GLOBAL_ADDRESS, TM);
   const LLT LocalPtr = GetAddrSpacePtr(AMDGPUAS::LOCAL_ADDRESS, TM);
   const LLT FlatPtr = GetAddrSpacePtr(AMDGPUAS::FLAT_ADDRESS, TM);
@@ -363,10 +365,10 @@ static bool isRegType(LLT Ty, const GCNTargetMachine &TM) {
          typeInSet(Ty, AllPtrTypes) || Ty.isPointer();
 }
 
-static LegalityPredicate isRegType(unsigned TypeIdx,
+static LegalityPredicate isRegisterClassType(unsigned TypeIdx,
                                    const GCNTargetMachine &TM) {
   return [TypeIdx, &TM](const LegalityQuery &Query) {
-    return isRegType(Query.Types[TypeIdx], TM);
+    return isRegisterClassType(Query.Types[TypeIdx], TM);
   };
 }
 
@@ -860,7 +862,7 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
 
   getActionDefinitionsBuilder(G_BITCAST)
       // Don't worry about the size constraint.
-      .legalIf(all(isRegType(0, TM), isRegType(1, TM)))
+      .legalIf(all(isRegisterClassType(0, TM), isRegisterClassType(1, TM)))
       .lower();
 
   getActionDefinitionsBuilder(G_CONSTANT)
