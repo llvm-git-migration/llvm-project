@@ -13,6 +13,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CodeSnippetHighlighter.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/ConvertUTF.h"
@@ -1250,7 +1251,7 @@ void TextDiagnostic::emitSnippetAndCaret(
 
     // Emit what we have computed.
     emitSnippet(SourceLine, MaxLineNoDisplayWidth, FID, SM, LineNo,
-                DisplayLineNo);
+                DisplayLineNo, LineStart);
 
     if (!CaretLine.empty()) {
       indentForLineNumbers();
@@ -1281,9 +1282,10 @@ void TextDiagnostic::emitSnippetAndCaret(
 void TextDiagnostic::emitSnippet(StringRef SourceLine,
                                  unsigned MaxLineNoDisplayWidth, FileID FID,
                                  const SourceManager &SM, unsigned LineNo,
-                                 unsigned DisplayLineNo) {
-  std::vector<StyleRange> Styles =
-      SnippetHighlighter.highlightLine(LineNo - 1, PP, LangOpts, FID, SM);
+                                 unsigned DisplayLineNo,
+                                 const char *LineStart) {
+  llvm::SmallVector<StyleRange> Styles = SnippetHighlighter.highlightLine(
+      LineNo - 1, PP, LangOpts, FID, SM, LineStart);
 
   // Emit line number.
   if (MaxLineNoDisplayWidth > 0) {

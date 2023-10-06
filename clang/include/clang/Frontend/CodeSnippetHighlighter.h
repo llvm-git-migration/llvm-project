@@ -10,16 +10,15 @@
 #define LLVM_CLANG_FRONTEND_CODESNIPPETHIGHLIGHTER_H
 
 #include "clang/Basic/LangOptions.h"
-#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/raw_ostream.h"
-#include <vector>
 
 namespace clang {
 
 struct StyleRange {
   unsigned Start;
   unsigned End;
-  const enum llvm::raw_ostream::Colors Color;
+  enum llvm::raw_ostream::Colors Color;
 };
 
 class Preprocessor;
@@ -33,10 +32,10 @@ public:
   /// Produce StyleRanges for the given line.
   /// The returned vector contains non-overlapping style ranges. They are sorted
   /// from beginning of the line to the end.
-  std::vector<StyleRange> highlightLine(unsigned LineNumber,
-                                        const Preprocessor *PP,
-                                        const LangOptions &LangOpts, FileID FID,
-                                        const SourceManager &SM);
+  llvm::SmallVector<StyleRange>
+  highlightLine(unsigned LineNumber, const Preprocessor *PP,
+                const LangOptions &LangOpts, FileID FID,
+                const SourceManager &SM, const char *LineStart);
 };
 
 } // namespace clang

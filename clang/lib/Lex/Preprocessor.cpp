@@ -546,6 +546,7 @@ void Preprocessor::EnterMainSourceFile() {
   // information) and predefined macros aren't guaranteed to be set properly.
   assert(NumEnteredSourceFiles == 0 && "Cannot reenter the main file!");
   FileID MainFileID = SourceMgr.getMainFileID();
+  // llvm::errs() << "##### Main source file: " << (int)MainFileID << "\n";
 
   // If MainFileID is loaded it means we loaded an AST file, no need to enter
   // a main file.
@@ -860,6 +861,32 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
     CurLexerCallback = CLK_LexAfterModuleImport;
   }
   return true;
+}
+
+void Preprocessor::saveCheckPoint(const char *P) {
+  static constexpr ptrdiff_t Limit = 1000;
+  if (CheckPoints.empty()) {
+    CheckPoints.push_back(P);
+    return;
+  }
+
+  const char *Cur = CheckPoints.back();
+  if (Cur == P)
+    return;
+  if ((P - Cur) > Limit)
+    CheckPoints.push_back(P);
+}
+
+const char *Preprocessor::getSaveFor(const char *S) const {
+  const char *C = S;
+  // FIXME: Use std::lower_bound or something smart. Aaron knows what I'm
+  // talking about.
+  for (ssize_t I = CheckPoints.size() - 1; I >= 0; --I) {
+    C = CheckPoints[I];
+    if (CheckPoints[I] <= S)
+      break;
+  }
+  return C;
 }
 
 void Preprocessor::Lex(Token &Result) {

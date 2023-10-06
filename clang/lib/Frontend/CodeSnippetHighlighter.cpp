@@ -14,9 +14,9 @@ static constexpr raw_ostream::Colors CommentColor = raw_ostream::GREEN;
 static constexpr raw_ostream::Colors LiteralColor = raw_ostream::CYAN;
 static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
 
-std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
+llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,
-    FileID FID, const SourceManager &SM) {
+    FileID FID, const SourceManager &SM, const char *LineStart) {
   std::chrono::steady_clock::time_point begin =
       std::chrono::steady_clock::now();
 
@@ -29,7 +29,7 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
 
   size_t NTokens = 0;
   // Classify the given token and append it to the given vector.
-  auto appendStyle = [PP, &LangOpts](std::vector<StyleRange> &Vec,
+  auto appendStyle = [PP, &LangOpts](llvm::SmallVector<StyleRange> &Vec,
                                      const Token &T, unsigned Start,
                                      unsigned Length) -> void {
     if (T.is(tok::raw_identifier)) {
@@ -52,12 +52,23 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     }
   };
 
+  // Figure out where to start lexing from.
   auto Buff = SM.getBufferOrNone(FID);
   assert(Buff);
   Lexer L = Lexer(FID, *Buff, SM, LangOpts);
   L.SetKeepWhitespaceMode(true);
-  std::vector<std::vector<StyleRange>> Lines;
 
+  // Seek to the last save point before the start of the line.
+  if (const char *Save = PP->getSaveFor(LineStart);
+      Buff->getBufferStart() <= Save && Save < Buff->getBufferEnd()) {
+    size_t Offset = Save - Buff->getBufferStart();
+    assert(Save >= Buff->getBufferStart());
+    assert(Save <= Buff->getBufferEnd());
+
+    L.seek(Offset, /*IsAtStartOfLine=*/true);
+  }
+
+  llvm::SmallVector<StyleRange> LineRanges;
   bool Stop = false;
   while (!Stop) {
     ++NTokens;
@@ -93,14 +104,13 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     if (Invalid)
       continue;
 
-    while (Lines.size() <= StartLine)
-      Lines.push_back({});
     // Simple tokens.
     if (StartLine == EndLine) {
-      appendStyle(Lines[StartLine], T, StartCol, T.getLength());
+      appendStyle(LineRanges, T, StartCol, T.getLength());
       continue;
     }
     unsigned NumLines = EndLine - StartLine;
+    assert(NumLines >= 1);
 
     // For tokens that span multiple lines (think multiline comments), we
     // divide them into multiple StyleRanges.
@@ -115,15 +125,17 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
     for (unsigned I = 0; I <= Spelling.size(); ++I) {
       // This line is done.
       if (Spelling[I] == '\n' || Spelling[I] == '\r' || I == Spelling.size()) {
-        while (Lines.size() <= StartLine + L)
-          Lines.push_back({});
+        if (StartLine + L == LineNumber) {
+          if (L == 0) // First line
+            appendStyle(LineRanges, T, StartCol, LineLength);
+          else if (L == NumLines) // Last line
+            appendStyle(LineRanges, T, 0, EndCol);
+          else
+            appendStyle(LineRanges, T, 0, LineLength);
 
-        if (L == 0) // First line
-          appendStyle(Lines[StartLine + L], T, StartCol, LineLength);
-        else if (L == NumLines) // Last line
-          appendStyle(Lines[StartLine + L], T, 0, EndCol);
-        else
-          appendStyle(Lines[StartLine + L], T, 0, LineLength);
+          // We only do one line, so we're done.
+          break;
+        }
         ++L;
         LineLength = 0;
         continue;
@@ -134,25 +146,21 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
 
 #if 0
   llvm::errs() << "--\nLine Style info: \n";
-  int I = 0;
-  for (std::vector<StyleRange> &Line : Lines) {
-    llvm::errs() << I << ": ";
-    for (const auto &R : Line) {
+  //int I = 0;
+  //for (std::vector<StyleRange> &Line : Lines) {
+    //llvm::errs() << I << ": ";
+    for (const auto &R : LineRanges) {
       llvm::errs() << "{" << R.Start << ", " << R.End << "}, ";
     }
     llvm::errs() << "\n";
 
-    ++I;
-  }
+    //++I;
+  //}
 #endif
-
-  while (Lines.size() <= LineNumber)
-    Lines.push_back({});
 
 #if 0
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  llvm::errs() << "Lexed " << Lines.size() << " lines and " << NTokens
-               << " Tokens\n";
+  llvm::errs() << "Lexed " << NTokens << " Tokens\n";
   llvm::errs() << "That took "
                << std::chrono::duration_cast<std::chrono::microseconds>(end -
                                                                         begin)
@@ -168,5 +176,5 @@ std::vector<StyleRange> CodeSnippetHighlighter::highlightLine(
       << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()
       << " seconds\n";
 #endif
-  return Lines[LineNumber];
+  return LineRanges;
 }
