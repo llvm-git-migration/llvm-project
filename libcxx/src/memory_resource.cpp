@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <memory_resource>
+#include <__utility/align_down.h>
 
 #ifndef _LIBCPP_HAS_NO_ATOMIC_HEADER
 #  include <atomic>
@@ -416,7 +417,7 @@ static void* align_down(size_t align, size_t size, void*& ptr, size_t& space) {
     return nullptr;
 
   char* p1      = static_cast<char*>(ptr);
-  char* new_ptr = reinterpret_cast<char*>(reinterpret_cast<uintptr_t>(p1 - size) & ~(align - 1));
+  char* new_ptr = static_cast<char*>(std::__align_down(align, p1 - size));
 
   if (new_ptr < (p1 - space))
     return nullptr;

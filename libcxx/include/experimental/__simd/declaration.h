@@ -18,6 +18,11 @@
 _LIBCPP_BEGIN_NAMESPACE_EXPERIMENTAL
 inline namespace parallelism_v2 {
 namespace simd_abi {
+#ifdef __AVX512F__
+template <int>
+struct __avx512;
+#endif
+
 template <int>
 struct __vec_ext;
 struct __scalar;
@@ -36,8 +41,13 @@ template <class _Tp>
 using compatible = __vec_ext<16 / sizeof(_Tp)>;
 
 // TODO: make this platform dependent
+#ifdef __AVX512F__
+template <class _Tp>
+using native = __avx512<64 / sizeof(_Tp)>;
+#else
 template <class _Tp>
 using native = __vec_ext<_LIBCPP_NATIVE_SIMD_WIDTH_IN_BYTES / sizeof(_Tp)>;
+#endif
 
 // TODO: make this platform dependent
 template <class _Tp, size_t _Np, class... _Abis>
@@ -50,6 +60,9 @@ template <class _Tp, size_t _Np, class... _Abis>
 using deduce_t = typename deduce<_Tp, _Np, _Abis...>::type;
 
 } // namespace simd_abi
+
+struct __from_storage_t {};
+inline constexpr __from_storage_t __from_storage;
 
 template <class _Tp, class _Abi>
 struct __simd_storage;

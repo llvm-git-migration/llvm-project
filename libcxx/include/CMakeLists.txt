@@ -229,6 +229,7 @@ set(files
   __algorithm/unwrap_iter.h
   __algorithm/unwrap_range.h
   __algorithm/upper_bound.h
+  __algorithm/vectorization.h
   __assert
   __atomic/aliases.h
   __atomic/atomic.h

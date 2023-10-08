@@ -19,18 +19,23 @@
 _LIBCPP_PUSH_MACROS
 #include <__undef_macros>
 
-#if _LIBCPP_STD_VER >= 20
-
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-template <__libcpp_unsigned_integer _Tp>
-_LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr bool has_single_bit(_Tp __t) noexcept {
+template <class _Tp>
+_LIBCPP_NODISCARD _LIBCPP_HIDE_FROM_ABI constexpr bool __has_single_bit(_Tp __t) noexcept {
   return __t != 0 && (((__t & (__t - 1)) == 0));
 }
 
-_LIBCPP_END_NAMESPACE_STD
+#if _LIBCPP_STD_VER >= 20
+
+template <__libcpp_unsigned_integer _Tp>
+_LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr bool has_single_bit(_Tp __t) noexcept {
+  return std::__has_single_bit(__t);
+}
 
 #endif // _LIBCPP_STD_VER >= 20
+
+_LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
 

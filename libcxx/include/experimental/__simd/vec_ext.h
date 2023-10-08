@@ -19,6 +19,10 @@
 #include <experimental/__simd/traits.h>
 #include <experimental/__simd/utility.h>
 
+#if __has_include(<immintrin.h>)
+#  include <immintrin.h>
+#endif
+
 #if _LIBCPP_STD_VER >= 17 && defined(_LIBCPP_ENABLE_EXPERIMENTAL)
 
 _LIBCPP_BEGIN_NAMESPACE_EXPERIMENTAL
@@ -73,6 +77,14 @@ struct __simd_operations<_Tp, simd_abi::__vec_ext<_Np>> {
   static _LIBCPP_HIDE_FROM_ABI _SimdStorage __generate(_Generator&& __g) noexcept {
     return __generate_init(std::forward<_Generator>(__g), std::make_index_sequence<_Np>());
   }
+
+  template <class _Up>
+  static _LIBCPP_HIDE_FROM_ABI _SimdStorage __load(const _Up* __data) noexcept {
+    _SimdStorage __result;
+    for (size_t __i = 0; __i != _Np; ++__i)
+      __result.__set(__i, __data[__i]);
+    return __result;
+  }
 };
 
 template <class _Tp, int _Np>
@@ -86,6 +98,27 @@ struct __mask_operations<_Tp, simd_abi::__vec_ext<_Np>> {
       __result.__set(__i, __all_bits_v);
     }
     return __result;
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI bool all_of(_MaskStorage __mask) noexcept {
+    [[maybe_unused]] constexpr auto __vec_size = sizeof(_Tp) * _Np;
+#  ifdef __AVX2__
+    if constexpr (__vec_size == 32) {
+      return _mm256_movemask_epi8((__m256i)__mask.__data) == 0xffffffffU;
+    } else
+#  endif
+#  ifdef __SSE2__
+    if constexpr (__vec_size == 16) {
+      return _mm_movemask_epi8((__m128i)__mask.__data) == 0xffffU;
+    } else
+#  endif
+    {
+      for (int __i = 0; __i != _Np; ++__i) {
+        if (!__mask.__get(__i))
+          return false;
+      }
+      return true;
+    }
   }
 };
 

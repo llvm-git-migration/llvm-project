@@ -15,6 +15,7 @@
 #include <__utility/forward.h>
 #include <cstddef>
 #include <experimental/__config>
+#include <experimental/__simd/avx512.h>
 #include <experimental/__simd/declaration.h>
 #include <experimental/__simd/reference.h>
 #include <experimental/__simd/traits.h>
@@ -44,6 +45,9 @@ public:
 
   _LIBCPP_HIDE_FROM_ABI simd() noexcept = default;
 
+  template <class _Up, class _Flags>
+  _LIBCPP_HIDE_FROM_ABI simd(const _Up* __data, _Flags) noexcept : __s_(_Impl::__load(__data)) {}
+
   // broadcast constructor
   template <class _Up, enable_if_t<__can_broadcast_v<value_type, __remove_cvref_t<_Up>>, int> = 0>
   _LIBCPP_HIDE_FROM_ABI simd(_Up&& __v) noexcept : __s_(_Impl::__broadcast(static_cast<value_type>(__v))) {}
@@ -64,9 +68,78 @@ public:
   explicit _LIBCPP_HIDE_FROM_ABI simd(_Generator&& __g) noexcept
       : __s_(_Impl::__generate(std::forward<_Generator>(__g))) {}
 
+  _LIBCPP_HIDE_FROM_ABI simd(__from_storage_t, _Storage __data) noexcept : __s_(__data) {}
+
   // scalar access [simd.subscr]
   _LIBCPP_HIDE_FROM_ABI reference operator[](size_t __i) noexcept { return reference(__s_, __i); }
   _LIBCPP_HIDE_FROM_ABI value_type operator[](size_t __i) const noexcept { return __s_.__get(__i); }
+
+  _LIBCPP_HIDE_FROM_ABI _Storage __get_data() const { return __s_; }
+
+#  ifdef __AVX512F__
+  template <int __comparator>
+  static _LIBCPP_HIDE_FROM_ABI auto __cmp(_Storage __lhs_wrapped, _Storage __rhs_wrapped) {
+      auto __lhs = __lhs_wrapped.__data;
+      auto __rhs = __rhs_wrapped.__data;
+      constexpr auto __element_size  = sizeof(_Tp);
+      constexpr auto __element_count = size();
+      if constexpr (__element_size == 1) {
+        if constexpr (__element_count == 16) {
+          return _mm_cmp_epi8_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 32) {
+          return _mm256_cmp_epi8_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 64) {
+          return _mm512_cmp_epi8_mask(__lhs, __rhs, __comparator);
+        } else {
+          static_assert(__element_count == 0, "Unexpected size");
+        }
+      } else if constexpr (__element_size == 2) {
+        if constexpr (__element_count == 8) {
+          return _mm_cmp_epi16_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 16) {
+          return _mm256_cmp_epi16_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 32) {
+          return _mm512_cmp_epi16_mask(__lhs, __rhs, __comparator);
+        } else {
+          static_assert(__element_count == 0, "Unexpected size");
+        }
+      } else if constexpr (__element_size == 4) {
+        if constexpr (__element_count == 4) {
+          return _mm_cmp_epi32_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 8) {
+          return _mm256_cmp_epi32_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 16) {
+          return _mm512_cmp_epi32_mask(__lhs, __rhs, __comparator);
+        } else {
+          static_assert(__element_count == 0, "Unexpected size");
+        }
+      } else if constexpr (__element_size == 8) {
+        if constexpr (__element_count == 2) {
+          return _mm_cmp_epi64_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 4) {
+          return _mm256_cmp_epi64_mask(__lhs, __rhs, __comparator);
+        } else if constexpr (__element_count == 8) {
+          return _mm512_cmp_epi64_mask(__lhs, __rhs, __comparator);
+        } else {
+          static_assert(__element_count == 0, "Unexpected size");
+        }
+      }
+  }
+#  endif
+
+  friend _LIBCPP_HIDE_FROM_ABI mask_type operator==(const simd& __lhs, const simd& __rhs) noexcept {
+#ifdef __AVX512F__
+    if constexpr (simd_abi::__is_avx512_v<_Abi>) {
+      return {__from_storage, {__cmp<_MM_CMPINT_EQ>(__lhs.__s_, __rhs.__s_)}};
+    } else
+#endif
+    {
+      mask_type __result;
+      for (int __i = 0; __i != size(); ++__i)
+        __result[__i] = __lhs[__i] == __rhs[__i];
+      return __result;
+    }
+  }
 };
 
 template <class _Tp, class _Abi>
