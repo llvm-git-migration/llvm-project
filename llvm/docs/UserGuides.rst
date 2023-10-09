@@ -181,6 +181,10 @@ Optimizations
 :doc:`InstrProfileFormat`
    This document explains two binary formats of instrumentation-based profiles.
 
+:doc:`InstCombineContributorGuide`
+   This document specifies guidelines for contributions for InstCombine and
+   related passes.
+
 Code Generation
 ---------------
 
