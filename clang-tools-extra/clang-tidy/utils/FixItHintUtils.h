@@ -47,6 +47,10 @@ addQualifierToVarDecl(const VarDecl &Var, const ASTContext &Context,
 
 // \brief Format a pointer to an expression
 std::string formatDereference(const Expr &ExprNode, const ASTContext &Context);
+
+// \brief Returns ``true`` if ExprNode ought to be enclosed within parentheses.
+bool needParens(const Expr &ExprNode);
+
 } // namespace clang::tidy::utils::fixit
 
 #endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_UTILS_FIXITHINTUTILS_H

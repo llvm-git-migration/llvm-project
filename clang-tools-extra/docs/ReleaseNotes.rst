@@ -191,6 +191,12 @@ New checks
   Recommends the smallest possible underlying type for an ``enum`` or ``enum``
   class based on the range of its enumerators.
 
+- New :doc:`readability-redundant-casting
+  <clang-tidy/checks/readability/redundant-casting>` check.
+
+  Detects explicit type casting operations that involve the same source and
+  destination types, and subsequently recommend their removal.
+
 - New :doc:`readability-reference-to-constructed-temporary
   <clang-tidy/checks/readability/reference-to-constructed-temporary>` check.
 

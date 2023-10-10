@@ -240,6 +240,11 @@ static bool needParensAfterUnaryOperator(const Expr &ExprNode) {
   return false;
 }
 
+bool needParens(const Expr &ExprNode) {
+  return !isa<clang::ParenExpr>(&ExprNode) &&
+         needParensAfterUnaryOperator(ExprNode);
+}
+
 // Format a pointer to an expression: prefix with '*' but simplify
 // when it already begins with '&'.  Return empty string on failure.
 std::string formatDereference(const Expr &ExprNode, const ASTContext &Context) {
