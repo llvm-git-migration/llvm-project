@@ -23,6 +23,7 @@ using namespace acc;
 
 #include "mlir/Dialect/OpenACC/OpenACCOpsDialect.cpp.inc"
 #include "mlir/Dialect/OpenACC/OpenACCOpsEnums.cpp.inc"
+#include "mlir/Dialect/OpenACC/OpenACCOpsInterfaces.cpp.inc"
 #include "mlir/Dialect/OpenACC/OpenACCTypeInterfaces.cpp.inc"
 
 namespace {
@@ -435,7 +436,7 @@ static LogicalResult verifyInitLikeSingleArgRegion(
 LogicalResult acc::PrivateRecipeOp::verifyRegions() {
   if (failed(verifyInitLikeSingleArgRegion(*this, getInitRegion(),
                                            "privatization", "init", getType(),
-                                           /*verifyYield=*/true)))
+                                           /*verifyYield=*/false)))
     return failure();
   if (failed(verifyInitLikeSingleArgRegion(
           *this, getDestroyRegion(), "privatization", "destroy", getType(),
@@ -619,7 +620,7 @@ Value ParallelOp::getDataOperand(unsigned i) {
 LogicalResult acc::ParallelOp::verify() {
   if (failed(checkSymOperandList<mlir::acc::PrivateRecipeOp>(
           *this, getPrivatizations(), getGangPrivateOperands(), "private",
-          "privatizations")))
+          "privatizations", false)))
     return failure();
   if (failed(checkSymOperandList<mlir::acc::ReductionRecipeOp>(
           *this, getReductionRecipes(), getReductionOperands(), "reduction",
@@ -860,7 +861,7 @@ LogicalResult acc::LoopOp::verify() {
 
   if (failed(checkSymOperandList<mlir::acc::PrivateRecipeOp>(
           *this, getPrivatizations(), getPrivateOperands(), "private",
-          "privatizations")))
+          "privatizations", false)))
     return failure();
 
   if (failed(checkSymOperandList<mlir::acc::ReductionRecipeOp>(
