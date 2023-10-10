@@ -864,7 +864,7 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
 }
 
 void Preprocessor::saveCheckPoint(const char *P) {
-  static constexpr ptrdiff_t Limit = 1000;
+  static constexpr ptrdiff_t Limit = 1024 * 8;
   if (CheckPoints.empty()) {
     CheckPoints.push_back(P);
     return;
