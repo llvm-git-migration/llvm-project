@@ -39,6 +39,17 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #define _LIBUNWIND_CHECK_LINUX_SIGRETURN 1
+#define _LIBUNWIND_CHECK_SIGRETURN 1
+#endif
+
+#if defined(_LIBUNWIND_TARGET_FREEBSD) && defined(_LIBUNWIND_TARGET_AARCH64)
+#include <machine/frame.h>
+#include <sys/sysctl.h>
+#include <sys/ucontext.h>
+#include <sys/user.h>
+#include <unistd.h>
+#define _LIBUNWIND_CHECK_FREEBSD_SIGRETURN 1
+#define _LIBUNWIND_CHECK_SIGRETURN 1
 #endif
 
 #include "AddressSpace.hpp"
@@ -983,7 +994,7 @@ private:
   }
 #endif
 
-#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN)
+#if defined(_LIBUNWIND_CHECK_SIGRETURN)
   bool setInfoForSigReturn() {
     R dummy;
     return setInfoForSigReturn(dummy);
@@ -1011,7 +1022,7 @@ private:
   template <typename Registers> int stepThroughSigReturn(Registers &) {
     return UNW_STEP_END;
   }
-#endif
+#endif // defined(_LIBUNWIND_CHECK_SIGRETURN)
 
 #if defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND)
   bool getInfoFromFdeCie(const typename CFI_Parser<A>::FDE_Info &fdeInfo,
@@ -1314,9 +1325,14 @@ private:
   unw_proc_info_t  _info;
   bool             _unwindInfoMissing;
   bool             _isSignalFrame;
-#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN)
+#if defined(_LIBUNWIND_CHECK_SIGRETURN)
   bool             _isSigReturn = false;
+#if defined(_LIBUNWIND_CHECK_FREEBSD_SIGRETURN)
+  bool _isSigTrampDetermined = false;
+  pint_t _sigTrampStart;
+  pint_t _sigTrampEnd;
 #endif
+#endif // defined(_LIBUNWIND_CHECK_SIGRETURN)
 };
 
 
@@ -2558,7 +2574,7 @@ int UnwindCursor<A, R>::stepWithTBTable(pint_t pc, tbtable *TBTable,
 
 template <typename A, typename R>
 void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
-#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN)
+#if defined(_LIBUNWIND_CHECK_SIGRETURN)
   _isSigReturn = false;
 #endif
 
@@ -2673,7 +2689,7 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
   }
 #endif // #if defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND)
 
-#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN)
+#if defined(_LIBUNWIND_CHECK_SIGRETURN)
   if (setInfoForSigReturn())
     return;
 #endif
@@ -2909,6 +2925,63 @@ int UnwindCursor<A, R>::stepThroughSigReturn(Registers_s390x &) {
 #endif // defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN) &&
        // defined(_LIBUNWIND_TARGET_S390X)
 
+#if defined(_LIBUNWIND_CHECK_FREEBSD_SIGRETURN) &&                             \
+    defined(_LIBUNWIND_TARGET_AARCH64)
+template <typename A, typename R>
+bool UnwindCursor<A, R>::setInfoForSigReturn(Registers_arm64 &) {
+  // Look for the sigreturn trampoline.
+  //
+  // https://cgit.freebsd.org/src/tree/sys/arm64/arm64/sigtramp.S
+  const pint_t pc = static_cast<pint_t>(this->getReg(UNW_REG_IP));
+
+  if (_isSigTrampDetermined == false) {
+    struct kinfo_sigtramp kst = {0};
+    size_t len = sizeof(kst);
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_SIGTRAMP, getpid()};
+    if (sysctl(mib, 4, &kst, &len, NULL, 0) == 0) {
+      _isSigTrampDetermined = true;
+      _sigTrampStart = reinterpret_cast<pint_t>(kst.ksigtramp_start);
+      _sigTrampEnd = reinterpret_cast<pint_t>(kst.ksigtramp_end);
+    }
+  }
+
+  if (_isSigTrampDetermined == false ||
+      (pc < _sigTrampStart || pc >= _sigTrampEnd))
+    return false;
+
+  _info = {};
+  _info.start_ip = _sigTrampStart;
+  _info.end_ip = _sigTrampEnd;
+  _isSigReturn = true;
+  return true;
+}
+
+template <typename A, typename R>
+int UnwindCursor<A, R>::stepThroughSigReturn(Registers_arm64 &) {
+  // In the signal trampoline frame, sp points to a sigframe
+  const pint_t kOffsetSpToSigcontext =
+      offsetof(struct sigframe, sf_uc) + offsetof(ucontext_t, uc_mcontext);
+
+  // Offsets from mcontext_t to each register.
+  const pint_t kOffsetGprs = offsetof(struct gpregs, gp_x[0]);
+  const pint_t kOffsetSp = offsetof(struct gpregs, gp_sp);
+  const pint_t kOffsetPc = offsetof(struct gpregs, gp_lr);
+
+  pint_t sigctx = _registers.getSP() + kOffsetSpToSigcontext;
+
+  for (int i = 0; i <= 29; ++i) {
+    uint64_t value =
+        _addressSpace.get64(sigctx + kOffsetGprs + static_cast<pint_t>(i * 8));
+    _registers.setRegister(UNW_AARCH64_X0 + i, value);
+  }
+  _registers.setSP(_addressSpace.get64(sigctx + kOffsetSp));
+  _registers.setIP(_addressSpace.get64(sigctx + kOffsetPc));
+  _isSignalFrame = true;
+  return UNW_STEP_SUCCESS;
+}
+#endif // defined(_LIBUNWIND_CHECK_FREEBSD_SIGRETURN) &&
+       // defined(_LIBUNWIND_TARGET_AARCH64)
+
 template <typename A, typename R> int UnwindCursor<A, R>::step(bool stage2) {
   (void)stage2;
   // Bottom of stack is defined is when unwind info cannot be found.
@@ -2917,7 +2990,7 @@ template <typename A, typename R> int UnwindCursor<A, R>::step(bool stage2) {
 
   // Use unwinding info to modify register set as if function returned.
   int result;
-#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN)
+#if defined(_LIBUNWIND_CHECK_SIGRETURN)
   if (_isSigReturn) {
     result = this->stepThroughSigReturn();
   } else

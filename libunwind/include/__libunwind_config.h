@@ -39,6 +39,9 @@
 # if defined(__HAIKU__)
 #  define _LIBUNWIND_TARGET_HAIKU 1
 # endif
+#if defined(__FreeBSD__)
+#define _LIBUNWIND_TARGET_FREEBSD 1
+#endif
 # if defined(__i386__)
 #  define _LIBUNWIND_TARGET_I386
 #  define _LIBUNWIND_CONTEXT_SIZE 8
@@ -73,6 +76,8 @@
 #  define _LIBUNWIND_CONTEXT_SIZE 66
 #  if defined(__SEH__)
 #    define _LIBUNWIND_CURSOR_SIZE 164
+#elif defined(_LIBUNWIND_TARGET_FREEBSD)
+#define _LIBUNWIND_CURSOR_SIZE 80
 #  else
 #    define _LIBUNWIND_CURSOR_SIZE 78
 #  endif
