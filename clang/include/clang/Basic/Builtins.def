@@ -118,6 +118,11 @@
 #  define LANGBUILTIN(ID, TYPE, ATTRS, BUILTIN_LANG) BUILTIN(ID, TYPE, ATTRS)
 #endif
 
+// Builtins for checking CPU features based on the GCC builtins.
+BUILTIN(__builtin_cpu_supports, "bcC*", "nc")
+BUILTIN(__builtin_cpu_is, "bcC*", "nc")
+BUILTIN(__builtin_cpu_init, "v", "n")
+
 // Standard libc/libm functions:
 BUILTIN(__builtin_atan2 , "ddd"  , "Fne")
 BUILTIN(__builtin_atan2f, "fff"  , "Fne")
