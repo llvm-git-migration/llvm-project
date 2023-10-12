@@ -1851,7 +1851,7 @@ private:
         _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20
         size_type __align_it(size_type __s) _NOEXCEPT
             {return (__s + (__a-1)) & ~(__a-1);}
-    enum {__alignment = 16};
+    enum { __alignment = 8 };
     static _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20
     size_type __recommend(size_type __s) _NOEXCEPT
     {
