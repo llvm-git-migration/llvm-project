@@ -1698,6 +1698,9 @@ public:
     ChangedStateAtExit
   };
 
+  void DiagnoseMissingFormatAttributes(const FunctionDecl *FDecl,
+                                       ArrayRef<const Expr *> Args,
+                                       SourceLocation Loc);
   void DiagnoseNonDefaultPragmaAlignPack(PragmaAlignPackDiagnoseKind Kind,
                                          SourceLocation IncludeLoc);
   void DiagnoseUnterminatedPragmaAlignPack();

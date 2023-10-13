@@ -381,6 +381,9 @@ Bug Fixes in This Version
 - Fixed a regression in CTAD that a friend declaration that befriends itself may cause
   incorrect constraint substitution. (#GH86769).
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH70024
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
