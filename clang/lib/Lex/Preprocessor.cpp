@@ -546,7 +546,6 @@ void Preprocessor::EnterMainSourceFile() {
   // information) and predefined macros aren't guaranteed to be set properly.
   assert(NumEnteredSourceFiles == 0 && "Cannot reenter the main file!");
   FileID MainFileID = SourceMgr.getMainFileID();
-  // llvm::errs() << "##### Main source file: " << (int)MainFileID << "\n";
 
   // If MainFileID is loaded it means we loaded an AST file, no need to enter
   // a main file.
@@ -878,15 +877,8 @@ void Preprocessor::saveCheckPoint(const char *P) {
 }
 
 const char *Preprocessor::getSaveFor(const char *S) const {
-  const char *C = S;
-  // FIXME: Use std::lower_bound or something smart. Aaron knows what I'm
-  // talking about.
-  for (ssize_t I = CheckPoints.size() - 1; I >= 0; --I) {
-    C = CheckPoints[I];
-    if (CheckPoints[I] <= S)
-      break;
-  }
-  return C;
+  auto It = llvm::lower_bound(CheckPoints, S, std::less<const char *>());
+  return *It;
 }
 
 void Preprocessor::Lex(Token &Result) {
