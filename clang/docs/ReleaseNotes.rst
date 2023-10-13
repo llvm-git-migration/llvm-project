@@ -65,7 +65,9 @@ Improvements to Clang's diagnostics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - We now generate a diagnostic for signed integer overflow due to unary minus
   in a non-constant expression context. This fixes
-  `Issue 31643 <https://github.com/llvm/llvm-project/issues/31643>`_
+  `Issue 31643 <https://github.com/llvm/llvm-project/issues/31643>`_.
+- We now generate a diagnostic for missing format attributes
+  `Issue 60718 <https://github.com/llvm/llvm-project/issues/60718>`_.
 
 Non-comprehensive list of changes in this release
 -------------------------------------------------
