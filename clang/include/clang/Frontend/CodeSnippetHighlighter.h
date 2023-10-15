@@ -19,6 +19,8 @@ struct StyleRange {
   unsigned Start;
   unsigned End;
   enum llvm::raw_ostream::Colors Color;
+  StyleRange(unsigned S, unsigned E, enum llvm::raw_ostream::Colors C)
+      : Start(S), End(E), Color(C){};
 };
 
 class Preprocessor;

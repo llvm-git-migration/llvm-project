@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Frontend/CodeSnippetHighlighter.h"
+#include "clang/Basic/CharInfo.h"
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
@@ -49,13 +50,13 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
         const IdentifierInfo *II = PP->getIdentifierInfo(RawIdent);
         assert(II);
         if (II->isKeyword(LangOpts))
-          Vec.push_back(StyleRange{Start, Start + Length, KeywordColor});
+          Vec.emplace_back(Start, Start + Length, KeywordColor);
       }
     } else if (tok::isLiteral(T.getKind())) {
-      Vec.push_back(StyleRange{Start, Start + Length, LiteralColor});
+      Vec.emplace_back(Start, Start + Length, LiteralColor);
     } else {
       assert(T.is(tok::comment));
-      Vec.push_back(StyleRange{Start, Start + Length, CommentColor});
+      Vec.emplace_back(Start, Start + Length, CommentColor);
     }
   };
 
@@ -131,7 +132,7 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineLength = 0;
     for (unsigned I = 0; I <= Spelling.size(); ++I) {
       // This line is done.
-      if (Spelling[I] == '\n' || Spelling[I] == '\r' || I == Spelling.size()) {
+      if (isVerticalWhitespace(Spelling[I]) || I == Spelling.size()) {
         if (StartLine + L == LineNumber) {
           if (L == 0) // First line
             appendStyle(LineRanges, T, StartCol, LineLength);
