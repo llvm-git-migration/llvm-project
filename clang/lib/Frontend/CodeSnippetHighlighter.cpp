@@ -72,6 +72,7 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     size_t Offset = Save - Buff->getBufferStart();
     assert(Save >= Buff->getBufferStart());
     assert(Save <= Buff->getBufferEnd());
+    assert(Save <= LineStart);
 
     L.seek(Offset, /*IsAtStartOfLine=*/true);
   }

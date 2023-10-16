@@ -876,9 +876,19 @@ void Preprocessor::saveCheckPoint(const char *P) {
     CheckPoints.push_back(P);
 }
 
+/// We want to always return a value lower than \p S.
+/// If there is no such checkpoint, return nullptr.
 const char *Preprocessor::getSaveFor(const char *S) const {
-  auto It = llvm::lower_bound(CheckPoints, S, std::less<const char *>());
-  return *It;
+  const char *Result = nullptr;
+  for (ssize_t I = CheckPoints.size() - 1; I >= 0; --I) {
+    const char *C = CheckPoints[I];
+    if (C <= S) {
+      Result = C;
+      break;
+    }
+  }
+
+  return Result;
 }
 
 void Preprocessor::Lex(Token &Result) {
