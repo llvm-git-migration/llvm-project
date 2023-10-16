@@ -18,9 +18,9 @@
 
 using namespace clang;
 
-static constexpr raw_ostream::Colors CommentColor = raw_ostream::GREEN;
-static constexpr raw_ostream::Colors LiteralColor = raw_ostream::CYAN;
-static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
+static constexpr raw_ostream::Colors CommentColor = raw_ostream::MAGENTA;
+static constexpr raw_ostream::Colors LiteralColor = raw_ostream::RED;
+static constexpr raw_ostream::Colors KeywordColor = raw_ostream::GREEN;
 
 llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,
@@ -45,7 +45,7 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
       // Special case true/false/nullptr literals, since they will otherwise be
       // treated as keywords.
       if (RawIdent == "true" || RawIdent == "false" || RawIdent == "nullptr") {
-        Vec.push_back(StyleRange{Start, Start + Length, LiteralColor});
+        Vec.emplace_back(Start, Start + Length, LiteralColor);
       } else {
         const IdentifierInfo *II = PP->getIdentifierInfo(RawIdent);
         assert(II);
