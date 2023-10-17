@@ -20,7 +20,7 @@ using namespace clang;
 
 static constexpr raw_ostream::Colors CommentColor = raw_ostream::MAGENTA;
 static constexpr raw_ostream::Colors LiteralColor = raw_ostream::RED;
-static constexpr raw_ostream::Colors KeywordColor = raw_ostream::GREEN;
+static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
 
 llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,

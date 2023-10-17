@@ -163,6 +163,8 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
     PreambleConditionalStack.startRecording();
 
   MaxTokens = LangOpts.MaxTokens;
+
+  CheckPoints.push_back(nullptr);
 }
 
 Preprocessor::~Preprocessor() {
@@ -862,17 +864,11 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
   return true;
 }
 
+static constexpr ptrdiff_t CheckPointLimit = 1024 * 8;
 void Preprocessor::saveCheckPoint(const char *P) {
-  static constexpr ptrdiff_t Limit = 1024 * 8;
-  if (CheckPoints.empty()) {
-    CheckPoints.push_back(P);
-    return;
-  }
-
-  const char *Cur = CheckPoints.back();
-  if (Cur == P)
-    return;
-  if ((P - Cur) > Limit)
+  assert(!CheckPoints.empty());
+  assert(CheckPoints.back() != P);
+  if ((P - CheckPoints.back()) > CheckPointLimit)
     CheckPoints.push_back(P);
 }
 

@@ -1306,18 +1306,13 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
     if (!WasPrintable)
       HighlightingEnabled = false;
 
-    // FIXME: I hope we can do this in some nicer way.
     if (HighlightingEnabled) {
-      std::optional<enum raw_ostream::Colors> H;
-      for (auto &P : Styles) {
-        if (P.Start < I && P.End >= I) {
-          H = P.Color;
-          break;
-        }
-      }
+      const auto *CharStyle = llvm::find_if(Styles, [I](const StyleRange &R) {
+        return (R.Start < I && R.End >= I);
+      });
 
-      if (H)
-        OS.changeColor(*H, false);
+      if (CharStyle != Styles.end())
+        OS.changeColor(CharStyle->Color, false);
       else
         OS.resetColor();
     }
