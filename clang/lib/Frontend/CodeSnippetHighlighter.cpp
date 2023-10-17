@@ -67,7 +67,7 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
   L.SetKeepWhitespaceMode(true);
 
   // Seek to the last save point before the start of the line.
-  if (const char *Save = PP->getSaveFor(LineStart);
+  if (const char *Save = PP->getCompleteTokenCheckpoint(LineStart);
       Buff->getBufferStart() <= Save && Save < Buff->getBufferEnd()) {
     size_t Offset = Save - Buff->getBufferStart();
     assert(Save >= Buff->getBufferStart());

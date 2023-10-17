@@ -141,10 +141,7 @@ class Preprocessor {
   std::unique_ptr<ScratchBuffer> ScratchBuf;
   HeaderSearch      &HeaderInfo;
   ModuleLoader      &TheModuleLoader;
-
   llvm::SmallVector<const char *> CheckPoints;
-  void saveCheckPoint(const char *P);
-  const char *getSaveFor(const char *S) const;
 
   /// External source of macros.
   ExternalPreprocessorSource *ExternalSource;
@@ -1323,6 +1320,11 @@ public:
     OnToken = std::move(F);
   }
 
+  /// Returns a pointer into the main file's buffer that's guaranteed to be
+  /// after a fully lexed token. This can be used to partially lex a file
+  /// without starting in the middle of a token.
+  const char *getCompleteTokenCheckpoint(const char *P) const;
+
   void setPreprocessToken(bool Preprocess) { PreprocessToken = Preprocess; }
 
   bool isMacroDefined(StringRef Id) {
@@ -2263,6 +2265,7 @@ private:
 
   const char *getCurLexerEndPos();
   void diagnoseMissingHeaderInUmbrellaDir(const Module &Mod);
+  void saveCheckPoint(const char *P);
 
 public:
   void PoisonSEHIdentifiers(bool Poison = true); // Borland
