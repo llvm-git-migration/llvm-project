@@ -50,7 +50,9 @@ func.func @generic_op_reshape_producer_fusion(%arg0 : tensor<?x?x4x?xf32>,
 #map1 = affine_map<(d0, d1) -> ()>
 func.func @generic_op_reshape_consumer_fusion(%arg0 : tensor<?x?xf32>,
                                          %arg1 : tensor<?x?xf32>,
-                                         %arg2 : f32) ->
+                                         %arg2 : f32,
+                                         %sz0: index,
+                                         %sz1: index) ->
                                          tensor<?x4x?x5xf32>
 {
   %0 = linalg.generic {
@@ -63,7 +65,7 @@ func.func @generic_op_reshape_consumer_fusion(%arg0 : tensor<?x?xf32>,
       %2 = arith.addf %1, %arg5 : f32
       linalg.yield %2 : f32
   } -> tensor<?x?xf32>
-  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] :
+  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] output_shape [%sz0, 4, %sz1, 5] :
     tensor<?x?xf32> into tensor<?x4x?x5xf32>
   return %1 : tensor<?x4x?x5xf32>
 }
@@ -94,7 +96,7 @@ func.func @generic_op_reshape_consumer_fusion(%arg0 : tensor<?x?xf32>,
 // -----
 
 func.func @reshape_as_consumer_permutation
-  (%a : tensor<?x?x?xf32>, %b : tensor<?x?xf32>)
+  (%a : tensor<?x?x?xf32>, %b : tensor<?x?xf32>, %sz0: index, %sz1: index, %sz2: index)
     -> tensor<?x2x?x3x4x?xf32> {
   %c = linalg.generic {
          indexing_maps = [affine_map<(d0, d1, d2) -> (d1, d0, d2)>,
@@ -107,8 +109,7 @@ func.func @reshape_as_consumer_permutation
          %1 = arith.addf %arg0, %arg1 : f32
          linalg.yield %1 : f32
        } -> tensor<?x?x?xf32>
-  %d = tensor.expand_shape %c [[0, 1], [2], [3, 4, 5]]
-       : tensor<?x?x?xf32> into tensor<?x2x?x3x4x?xf32>
+  %d = tensor.expand_shape %c [[0, 1], [2], [3, 4, 5]] output_shape [%sz0, 2, %sz1, 3, 4, %sz2] : tensor<?x?x?xf32> into tensor<?x2x?x3x4x?xf32>
   return %d : tensor<?x2x?x3x4x?xf32>
 }
 //  CHECK-DAG: #[[MAP8:.+]] = affine_map<(d0, d1, d2, d3, d4, d5) -> (d2, d3, d4, d0, d1, d5)>
@@ -152,7 +153,7 @@ func.func @generic_op_reshape_consumer_static(%arg0: tensor<264x4xf32>)
       %2 = arith.mulf %arg1, %arg2 : f32
       linalg.yield %2 : f32
     } -> tensor<264x4xf32>
-  %2 = tensor.expand_shape %1 [[0, 1], [2]] :
+  %2 = tensor.expand_shape %1 [[0, 1], [2]] output_shape [8, 33, 4] :
     tensor<264x4xf32> into tensor<8x33x4xf32>
   return %2 : tensor<8x33x4xf32>
 }
@@ -232,7 +233,8 @@ func.func @indexed_consumer_reshape_producer_fusion(%arg0 : tensor<?x?x4x?xi32>,
 
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
 func.func @indexed_producer_reshape_consumer_fusion(%arg0 : tensor<?x?xi32>,
-                                         %arg1 : tensor<?x?xi32>) ->
+                                         %arg1 : tensor<?x?xi32>, 
+                                         %sz0: index, %sz1: index) ->
                                          tensor<?x?x4x5xi32>
 {
   %0 = linalg.generic {
@@ -250,7 +252,7 @@ func.func @indexed_producer_reshape_consumer_fusion(%arg0 : tensor<?x?xi32>,
       %5 = arith.addi %3, %4 : i32
       linalg.yield %5 : i32
   } -> tensor<?x?xi32>
-  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] :
+  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] output_shape [%sz0, %sz1, 4, 5] :
     tensor<?x?xi32> into tensor<?x?x4x5xi32>
   return %1 : tensor<?x?x4x5xi32>
 }
@@ -302,8 +304,7 @@ func.func @reshape_as_consumer_permutation
          %7 = arith.addi %5, %6 : i32
          linalg.yield %7 : i32
        } -> tensor<6x4x210xi32>
-  %d = tensor.expand_shape %c [[0, 1], [2], [3, 4, 5]]
-       : tensor<6x4x210xi32> into tensor<2x3x4x5x6x7xi32>
+  %d = tensor.expand_shape %c [[0, 1], [2], [3, 4, 5]] output_shape [2, 3, 4, 5, 6, 7] : tensor<6x4x210xi32> into tensor<2x3x4x5x6x7xi32>
   return %d : tensor<2x3x4x5x6x7xi32>
 }
 
@@ -411,7 +412,8 @@ func.func @reshape_as_producer_projected_permutation(
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
 #map1 = affine_map<(d0, d1) -> (d1, d0)>
 func.func @generic_op_reshape_consumer_fusion_projected(%arg0 : tensor<?x?xf32>,
-                                                   %arg1 : tensor<?x?xf32>) ->
+                                                   %arg1 : tensor<?x?xf32>,
+                                                   %sz0: index, %sz1: index) ->
                                                    tensor<?x?x4x5xf32>
 {
   %0 = linalg.generic {
@@ -423,7 +425,7 @@ func.func @generic_op_reshape_consumer_fusion_projected(%arg0 : tensor<?x?xf32>,
       %1 = arith.mulf %arg3, %arg4 : f32
       linalg.yield %1 : f32
   } -> tensor<?x?xf32>
-  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] :
+  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] output_shape [%sz0, %sz1, 4, 5] :
     tensor<?x?xf32> into tensor<?x?x4x5xf32>
   return %1 : tensor<?x?x4x5xf32>
 }
@@ -503,7 +505,8 @@ func.func @no_fuse_mismatched_dynamism(%arg0: tensor<2x1xi64>, %arg1: tensor<?xi
 // -----
 
 func.func @reshape_as_consumer_permutation_with_multiple_results
-  (%a : tensor<?x?x?xf32>, %b : tensor<?x?xf32>)
+  (%a : tensor<?x?x?xf32>, %b : tensor<?x?xf32>, %sz0: index, 
+   %sz1: index, %sz2: index, %sz3: index, %sz4: index)
     -> (tensor<?x2x?x3x4x?xf32>, tensor<?x?x2x3x4x?xf32>) {
   %c:2 = linalg.generic {
          indexing_maps = [affine_map<(d0, d1, d2) -> (d1, d0, d2)>,
@@ -517,10 +520,8 @@ func.func @reshape_as_consumer_permutation_with_multiple_results
          %1 = arith.addf %arg0, %arg1 : f32
          linalg.yield %1, %1 : f32, f32
        } -> (tensor<?x?x?xf32>, tensor<?x?x?xf32>)
-  %d = tensor.expand_shape %c#0 [[0, 1], [2], [3, 4, 5]]
-       : tensor<?x?x?xf32> into tensor<?x2x?x3x4x?xf32>
-  %e = tensor.expand_shape %c#1 [[0], [1, 2], [3, 4, 5]]
-       : tensor<?x?x?xf32> into tensor<?x?x2x3x4x?xf32>
+  %d = tensor.expand_shape %c#0 [[0, 1], [2], [3, 4, 5]] output_shape [%sz0, 2, %sz1, 3, 4, %sz2] : tensor<?x?x?xf32> into tensor<?x2x?x3x4x?xf32>
+  %e = tensor.expand_shape %c#1 [[0], [1, 2], [3, 4, 5]] output_shape [%sz3, %sz4, 2, 3, 4, %sz2] : tensor<?x?x?xf32> into tensor<?x?x2x3x4x?xf32>
   return %d, %e : tensor<?x2x?x3x4x?xf32>, tensor<?x?x2x3x4x?xf32>
 }
 //  CHECK-DAG: #[[MAP0:.+]] = affine_map<(d0, d1, d2, d3, d4, d5) -> (d2, d3, d4, d0, d1, d5)>
@@ -556,7 +557,7 @@ module {
         %2 = arith.addf %arg4, %arg5 : f32
         linalg.yield %2, %2 : f32, f32
       } -> (tensor<512xf32>, tensor<200x512xf32>)
-    %1 = tensor.expand_shape %0#1 [[0, 1, 2], [3]] : tensor<200x512xf32> into tensor<25x8x1x512xf32>
+    %1 = tensor.expand_shape %0#1 [[0, 1, 2], [3]] output_shape [25, 8, 1, 512] : tensor<200x512xf32> into tensor<25x8x1x512xf32>
     return %1 : tensor<25x8x1x512xf32>
   }
 }
@@ -581,7 +582,9 @@ module {
 #map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 func.func @generic_op_reshape_consumer_fusion_reduction(%arg0 : tensor<?x?xf32>,
                                                         %arg1 : tensor<?x?xf32>,
-                                                        %arg2 : tensor<?x?xf32>) ->
+                                                        %arg2 : tensor<?x?xf32>,
+                                                        %sz0: index,
+                                                        %sz1: index) ->
                                                         tensor<?x?x4x5xf32>
 {
   %0 = linalg.generic {
@@ -593,7 +596,7 @@ func.func @generic_op_reshape_consumer_fusion_reduction(%arg0 : tensor<?x?xf32>,
       %1 = arith.mulf %arg3, %arg4 : f32
       linalg.yield %1 : f32
   } -> tensor<?x?xf32>
-  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] :
+  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] output_shape [%sz0, %sz1, 4, 5] :
     tensor<?x?xf32> into tensor<?x?x4x5xf32>
   return %1 : tensor<?x?x4x5xf32>
 }
@@ -668,12 +671,14 @@ func.func @generic_op_reshape_producer_fusion_with_reduction(%arg0 : tensor<?x7x
 
 func.func @linalg_add_reshape_consumer_fusion(%arg0 : tensor<?x?xf32>,
                                               %arg1 : tensor<?x?xf32>,
-                                              %arg2 : tensor<?x?xf32>) ->
+                                              %arg2 : tensor<?x?xf32>,
+                                              %sz0: index,
+                                              %sz1: index) ->
                                               tensor<?x?x4x5xf32>
 {
   %0 = linalg.add ins(%arg0, %arg1 : tensor<?x?xf32>, tensor<?x?xf32>)
        outs(%arg2 : tensor<?x?xf32>) -> tensor<?x?xf32>
-  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] :
+  %1 = tensor.expand_shape %0 [[0], [1, 2, 3]] output_shape [%sz0, %sz1, 4, 5] :
     tensor<?x?xf32> into tensor<?x?x4x5xf32>
   return %1 : tensor<?x?x4x5xf32>
 }
