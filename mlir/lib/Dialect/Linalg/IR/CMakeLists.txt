@@ -32,6 +32,7 @@ add_mlir_dialect_library(MLIRLinalgDialect
   MLIRMathDialect
   MLIRMemRefDialect
   MLIRTensorDialect
+  MLIRTensorUtils
   MLIRTilingInterface
   MLIRValueBoundsOpInterface
   MLIRViewLikeInterface

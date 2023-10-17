@@ -26,6 +26,11 @@ PadOp createPadHighOp(RankedTensorType type, Value source, Value pad,
 SmallVector<Value> createDynamicDimValues(OpBuilder &b, Location loc,
                                           Value rankedTensor);
 
+/// Creates Reshape op.
+template <typename ReshapeOp>
+Value createReshapeOp(ReshapeOp oldReshapeOp, OpBuilder &b, Location loc,
+                      RankedTensorType resultTy, Value src);
+
 /// Returns the transposed `rankedTensorType` if `transposeVector` is non-empty.
 /// Fail if `transposeVector` is not a permutation matching the tensor rank.
 FailureOr<RankedTensorType>

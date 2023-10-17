@@ -53,6 +53,25 @@ SmallVector<Value> mlir::tensor::createDynamicDimValues(OpBuilder &b,
   return dynamicDims;
 }
 
+template <typename ReshapeOp>
+Value mlir::tensor::createReshapeOp(ReshapeOp oldReshapeOp, OpBuilder &b,
+                                    Location loc, RankedTensorType resultTy,
+                                    Value src) {
+  if constexpr (std::is_same<ReshapeOp, mlir::tensor::ExpandShapeOp>::value) {
+    return b
+        .create<ReshapeOp>(loc, resultTy, src, oldReshapeOp.getReassociation(),
+                           oldReshapeOp.getOutputShape(),
+                           oldReshapeOp.getStaticOutputShape())
+        .getResult();
+  }
+  if constexpr (std::is_same<ReshapeOp, mlir::tensor::CollapseShapeOp>::value) {
+    return b
+        .create<ReshapeOp>(loc, resultTy, src, oldReshapeOp.getReassociation())
+        .getResult();
+  }
+  return {};
+}
+
 FailureOr<RankedTensorType>
 mlir::tensor::computeTransposedType(RankedTensorType rankedTensorType,
                                     ArrayRef<int64_t> transposeVector) {
