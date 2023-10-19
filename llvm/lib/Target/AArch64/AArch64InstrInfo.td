@@ -1533,6 +1533,27 @@ def PAUTH_PROLOGUE : Pseudo<(outs), (ins), []>, Sched<[]>;
 def PAUTH_EPILOGUE : Pseudo<(outs), (ins), []>, Sched<[]>;
 }
 
+def PAUTH_BLEND : Pseudo<(outs GPR64:$disc), (ins GPR64:$addr_disc, i32imm:$int_disc), []>, Sched<[]>;
+
+// Two tasks are handled by custom inserter:
+// 1. It tries to detect known signing schemas: either small immediate integer
+//    discriminator or an arbitrary register blended with a small integer -
+//    if such schema is detected, it is saved into the instruction's operands.
+// 2. It is worth to reuse $reg_disc as a scratch register unless we use
+//    immediate integer as a discriminator (in that case $reg_disc is XZR).
+//    In the latter case $scratch is technically XZR, but another def-ed
+//    register is added as an implicit operand by the inserter.
+//
+// See the comments in custom inserter code for explanation of the reason
+// to specify "Defs = [X16, X17]" here.
+let usesCustomInserter = 1, Defs = [X16, X17] in {
+def PAUTH_AUTH : Pseudo<(outs GPR64common:$auted, GPR64:$scratch),
+                        (ins GPR64common:$signed,
+                             GPR64:$reg_disc, i32imm:$int_disc,
+                             i32imm:$is_blended, i32imm:$key_id), [],
+                        "$auted = $signed, $scratch = $reg_disc">, Sched<[]>;
+}
+
 // These pointer authentication instructions require armv8.3a
 let Predicates = [HasPAuth] in {
 
@@ -9146,12 +9167,14 @@ let Predicates = [HasMOPS, HasMTE], Defs = [NZCV], Size = 12, mayLoad = 0, maySt
 //-----------------------------------------------------------------------------
 // v8.3 Pointer Authentication late patterns
 
-let Predicates = [HasPAuth] in {
 def : Pat<(int_ptrauth_blend GPR64:$Rd, imm64_0_65535:$imm),
-          (MOVKXi GPR64:$Rd, (trunc_imm imm64_0_65535:$imm), 48)>;
+          (PAUTH_BLEND GPR64:$Rd, (trunc_imm imm64_0_65535:$imm))>;
 def : Pat<(int_ptrauth_blend GPR64:$Rd, GPR64:$Rn),
           (BFMXri GPR64:$Rd, GPR64:$Rn, 16, 15)>;
-}
+
+def : Pat<(int_ptrauth_auth GPR64:$signed,
+                            timm:$key_id, GPR64:$reg_disc),
+          (PAUTH_AUTH GPR64:$signed, GPR64:$reg_disc, 0, 0, timm:$key_id)>;
 
 //-----------------------------------------------------------------------------
 
