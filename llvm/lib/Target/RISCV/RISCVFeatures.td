@@ -715,6 +715,13 @@ def HasStdExtZacas : Predicate<"Subtarget->hasStdExtZacas()">,
                                AssemblerPredicate<(all_of FeatureStdExtZacas),
                                "'Zacas' (Atomic Compare-And-Swap Instructions)">;
 
+def FeatureStdExtZalasr
+    : SubtargetFeature<"experimental-zalasr", "HasStdExtZalasr", "true",
+                       "'Zalasr' (Load-Acquire and Store-Release Instructions)">;
+def HasStdExtZalasr : Predicate<"Subtarget->hasStdExtZalasr()">,
+                               AssemblerPredicate<(all_of FeatureStdExtZalasr),
+                               "'Zalasr' (Load-Acquire and Store-Release Instructions)">;
+
 //===----------------------------------------------------------------------===//
 // Vendor extensions
 //===----------------------------------------------------------------------===//
