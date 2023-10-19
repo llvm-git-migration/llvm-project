@@ -797,6 +797,7 @@ Experimental extensions
     zimop               0.1
     zaamo               0.2
     zacas               1.0
+    zalasr              0.1
     zalrsc              0.2
     zfbfmin             1.0
     zcmop               0.2
