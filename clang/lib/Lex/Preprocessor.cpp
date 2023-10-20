@@ -163,8 +163,6 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
     PreambleConditionalStack.startRecording();
 
   MaxTokens = LangOpts.MaxTokens;
-
-  CheckPoints.push_back(nullptr);
 }
 
 Preprocessor::~Preprocessor() {
@@ -862,29 +860,6 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
     CurLexerCallback = CLK_LexAfterModuleImport;
   }
   return true;
-}
-
-static constexpr ptrdiff_t CheckPointLimit = 1024 * 8;
-void Preprocessor::saveCheckPoint(const char *P) {
-  assert(!CheckPoints.empty());
-  assert(CheckPoints.back() != P);
-  if ((P - CheckPoints.back()) > CheckPointLimit)
-    CheckPoints.push_back(P);
-}
-
-/// We want to always return a value lower than \p S.
-/// If there is no such checkpoint, return nullptr.
-const char *Preprocessor::getCompleteTokenCheckpoint(const char *P) const {
-  const char *Result = nullptr;
-  for (ssize_t I = CheckPoints.size() - 1; I >= 0; --I) {
-    const char *C = CheckPoints[I];
-    if (C <= P) {
-      Result = C;
-      break;
-    }
-  }
-
-  return Result;
 }
 
 void Preprocessor::Lex(Token &Result) {

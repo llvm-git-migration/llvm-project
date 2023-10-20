@@ -18,9 +18,15 @@
 
 using namespace clang;
 
-static constexpr raw_ostream::Colors CommentColor = raw_ostream::MAGENTA;
-static constexpr raw_ostream::Colors LiteralColor = raw_ostream::RED;
+// Magenta is taken for 'warning'. Red is already 'error' and 'cya'
+// is already taken for 'note'. Green is already used to underline
+// source ranges. White and black are bad because of the usual
+// terminal backgrounds. Which leaves us only with TWO options.
+static constexpr raw_ostream::Colors CommentColor = raw_ostream::YELLOW;
+static constexpr raw_ostream::Colors LiteralColor = raw_ostream::GREEN;
 static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
+/// Maximum size of file we still highlight.
+static constexpr size_t MaxBufferSize = 1024 * 1024; // 1MB.
 
 llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,
@@ -34,6 +40,13 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
   // Might cause emission of another diagnostic.
   if (PP->getIdentifierTable().getExternalIdentifierLookup())
     return {};
+
+  auto Buff = SM.getBufferOrNone(FID);
+  if (!Buff || Buff->getBufferSize() > MaxBufferSize)
+    return {};
+
+  Lexer L = Lexer(FID, *Buff, SM, LangOpts);
+  L.SetKeepWhitespaceMode(true);
 
   size_t NTokens = 0;
   // Classify the given token and append it to the given vector.
@@ -59,23 +72,6 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
       Vec.emplace_back(Start, Start + Length, CommentColor);
     }
   };
-
-  // Figure out where to start lexing from.
-  auto Buff = SM.getBufferOrNone(FID);
-  assert(Buff);
-  Lexer L = Lexer(FID, *Buff, SM, LangOpts);
-  L.SetKeepWhitespaceMode(true);
-
-  // Seek to the last save point before the start of the line.
-  if (const char *Save = PP->getCompleteTokenCheckpoint(LineStart);
-      Buff->getBufferStart() <= Save && Save < Buff->getBufferEnd()) {
-    size_t Offset = Save - Buff->getBufferStart();
-    assert(Save >= Buff->getBufferStart());
-    assert(Save <= Buff->getBufferEnd());
-    assert(Save <= LineStart);
-
-    L.seek(Offset, /*IsAtStartOfLine=*/true);
-  }
 
   llvm::SmallVector<StyleRange> LineRanges;
   bool Stop = false;
