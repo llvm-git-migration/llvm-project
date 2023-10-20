@@ -1857,7 +1857,6 @@ DIExpression *DIExpression::append(const DIExpression *Expr,
     }
     Op.appendToVector(NewOps);
   }
-
   NewOps.append(Ops.begin(), Ops.end());
   auto *result = DIExpression::get(Expr->getContext(), NewOps);
   assert(result->isValid() && "concatenated expression is not valid");
@@ -1996,6 +1995,286 @@ DIExpression::constantFold(const ConstantInt *CI) {
     return {this, CI};
   return {DIExpression::get(getContext(), Ops),
           ConstantInt::get(getContext(), NewInt)};
+}
+
+static bool isConstantVal(uint64_t Op) {
+  return Op == dwarf::DW_OP_constu || Op == dwarf::DW_OP_consts;
+}
+
+static bool isNeutralElement(uint64_t Op, uint64_t Val) {
+  switch (Op) {
+  case dwarf::DW_OP_plus:
+  case dwarf::DW_OP_minus:
+  case dwarf::DW_OP_shl:
+  case dwarf::DW_OP_shr:
+    return Val == 0;
+  case dwarf::DW_OP_mul:
+  case dwarf::DW_OP_div:
+    return Val == 1;
+  default:
+    return false;
+  }
+}
+
+static std::optional<uint64_t>
+foldOperationIfPossible(uint64_t Op, uint64_t Operand1, uint64_t Operand2) {
+  switch (Op) {
+  case dwarf::DW_OP_plus:
+    return Operand1 + Operand2;
+  case dwarf::DW_OP_minus:
+    return Operand1 - Operand2;
+  case dwarf::DW_OP_shl:
+    return Operand1 << Operand2;
+  case dwarf::DW_OP_shr:
+    return Operand1 >> Operand2;
+  case dwarf::DW_OP_mul:
+    return Operand1 * Operand2;
+  case dwarf::DW_OP_div:
+    return Operand1 / Operand2;
+  default:
+    return std::nullopt;
+  }
+}
+
+static bool operationsAreFoldableAndCommutative(uint64_t Op1, uint64_t Op2) {
+  if (Op1 != Op2)
+    return false;
+  switch (Op1) {
+  case dwarf::DW_OP_plus:
+  case dwarf::DW_OP_mul:
+    return true;
+  default:
+    return false;
+  }
+}
+
+static void consumeOneOperator(DIExpressionCursor &Cursor, uint64_t &Loc,
+                               const DIExpression::ExprOperand &Op) {
+  Cursor.consume(1);
+  Loc = Loc + Op.getSize();
+}
+
+DIExpression *DIExpression::foldConstantMath() {
+
+  SmallVector<uint64_t, 8> WorkingOps;
+  WorkingOps.append(Elements.begin(), Elements.end());
+  uint64_t Loc = 0;
+  DIExpressionCursor Cursor(WorkingOps);
+
+  while (Loc < WorkingOps.size()) {
+
+    auto Op1 = Cursor.peek();
+    // Expression has no operations, exit.
+    if (!Op1)
+      break;
+    auto Op1Raw = Op1->getOp();
+    auto Op1Arg = Op1->getArg(0);
+
+    // {DW_OP_plus_uconst, 0} -> {}
+    if (Op1Raw == dwarf::DW_OP_plus_uconst && Op1Arg == 0) {
+      WorkingOps.erase(WorkingOps.begin() + Loc, WorkingOps.begin() + Loc + 2);
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+
+    if (!isConstantVal(Op1Raw) && Op1Raw != dwarf::DW_OP_plus_uconst) {
+      // Early exit, all of the following patterns start with a constant value.
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+
+    auto Op2 = Cursor.peekNext();
+    // All following patterns require at least 2 Operations, exit.
+    if (!Op2)
+      break;
+    auto Op2Raw = Op2->getOp();
+
+    // {DW_OP_const[u, s], 0, DW_OP_[plus, minus, shl, shr]} -> {}
+    // {DW_OP_const[u, s], 1, DW_OP_[mul, div]} -> {}
+    if (isConstantVal(Op1Raw) && isNeutralElement(Op2Raw, Op1Arg)) {
+      WorkingOps.erase(WorkingOps.begin() + Loc, WorkingOps.begin() + Loc + 3);
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op2Arg = Op2->getArg(0);
+
+    // {DW_OP_plus_uconst, Const1, DW_OP_plus_uconst, Const2} ->
+    // {DW_OP_plus_uconst, Const1 + Const2}
+    if (Op1Raw == dwarf::DW_OP_plus_uconst &&
+        Op2Raw == dwarf::DW_OP_plus_uconst) {
+      auto Result = Op1Arg + Op2Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2,
+                       WorkingOps.begin() + Loc + 4);
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    // {DW_OP_const[u, s], Const1, DW_OP_plus_uconst Const2} -> {DW_OP_constu,
+    // Const1 + Const2}
+    if (isConstantVal(Op1Raw) && Op2Raw == dwarf::DW_OP_plus_uconst) {
+      auto Result = Op1Arg + Op2Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2,
+                       WorkingOps.begin() + Loc + 4);
+      WorkingOps[Loc] = dwarf::DW_OP_constu;
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op3 = Cursor.peekNextN(2);
+    // Op2 could still match a pattern, skip iteration.
+    if (!Op3) {
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+    auto Op3Raw = Op3->getOp();
+
+    // {DW_OP_const[u, s], Const1, DW_OP_const[u, s], Const2, DW_OP_[plus,
+    // minus, mul, div, shl, shr] -> {DW_OP_constu, Const1 [+, -, *, /, <<, >>]
+    // Const2}
+    if (isConstantVal(Op1Raw) && isConstantVal(Op2Raw)) {
+      auto Result = foldOperationIfPossible(Op3Raw, Op1Arg, Op2Arg);
+      if (!Result) {
+        consumeOneOperator(Cursor, Loc, *Op1);
+        continue;
+      }
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2,
+                       WorkingOps.begin() + Loc + 5);
+      WorkingOps[Loc] = dwarf::DW_OP_constu;
+      WorkingOps[Loc + 1] = *Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    // {DW_OP_plus_uconst, Const1, DW_OP_const[u, s], Const1, DW_OP_plus} ->
+    // {DW_OP_plus_uconst, Const1 + Const2}
+    if (Op1Raw == dwarf::DW_OP_plus_uconst && isConstantVal(Op2Raw) &&
+        Op3Raw == dwarf::DW_OP_plus) {
+      auto Result = Op1Arg + Op2Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2, WorkingOps.begin() + 5);
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op3Arg = Op3->getArg(0);
+    // {DW_OP_const[u, s], Const1, DW_OP_plus, DW_OP_plus_uconst, Const2} ->
+    // {DW_OP_plus_uconst, Const1 + Const2}
+    if (isConstantVal(Op1Raw) && Op2Raw == dwarf::DW_OP_plus &&
+        Op3Raw == dwarf::DW_OP_plus_uconst) {
+      auto Result = Op1Arg + Op3Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2, WorkingOps.begin() + 5);
+      WorkingOps[Loc] = dwarf::DW_OP_plus_uconst;
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op4 = Cursor.peekNextN(3);
+    // Op2 and Op3 could still match a pattern, skip iteration.
+    if (!Op4) {
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+    auto Op4Raw = Op4->getOp();
+
+    // {DW_OP_const[u, s], Const1, DW_OP_[plus, mul], Const2, DW_OP_[plus, mul]}
+    // -> {DW_OP_constu, Const1 [+, *] Const2, DW_OP_[plus, mul]}
+    if (isConstantVal(Op1Raw) && isConstantVal(Op3Raw) &&
+        operationsAreFoldableAndCommutative(Op2Raw, Op4Raw)) {
+      auto Result = foldOperationIfPossible(Op2Raw, Op1Arg, Op3Arg);
+      if (!Result)
+        llvm_unreachable(
+            "Something went very wrong here! This should always work");
+      WorkingOps.erase(WorkingOps.begin() + Loc + 3,
+                       WorkingOps.begin() + Loc + 6);
+      WorkingOps[Loc] = dwarf::DW_OP_constu;
+      WorkingOps[Loc + 1] = *Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+    auto Op5 = Cursor.peekNextN(4);
+    if (!Op5) {
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+    auto Op5Raw = Op5->getOp();
+    auto Op5Arg = Op5->getArg(0);
+
+    // {DW_OP_const[u, s], Const1, DW_OP_plus, DW_OP_LLVM_arg, Arg1, DW_OP_plus,
+    // DW_OP_plus_uconst, Const2} -> {DW_OP_constu, Const1 + Const2, DW_OP_plus,
+    // DW_OP_LLVM_arg, Arg1, DW_OP_plus}
+    if (isConstantVal(Op1Raw) && Op3Raw == dwarf::DW_OP_LLVM_arg &&
+        Op5Raw == dwarf::DW_OP_plus_uconst && Op2Raw == Op4Raw &&
+        Op4Raw == dwarf::DW_OP_plus) {
+      auto Result = Op1Arg + Op5Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 6,
+                       WorkingOps.begin() + Loc + 8);
+      WorkingOps[Loc] = dwarf::DW_OP_constu;
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op4Arg = Op4->getArg(0);
+
+    // {DW_OP_plus_uconst, Const1, DW_OP_LLVM_arg, Arg1, DW_OP_plus,
+    // DW_OP_const[u, s], Const2, DW_OP_plus} -> {DW_OP_plus_uconst, Const1 +
+    // Const2, DW_OP_LLVM_arg, Arg1, DW_OP_plus}
+    if (Op1Raw == dwarf::DW_OP_plus_uconst && Op2Raw == dwarf::DW_OP_LLVM_arg &&
+        Op3Raw == Op5Raw && Op3Raw == dwarf::DW_OP_plus &&
+        isConstantVal(Op4Raw)) {
+      auto Result = Op1Arg + Op4Arg;
+      WorkingOps.erase(WorkingOps.begin() + Loc + 5,
+                       WorkingOps.begin() + Loc + 8);
+      WorkingOps[Loc + 1] = Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    auto Op6 = Cursor.peekNextN(5);
+    if (!Op6) {
+      consumeOneOperator(Cursor, Loc, *Op1);
+      continue;
+    }
+    auto Op6Raw = Op6->getOp();
+    // {DW_OP_const[u, s], Const1, DW_OP_[plus, mul], DW_OP_LLVM_arg, Arg1,
+    // DW_OP_[plus, mul], DW_OP_const[u, s], Const2, DW_OP_[plus, mul]} ->
+    // {DW_OP_constu, Const1 [+, *] Const2, DW_OP_[plus, mul], DW_OP_LLVM_arg,
+    // Arg1, DW_OP_[plus, mul]}
+    if (isConstantVal(Op1Raw) && Op3Raw == dwarf::DW_OP_LLVM_arg &&
+        isConstantVal(Op5Raw) &&
+        operationsAreFoldableAndCommutative(Op2Raw, Op4Raw) &&
+        operationsAreFoldableAndCommutative(Op4Raw, Op6Raw)) {
+      auto Result = foldOperationIfPossible(Op2Raw, Op1Arg, Op5Arg);
+      if (!Result)
+        llvm_unreachable(
+            "Something went very wrong here! This should always work");
+      WorkingOps.erase(WorkingOps.begin() + Loc + 6,
+                       WorkingOps.begin() + Loc + 9);
+      WorkingOps[Loc] = dwarf::DW_OP_constu;
+      WorkingOps[Loc + 1] = *Result;
+      Cursor.assignNewExpr(WorkingOps);
+      Loc = 0;
+      continue;
+    }
+
+    consumeOneOperator(Cursor, Loc, *Op1);
+  }
+  auto *Result = DIExpression::get(getContext(), WorkingOps);
+  assert(Result->isValid() && "concatenated expression is not valid");
+  return Result;
 }
 
 uint64_t DIExpression::getNumLocationOperands() const {
