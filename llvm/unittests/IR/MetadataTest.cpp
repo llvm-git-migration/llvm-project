@@ -3120,6 +3120,285 @@ TEST_F(DIExpressionTest, get) {
   EXPECT_EQ(N0WithPrependedOps, N2);
 }
 
+TEST_F(DIExpressionTest, Fold) {
+
+  // Remove a No-op DW_OP_plus_uconst from an expression.
+  SmallVector<uint64_t, 8> Ops = {dwarf::DW_OP_plus_uconst, 0};
+  auto *Expr = DIExpression::get(Context, Ops);
+  auto *E = Expr->foldConstantMath();
+  SmallVector<uint64_t, 8> ResOps;
+  auto *ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op add from an expression.
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 0;
+  Ops.push_back(dwarf::DW_OP_plus);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op subtract from an expression.
+  Ops[2] = dwarf::DW_OP_minus;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op shift left from an expression.
+  Ops[2] = dwarf::DW_OP_shl;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op shift right from an expression.
+  Ops[2] = dwarf::DW_OP_shr;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op multiply from an expression.
+  Ops[2] = dwarf::DW_OP_mul;
+  Ops[1] = 1;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Remove a No-op divide from an expression.
+  Ops[2] = dwarf::DW_OP_div;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test fold {DW_OP_plus_uconst, Const1, DW_OP_plus_uconst, Const2} ->
+  // {DW_OP_plus_uconst, Const1 + Const2}
+  Ops[0] = dwarf::DW_OP_plus_uconst;
+  Ops[1] = 2;
+  Ops[2] = dwarf::DW_OP_plus_uconst;
+  Ops.push_back(3);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps.push_back(dwarf::DW_OP_plus_uconst);
+  ResOps.push_back(5);
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_plus_uconst, Const2} -> {DW_OP_constu,
+  // Const1 + Const2}
+  Ops[0] = dwarf::DW_OP_constu;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_plus} ->
+  // {DW_OP_constu, Const1 + Const2}
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_constu;
+  Ops[3] = 2;
+  Ops.push_back(dwarf::DW_OP_plus);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 10;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_minus} ->
+  // {DW_OP_constu, Const1 - Const2}
+  Ops[4] = dwarf::DW_OP_minus;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 6;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_mul} ->
+  // {DW_OP_constu, Const1 * Const2}
+  Ops[4] = dwarf::DW_OP_mul;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 16;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_div} ->
+  // {DW_OP_constu, Const1 / Const2}
+  Ops[4] = dwarf::DW_OP_div;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 4;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_shl} ->
+  // {DW_OP_constu, Const1 << Const2}
+  Ops[4] = dwarf::DW_OP_shl;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 32;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_constu, Const2, DW_OP_shr} ->
+  // {DW_OP_constu, Const1 >> Const2}
+  Ops[4] = dwarf::DW_OP_shr;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 2;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_plus_uconst, Const1, DW_OP_constu, Const2, DW_OP_plus} ->
+  // {DW_OP_plus_uconst, Const1 + Const2}
+  Ops[0] = dwarf::DW_OP_plus_uconst;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_constu;
+  Ops[3] = 2;
+  Ops[4] = dwarf::DW_OP_plus;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_plus_uconst;
+  ResOps[1] = 10;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_plus, DW_OP_plus_uconst, Const2} ->
+  // {DW_OP_plus_uconst, Const1 + Const2}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_plus;
+  Ops[3] = dwarf::DW_OP_plus_uconst;
+  Ops[4] = 2;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_plus, DW_OP_constu, Const2, DW_OP_plus}
+  // -> {DW_OP_plus_uconst, Const1 + Const2}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_plus;
+  Ops[3] = dwarf::DW_OP_constu;
+  Ops[4] = 2;
+  Ops.push_back(dwarf::DW_OP_plus);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_plus_uconst;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_mul, DW_OP_constu, Const2, DW_OP_mul} ->
+  // {DW_OP_constu, Const1 * Const2, DW_OP_mul}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_mul;
+  Ops[3] = dwarf::DW_OP_constu;
+  Ops[4] = 2;
+  Ops[5] = dwarf::DW_OP_mul;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 16;
+  ResOps.push_back(dwarf::DW_OP_mul);
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_plus_uconst, Const1, DW_OP_plus, DW_OP_LLVM_arg, Arg,
+  // DW_OP_plus, DW_OP_constu, Const2, DW_OP_plus} -> {DW_OP_plus_uconst, Const1
+  // + Const2, DW_OP_LLVM_arg, Arg, DW_OP_plus}
+  Ops[0] = dwarf::DW_OP_plus_uconst;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_LLVM_arg;
+  Ops[3] = 0;
+  Ops[4] = dwarf::DW_OP_plus;
+  Ops[5] = dwarf::DW_OP_constu;
+  Ops.push_back(2);
+  Ops.push_back(dwarf::DW_OP_plus);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_plus_uconst;
+  ResOps[1] = 10;
+  ResOps[2] = dwarf::DW_OP_LLVM_arg;
+  ResOps.push_back(0);
+  ResOps.push_back(dwarf::DW_OP_plus);
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_plus, DW_OP_LLVM_arg, Arg, DW_OP_plus,
+  // DW_OP_plus_uconst, Const2} -> {DW_OP_constu, Const1 + Const2, DW_OP_plus,
+  // DW_OP_LLVM_arg, Arg, DW_OP_plus}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_plus;
+  Ops[3] = dwarf::DW_OP_LLVM_arg;
+  Ops[4] = 0;
+  Ops[5] = dwarf::DW_OP_plus;
+  Ops[6] = dwarf::DW_OP_plus_uconst;
+  Ops[7] = 2;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_plus_uconst;
+  ResOps[1] = 10;
+  ResOps[2] = dwarf::DW_OP_LLVM_arg;
+  ResOps[3] = 0;
+  ResOps[4] = dwarf::DW_OP_plus;
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_plus, DW_OP_LLVM_arg, Arg, DW_OP_plus,
+  // DW_OP_constu, Const2, DW_OP_plus} -> {DW_OP_constu, Const1 + Const2,
+  // DW_OP_plus, DW_OP_LLVM_arg, Arg, DW_OP_plus}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_plus;
+  Ops[3] = dwarf::DW_OP_LLVM_arg;
+  Ops[4] = 0;
+  Ops[5] = dwarf::DW_OP_plus;
+  Ops[6] = dwarf::DW_OP_constu;
+  Ops[7] = 2;
+  Ops.push_back(dwarf::DW_OP_plus);
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+
+  // Test {DW_OP_constu, Const1, DW_OP_mul, DW_OP_LLVM_arg, Arg, DW_OP_mul,
+  // DW_OP_constu, Const2, DW_OP_mul} -> {DW_OP_constu, Const1 * Const2,
+  // DW_OP_mul, DW_OP_LLVM_arg, Arg, DW_OP_mul}
+  Ops[0] = dwarf::DW_OP_constu;
+  Ops[1] = 8;
+  Ops[2] = dwarf::DW_OP_mul;
+  Ops[3] = dwarf::DW_OP_LLVM_arg;
+  Ops[4] = 0;
+  Ops[5] = dwarf::DW_OP_mul;
+  Ops[6] = dwarf::DW_OP_constu;
+  Ops[7] = 2;
+  Ops[8] = dwarf::DW_OP_mul;
+  Expr = DIExpression::get(Context, Ops);
+  E = Expr->foldConstantMath();
+  ResOps[0] = dwarf::DW_OP_constu;
+  ResOps[1] = 16;
+  ResOps[2] = dwarf::DW_OP_mul;
+  ResOps[3] = dwarf::DW_OP_LLVM_arg;
+  ResOps[4] = 0;
+  ResOps.push_back(dwarf::DW_OP_mul);
+  ResExpr = DIExpression::get(Context, ResOps);
+  EXPECT_EQ(E, ResExpr);
+}
+
 TEST_F(DIExpressionTest, isValid) {
 #define EXPECT_VALID(...)                                                      \
   do {                                                                         \
