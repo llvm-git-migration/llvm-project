@@ -16,12 +16,14 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/BinaryFormat/Dwarf.h"
+#include "llvm/IR/DIExpressionOptimizer.h"
 #include "llvm/IR/DebugProgramInstruction.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 
+#include <bit>
 #include <numeric>
 #include <optional>
 
@@ -1880,7 +1882,6 @@ DIExpression *DIExpression::append(const DIExpression *Expr,
     }
     Op.appendToVector(NewOps);
   }
-
   NewOps.append(Ops.begin(), Ops.end());
   auto *result = DIExpression::get(Expr->getContext(), NewOps);
   assert(result->isValid() && "concatenated expression is not valid");
@@ -2020,6 +2021,87 @@ DIExpression::constantFold(const ConstantInt *CI) {
     return {this, CI};
   return {DIExpression::get(getContext(), Ops),
           ConstantInt::get(getContext(), NewInt)};
+}
+
+DIExpression *DIExpression::foldConstantMath() {
+
+  SmallVector<uint64_t, 8> WorkingOps(Elements.begin(), Elements.end());
+  uint64_t Loc = 0;
+  SmallVector<uint64_t> ResultOps = canonicalizeDwarfOperations(WorkingOps);
+  DIExpressionCursor Cursor(ResultOps);
+  SmallVector<DIExpression::ExprOperand, 8> Ops;
+
+  while (Loc < ResultOps.size()) {
+    Ops.clear();
+
+    auto Op = Cursor.peek();
+    // Expression has no operations, exit.
+    if (!Op)
+      break;
+
+    Ops.push_back(*Op);
+
+    if (!isConstantVal(Ops[0].getOp())) {
+      // Early exit, all of the following patterns start with a constant value.
+      consumeOneOperator(Cursor, Loc, *Op);
+      continue;
+    }
+
+    Op = Cursor.peekNext();
+    // All following patterns require at least 2 Operations, exit.
+    if (!Op)
+      break;
+
+    Ops.push_back(*Op);
+
+    if (tryFoldNoOpMath(Ops, Loc, Cursor, ResultOps))
+      continue;
+
+    Op = Cursor.peekNextN(2);
+    // Op[1] could still match a pattern, skip iteration.
+    if (!Op) {
+      consumeOneOperator(Cursor, Loc, Ops[0]);
+      continue;
+    }
+
+    Ops.push_back(*Op);
+    if (tryFoldConstants(Ops, Loc, Cursor, ResultOps))
+      continue;
+
+    Op = Cursor.peekNextN(3);
+    // Op[1] and Op[2] could still match a pattern, skip iteration.
+    if (!Op) {
+      consumeOneOperator(Cursor, Loc, Ops[0]);
+      continue;
+    }
+
+    Ops.push_back(*Op);
+    if (tryFoldCommutativeMath(Ops, Loc, Cursor, ResultOps))
+      continue;
+
+    Op = Cursor.peekNextN(4);
+    if (!Op) {
+      consumeOneOperator(Cursor, Loc, Ops[0]);
+      continue;
+    }
+
+    Ops.push_back(*Op);
+    Op = Cursor.peekNextN(5);
+    if (!Op) {
+      consumeOneOperator(Cursor, Loc, Ops[0]);
+      continue;
+    }
+
+    Ops.push_back(*Op);
+    if (tryFoldCommutativeMathWithArgInBetween(Ops, Loc, Cursor, ResultOps))
+      continue;
+
+    consumeOneOperator(Cursor, Loc, Ops[0]);
+  }
+  ResultOps = optimizeDwarfOperations(ResultOps);
+  auto *Result = DIExpression::get(getContext(), ResultOps);
+  assert(Result->isValid() && "concatenated expression is not valid");
+  return Result;
 }
 
 uint64_t DIExpression::getNumLocationOperands() const {
