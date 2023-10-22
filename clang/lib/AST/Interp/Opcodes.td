@@ -416,7 +416,11 @@ def InitThisField : AccessOpcode;
 // [Value] -> []
 def InitThisFieldActive : AccessOpcode;
 // [Value] -> []
-def InitThisBitField : BitFieldOpcode;
+def InitThisBitField : Opcode {
+  let Types = [AluTypeClass];
+  let Args = [ArgRecordField, ArgUint32];
+  let HasGroup = 1;
+}
 // [Pointer, Value] -> []
 def InitField : AccessOpcode;
 // [Pointer, Value] -> []
