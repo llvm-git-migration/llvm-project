@@ -7,9 +7,8 @@ declare i8 @llvm.umin.i8(i8, i8)
 
 define i32 @test_icmp_select_lte_0(i32 %0) {
 ; CHECK-LABEL: @test_icmp_select_lte_0(
-; CHECK-NEXT:    [[CML:%.*]] = icmp eq i32 [[TMP0:%.*]], 0
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr i32 [[TMP0]], 31
-; CHECK-NEXT:    [[RE:%.*]] = select i1 [[CML]], i32 1, i32 [[LSHR]]
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp slt i32 [[TMP0:%.*]], 1
+; CHECK-NEXT:    [[RE:%.*]] = zext i1 [[TMP2]] to i32
 ; CHECK-NEXT:    ret i32 [[RE]]
 ;
   %cml = icmp eq i32 %0, 0

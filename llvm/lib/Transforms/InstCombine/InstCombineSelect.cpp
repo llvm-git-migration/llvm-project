@@ -3415,6 +3415,20 @@ Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
                                 TrueVal);
   }
 
+  // select (icmp eq a, 0), 1, (lshr a, 31) -> icmp sle a, 0,
+  // which is then converted to icmp sle a, 1
+  CmpInst::Predicate Pred;
+  Value *A;
+  const APInt *C;
+  if (match(CondVal, m_Cmp(Pred, m_Value(A), m_Zero())) &&
+      match(TrueVal, m_One()) &&
+      match(FalseVal, m_LShr(m_Specific(A), m_APInt(C))) &&
+      Pred == ICmpInst::ICMP_EQ && *C == 31) {
+    auto *Cond = Builder.CreateICmpSLE(A,
+                                       ConstantInt::getNullValue(A->getType()));
+    return new ZExtInst(Cond, A->getType());
+  }
+
   if (Instruction *R = foldSelectOfBools(SI))
     return R;
 
