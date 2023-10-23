@@ -5,6 +5,19 @@ declare void @use(i8)
 declare void @use.i1(i1)
 declare i8 @llvm.umin.i8(i8, i8)
 
+define i32 @test_icmp_select_lte_0(i32 %0) {
+; CHECK-LABEL: @test_icmp_select_lte_0(
+; CHECK-NEXT:    [[CML:%.*]] = icmp eq i32 [[TMP0:%.*]], 0
+; CHECK-NEXT:    [[LSHR:%.*]] = lshr i32 [[TMP0]], 31
+; CHECK-NEXT:    [[RE:%.*]] = select i1 [[CML]], i32 1, i32 [[LSHR]]
+; CHECK-NEXT:    ret i32 [[RE]]
+;
+  %cml = icmp eq i32 %0, 0
+  %lshr = lshr i32 %0, 31
+  %re = select i1 %cml, i32 1, i32 %lshr
+  ret i32 %re
+}
+
 define i1 @icmp_select_const(i8 %x, i8 %y) {
 ; CHECK-LABEL: @icmp_select_const(
 ; CHECK-NEXT:    [[CMP1:%.*]] = icmp eq i8 [[X:%.*]], 0
