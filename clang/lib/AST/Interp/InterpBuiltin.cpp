@@ -138,6 +138,7 @@ static bool retPrimValue(InterpState &S, CodePtr OpPC, APValue &Result,
   case X:                                                                      \
     return Ret<X>(S, OpPC, Result);
   switch (*T) {
+    RET_CASE(PT_Ptr);
     RET_CASE(PT_Float);
     RET_CASE(PT_Bool);
     RET_CASE(PT_Sint8);
