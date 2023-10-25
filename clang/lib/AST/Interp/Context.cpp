@@ -91,6 +91,8 @@ bool Context::evaluate(State &Parent, const Expr *E, APValue &Result) {
 
 bool Context::evaluateAsInitializer(State &Parent, const VarDecl *VD,
                                     APValue &Result) {
+  llvm::errs() << __PRETTY_FUNCTION__ << "\n";
+  VD->dump();
   bool Recursing = !Stk.empty();
   ByteCodeExprGen<EvalEmitter> C(*this, *P, Parent, Stk);
 
