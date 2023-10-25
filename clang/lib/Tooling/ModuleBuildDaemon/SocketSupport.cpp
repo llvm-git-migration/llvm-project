@@ -69,9 +69,9 @@ llvm::Error cc1modbuildd::readFromSocket(int FD, std::string &BufferConsumer) {
 
   while ((n = read(FD, Buffer, MAX_BUFFER)) > 0) {
 
-    BufferConsumer.assign(Buffer, n);
-    // Read until ...\n encountered (last line of YAML document)
-    if (BufferConsumer.find("...\n") != std::string::npos)
+    BufferConsumer.append(Buffer, n);
+    // Read until \n... encountered (last line of YAML document)
+    if (BufferConsumer.find("\n...") != std::string::npos)
       break;
   }
 
@@ -95,10 +95,6 @@ llvm::Error cc1modbuildd::writeToSocket(StringRef Buffer, int WriteFD) {
       std::string Msg = "socket write error: " + std::string(strerror(errno));
       return llvm::make_error<StringError>(Msg, inconvertibleErrorCode());
     }
-
-    if (!BytesWritten || BytesWritten > BytesToWrite)
-      return llvm::errorCodeToError(
-          std::error_code(EIO, std::generic_category()));
 
     BytesToWrite -= BytesWritten;
     Bytes += BytesWritten;
