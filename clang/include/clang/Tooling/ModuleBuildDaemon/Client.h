@@ -21,7 +21,7 @@ using namespace llvm;
 namespace cc1modbuildd {
 
 // Returns where to store log files and socket address. Of the format
-// /tmp/clang-<BLAKE3HashOfClagnFullVersion>/
+// /tmp/clang-<BLAKE3HashOfClangFullVersion>/
 std::string getBasePath();
 
 llvm::Error attemptHandshake(int SocketFD, DiagnosticsEngine &Diag);

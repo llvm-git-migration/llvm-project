@@ -262,9 +262,25 @@ def err_test_module_file_extension_version : Error<
   "test module file extension '%0' has different version (%1.%2) than expected "
   "(%3.%4)">;
 
-def warn_module_build_daemon : Warning<"%0">,
+def err_unix_socket_addr_length : 
+  Error<"Socket address %0 is %1 characters long which is larger then the max length of %2">,
+  DefaultFatal;
+
+// Module Build Daemon
+def err_mbd_handshake : 
+  Error<"Attempt to hadshake with daemon has failed: %0">,
+  DefaultFatal;
+def err_mbd_connect : 
+  Error<"Attempt to connect to daemon has failed: %0">,
+  DefaultFatal;
+def remark_mbd_spawn : 
+  Remark<"Successfully spawned module build daemon">,
   InGroup<ModuleBuildDaemon>;
-def remark_module_build_daemon : Remark<"%0">,
+def remark_mbd_connection :
+  Remark<"Successfully connected to module build daemon at %0">,
+  InGroup<ModuleBuildDaemon>;
+def remark_mbd_handshake : 
+  Remark<"Successfully completed handshake with module build daemon">,
   InGroup<ModuleBuildDaemon>;
 
 def warn_eagerly_load_for_standard_cplusplus_modules : Warning<

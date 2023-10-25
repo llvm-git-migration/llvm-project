@@ -55,6 +55,7 @@ template <typename T> Expected<T> getSocketMsgFromBuffer(StringRef Buffer) {
   llvm::yaml::Input YamlIn(Buffer);
   YamlIn >> ClientRequest;
 
+  // YamlIn.error() dumps an error message if there is one
   if (YamlIn.error()) {
     std::string Msg = "Syntax or semantic error during YAML parsing";
     return llvm::make_error<StringError>(Msg, inconvertibleErrorCode());

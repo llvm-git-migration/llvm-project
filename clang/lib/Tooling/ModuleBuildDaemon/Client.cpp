@@ -60,16 +60,10 @@ llvm::Error cc1modbuildd::attemptHandshake(int SocketFD,
   std::string Buffer = getBufferFromSocketMsg(Request);
 
   // Send HandshakeMsg to module build daemon
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Trying to send HandshakeMsg to module build daemon";
   if (llvm::Error Err = writeToSocket(Buffer, SocketFD))
     return std::move(Err);
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Successfully sent HandshakeMsg to module build daemon";
 
   // Receive response from module build daemon
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Waiting to receive module build daemon response";
   Expected<HandshakeMsg> MaybeServerResponse =
       readSocketMsgFromSocket<HandshakeMsg>(SocketFD);
   if (!MaybeServerResponse)
@@ -80,8 +74,6 @@ llvm::Error cc1modbuildd::attemptHandshake(int SocketFD,
          "Response ActionType should only ever be HANDSHAKE");
 
   if (ServerResponse.MsgStatus == StatusType::SUCCESS) {
-    Diag.Report(diag::remark_module_build_daemon)
-        << "Successfully received HandshakeMsg from module build daemon";
     return llvm::Error::success();
   }
 
@@ -96,8 +88,8 @@ llvm::Error cc1modbuildd::spawnModuleBuildDaemon(StringRef BasePath,
   std::string BasePathStr = BasePath.str();
   const char *Args[] = {Argv0, "-cc1modbuildd", BasePathStr.c_str(), nullptr};
   pid_t pid;
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Trying to spawn module build daemon";
+
+  // TODO: Swich to llvm::sys::ExecuteNoWait
   int EC = posix_spawn(&pid, Args[0],
                        /*file_actions*/ nullptr,
                        /*spawnattr*/ nullptr, const_cast<char **>(Args),
@@ -106,8 +98,7 @@ llvm::Error cc1modbuildd::spawnModuleBuildDaemon(StringRef BasePath,
     return createStringError(std::error_code(EC, std::generic_category()),
                              "Failed to spawn module build daemon");
 
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Successfully spawned module build daemon";
+  Diag.Report(diag::remark_mbd_spawn);
   return llvm::Error::success();
 }
 
@@ -121,8 +112,6 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
   if (llvm::sys::fs::exists(SocketPath)) {
     Expected<int> MaybeFD = connectToSocket(SocketPath);
     if (MaybeFD) {
-      Diag.Report(diag::remark_module_build_daemon)
-          << "Module build daemon already exists";
       return std::move(*MaybeFD);
     }
     consumeError(MaybeFD.takeError());
@@ -142,13 +131,10 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
     // Wait a bit then check to see if the module build daemon has initialized
     usleep(WaitTime);
 
-    Diag.Report(diag::remark_module_build_daemon)
-        << "Trying to connect to recently spawned module build daemon";
     if (llvm::sys::fs::exists(SocketPath)) {
       Expected<int> MaybeFD = connectToSocket(SocketPath);
       if (MaybeFD) {
-        Diag.Report(diag::remark_module_build_daemon)
-            << "Succesfully connected to recently spawned module build daemon";
+        Diag.Report(diag::remark_mbd_connection) << SocketPath;
         return std::move(*MaybeFD);
       }
       consumeError(MaybeFD.takeError());
@@ -177,13 +163,14 @@ void cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
   else
     BasePath = cc1modbuildd::getBasePath();
 
-  // On most unix platforms a socket address cannot be over 108 characters
+  // TODO: Max length may vary across different platforms. Incoming llvm/Support
+  // for sockets will help make this portable. On most unix platforms a socket
+  // address cannot be over 108 characters. The socket file, mbd.sock, takes up
+  // 8 characters leaving 100 characters left for the user/system
   int MAX_ADDR = 108;
   if (BasePath.length() >= MAX_ADDR - std::string(SOCKET_FILE_NAME).length()) {
-    Diag.Report(diag::warn_module_build_daemon)
-        << "Provided socket path" + BasePath +
-               " is too long. Socket path much be equal to or less then 100 "
-               "characters. Invocation will not spawn module build daemon.";
+    Diag.Report(diag::err_unix_socket_addr_length)
+        << BasePath << BasePath.length() << 100;
     return;
   }
 
@@ -191,20 +178,17 @@ void cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
   Expected<int> MaybeDaemonFD =
       cc1modbuildd::getModuleBuildDaemon(Argv0, BasePath, Diag);
   if (!MaybeDaemonFD) {
-    Diag.Report(diag::warn_module_build_daemon) << getFullErrorMsg(
-        MaybeDaemonFD.takeError(), "Attempt to connect to daemon has failed: ");
+    Diag.Report(diag::err_mbd_connect) << MaybeDaemonFD.takeError();
     return;
   }
   int DaemonFD = std::move(*MaybeDaemonFD);
 
   if (llvm::Error HandshakeErr = attemptHandshake(DaemonFD, Diag)) {
-    Diag.Report(diag::warn_module_build_daemon) << getFullErrorMsg(
-        std::move(HandshakeErr), "Attempted hadshake with daemon has failed: ");
+    Diag.Report(diag::err_mbd_handshake) << std::move(HandshakeErr);
     return;
   }
 
-  Diag.Report(diag::remark_module_build_daemon)
-      << "Completed successfull handshake with module build daemon";
+  Diag.Report(diag::remark_mbd_handshake);
   return;
 }
 

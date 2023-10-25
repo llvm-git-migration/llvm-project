@@ -74,13 +74,16 @@ public:
 
   static void handleClient(ClientConnection Connection);
 
+  // TODO: modify so when shutdownDaemon is called the daemon stops accepting
+  // new client connections and waits for all existing client connections to
+  // terminate before exiting
   void shutdownDaemon() {
     int SocketFD = ListenSocketFD.load();
 
     unlink(SocketPath.c_str());
     shutdown(SocketFD, SHUT_RD);
     close(SocketFD);
-    exit(EXIT_SUCCESS);
+    _Exit(EXIT_SUCCESS);
   }
 
 private:
