@@ -129,6 +129,8 @@ public:
   bool VisitConvertVectorExpr(const ConvertVectorExpr *E);
   bool VisitShuffleVectorExpr(const ShuffleVectorExpr *E);
   bool VisitObjCBoxedExpr(const ObjCBoxedExpr *E);
+  bool VisitCXXNewExpr(const CXXNewExpr *E);
+  bool VisitCXXDeleteExpr(const CXXDeleteExpr *E);
 
 protected:
   bool visitExpr(const Expr *E) override;
