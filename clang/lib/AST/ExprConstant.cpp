@@ -2816,6 +2816,9 @@ static bool handleIntIntBinOp(EvalInfo &Info, const Expr *E, const APSInt &LHS,
       else if (LHS.countLeadingZeros() < SA)
         Info.CCEDiag(E, diag::note_constexpr_lshift_discards);
     }
+    if (Info.EvalStatus.Diag && !Info.EvalStatus.Diag->empty() &&
+        Info.getLangOpts().CPlusPlus)
+      return false;
     Result = LHS << SA;
     return true;
   }
@@ -2839,6 +2842,10 @@ static bool handleIntIntBinOp(EvalInfo &Info, const Expr *E, const APSInt &LHS,
     if (SA != RHS)
       Info.CCEDiag(E, diag::note_constexpr_large_shift)
         << RHS << E->getType() << LHS.getBitWidth();
+
+    if (Info.EvalStatus.Diag && !Info.EvalStatus.Diag->empty() &&
+        Info.getLangOpts().CPlusPlus)
+      return false;
     Result = LHS >> SA;
     return true;
   }
