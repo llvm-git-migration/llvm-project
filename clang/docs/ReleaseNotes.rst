@@ -686,6 +686,8 @@ Improvements to Clang's diagnostics
 - Clang no longer emits a "no previous prototype" warning for Win32 entry points under ``-Wmissing-prototypes``.
   Fixes #GH94366.
 
+- Clang now diagnoses non-C++11 integer constant expressions. Fixes #GH59863
+
 Improvements to Clang's time-trace
 ----------------------------------
 
