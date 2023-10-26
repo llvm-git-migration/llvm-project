@@ -665,6 +665,8 @@ Improvements to Clang's diagnostics
 
 - Clang now shows implicit deduction guides when diagnosing overload resolution failure. #GH92393.
 
+- Clang now diagnoses non-C++11 integer constant expressions. Fixes #GH59863
+
 Improvements to Clang's time-trace
 ----------------------------------
 
