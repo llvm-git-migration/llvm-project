@@ -11428,7 +11428,7 @@ static bool isScopedEnumerationType(QualType T) {
   return false;
 }
 
-static void DiagnoseBadShiftValues(Sema& S, ExprResult &LHS, ExprResult &RHS,
+static void DiagnoseBadShiftValues(Sema &S, ExprResult &LHS, ExprResult &RHS,
                                    SourceLocation Loc, BinaryOperatorKind Opc,
                                    QualType LHSType) {
   // OpenCL 6.3j: shift values are effectively % word size of LHS (more defined),
@@ -11460,9 +11460,11 @@ static void DiagnoseBadShiftValues(Sema& S, ExprResult &LHS, ExprResult &RHS,
   }
   llvm::APInt LeftBits(Right.getBitWidth(), LeftSize);
   if (Right.uge(LeftBits)) {
-    S.DiagRuntimeBehavior(Loc, RHS.get(),
-                          S.PDiag(diag::warn_shift_gt_typewidth)
-                            << RHS.get()->getSourceRange());
+    if (!S.getLangOpts().CPlusPlus11) {
+      S.DiagRuntimeBehavior(Loc, RHS.get(),
+                            S.PDiag(diag::warn_shift_gt_typewidth)
+                                << RHS.get()->getSourceRange());
+    }
     return;
   }
 
@@ -11523,9 +11525,9 @@ static void DiagnoseBadShiftValues(Sema& S, ExprResult &LHS, ExprResult &RHS,
   }
 
   S.Diag(Loc, diag::warn_shift_result_gt_typewidth)
-    << HexResult.str() << Result.getMinSignedBits() << LHSType
-    << Left.getBitWidth() << LHS.get()->getSourceRange()
-    << RHS.get()->getSourceRange();
+      << HexResult.str() << Result.getMinSignedBits() << LHSType
+      << Left.getBitWidth() << LHS.get()->getSourceRange()
+      << RHS.get()->getSourceRange();
 }
 
 /// Return the resulting type when a vector is shifted
@@ -19959,7 +19961,10 @@ bool Sema::DiagRuntimeBehavior(SourceLocation Loc, ArrayRef<const Stmt*> Stmts,
   case ExpressionEvaluationContext::ConstantEvaluated:
   case ExpressionEvaluationContext::ImmediateFunctionContext:
     // Relevant diagnostics should be produced by constant evaluation.
-    break;
+
+    // Solution below works for warnings detected in
+    // Sema::DiagnoseBadShiftValues()
+    return DiagIfReachable(Loc, Stmts, PD);
 
   case ExpressionEvaluationContext::PotentiallyEvaluated:
   case ExpressionEvaluationContext::PotentiallyEvaluatedIfUsed:

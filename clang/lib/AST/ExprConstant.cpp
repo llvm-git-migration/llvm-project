@@ -2805,7 +2805,7 @@ static bool handleIntIntBinOp(EvalInfo &Info, const Expr *E, const APSInt &LHS,
     unsigned SA = (unsigned) RHS.getLimitedValue(LHS.getBitWidth()-1);
     if (SA != RHS) {
       Info.CCEDiag(E, diag::note_constexpr_large_shift)
-        << RHS << E->getType() << LHS.getBitWidth();
+          << RHS << E->getType() << LHS.getBitWidth();
     } else if (LHS.isSigned() && !Info.getLangOpts().CPlusPlus20) {
       // C++11 [expr.shift]p2: A signed left shift must have a non-negative
       // operand, and must not overflow the corresponding unsigned type.
@@ -2838,7 +2838,7 @@ static bool handleIntIntBinOp(EvalInfo &Info, const Expr *E, const APSInt &LHS,
     unsigned SA = (unsigned) RHS.getLimitedValue(LHS.getBitWidth()-1);
     if (SA != RHS)
       Info.CCEDiag(E, diag::note_constexpr_large_shift)
-        << RHS << E->getType() << LHS.getBitWidth();
+          << RHS << E->getType() << LHS.getBitWidth();
     Result = LHS >> SA;
     return true;
   }
