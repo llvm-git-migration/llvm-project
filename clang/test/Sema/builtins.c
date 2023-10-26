@@ -171,8 +171,10 @@ void test17(void) {
 #define OPT(...) (__builtin_constant_p(__VA_ARGS__) && strlen(__VA_ARGS__) < 4)
   // FIXME: These are incorrectly treated as ICEs because strlen is treated as
   // a builtin.
-  ASSERT(OPT("abc"));
-  ASSERT(!OPT("abcd"));
+  ASSERT(OPT("abc")); /* expected-error {{expression is not an integer constant expression}}
+                         expected-note {{subexpression not valid in a constant expression}} */
+  ASSERT(!OPT("abcd")); /* expected-error {{expression is not an integer constant expression}}
+                           expected-note {{subexpression not valid in a constant expression}} */
   // In these cases, the strlen is non-constant, but the __builtin_constant_p
   // is 0: the array size is not an ICE but is foldable.
   ASSERT(!OPT(test17_c));
