@@ -254,7 +254,7 @@ def VENTANA_VEYRON_V1 : RISCVProcessorModel<"veyron-v1",
                                              [TuneVentanaVeyron]>;
 
 def XIANGSHAN_NANHU : RISCVProcessorModel<"xiangshan-nanhu",
-                                          NoSchedModel,
+                                          XiangShanNanHuModel,
                                           [Feature64Bit,
                                            FeatureStdExtZicsr,
                                            FeatureStdExtZifencei,
