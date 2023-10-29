@@ -18,7 +18,7 @@
 
 using namespace clang;
 
-// Magenta is taken for 'warning'. Red is already 'error' and 'cya'
+// Magenta is taken for 'warning'. Red is already 'error' and 'cyan'
 // is already taken for 'note'. Green is already used to underline
 // source ranges. White and black are bad because of the usual
 // terminal backgrounds. Which leaves us only with TWO options.
