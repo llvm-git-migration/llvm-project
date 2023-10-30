@@ -644,7 +644,7 @@ public:
   Type *getElementType() const;
 
   /// Return the number of elements in the array or vector.
-  unsigned getNumElements() const;
+  uint64_t getNumElements() const;
 
   /// Return the size (in bytes) of each element in the array/vector.
   /// The size of the elements is known to be a multiple of one byte.
