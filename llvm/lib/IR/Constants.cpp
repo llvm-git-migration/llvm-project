@@ -2855,7 +2855,7 @@ bool ConstantDataSequential::isElementTypeCompatible(Type *Ty) {
   return false;
 }
 
-unsigned ConstantDataSequential::getNumElements() const {
+uint64_t ConstantDataSequential::getNumElements() const {
   if (ArrayType *AT = dyn_cast<ArrayType>(getType()))
     return AT->getNumElements();
   return cast<FixedVectorType>(getType())->getNumElements();
