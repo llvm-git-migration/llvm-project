@@ -617,7 +617,7 @@ public:
 
   /// If this is a sequential container of integers (of any size), return the
   /// specified element in the low bits of a uint64_t.
-  uint64_t getElementAsInteger(unsigned i) const;
+  uint64_t getElementAsInteger(uint64_t i) const;
 
   /// If this is a sequential container of integers (of any size), return the
   /// specified element as an APInt.
@@ -625,7 +625,7 @@ public:
 
   /// If this is a sequential container of floating point type, return the
   /// specified element as an APFloat.
-  APFloat getElementAsAPFloat(unsigned i) const;
+  APFloat getElementAsAPFloat(uint64_t i) const;
 
   /// If this is an sequential container of floats, return the specified element
   /// as a float.
@@ -644,7 +644,7 @@ public:
   Type *getElementType() const;
 
   /// Return the number of elements in the array or vector.
-  unsigned getNumElements() const;
+  uint64_t getNumElements() const;
 
   /// Return the size (in bytes) of each element in the array/vector.
   /// The size of the elements is known to be a multiple of one byte.
@@ -684,7 +684,7 @@ public:
   }
 
 private:
-  const char *getElementPointer(unsigned Elt) const;
+  const char *getElementPointer(uint64_t Elt) const;
 };
 
 //===----------------------------------------------------------------------===//

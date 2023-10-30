@@ -2855,19 +2855,18 @@ bool ConstantDataSequential::isElementTypeCompatible(Type *Ty) {
   return false;
 }
 
-unsigned ConstantDataSequential::getNumElements() const {
+uint64_t ConstantDataSequential::getNumElements() const {
   if (ArrayType *AT = dyn_cast<ArrayType>(getType()))
     return AT->getNumElements();
   return cast<FixedVectorType>(getType())->getNumElements();
 }
 
-
 uint64_t ConstantDataSequential::getElementByteSize() const {
-  return getElementType()->getPrimitiveSizeInBits()/8;
+  return getElementType()->getPrimitiveSizeInBits() / 8;
 }
 
 /// Return the start of the specified element.
-const char *ConstantDataSequential::getElementPointer(unsigned Elt) const {
+const char *ConstantDataSequential::getElementPointer(uint64_t Elt) const {
   assert(Elt < getNumElements() && "Invalid Elt");
   return DataElements+Elt*getElementByteSize();
 }
@@ -3112,7 +3111,7 @@ Constant *ConstantDataVector::getSplat(unsigned NumElts, Constant *V) {
 }
 
 
-uint64_t ConstantDataSequential::getElementAsInteger(unsigned Elt) const {
+uint64_t ConstantDataSequential::getElementAsInteger(uint64_t Elt) const {
   assert(isa<IntegerType>(getElementType()) &&
          "Accessor can only be used when element is an integer");
   const char *EltPtr = getElementPointer(Elt);
@@ -3160,7 +3159,7 @@ APInt ConstantDataSequential::getElementAsAPInt(unsigned Elt) const {
   }
 }
 
-APFloat ConstantDataSequential::getElementAsAPFloat(unsigned Elt) const {
+APFloat ConstantDataSequential::getElementAsAPFloat(uint64_t Elt) const {
   const char *EltPtr = getElementPointer(Elt);
 
   switch (getElementType()->getTypeID()) {
