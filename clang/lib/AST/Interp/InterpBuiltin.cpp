@@ -138,6 +138,7 @@ static bool retPrimValue(InterpState &S, CodePtr OpPC, APValue &Result,
   case X:                                                                      \
     return Ret<X>(S, OpPC, Result);
   switch (*T) {
+    RET_CASE(PT_Ptr);
     RET_CASE(PT_Float);
     RET_CASE(PT_Bool);
     RET_CASE(PT_Sint8);
@@ -533,6 +534,15 @@ static bool interp__builtin_classify_type(InterpState &S, CodePtr OpPC,
   return true;
 }
 
+static bool interp__builtin_move(InterpState &S, CodePtr OpPC,
+                                 const InterpFrame *Frame, const Function *Func,
+                                 const CallExpr *Call) {
+
+  const Pointer &Arg = S.Stk.peek<Pointer>();
+  S.Stk.push<Pointer>(Arg);
+  return Func->getDecl()->isConstexpr();
+}
+
 bool InterpretBuiltin(InterpState &S, CodePtr OpPC, const Function *F,
                       const CallExpr *Call) {
   InterpFrame *Frame = S.Current;
@@ -699,6 +709,14 @@ bool InterpretBuiltin(InterpState &S, CodePtr OpPC, const Function *F,
 
   case Builtin::BI__builtin_classify_type:
     if (!interp__builtin_classify_type(S, OpPC, Frame, F, Call))
+      return false;
+    break;
+
+  case Builtin::BIas_const:
+  case Builtin::BIforward:
+  case Builtin::BIforward_like:
+  case Builtin::BImove:
+    if (!interp__builtin_move(S, OpPC, Frame, F, Call))
       return false;
     break;
 

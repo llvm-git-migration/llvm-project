@@ -378,3 +378,18 @@ namespace Packs {
   static_assert(foo<int, char>() == 2, "");
   static_assert(foo<>() == 0, "");
 }
+
+namespace std {
+template <typename T> struct remove_reference { using type = T; };
+template <typename T> struct remove_reference<T &> { using type = T; };
+template <typename T> struct remove_reference<T &&> { using type = T; };
+template <typename T>
+constexpr typename std::remove_reference<T>::type&& move(T &&t) noexcept {
+  return static_cast<typename std::remove_reference<T>::type &&>(t);
+}
+}
+/// The std::move declaration above gets translated to a builtin function.
+namespace Move {
+  constexpr int A = std::move(5);
+  static_assert(A == 5, "");
+}
