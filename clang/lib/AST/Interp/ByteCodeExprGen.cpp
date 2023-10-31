@@ -2351,7 +2351,9 @@ bool ByteCodeExprGen<Emitter>::visitDecl(const VarDecl *VD) {
   // Return the value
   if (VarT)
     return this->emitRet(*VarT, VD);
-  return this->emitRetValue(VD);
+
+  // Return non-primitive values as pointers here.
+  return this->emitRet(PT_Ptr, VD);
 }
 
 template <class Emitter>

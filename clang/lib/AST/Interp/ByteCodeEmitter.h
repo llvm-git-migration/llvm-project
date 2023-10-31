@@ -17,7 +17,6 @@
 #include "PrimType.h"
 #include "Program.h"
 #include "Source.h"
-#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace interp {
@@ -32,7 +31,7 @@ protected:
 
 public:
   /// Compiles the function into the module.
-  llvm::Expected<Function *> compileFunc(const FunctionDecl *FuncDecl);
+  Function *compileFunc(const FunctionDecl *FuncDecl);
 
 protected:
   ByteCodeEmitter(Context &Ctx, Program &P) : Ctx(Ctx), P(P) {}
@@ -81,8 +80,6 @@ private:
   LabelTy NextLabel = 0;
   /// Offset of the next local variable.
   unsigned NextLocalOffset = 0;
-  /// Location of a failure.
-  std::optional<SourceLocation> BailLocation;
   /// Label information for linker.
   llvm::DenseMap<LabelTy, unsigned> LabelOffsets;
   /// Location of label relocations.
