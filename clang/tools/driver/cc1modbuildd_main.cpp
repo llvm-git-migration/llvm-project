@@ -36,8 +36,7 @@
 #include <unordered_map>
 
 using namespace llvm;
-using namespace clang;
-using namespace cc1modbuildd;
+using namespace clang::tooling::cc1modbuildd;
 
 // Create unbuffered STDOUT stream so that any logging done by module build
 // daemon can be viewed without having to terminate the process
@@ -76,7 +75,7 @@ public:
 
   // TODO: modify so when shutdownDaemon is called the daemon stops accepting
   // new client connections and waits for all existing client connections to
-  // terminate before exiting
+  // terminate before closing the file descriptor and exiting
   void shutdownDaemon() {
     int SocketFD = ListenSocketFD.load();
 
@@ -174,7 +173,7 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
     std::perror("Socket bind error: ");
     exit(EXIT_FAILURE);
   }
-  printVerboseLog("mbd created and binded to socket address at: " + SocketPath);
+  printVerboseLog("mbd created and binded to socket at: " + SocketPath);
 
   // set socket to accept incoming connection request
   unsigned MaxBacklog = llvm::hardware_concurrency().compute_thread_count();
@@ -251,34 +250,37 @@ int ModuleBuildDaemonServer::listenForClients() {
 
 // Module build daemon is spawned with the following command line:
 //
-// clang -cc1modbuildd <path> -v
+// clang [-cc1modbuildd <path>] [-v]
 //
-// <path> defines the location of all files created by the module build daemon
-// and should follow the format /path/to/dir. For example, `clang
-// -cc1modbuildd /tmp/` creates a socket file at `/tmp/mbd.sock`
+// OPTIONS
+//   -cc1modbuildd <path>
+//       Specifies the path to all the files created by the module build daemon.
+//       The <path> should immediately follow the -cc1modbuildd option.
 //
-// When a module build daemon is spawned by a cc1 invocations, <path> follows
-// the format /tmp/clang-<BLAKE3HashOfClangFullVersion> and looks something like
-// /tmp/clang-3NXKISKJ0WJTN
+//   -v
+//       Provides verbose debug information.
 //
-// -v is optional and provides berbose debug information
+// NOTES
+//     The arguments <path> and -v are optional. By default <path> follows the
+//     format: /tmp/clang-<BLAKE3HashOfClangFullVersion>.
 //
 int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
-  if (Argv.size() < 1) {
-    errs() << "spawning a module build daemon requies a command line format of "
-              "`clang -cc1modbuildd <path>`. <path> defines where the module "
-              "build daemon will create mbd.out, mbd.err, mbd.sock"
-           << '\n';
-    return 1;
-  }
+  std::string BasePath;
+  if (!Argv.empty()) {
 
-  // Where to store log files and socket address
-  // TODO: Add check to confirm BasePath is directory
-  std::string BasePath(Argv[0]);
+    if (find(Argv, StringRef("-v")) != Argv.end())
+      VerboseLog = true;
 
-  // On most unix platforms a socket address cannot be over 108 characters
-  int MAX_ADDR = 108;
+    if (strcmp(Argv[0], "-v") != 0)
+      BasePath = Argv[0];
+  } else
+    BasePath = getBasePath();
+
+  // TODO: Make portable. On most unix platforms a socket address cannot be over
+  // 108 characters but that may not always be the case. Functionality will be
+  // provided by llvm/Support/Sockets once that is implemented
+  const int MAX_ADDR = 108;
   if (BasePath.length() >= MAX_ADDR - std::string(SOCKET_FILE_NAME).length()) {
     errs() << "Provided socket path" + BasePath +
                   " is too long. Socket path much be equal to or less then 100 "
@@ -291,9 +293,6 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   // Used to handle signals
   DaemonPtr = &Daemon;
-
-  if (find(Argv, StringRef("-v")) != Argv.end())
-    VerboseLog = true;
 
   Daemon.forkDaemon();
   Daemon.createDaemonSocket();

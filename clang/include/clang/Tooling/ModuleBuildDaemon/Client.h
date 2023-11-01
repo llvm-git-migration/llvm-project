@@ -15,27 +15,21 @@
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
 
-using namespace clang;
-using namespace llvm;
+namespace clang::tooling::cc1modbuildd {
 
-namespace cc1modbuildd {
+llvm::Error attemptHandshake(int SocketFD, clang::DiagnosticsEngine &Diag);
 
-// Returns where to store log files and socket address. Of the format
-// /tmp/clang-<BLAKE3HashOfClangFullVersion>/
-std::string getBasePath();
+llvm::Error spawnModuleBuildDaemon(llvm::StringRef BasePath, const char *Argv0,
+                                   clang::DiagnosticsEngine &Diag);
 
-llvm::Error attemptHandshake(int SocketFD, DiagnosticsEngine &Diag);
+llvm::Expected<int> getModuleBuildDaemon(const char *Argv0,
+                                         llvm::StringRef BasePath,
+                                         clang::DiagnosticsEngine &Diag);
 
-llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0,
-                                   DiagnosticsEngine &Diag);
-
-Expected<int> getModuleBuildDaemon(const char *Argv0, StringRef BasePath,
-                                   DiagnosticsEngine &Diag);
-
-void spawnModuleBuildDaemonAndHandshake(const CompilerInvocation &Clang,
-                                        DiagnosticsEngine &Diag,
+void spawnModuleBuildDaemonAndHandshake(const clang::CompilerInvocation &Clang,
+                                        clang::DiagnosticsEngine &Diag,
                                         const char *Argv0);
 
-} // namespace cc1modbuildd
+} // namespace clang::tooling::cc1modbuildd
 
 #endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_CLIENT_H

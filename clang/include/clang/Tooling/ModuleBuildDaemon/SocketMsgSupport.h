@@ -12,10 +12,7 @@
 #include "clang/Tooling/ModuleBuildDaemon/Client.h"
 #include "clang/Tooling/ModuleBuildDaemon/SocketSupport.h"
 
-using namespace clang;
-using namespace llvm;
-
-namespace cc1modbuildd {
+namespace clang::tooling::cc1modbuildd {
 
 enum class ActionType { HANDSHAKE };
 enum class StatusType { REQUEST, SUCCESS, FAILURE };
@@ -47,7 +44,8 @@ template <typename T> std::string getBufferFromSocketMsg(T Msg) {
   return Buffer;
 }
 
-template <typename T> Expected<T> getSocketMsgFromBuffer(StringRef Buffer) {
+template <typename T>
+llvm::Expected<T> getSocketMsgFromBuffer(llvm::StringRef Buffer) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
@@ -58,13 +56,14 @@ template <typename T> Expected<T> getSocketMsgFromBuffer(StringRef Buffer) {
   // YamlIn.error() dumps an error message if there is one
   if (YamlIn.error()) {
     std::string Msg = "Syntax or semantic error during YAML parsing";
-    return llvm::make_error<StringError>(Msg, inconvertibleErrorCode());
+    return llvm::make_error<llvm::StringError>(Msg,
+                                               llvm::inconvertibleErrorCode());
   }
 
   return ClientRequest;
 }
 
-template <typename T> Expected<T> readSocketMsgFromSocket(int FD) {
+template <typename T> llvm::Expected<T> readSocketMsgFromSocket(int FD) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
@@ -73,7 +72,7 @@ template <typename T> Expected<T> readSocketMsgFromSocket(int FD) {
     return std::move(ReadErr);
 
   // Wait for response from module build daemon
-  Expected<T> MaybeResponse =
+  llvm::Expected<T> MaybeResponse =
       getSocketMsgFromBuffer<T>(std::move(BufferConsumer).c_str());
   if (!MaybeResponse)
     return std::move(MaybeResponse.takeError());
@@ -92,11 +91,12 @@ template <typename T> llvm::Error writeSocketMsgToSocket(T Msg, int FD) {
 }
 
 template <typename T>
-Expected<int> connectAndWriteSocketMsgToSocket(T Msg, StringRef SocketPath) {
+llvm::Expected<int>
+connectAndWriteSocketMsgToSocket(T Msg, llvm::StringRef SocketPath) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
-  Expected<int> MaybeFD = connectToSocket(SocketPath);
+  llvm::Expected<int> MaybeFD = connectToSocket(SocketPath);
   if (!MaybeFD)
     return std::move(MaybeFD.takeError());
   int FD = std::move(*MaybeFD);
@@ -107,26 +107,26 @@ Expected<int> connectAndWriteSocketMsgToSocket(T Msg, StringRef SocketPath) {
   return FD;
 }
 
-} // namespace cc1modbuildd
+} // namespace clang::tooling::cc1modbuildd
 
-template <>
-struct llvm::yaml::ScalarEnumerationTraits<cc1modbuildd::StatusType> {
-  static void enumeration(IO &Io, cc1modbuildd::StatusType &Value) {
-    Io.enumCase(Value, "REQUEST", cc1modbuildd::StatusType::REQUEST);
-    Io.enumCase(Value, "SUCCESS", cc1modbuildd::StatusType::SUCCESS);
-    Io.enumCase(Value, "FAILURE", cc1modbuildd::StatusType::FAILURE);
+namespace cc1mod = clang::tooling::cc1modbuildd;
+
+template <> struct llvm::yaml::ScalarEnumerationTraits<cc1mod::StatusType> {
+  static void enumeration(IO &Io, cc1mod::StatusType &Value) {
+    Io.enumCase(Value, "REQUEST", cc1mod::StatusType::REQUEST);
+    Io.enumCase(Value, "SUCCESS", cc1mod::StatusType::SUCCESS);
+    Io.enumCase(Value, "FAILURE", cc1mod::StatusType::FAILURE);
   }
 };
 
-template <>
-struct llvm::yaml::ScalarEnumerationTraits<cc1modbuildd::ActionType> {
-  static void enumeration(IO &Io, cc1modbuildd::ActionType &Value) {
-    Io.enumCase(Value, "HANDSHAKE", cc1modbuildd::ActionType::HANDSHAKE);
+template <> struct llvm::yaml::ScalarEnumerationTraits<cc1mod::ActionType> {
+  static void enumeration(IO &Io, cc1mod::ActionType &Value) {
+    Io.enumCase(Value, "HANDSHAKE", cc1mod::ActionType::HANDSHAKE);
   }
 };
 
-template <> struct llvm::yaml::MappingTraits<cc1modbuildd::HandshakeMsg> {
-  static void mapping(IO &Io, cc1modbuildd::HandshakeMsg &Info) {
+template <> struct llvm::yaml::MappingTraits<cc1mod::HandshakeMsg> {
+  static void mapping(IO &Io, cc1mod::HandshakeMsg &Info) {
     Io.mapRequired("Action", Info.MsgAction);
     Io.mapRequired("Status", Info.MsgStatus);
   }
