@@ -18,6 +18,7 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/BLAKE3.h"
+#include "llvm/Support/Program.h"
 
 // TODO: Make portable
 #if LLVM_ON_UNIX
@@ -25,6 +26,7 @@
 #include <cerrno>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <signal.h>
 #include <spawn.h>
 #include <string>
@@ -33,28 +35,11 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-using namespace clang;
 using namespace llvm;
-using namespace cc1modbuildd;
 
-std::string cc1modbuildd::getBasePath() {
-  llvm::BLAKE3 Hash;
-  Hash.update(getClangFullVersion());
-  auto HashResult = Hash.final<sizeof(uint64_t)>();
-  uint64_t HashValue =
-      llvm::support::endian::read<uint64_t, llvm::support::native>(
-          HashResult.data());
-  std::string Key = toString(llvm::APInt(64, HashValue), 36, /*Signed*/ false);
+namespace clang::tooling::cc1modbuildd {
 
-  // Set paths
-  SmallString<128> BasePath;
-  llvm::sys::path::system_temp_directory(/*erasedOnReboot*/ true, BasePath);
-  llvm::sys::path::append(BasePath, "clang-" + Key);
-  return BasePath.c_str();
-}
-
-llvm::Error cc1modbuildd::attemptHandshake(int SocketFD,
-                                           DiagnosticsEngine &Diag) {
+llvm::Error attemptHandshake(int SocketFD, DiagnosticsEngine &Diag) {
 
   HandshakeMsg Request{ActionType::HANDSHAKE, StatusType::REQUEST};
   std::string Buffer = getBufferFromSocketMsg(Request);
@@ -82,29 +67,25 @@ llvm::Error cc1modbuildd::attemptHandshake(int SocketFD,
       inconvertibleErrorCode());
 }
 
-llvm::Error cc1modbuildd::spawnModuleBuildDaemon(StringRef BasePath,
-                                                 const char *Argv0,
-                                                 DiagnosticsEngine &Diag) {
-  std::string BasePathStr = BasePath.str();
-  const char *Args[] = {Argv0, "-cc1modbuildd", BasePathStr.c_str(), nullptr};
-  pid_t pid;
+llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0,
+                                   DiagnosticsEngine &Diag) {
 
-  // TODO: Swich to llvm::sys::ExecuteNoWait
-  int EC = posix_spawn(&pid, Args[0],
-                       /*file_actions*/ nullptr,
-                       /*spawnattr*/ nullptr, const_cast<char **>(Args),
-                       /*envp*/ nullptr);
-  if (EC)
-    return createStringError(std::error_code(EC, std::generic_category()),
-                             "Failed to spawn module build daemon");
+  std::vector<StringRef> Args = {Argv0, "-cc1modbuildd", BasePath.str()};
+
+  std::string ErrorBuffer;
+  // Will wait until module build daemon has forked and parent process. There
+  // is extra work that needs to be done for Windows when using ExecuteNoWait
+  llvm::sys::ExecuteAndWait(Argv0, Args, std::nullopt, {}, 0, 0, &ErrorBuffer);
+
+  if (!ErrorBuffer.empty())
+    return llvm::make_error<StringError>(ErrorBuffer, inconvertibleErrorCode());
 
   Diag.Report(diag::remark_mbd_spawn);
   return llvm::Error::success();
 }
 
-Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
-                                                 StringRef BasePath,
-                                                 DiagnosticsEngine &Diag) {
+Expected<int> getModuleBuildDaemon(const char *Argv0, StringRef BasePath,
+                                   DiagnosticsEngine &Diag) {
 
   SmallString<128> SocketPath = BasePath;
   llvm::sys::path::append(SocketPath, SOCKET_FILE_NAME);
@@ -117,8 +98,7 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
     consumeError(MaybeFD.takeError());
   }
 
-  if (llvm::Error Err =
-          cc1modbuildd::spawnModuleBuildDaemon(BasePath, Argv0, Diag))
+  if (llvm::Error Err = spawnModuleBuildDaemon(BasePath, Argv0, Diag))
     return std::move(Err);
 
   const unsigned int MICROSEC_IN_SEC = 1000000;
@@ -150,18 +130,18 @@ Expected<int> cc1modbuildd::getModuleBuildDaemon(const char *Argv0,
       "Module build daemon could not be spawned", inconvertibleErrorCode());
 }
 
-void cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
-    const CompilerInvocation &Clang, DiagnosticsEngine &Diag,
-    const char *Argv0) {
+void spawnModuleBuildDaemonAndHandshake(const CompilerInvocation &Clang,
+                                        DiagnosticsEngine &Diag,
+                                        const char *Argv0) {
 
   // The module build daemon stores all output files and its socket address
   // under BasePath. Either set BasePath to a user provided option or create an
-  // appropriate BasePath based on the hash of the full clang version
+  // appropriate BasePath based on the BLAKE3 hash of the full clang version
   std::string BasePath;
   if (!Clang.getFrontendOpts().ModuleBuildDaemonPath.empty())
     BasePath = Clang.getFrontendOpts().ModuleBuildDaemonPath;
   else
-    BasePath = cc1modbuildd::getBasePath();
+    BasePath = getBasePath();
 
   // TODO: Max length may vary across different platforms. Incoming llvm/Support
   // for sockets will help make this portable. On most unix platforms a socket
@@ -175,8 +155,7 @@ void cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
   }
 
   // If module build daemon does not exist spawn module build daemon
-  Expected<int> MaybeDaemonFD =
-      cc1modbuildd::getModuleBuildDaemon(Argv0, BasePath, Diag);
+  Expected<int> MaybeDaemonFD = getModuleBuildDaemon(Argv0, BasePath, Diag);
   if (!MaybeDaemonFD) {
     Diag.Report(diag::err_mbd_connect) << MaybeDaemonFD.takeError();
     return;
@@ -191,5 +170,7 @@ void cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
   Diag.Report(diag::remark_mbd_handshake);
   return;
 }
+
+} // namespace clang::tooling::cc1modbuildd
 
 #endif // LLVM_ON_UNIX

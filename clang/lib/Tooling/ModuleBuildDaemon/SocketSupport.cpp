@@ -32,18 +32,22 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-Expected<int> cc1modbuildd::createSocket() {
+using namespace llvm;
+
+namespace clang::tooling::cc1modbuildd {
+
+Expected<int> createSocket() {
   int FD;
   if ((FD = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     std::string Msg = "socket create error: " + std::string(strerror(errno));
-    return createStringError(inconvertibleErrorCode(), Msg);
+    return llvm::make_error<StringError>(Msg, inconvertibleErrorCode());
   }
   return FD;
 }
 
-Expected<int> cc1modbuildd::connectToSocket(StringRef SocketPath) {
+Expected<int> connectToSocket(StringRef SocketPath) {
 
-  Expected<int> MaybeFD = cc1modbuildd::createSocket();
+  Expected<int> MaybeFD = createSocket();
   if (!MaybeFD)
     return std::move(MaybeFD.takeError());
 
@@ -56,13 +60,13 @@ Expected<int> cc1modbuildd::connectToSocket(StringRef SocketPath) {
 
   if (connect(FD, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
     close(FD);
-    std::string msg = "socket connect error: " + std::string(strerror(errno));
-    return createStringError(inconvertibleErrorCode(), msg);
+    std::string Msg = "socket connect error: " + std::string(strerror(errno));
+    return llvm::make_error<StringError>(Msg, inconvertibleErrorCode());
   }
   return FD;
 }
 
-llvm::Error cc1modbuildd::readFromSocket(int FD, std::string &BufferConsumer) {
+llvm::Error readFromSocket(int FD, std::string &BufferConsumer) {
 
   char Buffer[MAX_BUFFER];
   ssize_t n;
@@ -84,7 +88,7 @@ llvm::Error cc1modbuildd::readFromSocket(int FD, std::string &BufferConsumer) {
   return llvm::Error::success();
 }
 
-llvm::Error cc1modbuildd::writeToSocket(StringRef Buffer, int WriteFD) {
+llvm::Error writeToSocket(StringRef Buffer, int WriteFD) {
 
   ssize_t BytesToWrite = static_cast<ssize_t>(Buffer.size());
   const char *Bytes = Buffer.data();
@@ -101,5 +105,7 @@ llvm::Error cc1modbuildd::writeToSocket(StringRef Buffer, int WriteFD) {
   }
   return llvm::Error::success();
 }
+
+} // namespace  clang::tooling::cc1modbuildd
 
 #endif // LLVM_ON_UNIX
