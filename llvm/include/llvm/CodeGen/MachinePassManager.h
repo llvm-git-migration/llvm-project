@@ -27,6 +27,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Target/CGPassBuilderOption.h"
 
 #include <map>
 
@@ -37,20 +38,13 @@ class MachineFunction;
 
 extern template class AnalysisManager<MachineFunction>;
 
-/// Like \c AnalysisKey, but only for machine passes.
-struct alignas(8) MachinePassKey {};
-
 /// A CRTP mix-in that provides informational APIs needed for machine passes.
 ///
 /// This provides some boilerplate for types that are machine passes. It
 /// automatically mixes in \c PassInfoMixin.
 template <typename DerivedT>
 struct MachinePassInfoMixin : public PassInfoMixin<DerivedT> {
-  static MachinePassKey *ID() {
-    static_assert(std::is_base_of<MachinePassInfoMixin, DerivedT>::value,
-                  "Must pass the derived type as the template argument!");
-    return &DerivedT::Key;
-  }
+  // TODO: Add MachineFunctionProperties support.
 };
 
 /// An AnalysisManager<MachineFunction> that also exposes IR analysis results.
@@ -150,10 +144,7 @@ class MachineFunctionPassManager
   using Base = PassManager<MachineFunction, MachineFunctionAnalysisManager>;
 
 public:
-  MachineFunctionPassManager(bool RequireCodeGenSCCOrder = false,
-                             bool VerifyMachineFunction = false)
-      : RequireCodeGenSCCOrder(RequireCodeGenSCCOrder),
-        VerifyMachineFunction(VerifyMachineFunction) {}
+  MachineFunctionPassManager() : Opt(getCGPassBuilderOption()) {}
   MachineFunctionPassManager(MachineFunctionPassManager &&) = default;
   MachineFunctionPassManager &
   operator=(MachineFunctionPassManager &&) = default;
@@ -261,10 +252,7 @@ private:
   using PassIndex = decltype(Passes)::size_type;
   std::map<PassIndex, llvm::unique_function<FuncTy>> MachineModulePasses;
 
-  // Run codegen in the SCC order.
-  bool RequireCodeGenSCCOrder;
-
-  bool VerifyMachineFunction;
+  CGPassBuilderOption Opt;
 };
 
 } // end namespace llvm
