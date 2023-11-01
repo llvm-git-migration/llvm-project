@@ -22,12 +22,16 @@
 #define STDOUT_FILE_NAME "mbd.out"
 #define STDERR_FILE_NAME "mbd.err"
 
-namespace cc1modbuildd {
+namespace clang::tooling::cc1modbuildd {
 
 void writeError(llvm::Error Err, std::string Msg);
 std::string getFullErrorMsg(llvm::Error Err, std::string Msg);
 llvm::Error makeStringError(llvm::Error Err, std::string Msg);
 
-} // namespace cc1modbuildd
+// Get a temprary location where the daemon can store log files and a socket
+// address. Of the format /tmp/clang-<BLAKE3HashOfClangFullVersion>/
+std::string getBasePath();
+
+} // namespace clang::tooling::cc1modbuildd
 
 #endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_UTILS_H
