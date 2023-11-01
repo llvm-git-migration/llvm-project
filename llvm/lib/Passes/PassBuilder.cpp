@@ -1281,6 +1281,24 @@ static bool isLoopPassName(StringRef Name, CallbacksT &Callbacks,
   return callbacksAcceptPassName<LoopPassManager>(Name, Callbacks);
 }
 
+bool PassBuilder::isMachineFunctionPassName(StringRef Name) const {
+#define MACHINE_FUNCTION_PASS(NAME, PASS_NAME, CONSTRUCTOR)                    \
+  if (Name == NAME)                                                            \
+    return true;
+#define MACHINE_MODULE_PASS(NAME, PASS_NAME, CONSTRUCTOR)                      \
+  if (Name == NAME)                                                            \
+    return true;
+#include "llvm/CodeGen/MachinePassRegistry.def"
+
+  if (!MachinePipelineParsingCallbacks.empty()) {
+    MachineFunctionPassManager DummyPM;
+    for (const auto &CB : MachinePipelineParsingCallbacks)
+      if (CB(Name, DummyPM))
+        return true;
+  }
+  return false;
+}
+
 std::optional<std::vector<PassBuilder::PipelineElement>>
 PassBuilder::parsePipelineText(StringRef Text) {
   std::vector<PipelineElement> ResultPipeline;

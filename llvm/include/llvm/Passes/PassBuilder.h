@@ -628,6 +628,8 @@ public:
   void invokePipelineEarlySimplificationEPCallbacks(ModulePassManager &MPM,
                                                     OptimizationLevel Level);
 
+  bool isMachineFunctionPassName(StringRef Name) const;
+
 private:
   // O1 pass pipeline
   FunctionPassManager
