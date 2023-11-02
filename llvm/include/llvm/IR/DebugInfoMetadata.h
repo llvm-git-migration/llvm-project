@@ -3142,6 +3142,25 @@ public:
     return *Next;
   }
 
+  std::optional<DIExpression::ExprOperand> peekNextN(unsigned N) const {
+    if (Start == End)
+      return std::nullopt;
+    DIExpression::expr_op_iterator Nth = Start;
+    for (unsigned I = 0; I < N; I++) {
+      Nth = Nth.getNext();
+      if (Nth == End)
+        return std::nullopt;
+    }
+    return *Nth;
+  }
+
+  void assignNewExpr(ArrayRef<uint64_t> Expr) {
+    DIExpression::expr_op_iterator NewStart(Expr.begin());
+    DIExpression::expr_op_iterator NewEnd(Expr.end());
+    this->Start = NewStart;
+    this->End = NewEnd;
+  }
+
   /// Determine whether there are any operations left in this expression.
   operator bool() const { return Start != End; }
 
