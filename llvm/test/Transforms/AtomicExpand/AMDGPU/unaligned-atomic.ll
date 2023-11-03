@@ -1,4 +1,4 @@
-; RUN: not --crash opt -S -mtriple=amdgcn-amd-amdhsa -mcpu=gfx900 -atomic-expand %s 2>&1 | FileCheck %s
+; RUN: not --crash opt -S -mtriple=amdgcn-amd-amdhsa -mcpu=gfx900 -passes=atomicexpand %s 2>&1 | FileCheck %s
 ; The AtomicExpand pass cannot handle missing libcalls (yet) so reports a fatal error.
 ; CHECK: LLVM ERROR: expandAtomicOpToLibcall shouldn't fail for Load
 

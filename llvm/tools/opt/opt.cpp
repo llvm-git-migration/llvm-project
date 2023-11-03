@@ -340,7 +340,6 @@ static bool shouldPinPassToLegacyPM(StringRef Pass) {
       "interleaved-load-combine",
       "unreachableblockelim",
       "verify-safepoint-ir",
-      "atomic-expand",
       "expandvp",
       "mve-tail-predication",
       "interleaved-access",
@@ -420,7 +419,6 @@ int main(int argc, char **argv) {
   initializeSelectOptimizePass(Registry);
   initializeCallBrPreparePass(Registry);
   initializeCodeGenPreparePass(Registry);
-  initializeAtomicExpandPass(Registry);
   initializeWinEHPreparePass(Registry);
   initializeDwarfEHPrepareLegacyPassPass(Registry);
   initializeSafeStackLegacyPassPass(Registry);

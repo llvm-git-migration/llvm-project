@@ -54,7 +54,7 @@ void initializeAlwaysInlinerLegacyPassPass(PassRegistry&);
 void initializeAssignmentTrackingAnalysisPass(PassRegistry &);
 void initializeAssumeBuilderPassLegacyPassPass(PassRegistry &);
 void initializeAssumptionCacheTrackerPass(PassRegistry&);
-void initializeAtomicExpandPass(PassRegistry&);
+void initializeAtomicExpandLegacyPass(PassRegistry &);
 void initializeBasicBlockPathCloningPass(PassRegistry &);
 void initializeBasicBlockSectionsProfileReaderPass(PassRegistry &);
 void initializeBasicBlockSectionsPass(PassRegistry &);

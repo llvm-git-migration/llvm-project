@@ -306,7 +306,7 @@ TargetPassConfig *RISCVTargetMachine::createPassConfig(PassManagerBase &PM) {
 }
 
 void RISCVPassConfig::addIRPasses() {
-  addPass(createAtomicExpandPass());
+  addPass(createAtomicExpandLegacyPass());
 
   if (getOptLevel() != CodeGenOptLevel::None) {
     addPass(createRISCVGatherScatterLoweringPass());
