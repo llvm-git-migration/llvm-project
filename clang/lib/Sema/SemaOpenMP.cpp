@@ -4478,6 +4478,8 @@ void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
                              Params);
     break;
   }
+  // For 'target teams loop', collect all captured regions so codegen can
+  // later decide the best IR to emit given the associated loop-nest.
   case OMPD_target_teams_loop:
   case OMPD_target_teams_distribute_parallel_for:
   case OMPD_target_teams_distribute_parallel_for_simd: {
@@ -15573,6 +15575,12 @@ static OpenMPDirectiveKind getOpenMPCaptureRegionForClause(
       if (NameModifier == OMPD_unknown || NameModifier == OMPD_parallel)
         CaptureRegion = OMPD_target;
       break;
+    case OMPD_teams_loop:
+    case OMPD_target_teams_loop:
+      // For [target] teams loop, assume capture region is 'teams' so it's
+      // available for codegen later to use if/when necessary.
+      CaptureRegion = OMPD_teams;
+      break;
     case OMPD_target_teams_distribute_parallel_for_simd:
       if (OpenMPVersion >= 50 &&
           (NameModifier == OMPD_unknown || NameModifier == OMPD_simd)) {
@@ -15580,7 +15588,6 @@ static OpenMPDirectiveKind getOpenMPCaptureRegionForClause(
         break;
       }
       [[fallthrough]];
-    case OMPD_target_teams_loop:
     case OMPD_target_teams_distribute_parallel_for:
       // If this clause applies to the nested 'parallel' region, capture within
       // the 'teams' region, otherwise do not capture.
@@ -15703,7 +15710,6 @@ static OpenMPDirectiveKind getOpenMPCaptureRegionForClause(
     case OMPD_declare_target:
     case OMPD_end_declare_target:
     case OMPD_loop:
-    case OMPD_teams_loop:
     case OMPD_teams:
     case OMPD_tile:
     case OMPD_unroll:
