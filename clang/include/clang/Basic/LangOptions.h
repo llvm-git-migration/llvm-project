@@ -394,6 +394,16 @@ public:
 
   enum ComplexRangeKind { CX_Full, CX_Limited, CX_Fortran };
 
+  enum class LayoutCompatibilityKind {
+    /// Use default layout rules of the target.
+    Default = 0,
+    /// Use Itanium rules for bit-field layout and fundamental types alignment.
+    Itanium = 1,
+    /// Use Microsoft C++ ABI rules for bit-field layout and fundamental types
+    /// alignment.
+    Microsoft = 2,
+  };
+
 public:
   /// The used language standard.
   LangStandard::Kind LangStd;

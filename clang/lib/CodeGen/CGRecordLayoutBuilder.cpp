@@ -104,10 +104,7 @@ struct CGRecordLowering {
   /// fields of the same formal type.  We want to emit a layout with
   /// these discrete storage units instead of combining them into a
   /// continuous run.
-  bool isDiscreteBitFieldABI() {
-    return Context.getTargetInfo().getCXXABI().isMicrosoft() ||
-           D->isMsStruct(Context);
-  }
+  bool isDiscreteBitFieldABI() { return D->isMsStruct(Context); }
 
   /// Helper function to check if we are targeting AAPCS.
   bool isAAPCS() const {
