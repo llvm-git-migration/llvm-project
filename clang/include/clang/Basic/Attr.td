@@ -3671,6 +3671,13 @@ def MSStruct : InheritableAttr {
   let SimpleHandler = 1;
 }
 
+def GCCStruct : InheritableAttr {
+  let Spellings = [GCC<"gcc_struct">];
+  let Subjects = SubjectList<[Record]>;
+  let Documentation = [Undocumented];
+  let SimpleHandler = 1;
+}
+
 def DLLExport : InheritableAttr, TargetSpecificAttr<TargetHasDLLImportExport> {
   let Spellings = [Declspec<"dllexport">, GCC<"dllexport">];
   let Subjects = SubjectList<[Function, Var, CXXRecord, ObjCInterface]>;

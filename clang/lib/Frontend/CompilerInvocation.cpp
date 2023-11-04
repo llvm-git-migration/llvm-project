@@ -3635,6 +3635,13 @@ void CompilerInvocationBase::GenerateLangArgs(const LangOptions &Opts,
     GenerateArg(Consumer, OPT_fcxx_abi_EQ,
                 TargetCXXABI::getSpelling(*Opts.CXXABI));
 
+  if (Opts.MSBitfields.has_value()) {
+    if (Opts.MSBitfields.value())
+      GenerateArg(Consumer, OPT_mms_bitfields);
+    else
+      GenerateArg(Consumer, OPT_mno_ms_bitfields);
+  }
+
   if (Opts.RelativeCXXABIVTables)
     GenerateArg(Consumer, OPT_fexperimental_relative_cxx_abi_vtables);
   else
@@ -4176,6 +4183,11 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
       Args.hasFlag(options::OPT_fexperimental_relative_cxx_abi_vtables,
                    options::OPT_fno_experimental_relative_cxx_abi_vtables,
                    TargetCXXABI::usesRelativeVTables(T));
+
+  if (Args.hasArg(options::OPT_mms_bitfields) ||
+      Args.hasArg(options::OPT_mno_ms_bitfields))
+    Opts.MSBitfields = Args.hasFlag(options::OPT_mms_bitfields,
+                                    options::OPT_mno_ms_bitfields, false);
 
   // RTTI is on by default.
   bool HasRTTI = !Args.hasArg(options::OPT_fno_rtti);

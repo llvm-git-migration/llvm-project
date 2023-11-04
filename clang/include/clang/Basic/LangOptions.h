@@ -507,6 +507,8 @@ public:
   // implementation on real-world examples.
   std::string OpenACCMacroOverride;
 
+  std::optional<bool> MSBitfields;
+
   LangOptions();
 
   /// Set language defaults for the given input language and
