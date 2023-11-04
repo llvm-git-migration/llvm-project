@@ -14,6 +14,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "llvm/CodeGen/AtomicExpand.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Analysis/AliasAnalysisEvaluator.h"
@@ -72,7 +73,6 @@
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/TypeBasedAliasAnalysis.h"
 #include "llvm/Analysis/UniformityAnalysis.h"
-#include "llvm/CodeGen/AtomicExpand.h"
 #include "llvm/CodeGen/HardwareLoops.h"
 #include "llvm/CodeGen/TypePromotion.h"
 #include "llvm/IR/DebugInfo.h"
