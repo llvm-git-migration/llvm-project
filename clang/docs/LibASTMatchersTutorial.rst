@@ -22,8 +22,8 @@ started guide <https://llvm.org/docs/GettingStarted.html>`_.
 
 .. code-block:: console
 
-      cd ~/clang-llvm
-      git clone https://github.com/llvm/llvm-project.git
+      mkdir ~/clang-llvm && cd ~/clang-llvm
+      git clone https://github.com/llvm/llvm-project.git .
 
 Next you need to obtain the CMake build system and Ninja build tool.
 
