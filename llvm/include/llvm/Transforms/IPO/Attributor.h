@@ -5143,9 +5143,7 @@ struct DenormalFPMathState : public AbstractState {
       return Mode != Other.Mode || ModeF32 != Other.ModeF32;
     }
 
-    bool isValid() const {
-      return Mode.isValid() && ModeF32.isValid();
-    }
+    bool isValid() const { return Mode.isValid() && ModeF32.isValid(); }
 
     static DenormalMode::DenormalModeKind
     unionDenormalKind(DenormalMode::DenormalModeKind Callee,
@@ -5185,9 +5183,7 @@ struct DenormalFPMathState : public AbstractState {
   // state.
   DenormalState getAssumed() const { return Known; }
 
-  bool isValidState() const override {
-    return Known.isValid();
-  }
+  bool isValidState() const override { return Known.isValid(); }
 
   /// Return true if there are no dynamic components to the denormal mode worth
   /// specializing.
@@ -5198,9 +5194,7 @@ struct DenormalFPMathState : public AbstractState {
            Known.ModeF32.Output != DenormalMode::Dynamic;
   }
 
-  bool isAtFixpoint() const override {
-    return IsAtFixedpoint;
-  }
+  bool isAtFixpoint() const override { return IsAtFixedpoint; }
 
   ChangeStatus indicateFixpoint() {
     bool Changed = !IsAtFixedpoint;
@@ -6122,6 +6116,8 @@ struct AAPointerInfo : public AbstractAttribute {
   virtual const_bin_iterator begin() const = 0;
   virtual const_bin_iterator end() const = 0;
   virtual int64_t numOffsetBins() const = 0;
+  virtual void dumpState(raw_ostream &O) const = 0;
+  virtual const Access &getBinAccess(unsigned Index) const = 0;
 
   /// Call \p CB on all accesses that might interfere with \p Range and return
   /// true if all such accesses were known and the callback returned true for
@@ -6292,6 +6288,9 @@ struct AAAllocationInfo : public StateWrapper<BooleanState, AbstractAttribute> {
                                              Attributor &A);
 
   virtual std::optional<TypeSize> getAllocatedSize() const = 0;
+
+  using NewOffsetsTy = DenseMap<AA::RangeTy, AA::RangeTy>;
+  virtual const NewOffsetsTy &getNewOffsets() const = 0;
 
   /// See AbstractAttribute::getName()
   const std::string getName() const override { return "AAAllocationInfo"; }
