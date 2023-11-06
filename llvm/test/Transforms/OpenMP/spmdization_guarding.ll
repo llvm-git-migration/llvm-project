@@ -119,6 +119,7 @@ define weak void @__omp_offloading_2a_fbfa7a_sequential_loop_l6(ptr %dyn, ptr %x
 ; CHECK-NEXT:    call void @__kmpc_barrier_simple_spmd(ptr @[[GLOB2]], i32 [[TMP4]])
 ; CHECK-NEXT:    br label [[REGION_EXIT3]]
 ; CHECK:       region.exit3:
+; CHECK-NEXT:    store i32 4711, ptr [[SELECT]], align 4
 ; CHECK-NEXT:    [[INC_I]] = add nuw nsw i32 [[I_0_I]], 1
 ; CHECK-NEXT:    br label [[FOR_COND_I]], !llvm.loop [[LOOP11:![0-9]+]]
 ; CHECK:       __omp_outlined__.exit:
@@ -249,6 +250,7 @@ define weak void @__omp_offloading_2a_fbfa7a_sequential_loop_l6(ptr %dyn, ptr %x
 ; CHECK-DISABLED-NEXT:    [[IDXPROM4_I:%.*]] = zext i32 [[I_0_I]] to i64
 ; CHECK-DISABLED-NEXT:    [[ARRAYIDX5_I:%.*]] = getelementptr inbounds i32, ptr [[X]], i64 [[IDXPROM4_I]]
 ; CHECK-DISABLED-NEXT:    store i32 [[SUB3_I]], ptr [[ARRAYIDX5_I]], align 4, !noalias [[META8]]
+; CHECK-DISABLED-NEXT:    store i32 4711, ptr [[SELECT]], align 4
 ; CHECK-DISABLED-NEXT:    [[INC_I]] = add nuw nsw i32 [[I_0_I]], 1
 ; CHECK-DISABLED-NEXT:    br label [[FOR_COND_I]], !llvm.loop [[LOOP11:![0-9]+]]
 ; CHECK-DISABLED:       __omp_outlined__.exit:
