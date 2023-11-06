@@ -37,8 +37,8 @@ define internal i32 @caller(ptr %B) {
 ; CGSCC-LABEL: define {{[^@]+}}@caller
 ; CGSCC-SAME: () #[[ATTR0]] {
 ; CGSCC-NEXT:    [[A:%.*]] = alloca i32, align 4
-; CGSCC-NEXT:    [[A2:%.*]] = alloca i8, i32 0, align 4
-; CGSCC-NEXT:    [[A1:%.*]] = alloca i8, i32 0, align 4
+; CGSCC-NEXT:    [[A2:%.*]] = alloca [0 x i8], align 1
+; CGSCC-NEXT:    [[A1:%.*]] = alloca [0 x i8], align 1
 ; CGSCC-NEXT:    ret i32 0
 ;
   %A = alloca i32

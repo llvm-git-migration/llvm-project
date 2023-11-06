@@ -82,4 +82,3 @@ entry:
   %10 = load i32, ptr %1
   ret i32 %10
 }
-
