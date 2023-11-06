@@ -8,6 +8,9 @@ define i32 @vec_write_0() {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_0
 ; CHECK-SAME: () #[[ATTR0:[0-9]+]] {
+; CHECK-NEXT:    [[A1:%.*]] = alloca [8 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[A1]], i64 -4
+; CHECK-NEXT:    store <2 x i32> zeroinitializer, ptr [[NEWGEP]], align 8
 ; CHECK-NEXT:    ret i32 0
 ;
   %a = alloca <2 x i32>
@@ -23,6 +26,9 @@ define i32 @vec_write_1() {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_1
 ; CHECK-SAME: () #[[ATTR0]] {
+; CHECK-NEXT:    [[A1:%.*]] = alloca [8 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[A1]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 5, i32 5>, ptr [[NEWGEP]], align 8
 ; CHECK-NEXT:    ret i32 10
 ;
   %a = alloca <2 x i32>
@@ -39,12 +45,15 @@ define i32 @vec_write_2() {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_2
 ; CHECK-SAME: () #[[ATTR0]] {
-; CHECK-NEXT:    [[A:%.*]] = alloca <2 x i32>, align 8
-; CHECK-NEXT:    store <2 x i32> <i32 3, i32 5>, ptr [[A]], align 8
-; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[A]], align 8
-; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A]], i64 1
-; CHECK-NEXT:    [[L2:%.*]] = load i32, ptr [[G]], align 4
-; CHECK-NEXT:    [[ADD:%.*]] = add i32 [[L1]], [[L2]]
+; CHECK-NEXT:    [[A1:%.*]] = alloca [8 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP5:%.*]] = getelementptr ptr, ptr [[A1]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 3, i32 5>, ptr [[NEWGEP5]], align 8
+; CHECK-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[A1]], i64 4
+; CHECK-NEXT:    [[L14:%.*]] = load i32, ptr [[NEWGEP3]], align 8
+; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A1]], i64 1
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[G]], i64 -4
+; CHECK-NEXT:    [[L22:%.*]] = load i32, ptr [[NEWGEP]], align 4
+; CHECK-NEXT:    [[ADD:%.*]] = add i32 [[L14]], [[L22]]
 ; CHECK-NEXT:    ret i32 [[ADD]]
 ;
   %a = alloca <2 x i32>
@@ -59,13 +68,18 @@ define i32 @vec_write_3() {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_3
 ; CHECK-SAME: () #[[ATTR0]] {
-; CHECK-NEXT:    [[A:%.*]] = alloca <4 x i32>, align 16
-; CHECK-NEXT:    store <2 x i32> <i32 3, i32 3>, ptr [[A]], align 16
-; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A]], i64 1
-; CHECK-NEXT:    store <2 x i32> <i32 5, i32 5>, ptr [[G]], align 8
+; CHECK-NEXT:    [[A1:%.*]] = alloca [16 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[A1]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 3, i32 3>, ptr [[NEWGEP3]], align 16
+; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A1]], i64 1
+; CHECK-NEXT:    [[NEWGEP5:%.*]] = getelementptr ptr, ptr [[G]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 5, i32 5>, ptr [[NEWGEP5]], align 8
 ; CHECK-NEXT:    [[J:%.*]] = getelementptr i32, ptr [[G]], i64 1
-; CHECK-NEXT:    [[L2B:%.*]] = load i32, ptr [[G]], align 8
-; CHECK-NEXT:    [[ADD:%.*]] = add i32 3, [[L2B]]
+; CHECK-NEXT:    [[NEWGEP4:%.*]] = getelementptr ptr, ptr [[J]], i64 -8
+; CHECK-NEXT:    store <2 x i32> <i32 7, i32 7>, ptr [[NEWGEP4]], align 8
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[G]], i64 -4
+; CHECK-NEXT:    [[L2B2:%.*]] = load i32, ptr [[NEWGEP]], align 8
+; CHECK-NEXT:    [[ADD:%.*]] = add i32 3, [[L2B2]]
 ; CHECK-NEXT:    ret i32 [[ADD]]
 ;
   %a = alloca <4 x i32>
@@ -83,6 +97,12 @@ define i32 @vec_write_4() {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_4
 ; CHECK-SAME: () #[[ATTR0]] {
+; CHECK-NEXT:    [[A1:%.*]] = alloca [12 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[A1]], i64 4
+; CHECK-NEXT:    store i32 3, ptr [[NEWGEP]], align 16
+; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A1]], i64 1
+; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[G]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 5, i32 5>, ptr [[NEWGEP2]], align 8
 ; CHECK-NEXT:    ret i32 13
 ;
   %a = alloca <4 x i32>
@@ -101,8 +121,12 @@ define i32 @vec_write_5(i32 %arg) {
 ; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CHECK-LABEL: define {{[^@]+}}@vec_write_5
 ; CHECK-SAME: (i32 [[ARG:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[A:%.*]] = alloca <4 x i32>, align 16
-; CHECK-NEXT:    store i32 [[ARG]], ptr [[A]], align 16
+; CHECK-NEXT:    [[A1:%.*]] = alloca [12 x i8], align 1
+; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[A1]], i64 4
+; CHECK-NEXT:    store i32 [[ARG]], ptr [[NEWGEP2]], align 16
+; CHECK-NEXT:    [[G:%.*]] = getelementptr i32, ptr [[A1]], i64 1
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[G]], i64 -4
+; CHECK-NEXT:    store <2 x i32> <i32 5, i32 5>, ptr [[NEWGEP]], align 8
 ; CHECK-NEXT:    [[ADD1:%.*]] = add i32 [[ARG]], 5
 ; CHECK-NEXT:    [[ADD2:%.*]] = add i32 5, [[ADD1]]
 ; CHECK-NEXT:    ret i32 [[ADD2]]

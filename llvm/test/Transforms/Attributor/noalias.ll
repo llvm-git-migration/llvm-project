@@ -189,21 +189,25 @@ define ptr @test6() nounwind uwtable ssp {
 ; TUNIT: Function Attrs: nounwind ssp uwtable
 ; TUNIT-LABEL: define {{[^@]+}}@test6
 ; TUNIT-SAME: () #[[ATTR3:[0-9]+]] {
-; TUNIT-NEXT:    [[X:%.*]] = alloca [2 x i8], align 1
-; TUNIT-NEXT:    store i8 97, ptr [[X]], align 1
-; TUNIT-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds [2 x i8], ptr [[X]], i64 0, i64 1
-; TUNIT-NEXT:    store i8 0, ptr [[ARRAYIDX1]], align 1
-; TUNIT-NEXT:    [[CALL:%.*]] = call noalias ptr @strdup(ptr noalias nocapture noundef nonnull dereferenceable(2) [[X]]) #[[ATTR2]]
+; TUNIT-NEXT:    [[X1:%.*]] = alloca [2147483649 x i8], align 1
+; TUNIT-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[X1]], i64 2147483647
+; TUNIT-NEXT:    store i8 97, ptr [[NEWGEP]], align 1
+; TUNIT-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds [2 x i8], ptr [[X1]], i64 0, i64 1
+; TUNIT-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[ARRAYIDX1]], i64 2147483647
+; TUNIT-NEXT:    store i8 0, ptr [[NEWGEP2]], align 1
+; TUNIT-NEXT:    [[CALL:%.*]] = call noalias ptr @strdup(ptr noalias nocapture noundef nonnull dereferenceable(2) [[X1]]) #[[ATTR2]]
 ; TUNIT-NEXT:    ret ptr [[CALL]]
 ;
 ; CGSCC: Function Attrs: nounwind ssp uwtable
 ; CGSCC-LABEL: define {{[^@]+}}@test6
 ; CGSCC-SAME: () #[[ATTR4:[0-9]+]] {
-; CGSCC-NEXT:    [[X:%.*]] = alloca [2 x i8], align 1
-; CGSCC-NEXT:    store i8 97, ptr [[X]], align 1
-; CGSCC-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds [2 x i8], ptr [[X]], i64 0, i64 1
-; CGSCC-NEXT:    store i8 0, ptr [[ARRAYIDX1]], align 1
-; CGSCC-NEXT:    [[CALL:%.*]] = call noalias ptr @strdup(ptr noalias nocapture noundef nonnull dereferenceable(2) [[X]]) #[[ATTR3]]
+; CGSCC-NEXT:    [[X1:%.*]] = alloca [2147483649 x i8], align 1
+; CGSCC-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[X1]], i64 2147483647
+; CGSCC-NEXT:    store i8 97, ptr [[NEWGEP]], align 1
+; CGSCC-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds [2 x i8], ptr [[X1]], i64 0, i64 1
+; CGSCC-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[ARRAYIDX1]], i64 2147483647
+; CGSCC-NEXT:    store i8 0, ptr [[NEWGEP2]], align 1
+; CGSCC-NEXT:    [[CALL:%.*]] = call noalias ptr @strdup(ptr noalias nocapture noundef nonnull dereferenceable(2) [[X1]]) #[[ATTR3]]
 ; CGSCC-NEXT:    ret ptr [[CALL]]
 ;
   %x = alloca [2 x i8], align 1
@@ -399,10 +403,10 @@ declare void @use_nocapture(ptr nocapture)
 declare void @use(ptr)
 define void @test12_1() {
 ; CHECK-LABEL: define {{[^@]+}}@test12_1() {
-; CHECK-NEXT:    [[A:%.*]] = alloca i8, align 4
+; CHECK-NEXT:    [[A1:%.*]] = alloca [2147483647 x i8], align 1
 ; CHECK-NEXT:    [[B:%.*]] = tail call noalias ptr @malloc(i64 noundef 4)
-; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A]])
-; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A]])
+; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A1]])
+; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A1]])
 ; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture [[B]])
 ; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture [[B]])
 ; CHECK-NEXT:    ret void

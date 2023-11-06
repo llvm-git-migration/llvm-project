@@ -529,15 +529,24 @@ define void @exclusion_set2(i1 %c1, i1 %c2, i1 %c3) {
 ; TUNIT-LABEL: define {{[^@]+}}@exclusion_set2
 ; TUNIT-SAME: (i1 [[C1:%.*]], i1 [[C2:%.*]], i1 [[C3:%.*]]) #[[ATTR7:[0-9]+]] {
 ; TUNIT-NEXT:  entry:
+; TUNIT-NEXT:    [[ALLOC1:%.*]] = alloca [4 x i8], align 1
+; TUNIT-NEXT:    [[GEP1:%.*]] = getelementptr inbounds i8, ptr [[ALLOC1]], i64 1
+; TUNIT-NEXT:    [[GEP2:%.*]] = getelementptr inbounds i8, ptr [[ALLOC1]], i64 2
 ; TUNIT-NEXT:    call void @use_4_i8(i8 undef, i8 undef, i8 undef, i8 undef)
+; TUNIT-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[ALLOC1]], i64 1
+; TUNIT-NEXT:    store i8 1, ptr [[NEWGEP3]], align 4
 ; TUNIT-NEXT:    call void @use_4_i8(i8 noundef 1, i8 undef, i8 undef, i8 undef)
 ; TUNIT-NEXT:    br i1 [[C1]], label [[IF_MERGE1:%.*]], label [[IF_THEN:%.*]]
 ; TUNIT:       if.then:
 ; TUNIT-NEXT:    call void @use_4_i8(i8 noundef 1, i8 undef, i8 undef, i8 undef)
+; TUNIT-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[GEP1]], i64 1
+; TUNIT-NEXT:    store i8 2, ptr [[NEWGEP2]], align 4
 ; TUNIT-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 undef, i8 undef)
 ; TUNIT-NEXT:    br i1 [[C1]], label [[IF_MERGE1]], label [[IF_THEN2:%.*]]
 ; TUNIT:       if.then2:
 ; TUNIT-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 undef, i8 undef)
+; TUNIT-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[GEP2]], i64 -2
+; TUNIT-NEXT:    store i8 3, ptr [[NEWGEP]], align 4
 ; TUNIT-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 noundef 3, i8 undef)
 ; TUNIT-NEXT:    br i1 [[C2]], label [[IF_MERGE2:%.*]], label [[IF_THEN3:%.*]]
 ; TUNIT:       if.merge1:
@@ -558,15 +567,24 @@ define void @exclusion_set2(i1 %c1, i1 %c2, i1 %c3) {
 ; CGSCC-LABEL: define {{[^@]+}}@exclusion_set2
 ; CGSCC-SAME: (i1 [[C1:%.*]], i1 [[C2:%.*]], i1 [[C3:%.*]]) #[[ATTR8:[0-9]+]] {
 ; CGSCC-NEXT:  entry:
+; CGSCC-NEXT:    [[ALLOC1:%.*]] = alloca [4 x i8], align 1
+; CGSCC-NEXT:    [[GEP1:%.*]] = getelementptr inbounds i8, ptr [[ALLOC1]], i64 1
+; CGSCC-NEXT:    [[GEP2:%.*]] = getelementptr inbounds i8, ptr [[ALLOC1]], i64 2
 ; CGSCC-NEXT:    call void @use_4_i8(i8 undef, i8 undef, i8 undef, i8 undef)
+; CGSCC-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[ALLOC1]], i64 1
+; CGSCC-NEXT:    store i8 1, ptr [[NEWGEP2]], align 4
 ; CGSCC-NEXT:    call void @use_4_i8(i8 noundef 1, i8 undef, i8 undef, i8 undef)
 ; CGSCC-NEXT:    br i1 [[C1]], label [[IF_MERGE1:%.*]], label [[IF_THEN:%.*]]
 ; CGSCC:       if.then:
 ; CGSCC-NEXT:    call void @use_4_i8(i8 noundef 1, i8 undef, i8 undef, i8 undef)
+; CGSCC-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[GEP1]], i64 1
+; CGSCC-NEXT:    store i8 2, ptr [[NEWGEP3]], align 4
 ; CGSCC-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 undef, i8 undef)
 ; CGSCC-NEXT:    br i1 [[C1]], label [[IF_MERGE1]], label [[IF_THEN2:%.*]]
 ; CGSCC:       if.then2:
 ; CGSCC-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 undef, i8 undef)
+; CGSCC-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[GEP2]], i64 -2
+; CGSCC-NEXT:    store i8 3, ptr [[NEWGEP]], align 4
 ; CGSCC-NEXT:    call void @use_4_i8(i8 noundef 1, i8 noundef 2, i8 noundef 3, i8 undef)
 ; CGSCC-NEXT:    br i1 [[C2]], label [[IF_MERGE2:%.*]], label [[IF_THEN3:%.*]]
 ; CGSCC:       if.merge1:
@@ -769,10 +787,10 @@ define i32 @exclusion_set3(i1 %c) {
 ; TUNIT: Function Attrs: norecurse nosync
 ; TUNIT-LABEL: define {{[^@]+}}@exclusion_set3
 ; TUNIT-SAME: (i1 [[C:%.*]]) #[[ATTR5]] {
-; TUNIT-NEXT:    [[A:%.*]] = alloca i32, align 4
-; TUNIT-NEXT:    store i32 3, ptr [[A]], align 4
-; TUNIT-NEXT:    call void @exclusion_set3_helper(i1 noundef [[C]], ptr noalias nocapture nofree noundef nonnull align 4 dereferenceable(4) [[A]]) #[[ATTR8]]
-; TUNIT-NEXT:    [[FINAL:%.*]] = load i32, ptr [[A]], align 4
+; TUNIT-NEXT:    [[A1:%.*]] = alloca [4 x i8], align 1
+; TUNIT-NEXT:    store i32 3, ptr [[A1]], align 4
+; TUNIT-NEXT:    call void @exclusion_set3_helper(i1 noundef [[C]], ptr noalias nocapture nofree noundef nonnull align 4 dereferenceable(4) [[A1]]) #[[ATTR8]]
+; TUNIT-NEXT:    [[FINAL:%.*]] = load i32, ptr [[A1]], align 4
 ; TUNIT-NEXT:    ret i32 [[FINAL]]
 ;
 ; CGSCC: Function Attrs: nosync
@@ -842,23 +860,23 @@ define i32 @two_calls() {
 ; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
 ; TUNIT-LABEL: define {{[^@]+}}@two_calls
 ; TUNIT-SAME: () #[[ATTR10:[0-9]+]] {
-; TUNIT-NEXT:    [[A:%.*]] = alloca i32, align 4
-; TUNIT-NEXT:    store i32 0, ptr [[A]], align 4
-; TUNIT-NEXT:    [[TMP1:%.*]] = load i32, ptr [[A]], align 4
+; TUNIT-NEXT:    [[A1:%.*]] = alloca [4 x i8], align 1
+; TUNIT-NEXT:    store i32 0, ptr [[A1]], align 4
+; TUNIT-NEXT:    [[TMP1:%.*]] = load i32, ptr [[A1]], align 4
 ; TUNIT-NEXT:    [[D:%.*]] = call i32 @broker(i32 [[TMP1]]) #[[ATTR13]]
-; TUNIT-NEXT:    store i32 1, ptr [[A]], align 4
-; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[A]], align 4
+; TUNIT-NEXT:    store i32 1, ptr [[A1]], align 4
+; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[A1]], align 4
 ; TUNIT-NEXT:    [[R:%.*]] = call i32 @broker(i32 [[TMP2]]) #[[ATTR13]]
 ; TUNIT-NEXT:    ret i32 [[R]]
 ;
 ; CGSCC: Function Attrs: mustprogress nofree nosync nounwind willreturn
 ; CGSCC-LABEL: define {{[^@]+}}@two_calls
 ; CGSCC-SAME: () #[[ATTR11:[0-9]+]] {
-; CGSCC-NEXT:    [[A:%.*]] = alloca i32, align 4
-; CGSCC-NEXT:    store i32 0, ptr [[A]], align 4
-; CGSCC-NEXT:    [[TMP1:%.*]] = load i32, ptr [[A]], align 4
+; CGSCC-NEXT:    [[A1:%.*]] = alloca [4 x i8], align 1
+; CGSCC-NEXT:    store i32 0, ptr [[A1]], align 4
+; CGSCC-NEXT:    [[TMP1:%.*]] = load i32, ptr [[A1]], align 4
 ; CGSCC-NEXT:    [[D:%.*]] = call i32 @broker(i32 noundef [[TMP1]]) #[[ATTR14]]
-; CGSCC-NEXT:    store i32 1, ptr [[A]], align 4
+; CGSCC-NEXT:    store i32 1, ptr [[A1]], align 4
 ; CGSCC-NEXT:    [[R:%.*]] = call i32 @broker(i32 noundef 1) #[[ATTR14]]
 ; CGSCC-NEXT:    ret i32 [[R]]
 ;
