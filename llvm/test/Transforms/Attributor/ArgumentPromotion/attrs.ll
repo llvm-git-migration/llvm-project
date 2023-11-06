@@ -44,12 +44,12 @@ define i32 @test(ptr %X) {
 ; TUNIT-LABEL: define {{[^@]+}}@test
 ; TUNIT-SAME: (ptr nocapture nofree nonnull readonly [[X:%.*]]) #[[ATTR1:[0-9]+]] {
 ; TUNIT-NEXT:  entry:
-; TUNIT-NEXT:    [[S:%.*]] = alloca [[STRUCT_SS:%.*]], align 8
-; TUNIT-NEXT:    store i32 1, ptr [[S]], align 8
-; TUNIT-NEXT:    [[VAL4:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i32 0, i32 1
-; TUNIT-NEXT:    [[TMP0:%.*]] = load i32, ptr [[S]], align 8
-; TUNIT-NEXT:    [[S_B4:%.*]] = getelementptr i8, ptr [[S]], i64 4
-; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S_B4]], align 8
+; TUNIT-NEXT:    [[S1:%.*]] = alloca [12 x i8], align 1
+; TUNIT-NEXT:    store i32 1, ptr [[S1]], align 8
+; TUNIT-NEXT:    [[VAL4:%.*]] = getelementptr [[STRUCT_SS:%.*]], ptr [[S1]], i32 0, i32 1
+; TUNIT-NEXT:    [[TMP0:%.*]] = load i32, ptr [[S1]], align 8
+; TUNIT-NEXT:    [[S1_B4:%.*]] = getelementptr i8, ptr [[S1]], i64 4
+; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S1_B4]], align 8
 ; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[X]], align 4
 ; TUNIT-NEXT:    [[C:%.*]] = call i32 @f(i32 [[TMP0]], i64 [[TMP1]], i32 [[TMP2]]) #[[ATTR2:[0-9]+]]
 ; TUNIT-NEXT:    ret i32 [[C]]
@@ -58,8 +58,8 @@ define i32 @test(ptr %X) {
 ; CGSCC-LABEL: define {{[^@]+}}@test
 ; CGSCC-SAME: (ptr nocapture nofree noundef nonnull readonly align 4 dereferenceable(4) [[X:%.*]]) #[[ATTR1:[0-9]+]] {
 ; CGSCC-NEXT:  entry:
-; CGSCC-NEXT:    [[S:%.*]] = alloca [[STRUCT_SS:%.*]], align 8
-; CGSCC-NEXT:    [[VAL4:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i32 0, i32 1
+; CGSCC-NEXT:    [[S1:%.*]] = alloca [12 x i8], align 1
+; CGSCC-NEXT:    [[VAL4:%.*]] = getelementptr [[STRUCT_SS:%.*]], ptr [[S1]], i32 0, i32 1
 ; CGSCC-NEXT:    [[TMP0:%.*]] = load i32, ptr [[X]], align 4
 ; CGSCC-NEXT:    [[C:%.*]] = call i32 @f(i32 noundef 1, i64 noundef 2, i32 [[TMP0]]) #[[ATTR2:[0-9]+]]
 ; CGSCC-NEXT:    ret i32 [[C]]
