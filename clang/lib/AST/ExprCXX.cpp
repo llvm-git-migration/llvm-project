@@ -354,10 +354,10 @@ UnresolvedLookupExpr::UnresolvedLookupExpr(
     NestedNameSpecifierLoc QualifierLoc, SourceLocation TemplateKWLoc,
     const DeclarationNameInfo &NameInfo, bool RequiresADL, bool Overloaded,
     const TemplateArgumentListInfo *TemplateArgs, UnresolvedSetIterator Begin,
-    UnresolvedSetIterator End)
+    UnresolvedSetIterator End, bool KnownDependent)
     : OverloadExpr(UnresolvedLookupExprClass, Context, QualifierLoc,
-                   TemplateKWLoc, NameInfo, TemplateArgs, Begin, End, false,
-                   false, false),
+                   TemplateKWLoc, NameInfo, TemplateArgs, Begin, End,
+                   KnownDependent, false, false),
       NamingClass(NamingClass) {
   UnresolvedLookupExprBits.RequiresADL = RequiresADL;
   UnresolvedLookupExprBits.Overloaded = Overloaded;
@@ -380,7 +380,7 @@ UnresolvedLookupExpr *UnresolvedLookupExpr::Create(
   void *Mem = Context.Allocate(Size, alignof(UnresolvedLookupExpr));
   return new (Mem) UnresolvedLookupExpr(Context, NamingClass, QualifierLoc,
                                         SourceLocation(), NameInfo, RequiresADL,
-                                        Overloaded, nullptr, Begin, End);
+                                        Overloaded, nullptr, Begin, End, false);
 }
 
 UnresolvedLookupExpr *UnresolvedLookupExpr::Create(
@@ -388,7 +388,7 @@ UnresolvedLookupExpr *UnresolvedLookupExpr::Create(
     NestedNameSpecifierLoc QualifierLoc, SourceLocation TemplateKWLoc,
     const DeclarationNameInfo &NameInfo, bool RequiresADL,
     const TemplateArgumentListInfo *Args, UnresolvedSetIterator Begin,
-    UnresolvedSetIterator End) {
+    UnresolvedSetIterator End, bool KnownDependent) {
   assert(Args || TemplateKWLoc.isValid());
   unsigned NumResults = End - Begin;
   unsigned NumTemplateArgs = Args ? Args->size() : 0;
@@ -396,9 +396,9 @@ UnresolvedLookupExpr *UnresolvedLookupExpr::Create(
       totalSizeToAlloc<DeclAccessPair, ASTTemplateKWAndArgsInfo,
                        TemplateArgumentLoc>(NumResults, 1, NumTemplateArgs);
   void *Mem = Context.Allocate(Size, alignof(UnresolvedLookupExpr));
-  return new (Mem) UnresolvedLookupExpr(Context, NamingClass, QualifierLoc,
-                                        TemplateKWLoc, NameInfo, RequiresADL,
-                                        /*Overloaded*/ true, Args, Begin, End);
+  return new (Mem) UnresolvedLookupExpr(
+      Context, NamingClass, QualifierLoc, TemplateKWLoc, NameInfo, RequiresADL,
+      /*Overloaded=*/true, Args, Begin, End, KnownDependent);
 }
 
 UnresolvedLookupExpr *UnresolvedLookupExpr::CreateEmpty(
@@ -1063,7 +1063,7 @@ CXXTemporaryObjectExpr::CXXTemporaryObjectExpr(
           CXXTemporaryObjectExprClass, Ty, TSI->getTypeLoc().getBeginLoc(),
           Cons, /* Elidable=*/false, Args, HadMultipleCandidates,
           ListInitialization, StdInitListInitialization, ZeroInitialization,
-          CXXConstructExpr::CK_Complete, ParenOrBraceRange),
+          CXXConstructionKind::Complete, ParenOrBraceRange),
       TSI(TSI) {
   setDependence(computeDependence(this));
 }
@@ -1111,7 +1111,7 @@ CXXConstructExpr *CXXConstructExpr::Create(
     CXXConstructorDecl *Ctor, bool Elidable, ArrayRef<Expr *> Args,
     bool HadMultipleCandidates, bool ListInitialization,
     bool StdInitListInitialization, bool ZeroInitialization,
-    ConstructionKind ConstructKind, SourceRange ParenOrBraceRange) {
+    CXXConstructionKind ConstructKind, SourceRange ParenOrBraceRange) {
   unsigned SizeOfTrailingObjects = sizeOfTrailingObjects(Args.size());
   void *Mem = Ctx.Allocate(sizeof(CXXConstructExpr) + SizeOfTrailingObjects,
                            alignof(CXXConstructExpr));
@@ -1134,7 +1134,7 @@ CXXConstructExpr::CXXConstructExpr(
     StmtClass SC, QualType Ty, SourceLocation Loc, CXXConstructorDecl *Ctor,
     bool Elidable, ArrayRef<Expr *> Args, bool HadMultipleCandidates,
     bool ListInitialization, bool StdInitListInitialization,
-    bool ZeroInitialization, ConstructionKind ConstructKind,
+    bool ZeroInitialization, CXXConstructionKind ConstructKind,
     SourceRange ParenOrBraceRange)
     : Expr(SC, Ty, VK_PRValue, OK_Ordinary), Constructor(Ctor),
       ParenOrBraceRange(ParenOrBraceRange), NumArgs(Args.size()) {
@@ -1143,7 +1143,7 @@ CXXConstructExpr::CXXConstructExpr(
   CXXConstructExprBits.ListInitialization = ListInitialization;
   CXXConstructExprBits.StdInitListInitialization = StdInitListInitialization;
   CXXConstructExprBits.ZeroInitialization = ZeroInitialization;
-  CXXConstructExprBits.ConstructionKind = ConstructKind;
+  CXXConstructExprBits.ConstructionKind = llvm::to_underlying(ConstructKind);
   CXXConstructExprBits.IsImmediateEscalating = false;
   CXXConstructExprBits.Loc = Loc;
 
