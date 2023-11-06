@@ -515,6 +515,7 @@ if(LIBC_TARGET_ARCHITECTURE_IS_GPU)
     DEPENDS
       .llvm_libc_common_h
       .llvm-libc-types.rpc_opcodes_t
+      .llvm-libc-types.rpc_port_t
   )
 endif()
 

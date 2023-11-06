@@ -1,14 +1,44 @@
+def RPCPortT : NamedType<"rpc_port_t">;
+def RPCPortPtrT : PtrType<RPCPortT>;
+def RPCBufferT : NamedType<"rpc_buffer_t">;
+def RPCBufferPtrT : PtrType<RPCBufferT>;
+
 def GPUExtensions : StandardSpec<"GPUExtensions"> {
   HeaderSpec RPC = HeaderSpec<
     "gpu/rpc.h",
     [], // Macros
-    [], // Types
+    [RPCPortT, RPCBufferT, SizeTType], // Types
     [], // Enumerations
     [
         FunctionSpec<
             "rpc_host_call",
             RetValSpec<VoidType>,
             [ArgSpec<VoidPtr>, ArgSpec<VoidPtr>, ArgSpec<SizeTType>]
+        >,
+        FunctionSpec<
+            "rpc_open_port",
+            RetValSpec<RPCPortT>,
+            [ArgSpec<UnsignedIntType>]
+        >,
+        FunctionSpec<
+            "rpc_get_buffer",
+            RetValSpec<RPCBufferPtrT>,
+            [ArgSpec<RPCPortPtrT>]
+        >,
+        FunctionSpec<
+            "rpc_send",
+            RetValSpec<VoidType>,
+            [ArgSpec<RPCPortPtrT>]
+        >,
+        FunctionSpec<
+            "rpc_recv",
+            RetValSpec<VoidType>,
+            [ArgSpec<RPCPortPtrT>]
+        >,
+        FunctionSpec<
+            "rpc_close_port",
+            RetValSpec<VoidType>,
+            [ArgSpec<RPCPortPtrT>]
         >,
     ]
   >;

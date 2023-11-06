@@ -319,6 +319,14 @@ public:
 
   LIBC_INLINE uint16_t get_index() const { return index; }
 
+  /// Waits until this port owns the buffer and returns a pointer to it.
+  LIBC_INLINE Buffer *get_buffer() const {
+    uint32_t in = owns_buffer ? out ^ T : process.load_inbox(lane_mask, index);
+    process.wait_for_ownership(lane_mask, index, out, in);
+
+    return &process.packet[index].payload.slot[gpu::get_lane_id()];
+  }
+
   LIBC_INLINE void close() {
     // The server is passive, if it own the buffer when it closes we need to
     // give ownership back to the client.
@@ -347,7 +355,9 @@ struct Client {
       : process(port_count, buffer) {}
 
   using Port = rpc::Port<false, Packet<gpu::LANE_SIZE>>;
-  template <uint16_t opcode> LIBC_INLINE Port open();
+
+  template <uint16_t opcode> LIBC_INLINE Port open() { return open(opcode); }
+  LIBC_INLINE Port open(const uint16_t opcode);
 
 private:
   Process<false, Packet<gpu::LANE_SIZE>> process;
@@ -510,8 +520,10 @@ LIBC_INLINE void Port<T, S>::recv_n(void **dst, uint64_t *size, A &&alloc) {
 /// only open a port if we find an index that is in a valid sending state. That
 /// is, there are send operations pending that haven't been serviced on this
 /// port. Each port instance uses an associated \p opcode to tell the server
-/// what to do.
-template <uint16_t opcode> LIBC_INLINE Client::Port Client::open() {
+/// what to do. It is very important that the \p opcode value is identical
+/// across each lane. Use the template version of this unless absolutely
+/// necessary.
+LIBC_INLINE Client::Port Client::open(const uint16_t opcode) {
   // Repeatedly perform a naive linear scan for a port that can be opened to
   // send data.
   for (uint32_t index = 0;; ++index) {
