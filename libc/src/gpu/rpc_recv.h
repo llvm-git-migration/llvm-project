@@ -13,7 +13,7 @@
 
 namespace LIBC_NAMESPACE {
 
-void rpc_recv(rpc_port_t *handle);
+void rpc_recv(rpc_port_t *handle, rpc_callback_t callback, void *data);
 
 } // namespace LIBC_NAMESPACE
 

@@ -14,7 +14,7 @@
 #include <llvm-libc-types/size_t.h>
 
 #include <llvm-libc-types/rpc_opcodes_t.h>
-#include <llvm-libc-types/rpc_port_t.h>
+#include <llvm-libc-types/rpc_client_t.h>
 
 %%public_api()
 

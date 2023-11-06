@@ -9,7 +9,6 @@
 #include <gpu/rpc.h>
 
 #include "src/gpu/rpc_close_port.h"
-#include "src/gpu/rpc_get_buffer.h"
 #include "src/gpu/rpc_open_port.h"
 #include "src/gpu/rpc_recv.h"
 #include "src/gpu/rpc_send.h"
@@ -28,61 +27,93 @@ static void test_interface(bool end_with_send) {
   // rpc::Client::Port port = rpc::client.open<RPC_TEST_INTERFACE>();
   rpc_port_t port = LIBC_NAMESPACE::rpc_open_port(RPC_TEST_INTERFACE);
 
-  // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = end_with_send; });
-  rpc_buffer_t *buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  buffer->data[0] = end_with_send;
-  LIBC_NAMESPACE::rpc_send(&port);
+  LIBC_NAMESPACE::rpc_send(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        buffer->data[0] = *reinterpret_cast<bool *>(data);
+      },
+      &end_with_send);
 
   // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = cnt = cnt + 1; });
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  buffer->data[0] = cnt = cnt + 1;
-  LIBC_NAMESPACE::rpc_send(&port);
+  LIBC_NAMESPACE::rpc_send(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        buffer->data[0] = *reinterpret_cast<uint64_t *>(data) += 1;
+      },
+      &cnt);
 
   // port.recv([&](rpc::Buffer *buffer) { cnt = buffer->data[0]; });
-  LIBC_NAMESPACE::rpc_recv(&port);
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  cnt = buffer->data[0];
+  LIBC_NAMESPACE::rpc_recv(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        *reinterpret_cast<uint64_t *>(data) = buffer->data[0];
+      },
+      &cnt);
 
   // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = cnt = cnt + 1; });
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  buffer->data[0] = cnt = cnt + 1;
-  LIBC_NAMESPACE::rpc_send(&port);
+  LIBC_NAMESPACE::rpc_send(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        buffer->data[0] = *reinterpret_cast<uint64_t *>(data) += 1;
+      },
+      &cnt);
 
   // port.recv([&](rpc::Buffer *buffer) { cnt = buffer->data[0]; });
-  LIBC_NAMESPACE::rpc_recv(&port);
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  cnt = buffer->data[0];
+  LIBC_NAMESPACE::rpc_recv(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        *reinterpret_cast<uint64_t *>(data) = buffer->data[0];
+      },
+      &cnt);
 
   // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = cnt = cnt + 1; });
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  buffer->data[0] = cnt = cnt + 1;
-  LIBC_NAMESPACE::rpc_send(&port);
+  LIBC_NAMESPACE::rpc_send(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        buffer->data[0] = *reinterpret_cast<uint64_t *>(data) += 1;
+      },
+      &cnt);
 
   // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = cnt = cnt + 1; });
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  buffer->data[0] = cnt = cnt + 1;
-  LIBC_NAMESPACE::rpc_send(&port);
+  LIBC_NAMESPACE::rpc_send(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        buffer->data[0] = *reinterpret_cast<uint64_t *>(data) += 1;
+      },
+      &cnt);
 
   // port.recv([&](rpc::Buffer *buffer) { cnt = buffer->data[0]; });
-  LIBC_NAMESPACE::rpc_recv(&port);
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  cnt = buffer->data[0];
+  LIBC_NAMESPACE::rpc_recv(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        *reinterpret_cast<uint64_t *>(data) = buffer->data[0];
+      },
+      &cnt);
 
   // port.recv([&](rpc::Buffer *buffer) { cnt = buffer->data[0]; });
-  LIBC_NAMESPACE::rpc_recv(&port);
-  buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-  cnt = buffer->data[0];
+  LIBC_NAMESPACE::rpc_recv(
+      &port,
+      [](rpc_buffer_t *buffer, void *data, uint32_t) {
+        *reinterpret_cast<uint64_t *>(data) = buffer->data[0];
+      },
+      &cnt);
 
   if (end_with_send) {
     // port.send([&](rpc::Buffer *buffer) { buffer->data[0] = cnt = cnt + 1; });
-    buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-    buffer->data[0] = cnt = cnt + 1;
-    LIBC_NAMESPACE::rpc_send(&port);
+    LIBC_NAMESPACE::rpc_send(
+        &port,
+        [](rpc_buffer_t *buffer, void *data, uint32_t) {
+          buffer->data[0] = *reinterpret_cast<uint64_t *>(data) += 1;
+        },
+        &cnt);
   } else {
     // port.recv([&](rpc::Buffer *buffer) { cnt = buffer->data[0]; });
-    LIBC_NAMESPACE::rpc_recv(&port);
-    buffer = LIBC_NAMESPACE::rpc_get_buffer(&port);
-    cnt = buffer->data[0];
+    LIBC_NAMESPACE::rpc_recv(
+        &port,
+        [](rpc_buffer_t *buffer, void *data, uint32_t) {
+          *reinterpret_cast<uint64_t *>(data) = buffer->data[0];
+        },
+        &cnt);
   }
 
   // port.close();

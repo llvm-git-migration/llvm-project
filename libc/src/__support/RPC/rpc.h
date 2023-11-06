@@ -319,14 +319,6 @@ public:
 
   LIBC_INLINE uint16_t get_index() const { return index; }
 
-  /// Waits until this port owns the buffer and returns a pointer to it.
-  LIBC_INLINE Buffer *get_buffer() const {
-    uint32_t in = owns_buffer ? out ^ T : process.load_inbox(lane_mask, index);
-    process.wait_for_ownership(lane_mask, index, out, in);
-
-    return &process.packet[index].payload.slot[gpu::get_lane_id()];
-  }
-
   LIBC_INLINE void close() {
     // The server is passive, if it own the buffer when it closes we need to
     // give ownership back to the client.

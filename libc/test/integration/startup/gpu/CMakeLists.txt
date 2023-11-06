@@ -51,7 +51,6 @@ add_integration_test(
     rpc_external_interface_test.cpp
   DEPENDS
     libc.src.gpu.rpc_open_port
-    libc.src.gpu.rpc_get_buffer
     libc.src.gpu.rpc_send
     libc.src.gpu.rpc_recv
     libc.src.gpu.rpc_close_port

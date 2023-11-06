@@ -17,9 +17,12 @@ namespace LIBC_NAMESPACE {
 static_assert(sizeof(rpc_port_t) == sizeof(rpc::Client::Port), "ABI mismatch");
 static_assert(sizeof(rpc_buffer_t) == sizeof(rpc::Buffer), "ABI mismatch");
 
-LLVM_LIBC_FUNCTION(void, rpc_send, (rpc_port_t * handle)) {
+LLVM_LIBC_FUNCTION(void, rpc_send,
+                   (rpc_port_t * handle, rpc_callback_t callback, void *data)) {
   rpc::Client::Port *port = reinterpret_cast<rpc::Client::Port *>(handle);
-  port->send([](rpc::Buffer *) { /* Filled by rpc_get_buffer() */ });
+  port->send([=](rpc::Buffer *buffer, uint32_t id) {
+    callback(reinterpret_cast<rpc_buffer_t *>(buffer), data, id);
+  });
 }
 
 } // namespace LIBC_NAMESPACE
