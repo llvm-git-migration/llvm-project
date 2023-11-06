@@ -45,6 +45,18 @@ add_integration_test(
 )
 
 add_integration_test(
+  startup_rpc_external_interface_test
+  SUITE libc-startup-tests
+  SRCS
+    rpc_external_interface_test.cpp
+  DEPENDS
+    libc.src.gpu.rpc_open_port
+    libc.src.gpu.rpc_send_n
+    libc.src.gpu.rpc_recv_n
+    libc.src.gpu.rpc_close_port
+)
+
+add_integration_test(
   startup_rpc_stream_test
   SUITE libc-startup-tests
   SRCS
