@@ -92,10 +92,10 @@ define void @t1_caller(ptr noalias %a) {
 ; TUNIT-NEXT:  entry:
 ; TUNIT-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; TUNIT-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; TUNIT-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; TUNIT-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; TUNIT-NEXT:    store i32 42, ptr [[B]], align 32
 ; TUNIT-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t1_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t1_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t1_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t1_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; TUNIT-NEXT:    ret void
 ;
 ; CGSCC-LABEL: define {{[^@]+}}@t1_caller
@@ -103,10 +103,10 @@ define void @t1_caller(ptr noalias %a) {
 ; CGSCC-NEXT:  entry:
 ; CGSCC-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; CGSCC-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; CGSCC-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; CGSCC-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; CGSCC-NEXT:    store i32 42, ptr [[B]], align 32
 ; CGSCC-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t1_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t1_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t1_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t1_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; CGSCC-NEXT:    ret void
 ;
 entry:
@@ -165,10 +165,10 @@ define void @t2_caller(ptr noalias %a) {
 ; TUNIT-NEXT:  entry:
 ; TUNIT-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; TUNIT-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; TUNIT-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; TUNIT-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; TUNIT-NEXT:    store i32 42, ptr [[B]], align 32
 ; TUNIT-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t2_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t2_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t2_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t2_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; TUNIT-NEXT:    ret void
 ;
 ; CGSCC-LABEL: define {{[^@]+}}@t2_caller
@@ -176,10 +176,10 @@ define void @t2_caller(ptr noalias %a) {
 ; CGSCC-NEXT:  entry:
 ; CGSCC-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; CGSCC-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; CGSCC-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; CGSCC-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; CGSCC-NEXT:    store i32 42, ptr [[B]], align 32
 ; CGSCC-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t2_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t2_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t2_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t2_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; CGSCC-NEXT:    ret void
 ;
 entry:
@@ -238,11 +238,11 @@ define void @t3_caller(ptr noalias %a) {
 ; TUNIT-NEXT:  entry:
 ; TUNIT-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; TUNIT-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; TUNIT-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; TUNIT-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; TUNIT-NEXT:    store i32 42, ptr [[B]], align 32
 ; TUNIT-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
-; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; TUNIT-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 undef, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; TUNIT-NEXT:    ret void
 ;
 ; CGSCC-LABEL: define {{[^@]+}}@t3_caller
@@ -250,11 +250,11 @@ define void @t3_caller(ptr noalias %a) {
 ; CGSCC-NEXT:  entry:
 ; CGSCC-NEXT:    [[B:%.*]] = alloca i32, align 32
 ; CGSCC-NEXT:    [[C:%.*]] = alloca ptr, align 64
-; CGSCC-NEXT:    [[PTR:%.*]] = alloca i32, align 128
+; CGSCC-NEXT:    [[PTR1:%.*]] = alloca [0 x i8], align 1
 ; CGSCC-NEXT:    store i32 42, ptr [[B]], align 32
 ; CGSCC-NEXT:    store ptr [[B]], ptr [[C]], align 64
-; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
-; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
+; CGSCC-NEXT:    call void (ptr, ptr, ptr, ...) @t3_callback_broker(ptr noundef align 4294967296 null, ptr noalias nocapture noundef nonnull align 128 dereferenceable(4) [[PTR1]], ptr nocapture noundef nonnull @t3_callback_callee, ptr nocapture align 256 [[A]], i64 noundef 99, ptr noalias nocapture nofree noundef nonnull readonly align 64 dereferenceable(8) [[C]])
 ; CGSCC-NEXT:    ret void
 ;
 entry:
