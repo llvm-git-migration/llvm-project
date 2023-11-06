@@ -757,19 +757,19 @@ define ptr @b64613_b(ptr noundef %p, i32 %i) {
 ; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; TUNIT-LABEL: define ptr @b64613_b
 ; TUNIT-SAME: (ptr nofree noundef [[P:%.*]], i32 [[I:%.*]]) #[[ATTR11]] {
-; TUNIT-NEXT:    [[P_ADDR:%.*]] = alloca <2 x ptr>, align 1
-; TUNIT-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR]], i32 [[I]]
+; TUNIT-NEXT:    [[P_ADDR1:%.*]] = alloca [8 x i8], align 1
+; TUNIT-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR1]], i32 [[I]]
 ; TUNIT-NEXT:    store ptr [[P]], ptr [[G]], align 1
-; TUNIT-NEXT:    [[R:%.*]] = load ptr, ptr [[P_ADDR]], align 1
+; TUNIT-NEXT:    [[R:%.*]] = load ptr, ptr [[P_ADDR1]], align 1
 ; TUNIT-NEXT:    ret ptr [[R]]
 ;
 ; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; CGSCC-LABEL: define ptr @b64613_b
 ; CGSCC-SAME: (ptr nofree noundef [[P:%.*]], i32 [[I:%.*]]) #[[ATTR12]] {
-; CGSCC-NEXT:    [[P_ADDR:%.*]] = alloca <2 x ptr>, align 1
-; CGSCC-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR]], i32 [[I]]
+; CGSCC-NEXT:    [[P_ADDR1:%.*]] = alloca [8 x i8], align 1
+; CGSCC-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR1]], i32 [[I]]
 ; CGSCC-NEXT:    store ptr [[P]], ptr [[G]], align 1
-; CGSCC-NEXT:    [[R:%.*]] = load ptr, ptr [[P_ADDR]], align 1
+; CGSCC-NEXT:    [[R:%.*]] = load ptr, ptr [[P_ADDR1]], align 1
 ; CGSCC-NEXT:    ret ptr [[R]]
 ;
   %p.addr = alloca <2 x ptr>, align 1
@@ -782,16 +782,16 @@ define void @b64613_positive(ptr noundef %p, i32 %i) {
 ; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 ; TUNIT-LABEL: define void @b64613_positive
 ; TUNIT-SAME: (ptr nocapture nofree noundef [[P:%.*]], i32 [[I:%.*]]) #[[ATTR11]] {
-; TUNIT-NEXT:    [[P_ADDR:%.*]] = alloca <2 x ptr>, align 1
-; TUNIT-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR]], i32 [[I]]
+; TUNIT-NEXT:    [[P_ADDR1:%.*]] = alloca [8 x i8], align 1
+; TUNIT-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR1]], i32 [[I]]
 ; TUNIT-NEXT:    store ptr [[P]], ptr [[G]], align 1
 ; TUNIT-NEXT:    ret void
 ;
 ; CGSCC: Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none)
 ; CGSCC-LABEL: define void @b64613_positive
 ; CGSCC-SAME: (ptr nocapture nofree noundef [[P:%.*]], i32 [[I:%.*]]) #[[ATTR13:[0-9]+]] {
-; CGSCC-NEXT:    [[P_ADDR:%.*]] = alloca <2 x ptr>, align 1
-; CGSCC-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR]], i32 [[I]]
+; CGSCC-NEXT:    [[P_ADDR1:%.*]] = alloca [8 x i8], align 1
+; CGSCC-NEXT:    [[G:%.*]] = getelementptr i8, ptr [[P_ADDR1]], i32 [[I]]
 ; CGSCC-NEXT:    store ptr [[P]], ptr [[G]], align 1
 ; CGSCC-NEXT:    ret void
 ;
