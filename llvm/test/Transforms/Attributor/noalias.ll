@@ -399,10 +399,10 @@ declare void @use_nocapture(ptr nocapture)
 declare void @use(ptr)
 define void @test12_1() {
 ; CHECK-LABEL: define {{[^@]+}}@test12_1() {
-; CHECK-NEXT:    [[A:%.*]] = alloca i8, align 4
+; CHECK-NEXT:    [[A1:%.*]] = alloca [0 x i8], align 1
 ; CHECK-NEXT:    [[B:%.*]] = tail call noalias ptr @malloc(i64 noundef 4)
-; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A]])
-; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A]])
+; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A1]])
+; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture noundef nonnull align 4 dereferenceable(1) [[A1]])
 ; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture [[B]])
 ; CHECK-NEXT:    tail call void @use_nocapture(ptr noalias nocapture [[B]])
 ; CHECK-NEXT:    ret void
