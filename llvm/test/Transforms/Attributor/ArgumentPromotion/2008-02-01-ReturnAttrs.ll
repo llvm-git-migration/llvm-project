@@ -22,16 +22,16 @@ define i32 @f(i32 %x) {
 ; TUNIT-LABEL: define {{[^@]+}}@f
 ; TUNIT-SAME: (i32 returned [[X:%.*]]) #[[ATTR0:[0-9]+]] {
 ; TUNIT-NEXT:  entry:
-; TUNIT-NEXT:    [[X_ADDR:%.*]] = alloca i32, align 4
-; TUNIT-NEXT:    store i32 [[X]], ptr [[X_ADDR]], align 4
+; TUNIT-NEXT:    [[X_ADDR1:%.*]] = alloca [4 x i8], align 1
+; TUNIT-NEXT:    store i32 [[X]], ptr [[X_ADDR1]], align 4
 ; TUNIT-NEXT:    ret i32 [[X]]
 ;
 ; CGSCC: Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none)
 ; CGSCC-LABEL: define {{[^@]+}}@f
 ; CGSCC-SAME: (i32 [[X:%.*]]) #[[ATTR1:[0-9]+]] {
 ; CGSCC-NEXT:  entry:
-; CGSCC-NEXT:    [[X_ADDR:%.*]] = alloca i32, align 4
-; CGSCC-NEXT:    store i32 [[X]], ptr [[X_ADDR]], align 4
+; CGSCC-NEXT:    [[X_ADDR1:%.*]] = alloca [4 x i8], align 1
+; CGSCC-NEXT:    store i32 [[X]], ptr [[X_ADDR1]], align 4
 ; CGSCC-NEXT:    [[TMP1:%.*]] = call i32 @deref(i32 [[X]]) #[[ATTR2:[0-9]+]]
 ; CGSCC-NEXT:    ret i32 [[TMP1]]
 ;
