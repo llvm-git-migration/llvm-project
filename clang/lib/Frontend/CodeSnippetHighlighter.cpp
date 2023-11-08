@@ -45,7 +45,7 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
   if (!Buff || Buff->getBufferSize() > MaxBufferSize)
     return {};
 
-  Lexer L = Lexer(FID, *Buff, SM, LangOpts);
+  Lexer L{FID, *Buff, SM, LangOpts};
   L.SetKeepWhitespaceMode(true);
 
   size_t NTokens = 0;
