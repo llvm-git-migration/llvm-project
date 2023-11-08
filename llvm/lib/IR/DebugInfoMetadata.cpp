@@ -1782,7 +1782,7 @@ DIExpression *DIExpression::appendOpsToArg(const DIExpression *Expr,
   if (StackValue)
     NewOps.push_back(dwarf::DW_OP_stack_value);
 
-  return DIExpression::get(Expr->getContext(), NewOps);
+  return DIExpression::get(Expr->getContext(), NewOps)->foldConstantMath();
 }
 
 DIExpression *DIExpression::replaceArg(const DIExpression *Expr,
