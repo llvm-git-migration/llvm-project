@@ -1860,7 +1860,7 @@ DIExpression *DIExpression::append(const DIExpression *Expr,
   NewOps.append(Ops.begin(), Ops.end());
   auto *result = DIExpression::get(Expr->getContext(), NewOps);
   assert(result->isValid() && "concatenated expression is not valid");
-  return result;
+  return result->foldConstantMath();
 }
 
 DIExpression *DIExpression::appendToStack(const DIExpression *Expr,
@@ -2157,7 +2157,8 @@ DIExpression *DIExpression::foldConstantMath() {
     if (Op1Raw == dwarf::DW_OP_plus_uconst && isConstantVal(Op2Raw) &&
         Op3Raw == dwarf::DW_OP_plus) {
       auto Result = Op1Arg + Op2Arg;
-      WorkingOps.erase(WorkingOps.begin() + Loc + 2, WorkingOps.begin() + 5);
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2,
+                       WorkingOps.begin() + Loc + 5);
       WorkingOps[Loc + 1] = Result;
       Cursor.assignNewExpr(WorkingOps);
       Loc = 0;
@@ -2170,7 +2171,8 @@ DIExpression *DIExpression::foldConstantMath() {
     if (isConstantVal(Op1Raw) && Op2Raw == dwarf::DW_OP_plus &&
         Op3Raw == dwarf::DW_OP_plus_uconst) {
       auto Result = Op1Arg + Op3Arg;
-      WorkingOps.erase(WorkingOps.begin() + Loc + 2, WorkingOps.begin() + 5);
+      WorkingOps.erase(WorkingOps.begin() + Loc + 2,
+                       WorkingOps.begin() + Loc + 5);
       WorkingOps[Loc] = dwarf::DW_OP_plus_uconst;
       WorkingOps[Loc + 1] = Result;
       Cursor.assignNewExpr(WorkingOps);
