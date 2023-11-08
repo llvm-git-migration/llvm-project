@@ -330,6 +330,11 @@ Changes in existing checks
   <clang-tidy/checks/modernize/avoid-bind>` check to
   not emit a ``return`` for fixes when the function returns ``void``.
 
+- Improved :doc:`modernize-avoid-c-arrays
+  <clang-tidy/checks/modernize/avoid-c-arrays>` check by introducing the new
+  `AllowStringArrays` option, enabling the exclusion of array types with deduced
+  sizes constructed from string literals.
+
 - Improved :doc:`modernize-loop-convert
   <clang-tidy/checks/modernize/loop-convert>` to support for-loops with
   iterators initialized by free functions like ``begin``, ``end``, or ``size``
