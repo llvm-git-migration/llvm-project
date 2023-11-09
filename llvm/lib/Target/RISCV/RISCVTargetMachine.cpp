@@ -343,28 +343,6 @@ public:
     return getTM<RISCVTargetMachine>();
   }
 
-  ScheduleDAGInstrs *
-  createMachineScheduler(MachineSchedContext *C) const override {
-    const RISCVSubtarget &ST = C->MF->getSubtarget<RISCVSubtarget>();
-    if (ST.enableMacroFusion()) {
-      ScheduleDAGMILive *DAG = createGenericSchedLive(C);
-      DAG->addMutation(createMacroFusionDAGMutation(ST.getMacroFusions()));
-      return DAG;
-    }
-    return nullptr;
-  }
-
-  ScheduleDAGInstrs *
-  createPostMachineScheduler(MachineSchedContext *C) const override {
-    const RISCVSubtarget &ST = C->MF->getSubtarget<RISCVSubtarget>();
-    if (ST.enableMacroFusion()) {
-      ScheduleDAGMI *DAG = createGenericSchedPostRA(C);
-      DAG->addMutation(createMacroFusionDAGMutation(ST.getMacroFusions()));
-      return DAG;
-    }
-    return nullptr;
-  }
-
   void addIRPasses() override;
   bool addPreISel() override;
   bool addInstSelector() override;
