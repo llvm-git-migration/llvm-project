@@ -1427,6 +1427,7 @@ PPCTargetLowering::PPCTargetLowering(const PPCTargetMachine &TM,
   setLibcallName(RTLIB::LLRINT_F128, "llrintf128");
   setLibcallName(RTLIB::NEARBYINT_F128, "nearbyintf128");
   setLibcallName(RTLIB::FMA_F128, "fmaf128");
+  setLibcallName(RTLIB::FREXP_F128, "frexpf128");
 
   if (Subtarget.isAIXABI()) {
     setLibcallName(RTLIB::MEMCPY, isPPC64 ? "___memmove64" : "___memmove");
@@ -15588,7 +15589,7 @@ SDValue PPCTargetLowering::PerformDAGCombine(SDNode *N,
       break;
     SDValue ConstOp = DAG.getConstant(Imm, dl, MVT::i32);
     SDValue NarrowAnd = DAG.getNode(ISD::AND, dl, MVT::i32, NarrowOp, ConstOp);
-    return DAG.getAnyExtOrTrunc(NarrowAnd, dl, N->getValueType(0));
+    return DAG.getZExtOrTrunc(NarrowAnd, dl, N->getValueType(0));
   }
   case ISD::SHL:
     return combineSHL(N, DCI);
@@ -17297,7 +17298,7 @@ bool PPCTargetLowering::isFMAFasterThanFMulAndFAdd(const MachineFunction &MF,
 
 bool PPCTargetLowering::isFMAFasterThanFMulAndFAdd(const Function &F,
                                                    Type *Ty) const {
-  if (Subtarget.hasSPE())
+  if (Subtarget.hasSPE() || Subtarget.useSoftFloat())
     return false;
   switch (Ty->getScalarType()->getTypeID()) {
   case Type::FloatTyID:
@@ -17501,7 +17502,7 @@ bool PPCTargetLowering::useLoadStackGuardNode() const {
 void PPCTargetLowering::insertSSPDeclarations(Module &M) const {
   if (Subtarget.isAIXABI()) {
     M.getOrInsertGlobal(AIXSSPCanaryWordName,
-                        Type::getInt8PtrTy(M.getContext()));
+                        PointerType::getUnqual(M.getContext()));
     return;
   }
   if (!Subtarget.isTargetLinux())
