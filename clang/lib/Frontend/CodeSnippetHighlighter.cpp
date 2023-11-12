@@ -28,27 +28,30 @@ static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
 /// Maximum size of file we still highlight.
 static constexpr size_t MaxBufferSize = 1024 * 1024; // 1MB.
 
-llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
-    unsigned LineNumber, const Preprocessor *PP, const LangOptions &LangOpts,
-    FileID FID, const SourceManager &SM, const char *LineStart) {
-  std::chrono::steady_clock::time_point begin =
-      std::chrono::steady_clock::now();
+std::unique_ptr<llvm::SmallVector<StyleRange>[]>
+CodeSnippetHighlighter::highlightLines(unsigned StartLineNumber,
+                                       unsigned EndLineNumber,
+                                       const Preprocessor *PP,
+                                       const LangOptions &LangOpts, FileID FID,
+                                       const SourceManager &SM) {
+  assert(StartLineNumber <= EndLineNumber);
+  auto SnippetRanges = std::make_unique<llvm::SmallVector<StyleRange>[]>(
+      EndLineNumber - StartLineNumber + 1);
 
   if (!PP)
-    return {};
+    return SnippetRanges;
 
   // Might cause emission of another diagnostic.
   if (PP->getIdentifierTable().getExternalIdentifierLookup())
-    return {};
+    return SnippetRanges;
 
   auto Buff = SM.getBufferOrNone(FID);
   if (!Buff || Buff->getBufferSize() > MaxBufferSize)
-    return {};
+    return SnippetRanges;
 
   Lexer L{FID, *Buff, SM, LangOpts};
   L.SetKeepWhitespaceMode(true);
 
-  size_t NTokens = 0;
   // Classify the given token and append it to the given vector.
   auto appendStyle = [PP, &LangOpts](llvm::SmallVector<StyleRange> &Vec,
                                      const Token &T, unsigned Start,
@@ -73,10 +76,9 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     }
   };
 
-  llvm::SmallVector<StyleRange> LineRanges;
+
   bool Stop = false;
   while (!Stop) {
-    ++NTokens;
     Token T;
     Stop = L.LexFromRawLexer(T);
     if (T.is(tok::unknown))
@@ -88,21 +90,19 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
       continue;
 
     bool Invalid = false;
-    unsigned EndLine = SM.getSpellingLineNumber(T.getEndLoc(), &Invalid) - 1;
-    if (Invalid)
+    unsigned TokenEndLine = SM.getSpellingLineNumber(T.getEndLoc(), &Invalid);
+    if (Invalid || TokenEndLine < StartLineNumber)
       continue;
 
-    if (EndLine < LineNumber)
-      continue;
-    unsigned StartLine =
-        SM.getSpellingLineNumber(T.getLocation(), &Invalid) - 1;
+    assert(TokenEndLine >= StartLineNumber);
+
+    unsigned TokenStartLine =
+        SM.getSpellingLineNumber(T.getLocation(), &Invalid);
     if (Invalid)
       continue;
-    if (StartLine > LineNumber)
+    // If this happens, we're done.
+    if (TokenStartLine > EndLineNumber)
       break;
-
-    // Must have an intersection at this point
-    assert(StartLine <= LineNumber && EndLine >= LineNumber);
 
     unsigned StartCol =
         SM.getSpellingColumnNumber(T.getLocation(), &Invalid) - 1;
@@ -110,12 +110,13 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
       continue;
 
     // Simple tokens.
-    if (StartLine == EndLine) {
+    if (TokenStartLine == TokenEndLine) {
+      llvm::SmallVector<StyleRange> &LineRanges =
+          SnippetRanges[TokenStartLine - StartLineNumber];
       appendStyle(LineRanges, T, StartCol, T.getLength());
       continue;
     }
-    unsigned NumLines = EndLine - StartLine;
-    assert(NumLines >= 1);
+    assert((TokenEndLine - TokenStartLine) >= 1);
 
     // For tokens that span multiple lines (think multiline comments), we
     // divide them into multiple StyleRanges.
@@ -125,23 +126,26 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
 
     std::string Spelling = Lexer::getSpelling(T, SM, LangOpts);
 
-    unsigned L = 0;
+    unsigned L = TokenStartLine;
     unsigned LineLength = 0;
     for (unsigned I = 0; I <= Spelling.size(); ++I) {
       // This line is done.
       if (isVerticalWhitespace(Spelling[I]) || I == Spelling.size()) {
-        if (StartLine + L == LineNumber) {
-          if (L == 0) // First line
+        llvm::SmallVector<StyleRange> &LineRanges =
+            SnippetRanges[L - StartLineNumber];
+
+        if (L == StartLineNumber) {
+          if (L == TokenStartLine) // First line
             appendStyle(LineRanges, T, StartCol, LineLength);
-          else if (L == NumLines) // Last line
+          else if (L == TokenEndLine) // Last line
             appendStyle(LineRanges, T, 0, EndCol);
           else
             appendStyle(LineRanges, T, 0, LineLength);
-
-          // We only do one line, so we're done.
-          break;
         }
+
         ++L;
+        if (L > EndLineNumber)
+          break;
         LineLength = 0;
         continue;
       }
@@ -149,37 +153,5 @@ llvm::SmallVector<StyleRange> CodeSnippetHighlighter::highlightLine(
     }
   }
 
-#if 0
-  llvm::errs() << "--\nLine Style info: \n";
-  //int I = 0;
-  //for (std::vector<StyleRange> &Line : Lines) {
-    //llvm::errs() << I << ": ";
-    for (const auto &R : LineRanges) {
-      llvm::errs() << "{" << R.Start << ", " << R.End << "}, ";
-    }
-    llvm::errs() << "\n";
-
-    //++I;
-  //}
-#endif
-
-#if 0
-  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  llvm::errs() << "Lexed " << NTokens << " Tokens\n";
-  llvm::errs() << "That took "
-               << std::chrono::duration_cast<std::chrono::microseconds>(end -
-                                                                        begin)
-                      .count()
-               << " microseconds\n";
-  llvm::errs() << "That took "
-               << std::chrono::duration_cast<std::chrono::milliseconds>(end -
-                                                                        begin)
-                      .count()
-               << " milliseconds\n";
-  llvm::errs()
-      << "That took "
-      << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()
-      << " seconds\n";
-#endif
-  return LineRanges;
+  return SnippetRanges;
 }

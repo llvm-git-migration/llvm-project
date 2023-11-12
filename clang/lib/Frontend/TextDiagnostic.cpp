@@ -1186,6 +1186,11 @@ void TextDiagnostic::emitSnippetAndCaret(
   SmallVector<LineRange> LineRanges =
       prepareAndFilterRanges(Ranges, SM, Lines, FID, LangOpts);
 
+  // Prepare source highlighting information for the lines we're about to emit.
+  std::unique_ptr<llvm::SmallVector<StyleRange>[]> SourceStyles =
+      SnippetHighlighter.highlightLines(Lines.first, Lines.second, PP, LangOpts,
+                                        FID, SM);
+
   for (unsigned LineNo = Lines.first; LineNo != Lines.second + 1;
        ++LineNo, ++DisplayLineNo) {
     // Rewind from the current position to the start of the line.
@@ -1250,7 +1255,7 @@ void TextDiagnostic::emitSnippetAndCaret(
 
     // Emit what we have computed.
     emitSnippet(SourceLine, MaxLineNoDisplayWidth, FID, SM, LineNo,
-                DisplayLineNo, LineStart);
+                DisplayLineNo, SourceStyles[LineNo - Lines.first]);
 
     if (!CaretLine.empty()) {
       indentForLineNumbers();
@@ -1282,10 +1287,7 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
                                  unsigned MaxLineNoDisplayWidth, FileID FID,
                                  const SourceManager &SM, unsigned LineNo,
                                  unsigned DisplayLineNo,
-                                 const char *LineStart) {
-  llvm::SmallVector<StyleRange> Styles = SnippetHighlighter.highlightLine(
-      LineNo - 1, PP, LangOpts, FID, SM, LineStart);
-
+                                 ArrayRef<StyleRange> Styles) {
   // Emit line number.
   if (MaxLineNoDisplayWidth > 0) {
     unsigned LineNoDisplayWidth = getNumDisplayWidth(DisplayLineNo);
