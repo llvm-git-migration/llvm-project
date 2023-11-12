@@ -128,7 +128,6 @@ enum MacroUse {
 class Preprocessor {
   friend class VAOptDefinitionContext;
   friend class VariadicMacroScopeGuard;
-  friend class CodeSnippetHighlighter;
 
   llvm::unique_function<void(const clang::Token &)> OnToken;
   std::shared_ptr<PreprocessorOptions> PPOpts;

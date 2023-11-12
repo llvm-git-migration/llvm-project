@@ -19,6 +19,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang {
+
 /// Class to encapsulate the logic for formatting and printing a textual
 /// diagnostic message.
 ///
