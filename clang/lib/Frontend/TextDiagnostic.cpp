@@ -49,8 +49,6 @@ static const enum raw_ostream::Colors savedColor =
 static constexpr raw_ostream::Colors CommentColor = raw_ostream::YELLOW;
 static constexpr raw_ostream::Colors LiteralColor = raw_ostream::GREEN;
 static constexpr raw_ostream::Colors KeywordColor = raw_ostream::BLUE;
-/// Maximum size of file we still highlight.
-static constexpr size_t MaxBufferSize = 1024 * 1024; // 1MB.
 
 /// Add highlights to differences in template strings.
 static void applyTemplateHighlighting(raw_ostream &OS, StringRef Str,
@@ -1125,7 +1123,8 @@ prepareAndFilterRanges(const SmallVectorImpl<CharSourceRange> &Ranges,
 
 std::unique_ptr<llvm::SmallVector<TextDiagnostic::StyleRange>[]>
 highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
-               const Preprocessor *PP, const LangOptions &LangOpts, FileID FID,
+               const Preprocessor *PP, const LangOptions &LangOpts,
+               uint32_t MaxHighlightFileSize, FileID FID,
                const SourceManager &SM) {
   assert(StartLineNumber <= EndLineNumber);
   auto SnippetRanges =
@@ -1140,7 +1139,7 @@ highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
     return SnippetRanges;
 
   auto Buff = SM.getBufferOrNone(FID);
-  if (!Buff || Buff->getBufferSize() > MaxBufferSize)
+  if (!Buff || Buff->getBufferSize() > MaxHighlightFileSize)
     return SnippetRanges;
 
   Lexer L{FID, *Buff, SM, LangOpts};
@@ -1323,7 +1322,8 @@ void TextDiagnostic::emitSnippetAndCaret(
 
   // Prepare source highlighting information for the lines we're about to emit.
   std::unique_ptr<llvm::SmallVector<StyleRange>[]> SourceStyles =
-      highlightLines(Lines.first, Lines.second, PP, LangOpts, FID, SM);
+      highlightLines(Lines.first, Lines.second, PP, LangOpts,
+                     DiagOpts->MaxHighlightFileSize, FID, SM);
 
   for (unsigned LineNo = Lines.first; LineNo != Lines.second + 1;
        ++LineNo, ++DisplayLineNo) {
