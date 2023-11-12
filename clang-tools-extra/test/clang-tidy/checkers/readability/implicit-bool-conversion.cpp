@@ -478,3 +478,12 @@ namespace PR47000 {
   using IntType = int;
   int to_int2(bool x) { return IntType{x}; }
 }
+
+namespace PR71848 {
+  int fun() {
+    bool foo = false;
+    return( foo );
+// CHECK-MESSAGES: :[[@LINE-1]]:11: warning: implicit conversion bool -> 'int' [readability-implicit-bool-conversion]
+// CHECK-FIXES: return static_cast<int>( foo );
+  }
+}

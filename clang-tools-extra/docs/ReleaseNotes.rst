@@ -410,7 +410,8 @@ Changes in existing checks
 - Improved :doc:`readability-implicit-bool-conversion
   <clang-tidy/checks/readability/implicit-bool-conversion>` check to take
   do-while loops into account for the `AllowIntegerConditions` and
-  `AllowPointerConditions` options.
+  `AllowPointerConditions` options. Additionally, an issue with auto-fix
+  suggestions generating invalid code in certain scenarios has been resolved.
 
 - Improved :doc:`readability-non-const-parameter
   <clang-tidy/checks/readability/non-const-parameter>` check to ignore
