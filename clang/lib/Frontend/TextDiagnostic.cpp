@@ -1226,7 +1226,7 @@ highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
         llvm::SmallVector<TextDiagnostic::StyleRange> &LineRanges =
             SnippetRanges[L - StartLineNumber];
 
-        if (L == StartLineNumber) {
+        if (L >= StartLineNumber) {
           if (L == TokenStartLine) // First line
             appendStyle(LineRanges, T, StartCol, LineLength);
           else if (L == TokenEndLine) // Last line
