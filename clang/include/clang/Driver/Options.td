@@ -7014,6 +7014,10 @@ def fno_diagnostics_use_presumed_location : Flag<["-"], "fno-diagnostics-use-pre
 def ftabstop : Separate<["-"], "ftabstop">, MetaVarName<"<N>">,
   HelpText<"Set the tab stop distance.">,
   MarshallingInfoInt<DiagnosticOpts<"TabStop">, "DiagnosticOptions::DefaultTabStop">;
+def fmax_highlight_file_size : Separate<["-"], "fmax-highlight-file-size">, MetaVarName<"<N>">,
+  HelpText<"Set the tab stop distance.">,
+  MarshallingInfoInt<DiagnosticOpts<"MaxHighlightFileSize">, "DiagnosticOptions::DefaultMaxHighlightFileSize">;
+
 def ferror_limit : Separate<["-"], "ferror-limit">, MetaVarName<"<N>">,
   HelpText<"Set the maximum number of errors to emit before stopping (0 = no limit).">,
   MarshallingInfoInt<DiagnosticOpts<"ErrorLimit">>;
