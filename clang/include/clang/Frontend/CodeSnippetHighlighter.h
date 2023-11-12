@@ -34,7 +34,6 @@ public:
   /// Produce StyleRanges for the given line.
   /// The returned vector contains non-overlapping style ranges. They are sorted
   /// from beginning of the line to the end.
-  // llvm::SmallVector<StyleRange>
   std::unique_ptr<llvm::SmallVector<StyleRange>[]>
   highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
                  const Preprocessor *PP, const LangOptions &LangOpts,
