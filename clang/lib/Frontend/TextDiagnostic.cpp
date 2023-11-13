@@ -1121,6 +1121,13 @@ prepareAndFilterRanges(const SmallVectorImpl<CharSourceRange> &Ranges,
   return LineRanges;
 }
 
+/// Creates syntax highlighting information in form of StyleRanges.
+///
+/// The returned unique ptr has always exactly size
+/// (\p EndLineNumber - \p StartLineNumber + 1). Each SmallVector in there
+/// corresponds to syntax highlighting information in one line. In each line,
+/// the StyleRanges are non-overlapping and sorted from start to end of the
+/// line.
 std::unique_ptr<llvm::SmallVector<TextDiagnostic::StyleRange>[]>
 highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
                const Preprocessor *PP, const LangOptions &LangOpts,
