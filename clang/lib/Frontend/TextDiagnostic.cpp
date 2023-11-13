@@ -1129,10 +1129,10 @@ prepareAndFilterRanges(const SmallVectorImpl<CharSourceRange> &Ranges,
 /// the StyleRanges are non-overlapping and sorted from start to end of the
 /// line.
 std::unique_ptr<llvm::SmallVector<TextDiagnostic::StyleRange>[]>
-highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
-               const Preprocessor *PP, const LangOptions &LangOpts,
-               uint32_t MaxHighlightFileSize, FileID FID,
-               const SourceManager &SM) {
+highlightLines(StringRef FileData, unsigned StartLineNumber,
+               unsigned EndLineNumber, const Preprocessor *PP,
+               const LangOptions &LangOpts, uint32_t MaxHighlightFileSize,
+               FileID FID, const SourceManager &SM) {
   assert(StartLineNumber <= EndLineNumber);
   auto SnippetRanges =
       std::make_unique<llvm::SmallVector<TextDiagnostic::StyleRange>[]>(
@@ -1145,8 +1145,8 @@ highlightLines(unsigned StartLineNumber, unsigned EndLineNumber,
   if (PP->getIdentifierTable().getExternalIdentifierLookup())
     return SnippetRanges;
 
-  auto Buff = SM.getBufferOrNone(FID);
-  if (!Buff || Buff->getBufferSize() > MaxHighlightFileSize)
+  auto Buff = llvm::MemoryBuffer::getMemBuffer(FileData);
+  if (Buff->getBufferSize() > MaxHighlightFileSize)
     return SnippetRanges;
 
   Lexer L{FID, *Buff, SM, LangOpts};
@@ -1329,7 +1329,7 @@ void TextDiagnostic::emitSnippetAndCaret(
 
   // Prepare source highlighting information for the lines we're about to emit.
   std::unique_ptr<llvm::SmallVector<StyleRange>[]> SourceStyles =
-      highlightLines(Lines.first, Lines.second, PP, LangOpts,
+      highlightLines(BufStart, Lines.first, Lines.second, PP, LangOpts,
                      DiagOpts->MaxHighlightFileSize, FID, SM);
 
   for (unsigned LineNo = Lines.first; LineNo != Lines.second + 1;
