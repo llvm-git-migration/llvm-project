@@ -200,6 +200,7 @@ def SiFive7Model : SchedMachineModel {
                              HasStdExtZcmt, HasStdExtZknd, HasStdExtZkne,
                              HasStdExtZknh, HasStdExtZksed, HasStdExtZksh,
                              HasStdExtZkr];
+  let MacroFusions = [LUIADDI];
 }
 
 // The SiFive7 microarchitecture has three pipelines: A, B, V.

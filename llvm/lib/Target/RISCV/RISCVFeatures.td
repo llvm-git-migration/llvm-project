@@ -971,10 +971,6 @@ def TuneDLenFactor2
    : SubtargetFeature<"dlen-factor-2", "DLenFactor2", "true",
                       "Vector unit DLEN(data path width) is half of VLEN">;
 
-def TuneLUIADDIFusion
-    : SubtargetFeature<"lui-addi-fusion", "HasLUIADDIFusion",
-                       "true", "Enable LUI+ADDI macrofusion">;
-
 def TuneNoDefaultUnroll
     : SubtargetFeature<"no-default-unroll", "EnableDefaultUnroll", "false",
                        "Disable default unroll preference.">;
@@ -993,8 +989,7 @@ def TuneSiFive7 : SubtargetFeature<"sifive7", "RISCVProcFamily", "SiFive7",
                                     TuneShortForwardBranchOpt]>;
 
 def TuneVentanaVeyron : SubtargetFeature<"ventana-veyron", "RISCVProcFamily", "VentanaVeyron",
-                                         "Ventana-Veyron Series processors",
-                                         [TuneLUIADDIFusion]>;
+                                         "Ventana-Veyron Series processors">;
 
 // Assume that lock-free native-width atomics are available, even if the target
 // and operating system combination would not usually provide them. The user

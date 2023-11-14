@@ -34,6 +34,7 @@ include "GISel/RISCVRegisterBanks.td"
 // RISC-V Scheduling Models
 //===----------------------------------------------------------------------===//
 
+include "RISCVMacroFusion.td"
 include "RISCVSchedRocket.td"
 include "RISCVSchedSiFive7.td"
 include "RISCVSchedSyntacoreSCR1.td"

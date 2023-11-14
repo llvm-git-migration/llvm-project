@@ -48,6 +48,9 @@ std::unique_ptr<MCObjectTargetWriter> createRISCVELFObjectWriter(uint8_t OSABI,
 #define GET_INSTRINFO_MC_HELPER_DECLS
 #include "RISCVGenInstrInfo.inc"
 
+#define GET_MACRO_FUSION_ENUM
+#include "RISCVGenMacroFusion.inc"
+
 #define GET_SUBTARGETINFO_ENUM
 #include "RISCVGenSubtargetInfo.inc"
 
