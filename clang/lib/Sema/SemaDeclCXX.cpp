@@ -7259,7 +7259,7 @@ void Sema::CheckCompletedCXXClass(Scope *S, CXXRecordDecl *Record) {
   // Microsoft or Itanium C++ ABI. However, even if these attributes are
   // present, we do not layout classes following foreign ABI rules, but
   // instead enter a special "compatibility mode", which only changes
-  // alignements of fundamental types and layout of bit fields.
+  // alignments of fundamental types and layout of bit fields.
   // Check whether this class uses any C++ features that are implemented
   // completely differently in the requested ABI, and if so, emit a
   // diagnostic. That diagnostic defaults to an error, but we allow
