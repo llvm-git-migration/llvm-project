@@ -998,6 +998,9 @@ def warn_npot_ms_struct : Warning<
   "data types with sizes that aren't a power of two">,
   DefaultError, InGroup<IncompatibleMSStruct>;
 
+def err_itanium_layout_unimplemented : Error<
+  "sorry, Itanium-compatible layout is unimplemented for the current C++ ABI">;
+
 // -Wpadded-bitfield
 def warn_padded_struct_bitfield : Warning<
   "padding %select{struct|interface|class}0 %1 with %2 "

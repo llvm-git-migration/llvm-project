@@ -3667,14 +3667,14 @@ def CFGuard : InheritableAttr, TargetSpecificAttr<TargetWindows> {
 def MSStruct : InheritableAttr {
   let Spellings = [GCC<"ms_struct">];
   let Subjects = SubjectList<[Record]>;
-  let Documentation = [Undocumented];
+  let Documentation = [MSStructDocs];
   let SimpleHandler = 1;
 }
 
 def GCCStruct : InheritableAttr {
   let Spellings = [GCC<"gcc_struct">];
   let Subjects = SubjectList<[Record]>;
-  let Documentation = [Undocumented];
+  let Documentation = [GCCStructDocs];
   let SimpleHandler = 1;
 }
 
