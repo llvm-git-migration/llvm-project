@@ -7394,47 +7394,11 @@ defm : VPatNullaryV<"int_riscv_vid", "PseudoVID">;
 // 16.1. Integer Scalar Move Instructions
 //===----------------------------------------------------------------------===//
 
-foreach vti = AllIntegerVectors in {
+foreach vti = NoGroupIntegerVectors in {
   let Predicates = GetVTypePredicates<vti>.Predicates in
   def : Pat<(XLenVT (riscv_vmv_x_s (vti.Vector vti.RegClass:$rs2))),
-            (PseudoVMV_X_S
-               !if(!isa<GroupVTypeInfo>(vti),
-                   (!cast<GroupVTypeInfo>(vti).VectorM1
-                      (EXTRACT_SUBREG $rs2, sub_vrm1_0)),
-                   (vti.Vector $rs2)),
-               vti.Log2SEW)>;
+            (PseudoVMV_X_S $rs2, vti.Log2SEW)>;
   // vmv.s.x is handled with a custom node in RISCVInstrInfoVVLPatterns.td
-}
-
-//===----------------------------------------------------------------------===//
-// 16.2. Floating-Point Scalar Move Instructions
-//===----------------------------------------------------------------------===//
-
-foreach fvti = AllFloatVectors in {
-  let Predicates = GetVTypePredicates<fvti>.Predicates in {
-    def : Pat<(fvti.Vector (int_riscv_vfmv_s_f (fvti.Vector fvti.RegClass:$rs1),
-                           (fvti.Scalar fvti.ScalarRegClass:$rs2), VLOpFrag)),
-              (!cast<Instruction>("PseudoVFMV_S_"#fvti.ScalarSuffix#"_" #
-                                  fvti.LMul.MX)
-               (fvti.Vector $rs1),
-               (fvti.Scalar fvti.ScalarRegClass:$rs2),
-               GPR:$vl, fvti.Log2SEW)>;
-
-    defvar isGroup = !isa<GroupVTypeInfo>(fvti);
-    defvar merge = !if(isGroup,
-                       (!cast<GroupVTypeInfo>(fvti).VectorM1
-                          (EXTRACT_SUBREG $rs1, sub_vrm1_0)),
-                       (fvti.Vector $rs1));
-    defvar vmv_s_x_x0 = (PseudoVMV_S_X merge, (XLenVT X0), GPR:$vl, fvti.Log2SEW);
-    def : Pat<(fvti.Vector (int_riscv_vfmv_s_f (fvti.Vector fvti.RegClass:$rs1),
-                           (fvti.Scalar (fpimm0)), VLOpFrag)),
-              !if(isGroup, (INSERT_SUBREG $rs1, vmv_s_x_x0, sub_vrm1_0), vmv_s_x_x0)>;
-
-    defvar vmv_s_x_imm = (PseudoVMV_S_X merge, GPR:$imm, GPR:$vl, fvti.Log2SEW);
-    def : Pat<(fvti.Vector (int_riscv_vfmv_s_f (fvti.Vector fvti.RegClass:$rs1),
-                           (fvti.Scalar (SelectFPImm (XLenVT GPR:$imm))), VLOpFrag)),
-              !if(isGroup, (INSERT_SUBREG $rs1, vmv_s_x_imm, sub_vrm1_0), vmv_s_x_imm)>;
-  }
 }
 
 //===----------------------------------------------------------------------===//
