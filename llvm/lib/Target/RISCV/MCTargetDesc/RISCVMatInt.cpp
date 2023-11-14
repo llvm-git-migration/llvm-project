@@ -236,7 +236,7 @@ InstSeq generateInstSeq(int64_t Val, const MCSubtargetInfo &STI) {
     // NOTE: We don't check for C extension to minimize differences in generated
     // code.
     bool IsShiftedCompressible =
-        isInt<6>(ShiftedVal) && !STI.hasFeature(RISCV::TuneLUIADDIFusion);
+        isInt<6>(ShiftedVal) && !STI.hasFeature(RISCV::LUIADDIFusion);
     RISCVMatInt::InstSeq TmpSeq;
     generateInstSeqImpl(ShiftedVal, STI, TmpSeq);
 
