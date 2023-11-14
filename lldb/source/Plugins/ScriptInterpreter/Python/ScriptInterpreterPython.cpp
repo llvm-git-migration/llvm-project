@@ -2791,7 +2791,7 @@ bool ScriptInterpreterPythonImpl::RunScriptBasedParsedCommand(
       args_arr_sp->AddStringItem(entry.ref());
     }
     StructuredDataImpl args_impl(args_arr_sp);
-    
+
     ret_val = SWIGBridge::LLDBSwigPythonCallParsedCommandObject(
         static_cast<PyObject *>(impl_obj_sp->GetValue()), debugger_sp,
         args_impl, cmd_retobj, exe_ctx_ref_sp);
@@ -2805,7 +2805,6 @@ bool ScriptInterpreterPythonImpl::RunScriptBasedParsedCommand(
   error.Clear();
   return ret_val;
 }
-
 
 /// In Python, a special attribute __doc__ contains the docstring for an object
 /// (function, method, class, ...) if any is defined Otherwise, the attribute's
@@ -2925,7 +2924,7 @@ uint32_t ScriptInterpreterPythonImpl::GetFlagsForCommandObject(
   return result;
 }
 
-StructuredData::ObjectSP 
+StructuredData::ObjectSP
 ScriptInterpreterPythonImpl::GetOptionsForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
   StructuredData::ObjectSP result = {};
@@ -2970,10 +2969,10 @@ ScriptInterpreterPythonImpl::GetOptionsForCommandObject(
     PyErr_Clear();
     return {};
   }
-    return py_return.CreateStructuredObject();
+  return py_return.CreateStructuredObject();
 }
 
-StructuredData::ObjectSP 
+StructuredData::ObjectSP
 ScriptInterpreterPythonImpl::GetArgumentsForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
   StructuredData::ObjectSP result = {};
@@ -3018,11 +3017,10 @@ ScriptInterpreterPythonImpl::GetArgumentsForCommandObject(
     PyErr_Clear();
     return {};
   }
-    return py_return.CreateStructuredObject();
+  return py_return.CreateStructuredObject();
 }
 
-void 
-ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
+void ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
 
   Locker py_lock(this, Locker::AcquireLock | Locker::NoSTDIN, Locker::FreeLock);
@@ -3030,7 +3028,7 @@ ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
   static char callee_name[] = "option_parsing_started";
 
   if (!cmd_obj_sp)
-    return ;
+    return;
 
   PythonObject implementor(PyRefType::Borrowed,
                            (PyObject *)cmd_obj_sp->GetValue());
@@ -3056,9 +3054,9 @@ ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
   if (PyErr_Occurred())
     PyErr_Clear();
 
-  // FIXME: this should really be a void function
-  bool py_return = unwrapOrSetPythonException(
-      As<bool>(implementor.CallMethod(callee_name)));
+  // option_parsing_starting doesn't return anything, ignore anything but
+  // python errors.
+  unwrapOrSetPythonException(As<bool>(implementor.CallMethod(callee_name)));
 
   // if it fails, print the error but otherwise go on
   if (PyErr_Occurred()) {
@@ -3068,8 +3066,7 @@ ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
   }
 }
 
-bool
-ScriptInterpreterPythonImpl::SetOptionValueForCommandObject(
+bool ScriptInterpreterPythonImpl::SetOptionValueForCommandObject(
     StructuredData::GenericSP cmd_obj_sp, ExecutionContext *exe_ctx,
     llvm::StringRef long_option, llvm::StringRef value) {
   StructuredData::ObjectSP result = {};
@@ -3104,15 +3101,15 @@ ScriptInterpreterPythonImpl::SetOptionValueForCommandObject(
 
   if (PyErr_Occurred())
     PyErr_Clear();
-    
+
   lldb::ExecutionContextRefSP exe_ctx_ref_sp;
   if (exe_ctx)
     exe_ctx_ref_sp.reset(new ExecutionContextRef(exe_ctx));
   PythonObject ctx_ref_obj = SWIGBridge::ToSWIGWrapper(exe_ctx_ref_sp);
-    
-  bool py_return = unwrapOrSetPythonException(
-      As<bool>(implementor.CallMethod(callee_name, ctx_ref_obj, long_option.str().c_str(), 
-                                      value.str().c_str())));
+
+  bool py_return = unwrapOrSetPythonException(As<bool>(
+      implementor.CallMethod(callee_name, ctx_ref_obj,
+                             long_option.str().c_str(), value.str().c_str())));
 
   // if it fails, print the error but otherwise go on
   if (PyErr_Occurred()) {

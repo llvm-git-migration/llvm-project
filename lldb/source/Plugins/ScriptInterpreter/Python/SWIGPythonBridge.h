@@ -213,12 +213,11 @@ public:
                                   lldb::DebuggerSP debugger, const char *args,
                                   lldb_private::CommandReturnObject &cmd_retobj,
                                   lldb::ExecutionContextRefSP exe_ctx_ref_sp);
-  static bool
-  LLDBSwigPythonCallParsedCommandObject(PyObject *implementor,
-                                  lldb::DebuggerSP debugger,  
-                                  StructuredDataImpl &args_impl,
-                                  lldb_private::CommandReturnObject &cmd_retobj,
-                                  lldb::ExecutionContextRefSP exe_ctx_ref_sp);
+  static bool LLDBSwigPythonCallParsedCommandObject(
+      PyObject *implementor, lldb::DebuggerSP debugger,
+      StructuredDataImpl &args_impl,
+      lldb_private::CommandReturnObject &cmd_retobj,
+      lldb::ExecutionContextRefSP exe_ctx_ref_sp);
 
   static bool LLDBSwigPythonCallModuleInit(const char *python_module_name,
                                            const char *session_dictionary_name,

@@ -219,7 +219,7 @@ bool lldb_private::python::SWIGBridge::LLDBSwigPythonCallCommandObject(
 }
 
 bool lldb_private::python::SWIGBridge::LLDBSwigPythonCallParsedCommandObject(
-    PyObject *implementor, lldb::DebuggerSP debugger, 
+    PyObject *implementor, lldb::DebuggerSP debugger,
     StructuredDataImpl &args_impl,
     lldb_private::CommandReturnObject &cmd_retobj,
     lldb::ExecutionContextRefSP exe_ctx_ref_sp) {
