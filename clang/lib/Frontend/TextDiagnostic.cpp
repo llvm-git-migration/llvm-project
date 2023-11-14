@@ -1437,7 +1437,7 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
 
   // Print the source line one character at a time.
   bool PrintReversed = false;
-  bool HighlightingEnabled = DiagOpts->ShowColors;
+  std::optional<llvm::raw_ostream::Colors> CurrentColor;
   size_t I = 0;
   while (I < SourceLine.size()) {
     auto [Str, WasPrintable] =
@@ -1449,21 +1449,27 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
         PrintReversed = !PrintReversed;
         if (PrintReversed)
           OS.reverseColor();
-        else
+        else {
           OS.resetColor();
+          CurrentColor = std::nullopt;
+        }
       }
-    }
 
-    // Apply syntax highlighting information if requested.
-    if (HighlightingEnabled) {
+      // Apply syntax highlighting information.
       const auto *CharStyle = llvm::find_if(Styles, [I](const StyleRange &R) {
         return (R.Start < I && R.End >= I);
       });
 
-      if (CharStyle != Styles.end())
-        OS.changeColor(CharStyle->Color, false);
-      else
+      if (CharStyle != Styles.end()) {
+        if (!CurrentColor ||
+            (CurrentColor && *CurrentColor != CharStyle->Color)) {
+          OS.changeColor(CharStyle->Color, false);
+          CurrentColor = CharStyle->Color;
+        }
+      } else if (CurrentColor) {
         OS.resetColor();
+        CurrentColor = std::nullopt;
+      }
     }
 
     OS << Str;
