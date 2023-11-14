@@ -340,10 +340,11 @@ Attribute Changes in Clang
   All parameters of a function are considered to be lifetime bound if the function
   returns a type annotated with ``[[clang::coro_lifetimebound]]`` and ``[[clang::coro_return_type]]``.
 
-- On targets with C++ ABI other than Microsoft, Clang now supports
-  ``[[gnu:gcc_struct]]`` with the behavior similar to one existing in GCC. In
-  particular, it locally cancels the effect of ``-mms-bitfields`` switch (either
-  if it is provided explicitly or if the behavior is default on a target).
+- On targets with Itanium C++ ABI, Clang now supports ``[[gnu:gcc_struct]]``
+  with the behavior similar to one existing in GCC. In particular, whenever
+  ``-mms-bitfields`` command line option is provided (or if Microsoft-compatible
+  structure layout is default on the target), ``[[gnu::gcc_struct]]`` requests
+  the compiler to follow Itanium rules for the layout of an annotated structure.
 
 Improvements to Clang's diagnostics
 -----------------------------------

@@ -999,7 +999,7 @@ def warn_npot_ms_struct : Warning<
   DefaultError, InGroup<IncompatibleMSStruct>;
 
 def err_itanium_layout_unimplemented : Error<
-  "sorry, Itanium-compatible layout is unimplemented for the current C++ ABI">;
+  "Itanium-compatible layout for the Microsoft C++ ABI is not yet supported">;
 
 // -Wpadded-bitfield
 def warn_padded_struct_bitfield : Warning<
