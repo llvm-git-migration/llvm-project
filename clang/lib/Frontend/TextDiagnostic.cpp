@@ -1443,11 +1443,18 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
     auto [Str, WasPrintable] =
         printableTextForNextCharacter(SourceLine, &I, DiagOpts->TabStop);
 
-    // Just stop highlighting anything for this line if we found a non-printable
-    // character.
-    if (!WasPrintable)
-      HighlightingEnabled = false;
+    // Toggle inverted colors on or off for this character.
+    if (DiagOpts->ShowColors) {
+      if (WasPrintable == PrintReversed) {
+        PrintReversed = !PrintReversed;
+        if (PrintReversed)
+          OS.reverseColor();
+        else
+          OS.resetColor();
+      }
+    }
 
+    // Apply syntax highlighting information if requested.
     if (HighlightingEnabled) {
       const auto *CharStyle = llvm::find_if(Styles, [I](const StyleRange &R) {
         return (R.Start < I && R.End >= I);
@@ -1459,16 +1466,6 @@ void TextDiagnostic::emitSnippet(StringRef SourceLine,
         OS.resetColor();
     }
 
-    // Toggle inverted colors on or off for this character.
-    if (DiagOpts->ShowColors) {
-      if (WasPrintable == PrintReversed) {
-        PrintReversed = !PrintReversed;
-        if (PrintReversed)
-          OS.reverseColor();
-        else
-          OS.resetColor();
-      }
-    }
     OS << Str;
   }
 
