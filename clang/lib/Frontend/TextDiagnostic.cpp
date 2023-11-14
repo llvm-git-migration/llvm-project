@@ -1135,7 +1135,7 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
                FileID FID, const SourceManager &SM) {
   assert(StartLineNumber <= EndLineNumber);
   auto SnippetRanges =
-      std::make_unique<llvm::SmallVector<TextDiagnostic::StyleRange>[]>(
+      std::make_unique<SmallVector<TextDiagnostic::StyleRange>[]>(
           EndLineNumber - StartLineNumber + 1);
 
   if (!PP)
@@ -1154,7 +1154,7 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
 
   // Classify the given token and append it to the given vector.
   auto appendStyle =
-      [PP, &LangOpts](llvm::SmallVector<TextDiagnostic::StyleRange> &Vec,
+      [PP, &LangOpts](SmallVector<TextDiagnostic::StyleRange> &Vec,
                       const Token &T, unsigned Start, unsigned Length) -> void {
     if (T.is(tok::raw_identifier)) {
       StringRef RawIdent = T.getRawIdentifier();
@@ -1210,7 +1210,7 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
 
     // Simple tokens.
     if (TokenStartLine == TokenEndLine) {
-      llvm::SmallVector<TextDiagnostic::StyleRange> &LineRanges =
+      SmallVector<TextDiagnostic::StyleRange> &LineRanges =
           SnippetRanges[TokenStartLine - StartLineNumber];
       appendStyle(LineRanges, T, StartCol, T.getLength());
       continue;
@@ -1230,7 +1230,7 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
     for (unsigned I = 0; I <= Spelling.size(); ++I) {
       // This line is done.
       if (isVerticalWhitespace(Spelling[I]) || I == Spelling.size()) {
-        llvm::SmallVector<TextDiagnostic::StyleRange> &LineRanges =
+        SmallVector<TextDiagnostic::StyleRange> &LineRanges =
             SnippetRanges[L - StartLineNumber];
 
         if (L >= StartLineNumber) {
@@ -1328,7 +1328,7 @@ void TextDiagnostic::emitSnippetAndCaret(
       prepareAndFilterRanges(Ranges, SM, Lines, FID, LangOpts);
 
   // Prepare source highlighting information for the lines we're about to emit.
-  std::unique_ptr<llvm::SmallVector<StyleRange>[]> SourceStyles =
+  std::unique_ptr<SmallVector<StyleRange>[]> SourceStyles =
       highlightLines(BufStart, Lines.first, Lines.second, PP, LangOpts,
                      DiagOpts->MaxHighlightFileSize, FID, SM);
 
