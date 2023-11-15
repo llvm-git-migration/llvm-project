@@ -2757,7 +2757,6 @@ foreach mti = AllMasks in {
 // 16. Vector Permutation Instructions
 
 // 16.1. Integer Scalar Move Instructions
-// 16.4. Vector Register Gather Instruction
 foreach vti = NoGroupIntegerVectors in {
   let Predicates = GetVTypePredicates<vti>.Predicates in {
     def : Pat<(vti.Vector (riscv_vmv_s_x_vl (vti.Vector vti.RegClass:$merge),
@@ -2768,6 +2767,7 @@ foreach vti = NoGroupIntegerVectors in {
   }
 }
 
+// 16.4. Vector Register Gather Instruction
 foreach vti = AllIntegerVectors in {
   let Predicates = GetVTypePredicates<vti>.Predicates in {
     def : Pat<(vti.Vector (riscv_vrgather_vv_vl vti.RegClass:$rs2,
