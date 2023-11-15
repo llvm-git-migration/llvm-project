@@ -3674,7 +3674,7 @@ def MSStruct : InheritableAttr {
 def GCCStruct : InheritableAttr {
   let Spellings = [GCC<"gcc_struct">];
   let Subjects = SubjectList<[Record]>;
-  let Documentation = [GCCStructDocs];
+  let Documentation = [MSStructDocs]; // Covers this attribute too.
   let SimpleHandler = 1;
 }
 

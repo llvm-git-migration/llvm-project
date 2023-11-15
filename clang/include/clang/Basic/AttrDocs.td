@@ -7675,10 +7675,3 @@ Note that the default behavior can be controlled by ``-mms-bitfields`` and
 ``-mno-ms-bitfields`` switches and via ``#pragma ms_struct``.
   }];
 }
-
-def GCCStructDocs : Documentation {
-  let Category = DocCatDecl;
-  let Content = [{
-See ms_struct_.
-  }];
-}
