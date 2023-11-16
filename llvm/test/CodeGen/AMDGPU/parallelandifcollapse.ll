@@ -3,8 +3,8 @@
 ; CFG flattening should use parallel-and mode to generate branch conditions and
 ; then merge if-regions with the same bodies.
 ;
-; CHECK: OR_INT
-; CHECK-NEXT: OR_INT
+; CHECK: AND_INT
+; CHECK-NEXT: AND_INT
 ; CHECK-NEXT: AND_INT
 
 ; FIXME: For some reason having the allocas here allowed the flatten cfg pass
