@@ -436,9 +436,9 @@ bool FlattenCFGOpt::MergeIfRegion(BasicBlock *BB, IRBuilder<> &Builder) {
   bool InvertCond2 = false;
   BinaryOperator::BinaryOps CombineOp;
   if (IfFalse1 == FirstEntryBlock) {
-    // The else-path is empty, so we must use "or" operation to combine the
+    // The then-path is empty, so we must use "and" operation to combine the
     // conditions.
-    CombineOp = BinaryOperator::Or;
+    CombineOp = BinaryOperator::And;
     if (IfFalse2 != SecondEntryBlock) {
       if (IfTrue2 != SecondEntryBlock)
         return false;
@@ -450,9 +450,9 @@ bool FlattenCFGOpt::MergeIfRegion(BasicBlock *BB, IRBuilder<> &Builder) {
     if (!CompareIfRegionBlock(IfTrue1, IfTrue2, SecondEntryBlock))
       return false;
   } else if (IfTrue1 == FirstEntryBlock) {
-    // The then-path is empty, so we must use "and" operation to combine the
+    // The else-path is empty, so we must use "or" operation to combine the
     // conditions.
-    CombineOp = BinaryOperator::And;
+    CombineOp = BinaryOperator::Or;
     if (IfTrue2 != SecondEntryBlock) {
       if (IfFalse2 != SecondEntryBlock)
         return false;

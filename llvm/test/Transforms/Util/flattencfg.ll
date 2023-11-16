@@ -10,12 +10,12 @@ define void @test_not_crash(i32 %in_a) #0 {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP0:%.*]] = icmp eq i32 [[IN_A]], -1
 ; CHECK-NEXT:    [[CMP1:%.*]] = icmp ne i32 [[IN_A]], 0
-; CHECK-NEXT:    [[COND0:%.*]] = and i1 [[CMP0]], [[CMP1]]
+; CHECK-NEXT:    [[COND0:%.*]] = or i1 [[CMP0]], [[CMP1]]
 ; CHECK-NEXT:    br i1 [[COND0]], label [[B0:%.*]], label [[B1:%.*]]
 ; CHECK:       b0:
 ; CHECK-NEXT:    [[CMP2:%.*]] = icmp eq i32 [[IN_A]], 0
 ; CHECK-NEXT:    [[CMP3:%.*]] = icmp ne i32 [[IN_A]], 1
-; CHECK-NEXT:    [[COND1:%.*]] = or i1 [[CMP2]], [[CMP3]]
+; CHECK-NEXT:    [[COND1:%.*]] = and i1 [[CMP2]], [[CMP3]]
 ; CHECK-NEXT:    br i1 [[COND1]], label [[EXIT:%.*]], label [[B1]]
 ; CHECK:       b1:
 ; CHECK-NEXT:    br label [[EXIT]]
@@ -25,13 +25,13 @@ define void @test_not_crash(i32 %in_a) #0 {
 entry:
   %cmp0 = icmp eq i32 %in_a, -1
   %cmp1 = icmp ne i32 %in_a, 0
-  %cond0 = and i1 %cmp0, %cmp1
+  %cond0 = or i1 %cmp0, %cmp1
   br i1 %cond0, label %b0, label %b1
 
 b0:                                ; preds = %entry
   %cmp2 = icmp eq i32 %in_a, 0
   %cmp3 = icmp ne i32 %in_a, 1
-  %cond1 = or i1 %cmp2, %cmp3
+  %cond1 = and i1 %cmp2, %cmp3
   br i1 %cond1, label %exit, label %b1
 
 b1:                                       ; preds = %entry, %b0
@@ -47,7 +47,7 @@ define void @test_not_crash2(float %a, float %b) #0 {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = fcmp ult float [[A]], 1.000000e+00
 ; CHECK-NEXT:    [[TMP1:%.*]] = fcmp ult float [[B]], 1.000000e+00
-; CHECK-NEXT:    [[TMP2:%.*]] = and i1 [[TMP0]], [[TMP1]]
+; CHECK-NEXT:    [[TMP2:%.*]] = or i1 [[TMP0]], [[TMP1]]
 ; CHECK-NEXT:    br i1 [[TMP2]], label [[BB4:%.*]], label [[BB3:%.*]]
 ; CHECK:       bb3:
 ; CHECK-NEXT:    br label [[BB4]]
@@ -78,7 +78,7 @@ define void @test_not_crash3(i32 %a) #0 {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[A_EQ_0:%.*]] = icmp eq i32 [[A]], 0
 ; CHECK-NEXT:    [[A_EQ_1:%.*]] = icmp eq i32 [[A]], 1
-; CHECK-NEXT:    [[TMP0:%.*]] = or i1 [[A_EQ_0]], [[A_EQ_1]]
+; CHECK-NEXT:    [[TMP0:%.*]] = and i1 [[A_EQ_0]], [[A_EQ_1]]
 ; CHECK-NEXT:    br i1 [[TMP0]], label [[BB2:%.*]], label [[BB3:%.*]]
 ; CHECK:       bb2:
 ; CHECK-NEXT:    br label [[BB3]]
@@ -114,7 +114,7 @@ define void @test_then(i32 %x, i32 %y, i32 %z) {
 ; CHECK-NEXT:  entry.x:
 ; CHECK-NEXT:    [[CMP_X:%.*]] = icmp ne i32 [[X]], 0
 ; CHECK-NEXT:    [[CMP_Y:%.*]] = icmp ne i32 [[Y]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = or i1 [[CMP_X]], [[CMP_Y]]
+; CHECK-NEXT:    [[TMP0:%.*]] = and i1 [[CMP_X]], [[CMP_Y]]
 ; CHECK-NEXT:    br i1 [[TMP0]], label [[IF_THEN_Y:%.*]], label [[EXIT:%.*]]
 ; CHECK:       if.then.y:
 ; CHECK-NEXT:    store i32 [[Z]], ptr @g, align 4
@@ -148,7 +148,7 @@ define void @test_else(i32 %x, i32 %y, i32 %z) {
 ; CHECK-NEXT:  entry.x:
 ; CHECK-NEXT:    [[CMP_X:%.*]] = icmp eq i32 [[X]], 0
 ; CHECK-NEXT:    [[CMP_Y:%.*]] = icmp eq i32 [[Y]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = and i1 [[CMP_X]], [[CMP_Y]]
+; CHECK-NEXT:    [[TMP0:%.*]] = or i1 [[CMP_X]], [[CMP_Y]]
 ; CHECK-NEXT:    br i1 [[TMP0]], label [[EXIT:%.*]], label [[IF_ELSE_Y:%.*]]
 ; CHECK:       if.else.y:
 ; CHECK-NEXT:    store i32 [[Z]], ptr @g, align 4
@@ -182,7 +182,7 @@ define void @test_combine_and(i32 %x, i32 %y, i32 %z) {
 ; CHECK-NEXT:  entry.x:
 ; CHECK-NEXT:    [[CMP_X:%.*]] = icmp eq i32 [[X]], 0
 ; CHECK-NEXT:    [[CMP_Y:%.*]] = icmp eq i32 [[Y]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = and i1 [[CMP_X]], [[CMP_Y]]
+; CHECK-NEXT:    [[TMP0:%.*]] = or i1 [[CMP_X]], [[CMP_Y]]
 ; CHECK-NEXT:    br i1 [[TMP0]], label [[EXIT:%.*]], label [[IF_THEN_Y:%.*]]
 ; CHECK:       if.then.y:
 ; CHECK-NEXT:    store i32 [[Z]], ptr @g, align 4
@@ -216,7 +216,7 @@ define void @test_combine_or(i32 %x, i32 %y, i32 %z) {
 ; CHECK-NEXT:  entry.x:
 ; CHECK-NEXT:    [[CMP_X:%.*]] = icmp ne i32 [[X]], 0
 ; CHECK-NEXT:    [[CMP_Y:%.*]] = icmp ne i32 [[Y]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = or i1 [[CMP_X]], [[CMP_Y]]
+; CHECK-NEXT:    [[TMP0:%.*]] = and i1 [[CMP_X]], [[CMP_Y]]
 ; CHECK-NEXT:    br i1 [[TMP0]], label [[IF_ELSE_Y:%.*]], label [[EXIT:%.*]]
 ; CHECK:       if.else.y:
 ; CHECK-NEXT:    store i32 [[Z]], ptr @g, align 4
@@ -279,7 +279,7 @@ define i1 @test_cond_multi_use(i32 %x, i32 %y, i32 %z) {
 ; CHECK-NEXT:    [[CMP_X:%.*]] = icmp ne i32 [[X]], 0
 ; CHECK-NEXT:    [[CMP_Y:%.*]] = icmp eq i32 [[Y]], 0
 ; CHECK-NEXT:    [[TMP0:%.*]] = xor i1 [[CMP_Y]], true
-; CHECK-NEXT:    [[TMP1:%.*]] = or i1 [[CMP_X]], [[TMP0]]
+; CHECK-NEXT:    [[TMP1:%.*]] = and i1 [[CMP_X]], [[TMP0]]
 ; CHECK-NEXT:    br i1 [[TMP1]], label [[IF_THEN_Y:%.*]], label [[EXIT:%.*]]
 ; CHECK:       if.then.y:
 ; CHECK-NEXT:    store i32 [[Z]], ptr @g, align 4
