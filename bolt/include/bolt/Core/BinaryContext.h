@@ -962,6 +962,10 @@ public:
     return getUniqueSectionByName(".gdb_index");
   }
 
+  ErrorOr<BinarySection &> getDebugNamesSection() const {
+    return getUniqueSectionByName(".debug_names");
+  }
+
   /// @}
 
   /// Register \p TargetFunction as a fragment of \p Function if checks pass:
