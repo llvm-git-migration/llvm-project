@@ -916,8 +916,7 @@ void DebugStrOffsetsWriter::finalizeSection(DWARFUnit &Unit,
   }
 
   StrOffsetSectionWasModified = false;
-  IndexToAddressMap.clear();
-  StrOffsets.clear();
+  clear();
 }
 
 void DebugStrWriter::create() {
@@ -1239,6 +1238,5 @@ void DwarfLineTable::emit(BinaryContext &BC, MCStreamer &Streamer) {
   if (LineStr)
     LineStr->emitSection(&Streamer);
 }
-
 } // namespace bolt
 } // namespace llvm

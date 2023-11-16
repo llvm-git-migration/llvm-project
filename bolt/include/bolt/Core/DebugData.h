@@ -439,6 +439,12 @@ public:
   /// Update Str offset in .debug_str in .debug_str_offsets.
   void updateAddressMap(uint32_t Index, uint32_t Address);
 
+  /// Get offset for given index in original .debug_str_offsets section.
+  uint64_t getOffset(uint32_t Index) const {
+    assert(StrOffsets.size() > Index && "Index is out of bounds.");
+    return StrOffsets[Index];
+  }
+
   /// Writes out current sections entry into .debug_str_offsets.
   void finalizeSection(DWARFUnit &Unit, DIEBuilder &DIEBldr);
 
@@ -450,10 +456,16 @@ public:
     return std::move(StrOffsetsBuffer);
   }
 
-private:
   /// Initializes Buffer and Stream.
   void initialize(DWARFUnit &Unit);
 
+  /// Clear data.
+  void clear() {
+    IndexToAddressMap.clear();
+    StrOffsets.clear();
+  }
+
+private:
   std::unique_ptr<DebugStrOffsetsBufferVector> StrOffsetsBuffer;
   std::unique_ptr<raw_svector_ostream> StrOffsetsStream;
   std::map<uint32_t, uint32_t> IndexToAddressMap;
@@ -478,11 +490,12 @@ public:
   /// Returns False if no strings were added to .debug_str.
   bool isInitialized() const { return !StrBuffer->empty(); }
 
+  /// Initializes Buffer and Stream.
+  void initialize();
+
 private:
   /// Mutex used for parallel processing of debug info.
   std::mutex WriterMutex;
-  /// Initializes Buffer and Stream.
-  void initialize();
   /// Creates internal data structures.
   void create();
   std::unique_ptr<DebugStrBufferVector> StrBuffer;
@@ -798,6 +811,7 @@ public:
   // Returns DWARF Version for this line table.
   uint16_t getDwarfVersion() const { return DwarfVersion; }
 };
+
 } // namespace bolt
 } // namespace llvm
 
