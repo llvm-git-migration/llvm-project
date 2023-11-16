@@ -257,8 +257,8 @@ define i64 @test_zero_disc(i64 %signed) {
 ; MIR-HINT:            liveins: $x0
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT:            $x17, {{(dead )?}}$xzr = PAUTH_AUTH %[[SIGNED]], $xzr, 0, 0, 1, implicit-def $x16{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_zero_disc
@@ -267,7 +267,7 @@ define i64 @test_zero_disc(i64 %signed) {
 ; MIR-V83:            liveins: $x0
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}$xzr = PAUTH_AUTH %[[SIGNED]], $xzr, 0, 0, 1, implicit-def %{{[0-9]+}}{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 0)
   ret i64 %auted
@@ -291,8 +291,8 @@ define i64 @test_immediate_disc(i64 %signed) {
 ; MIR-HINT:            liveins: $x0
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT:            $x17, {{(dead )?}}$xzr = PAUTH_AUTH %[[SIGNED]], $xzr, 42, 0, 1, implicit-def $x16{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_immediate_disc
@@ -301,7 +301,7 @@ define i64 @test_immediate_disc(i64 %signed) {
 ; MIR-V83:            liveins: $x0
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}$xzr = PAUTH_AUTH %[[SIGNED]], $xzr, 42, 0, 1, implicit-def %{{[0-9]+}}{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 42)
   ret i64 %auted
@@ -325,8 +325,8 @@ define i64 @test_raw_disc(i64 %signed, i64 %raw_disc) {
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT-DAG:        %[[RAW_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-HINT:            $x17, {{(dead )?}}$x16 = PAUTH_AUTH %[[SIGNED]], %[[RAW_DISC]], 0, 0, 1{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_raw_disc
@@ -336,7 +336,7 @@ define i64 @test_raw_disc(i64 %signed, i64 %raw_disc) {
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83-DAG:        %[[RAW_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}%{{[0-9]+}}:gpr64 = PAUTH_AUTH %[[SIGNED]], %[[RAW_DISC]], 0, 0, 1{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 %raw_disc)
   ret i64 %auted
@@ -362,8 +362,8 @@ define i64 @test_blended_disc(i64 %signed, i64 %addr_disc) {
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT-DAG:        %[[ADDR_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-HINT:            $x17, {{(dead )?}}$x16 = PAUTH_AUTH %[[SIGNED]], %[[ADDR_DISC]], 42, 1, 1{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_blended_disc
@@ -373,7 +373,7 @@ define i64 @test_blended_disc(i64 %signed, i64 %addr_disc) {
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83-DAG:        %[[ADDR_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}%{{[0-9]+}}:gpr64 = PAUTH_AUTH %[[SIGNED]], %[[ADDR_DISC]], 42, 1, 1{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %disc = call i64 @llvm.ptrauth.blend(i64 %addr_disc, i64 42)
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 %disc)
@@ -400,8 +400,8 @@ define i64 @test_blended_with_zero(i64 %signed, i64 %addr_disc) {
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT-DAG:        %[[ADDR_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-HINT:            $x17, {{(dead )?}}$x16 = PAUTH_AUTH %[[SIGNED]], %[[ADDR_DISC]], 0, 1, 1{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_blended_with_zero
@@ -411,7 +411,7 @@ define i64 @test_blended_with_zero(i64 %signed, i64 %addr_disc) {
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83-DAG:        %[[ADDR_DISC:[0-9]+]]:gpr64 = COPY $x1
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}%{{[0-9]+}}:gpr64 = PAUTH_AUTH %[[SIGNED]], %[[ADDR_DISC]], 0, 1, 1{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %disc = call i64 @llvm.ptrauth.blend(i64 %addr_disc, i64 0)
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 %disc)
@@ -439,8 +439,8 @@ define i64 @test_null_blend(i64 %signed) {
 ; MIR-HINT-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-HINT-DAG:        %[[ZERO:[0-9]+]]:gpr64 = COPY $xzr
 ; MIR-HINT:            $x17, {{(dead )?}}$x16 = PAUTH_AUTH %[[SIGNED]], %[[ZERO]], 42, 1, 1{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_null_blend
@@ -450,7 +450,7 @@ define i64 @test_null_blend(i64 %signed) {
 ; MIR-V83-DAG:        %[[SIGNED:[0-9]+]]:gpr64common = COPY $x0
 ; MIR-V83-DAG:        %[[ZERO:[0-9]+]]:gpr64 = COPY $xzr
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}%{{[0-9]+}}:gpr64 = PAUTH_AUTH %[[SIGNED]], %[[ZERO]], 42, 1, 1{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %disc = call i64 @llvm.ptrauth.blend(i64 0, i64 42)
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 %disc)
@@ -477,8 +477,8 @@ define i64 @test_custom_discriminator(i64 %signed, i64 %n) {
 ; MIR-HINT-DAG:        %[[N:[0-9]+]]:gpr64{{.*}} = COPY $x1
 ; MIR-HINT-DAG:        %[[DISC:[0-9]+]]:gpr64common = ADDXri %[[N]], 42, 0
 ; MIR-HINT:            $x17, {{(dead )?}}$x16 = PAUTH_AUTH %[[SIGNED]], %[[DISC]], 0, 0, 1{{$}}
-; MIR-HINT-DAG:        %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
-; MIR-HINT-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-HINT:            %[[AUTED:[0-9]+]]:gpr64common = COPY $x17
+; MIR-HINT:            $x0 = COPY %[[AUTED]]
 ; MIR-HINT:            RET_ReallyLR implicit $x0
 
 ; MIR-V83-LABEL:  name: test_custom_discriminator
@@ -489,7 +489,7 @@ define i64 @test_custom_discriminator(i64 %signed, i64 %n) {
 ; MIR-V83-DAG:        %[[N:[0-9]+]]:gpr64{{.*}} = COPY $x1
 ; MIR-V83-DAG:        %[[DISC:[0-9]+]]:gpr64common = ADDXri %[[N]], 42, 0
 ; MIR-V83:            %[[AUTED:[0-9]+]]:gpr64common, {{(dead )?}}%{{[0-9]+}}:gpr64 = PAUTH_AUTH %[[SIGNED]], %[[DISC]], 0, 0, 1{{$}}
-; MIR-V83-DAG:        $x0 = COPY %[[AUTED]]
+; MIR-V83:            $x0 = COPY %[[AUTED]]
 ; MIR-V83:            RET_ReallyLR implicit $x0
   %disc = add i64 %n, 42
   %auted = call i64 @llvm.ptrauth.auth(i64 %signed, i32 1, i64 %disc)
