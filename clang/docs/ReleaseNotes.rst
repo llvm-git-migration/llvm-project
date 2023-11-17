@@ -710,6 +710,8 @@ Target Specific Changes
 AMDGPU Support
 ^^^^^^^^^^^^^^
 
+* Initial support for gfx950
+
 X86 Support
 ^^^^^^^^^^^
 
