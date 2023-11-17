@@ -20,6 +20,15 @@
 using namespace llvm;
 #define DEBUG_TYPE "balanced-partitioning"
 
+namespace llvm {
+template <> struct format_provider<BPFunctionNode::UtilityNodeT> {
+  static void format(const BPFunctionNode::UtilityNodeT &V, raw_ostream &OS,
+                     StringRef Style) {
+    OS << "(" << V.id << "-" << V.weight << ")";
+  }
+};
+} // namespace llvm
+
 void BPFunctionNode::dump(raw_ostream &OS) const {
   OS << formatv("{{ID={0} Utilities={{{1:$[,]}} Bucket={2}}", Id,
                 make_range(UtilityNodes.begin(), UtilityNodes.end()), Bucket);
@@ -167,37 +176,38 @@ void BalancedPartitioning::runIterations(const FunctionNodeRange Nodes,
                                          unsigned RightBucket,
                                          std::mt19937 &RNG) const {
   unsigned NumNodes = std::distance(Nodes.begin(), Nodes.end());
-  DenseMap<BPFunctionNode::UtilityNodeT, unsigned> UtilityNodeDegree;
+  DenseMap<uint32_t, unsigned> UtilityNodeDegree;
   for (auto &N : Nodes)
     for (auto &UN : N.UtilityNodes)
-      ++UtilityNodeDegree[UN];
+      ++UtilityNodeDegree[UN.id];
   // Remove utility nodes if they have just one edge or are connected to all
   // functions
   for (auto &N : Nodes)
     llvm::erase_if(N.UtilityNodes, [&](auto &UN) {
-      return UtilityNodeDegree[UN] <= 1 || UtilityNodeDegree[UN] >= NumNodes;
+      return UtilityNodeDegree[UN.id] <= 1 ||
+             UtilityNodeDegree[UN.id] >= NumNodes;
     });
 
   // Renumber utility nodes so they can be used to index into Signatures
-  DenseMap<BPFunctionNode::UtilityNodeT, unsigned> UtilityNodeIndex;
+  DenseMap<uint32_t, unsigned> UtilityNodeIndex;
   for (auto &N : Nodes)
     for (auto &UN : N.UtilityNodes)
-      if (!UtilityNodeIndex.count(UN))
-        UtilityNodeIndex[UN] = UtilityNodeIndex.size();
+      if (!UtilityNodeIndex.count(UN.id))
+        UtilityNodeIndex[UN.id] = UtilityNodeIndex.size();
   for (auto &N : Nodes)
     for (auto &UN : N.UtilityNodes)
-      UN = UtilityNodeIndex[UN];
+      UN.id = UtilityNodeIndex[UN.id];
 
   // Initialize signatures
   SignaturesT Signatures(/*Size=*/UtilityNodeIndex.size());
   for (auto &N : Nodes) {
     for (auto &UN : N.UtilityNodes) {
-      assert(UN < Signatures.size());
-      if (N.Bucket == LeftBucket) {
-        Signatures[UN].LeftCount++;
-      } else {
-        Signatures[UN].RightCount++;
-      }
+      assert(UN.id < Signatures.size());
+      if (N.Bucket == LeftBucket)
+        Signatures[UN.id].LeftCount++;
+      else
+        Signatures[UN.id].RightCount++;
+      Signatures[UN.id].Weight = UN.weight;
     }
   }
 
@@ -225,9 +235,11 @@ unsigned BalancedPartitioning::runIteration(const FunctionNodeRange Nodes,
     Signature.CachedGainLR = 0.f;
     Signature.CachedGainRL = 0.f;
     if (L > 0)
-      Signature.CachedGainLR = Cost - logCost(L - 1, R + 1);
+      Signature.CachedGainLR =
+          (Cost - logCost(L - 1, R + 1)) * Signature.Weight;
     if (R > 0)
-      Signature.CachedGainRL = Cost - logCost(L + 1, R - 1);
+      Signature.CachedGainRL =
+          (Cost - logCost(L + 1, R - 1)) * Signature.Weight;
     Signature.CachedGainIsValid = true;
   }
 
@@ -286,14 +298,14 @@ bool BalancedPartitioning::moveFunctionNode(BPFunctionNode &N,
   // Update signatures and invalidate gain cache
   if (FromLeftToRight) {
     for (auto &UN : N.UtilityNodes) {
-      auto &Signature = Signatures[UN];
+      auto &Signature = Signatures[UN.id];
       Signature.LeftCount--;
       Signature.RightCount++;
       Signature.CachedGainIsValid = false;
     }
   } else {
     for (auto &UN : N.UtilityNodes) {
-      auto &Signature = Signatures[UN];
+      auto &Signature = Signatures[UN.id];
       Signature.LeftCount++;
       Signature.RightCount--;
       Signature.CachedGainIsValid = false;
@@ -322,8 +334,8 @@ float BalancedPartitioning::moveGain(const BPFunctionNode &N,
                                      const SignaturesT &Signatures) {
   float Gain = 0.f;
   for (auto &UN : N.UtilityNodes)
-    Gain += (FromLeftToRight ? Signatures[UN].CachedGainLR
-                             : Signatures[UN].CachedGainRL);
+    Gain += (FromLeftToRight ? Signatures[UN.id].CachedGainLR
+                             : Signatures[UN.id].CachedGainRL);
   return Gain;
 }
 
