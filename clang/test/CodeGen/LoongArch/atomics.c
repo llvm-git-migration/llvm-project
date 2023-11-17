@@ -33,9 +33,9 @@ void test_i32_atomics(_Atomic(int32_t) * a, int32_t b) {
 }
 
 void test_i64_atomics(_Atomic(int64_t) * a, int64_t b) {
-  // LA32: call i64 @__atomic_load_8
-  // LA32: call void @__atomic_store_8
-  // LA32: call i64 @__atomic_fetch_add_8
+  // LA32: load atomic i64, ptr %a seq_cst, align 8
+  // LA32: store atomic i64 %b, ptr %a seq_cst, align 8
+  // LA32: atomicrmw add ptr %a, i64 %b seq_cst
   // LA64: load atomic i64, ptr %a seq_cst, align 8
   // LA64: store atomic i64 %b, ptr %a seq_cst, align 8
   // LA64: atomicrmw add ptr %a, i64 %b seq_cst
