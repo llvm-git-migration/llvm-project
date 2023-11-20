@@ -924,7 +924,7 @@ std::vector<BPFunctionNode> TemporalProfTraceTy::createBPFunctionNodes(
     for (size_t Timestamp = 0; Timestamp < Trace.size(); Timestamp++) {
       for (int I = std::floor(std::log2(Timestamp + 1)); I < N; I++) {
         auto &FunctionId = Trace[Timestamp];
-        UtilityNodeT GroupId = {TraceIdx * N + I};
+        UtilityNodeT GroupId(TraceIdx * N + I);
         FuncGroups[FunctionId].push_back(GroupId);
       }
     }
@@ -933,10 +933,9 @@ std::vector<BPFunctionNode> TemporalProfTraceTy::createBPFunctionNodes(
   std::vector<BPFunctionNode> Nodes;
   for (auto &Id : FunctionIds) {
     auto &UNs = FuncGroups[Id];
-    llvm::sort(UNs.begin(), UNs.end(),
-               [](const UtilityNodeT &L, const UtilityNodeT &R) {
-                 return L.id < R.id;
-               });
+    llvm::sort(UNs, [](const UtilityNodeT &L, const UtilityNodeT &R) {
+      return L.id < R.id;
+    });
     UNs.erase(std::unique(UNs.begin(), UNs.end(),
                           [](const UtilityNodeT &L, const UtilityNodeT &R) {
                             return L.id == R.id;
