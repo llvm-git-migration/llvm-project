@@ -85,6 +85,8 @@ bool CheckLoad(InterpState &S, CodePtr OpPC, const Pointer &Ptr);
 
 bool CheckInitialized(InterpState &S, CodePtr OpPC, const Pointer &Ptr,
                       AccessKinds AK);
+/// Check if a global variable is initialized.
+bool CheckGlobalInitialized(InterpState &S, CodePtr OpPC, const Pointer &Ptr);
 
 /// Checks if a value can be stored in a block.
 bool CheckStore(InterpState &S, CodePtr OpPC, const Pointer &Ptr);
@@ -1003,10 +1005,16 @@ bool SetThisField(InterpState &S, CodePtr OpPC, uint32_t I) {
 
 template <PrimType Name, class T = typename PrimConv<Name>::T>
 bool GetGlobal(InterpState &S, CodePtr OpPC, uint32_t I) {
-  const Block *B = S.P.getGlobal(I);
-  if (B->isExtern())
+  const Pointer &Ptr = S.P.getPtrGlobal(I);
+  if (Ptr.isExtern())
     return false;
-  S.Stk.push<T>(B->deref<T>());
+
+  // If a global variable is uninitialized, that means the initialize we've
+  // compiled for it wasn't a constant expression. Diagnose that.
+  if (!CheckGlobalInitialized(S, OpPC, Ptr))
+    return false;
+
+  S.Stk.push<T>(Ptr.deref<T>());
   return true;
 }
 
@@ -1018,7 +1026,9 @@ bool SetGlobal(InterpState &S, CodePtr OpPC, uint32_t I) {
 
 template <PrimType Name, class T = typename PrimConv<Name>::T>
 bool InitGlobal(InterpState &S, CodePtr OpPC, uint32_t I) {
-  S.P.getGlobal(I)->deref<T>() = S.Stk.pop<T>();
+  const Pointer &P = S.P.getGlobal(I);
+  P.deref<T>() = S.Stk.pop<T>();
+  P.initialize();
   return true;
 }
 
@@ -1034,7 +1044,10 @@ bool InitGlobalTemp(InterpState &S, CodePtr OpPC, uint32_t I,
   APValue *Cached = Temp->getOrCreateValue(true);
   *Cached = APV;
 
-  S.P.getGlobal(I)->deref<T>() = S.Stk.pop<T>();
+  const Pointer &P = S.P.getGlobal(I);
+  P.deref<T>() = S.Stk.pop<T>();
+  P.initialize();
+
   return true;
 }
 
