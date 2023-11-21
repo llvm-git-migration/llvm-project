@@ -944,7 +944,8 @@ define void @load_i8_stride4_vf32(ptr %in.vec, ptr %out.vec0, ptr %out.vec1, ptr
 ; AVX512F-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
 ; AVX512F-NEXT:    vmovdqa 64(%rdi), %ymm3
 ; AVX512F-NEXT:    vpshufb %ymm0, %ymm3, %ymm0
-; AVX512F-NEXT:    vmovdqa {{.*#+}} ymm4 = [0,4,0,4,0,4,8,12]
+; AVX512F-NEXT:    vbroadcasti128 {{.*#+}} ymm4 = [0,4,8,12,0,4,8,12]
+; AVX512F-NEXT:    # ymm4 = mem[0,1,0,1]
 ; AVX512F-NEXT:    vpermt2d %ymm2, %ymm4, %ymm0
 ; AVX512F-NEXT:    vmovdqa64 (%rdi), %zmm2
 ; AVX512F-NEXT:    vpmovdb %zmm2, %xmm5
@@ -1940,7 +1941,8 @@ define void @load_i8_stride4_vf64(ptr %in.vec, ptr %out.vec0, ptr %out.vec1, ptr
 ; AVX512F-NEXT:    vpshufb %ymm7, %ymm3, %ymm5
 ; AVX512F-NEXT:    vmovdqa 192(%rdi), %ymm4
 ; AVX512F-NEXT:    vpshufb %ymm7, %ymm4, %ymm6
-; AVX512F-NEXT:    vmovdqa {{.*#+}} ymm1 = [0,4,0,4,0,4,8,12]
+; AVX512F-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [0,4,8,12,0,4,8,12]
+; AVX512F-NEXT:    # ymm1 = mem[0,1,0,1]
 ; AVX512F-NEXT:    vpermt2d %ymm5, %ymm1, %ymm6
 ; AVX512F-NEXT:    vpmovdb %zmm2, %xmm5
 ; AVX512F-NEXT:    vpblendd {{.*#+}} ymm8 = ymm5[0,1,2,3],ymm6[4,5,6,7]

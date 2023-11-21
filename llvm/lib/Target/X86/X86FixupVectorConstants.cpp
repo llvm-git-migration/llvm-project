@@ -294,6 +294,18 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
   case X86::VMOVUPSZ128rm:
     return ConvertToBroadcast(0, 0, X86::VMOVDDUPZ128rm,
                               X86::VBROADCASTSSZ128rm, 0, 0, 1);
+  case X86::VMOVAPDZ128rmk:
+  case X86::VMOVUPDZ128rmk:
+    return ConvertToBroadcast(0, 0, X86::VMOVDDUPZ128rmk, 0, 0, 0, 3);
+  case X86::VMOVAPSZ128rmk:
+  case X86::VMOVUPSZ128rmk:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZ128rmk, 0, 0, 3);
+  case X86::VMOVAPDZ128rmkz:
+  case X86::VMOVUPDZ128rmkz:
+    return ConvertToBroadcast(0, 0, X86::VMOVDDUPZ128rmkz, 0, 0, 0, 2);
+  case X86::VMOVAPSZ128rmkz:
+  case X86::VMOVUPSZ128rmkz:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZ128rmkz, 0, 0, 2);
   case X86::VMOVAPDZ256rm:
   case X86::VMOVAPSZ256rm:
   case X86::VMOVUPDZ256rm:
@@ -301,6 +313,18 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
     return ConvertToBroadcast(0, X86::VBROADCASTF32X4Z256rm,
                               X86::VBROADCASTSDZ256rm, X86::VBROADCASTSSZ256rm,
                               0, 0, 1);
+  case X86::VMOVAPDZ256rmk:
+  case X86::VMOVUPDZ256rmk:
+    return ConvertToBroadcast(0, 0, X86::VBROADCASTSDZ256rmk, 0, 0, 0, 3);
+  case X86::VMOVAPSZ256rmk:
+  case X86::VMOVUPSZ256rmk:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZ256rmk, 0, 0, 3);
+  case X86::VMOVAPDZ256rmkz:
+  case X86::VMOVUPDZ256rmkz:
+    return ConvertToBroadcast(0, 0, X86::VBROADCASTSDZ256rmkz, 0, 0, 0, 2);
+  case X86::VMOVAPSZ256rmkz:
+  case X86::VMOVUPSZ256rmkz:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZ256rmkz, 0, 0, 2);
   case X86::VMOVAPDZrm:
   case X86::VMOVAPSZrm:
   case X86::VMOVUPDZrm:
@@ -308,6 +332,18 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
     return ConvertToBroadcast(X86::VBROADCASTF64X4rm, X86::VBROADCASTF32X4rm,
                               X86::VBROADCASTSDZrm, X86::VBROADCASTSSZrm, 0, 0,
                               1);
+  case X86::VMOVAPDZrmk:
+  case X86::VMOVUPDZrmk:
+    return ConvertToBroadcast(0, 0, X86::VBROADCASTSDZrmk, 0, 0, 0, 3);
+  case X86::VMOVAPSZrmk:
+  case X86::VMOVUPSZrmk:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZrmk, 0, 0, 3);
+  case X86::VMOVAPDZrmkz:
+  case X86::VMOVUPDZrmkz:
+    return ConvertToBroadcast(0, 0, X86::VBROADCASTSDZrmkz, 0, 0, 0, 2);
+  case X86::VMOVAPSZrmkz:
+  case X86::VMOVUPSZrmkz:
+    return ConvertToBroadcast(0, 0, 0, X86::VBROADCASTSSZrmkz, 0, 0, 2);
     /* Integer Loads */
   case X86::VMOVDQArm:
   case X86::VMOVDQUrm:
@@ -332,6 +368,18 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
                               X86::VPBROADCASTDZ128rm,
                               HasBWI ? X86::VPBROADCASTWZ128rm : 0,
                               HasBWI ? X86::VPBROADCASTBZ128rm : 0, 1);
+  case X86::VMOVDQA32Z128rmk:
+  case X86::VMOVDQU32Z128rmk:
+    return ConvertToBroadcast(0, 0, 0, X86::VPBROADCASTDZ128rmk, 0, 0, 3);
+  case X86::VMOVDQA32Z128rmkz:
+  case X86::VMOVDQU32Z128rmkz:
+    return ConvertToBroadcast(0, 0, 0, X86::VPBROADCASTDZ128rmkz, 0, 0, 2);
+  case X86::VMOVDQA64Z128rmk:
+  case X86::VMOVDQU64Z128rmk:
+    return ConvertToBroadcast(0, 0, X86::VPBROADCASTQZ128rmk, 0, 0, 0, 3);
+  case X86::VMOVDQA64Z128rmkz:
+  case X86::VMOVDQU64Z128rmkz:
+    return ConvertToBroadcast(0, 0, X86::VPBROADCASTQZ128rmkz, 0, 0, 0, 2);
   case X86::VMOVDQA32Z256rm:
   case X86::VMOVDQA64Z256rm:
   case X86::VMOVDQU32Z256rm:
@@ -340,6 +388,24 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
                               X86::VPBROADCASTQZ256rm, X86::VPBROADCASTDZ256rm,
                               HasBWI ? X86::VPBROADCASTWZ256rm : 0,
                               HasBWI ? X86::VPBROADCASTBZ256rm : 0, 1);
+  case X86::VMOVDQA32Z256rmk:
+  case X86::VMOVDQU32Z256rmk:
+    return ConvertToBroadcast(0, X86::VBROADCASTI32X4Z256rmk,
+                              HasDQI ? X86::VBROADCASTI32X2Z256rmk : 0,
+                              X86::VPBROADCASTDZ256rmk, 0, 0, 3);
+  case X86::VMOVDQA32Z256rmkz:
+  case X86::VMOVDQU32Z256rmkz:
+    return ConvertToBroadcast(0, X86::VBROADCASTI32X4Z256rmkz,
+                              HasDQI ? X86::VBROADCASTI32X2Z256rmkz : 0,
+                              X86::VPBROADCASTDZ256rmkz, 0, 0, 2);
+  case X86::VMOVDQA64Z256rmk:
+  case X86::VMOVDQU64Z256rmk:
+    return ConvertToBroadcast(0, HasDQI ? X86::VBROADCASTI64X2Z128rmk : 0,
+                              X86::VPBROADCASTQZ256rmk, 0, 0, 0, 3);
+  case X86::VMOVDQA64Z256rmkz:
+  case X86::VMOVDQU64Z256rmkz:
+    return ConvertToBroadcast(0, HasDQI ? X86::VBROADCASTI64X2Z128rmkz : 0,
+                              X86::VPBROADCASTQZ256rmkz, 0, 0, 0, 2);
   case X86::VMOVDQA32Zrm:
   case X86::VMOVDQA64Zrm:
   case X86::VMOVDQU32Zrm:
@@ -348,31 +414,54 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
                               X86::VPBROADCASTQZrm, X86::VPBROADCASTDZrm,
                               HasBWI ? X86::VPBROADCASTWZrm : 0,
                               HasBWI ? X86::VPBROADCASTBZrm : 0, 1);
+  case X86::VMOVDQA32Zrmk:
+  case X86::VMOVDQU32Zrmk:
+    return ConvertToBroadcast(
+        HasDQI ? X86::VBROADCASTI32X8rmk : 0, X86::VBROADCASTI32X4rmk,
+        HasDQI ? X86::VBROADCASTI32X2Zrmk : 0, X86::VPBROADCASTDZrmk, 0, 0, 3);
+  case X86::VMOVDQA32Zrmkz:
+  case X86::VMOVDQU32Zrmkz:
+    return ConvertToBroadcast(HasDQI ? X86::VBROADCASTI32X8rmkz : 0,
+                              X86::VBROADCASTI32X4rmkz,
+                              HasDQI ? X86::VBROADCASTI32X2Zrmkz : 0,
+                              X86::VPBROADCASTDZrmkz, 0, 0, 2);
+  case X86::VMOVDQA64Zrmk:
+  case X86::VMOVDQU64Zrmk:
+    return ConvertToBroadcast(X86::VBROADCASTI64X4rmk,
+                              HasDQI ? X86::VBROADCASTI64X2rmk : 0,
+                              X86::VPBROADCASTQZrmk, 0, 0, 0, 3);
+  case X86::VMOVDQA64Zrmkz:
+  case X86::VMOVDQU64Zrmkz:
+    return ConvertToBroadcast(X86::VBROADCASTI64X4rmkz,
+                              HasDQI ? X86::VBROADCASTI64X2rmkz : 0,
+                              X86::VPBROADCASTQZrmkz, 0, 0, 0, 2);
   }
 
-  auto ConvertToBroadcastAVX512 = [&](unsigned OpSrc32, unsigned OpSrc64) {
-    unsigned OpBcst32 = 0, OpBcst64 = 0;
-    unsigned OpNoBcst32 = 0, OpNoBcst64 = 0;
+  auto ConvertToBroadcastAVX512 = [&](unsigned OpSrc16, unsigned OpSrc32,
+                                      unsigned OpSrc64) {
+    if (OpSrc16) {
+      if (const X86FoldTableEntry *Mem2Bcst =
+              llvm::lookupBroadcastFoldTable(OpSrc16, 16)) {
+        if (ConvertToBroadcast(0, 0, 0, 0, Mem2Bcst->DstOp, 0,
+                               Mem2Bcst->Flags & TB_INDEX_MASK))
+          return true;
+      }
+    }
     if (OpSrc32) {
       if (const X86FoldTableEntry *Mem2Bcst =
               llvm::lookupBroadcastFoldTable(OpSrc32, 32)) {
-        OpBcst32 = Mem2Bcst->DstOp;
-        OpNoBcst32 = Mem2Bcst->Flags & TB_INDEX_MASK;
+        if (ConvertToBroadcast(0, 0, 0, Mem2Bcst->DstOp, 0, 0,
+                               Mem2Bcst->Flags & TB_INDEX_MASK))
+          return true;
       }
     }
     if (OpSrc64) {
       if (const X86FoldTableEntry *Mem2Bcst =
               llvm::lookupBroadcastFoldTable(OpSrc64, 64)) {
-        OpBcst64 = Mem2Bcst->DstOp;
-        OpNoBcst64 = Mem2Bcst->Flags & TB_INDEX_MASK;
+        if (ConvertToBroadcast(0, 0, Mem2Bcst->DstOp, 0, 0, 0,
+                               Mem2Bcst->Flags & TB_INDEX_MASK))
+          return true;
       }
-    }
-    assert(((OpBcst32 == 0) || (OpBcst64 == 0) || (OpNoBcst32 == OpNoBcst64)) &&
-           "OperandNo mismatch");
-
-    if (OpBcst32 || OpBcst64) {
-      unsigned OpNo = OpBcst32 == 0 ? OpNoBcst64 : OpNoBcst32;
-      return ConvertToBroadcast(0, 0, OpBcst64, OpBcst32, 0, 0, OpNo);
     }
     return false;
   };
@@ -380,7 +469,7 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
   // Attempt to find a AVX512 mapping from a full width memory-fold instruction
   // to a broadcast-fold instruction variant.
   if ((MI.getDesc().TSFlags & X86II::EncodingMask) == X86II::EVEX)
-    return ConvertToBroadcastAVX512(Opc, Opc);
+    return ConvertToBroadcastAVX512(Opc, Opc, Opc);
 
   // Reverse the X86InstrInfo::setExecutionDomainCustom EVEX->VEX logic
   // conversion to see if we can convert to a broadcasted (integer) logic op.
@@ -437,7 +526,7 @@ bool X86FixupVectorConstantsPass::processInstruction(MachineFunction &MF,
       break;
     }
     if (OpSrc32 || OpSrc64)
-      return ConvertToBroadcastAVX512(OpSrc32, OpSrc64);
+      return ConvertToBroadcastAVX512(0, OpSrc32, OpSrc64);
   }
 
   return false;

@@ -297,6 +297,8 @@ static bool matchBroadcastSize(const X86FoldTableEntry &Entry,
   case TB_BCAST_SS:
   case TB_BCAST_D:
     return BroadcastBits == 32;
+  case TB_BCAST_SH:
+    return BroadcastBits == 16;
   }
   return false;
 }

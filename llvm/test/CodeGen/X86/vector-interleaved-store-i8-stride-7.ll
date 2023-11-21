@@ -684,7 +684,7 @@ define void @store_i8_stride7_vf8(ptr %in.vecptr0, ptr %in.vecptr1, ptr %in.vecp
 ; AVX512F-FAST-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
 ; AVX512F-FAST-NEXT:    vmovdqa {{.*#+}} ymm1 = <0,2,4,u>
 ; AVX512F-FAST-NEXT:    vpermi2q %ymm3, %ymm0, %ymm1
-; AVX512F-FAST-NEXT:    vbroadcasti128 {{.*#+}} ymm0 = [0,2,4,6,0,2,4,6]
+; AVX512F-FAST-NEXT:    vbroadcasti128 {{.*#+}} ymm0 = [0,2,4,0,0,2,4,0]
 ; AVX512F-FAST-NEXT:    # ymm0 = mem[0,1,0,1]
 ; AVX512F-FAST-NEXT:    vpermd %ymm1, %ymm0, %ymm0
 ; AVX512F-FAST-NEXT:    vpshufb {{.*#+}} ymm0 = zero,zero,zero,zero,ymm0[0,4,8],zero,zero,zero,zero,ymm0[1,5,9],zero,zero,zero,zero,ymm0[18,22,26],zero,zero,zero,zero,ymm0[19,23,27],zero,zero,zero,zero
@@ -775,7 +775,7 @@ define void @store_i8_stride7_vf8(ptr %in.vecptr0, ptr %in.vecptr1, ptr %in.vecp
 ; AVX512BW-FAST-NEXT:    vpermq {{.*#+}} ymm2 = ymm2[2,3,0,1]
 ; AVX512BW-FAST-NEXT:    vpshufb {{.*#+}} ymm2 = zero,zero,ymm2[0,8],zero,zero,zero,zero,zero,ymm2[1,9],zero,zero,zero,zero,zero,zero,zero,zero,zero,zero,ymm2[19,27],zero,zero,zero,zero,zero,ymm2[20,28],zero,zero
 ; AVX512BW-FAST-NEXT:    vpor %ymm3, %ymm2, %ymm2
-; AVX512BW-FAST-NEXT:    vbroadcasti128 {{.*#+}} ymm3 = [0,2,4,6,0,2,4,6]
+; AVX512BW-FAST-NEXT:    vbroadcasti128 {{.*#+}} ymm3 = [0,2,4,0,0,2,4,0]
 ; AVX512BW-FAST-NEXT:    # ymm3 = mem[0,1,0,1]
 ; AVX512BW-FAST-NEXT:    vpermd %ymm1, %ymm3, %ymm1
 ; AVX512BW-FAST-NEXT:    movl $236730480, %ecx # imm = 0xE1C3870
