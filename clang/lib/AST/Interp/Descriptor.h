@@ -73,6 +73,10 @@ struct InlineDescriptor {
   unsigned IsFieldMutable : 1;
 
   const Descriptor *Desc;
+
+  InlineDescriptor(const Descriptor *D)
+      : Offset(sizeof(InlineDescriptor)), IsConst(false), IsInitialized(false),
+        IsBase(false), IsActive(false), IsFieldMutable(false), Desc(D) {}
 };
 
 /// Describes a memory block created by an allocation site.
