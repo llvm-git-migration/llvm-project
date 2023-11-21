@@ -68,15 +68,7 @@ unsigned Program::createGlobalString(const StringLiteral *S) {
                                        /*isExtern=*/false);
   G->block()->invokeCtor();
 
-  InlineDescriptor *ID =
-      reinterpret_cast<InlineDescriptor *>(G->block()->rawData());
-  ID->Offset = sizeof(InlineDescriptor);
-  ID->Desc = Desc;
-  ID->IsConst = true;
-  ID->IsInitialized = true;
-  ID->IsBase = false;
-  ID->IsActive = true;
-  ID->IsFieldMutable = false;
+  new (G->block()->rawData()) InlineDescriptor(Desc);
   Globals.push_back(G);
 
   // Construct the string in storage.
@@ -221,17 +213,7 @@ std::optional<unsigned> Program::createGlobal(const DeclTy &D, QualType Ty,
   G->block()->invokeCtor();
 
   // Initialize InlineDescriptor fields.
-  InlineDescriptor *ID =
-      reinterpret_cast<InlineDescriptor *>(G->block()->rawData());
-  ID->Offset = sizeof(InlineDescriptor);
-  ID->Desc = Desc;
-  ID->IsConst = true;
-  ID->IsInitialized = true;
-  ID->IsInitialized = false;
-  ID->IsBase = false;
-  ID->IsActive = true;
-  ID->IsFieldMutable = false;
-
+  new (G->block()->rawData()) InlineDescriptor(Desc);
   Globals.push_back(G);
 
   return I;
