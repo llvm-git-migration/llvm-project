@@ -252,7 +252,7 @@ bool GISelAddressing::instMayAlias(const MachineInstr &MI,
       return false;
   }
 
-  // if NumBytes is scalable and offset is not 0, conservatively return may
+  // If NumBytes is scalable and offset is not 0, conservatively return may
   // alias
   if ((MUC0.NumBytes.isScalable() && (MUC0.Offset != 0)) ||
       (MUC1.NumBytes.isScalable() && (MUC1.Offset != 0)))

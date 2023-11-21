@@ -27916,20 +27916,17 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
       return false;
   }
 
-  // if NumBytes is scalable and offset is not 0, conservatively return may
+  // If NumBytes is scalable and offset is not 0, conservatively return may
   // alias
   if ((MUC0.NumBytes.hasValue() && MUC0.NumBytes.isScalable() &&
-       (MUC0.Offset != 0)) ||
+       MUC0.Offset != 0) ||
       (MUC1.NumBytes.hasValue() && MUC1.NumBytes.isScalable() &&
-       (MUC1.Offset != 0)))
+       MUC1.Offset != 0))
     return true;
   // Try to prove that there is aliasing, or that there is no aliasing. Either
   // way, we can return now. If nothing can be proved, proceed with more tests.
-  const bool BothNotScalable = !(MUC0.NumBytes.isScalable() ||
-                                 MUC1.NumBytes.isScalable());
   bool IsAlias;
-  if (BothNotScalable &&
-      BaseIndexOffset::computeAliasing(Op0, MUC0.NumBytes, Op1, MUC1.NumBytes,
+  if (BaseIndexOffset::computeAliasing(Op0, MUC0.NumBytes, Op1, MUC1.NumBytes,
                                        DAG, IsAlias))
     return IsAlias;
 
@@ -27957,22 +27954,18 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
   LocationSize Size0 = MUC0.NumBytes;
   LocationSize Size1 = MUC1.NumBytes;
 
-  if (BothNotScalable) {
-    if (OrigAlignment0 == OrigAlignment1 && SrcValOffset0 != SrcValOffset1 &&
-        Size0.hasValue() && Size1.hasValue() && !Size0.isScalable() &&
-        !Size1.isScalable() && Size0.getValue() == Size1.getValue() &&
-        OrigAlignment0 > Size0.getValue() &&
-        SrcValOffset0 % Size0.getValue() == 0 &&
-        SrcValOffset1 % Size1.getValue() == 0) {
-      int64_t OffAlign0 = SrcValOffset0 % OrigAlignment0.value();
-      int64_t OffAlign1 = SrcValOffset1 % OrigAlignment1.value();
+  if (OrigAlignment0 == OrigAlignment1 && SrcValOffset0 != SrcValOffset1 &&
+      Size0.hasValue() && Size1.hasValue() && !Size0.isScalable() &&
+      !Size1.isScalable() && Size0.getValue() == Size1.getValue() && OrigAlignment0 > Size0.getValue() &&
+      SrcValOffset0 % Size0.getValue() == 0 && SrcValOffset1 % Size1.getValue() == 0) {
+    int64_t OffAlign0 = SrcValOffset0 % OrigAlignment0.value();
+    int64_t OffAlign1 = SrcValOffset1 % OrigAlignment1.value();
 
       // There is no overlap between these relatively aligned accesses of
       // similar size. Return no alias.
       if ((OffAlign0 + Size0.getValue()) <= OffAlign1 ||
           (OffAlign1 + Size1.getValue()) <= OffAlign0)
         return false;
-    }
   }
 
   bool UseAA = CombinerGlobalAA.getNumOccurrences() > 0
@@ -27995,7 +27988,7 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
     LocationSize Loc0 = Size0.getValue().isScalable()
                             ? LocationSize::precise(Size0.getValue())
                             : LocationSize::precise(Overlap0);
-    LocationSize Loc1 = Size1.getValue().isScalable()
+    LocationSize Loc1 = Size1.isScalable()
                             ? LocationSize::precise(Size1.getValue())
                             : LocationSize::precise(Overlap1);
     if (AA->isNoAlias(
