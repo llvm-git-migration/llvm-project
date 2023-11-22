@@ -78,6 +78,10 @@ agents_definitions:
     agents:
       queue: libcxx-builders
       os: android
+  _ohos_agent: &ohos_agent
+    agents:
+      queue: libcxx-builders
+      os: ohos
 
 
 environment_definitions:
@@ -259,6 +263,13 @@ steps:
     <<: *android_agent
     <<: *common
 
+- group: ':ohos: OpenHarmony'
+  steps:
+  - label: OpenHarmony Aarch64
+    command: libcxx/utils/ci/run-buildbot aarch64-linux-ohos
+    soft_fail: true
+    <<: *ohos_agent
+    <<: *common
 
     # TODO: Re-enable this once we've figured out how to run back-deployment testing on arm64 on recent OSes
     # - label: "Apple back-deployment macosx11.0 arm64"
