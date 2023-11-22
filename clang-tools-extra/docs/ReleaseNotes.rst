@@ -193,7 +193,7 @@ New checks
   class based on the range of its enumerators.
 
 - New :doc:`readability-redundant-inline-specifier
-  <clang-tidy/checks/readability/readability-redundant-inline-specifier>` check.
+  <clang-tidy/checks/readability/redundant-inline-specifier>` check.
 
   Detects redundant ``inline`` specifiers on function and variable declarations.
 
