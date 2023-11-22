@@ -263,7 +263,7 @@ steps:
     <<: *android_agent
     <<: *common
 
-- group: ':ohos: OpenHarmony'
+- group: ' OpenHarmony'
   steps:
   - label: OpenHarmony Aarch64
     command: libcxx/utils/ci/run-buildbot aarch64-linux-ohos
