@@ -52,6 +52,9 @@ void RISCVTargetStreamer::setFlagsFromFeatures(const MCSubtargetInfo &STI) {
   HasRVC = STI.hasFeature(RISCV::FeatureStdExtC) ||
            STI.hasFeature(RISCV::FeatureStdExtZca);
   HasTSO = STI.hasFeature(RISCV::FeatureStdExtZtso);
+  HasZicfilp = STI.hasFeature(RISCV::FeatureStdExtZicfilp);
+  HasZicfiss = STI.hasFeature(RISCV::FeatureStdExtZicfiss);
+  IsRV64 = STI.hasFeature(RISCV::Feature64Bit);
 }
 
 void RISCVTargetStreamer::emitTargetAttributes(const MCSubtargetInfo &STI,

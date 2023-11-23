@@ -85,6 +85,37 @@ void RISCVTargetELFStreamer::finishAttributeSection() {
                           ELF::SHT_RISCV_ATTRIBUTES, AttributeSection);
 }
 
+void RISCVTargetELFStreamer::emitGNUProgramProperties(unsigned Flags) {
+  if (Flags == 0)
+    return;
+
+  MCStreamer &OutStreamer = getStreamer();
+  MCContext &Context = OutStreamer.getContext();
+  MCSectionELF *Nt = Context.getELFSection(".note.gnu.property", ELF::SHT_NOTE,
+                                           ELF::SHF_ALLOC);
+  MCSection *Cur = OutStreamer.getCurrentSectionOnly();
+  OutStreamer.switchSection(Nt);
+
+  // Emit the note header.
+  uint64_t DataSize = isRV64() ? 4 : 3;
+  OutStreamer.emitValueToAlignment(isRV64() ? Align(8) : Align(4));
+  OutStreamer.emitIntValue(4, 4);     // data size for note name
+  OutStreamer.emitIntValue(4 * DataSize, 4); // data size
+  OutStreamer.emitIntValue(ELF::NT_GNU_PROPERTY_TYPE_0, 4); // note type
+  OutStreamer.emitBytes(StringRef("GNU", 4));               // note name
+
+  // Emit the CFI(Zicfilp/Zicfiss) properties.
+  OutStreamer.emitIntValue(ELF::GNU_PROPERTY_RISCV_FEATURE_1_AND,
+                           4);        // and property
+  OutStreamer.emitIntValue(4, 4);     // data size
+  OutStreamer.emitIntValue(Flags, 4); // data
+  if (isRV64())
+    OutStreamer.emitIntValue(0, 4);     // Padding
+
+  OutStreamer.endSection(Nt);
+  OutStreamer.switchSection(Cur);
+}
+
 void RISCVTargetELFStreamer::finish() {
   RISCVTargetStreamer::finish();
   MCAssembler &MCA = getStreamer().getAssembler();
@@ -118,6 +149,19 @@ void RISCVTargetELFStreamer::finish() {
   }
 
   MCA.setELFHeaderEFlags(EFlags);
+
+  unsigned FeatureFlags = 0;
+
+  // Check Zicfilp or Zicfiss with features
+  // TODO should we check with codegen enable
+  // ex. -mllvm -riscv-hardware-shadow-stack=true ?
+  if (hasZicfilp())
+    FeatureFlags |= ELF::GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_SIMPLE;
+
+  if (hasZicfiss())
+    FeatureFlags |= ELF::GNU_PROPERTY_RISCV_FEATURE_1_CFI_SS;
+
+  emitGNUProgramProperties(FeatureFlags);
 }
 
 void RISCVTargetELFStreamer::reset() {

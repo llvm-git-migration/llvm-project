@@ -70,6 +70,7 @@ public:
   void emitDirectiveVariantCC(MCSymbol &Symbol) override;
 
   void finish() override;
+  void emitGNUProgramProperties(unsigned Flags);
 };
 
 MCELFStreamer *createRISCVELFStreamer(MCContext &C,
