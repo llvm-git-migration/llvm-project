@@ -704,8 +704,11 @@ public:
   }
 
   /// getMinGlobalAlign - Return the minimum alignment of a global variable,
-  /// unless its alignment is explicitly reduced via attributes.
-  virtual unsigned getMinGlobalAlign (uint64_t) const {
+  /// unless its alignment is explicitly reduced via attributes. It may be
+  /// that an external symbol needs to be considered unaligned (like
+  /// artificial symbols created from a linker script). If \param HasDef is
+  /// false, this symbol does not have a definition and is external.
+  virtual unsigned getMinGlobalAlign(uint64_t Size, bool HasDef) const {
     return MinGlobalAlign;
   }
 
