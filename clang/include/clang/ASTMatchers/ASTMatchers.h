@@ -7889,7 +7889,7 @@ AST_POLYMORPHIC_MATCHER(isInline, AST_POLYMORPHIC_SUPPORTED_TYPES(NamespaceDecl,
   if (const auto *NSD = dyn_cast<NamespaceDecl>(&Node))
     return NSD->isInline();
   if (const auto *VD = dyn_cast<VarDecl>(&Node))
-    return VD->isInlineSpecified();
+    return VD->isInline();
   llvm_unreachable("Not a valid polymorphic type");
 }
 

@@ -1,5 +1,4 @@
-//===--- RedundantInlineSpecifierCheck.cpp -
-// clang-tidy----------------------===//
+//===--- RedundantInlineSpecifierCheck.cpp - clang-tidy--------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -17,6 +16,7 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Lex/Token.h"
 
 #include "../utils/LexerUtils.h"
 
@@ -24,29 +24,39 @@ using namespace clang::ast_matchers;
 
 namespace clang::tidy::readability {
 
+AST_POLYMORPHIC_MATCHER(isInlineSpecified, AST_POLYMORPHIC_SUPPORTED_TYPES(
+                                                      FunctionDecl,
+                                                                  VarDecl)) {
+  if (const auto *FD = dyn_cast<FunctionDecl>(&Node))
+    return FD->isInlineSpecified();
+  if (const auto *VD = dyn_cast<VarDecl>(&Node))
+    return VD->isInlineSpecified();
+  llvm_unreachable("Not a valid polymorphic type");
+}
+
+
 static std::optional<SourceLocation>
 getInlineTokenLocation(SourceRange RangeLocation, const SourceManager &Sources,
                        const LangOptions &LangOpts) {
-  SourceLocation CurrentLocation = RangeLocation.getBegin();
-  Token CurrentToken;
-  while (!Lexer::getRawToken(CurrentLocation, CurrentToken, Sources, LangOpts,
-                             true) &&
-         CurrentLocation < RangeLocation.getEnd() &&
-         CurrentToken.isNot(tok::eof)) {
-    if (CurrentToken.is(tok::raw_identifier)) {
-      if (CurrentToken.getRawIdentifier() == "inline") {
-        return CurrentToken.getLocation();
-      }
-    }
-    CurrentLocation = CurrentToken.getEndLoc();
+  Token FirstToken;
+  Lexer::getRawToken(RangeLocation.getBegin(), FirstToken, Sources, LangOpts,
+                             true);
+  std::optional<Token> CurrentToken = FirstToken;
+  while (CurrentToken && CurrentToken->getLocation() < RangeLocation.getEnd() &&
+         CurrentToken->isNot(tok::eof)) {
+    if (CurrentToken->is(tok::raw_identifier) &&
+        CurrentToken->getRawIdentifier() == "inline")
+      return CurrentToken->getLocation();
+
+    CurrentToken = Lexer::findNextToken(CurrentToken->getLocation(), Sources, LangOpts);
   }
   return std::nullopt;
 }
 
 void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(
-      functionDecl(unless(isExpansionInSystemHeader()), unless(isImplicit()),
-                   unless(hasAncestor(lambdaExpr())), isInline(),
+      functionDecl(unless(isExpansionInSystemHeader()),
+                   unless(hasAncestor(lambdaExpr())), isInlineSpecified(),
                    anyOf(isConstexpr(), isDeleted(),
                          allOf(isDefinition(), hasAncestor(recordDecl()),
                                unless(hasAncestor(cxxConstructorDecl())))))
@@ -54,22 +64,22 @@ void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
       this);
 
   Finder->addMatcher(
-      varDecl(isInline(), unless(isImplicit()),
+      varDecl(isInlineSpecified(),
               anyOf(allOf(isConstexpr(), unless(isStaticStorageClass())),
                     hasAncestor(recordDecl())))
           .bind("var_decl"),
       this);
 
   Finder->addMatcher(
-      functionTemplateDecl(has(functionDecl(isInline()))).bind("templ_decl"),
+      functionTemplateDecl(has(functionDecl(isInlineSpecified()))).bind("templ_decl"),
       this);
 }
 
 template <typename T>
 void RedundantInlineSpecifierCheck::handleMatchedDecl(
     const T *MatchedDecl, const SourceManager &Sources,
-    const MatchFinder::MatchResult &Result, const char *Message) {
-  if (auto Loc = getInlineTokenLocation(MatchedDecl->getSourceRange(), Sources,
+    const MatchFinder::MatchResult &Result, StringRef Message) {
+  if (std::optional<SourceLocation> Loc = getInlineTokenLocation(MatchedDecl->getSourceRange(), Sources,
                                         Result.Context->getLangOpts()))
     diag(*Loc, Message) << MatchedDecl << FixItHint::CreateRemoval(*Loc);
 }
@@ -82,17 +92,17 @@ void RedundantInlineSpecifierCheck::check(
           Result.Nodes.getNodeAs<FunctionDecl>("fun_decl")) {
     handleMatchedDecl(
         MatchedDecl, Sources, Result,
-        "Function %0 has inline specifier but is implicitly inlined");
+        "function %0 has inline specifier but is implicitly inlined");
   } else if (const auto *MatchedDecl =
                  Result.Nodes.getNodeAs<VarDecl>("var_decl")) {
     handleMatchedDecl(
         MatchedDecl, Sources, Result,
-        "Variable %0 has inline specifier but is implicitly inlined");
+        "variable %0 has inline specifier but is implicitly inlined");
   } else if (const auto *MatchedDecl =
                  Result.Nodes.getNodeAs<FunctionTemplateDecl>("templ_decl")) {
     handleMatchedDecl(
         MatchedDecl, Sources, Result,
-        "Function %0 has inline specifier but is implicitly inlined");
+        "function %0 has inline specifier but is implicitly inlined");
   }
 }
 

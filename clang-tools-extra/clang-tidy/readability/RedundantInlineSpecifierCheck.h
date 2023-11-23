@@ -13,7 +13,7 @@
 
 namespace clang::tidy::readability {
 
-/// Finds redundant `inline` specifiers in function and variable declarations.
+/// Detects redundant ``inline`` specifiers on function and variable declarations.
 ///
 /// For the user-facing documentation see:
 /// http://clang.llvm.org/extra/clang-tidy/checks/readability/readability-redundant-inline-specifier.html
@@ -23,12 +23,15 @@ public:
       : ClangTidyCheck(Name, Context) {}
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
+  std::optional<TraversalKind> getCheckTraversalKind() const override {
+    return TK_IgnoreUnlessSpelledInSource;
+  }
 
 private:
   template <typename T>
   void handleMatchedDecl(const T *MatchedDecl, const SourceManager &Sources,
                          const ast_matchers::MatchFinder::MatchResult &Result,
-                         const char *Message);
+                         StringRef Message);
 };
 
 } // namespace clang::tidy::readability
