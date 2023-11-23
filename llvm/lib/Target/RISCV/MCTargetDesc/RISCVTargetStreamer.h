@@ -35,6 +35,8 @@ class RISCVTargetStreamer : public MCTargetStreamer {
   RISCVABI::ABI TargetABI = RISCVABI::ABI_Unknown;
   bool HasRVC = false;
   bool HasTSO = false;
+  bool HasZICFILP = false;
+  bool HasZICFISS = false;
 
 public:
   RISCVTargetStreamer(MCStreamer &S);
@@ -63,6 +65,8 @@ public:
   void setFlagsFromFeatures(const MCSubtargetInfo &STI);
   bool hasRVC() const { return HasRVC; }
   bool hasTSO() const { return HasTSO; }
+  bool hasZICFILP() const { return HasZICFILP; }
+  bool hasZICFISS() const { return HasZICFISS; }
 };
 
 // This part is for ascii assembly output
