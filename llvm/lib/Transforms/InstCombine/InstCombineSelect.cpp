@@ -1672,6 +1672,110 @@ static Value *foldSelectInstWithICmpConst(SelectInst &SI, ICmpInst *ICI,
   return nullptr;
 }
 
+static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
+                                     InstCombinerImpl &IC) {
+  ICmpInst::Predicate Pred = ICI->getPredicate();
+  if (!ICmpInst::isEquality(Pred))
+    return nullptr;
+
+  Value *TrueVal = SI.getTrueValue();
+  Value *FalseVal = SI.getFalseValue();
+  Value *CmpLHS = ICI->getOperand(0);
+  Value *CmpRHS = ICI->getOperand(1);
+
+  if (Pred == ICmpInst::ICMP_NE) {
+    Pred = ICmpInst::ICMP_EQ;
+    std::swap(TrueVal, FalseVal);
+  }
+
+  if (!isa<BinaryOperator>(CmpLHS) || !isa<BinaryOperator>(TrueVal))
+    return nullptr;
+
+  // Transform (X == C) ? X : Y -> (X == C) ? C : Y
+  // specific handling for and/or/xor bit operation.
+  // https://alive2.llvm.org/ce/z/WW8iRR
+  // x&y -> (x|y) ^ (x^y)
+  // x|y -> (x&y) | (x^y)
+  // x^y -> (x|y) ^ (x&y)
+  Value *X, *Y;
+  Value *AllOnes = Constant::getAllOnesValue(TrueVal->getType());
+  Value *Null = Constant::getNullValue(TrueVal->getType());
+  Instruction *ISI = &cast<Instruction>(SI);
+
+  // https://alive2.llvm.org/ce/z/EzU4sx
+  // (X & Y) == C ? X | Y : X ^ Y  ->  (X & Y) == C ?  C | (X^Y) : X ^ Y
+  // (X & Y) == C ? X ^ Y : X | Y  ->  (X & Y) == C ? ~C & (X|Y) : X | Y
+  // if C == 0, X|Y:X^Y -> 0|X^Y -> X^Y, X^Y:X|Y -> -1&X|Y:X|Y -> X|Y
+  // if C == -1, X|Y:X^Y -> -1:X^Y, X^Y:X|Y -> 0:X|Y
+  // otherwise, X|Y:(X^Y)|C -> (X^Y)|C, X^Y:(X&Y)^C -> (X&Y)^C
+  if (match(CmpLHS, m_And(m_Value(X), m_Value(Y)))) {
+    if (match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y)))) {
+      if ((match(FalseVal, m_c_Xor(m_Specific(X), m_Specific(Y))) &&
+           match(CmpRHS, m_Zero())) ||
+          (match(FalseVal, m_c_Or(m_c_Xor(m_Specific(X), m_Specific(Y)),
+                                  m_Specific(CmpRHS)))))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      else if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, AllOnes);
+    } else if (match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) {
+      if ((match(FalseVal, m_c_Or(m_Specific(X), m_Specific(Y))) &&
+           match(CmpRHS, m_Zero())) ||
+          (match(FalseVal, m_c_And(m_c_Or(m_Specific(X), m_Specific(Y)),
+                                   m_Not(m_Specific(CmpRHS))))))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      else if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, Null);
+    }
+  }
+
+  // https://alive2.llvm.org/ce/z/MnTYwj
+  // (X | Y) == C ? X & Y : FV  ->  (X | Y) == C ? C ^ (X^Y) : FV
+  // (X | Y) == C ? X ^ Y : FV  ->  (X | Y) == C ? C ^ (X&Y) : FV
+  // if C == 0, (X op Y) : FalseVal -> 0:FalseVal
+  // if C == 0, X&Y -> 0^(X^Y) -> X^Y, X^Y -> 0^(X&Y) -> X&Y
+  // otherwise, X&Y:(X^Y)^C -> (X^Y)^C, X^Y:(X&Y)^C -> (X&Y)^C
+  if (match(CmpLHS, m_Or(m_Value(X), m_Value(Y)))) {
+    if (match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y)))) {
+      if (((match(FalseVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) &&
+           (match(CmpRHS, m_Zero()))) ||
+          (match(FalseVal, m_c_Xor(m_c_Xor(m_Specific(X), m_Specific(Y)),
+                                   m_Specific(CmpRHS)))))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+    } else if (match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) {
+      if (((match(FalseVal, m_c_And(m_Specific(X), m_Specific(Y)))) &&
+           match(CmpRHS, m_Zero())) ||
+          (match(FalseVal, m_c_Xor(m_c_And(m_Specific(X), m_Specific(Y)),
+                                   m_Specific(CmpRHS)))))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+    } else if (match(TrueVal,
+                     m_CombineOr(m_c_And(m_Specific(X), m_Specific(Y)),
+                                 m_c_Or(m_Specific(X), m_Specific(Y)))) &&
+               match(CmpRHS, m_Zero()))
+      return IC.replaceOperand(SI, 1, Null);
+  }
+
+  // https://alive2.llvm.org/ce/z/gSs5as
+  // X^Y==-1 ? X&Y:~(X|Y) -> (X|Y)^-1:~(X|Y)-> ~(X|Y)
+  // X^Y==-1 ? X|Y:FV -> (X&Y)|-1:FV-> -1:FV
+  // otherwise, X&Y:(X|Y)^C -> (X|Y)^C, X|Y:(X&Y)^C -> (X&Y)^C
+  if (match(CmpLHS, m_Xor(m_Value(X), m_Value(Y)))) {
+    if ((match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y)))) &&
+        (match(FalseVal, m_Xor(m_c_Or(m_Specific(X), m_Specific(Y)),
+                               m_Specific(CmpRHS)))))
+      return IC.replaceInstUsesWith(*ISI, FalseVal);
+
+    else if (match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y)))) {
+      if (match(FalseVal, m_c_Xor(m_c_And(m_Specific(X), m_Specific(Y)),
+                                  m_Specific(CmpRHS))))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, Null);
+    }
+  }
+
+  return nullptr;
+}
+
 /// Visit a SelectInst that has an ICmpInst as its first operand.
 Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
                                                       ICmpInst *ICI) {
@@ -1713,6 +1817,9 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
       Changed = true;
     }
   }
+
+  if (Instruction *NewSel = foldSelectICmpEq(SI, ICI, *this))
+    return NewSel;
 
   // Canonicalize a signbit condition to use zero constant by swapping:
   // (CmpLHS > -1) ? TV : FV --> (CmpLHS < 0) ? FV : TV
