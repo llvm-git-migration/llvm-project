@@ -114,7 +114,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, sameFrameObject) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store.getNode(), NumBytes, Store.getNode(), NumBytes, *DAG, IsAlias);
+      Store.getNode(), LocationSize::precise(NumBytes), Store.getNode(),
+      LocationSize::precise(NumBytes), *DAG, IsAlias);
 
   EXPECT_TRUE(IsValid);
   EXPECT_TRUE(IsAlias);
@@ -133,14 +134,10 @@ TEST_F(SelectionDAGAddressAnalysisTest, sameFrameObjectUnknownSize) {
   SDValue Store = DAG->getStore(DAG->getEntryNode(), Loc, Value, Index,
                                 PtrInfo.getWithOffset(Offset));
 
-  // Maybe unlikely that BaseIndexOffset::computeAliasing is used with the
-  // optional NumBytes being unset like in this test, but it would be confusing
-  // if that function determined IsAlias=false here.
-  std::optional<TypeSize> NumBytes;
-
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store.getNode(), NumBytes, Store.getNode(), NumBytes, *DAG, IsAlias);
+      Store.getNode(), LocationSize::beforeOrAfterPointer(), Store.getNode(),
+      LocationSize::beforeOrAfterPointer(), *DAG, IsAlias);
 
   EXPECT_FALSE(IsValid);
 }
@@ -169,7 +166,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, noAliasingFrameObjects) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store0.getNode(), NumBytes0, Store1.getNode(), NumBytes1, *DAG, IsAlias);
+      Store0.getNode(), LocationSize::precise(NumBytes0), Store1.getNode(),
+      LocationSize::precise(NumBytes1), *DAG, IsAlias);
 
   EXPECT_TRUE(IsValid);
   EXPECT_FALSE(IsAlias);
@@ -197,7 +195,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, unknownSizeFrameObjects) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store0.getNode(), NumBytes0, Store1.getNode(), NumBytes1, *DAG, IsAlias);
+      Store0.getNode(), LocationSize::precise(NumBytes0), Store1.getNode(),
+      LocationSize::precise(NumBytes1), *DAG, IsAlias);
 
   EXPECT_FALSE(IsValid);
 }
@@ -226,7 +225,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, globalWithFrameObject) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store.getNode(), NumBytes, GStore.getNode(), GNumBytes, *DAG, IsAlias);
+      Store.getNode(), LocationSize::precise(NumBytes), GStore.getNode(),
+      LocationSize::precise(GNumBytes), *DAG, IsAlias);
 
   EXPECT_TRUE(IsValid);
   EXPECT_FALSE(IsAlias);
@@ -250,9 +250,9 @@ TEST_F(SelectionDAGAddressAnalysisTest, globalWithAliasedGlobal) {
                     MachinePointerInfo(AliasedG, 0));
 
   bool IsAlias;
-  bool IsValid = BaseIndexOffset::computeAliasing(GStore.getNode(), GNumBytes,
-                                                  AliasedGStore.getNode(),
-                                                  GNumBytes, *DAG, IsAlias);
+  bool IsValid = BaseIndexOffset::computeAliasing(
+      GStore.getNode(), LocationSize::precise(GNumBytes),
+      AliasedGStore.getNode(), LocationSize::precise(GNumBytes), *DAG, IsAlias);
 
   // With some deeper analysis we could detect if G and AliasedG is aliasing or
   // not. But computeAliasing is currently defensive and assumes that a
@@ -287,12 +287,14 @@ TEST_F(SelectionDAGAddressAnalysisTest, fixedSizeFrameObjectsWithinDiff) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store0.getNode(), NumBytes0, Store1.getNode(), NumBytes1, *DAG, IsAlias);
+      Store0.getNode(), LocationSize::precise(NumBytes0), Store1.getNode(),
+      LocationSize::precise(NumBytes1), *DAG, IsAlias);
   EXPECT_TRUE(IsValid);
   EXPECT_FALSE(IsAlias);
 
   IsValid = BaseIndexOffset::computeAliasing(
-      Store1.getNode(), NumBytes1, Store0.getNode(), NumBytes0, *DAG, IsAlias);
+      Store1.getNode(), LocationSize::precise(NumBytes1), Store0.getNode(),
+      LocationSize::precise(NumBytes0), *DAG, IsAlias);
   EXPECT_TRUE(IsValid);
   EXPECT_FALSE(IsAlias);
 }
@@ -326,7 +328,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, fixedSizeFrameObjectsOutOfDiff) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store0.getNode(), NumBytes0, Store1.getNode(), NumBytes1, *DAG, IsAlias);
+      Store0.getNode(), LocationSize::precise(NumBytes0), Store1.getNode(),
+      LocationSize::precise(NumBytes1), *DAG, IsAlias);
   EXPECT_TRUE(IsValid);
   EXPECT_TRUE(IsAlias);
 }
@@ -358,7 +361,8 @@ TEST_F(SelectionDAGAddressAnalysisTest, twoFixedStackObjects) {
 
   bool IsAlias;
   bool IsValid = BaseIndexOffset::computeAliasing(
-      Store0.getNode(), NumBytes0, Store1.getNode(), NumBytes1, *DAG, IsAlias);
+      Store0.getNode(), LocationSize::precise(NumBytes0), Store1.getNode(),
+      LocationSize::precise(NumBytes1), *DAG, IsAlias);
   EXPECT_TRUE(IsValid);
   EXPECT_FALSE(IsAlias);
 }

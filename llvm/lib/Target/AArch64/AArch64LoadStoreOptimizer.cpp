@@ -2322,7 +2322,9 @@ bool AArch64LoadStoreOpt::tryToPairLdStInst(MachineBasicBlock::iterator &MBBI) {
     // Get the needed alignments to check them if
     // ldp-aligned-only/stp-aligned-only features are opted.
     uint64_t MemAlignment = MemOp ? MemOp->getAlign().value() : -1;
-    uint64_t TypeAlignment = MemOp ? Align(MemOp->getSize()).value() : -1;
+    uint64_t TypeAlignment = MemOp && MemOp->getSize().hasValue()
+                                 ? Align(MemOp->getSize().getValue()).value()
+                                 : -1;
 
     // If a load arrives and ldp-aligned-only feature is opted, check that the
     // alignment of the source pointer is at least double the alignment of the

@@ -85,9 +85,9 @@ bool BaseIndexOffset::equalBaseIndex(const BaseIndexOffset &Other,
 }
 
 bool BaseIndexOffset::computeAliasing(const SDNode *Op0,
-                                      const std::optional<TypeSize> NumBytes0,
+                                      const LocationSize NumBytes0,
                                       const SDNode *Op1,
-                                      const std::optional<TypeSize> NumBytes1,
+                                      const LocationSize NumBytes1,
                                       const SelectionDAG &DAG, bool &IsAlias) {
   BaseIndexOffset BasePtr0 = match(Op0, DAG);
   BaseIndexOffset BasePtr1 = match(Op1, DAG);
@@ -95,27 +95,23 @@ bool BaseIndexOffset::computeAliasing(const SDNode *Op0,
   if (!(BasePtr0.getBase().getNode() && BasePtr1.getBase().getNode()))
     return false;
   int64_t PtrDiff;
-  if (NumBytes0 && NumBytes1 &&
-      BasePtr0.equalBaseIndex(BasePtr1, DAG, PtrDiff)) {
+  if (BasePtr0.equalBaseIndex(BasePtr1, DAG, PtrDiff)) {
     // If the size of memory access is unknown, do not use it to analysis.
-    // One example of unknown size memory access is to load/store scalable
-    // vector objects on the stack.
     // BasePtr1 is PtrDiff away from BasePtr0. They alias if none of the
     // following situations arise:
-    if (PtrDiff >= 0 && !NumBytes0->isScalable() &&
-        NumBytes0->getFixedValue() != MemoryLocation::UnknownSize) {
+    if (PtrDiff >= 0 && NumBytes0.hasValue() && !NumBytes0.isScalable()) {
       // [----BasePtr0----]
       //                         [---BasePtr1--]
       // ========PtrDiff========>
-      IsAlias = !((int64_t)NumBytes0->getFixedValue() <= PtrDiff);
+      IsAlias = !((int64_t)NumBytes0.getValue().getFixedValue() <= PtrDiff);
       return true;
     }
-    if (PtrDiff < 0 && !NumBytes1->isScalable() &&
-        NumBytes1->getFixedValue() != MemoryLocation::UnknownSize) {
+    if (PtrDiff < 0 && NumBytes1.hasValue() && !NumBytes1.isScalable()) {
       //                     [----BasePtr0----]
       // [---BasePtr1--]
       // =====(-PtrDiff)====>
-      IsAlias = !((PtrDiff + (int64_t)NumBytes1->getFixedValue()) <= 0);
+      IsAlias =
+          !((PtrDiff + (int64_t)NumBytes1.getValue().getFixedValue()) <= 0);
       return true;
     }
     return false;

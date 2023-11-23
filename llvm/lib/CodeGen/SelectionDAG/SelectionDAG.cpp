@@ -8341,11 +8341,10 @@ SDValue SelectionDAG::getMergeValues(ArrayRef<SDValue> Ops, const SDLoc &dl) {
 SDValue SelectionDAG::getMemIntrinsicNode(
     unsigned Opcode, const SDLoc &dl, SDVTList VTList, ArrayRef<SDValue> Ops,
     EVT MemVT, MachinePointerInfo PtrInfo, Align Alignment,
-    MachineMemOperand::Flags Flags, uint64_t Size, const AAMDNodes &AAInfo) {
-  if (!Size && MemVT.isScalableVector())
-    Size = MemoryLocation::UnknownSize;
-  else if (!Size)
-    Size = MemVT.getStoreSize();
+    MachineMemOperand::Flags Flags, LocationSize Size,
+    const AAMDNodes &AAInfo) {
+  if (Size.hasValue() && !Size.getValue())
+    Size = LocationSize::precise(MemVT.getStoreSize());
 
   MachineFunction &MF = getMachineFunction();
   MachineMemOperand *MMO =
@@ -9027,10 +9026,10 @@ SDValue SelectionDAG::getStridedLoadVP(
   if (PtrInfo.V.isNull())
     PtrInfo = InferPointerInfo(PtrInfo, *this, Ptr, Offset);
 
-  uint64_t Size = MemoryLocation::UnknownSize;
   MachineFunction &MF = getMachineFunction();
-  MachineMemOperand *MMO = MF.getMachineMemOperand(PtrInfo, MMOFlags, Size,
-                                                   Alignment, AAInfo, Ranges);
+  MachineMemOperand *MMO = MF.getMachineMemOperand(
+      PtrInfo, MMOFlags, LocationSize::beforeOrAfterPointer(), Alignment,
+      AAInfo, Ranges);
   return getStridedLoadVP(AM, ExtType, VT, DL, Chain, Ptr, Offset, Stride, Mask,
                           EVL, MemVT, MMO, IsExpanding);
 }
@@ -9179,7 +9178,8 @@ SDValue SelectionDAG::getTruncStridedStoreVP(
 
   MachineFunction &MF = getMachineFunction();
   MachineMemOperand *MMO = MF.getMachineMemOperand(
-      PtrInfo, MMOFlags, MemoryLocation::UnknownSize, Alignment, AAInfo);
+      PtrInfo, MMOFlags, LocationSize::beforeOrAfterPointer(), Alignment,
+      AAInfo);
   return getTruncStridedStoreVP(Chain, DL, Val, Ptr, Stride, Mask, EVL, SVT,
                                 MMO, IsCompressing);
 }
@@ -11779,9 +11779,10 @@ MemSDNode::MemSDNode(unsigned Opc, unsigned Order, const DebugLoc &dl,
   // We check here that the size of the memory operand fits within the size of
   // the MMO. This is because the MMO might indicate only a possible address
   // range instead of specifying the affected memory addresses precisely.
-  assert((!MMO->getType().isValid() ||
-          TypeSize::isKnownLE(memvt.getStoreSize(), MMO->getSize())) &&
-         "Size mismatch!");
+  assert(
+      (!MMO->getType().isValid() ||
+       TypeSize::isKnownLE(memvt.getStoreSize(), MMO->getSize().getValue())) &&
+      "Size mismatch!");
 }
 
 /// Profile - Gather unique data for the node.

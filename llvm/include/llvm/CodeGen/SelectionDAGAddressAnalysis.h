@@ -81,10 +81,8 @@ public:
 
   // Returns true `Op0` and `Op1` can be proven to alias/not alias, in
   // which case `IsAlias` is set to true/false.
-  static bool computeAliasing(const SDNode *Op0,
-                              const std::optional<TypeSize> NumBytes0,
-                              const SDNode *Op1,
-                              const std::optional<TypeSize> NumBytes1,
+  static bool computeAliasing(const SDNode *Op0, const LocationSize NumBytes0,
+                              const SDNode *Op1, const LocationSize NumBytes1,
                               const SelectionDAG &DAG, bool &IsAlias);
 
   /// Parses tree in N for base, index, offset addresses.

@@ -59,7 +59,7 @@ static void rewriteP2Align(MachineInstr &MI, unsigned OperandNo) {
          "ISel should set p2align operands to 0");
   assert(MI.hasOneMemOperand() &&
          "Load and store instructions have exactly one mem operand");
-  assert((*MI.memoperands_begin())->getSize() ==
+  assert((*MI.memoperands_begin())->getSize().getValue() ==
              (UINT64_C(1) << WebAssembly::GetDefaultP2Align(MI.getOpcode())) &&
          "Default p2align value should be natural");
   assert(MI.getDesc().operands()[OperandNo].OperandType ==

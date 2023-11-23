@@ -1356,7 +1356,7 @@ InstrRefBasedLDV::findLocationForMemOperand(const MachineInstr &MI) {
   // from the stack at some point. Happily the memory operand will tell us
   // the size written to the stack.
   auto *MemOperand = *MI.memoperands_begin();
-  unsigned SizeInBits = MemOperand->getSizeInBits();
+  unsigned SizeInBits = MemOperand->getSizeInBits().getValue();
 
   // Find that position in the stack indexes we're tracking.
   auto IdxIt = MTracker->StackSlotIdxes.find({SizeInBits, 0});
