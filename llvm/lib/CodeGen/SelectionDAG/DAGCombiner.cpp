@@ -27869,12 +27869,9 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
                            ? -1 * C->getSExtValue()
                            : 0;
       TypeSize Size = LSN->getMemoryVT().getStoreSize();
-      return {LSN->isVolatile(),
-              LSN->isAtomic(),
-              LSN->getBasePtr(),
-              Offset /*base offset*/,
-              LocationSize::precise(Size),
-              LSN->getMemOperand()};
+      return {LSN->isVolatile(),           LSN->isAtomic(),
+              LSN->getBasePtr(),           Offset /*base offset*/,
+              LocationSize::precise(Size), LSN->getMemOperand()};
     }
     if (const auto *LN = cast<LifetimeSDNode>(N))
       return {false /*isVolatile*/,
@@ -27956,16 +27953,20 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
 
   if (OrigAlignment0 == OrigAlignment1 && SrcValOffset0 != SrcValOffset1 &&
       Size0.hasValue() && Size1.hasValue() && !Size0.isScalable() &&
-      !Size1.isScalable() && Size0.getValue() == Size1.getValue() && OrigAlignment0 > Size0.getValue() &&
-      SrcValOffset0 % Size0.getValue() == 0 && SrcValOffset1 % Size1.getValue() == 0) {
+      !Size1.isScalable() && Size0 == Size1 &&
+      OrigAlignment0 > Size0.getValue().getKnownMinValue() &&
+      SrcValOffset0 % Size0.getValue().getKnownMinValue() == 0 &&
+      SrcValOffset1 % Size1.getValue().getKnownMinValue() == 0) {
     int64_t OffAlign0 = SrcValOffset0 % OrigAlignment0.value();
     int64_t OffAlign1 = SrcValOffset1 % OrigAlignment1.value();
 
-      // There is no overlap between these relatively aligned accesses of
-      // similar size. Return no alias.
-      if ((OffAlign0 + Size0.getValue()) <= OffAlign1 ||
-          (OffAlign1 + Size1.getValue()) <= OffAlign0)
-        return false;
+    // There is no overlap between these relatively aligned accesses of
+    // similar size. Return no alias.
+    if ((OffAlign0 + static_cast<int64_t>(
+                         Size0.getValue().getKnownMinValue())) <= OffAlign1 ||
+        (OffAlign1 + static_cast<int64_t>(
+                         Size1.getValue().getKnownMinValue())) <= OffAlign0)
+      return false;
   }
 
   bool UseAA = CombinerGlobalAA.getNumOccurrences() > 0
@@ -27985,12 +27986,10 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
         Size0.getValue().getKnownMinValue() + SrcValOffset0 - MinOffset;
     int64_t Overlap1 =
         Size1.getValue().getKnownMinValue() + SrcValOffset1 - MinOffset;
-    LocationSize Loc0 = Size0.getValue().isScalable()
-                            ? LocationSize::precise(Size0.getValue())
-                            : LocationSize::precise(Overlap0);
-    LocationSize Loc1 = Size1.isScalable()
-                            ? LocationSize::precise(Size1.getValue())
-                            : LocationSize::precise(Overlap1);
+    LocationSize Loc0 =
+        Size0.isScalable() ? Size0 : LocationSize::precise(Overlap0);
+    LocationSize Loc1 =
+        Size1.isScalable() ? Size1 : LocationSize::precise(Overlap1);
     if (AA->isNoAlias(
             MemoryLocation(MUC0.MMO->getValue(), Loc0,
                            UseTBAA ? MUC0.MMO->getAAInfo() : AAMDNodes()),

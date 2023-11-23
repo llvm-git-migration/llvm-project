@@ -117,12 +117,8 @@ bool GISelAddressing::aliasIsKnownForLoadStore(const MachineInstr &MI1,
   if (!BasePtr0.BaseReg.isValid() || !BasePtr1.BaseReg.isValid())
     return false;
 
-  LocationSize Size1 = LdSt1->getMemSize() != MemoryLocation::UnknownSize
-                           ? LdSt1->getMemSize()
-                           : LocationSize::beforeOrAfterPointer();
-  LocationSize Size2 = LdSt2->getMemSize() != MemoryLocation::UnknownSize
-                           ? LdSt2->getMemSize()
-                           : LocationSize::beforeOrAfterPointer();
+  LocationSize Size1 = LdSt1->getMemSize();
+  LocationSize Size2 = LdSt2->getMemSize();
 
   int64_t PtrDiff;
   if (BasePtr0.BaseReg == BasePtr1.BaseReg) {
@@ -132,14 +128,14 @@ bool GISelAddressing::aliasIsKnownForLoadStore(const MachineInstr &MI1,
     // vector objects on the stack.
     // BasePtr1 is PtrDiff away from BasePtr0. They alias if none of the
     // following situations arise:
-    if (PtrDiff >= 0 && Size1.hasValue()) {
+    if (PtrDiff >= 0 && Size1.hasValue() && !Size1.isScalable()) {
       // [----BasePtr0----]
       //                         [---BasePtr1--]
       // ========PtrDiff========>
       IsAlias = !((int64_t)Size1.getValue() <= PtrDiff);
       return true;
     }
-    if (PtrDiff < 0 && Size2.hasValue()) {
+    if (PtrDiff < 0 && Size2.hasValue() && !Size2.isScalable()) {
       //                     [----BasePtr0----]
       // [---BasePtr1--]
       // =====(-PtrDiff)====>
@@ -214,9 +210,9 @@ bool GISelAddressing::instMayAlias(const MachineInstr &MI,
         Offset = 0;
       }
 
-      TypeSize Size = LS->getMMO().getMemoryType().getSizeInBytes();
-      return {LS->isVolatile(),       LS->isAtomic(),          BaseReg,
-              Offset /*base offset*/, LocationSize::precise(Size), &LS->getMMO()};
+      LocationSize Size = LS->getMMO().getSize();
+      return {LS->isVolatile(),       LS->isAtomic(), BaseReg,
+              Offset /*base offset*/, Size,           &LS->getMMO()};
     }
     // FIXME: support recognizing lifetime instructions.
     // Default.
@@ -254,12 +250,12 @@ bool GISelAddressing::instMayAlias(const MachineInstr &MI,
 
   // If NumBytes is scalable and offset is not 0, conservatively return may
   // alias
-  if ((MUC0.NumBytes.isScalable() && (MUC0.Offset != 0)) ||
-      (MUC1.NumBytes.isScalable() && (MUC1.Offset != 0)))
+  if ((MUC0.NumBytes.isScalable() && MUC0.Offset != 0) ||
+      (MUC1.NumBytes.isScalable() && MUC1.Offset != 0))
     return true;
 
   const bool BothNotScalable =
-      !(MUC0.NumBytes.isScalable() || MUC1.NumBytes.isScalable());
+      !MUC0.NumBytes.isScalable() && !MUC1.NumBytes.isScalable();
 
   // Try to prove that there is aliasing, or that there is no aliasing. Either
   // way, we can return now. If nothing can be proved, proceed with more tests.
@@ -527,7 +523,7 @@ bool LoadStoreOpt::addStoreToCandidate(GStore &StoreMI,
     return false;
 
   // Don't allow truncating stores for now.
-  if (StoreMI.getMemSizeInBits() != ValueTy.getSizeInBits())
+  if (StoreMI.getMemSizeInBits().getValue() != ValueTy.getSizeInBits())
     return false;
 
   // Avoid adding volatile or ordered stores to the candidate. We already have a

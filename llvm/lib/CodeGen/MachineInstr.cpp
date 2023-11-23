@@ -1302,10 +1302,10 @@ static bool MemOperandsHaveAlias(const MachineFrameInfo &MFI, AAResults *AA,
   int64_t OffsetB = MMOb->getOffset();
   int64_t MinOffset = std::min(OffsetA, OffsetB);
 
-  TypeSize WidthA = MMOa->getSize();
-  TypeSize WidthB = MMOb->getSize();
-  bool KnownWidthA = WidthA.getKnownMinValue() != MemoryLocation::UnknownSize;
-  bool KnownWidthB = WidthB.getKnownMinValue() != MemoryLocation::UnknownSize;
+  LocationSize WidthA = MMOa->getSize();
+  LocationSize WidthB = MMOb->getSize();
+  bool KnownWidthA = WidthA.hasValue();
+  bool KnownWidthB = WidthB.hasValue();
   bool BothMMONonScalable = !WidthA.isScalable() && !WidthB.isScalable();
 
   const Value *ValA = MMOa->getValue();
@@ -1326,8 +1326,9 @@ static bool MemOperandsHaveAlias(const MachineFrameInfo &MFI, AAResults *AA,
     if (!KnownWidthA || !KnownWidthB)
       return true;
     int64_t MaxOffset = std::max(OffsetA, OffsetB);
-    int64_t LowWidth = (MinOffset == OffsetA) ? WidthA.getKnownMinValue()
-                                              : WidthB.getKnownMinValue();
+    int64_t LowWidth = (MinOffset == OffsetA)
+                           ? WidthA.getValue().getKnownMinValue()
+                           : WidthB.getValue().getKnownMinValue();
     return (MinOffset + LowWidth > MaxOffset);
   }
 
@@ -1346,19 +1347,19 @@ static bool MemOperandsHaveAlias(const MachineFrameInfo &MFI, AAResults *AA,
       (WidthB.isScalable() && OffsetB > 0))
     return true;
 
-  int64_t OverlapA = KnownWidthA
-                         ? WidthA.getKnownMinValue() + OffsetA - MinOffset
-                         : MemoryLocation::UnknownSize;
-  int64_t OverlapB = KnownWidthB
-                         ? WidthB.getKnownMinValue() + OffsetB - MinOffset
-                         : MemoryLocation::UnknownSize;
+  int64_t OverlapA =
+      KnownWidthA ? WidthA.getValue().getKnownMinValue() + OffsetA - MinOffset
+                  : MemoryLocation::UnknownSize;
+  int64_t OverlapB =
+      KnownWidthB ? WidthB.getValue().getKnownMinValue() + OffsetB - MinOffset
+                  : MemoryLocation::UnknownSize;
 
-  LocationSize LocA = WidthA.isScalable() && KnownWidthA
-                          ? LocationSize::precise(WidthA)
-                          : LocationSize(OverlapA);
-  LocationSize LocB = WidthB.isScalable() && KnownWidthB
-                          ? LocationSize::precise(WidthB)
-                          : LocationSize(OverlapB);
+  LocationSize LocA = (WidthA.isScalable() || !KnownWidthA)
+                          ? WidthA
+                          : LocationSize::precise(OverlapA);
+  LocationSize LocB = (WidthB.isScalable() || !KnownWidthB)
+                          ? WidthB
+                          : LocationSize::precise(OverlapB);
 
   return !AA->isNoAlias(
       MemoryLocation(ValA, LocA, UseTBAA ? MMOa->getAAInfo() : AAMDNodes()),
@@ -2373,15 +2374,16 @@ using MMOList = SmallVector<const MachineMemOperand *, 2>;
 static LocationSize getSpillSlotSize(const MMOList &Accesses,
                                      const MachineFrameInfo &MFI) {
   uint64_t Size = 0;
-  for (const auto *A : Accesses)
+  for (const auto *A : Accesses) {
     if (MFI.isSpillSlotObjectIndex(
             cast<FixedStackPseudoSourceValue>(A->getPseudoValue())
                 ->getFrameIndex())) {
-      uint64_t S = A->getSize();
-      if (S == ~UINT64_C(0))
+      LocationSize S = A->getSize();
+      if (!S.hasValue())
         return LocationSize::beforeOrAfterPointer();
-      Size += S;
+      Size += S.getValue();
     }
+  }
   return Size;
 }
 
@@ -2390,10 +2392,8 @@ MachineInstr::getSpillSize(const TargetInstrInfo *TII) const {
   int FI;
   if (TII->isStoreToStackSlotPostFE(*this, FI)) {
     const MachineFrameInfo &MFI = getMF()->getFrameInfo();
-    if (MFI.isSpillSlotObjectIndex(FI)) {
-      uint64_t Size = (*memoperands_begin())->getSize();
-      return Size == ~UINT64_C(0) ? LocationSize::beforeOrAfterPointer() : Size;
-    }
+    if (MFI.isSpillSlotObjectIndex(FI))
+      return (*memoperands_begin())->getSize();
   }
   return std::nullopt;
 }
@@ -2411,10 +2411,8 @@ MachineInstr::getRestoreSize(const TargetInstrInfo *TII) const {
   int FI;
   if (TII->isLoadFromStackSlotPostFE(*this, FI)) {
     const MachineFrameInfo &MFI = getMF()->getFrameInfo();
-    if (MFI.isSpillSlotObjectIndex(FI)) {
-      uint64_t Size = (*memoperands_begin())->getSize();
-      return Size == ~UINT64_C(0) ? LocationSize::beforeOrAfterPointer() : Size;
-    }
+    if (MFI.isSpillSlotObjectIndex(FI))
+      return (*memoperands_begin())->getSize();
   }
   return std::nullopt;
 }
