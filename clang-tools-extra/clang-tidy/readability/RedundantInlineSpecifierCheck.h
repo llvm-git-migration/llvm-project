@@ -13,7 +13,8 @@
 
 namespace clang::tidy::readability {
 
-/// Detects redundant ``inline`` specifiers on function and variable declarations.
+/// Detects redundant ``inline`` specifiers on function and variable
+/// declarations.
 ///
 /// For the user-facing documentation see:
 /// http://clang.llvm.org/extra/clang-tidy/checks/readability/readability-redundant-inline-specifier.html

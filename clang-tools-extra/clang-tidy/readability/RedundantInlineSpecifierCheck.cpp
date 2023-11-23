@@ -24,9 +24,9 @@ using namespace clang::ast_matchers;
 
 namespace clang::tidy::readability {
 
-AST_POLYMORPHIC_MATCHER(isInlineSpecified, AST_POLYMORPHIC_SUPPORTED_TYPES(
-                                                      FunctionDecl,
-                                                                  VarDecl)) {
+AST_POLYMORPHIC_MATCHER(isInlineSpecified,
+                        AST_POLYMORPHIC_SUPPORTED_TYPES(FunctionDecl,
+                                                        VarDecl)) {
   if (const auto *FD = dyn_cast<FunctionDecl>(&Node))
     return FD->isInlineSpecified();
   if (const auto *VD = dyn_cast<VarDecl>(&Node))
@@ -34,13 +34,12 @@ AST_POLYMORPHIC_MATCHER(isInlineSpecified, AST_POLYMORPHIC_SUPPORTED_TYPES(
   llvm_unreachable("Not a valid polymorphic type");
 }
 
-
 static std::optional<SourceLocation>
 getInlineTokenLocation(SourceRange RangeLocation, const SourceManager &Sources,
                        const LangOptions &LangOpts) {
   Token FirstToken;
   Lexer::getRawToken(RangeLocation.getBegin(), FirstToken, Sources, LangOpts,
-                             true);
+                     true);
   std::optional<Token> CurrentToken = FirstToken;
   while (CurrentToken && CurrentToken->getLocation() < RangeLocation.getEnd() &&
          CurrentToken->isNot(tok::eof)) {
@@ -48,7 +47,8 @@ getInlineTokenLocation(SourceRange RangeLocation, const SourceManager &Sources,
         CurrentToken->getRawIdentifier() == "inline")
       return CurrentToken->getLocation();
 
-    CurrentToken = Lexer::findNextToken(CurrentToken->getLocation(), Sources, LangOpts);
+    CurrentToken =
+        Lexer::findNextToken(CurrentToken->getLocation(), Sources, LangOpts);
   }
   return std::nullopt;
 }
@@ -58,8 +58,7 @@ void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
       functionDecl(unless(isExpansionInSystemHeader()),
                    unless(hasAncestor(lambdaExpr())), isInlineSpecified(),
                    anyOf(isConstexpr(), isDeleted(),
-                         allOf(isDefinition(), hasAncestor(recordDecl()),
-                               unless(hasAncestor(cxxConstructorDecl())))))
+                         allOf(isDefinition(), hasAncestor(recordDecl()))))
           .bind("fun_decl"),
       this);
 
@@ -71,7 +70,8 @@ void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
       this);
 
   Finder->addMatcher(
-      functionTemplateDecl(has(functionDecl(isInlineSpecified()))).bind("templ_decl"),
+      functionTemplateDecl(has(functionDecl(isInlineSpecified())))
+          .bind("templ_decl"),
       this);
 }
 
@@ -79,8 +79,9 @@ template <typename T>
 void RedundantInlineSpecifierCheck::handleMatchedDecl(
     const T *MatchedDecl, const SourceManager &Sources,
     const MatchFinder::MatchResult &Result, StringRef Message) {
-  if (std::optional<SourceLocation> Loc = getInlineTokenLocation(MatchedDecl->getSourceRange(), Sources,
-                                        Result.Context->getLangOpts()))
+  if (std::optional<SourceLocation> Loc =
+          getInlineTokenLocation(MatchedDecl->getSourceRange(), Sources,
+                                 Result.Context->getLangOpts()))
     diag(*Loc, Message) << MatchedDecl << FixItHint::CreateRemoval(*Loc);
 }
 
