@@ -1275,6 +1275,12 @@ inline bool InitPtrPop(InterpState &S, CodePtr OpPC) {
   return true;
 }
 
+inline bool InitPtr(InterpState &S, CodePtr OpPC) {
+  const Pointer &Ptr = S.Stk.peek<Pointer>();
+  Ptr.initialize();
+  return true;
+}
+
 inline bool VirtBaseHelper(InterpState &S, CodePtr OpPC, const RecordDecl *Decl,
                            const Pointer &Ptr) {
   Pointer Base = Ptr;
@@ -1331,7 +1337,7 @@ bool Store(InterpState &S, CodePtr OpPC) {
   const Pointer &Ptr = S.Stk.peek<Pointer>();
   if (!CheckStore(S, OpPC, Ptr))
     return false;
-  if (!Ptr.isRoot())
+  if (Ptr.canBeInitialized())
     Ptr.initialize();
   Ptr.deref<T>() = Value;
   return true;
@@ -1343,7 +1349,7 @@ bool StorePop(InterpState &S, CodePtr OpPC) {
   const Pointer &Ptr = S.Stk.pop<Pointer>();
   if (!CheckStore(S, OpPC, Ptr))
     return false;
-  if (!Ptr.isRoot())
+  if (Ptr.canBeInitialized())
     Ptr.initialize();
   Ptr.deref<T>() = Value;
   return true;
@@ -1355,7 +1361,7 @@ bool StoreBitField(InterpState &S, CodePtr OpPC) {
   const Pointer &Ptr = S.Stk.peek<Pointer>();
   if (!CheckStore(S, OpPC, Ptr))
     return false;
-  if (!Ptr.isRoot())
+  if (Ptr.canBeInitialized())
     Ptr.initialize();
   if (const auto *FD = Ptr.getField())
     Ptr.deref<T>() = Value.truncate(FD->getBitWidthValue(S.getCtx()));
@@ -1370,7 +1376,7 @@ bool StoreBitFieldPop(InterpState &S, CodePtr OpPC) {
   const Pointer &Ptr = S.Stk.pop<Pointer>();
   if (!CheckStore(S, OpPC, Ptr))
     return false;
-  if (!Ptr.isRoot())
+  if (Ptr.canBeInitialized())
     Ptr.initialize();
   if (const auto *FD = Ptr.getField())
     Ptr.deref<T>() = Value.truncate(FD->getBitWidthValue(S.getCtx()));

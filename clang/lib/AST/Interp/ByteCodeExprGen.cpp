@@ -802,7 +802,7 @@ bool ByteCodeExprGen<Emitter>::visitArrayElemInit(unsigned ElemIndex,
     return false;
   if (!this->visitInitializer(Init))
     return false;
-  return this->emitPopPtr(Init);
+  return this->emitInitPtrPop(Init);
 }
 
 template <class Emitter>

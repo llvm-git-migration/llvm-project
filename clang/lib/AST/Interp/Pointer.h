@@ -286,10 +286,10 @@ public:
   bool isArrayElement() const { return inArray() && Base != Offset; }
   /// Pointer points directly to a block.
   bool isRoot() const {
-    return (Base == 0 || Base == sizeof(InlineDescriptor) ||
-            Base == RootPtrMark) &&
-           Offset == 0;
+    return (Base == 0 || Base == RootPtrMark) && Offset == 0;
   }
+  /// If this pointer has an InlineDescriptor we can use to initialize.
+  bool canBeInitialized() const { return Pointee && Base > 0; }
 
   /// Returns the record descriptor of a class.
   const Record *getRecord() const { return getFieldDesc()->ElemRecord; }
