@@ -1672,6 +1672,143 @@ static Value *foldSelectInstWithICmpConst(SelectInst &SI, ICmpInst *ICI,
   return nullptr;
 }
 
+static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
+                                     InstCombinerImpl &IC) {
+  ICmpInst::Predicate Pred = ICI->getPredicate();
+  if (!ICmpInst::isEquality(Pred))
+    return nullptr;
+
+  Value *TrueVal = SI.getTrueValue();
+  Value *FalseVal = SI.getFalseValue();
+  Value *CmpLHS = ICI->getOperand(0);
+  Value *CmpRHS = ICI->getOperand(1);
+
+  if (Pred == ICmpInst::ICMP_NE) {
+    Pred = ICmpInst::ICMP_EQ;
+    std::swap(TrueVal, FalseVal);
+  }
+
+  // Transform (X == C) ? X : Y -> (X == C) ? C : Y
+  // specific handling for Bitwise operation.
+  // https://alive2.llvm.org/ce/z/mW3eYR
+  // x&y -> (x|y) ^ (x^y)  or  (x|y) & ~(x^y)
+  // x|y -> (x&y) | (x^y)  or  (x&y) ^  (x^y)
+  // x^y -> (x|y) ^ (x&y)  or  (x|y) & ~(x&y)
+  Value *X, *Y;
+  if (!(match(CmpLHS, m_BitwiseLogic(m_Value(X), m_Value(Y)))) ||
+      !(match(TrueVal, m_BitwiseLogic(m_Specific(X), m_Specific(Y)))))
+    return nullptr;
+
+  Value *AllOnes = Constant::getAllOnesValue(TrueVal->getType());
+  Value *Null = Constant::getNullValue(TrueVal->getType());
+  Instruction *ISI = &cast<Instruction>(SI);
+  const unsigned AndOps = Instruction::And, OrOps = Instruction::Or,
+                 XorOps = Instruction::Xor, NoOps = 0;
+  enum NotMask { None = 0, NotInner, NotRHS };
+
+  auto matchFalseVal = [&](Value *FalseVal, Value *CmpRHS, Value *X, Value *Y,
+                           unsigned OuterOpc, unsigned InnerOpc,
+                           unsigned NotMask) {
+    auto matchInner = m_c_BinOp(InnerOpc, m_Specific(X), m_Specific(Y));
+    if (OuterOpc == NoOps) {
+      if (match(CmpRHS, m_Zero()))
+        return match(FalseVal, matchInner);
+      else
+        return false;
+    }
+
+    if (NotMask == NotInner) {
+      return match(FalseVal,
+                   m_c_BinOp(OuterOpc, m_Not(matchInner), m_Specific(CmpRHS)));
+    } else if (NotMask == NotRHS) {
+      return match(FalseVal,
+                   m_c_BinOp(OuterOpc, matchInner, m_Not(m_Specific(CmpRHS))));
+    } else {
+      return match(FalseVal,
+                   m_c_BinOp(OuterOpc, matchInner, m_Specific(CmpRHS)));
+    }
+  };
+
+  // https://alive2.llvm.org/ce/z/rw7XWv
+  // (X&Y)==C ? X|Y : X^Y -> (X^Y)|C : X^Y  or (X^Y)^ C : X^Y
+  // (X&Y)==C ? X^Y : X|Y -> (X|Y)^C : X|Y  or (X|Y)&~C : X|Y
+  if (match(CmpLHS, m_And(m_Value(X), m_Value(Y)))) {
+    if (match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y)))) {
+      // (X&Y)==0 ? X|Y : X^Y -> (X^Y)|0 : X^Y -> X^Y
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, NoOps, XorOps, None) ||
+          // (X&Y)==C ? X|Y : (X^Y)|C -> (X^Y)|C : (X^Y)|C -> (X|Y)^C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, OrOps, XorOps, None) ||
+          // (X&Y)==C ? X|Y : (X^Y)^C -> (X^Y)^C : (X^Y)^C -> (X^Y)^C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, XorOps, None))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      // (X&Y)==-1 ? X|Y : FV -> -1 : FV
+      else if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, AllOnes);
+    } else if (match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) {
+      // (X&Y)==0 ? X^Y : X|Y -> (X|Y)^0 : X|Y -> X:Y
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, NoOps, OrOps, None) ||
+          // (X&Y)==C ? X^Y : (X|Y)^ C -> (X|Y)^ C : (X|Y)^ C -> (X|Y)^ C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, OrOps, None) ||
+          // (X&Y)==C ? X^Y : (X|Y)&~C -> (X|Y)&~C : (X|Y)&~C -> (X|Y)&~C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, AndOps, OrOps, NotRHS))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      // (X&Y)==-1 ? X^Y : FV -> 0 : FV
+      else if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, Null);
+    }
+  }
+
+  // https://alive2.llvm.org/ce/z/5yaUzR
+  // (X|Y)==C ? X&Y : X^Y -> (X^Y)^C : X^Y  or  ~(X^Y)&C : X^Y
+  // (X|Y)==C ? X^Y : X&Y -> (X&Y)^C : X&Y  or  ~(X&Y)&C : X&Y
+  if (match(CmpLHS, m_Or(m_Value(X), m_Value(Y)))) {
+    if (match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y)))) {
+      // (X|Y)==0 ? X&Y : X^Y -> (X^Y)^0 : X^Y -> X^Y
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, NoOps, XorOps, None) ||
+          // (X|Y)==C ? X&Y: (X^Y)^C -> (X^Y)^C: (X^Y)^C ->  (X^Y)^C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, XorOps, None) ||
+          // (X|Y)==C ? X&Y:~(X^Y)&C ->~(X^Y)&C:~(X^Y)&C -> ~(X^Y)&C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, AndOps, XorOps, NotInner))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+    } else if (match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) {
+      // (X|Y)==0 ? X^Y : X&Y -> (X&Y)^0 : X&Y -> X&Y
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, NoOps, AndOps, None) ||
+          // (X|Y)==C ? X^Y : (X&Y)^C ->  (X&Y)^C : (X&Y)^C ->  (X&Y)^C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, AndOps, None) ||
+          // (X|Y)==C ? X^Y :~(X&Y)&C -> ~(X&Y)&C :~(X&Y)&C -> ~(X&Y)&C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, AndOps, AndOps, NotInner))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+    } else if (match(TrueVal, m_BitwiseLogic(m_Specific(X), m_Specific(Y))) &&
+               match(CmpRHS, m_Zero()))
+      // (X|Y)==0 ? (X BitwiseLogic Y) : FV -> (X|Y)==0 ? 0 : FV
+      return IC.replaceOperand(SI, 1, Null);
+  }
+
+  // https://alive2.llvm.org/ce/z/dA9Hy-
+  // (X^Y)==C ? X&Y : X|Y -> (X|Y)^C : X|Y  or (X|Y)&~C : X|Y
+  // (X^Y)==C ? X|Y : X&Y -> (X&Y)|C : X&Y  or (X&Y)^ C : X&Y
+  if (match(CmpLHS, m_Xor(m_Value(X), m_Value(Y)))) {
+    if ((match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y))))) {
+      // (X^Y)==C ? X&Y : (X|Y)^C -> (X|Y)^C
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, OrOps, None) ||
+          // (X^Y)==C ? X&Y : (X|Y)&~C -> (X|Y)&~C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, AndOps, OrOps, NotRHS))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+    } else if (match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y)))) {
+      // (X^Y)==C ? (X|Y) : (X&Y)|C -> (X&Y)|C
+      if (matchFalseVal(FalseVal, CmpRHS, X, Y, OrOps, AndOps, None) ||
+          // (X^Y)==C ? (X|Y) : (X&Y)^C -> (X&Y)^C
+          matchFalseVal(FalseVal, CmpRHS, X, Y, XorOps, AndOps, None))
+        return IC.replaceInstUsesWith(*ISI, FalseVal);
+      // (X^Y)==-1 ? (X|Y) : FV -> -1 : FV
+      if (match(CmpRHS, m_AllOnes()))
+        return IC.replaceOperand(SI, 1, AllOnes);
+    }
+  }
+
+  return nullptr;
+}
+
 /// Visit a SelectInst that has an ICmpInst as its first operand.
 Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
                                                       ICmpInst *ICI) {
@@ -1713,6 +1850,9 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
       Changed = true;
     }
   }
+
+  if (Instruction *NewSel = foldSelectICmpEq(SI, ICI, *this))
+    return NewSel;
 
   // Canonicalize a signbit condition to use zero constant by swapping:
   // (CmpLHS > -1) ? TV : FV --> (CmpLHS < 0) ? FV : TV
