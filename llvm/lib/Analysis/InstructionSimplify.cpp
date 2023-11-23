@@ -4585,6 +4585,42 @@ static Value *simplifySelectWithFakeICmpEq(Value *CmpLHS, Value *CmpRHS,
                                Pred == ICmpInst::ICMP_EQ);
 }
 
+/// Try to simplify the Select instruction consisting of and/or/xor.
+static Value *simplifySelectWithAndOrXorBitOp(Value *CmpLHS, Value *CmpRHS,
+                                              Value *TrueVal, Value *FalseVal) {
+  Value *X, *Y;
+  // (X & Y) == 0 ? X | Y : X ^ Y   --> X ^ Y
+  // (X & Y) == 0 ? X ^ Y : X | Y   --> X | Y
+  if (match(CmpLHS, m_And(m_Value(X), m_Value(Y))) && match(CmpRHS, m_Zero())) {
+    if ((match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y))) &&
+         match(FalseVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) ||
+        (match(FalseVal, m_c_Or(m_Specific(X), m_Specific(Y))) &&
+         match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))))
+      return FalseVal;
+  }
+  // (X | Y) == 0 ? X & Y : X ^ Y   --> X ^ Y
+  // (X | Y) == 0 ? X ^ Y : X & Y   --> X & Y
+  if (match(CmpLHS, m_Or(m_Value(X), m_Value(Y))) && match(CmpRHS, m_Zero())) {
+    if ((match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y))) &&
+         match(FalseVal, m_c_Xor(m_Specific(X), m_Specific(Y)))) ||
+        (match(FalseVal, m_c_And(m_Specific(X), m_Specific(Y))) &&
+         match(TrueVal, m_c_Xor(m_Specific(X), m_Specific(Y)))))
+      return FalseVal;
+  }
+  // (X ^ Y) == 0 ? X | Y : X & Y   --> X & Y
+  // (X ^ Y) == 0 ? X & Y : X | Y   --> X | Y
+  // X == Y is equals with (X ^ Y) == 0
+  X = CmpLHS;
+  Y = CmpRHS;
+  if ((match(TrueVal, m_c_And(m_Specific(X), m_Specific(Y))) &&
+       match(FalseVal, m_c_Or(m_Specific(X), m_Specific(Y)))) ||
+      (match(FalseVal, m_c_And(m_Specific(X), m_Specific(Y))) &&
+       match(TrueVal, m_c_Or(m_Specific(X), m_Specific(Y)))))
+    return FalseVal;
+
+  return nullptr;
+}
+
 /// Try to simplify a select instruction when its condition operand is an
 /// integer equality comparison.
 static Value *simplifySelectWithICmpEq(Value *CmpLHS, Value *CmpRHS,
@@ -4599,6 +4635,10 @@ static Value *simplifySelectWithICmpEq(Value *CmpLHS, Value *CmpRHS,
                              /* AllowRefinement */ true,
                              /* DropFlags */ nullptr, MaxRecurse) == FalseVal)
     return FalseVal;
+
+  if (Value *V =
+          simplifySelectWithAndOrXorBitOp(CmpLHS, CmpRHS, TrueVal, FalseVal))
+    return V;
 
   return nullptr;
 }
