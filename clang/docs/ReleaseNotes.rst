@@ -832,7 +832,7 @@ AST Matchers
 - Add ``macroQualifiedType``.
 - Add ``CXXFoldExpr`` related matchers: ``cxxFoldExpr``, ``callee``,
   ``hasInit``, ``hasPattern``, ``isRightFold``, ``isLeftFold``,
-  ``isUnaryFold``, ``isBinaryFold``, ``hasOperator``, ``hasLHS``, ``hasRHS``.
+  ``isUnaryFold``, ``isBinaryFold``, ``hasOperator``, ``hasLHS``, ``hasRHS``, ``hasEitherOperand``.
 
 clang-format
 ------------
