@@ -3,8 +3,7 @@
 readability-redundant-inline-specifier
 ======================================
 
-Checks for instances of the ``inline`` keyword in code where it is redundant
-and recommends its removal.
+Detects redundant ``inline`` specifiers on function and variable declarations.
 
 Examples:
 
