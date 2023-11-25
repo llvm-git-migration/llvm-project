@@ -114,3 +114,22 @@ namespace ns
 auto fn6 = [](){};
 //CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'operator()' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 
+template <typename T> inline T fn7();
+// CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'fn7' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-FIXES: template <typename T> T fn7();
+
+template <typename T>  T fn7()
+// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'fn7' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+{
+    return T{};
+}
+
+template <typename T>  T fn8();
+// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'fn8' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+
+template <typename T> inline T fn8()
+// CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'fn8' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-FIXES: template <typename T> T fn8()
+{
+    return T{};
+}
