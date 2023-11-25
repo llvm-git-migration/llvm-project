@@ -61,18 +61,18 @@ void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
                          allOf(isDefinition(), hasAncestor(recordDecl()))))
           .bind("fun_decl"),
       this);
-
-  Finder->addMatcher(
-      varDecl(isInlineSpecified(),
-              anyOf(isInAnonymousNamespace(),
-                    allOf(isConstexpr(), hasAncestor(recordDecl()))))
-          .bind("var_decl"),
-      this);
-
   Finder->addMatcher(
       functionTemplateDecl(has(functionDecl(isInlineSpecified())))
           .bind("templ_decl"),
       this);
+  if (getLangOpts().CPlusPlus17) {
+    Finder->addMatcher(
+        varDecl(isInlineSpecified(),
+                anyOf(isInAnonymousNamespace(),
+                      allOf(isConstexpr(), hasAncestor(recordDecl()))))
+            .bind("var_decl"),
+        this);
+  }
 }
 
 template <typename T>

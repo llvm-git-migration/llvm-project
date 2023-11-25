@@ -1,4 +1,4 @@
-// RUN: %check_clang_tidy %s readability-redundant-inline-specifier %t
+// RUN: %check_clang_tidy %s readability-redundant-inline-specifier -std=c++17 %t
 
 template <typename T> inline T f()
 // CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'f' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
