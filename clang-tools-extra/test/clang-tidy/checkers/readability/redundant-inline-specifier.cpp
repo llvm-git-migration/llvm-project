@@ -28,6 +28,9 @@ class C
     // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: function 'operator=' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
     // CHECK-FIXES: C& operator=(const C&) = delete;
 
+    inline C(const C&) = default;
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: function 'C' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+
     constexpr inline C& operator=(int a);
     // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: function 'operator=' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
     // CHECK-FIXES: constexpr C& operator=(int a);
@@ -76,7 +79,7 @@ static constexpr inline int fn1(int i)
 namespace
 {
     inline int fn2(int i)
-    // CHECK-MESSAGES-NOT: :[[@LINE-1]]:5: warning: function 'fn2' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: function 'fn2' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
     {
         return i - 1;
     }
@@ -87,6 +90,9 @@ namespace
     {
         return i - 1;
     }
+
+    inline constexpr int MY_CONSTEXPR_VAR = 42;
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: variable 'MY_CONSTEXPR_VAR' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 }
 
 namespace ns

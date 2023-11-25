@@ -55,16 +55,14 @@ getInlineTokenLocation(SourceRange RangeLocation, const SourceManager &Sources,
 
 void RedundantInlineSpecifierCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(
-      functionDecl(unless(isExpansionInSystemHeader()), isInlineSpecified(),
-                   anyOf(isConstexpr(), isDeleted(),
+      functionDecl(isInlineSpecified(), anyOf(isConstexpr(), isDeleted(), isDefaulted(), isInAnonymousNamespace(),
                          allOf(isDefinition(), hasAncestor(recordDecl()))))
           .bind("fun_decl"),
       this);
 
   Finder->addMatcher(
       varDecl(isInlineSpecified(),
-              anyOf(allOf(isConstexpr(), unless(isStaticStorageClass())),
-                    hasAncestor(recordDecl())))
+              anyOf(isInAnonymousNamespace(), allOf(isConstexpr(), hasAncestor(recordDecl()))))
           .bind("var_decl"),
       this);
 
