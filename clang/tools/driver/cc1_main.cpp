@@ -291,14 +291,8 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
 
   // Handle module build daemon functionality if enabled
   if (Clang->getFrontendOpts().ModuleBuildDaemon) {
-#if LLVM_ON_UNIX
     clang::tooling::cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
         Clang->getInvocation(), Clang->getDiagnostics(), Argv0);
-#else
-    llvm::errs() << "-fmodule-build-daemon not supported by current platform"
-                 << '\n';
-    return 1;
-#endif
   }
 
   // Execute the frontend actions.
