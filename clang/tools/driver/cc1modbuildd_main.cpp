@@ -17,40 +17,49 @@
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
 
-// TODO: Make portable
-#if LLVM_ON_UNIX
+using namespace llvm;
+using namespace clang::tooling::cc1modbuildd;
 
 #include <errno.h>
 #include <fstream>
 #include <mutex>
 #include <optional>
-#include <signal.h>
 #include <sstream>
 #include <stdbool.h>
 #include <string>
+#include <type_traits>
+#include <unordered_map>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
-#include <type_traits>
 #include <unistd.h>
-#include <unordered_map>
-
-using namespace llvm;
-using namespace clang::tooling::cc1modbuildd;
+#endif
 
 // Create unbuffered STDOUT stream so that any logging done by module build
 // daemon can be viewed without having to terminate the process
 static raw_fd_ostream &unbuff_outs() {
-  static raw_fd_ostream S(STDOUT_FILENO, false, true);
+  static raw_fd_ostream S(fileno(stdout), false, true);
   return S;
 }
 
-namespace {
+static bool VerboseLog = false;
+static void printVerboseLog(const llvm::Twine &message) {
+  if (VerboseLog) {
+    unbuff_outs() << message << '\n';
+  }
+}
 
 struct ClientConnection {
   int ClientFD;
   std::string Buffer;
 };
+
+namespace {
 
 class ModuleBuildDaemonServer {
 public:
@@ -77,16 +86,21 @@ public:
   // new client connections and waits for all existing client connections to
   // terminate before closing the file descriptor and exiting
   void shutdownDaemon() {
+#ifdef _WIN32
+    // TODO: implement windows version
+#else
     int SocketFD = ListenSocketFD.load();
-
     unlink(SocketPath.c_str());
     shutdown(SocketFD, SHUT_RD);
     close(SocketFD);
     _Exit(EXIT_SUCCESS);
+#endif
   }
 
 private:
+#ifndef _WIN32
   pid_t Pid = -1;
+#endif
   std::atomic<int> ListenSocketFD = -1;
 };
 
@@ -99,13 +113,7 @@ void handleSignal(int Signal) {
 }
 } // namespace
 
-static bool VerboseLog = false;
-static void printVerboseLog(const llvm::Twine &message) {
-  if (VerboseLog) {
-    unbuff_outs() << message << '\n';
-  }
-}
-
+#ifndef _WIN32
 // Forks and detaches process, creating module build daemon
 int ModuleBuildDaemonServer::forkDaemon() {
 
@@ -143,6 +151,7 @@ int ModuleBuildDaemonServer::forkDaemon() {
   return EXIT_SUCCESS;
 }
 
+// TODO: Make portable
 // Creates unix socket for IPC with module build daemon
 int ModuleBuildDaemonServer::createDaemonSocket() {
 
@@ -247,15 +256,16 @@ int ModuleBuildDaemonServer::listenForClients() {
   }
   return 0;
 }
+#endif // LLVM_ON_UNIX
 
 // Module build daemon is spawned with the following command line:
 //
-// clang [-cc1modbuildd <path>] [-v]
+// clang -cc1modbuildd [<path>] [-v]
 //
 // OPTIONS
-//   -cc1modbuildd <path>
+//   <path>
 //       Specifies the path to all the files created by the module build daemon.
-//       The <path> should immediately follow the -cc1modbuildd option.
+//       If provided, <path> should immediately follow -cc1modbuildd.
 //
 //   -v
 //       Provides verbose debug information.
@@ -264,6 +274,7 @@ int ModuleBuildDaemonServer::listenForClients() {
 //     The arguments <path> and -v are optional. By default <path> follows the
 //     format: /tmp/clang-<BLAKE3HashOfClangFullVersion>.
 //
+
 int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   std::string BasePath;
@@ -294,11 +305,11 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
   // Used to handle signals
   DaemonPtr = &Daemon;
 
+#ifndef _WIN32
   Daemon.forkDaemon();
   Daemon.createDaemonSocket();
   Daemon.listenForClients();
+#endif
 
   return 0;
 }
-
-#endif // LLVM_ON_UNIX

@@ -372,12 +372,7 @@ static int ExecuteCC1Tool(SmallVectorImpl<const char *> &ArgV,
     return cc1gen_reproducer_main(ArrayRef(ArgV).slice(2), ArgV[0],
                                   GetExecutablePathVP, ToolContext);
   if (Tool == "-cc1modbuildd") {
-#if LLVM_ON_UNIX
     return cc1modbuildd_main(ArrayRef(ArgV).slice(2));
-#else
-    llvm::errs() << "-cc1modbuildd not supported by current platform" << '\n';
-    return 1;
-#endif
   }
 
   // Reject unknown tools
