@@ -57,8 +57,17 @@ public:
                               iterator_range<MachineBasicBlock::iterator> Range,
                               SmallSet<Register, 4> &SGPROperandRegs) const;
 
-  Register buildReadFirstLane(MachineIRBuilder &B, MachineRegisterInfo &MRI,
-                              Register Src) const;
+  Register buildReadFirstLaneSrc(MachineIRBuilder &B, Register Src) const;
+
+  void buildReadFirstLaneForType(MachineIRBuilder &B, Register SgprDst,
+                                 Register VgprSrc) const;
+
+  void buildReadFirstLaneB32(MachineIRBuilder &B, Register SgprDst,
+                             Register VgprSrc) const;
+
+  void buildReadFirstLaneSequenceOfB32(MachineIRBuilder &B, Register SgprDst,
+                                       Register VgprSrc,
+                                       unsigned NumElts) const;
 
   bool executeInWaterfallLoop(MachineIRBuilder &B, MachineInstr &MI,
                               ArrayRef<unsigned> OpIndices) const;
@@ -116,6 +125,12 @@ public:
                                        const MachineRegisterInfo &MRI,
                                        const TargetRegisterInfo &TRI) const;
 
+  // Return a value mapping for an operand that is same as already assigned
+  // reg bank or corresponds to assigned register class + LLT
+  const ValueMapping *
+  getPreAssignedOpMapping(Register Reg, const MachineRegisterInfo &MRI,
+                          const TargetRegisterInfo &TRI) const;
+
   // Return a value mapping for an operand that is required to be a AGPR.
   const ValueMapping *getAGPROpMapping(Register Reg,
                                        const MachineRegisterInfo &MRI,
@@ -155,6 +170,9 @@ public:
 
   const InstructionMapping &getDefaultMappingSOP(const MachineInstr &MI) const;
   const InstructionMapping &getDefaultMappingVOP(const MachineInstr &MI) const;
+  const InstructionMapping &
+  getDefaultMappingVOPWithPreassignedDef(const MachineInstr &MI) const;
+
   const InstructionMapping &getDefaultMappingAllVGPR(
     const MachineInstr &MI) const;
 
