@@ -158,5 +158,8 @@ for header in public_headers:
 #define erase SYSTEM_RESERVED_NAME
 #define refresh SYSTEM_RESERVED_NAME
 
+// Macros from the CUDA SDKs
+#define __noinline__ __attribute__((noinline))
+
 #include <{header}>
 """)

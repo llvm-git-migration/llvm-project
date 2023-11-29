@@ -26,3 +26,7 @@
 #ifdef erase
 #  undef erase
 #endif
+
+#ifdef __noinline__
+#  undef __noinline__
+#endif
