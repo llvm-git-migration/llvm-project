@@ -396,7 +396,8 @@ public:
     Default = 0,
     /// Use Itanium rules for bit-field layout and fundamental types alignment.
     Itanium = 1,
-    /// Use Microsoft C++ ABI rules for bit-field layout and fundamental types alignment.
+    /// Use Microsoft C++ ABI rules for bit-field layout and fundamental types
+    /// alignment.
     Microsoft = 2,
   };
 
