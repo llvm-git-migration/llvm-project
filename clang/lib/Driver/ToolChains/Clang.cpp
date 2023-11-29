@@ -5670,9 +5670,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       Args.hasArg(options::OPT_mno_ms_bitfields)) {
     if (Args.hasFlag(options::OPT_mms_bitfields, options::OPT_mno_ms_bitfields,
                      false))
-      CmdArgs.push_back("-mms-bitfields");
+      CmdArgs.push_back("-fms-layout-compatibility=microsoft");
     else
-      CmdArgs.push_back("-mno-ms-bitfields");
+      CmdArgs.push_back("-fms-layout-compatibility=itanium");
   }
 
   if (Triple.isWindowsGNUEnvironment()) {

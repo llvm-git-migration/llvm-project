@@ -391,6 +391,15 @@ public:
     IncompleteOnly = 3,
   };
 
+  enum class LayoutCompatibilityKind {
+    /// Use default layout rules of the target.
+    Default = 0,
+    /// Use Itanium rules for bit-field layout and fundamental types alignment.
+    Itanium = 1,
+    /// Use Microsoft C++ ABI rules for bit-field layout and fundamental types alignment.
+    Microsoft = 2,
+  };
+
 public:
   /// The used language standard.
   LangStandard::Kind LangStd;
@@ -506,8 +515,6 @@ public:
   // This exists so that we can override the macro value and test our incomplete
   // implementation on real-world examples.
   std::string OpenACCMacroOverride;
-
-  std::optional<bool> MSBitfields;
 
   LangOptions();
 

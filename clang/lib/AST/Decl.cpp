@@ -5035,8 +5035,10 @@ bool RecordDecl::isMsStruct(const ASTContext &C) const {
     return true;
   if (hasAttr<GCCStructAttr>())
     return false;
-  return C.getLangOpts().MSBitfields.value_or(
-      C.getTargetInfo().defaultsToMsStruct());
+  auto LayoutCompatibility = C.getLangOpts().getLayoutCompatibility();
+  if (LayoutCompatibility == LangOptions::LayoutCompatibilityKind::Default)
+    return C.getTargetInfo().defaultsToMsStruct();
+  return LayoutCompatibility == LangOptions::LayoutCompatibilityKind::Microsoft;
 }
 
 void RecordDecl::reorderDecls(const SmallVectorImpl<Decl *> &Decls) {

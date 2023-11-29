@@ -1,13 +1,15 @@
-// RUN: %clang -### -target x86_64-linux-gnu %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-MSBITFIELDS
-// RUN: %clang -### -target x86_64-windows-gnu %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-MSBITFIELDS
-// RUN: %clang -### -target x86_64-windows-msvc %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-MSBITFIELDS
-// RUN: %clang -### -mms-bitfields %s 2>&1 | FileCheck %s -check-prefix=MSBITFIELDS
-// RUN: %clang -### -mno-ms-bitfields %s 2>&1 | FileCheck %s -check-prefix=NO-MSBITFIELDS
-// RUN: %clang -### -mno-ms-bitfields -mms-bitfields %s 2>&1 | FileCheck %s -check-prefix=MSBITFIELDS
-// RUN: %clang -### -mms-bitfields -mno-ms-bitfields %s 2>&1 | FileCheck %s -check-prefix=NO-MSBITFIELDS
+// RUN: %clang -### -target x86_64-linux-gnu %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-LAYOUT
+// RUN: %clang -### -target x86_64-windows-gnu %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-LAYOUT
+// RUN: %clang -### -target x86_64-windows-msvc %s 2>&1 | FileCheck %s -check-prefix=DEFAULT-LAYOUT
+// RUN: %clang -### -mms-bitfields %s 2>&1 | FileCheck %s -check-prefix=MICROSOFT-LAYOUT
+// RUN: %clang -### -mno-ms-bitfields %s 2>&1 | FileCheck %s -check-prefix=ITANIUM-LAYOUT
+// RUN: %clang -### -mno-ms-bitfields -mms-bitfields %s 2>&1 | FileCheck %s -check-prefix=MICROSOFT-LAYOUT
+// RUN: %clang -### -mms-bitfields -mno-ms-bitfields %s 2>&1 | FileCheck %s -check-prefix=ITANIUM-LAYOUT
 
-// MSBITFIELDS: -mms-bitfields
-// NO-MSBITFIELDS: -mno-ms-bitfields
-// DEFAULT-MSBITFIELDS-NOT: -mms-bitfields
-// DEFAULT-MSBITFIELDS-NOT: -mno-ms-bitfields
+// DEFAULT-LAYOUT-NOT: -fms-layout-compatibility=itanium
+// DEFAULT-LAYOUT-NOT: -fms-layout-compatibility=microsoft
+// MICROSOFT-LAYOUT: -fms-layout-compatibility=microsoft
+// MICROSOFT-LAYOUT-NOT: -fms-layout-compatibility=itanium
+// ITANIUM-LAYOUT: -fms-layout-compatibility=itanium
+// ITANIUM-LAYOUT-NOT: -fms-layout-compatibility=microsoft
 

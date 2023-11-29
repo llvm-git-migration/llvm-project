@@ -7273,7 +7273,7 @@ void Sema::CheckCompletedCXXClass(Scope *S, CXXRecordDecl *Record) {
   // language option (as opposed to via a pragma or attribute), as
   // the option -mms-bitfields otherwise essentially makes it impossible
   // to build C++ code, unless this diagnostic is turned off.
-  if (!Context.getLangOpts().MSBitfields.has_value() &&
+  if (Context.getLangOpts().getLayoutCompatibility() == LangOptions::LayoutCompatibilityKind::Default &&
       Record->isMsStruct(Context) !=
           Context.getTargetInfo().defaultsToMsStruct() &&
       (Record->isPolymorphic() || Record->getNumBases())) {
