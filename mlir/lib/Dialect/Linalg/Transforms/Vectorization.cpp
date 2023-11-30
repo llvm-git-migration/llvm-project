@@ -19,6 +19,7 @@
 #include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "mlir/Dialect/Utils/IndexingUtils.h"
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/Dialect/Vector/Interfaces/MaskableOpInterface.h"
@@ -1385,6 +1386,88 @@ vectorizeAsLinalgGeneric(RewriterBase &rewriter, VectorizationState &state,
 
   return success();
 }
+// Vectorize an `tensor::UnPackOp` without OuterDimsPerms to these 4 Ops:
+//   Vector::TransferReadOp - Reads the Vector Array of Source data
+//   vector::TransposeOp - Transpose the Source
+//   ShapeCastOp - Reshapes the data based on the target.
+//   vector::TransferWriteOp. - Write the result vector back.
+
+static LogicalResult vectorizeAsUnpackOp(RewriterBase &rewriter,
+                                         tensor::UnPackOp unpackOp,
+                                         ArrayRef<int64_t> inputVectorSizes,
+                                         SmallVectorImpl<Value> &newResults) {
+
+  if (!unpackOp.getOuterDimsPerm().empty()) {
+    LDBG("outer dimensions perms NYI for: " << unpackOp);
+    return failure();
+  }
+
+  OpBuilder::InsertionGuard g(rewriter);
+  rewriter.setInsertionPoint(unpackOp);
+
+  RankedTensorType packTensorType = unpackOp.getSourceType();
+  auto maskType =
+      VectorType::get(packTensorType.getShape(), rewriter.getI1Type());
+  auto vectorType = VectorType::get(packTensorType.getShape(),
+                                    packTensorType.getElementType());
+  ReifiedRankedShapedTypeDims reifiedRetShapes;
+  LogicalResult status =
+      cast<ReifyRankedShapedTypeOpInterface>(unpackOp.getOperation())
+          .reifyResultShapes(rewriter, reifiedRetShapes);
+  if (status.failed()) {
+    LDBG("Unable to reify result shapes of " << unpackOp);
+    return failure();
+  }
+
+  arith::ConstantIndexOp zeroOp =
+      rewriter.create<arith::ConstantIndexOp>(unpackOp->getLoc(), 0);
+  Value mask = rewriter.create<vector::CreateMaskOp>(
+      unpackOp.getLoc(), maskType,
+      tensor::getMixedSizes(rewriter, unpackOp.getLoc(), unpackOp.getSource()));
+
+  vector::TransferReadOp readOp = rewriter.create<vector::TransferReadOp>(
+      unpackOp.getLoc(), vectorType, unpackOp.getSource(),
+      SmallVector<Value>(packTensorType.getRank(), zeroOp),
+      rewriter.getMultiDimIdentityMap(packTensorType.getRank()));
+
+  vector::MaskOp maskedOp =
+      cast<vector::MaskOp>(mlir::vector::maskOperation(rewriter, readOp, mask));
+
+  int64_t numPackedDim = unpackOp.getInnerDimsPos().size();
+  int64_t packRank = packTensorType.getRank();
+  auto lastDims =
+      llvm::to_vector(llvm::seq<int64_t>(packRank - numPackedDim, packRank));
+  PackingMetadata packMetadata =
+      computePackingMetadata(packRank, unpackOp.getInnerDimsPos());
+  SmallVector<int64_t> lastDimToInsertPosPerm = computePermutationVector(
+      packRank, lastDims, packMetadata.insertPositions);
+  SmallVector<int64_t> stripMineShape(packTensorType.getShape());
+  applyPermutationToVector(stripMineShape, lastDimToInsertPosPerm);
+
+  RankedTensorType stripMineTensorType =
+      RankedTensorType::Builder(packTensorType).setShape(stripMineShape);
+
+  RankedTensorType collapsedType = tensor::CollapseShapeOp::inferCollapsedType(
+      stripMineTensorType, packMetadata.reassociations);
+  auto vecCollapsedType =
+      VectorType::get(collapsedType.getShape(), collapsedType.getElementType());
+
+  vector::TransposeOp transposeOp = rewriter.create<vector::TransposeOp>(
+      unpackOp.getLoc(), maskedOp.getResult(0), lastDimToInsertPosPerm);
+
+  vector::ShapeCastOp shapeCastOp = rewriter.create<vector::ShapeCastOp>(
+      unpackOp.getLoc(), vecCollapsedType, transposeOp->getResult(0));
+  tensor::EmptyOp emptyOp = rewriter.create<tensor::EmptyOp>(
+      unpackOp.getLoc(), reifiedRetShapes[0], packTensorType.getElementType());
+
+  vector::TransferWriteOp writeOp = rewriter.create<vector::TransferWriteOp>(
+      unpackOp.getLoc(), shapeCastOp->getResult(0), emptyOp,
+      SmallVector<Value>(lastDims.size(), zeroOp),
+      SmallVector<bool>(lastDims.size(), true));
+
+  newResults.push_back(writeOp->getResult(0));
+  return success();
+}
 
 /// Vectorize a `padOp` with (1) static result type, (2) constant padding value
 /// and (3) all-zero lowPad to
@@ -1579,6 +1662,12 @@ vectorizeLinalgOpPrecondition(LinalgOp linalgOp,
 }
 
 static LogicalResult
+vectorizeUnpackOpPrecondition(tensor::UnPackOp unpackOp,
+                              ArrayRef<int64_t> inputVectorSizes) {
+  return success();
+}
+
+static LogicalResult
 vectorizePadOpPrecondition(tensor::PadOp padOp,
                            ArrayRef<int64_t> inputVectorSizes) {
   auto padValue = padOp.getConstantPaddingValue();
@@ -1636,6 +1725,9 @@ LogicalResult mlir::linalg::vectorizeOpPrecondition(
       })
       .Case<tensor::PadOp>([&](auto padOp) {
         return vectorizePadOpPrecondition(padOp, inputVectorSizes);
+      })
+      .Case<tensor::UnPackOp>([&](auto unpackOp) {
+        return vectorizeUnpackOpPrecondition(unpackOp, inputVectorSizes);
       })
       .Default([](auto) { return failure(); });
 }
@@ -1723,6 +1815,10 @@ LogicalResult mlir::linalg::vectorize(RewriterBase &rewriter, Operation *op,
           .Case<tensor::PadOp>([&](auto padOp) {
             return vectorizeAsTensorPadOp(rewriter, padOp, inputVectorSizes,
                                           results);
+          })
+          .Case<tensor::UnPackOp>([&](auto unpackOp) {
+            return vectorizeAsUnpackOp(rewriter, unpackOp, inputVectorSizes,
+                                       results);
           })
           .Default([](auto) { return failure(); });
 
