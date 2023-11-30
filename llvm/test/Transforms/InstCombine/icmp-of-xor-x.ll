@@ -5,6 +5,910 @@ declare void @llvm.assume(i1)
 declare void @barrier()
 declare void @use.i8(i8)
 
+; X comp X^Neg_C tests, signed.
+; X s< X^Neg_C  -->  X s< 0
+define i1 @src_slt_allone(i8 %x) {
+; CHECK-LABEL: @src_slt_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp slt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_slt_min(i8 %x) {
+; CHECK-LABEL: @src_slt_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp slt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_slt_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_slt_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp slt i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_slt_i128_min(i128 %x) {
+; CHECK-LABEL: @src_slt_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp slt i128 %x, %not
+  ret i1 %cmp
+}
+
+; X s> X^Neg_C  -->  X s> -1
+define i1 @src_sgt_allone(i8 %x) {
+; CHECK-LABEL: @src_sgt_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp sgt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_min(i8 %x) {
+; CHECK-LABEL: @src_sgt_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp sgt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_sgt_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp sgt i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_i128_min(i128 %x) {
+; CHECK-LABEL: @src_sgt_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp sgt i128 %x, %not
+  ret i1 %cmp
+}
+
+; X s<= X^Neg_C  -->  X s< 0
+define i1 @src_sle_allone(i8 %x) {
+; CHECK-LABEL: @src_sle_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp sle i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sle_min(i8 %x) {
+; CHECK-LABEL: @src_sle_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp sle i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sle_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_sle_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp sle i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sle_i128_min(i128 %x) {
+; CHECK-LABEL: @src_sle_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp sle i128 %x, %not
+  ret i1 %cmp
+}
+
+; X s>= X^Neg_C  -->  X s> -1
+define i1 @src_sge_allone(i8 %x) {
+; CHECK-LABEL: @src_sge_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp sge i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sge_min(i8 %x) {
+; CHECK-LABEL: @src_sge_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp sge i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sge_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_sge_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp sge i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_sge_i128_min(i128 %x) {
+; CHECK-LABEL: @src_sge_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp sge i128 %x, %not
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C tests, signed. commutative
+; Neg_C^X s< X   -->      X s> -1
+define i1 @src_slt_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_slt_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp slt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_slt_comm_min(i8 %x) {
+; CHECK-LABEL: @src_slt_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp slt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_slt_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_slt_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp slt i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_slt_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_slt_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp slt i128 %not, %x
+  ret i1 %cmp
+}
+
+; Neg_C^X s> X  -->  X s< 0
+define i1 @src_sgt_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_sgt_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp sgt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_comm_min(i8 %x) {
+; CHECK-LABEL: @src_sgt_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp sgt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_sgt_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp sgt i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sgt_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_sgt_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp sgt i128 %not, %x
+  ret i1 %cmp
+}
+
+; X^Neg_C s<= X  -->  X s> -1
+define i1 @src_sle_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_sle_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp sle i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sle_comm_min(i8 %x) {
+; CHECK-LABEL: @src_sle_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp sle i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sle_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_sle_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp sle i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sle_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_sle_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp sle i128 %not, %x
+  ret i1 %cmp
+}
+
+; Neg_C^X s>= X  -->  X s< 0
+define i1 @src_sge_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_sge_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp sge i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sge_comm_min(i8 %x) {
+; CHECK-LABEL: @src_sge_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp sge i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sge_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_sge_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp sge i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_sge_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_sge_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp sge i128 %not, %x
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C tests, unsigned.
+; X u< X^Neg_C  -->  X s> -1
+define i1 @src_ult_allone(i8 %x) {
+; CHECK-LABEL: @src_ult_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp ult i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ult_min(i8 %x) {
+; CHECK-LABEL: @src_ult_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp ult i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ult_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_ult_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp ult i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ult_i128_min(i128 %x) {
+; CHECK-LABEL: @src_ult_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp ult i128 %x, %not
+  ret i1 %cmp
+}
+
+; X u> X^Neg_C  -->  X s< 0
+define i1 @src_ugt_allone(i8 %x) {
+; CHECK-LABEL: @src_ugt_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp ugt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_min(i8 %x) {
+; CHECK-LABEL: @src_ugt_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp ugt i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_ugt_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp ugt i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_i128_min(i128 %x) {
+; CHECK-LABEL: @src_ugt_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp ugt i128 %x, %not
+  ret i1 %cmp
+}
+
+; X u<= X^Neg_C  -->  X s> -1
+define i1 @src_ule_allone(i8 %x) {
+; CHECK-LABEL: @src_ule_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp ule i8 %x, %not
+  ret i1 %cmp
+}
+
+; X u<= X^Neg_C  -->  X s> -1
+define i1 @src_ule_min(i8 %x) {
+; CHECK-LABEL: @src_ule_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp ule i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ule_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_ule_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp ule i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_ule_i128_min(i128 %x) {
+; CHECK-LABEL: @src_ule_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp ule i128 %x, %not
+  ret i1 %cmp
+}
+
+; X u>= X^Neg_C  -->  X s< 0
+define i1 @src_uge_allone(i8 %x) {
+; CHECK-LABEL: @src_uge_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -1
+  %cmp = icmp uge i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_uge_min(i8 %x) {
+; CHECK-LABEL: @src_uge_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 %x, -128
+  %cmp = icmp uge i8 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_uge_i128_allone(i128 %x) {
+; CHECK-LABEL: @src_uge_i128_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -1
+  %cmp = icmp uge i128 %x, %not
+  ret i1 %cmp
+}
+
+define i1 @src_uge_i128_min(i128 %x) {
+; CHECK-LABEL: @src_uge_i128_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 %x, -170141183460469231731687303715884105728
+  %cmp = icmp uge i128 %x, %not
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C tests, unsigned. commutative
+; Neg_C^X u< X  -->  X s< 0
+define i1 @src_ult_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_ult_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp ult i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ult_comm_min(i8 %x) {
+; CHECK-LABEL: @src_ult_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp ult i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ult_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_ult_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp ult i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ult_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_ult_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp ult i128 %not, %x
+  ret i1 %cmp
+}
+
+; Neg_C^X u> X  -->  X s> -1
+define i1 @src_ugt_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_ugt_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp ugt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_comm_min(i8 %x) {
+; CHECK-LABEL: @src_ugt_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp ugt i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_ugt_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp ugt i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ugt_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_ugt_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp ugt i128 %not, %x
+  ret i1 %cmp
+}
+
+; Neg_C^X u<= X  -->  X s< 0
+define i1 @src_ule_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_ule_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp ule i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ule_comm_min(i8 %x) {
+; CHECK-LABEL: @src_ule_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp ule i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ule_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_ule_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp ule i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_ule_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_ule_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp ule i128 %not, %x
+  ret i1 %cmp
+}
+
+; Neg_C^X u>= X  -->  X s> -1
+define i1 @src_uge_comm_allone(i8 %x) {
+; CHECK-LABEL: @src_uge_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -1, %x
+  %cmp = icmp uge i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_uge_comm_min(i8 %x) {
+; CHECK-LABEL: @src_uge_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -128
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i8 -128, %x
+  %cmp = icmp uge i8 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_uge_i128_comm_allone(i128 %x) {
+; CHECK-LABEL: @src_uge_i128_comm_allone(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -1, %x
+  %cmp = icmp uge i128 %not, %x
+  ret i1 %cmp
+}
+
+define i1 @src_uge_i128_comm_min(i128 %x) {
+; CHECK-LABEL: @src_uge_i128_comm_min(
+; CHECK-NEXT:    [[NOT:%.*]] = xor i128 [[X:%.*]], -170141183460469231731687303715884105728
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i128 [[NOT]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %not = xor i128 -170141183460469231731687303715884105728, %x
+  %cmp = icmp uge i128 %not, %x
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C tests. negative
+; X comp Y
+define i1 @src_sle_xny(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_sle_xny(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp sle i8 %x, %y.not
+  ret i1 %cmp
+}
+define i1 @src_sle_nyx(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_sle_nyx(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp sle i8 %y.not, %x
+  ret i1 %cmp
+}
+define i1 @src_sge_xny(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_sge_xny(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp sge i8 %x, %y.not
+  ret i1 %cmp
+}
+define i1 @src_sge_nyx(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_sge_nyx(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp sge i8 %y.not, %x
+  ret i1 %cmp
+}
+define i1 @src_ule_xny(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_ule_xny(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp uge i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp ule i8 %x, %y.not
+  ret i1 %cmp
+}
+define i1 @src_ule_nyx(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_ule_nyx(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ule i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp ule i8 %y.not, %x
+  ret i1 %cmp
+}
+define i1 @src_uge_xny(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_uge_xny(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ule i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp uge i8 %x, %y.not
+  ret i1 %cmp
+}
+define i1 @src_uge_nyx(i8 %x, i8 %y) {
+; CHECK-LABEL: @src_uge_nyx(
+; CHECK-NEXT:    [[Y_NOT:%.*]] = xor i8 [[Y:%.*]], -1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp uge i8 [[Y_NOT]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %y.not = xor i8 %y, -1
+  %cmp = icmp uge i8 %y.not, %x
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C tests. negative
+; (X+1) comp X^Neg_C
+define i1 @src_sle_incx_nx(i8 %x) {
+; CHECK-LABEL: @src_sle_incx_nx(
+; CHECK-NEXT:    [[TMP1:%.*]] = sub i8 -2, [[X:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[TMP1]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %nx = xor i8 %x, -1
+  %inc.x = add i8 %x, 1
+  %cmp = icmp sle i8 %inc.x, %nx
+  ret i1 %cmp
+}
+; (X-1) comp X^Neg_C
+define i1 @src_sle_decx_nx(i8 %x) {
+; CHECK-LABEL: @src_sle_decx_nx(
+; CHECK-NEXT:    [[TMP1:%.*]] = sub i8 0, [[X:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[TMP1]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %nx = xor i8 %x, -1
+  %dec.x = add i8 %x, -1
+  %cmp = icmp sle i8 %dec.x, %nx
+  ret i1 %cmp
+}
+; X comp (X+1)^Neg_C
+define i1 @src_sle_x_nincx(i8 %x) {
+; CHECK-LABEL: @src_sle_x_nincx(
+; CHECK-NEXT:    [[NOT_INC_X:%.*]] = sub i8 -2, [[X:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[NOT_INC_X]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %inc.x = add i8 %x, 1
+  %not.inc.x = xor i8 %inc.x, -1
+  %cmp = icmp sle i8 %x, %not.inc.x
+  ret i1 %cmp
+}
+; X comp (X-1)^Neg_C
+define i1 @src_sle_x_ndecx(i8 %x) {
+; CHECK-LABEL: @src_sle_x_ndecx(
+; CHECK-NEXT:    [[NOT_DEC_X:%.*]] = sub i8 0, [[X:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i8 [[NOT_DEC_X]], [[X]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %dec.x = add i8 %x, -1
+  %not.dec.x = xor i8 %dec.x, -1
+  %cmp = icmp sle i8 %x, %not.dec.x
+  ret i1 %cmp
+}
+
+; X comp X^Neg_C vector tests
+; X s< X^Neg_C --> X s< 0
+define <2 x i1> @src_slt_xnx_to_slt_0_i8_vec(<2 x i8> %x) {
+; CHECK-LABEL: @src_slt_xnx_to_slt_0_i8_vec(
+; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %not = xor <2 x i8> %x, <i8 -1, i8 -1>
+  %cmp = icmp slt <2 x i8> %x, %not
+  ret <2 x i1> %cmp
+}
+; X s> X^Neg_C  -->  X s> -1
+define <2 x i1> @src_sgt_xnx_to_sgt_n1_i8_vec(<2 x i8> %x) {
+; CHECK-LABEL: @src_sgt_xnx_to_sgt_n1_i8_vec(
+; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %not = xor <2 x i8> %x, <i8 -1, i8 -1>
+  %cmp = icmp sgt <2 x i8> %x, %not
+  ret <2 x i1> %cmp
+}
+; X s<= X^Neg_C  -->  X s< X^Neg_C  -->  X s< 0
+define <2 x i1> @src_sle_xnx_to_slt_0_i8_vec(<2 x i8> %x) {
+; CHECK-LABEL: @src_sle_xnx_to_slt_0_i8_vec(
+; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %not = xor <2 x i8> %x, <i8 -1, i8 -1>
+  %cmp = icmp sle <2 x i8> %x, %not
+  ret <2 x i1> %cmp
+}
+; X s>= X^Neg_C  -->  X s> X^Neg_C  -->  X s> -1
+define <2 x i1> @src_sge_xnx_to_sgt_n1_i8_vec(<2 x i8> %x) {
+; CHECK-LABEL: @src_sge_xnx_to_sgt_n1_i8_vec(
+; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %not = xor <2 x i8> %x, <i8 -1, i8 -1>
+  %cmp = icmp sge <2 x i8> %x, %not
+  ret <2 x i1> %cmp
+}
+
 ; test for (~x ^ y) < ~z
 define i1 @test_xor1(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @test_xor1(
