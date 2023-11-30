@@ -4540,14 +4540,45 @@ static Instruction *foldICmpXorXX(ICmpInst &I, const SimplifyQuery &Q,
   if (!match(Op0, m_c_Xor(m_Specific(Op1), m_Value(A))))
     return nullptr;
 
+  CmpInst::Predicate StrictPred = ICmpInst::getStrictPredicate(Pred);
+  // Transform
+  // X s< ~X, X s<= ~X, X u> ~X, X u>= ~X
+  // --> X s< 0
+  // X s> ~X, X s>= ~X, X u< ~X, X u<= ~X
+  // --> X s> -1
+  // X ==  ~X  -->   false
+  // X !=  ~X  -->   true
+  if (match(Op0, m_Not(m_Specific(Op1)))) {
+    CmpInst::Predicate NewPred;
+    switch (StrictPred) {
+    case ICmpInst::ICMP_EQ:
+      return IC.replaceInstUsesWith(I, ConstantInt::getFalse(I.getType()));
+    case ICmpInst::ICMP_NE:
+      return IC.replaceInstUsesWith(I, ConstantInt::getTrue(I.getType()));
+    case ICmpInst::ICMP_SLT:
+    case ICmpInst::ICMP_UGT:
+      NewPred = ICmpInst::ICMP_SGT;
+      break;
+    case ICmpInst::ICMP_SGT:
+    case ICmpInst::ICMP_ULT:
+      NewPred = ICmpInst::ICMP_SLT;
+      break;
+    default:
+      llvm_unreachable("not a valid predicate");
+    }
+    Constant *Const = NewPred == ICmpInst::ICMP_SLT
+                          ? Constant::getNullValue(Op1->getType())
+                          : Constant::getAllOnesValue(Op1->getType());
+    return new ICmpInst(NewPred, Op1, Const);
+  }
+
   // icmp (X ^ Y_NonZero) u>= X --> icmp (X ^ Y_NonZero) u> X
   // icmp (X ^ Y_NonZero) u<= X --> icmp (X ^ Y_NonZero) u< X
   // icmp (X ^ Y_NonZero) s>= X --> icmp (X ^ Y_NonZero) s> X
   // icmp (X ^ Y_NonZero) s<= X --> icmp (X ^ Y_NonZero) s< X
-  CmpInst::Predicate PredOut = CmpInst::getStrictPredicate(Pred);
-  if (PredOut != Pred &&
+  if (StrictPred != Pred &&
       isKnownNonZero(A, Q.DL, /*Depth=*/0, Q.AC, Q.CxtI, Q.DT))
-    return new ICmpInst(PredOut, Op0, Op1);
+    return new ICmpInst(StrictPred, Op0, Op1);
 
   return nullptr;
 }
