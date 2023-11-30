@@ -11,11 +11,9 @@ declare void @use.vec.i1(<2 x i1>)
 ; X s< X^Neg_C  -->  X s< 0
 define i1 @src_slt(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_slt(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[X:%.*]], 0
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[X_128:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -28,11 +26,9 @@ define i1 @src_slt(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_slt_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_slt_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[X:%.*]], zeroinitializer
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[X]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -46,11 +42,9 @@ define <2 x i1> @src_slt_vec(<2 x i8> %x) {
 ; X s> X^Neg_C  -->  X s> -1
 define i1 @src_sgt(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_sgt(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[X:%.*]], -1
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[X_128:%.*]], -1
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -63,11 +57,9 @@ define i1 @src_sgt(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_sgt_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_sgt_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[X]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -81,11 +73,9 @@ define <2 x i1> @src_sgt_vec(<2 x i8> %x) {
 ; X s<= X^Neg_C  -->  X s< 0
 define i1 @src_sle(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_sle(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[X:%.*]], 0
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[X_128:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -98,11 +88,9 @@ define i1 @src_sle(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_sle_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_sle_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[X:%.*]], zeroinitializer
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[X]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -116,11 +104,9 @@ define <2 x i1> @src_sle_vec(<2 x i8> %x) {
 ; X s>= X^Neg_C  -->  X s> -1
 define i1 @src_sge(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_sge(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[X:%.*]], -1
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[X_128:%.*]], -1
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -133,11 +119,9 @@ define i1 @src_sge(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_sge_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_sge_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[X]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -152,11 +136,9 @@ define <2 x i1> @src_sge_vec(<2 x i8> %x) {
 ; X u< X^Neg_C  -->  X s> -1
 define i1 @src_ult(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_ult(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[X:%.*]], -1
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp ugt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[X_128:%.*]], -1
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -169,11 +151,9 @@ define i1 @src_ult(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_ult_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_ult_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp ugt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[X]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -187,11 +167,9 @@ define <2 x i1> @src_ult_vec(<2 x i8> %x) {
 ; X u> X^Neg_C  -->  X s< 0
 define i1 @src_ugt(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_ugt(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[X:%.*]], 0
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp ult i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[X_128:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -204,11 +182,9 @@ define i1 @src_ugt(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_ugt_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_ugt_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ult <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[X:%.*]], zeroinitializer
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp ult <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[X]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -222,11 +198,9 @@ define <2 x i1> @src_ugt_vec(<2 x i8> %x) {
 ; X u<= X^Neg_C  -->  X s> -1
 define i1 @src_ule(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_ule(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[X:%.*]], -1
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp ugt i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp sgt i128 [[X_128:%.*]], -1
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -239,11 +213,9 @@ define i1 @src_ule(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_ule_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_ule_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp ugt <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp sgt <2 x i8> [[X]], <i8 -1, i8 -1>
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
@@ -257,11 +229,9 @@ define <2 x i1> @src_ule_vec(<2 x i8> %x) {
 ; X u>= X^Neg_C  -->  X s< 0
 define i1 @src_uge(i8 %x, i128 %x.128) {
 ; CHECK-LABEL: @src_uge(
-; CHECK-NEXT:    [[NOT:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[X:%.*]], 0
 ; CHECK-NEXT:    call void @use.i1(i1 [[CMP]])
-; CHECK-NEXT:    [[NOT_128:%.*]] = xor i128 [[X_128:%.*]], -170141183460469231731687303715884105728
-; CHECK-NEXT:    [[CMP_128:%.*]] = icmp ult i128 [[NOT_128]], [[X_128]]
+; CHECK-NEXT:    [[CMP_128:%.*]] = icmp slt i128 [[X_128:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[CMP_128]]
 ;
   %not = xor i8 %x, -1
@@ -274,11 +244,9 @@ define i1 @src_uge(i8 %x, i128 %x.128) {
 
 define <2 x i1> @src_uge_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @src_uge_vec(
-; CHECK-NEXT:    [[NOT:%.*]] = xor <2 x i8> [[X:%.*]], <i8 -1, i8 -1>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ult <2 x i8> [[NOT]], [[X]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[X:%.*]], zeroinitializer
 ; CHECK-NEXT:    call void @use.vec.i1(<2 x i1> [[CMP]])
-; CHECK-NEXT:    [[NOT_MIN:%.*]] = xor <2 x i8> [[X]], <i8 -128, i8 -128>
-; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp ult <2 x i8> [[NOT_MIN]], [[X]]
+; CHECK-NEXT:    [[CMP_MIN:%.*]] = icmp slt <2 x i8> [[X]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[CMP_MIN]]
 ;
   %not = xor <2 x i8> %x, <i8 -1, i8 -1>
