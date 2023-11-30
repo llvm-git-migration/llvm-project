@@ -14441,7 +14441,6 @@ SDValue PPCTargetLowering::combineSetCC(SDNode *N, DAGCombinerInfo &DCI) const {
     if (LHS.getOpcode() == ISD::ADD && isa<ConstantSDNode>(LHS.getOperand(1))) {
       uint64_t Addend = cast<ConstantSDNode>(LHS.getOperand(1))->getZExtValue();
       if (OpVT == MVT::i64) {
-        // (a-2^(M-1)) => sext(trunc(a, M), 64)
         uint64_t ShiftVal = ~Addend + 1;
         uint64_t CmpVal = ~RHSVal + 1;
         if (isPowerOf2_64(ShiftVal) && ShiftVal << 1 == CmpVal) {
@@ -14465,7 +14464,7 @@ SDValue PPCTargetLowering::combineSetCC(SDNode *N, DAGCombinerInfo &DCI) const {
                LHS.getOperand(0).getOpcode() == ISD::ADD &&
                isa<ConstantSDNode>(LHS.getOperand(1)) &&
                isa<ConstantSDNode>(LHS.getOperand(0).getOperand(1))) {
-      if (RHSVal == 65535 &&
+      if (RHSVal == 0xffff &&
           cast<ConstantSDNode>(LHS.getOperand(1))->getZExtValue() == 16 &&
           cast<ConstantSDNode>(LHS.getOperand(0).getOperand(1))
                   ->getZExtValue() == 0xffff8000) {
