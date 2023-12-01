@@ -156,6 +156,8 @@ struct RegisterCodeGenFlags {
   RegisterCodeGenFlags();
 };
 
+bool getEnableBBAddrMap();
+
 llvm::BasicBlockSection getBBSectionsMode(llvm::TargetOptions &Options);
 
 /// Common utility function tightly tied to the options listed here. Initializes

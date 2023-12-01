@@ -693,6 +693,17 @@ decodeBBAddrMapImpl(const ELFFile<ELFT> &EF,
     for (typename ELFFile<ELFT>::Elf_Rela Rela : *Relas)
       FunctionOffsetTranslations[Rela.r_offset] = Rela.r_addend;
   }
+  auto GetAddressForRelocation =
+      [&](unsigned RelocationOffsetInSection) -> Expected<unsigned> {
+    auto FOTIterator =
+        FunctionOffsetTranslations.find(RelocationOffsetInSection);
+    if (FOTIterator == FunctionOffsetTranslations.end()) {
+      return createError("failed to get relocation data for offset: " +
+                         Twine::utohexstr(RelocationOffsetInSection) +
+                         " in section " + describe(EF, Sec));
+    }
+    return FOTIterator->second;
+  };
   Expected<ArrayRef<uint8_t>> ContentsOrErr = EF.getSectionContents(Sec);
   if (!ContentsOrErr)
     return ContentsOrErr.takeError();
@@ -706,7 +717,7 @@ decodeBBAddrMapImpl(const ELFFile<ELFT> &EF,
 
   uint8_t Version = 0;
   uint8_t Feature = 0;
-  PGOAnalysisMap::Features FeatEnable{};
+  BBAddrMap::Features FeatEnable{};
   while (!ULEBSizeErr && !MetadataDecodeErr && Cur &&
          Cur.tell() < Content.size()) {
     if (Sec.sh_type == ELF::SHT_LLVM_BB_ADDR_MAP) {
@@ -719,11 +730,10 @@ decodeBBAddrMapImpl(const ELFFile<ELFT> &EF,
       Feature = Data.getU8(Cur); // Feature byte
       if (!Cur)
         break;
-      auto FeatEnableOrErr = PGOAnalysisMap::Features::decode(Feature);
+      auto FeatEnableOrErr = BBAddrMap::Features::decode(Feature);
       if (!FeatEnableOrErr)
         return FeatEnableOrErr.takeError();
-      FeatEnable =
-          FeatEnableOrErr ? *FeatEnableOrErr : PGOAnalysisMap::Features{};
+      FeatEnable = FeatEnableOrErr ? *FeatEnableOrErr : BBAddrMap::Features{};
       if (Feature != 0 && Version < 2 && Cur)
         return createError(
             "version should be >= 2 for SHT_LLVM_BB_ADDR_MAP when "
@@ -731,48 +741,72 @@ decodeBBAddrMapImpl(const ELFFile<ELFT> &EF,
             Twine(static_cast<int>(Version)) +
             " feature = " + Twine(static_cast<int>(Feature)));
     }
-    uint64_t SectionOffset = Cur.tell();
-    auto Address =
-        static_cast<typename ELFFile<ELFT>::uintX_t>(Data.getAddress(Cur));
-    if (!Cur)
-      return Cur.takeError();
-    if (IsRelocatable) {
-      assert(Address == 0);
-      auto FOTIterator = FunctionOffsetTranslations.find(SectionOffset);
-      if (FOTIterator == FunctionOffsetTranslations.end()) {
-        return createError("failed to get relocation data for offset: " +
-                           Twine::utohexstr(SectionOffset) + " in section " +
-                           describe(EF, Sec));
-      }
-      Address = FOTIterator->second;
-    }
-    uint32_t NumBlocks = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
-
+    uint32_t NumBlocksInBBRange = 0;
+    uint32_t NumBBRanges = 1;
+    typename ELFFile<ELFT>::uintX_t RangeBaseAddress = 0;
     std::vector<BBAddrMap::BBEntry> BBEntries;
-    uint32_t PrevBBEndOffset = 0;
-    for (uint32_t BlockIndex = 0;
-         !MetadataDecodeErr && !ULEBSizeErr && Cur && (BlockIndex < NumBlocks);
-         ++BlockIndex) {
-      uint32_t ID = Version >= 2
-                        ? readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr)
-                        : BlockIndex;
-      uint32_t Offset = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
-      uint32_t Size = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
-      uint32_t MD = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
-      if (Version >= 1) {
-        // Offset is calculated relative to the end of the previous BB.
-        Offset += PrevBBEndOffset;
-        PrevBBEndOffset = Offset + Size;
+    if (FeatEnable.MultiBBRange) {
+      NumBBRanges = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
+    } else {
+      uint64_t RelocationOffsetInSection = Cur.tell();
+      RangeBaseAddress =
+          static_cast<typename ELFFile<ELFT>::uintX_t>(Data.getAddress(Cur));
+      if (!Cur)
+        return Cur.takeError();
+      if (IsRelocatable) {
+        Expected<unsigned> AddressOrErr =
+            GetAddressForRelocation(RelocationOffsetInSection);
+        if (!AddressOrErr)
+          return AddressOrErr.takeError();
+        RangeBaseAddress = *AddressOrErr;
       }
-      Expected<BBAddrMap::BBEntry::Metadata> MetadataOrErr =
-          BBAddrMap::BBEntry::Metadata::decode(MD);
-      if (!MetadataOrErr) {
-        MetadataDecodeErr = MetadataOrErr.takeError();
-        break;
-      }
-      BBEntries.push_back({ID, Offset, Size, *MetadataOrErr});
+      NumBlocksInBBRange = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
     }
-    FunctionEntries.emplace_back(Address, std::move(BBEntries));
+    std::vector<BBAddrMap::BBRangeEntry> BBRangeEntries;
+    uint32_t TotalNumBlocks = 0;
+    for (uint32_t BBRangeIndex = 0; BBRangeIndex < NumBBRanges;
+         ++BBRangeIndex) {
+      uint32_t PrevBBEndOffset = 0;
+      if (FeatEnable.MultiBBRange) {
+        uint64_t RelocationOffsetInSection = Cur.tell();
+        RangeBaseAddress =
+            static_cast<typename ELFFile<ELFT>::uintX_t>(Data.getAddress(Cur));
+        if (IsRelocatable) {
+          assert(RangeBaseAddress == 0);
+          Expected<unsigned> AddressOrErr =
+              GetAddressForRelocation(RelocationOffsetInSection);
+          if (!AddressOrErr)
+            return AddressOrErr.takeError();
+          RangeBaseAddress = *AddressOrErr;
+        }
+        NumBlocksInBBRange = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
+      }
+      for (uint32_t BlockIndex = 0; !MetadataDecodeErr && !ULEBSizeErr && Cur &&
+                                    (BlockIndex < NumBlocksInBBRange);
+           ++BlockIndex) {
+        uint32_t ID = Version >= 2
+                          ? readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr)
+                          : BlockIndex;
+        uint32_t Offset = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
+        uint32_t Size = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
+        uint32_t MD = readULEB128As<uint32_t>(Data, Cur, ULEBSizeErr);
+        if (Version >= 1) {
+          // Offset is calculated relative to the end of the previous BB.
+          Offset += PrevBBEndOffset;
+          PrevBBEndOffset = Offset + Size;
+        }
+        Expected<BBAddrMap::BBEntry::Metadata> MetadataOrErr =
+            BBAddrMap::BBEntry::Metadata::decode(MD);
+        if (!MetadataOrErr) {
+          MetadataDecodeErr = MetadataOrErr.takeError();
+          break;
+        }
+        BBEntries.push_back({ID, Offset, Size, *MetadataOrErr});
+      }
+      TotalNumBlocks += BBEntries.size();
+      BBRangeEntries.push_back({RangeBaseAddress, std::move(BBEntries)});
+    }
+    FunctionEntries.push_back({std::move(BBRangeEntries)});
 
     if (FeatEnable.FuncEntryCount || FeatEnable.BBFreq || FeatEnable.BrProb) {
       // Function entry count
@@ -783,7 +817,7 @@ decodeBBAddrMapImpl(const ELFFile<ELFT> &EF,
 
       std::vector<PGOAnalysisMap::PGOBBEntry> PGOBBEntries;
       for (uint32_t BlockIndex = 0; !MetadataDecodeErr && !ULEBSizeErr && Cur &&
-                                    (BlockIndex < NumBlocks);
+                                    (BlockIndex < TotalNumBlocks);
            ++BlockIndex) {
         // Block frequency
         uint64_t BBF = FeatEnable.BBFreq
