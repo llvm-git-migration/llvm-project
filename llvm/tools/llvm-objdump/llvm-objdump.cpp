@@ -84,7 +84,6 @@
 #include <cctype>
 #include <cstring>
 #include <optional>
-#include <set>
 #include <system_error>
 #include <unordered_map>
 #include <utility>
@@ -1263,20 +1262,20 @@ static SymbolInfoTy createDummySymbolInfo(const ObjectFile &Obj,
     return SymbolInfoTy(Addr, Name, Type);
 }
 
-static void
-collectBBAddrMapLabels(const std::unordered_map<uint64_t, BBAddrMap> &AddrToBBAddrMap,
-                       uint64_t SectionAddr, uint64_t Start, uint64_t End,
-                       std::unordered_map<uint64_t, std::vector<std::string>> &Labels) {
-  if (AddrToBBAddrMap.empty())
+static void collectBBAddrMapLabels(
+    const std::unordered_map<uint64_t, BBAddrMap::BBRangeEntry> &AddrToBBRange,
+    uint64_t SectionAddr, uint64_t Start, uint64_t End,
+    std::unordered_map<uint64_t, std::vector<std::string>> &Labels) {
+  if (AddrToBBRange.empty())
     return;
   Labels.clear();
   uint64_t StartAddress = SectionAddr + Start;
   uint64_t EndAddress = SectionAddr + End;
-  auto Iter = AddrToBBAddrMap.find(StartAddress);
-  if (Iter == AddrToBBAddrMap.end())
+  auto Iter = AddrToBBRange.find(StartAddress);
+  if (Iter == AddrToBBRange.end())
     return;
-  for (const BBAddrMap::BBEntry &BBEntry : Iter->second.getBBEntries()) {
-    uint64_t BBAddress = BBEntry.Offset + Iter->second.getFunctionAddress();
+  for (const BBAddrMap::BBEntry &BBEntry : Iter->second.BBEntries) {
+    uint64_t BBAddress = BBEntry.Offset + Iter->second.BaseAddress;
     if (BBAddress >= EndAddress)
       continue;
     Labels[BBAddress].push_back(("BB" + Twine(BBEntry.ID)).str());
@@ -1636,19 +1635,21 @@ disassembleObject(ObjectFile &Obj, const ObjectFile &DbgObj,
 
   LLVM_DEBUG(LVP.dump());
 
-  std::unordered_map<uint64_t, BBAddrMap> AddrToBBAddrMap;
+  std::unordered_map<uint64_t, BBAddrMap::BBRangeEntry> AddrToBBRange;
   auto ReadBBAddrMap = [&](std::optional<unsigned> SectionIndex =
                                std::nullopt) {
-    AddrToBBAddrMap.clear();
+    AddrToBBRange.clear();
     if (const auto *Elf = dyn_cast<ELFObjectFileBase>(&Obj)) {
       auto BBAddrMapsOrErr = Elf->readBBAddrMap(SectionIndex);
       if (!BBAddrMapsOrErr) {
         reportWarning(toString(BBAddrMapsOrErr.takeError()), Obj.getFileName());
         return;
       }
-      for (auto &FunctionBBAddrMap : *BBAddrMapsOrErr)
-        AddrToBBAddrMap.emplace(FunctionBBAddrMap.Addr,
-                                std::move(FunctionBBAddrMap));
+      for (auto &FunctionBBAddrMap : *BBAddrMapsOrErr) {
+        for (auto &BBRange : FunctionBBAddrMap.BBRanges) {
+          AddrToBBRange.emplace(BBRange.BaseAddress, std::move(BBRange));
+        }
+      }
     }
   };
 
@@ -1983,7 +1984,7 @@ disassembleObject(ObjectFile &Obj, const ObjectFile &DbgObj,
                                   DT->DisAsm.get(), DT->InstPrinter.get(),
                                   PrimaryTarget.SubtargetInfo.get(),
                                   SectionAddr, Index, End, AllLabels);
-        collectBBAddrMapLabels(AddrToBBAddrMap, SectionAddr, Index, End,
+        collectBBAddrMapLabels(AddrToBBRange, SectionAddr, Index, End,
                                BBAddrMapLabels);
       }
 
