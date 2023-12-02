@@ -290,7 +290,9 @@ public:
     uptr Size =
         android_unsafe_frame_pointer_chase(Stack, MaxTraceSize + DiscardFrames);
     Size = Min<uptr>(Size, MaxTraceSize + DiscardFrames);
-    return Depot.insert(Stack + Min<uptr>(DiscardFrames, Size), Stack + Size);
+    return reinterpret_cast<StackDepot *>(RawStackDepot)
+        ->insert(RawStackDepot, Stack + Min<uptr>(DiscardFrames, Size),
+                 Stack + Size);
 #else
     return 0;
 #endif
@@ -917,8 +919,14 @@ public:
       Primary.Options.clear(OptionBit::AddLargeAllocationSlack);
   }
 
-  const char *getStackDepotAddress() const {
-    return reinterpret_cast<const char *>(&Depot);
+  const char *getStackDepotAddress() {
+    initThreadMaybe();
+    return RawStackDepot;
+  }
+
+  uptr getStackDepotSize() {
+    initThreadMaybe();
+    return StackDepotSize;
   }
 
   const char *getRegionInfoArrayAddress() const {
@@ -954,45 +962,54 @@ public:
 
   static const uptr MaxTraceSize = 64;
 
-  static void collectTraceMaybe(const StackDepot *Depot,
+  static void collectTraceMaybe(const char *RawStackDepot,
                                 uintptr_t (&Trace)[MaxTraceSize], u32 Hash) {
+    auto *Depot = reinterpret_cast<const StackDepot *>(RawStackDepot);
     uptr RingPos, Size;
-    if (!Depot->find(Hash, &RingPos, &Size))
+    if (!Depot->find(RawStackDepot, Hash, &RingPos, &Size))
       return;
     for (unsigned I = 0; I != Size && I != MaxTraceSize; ++I)
-      Trace[I] = static_cast<uintptr_t>((*Depot)[RingPos + I]);
+      Trace[I] = static_cast<uintptr_t>(Depot->at(RawStackDepot, RingPos + I));
   }
 
   static void getErrorInfo(struct scudo_error_info *ErrorInfo,
                            uintptr_t FaultAddr, const char *DepotPtr,
-                           const char *RegionInfoPtr, const char *RingBufferPtr,
-                           size_t RingBufferSize, const char *Memory,
-                           const char *MemoryTags, uintptr_t MemoryAddr,
-                           size_t MemorySize) {
+                           size_t DepotSize, const char *RegionInfoPtr,
+                           const char *RingBufferPtr, size_t RingBufferSize,
+                           const char *Memory, const char *MemoryTags,
+                           uintptr_t MemoryAddr, size_t MemorySize) {
     *ErrorInfo = {};
     if (!allocatorSupportsMemoryTagging<Config>() ||
         MemoryAddr + MemorySize < MemoryAddr)
       return;
 
-    auto *Depot = reinterpret_cast<const StackDepot *>(DepotPtr);
+    if (DepotPtr && DepotSize < sizeof(StackDepot)) {
+      return;
+    }
+    if (DepotPtr &&
+        !reinterpret_cast<const StackDepot *>(DepotPtr)->isValid(DepotSize)) {
+      // corrupted stack depot.
+      return;
+    }
+
     size_t NextErrorReport = 0;
 
     // Check for OOB in the current block and the two surrounding blocks. Beyond
     // that, UAF is more likely.
     if (extractTag(FaultAddr) != 0)
-      getInlineErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, Depot,
+      getInlineErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, DepotPtr,
                          RegionInfoPtr, Memory, MemoryTags, MemoryAddr,
                          MemorySize, 0, 2);
 
     // Check the ring buffer. For primary allocations this will only find UAF;
     // for secondary allocations we can find either UAF or OOB.
-    getRingBufferErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, Depot,
+    getRingBufferErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, DepotPtr,
                            RingBufferPtr, RingBufferSize);
 
     // Check for OOB in the 28 blocks surrounding the 3 we checked earlier.
     // Beyond that we are likely to hit false positives.
     if (extractTag(FaultAddr) != 0)
-      getInlineErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, Depot,
+      getInlineErrorInfo(ErrorInfo, NextErrorReport, FaultAddr, DepotPtr,
                          RegionInfoPtr, Memory, MemoryTags, MemoryAddr,
                          MemorySize, 2, 16);
   }
@@ -1040,7 +1057,9 @@ private:
   uptr GuardedAllocSlotSize = 0;
 #endif // GWP_ASAN_HOOKS
 
-  StackDepot Depot;
+  char *RawStackDepot = nullptr;
+  uptr StackDepotSize = 0;
+  MemMapT RawStackDepotMap;
 
   struct AllocationRingBuffer {
     struct Entry {
@@ -1256,7 +1275,8 @@ private:
   }
 
   void storePrimaryAllocationStackMaybe(const Options &Options, void *Ptr) {
-    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)))
+    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)) ||
+        !RawRingBuffer)
       return;
     auto *Ptr32 = reinterpret_cast<u32 *>(Ptr);
     Ptr32[MemTagAllocationTraceIndex] = collectStackTrace();
@@ -1289,7 +1309,8 @@ private:
 
   void storeSecondaryAllocationStackMaybe(const Options &Options, void *Ptr,
                                           uptr Size) {
-    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)))
+    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)) ||
+        !RawRingBuffer)
       return;
 
     u32 Trace = collectStackTrace();
@@ -1304,7 +1325,8 @@ private:
 
   void storeDeallocationStackMaybe(const Options &Options, void *Ptr,
                                    u8 PrevTag, uptr Size) {
-    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)))
+    if (!UNLIKELY(Options.get(OptionBit::TrackAllocationStacks)) ||
+        !RawRingBuffer)
       return;
 
     auto *Ptr32 = reinterpret_cast<u32 *>(Ptr);
@@ -1325,7 +1347,7 @@ private:
 
   static void getInlineErrorInfo(struct scudo_error_info *ErrorInfo,
                                  size_t &NextErrorReport, uintptr_t FaultAddr,
-                                 const StackDepot *Depot,
+                                 const char *RawStackDepot,
                                  const char *RegionInfoPtr, const char *Memory,
                                  const char *MemoryTags, uintptr_t MemoryAddr,
                                  size_t MemorySize, size_t MinDistance,
@@ -1390,8 +1412,10 @@ private:
           UntaggedFaultAddr < ChunkAddr ? BUFFER_UNDERFLOW : BUFFER_OVERFLOW;
       R->allocation_address = ChunkAddr;
       R->allocation_size = Header.SizeOrUnusedBytes;
-      collectTraceMaybe(Depot, R->allocation_trace,
-                        Data[MemTagAllocationTraceIndex]);
+      if (RawStackDepot) {
+        collectTraceMaybe(RawStackDepot, R->allocation_trace,
+                          Data[MemTagAllocationTraceIndex]);
+      }
       R->allocation_tid = Data[MemTagAllocationTidIndex];
       return NextErrorReport == NumErrorReports;
     };
@@ -1408,13 +1432,13 @@ private:
   static void getRingBufferErrorInfo(struct scudo_error_info *ErrorInfo,
                                      size_t &NextErrorReport,
                                      uintptr_t FaultAddr,
-                                     const StackDepot *Depot,
+                                     const char *RawStackDepot,
                                      const char *RingBufferPtr,
                                      size_t RingBufferSize) {
     auto *RingBuffer =
         reinterpret_cast<const AllocationRingBuffer *>(RingBufferPtr);
     size_t RingBufferElements = ringBufferElementsFromBytes(RingBufferSize);
-    if (!RingBuffer || RingBufferElements == 0)
+    if (!RingBuffer || RingBufferElements == 0 || !RawStackDepot)
       return;
     uptr Pos = atomic_load_relaxed(&RingBuffer->Pos);
 
@@ -1473,9 +1497,10 @@ private:
 
       R->allocation_address = UntaggedEntryPtr;
       R->allocation_size = EntrySize;
-      collectTraceMaybe(Depot, R->allocation_trace, AllocationTrace);
+      collectTraceMaybe(RawStackDepot, R->allocation_trace, AllocationTrace);
       R->allocation_tid = AllocationTid;
-      collectTraceMaybe(Depot, R->deallocation_trace, DeallocationTrace);
+      collectTraceMaybe(RawStackDepot, R->deallocation_trace,
+                        DeallocationTrace);
       R->deallocation_tid = DeallocationTid;
     }
   }
@@ -1504,6 +1529,28 @@ private:
       return;
     u32 AllocationRingBufferSize =
         static_cast<u32>(getFlags()->allocation_ring_buffer_size);
+    // We store alloc and free stacks for each entry.
+    constexpr auto kStacksPerRingBufferEntry = 2;
+    u32 TabSize = static_cast<u32>(roundUpPowerOfTwo(kStacksPerRingBufferEntry *
+                                                     AllocationRingBufferSize));
+    constexpr auto kFramesPerStack = 8;
+    static_assert(isPowerOfTwo(kFramesPerStack));
+    u32 RingSize = static_cast<u32>(TabSize * kFramesPerStack);
+    DCHECK(isPowerOfTwo(RingSize));
+    static_assert(sizeof(StackDepot) % alignof(atomic_u64) == 0);
+
+    StackDepotSize = sizeof(StackDepot) + sizeof(atomic_u64) * RingSize +
+                     sizeof(atomic_u32) * TabSize;
+    MemMapT DepotMap;
+    DepotMap.map(
+        /*Addr=*/0U, roundUp(StackDepotSize, getPageSizeCached()),
+        "scudo:stack_depot");
+    RawStackDepot = reinterpret_cast<char *>(DepotMap.getBase());
+    auto *Depot = reinterpret_cast<StackDepot *>(DepotMap.getBase());
+    Depot->init(RingSize, TabSize);
+    DCHECK(Depot->isValid(StackDepotSize));
+    RawStackDepotMap = DepotMap;
+
     MemMapT MemMap;
     MemMap.map(
         /*Addr=*/0U,
@@ -1526,6 +1573,10 @@ private:
                              RawRingBufferMap.getCapacity());
     }
     RawRingBuffer = nullptr;
+    if (RawStackDepot) {
+      RawStackDepotMap.unmap(RawStackDepotMap.getBase(),
+                             RawStackDepotMap.getCapacity());
+    }
   }
 
   static constexpr size_t ringBufferSizeInBytes(u32 RingBufferElements) {
