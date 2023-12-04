@@ -410,7 +410,10 @@ TARGET_BUILTIN(__builtin_amdgcn_cvt_pk_fp8_f32, "iffiIb", "nc", "fp8-insts")
 TARGET_BUILTIN(__builtin_amdgcn_cvt_sr_bf8_f32, "ifiiIi", "nc", "fp8-insts")
 TARGET_BUILTIN(__builtin_amdgcn_cvt_sr_fp8_f32, "ifiiIi", "nc", "fp8-insts")
 
-// OpenCL
+// OpenCL printf has the following signature
+//     int printf(__constant const char* st, ...) __attribute__((format(printf, 1, 2)));
+// The "__constant" address space corresponds to number 4 in LLVM IR for AMDGPU.
+// Following entry makes sure printf is recognized as builtin for OCL inputs.
 LANGBUILTIN(printf, "icC*4.", "fp:0:", ALL_OCL_LANGUAGES)
 
 #undef BUILTIN
