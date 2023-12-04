@@ -40,8 +40,8 @@ private:
   //typedef DenseMap<MachineBasicBlock*, Register> AvailableValsTy;
   void *AV = nullptr;
 
-  /// VRC - Register class of the current virtual register.
-  const TargetRegisterClass *VRC = nullptr;
+  /// RegAttrs - current virtual register, new registers copy its attributes.
+  Register RegAttrs;
 
   /// InsertedPHIs - If this is non-null, the MachineSSAUpdater adds all PHI
   /// nodes that it creates to the vector.
@@ -62,7 +62,6 @@ public:
   /// Initialize - Reset this object to get ready for a new set of SSA
   /// updates.
   void Initialize(Register V);
-  void Initialize(const TargetRegisterClass *RC);
 
   /// AddAvailableValue - Indicate that a rewritten value is available at the
   /// end of the specified block with the specified value.
