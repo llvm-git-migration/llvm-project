@@ -17,6 +17,7 @@
 
 #include "AMDGPU.h"
 #include "SILowerI1Copies.h"
+#include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineUniformityAnalysis.h"
 #include "llvm/InitializePasses.h"
@@ -60,6 +61,7 @@ public:
 
 private:
   MachineUniformityInfo *MUI = nullptr;
+  MachineIRBuilder B;
 
 public:
   void markAsLaneMask(Register DstReg) const override;
@@ -80,7 +82,7 @@ public:
 DivergenceLoweringHelper::DivergenceLoweringHelper(
     MachineFunction *MF, MachineDominatorTree *DT,
     MachinePostDominatorTree *PDT, MachineUniformityInfo *MUI)
-    : PhiLoweringHelper(MF, DT, PDT), MUI(MUI) {}
+    : PhiLoweringHelper(MF, DT, PDT), MUI(MUI), B(*MF) {}
 
 // _(s1) -> SReg_32/64(s1)
 void DivergenceLoweringHelper::markAsLaneMask(Register DstReg) const {
@@ -182,7 +184,16 @@ void DivergenceLoweringHelper::buildMergeLaneMasks(
       .addReg(CurMaskedReg);
 }
 
-void DivergenceLoweringHelper::constrainAsLaneMask(Incoming &In) { return; }
+// GlobalISel has to constrain S1 incoming taken as-is with lane mask register
+// class. Insert a copy of Incoming.Reg to new lane mask inside Incoming.Block,
+// Incoming.Reg becomes that new lane mask.
+void DivergenceLoweringHelper::constrainAsLaneMask(Incoming &In) {
+  B.setInsertPt(*In.Block, In.Block->getFirstTerminator());
+
+  auto Copy = B.buildCopy(LLT::scalar(1), In.Reg);
+  MRI->setRegClass(Copy.getReg(0), ST->getBoolRC());
+  In.Reg = Copy.getReg(0);
+}
 
 } // End anonymous namespace.
 
