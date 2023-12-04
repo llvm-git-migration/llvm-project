@@ -75,7 +75,7 @@
 #include "ICF.h"
 #include "Config.h"
 #include "InputFiles.h"
-#include "LinkerScript.h"
+#include "InputSection.h"
 #include "OutputSections.h"
 #include "SymbolTable.h"
 #include "Symbols.h"
