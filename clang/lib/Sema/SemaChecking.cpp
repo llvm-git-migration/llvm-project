@@ -12465,6 +12465,18 @@ isArithmeticArgumentPromotion(Sema &S, const ImplicitCastExpr *ICE) {
          S.Context.getFloatingTypeOrder(From, To) < 0;
 }
 
+static clang::analyze_format_string::ArgType::MatchKind
+handleFormatSignedness(clang::analyze_format_string::ArgType::MatchKind Match,
+                       DiagnosticOptions &DiagOpts) {
+  if (Match == clang::analyze_format_string::ArgType::MatchSignedness) {
+    if (DiagOpts.FormatSignedness)
+      Match = clang::analyze_format_string::ArgType::NoMatch;
+    else
+      Match = clang::analyze_format_string::ArgType::Match;
+  }
+  return Match;
+}
+
 bool
 CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
                                     const char *StartSpecifier,
@@ -12508,6 +12520,8 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
 
   ArgType::MatchKind ImplicitMatch = ArgType::NoMatch;
   ArgType::MatchKind Match = AT.matchesType(S.Context, ExprTy);
+  Match =
+      handleFormatSignedness(Match, S.getDiagnostics().getDiagnosticOptions());
   if (Match == ArgType::Match)
     return true;
 
@@ -12531,6 +12545,8 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
           ICE->getType() == S.Context.UnsignedIntTy) {
         // All further checking is done on the subexpression
         ImplicitMatch = AT.matchesType(S.Context, ExprTy);
+        ImplicitMatch = handleFormatSignedness(
+            ImplicitMatch, S.getDiagnostics().getDiagnosticOptions());
         if (ImplicitMatch == ArgType::Match)
           return true;
       }
@@ -12651,6 +12667,7 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       switch (Match) {
       case ArgType::Match:
       case ArgType::MatchPromotion:
+      case ArgType::MatchSignedness:
       case ArgType::NoMatchPromotionTypeConfusion:
         llvm_unreachable("expected non-matching");
       case ArgType::NoMatchPedantic:
@@ -12687,8 +12704,10 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       CastFix << (S.LangOpts.CPlusPlus ? ">" : ")");
 
       SmallVector<FixItHint,4> Hints;
-      if (AT.matchesType(S.Context, IntendedTy) != ArgType::Match ||
-          ShouldNotPrintDirectly)
+      ArgType::MatchKind IntendedMatch = AT.matchesType(S.Context, IntendedTy);
+      IntendedMatch = handleFormatSignedness(
+          IntendedMatch, S.getDiagnostics().getDiagnosticOptions());
+      if ((IntendedMatch != ArgType::Match) || ShouldNotPrintDirectly)
         Hints.push_back(FixItHint::CreateReplacement(SpecRange, os.str()));
 
       if (const CStyleCastExpr *CCast = dyn_cast<CStyleCastExpr>(E)) {
@@ -12756,6 +12775,7 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       switch (Match) {
       case ArgType::Match:
       case ArgType::MatchPromotion:
+      case ArgType::MatchSignedness:
       case ArgType::NoMatchPromotionTypeConfusion:
         llvm_unreachable("expected non-matching");
       case ArgType::NoMatchPedantic:
@@ -12968,6 +12988,8 @@ bool CheckScanfHandler::HandleScanfSpecifier(
 
   analyze_format_string::ArgType::MatchKind Match =
       AT.matchesType(S.Context, Ex->getType());
+  Match =
+      handleFormatSignedness(Match, S.getDiagnostics().getDiagnosticOptions());
   bool Pedantic = Match == analyze_format_string::ArgType::NoMatchPedantic;
   if (Match == analyze_format_string::ArgType::Match)
     return true;
