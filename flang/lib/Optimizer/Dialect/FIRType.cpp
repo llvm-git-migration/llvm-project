@@ -330,6 +330,13 @@ bool isAllocatableOrPointerArray(mlir::Type ty) {
   return false;
 }
 
+bool isTypeWithDescriptor(mlir::Type ty) {
+  if (fir::isPointerType(ty) || fir::isAllocatableType(ty) ||
+      fir::isAssumedShape(ty))
+    return true;
+  return false;
+}
+
 bool isPolymorphicType(mlir::Type ty) {
   if (auto refTy = fir::dyn_cast_ptrEleTy(ty))
     ty = refTy;
