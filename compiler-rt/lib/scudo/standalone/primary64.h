@@ -119,11 +119,13 @@ public:
     SmallerBlockReleasePageDelta =
         PagesInGroup * (1 + MinSizeClass / 16U) / 100;
 
+#if 0
     // Reserve the space required for the Primary.
     CHECK(ReservedMemory.create(/*Addr=*/0U, PrimarySize,
                                 "scudo:primary_reserve"));
     PrimaryBase = ReservedMemory.getBase();
     DCHECK_NE(PrimaryBase, 0U);
+#endif
 
     u32 Seed;
     const u64 Time = getMonotonicTimeFast();
@@ -133,12 +135,14 @@ public:
     for (uptr I = 0; I < NumClasses; I++) {
       RegionInfo *Region = getRegionInfo(I);
 
+#if 0
       // The actual start of a region is offset by a random number of pages
       // when PrimaryEnableRandomOffset is set.
       Region->RegionBeg = (PrimaryBase + (I << RegionSizeLog)) +
                           (Config::Primary::EnableRandomOffset
                                ? ((getRandomModN(&Seed, 16) + 1) * PageSize)
                                : 0);
+#endif
       Region->RandState = getRandomU32(&Seed);
       // Releasing small blocks is expensive, set a higher threshold to avoid
       // frequent page releases.
@@ -148,9 +152,11 @@ public:
         Region->TryReleaseThreshold = PageSize;
       Region->ReleaseInfo.LastReleaseAtNs = Time;
 
+#if 0
       Region->MemMapInfo.MemMap = ReservedMemory.dispatch(
           PrimaryBase + (I << RegionSizeLog), RegionSize);
       CHECK(Region->MemMapInfo.MemMap.isAllocated());
+#endif
     }
     shuffle(RegionInfoArray, NumClasses, &Seed);
 
@@ -165,6 +171,10 @@ public:
   void unmapTestOnly() NO_THREAD_SAFETY_ANALYSIS {
     for (uptr I = 0; I < NumClasses; I++) {
       RegionInfo *Region = getRegionInfo(I);
+      MemMapT &MemMap = Region->MemMapInfo.MemMap;
+      if (MemMap.isAllocated())
+        MemMap.unmap(MemMap.getBase(), MemMap.getCapacity());
+
       *Region = {};
     }
     if (PrimaryBase)
@@ -586,9 +596,16 @@ private:
   }
 
   uptr getRegionBaseByClassId(uptr ClassId) {
+    RegionInfo *Region = getRegionInfo(ClassId);
+    Region->MMLock.assertHeld();
+    if (!Region->MemMapInfo.MemMap.isAllocated())
+      return 0U;
+    return Region->MemMapInfo.MemMap.getBase();
+#if 0
     return roundDown(getRegionInfo(ClassId)->RegionBeg - PrimaryBase,
                      RegionSize) +
            PrimaryBase;
+#endif
   }
 
   static CompactPtrT compactPtrInternal(uptr Base, uptr Ptr) {
@@ -982,6 +999,26 @@ private:
     const uptr Size = getSizeByClassId(ClassId);
     const u16 MaxCount = CacheT::getMaxCached(Size);
 
+    MemMapT &RegionMemMap = Region->MemMapInfo.MemMap;
+    if (UNLIKELY(!RegionMemMap.isAllocated())) {
+      DCHECK_EQ(Region->RegionBeg, 0U);
+      ReservedMemoryT ReservedMemory;
+      if (!ReservedMemory.create(/*Addr=*/0U, RegionSize,
+                                 "scudo:primary_reserve")) {
+        Printf("Can't preserve pages for size class %zu.\n",
+               getSizeByClassId(ClassId));
+        return nullptr;
+      }
+      RegionMemMap = ReservedMemory.dispatch(ReservedMemory.getBase(),
+                                             ReservedMemory.getCapacity());
+      CHECK(RegionMemMap.isAllocated());
+
+      Region->RegionBeg = RegionMemMap.getBase() +
+                          (Config::Primary::EnableRandomOffset
+                               ? ((getRandomModN(&Region->RandState, 16) + 1) *
+                                  getPageSizeCached())
+                               : 0);
+    }
     const uptr RegionBeg = Region->RegionBeg;
     const uptr MappedUser = Region->MemMapInfo.MappedUser;
     const uptr TotalUserBytes =

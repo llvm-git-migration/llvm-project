@@ -129,7 +129,7 @@ void MemMapLinux::releaseAndZeroPagesToOSImpl(uptr From, uptr Size) {
 bool ReservedMemoryLinux::createImpl(uptr Addr, uptr Size, const char *Name,
                                      uptr Flags) {
   ReservedMemoryLinux::MemMapT MemMap;
-  if (!MemMap.map(Addr, Size, Name, Flags | MAP_NOACCESS))
+  if (!MemMap.map(Addr, Size, Name, Flags | MAP_NOACCESS | MAP_ALLOWNOMEM))
     return false;
 
   MapBase = MemMap.getBase();
