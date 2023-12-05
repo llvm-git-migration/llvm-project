@@ -609,7 +609,7 @@ define void @test_srem_vec(ptr %X) nounwind {
 ; RV32MV-NEXT:    sw s3, 28(sp) # 4-byte Folded Spill
 ; RV32MV-NEXT:    sw s4, 24(sp) # 4-byte Folded Spill
 ; RV32MV-NEXT:    csrr a1, vlenb
-; RV32MV-NEXT:    slli a1, a1, 1
+; RV32MV-NEXT:    slli a1, a1, 2
 ; RV32MV-NEXT:    sub sp, sp, a1
 ; RV32MV-NEXT:    mv s0, a0
 ; RV32MV-NEXT:    lbu a0, 12(a0)
@@ -643,21 +643,27 @@ define void @test_srem_vec(ptr %X) nounwind {
 ; RV32MV-NEXT:    mv a1, s4
 ; RV32MV-NEXT:    li a3, 0
 ; RV32MV-NEXT:    call __moddi3@plt
-; RV32MV-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32MV-NEXT:    addi a2, sp, 16
 ; RV32MV-NEXT:    vl2r.v v8, (a2) # Unknown-size Folded Reload
+; RV32MV-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32MV-NEXT:    vslide1down.vx v8, v8, a0
 ; RV32MV-NEXT:    vslide1down.vx v8, v8, a1
-; RV32MV-NEXT:    addi a0, sp, 16
+; RV32MV-NEXT:    csrr a0, vlenb
+; RV32MV-NEXT:    slli a0, a0, 1
+; RV32MV-NEXT:    add a0, sp, a0
+; RV32MV-NEXT:    addi a0, a0, 16
 ; RV32MV-NEXT:    vs2r.v v8, (a0) # Unknown-size Folded Spill
 ; RV32MV-NEXT:    li a2, -5
 ; RV32MV-NEXT:    li a3, -1
 ; RV32MV-NEXT:    mv a0, s1
 ; RV32MV-NEXT:    mv a1, s3
 ; RV32MV-NEXT:    call __moddi3@plt
-; RV32MV-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
-; RV32MV-NEXT:    addi a2, sp, 16
+; RV32MV-NEXT:    csrr a2, vlenb
+; RV32MV-NEXT:    slli a2, a2, 1
+; RV32MV-NEXT:    add a2, sp, a2
+; RV32MV-NEXT:    addi a2, a2, 16
 ; RV32MV-NEXT:    vl2r.v v8, (a2) # Unknown-size Folded Reload
+; RV32MV-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32MV-NEXT:    vslide1down.vx v8, v8, a0
 ; RV32MV-NEXT:    vslide1down.vx v8, v8, a1
 ; RV32MV-NEXT:    vslidedown.vi v8, v8, 2
@@ -712,7 +718,7 @@ define void @test_srem_vec(ptr %X) nounwind {
 ; RV32MV-NEXT:    or a0, a0, a1
 ; RV32MV-NEXT:    sw a0, 8(s0)
 ; RV32MV-NEXT:    csrr a0, vlenb
-; RV32MV-NEXT:    slli a0, a0, 1
+; RV32MV-NEXT:    slli a0, a0, 2
 ; RV32MV-NEXT:    add sp, sp, a0
 ; RV32MV-NEXT:    lw ra, 44(sp) # 4-byte Folded Reload
 ; RV32MV-NEXT:    lw s0, 40(sp) # 4-byte Folded Reload

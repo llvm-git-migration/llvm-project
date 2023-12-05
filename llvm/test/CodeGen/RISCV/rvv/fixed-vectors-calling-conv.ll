@@ -591,8 +591,8 @@ define <32 x i32> @ret_v32i32_param_v32i32_v32i32_v32i32_i32(<32 x i32> %x, <32 
 ;
 ; LMULMAX4-LABEL: ret_v32i32_param_v32i32_v32i32_v32i32_i32:
 ; LMULMAX4:       # %bb.0:
-; LMULMAX4-NEXT:    vsetivli zero, 16, e32, m4, ta, ma
 ; LMULMAX4-NEXT:    addi a1, a0, 64
+; LMULMAX4-NEXT:    vsetivli zero, 16, e32, m4, ta, ma
 ; LMULMAX4-NEXT:    vle32.v v24, (a1)
 ; LMULMAX4-NEXT:    vle32.v v28, (a0)
 ; LMULMAX4-NEXT:    vadd.vv v8, v8, v16
@@ -1205,8 +1205,8 @@ define <32 x i32> @vector_arg_via_stack(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, 
 ;
 ; LMULMAX2-LABEL: vector_arg_via_stack:
 ; LMULMAX2:       # %bb.0:
-; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; LMULMAX2-NEXT:    addi a0, sp, 64
+; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; LMULMAX2-NEXT:    vle32.v v16, (a0)
 ; LMULMAX2-NEXT:    vle32.v v18, (sp)
 ; LMULMAX2-NEXT:    addi a0, sp, 32

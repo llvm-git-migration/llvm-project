@@ -525,7 +525,9 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV32-SLOW-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
 ; RV32-SLOW-NEXT:    vmv.s.x v9, a0
 ; RV32-SLOW-NEXT:    vslideup.vi v8, v9, 1
-; RV32-SLOW-NEXT:  .LBB8_4: # %else2
+; RV32-SLOW-NEXT:    vse32.v v8, (a1)
+; RV32-SLOW-NEXT:    ret
+; RV32-SLOW-NEXT:  .LBB8_4:
 ; RV32-SLOW-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
 ; RV32-SLOW-NEXT:    vse32.v v8, (a1)
 ; RV32-SLOW-NEXT:    ret
@@ -569,7 +571,9 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV64-SLOW-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
 ; RV64-SLOW-NEXT:    vmv.s.x v9, a0
 ; RV64-SLOW-NEXT:    vslideup.vi v8, v9, 1
-; RV64-SLOW-NEXT:  .LBB8_4: # %else2
+; RV64-SLOW-NEXT:    vse32.v v8, (a1)
+; RV64-SLOW-NEXT:    ret
+; RV64-SLOW-NEXT:  .LBB8_4:
 ; RV64-SLOW-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
 ; RV64-SLOW-NEXT:    vse32.v v8, (a1)
 ; RV64-SLOW-NEXT:    ret

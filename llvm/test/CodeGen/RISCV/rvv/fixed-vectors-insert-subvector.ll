@@ -193,14 +193,14 @@ define void @insert_v8i32_v2i32_0(ptr %vp, ptr %svp) {
 define void @insert_v8i32_v2i32_2(ptr %vp, ptr %svp) {
 ; LMULMAX2-LABEL: insert_v8i32_v2i32_2:
 ; LMULMAX2:       # %bb.0:
+; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
+; LMULMAX2-NEXT:    vle32.v v8, (a0)
 ; LMULMAX2-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
-; LMULMAX2-NEXT:    vle32.v v8, (a1)
-; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
-; LMULMAX2-NEXT:    vle32.v v10, (a0)
+; LMULMAX2-NEXT:    vle32.v v10, (a1)
 ; LMULMAX2-NEXT:    vsetivli zero, 4, e32, m2, tu, ma
-; LMULMAX2-NEXT:    vslideup.vi v10, v8, 2
+; LMULMAX2-NEXT:    vslideup.vi v8, v10, 2
 ; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
-; LMULMAX2-NEXT:    vse32.v v10, (a0)
+; LMULMAX2-NEXT:    vse32.v v8, (a0)
 ; LMULMAX2-NEXT:    ret
 ;
 ; LMULMAX1-LABEL: insert_v8i32_v2i32_2:
@@ -222,12 +222,13 @@ define void @insert_v8i32_v2i32_2(ptr %vp, ptr %svp) {
 define void @insert_v8i32_v2i32_6(ptr %vp, ptr %svp) {
 ; LMULMAX2-LABEL: insert_v8i32_v2i32_6:
 ; LMULMAX2:       # %bb.0:
-; LMULMAX2-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
-; LMULMAX2-NEXT:    vle32.v v8, (a1)
 ; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
-; LMULMAX2-NEXT:    vle32.v v10, (a0)
-; LMULMAX2-NEXT:    vslideup.vi v10, v8, 6
-; LMULMAX2-NEXT:    vse32.v v10, (a0)
+; LMULMAX2-NEXT:    vle32.v v8, (a0)
+; LMULMAX2-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
+; LMULMAX2-NEXT:    vle32.v v10, (a1)
+; LMULMAX2-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
+; LMULMAX2-NEXT:    vslideup.vi v8, v10, 6
+; LMULMAX2-NEXT:    vse32.v v8, (a0)
 ; LMULMAX2-NEXT:    ret
 ;
 ; LMULMAX1-LABEL: insert_v8i32_v2i32_6:

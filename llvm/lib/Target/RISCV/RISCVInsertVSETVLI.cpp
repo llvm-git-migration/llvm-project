@@ -54,6 +54,9 @@ static MachineInstr *getReachingDefMI(Register Reg, const MachineInstr *MI,
   if (MRI->isSSA())
     return MRI->getVRegDef(Reg);
 
+  if (!MI)
+    return MRI->getUniqueVRegDef(Reg);
+
   if (!LIS)
     return nullptr;
 
@@ -1476,7 +1479,8 @@ void RISCVInsertVSETVLI::doPRE(MachineBasicBlock &MBB) {
   // we need to prove the value is available at the point we're going
   // to insert the vsetvli at.
   if (AvailableInfo.hasAVLReg() && RISCV::X0 != AvailableInfo.getAVLReg()) {
-    MachineInstr *AVLDefMI = MRI->getVRegDef(AvailableInfo.getAVLReg());
+    MachineInstr *AVLDefMI =
+        getReachingDefMI(AvailableInfo.getAVLReg(), nullptr, MRI, LIS);
     if (!AVLDefMI)
       return;
     // This is an inline dominance check which covers the case of

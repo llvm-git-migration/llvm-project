@@ -69,8 +69,8 @@ define <4 x i64> @interleave_v2i64(<2 x i64> %x, <2 x i64> %y) {
 ; RV32-V512-NEXT:    vsetivli zero, 4, e16, mf4, ta, ma
 ; RV32-V512-NEXT:    vid.v v10
 ; RV32-V512-NEXT:    vsrl.vi v11, v10, 1
-; RV32-V512-NEXT:    vsetvli zero, zero, e64, m1, ta, mu
 ; RV32-V512-NEXT:    vmv.v.i v0, 10
+; RV32-V512-NEXT:    vsetvli zero, zero, e64, m1, ta, mu
 ; RV32-V512-NEXT:    vrgatherei16.vv v10, v8, v11
 ; RV32-V512-NEXT:    vrgatherei16.vv v10, v9, v11, v0.t
 ; RV32-V512-NEXT:    vmv.v.v v8, v10

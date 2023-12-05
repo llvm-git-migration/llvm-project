@@ -110,8 +110,8 @@ define void @sext_v32i8_v32i32(ptr %x, ptr %z) {
 ;
 ; LMULMAX1-LABEL: sext_v32i8_v32i32:
 ; LMULMAX1:       # %bb.0:
-; LMULMAX1-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
 ; LMULMAX1-NEXT:    addi a2, a0, 16
+; LMULMAX1-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
 ; LMULMAX1-NEXT:    vle8.v v8, (a2)
 ; LMULMAX1-NEXT:    vle8.v v9, (a0)
 ; LMULMAX1-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma

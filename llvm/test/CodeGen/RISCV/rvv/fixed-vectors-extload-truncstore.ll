@@ -1310,8 +1310,8 @@ define <16 x i64> @sextload_v16i32_v16i64(ptr %x) {
 ; LMULMAX1-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; LMULMAX1-NEXT:    vle32.v v16, (a1)
 ; LMULMAX1-NEXT:    addi a1, a0, 32
-; LMULMAX1-NEXT:    vle32.v v14, (a1)
 ; LMULMAX1-NEXT:    vle32.v v10, (a0)
+; LMULMAX1-NEXT:    vle32.v v14, (a1)
 ; LMULMAX1-NEXT:    addi a0, a0, 16
 ; LMULMAX1-NEXT:    vle32.v v12, (a0)
 ; LMULMAX1-NEXT:    vsetivli zero, 2, e32, m1, ta, ma
@@ -1358,8 +1358,8 @@ define <16 x i64> @zextload_v16i32_v16i64(ptr %x) {
 ; LMULMAX1-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; LMULMAX1-NEXT:    vle32.v v16, (a1)
 ; LMULMAX1-NEXT:    addi a1, a0, 32
-; LMULMAX1-NEXT:    vle32.v v14, (a1)
 ; LMULMAX1-NEXT:    vle32.v v10, (a0)
+; LMULMAX1-NEXT:    vle32.v v14, (a1)
 ; LMULMAX1-NEXT:    addi a0, a0, 16
 ; LMULMAX1-NEXT:    vle32.v v12, (a0)
 ; LMULMAX1-NEXT:    vsetivli zero, 2, e32, m1, ta, ma

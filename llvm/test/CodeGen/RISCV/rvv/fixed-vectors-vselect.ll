@@ -5,8 +5,8 @@
 define void @vselect_vv_v6i32(ptr %a, ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vv_v6i32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a2, 0(a2)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a1)
 ; CHECK-NEXT:    srli a1, a2, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
@@ -38,8 +38,8 @@ define void @vselect_vv_v6i32(ptr %a, ptr %b, ptr %cc, ptr %z) {
 define void @vselect_vx_v6i32(i32 %a, ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vx_v6i32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a2, 0(a2)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a1)
 ; CHECK-NEXT:    srli a1, a2, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
@@ -73,8 +73,8 @@ define void @vselect_vx_v6i32(i32 %a, ptr %b, ptr %cc, ptr %z) {
 define void @vselect_vi_v6i32(ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vi_v6i32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a1, 0(a1)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a0)
 ; CHECK-NEXT:    srli a0, a1, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
@@ -109,8 +109,8 @@ define void @vselect_vi_v6i32(ptr %b, ptr %cc, ptr %z) {
 define void @vselect_vv_v6f32(ptr %a, ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vv_v6f32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a2, 0(a2)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a1)
 ; CHECK-NEXT:    srli a1, a2, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
@@ -142,8 +142,8 @@ define void @vselect_vv_v6f32(ptr %a, ptr %b, ptr %cc, ptr %z) {
 define void @vselect_vx_v6f32(float %a, ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vx_v6f32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a1, 0(a1)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a0)
 ; CHECK-NEXT:    srli a0, a1, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
@@ -177,8 +177,8 @@ define void @vselect_vx_v6f32(float %a, ptr %b, ptr %cc, ptr %z) {
 define void @vselect_vfpzero_v6f32(ptr %b, ptr %cc, ptr %z) {
 ; CHECK-LABEL: vselect_vfpzero_v6f32:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    lbu a1, 0(a1)
+; CHECK-NEXT:    vsetivli zero, 6, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a0)
 ; CHECK-NEXT:    srli a0, a1, 1
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma

@@ -1550,7 +1550,7 @@ declare <4 x half> @llvm.copysign.v4f16(<4 x half>, <4 x half>)
 define void @copysign_neg_trunc_v3f16_v3f32(ptr %x, ptr %y) {
 ; ZVFH-LABEL: copysign_neg_trunc_v3f16_v3f32:
 ; ZVFH:       # %bb.0:
-; ZVFH-NEXT:    vsetivli zero, 3, e16, mf2, ta, ma
+; ZVFH-NEXT:    vsetivli zero, 3, e32, m1, ta, ma
 ; ZVFH-NEXT:    vle32.v v8, (a1)
 ; ZVFH-NEXT:    vle16.v v9, (a0)
 ; ZVFH-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
@@ -2954,8 +2954,8 @@ define void @fneg_v16f16(ptr %x) {
 ;
 ; LMULMAX1-LABEL: fneg_v16f16:
 ; LMULMAX1:       # %bb.0:
-; LMULMAX1-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
 ; LMULMAX1-NEXT:    addi a1, a0, 16
+; LMULMAX1-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
 ; LMULMAX1-NEXT:    vle16.v v8, (a1)
 ; LMULMAX1-NEXT:    vle16.v v9, (a0)
 ; LMULMAX1-NEXT:    vfneg.v v8, v8
@@ -2992,8 +2992,8 @@ define void @fneg_v8f32(ptr %x) {
 ;
 ; LMULMAX1-LABEL: fneg_v8f32:
 ; LMULMAX1:       # %bb.0:
-; LMULMAX1-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; LMULMAX1-NEXT:    addi a1, a0, 16
+; LMULMAX1-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; LMULMAX1-NEXT:    vle32.v v8, (a1)
 ; LMULMAX1-NEXT:    vle32.v v9, (a0)
 ; LMULMAX1-NEXT:    vfneg.v v8, v8
@@ -3026,8 +3026,8 @@ define void @fneg_v4f64(ptr %x) {
 ;
 ; LMULMAX1-LABEL: fneg_v4f64:
 ; LMULMAX1:       # %bb.0:
-; LMULMAX1-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
 ; LMULMAX1-NEXT:    addi a1, a0, 16
+; LMULMAX1-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
 ; LMULMAX1-NEXT:    vle64.v v8, (a1)
 ; LMULMAX1-NEXT:    vle64.v v9, (a0)
 ; LMULMAX1-NEXT:    vfneg.v v8, v8
