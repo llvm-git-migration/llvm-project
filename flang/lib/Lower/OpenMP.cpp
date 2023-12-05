@@ -1889,9 +1889,7 @@ bool ClauseProcessor::processMap(
           auto origSymbol =
               converter.getSymbolAddress(*getOmpObjectSymbol(ompObject));
           mlir::Value mapOp, symAddr;
-          if (fir::isPointerType(origSymbol.getType()) ||
-              fir::isAllocatableType(origSymbol.getType()) ||
-              fir::isAssumedShape(origSymbol.getType())) {
+          if (fir::isTypeWithDescriptor(origSymbol.getType())) {
             symAddr = origSymbol;
             mapOp = processDescriptorTypeMappings(
                 semanticsContext, stmtCtx, converter, clauseLocation,
@@ -2865,9 +2863,7 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
         }
 
         mlir::Value mapOp;
-        if (fir::isPointerType(baseOp.getType()) ||
-            fir::isAllocatableType(baseOp.getType()) ||
-            fir::isAssumedShape(baseOp.getType())) {
+        if (fir::isTypeWithDescriptor(baseOp.getType())) {
           mapOp = processDescriptorTypeMappings(
               semanticsContext, stmtCtx, converter, baseOp.getLoc(), baseOp,
               baseAddr, bounds, name.str(), mapFlag);
