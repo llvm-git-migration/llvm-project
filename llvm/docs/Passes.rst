@@ -728,8 +728,8 @@ wrapper functions that are registered as global constructors in
 ``llvm.global_ctors`` and which contain a call to ``__cxa_atexit`` to register
 their destructor functions.
 
-``loweratomic``: Lower atomic intrinsics to non-atomic form
------------------------------------------------------------
+``lower-atomic``: Lower atomic intrinsics to non-atomic form
+------------------------------------------------------------
 
 This pass lowers atomic intrinsics to non-atomic form for use in a known
 non-preemptible environment.
