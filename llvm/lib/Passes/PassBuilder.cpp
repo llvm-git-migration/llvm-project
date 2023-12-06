@@ -1296,7 +1296,8 @@ static bool isLoopPassName(StringRef Name, CallbacksT &Callbacks,
 
 static StringRef convertToNewPassName(StringRef OldName) {
   static StringMap<StringRef> NameMap = {{"loweratomic", "lower-atomic"},
-                                         {"lowerinvoke", "lower-invoke"}};
+                                         {"lowerinvoke", "lower-invoke"},
+                                         {"lowerswitch", "lower-switch"}};
 
   if (auto I = NameMap.find(OldName); I != NameMap.end()) {
     auto NewName = I->second;

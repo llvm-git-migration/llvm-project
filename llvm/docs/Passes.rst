@@ -748,8 +748,8 @@ support stack unwinding.  This pass converts ``invoke`` instructions to
 become dead code (which can be removed by running the ``-simplifycfg`` pass
 afterwards).
 
-``lowerswitch``: Lower ``SwitchInst``\ s to branches
-----------------------------------------------------
+``lower-switch``: Lower ``SwitchInst``\ s to branches
+-----------------------------------------------------
 
 Rewrites switch instructions with a sequence of branches, which allows targets
 to get away with not implementing the switch instruction until it is
