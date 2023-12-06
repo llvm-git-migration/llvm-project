@@ -1294,6 +1294,18 @@ static bool isLoopPassName(StringRef Name, CallbacksT &Callbacks,
   return callbacksAcceptPassName<LoopPassManager>(Name, Callbacks);
 }
 
+static StringRef convertToNewPassName(StringRef OldName) {
+  static StringMap<StringRef> NameMap = {{"loweratomic", "lower-atomic"}};
+
+  if (auto I = NameMap.find(OldName); I != NameMap.end()) {
+    auto NewName = I->second;
+    errs() << "WARNING: Name '" << OldName << "' is deprecated, please use '"
+           << NewName << "'.\n";
+    return NewName;
+  }
+  return OldName;
+}
+
 std::optional<std::vector<PassBuilder::PipelineElement>>
 PassBuilder::parsePipelineText(StringRef Text) {
   std::vector<PipelineElement> ResultPipeline;
@@ -1303,7 +1315,7 @@ PassBuilder::parsePipelineText(StringRef Text) {
   for (;;) {
     std::vector<PipelineElement> &Pipeline = *PipelineStack.back();
     size_t Pos = Text.find_first_of(",()");
-    Pipeline.push_back({Text.substr(0, Pos), {}});
+    Pipeline.push_back({convertToNewPassName(Text.substr(0, Pos)), {}});
 
     // If we have a single terminating name, we're done.
     if (Pos == Text.npos)
