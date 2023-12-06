@@ -37,9 +37,12 @@ AST_POLYMORPHIC_MATCHER(isInlineSpecified,
 static std::optional<SourceLocation>
 getInlineTokenLocation(SourceRange RangeLocation, const SourceManager &Sources,
                        const LangOptions &LangOpts) {
+  SourceLocation Loc = RangeLocation.getBegin();
+  if (Loc.isMacroID())
+    return std::nullopt;
+
   Token FirstToken;
-  Lexer::getRawToken(RangeLocation.getBegin(), FirstToken, Sources, LangOpts,
-                     true);
+  Lexer::getRawToken(Loc, FirstToken, Sources, LangOpts, true);
   std::optional<Token> CurrentToken = FirstToken;
   while (CurrentToken && CurrentToken->getLocation() < RangeLocation.getEnd() &&
          CurrentToken->isNot(tok::eof)) {
