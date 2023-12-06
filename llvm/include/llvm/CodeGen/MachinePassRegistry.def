@@ -36,7 +36,7 @@ FUNCTION_ANALYSIS("targetir", TargetIRAnalysis,
 #ifndef FUNCTION_PASS
 #define FUNCTION_PASS(NAME, PASS_NAME, CONSTRUCTOR)
 #endif
-FUNCTION_PASS("callbrprepare", CallBrPreparePass, ())
+FUNCTION_PASS("callbr-prepare", CallBrPreparePass, ())
 FUNCTION_PASS("consthoist", ConstantHoistingPass, ())
 FUNCTION_PASS("ee-instrument", EntryExitInstrumenterPass, (false))
 FUNCTION_PASS("expand-large-div-rem", ExpandLargeDivRemPass, ())

@@ -1295,7 +1295,10 @@ static bool isLoopPassName(StringRef Name, CallbacksT &Callbacks,
 }
 
 static StringRef convertToNewPassName(StringRef OldName) {
-  static StringMap<StringRef> NameMap = {{"loweratomic", "lower-atomic"},
+  static StringMap<StringRef> NameMap = {{"callbrprepare", "callbr-prepare"},
+                                         {"dwarfehprepare", "dwarf-eh-prepare"},
+                                         {"flattencfg", "flatten-cfg"},
+                                         {"loweratomic", "lower-atomic"},
                                          {"lowerinvoke", "lower-invoke"},
                                          {"lowerswitch", "lower-switch"}};
 
