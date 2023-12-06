@@ -201,7 +201,7 @@
 ; CHECK-INVALIDATE-ALL-CG-NOT: Running analysis: NoOpModuleAnalysis
 
 ; RUN: opt -disable-output -disable-verify -verify-analysis-invalidation=0 -debug-pass-manager %s 2>&1 \
-; RUN:     -passes='require<targetlibinfo>,invalidate<all>,require<targetlibinfo>' \
+; RUN:     -passes='require<target-lib-info>,invalidate<all>,require<target-lib-info>' \
 ; RUN:     | FileCheck %s --check-prefix=CHECK-TLI
 ; CHECK-TLI: Running pass: RequireAnalysisPass
 ; CHECK-TLI: Running analysis: TargetLibraryAnalysis

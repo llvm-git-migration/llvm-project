@@ -1301,7 +1301,8 @@ static StringRef convertToNewPassName(StringRef OldName) {
                                          {"loweratomic", "lower-atomic"},
                                          {"lowerinvoke", "lower-invoke"},
                                          {"lowerswitch", "lower-switch"},
-                                         {"targetir", "target-ir"}};
+                                         {"targetir", "target-ir"},
+                                         {"targetlibinfo", "target-lib-info"}};
 
   if (auto I = NameMap.find(OldName); I != NameMap.end()) {
     auto NewName = I->second;
