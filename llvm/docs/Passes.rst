@@ -739,8 +739,8 @@ this would require knowledge of the entire call graph of the program including
 any libraries which may not be available in bitcode form); it simply lowers
 every atomic intrinsic.
 
-``lowerinvoke``: Lower invokes to calls, for unwindless code generators
------------------------------------------------------------------------
+``lower-invoke``: Lower invokes to calls, for unwindless code generators
+------------------------------------------------------------------------
 
 This transformation is designed for use by code generators which do not yet
 support stack unwinding.  This pass converts ``invoke`` instructions to
