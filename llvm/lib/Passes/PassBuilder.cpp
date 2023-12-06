@@ -1301,6 +1301,7 @@ static StringRef convertToNewPassName(StringRef OldName) {
                                          {"loweratomic", "lower-atomic"},
                                          {"lowerinvoke", "lower-invoke"},
                                          {"lowerswitch", "lower-switch"},
+                                         {"winehprepare", "win-eh-prepare"},
                                          {"targetir", "target-ir"},
                                          {"targetlibinfo", "target-lib-info"}};
 
