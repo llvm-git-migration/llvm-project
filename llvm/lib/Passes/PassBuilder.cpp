@@ -1300,7 +1300,8 @@ static StringRef convertToNewPassName(StringRef OldName) {
                                          {"flattencfg", "flatten-cfg"},
                                          {"loweratomic", "lower-atomic"},
                                          {"lowerinvoke", "lower-invoke"},
-                                         {"lowerswitch", "lower-switch"}};
+                                         {"lowerswitch", "lower-switch"},
+                                         {"targetir", "target-ir"}};
 
   if (auto I = NameMap.find(OldName); I != NameMap.end()) {
     auto NewName = I->second;

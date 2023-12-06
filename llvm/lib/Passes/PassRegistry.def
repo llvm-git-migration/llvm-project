@@ -251,7 +251,7 @@ FUNCTION_ANALYSIS("should-not-run-function-passes",
 FUNCTION_ANALYSIS("should-run-extra-vector-passes",
                   ShouldRunExtraVectorPasses())
 FUNCTION_ANALYSIS("stack-safety-local", StackSafetyAnalysis())
-FUNCTION_ANALYSIS("targetir",
+FUNCTION_ANALYSIS("target-ir",
                   TM ? TM->getTargetIRAnalysis() : TargetIRAnalysis())
 FUNCTION_ANALYSIS("targetlibinfo", TargetLibraryAnalysis())
 FUNCTION_ANALYSIS("uniformity", UniformityInfoAnalysis())

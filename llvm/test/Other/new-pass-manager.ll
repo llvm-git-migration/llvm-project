@@ -211,7 +211,7 @@
 ; CHECK-TLI-NOT: Running analysis: TargetLibraryAnalysis
 
 ; RUN: opt -disable-output -disable-verify -verify-analysis-invalidation=0 -debug-pass-manager %s 2>&1 \
-; RUN:     -passes='require<targetir>,invalidate<all>,require<targetir>' \
+; RUN:     -passes='require<target-ir>,invalidate<all>,require<target-ir>' \
 ; RUN:     | FileCheck %s --check-prefix=CHECK-TIRA
 ; CHECK-TIRA: Running pass: RequireAnalysisPass
 ; CHECK-TIRA: Running analysis: TargetIRAnalysis

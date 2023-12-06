@@ -29,7 +29,7 @@ MODULE_PASS("pre-isel-intrinsic-lowering", PreISelIntrinsicLoweringPass, ())
 #define FUNCTION_ANALYSIS(NAME, PASS_NAME, CONSTRUCTOR)
 #endif
 FUNCTION_ANALYSIS("pass-instrumentation", PassInstrumentationAnalysis, (PIC))
-FUNCTION_ANALYSIS("targetir", TargetIRAnalysis,
+FUNCTION_ANALYSIS("target-ir", TargetIRAnalysis,
                   (std::move(TM.getTargetIRAnalysis())))
 #undef FUNCTION_ANALYSIS
 
