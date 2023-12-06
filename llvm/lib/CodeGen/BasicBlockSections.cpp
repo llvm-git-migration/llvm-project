@@ -318,9 +318,8 @@ bool BasicBlockSections::runOnMachineFunction(MachineFunction &MF) {
   MF.setBBSectionsType(BBSectionsType);
   assignSections(MF, FuncClusterInfo);
 
-  // We make sure that the cluster including the entry basic block precedes all
-  // other clusters.
-  auto EntryBBSectionID = MF.front().getSectionID();
+  const MachineBasicBlock &EntryBB = MF.front();
+  auto EntryBBSectionID = EntryBB.getSectionID();
 
   // Helper function for ordering BB sections as follows:
   //   * Entry section (section including the entry block).
@@ -347,6 +346,9 @@ bool BasicBlockSections::runOnMachineFunction(MachineFunction &MF) {
     auto YSectionID = Y.getSectionID();
     if (XSectionID != YSectionID)
       return MBBSectionOrder(XSectionID, YSectionID);
+    // Make sure that the entry block is placed at the beginning.
+    if (&X == &EntryBB || &Y == &EntryBB)
+      return &X == &EntryBB;
     // If the two basic block are in the same section, the order is decided by
     // their position within the section.
     if (XSectionID.Type == MBBSectionID::SectionType::Default)

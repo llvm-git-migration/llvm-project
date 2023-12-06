@@ -213,10 +213,6 @@ Error BasicBlockSectionsProfileReader::ReadV1Profile() {
               Twine("duplicate basic block id found '") + BasicBlockIDStr +
               "'");
 
-        if (!BasicBlockID->BaseID && CurrentPosition)
-          return createProfileParseError(
-              "entry BB (0) does not begin a cluster.");
-
         FI->second.ClusterInfo.emplace_back(BBClusterInfo{
             *std::move(BasicBlockID), CurrentCluster, CurrentPosition++});
       }
@@ -287,9 +283,6 @@ Error BasicBlockSectionsProfileReader::ReadV0Profile() {
         if (!FuncBBIDs.insert(BBID).second)
           return createProfileParseError(
               Twine("duplicate basic block id found '") + BBIDStr + "'");
-        if (BBID == 0 && CurrentPosition)
-          return createProfileParseError(
-              "entry BB (0) does not begin a cluster");
 
         FI->second.ClusterInfo.emplace_back(
             BBClusterInfo({{static_cast<unsigned>(BBID), 0},
