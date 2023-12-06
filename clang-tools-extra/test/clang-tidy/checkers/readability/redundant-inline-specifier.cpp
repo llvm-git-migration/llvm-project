@@ -133,3 +133,9 @@ template <typename T> inline T fn8()
 {
     return T{};
 }
+
+#define INLINE_MACRO() inline void fn9() { }
+INLINE_MACRO()
+
+#define INLINE_KW inline
+INLINE_KW void fn10() { }
