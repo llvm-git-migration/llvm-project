@@ -5,9 +5,8 @@
 define <4 x half> @shuffle_v4f16(<4 x half> %x, <4 x half> %y) {
 ; CHECK-LABEL: shuffle_v4f16:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
-; CHECK-NEXT:    vmv.v.i v0, 11
 ; CHECK-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
+; CHECK-NEXT:    vmv.v.i v0, 11
 ; CHECK-NEXT:    vmerge.vvm v8, v9, v8, v0
 ; CHECK-NEXT:    ret
   %s = shufflevector <4 x half> %x, <4 x half> %y, <4 x i32> <i32 0, i32 1, i32 6, i32 3>
@@ -31,9 +30,8 @@ define <4 x double> @shuffle_fv_v4f64(<4 x double> %x) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    lui a0, %hi(.LCPI2_0)
 ; CHECK-NEXT:    fld fa5, %lo(.LCPI2_0)(a0)
-; CHECK-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
-; CHECK-NEXT:    vmv.v.i v0, 9
 ; CHECK-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
+; CHECK-NEXT:    vmv.v.i v0, 9
 ; CHECK-NEXT:    vfmerge.vfm v8, v8, fa5, v0
 ; CHECK-NEXT:    ret
   %s = shufflevector <4 x double> <double 2.0, double 2.0, double 2.0, double 2.0>, <4 x double> %x, <4 x i32> <i32 0, i32 5, i32 6, i32 3>
@@ -45,9 +43,8 @@ define <4 x double> @shuffle_vf_v4f64(<4 x double> %x) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    lui a0, %hi(.LCPI3_0)
 ; CHECK-NEXT:    fld fa5, %lo(.LCPI3_0)(a0)
-; CHECK-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
-; CHECK-NEXT:    vmv.v.i v0, 6
 ; CHECK-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
+; CHECK-NEXT:    vmv.v.i v0, 6
 ; CHECK-NEXT:    vfmerge.vfm v8, v8, fa5, v0
 ; CHECK-NEXT:    ret
   %s = shufflevector <4 x double> %x, <4 x double> <double 2.0, double 2.0, double 2.0, double 2.0>, <4 x i32> <i32 0, i32 5, i32 6, i32 3>

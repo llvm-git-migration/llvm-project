@@ -5454,9 +5454,8 @@ define void @mulhs_v4i64(ptr %x) {
 ; LMULMAX2-RV64-NEXT:    ld a2, %lo(.LCPI188_0)(a2)
 ; LMULMAX2-RV64-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
 ; LMULMAX2-RV64-NEXT:    vle64.v v8, (a0)
-; LMULMAX2-RV64-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
-; LMULMAX2-RV64-NEXT:    vmv.v.i v0, 5
 ; LMULMAX2-RV64-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
+; LMULMAX2-RV64-NEXT:    vmv.v.i v0, 5
 ; LMULMAX2-RV64-NEXT:    vmv.v.x v10, a1
 ; LMULMAX2-RV64-NEXT:    vmerge.vxm v10, v10, a2, v0
 ; LMULMAX2-RV64-NEXT:    vmulh.vv v10, v8, v10
