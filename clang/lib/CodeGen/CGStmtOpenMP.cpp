@@ -1436,9 +1436,12 @@ void CodeGenFunction::EmitOMPReductionClauseFinal(
           *this, D.getBeginLoc(),
           isOpenMPWorksharingDirective(D.getDirectiveKind()));
     }
+    bool TeamsLoopCanBeParallel = false;
+    if (auto *TTLD = dyn_cast<OMPTargetTeamsGenericLoopDirective>(&D))
+      TeamsLoopCanBeParallel = TTLD->canBeParallelFor();
     bool WithNowait = D.getSingleClause<OMPNowaitClause>() ||
                       isOpenMPParallelDirective(D.getDirectiveKind()) ||
-                      CGM.teamsLoopCanBeParallelFor(D) ||
+                      TeamsLoopCanBeParallel ||
                       ReductionKind == OMPD_simd;
     bool SimpleReduction = ReductionKind == OMPD_simd;
     // Emit nowait reduction if nowait clause is present or directive is a
@@ -7965,7 +7968,7 @@ static void emitTargetTeamsGenericLoopRegionAsDistribute(
 void CodeGenFunction::EmitOMPTargetTeamsGenericLoopDirective(
     const OMPTargetTeamsGenericLoopDirective &S) {
   auto &&CodeGen = [&S](CodeGenFunction &CGF, PrePostActionTy &Action) {
-    if (CGF.CGM.teamsLoopCanBeParallelFor(S))
+    if (S.canBeParallelFor())
       emitTargetTeamsGenericLoopRegionAsParallel(CGF, Action, S);
     else
       emitTargetTeamsGenericLoopRegionAsDistribute(CGF, Action, S);
@@ -7978,7 +7981,7 @@ void CodeGenFunction::EmitOMPTargetTeamsGenericLoopDeviceFunction(
     const OMPTargetTeamsGenericLoopDirective &S) {
   // Emit SPMD target parallel loop region as a standalone region.
   auto &&CodeGen = [&S](CodeGenFunction &CGF, PrePostActionTy &Action) {
-    if (CGF.CGM.teamsLoopCanBeParallelFor(S))
+    if (S.canBeParallelFor())
       emitTargetTeamsGenericLoopRegionAsParallel(CGF, Action, S);
     else
       emitTargetTeamsGenericLoopRegionAsDistribute(CGF, Action, S);

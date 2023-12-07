@@ -11311,6 +11311,9 @@ private:
                         OpenMPDirectiveKind &Kind,
                         OpenMPDirectiveKind &PrevMappedDirective);
 
+  /// [target] teams loop is equivalent to parallel for if associated loop
+  /// nest meets certain critera.
+  bool teamsLoopCanBeParallelFor(Stmt *Astmt);
 public:
   /// The declarator \p D defines a function in the scope \p S which is nested
   /// in an `omp begin/end declare variant` scope. In this method we create a
