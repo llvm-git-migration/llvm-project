@@ -76,7 +76,7 @@ public:
 
   ~ModuleBuildDaemonServer() { shutdownDaemon(); }
 
-  int forkDaemon();
+  int setupDaemonEnv();
   int createDaemonSocket();
   int listenForClients();
 
@@ -98,9 +98,6 @@ public:
   }
 
 private:
-#ifndef _WIN32
-  pid_t Pid = -1;
-#endif
   std::atomic<int> ListenSocketFD = -1;
 };
 
@@ -115,18 +112,7 @@ void handleSignal(int Signal) {
 
 #ifndef _WIN32
 // Forks and detaches process, creating module build daemon
-int ModuleBuildDaemonServer::forkDaemon() {
-
-  pid_t pid = fork();
-
-  if (pid < 0) {
-    exit(EXIT_FAILURE);
-  }
-  if (pid > 0) {
-    exit(EXIT_SUCCESS);
-  }
-
-  Pid = getpid();
+int ModuleBuildDaemonServer::setupDaemonEnv() {
 
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
@@ -141,10 +127,6 @@ int ModuleBuildDaemonServer::forkDaemon() {
   }
   if (signal(SIGHUP, SIG_IGN) == SIG_ERR) {
     errs() << "failed to ignore SIGHUP" << '\n';
-    exit(EXIT_FAILURE);
-  }
-  if (setsid() == -1) {
-    errs() << "setsid failed" << '\n';
     exit(EXIT_FAILURE);
   }
 
@@ -274,7 +256,6 @@ int ModuleBuildDaemonServer::listenForClients() {
 //     The arguments <path> and -v are optional. By default <path> follows the
 //     format: /tmp/clang-<BLAKE3HashOfClangFullVersion>.
 //
-
 int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   std::string BasePath;
@@ -306,7 +287,7 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
   DaemonPtr = &Daemon;
 
 #ifndef _WIN32
-  Daemon.forkDaemon();
+  Daemon.setupDaemonEnv();
   Daemon.createDaemonSocket();
   Daemon.listenForClients();
 #endif

@@ -71,11 +71,9 @@ llvm::Error spawnModuleBuildDaemon(StringRef BasePath, const char *Argv0,
                                    DiagnosticsEngine &Diag) {
 
   std::vector<StringRef> Args = {Argv0, "-cc1modbuildd", BasePath.str()};
-
   std::string ErrorBuffer;
-  // Will wait until module build daemon has forked and parent process. There
-  // is extra work that needs to be done for Windows when using ExecuteNoWait
-  llvm::sys::ExecuteAndWait(Argv0, Args, std::nullopt, {}, 0, 0, &ErrorBuffer);
+  llvm::sys::ExecuteNoWait(Argv0, Args, std::nullopt, {}, 0, &ErrorBuffer,
+                           nullptr, nullptr, /*DetachProcess*/ true);
 
   if (!ErrorBuffer.empty())
     return llvm::make_error<StringError>(ErrorBuffer, inconvertibleErrorCode());
