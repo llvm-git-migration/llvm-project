@@ -506,9 +506,11 @@ AMDGPUTargetLowering::AMDGPUTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SELECT, MVT::v12f32, Promote);
   AddPromotedToType(ISD::SELECT, MVT::v12f32, MVT::v12i32);
 
-  // There are no libcalls of any kind.
   for (int I = 0; I < RTLIB::UNKNOWN_LIBCALL; ++I)
     setLibcallName(static_cast<RTLIB::Libcall>(I), nullptr);
+  // Supported compiler-rt libcalls should be enabled in compiler-rt for
+  // amdgcn first then added here.
+  setLibcallName(RTLIB::SDIV_I128, "__divti3");
 
   setSchedulingPreference(Sched::RegPressure);
   setJumpIsExpensive(true);
