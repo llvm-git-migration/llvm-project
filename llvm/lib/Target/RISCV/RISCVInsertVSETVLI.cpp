@@ -542,8 +542,8 @@ public:
       if (getAVLReg() == RISCV::X0)
         return true;
       if (MachineInstr *MI = MRI.getUniqueVRegDef(getAVLReg());
-          MI && MI->getOpcode() == RISCV::ADDI &&
-          MI->getOperand(1).isReg() && MI->getOperand(2).isImm() &&
+          MI && MI->getOpcode() == RISCV::ADDI && MI->getOperand(1).isReg() &&
+          MI->getOperand(2).isImm() &&
           MI->getOperand(1).getReg() == RISCV::X0 &&
           MI->getOperand(2).getImm() != 0)
         return true;
