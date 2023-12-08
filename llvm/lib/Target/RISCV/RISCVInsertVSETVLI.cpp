@@ -28,6 +28,7 @@
 #include "RISCVSubtarget.h"
 #include "llvm/CodeGen/LiveDebugVariables.h"
 #include "llvm/CodeGen/LiveIntervals.h"
+#include "llvm/CodeGen/LiveStacks.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include <queue>
 using namespace llvm;
@@ -797,6 +798,7 @@ public:
     AU.addPreserved<SlotIndexes>();
     AU.addUsedIfAvailable<LiveDebugVariables>();
     AU.addPreserved<LiveDebugVariables>();
+    AU.addPreserved<LiveStacks>();
 
     MachineFunctionPass::getAnalysisUsage(AU);
   }

@@ -143,7 +143,6 @@
 ; CHECK-NEXT:       Greedy Register Allocator
 ; CHECK-NEXT:       Virtual Register Rewriter
 ; CHECK-NEXT:       RISC-V Insert VSETVLI pass
-; CHECK-NEXT:       Live Stack Slot Analysis
 ; CHECK-NEXT:       Virtual Register Map
 ; CHECK-NEXT:       Live Register Matrix
 ; CHECK-NEXT:       Greedy Register Allocator
