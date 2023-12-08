@@ -15,7 +15,10 @@
 #include "AMDGPURegBankSelect.h"
 #include "AMDGPU.h"
 #include "GCNSubtarget.h"
+#include "llvm/CodeGen/GlobalISel/GenericMachineInstrs.h"
+#include "llvm/CodeGen/GlobalISel/MIPatternMatch.h"
 #include "llvm/CodeGen/MachineUniformityAnalysis.h"
+#include "llvm/IR/IntrinsicsAMDGPU.h"
 #include "llvm/InitializePasses.h"
 
 #define DEBUG_TYPE "regbankselect"
@@ -68,7 +71,26 @@ bool AMDGPURegBankSelect::runOnMachineFunction(MachineFunction &MF) {
   MachineUniformityInfo Uniformity =
       computeMachineUniformityInfo(MF, CycleInfo, DomTree.getBase(),
                                    !ST.isSingleLaneExecution(F));
-  (void)Uniformity; // TODO: Use this
+
+  // Switch for uniformity info based regbank selection. Pre-selects register
+  // bank on dst registers using machine uniformity analysis.
+  // Keep in sinc with switches in getInstrMapping and applyMappingImpl.
+  for (MachineBasicBlock &MBB : MF) {
+    for (MachineInstr &MI : MBB) {
+      switch (MI.getOpcode()) {
+      case AMDGPU::G_FADD: {
+        Register Dst = MI.getOperand(0).getReg();
+        if (Uniformity.isUniform(Dst))
+          MRI->setRegBank(Dst, RBI->getRegBank(AMDGPU::SGPRRegBankID));
+        else
+          MRI->setRegBank(Dst, RBI->getRegBank(AMDGPU::VGPRRegBankID));
+        break;
+      }
+      default:
+        break;
+      }
+    }
+  }
 
   assignRegisterBanks(MF);
 
