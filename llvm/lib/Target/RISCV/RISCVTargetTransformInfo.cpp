@@ -437,9 +437,10 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
       LenCost = isInt<5>(LT.second.getVectorNumElements() - 1) ? 0 : 1;
     InstructionCost GatherCost = 2 + TLI->getVRGatherVVCost(LT.second);
     // Mask operation additionally required extend and truncate
-    InstructionCost ExtendCost = Tp->getElementType()->isIntegerTy(1) ? 3 : 0;
-    return LT.first * TLI->getLMULCost(LT.second) *
-           (LenCost + GatherCost + ExtendCost);
+    InstructionCost ExtendCost = Tp->getElementType()->isIntegerTy(1)
+                                     ? TLI->getLMULCost(LT.second) * 3
+                                     : 0;
+    return LT.first * (LenCost + GatherCost + ExtendCost);
   }
   }
   return BaseT::getShuffleCost(Kind, Tp, Mask, CostKind, Index, SubTp);
@@ -1083,7 +1084,7 @@ RISCVTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
     // These all use the same code.
     auto LT = getTypeLegalizationCost(RetTy);
     if (!LT.second.isVector() && TLI->isOperationCustom(ISD::FCEIL, LT.second))
-      return LT.first * TLI->getLMULCost(LT.second) * 8;
+      return LT.first * 8;
     break;
   }
   case Intrinsic::umin:
