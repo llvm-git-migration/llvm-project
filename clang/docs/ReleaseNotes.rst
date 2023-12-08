@@ -503,6 +503,8 @@ Improvements to Clang's diagnostics
        48 | static_assert(1 << 4 == 15);
           |               ~~~~~~~^~~~~
 
+- New ``-Wformat-signedness`` diagnostic that warn if the format string requires an
+  unsigned argument and the argument is signed and vice versa.
 
 Improvements to Clang's time-trace
 ----------------------------------
