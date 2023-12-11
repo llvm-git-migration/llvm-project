@@ -1,4 +1,5 @@
 add_mlir_dialect_library(MLIRMLProgramTransforms
+  Bufferize.cpp
   PipelineGlobalOps.cpp
 
   ADDITIONAL_HEADER_DIRS

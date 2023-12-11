@@ -11,6 +11,23 @@
 
 include "mlir/Pass/PassBase.td"
 
+def MLProgramBufferize: Pass<"mlprogram-bufferize", "ModuleOp"> {
+  let summary = "Bufferize the MLProgram dialect ops";
+  let description = [{
+    This pass bufferizes ops in the `ml_program` dialect. It is implemented as a
+    standalone pass because One-Shot Bufferize does not handle module-level ops
+    like `ml_program.global`. Therefore, this pass should run just before
+    One-Shot Bufferize.
+
+    This pass is intended to be a generic lowering of `ml_program` ops to allow
+    for them to be lowered all the way to LLVM. Users may want a more specialized
+    lowering depending on how they manage global state in their system.
+  }];
+  let dependentDialects = [
+    "bufferization::BufferizationDialect", "memref::MemRefDialect", 
+  ];
+}
+
 def MLProgramPipelineGlobals : Pass<"mlprogram-pipeline-globals", "ModuleOp"> {
   let summary = "Optimize `ml_program` global operations for read and store";
   let description = [{
