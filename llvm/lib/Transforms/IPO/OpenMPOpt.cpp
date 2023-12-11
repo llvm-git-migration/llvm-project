@@ -3610,7 +3610,7 @@ struct AAKernelInfoFunction : AAKernelInfoImpl {
     };
 
     // Add a dependence to ensure updates if the state changes.
-    auto AddDependence = [](Attributor &A, const AAKernelInfoImpl *KI,
+    auto AddDependence = [](Attributor &A, const AAKernelInfo *KI,
                             const AbstractAttribute *QueryingAA) {
       if (QueryingAA) {
         A.recordDependence(*KI, *QueryingAA, DepClassTy::OPTIONAL);
