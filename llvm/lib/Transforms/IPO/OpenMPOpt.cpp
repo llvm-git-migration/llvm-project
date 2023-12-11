@@ -4684,7 +4684,7 @@ struct AAKernelInfoCallSite : AAKernelInfoImpl {
 
     // Next we check if we know the callee. If it is a known OpenMP function
     // we will handle them explicitly in the switch below. If it is not, we
-    // will use an AAKernelInfoImpl object on the callee to gather information
+    // will use an AAKernelInfo object on the callee to gather information
     // and merge that into the current state. The latter happens in the
     // updateImpl.
     auto CheckCallee = [&](Function *Callee, unsigned NumCallees) {
