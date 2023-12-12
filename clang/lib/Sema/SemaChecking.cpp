@@ -12465,6 +12465,20 @@ isArithmeticArgumentPromotion(Sema &S, const ImplicitCastExpr *ICE) {
          S.Context.getFloatingTypeOrder(From, To) < 0;
 }
 
+static analyze_format_string::ArgType::MatchKind
+handleFormatSignedness(analyze_format_string::ArgType::MatchKind Match,
+                       DiagnosticsEngine &Diags, SourceLocation Loc) {
+  if (Match == analyze_format_string::ArgType::NoMatchSignedness) {
+    if (!Diags.isIgnored(
+            diag::warn_format_conversion_argument_type_mismatch_signedness,
+            Loc))
+      Match = analyze_format_string::ArgType::NoMatch;
+    else
+      Match = analyze_format_string::ArgType::Match;
+  }
+  return Match;
+}
+
 bool
 CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
                                     const char *StartSpecifier,
@@ -12508,6 +12522,7 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
 
   ArgType::MatchKind ImplicitMatch = ArgType::NoMatch;
   ArgType::MatchKind Match = AT.matchesType(S.Context, ExprTy);
+  Match = handleFormatSignedness(Match, S.getDiagnostics(), E->getExprLoc());
   if (Match == ArgType::Match)
     return true;
 
@@ -12531,6 +12546,8 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
           ICE->getType() == S.Context.UnsignedIntTy) {
         // All further checking is done on the subexpression
         ImplicitMatch = AT.matchesType(S.Context, ExprTy);
+        ImplicitMatch = handleFormatSignedness(
+            ImplicitMatch, S.getDiagnostics(), E->getExprLoc());
         if (ImplicitMatch == ArgType::Match)
           return true;
       }
@@ -12563,7 +12580,6 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
     Match = ArgType::NoMatch;
   }
   if (ImplicitMatch == ArgType::NoMatchPedantic ||
-      ImplicitMatch == ArgType::NoMatchSignedness ||
       ImplicitMatch == ArgType::NoMatchTypeConfusion)
     Match = ImplicitMatch;
   assert(Match != ArgType::MatchPromotion);
@@ -12653,12 +12669,10 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       case ArgType::Match:
       case ArgType::MatchPromotion:
       case ArgType::NoMatchPromotionTypeConfusion:
+      case ArgType::NoMatchSignedness:
         llvm_unreachable("expected non-matching");
       case ArgType::NoMatchPedantic:
         Diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
-        break;
-      case ArgType::NoMatchSignedness:
-        Diag = diag::warn_format_conversion_argument_type_mismatch_signedness;
         break;
       case ArgType::NoMatchTypeConfusion:
         Diag = diag::warn_format_conversion_argument_type_mismatch_confusion;
@@ -12691,8 +12705,10 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       CastFix << (S.LangOpts.CPlusPlus ? ">" : ")");
 
       SmallVector<FixItHint,4> Hints;
-      if (AT.matchesType(S.Context, IntendedTy) != ArgType::Match ||
-          ShouldNotPrintDirectly)
+      ArgType::MatchKind IntendedMatch = AT.matchesType(S.Context, IntendedTy);
+      IntendedMatch = handleFormatSignedness(IntendedMatch, S.getDiagnostics(),
+                                             E->getExprLoc());
+      if ((IntendedMatch != ArgType::Match) || ShouldNotPrintDirectly)
         Hints.push_back(FixItHint::CreateReplacement(SpecRange, os.str()));
 
       if (const CStyleCastExpr *CCast = dyn_cast<CStyleCastExpr>(E)) {
@@ -12728,18 +12744,9 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
           Name = TypedefTy->getDecl()->getName();
         else
           Name = CastTyName;
-        unsigned Diag;
-        switch (Match) {
-        default:
-          Diag = diag::warn_format_argument_needs_cast;
-          break;
-        case analyze_format_string::ArgType::NoMatchPedantic:
-          Diag = diag::warn_format_argument_needs_cast_pedantic;
-          break;
-        case analyze_format_string::ArgType::NoMatchSignedness:
-          Diag = diag::warn_format_argument_needs_cast_signedness;
-          break;
-        }
+        unsigned Diag = Match == ArgType::NoMatchPedantic
+                            ? diag::warn_format_argument_needs_cast_pedantic
+                            : diag::warn_format_argument_needs_cast;
         EmitFormatDiagnostic(S.PDiag(Diag) << Name << IntendedTy << IsEnum
                                            << E->getSourceRange(),
                              E->getBeginLoc(), /*IsStringLocation=*/false,
@@ -12748,13 +12755,10 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
         // In this case, the expression could be printed using a different
         // specifier, but we've decided that the specifier is probably correct
         // and we should cast instead. Just use the normal warning message.
-        unsigned Diag =
-            Match == ArgType::NoMatchSignedness
-                ? diag::warn_format_conversion_argument_type_mismatch_signedness
-                : diag::warn_format_conversion_argument_type_mismatch;
         EmitFormatDiagnostic(
-            S.PDiag(Diag) << AT.getRepresentativeTypeName(S.Context) << ExprTy
-                          << IsEnum << E->getSourceRange(),
+            S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
+                << AT.getRepresentativeTypeName(S.Context) << ExprTy << IsEnum
+                << E->getSourceRange(),
             E->getBeginLoc(), /*IsStringLocation*/ false, SpecRange, Hints);
       }
     }
@@ -12773,12 +12777,10 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       case ArgType::Match:
       case ArgType::MatchPromotion:
       case ArgType::NoMatchPromotionTypeConfusion:
+      case ArgType::NoMatchSignedness:
         llvm_unreachable("expected non-matching");
       case ArgType::NoMatchPedantic:
         Diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
-        break;
-      case ArgType::NoMatchSignedness:
-        Diag = diag::warn_format_conversion_argument_type_mismatch_signedness;
         break;
       case ArgType::NoMatchTypeConfusion:
         Diag = diag::warn_format_conversion_argument_type_mismatch_confusion;
@@ -12987,24 +12989,18 @@ bool CheckScanfHandler::HandleScanfSpecifier(
 
   analyze_format_string::ArgType::MatchKind Match =
       AT.matchesType(S.Context, Ex->getType());
+  Match = handleFormatSignedness(Match, S.getDiagnostics(), Ex->getExprLoc());
+  bool Pedantic = Match == analyze_format_string::ArgType::NoMatchPedantic;
   if (Match == analyze_format_string::ArgType::Match)
     return true;
 
   ScanfSpecifier fixedFS = FS;
   bool Success = fixedFS.fixType(Ex->getType(), Ex->IgnoreImpCasts()->getType(),
                                  S.getLangOpts(), S.Context);
-  unsigned Diag;
-  switch (Match) {
-  default:
-    Diag = diag::warn_format_conversion_argument_type_mismatch;
-    break;
-  case analyze_format_string::ArgType::NoMatchPedantic:
-    Diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
-    break;
-  case analyze_format_string::ArgType::NoMatchSignedness:
-    Diag = diag::warn_format_conversion_argument_type_mismatch_signedness;
-    break;
-  }
+
+  unsigned Diag =
+      Pedantic ? diag::warn_format_conversion_argument_type_mismatch_pedantic
+               : diag::warn_format_conversion_argument_type_mismatch;
 
   if (Success) {
     // Get the fix string from the fixed format specifier.
