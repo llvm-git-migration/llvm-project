@@ -81,6 +81,11 @@ static cl::opt<unsigned> AArch64MinimumJumpTableEntries(
     "aarch64-min-jump-table-entries", cl::init(13), cl::Hidden,
     cl::desc("Set minimum number of entries to use a jump table on AArch64"));
 
+static cl::opt<bool>
+    EnableMachinePipeliner("aarch64-enable-pipeliner",
+                           cl::desc("Enable Machine Pipeliner for AArch64"),
+                           cl::init(false), cl::Hidden);
+
 unsigned AArch64Subtarget::getVectorInsertExtractBaseCost() const {
   if (OverrideVectorInsertExtractBaseCost.getNumOccurrences() > 0)
     return OverrideVectorInsertExtractBaseCost;
@@ -539,4 +544,8 @@ AArch64Subtarget::getAuthenticatedLRCheckMethod() const {
   // At now, use None by default because checks may introduce an unexpected
   // performance regression or incompatibility with execute-only mappings.
   return AArch64PAuth::AuthCheckMethod::None;
+}
+
+bool AArch64Subtarget::enableMachinePipeliner() const {
+  return getSchedModel().hasInstrSchedModel() && EnableMachinePipeliner;
 }
