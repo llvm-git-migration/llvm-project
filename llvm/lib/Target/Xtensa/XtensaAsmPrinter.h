@@ -36,6 +36,7 @@ public:
 
   StringRef getPassName() const override { return "Xtensa Assembly Printer"; }
   void emitInstruction(const MachineInstr *MI) override;
+  void emitConstantPool() override;
 };
 } // end namespace llvm
 

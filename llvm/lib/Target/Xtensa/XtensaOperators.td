@@ -7,9 +7,17 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
+// Type profiles
+//===----------------------------------------------------------------------===//
+def SDT_XtensaWrapPtr             : SDTypeProfile<1, 1,
+                                                 [SDTCisSameAs<0, 1>,
+                                                  SDTCisPtrTy<0>]>;
 
 //===----------------------------------------------------------------------===//
 // Node definitions
 //===----------------------------------------------------------------------===//
 def Xtensa_retflag: SDNode<"XtensaISD::RET", SDTNone,
                                  [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def Xtensa_pcrel_wrapper: SDNode<"XtensaISD::PCREL_WRAPPER", SDT_XtensaWrapPtr, []>;

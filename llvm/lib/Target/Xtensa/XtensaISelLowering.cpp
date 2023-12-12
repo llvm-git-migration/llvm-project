@@ -33,6 +33,7 @@ using namespace llvm;
 XtensaTargetLowering::XtensaTargetLowering(const TargetMachine &tm,
                                            const XtensaSubtarget &STI)
     : TargetLowering(tm), Subtarget(STI) {
+  MVT PtrVT = MVT::i32;
   // Set up the register classes.
   addRegisterClass(MVT::i32, &Xtensa::ARRegClass);
 
@@ -46,12 +47,17 @@ XtensaTargetLowering::XtensaTargetLowering(const TargetMachine &tm,
 
   setMinFunctionAlignment(Align(4));
 
+  setOperationAction(ISD::Constant, MVT::i32, Custom);
+  setOperationAction(ISD::Constant, MVT::i64, Expand);
+
   // No sign extend instructions for i1
   for (MVT VT : MVT::integer_valuetypes()) {
     setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1, Promote);
     setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1, Promote);
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::i1, Promote);
   }
+
+  setOperationAction(ISD::ConstantPool, PtrVT, Custom);
 
   // Compute derived properties from the register classes
   computeRegisterProperties(STI.getRegisterInfo());
@@ -314,9 +320,57 @@ XtensaTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
   return DAG.getNode(XtensaISD::RET, DL, MVT::Other, RetOps);
 }
 
+SDValue XtensaTargetLowering::LowerImmediate(SDValue Op,
+                                             SelectionDAG &DAG) const {
+  const ConstantSDNode *CN = cast<ConstantSDNode>(Op);
+  SDLoc DL(CN);
+  APInt apval = CN->getAPIntValue();
+  int64_t value = apval.getSExtValue();
+  if (Op.getValueType() == MVT::i32) {
+    // Check if use node maybe lowered to the MOVI instruction
+    if (value > -2048 && value <= 2047)
+      return Op;
+    // Check if use node maybe lowered to the ADDMI instruction
+    SDNode &OpNode = *Op.getNode();
+    if ((OpNode.hasOneUse() && OpNode.use_begin()->getOpcode() == ISD::ADD) &&
+        (value >= -32768) && (value <= 32512) && ((value & 0xff) == 0))
+      return Op;
+    Type *Ty = Type::getInt32Ty(*DAG.getContext());
+    Constant *CV = ConstantInt::get(Ty, value);
+    SDValue CP = DAG.getConstantPool(CV, MVT::i32);
+    return CP;
+  }
+  return Op;
+}
+
+SDValue XtensaTargetLowering::getAddrPCRel(SDValue Op,
+                                           SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  return DAG.getNode(XtensaISD::PCREL_WRAPPER, DL, Ty, Op);
+}
+
+SDValue XtensaTargetLowering::LowerConstantPool(ConstantPoolSDNode *CP,
+                                                SelectionDAG &DAG) const {
+  EVT PtrVT = getPointerTy(DAG.getDataLayout());
+  SDValue Result;
+  if (!CP->isMachineConstantPoolEntry()) {
+    Result = DAG.getTargetConstantPool(CP->getConstVal(), PtrVT, CP->getAlign(),
+                                       CP->getOffset());
+  } else {
+    report_fatal_error("This constantpool type is not supported yet");
+  }
+
+  return getAddrPCRel(Result, DAG);
+}
+
 SDValue XtensaTargetLowering::LowerOperation(SDValue Op,
                                              SelectionDAG &DAG) const {
   switch (Op.getOpcode()) {
+  case ISD::Constant:
+    return LowerImmediate(Op, DAG);
+  case ISD::ConstantPool:
+    return LowerConstantPool(cast<ConstantPoolSDNode>(Op), DAG);
   default:
     report_fatal_error("Unexpected node to lower");
   }
@@ -327,10 +381,8 @@ const char *XtensaTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case XtensaISD::NAME:                                                        \
     return "XtensaISD::" #NAME
   switch (Opcode) {
-  case XtensaISD::FIRST_NUMBER:
-    break;
-  case XtensaISD::RET:
-    return "XtensaISD::RET";
+    OPCODE(RET);
+    OPCODE(PCREL_WRAPPER);
   }
   return NULL;
 #undef OPCODE

@@ -24,6 +24,9 @@ namespace llvm {
 namespace XtensaISD {
 enum {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
+  // Wraps a TargetGlobalAddress that should be loaded using PC-relative
+  // accesses.  Operand 0 is the address.
+  PCREL_WRAPPER,
   RET
 };
 }
@@ -55,6 +58,11 @@ public:
 
 private:
   const XtensaSubtarget &Subtarget;
+
+  SDValue LowerImmediate(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerConstantPool(ConstantPoolSDNode *CP, SelectionDAG &DAG) const;
+
+  SDValue getAddrPCRel(SDValue Op, SelectionDAG &DAG) const;
 
   CCAssignFn *CCAssignFnForCall(CallingConv::ID CC, bool IsVarArg) const;
 };

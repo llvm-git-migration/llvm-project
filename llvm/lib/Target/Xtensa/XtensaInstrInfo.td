@@ -239,6 +239,9 @@ def L32R : RI16_Inst<0x01, (outs AR:$t), (ins L32Rtarget:$label),
   let imm16 = label;
 }
 
+// pcrel addr loading using L32R
+def : Pat<(Xtensa_pcrel_wrapper tconstpool : $in), (L32R tconstpool : $in)>;
+
 //extending loads
 def : Pat<(i32 (extloadi1  addr_ish1:$addr)), (L8UI addr_ish1:$addr)>;
 def : Pat<(i32 (extloadi8  addr_ish1:$addr)), (L8UI addr_ish1:$addr)>;
