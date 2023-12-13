@@ -73,22 +73,20 @@ size_t Stream::PutCString(llvm::StringRef str) {
 }
 
 void Stream::PutCStringColorHighlighted(llvm::StringRef text,
-                                        llvm::StringRef pattern,
-                                        llvm::StringRef prefix,
-                                        llvm::StringRef suffix) {
+                                        std::optional<Information> pattern_info) {
   // Only apply color formatting when a pattern is present and both prefix and
   // suffix are specified. In the absence of these conditions, output the text
   // without color formatting.
-  if (pattern.empty() || (prefix.empty() && suffix.empty())) {
+  if (!pattern_info.has_value()) {
     PutCString(text);
     return;
   }
 
-  llvm::Regex reg_pattern(pattern);
+  llvm::Regex reg_pattern(pattern_info.value().pattern);
   llvm::SmallVector<llvm::StringRef, 1> matches;
   llvm::StringRef remaining = text;
   std::string format_str = lldb_private::ansi::FormatAnsiTerminalCodes(
-      prefix.str() + "%.*s" + suffix.str());
+      pattern_info.value().prefix.str() + "%.*s" + pattern_info.value().suffix.str());
   while (reg_pattern.match(remaining, &matches)) {
     llvm::StringRef match = matches[0];
     size_t match_start_pos = match.data() - remaining.data();

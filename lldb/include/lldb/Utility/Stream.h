@@ -23,6 +23,12 @@
 
 namespace lldb_private {
 
+struct Information {
+    llvm::StringRef pattern;
+    llvm::StringRef prefix;
+    llvm::StringRef suffix;
+};
+
 /// \class Stream Stream.h "lldb/Utility/Stream.h"
 /// A stream class that can stream formatted output to a file.
 class Stream {
@@ -261,9 +267,7 @@ public:
   ///     environment-dependent.
 
   void PutCStringColorHighlighted(llvm::StringRef text,
-                                  llvm::StringRef pattern = "",
-                                  llvm::StringRef prefix = "",
-                                  llvm::StringRef suffix = "");
+                                  std::optional<Information> pattern_info = std::nullopt);
 
   /// Output and End of Line character to the stream.
   size_t EOL();

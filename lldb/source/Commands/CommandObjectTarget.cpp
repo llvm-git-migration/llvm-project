@@ -55,6 +55,7 @@
 #include "lldb/Utility/State.h"
 #include "lldb/Utility/StructuredData.h"
 #include "lldb/Utility/Timer.h"
+#include "lldb/Utility/Stream.h"
 #include "lldb/lldb-enumerations.h"
 #include "lldb/lldb-private-enumerations.h"
 
@@ -1533,7 +1534,7 @@ static void DumpOsoFilesTable(Stream &strm,
 
 static void DumpAddress(ExecutionContextScope *exe_scope,
                         const Address &so_addr, bool verbose, bool all_ranges,
-                        Stream &strm, llvm::StringRef pattern = "") {
+                        Stream &strm, std::optional<Information> pattern_info = std::nullopt) {
   strm.IndentMore();
   strm.Indent("    Address: ");
   so_addr.Dump(&strm, exe_scope, Address::DumpStyleModuleWithFileAddress);
@@ -1543,14 +1544,22 @@ static void DumpAddress(ExecutionContextScope *exe_scope,
   strm.Indent("    Summary: ");
   const uint32_t save_indent = strm.GetIndentLevel();
   strm.SetIndentLevel(save_indent + 13);
-  so_addr.Dump(&strm, exe_scope, Address::DumpStyleResolvedDescription,
-               Address::DumpStyleInvalid, UINT32_MAX, false, pattern);
+  if (pattern_info.has_value())
+    so_addr.Dump(&strm, exe_scope, Address::DumpStyleResolvedDescription,
+                Address::DumpStyleInvalid, UINT32_MAX, false, pattern_info);
+  else
+    so_addr.Dump(&strm, exe_scope, Address::DumpStyleResolvedDescription,
+                Address::DumpStyleInvalid, UINT32_MAX, false);
   strm.SetIndentLevel(save_indent);
   // Print out detailed address information when verbose is enabled
   if (verbose) {
     strm.EOL();
-    so_addr.Dump(&strm, exe_scope, Address::DumpStyleDetailedSymbolContext,
-                 Address::DumpStyleInvalid, UINT32_MAX, all_ranges, pattern);
+    if(pattern_info.has_value())
+      so_addr.Dump(&strm, exe_scope, Address::DumpStyleDetailedSymbolContext,
+                  Address::DumpStyleInvalid, UINT32_MAX, all_ranges, pattern_info);
+    else
+      so_addr.Dump(&strm, exe_scope, Address::DumpStyleDetailedSymbolContext,
+                  Address::DumpStyleInvalid, UINT32_MAX, all_ranges);
   }
   strm.IndentLess();
 }
@@ -1618,22 +1627,26 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
     for (uint32_t i = 0; i < num_matches; ++i) {
       Symbol *symbol = symtab->SymbolAtIndex(match_indexes[i]);
       if (symbol) {
+        Information info;
+        llvm::StringRef ansi_prefix =
+              interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
+          llvm::StringRef ansi_suffix =
+              interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
+        info.pattern = name;
+        info.prefix = ansi_prefix;
+        info.suffix = ansi_suffix;
         if (symbol->ValueIsAddress()) {
           DumpAddress(
               interpreter.GetExecutionContext().GetBestExecutionContextScope(),
               symbol->GetAddressRef(), verbose, all_ranges, strm,
-              use_color && name_is_regex ? name : nullptr);
+              use_color && name_is_regex ? std::optional<Information>{info} : std::nullopt);
           strm.EOL();
         } else {
           strm.IndentMore();
           strm.Indent("    Name: ");
-          llvm::StringRef ansi_prefix =
-              interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
-          llvm::StringRef ansi_suffix =
-              interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
           strm.PutCStringColorHighlighted(
               symbol->GetDisplayName().GetStringRef(),
-              use_color ? name : nullptr, ansi_prefix, ansi_suffix);
+              use_color ? std::optional<Information>{info} : std::nullopt);
           strm.EOL();
           strm.Indent("    Value: ");
           strm.Printf("0x%16.16" PRIx64 "\n", symbol->GetRawValue());

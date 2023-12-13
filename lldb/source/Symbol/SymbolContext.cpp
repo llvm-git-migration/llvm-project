@@ -25,6 +25,7 @@
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/StreamString.h"
+#include "lldb/Utility/Stream.h"
 #include "lldb/lldb-enumerations.h"
 
 using namespace lldb;
@@ -73,7 +74,7 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
                                     bool show_module, bool show_inlined_frames,
                                     bool show_function_arguments,
                                     bool show_function_name,
-                                    llvm::StringRef pattern) const {
+                                    std::optional<Information> pattern_info) const {
   bool dumped_something = false;
   if (show_module && module_sp) {
     if (show_fullpaths)
@@ -102,8 +103,10 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
           ansi_prefix = target_sp->GetDebugger().GetRegexMatchAnsiPrefix();
           ansi_suffix = target_sp->GetDebugger().GetRegexMatchAnsiSuffix();
         }
-        s->PutCStringColorHighlighted(name.GetStringRef(), pattern, ansi_prefix,
-                                      ansi_suffix);
+        if (pattern_info.has_value())
+          s->PutCStringColorHighlighted(name.GetStringRef(), pattern_info);
+        else
+          s->PutCStringColorHighlighted(name.GetStringRef());
       }
     }
 
@@ -178,8 +181,10 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
         ansi_prefix = target_sp->GetDebugger().GetRegexMatchAnsiPrefix();
         ansi_suffix = target_sp->GetDebugger().GetRegexMatchAnsiSuffix();
       }
-      s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(), pattern,
-                                    ansi_prefix, ansi_suffix);
+      if (pattern_info.has_value())
+        s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(), pattern_info);
+      else
+        s->PutCStringColorHighlighted(symbol->GetName().GetStringRef());
     }
 
     if (addr.IsValid() && symbol->ValueIsAddress()) {
@@ -203,7 +208,7 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
 
 void SymbolContext::GetDescription(Stream *s, lldb::DescriptionLevel level,
                                    Target *target,
-                                   llvm::StringRef pattern) const {
+                                   std::optional<Information> pattern_info) const {
   if (module_sp) {
     s->Indent("     Module: file = \"");
     module_sp->GetFileSpec().Dump(s->AsRawOstream());
@@ -263,7 +268,10 @@ void SymbolContext::GetDescription(Stream *s, lldb::DescriptionLevel level,
 
   if (symbol != nullptr) {
     s->Indent("     Symbol: ");
-    symbol->GetDescription(s, level, target, pattern);
+    if (pattern_info.has_value())
+      symbol->GetDescription(s, level, target, pattern_info);
+    else
+      symbol->GetDescription(s, level, target);
     s->EOL();
   }
 

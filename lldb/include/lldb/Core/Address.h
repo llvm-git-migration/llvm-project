@@ -13,6 +13,7 @@
 #include "lldb/lldb-forward.h"
 #include "lldb/lldb-private-enumerations.h"
 #include "lldb/lldb-types.h"
+#include "lldb/Utility/Stream.h"
 
 #include "llvm/ADT/StringRef.h"
 
@@ -255,7 +256,8 @@ public:
   bool Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
             DumpStyle fallback_style = DumpStyleInvalid,
             uint32_t addr_byte_size = UINT32_MAX, bool all_ranges = false,
-            llvm::StringRef pattern = "") const;
+            std::optional<Information> pattern_info = std::nullopt) const;
+            
 
   AddressClass GetAddressClass() const;
 
