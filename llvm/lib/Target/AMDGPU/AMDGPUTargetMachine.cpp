@@ -770,6 +770,15 @@ void AMDGPUTargetMachine::registerPassBuilderCallbacks(PassBuilder &PB) {
 
         PM.addPass(createCGSCCToFunctionPassAdaptor(std::move(FPM)));
       });
+
+  PB.registerFullLinkTimeOptimizationLastEPCallback(
+      [this](ModulePassManager &PM, OptimizationLevel Level) {
+        // We want to support the -lto-partitions=N option as "best effort".
+        // For that, we need to lower LDS earlier in the pipeline before the
+        // module is partitioned for codegen.
+        if (EnableLowerModuleLDS)
+          PM.addPass(AMDGPULowerModuleLDSPass(*this, /*IsEarlyRun*/ true));
+      });
 }
 
 int64_t AMDGPUTargetMachine::getNullPointerValue(unsigned AddrSpace) {
