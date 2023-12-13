@@ -27,6 +27,10 @@ struct Information {
     llvm::StringRef pattern;
     llvm::StringRef prefix;
     llvm::StringRef suffix;
+    
+    // Constructor
+    Information(llvm::StringRef p, llvm::StringRef pre, llvm::StringRef suf)
+        : pattern(p), prefix(pre), suffix(suf) {}
 };
 
 /// \class Stream Stream.h "lldb/Utility/Stream.h"

@@ -1618,6 +1618,11 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
   }
 
   if (num_matches > 0) {
+    llvm::StringRef ansi_prefix =
+          interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
+      llvm::StringRef ansi_suffix =
+          interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
+    Information info(name, ansi_prefix, ansi_suffix);
     strm.Indent();
     strm.Printf("%u symbols match %s'%s' in ", num_matches,
                 name_is_regex ? "the regular expression " : "", name);
@@ -1627,14 +1632,6 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
     for (uint32_t i = 0; i < num_matches; ++i) {
       Symbol *symbol = symtab->SymbolAtIndex(match_indexes[i]);
       if (symbol) {
-        Information info;
-        llvm::StringRef ansi_prefix =
-              interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
-          llvm::StringRef ansi_suffix =
-              interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
-        info.pattern = name;
-        info.prefix = ansi_prefix;
-        info.suffix = ansi_suffix;
         if (symbol->ValueIsAddress()) {
           DumpAddress(
               interpreter.GetExecutionContext().GetBestExecutionContextScope(),
@@ -1666,7 +1663,8 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
 static void DumpSymbolContextList(ExecutionContextScope *exe_scope,
                                   Stream &strm,
                                   const SymbolContextList &sc_list,
-                                  bool verbose, bool all_ranges) {
+                                  bool verbose, bool all_ranges, 
+                                  std::optional<Information> pattern_info = std::nullopt) {
   strm.IndentMore();
   bool first_module = true;
   for (const SymbolContext &sc : sc_list) {
@@ -1677,7 +1675,10 @@ static void DumpSymbolContextList(ExecutionContextScope *exe_scope,
 
     sc.GetAddressRange(eSymbolContextEverything, 0, true, range);
 
-    DumpAddress(exe_scope, range.GetBaseAddress(), verbose, all_ranges, strm);
+    if (pattern_info.has_value())
+      DumpAddress(exe_scope, range.GetBaseAddress(), verbose, all_ranges, strm, pattern_info);
+    else
+      DumpAddress(exe_scope, range.GetBaseAddress(), verbose, all_ranges, strm);
     first_module = false;
   }
   strm.IndentLess();
@@ -1688,6 +1689,7 @@ static size_t LookupFunctionInModule(CommandInterpreter &interpreter,
                                      const char *name, bool name_is_regex,
                                      const ModuleFunctionSearchOptions &options,
                                      bool verbose, bool all_ranges) {
+  const bool use_color = interpreter.GetDebugger().GetUseColor();
   if (module && name && name[0]) {
     SymbolContextList sc_list;
     size_t num_matches = 0;
@@ -1701,6 +1703,11 @@ static size_t LookupFunctionInModule(CommandInterpreter &interpreter,
     }
     num_matches = sc_list.GetSize();
     if (num_matches) {
+      llvm::StringRef ansi_prefix =
+            interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
+        llvm::StringRef ansi_suffix =
+            interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
+      Information info(name, ansi_prefix, ansi_suffix);
       strm.Indent();
       strm.Printf("%" PRIu64 " match%s found in ", (uint64_t)num_matches,
                   num_matches > 1 ? "es" : "");
@@ -1708,7 +1715,8 @@ static size_t LookupFunctionInModule(CommandInterpreter &interpreter,
       strm.PutCString(":\n");
       DumpSymbolContextList(
           interpreter.GetExecutionContext().GetBestExecutionContextScope(),
-          strm, sc_list, verbose, all_ranges);
+          strm, sc_list, verbose, all_ranges,
+          use_color && name_is_regex ? std::optional<Information>{info} : std::nullopt);
     }
     return num_matches;
   }
