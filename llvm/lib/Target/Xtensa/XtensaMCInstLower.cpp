@@ -42,6 +42,13 @@ XtensaMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
   XtensaMCExpr::VariantKind Kind = XtensaMCExpr::VK_Xtensa_None;
 
   switch (MOTy) {
+  case MachineOperand::MO_MachineBasicBlock:
+    Symbol = MO.getMBB()->getSymbol();
+    break;
+  case MachineOperand::MO_BlockAddress:
+    Symbol = Printer.GetBlockAddressSymbol(MO.getBlockAddress());
+    Offset += MO.getOffset();
+    break;
   case MachineOperand::MO_ConstantPoolIndex:
     Symbol = GetConstantPoolIndexSymbol(MO);
     Offset += MO.getOffset();
@@ -79,6 +86,8 @@ MCOperand XtensaMCInstLower::lowerOperand(const MachineOperand &MO,
     return MCOperand::createImm(MO.getImm() + Offset);
   case MachineOperand::MO_RegisterMask:
     break;
+  case MachineOperand::MO_MachineBasicBlock:
+  case MachineOperand::MO_BlockAddress:
   case MachineOperand::MO_ConstantPoolIndex:
     return LowerSymbolOperand(MO, MOTy, Offset);
   default:

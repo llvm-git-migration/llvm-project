@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "XtensaAsmPrinter.h"
+#include "XtensaConstantPoolValue.h"
 #include "TargetInfo/XtensaTargetInfo.h"
 #include "XtensaMCInstLower.h"
 #include "llvm/ADT/StringExtras.h"
@@ -30,11 +31,101 @@
 
 using namespace llvm;
 
+static MCSymbolRefExpr::VariantKind
+getModifierVariantKind(XtensaCP::XtensaCPModifier Modifier) {
+  switch (Modifier) {
+  case XtensaCP::no_modifier:
+    return MCSymbolRefExpr::VK_None;
+  case XtensaCP::TPOFF:
+    return MCSymbolRefExpr::VK_TPOFF;
+  }
+  report_fatal_error("Invalid XtensaCPModifier!");
+}
+
 void XtensaAsmPrinter::emitInstruction(const MachineInstr *MI) {
   XtensaMCInstLower Lower(MF->getContext(), *this);
   MCInst LoweredMI;
   Lower.lower(MI, LoweredMI);
   EmitToStreamer(*OutStreamer, LoweredMI);
+}
+
+void XtensaAsmPrinter::emitMachineConstantPoolValue(
+    MachineConstantPoolValue *MCPV) {
+  XtensaConstantPoolValue *ACPV = static_cast<XtensaConstantPoolValue *>(MCPV);
+
+  MCSymbol *MCSym;
+  if (ACPV->isBlockAddress()) {
+    const BlockAddress *BA =
+        cast<XtensaConstantPoolConstant>(ACPV)->getBlockAddress();
+    MCSym = GetBlockAddressSymbol(BA);
+  } else {
+    report_fatal_error(
+        "This constant type is not supported yet in constantpool");
+  }
+
+  MCSymbol *LblSym = GetCPISymbol(ACPV->getLabelId());
+  // TODO find a better way to check whether we emit data to .s file
+  if (OutStreamer->hasRawTextSupport()) {
+    std::string SymName("\t.literal ");
+    SymName += LblSym->getName();
+    SymName += ", ";
+    SymName += MCSym->getName();
+
+    StringRef Modifier = ACPV->getModifierText();
+    SymName += Modifier;
+
+    OutStreamer->emitRawText(StringRef(SymName));
+  } else {
+    MCSymbolRefExpr::VariantKind VK =
+        getModifierVariantKind(ACPV->getModifier());
+
+    if (ACPV->getModifier() != XtensaCP::no_modifier) {
+      std::string SymName(MCSym->getName());
+      MCSym = GetExternalSymbolSymbol(StringRef(SymName));
+    }
+
+    const MCExpr *Expr = MCSymbolRefExpr::create(MCSym, VK, OutContext);
+    uint64_t Size = getDataLayout().getTypeAllocSize(ACPV->getType());
+    OutStreamer->emitCodeAlignment(
+        Align(4), OutStreamer->getContext().getSubtargetInfo());
+    OutStreamer->emitLabel(LblSym);
+    OutStreamer->emitValue(Expr, Size);
+  }
+}
+
+void XtensaAsmPrinter::emitMachineConstantPoolEntry(
+    const MachineConstantPoolEntry &CPE, int i) {
+  if (CPE.isMachineConstantPoolEntry()) {
+    XtensaConstantPoolValue *ACPV =
+        static_cast<XtensaConstantPoolValue *>(CPE.Val.MachineCPVal);
+    ACPV->setLabelId(i);
+    emitMachineConstantPoolValue(CPE.Val.MachineCPVal);
+  } else {
+    MCSymbol *LblSym = GetCPISymbol(i);
+    // TODO find a better way to check whether we emit data to .s file
+    if (OutStreamer->hasRawTextSupport()) {
+      std::string str("\t.literal ");
+      str += LblSym->getName();
+      str += ", ";
+      const Constant *C = CPE.Val.ConstVal;
+
+      if (const auto *CFP = dyn_cast<ConstantFP>(C)) {
+        str += toString(CFP->getValueAPF().bitcastToAPInt(), 10, true);
+      } else if (const auto *CI = dyn_cast<ConstantInt>(C)) {
+        str += toString(CI->getValue(), 10, true);
+      } else {
+        report_fatal_error(
+            "This constant type is not supported yet in constantpool");
+      }
+
+      OutStreamer->emitRawText(StringRef(str));
+    } else {
+      OutStreamer->emitCodeAlignment(
+          Align(4), OutStreamer->getContext().getSubtargetInfo());
+      OutStreamer->emitLabel(LblSym);
+      emitGlobalConstant(getDataLayout(), CPE.Val.ConstVal);
+    }
+  }
 }
 
 /// EmitConstantPool - Print to the current output stream assembly
@@ -82,32 +173,7 @@ void XtensaAsmPrinter::emitConstantPool() {
       }
     }
 
-    if (CPE.isMachineConstantPoolEntry()) {
-      report_fatal_error("This constantpool type is not supported yet");
-    } else {
-      MCSymbol *LblSym = GetCPISymbol(i);
-      // TODO find a better way to check whether we emit data to .s file
-      if (OutStreamer->hasRawTextSupport()) {
-        std::string str("\t.literal ");
-        str += LblSym->getName();
-        str += ", ";
-        const Constant *C = CPE.Val.ConstVal;
-
-        if (const auto *CFP = dyn_cast<ConstantFP>(C)) {
-          str += toString(CFP->getValueAPF().bitcastToAPInt(), 10, true);
-        } else if (const auto *CI = dyn_cast<ConstantInt>(C)) {
-          str += toString(CI->getValue(), 10, true);
-        } else {
-          report_fatal_error(
-              "This constant type is not supported yet in constantpool");
-        }
-
-        OutStreamer->emitRawText(StringRef(str));
-      } else {
-        OutStreamer->emitLabel(LblSym);
-        emitGlobalConstant(getDataLayout(), CPE.Val.ConstVal);
-      }
-    }
+    emitMachineConstantPoolEntry(CPE, i);
   }
 }
 

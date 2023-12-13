@@ -17,6 +17,7 @@
 
 #include "XtensaTargetMachine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
+#include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/Support/Compiler.h"
 
 namespace llvm {
@@ -37,6 +38,8 @@ public:
   StringRef getPassName() const override { return "Xtensa Assembly Printer"; }
   void emitInstruction(const MachineInstr *MI) override;
   void emitConstantPool() override;
+  void emitMachineConstantPoolEntry(const MachineConstantPoolEntry &CPE, int i);
+  void emitMachineConstantPoolValue(MachineConstantPoolValue *MCPV) override;
 };
 } // end namespace llvm
 

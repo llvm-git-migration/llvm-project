@@ -13,6 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "XtensaConstantPoolValue.h"
 #include "XtensaISelLowering.h"
 #include "XtensaSubtarget.h"
 #include "XtensaTargetMachine.h"
@@ -49,6 +50,8 @@ XtensaTargetLowering::XtensaTargetLowering(const TargetMachine &tm,
 
   setOperationAction(ISD::Constant, MVT::i32, Custom);
   setOperationAction(ISD::Constant, MVT::i64, Expand);
+  setOperationAction(ISD::ConstantFP, MVT::f32, Custom);
+  setOperationAction(ISD::ConstantFP, MVT::f64, Expand);
 
   // No sign extend instructions for i1
   for (MVT VT : MVT::integer_valuetypes()) {
@@ -58,9 +61,15 @@ XtensaTargetLowering::XtensaTargetLowering(const TargetMachine &tm,
   }
 
   setOperationAction(ISD::ConstantPool, PtrVT, Custom);
+  setOperationAction(ISD::BlockAddress, PtrVT, Custom);
 
   // Compute derived properties from the register classes
   computeRegisterProperties(STI.getRegisterInfo());
+}
+
+bool XtensaTargetLowering::isFPImmLegal(const APFloat &Imm, EVT VT,
+                                        bool ForCodeSize) const {
+  return false;
 }
 
 //===----------------------------------------------------------------------===//
@@ -343,6 +352,31 @@ SDValue XtensaTargetLowering::LowerImmediate(SDValue Op,
   return Op;
 }
 
+SDValue XtensaTargetLowering::LowerImmediateFP(SDValue Op, SelectionDAG & DAG)
+    const {
+  if (Op.getValueType() != MVT::f32)
+    return Op;
+  const ConstantFPSDNode *CN = cast<ConstantFPSDNode>(Op);
+  SDLoc DL(CN);
+  APFloat apval = CN->getValueAPF();
+  int64_t value = llvm::bit_cast<uint32_t>(apval.convertToFloat());
+  Type *Ty = Type::getInt32Ty(*DAG.getContext());
+  Constant *CV = ConstantInt::get(Ty, value);
+  SDValue CP = DAG.getConstantPool(CV, MVT::i32);
+  return DAG.getNode(ISD::BITCAST, DL, MVT::f32, CP);
+}
+
+SDValue XtensaTargetLowering::LowerBlockAddress(BlockAddressSDNode *Node,
+                                                SelectionDAG &DAG) const {
+  const BlockAddress *BA = Node->getBlockAddress();
+  EVT PtrVT = getPointerTy(DAG.getDataLayout());
+  XtensaConstantPoolValue *CPV =
+      XtensaConstantPoolConstant::Create(BA, 0, XtensaCP::CPBlockAddress);
+  SDValue CPAddr = DAG.getTargetConstantPool(CPV, PtrVT, Align(4));
+  SDValue CPWrap = getAddrPCRel(CPAddr, DAG);
+  return CPWrap;
+}
+
 SDValue XtensaTargetLowering::getAddrPCRel(SDValue Op,
                                            SelectionDAG &DAG) const {
   SDLoc DL(Op);
@@ -354,11 +388,13 @@ SDValue XtensaTargetLowering::LowerConstantPool(ConstantPoolSDNode *CP,
                                                 SelectionDAG &DAG) const {
   EVT PtrVT = getPointerTy(DAG.getDataLayout());
   SDValue Result;
-  if (!CP->isMachineConstantPoolEntry()) {
+
+  if (CP->isMachineConstantPoolEntry()) {
+    Result =
+        DAG.getTargetConstantPool(CP->getMachineCPVal(), PtrVT, CP->getAlign());
+  } else {
     Result = DAG.getTargetConstantPool(CP->getConstVal(), PtrVT, CP->getAlign(),
                                        CP->getOffset());
-  } else {
-    report_fatal_error("This constantpool type is not supported yet");
   }
 
   return getAddrPCRel(Result, DAG);
@@ -369,6 +405,10 @@ SDValue XtensaTargetLowering::LowerOperation(SDValue Op,
   switch (Op.getOpcode()) {
   case ISD::Constant:
     return LowerImmediate(Op, DAG);
+  case ISD::ConstantFP:
+    return LowerImmediateFP(Op, DAG);
+  case ISD::BlockAddress:
+    return LowerBlockAddress(cast<BlockAddressSDNode>(Op), DAG);
   case ISD::ConstantPool:
     return LowerConstantPool(cast<ConstantPoolSDNode>(Op), DAG);
   default:
