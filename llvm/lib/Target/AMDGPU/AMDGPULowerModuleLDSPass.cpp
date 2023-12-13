@@ -215,6 +215,12 @@ using namespace llvm;
 
 namespace {
 
+cl::opt<bool>
+    ForceAddModuleFlag("amdgpu-lower-module-lds-force-add-moduleflag",
+                       cl::desc("Always add the module flag that prevents "
+                                "multiple runs of LowerModuleLDS."),
+                       cl::init(false), cl::ReallyHidden);
+
 cl::opt<bool> SuperAlignLDSGlobals(
     "amdgpu-super-align-lds-globals",
     cl::desc("Increase alignment of LDS if it is not on align boundary"),
@@ -254,6 +260,7 @@ template <typename T> std::vector<T> sortByName(std::vector<T> &&V) {
 
 class AMDGPULowerModuleLDS {
   const AMDGPUTargetMachine &TM;
+  bool IsEarlyRun;
 
   static void
   removeLocalVarsFromUsedLists(Module &M,
@@ -328,7 +335,8 @@ class AMDGPULowerModuleLDS {
   }
 
 public:
-  AMDGPULowerModuleLDS(const AMDGPUTargetMachine &TM_) : TM(TM_) {}
+  AMDGPULowerModuleLDS(const AMDGPUTargetMachine &TM_, bool IsEarlyRun = false)
+      : TM(TM_), IsEarlyRun(IsEarlyRun) {}
 
   using FunctionVariableMap = DenseMap<Function *, DenseSet<GlobalVariable *>>;
 
@@ -1133,6 +1141,15 @@ public:
   }
 
   bool runOnModule(Module &M) {
+    // This pass may run twice in a full LTO pipeline.
+    //
+    // If we ran it early, we'll have added metadata to skip next runs.
+    if (M.getModuleFlag("amdgcn.lowered_module_lds"))
+      return false;
+    if (IsEarlyRun || ForceAddModuleFlag)
+      M.addModuleFlag(Module::ModFlagBehavior::Warning,
+                      "amdgcn.lowered_module_lds", 1);
+
     CallGraph CG = CallGraph(M);
     bool Changed = superAlignLDSGlobals(M);
 
@@ -1626,6 +1643,7 @@ llvm::createAMDGPULowerModuleLDSLegacyPass(const AMDGPUTargetMachine *TM) {
 
 PreservedAnalyses AMDGPULowerModuleLDSPass::run(Module &M,
                                                 ModuleAnalysisManager &) {
-  return AMDGPULowerModuleLDS(TM).runOnModule(M) ? PreservedAnalyses::none()
-                                                 : PreservedAnalyses::all();
+  return AMDGPULowerModuleLDS(TM, IsEarlyRun).runOnModule(M)
+             ? PreservedAnalyses::none()
+             : PreservedAnalyses::all();
 }

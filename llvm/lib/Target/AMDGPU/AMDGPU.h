@@ -131,7 +131,10 @@ extern char &AMDGPULowerModuleLDSLegacyPassID;
 
 struct AMDGPULowerModuleLDSPass : PassInfoMixin<AMDGPULowerModuleLDSPass> {
   const AMDGPUTargetMachine &TM;
-  AMDGPULowerModuleLDSPass(const AMDGPUTargetMachine &TM_) : TM(TM_) {}
+  bool IsEarlyRun;
+  AMDGPULowerModuleLDSPass(const AMDGPUTargetMachine &TM_,
+                           bool IsEarlyRun = false)
+      : TM(TM_), IsEarlyRun(IsEarlyRun) {}
 
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
 };
