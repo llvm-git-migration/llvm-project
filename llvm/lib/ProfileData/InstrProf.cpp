@@ -828,15 +828,19 @@ void InstrProfRecord::merge(InstrProfRecord &Other, uint64_t Weight,
 
   for (size_t I = 0, E = Other.Counts.size(); I < E; ++I) {
     bool Overflowed;
-    uint64_t Value =
+    uint64_t Value;
+    // When a profile has single byte coverage, use || to merge counters.
+    Value =
         SaturatingMultiplyAdd(Other.Counts[I], Weight, Counts[I], &Overflowed);
+
     if (Value > getInstrMaxCountValue()) {
       Value = getInstrMaxCountValue();
       Overflowed = true;
     }
+
+      if (Overflowed)
+        Warn(instrprof_error::counter_overflow);
     Counts[I] = Value;
-    if (Overflowed)
-      Warn(instrprof_error::counter_overflow);
   }
 
   // If the number of bitmap bytes doesn't match we either have bad data
