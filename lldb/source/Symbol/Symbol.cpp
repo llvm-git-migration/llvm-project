@@ -262,18 +262,12 @@ void Symbol::GetDescription(Stream *s, lldb::DescriptionLevel level,
   }
   if (ConstString demangled = m_mangled.GetDemangledName()) {
     s->PutCString(", name=\"");
-    if (pattern_info.has_value())
-      s->PutCStringColorHighlighted(demangled.GetStringRef(), pattern_info);
-    else
-      s->PutCStringColorHighlighted(demangled.GetStringRef());
+    s->PutCStringColorHighlighted(demangled.GetStringRef(), pattern_info);
     s->PutCString("\"");
   }
   if (ConstString mangled_name = m_mangled.GetMangledName()) {
     s->PutCString(", mangled=\"");
-    if (pattern_info.has_value())
-      s->PutCStringColorHighlighted(mangled_name.GetStringRef(), pattern_info);
-    else
-      s->PutCStringColorHighlighted(mangled_name.GetStringRef());
+    s->PutCStringColorHighlighted(mangled_name.GetStringRef(), pattern_info);
     s->PutCString("\"");
   }
 }

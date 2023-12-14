@@ -103,10 +103,7 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
           ansi_prefix = target_sp->GetDebugger().GetRegexMatchAnsiPrefix();
           ansi_suffix = target_sp->GetDebugger().GetRegexMatchAnsiSuffix();
         }
-        if (pattern_info.has_value())
-          s->PutCStringColorHighlighted(name.GetStringRef(), pattern_info);
-        else
-          s->PutCStringColorHighlighted(name.GetStringRef());
+        s->PutCStringColorHighlighted(name.GetStringRef(), pattern_info);
       }
     }
 
@@ -181,10 +178,7 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
         ansi_prefix = target_sp->GetDebugger().GetRegexMatchAnsiPrefix();
         ansi_suffix = target_sp->GetDebugger().GetRegexMatchAnsiSuffix();
       }
-      if (pattern_info.has_value())
-        s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(), pattern_info);
-      else
-        s->PutCStringColorHighlighted(symbol->GetName().GetStringRef());
+      s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(), pattern_info);
     }
 
     if (addr.IsValid() && symbol->ValueIsAddress()) {
@@ -268,10 +262,7 @@ void SymbolContext::GetDescription(Stream *s, lldb::DescriptionLevel level,
 
   if (symbol != nullptr) {
     s->Indent("     Symbol: ");
-    if (pattern_info.has_value())
-      symbol->GetDescription(s, level, target, pattern_info);
-    else
-      symbol->GetDescription(s, level, target);
+    symbol->GetDescription(s, level, target, pattern_info);
     s->EOL();
   }
 

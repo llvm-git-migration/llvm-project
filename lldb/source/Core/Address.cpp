@@ -524,10 +524,7 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
                     ansi_suffix =
                         target->GetDebugger().GetRegexMatchAnsiSuffix();
                   }
-                  if (pattern_info.has_value())
-                    s->PutCStringColorHighlighted(symbol_name, pattern_info);
-                  else
-                    s->PutCStringColorHighlighted(symbol_name);
+                  s->PutCStringColorHighlighted(symbol_name, pattern_info);
                   addr_t delta =
                       file_Addr - symbol->GetAddressRef().GetFileAddress();
                   if (delta)
@@ -654,12 +651,8 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
                 if (pointer_sc.function != nullptr ||
                     pointer_sc.symbol != nullptr) {
                   s->PutCString(": ");
-                  if (pattern_info.has_value())
-                    pointer_sc.DumpStopContext(s, exe_scope, so_addr, true, false,
-                                              false, true, true, pattern_info);
-                  else
-                    pointer_sc.DumpStopContext(s, exe_scope, so_addr, true, false,
-                                              false, true, true);
+                  pointer_sc.DumpStopContext(s, exe_scope, so_addr, true, false,
+                                            false, true, true, pattern_info);
                 }
               }
             }
@@ -696,38 +689,24 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
             if (show_stop_context) {
               // We have a function or a symbol from the same sections as this
               // address.
-              
-              if (pattern_info.has_value())
-                sc.DumpStopContext(s, exe_scope, *this, show_fullpaths,
-                                  show_module, show_inlined_frames,
-                                  show_function_arguments, show_function_name,
-                                  pattern_info);
-              else
-                sc.DumpStopContext(s, exe_scope, *this, show_fullpaths,
-                                  show_module, show_inlined_frames,
-                                  show_function_arguments, show_function_name);
+              sc.DumpStopContext(s, exe_scope, *this, show_fullpaths,
+                                show_module, show_inlined_frames,
+                                show_function_arguments, show_function_name,
+                                pattern_info);
             } else {
               // We found a symbol but it was in a different section so it
               // isn't the symbol we should be showing, just show the section
               // name + offset
-              if (pattern_info.has_value())
-                Dump(s, exe_scope, DumpStyleSectionNameOffset, DumpStyleInvalid,
-                    UINT32_MAX, false, pattern_info);
-              else
-                Dump(s, exe_scope, DumpStyleSectionNameOffset, DumpStyleInvalid,
-                    UINT32_MAX, false);
+              Dump(s, exe_scope, DumpStyleSectionNameOffset, DumpStyleInvalid,
+                  UINT32_MAX, false, pattern_info);
             }
           }
         }
       }
     } else {
       if (fallback_style != DumpStyleInvalid)
-        if (pattern_info.has_value())
-          return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
-                      false, pattern_info);
-        else
-          return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
-                      false);
+        return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
+                    false, pattern_info);
       return false;
     }
     break;
@@ -748,10 +727,8 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
               sc.symbol->GetAddressRef().GetSection() != GetSection())
             sc.symbol = nullptr;
         }
-        if (pattern_info.has_value())
-          sc.GetDescription(s, eDescriptionLevelBrief, target, pattern_info);
-        else
-          sc.GetDescription(s, eDescriptionLevelBrief, target);
+        
+        sc.GetDescription(s, eDescriptionLevelBrief, target, pattern_info);
 
         if (sc.block) {
           bool can_create = true;
@@ -799,12 +776,8 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
       }
     } else {
       if (fallback_style != DumpStyleInvalid)
-        if (pattern_info.has_value())
-          return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
-                      false, pattern_info);
-        else
-          return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
-                      false);
+        return Dump(s, exe_scope, fallback_style, DumpStyleInvalid, addr_size,
+                    false, pattern_info);
       return false;
     }
     break;
