@@ -6205,7 +6205,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_inlines_hidden_static_local_var,
                            options::OPT_fno_visibility_inlines_hidden_static_local_var);
   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete,
-                           options::OPT_fno_visibility_global_new_delete);
+                  options::OPT_fno_visibility_global_new_delete);
   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete_hidden);
   // Error for incompatible global new and delete directives.
   const Arg *N = Args.getLastArg(options::OPT_fvisibility_global_new_delete,
