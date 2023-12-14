@@ -34,6 +34,8 @@ class Dialect {
   // pattern or interfaces.
   list<string> dependentDialects = [];
 
+  dag discardableAttrs = (ins);
+
   // The C++ namespace that ops of this dialect should be placed into.
   //
   // By default, uses the name of the dialect as the only namespace. To avoid
