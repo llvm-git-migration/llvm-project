@@ -203,8 +203,9 @@ static bool isAbsoluteValue(const Symbol &sym) {
 
 // Returns true if Expr refers a PLT entry.
 static bool needsPlt(RelExpr expr) {
-  return oneof<R_PLT, R_PLT_PC, R_PLT_GOTPLT, R_LOONGARCH_PLT_PAGE_PC,
-               R_PPC32_PLTREL, R_PPC64_CALL_PLT>(expr);
+  return oneof<R_PLT, R_PLT_PC, R_PLT_GOTREL, R_PLT_GOTPLT, R_GOTPLT_GOTREL,
+               R_GOTPLT_PC, R_LOONGARCH_PLT_PAGE_PC, R_PPC32_PLTREL,
+               R_PPC64_CALL_PLT>(expr);
 }
 
 bool lld::elf::needsGot(RelExpr expr) {
@@ -233,6 +234,8 @@ static RelExpr toPlt(RelExpr expr) {
     return R_PLT_PC;
   case R_ABS:
     return R_PLT;
+  case R_GOTREL:
+    return R_PLT_GOTREL;
   default:
     return expr;
   }
@@ -253,6 +256,8 @@ static RelExpr fromPlt(RelExpr expr) {
     return R_ABS;
   case R_PLT_GOTPLT:
     return R_GOTPLTREL;
+  case R_PLT_GOTREL:
+    return R_GOTREL;
   default:
     return expr;
   }
@@ -979,10 +984,10 @@ bool RelocationScanner::isStaticLinkTimeConstant(RelExpr e, RelType type,
   if (oneof<R_GOTPLT, R_GOT_OFF, R_RELAX_HINT, R_MIPS_GOT_LOCAL_PAGE,
             R_MIPS_GOTREL, R_MIPS_GOT_OFF, R_MIPS_GOT_OFF32, R_MIPS_GOT_GP_PC,
             R_AARCH64_GOT_PAGE_PC, R_GOT_PC, R_GOTONLY_PC, R_GOTPLTONLY_PC,
-            R_PLT_PC, R_PLT_GOTPLT, R_PPC32_PLTREL, R_PPC64_CALL_PLT,
-            R_PPC64_RELAX_TOC, R_RISCV_ADD, R_AARCH64_GOT_PAGE,
-            R_LOONGARCH_PLT_PAGE_PC, R_LOONGARCH_GOT, R_LOONGARCH_GOT_PAGE_PC>(
-          e))
+            R_PLT_PC, R_PLT_GOTREL, R_PLT_GOTPLT, R_GOTPLT_GOTREL, R_GOTPLT_PC,
+            R_PPC32_PLTREL, R_PPC64_CALL_PLT, R_PPC64_RELAX_TOC, R_RISCV_ADD,
+            R_AARCH64_GOT_PAGE, R_LOONGARCH_PLT_PAGE_PC, R_LOONGARCH_GOT,
+            R_LOONGARCH_GOT_PAGE_PC>(e))
     return true;
 
   // These never do, except if the entire file is position dependent or if
@@ -1374,8 +1379,8 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
             R_LOONGARCH_GOT_PAGE_PC, R_GOT_OFF, R_TLSIE_HINT>(expr)) {
     ctx.hasTlsIe.store(true, std::memory_order_relaxed);
     // Initial-Exec relocs can be optimized to Local-Exec if the symbol is
-    // locally defined.
-    if (execOptimize && isLocalInExecutable) {
+    // locally defined.  This is not supported on SystemZ.
+    if (execOptimize && isLocalInExecutable && config->emachine != EM_S390) {
       c.addReloc({R_RELAX_TLS_IE_TO_LE, type, offset, addend, &sym});
     } else if (expr != R_TLSIE_HINT) {
       sym.setFlags(NEEDS_TLSIE);
@@ -1420,6 +1425,26 @@ template <class ELFT, class RelTy> void RelocationScanner::scanOne(RelTy *&i) {
   // Ignore R_*_NONE and other marker relocations.
   if (expr == R_NONE)
     return;
+
+  // Like other platforms, calls to the TLS helper routine on SystemZ carry
+  // two relocations, one for the helper routine itself, and a TLS marker
+  // relocation.  When relaxing the TLS model, the helper routine is no longer
+  // needed, and its relocation should be removed.  Unlike other platforms,
+  // on SystemZ the TLS marker routine typically comes *after* the helper
+  // routine relocation, so the getTlsGdRelaxSkip mechanism used by
+  // handleTlsRelocation does not work on this platform.
+  //
+  // Instead, check for this case here: if we are building a main executable
+  // (i.e. TLS relaxation applies), and the relocation *after* the current one
+  // is a TLS call marker instruction matching the current instruction, then
+  // skip this relocation.
+  if (config->emachine == EM_S390 && !config->shared) {
+    if (i < end && getter.get(i->r_offset) == offset - 2) {
+      RelType nextType = i->getType(/*isMips64EL=*/false);
+      if (nextType == R_390_TLS_GDCALL || nextType == R_390_TLS_LDCALL)
+        return;
+    }
+  }
 
   // Error if the target symbol is undefined. Symbol index 0 may be used by
   // marker relocations, e.g. R_*_NONE and R_ARM_V4BX. Don't error on them.
