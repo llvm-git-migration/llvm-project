@@ -99,8 +99,8 @@ define void @abs_v32i8(ptr %x) {
 ;
 ; LMULMAX1-RV32-LABEL: abs_v32i8:
 ; LMULMAX1-RV32:       # %bb.0:
-; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
+; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vle8.v v8, (a1)
 ; LMULMAX1-RV32-NEXT:    vle8.v v9, (a0)
 ; LMULMAX1-RV32-NEXT:    vrsub.vi v10, v8, 0
@@ -113,8 +113,8 @@ define void @abs_v32i8(ptr %x) {
 ;
 ; LMULMAX1-RV64-LABEL: abs_v32i8:
 ; LMULMAX1-RV64:       # %bb.0:
-; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
+; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vle8.v v8, (a1)
 ; LMULMAX1-RV64-NEXT:    vle8.v v9, (a0)
 ; LMULMAX1-RV64-NEXT:    vrsub.vi v10, v8, 0
@@ -143,8 +143,8 @@ define void @abs_v16i16(ptr %x) {
 ;
 ; LMULMAX1-RV32-LABEL: abs_v16i16:
 ; LMULMAX1-RV32:       # %bb.0:
-; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vle16.v v8, (a1)
 ; LMULMAX1-RV32-NEXT:    vle16.v v9, (a0)
 ; LMULMAX1-RV32-NEXT:    vrsub.vi v10, v8, 0
@@ -157,8 +157,8 @@ define void @abs_v16i16(ptr %x) {
 ;
 ; LMULMAX1-RV64-LABEL: abs_v16i16:
 ; LMULMAX1-RV64:       # %bb.0:
-; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vle16.v v8, (a1)
 ; LMULMAX1-RV64-NEXT:    vle16.v v9, (a0)
 ; LMULMAX1-RV64-NEXT:    vrsub.vi v10, v8, 0
@@ -187,8 +187,8 @@ define void @abs_v8i32(ptr %x) {
 ;
 ; LMULMAX1-RV32-LABEL: abs_v8i32:
 ; LMULMAX1-RV32:       # %bb.0:
-; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vle32.v v8, (a1)
 ; LMULMAX1-RV32-NEXT:    vle32.v v9, (a0)
 ; LMULMAX1-RV32-NEXT:    vrsub.vi v10, v8, 0
@@ -201,8 +201,8 @@ define void @abs_v8i32(ptr %x) {
 ;
 ; LMULMAX1-RV64-LABEL: abs_v8i32:
 ; LMULMAX1-RV64:       # %bb.0:
-; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vle32.v v8, (a1)
 ; LMULMAX1-RV64-NEXT:    vle32.v v9, (a0)
 ; LMULMAX1-RV64-NEXT:    vrsub.vi v10, v8, 0
@@ -231,8 +231,8 @@ define void @abs_v4i64(ptr %x) {
 ;
 ; LMULMAX1-RV32-LABEL: abs_v4i64:
 ; LMULMAX1-RV32:       # %bb.0:
-; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
+; LMULMAX1-RV32-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV32-NEXT:    vle64.v v8, (a1)
 ; LMULMAX1-RV32-NEXT:    vle64.v v9, (a0)
 ; LMULMAX1-RV32-NEXT:    vrsub.vi v10, v8, 0
@@ -245,8 +245,8 @@ define void @abs_v4i64(ptr %x) {
 ;
 ; LMULMAX1-RV64-LABEL: abs_v4i64:
 ; LMULMAX1-RV64:       # %bb.0:
-; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
+; LMULMAX1-RV64-NEXT:    addi a1, a0, 16
 ; LMULMAX1-RV64-NEXT:    vle64.v v8, (a1)
 ; LMULMAX1-RV64-NEXT:    vle64.v v9, (a0)
 ; LMULMAX1-RV64-NEXT:    vrsub.vi v10, v8, 0

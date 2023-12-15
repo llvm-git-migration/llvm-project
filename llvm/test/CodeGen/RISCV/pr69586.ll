@@ -36,7 +36,7 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    .cfi_offset s10, -96
 ; NOREMAT-NEXT:    .cfi_offset s11, -104
 ; NOREMAT-NEXT:    li a2, 32
-; NOREMAT-NEXT:    vsetvli a2, a2, e32, m2, ta, ma
+; NOREMAT-NEXT:    vsetvli zero, a2, e32, m2, ta, ma
 ; NOREMAT-NEXT:    vle32.v v8, (a0)
 ; NOREMAT-NEXT:    addi a2, a0, 512
 ; NOREMAT-NEXT:    vle32.v v10, (a2)
@@ -747,7 +747,7 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    .cfi_offset s10, -96
 ; REMAT-NEXT:    .cfi_offset s11, -104
 ; REMAT-NEXT:    li a2, 32
-; REMAT-NEXT:    vsetvli a2, a2, e32, m2, ta, ma
+; REMAT-NEXT:    vsetvli zero, a2, e32, m2, ta, ma
 ; REMAT-NEXT:    vle32.v v8, (a0)
 ; REMAT-NEXT:    addi a2, a0, 512
 ; REMAT-NEXT:    vle32.v v10, (a2)

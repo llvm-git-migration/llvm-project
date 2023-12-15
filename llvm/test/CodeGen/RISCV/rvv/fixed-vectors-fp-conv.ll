@@ -189,24 +189,24 @@ define void @fpround_v8f64_v8f16(ptr %x, ptr %y) {
 ; LMULMAX1-NEXT:    vle64.v v8, (a2)
 ; LMULMAX1-NEXT:    addi a2, a0, 32
 ; LMULMAX1-NEXT:    vle64.v v9, (a0)
+; LMULMAX1-NEXT:    vle64.v v10, (a2)
 ; LMULMAX1-NEXT:    addi a0, a0, 16
-; LMULMAX1-NEXT:    vle64.v v10, (a0)
-; LMULMAX1-NEXT:    vle64.v v11, (a2)
+; LMULMAX1-NEXT:    vle64.v v11, (a0)
 ; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v12, v9
 ; LMULMAX1-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
 ; LMULMAX1-NEXT:    vfncvt.f.f.w v9, v12
 ; LMULMAX1-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
-; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v12, v10
+; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v12, v11
 ; LMULMAX1-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; LMULMAX1-NEXT:    vfncvt.f.f.w v10, v12
+; LMULMAX1-NEXT:    vfncvt.f.f.w v11, v12
 ; LMULMAX1-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; LMULMAX1-NEXT:    vslideup.vi v9, v10, 2
+; LMULMAX1-NEXT:    vslideup.vi v9, v11, 2
 ; LMULMAX1-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
-; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v10, v11
+; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v11, v10
 ; LMULMAX1-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; LMULMAX1-NEXT:    vfncvt.f.f.w v11, v10
+; LMULMAX1-NEXT:    vfncvt.f.f.w v10, v11
 ; LMULMAX1-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; LMULMAX1-NEXT:    vslideup.vi v9, v11, 4
+; LMULMAX1-NEXT:    vslideup.vi v9, v10, 4
 ; LMULMAX1-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
 ; LMULMAX1-NEXT:    vfncvt.rod.f.f.w v10, v8
 ; LMULMAX1-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
