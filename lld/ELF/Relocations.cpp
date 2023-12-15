@@ -1364,8 +1364,8 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
             R_LOONGARCH_GOT_PAGE_PC, R_GOT_OFF, R_TLSIE_HINT>(expr)) {
     ctx.hasTlsIe.store(true, std::memory_order_relaxed);
     // Initial-Exec relocs can be relaxed to Local-Exec if the symbol is locally
-    // defined.
-    if (toExecRelax && isLocalInExecutable) {
+    // defined.  This is not supported on SystemZ.
+    if (toExecRelax && isLocalInExecutable && config->emachine != EM_S390) {
       c.addReloc({R_RELAX_TLS_IE_TO_LE, type, offset, addend, &sym});
     } else if (expr != R_TLSIE_HINT) {
       sym.setFlags(NEEDS_TLSIE);
@@ -1410,6 +1410,26 @@ template <class ELFT, class RelTy> void RelocationScanner::scanOne(RelTy *&i) {
   // Ignore R_*_NONE and other marker relocations.
   if (expr == R_NONE)
     return;
+
+  // Like other platforms, calls to the TLS helper routine on SystemZ carry
+  // two relocations, one for the helper routine itself, and a TLS marker
+  // relocation.  When relaxing the TLS model, the helper routine is no longer
+  // needed, and its relocation should be removed.  Unlike other platforms,
+  // on SystemZ the TLS marker routine typically comes *after* the helper
+  // routine relocation, so the getTlsGdRelaxSkip mechanism used by
+  // handleTlsRelocation does not work on this platform.
+  //
+  // Instead, check for this case here: if we are building a main executable
+  // (i.e. TLS relaxation applies), and the relocation *after* the current one
+  // is a TLS call marker instruction matching the current instruction, then
+  // skip this relocation.
+  if (config->emachine == EM_S390 && !config->shared) {
+    if (i < end && getter.get(i->r_offset) == offset - 2) {
+      RelType nextType = i->getType(/*isMips64EL=*/false);
+      if (nextType == R_390_TLS_GDCALL || nextType == R_390_TLS_LDCALL)
+        return;
+    }
+  }
 
   // Error if the target symbol is undefined. Symbol index 0 may be used by
   // marker relocations, e.g. R_*_NONE and R_ARM_V4BX. Don't error on them.
