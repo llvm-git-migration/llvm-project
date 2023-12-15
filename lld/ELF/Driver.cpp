@@ -199,6 +199,7 @@ static std::tuple<ELFKind, uint16_t, uint8_t> parseEmulation(StringRef emul) {
           .Case("msp430elf", {ELF32LEKind, EM_MSP430})
           .Case("elf64_amdgpu", {ELF64LEKind, EM_AMDGPU})
           .Case("elf64loongarch", {ELF64LEKind, EM_LOONGARCH})
+          .Case("elf64_s390", {ELF64BEKind, EM_S390})
           .Default({ELFNoneKind, EM_NONE});
 
   if (ret.first == ELFNoneKind)
@@ -1171,7 +1172,7 @@ static bool getIsRela(opt::InputArgList &args) {
   uint16_t m = config->emachine;
   return m == EM_AARCH64 || m == EM_AMDGPU || m == EM_HEXAGON ||
          m == EM_LOONGARCH || m == EM_PPC || m == EM_PPC64 || m == EM_RISCV ||
-         m == EM_X86_64;
+         m == EM_S390 || m == EM_X86_64;
 }
 
 static void parseClangOption(StringRef opt, const Twine &msg) {
