@@ -153,6 +153,18 @@ struct ImplicitConversionData {
 RECOVERABLE(implicit_conversion, ImplicitConversionData *Data, ValueHandle Src,
             ValueHandle Dst)
 
+struct ImplicitBitfieldConversionData {
+  SourceLocation Loc;
+  const TypeDescriptor &FromType;
+  const TypeDescriptor &ToType;
+  /* ImplicitConversionCheckKind */ unsigned char Kind;
+  unsigned int BitfieldBits;
+};
+
+/// \brief Implict bitfield conversion that changed the value.
+RECOVERABLE(implicit_bitfield_conversion, ImplicitBitfieldConversionData *Data,
+            ValueHandle Src, ValueHandle Dst)
+
 /// Known builtin check kinds.
 /// Keep in sync with the enum of the same name in CodeGenFunction.h
 enum BuiltinCheckKind : unsigned char {

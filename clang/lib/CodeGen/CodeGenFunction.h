@@ -120,6 +120,7 @@ enum TypeEvaluationKind {
   SANITIZER_CHECK(FloatCastOverflow, float_cast_overflow, 0)                   \
   SANITIZER_CHECK(FunctionTypeMismatch, function_type_mismatch, 0)             \
   SANITIZER_CHECK(ImplicitConversion, implicit_conversion, 0)                  \
+  SANITIZER_CHECK(ImplicitBitfieldConversion, implicit_bitfield_conversion, 0) \
   SANITIZER_CHECK(InvalidBuiltin, invalid_builtin, 0)                          \
   SANITIZER_CHECK(InvalidObjCCast, invalid_objc_cast, 0)                       \
   SANITIZER_CHECK(LoadInvalidValue, load_invalid_value, 0)                     \
@@ -2696,6 +2697,19 @@ public:
   /// EvaluateExprAsBool - Perform the usual unary conversions on the specified
   /// expression and compare the result against zero, returning an Int1Ty value.
   llvm::Value *EvaluateExprAsBool(const Expr *E);
+
+  /// Retrieve the implicit cast expression of the rhs in a binary operator
+  /// expression This is used for implicit bitfield conversion checks, which
+  /// must compare with the value before truncation
+  ImplicitCastExpr *
+  RetrieveImplicitCastExprForBitfieldSanitizer(const BinaryOperator *E);
+
+  /// Emit a check that an [implicit] conversion of a bitfield. It is not UB,
+  /// so we use the value after conversion.
+  void EmitBitfieldConversionCheck(llvm::Value *Src, QualType SrcType,
+                                   llvm::Value *Dst, QualType DstType,
+                                   const CGBitFieldInfo &Info,
+                                   SourceLocation Loc);
 
   /// EmitIgnoredExpr - Emit an expression in a context which ignores the result.
   void EmitIgnoredExpr(const Expr *E);

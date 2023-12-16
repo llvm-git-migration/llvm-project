@@ -5570,11 +5570,44 @@ LValue CodeGenFunction::EmitBinaryOperatorLValue(const BinaryOperator *E) {
       break;
     }
 
-    RValue RV = EmitAnyExpr(E->getRHS());
+    llvm::Value *Previous = nullptr;
+    RValue RV;
+    QualType SrcType = E->getRHS()->getType();
+    // If LHS refers to a bitfield we want to retrieve the value before
+    // implicit conversion between the bitfield type and the RHS type
+    // and evaluate RHS without integer sanitizer checks (if passed)
+    if (auto *ICE = RetrieveImplicitCastExprForBitfieldSanitizer(E)) {
+      SrcType = ICE->getSubExpr()->getType();
+      Previous = EmitScalarExpr(ICE->getSubExpr());
+      // Pass default ScalarConversionOpts so that sanitizer check is
+      // not emitted here
+      llvm::Value *RHS = EmitScalarConversion(Previous, SrcType, ICE->getType(),
+                                              ICE->getExprLoc());
+      RV = RValue::get(RHS);
+    }
+
+    if (!Previous)
+      RV = EmitAnyExpr(E->getRHS());
+
     LValue LV = EmitCheckedLValue(E->getLHS(), TCK_Store);
+
     if (RV.isScalar())
       EmitNullabilityCheck(LV, RV.getScalarVal(), E->getExprLoc());
-    EmitStoreThroughLValue(RV, LV);
+
+    // Passing a pointer EmitStoreThroughBitfieldLValue will emit the result
+    // If sanitizer checks are not used, we do not use the result
+    // Hence, use EmitStoreThroughLValue instead
+    if (SanOpts.hasOneOf(SanitizerKind::ImplicitBitfieldConversion) &&
+        LV.isBitField() && RV.isScalar()) {
+      llvm::Value *Src = Previous ? Previous : RV.getScalarVal();
+      QualType DstType = E->getLHS()->getType();
+      llvm::Value *Result;
+      EmitStoreThroughBitfieldLValue(RV, LV, &Result);
+      EmitBitfieldConversionCheck(Src, SrcType, Result, DstType,
+                                  LV.getBitFieldInfo(), E->getExprLoc());
+    } else
+      EmitStoreThroughLValue(RV, LV);
+
     if (getLangOpts().OpenMP)
       CGM.getOpenMPRuntime().checkAndEmitLastprivateConditional(*this,
                                                                 E->getLHS());
