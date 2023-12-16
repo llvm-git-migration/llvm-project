@@ -119,6 +119,26 @@ Non-comprehensive list of changes in this release
 
 New Compiler Flags
 ------------------
+- ``-fsanitize=implicit-unsigned-bitfield-truncation`` catches implicit
+  unsigned conversions involving bitfields.
+- ``-fsanitize=implicit-signed-bitfield-truncation`` catches implicit
+  signed conversions involving bitfields.
+- ``-fsanitize=implicit-bitfield-sign-change`` catches implicit
+  conversions involving bitfields that result in a sign change.
+- ``-fsanitize=implicit-bitfield-truncation`` a group to include both
+  ``-fsanitize=implicit-unsigned-bitfield-truncation`` and
+  ``-fsanitize=implicit-signed-bitfield-truncation``.
+- ``-fsanitize=implicit-bitfield-arithmetic-value-change`` a group to
+  include both ``implicit-signed-bitfield-truncation`` and
+  ``implicit-bitfield-sign-change``.
+- ``-fsanitize=implicit-bitfield-conversion`` a group to include
+  ``-fsanitize=implicit-unsigned-bitfield-truncation``,
+  ``-fsanitize=implicit-signed-bitfield-truncation`` and
+  ``implicit-bitfield-sign-change``.
+- ``-fsanitize=implicit-integer-conversion`` a group to include
+  ``-fsanitize=implicit-unsigned-integer-truncation``,
+  ``-fsanitize=implicit-signed-integer-truncation`` and
+  ``implicit-integer-sign-change``.
 
 .. _target_os_detail:
 
@@ -136,6 +156,11 @@ Deprecated Compiler Flags
 
 Modified Compiler Flags
 -----------------------
+- ``-fsanitize=implicit-conversion`` is now a group for both
+  ``-fsanitize=implicit-integer-conversion`` and
+  ``-fsanitize=implicit-bitfield-conversion``. Hence,
+  ``-fsanitize=implicit-integer-conversion`` has replaced what previously
+  was ``-fsanitize=implicit-conversion``.
 
 Removed Compiler Flags
 -------------------------

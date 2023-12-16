@@ -551,19 +551,15 @@ void __ubsan::__ubsan_handle_load_invalid_value_abort(InvalidValueData *Data,
   Die();
 }
 
-static void handleImplicitConversion(ImplicitConversionData *Data,
-                                     ReportOptions Opts, ValueHandle Src,
-                                     ValueHandle Dst) {
-  SourceLocation Loc = Data->Loc.acquire();
+static ErrorType getImplicitConversionError(const TypeDescriptor &SrcTy,
+                                            const TypeDescriptor &DstTy,
+                                            unsigned char Kind) {
+
   ErrorType ET = ErrorType::GenericUB;
-
-  const TypeDescriptor &SrcTy = Data->FromType;
-  const TypeDescriptor &DstTy = Data->ToType;
-
   bool SrcSigned = SrcTy.isSignedIntegerTy();
   bool DstSigned = DstTy.isSignedIntegerTy();
 
-  switch (Data->Kind) {
+  switch (Kind) {
   case ICCK_IntegerTruncation: { // Legacy, no longer used.
     // Let's figure out what it should be as per the new types, and upgrade.
     // If both types are unsigned, then it's an unsigned truncation.
@@ -588,6 +584,19 @@ static void handleImplicitConversion(ImplicitConversionData *Data,
     ET = ErrorType::ImplicitSignedIntegerTruncationOrSignChange;
     break;
   }
+  return ET;
+}
+
+static void handleImplicitConversion(ImplicitConversionData *Data,
+                                     ReportOptions Opts, ValueHandle Src,
+                                     ValueHandle Dst) {
+
+  SourceLocation Loc = Data->Loc.acquire();
+  const TypeDescriptor &SrcTy = Data->FromType;
+  const TypeDescriptor &DstTy = Data->ToType;
+  bool SrcSigned = SrcTy.isSignedIntegerTy();
+  bool DstSigned = DstTy.isSignedIntegerTy();
+  ErrorType ET = getImplicitConversionError(SrcTy, DstTy, Data->Kind);
 
   if (ignoreReport(Loc, Opts, ET))
     return;
@@ -595,13 +604,36 @@ static void handleImplicitConversion(ImplicitConversionData *Data,
   ScopedReport R(Opts, Loc, ET);
 
   // FIXME: is it possible to dump the values as hex with fixed width?
-
   Diag(Loc, DL_Error, ET,
        "implicit conversion from type %0 of value %1 (%2-bit, %3signed) to "
        "type %4 changed the value to %5 (%6-bit, %7signed)")
       << SrcTy << Value(SrcTy, Src) << SrcTy.getIntegerBitWidth()
       << (SrcSigned ? "" : "un") << DstTy << Value(DstTy, Dst)
       << DstTy.getIntegerBitWidth() << (DstSigned ? "" : "un");
+}
+
+static void
+handleImplicitBitfieldConversion(ImplicitBitfieldConversionData *Data,
+                                 ReportOptions Opts, ValueHandle Src,
+                                 ValueHandle Dst) {
+  SourceLocation Loc = Data->Loc.acquire();
+  const TypeDescriptor &SrcTy = Data->FromType;
+  const TypeDescriptor &DstTy = Data->ToType;
+  bool SrcSigned = SrcTy.isSignedIntegerTy();
+  bool DstSigned = DstTy.isSignedIntegerTy();
+  ErrorType ET = getImplicitConversionError(SrcTy, DstTy, Data->Kind);
+
+  if (ignoreReport(Loc, Opts, ET))
+    return;
+
+  ScopedReport R(Opts, Loc, ET);
+  // FIXME: is it possible to dump the values as hex with fixed width?
+  Diag(Loc, DL_Error, ET,
+       "implicit conversion from type %0 of value %1 (%2-bit, %3signed) to "
+       "type %4 changed the value to %5 (%6-bit bitfield, %7signed)")
+      << SrcTy << Value(SrcTy, Src) << SrcTy.getIntegerBitWidth()
+      << (SrcSigned ? "" : "un") << DstTy << Value(DstTy, Dst)
+      << Data->BitfieldBits << (DstSigned ? "" : "un");
 }
 
 void __ubsan::__ubsan_handle_implicit_conversion(ImplicitConversionData *Data,
@@ -614,6 +646,18 @@ void __ubsan::__ubsan_handle_implicit_conversion_abort(
     ImplicitConversionData *Data, ValueHandle Src, ValueHandle Dst) {
   GET_REPORT_OPTIONS(true);
   handleImplicitConversion(Data, Opts, Src, Dst);
+  Die();
+}
+
+void __ubsan::__ubsan_handle_implicit_bitfield_conversion(
+    ImplicitBitfieldConversionData *Data, ValueHandle Src, ValueHandle Dst) {
+  GET_REPORT_OPTIONS(false);
+  handleImplicitBitfieldConversion(Data, Opts, Src, Dst);
+}
+void __ubsan::__ubsan_handle_implicit_bitfield_conversion_abort(
+    ImplicitBitfieldConversionData *Data, ValueHandle Src, ValueHandle Dst) {
+  GET_REPORT_OPTIONS(true);
+  handleImplicitBitfieldConversion(Data, Opts, Src, Dst);
   Die();
 }
 

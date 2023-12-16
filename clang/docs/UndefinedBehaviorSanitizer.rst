@@ -148,6 +148,23 @@ Available checks are:
      Issues caught by this sanitizer are not undefined behavior,
      but are often unintentional.
   -  ``-fsanitize=integer-divide-by-zero``: Integer division by zero.
+  -  ``-fsanitize=implicit-unsigned-bitfield-truncation``,
+     ``-fsanitize=implicit-signed-bitfield-truncation``: Implicit conversion from
+     integer of larger bit width to smaller bitfield, if that results in data
+     loss. That is, if the demoted value, after casting back to the original
+     width, is not equal to the original value before the downcast.
+     The ``-fsanitize=implicit-unsigned-bitfield-truncation`` handles conversions
+     between two ``unsigned`` types, while
+     ``-fsanitize=implicit-signed-bitfield-truncation`` handles the rest of the
+     conversions - when either one, or both of the types are signed.
+     Issues caught by these sanitizers are not undefined behavior,
+     but are often unintentional.
+  -  ``-fsanitize=implicit-bitfield-sign-change``: Implicit conversion from
+     integer of larger bit width to smaller bitfield, if that changes the
+     sign of the value. That is, if the original value was negative and the
+     new value is positive (or zero), or the original value was positive,
+     and the new value is negative.  Issues caught by this sanitizer are not
+     undefined behavior, but are often unintentional.
   -  ``-fsanitize=nonnull-attribute``: Passing null pointer as a function
      parameter which is declared to never be null.
   -  ``-fsanitize=null``: Use of a null pointer or creation of a null
@@ -192,8 +209,8 @@ Available checks are:
      This includes all the checks covered by ``-ftrapv``, as well as checks for
      signed division overflow (``INT_MIN/-1``), but not checks for
      lossy implicit conversions performed before the computation
-     (see ``-fsanitize=implicit-conversion``). Both of these two issues are
-     handled by ``-fsanitize=implicit-conversion`` group of checks.
+     (see ``-fsanitize=implicit-integer-conversion``). Both of these two issues are
+     handled by ``-fsanitize=implicit-integer-conversion`` group of checks.
   -  ``-fsanitize=unreachable``: If control flow reaches an unreachable
      program point.
   -  ``-fsanitize=unsigned-integer-overflow``: Unsigned integer overflow, where
@@ -201,7 +218,7 @@ Available checks are:
      type. Unlike signed integer overflow, this is not undefined behavior, but
      it is often unintentional. This sanitizer does not check for lossy implicit
      conversions performed before such a computation
-     (see ``-fsanitize=implicit-conversion``).
+     (see ``-fsanitize=implicit-integer-conversion``).
   -  ``-fsanitize=vla-bound``: A variable-length array whose bound
      does not evaluate to a positive value.
   -  ``-fsanitize=vptr``: Use of an object whose vptr indicates that it is of
@@ -213,8 +230,9 @@ Available checks are:
 You can also use the following check groups:
   -  ``-fsanitize=undefined``: All of the checks listed above other than
      ``float-divide-by-zero``, ``unsigned-integer-overflow``,
-     ``implicit-conversion``, ``local-bounds`` and the ``nullability-*`` group
-     of checks.
+     ``implicit-integer-conversion``, ``implicit-bitfield-conversion``,
+     ``implicit-conversion``, ``local-bounds`` and the ``nullability-*``
+     group of checks.
   -  ``-fsanitize=undefined-trap``: Deprecated alias of
      ``-fsanitize=undefined``.
   -  ``-fsanitize=implicit-integer-truncation``: Catches lossy integral
@@ -223,11 +241,26 @@ You can also use the following check groups:
   -  ``-fsanitize=implicit-integer-arithmetic-value-change``: Catches implicit
      conversions that change the arithmetic value of the integer. Enables
      ``implicit-signed-integer-truncation`` and ``implicit-integer-sign-change``.
-  -  ``-fsanitize=implicit-conversion``: Checks for suspicious
-     behavior of implicit conversions. Enables
+  -  ``-fsanitize=implicit-integer-conversion``: Checks for suspicious
+     behavior of implicit integer conversions. Enables
      ``implicit-unsigned-integer-truncation``,
      ``implicit-signed-integer-truncation``, and
      ``implicit-integer-sign-change``.
+  -  ``-fsanitize=implicit-bitfield-truncation``: Catches lossy bitfield
+     conversions. Enables ``implicit-signed-bitfield-truncation`` and
+     ``implicit-unsigned-bitfield-truncation``.
+  -  ``-fsanitize=implicit-bitfield-arithmetic-value-change``: Catches implicit
+     conversions that change the arithmetic value of the bitfield. Enables
+     ``implicit-signed-bitfield-truncation`` and ``implicit-bitfield-sign-change``.
+  -  ``-fsanitize=implicit-bitfield-conversion``: Checks for suspicious
+     behavior of implicit bitfield conversions. Enables
+     ``implicit-unsigned-bitfield-truncation``,
+     ``implicit-signed-bitfield-truncation``, and
+     ``implicit-bitfield-sign-change``.
+  -  ``-fsanitize=implicit-conversion``: Checks for suspicious
+     behavior of implicit conversions. Enables
+     ``implicit-integer-conversion``, and
+     ``implicit-bitfield-conversion``.
   -  ``-fsanitize=integer``: Checks for undefined or suspicious integer
      behavior (e.g. unsigned integer overflow).
      Enables ``signed-integer-overflow``, ``unsigned-integer-overflow``,
