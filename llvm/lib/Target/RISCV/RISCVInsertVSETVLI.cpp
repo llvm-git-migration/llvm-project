@@ -535,13 +535,14 @@ public:
   bool getTailAgnostic() const { return TailAgnostic; }
   bool getMaskAgnostic() const { return MaskAgnostic; }
 
-  bool hasNonZeroAVL(const MachineRegisterInfo &MRI) const {
+  bool hasNonZeroAVL(const MachineRegisterInfo &MRI,
+                     const LiveIntervals *LIS) const {
     if (hasAVLImm())
       return getAVLImm() > 0;
     if (hasAVLReg()) {
       if (getAVLReg() == RISCV::X0)
         return true;
-      if (MachineInstr *MI = MRI.getUniqueVRegDef(getAVLReg());
+      if (MachineInstr *MI = getReachingDefMI(getAVLReg(), nullptr, &MRI, LIS);
           MI && MI->getOpcode() == RISCV::ADDI && MI->getOperand(1).isReg() &&
           MI->getOperand(2).isImm() &&
           MI->getOperand(1).getReg() == RISCV::X0 &&
@@ -553,10 +554,11 @@ public:
   }
 
   bool hasEquallyZeroAVL(const VSETVLIInfo &Other,
-                         const MachineRegisterInfo &MRI) const {
+                         const MachineRegisterInfo &MRI,
+                         const LiveIntervals *LIS) const {
     if (hasSameAVL(Other))
       return true;
-    return (hasNonZeroAVL(MRI) && Other.hasNonZeroAVL(MRI));
+    return (hasNonZeroAVL(MRI, LIS) && Other.hasNonZeroAVL(MRI, LIS));
   }
 
   bool hasSameAVL(const VSETVLIInfo &Other) const {
@@ -635,7 +637,8 @@ public:
   // Require are compatible with the previous vsetvli instruction represented
   // by this.  MI is the instruction whose requirements we're considering.
   bool isCompatible(const DemandedFields &Used, const VSETVLIInfo &Require,
-                    const MachineRegisterInfo &MRI) const {
+                    const MachineRegisterInfo &MRI,
+                    const LiveIntervals *LIS) const {
     assert(isValid() && Require.isValid() &&
            "Can't compare invalid VSETVLIInfos");
     assert(!Require.SEWLMULRatioOnly &&
@@ -651,7 +654,7 @@ public:
     if (Used.VLAny && !hasSameAVL(Require))
       return false;
 
-    if (Used.VLZeroness && !hasEquallyZeroAVL(Require, MRI))
+    if (Used.VLZeroness && !hasEquallyZeroAVL(Require, MRI, LIS))
       return false;
 
     return hasCompatibleVTYPE(Used, Require);
@@ -1113,7 +1116,7 @@ bool RISCVInsertVSETVLI::needVSETVLI(const MachineInstr &MI,
     Used.TailPolicy = false;
   }
 
-  if (CurInfo.isCompatible(Used, Require, *MRI))
+  if (CurInfo.isCompatible(Used, Require, *MRI, LIS))
     return false;
 
   // We didn't find a compatible value. If our AVL is a virtual register,
@@ -1137,7 +1140,8 @@ bool RISCVInsertVSETVLI::needVSETVLI(const MachineInstr &MI,
 
 static VSETVLIInfo adjustIncoming(VSETVLIInfo PrevInfo, VSETVLIInfo NewInfo,
                                   DemandedFields &Demanded,
-                                  const MachineRegisterInfo *MRI);
+                                  const MachineRegisterInfo *MRI,
+                                  const LiveIntervals *LIS);
 
 // Given an incoming state reaching MI, minimally modifies that state so that it
 // is compatible with MI. The resulting state is guaranteed to be semantically
@@ -1164,7 +1168,7 @@ void RISCVInsertVSETVLI::transferBefore(VSETVLIInfo &Info,
 
   DemandedFields Demanded = getDemanded(MI, MRI, ST, LIS);
   const VSETVLIInfo IncomingInfo =
-      adjustIncoming(PrevInfo, NewInfo, Demanded, MRI);
+      adjustIncoming(PrevInfo, NewInfo, Demanded, MRI, LIS);
 
   if (Demanded.usedVL())
     Info.setAVL(IncomingInfo);
@@ -1183,7 +1187,8 @@ void RISCVInsertVSETVLI::transferBefore(VSETVLIInfo &Info,
 
 static VSETVLIInfo adjustIncoming(VSETVLIInfo PrevInfo, VSETVLIInfo NewInfo,
                                   DemandedFields &Demanded,
-                                  const MachineRegisterInfo *MRI) {
+                                  const MachineRegisterInfo *MRI,
+                                  const LiveIntervals *LIS) {
   VSETVLIInfo Info = NewInfo;
 
   // If we don't use LMUL or the SEW/LMUL ratio, then adjust LMUL so that we
@@ -1206,7 +1211,8 @@ static VSETVLIInfo adjustIncoming(VSETVLIInfo PrevInfo, VSETVLIInfo NewInfo,
   // to prevent extending live range of an avl register operand.
   // TODO: We can probably relax this for immediates.
   if (Demanded.VLZeroness && !Demanded.VLAny && PrevInfo.isValid() &&
-      PrevInfo.hasEquallyZeroAVL(Info, *MRI) && Info.hasSameVLMAX(PrevInfo)) {
+      PrevInfo.hasEquallyZeroAVL(Info, *MRI, LIS) &&
+      Info.hasSameVLMAX(PrevInfo)) {
     Info.setAVL(PrevInfo);
     Demanded.demandVL();
   }
@@ -1324,7 +1330,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
     return true;
 
   // We need the AVL to be produce by a PHI node in this basic block.
-  MachineInstr *PHI = MRI->getUniqueVRegDef(AVLReg);
+  MachineInstr *PHI = getReachingDefMI(AVLReg, nullptr, MRI, LIS);
   if (!PHI || PHI->getOpcode() != RISCV::PHI || PHI->getParent() != &MBB)
     return true;
 
@@ -1339,7 +1345,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
       return true;
 
     // We need the PHI input to the be the output of a VSET(I)VLI.
-    MachineInstr *DefMI = MRI->getUniqueVRegDef(InReg);
+    MachineInstr *DefMI = getReachingDefMI(InReg, nullptr, MRI, LIS);
     if (!DefMI || !isVectorConfigInstr(*DefMI))
       return true;
 
