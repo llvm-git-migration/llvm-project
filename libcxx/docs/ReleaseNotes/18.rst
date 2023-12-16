@@ -81,6 +81,13 @@ Improvements and New Features
 - The ``_LIBCPP_ENABLE_CXX26_REMOVED_STRING_RESERVE`` macro has been added to make
   the function ``std::basic_string<...>::reserve()`` available.
 
+- The experimental standard library modules can now be installed. By default,
+  they are not installed. This can be enabled by configuring CMake with
+  ``-DLIBCXX_INSTALL_MODULES=ON``. The installation directory can be configured
+  with the CMake option ``-DLIBCXX_INSTALL_MODULE_DIR=<path>``. The default
+  location is ``modules/c++/v1`` in the same prefix as the ``include``
+  directory.
+
 
 Deprecations and Removals
 -------------------------
