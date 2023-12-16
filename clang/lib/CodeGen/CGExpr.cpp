@@ -5571,11 +5571,50 @@ LValue CodeGenFunction::EmitBinaryOperatorLValue(const BinaryOperator *E) {
       break;
     }
 
-    RValue RV = EmitAnyExpr(E->getRHS());
+    llvm::Value *Previous = nullptr;
+    RValue RV;
+    QualType SrcType = E->getRHS()->getType();
+    // Check if LHS is a bitfield and sanitizer checks are enabled
+    if (E->getLHS()->refersToBitField() &&
+        SanOpts.hasOneOf(SanitizerKind::ImplicitConversion |
+                         SanitizerKind::ImplicitBitfieldConversion)) {
+      // Get the RHS before scalar conversion
+      if (auto *ICE = GetOriginalRHSForBitfieldSanitizer(E)) {
+        SrcType = ICE->getSubExpr()->getType();
+        Previous = EmitScalarExpr(ICE->getSubExpr());
+        // Pass default ScalarConversionOpts to avoid emitting
+        // integer sanitizer checks as E refers to bitfield
+        llvm::Value *RHS = EmitScalarConversion(
+            Previous, SrcType, ICE->getType(), ICE->getExprLoc());
+        RV = RValue::get(RHS);
+      }
+    }
+
+    // Otherwise, visit RHS as usual
+    if (!Previous)
+      RV = EmitAnyExpr(E->getRHS());
+
     LValue LV = EmitCheckedLValue(E->getLHS(), TCK_Store);
+
     if (RV.isScalar())
       EmitNullabilityCheck(LV, RV.getScalarVal(), E->getExprLoc());
-    EmitStoreThroughLValue(RV, LV);
+
+    // Passing a pointer EmitStoreThroughBitfieldLValue will emit the result
+    // If sanitizer checks are not used, we do not use the result
+    // Hence, use EmitStoreThroughLValue instead
+    if (LV.isBitField() && RV.isScalar() &&
+        SanOpts.hasOneOf(SanitizerKind::ImplicitBitfieldConversion)) {
+      // If the expression contained an implicit conversion, make sure
+      // to use the value before the scalar conversion.
+      llvm::Value *Src = Previous ? Previous : RV.getScalarVal();
+      QualType DstType = E->getLHS()->getType();
+      llvm::Value *Result;
+      EmitStoreThroughBitfieldLValue(RV, LV, &Result);
+      EmitBitfieldConversionCheck(Src, SrcType, Result, DstType,
+                                  LV.getBitFieldInfo(), E->getExprLoc());
+    } else
+      EmitStoreThroughLValue(RV, LV);
+
     if (getLangOpts().OpenMP)
       CGM.getOpenMPRuntime().checkAndEmitLastprivateConditional(*this,
                                                                 E->getLHS());
