@@ -143,6 +143,10 @@ Non-comprehensive list of changes in this release
 
 New Compiler Flags
 ------------------
+- ``-fsanitize=implicit-bitfield-conversion`` checks implicit truncation and
+  sign change.
+- ``-fsanitize=implicit-integer-conversion`` a group that replaces the previous
+  group ``-fsanitize=implicit-conversion``.
 
 .. _target_os_detail:
 
@@ -160,6 +164,9 @@ Deprecated Compiler Flags
 
 Modified Compiler Flags
 -----------------------
+- ``-fsanitize=implicit-conversion`` is now a group for both
+  ``-fsanitize=implicit-integer-conversion`` and
+  ``-fsanitize=implicit-bitfield-conversion``.
 
 Removed Compiler Flags
 -------------------------
