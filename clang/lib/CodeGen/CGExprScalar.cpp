@@ -15,6 +15,7 @@
 #include "CGDebugInfo.h"
 #include "CGObjCRuntime.h"
 #include "CGOpenMPRuntime.h"
+#include "CGRecordLayout.h"
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
 #include "ConstantEmitter.h"
@@ -323,6 +324,25 @@ public:
   /// NOTE: Src and Dst may be the exact same value! (point to the same thing)
   void EmitIntegerSignChangeCheck(Value *Src, QualType SrcType, Value *Dst,
                                   QualType DstType, SourceLocation Loc);
+
+  /// Emit a check that an [implicit] truncation of a bitfield does not
+  /// discard any bits. It is not UB, so we use the value after truncation.
+  void EmitBitfieldTruncationCheck(Value *Src, QualType SrcType, Value *Dst,
+                                   QualType DstType, const CGBitFieldInfo &Info,
+                                   SourceLocation Loc);
+
+  /// Emit a check that an [implicit] conversion of a bitfield does not change
+  /// the sign of the value. It is not UB, so we use the value after conversion.
+  /// NOTE: Src and Dst may be the exact same value! (point to the same thing)
+  void EmitBitfieldSignChangeCheck(Value *Src, QualType SrcType, Value *Dst,
+                                   QualType DstType, const CGBitFieldInfo &Info,
+                                   SourceLocation Loc);
+
+  /// Emit a check that an [implicit] conversion of a bitfield. It is not UB,
+  /// so we use the value after conversion.
+  void EmitBitfieldConversionCheck(Value *Src, QualType SrcType, Value *Dst,
+                                   QualType DstType, const CGBitFieldInfo &Info,
+                                   SourceLocation Loc);
 
   /// Emit a conversion from the specified type to the specified destination
   /// type, both of which are LLVM scalar types.
@@ -1237,6 +1257,221 @@ void ScalarExprEmitter::EmitIntegerSignChangeCheck(Value *Src, QualType SrcType,
   // EmitCheck() will 'and' all the checks together.
   CGF.EmitCheck(Checks, SanitizerHandler::ImplicitConversion, StaticArgs,
                 {Src, Dst});
+}
+
+// Should be called within CodeGenFunction::SanitizerScope RAII scope.
+// Returns 'i1 false' when the truncation Src -> Dst was lossy.
+static std::pair<ScalarExprEmitter::ImplicitConversionCheckKind,
+                 std::pair<llvm::Value *, SanitizerMask>>
+EmitBitfieldTruncationCheckHelper(Value *Src, QualType SrcType, Value *Dst,
+                                  QualType DstType, CGBuilderTy &Builder) {
+
+  llvm::Type *SrcTy = Src->getType();
+  llvm::Type *DstTy = Dst->getType();
+  (void)SrcTy; // Only used in assert()
+  (void)DstTy; // Only used in assert()
+
+  // This should be truncation of integral types.
+  assert(isa<llvm::IntegerType>(SrcTy) && isa<llvm::IntegerType>(DstTy) &&
+         "non-integer llvm type");
+
+  bool SrcSigned = SrcType->isSignedIntegerOrEnumerationType();
+  bool DstSigned = DstType->isSignedIntegerOrEnumerationType();
+
+  ScalarExprEmitter::ImplicitConversionCheckKind Kind;
+  SanitizerMask Mask;
+  if (!SrcSigned && !DstSigned) {
+    Kind = ScalarExprEmitter::ICCK_UnsignedIntegerTruncation;
+    Mask = SanitizerKind::ImplicitUnsignedIntegerTruncation;
+  } else {
+    Kind = ScalarExprEmitter::ICCK_SignedIntegerTruncation;
+    Mask = SanitizerKind::ImplicitSignedIntegerTruncation;
+  }
+
+  // Since Src already has the same type as Dst, we don't have
+  // to sign extend or truncate the Src value.
+  llvm::Value *CheckV = Builder.CreateICmpEQ(Dst, Src, "bf.truncheck");
+  // If the comparison result is 'i1 false', then the truncation was lossy.
+
+  return std::make_pair(Kind, std::make_pair(CheckV, Mask));
+}
+
+void ScalarExprEmitter::EmitBitfieldTruncationCheck(
+    Value *Src, QualType SrcType, Value *Dst, QualType DstType,
+    const CGBitFieldInfo &Info, SourceLocation Loc) {
+
+  if (!CGF.SanOpts.hasOneOf(SanitizerKind::ImplicitIntegerTruncation))
+    return;
+
+  // TODO: Calculate src width to avoid emitting code
+  // for unecessary cases.
+  unsigned SrcBits = ConvertType(SrcType)->getScalarSizeInBits();
+  unsigned BitfieldWidth = Info.Size;
+  // This must be truncation. Else we do not care.
+  if (SrcBits <= BitfieldWidth)
+    return;
+
+  // If the integer sign change sanitizer is enabled,
+  // and we are truncating from larger unsigned type to smaller signed type,
+  // let that next sanitizer deal with it.
+  bool SrcSigned = SrcType->isSignedIntegerOrEnumerationType();
+  bool DstSigned = DstType->isSignedIntegerOrEnumerationType();
+  if (CGF.SanOpts.has(SanitizerKind::ImplicitIntegerSignChange) &&
+      (!SrcSigned && DstSigned))
+    return;
+
+  CodeGenFunction::SanitizerScope SanScope(&CGF);
+
+  std::pair<ScalarExprEmitter::ImplicitConversionCheckKind,
+            std::pair<llvm::Value *, SanitizerMask>>
+      Check = EmitBitfieldTruncationCheckHelper(Src, SrcType, Dst, DstType,
+                                                Builder);
+  // If the comparison result is 'i1 false', then the truncation was lossy.
+
+  llvm::Constant *StaticArgs[] = {
+      CGF.EmitCheckSourceLocation(Loc), CGF.EmitCheckTypeDescriptor(SrcType),
+      CGF.EmitCheckTypeDescriptor(DstType),
+      llvm::ConstantInt::get(Builder.getInt8Ty(), Check.first),
+      llvm::ConstantInt::get(Builder.getInt32Ty(), Info.Size)};
+  CGF.EmitCheck(Check.second, SanitizerHandler::ImplicitConversion, StaticArgs,
+                {Src, Dst});
+}
+
+// Should be called within CodeGenFunction::SanitizerScope RAII scope.
+// Returns 'i1 false' when the conversion Src -> Dst changed the sign.
+static std::pair<ScalarExprEmitter::ImplicitConversionCheckKind,
+                 std::pair<llvm::Value *, SanitizerMask>>
+EmitBitfieldSignChangeCheckHelper(Value *Src, QualType SrcType,
+                                  unsigned SrcBits, Value *Dst,
+                                  QualType DstType, unsigned DstBits,
+                                  CGBuilderTy &Builder) {
+  llvm::Type *SrcTy = Src->getType();
+  llvm::Type *DstTy = Dst->getType();
+  (void)SrcTy; // Only used in assert()
+  (void)DstTy; // Only used in assert()
+
+  // This should be truncation of integral types.
+  assert(isa<llvm::IntegerType>(SrcTy) && isa<llvm::IntegerType>(DstTy) &&
+         "non-integer llvm type");
+
+  bool SrcSigned = SrcType->isSignedIntegerOrEnumerationType();
+  bool DstSigned = DstType->isSignedIntegerOrEnumerationType();
+
+  assert(((SrcBits != DstBits) || (SrcSigned != DstSigned)) &&
+         "either the widths should be different, or the signednesses.");
+
+  // 1. Was the old Value negative?
+  llvm::Value *SrcIsNegative =
+      EmitIsNegativeTestHelper(Src, SrcType, "bf.src", Builder);
+  // 2. Is the new Value negative?
+  llvm::Value *DstIsNegative =
+      EmitIsNegativeTestHelper(Dst, DstType, "bf.dst", Builder);
+  // 3. Now, was the 'negativity status' preserved during the conversion?
+  //    NOTE: conversion from negative to zero is considered to change the sign.
+  //    (We want to get 'false' when the conversion changed the sign)
+  //    So we should just equality-compare the negativity statuses.
+  llvm::Value *Check = nullptr;
+  Check =
+      Builder.CreateICmpEQ(SrcIsNegative, DstIsNegative, "bf.signchangecheck");
+  // If the comparison result is 'false', then the conversion changed the sign.
+  return std::make_pair(
+      ScalarExprEmitter::ICCK_IntegerSignChange,
+      std::make_pair(Check, SanitizerKind::ImplicitIntegerSignChange));
+}
+
+void ScalarExprEmitter::EmitBitfieldSignChangeCheck(
+    Value *Src, QualType SrcType, Value *Dst, QualType DstType,
+    const CGBitFieldInfo &Info, SourceLocation Loc) {
+
+  if (!CGF.SanOpts.has(SanitizerKind::ImplicitIntegerSignChange))
+    return;
+
+  bool SrcSigned = SrcType->isSignedIntegerOrEnumerationType();
+  bool DstSigned = DstType->isSignedIntegerOrEnumerationType();
+  unsigned SrcBits = ConvertType(SrcType)->getScalarSizeInBits();
+  unsigned DstBits = Info.Size;
+
+  // Now, we do not need to emit the check in *all* of the cases.
+  // We can avoid emitting it in some obvious cases where it would have been
+  // dropped by the opt passes (instcombine) always anyways.
+  // If it's a cast between effectively the same type, no check.
+  // NOTE: this is *not* equivalent to checking the canonical types.
+  if (SrcSigned == DstSigned && SrcBits == DstBits)
+    return;
+  // At least one of the values needs to have signed type.
+  // If both are unsigned, then obviously, neither of them can be negative.
+  if (!SrcSigned && !DstSigned)
+    return;
+  // If the conversion is to *larger* *signed* type, then no check is needed.
+  // Because either sign-extension happens (so the sign will remain),
+  // or zero-extension will happen (the sign bit will be zero.)
+  if ((DstBits > SrcBits) && DstSigned)
+    return;
+  if (CGF.SanOpts.has(SanitizerKind::ImplicitSignedIntegerTruncation) &&
+      (SrcBits > DstBits) && SrcSigned) {
+    // If the signed integer truncation sanitizer is enabled,
+    // and this is a truncation from signed type, then no check is needed.
+    // Because here sign change check is interchangeable with truncation check.
+    return;
+  }
+  // That's it. We can't rule out any more cases with the data we have.
+
+  CodeGenFunction::SanitizerScope SanScope(&CGF);
+
+  std::pair<ScalarExprEmitter::ImplicitConversionCheckKind,
+            std::pair<llvm::Value *, SanitizerMask>>
+      Check;
+
+  // Each of these checks needs to return 'false' when an issue was detected.
+  ImplicitConversionCheckKind CheckKind;
+  llvm::SmallVector<std::pair<llvm::Value *, SanitizerMask>, 2> Checks;
+  // So we can 'and' all the checks together, and still get 'false',
+  // if at least one of the checks detected an issue.
+
+  Check = EmitBitfieldSignChangeCheckHelper(Src, SrcType, SrcBits, Dst, DstType,
+                                            DstBits, Builder);
+  CheckKind = Check.first;
+  Checks.emplace_back(Check.second);
+
+  if (CGF.SanOpts.has(SanitizerKind::ImplicitSignedIntegerTruncation) &&
+      (SrcBits > DstBits) && !SrcSigned && DstSigned) {
+    // If the signed integer truncation sanitizer was enabled,
+    // and we are truncating from larger unsigned type to smaller signed type,
+    // let's handle the case we skipped in that check.
+    Check =
+        EmitBitfieldTruncationCheckHelper(Src, SrcType, Dst, DstType, Builder);
+    CheckKind = ICCK_SignedIntegerTruncationOrSignChange;
+    Checks.emplace_back(Check.second);
+    // If the comparison result is 'i1 false', then the truncation was lossy.
+  }
+
+  llvm::Constant *StaticArgs[] = {
+      CGF.EmitCheckSourceLocation(Loc), CGF.EmitCheckTypeDescriptor(SrcType),
+      CGF.EmitCheckTypeDescriptor(DstType),
+      llvm::ConstantInt::get(Builder.getInt8Ty(), CheckKind),
+      llvm::ConstantInt::get(Builder.getInt32Ty(), Info.Size)};
+  // EmitCheck() will 'and' all the checks together.
+  CGF.EmitCheck(Checks, SanitizerHandler::ImplicitConversion, StaticArgs,
+                {Src, Dst});
+}
+
+void ScalarExprEmitter::EmitBitfieldConversionCheck(
+    Value *Src, QualType SrcType, Value *Dst, QualType DstType,
+    const CGBitFieldInfo &Info, SourceLocation Loc) {
+
+  if (!CGF.SanOpts.hasOneOf(SanitizerKind::ImplicitConversion))
+    return;
+
+  // We only care about int->int conversions here.
+  // We ignore conversions to/from pointer and/or bool.
+  if (!PromotionIsPotentiallyEligibleForImplicitIntegerConversionCheck(SrcType,
+                                                                       DstType))
+    return;
+
+  assert(!DstType->isBooleanType() && "we should not get here with booleans.");
+
+  EmitBitfieldTruncationCheck(Src, SrcType, Dst, DstType, Info, Loc);
+  EmitBitfieldSignChangeCheck(Src, SrcType, Dst, DstType, Info, Loc);
 }
 
 Value *ScalarExprEmitter::EmitScalarCast(Value *Src, QualType SrcType,
@@ -2848,9 +3083,12 @@ ScalarExprEmitter::EmitScalarPrePostIncDec(const UnaryOperator *E, LValue LV,
   }
 
   // Store the updated result through the lvalue.
-  if (LV.isBitField())
+  if (LV.isBitField()) {
+    Value *Src = value;
     CGF.EmitStoreThroughBitfieldLValue(RValue::get(value), LV, &value);
-  else
+    EmitBitfieldConversionCheck(Src, E->getType(), value, E->getType(),
+                                LV.getBitFieldInfo(), E->getExprLoc());
+  } else
     CGF.EmitStoreThroughLValue(RValue::get(value), LV);
 
   // If this is a postinc, return the value read from memory, otherwise use the
@@ -3375,9 +3613,17 @@ LValue ScalarExprEmitter::EmitCompoundAssignLValue(
   // specially because the result is altered by the store, i.e., [C99 6.5.16p1]
   // 'An assignment expression has the value of the left operand after the
   // assignment...'.
-  if (LHSLV.isBitField())
+  if (LHSLV.isBitField()) {
+    Value *Src = Result;
+    QualType SrcType = E->getRHS()->getType();
+    QualType DstType = E->getLHS()->getType();
+    if (ImplicitCastExpr *ICE = dyn_cast<ImplicitCastExpr>(E->getRHS())) {
+      SrcType = ICE->getSubExpr()->getType();
+    }
     CGF.EmitStoreThroughBitfieldLValue(RValue::get(Result), LHSLV, &Result);
-  else
+    EmitBitfieldConversionCheck(Src, SrcType, Result, DstType,
+                                LHSLV.getBitFieldInfo(), E->getExprLoc());
+  } else
     CGF.EmitStoreThroughLValue(RValue::get(Result), LHSLV);
 
   if (CGF.getLangOpts().OpenMP)
@@ -4513,7 +4759,15 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
     // 'An assignment expression has the value of the left operand after
     // the assignment...'.
     if (LHS.isBitField()) {
+      Value *Src = RHS;
+      QualType SrcType = E->getRHS()->getType();
+      QualType DstType = E->getLHS()->getType();
+      if (ImplicitCastExpr *ICE = dyn_cast<ImplicitCastExpr>(E->getRHS())) {
+        SrcType = ICE->getSubExpr()->getType();
+      }
       CGF.EmitStoreThroughBitfieldLValue(RValue::get(RHS), LHS, &RHS);
+      EmitBitfieldConversionCheck(Src, SrcType, RHS, DstType,
+                                  LHS.getBitFieldInfo(), E->getExprLoc());
     } else {
       CGF.EmitNullabilityCheck(LHS, RHS, E->getExprLoc());
       CGF.EmitStoreThroughLValue(RValue::get(RHS), LHS);

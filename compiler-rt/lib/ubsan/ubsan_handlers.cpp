@@ -594,14 +594,16 @@ static void handleImplicitConversion(ImplicitConversionData *Data,
 
   ScopedReport R(Opts, Loc, ET);
 
-  // FIXME: is it possible to dump the values as hex with fixed width?
+  unsigned DstBits =
+      Data->BitfieldBits ? Data->BitfieldBits : DstTy.getIntegerBitWidth();
 
+  // FIXME: is it possible to dump the values as hex with fixed width?
   Diag(Loc, DL_Error, ET,
        "implicit conversion from type %0 of value %1 (%2-bit, %3signed) to "
-       "type %4 changed the value to %5 (%6-bit, %7signed)")
+       "type %4 changed the value to %5 (%6-bit%7, %8signed)")
       << SrcTy << Value(SrcTy, Src) << SrcTy.getIntegerBitWidth()
-      << (SrcSigned ? "" : "un") << DstTy << Value(DstTy, Dst)
-      << DstTy.getIntegerBitWidth() << (DstSigned ? "" : "un");
+      << (SrcSigned ? "" : "un") << DstTy << Value(DstTy, Dst) << DstBits
+      << (Data->BitfieldBits ? " bitfield" : "") << (DstSigned ? "" : "un");
 }
 
 void __ubsan::__ubsan_handle_implicit_conversion(ImplicitConversionData *Data,
