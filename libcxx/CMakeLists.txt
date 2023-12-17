@@ -177,7 +177,10 @@ set(LIBCXX_LIBDIR_SUFFIX "${LLVM_LIBDIR_SUFFIX}" CACHE STRING
     "Define suffix of library directory name (32/64)")
 option(LIBCXX_INSTALL_HEADERS "Install the libc++ headers." ON)
 option(LIBCXX_INSTALL_LIBRARY "Install the libc++ library." ON)
-option(LIBCXX_INSTALL_MODULES "Install the libc++ C++20 modules (experimental)." OFF)
+cmake_dependent_option(LIBCXX_INSTALL_MODULES
+  "Install the libc++ C++20 modules (experimental)." OFF
+  "LIBCXX_ENABLE_STD_MODULES" OFF
+)
 cmake_dependent_option(LIBCXX_INSTALL_STATIC_LIBRARY
   "Install the static libc++ library." ON
   "LIBCXX_ENABLE_STATIC;LIBCXX_INSTALL_LIBRARY" OFF)
