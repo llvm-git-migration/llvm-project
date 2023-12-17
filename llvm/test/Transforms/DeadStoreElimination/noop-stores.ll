@@ -795,3 +795,84 @@ join:
   store i8 %v, ptr %q, align 1
   ret void
 }
+
+; Dominating condition implies value already exists, optimize store
+define void @remove_tautological_store(ptr %x, ptr %y, ptr %z) {
+; CHECK-LABEL: @remove_tautological_store(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VALX:%.*]] = load i32, ptr [[X:%.*]], align 4
+; CHECK-NEXT:    [[CMPX:%.*]] = icmp eq i32 [[VALX]], 4
+; CHECK-NEXT:    br i1 [[CMPX]], label [[IF_X:%.*]], label [[END:%.*]]
+; CHECK:       if.x:
+; CHECK-NEXT:    br label [[END]]
+; CHECK:       end:
+; CHECK-NEXT:    ret void
+;
+entry:
+  %valx = load i32, ptr %x, align 4
+  %cmpx = icmp eq i32 %valx, 4
+  br i1 %cmpx, label %if.x, label %end
+
+if.x:
+  store i32 4, ptr %x, align 4
+  br label %end
+
+end:
+  ret void
+}
+
+; Dominating condition implies value already exists, optimize store
+; Should not optimize since value being stored is different from cond check
+define void @remove_tautological_store_fail_diff_value(ptr %x) {
+; CHECK-LABEL: @remove_tautological_store_fail_diff_value(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VALX:%.*]] = load i32, ptr [[X:%.*]], align 4
+; CHECK-NEXT:    [[CMPX:%.*]] = icmp eq i32 [[VALX]], 4
+; CHECK-NEXT:    br i1 [[CMPX]], label [[IF_X:%.*]], label [[END:%.*]]
+; CHECK:       if.x:
+; CHECK-NEXT:    store i32 5, ptr [[X]], align 4
+; CHECK-NEXT:    br label [[END]]
+; CHECK:       end:
+; CHECK-NEXT:    ret void
+;
+entry:
+  %valx = load i32, ptr %x, align 4
+  %cmpx = icmp eq i32 %valx, 4
+  br i1 %cmpx, label %if.x, label %end
+
+if.x:
+  store i32 5, ptr %x, align 4
+  br label %end
+
+end:
+  ret void
+}
+
+; Dominating condition implies value already exists, optimize store
+; Should not optimize since there is a clobbering acc after load
+define void @remove_tautological_store_fail_clobber(ptr %x) {
+; CHECK-LABEL: @remove_tautological_store_fail_clobber(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VALX:%.*]] = load i32, ptr [[X:%.*]], align 4
+; CHECK-NEXT:    store i32 5, ptr [[X]], align 4
+; CHECK-NEXT:    [[CMPX:%.*]] = icmp eq i32 [[VALX]], 4
+; CHECK-NEXT:    br i1 [[CMPX]], label [[IF_X:%.*]], label [[END:%.*]]
+; CHECK:       if.x:
+; CHECK-NEXT:    store i32 4, ptr [[X]], align 4
+; CHECK-NEXT:    br label [[END]]
+; CHECK:       end:
+; CHECK-NEXT:    ret void
+;
+entry:
+  %valx = load i32, ptr %x, align 4
+  store i32 5, ptr %x, align 4
+  %cmpx = icmp eq i32 %valx, 4
+  br i1 %cmpx, label %if.x, label %end
+
+if.x:
+  store i32 4, ptr %x, align 4
+  br label %end
+
+end:
+  ret void
+}
