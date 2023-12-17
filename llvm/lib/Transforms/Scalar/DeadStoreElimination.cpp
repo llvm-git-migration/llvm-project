@@ -1901,6 +1901,51 @@ struct DSEState {
     return true;
   }
 
+  // Check if there is a dominating condition, that implies that the value
+  // being stored in a ptr is already present in the ptr.
+  bool dominatingConditionImpliesValue(MemoryDef *Def) {
+    auto *StoreI = dyn_cast<StoreInst>(Def->getMemoryInst());
+    BasicBlock *StoreBB = StoreI->getParent();
+    Value *StorePtr = StoreI->getPointerOperand();
+    Value *StoreVal = StoreI->getValueOperand();
+
+    DomTreeNode *IDom = DT.getNode(StoreBB)->getIDom();
+    if (!IDom)
+      return false;
+
+    auto *BI = dyn_cast<BranchInst>(IDom->getBlock()->getTerminator());
+    if (!BI || !BI->isConditional())
+      return false;
+
+    // In case both blocks are the same, it is not possible to determine
+    // if optimization is possible. (We would not want to optimize a store
+    // in the FalseBB if condition is true and vice versa.)
+    if (BI->getSuccessor(0) == BI->getSuccessor(1))
+      return false;
+
+    Instruction *ICmpL;
+    ICmpInst::Predicate Pred;
+    if (!match(BI->getCondition(),
+               m_c_ICmp(Pred,
+                        m_CombineAnd(m_Load(m_Specific(StorePtr)),
+                                     m_Instruction(ICmpL)),
+                        m_Specific(StoreVal))) ||
+        !ICmpInst::isEquality(Pred))
+      return false;
+
+    if (Pred == ICmpInst::ICMP_EQ && StoreBB != BI->getSuccessor(0))
+      return false;
+
+    if (Pred == ICmpInst::ICMP_NE && StoreBB != BI->getSuccessor(1))
+      return false;
+
+    MemoryAccess *LoadAcc = MSSA.getMemoryAccess(ICmpL);
+    MemoryAccess *ClobAcc =
+        MSSA.getSkipSelfWalker()->getClobberingMemoryAccess(Def, BatchAA);
+
+    return MSSA.dominates(ClobAcc, LoadAcc);
+  }
+
   /// \returns true if \p Def is a no-op store, either because it
   /// directly stores back a loaded value or stores zero to a calloced object.
   bool storeIsNoop(MemoryDef *Def, const Value *DefUO) {
@@ -1930,6 +1975,9 @@ struct DSEState {
 
     if (!Store)
       return false;
+
+    if (dominatingConditionImpliesValue(Def))
+      return true;
 
     if (auto *LoadI = dyn_cast<LoadInst>(Store->getOperand(0))) {
       if (LoadI->getPointerOperand() == Store->getOperand(1)) {
