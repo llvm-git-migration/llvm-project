@@ -21,6 +21,7 @@
 #define SOCKET_FILE_NAME "mbd.sock"
 #define STDOUT_FILE_NAME "mbd.out"
 #define STDERR_FILE_NAME "mbd.err"
+#define MODULE_BUILD_DAEMON_FLAG "-cc1modbuildd"
 
 namespace clang::tooling::cc1modbuildd {
 
@@ -33,5 +34,4 @@ llvm::Error makeStringError(llvm::Error Err, std::string Msg);
 std::string getBasePath();
 
 } // namespace clang::tooling::cc1modbuildd
-
 #endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_UTILS_H

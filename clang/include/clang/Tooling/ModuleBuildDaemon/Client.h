@@ -14,17 +14,19 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
+#include "llvm/Support/raw_socket_stream.h"
 
 namespace clang::tooling::cc1modbuildd {
 
-llvm::Error attemptHandshake(int SocketFD, clang::DiagnosticsEngine &Diag);
+llvm::Error attemptHandshake(llvm::raw_socket_stream &Client,
+                             DiagnosticsEngine &Diag);
 
 llvm::Error spawnModuleBuildDaemon(llvm::StringRef BasePath, const char *Argv0,
                                    clang::DiagnosticsEngine &Diag);
 
-llvm::Expected<int> getModuleBuildDaemon(const char *Argv0,
-                                         llvm::StringRef BasePath,
-                                         clang::DiagnosticsEngine &Diag);
+llvm::Expected<std::unique_ptr<llvm::raw_socket_stream>>
+getModuleBuildDaemon(const char *Argv0, llvm::StringRef BasePath,
+                     clang::DiagnosticsEngine &Diag);
 
 void spawnModuleBuildDaemonAndHandshake(const clang::CompilerInvocation &Clang,
                                         clang::DiagnosticsEngine &Diag,

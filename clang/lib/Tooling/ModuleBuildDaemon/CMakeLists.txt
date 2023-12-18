@@ -4,6 +4,6 @@ set(LLVM_LINK_COMPONENTS
 
 add_clang_library(clangModuleBuildDaemon
   Client.cpp
-  SocketSupport.cpp
+  SocketMsgSupport.cpp
   Utils.cpp
   )
