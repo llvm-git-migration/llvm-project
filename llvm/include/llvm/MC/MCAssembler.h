@@ -161,6 +161,8 @@ private:
   // which flags to be set.
   unsigned ELFHeaderEFlags;
 
+  unsigned char ELFHeaderABIVersion = 0;
+
   /// Used to communicate Linker Optimization Hint information between
   /// the Streamer and the .o writer
   MCLOHContainer LOHContainer;
@@ -278,6 +280,10 @@ public:
   /// ELF e_header flags
   unsigned getELFHeaderEFlags() const { return ELFHeaderEFlags; }
   void setELFHeaderEFlags(unsigned Flags) { ELFHeaderEFlags = Flags; }
+
+  /// ELF e_ident[EI_ABIVERSION] value
+  unsigned char getELFHeaderABIVersion() const { return ELFHeaderABIVersion; }
+  void setELFHeaderABIVersion(unsigned char V) { ELFHeaderABIVersion = V; }
 
   /// MachO deployment target version information.
   const VersionInfoType &getVersionInfo() const { return VersionInfo; }

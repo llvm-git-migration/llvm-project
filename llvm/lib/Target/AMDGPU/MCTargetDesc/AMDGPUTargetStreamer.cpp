@@ -217,6 +217,12 @@ void AMDGPUTargetAsmStreamer::EmitDirectiveAMDGCNTarget() {
   OS << "\t.amdgcn_target \"" << getTargetID()->toString() << "\"\n";
 }
 
+void AMDGPUTargetAsmStreamer::EmitDirectiveAMDGCNCodeObjectVersion(
+    unsigned COV) {
+  AMDGPUTargetStreamer::EmitDirectiveAMDGCNCodeObjectVersion(COV);
+  OS << "\t.amdgcn_code_object_version " << COV << '\n';
+}
+
 void
 AMDGPUTargetAsmStreamer::EmitAMDKernelCodeT(const amd_kernel_code_t &Header) {
   OS << "\t.amd_kernel_code_t\n";
@@ -286,7 +292,7 @@ bool AMDGPUTargetAsmStreamer::EmitCodeEnd(const MCSubtargetInfo &STI) {
 void AMDGPUTargetAsmStreamer::EmitAmdhsaKernelDescriptor(
     const MCSubtargetInfo &STI, StringRef KernelName,
     const amdhsa::kernel_descriptor_t &KD, uint64_t NextVGPR, uint64_t NextSGPR,
-    bool ReserveVCC, bool ReserveFlatScr, unsigned CodeObjectVersion) {
+    bool ReserveVCC, bool ReserveFlatScr) {
   IsaVersion IVersion = getIsaVersion(STI.getCPU());
 
   OS << "\t.amdhsa_kernel " << KernelName << '\n';
@@ -479,6 +485,8 @@ MCELFStreamer &AMDGPUTargetELFStreamer::getStreamer() {
 void AMDGPUTargetELFStreamer::finish() {
   MCAssembler &MCA = getStreamer().getAssembler();
   MCA.setELFHeaderEFlags(getEFlags());
+  MCA.setELFHeaderABIVersion(
+      getELFABIVersion(STI.getTargetTriple(), CodeObjectVersion));
 
   std::string Blob;
   const char *Vendor = getPALMetadata()->getVendor();
@@ -566,17 +574,7 @@ unsigned AMDGPUTargetELFStreamer::getEFlagsUnknownOS() {
 unsigned AMDGPUTargetELFStreamer::getEFlagsAMDHSA() {
   assert(isHsaAbi(STI));
 
-  if (std::optional<uint8_t> HsaAbiVer = getHsaAbiVersion(&STI)) {
-    switch (*HsaAbiVer) {
-    case ELF::ELFABIVERSION_AMDGPU_HSA_V3:
-      return getEFlagsV3();
-    case ELF::ELFABIVERSION_AMDGPU_HSA_V4:
-    case ELF::ELFABIVERSION_AMDGPU_HSA_V5:
-      return getEFlagsV4();
-    }
-  }
-
-  llvm_unreachable("HSA OS ABI Version identification must be defined");
+  return getEFlagsV4();
 }
 
 unsigned AMDGPUTargetELFStreamer::getEFlagsAMDPAL() {
@@ -777,8 +775,7 @@ bool AMDGPUTargetELFStreamer::EmitCodeEnd(const MCSubtargetInfo &STI) {
 void AMDGPUTargetELFStreamer::EmitAmdhsaKernelDescriptor(
     const MCSubtargetInfo &STI, StringRef KernelName,
     const amdhsa::kernel_descriptor_t &KernelDescriptor, uint64_t NextVGPR,
-    uint64_t NextSGPR, bool ReserveVCC, bool ReserveFlatScr,
-    unsigned CodeObjectVersion) {
+    uint64_t NextSGPR, bool ReserveVCC, bool ReserveFlatScr) {
   auto &Streamer = getStreamer();
   auto &Context = Streamer.getContext();
 

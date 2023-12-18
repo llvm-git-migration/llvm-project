@@ -417,7 +417,7 @@ void ELFWriter::writeHeader(const MCAssembler &Asm) {
                    ? int(ELF::ELFOSABI_GNU)
                    : OSABI);
   // e_ident[EI_ABIVERSION]
-  W.OS << char(OWriter.TargetObjectWriter->getABIVersion());
+  W.OS << char(Asm.getELFHeaderABIVersion());
 
   W.OS.write_zeros(ELF::EI_NIDENT - ELF::EI_PAD);
 
