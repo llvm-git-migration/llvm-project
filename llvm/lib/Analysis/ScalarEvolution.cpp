@@ -8139,16 +8139,7 @@ ScalarEvolution::getSmallConstantTripCount(const Loop *L,
 unsigned ScalarEvolution::getSmallConstantMaxTripCount(const Loop *L) {
   const auto *MaxExitCount =
       dyn_cast<SCEVConstant>(getConstantMaxBackedgeTakenCount(L));
-  unsigned MaxExitCountN = getConstantTripCount(MaxExitCount);
-  if (UseMemoryAccessUBForBEInference) {
-    auto *MaxInferCount = getConstantMaxTripCountFromMemAccess(L);
-    if (auto *InferCount = dyn_cast<SCEVConstant>(MaxInferCount)) {
-      unsigned InferValue = InferCount->getValue()->getZExtValue();
-      MaxExitCountN =
-          MaxExitCountN == 0 ? InferValue : std::min(MaxExitCountN, InferValue);
-    }
-  }
-  return MaxExitCountN;
+  return getConstantTripCount(MaxExitCount);
 }
 
 unsigned ScalarEvolution::getSmallConstantTripMultiple(const Loop *L) {
@@ -8213,13 +8204,9 @@ collectExecLoadStoreInsideLoop(const Loop *L, DominatorTree &DT,
   if (!L->isLoopSimplifyForm() || !L->isInnermost())
     return;
 
-  // FIXME: To make the case more typical, we only analyze loops that have one
-  // exiting block and the block must be the latch. It is easier to capture
-  // loops with memory access that will be executed in every iteration.
   const BasicBlock *LoopLatch = L->getLoopLatch();
   assert(LoopLatch && "normal form loop doesn't have a latch");
-  if (L->getExitingBlock() != LoopLatch)
-    return;
+  assert(L->getExitingBlock() == LoopLatch);
 
   // We will not continue if sanitizer is enabled.
   const Function *F = LoopLatch->getParent();
@@ -8322,8 +8309,8 @@ static const SCEV *checkIndexWrap(Value *Ptr, ScalarEvolution *SE,
   return SE->getUMinFromMismatchedTypes(InferCountColl);
 }
 
-const SCEV *
-ScalarEvolution::getConstantMaxTripCountFromMemAccess(const Loop *L) {
+ScalarEvolution::ExitLimit
+ScalarEvolution::computeExitLimitFromMemAccessImpl(const Loop *L) {
   SmallVector<Instruction *, 4> MemInsts;
   collectExecLoadStoreInsideLoop(L, DT, MemInsts);
 
@@ -8361,7 +8348,27 @@ ScalarEvolution::getConstantMaxTripCountFromMemAccess(const Loop *L) {
   if (InferCountColl.empty())
     return getCouldNotCompute();
 
-  return getUMinFromMismatchedTypes(InferCountColl);
+  const SCEV *Count = getUMinFromMismatchedTypes(InferCountColl);
+
+  return {getCouldNotCompute(), Count, Count, /*MaxOrZero=*/false};
+}
+
+ScalarEvolution::ExitLimit
+ScalarEvolution::computeExitLimitFromMemAccessCached(ExitLimitCacheTy &Cache,
+                                                     const Loop *L) {
+  // We don't really need them but the cache does.
+  constexpr Value *ExitCond = nullptr;
+  constexpr const bool ExitIfTrue = true;
+  constexpr const bool ControlsOnlyExit = true;
+  constexpr const bool AllowPredicates = true;
+
+  if (auto MaybeEL = Cache.find(L, ExitCond, ExitIfTrue, ControlsOnlyExit,
+                                AllowPredicates))
+    return *MaybeEL;
+
+  ExitLimit EL = computeExitLimitFromMemAccessImpl(L);
+  Cache.insert(L, ExitCond, ExitIfTrue, ControlsOnlyExit, AllowPredicates, EL);
+  return EL;
 }
 
 const SCEV *ScalarEvolution::getExitCount(const Loop *L,
@@ -8946,6 +8953,16 @@ ScalarEvolution::computeExitLimit(const Loop *L, BasicBlock *ExitingBlock,
   if (!Latch || !DT.dominates(ExitingBlock, Latch))
     return getCouldNotCompute();
 
+  // FIXME: To make the case more typical, we only analyze loops that have one
+  // exiting block and the block must be the latch. It is easier to capture
+  // loops with memory access that will be executed in every iteration.
+  const SCEV *PotentiallyBetterConstantMax = getCouldNotCompute();
+  if (UseMemoryAccessUBForBEInference && Latch == L->getExitingBlock()) {
+    assert(Latch == ExitingBlock);
+    auto EL = computeExitLimitFromMemAccess(L);
+    PotentiallyBetterConstantMax = EL.ConstantMaxNotTaken;
+  }
+
   bool IsOnlyExit = (L->getExitingBlock() != nullptr);
   Instruction *Term = ExitingBlock->getTerminator();
   if (BranchInst *BI = dyn_cast<BranchInst>(Term)) {
@@ -8954,9 +8971,13 @@ ScalarEvolution::computeExitLimit(const Loop *L, BasicBlock *ExitingBlock,
     assert(ExitIfTrue == L->contains(BI->getSuccessor(1)) &&
            "It should have one successor in loop and one exit block!");
     // Proceed to the next level to examine the exit condition expression.
-    return computeExitLimitFromCond(L, BI->getCondition(), ExitIfTrue,
-                                    /*ControlsOnlyExit=*/IsOnlyExit,
-                                    AllowPredicates);
+    ExitLimit EL = computeExitLimitFromCond(L, BI->getCondition(), ExitIfTrue,
+                                            /*ControlsOnlyExit=*/IsOnlyExit,
+                                            AllowPredicates);
+    if (!isa<SCEVCouldNotCompute>(PotentiallyBetterConstantMax))
+      EL.ConstantMaxNotTaken = getUMinFromMismatchedTypes(
+          EL.ConstantMaxNotTaken, PotentiallyBetterConstantMax);
+    return EL;
   }
 
   if (SwitchInst *SI = dyn_cast<SwitchInst>(Term)) {
@@ -8969,9 +8990,13 @@ ScalarEvolution::computeExitLimit(const Loop *L, BasicBlock *ExitingBlock,
         Exit = SBB;
       }
     assert(Exit && "Exiting block must have at least one exit");
-    return computeExitLimitFromSingleExitSwitch(
-        L, SI, Exit,
-        /*ControlsOnlyExit=*/IsOnlyExit);
+    ExitLimit EL =
+        computeExitLimitFromSingleExitSwitch(L, SI, Exit,
+                                             /*ControlsOnlyExit=*/IsOnlyExit);
+    if (!isa<SCEVCouldNotCompute>(PotentiallyBetterConstantMax))
+      EL.ConstantMaxNotTaken = getUMinFromMismatchedTypes(
+          EL.ConstantMaxNotTaken, PotentiallyBetterConstantMax);
+    return EL;
   }
 
   return getCouldNotCompute();
@@ -8983,6 +9008,13 @@ ScalarEvolution::ExitLimit ScalarEvolution::computeExitLimitFromCond(
   ScalarEvolution::ExitLimitCacheTy Cache(L, ExitIfTrue, AllowPredicates);
   return computeExitLimitFromCondCached(Cache, L, ExitCond, ExitIfTrue,
                                         ControlsOnlyExit, AllowPredicates);
+}
+
+ScalarEvolution::ExitLimit
+ScalarEvolution::computeExitLimitFromMemAccess(const Loop *L) {
+  ScalarEvolution::ExitLimitCacheTy Cache(L, /* ExitIfTrue */ true,
+                                          /* AllowPredicates */ true);
+  return computeExitLimitFromMemAccessCached(Cache, L);
 }
 
 std::optional<ScalarEvolution::ExitLimit>

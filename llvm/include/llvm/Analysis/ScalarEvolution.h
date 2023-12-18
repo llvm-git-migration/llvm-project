@@ -854,12 +854,6 @@ public:
   unsigned getSmallConstantTripMultiple(const Loop *L,
                                         const BasicBlock *ExitingBlock);
 
-  /// Return the upper bound of the loop trip count infered from memory access.
-  /// This can not access bytes starting outside the statically allocated size
-  /// without being immediate UB. Returns SCEVCouldNotCompute if the trip count
-  /// could not be inferred.
-  const SCEV *getConstantMaxTripCountFromMemAccess(const Loop *L);
-
   /// The terms "backedge taken count" and "exit count" are used
   /// interchangeably to refer to the number of times the backedge of a loop
   /// has executed before the loop is exited.
@@ -1158,6 +1152,8 @@ public:
   ExitLimit computeExitLimitFromCond(const Loop *L, Value *ExitCond,
                                      bool ExitIfTrue, bool ControlsOnlyExit,
                                      bool AllowPredicates = false);
+
+  ExitLimit computeExitLimitFromMemAccess(const Loop *L);
 
   /// A predicate is said to be monotonically increasing if may go from being
   /// false to being true as the loop iterates, but never the other way
@@ -1803,6 +1799,9 @@ private:
                                          Value *ExitCond, bool ExitIfTrue,
                                          bool ControlsOnlyExit,
                                          bool AllowPredicates);
+  ExitLimit computeExitLimitFromMemAccessCached(ExitLimitCacheTy &Cache,
+                                                const Loop *L);
+  ExitLimit computeExitLimitFromMemAccessImpl(const Loop *L);
   std::optional<ScalarEvolution::ExitLimit> computeExitLimitFromCondFromBinOp(
       ExitLimitCacheTy &Cache, const Loop *L, Value *ExitCond, bool ExitIfTrue,
       bool ControlsOnlyExit, bool AllowPredicates);

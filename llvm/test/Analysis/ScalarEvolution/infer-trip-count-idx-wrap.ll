@@ -5,12 +5,12 @@ define void @ComputeMaxTripCountFromArrayIdxWrap(i32 signext %len) {
 ; CHECK-LABEL: 'ComputeMaxTripCountFromArrayIdxWrap'
 ; CHECK-NEXT:  Determining loop execution counts for: @ComputeMaxTripCountFromArrayIdxWrap
 ; CHECK-NEXT:  Loop %for.body: backedge-taken count is (-1 + %len)
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 2147483646
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 255
 ; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip is 255
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 256
 ;
 entry:
   %a = alloca [256 x i32], align 4
@@ -41,12 +41,12 @@ define void @ComputeMaxTripCountFromArrayIdxWrap2(i32 signext %len) {
 ; CHECK-LABEL: 'ComputeMaxTripCountFromArrayIdxWrap2'
 ; CHECK-NEXT:  Determining loop execution counts for: @ComputeMaxTripCountFromArrayIdxWrap2
 ; CHECK-NEXT:  Loop %for.body: backedge-taken count is (-1 + %len)
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 2147483646
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 127
 ; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip is 127
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 128
 ;
 entry:
   %a = alloca [127 x i32], align 4
@@ -77,12 +77,12 @@ define void @ComputeMaxTripCountFromArrayIdxWrap3(i32 signext %len) {
 ; CHECK-LABEL: 'ComputeMaxTripCountFromArrayIdxWrap3'
 ; CHECK-NEXT:  Determining loop execution counts for: @ComputeMaxTripCountFromArrayIdxWrap3
 ; CHECK-NEXT:  Loop %for.body: backedge-taken count is (-1 + %len)
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 2147483646
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 20
 ; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip is 20
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 21
 ;
 entry:
   %a = alloca [20 x i32], align 4

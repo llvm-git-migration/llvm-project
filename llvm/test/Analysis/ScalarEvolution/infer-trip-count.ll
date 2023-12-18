@@ -5,12 +5,12 @@ define void @ComputeMaxTripCountFromArrayNormal(i32 signext %len) {
 ; CHECK-LABEL: 'ComputeMaxTripCountFromArrayNormal'
 ; CHECK-NEXT:  Determining loop execution counts for: @ComputeMaxTripCountFromArrayNormal
 ; CHECK-NEXT:  Loop %for.body: backedge-taken count is (-1 + %len)
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 2147483646
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 7
 ; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip is 7
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 8
 ;
 entry:
   %a = alloca [7 x i32], align 4
@@ -41,12 +41,12 @@ define void @ComputeMaxTripCountFromZeroArray(i32 signext %len) {
 ; CHECK-LABEL: 'ComputeMaxTripCountFromZeroArray'
 ; CHECK-NEXT:  Determining loop execution counts for: @ComputeMaxTripCountFromZeroArray
 ; CHECK-NEXT:  Loop %for.body: backedge-taken count is (-1 + %len)
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 2147483646
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is 0
 ; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip couldn't be computed.
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 1
 ;
 entry:
   %a = alloca [0 x i32], align 4
@@ -81,7 +81,7 @@ define void @ComputeMaxTripCountFromExtremArray(i32 signext %len) {
 ; CHECK-NEXT:  Loop %for.body: Predicated backedge-taken count is (-1 + %len)
 ; CHECK-NEXT:   Predicates:
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
-; CHECK-NEXT:  Loop %for.body: Small constant max trip is 2147483646
+; CHECK-NEXT:  Loop %for.body: Small constant max trip is 2147483647
 ;
 entry:
   %a = alloca [4294967295 x i1], align 4
