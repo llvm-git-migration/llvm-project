@@ -1351,7 +1351,10 @@ public:
     /// \brief Describes whether we are in an expression constext which we have
     /// to handle differently.
     enum ExpressionKind {
-      EK_Decltype, EK_TemplateArgument, EK_Other
+      EK_Decltype,
+      EK_TemplateArgument,
+      EK_BoundsAttrArgument,
+      EK_Other
     } ExprContext;
 
     // A context can be nested in both a discarded statement context and
@@ -1479,6 +1482,11 @@ public:
   std::tuple<MangleNumberingContext *, Decl *>
   getCurrentMangleNumberContext(const DeclContext *DC);
 
+  bool isBoundsAttrContext() const {
+    return ExprEvalContexts.back().ExprContext ==
+           ExpressionEvaluationContextRecord::ExpressionKind::
+               EK_BoundsAttrArgument;
+  }
 
   /// SpecialMemberOverloadResult - The overloading result for a special member
   /// function.
@@ -2666,6 +2674,10 @@ public:
                                       SourceLocation Loc);
   QualType BuiltinChangeSignedness(QualType BaseType, UTTKind UKind,
                                    SourceLocation Loc);
+
+  QualType BuildCountAttributedArrayType(
+      QualType WrappedTy, Expr *CountExpr,
+      const llvm::SmallVector<TypeCoupledDeclRefInfo, 1> &Decls);
 
   //===--------------------------------------------------------------------===//
   // Symbol table / Decl tracking callbacks: SemaDecl.cpp.
@@ -4854,8 +4866,6 @@ public:
                          const AttributeCommonInfo &A);
   bool CheckAlwaysInlineAttr(const Stmt *OrigSt, const Stmt *CurSt,
                              const AttributeCommonInfo &A);
-
-  bool CheckCountedByAttr(Scope *Scope, const FieldDecl *FD);
 
   /// Adjust the calling convention of a method to be the ABI default if it
   /// wasn't specified explicitly.  This handles method types formed from
