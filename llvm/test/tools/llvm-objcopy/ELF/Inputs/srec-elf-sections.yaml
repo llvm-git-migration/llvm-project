@@ -1,0 +1,46 @@
+!ELF
+FileHeader:
+  Class:           ELFCLASS64
+  Data:            ELFDATA2LSB
+  Type:            ET_EXEC
+  Machine:         EM_X86_64
+Sections:
+  - Name:            .data1
+# Records for this section should come last
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC ]
+    Content:         "11111111111111111111"
+    Address:         0xEFFFFF
+    AddressAlign:    0x8
+  - Name:            .data2
+# This section overlaps 24-bit address boundary, so we expect
+# its record type to be S3
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC ]
+    Content:         "3031323334353637383940"
+    Address:         0xFFFFF8
+    AddressAlign:    0x8
+  - Name:            .text
+# This section's contents exceeds default line length of 16 bytes
+# so we expect two lines created for it. Records for this section
+# should appear before records for the previous section.
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC, SHF_EXECINSTR ]
+    Address:         0x1000
+    AddressAlign:    0x8
+    Content:         "000102030405060708090A0B0C0D0E0F1011121314"
+  - Name:            .bss
+# NOBITS sections are not written
+    Type:            SHT_NOBITS
+    Flags:           [ SHF_ALLOC ]
+    Address:         0x10100
+    Size:            0x1000
+    AddressAlign:    0x8
+  - Name:            .dummy
+# Non-allocatable sections are not written
+    Type:            SHT_PROGBITS
+    Flags:           [ ]
+    Address:         0x20FFF8
+    Size:            65536
+    AddressAlign:    0x8
+

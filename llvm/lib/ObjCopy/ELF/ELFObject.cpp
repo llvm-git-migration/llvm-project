@@ -324,6 +324,14 @@ Expected<IHexRecord> IHexRecord::parse(StringRef Line) {
   return Rec;
 }
 
+static uint64_t sectionLMA(const SectionBase *Sec) {
+  Segment *Seg = Sec->ParentSegment;
+  if (Seg && Seg->Type == PT_LOAD && Seg->VAddr <= Sec->Addr &&
+      (Seg->VAddr + Seg->MemSize > Sec->Addr))
+    return Sec->Addr - Seg->VAddr + Seg->PAddr;
+  return Sec->Addr;
+}
+
 static uint64_t sectionPhysicalAddr(const SectionBase *Sec) {
   Segment *Seg = Sec->ParentSegment;
   if (Seg && Seg->Type != ELF::PT_LOAD)
@@ -2810,6 +2818,235 @@ Error IHexWriter::finalize() {
                              "failed to allocate memory buffer of " +
                                  Twine::utohexstr(TotalSize) + " bytes");
 
+  return Error::success();
+}
+
+Error SRECSectionWriterBase::visit(const StringTableSection &Sec) {
+  // Check that sizer has already done its work
+  assert(Sec.Size == Sec.StrTabBuilder.getSize());
+  // we don't need to write anything here the real writer has already done it.
+  return Error::success();
+}
+
+Error SRECSectionWriterBase::visit(const Section &Sec) {
+  writeSection(Sec, Sec.Contents);
+  return Error::success();
+}
+
+Error SRECSectionWriterBase::visit(const OwnedDataSection &Sec) {
+  writeSection(Sec, Sec.Data);
+  return Error::success();
+}
+
+Error SRECSectionWriterBase::visit(const DynamicRelocationSection &Sec) {
+  writeSection(Sec, Sec.Contents);
+  return Error::success();
+}
+
+void SRECSectionWriter::writeRecord(SRecord &Record, uint64_t Off) {
+  SRecLineData Data = Record.toString();
+  memcpy(Out.getBufferStart() + Off, Data.data(), Data.size());
+}
+
+void SRECSectionWriter::writeRecords() {
+  uint64_t Off = HeaderSize;
+  for (SRecord &Record : Records) {
+    Record.Type = Type;
+    writeRecord(Record, Off);
+    Off += Record.getSize();
+  }
+  Offset = Off;
+}
+
+void SRECSectionWriterBase::writeRecords() {
+  uint64_t Off = HeaderSize;
+  for (SRecord &Record : Records) {
+    Record.Type = Type;
+    Off += Record.getSize();
+  }
+  Offset = Off;
+}
+
+void SRECSectionWriterBase::writeSection(const SectionBase &S,
+                                         ArrayRef<uint8_t> Data) {
+  const uint32_t ChunkSize = 16;
+  uint32_t Address = sectionLMA(&S);
+  uint32_t EndAddr = Address + S.Size - 1;
+  if (isUInt<16>(EndAddr))
+    Type = std::max(static_cast<uint8_t>(SRecord::S1), Type);
+  else if (isUInt<24>(EndAddr))
+    Type = std::max(static_cast<uint8_t>(SRecord::S2), Type);
+  else
+    Type = SRecord::S3;
+  while (!Data.empty()) {
+    uint64_t DataSize = std::min<uint64_t>(Data.size(), ChunkSize);
+    SRecord Record{Type, Address, Data.take_front(DataSize)};
+    Records.push_back(Record);
+    Data = Data.drop_front(DataSize);
+    Address += DataSize;
+  }
+}
+
+Error SRECSectionWriter::visit(const StringTableSection &Sec) {
+  assert(Sec.Size == Sec.StrTabBuilder.getSize());
+  std::vector<uint8_t> Data(Sec.Size);
+  Sec.StrTabBuilder.write(Data.data());
+  writeSection(Sec, Data);
+  return Error::success();
+}
+
+SRecLineData SRecord::toString() const {
+  SRecLineData Line(getSize());
+  auto *Iter = Line.begin();
+  *Iter++ = 'S';
+  *Iter++ = '0' + Type;
+  // write 1 byte (2 hex characters) record count
+  Iter = toHexStr(getCount(), Iter, 2);
+  // write the address field with length depending on record type
+  Iter = toHexStr(Address, Iter, getAddressSize());
+  // write data byte by byte
+  for (uint8_t X : Data)
+    Iter = toHexStr(X, Iter, 2);
+  // write the 1 byte checksum
+  Iter = toHexStr(getChecksum(), Iter, 2);
+  *Iter++ = '\r';
+  *Iter++ = '\n';
+  assert(Iter == Line.end());
+  return Line;
+}
+
+uint8_t SRecord::getChecksum() const {
+  uint32_t Sum = getCount();
+  Sum += (Address >> 24) & 0xFF;
+  Sum += (Address >> 16) & 0xFF;
+  Sum += (Address >> 8) & 0xFF;
+  Sum += Address & 0xFF;
+  for (uint8_t Byte : Data)
+    Sum += Byte;
+  return 0xFF - (Sum & 0xFF);
+}
+
+size_t SRecord::getSize() const {
+  // 2 characters for type, count, checksum, CRLF
+  return 2 + 2 + getAddressSize() + Data.size() * 2 + 2 + 2;
+}
+
+uint8_t SRecord::getAddressSize() const {
+  switch (Type) {
+  case Type::S2:
+    return 6;
+  case Type::S3:
+    return 8;
+  case Type::S7:
+    return 8;
+  case Type::S8:
+    return 6;
+  default:
+    return 4;
+  }
+}
+
+uint8_t SRecord::getCount() const {
+  uint8_t DataSize = Data.size();
+  uint8_t ChecksumSize = 1;
+  return getAddressSize() / 2 + DataSize + ChecksumSize;
+}
+
+SRecord SRecord::getHeader(StringRef FileName) {
+  // limit header to 40 characters
+  StringRef HeaderContents = FileName.slice(0, 40);
+  ArrayRef<uint8_t> Data(
+      reinterpret_cast<const uint8_t *>(HeaderContents.data()),
+      HeaderContents.size());
+  return {SRecord::S0, 0, Data};
+}
+
+size_t SRECWriter::writeHeader(uint8_t *Buf) {
+  SRecLineData Record = SRecord::getHeader(OutputFileName).toString();
+  memcpy(Buf, Record.data(), Record.size());
+  return Record.size();
+}
+
+size_t SRECWriter::writeTerminator(uint8_t *Buf, uint8_t Type) {
+  assert(Type >= 7 && Type <= 9);
+  uint32_t Entry = Obj.Entry;
+  SRecLineData Data = SRecord{Type, Entry, {}}.toString();
+  memcpy(Buf, Data.data(), Data.size());
+  return Data.size();
+}
+
+Error SRECWriter::write() {
+  uint32_t HeaderSize =
+      writeHeader(reinterpret_cast<uint8_t *>(Buf->getBufferStart()));
+  SRECSectionWriter Writer(*Buf, HeaderSize);
+  for (const SectionBase *S : Sections) {
+    if (Error E = S->accept(Writer))
+      return E;
+  }
+  Writer.writeRecords();
+  uint64_t Offset = Writer.getBufferOffset();
+  /// S1 terminates with S9, S2 with S8, S3 with S7
+  uint8_t TerminatorType = 10 - Writer.getType();
+  Offset += writeTerminator(
+      reinterpret_cast<uint8_t *>(Buf->getBufferStart() + Offset),
+      TerminatorType);
+  assert(Offset == TotalSize);
+  Out.write(Buf->getBufferStart(), Buf->getBufferSize());
+  return Error::success();
+}
+
+Error SRECWriter::checkSection(const SectionBase &S) const {
+  if (!isUInt<32>(S.Addr + S.Size - 1))
+    return createStringError(
+        errc::invalid_argument,
+        "Section '%s' address range [0x%llx, 0x%llx] is not 32 bit",
+        S.Name.c_str(), S.Addr, S.Addr + S.Size - 1);
+  return Error::success();
+}
+
+Error SRECWriter::finalize() {
+  // We can't write 64-bit addresses.
+  if (!isUInt<32>(Obj.Entry))
+    return createStringError(errc::invalid_argument,
+                             "Entry point address 0x%llx overflows 32 bits",
+                             Obj.Entry);
+
+  for (const SectionBase &S : Obj.sections()) {
+    if ((S.Flags & ELF::SHF_ALLOC) && S.Type != ELF::SHT_NOBITS && S.Size > 0) {
+      if (Error E = checkSection(S))
+        return E;
+      Sections.push_back(&S);
+    }
+  }
+
+  llvm::sort(Sections, [](const SectionBase *A, const SectionBase *B) {
+    return sectionLMA(A) < sectionLMA(B);
+  });
+
+  std::unique_ptr<WritableMemoryBuffer> EmptyBuffer =
+      WritableMemoryBuffer::getNewMemBuffer(0);
+  if (!EmptyBuffer)
+    return createStringError(errc::not_enough_memory,
+                             "failed to allocate memory buffer of 0 bytes");
+
+  SRECSectionWriterBase LengthCalc(*EmptyBuffer, 0);
+  for (const SectionBase *Sec : Sections)
+    if (Error Err = Sec->accept(LengthCalc))
+      return Err;
+
+  LengthCalc.writeRecords();
+
+  // We need to add the size of the Header and Terminator records
+  SRecord Header = SRecord::getHeader(OutputFileName);
+  uint8_t TerminatorType = 10 - LengthCalc.getType();
+  SRecord Terminator = {TerminatorType, static_cast<uint32_t>(Obj.Entry), {}};
+  TotalSize =
+      LengthCalc.getBufferOffset() + Header.getSize() + Terminator.getSize();
+  Buf = WritableMemoryBuffer::getNewMemBuffer(TotalSize);
+  if (!Buf)
+    return createStringError(errc::not_enough_memory,
+                             "failed to allocate memory buffer of 0x" +
+                                 Twine::utohexstr(TotalSize) + " bytes");
   return Error::success();
 }
 

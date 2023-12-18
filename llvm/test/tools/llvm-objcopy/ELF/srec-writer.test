@@ -1,0 +1,44 @@
+# RUN: yaml2obj %p/Inputs/srec-elf-sections.yaml -o %t
+# RUN: llvm-objcopy -O srec %t - | FileCheck %s
+
+# Check that section address range overlapping 32 bit range
+# triggers an error
+# RUN: yaml2obj %p/Inputs/srec-elf-sections-err.yaml -o %t.err
+# RUN: not llvm-objcopy -O srec --only-section=.text1 %t.err - 2>&1 \
+#   RUN: | FileCheck %s --check-prefix=BAD-ADDR
+# RUN: not llvm-objcopy -O srec --only-section=.text2 %t.err - 2>&1 \
+#   RUN: | FileCheck %s --check-prefix=BAD-ADDR2
+
+# Check that zero length section is not written
+# RUN: llvm-objcopy -O srec --only-section=.text %t.err - \
+#   RUN:| FileCheck %s --check-prefix=ZERO_SIZE_SEC
+
+# Start address which exceeds 32 bit range triggers an error
+# RUN: not llvm-objcopy -O srec --set-start=0xF00000000 %t - 2>&1 \
+#   RUN: | FileCheck %s --check-prefix=BAD_START
+
+# Records should use LMA instead of VMA
+# RUN: yaml2obj %p/Inputs/srec-elf-segments.yaml -o %t.lma
+# RUN: llvm-objcopy -O srec %t.lma - | FileCheck %s --check-prefix=LMA
+
+CHECK: S00400002DCE
+CHECK-NEXT: S31500001000000102030405060708090A0B0C0D0E0F62
+CHECK-NEXT: S30A0000101010111213147B
+CHECK-NEXT: S30F00EFFFFF1111111111111111111159
+CHECK-NEXT: S31000FFFFF83031323334353637383940AC
+CHECK-NEXT: S70500000000FA
+
+LMA: S00400002DCE
+LMA-NEXT: S1088000002004809043
+LMA-NEXT: S1058009FF0072
+LMA-NEXT: S90380007C
+
+# BAD-ADDR: Section '.text1' address range [0xfffffff8, 0x100000000] is not 32 bit
+# BAD-ADDR2: Section '.text2' address range [0xffffffff0, 0xffffffff4] is not 32 bit
+
+# there should be no records besides header and terminator
+# ZERO_SIZE_SEC-NOT: {{S[1-8]}}
+# ZERO_SIZE_SEC: S00400002DCE
+# ZERO_SIZE_SEC-NEXT: S9030000FC
+
+# BAD_START: Entry point address 0xf00000000 overflows 32 bits
