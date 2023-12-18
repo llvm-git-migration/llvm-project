@@ -1303,6 +1303,7 @@ private:
                           unsigned NextFreeSGPR, SMRange SGPRRange,
                           unsigned &VGPRBlocks, unsigned &SGPRBlocks);
   bool ParseDirectiveAMDGCNTarget();
+  bool ParseDirectiveAMDHSACodeObjectVersion();
   bool ParseDirectiveAMDHSAKernel();
   bool ParseAMDKernelCodeTValue(StringRef ID, amd_kernel_code_t &Header);
   bool ParseDirectiveAMDKernelCodeT();
@@ -5595,9 +5596,18 @@ bool AMDGPUAsmParser::ParseDirectiveAMDHSAKernel() {
     }
   }
 
-  getTargetStreamer().EmitAmdhsaKernelDescriptor(
-      getSTI(), KernelName, KD, NextFreeVGPR, NextFreeSGPR, ReserveVCC,
-      ReserveFlatScr, AMDGPU::getAmdhsaCodeObjectVersion());
+  getTargetStreamer().EmitAmdhsaKernelDescriptor(getSTI(), KernelName, KD,
+                                                 NextFreeVGPR, NextFreeSGPR,
+                                                 ReserveVCC, ReserveFlatScr);
+  return false;
+}
+
+bool AMDGPUAsmParser::ParseDirectiveAMDHSACodeObjectVersion() {
+  uint32_t Version;
+  if (ParseAsAbsoluteExpression(Version))
+    return true;
+
+  getTargetStreamer().EmitDirectiveAMDHSACodeObjectVersion(Version);
   return false;
 }
 
@@ -5883,6 +5893,9 @@ bool AMDGPUAsmParser::ParseDirective(AsmToken DirectiveID) {
   if (isHsaAbi(getSTI())) {
     if (IDVal == ".amdhsa_kernel")
      return ParseDirectiveAMDHSAKernel();
+
+    if (IDVal == ".amdhsa_code_object_version")
+      return ParseDirectiveAMDHSACodeObjectVersion();
 
     // TODO: Restructure/combine with PAL metadata directive.
     if (IDVal == AMDGPU::HSAMD::V3::AssemblerDirectiveBegin)
@@ -8060,9 +8073,8 @@ void AMDGPUAsmParser::onBeginOfFile() {
     return;
 
   if (!getTargetStreamer().getTargetID())
-    getTargetStreamer().initializeTargetID(getSTI(), getSTI().getFeatureString(),
-        // TODO: Should try to check code object version from directive???
-        AMDGPU::getAmdhsaCodeObjectVersion());
+    getTargetStreamer().initializeTargetID(getSTI(),
+                                           getSTI().getFeatureString());
 
   if (isHsaAbi(getSTI()))
     getTargetStreamer().EmitDirectiveAMDGCNTarget();
