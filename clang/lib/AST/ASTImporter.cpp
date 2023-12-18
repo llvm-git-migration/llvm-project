@@ -1504,6 +1504,18 @@ ExpectedType ASTNodeImporter::VisitAttributedType(const AttributedType *T) {
       *ToModifiedTypeOrErr, *ToEquivalentTypeOrErr);
 }
 
+ExpectedType
+ASTNodeImporter::VisitCountAttributedType(const CountAttributedType *T) {
+  ExpectedType ToWrappedTypeOrErr = import(T->desugar());
+  if (!ToWrappedTypeOrErr)
+    return ToWrappedTypeOrErr.takeError();
+
+  // FIXME: Handle CoupledDecls correctly
+  return Importer.getToContext().getCountAttributedType(
+      *ToWrappedTypeOrErr, T->getCountExpr(), T->isCountInBytes(),
+      T->isOrNull(), T->getCoupledDecls());
+}
+
 ExpectedType ASTNodeImporter::VisitTemplateTypeParmType(
     const TemplateTypeParmType *T) {
   Expected<TemplateTypeParmDecl *> ToDeclOrErr = import(T->getDecl());
