@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Tooling/ModuleBuildDaemon/SocketMsgSupport.h"
-#include "clang/Tooling/ModuleBuildDaemon/SocketSupport.h"
 #include "clang/Tooling/ModuleBuildDaemon/Utils.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
@@ -40,7 +39,7 @@ using namespace clang::tooling::cc1modbuildd;
 #include <unistd.h>
 #endif
 
-// Create unbuffered STDOUT stream so that any logging done by module build
+// Create unbuffered STDOUT stream so that any logging done by the module build
 // daemon can be viewed without having to terminate the process
 static raw_fd_ostream &unbuff_outs() {
   static raw_fd_ostream S(fileno(stdout), false, true);
@@ -54,11 +53,6 @@ static void printVerboseLog(const llvm::Twine &message) {
   }
 }
 
-struct ClientConnection {
-  int ClientFD;
-  std::string Buffer;
-};
-
 namespace {
 
 class ModuleBuildDaemonServer {
@@ -67,7 +61,7 @@ public:
   SmallString<256> STDERR;
   SmallString<256> STDOUT;
 
-  ModuleBuildDaemonServer(StringRef Path, ArrayRef<const char *> Argv)
+  ModuleBuildDaemonServer(StringRef Path)
       : SocketPath(Path), STDERR(Path), STDOUT(Path) {
     llvm::sys::path::append(SocketPath, SOCKET_FILE_NAME);
     llvm::sys::path::append(STDOUT, STDOUT_FILE_NAME);
@@ -80,25 +74,18 @@ public:
   int createDaemonSocket();
   int listenForClients();
 
-  static void handleClient(ClientConnection Connection);
+  static void handleClient(std::shared_ptr<raw_socket_stream> Connection);
 
   // TODO: modify so when shutdownDaemon is called the daemon stops accepting
   // new client connections and waits for all existing client connections to
   // terminate before closing the file descriptor and exiting
   void shutdownDaemon() {
-#ifdef _WIN32
-    // TODO: implement windows version
-#else
-    int SocketFD = ListenSocketFD.load();
-    unlink(SocketPath.c_str());
-    shutdown(SocketFD, SHUT_RD);
-    close(SocketFD);
-    _Exit(EXIT_SUCCESS);
-#endif
+    ServerListener.value().~ListeningSocket();
+    exit(EXIT_SUCCESS);
   }
 
 private:
-  std::atomic<int> ListenSocketFD = -1;
+  std::optional<llvm::ListeningSocket> ServerListener;
 };
 
 // Required to handle SIGTERM by calling Shutdown
@@ -110,13 +97,14 @@ void handleSignal(int Signal) {
 }
 } // namespace
 
-#ifndef _WIN32
-// Forks and detaches process, creating module build daemon
+// Sets up file descriptors and signals for module build daemon
 int ModuleBuildDaemonServer::setupDaemonEnv() {
 
+#ifdef _WIN32
+  freopen("NUL", "r", stdin);
+#else
   close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
+#endif
 
   freopen(STDOUT.c_str(), "a", stdout);
   freopen(STDERR.c_str(), "a", stderr);
@@ -129,116 +117,92 @@ int ModuleBuildDaemonServer::setupDaemonEnv() {
     errs() << "failed to ignore SIGHUP" << '\n';
     exit(EXIT_FAILURE);
   }
-
   return EXIT_SUCCESS;
 }
 
-// TODO: Make portable
 // Creates unix socket for IPC with module build daemon
 int ModuleBuildDaemonServer::createDaemonSocket() {
 
-  // New socket
-  int SocketFD = socket(AF_UNIX, SOCK_STREAM, 0);
+  Expected<ListeningSocket> MaybeServerListener =
+      llvm::ListeningSocket::createUnix(SocketPath);
 
-  if (SocketFD == -1) {
-    std::perror("Socket create error: ");
-    exit(EXIT_FAILURE);
+  if (llvm::Error Err = MaybeServerListener.takeError()) {
+
+    llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
+      // If the socket address is already in use, exit because another module
+      // build daemon has successfully launched. When translation units are
+      // compiled in parallel, until the socket file is created, all clang
+      // invocations will try to spawn a module build daemon.
+      if (std::error_code EC = SE.convertToErrorCode();
+          EC == std::errc::address_in_use) {
+        exit(EXIT_SUCCESS);
+      } else {
+        llvm::errs() << "ERROR: " << EC.message() << '\n';
+        exit(EXIT_FAILURE);
+      }
+    });
   }
 
-  struct sockaddr_un addr;
-  memset(&addr, 0, sizeof(struct sockaddr_un));
-  addr.sun_family = AF_UNIX;
-  strncpy(addr.sun_path, SocketPath.c_str(), sizeof(addr.sun_path) - 1);
-
-  // bind to local address
-  if (bind(SocketFD, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-
-    // If the socket address is already in use, exit because another module
-    // build daemon has successfully launched. When translation units are
-    // compiled in parallel, until the socket file is created, all clang
-    // invocations will spawn a module build daemon.
-    if (errno == EADDRINUSE) {
-      close(SocketFD);
-      exit(EXIT_SUCCESS);
-    }
-    std::perror("Socket bind error: ");
-    exit(EXIT_FAILURE);
-  }
   printVerboseLog("mbd created and binded to socket at: " + SocketPath);
-
-  // set socket to accept incoming connection request
-  unsigned MaxBacklog = llvm::hardware_concurrency().compute_thread_count();
-  if (listen(SocketFD, MaxBacklog) == -1) {
-    std::perror("Socket listen error: ");
-    exit(EXIT_FAILURE);
-  }
-
-  ListenSocketFD.store(SocketFD);
+  ServerListener.emplace(std::move(*MaybeServerListener));
   return 0;
 }
 
-// Function submitted to thread pool with each client connection. Not
-// responsible for closing client connections
-// TODO: Setup something like ScopedHandle to auto close client on return
-void ModuleBuildDaemonServer::handleClient(ClientConnection Connection) {
+#include <cstddef>
+
+// Function submitted to thread pool with each frontend connection. Not
+// responsible for closing frontend socket connections
+void ModuleBuildDaemonServer::handleClient(
+    std::shared_ptr<llvm::raw_socket_stream> MovableConnection) {
+
+  llvm::raw_socket_stream &Connection = *MovableConnection;
+  std::string Buffer;
 
   // Read handshake from client
-  if (llvm::Error ReadErr =
-          readFromSocket(Connection.ClientFD, Connection.Buffer)) {
+  if (llvm::Error ReadErr = readFromSocket(Connection, Buffer)) {
     writeError(std::move(ReadErr), "Daemon failed to read buffer from socket");
-    close(Connection.ClientFD);
     return;
   }
 
   // Wait for response from module build daemon
   Expected<HandshakeMsg> MaybeHandshakeMsg =
-      getSocketMsgFromBuffer<HandshakeMsg>(Connection.Buffer);
+      getSocketMsgFromBuffer<HandshakeMsg>(Buffer);
   if (!MaybeHandshakeMsg) {
     writeError(MaybeHandshakeMsg.takeError(),
                "Failed to convert buffer to HandshakeMsg: ");
-    close(Connection.ClientFD);
     return;
   }
 
   // Have received HandshakeMsg - send HandshakeMsg response to clang invocation
   HandshakeMsg Msg(ActionType::HANDSHAKE, StatusType::SUCCESS);
-  if (llvm::Error WriteErr = writeSocketMsgToSocket(Msg, Connection.ClientFD)) {
+  if (llvm::Error WriteErr = writeSocketMsgToSocket(Connection, Msg)) {
     writeError(std::move(WriteErr),
                "Failed to notify client that handshake was received");
-    close(Connection.ClientFD);
     return;
   }
 
-  // Remove HandshakeMsg from Buffer in preperation for next read. Not currently
-  // necessary but will be once Daemon increases communication
-  size_t Position = Connection.Buffer.find("...\n");
-  if (Position != std::string::npos)
-    Connection.Buffer = Connection.Buffer.substr(Position + 4);
-
-  close(Connection.ClientFD);
   return;
 }
 
 int ModuleBuildDaemonServer::listenForClients() {
 
   llvm::ThreadPool Pool;
-  int Client;
-
   while (true) {
 
-    if ((Client = accept(ListenSocketFD.load(), NULL, NULL)) == -1) {
-      std::perror("Socket accept error: ");
+    Expected<std::unique_ptr<raw_socket_stream>> MaybeConnection =
+        ServerListener.value().accept();
+
+    if (llvm::Error Err = MaybeConnection.takeError()) {
+      llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
+        llvm::errs() << "ERROR: " << SE.getMessage() << '\n';
+      });
       continue;
     }
-
-    ClientConnection Connection;
-    Connection.ClientFD = Client;
-
+    std::shared_ptr<raw_socket_stream> Connection(std::move(*MaybeConnection));
     Pool.async(handleClient, Connection);
   }
   return 0;
 }
-#endif // LLVM_ON_UNIX
 
 // Module build daemon is spawned with the following command line:
 //
@@ -259,6 +223,8 @@ int ModuleBuildDaemonServer::listenForClients() {
 int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
   std::string BasePath;
+  // command line argument parsing. -cc1modbuildd is sliced away when passing
+  // Argv to cc1modbuildd_main
   if (!Argv.empty()) {
 
     if (find(Argv, StringRef("-v")) != Argv.end())
@@ -266,31 +232,34 @@ int cc1modbuildd_main(ArrayRef<const char *> Argv) {
 
     if (strcmp(Argv[0], "-v") != 0)
       BasePath = Argv[0];
-  } else
-    BasePath = getBasePath();
+    else
+      BasePath = getBasePath();
 
-  // TODO: Make portable. On most unix platforms a socket address cannot be over
-  // 108 characters but that may not always be the case. Functionality will be
-  // provided by llvm/Support/Sockets once that is implemented
+  } else {
+    BasePath = getBasePath();
+  }
+
+  // TODO: Max length may vary across different platforms. Incoming llvm/Support
+  // for sockets will help make this portable. On most unix platforms a socket
+  // address cannot be over 108 characters. The socket file, mbd.sock, takes up
+  // 8 characters leaving 100 characters left for the user/system
   const int MAX_ADDR = 108;
   if (BasePath.length() >= MAX_ADDR - std::string(SOCKET_FILE_NAME).length()) {
-    errs() << "Provided socket path" + BasePath +
-                  " is too long. Socket path much be equal to or less then 100 "
-                  "characters. Module build daemon will not be spawned.";
+    errs() << "Socket path '" + BasePath +
+                  "' is too long. Socket path much be equal to or less then "
+                  "100 characters. Module build daemon will not be spawned.";
     return 1;
   }
 
   llvm::sys::fs::create_directories(BasePath);
-  ModuleBuildDaemonServer Daemon(BasePath, Argv);
+  ModuleBuildDaemonServer Daemon(BasePath);
 
   // Used to handle signals
   DaemonPtr = &Daemon;
 
-#ifndef _WIN32
   Daemon.setupDaemonEnv();
   Daemon.createDaemonSocket();
   Daemon.listenForClients();
-#endif
 
-  return 0;
+  return EXIT_SUCCESS;
 }

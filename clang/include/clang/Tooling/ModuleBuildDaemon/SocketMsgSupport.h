@@ -10,7 +10,6 @@
 #define LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_SOCKETMSGSUPPORT_H
 
 #include "clang/Tooling/ModuleBuildDaemon/Client.h"
-#include "clang/Tooling/ModuleBuildDaemon/SocketSupport.h"
 
 namespace clang::tooling::cc1modbuildd {
 
@@ -32,6 +31,12 @@ struct HandshakeMsg : public BaseMsg {
       : BaseMsg(Action, Status) {}
 };
 
+Expected<std::unique_ptr<llvm::raw_socket_stream>>
+connectToSocket(StringRef SocketPath);
+llvm::Error readFromSocket(llvm::raw_socket_stream &Connection,
+                           std::string &BufferConsumer);
+void writeToSocket(llvm::raw_socket_stream &Socket, llvm::StringRef Buffer);
+
 template <typename T> std::string getBufferFromSocketMsg(T Msg) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
@@ -49,9 +54,9 @@ llvm::Expected<T> getSocketMsgFromBuffer(llvm::StringRef Buffer) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
-  T ClientRequest;
+  T Request;
   llvm::yaml::Input YamlIn(Buffer);
-  YamlIn >> ClientRequest;
+  YamlIn >> Request;
 
   // YamlIn.error() dumps an error message if there is one
   if (YamlIn.error()) {
@@ -60,15 +65,16 @@ llvm::Expected<T> getSocketMsgFromBuffer(llvm::StringRef Buffer) {
                                                llvm::inconvertibleErrorCode());
   }
 
-  return ClientRequest;
+  return Request;
 }
 
-template <typename T> llvm::Expected<T> readSocketMsgFromSocket(int FD) {
+template <typename T>
+llvm::Expected<T> readSocketMsgFromSocket(llvm::raw_socket_stream &Socket) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
   std::string BufferConsumer;
-  if (llvm::Error ReadErr = readFromSocket(FD, BufferConsumer))
+  if (llvm::Error ReadErr = readFromSocket(Socket, BufferConsumer))
     return std::move(ReadErr);
 
   // Wait for response from module build daemon
@@ -79,13 +85,13 @@ template <typename T> llvm::Expected<T> readSocketMsgFromSocket(int FD) {
   return std::move(*MaybeResponse);
 }
 
-template <typename T> llvm::Error writeSocketMsgToSocket(T Msg, int FD) {
+template <typename T>
+llvm::Error writeSocketMsgToSocket(llvm::raw_socket_stream &Socket, T Msg) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value,
                 "T must inherit from cc1modbuildd::BaseMsg");
 
   std::string Buffer = getBufferFromSocketMsg(Msg);
-  if (llvm::Error Err = writeToSocket(Buffer, FD))
-    return std::move(Err);
+  writeToSocket(Socket, Buffer);
 
   return llvm::Error::success();
 }
