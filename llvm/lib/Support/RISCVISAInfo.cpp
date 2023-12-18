@@ -71,7 +71,9 @@ static const RISCVSupportedExtension SupportedExtensions[] = {
     {"xcvalu", RISCVExtensionVersion{1, 0}},
     {"xcvbi", RISCVExtensionVersion{1, 0}},
     {"xcvbitmanip", RISCVExtensionVersion{1, 0}},
+    {"xcvelw", RISCVExtensionVersion{1, 0}},
     {"xcvmac", RISCVExtensionVersion{1, 0}},
+    {"xcvmem", RISCVExtensionVersion{1, 0}},
     {"xcvsimd", RISCVExtensionVersion{1, 0}},
     {"xsfcie", RISCVExtensionVersion{1, 0}},
     {"xsfvcp", RISCVExtensionVersion{1, 0}},
@@ -172,7 +174,7 @@ static const RISCVSupportedExtension SupportedExperimentalExtensions[] = {
 
     {"zfbfmin", RISCVExtensionVersion{0, 8}},
 
-    {"zicfilp", RISCVExtensionVersion{0, 2}},
+    {"zicfilp", RISCVExtensionVersion{0, 4}},
     {"zicond", RISCVExtensionVersion{1, 0}},
 
     {"ztso", RISCVExtensionVersion{0, 1}},
@@ -1008,7 +1010,7 @@ static const char *ImpliedExtsZcmt[] = {"zca"};
 static const char *ImpliedExtsZdinx[] = {"zfinx"};
 static const char *ImpliedExtsZfa[] = {"f"};
 static const char *ImpliedExtsZfbfmin[] = {"f"};
-static const char *ImpliedExtsZfh[] = {"f"};
+static const char *ImpliedExtsZfh[] = {"zfhmin"};
 static const char *ImpliedExtsZfhmin[] = {"f"};
 static const char *ImpliedExtsZfinx[] = {"zicsr"};
 static const char *ImpliedExtsZhinx[] = {"zfinx"};
@@ -1290,12 +1292,16 @@ StringRef RISCVISAInfo::computeDefaultABI() const {
   if (XLen == 32) {
     if (hasExtension("d"))
       return "ilp32d";
+    if (hasExtension("f"))
+      return "ilp32f";
     if (hasExtension("e"))
       return "ilp32e";
     return "ilp32";
   } else if (XLen == 64) {
     if (hasExtension("d"))
       return "lp64d";
+    if (hasExtension("f"))
+      return "lp64f";
     if (hasExtension("e"))
       return "lp64e";
     return "lp64";

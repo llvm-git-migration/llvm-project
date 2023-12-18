@@ -1421,11 +1421,6 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
     Protocol = GV;
     return GV;
   }
-  llvm::Constant *EnforceType(llvm::Constant *Val, llvm::Type *Ty) {
-    if (Val->getType() == Ty)
-      return Val;
-    return llvm::ConstantExpr::getBitCast(Val, Ty);
-  }
   llvm::Value *GetTypedSelector(CodeGenFunction &CGF, Selector Sel,
                                 const std::string &TypeEncoding) override {
     return GetConstantSelector(Sel, TypeEncoding);
@@ -1462,7 +1457,7 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
     auto SelVarName = (StringRef(".objc_selector_") + Sel.getAsString() + "_" +
       MangledTypes).str();
     if (auto *GV = TheModule.getNamedGlobal(SelVarName))
-      return EnforceType(GV, SelectorTy);
+      return GV;
     ConstantInitBuilder builder(CGM);
     auto SelBuilder = builder.beginStruct();
     SelBuilder.add(ExportUniqueString(Sel.getAsString(), ".objc_sel_name_",
@@ -1473,8 +1468,7 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
     GV->setComdat(TheModule.getOrInsertComdat(SelVarName));
     GV->setVisibility(llvm::GlobalValue::HiddenVisibility);
     GV->setSection(sectionName<SelectorSection>());
-    auto *SelVal = EnforceType(GV, SelectorTy);
-    return SelVal;
+    return GV;
   }
   llvm::StructType *emptyStruct = nullptr;
 
@@ -1731,9 +1725,8 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
       SmallVector<ObjCMethodDecl*, 16> ClassMethods;
       ClassMethods.insert(ClassMethods.begin(), OID->classmeth_begin(),
           OID->classmeth_end());
-      metaclassFields.addBitCast(
-              GenerateMethodList(className, "", ClassMethods, true),
-              PtrTy);
+      metaclassFields.add(
+          GenerateMethodList(className, "", ClassMethods, true));
     }
     // void *dtable;
     metaclassFields.addNullPointer(PtrTy);
@@ -1784,7 +1777,7 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
         }
       }
       if (!IsCOFF)
-        classFields.add(llvm::ConstantExpr::getBitCast(SuperClass, PtrTy));
+        classFields.add(SuperClass);
       else
         classFields.addNullPointer(PtrTy);
     } else
@@ -1900,9 +1893,9 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
     if (InstanceMethods.size() == 0)
       classFields.addNullPointer(PtrTy);
     else
-      classFields.addBitCast(
-              GenerateMethodList(className, "", InstanceMethods, false),
-              PtrTy);
+      classFields.add(
+          GenerateMethodList(className, "", InstanceMethods, false));
+
     // void *dtable;
     classFields.addNullPointer(PtrTy);
     // IMP cxx_construct;
@@ -1918,9 +1911,8 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
                                                    classDecl->protocol_end());
     SmallVector<llvm::Constant *, 16> Protocols;
     for (const auto *I : RuntimeProtocols)
-      Protocols.push_back(
-          llvm::ConstantExpr::getBitCast(GenerateProtocolRef(I),
-            ProtocolPtrTy));
+      Protocols.push_back(GenerateProtocolRef(I));
+
     if (Protocols.empty())
       classFields.addNullPointer(PtrTy);
     else
@@ -1938,7 +1930,7 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
 
     auto *classRefSymbol = GetClassVar(className);
     classRefSymbol->setSection(sectionName<ClassReferenceSection>());
-    classRefSymbol->setInitializer(llvm::ConstantExpr::getBitCast(classStruct, IdTy));
+    classRefSymbol->setInitializer(classStruct);
 
     if (IsCOFF) {
       // we can't import a class struct.
@@ -1959,22 +1951,19 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
     // Resolve the class aliases, if they exist.
     // FIXME: Class pointer aliases shouldn't exist!
     if (ClassPtrAlias) {
-      ClassPtrAlias->replaceAllUsesWith(
-          llvm::ConstantExpr::getBitCast(classStruct, IdTy));
+      ClassPtrAlias->replaceAllUsesWith(classStruct);
       ClassPtrAlias->eraseFromParent();
       ClassPtrAlias = nullptr;
     }
     if (auto Placeholder =
         TheModule.getNamedGlobal(SymbolForClass(className)))
       if (Placeholder != classStruct) {
-        Placeholder->replaceAllUsesWith(
-            llvm::ConstantExpr::getBitCast(classStruct, Placeholder->getType()));
+        Placeholder->replaceAllUsesWith(classStruct);
         Placeholder->eraseFromParent();
         classStruct->setName(SymbolForClass(className));
       }
     if (MetaClassPtrAlias) {
-      MetaClassPtrAlias->replaceAllUsesWith(
-          llvm::ConstantExpr::getBitCast(metaclass, IdTy));
+      MetaClassPtrAlias->replaceAllUsesWith(metaclass);
       MetaClassPtrAlias->eraseFromParent();
       MetaClassPtrAlias = nullptr;
     }
@@ -2415,7 +2404,7 @@ llvm::Constant *CGObjCGNUstep::GetEHType(QualType T) {
                                  false,
                                  llvm::GlobalValue::ExternalLinkage,
                                  nullptr, "__objc_id_type_info");
-    return llvm::ConstantExpr::getBitCast(IDEHType, PtrToInt8Ty);
+    return IDEHType;
   }
 
   const ObjCObjectPointerType *PT =
@@ -2429,9 +2418,8 @@ llvm::Constant *CGObjCGNUstep::GetEHType(QualType T) {
   std::string typeinfoName = "__objc_eh_typeinfo_" + className;
 
   // Return the existing typeinfo if it exists
-  llvm::Constant *typeinfo = TheModule.getGlobalVariable(typeinfoName);
-  if (typeinfo)
-    return llvm::ConstantExpr::getBitCast(typeinfo, PtrToInt8Ty);
+  if (llvm::Constant *typeinfo = TheModule.getGlobalVariable(typeinfoName))
+    return typeinfo;
 
   // Otherwise create it.
 
@@ -2446,9 +2434,8 @@ llvm::Constant *CGObjCGNUstep::GetEHType(QualType T) {
                                       nullptr, vtableName);
   }
   llvm::Constant *Two = llvm::ConstantInt::get(IntTy, 2);
-  auto *BVtable = llvm::ConstantExpr::getBitCast(
-      llvm::ConstantExpr::getGetElementPtr(Vtable->getValueType(), Vtable, Two),
-      PtrToInt8Ty);
+  auto *BVtable =
+      llvm::ConstantExpr::getGetElementPtr(Vtable->getValueType(), Vtable, Two);
 
   llvm::Constant *typeName =
     ExportUniqueString(className, "__objc_eh_typename_");
@@ -2462,7 +2449,7 @@ llvm::Constant *CGObjCGNUstep::GetEHType(QualType T) {
                                  CGM.getPointerAlign(),
                                  /*constant*/ false,
                                  llvm::GlobalValue::LinkOnceODRLinkage);
-  return llvm::ConstantExpr::getBitCast(TI, PtrToInt8Ty);
+  return TI;
 }
 
 /// Generate an NSConstantString object.
@@ -2495,9 +2482,7 @@ ConstantAddress CGObjCGNU::GenerateConstantString(const StringLiteral *SL) {
   Fields.add(isa);
   Fields.add(MakeConstantString(Str));
   Fields.addInt(IntTy, Str.size());
-  llvm::Constant *ObjCStr =
-    Fields.finishAndCreateGlobal(".objc_str", Align);
-  ObjCStr = llvm::ConstantExpr::getBitCast(ObjCStr, PtrToInt8Ty);
+  llvm::Constant *ObjCStr = Fields.finishAndCreateGlobal(".objc_str", Align);
   ObjCStrings[Str] = ObjCStr;
   ConstantStrings.push_back(ObjCStr);
   return ConstantAddress(ObjCStr, Int8Ty, Align);
@@ -2901,14 +2886,14 @@ GenerateMethodList(StringRef ClassName,
     assert(FnPtr && "Can't generate metadata for method that doesn't exist");
     auto Method = MethodArray.beginStruct(ObjCMethodTy);
     if (isV2ABI) {
-      Method.addBitCast(FnPtr, IMPTy);
+      Method.add(FnPtr);
       Method.add(GetConstantSelector(OMD->getSelector(),
           Context.getObjCEncodingForMethodDecl(OMD)));
       Method.add(MakeConstantString(Context.getObjCEncodingForMethodDecl(OMD, true)));
     } else {
       Method.add(MakeConstantString(OMD->getSelector().getAsString()));
       Method.add(MakeConstantString(Context.getObjCEncodingForMethodDecl(OMD)));
-      Method.addBitCast(FnPtr, IMPTy);
+      Method.add(FnPtr);
     }
     Method.finishAndAddTo(MethodArray);
   }
@@ -3007,7 +2992,7 @@ llvm::Constant *CGObjCGNU::GenerateClassStructure(
   // Fill in the structure
 
   // isa
-  Elements.addBitCast(MetaClass, PtrToInt8Ty);
+  Elements.add(MetaClass);
   // super_class
   Elements.add(SuperClass);
   // name
@@ -3036,7 +3021,7 @@ llvm::Constant *CGObjCGNU::GenerateClassStructure(
   // sibling_class
   Elements.add(NULLPtr);
   // protocols
-  Elements.addBitCast(Protocols, PtrTy);
+  Elements.add(Protocols);
   // gc_object_type
   Elements.add(NULLPtr);
   // abi_version
@@ -3060,8 +3045,7 @@ llvm::Constant *CGObjCGNU::GenerateClassStructure(
     Elements.finishAndCreateGlobal(ClassSym, CGM.getPointerAlign(), false,
                                    llvm::GlobalValue::ExternalLinkage);
   if (ClassRef) {
-    ClassRef->replaceAllUsesWith(llvm::ConstantExpr::getBitCast(Class,
-                  ClassRef->getType()));
+    ClassRef->replaceAllUsesWith(Class);
     ClassRef->removeFromParent();
     Class->setName(ClassSym);
   }
@@ -3109,7 +3093,7 @@ CGObjCGNU::GenerateProtocolList(ArrayRef<std::string> Protocols) {
     } else {
       protocol = value->getValue();
     }
-    Elements.addBitCast(protocol, PtrToInt8Ty);
+    Elements.add(protocol);
   }
   Elements.finishAndAddTo(ProtocolList);
   return ProtocolList.finishAndCreateGlobal(".objc_protocol_list",
@@ -3136,7 +3120,6 @@ llvm::Constant *
 CGObjCGNU::GenerateEmptyProtocol(StringRef ProtocolName) {
   llvm::Constant *ProtocolList = GenerateProtocolList({});
   llvm::Constant *MethodList = GenerateProtocolMethodList({});
-  MethodList = llvm::ConstantExpr::getBitCast(MethodList, PtrToInt8Ty);
   // Protocols are objects containing lists of the methods implemented and
   // protocols adopted.
   ConstantInitBuilder Builder(CGM);
@@ -3227,9 +3210,7 @@ void CGObjCGNU::GenerateProtocol(const ObjCProtocolDecl *PD) {
   Elements.add(PropertyList);
   Elements.add(OptionalPropertyList);
   ExistingProtocols[ProtocolName] =
-    llvm::ConstantExpr::getBitCast(
-      Elements.finishAndCreateGlobal(".objc_protocol", CGM.getPointerAlign()),
-      IdTy);
+      Elements.finishAndCreateGlobal(".objc_protocol", CGM.getPointerAlign());
 }
 void CGObjCGNU::GenerateProtocolHolderCategory() {
   // Collect information about instance methods
@@ -3242,11 +3223,9 @@ void CGObjCGNU::GenerateProtocolHolderCategory() {
   Elements.add(MakeConstantString(CategoryName));
   Elements.add(MakeConstantString(ClassName));
   // Instance method list
-  Elements.addBitCast(GenerateMethodList(
-          ClassName, CategoryName, {}, false), PtrTy);
+  Elements.add(GenerateMethodList(ClassName, CategoryName, {}, false));
   // Class method list
-  Elements.addBitCast(GenerateMethodList(
-          ClassName, CategoryName, {}, true), PtrTy);
+  Elements.add(GenerateMethodList(ClassName, CategoryName, {}, true));
 
   // Protocol list
   ConstantInitBuilder ProtocolListBuilder(CGM);
@@ -3256,16 +3235,13 @@ void CGObjCGNU::GenerateProtocolHolderCategory() {
   auto ProtocolElements = ProtocolList.beginArray(PtrTy);
   for (auto iter = ExistingProtocols.begin(), endIter = ExistingProtocols.end();
        iter != endIter ; iter++) {
-    ProtocolElements.addBitCast(iter->getValue(), PtrTy);
+    ProtocolElements.add(iter->getValue());
   }
   ProtocolElements.finishAndAddTo(ProtocolList);
-  Elements.addBitCast(
-                   ProtocolList.finishAndCreateGlobal(".objc_protocol_list",
-                                                      CGM.getPointerAlign()),
-                   PtrTy);
-  Categories.push_back(llvm::ConstantExpr::getBitCast(
-        Elements.finishAndCreateGlobal("", CGM.getPointerAlign()),
-        PtrTy));
+  Elements.add(ProtocolList.finishAndCreateGlobal(".objc_protocol_list",
+                                                  CGM.getPointerAlign()));
+  Categories.push_back(
+      Elements.finishAndCreateGlobal("", CGM.getPointerAlign()));
 }
 
 /// Libobjc2 uses a bitfield representation where small(ish) bitfields are
@@ -3340,38 +3316,35 @@ void CGObjCGNU::GenerateCategory(const ObjCCategoryImplDecl *OCD) {
   SmallVector<ObjCMethodDecl*, 16> InstanceMethods;
   InstanceMethods.insert(InstanceMethods.begin(), OCD->instmeth_begin(),
       OCD->instmeth_end());
-  Elements.addBitCast(
-          GenerateMethodList(ClassName, CategoryName, InstanceMethods, false),
-          PtrTy);
+  Elements.add(
+      GenerateMethodList(ClassName, CategoryName, InstanceMethods, false));
+
   // Class method list
 
   SmallVector<ObjCMethodDecl*, 16> ClassMethods;
   ClassMethods.insert(ClassMethods.begin(), OCD->classmeth_begin(),
       OCD->classmeth_end());
-  Elements.addBitCast(
-          GenerateMethodList(ClassName, CategoryName, ClassMethods, true),
-          PtrTy);
+  Elements.add(GenerateMethodList(ClassName, CategoryName, ClassMethods, true));
+
   // Protocol list
-  Elements.addBitCast(GenerateCategoryProtocolList(CatDecl), PtrTy);
+  Elements.add(GenerateCategoryProtocolList(CatDecl));
   if (isRuntime(ObjCRuntime::GNUstep, 2)) {
     const ObjCCategoryDecl *Category =
       Class->FindCategoryDeclaration(OCD->getIdentifier());
     if (Category) {
       // Instance properties
-      Elements.addBitCast(GeneratePropertyList(OCD, Category, false), PtrTy);
+      Elements.add(GeneratePropertyList(OCD, Category, false));
       // Class properties
-      Elements.addBitCast(GeneratePropertyList(OCD, Category, true), PtrTy);
+      Elements.add(GeneratePropertyList(OCD, Category, true));
     } else {
       Elements.addNullPointer(PtrTy);
       Elements.addNullPointer(PtrTy);
     }
   }
 
-  Categories.push_back(llvm::ConstantExpr::getBitCast(
-        Elements.finishAndCreateGlobal(
-          std::string(".objc_category_")+ClassName+CategoryName,
-          CGM.getPointerAlign()),
-        PtrTy));
+  Categories.push_back(Elements.finishAndCreateGlobal(
+      std::string(".objc_category_") + ClassName + CategoryName,
+      CGM.getPointerAlign()));
 }
 
 llvm::Constant *CGObjCGNU::GeneratePropertyList(const Decl *Container,
@@ -3674,20 +3647,17 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
 
   // Resolve the class aliases, if they exist.
   if (ClassPtrAlias) {
-    ClassPtrAlias->replaceAllUsesWith(
-        llvm::ConstantExpr::getBitCast(ClassStruct, IdTy));
+    ClassPtrAlias->replaceAllUsesWith(ClassStruct);
     ClassPtrAlias->eraseFromParent();
     ClassPtrAlias = nullptr;
   }
   if (MetaClassPtrAlias) {
-    MetaClassPtrAlias->replaceAllUsesWith(
-        llvm::ConstantExpr::getBitCast(MetaClassStruct, IdTy));
+    MetaClassPtrAlias->replaceAllUsesWith(MetaClassStruct);
     MetaClassPtrAlias->eraseFromParent();
     MetaClassPtrAlias = nullptr;
   }
 
   // Add class structure to list to be added to the symtab later
-  ClassStruct = llvm::ConstantExpr::getBitCast(ClassStruct, PtrToInt8Ty);
   Classes.push_back(ClassStruct);
 }
 
@@ -3701,11 +3671,9 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
   GenerateProtocolHolderCategory();
 
   llvm::StructType *selStructTy = dyn_cast<llvm::StructType>(SelectorElemTy);
-  llvm::Type *selStructPtrTy = SelectorTy;
   if (!selStructTy) {
     selStructTy = llvm::StructType::get(CGM.getLLVMContext(),
                                         { PtrToInt8Ty, PtrToInt8Ty });
-    selStructPtrTy = llvm::PointerType::getUnqual(selStructTy);
   }
 
   // Generate statics list:
@@ -3736,7 +3704,6 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
 
     statics = allStaticsArray.finishAndCreateGlobal(".objc_statics_ptr",
                                                     CGM.getPointerAlign());
-    statics = llvm::ConstantExpr::getBitCast(statics, PtrTy);
   }
 
   // Array of classes, categories, and constant objects.
@@ -3799,9 +3766,6 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
     // FIXME: We're generating redundant loads and stores here!
     llvm::Constant *selPtr = llvm::ConstantExpr::getGetElementPtr(
         selectorList->getValueType(), selectorList, idxs);
-    // If selectors are defined as an opaque type, cast the pointer to this
-    // type.
-    selPtr = llvm::ConstantExpr::getBitCast(selPtr, SelectorTy);
     selectorAliases[i]->replaceAllUsesWith(selPtr);
     selectorAliases[i]->eraseFromParent();
   }
@@ -3813,7 +3777,7 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
     // Number of static selectors
     symtab.addInt(LongTy, selectorCount);
 
-    symtab.addBitCast(selectorList, selStructPtrTy);
+    symtab.add(selectorList);
 
     // Number of classes defined.
     symtab.addInt(CGM.Int16Ty, Classes.size());
@@ -3922,7 +3886,6 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
        llvm::Constant *TheClass =
           TheModule.getGlobalVariable("_OBJC_CLASS_" + iter->first, true);
        if (TheClass) {
-         TheClass = llvm::ConstantExpr::getBitCast(TheClass, PtrTy);
          Builder.CreateCall(RegisterAlias,
                             {TheClass, MakeConstantString(iter->second)});
        }

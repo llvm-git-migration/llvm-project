@@ -43,7 +43,9 @@
 ; RUN: llc -mtriple=riscv32 -mattr=+svinval %s -o - | FileCheck --check-prefixes=CHECK,RV32SVINVAL %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xcvalu %s -o - | FileCheck --check-prefix=RV32XCVALU %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xcvbitmanip %s -o - | FileCheck --check-prefix=RV32XCVBITMANIP %s
+; RUN: llc -mtriple=riscv32 -mattr=+xcvelw %s -o - | FileCheck --check-prefix=RV32XCVELW %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xcvmac %s -o - | FileCheck --check-prefix=RV32XCVMAC %s
+; RUN: llc -mtriple=riscv32 -mattr=+xcvmem %s -o - | FileCheck --check-prefix=RV32XCVMEM %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xcvsimd %s -o - | FileCheck --check-prefix=RV32XCVSIMD %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xcvbi %s -o - | FileCheck --check-prefix=RV32XCVBI %s
 ; RUN: llc -mtriple=riscv32 -mattr=+xtheadcmo %s -o - | FileCheck --check-prefix=RV32XTHEADCMO %s
@@ -191,14 +193,14 @@
 ; RV32ZIHINTPAUSE: .attribute 5, "rv32i2p1_zihintpause2p0"
 ; RV32ZIHINTNTL: .attribute 5, "rv32i2p1_zihintntl1p0"
 ; RV32ZFHMIN: .attribute 5, "rv32i2p1_f2p2_zicsr2p0_zfhmin1p0"
-; RV32ZFH: .attribute 5, "rv32i2p1_f2p2_zicsr2p0_zfh1p0"
+; RV32ZFH: .attribute 5, "rv32i2p1_f2p2_zicsr2p0_zfh1p0_zfhmin1p0"
 ; RV32ZBA: .attribute 5, "rv32i2p1_zba1p0"
 ; RV32ZBB: .attribute 5, "rv32i2p1_zbb1p0"
 ; RV32ZBC: .attribute 5, "rv32i2p1_zbc1p0"
 ; RV32ZBS: .attribute 5, "rv32i2p1_zbs1p0"
 ; RV32V: .attribute 5, "rv32i2p1_f2p2_d2p2_v1p0_zicsr2p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
 ; RV32H: .attribute 5, "rv32i2p1_h1p0"
-; RV32COMBINED: .attribute 5, "rv32i2p1_f2p2_d2p2_v1p0_zicsr2p0_zfh1p0_zbb1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+; RV32COMBINED: .attribute 5, "rv32i2p1_f2p2_d2p2_v1p0_zicsr2p0_zfh1p0_zfhmin1p0_zbb1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
 ; RV32ZBKB: .attribute 5, "rv32i2p1_zbkb1p0"
 ; RV32ZBKC: .attribute 5, "rv32i2p1_zbkc1p0"
 ; RV32ZBKX: .attribute 5, "rv32i2p1_zbkx1p0"
@@ -223,7 +225,9 @@
 ; RV32SVINVAL: .attribute 5, "rv32i2p1_svinval1p0"
 ; RV32XCVALU: .attribute 5, "rv32i2p1_xcvalu1p0"
 ; RV32XCVBITMANIP: .attribute 5, "rv32i2p1_xcvbitmanip1p0"
+; RV32XCVELW: .attribute 5, "rv32i2p1_xcvelw1p0"
 ; RV32XCVMAC: .attribute 5, "rv32i2p1_xcvmac1p0"
+; RV32XCVMEM: .attribute 5, "rv32i2p1_xcvmem1p0"
 ; RV32XCVSIMD: .attribute 5, "rv32i2p1_xcvsimd1p0"
 ; RV32XCVBI: .attribute 5, "rv32i2p1_xcvbi1p0"
 ; RV32XTHEADCMO: .attribute 5, "rv32i2p1_xtheadcmo1p0"
@@ -267,7 +271,7 @@
 ; RV32ZVFBFMIN: .attribute 5, "rv32i2p1_f2p2_zicsr2p0_zfbfmin0p8_zve32f1p0_zve32x1p0_zvfbfmin0p8_zvl32b1p0"
 ; RV32ZVFBFWMA: .attribute 5, "rv32i2p1_f2p2_zicsr2p0_zfbfmin0p8_zve32f1p0_zve32x1p0_zvfbfmin0p8_zvfbfwma0p8_zvl32b1p0"
 ; RV32ZACAS: .attribute 5, "rv32i2p1_a2p1_zacas1p0"
-; RV32ZICFILP: .attribute 5, "rv32i2p1_zicfilp0p2"
+; RV32ZICFILP: .attribute 5, "rv32i2p1_zicfilp0p4"
 
 ; RV64M: .attribute 5, "rv64i2p1_m2p0"
 ; RV64ZMMUL: .attribute 5, "rv64i2p1_zmmul1p0"
@@ -279,14 +283,14 @@
 ; RV64ZIHINTPAUSE: .attribute 5, "rv64i2p1_zihintpause2p0"
 ; RV64ZIHINTNTL: .attribute 5, "rv64i2p1_zihintntl1p0"
 ; RV64ZFHMIN: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfhmin1p0"
-; RV64ZFH: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfh1p0"
+; RV64ZFH: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfh1p0_zfhmin1p0"
 ; RV64ZBA: .attribute 5, "rv64i2p1_zba1p0"
 ; RV64ZBB: .attribute 5, "rv64i2p1_zbb1p0"
 ; RV64ZBC: .attribute 5, "rv64i2p1_zbc1p0"
 ; RV64ZBS: .attribute 5, "rv64i2p1_zbs1p0"
 ; RV64V: .attribute 5, "rv64i2p1_f2p2_d2p2_v1p0_zicsr2p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
 ; RV64H: .attribute 5, "rv64i2p1_h1p0"
-; RV64COMBINED: .attribute 5, "rv64i2p1_f2p2_d2p2_v1p0_zicsr2p0_zfh1p0_zbb1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+; RV64COMBINED: .attribute 5, "rv64i2p1_f2p2_d2p2_v1p0_zicsr2p0_zfh1p0_zfhmin1p0_zbb1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
 ; RV64ZBKB: .attribute 5, "rv64i2p1_zbkb1p0"
 ; RV64ZBKC: .attribute 5, "rv64i2p1_zbkc1p0"
 ; RV64ZBKX: .attribute 5, "rv64i2p1_zbkx1p0"
@@ -356,7 +360,7 @@
 ; RV64ZVFBFMIN: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfbfmin0p8_zve32f1p0_zve32x1p0_zvfbfmin0p8_zvl32b1p0"
 ; RV64ZVFBFWMA: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfbfmin0p8_zve32f1p0_zve32x1p0_zvfbfmin0p8_zvfbfwma0p8_zvl32b1p0"
 ; RV64ZACAS: .attribute 5, "rv64i2p1_a2p1_zacas1p0"
-; RV64ZICFILP: .attribute 5, "rv64i2p1_zicfilp0p2"
+; RV64ZICFILP: .attribute 5, "rv64i2p1_zicfilp0p4"
 
 define i32 @addi(i32 %a) {
   %1 = add i32 %a, 1

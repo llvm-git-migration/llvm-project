@@ -1623,7 +1623,11 @@ static void dump(llvm::raw_ostream &OS, StringRef FunctionName,
       OS << "Gap,";
       break;
     case CounterMappingRegion::BranchRegion:
+    case CounterMappingRegion::MCDCBranchRegion:
       OS << "Branch,";
+      break;
+    case CounterMappingRegion::MCDCDecisionRegion:
+      OS << "Decision,";
       break;
     }
 
@@ -1820,7 +1824,7 @@ void CoverageMappingModuleGen::emit() {
   CGM.addUsedGlobal(CovData);
   // Create the deferred function records array
   if (!FunctionNames.empty()) {
-    auto NamesArrTy = llvm::ArrayType::get(llvm::Type::getInt8PtrTy(Ctx),
+    auto NamesArrTy = llvm::ArrayType::get(llvm::PointerType::getUnqual(Ctx),
                                            FunctionNames.size());
     auto NamesArrVal = llvm::ConstantArray::get(NamesArrTy, FunctionNames);
     // This variable will *NOT* be emitted to the object file. It is used
