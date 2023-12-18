@@ -35,27 +35,6 @@ using namespace llvm::AMDGPU;
 // AMDGPUTargetStreamer
 //===----------------------------------------------------------------------===//
 
-static void convertIsaVersionV2(uint32_t &Major, uint32_t &Minor,
-                                uint32_t &Stepping, bool Sramecc, bool Xnack) {
-  if (Major == 9 && Minor == 0) {
-    switch (Stepping) {
-      case 0:
-      case 2:
-      case 4:
-      case 6:
-        if (Xnack)
-          Stepping++;
-    }
-  }
-}
-
-bool AMDGPUTargetStreamer::EmitHSAMetadataV2(StringRef HSAMetadataString) {
-  HSAMD::Metadata HSAMetadata;
-  if (HSAMD::fromString(HSAMetadataString, HSAMetadata))
-    return false;
-  return EmitHSAMetadata(HSAMetadata);
-}
-
 bool AMDGPUTargetStreamer::EmitHSAMetadataV3(StringRef HSAMetadataString) {
   msgpack::Document HSAMetadataDoc;
   if (!HSAMetadataDoc.fromYAML(HSAMetadataString))
@@ -238,23 +217,6 @@ void AMDGPUTargetAsmStreamer::EmitDirectiveAMDGCNTarget() {
   OS << "\t.amdgcn_target \"" << getTargetID()->toString() << "\"\n";
 }
 
-void AMDGPUTargetAsmStreamer::EmitDirectiveHSACodeObjectVersion(
-    uint32_t Major, uint32_t Minor) {
-  OS << "\t.hsa_code_object_version " <<
-        Twine(Major) << "," << Twine(Minor) << '\n';
-}
-
-void
-AMDGPUTargetAsmStreamer::EmitDirectiveHSACodeObjectISAV2(uint32_t Major,
-                                                         uint32_t Minor,
-                                                         uint32_t Stepping,
-                                                         StringRef VendorName,
-                                                         StringRef ArchName) {
-  convertIsaVersionV2(Major, Minor, Stepping, TargetID->isSramEccOnOrAny(), TargetID->isXnackOnOrAny());
-  OS << "\t.hsa_code_object_isa " << Twine(Major) << "," << Twine(Minor) << ","
-     << Twine(Stepping) << ",\"" << VendorName << "\",\"" << ArchName << "\"\n";
-}
-
 void
 AMDGPUTargetAsmStreamer::EmitAMDKernelCodeT(const amd_kernel_code_t &Header) {
   OS << "\t.amd_kernel_code_t\n";
@@ -280,18 +242,6 @@ void AMDGPUTargetAsmStreamer::emitAMDGPULDS(MCSymbol *Symbol, unsigned Size,
 
 bool AMDGPUTargetAsmStreamer::EmitISAVersion() {
   OS << "\t.amd_amdgpu_isa \"" << getTargetID()->toString() << "\"\n";
-  return true;
-}
-
-bool AMDGPUTargetAsmStreamer::EmitHSAMetadata(
-    const AMDGPU::HSAMD::Metadata &HSAMetadata) {
-  std::string HSAMetadataString;
-  if (HSAMD::toString(HSAMetadata, HSAMetadataString))
-    return false;
-
-  OS << '\t' << HSAMD::AssemblerDirectiveBegin << '\n';
-  OS << HSAMetadataString << '\n';
-  OS << '\t' << HSAMD::AssemblerDirectiveEnd << '\n';
   return true;
 }
 
@@ -699,44 +649,6 @@ unsigned AMDGPUTargetELFStreamer::getEFlagsV4() {
 
 void AMDGPUTargetELFStreamer::EmitDirectiveAMDGCNTarget() {}
 
-void AMDGPUTargetELFStreamer::EmitDirectiveHSACodeObjectVersion(
-    uint32_t Major, uint32_t Minor) {
-
-  EmitNote(ElfNote::NoteNameV2, MCConstantExpr::create(8, getContext()),
-           ELF::NT_AMD_HSA_CODE_OBJECT_VERSION, [&](MCELFStreamer &OS) {
-             OS.emitInt32(Major);
-             OS.emitInt32(Minor);
-           });
-}
-
-void
-AMDGPUTargetELFStreamer::EmitDirectiveHSACodeObjectISAV2(uint32_t Major,
-                                                         uint32_t Minor,
-                                                         uint32_t Stepping,
-                                                         StringRef VendorName,
-                                                         StringRef ArchName) {
-  uint16_t VendorNameSize = VendorName.size() + 1;
-  uint16_t ArchNameSize = ArchName.size() + 1;
-
-  unsigned DescSZ = sizeof(VendorNameSize) + sizeof(ArchNameSize) +
-    sizeof(Major) + sizeof(Minor) + sizeof(Stepping) +
-    VendorNameSize + ArchNameSize;
-
-  convertIsaVersionV2(Major, Minor, Stepping, TargetID->isSramEccOnOrAny(), TargetID->isXnackOnOrAny());
-  EmitNote(ElfNote::NoteNameV2, MCConstantExpr::create(DescSZ, getContext()),
-           ELF::NT_AMD_HSA_ISA_VERSION, [&](MCELFStreamer &OS) {
-             OS.emitInt16(VendorNameSize);
-             OS.emitInt16(ArchNameSize);
-             OS.emitInt32(Major);
-             OS.emitInt32(Minor);
-             OS.emitInt32(Stepping);
-             OS.emitBytes(VendorName);
-             OS.emitInt8(0); // NULL terminate VendorName
-             OS.emitBytes(ArchName);
-             OS.emitInt8(0); // NULL terminate ArchName
-           });
-}
-
 void
 AMDGPUTargetELFStreamer::EmitAMDKernelCodeT(const amd_kernel_code_t &Header) {
 
@@ -810,30 +722,6 @@ bool AMDGPUTargetELFStreamer::EmitHSAMetadata(msgpack::Document &HSAMetadataDoc,
       MCSymbolRefExpr::create(DescBegin, Context), Context);
 
   EmitNote(ElfNote::NoteNameV3, DescSZ, ELF::NT_AMDGPU_METADATA,
-           [&](MCELFStreamer &OS) {
-             OS.emitLabel(DescBegin);
-             OS.emitBytes(HSAMetadataString);
-             OS.emitLabel(DescEnd);
-           });
-  return true;
-}
-
-bool AMDGPUTargetELFStreamer::EmitHSAMetadata(
-    const AMDGPU::HSAMD::Metadata &HSAMetadata) {
-  std::string HSAMetadataString;
-  if (HSAMD::toString(HSAMetadata, HSAMetadataString))
-    return false;
-
-  // Create two labels to mark the beginning and end of the desc field
-  // and a MCExpr to calculate the size of the desc field.
-  auto &Context = getContext();
-  auto *DescBegin = Context.createTempSymbol();
-  auto *DescEnd = Context.createTempSymbol();
-  auto *DescSZ = MCBinaryExpr::createSub(
-    MCSymbolRefExpr::create(DescEnd, Context),
-    MCSymbolRefExpr::create(DescBegin, Context), Context);
-
-  EmitNote(ElfNote::NoteNameV2, DescSZ, ELF::NT_AMD_HSA_METADATA,
            [&](MCELFStreamer &OS) {
              OS.emitLabel(DescBegin);
              OS.emitBytes(HSAMetadataString);

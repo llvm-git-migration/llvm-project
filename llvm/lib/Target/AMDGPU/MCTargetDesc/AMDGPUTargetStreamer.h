@@ -47,14 +47,6 @@ public:
 
   virtual void EmitDirectiveAMDGCNTarget(){};
 
-  virtual void EmitDirectiveHSACodeObjectVersion(uint32_t Major,
-                                                 uint32_t Minor){};
-
-  virtual void EmitDirectiveHSACodeObjectISAV2(uint32_t Major, uint32_t Minor,
-                                               uint32_t Stepping,
-                                               StringRef VendorName,
-                                               StringRef ArchName){};
-
   virtual void EmitAMDKernelCodeT(const amd_kernel_code_t &Header){};
 
   virtual void EmitAMDGPUSymbolType(StringRef SymbolName, unsigned Type){};
@@ -64,9 +56,6 @@ public:
 
   /// \returns True on success, false on failure.
   virtual bool EmitISAVersion() { return true; }
-
-  /// \returns True on success, false on failure.
-  virtual bool EmitHSAMetadataV2(StringRef HSAMetadataString);
 
   /// \returns True on success, false on failure.
   virtual bool EmitHSAMetadataV3(StringRef HSAMetadataString);
@@ -134,13 +123,6 @@ public:
 
   void EmitDirectiveAMDGCNTarget() override;
 
-  void EmitDirectiveHSACodeObjectVersion(uint32_t Major,
-                                         uint32_t Minor) override;
-
-  void EmitDirectiveHSACodeObjectISAV2(uint32_t Major, uint32_t Minor,
-                                       uint32_t Stepping, StringRef VendorName,
-                                       StringRef ArchName) override;
-
   void EmitAMDKernelCodeT(const amd_kernel_code_t &Header) override;
 
   void EmitAMDGPUSymbolType(StringRef SymbolName, unsigned Type) override;
@@ -152,9 +134,6 @@ public:
 
   /// \returns True on success, false on failure.
   bool EmitHSAMetadata(msgpack::Document &HSAMetadata, bool Strict) override;
-
-  /// \returns True on success, false on failure.
-  bool EmitHSAMetadata(const AMDGPU::HSAMD::Metadata &HSAMetadata) override;
 
   /// \returns True on success, false on failure.
   bool EmitCodeEnd(const MCSubtargetInfo &STI) override;
@@ -198,13 +177,6 @@ public:
 
   void EmitDirectiveAMDGCNTarget() override;
 
-  void EmitDirectiveHSACodeObjectVersion(uint32_t Major,
-                                         uint32_t Minor) override;
-
-  void EmitDirectiveHSACodeObjectISAV2(uint32_t Major, uint32_t Minor,
-                                       uint32_t Stepping, StringRef VendorName,
-                                       StringRef ArchName) override;
-
   void EmitAMDKernelCodeT(const amd_kernel_code_t &Header) override;
 
   void EmitAMDGPUSymbolType(StringRef SymbolName, unsigned Type) override;
@@ -216,9 +188,6 @@ public:
 
   /// \returns True on success, false on failure.
   bool EmitHSAMetadata(msgpack::Document &HSAMetadata, bool Strict) override;
-
-  /// \returns True on success, false on failure.
-  bool EmitHSAMetadata(const AMDGPU::HSAMD::Metadata &HSAMetadata) override;
 
   /// \returns True on success, false on failure.
   bool EmitCodeEnd(const MCSubtargetInfo &STI) override;
