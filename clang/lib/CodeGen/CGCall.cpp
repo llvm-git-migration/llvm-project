@@ -1144,9 +1144,10 @@ void CodeGenFunction::ExpandTypeToArgs(
 }
 
 /// Create a temporary allocation for the purposes of coercion.
-static Address CreateTempAllocaForCoercion(CodeGenFunction &CGF, llvm::Type *Ty,
-                                           CharUnits MinAlign,
-                                           const Twine &Name = "tmp") {
+static RawAddress CreateTempAllocaForCoercion(CodeGenFunction &CGF,
+                                              llvm::Type *Ty,
+                                              CharUnits MinAlign,
+                                              const Twine &Name = "tmp") {
   // Don't use an alignment that's worse than what LLVM would prefer.
   auto PrefAlign = CGF.CGM.getDataLayout().getPrefTypeAlign(Ty);
   CharUnits Align = std::max(MinAlign, CharUnits::fromQuantity(PrefAlign));
@@ -1318,11 +1319,11 @@ static llvm::Value *CreateCoercedLoad(Address Src, llvm::Type *Ty,
   }
 
   // Otherwise do coercion through memory. This is stupid, but simple.
-  Address Tmp =
+  RawAddress Tmp =
       CreateTempAllocaForCoercion(CGF, Ty, Src.getAlignment(), Src.getName());
   CGF.Builder.CreateMemCpy(
-      Tmp.getRawPointer(CGF), Tmp.getAlignment().getAsAlign(),
-      Src.getRawPointer(CGF), Src.getAlignment().getAsAlign(),
+      Tmp.getPointer(), Tmp.getAlignment().getAsAlign(), Src.getRawPointer(CGF),
+      Src.getAlignment().getAsAlign(),
       llvm::ConstantInt::get(CGF.IntPtrTy, SrcSize.getKnownMinValue()));
   return CGF.Builder.CreateLoad(Tmp);
 }
@@ -1406,11 +1407,12 @@ static void CreateCoercedStore(llvm::Value *Src,
     //
     // FIXME: Assert that we aren't truncating non-padding bits when have access
     // to that information.
-    Address Tmp = CreateTempAllocaForCoercion(CGF, SrcTy, Dst.getAlignment());
+    RawAddress Tmp =
+        CreateTempAllocaForCoercion(CGF, SrcTy, Dst.getAlignment());
     CGF.Builder.CreateStore(Src, Tmp);
     CGF.Builder.CreateMemCpy(
         Dst.getRawPointer(CGF), Dst.getAlignment().getAsAlign(),
-        Tmp.getRawPointer(CGF), Tmp.getAlignment().getAsAlign(),
+        Tmp.getPointer(), Tmp.getAlignment().getAsAlign(),
         llvm::ConstantInt::get(CGF.IntPtrTy, DstSize.getFixedValue()));
   }
 }
@@ -3004,7 +3006,7 @@ void CodeGenFunction::EmitFunctionProlog(const CGFunctionInfo &FI,
         // may be aliased, copy it to ensure that the parameter variable is
         // mutable and has a unique adress, as C requires.
         if (ArgI.getIndirectRealign() || ArgI.isIndirectAliased()) {
-          Address AlignedTemp = CreateMemTemp(Ty, "coerce");
+          RawAddress AlignedTemp = CreateMemTemp(Ty, "coerce");
 
           // Copy from the incoming argument pointer to the temporary with the
           // appropriate alignment.
@@ -3013,8 +3015,7 @@ void CodeGenFunction::EmitFunctionProlog(const CGFunctionInfo &FI,
           // copy.
           CharUnits Size = getContext().getTypeSizeInChars(Ty);
           Builder.CreateMemCpy(
-              AlignedTemp.getRawPointer(*this),
-              AlignedTemp.getAlignment().getAsAlign(),
+              AlignedTemp.getPointer(), AlignedTemp.getAlignment().getAsAlign(),
               ParamAddr.getRawPointer(*this),
               ParamAddr.getAlignment().getAsAlign(),
               llvm::ConstantInt::get(IntPtrTy, Size.getQuantity()));
