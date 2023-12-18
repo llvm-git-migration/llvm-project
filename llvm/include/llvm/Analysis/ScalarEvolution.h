@@ -854,6 +854,12 @@ public:
   unsigned getSmallConstantTripMultiple(const Loop *L,
                                         const BasicBlock *ExitingBlock);
 
+  /// Return the upper bound of the loop trip count infered from memory access.
+  /// This can not access bytes starting outside the statically allocated size
+  /// without being immediate UB. Returns SCEVCouldNotCompute if the trip count
+  /// could not be inferred.
+  const SCEV *getConstantMaxTripCountFromMemAccess(const Loop *L);
+
   /// The terms "backedge taken count" and "exit count" are used
   /// interchangeably to refer to the number of times the backedge of a loop
   /// has executed before the loop is exited.

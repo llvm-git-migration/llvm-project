@@ -249,6 +249,10 @@ static cl::opt<bool> UseContextForNoWrapFlagInference(
     cl::desc("Infer nuw/nsw flags using context where suitable"),
     cl::init(true));
 
+static cl::opt<bool> UseMemoryAccessUBForBEInference(
+    "scalar-evolution-infer-max-trip-count-from-memory-access", cl::Hidden,
+    cl::desc("Infer loop max trip count from memory access"), cl::init(false));
+
 //===----------------------------------------------------------------------===//
 //                           SCEV class definitions
 //===----------------------------------------------------------------------===//
@@ -8135,7 +8139,16 @@ ScalarEvolution::getSmallConstantTripCount(const Loop *L,
 unsigned ScalarEvolution::getSmallConstantMaxTripCount(const Loop *L) {
   const auto *MaxExitCount =
       dyn_cast<SCEVConstant>(getConstantMaxBackedgeTakenCount(L));
-  return getConstantTripCount(MaxExitCount);
+  unsigned MaxExitCountN = getConstantTripCount(MaxExitCount);
+  if (UseMemoryAccessUBForBEInference) {
+    auto *MaxInferCount = getConstantMaxTripCountFromMemAccess(L);
+    if (auto *InferCount = dyn_cast<SCEVConstant>(MaxInferCount)) {
+      unsigned InferValue = InferCount->getValue()->getZExtValue();
+      MaxExitCountN =
+          MaxExitCountN == 0 ? InferValue : std::min(MaxExitCountN, InferValue);
+    }
+  }
+  return MaxExitCountN;
 }
 
 unsigned ScalarEvolution::getSmallConstantTripMultiple(const Loop *L) {
@@ -8188,6 +8201,167 @@ ScalarEvolution::getSmallConstantTripMultiple(const Loop *L,
          "Exiting block must actually branch out of the loop!");
   const SCEV *ExitCount = getExitCount(L, ExitingBlock);
   return getSmallConstantTripMultiple(L, ExitCount);
+}
+
+/// Collect all load/store instructions that must be executed in every iteration
+/// of loop \p L .
+static void
+collectExecLoadStoreInsideLoop(const Loop *L, DominatorTree &DT,
+                               SmallVector<Instruction *, 4> &MemInsts) {
+  // It is difficult to tell if the load/store instruction is executed on every
+  // iteration inside an irregular loop.
+  if (!L->isLoopSimplifyForm() || !L->isInnermost())
+    return;
+
+  // FIXME: To make the case more typical, we only analyze loops that have one
+  // exiting block and the block must be the latch. It is easier to capture
+  // loops with memory access that will be executed in every iteration.
+  const BasicBlock *LoopLatch = L->getLoopLatch();
+  assert(LoopLatch && "normal form loop doesn't have a latch");
+  if (L->getExitingBlock() != LoopLatch)
+    return;
+
+  // We will not continue if sanitizer is enabled.
+  const Function *F = LoopLatch->getParent();
+  if (F->hasFnAttribute(Attribute::SanitizeAddress) ||
+      F->hasFnAttribute(Attribute::SanitizeThread) ||
+      F->hasFnAttribute(Attribute::SanitizeMemory) ||
+      F->hasFnAttribute(Attribute::SanitizeHWAddress) ||
+      F->hasFnAttribute(Attribute::SanitizeMemTag))
+    return;
+
+  for (auto *BB : L->getBlocks()) {
+    // We need to make sure that max execution time of MemAccessBB in loop
+    // represents latch max excution time. The BB below should be skipped:
+    //            Entry
+    //              │
+    //        ┌─────▼─────┐
+    //        │Loop Header◄─────┐
+    //        └──┬──────┬─┘     │
+    //           │      │       │
+    //  ┌────────▼──┐ ┌─▼─────┐ │
+    //  │MemAccessBB│ │OtherBB│ │
+    //  └────────┬──┘ └─┬─────┘ │
+    //           │      │       │
+    //         ┌─▼──────▼─┐     │
+    //         │Loop Latch├─────┘
+    //         └────┬─────┘
+    //              ▼
+    //             Exit
+    if (!DT.dominates(BB, LoopLatch))
+      continue;
+
+    for (Instruction &I : *BB) {
+      if (isa<LoadInst>(&I) || isa<StoreInst>(&I))
+        MemInsts.push_back(&I);
+    }
+  }
+}
+
+/// Return a SCEV representing the memory size of pointer \p V .
+static const SCEV *getCertainSizeOfMem(const SCEV *V, Type *RTy,
+                                       const DataLayout &DL,
+                                       const TargetLibraryInfo &TLI,
+                                       ScalarEvolution *SE) {
+  const SCEVUnknown *PtrBase = dyn_cast<SCEVUnknown>(V);
+  if (!PtrBase)
+    return nullptr;
+  Value *Ptr = PtrBase->getValue();
+  uint64_t Size = 0;
+  if (!llvm::getObjectSize(Ptr, Size, DL, &TLI))
+    return nullptr;
+  return SE->getConstant(RTy, Size);
+}
+
+/// Get the range of given index represented by \p AddRec.
+static const SCEV *getIndexRange(const SCEVAddRecExpr *AddRec,
+                                 ScalarEvolution *SE) {
+  const SCEV *Range = SE->getConstant(SE->getUnsignedRangeMax(AddRec) -
+                                      SE->getUnsignedRangeMin(AddRec));
+  const SCEV *Step = AddRec->getStepRecurrence(*SE);
+  return SE->getUDivCeilSCEV(Range, Step);
+}
+
+/// Check whether the index can wrap and if we can still infer max trip count
+/// given the max trip count inferred from memory access.
+static const SCEV *checkIndexWrap(Value *Ptr, ScalarEvolution *SE,
+                                  const SCEVConstant *MaxExecCount) {
+  SmallVector<const SCEV *> InferCountColl;
+  auto *PtrGEP = dyn_cast<GetElementPtrInst>(Ptr);
+  if (!PtrGEP)
+    return SE->getCouldNotCompute();
+  for (Value *Index : PtrGEP->indices()) {
+    Value *V = Index;
+    if (isa<ZExtInst>(V) || isa<SExtInst>(V))
+      V = cast<Instruction>(Index)->getOperand(0);
+    auto *SCEV = SE->getSCEV(V);
+    if (isa<SCEVCouldNotCompute>(SCEV))
+      return SE->getCouldNotCompute();
+    auto *AddRec = dyn_cast<SCEVAddRecExpr>(SCEV);
+    if (!AddRec)
+      continue;
+    auto *IndexRange = getIndexRange(AddRec, SE);
+    if (AddRec->hasNoSelfWrap()) {
+      InferCountColl.push_back(
+          SE->getUMinFromMismatchedTypes(IndexRange, MaxExecCount));
+    } else {
+      auto *IndexRangeC = dyn_cast<SCEVConstant>(IndexRange);
+      if (!IndexRangeC)
+        continue;
+      if (MaxExecCount->getValue()->getZExtValue() >
+          IndexRangeC->getValue()->getZExtValue())
+        InferCountColl.push_back(IndexRange);
+      else
+        InferCountColl.push_back(MaxExecCount);
+    }
+  }
+
+  if (InferCountColl.empty())
+    return SE->getCouldNotCompute();
+
+  return SE->getUMinFromMismatchedTypes(InferCountColl);
+}
+
+const SCEV *
+ScalarEvolution::getConstantMaxTripCountFromMemAccess(const Loop *L) {
+  SmallVector<Instruction *, 4> MemInsts;
+  collectExecLoadStoreInsideLoop(L, DT, MemInsts);
+
+  SmallVector<const SCEV *> InferCountColl;
+  const DataLayout &DL = getDataLayout();
+
+  for (Instruction *I : MemInsts) {
+    Value *Ptr = getLoadStorePointerOperand(I);
+    assert(Ptr && "empty pointer operand");
+    auto *AddRec = dyn_cast<SCEVAddRecExpr>(getSCEV(Ptr));
+    if (!AddRec || !AddRec->isAffine())
+      continue;
+    const SCEV *PtrBase = getPointerBase(AddRec);
+    const SCEV *Step = AddRec->getStepRecurrence(*this);
+    const SCEV *MemSize =
+        getCertainSizeOfMem(PtrBase, Step->getType(), DL, TLI, this);
+    if (!MemSize)
+      continue;
+    // Now we can infer a max execution time by MemLength/StepLength.
+    auto *MaxExecCount = dyn_cast<SCEVConstant>(getUDivCeilSCEV(MemSize, Step));
+    if (!MaxExecCount || MaxExecCount->getAPInt().getActiveBits() > 32)
+      continue;
+    // Now we check the wrap. We can still explore the max trip count in the
+    // following two cases:
+    // 1. If the index can potentially wrap but the max trip count inferred from
+    // memory access is within the range of index.
+    // 2. If the index can't wrap, then the max trip count is:
+    // min(range of index, max value inferred from memory access).
+    auto *Res = checkIndexWrap(Ptr, this, MaxExecCount);
+    if (isa<SCEVCouldNotCompute>(Res))
+      continue;
+    InferCountColl.push_back(Res);
+  }
+
+  if (InferCountColl.empty())
+    return getCouldNotCompute();
+
+  return getUMinFromMismatchedTypes(InferCountColl);
 }
 
 const SCEV *ScalarEvolution::getExitCount(const Loop *L,
@@ -13476,6 +13650,17 @@ static void PrintLoopInfo(raw_ostream &OS, ScalarEvolution *SE,
     L->getHeader()->printAsOperand(OS, /*PrintType=*/false);
     OS << ": ";
     OS << "Trip multiple is " << SE->getSmallConstantTripMultiple(L) << "\n";
+  }
+
+  if (UseMemoryAccessUBForBEInference) {
+    unsigned SmallMaxTrip = SE->getSmallConstantMaxTripCount(L);
+    OS << "Loop ";
+    L->getHeader()->printAsOperand(OS, /*PrintType=*/false);
+    OS << ": ";
+    if (SmallMaxTrip)
+      OS << "Small constant max trip is " << SmallMaxTrip << "\n";
+    else
+      OS << "Small constant max trip couldn't be computed.\n";
   }
 }
 
