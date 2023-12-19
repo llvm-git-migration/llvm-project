@@ -441,7 +441,6 @@ public:
       : Writer(Obj, OS), OutputFileName(OutputFile) {}
 };
 
-
 class SectionBase {
 public:
   std::string Name;
