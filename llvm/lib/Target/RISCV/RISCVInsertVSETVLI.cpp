@@ -963,6 +963,13 @@ static void fixupModifyVRegLI(Register VReg, LiveIntervals *LIS) {
   if (LIS->hasInterval(VReg))
     LIS->removeInterval(VReg);
   LIS->createAndComputeVirtRegInterval(VReg);
+
+  // After needVSETVLIPHI, may raise
+  // "Multiple connected components in live interval"
+  // error.
+  auto &LI = LIS->getInterval(VReg);
+  SmallVector<LiveInterval *, 8> SplitLIs;
+  LIS->splitSeparateComponents(LI, SplitLIs);
 }
 
 static void fixupModifyVRegLIFromVSETVL(MachineInstr *MI, LiveIntervals *LIS) {
@@ -1343,32 +1350,65 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
   if (!AVLReg.isVirtual())
     return true;
 
-  // We need the AVL to be produce by a PHI node in this basic block.
-  const MachineInstr *PHI = getReachingDefMI(AVLReg, &MI, MRI, LIS);
-  if (!PHI || PHI->getOpcode() != RISCV::PHI || PHI->getParent() != &MBB)
-    return true;
+  if (!MRI->isSSA()) {
 
-  for (unsigned PHIOp = 1, NumOps = PHI->getNumOperands(); PHIOp != NumOps;
-       PHIOp += 2) {
-    Register InReg = PHI->getOperand(PHIOp).getReg();
-    MachineBasicBlock *PBB = PHI->getOperand(PHIOp + 1).getMBB();
-    const BlockData &PBBInfo = BlockInfo[PBB->getNumber()];
-    // If the exit from the predecessor has the VTYPE we are looking for
-    // we might be able to avoid a VSETVLI.
-    if (PBBInfo.Exit.isUnknown() || !PBBInfo.Exit.hasSameVTYPE(Require))
+    // For O0
+    if (!LIS)
       return true;
 
-    // We need the PHI input to the be the output of a VSET(I)VLI.
-    const MachineInstr *DefMI = getReachingDefMI(InReg, PHI, MRI, LIS);
-    if (!DefMI || !isVectorConfigInstr(*DefMI))
+    LiveRange &LR = LIS->getInterval(Require.getAVLReg());
+    SlotIndexes *SIs = LIS->getSlotIndexes();
+    SlotIndex SI = SIs->getInstructionIndex(MI);
+    VNInfo *Valno = LR.getVNInfoAt(SI);
+    if (!Valno || !Valno->isPHIDef())
       return true;
 
-    // We found a VSET(I)VLI make sure it matches the output of the
-    // predecessor block.
-    VSETVLIInfo DefInfo = getInfoForVSETVLI(*DefMI);
-    if (!DefInfo.hasSameAVL(PBBInfo.Exit) ||
-        !DefInfo.hasSameVTYPE(PBBInfo.Exit))
+    for (auto *PredMBB : MBB.predecessors()) {
+      const BlockData &PBBInfo = BlockInfo[PredMBB->getNumber()];
+      if (PBBInfo.Exit.isUnknown() || !PBBInfo.Exit.hasSameVTYPE(Require))
+        return true;
+
+      const VNInfo *Value = LR.getVNInfoBefore(LIS->getMBBEndIdx(PredMBB));
+      if (!Value)
+        return true;
+
+      MachineInstr *DefMI = LIS->getInstructionFromIndex(Value->def);
+      if (!DefMI || !isVectorConfigInstr(*DefMI))
+        return true;
+
+      VSETVLIInfo DefInfo = getInfoForVSETVLI(*DefMI);
+      if (!DefInfo.hasSameAVL(PBBInfo.Exit) ||
+          !DefInfo.hasSameVTYPE(PBBInfo.Exit))
+        return true;
+    }
+  } else {
+    // We need the AVL to be produce by a PHI node in this basic block.
+    const MachineInstr *PHI = getReachingDefMI(AVLReg, &MI, MRI, LIS);
+    if (!PHI || PHI->getOpcode() != RISCV::PHI || PHI->getParent() != &MBB)
       return true;
+
+    for (unsigned PHIOp = 1, NumOps = PHI->getNumOperands(); PHIOp != NumOps;
+         PHIOp += 2) {
+      Register InReg = PHI->getOperand(PHIOp).getReg();
+      MachineBasicBlock *PBB = PHI->getOperand(PHIOp + 1).getMBB();
+      const BlockData &PBBInfo = BlockInfo[PBB->getNumber()];
+      // If the exit from the predecessor has the VTYPE we are looking for
+      // we might be able to avoid a VSETVLI.
+      if (PBBInfo.Exit.isUnknown() || !PBBInfo.Exit.hasSameVTYPE(Require))
+        return true;
+
+      // We need the PHI input to the be the output of a VSET(I)VLI.
+      const MachineInstr *DefMI = getReachingDefMI(InReg, PHI, MRI, LIS);
+      if (!DefMI || !isVectorConfigInstr(*DefMI))
+        return true;
+
+      // We found a VSET(I)VLI make sure it matches the output of the
+      // predecessor block.
+      VSETVLIInfo DefInfo = getInfoForVSETVLI(*DefMI);
+      if (!DefInfo.hasSameAVL(PBBInfo.Exit) ||
+          !DefInfo.hasSameVTYPE(PBBInfo.Exit))
+        return true;
+    }
   }
 
   // If all the incoming values to the PHI checked out, we don't need
