@@ -1500,20 +1500,6 @@ void RISCVInsertVSETVLI::emitVSETVLIs(MachineBasicBlock &MBB) {
   }
 }
 
-static MachineInstr *findLastMIRelateToReg(MachineBasicBlock *MBB,
-                                           Register Reg) {
-  for (auto MBBI = MBB->rbegin(); MBBI != MBB->rend(); MBBI++) {
-    for (auto MO : MBBI->operands()) {
-      if (!MO.isReg())
-        continue;
-      if (MO.getReg() == Reg)
-        return &(*MBBI);
-    }
-  }
-
-  return nullptr;
-}
-
 /// Perform simple partial redundancy elimination of the VSETVLI instructions
 /// we're about to insert by looking for cases where we can PRE from the
 /// beginning of one block to the end of one of its predecessors.  Specifically,
