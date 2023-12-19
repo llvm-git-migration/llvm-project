@@ -1681,7 +1681,8 @@ CharUnits ASTContext::getDeclAlign(const Decl *D, bool ForAlignof) const {
       if (VD->hasGlobalStorage() && !ForAlignof) {
         uint64_t TypeSize =
             !BaseT->isIncompleteType() ? getTypeSize(T.getTypePtr()) : 0;
-        Align = std::max(Align, getTargetInfo().getMinGlobalAlign(TypeSize, VD));
+        Align =
+            std::max(Align, getTargetInfo().getMinGlobalAlign(TypeSize, VD));
       }
 
     // Fields can be subject to extra alignment constraints, like if
