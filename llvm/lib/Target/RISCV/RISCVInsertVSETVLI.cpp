@@ -76,11 +76,8 @@ static const MachineInstr *getReachingDefMI(Register Reg,
     SlotIndexes *SIs = LIS->getSlotIndexes();
     SlotIndex SI = SIs->getInstructionIndex(*MI);
 
-    if (!LI.liveAt(SI))
-      return nullptr;
-
-    VNInfo *Valno = LI.getVNInfoAt(SI);
-    if (Valno->isPHIDef())
+    VNInfo *Valno = LI.getVNInfoBefore(SI);
+    if (!Valno || Valno->isPHIDef())
       return nullptr;
     MachineInstr *DefMI = SIs->getInstructionFromIndex(Valno->def);
     return DefMI;
@@ -1558,9 +1555,7 @@ void RISCVInsertVSETVLI::doPRE(MachineBasicBlock &MBB) {
   // to insert the vsetvli at.
   if (AvailableInfo.hasAVLReg() && RISCV::X0 != AvailableInfo.getAVLReg()) {
     const MachineInstr *AVLDefMI = getReachingDefMI(
-        AvailableInfo.getAVLReg(),
-        findLastMIRelateToReg(UnavailablePred, AvailableInfo.getAVLReg()), MRI,
-        LIS);
+        AvailableInfo.getAVLReg(), &UnavailablePred->instr_back(), MRI, LIS);
     if (!AVLDefMI)
       return;
     // This is an inline dominance check which covers the case of
