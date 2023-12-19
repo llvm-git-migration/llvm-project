@@ -811,8 +811,8 @@ public:
 private:
   bool needVSETVLI(const MachineInstr &MI, const VSETVLIInfo &Require,
                    const VSETVLIInfo &CurInfo) const;
-  bool needVSETVLIPHI(const VSETVLIInfo &Require,
-                      const MachineBasicBlock &MBB) const;
+  bool needVSETVLIPHI(const VSETVLIInfo &Require, const MachineBasicBlock &MBB,
+                      const MachineInstr &MI) const;
   void insertVSETVLI(MachineBasicBlock &MBB, MachineInstr &MI,
                      const VSETVLIInfo &Info, const VSETVLIInfo &PrevInfo);
   void insertVSETVLI(MachineBasicBlock &MBB,
@@ -1318,7 +1318,8 @@ void RISCVInsertVSETVLI::computeIncomingVLVTYPE(const MachineBasicBlock &MBB) {
 // be unneeded if the AVL is a phi node where all incoming values are VL
 // outputs from the last VSETVLI in their respective basic blocks.
 bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
-                                        const MachineBasicBlock &MBB) const {
+                                        const MachineBasicBlock &MBB,
+                                        const MachineInstr &MI) const {
   if (DisableInsertVSETVLPHIOpt)
     return true;
 
@@ -1330,7 +1331,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
     return true;
 
   // We need the AVL to be produce by a PHI node in this basic block.
-  MachineInstr *PHI = getReachingDefMI(AVLReg, nullptr, MRI, LIS);
+  MachineInstr *PHI = getReachingDefMI(AVLReg, &MI, MRI, LIS);
   if (!PHI || PHI->getOpcode() != RISCV::PHI || PHI->getParent() != &MBB)
     return true;
 
@@ -1345,7 +1346,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
       return true;
 
     // We need the PHI input to the be the output of a VSET(I)VLI.
-    MachineInstr *DefMI = getReachingDefMI(InReg, nullptr, MRI, LIS);
+    MachineInstr *DefMI = getReachingDefMI(InReg, PHI, MRI, LIS);
     if (!DefMI || !isVectorConfigInstr(*DefMI))
       return true;
 
@@ -1392,7 +1393,7 @@ void RISCVInsertVSETVLI::emitVSETVLIs(MachineBasicBlock &MBB) {
         // wouldn't be used and VL/VTYPE registers are correct.  Note that
         // we *do* need to model the state as if it changed as while the
         // register contents are unchanged, the abstract model can change.
-        if (!PrefixTransparent || needVSETVLIPHI(CurInfo, MBB))
+        if (!PrefixTransparent || needVSETVLIPHI(CurInfo, MBB, MI))
           insertVSETVLI(MBB, MI, CurInfo, PrevInfo);
         PrefixTransparent = false;
       }
