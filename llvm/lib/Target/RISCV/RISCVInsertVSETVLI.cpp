@@ -59,6 +59,7 @@ static const MachineInstr *getReachingDefMI(Register Reg,
   if (!MI)
     return MRI->getUniqueVRegDef(Reg);
 
+  // For O0 situation
   if (!LIS)
     return nullptr;
 
