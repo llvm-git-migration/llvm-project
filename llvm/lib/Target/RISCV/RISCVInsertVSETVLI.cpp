@@ -49,9 +49,10 @@ namespace {
 // For the SSA form, we could just use the getVRegDef to take Reaching
 // definition. For the non-SSA, we retrieve reaching definition for specific
 // register from LiveInterval/VNInfo.
-static MachineInstr *getReachingDefMI(Register Reg, const MachineInstr *MI,
-                                      const MachineRegisterInfo *MRI,
-                                      const LiveIntervals *LIS) {
+static const MachineInstr *getReachingDefMI(Register Reg,
+                                            const MachineInstr *MI,
+                                            const MachineRegisterInfo *MRI,
+                                            const LiveIntervals *LIS) {
   if (MRI->isSSA())
     return MRI->getVRegDef(Reg);
 
@@ -61,6 +62,11 @@ static MachineInstr *getReachingDefMI(Register Reg, const MachineInstr *MI,
   if (!LIS)
     return nullptr;
 
+  if (llvm::any_of(MI->defs(), [Reg](const MachineOperand MO) {
+        return MO.isReg() && MO.getReg() == Reg;
+      }))
+    return MI;
+
   if (Reg.isVirtual() && LIS->hasInterval(Reg)) {
     auto &LI = LIS->getInterval(Reg);
     // Undef Operand
@@ -68,6 +74,10 @@ static MachineInstr *getReachingDefMI(Register Reg, const MachineInstr *MI,
       return nullptr;
     SlotIndexes *SIs = LIS->getSlotIndexes();
     SlotIndex SI = SIs->getInstructionIndex(*MI);
+
+    if (!LI.liveAt(SI))
+      return nullptr;
+
     VNInfo *Valno = LI.getVNInfoAt(SI);
     if (Valno->isPHIDef())
       return nullptr;
@@ -219,13 +229,14 @@ static bool hasUndefinedMergeOp(const MachineInstr &MI,
   if (!MRI.isSSA() && UseMO.isUndef())
     return true;
 
-  if (MachineInstr *UseMI = getReachingDefMI(UseMO.getReg(), &MI, &MRI, LIS)) {
+  if (const MachineInstr *UseMI =
+          getReachingDefMI(UseMO.getReg(), &MI, &MRI, LIS)) {
     if (UseMI->isImplicitDef())
       return true;
 
     if (UseMI->isRegSequence()) {
       for (unsigned i = 1, e = UseMI->getNumOperands(); i < e; i += 2) {
-        MachineInstr *SourceMI =
+        const MachineInstr *SourceMI =
             getReachingDefMI(UseMI->getOperand(i).getReg(), UseMI, &MRI, LIS);
         if (!SourceMI || !SourceMI->isImplicitDef())
           return false;
@@ -542,7 +553,8 @@ public:
     if (hasAVLReg()) {
       if (getAVLReg() == RISCV::X0)
         return true;
-      if (MachineInstr *MI = getReachingDefMI(getAVLReg(), nullptr, &MRI, LIS);
+      if (const MachineInstr *MI =
+              getReachingDefMI(getAVLReg(), nullptr, &MRI, LIS);
           MI && MI->getOpcode() == RISCV::ADDI && MI->getOperand(1).isReg() &&
           MI->getOperand(2).isImm() &&
           MI->getOperand(1).getReg() == RISCV::X0 &&
@@ -922,7 +934,7 @@ static VSETVLIInfo computeInfoForInstr(const MachineInstr &MI, uint64_t TSFlags,
   // register AVLs to avoid extending live ranges without being sure we can
   // kill the original source reg entirely.
   if (InstrInfo.hasAVLReg() && InstrInfo.getAVLReg().isVirtual()) {
-    MachineInstr *DefMI =
+    const MachineInstr *DefMI =
         getReachingDefMI(InstrInfo.getAVLReg(), &MI, MRI, LIS);
     if (DefMI && isVectorConfigInstr(*DefMI)) {
       VSETVLIInfo DefInstrInfo = getInfoForVSETVLI(*DefMI);
@@ -990,7 +1002,7 @@ void RISCVInsertVSETVLI::insertVSETVLI(MachineBasicBlock &MBB,
     // same, we can use the X0, X0 form.
     if (Info.hasSameVLMAX(PrevInfo) && Info.hasAVLReg() &&
         Info.getAVLReg().isVirtual()) {
-      if (MachineInstr *DefMI =
+      if (const MachineInstr *DefMI =
               getReachingDefMI(Info.getAVLReg(), &(*InsertPt), MRI, LIS)) {
         if (isVectorConfigInstr(*DefMI)) {
           VSETVLIInfo DefInfo = getInfoForVSETVLI(*DefMI);
@@ -1125,7 +1137,7 @@ bool RISCVInsertVSETVLI::needVSETVLI(const MachineInstr &MI,
   // VSETVLI here.
   if (Require.hasAVLReg() && Require.getAVLReg().isVirtual() &&
       CurInfo.hasCompatibleVTYPE(Used, Require)) {
-    if (MachineInstr *DefMI =
+    if (const MachineInstr *DefMI =
             getReachingDefMI(Require.getAVLReg(), &MI, MRI, LIS)) {
       if (isVectorConfigInstr(*DefMI)) {
         VSETVLIInfo DefInfo = getInfoForVSETVLI(*DefMI);
@@ -1331,7 +1343,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
     return true;
 
   // We need the AVL to be produce by a PHI node in this basic block.
-  MachineInstr *PHI = getReachingDefMI(AVLReg, &MI, MRI, LIS);
+  const MachineInstr *PHI = getReachingDefMI(AVLReg, &MI, MRI, LIS);
   if (!PHI || PHI->getOpcode() != RISCV::PHI || PHI->getParent() != &MBB)
     return true;
 
@@ -1346,7 +1358,7 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
       return true;
 
     // We need the PHI input to the be the output of a VSET(I)VLI.
-    MachineInstr *DefMI = getReachingDefMI(InReg, PHI, MRI, LIS);
+    const MachineInstr *DefMI = getReachingDefMI(InReg, PHI, MRI, LIS);
     if (!DefMI || !isVectorConfigInstr(*DefMI))
       return true;
 
@@ -1451,6 +1463,19 @@ void RISCVInsertVSETVLI::emitVSETVLIs(MachineBasicBlock &MBB) {
   }
 }
 
+static MachineInstr *findLastUserForReg(MachineBasicBlock *MBB, Register Reg) {
+  for (auto MBBI = MBB->rbegin(); MBBI != MBB->rend(); MBBI++) {
+    for (auto MO : MBBI->operands()) {
+      if (!MO.isReg())
+        continue;
+      if (MO.getReg() == Reg)
+        return &(*MBBI);
+    }
+  }
+
+  return nullptr;
+}
+
 /// Perform simple partial redundancy elimination of the VSETVLI instructions
 /// we're about to insert by looking for cases where we can PRE from the
 /// beginning of one block to the end of one of its predecessors.  Specifically,
@@ -1488,8 +1513,10 @@ void RISCVInsertVSETVLI::doPRE(MachineBasicBlock &MBB) {
   // we need to prove the value is available at the point we're going
   // to insert the vsetvli at.
   if (AvailableInfo.hasAVLReg() && RISCV::X0 != AvailableInfo.getAVLReg()) {
-    MachineInstr *AVLDefMI =
-        getReachingDefMI(AvailableInfo.getAVLReg(), nullptr, MRI, LIS);
+    const MachineInstr *AVLDefMI = getReachingDefMI(
+        AvailableInfo.getAVLReg(),
+        findLastUserForReg(UnavailablePred, AvailableInfo.getAVLReg()), MRI,
+        LIS);
     if (!AVLDefMI)
       return;
     // This is an inline dominance check which covers the case of
