@@ -1464,7 +1464,8 @@ void RISCVInsertVSETVLI::emitVSETVLIs(MachineBasicBlock &MBB) {
   }
 }
 
-static MachineInstr *findLastUserForReg(MachineBasicBlock *MBB, Register Reg) {
+static MachineInstr *findLastMIRelateToReg(MachineBasicBlock *MBB,
+                                           Register Reg) {
   for (auto MBBI = MBB->rbegin(); MBBI != MBB->rend(); MBBI++) {
     for (auto MO : MBBI->operands()) {
       if (!MO.isReg())
@@ -1516,7 +1517,7 @@ void RISCVInsertVSETVLI::doPRE(MachineBasicBlock &MBB) {
   if (AvailableInfo.hasAVLReg() && RISCV::X0 != AvailableInfo.getAVLReg()) {
     const MachineInstr *AVLDefMI = getReachingDefMI(
         AvailableInfo.getAVLReg(),
-        findLastUserForReg(UnavailablePred, AvailableInfo.getAVLReg()), MRI,
+        findLastMIRelateToReg(UnavailablePred, AvailableInfo.getAVLReg()), MRI,
         LIS);
     if (!AVLDefMI)
       return;
