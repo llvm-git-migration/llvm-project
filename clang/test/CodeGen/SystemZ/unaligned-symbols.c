@@ -102,3 +102,11 @@ unsigned char foo6 () {
   return ExtUnAl_s_nested[0].a[0].c[0] + ExtExplAlign_s_nested[0].a[0].c[0] +
          Aligned_s_nested[0].a[0].c[0];
 }
+
+// A weak symbol could be replaced with an unaligned one at link time.
+// CHECK-LABEL: foo7
+// CHECK-NOT: larl {{.*}}Weaksym
+unsigned char __attribute__((weak)) Weaksym = 0;
+unsigned char foo7 () {
+  return Weaksym;
+}

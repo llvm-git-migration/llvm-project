@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "SystemZ.h"
+#include "clang/AST/Decl.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/MacroBuilder.h"
@@ -139,10 +140,10 @@ bool SystemZTargetInfo::hasFeature(StringRef Feature) const {
 }
 
 unsigned SystemZTargetInfo::getMinGlobalAlign(uint64_t Size,
-                                              bool HasDef) const {
-  // Don't enforce the minimum alignment on an external symbol if
+                                              const VarDecl *VD) const {
+  // Don't enforce the minimum alignment on an external or weak symbol if
   // -munaligned-symbols is passed.
-  if (UnalignedSymbols && !HasDef)
+  if (UnalignedSymbols && VD && (!VD->hasDefinition() || VD->isWeak()))
     return 0;
 
   return MinGlobalAlign;

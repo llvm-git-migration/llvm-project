@@ -1681,8 +1681,7 @@ CharUnits ASTContext::getDeclAlign(const Decl *D, bool ForAlignof) const {
       if (VD->hasGlobalStorage() && !ForAlignof) {
         uint64_t TypeSize =
             !BaseT->isIncompleteType() ? getTypeSize(T.getTypePtr()) : 0;
-        Align = std::max(Align, getTargetInfo().getMinGlobalAlign(
-                                    TypeSize, VD->hasDefinition()));
+        Align = std::max(Align, getTargetInfo().getMinGlobalAlign(TypeSize, VD));
       }
 
     // Fields can be subject to extra alignment constraints, like if
@@ -2503,19 +2502,18 @@ unsigned ASTContext::getTargetDefaultAlignForAttributeAligned() const {
 }
 
 /// getAlignOfGlobalVar - Return the alignment in bits that should be given
-/// to a global variable of the specified type (see comment for
-/// getMinGlobalAlign about HasDef).
-unsigned ASTContext::getAlignOfGlobalVar(QualType T, bool HasDef) const {
+/// to a global variable of the specified type.
+unsigned ASTContext::getAlignOfGlobalVar(QualType T, const VarDecl *VD) const {
   uint64_t TypeSize = getTypeSize(T.getTypePtr());
   return std::max(getPreferredTypeAlign(T),
-                  getTargetInfo().getMinGlobalAlign(TypeSize, HasDef));
+                  getTargetInfo().getMinGlobalAlign(TypeSize, VD));
 }
 
 /// getAlignOfGlobalVarInChars - Return the alignment in characters that
 /// should be given to a global variable of the specified type.
 CharUnits ASTContext::getAlignOfGlobalVarInChars(QualType T,
-                                                 bool HasDef) const {
-  return toCharUnitsFromBits(getAlignOfGlobalVar(T, HasDef));
+                                                 const VarDecl *VD) const {
+  return toCharUnitsFromBits(getAlignOfGlobalVar(T, VD));
 }
 
 CharUnits ASTContext::getOffsetOfBaseWithVBPtr(const CXXRecordDecl *RD) const {

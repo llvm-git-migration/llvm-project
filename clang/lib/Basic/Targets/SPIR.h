@@ -125,7 +125,7 @@ protected:
       LongLongWidth = HostTarget->getLongLongWidth();
       LongLongAlign = HostTarget->getLongLongAlign();
       MinGlobalAlign = HostTarget->getMinGlobalAlign(/* TypeSize = */ 0,
-                                                     /* HasDef = */ true);
+                                                     /* VD = */ nullptr);
       NewAlign = HostTarget->getNewAlign();
       DefaultAlignForAttributeAligned =
           HostTarget->getDefaultAlignForAttributeAligned();
