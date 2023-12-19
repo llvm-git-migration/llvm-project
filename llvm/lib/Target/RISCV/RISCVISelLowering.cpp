@@ -539,8 +539,9 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     if (Subtarget.hasStdExtZfa()) {
       setOperationAction(ISD::FNEARBYINT, MVT::f32, Legal);
       setOperationAction({ISD::FMAXIMUM, ISD::FMINIMUM}, MVT::f32, Legal);
-    } else
+    } else {
       setOperationAction({ISD::FMAXIMUM, ISD::FMINIMUM}, MVT::f32, Custom);
+    }
   }
 
   if (Subtarget.hasStdExtFOrZfinx() && Subtarget.is64Bit())
