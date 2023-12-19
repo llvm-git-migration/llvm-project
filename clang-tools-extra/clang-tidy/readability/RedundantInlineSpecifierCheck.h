@@ -21,7 +21,8 @@ namespace clang::tidy::readability {
 class RedundantInlineSpecifierCheck : public ClangTidyCheck {
 public:
   RedundantInlineSpecifierCheck(StringRef Name, ClangTidyContext *Context)
-      : ClangTidyCheck(Name, Context) {}
+      : ClangTidyCheck(Name, Context),
+        StrictMode(Options.getLocalOrGlobal("StrictMode", false)) {}
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
   std::optional<TraversalKind> getCheckTraversalKind() const override {
@@ -33,6 +34,7 @@ private:
   void handleMatchedDecl(const T *MatchedDecl, const SourceManager &Sources,
                          const ast_matchers::MatchFinder::MatchResult &Result,
                          StringRef Message);
+  const bool StrictMode;
 };
 
 } // namespace clang::tidy::readability

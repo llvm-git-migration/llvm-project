@@ -22,3 +22,11 @@ functions are implicitly inlined
 
 In the example above the keyword ``inline`` is redundant since member functions
 defined entirely inside a class/struct/union definition are implicitly inlined.
+
+Options
+-------
+
+.. option:: StrictMode
+
+   If set to `true`, the check will also flag functions and variables that
+   already have internal linkage as redundant.

@@ -1,8 +1,9 @@
-// RUN: %check_clang_tidy %s readability-redundant-inline-specifier -std=c++17 %t
+// RUN: %check_clang_tidy -std=c++17 %s readability-redundant-inline-specifier %t
+// RUN: %check_clang_tidy -std=c++17 -check-suffixes=,STRICT %s readability-redundant-inline-specifier %t -- -config="{CheckOptions: {readability-redundant-inline-specifier.StrictMode: 'true'}}"
 
 template <typename T> inline T f()
-// CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'f' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
-// CHECK-FIXES: template <typename T> T f()
+// CHECK-MESSAGES-STRICT: :[[@LINE-1]]:23: warning: function 'f' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-FIXES-STRICT: template <typename T> T f()
 {
     return T{};
 }
@@ -12,7 +13,6 @@ template <> inline double f<double>() = delete;
 // CHECK-FIXES: template <> double f<double>() = delete;
 
 inline int g(float a)
-// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'g' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 {
     return static_cast<int>(a - 5.F);
 }
@@ -30,6 +30,7 @@ class C
 
     inline C(const C&) = default;
     // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: function 'C' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-FIXES: C(const C&) = default;
 
     constexpr inline C& operator=(int a);
     // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: function 'operator=' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
@@ -52,7 +53,6 @@ class C
     // CHECK-FIXES: static constexpr int C_STATIC = 42;
 
     static constexpr int C_STATIC_2 = 42;
-    // CHECK-MESSAGES-NOT: :[[@LINE-1]]:5: warning: variable 'C_STATIC_2' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 };
 
 constexpr inline int Get42() { return 42; }
@@ -61,10 +61,10 @@ constexpr inline int Get42() { return 42; }
 
 
 static constexpr inline int NAMESPACE_STATIC = 42;
-// CHECK-MESSAGES-NOT: :[[@LINE-1]]:18: warning: variable 'NAMESPACE_STATIC' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 
 inline static int fn0(int i)
-// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'fn0' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-MESSAGES-STRICT: :[[@LINE-1]]:1: warning: function 'fn0' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-FIXES-STRICT: static int fn0(int i)
 {
     return i - 1;
 }
@@ -79,7 +79,8 @@ static constexpr inline int fn1(int i)
 namespace
 {
     inline int fn2(int i)
-    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: function 'fn2' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-MESSAGES-STRICT: :[[@LINE-1]]:5: warning: function 'fn2' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-FIXES-STRICT: int fn2(int i)
     {
         return i - 1;
     }
@@ -92,13 +93,13 @@ namespace
     }
 
     inline constexpr int MY_CONSTEXPR_VAR = 42;
-    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: variable 'MY_CONSTEXPR_VAR' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-MESSAGES-STRICT: :[[@LINE-1]]:5: warning: variable 'MY_CONSTEXPR_VAR' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+    // CHECK-FIXES-STRICT: constexpr int MY_CONSTEXPR_VAR = 42;
 }
 
 namespace ns
 {
     inline int fn4(int i)
-    // CHECK-MESSAGES-NOT: :[[@LINE-1]]:5: warning: function 'fn4' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
     {
         return i - 1;
     }
@@ -112,24 +113,19 @@ namespace ns
 }
 
 auto fn6 = [](){};
-//CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'operator()' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 
 template <typename T> inline T fn7();
-// CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'fn7' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
-// CHECK-FIXES: template <typename T> T fn7();
 
-template <typename T>  T fn7()
-// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'fn7' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+template <typename T> T fn7()
 {
     return T{};
 }
 
 template <typename T>  T fn8();
-// CHECK-MESSAGES-NOT: :[[@LINE-1]]:1: warning: function 'fn8' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
 
 template <typename T> inline T fn8()
-// CHECK-MESSAGES: :[[@LINE-1]]:23: warning: function 'fn8' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
-// CHECK-FIXES: template <typename T> T fn8()
+// CHECK-MESSAGES-STRICT: :[[@LINE-1]]:23: warning: function 'fn8' has inline specifier but is implicitly inlined [readability-redundant-inline-specifier]
+// CHECK-FIXES-STRICT: template <typename T> T fn8()
 {
     return T{};
 }
