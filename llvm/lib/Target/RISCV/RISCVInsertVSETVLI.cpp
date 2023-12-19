@@ -70,12 +70,8 @@ static const MachineInstr *getReachingDefMI(Register Reg,
 
   if (Reg.isVirtual() && LIS->hasInterval(Reg)) {
     auto &LI = LIS->getInterval(Reg);
-    // Undef Operand
-    if (LI.empty())
-      return nullptr;
     SlotIndexes *SIs = LIS->getSlotIndexes();
     SlotIndex SI = SIs->getInstructionIndex(*MI);
-
     VNInfo *Valno = LI.getVNInfoBefore(SI);
     if (!Valno || Valno->isPHIDef())
       return nullptr;
