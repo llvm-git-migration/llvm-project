@@ -1372,6 +1372,8 @@ bool RISCVInsertVSETVLI::needVSETVLIPHI(const VSETVLIInfo &Require,
       if (!Value)
         return true;
 
+      // TODO: DefMI is COPY in most case, maybe we should search
+      // until encouter non-COPY node.
       MachineInstr *DefMI = LIS->getInstructionFromIndex(Value->def);
       if (!DefMI || !isVectorConfigInstr(*DefMI))
         return true;
