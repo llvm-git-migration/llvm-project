@@ -428,7 +428,7 @@ set(LIBCXX_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/c++/v1" CACHE STRING
     "Path where target-agnostic libc++ headers should be installed.")
 set(LIBCXX_INSTALL_RUNTIME_DIR "${CMAKE_INSTALL_BINDIR}" CACHE STRING
     "Path where built libc++ runtime libraries should be installed.")
-set(LIBCXX_INSTALL_MODULE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/../modules/c++/v1" CACHE STRING
+set(LIBCXX_INSTALL_MODULE_DIR "usr/share/libc++/v1" CACHE STRING
     "Path where target-agnostic libc++ modules should be installed.")
 
 set(LIBCXX_SHARED_OUTPUT_NAME "c++" CACHE STRING "Output name for the shared libc++ runtime library.")

@@ -8,7 +8,7 @@
       "is-standard-library": true,
       "local-arguments": {
         "system-include-directories": [
-          "@LIBCXX_MODULE_RELATIVE_PATH@/std"
+          "@LIBCXX_MODULE_RELATIVE_PATH@"
         ]
       }
     },
@@ -18,8 +18,7 @@
       "is-std-library": true,
       "local-arguments": {
         "system-include-directories": [
-          "@LIBCXX_MODULE_RELATIVE_PATH@/std",
-          "@LIBCXX_MODULE_RELATIVE_PATH@/std.compat"
+          "@LIBCXX_MODULE_RELATIVE_PATH@"
         ]
       }
     }

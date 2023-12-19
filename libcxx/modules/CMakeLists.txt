@@ -215,11 +215,11 @@ add_custom_target(generate-cxx-modules
 # file. This allows moving the entire installation to a different to a
 # different location.
 file(RELATIVE_PATH LIBCXX_MODULE_RELATIVE_PATH
-	${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_LIBRARY_DIR}
-	${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_MODULE_DIR})
+  ${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_LIBRARY_DIR}
+  ${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_MODULE_DIR})
 configure_file(
   "modules.json.in"
-  "${LIBCXX_LIBRARY_DIR}/modules.json"
+  "${LIBCXX_LIBRARY_DIR}/libc++.modules.json"
   @ONLY
 )
 
@@ -248,7 +248,7 @@ if (LIBCXX_INSTALL_MODULES)
 
   # Install the module manifest.
   install(FILES
-      "${LIBCXX_LIBRARY_DIR}/modules.json"
+      "${LIBCXX_LIBRARY_DIR}/libc++.modules.json"
     DESTINATION "${LIBCXX_INSTALL_LIBRARY_DIR}"
     COMPONENT cxx-modules
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ

@@ -397,7 +397,7 @@ if (NOT CMAKE_CONFIGURATION_TYPES)
     if(LIBCXX_INSTALL_HEADERS)
       set(header_install_target install-cxx-headers)
     endif()
-	if(LIBCXX_INSTALL_MODULES)
+    if(LIBCXX_INSTALL_MODULES)
       set(header_install_target install-cxx-modules)
     endif()
     add_custom_target(install-cxx
