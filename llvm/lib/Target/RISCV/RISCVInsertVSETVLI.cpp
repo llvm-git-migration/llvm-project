@@ -63,6 +63,7 @@ static const MachineInstr *getReachingDefMI(Register Reg,
   if (!LIS)
     return nullptr;
 
+  // If MI is DefMI
   if (llvm::any_of(MI->defs(), [Reg](const MachineOperand MO) {
         return MO.isReg() && MO.getReg() == Reg;
       }))
