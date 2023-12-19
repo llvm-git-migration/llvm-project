@@ -324,14 +324,6 @@ Expected<IHexRecord> IHexRecord::parse(StringRef Line) {
   return Rec;
 }
 
-static uint64_t sectionLMA(const SectionBase *Sec) {
-  Segment *Seg = Sec->ParentSegment;
-  if (Seg && Seg->Type == PT_LOAD && Seg->VAddr <= Sec->Addr &&
-      (Seg->VAddr + Seg->MemSize > Sec->Addr))
-    return Sec->Addr - Seg->VAddr + Seg->PAddr;
-  return Sec->Addr;
-}
-
 static uint64_t sectionPhysicalAddr(const SectionBase *Sec) {
   Segment *Seg = Sec->ParentSegment;
   if (Seg && Seg->Type != ELF::PT_LOAD)
@@ -2821,80 +2813,6 @@ Error IHexWriter::finalize() {
   return Error::success();
 }
 
-Error SRECSectionWriterBase::visit(const StringTableSection &Sec) {
-  // Check that sizer has already done its work
-  assert(Sec.Size == Sec.StrTabBuilder.getSize());
-  // we don't need to write anything here the real writer has already done it.
-  return Error::success();
-}
-
-Error SRECSectionWriterBase::visit(const Section &Sec) {
-  writeSection(Sec, Sec.Contents);
-  return Error::success();
-}
-
-Error SRECSectionWriterBase::visit(const OwnedDataSection &Sec) {
-  writeSection(Sec, Sec.Data);
-  return Error::success();
-}
-
-Error SRECSectionWriterBase::visit(const DynamicRelocationSection &Sec) {
-  writeSection(Sec, Sec.Contents);
-  return Error::success();
-}
-
-void SRECSectionWriter::writeRecord(SRecord &Record, uint64_t Off) {
-  SRecLineData Data = Record.toString();
-  memcpy(Out.getBufferStart() + Off, Data.data(), Data.size());
-}
-
-void SRECSectionWriter::writeRecords() {
-  uint64_t Off = HeaderSize;
-  for (SRecord &Record : Records) {
-    Record.Type = Type;
-    writeRecord(Record, Off);
-    Off += Record.getSize();
-  }
-  Offset = Off;
-}
-
-void SRECSectionWriterBase::writeRecords() {
-  uint64_t Off = HeaderSize;
-  for (SRecord &Record : Records) {
-    Record.Type = Type;
-    Off += Record.getSize();
-  }
-  Offset = Off;
-}
-
-void SRECSectionWriterBase::writeSection(const SectionBase &S,
-                                         ArrayRef<uint8_t> Data) {
-  const uint32_t ChunkSize = 16;
-  uint32_t Address = sectionLMA(&S);
-  uint32_t EndAddr = Address + S.Size - 1;
-  if (isUInt<16>(EndAddr))
-    Type = std::max(static_cast<uint8_t>(SRecord::S1), Type);
-  else if (isUInt<24>(EndAddr))
-    Type = std::max(static_cast<uint8_t>(SRecord::S2), Type);
-  else
-    Type = SRecord::S3;
-  while (!Data.empty()) {
-    uint64_t DataSize = std::min<uint64_t>(Data.size(), ChunkSize);
-    SRecord Record{Type, Address, Data.take_front(DataSize)};
-    Records.push_back(Record);
-    Data = Data.drop_front(DataSize);
-    Address += DataSize;
-  }
-}
-
-Error SRECSectionWriter::visit(const StringTableSection &Sec) {
-  assert(Sec.Size == Sec.StrTabBuilder.getSize());
-  std::vector<uint8_t> Data(Sec.Size);
-  Sec.StrTabBuilder.write(Data.data());
-  writeSection(Sec, Data);
-  return Error::success();
-}
-
 SRecLineData SRecord::toString() const {
   SRecLineData Line(getSize());
   auto *Iter = Line.begin();
@@ -2953,7 +2871,9 @@ uint8_t SRecord::getCount() const {
 }
 
 SRecord SRecord::getHeader(StringRef FileName) {
-  // limit header to 40 characters
+  // Header is a record with Type S0, Address 0, and Data that is a
+  // vendor-specific text comment. For the comment we will use the output file
+  // name truncated to 40 characters.
   StringRef HeaderContents = FileName.slice(0, 40);
   ArrayRef<uint8_t> Data(
       reinterpret_cast<const uint8_t *>(HeaderContents.data()),
@@ -2967,81 +2887,26 @@ size_t SRECWriter::writeHeader(uint8_t *Buf) {
   return Record.size();
 }
 
-size_t SRECWriter::writeTerminator(uint8_t *Buf, uint8_t Type) {
-  assert(Type >= 7 && Type <= 9);
-  uint32_t Entry = Obj.Entry;
-  SRecLineData Data = SRecord{Type, Entry, {}}.toString();
-  memcpy(Buf, Data.data(), Data.size());
-  return Data.size();
-}
-
 Error SRECWriter::write() {
   uint32_t HeaderSize =
       writeHeader(reinterpret_cast<uint8_t *>(Buf->getBufferStart()));
-  SRECSectionWriter Writer(*Buf, HeaderSize);
-  for (const SectionBase *S : Sections) {
-    if (Error E = S->accept(Writer))
-      return E;
-  }
-  Writer.writeRecords();
-  uint64_t Offset = Writer.getBufferOffset();
-  /// S1 terminates with S9, S2 with S8, S3 with S7
-  uint8_t TerminatorType = 10 - Writer.getType();
-  Offset += writeTerminator(
-      reinterpret_cast<uint8_t *>(Buf->getBufferStart() + Offset),
-      TerminatorType);
-  assert(Offset == TotalSize);
+
+  // FIXME: we currently only write the header and nothing else
+  assert(HeaderSize == TotalSize);
   Out.write(Buf->getBufferStart(), Buf->getBufferSize());
   return Error::success();
 }
 
-Error SRECWriter::checkSection(const SectionBase &S) const {
-  if (!isUInt<32>(S.Addr + S.Size - 1))
-    return createStringError(
-        errc::invalid_argument,
-        "Section '%s' address range [0x%llx, 0x%llx] is not 32 bit",
-        S.Name.c_str(), S.Addr, S.Addr + S.Size - 1);
-  return Error::success();
-}
-
 Error SRECWriter::finalize() {
-  // We can't write 64-bit addresses.
-  if (!isUInt<32>(Obj.Entry))
-    return createStringError(errc::invalid_argument,
-                             "Entry point address 0x%llx overflows 32 bits",
-                             Obj.Entry);
-
-  for (const SectionBase &S : Obj.sections()) {
-    if ((S.Flags & ELF::SHF_ALLOC) && S.Type != ELF::SHT_NOBITS && S.Size > 0) {
-      if (Error E = checkSection(S))
-        return E;
-      Sections.push_back(&S);
-    }
-  }
-
-  llvm::sort(Sections, [](const SectionBase *A, const SectionBase *B) {
-    return sectionLMA(A) < sectionLMA(B);
-  });
-
   std::unique_ptr<WritableMemoryBuffer> EmptyBuffer =
       WritableMemoryBuffer::getNewMemBuffer(0);
   if (!EmptyBuffer)
     return createStringError(errc::not_enough_memory,
                              "failed to allocate memory buffer of 0 bytes");
 
-  SRECSectionWriterBase LengthCalc(*EmptyBuffer, 0);
-  for (const SectionBase *Sec : Sections)
-    if (Error Err = Sec->accept(LengthCalc))
-      return Err;
-
-  LengthCalc.writeRecords();
-
-  // We need to add the size of the Header and Terminator records
   SRecord Header = SRecord::getHeader(OutputFileName);
-  uint8_t TerminatorType = 10 - LengthCalc.getType();
-  SRecord Terminator = {TerminatorType, static_cast<uint32_t>(Obj.Entry), {}};
-  TotalSize =
-      LengthCalc.getBufferOffset() + Header.getSize() + Terminator.getSize();
+  TotalSize = Header.getSize();
+
   Buf = WritableMemoryBuffer::getNewMemBuffer(TotalSize);
   if (!Buf)
     return createStringError(errc::not_enough_memory,

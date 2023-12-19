@@ -1,3 +1,5 @@
+# FIXME: Currently the sections in this file are ignored and we
+# only write the header
 !ELF
 FileHeader:
   Class:           ELFCLASS64
