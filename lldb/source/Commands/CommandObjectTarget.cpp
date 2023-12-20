@@ -1545,13 +1545,14 @@ static void DumpAddress(ExecutionContextScope *exe_scope,
   const uint32_t save_indent = strm.GetIndentLevel();
   strm.SetIndentLevel(save_indent + 13);
   so_addr.Dump(&strm, exe_scope, Address::DumpStyleResolvedDescription,
-              Address::DumpStyleInvalid, UINT32_MAX, false, pattern_info);
+               Address::DumpStyleInvalid, UINT32_MAX, false, pattern_info);
   strm.SetIndentLevel(save_indent);
   // Print out detailed address information when verbose is enabled
   if (verbose) {
     strm.EOL();
     so_addr.Dump(&strm, exe_scope, Address::DumpStyleDetailedSymbolContext,
-                Address::DumpStyleInvalid, UINT32_MAX, all_ranges, pattern_info);
+                 Address::DumpStyleInvalid, UINT32_MAX, all_ranges,
+                 pattern_info);
   }
   strm.IndentLess();
 }
@@ -1665,7 +1666,8 @@ static void DumpSymbolContextList(ExecutionContextScope *exe_scope,
 
     AddressRange range;
     sc.GetAddressRange(eSymbolContextEverything, 0, true, range);
-    DumpAddress(exe_scope, range.GetBaseAddress(), verbose, all_ranges, strm, pattern_info);
+    DumpAddress(exe_scope, range.GetBaseAddress(), verbose, all_ranges, strm,
+                pattern_info);
     first_module = false;
   }
   strm.IndentLess();

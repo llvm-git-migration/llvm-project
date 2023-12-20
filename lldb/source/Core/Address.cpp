@@ -652,7 +652,7 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
                     pointer_sc.symbol != nullptr) {
                   s->PutCString(": ");
                   pointer_sc.DumpStopContext(s, exe_scope, so_addr, true, false,
-                                            false, true, true, pattern_info);
+                                             false, true, true, pattern_info);
                 }
               }
             }
@@ -690,15 +690,15 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
               // We have a function or a symbol from the same sections as this
               // address.
               sc.DumpStopContext(s, exe_scope, *this, show_fullpaths,
-                                show_module, show_inlined_frames,
-                                show_function_arguments, show_function_name,
-                                pattern_info);
+                                 show_module, show_inlined_frames,
+                                 show_function_arguments, show_function_name,
+                                 pattern_info);
             } else {
               // We found a symbol but it was in a different section so it
               // isn't the symbol we should be showing, just show the section
               // name + offset
               Dump(s, exe_scope, DumpStyleSectionNameOffset, DumpStyleInvalid,
-                  UINT32_MAX, false, pattern_info);
+                   UINT32_MAX, false, pattern_info);
             }
           }
         }
@@ -727,7 +727,7 @@ bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
               sc.symbol->GetAddressRef().GetSection() != GetSection())
             sc.symbol = nullptr;
         }
-        
+
         sc.GetDescription(s, eDescriptionLevelBrief, target, pattern_info);
 
         if (sc.block) {

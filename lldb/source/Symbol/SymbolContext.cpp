@@ -178,7 +178,8 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
         ansi_prefix = target_sp->GetDebugger().GetRegexMatchAnsiPrefix();
         ansi_suffix = target_sp->GetDebugger().GetRegexMatchAnsiSuffix();
       }
-      s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(), pattern_info);
+      s->PutCStringColorHighlighted(symbol->GetName().GetStringRef(),
+                                    pattern_info);
     }
 
     if (addr.IsValid() && symbol->ValueIsAddress()) {
