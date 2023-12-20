@@ -407,7 +407,8 @@ bool Address::GetDescription(Stream &s, Target &target,
 
 bool Address::Dump(Stream *s, ExecutionContextScope *exe_scope, DumpStyle style,
                    DumpStyle fallback_style, uint32_t addr_size,
-                   bool all_ranges, std::optional<Information> pattern_info) const {
+                   bool all_ranges,
+                   std::optional<Information> pattern_info) const {
   // If the section was nullptr, only load address is going to work unless we
   // are trying to deref a pointer
   SectionSP section_sp(GetSection());

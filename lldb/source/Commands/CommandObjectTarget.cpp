@@ -53,9 +53,9 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/State.h"
+#include "lldb/Utility/Stream.h"
 #include "lldb/Utility/StructuredData.h"
 #include "lldb/Utility/Timer.h"
-#include "lldb/Utility/Stream.h"
 #include "lldb/lldb-enumerations.h"
 #include "lldb/lldb-private-enumerations.h"
 
@@ -1532,9 +1532,10 @@ static void DumpOsoFilesTable(Stream &strm,
   });
 }
 
-static void DumpAddress(ExecutionContextScope *exe_scope,
-                        const Address &so_addr, bool verbose, bool all_ranges,
-                        Stream &strm, std::optional<Information> pattern_info = std::nullopt) {
+static void
+DumpAddress(ExecutionContextScope *exe_scope, const Address &so_addr,
+            bool verbose, bool all_ranges, Stream &strm,
+            std::optional<Information> pattern_info = std::nullopt) {
   strm.IndentMore();
   strm.Indent("    Address: ");
   so_addr.Dump(&strm, exe_scope, Address::DumpStyleModuleWithFileAddress);
@@ -1612,9 +1613,9 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
 
   if (num_matches > 0) {
     llvm::StringRef ansi_prefix =
-          interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
-      llvm::StringRef ansi_suffix =
-          interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
+        interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
+    llvm::StringRef ansi_suffix =
+        interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
     Information info(name, ansi_prefix, ansi_suffix);
     strm.Indent();
     strm.Printf("%u symbols match %s'%s' in ", num_matches,
@@ -1629,7 +1630,8 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
           DumpAddress(
               interpreter.GetExecutionContext().GetBestExecutionContextScope(),
               symbol->GetAddressRef(), verbose, all_ranges, strm,
-              use_color && name_is_regex ? std::optional<Information>{info} : std::nullopt);
+              use_color && name_is_regex ? std::optional<Information>{info}
+                                         : std::nullopt);
           strm.EOL();
         } else {
           strm.IndentMore();
@@ -1653,11 +1655,11 @@ static uint32_t LookupSymbolInModule(CommandInterpreter &interpreter,
   return num_matches;
 }
 
-static void DumpSymbolContextList(ExecutionContextScope *exe_scope,
-                                  Stream &strm,
-                                  const SymbolContextList &sc_list,
-                                  bool verbose, bool all_ranges, 
-                                  std::optional<Information> pattern_info = std::nullopt) {
+static void
+DumpSymbolContextList(ExecutionContextScope *exe_scope, Stream &strm,
+                      const SymbolContextList &sc_list, bool verbose,
+                      bool all_ranges,
+                      std::optional<Information> pattern_info = std::nullopt) {
   strm.IndentMore();
   bool first_module = true;
   for (const SymbolContext &sc : sc_list) {
@@ -1693,9 +1695,9 @@ static size_t LookupFunctionInModule(CommandInterpreter &interpreter,
     num_matches = sc_list.GetSize();
     if (num_matches) {
       llvm::StringRef ansi_prefix =
-            interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
-        llvm::StringRef ansi_suffix =
-            interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
+          interpreter.GetDebugger().GetRegexMatchAnsiPrefix();
+      llvm::StringRef ansi_suffix =
+          interpreter.GetDebugger().GetRegexMatchAnsiSuffix();
       Information info(name, ansi_prefix, ansi_suffix);
       strm.Indent();
       strm.Printf("%" PRIu64 " match%s found in ", (uint64_t)num_matches,
@@ -1705,7 +1707,8 @@ static size_t LookupFunctionInModule(CommandInterpreter &interpreter,
       DumpSymbolContextList(
           interpreter.GetExecutionContext().GetBestExecutionContextScope(),
           strm, sc_list, verbose, all_ranges,
-          use_color && name_is_regex ? std::optional<Information>{info} : std::nullopt);
+          use_color && name_is_regex ? std::optional<Information>{info}
+                                     : std::nullopt);
     }
     return num_matches;
   }

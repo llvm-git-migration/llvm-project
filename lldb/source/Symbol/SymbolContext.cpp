@@ -24,8 +24,8 @@
 #include "lldb/Target/Target.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
-#include "lldb/Utility/StreamString.h"
 #include "lldb/Utility/Stream.h"
+#include "lldb/Utility/StreamString.h"
 #include "lldb/lldb-enumerations.h"
 
 using namespace lldb;
@@ -69,12 +69,11 @@ void SymbolContext::Clear(bool clear_target) {
   variable = nullptr;
 }
 
-bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
-                                    const Address &addr, bool show_fullpaths,
-                                    bool show_module, bool show_inlined_frames,
-                                    bool show_function_arguments,
-                                    bool show_function_name,
-                                    std::optional<Information> pattern_info) const {
+bool SymbolContext::DumpStopContext(
+    Stream *s, ExecutionContextScope *exe_scope, const Address &addr,
+    bool show_fullpaths, bool show_module, bool show_inlined_frames,
+    bool show_function_arguments, bool show_function_name,
+    std::optional<Information> pattern_info) const {
   bool dumped_something = false;
   if (show_module && module_sp) {
     if (show_fullpaths)
@@ -201,9 +200,9 @@ bool SymbolContext::DumpStopContext(Stream *s, ExecutionContextScope *exe_scope,
   return dumped_something;
 }
 
-void SymbolContext::GetDescription(Stream *s, lldb::DescriptionLevel level,
-                                   Target *target,
-                                   std::optional<Information> pattern_info) const {
+void SymbolContext::GetDescription(
+    Stream *s, lldb::DescriptionLevel level, Target *target,
+    std::optional<Information> pattern_info) const {
   if (module_sp) {
     s->Indent("     Module: file = \"");
     module_sp->GetFileSpec().Dump(s->AsRawOstream());

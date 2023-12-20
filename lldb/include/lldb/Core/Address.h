@@ -9,11 +9,11 @@
 #ifndef LLDB_CORE_ADDRESS_H
 #define LLDB_CORE_ADDRESS_H
 
+#include "lldb/Utility/Stream.h"
 #include "lldb/lldb-defines.h"
 #include "lldb/lldb-forward.h"
 #include "lldb/lldb-private-enumerations.h"
 #include "lldb/lldb-types.h"
-#include "lldb/Utility/Stream.h"
 
 #include "llvm/ADT/StringRef.h"
 
@@ -257,7 +257,6 @@ public:
             DumpStyle fallback_style = DumpStyleInvalid,
             uint32_t addr_byte_size = UINT32_MAX, bool all_ranges = false,
             std::optional<Information> pattern_info = std::nullopt) const;
-            
 
   AddressClass GetAddressClass() const;
 

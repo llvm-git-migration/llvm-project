@@ -72,8 +72,8 @@ size_t Stream::PutCString(llvm::StringRef str) {
   return bytes_written;
 }
 
-void Stream::PutCStringColorHighlighted(llvm::StringRef text,
-                                        std::optional<Information> pattern_info) {
+void Stream::PutCStringColorHighlighted(
+    llvm::StringRef text, std::optional<Information> pattern_info) {
   // Only apply color formatting when the pattern information is specified.
   // Otherwise, output the text without color formatting.
   if (!pattern_info.has_value()) {
@@ -85,7 +85,8 @@ void Stream::PutCStringColorHighlighted(llvm::StringRef text,
   llvm::SmallVector<llvm::StringRef, 1> matches;
   llvm::StringRef remaining = text;
   std::string format_str = lldb_private::ansi::FormatAnsiTerminalCodes(
-      pattern_info.value().prefix.str() + "%.*s" + pattern_info.value().suffix.str());
+      pattern_info.value().prefix.str() + "%.*s" +
+      pattern_info.value().suffix.str());
   while (reg_pattern.match(remaining, &matches)) {
     llvm::StringRef match = matches[0];
     size_t match_start_pos = match.data() - remaining.data();

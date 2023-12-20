@@ -227,7 +227,8 @@ bool Symbol::IsTrampoline() const { return m_type == eSymbolTypeTrampoline; }
 bool Symbol::IsIndirect() const { return m_type == eSymbolTypeResolver; }
 
 void Symbol::GetDescription(Stream *s, lldb::DescriptionLevel level,
-                            Target *target, std::optional<Information> pattern_info) const {
+                            Target *target,
+                            std::optional<Information> pattern_info) const {
   s->Printf("id = {0x%8.8x}", m_uid);
 
   if (m_addr_range.GetBaseAddress().GetSection()) {

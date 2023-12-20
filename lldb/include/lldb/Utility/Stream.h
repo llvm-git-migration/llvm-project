@@ -24,13 +24,13 @@
 namespace lldb_private {
 
 struct Information {
-    llvm::StringRef pattern;
-    llvm::StringRef prefix;
-    llvm::StringRef suffix;
-    
-    // Constructor
-    Information(llvm::StringRef p, llvm::StringRef pre, llvm::StringRef suf)
-        : pattern(p), prefix(pre), suffix(suf) {}
+  llvm::StringRef pattern;
+  llvm::StringRef prefix;
+  llvm::StringRef suffix;
+
+  // Constructor
+  Information(llvm::StringRef p, llvm::StringRef pre, llvm::StringRef suf)
+      : pattern(p), prefix(pre), suffix(suf) {}
 };
 
 /// \class Stream Stream.h "lldb/Utility/Stream.h"
@@ -270,8 +270,9 @@ public:
   ///     The ANSI color code to end colorization. This is
   ///     environment-dependent.
 
-  void PutCStringColorHighlighted(llvm::StringRef text,
-                                  std::optional<Information> pattern_info = std::nullopt);
+  void PutCStringColorHighlighted(
+      llvm::StringRef text,
+      std::optional<Information> pattern_info = std::nullopt);
 
   /// Output and End of Line character to the stream.
   size_t EOL();
