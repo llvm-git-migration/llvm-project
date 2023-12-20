@@ -3443,11 +3443,28 @@ void CodeGenFunction::EmitCfiSlowPathCheck(
 void CodeGenFunction::EmitCfiCheckStub() {
   llvm::Module *M = &CGM.getModule();
   auto &Ctx = M->getContext();
+  auto &C = getContext();
+  QualType QInt64Ty = C.getIntTypeForBitwidth(64, false);
+
+  FunctionArgList FnArgs;
+  ImplicitParamDecl ArgCallsiteTypeId(C, QInt64Ty, ImplicitParamKind::Other);
+  ImplicitParamDecl ArgAddr(C, C.VoidPtrTy, ImplicitParamKind::Other);
+  ImplicitParamDecl ArgCFICheckFailData(C, C.VoidPtrTy,
+                                        ImplicitParamKind::Other);
+  FnArgs.push_back(&ArgCallsiteTypeId);
+  FnArgs.push_back(&ArgAddr);
+  FnArgs.push_back(&ArgCFICheckFailData);
+  const CGFunctionInfo &FI =
+      CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, FnArgs);
+
   llvm::Function *F = llvm::Function::Create(
-      llvm::FunctionType::get(VoidTy, {Int64Ty, Int8PtrTy, Int8PtrTy}, false),
+      llvm::FunctionType::get(VoidTy, {Int64Ty, VoidPtrTy, VoidPtrTy}, false),
       llvm::GlobalValue::WeakAnyLinkage, "__cfi_check", M);
+  CGM.SetLLVMFunctionAttributes(GlobalDecl(), FI, F, /*IsThunk=*/false);
+  CGM.SetLLVMFunctionAttributesForDefinition(nullptr, F);
   F->setAlignment(llvm::Align(4096));
   CGM.setDSOLocal(F);
+
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(Ctx, "entry", F);
   // CrossDSOCFI pass is not executed if there is no executable code.
   SmallVector<llvm::Value*> Args{F->getArg(2), F->getArg(1)};
