@@ -74,9 +74,8 @@ size_t Stream::PutCString(llvm::StringRef str) {
 
 void Stream::PutCStringColorHighlighted(llvm::StringRef text,
                                         std::optional<Information> pattern_info) {
-  // Only apply color formatting when a pattern is present and both prefix and
-  // suffix are specified. In the absence of these conditions, output the text
-  // without color formatting.
+  // Only apply color formatting when the pattern information is specified.
+  // Otherwise, output the text without color formatting.
   if (!pattern_info.has_value()) {
     PutCString(text);
     return;
