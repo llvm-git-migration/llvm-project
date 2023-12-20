@@ -2869,6 +2869,23 @@ Sema::ActOnIdExpression(Scope *S, CXXScopeSpec &SS,
   // This is guaranteed from this point on.
   assert(!R.empty() || ADL);
 
+  // BoundsSafety: This specially handles arguments of bounds attributes
+  // appertains to a type of C struct field such that the name lookup
+  // within a struct finds the member name, which is not the case for other
+  // contexts in C.
+  ExpressionEvaluationContextRecord &LastRecord = ExprEvalContexts.back();
+  using ExpressionKind = ExpressionEvaluationContextRecord::ExpressionKind;
+  if (LastRecord.ExprContext == ExpressionKind::EK_BoundsAttrArgument &&
+      !getLangOpts().CPlusPlus && S->isClassScope()) {
+    // See if this is reference to a field of struct.
+    if (auto *VD = dyn_cast<ValueDecl>(R.getFoundDecl())) {
+      QualType type = VD->getType().getNonReferenceType();
+      // This will eventually be translated into MemberExpr upon
+      // the use of instantiated struct fields.
+      return BuildDeclRefExpr(VD, type, VK_PRValue, NameLoc);
+    }
+  }
+
   // Check whether this might be a C++ implicit instance member access.
   // C++ [class.mfct.non-static]p3:
   //   When an id-expression that is not part of a class member access
@@ -2893,7 +2910,7 @@ Sema::ActOnIdExpression(Scope *S, CXXScopeSpec &SS,
   // to get this right here so that we don't end up making a
   // spuriously dependent expression if we're inside a dependent
   // instance method.
-  if (!R.empty() && (*R.begin())->isCXXClassMember()) {
+  if (getLangOpts().CPlusPlus && !R.empty() && (*R.begin())->isCXXClassMember()) {
     bool MightBeImplicitMember;
     if (!IsAddressOfOperand)
       MightBeImplicitMember = true;
@@ -3549,7 +3566,8 @@ ExprResult Sema::BuildDeclarationNameExpr(
   case Decl::Field:
   case Decl::IndirectField:
   case Decl::ObjCIvar:
-    assert(getLangOpts().CPlusPlus && "building reference to field in C?");
+    assert((getLangOpts().CPlusPlus || isBoundsAttrArgument())
+           && "building reference to field in C?");
 
     // These can't have reference type in well-formed programs, but
     // for internal consistency we do this anyway.
