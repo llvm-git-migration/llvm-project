@@ -1,0 +1,62 @@
+# RUN: llc -mtriple=riscv64 -mcpu=sifive-x280 -run-pass=postmisched -enable-post-misched -debug-only=machine-scheduler -misched-dump-schedule-trace -misched-postra-direction=topdown -o - %s 2>&1 | FileCheck --check-prefix=TOPDOWN %s
+# RUN: llc -mtriple=riscv64 -mcpu=sifive-x280 -run-pass=postmisched -enable-post-misched -debug-only=machine-scheduler -misched-dump-schedule-trace -misched-postra-direction=bottomup -o - %s 2>&1 | FileCheck --check-prefix=BOTTOMUP %s
+
+# REQUIRES: asserts
+
+---
+name:            add_m2
+tracksRegLiveness: true
+body:             |
+  bb.0.entry:
+    liveins: $x10, $v8m2, $v10m2, $v12m2, $v14m2
+
+    dead $x0 = PseudoVSETVLI killed renamable $x10, 153 /* e64, m2, tu, ma */, implicit-def $vl, implicit-def $vtype
+    renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2, killed renamable $v8m2, killed renamable $v10m2, $noreg, 6 /* e64 */, 0 /* tu, mu */, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+    renamable $v10m2 = PseudoVADD_VV_M2 undef renamable $v10m2, killed renamable $v14m2, killed renamable $v12m2, $noreg, 6 /* e64 */, 0 /* tu, mu */, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+    renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2, killed renamable $v8m2, killed renamable $v10m2, $noreg, 6 /* e64 */, 0 /* tu, mu */, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+    PseudoRET implicit killed $v8m2
+...
+
+# TOPDOWN: *** Final schedule for %bb.0 ***
+# TOPDOWN-NEXT:  * Schedule table (TopDown):
+# TOPDOWN-NEXT:   i: issue
+# TOPDOWN-NEXT:   x: resource booked
+# TOPDOWN-NEXT: Cycle              | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11 | 12 |
+# TOPDOWN-NEXT: SU(0)              | i  |    |    |    |    |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:       SiFive7PipeA | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:      SiFive7PipeAB | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT: SU(1)              | i  |    |    |    |    |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:         SiFive7VCQ | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:          SiFive7VA |    | x  | x  | x  | x  |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT: SU(2)              |    |    |    |    | i  |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:         SiFive7VCQ |    |    |    |    | x  |    |    |    |    |    |    |    |    |
+# TOPDOWN-NEXT:          SiFive7VA |    |    |    |    |    | x  | x  | x  | x  |    |    |    |    |
+# TOPDOWN-NEXT: SU(3)              |    |    |    |    |    |    |    |    | i  |    |    |    |    |
+# TOPDOWN-NEXT:         SiFive7VCQ |    |    |    |    |    |    |    |    | x  |    |    |    |    |
+# TOPDOWN-NEXT:          SiFive7VA |    |    |    |    |    |    |    |    |    | x  | x  | x  | x  |
+# TOPDOWN-NEXT: SU(0):   dead $x0 = PseudoVSETVLI renamable $x10, 153, implicit-def $vl, implicit-def $vtype
+# TOPDOWN-NEXT: SU(1):   renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2(tied-def 0), renamable $v8m2, renamable $v10m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+# TOPDOWN-NEXT: SU(2):   renamable $v10m2 = PseudoVADD_VV_M2 undef renamable $v10m2(tied-def 0), renamable $v14m2, renamable $v12m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+# TOPDOWN-NEXT: SU(3):   renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2(tied-def 0), renamable $v8m2, renamable $v10m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+
+# BOTTOMUP: *** Final schedule for %bb.0 ***
+# BOTTOMUP-NEXT:  * Schedule table (BottomUp):
+# BOTTOMUP-NEXT:   i: issue
+# BOTTOMUP-NEXT:   x: resource booked
+# BOTTOMUP-NEXT: Cycle              | 12 | 11 | 10 | 9  | 8  | 7  | 6  | 5  | 4  | 3  | 2  | 1  | 0  |
+# BOTTOMUP-NEXT: SU(0)              | i  |    |    |    |    |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:       SiFive7PipeA | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:      SiFive7PipeAB | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT: SU(1)              | i  |    |    |    |    |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:         SiFive7VCQ | x  |    |    |    |    |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:          SiFive7VA |    | x  | x  | x  | x  |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT: SU(2)              |    |    |    |    | i  |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:         SiFive7VCQ |    |    |    |    | x  |    |    |    |    |    |    |    |    |
+# BOTTOMUP-NEXT:          SiFive7VA |    |    |    |    |    | x  | x  | x  | x  |    |    |    |    |
+# BOTTOMUP-NEXT: SU(3)              |    |    |    |    |    |    |    |    | i  |    |    |    |    |
+# BOTTOMUP-NEXT:         SiFive7VCQ |    |    |    |    |    |    |    |    | x  |    |    |    |    |
+# BOTTOMUP-NEXT:          SiFive7VA |    |    |    |    |    |    |    |    |    | x  | x  | x  | x  |
+# BOTTOMUP-NEXT: SU(0):   dead $x0 = PseudoVSETVLI renamable $x10, 153, implicit-def $vl, implicit-def $vtype
+# BOTTOMUP-NEXT: SU(1):   renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2(tied-def 0), renamable $v8m2, renamable $v10m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+# BOTTOMUP-NEXT: SU(2):   renamable $v10m2 = PseudoVADD_VV_M2 undef renamable $v10m2(tied-def 0), renamable $v14m2, renamable $v12m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
+# BOTTOMUP-NEXT: SU(3):   renamable $v8m2 = PseudoVADD_VV_M2 undef renamable $v8m2(tied-def 0), renamable $v8m2, renamable $v10m2, $noreg, 6, 0, implicit $vl, implicit $vtype, implicit $vl, implicit $vtype
