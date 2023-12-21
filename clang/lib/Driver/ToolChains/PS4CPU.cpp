@@ -359,12 +359,12 @@ void toolchains::PS4PS5Base::addClangTargetOptions(
 
   CC1Args.push_back("-fno-use-init-array");
 
-  // Default to -fno-visibility-global-new-delete for PS5.
+  // Default to -fno-forced-global-new-delete-visibility for PS5.
   if (getTriple().isPS5() &&
-      !DriverArgs.hasArg(options::OPT_fvisibility_global_new_delete,
-                         options::OPT_fno_visibility_global_new_delete,
+      !DriverArgs.hasArg(options::OPT_fforced_global_new_delete_visibility,
+                         options::OPT_fno_forced_global_new_delete_visibility,
                          options::OPT_fvisibility_global_new_delete_hidden))
-    CC1Args.push_back("-fno-visibility-global-new-delete");
+    CC1Args.push_back("-fno-forced-global-new-delete-visibility");
   const Arg *A =
       DriverArgs.getLastArg(options::OPT_fvisibility_from_dllstorageclass,
                             options::OPT_fno_visibility_from_dllstorageclass);

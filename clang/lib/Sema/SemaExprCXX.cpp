@@ -3222,7 +3222,7 @@ void Sema::DeclareGlobalAllocationFunction(DeclarationName Name,
       Alloc->setLocalOwningModule(TheGlobalModuleFragment);
     }
 
-    if (LangOpts.GlobalAllocationFunctionVisibility)
+    if (LangOpts.GlobalAllocationFunctionVisibilityAttr)
       Alloc->addAttr(VisibilityAttr::CreateImplicit(
           Context, LangOpts.GlobalAllocationFunctionVisibilityHidden
                        ? VisibilityAttr::Hidden

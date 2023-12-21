@@ -6204,14 +6204,15 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_inlines_hidden_static_local_var,
                            options::OPT_fno_visibility_inlines_hidden_static_local_var);
-  Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete,
-                  options::OPT_fno_visibility_global_new_delete);
+  Args.AddLastArg(CmdArgs, options::OPT_fforced_global_new_delete_visibility,
+                  options::OPT_fno_forced_global_new_delete_visibility);
   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete_hidden);
   // Error for incompatible global new and delete directives.
-  const Arg *N = Args.getLastArg(options::OPT_fvisibility_global_new_delete,
-                                 options::OPT_fno_visibility_global_new_delete);
-  if (N &&
-      N->getOption().matches(options::OPT_fno_visibility_global_new_delete)) {
+  const Arg *N =
+      Args.getLastArg(options::OPT_fforced_global_new_delete_visibility,
+                      options::OPT_fno_forced_global_new_delete_visibility);
+  if (N && N->getOption().matches(
+               options::OPT_fno_forced_global_new_delete_visibility)) {
     if (Arg *H =
             Args.getLastArg(options::OPT_fvisibility_global_new_delete_hidden))
       D.Diag(diag::err_drv_incompatible_options)
