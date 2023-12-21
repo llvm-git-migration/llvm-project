@@ -368,7 +368,7 @@ void __kmpc_fork_call_if(ident_t *loc, kmp_int32 argc, kmpc_micro microtask,
       __kmp_invoke_microtask(VOLATILE_CAST(microtask_t) microtask, gtid,
                              /*npr=*/0,
                              /*argc=*/0,
-                             /*args=*/nullptr
+                             /*args=*/&args
 #if OMPT_SUPPORT
                              ,
                              &exit_frame_ptr
