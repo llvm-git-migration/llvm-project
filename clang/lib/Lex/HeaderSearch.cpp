@@ -1458,7 +1458,7 @@ bool HeaderSearch::ShouldEnterIncludeFile(Preprocessor &PP,
   } else {
     // Otherwise, if this is a #include of a file that was previously #import'd
     // or if this is the second #include of a #pragma once file, ignore it.
-    if ((FileInfo.isPragmaOnce || FileInfo.isImport) && !TryEnterImported())
+    if (FileInfo.isPragmaOnce || FileInfo.isImport)
       return false;
   }
 
