@@ -653,6 +653,31 @@ multiclass MIMG_NoSampler <mimgopc op, string asm, bit has_d16, bit mip = 0,
   }
 }
 
+multiclass MIMG_NoSampler_Pseudo <mimgopc op, string asm, bit has_d16, bit mip = 0,
+                           bit isResInfo = 0,
+                           bit msaa = 0> {
+  def "" : MIMGBaseOpcode {
+    let Coordinates = !not(isResInfo);
+    let LodOrClampOrMip = mip;
+    let HasD16 = has_d16;
+    let MSAA = msaa;
+  }
+
+  let BaseOpcode = !cast<MIMGBaseOpcode>(NAME),
+      mayLoad = !not(isResInfo), isCodeGenOnly = 1 in {
+    let VDataDwords = 1 in
+    defm _V1 : MIMG_NoSampler_Src_Helper <op, asm, VGPR_32, 1, msaa>;
+    let VDataDwords = 2 in
+    defm _V2 : MIMG_NoSampler_Src_Helper <op, asm, VReg_64, 0, msaa>;
+    let VDataDwords = 3 in
+    defm _V3 : MIMG_NoSampler_Src_Helper <op, asm, VReg_96, 0, msaa>;
+    let VDataDwords = 4 in
+    defm _V4 : MIMG_NoSampler_Src_Helper <op, asm, VReg_128, 0, msaa>;
+    let VDataDwords = 5 in
+    defm _V5 : MIMG_NoSampler_Src_Helper <op, asm, VReg_160, 0, msaa>;
+  }
+}
+
 class MIMG_Store_Helper <mimgopc op, string asm,
                          RegisterClass data_rc,
                          RegisterClass addr_rc,
@@ -1554,7 +1579,11 @@ defm IMAGE_ATOMIC_FCMPSWAP      : MIMG_Atomic <mimgopc<MIMG.NOP, MIMG.NOP, 0x1d,
 defm IMAGE_ATOMIC_FMIN          : MIMG_Atomic <mimgopc<MIMG.NOP, MIMG.NOP, 0x1e, MIMG.NOP>, "image_atomic_fmin", 0, 1>;
 defm IMAGE_ATOMIC_FMAX          : MIMG_Atomic <mimgopc<MIMG.NOP, MIMG.NOP, 0x1f, MIMG.NOP>, "image_atomic_fmax", 0, 1>;
 
+
+defm IMAGE_ATOMIC_LOAD          : MIMG_NoSampler_Pseudo <mimgopc<0x00, 0x00, 0x00>, "image_load", 1>;
+
 defm IMAGE_SAMPLE               : MIMG_Sampler_WQM <mimgopc<0x1b, 0x1b, 0x20>, AMDGPUSample>;
+
 let OtherPredicates = [HasExtendedImageInsts] in {
 defm IMAGE_SAMPLE_CL            : MIMG_Sampler_WQM <mimgopc<0x40, 0x40, 0x21>, AMDGPUSample_cl>;
 defm IMAGE_SAMPLE_D             : MIMG_Sampler <mimgopc<0x1c, 0x1c, 0x22>, AMDGPUSample_d>;
@@ -1698,6 +1727,7 @@ class ImageDimIntrinsicInfo<AMDGPUImageDimIntrinsic I> {
   bits<8> UnormIndex = DimEval.UnormArgIndex;
   bits<8> TexFailCtrlIndex = DimEval.TexFailCtrlArgIndex;
   bits<8> CachePolicyIndex = DimEval.CachePolicyArgIndex;
+  // bits<8> AtomicOrderingIndex = DimEval.AtomicOrderingIndex;
 
   bits<8> BiasTyArg = !add(I.P.NumRetAndDataAnyTypes,
     !if(!eq(NumOffsetArgs, 0), 0, I.P.ExtraAddrArgs[0].Type.isAny));

@@ -1154,6 +1154,8 @@ public:
     MaybeAlign align = Align(1);   // alignment
 
     MachineMemOperand::Flags flags = MachineMemOperand::MONone;
+
+    AtomicOrdering ordering = AtomicOrdering::NotAtomic;
     IntrinsicInfo() = default;
   };
 
