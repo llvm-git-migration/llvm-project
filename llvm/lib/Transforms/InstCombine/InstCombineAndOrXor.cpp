@@ -3910,6 +3910,10 @@ Instruction *InstCombinerImpl::visitOr(BinaryOperator &I) {
 
   if (Instruction *Res = foldBitwiseLogicWithIntrinsics(I, Builder))
     return Res;
+  
+  if (cast<PossiblyDisjointInst>(I).isDisjoint())
+    if (Value *V = SimplifyAddWithRemainder(I))
+      return replaceInstUsesWith(I, V);
 
   return nullptr;
 }
