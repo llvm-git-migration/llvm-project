@@ -503,6 +503,12 @@ TEST_F(TokenAnnotatorTest, UnderstandsVariables) {
       annotate("inline bool var = is_integral_v<int> && is_signed_v<int>;");
   EXPECT_EQ(Tokens.size(), 15u) << Tokens;
   EXPECT_TOKEN(Tokens[8], tok::ampamp, TT_BinaryOperator);
+
+  Tokens = annotate("struct Foo f{};");
+  EXPECT_EQ(Tokens.size(), 7u) << Tokens;
+  EXPECT_TOKEN(Tokens[1], tok::identifier, TT_Unknown);
+  EXPECT_TOKEN(Tokens[2], tok::identifier, TT_StartOfName);
+  EXPECT_TOKEN(Tokens[3], tok::l_brace, TT_Unknown);
 }
 
 TEST_F(TokenAnnotatorTest, UnderstandsVariableTemplates) {

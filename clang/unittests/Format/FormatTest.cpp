@@ -14548,6 +14548,7 @@ TEST_F(FormatTest, UnderstandContextOfRecordTypeKeywords) {
   verifyFormat("struct foo f() {}\nint n;");
   verifyFormat("class foo f() {}\nint n;");
   verifyFormat("union foo f() {}\nint n;");
+  verifyFormat("struct MACRO foo f{};");
 
   // Templates.
   verifyFormat("template <class X> void f() {}\nint n;");

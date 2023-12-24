@@ -3873,6 +3873,7 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
   const FormatToken &InitialToken = *FormatTok;
   nextToken();
 
+  int NonMacroIdentifierCount = 0;
   // The actual identifier can be a nested name specifier, and in macros
   // it is often token-pasted.
   // An [[attribute]] can be before the identifier.
@@ -3898,6 +3899,8 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
         FormatTok->is(tok::identifier) &&
         FormatTok->TokenText != FormatTok->TokenText.upper();
     nextToken();
+    if (IsNonMacroIdentifier)
+      ++NonMacroIdentifierCount;
     // We can have macros in between 'class' and the class name.
     if (!IsNonMacroIdentifier && FormatTok->is(tok::l_paren))
       parseParens();
@@ -3960,6 +3963,11 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
     }
   };
   if (FormatTok->is(tok::l_brace)) {
+    // Handles C-Style variable declaration of a struct
+    if (Style.isCpp() && NonMacroIdentifierCount == 2) {
+      parseBracedList();
+      return;
+    }
     auto [OpenBraceType, ClosingBraceType] = GetBraceTypes(InitialToken);
     FormatTok->setFinalizedType(OpenBraceType);
     if (ParseAsExpr) {
