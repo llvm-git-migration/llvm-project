@@ -39,6 +39,10 @@ struct RISCVSupportedExtension {
     return StringRef(Name) < StringRef(RHS.Name);
   }
 };
+struct RISCVProfile {
+  const char *Name;
+  const char *MArch;
+};
 
 } // end anonymous namespace
 
@@ -204,6 +208,17 @@ static const RISCVSupportedExtension SupportedExperimentalExtensions[] = {
 
     {"zvfbfmin", RISCVExtensionVersion{0, 8}},
     {"zvfbfwma", RISCVExtensionVersion{0, 8}},
+};
+
+static const RISCVProfile SupportedProfiles[] = {
+    {"rvi20u32", "rv32i"},
+    {"rvi20u64", "rv64i"},
+    {"rva20u64", "rv64imafdc_zicsr"},
+    {"rva20s64", "rv64imafdc_zicsr_zifencei"},
+    {"rva22u64", "rv64imafdc_zicsr_zihintpause_zba_zbb_zbs_zicbom_zicbop_"
+                 "zicboz_zfhmin_zkt"},
+    {"rva22s64", "rv64imafdc_zicsr_zifencei_zihintpause_zba_zbb_zbs_zicbom_"
+                 "zicbop_zicboz_zfhmin_zkt_svpbmt_svinval"},
 };
 
 static void verifyTables() {
@@ -494,6 +509,10 @@ void RISCVISAInfo::toFeatures(
       Features.push_back(StrAlloc(Twine("-experimental-") + Ext.Name));
     }
   }
+
+  // Add profile feature.
+  if (!Profile.empty())
+    Features.push_back(StrAlloc(Twine("+") + Profile));
 }
 
 // Extensions may have a version number, and may be separated by
@@ -710,6 +729,36 @@ RISCVISAInfo::parseArchString(StringRef Arch, bool EnableExperimentalExtension,
                              "string must be lowercase");
   }
 
+  bool IsProfile = Arch.starts_with("rvi") || Arch.starts_with("rva") ||
+                   Arch.starts_with("rvb") || Arch.starts_with("rvm");
+  std::string NewArch;
+  std::string ProfileName;
+  if (IsProfile) {
+    const RISCVProfile *FoundProfile = nullptr;
+    for (const RISCVProfile &Profile : SupportedProfiles) {
+      if (Arch.starts_with(Profile.Name)) {
+        FoundProfile = &Profile;
+        break;
+      }
+    }
+
+    if (!FoundProfile)
+      return createStringError(errc::invalid_argument, "unsupported profile");
+
+    ProfileName = FoundProfile->Name;
+    NewArch = FoundProfile->MArch;
+
+    StringRef ArchWithoutProfile = Arch.substr(ProfileName.size());
+    if (!ArchWithoutProfile.empty()) {
+      if (!ArchWithoutProfile.starts_with("_"))
+        return createStringError(
+            errc::invalid_argument,
+            "additional extensions must be after separator '_'");
+      NewArch = NewArch + ArchWithoutProfile.str();
+    }
+    Arch = NewArch;
+  }
+
   bool HasRV64 = Arch.starts_with("rv64");
   // ISA string must begin with rv32 or rv64.
   if (!(Arch.starts_with("rv32") || HasRV64) || (Arch.size() < 5)) {
@@ -720,6 +769,8 @@ RISCVISAInfo::parseArchString(StringRef Arch, bool EnableExperimentalExtension,
 
   unsigned XLen = HasRV64 ? 64 : 32;
   std::unique_ptr<RISCVISAInfo> ISAInfo(new RISCVISAInfo(XLen));
+  if (!ProfileName.empty())
+    ISAInfo->Profile = ProfileName;
 
   // The canonical order specified in ISA manual.
   // Ref: Table 22.1 in RISC-V User-Level ISA V2.2

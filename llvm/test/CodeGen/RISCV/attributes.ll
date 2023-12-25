@@ -189,6 +189,14 @@
 ; RUN: llc -mtriple=riscv64 -mattr=+experimental-zacas %s -o - | FileCheck --check-prefix=RV64ZACAS %s
 ; RUN: llc -mtriple=riscv64 -mattr=+experimental-zicfilp %s -o - | FileCheck --check-prefix=RV64ZICFILP %s
 
+; Tests for profile features.
+; RUN: llc -mtriple=riscv32 -mattr=+rvi20u32 %s -o - | FileCheck --check-prefix=RVI20U32 %s
+; RUN: llc -mtriple=riscv64 -mattr=+rvi20u64 %s -o - | FileCheck --check-prefix=RVI20U64 %s
+; RUN: llc -mtriple=riscv64 -mattr=+rva20u64 %s -o - | FileCheck --check-prefix=RVA20U64 %s
+; RUN: llc -mtriple=riscv64 -mattr=+rva20s64 %s -o - | FileCheck --check-prefix=RVA20S64 %s
+; RUN: llc -mtriple=riscv64 -mattr=+rva22u64 %s -o - | FileCheck --check-prefix=RVA22U64 %s
+; RUN: llc -mtriple=riscv64 -mattr=+rva22s64 %s -o - | FileCheck --check-prefix=RVA22S64 %s
+
 ; CHECK: .attribute 4, 16
 
 ; RV32M: .attribute 5, "rv32i2p1_m2p0"
@@ -377,6 +385,13 @@
 ; RV64ZVFBFWMA: .attribute 5, "rv64i2p1_f2p2_zicsr2p0_zfbfmin0p8_zve32f1p0_zve32x1p0_zvfbfmin0p8_zvfbfwma0p8_zvl32b1p0"
 ; RV64ZACAS: .attribute 5, "rv64i2p1_a2p1_zacas1p0"
 ; RV64ZICFILP: .attribute 5, "rv64i2p1_zicfilp0p4"
+
+; RVI20U32: .attribute 5, "rv32i2p1"
+; RVI20U64: .attribute 5, "rv64i2p1"
+; RVA20U64: .attribute 5, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0"
+; RVA20S64: .attribute 5, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0"
+; RVA22U64: .attribute 5, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicbom1p0_zicbop1p0_zicboz1p0_zicsr2p0_zihintpause2p0_zfhmin1p0_zba1p0_zbb1p0_zbs1p0_zkt1p0"
+; RVA22S64: .attribute 5, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicbom1p0_zicbop1p0_zicboz1p0_zicsr2p0_zifencei2p0_zihintpause2p0_zfhmin1p0_zba1p0_zbb1p0_zbs1p0_zkt1p0_svinval1p0_svpbmt1p0"
 
 define i32 @addi(i32 %a) {
   %1 = add i32 %a, 1
