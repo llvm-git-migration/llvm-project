@@ -80,6 +80,7 @@ public:
   unsigned getMaxVLen() const { return 65536; }
   unsigned getMaxELen() const { return MaxELen; }
   unsigned getMaxELenFp() const { return MaxELenFp; }
+  std::string getProfile() const { return Profile; }
 
   bool hasExtension(StringRef Ext) const;
   std::string toString() const;
@@ -96,12 +97,13 @@ public:
 
 private:
   RISCVISAInfo(unsigned XLen)
-      : XLen(XLen), FLen(0), MinVLen(0), MaxELen(0), MaxELenFp(0) {}
+      : XLen(XLen), FLen(0), MinVLen(0), MaxELen(0), MaxELenFp(0), Profile() {}
 
   unsigned XLen;
   unsigned FLen;
   unsigned MinVLen;
   unsigned MaxELen, MaxELenFp;
+  std::string Profile;
 
   OrderedExtensionMap Exts;
 

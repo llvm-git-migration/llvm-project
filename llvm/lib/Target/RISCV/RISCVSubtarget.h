@@ -56,6 +56,16 @@ struct RISCVTuneInfo {
 #include "RISCVGenSearchableTables.inc"
 } // namespace RISCVTuneInfoTable
 
+enum RISCVProfileEnum : uint8_t {
+  Unspecified,
+  RVA20S64,
+  RVA20U64,
+  RVA22S64,
+  RVA22U64,
+  RVI20U32,
+  RVI20U64,
+};
+
 class RISCVSubtarget : public RISCVGenSubtargetInfo {
 public:
   // clang-format off
@@ -69,6 +79,8 @@ private:
   virtual void anchor();
 
   RISCVProcFamilyEnum RISCVProcFamily = Others;
+
+  RISCVProfileEnum RISCVProfile = Unspecified;
 
 #define GET_SUBTARGETINFO_MACRO(ATTRIBUTE, DEFAULT, GETTER) \
   bool ATTRIBUTE = DEFAULT;
@@ -137,6 +149,8 @@ public:
   /// and preferably modeled with SubtargetFeatures or properties in
   /// initializeProperties().
   RISCVProcFamilyEnum getProcFamily() const { return RISCVProcFamily; }
+
+  RISCVProfileEnum getRISCVProfile() const { return RISCVProfile; }
 
 #define GET_SUBTARGETINFO_MACRO(ATTRIBUTE, DEFAULT, GETTER) \
   bool GETTER() const { return ATTRIBUTE; }
