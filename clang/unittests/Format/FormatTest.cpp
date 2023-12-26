@@ -14543,12 +14543,13 @@ TEST_F(FormatTest, UnderstandContextOfRecordTypeKeywords) {
   verifyFormat("struct foo a = {bar};\nint n;");
   verifyFormat("class foo a = {bar};\nint n;");
   verifyFormat("union foo a = {bar};\nint n;");
+  verifyFormat("struct MACRO foo f{};");
+  verifyFormat("struct MACRO foo<int> f{};");
 
   // Elaborate types inside function definitions.
   verifyFormat("struct foo f() {}\nint n;");
   verifyFormat("class foo f() {}\nint n;");
   verifyFormat("union foo f() {}\nint n;");
-  verifyFormat("struct MACRO foo f{};");
 
   // Templates.
   verifyFormat("template <class X> void f() {}\nint n;");

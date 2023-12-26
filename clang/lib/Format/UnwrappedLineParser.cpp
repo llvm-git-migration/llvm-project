@@ -3917,6 +3917,8 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
   // (this would still leave us with an ambiguity between template function
   // and class declarations).
   if (FormatTok->isOneOf(tok::colon, tok::less)) {
+    int AngleNestingLevel = 0;
+    bool ColonFound = false;
     do {
       if (FormatTok->is(tok::l_brace)) {
         calculateBraceTypes(/*ExpectClassBody=*/true);
@@ -3943,6 +3945,17 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
         nextToken();
         parseCSharpGenericTypeConstraint();
         break;
+      }
+      // Do not count identifiers inside a template angle brackets
+      if(FormatTok->is(tok::colon))
+        ColonFound = true;
+      if (FormatTok->is(tok::less))
+        ++AngleNestingLevel;
+      else if (FormatTok->is(tok::greater))
+        --AngleNestingLevel;
+      if (AngleNestingLevel == 0 && !ColonFound && FormatTok->is(tok::identifier) &&
+          FormatTok->TokenText != FormatTok->TokenText.upper()) {
+        ++NonMacroIdentifierCount;
       }
       nextToken();
     } while (!eof());
