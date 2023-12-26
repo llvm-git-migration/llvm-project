@@ -3947,13 +3947,14 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
         break;
       }
       // Do not count identifiers inside a template angle brackets
-      if(FormatTok->is(tok::colon))
+      if (FormatTok->is(tok::colon))
         ColonFound = true;
-      if (FormatTok->is(tok::less))
+      else if (FormatTok->is(tok::less))
         ++AngleNestingLevel;
       else if (FormatTok->is(tok::greater))
         --AngleNestingLevel;
-      if (AngleNestingLevel == 0 && !ColonFound && FormatTok->is(tok::identifier) &&
+      if (AngleNestingLevel == 0 && !ColonFound &&
+          FormatTok->is(tok::identifier) &&
           FormatTok->TokenText != FormatTok->TokenText.upper()) {
         ++NonMacroIdentifierCount;
       }
