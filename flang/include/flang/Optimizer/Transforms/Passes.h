@@ -93,6 +93,8 @@ std::unique_ptr<mlir::Pass> createFunctionAttrPass();
 std::unique_ptr<mlir::Pass>
 createFunctionAttrPass(FunctionAttrTypes &functionAttr);
 
+std::unique_ptr<mlir::Pass> createDoConcurrentConversionPass();
+
 // declarative passes
 #define GEN_PASS_REGISTRATION
 #include "flang/Optimizer/Transforms/Passes.h.inc"
