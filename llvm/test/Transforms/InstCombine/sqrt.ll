@@ -90,10 +90,9 @@ define float @sqrt_call_fabs_f32(float %x) {
 
 define double @sqrt_exp(double %x) {
 ; CHECK-LABEL: @sqrt_exp(
-; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
-; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
-; CHECK-NEXT:    [[RES:%.*]] = call fast double @llvm.sqrt.f64(double [[E]])
-; CHECK-NEXT:    ret double [[RES]]
+; CHECK-NEXT:    [[MERGED_SQRT:%.*]] = fmul fast double [[X:%.*]], 5.000000e+00
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MERGED_SQRT]])
+; CHECK-NEXT:    ret double [[E]]
 ;
   %mul = fmul fast double %x, 10.0
   %e = call fast double @llvm.exp.f64(double %mul)
@@ -103,10 +102,9 @@ define double @sqrt_exp(double %x) {
 
 define double @sqrt_exp_2(double %x) {
 ; CHECK-LABEL: @sqrt_exp_2(
-; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
-; CHECK-NEXT:    [[E:%.*]] = call fast double @exp(double [[MUL]])
-; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
-; CHECK-NEXT:    ret double [[RES]]
+; CHECK-NEXT:    [[MERGED_SQRT:%.*]] = fmul fast double [[X:%.*]], 5.000000e+00
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp(double [[MERGED_SQRT]])
+; CHECK-NEXT:    ret double [[E]]
 ;
   %mul = fmul fast double %x, 10.0
   %e = call fast double @exp(double %mul)
@@ -116,10 +114,9 @@ define double @sqrt_exp_2(double %x) {
 
 define double @sqrt_exp2(double %x) {
 ; CHECK-LABEL: @sqrt_exp2(
-; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
-; CHECK-NEXT:    [[E:%.*]] = call fast double @exp2(double [[MUL]])
-; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
-; CHECK-NEXT:    ret double [[RES]]
+; CHECK-NEXT:    [[MERGED_SQRT:%.*]] = fmul fast double [[X:%.*]], 5.000000e+00
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp2(double [[MERGED_SQRT]])
+; CHECK-NEXT:    ret double [[E]]
 ;
   %mul = fmul fast double %x, 10.0
   %e = call fast double @exp2(double %mul)
@@ -129,10 +126,9 @@ define double @sqrt_exp2(double %x) {
 
 define double @sqrt_exp10(double %x) {
 ; CHECK-LABEL: @sqrt_exp10(
-; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
-; CHECK-NEXT:    [[E:%.*]] = call fast double @exp10(double [[MUL]])
-; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
-; CHECK-NEXT:    ret double [[RES]]
+; CHECK-NEXT:    [[MERGED_SQRT:%.*]] = fmul fast double [[X:%.*]], 5.000000e+00
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp10(double [[MERGED_SQRT]])
+; CHECK-NEXT:    ret double [[E]]
 ;
   %mul = fmul fast double %x, 10.0
   %e = call fast double @exp10(double %mul)
@@ -142,10 +138,9 @@ define double @sqrt_exp10(double %x) {
 
 define double @sqrt_exp_nofast_1(double %x) {
 ; CHECK-LABEL: @sqrt_exp_nofast_1(
-; CHECK-NEXT:    [[MUL:%.*]] = fmul double [[X:%.*]], 1.000000e+01
-; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
-; CHECK-NEXT:    [[RES:%.*]] = call fast double @llvm.sqrt.f64(double [[E]])
-; CHECK-NEXT:    ret double [[RES]]
+; CHECK-NEXT:    [[MERGED_SQRT:%.*]] = fmul fast double [[X:%.*]], 5.000000e+00
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MERGED_SQRT]])
+; CHECK-NEXT:    ret double [[E]]
 ;
   %mul = fmul double %x, 10.0
   %e = call fast double @llvm.exp.f64(double %mul)
@@ -153,6 +148,7 @@ define double @sqrt_exp_nofast_1(double %x) {
   ret double %res
 }
 
+; Negative test
 define double @sqrt_exp_nofast_2(double %x) {
 ; CHECK-LABEL: @sqrt_exp_nofast_2(
 ; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
@@ -166,6 +162,7 @@ define double @sqrt_exp_nofast_2(double %x) {
   ret double %res
 }
 
+; Negative test
 define double @sqrt_exp_nofast_3(double %x) {
 ; CHECK-LABEL: @sqrt_exp_nofast_3(
 ; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
@@ -179,6 +176,7 @@ define double @sqrt_exp_nofast_3(double %x) {
   ret double %res
 }
 
+; Negative test
 define double @sqrt_exp_noconst(double %x, double %y) {
 ; CHECK-LABEL: @sqrt_exp_noconst(
 ; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], [[Y:%.*]]
