@@ -360,7 +360,50 @@ public:
   }
 
 protected:
-  _LIBCPP_HIDE_FROM_ABI ios_base() { // purposefully does no initialization
+  _LIBCPP_HIDE_FROM_ABI ios_base() : __loc_(nullptr) {
+    // purposefully does no initialization
+    //
+    // Except for the locale, this is a sentinel to avoid destroying
+    // an uninitialized object.
+    //
+    // [ios.base.cons]/1
+    //
+    // ios_base();
+    // Effects: Each ios_base member has an indeterminate value after
+    // construction. The object's members shall be initialized by
+    // calling basic_ios::init before the object's first use or before
+    // it is destroyed, whichever comes first; otherwise the behavior
+    // is undefined.
+    //
+    // [basic.ios.cons]/2
+    //
+    // basic_ios();
+    // Effects: Leaves its member objects uninitialized.  The object
+    // shall be initialized by calling basic_ios::init before its
+    // first use or before it is destroyed, whichever comes first;
+    // otherwise the behavior is undefined.
+    //
+    // ostream and friends have a basic_ios virtual base.
+    // [class.base.init]/13
+    // In a non-delegating constructor, initialization proceeds in the
+    // following order:
+    // - First, and only for the constructor of the most derived class
+    //   ([intro.object]), virtual base classes are initialized ...
+    //
+    // So in this example
+    // struct Foo : AlwaysThrows, std::ostream {
+    //    Foo() : AlwaysThrows{}, std::ostream{nullptr} {}
+    // };
+    //
+    // Here
+    // - the ios_base object is constructed
+    // - the AlwaysThrows object is constructed and throws an exception
+    // - the AlwaysThrows object is destrodyed
+    // - the ios_base object is destroyed
+    //
+    // The ios_base object is destroyed before it has been initialized
+    // and runs into undefined behavior. By using __loc_ as a sentinel
+    // we can avoid accessing uninitialized memory in the destructor.
   }
 
   void init(void* __sb);
@@ -572,7 +615,9 @@ public:
   _LIBCPP_HIDE_FROM_ABI char_type widen(char __c) const;
 
 protected:
-  _LIBCPP_HIDE_FROM_ABI basic_ios() { // purposefully does no initialization
+  _LIBCPP_HIDE_FROM_ABI basic_ios() {
+    // purposefully does no initialization
+    // since the destructor does nothing this does not have ios_base issues.
   }
   _LIBCPP_HIDE_FROM_ABI void init(basic_streambuf<char_type, traits_type>* __sb);
 
