@@ -25,7 +25,7 @@
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/FrontendTool/Utils.h"
-#include "clang/Tooling/ModuleBuildDaemon/Client.h"
+#include "clang/Tooling/ModuleBuildDaemon/Frontend.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/LinkAllPasses.h"
@@ -292,7 +292,7 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
   // Handle module build daemon functionality if enabled
   if (Clang->getFrontendOpts().ModuleBuildDaemon) {
     clang::tooling::cc1modbuildd::spawnModuleBuildDaemonAndHandshake(
-        Clang->getInvocation(), Clang->getDiagnostics(), Argv0);
+        Clang->getInvocation(), Argv0, Clang->getDiagnostics());
   }
 
   // Execute the frontend actions.

@@ -21,25 +21,6 @@ using namespace llvm;
 
 namespace clang::tooling::cc1modbuildd {
 
-void writeError(llvm::Error Err, std::string Msg) {
-  handleAllErrors(std::move(Err), [&](ErrorInfoBase &EIB) {
-    errs() << Msg << EIB.message() << '\n';
-  });
-}
-
-std::string getFullErrorMsg(llvm::Error Err, std::string Msg) {
-  std::string ErrMessage;
-  handleAllErrors(std::move(Err), [&](ErrorInfoBase &EIB) {
-    ErrMessage = Msg + EIB.message();
-  });
-  return ErrMessage;
-}
-
-llvm::Error makeStringError(llvm::Error Err, std::string Msg) {
-  std::string ErrMsg = getFullErrorMsg(std::move(Err), Msg);
-  return llvm::make_error<StringError>(ErrMsg, inconvertibleErrorCode());
-}
-
 std::string getBasePath() {
   llvm::BLAKE3 Hash;
   Hash.update(clang::getClangFullVersion());
@@ -54,6 +35,15 @@ std::string getBasePath() {
   llvm::sys::path::system_temp_directory(/*erasedOnReboot*/ true, BasePath);
   llvm::sys::path::append(BasePath, "clang-" + Key);
   return BasePath.c_str();
+}
+
+bool validBasePathLength(llvm::StringRef Address) {
+  // Confirm that the user provided BasePath is short enough to allow the socket
+  // address to fit within the alloted space
+  if (Address.str().length() > BASEPATH_MAX_LENGTH) {
+    return false;
+  }
+  return true;
 }
 
 } // namespace clang::tooling::cc1modbuildd
