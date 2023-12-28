@@ -1218,6 +1218,12 @@ public:
     return Triple;
   }
 
+  /// Returns information about C layouts that come from LLVM. This is used
+  /// to control lowering to libcalls.
+  llvm::Triple::CLayouts getTripleLayouts() const {
+    return Triple.getCLayouts();
+  }
+
   /// Returns the target ID if supported.
   virtual std::optional<std::string> getTargetID() const {
     return std::nullopt;

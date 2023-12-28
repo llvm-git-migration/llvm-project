@@ -156,8 +156,7 @@ AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
   MaxAtomicInlineWidth = 128;
   MaxAtomicPromoteWidth = 128;
 
-  LongDoubleWidth = LongDoubleAlign = SuitableAlign = 128;
-  LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  SuitableAlign = LongDoubleAlign;
 
   BFloat16Width = BFloat16Align = 16;
   BFloat16Format = &llvm::APFloat::BFloat();
@@ -1452,8 +1451,6 @@ WindowsARM64TargetInfo::WindowsARM64TargetInfo(const llvm::Triple &Triple,
   IntWidth = IntAlign = 32;
   LongWidth = LongAlign = 32;
   DoubleAlign = LongLongAlign = 64;
-  LongDoubleWidth = LongDoubleAlign = 64;
-  LongDoubleFormat = &llvm::APFloat::IEEEdouble();
   IntMaxType = SignedLongLong;
   Int64Type = SignedLongLong;
   SizeType = UnsignedLongLong;
@@ -1550,8 +1547,7 @@ DarwinAArch64TargetInfo::DarwinAArch64TargetInfo(const llvm::Triple &Triple,
   WCharType = SignedInt;
   UseSignedCharForObjCBool = false;
 
-  LongDoubleWidth = LongDoubleAlign = SuitableAlign = 64;
-  LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+  SuitableAlign = LongDoubleAlign;
 
   UseZeroLengthBitfieldAlignment = false;
 

@@ -76,8 +76,6 @@ public:
     LargeArrayMinWidth = 128;
     LargeArrayAlign = 128;
     SigAtomicType = SignedLong;
-    LongDoubleWidth = LongDoubleAlign = 128;
-    LongDoubleFormat = &llvm::APFloat::IEEEquad();
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 64;
     // size_t being unsigned long for both wasm32 and wasm64 makes mangled names
     // more consistent between the two.

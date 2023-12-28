@@ -88,8 +88,6 @@ public:
   PPCTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
       : TargetInfo(Triple) {
     SuitableAlign = 128;
-    LongDoubleWidth = LongDoubleAlign = 128;
-    LongDoubleFormat = &llvm::APFloat::PPCDoubleDouble();
     HasStrictFP = true;
     HasIbm128 = true;
   }
@@ -384,18 +382,9 @@ public:
       SizeType = UnsignedLong;
       PtrDiffType = SignedLong;
       IntPtrType = SignedLong;
-      LongDoubleWidth = 64;
-      LongDoubleAlign = DoubleAlign = 32;
-      LongDoubleFormat = &llvm::APFloat::IEEEdouble();
       break;
     default:
       break;
-    }
-
-    if (Triple.isOSFreeBSD() || Triple.isOSNetBSD() || Triple.isOSOpenBSD() ||
-        Triple.isMusl()) {
-      LongDoubleWidth = LongDoubleAlign = 64;
-      LongDoubleFormat = &llvm::APFloat::IEEEdouble();
     }
 
     // PPC32 supports atomics up to 4 bytes.
@@ -422,9 +411,6 @@ public:
     if (Triple.isOSAIX()) {
       // TODO: Set appropriate ABI for AIX platform.
       DataLayout = "E-m:a-Fi64-i64:64-n32:64";
-      LongDoubleWidth = 64;
-      LongDoubleAlign = DoubleAlign = 32;
-      LongDoubleFormat = &llvm::APFloat::IEEEdouble();
     } else if ((Triple.getArch() == llvm::Triple::ppc64le)) {
       DataLayout = "e-m:e-Fn32-i64:64-n32:64";
       ABI = "elfv2";
@@ -438,11 +424,6 @@ public:
         DataLayout += "-Fi64";
       }
       DataLayout += "-i64:64-n32:64";
-    }
-
-    if (Triple.isOSFreeBSD() || Triple.isOSOpenBSD() || Triple.isMusl()) {
-      LongDoubleWidth = LongDoubleAlign = 64;
-      LongDoubleFormat = &llvm::APFloat::IEEEdouble();
     }
 
     if (Triple.isOSAIX() || Triple.isOSLinux())

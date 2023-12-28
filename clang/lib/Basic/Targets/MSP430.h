@@ -35,8 +35,8 @@ public:
     LongAlign = LongLongAlign = 16;
     FloatWidth = 32;
     FloatAlign = 16;
-    DoubleWidth = LongDoubleWidth = 64;
-    DoubleAlign = LongDoubleAlign = 16;
+    DoubleWidth = 64;
+    DoubleAlign = 16;
     PointerWidth = 16;
     PointerAlign = 16;
     SuitableAlign = 16;

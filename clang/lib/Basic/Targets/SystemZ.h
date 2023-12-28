@@ -40,9 +40,6 @@ public:
     LongWidth = LongLongWidth = LongAlign = LongLongAlign = 64;
     Int128Align = 64;
     PointerWidth = PointerAlign = 64;
-    LongDoubleWidth = 128;
-    LongDoubleAlign = 64;
-    LongDoubleFormat = &llvm::APFloat::IEEEquad();
     DefaultAlignForAttributeAligned = 64;
     MinGlobalAlign = 16;
     if (Triple.isOSzOS()) {

@@ -54,6 +54,10 @@ static const LangASMap FakeAddrSpaceMap = {
 TargetInfo::TargetInfo(const llvm::Triple &T) : Triple(T) {
   // Set defaults.  Defaults are set for a 32-bit RISC platform, like PPC or
   // SPARC.  These should be overridden by concrete targets as needed.
+
+  // Load some defaults from LLVM
+  llvm::Triple::CLayouts TripleLayouts = getTripleLayouts();
+
   BigEndian = !T.isLittleEndian();
   TLSSupported = true;
   VLASupported = true;
@@ -113,8 +117,8 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : Triple(T) {
   FloatAlign = 32;
   DoubleWidth = 64;
   DoubleAlign = 64;
-  LongDoubleWidth = 64;
-  LongDoubleAlign = 64;
+  LongDoubleWidth = TripleLayouts.LongDoubleWidth;
+  LongDoubleAlign = TripleLayouts.LongDoubleAlign;
   Float128Align = 128;
   Ibm128Align = 128;
   LargeArrayMinWidth = 0;
@@ -144,7 +148,7 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : Triple(T) {
   HalfFormat = &llvm::APFloat::IEEEhalf();
   FloatFormat = &llvm::APFloat::IEEEsingle();
   DoubleFormat = &llvm::APFloat::IEEEdouble();
-  LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+  LongDoubleFormat = TripleLayouts.LongDoubleFormat;
   Float128Format = &llvm::APFloat::IEEEquad();
   Ibm128Format = &llvm::APFloat::PPCDoubleDouble();
   MCountName = "mcount";

@@ -37,9 +37,6 @@ public:
     HasFeatureF = false;
     HasFeatureLSX = false;
     HasFeatureLASX = false;
-    LongDoubleWidth = 128;
-    LongDoubleAlign = 128;
-    LongDoubleFormat = &llvm::APFloat::IEEEquad();
     MCountName = "_mcount";
     SuitableAlign = 128;
     WCharType = SignedInt;

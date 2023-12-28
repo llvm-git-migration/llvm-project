@@ -29,7 +29,7 @@ public:
     NoAsmVariants = true;
     LongLongAlign = 32;
     SuitableAlign = 32;
-    DoubleAlign = LongDoubleAlign = 32;
+    DoubleAlign = 32;
     SizeType = UnsignedInt;
     PtrDiffType = SignedInt;
     IntPtrType = SignedInt;
