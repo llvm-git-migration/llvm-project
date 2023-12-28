@@ -819,6 +819,19 @@ public:
   _LIBCPP_HIDE_FROM_ABI valarray& operator<<=(const value_type& __x);
   _LIBCPP_HIDE_FROM_ABI valarray& operator>>=(const value_type& __x);
 
+  // The valarray overloads are needed for the types with an implicit
+  // conversion to valarray. For example slice_array.
+  _LIBCPP_HIDE_FROM_ABI valarray& operator*=(const valarray& __v) { return operator*= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator/=(const valarray& __v) { return operator/= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator%=(const valarray& __v) { return operator%= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator+=(const valarray& __v) { return operator+= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator-=(const valarray& __v) { return operator-= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator^=(const valarray& __v) { return operator^= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator&=(const valarray& __v) { return operator&= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator|=(const valarray& __v) { return operator|= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator<<=(const valarray& __v) { return operator<<= <valarray>(__v); }
+  _LIBCPP_HIDE_FROM_ABI valarray& operator>>=(const valarray& __v) { return operator>>= <valarray>(__v); }
+
   template <class _Expr, __enable_if_t<__is_val_expr<_Expr>::value, int> = 0>
   _LIBCPP_HIDE_FROM_ABI valarray& operator*=(const _Expr& __v);
 
