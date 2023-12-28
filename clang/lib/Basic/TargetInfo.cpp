@@ -925,6 +925,19 @@ bool TargetInfo::validateInputConstraint(
   return true;
 }
 
+void TargetInfo::validateCLayouts() const {
+  llvm::Triple::CLayouts TripleLayouts = Triple.getCLayouts();
+  if (__builtin_expect(LongDoubleWidth != TripleLayouts.LongDoubleWidth ||
+                           LongDoubleAlign != TripleLayouts.LongDoubleAlign,
+                       0)) {
+    fprintf(stderr, "'long double' width got %d but expected %d\n",
+            LongDoubleWidth, TripleLayouts.LongDoubleWidth);
+    fprintf(stderr, "'long double' align got %d but expected %d\n",
+            LongDoubleAlign, TripleLayouts.LongDoubleAlign);
+    llvm_unreachable("Clang & LLVM layout mismatch");
+  }
+}
+
 void TargetInfo::CheckFixedPointBits() const {
   // Check that the number of fractional and integral bits (and maybe sign) can
   // fit into the bits given for a fixed point type.

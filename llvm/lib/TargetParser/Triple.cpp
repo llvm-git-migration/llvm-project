@@ -1900,6 +1900,148 @@ VersionTuple Triple::getCanonicalVersionForOS(OSType OSKind,
   }
 }
 
+Triple::CLayouts Triple::getCLayouts() const {
+  Triple::CLayouts Layouts;
+
+  // Default to a 32-bit RISC platform
+  Layouts.LongDoubleWidth = 64;
+  Layouts.LongDoubleAlign = 64;
+  Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+
+  enum ArchType arch = getArch();
+
+  if (arch == aarch64 || arch == aarch64_be || arch == aarch64_32) {
+    Layouts.LongDoubleWidth = 128;
+    Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+
+    // TODO: verify this logic matches when WindowsARM64TargetInfo /
+    // DarwinAArch64TargetInfo is called
+    if (isOSWindows()) {
+      Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else if (isMacOSX()) {
+      // TODO: should this just be isMacOSX or check specifically for darwin?
+      Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    }
+  } else if (arch == avr) {
+    Layouts.LongDoubleWidth = 32;
+    Layouts.LongDoubleAlign = 8;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEsingle();
+  } else if (arch == arc) {
+    Layouts.LongDoubleAlign = 32;
+  } else if (arch == arm) {
+    // TODO: port the logic
+  } else if (arch == csky) {
+    Layouts.LongDoubleAlign = 32;
+  } else if (arch == loongarch32 || arch == loongarch64) {
+    Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == mips || arch == mipsel || arch == mips64 ||
+             arch == mips64el) {
+    if (isMIPS32()) {
+      // o32
+      Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else {
+      // n32 & n64
+      Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 128;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+      if (isOSFreeBSD()) {
+        Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 64;
+        Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+      }
+    }
+  } else if (arch == msp430) {
+    Layouts.LongDoubleWidth = 64;
+    Layouts.LongDoubleAlign = 16;
+  } else if (arch == ppc || arch == ppcle || arch == ppc64 || arch == ppc64le) {
+    // TODO: figure out how to get features
+
+    if (getOS() == AIX) {
+      Layouts.LongDoubleWidth = 64;
+      Layouts.LongDoubleAlign = 32;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else if (isOSFreeBSD() || isOSNetBSD() || isOSOpenBSD() || isMusl()) {
+      Layouts.LongDoubleWidth = 64;
+      Layouts.LongDoubleAlign = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else {
+      Layouts.LongDoubleWidth = 128;
+      Layouts.LongDoubleAlign = 128;
+      Layouts.LongDoubleFormat = &llvm::APFloat::PPCDoubleDouble();
+    }
+  } else if (arch == riscv32 || arch == riscv64) {
+    Layouts.LongDoubleWidth = 128;
+    Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == sparcv9) {
+    // The SPARCv8 System V ABI has long double 128-bits in size, but 64-bit
+    // aligned. The SPARCv9 SCD 2.4.1 says 16-byte aligned.
+    Layouts.LongDoubleWidth = 128;
+    Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == systemz) {
+    Layouts.LongDoubleWidth = 128;
+    Layouts.LongDoubleAlign = 64;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == tce || arch == tcele) {
+    Layouts.LongDoubleWidth = 32;
+    Layouts.LongDoubleAlign = 32;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEsingle();
+  } else if (arch == ve) {
+    Layouts.LongDoubleWidth = 128;
+    Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == wasm32 || arch == wasm64) {
+    Layouts.LongDoubleWidth = Layouts.LongDoubleAlign = 128;
+    Layouts.LongDoubleFormat = &llvm::APFloat::IEEEquad();
+  } else if (arch == x86 || arch == x86_64) {
+    if (arch == x86_64) {
+      Layouts.LongDoubleWidth = 128;
+      Layouts.LongDoubleAlign = 128;
+    }
+    if (isOSDarwin()) {
+      Layouts.LongDoubleWidth = 128;
+      Layouts.LongDoubleAlign = 128;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else if (isAndroid()) {
+      Layouts.LongDoubleWidth = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else if (isOSLinux()) {
+      Layouts.LongDoubleWidth = 96;
+      Layouts.LongDoubleAlign = 32;
+      Layouts.LongDoubleFormat = &llvm::APFloat::x87DoubleExtended();
+    } else if (isOSWindows()) {
+      if (isWindowsCygwinEnvironment()) {
+        Layouts.LongDoubleWidth = 64;
+        Layouts.LongDoubleAlign = 64;
+      } else if (isWindowsGNUEnvironment()) {
+        // Mingw64 rounds long double size and alignment up to 16 bytes, but
+        // sticks with x86 FP ops. Weird.
+        Layouts.LongDoubleWidth = 128;
+        Layouts.LongDoubleAlign = 128;
+        Layouts.LongDoubleFormat = &llvm::APFloat::x87DoubleExtended();
+      } else {
+        Layouts.LongDoubleWidth = 64;
+        Layouts.LongDoubleAlign = 64;
+        Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+      }
+    } else if (isOSIAMCU()) {
+      Layouts.LongDoubleWidth = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    } else if (isOHOSFamily()) {
+      Layouts.LongDoubleWidth = 64;
+      Layouts.LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+    }
+  } else if (arch == xcore) {
+    Layouts.LongDoubleAlign = 32;
+  }
+
+  return Layouts;
+}
+
 // HLSL triple environment orders are relied on in the front end
 static_assert(Triple::Vertex - Triple::Pixel == 1,
               "incorrect HLSL stage order");
