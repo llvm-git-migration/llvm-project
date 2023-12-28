@@ -262,16 +262,15 @@ def err_test_module_file_extension_version : Error<
   "test module file extension '%0' has different version (%1.%2) than expected "
   "(%3.%4)">;
 
-def err_unix_socket_addr_length :
-  Error<"Socket address %0 is %1 characters long which is larger then the max length of %2">,
-  DefaultFatal;
-
 // Module Build Daemon
+def err_basepath_length :
+  Error<"BasePath '%0' is longer then the max length of %1">,
+  DefaultFatal;
 def err_mbd_handshake :
-  Error<"Attempt to hadshake with daemon has failed: %0">,
+  Error<"Attempt to handshake with module build daemon has failed: %0">,
   DefaultFatal;
 def err_mbd_connect :
-  Error<"Attempt to connect to daemon has failed: %0">,
+  Error<"Attempt to connect to module build daemon has failed: %0">,
   DefaultFatal;
 def remark_mbd_spawn :
   Remark<"Successfully spawned module build daemon">,

@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// Functions required by both the module build daemon (server) and clang
-// invocation (client)
+// Functions required by both the frontend and the module build daemon
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,23 +14,30 @@
 #define LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_UTILS_H
 
 #include "llvm/Support/Error.h"
-#include <string>
 
-#define MAX_BUFFER 4096
-#define SOCKET_FILE_NAME "mbd.sock"
-#define STDOUT_FILE_NAME "mbd.out"
-#define STDERR_FILE_NAME "mbd.err"
-#define MODULE_BUILD_DAEMON_FLAG "-cc1modbuildd"
+#include <string>
+#include <sys/un.h>
 
 namespace clang::tooling::cc1modbuildd {
 
-void writeError(llvm::Error Err, std::string Msg);
-std::string getFullErrorMsg(llvm::Error Err, std::string Msg);
-llvm::Error makeStringError(llvm::Error Err, std::string Msg);
+constexpr const std::string_view SOCKET_FILE_NAME = "mbd.sock";
+constexpr const std::string_view STDOUT_FILE_NAME = "mbd.out";
+constexpr const std::string_view STDERR_FILE_NAME = "mbd.err";
+constexpr const std::string_view MODULE_BUILD_DAEMON_FLAG = "-cc1modbuildd";
+
+// A llvm::raw_socket_stream uses sockaddr_un
+constexpr const size_t SOCKET_ADDR_MAX_LENGTH = sizeof(sockaddr_un::sun_path);
+
+constexpr const size_t BASEPATH_MAX_LENGTH =
+    SOCKET_ADDR_MAX_LENGTH - std::string_view(SOCKET_FILE_NAME).length();
 
 // Get a temprary location where the daemon can store log files and a socket
 // address. Of the format /tmp/clang-<BLAKE3HashOfClangFullVersion>/
 std::string getBasePath();
 
+// Check if the user provided BasePath is short enough
+bool validBasePathLength(llvm::StringRef);
+
 } // namespace clang::tooling::cc1modbuildd
-#endif // LLVM_CLANG_TOOLING_MODULEBUILDDAEMON_UTILS_H
+
+#endif
