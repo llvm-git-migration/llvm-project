@@ -2523,7 +2523,8 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
 }
 
 /// Look for opportunities to duplicate return instructions to the predecessor
-/// to enable tail call optimizations. The case it is currently looking for is:
+/// to enable tail call optimizations. The case it is currently looking for are
+/// simple return of call values, function arguments, or phi nodes as follows:
 /// @code
 /// bb0:
 ///   %tmp0 = tail call i32 @f0()
@@ -2580,7 +2581,7 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
     }
 
     PN = dyn_cast<PHINode>(V);
-    if (!PN)
+    if (!PN && !isa<Argument>(V) && !isa<CallInst>(V))
       return false;
   }
 
@@ -2620,8 +2621,38 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
       // Make sure the phi value is indeed produced by the tail call.
       if (CI && CI->hasOneUse() && CI->getParent() == PredBB &&
           TLI->mayBeEmittedAsTailCall(CI) &&
-          attributesPermitTailCall(F, CI, RetI, *TLI))
+          attributesPermitTailCall(F, CI, RetI, *TLI)) {
         TailCallBBs.push_back(PredBB);
+      } else {
+        /// Consider the cases in which the phi value is indirectly produced by
+        /// the tail call, for example when encountering memset(), memmove(),
+        /// whose return value may have been optimized out.
+        /// @code
+        /// bb0:
+        ///   tail call void @llvm.memset.p0.i64()
+        ///   br label %return
+        /// @endcode
+        if (PredBB && PredBB->getSingleSuccessor() == BB)
+          CI = dyn_cast_or_null<CallInst>(
+              PredBB->getTerminator()->getPrevNonDebugInstruction(true));
+
+        // If we return void from the call site, it must be an intrinsic.
+        if (CI && CI->getType()->isVoidTy() && !isa<IntrinsicInst>(CI))
+          continue;
+
+        /// If we return a value, it must not be used. A valid case may be when
+        /// strcpy()'ing, where its first argument is used in the phi-node.
+        /// @code
+        /// bb0:
+        ///   %1 = tail call ptr @strcpy()
+        ///   br label %return
+        /// @endcode
+        if (CI && CI->use_empty() && CI->hasArgument(IncomingVal) &&
+            IncomingVal == CI->getArgOperand(0) &&
+            TLI->mayBeEmittedAsTailCall(CI) &&
+            attributesPermitTailCall(F, CI, RetI, *TLI))
+          TailCallBBs.push_back(PredBB);
+      }
     }
   } else {
     SmallPtrSet<BasicBlock *, 4> VisitedBBs;

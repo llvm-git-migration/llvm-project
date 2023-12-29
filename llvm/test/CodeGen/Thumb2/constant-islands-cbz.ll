@@ -8,12 +8,11 @@ define ptr @test(ptr returned %this, i32 %event_size, ptr %event_pointer) {
 ; CHECK-T1-NEXT:    .save {r4, lr}
 ; CHECK-T1-NEXT:    push {r4, lr}
 ; CHECK-T1-NEXT:    mov r4, r0
-; CHECK-T1-NEXT:    movs r0, #0
-; CHECK-T1-NEXT:    str r0, [r4, #4]
-; CHECK-T1-NEXT:    str r0, [r4, #8]
-; CHECK-T1-NEXT:    str r0, [r4, #12]
-; CHECK-T1-NEXT:    str r0, [r4, #16]
-; CHECK-T1-NEXT:    mov r0, r4
+; CHECK-T1-NEXT:    movs r3, #0
+; CHECK-T1-NEXT:    str r3, [r0, #4]
+; CHECK-T1-NEXT:    str r3, [r0, #8]
+; CHECK-T1-NEXT:    str r3, [r0, #12]
+; CHECK-T1-NEXT:    str r3, [r0, #16]
 ; CHECK-T1-NEXT:    cbz r2, .LBB0_2
 ; CHECK-T1-NEXT:  @ %bb.1: @ %if.else
 ; CHECK-T1-NEXT:    bl equeue_create_inplace
@@ -28,11 +27,10 @@ define ptr @test(ptr returned %this, i32 %event_size, ptr %event_pointer) {
 ; CHECK-T2:       @ %bb.0: @ %entry
 ; CHECK-T2-NEXT:    .save {r4, lr}
 ; CHECK-T2-NEXT:    push {r4, lr}
+; CHECK-T2-NEXT:    movs r3, #0
 ; CHECK-T2-NEXT:    mov r4, r0
-; CHECK-T2-NEXT:    movs r0, #0
-; CHECK-T2-NEXT:    strd r0, r0, [r4, #4]
-; CHECK-T2-NEXT:    strd r0, r0, [r4, #12]
-; CHECK-T2-NEXT:    mov r0, r4
+; CHECK-T2-NEXT:    strd r3, r3, [r0, #4]
+; CHECK-T2-NEXT:    strd r3, r3, [r0, #12]
 ; CHECK-T2-NEXT:    cbz r2, .LBB0_2
 ; CHECK-T2-NEXT:  @ %bb.1: @ %if.else
 ; CHECK-T2-NEXT:    bl equeue_create_inplace
