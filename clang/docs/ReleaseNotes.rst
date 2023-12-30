@@ -203,6 +203,9 @@ Non-comprehensive list of changes in this release
 - ``__typeof_unqual__`` is available in all C modes as an extension, which behaves
   like ``typeof_unqual`` from C23, similar to ``__typeof__`` and ``typeof``.
 
+- Builtins ``__builtin_shufflevector()`` and ``__builtin_convertvector()`` may
+  now be used within constant expressions.
+
 New Compiler Flags
 ------------------
 - ``-fsanitize=implicit-bitfield-conversion`` checks implicit truncation and
