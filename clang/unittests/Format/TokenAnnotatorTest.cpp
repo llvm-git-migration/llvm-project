@@ -508,13 +508,13 @@ TEST_F(TokenAnnotatorTest, UnderstandsVariables) {
   EXPECT_EQ(Tokens.size(), 7u) << Tokens;
   EXPECT_TOKEN(Tokens[1], tok::identifier, TT_Unknown);
   EXPECT_TOKEN(Tokens[2], tok::identifier, TT_StartOfName);
-  EXPECT_TOKEN(Tokens[3], tok::l_brace, TT_Unknown);
+  EXPECT_BRACE_KIND(Tokens[3], BK_BracedInit);
 
   Tokens = annotate("struct Foo<int> f{};");
   EXPECT_EQ(Tokens.size(), 10u) << Tokens;
   EXPECT_TOKEN(Tokens[1], tok::identifier, TT_Unknown);
   EXPECT_TOKEN(Tokens[5], tok::identifier, TT_StartOfName);
-  EXPECT_TOKEN(Tokens[6], tok::l_brace, TT_Unknown);
+  EXPECT_BRACE_KIND(Tokens[6], BK_BracedInit);
 }
 
 TEST_F(TokenAnnotatorTest, UnderstandsVariableTemplates) {

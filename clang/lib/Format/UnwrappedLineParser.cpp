@@ -3921,7 +3921,8 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
     bool ColonFound = false;
     do {
       if (FormatTok->is(tok::l_brace)) {
-        calculateBraceTypes(/*ExpectClassBody=*/true);
+        calculateBraceTypes(/*ExpectClassBody=*/ColonFound ||
+                            NonMacroIdentifierCount < 2);
         if (!tryToParseBracedList())
           break;
       }
@@ -3946,16 +3947,15 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
         parseCSharpGenericTypeConstraint();
         break;
       }
-      // Do not count identifiers inside a template angle brackets
       if (FormatTok->is(tok::colon))
         ColonFound = true;
       else if (FormatTok->is(tok::less))
         ++AngleNestingLevel;
       else if (FormatTok->is(tok::greater))
         --AngleNestingLevel;
-      if (AngleNestingLevel == 0 && !ColonFound &&
-          FormatTok->is(tok::identifier) &&
-          FormatTok->TokenText != FormatTok->TokenText.upper()) {
+      // Do not count identifiers inside a template angle brackets
+      if (FormatTok->is(tok::identifier) && AngleNestingLevel == 0 &&
+          !ColonFound && FormatTok->TokenText != FormatTok->TokenText.upper()) {
         ++NonMacroIdentifierCount;
       }
       nextToken();
@@ -3978,10 +3978,9 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
   };
   if (FormatTok->is(tok::l_brace)) {
     // Handles C-Style variable declaration of a struct
-    if (Style.isCpp() && NonMacroIdentifierCount == 2) {
-      parseBracedList();
+    if (Style.isCpp() && NonMacroIdentifierCount == 2 && tryToParseBracedList())
       return;
-    }
+
     auto [OpenBraceType, ClosingBraceType] = GetBraceTypes(InitialToken);
     FormatTok->setFinalizedType(OpenBraceType);
     if (ParseAsExpr) {
