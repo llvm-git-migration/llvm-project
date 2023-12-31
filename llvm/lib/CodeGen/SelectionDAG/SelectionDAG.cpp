@@ -3416,10 +3416,15 @@ KnownBits SelectionDAG::computeKnownBits(SDValue Op, const APInt &DemandedElts,
       Known = KnownBits::mulhs(Known, Known2);
     break;
   }
-  case ISD::AVGCEILU: {
+  case ISD::AVGFLOORU:
+  case ISD::AVGCEILU:
+  case ISD::AVGFLOORS:
+  case ISD::AVGCEILS: {
     Known = computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
     Known2 = computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
-    Known = Known.zext(BitWidth + 1);
+    Known = (Opcode == ISD::AVGFLOORU || Opcode == ISD::AVGCEILU)
+                ? Known.zext(BitWidth + 1)
+                : Known.sext(BitWidth + 1);
     Known2 = Known2.zext(BitWidth + 1);
     KnownBits One = KnownBits::makeConstant(APInt(1, 1));
     Known = KnownBits::computeForAddCarry(Known, Known2, One);
