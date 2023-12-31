@@ -99,9 +99,10 @@ public:
 
     void deleteCalled(void * p)
     {
-        assert(p);
-        --outstanding_new;
-        ++delete_called;
+        if (p) {
+          --outstanding_new;
+          ++delete_called;
+        }
     }
 
     void alignedDeleteCalled(void *p, std::size_t a) {
