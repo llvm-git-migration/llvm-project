@@ -47,7 +47,7 @@ static_assert(std::__libcpp_is_trivially_equality_comparable<
               "");
 static_assert(std::__libcpp_is_trivially_equality_comparable<char16_t, std::uint_least16_t>::value, "");
 
-struct S {
+struct Empty {
   char c;
 };
 
@@ -55,11 +55,11 @@ struct S2 {
   char c;
 };
 
-struct VirtualBase : virtual S {};
-struct NonVirtualBase : S, S2 {};
+struct VirtualBase : virtual Empty {};
+struct NonVirtualBase : Empty, S2 {};
 
-static_assert(!std::__libcpp_is_trivially_equality_comparable<S*, VirtualBase*>::value, "");
+static_assert(!std::__libcpp_is_trivially_equality_comparable<Empty*, VirtualBase*>::value, "");
 static_assert(!std::__libcpp_is_trivially_equality_comparable<S2*, VirtualBase*>::value, "");
 
 // This is trivially_equality_comparable, but we can't detect it currently
-static_assert(!std::__libcpp_is_trivially_equality_comparable<S*, NonVirtualBase*>::value, "");
+static_assert(!std::__libcpp_is_trivially_equality_comparable<Empty*, NonVirtualBase*>::value, "");

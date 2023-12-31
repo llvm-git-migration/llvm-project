@@ -33,6 +33,7 @@
 #include <__type_traits/is_reference.h>
 #include <__type_traits/is_same.h>
 #include <__type_traits/is_swappable.h>
+#include <__type_traits/is_trivially_relocatable.h>
 #include <__type_traits/is_void.h>
 #include <__type_traits/remove_extent.h>
 #include <__type_traits/type_identity.h>
@@ -128,6 +129,17 @@ public:
   typedef _LIBCPP_NODEBUG typename __pointer<_Tp, deleter_type>::type pointer;
 
   static_assert(!is_rvalue_reference<deleter_type>::value, "the specified deleter type cannot be an rvalue reference");
+
+  // A unique_ptr contains the following members which may be trivially relocatable:
+  // - pointer : this may be trivially relocatable, so it's checked
+  // - delter_type: this may be trivially relocatable, so it's checked
+  //
+  // This uniuqe_ptr implementation only contains a pointer to the unique object and a delter, so there are no
+  // references to itself. This means that the entire structure is trivially relocatable if it's members are.
+  using __trivially_relocatable = __conditional_t<
+      __libcpp_is_trivially_relocatable<pointer>::value && __libcpp_is_trivially_relocatable<deleter_type>::value,
+      unique_ptr,
+      void>;
 
 private:
   __compressed_pair<pointer, deleter_type> __ptr_;
@@ -279,6 +291,17 @@ public:
   typedef _Tp element_type;
   typedef _Dp deleter_type;
   typedef typename __pointer<_Tp, deleter_type>::type pointer;
+
+  // A unique_ptr contains the following members which may be trivially relocatable:
+  // - pointer : this may be trivially relocatable, so it's checked
+  // - delter_type: this may be trivially relocatable, so it's checked
+  //
+  // This uniuqe_ptr implementation only contains a pointer to the unique object and a delter, so there are no
+  // references to itself. This means that the entire structure is trivially relocatable if it's members are.
+  using __trivially_relocatable = __conditional_t<
+      __libcpp_is_trivially_relocatable<pointer>::value && __libcpp_is_trivially_relocatable<deleter_type>::value,
+      unique_ptr,
+      void>;
 
 private:
   __compressed_pair<pointer, deleter_type> __ptr_;

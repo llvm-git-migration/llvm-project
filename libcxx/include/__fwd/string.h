@@ -12,6 +12,8 @@
 #include <__availability>
 #include <__config>
 #include <__fwd/memory_resource.h>
+#include <__type_traits/is_fundamental.h>
+#include <__type_traits/is_trivially_relocatable.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header

@@ -724,6 +724,20 @@ public:
   typedef typename __alloc_traits::pointer pointer;
   typedef typename __alloc_traits::const_pointer const_pointer;
 
+  // A basic_string contains the following members which may be trivially relocatable:
+  // - pointer: is currently assumed to be trivially relocatable, but is still checked in case that changes
+  // - size_type: is always trivially relocatable, since it has to be an integral type
+  // - value_type: is always trivially relocatable, since it has to be trivial
+  // - unsigned char: is a fundamental type, so it's trivially relocatable
+  // - allocator_type: may or may not be trivially relocatable, so it's checked
+  //
+  // This string implementation doesn't contain any references into itself. It only contains a bit that says whether
+  // it is in small or large string mode, so the entire structure is trivially relocatable if it's members are.
+  using __trivially_relocatable = __conditional_t<
+      __libcpp_is_trivially_relocatable<allocator_type>::value && __libcpp_is_trivially_relocatable<pointer>::value,
+      basic_string,
+      void>;
+
   static_assert((!is_array<value_type>::value), "Character type of basic_string must not be an array");
   static_assert((is_standard_layout<value_type>::value), "Character type of basic_string must be standard-layout");
   static_assert((is_trivial<value_type>::value), "Character type of basic_string must be trivial");
