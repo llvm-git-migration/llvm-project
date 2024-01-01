@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// REQUIRES: libcpp-abi-no-compressed-pair-padding
+
 #include <vector>
 
 #include "min_allocator.h"

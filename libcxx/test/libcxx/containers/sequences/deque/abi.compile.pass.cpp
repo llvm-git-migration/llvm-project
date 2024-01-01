@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// REQUIRES: libcpp-abi-no-compressed-pair-padding
+
 #include <cstdint>
 #include <deque>
 
