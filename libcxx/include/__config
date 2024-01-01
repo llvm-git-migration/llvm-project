@@ -179,6 +179,8 @@
 // pointer from 16 to 8. This changes the output of std::string::max_size,
 // which makes it ABI breaking
 #    define _LIBCPP_ABI_STRING_8_BYTE_ALIGNMENT
+// Don't add padding from __compressed_pair
+#    define _LIBCPP_ABI_NO_COMPRESSED_PAIR_PADDING
 #  elif _LIBCPP_ABI_VERSION == 1
 #    if !(defined(_LIBCPP_OBJECT_FORMAT_COFF) || defined(_LIBCPP_OBJECT_FORMAT_XCOFF))
 // Enable compiling copies of now inline methods into the dylib to support

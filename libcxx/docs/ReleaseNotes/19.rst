@@ -1,0 +1,97 @@
+===========================================
+Libc++ 19.0.0 (In-Progress) Release Notes
+===========================================
+
+.. contents::
+   :local:
+   :depth: 2
+
+Written by the `Libc++ Team <https://libcxx.llvm.org>`_
+
+.. warning::
+
+   These are in-progress notes for the upcoming libc++ 18.0.0 release.
+   Release notes for previous releases can be found on
+   `the Download Page <https://releases.llvm.org/download.html>`_.
+
+Introduction
+============
+
+This document contains the release notes for the libc++ C++ Standard Library,
+part of the LLVM Compiler Infrastructure, release 18.0.0. Here we describe the
+status of libc++ in some detail, including major improvements from the previous
+release and new feature work. For the general LLVM release notes, see `the LLVM
+documentation <https://llvm.org/docs/ReleaseNotes.html>`_. All LLVM releases may
+be downloaded from the `LLVM releases web site <https://llvm.org/releases/>`_.
+
+For more information about libc++, please see the `Libc++ Web Site
+<https://libcxx.llvm.org>`_ or the `LLVM Web Site <https://llvm.org>`_.
+
+Note that if you are reading this file from a Git checkout or the
+main Libc++ web page, this document applies to the *next* release, not
+the current one. To see the release notes for a specific release, please
+see the `releases page <https://llvm.org/releases/>`_.
+
+What's New in Libc++ 18.0.0?
+==============================
+
+Implemented Papers
+------------------
+
+
+Improvements and New Features
+-----------------------------
+
+- The internal structure ``__compressed_pair`` has been replaced with ``[[no_unique_address]]``, resulting in reduced
+  compile times and smaller debug information as well as better code gen if optimizations are disabled.
+
+Deprecations and Removals
+-------------------------
+
+
+Upcoming Deprecations and Removals
+----------------------------------
+
+LLVM 19
+~~~~~~~
+
+- The ``LIBCXX_ENABLE_ASSERTIONS`` CMake variable that was used to enable the safe mode will be deprecated and setting
+  it will trigger an error; use the ``LIBCXX_HARDENING_MODE`` variable with the value ``extensive`` instead. Similarly,
+  the ``_LIBCPP_ENABLE_ASSERTIONS`` macro will be deprecated (setting it to ``1`` still enables the extensive mode the
+  LLVM 19 release while also issuing a deprecation warning). See :ref:`the hardening documentation
+  <using-hardening-modes>` for more details.
+
+- The base template for ``std::char_traits`` has been marked as deprecated and will be removed in LLVM 19. If you
+  are using ``std::char_traits`` with types other than ``char``, ``wchar_t``, ``char8_t``, ``char16_t``, ``char32_t``
+  or a custom character type for which you specialized ``std::char_traits``, your code will stop working when we
+  remove the base template. The Standard does not mandate that a base template is provided, and such a base template
+  is bound to be incorrect for some types, which could currently cause unexpected behavior while going undetected.
+  Note that the ``_LIBCPP_CHAR_TRAITS_REMOVE_BASE_SPECIALIZATION`` macro can be defined in LLVM 18 to eagerly remove
+  the specialization and prepare code bases for the unconditional removal in LLVM 19.
+
+- The ``_LIBCPP_ENABLE_NARROWING_CONVERSIONS_IN_VARIANT`` macro that changed the behavior for narrowing conversions
+  in ``std::variant`` will be removed in LLVM 19.
+
+- The ``_LIBCPP_ENABLE_CXX20_REMOVED_ALLOCATOR_MEMBERS`` macro has been deprecated in LLVM 18 and will be removed
+  entirely in LLVM 19.
+
+- The ``_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES`` and
+  ``_LIBCPP_ENABLE_CXX20_REMOVED_FEATURES`` macros have been deprecated
+  in LLVM 18 and will be removed entirely in LLVM 19.
+
+LLVM 20
+~~~~~~~
+
+- The ``LIBCXX_ENABLE_ASSERTIONS`` CMake variable and the ``_LIBCPP_ENABLE_ASSERTIONS`` macro that were used to enable
+  the safe mode will be removed.
+
+
+ABI Affecting Changes
+---------------------
+
+- The internal structure ``__compressed_pair`` has been replaced with ``[[no_unique_address]]``. This change results in
+  empty final types to be placed at the beginning of the object instead of where the beginning of the
+  ``__compressed_pair`` subobject was. This is only observable by checking the address of the subobject.
+
+Build System Changes
+--------------------
