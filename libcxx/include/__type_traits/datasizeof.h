@@ -59,6 +59,11 @@ inline const size_t __datasizeof_v = offsetof(_FirstPaddingByte<_Tp>, __first_pa
 _LIBCPP_DIAGNOSTIC_POP
 #endif   // __has_extension(datasizeof)
 
+#if !__has_extension(datasizeof)
+template <class _Tp>
+struct __libcpp_datasizeof<_Tp&> : __libcpp_datasizeof<_Tp> {};
+#endif
+
 _LIBCPP_END_NAMESPACE_STD
 
 #endif // _LIBCPP___TYPE_TRAITS_DATASIZEOF_H
