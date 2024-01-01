@@ -57,6 +57,9 @@ _LIBCPP_CLANG_DIAGNOSTIC_IGNORED("-Winvalid-offsetof")
 template <class _Tp>
 inline const size_t __datasizeof_v = offsetof(_FirstPaddingByte<_Tp>, __first_padding_byte_);
 _LIBCPP_DIAGNOSTIC_POP
+
+template <class _Tp>
+inline const size_t __datasizeof_v<_Tp&> = __datasizeof_v<_Tp>;
 #endif   // __has_extension(datasizeof)
 
 _LIBCPP_END_NAMESPACE_STD
