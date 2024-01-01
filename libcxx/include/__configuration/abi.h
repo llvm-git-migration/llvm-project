@@ -98,6 +98,13 @@
 // and WCHAR_MAX. This ABI setting determines whether we should instead track whether the fill
 // value has been initialized using a separate boolean, which changes the ABI.
 #  define _LIBCPP_ABI_IOS_ALLOW_ARBITRARY_FILL_VALUE
+// Historically, libc++ used a type called `__compressed_pair` to reduce storage need in cases of empty types (e.g. an
+// empty allocator in std::vector). We switched to using `[[no_unique_address]]`. However, for ABI compatibility reasons
+// we had to add artificial padding in a few places.
+//
+// This setting disables the addition of such artificial padding, leading to a more optimal
+// representation for several types.
+#  define _LIBCPP_ABI_NO_COMPRESSED_PAIR_PADDING
 #elif _LIBCPP_ABI_VERSION == 1
 #  if !(defined(_LIBCPP_OBJECT_FORMAT_COFF) || defined(_LIBCPP_OBJECT_FORMAT_XCOFF))
 // Enable compiling copies of now inline methods into the dylib to support
