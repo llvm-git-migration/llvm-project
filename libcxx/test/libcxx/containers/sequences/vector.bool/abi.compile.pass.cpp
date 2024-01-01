@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// REQUIRES: libcpp-abi-version=1
+
 #include <vector>
 
 #include "min_allocator.h"

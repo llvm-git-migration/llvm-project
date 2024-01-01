@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// REQUIRES: libcpp-abi-version=1
+
 #include <cstdint>
 #include <deque>
 
