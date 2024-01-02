@@ -448,6 +448,7 @@ def collect_original_check_lines(original_check_lines, ti: TestInfo, prefix_set:
 
             in_function_start = original_check_lines[func_name] = {}
 
+
 # Perform lit-like substitutions
 def getSubstitutions(sourcepath):
     sourcedir = os.path.dirname(sourcepath)
