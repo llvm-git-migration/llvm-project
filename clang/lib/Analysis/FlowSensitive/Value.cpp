@@ -27,9 +27,13 @@ static bool areEquivalentIndirectionValues(const Value &Val1,
 }
 
 bool areEquivalentValues(const Value &Val1, const Value &Val2) {
-  return &Val1 == &Val2 || (Val1.getKind() == Val2.getKind() &&
-                            (isa<TopBoolValue>(&Val1) ||
-                             areEquivalentIndirectionValues(Val1, Val2)));
+  // If values are distinct and have properties, we don't consider them equal,
+  // leaving equality up to the user model.
+  return &Val1 == &Val2 ||
+         (Val1.getKind() == Val2.getKind() &&
+          (Val1.properties().empty() && Val2.properties().empty()) &&
+          (isa<TopBoolValue>(&Val1) ||
+           areEquivalentIndirectionValues(Val1, Val2)));
 }
 
 raw_ostream &operator<<(raw_ostream &OS, const Value &Val) {

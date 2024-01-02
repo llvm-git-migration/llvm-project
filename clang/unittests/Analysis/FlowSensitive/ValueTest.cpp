@@ -53,8 +53,8 @@ TEST(ValueTest, EquivalentValuesWithDifferentPropsEquivalent) {
   TopBoolValue V2(A.makeAtomRef(Atom(3)));
   V1.setProperty("foo", Prop1);
   V2.setProperty("bar", Prop2);
-  EXPECT_TRUE(areEquivalentValues(V1, V2));
-  EXPECT_TRUE(areEquivalentValues(V2, V1));
+  EXPECT_FALSE(areEquivalentValues(V1, V2));
+  EXPECT_FALSE(areEquivalentValues(V2, V1));
 }
 
 TEST(ValueTest, DifferentKindsNotEquivalent) {
