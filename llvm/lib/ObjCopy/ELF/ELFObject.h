@@ -172,6 +172,8 @@ public:
   friend class SectionWriter;                                                  \
   friend class IHexSectionWriterBase;                                          \
   friend class IHexSectionWriter;                                              \
+  friend class SRECSectionWriterBase;                                          \
+  friend class SRECSectionWriter;                                              \
   template <class ELFT> friend class ELFSectionWriter;                         \
   template <class ELFT> friend class ELFSectionSizer;
 
@@ -402,6 +404,7 @@ struct SRecord {
   uint8_t getChecksum() const;
   size_t getSize() const;
   static SRecord getHeader(StringRef FileName);
+  static SRecord getTerminator(uint8_t Type, uint32_t Entry);
   enum Type : uint8_t {
     // Vendor specific text comment
     S0 = 0,
@@ -426,12 +429,15 @@ struct SRecord {
   };
 };
 
-/// FIXME: This is currently a contrived writer that only writes the
-/// Header record and nothing else
+/// The real writer
 class SRECWriter : public Writer {
   StringRef OutputFileName;
   size_t TotalSize = 0;
+  std::vector<const SectionBase *> Sections;
+
   size_t writeHeader(uint8_t *Buf);
+  size_t writeTerminator(uint8_t *Buf, uint8_t Type);
+  Error checkSection(const SectionBase &S) const;
 
 public:
   ~SRECWriter() = default;
@@ -439,6 +445,49 @@ public:
   Error write() override;
   SRECWriter(Object &Obj, raw_ostream &OS, StringRef OutputFile)
       : Writer(Obj, OS), OutputFileName(OutputFile) {}
+};
+
+/// Base class for SRecSectionWriter
+/// This class does not actually write anything. It is only used for size
+/// calculation.
+class SRECSectionWriterBase : public BinarySectionWriter {
+protected:
+  // Offset in the output buffer
+  uint64_t Offset;
+  // Sections start after the header
+  uint64_t HeaderSize;
+  // Type of records to write
+  uint8_t Type = SRecord::S1;
+  std::vector<SRecord> Records;
+  void writeSection(const SectionBase &S, ArrayRef<uint8_t> Data);
+
+public:
+  explicit SRECSectionWriterBase(WritableMemoryBuffer &Buf,
+                                 uint64_t StartOffset)
+      : BinarySectionWriter(Buf), Offset(StartOffset), HeaderSize(StartOffset) {
+  }
+
+  // Once the type of all records is known, write the records
+  virtual void writeRecords();
+  uint64_t getBufferOffset() const { return Offset; }
+  Error visit(const Section &S) final;
+  Error visit(const OwnedDataSection &S) final;
+  Error visit(const StringTableSection &S) override;
+  Error visit(const DynamicRelocationSection &S) final;
+  uint8_t getType() const { return Type; };
+  void writeRecord(SRecord &Record);
+  using BinarySectionWriter::visit;
+};
+
+// Real SREC section writer
+class SRECSectionWriter : public SRECSectionWriterBase {
+  void writeRecord(SRecord &Record, uint64_t Off);
+
+public:
+  SRECSectionWriter(WritableMemoryBuffer &Buf, uint64_t Offset)
+      : SRECSectionWriterBase(Buf, Offset) {}
+  Error visit(const StringTableSection &Sec) override;
+  void writeRecords() override;
 };
 
 class SectionBase {

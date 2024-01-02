@@ -1,0 +1,45 @@
+# A test where LMA and VMA are different. Records should use the LMA
+!ELF
+FileHeader:
+  Class:           ELFCLASS64
+  Data:            ELFDATA2LSB
+  Type:            ET_EXEC
+  Machine:         EM_X86_64
+  Entry:           0x8000
+ProgramHeaders:
+  - Type:            PT_LOAD
+    Flags:           [ PF_X, PF_R ]
+    FirstSec:        .text
+    LastSec:         .text
+    VAddr:           0x8000
+    Align:           0x1000
+    Offset:          0x1000
+  - Type:            PT_LOAD
+    Flags:           [ PF_W, PF_R ]
+    FirstSec:        .bss
+    LastSec:         .data
+    VAddr:           0x20000
+    PAddr:           0x8005
+    Align:           0x1000
+    Offset:          0x2000
+Sections:
+  - Name:            .text
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC, SHF_EXECINSTR ]
+    Address:         0x8000
+    AddressAlign:    0x4
+    Offset:          0x1000
+    Content:         '0020048090'
+  - Name:            .bss
+    Type:            SHT_NOBITS
+    Flags:           [ SHF_WRITE, SHF_ALLOC ]
+    Address:         0x20000
+    AddressAlign:    0x1
+    Offset:          0x2000
+    Size:            0x4
+  - Name:            .data
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_WRITE, SHF_ALLOC ]
+    Address:         0x20004
+    AddressAlign:    0x1
+    Content:         FF00
