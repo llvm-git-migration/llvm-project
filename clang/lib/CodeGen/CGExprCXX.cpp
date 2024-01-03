@@ -1038,11 +1038,13 @@ void CodeGenFunction::EmitNewArrayInitializer(
     return true;
   };
 
+  const InitListExpr *ILE = dyn_cast<InitListExpr>(Init);
+  const CXXParenListInitExpr *CPLIE = dyn_cast<CXXParenListInitExpr>(Init);
   // If the initializer is an initializer list, first do the explicit elements.
-  if (const InitListExpr *ILE = dyn_cast<InitListExpr>(Init)) {
+  if (ILE || CPLIE) {
     // Initializing from a (braced) string literal is a special case; the init
     // list element does not initialize a (single) array element.
-    if (ILE->isStringLiteralInit()) {
+    if (ILE && ILE->isStringLiteralInit()) {
       // Initialize the initial portion of length equal to that of the string
       // literal. The allocation must be for at least this much; we emitted a
       // check for that earlier.
@@ -1073,7 +1075,7 @@ void CodeGenFunction::EmitNewArrayInitializer(
       return;
     }
 
-    InitListElements = ILE->getNumInits();
+    InitListElements = ILE ? ILE->getNumInits() : CPLIE->getInitExprs().size();
 
     // If this is a multi-dimensional array new, we will initialize multiple
     // elements with each init list element.
@@ -1101,7 +1103,8 @@ void CodeGenFunction::EmitNewArrayInitializer(
     }
 
     CharUnits StartAlign = CurPtr.getAlignment();
-    for (unsigned i = 0, e = ILE->getNumInits(); i != e; ++i) {
+    ArrayRef<Expr *> InitExprs = ILE ? ILE->inits() : CPLIE->getInitExprs();
+    for (unsigned i = 0; i < InitExprs.size(); ++i) {
       // Tell the cleanup that it needs to destroy up to this
       // element.  TODO: some of these stores can be trivially
       // observed to be unnecessary.
@@ -1111,8 +1114,8 @@ void CodeGenFunction::EmitNewArrayInitializer(
       // FIXME: If the last initializer is an incomplete initializer list for
       // an array, and we have an array filler, we can fold together the two
       // initialization loops.
-      StoreAnyExprIntoOneUnit(*this, ILE->getInit(i),
-                              ILE->getInit(i)->getType(), CurPtr,
+      Expr *IE = InitExprs[i];
+      StoreAnyExprIntoOneUnit(*this, IE, IE->getType(), CurPtr,
                               AggValueSlot::DoesNotOverlap);
       CurPtr = Address(Builder.CreateInBoundsGEP(
                            CurPtr.getElementType(), CurPtr.getPointer(),
@@ -1122,7 +1125,7 @@ void CodeGenFunction::EmitNewArrayInitializer(
     }
 
     // The remaining elements are filled with the array filler expression.
-    Init = ILE->getArrayFiller();
+    Init = ILE ? ILE->getArrayFiller() : CPLIE->getArrayFiller();
 
     // Extract the initializer for the individual array elements by pulling
     // out the array filler from all the nested initializer lists. This avoids
