@@ -110,85 +110,18 @@ void LLVM::AllocaOp::handleDestructuringComplete(
 // Interfaces for LoadOp/StoreOp
 //===----------------------------------------------------------------------===//
 
-bool LLVM::LoadOp::loadsFrom(const MemorySlot &slot) {
-  return getAddr() == slot.ptr;
-}
-
-bool LLVM::LoadOp::storesTo(const MemorySlot &slot) { return false; }
-
-Value LLVM::LoadOp::getStored(const MemorySlot &slot, RewriterBase &rewriter) {
-  llvm_unreachable("getStored should not be called on LoadOp");
-}
-
-bool LLVM::StoreOp::loadsFrom(const MemorySlot &slot) { return false; }
-
-bool LLVM::StoreOp::storesTo(const MemorySlot &slot) {
-  return getAddr() == slot.ptr;
-}
-
-Value LLVM::StoreOp::getStored(const MemorySlot &slot, RewriterBase &rewriter) {
-  return getValue();
-}
-
-bool LLVM::LoadOp::canUsesBeRemoved(
-    const MemorySlot &slot, const SmallPtrSetImpl<OpOperand *> &blockingUses,
-    SmallVectorImpl<OpOperand *> &newBlockingUses) {
-  if (blockingUses.size() != 1)
-    return false;
-  Value blockingUse = (*blockingUses.begin())->get();
-  // If the blocking use is the slot ptr itself, there will be enough
-  // context to reconstruct the result of the load at removal time, so it can
-  // be removed (provided it loads the exact stored value and is not
-  // volatile).
-  return blockingUse == slot.ptr && getAddr() == slot.ptr &&
-         getResult().getType() == slot.elemType && !getVolatile_();
-}
-
-DeletionKind LLVM::LoadOp::removeBlockingUses(
-    const MemorySlot &slot, const SmallPtrSetImpl<OpOperand *> &blockingUses,
-    RewriterBase &rewriter, Value reachingDefinition) {
-  // `canUsesBeRemoved` checked this blocking use must be the loaded slot
-  // pointer.
-  rewriter.replaceAllUsesWith(getResult(), reachingDefinition);
-  return DeletionKind::Delete;
-}
-
-bool LLVM::StoreOp::canUsesBeRemoved(
-    const MemorySlot &slot, const SmallPtrSetImpl<OpOperand *> &blockingUses,
-    SmallVectorImpl<OpOperand *> &newBlockingUses) {
-  if (blockingUses.size() != 1)
-    return false;
-  Value blockingUse = (*blockingUses.begin())->get();
-  // If the blocking use is the slot ptr itself, dropping the store is
-  // fine, provided we are currently promoting its target value. Don't allow a
-  // store OF the slot pointer, only INTO the slot pointer.
-  return blockingUse == slot.ptr && getAddr() == slot.ptr &&
-         getValue() != slot.ptr && getValue().getType() == slot.elemType &&
-         !getVolatile_();
-}
-
-DeletionKind LLVM::StoreOp::removeBlockingUses(
-    const MemorySlot &slot, const SmallPtrSetImpl<OpOperand *> &blockingUses,
-    RewriterBase &rewriter, Value reachingDefinition) {
+DeletionKind LLVM::AddressSpaceAttr::removeStoreBlockingUses(
+    Operation *op, Value value, const MemorySlot &slot,
+    const SmallPtrSetImpl<OpOperand *> &blockingUses, RewriterBase &rewriter,
+    Value reachingDefinition) const {
   // `canUsesBeRemoved` checked this blocking use must be the stored slot
   // pointer.
   for (Operation *user : slot.ptr.getUsers())
-    if (auto declareOp = dyn_cast<LLVM::DbgDeclareOp>(user))
-      rewriter.create<LLVM::DbgValueOp>(declareOp->getLoc(), getValue(),
+    if (auto declareOp = mlir::dyn_cast<LLVM::DbgDeclareOp>(user))
+      rewriter.create<LLVM::DbgValueOp>(declareOp->getLoc(), value,
                                         declareOp.getVarInfo(),
                                         declareOp.getLocationExpr());
   return DeletionKind::Delete;
-}
-
-LogicalResult LLVM::LoadOp::ensureOnlySafeAccesses(
-    const MemorySlot &slot, SmallVectorImpl<MemorySlot> &mustBeSafelyUsed) {
-  return success(getAddr() != slot.ptr || getType() == slot.elemType);
-}
-
-LogicalResult LLVM::StoreOp::ensureOnlySafeAccesses(
-    const MemorySlot &slot, SmallVectorImpl<MemorySlot> &mustBeSafelyUsed) {
-  return success(getAddr() != slot.ptr ||
-                 getValue().getType() == slot.elemType);
 }
 
 //===----------------------------------------------------------------------===//
@@ -211,17 +144,6 @@ bool LLVM::BitcastOp::canUsesBeRemoved(
 }
 
 DeletionKind LLVM::BitcastOp::removeBlockingUses(
-    const SmallPtrSetImpl<OpOperand *> &blockingUses, RewriterBase &rewriter) {
-  return DeletionKind::Delete;
-}
-
-bool LLVM::AddrSpaceCastOp::canUsesBeRemoved(
-    const SmallPtrSetImpl<OpOperand *> &blockingUses,
-    SmallVectorImpl<OpOperand *> &newBlockingUses) {
-  return forwardToUsers(*this, newBlockingUses);
-}
-
-DeletionKind LLVM::AddrSpaceCastOp::removeBlockingUses(
     const SmallPtrSetImpl<OpOperand *> &blockingUses, RewriterBase &rewriter) {
   return DeletionKind::Delete;
 }

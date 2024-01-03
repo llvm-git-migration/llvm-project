@@ -66,18 +66,6 @@ SmallVector<Value> mlir::LLVM::AtomicCmpXchgOp::getAccessedOperands() {
   return {getPtr()};
 }
 
-SmallVector<Value> mlir::LLVM::AtomicRMWOp::getAccessedOperands() {
-  return {getPtr()};
-}
-
-SmallVector<Value> mlir::LLVM::LoadOp::getAccessedOperands() {
-  return {getAddr()};
-}
-
-SmallVector<Value> mlir::LLVM::StoreOp::getAccessedOperands() {
-  return {getAddr()};
-}
-
 SmallVector<Value> mlir::LLVM::MemcpyOp::getAccessedOperands() {
   return {getDst(), getSrc()};
 }

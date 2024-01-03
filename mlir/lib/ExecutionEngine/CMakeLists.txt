@@ -93,6 +93,7 @@ add_mlir_library(MLIRExecutionEngine
   MLIRLLVMDialect
   MLIRLLVMToLLVMIRTranslation
   MLIROpenMPToLLVMIRTranslation
+  MLIRPtrToLLVMIRTranslation
   MLIRTargetLLVMIRExport
   )
 
@@ -118,6 +119,7 @@ add_mlir_library(MLIRJitRunner
   MLIRIR
   MLIRParser
   MLIRLLVMToLLVMIRTranslation
+  MLIRPtrToLLVMIRTranslation
   MLIRTargetLLVMIRExport
   MLIRTransforms
   MLIRSupport

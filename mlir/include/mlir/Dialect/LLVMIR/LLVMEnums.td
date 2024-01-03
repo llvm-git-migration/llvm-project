@@ -87,42 +87,6 @@ def AsmATTOrIntel : LLVM_EnumAttr<
 // Atomic Operations
 //===----------------------------------------------------------------------===//
 
-def AtomicBinOpXchg : LLVM_EnumAttrCase<"xchg", "xchg", "Xchg", 0>;
-def AtomicBinOpAdd  : LLVM_EnumAttrCase<"add", "add", "Add", 1>;
-def AtomicBinOpSub  : LLVM_EnumAttrCase<"sub", "sub", "Sub", 2>;
-def AtomicBinOpAnd  : LLVM_EnumAttrCase<"_and", "_and", "And", 3>;
-def AtomicBinOpNand : LLVM_EnumAttrCase<"nand", "nand", "Nand", 4>;
-def AtomicBinOpOr   : LLVM_EnumAttrCase<"_or", "_or", "Or", 5>;
-def AtomicBinOpXor  : LLVM_EnumAttrCase<"_xor", "_xor", "Xor", 6>;
-def AtomicBinOpMax  : LLVM_EnumAttrCase<"max", "max", "Max", 7>;
-def AtomicBinOpMin  : LLVM_EnumAttrCase<"min", "min", "Min", 8>;
-def AtomicBinOpUMax : LLVM_EnumAttrCase<"umax", "umax", "UMax", 9>;
-def AtomicBinOpUMin : LLVM_EnumAttrCase<"umin", "umin", "UMin", 10>;
-def AtomicBinOpFAdd : LLVM_EnumAttrCase<"fadd", "fadd", "FAdd", 11>;
-def AtomicBinOpFSub : LLVM_EnumAttrCase<"fsub", "fsub", "FSub", 12>;
-def AtomicBinOpFMax : LLVM_EnumAttrCase<"fmax", "fmax", "FMax", 13>;
-def AtomicBinOpFMin : LLVM_EnumAttrCase<"fmin", "fmin", "FMin", 14>;
-def AtomicBinOpUIncWrap : LLVM_EnumAttrCase<"uinc_wrap",
-                                            "uinc_wrap", "UIncWrap", 15>;
-def AtomicBinOpUDecWrap : LLVM_EnumAttrCase<"udec_wrap",
-                                            "udec_wrap", "UDecWrap", 16>;
-
-// A sentinel value that has no MLIR counterpart.
-def AtomicBadBinOp : LLVM_EnumAttrCase<"", "", "BAD_BINOP", 0>;
-
-def AtomicBinOp : LLVM_EnumAttr<
-    "AtomicBinOp",
-    "::llvm::AtomicRMWInst::BinOp",
-    "llvm.atomicrmw binary operations",
-    [AtomicBinOpXchg, AtomicBinOpAdd, AtomicBinOpSub, AtomicBinOpAnd,
-     AtomicBinOpNand, AtomicBinOpOr, AtomicBinOpXor, AtomicBinOpMax,
-     AtomicBinOpMin, AtomicBinOpUMax, AtomicBinOpUMin, AtomicBinOpFAdd,
-     AtomicBinOpFSub, AtomicBinOpFMax, AtomicBinOpFMin, AtomicBinOpUIncWrap,
-     AtomicBinOpUDecWrap],
-    [AtomicBadBinOp]> {
-  let cppNamespace = "::mlir::LLVM";
-}
-
 def AtomicOrderingNotAtomic : LLVM_EnumAttrCase<"not_atomic",
                                                 "not_atomic", "NotAtomic", 0>;
 def AtomicOrderingUnordered : LLVM_EnumAttrCase<"unordered",

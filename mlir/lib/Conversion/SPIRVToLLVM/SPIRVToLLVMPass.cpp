@@ -58,6 +58,7 @@ void ConvertSPIRVToLLVMPass::runOnOperation() {
 
   ConversionTarget target(*context);
   target.addIllegalDialect<spirv::SPIRVDialect>();
+  target.addLegalDialect<ptr::PtrDialect>();
   target.addLegalDialect<LLVM::LLVMDialect>();
 
   if (clientAPI != spirv::ClientAPI::OpenCL &&

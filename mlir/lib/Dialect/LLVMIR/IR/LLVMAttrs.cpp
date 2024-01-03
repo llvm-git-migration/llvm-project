@@ -12,6 +12,7 @@
 
 #include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/Ptr/IR/PtrAttrs.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/Interfaces/FunctionInterfaces.h"
@@ -247,4 +248,212 @@ TargetFeaturesAttr TargetFeaturesAttr::featuresAt(Operation *op) {
     return {};
   return parentFunction.getOperation()->getAttrOfType<TargetFeaturesAttr>(
       getAttributeName());
+}
+
+//===----------------------------------------------------------------------===//
+// AddressSpaceAttr
+//===----------------------------------------------------------------------===//
+
+static bool isLoadableType(Type type) {
+  return /*LLVM_PrimitiveType*/ (
+             LLVM::isCompatibleOuterType(type) &&
+             !isa<LLVM::LLVMVoidType, LLVM::LLVMFunctionType>(type)) &&
+         /*LLVM_OpaqueStruct*/
+         !(isa<LLVM::LLVMStructType>(type) &&
+           cast<LLVM::LLVMStructType>(type).isOpaque()) &&
+         /*LLVM_AnyTargetExt*/
+         !(isa<LLVM::LLVMTargetExtType>(type) &&
+           !cast<LLVM::LLVMTargetExtType>(type).supportsMemOps());
+}
+
+Dialect *AddressSpaceAttr::getModelOwner() const { return &getDialect(); }
+
+unsigned AddressSpaceAttr::getAddressSpace() const { return getAs(); }
+
+Attribute AddressSpaceAttr::getDefaultMemorySpace() const {
+  return AddressSpaceAttr::get(getContext(), 0);
+}
+
+bool AddressSpaceAttr::isLoadableType(Type type) const {
+  return ::isLoadableType(type);
+}
+
+bool AddressSpaceAttr::isStorableType(Type type) const {
+  return ::isLoadableType(type);
+}
+
+/// Verifies that all elements of `array` are instances of `Attr`.
+template <class AttrT>
+static LogicalResult isArrayOf(Operation *op, Attribute attr) {
+  if (!attr)
+    return success();
+  auto array = dyn_cast<ArrayAttr>(attr);
+  if (!array)
+    return failure();
+  for (Attribute iter : array)
+    if (!isa<AttrT>(iter))
+      return failure();
+  return success();
+}
+
+static LogicalResult verifyAliasAnalysisOpInterface(Operation *op) {
+  if (auto aliasScopes = op->getAttr("alias_scopes"))
+    if (failed(isArrayOf<AliasScopeAttr>(op, aliasScopes)))
+      return op->emitError() << "attribute '"
+                             << "alias_scopes"
+                             << "' failed to satisfy constraint: LLVM dialect "
+                                "alias scope array";
+
+  if (auto noAliasScopes = op->getAttr("noalias_scopes"))
+    if (failed(isArrayOf<AliasScopeAttr>(op, noAliasScopes)))
+      return op->emitError() << "attribute '"
+                             << "noalias_scopes"
+                             << "' failed to satisfy constraint: LLVM dialect "
+                                "alias scope array";
+
+  Attribute tags = op->getAttr("tbaa");
+  if (!tags)
+    return success();
+
+  if (failed(isArrayOf<TBAATagAttr>(op, tags)))
+    return op->emitError() << "attribute '"
+                           << "tbaa"
+                           << "' failed to satisfy constraint: LLVM dialect "
+                              "TBAA tag metadata array";
+  return success();
+}
+
+static LogicalResult verifyAccessGroupOpInterface(Operation *op) {
+  if (auto accessGroups = op->getAttr("access_groups"))
+    if (failed(isArrayOf<AccessGroupAttr>(op, accessGroups)))
+      return op->emitError() << "attribute '"
+                             << "access_groups"
+                             << "' failed to satisfy constraint: LLVM dialect "
+                                "access group metadata array";
+  return success();
+}
+
+/// Returns true if the given type is supported by atomic operations. All
+/// integer and float types with limited bit width are supported. Additionally,
+/// depending on the operation pointers may be supported as well.
+static bool isTypeCompatibleWithAtomicOp(Type type, bool isPointerTypeAllowed) {
+  if (llvm::isa<LLVMPointerType>(type))
+    return isPointerTypeAllowed;
+
+  std::optional<unsigned> bitWidth;
+  if (auto floatType = llvm::dyn_cast<FloatType>(type)) {
+    if (!isCompatibleFloatingPointType(type))
+      return false;
+    bitWidth = floatType.getWidth();
+  }
+  if (auto integerType = llvm::dyn_cast<IntegerType>(type))
+    bitWidth = integerType.getWidth();
+  // The type is neither an integer, float, or pointer type.
+  if (!bitWidth)
+    return false;
+  return *bitWidth == 8 || *bitWidth == 16 || *bitWidth == 32 ||
+         *bitWidth == 64;
+}
+
+/// Verifies the attributes and the type of atomic memory access operations.
+LogicalResult AddressSpaceAttr::verifyCompatibleAtomicOp(
+    ptr::AtomicOpInfo info,
+    ArrayRef<ptr::AtomicOrdering> unsupportedOrderings) const {
+  if (failed(verifyAliasAnalysisOpInterface(info.op)))
+    return failure();
+  if (failed(verifyAccessGroupOpInterface(info.op)))
+    return failure();
+  if (info.ordering != ptr::AtomicOrdering::not_atomic) {
+    if (!isTypeCompatibleWithAtomicOp(info.valueType,
+                                      /*isPointerTypeAllowed=*/true))
+      return info.op->emitOpError("unsupported type ")
+             << info.valueType << " for atomic access";
+    if (llvm::is_contained(unsupportedOrderings, info.ordering))
+      return info.op->emitOpError("unsupported ordering '")
+             << ptr::stringifyAtomicOrdering(info.ordering) << "'";
+    if (!info.alignment)
+      return info.op->emitOpError("expected alignment for atomic access");
+    return success();
+  }
+  if (info.syncScope)
+    return info.op->emitOpError(
+        "expected syncscope to be null for non-atomic access");
+  return success();
+}
+
+LogicalResult AddressSpaceAttr::verifyAtomicRMW(ptr::AtomicOpInfo info,
+                                                ptr::AtomicBinOp binOp) const {
+  if (failed(verifyAccessGroupOpInterface(info.op)))
+    return failure();
+  if (failed(verifyAliasAnalysisOpInterface(info.op)))
+    return failure();
+  auto valType = info.valueType;
+  if (binOp == ptr::AtomicBinOp::fadd || binOp == ptr::AtomicBinOp::fsub ||
+      binOp == ptr::AtomicBinOp::fmin || binOp == ptr::AtomicBinOp::fmax) {
+    if (!mlir::LLVM::isCompatibleFloatingPointType(valType))
+      return info.op->emitOpError("expected LLVM IR floating point type");
+  } else if (binOp == ptr::AtomicBinOp::xchg) {
+    if (!isTypeCompatibleWithAtomicOp(valType, /*isPointerTypeAllowed=*/true))
+      return info.op->emitOpError("unexpected LLVM IR type for 'xchg' bin_op");
+  } else {
+    auto intType = llvm::dyn_cast<IntegerType>(valType);
+    unsigned intBitWidth = intType ? intType.getWidth() : 0;
+    if (intBitWidth != 8 && intBitWidth != 16 && intBitWidth != 32 &&
+        intBitWidth != 64)
+      return info.op->emitOpError("expected LLVM IR integer type");
+  }
+
+  if (static_cast<unsigned>(info.ordering) <
+      static_cast<unsigned>(ptr::AtomicOrdering::monotonic))
+    return info.op->emitOpError()
+           << "expected at least '"
+           << ptr::stringifyAtomicOrdering(ptr::AtomicOrdering::monotonic)
+           << "' ordering";
+
+  return success();
+}
+
+LogicalResult AddressSpaceAttr::verifyAtomicAtomicCmpXchg(
+    ptr::AtomicOpInfo info, ptr::AtomicOrdering failureOrdering) const {
+  if (failed(verifyAccessGroupOpInterface(info.op)))
+    return failure();
+  if (failed(verifyAliasAnalysisOpInterface(info.op)))
+    return failure();
+  auto valType = info.valueType;
+  if (!isTypeCompatibleWithAtomicOp(valType,
+                                    /*isPointerTypeAllowed=*/true))
+    return info.op->emitOpError("unexpected LLVM IR type");
+  if (info.ordering < ptr::AtomicOrdering::monotonic ||
+      failureOrdering < ptr::AtomicOrdering::monotonic)
+    return info.op->emitOpError("ordering must be at least 'monotonic'");
+  if (failureOrdering == ptr::AtomicOrdering::release ||
+      failureOrdering == ptr::AtomicOrdering::acq_rel)
+    return info.op->emitOpError(
+        "failure ordering cannot be 'release' or 'acq_rel'");
+  return success();
+}
+
+template <typename Ty>
+static bool isScalarOrVectorOf(Type ty) {
+  return isa<Ty>(ty) || (LLVM::isCompatibleVectorType(ty) &&
+                         isa<Ty>(LLVM::getVectorElementType(ty)));
+}
+
+LogicalResult AddressSpaceAttr::verifyPtrCast(Operation *op, Type tgt,
+                                              Type src) const {
+  if (!isScalarOrVectorOf<LLVMPointerType>(tgt))
+    return op->emitOpError() << "invalid target ptr-like type";
+  if (!isScalarOrVectorOf<LLVMPointerType>(src))
+    return op->emitOpError() << "invalid source ptr-like type";
+  return success();
+}
+
+LogicalResult AddressSpaceAttr::verifyIntCastTypes(Operation *op,
+                                                   Type intLikeTy,
+                                                   Type ptrLikeTy) const {
+  if (!isScalarOrVectorOf<IntegerType>(intLikeTy))
+    return op->emitOpError() << "invalid int-like type";
+  if (!isScalarOrVectorOf<LLVMPointerType>(ptrLikeTy))
+    return op->emitOpError() << "invalid ptr-like type";
+  return success();
 }

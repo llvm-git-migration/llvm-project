@@ -223,7 +223,7 @@ llvm.func @_QPomp_target_data(%a : !llvm.ptr, %b : !llvm.ptr, %c : !llvm.ptr, %d
 // CHECK: %[[MAP_0:.*]] = omp.map_info var_ptr(%[[ARG0]] : !llvm.ptr, !llvm.array<1024 x i32>)  map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
 // CHECK: omp.target_data map_entries(%[[MAP_0]] : !llvm.ptr) {
 // CHECK:           %[[VAL_1:.*]] = llvm.mlir.constant(10 : i32) : i32
-// CHECK:           llvm.store %[[VAL_1]], %[[ARG1]] : i32, !llvm.ptr
+// CHECK:           ptr.store %[[VAL_1]], %[[ARG1]] : i32, !llvm.ptr
 // CHECK:           omp.terminator
 // CHECK:         }
 // CHECK:         llvm.return
@@ -232,7 +232,7 @@ llvm.func @_QPomp_target_data_region(%a : !llvm.ptr, %i : !llvm.ptr) {
   %1 = omp.map_info var_ptr(%a : !llvm.ptr, !llvm.array<1024 x i32>)   map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
   omp.target_data map_entries(%1 : !llvm.ptr) {
     %2 = llvm.mlir.constant(10 : i32) : i32
-    llvm.store %2, %i : i32, !llvm.ptr
+    ptr.store %2, %i : i32, !llvm.ptr
     omp.terminator
   }
   llvm.return
@@ -249,7 +249,7 @@ llvm.func @_QPomp_target_data_region(%a : !llvm.ptr, %i : !llvm.ptr) {
 // CHECK:           omp.target   thread_limit(%[[VAL_0]] : i32) map_entries(%[[MAP1]] -> %[[BB_ARG0:.*]], %[[MAP2]] -> %[[BB_ARG1:.*]] : !llvm.ptr, !llvm.ptr) {
 // CHECK:           ^bb0(%[[BB_ARG0]]: !llvm.ptr, %[[BB_ARG1]]: !llvm.ptr):
 // CHECK:             %[[VAL_1:.*]] = llvm.mlir.constant(10 : i32) : i32
-// CHECK:             llvm.store %[[VAL_1]], %[[BB_ARG1]] : i32, !llvm.ptr
+// CHECK:             ptr.store %[[VAL_1]], %[[BB_ARG1]] : i32, !llvm.ptr
 // CHECK:             omp.terminator
 // CHECK:           }
 // CHECK:           llvm.return
@@ -262,7 +262,7 @@ llvm.func @_QPomp_target(%a : !llvm.ptr, %i : !llvm.ptr) {
   omp.target   thread_limit(%0 : i32) map_entries(%1 -> %arg0, %3 -> %arg1 : !llvm.ptr, !llvm.ptr) {
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
     %2 = llvm.mlir.constant(10 : i32) : i32
-    llvm.store %2, %arg1 : i32, !llvm.ptr
+    ptr.store %2, %arg1 : i32, !llvm.ptr
     omp.terminator
   }
   llvm.return
@@ -347,16 +347,16 @@ llvm.func @_QPsimple_reduction(%arg0: !llvm.ptr {fir.bindc_name = "y"}) {
   %3 = llvm.mlir.constant(1 : i64) : i64
   %4 = llvm.alloca %3 x i32 {bindc_name = "x", uniq_name = "_QFsimple_reductionEx"} : (i64) -> !llvm.ptr
   %5 = llvm.zext %2 : i1 to i32
-  llvm.store %5, %4 : i32, !llvm.ptr
+  ptr.store %5, %4 : i32, !llvm.ptr
   omp.parallel   {
     %6 = llvm.alloca %3 x i32 {adapt.valuebyref, in_type = i32, operandSegmentSizes = array<i32: 0, 0>, pinned} : (i64) -> !llvm.ptr
     omp.wsloop   reduction(@eqv_reduction -> %4 : !llvm.ptr) for  (%arg1) : i32 = (%1) to (%0) inclusive step (%1) {
-      llvm.store %arg1, %6 : i32, !llvm.ptr
-      %7 = llvm.load %6 : !llvm.ptr -> i32
+      ptr.store %arg1, %6 : i32, !llvm.ptr
+      %7 = ptr.load %6 : !llvm.ptr -> i32
       %8 = llvm.sext %7 : i32 to i64
       %9 = llvm.sub %8, %3  : i64
       %10 = llvm.getelementptr %arg0[0, %9] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.array<100 x i32>
-      %11 = llvm.load %10 : !llvm.ptr -> i32
+      %11 = ptr.load %10 : !llvm.ptr -> i32
       omp.reduction %11, %4 : i32, !llvm.ptr
       omp.yield
     }
@@ -382,7 +382,7 @@ llvm.func @_QQmain() {
     %8 = llvm.icmp "sgt" %7, %0 : i64
     llvm.cond_br %8, ^bb2, ^bb3
   ^bb2:  // pred: ^bb1
-    llvm.store %6, %4 : i32, !llvm.ptr
+    ptr.store %6, %4 : i32, !llvm.ptr
 // CHECK: omp.task
     omp.task   {
 // CHECK: llvm.call @[[CALL_FUNC:.*]]({{.*}}) :
@@ -390,12 +390,12 @@ llvm.func @_QQmain() {
 // CHECK: omp.terminator
       omp.terminator
     }
-    %9 = llvm.load %4 : !llvm.ptr -> i32
+    %9 = ptr.load %4 : !llvm.ptr -> i32
     %10 = llvm.add %9, %5  : i32
     %11 = llvm.sub %7, %2  : i64
     llvm.br ^bb1(%10, %11 : i32, i64)
   ^bb3:  // pred: ^bb1
-    llvm.store %6, %4 : i32, !llvm.ptr
+    ptr.store %6, %4 : i32, !llvm.ptr
 // CHECK: omp.terminator
     omp.terminator
   }
@@ -422,15 +422,15 @@ llvm.func @sub_() {
     %7 = llvm.icmp "sgt" %6, %0 : i64
     llvm.cond_br %7, ^bb2, ^bb3
   ^bb2:  // pred: ^bb1
-    llvm.store %5, %3 : i32, !llvm.ptr
-    %8 = llvm.load %3 : !llvm.ptr -> i32
+    ptr.store %5, %3 : i32, !llvm.ptr
+    %8 = ptr.load %3 : !llvm.ptr -> i32
 // CHECK: llvm.add
     %9 = arith.addi %8, %4 : i32
 // CHECK: llvm.sub
     %10 = arith.subi %6, %1 : i64
     llvm.br ^bb1(%9, %10 : i32, i64)
   ^bb3:  // pred: ^bb1
-    llvm.store %5, %3 : i32, !llvm.ptr
+    ptr.store %5, %3 : i32, !llvm.ptr
 // CHECK: omp.terminator
     omp.terminator
   }

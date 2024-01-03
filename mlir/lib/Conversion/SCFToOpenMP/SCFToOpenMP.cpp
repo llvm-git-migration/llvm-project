@@ -232,7 +232,7 @@ static omp::ReductionDeclareOp addAtomicRMW(OpBuilder &builder,
                                               atomicBlock->getArgument(1));
   builder.create<LLVM::AtomicRMWOp>(reduce.getLoc(), atomicKind,
                                     atomicBlock->getArgument(0), loaded,
-                                    LLVM::AtomicOrdering::monotonic);
+                                    ptr::AtomicOrdering::monotonic);
   builder.create<omp::YieldOp>(reduce.getLoc(), ArrayRef<Value>());
   return decl;
 }
@@ -475,7 +475,7 @@ struct ParallelOpLowering : public OpRewritePattern<scf::ParallelOp> {
 static LogicalResult applyPatterns(ModuleOp module, unsigned numThreads) {
   ConversionTarget target(*module.getContext());
   target.addIllegalOp<scf::ReduceOp, scf::ReduceReturnOp, scf::ParallelOp>();
-  target.addLegalDialect<omp::OpenMPDialect, LLVM::LLVMDialect,
+  target.addLegalDialect<omp::OpenMPDialect, ptr::PtrDialect, LLVM::LLVMDialect,
                          memref::MemRefDialect>();
 
   RewritePatternSet patterns(module.getContext());

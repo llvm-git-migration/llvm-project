@@ -18,6 +18,7 @@
 #include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMInterfaces.h"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
+#include "mlir/Dialect/Ptr/IR/PtrOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
@@ -84,6 +85,14 @@ public:
 
   using BaseT::operator=;
 };
+
+using AtomicBinOp = ::mlir::ptr::AtomicBinOp;
+using AtomicRMWOp = ::mlir::ptr::AtomicRMWOp;
+using LoadOp = ::mlir::ptr::LoadOp;
+using StoreOp = ::mlir::ptr::StoreOp;
+using AddrSpaceCastOp = ::mlir::ptr::AddrSpaceCastOp;
+using IntToPtrOp = ::mlir::ptr::IntToPtrOp;
+using PtrToIntOp = ::mlir::ptr::PtrToIntOp;
 } // namespace LLVM
 } // namespace mlir
 
@@ -232,7 +241,6 @@ template <typename IntT = int64_t>
 SmallVector<IntT> convertArrayToIndices(ArrayAttr attrs) {
   return convertArrayToIndices<IntT>(attrs.getValue());
 }
-
 } // namespace LLVM
 } // namespace mlir
 

@@ -10,8 +10,8 @@ module attributes {omp.is_target_device = true} {
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
       %2 = llvm.mlir.constant(20 : i32) : i32
       %3 = llvm.mlir.constant(10 : i32) : i32
-      llvm.store %3, %arg0 : i32, !llvm.ptr
-      llvm.store %2, %arg1 : i32, !llvm.ptr
+      ptr.store %3, %arg0 : i32, !llvm.ptr
+      ptr.store %2, %arg1 : i32, !llvm.ptr
       omp.terminator
     }
     llvm.return

@@ -160,8 +160,8 @@ def AccessGroupOpInterface : OpInterface<"AccessGroupOpInterface"> {
       /*args=*/        (ins),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        return op.getAccessGroupsAttr();
+        return mlir::dyn_cast_or_null<ArrayAttr>(
+          $_op->getAttr("access_groups"));
       }]
       >,
     InterfaceMethod<
@@ -171,8 +171,10 @@ def AccessGroupOpInterface : OpInterface<"AccessGroupOpInterface"> {
       /*args=*/        (ins "const ArrayAttr":$attr),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        op.setAccessGroupsAttr(attr);
+        if (attr)
+          $_op->setAttr("access_groups", attr);
+        else
+          $_op->removeAttr("access_groups"); 
       }]
       >
   ];
@@ -198,8 +200,8 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        return op.getAliasScopesAttr();
+        return mlir::dyn_cast_or_null<ArrayAttr>(
+          $_op->getAttr("alias_scopes"));
       }]
       >,
     InterfaceMethod<
@@ -209,8 +211,10 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins "const ArrayAttr":$attr),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        op.setAliasScopesAttr(attr);
+        if (attr)
+          $_op->setAttr("alias_scopes", attr);
+        else
+          $_op->removeAttr("alias_scopes");          
       }]
       >,
     InterfaceMethod<
@@ -220,8 +224,8 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        return op.getNoaliasScopesAttr();
+        return mlir::dyn_cast_or_null<ArrayAttr>(
+          $_op->getAttr("noalias_scopes"));
       }]
       >,
     InterfaceMethod<
@@ -231,8 +235,10 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins "const ArrayAttr":$attr),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        op.setNoaliasScopesAttr(attr);
+        if (attr)
+          $_op->setAttr("noalias_scopes", attr);
+        else
+          $_op->removeAttr("noalias_scopes");    
       }]
       >,
     InterfaceMethod<
@@ -242,8 +248,8 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        return op.getTbaaAttr();
+        return mlir::dyn_cast_or_null<ArrayAttr>(
+          $_op->getAttr("tbaa"));
       }]
       >,
     InterfaceMethod<
@@ -253,8 +259,10 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
       /*args=*/        (ins "const ArrayAttr":$attr),
       /*methodBody=*/  [{}],
       /*defaultImpl=*/ [{
-        auto op = cast<ConcreteOp>(this->getOperation());
-        op.setTbaaAttr(attr);
+        if (attr)
+          $_op->setAttr("tbaa", attr);
+        else
+          $_op->removeAttr("tbaa");    
       }]
       >,
     InterfaceMethod<
@@ -262,7 +270,11 @@ def AliasAnalysisOpInterface : OpInterface<"AliasAnalysisOpInterface"> {
                        "operation",
       /*returnType=*/  "::llvm::SmallVector<::mlir::Value>",
       /*methodName=*/  "getAccessedOperands",
-      /*args=*/        (ins)
+      /*args=*/        (ins),
+      /*methodBody=*/  [{}],
+      /*defaultImpl=*/ [{
+        return {};
+      }]
       >
   ];
 }

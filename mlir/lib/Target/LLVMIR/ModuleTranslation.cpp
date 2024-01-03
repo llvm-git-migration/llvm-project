@@ -254,8 +254,8 @@ translateDataLayout(DataLayoutSpecInterface attribute,
               uint64_t preferred =
                   dataLayout.getTypePreferredAlignment(type) * 8u;
               layoutStream << size << ":" << abi << ":" << preferred;
-              if (std::optional<uint64_t> index = extractPointerSpecValue(
-                      entry.getValue(), PtrDLEntryPos::Index))
+              if (std::optional<uint64_t> index = ptr::extractPointerSpecValue(
+                      entry.getValue(), ptr::PtrDLEntryPos::Index))
                 layoutStream << ":" << *index;
               return success();
             })

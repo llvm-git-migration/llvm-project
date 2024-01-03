@@ -10,6 +10,7 @@
 #define LLVMIR_ATTRDEFS
 
 include "mlir/Dialect/LLVMIR/LLVMDialect.td"
+include "mlir/Dialect/Ptr/IR/MemorySpaceInterfaces.td"
 include "mlir/IR/AttrTypeBase.td"
 include "mlir/IR/CommonAttrConstraints.td"
 
@@ -995,6 +996,28 @@ def LLVM_TargetFeaturesAttr : LLVM_Attr<"TargetFeatures", "target_features">
 
   let assemblyFormat = "`<` `[` (`]`) : ($features^ `]`)? `>`";
   let genVerifyDecl = 1;
+}
+
+//===----------------------------------------------------------------------===//
+// AddressSpaceAttr
+//===----------------------------------------------------------------------===//
+
+def AddressSpaceAttr : LLVM_Attr<"AddressSpace", "address_space", [
+    DeclareAttrInterfaceMethods<MemorySpaceAttrInterface, [
+      "getModelOwner",
+      "getAddressSpace",
+      "getDefaultMemorySpace",
+      "isLoadableType",
+      "isStorableType",
+      "verifyCompatibleAtomicOp",
+      "verifyAtomicRMW",
+      "verifyAtomicAtomicCmpXchg",
+      "verifyPtrCast",
+      "verifyIntCastTypes",
+      "removeStoreBlockingUses"]>
+  ]> {
+  let parameters = (ins DefaultValuedParameter<"unsigned", "0">:$as);
+  let assemblyFormat = "(`<` $as^ `>`)?";
 }
 
 #endif // LLVMIR_ATTRDEFS

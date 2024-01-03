@@ -1576,7 +1576,7 @@ struct AtomicRMWOpLowering : public LoadStoreOpLowering<memref::AtomicRMWOp> {
                              adaptor.getIndices(), rewriter);
     rewriter.replaceOpWithNewOp<LLVM::AtomicRMWOp>(
         atomicOp, *maybeKind, dataPtr, adaptor.getValue(),
-        LLVM::AtomicOrdering::acq_rel);
+        ptr::AtomicOrdering::acq_rel);
     return success();
   }
 };

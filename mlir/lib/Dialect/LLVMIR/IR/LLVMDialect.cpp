@@ -17,6 +17,7 @@
 #include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMInterfaces.h"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
+#include "mlir/Dialect/Ptr/IR/PtrDialect.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -754,22 +755,6 @@ Type GEPOp::getResultPtrElementType() {
 // LoadOp
 //===----------------------------------------------------------------------===//
 
-void LoadOp::getEffects(
-    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
-        &effects) {
-  effects.emplace_back(MemoryEffects::Read::get(), getAddr());
-  // Volatile operations can have target-specific read-write effects on
-  // memory besides the one referred to by the pointer operand.
-  // Similarly, atomic operations that are monotonic or stricter cause
-  // synchronization that from a language point-of-view, are arbitrary
-  // read-writes into memory.
-  if (getVolatile_() || (getOrdering() != AtomicOrdering::not_atomic &&
-                         getOrdering() != AtomicOrdering::unordered)) {
-    effects.emplace_back(MemoryEffects::Write::get());
-    effects.emplace_back(MemoryEffects::Read::get());
-  }
-}
-
 /// Returns true if the given type is supported by atomic operations. All
 /// integer and float types with limited bit width are supported. Additionally,
 /// depending on the operation pointers may be supported as well.
@@ -812,63 +797,6 @@ LogicalResult verifyAtomicMemOp(OpTy memOp, Type valueType,
     return memOp.emitOpError(
         "expected syncscope to be null for non-atomic access");
   return success();
-}
-
-LogicalResult LoadOp::verify() {
-  Type valueType = getResult().getType();
-  return verifyAtomicMemOp(*this, valueType,
-                           {AtomicOrdering::release, AtomicOrdering::acq_rel});
-}
-
-void LoadOp::build(OpBuilder &builder, OperationState &state, Type type,
-                   Value addr, unsigned alignment, bool isVolatile,
-                   bool isNonTemporal, AtomicOrdering ordering,
-                   StringRef syncscope) {
-  build(builder, state, type, addr,
-        alignment ? builder.getI64IntegerAttr(alignment) : nullptr, isVolatile,
-        isNonTemporal, ordering,
-        syncscope.empty() ? nullptr : builder.getStringAttr(syncscope),
-        /*access_groups=*/nullptr,
-        /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr,
-        /*tbaa=*/nullptr);
-}
-
-//===----------------------------------------------------------------------===//
-// StoreOp
-//===----------------------------------------------------------------------===//
-
-void StoreOp::getEffects(
-    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
-        &effects) {
-  effects.emplace_back(MemoryEffects::Write::get(), getAddr());
-  // Volatile operations can have target-specific read-write effects on
-  // memory besides the one referred to by the pointer operand.
-  // Similarly, atomic operations that are monotonic or stricter cause
-  // synchronization that from a language point-of-view, are arbitrary
-  // read-writes into memory.
-  if (getVolatile_() || (getOrdering() != AtomicOrdering::not_atomic &&
-                         getOrdering() != AtomicOrdering::unordered)) {
-    effects.emplace_back(MemoryEffects::Write::get());
-    effects.emplace_back(MemoryEffects::Read::get());
-  }
-}
-
-LogicalResult StoreOp::verify() {
-  Type valueType = getValue().getType();
-  return verifyAtomicMemOp(*this, valueType,
-                           {AtomicOrdering::acquire, AtomicOrdering::acq_rel});
-}
-
-void StoreOp::build(OpBuilder &builder, OperationState &state, Value value,
-                    Value addr, unsigned alignment, bool isVolatile,
-                    bool isNonTemporal, AtomicOrdering ordering,
-                    StringRef syncscope) {
-  build(builder, state, value, addr,
-        alignment ? builder.getI64IntegerAttr(alignment) : nullptr, isVolatile,
-        isNonTemporal, ordering,
-        syncscope.empty() ? nullptr : builder.getStringAttr(syncscope),
-        /*access_groups=*/nullptr,
-        /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
 
 //===----------------------------------------------------------------------===//
@@ -2603,47 +2531,6 @@ ConstantOp LLVM::ConstantOp::materialize(OpBuilder &builder, Attribute value,
 OpFoldResult LLVM::ConstantOp::fold(FoldAdaptor) { return getValue(); }
 
 //===----------------------------------------------------------------------===//
-// AtomicRMWOp
-//===----------------------------------------------------------------------===//
-
-void AtomicRMWOp::build(OpBuilder &builder, OperationState &state,
-                        AtomicBinOp binOp, Value ptr, Value val,
-                        AtomicOrdering ordering, StringRef syncscope,
-                        unsigned alignment, bool isVolatile) {
-  build(builder, state, val.getType(), binOp, ptr, val, ordering,
-        !syncscope.empty() ? builder.getStringAttr(syncscope) : nullptr,
-        alignment ? builder.getI64IntegerAttr(alignment) : nullptr, isVolatile,
-        /*access_groups=*/nullptr,
-        /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
-}
-
-LogicalResult AtomicRMWOp::verify() {
-  auto valType = getVal().getType();
-  if (getBinOp() == AtomicBinOp::fadd || getBinOp() == AtomicBinOp::fsub ||
-      getBinOp() == AtomicBinOp::fmin || getBinOp() == AtomicBinOp::fmax) {
-    if (!mlir::LLVM::isCompatibleFloatingPointType(valType))
-      return emitOpError("expected LLVM IR floating point type");
-  } else if (getBinOp() == AtomicBinOp::xchg) {
-    if (!isTypeCompatibleWithAtomicOp(valType, /*isPointerTypeAllowed=*/true))
-      return emitOpError("unexpected LLVM IR type for 'xchg' bin_op");
-  } else {
-    auto intType = llvm::dyn_cast<IntegerType>(valType);
-    unsigned intBitWidth = intType ? intType.getWidth() : 0;
-    if (intBitWidth != 8 && intBitWidth != 16 && intBitWidth != 32 &&
-        intBitWidth != 64)
-      return emitOpError("expected LLVM IR integer type");
-  }
-
-  if (static_cast<unsigned>(getOrdering()) <
-      static_cast<unsigned>(AtomicOrdering::monotonic))
-    return emitOpError() << "expected at least '"
-                         << stringifyAtomicOrdering(AtomicOrdering::monotonic)
-                         << "' ordering";
-
-  return success();
-}
-
-//===----------------------------------------------------------------------===//
 // AtomicCmpXchgOp
 //===----------------------------------------------------------------------===//
 
@@ -2806,24 +2693,9 @@ LogicalResult LLVM::BitcastOp::verify() {
   // 'llvm.addrspacecast' must be used for this purpose instead.
   if (resultType.getAddressSpace() != sourceType.getAddressSpace())
     return emitOpError("cannot cast pointers of different address spaces, "
-                       "use 'llvm.addrspacecast' instead");
+                       "use 'ptr.addrspacecast' instead");
 
   return success();
-}
-
-//===----------------------------------------------------------------------===//
-// Folder for LLVM::AddrSpaceCastOp
-//===----------------------------------------------------------------------===//
-
-OpFoldResult LLVM::AddrSpaceCastOp::fold(FoldAdaptor adaptor) {
-  // addrcast(x : T0, T0) -> x
-  if (getArg().getType() == getType())
-    return getArg();
-  // addrcast(addrcast(x : T0, T1), T0) -> x
-  if (auto prev = getArg().getDefiningOp<AddrSpaceCastOp>())
-    if (prev.getArg().getType() == getType())
-      return prev.getArg();
-  return {};
 }
 
 //===----------------------------------------------------------------------===//
@@ -2965,6 +2837,54 @@ LogicalResult LinkerOptionsOp::verify() {
 //===----------------------------------------------------------------------===//
 // LLVMDialect initialization, type parsing, and registration.
 //===----------------------------------------------------------------------===//
+namespace {
+// Implementation of the `AccessGroupOpInterface` model.
+class AccessGroupOpInterfaceLoadImpl
+    : public LLVM::AccessGroupOpInterface::ExternalModel<
+          AccessGroupOpInterfaceLoadImpl, LoadOp> {};
+// Implementation of the `AccessGroupOpInterface` model.
+class AccessGroupOpInterfaceStoreImpl
+    : public LLVM::AccessGroupOpInterface::ExternalModel<
+          AccessGroupOpInterfaceStoreImpl, StoreOp> {};
+// Implementation of the `AccessGroupOpInterface` model.
+class AccessGroupOpInterfaceAtomicRMWImpl
+    : public LLVM::AccessGroupOpInterface::ExternalModel<
+          AccessGroupOpInterfaceAtomicRMWImpl, AtomicRMWOp> {};
+
+// Implementation of the `AccessGroupOpInterface` model.
+class AliasAnalysisOpInterfaceLoadImpl
+    : public LLVM::AliasAnalysisOpInterface::ExternalModel<
+          AliasAnalysisOpInterfaceLoadImpl, LoadOp> {
+public:
+  SmallVector<Value> getAccessedOperands(Operation *op) const {
+    if (auto loadOp = dyn_cast<LoadOp>(op))
+      return loadOp.getAccessedOperands();
+    return {};
+  }
+};
+// Implementation of the `AccessGroupOpInterface` model.
+class AliasAnalysisOpInterfaceStoreImpl
+    : public LLVM::AliasAnalysisOpInterface::ExternalModel<
+          AliasAnalysisOpInterfaceStoreImpl, StoreOp> {
+public:
+  SmallVector<Value> getAccessedOperands(Operation *op) const {
+    if (auto storeOp = dyn_cast<StoreOp>(op))
+      return storeOp.getAccessedOperands();
+    return {};
+  }
+};
+// Implementation of the `AccessGroupOpInterface` model.
+class AliasAnalysisOpInterfaceAtomicRMWImpl
+    : public LLVM::AliasAnalysisOpInterface::ExternalModel<
+          AliasAnalysisOpInterfaceAtomicRMWImpl, AtomicRMWOp> {
+public:
+  SmallVector<Value> getAccessedOperands(Operation *op) const {
+    if (auto atomicOp = dyn_cast<AtomicRMWOp>(op))
+      return atomicOp.getAccessedOperands();
+    return {};
+  }
+};
+} // namespace
 
 void LLVMDialect::initialize() {
   registerAttributes();
@@ -2994,6 +2914,16 @@ void LLVMDialect::initialize() {
   addInterfaces<LLVMOpAsmDialectInterface>();
   // clang-format on
   detail::addLLVMInlinerInterface(this);
+
+  LoadOp::attachInterface<AccessGroupOpInterfaceLoadImpl,
+                          AliasAnalysisOpInterfaceLoadImpl>(*getContext());
+
+  StoreOp::attachInterface<AccessGroupOpInterfaceStoreImpl,
+                           AliasAnalysisOpInterfaceStoreImpl>(*getContext());
+
+  AtomicRMWOp::attachInterface<AccessGroupOpInterfaceAtomicRMWImpl,
+                               AliasAnalysisOpInterfaceAtomicRMWImpl>(
+      *getContext());
 }
 
 #define GET_OP_CLASSES

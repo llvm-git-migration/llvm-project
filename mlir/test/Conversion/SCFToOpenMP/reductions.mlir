@@ -13,8 +13,8 @@
 
 // CHECK: atomic
 // CHECK: ^{{.*}}(%[[ARG0:.*]]: !llvm.ptr, %[[ARG1:.*]]: !llvm.ptr):
-// CHECK: %[[RHS:.*]] = llvm.load %[[ARG1]] : !llvm.ptr -> f32
-// CHECK: llvm.atomicrmw fadd %[[ARG0]], %[[RHS]] monotonic
+// CHECK: %[[RHS:.*]] = ptr.load %[[ARG1]] : !llvm.ptr -> f32
+// CHECK: ptr.atomicrmw fadd %[[ARG0]], %[[RHS]] monotonic
 
 // CHECK-LABEL: @reduction1
 func.func @reduction1(%arg0 : index, %arg1 : index, %arg2 : index,
@@ -22,7 +22,7 @@ func.func @reduction1(%arg0 : index, %arg1 : index, %arg2 : index,
   // CHECK: %[[CST:.*]] = arith.constant 0.0
   // CHECK: %[[ONE:.*]] = llvm.mlir.constant(1
   // CHECK: %[[BUF:.*]] = llvm.alloca %[[ONE]] x f32
-  // CHECK: llvm.store %[[CST]], %[[BUF]]
+  // CHECK: ptr.store %[[CST]], %[[BUF]]
   %step = arith.constant 1 : index
   %zero = arith.constant 0.0 : f32
   // CHECK: omp.parallel
@@ -42,7 +42,7 @@ func.func @reduction1(%arg0 : index, %arg1 : index, %arg2 : index,
     // CHECK: omp.yield
   }
   // CHECK: omp.terminator
-  // CHECK: llvm.load %[[BUF]]
+  // CHECK: ptr.load %[[BUF]]
   return
 }
 
@@ -181,8 +181,8 @@ func.func @reduction3(%arg0 : index, %arg1 : index, %arg2 : index,
 
 // CHECK: atomic
 // CHECK: ^{{.*}}(%[[ARG0:.*]]: !llvm.ptr, %[[ARG1:.*]]: !llvm.ptr):
-// CHECK: %[[RHS:.*]] = llvm.load %[[ARG1]] : !llvm.ptr -> i64
-// CHECK: llvm.atomicrmw max %[[ARG0]], %[[RHS]] monotonic
+// CHECK: %[[RHS:.*]] = ptr.load %[[ARG1]] : !llvm.ptr -> i64
+// CHECK: ptr.atomicrmw max %[[ARG0]], %[[RHS]] monotonic
 
 // CHECK-LABEL: @reduction4
 func.func @reduction4(%arg0 : index, %arg1 : index, %arg2 : index,
@@ -193,9 +193,9 @@ func.func @reduction4(%arg0 : index, %arg1 : index, %arg2 : index,
   // CHECK: %[[IONE:.*]] = arith.constant 1
   %ione = arith.constant 1 : i64
   // CHECK: %[[BUF1:.*]] = llvm.alloca %{{.*}} x f32
-  // CHECK: llvm.store %[[ZERO]], %[[BUF1]]
+  // CHECK: ptr.store %[[ZERO]], %[[BUF1]]
   // CHECK: %[[BUF2:.*]] = llvm.alloca %{{.*}} x i64
-  // CHECK: llvm.store %[[IONE]], %[[BUF2]]
+  // CHECK: ptr.store %[[IONE]], %[[BUF2]]
 
   // CHECK: omp.parallel
   // CHECK: omp.wsloop
@@ -223,8 +223,8 @@ func.func @reduction4(%arg0 : index, %arg1 : index, %arg2 : index,
     // CHECK: omp.yield
   }
   // CHECK: omp.terminator
-  // CHECK: %[[RES1:.*]] = llvm.load %[[BUF1]] : !llvm.ptr -> f32
-  // CHECK: %[[RES2:.*]] = llvm.load %[[BUF2]] : !llvm.ptr -> i64
+  // CHECK: %[[RES1:.*]] = ptr.load %[[BUF1]] : !llvm.ptr -> f32
+  // CHECK: %[[RES2:.*]] = ptr.load %[[BUF2]] : !llvm.ptr -> i64
   // CHECK: return %[[RES1]], %[[RES2]]
   return %res#0, %res#1 : f32, i64
 }

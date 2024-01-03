@@ -586,8 +586,8 @@ combiner {
 }
 atomic {
 ^bb2(%arg2: !llvm.ptr, %arg3: !llvm.ptr):
-  %2 = llvm.load %arg3 : !llvm.ptr -> f32
-  llvm.atomicrmw fadd %arg2, %2 monotonic : !llvm.ptr, f32
+  %2 = ptr.load %arg3 : !llvm.ptr -> f32
+  ptr.atomicrmw fadd %arg2, %2 monotonic : !llvm.ptr, f32
   omp.yield
 }
 
@@ -1689,16 +1689,16 @@ func.func @omp_threadprivate() {
   // CHECK: {{.*}} = omp.threadprivate [[ARG0]] : !llvm.ptr -> !llvm.ptr
   %3 = llvm.mlir.addressof @_QFsubEx : !llvm.ptr
   %4 = omp.threadprivate %3 : !llvm.ptr -> !llvm.ptr
-  llvm.store %0, %4 : i32, !llvm.ptr
+  ptr.store %0, %4 : i32, !llvm.ptr
 
   // CHECK:  omp.parallel
   // CHECK:    {{.*}} = omp.threadprivate [[ARG0]] : !llvm.ptr -> !llvm.ptr
   omp.parallel  {
     %5 = omp.threadprivate %3 : !llvm.ptr -> !llvm.ptr
-    llvm.store %1, %5 : i32, !llvm.ptr
+    ptr.store %1, %5 : i32, !llvm.ptr
     omp.terminator
   }
-  llvm.store %2, %4 : i32, !llvm.ptr
+  ptr.store %2, %4 : i32, !llvm.ptr
   return
 }
 
@@ -1995,14 +1995,14 @@ func.func @omp_requires_multiple() -> ()
 // CHECK-SAME: (%[[v:.*]]: !llvm.ptr, %[[x:.*]]: !llvm.ptr)
 func.func @opaque_pointers_atomic_rwu(%v: !llvm.ptr, %x: !llvm.ptr) {
   // CHECK: omp.atomic.read %[[v]] = %[[x]] : !llvm.ptr, i32
-  // CHECK: %[[VAL:.*]] = llvm.load %[[x]] : !llvm.ptr -> i32
+  // CHECK: %[[VAL:.*]] = ptr.load %[[x]] : !llvm.ptr -> i32
   // CHECK: omp.atomic.write %[[v]] = %[[VAL]] : !llvm.ptr, i32
   // CHECK: omp.atomic.update %[[x]] : !llvm.ptr {
   // CHECK-NEXT: ^{{[[:alnum:]]+}}(%[[XVAL:.*]]: i32):
   // CHECK-NEXT:   omp.yield(%[[XVAL]] : i32)
   // CHECK-NEXT: }
   omp.atomic.read %v = %x : !llvm.ptr, i32
-  %val = llvm.load %x : !llvm.ptr -> i32
+  %val = ptr.load %x : !llvm.ptr -> i32
   omp.atomic.write %v = %val : !llvm.ptr, i32
   omp.atomic.update %x : !llvm.ptr {
     ^bb0(%xval: i32):
@@ -2027,8 +2027,8 @@ combiner {
 }
 atomic {
 ^bb2(%arg2: !llvm.ptr, %arg3: !llvm.ptr):
-  %2 = llvm.load %arg3 : !llvm.ptr -> f32
-  llvm.atomicrmw fadd %arg2, %2 monotonic : !llvm.ptr, f32
+  %2 = ptr.load %arg3 : !llvm.ptr -> f32
+  ptr.atomicrmw fadd %arg2, %2 monotonic : !llvm.ptr, f32
   omp.yield
 }
 

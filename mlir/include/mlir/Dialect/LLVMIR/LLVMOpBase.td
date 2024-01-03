@@ -250,7 +250,7 @@ class LLVM_Op<string mnemonic, list<Trait> traits = []> :
 class LLVM_MemAccessOpBase<string mnemonic, list<Trait> traits = []> :
     LLVM_Op<mnemonic, !listconcat([
       DeclareOpInterfaceMethods<AccessGroupOpInterface>,
-      DeclareOpInterfaceMethods<AliasAnalysisOpInterface>], traits)>,
+      DeclareOpInterfaceMethods<AliasAnalysisOpInterface, ["getAccessedOperands"]>], traits)>,
     LLVM_MemOpPatterns {
   dag aliasAttrs = (ins OptionalAttr<LLVM_AccessGroupArrayAttr>:$access_groups,
                     OptionalAttr<LLVM_AliasScopeArrayAttr>:$alias_scopes,
@@ -294,7 +294,7 @@ class LLVM_IntrOpBase<Dialect dialect, string opName, string enumName,
         !if(!gt(requiresAccessGroup, 0),
             [DeclareOpInterfaceMethods<AccessGroupOpInterface>], []),
         !if(!gt(requiresAliasAnalysis, 0),
-            [DeclareOpInterfaceMethods<AliasAnalysisOpInterface>], []),
+            [DeclareOpInterfaceMethods<AliasAnalysisOpInterface, ["getAccessedOperands"]>], []),
         !if(!gt(requiresFastmath, 0),
             [DeclareOpInterfaceMethods<FastmathFlagsInterface>], []),
         traits)>,

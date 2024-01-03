@@ -13,6 +13,8 @@ mlir_tablegen(LLVMOpsAttrDefs.cpp.inc -gen-attrdef-defs
               -attrdefs-dialect=llvm)
 add_public_tablegen_target(MLIRLLVMOpsIncGen)
 
+add_dependencies(MLIRLLVMOpsIncGen MLIRPtrOpsIncGen)
+
 set(LLVM_TARGET_DEFINITIONS LLVMTypes.td)
 mlir_tablegen(LLVMTypes.h.inc -gen-typedef-decls -typedefs-dialect=llvm)
 mlir_tablegen(LLVMTypes.cpp.inc -gen-typedef-defs -typedefs-dialect=llvm)
