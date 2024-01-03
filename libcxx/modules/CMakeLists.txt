@@ -212,11 +212,10 @@ add_custom_target(generate-cxx-modules
 )
 
 # Use the relative path between the installation and the module in the json
-# file. This allows moving the entire installation to a different to a
-# different location.
+# file. This allows moving the entire installation to a different location.
 file(RELATIVE_PATH LIBCXX_MODULE_RELATIVE_PATH
   ${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_LIBRARY_DIR}
-  ${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_MODULE_DIR})
+  ${CMAKE_INSTALL_PREFIX}/${LIBCXX_INSTALL_MODULE_INTERFACE_UNIT_SOURCE_DIR})
 configure_file(
   "modules.json.in"
   "${LIBCXX_LIBRARY_DIR}/libc++.modules.json"
@@ -227,11 +226,11 @@ configure_file(
 add_library(cxx-modules INTERFACE)
 add_dependencies(cxx-modules generate-cxx-modules)
 
-if (LIBCXX_INSTALL_MODULES)
+if (LIBCXX_INSTALL_MODULE_INTERFACE_UNIT_SOURCES)
   foreach(file ${LIBCXX_MODULE_STD_SOURCES} ${LIBCXX_MODULE_STD_COMPAT_SOURCES})
     get_filename_component(dir ${file} DIRECTORY)
     install(FILES ${file}
-      DESTINATION "${LIBCXX_INSTALL_MODULE_DIR}/${dir}"
+      DESTINATION "${LIBCXX_INSTALL_MODULE_INTERFACE_UNIT_SOURCE_DIR}/${dir}"
       COMPONENT cxx-modules
       PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     )
@@ -241,7 +240,7 @@ if (LIBCXX_INSTALL_MODULES)
   install(FILES
       "${LIBCXX_GENERATED_MODULE_DIR}/std.cppm"
       "${LIBCXX_GENERATED_MODULE_DIR}/std.compat.cppm"
-    DESTINATION "${LIBCXX_INSTALL_MODULE_DIR}"
+    DESTINATION "${LIBCXX_INSTALL_MODULE_INTERFACE_UNIT_SOURCE_DIR}"
     COMPONENT cxx-modules
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
   )
