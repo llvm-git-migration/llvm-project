@@ -48,15 +48,15 @@ enum { AMDHSA_COV4 = 4, AMDHSA_COV5 = 5 };
 bool isHsaAbi(const MCSubtargetInfo &STI);
 
 /// \returns Code object version from the IR module flag.
-unsigned getCodeObjectVersion(const Module &M);
+unsigned getAMDHSACodeObjectVersion(const Module &M);
 
-/// \returns The default code object version. This should only be used when we
-/// lack a more accurate CodeObjectVersion value (e.g. from the IR module flag
-/// or a .amdgcn_code_object_version directive)
-unsigned getDefaultCodeObjectVersion();
+/// \returns The default HSA code object version. This should only be used when
+/// we lack a more accurate CodeObjectVersion value (e.g. from the IR module
+/// flag or a .amdhsa_code_object_version directive)
+unsigned getDefaultAMDHSACodeObjectVersion();
 
-/// \returns ABIVersion suitable for use in ELF's e_ident[ABIVERSION].
-/// \param CodeObjectVersion is a value returned by getCodeObjectVersion().
+/// \returns ABIVersion suitable for use in ELF's e_ident[ABIVERSION]. \param
+/// CodeObjectVersion is a value returned by getAMDHSACodeObjectVersion().
 uint8_t getELFABIVersion(const Triple &OS, unsigned CodeObjectVersion);
 
 /// \returns The offset of the multigrid_sync_arg argument from implicitarg_ptr

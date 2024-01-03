@@ -44,15 +44,15 @@ protected:
 public:
   AMDGPUTargetStreamer(MCStreamer &S)
       : MCTargetStreamer(S),
-        // Assume the default COV for now, EmitDirectiveAMDGCNCodeObjectVersion
+        // Assume the default COV for now, EmitDirectiveAMDHSACodeObjectVersion
         // will update this if it is encountered.
-        CodeObjectVersion(AMDGPU::getDefaultCodeObjectVersion()) {}
+        CodeObjectVersion(AMDGPU::getDefaultAMDHSACodeObjectVersion()) {}
 
   AMDGPUPALMetadata *getPALMetadata() { return &PALMetadata; }
 
   virtual void EmitDirectiveAMDGCNTarget(){};
 
-  virtual void EmitDirectiveAMDGCNCodeObjectVersion(unsigned COV) {
+  virtual void EmitDirectiveAMDHSACodeObjectVersion(unsigned COV) {
     CodeObjectVersion = COV;
   }
 
@@ -128,7 +128,7 @@ public:
 
   void EmitDirectiveAMDGCNTarget() override;
 
-  void EmitDirectiveAMDGCNCodeObjectVersion(unsigned COV) override;
+  void EmitDirectiveAMDHSACodeObjectVersion(unsigned COV) override;
 
   void EmitAMDKernelCodeT(const amd_kernel_code_t &Header) override;
 

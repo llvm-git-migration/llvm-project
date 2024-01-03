@@ -1,7 +1,7 @@
 ; RUN: llc -mtriple=amdgcn-amd-amdhsa -mcpu=gfx803 < %s | FileCheck --check-prefixes=ALL-ASM,OSABI-AMDHSA-ASM %s
 ; RUN: llc -filetype=obj -mtriple=amdgcn-amd-amdhsa -mcpu=gfx803 < %s | llvm-readelf -S -r -s --notes - | FileCheck --check-prefix=OSABI-AMDHSA-ELF %s
 
-; ALL-ASM: amdgcn_code_object_version 4
+; ALL-ASM: amdhsa_code_object_version 4
 
 ; ALL-ASM-LABEL: {{^}}fadd:
 

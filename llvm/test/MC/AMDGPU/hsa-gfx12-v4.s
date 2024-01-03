@@ -52,8 +52,8 @@
 .amdgcn_target "amdgcn-amd-amdhsa--gfx1200"
 // ASM: .amdgcn_target "amdgcn-amd-amdhsa--gfx1200"
 
-.amdgcn_code_object_version 4
-// ASM: .amdgcn_code_object_version 4
+.amdhsa_code_object_version 4
+// ASM: .amdhsa_code_object_version 4
 
 .p2align 8
 .type minimal,@function

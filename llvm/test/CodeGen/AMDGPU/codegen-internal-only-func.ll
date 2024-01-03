@@ -8,9 +8,9 @@
 
 ; OPT:	  .text
 ; OPT-NEXT: .section	".note.GNU-stack"
-; COV4-NEXT: .amdgcn_code_object_version 4
-; COV5-NEXT: .amdgcn_code_object_version 5
 ; OPT-NEXT: .amdgcn_target "amdgcn-amd-amdhsa--gfx900"
+; COV4-NEXT: .amdhsa_code_object_version 4
+; COV5-NEXT: .amdhsa_code_object_version 5
 ; OPT-NEXT: .amdgpu_metadata
 ; OPT-NEXT: ---
 ; OPT-NEXT: amdhsa.kernels:  []

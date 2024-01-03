@@ -19,8 +19,8 @@
 .amdgcn_target "amdgcn-unknown-amdhsa--gfx700"
 // ASM: .amdgcn_target "amdgcn-unknown-amdhsa--gfx700"
 
-.amdgcn_code_object_version 4
-// ASM: .amdgcn_code_object_version 4
+.amdhsa_code_object_version 4
+// ASM: .amdhsa_code_object_version 4
 
 .set my_is_ptr64, 1
 

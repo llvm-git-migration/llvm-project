@@ -217,10 +217,10 @@ void AMDGPUTargetAsmStreamer::EmitDirectiveAMDGCNTarget() {
   OS << "\t.amdgcn_target \"" << getTargetID()->toString() << "\"\n";
 }
 
-void AMDGPUTargetAsmStreamer::EmitDirectiveAMDGCNCodeObjectVersion(
+void AMDGPUTargetAsmStreamer::EmitDirectiveAMDHSACodeObjectVersion(
     unsigned COV) {
-  AMDGPUTargetStreamer::EmitDirectiveAMDGCNCodeObjectVersion(COV);
-  OS << "\t.amdgcn_code_object_version " << COV << '\n';
+  AMDGPUTargetStreamer::EmitDirectiveAMDHSACodeObjectVersion(COV);
+  OS << "\t.amdhsa_code_object_version " << COV << '\n';
 }
 
 void

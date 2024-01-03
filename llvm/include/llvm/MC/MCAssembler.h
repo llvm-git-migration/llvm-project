@@ -154,13 +154,12 @@ private:
   bool SubsectionsViaSymbols : 1;
   bool IncrementalLinkerCompatible : 1;
 
-  /// ELF specific e_header flags
-  // It would be good if there were an MCELFAssembler class to hold this.
-  // ELF header flags are used both by the integrated and standalone assemblers.
+  /// ELF specific e_header and abi version flags
+  // It would be good if there were an MCELFAssembler class to hold these. ELF
+  // header flags are used both by the integrated and standalone assemblers.
   // Access to the flags is necessary in cases where assembler directives affect
   // which flags to be set.
   unsigned ELFHeaderEFlags;
-
   unsigned char ELFHeaderABIVersion = 0;
 
   /// Used to communicate Linker Optimization Hint information between

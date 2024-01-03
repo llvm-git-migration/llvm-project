@@ -124,16 +124,16 @@ bool isHsaAbi(const MCSubtargetInfo &STI) {
   return STI.getTargetTriple().getOS() == Triple::AMDHSA;
 }
 
-unsigned getCodeObjectVersion(const Module &M) {
+unsigned getAMDHSACodeObjectVersion(const Module &M) {
   if (auto Ver = mdconst::extract_or_null<ConstantInt>(
           M.getModuleFlag("amdgpu_code_object_version"))) {
     return (unsigned)Ver->getZExtValue() / 100;
   }
 
-  return getDefaultCodeObjectVersion();
+  return getDefaultAMDHSACodeObjectVersion();
 }
 
-unsigned getDefaultCodeObjectVersion() {
+unsigned getDefaultAMDHSACodeObjectVersion() {
   return DefaultAMDHSACodeObjectVersion;
 }
 

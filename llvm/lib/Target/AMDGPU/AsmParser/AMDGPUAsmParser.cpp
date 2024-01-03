@@ -1295,7 +1295,7 @@ private:
                           unsigned NextFreeSGPR, SMRange SGPRRange,
                           unsigned &VGPRBlocks, unsigned &SGPRBlocks);
   bool ParseDirectiveAMDGCNTarget();
-  bool ParseDirectiveAMDGCNCodeObjectVersion();
+  bool ParseDirectiveAMDHSACodeObjectVersion();
   bool ParseDirectiveAMDHSAKernel();
   bool ParseAMDKernelCodeTValue(StringRef ID, amd_kernel_code_t &Header);
   bool ParseDirectiveAMDKernelCodeT();
@@ -5526,12 +5526,12 @@ bool AMDGPUAsmParser::ParseDirectiveAMDHSAKernel() {
   return false;
 }
 
-bool AMDGPUAsmParser::ParseDirectiveAMDGCNCodeObjectVersion() {
+bool AMDGPUAsmParser::ParseDirectiveAMDHSACodeObjectVersion() {
   uint32_t Version;
   if (ParseAsAbsoluteExpression(Version))
     return true;
 
-  getTargetStreamer().EmitDirectiveAMDGCNCodeObjectVersion(Version);
+  getTargetStreamer().EmitDirectiveAMDHSACodeObjectVersion(Version);
   return false;
 }
 
@@ -5818,6 +5818,9 @@ bool AMDGPUAsmParser::ParseDirective(AsmToken DirectiveID) {
     if (IDVal == ".amdhsa_kernel")
      return ParseDirectiveAMDHSAKernel();
 
+    if (IDVal == ".amdhsa_code_object_version")
+      return ParseDirectiveAMDHSACodeObjectVersion();
+
     // TODO: Restructure/combine with PAL metadata directive.
     if (IDVal == AMDGPU::HSAMD::V3::AssemblerDirectiveBegin)
       return ParseDirectiveHSAMetadata();
@@ -5850,9 +5853,6 @@ bool AMDGPUAsmParser::ParseDirective(AsmToken DirectiveID) {
 
   if (IDVal == PALMD::AssemblerDirective)
     return ParseDirectivePALMetadata();
-
-  if (IDVal == ".amdgcn_code_object_version")
-    return ParseDirectiveAMDGCNCodeObjectVersion();
 
   return true;
 }
