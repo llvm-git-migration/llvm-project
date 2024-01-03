@@ -664,9 +664,6 @@ Bug Fixes in This Version
 - Fix crash during code generation of C++ coroutine initial suspend when the return
   type of await_resume is not trivially destructible.
   Fixes (`#63803 <https://github.com/llvm/llvm-project/issues/63803>`_)
-- ``__is_trivially_relocatable`` no longer returns true for non-object types
-  such as references and functions.
-  Fixes (`#67498 <https://github.com/llvm/llvm-project/issues/67498>`_)
 - Fix crash when the object used as a ``static_assert`` message has ``size`` or ``data`` members
   which are not member functions.
 - Support UDLs in ``static_assert`` message.
@@ -699,6 +696,12 @@ Bug Fixes in This Version
 - Clang now accepts recursive non-dependent calls to functions with deduced
   return type.
   Fixes (`#71015 <https://github.com/llvm/llvm-project/issues/71015>`_)
+- ``__is_trivially_relocatable`` no longer returns ``true`` for non-object types
+  such as references and functions, and no longer returns ``false`` for volatile-qualified types.
+  Fixes (`#67498 <https://github.com/llvm/llvm-project/issues/67498>`_) and
+  (`#77091 <https://github.com/llvm/llvm-project/issues/77091>`_)
+
+
 - Fix assertion failure when initializing union containing struct with
   flexible array member using empty initializer list.
   Fixes (`#77085 <https://github.com/llvm/llvm-project/issues/77085>`_)
