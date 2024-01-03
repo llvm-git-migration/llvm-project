@@ -59,6 +59,7 @@ class BasicBlock;
 class MDNode;
 class Module;
 class DbgVariableIntrinsic;
+class DIAssignID;
 class DPMarker;
 class DPValue;
 class raw_ostream;
@@ -81,6 +82,7 @@ class DPValue : public ilist_node<DPValue>, private DebugValueUser {
   DILocalVariable *Variable;
   DIExpression *Expression;
   DebugLoc DbgLoc;
+  DIExpression *AddressExpression;
 
 public:
   void deleteInstr();
@@ -97,6 +99,7 @@ public:
   enum class LocationType {
     Declare,
     Value,
+    Assign,
 
     End, ///< Marks the end of the concrete types.
     Any, ///< To indicate all LocationTypes in searches.
@@ -117,6 +120,22 @@ public:
   /// assigning \p Location to the DV / Expr / DI variable.
   DPValue(Metadata *Location, DILocalVariable *DV, DIExpression *Expr,
           const DILocation *DI, LocationType Type = LocationType::Value);
+  DPValue(Metadata *Value, DILocalVariable *Variable, DIExpression *Expression,
+          DIAssignID *AssignID, Metadata *Address,
+          DIExpression *AddressExpression, const DILocation *DI);
+
+  static DPValue *createDPVAssign(Metadata *Value, DILocalVariable *Variable,
+                                  DIExpression *Expression,
+                                  DIAssignID *AssignID, Metadata *Address,
+                                  DIExpression *AddressExpression,
+                                  const DILocation *DI,
+                                  Instruction *InsertBefore = nullptr);
+  static DPValue *createLinkedDPVAssign(Instruction *LinkedInstr, Value *Val,
+                                        DILocalVariable *Variable,
+                                        DIExpression *Expression,
+                                        Value *Address,
+                                        DIExpression *AddressExpression,
+                                        const DILocation *DI);
 
   /// Iterator for ValueAsMetadata that internally uses direct pointer iteration
   /// over either a ValueAsMetadata* or a ValueAsMetadata**, dereferencing to the
@@ -194,7 +213,7 @@ public:
 
   /// Does this describe the address of a local variable. True for dbg.addr
   /// and dbg.declare, but not dbg.value, which describes its value.
-  bool isAddressOfVariable() const { return Type != LocationType::Value; }
+  bool isAddressOfVariable() const { return Type == LocationType::Declare; }
   LocationType getType() const { return Type; }
 
   DebugLoc getDebugLoc() const { return DbgLoc; }
@@ -207,7 +226,11 @@ public:
 
   DIExpression *getExpression() const { return Expression; }
 
-  Metadata *getRawLocation() const { return DebugValue; }
+  /// Returns the metadata operand for the first location description. i.e.,
+  /// dbg intrinsic dbg.value,declare operand and dbg.assign 1st location
+  /// operand (the "value componenet"). Note the operand (singular) may be
+  /// a DIArgList which is a list of values.
+  Metadata *getRawLocation() const { return DebugValues[0]; }
 
   /// Use of this should generally be avoided; instead,
   /// replaceVariableLocationOp and addVariableLocationOps should be used where
@@ -217,23 +240,45 @@ public:
         (isa<ValueAsMetadata>(NewLocation) || isa<DIArgList>(NewLocation) ||
          isa<MDNode>(NewLocation)) &&
         "Location for a DPValue must be either ValueAsMetadata or DIArgList");
-    resetDebugValue(NewLocation);
+    resetDebugValue(0, NewLocation);
   }
 
   /// Get the size (in bits) of the variable, or fragment of the variable that
   /// is described.
   std::optional<uint64_t> getFragmentSizeInBits() const;
 
+  /// @name DbgAssign Methods
+  /// @{
+  bool isDbgAssign() const { return getType() == LocationType::Assign; }
+
+  Value *getAddress() const;
+  Metadata *getRawAddress() const {
+    return isDbgAssign() ? DebugValues[1] : DebugValues[0];
+  }
+  Metadata *getRawAssignID() const { return DebugValues[2]; }
+  DIAssignID *getAssignID() const;
+  DIExpression *getAddressExpression() const { return AddressExpression; }
+  void setAddressExpression(DIExpression *NewExpr) {
+    AddressExpression = NewExpr;
+  }
+  void setAssignId(DIAssignID *New);
+  void setAddress(Value *V) { resetDebugValue(1, ValueAsMetadata::get(V)); }
+  /// Kill the address component.
+  void setKillAddress();
+  /// Check whether this kills the address component. This doesn't take into
+  /// account the position of the intrinsic, therefore a returned value of false
+  /// does not guarentee the address is a valid location for the variable at the
+  /// intrinsic's position in IR.
+  bool isKillAddress() const;
+
+  /// @}
+public:
   DPValue *clone() const;
   /// Convert this DPValue back into a dbg.value intrinsic.
   /// \p InsertBefore Optional position to insert this intrinsic.
   /// \returns A new dbg.value intrinsic representiung this DPValue.
   DbgVariableIntrinsic *createDebugIntrinsic(Module *M,
                                              Instruction *InsertBefore) const;
-  /// Handle changes to the location of the Value(s) that we refer to happening
-  /// "under our feet".
-  void handleChangedLocation(Metadata *NewLocation);
-
   void setMarker(DPMarker *M) { Marker = M; }
 
   DPMarker *getMarker() { return Marker; }
