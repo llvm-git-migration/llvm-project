@@ -390,10 +390,10 @@ protected:
         this->getTypeConverter());
   }
 
-  void attachTBAATag(mlir::LLVM::AliasAnalysisOpInterface op,
-                     mlir::Type baseFIRType, mlir::Type accessFIRType,
-                     mlir::LLVM::GEPOp gep) const {
-    lowerTy().attachTBAATag(op, baseFIRType, accessFIRType, gep);
+  void attachTBAATag(mlir::Operation *op, mlir::Type baseFIRType,
+                     mlir::Type accessFIRType, mlir::LLVM::GEPOp gep) const {
+    if (auto iface = mlir::dyn_cast<mlir::LLVM::AliasAnalysisOpInterface>(op))
+      lowerTy().attachTBAATag(iface, baseFIRType, accessFIRType, gep);
   }
 
   const fir::FIRToLLVMPassOptions &options;
@@ -3105,9 +3105,11 @@ struct LoadOpConversion : public FIROpConversion<fir::LoadOp> {
         TODO(loc, "loading or assumed rank fir.box");
       auto boxValue =
           rewriter.create<mlir::LLVM::LoadOp>(loc, llvmLoadTy, inputBoxStorage);
-      if (std::optional<mlir::ArrayAttr> optionalTag = load.getTbaa())
-        boxValue.setTBAATags(*optionalTag);
-      else
+      if (std::optional<mlir::ArrayAttr> optionalTag = load.getTbaa()) {
+        if (auto iface = mlir::dyn_cast<mlir::LLVM::AliasAnalysisOpInterface>(
+                boxValue.getOperation()))
+          iface.setTBAATags(*optionalTag);
+      } else
         attachTBAATag(boxValue, boxTy, boxTy, nullptr);
       auto newBoxStorage =
           genAllocaWithType(loc, llvmLoadTy, defaultAlign, rewriter);
@@ -3118,9 +3120,11 @@ struct LoadOpConversion : public FIROpConversion<fir::LoadOp> {
     } else {
       auto loadOp = rewriter.create<mlir::LLVM::LoadOp>(
           load.getLoc(), llvmLoadTy, adaptor.getOperands(), load->getAttrs());
-      if (std::optional<mlir::ArrayAttr> optionalTag = load.getTbaa())
-        loadOp.setTBAATags(*optionalTag);
-      else
+      if (std::optional<mlir::ArrayAttr> optionalTag = load.getTbaa()) {
+        if (auto iface = mlir::dyn_cast<mlir::LLVM::AliasAnalysisOpInterface>(
+                loadOp.getOperation()))
+          iface.setTBAATags(*optionalTag);
+      } else
         attachTBAATag(loadOp, load.getType(), load.getType(), nullptr);
       rewriter.replaceOp(load, loadOp.getResult());
     }
@@ -3364,9 +3368,11 @@ struct StoreOpConversion : public FIROpConversion<fir::StoreOp> {
       newStoreOp = rewriter.create<mlir::LLVM::StoreOp>(
           loc, adaptor.getOperands()[0], adaptor.getOperands()[1]);
     }
-    if (std::optional<mlir::ArrayAttr> optionalTag = store.getTbaa())
-      newStoreOp.setTBAATags(*optionalTag);
-    else
+    if (std::optional<mlir::ArrayAttr> optionalTag = store.getTbaa()) {
+      if (auto iface = mlir::dyn_cast<mlir::LLVM::AliasAnalysisOpInterface>(
+              newStoreOp.getOperation()))
+        iface.setTBAATags(*optionalTag);
+    } else
       attachTBAATag(newStoreOp, storeTy, storeTy, nullptr);
     rewriter.eraseOp(store);
     return mlir::success();
@@ -3883,6 +3889,7 @@ public:
     mlir::populateComplexToLLVMConversionPatterns(typeConverter, pattern);
     mlir::populateVectorToLLVMConversionPatterns(typeConverter, pattern);
     mlir::ConversionTarget target{*context};
+    target.addLegalDialect<mlir::ptr::PtrDialect>();
     target.addLegalDialect<mlir::LLVM::LLVMDialect>();
     // The OpenMP dialect is legal for Operations without regions, for those
     // which contains regions it is legal if the region contains only the
