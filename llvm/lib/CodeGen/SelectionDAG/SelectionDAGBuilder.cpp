@@ -1241,6 +1241,7 @@ void SelectionDAGBuilder::visitDbgInfo(const Instruction &I) {
                              It->Expr, Vals.size() > 1, It->DL, SDNodeOrder);
       }
     }
+    return;
   }
 
   // Is there is any debug-info attached to this instruction, in the form of
