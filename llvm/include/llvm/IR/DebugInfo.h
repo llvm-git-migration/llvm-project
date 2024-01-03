@@ -193,6 +193,12 @@ inline AssignmentInstRange getAssignmentInsts(const DbgAssignIntrinsic *DAI) {
   return getAssignmentInsts(DAI->getAssignID());
 }
 
+inline SmallVector<DPValue *> getDPVAssignmentMarkers(const Instruction *Inst) {
+  if (auto *ID = Inst->getMetadata(LLVMContext::MD_DIAssignID))
+    return cast<DIAssignID>(ID)->getAllDPValueUsers();
+  return {};
+}
+
 //
 // Utilities for enumerating llvm.dbg.assign intrinsic from an assignment ID.
 //
