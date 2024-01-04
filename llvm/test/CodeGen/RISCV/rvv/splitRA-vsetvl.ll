@@ -1835,9 +1835,8 @@ define <4 x float> @tail_vmv_v_i_treat_as_vmv_s_x(<8 x float> %x, <8 x float> %y
 ; CHECK-NEXT:    vmul.vx v14, v12, a0
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
 ; CHECK-NEXT:    vrgatherei16.vv v12, v8, v14
-; CHECK-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
-; CHECK-NEXT:    vmv.v.i v0, 12
 ; CHECK-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; CHECK-NEXT:    vmv.v.i v0, 12
 ; CHECK-NEXT:    vadd.vi v8, v14, -14
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, mu
 ; CHECK-NEXT:    vrgatherei16.vv v12, v10, v8, v0.t
