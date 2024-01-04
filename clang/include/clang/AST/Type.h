@@ -4037,9 +4037,12 @@ public:
     // Describes the value of the state using ArmStateValue.
     SME_ZAShift = 2,
     SME_ZAMask = 0b111 << SME_ZAShift,
+    SME_ZT0Shift = 5,
+    SME_ZT0Mask = 0b111 << SME_ZT0Shift,
 
-    SME_AttributeMask = 0b111'111 // We only support maximum 6 bits because of
-                                  // the bitmask in FunctionTypeExtraBitfields.
+    SME_AttributeMask =
+        0b111'111'11 // We can't support more than 8 bits because of
+                     // the bitmask in FunctionTypeExtraBitfields.
   };
 
   enum ArmStateValue : unsigned {
@@ -4054,6 +4057,10 @@ public:
     return (ArmStateValue)((AttrBits & SME_ZAMask) >> SME_ZAShift);
   }
 
+  static ArmStateValue getArmZT0State(unsigned AttrBits) {
+    return (ArmStateValue)((AttrBits & SME_ZT0Mask) >> SME_ZT0Shift);
+  }
+
   /// A simple holder for various uncommon bits which do not fit in
   /// FunctionTypeBitfields. Aligned to alignof(void *) to maintain the
   /// alignment of subsequent objects in TrailingObjects.
@@ -4065,7 +4072,7 @@ public:
 
     /// Any AArch64 SME ACLE type attributes that need to be propagated
     /// on declarations and function pointers.
-    unsigned AArch64SMEAttributes : 6;
+    unsigned AArch64SMEAttributes : 8;
     FunctionTypeExtraBitfields()
         : NumExceptionType(0), AArch64SMEAttributes(SME_NormalFunction) {}
   };
@@ -4248,7 +4255,7 @@ public:
     FunctionType::ExtInfo ExtInfo;
     unsigned Variadic : 1;
     unsigned HasTrailingReturn : 1;
-    unsigned AArch64SMEAttributes : 6;
+    unsigned AArch64SMEAttributes : 8;
     Qualifiers TypeQuals;
     RefQualifierKind RefQualifier = RQ_None;
     ExceptionSpecInfo ExceptionSpec;

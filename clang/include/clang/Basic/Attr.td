@@ -2535,6 +2535,9 @@ def ArmNew : InheritableAttr, TargetSpecificAttr<TargetAArch64> {
     bool isNewZA() const {
       return llvm::is_contained(newArgs(), "za");
     }
+    bool isNewZT0() const {
+      return llvm::is_contained(newArgs(), "zt0");
+    }
   }];
 }
 

@@ -8843,6 +8843,7 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   }
 
   bool HasZA = false;
+  bool HasZT0 = false;
   for (unsigned I = 0, E = AL.getNumArgs(); I != E; ++I) {
     StringRef StateName;
     SourceLocation LiteralLoc;
@@ -8851,6 +8852,8 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
 
     if (StateName == "za")
       HasZA = true;
+    else if (StateName == "zt0")
+      HasZT0 = true;
     else {
       S.Diag(LiteralLoc, diag::err_unknown_arm_state) << StateName;
       AL.setInvalid();
@@ -8868,6 +8871,11 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
         FunctionType::getArmZAState(FPT->getAArch64SMEAttributes());
     if (HasZA && ZAState != FunctionType::ARM_None &&
         checkArmNewAttrMutualExclusion(S, AL, FPT, ZAState, "za"))
+      return;
+    FunctionType::ArmStateValue ZT0State =
+        FunctionType::getArmZT0State(FPT->getAArch64SMEAttributes());
+    if (HasZT0 && ZT0State != FunctionType::ARM_None &&
+        checkArmNewAttrMutualExclusion(S, AL, FPT, ZT0State, "zt0"))
       return;
   }
 
