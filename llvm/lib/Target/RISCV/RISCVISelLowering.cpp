@@ -13039,10 +13039,15 @@ struct NodeExtensionHelper {
       if (!VT.isVector())
         break;
 
-      MVT NarrowVT = OrigOperand.getOperand(0)->getSimpleValueType(0);
+      SDValue NarrowElt = OrigOperand.getOperand(0);
+      MVT NarrowVT = NarrowElt.getSimpleValueType();
 
       unsigned ScalarBits = VT.getScalarSizeInBits();
       unsigned NarrowScalarBits = NarrowVT.getScalarSizeInBits();
+
+      // Ensure the narrowing element type is legal
+      if (!Subtarget.getTargetLowering()->isTypeLegal(NarrowElt.getValueType()))
+        break;
 
       // Ensure the extension's semantic is equivalent to rvv vzext or vsext.
       if (ScalarBits != NarrowScalarBits * 2)
