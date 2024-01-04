@@ -294,7 +294,7 @@ StringRef riscv::getRISCVArch(const llvm::opt::ArgList &Args,
 
     if (MABI.equals_insensitive("ilp32e"))
       return "rv32e";
-    else if (MABI.starts_with_insensitive("lp64e"))
+    else if (MABI.equals_insensitive("lp64e"))
       return "rv64e";
     else if (MABI.starts_with_insensitive("ilp32"))
       return "rv32imafdc";

@@ -10,14 +10,7 @@
 ; RUN:   -verify-machineinstrs < %s \
 ; RUN:   | FileCheck -check-prefix=ILP32E-WITHFP-SAVE-RESTORE %s
 
-; As well as calling convention details, we check that ra and fp are
-; consistently stored to fp-4 and fp-8.
-
-; Any tests that would have identical output for some combination of the ilp32*
-; ABIs belong in calling-conv-*-common.ll. This file contains tests that will
-; have different output across those ABIs. i.e. where some arguments would be
-; passed according to the floating point ABI, or where the stack is aligned to
-; a different boundary.
+; This file contains tests that will have differing output for the ilp32e ABIs.
 
 define i32 @callee_float_in_regs(i32 %a, float %b) {
 ; ILP32E-FPELIM-LABEL: callee_float_in_regs:

@@ -117,7 +117,7 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 
   // There are only 16 GPRs for RVE.
   if (STI.isRVE())
-    for (size_t Reg = RISCV::X16; Reg <= RISCV::X31; Reg++)
+    for (MCPhysReg Reg = RISCV::X16; Reg <= RISCV::X31; Reg++)
       markSuperRegs(Reserved, Reg);
 
   // V registers for code generation. We handle them manually.

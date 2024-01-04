@@ -4,15 +4,7 @@
 ; RUN: llc -mtriple=riscv64 -target-abi lp64e -verify-machineinstrs -frame-pointer=all < %s \
 ; RUN:   | FileCheck -check-prefix=RV64I-LP64E-WITHFP %s
 
-; As well as calling convention details, we check that ra and fp are
-; consistently stored to fp-8 and fp-16.
-
-; Any tests that would have identical output for some combination of the lp64*
-; ABIs belong in calling-conv-*-common.ll. This file contains tests that will
-; have different output across those ABIs. i.e. where some arguments would be
-; passed according to the floating point ABI.
-
-; TODO: softened float values can be passed anyext.
+; This file contains tests that will have differing output for the lp64e ABIs.
 
 define i64 @callee_float_in_regs(i64 %a, float %b) nounwind {
 ; RV64I-LP64E-FPELIM-LABEL: callee_float_in_regs:

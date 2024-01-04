@@ -42,7 +42,7 @@
 # RV32EF-LP64F: 64-bit ABIs are not supported for 32-bit targets (ignoring target-abi)
 # RV32EFD-LP64D: 64-bit ABIs are not supported for 32-bit targets (ignoring target-abi)
 # RV32E-LP64E: 64-bit ABIs are not supported for 32-bit targets (ignoring target-abi)
-# RV32EFD-LP64D: LLVM ERROR: ILP32E must not be used with the D ISA extension
+# RV32EFD-LP64D: LLVM ERROR: ILP32E cannot be used with the D ISA extension
 
 # RUN: llvm-mc -triple=riscv32 -target-abi ilp32f < %s 2>&1 \
 # RUN:   | FileCheck -check-prefix=RV32I-ILP32F %s
@@ -78,9 +78,9 @@
 # RV32E-ILP32: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
 # RV32EF-ILP32F: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
 # RV32EFD-ILP32F: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
-# RV32EFD-ILP32F: LLVM ERROR: ILP32E must not be used with the D ISA extension
+# RV32EFD-ILP32F: LLVM ERROR: ILP32E cannot be used with the D ISA extension
 # RV32EFD-ILP32D: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
-# RV32EFD-ILP32D: LLVM ERROR: ILP32E must not be used with the D ISA extension
+# RV32EFD-ILP32D: LLVM ERROR: ILP32E cannot be used with the D ISA extension
 
 # RUN: llvm-mc -triple=riscv64 -mattr=+e -target-abi lp64 < %s 2>&1 \
 # RUN:   | FileCheck -check-prefix=RV64EF-LP64F %s

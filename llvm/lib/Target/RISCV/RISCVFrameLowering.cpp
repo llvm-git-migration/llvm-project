@@ -512,8 +512,9 @@ void RISCVFrameLowering::emitPrologue(MachineFunction &MF,
   // The following calculates the correct offset knowing the number of callee
   // saved registers spilt by the two methods.
   if (int LibCallRegs = getLibCallID(MF, MFI.getCalleeSavedInfo()) + 1) {
-    // Calculate the size of the frame managed by the libcall. The libcalls are
-    // implemented such that the stack will always be 16 byte aligned.
+    // Calculate the size of the frame managed by the libcall. The stack
+    // alignment of these libcalls should be the same as how we set it in
+    // getABIStackAlignment.
     unsigned LibCallFrameSize =
         alignTo((STI.getXLen() / 8) * LibCallRegs, getStackAlign());
     RVFI->setLibCallStackSize(LibCallFrameSize);

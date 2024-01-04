@@ -17187,10 +17187,9 @@ static bool CC_RISCVAssign2XLen(unsigned XLen, CCState &State, CCValAssign VA1,
     // Both halves must be passed on the stack, with proper alignment.
     // TODO: To be compatible with GCC's behaviors, we force them to have 4-byte
     // alignment. This behavior may be changed when RV32E/ILP32E is ratified.
-    Align StackAlign =
-        EABI && XLen == 32
-            ? Align(XLenInBytes)
-            : std::max(Align(XLenInBytes), ArgFlags1.getNonZeroOrigAlign());
+    Align StackAlign(XLenInBytes);
+    if (!EABI || XLen != 32)
+      StackAlign = std::max(StackAlign, ArgFlags1.getNonZeroOrigAlign());
     State.addLoc(
         CCValAssign::getMem(VA1.getValNo(), VA1.getValVT(),
                             State.AllocateStack(XLenInBytes, StackAlign),

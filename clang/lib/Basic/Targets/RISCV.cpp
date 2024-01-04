@@ -395,7 +395,7 @@ bool RISCVTargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
 
   if (ABI == "ilp32e" && ISAInfo->hasExtension("d")) {
     Diags.Report(diag::err_invalid_feature_combination)
-        << "ILP32E must not be used with the D ISA extension";
+        << "ILP32E cannot be used with the D ISA extension";
     return false;
   }
   return true;
