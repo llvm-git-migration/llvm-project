@@ -296,6 +296,19 @@ struct Fragment {
     // ::). All nested namespaces are affected as well.
     // Affects availability of the AddUsing tweak.
     std::vector<Located<std::string>> FullyQualifiedNamespaces;
+
+    /// List of regexes for headers that should always be included with a
+    /// ""-style include. By default, and in case of a conflict with
+    /// AngledHeaders (i.e. a header matches a regex in both QuotedHeaders and
+    /// AngledHeaders), system headers use <> and non-system headers use "".
+    /// These can match any suffix of the header file in question.
+    std::vector<Located<std::string>> QuotedHeaders;
+    /// List of regexes for headers that should always be included with a
+    /// <>-style include. By default, and in case of a conflict with
+    /// AngledHeaders (i.e. a header matches a regex in both QuotedHeaders and
+    /// AngledHeaders), system headers use <> and non-system headers use "".
+    /// These can match any suffix of the header file in question.
+    std::vector<Located<std::string>> AngledHeaders;
   };
   StyleBlock Style;
 
