@@ -10,6 +10,7 @@
 #include "clang/Tooling/ModuleBuildDaemon/Utils.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Signals.h"
 #include "llvm/Support/ThreadPool.h"
 
 #include <csignal>
@@ -76,9 +77,8 @@ private:
   std::optional<llvm::ListeningSocket> ServerListener;
 };
 
-// Required to handle SIGTERM by calling Shutdown
 ModuleBuildDaemonServer *DaemonPtr = nullptr;
-void handleSignal(int Signal) {
+void handleSignal() {
   if (DaemonPtr != nullptr) {
     DaemonPtr->shutdownDaemon();
   }
@@ -97,14 +97,17 @@ int ModuleBuildDaemonServer::setupDaemonEnv() {
   freopen(STDOUT.c_str(), "a", stdout);
   freopen(STDERR.c_str(), "a", stderr);
 
-  if (signal(SIGTERM, handleSignal) == SIG_ERR) {
-    errs() << "failed to handle SIGTERM" << '\n';
-    exit(EXIT_FAILURE);
-  }
+  llvm::sys::SetInterruptFunction(handleSignal);
+
+// TODO: Figure out how to do this on windows
+#ifdef SIGHUP
+  // Overides llvm::sys::SetInterruptFunction
   if (signal(SIGHUP, SIG_IGN) == SIG_ERR) {
-    errs() << "failed to ignore SIGHUP" << '\n';
+    errs() << "failed to handle SIGHUP" << '\n';
     exit(EXIT_FAILURE);
   }
+#endif
+
   return EXIT_SUCCESS;
 }
 

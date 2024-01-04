@@ -16,7 +16,16 @@
 #include "llvm/Support/Error.h"
 
 #include <string>
+
+#ifdef _WIN32
+// winsock2.h must be included before afunix.h
+// clang-format off
+#include <winsock2.h>
+#include <afunix.h>
+// clang-format on
+#else
 #include <sys/un.h>
+#endif
 
 namespace clang::tooling::cc1modbuildd {
 
