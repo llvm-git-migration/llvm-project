@@ -1131,9 +1131,9 @@ class HighRegisterPressureDetector {
   const unsigned PSetNum;
 
   // Indexed by PSet ID
-  // InitSetPressure takes into account the register preesure of live-in
+  // InitSetPressure takes into account the register pressure of live-in
   // registers. It's not depend on how the loop is scheduled, so it's enough to
-  // calculate them once at the begining.
+  // calculate them once at the beginning.
   std::vector<unsigned> InitSetPressure;
 
   // Indexed by PSet ID
@@ -1183,13 +1183,13 @@ private:
     unsigned Weight = PSetIter.getWeight();
     for (; PSetIter.isValid(); ++PSetIter) {
       auto &P = Pressure[*PSetIter];
-      assert(Weight <= P &&
-             "register pressure must be greater or equal than weight");
+      assert(P >= Weight &&
+             "register pressure must be greater than or equal weight");
       P -= Weight;
     }
   }
 
-  // Retrun true if Reg is fixed one, for example, stack pointer
+  // Return true if Reg is fixed one, for example, stack pointer
   bool isFixedRegister(Register Reg) const {
     return Reg.isPhysical() && TRI->isFixedRegister(MF, Reg.asMCReg());
   }
@@ -1221,7 +1221,7 @@ private:
       increaseRegisterPressure(InitSetPressure, LiveIn);
   }
 
-  // Calcluate the upper limit of each pressure set
+  // Calculate the upper limit of each pressure set
   void computePressureSetLimit(const RegisterClassInfo &RCI) {
     for (unsigned PSet = 0; PSet < PSetNum; PSet++)
       PressureSetLimit[PSet] = RCI.getRegPressureSetLimit(PSet);
@@ -1254,8 +1254,8 @@ private:
       unsigned Weight = PSetIter.getWeight();
       for (; PSetIter.isValid(); ++PSetIter) {
         unsigned &Limit = PressureSetLimit[*PSetIter];
-        assert(Weight <= Limit &&
-               "register pressure limit must be greater or equal than weight");
+        assert(Limit >= Weight &&
+               "register pressure limit must be greater than or equal weight");
         Limit -= Weight;
         LLVM_DEBUG(dbgs() << "PSet=" << *PSetIter << " Limit=" << Limit
                           << " (decreased by " << Weight << ")\n");
@@ -1267,7 +1267,7 @@ private:
   //   - by an instruction of the current iteration
   //   - by a phi instruction of the next iteration (loop carried value)
   //
-  // Furthermore, following two gropus of instructions are executed
+  // Furthermore, following two groups of instructions are executed
   // simultaneously
   //   - next iteration's phi instructions in i-th stage
   //   - current iteration's instructions in i+1-th stage
@@ -1442,7 +1442,7 @@ public:
   }
 
   // Calculate the maximum register pressures of the loop and check if they
-  // excced the limit
+  // exceed the limit
   bool detect(const OrderedInstsTy &OrderedInsts, Instr2StageTy &Stages,
               const unsigned MaxStage) const {
     assert(0 <= RegPressureMargin && RegPressureMargin <= 100 &&
@@ -1466,7 +1466,7 @@ public:
       if (Limit < MaxSetPressure[PSet] + Margin) {
         LLVM_DEBUG(
             dbgs()
-            << "Rejecte the schedule because of too high register pressure\n");
+            << "Rejected the schedule because of too high register pressure\n");
         return true;
       }
     }
@@ -2329,11 +2329,11 @@ void SwingSchedulerDAG::computeNodeOrder(NodeSetType &NodeSets) {
   });
 }
 
-/// Create a instruction stream that represents a single iteration and stage of
+/// Create an instruction stream that represents a single iteration and stage of
 /// each instruction. This function differs from SMSchedule::finalizeSchedule in
 /// that this doesn't have any side-effect to SwingSchedulerDAG. That is, this
-/// function is approximation of SMSchedule::finalizeSchedule with all non-const
-/// operations removed
+/// function is an approximation of SMSchedule::finalizeSchedule with all non-const
+/// operations removed.
 static void computeScheduledInsts(const SwingSchedulerDAG *SSD,
                                   SMSchedule &Schedule,
                                   std::vector<MachineInstr *> &OrderedInsts,
@@ -2458,8 +2458,8 @@ bool SwingSchedulerDAG::schedulePipeline(SMSchedule &Schedule) {
     if (scheduleFound)
       scheduleFound = Schedule.isValidSchedule(this);
 
-    // If a schedule found and the option is enabled, check if the schedule
-    // might generate additional register spill/fill
+    // If a schedule was found and the option is enabled, check if the schedule
+    // might generate additional register spills/fills.
     if (scheduleFound && LimitRegPressure) {
       std::vector<MachineInstr *> OrderedInsts;
       DenseMap<MachineInstr *, unsigned> Stages;
