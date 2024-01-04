@@ -1826,6 +1826,27 @@ define <vscale x 32 x half> @vsitofp_nxv32f16_nxv32i32(<vscale x 32 x i32> %va, 
   ret <vscale x 32 x half> %v
 }
 
+define <4 x float> @tail_vmv_v_i_treat_as_vmv_s_x(<8 x float> %x, <8 x float> %y) optsize {
+; CHECK-LABEL: tail_vmv_v_i_treat_as_vmv_s_x:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; CHECK-NEXT:    vid.v v12
+; CHECK-NEXT:    li a0, 7
+; CHECK-NEXT:    vmul.vx v14, v12, a0
+; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
+; CHECK-NEXT:    vrgatherei16.vv v12, v8, v14
+; CHECK-NEXT:    vsetivli zero, 1, e8, mf8, ta, ma
+; CHECK-NEXT:    vmv.v.i v0, 12
+; CHECK-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; CHECK-NEXT:    vadd.vi v8, v14, -14
+; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, mu
+; CHECK-NEXT:    vrgatherei16.vv v12, v10, v8, v0.t
+; CHECK-NEXT:    vmv1r.v v8, v12
+; CHECK-NEXT:    ret
+  %z = shufflevector <8 x float> %x, <8 x float> %y, <4 x i32> <i32 0, i32 7, i32 8, i32 15>
+  ret <4 x float> %z
+}
+
 declare {<vscale x 8 x i64>, <vscale x 8 x i64>} @llvm.experimental.vector.deinterleave2.nxv16i64(<vscale x 16 x i64>)
 declare <8 x i32> @llvm.vector.insert.v2i32.v8i32(<8 x i32>, <2 x i32>, i64)
 declare <11 x i64> @llvm.vp.and.v11i64(<11 x i64>, <11 x i64>, <11 x i1>, i32)

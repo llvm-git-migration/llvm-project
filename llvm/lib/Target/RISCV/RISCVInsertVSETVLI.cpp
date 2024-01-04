@@ -1680,8 +1680,9 @@ void RISCVInsertVSETVLI::doLocalPostpass(MachineBasicBlock &MBB) {
 
       // A tail undefined vmv.v.i/x or vfmv.v.f with VL=1 can be treated in the
       // same semantically as vmv.s.x.
-      if (MIInBetween.size() == 1 && isScalarSplatInstr(*MIInBetween[0]) &&
-          MI.getOperand(1).isImm() && MI.getOperand(1).getImm() == 1 &&
+      if (false && MIInBetween.size() == 1 &&
+          isScalarSplatInstr(*MIInBetween[0]) && MI.getOperand(1).isImm() &&
+          MI.getOperand(1).getImm() == 1 &&
           isLMUL1OrSmaller(RISCVVType::getVLMUL(MI.getOperand(2).getImm())) &&
           hasUndefinedMergeOp(*MIInBetween[0], *MRI, LIS)) {
         Used.LMUL = false;
