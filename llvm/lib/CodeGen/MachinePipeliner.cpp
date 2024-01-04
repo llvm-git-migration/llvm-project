@@ -1015,6 +1015,41 @@ void SwingSchedulerDAG::changeDependences() {
   }
 }
 
+/// Create an instruction stream that represents a single iteration and stage of
+/// each instruction. This function differs from SMSchedule::finalizeSchedule in
+/// that this doesn't have any side-effect to SwingSchedulerDAG. That is, this
+/// function is an approximation of SMSchedule::finalizeSchedule with all
+/// non-const operations removed.
+static void computeScheduledInsts(const SwingSchedulerDAG *SSD,
+                                  SMSchedule &Schedule,
+                                  std::vector<MachineInstr *> &OrderedInsts,
+                                  DenseMap<MachineInstr *, unsigned> &Stages) {
+  DenseMap<int, std::deque<SUnit *>> Instrs;
+
+  // Move all instructions to the first stage from the later stages.
+  for (int Cycle = Schedule.getFirstCycle(); Cycle <= Schedule.getFinalCycle();
+       ++Cycle) {
+    for (int Stage = 0, LastStage = Schedule.getMaxStageCount();
+         Stage <= LastStage; ++Stage) {
+      for (SUnit *SU : llvm::reverse(Schedule.getInstructions(
+               Cycle + Stage * Schedule.getInitiationInterval()))) {
+        Instrs[Cycle].push_front(SU);
+      }
+    }
+  }
+
+  for (int Cycle = Schedule.getFirstCycle(); Cycle <= Schedule.getFinalCycle();
+       ++Cycle) {
+    std::deque<SUnit *> &CycleInstrs = Instrs[Cycle];
+    CycleInstrs = std::move(Schedule.reorderInstructions(SSD, CycleInstrs));
+    for (SUnit *SU : CycleInstrs) {
+      MachineInstr *MI = SU->getInstr();
+      OrderedInsts.push_back(MI);
+      Stages[MI] = Schedule.stageScheduled(SU);
+    }
+  }
+}
+
 namespace {
 
 // FuncUnitSorter - Comparison operator used to sort instructions by
@@ -1199,7 +1234,13 @@ private:
   }
 
   // Search for live-in variables. They are factored into the register pressure
-  // from the begining.
+  // from the begining. Live-in variables used by every iteration should be
+  // considered as alive throughout the loop. For example, the variable `c` in
+  // following code. \code
+  //   int c = ...;
+  //   for (int i = 0; i < n; i++)
+  //     a[i] += b[i] + c;
+  // \endcode
   void computeLiveIn() {
     DenseSet<Register> Used;
     for (const auto &MI : *OrigMBB) {
@@ -1232,7 +1273,7 @@ private:
     SmallDenseSet<Register, 8> FixedRegs;
     for (const TargetRegisterClass *TRC : TRI->regclasses()) {
       for (const MCPhysReg Reg : *TRC)
-        if (isFixedRegister(Reg) && !FixedRegs.contains(Reg))
+        if (isFixedRegister(Reg))
           FixedRegs.insert(Reg);
     }
 
@@ -1338,9 +1379,10 @@ private:
   // Stage   2   1   0
   // Stage   3   2   1   0  <- All stages overlap
   //
-  std::vector<unsigned> exec(const OrderedInstsTy &OrderedInsts,
-                             Instr2StageTy &Stages,
-                             const unsigned StageCount) const {
+  std::vector<unsigned>
+  computeMaxSetPressure(const OrderedInstsTy &OrderedInsts,
+                        Instr2StageTy &Stages,
+                        const unsigned StageCount) const {
     using RegSetTy = SmallDenseSet<Register, 16>;
 
     // Indexed by #Iter. To treat "local" variables of each stage separately, we
@@ -1425,8 +1467,6 @@ private:
   }
 
 public:
-  HighRegisterPressureDetector() = delete;
-
   HighRegisterPressureDetector(MachineBasicBlock *OrigMBB,
                                const MachineFunction &MF)
       : OrigMBB(OrigMBB), MF(MF), MRI(MF.getRegInfo()),
@@ -1443,12 +1483,16 @@ public:
 
   // Calculate the maximum register pressures of the loop and check if they
   // exceed the limit
-  bool detect(const OrderedInstsTy &OrderedInsts, Instr2StageTy &Stages,
+  bool detect(const SwingSchedulerDAG *SSD, SMSchedule &Schedule,
               const unsigned MaxStage) const {
     assert(0 <= RegPressureMargin && RegPressureMargin <= 100 &&
            "the percentage of the margin must be between 0 to 100");
+
+    OrderedInstsTy OrderedInsts;
+    Instr2StageTy Stages;
+    computeScheduledInsts(SSD, Schedule, OrderedInsts, Stages);
     const auto MaxSetPressure =
-        std::move(exec(OrderedInsts, Stages, MaxStage + 1));
+        std::move(computeMaxSetPressure(OrderedInsts, Stages, MaxStage + 1));
 
     LLVM_DEBUG({
       dbgs() << "Dump MaxSetPressure:\n";
@@ -2329,41 +2373,6 @@ void SwingSchedulerDAG::computeNodeOrder(NodeSetType &NodeSets) {
   });
 }
 
-/// Create an instruction stream that represents a single iteration and stage of
-/// each instruction. This function differs from SMSchedule::finalizeSchedule in
-/// that this doesn't have any side-effect to SwingSchedulerDAG. That is, this
-/// function is an approximation of SMSchedule::finalizeSchedule with all non-const
-/// operations removed.
-static void computeScheduledInsts(const SwingSchedulerDAG *SSD,
-                                  SMSchedule &Schedule,
-                                  std::vector<MachineInstr *> &OrderedInsts,
-                                  DenseMap<MachineInstr *, unsigned> &Stages) {
-  DenseMap<int, std::deque<SUnit *>> Instrs;
-
-  // Move all instructions to the first stage from the later stages.
-  for (int Cycle = Schedule.getFirstCycle(); Cycle <= Schedule.getFinalCycle();
-       ++Cycle) {
-    for (int Stage = 0, LastStage = Schedule.getMaxStageCount();
-         Stage <= LastStage; ++Stage) {
-      for (SUnit *SU : llvm::reverse(Schedule.getInstructions(
-               Cycle + Stage * Schedule.getInitiationInterval()))) {
-        Instrs[Cycle].push_front(SU);
-      }
-    }
-  }
-
-  for (int Cycle = Schedule.getFirstCycle(); Cycle <= Schedule.getFinalCycle();
-       ++Cycle) {
-    std::deque<SUnit *> &CycleInstrs = Instrs[Cycle];
-    CycleInstrs = std::move(Schedule.reorderInstructions(SSD, CycleInstrs));
-    for (SUnit *SU : CycleInstrs) {
-      MachineInstr *MI = SU->getInstr();
-      OrderedInsts.push_back(MI);
-      Stages[MI] = Schedule.stageScheduled(SU);
-    }
-  }
-}
-
 /// Process the nodes in the computed order and create the pipelined schedule
 /// of the instructions, if possible. Return true if a schedule is found.
 bool SwingSchedulerDAG::schedulePipeline(SMSchedule &Schedule) {
@@ -2460,13 +2469,9 @@ bool SwingSchedulerDAG::schedulePipeline(SMSchedule &Schedule) {
 
     // If a schedule was found and the option is enabled, check if the schedule
     // might generate additional register spills/fills.
-    if (scheduleFound && LimitRegPressure) {
-      std::vector<MachineInstr *> OrderedInsts;
-      DenseMap<MachineInstr *, unsigned> Stages;
-      computeScheduledInsts(this, Schedule, OrderedInsts, Stages);
-      scheduleFound = !HRPDetector->detect(OrderedInsts, Stages,
-                                           Schedule.getMaxStageCount());
-    }
+    if (scheduleFound && LimitRegPressure)
+      scheduleFound =
+          !HRPDetector->detect(this, Schedule, Schedule.getMaxStageCount());
   }
 
   LLVM_DEBUG(dbgs() << "Schedule Found? " << scheduleFound
