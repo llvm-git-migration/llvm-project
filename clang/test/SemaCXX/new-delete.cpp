@@ -1,3 +1,4 @@
+// RUN: %clang_cc1 -fsyntax-only -verify=expected,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++98
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++11
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++14
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,cxx17,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++17
