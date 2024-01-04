@@ -162,6 +162,13 @@ GCNSubtarget::initializeSubtargetDependencies(const Triple &TT,
   LLVM_DEBUG(dbgs() << "sramecc setting for subtarget: "
                     << TargetID.getSramEccSetting() << '\n');
 
+  // FIXME(?): It's very ugly to crash, it'd be better to print a diagnostic.
+  if (RequiresCOV6 &&
+      AMDGPU::getAmdhsaCodeObjectVersion() < AMDGPU::AMDHSA_COV6)
+    report_fatal_error(
+        GPU + " is only available on code object version 6 or better",
+        /*gen_crash_diag*/ false);
+
   return *this;
 }
 

@@ -221,6 +221,8 @@ protected:
   bool HasVALUTransUseHazard = false;
   bool HasForceStoreSC0SC1 = false;
 
+  bool RequiresCOV6 = false;
+
   // Dummy feature to use for assembler in tablegen.
   bool FeatureDisable = false;
 
