@@ -980,7 +980,7 @@ LogicalResult ExitDataOp::verify() {
 }
 
 LogicalResult UpdateDataOp::verify() {
-  return verifyMapClause(*this, getMotionOperands());
+  return verifyMapClause(*this, getMapOperands());
 }
 
 LogicalResult TargetOp::verify() {
