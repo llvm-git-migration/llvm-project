@@ -42,7 +42,7 @@ namespace AMDGPU {
 
 struct IsaVersion;
 
-enum { AMDHSA_COV4 = 4, AMDHSA_COV5 = 5 };
+enum { AMDHSA_COV4 = 4, AMDHSA_COV5 = 5, AMDHSA_COV6 = 6 };
 
 /// \returns True if \p STI is AMDHSA.
 bool isHsaAbi(const MCSubtargetInfo &STI);
@@ -54,6 +54,9 @@ bool isHsaAbiVersion4(const MCSubtargetInfo *STI);
 /// \returns True if HSA OS ABI Version identification is 5,
 /// false otherwise.
 bool isHsaAbiVersion5(const MCSubtargetInfo *STI);
+/// \returns True if HSA OS ABI Version identification is 6,
+/// false otherwise.
+bool isHsaAbiVersion6(const MCSubtargetInfo *STI);
 
 /// \returns The offset of the multigrid_sync_arg argument from implicitarg_ptr
 unsigned getMultigridSyncArgImplicitArgPosition(unsigned COV);
