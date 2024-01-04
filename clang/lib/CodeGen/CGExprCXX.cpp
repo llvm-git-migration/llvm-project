@@ -1104,7 +1104,8 @@ void CodeGenFunction::EmitNewArrayInitializer(
 
     CharUnits StartAlign = CurPtr.getAlignment();
     ArrayRef<Expr *> InitExprs = ILE ? ILE->inits() : CPLIE->getInitExprs();
-    for (unsigned i = 0; i < InitExprs.size(); ++i) {
+    unsigned i = 0;
+    for (Expr *IE : InitExprs) {
       // Tell the cleanup that it needs to destroy up to this
       // element.  TODO: some of these stores can be trivially
       // observed to be unnecessary.
@@ -1114,14 +1115,13 @@ void CodeGenFunction::EmitNewArrayInitializer(
       // FIXME: If the last initializer is an incomplete initializer list for
       // an array, and we have an array filler, we can fold together the two
       // initialization loops.
-      Expr *IE = InitExprs[i];
       StoreAnyExprIntoOneUnit(*this, IE, IE->getType(), CurPtr,
                               AggValueSlot::DoesNotOverlap);
       CurPtr = Address(Builder.CreateInBoundsGEP(
                            CurPtr.getElementType(), CurPtr.getPointer(),
                            Builder.getSize(1), "array.exp.next"),
                        CurPtr.getElementType(),
-                       StartAlign.alignmentAtOffset((i + 1) * ElementSize));
+                       StartAlign.alignmentAtOffset((++i) * ElementSize));
     }
 
     // The remaining elements are filled with the array filler expression.
