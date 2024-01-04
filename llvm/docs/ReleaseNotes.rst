@@ -132,6 +132,7 @@ Changes to the RISC-V Backend
 * Added smstateen extension to -march. CSR names for smstateen were already supported.
 * Zaamo and Zalrsc are no longer experimental.
 * Processors that enable post reg-alloc scheduling (PostMachineScheduler) by default should use the `UsePostRAScheduler` subtarget feature. Setting `PostRAScheduler = 1` in the scheduler model will have no effect on the enabling of the PostMachineScheduler.
+* B (the collection of the Zba, Zbb, Zbs extensions) is supported.
 
 Changes to the WebAssembly Backend
 ----------------------------------
