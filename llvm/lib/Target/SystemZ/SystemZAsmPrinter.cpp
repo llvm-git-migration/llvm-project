@@ -889,13 +889,17 @@ static void printFormattedRegName(const MCAsmInfo *MAI, unsigned RegNo,
     OS << '%' << RegName;
 }
 
+static void printReg(unsigned Reg, const MCAsmInfo *MAI, raw_ostream &OS) {
+  if (!Reg)
+    OS << '0';
+  else
+    printFormattedRegName(MAI, Reg, OS);
+}
+
 static void printOperand(const MCOperand &MCOp, const MCAsmInfo *MAI,
                          raw_ostream &OS) {
   if (MCOp.isReg()) {
-    if (!MCOp.getReg())
-      OS << '0';
-    else
-      printFormattedRegName(MAI, MCOp.getReg(), OS);
+    printReg(MCOp.getReg(), MAI, OS);
   } else if (MCOp.isImm())
     OS << MCOp.getImm();
   else if (MCOp.isExpr())
@@ -946,6 +950,21 @@ bool SystemZAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
                                               unsigned OpNo,
                                               const char *ExtraCode,
                                               raw_ostream &OS) {
+  if (ExtraCode && ExtraCode[0] && !ExtraCode[1]) {
+    switch (ExtraCode[0]) {
+    case 'A':
+      // Unlike EmitMachineNode(), EmitSpecialNode(INLINEASM) does not call
+      // setMemRefs(), so MI->memoperands() is empty and the alignment
+      // information is not available.
+      return false;
+    case 'O':
+      OS << MI->getOperand(OpNo + 1).getImm();
+      return false;
+    case 'R':
+      ::printReg(MI->getOperand(OpNo).getReg(), MAI, OS);
+      return false;
+    }
+  }
   printAddress(MAI, MI->getOperand(OpNo).getReg(),
                MCOperand::createImm(MI->getOperand(OpNo + 1).getImm()),
                MI->getOperand(OpNo + 2).getReg(), OS);
