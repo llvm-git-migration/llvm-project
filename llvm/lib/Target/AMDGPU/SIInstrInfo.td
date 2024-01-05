@@ -914,6 +914,16 @@ def fp16_zeros_high_16bits : PatLeaf<(f16 VGPR_32:$src), [{
   return fp16SrcZerosHighBits(N->getOpcode());
 }]>;
 
+def MFMALdScaleXForm : SDNodeXForm<timm, [{
+  unsigned Val = N->getZExtValue();
+  unsigned New = 0;
+  if (Val & 0x1)
+    New |= SISrcMods::OP_SEL_0;
+  if (Val & 0x2)
+    New |= SISrcMods::OP_SEL_1;
+  return CurDAG->getTargetConstant(New, SDLoc(N), MVT::i32);
+}]>;
+
 def is_canonicalized : PatLeaf<(fAny srcvalue:$src), [{
   const SITargetLowering &Lowering =
       *static_cast<const SITargetLowering *>(getTargetLowering());
@@ -1514,6 +1524,10 @@ class PackedIntInputMods <PackedIntInputModsMatchClass matchClass> : InputMods <
 
 def PackedF16InputMods : PackedFPInputMods<PackedF16InputModsMatchClass>;
 def PackedI16InputMods : PackedIntInputMods<PackedI16InputModsMatchClass>;
+
+def MFMALdScaleModifierOp : TImmLeaf<i32, [{
+  return isUInt<2>(Imm);
+}], MFMALdScaleXForm>;
 
 //===----------------------------------------------------------------------===//
 // Complex patterns
@@ -2851,6 +2865,8 @@ def VOP_V16F32_V2I32_V4I32_I32    : VOPProfile <[v16f32, v2i32, v4i32, i32]>;
 def VOP_V4F32_V8F16_V8F16_V4F32   : VOPProfile <[v4f32,  v8f16, v8f16, v4f32]>;
 def VOP_V16F32_V8F16_V8F16_V16F32 : VOPProfile <[v16f32, v8f16, v8f16, v16f32]>;
 def VOP_V16F32_V8BF16_V8BF16_V16F32 : VOPProfile <[v16f32, v8bf16, v8bf16, v16f32]>;
+def VOP_V4F32_V8I32_V8I32_V4F32   : VOPProfile <[v4f32,  v8i32, v8i32, v4f32]>;
+def VOP_V16F32_V8I32_V8I32_V16F32   : VOPProfile <[v16f32, v8i32, v8i32, v16f32]>;
 
 
 class Commutable_REV <string revOp, bit isOrig> {
