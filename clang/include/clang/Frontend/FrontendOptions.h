@@ -383,7 +383,8 @@ public:
   LLVM_PREFERRED_TYPE(bool)
   unsigned ModulesShareFileManager : 1;
 
-  /// Connect to module build daemon
+  /// Connect to module build daemon.
+  LLVM_PREFERRED_TYPE(bool)
   unsigned ModuleBuildDaemon : 1;
 
   CodeCompleteOptions CodeCompleteOpts;
