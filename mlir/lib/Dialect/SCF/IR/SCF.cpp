@@ -527,6 +527,10 @@ ParseResult ForOp::parse(OpAsmParser &parser, OperationState &result) {
 
 SmallVector<Region *> ForOp::getLoopRegions() { return {&getRegion()}; }
 
+Block::BlockArgListType ForOp::getRegionIterArgs() {
+  return getBody()->getArguments().drop_front(getNumInductionVars());
+}
+
 MutableArrayRef<OpOperand> ForOp::getInitsMutable() {
   return getInitArgsMutable();
 }
@@ -620,6 +624,47 @@ LogicalResult scf::ForallOp::promoteIfSingleIteration(RewriterBase &rewriter) {
 
   promote(rewriter, *this);
   return success();
+}
+
+Block::BlockArgListType ForallOp::getRegionIterArgs() {
+  return getBody()->getArguments().drop_front(getRank());
+}
+
+MutableArrayRef<OpOperand> ForallOp::getInitsMutable() {
+  return getOutputsMutable();
+}
+
+FailureOr<LoopLikeOpInterface>
+ForallOp::replaceWithAdditionalYields(RewriterBase &rewriter,
+                                      ValueRange newInitOperands,
+                                      bool replaceInitOperandUsesInLoop,
+                                      const NewYieldValuesFn &newYieldValueFn) {
+  OpBuilder::InsertionGuard g(rewriter);
+  rewriter.setInsertionPoint(getOperation());
+  auto inits = llvm::to_vector(getOutputs());
+  inits.append(newInitOperands.begin(), newInitOperands.end());
+  auto newLoop = rewriter.create<scf::ForallOp>(
+      getLoc(), getMixedLowerBound(), getMixedUpperBound(), getMixedStep(),
+      inits, getMapping(), [](OpBuilder &, Location, ValueRange) {});
+
+  // Move the region of the current block to the newly created op.
+  Block *newLoopBody = newLoop.getBody();
+  rewriter.mergeBlocks(
+      getBody(), newLoopBody,
+      newLoopBody->getArguments().take_front(getBody()->getNumArguments()));
+
+  // Update the terminator.
+  {
+    OpBuilder::InsertionGuard g(rewriter);
+    auto terminator = cast<scf::InParallelOp>(newLoopBody->getTerminator());
+    rewriter.setInsertionPointToEnd(terminator.getBody());
+    newYieldValueFn(
+        rewriter, getLoc(),
+        newLoopBody->getArguments().take_back(newInitOperands.size()));
+  }
+  rewriter.replaceOp(getOperation(),
+                     newLoop->getResults().take_front(getNumResults()));
+  return cast<LoopLikeOpInterface>(newLoop.getOperation());
 }
 
 /// Promotes the loop body of a scf::ForallOp to its containing block.
@@ -1630,9 +1675,8 @@ struct FoldTensorCastOfOutputIntoForallOp
     // mapped to the tensor.cast old-typed results of the output bbArgs. The
     // destination have to be updated to point to the output bbArgs directly.
     auto terminator = newForallOp.getTerminator();
-    for (auto [yieldingOp, outputBlockArg] :
-         llvm::zip(terminator.getYieldingOps(),
-                   newForallOp.getOutputBlockArguments())) {
+    for (auto [yieldingOp, outputBlockArg] : llvm::zip(
+             terminator.getYieldingOps(), newForallOp.getRegionIterArgs())) {
       auto insertSliceOp = cast<tensor::ParallelInsertSliceOp>(yieldingOp);
       insertSliceOp.getDestMutable().assign(outputBlockArg);
     }
