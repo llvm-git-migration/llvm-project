@@ -18,6 +18,9 @@
 #include <string>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 // winsock2.h must be included before afunix.h
 // clang-format off
 #include <winsock2.h>
