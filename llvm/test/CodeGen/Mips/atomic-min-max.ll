@@ -1000,6 +1000,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPSEL-NEXT:    ll $2, 0($6)
 ; MIPSEL-NEXT:    and $2, $2, $8
 ; MIPSEL-NEXT:    and $7, $7, $8
+; MIPSEL-NEXT:    srav $2, $2, $10
+; MIPSEL-NEXT:    srav $7, $7, $10
+; MIPSEL-NEXT:    seh $2, $2
+; MIPSEL-NEXT:    seh $7, $7
 ; MIPSEL-NEXT:    slt $5, $2, $7
 ; MIPSEL-NEXT:    move $3, $2
 ; MIPSEL-NEXT:    movn $3, $7, $5
@@ -1041,6 +1045,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPSELR6-NEXT:    ll $2, 0($6)
 ; MIPSELR6-NEXT:    and $2, $2, $8
 ; MIPSELR6-NEXT:    and $7, $7, $8
+; MIPSELR6-NEXT:    srav $2, $2, $10
+; MIPSELR6-NEXT:    srav $7, $7, $10
+; MIPSELR6-NEXT:    seh $2, $2
+; MIPSELR6-NEXT:    seh $7, $7
 ; MIPSELR6-NEXT:    slt $5, $2, $7
 ; MIPSELR6-NEXT:    seleqz $3, $2, $5
 ; MIPSELR6-NEXT:    selnez $5, $7, $5
@@ -1081,6 +1089,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MMEL-NEXT:    ll $2, 0($6)
 ; MMEL-NEXT:    and $2, $2, $8
 ; MMEL-NEXT:    and $7, $7, $8
+; MMEL-NEXT:    srav $2, $2, $10
+; MMEL-NEXT:    srav $7, $7, $10
+; MMEL-NEXT:    seh $2, $2
+; MMEL-NEXT:    seh $7, $7
 ; MMEL-NEXT:    slt $5, $2, $7
 ; MMEL-NEXT:    or $3, $2, $zero
 ; MMEL-NEXT:    movn $3, $7, $5
@@ -1120,6 +1132,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MMELR6-NEXT:    ll $2, 0($6)
 ; MMELR6-NEXT:    and $2, $2, $8
 ; MMELR6-NEXT:    and $7, $7, $8
+; MMELR6-NEXT:    srav $2, $2, $10
+; MMELR6-NEXT:    srav $7, $7, $10
+; MMELR6-NEXT:    seh $2, $2
+; MMELR6-NEXT:    seh $7, $7
 ; MMELR6-NEXT:    slt $5, $2, $7
 ; MMELR6-NEXT:    seleqz $3, $2, $5
 ; MMELR6-NEXT:    selnez $5, $7, $5
@@ -1239,6 +1255,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPS64EL-NEXT:    ll $2, 0($6)
 ; MIPS64EL-NEXT:    and $2, $2, $8
 ; MIPS64EL-NEXT:    and $7, $7, $8
+; MIPS64EL-NEXT:    srav $2, $2, $10
+; MIPS64EL-NEXT:    srav $7, $7, $10
+; MIPS64EL-NEXT:    seh $2, $2
+; MIPS64EL-NEXT:    seh $7, $7
 ; MIPS64EL-NEXT:    slt $5, $2, $7
 ; MIPS64EL-NEXT:    move $3, $2
 ; MIPS64EL-NEXT:    movn $3, $7, $5
@@ -1280,6 +1300,10 @@ define i16 @test_max_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPS64ELR6-NEXT:    ll $2, 0($6)
 ; MIPS64ELR6-NEXT:    and $2, $2, $8
 ; MIPS64ELR6-NEXT:    and $7, $7, $8
+; MIPS64ELR6-NEXT:    srav $2, $2, $10
+; MIPS64ELR6-NEXT:    srav $7, $7, $10
+; MIPS64ELR6-NEXT:    seh $2, $2
+; MIPS64ELR6-NEXT:    seh $7, $7
 ; MIPS64ELR6-NEXT:    slt $5, $2, $7
 ; MIPS64ELR6-NEXT:    seleqz $3, $2, $5
 ; MIPS64ELR6-NEXT:    selnez $5, $7, $5
@@ -1481,6 +1505,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPSEL-NEXT:    ll $2, 0($6)
 ; MIPSEL-NEXT:    and $2, $2, $8
 ; MIPSEL-NEXT:    and $7, $7, $8
+; MIPSEL-NEXT:    srav $2, $2, $10
+; MIPSEL-NEXT:    srav $7, $7, $10
+; MIPSEL-NEXT:    seh $2, $2
+; MIPSEL-NEXT:    seh $7, $7
 ; MIPSEL-NEXT:    slt $5, $2, $7
 ; MIPSEL-NEXT:    move $3, $2
 ; MIPSEL-NEXT:    movz $3, $7, $5
@@ -1522,6 +1550,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPSELR6-NEXT:    ll $2, 0($6)
 ; MIPSELR6-NEXT:    and $2, $2, $8
 ; MIPSELR6-NEXT:    and $7, $7, $8
+; MIPSELR6-NEXT:    srav $2, $2, $10
+; MIPSELR6-NEXT:    srav $7, $7, $10
+; MIPSELR6-NEXT:    seh $2, $2
+; MIPSELR6-NEXT:    seh $7, $7
 ; MIPSELR6-NEXT:    slt $5, $2, $7
 ; MIPSELR6-NEXT:    selnez $3, $2, $5
 ; MIPSELR6-NEXT:    seleqz $5, $7, $5
@@ -1562,6 +1594,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MMEL-NEXT:    ll $2, 0($6)
 ; MMEL-NEXT:    and $2, $2, $8
 ; MMEL-NEXT:    and $7, $7, $8
+; MMEL-NEXT:    srav $2, $2, $10
+; MMEL-NEXT:    srav $7, $7, $10
+; MMEL-NEXT:    seh $2, $2
+; MMEL-NEXT:    seh $7, $7
 ; MMEL-NEXT:    slt $5, $2, $7
 ; MMEL-NEXT:    or $3, $2, $zero
 ; MMEL-NEXT:    movz $3, $7, $5
@@ -1601,6 +1637,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MMELR6-NEXT:    ll $2, 0($6)
 ; MMELR6-NEXT:    and $2, $2, $8
 ; MMELR6-NEXT:    and $7, $7, $8
+; MMELR6-NEXT:    srav $2, $2, $10
+; MMELR6-NEXT:    srav $7, $7, $10
+; MMELR6-NEXT:    seh $2, $2
+; MMELR6-NEXT:    seh $7, $7
 ; MMELR6-NEXT:    slt $5, $2, $7
 ; MMELR6-NEXT:    selnez $3, $2, $5
 ; MMELR6-NEXT:    seleqz $5, $7, $5
@@ -1720,6 +1760,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPS64EL-NEXT:    ll $2, 0($6)
 ; MIPS64EL-NEXT:    and $2, $2, $8
 ; MIPS64EL-NEXT:    and $7, $7, $8
+; MIPS64EL-NEXT:    srav $2, $2, $10
+; MIPS64EL-NEXT:    srav $7, $7, $10
+; MIPS64EL-NEXT:    seh $2, $2
+; MIPS64EL-NEXT:    seh $7, $7
 ; MIPS64EL-NEXT:    slt $5, $2, $7
 ; MIPS64EL-NEXT:    move $3, $2
 ; MIPS64EL-NEXT:    movz $3, $7, $5
@@ -1761,6 +1805,10 @@ define i16 @test_min_16(ptr nocapture %ptr, i16 signext %val) {
 ; MIPS64ELR6-NEXT:    ll $2, 0($6)
 ; MIPS64ELR6-NEXT:    and $2, $2, $8
 ; MIPS64ELR6-NEXT:    and $7, $7, $8
+; MIPS64ELR6-NEXT:    srav $2, $2, $10
+; MIPS64ELR6-NEXT:    srav $7, $7, $10
+; MIPS64ELR6-NEXT:    seh $2, $2
+; MIPS64ELR6-NEXT:    seh $7, $7
 ; MIPS64ELR6-NEXT:    slt $5, $2, $7
 ; MIPS64ELR6-NEXT:    selnez $3, $2, $5
 ; MIPS64ELR6-NEXT:    seleqz $5, $7, $5
@@ -2780,7 +2828,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS-NEXT:  # %bb.2: # %entry
 ; MIPS-NEXT:    and $1, $2, $8
 ; MIPS-NEXT:    srlv $1, $1, $10
-; MIPS-NEXT:    seh $1, $1
+; MIPS-NEXT:    seb $1, $1
 ; MIPS-NEXT:  # %bb.3: # %entry
 ; MIPS-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPS-NEXT:  # %bb.4: # %entry
@@ -2820,7 +2868,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSR6-NEXT:  # %bb.2: # %entry
 ; MIPSR6-NEXT:    and $1, $2, $8
 ; MIPSR6-NEXT:    srlv $1, $1, $10
-; MIPSR6-NEXT:    seh $1, $1
+; MIPSR6-NEXT:    seb $1, $1
 ; MIPSR6-NEXT:  # %bb.3: # %entry
 ; MIPSR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSR6-NEXT:  # %bb.4: # %entry
@@ -2858,7 +2906,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MM-NEXT:  # %bb.2: # %entry
 ; MM-NEXT:    and $1, $2, $8
 ; MM-NEXT:    srlv $1, $1, $10
-; MM-NEXT:    seh $1, $1
+; MM-NEXT:    seb $1, $1
 ; MM-NEXT:  # %bb.3: # %entry
 ; MM-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MM-NEXT:  # %bb.4: # %entry
@@ -2897,7 +2945,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMR6-NEXT:  # %bb.2: # %entry
 ; MMR6-NEXT:    and $1, $2, $8
 ; MMR6-NEXT:    srlv $1, $1, $10
-; MMR6-NEXT:    seh $1, $1
+; MMR6-NEXT:    seb $1, $1
 ; MMR6-NEXT:  # %bb.3: # %entry
 ; MMR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMR6-NEXT:  # %bb.4: # %entry
@@ -2925,6 +2973,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSEL-NEXT:    ll $2, 0($6)
 ; MIPSEL-NEXT:    and $2, $2, $8
 ; MIPSEL-NEXT:    and $7, $7, $8
+; MIPSEL-NEXT:    srav $2, $2, $10
+; MIPSEL-NEXT:    srav $7, $7, $10
+; MIPSEL-NEXT:    seb $2, $2
+; MIPSEL-NEXT:    seb $7, $7
 ; MIPSEL-NEXT:    slt $5, $2, $7
 ; MIPSEL-NEXT:    move $3, $2
 ; MIPSEL-NEXT:    movn $3, $7, $5
@@ -2937,7 +2989,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSEL-NEXT:  # %bb.2: # %entry
 ; MIPSEL-NEXT:    and $1, $2, $8
 ; MIPSEL-NEXT:    srlv $1, $1, $10
-; MIPSEL-NEXT:    seh $1, $1
+; MIPSEL-NEXT:    seb $1, $1
 ; MIPSEL-NEXT:  # %bb.3: # %entry
 ; MIPSEL-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSEL-NEXT:  # %bb.4: # %entry
@@ -2966,6 +3018,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSELR6-NEXT:    ll $2, 0($6)
 ; MIPSELR6-NEXT:    and $2, $2, $8
 ; MIPSELR6-NEXT:    and $7, $7, $8
+; MIPSELR6-NEXT:    srav $2, $2, $10
+; MIPSELR6-NEXT:    srav $7, $7, $10
+; MIPSELR6-NEXT:    seb $2, $2
+; MIPSELR6-NEXT:    seb $7, $7
 ; MIPSELR6-NEXT:    slt $5, $2, $7
 ; MIPSELR6-NEXT:    seleqz $3, $2, $5
 ; MIPSELR6-NEXT:    selnez $5, $7, $5
@@ -2978,7 +3034,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSELR6-NEXT:  # %bb.2: # %entry
 ; MIPSELR6-NEXT:    and $1, $2, $8
 ; MIPSELR6-NEXT:    srlv $1, $1, $10
-; MIPSELR6-NEXT:    seh $1, $1
+; MIPSELR6-NEXT:    seb $1, $1
 ; MIPSELR6-NEXT:  # %bb.3: # %entry
 ; MIPSELR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSELR6-NEXT:  # %bb.4: # %entry
@@ -3006,6 +3062,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMEL-NEXT:    ll $2, 0($6)
 ; MMEL-NEXT:    and $2, $2, $8
 ; MMEL-NEXT:    and $7, $7, $8
+; MMEL-NEXT:    srav $2, $2, $10
+; MMEL-NEXT:    srav $7, $7, $10
+; MMEL-NEXT:    seb $2, $2
+; MMEL-NEXT:    seb $7, $7
 ; MMEL-NEXT:    slt $5, $2, $7
 ; MMEL-NEXT:    or $3, $2, $zero
 ; MMEL-NEXT:    movn $3, $7, $5
@@ -3017,7 +3077,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMEL-NEXT:  # %bb.2: # %entry
 ; MMEL-NEXT:    and $1, $2, $8
 ; MMEL-NEXT:    srlv $1, $1, $10
-; MMEL-NEXT:    seh $1, $1
+; MMEL-NEXT:    seb $1, $1
 ; MMEL-NEXT:  # %bb.3: # %entry
 ; MMEL-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMEL-NEXT:  # %bb.4: # %entry
@@ -3045,6 +3105,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMELR6-NEXT:    ll $2, 0($6)
 ; MMELR6-NEXT:    and $2, $2, $8
 ; MMELR6-NEXT:    and $7, $7, $8
+; MMELR6-NEXT:    srav $2, $2, $10
+; MMELR6-NEXT:    srav $7, $7, $10
+; MMELR6-NEXT:    seb $2, $2
+; MMELR6-NEXT:    seb $7, $7
 ; MMELR6-NEXT:    slt $5, $2, $7
 ; MMELR6-NEXT:    seleqz $3, $2, $5
 ; MMELR6-NEXT:    selnez $5, $7, $5
@@ -3057,7 +3121,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMELR6-NEXT:  # %bb.2: # %entry
 ; MMELR6-NEXT:    and $1, $2, $8
 ; MMELR6-NEXT:    srlv $1, $1, $10
-; MMELR6-NEXT:    seh $1, $1
+; MMELR6-NEXT:    seb $1, $1
 ; MMELR6-NEXT:  # %bb.3: # %entry
 ; MMELR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMELR6-NEXT:  # %bb.4: # %entry
@@ -3096,7 +3160,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64-NEXT:  # %bb.2: # %entry
 ; MIPS64-NEXT:    and $1, $2, $8
 ; MIPS64-NEXT:    srlv $1, $1, $10
-; MIPS64-NEXT:    seh $1, $1
+; MIPS64-NEXT:    seb $1, $1
 ; MIPS64-NEXT:  # %bb.3: # %entry
 ; MIPS64-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64-NEXT:  # %bb.4: # %entry
@@ -3136,7 +3200,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64R6-NEXT:  # %bb.2: # %entry
 ; MIPS64R6-NEXT:    and $1, $2, $8
 ; MIPS64R6-NEXT:    srlv $1, $1, $10
-; MIPS64R6-NEXT:    seh $1, $1
+; MIPS64R6-NEXT:    seb $1, $1
 ; MIPS64R6-NEXT:  # %bb.3: # %entry
 ; MIPS64R6-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64R6-NEXT:  # %bb.4: # %entry
@@ -3164,6 +3228,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64EL-NEXT:    ll $2, 0($6)
 ; MIPS64EL-NEXT:    and $2, $2, $8
 ; MIPS64EL-NEXT:    and $7, $7, $8
+; MIPS64EL-NEXT:    srav $2, $2, $10
+; MIPS64EL-NEXT:    srav $7, $7, $10
+; MIPS64EL-NEXT:    seb $2, $2
+; MIPS64EL-NEXT:    seb $7, $7
 ; MIPS64EL-NEXT:    slt $5, $2, $7
 ; MIPS64EL-NEXT:    move $3, $2
 ; MIPS64EL-NEXT:    movn $3, $7, $5
@@ -3176,7 +3244,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64EL-NEXT:  # %bb.2: # %entry
 ; MIPS64EL-NEXT:    and $1, $2, $8
 ; MIPS64EL-NEXT:    srlv $1, $1, $10
-; MIPS64EL-NEXT:    seh $1, $1
+; MIPS64EL-NEXT:    seb $1, $1
 ; MIPS64EL-NEXT:  # %bb.3: # %entry
 ; MIPS64EL-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64EL-NEXT:  # %bb.4: # %entry
@@ -3205,6 +3273,10 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64ELR6-NEXT:    ll $2, 0($6)
 ; MIPS64ELR6-NEXT:    and $2, $2, $8
 ; MIPS64ELR6-NEXT:    and $7, $7, $8
+; MIPS64ELR6-NEXT:    srav $2, $2, $10
+; MIPS64ELR6-NEXT:    srav $7, $7, $10
+; MIPS64ELR6-NEXT:    seb $2, $2
+; MIPS64ELR6-NEXT:    seb $7, $7
 ; MIPS64ELR6-NEXT:    slt $5, $2, $7
 ; MIPS64ELR6-NEXT:    seleqz $3, $2, $5
 ; MIPS64ELR6-NEXT:    selnez $5, $7, $5
@@ -3217,7 +3289,7 @@ define i8 @test_max_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64ELR6-NEXT:  # %bb.2: # %entry
 ; MIPS64ELR6-NEXT:    and $1, $2, $8
 ; MIPS64ELR6-NEXT:    srlv $1, $1, $10
-; MIPS64ELR6-NEXT:    seh $1, $1
+; MIPS64ELR6-NEXT:    seb $1, $1
 ; MIPS64ELR6-NEXT:  # %bb.3: # %entry
 ; MIPS64ELR6-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64ELR6-NEXT:  # %bb.4: # %entry
@@ -3261,7 +3333,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS-NEXT:  # %bb.2: # %entry
 ; MIPS-NEXT:    and $1, $2, $8
 ; MIPS-NEXT:    srlv $1, $1, $10
-; MIPS-NEXT:    seh $1, $1
+; MIPS-NEXT:    seb $1, $1
 ; MIPS-NEXT:  # %bb.3: # %entry
 ; MIPS-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPS-NEXT:  # %bb.4: # %entry
@@ -3301,7 +3373,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSR6-NEXT:  # %bb.2: # %entry
 ; MIPSR6-NEXT:    and $1, $2, $8
 ; MIPSR6-NEXT:    srlv $1, $1, $10
-; MIPSR6-NEXT:    seh $1, $1
+; MIPSR6-NEXT:    seb $1, $1
 ; MIPSR6-NEXT:  # %bb.3: # %entry
 ; MIPSR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSR6-NEXT:  # %bb.4: # %entry
@@ -3339,7 +3411,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MM-NEXT:  # %bb.2: # %entry
 ; MM-NEXT:    and $1, $2, $8
 ; MM-NEXT:    srlv $1, $1, $10
-; MM-NEXT:    seh $1, $1
+; MM-NEXT:    seb $1, $1
 ; MM-NEXT:  # %bb.3: # %entry
 ; MM-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MM-NEXT:  # %bb.4: # %entry
@@ -3378,7 +3450,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMR6-NEXT:  # %bb.2: # %entry
 ; MMR6-NEXT:    and $1, $2, $8
 ; MMR6-NEXT:    srlv $1, $1, $10
-; MMR6-NEXT:    seh $1, $1
+; MMR6-NEXT:    seb $1, $1
 ; MMR6-NEXT:  # %bb.3: # %entry
 ; MMR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMR6-NEXT:  # %bb.4: # %entry
@@ -3406,6 +3478,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSEL-NEXT:    ll $2, 0($6)
 ; MIPSEL-NEXT:    and $2, $2, $8
 ; MIPSEL-NEXT:    and $7, $7, $8
+; MIPSEL-NEXT:    srav $2, $2, $10
+; MIPSEL-NEXT:    srav $7, $7, $10
+; MIPSEL-NEXT:    seb $2, $2
+; MIPSEL-NEXT:    seb $7, $7
 ; MIPSEL-NEXT:    slt $5, $2, $7
 ; MIPSEL-NEXT:    move $3, $2
 ; MIPSEL-NEXT:    movz $3, $7, $5
@@ -3418,7 +3494,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSEL-NEXT:  # %bb.2: # %entry
 ; MIPSEL-NEXT:    and $1, $2, $8
 ; MIPSEL-NEXT:    srlv $1, $1, $10
-; MIPSEL-NEXT:    seh $1, $1
+; MIPSEL-NEXT:    seb $1, $1
 ; MIPSEL-NEXT:  # %bb.3: # %entry
 ; MIPSEL-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSEL-NEXT:  # %bb.4: # %entry
@@ -3447,6 +3523,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSELR6-NEXT:    ll $2, 0($6)
 ; MIPSELR6-NEXT:    and $2, $2, $8
 ; MIPSELR6-NEXT:    and $7, $7, $8
+; MIPSELR6-NEXT:    srav $2, $2, $10
+; MIPSELR6-NEXT:    srav $7, $7, $10
+; MIPSELR6-NEXT:    seb $2, $2
+; MIPSELR6-NEXT:    seb $7, $7
 ; MIPSELR6-NEXT:    slt $5, $2, $7
 ; MIPSELR6-NEXT:    selnez $3, $2, $5
 ; MIPSELR6-NEXT:    seleqz $5, $7, $5
@@ -3459,7 +3539,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPSELR6-NEXT:  # %bb.2: # %entry
 ; MIPSELR6-NEXT:    and $1, $2, $8
 ; MIPSELR6-NEXT:    srlv $1, $1, $10
-; MIPSELR6-NEXT:    seh $1, $1
+; MIPSELR6-NEXT:    seb $1, $1
 ; MIPSELR6-NEXT:  # %bb.3: # %entry
 ; MIPSELR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MIPSELR6-NEXT:  # %bb.4: # %entry
@@ -3487,6 +3567,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMEL-NEXT:    ll $2, 0($6)
 ; MMEL-NEXT:    and $2, $2, $8
 ; MMEL-NEXT:    and $7, $7, $8
+; MMEL-NEXT:    srav $2, $2, $10
+; MMEL-NEXT:    srav $7, $7, $10
+; MMEL-NEXT:    seb $2, $2
+; MMEL-NEXT:    seb $7, $7
 ; MMEL-NEXT:    slt $5, $2, $7
 ; MMEL-NEXT:    or $3, $2, $zero
 ; MMEL-NEXT:    movz $3, $7, $5
@@ -3498,7 +3582,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMEL-NEXT:  # %bb.2: # %entry
 ; MMEL-NEXT:    and $1, $2, $8
 ; MMEL-NEXT:    srlv $1, $1, $10
-; MMEL-NEXT:    seh $1, $1
+; MMEL-NEXT:    seb $1, $1
 ; MMEL-NEXT:  # %bb.3: # %entry
 ; MMEL-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMEL-NEXT:  # %bb.4: # %entry
@@ -3526,6 +3610,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMELR6-NEXT:    ll $2, 0($6)
 ; MMELR6-NEXT:    and $2, $2, $8
 ; MMELR6-NEXT:    and $7, $7, $8
+; MMELR6-NEXT:    srav $2, $2, $10
+; MMELR6-NEXT:    srav $7, $7, $10
+; MMELR6-NEXT:    seb $2, $2
+; MMELR6-NEXT:    seb $7, $7
 ; MMELR6-NEXT:    slt $5, $2, $7
 ; MMELR6-NEXT:    selnez $3, $2, $5
 ; MMELR6-NEXT:    seleqz $5, $7, $5
@@ -3538,7 +3626,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MMELR6-NEXT:  # %bb.2: # %entry
 ; MMELR6-NEXT:    and $1, $2, $8
 ; MMELR6-NEXT:    srlv $1, $1, $10
-; MMELR6-NEXT:    seh $1, $1
+; MMELR6-NEXT:    seb $1, $1
 ; MMELR6-NEXT:  # %bb.3: # %entry
 ; MMELR6-NEXT:    sw $1, 4($sp) # 4-byte Folded Spill
 ; MMELR6-NEXT:  # %bb.4: # %entry
@@ -3577,7 +3665,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64-NEXT:  # %bb.2: # %entry
 ; MIPS64-NEXT:    and $1, $2, $8
 ; MIPS64-NEXT:    srlv $1, $1, $10
-; MIPS64-NEXT:    seh $1, $1
+; MIPS64-NEXT:    seb $1, $1
 ; MIPS64-NEXT:  # %bb.3: # %entry
 ; MIPS64-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64-NEXT:  # %bb.4: # %entry
@@ -3617,7 +3705,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64R6-NEXT:  # %bb.2: # %entry
 ; MIPS64R6-NEXT:    and $1, $2, $8
 ; MIPS64R6-NEXT:    srlv $1, $1, $10
-; MIPS64R6-NEXT:    seh $1, $1
+; MIPS64R6-NEXT:    seb $1, $1
 ; MIPS64R6-NEXT:  # %bb.3: # %entry
 ; MIPS64R6-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64R6-NEXT:  # %bb.4: # %entry
@@ -3645,6 +3733,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64EL-NEXT:    ll $2, 0($6)
 ; MIPS64EL-NEXT:    and $2, $2, $8
 ; MIPS64EL-NEXT:    and $7, $7, $8
+; MIPS64EL-NEXT:    srav $2, $2, $10
+; MIPS64EL-NEXT:    srav $7, $7, $10
+; MIPS64EL-NEXT:    seb $2, $2
+; MIPS64EL-NEXT:    seb $7, $7
 ; MIPS64EL-NEXT:    slt $5, $2, $7
 ; MIPS64EL-NEXT:    move $3, $2
 ; MIPS64EL-NEXT:    movz $3, $7, $5
@@ -3657,7 +3749,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64EL-NEXT:  # %bb.2: # %entry
 ; MIPS64EL-NEXT:    and $1, $2, $8
 ; MIPS64EL-NEXT:    srlv $1, $1, $10
-; MIPS64EL-NEXT:    seh $1, $1
+; MIPS64EL-NEXT:    seb $1, $1
 ; MIPS64EL-NEXT:  # %bb.3: # %entry
 ; MIPS64EL-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64EL-NEXT:  # %bb.4: # %entry
@@ -3686,6 +3778,10 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64ELR6-NEXT:    ll $2, 0($6)
 ; MIPS64ELR6-NEXT:    and $2, $2, $8
 ; MIPS64ELR6-NEXT:    and $7, $7, $8
+; MIPS64ELR6-NEXT:    srav $2, $2, $10
+; MIPS64ELR6-NEXT:    srav $7, $7, $10
+; MIPS64ELR6-NEXT:    seb $2, $2
+; MIPS64ELR6-NEXT:    seb $7, $7
 ; MIPS64ELR6-NEXT:    slt $5, $2, $7
 ; MIPS64ELR6-NEXT:    selnez $3, $2, $5
 ; MIPS64ELR6-NEXT:    seleqz $5, $7, $5
@@ -3698,7 +3794,7 @@ define i8 @test_min_8(ptr nocapture %ptr, i8 signext %val) {
 ; MIPS64ELR6-NEXT:  # %bb.2: # %entry
 ; MIPS64ELR6-NEXT:    and $1, $2, $8
 ; MIPS64ELR6-NEXT:    srlv $1, $1, $10
-; MIPS64ELR6-NEXT:    seh $1, $1
+; MIPS64ELR6-NEXT:    seb $1, $1
 ; MIPS64ELR6-NEXT:  # %bb.3: # %entry
 ; MIPS64ELR6-NEXT:    sw $1, 12($sp) # 4-byte Folded Spill
 ; MIPS64ELR6-NEXT:  # %bb.4: # %entry
