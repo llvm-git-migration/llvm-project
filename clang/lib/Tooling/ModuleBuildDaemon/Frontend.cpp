@@ -98,8 +98,8 @@ getModuleBuildDaemon(const CompilerInvocation &Clang, const char *Argv0,
           spawnModuleBuildDaemon(Clang, Argv0, Diag, BasePath.str()))
     return std::move(Err);
 
-  constexpr const unsigned int MICROSEC_IN_SEC = 1000000;
-  constexpr const unsigned int MAX_WAIT_TIME = 30 * MICROSEC_IN_SEC;
+  constexpr unsigned int MICROSEC_IN_SEC = 1000000;
+  constexpr unsigned int MAX_WAIT_TIME = 30 * MICROSEC_IN_SEC;
   unsigned int CumulativeTime = 0;
   unsigned int WaitTime = 10;
 
