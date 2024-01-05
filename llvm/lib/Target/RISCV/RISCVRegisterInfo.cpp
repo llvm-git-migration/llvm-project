@@ -120,6 +120,9 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   markSuperRegs(Reserved, RISCV::FRM);
   markSuperRegs(Reserved, RISCV::FFLAGS);
 
+  // SiFive VCIX state registers.
+  markSuperRegs(Reserved, RISCV::VCIX_STATE);
+
   if (MF.getFunction().getCallingConv() == CallingConv::GRAAL) {
     if (Subtarget.isRVE())
       report_fatal_error("Graal reserved registers do not exist in RVE");
