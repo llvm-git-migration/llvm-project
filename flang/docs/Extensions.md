@@ -96,6 +96,11 @@ end
 * `NULL()` without `MOLD=` is not allowed to be associated as an
   actual argument corresponding to an assumed-rank dummy argument;
   its rank in the called procedure would not be well-defined.
+* The standard defines the intrinsic functions `MOD` and `MODULO`
+  for real arguments using expressions in terms of `AINT` and `FLOOR`.
+  These definitions yield fairly poor results due to floating-point
+  cancellation, and every Fortran compiler (including this one)
+  uses better algorithms.
 
 ## Extensions, deletions, and legacy features supported by default
 
