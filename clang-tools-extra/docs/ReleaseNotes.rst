@@ -119,7 +119,7 @@ Improvements to clang-tidy
 
 - Improved `--dump-config` to print check options in alphabetical order.
 
-- Improved :program:`clang-tidy-diff.py` script. 
+- Improved :program:`clang-tidy-diff.py` script.
     * Return exit code `1` if any :program:`clang-tidy` subprocess exits with
       a non-zero code or if exporting fixes fails.
 
@@ -309,6 +309,10 @@ Changes in existing checks
   <clang-tidy/checks/cppcoreguidelines/narrowing-conversions>` check by
   extending the `IgnoreConversionFromTypes` option to include types without a
   declaration, such as built-in types.
+
+- Improved :doc:`cppcoreguidelines-owning-memory
+  <clang-tidy/checks/cppcoreguidelines/owning-memory>` check to properly handle
+  return type in lambdas and in nested functions.
 
 - Improved :doc:`cppcoreguidelines-prefer-member-initializer
   <clang-tidy/checks/cppcoreguidelines/prefer-member-initializer>` check to
