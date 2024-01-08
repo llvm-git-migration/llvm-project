@@ -63,6 +63,14 @@ cuMemGetAllocationGranularity(size_t *granularity,
                               CUmemAllocationGranularity_flags option) {}
 #endif
 
+#if (defined(CUDA_VERSION) && (CUDA_VERSION < 11020))
+// Forward declarations of asynchronous memory management functions. This is
+// necessary for older versions of CUDA.
+CUresult cuMemAllocAsync(CUdeviceptr *ptr, size_t, CUstream) { *ptr = nullptr; }
+
+CUresult cuMemFreeAsync(CUdeviceptr dptr, CUstream hStream) {}
+#endif
+
 /// Class implementing the CUDA device images properties.
 struct CUDADeviceImageTy : public DeviceImageTy {
   /// Create the CUDA image with the id and the target image pointer.
@@ -488,6 +496,16 @@ struct CUDADeviceTy : public GenericDeviceTy {
       Res = cuMemAllocManaged(&DevicePtr, Size, CU_MEM_ATTACH_GLOBAL);
       MemAlloc = (void *)DevicePtr;
       break;
+    case TARGET_ALLOC_DEVICE_NON_BLOCKING: {
+      CUstream Stream;
+      if ((Res = cuStreamCreate(&Stream, CU_STREAM_NON_BLOCKING)))
+        break;
+      if ((Res = cuMemAllocAsync(&DevicePtr, Size, Stream)))
+        break;
+      cuStreamSynchronize(Stream);
+      Res = cuStreamDestroy(Stream);
+      MemAlloc = (void *)DevicePtr;
+    }
     }
 
     if (auto Err =
@@ -518,6 +536,15 @@ struct CUDADeviceTy : public GenericDeviceTy {
     case TARGET_ALLOC_HOST:
       Res = cuMemFreeHost(TgtPtr);
       break;
+    case TARGET_ALLOC_DEVICE_NON_BLOCKING: {
+      CUstream Stream;
+      if ((Res = cuStreamCreate(&Stream, CU_STREAM_NON_BLOCKING)))
+        break;
+      cuMemFreeAsync(reinterpret_cast<CUdeviceptr>(TgtPtr), Stream);
+      cuStreamSynchronize(Stream);
+      if ((Res = cuStreamDestroy(Stream)))
+        break;
+    }
     }
 
     if (auto Err = Plugin::check(Res, "Error in cuMemFree[Host]: %s")) {
@@ -728,7 +755,7 @@ struct CUDADeviceTy : public GenericDeviceTy {
 
     // If there is already pending work on the stream it could be waiting for
     // someone to check the RPC server.
-    if (auto RPCServer = getRPCServer()) {
+    if (auto *RPCServer = getRPCServer()) {
       CUresult Res = cuStreamQuery(Stream);
       while (Res == CUDA_ERROR_NOT_READY) {
         if (auto Err = RPCServer->runServer(*this))
@@ -1063,15 +1090,13 @@ private:
     // automatically so we must create it ourselves. The backend will emit
     // several globals that contain function pointers we can call. These are
     // prefixed with a known name due to Nvidia's lack of section support.
-    const ELF64LEObjectFile *ELFObj =
-        Handler.getOrCreateELFObjectFile(*this, Image);
-    if (!ELFObj)
-      return Plugin::error("Unable to create ELF object for image %p",
-                           Image.getStart());
+    auto ELFObjOrErr = Handler.getELFObjectFile(Image);
+    if (!ELFObjOrErr)
+      return ELFObjOrErr.takeError();
 
     // Search for all symbols that contain a constructor or destructor.
     SmallVector<std::pair<StringRef, uint16_t>> Funcs;
-    for (ELFSymbolRef Sym : ELFObj->symbols()) {
+    for (ELFSymbolRef Sym : ELFObjOrErr->symbols()) {
       auto NameOrErr = Sym.getName();
       if (!NameOrErr)
         return NameOrErr.takeError();
@@ -1088,7 +1113,7 @@ private:
     }
 
     // Sort the created array to be in priority order.
-    llvm::sort(Funcs, [=](auto x, auto y) { return x.second < y.second; });
+    llvm::sort(Funcs, [=](auto X, auto Y) { return X.second < Y.second; });
 
     // Allocate a buffer to store all of the known constructor / destructor
     // functions in so we can iterate them on the device.
