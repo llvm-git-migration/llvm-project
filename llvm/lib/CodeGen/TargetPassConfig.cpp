@@ -867,7 +867,6 @@ void TargetPassConfig::addIRPasses() {
         addPass(createPrintFunctionPass(dbgs(),
                                         "\n\n*** Code after LSR ***\n"));
     }
-
   }
 
   // Run GC lowering passes for builtin collectors
