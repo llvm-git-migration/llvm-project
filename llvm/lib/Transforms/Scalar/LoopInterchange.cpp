@@ -115,8 +115,8 @@ static bool populateDependencyMatrix(CharMatrix &DepMatrix, unsigned Level,
   for (I = MemInstr.begin(), IE = MemInstr.end(); I != IE; ++I) {
     for (J = I + 1, JE = MemInstr.end(); J != JE; ++J) {
       std::vector<char> Dep;
-      Instruction *Src = cast<Instruction>(*I);
-      Instruction *Dst = cast<Instruction>(*J);
+      Instruction *Src = cast<Instruction>(*J);
+      Instruction *Dst = cast<Instruction>(*I);
       // Ignore Input dependencies.
       if (isa<LoadInst>(Src) && isa<LoadInst>(Dst))
         continue;
