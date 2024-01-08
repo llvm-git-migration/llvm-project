@@ -20,6 +20,7 @@
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCELFStreamer.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/AMDGPUMetadata.h"
@@ -485,7 +486,7 @@ MCELFStreamer &AMDGPUTargetELFStreamer::getStreamer() {
 void AMDGPUTargetELFStreamer::finish() {
   MCAssembler &MCA = getStreamer().getAssembler();
   MCA.setELFHeaderEFlags(getEFlags());
-  MCA.setELFHeaderABIVersion(
+  MCA.getWriter().setOverrideABIVersion(
       getELFABIVersion(STI.getTargetTriple(), CodeObjectVersion));
 
   std::string Blob;
