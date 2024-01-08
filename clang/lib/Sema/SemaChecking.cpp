@@ -2032,10 +2032,10 @@ static bool checkPointerAuthValue(Sema &S, Expr *&Arg,
     Arg = R.get();
   }
 
-  auto allowsPointer = [](PointerAuthOpKind OpKind) {
+  auto AllowsPointer = [](PointerAuthOpKind OpKind) {
     return OpKind != PAO_BlendInteger;
   };
-  auto allowsInteger = [](PointerAuthOpKind OpKind) {
+  auto AllowsInteger = [](PointerAuthOpKind OpKind) {
     return OpKind == PAO_Discriminator ||
            OpKind == PAO_BlendInteger ||
            OpKind == PAO_SignGeneric;
@@ -2043,11 +2043,11 @@ static bool checkPointerAuthValue(Sema &S, Expr *&Arg,
 
   // Require the value to have the right range of type.
   QualType ExpectedTy;
-  if (allowsPointer(OpKind) && Arg->getType()->isPointerType()) {
+  if (AllowsPointer(OpKind) && Arg->getType()->isPointerType()) {
     ExpectedTy = Arg->getType().getUnqualifiedType();
-  } else if (allowsPointer(OpKind) && Arg->getType()->isNullPtrType()) {
+  } else if (AllowsPointer(OpKind) && Arg->getType()->isNullPtrType()) {
     ExpectedTy = S.Context.VoidPtrTy;
-  } else if (allowsInteger(OpKind) &&
+  } else if (AllowsInteger(OpKind) &&
              Arg->getType()->isIntegralOrUnscopedEnumerationType()) {
     ExpectedTy = S.Context.getUIntPtrType();
 
@@ -2057,8 +2057,8 @@ static bool checkPointerAuthValue(Sema &S, Expr *&Arg,
       << unsigned(OpKind == PAO_Discriminator ? 1 :
                   OpKind == PAO_BlendPointer ? 2 :
                   OpKind == PAO_BlendInteger ? 3 : 0)
-      << unsigned(allowsInteger(OpKind) ?
-                    (allowsPointer(OpKind) ? 2 : 1) : 0)
+      << unsigned(AllowsInteger(OpKind) ?
+                    (AllowsPointer(OpKind) ? 2 : 1) : 0)
       << Arg->getType()
       << Arg->getSourceRange();
     return true;

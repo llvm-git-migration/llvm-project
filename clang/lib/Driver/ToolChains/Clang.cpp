@@ -7077,7 +7077,6 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
                    options::OPT_fno_ptrauth_intrinsics, false))
     CmdArgs.push_back("-fptrauth-intrinsics");
 
-
   // -fsigned-bitfields is default, and clang doesn't yet support
   // -funsigned-bitfields.
   if (!Args.hasFlag(options::OPT_fsigned_bitfields,

@@ -4014,7 +4014,7 @@ defm strict_return : BoolFOption<"strict-return",
 let Group = f_Group in {
   let Visibility = [ClangOption,CC1Option] in {
     def fptrauth_intrinsics : Flag<["-"], "fptrauth-intrinsics">,
-      HelpText<"Enable pointer-authentication intrinsics">;
+      HelpText<"Enable pointer authentication intrinsics">;
   }
   def fno_ptrauth_intrinsics : Flag<["-"], "fno-ptrauth-intrinsics">;
 }
