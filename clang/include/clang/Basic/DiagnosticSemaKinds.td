@@ -12076,7 +12076,7 @@ def note_unsafe_buffer_variable_fixit_together : Note<
 def note_safe_buffer_usage_suggestions_disabled : Note<
   "pass -fsafe-buffer-usage-suggestions to receive code hardening suggestions">;
 def warn_unsafe_buffer_usage_in_container : Warning<
-  "%select{the two-parameter std::span construction is unsafe as it can introduce mismatch between buffer size and the bound information}0">,
+  "the two-parameter std::span construction is unsafe as it can introduce mismatch between buffer size and the bound information">,
   InGroup<UnsafeBufferUsageInContainer>, DefaultIgnore;
 #ifndef NDEBUG
 // Not a user-facing diagnostic. Useful for debugging false negatives in

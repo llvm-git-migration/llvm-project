@@ -2258,8 +2258,7 @@ public:
       }
     } else if (const auto *CtorExpr = dyn_cast<CXXConstructExpr>(Operation)) {
       S.Diag(CtorExpr->getLocation(),
-             diag::warn_unsafe_buffer_usage_in_container)
-          << 0;
+             diag::warn_unsafe_buffer_usage_in_container);
     } else {
       if (isa<CallExpr>(Operation)) {
         // note_unsafe_buffer_operation doesn't have this mode yet.
