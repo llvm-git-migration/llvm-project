@@ -4969,7 +4969,7 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
   case Builtin::BI__builtin_ptrauth_sign_unauthenticated:
   case Builtin::BI__builtin_ptrauth_strip: {
     // Emit the arguments.
-    SmallVector<llvm::Value*, 5> Args;
+    SmallVector<llvm::Value *, 5> Args;
     for (auto argExpr : E->arguments())
       Args.push_back(EmitScalarExpr(argExpr));
 
@@ -4979,25 +4979,25 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
       Args[0] = Builder.CreatePtrToInt(Args[0], IntPtrTy);
 
     switch (BuiltinID) {
-      case Builtin::BI__builtin_ptrauth_auth_and_resign:
-        if (Args[4]->getType()->isPointerTy())
-          Args[4] = Builder.CreatePtrToInt(Args[4], IntPtrTy);
-        LLVM_FALLTHROUGH;
+    case Builtin::BI__builtin_ptrauth_auth_and_resign:
+      if (Args[4]->getType()->isPointerTy())
+        Args[4] = Builder.CreatePtrToInt(Args[4], IntPtrTy);
+      LLVM_FALLTHROUGH;
 
-      case Builtin::BI__builtin_ptrauth_auth:
-      case Builtin::BI__builtin_ptrauth_sign_unauthenticated:
-        if (Args[2]->getType()->isPointerTy())
-          Args[2] = Builder.CreatePtrToInt(Args[2], IntPtrTy);
-        break;
+    case Builtin::BI__builtin_ptrauth_auth:
+    case Builtin::BI__builtin_ptrauth_sign_unauthenticated:
+      if (Args[2]->getType()->isPointerTy())
+        Args[2] = Builder.CreatePtrToInt(Args[2], IntPtrTy);
+      break;
 
-      case Builtin::BI__builtin_ptrauth_sign_generic_data:
-        if (Args[1]->getType()->isPointerTy())
-          Args[1] = Builder.CreatePtrToInt(Args[1], IntPtrTy);
-        break;
+    case Builtin::BI__builtin_ptrauth_sign_generic_data:
+      if (Args[1]->getType()->isPointerTy())
+        Args[1] = Builder.CreatePtrToInt(Args[1], IntPtrTy);
+      break;
 
-      case Builtin::BI__builtin_ptrauth_blend_discriminator:
-      case Builtin::BI__builtin_ptrauth_strip:
-        break;
+    case Builtin::BI__builtin_ptrauth_blend_discriminator:
+    case Builtin::BI__builtin_ptrauth_strip:
+      break;
     }
 
     // Call the intrinsic.
