@@ -113,7 +113,7 @@ static bool populateDependencyMatrix(CharMatrix &DepMatrix, unsigned Level,
   ValueVector::iterator I, IE, J, JE;
 
   for (I = MemInstr.begin(), IE = MemInstr.end(); I != IE; ++I) {
-    for (J = I, JE = MemInstr.end(); J != JE; ++J) {
+    for (J = I + 1, JE = MemInstr.end(); J != JE; ++J) {
       std::vector<char> Dep;
       Instruction *Src = cast<Instruction>(*I);
       Instruction *Dst = cast<Instruction>(*J);
