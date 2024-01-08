@@ -280,6 +280,10 @@ bool ByteCodeExprGen<Emitter>::VisitCastExpr(const CastExpr *CE) {
     return true;
   }
 
+  case CK_IntegralComplexToReal:
+  case CK_FloatingComplexToReal:
+    return this->emitComplexReal(SubExpr);
+
   case CK_ToVoid:
     return discard(SubExpr);
 
@@ -2023,7 +2027,7 @@ bool ByteCodeExprGen<Emitter>::dereference(
   }
 
   if (LV->getType()->isAnyComplexType())
-    return visit(LV);
+    return this->delegate(LV);
 
   return false;
 }
@@ -2760,21 +2764,9 @@ bool ByteCodeExprGen<Emitter>::VisitUnaryOperator(const UnaryOperator *E) {
     if (!this->visit(SubExpr))
       return false;
     return DiscardResult ? this->emitPop(*T, E) : this->emitComp(*T, E);
-  case UO_Real: { // __real x
+  case UO_Real: // __real x
     assert(!T);
-    if (!this->visit(SubExpr))
-      return false;
-    if (!this->emitConstUint8(0, E))
-      return false;
-    if (!this->emitArrayElemPtrPopUint8(E))
-      return false;
-
-    // Since our _Complex implementation does not map to a primitive type,
-    // we sometimes have to do the lvalue-to-rvalue conversion here manually.
-    if (!SubExpr->isLValue())
-      return this->emitLoadPop(classifyPrim(E->getType()), E);
-    return true;
-  }
+    return this->emitComplexReal(SubExpr);
   case UO_Imag: { // __imag x
     assert(!T);
     if (!this->visit(SubExpr))
@@ -2939,6 +2931,29 @@ bool ByteCodeExprGen<Emitter>::emitPrimCast(PrimType FromT, PrimType ToT,
   }
 
   return false;
+}
+
+/// Emits __real(SubExpr)
+template <class Emitter>
+bool ByteCodeExprGen<Emitter>::emitComplexReal(const Expr *SubExpr) {
+  assert(SubExpr->getType()->isAnyComplexType());
+
+  if (DiscardResult)
+    return this->discard(SubExpr);
+
+  if (!this->visit(SubExpr))
+    return false;
+  if (!this->emitConstUint8(0, SubExpr))
+    return false;
+  if (!this->emitArrayElemPtrPopUint8(SubExpr))
+    return false;
+
+  // Since our _Complex implementation does not map to a primitive type,
+  // we sometimes have to do the lvalue-to-rvalue conversion here manually.
+  if (!SubExpr->isLValue())
+    return this->emitLoadPop(*classifyComplexElementType(SubExpr->getType()),
+                             SubExpr);
+  return true;
 }
 
 /// When calling this, we have a pointer of the local-to-destroy
