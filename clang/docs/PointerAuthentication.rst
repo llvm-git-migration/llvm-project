@@ -118,7 +118,7 @@ independently for I and D keys.)
   interfaces or as primitives in a compiler IR because they expose raw
   pointers.  Raw pointers require special attention in the language
   implementation to avoid the accidental creation of exploitable code
-  sequences; see the section on `Attackable code sequences`_.
+  sequences.
 
 The following details are all implementation-defined:
 
@@ -172,9 +172,7 @@ Discriminators
 A discriminator is arbitrary extra data which alters the signature calculated
 for a pointer.  When two pointers are signed differently --- either with
 different keys or with different discriminators --- an attacker cannot simply
-replace one pointer with the other.  For more information on why discriminators
-are important and how to use them effectively, see the section on `Substitution
-attacks`_.
+replace one pointer with the other.
 
 To use standard cryptographic terminology, a discriminator acts as a salt in
 the signing of a pointer, and the key data acts as a pepper.  That is, both the
@@ -244,8 +242,7 @@ signing schema breaks down even more simply:
 It is important that the signing schema be independently derived at all signing
 and authentication sites.  Preferably, the schema should be hard-coded
 everywhere it is needed, but at the very least, it must not be derived by
-inspecting information stored along with the pointer.  See the section on
-`Attacks on pointer authentication`_ for more information.
+inspecting information stored along with the pointer.
 
 Language Features
 -----------------
@@ -340,7 +337,7 @@ Produce a signed pointer for the given raw pointer without applying any
 authentication or extra treatment.  This operation is not required to have the
 same behavior on a null pointer that the language implementation would.
 
-This is a treacherous operation that can easily result in `signing oracles`_.
+This is a treacherous operation that can easily result in signing oracles.
 Programs should use it seldom and carefully.
 
 ``ptrauth_auth_and_resign``
@@ -361,8 +358,7 @@ a null pointer that the language implementation would.
 The code sequence produced for this operation must not be directly attackable.
 However, if the discriminator values are not constant integers, their
 computations may still be attackable.  In the future, Clang should be enhanced
-to guaranteed non-attackability if these expressions are
-:ref:`safely-derived<Safe derivation>`.
+to guaranteed non-attackability if these expressions are safely-derived.
 
 ``ptrauth_auth_data``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -378,7 +374,7 @@ remove the signature.
 as ``pointer``.  This operation is not required to have the same behavior on
 a null pointer that the language implementation would.
 
-In the future when Clang makes `safe derivation`_ guarantees, the result of
+In the future when Clang makes safe derivation guarantees, the result of
 this operation should be considered safely-derived.
 
 ``ptrauth_sign_generic_data``
