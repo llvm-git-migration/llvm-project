@@ -46,6 +46,9 @@ RISCVTTIImpl::getRISCVInstructionCost(ArrayRef<unsigned> OpCodes, MVT VT,
   InstructionCost Cost = 0;
   for (auto Op : OpCodes) {
     switch (Op) {
+    case RISCV::SLT:
+      Cost += 1;
+      break;
     case RISCV::VRGATHER_VI:
       Cost += TLI->getVRGatherVICost(VT);
       break;
@@ -84,8 +87,14 @@ RISCVTTIImpl::getRISCVInstructionCost(ArrayRef<unsigned> OpCodes, MVT VT,
       Cost += VL;
       break;
     }
+    case RISCV::VMV_X_S:
+    case RISCV::VFMV_F_S:
+      Cost += 1;
+      break;
     case RISCV::VMV_S_X:
-      // FIXME: VMV_S_X doesn't use LMUL, the cost should be 1
+    case RISCV::VFMV_S_F:
+      Cost += 1;
+      break;
     default:
       Cost += LMULCost;
     }
@@ -444,9 +453,8 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
     // vmv.s.x      v0, a0
     // vmerge.vvm   v8, v9, v8, v0
     return LT.first *
-           (TLI->getLMULCost(LT.second) + // FIXME: should be 1 for li
-            getRISCVInstructionCost({RISCV::VMV_S_X, RISCV::VMERGE_VVM},
-                                    LT.second, CostKind));
+           (1 + getRISCVInstructionCost({RISCV::VMV_S_X, RISCV::VMERGE_VVM},
+                                        LT.second, CostKind));
   }
   case TTI::SK_Broadcast: {
     bool HasScalar = (Args.size() > 0) && (Operator::getOpcode(Args[0]) ==
@@ -459,9 +467,8 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
         //   vmv.v.x v8, a0
         //   vmsne.vi v0, v8, 0
         return LT.first *
-               (TLI->getLMULCost(LT.second) + // FIXME: should be 1 for andi
-                getRISCVInstructionCost({RISCV::VMV_V_X, RISCV::VMSNE_VI},
-                                        LT.second, CostKind));
+               (1 + getRISCVInstructionCost({RISCV::VMV_V_X, RISCV::VMSNE_VI},
+                                            LT.second, CostKind));
       }
       // Example sequence:
       //   vsetivli  zero, 2, e8, mf8, ta, mu (ignored)
@@ -473,12 +480,10 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
       //   vmsne.vi  v0, v8, 0
 
       return LT.first *
-             (TLI->getLMULCost(LT.second) + // FIXME: this should be 1 for andi
-              TLI->getLMULCost(
-                  LT.second) + // FIXME: vmv.x.s is the same as extractelement
-              getRISCVInstructionCost({RISCV::VMV_V_I, RISCV::VMERGE_VIM,
-                                       RISCV::VMV_V_X, RISCV::VMSNE_VI},
-                                      LT.second, CostKind));
+             (1 + getRISCVInstructionCost({RISCV::VMV_V_I, RISCV::VMERGE_VIM,
+                                           RISCV::VMV_X_S, RISCV::VMV_V_X,
+                                           RISCV::VMSNE_VI},
+                                          LT.second, CostKind));
     }
 
     if (HasScalar) {
@@ -523,9 +528,9 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
     if (LT.second.isFixedLengthVector())
       // vrsub.vi has a 5 bit immediate field, otherwise an li suffices
       LenCost = isInt<5>(LT.second.getVectorNumElements() - 1) ? 0 : 1;
-    // FIXME: replace the constant `2` below with cost of {VID_V,VRSUB_VX}
-    InstructionCost GatherCost =
-        2 + getRISCVInstructionCost(RISCV::VRGATHER_VV, LT.second, CostKind);
+    InstructionCost GatherCost = getRISCVInstructionCost(
+        {RISCV::VID_V, RISCV::VRSUB_VX, RISCV::VRGATHER_VV}, LT.second,
+        CostKind);
     // Mask operation additionally required extend and truncate
     InstructionCost ExtendCost = Tp->getElementType()->isIntegerTy(1) ? 3 : 0;
     return LT.first * (LenCost + GatherCost + ExtendCost);
@@ -1358,19 +1363,53 @@ RISCVTTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *Ty,
     return BaseT::getMinMaxReductionCost(IID, Ty, FMF, CostKind);
 
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
-  if (Ty->getElementType()->isIntegerTy(1))
-    // vcpop sequences, see vreduction-mask.ll.  umax, smin actually only
-    // cost 2, but we don't have enough info here so we slightly over cost.
-    return (LT.first - 1) + 3;
+  std::array<unsigned, 3> Opcodes;
+  if (Ty->getElementType()->isIntegerTy(1)) {
+    // vcpop sequences, see vreduction-mask.ll.
+    if ((IID == Intrinsic::umax) || (IID == Intrinsic::smin))
+      Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M, RISCV::SLT};
+    else
+      Opcodes = {RISCV::VCPOP_M, RISCV::SLT};
+    return (LT.first - 1) +
+           getRISCVInstructionCost(Opcodes, LT.second, CostKind);
+  }
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
-  InstructionCost BaseCost = 2;
-
-  if (CostKind == TTI::TCK_CodeSize)
-    return (LT.first - 1) + BaseCost;
-
-  unsigned VL = getEstimatedVLFor(Ty);
-  return (LT.first - 1) + BaseCost + Log2_32_Ceil(VL);
+  unsigned SplitOp;
+  switch (IID) {
+  default:
+    llvm_unreachable("Unsupported intrinsic");
+  case Intrinsic::smax:
+    SplitOp = RISCV::VMAX_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDMAX_VS, RISCV::VMV_X_S};
+    break;
+  case Intrinsic::smin:
+    SplitOp = RISCV::VMIN_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDMIN_VS, RISCV::VMV_X_S};
+    break;
+  case Intrinsic::umax:
+    SplitOp = RISCV::VMAXU_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDMAXU_VS, RISCV::VMV_X_S};
+    break;
+  case Intrinsic::umin:
+    SplitOp = RISCV::VMINU_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDMINU_VS, RISCV::VMV_X_S};
+    break;
+  case Intrinsic::maxnum:
+    SplitOp = RISCV::VFMAX_VV;
+    Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDMAX_VS, RISCV::VFMV_F_S};
+    break;
+  case Intrinsic::minnum:
+    SplitOp = RISCV::VFMIN_VV;
+    Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDMIN_VS, RISCV::VFMV_F_S};
+    break;
+  }
+  // Add a cost for data larger than LMUL8
+  InstructionCost SplitCost =
+      (LT.first > 1) ? (LT.first - 1) *
+                           getRISCVInstructionCost(SplitOp, LT.second, CostKind)
+                     : 0;
+  return SplitCost + getRISCVInstructionCost(Opcodes, LT.second, CostKind);
 }
 
 InstructionCost
@@ -1392,20 +1431,50 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
     return BaseT::getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
 
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
-  if (Ty->getElementType()->isIntegerTy(1))
+  std::array<unsigned, 3> Opcodes;
+  if (Ty->getElementType()->isIntegerTy(1)) {
     // vcpop sequences, see vreduction-mask.ll
-    return (LT.first - 1) + (ISD == ISD::AND ? 3 : 2);
+    if (ISD == ISD::AND)
+      Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M, RISCV::SLT};
+    else
+      Opcodes = {RISCV::VCPOP_M, RISCV::SLT};
+    return (LT.first - 1) +
+           getRISCVInstructionCost(Opcodes, LT.second, CostKind);
+  }
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
-  InstructionCost BaseCost = 2;
-
-  if (CostKind == TTI::TCK_CodeSize)
-    return (LT.first - 1) + BaseCost;
-
-  unsigned VL = getEstimatedVLFor(Ty);
-  if (TTI::requiresOrderedReduction(FMF))
-    return (LT.first - 1) + BaseCost + VL;
-  return (LT.first - 1) + BaseCost + Log2_32_Ceil(VL);
+  unsigned SplitOp;
+  switch (ISD) {
+  case ISD::ADD:
+    SplitOp = RISCV::VADD_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDSUM_VS, RISCV::VMV_X_S};
+    break;
+  case ISD::OR:
+    SplitOp = RISCV::VOR_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDOR_VS, RISCV::VMV_X_S};
+    break;
+  case ISD::XOR:
+    SplitOp = RISCV::VXOR_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDXOR_VS, RISCV::VMV_X_S};
+    break;
+  case ISD::AND:
+    SplitOp = RISCV::VAND_VV;
+    Opcodes = {RISCV::VMV_S_X, RISCV::VREDAND_VS, RISCV::VMV_X_S};
+    break;
+  case ISD::FADD:
+    SplitOp = RISCV::VFADD_VV;
+    if (TTI::requiresOrderedReduction(FMF))
+      Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDOSUM_VS, RISCV::VFMV_F_S};
+    else
+      Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDUSUM_VS, RISCV::VFMV_F_S};
+    break;
+  }
+  // Add a cost for data larger than LMUL8
+  InstructionCost SplitCost =
+      (LT.first > 1) ? (LT.first - 1) *
+                           getRISCVInstructionCost(SplitOp, LT.second, CostKind)
+                     : 0;
+  return SplitCost + getRISCVInstructionCost(Opcodes, LT.second, CostKind);
 }
 
 InstructionCost RISCVTTIImpl::getExtendedReductionCost(
