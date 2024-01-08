@@ -138,6 +138,7 @@ struct ArmConfig {
 inline ArmConfig getArmConfigForCPUArch(ARMBuildAttrs::CPUArch CPUArch) {
   ArmConfig ArmCfg;
   switch (CPUArch) {
+  case ARMBuildAttrs::v6:
   case ARMBuildAttrs::v7:
   case ARMBuildAttrs::v8_A:
     ArmCfg.J1J2BranchEncoding = true;

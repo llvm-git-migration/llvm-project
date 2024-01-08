@@ -254,6 +254,7 @@ createLinkGraphFromELFObject_aarch32(MemoryBufferRef ObjectBuffer) {
   using namespace ARMBuildAttrs;
   auto Arch = static_cast<CPUArch>(ARM::getArchAttr(AK));
   switch (Arch) {
+  case v6:
   case v7:
   case v8_A:
     ArmCfg = aarch32::getArmConfigForCPUArch(Arch);
