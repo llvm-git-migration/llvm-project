@@ -120,6 +120,9 @@ static bool populateDependencyMatrix(CharMatrix &DepMatrix, unsigned Level,
       // Ignore Input dependencies.
       if (isa<LoadInst>(Src) && isa<LoadInst>(Dst))
         continue;
+      // Swap if Src is no a store.
+      if (!isa<StoreInst>(Src))
+        std::swap(Src, Dst);
       // Track Output, Flow, and Anti dependencies.
       if (auto D = DI->depends(Src, Dst, true)) {
         assert(D->isOrdered() && "Expected an output, flow or anti dep.");
