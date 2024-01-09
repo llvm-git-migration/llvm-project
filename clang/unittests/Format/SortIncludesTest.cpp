@@ -821,6 +821,30 @@ TEST_F(SortIncludesTest, CalculatesCorrectCursorPositionWithRegrouping) {
   EXPECT_EQ(27u, newCursor(Code, 28)); // Start of last line
 }
 
+TEST_F(SortIncludesTest, CalculatesCorrectCursorPositionWhenNoReplacementsWithRegroupingAndCRLF) {
+  Style.IncludeBlocks = Style.IBS_Regroup;
+  FmtStyle.LineEnding = FormatStyle::LE_CRLF;
+  Style.IncludeCategories = {
+      {"^\"aa\"", 1, 0, false},
+      {"^\"b\"", 1, 1, false},
+      {".*", 2, 2, false}};
+  std::string Code = "#include \"aa\"\r\n" // Start of line: 0
+                     "\r\n"                // Start of line: 15
+                     "#include \"b\"\r\n"  // Start of line: 17
+                     "\r\n"                // Start of line: 31
+                     "#include \"c\"\r\n"  // Start of line: 33
+                     "\r\n"                // Start of line: 47
+                     "int i;";             // Start of line: 49
+  EXPECT_EQ(Code, sort(Code));
+  EXPECT_EQ(0u, newCursor(Code, 0));
+  EXPECT_EQ(15u, newCursor(Code, 15));
+  EXPECT_EQ(17u, newCursor(Code, 17));
+  EXPECT_EQ(31u, newCursor(Code, 31));
+  EXPECT_EQ(33u, newCursor(Code, 33));
+  EXPECT_EQ(47u, newCursor(Code, 47));
+  EXPECT_EQ(49u, newCursor(Code, 49));
+}
+
 TEST_F(SortIncludesTest, DeduplicateIncludes) {
   EXPECT_EQ("#include <a>\n"
             "#include <b>\n"
