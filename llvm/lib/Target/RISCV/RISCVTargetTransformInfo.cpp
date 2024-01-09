@@ -46,9 +46,6 @@ RISCVTTIImpl::getRISCVInstructionCost(ArrayRef<unsigned> OpCodes, MVT VT,
   InstructionCost Cost = 0;
   for (auto Op : OpCodes) {
     switch (Op) {
-    case RISCV::SLT:
-      Cost += 1;
-      break;
     case RISCV::VRGATHER_VI:
       Cost += TLI->getVRGatherVICost(VT);
       break;
@@ -1363,15 +1360,13 @@ RISCVTTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *Ty,
     return BaseT::getMinMaxReductionCost(IID, Ty, FMF, CostKind);
 
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
-  std::array<unsigned, 3> Opcodes;
+  SmallVector<unsigned, 3> Opcodes;
   if (Ty->getElementType()->isIntegerTy(1)) {
     // vcpop sequences, see vreduction-mask.ll.
     if ((IID == Intrinsic::umax) || (IID == Intrinsic::smin))
-      Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M, RISCV::SLT};
+      return getArithmeticReductionCost(Instruction::Or, Ty, FMF, CostKind);
     else
-      Opcodes = {RISCV::VCPOP_M, RISCV::SLT};
-    return (LT.first - 1) +
-           getRISCVInstructionCost(Opcodes, LT.second, CostKind);
+      return getArithmeticReductionCost(Instruction::And, Ty, FMF, CostKind);
   }
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
@@ -1431,15 +1426,23 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
     return BaseT::getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
 
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
-  std::array<unsigned, 3> Opcodes;
-  if (Ty->getElementType()->isIntegerTy(1)) {
+  SmallVector<unsigned, 3> Opcodes;
+  Type *ElementTy = Ty->getElementType();
+  if (ElementTy->isIntegerTy(1)) {
     // vcpop sequences, see vreduction-mask.ll
-    if (ISD == ISD::AND)
-      Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M, RISCV::SLT};
-    else
-      Opcodes = {RISCV::VCPOP_M, RISCV::SLT};
-    return (LT.first - 1) +
-           getRISCVInstructionCost(Opcodes, LT.second, CostKind);
+    if (ISD == ISD::AND) {
+      Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M};
+      return (LT.first - 1) +
+             getRISCVInstructionCost(Opcodes, LT.second, CostKind) +
+             getCmpSelInstrCost(Instruction::Select, ElementTy, ElementTy,
+                                CmpInst::ICMP_EQ, CostKind);
+    } else {
+      Opcodes = {RISCV::VCPOP_M};
+      return (LT.first - 1) +
+             getRISCVInstructionCost(Opcodes, LT.second, CostKind) +
+             getCmpSelInstrCost(Instruction::Select, ElementTy, ElementTy,
+                                CmpInst::ICMP_NE, CostKind);
+    }
   }
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
