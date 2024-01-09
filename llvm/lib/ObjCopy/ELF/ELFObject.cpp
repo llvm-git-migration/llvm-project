@@ -324,14 +324,6 @@ Expected<IHexRecord> IHexRecord::parse(StringRef Line) {
   return Rec;
 }
 
-static uint64_t sectionLMA(const SectionBase *Sec) {
-  Segment *Seg = Sec->ParentSegment;
-  if (Seg && Seg->Type == PT_LOAD && Seg->VAddr <= Sec->Addr &&
-      (Seg->VAddr + Seg->MemSize > Sec->Addr))
-    return Sec->Addr - Seg->VAddr + Seg->PAddr;
-  return Sec->Addr;
-}
-
 static uint64_t sectionPhysicalAddr(const SectionBase *Sec) {
   Segment *Seg = Sec->ParentSegment;
   if (Seg && Seg->Type != ELF::PT_LOAD)
@@ -2870,7 +2862,7 @@ void SRECSectionWriterBase::writeRecords() {
 void SRECSectionWriterBase::writeSection(const SectionBase &S,
                                          ArrayRef<uint8_t> Data) {
   const uint32_t ChunkSize = 16;
-  uint32_t Address = sectionLMA(&S);
+  uint32_t Address = sectionPhysicalAddr(&S);
   uint32_t EndAddr = Address + S.Size - 1;
   if (isUInt<16>(EndAddr))
     Type = std::max(static_cast<uint8_t>(SRecord::S1), Type);
@@ -3022,7 +3014,7 @@ Error SRECWriter::finalize() {
   }
 
   llvm::sort(Sections, [](const SectionBase *A, const SectionBase *B) {
-    return sectionLMA(A) < sectionLMA(B);
+    return sectionPhysicalAddr(A) < sectionPhysicalAddr(B);
   });
 
   std::unique_ptr<WritableMemoryBuffer> EmptyBuffer =

@@ -17,9 +17,9 @@
 # RUN: not llvm-objcopy -O srec --set-start=0xF00000000 %t - 2>&1 \
 #   RUN: | FileCheck %s --check-prefix=BAD_START
 
-## Records should use LMA instead of VMA
-# RUN: yaml2obj %p/Inputs/srec-elf-segments.yaml -o %t.lma
-# RUN: llvm-objcopy -O srec %t.lma - | FileCheck %s --check-prefix=LMA
+## Records should use segment physical addresses
+# RUN: yaml2obj %p/Inputs/ihex-elf-segments.yaml -o %t.seg
+# RUN: llvm-objcopy -O srec %t.seg - | FileCheck %s --check-prefix=PADDR
 
 ## # The record type for the header should be S0 with a 2 byte address
 ## of 0. For an output file named "-" the header data field should contain "2D"
@@ -32,10 +32,14 @@
 # CHECK-NEXT: S31000FFFFF83031323334353637383940AC
 # CHECK-NEXT: S70500000000FA
 
-# LMA: S00400002DCE
-# LMA-NEXT: S1088000002004809043
-# LMA-NEXT: S1058009FF0072
-# LMA-NEXT: S90380007C
+# PADDR: S00400002DCE
+# PADDR-NEXT: S214100000000102030405060708090A0B0C0D0E0F63
+# PADDR-NEXT: S20910001010111213147C
+# PADDR-NEXT: S20F10001830313233343536373839407B
+# PADDR-NEXT: S20810002840414243B9
+# PADDR-NEXT: S20F100030505152535455565758596003
+# PADDR-NEXT: S20720FFF8000000E1
+# PADDR-NEXT: S804100000EB
 
 # BAD-ADDR: Section '.text1' address range [0xfffffff8, 0x100000000] is not 32 bit
 # BAD-ADDR2: Section '.text2' address range [0xffffffff0, 0xffffffff4] is not 32 bit
