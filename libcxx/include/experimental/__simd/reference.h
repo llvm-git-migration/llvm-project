@@ -12,6 +12,7 @@
 
 #include <__type_traits/is_assignable.h>
 #include <__type_traits/is_same.h>
+#include <__utility/declval.h>
 #include <__utility/forward.h>
 #include <cstddef>
 #include <experimental/__config>
@@ -53,6 +54,86 @@ public:
   template <class _Up, enable_if_t<is_assignable_v<value_type&, _Up&&>, int> = 0>
   _LIBCPP_HIDE_FROM_ABI __simd_reference operator=(_Up&& __v) && noexcept {
     __set(static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() + std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator+=(_Up&& __v) && noexcept {
+    __set(__get() + static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() - std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator-=(_Up&& __v) && noexcept {
+    __set(__get() - static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() * std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator*=(_Up&& __v) && noexcept {
+    __set(__get() * static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() / std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator/=(_Up&& __v) && noexcept {
+    __set(__get() / static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() % std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator%=(_Up&& __v) && noexcept {
+    __set(__get() % static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() & std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator&=(_Up&& __v) && noexcept {
+    __set(__get() & static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() | std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator|=(_Up&& __v) && noexcept {
+    __set(__get() | static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <
+      class _Up,
+      enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() ^ std::declval<_Up>())&&>, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator^=(_Up&& __v) && noexcept {
+    __set(__get() ^ static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <class _Up,
+            enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() << std::declval<_Up>())&&>,
+                        int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator<<=(_Up&& __v) && noexcept {
+    __set(__get() << static_cast<value_type>(std::forward<_Up>(__v)));
+    return {__s_, __idx_};
+  }
+
+  template <class _Up,
+            enable_if_t<is_assignable_v<value_type&, decltype(std::declval<value_type&>() >> std::declval<_Up>())&&>,
+                        int> = 0>
+  _LIBCPP_HIDE_FROM_ABI __simd_reference operator>>=(_Up&& __v) && noexcept {
+    __set(__get() >> static_cast<value_type>(std::forward<_Up>(__v)));
     return {__s_, __idx_};
   }
 };
