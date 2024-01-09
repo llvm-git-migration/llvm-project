@@ -14,6 +14,7 @@
 #ifndef LLVM_CLANG_EXTRACTAPI_EXTRACT_API_VISITOR_H
 #define LLVM_CLANG_EXTRACTAPI_EXTRACT_API_VISITOR_H
 
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -128,9 +129,10 @@ protected:
   void recordEnumConstants(EnumRecord *EnumRecord,
                            const EnumDecl::enumerator_range Constants);
 
-  /// Collect API information for the struct fields and associate with the
+  /// Collect API information for the record fields and associate with the
   /// parent struct.
-  void recordStructFields(StructRecord *StructRecord,
+  void recordRecordFields(RecordRecord *RecordRecord,
+                          APIRecord::RecordKind FieldKind,
                           const RecordDecl::field_range Fields);
 
   /// Collect API information for the Objective-C methods and associate with the
@@ -524,17 +526,25 @@ bool ExtractAPIVisitorBase<Derived>::VisitRecordDecl(const RecordDecl *Decl) {
 
   // Build declaration fragments and sub-heading for the struct.
   DeclarationFragments Declaration =
-      DeclarationFragmentsBuilder::getFragmentsForStruct(Decl);
+      DeclarationFragmentsBuilder::getFragmentsForRecordDecl(Decl);
   DeclarationFragments SubHeading =
       DeclarationFragmentsBuilder::getSubHeading(Decl);
 
-  StructRecord *StructRecord =
-      API.addStruct(Name, USR, Loc, AvailabilitySet(Decl), Comment, Declaration,
-                    SubHeading, isInSystemHeader(Decl));
+  auto RecordKind = APIRecord::RK_Struct;
+  auto FieldRecordKind = APIRecord::RK_StructField;
+
+  if (Decl->isUnion()) {
+    RecordKind = APIRecord::RK_Union;
+    FieldRecordKind = APIRecord::RK_UnionField;
+  }
+
+  RecordRecord *RecordRecord =
+      API.addRecord(Name, USR, Loc, AvailabilitySet(Decl), Comment, Declaration,
+                    SubHeading, RecordKind, isInSystemHeader(Decl));
 
   // Now collect information about the fields in this struct.
-  getDerivedExtractAPIVisitor().recordStructFields(StructRecord,
-                                                   Decl->fields());
+  getDerivedExtractAPIVisitor().recordRecordFields(
+      RecordRecord, FieldRecordKind, Decl->fields());
 
   return true;
 }
@@ -1055,8 +1065,8 @@ bool ExtractAPIVisitorBase<Derived>::VisitTypedefNameDecl(
           dyn_cast<ElaboratedType>(Decl->getUnderlyingType())) {
     if (const TagType *TagTy = dyn_cast<TagType>(ET->desugar())) {
       if (Decl->getName() == TagTy->getDecl()->getName()) {
-        if (TagTy->getDecl()->isStruct()) {
-          modifyRecords(API.getStructs(), Decl->getName());
+        if (isa<RecordDecl>(TagTy->getDecl())) {
+          modifyRecords(API.getRecords(), Decl->getName());
         }
         if (TagTy->getDecl()->isEnum()) {
           modifyRecords(API.getEnums(), Decl->getName());
@@ -1169,8 +1179,9 @@ void ExtractAPIVisitorBase<Derived>::recordEnumConstants(
 /// Collect API information for the struct fields and associate with the
 /// parent struct.
 template <typename Derived>
-void ExtractAPIVisitorBase<Derived>::recordStructFields(
-    StructRecord *StructRecord, const RecordDecl::field_range Fields) {
+void ExtractAPIVisitorBase<Derived>::recordRecordFields(
+    RecordRecord *RecordRecord, APIRecord::RecordKind FieldKind,
+    const RecordDecl::field_range Fields) {
   for (const auto *Field : Fields) {
     // Collect symbol information.
     StringRef Name = Field->getName();
@@ -1189,8 +1200,8 @@ void ExtractAPIVisitorBase<Derived>::recordStructFields(
     DeclarationFragments SubHeading =
         DeclarationFragmentsBuilder::getSubHeading(Field);
 
-    API.addStructField(StructRecord, Name, USR, Loc, AvailabilitySet(Field),
-                       Comment, Declaration, SubHeading,
+    API.addRecordField(RecordRecord, Name, USR, Loc, AvailabilitySet(Field),
+                       Comment, Declaration, SubHeading, FieldKind,
                        isInSystemHeader(Field));
   }
 }
