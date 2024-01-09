@@ -71,17 +71,11 @@ enum Fixups {
   // Used to generate an R_RISCV_ALIGN relocation, which indicates the linker
   // should fixup the alignment after linker relaxation.
   fixup_riscv_align,
-  // 20-bit fixup corresponding to %tlsdesc_hi(foo) for instructions like
-  // auipc
+  // Fixups indicating a TLS descriptor code sequence, corresponding to auipc,
+  // lw/ld, addi, and jalr, respectively.
   fixup_riscv_tlsdesc_hi20,
-  // 12-bit fixup corresponding to %tlsdesc_load_lo(foo) for instructions like
-  // lw
   fixup_riscv_tlsdesc_load_lo12,
-  // 12-bit fixup corresponding to %tlsdesc_add_lo(foo) for instructions like
-  // addi
   fixup_riscv_tlsdesc_add_lo12,
-  // Fixup representing a function call to TLS descriptor resolve function,
-  // %tlsdesc_call
   fixup_riscv_tlsdesc_call,
 
   // Used as a sentinel, must be the last
