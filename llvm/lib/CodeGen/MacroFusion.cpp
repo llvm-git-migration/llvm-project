@@ -128,6 +128,7 @@ bool llvm::fuseInstructionPair(ScheduleDAGInstrs &DAG, SUnit &FirstSU,
     }
   }
 
+  SecondSU.getInstr()->setFlag(MachineInstr::Fusible);
   ++NumFused;
   return true;
 }
