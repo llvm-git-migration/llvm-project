@@ -2,7 +2,7 @@
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++11
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++14
 // RUN: %clang_cc1 -fsyntax-only -verify=expected,cxx17,precxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++17
-// RUN: %clang_cc1 -fsyntax-only -verify=expected,cxx17 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++20
+// RUN: %clang_cc1 -fsyntax-only -verify=expected,cxx17,cxx20 %s -triple=i686-pc-linux-gnu -Wno-new-returns-null -std=c++20
 
 // FIXME Location is (frontend)
 // cxx17-note@*:* {{candidate function not viable: requires 2 arguments, but 3 were provided}}
@@ -26,6 +26,11 @@ struct U
 };
 struct V : U
 {
+};
+struct W // cxx20-note 2{{candidate constructor}}
+{
+  int a;
+  int b;
 };
 
 inline void operator delete(void *); // expected-warning {{replacement function 'operator delete' cannot be declared 'inline'}}
@@ -358,6 +363,11 @@ void h(unsigned i) {
 }
 template void h<unsigned>(unsigned);
 template void h<unsigned[10]>(unsigned); // precxx20-note {{in instantiation of function template specialization 'Test1::h<unsigned int[10]>' requested here}}
+
+void i() {
+  new W[2](1, 2, 3); // precxx20-error {{array 'new' cannot have initialization arguments}}
+  // cxx20-error@-1 {{no viable conversion from 'int' to 'W'}}
+}
 
 }
 

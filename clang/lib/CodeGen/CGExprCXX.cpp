@@ -1040,11 +1040,12 @@ void CodeGenFunction::EmitNewArrayInitializer(
 
   const InitListExpr *ILE = dyn_cast<InitListExpr>(Init);
   const CXXParenListInitExpr *CPLIE = dyn_cast<CXXParenListInitExpr>(Init);
+  const StringLiteral *SL = dyn_cast<StringLiteral>(Init);
   // If the initializer is an initializer list, first do the explicit elements.
-  if (ILE || CPLIE) {
+  if (ILE || CPLIE || SL) {
     // Initializing from a (braced) string literal is a special case; the init
     // list element does not initialize a (single) array element.
-    if (ILE && ILE->isStringLiteralInit()) {
+    if ((ILE && ILE->isStringLiteralInit()) || SL) {
       // Initialize the initial portion of length equal to that of the string
       // literal. The allocation must be for at least this much; we emitted a
       // check for that earlier.
@@ -1056,12 +1057,12 @@ void CodeGenFunction::EmitNewArrayInitializer(
                                 AggValueSlot::DoesNotOverlap,
                                 AggValueSlot::IsNotZeroed,
                                 AggValueSlot::IsSanitizerChecked);
-      EmitAggExpr(ILE->getInit(0), Slot);
+      EmitAggExpr(SL ? SL : ILE->getInit(0), Slot);
 
       // Move past these elements.
-      InitListElements =
-          cast<ConstantArrayType>(ILE->getType()->getAsArrayTypeUnsafe())
-              ->getSize().getZExtValue();
+      const ArrayType *AT = SL ? SL->getType()->getAsArrayTypeUnsafe()
+                               : ILE->getType()->getAsArrayTypeUnsafe();
+      InitListElements = cast<ConstantArrayType>(AT)->getSize().getZExtValue();
       CurPtr = Builder.CreateConstInBoundsGEP(
           CurPtr, InitListElements, "string.init.end");
 
@@ -1564,16 +1565,21 @@ llvm::Value *CodeGenFunction::EmitCXXNewExpr(const CXXNewExpr *E) {
   // 1. Build a call to the allocation function.
   FunctionDecl *allocator = E->getOperatorNew();
 
-  // If there is a brace-initializer, cannot allocate fewer elements than inits.
+  // If there is a brace-initializer or C++20 parenthesized initializer, cannot
+  // allocate fewer elements than inits.
   unsigned minElements = 0;
   if (E->isArray() && E->hasInitializer()) {
-    const InitListExpr *ILE = dyn_cast<InitListExpr>(E->getInitializer());
-    if (ILE && ILE->isStringLiteralInit())
+    const Expr *Init = E->getInitializer();
+    const InitListExpr *ILE = dyn_cast<InitListExpr>(Init);
+    const CXXParenListInitExpr *CPLIE = dyn_cast<CXXParenListInitExpr>(Init);
+    if ((ILE && ILE->isStringLiteralInit()) || isa<StringLiteral>(Init)) {
       minElements =
-          cast<ConstantArrayType>(ILE->getType()->getAsArrayTypeUnsafe())
-              ->getSize().getZExtValue();
-    else if (ILE)
-      minElements = ILE->getNumInits();
+          cast<ConstantArrayType>(Init->getType()->getAsArrayTypeUnsafe())
+              ->getSize()
+              .getZExtValue();
+    } else if (ILE || CPLIE) {
+      minElements = ILE ? ILE->getNumInits() : CPLIE->getInitExprs().size();
+    }
   }
 
   llvm::Value *numElements = nullptr;

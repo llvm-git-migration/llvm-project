@@ -531,22 +531,7 @@ namespace gh68198 {
 
   // CHECK: define {{.*}} void @{{.*foo26.*}} {
   // CHECK-NEXT: entry
-  // CHECK-NEXT: [[ARR_9:%.*arr9.*]] = alloca ptr, align 8
-  // CHECK-NEXT: [[CALL_PTR:%.*]] = call noalias noundef nonnull ptr @_Znam(i64 noundef 16) #7
-  // CHECK-NEXT: store i32 1, ptr [[CALL_PTR]], align 4
-  // CHECK-NEXT: [[ARRAY_EXP_NEXT:%.*]] = getelementptr inbounds i32, ptr [[CALL_PTR]], i64 1
-  // CHECK-NEXT: store i32 2, ptr [[ARRAY_EXP_NEXT]], align 4
-  // CHECK-NEXT: [[ARRAY_EXP_NEXT1:%.*]] = getelementptr inbounds i32, ptr [[ARRAY_EXP_NEXT]], i64 1
-  // CHECK-NEXT: call void @llvm.memset.p0.i64(ptr align 4 [[ARRAY_EXP_NEXT1]], i8 0, i64 8, i1 false)
-  // CHECK-NEXT: store ptr [[CALL_PTR]], ptr [[ARR_9]], align 8
-  // CHECK-NEXT: ret void
-  void foo26() {
-    int* arr9 = new int[4](1, 2);
-  }
-
-  // CHECK: define {{.*}} void @{{.*foo27.*}} {
-  // CHECK-NEXT: entry
-  // CHECK-NEXT: [[ARR_10:%.*arr10.*]] = alloca ptr, align 8
+  // CHECK-NEXT: [[ARR_10:%.*arr9.*]] = alloca ptr, align 8
   // CHECK-NEXT: [[CALL_PTR]] = call noalias noundef nonnull ptr @_Znam(i64 noundef 16)
   // CHECK-NEXT: [[ARRAYINIT_BEGIN:%.*]] = getelementptr inbounds [2 x i32], ptr [[CALL]], i64 0, i64 0
   // CHECK-NEXT: store i32 1, ptr [[ARRAYINIT_BEGIN]], align 4
@@ -560,13 +545,13 @@ namespace gh68198 {
   // CHECK-NEXT: [[ARRAY_EXP_NEXT3:%.*]] = getelementptr inbounds [2 x i32], ptr [[ARRAY_EXP_NEXT]], i64 1
   // CHECK-NEXT: store ptr [[CALL_PTR]], ptr [[ARR_10]], align 8
   // CHECK-NEXT: ret void
-  void foo27() {
-    void* arr10 = new int[][2]({1, 2}, {3, 4});
+  void foo26() {
+    void* arr9 = new int[][2]({1, 2}, {3, 4});
   }
 
-  // CHECK: define {{.*}} void @{{.*foo28.*}} {
+  // CHECK: define {{.*}} void @{{.*foo27.*}} {
   // CHECK-NEXT: entry
-  // CHECK-NEXT: [[ARR_11:%.*arr11.*]] = alloca ptr, align 8
+  // CHECK-NEXT: [[ARR_10:%.*arr10.*]] = alloca ptr, align 8
   // CHECK-NEXT: [[CALL_PTR]] = call noalias noundef nonnull ptr @_Znam(i64 noundef 32)
   // CHECK-NEXT: [[ARRAYINIT_BEGIN:%.*]] = getelementptr inbounds [2 x i32], ptr [[CALL]], i64 0, i64 0
   // CHECK-NEXT: store i32 5, ptr [[ARRAYINIT_BEGIN]], align 4
@@ -579,9 +564,9 @@ namespace gh68198 {
   // CHECK-NEXT: store i32 8, ptr [[ARRAYINIT_ELEMENT2]], align 4
   // CHECK-NEXT: [[ARRAY_EXP_NEXT3:%.*]] = getelementptr inbounds [2 x i32], ptr [[ARRAY_EXP_NEXT]], i64 1
   // CHECK-NEXT: call void @llvm.memset.p0.i64(ptr align 4 [[ARRAY_EXP_NEXT3]], i8 0, i64 16, i1 false)
-  // CHECK-NEXT: store ptr [[CALL_PTR]], ptr [[ARR_11]], align 8
+  // CHECK-NEXT: store ptr [[CALL_PTR]], ptr [[ARR_10]], align 8
   // CHECK-NEXT: ret void
-  void foo28() {
-    void* arr11 = new int[4][2]({5, 6}, {7, 8});
+  void foo27() {
+    void* arr10 = new int[4][2]({5, 6}, {7, 8});
   }
 }
