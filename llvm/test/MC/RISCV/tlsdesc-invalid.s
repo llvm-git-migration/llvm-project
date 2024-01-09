@@ -10,6 +10,7 @@ lw   a0, t0, %tlsdesc_load_lo(a_symbol)(a4) # CHECK: :[[@LINE]]:14: error: inval
 
 addi a0, t0, %tlsdesc_add_lo(a_symbol)(a4) # CHECK: :[[@LINE]]:40: error: invalid operand for instruction
 addi a0, %tlsdesc_add_lo(a_symbol) # CHECK: :[[@LINE]]:10: error: invalid operand for instruction
+addi x1, %tlsdesc_load_lo(a_symbol)(a0) # CHECK: :[[@LINE]]:10: error: invalid operand for instruction
 
 jalr x5, 0(a1), %tlsdesc_hi(a_symbol) # CHECK: :[[@LINE]]:17: error: operand must be a symbol with %tlsdesc_call modifier
 jalr x1, 0(a1), %tlsdesc_call(a_symbol) # CHECK: :[[@LINE]]:12: error: the output operand must be t0/x5 when using %tlsdesc_call modifier
