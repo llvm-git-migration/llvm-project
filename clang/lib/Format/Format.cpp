@@ -718,8 +718,10 @@ template <> struct MappingTraits<FormatStyle::SpacesInLineComment> {
   }
 };
 
-template <> struct ScalarEnumerationTraits<FormatStyle::SpacesInParensCustomStyle> {
-  static void enumeration(IO &IO, FormatStyle::SpacesInParensCustomStyle &Value) {
+template <>
+struct ScalarEnumerationTraits<FormatStyle::SpacesInParensCustomStyle> {
+  static void enumeration(IO &IO,
+                          FormatStyle::SpacesInParensCustomStyle &Value) {
     IO.enumCase(Value, "Never", FormatStyle::SIPCS_Never);
     IO.enumCase(Value, "NonConsecutive", FormatStyle::SIPCS_NonConsecutive);
     IO.enumCase(Value, "Always", FormatStyle::SIPCS_Always);
@@ -1185,7 +1187,8 @@ template <> struct MappingTraits<FormatStyle> {
       if (SpacesInParentheses) {
         // set all options except InCStyleCasts and InEmptyParentheses
         // to true for backward compatibility.
-        Style.SpacesInParensOptions.InAttributeSpecifiers = FormatStyle::SIPCS_Always;
+        Style.SpacesInParensOptions.InAttributeSpecifiers =
+            FormatStyle::SIPCS_Always;
         Style.SpacesInParensOptions.InConditionalStatements = true;
         Style.SpacesInParensOptions.InCStyleCasts =
             SpacesInCStyleCastParentheses;
