@@ -88,7 +88,116 @@ define float @sqrt_call_fabs_f32(float %x) {
   ret float %sqrt
 }
 
+define double @sqrt_exp(double %x) {
+; CHECK-LABEL: @sqrt_exp(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @llvm.sqrt.f64(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call fast double @llvm.exp.f64(double %mul)
+  %res = call fast double @llvm.sqrt.f64(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp_2(double %x) {
+; CHECK-LABEL: @sqrt_exp_2(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call fast double @exp(double %mul)
+  %res = call fast double @sqrt(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp2(double %x) {
+; CHECK-LABEL: @sqrt_exp2(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp2(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call fast double @exp2(double %mul)
+  %res = call fast double @sqrt(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp10(double %x) {
+; CHECK-LABEL: @sqrt_exp10(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @exp10(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @sqrt(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call fast double @exp10(double %mul)
+  %res = call fast double @sqrt(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp_nofast_1(double %x) {
+; CHECK-LABEL: @sqrt_exp_nofast_1(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @llvm.sqrt.f64(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul double %x, 10.0
+  %e = call fast double @llvm.exp.f64(double %mul)
+  %res = call fast double @llvm.sqrt.f64(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp_nofast_2(double %x) {
+; CHECK-LABEL: @sqrt_exp_nofast_2(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call double @llvm.exp.f64(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call fast double @llvm.sqrt.f64(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call double @llvm.exp.f64(double %mul)
+  %res = call fast double @llvm.sqrt.f64(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp_nofast_3(double %x) {
+; CHECK-LABEL: @sqrt_exp_nofast_3(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], 1.000000e+01
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call double @llvm.sqrt.f64(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, 10.0
+  %e = call fast double @llvm.exp.f64(double %mul)
+  %res = call double @llvm.sqrt.f64(double %e)
+  ret double %res
+}
+
+define double @sqrt_exp_noconst(double %x, double %y) {
+; CHECK-LABEL: @sqrt_exp_noconst(
+; CHECK-NEXT:    [[MUL:%.*]] = fmul fast double [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    [[E:%.*]] = call fast double @llvm.exp.f64(double [[MUL]])
+; CHECK-NEXT:    [[RES:%.*]] = call double @llvm.sqrt.f64(double [[E]])
+; CHECK-NEXT:    ret double [[RES]]
+;
+  %mul = fmul fast double %x, %y
+  %e = call fast double @llvm.exp.f64(double %mul)
+  %res = call double @llvm.sqrt.f64(double %e)
+  ret double %res
+}
+
 declare i32 @foo(double)
 declare double @sqrt(double) readnone
 declare float @sqrtf(float)
 declare float @llvm.fabs.f32(float)
+declare double @llvm.exp.f64(double)
+declare double @llvm.sqrt.f64(double)
+declare double @exp(double)
+declare double @exp2(double)
+declare double @exp10(double)
