@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/BufferDeallocationOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
@@ -46,18 +47,24 @@ void arith::ArithDialect::initialize() {
 #define GET_ATTRDEF_LIST
 #include "mlir/Dialect/Arith/IR/ArithOpsAttributes.cpp.inc"
       >();
+  
   addInterfaces<ArithInlinerInterface>();
+
   declarePromisedInterface<SelectOp,
                            bufferization::BufferDeallocationOpInterface>();
+  
   declarePromisedInterface<ConstantOp,
                            bufferization::BufferizableOpInterface>();
   declarePromisedInterface<IndexCastOp,
                            bufferization::BufferizableOpInterface>();
   declarePromisedInterface<SelectOp, bufferization::BufferizableOpInterface>();
+
   declarePromisedInterface<AddIOp, ValueBoundsOpInterface>();
   declarePromisedInterface<ConstantOp, ValueBoundsOpInterface>();
   declarePromisedInterface<SubIOp, ValueBoundsOpInterface>();
   declarePromisedInterface<MulIOp, ValueBoundsOpInterface>();
+
+  declarePromisedInterface<ArithDialect, ConvertToLLVMPatternInterface>();
 }
 
 /// Materialize an integer or floating point constant.

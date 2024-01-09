@@ -8,6 +8,7 @@
 
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 
+#include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/BufferDeallocationOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
@@ -68,12 +69,17 @@ void ControlFlowDialect::initialize() {
 #define GET_OP_LIST
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.cpp.inc"
       >();
+
   addInterfaces<ControlFlowInlinerInterface>();
+  
   declarePromisedInterface<BranchOp, bufferization::BufferizableOpInterface>();
   declarePromisedInterface<CondBranchOp,
                            bufferization::BufferizableOpInterface>();
+
   declarePromisedInterface<CondBranchOp,
                            bufferization::BufferDeallocationOpInterface>();
+  
+  declarePromisedInterface<ControlFlowDialect, ConvertToLLVMPatternInterface>();
 }
 
 //===----------------------------------------------------------------------===//
