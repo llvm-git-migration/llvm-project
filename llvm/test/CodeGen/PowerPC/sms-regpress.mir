@@ -8,13 +8,13 @@
 # CHECK: Try to schedule with 22
 # CHECK: 	Can't schedule
 # CHECK: Try to schedule with 23
-# CHECK: Rejecte the schedule because of too high register pressure
+# CHECK: Rejected the schedule because of too high register pressure
 # CHECK: Try to schedule with 24
-# CHECK: Rejecte the schedule because of too high register pressure
+# CHECK: Rejected the schedule because of too high register pressure
 # CHECK: Try to schedule with 25
-# CHECK: Rejecte the schedule because of too high register pressure
+# CHECK: Rejected the schedule because of too high register pressure
 # CHECK: Try to schedule with 26
-# CHECK: Rejecte the schedule because of too high register pressure
+# CHECK: Rejected the schedule because of too high register pressure
 # CHECK: Try to schedule with 27
 # CHECK: Schedule Found? 1 (II=27)
 
