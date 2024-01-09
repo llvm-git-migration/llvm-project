@@ -1864,7 +1864,7 @@ def : Pat<(fshl GR64:$src1, GR64:$src2, (shiftMask64 CL)),
 def : Pat<(fshr GR64:$src2, GR64:$src1, (shiftMask64 CL)),
           (SHRD64rrCL GR64:$src1, GR64:$src2)>;
 
-let Predicates = [HasBMI2] in {
+let Predicates = [HasBMI2, NoEGPR] in {
   let AddedComplexity = 1 in {
     def : Pat<(sra GR32:$src1, (shiftMask32 GR8:$src2)),
               (SARX32rr GR32:$src1,
@@ -1918,6 +1918,64 @@ let Predicates = [HasBMI2] in {
                         (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
   def : Pat<(shl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
             (SHLX64rm addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+}
+
+let Predicates = [HasBMI2, HasEGPR] in {
+  let AddedComplexity = 1 in {
+    def : Pat<(sra GR32:$src1, (shiftMask32 GR8:$src2)),
+              (SARX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(sra GR64:$src1, (shiftMask64 GR8:$src2)),
+              (SARX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+    def : Pat<(srl GR32:$src1, (shiftMask32 GR8:$src2)),
+              (SHRX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(srl GR64:$src1, (shiftMask64 GR8:$src2)),
+              (SHRX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+    def : Pat<(shl GR32:$src1, (shiftMask32 GR8:$src2)),
+              (SHLX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(shl GR64:$src1, (shiftMask64 GR8:$src2)),
+              (SHLX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  }
+
+  def : Pat<(sra (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
+            (SARX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(sra (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
+            (SARX64rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+  def : Pat<(srl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
+            (SHRX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(srl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
+            (SHRX64rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+  def : Pat<(shl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
+            (SHLX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(shl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
+            (SHLX64rm_EVEX addr:$src1,
                       (INSERT_SUBREG
                         (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
 }

@@ -879,7 +879,7 @@ let Predicates = [HasBMI2, HasEGPR, In64BitMode] in {
   defm SHLX64 : bmi_shift<"shlx{q}", GR64, i64mem, "_EVEX">, T8, PD, REX_W, EVEX;
 }
 
-let Predicates = [HasBMI2] in {
+let Predicates = [HasBMI2, NoEGPR] in {
   // Prefer RORX which is non-destructive and doesn't update EFLAGS.
   let AddedComplexity = 10 in {
     def : Pat<(rotr GR32:$src, (i8 imm:$shamt)),
@@ -979,6 +979,86 @@ let Predicates = [HasBMI2] in {
                         (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
   def : Pat<(shl (loadi64 addr:$src1), GR8:$src2),
             (SHLX64rm addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+}
+
+let Predicates = [HasBMI2, HasEGPR] in {
+  let AddedComplexity = 10 in {
+    def : Pat<(rotr GR32:$src, (i8 imm:$shamt)),
+              (RORX32ri_EVEX GR32:$src, imm:$shamt)>;
+    def : Pat<(rotr GR64:$src, (i8 imm:$shamt)),
+              (RORX64ri_EVEX GR64:$src, imm:$shamt)>;
+
+    def : Pat<(rotl GR32:$src, (i8 imm:$shamt)),
+              (RORX32ri_EVEX GR32:$src, (ROT32L2R_imm8 imm:$shamt))>;
+    def : Pat<(rotl GR64:$src, (i8 imm:$shamt)),
+              (RORX64ri_EVEX GR64:$src, (ROT64L2R_imm8 imm:$shamt))>;
+  }
+
+  def : Pat<(rotr (loadi32 addr:$src), (i8 imm:$shamt)),
+            (RORX32mi_EVEX addr:$src, imm:$shamt)>;
+  def : Pat<(rotr (loadi64 addr:$src), (i8 imm:$shamt)),
+            (RORX64mi_EVEX addr:$src, imm:$shamt)>;
+
+  def : Pat<(rotl (loadi32 addr:$src), (i8 imm:$shamt)),
+            (RORX32mi_EVEX addr:$src, (ROT32L2R_imm8 imm:$shamt))>;
+  def : Pat<(rotl (loadi64 addr:$src), (i8 imm:$shamt)),
+            (RORX64mi_EVEX addr:$src, (ROT64L2R_imm8 imm:$shamt))>;
+
+  let AddedComplexity = 1 in {
+    def : Pat<(sra GR32:$src1, GR8:$src2),
+              (SARX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(sra GR64:$src1, GR8:$src2),
+              (SARX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+    def : Pat<(srl GR32:$src1, GR8:$src2),
+              (SHRX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(srl GR64:$src1, GR8:$src2),
+              (SHRX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+    def : Pat<(shl GR32:$src1, GR8:$src2),
+              (SHLX32rr_EVEX GR32:$src1,
+                        (INSERT_SUBREG
+                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+    def : Pat<(shl GR64:$src1, GR8:$src2),
+              (SHLX64rr_EVEX GR64:$src1,
+                        (INSERT_SUBREG
+                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  }
+
+  def : Pat<(sra (loadi32 addr:$src1), GR8:$src2),
+            (SARX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(sra (loadi64 addr:$src1), GR8:$src2),
+            (SARX64rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+  def : Pat<(srl (loadi32 addr:$src1), GR8:$src2),
+            (SHRX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(srl (loadi64 addr:$src1), GR8:$src2),
+            (SHRX64rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+
+  def : Pat<(shl (loadi32 addr:$src1), GR8:$src2),
+            (SHLX32rm_EVEX addr:$src1,
+                      (INSERT_SUBREG
+                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  def : Pat<(shl (loadi64 addr:$src1), GR8:$src2),
+            (SHLX64rm_EVEX addr:$src1,
                       (INSERT_SUBREG
                         (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
 }
