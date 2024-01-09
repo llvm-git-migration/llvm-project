@@ -4639,6 +4639,16 @@ struct FormatStyle {
   /// \version 17
   SpacesInParensStyle SpacesInParens;
 
+  /// Selective control over spaces in parens.
+  enum SpacesInParensCustomStyle : int8_t {
+    /// Never put spaces in parens.
+    SIPCS_Never,
+    /// Only put spaces in parens not followed by the same consecutive parens.
+    SIPCS_NonConsecutive,
+    /// Always put spaces in parens.
+    SIPCS_Always
+  };
+
   /// Precise control over the spacing in parentheses.
   /// \code
   ///   # Should be declared this way:
@@ -4650,10 +4660,18 @@ struct FormatStyle {
   struct SpacesInParensCustom {
     /// Put a space in parentheses of attribute specifiers.
     /// \code
-    ///    true:                                  false:
-    ///    __attribute__( ( noreturn ) )    vs.     __attribute__((noreturn))
+    ///    Always:
+    ///    __attribute__( ( noreturn ) )
     /// \endcode
-    bool InAttributeSpecifiers;
+    /// \code
+    ///   NonConsecutive:
+    ///   _attribute__(( noreturn ))
+    /// \endcode
+    /// \code
+    ///   Never:
+    ///   _attribute__((noreturn))
+    /// \endcode
+    SpacesInParensCustomStyle InAttributeSpecifiers;
     /// Put a space in parentheses only inside conditional statements
     /// (``for/if/while/switch...``).
     /// \code
@@ -4687,10 +4705,10 @@ struct FormatStyle {
     bool Other;
 
     SpacesInParensCustom()
-        : InAttributeSpecifiers(false), InConditionalStatements(false),
+        : InAttributeSpecifiers(SIPCS_Never), InConditionalStatements(false),
           InCStyleCasts(false), InEmptyParentheses(false), Other(false) {}
 
-    SpacesInParensCustom(bool InAttributeSpecifiers,
+    SpacesInParensCustom(SpacesInParensCustomStyle InAttributeSpecifiers,
                          bool InConditionalStatements, bool InCStyleCasts,
                          bool InEmptyParentheses, bool Other)
         : InAttributeSpecifiers(InAttributeSpecifiers),
@@ -4718,6 +4736,7 @@ struct FormatStyle {
   ///   # Example of usage:
   ///   SpacesInParens: Custom
   ///   SpacesInParensOptions:
+  ///     InAttributeSpecifiers: NonConsecutive
   ///     InConditionalStatements: true
   ///     InEmptyParentheses: true
   /// \endcode
