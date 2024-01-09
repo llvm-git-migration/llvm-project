@@ -98,6 +98,7 @@ SITargetLowering::SITargetLowering(const TargetMachine &TM,
 
   addRegisterClass(MVT::f64, V64RegClass);
   addRegisterClass(MVT::v2f32, V64RegClass);
+  addRegisterClass(MVT::Untyped, V64RegClass);
 
   addRegisterClass(MVT::v3i32, &AMDGPU::SGPR_96RegClass);
   addRegisterClass(MVT::v3f32, TRI->getVGPRClassForBitWidth(96));
@@ -3758,6 +3759,9 @@ SDValue SITargetLowering::LowerCall(CallLoweringInfo &CLI,
     Ops.push_back(DAG.getTargetConstant(0, DL, MVT::i64));
   }
 
+  if (!IsTailCall)
+    Ops.push_back(CLI.ConvergenceControlToken);
+
   if (IsTailCall) {
     // Each tail call may have to adjust the stack by a different amount, so
     // this information must travel along with the operation for eventual
@@ -5085,8 +5089,26 @@ MachineBasicBlock *SITargetLowering::EmitInstrWithCustomInserter(
     MachineInstrBuilder MIB;
     MIB = BuildMI(*BB, MI, DL, TII->get(AMDGPU::SI_CALL), ReturnAddrReg);
 
-    for (const MachineOperand &MO : MI.operands())
-      MIB.add(MO);
+    for (unsigned I = 0, E = MI.getNumOperands(); I != E; ++I) {
+      MachineOperand &MO = MI.getOperand(I);
+      if (I != 2) {
+        MIB.add(MO);
+        continue;
+      }
+    }
+
+    MachineOperand &MO = MI.getOperand(2);
+    MachineRegisterInfo &MRI = BB->getParent()->getRegInfo();
+    // The token operand is always a register, whose definition is IMPLICIT_DEF
+    // iff there was no token on the call.
+    if (MachineInstr *Def = MRI.getVRegDef(MO.getReg())) {
+      if (Def->getOpcode() != TargetOpcode::IMPLICIT_DEF) {
+        Def->dump();
+        MO.dump();
+        MO.setImplicit();
+        MIB.add(MO);
+      }
+    }
 
     MIB.cloneMemRefs(MI);
     MI.eraseFromParent();
@@ -14706,8 +14728,9 @@ void SITargetLowering::AddIMGInit(MachineInstr &MI) const {
 
 /// Assign the register class depending on the number of
 /// bits set in the writemask
-void SITargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                     SDNode *Node) const {
+void SITargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   const SIInstrInfo *TII = getSubtarget()->getInstrInfo();
 
   MachineFunction *MF = MI.getParent()->getParent();
@@ -14774,6 +14797,21 @@ void SITargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
     if (!MI.mayStore())
       AddIMGInit(MI);
     TII->enforceOperandRCAlignment(MI, AMDGPU::OpName::vaddr);
+  }
+
+  if (MI.getOpcode() == AMDGPU::CONVERGENCECTRL_GLUE) {
+    MI.getOperand(0).setIsKill(false);
+  }
+
+  if (SDNode *GluedNode = Node->getGluedNode()) {
+    // FIXME: Possibly iterate over multiple glue nodes?
+    GluedNode->dump();
+    if (GluedNode->getOpcode() == ~(unsigned)AMDGPU::CONVERGENCECTRL_GLUE) {
+      Register VReg = getVR(GluedNode->getOperand(0));
+      MachineOperand MO = MachineOperand::CreateReg(VReg, /* isDef = */ false,
+                                                    /* isImp = */ true);
+      MI.addOperand(MO);
+    }
   }
 }
 

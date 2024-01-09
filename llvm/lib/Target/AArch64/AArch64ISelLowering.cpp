@@ -7416,7 +7416,7 @@ static bool checkZExtBool(SDValue Arg, const SelectionDAG &DAG) {
 }
 
 void AArch64TargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                          SDNode *Node) const {
+                                                          SDNode *Node, function_ref<Register(SDValue)> getVR) const {
   // Live-in physreg copies that are glued to SMSTART are applied as
   // implicit-def's in the InstrEmitter. Here we remove them, allowing the
   // register allocator to pass call args in callee saved regs, without extra

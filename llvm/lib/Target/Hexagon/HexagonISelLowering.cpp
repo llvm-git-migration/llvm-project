@@ -3830,8 +3830,9 @@ bool HexagonTargetLowering::shouldReduceLoadWidth(SDNode *Load,
   return true;
 }
 
-void HexagonTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-      SDNode *Node) const {
+void HexagonTargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   AdjustHvxInstrPostInstrSelection(MI, Node);
 }
 

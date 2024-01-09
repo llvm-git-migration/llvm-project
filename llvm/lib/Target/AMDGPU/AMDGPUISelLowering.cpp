@@ -927,6 +927,20 @@ bool AMDGPUTargetLowering::aggressivelyPreferBuildVectorSources(EVT VecVT) const
   return true;
 }
 
+void AMDGPUTargetLowering::CollectTargetIntrinsicOperands(
+    const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG,
+    function_ref<SDValue(const Value *)> getValue) const {
+  if (auto Bundle = I.getOperandBundle(LLVMContext::OB_convergencectrl)) {
+    auto *Token = Bundle->Inputs[0].get();
+    SDValue ConvControlToken = getValue(Token);
+    // FIXME: Possibly handle the case where the last node in Ops is already a
+    // glue node?
+    ConvControlToken = DAG.getNode(AMDGPUISD::CONVERGENCECTRL_GLUE, {},
+                                   MVT::Glue, ConvControlToken);
+    Ops.push_back(ConvControlToken);
+  }
+}
+
 bool AMDGPUTargetLowering::isTruncateFree(EVT Source, EVT Dest) const {
   // Truncate is just accessing a subregister.
 
@@ -5334,6 +5348,7 @@ const char* AMDGPUTargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(IF)
   NODE_NAME_CASE(ELSE)
   NODE_NAME_CASE(LOOP)
+  NODE_NAME_CASE(CONVERGENCECTRL_GLUE)
   NODE_NAME_CASE(CALL)
   NODE_NAME_CASE(TC_RETURN)
   NODE_NAME_CASE(TC_RETURN_GFX)

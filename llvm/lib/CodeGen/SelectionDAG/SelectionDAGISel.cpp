@@ -330,8 +330,9 @@ TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   llvm_unreachable(nullptr);
 }
 
-void TargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                   SDNode *Node) const {
+void TargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   assert(!MI.hasPostISelHook() &&
          "If a target marks an instruction with 'hasPostISelHook', "
          "it must implement TargetLowering::AdjustInstrPostInstrSelection!");
@@ -2371,6 +2372,21 @@ void SelectionDAGISel::Select_MEMBARRIER(SDNode *N) {
                        N->getOperand(0));
 }
 
+void SelectionDAGISel::Select_CONVERGENCECTRL_ANCHOR(SDNode *N) {
+  CurDAG->SelectNodeTo(N, TargetOpcode::CONVERGENCECTRL_ANCHOR,
+                       N->getValueType(0));
+}
+
+void SelectionDAGISel::Select_CONVERGENCECTRL_ENTRY(SDNode *N) {
+  CurDAG->SelectNodeTo(N, TargetOpcode::CONVERGENCECTRL_ENTRY,
+                       N->getValueType(0));
+}
+
+void SelectionDAGISel::Select_CONVERGENCECTRL_LOOP(SDNode *N) {
+  CurDAG->SelectNodeTo(N, TargetOpcode::CONVERGENCECTRL_LOOP,
+                       N->getValueType(0), N->getOperand(0));
+}
+
 void SelectionDAGISel::pushStackMapLiveVariable(SmallVectorImpl<SDValue> &Ops,
                                                 SDValue OpVal, SDLoc DL) {
   SDNode *OpNode = OpVal.getNode();
@@ -3094,6 +3110,15 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
     return;
   case ISD::JUMP_TABLE_DEBUG_INFO:
     Select_JUMP_TABLE_DEBUG_INFO(NodeToMatch);
+    return;
+  case ISD::CONVERGENCECTRL_ANCHOR:
+    Select_CONVERGENCECTRL_ANCHOR(NodeToMatch);
+    return;
+  case ISD::CONVERGENCECTRL_ENTRY:
+    Select_CONVERGENCECTRL_ENTRY(NodeToMatch);
+    return;
+  case ISD::CONVERGENCECTRL_LOOP:
+    Select_CONVERGENCECTRL_LOOP(NodeToMatch);
     return;
   }
 

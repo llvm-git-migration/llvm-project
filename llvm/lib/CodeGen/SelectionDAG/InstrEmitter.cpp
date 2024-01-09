@@ -1193,7 +1193,9 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
 
   // Run post-isel target hook to adjust this instruction if needed.
   if (II.hasPostISelHook())
-    TLI->AdjustInstrPostInstrSelection(*MIB, Node);
+    TLI->AdjustInstrPostInstrSelection(
+        *MIB, Node,
+        [this, &VRBaseMap](SDValue Op) { return getVR(Op, VRBaseMap); });
 }
 
 /// EmitSpecialNode - Generate machine code for a target-independent node and

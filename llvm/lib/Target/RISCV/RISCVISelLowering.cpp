@@ -16979,8 +16979,9 @@ RISCVTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   }
 }
 
-void RISCVTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                        SDNode *Node) const {
+void RISCVTargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   // Add FRM dependency to any instructions with dynamic rounding mode.
   int Idx = RISCV::getNamedOperandIdx(MI.getOpcode(), RISCV::OpName::frm);
   if (Idx < 0) {

@@ -618,8 +618,8 @@ def SI_RETURN : SPseudoInstSI <
 // This version is only needed so we can fill in the output register
 // in the custom inserter.
 def SI_CALL_ISEL : SPseudoInstSI <
-  (outs), (ins SSrc_b64:$src0, unknown:$callee),
-  [(AMDGPUcall i64:$src0, tglobaladdr:$callee)]> {
+  (outs), (ins SSrc_b64:$src0, unknown:$callee, unknown:$token),
+  [(AMDGPUcall i64:$src0, tglobaladdr:$callee, untyped:$token)]> {
   let Size = 4;
   let isCall = 1;
   let SchedRW = [WriteBranch];
@@ -629,9 +629,14 @@ def SI_CALL_ISEL : SPseudoInstSI <
 }
 
 def : GCNPat<
-  (AMDGPUcall i64:$src0, (i64 0)),
-  (SI_CALL_ISEL $src0, (i64 0))
+  (AMDGPUcall i64:$src0, (i64 0), untyped:$token),
+  (SI_CALL_ISEL $src0, (i64 0), untyped:$token)
 >;
+
+// def : GCNPat<
+//   (AMDGPUcall i64:$src0, (i64 0)),
+//   (SI_CALL_ISEL $src0, (i64 0), undef_tied_input)
+// >;
 
 // Wrapper around s_swappc_b64 with extra $callee parameter to track
 // the called function after regalloc.
@@ -720,6 +725,15 @@ multiclass si_cs_chain_tc_patterns<
 
 defm : si_cs_chain_tc_patterns<i32>;
 defm : si_cs_chain_tc_patterns<i64>;
+
+def CONVERGENCECTRL_GLUE : VPseudoInstSI <
+  (outs), (ins unknown:$token)> {
+  let mayLoad = 0;
+  let mayStore = 0;
+  let hasSideEffects = 0;
+  let isConvergent = 1;
+  let hasPostISelHook = 1;
+}
 
 def ADJCALLSTACKUP : SPseudoInstSI<
   (outs), (ins i32imm:$amt0, i32imm:$amt1),

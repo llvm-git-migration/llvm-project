@@ -406,7 +406,7 @@ public:
     auto FailureCB = [this](const Twine &Message) {
       this->CheckFailed(Message);
     };
-    ConvergenceVerifyHelper.initialize(OS, FailureCB, F);
+    ConvergenceVerifyHelper.initialize(OS, FailureCB, F, true);
 
     Broken = false;
     // FIXME: We strip const here because the inst visitor strips const.

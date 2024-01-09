@@ -4409,6 +4409,7 @@ public:
     SmallVector<ISD::InputArg, 32> Ins;
     SmallVector<SDValue, 4> InVals;
     const ConstantInt *CFIType = nullptr;
+    SDValue ConvergenceControlToken;
 
     CallLoweringInfo(SelectionDAG &DAG)
         : RetSExt(false), RetZExt(false), IsVarArg(false), IsInReg(false),
@@ -4539,6 +4540,11 @@ public:
 
     CallLoweringInfo &setCFIType(const ConstantInt *Type) {
       CFIType = Type;
+      return *this;
+    }
+
+    CallLoweringInfo &setConvergenceControlToken(SDValue Token) {
+      ConvergenceControlToken = Token;
       return *this;
     }
 
@@ -4928,9 +4934,9 @@ public:
 
   // Targets may override this function to collect operands from the CallInst
   // and for example, lower them into the SelectionDAG operands.
-  virtual void CollectTargetIntrinsicOperands(const CallInst &I,
-                                              SmallVectorImpl<SDValue> &Ops,
-                                              SelectionDAG &DAG) const;
+  virtual void CollectTargetIntrinsicOperands(
+      const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG,
+      function_ref<SDValue(const Value *)> getValue) const;
 
   //===--------------------------------------------------------------------===//
   // Div utility functions
@@ -5362,8 +5368,9 @@ public:
   /// the 'hasPostISelHook' flag. These instructions must be adjusted after
   /// instruction selection by target hooks.  e.g. To fill in optional defs for
   /// ARM 's' setting instructions.
-  virtual void AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                             SDNode *Node) const;
+  virtual void
+  AdjustInstrPostInstrSelection(MachineInstr &MI, SDNode *Node,
+                                function_ref<Register(SDValue)> getVR) const;
 
   /// If this function returns true, SelectionDAGBuilder emits a
   /// LOAD_STACK_GUARD node when it is lowering Intrinsic::stackprotector.

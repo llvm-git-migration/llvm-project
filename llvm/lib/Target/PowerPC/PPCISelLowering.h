@@ -992,9 +992,9 @@ namespace llvm {
       return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
     }
 
-    void CollectTargetIntrinsicOperands(const CallInst &I,
-                                 SmallVectorImpl<SDValue> &Ops,
-                                 SelectionDAG &DAG) const override;
+    void CollectTargetIntrinsicOperands(
+        const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG,
+        function_ref<SDValue(const Value *)> getValue) const override;
 
     /// isLegalAddressingMode - Return true if the addressing mode represented
     /// by AM is legal for this target, for a load/store of the specified type.

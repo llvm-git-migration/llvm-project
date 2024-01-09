@@ -194,6 +194,10 @@ public:
   bool isZExtFree(Type *Src, Type *Dest) const override;
   bool isZExtFree(EVT Src, EVT Dest) const override;
 
+  void CollectTargetIntrinsicOperands(
+      const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG,
+      function_ref<SDValue(const Value *)> getValue) const override;
+
   SDValue getNegatedExpression(SDValue Op, SelectionDAG &DAG,
                                bool LegalOperations, bool ForCodeSize,
                                NegatibleCost &Cost,
@@ -398,6 +402,8 @@ enum NodeType : unsigned {
   IF,
   ELSE,
   LOOP,
+
+  CONVERGENCECTRL_GLUE,
 
   // A uniform kernel return that terminates the wavefront.
   ENDPGM,

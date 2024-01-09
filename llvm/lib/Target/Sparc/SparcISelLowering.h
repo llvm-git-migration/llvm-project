@@ -223,8 +223,9 @@ namespace llvm {
     MachineBasicBlock *expandSelectCC(MachineInstr &MI, MachineBasicBlock *BB,
                                       unsigned BROpcode) const;
 
-    void AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                       SDNode *Node) const override;
+    void AdjustInstrPostInstrSelection(
+        MachineInstr &MI, SDNode *Node,
+        function_ref<Register(SDValue)> getVR) const override;
   };
 } // end namespace llvm
 

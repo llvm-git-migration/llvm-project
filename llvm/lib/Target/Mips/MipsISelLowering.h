@@ -339,8 +339,9 @@ class TargetRegisterClass;
     EmitInstrWithCustomInserter(MachineInstr &MI,
                                 MachineBasicBlock *MBB) const override;
 
-    void AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                       SDNode *Node) const override;
+    void AdjustInstrPostInstrSelection(
+        MachineInstr &MI, SDNode *Node,
+        function_ref<Register(SDValue)> getVR) const override;
 
     void HandleByVal(CCState *, unsigned &, Align) const override;
 

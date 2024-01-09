@@ -12381,8 +12381,9 @@ static void attachMEMCPYScratchRegs(const ARMSubtarget *Subtarget,
   }
 }
 
-void ARMTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                      SDNode *Node) const {
+void ARMTargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   if (MI.getOpcode() == ARM::MEMCPY) {
     attachMEMCPYScratchRegs(Subtarget, MI, Node);
     return;

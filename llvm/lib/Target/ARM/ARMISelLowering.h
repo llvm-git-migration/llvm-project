@@ -427,8 +427,9 @@ class VectorType;
     EmitInstrWithCustomInserter(MachineInstr &MI,
                                 MachineBasicBlock *MBB) const override;
 
-    void AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                       SDNode *Node) const override;
+    void AdjustInstrPostInstrSelection(
+        MachineInstr &MI, SDNode *Node,
+        function_ref<Register(SDValue)> getVR) const override;
 
     SDValue PerformCMOVCombine(SDNode *N, SelectionDAG &DAG) const;
     SDValue PerformBRCONDCombine(SDNode *N, SelectionDAG &DAG) const;

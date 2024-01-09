@@ -342,8 +342,9 @@ public:
   bool shouldReduceLoadWidth(SDNode *Load, ISD::LoadExtType ExtTy,
                              EVT NewVT) const override;
 
-  void AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                     SDNode *Node) const override;
+  void AdjustInstrPostInstrSelection(
+      MachineInstr &MI, SDNode *Node,
+      function_ref<Register(SDValue)> getVR) const override;
 
   // Handling of atomic RMW instructions.
   Value *emitLoadLinked(IRBuilderBase &Builder, Type *ValueTy, Value *Addr,

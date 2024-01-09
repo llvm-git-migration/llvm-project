@@ -16788,9 +16788,9 @@ void PPCTargetLowering::LowerAsmOperandForConstraint(SDValue Op,
   TargetLowering::LowerAsmOperandForConstraint(Op, Constraint, Ops, DAG);
 }
 
-void PPCTargetLowering::CollectTargetIntrinsicOperands(const CallInst &I,
-                                              SmallVectorImpl<SDValue> &Ops,
-                                              SelectionDAG &DAG) const {
+void PPCTargetLowering::CollectTargetIntrinsicOperands(
+    const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG,
+    function_ref<SDValue(const Value *)> getValue) const {
   if (I.getNumOperands() <= 1)
     return;
   if (!isa<ConstantSDNode>(Ops[1].getNode()))

@@ -3101,8 +3101,9 @@ getOpndList(SmallVectorImpl<SDValue> &Ops,
     Ops.push_back(InGlue);
 }
 
-void MipsTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                       SDNode *Node) const {
+void MipsTargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   switch (MI.getOpcode()) {
     default:
       return;

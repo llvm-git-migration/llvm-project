@@ -3642,8 +3642,9 @@ void SparcTargetLowering::insertSSPDeclarations(Module &M) const {
     return TargetLowering::insertSSPDeclarations(M);
 }
 
-void SparcTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
-                                                        SDNode *Node) const {
+void SparcTargetLowering::AdjustInstrPostInstrSelection(
+    MachineInstr &MI, SDNode *Node,
+    function_ref<Register(SDValue)> getVR) const {
   assert(MI.getOpcode() == SP::SUBCCrr || MI.getOpcode() == SP::SUBCCri);
   // If the result is dead, replace it with %g0.
   if (!Node->hasAnyUseOfValue(0))
