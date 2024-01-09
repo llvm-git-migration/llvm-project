@@ -68,8 +68,18 @@ define dso_local zeroext i32 @func(double noundef %0, double noundef %1) #0 {
   ; CHECK-LABEL:      __adddf3
 }
 
+; To check ppc_fp128 soften without crash
+define zeroext i1 @ppcf128_soften(ppc_fp128 %a) #0 {
+entry:
+  %0 = tail call i1 @llvm.is.fpclass.ppcf128(ppc_fp128 %a, i32 100)
+  ret i1 %0
+
+  ; CHECK-LABEL: ppcf128_soften
+}
+
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
 declare double @llvm.fmuladd.f64(double, double, double) #1
+declare i1 @llvm.is.fpclass.ppcf128(ppc_fp128, i32 immarg) #1
 
 attributes #0 = {"use-soft-float"="true" }
 attributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
