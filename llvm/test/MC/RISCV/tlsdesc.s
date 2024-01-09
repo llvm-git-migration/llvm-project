@@ -28,9 +28,9 @@ start:                                  # @start
 
 ## Check invalid usage
 .ifdef ERR
-	auipc x1, %tlsdesc_call(foo) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi/%tlsdesc_hi modifier or an integer in the range
-	auipc x1, %tlsdesc_call(1234) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi/%tlsdesc_hi modifier or an integer in the range
-	auipc a0, %tlsdesc_hi(a+b) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi/%tlsdesc_hi modifier or an integer in the range
+	auipc x1, %tlsdesc_call(foo) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi modifier or an integer in the range
+	auipc x1, %tlsdesc_call(1234) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi modifier or an integer in the range
+	auipc a0, %tlsdesc_hi(a+b) # ERR: :[[@LINE]]:12: error: operand must be a symbol with a %pcrel_hi/%got_pcrel_hi/%tls_ie_pcrel_hi/%tls_gd_pcrel_hi modifier or an integer in the range
 
 	lw   a0, t0, %tlsdesc_load_lo(a_symbol) # ERR: :[[@LINE]]:15: error: invalid operand for instruction
 	lw   a0, t0, %tlsdesc_load_lo(a_symbol)(a4) # ERR: :[[@LINE]]:15: error: invalid operand for instruction
