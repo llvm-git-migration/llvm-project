@@ -88,14 +88,13 @@ RISCVRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
 }
 
 BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
-  const RISCVSubtarget &STI = MF.getSubtarget<RISCVSubtarget>();
   const RISCVFrameLowering *TFI = getFrameLowering(MF);
   BitVector Reserved(getNumRegs());
   auto &Subtarget = MF.getSubtarget<RISCVSubtarget>();
 
   // Mark any registers requested to be reserved as such
   for (size_t Reg = 0; Reg < getNumRegs(); Reg++) {
-    if (STI.isRegisterReservedByUser(Reg))
+    if (Subtarget.isRegisterReservedByUser(Reg))
       markSuperRegs(Reserved, Reg);
   }
 
@@ -116,7 +115,7 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   markSuperRegs(Reserved, RISCV::DUMMY_REG_PAIR_WITH_X0);
 
   // There are only 16 GPRs for RVE.
-  if (STI.isRVE())
+  if (Subtarget.isRVE())
     for (MCPhysReg Reg = RISCV::X16; Reg <= RISCV::X31; Reg++)
       markSuperRegs(Reserved, Reg);
 

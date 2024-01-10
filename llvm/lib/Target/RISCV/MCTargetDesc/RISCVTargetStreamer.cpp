@@ -51,10 +51,10 @@ void RISCVTargetStreamer::setTargetABI(RISCVABI::ABI ABI) {
 void RISCVTargetStreamer::emitTargetAttributes(const MCSubtargetInfo &STI,
                                                bool EmitStackAlign) {
   if (EmitStackAlign) {
-    if (STI.hasFeature(RISCV::FeatureRVE))
-      emitAttribute(RISCVAttrs::STACK_ALIGN, STI.hasFeature(RISCV::Feature32Bit)
-                                                 ? RISCVAttrs::ALIGN_4
-                                                 : RISCVAttrs::ALIGN_8);
+    if (TargetABI == RISCVABI::ABI_ILP32E)
+      emitAttribute(RISCVAttrs::STACK_ALIGN, RISCVAttrs::ALIGN_4);
+    else if (TargetABI == RISCVABI::ABI_LP64E)
+      emitAttribute(RISCVAttrs::STACK_ALIGN, RISCVAttrs::ALIGN_8);
     else
       emitAttribute(RISCVAttrs::STACK_ALIGN, RISCVAttrs::ALIGN_16);
   }

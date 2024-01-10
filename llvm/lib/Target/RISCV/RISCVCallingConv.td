@@ -42,12 +42,13 @@ def CSR_XLEN_F64_Interrupt: CalleeSavedRegs<(add CSR_Interrupt,
                                              (sequence "F%u_D", 0, 31))>;
 
 // Same as CSR_Interrupt, but excluding X16-X31.
-def CSR_Interrupt_RVE : CalleeSavedRegs<(add X1, (sequence "X%u", 5, 15))>;
+def CSR_Interrupt_RVE : CalleeSavedRegs<(sub CSR_Interrupt,
+                                        (sequence "X%u", 16, 31))>;
 
 // Same as CSR_XLEN_F32_Interrupt, but excluding X16-X31.
-def CSR_XLEN_F32_Interrupt_RVE: CalleeSavedRegs<(add CSR_Interrupt_RVE,
-                                                (sequence "F%u_F", 0, 31))>;
+def CSR_XLEN_F32_Interrupt_RVE: CalleeSavedRegs<(sub CSR_XLEN_F32_Interrupt,
+                                                (sequence "X%u", 16, 31))>;
 
 // Same as CSR_XLEN_F64_Interrupt, but excluding X16-X31.
-def CSR_XLEN_F64_Interrupt_RVE: CalleeSavedRegs<(add CSR_Interrupt_RVE,
-                                                (sequence "F%u_D", 0, 31))>;
+def CSR_XLEN_F64_Interrupt_RVE: CalleeSavedRegs<(sub CSR_XLEN_F64_Interrupt,
+                                                (sequence "X%u", 16, 31))>;
