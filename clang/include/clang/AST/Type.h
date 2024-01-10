@@ -4920,7 +4920,7 @@ public:
     return *(getExpansionsPtr() + Index);
   }
 
-  bool hasSelectedType() const { return Index != -1 && !isDependentType(); }
+  bool hasSelectedType() const { return !isDependentType(); }
 
   ArrayRef<QualType> getExpansions() const {
     return {getExpansionsPtr(), Size};
