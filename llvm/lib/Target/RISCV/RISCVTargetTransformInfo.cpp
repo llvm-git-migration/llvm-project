@@ -1360,7 +1360,6 @@ RISCVTTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *Ty,
     return BaseT::getMinMaxReductionCost(IID, Ty, FMF, CostKind);
 
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
-  SmallVector<unsigned, 3> Opcodes;
   if (Ty->getElementType()->isIntegerTy(1)) {
     // vcpop sequences, see vreduction-mask.ll.
     if ((IID == Intrinsic::umax) || (IID == Intrinsic::smin))
@@ -1371,6 +1370,7 @@ RISCVTTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *Ty,
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
   unsigned SplitOp;
+  SmallVector<unsigned, 3> Opcodes;
   switch (IID) {
   default:
     llvm_unreachable("Unsupported intrinsic");
