@@ -5495,12 +5495,14 @@ static void TryOrBuildParenListInitialization(
         return;
     }
     //   ...and value-initialized for each k < i <= n;
-    InitializedEntity SubEntity = InitializedEntity::InitializeElement(
-        S.getASTContext(), Args.size(), Entity);
-    InitializationKind SubKind = InitializationKind::CreateValue(
-        Kind.getLocation(), Kind.getLocation(), Kind.getLocation(), true);
-    if (!HandleInitializedEntity(SubEntity, SubKind, nullptr, &ArrayFiller))
-      return;
+    if (ArrayLength > Args.size() || Entity.isVariableLengthArrayNew()) {
+      InitializedEntity SubEntity = InitializedEntity::InitializeElement(
+          S.getASTContext(), Args.size(), Entity);
+      InitializationKind SubKind = InitializationKind::CreateValue(
+          Kind.getLocation(), Kind.getLocation(), Kind.getLocation(), true);
+      if (!HandleInitializedEntity(SubEntity, SubKind, nullptr, &ArrayFiller))
+        return;
+    }
 
     if (ResultType.isNull()) {
       ResultType = S.Context.getConstantArrayType(
