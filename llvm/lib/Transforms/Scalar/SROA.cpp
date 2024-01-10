@@ -2289,6 +2289,12 @@ static VectorType *isVectorPromotionViable(Partition &P, const DataLayout &DL) {
     if (S.beginOffset() == P.beginOffset() && S.endOffset() == P.endOffset())
       CheckCandidateType(Ty);
   }
+
+  if (auto *VTy = checkVectorTypesForPromotion(
+          P, DL, CandidateTys, HaveCommonEltTy, CommonEltTy, HaveVecPtrTy,
+          HaveCommonVecPtrTy, CommonVecPtrTy))
+    return VTy;
+
   // Consider additional vector types where the element type size is a
   // multiple of load/store element size.
   for (Type *Ty : LoadStoreTys) {
@@ -2298,6 +2304,7 @@ static VectorType *isVectorPromotionViable(Partition &P, const DataLayout &DL) {
     // Make a copy of CandidateTys and iterate through it, because we might
     // append to CandidateTys in the loop.
     SmallVector<VectorType *, 4> CandidateTysCopy = CandidateTys;
+    CandidateTys.clear();
     for (VectorType *&VTy : CandidateTysCopy) {
       unsigned VectorSize = DL.getTypeSizeInBits(VTy).getFixedValue();
       unsigned ElementSize =
