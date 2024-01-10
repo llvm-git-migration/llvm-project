@@ -1534,6 +1534,7 @@ The AMDGPU backend uses the following ELF header:
                                 - ``ELFABIVERSION_AMDGPU_HSA_V3``
                                 - ``ELFABIVERSION_AMDGPU_HSA_V4``
                                 - ``ELFABIVERSION_AMDGPU_HSA_V5``
+                                - ``ELFABIVERSION_AMDGPU_HSA_V6``
                                 - ``ELFABIVERSION_AMDGPU_PAL``
                                 - ``ELFABIVERSION_AMDGPU_MESA3D``
      ``e_type``                 - ``ET_REL``
@@ -1542,7 +1543,8 @@ The AMDGPU backend uses the following ELF header:
      ``e_entry``                0
      ``e_flags``                See :ref:`amdgpu-elf-header-e_flags-v2-table`,
                                 :ref:`amdgpu-elf-header-e_flags-table-v3`,
-                                and :ref:`amdgpu-elf-header-e_flags-table-v4-onwards`
+                                :ref:`amdgpu-elf-header-e_flags-table-v4-v5`,
+                                and :ref:`amdgpu-elf-header-e_flags-table-v6-onwards`
      ========================== ===============================
 
 ..
@@ -1562,6 +1564,7 @@ The AMDGPU backend uses the following ELF header:
      ``ELFABIVERSION_AMDGPU_HSA_V3`` 1
      ``ELFABIVERSION_AMDGPU_HSA_V4`` 2
      ``ELFABIVERSION_AMDGPU_HSA_V5`` 3
+     ``ELFABIVERSION_AMDGPU_HSA_V6`` 4
      ``ELFABIVERSION_AMDGPU_PAL``    0
      ``ELFABIVERSION_AMDGPU_MESA3D`` 0
      =============================== =====
@@ -1608,6 +1611,10 @@ The AMDGPU backend uses the following ELF header:
     runtime ABI for code object V5. Specify using the Clang option
     ``-mcode-object-version=5``.
 
+  * ``ELFABIVERSION_AMDGPU_HSA_V6`` is used to specify the version of AMD HSA
+    runtime ABI for code object V6. Specify using the Clang option
+    ``-mcode-object-version=6``.
+
   * ``ELFABIVERSION_AMDGPU_PAL`` is used to specify the version of AMD PAL
     runtime ABI.
 
@@ -1634,8 +1641,9 @@ The AMDGPU backend uses the following ELF header:
   ``NT_AMD_HSA_ISA_VERSION`` note record for code object V2 (see
   :ref:`amdgpu-note-records-v2`) and in the ``EF_AMDGPU_MACH`` bit field of the
   ``e_flags`` for code object V3 and above (see
-  :ref:`amdgpu-elf-header-e_flags-table-v3` and
-  :ref:`amdgpu-elf-header-e_flags-table-v4-onwards`).
+  :ref:`amdgpu-elf-header-e_flags-table-v3`,
+  :ref:`amdgpu-elf-header-e_flags-table-v4-v5` and
+  :ref:`amdgpu-elf-header-e_flags-table-v6-onwards`).
 
 ``e_entry``
   The entry point is 0 as the entry points for individual kernels must be
@@ -1706,8 +1714,8 @@ The AMDGPU backend uses the following ELF header:
                                              :ref:`amdgpu-target-features`.
      ================================= ===== =============================
 
-  .. table:: AMDGPU ELF Header ``e_flags`` for Code Object V4 and After
-     :name: amdgpu-elf-header-e_flags-table-v4-onwards
+  .. table:: AMDGPU ELF Header ``e_flags`` for Code Object V4 and V5
+     :name: amdgpu-elf-header-e_flags-table-v4-v5
 
      ============================================ ===== ===================================
      Name                                         Value      Description
@@ -1732,6 +1740,42 @@ The AMDGPU backend uses the following ELF header:
      ``EF_AMDGPU_FEATURE_SRAMECC_OFF_V4``         0x800 SRAMECC disabled,
      ``EF_AMDGPU_FEATURE_SRAMECC_ON_V4``          0xc00 SRAMECC enabled.
      ============================================ ===== ===================================
+
+  .. table:: AMDGPU ELF Header ``e_flags`` for Code Object V6 and After
+     :name: amdgpu-elf-header-e_flags-table-v6-onwards
+
+     ============================================ ========== =========================================
+     Name                                         Value      Description
+     ============================================ ========== =========================================
+     ``EF_AMDGPU_MACH``                           0x0ff      AMDGPU processor selection
+                                                             mask for
+                                                             ``EF_AMDGPU_MACH_xxx`` values
+                                                             defined in
+                                                             :ref:`amdgpu-ef-amdgpu-mach-table`.
+     ``EF_AMDGPU_FEATURE_XNACK_V4``               0x300      XNACK selection mask for
+                                                             ``EF_AMDGPU_FEATURE_XNACK_*_V4``
+                                                             values.
+     ``EF_AMDGPU_FEATURE_XNACK_UNSUPPORTED_V4``   0x000      XNACK unsupported.
+     ``EF_AMDGPU_FEATURE_XNACK_ANY_V4``           0x100      XNACK can have any value.
+     ``EF_AMDGPU_FEATURE_XNACK_OFF_V4``           0x200      XNACK disabled.
+     ``EF_AMDGPU_FEATURE_XNACK_ON_V4``            0x300      XNACK enabled.
+     ``EF_AMDGPU_FEATURE_SRAMECC_V4``             0xc00      SRAMECC selection mask for
+                                                             ``EF_AMDGPU_FEATURE_SRAMECC_*_V4``
+                                                             values.
+     ``EF_AMDGPU_FEATURE_SRAMECC_UNSUPPORTED_V4`` 0x000      SRAMECC unsupported.
+     ``EF_AMDGPU_FEATURE_SRAMECC_ANY_V4``         0x400      SRAMECC can have any value.
+     ``EF_AMDGPU_FEATURE_SRAMECC_OFF_V4``         0x800      SRAMECC disabled,
+     ``EF_AMDGPU_FEATURE_SRAMECC_ON_V4``          0xc00      SRAMECC enabled.
+     ``EF_AMDGPU_GENERIC_VERSION_V<X>``           0x01000000 The most significant byte of EFLAGS
+                                                  to         contains a "generic code object
+                                                  0xff000000 version". This is used by runtimes
+                                                             to determine if a generic code
+                                                             object can be run on a
+                                                             machine.
+                                                             NOTE: This is only set for generic
+                                                             targets. (e.g., ``gfx9-generic``).
+                                                             See :ref:`amdgpu-generic-processor-table`
+     ============================================ ========== =========================================
 
   .. table:: AMDGPU ``EF_AMDGPU_MACH`` Values
      :name: amdgpu-ef-amdgpu-mach-table
@@ -4238,6 +4282,33 @@ Code object V5 metadata is the same as
                                                        devices for the trap handler ABI (see :ref:`amdgpu-amdhsa-trap-handler-abi`).
 
      ====================== ============== ========= ================================
+
+.. _amdgpu-amdhsa-code-object-metadata-v6:
+
+Code Object V6 Metadata
++++++++++++++++++++++++
+
+.. warning::
+  Code object V6 is not the default code object version emitted by this version
+  of LLVM.
+
+
+Code object V6 metadata is the same as
+:ref:`amdgpu-amdhsa-code-object-metadata-v5` with the changes defined in table
+:ref:`amdgpu-amdhsa-code-object-metadata-map-table-v6`.
+
+  .. table:: AMDHSA Code Object V6 Metadata Map Changes
+     :name: amdgpu-amdhsa-code-object-metadata-map-table-v6
+
+     ================= ============== ========= =======================================
+     String Key        Value Type     Required? Description
+     ================= ============== ========= =======================================
+     "amdhsa.version"  sequence of    Required  - The first integer is the major
+                       2 integers                 version. Currently 1.
+                                                - The second integer is the minor
+                                                  version. Currently 3.
+     ================= ============== ========= =======================================
+
 
 ..
 
