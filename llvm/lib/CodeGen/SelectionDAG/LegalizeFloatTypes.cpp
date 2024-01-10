@@ -267,10 +267,9 @@ SDValue DAGTypeLegalizer::SoftenFloatRes_ConstantFP(SDNode *N) {
 SDValue DAGTypeLegalizer::SoftenFloatRes_EXTRACT_ELEMENT(SDNode *N) {
   SDValue Src = N->getOperand(0);
   assert(Src.getValueType() == MVT::ppcf128 &&
-         Src.getOperand(0)->getOpcode() == ISD::BUILD_PAIR &&
          "In floats only ppcf128 can be extracted by element!");
-  EVT DestVT = EVT::getIntegerVT(*DAG.getContext(), N->getValueSizeInBits(0));
-  return DAG.getNode(ISD::EXTRACT_ELEMENT, SDLoc(N), DestVT,
+  return DAG.getNode(ISD::EXTRACT_ELEMENT, SDLoc(N),
+                     N->getValueType(0).changeTypeToInteger(),
                      Src.getOperand(0), N->getOperand(1));
 }
 

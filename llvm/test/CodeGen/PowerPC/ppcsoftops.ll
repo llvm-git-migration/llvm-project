@@ -71,8 +71,8 @@ define dso_local zeroext i32 @func(double noundef %0, double noundef %1) #0 {
 ; To check ppc_fp128 soften without crash
 define zeroext i1 @ppcf128_soften(ppc_fp128 %a) #0 {
 entry:
-  %0 = tail call i1 @llvm.is.fpclass.ppcf128(ppc_fp128 %a, i32 100)
-  ret i1 %0
+  %fpclass = tail call i1 @llvm.is.fpclass.ppcf128(ppc_fp128 %a, i32 100)
+  ret i1 %fpclass
 
   ; CHECK-LABEL: ppcf128_soften
 }
