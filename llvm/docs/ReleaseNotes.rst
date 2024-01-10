@@ -151,6 +151,9 @@ Changes to the RISC-V Backend
   "SiFive Custom Instruction Extension" as SiFive defines it. The LLVM project
   needs to work with SiFive to define and document real extension names for
   individual CSRs and instructions.
+* Support was added for the Ziccif, Ziccrse, Ziccamoa, Zicclsm, Za64rs, Za128rs
+  and Zic64b extensions which were introduced as a part of the RISC-V Profiles
+  specification.
 
 Changes to the WebAssembly Backend
 ----------------------------------
