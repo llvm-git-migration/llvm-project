@@ -1046,7 +1046,7 @@ public:
   QualType RebuildPackIndexingType(QualType Pattern, Expr *IndexExpr,
                                    SourceLocation Loc,
                                    SourceLocation EllipsisLoc,
-                                   bool FullyExpanded,
+                                   bool FullySubstituted,
                                    ArrayRef<QualType> Expansions = {});
 
   /// Build a new C++11 auto type.
@@ -6487,11 +6487,11 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
   QualType Pattern = TL.getPattern();
 
   const PackIndexingType *PIT = TL.getTypePtr();
-  SmallVector<QualType, 5> ExpandedTypes;
+  SmallVector<QualType, 5> SubtitutedTypes;
   llvm::ArrayRef<QualType> Types = PIT->getExpansions();
 
   bool NotYetExpanded = Types.empty();
-  bool FullyExpanded = true;
+  bool FullySubstituted = true;
 
   if (Types.empty())
     Types = llvm::ArrayRef<QualType>(&Pattern, 1);
@@ -6501,7 +6501,7 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
       QualType Transformed = getDerived().TransformType(T);
       if (Transformed.isNull())
         return QualType();
-      ExpandedTypes.push_back(Transformed);
+      SubtitutedTypes.push_back(Transformed);
       continue;
     }
 
@@ -6524,10 +6524,10 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
       if (Pack.isNull())
         return QualType();
       if (NotYetExpanded) {
-        FullyExpanded = false;
+        FullySubstituted = false;
         QualType Out = getDerived().RebuildPackIndexingType(
             Pack, IndexExpr.get(), SourceLocation(), TL.getEllipsisLoc(),
-            FullyExpanded);
+            FullySubstituted);
         if (Out.isNull())
           return QualType();
 
@@ -6535,7 +6535,7 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
         Loc.setEllipsisLoc(TL.getEllipsisLoc());
         return Out;
       }
-      ExpandedTypes.push_back(Pack);
+      SubtitutedTypes.push_back(Pack);
       continue;
     }
     for (unsigned I = 0; I != *NumExpansions; ++I) {
@@ -6543,17 +6543,17 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
       QualType Out = getDerived().TransformType(T);
       if (Out.isNull())
         return QualType();
-      ExpandedTypes.push_back(Out);
+      SubtitutedTypes.push_back(Out);
     }
     // If we're supposed to retain a pack expansion, do so by temporarily
     // forgetting the partially-substituted parameter pack.
     if (RetainExpansion) {
-      FullyExpanded = false;
+      FullySubstituted = false;
       ForgetPartiallySubstitutedPackRAII Forget(getDerived());
       QualType Out = getDerived().TransformType(T);
       if (Out.isNull())
         return QualType();
-      ExpandedTypes.push_back(Out);
+      SubtitutedTypes.push_back(Out);
     }
   }
 
@@ -6561,7 +6561,7 @@ TreeTransform<Derived>::TransformPackIndexingType(TypeLocBuilder &TLB,
 
   QualType Out = getDerived().RebuildPackIndexingType(
       Result, IndexExpr.get(), SourceLocation(), TL.getEllipsisLoc(),
-      FullyExpanded, ExpandedTypes);
+      FullySubstituted, SubtitutedTypes);
   if (Out.isNull())
     return Out;
 
@@ -15313,12 +15313,11 @@ QualType TreeTransform<Derived>::RebuildDecltypeType(Expr *E, SourceLocation) {
 }
 
 template <typename Derived>
-QualType TreeTransform<Derived>::RebuildPackIndexingType(
-    QualType Pattern, Expr *IndexExpr, SourceLocation Loc,
-    SourceLocation EllipsisLoc, bool FullyExpanded,
+QualType TreeTransform<Derived>::RebuildPackIndexingType(QualType Pattern, Expr *IndexExpr, SourceLocation Loc,
+    SourceLocation EllipsisLoc, bool FullySubstituted,
     ArrayRef<QualType> Expansions) {
   return SemaRef.BuildPackIndexingType(Pattern, IndexExpr, Loc, EllipsisLoc,
-                                       FullyExpanded, Expansions);
+                                       FullySubstituted, Expansions);
 }
 
 template<typename Derived>

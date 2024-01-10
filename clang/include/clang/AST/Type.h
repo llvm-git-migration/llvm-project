@@ -4895,13 +4895,12 @@ class PackIndexingType final
   Expr *IndexExpr;
 
   unsigned Size;
-  int Index = -1;
 
 protected:
   friend class ASTContext; // ASTContext creates these.
   PackIndexingType(const ASTContext &Context, QualType Canonical,
                    QualType Pattern, Expr *IndexExpr,
-                   ArrayRef<QualType> Expansions = {}, int Index = -1);
+                   ArrayRef<QualType> Expansions = {});
 
 public:
   Expr *getIndexExpr() const { return IndexExpr; }
@@ -4917,10 +4916,12 @@ public:
 
   QualType getSelectedType() const {
     assert(hasSelectedType() && "Type is dependant");
-    return *(getExpansionsPtr() + Index);
+    return *(getExpansionsPtr() + *getSelectedIndex());
   }
 
-  bool hasSelectedType() const { return !isDependentType(); }
+  std::optional<unsigned> getSelectedIndex() const;
+
+  bool hasSelectedType() const { return getSelectedIndex() != std::nullopt; }
 
   ArrayRef<QualType> getExpansions() const {
     return {getExpansionsPtr(), Size};
