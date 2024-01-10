@@ -1429,9 +1429,15 @@ def FeatureISAVersion11_Common : FeatureSet<
    FeatureVcmpxPermlaneHazard,
    FeatureMADIntraFwdBug]>;
 
+// There are few workarounds that need to be
+// added to all targets. This pessimizes codegen
+// a bit on the generic GFX11 target.
 def FeatureISAVersion11_Generic: FeatureSet<
   !listconcat(FeatureISAVersion11_Common.Features,
-    [FeatureRequiresCOV6])>;
+    [FeatureMSAALoadDstSelBug,
+     FeatureVALUTransUseHazard,
+     FeatureUserSGPRInit16Bug,
+     FeatureRequiresCOV6])>;
 
 def FeatureISAVersion11_0_Common : FeatureSet<
   !listconcat(FeatureISAVersion11_Common.Features,
