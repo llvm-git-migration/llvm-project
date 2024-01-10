@@ -1508,7 +1508,7 @@ public:
   /// \param UserIC User specific interleave count.
   void setTailFoldingStyles(bool IsScalableVF, unsigned UserIC) {
     assert(!ChosenTailFoldingStyle && "Tail folding must not be selected yet.");
-    if (!Legal->prepareToFoldTailByMasking()) {
+    if (!Legal->canFoldTailByMasking()) {
       ChosenTailFoldingStyle =
           std::make_pair(TailFoldingStyle::None, TailFoldingStyle::None);
       return;
@@ -7308,6 +7308,9 @@ LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC) {
       // values.
       CM.invalidateCostModelingDecisions();
   }
+
+  if (CM.foldTailByMasking())
+    Legal->prepareToFoldTailByMasking();
 
   ElementCount MaxUserVF =
       UserVF.isScalable() ? MaxFactors.ScalableVF : MaxFactors.FixedVF;
