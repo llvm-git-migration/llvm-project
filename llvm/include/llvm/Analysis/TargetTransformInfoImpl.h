@@ -378,6 +378,10 @@ public:
 
   bool enableSelectOptimize() const { return true; }
 
+  bool shouldTreatInstructionLikeSelect(Instruction *I) {
+    return isa<SelectInst>(I);
+  }
+
   bool enableInterleavedAccessVectorization() const { return false; }
 
   bool enableMaskedInterleavedAccessVectorization() const { return false; }

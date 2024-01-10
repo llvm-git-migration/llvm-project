@@ -412,6 +412,16 @@ public:
 
   bool enableSelectOptimize() { return ST->enableSelectOptimize(); }
 
+  bool shouldTreatInstructionLikeSelect(Instruction *I) {
+    // For the binary operators (e.g. or) we need to be more careful than
+    // selects, here we only transform them if they are already at a natural
+    // break point in the code - the end of a block with an unconditional
+    // terminator.
+    return isa<SelectInst>(I) ||
+           (isa<BinaryOperator>(I) && isa<BranchInst>(I->getNextNode()) &&
+            cast<BranchInst>(I->getNextNode())->isUnconditional());
+  }
+
   unsigned getStoreMinimumVF(unsigned VF, Type *ScalarMemTy,
                              Type *ScalarValTy) const {
     // We can vectorize store v4i8.
