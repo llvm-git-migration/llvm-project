@@ -177,6 +177,7 @@ AST Matchers
 
 clang-format
 ------------
+- Add ``ShortReturnTypeColumn`` option.
 
 libclang
 --------
