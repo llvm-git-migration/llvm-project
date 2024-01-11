@@ -12398,6 +12398,50 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
   verifyFormat("template <typename T> // Templates on own line.\n"
                "static int            // Some comment.\n"
                "MyFunction(int a);");
+
+  FormatStyle ShortReturnType = getLLVMStyle();
+  verifyFormat("Type "
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "ooooooooong::\n"
+               "    FunctionDeclaration();",
+               ShortReturnType);
+  verifyFormat("struct S {\n"
+               "  Type\n"
+               "  "
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "oooooooooooong::\n"
+               "      FunctionDefinition();\n"
+               "}",
+               ShortReturnType);
+
+  ShortReturnType.ShortReturnTypeLength = 0;
+  verifyFormat("Type\n"
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "ooooooooong::\n"
+               "    FunctionDeclaration();",
+               ShortReturnType);
+  verifyFormat("struct S {\n"
+               "  Type\n"
+               "  "
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "oooooooooooong::\n"
+               "      FunctionDefinition();\n"
+               "}",
+               ShortReturnType);
+
+  ShortReturnType.ShortReturnTypeLength = 7;
+  verifyFormat("Type "
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "ooooooooong::\n"
+               "    FunctionDeclaration();",
+               ShortReturnType);
+  verifyFormat("struct S {\n"
+               "  Type "
+               "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+               "oooooooooooong::\n"
+               "      FunctionDefinition();\n"
+               "}",
+               ShortReturnType);
 }
 
 TEST_F(FormatTest, FormatsAccessModifiers) {
