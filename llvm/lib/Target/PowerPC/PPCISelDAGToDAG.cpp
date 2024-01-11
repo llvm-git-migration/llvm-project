@@ -7682,26 +7682,12 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
   int Offset = cast<ConstantSDNode>(MemOffset)->getZExtValue();
   if (NewOpFlags) {
     if (Offset < 0 || Offset > MaxDisplacement) {
-      // If we have a addi(toc@l)/addis(toc@ha) pair, and the addis has only
-      // one use, then we can do this for any offset, we just need to also
-      // update the offset (i.e. the symbol addend) on the addis also.
-      if (MemBase.getMachineOpcode() != PPC::ADDItocL) {
+      // Check base opcode and its uses, quit if it has multiple uses.
+      if (MemBase.getMachineOpcode() != PPC::ADDItocL ||
+          !HBase.isMachineOpcode() ||
+          HBase.getMachineOpcode() != PPC::ADDIStocHA8 || !MemBase.hasOneUse() ||
+          !HBase.hasOneUse() || HBase.getOperand(1) != ImmOpnd)
         return;
-      }
-
-      if (!HBase.isMachineOpcode() ||
-          HBase.getMachineOpcode() != PPC::ADDIStocHA8) {
-        return;
-      }
-
-      if (!MemBase.hasOneUse() || !HBase.hasOneUse()) {
-        return;
-      }
-
-      SDValue HImmOpnd = HBase.getOperand(1);
-      if (HImmOpnd != ImmOpnd) {
-        return;
-      }
 
       UpdateHBase = true;
     }
@@ -7713,13 +7699,8 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
     if (auto *C = dyn_cast<ConstantSDNode>(ImmOpnd)) {
       Offset += C->getSExtValue();
 
-      if (ExtraAlign && (Offset % ExtraAlign) != 0) {
+      if ((ExtraAlign && (Offset % ExtraAlign) != 0) || !isInt<16>(Offset))
         return;
-      }
-
-      if (!isInt<16>(Offset)) {
-        return;
-      }
 
       ImmOpnd = DAG->getTargetConstant(Offset, SDLoc(ImmOpnd),
                                        ImmOpnd.getValueType());
@@ -7734,8 +7715,7 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
   LLVM_DEBUG(N->dump(DAG));
   LLVM_DEBUG(dbgs() << "\n");
 
-  // If the relocation information isn't already present on the
-  // immediate operand, add it now.
+  // Add relocation flag if not present on the immediate operand.
   if (NewOpFlags) {
     if (GlobalAddressSDNode *GA = dyn_cast<GlobalAddressSDNode>(ImmOpnd)) {
       const GlobalValue *GV = GA->getGlobal();
@@ -7755,21 +7735,14 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
     }
   }
 
-  if (IsLoad) {
-    if (IsToc)
-      (void)DAG->UpdateNodeOperands(N, MemBase.getOperand(0),
-                                    MemBase.getOperand(1), N->getOperand(2));
-    else
-      (void)DAG->UpdateNodeOperands(N, ImmOpnd, MemBase.getOperand(0),
-                                    N->getOperand(2));
-  } else {
-    if (IsToc)
-      (void)DAG->UpdateNodeOperands(N, N->getOperand(0), MemBase.getOperand(0),
-                                    MemBase.getOperand(1), N->getOperand(3));
-    else
-      (void)DAG->UpdateNodeOperands(N, N->getOperand(0), ImmOpnd,
-                                    MemBase.getOperand(0), N->getOperand(3));
-  }
+  SDValue RegOpnd = MemBase.getOperand(0);
+  if (IsToc)
+    std::swap(RegOpnd, ImmOpnd);
+  if (IsLoad)
+    (void)DAG->UpdateNodeOperands(N, ImmOpnd, RegOpnd, N->getOperand(2));
+  else
+    (void)DAG->UpdateNodeOperands(N, N->getOperand(0), ImmOpnd, RegOpnd,
+                                  N->getOperand(3));
 
   if (UpdateHBase)
     (void)DAG->UpdateNodeOperands(HBase.getNode(), HBase.getOperand(0),
