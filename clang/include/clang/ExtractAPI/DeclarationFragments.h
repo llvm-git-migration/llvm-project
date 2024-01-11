@@ -27,8 +27,6 @@
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Lex/MacroInfo.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include <vector>
 
 namespace clang {
@@ -314,13 +312,9 @@ public:
   static DeclarationFragments
       getFragmentsForTemplateParameters(ArrayRef<NamedDecl *>);
 
-  static std::string
-  getNameForTemplateArgument(const ArrayRef<NamedDecl *>, std::string);
-
-  static DeclarationFragments
-  getFragmentsForTemplateArguments(const ArrayRef<TemplateArgument>,
-                                   ASTContext &,
-                                   const std::optional<ArrayRef<NamedDecl *>>);
+  static DeclarationFragments getFragmentsForTemplateArguments(
+      const ArrayRef<TemplateArgument>, ASTContext &,
+      const std::optional<ArrayRef<TemplateArgumentLoc>>);
 
   static DeclarationFragments getFragmentsForConcept(const ConceptDecl *);
 
@@ -430,12 +424,7 @@ DeclarationFragmentsBuilder::getFunctionSignature(const FunctionT *Function) {
       dyn_cast<FunctionDecl>(Function)->getDescribedFunctionTemplate() &&
       ReturnType.begin()->Spelling.substr(0, 14).compare("type-parameter") ==
           0) {
-    std::string ProperArgName =
-        getNameForTemplateArgument(dyn_cast<FunctionDecl>(Function)
-                                       ->getDescribedFunctionTemplate()
-                                       ->getTemplateParameters()
-                                       ->asArray(),
-                                   ReturnType.begin()->Spelling);
+    std::string ProperArgName = Function->getReturnType().getAsString();
     ReturnType.begin()->Spelling.swap(ProperArgName);
   }
   ReturnType.append(std::move(After));
