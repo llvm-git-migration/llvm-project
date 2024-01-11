@@ -4554,9 +4554,8 @@ bool DeclarationVisitor::Pre(const parser::NamedConstantDef &x) {
   }
   const auto &expr{std::get<parser::ConstantExpr>(x.t)};
   auto &details{symbol.get<ObjectEntityDetails>()};
-  if (details.init()) {
-    SayWithDecl(
-        name, symbol, "Named constant '%s' already has a value"_err_en_US);
+  if (details.init() || symbol.test(Symbol::Flag::InDataStmt)) {
+    Say(name, "Named constant '%s' already has a value"_err_en_US);
   }
   if (inOldStyleParameterStmt_) {
     // non-standard extension PARAMETER statement (no parentheses)
@@ -4936,6 +4935,8 @@ Symbol &DeclarationVisitor::DeclareObjectEntity(
       } else if (MustBeScalar(symbol)) {
         Say(name,
             "'%s' appeared earlier as a scalar actual argument to a specification function"_warn_en_US);
+      } else if (details->init() || symbol.test(Symbol::Flag::InDataStmt)) {
+        Say(name, "'%s' was initialized earlier as a scalar"_err_en_US);
       } else {
         details->set_shape(arraySpec());
       }
@@ -8915,7 +8916,7 @@ private:
                      std::get_if<parser::ConstantExpr>(&init->u)}) {
         if (name.symbol) {
           if (const auto *object{name.symbol->detailsIf<ObjectEntityDetails>()};
-              object && !object->init()) {
+              !object || !object->init()) {
             resolver_.NonPointerInitialization(name, *expr);
           }
         }
