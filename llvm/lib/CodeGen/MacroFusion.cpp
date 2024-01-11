@@ -13,6 +13,7 @@
 
 #include "llvm/CodeGen/MacroFusion.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/CodeGen/ScheduleDAGInstrs.h"
@@ -128,7 +129,12 @@ bool llvm::fuseInstructionPair(ScheduleDAGInstrs &DAG, SUnit &FirstSU,
     }
   }
 
-  SecondSU.getInstr()->setFlag(MachineInstr::Fusible);
+  // Mark the second instruction of fusible pair as MachineInstr::Fusible if
+  // this mutation is running in pre-ra scheduler.
+  if (!DAG.MF.getProperties().hasProperty(
+          MachineFunctionProperties::Property::NoVRegs))
+    SecondSU.getInstr()->setFlag(MachineInstr::Fusible);
+
   ++NumFused;
   return true;
 }
