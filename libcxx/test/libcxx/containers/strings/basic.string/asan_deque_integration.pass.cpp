@@ -13,6 +13,7 @@
 #include <array>
 #include "test_macros.h"
 #include "asan_testing.h" // includes deque and string - don't do it before
+#include "min_allocator.h"
 
 // This tests exists to check if strings work well with deque, as those
 // may be partialy annotated, we cannot simply call
