@@ -1003,8 +1003,18 @@ void RISCVFrameLowering::determineCalleeSaves(MachineFunction &MF,
     };
 
     for (auto Reg : CSRegs)
+      // Only save x0-x15 for RVE.
       if (Reg < RISCV::X16 || !Subtarget.isRVE())
         SavedRegs.set(Reg);
+
+    // According to psABI, if ilp32e/lp64e ABIs are used with an ISA that
+    // has any of the registers x16-x31 and f0-f31, then these registers are
+    // considered temporaries, so we should also save x16-x31 here.
+    if (STI.getTargetABI() == RISCVABI::ABI_ILP32E ||
+        STI.getTargetABI() == RISCVABI::ABI_LP64E) {
+      for (MCPhysReg Reg = RISCV::X16; Reg <= RISCV::X31; Reg++)
+        SavedRegs.set(Reg);
+    }
 
     if (Subtarget.hasStdExtF()) {
 
