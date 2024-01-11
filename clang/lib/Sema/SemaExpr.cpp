@@ -6258,7 +6258,7 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
   assert(Param->hasDefaultArg() && "can't build nonexistent default arg");
 
   bool NestedDefaultChecking = isCheckingDefaultArgumentOrInitializer();
-
+  bool IsInLifetimeExtendingContext = isInLifetimeExtendingContext();
   std::optional<ExpressionEvaluationContextRecord::InitializationContext>
       InitializationContext =
           OutermostDeclarationWithDelayedImmediateInvocations();
@@ -6291,9 +6291,19 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
     ImmediateCallVisitor V(getASTContext());
     if (!NestedDefaultChecking)
       V.TraverseDecl(Param);
-    if (V.HasImmediateCalls) {
-      ExprEvalContexts.back().DelayedDefaultInitializationContext = {
-          CallLoc, Param, CurContext};
+
+    // Rewrite the call argument that was created from the corresponding
+    // parameter's default argument.
+    if (V.HasImmediateCalls || IsInLifetimeExtendingContext) {
+      if (V.HasImmediateCalls)
+        ExprEvalContexts.back().DelayedDefaultInitializationContext = {
+            CallLoc, Param, CurContext};
+      // Pass down lifetime extending flag, and collect temporaries in
+      // CreateMaterializeTemporaryExpr when we rewrite the call argument.
+      auto &LastRecord = ExprEvalContexts.back();
+      auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
+      LastRecord.IsInLifetimeExtendingContext = IsInLifetimeExtendingContext;
+
       EnsureImmediateInvocationInDefaultArgs Immediate(*this);
       ExprResult Res;
       runWithSufficientStackSpace(CallLoc, [&] {
@@ -6307,6 +6317,10 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
       if (Res.isInvalid())
         return ExprError();
       Init = Res.get();
+
+      // Collect MaterializeTemporaryExprs in the rewritten CXXDefaultArgExpr.
+      PrevRecord.ForRangeLifetimeExtendTemps.append(
+          LastRecord.ForRangeLifetimeExtendTemps);
     }
   }
 
