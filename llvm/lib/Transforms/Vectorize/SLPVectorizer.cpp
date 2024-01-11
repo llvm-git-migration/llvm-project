@@ -179,6 +179,10 @@ static cl::opt<bool>
     ViewSLPTree("view-slp-tree", cl::Hidden,
                 cl::desc("Display the SLP trees with Graphviz"));
 
+static cl::opt<bool> VectorizeWithPadding(
+    "slp-vectorize-with-padding", cl::init(false), cl::Hidden,
+    cl::desc("Try to vectorize non-power-of-2 operations using padding."));
+
 // Limit the number of alias checks. The limit is chosen so that
 // it has no negative effect on the llvm benchmarks.
 static const unsigned AliasedCheckLimit = 10;
@@ -2557,7 +2561,7 @@ private:
     unsigned getVectorFactor() const {
       if (!ReuseShuffleIndices.empty())
         return ReuseShuffleIndices.size();
-      return Scalars.size();
+      return Scalars.size() + getNumPadding();
     };
 
     /// A vector of scalars.
@@ -2574,6 +2578,7 @@ private:
     /// intrinsics for store/load)?
     enum EntryState {
       Vectorize,
+      VectorizeWithPadding,
       ScatterVectorize,
       PossibleStridedVectorize,
       NeedToGather
@@ -2610,6 +2615,9 @@ private:
     /// The main/alternate instruction.
     Instruction *MainOp = nullptr;
     Instruction *AltOp = nullptr;
+
+    /// The number of padding lanes (containing poison).
+    unsigned NumPadding = 0;
 
   public:
     /// Set this bundle's \p OpIdx'th operand to \p OpVL.
@@ -2733,6 +2741,15 @@ private:
                           SmallVectorImpl<Value *> *OpScalars = nullptr,
                           SmallVectorImpl<Value *> *AltScalars = nullptr) const;
 
+    /// Set the number of apdding lanes for this node.
+    void setNumPadding(unsigned Padding) {
+      assert(NumPadding == 0 && "Cannot change padding more than once.");
+      NumPadding = Padding;
+    }
+
+    /// Return the number of padding lanes (containg poison) for this node.
+    unsigned getNumPadding() const { return NumPadding; }
+
 #ifndef NDEBUG
     /// Debug printer.
     LLVM_DUMP_METHOD void dump() const {
@@ -2749,6 +2766,9 @@ private:
       switch (State) {
       case Vectorize:
         dbgs() << "Vectorize\n";
+        break;
+      case VectorizeWithPadding:
+        dbgs() << "VectorizeWithPadding\n";
         break;
       case ScatterVectorize:
         dbgs() << "ScatterVectorize\n";
@@ -2790,6 +2810,8 @@ private:
       for (const auto &EInfo : UserTreeIndices)
         dbgs() << EInfo << ", ";
       dbgs() << "\n";
+      if (getNumPadding() > 0)
+        dbgs() << "Padding: " << getNumPadding() << "\n";
     }
 #endif
   };
@@ -2891,9 +2913,19 @@ private:
           ValueToGatherNodes.try_emplace(V).first->getSecond().insert(Last);
     }
 
-    if (UserTreeIdx.UserTE)
+    if (UserTreeIdx.UserTE) {
       Last->UserTreeIndices.push_back(UserTreeIdx);
-
+      if (!isPowerOf2_32(Last->Scalars.size()) &&
+          Last->State != TreeEntry::VectorizeWithPadding) {
+        if (UserTreeIdx.UserTE->State == TreeEntry::VectorizeWithPadding)
+          Last->setNumPadding(1);
+        else {
+          Last->setNumPadding(UserTreeIdx.UserTE->getNumPadding());
+          assert((Last->getNumPadding() == 0 || Last->ReorderIndices.empty()) &&
+                 "Reodering isn't implemented for nodes with padding yet");
+        }
+      }
+    }
     return Last;
   }
 
@@ -2921,7 +2953,8 @@ private:
   /// and fills required data before actual scheduling of the instructions.
   TreeEntry::EntryState getScalarsVectorizationState(
       InstructionsState &S, ArrayRef<Value *> VL, bool IsScatterVectorizeUserTE,
-      OrdersType &CurrentOrder, SmallVectorImpl<Value *> &PointerOps) const;
+      OrdersType &CurrentOrder, SmallVectorImpl<Value *> &PointerOps,
+      bool HasPadding) const;
 
   /// Maps a specific scalar to its tree entry.
   SmallDenseMap<Value *, TreeEntry *> ScalarToTreeEntry;
@@ -3822,6 +3855,7 @@ namespace {
 enum class LoadsState {
   Gather,
   Vectorize,
+  VectorizeWithPadding,
   ScatterVectorize,
   PossibleStridedVectorize
 };
@@ -3898,8 +3932,10 @@ static LoadsState canVectorizeLoads(ArrayRef<Value *> VL, const Value *VL0,
       std::optional<int> Diff =
           getPointersDiff(ScalarTy, Ptr0, ScalarTy, PtrN, DL, SE);
       // Check that the sorted loads are consecutive.
+      bool NeedsPadding = !isPowerOf2_32(VL.size());
       if (static_cast<unsigned>(*Diff) == VL.size() - 1)
-        return LoadsState::Vectorize;
+        return NeedsPadding ? LoadsState::VectorizeWithPadding
+                            : LoadsState::Vectorize;
       // Simple check if not a strided access - clear order.
       IsPossibleStrided = *Diff % (VL.size() - 1) == 0;
     }
@@ -4534,7 +4570,8 @@ void BoUpSLP::reorderTopToBottom() {
         continue;
       }
       if ((TE->State == TreeEntry::Vectorize ||
-           TE->State == TreeEntry::PossibleStridedVectorize) &&
+           TE->State == TreeEntry::PossibleStridedVectorize ||
+           TE->State == TreeEntry::VectorizeWithPadding) &&
           isa<ExtractElementInst, ExtractValueInst, LoadInst, StoreInst,
               InsertElementInst>(TE->getMainOp()) &&
           !TE->isAltShuffle()) {
@@ -4568,6 +4605,10 @@ bool BoUpSLP::canReorderOperands(
     TreeEntry *UserTE, SmallVectorImpl<std::pair<unsigned, TreeEntry *>> &Edges,
     ArrayRef<TreeEntry *> ReorderableGathers,
     SmallVectorImpl<TreeEntry *> &GatherOps) {
+  // Reordering isn't implemented for nodes with padding yet.
+  if (UserTE->getNumPadding() > 0)
+    return false;
+
   for (unsigned I = 0, E = UserTE->getNumOperands(); I < E; ++I) {
     if (any_of(Edges, [I](const std::pair<unsigned, TreeEntry *> &OpData) {
           return OpData.first == I &&
@@ -4746,6 +4787,10 @@ void BoUpSLP::reorderBottomToTop(bool IgnoreReorder) {
         auto Res = OrdersUses.insert(std::make_pair(OrdersType(), 0));
         const auto &&AllowsReordering = [IgnoreReorder, &GathersToOrders](
                                             const TreeEntry *TE) {
+          // Reordering for nodes with padding not implemented yet.
+          if (TE->getNumPadding() > 0 ||
+              TE->State == TreeEntry::VectorizeWithPadding)
+            return false;
           if (!TE->ReorderIndices.empty() || !TE->ReuseShuffleIndices.empty() ||
               (TE->State == TreeEntry::Vectorize && TE->isAltShuffle()) ||
               (IgnoreReorder && TE->Idx == 0))
@@ -5233,7 +5278,8 @@ static bool isAlternateInstruction(const Instruction *I,
 
 BoUpSLP::TreeEntry::EntryState BoUpSLP::getScalarsVectorizationState(
     InstructionsState &S, ArrayRef<Value *> VL, bool IsScatterVectorizeUserTE,
-    OrdersType &CurrentOrder, SmallVectorImpl<Value *> &PointerOps) const {
+    OrdersType &CurrentOrder, SmallVectorImpl<Value *> &PointerOps,
+    bool HasPadding) const {
   assert(S.MainOp && "Expected instructions with same/alternate opcodes only.");
 
   unsigned ShuffleOrOp =
@@ -5256,7 +5302,7 @@ BoUpSLP::TreeEntry::EntryState BoUpSLP::getScalarsVectorizationState(
   }
   case Instruction::ExtractValue:
   case Instruction::ExtractElement: {
-    bool Reuse = canReuseExtract(VL, VL0, CurrentOrder);
+    bool Reuse = !HasPadding && canReuseExtract(VL, VL0, CurrentOrder);
     if (Reuse || !CurrentOrder.empty())
       return TreeEntry::Vectorize;
     LLVM_DEBUG(dbgs() << "SLP: Gather extract sequence.\n");
@@ -5294,6 +5340,8 @@ BoUpSLP::TreeEntry::EntryState BoUpSLP::getScalarsVectorizationState(
                               PointerOps)) {
     case LoadsState::Vectorize:
       return TreeEntry::Vectorize;
+    case LoadsState::VectorizeWithPadding:
+      return TreeEntry::VectorizeWithPadding;
     case LoadsState::ScatterVectorize:
       return TreeEntry::ScatterVectorize;
     case LoadsState::PossibleStridedVectorize:
@@ -5353,6 +5401,15 @@ BoUpSLP::TreeEntry::EntryState BoUpSLP::getScalarsVectorizationState(
     }
     return TreeEntry::Vectorize;
   }
+  case Instruction::UDiv:
+  case Instruction::SDiv:
+  case Instruction::URem:
+  case Instruction::SRem:
+    // The instruction may trigger immediate UB on the poison/undef padding
+    // elements, so force gather to avoid introducing new UB.
+    if (HasPadding)
+      return TreeEntry::NeedToGather;
+    [[fallthrough]];
   case Instruction::Select:
   case Instruction::FNeg:
   case Instruction::Add:
@@ -5361,11 +5418,7 @@ BoUpSLP::TreeEntry::EntryState BoUpSLP::getScalarsVectorizationState(
   case Instruction::FSub:
   case Instruction::Mul:
   case Instruction::FMul:
-  case Instruction::UDiv:
-  case Instruction::SDiv:
   case Instruction::FDiv:
-  case Instruction::URem:
-  case Instruction::SRem:
   case Instruction::FRem:
   case Instruction::Shl:
   case Instruction::LShr:
@@ -5548,6 +5601,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
                                  bool DoNotFail = false) {
     // Check that every instruction appears once in this bundle.
     DenseMap<Value *, unsigned> UniquePositions(VL.size());
+    auto OriginalVL = VL;
     for (Value *V : VL) {
       if (isConstant(V)) {
         ReuseShuffleIndicies.emplace_back(
@@ -5560,6 +5614,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
       if (Res.second)
         UniqueValues.emplace_back(V);
     }
+
     size_t NumUniqueScalarValues = UniqueValues.size();
     if (NumUniqueScalarValues == VL.size()) {
       ReuseShuffleIndicies.clear();
@@ -5587,6 +5642,15 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
             NonUniqueValueVL.append(PWSz - UniqueValues.size(),
                                     UniqueValues.back());
             VL = NonUniqueValueVL;
+
+            if (UserTreeIdx.UserTE &&
+                UserTreeIdx.UserTE->getNumPadding() != 0) {
+              LLVM_DEBUG(dbgs() << "SLP: Reshuffling scalars not yet supported "
+                                   "for nodes with padding.\n");
+              newTreeEntry(OriginalVL, std::nullopt /*not vectorized*/, S,
+                           UserTreeIdx);
+              return false;
+            }
           }
           return true;
         }
@@ -5595,6 +5659,13 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
         return false;
       }
       VL = UniqueValues;
+      if (UserTreeIdx.UserTE && UserTreeIdx.UserTE->getNumPadding() != 0) {
+        LLVM_DEBUG(dbgs() << "SLP: Reshuffling scalars not yet supported for "
+                             "nodes with padding.\n");
+        newTreeEntry(OriginalVL, std::nullopt /*not vectorized*/, S,
+                     UserTreeIdx);
+        return false;
+      }
     }
     return true;
   };
@@ -5859,7 +5930,8 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
   OrdersType CurrentOrder;
   SmallVector<Value *> PointerOps;
   TreeEntry::EntryState State = getScalarsVectorizationState(
-      S, VL, IsScatterVectorizeUserTE, CurrentOrder, PointerOps);
+      S, VL, IsScatterVectorizeUserTE, CurrentOrder, PointerOps,
+      UserTreeIdx.UserTE && UserTreeIdx.UserTE->getNumPadding() > 0);
   if (State == TreeEntry::NeedToGather) {
     newTreeEntry(VL, std::nullopt /*not vectorized*/, S, UserTreeIdx,
                  ReuseShuffleIndicies);
@@ -6001,16 +6073,25 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
       fixupOrderingIndices(CurrentOrder);
       switch (State) {
       case TreeEntry::Vectorize:
+      case TreeEntry::VectorizeWithPadding:
         if (CurrentOrder.empty()) {
           // Original loads are consecutive and does not require reordering.
-          TE = newTreeEntry(VL, Bundle /*vectorized*/, S, UserTreeIdx,
+          TE = newTreeEntry(VL, State, Bundle, S, UserTreeIdx,
                             ReuseShuffleIndicies);
-          LLVM_DEBUG(dbgs() << "SLP: added a vector of loads.\n");
+          LLVM_DEBUG(dbgs() << "SLP: added a vector of loads"
+                            << (State == TreeEntry::VectorizeWithPadding
+                                    ? " with padding"
+                                    : "")
+                            << ".\n");
         } else {
           // Need to reorder.
-          TE = newTreeEntry(VL, Bundle /*vectorized*/, S, UserTreeIdx,
+          TE = newTreeEntry(VL, State, Bundle, S, UserTreeIdx,
                             ReuseShuffleIndicies, CurrentOrder);
-          LLVM_DEBUG(dbgs() << "SLP: added a vector of jumbled loads.\n");
+          LLVM_DEBUG(dbgs() << "SLP: added a vector of jumbled loads"
+                            << (State == TreeEntry::VectorizeWithPadding
+                                    ? " with padding"
+                                    : "")
+                            << ".\n");
         }
         TE->setOperandsInOrder();
         break;
@@ -6211,21 +6292,32 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth,
         *OIter = SI->getValueOperand();
         ++OIter;
       }
+      TreeEntry::EntryState State = isPowerOf2_32(VL.size())
+                                        ? TreeEntry::Vectorize
+                                        : TreeEntry::VectorizeWithPadding;
       // Check that the sorted pointer operands are consecutive.
       if (CurrentOrder.empty()) {
         // Original stores are consecutive and does not require reordering.
-        TreeEntry *TE = newTreeEntry(VL, Bundle /*vectorized*/, S, UserTreeIdx,
+        TreeEntry *TE = newTreeEntry(VL, State, Bundle, S, UserTreeIdx,
                                      ReuseShuffleIndicies);
         TE->setOperandsInOrder();
         buildTree_rec(Operands, Depth + 1, {TE, 0});
-        LLVM_DEBUG(dbgs() << "SLP: added a vector of stores.\n");
+        LLVM_DEBUG(dbgs() << "SLP: added a vector of stores"
+                          << (State == TreeEntry::VectorizeWithPadding
+                                  ? " with padding"
+                                  : "")
+                          << ".\n");
       } else {
         fixupOrderingIndices(CurrentOrder);
-        TreeEntry *TE = newTreeEntry(VL, Bundle /*vectorized*/, S, UserTreeIdx,
+        TreeEntry *TE = newTreeEntry(VL, State, Bundle, S, UserTreeIdx,
                                      ReuseShuffleIndicies, CurrentOrder);
         TE->setOperandsInOrder();
         buildTree_rec(Operands, Depth + 1, {TE, 0});
-        LLVM_DEBUG(dbgs() << "SLP: added a vector of jumbled stores.\n");
+        LLVM_DEBUG(dbgs() << "SLP: added a vector of jumbled stores"
+                          << (State == TreeEntry::VectorizeWithPadding
+                                  ? " with padding"
+                                  : "")
+                          << ".\n");
       }
       return;
     }
@@ -6955,7 +7047,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     return Constant::getAllOnesValue(Ty);
   }
 
-  InstructionCost getBuildVectorCost(ArrayRef<Value *> VL, Value *Root) {
+  InstructionCost getBuildVectorCost(ArrayRef<Value *> VL, Value *Root,
+                                     bool WithPadding = false) {
     if ((!Root && allConstant(VL)) || all_of(VL, UndefValue::classof))
       return TTI::TCC_Free;
     auto *VecTy = FixedVectorType::get(VL.front()->getType(), VL.size());
@@ -6966,7 +7059,7 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     InstructionsState S = getSameOpcode(VL, *R.TLI);
     const unsigned Sz = R.DL->getTypeSizeInBits(VL.front()->getType());
     unsigned MinVF = R.getMinVF(2 * Sz);
-    if (VL.size() > 2 &&
+    if (!WithPadding && VL.size() > 2 &&
         ((S.getOpcode() == Instruction::Load && !S.isAltShuffle()) ||
          (InVectors.empty() &&
           any_of(seq<unsigned>(0, VL.size() / MinVF),
@@ -7002,6 +7095,7 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
                                   *R.LI, *R.TLI, CurrentOrder, PointerOps);
             switch (LS) {
             case LoadsState::Vectorize:
+            case LoadsState::VectorizeWithPadding:
             case LoadsState::ScatterVectorize:
             case LoadsState::PossibleStridedVectorize:
               // Mark the vectorized loads so that we don't vectorize them
@@ -7077,7 +7171,7 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
         }
         GatherCost -= ScalarsCost;
       }
-    } else if (!Root && isSplat(VL)) {
+    } else if (!WithPadding && !Root && isSplat(VL)) {
       // Found the broadcasting of the single scalar, calculate the cost as
       // the broadcast.
       const auto *It =
@@ -7638,8 +7732,8 @@ public:
         CommonMask[Idx] = Mask[Idx] + VF;
   }
   Value *gather(ArrayRef<Value *> VL, unsigned MaskVF = 0,
-                Value *Root = nullptr) {
-    Cost += getBuildVectorCost(VL, Root);
+                Value *Root = nullptr, bool WithPadding = false) {
+    Cost += getBuildVectorCost(VL, Root, WithPadding);
     if (!Root) {
       // FIXME: Need to find a way to avoid use of getNullValue here.
       SmallVector<Constant *> Vals;
@@ -7743,7 +7837,7 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
   }
   if (!FixedVectorType::isValidElementType(ScalarTy))
     return InstructionCost::getInvalid();
-  auto *VecTy = FixedVectorType::get(ScalarTy, VL.size());
+  auto *VecTy = FixedVectorType::get(ScalarTy, VL.size() + E->getNumPadding());
   TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
 
   // If we have computed a smaller type for the expression, update VecTy so
@@ -7751,7 +7845,7 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
   auto It = MinBWs.find(E);
   if (It != MinBWs.end()) {
     ScalarTy = IntegerType::get(F->getContext(), It->second.first);
-    VecTy = FixedVectorType::get(ScalarTy, VL.size());
+    VecTy = FixedVectorType::get(ScalarTy, VL.size() + E->getNumPadding());
   }
   unsigned EntryVF = E->getVectorFactor();
   auto *FinalVecTy = FixedVectorType::get(ScalarTy, EntryVF);
@@ -7785,6 +7879,7 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
     CommonCost =
         TTI->getShuffleCost(TTI::SK_PermuteSingleSrc, FinalVecTy, Mask);
   assert((E->State == TreeEntry::Vectorize ||
+          E->State == TreeEntry::VectorizeWithPadding ||
           E->State == TreeEntry::ScatterVectorize ||
           E->State == TreeEntry::PossibleStridedVectorize) &&
          "Unhandled state");
@@ -7890,7 +7985,8 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
     // loads) or (2) when Ptrs are the arguments of loads or stores being
     // vectorized as plane wide unit-stride load/store since all the
     // loads/stores are known to be from/to adjacent locations.
-    assert(E->State == TreeEntry::Vectorize &&
+    assert((E->State == TreeEntry::Vectorize ||
+            E->State == TreeEntry::VectorizeWithPadding) &&
            "Entry state expected to be Vectorize here.");
     if (isa<LoadInst, StoreInst>(VL0)) {
       // Case 2: estimate costs for pointer related costs when vectorizing to
@@ -8146,7 +8242,8 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
   case Instruction::BitCast: {
     auto SrcIt = MinBWs.find(getOperandEntry(E, 0));
     Type *SrcScalarTy = VL0->getOperand(0)->getType();
-    auto *SrcVecTy = FixedVectorType::get(SrcScalarTy, VL.size());
+    auto *SrcVecTy =
+        FixedVectorType::get(SrcScalarTy, VL.size() + E->getNumPadding());
     unsigned Opcode = ShuffleOrOp;
     unsigned VecOpcode = Opcode;
     if (!ScalarTy->isFloatingPointTy() && !SrcScalarTy->isFloatingPointTy() &&
@@ -8156,7 +8253,8 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
       if (SrcIt != MinBWs.end()) {
         SrcBWSz = SrcIt->second.first;
         SrcScalarTy = IntegerType::get(F->getContext(), SrcBWSz);
-        SrcVecTy = FixedVectorType::get(SrcScalarTy, VL.size());
+        SrcVecTy =
+            FixedVectorType::get(SrcScalarTy, VL.size() + E->getNumPadding());
       }
       unsigned BWSz = DL->getTypeSizeInBits(ScalarTy);
       if (BWSz == SrcBWSz) {
@@ -8299,10 +8397,19 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
     auto *LI0 = cast<LoadInst>(VL0);
     auto GetVectorCost = [&](InstructionCost CommonCost) {
       InstructionCost VecLdCost;
-      if (E->State == TreeEntry::Vectorize) {
+      if (E->State == TreeEntry::Vectorize ||
+          E->State == TreeEntry::VectorizeWithPadding) {
         VecLdCost = TTI->getMemoryOpCost(
             Instruction::Load, VecTy, LI0->getAlign(),
             LI0->getPointerAddressSpace(), CostKind, TTI::OperandValueInfo());
+        if (E->State == TreeEntry::VectorizeWithPadding) {
+          auto *SrcTy =
+              FixedVectorType::get(VecTy->getElementType(), VL.size() + 1);
+          SmallVector<int> Mask(VL.size() + 1, PoisonMaskElem);
+          std::iota(Mask.begin(), Mask.begin() + VL.size(), 0);
+          VecLdCost += TTI->getShuffleCost(TTI::SK_InsertSubvector, SrcTy, Mask,
+                                           TTI::TCK_RecipThroughput, 0, VecTy);
+        }
       } else {
         assert((E->State == TreeEntry::ScatterVectorize ||
                 E->State == TreeEntry::PossibleStridedVectorize) &&
@@ -8345,10 +8452,20 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
     auto GetVectorCost = [=](InstructionCost CommonCost) {
       // We know that we can merge the stores. Calculate the cost.
       TTI::OperandValueInfo OpInfo = getOperandInfo(E->getOperand(0));
-      return TTI->getMemoryOpCost(Instruction::Store, VecTy, BaseSI->getAlign(),
-                                  BaseSI->getPointerAddressSpace(), CostKind,
-                                  OpInfo) +
-             CommonCost;
+      InstructionCost Cost =
+          TTI->getMemoryOpCost(Instruction::Store, VecTy, BaseSI->getAlign(),
+                               BaseSI->getPointerAddressSpace(), CostKind,
+                               OpInfo) +
+          CommonCost;
+      if (E->State == TreeEntry::VectorizeWithPadding) {
+        auto *SrcTy =
+            FixedVectorType::get(VecTy->getElementType(), VL.size() + 1);
+        SmallVector<int> Mask(VL.size() + 1, PoisonMaskElem);
+        std::iota(Mask.begin(), Mask.begin() + VL.size(), 0);
+        Cost += TTI->getShuffleCost(TTI::SK_ExtractSubvector, SrcTy, Mask,
+                                    TTI::TCK_RecipThroughput, 0, VecTy);
+      }
+      return Cost;
     };
     SmallVector<Value *> PointerOps(VL.size());
     for (auto [I, V] : enumerate(VL)) {
@@ -9708,6 +9825,9 @@ BoUpSLP::isGatherShuffledEntry(
   // No need to check for the topmost gather node.
   if (TE == VectorizableTree.front().get())
     return {};
+  // Gathering for nodes with padding is not implemented yet.
+  if (TE->getNumPadding() > 0)
+    return {};
   Mask.assign(VL.size(), PoisonMaskElem);
   assert(TE->UserTreeIndices.size() == 1 &&
          "Expected only single user of the gather node.");
@@ -10420,7 +10540,7 @@ public:
     add(V1, NewMask);
   }
   Value *gather(ArrayRef<Value *> VL, unsigned MaskVF = 0,
-                Value *Root = nullptr) {
+                Value *Root = nullptr, bool WithPadding = false) {
     return R.gather(VL, Root);
   }
   Value *createFreeze(Value *V) { return Builder.CreateFreeze(V); }
@@ -10489,7 +10609,6 @@ Value *BoUpSLP::vectorizeOperand(TreeEntry *E, unsigned NodeIdx,
     SmallVector<int> Mask(E->ReorderIndices.begin(), E->ReorderIndices.end());
     reorderScalars(VL, Mask);
   }
-  const unsigned VF = VL.size();
   InstructionsState S = getSameOpcode(VL, *TLI);
   // Special processing for GEPs bundle, which may include non-gep values.
   if (!S.getOpcode() && VL.front()->getType()->isPointerTy()) {
@@ -10531,6 +10650,7 @@ Value *BoUpSLP::vectorizeOperand(TreeEntry *E, unsigned NodeIdx,
         ShuffleBuilder.add(V, Mask);
         return ShuffleBuilder.finalize(std::nullopt);
       };
+      const unsigned VF = VL.size() + E->getNumPadding();
       Value *V = vectorizeTree(VE, PostponedPHIs);
       if (VF != cast<FixedVectorType>(V->getType())->getNumElements()) {
         if (!VE->ReuseShuffleIndices.empty()) {
@@ -10657,6 +10777,14 @@ ResTy BoUpSLP::processBuildVector(const TreeEntry *E, Args &...Params) {
     return true;
   };
   BVTy ShuffleBuilder(Params...);
+  if (E->getNumPadding() > 0) {
+    Value *BV = ShuffleBuilder.gather(E->Scalars, 0, nullptr, true);
+    SmallVector<int> Mask(VF, PoisonMaskElem);
+    std::iota(Mask.begin(), Mask.begin() + E->Scalars.size(), 0);
+    ShuffleBuilder.add(BV, Mask);
+    return ShuffleBuilder.finalize(E->ReuseShuffleIndices);
+  }
+
   ResTy Res = ResTy();
   SmallVector<int> Mask;
   SmallVector<int> ExtractMask(GatheredScalars.size(), PoisonMaskElem);
@@ -11064,8 +11192,22 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
 
   auto FinalShuffle = [&](Value *V, const TreeEntry *E, VectorType *VecTy,
                           bool IsSigned) {
-    if (V->getType() != VecTy)
-      V = Builder.CreateIntCast(V, VecTy, IsSigned);
+    if (V->getType() != VecTy) {
+      if (E->getNumPadding() > 0 &&
+          cast<FixedVectorType>(V->getType())->getNumElements() +
+                  E->getNumPadding() ==
+              cast<FixedVectorType>(VecTy)->getNumElements()) {
+        assert(E->ReorderIndices.empty());
+        assert(E->ReuseShuffleIndices.empty());
+        SmallVector<int> Mask(cast<FixedVectorType>(VecTy)->getNumElements(),
+                              PoisonMaskElem);
+        ShuffleInstructionBuilder ShuffleBuilder(Builder, *this);
+        ShuffleBuilder.add(V, std::nullopt);
+        std::iota(Mask.begin(), Mask.begin() + E->Scalars.size(), 0);
+        return ShuffleBuilder.finalize(Mask);
+      } else
+        V = Builder.CreateIntCast(V, VecTy, IsSigned);
+    }
     ShuffleInstructionBuilder ShuffleBuilder(Builder, *this);
     if (E->getOpcode() == Instruction::Store) {
       ArrayRef<int> Mask =
@@ -11081,6 +11223,7 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
   };
 
   assert((E->State == TreeEntry::Vectorize ||
+          E->State == TreeEntry::VectorizeWithPadding ||
           E->State == TreeEntry::ScatterVectorize ||
           E->State == TreeEntry::PossibleStridedVectorize) &&
          "Unhandled state");
@@ -11098,7 +11241,8 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
     ScalarTy = IntegerType::get(F->getContext(), It->second.first);
     IsSigned = It->second.second;
   }
-  auto *VecTy = FixedVectorType::get(ScalarTy, E->Scalars.size());
+  auto *VecTy =
+      FixedVectorType::get(ScalarTy, E->Scalars.size() + E->getNumPadding());
   switch (ShuffleOrOp) {
     case Instruction::PHI: {
       assert((E->ReorderIndices.empty() ||
@@ -11544,8 +11688,19 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
       LoadInst *LI = cast<LoadInst>(VL0);
       Instruction *NewLI;
       Value *PO = LI->getPointerOperand();
-      if (E->State == TreeEntry::Vectorize) {
+      Value *V;
+      if (E->State == TreeEntry::VectorizeWithPadding) {
+        auto *VecTy =
+            FixedVectorType::get(E->Scalars[0]->getType(), E->Scalars.size());
         NewLI = Builder.CreateAlignedLoad(VecTy, PO, LI->getAlign());
+        SmallVector<int> Mask(E->Scalars.size() + 1, PoisonMaskElem);
+        assert(isPowerOf2_32(E->Scalars.size() + 1) &&
+               "unexpected padding needed");
+        std::iota(Mask.begin(), Mask.begin() + E->Scalars.size(), 0);
+        V = Builder.CreateShuffleVector(NewLI, PoisonValue::get(VecTy), Mask);
+      } else if (E->State == TreeEntry::Vectorize) {
+        NewLI = Builder.CreateAlignedLoad(VecTy, PO, LI->getAlign());
+        V = NewLI;
       } else {
         assert((E->State == TreeEntry::ScatterVectorize ||
                 E->State == TreeEntry::PossibleStridedVectorize) &&
@@ -11561,10 +11716,12 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
           CommonAlignment =
               std::min(CommonAlignment, cast<LoadInst>(V)->getAlign());
         NewLI = Builder.CreateMaskedGather(VecTy, VecPtr, CommonAlignment);
+        V = NewLI;
       }
-      Value *V = propagateMetadata(NewLI, E->Scalars);
+      propagateMetadata(NewLI, E->Scalars);
 
-      V = FinalShuffle(V, E, VecTy, IsSigned);
+      if (E->State != TreeEntry::VectorizeWithPadding)
+        V = FinalShuffle(V, E, VecTy, IsSigned);
       E->VectorizedValue = V;
       ++NumVectorInstructions;
       return V;
@@ -11639,8 +11796,8 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
       SmallVector<Type *, 2> TysForDecl;
       // Add return type if intrinsic is overloaded on it.
       if (UseIntrinsic && isVectorIntrinsicWithOverloadTypeAtArg(ID, -1))
-        TysForDecl.push_back(
-            FixedVectorType::get(CI->getType(), E->Scalars.size()));
+        TysForDecl.push_back(FixedVectorType::get(
+            CI->getType(), E->Scalars.size() + E->getNumPadding()));
       for (unsigned I : seq<unsigned>(0, CI->arg_size())) {
         ValueList OpVL;
         // Some intrinsics have scalar arguments. This argument should not be
@@ -13421,7 +13578,8 @@ bool SLPVectorizerPass::vectorizeStoreChain(ArrayRef<Value *> Chain, BoUpSLP &R,
   unsigned VF = Chain.size();
 
   if (!isPowerOf2_32(Sz) || !isPowerOf2_32(VF) || VF < 2 || VF < MinVF)
-    return false;
+    if (!VectorizeWithPadding || (VF < MinVF && VF + 1 != MinVF))
+      return false;
 
   LLVM_DEBUG(dbgs() << "SLP: Analyzing " << VF << " stores at offset " << Idx
                     << "\n");
@@ -13517,9 +13675,36 @@ bool SLPVectorizerPass::vectorizeStores(ArrayRef<StoreInst *> Stores,
                           << "MinVF (" << MinVF << ")\n");
       }
 
+      unsigned StartIdx = 0;
+      if (VectorizeWithPadding) {
+        unsigned CandVF = Operands.size() + 1;
+        if (isPowerOf2_32(CandVF) && CandVF <= MaxVF) {
+          assert(
+              all_of(
+                  Operands,
+                  [&](Value *V) {
+                    return cast<StoreInst>(V)->getValueOperand()->getType() ==
+                           cast<StoreInst>(Operands.front())
+                               ->getValueOperand()
+                               ->getType();
+                  }) &&
+              "Expected all operands of same type.");
+          if (!VectorizedStores.count(Operands.front()) &&
+              !VectorizedStores.count(Operands.back()) &&
+              TriedSequences
+                  .insert(std::make_pair(Operands.front(), Operands.back()))
+                  .second &&
+              vectorizeStoreChain(Operands, R, Operands.size(), MinVF)) {
+            // Mark the vectorized stores so that we don't vectorize them again.
+            VectorizedStores.insert(Operands.begin(), Operands.end());
+            Changed = true;
+            StartIdx += Operands.size();
+          }
+        }
+      }
+
       // FIXME: Is division-by-2 the correct step? Should we assert that the
       // register size is a power-of-2?
-      unsigned StartIdx = 0;
       for (unsigned Size = MaxVF; Size >= MinVF; Size /= 2) {
         for (unsigned Cnt = StartIdx, E = Operands.size(); Cnt + Size <= E;) {
           ArrayRef<Value *> Slice = ArrayRef(Operands).slice(Cnt, Size);
