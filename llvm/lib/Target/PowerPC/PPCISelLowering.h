@@ -163,6 +163,7 @@ namespace llvm {
     SRL,
     SRA,
     SHL,
+    ADDC, ADDE, SUBC, SUBE,
 
     /// FNMSUB - Negated multiply-subtract instruction.
     FNMSUB,
@@ -602,6 +603,7 @@ namespace llvm {
     /// Loads the entry for GA from the TOC, where the TOC base is given by
     /// the last operand.
     TOC_ENTRY
+
   };
 
   } // end namespace PPCISD
@@ -1310,6 +1312,8 @@ namespace llvm {
     SDValue LowerBSWAP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerATOMIC_CMP_SWAP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerIS_FPCLASS(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerADDSUBO_CARRY(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerADDSUBO(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerToLibCall(const char *LibCallName, SDValue Op,
                            SelectionDAG &DAG) const;
     SDValue lowerLibCallBasedOnType(const char *LibCallFloatName,
