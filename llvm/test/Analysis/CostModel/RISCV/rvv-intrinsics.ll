@@ -593,8 +593,8 @@ define void @reduce_fadd() {
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 10 for instruction: %28 = call double @llvm.vector.reduce.fadd.nxv4f64(double undef, <vscale x 4 x double> undef)
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 18 for instruction: %29 = call double @llvm.vp.reduce.fadd.nxv8f64(double undef, <vscale x 8 x double> undef, <vscale x 8 x i1> undef, i32 undef)
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 18 for instruction: %30 = call double @llvm.vector.reduce.fadd.nxv8f64(double undef, <vscale x 8 x double> undef)
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 26 for instruction: %31 = call double @llvm.vp.reduce.fadd.nxv16f64(double undef, <vscale x 16 x double> undef, <vscale x 16 x i1> undef, i32 undef)
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 26 for instruction: %32 = call double @llvm.vector.reduce.fadd.nxv16f64(double undef, <vscale x 16 x double> undef)
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 34 for instruction: %31 = call double @llvm.vp.reduce.fadd.nxv16f64(double undef, <vscale x 16 x double> undef, <vscale x 16 x i1> undef, i32 undef)
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 34 for instruction: %32 = call double @llvm.vector.reduce.fadd.nxv16f64(double undef, <vscale x 16 x double> undef)
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
   call float @llvm.vp.reduce.fadd.v2f32(float undef, <2 x float> undef, <2 x i1> undef, i32 undef)

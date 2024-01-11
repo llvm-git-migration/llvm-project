@@ -1434,18 +1434,25 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
       Opcodes = {RISCV::VMNAND_MM, RISCV::VCPOP_M};
       return (LT.first - 1) +
              getRISCVInstructionCost(Opcodes, LT.second, CostKind) +
-             getCmpSelInstrCost(Instruction::Select, ElementTy, ElementTy,
+             getCmpSelInstrCost(Instruction::ICmp, ElementTy, ElementTy,
                                 CmpInst::ICMP_EQ, CostKind);
     } else {
       Opcodes = {RISCV::VCPOP_M};
       return (LT.first - 1) +
              getRISCVInstructionCost(Opcodes, LT.second, CostKind) +
-             getCmpSelInstrCost(Instruction::Select, ElementTy, ElementTy,
+             getCmpSelInstrCost(Instruction::ICmp, ElementTy, ElementTy,
                                 CmpInst::ICMP_NE, CostKind);
     }
   }
 
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
+  if (TTI::requiresOrderedReduction(FMF)) {
+    Opcodes.push_back(RISCV::VFMV_S_F);
+    for (unsigned i = 0; i < LT.first.getValue(); i++)
+      Opcodes.push_back(RISCV::VFREDOSUM_VS);
+    Opcodes.push_back(RISCV::VFMV_F_S);
+    return getRISCVInstructionCost(Opcodes, LT.second, CostKind);
+  }
   unsigned SplitOp;
   switch (ISD) {
   case ISD::ADD:
@@ -1466,10 +1473,7 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
     break;
   case ISD::FADD:
     SplitOp = RISCV::VFADD_VV;
-    if (TTI::requiresOrderedReduction(FMF))
-      Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDOSUM_VS, RISCV::VFMV_F_S};
-    else
-      Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDUSUM_VS, RISCV::VFMV_F_S};
+    Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDUSUM_VS, RISCV::VFMV_F_S};
     break;
   }
   // Add a cost for data larger than LMUL8
