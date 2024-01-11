@@ -879,30 +879,7 @@ let Predicates = [HasBMI2, HasEGPR, In64BitMode] in {
   defm SHLX64 : bmi_shift<"shlx{q}", GR64, i64mem, "_EVEX">, T8, PD, REX_W, EVEX;
 }
 
-let Predicates = [HasBMI2, NoEGPR] in {
-  // Prefer RORX which is non-destructive and doesn't update EFLAGS.
-  let AddedComplexity = 10 in {
-    def : Pat<(rotr GR32:$src, (i8 imm:$shamt)),
-              (RORX32ri GR32:$src, imm:$shamt)>;
-    def : Pat<(rotr GR64:$src, (i8 imm:$shamt)),
-              (RORX64ri GR64:$src, imm:$shamt)>;
-
-    def : Pat<(rotl GR32:$src, (i8 imm:$shamt)),
-              (RORX32ri GR32:$src, (ROT32L2R_imm8 imm:$shamt))>;
-    def : Pat<(rotl GR64:$src, (i8 imm:$shamt)),
-              (RORX64ri GR64:$src, (ROT64L2R_imm8 imm:$shamt))>;
-  }
-
-  def : Pat<(rotr (loadi32 addr:$src), (i8 imm:$shamt)),
-            (RORX32mi addr:$src, imm:$shamt)>;
-  def : Pat<(rotr (loadi64 addr:$src), (i8 imm:$shamt)),
-            (RORX64mi addr:$src, imm:$shamt)>;
-
-  def : Pat<(rotl (loadi32 addr:$src), (i8 imm:$shamt)),
-            (RORX32mi addr:$src, (ROT32L2R_imm8 imm:$shamt))>;
-  def : Pat<(rotl (loadi64 addr:$src), (i8 imm:$shamt)),
-            (RORX64mi addr:$src, (ROT64L2R_imm8 imm:$shamt))>;
-
+multiclass bmi_shift_patterns<SDNode op, string name, string Suffix = ""> {
   // Prefer SARX/SHRX/SHLX over SAR/SHR/SHL with variable shift BUT not
   // immediate shift, i.e. the following code is considered better
   //
@@ -917,34 +894,15 @@ let Predicates = [HasBMI2, NoEGPR] in {
   //  ... %edi, ...
   //
   let AddedComplexity = 1 in {
-    def : Pat<(sra GR32:$src1, GR8:$src2),
-              (SARX32rr GR32:$src1,
+    def : Pat<(op GR32:$src1, GR8:$src2),
+              (!cast<Instruction>(name#"32rr"#Suffix) GR32:$src1,
                         (INSERT_SUBREG
                           (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(sra GR64:$src1, GR8:$src2),
-              (SARX64rr GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(srl GR32:$src1, GR8:$src2),
-              (SHRX32rr GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(srl GR64:$src1, GR8:$src2),
-              (SHRX64rr GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(shl GR32:$src1, GR8:$src2),
-              (SHLX32rr GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(shl GR64:$src1, GR8:$src2),
-              (SHLX64rr GR64:$src1,
+    def : Pat<(op GR64:$src1, GR8:$src2),
+              (!cast<Instruction>(name#"64rr"#Suffix) GR64:$src1,
                         (INSERT_SUBREG
                           (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
   }
-
   // We prefer to use
   //  mov (%ecx), %esi
   //  shl $imm, $esi
@@ -955,112 +913,53 @@ let Predicates = [HasBMI2, NoEGPR] in {
   //  shlx %al, (%ecx), %esi
   //
   // This priority is enforced by IsProfitableToFoldLoad.
-  def : Pat<(sra (loadi32 addr:$src1), GR8:$src2),
-            (SARX32rm addr:$src1,
+  def : Pat<(op (loadi32 addr:$src1), GR8:$src2),
+            (!cast<Instruction>(name#"32rm"#Suffix) addr:$src1,
                       (INSERT_SUBREG
                         (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(sra (loadi64 addr:$src1), GR8:$src2),
-            (SARX64rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(srl (loadi32 addr:$src1), GR8:$src2),
-            (SHRX32rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(srl (loadi64 addr:$src1), GR8:$src2),
-            (SHRX64rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(shl (loadi32 addr:$src1), GR8:$src2),
-            (SHLX32rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(shl (loadi64 addr:$src1), GR8:$src2),
-            (SHLX64rm addr:$src1,
+  def : Pat<(op (loadi64 addr:$src1), GR8:$src2),
+            (!cast<Instruction>(name#"64rm"#Suffix) addr:$src1,
                       (INSERT_SUBREG
                         (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
 }
 
-let Predicates = [HasBMI2, HasEGPR] in {
+multiclass RORX_patterns<string Suffix = ""> {
+  // Prefer RORX which is non-destructive and doesn't update EFLAGS.
   let AddedComplexity = 10 in {
     def : Pat<(rotr GR32:$src, (i8 imm:$shamt)),
-              (RORX32ri_EVEX GR32:$src, imm:$shamt)>;
+              (!cast<Instruction>(RORX32ri#Suffix) GR32:$src, imm:$shamt)>;
     def : Pat<(rotr GR64:$src, (i8 imm:$shamt)),
-              (RORX64ri_EVEX GR64:$src, imm:$shamt)>;
+              (!cast<Instruction>(RORX64ri#Suffix) GR64:$src, imm:$shamt)>;
 
     def : Pat<(rotl GR32:$src, (i8 imm:$shamt)),
-              (RORX32ri_EVEX GR32:$src, (ROT32L2R_imm8 imm:$shamt))>;
+              (!cast<Instruction>(RORX32ri#Suffix) GR32:$src, (ROT32L2R_imm8 imm:$shamt))>;
     def : Pat<(rotl GR64:$src, (i8 imm:$shamt)),
-              (RORX64ri_EVEX GR64:$src, (ROT64L2R_imm8 imm:$shamt))>;
+              (!cast<Instruction>(RORX64ri#Suffix) GR64:$src, (ROT64L2R_imm8 imm:$shamt))>;
   }
 
   def : Pat<(rotr (loadi32 addr:$src), (i8 imm:$shamt)),
-            (RORX32mi_EVEX addr:$src, imm:$shamt)>;
+            (!cast<Instruction>(RORX32mi#Suffix) addr:$src, imm:$shamt)>;
   def : Pat<(rotr (loadi64 addr:$src), (i8 imm:$shamt)),
-            (RORX64mi_EVEX addr:$src, imm:$shamt)>;
+            (!cast<Instruction>(RORX64mi#Suffix) addr:$src, imm:$shamt)>;
 
   def : Pat<(rotl (loadi32 addr:$src), (i8 imm:$shamt)),
-            (RORX32mi_EVEX addr:$src, (ROT32L2R_imm8 imm:$shamt))>;
+            (!cast<Instruction>(RORX32mi#Suffix) addr:$src, (ROT32L2R_imm8 imm:$shamt))>;
   def : Pat<(rotl (loadi64 addr:$src), (i8 imm:$shamt)),
-            (RORX64mi_EVEX addr:$src, (ROT64L2R_imm8 imm:$shamt))>;
+            (!cast<Instruction>(RORX64mi#Suffix) addr:$src, (ROT64L2R_imm8 imm:$shamt))>;
+}
 
-  let AddedComplexity = 1 in {
-    def : Pat<(sra GR32:$src1, GR8:$src2),
-              (SARX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(sra GR64:$src1, GR8:$src2),
-              (SARX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+let Predicates = [HasBMI2, NoEGPR] in {
+  defm : RORX_patterns<>;
+  defm : bmi_shift_patterns<sra, "SARX">;
+  defm : bmi_shift_patterns<srl, "SHRX">;
+  defm : bmi_shift_patterns<shl, "SHLX">;
+}
 
-    def : Pat<(srl GR32:$src1, GR8:$src2),
-              (SHRX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(srl GR64:$src1, GR8:$src2),
-              (SHRX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(shl GR32:$src1, GR8:$src2),
-              (SHLX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(shl GR64:$src1, GR8:$src2),
-              (SHLX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  }
-
-  def : Pat<(sra (loadi32 addr:$src1), GR8:$src2),
-            (SARX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(sra (loadi64 addr:$src1), GR8:$src2),
-            (SARX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(srl (loadi32 addr:$src1), GR8:$src2),
-            (SHRX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(srl (loadi64 addr:$src1), GR8:$src2),
-            (SHRX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(shl (loadi32 addr:$src1), GR8:$src2),
-            (SHLX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(shl (loadi64 addr:$src1), GR8:$src2),
-            (SHLX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+let Predicates = [HasBMI2, HasEGPR] in {
+  defm : RORX_patterns<"_EVEX">;
+  defm : bmi_shift_patterns<sra, "SARX", "_EVEX">;
+  defm : bmi_shift_patterns<srl, "SHRX", "_EVEX">;
+  defm : bmi_shift_patterns<shl, "SHLX", "_EVEX">;
 }
 
 def : Pat<(rotl GR8:$src1, (i8 relocImm:$src2)),

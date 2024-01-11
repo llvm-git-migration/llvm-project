@@ -1864,120 +1864,37 @@ def : Pat<(fshl GR64:$src1, GR64:$src2, (shiftMask64 CL)),
 def : Pat<(fshr GR64:$src2, GR64:$src1, (shiftMask64 CL)),
           (SHRD64rrCL GR64:$src1, GR64:$src2)>;
 
-let Predicates = [HasBMI2, NoEGPR] in {
+multiclass bmi_shift_mask_patterns<SDNode op, string name, string Suffix = ""> {
   let AddedComplexity = 1 in {
-    def : Pat<(sra GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SARX32rr GR32:$src1,
+    def : Pat<(op GR32:$src1, (shiftMask32 GR8:$src2)),
+              (!cast<Instruction>(name#"32rr"#Suffix) GR32:$src1,
                         (INSERT_SUBREG
                           (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(sra GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SARX64rr GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(srl GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SHRX32rr GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(srl GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SHRX64rr GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(shl GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SHLX32rr GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(shl GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SHLX64rr GR64:$src1,
+    def : Pat<(op GR64:$src1, (shiftMask64 GR8:$src2)),
+              (!cast<Instruction>(name#"64rr"#Suffix) GR64:$src1,
                         (INSERT_SUBREG
                           (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
   }
-
-  def : Pat<(sra (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SARX32rm addr:$src1,
+  def : Pat<(op (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
+            (!cast<Instruction>(name#"32rm"#Suffix) addr:$src1,
                       (INSERT_SUBREG
                         (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(sra (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SARX64rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(srl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SHRX32rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(srl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SHRX64rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(shl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SHLX32rm addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(shl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SHLX64rm addr:$src1,
+  def : Pat<(op (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
+            (!cast<Instruction>(name#"64rm"#Suffix) addr:$src1,
                       (INSERT_SUBREG
                         (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
 }
 
+let Predicates = [HasBMI2, NoEGPR] in {
+  defm : bmi_shift_mask_patterns<sra, "SARX">;
+  defm : bmi_shift_mask_patterns<srl, "SHRX">;
+  defm : bmi_shift_mask_patterns<shl, "SHLX">;
+}
+
 let Predicates = [HasBMI2, HasEGPR] in {
-  let AddedComplexity = 1 in {
-    def : Pat<(sra GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SARX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(sra GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SARX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(srl GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SHRX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(srl GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SHRX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-    def : Pat<(shl GR32:$src1, (shiftMask32 GR8:$src2)),
-              (SHLX32rr_EVEX GR32:$src1,
-                        (INSERT_SUBREG
-                          (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-    def : Pat<(shl GR64:$src1, (shiftMask64 GR8:$src2)),
-              (SHLX64rr_EVEX GR64:$src1,
-                        (INSERT_SUBREG
-                          (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  }
-
-  def : Pat<(sra (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SARX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(sra (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SARX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(srl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SHRX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(srl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SHRX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-
-  def : Pat<(shl (loadi32 addr:$src1), (shiftMask32 GR8:$src2)),
-            (SHLX32rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i32 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
-  def : Pat<(shl (loadi64 addr:$src1), (shiftMask64 GR8:$src2)),
-            (SHLX64rm_EVEX addr:$src1,
-                      (INSERT_SUBREG
-                        (i64 (IMPLICIT_DEF)), GR8:$src2, sub_8bit))>;
+  defm : bmi_shift_mask_patterns<sra, "SARX", "_EVEX">;
+  defm : bmi_shift_mask_patterns<srl, "SHRX", "_EVEX">;
+  defm : bmi_shift_mask_patterns<shl, "SHLX", "_EVEX">;
 }
 
 // Use BTR/BTS/BTC for clearing/setting/toggling a bit in a variable location.
