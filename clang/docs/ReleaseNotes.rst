@@ -897,6 +897,10 @@ clang-format
 - Adds ``AlignCaseArrows`` suboption to ``AlignConsecutiveShortCaseStatements``.
 - Add ``InAttributeSpecifiers`` style option to ``SpacesInParensOptions``
   to control addition of spaces after the ``__attribute__`` keyword.
+- Add ``NonConsecutive`` sub-option for ``InAttributeSpecifiers``,
+  ``InConditionalStatements``, ``InCStyleCasts``, and ``Other`` options of
+  ``SpacesInParensOptions`` to control addition of spaces between consecutive
+  parentheses.
 
 libclang
 --------
