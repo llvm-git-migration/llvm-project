@@ -404,7 +404,7 @@ struct SRecord {
   uint8_t getChecksum() const;
   size_t getSize() const;
   static SRecord getHeader(StringRef FileName);
-  static SRecord getTerminator(uint8_t Type, uint32_t Entry);
+  static uint8_t getType(uint32_t Address);
   enum Type : uint8_t {
     // Vendor specific text comment
     S0 = 0,
@@ -468,7 +468,7 @@ public:
   }
 
   // Once the type of all records is known, write the records
-  virtual void writeRecords();
+  virtual void writeRecords(uint32_t Entry);
   uint64_t getBufferOffset() const { return Offset; }
   Error visit(const Section &S) final;
   Error visit(const OwnedDataSection &S) final;
@@ -487,7 +487,7 @@ public:
   SRECSectionWriter(WritableMemoryBuffer &Buf, uint64_t Offset)
       : SRECSectionWriterBase(Buf, Offset) {}
   Error visit(const StringTableSection &Sec) override;
-  void writeRecords() override;
+  void writeRecords(uint32_t Entry) override;
 };
 
 class SectionBase {

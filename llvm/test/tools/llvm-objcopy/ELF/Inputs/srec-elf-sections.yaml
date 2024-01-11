@@ -20,6 +20,13 @@ Sections:
     Content:         "3031323334353637383940"
     Address:         0xFFFFF8
     AddressAlign:    0x8
+# Sign-extended addresses are OK
+  - Name:            .data3
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC ]
+    Address:         0xFFFFFFFF80001000
+    AddressAlign:    0x8
+    Content:         "0001020304"
   - Name:            .text
 # This section's contents exceeds default line length of 16 bytes
 # so we expect two lines created for it. Records for this section

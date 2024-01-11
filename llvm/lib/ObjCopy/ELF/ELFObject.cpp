@@ -2840,7 +2840,8 @@ void SRECSectionWriter::writeRecord(SRecord &Record, uint64_t Off) {
   memcpy(Out.getBufferStart() + Off, Data.data(), Data.size());
 }
 
-void SRECSectionWriter::writeRecords() {
+void SRECSectionWriter::writeRecords(uint32_t Entry) {
+  Type = std::max(Type, SRecord::getType(Entry));
   uint64_t Off = HeaderSize;
   for (SRecord &Record : Records) {
     Record.Type = Type;
@@ -2850,7 +2851,10 @@ void SRECSectionWriter::writeRecords() {
   Offset = Off;
 }
 
-void SRECSectionWriterBase::writeRecords() {
+void SRECSectionWriterBase::writeRecords(uint32_t Entry) {
+  // The ELF header could contain an entry point outside of the sections we have
+  // seen that does not fit the current record Type
+  Type = std::max(Type, SRecord::getType(Entry));
   uint64_t Off = HeaderSize;
   for (SRecord &Record : Records) {
     Record.Type = Type;
@@ -2864,12 +2868,7 @@ void SRECSectionWriterBase::writeSection(const SectionBase &S,
   const uint32_t ChunkSize = 16;
   uint32_t Address = sectionPhysicalAddr(&S);
   uint32_t EndAddr = Address + S.Size - 1;
-  if (isUInt<16>(EndAddr))
-    Type = std::max(static_cast<uint8_t>(SRecord::S1), Type);
-  else if (isUInt<24>(EndAddr))
-    Type = std::max(static_cast<uint8_t>(SRecord::S2), Type);
-  else
-    Type = SRecord::S3;
+  Type = std::max(SRecord::getType(EndAddr), Type);
   while (!Data.empty()) {
     uint64_t DataSize = std::min<uint64_t>(Data.size(), ChunkSize);
     SRecord Record{Type, Address, Data.take_front(DataSize)};
@@ -2944,6 +2943,14 @@ uint8_t SRecord::getCount() const {
   return getAddressSize() / 2 + DataSize + ChecksumSize;
 }
 
+uint8_t SRecord::getType(uint32_t Address) {
+  if (isUInt<16>(Address))
+    return SRecord::S1;
+  if (isUInt<24>(Address))
+    return SRecord::S2;
+  return SRecord::S3;
+}
+
 SRecord SRecord::getHeader(StringRef FileName) {
   // Header is a record with Type S0, Address 0, and Data that is a
   // vendor-specific text comment. For the comment we will use the output file
@@ -2977,7 +2984,7 @@ Error SRECWriter::write() {
     if (Error E = S->accept(Writer))
       return E;
   }
-  Writer.writeRecords();
+  Writer.writeRecords(Obj.Entry);
   uint64_t Offset = Writer.getBufferOffset();
   // S1 terminates with S9, S2 with S8, S3 with S7
   uint8_t TerminatorType = 10 - Writer.getType();
@@ -2990,7 +2997,7 @@ Error SRECWriter::write() {
 }
 
 Error SRECWriter::checkSection(const SectionBase &S) const {
-  if (!isUInt<32>(S.Addr + S.Size - 1))
+  if (addressOverflows32bit(S.Addr + S.Size - 1))
     return createStringError(
         errc::invalid_argument,
         "Section '%s' address range [0x%llx, 0x%llx] is not 32 bit",
@@ -3000,7 +3007,7 @@ Error SRECWriter::checkSection(const SectionBase &S) const {
 
 Error SRECWriter::finalize() {
   // We can't write 64-bit addresses.
-  if (!isUInt<32>(Obj.Entry))
+  if (addressOverflows32bit(Obj.Entry))
     return createStringError(errc::invalid_argument,
                              "Entry point address 0x%llx overflows 32 bits",
                              Obj.Entry);
@@ -3028,7 +3035,7 @@ Error SRECWriter::finalize() {
     if (Error Err = Sec->accept(LengthCalc))
       return Err;
 
-  LengthCalc.writeRecords();
+  LengthCalc.writeRecords(Obj.Entry);
   // We need to add the size of the Header and Terminator records
   SRecord Header = SRecord::getHeader(OutputFileName);
   uint8_t TerminatorType = 10 - LengthCalc.getType();

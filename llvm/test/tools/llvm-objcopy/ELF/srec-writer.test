@@ -13,9 +13,21 @@
 # RUN: llvm-objcopy -O srec --only-section=.text %t.err - \
 #   RUN:| FileCheck %s --check-prefix=ZERO_SIZE_SEC
 
+## Terminator should contain the entry point
+# RUN: llvm-objcopy -O srec --set-start=0xF0000000 %t \
+#   RUN: --only-section=.dummy - 2>&1 | FileCheck %s --check-prefix=ENTRY
+
+## Sign-extended entry point is OK
+# RUN: llvm-objcopy -O srec --set-start=0xFFFFFFFFF0000000 %t \
+#   RUN: --only-section=.dummy - 2>&1 | FileCheck %s --check-prefix=ENTRY
+
 ## Start address which exceeds 32 bit range triggers an error
 # RUN: not llvm-objcopy -O srec --set-start=0xF00000000 %t - 2>&1 \
 #   RUN: | FileCheck %s --check-prefix=BAD_START
+
+## Sign-extended start address which exceeds 32 bit range triggers an error
+# RUN: not llvm-objcopy -O srec --set-start=0xFFFFFFFF0F000000 %t - 2>&1 \
+#   RUN: | FileCheck %s --check-prefix=BAD_EXTENDED_START
 
 ## Records should use segment physical addresses
 # RUN: yaml2obj %p/Inputs/ihex-elf-segments.yaml -o %t.seg
@@ -30,6 +42,7 @@
 # CHECK-NEXT: S30A0000101010111213147B
 # CHECK-NEXT: S30F00EFFFFF1111111111111111111159
 # CHECK-NEXT: S31000FFFFF83031323334353637383940AC
+# CHECK-NEXT: S30A8000100000010203045B
 # CHECK-NEXT: S70500000000FA
 
 # PADDR: S00400002DCE
@@ -49,4 +62,9 @@
 # ZERO_SIZE_SEC: S00400002DCE
 # ZERO_SIZE_SEC-NEXT: S9030000FC
 
+# ENTRY: S00400002DCE
+# ENTRY-NEXT: S705F00000000A
+
 # BAD_START: Entry point address 0xf00000000 overflows 32 bits
+
+# BAD_EXTENDED_START: Entry point address 0xffffffff0f000000 overflows 32 bits
