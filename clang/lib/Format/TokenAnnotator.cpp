@@ -3923,7 +3923,9 @@ void TokenAnnotator::calculateFormattingInformation(AnnotatedLine &Line) const {
     const FormatToken *Prev = Current->Previous;
     if (Current->is(TT_LineComment)) {
       if (Prev->is(BK_BracedInit) && Prev->opensScope()) {
-        Current->SpacesRequiredBefore = (Style.Cpp11BracedListStyle && Style.SpacesInParensOptions.Other ==            FormatStyle::SIPCS_Never)
+        Current->SpacesRequiredBefore =
+            (Style.Cpp11BracedListStyle &&
+             Style.SpacesInParensOptions.Other == FormatStyle::SIPCS_Never)
                 ? 0
                 : 1;
       } else if (Prev->is(TT_VerilogMultiLineListLParen)) {
@@ -4345,8 +4347,9 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
        Right.is(tok::r_brace) && Right.isNot(BK_Block))) {
     return Style.SpacesInParensOptions.InEmptyParentheses;
   }
-  if (Style.SpacesInParensOptions.InConditionalStatements != FormatStyle::SIPCS_Never) {
-  // TODO: check consecutive parens
+  if (Style.SpacesInParensOptions.InConditionalStatements !=
+      FormatStyle::SIPCS_Never) {
+    // TODO: check consecutive parens
     const FormatToken *LeftParen = nullptr;
     if (Left.is(tok::l_paren))
       LeftParen = &Left;
@@ -4632,8 +4635,8 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
   if ((Left.is(tok::l_brace) && Left.isNot(BK_Block)) ||
       (Right.is(tok::r_brace) && Right.MatchingParen &&
        Right.MatchingParen->isNot(BK_Block))) {
-    return !Style.Cpp11BracedListStyle || (Style.SpacesInParensOptions.Other !=
-                                           FormatStyle::SIPCS_Never);
+    return !Style.Cpp11BracedListStyle ||
+           (Style.SpacesInParensOptions.Other != FormatStyle::SIPCS_Never);
   }
   if (Left.is(TT_BlockComment)) {
     // No whitespace in x(/*foo=*/1), except for JavaScript.
@@ -5350,8 +5353,8 @@ bool TokenAnnotator::spaceRequiredBefore(const AnnotatedLine &Line,
            !(Left.isOneOf(tok::l_paren, tok::r_paren, tok::l_square,
                           tok::kw___super, TT_TemplateOpener,
                           TT_TemplateCloser)) ||
-           (Left.is(tok::l_paren) && Style.SpacesInParensOptions.Other !=
-                                     FormatStyle::SIPCS_Always);
+           (Left.is(tok::l_paren) &&
+            Style.SpacesInParensOptions.Other != FormatStyle::SIPCS_Always);
   }
   if ((Left.is(TT_TemplateOpener)) != (Right.is(TT_TemplateCloser)))
     return ShouldAddSpacesInAngles();
