@@ -2988,7 +2988,10 @@ static Address EmitX86_64VAArgFromMemory(CodeGenFunction &CGF,
   // AMD64-ABI 3.5.7p5: Step 10. Align l->overflow_arg_area upwards to
   // an 8 byte boundary.
 
-  uint64_t SizeInBytes = (CGF.getContext().getTypeSize(Ty) + 7) / 8;
+  uint64_t SizeInBytes = 0;
+  if (!isEmptyRecord(CGF.getContext(), Ty, true, true))
+    SizeInBytes = (CGF.getContext().getTypeSize(Ty) + 7) / 8;
+
   llvm::Value *Offset =
       llvm::ConstantInt::get(CGF.Int32Ty, (SizeInBytes + 7)  & ~7);
   overflow_arg_area = CGF.Builder.CreateGEP(CGF.Int8Ty, overflow_arg_area,
