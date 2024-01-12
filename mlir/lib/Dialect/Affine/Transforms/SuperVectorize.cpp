@@ -721,8 +721,7 @@ struct VectorizationState {
   /// Example:
   ///   * 'replaced': induction variable of a loop to be vectorized.
   ///   * 'replacement': new induction variable in the new vector loop.
-  void registerValueScalarReplacement(BlockArgument replaced,
-                                      BlockArgument replacement);
+  void registerValueScalarReplacement(Value replaced, Value replacement);
 
   /// Registers the scalar replacement of a scalar result returned from a
   /// reduction loop. 'replacement' must be scalar.
@@ -854,8 +853,8 @@ void VectorizationState::registerValueVectorReplacementImpl(Value replaced,
 /// Example:
 ///   * 'replaced': induction variable of a loop to be vectorized.
 ///   * 'replacement': new induction variable in the new vector loop.
-void VectorizationState::registerValueScalarReplacement(
-    BlockArgument replaced, BlockArgument replacement) {
+void VectorizationState::registerValueScalarReplacement(Value replaced,
+                                                        Value replacement) {
   registerValueScalarReplacementImpl(replaced, replacement);
 }
 
@@ -976,6 +975,28 @@ static arith::ConstantOp vectorizeConstant(arith::ConstantOp constOp,
   // Register vector replacement for future uses in the scope.
   state.registerOpVectorReplacement(constOp, newConstOp);
   return newConstOp;
+}
+
+/// We have no need to vectorize affine.apply. However, we still need to
+/// generate it and replace the operands with values in valueScalarReplacement.
+static Operation *vectorizeAffineApplyOp(AffineApplyOp applyOp,
+                                         VectorizationState &state) {
+  SmallVector<Value, 8> updatedOperands;
+  for (Value operand : applyOp.getOperands()) {
+    Value updatedOperand = operand;
+    if (state.valueScalarReplacement.contains(operand)) {
+      updatedOperand = state.valueScalarReplacement.lookupOrDefault(operand);
+    }
+    updatedOperands.push_back(updatedOperand);
+  }
+
+  auto newApplyOp = state.builder.create<AffineApplyOp>(
+      applyOp.getLoc(), applyOp.getAffineMap(), updatedOperands);
+
+  // Register the new affine.apply result.
+  state.registerValueScalarReplacement(applyOp.getResult(),
+                                       newApplyOp.getResult());
+  return newApplyOp;
 }
 
 /// Creates a constant vector filled with the neutral elements of the given
@@ -1493,6 +1514,8 @@ static Operation *vectorizeOneOperation(Operation *op,
     return vectorizeAffineYieldOp(yieldOp, state);
   if (auto constant = dyn_cast<arith::ConstantOp>(op))
     return vectorizeConstant(constant, state);
+  if (auto applyOp = dyn_cast<AffineApplyOp>(op))
+    return vectorizeAffineApplyOp(applyOp, state);
 
   // Other ops with regions are not supported.
   if (op->getNumRegions() != 0)
