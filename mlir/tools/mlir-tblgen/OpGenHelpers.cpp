@@ -81,8 +81,16 @@ bool mlir::tblgen::isPythonReserved(StringRef str) {
   return reserved.contains(str);
 }
 
-std::string
-mlir::tblgen::getAttributeNameSpace(llvm::SmallVector<StringRef> namespaces) {
+std::string mlir::tblgen::getEnumAttributeNameSpace(const EnumAttr &enumAttr) {
+  llvm::SmallVector<StringRef> namespaces;
+  if (enumAttr.getCppNamespace().empty() &&
+      enumAttr.getBaseAttr().isEnumAttr()) {
+    EnumAttr(enumAttr.getBaseAttr().getDef())
+        .getCppNamespace()
+        .ltrim("::")
+        .split(namespaces, "::");
+  } else
+    enumAttr.getCppNamespace().ltrim("::").split(namespaces, "::");
   std::string namespace_;
   if (namespaces[0] == "mlir")
     namespace_ = llvm::join(llvm::drop_begin(namespaces), "_");
