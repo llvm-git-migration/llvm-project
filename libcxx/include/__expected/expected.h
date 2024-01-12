@@ -406,7 +406,7 @@ public:
   = default;
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected(const expected& __other) noexcept(
-      is_nothrow_copy_constructible_v<_Tp>&& is_nothrow_copy_constructible_v<_Err>) // strengthened
+      is_nothrow_copy_constructible_v<_Tp> && is_nothrow_copy_constructible_v<_Err>) // strengthened
     requires(is_copy_constructible_v<_Tp> && is_copy_constructible_v<_Err> &&
              !(is_trivially_copy_constructible_v<_Tp> && is_trivially_copy_constructible_v<_Err>))
       : __base(__other.__has_val(), __other.__union()) {}
@@ -417,7 +417,7 @@ public:
   = default;
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected(expected&& __other) noexcept(
-      is_nothrow_move_constructible_v<_Tp>&& is_nothrow_move_constructible_v<_Err>)
+      is_nothrow_move_constructible_v<_Tp> && is_nothrow_move_constructible_v<_Err>)
     requires(is_move_constructible_v<_Tp> && is_move_constructible_v<_Err> &&
              !(is_trivially_move_constructible_v<_Tp> && is_trivially_move_constructible_v<_Err>))
       : __base(__other.__has_val(), std::move(__other.__union())) {}
@@ -458,15 +458,15 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr explicit(!is_convertible_v<const _Up&, _Tp> ||
                                            !is_convertible_v<const _OtherErr&, _Err>)
       expected(const expected<_Up, _OtherErr>& __other) noexcept(
-          is_nothrow_constructible_v<_Tp, const _Up&>&&
-              is_nothrow_constructible_v<_Err, const _OtherErr&>) // strengthened
+          is_nothrow_constructible_v<_Tp, const _Up&> &&
+          is_nothrow_constructible_v<_Err, const _OtherErr&>) // strengthened
       : __base(__other.__has_val(), __other.__union()) {}
 
   template <class _Up, class _OtherErr>
     requires __can_convert<_Up, _OtherErr, _Up, _OtherErr>::value
   _LIBCPP_HIDE_FROM_ABI constexpr explicit(!is_convertible_v<_Up, _Tp> || !is_convertible_v<_OtherErr, _Err>)
       expected(expected<_Up, _OtherErr>&& __other) noexcept(
-          is_nothrow_constructible_v<_Tp, _Up>&& is_nothrow_constructible_v<_Err, _OtherErr>) // strengthened
+          is_nothrow_constructible_v<_Tp, _Up> && is_nothrow_constructible_v<_Err, _OtherErr>) // strengthened
       : __base(__other.__has_val(), std::move(__other.__union())) {}
 
   template <class _Up = _Tp>
@@ -545,8 +545,8 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr expected& operator=(const expected&) = delete;
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected& operator=(const expected& __rhs) noexcept(
-      is_nothrow_copy_assignable_v<_Tp>&& is_nothrow_copy_constructible_v<_Tp>&& is_nothrow_copy_assignable_v<_Err>&&
-          is_nothrow_copy_constructible_v<_Err>) // strengthened
+      is_nothrow_copy_assignable_v<_Tp> && is_nothrow_copy_constructible_v<_Tp> && is_nothrow_copy_assignable_v<_Err> &&
+      is_nothrow_copy_constructible_v<_Err>) // strengthened
     requires(is_copy_assignable_v<_Tp> && is_copy_constructible_v<_Tp> && is_copy_assignable_v<_Err> &&
              is_copy_constructible_v<_Err> &&
              (is_nothrow_move_constructible_v<_Tp> || is_nothrow_move_constructible_v<_Err>))
@@ -564,8 +564,8 @@ public:
   }
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected&
-  operator=(expected&& __rhs) noexcept(is_nothrow_move_assignable_v<_Tp>&& is_nothrow_move_constructible_v<_Tp>&&
-                                           is_nothrow_move_assignable_v<_Err>&& is_nothrow_move_constructible_v<_Err>)
+  operator=(expected&& __rhs) noexcept(is_nothrow_move_assignable_v<_Tp> && is_nothrow_move_constructible_v<_Tp> &&
+                                       is_nothrow_move_assignable_v<_Err> && is_nothrow_move_constructible_v<_Err>)
     requires(is_move_constructible_v<_Tp> && is_move_assignable_v<_Tp> && is_move_constructible_v<_Err> &&
              is_move_assignable_v<_Err> &&
              (is_nothrow_move_constructible_v<_Tp> || is_nothrow_move_constructible_v<_Err>))
@@ -649,8 +649,8 @@ public:
 public:
   // [expected.object.swap], swap
   _LIBCPP_HIDE_FROM_ABI constexpr void
-  swap(expected& __rhs) noexcept(is_nothrow_move_constructible_v<_Tp>&& is_nothrow_swappable_v<_Tp>&&
-                                     is_nothrow_move_constructible_v<_Err>&& is_nothrow_swappable_v<_Err>)
+  swap(expected& __rhs) noexcept(is_nothrow_move_constructible_v<_Tp> && is_nothrow_swappable_v<_Tp> &&
+                                 is_nothrow_move_constructible_v<_Err> && is_nothrow_swappable_v<_Err>)
     requires(is_swappable_v<_Tp> && is_swappable_v<_Err> && is_move_constructible_v<_Tp> &&
              is_move_constructible_v<_Err> &&
              (is_nothrow_move_constructible_v<_Tp> || is_nothrow_move_constructible_v<_Err>))
@@ -1391,7 +1391,7 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr expected& operator=(const expected&) = delete;
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected& operator=(const expected& __rhs) noexcept(
-      is_nothrow_copy_assignable_v<_Err>&& is_nothrow_copy_constructible_v<_Err>) // strengthened
+      is_nothrow_copy_assignable_v<_Err> && is_nothrow_copy_constructible_v<_Err>) // strengthened
     requires(is_copy_assignable_v<_Err> && is_copy_constructible_v<_Err>)
   {
     if (this->__has_val()) {
@@ -1411,7 +1411,7 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr expected& operator=(expected&&) = delete;
 
   _LIBCPP_HIDE_FROM_ABI constexpr expected&
-  operator=(expected&& __rhs) noexcept(is_nothrow_move_assignable_v<_Err>&& is_nothrow_move_constructible_v<_Err>)
+  operator=(expected&& __rhs) noexcept(is_nothrow_move_assignable_v<_Err> && is_nothrow_move_constructible_v<_Err>)
     requires(is_move_assignable_v<_Err> && is_move_constructible_v<_Err>)
   {
     if (this->__has_val()) {
@@ -1458,7 +1458,7 @@ public:
 
   // [expected.void.swap], swap
   _LIBCPP_HIDE_FROM_ABI constexpr void
-  swap(expected& __rhs) noexcept(is_nothrow_move_constructible_v<_Err>&& is_nothrow_swappable_v<_Err>)
+  swap(expected& __rhs) noexcept(is_nothrow_move_constructible_v<_Err> && is_nothrow_swappable_v<_Err>)
     requires(is_swappable_v<_Err> && is_move_constructible_v<_Err>)
   {
     auto __swap_val_unex_impl = [](expected& __with_val, expected& __with_err) {
