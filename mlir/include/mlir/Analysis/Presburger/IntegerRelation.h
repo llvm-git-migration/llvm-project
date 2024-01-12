@@ -122,6 +122,10 @@ public:
   /// current space; this will result in an assert failure.
   void setSpaceExceptLocals(const PresburgerSpace &oSpace);
 
+  /// Set the ith identifier of the IntegerRelation's PresburgerSpace. The index
+  /// is relative to the kind of the variable.
+  void setId(VarKind kind, unsigned i, Identifier id);
+
   /// Returns a copy of the space without locals.
   PresburgerSpace getSpaceWithoutLocals() const {
     return PresburgerSpace::getRelationSpace(space.getNumDomainVars(),
