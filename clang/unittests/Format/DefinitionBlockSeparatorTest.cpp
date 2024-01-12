@@ -17,80 +17,97 @@
 namespace clang {
 namespace format {
 namespace {
+std::string
+separateDefinitionBlocks(llvm::StringRef Code,
+                         const std::vector<tooling::Range> &Ranges,
+                         const FormatStyle &Style = getLLVMStyle()) {
+  LLVM_DEBUG(llvm::errs() << "---\n");
+  LLVM_DEBUG(llvm::errs() << Code << "\n\n");
+  tooling::Replacements Replaces = reformat(Style, Code, Ranges, "<stdin>");
+  auto Result = applyAllReplacements(Code, Replaces);
+  EXPECT_TRUE(static_cast<bool>(Result));
+  LLVM_DEBUG(llvm::errs() << "\n" << *Result << "\n\n");
+  return *Result;
+}
 
-class DefinitionBlockSeparatorTest : public ::testing::Test {
-protected:
-  static std::string
-  separateDefinitionBlocks(llvm::StringRef Code,
-                           const std::vector<tooling::Range> &Ranges,
-                           const FormatStyle &Style = getLLVMStyle()) {
-    LLVM_DEBUG(llvm::errs() << "---\n");
-    LLVM_DEBUG(llvm::errs() << Code << "\n\n");
-    tooling::Replacements Replaces = reformat(Style, Code, Ranges, "<stdin>");
-    auto Result = applyAllReplacements(Code, Replaces);
-    EXPECT_TRUE(static_cast<bool>(Result));
-    LLVM_DEBUG(llvm::errs() << "\n" << *Result << "\n\n");
-    return *Result;
-  }
+std::string
+separateDefinitionBlocks(llvm::StringRef Code,
+                         const FormatStyle &Style = getLLVMStyle()) {
+  return separateDefinitionBlocks(
+      Code,
+      /*Ranges=*/{1, tooling::Range(0, Code.size())}, Style);
+}
 
-  static std::string
-  separateDefinitionBlocks(llvm::StringRef Code,
-                           const FormatStyle &Style = getLLVMStyle()) {
-    return separateDefinitionBlocks(
-        Code,
-        /*Ranges=*/{1, tooling::Range(0, Code.size())}, Style);
-  }
-
-  static void _verifyFormat(const char *File, int Line, llvm::StringRef Code,
-                            const FormatStyle &Style = getLLVMStyle(),
-                            llvm::StringRef ExpectedCode = "",
-                            bool Inverse = true) {
-    ::testing::ScopedTrace t(File, Line, ::testing::Message() << Code.str());
-    bool HasOriginalCode = true;
-    if (ExpectedCode == "") {
-      ExpectedCode = Code;
-      HasOriginalCode = false;
-    }
-
-    EXPECT_EQ(ExpectedCode, separateDefinitionBlocks(ExpectedCode, Style))
-        << "Expected code is not stable";
-    if (Inverse) {
-      FormatStyle InverseStyle = Style;
-      if (Style.SeparateDefinitionBlocks == FormatStyle::SDS_Always)
-        InverseStyle.SeparateDefinitionBlocks = FormatStyle::SDS_Never;
-      else
-        InverseStyle.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
-      EXPECT_NE(ExpectedCode,
-                separateDefinitionBlocks(ExpectedCode, InverseStyle))
-          << "Inverse formatting makes no difference";
-    }
-    std::string CodeToFormat =
-        HasOriginalCode ? Code.str() : removeEmptyLines(Code);
-    std::string Result = separateDefinitionBlocks(CodeToFormat, Style);
-    EXPECT_EQ(ExpectedCode, Result) << "Test failed. Formatted:\n" << Result;
-  }
-
-  static std::string removeEmptyLines(llvm::StringRef Code) {
-    std::string Result = "";
-    for (auto Char : Code.str()) {
-      if (Result.size()) {
-        auto LastChar = Result.back();
-        if ((Char == '\n' && LastChar == '\n') ||
-            (Char == '\r' && (LastChar == '\r' || LastChar == '\n'))) {
-          continue;
-        }
+std::string removeEmptyLines(llvm::StringRef Code) {
+  std::string Result = "";
+  for (auto Char : Code.str()) {
+    if (Result.size()) {
+      auto LastChar = Result.back();
+      if ((Char == '\n' && LastChar == '\n') ||
+          (Char == '\r' && (LastChar == '\r' || LastChar == '\n'))) {
+        continue;
       }
-      Result.push_back(Char);
     }
-    return Result;
+    Result.push_back(Char);
   }
-};
+  return Result;
+}
+void _verifyFormat(const char *File, int Line, llvm::StringRef Code,
+                   const FormatStyle &Style = getLLVMStyle(),
+                   llvm::StringRef ExpectedCode = "", bool Inverse = true) {
+  ::testing::ScopedTrace t(File, Line, ::testing::Message() << Code.str());
+  bool HasOriginalCode = true;
+  if (ExpectedCode == "") {
+    ExpectedCode = Code;
+    HasOriginalCode = false;
+  }
+
+  EXPECT_EQ(ExpectedCode, separateDefinitionBlocks(ExpectedCode, Style))
+      << "Expected code is not stable";
+
+  auto checkInverseStyle = [&](FormatStyle::SeparateDefinitionStyle newStyle) {
+    FormatStyle InverseStyle = Style;
+    InverseStyle.SeparateDefinitionBlocks = newStyle;
+    if (newStyle == FormatStyle::SDS_Two)
+      InverseStyle.MaxEmptyLinesToKeep = 2;
+    EXPECT_NE(ExpectedCode,
+              separateDefinitionBlocks(ExpectedCode, InverseStyle))
+        << "Changing formatting makes no difference";
+  };
+  if (Inverse) {
+    switch (Style.SeparateDefinitionBlocks) {
+    case FormatStyle::SDS_Never:
+      checkInverseStyle(FormatStyle::SDS_One);
+      checkInverseStyle(FormatStyle::SDS_Two);
+      break;
+    case FormatStyle::SDS_One:
+      checkInverseStyle(FormatStyle::SDS_Never);
+      checkInverseStyle(FormatStyle::SDS_Two);
+      break;
+    case FormatStyle::SDS_Two:
+      checkInverseStyle(FormatStyle::SDS_Never);
+      checkInverseStyle(FormatStyle::SDS_One);
+      break;
+    case FormatStyle::SDS_Leave:
+      break;
+    }
+  }
+  std::string CodeToFormat =
+      HasOriginalCode ? Code.str() : removeEmptyLines(Code);
+  std::string Result = separateDefinitionBlocks(CodeToFormat, Style);
+  EXPECT_EQ(ExpectedCode, Result) << "Test failed. Formatted:\n" << Result;
+}
+class DefinitionBlockSeparatorTest : public ::testing::Test {};
+
+class LicenseTest : public ::testing::TestWithParam<std::string> {};
+class IncludesTest : public ::testing::TestWithParam<std::string> {};
+class NoNewLineAtEofTest : public ::testing::TestWithParam<std::string> {};
 
 #define verifyFormat(...) _verifyFormat(__FILE__, __LINE__, __VA_ARGS__)
 
 TEST_F(DefinitionBlockSeparatorTest, Basic) {
   FormatStyle Style = getLLVMStyle();
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   verifyFormat("int foo(int i, int j) {\n"
                "  int r = i + j;\n"
                "  return r;\n"
@@ -164,7 +181,7 @@ TEST_F(DefinitionBlockSeparatorTest, Basic) {
 
 TEST_F(DefinitionBlockSeparatorTest, FormatConflict) {
   FormatStyle Style = getLLVMStyle();
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   llvm::StringRef Code = "class Test {\n"
                          "public:\n"
                          "  static void foo() {\n"
@@ -178,7 +195,7 @@ TEST_F(DefinitionBlockSeparatorTest, FormatConflict) {
 
 TEST_F(DefinitionBlockSeparatorTest, CommentBlock) {
   FormatStyle Style = getLLVMStyle();
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   std::string Prefix = "enum Foo { FOO, BAR };\n"
                        "\n"
                        "/*\n"
@@ -248,18 +265,18 @@ TEST_F(DefinitionBlockSeparatorTest, UntouchBlockStartStyle) {
   };
 
   FormatStyle AlwaysStyle = getLLVMStyle();
-  AlwaysStyle.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  AlwaysStyle.SeparateDefinitionBlocks = FormatStyle::SDS_One;
 
   FormatStyle NeverStyle = getLLVMStyle();
   NeverStyle.SeparateDefinitionBlocks = FormatStyle::SDS_Never;
 
-  auto TestKit = MakeUntouchTest("/* FOOBAR */\n"
+  auto TestKit = MakeUntouchTest("/* FOOBAR */\n\n"
                                  "#ifdef FOO\n\n",
                                  "\n#elifndef BAR\n\n", "\n#endif\n\n", false);
   verifyFormat(TestKit.first, AlwaysStyle, TestKit.second);
   verifyFormat(TestKit.second, NeverStyle, removeEmptyLines(TestKit.second));
 
-  TestKit = MakeUntouchTest("/* FOOBAR */\n"
+  TestKit = MakeUntouchTest("/* FOOBAR */\n\n"
                             "#ifdef FOO\n",
                             "#elifndef BAR\n", "#endif\n", false);
   verifyFormat(TestKit.first, AlwaysStyle, TestKit.second);
@@ -282,7 +299,7 @@ TEST_F(DefinitionBlockSeparatorTest, UntouchBlockStartStyle) {
 
 TEST_F(DefinitionBlockSeparatorTest, Always) {
   FormatStyle Style = getLLVMStyle();
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
 
   verifyFormat("// clang-format off\n"
                "template<class T>\n"
@@ -400,7 +417,7 @@ TEST_F(DefinitionBlockSeparatorTest, Never) {
 TEST_F(DefinitionBlockSeparatorTest, OpeningBracketOwnsLine) {
   FormatStyle Style = getLLVMStyle();
   Style.BreakBeforeBraces = FormatStyle::BS_Allman;
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   verifyFormat("namespace NS\n"
                "{\n"
                "// Enum test1\n"
@@ -464,7 +481,7 @@ TEST_F(DefinitionBlockSeparatorTest, OpeningBracketOwnsLine) {
 TEST_F(DefinitionBlockSeparatorTest, TryBlocks) {
   FormatStyle Style = getLLVMStyle();
   Style.BreakBeforeBraces = FormatStyle::BS_Allman;
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   verifyFormat("void FunctionWithInternalTry()\n"
                "{\n"
                "  try\n"
@@ -540,7 +557,7 @@ TEST_F(DefinitionBlockSeparatorTest, Leave) {
 
 TEST_F(DefinitionBlockSeparatorTest, CSharp) {
   FormatStyle Style = getLLVMStyle(FormatStyle::LK_CSharp);
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   Style.AllowShortFunctionsOnASingleLine = FormatStyle::SFS_None;
   Style.AllowShortEnumsOnASingleLine = false;
   verifyFormat("namespace {\r\n"
@@ -581,7 +598,7 @@ TEST_F(DefinitionBlockSeparatorTest, CSharp) {
 
 TEST_F(DefinitionBlockSeparatorTest, JavaScript) {
   FormatStyle Style = getLLVMStyle(FormatStyle::LK_JavaScript);
-  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Always;
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
   Style.AllowShortFunctionsOnASingleLine = FormatStyle::SFS_None;
   Style.AllowShortEnumsOnASingleLine = false;
   verifyFormat("export const enum Foo {\n"
@@ -609,6 +626,113 @@ TEST_F(DefinitionBlockSeparatorTest, JavaScript) {
                "  E\n"
                "}",
                Style);
+}
+
+TEST_P(LicenseTest, SeparateLicenseFromBlock) {
+  constexpr StringRef LicenseSingleLineCommentStyle = {"// start license\n"
+                                                       "// license text\n"
+                                                       "// more license text\n"
+                                                       "// end license\n"};
+  constexpr StringRef LicenseMultipleLineCommentStyle{"/*\n"
+                                                      "start license\n"
+                                                      "license text\n"
+                                                      "more license text\n"
+                                                      "end license */\n"};
+
+  const auto Block = GetParam();
+  FormatStyle Style = getLLVMStyle();
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
+  Style.MaxEmptyLinesToKeep = 2;
+  verifyFormat(LicenseSingleLineCommentStyle.str() + "\n" + Block, Style);
+  verifyFormat(LicenseMultipleLineCommentStyle.str() + "\n" + Block, Style);
+
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Two;
+  verifyFormat(LicenseSingleLineCommentStyle.str() + "\n\n" + Block, Style);
+  verifyFormat(LicenseMultipleLineCommentStyle.str() + "\n\n" + Block, Style);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DefinitionSeparator, LicenseTest,
+    ::testing::Values(std::string{"class Test {};"},
+                      std::string{"class Test {\n"
+                                  "public:\n"
+                                  "  void test() const {}\n"
+                                  "};\n"},
+                      std::string{"namespace tests {};"},
+                      std::string{"static int variable = 10;"},
+                      std::string{"#ifnef __TEST__\n"
+                                  "#define __TEST__\n"
+                                  "#endif"}));
+
+TEST_P(IncludesTest, SeparateIncludeFromBlock) {
+  constexpr StringRef Includes = {"#include <string>\n"
+                                  "#include <cstdio>\n"};
+
+  const auto Block = GetParam();
+  FormatStyle Style = getLLVMStyle();
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
+  Style.MaxEmptyLinesToKeep = 2;
+  verifyFormat(Includes.str() + "\n" + Block, Style);
+
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Two;
+  verifyFormat(Includes.str() + "\n\n" + Block, Style);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DefinitionSeparator, IncludesTest,
+    ::testing::Values(std::string{"class Test {};"},
+                      std::string{"class Test {\n"
+                                  "public:\n"
+                                  "  void test() const {}\n"
+                                  "};\n"},
+                      std::string{"namespace tests {};"},
+                      std::string{"static int variable = 10;"},
+                      std::string{"#ifnef __TEST__\n"
+                                  "#define __TEST__\n"
+                                  "#endif"}));
+
+TEST_P(NoNewLineAtEofTest, NoNewLineAfterBlock) {
+  FormatStyle Style = getLLVMStyle();
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
+  Style.MaxEmptyLinesToKeep = 2;
+  const auto Code = GetParam();
+  verifyFormat(Code, Style, Code,
+               /* Inverse = */ false);
+
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Two;
+  verifyFormat(Code, Style, Code,
+               /* Inverse = */ false);
+}
+
+INSTANTIATE_TEST_SUITE_P(DefinitionSeparator, NoNewLineAtEofTest,
+                         ::testing::Values(std::string{"// start license\n"
+                                                       "// license text\n"
+                                                       "// more license text\n"
+                                                       "// end license\n"},
+                                           std::string{"// start license"},
+                                           std::string{"#include <string>"},
+                                           std::string{"#include <string>\n"
+                                                       "#include <cstdio>"}));
+
+TEST_F(DefinitionBlockSeparatorTest,
+       NoNewLinesWhenThereIsNoCodeAfterLicenseText) {
+  FormatStyle Style = getLLVMStyle();
+  constexpr StringRef Code = {"// start license\n"
+                              "// license text\n"
+                              "// end license"};
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_One;
+  verifyFormat(Code, Style,
+               "// start license\n"
+               "// license text\n"
+               "// end license",
+               /* Inverse = */ false);
+
+  Style.SeparateDefinitionBlocks = FormatStyle::SDS_Two;
+  verifyFormat(Code, Style,
+               "// start license\n"
+               "// license text\n"
+               "// end license",
+               /* Inverse = */ false);
 }
 } // namespace
 } // namespace format

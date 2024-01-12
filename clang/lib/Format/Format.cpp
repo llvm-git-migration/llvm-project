@@ -586,7 +586,8 @@ template <>
 struct ScalarEnumerationTraits<FormatStyle::SeparateDefinitionStyle> {
   static void enumeration(IO &IO, FormatStyle::SeparateDefinitionStyle &Value) {
     IO.enumCase(Value, "Leave", FormatStyle::SDS_Leave);
-    IO.enumCase(Value, "Always", FormatStyle::SDS_Always);
+    IO.enumCase(Value, "One", FormatStyle::SDS_One);
+    IO.enumCase(Value, "Two", FormatStyle::SDS_Two);
     IO.enumCase(Value, "Never", FormatStyle::SDS_Never);
   }
 };

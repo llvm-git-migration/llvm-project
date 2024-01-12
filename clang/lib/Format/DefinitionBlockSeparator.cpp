@@ -17,6 +17,22 @@
 #include "llvm/Support/Debug.h"
 #define DEBUG_TYPE "definition-block-separator"
 
+namespace {
+unsigned getNewlineCount(
+    clang::format::FormatStyle::SeparateDefinitionStyle separateDefinitions) {
+  switch (separateDefinitions) {
+  case clang::format::FormatStyle::SDS_One:
+    return 2;
+  case clang::format::FormatStyle::SDS_Two:
+    return 3;
+  case clang::format::FormatStyle::SDS_Never:
+    return 1;
+  case clang::format::FormatStyle::SDS_Leave:
+    assert(false);
+  }
+  return 1;
+}
+} // namespace
 namespace clang {
 namespace format {
 std::pair<tooling::Replacements, unsigned> DefinitionBlockSeparator::analyze(
@@ -65,8 +81,7 @@ void DefinitionBlockSeparator::separateBlocks(
     }
     return false;
   };
-  unsigned NewlineCount =
-      (Style.SeparateDefinitionBlocks == FormatStyle::SDS_Always ? 1 : 0) + 1;
+  unsigned NewlineCount = getNewlineCount(Style.SeparateDefinitionBlocks);
   WhitespaceManager Whitespaces(
       Env.getSourceManager(), Style,
       Style.LineEnding > FormatStyle::LE_CRLF
@@ -74,9 +89,10 @@ void DefinitionBlockSeparator::separateBlocks(
                 Env.getSourceManager().getBufferData(Env.getFileID()),
                 Style.LineEnding == FormatStyle::LE_DeriveCRLF)
           : Style.LineEnding == FormatStyle::LE_CRLF);
+  std::optional<bool> inLicenseText{};
   for (unsigned I = 0; I < Lines.size(); ++I) {
     const auto &CurrentLine = Lines[I];
-    if (CurrentLine->InPPDirective)
+    if (CurrentLine->InMacroBody)
       continue;
     FormatToken *TargetToken = nullptr;
     AnnotatedLine *TargetLine;
@@ -93,7 +109,7 @@ void DefinitionBlockSeparator::separateBlocks(
       if (TargetToken->is(tok::eof))
         return;
       if (IsAccessSpecifierToken(TargetToken) ||
-          (OpeningLineIndex > 0 &&
+          (OpeningLineIndex > 0 && OpeningLineIndex < Lines.size() &&
            IsAccessSpecifierToken(Lines[OpeningLineIndex - 1]->First))) {
         return;
       }
@@ -171,6 +187,31 @@ void DefinitionBlockSeparator::separateBlocks(
       return false;
     };
 
+    // Separate License text.
+    const bool isComment = Lines[I]->isComment();
+    if (!inLicenseText.has_value()) {
+      inLicenseText = isComment;
+      if (isComment) {
+        while (I < Lines.size() && Lines[I]->isComment())
+          ++I;
+        if (I < Lines.size()) {
+          inLicenseText = false;
+          TargetLine = Lines[I];
+          TargetToken = TargetLine->First;
+          InsertReplacement(NewlineCount);
+          continue;
+        }
+      }
+    }
+
+    // Separate includes block.
+    if (I > 0 && Lines[I - 1]->isInclude() && !Lines[I]->isInclude()) {
+      TargetLine = Lines[I];
+      TargetToken = TargetLine->First;
+      InsertReplacement(NewlineCount);
+      continue;
+    }
+
     if (HasEnumOnLine() &&
         !LikelyDefinition(CurrentLine, /*ExcludeEnum=*/true)) {
       // We have no scope opening/closing information for enum.
@@ -214,8 +255,10 @@ void DefinitionBlockSeparator::separateBlocks(
         TargetToken = TargetLine->First;
         if (!FollowingOtherOpening()) {
           // Avoid duplicated replacement.
-          if (TargetToken->isNot(tok::l_brace))
+          if (TargetToken->isNot(tok::l_brace) && OpeningLineIndex > 0 &&
+              !Lines[OpeningLineIndex - 1]->isInclude()) {
             InsertReplacement(NewlineCount);
+          }
         } else if (IsNeverStyle) {
           InsertReplacement(OpeningLineIndex != 0);
         }
@@ -238,7 +281,8 @@ void DefinitionBlockSeparator::separateBlocks(
           ++OpeningLineIndex;
         }
         TargetLine = Lines[OpeningLineIndex];
-        if (!LikelyDefinition(TargetLine)) {
+        if (!LikelyDefinition(TargetLine) && OpeningLineIndex > 0 &&
+            !Lines[OpeningLineIndex - 1]->isInclude()) {
           OpeningLineIndex = I + 1;
           TargetLine = Lines[I + 1];
           TargetToken = TargetLine->First;
