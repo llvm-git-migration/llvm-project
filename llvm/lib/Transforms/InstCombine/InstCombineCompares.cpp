@@ -6855,6 +6855,45 @@ Instruction *InstCombinerImpl::visitICmpInst(ICmpInst &I) {
   if (Value *V = simplifyICmpInst(I.getPredicate(), Op0, Op1, Q))
     return replaceInstUsesWith(I, V);
 
+  {
+    Value *X;
+    const APInt *C1, *C2;
+    ICmpInst::Predicate Pred;
+    if ((match(&I, m_ICmp(Pred, m_SRem(m_Value(X), m_NonNegative(C1)),
+                          m_APInt(C2))) &&
+         ((Pred == ICmpInst::ICMP_SLT && *C2 == *C1 - 1) ||
+          (Pred == ICmpInst::ICMP_SGT && *C2 == *C1 - 2))) ||
+        (match(&I,
+               m_ICmp(Pred, m_SRem(m_Value(X), m_Negative(C1)), m_APInt(C2))) &&
+         ((Pred == ICmpInst::ICMP_SGT && *C2 == *C1 + 1) ||
+          (Pred == ICmpInst::ICMP_SLT && *C2 == *C1 + 2)))) {
+      // icmp slt (X s% C), (C - 1) --> icmp ne (X s% C), (C - 1), if C >= 0
+      // icmp sgt (X s% C), (C - 2) --> icmp eq (X s% C), (C - 1), if C >= 0
+      // icmp sgt (X s% C), (C + 1) --> icmp ne (X s% C), (C + 1), if C < 0
+      // icmp slt (X s% C), (C + 2) --> icmp eq (X s% C), (C + 1), if C < 0
+      return CmpInst::Create(Instruction::ICmp,
+                             ((Pred == ICmpInst::ICMP_SLT && *C2 == *C1 - 1) ||
+                              (Pred == ICmpInst::ICMP_SGT && *C2 == *C1 + 1))
+                                 ? ICmpInst::ICMP_NE
+                                 : ICmpInst::ICMP_EQ,
+                             Op0,
+                             ConstantInt::get(Op1->getType(), C1->isNegative()
+                                                                  ? *C1 + 1
+                                                                  : *C1 - 1));
+    }
+
+    if (match(&I, m_ICmp(Pred, m_URem(m_Value(X), m_APInt(C1)), m_APInt(C2))) &&
+        ((Pred == ICmpInst::ICMP_ULT && *C2 == *C1 - 1) ||
+         (Pred == ICmpInst::ICMP_UGT && *C2 == *C1 - 2 && C2->ugt(1)))) {
+      // icmp ult (X u% C), (C - 1) --> icmp ne (X u% C), (C - 1)
+      // icmp ugt (X u% C), (C - 2) --> icmp eq (X u% C), (C - 1), if C >u 1
+      return CmpInst::Create(Instruction::ICmp,
+                             Pred == ICmpInst::ICMP_UGT ? ICmpInst::ICMP_EQ
+                                                        : ICmpInst::ICMP_NE,
+                             Op0, ConstantInt::get(Op1->getType(), *C1 - 1));
+    }
+  }
+
   // Comparing -val or val with non-zero is the same as just comparing val
   // ie, abs(val) != 0 -> val != 0
   if (I.getPredicate() == ICmpInst::ICMP_NE && match(Op1, m_Zero())) {
