@@ -596,6 +596,8 @@ Improvements to Clang's diagnostics
        13 |     new (__builtin_memset) S {};
           |          ^
 
+- Clang now diagnoses member template declarations with multiple declarators.
+
 
 Improvements to Clang's time-trace
 ----------------------------------
