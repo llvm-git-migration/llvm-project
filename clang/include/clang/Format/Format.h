@@ -4623,7 +4623,7 @@ struct FormatStyle {
     ///   Never:
     ///   t f(Deleted &) & = delete;
     ///   decltype((x))
-    ///   x = ((int32))y 
+    ///   x = ((int32))y
     ///   y = ((int (*)(int))foo)(x);
     /// \endcode
     SpacesInParensCustomStyle Other;
