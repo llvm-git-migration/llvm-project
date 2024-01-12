@@ -20,6 +20,7 @@ namespace lldb_private {
 /// file yet. This also stores an optional checksum of the on-disk content.
 class SupportFile {
 public:
+  SupportFile() : m_file_spec(), m_checksum() {}
   SupportFile(const FileSpec &spec) : m_file_spec(spec), m_checksum() {}
   SupportFile(const FileSpec &spec, const Checksum &checksum)
       : m_file_spec(spec), m_checksum(checksum) {}
