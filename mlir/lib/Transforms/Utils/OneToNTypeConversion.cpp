@@ -113,6 +113,9 @@ static const char *const castKindAttrName =
 /// result types. Returns the result values of the cast.
 static ValueRange buildUnrealizedCast(OpBuilder &builder, TypeRange resultTypes,
                                       ValueRange inputs, CastKind kind) {
+  if (resultTypes.empty())
+    return ValueRange();
+
   // Create cast.
   Location loc = builder.getUnknownLoc();
   if (!inputs.empty())
