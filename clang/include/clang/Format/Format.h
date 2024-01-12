@@ -4744,9 +4744,8 @@ struct FormatStyle {
 
     SpacesInParensCustom()
         : InAttributeSpecifiers(SIPCS_Never),
-          InConditionalStatements(SIPCS_Never),
-          InCStyleCasts(SIPCS_Never), InEmptyParentheses(false),
-          Other(SIPCS_Never) {}
+          InConditionalStatements(SIPCS_Never), InCStyleCasts(SIPCS_Never),
+          InEmptyParentheses(false), Other(SIPCS_Never) {}
 
     SpacesInParensCustom(SpacesInParensCustomStyle InAttributeSpecifiers,
                          SpacesInParensCustomStyle InConditionalStatements,
