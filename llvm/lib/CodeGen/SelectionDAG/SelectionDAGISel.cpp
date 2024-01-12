@@ -670,12 +670,12 @@ bool SelectionDAGISel::runOnMachineFunction(MachineFunction &mf) {
 
     for (const auto &MI : MBB) {
       const MCInstrDesc &MCID = TII->get(MI.getOpcode());
-      if ((MCID.isCall() && !MCID.isReturn()) ||
-          MI.isStackAligningInlineAsm()) {
+      if ((MCID.isCall() && !MCID.isReturn()) || MI.isStackAligningInlineAsm())
         MFI.setHasCalls(true);
-      }
       if (MI.isInlineAsm()) {
         MF->setHasInlineAsm(true);
+        if (MI.isStackAligningInlineAsm())
+          MFI.setAdjustsStack(true);
       }
     }
   }
