@@ -98,6 +98,8 @@ Attribute Changes in Clang
 Improvements to Clang's diagnostics
 -----------------------------------
 
+- Clang now diagnoses member template declarations with multiple declarators.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
