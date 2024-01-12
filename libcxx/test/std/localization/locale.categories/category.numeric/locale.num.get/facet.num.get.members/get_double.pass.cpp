@@ -116,9 +116,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(v == INFINITY);
+        assert(base(iter) == str);
+        assert(err == ios.failbit);
+        assert(v == 0.0);
     }
     {
         const char str[] = "INF";
@@ -128,9 +128,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(v == INFINITY);
+        assert(base(iter) == str);
+        assert(err == ios.failbit);
+        assert(v == 0.0);
     }
     {
         const char str[] = "-inf";
@@ -140,9 +140,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(v == -INFINITY);
+        assert(base(iter) == str + 1);
+        assert(err == ios.failbit);
+        assert(v == 0.0);
     }
     {
         const char str[] = "-INF";
@@ -152,9 +152,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(v == -INFINITY);
+        assert(base(iter) == str + 1);
+        assert(err == ios.failbit);
+        assert(v == 0.0);
     }
     {
         const char str[] = "nan";
@@ -164,9 +164,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(std::isnan(v));
+        assert(base(iter) == str);
+        assert(err == ios.failbit);
+        assert(v = 0.0);
     }
     {
         const char str[] = "NAN";
@@ -176,9 +176,9 @@ int main(int, char**)
             f.get(cpp17_input_iterator<const char*>(str),
                   cpp17_input_iterator<const char*>(str+sizeof(str)),
                   ios, err, v);
-        assert(base(iter) == str+sizeof(str)-1);
-        assert(err == ios.goodbit);
-        assert(std::isnan(v));
+        assert(base(iter) == str);
+        assert(err == ios.failbit);
+        assert(v = 0.0);
     }
     {
         v = -1;
