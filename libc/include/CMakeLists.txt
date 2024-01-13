@@ -92,6 +92,7 @@ add_gen_header(
     .llvm-libc-macros.math_macros
     .llvm-libc-types.double_t
     .llvm-libc-types.float_t
+    .llvm-libc-types.float128
 )
 
 # TODO: This should be conditional on POSIX networking being included.
