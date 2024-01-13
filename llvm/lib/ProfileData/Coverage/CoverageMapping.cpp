@@ -1319,8 +1319,71 @@ LineCoverageStats::LineCoverageStats(
       !StartOfSkippedRegion &&
       ((WrappedSegment && WrappedSegment->HasCount) || (MinRegionCount > 0));
 
-  if (!Mapped)
+  Mapped |= std::any_of(
+      LineSegments.begin(), LineSegments.end(),
+      [](const auto *Seq) { return Seq->IsRegionEntry && Seq->HasCount; });
+
+  Mapped |= WrappedSegment && WrappedSegment->IsRegionEntry &&
+            WrappedSegment->HasCount;
+
+  /*
+  printf("line %u: ", Line);
+  printf("segments: %u,", (unsigned)LineSegments.size());
+
+  auto print_seq = [](const auto * seq) {
+    printf("(line: %u, column: %u ", seq->Line, seq->Col);
+    if (seq->HasCount) {
+      printf(" count: %llu", seq->Count);
+    } else {
+      printf(" nocount");
+    }
+
+    if (seq->IsRegionEntry) {
+      printf(" entry");
+    }
+
+    if (seq->IsGapRegion) {
+      printf(" gap");
+    }
+
+    printf(")");
+  };
+
+  for (const auto * seq: LineSegments) {
+    printf(" ");
+    print_seq(seq);
+  }
+
+  if (WrappedSegment) {
+    printf(" wrapped seq: ");
+    print_seq(WrappedSegment);
+  }
+
+
+
+  bool should_map = false;
+  for (const auto * seq: LineSegments) {
+    if (seq->IsRegionEntry && seq->HasCount) {
+      should_map = true;
+    }
+  }
+
+  if (should_map) {
+    Mapped = true;
+  }
+
+  if (WrappedSegment && WrappedSegment->IsRegionEntry &&
+  WrappedSegment->HasCount) { if (!Mapped) { Mapped = true; printf("
+  [ARGH:%u]",Line);
+    }
+  }*/
+
+  if (!Mapped) {
+    // printf(" [skip]\n");
     return;
+  }
+
+  // printf(" mapped\n");
 
   // Pick the max count from the non-gap, region entry segments and the
   // wrapped count.
