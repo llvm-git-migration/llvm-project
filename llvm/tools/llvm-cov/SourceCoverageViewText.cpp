@@ -170,6 +170,12 @@ void SourceCoverageViewText::renderLine(raw_ostream &OS, LineRef L,
   std::optional<raw_ostream::Colors> Highlight;
   SmallVector<std::pair<unsigned, unsigned>, 2> HighlightedRanges;
 
+  auto AllWhiteSpace = [](std::string_view Snippet) {
+    return std::all_of(Snippet.begin(), Snippet.end(), [](auto c) {
+      return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    });
+  };
+
   // The first segment overlaps from a previous line, so we treat it specially.
   if (WrappedSegment && !WrappedSegment->IsGapRegion &&
       WrappedSegment->HasCount && WrappedSegment->Count == 0)
@@ -179,10 +185,15 @@ void SourceCoverageViewText::renderLine(raw_ostream &OS, LineRef L,
   unsigned Col = 1;
   for (const auto *S : Segments) {
     unsigned End = std::min(S->Col, static_cast<unsigned>(Line.size()) + 1);
-    colored_ostream(OS, Highlight ? *Highlight : raw_ostream::SAVEDCOLOR,
+    const auto Region = Line.substr(Col - 1, End - Col);
+
+    colored_ostream(OS,
+                    (Highlight && !AllWhiteSpace(Region))
+                        ? *Highlight
+                        : raw_ostream::SAVEDCOLOR,
                     getOptions().Colors && Highlight, /*Bold=*/false,
                     /*BG=*/true)
-        << Line.substr(Col - 1, End - Col);
+        << Region;
     if (getOptions().Debug && Highlight)
       HighlightedRanges.push_back(std::make_pair(Col, End));
     Col = End;
@@ -196,9 +207,14 @@ void SourceCoverageViewText::renderLine(raw_ostream &OS, LineRef L,
   }
 
   // Show the rest of the line.
-  colored_ostream(OS, Highlight ? *Highlight : raw_ostream::SAVEDCOLOR,
+  const auto LastRegion = Line.substr(Col - 1, Line.size() - Col + 1);
+
+  colored_ostream(OS,
+                  (Highlight && !AllWhiteSpace(LastRegion))
+                      ? *Highlight
+                      : raw_ostream::SAVEDCOLOR,
                   getOptions().Colors && Highlight, /*Bold=*/false, /*BG=*/true)
-      << Line.substr(Col - 1, Line.size() - Col + 1);
+      << LastRegion;
   OS << '\n';
 
   if (getOptions().Debug) {

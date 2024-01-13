@@ -1278,12 +1278,6 @@ struct CounterCoverageMappingBuilder
 
   void findGapAreaBetweenAndMarkSkipArea(SourceLocation AfterLoc,
                                          SourceLocation BeforeLoc) {
-    // const std::optional<SourceRange> Gap = findGapAreaBetween(AfterLoc,
-    // BeforeLoc);
-    //
-    // if (Gap) {
-    //   markSkipArea(Gap->getBegin(), Gap->getEnd());
-    // }
     markSkipArea(AfterLoc, BeforeLoc);
   }
 

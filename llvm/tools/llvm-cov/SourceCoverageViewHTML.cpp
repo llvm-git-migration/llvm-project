@@ -799,9 +799,15 @@ void SourceCoverageViewHTML::renderLine(raw_ostream &OS, LineRef L,
            S->HasCount && S->Count == 0;
   };
 
+  auto AllWhiteSpace = [](std::string_view Snippet) {
+    return std::all_of(Snippet.begin(), Snippet.end(), [](auto c) {
+      return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    });
+  };
+
   if (CheckIfUncovered(LCS.getWrappedSegment())) {
     Color = "red";
-    if (!Snippets[0].empty())
+    if (!Snippets[0].empty() && !AllWhiteSpace(Snippets[0]))
       Snippets[0] = Highlight(Snippets[0], 1, 1 + Snippets[0].size());
   }
 
@@ -814,7 +820,7 @@ void SourceCoverageViewHTML::renderLine(raw_ostream &OS, LineRef L,
     else
       Color = std::nullopt;
 
-    if (Color)
+    if (Color && !AllWhiteSpace(Snippets[I + 1]))
       Snippets[I + 1] = Highlight(Snippets[I + 1], CurSeg->Col,
                                   CurSeg->Col + Snippets[I + 1].size());
   }
