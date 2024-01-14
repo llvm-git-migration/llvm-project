@@ -240,6 +240,36 @@ define i32 @lshr_or_extra_use(i32 %x, i32 %y, ptr %p) {
   ret i32 %sh1
 }
 
+define i32 @lshr_or_extra_use_shift(i32 %x, ptr %p) {
+; CHECK-LABEL: @lshr_or_extra_use_shift(
+; CHECK-NEXT:    [[SH0:%.*]] = lshr i32 [[X:%.*]], 5
+; CHECK-NEXT:    store i32 [[SH0]], ptr [[P:%.*]], align 4
+; CHECK-NEXT:    [[R:%.*]] = lshr i32 [[X]], 12
+; CHECK-NEXT:    [[SH1:%.*]] = or i32 [[R]], 192
+; CHECK-NEXT:    ret i32 [[SH1]]
+;
+  %sh0 = lshr i32 %x, 5
+  %r = or i32 %sh0, 24601
+  store i32 %sh0, ptr %p
+  %sh1 = lshr i32 %r, 7
+  ret i32 %sh1
+}
+
+define i32 @lshr_or_extra_use_var(i32 %x, i32 %y, ptr %p) {
+; CHECK-LABEL: @lshr_or_extra_use_var(
+; CHECK-NEXT:    [[SH0:%.*]] = lshr i32 [[X:%.*]], 5
+; CHECK-NEXT:    [[R:%.*]] = or i32 [[SH0]], [[Y:%.*]]
+; CHECK-NEXT:    store i32 [[SH0]], ptr [[P:%.*]], align 4
+; CHECK-NEXT:    [[SH1:%.*]] = lshr i32 [[R]], 7
+; CHECK-NEXT:    ret i32 [[SH1]]
+;
+  %sh0 = lshr i32 %x, 5
+  %r = or i32 %sh0, %y
+  store i32 %sh0, ptr %p
+  %sh1 = lshr i32 %r, 7
+  ret i32 %sh1
+}
+
 ; Avoid crashing on constant expressions.
 
 @g = external global i32
