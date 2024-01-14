@@ -430,6 +430,21 @@ define i8 @shl_sub(i8 %x, i8 %y) {
   ret i8 %sh1
 }
 
+define i8 @shl_sub_multiuse(i8 %x) {
+; CHECK-LABEL: @shl_sub_multiuse(
+; CHECK-NEXT:    [[SH0:%.*]] = shl i8 [[X:%.*]], 3
+; CHECK-NEXT:    [[R:%.*]] = sub i8 [[SH0]], 42
+; CHECK-NEXT:    call void @use(i8 [[SH0]])
+; CHECK-NEXT:    [[SH1:%.*]] = shl i8 [[R]], 2
+; CHECK-NEXT:    ret i8 [[SH1]]
+;
+  %sh0 = shl i8 %x, 3
+  %r = sub i8 %sh0, 42
+  call void @use(i8 %sh0)
+  %sh1 = shl i8 %r, 2
+  ret i8 %sh1
+}
+
 ; Make sure we don't commute operands for sub
 define i8 @shl_sub_no_commute(i8 %x, i8 %y) {
 ; CHECK-LABEL: @shl_sub_no_commute(
