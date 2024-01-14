@@ -389,6 +389,21 @@ define i8 @lshr_add(i8 %x, i8 %y) {
   ret i8 %sh1
 }
 
+define i8 @lshr_add_multiuse(i8 %x) {
+; CHECK-LABEL: @lshr_add_multiuse(
+; CHECK-NEXT:    [[SH0:%.*]] = lshr i8 [[X:%.*]], 3
+; CHECK-NEXT:    [[R:%.*]] = add nuw nsw i8 [[SH0]], 42
+; CHECK-NEXT:    call void @use(i8 [[SH0]])
+; CHECK-NEXT:    [[SH1:%.*]] = lshr i8 [[R]], 2
+; CHECK-NEXT:    ret i8 [[SH1]]
+;
+  %sh0 = lshr i8 %x, 3
+  %r = add i8 %sh0, 42 ; constant operand on the 'add'
+  call void @use(i8 %sh0)
+  %sh1 = lshr i8 %r, 2
+  ret i8 %sh1
+}
+
 define <2 x i8> @lshr_add_nonuniform(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-LABEL: @lshr_add_nonuniform(
 ; CHECK-NEXT:    [[SH0:%.*]] = lshr <2 x i8> [[X:%.*]], <i8 3, i8 4>
