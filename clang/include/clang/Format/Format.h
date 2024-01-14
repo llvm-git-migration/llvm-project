@@ -3928,12 +3928,16 @@ struct FormatStyle {
   /// \version 13
   unsigned ShortNamespaceLines;
 
-  /// When AlwaysBreakAfterReturnType is None, line breaks are prevented after
-  /// short return types. This configures the character limit for a type to be
-  /// regarded as short. Note that this isn't the length of the type itself,
-  /// but the column where it finishes. I.e. it includes indentation, etc.
+  /// When ``AlwaysBreakAfterReturnType`` is ``None``, line breaks are prevented
+  /// after short return types. This configures the column limit for a type
+  /// to be regarded as short.
+  ///
+  /// \note
+  ///  This isn't the length of the type itself, but the column where it
+  ///  finishes. I.e. it includes indentation, etc.
+  /// \endnote
   /// \version 18
-  unsigned ShortReturnTypeLength;
+  unsigned ShortReturnTypeColumn;
 
   /// Include sorting options.
   enum SortIncludesOptions : int8_t {
@@ -4897,7 +4901,7 @@ struct FormatStyle {
            RequiresExpressionIndentation == R.RequiresExpressionIndentation &&
            SeparateDefinitionBlocks == R.SeparateDefinitionBlocks &&
            ShortNamespaceLines == R.ShortNamespaceLines &&
-           ShortReturnTypeLength == R.ShortReturnTypeLength &&
+           ShortReturnTypeColumn == R.ShortReturnTypeColumn &&
            SortIncludes == R.SortIncludes &&
            SortJavaStaticImport == R.SortJavaStaticImport &&
            SpaceAfterCStyleCast == R.SpaceAfterCStyleCast &&

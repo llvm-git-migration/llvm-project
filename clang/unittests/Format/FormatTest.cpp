@@ -12414,7 +12414,7 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
                "}",
                ShortReturnType);
 
-  ShortReturnType.ShortReturnTypeLength = 0;
+  ShortReturnType.ShortReturnTypeColumn = 0;
   verifyFormat("Type\n"
                "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
                "ooooooooong::\n"
@@ -12429,7 +12429,7 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
                "}",
                ShortReturnType);
 
-  ShortReturnType.ShortReturnTypeLength = 7;
+  ShortReturnType.ShortReturnTypeColumn = 7;
   verifyFormat("Type "
                "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
                "ooooooooong::\n"
