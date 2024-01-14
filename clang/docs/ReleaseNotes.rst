@@ -828,6 +828,8 @@ Bug Fixes in This Version
 - Fix an issue with missing symbol definitions when the first coroutine
   statement appears in a discarded ``if constexpr`` branch.
   Fixes (`#78290 <https://github.com/llvm/llvm-project/issues/78290>`_)
+- Fix crash when using lifetimebound attribute in function with trailing return.
+  Fixes (`#73619 <https://github.com/llvm/llvm-project/issues/73619>`_)
 
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
