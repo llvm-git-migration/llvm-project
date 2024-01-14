@@ -12410,7 +12410,7 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
                "  "
                "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
                "oooooooooooong::\n"
-               "      FunctionDefinition();\n"
+               "      FunctionDeclaration();\n"
                "}",
                ShortReturnType);
 
@@ -12425,7 +12425,7 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
                "  "
                "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
                "oooooooooooong::\n"
-               "      FunctionDefinition();\n"
+               "      FunctionDeclaration();\n"
                "}",
                ShortReturnType);
 
@@ -12439,7 +12439,7 @@ TEST_F(FormatTest, BreaksLongDeclarations) {
                "  Type "
                "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
                "oooooooooooong::\n"
-               "      FunctionDefinition();\n"
+               "      FunctionDeclaration();\n"
                "}",
                ShortReturnType);
 }
