@@ -45,7 +45,7 @@ WebAssemblySubtarget::WebAssemblySubtarget(const Triple &TT,
       TargetTriple(TT), InstrInfo(initializeSubtargetDependencies(CPU, FS)),
       TLInfo(TM, *this) {}
 
-bool WebAssemblySubtarget::enableAtomicExpand() const {
+bool WebAssemblySubtarget::enableExpandAtomic() const {
   // If atomics are disabled, atomic ops are lowered instead of expanded
   return hasAtomics();
 }

@@ -215,7 +215,7 @@ public:
   virtual bool enablePostRAMachineScheduler() const;
 
   /// True if the subtarget should run the atomic expansion pass.
-  virtual bool enableAtomicExpand() const;
+  virtual bool enableExpandAtomic() const;
 
   /// True if the subtarget should run the indirectbr expansion pass.
   virtual bool enableIndirectBrExpand() const;

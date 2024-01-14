@@ -175,7 +175,7 @@ TargetPassConfig *SparcTargetMachine::createPassConfig(PassManagerBase &PM) {
 }
 
 void SparcPassConfig::addIRPasses() {
-  addPass(createAtomicExpandPass());
+  addPass(createExpandAtomicLegacyPass());
 
   TargetPassConfig::addIRPasses();
 }

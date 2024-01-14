@@ -40,7 +40,6 @@ add_llvm_component_library(LLVMCodeGen
   AllocationOrder.cpp
   Analysis.cpp
   AssignmentTrackingAnalysis.cpp
-  AtomicExpandPass.cpp
   BasicTargetTransformInfo.cpp
   BranchFolding.cpp
   BranchRelaxation.cpp
@@ -69,6 +68,7 @@ add_llvm_component_library(LLVMCodeGen
   EdgeBundles.cpp
   EHContGuardCatchret.cpp
   ExecutionDomainFix.cpp
+  ExpandAtomicPass.cpp
   ExpandLargeDivRem.cpp
   ExpandLargeFpConvert.cpp
   ExpandMemCmp.cpp

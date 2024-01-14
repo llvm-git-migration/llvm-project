@@ -23,7 +23,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "ppc-atomic-expand"
+#define DEBUG_TYPE "ppc-expand-atomic"
 
 namespace {
 
