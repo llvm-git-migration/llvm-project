@@ -1,5 +1,5 @@
 // RUN: %clang_cc1 %s -triple=amdgcn-amd-amdhsa -fcuda-is-device \
-// RUN:   -target-cpu gfx90a -Rpass=expand-atomic -S -o - 2>&1 | \
+// RUN:   -target-cpu gfx90a -Rpass=atomic-expand -S -o - 2>&1 | \
 // RUN:   FileCheck %s --check-prefix=GFX90A-CAS
 
 // REQUIRES: amdgpu-registered-target

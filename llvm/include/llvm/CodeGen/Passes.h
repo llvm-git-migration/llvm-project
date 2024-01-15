@@ -41,10 +41,10 @@ class FileSystem;
 // List of target independent CodeGen pass IDs.
 namespace llvm {
 
-  /// ExpandAtomicPass - At IR level this pass replace atomic instructions with
+  /// AtomicExpandPass - At IR level this pass replace atomic instructions with
   /// __atomic_* library calls, or target specific instruction which implement the
   /// same semantics in a way which better fits the target backend.
-  FunctionPass *createExpandAtomicLegacyPass();
+  FunctionPass *createAtomicExpandLegacyPass();
 
   /// createUnreachableBlockEliminationPass - The LLVM code generator does not
   /// work well with unreachable basic blocks (what live ranges make sense for a
@@ -101,9 +101,9 @@ namespace llvm {
   /// handling of complex number arithmetic
   FunctionPass *createComplexDeinterleavingPass(const TargetMachine *TM);
 
-  /// ExpandAtomicID -- Lowers atomic operations in terms of either cmpxchg
+  /// AtomicExpandID -- Lowers atomic operations in terms of either cmpxchg
   /// load-linked/store-conditional loops.
-  extern char &ExpandAtomicID;
+  extern char &AtomicExpandID;
 
   /// MachineLoopInfo - This pass is a loop analysis pass.
   extern char &MachineLoopInfoID;

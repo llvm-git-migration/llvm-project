@@ -24,7 +24,7 @@ TargetSubtargetInfo::TargetSubtargetInfo(
 
 TargetSubtargetInfo::~TargetSubtargetInfo() = default;
 
-bool TargetSubtargetInfo::enableExpandAtomic() const {
+bool TargetSubtargetInfo::enableAtomicExpand() const {
   return true;
 }
 

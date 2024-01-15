@@ -65,6 +65,7 @@ namespace {
       (void) llvm::createSCEVAAWrapperPass();
       (void) llvm::createTypeBasedAAWrapperPass();
       (void) llvm::createScopedNoAliasAAWrapperPass();
+      (void) llvm::createAtomicExpandLegacyPass();
       (void) llvm::createBreakCriticalEdgesPass();
       (void) llvm::createCallGraphDOTPrinterPass();
       (void) llvm::createCallGraphViewerPass();
@@ -119,7 +120,6 @@ namespace {
       (void) llvm::createGVNPass();
       (void) llvm::createPostDomTree();
       (void) llvm::createMergeICmpsLegacyPass();
-      (void) llvm::createExpandAtomicLegacyPass();
       (void) llvm::createExpandLargeDivRemPass();
       (void)llvm::createExpandMemCmpLegacyPass();
       (void) llvm::createExpandVectorPredicationPass();

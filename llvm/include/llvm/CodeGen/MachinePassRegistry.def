@@ -135,7 +135,7 @@ MACHINE_FUNCTION_ANALYSIS("pass-instrumentation", PassInstrumentationAnalysis,
 #ifndef DUMMY_FUNCTION_PASS
 #define DUMMY_FUNCTION_PASS(NAME, PASS_NAME, CONSTRUCTOR)
 #endif
-DUMMY_FUNCTION_PASS("expand-atomic", ExpandAtomicPass, ())
+DUMMY_FUNCTION_PASS("atomic-expand", AtomicExpandPass, ())
 #undef DUMMY_FUNCTION_PASS
 
 #ifndef DUMMY_MACHINE_MODULE_PASS

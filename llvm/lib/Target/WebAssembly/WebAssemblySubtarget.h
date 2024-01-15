@@ -84,7 +84,7 @@ public:
     return &getInstrInfo()->getRegisterInfo();
   }
   const Triple &getTargetTriple() const { return TargetTriple; }
-  bool enableExpandAtomic() const override;
+  bool enableAtomicExpand() const override;
   bool enableIndirectBrExpand() const override { return true; }
   bool enableMachineScheduler() const override;
   bool useAA() const override;

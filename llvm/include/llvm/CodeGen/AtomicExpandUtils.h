@@ -34,7 +34,7 @@ using CreateCmpXchgInstFun =
 /// instructions directly into a platform specific intrinsics (because, say,
 /// those intrinsics don't exist). If such a pass is able to expand cmpxchg
 /// instructions directly however, then, with this function, it could avoid two
-/// extra module passes (avoiding passes by `-expand-atomic` and itself). A
+/// extra module passes (avoiding passes by `-atomic-expand` and itself). A
 /// specific example would be PNaCl's `RewriteAtomics` pass.
 ///
 /// Given: atomicrmw some_op iN* %addr, iN %incr ordering
@@ -46,7 +46,7 @@ using CreateCmpXchgInstFun =
 /// loop:
 ///     %loaded = phi iN [ %init_loaded, %entry ], [ %new_loaded, %loop ]
 ///     %new = some_op iN %loaded, %incr
-/// ; This is what -expand-atomic will produce using this function on i686
+/// ; This is what -atomic-expand will produce using this function on i686
 /// targets:
 ///     %pair = cmpxchg iN* %addr, iN %loaded, iN %new_val
 ///     %new_loaded = extractvalue { iN, i1 } %pair, 0

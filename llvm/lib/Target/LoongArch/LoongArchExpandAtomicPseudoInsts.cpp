@@ -604,7 +604,7 @@ bool LoongArchExpandAtomicPseudo::expandAtomicCmpXchg(
 
 } // end namespace
 
-INITIALIZE_PASS(LoongArchExpandAtomicPseudo, "loongarch-expand-atomic-pseudo",
+INITIALIZE_PASS(LoongArchExpandAtomicPseudo, "loongarch-atomic-expand-pseudo",
                 LoongArch_EXPAND_ATOMIC_PSEUDO_NAME, false, false)
 
 namespace llvm {

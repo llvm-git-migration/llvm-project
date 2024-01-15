@@ -730,7 +730,7 @@ bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
 
 } // end of anonymous namespace
 
-INITIALIZE_PASS(RISCVExpandAtomicPseudo, "riscv-expand-atomic-pseudo",
+INITIALIZE_PASS(RISCVExpandAtomicPseudo, "riscv-atomic-expand-pseudo",
                 RISCV_EXPAND_ATOMIC_PSEUDO_NAME, false, false)
 
 namespace llvm {

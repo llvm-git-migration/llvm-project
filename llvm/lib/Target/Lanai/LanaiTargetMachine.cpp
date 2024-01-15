@@ -106,7 +106,7 @@ LanaiTargetMachine::createPassConfig(PassManagerBase &PassManager) {
 }
 
 void LanaiPassConfig::addIRPasses() {
-  addPass(createExpandAtomicLegacyPass());
+  addPass(createAtomicExpandLegacyPass());
 
   TargetPassConfig::addIRPasses();
 }
