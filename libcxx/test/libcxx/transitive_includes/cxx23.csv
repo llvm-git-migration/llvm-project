@@ -650,6 +650,7 @@ thread typeinfo
 thread version
 tuple compare
 tuple cstddef
+tuple cstdint
 tuple version
 type_traits cstddef
 type_traits cstdint
@@ -684,6 +685,7 @@ unordered_set tuple
 unordered_set version
 utility compare
 utility cstddef
+utility cstdint
 utility initializer_list
 utility limits
 utility version
