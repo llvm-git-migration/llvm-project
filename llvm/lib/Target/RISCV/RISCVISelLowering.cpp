@@ -20868,7 +20868,8 @@ bool RISCVTargetLowering::fallBackToDAGISel(const Instruction &Inst) const {
   unsigned Op = Inst.getOpcode();
   if (Op == Instruction::Add || Op == Instruction::Sub ||
       Op == Instruction::And || Op == Instruction::Or ||
-      Op == Instruction::Xor || Op == Instruction::InsertElement)
+      Op == Instruction::Xor || Op == Instruction::InsertElement ||
+      Op == Instruction::Load)
     return false;
 
   if (Inst.getType()->isScalableTy())
