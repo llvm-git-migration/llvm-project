@@ -5440,7 +5440,7 @@ def RISCVVectorCCDocs : Documentation {
 The ``riscv_vector_cc`` attribute can be applied to a function. It preserves 15
 registers namely, v1-v7 and v24-v31 as callee-saved. Callers thus don't need
 to save these registers before function calls, and callees only need to save
-them only if they use them.
+them if they use them.
  }];
 }
 
