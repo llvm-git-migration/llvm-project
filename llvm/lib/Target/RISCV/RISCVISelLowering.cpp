@@ -20923,7 +20923,7 @@ bool RISCVTargetLowering::fallBackToDAGISel(const Instruction &Inst) const {
   if (Op == Instruction::Add || Op == Instruction::Sub ||
       Op == Instruction::And || Op == Instruction::Or ||
       Op == Instruction::Xor || Op == Instruction::InsertElement ||
-      Op == Instruction::Xor || Op == Instruction::ShuffleVector)
+      Op == Instruction::ShuffleVector || Op == Instruction::Load)
     return false;
 
   if (Inst.getType()->isScalableTy())
