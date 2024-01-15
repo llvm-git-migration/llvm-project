@@ -1,6 +1,6 @@
 ; RUN: llc -O3 %s -o %t.s
-; RUN: llc -O3 -stop-after=atomic-expand %s -o %t.mir
-; RUN: llc -O3 -start-after=atomic-expand %s -o %t2.s
+; RUN: llc -O3 -stop-after=expand-atomic %s -o %t.mir
+; RUN: llc -O3 -start-after=expand-atomic %s -o %t2.s
 
 ; If we add tti pass correctly files should be identical
 ; Otherwise LSR will use default TargetTransformInfo and
