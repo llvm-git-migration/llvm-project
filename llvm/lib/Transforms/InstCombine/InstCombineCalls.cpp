@@ -1601,6 +1601,15 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       return CastInst::Create(Instruction::ZExt, NarrowAbs, II->getType());
     }
 
+    // abs(a * abs(b)) --> abs(a * b)
+    Value *A, *B;
+    if (match(IIOperand,
+              m_OneUse(m_c_Mul(m_Value(A),
+                               m_Intrinsic<Intrinsic::abs>(m_Value(B)))))) {
+      Value *New = Builder.CreateMul(A, B);
+      return replaceOperand(*II, 0, New);
+    }
+
     // Match a complicated way to check if a number is odd/even:
     // abs (srem X, 2) --> and X, 1
     const APInt *C;
