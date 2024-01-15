@@ -33,6 +33,15 @@ def rcp_sqrt_to_rsq : GICombineRule<
          [{ return matchRcpSqrtToRsq(*${rcp}, ${matchinfo}); }]),
   (apply [{ Helper.applyBuildFn(*${rcp}, ${matchinfo}); }])>;
 
+def fdiv_instr : GIDefMatchData<"MachineInstr *">;
+
+def fdiv_1_by_sqrt_to_rsq : GICombineRule<
+  (defs root:$dst, fdiv_instr:$fdivinstr),
+  (match (G_FSQRT $sqrt, $x, (MIFlags FmContract)),
+         // (G_FCONSTANT $one, $fpimm), // error: ('G_FCONSTANT') is unreachable from the pattern root!
+         (G_FDIV $dst, $sqrt, $fpimm, (MIFlags FmContract)):$fdivinstr,
+         [{ return ${fpimm}.getFPImm()->isExactlyValue(1.0); }]),
+  (apply [{ applyOneFDivSqrtToRsq(*${fdivinstr}, ${x}.getReg()); }])>;
 
 def cvt_f32_ubyteN_matchdata : GIDefMatchData<"CvtF32UByteMatchInfo">;
 
@@ -156,7 +165,7 @@ def AMDGPUPostLegalizerCombiner: GICombiner<
   "AMDGPUPostLegalizerCombinerImpl",
   [all_combines, gfx6gfx7_combines, gfx8_combines,
    uchar_to_float, cvt_f32_ubyteN, remove_fcanonicalize, foldable_fneg,
-   rcp_sqrt_to_rsq, sign_extension_in_reg, smulu64]> {
+   rcp_sqrt_to_rsq, fdiv_1_by_sqrt_to_rsq, sign_extension_in_reg, smulu64]> {
   let CombineAllMethodName = "tryCombineAllImpl";
 }
 
