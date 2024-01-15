@@ -83,6 +83,9 @@ public:
   matchRcpSqrtToRsq(MachineInstr &MI,
                     std::function<void(MachineIRBuilder &)> &MatchInfo) const;
 
+  bool matchFDivSqrt(MachineInstr &MI,
+                     std::function<void(MachineIRBuilder &)> &MatchInfo) const;
+
   // FIXME: Should be able to have 2 separate matchdatas rather than custom
   // struct boilerplate.
   struct CvtF32UByteMatchInfo {
@@ -331,6 +334,59 @@ bool AMDGPUPostLegalizerCombinerImpl::matchRcpSqrtToRsq(
     };
     return true;
   }
+  return false;
+}
+
+bool AMDGPUPostLegalizerCombinerImpl::matchFDivSqrt(
+    MachineInstr &MI,
+    std::function<void(MachineIRBuilder &)> &MatchInfo) const {
+
+  // TODO: Can I match fdiv 1.0 / sqrt(x) from here?
+  // My apologies, this code is still a mess. Trying to figure out
+  // what value MI should hold when getting to this point
+
+  auto getSqrtSrc = [=](const MachineInstr &MI) -> MachineInstr * {
+    if (!MI.getFlag(MachineInstr::FmContract))
+      return nullptr;
+    MachineInstr *SqrtSrcMI = nullptr;
+    auto Match =
+        mi_match(MI.getOperand(0).getReg(), MRI, m_GFSqrt(m_MInstr(SqrtSrcMI)));
+    (void)Match;
+    return SqrtSrcMI;
+  };
+
+  // Do I need to match write a matcher for  %one:_(s16) = G_FCONSTANT half 1.0
+  // ??
+
+  auto getFdivSrc = [=](const MachineInstr &MI) -> MachineInstr * {
+    if (!MI.getFlag(MachineInstr::FmContract))
+      return nullptr;
+
+    MachineInstr *FDivSrcMI = nullptr;
+    Register One;
+    auto Match = mi_match(MI.getOperand(0).getReg(), MRI,
+                          m_GFDiv(m_Reg(One), m_MInstr(FDivSrcMI)));
+    // Not sure how to check for FDiv operancd has a 1.0 value ?
+    if (!MI.getOperand(1).isFPImm()) {
+      return nullptr;
+    }
+    if (!MI.getOperand(1).getFPImm()->isOneValue()) {
+      return nullptr;
+    }
+    (void)Match;
+    return FDivSrcMI;
+  };
+
+  MachineInstr *FDivSrcMI = nullptr, *SqrtSrcMI = nullptr;
+  if ((SqrtSrcMI = getSqrtSrc(MI)) && (FDivSrcMI = getFdivSrc(*SqrtSrcMI))) {
+    MatchInfo = [SqrtSrcMI, &MI](MachineIRBuilder &B) {
+      B.buildIntrinsic(Intrinsic::amdgcn_rsq, {MI.getOperand(0)})
+          .addUse(SqrtSrcMI->getOperand(0).getReg())
+          .setMIFlags(MI.getFlags());
+    };
+    return true;
+  }
+
   return false;
 }
 
