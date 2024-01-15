@@ -336,7 +336,7 @@ bool CheckGlobalInitialized(InterpState &S, CodePtr OpPC, const Pointer &Ptr) {
   if (Ptr.isInitialized())
     return true;
 
-  const VarDecl *VD = cast<VarDecl>(Ptr.getDeclDesc()->asValueDecl());
+  const auto *VD = cast<VarDecl>(Ptr.getDeclDesc()->asValueDecl());
   if ((S.getLangOpts().CPlusPlus && !VD->hasConstantInitialization() &&
        VD->mightBeUsableInConstantExpressions(S.getCtx())) ||
       ((S.getLangOpts().CPlusPlus || S.getLangOpts().OpenCL) &&

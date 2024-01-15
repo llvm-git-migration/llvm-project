@@ -1014,7 +1014,7 @@ bool GetGlobal(InterpState &S, CodePtr OpPC, uint32_t I) {
   if (Ptr.isExtern())
     return false;
 
-  // If a global variable is uninitialized, that means the initialize we've
+  // If a global variable is uninitialized, that means the initializer we've
   // compiled for it wasn't a constant expression. Diagnose that.
   if (!CheckGlobalInitialized(S, OpPC, Ptr))
     return false;
