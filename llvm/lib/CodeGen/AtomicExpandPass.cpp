@@ -68,7 +68,7 @@ private:
   bool bracketInstWithFences(Instruction *I, AtomicOrdering Order);
   IntegerType *getCorrespondingIntegerType(Type *T, const DataLayout &DL);
   LoadInst *convertAtomicLoadToIntegerType(LoadInst *LI);
-  bool tryAtomicExpandLoad(LoadInst *LI);
+  bool tryExpandAtomicLoad(LoadInst *LI);
   bool expandAtomicLoadToLL(LoadInst *LI);
   bool expandAtomicLoadToCmpXchg(LoadInst *LI);
   StoreInst *convertAtomicStoreToIntegerType(StoreInst *SI);
