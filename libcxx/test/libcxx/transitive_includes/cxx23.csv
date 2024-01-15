@@ -650,6 +650,7 @@ thread typeinfo
 thread version
 tuple compare
 tuple cstddef
+tuple cstdint
 tuple version
 type_traits cstddef
 type_traits cstdint
