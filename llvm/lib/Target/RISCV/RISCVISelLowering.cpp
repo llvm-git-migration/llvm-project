@@ -20532,11 +20532,12 @@ unsigned RISCVTargetLowering::getCustomCtpopCost(EVT VT,
 
 bool RISCVTargetLowering::fallBackToDAGISel(const Instruction &Inst) const {
 
-  // GISel support is in progress or complete for G_ADD, G_SUB, G_AND, G_OR, and
-  // G_XOR.
+  // GISel support is in progress or complete for G_ADD, G_SUB, G_AND, G_OR,
+  // G_XOR, and G_LOAD
   unsigned Op = Inst.getOpcode();
   if (Op == Instruction::Add || Op == Instruction::Sub ||
-      Op == Instruction::And || Op == Instruction::Or || Op == Instruction::Xor)
+      Op == Instruction::And || Op == Instruction::Or ||
+      Op == Instruction::Xor || Op == Instruction::Load)
     return false;
 
   if (Inst.getType()->isScalableTy())
