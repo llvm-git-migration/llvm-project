@@ -640,7 +640,7 @@ void RISCVFrameLowering::emitPrologue(MachineFunction &MF,
   // directives.
   for (const auto &Entry : CSI) {
     int FrameIdx = Entry.getFrameIdx();
-    if (FrameIdx >=0 &&
+    if (FrameIdx >= 0 &&
         MFI.getStackID(FrameIdx) == TargetStackID::ScalableVector)
       continue;
 
@@ -1651,37 +1651,11 @@ bool RISCVFrameLowering::restoreCalleeSavedRegisters(
     DL = MI->getDebugLoc();
 
   // Manually restore values not restored by libcall & Push/Pop.
-  // Keep the same order as in the prologue. There is no need to reverse the
-  // order in the epilogue. In addition, the return address will be restored
-  // first in the epilogue. It increases the opportunity to avoid the
-  // load-to-use data hazard between loading RA and return by RA.
-  // loadRegFromStackSlot can insert multiple instructions.
-  //
-  //
-  // We first change the restore order for scalar and vector
-  // callee-saved registers as the layout shown below:
-  //
-  // Epilog restore order (original):
-  //     ----------------------------
-  //      RVV objects
-  //     ----------------------------
-  //      Callee-saved regs(scalar)
-  //      Callee-saved regs(vector)
-  //     ----------------------------
-  //
-  // Epilog restore order (after):
-  //     ----------------------------
-  //      RVV objects
-  //     ----------------------------
-  //      Callee-saved regs(vector)
-  //      Callee-saved regs(scalar)
-  //     ----------------------------
-  //
-  // So that it is able to put all vector registers which need
-  // to be restored together. The return address will be restored
-  // first in the scalar regs. It increases the opportunity to avoid the
-  // load-to-use data hazard between loading RA and return by RA.
-  // loadRegFromStackSlot can insert multiple instructions.
+  // Reverse the restore order in epilog.  In addition, the return
+  // address will be restored first in the epilogue. It increases
+  // the opportunity to avoid the load-to-use data hazard between
+  // loading RA and return by RA.  loadRegFromStackSlot can insert
+  // multiple instructions.
   const auto &UnmanagedCSI = getUnmanagedCSI(*MF, CSI);
   const auto &RVVCSI = getRVVCalleeSavedInfo(*MF, CSI);
 

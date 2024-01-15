@@ -1,4 +1,3 @@
-// REQUIRES: riscv-registered-target
 // RUN: %clang_cc1 %s -triple riscv64 -target-feature +v -verify
 
 __attribute__((riscv_vector_cc)) int var; // expected-warning {{'riscv_vector_cc' only applies to function types; type here is 'int'}}
