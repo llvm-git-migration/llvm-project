@@ -3312,7 +3312,11 @@ genOMP(Fortran::lower::AbstractConverter &converter,
                /*outerCombined=*/false);
     break;
   case llvm::omp::Directive::OMPD_workshare:
-    TODO(currentLocation, "Workshare construct");
+    // FIXME: Workshare is not a commonly used OpenMP construct, an
+    // implementation for this feature will come later. For the codes
+    // that use this construct, add a single construct for now.
+    genSingleOp(converter, eval, currentLocation, beginClauseList,
+                endClauseList);
     break;
   default: {
     // Codegen for combined directives
