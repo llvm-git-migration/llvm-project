@@ -2419,6 +2419,7 @@ private:
   bool MightBeDeclarator(DeclaratorContext Context);
   DeclGroupPtrTy ParseDeclGroup(ParsingDeclSpec &DS, DeclaratorContext Context,
                                 ParsedAttributes &Attrs,
+                                ParsedTemplateInfo &TemplateInfo,
                                 SourceLocation *DeclEnd = nullptr,
                                 ForRangeInit *FRI = nullptr);
   Decl *ParseDeclarationAfterDeclarator(Declarator &D,
@@ -3599,7 +3600,7 @@ private:
                                                  ParsedAttributes &AccessAttrs,
                                                  AccessSpecifier AS);
   Decl *ParseSingleDeclarationAfterTemplate(
-      DeclaratorContext Context, const ParsedTemplateInfo &TemplateInfo,
+      DeclaratorContext Context, ParsedTemplateInfo &TemplateInfo,
       ParsingDeclRAIIObject &DiagsFromParams, SourceLocation &DeclEnd,
       ParsedAttributes &AccessAttrs, AccessSpecifier AS = AS_none);
   bool ParseTemplateParameters(MultiParseScope &TemplateScopes, unsigned Depth,

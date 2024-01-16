@@ -168,10 +168,10 @@ Decl *Parser::ParseTemplateDeclarationOrSpecialization(
                            LastParamListWasEmpty),
         DeclEnd);
 
+  ParsedTemplateInfo TemplateInfo(&ParamLists, isSpecialization,
+                                  LastParamListWasEmpty);
   return ParseSingleDeclarationAfterTemplate(
-      Context,
-      ParsedTemplateInfo(&ParamLists, isSpecialization, LastParamListWasEmpty),
-      ParsingTemplateParams, DeclEnd, AccessAttrs, AS);
+      Context, TemplateInfo, ParsingTemplateParams, DeclEnd, AccessAttrs, AS);
 }
 
 /// Parse a single declaration that declares a template,
@@ -185,7 +185,7 @@ Decl *Parser::ParseTemplateDeclarationOrSpecialization(
 ///
 /// \returns the new declaration.
 Decl *Parser::ParseSingleDeclarationAfterTemplate(
-    DeclaratorContext Context, const ParsedTemplateInfo &TemplateInfo,
+    DeclaratorContext Context, ParsedTemplateInfo &TemplateInfo,
     ParsingDeclRAIIObject &DiagsFromTParams, SourceLocation &DeclEnd,
     ParsedAttributes &AccessAttrs, AccessSpecifier AS) {
   assert(TemplateInfo.Kind != ParsedTemplateInfo::NonTemplate &&
@@ -262,123 +262,12 @@ Decl *Parser::ParseSingleDeclarationAfterTemplate(
   if (TemplateInfo.Kind == ParsedTemplateInfo::ExplicitInstantiation)
     ProhibitAttributes(prefixAttrs);
 
-  // Parse the declarator.
-  ParsingDeclarator DeclaratorInfo(*this, DS, prefixAttrs,
-                                   (DeclaratorContext)Context);
-  if (TemplateInfo.TemplateParams)
-    DeclaratorInfo.setTemplateParameterLists(*TemplateInfo.TemplateParams);
-
-  // Turn off usual access checking for template specializations and
-  // instantiations.
-  // C++20 [temp.spec] 13.9/6.
-  // This disables the access checking rules for function template explicit
-  // instantiation and explicit specialization:
-  // - parameter-list;
-  // - template-argument-list;
-  // - noexcept-specifier;
-  // - dynamic-exception-specifications (deprecated in C++11, removed since
-  //   C++17).
-  bool IsTemplateSpecOrInst =
-      (TemplateInfo.Kind == ParsedTemplateInfo::ExplicitInstantiation ||
-       TemplateInfo.Kind == ParsedTemplateInfo::ExplicitSpecialization);
-  SuppressAccessChecks SAC(*this, IsTemplateSpecOrInst);
-
-  ParseDeclarator(DeclaratorInfo);
-
-  if (IsTemplateSpecOrInst)
-    SAC.done();
-
-  // Error parsing the declarator?
-  if (!DeclaratorInfo.hasName()) {
-    SkipMalformedDecl();
+  auto DeclGroupPtr =
+      ParseDeclGroup(DS, Context, prefixAttrs, TemplateInfo, &DeclEnd,
+                     /*FRI=*/nullptr);
+  if (!DeclGroupPtr || !DeclGroupPtr.get().isSingleDecl())
     return nullptr;
-  }
-
-  LateParsedAttrList LateParsedAttrs(true);
-  if (DeclaratorInfo.isFunctionDeclarator()) {
-    if (Tok.is(tok::kw_requires)) {
-      CXXScopeSpec &ScopeSpec = DeclaratorInfo.getCXXScopeSpec();
-      DeclaratorScopeObj DeclScopeObj(*this, ScopeSpec);
-      if (ScopeSpec.isValid() &&
-          Actions.ShouldEnterDeclaratorScope(getCurScope(), ScopeSpec))
-        DeclScopeObj.EnterDeclaratorScope();
-      ParseTrailingRequiresClause(DeclaratorInfo);
-    }
-
-    MaybeParseGNUAttributes(DeclaratorInfo, &LateParsedAttrs);
-  }
-
-  if (DeclaratorInfo.isFunctionDeclarator() &&
-      isStartOfFunctionDefinition(DeclaratorInfo)) {
-
-    // Function definitions are only allowed at file scope and in C++ classes.
-    // The C++ inline method definition case is handled elsewhere, so we only
-    // need to handle the file scope definition case.
-    if (Context != DeclaratorContext::File) {
-      Diag(Tok, diag::err_function_definition_not_allowed);
-      SkipMalformedDecl();
-      return nullptr;
-    }
-
-    if (DS.getStorageClassSpec() == DeclSpec::SCS_typedef) {
-      // Recover by ignoring the 'typedef'. This was probably supposed to be
-      // the 'typename' keyword, which we should have already suggested adding
-      // if it's appropriate.
-      Diag(DS.getStorageClassSpecLoc(), diag::err_function_declared_typedef)
-        << FixItHint::CreateRemoval(DS.getStorageClassSpecLoc());
-      DS.ClearStorageClassSpecs();
-    }
-
-    if (TemplateInfo.Kind == ParsedTemplateInfo::ExplicitInstantiation) {
-      if (DeclaratorInfo.getName().getKind() !=
-          UnqualifiedIdKind::IK_TemplateId) {
-        // If the declarator-id is not a template-id, issue a diagnostic and
-        // recover by ignoring the 'template' keyword.
-        Diag(Tok, diag::err_template_defn_explicit_instantiation) << 0;
-        return ParseFunctionDefinition(DeclaratorInfo, ParsedTemplateInfo(),
-                                       &LateParsedAttrs);
-      } else {
-        SourceLocation LAngleLoc
-          = PP.getLocForEndOfToken(TemplateInfo.TemplateLoc);
-        Diag(DeclaratorInfo.getIdentifierLoc(),
-             diag::err_explicit_instantiation_with_definition)
-            << SourceRange(TemplateInfo.TemplateLoc)
-            << FixItHint::CreateInsertion(LAngleLoc, "<>");
-
-        // Recover as if it were an explicit specialization.
-        TemplateParameterLists FakedParamLists;
-        FakedParamLists.push_back(Actions.ActOnTemplateParameterList(
-            0, SourceLocation(), TemplateInfo.TemplateLoc, LAngleLoc,
-            std::nullopt, LAngleLoc, nullptr));
-
-        return ParseFunctionDefinition(
-            DeclaratorInfo, ParsedTemplateInfo(&FakedParamLists,
-                                               /*isSpecialization=*/true,
-                                               /*lastParameterListWasEmpty=*/true),
-            &LateParsedAttrs);
-      }
-    }
-    return ParseFunctionDefinition(DeclaratorInfo, TemplateInfo,
-                                   &LateParsedAttrs);
-  }
-
-  // Parse this declaration.
-  Decl *ThisDecl = ParseDeclarationAfterDeclarator(DeclaratorInfo,
-                                                   TemplateInfo);
-
-  if (Tok.is(tok::comma)) {
-    Diag(Tok, diag::err_multiple_template_declarators)
-      << (int)TemplateInfo.Kind;
-    SkipUntil(tok::semi);
-    return ThisDecl;
-  }
-
-  // Eat the semi colon after the declaration.
-  ExpectAndConsumeSemi(diag::err_expected_semi_declaration);
-  if (LateParsedAttrs.size() > 0)
-    ParseLexedAttributeList(LateParsedAttrs, ThisDecl, true, false);
-  DeclaratorInfo.complete(ThisDecl);
-  return ThisDecl;
+  return DeclGroupPtr.get().getSingleDecl();
 }
 
 /// \brief Parse a single declaration that declares a concept.
@@ -1696,9 +1585,9 @@ Decl *Parser::ParseExplicitInstantiation(DeclaratorContext Context,
   ParsingDeclRAIIObject
     ParsingTemplateParams(*this, ParsingDeclRAIIObject::NoParent);
 
+  ParsedTemplateInfo TemplateInfo(ExternLoc, TemplateLoc);
   return ParseSingleDeclarationAfterTemplate(
-      Context, ParsedTemplateInfo(ExternLoc, TemplateLoc),
-      ParsingTemplateParams, DeclEnd, AccessAttrs, AS);
+      Context, TemplateInfo, ParsingTemplateParams, DeclEnd, AccessAttrs, AS);
 }
 
 SourceRange Parser::ParsedTemplateInfo::getSourceRange() const {

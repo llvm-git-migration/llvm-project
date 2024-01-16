@@ -2027,7 +2027,8 @@ Parser::DeclGroupPtrTy Parser::ParseSimpleDeclaration(
   if (DeclSpecStart)
     DS.SetRangeStart(*DeclSpecStart);
 
-  return ParseDeclGroup(DS, Context, DeclAttrs, &DeclEnd, FRI);
+  ParsedTemplateInfo TemplateInfo;
+  return ParseDeclGroup(DS, Context, DeclAttrs, TemplateInfo, &DeclEnd, FRI);
 }
 
 /// Returns true if this might be the start of a declarator, or a common typo
@@ -2184,6 +2185,7 @@ void Parser::SkipMalformedDecl() {
 Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
                                               DeclaratorContext Context,
                                               ParsedAttributes &Attrs,
+                                              ParsedTemplateInfo &TemplateInfo,
                                               SourceLocation *DeclEnd,
                                               ForRangeInit *FRI) {
   // Parse the first declarator.
@@ -2193,7 +2195,28 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
   ParsedAttributes LocalAttrs(AttrFactory);
   LocalAttrs.takeAllFrom(Attrs);
   ParsingDeclarator D(*this, DS, LocalAttrs, Context);
+  if (TemplateInfo.TemplateParams)
+    D.setTemplateParameterLists(*TemplateInfo.TemplateParams);
+
+  // Turn off usual access checking for template specializations and
+  // instantiations.
+  // C++20 [temp.spec] 13.9/6.
+  // This disables the access checking rules for function template explicit
+  // instantiation and explicit specialization:
+  // - parameter-list;
+  // - template-argument-list;
+  // - noexcept-specifier;
+  // - dynamic-exception-specifications (deprecated in C++11, removed since
+  //   C++17).
+  bool IsTemplateSpecOrInst =
+      (TemplateInfo.Kind == ParsedTemplateInfo::ExplicitInstantiation ||
+       TemplateInfo.Kind == ParsedTemplateInfo::ExplicitSpecialization);
+  SuppressAccessChecks SAC(*this, IsTemplateSpecOrInst);
+
   ParseDeclarator(D);
+
+  if (IsTemplateSpecOrInst)
+    SAC.done();
 
   // Bail out if the first declarator didn't seem well-formed.
   if (!D.hasName() && !D.mayOmitIdentifier()) {
@@ -2204,8 +2227,14 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
   if (getLangOpts().HLSL)
     MaybeParseHLSLSemantics(D);
 
-  if (Tok.is(tok::kw_requires))
+  if (Tok.is(tok::kw_requires)) {
+    CXXScopeSpec &ScopeSpec = D.getCXXScopeSpec();
+    DeclaratorScopeObj DeclScopeObj(*this, ScopeSpec);
+    if (ScopeSpec.isValid() &&
+        Actions.ShouldEnterDeclaratorScope(getCurScope(), ScopeSpec))
+      DeclScopeObj.EnterDeclaratorScope();
     ParseTrailingRequiresClause(D);
+  }
 
   // Save late-parsed attributes for now; they need to be parsed in the
   // appropriate function scope after the function Decl has been constructed.
@@ -2269,8 +2298,34 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
             DS.ClearStorageClassSpecs();
           }
 
-          Decl *TheDecl = ParseFunctionDefinition(D, ParsedTemplateInfo(),
-                                                  &LateParsedAttrs);
+          if (TemplateInfo.Kind == ParsedTemplateInfo::ExplicitInstantiation) {
+            if (D.getName().getKind() != UnqualifiedIdKind::IK_TemplateId) {
+              // If the declarator-id is not a template-id, issue a diagnostic
+              // and recover by ignoring the 'template' keyword.
+              Diag(Tok, diag::err_template_defn_explicit_instantiation) << 0;
+              TemplateInfo = ParsedTemplateInfo();
+            } else {
+              SourceLocation LAngleLoc =
+                  PP.getLocForEndOfToken(TemplateInfo.TemplateLoc);
+              Diag(D.getIdentifierLoc(),
+                   diag::err_explicit_instantiation_with_definition)
+                  << SourceRange(TemplateInfo.TemplateLoc)
+                  << FixItHint::CreateInsertion(LAngleLoc, "<>");
+
+              // Recover as if it were an explicit specialization.
+              TemplateParameterLists FakedParamLists;
+              FakedParamLists.push_back(Actions.ActOnTemplateParameterList(
+                  0, SourceLocation(), TemplateInfo.TemplateLoc, LAngleLoc,
+                  std::nullopt, LAngleLoc, nullptr));
+              TemplateInfo =
+                  ParsedTemplateInfo(&FakedParamLists,
+                                     /*isSpecialization=*/true,
+                                     /*lastParameterListWasEmpty=*/true);
+            }
+          }
+
+          Decl *TheDecl =
+              ParseFunctionDefinition(D, TemplateInfo, &LateParsedAttrs);
           return Actions.ConvertDeclToDeclGroup(TheDecl);
         }
 
@@ -2334,8 +2389,8 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
   }
 
   SmallVector<Decl *, 8> DeclsInGroup;
-  Decl *FirstDecl = ParseDeclarationAfterDeclaratorAndAttributes(
-      D, ParsedTemplateInfo(), FRI);
+  Decl *FirstDecl =
+      ParseDeclarationAfterDeclaratorAndAttributes(D, TemplateInfo, FRI);
   if (LateParsedAttrs.size() > 0)
     ParseLexedAttributeList(LateParsedAttrs, FirstDecl, true, false);
   D.complete(FirstDecl);
@@ -2343,6 +2398,13 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
     DeclsInGroup.push_back(FirstDecl);
 
   bool ExpectSemi = Context != DeclaratorContext::ForInit;
+
+  if (TemplateInfo.Kind != ParsedTemplateInfo::NonTemplate &&
+      Tok.is(tok::comma)) {
+    Diag(Tok, diag::err_multiple_template_declarators)
+        << (int)TemplateInfo.Kind;
+    // SkipUntil(tok::semi);
+  }
 
   // If we don't have a comma, it is either the end of the list (a ';') or an
   // error, bail out.
@@ -2387,7 +2449,7 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
       //        declarator requires-clause
       if (Tok.is(tok::kw_requires))
         ParseTrailingRequiresClause(D);
-      Decl *ThisDecl = ParseDeclarationAfterDeclarator(D);
+      Decl *ThisDecl = ParseDeclarationAfterDeclarator(D, TemplateInfo);
       D.complete(ThisDecl);
       if (ThisDecl)
         DeclsInGroup.push_back(ThisDecl);

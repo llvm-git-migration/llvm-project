@@ -3024,7 +3024,7 @@ Parser::ParseCXXClassMemberDeclaration(AccessSpecifier AS,
   // member-declarator-list:
   //   member-declarator
   //   member-declarator-list ',' member-declarator
-
+  bool PastFirst = false;
   while (true) {
     InClassInitStyle HasInClassInit = ICIS_NoInit;
     bool HasStaticInitializer = false;
@@ -3167,14 +3167,12 @@ Parser::ParseCXXClassMemberDeclaration(AccessSpecifier AS,
 
     DeclaratorInfo.complete(ThisDecl);
 
-    if (TemplateInfo.Kind != ParsedTemplateInfo::NonTemplate) {
-      if (Tok.is(tok::comma)) {
-        Diag(Tok, diag::err_multiple_template_declarators)
-            << (int)TemplateInfo.Kind;
-        SkipUntil(tok::semi, StopBeforeMatch);
-      }
-      break;
+    if (TemplateInfo.Kind != ParsedTemplateInfo::NonTemplate && !PastFirst &&
+        Tok.is(tok::comma)) {
+      Diag(Tok, diag::err_multiple_template_declarators)
+          << (int)TemplateInfo.Kind;
     }
+    PastFirst = true;
 
     // If we don't have a comma, it is either the end of the list (a ';')
     // or an error, bail out.

@@ -1240,8 +1240,8 @@ Parser::DeclGroupPtrTy Parser::ParseDeclOrFunctionDefInternal(
     Decl *TheDecl = ParseLinkage(DS, DeclaratorContext::File);
     return Actions.ConvertDeclToDeclGroup(TheDecl);
   }
-
-  return ParseDeclGroup(DS, DeclaratorContext::File, Attrs);
+  ParsedTemplateInfo TemplateInfo;
+  return ParseDeclGroup(DS, DeclaratorContext::File, Attrs, TemplateInfo);
 }
 
 Parser::DeclGroupPtrTy Parser::ParseDeclarationOrFunctionDefinition(
