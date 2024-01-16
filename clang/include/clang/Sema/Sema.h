@@ -8256,7 +8256,7 @@ public:
                                       TemplateSpecializationKind TSK,
                                       bool Complain = true);
 
-  void DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl);
+  void DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl, bool IssueWarning = false);
   TemplateDecl *AdjustDeclIfTemplate(Decl *&Decl);
 
   NamedDecl *ActOnTypeParameter(Scope *S, bool Typename,

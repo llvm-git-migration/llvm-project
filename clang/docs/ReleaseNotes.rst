@@ -97,6 +97,7 @@ Attribute Changes in Clang
 
 Improvements to Clang's diagnostics
 -----------------------------------
+- Clang now diagnoses function/variable templates that shadow their own template parameters, e.g. ``template<class T> void T();``.
 
 Improvements to Clang's time-trace
 ----------------------------------
