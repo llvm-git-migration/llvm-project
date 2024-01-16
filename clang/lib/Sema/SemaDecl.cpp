@@ -6377,12 +6377,6 @@ NamedDecl *Sema::HandleDeclarator(Scope *S, Declarator &D,
   } else if (DiagnoseUnexpandedParameterPack(NameInfo, UPPC_DeclarationType))
     return nullptr;
 
-  // The scope passed in may not be a decl scope.  Zip up the scope tree until
-  // we find one that is.
-  while ((S->getFlags() & Scope::DeclScope) == 0 ||
-         (S->getFlags() & Scope::TemplateParamScope) != 0)
-    S = S->getParent();
-
   DeclContext *DC = CurContext;
   if (D.getCXXScopeSpec().isInvalid())
     D.setInvalidType();
@@ -6506,12 +6500,26 @@ NamedDecl *Sema::HandleDeclarator(Scope *S, Declarator &D,
     RemoveUsingDecls(Previous);
   }
 
-  if (Previous.isSingleResult() &&
-      Previous.getFoundDecl()->isTemplateParameter()) {
+  // if (Previous.isSingleResult() &&
+  //    Previous.getFoundDecl()->isTemplateParameter()) {
+  if (auto *TPD = Previous.getAsSingle<NamedDecl>();
+      TPD && TPD->isTemplateParameter()) {
+    // Older versions of clang allowed the names of function/variable templates
+    // to shadow the names of their template parameters. For the compatibility
+    // purposes we detect such cases and issue a default-to-error warning that
+    // can be disabled with -Wno-strict-primary-template-shadow.
+    bool IssueShadowingWarning = false;
+    for (Scope *Inner = S; (Inner->getFlags() & Scope::DeclScope) == 0 ||
+                           Inner->isTemplateParamScope();
+         Inner = Inner->getParent()) {
+      if (IssueShadowingWarning = Inner->isDeclScope(TPD))
+        break;
+    }
+
     // Maybe we will complain about the shadowed template parameter.
     if (!D.isInvalidType())
-      DiagnoseTemplateParameterShadow(D.getIdentifierLoc(),
-                                      Previous.getFoundDecl());
+      DiagnoseTemplateParameterShadow(D.getIdentifierLoc(), TPD,
+                                      IssueShadowingWarning);
 
     // Just pretend that we didn't see the previous declaration.
     Previous.clear();
@@ -6534,6 +6542,12 @@ NamedDecl *Sema::HandleDeclarator(Scope *S, Declarator &D,
   // of a function declaration (C++ only).
   if (getLangOpts().CPlusPlus)
     CheckExtraCXXDefaultArguments(D);
+
+  // The scope passed in may not be a decl scope.  Zip up the scope tree until
+  // we find one that is.
+  while ((S->getFlags() & Scope::DeclScope) == 0 ||
+         (S->getFlags() & Scope::TemplateParamScope) != 0)
+    S = S->getParent();
 
   NamedDecl *New;
 

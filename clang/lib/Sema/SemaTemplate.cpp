@@ -885,7 +885,8 @@ bool Sema::DiagnoseUninstantiableTemplate(SourceLocation PointOfInstantiation,
 /// that the template parameter 'PrevDecl' is being shadowed by a new
 /// declaration at location Loc. Returns true to indicate that this is
 /// an error, and false otherwise.
-void Sema::DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl) {
+void Sema::DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl,
+                                           bool IssueWarning) {
   assert(PrevDecl->isTemplateParameter() && "Not a template parameter");
 
   // C++ [temp.local]p4:
@@ -893,8 +894,10 @@ void Sema::DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl) {
   //   scope (including nested scopes).
   //
   // Make this a warning when MSVC compatibility is requested.
-  unsigned DiagId = getLangOpts().MSVCCompat ? diag::ext_template_param_shadow
-                                             : diag::err_template_param_shadow;
+  unsigned DiagId = getLangOpts().MSVCCompat
+                        ? diag::ext_template_param_shadow
+                        : (IssueWarning ? diag::ext_compat_template_param_shadow
+                                        : diag::err_template_param_shadow);
   const auto *ND = cast<NamedDecl>(PrevDecl);
   Diag(Loc, DiagId) << ND->getDeclName();
   NoteTemplateParameterLocation(*ND);
