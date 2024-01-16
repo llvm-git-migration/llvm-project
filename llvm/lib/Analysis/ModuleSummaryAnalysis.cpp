@@ -499,11 +499,7 @@ static void computeFunctionSummary(
                    StackContext.beginAfterSharedPrefix(InstCallsite);
                ContextIter != StackContext.end(); ++ContextIter) {
             unsigned StackIdIdx = Index.addOrGetStackIdIndex(*ContextIter);
-            // If this is a direct recursion, simply skip the duplicate
-            // entries. If this is mutual recursion, handling is left to
-            // the LTO link analysis client.
-            if (StackIdIndices.empty() || StackIdIndices.back() != StackIdIdx)
-              StackIdIndices.push_back(StackIdIdx);
+            StackIdIndices.push_back(StackIdIdx);
           }
           MIBs.push_back(
               MIBInfo(getMIBAllocType(MIBMD), std::move(StackIdIndices)));
