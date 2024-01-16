@@ -21,6 +21,8 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/Interfaces/FunctionInterfaces.h"
+#include "mlir/Interfaces/SubsetOpInterface.h"
+#include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Parser/Parser.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/InliningUtils.h"
@@ -118,6 +120,9 @@ void mlir::linalg::LinalgDialect::initialize() {
       >(namedStructuredOpRegionBuilders);
 
   addInterfaces<LinalgInlinerInterface>();
+  declarePromisedInterface<CopyOp, SubsetOpInterface>();
+  declarePromisedInterface<CopyOp, SubsetInsertionOpInterface>();
+  declarePromisedInterface<IndexOp, ValueBoundsOpInterface>();
 }
 
 LogicalResult LinalgDialect::verifyOperationAttribute(Operation *op,

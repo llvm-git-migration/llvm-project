@@ -9,6 +9,8 @@
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Bufferization/IR/BufferDeallocationOpInterface.h"
+#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/Builders.h"
@@ -67,6 +69,11 @@ void ControlFlowDialect::initialize() {
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.cpp.inc"
       >();
   addInterfaces<ControlFlowInlinerInterface>();
+  declarePromisedInterface<BranchOp, bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<CondBranchOp,
+                           bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<CondBranchOp,
+                           bufferization::BufferDeallocationOpInterface>();
 }
 
 //===----------------------------------------------------------------------===//
