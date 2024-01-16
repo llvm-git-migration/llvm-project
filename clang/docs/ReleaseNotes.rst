@@ -268,6 +268,8 @@ Non-comprehensive list of changes in this release
   and vector types as return value ``19``, to match GCC 14's behavior.
 * The default value of `_MSC_VER` was raised from 1920 to 1933.
 * Since MSVC 19.33 added undocumented attribute ``[[msvc::constexpr]]``, this release adds the attribute as well.
+* Support for ``__builtin_verbose_trap`` has been added. See
+  https://clang.llvm.org/docs/LanguageExtensions.html#builtin-functions.
 
 * Added ``#pragma clang fp reciprocal``.
 
