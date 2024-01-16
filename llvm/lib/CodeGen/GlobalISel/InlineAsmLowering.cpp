@@ -13,6 +13,7 @@
 
 #include "llvm/CodeGen/GlobalISel/InlineAsmLowering.h"
 #include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
@@ -601,6 +602,9 @@ bool InlineAsmLowering::lowerInlineAsm(
       return false;
     }
   }
+
+  if (ExtraInfo.get() & InlineAsm::Extra_IsAlignStack)
+    MF.getFrameInfo().setAdjustsStack(true);
 
   return true;
 }
