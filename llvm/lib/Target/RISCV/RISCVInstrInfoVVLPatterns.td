@@ -708,12 +708,11 @@ class VPatTiedBinaryMaskVL_V<SDNode vop,
                        srcvalue,
                        true_mask,
                        VLOpFrag)),
-          result_reg_class:$rs1, result_reg_class:$merge, VLOpFrag),
-        (!cast<Instruction>(instruction_name#"_"#suffix#"_"# vlmul.MX#"_MASK")
-          result_reg_class:$merge,
+          result_reg_class:$rs1, result_reg_class:$rs1, VLOpFrag),
+        (!cast<Instruction>(instruction_name#"_"#suffix#"_"# vlmul.MX#"_MASK_TIED")
           result_reg_class:$rs1,
           op2_reg_class:$rs2,
-          (mask_type V0), GPR:$vl, sew, TAIL_AGNOSTIC)>;
+          (mask_type V0), GPR:$vl, sew, TU_MU)>;
 
 multiclass VPatTiedBinaryNoMaskVL_V_RM<SDNode vop,
                                        string instruction_name,

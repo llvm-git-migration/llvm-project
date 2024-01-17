@@ -13475,7 +13475,7 @@ static SDValue combineVWADDSelect(SDNode *N, SelectionDAG &DAG) {
   SDValue Z = Merge->getOperand(2);
 
   if (Z.getOpcode() != ISD::INSERT_SUBVECTOR ||
-      !isNullConstant(Z.getOperand(2)))
+      !ISD::isBuildVectorAllZeros(Z.getOperand(1).getNode()))
     return SDValue();
 
   if (!Merge.hasOneUse())
@@ -13489,8 +13489,7 @@ static SDValue combineVWADDSelect(SDNode *N, SelectionDAG &DAG) {
   EVT VT = N->getValueType(0);
 
   SDValue WX = DAG.getNode(Opc, DL, VT, Ops, N->getFlags());
-  return DAG.getNode(RISCVISD::VMERGE_VL, DL, VT, Cond, WX, Y, DAG.getUNDEF(VT),
-                     VL);
+  return DAG.getNode(RISCVISD::VMERGE_VL, DL, VT, Cond, WX, Y, Y, VL);
 }
 
 static SDValue performVWADD_VLCombine(SDNode *N,
