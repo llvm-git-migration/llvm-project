@@ -21,6 +21,7 @@
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -1425,9 +1426,16 @@ SDValue SelectionDAGLegalize::ExpandExtractFromVectorThroughStack(SDValue Op) {
 
   if (!Ch.getNode()) {
     // Store the value to a temporary stack slot, then LOAD the returned part.
+    auto &MF = DAG.getMachineFunction();
+    auto &MFI = MF.getFrameInfo();
     StackPtr = DAG.CreateStackTemporary(VecVT);
-    Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr,
-                      MachinePointerInfo());
+    int FI = cast<FrameIndexSDNode>(StackPtr.getNode())->getIndex();
+    MachinePointerInfo PtrInfo = MachinePointerInfo::getFixedStack(MF, FI);
+    MachineMemOperand *StoreMMO =
+        MF.getMachineMemOperand(PtrInfo, MachineMemOperand::MOStore,
+                                MFI.getObjectSize(FI), MFI.getObjectAlign(FI));
+
+    Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, StoreMMO);
   }
 
   SDValue NewLoad;
