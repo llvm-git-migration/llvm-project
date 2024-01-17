@@ -21,6 +21,7 @@
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -1377,6 +1378,19 @@ void SelectionDAGLegalize::LegalizeOp(SDNode *Node) {
   }
 }
 
+// Helper function that generates an MMO that considers the alignment of the
+// stack, and the size of the stack object
+MachineMemOperand *getStackAlignedMMO(SDValue &StackPtr, MachineFunction &MF) {
+  auto &MFI = MF.getFrameInfo();
+  int FI = cast<FrameIndexSDNode>(StackPtr.getNode())->getIndex();
+  MachinePointerInfo PtrInfo = MachinePointerInfo::getFixedStack(MF, FI);
+  MachineMemOperand *MMO =
+      MF.getMachineMemOperand(PtrInfo, MachineMemOperand::MOStore,
+                              MFI.getObjectSize(FI), MFI.getObjectAlign(FI));
+
+  return MMO;
+}
+
 SDValue SelectionDAGLegalize::ExpandExtractFromVectorThroughStack(SDValue Op) {
   SDValue Vec = Op.getOperand(0);
   SDValue Idx = Op.getOperand(1);
@@ -1426,8 +1440,9 @@ SDValue SelectionDAGLegalize::ExpandExtractFromVectorThroughStack(SDValue Op) {
   if (!Ch.getNode()) {
     // Store the value to a temporary stack slot, then LOAD the returned part.
     StackPtr = DAG.CreateStackTemporary(VecVT);
-    Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr,
-                      MachinePointerInfo());
+    MachineMemOperand *StoreMMO =
+        getStackAlignedMMO(StackPtr, DAG.getMachineFunction());
+    Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, StoreMMO);
   }
 
   SDValue NewLoad;
