@@ -10,9 +10,11 @@
 #define LIBCXX_TEST_SUPPORT_TEST_RANGE_H
 
 #include <concepts>
+#include <functional>
 #include <iterator>
 #include <ranges>
 
+#include "__concepts/invocable.h"
 #include "test_iterators.h"
 
 #if TEST_STD_VER < 17
@@ -88,5 +90,13 @@ concept simple_view =
     std::ranges::view<Range> && std::ranges::range<const Range> &&
     std::same_as<std::ranges::iterator_t<Range>, std::ranges::iterator_t<const Range>> &&
     std::same_as<std::ranges::sentinel_t<Range>, std::ranges::sentinel_t<const Range>>;
+
+template <class T, class U = T>
+concept weakly_equality_comparable_with = requires(const T& t, const U& u) {
+  { t == u } -> std::same_as<bool>;
+  { t != u } -> std::same_as<bool>;
+  { u == t } -> std::same_as<bool>;
+  { u != t } -> std::same_as<bool>;
+};
 
 #endif // LIBCXX_TEST_SUPPORT_TEST_RANGE_H
