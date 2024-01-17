@@ -4692,9 +4692,8 @@ private:
 
   /// Lower functions contained in a module.
   void lowerMod(Fortran::lower::pft::ModuleLikeUnit &mod) {
-    for (Fortran::lower::pft::FunctionLikeUnit &f : mod.nestedFunctions) {
+    for (Fortran::lower::pft::FunctionLikeUnit &f : mod.nestedFunctions)
       lowerFunc(f);
-    }
   }
 
   void setCurrentPosition(const Fortran::parser::CharBlock &position) {
