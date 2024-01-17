@@ -4376,8 +4376,14 @@ NestedNameSpecifierLoc TreeTransform<Derived>::TransformNestedNameSpecifierLoc(
           SS.Adopt(ETL.getQualifierLoc());
           TL = ETL.getNamedTypeLoc();
         }
-        SS.Extend(SemaRef.Context, /*FIXME:*/ SourceLocation(), TL,
-                  Q.getLocalEndLoc());
+        SourceLocation TemplateKWLoc;
+        if (const auto TSTL = TL.getAs<TemplateSpecializationTypeLoc>())
+          TemplateKWLoc = TSTL.getTemplateKeywordLoc();
+        else if (const auto DTSTL =
+                     TL.getAs<DependentTemplateSpecializationTypeLoc>())
+          TemplateKWLoc = DTSTL.getTemplateKeywordLoc();
+
+        SS.Extend(SemaRef.Context, TemplateKWLoc, TL, Q.getLocalEndLoc());
         break;
       }
       // If the nested-name-specifier is an invalid type def, don't emit an
