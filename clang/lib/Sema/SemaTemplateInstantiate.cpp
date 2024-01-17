@@ -3064,10 +3064,18 @@ bool Sema::SubstDefaultArgument(
       if (addInstantiatedParametersToScope(FD, PatternFD, *LIS, TemplateArgs))
         return true;
     }
+    auto NewTemplateArgs = TemplateArgs;
+    if (FD->isOutOfLine()) {
+      auto *CurrentTemplateArgumentList = TemplateArgumentList::CreateCopy(
+          getASTContext(), TemplateArgs.getInnermost());
+      NewTemplateArgs = getTemplateInstantiationArgs(
+          FD, FD->getDeclContext(), true, CurrentTemplateArgumentList, true,
+          nullptr, false, false);
+    }
 
     runWithSufficientStackSpace(Loc, [&] {
-      Result = SubstInitializer(PatternExpr, TemplateArgs,
-                                /*DirectInit*/false);
+      Result = SubstInitializer(PatternExpr, NewTemplateArgs,
+                                /*DirectInit*/ false);
     });
   }
   if (Result.isInvalid())
