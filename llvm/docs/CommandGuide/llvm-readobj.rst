@@ -61,6 +61,16 @@ file formats.
   Dump decompressed section content when used with ``-x`` or ``-p``.
   If the section(s) are not compressed, they are displayed as is.
 
+.. option:: --demangle, -C
+
+ Display demangled symbol names in the output; the option only is for ELF and
+ XCOFF file format.
+
+.. option:: --no-demangle (default)
+
+ Not demangle symbol names in the output; the option only is for ELF and
+ XCOFF file format.
+
 .. option:: --expand-relocs
 
  When used with :option:`--relocs`, display each relocation in an expanded
@@ -163,10 +173,6 @@ The following options are implemented only for the ELF file format.
 
  Display the contents of the basic block address map section(s), which contain the
  address of each function, along with the relative offset of each basic block.
-
-.. option:: --demangle, -C
-
- Display demangled symbol names in the output.
 
 .. option:: --dependent-libraries
 
