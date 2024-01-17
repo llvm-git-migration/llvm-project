@@ -691,6 +691,30 @@ multiclass VPatTiedBinaryNoMaskVL_V<SDNode vop,
                      GPR:$vl, sew, TU_MU)>;
 }
 
+class VPatTiedBinaryMaskVL_V<SDNode vop,
+                                string instruction_name,
+                                string suffix,
+                                ValueType result_type,
+                                ValueType op2_type,
+                                ValueType mask_type,
+                                int sew,
+                                LMULInfo vlmul,
+                                VReg result_reg_class,
+                                VReg op2_reg_class>
+  : Pat<(riscv_vmerge_vl (mask_type V0),
+          (result_type (vop
+                       result_reg_class:$rs1,
+                       (op2_type op2_reg_class:$rs2),
+                       srcvalue,
+                       true_mask,
+                       VLOpFrag)),
+          result_reg_class:$rs1, result_reg_class:$merge, VLOpFrag),
+        (!cast<Instruction>(instruction_name#"_"#suffix#"_"# vlmul.MX#"_MASK")
+          result_reg_class:$merge,
+          result_reg_class:$rs1,
+          op2_reg_class:$rs2,
+          (mask_type V0), GPR:$vl, sew, TAIL_AGNOSTIC)>;
+
 multiclass VPatTiedBinaryNoMaskVL_V_RM<SDNode vop,
                                        string instruction_name,
                                        string suffix,
@@ -818,6 +842,9 @@ multiclass VPatBinaryWVL_VV_VX_WV_WX<SDPatternOperator vop, SDNode vop_w,
                                  GetVTypePredicates<wti>.Predicates) in {
       defm : VPatTiedBinaryNoMaskVL_V<vop_w, instruction_name, "WV",
                                       wti.Vector, vti.Vector, vti.Log2SEW,
+                                      vti.LMul, wti.RegClass, vti.RegClass>;
+      def : VPatTiedBinaryMaskVL_V<vop_w, instruction_name, "WV",
+                                      wti.Vector, vti.Vector, vti.Mask, vti.Log2SEW,
                                       vti.LMul, wti.RegClass, vti.RegClass>;
       def : VPatBinaryVL_V<vop_w, instruction_name, "WV",
                            wti.Vector, wti.Vector, vti.Vector, vti.Mask,
