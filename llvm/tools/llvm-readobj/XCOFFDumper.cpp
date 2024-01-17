@@ -13,6 +13,7 @@
 #include "ObjDumper.h"
 #include "llvm-readobj.h"
 #include "llvm/Object/XCOFFObjectFile.h"
+#include "llvm/Demangle/Demangle.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -250,7 +251,8 @@ void XCOFFDumper::printLoaderSectionSymbolsHelper(uintptr_t LoaderSectionAddr) {
     }
 
     DictScope DS(W, "Symbol");
-    W.printString("Name", SymbolNameOrErr.get());
+    StringRef SymbolName = SymbolNameOrErr.get();
+    W.printString("Name", opts::Demangle ? demangle(SymbolName) : SymbolName);
     W.printHex("Virtual Address", LoadSecSymEntPtr->Value);
     W.printNumber("SectionNum", LoadSecSymEntPtr->SectionNumber);
     W.printHex("SymbolType", LoadSecSymEntPtr->SymbolType);
@@ -752,7 +754,7 @@ void XCOFFDumper::printSymbol(const SymbolRef &S) {
   XCOFF::StorageClass SymbolClass = SymbolEntRef.getStorageClass();
 
   W.printNumber("Index", SymbolIdx);
-  W.printString("Name", SymbolName);
+  W.printString("Name", opts::Demangle ? demangle(SymbolName) : SymbolName);
   W.printHex(GetSymbolValueName(SymbolClass), SymbolEntRef.getValue());
 
   StringRef SectionName =
