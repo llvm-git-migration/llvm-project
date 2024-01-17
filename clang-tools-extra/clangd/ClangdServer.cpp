@@ -668,16 +668,29 @@ void ClangdServer::codeAction(const CodeActionInputs &Params,
     CodeActionResult Result;
     Result.Version = InpAST->AST.version().str();
     if (KindAllowed(CodeAction::QUICKFIX_KIND)) {
-      auto FindMatchedFixes =
-          [&InpAST](const DiagRef &DR) -> llvm::ArrayRef<Fix> {
+      auto FindMatchedDiag = [&InpAST](const DiagRef &DR) -> const Diag * {
         for (const auto &Diag : InpAST->AST.getDiagnostics())
           if (Diag.Range == DR.Range && Diag.Message == DR.Message)
-            return Diag.Fixes;
-        return {};
+            return &Diag;
+        return nullptr;
       };
-      for (const auto &Diag : Params.Diagnostics)
-        for (const auto &Fix : FindMatchedFixes(Diag))
-          Result.QuickFixes.push_back({Diag, Fix});
+      for (const auto &DiagRef : Params.Diagnostics) {
+        if (const auto *Diag = FindMatchedDiag(DiagRef))
+          for (const auto &Fix : Diag->Fixes) {
+            bool IsClangTidyRename =
+                Diag->Source == Diag::ClangTidy &&
+                Diag->Name == "readability-identifier-naming" &&
+                !Fix.Edits.empty();
+            if (IsClangTidyRename) {
+              CodeActionResult::Rename R;
+              R.NewName = Fix.Edits.front().newText;
+              R.Diag = DiagRef;
+              Result.Renames.emplace_back(std::move(R));
+            } else {
+              Result.QuickFixes.push_back({DiagRef, Fix});
+            }
+          }
+      }
     }
 
     // Collect Tweaks
