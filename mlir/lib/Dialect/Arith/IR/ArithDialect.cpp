@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/BufferDeallocationOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
@@ -47,6 +48,7 @@ void arith::ArithDialect::initialize() {
 #include "mlir/Dialect/Arith/IR/ArithOpsAttributes.cpp.inc"
       >();
   addInterfaces<ArithInlinerInterface>();
+  declarePromisedInterface<ArithDialect, ConvertToLLVMPatternInterface>();
   declarePromisedInterface<SelectOp,
                            bufferization::BufferDeallocationOpInterface>();
   declarePromisedInterface<ConstantOp,

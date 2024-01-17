@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/AllocationOpInterface.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -46,6 +47,7 @@ void mlir::memref::MemRefDialect::initialize() {
 #include "mlir/Dialect/MemRef/IR/MemRefOps.cpp.inc"
       >();
   addInterfaces<MemRefInlinerInterface>();
+  declarePromisedInterface<MemRefDialect, ConvertToLLVMPatternInterface>();
   declarePromisedInterface<AllocOp, bufferization::AllocationOpInterface>();
   declarePromisedInterface<AllocaOp, bufferization::AllocationOpInterface>();
   declarePromisedInterface<ReallocOp, bufferization::AllocationOpInterface>();
