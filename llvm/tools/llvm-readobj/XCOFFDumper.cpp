@@ -12,8 +12,8 @@
 
 #include "ObjDumper.h"
 #include "llvm-readobj.h"
-#include "llvm/Object/XCOFFObjectFile.h"
 #include "llvm/Demangle/Demangle.h"
+#include "llvm/Object/XCOFFObjectFile.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/ScopedPrinter.h"
 
