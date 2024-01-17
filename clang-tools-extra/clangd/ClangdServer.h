@@ -380,6 +380,11 @@ public:
     };
     std::vector<QuickFix> QuickFixes;
     std::vector<TweakRef> TweakRefs;
+    struct Rename {
+      DiagRef Diag;
+      std::string NewName;
+    };
+    std::vector<Rename> Renames;
   };
   /// Surface code actions (quick-fixes for diagnostics, or available code
   /// tweaks) for a given range in a file.
