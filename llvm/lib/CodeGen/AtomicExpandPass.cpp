@@ -346,11 +346,7 @@ bool AtomicExpandLegacy::runOnFunction(Function &F) {
   if (skipFunction(F))
     return false;
 
-  auto *TPC = getAnalysisIfAvailable<TargetPassConfig>();
-  if (!TPC)
-    return false;
-
-  auto *TM = &TPC->getTM<TargetMachine>();
+  auto *TM = &getAnalysis<TargetPassConfig>().getTM<TargetMachine>();
 
   AtomicExpandImpl AE;
   return AE.run(F, TM);
@@ -368,9 +364,7 @@ PreservedAnalyses AtomicExpandPass::run(Function &F,
   if (!Changed)
     return PreservedAnalyses::all();
 
-  PreservedAnalyses PA;
-  PA.preserveSet<CFGAnalyses>();
-  return PA;
+  return PreservedAnalyses::none();
 }
 
 bool AtomicExpandImpl::bracketInstWithFences(Instruction *I,
