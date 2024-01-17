@@ -2962,7 +2962,8 @@ public:
   bool DiagnoseClassNameShadow(DeclContext *DC, DeclarationNameInfo Info);
   bool diagnoseQualifiedDeclaration(CXXScopeSpec &SS, DeclContext *DC,
                                     DeclarationName Name, SourceLocation Loc,
-                                    bool IsTemplateId);
+                                    TemplateIdAnnotation *TemplateId,
+                                    bool IsMemberSpecialization);
   void
   diagnoseIgnoredQualifiers(unsigned DiagID, unsigned Quals,
                             SourceLocation FallbackLoc,
