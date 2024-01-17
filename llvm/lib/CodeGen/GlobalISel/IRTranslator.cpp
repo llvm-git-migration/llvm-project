@@ -3303,6 +3303,7 @@ void IRTranslator::translateDbgInfo(const Instruction &Inst,
 bool IRTranslator::translate(const Instruction &Inst) {
   CurBuilder->setDebugLoc(Inst.getDebugLoc());
   CurBuilder->setPCSections(Inst.getMetadata(LLVMContext::MD_pcsections));
+  CurBuilder->setMMRAMetadata(Inst.getMetadata(LLVMContext::MD_MMRA));
 
   if (TLI->fallBackToDAGISel(Inst))
     return false;
