@@ -1980,14 +1980,10 @@ void SparseTensorDialect::initialize() {
       >();
   declarePromisedInterface<ConcatenateOp,
                            bufferization::BufferizableOpInterface>();
-  declarePromisedInterface<ConvertOp,
-                           bufferization::BufferizableOpInterface>();
-  declarePromisedInterface<LoadOp,
-                           bufferization::BufferizableOpInterface>();
-  declarePromisedInterface<NewOp,
-                           bufferization::BufferizableOpInterface>();
-  declarePromisedInterface<InsertOp,
-                           bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<ConvertOp, bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<LoadOp, bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<NewOp, bufferization::BufferizableOpInterface>();
+  declarePromisedInterface<InsertOp, bufferization::BufferizableOpInterface>();
   declarePromisedInterface<NumberOfEntriesOp,
                            bufferization::BufferizableOpInterface>();
   declarePromisedInterface<AssembleOp,
