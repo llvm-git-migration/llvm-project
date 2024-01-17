@@ -328,7 +328,8 @@ void XCOFFDumper::printLoaderSectionRelocationEntry(
 
     uint8_t Info = Type >> 8;
     W.printHex("Virtual Address", LoaderSecRelEntPtr->VirtualAddr);
-    W.printNumber("Symbol", SymbolName, LoaderSecRelEntPtr->SymbolIndex);
+    W.printNumber("Symbol", opts::Demangle ? demangle(SymbolName) : SymbolName,
+                  LoaderSecRelEntPtr->SymbolIndex);
     W.printString("IsSigned", IsRelocationSigned(Info) ? "Yes" : "No");
     W.printNumber("FixupBitValue", IsFixupIndicated(Info) ? 1 : 0);
     W.printNumber("Length", GetRelocatedLength(Info));
@@ -342,8 +343,9 @@ void XCOFFDumper::printLoaderSectionRelocationEntry(
                   << XCOFF::getRelocationTypeString(
                          static_cast<XCOFF::RelocationType>(Type))
                   << ")" << format_decimal(LoaderSecRelEntPtr->SectionNum, 8)
-                  << "    " << SymbolName << " ("
-                  << LoaderSecRelEntPtr->SymbolIndex << ")\n";
+                  << "    "
+                  << (opts::Demangle ? demangle(SymbolName) : SymbolName)
+                  << " (" << LoaderSecRelEntPtr->SymbolIndex << ")\n";
   }
 }
 
@@ -468,15 +470,17 @@ template <typename RelTy> void XCOFFDumper::printRelocation(RelTy Reloc) {
   if (opts::ExpandRelocs) {
     DictScope Group(W, "Relocation");
     W.printHex("Virtual Address", Reloc.VirtualAddress);
-    W.printNumber("Symbol", SymbolName, Reloc.SymbolIndex);
+    W.printNumber("Symbol", opts::Demangle ? demangle(SymbolName) : SymbolName,
+                  Reloc.SymbolIndex);
     W.printString("IsSigned", Reloc.isRelocationSigned() ? "Yes" : "No");
     W.printNumber("FixupBitValue", Reloc.isFixupIndicated() ? 1 : 0);
     W.printNumber("Length", Reloc.getRelocatedLength());
     W.printEnum("Type", (uint8_t)Reloc.Type, ArrayRef(RelocationTypeNameclass));
   } else {
     raw_ostream &OS = W.startLine();
-    OS << W.hex(Reloc.VirtualAddress) << " " << RelocName << " " << SymbolName
-       << "(" << Reloc.SymbolIndex << ") " << W.hex(Reloc.Info) << "\n";
+    OS << W.hex(Reloc.VirtualAddress) << " " << RelocName << " "
+       << (opts::Demangle ? demangle(SymbolName) : SymbolName) << "("
+       << Reloc.SymbolIndex << ") " << W.hex(Reloc.Info) << "\n";
   }
 }
 
