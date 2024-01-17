@@ -859,6 +859,10 @@ Bug Fixes in This Version
   Fixes (`#78290 <https://github.com/llvm/llvm-project/issues/78290>`_)
 - Fixed assertion failure with deleted overloaded unary operators.
   Fixes (`#78314 <https://github.com/llvm/llvm-project/issues/78314>`_)
+- Fix a crash when specializing an out-of-line member function with a default
+  parameter where we did an incorrect specialization of the initialization of
+  the default parameter.
+  Fixes (`#68490 <https://github.com/llvm/llvm-project/issues/68490>`_)
 
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
