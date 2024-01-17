@@ -257,6 +257,9 @@ struct BufferizationOptions {
   /// Parameters: Value, memory space, bufferization options
   using UnknownTypeConverterFn = std::function<BaseMemRefType(
       Value, Attribute memorySpace, const BufferizationOptions &)>;
+  // Produce a MemorySpace attribute from a tensor type
+  using GetMemorySpaceFn =
+      std::function<std::optional<Attribute>(TensorType t)>;
 
   BufferizationOptions();
 
@@ -350,6 +353,16 @@ struct BufferizationOptions {
   /// converter that returns a memref type with a fully dynamic layout map is
   /// used.
   UnknownTypeConverterFn unknownTypeConverterFn = nullptr;
+
+  // Use during type conversion to determine the memory space for memref based
+  // on the originanl tensor type
+  GetMemorySpaceFn getMemorySpaceFn = nullptr;
+
+  std::optional<Attribute> getMemorySpace(TensorType t) const {
+    if (getMemorySpaceFn)
+      return getMemorySpaceFn(t);
+    return defaultMemorySpace;
+  }
 
   /// Seed for the analysis fuzzer. If set to `0`, the fuzzer is deactivated.
   /// Should be used only with `testAnalysisOnly = true`.
