@@ -162,6 +162,11 @@ RT_API_ATTRS int Descriptor::Allocate() {
   }
   // TODO: image synchronization
   raw_.base_addr = p;
+  SetByteStrides();
+  return 0;
+}
+
+RT_API_ATTRS void Descriptor::SetByteStrides() {
   if (int dims{rank()}) {
     std::size_t stride{ElementBytes()};
     for (int j{0}; j < dims; ++j) {
@@ -170,7 +175,6 @@ RT_API_ATTRS int Descriptor::Allocate() {
       stride *= dimension.Extent();
     }
   }
-  return 0;
 }
 
 RT_API_ATTRS int Descriptor::Destroy(
