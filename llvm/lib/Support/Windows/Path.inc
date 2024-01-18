@@ -936,30 +936,11 @@ mapped_file_region::mapped_file_region(sys::fs::file_t fd, mapmode mode,
     copyFrom(mapped_file_region());
 }
 
-static bool hasFlushBufferKernelBug() {
-  static bool Ret{GetWindowsOSVersion() < llvm::VersionTuple(10, 0, 0, 17763)};
-  return Ret;
-}
-
-static bool isEXE(StringRef Magic) {
-  static const char PEMagic[] = {'P', 'E', '\0', '\0'};
-  if (Magic.starts_with(StringRef("MZ")) && Magic.size() >= 0x3c + 4) {
-    uint32_t off = read32le(Magic.data() + 0x3c);
-    // PE/COFF file, either EXE or DLL.
-    if (Magic.substr(off).starts_with(StringRef(PEMagic, sizeof(PEMagic))))
-      return true;
-  }
-  return false;
-}
-
 void mapped_file_region::unmapImpl() {
   if (Mapping) {
-
-    bool Exe = isEXE(StringRef((char *)Mapping, Size));
-
     ::UnmapViewOfFile(Mapping);
 
-    if (Mode == mapmode::readwrite && Exe && hasFlushBufferKernelBug()) {
+    if (Mode == mapmode::readwrite) {
       // There is a Windows kernel bug, the exact trigger conditions of which
       // are not well understood.  When triggered, dirty pages are not properly
       // flushed and subsequent process's attempts to read a file can return
@@ -967,6 +948,12 @@ void mapped_file_region::unmapImpl() {
       // sufficient to ensure that this bug is not triggered.
       // The bug only occurs when writing an executable and executing it right
       // after, under high I/O pressure.
+      //
+      // Separately, on VirtualBox Shared Folder mounts, writes via memory maps
+      // always end up unflushed (regardless of version of Windows, unless
+      // flushed with this explicit call, if they are renamed with
+      // SetFileInformationByHandle(FileRenameInfo) before closing the output
+      // handle.
       ::FlushFileBuffers(FileHandle);
     }
 
