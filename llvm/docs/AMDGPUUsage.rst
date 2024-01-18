@@ -631,7 +631,7 @@ generating the code. A mismatch of features may result in incorrect
 execution, or a reduction in performance.
 
 The target features supported by each processor is listed in
-:ref:`amdgpu-processor-table`.
+:ref:`amdgpu-processors`.
 
 Target features are controlled by exactly one of the following Clang
 options:
