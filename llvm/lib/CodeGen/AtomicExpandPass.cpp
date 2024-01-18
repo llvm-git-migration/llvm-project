@@ -343,9 +343,7 @@ bool AtomicExpandImpl::run(Function &F, const TargetMachine *TM) {
 }
 
 bool AtomicExpandLegacy::runOnFunction(Function &F) {
-  if (skipFunction(F))
-    return false;
-
+  i
   auto *TM = &getAnalysis<TargetPassConfig>().getTM<TargetMachine>();
 
   AtomicExpandImpl AE;
