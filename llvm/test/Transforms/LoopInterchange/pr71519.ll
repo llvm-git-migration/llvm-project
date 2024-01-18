@@ -10,11 +10,16 @@
 ;;      for (int j = 1; j < 256; j++)
 ;;        aa[j][i] = aa[j - 1][i] + bb[j][i];
 
-; CHECK: Found anti dependency between Src and Dst
+; CHECK: Before normalizing negative direction vectors:
+; CHECK: consistent anti [S 0 -1]!
+; CHECK: After normalizing negative direction vectors:
+; CHECK: consistent flow [S 0 1]!
+; CHECK: Negative dependence vector normalized.
+; CHECK: Found flow dependency between Src and Dst
 ; CHECK:  Src:  %1 = load float, ptr %arrayidx10, align 4
 ; CHECK:  Dst:  store float %add, ptr %arrayidx18, align 4
 ; CHECK: Processing InnerLoopId = 2 and OuterLoopId = 1
-; CHECK: Not interchanging loops. Cannot prove legality.
+; CHECK: Loops interchanged.
 
 define float @s231() {
 entry:

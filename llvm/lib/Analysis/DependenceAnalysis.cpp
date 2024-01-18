@@ -290,7 +290,7 @@ FullDependence::FullDependence(Instruction *Source, Instruction *Destination,
 bool FullDependence::isDirectionNegative() const {
   for (unsigned Level = 1; Level <= Levels; ++Level) {
     unsigned char Direction = DV[Level - 1].Direction;
-    if (Direction == Dependence::DVEntry::EQ)
+    if (Direction == Dependence::DVEntry::EQ || isScalar(Level))
       continue;
     if (Direction == Dependence::DVEntry::GT ||
         Direction == Dependence::DVEntry::GE)
