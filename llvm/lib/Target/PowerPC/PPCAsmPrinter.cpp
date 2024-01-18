@@ -2630,8 +2630,8 @@ void PPCAIXAsmPrinter::emitGlobalVariable(const GlobalVariable *GV) {
   // when we emit the .toc section.
   if (GV->hasAttribute("toc-data")) {
     unsigned PointerSize = GV->getParent()->getDataLayout().getPointerSize();
-    if (Subtarget->tocDataChecks(PointerSize, GV))
-      TOCDataGlobalVars.push_back(GV);
+    Subtarget->tocDataChecks(PointerSize, GV);
+    TOCDataGlobalVars.push_back(GV);
     return;
   }
 
