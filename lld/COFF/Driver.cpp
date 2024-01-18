@@ -945,6 +945,7 @@ void LinkerDriver::createImportLibrary(bool asLib) {
     e2.Name = std::string(e1.name);
     e2.SymbolName = std::string(e1.symbolName);
     e2.ExtName = std::string(e1.extName);
+    e2.ExportAs = std::string(e1.exportAs);
     e2.AliasTarget = std::string(e1.aliasTarget);
     e2.Ordinal = e1.ordinal;
     e2.Noname = e1.noname;
@@ -1039,12 +1040,14 @@ void LinkerDriver::parseModuleDefs(StringRef path) {
     if (!e1.ExtName.empty() && e1.ExtName != e1.Name &&
         StringRef(e1.Name).contains('.')) {
       e2.name = saver().save(e1.ExtName);
+      e2.exportAs = saver().save(e1.ExportAs);
       e2.forwardTo = saver().save(e1.Name);
       ctx.config.exports.push_back(e2);
       continue;
     }
     e2.name = saver().save(e1.Name);
     e2.extName = saver().save(e1.ExtName);
+    e2.exportAs = saver().save(e1.ExportAs);
     e2.aliasTarget = saver().save(e1.AliasTarget);
     e2.ordinal = e1.Ordinal;
     e2.noname = e1.Noname;
