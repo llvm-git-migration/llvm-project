@@ -160,8 +160,7 @@ bool needsSpacePrefix(SourceLocation Loc, ASTContext &Context) {
     return true;
 
   const StringRef AllowedCharacters(" \t\n\v\f\r(){}[]<>;,+=-|&~!^*/");
-  return SpaceBeforeStmtStr.rtrim(AllowedCharacters).size() ==
-         SpaceBeforeStmtStr.size();
+  return !AllowedCharacters.contains(SpaceBeforeStmtStr.back());
 }
 
 void fixGenericExprCastFromBool(DiagnosticBuilder &Diag,
