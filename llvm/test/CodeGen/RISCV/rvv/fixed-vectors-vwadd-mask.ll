@@ -2,15 +2,14 @@
 ; RUN: llc -mtriple=riscv32 -mattr=+v -verify-machineinstrs < %s | FileCheck %s --check-prefixes=CHECK
 ; RUN: llc -mtriple=riscv64 -mattr=+v -verify-machineinstrs < %s | FileCheck %s --check-prefixes=CHECK
 
-define <8 x i64> @vwadd_mask_v8i32(<8 x i32> %x, <8 x i64> %y) {
-; CHECK-LABEL: vwadd_mask_v8i32:
+define <8 x i64> @vwadd_wv_mask_v8i32(<8 x i32> %x, <8 x i64> %y) {
+; CHECK-LABEL: vwadd_wv_mask_v8i32:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    li a0, 42
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; CHECK-NEXT:    vmslt.vx v0, v8, a0
-; CHECK-NEXT:    vsetvli zero, zero, e32, m2, tu, mu
-; CHECK-NEXT:    vwadd.wv v12, v12, v8, v0.t
-; CHECK-NEXT:    vmv4r.v v8, v12
+; CHECK-NEXT:    vwadd.wv v16, v12, v8, v0.t
+; CHECK-NEXT:    vmv4r.v v8, v16
 ; CHECK-NEXT:    ret
     %mask = icmp slt <8 x i32> %x, <i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42>
     %a = select <8 x i1> %mask, <8 x i32> %x, <8 x i32> zeroinitializer
@@ -19,15 +18,64 @@ define <8 x i64> @vwadd_mask_v8i32(<8 x i32> %x, <8 x i64> %y) {
     ret <8 x i64> %ret
 }
 
-define <8 x i64> @vwadd_mask_v8i32_commutative(<8 x i32> %x, <8 x i64> %y) {
-; CHECK-LABEL: vwadd_mask_v8i32_commutative:
+define <8 x i64> @vwadd_vv_mask_v8i32(<8 x i32> %x, <8 x i32> %y) {
+; CHECK-LABEL: vwadd_vv_mask_v8i32:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    li a0, 42
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; CHECK-NEXT:    vmslt.vx v0, v8, a0
-; CHECK-NEXT:    vsetvli zero, zero, e32, m2, tu, mu
-; CHECK-NEXT:    vwadd.wv v12, v12, v8, v0.t
+; CHECK-NEXT:    vwadd.vv v12, v8, v10, v0.t
 ; CHECK-NEXT:    vmv4r.v v8, v12
+; CHECK-NEXT:    ret
+    %mask = icmp slt <8 x i32> %x, <i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42>
+    %a = select <8 x i1> %mask, <8 x i32> %x, <8 x i32> zeroinitializer
+    %sa = sext <8 x i32> %a to <8 x i64>
+    %sy = sext <8 x i32> %y to <8 x i64>
+    %ret = add <8 x i64> %sa, %sy
+    ret <8 x i64> %ret
+}
+
+define <8 x i64> @vwaddu_wv_mask_v8i32(<8 x i32> %x, <8 x i64> %y) {
+; CHECK-LABEL: vwaddu_wv_mask_v8i32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    li a0, 42
+; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
+; CHECK-NEXT:    vmslt.vx v0, v8, a0
+; CHECK-NEXT:    vwaddu.wv v16, v12, v8, v0.t
+; CHECK-NEXT:    vmv4r.v v8, v16
+; CHECK-NEXT:    ret
+    %mask = icmp slt <8 x i32> %x, <i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42>
+    %a = select <8 x i1> %mask, <8 x i32> %x, <8 x i32> zeroinitializer
+    %sa = zext <8 x i32> %a to <8 x i64>
+    %ret = add <8 x i64> %sa, %y
+    ret <8 x i64> %ret
+}
+
+define <8 x i64> @vwaddu_vv_mask_v8i32(<8 x i32> %x, <8 x i32> %y) {
+; CHECK-LABEL: vwaddu_vv_mask_v8i32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    li a0, 42
+; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
+; CHECK-NEXT:    vmslt.vx v0, v8, a0
+; CHECK-NEXT:    vwaddu.vv v12, v8, v10, v0.t
+; CHECK-NEXT:    vmv4r.v v8, v12
+; CHECK-NEXT:    ret
+    %mask = icmp slt <8 x i32> %x, <i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42>
+    %a = select <8 x i1> %mask, <8 x i32> %x, <8 x i32> zeroinitializer
+    %sa = zext <8 x i32> %a to <8 x i64>
+    %sy = zext <8 x i32> %y to <8 x i64>
+    %ret = add <8 x i64> %sa, %sy
+    ret <8 x i64> %ret
+}
+
+define <8 x i64> @vwadd_wv_mask_v8i32_commutative(<8 x i32> %x, <8 x i64> %y) {
+; CHECK-LABEL: vwadd_wv_mask_v8i32_commutative:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    li a0, 42
+; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
+; CHECK-NEXT:    vmslt.vx v0, v8, a0
+; CHECK-NEXT:    vwadd.wv v16, v12, v8, v0.t
+; CHECK-NEXT:    vmv4r.v v8, v16
 ; CHECK-NEXT:    ret
     %mask = icmp slt <8 x i32> %x, <i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42, i32 42>
     %a = select <8 x i1> %mask, <8 x i32> %x, <8 x i32> zeroinitializer
@@ -36,8 +84,8 @@ define <8 x i64> @vwadd_mask_v8i32_commutative(<8 x i32> %x, <8 x i64> %y) {
     ret <8 x i64> %ret
 }
 
-define <8 x i64> @vwadd_mask_v8i32_nonzero(<8 x i32> %x, <8 x i64> %y) {
-; CHECK-LABEL: vwadd_mask_v8i32_nonzero:
+define <8 x i64> @vwadd_wv_mask_v8i32_nonzero(<8 x i32> %x, <8 x i64> %y) {
+; CHECK-LABEL: vwadd_wv_mask_v8i32_nonzero:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    li a0, 42
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma

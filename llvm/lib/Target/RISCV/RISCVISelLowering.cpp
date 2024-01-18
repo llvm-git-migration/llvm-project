@@ -13460,12 +13460,16 @@ combineBinOp_VLToVWBinOp_VL(SDNode *N, TargetLowering::DAGCombinerInfo &DCI) {
 // (vwadd y, (select cond, x, 0)) -> select cond (vwadd y, x), y
 static SDValue combineVWADDSelect(SDNode *N, SelectionDAG &DAG) {
   unsigned Opc = N->getOpcode();
-  assert(Opc == RISCVISD::VWADD_VL || Opc == RISCVISD::VWADD_W_VL ||
-         Opc == RISCVISD::VWADDU_W_VL);
+  assert(Opc == RISCVISD::VWADD_VL || Opc == RISCVISD::VWADDU_VL ||
+         Opc == RISCVISD::VWADD_W_VL || Opc == RISCVISD::VWADDU_W_VL);
 
-  SDValue VL = N->getOperand(4);
-  SDValue Y = N->getOperand(0);
   SDValue Merge = N->getOperand(1);
+  unsigned MergeID = 1;
+
+  if (Merge.getOpcode() != RISCVISD::VMERGE_VL) {
+    Merge = N->getOperand(0);
+    MergeID = 0;
+  }
 
   if (Merge.getOpcode() != RISCVISD::VMERGE_VL)
     return SDValue();
@@ -13482,23 +13486,20 @@ static SDValue combineVWADDSelect(SDNode *N, SelectionDAG &DAG) {
     return SDValue();
 
   SmallVector<SDValue, 6> Ops(N->op_values());
-  Ops[0] = Y;
-  Ops[1] = X;
+  Ops[MergeID] = X;
+  Ops[3] = Cond;
 
   SDLoc DL(N);
-  EVT VT = N->getValueType(0);
-
-  SDValue WX = DAG.getNode(Opc, DL, VT, Ops, N->getFlags());
-  return DAG.getNode(RISCVISD::VMERGE_VL, DL, VT, Cond, WX, Y, Y, VL);
+  return DAG.getNode(Opc, DL, N->getValueType(0), Ops, N->getFlags());
 }
 
 static SDValue performVWADD_VLCombine(SDNode *N,
                                       TargetLowering::DAGCombinerInfo &DCI) {
   unsigned Opc = N->getOpcode();
   assert(Opc == RISCVISD::VWADD_VL || Opc == RISCVISD::VWADD_W_VL ||
-         Opc == RISCVISD::VWADDU_W_VL);
+         Opc == RISCVISD::VWADDU_VL || Opc == RISCVISD::VWADDU_W_VL);
 
-  if (Opc != RISCVISD::VWADD_VL) {
+  if (Opc == RISCVISD::VWADDU_W_VL || Opc == RISCVISD::VWADD_W_VL) {
     if (SDValue V = combineBinOp_VLToVWBinOp_VL(N, DCI))
       return V;
   }
@@ -15550,6 +15551,7 @@ SDValue RISCVTargetLowering::PerformDAGCombine(SDNode *N,
       return V;
     return combineToVWMACC(N, DAG, Subtarget);
   case RISCVISD::VWADD_VL:
+  case RISCVISD::VWADDU_VL:
   case RISCVISD::VWADD_W_VL:
   case RISCVISD::VWADDU_W_VL:
     return performVWADD_VLCombine(N, DCI);
