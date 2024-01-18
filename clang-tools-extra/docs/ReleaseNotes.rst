@@ -501,11 +501,11 @@ Changes in existing checks
 - Improved :doc:`readability-implicit-bool-conversion
   <clang-tidy/checks/readability/implicit-bool-conversion>` check to take
   do-while loops into account for the `AllowIntegerConditions` and
-  `AllowPointerConditions` options. It also now provides more consistent
-  suggestions when parentheses are added to the return value or expressions.
-  It also ignores false-positives for comparison containing ``bool`` bitfield.
-  Auto-fix suggestions creating invalid code in certain scenarios have now been
-  fixed.
+  `AllowPointerConditions` options. Corrected issues with invalid fix
+  suggestions for ``static_cast`` without a preceding space. Addressed duplicate
+  parentheses in double implicit casts, ensuring more consistent suggestions for
+  added parentheses in return values or expressions. Also, ignored false
+  positives in comparisons with ``bool`` bitfields.
 
 - Improved :doc:`readability-misleading-indentation
   <clang-tidy/checks/readability/misleading-indentation>` check to ignore
