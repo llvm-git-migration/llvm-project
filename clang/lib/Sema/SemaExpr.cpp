@@ -19719,7 +19719,9 @@ bool Sema::tryCaptureVariable(
   // we can bailout early.
   if (CapturingFunctionScopes == 0 && (!BuildAndDiagnose || VarDC == DC))
     return true;
-
+  // Expression in `RequiresExprBodyDecl` should not be captured.
+  if (isa<RequiresExprBodyDecl>(CurContext))
+    return true;
   const auto *VD = dyn_cast<VarDecl>(Var);
   if (VD) {
     if (VD->isInitCapture())
