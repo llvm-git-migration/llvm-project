@@ -44,9 +44,7 @@ define i32 @foo(ptr %0, i32 %1) {
   ; LIMIT-NEXT: {{  $}}
   ; LIMIT-NEXT: bb.5.default.unreachable2:
   ; LIMIT-NEXT:   successors:
-  ; LIMIT-NEXT: {{  $}}
-  ; LIMIT-NEXT: {{  $}}
-  ; LIMIT-NEXT: bb.6 (%ir-block.16):
+  ; LIMIT: bb.6 (%ir-block.16):
   ; LIMIT-NEXT:   successors: %bb.7(0x20000000), %bb.8(0x20000000), %bb.9(0x20000000), %bb.10(0x20000000)
   ; LIMIT-NEXT: {{  $}}
   ; LIMIT-NEXT:   [[PHI:%[0-9]+]]:gr32 = PHI [[SHR32ri3]], %bb.4, [[SHR32ri2]], %bb.3, [[SHR32ri1]], %bb.2, [[MOV32rm]], %bb.1
@@ -140,9 +138,7 @@ define i32 @foo(ptr %0, i32 %1) {
   ; NOLIMIT-NEXT: {{  $}}
   ; NOLIMIT-NEXT: bb.5.default.unreachable2:
   ; NOLIMIT-NEXT:   successors:
-  ; NOLIMIT-NEXT: {{  $}}
-  ; NOLIMIT-NEXT: {{  $}}
-  ; NOLIMIT-NEXT: bb.7 (%ir-block.20):
+  ; NOLIMIT: bb.7 (%ir-block.20):
   ; NOLIMIT-NEXT:   successors: %bb.11(0x80000000)
   ; NOLIMIT-NEXT: {{  $}}
   ; NOLIMIT-NEXT:   [[PHI:%[0-9]+]]:gr32 = PHI [[SHR32ri6]], %bb.4, [[SHR32ri4]], %bb.3, [[SHR32ri2]], %bb.2, [[MOV32rm]], %bb.1
