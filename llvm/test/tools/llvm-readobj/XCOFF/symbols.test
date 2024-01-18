@@ -225,7 +225,7 @@ Symbols:
 # SYMBOL32-NEXT:   }
 # SYMBOL32-NEXT:   Symbol {
 # SYMBOL32-NEXT:     Index: 8
-# NODEMANGLE-NEXT:     Name: ._Z5func1i
+# NODEMANGLE-NEXT:   Name: ._Z5func1i
 # DEMANGLE-NEXT:     Name: .func1(int)
 # SYMBOL32-NEXT:     Value (RelocatableAddress): 0x0
 # SYMBOL32-NEXT:     Section: .text

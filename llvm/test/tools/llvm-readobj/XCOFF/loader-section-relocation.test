@@ -80,12 +80,12 @@ Sections:
 # COMMON-NEXT:     Loader Section Relocations {
 # NOEXPAND64-NEXT:           Vaddr            Type        SecNum  SymbolName (Index)
 # NOEXPAND64-NEXT:     0x0000000020000294 0x1f00 (R_POS)       2    .data (1)
-# NODEMAN64-NEXT:     0x000000002000029c 0x1f00 (R_POS)       2    _Z4funcv (3)
-# DEMAN64-NEXT:     0x000000002000029c 0x1f00 (R_POS)       2    func() (3)
+# NODEMAN64-NEXT:      0x000000002000029c 0x1f00 (R_POS)       2    _Z4funcv (3)
+# DEMAN64-NEXT:        0x000000002000029c 0x1f00 (R_POS)       2    func() (3)
 # NOEXPAND32-NEXT:        Vaddr        Type        SecNum  SymbolName (Index)
 # NOEXPAND32-NEXT:      0x20000294 0x1f00 (R_POS)       2    .data (1)
-# NODEMAN32-NEXT:      0x2000029c 0x1f00 (R_POS)       2    _Z4funcv (3)
-# DEMAN32-NEXT:      0x2000029c 0x1f00 (R_POS)       2    func() (3)
+# NODEMAN32-NEXT:       0x2000029c 0x1f00 (R_POS)       2    _Z4funcv (3)
+# DEMAN32-NEXT:         0x2000029c 0x1f00 (R_POS)       2    func() (3)
 # EXPAND-NEXT:       Relocation {
 # EXPAND-NEXT:         Virtual Address: 0x20000294
 # EXPAND-NEXT:         Symbol: .data (1)
@@ -97,8 +97,8 @@ Sections:
 # EXPAND-NEXT:       }
 # EXPAND-NEXT:       Relocation {
 # EXPAND-NEXT:         Virtual Address: 0x2000029C
-# NODEMANEXP-NEXT:         Symbol: _Z4funcv (3)
-# DEMANEXP-NEXT:         Symbol: func() (3)
+# NODEMANEXP-NEXT:     Symbol: _Z4funcv (3)
+# DEMANEXP-NEXT:       Symbol: func() (3)
 # EXPAND-NEXT:         IsSigned: No
 # EXPAND-NEXT:         FixupBitValue: 0
 # EXPAND-NEXT:         Length: 32
