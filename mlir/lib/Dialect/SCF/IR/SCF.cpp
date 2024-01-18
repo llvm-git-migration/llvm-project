@@ -588,9 +588,10 @@ ForOp::replaceWithAdditionalYields(RewriterBase &rewriter,
   return cast<LoopLikeOpInterface>(newLoop.getOperation());
 }
 
-FailureOr<LoopLikeOpInterface> ForOp::yieldTiledValuesAndReplace(
-    RewriterBase &rewriter, ValueRange newInitOperands,
-    const YieldTiledValuesFn &yieldTiledValuesFn) {
+FailureOr<LoopLikeOpInterface>
+ForOp::yieldTiledValuesAndReplace(RewriterBase &rewriter,
+                                  ValueRange newInitOperands,
+                                  YieldTiledValuesFn yieldTiledValuesFn) {
   OpBuilder::InsertionGuard g(rewriter);
   rewriter.setInsertionPoint(getOperation());
 
@@ -691,9 +692,10 @@ MutableArrayRef<OpOperand> ForallOp::getInitsMutable() {
   return getOutputsMutable();
 }
 
-FailureOr<LoopLikeOpInterface> ForallOp::yieldTiledValuesAndReplace(
-    RewriterBase &rewriter, ValueRange newInitOperands,
-    const YieldTiledValuesFn &yieldTiledValuesFn) {
+FailureOr<LoopLikeOpInterface>
+ForallOp::yieldTiledValuesAndReplace(RewriterBase &rewriter,
+                                     ValueRange newInitOperands,
+                                     YieldTiledValuesFn yieldTiledValuesFn) {
   OpBuilder::InsertionGuard g(rewriter);
   rewriter.setInsertionPoint(getOperation());
   auto inits = llvm::to_vector(getOutputs());
