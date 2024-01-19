@@ -141,7 +141,7 @@ struct TypeErasedDataflowAnalysisState {
 ///
 /// `MaxBlockVisits` caps the number of block visits during analysis. It doesn't
 /// distinguish between repeat visits to the same block and visits to distinct
-/// blocks. This parameter is a backstop to prevent infintite loops, in the case
+/// blocks. This parameter is a backstop to prevent infinite loops, in the case
 /// of bugs in the lattice and/or transfer functions that prevent the analysis
 /// from converging.
 llvm::Expected<std::vector<std::optional<TypeErasedDataflowAnalysisState>>>

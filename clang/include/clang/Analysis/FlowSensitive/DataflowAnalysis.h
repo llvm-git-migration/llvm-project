@@ -187,13 +187,11 @@ template <typename LatticeT> struct DataflowAnalysisState {
 /// `PostVisitCFG` on each CFG element with the final analysis results at that
 /// program point.
 ///
-/// `MaxBlockVisits` caps the number of block visits during analysis. It doesn't
-/// distinguish between repeat visits to the same block and visits to distinct
-/// blocks. This parameter is a backstop to prevent infintite loops, in the case
-/// of bugs in the lattice and/or transfer functions that prevent the analysis
-/// from converging. The default value is essentially arbitrary -- large enough
-/// to accomodate what seems like any reasonable CFG, but still small enough to
-/// limit the cost of hitting the limit.
+/// `MaxBlockVisits` caps the number of block visits during analysis. See
+/// `runTypeErasedDataflowAnalysis` for a full description. The default value is
+/// essentially arbitrary -- large enough to accommodate what seems like any
+/// reasonable CFG, but still small enough to limit the cost of hitting the
+/// limit.
 template <typename AnalysisT>
 llvm::Expected<std::vector<
     std::optional<DataflowAnalysisState<typename AnalysisT::Lattice>>>>
@@ -271,13 +269,9 @@ auto createAnalysis(ASTContext &ASTCtx, Environment &Env)
 /// - This limit is still low enough to keep runtimes acceptable (on typical
 ///   machines) in cases where we hit the limit.
 ///
-/// `MaxBlockVisits` caps the number of block visits during analysis. It doesn't
-/// distinguish between repeat visits to the same block and visits to distinct
-/// blocks. This parameter is a backstop to prevent infintite loops, in the case
-/// of bugs in the lattice and/or transfer functions that prevent the analysis
-/// from converging. The default value is essentially arbitrary -- large enough
-/// to accomodate what seems like any reasonable CFG, but still small enough to
-/// limit the cost of hitting the limit.
+/// `MaxBlockVisits` caps the number of block visits during analysis. See
+/// `runDataflowAnalysis` for a full description and explanation of the default
+/// value.
 template <typename AnalysisT, typename Diagnostic>
 llvm::Expected<llvm::SmallVector<Diagnostic>> diagnoseFunction(
     const FunctionDecl &FuncDecl, ASTContext &ASTCtx,
