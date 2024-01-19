@@ -2530,12 +2530,12 @@ LogicalResult acc::UpdateOp::verify() {
 
     // The async attribute represent the async clause without value. Therefore
     // the attribute and operand cannot appear at the same time.
-    if (getAsyncValue(dtype) && hasAsync(dtype))
+    if (getAsyncValue(dtype) && hasAsyncOnly(dtype))
       return emitError("async attribute cannot appear with asyncOperand");
 
     // The wait attribute represent the wait clause without values. Therefore
     // the attribute and operands cannot appear at the same time.
-    if (!getWaitValues(dtype).empty() && hasWait(dtype))
+    if (!getWaitValues(dtype).empty() && hasWaitOnly(dtype))
       return emitError("wait attribute cannot appear with waitOperands");
   }
 
