@@ -2779,6 +2779,11 @@ llvm::removeAllNonTerminatorAndEHPadInstructions(BasicBlock *BB) {
   Instruction *EndInst = BB->getTerminator(); // Last not to be deleted.
   // RemoveDIs: erasing debug-info must be done manually.
   EndInst->dropDbgValues();
+
+  if (isa<ReturnInst>(EndInst) && EndInst->getNumOperands() > 0 &&
+      isa<Instruction>(EndInst->getOperand(0)))
+    EndInst->setOperand(0, PoisonValue::get(EndInst->getOperand(0)->getType()));
+
   while (EndInst != &BB->front()) {
     // Delete the next to last instruction.
     Instruction *Inst = &*--EndInst->getIterator();
