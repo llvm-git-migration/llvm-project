@@ -1054,6 +1054,8 @@ bool llvm::peelLoop(Loop *L, unsigned PeelCount, LoopInfo *LI,
   assert(DT.verify(DominatorTree::VerificationLevel::Fast));
 #endif
 
+  if (PreserveLCSSA && !L->isRecursivelyLCSSAForm(DT, *LI))
+    formLCSSARecursively(*L, DT, LI, SE);
   // FIXME: Incrementally update loop-simplify
   simplifyLoop(L, &DT, LI, SE, AC, nullptr, PreserveLCSSA);
 
