@@ -135,6 +135,13 @@ C23 Feature Support
 
   Fixes (`#81472 <https://github.com/llvm/llvm-project/issues/81472>`_).
 
+  - Enumerations should allow values greater than INT_MAX and smaller than
+    INT_MIN, in order to provide a value-preserved set of integer constants. `N3029 Improved Normal Enumerations <https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3029.htm>`_
+
+  - Enumerations should have the ability to specify the underlying type to aid
+    in portability and usability across platforms, across ABIs, and across
+    languages (for serialization and similar purposes). `N3030 Enhancements to Enumerations <https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3030.htm>`_
+
 Non-comprehensive list of changes in this release
 -------------------------------------------------
 
@@ -207,6 +214,8 @@ Bug Fixes in This Version
 - Clang now doesn't produce false-positive warning `-Wconstant-logical-operand`
   for logical operators in C23.
   Fixes (`#64356 <https://github.com/llvm/llvm-project/issues/64356>`_).
+- Fixes miscompilation when an enum has a specified value such that the auto
+  increment overflows a signed long. Fixes (`#24667 <https://github.com/llvm/llvm-project/issues/24667>`_)
 
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

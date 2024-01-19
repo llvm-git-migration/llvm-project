@@ -1,9 +1,10 @@
-// RUN: %clang_cc1 -triple %itanium_abi_triple %s -fsyntax-only -verify -pedantic
+// RUN: %clang_cc1 -std=c23 -triple %itanium_abi_triple %s -fsyntax-only -verify -pedantic
+// RUN: %clang_cc1 -std=c17 -triple %itanium_abi_triple %s -fsyntax-only -verify -pedantic
+
+#if __STDC_VERSION__  < 202311L
 enum e {A,
         B = 42LL << 32,        // expected-warning {{ISO C restricts enumerator values to range of 'int'}}
       C = -4, D = 12456 };
-
-enum f { a = -2147483648, b = 2147483647 }; // ok.
 
 enum g {  // too negative
    c = -2147483649,         // expected-warning {{ISO C restricts enumerator values to range of 'int'}}
@@ -17,6 +18,40 @@ enum h { e = -2147483648, // too pos
 enum x                      // expected-warning {{enumeration values exceed range of largest integer}}
 { y = -9223372036854775807LL-1,  // expected-warning {{ISO C restricts enumerator values to range of 'int'}}
 z = 9223372036854775808ULL };    // expected-warning {{ISO C restricts enumerator values to range of 'int'}}
+
+
+enum GH24667 {   GH24667_x = 9223372036854775807UL, };
+// expected-warning@-1 {{ISO C restricts enumerator values to range of 'int' (9223372036854775807 is too large)}}
+
+#else
+enum e {A,
+        B = 42LL << 32,
+      C = -4, D = 12456 };
+
+enum g {  // too negative
+   c = -2147483649,         
+   d = 2147483647 };
+enum h { e = -2147483648, // too pos
+   f = 2147483648,           
+  i = 0xFFFF0000 
+};
+
+// minll maxull
+enum x                      // expected-warning {{enumeration values exceed range of largest integer}}
+{ y = -9223372036854775807LL-1,  
+z = 9223372036854775808ULL }; 
+
+enum GH24667 {   GH24667_x = 9223372036854775807UL, };
+enum N3029 { 	N3029_0 = 0xFFFFFFFFFFFFFFFFULL };
+enum N3030 : unsigned long long {
+	N3030_0 = 0xFFFFFFFFFFFFFFFFULL
+	// ^ not a constraint violation with a 64-bit unsigned long long
+};
+#endif
+
+enum f { a = -2147483648, b = 2147483647 }; // ok.
+
+
 
 int test(void) {
   return sizeof(enum e) ;
