@@ -1556,6 +1556,16 @@ LegalizerHelper::LegalizeResult LegalizerHelper::narrowScalar(MachineInstr &MI,
     MI.eraseFromParent();
     return Legalized;
   }
+  case TargetOpcode::G_FCMP:
+    Observer.changingInstr(MI);
+    if (TypeIdx == 0)
+      narrowScalarDst(MI, NarrowTy, 0, TargetOpcode::G_ZEXT);
+    else {
+      return UnableToLegalize;
+    }
+    Observer.changedInstr(MI);
+    return Legalized;
+
   case TargetOpcode::G_SEXT_INREG: {
     if (TypeIdx != 0)
       return UnableToLegalize;
