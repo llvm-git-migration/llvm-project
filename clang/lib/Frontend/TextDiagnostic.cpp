@@ -1166,9 +1166,23 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
                       const Token &T, unsigned Start, unsigned Length) -> void {
     if (T.is(tok::raw_identifier)) {
       StringRef RawIdent = T.getRawIdentifier();
-      // Special case true/false/nullptr literals, since they will otherwise be
-      // treated as keywords.
-      if (RawIdent == "true" || RawIdent == "false" || RawIdent == "nullptr") {
+      // Special case true/false/nullptr/... literals, since they will otherwise
+      // be treated as keywords.
+      // FIXME: It would be good to have a programmatic way of getting this
+      // list.
+      if (llvm::StringSwitch<bool>(RawIdent)
+              .Case("true", true)
+              .Case("false", true)
+              .Case("nullptr", true)
+              .Case("__func__", true)
+              .Case("__objc_yes__", true)
+              .Case("__objc_no__", true)
+              .Case("__null", true)
+              .Case("__FUNCDNAME__", true)
+              .Case("__FUNCSIG__", true)
+              .Case("__FUNCTION__", true)
+              .Case("__FUNCSIG__", true)
+              .Default(false)) {
         Vec.emplace_back(Start, Start + Length, LiteralColor);
       } else {
         const IdentifierInfo *II = PP->getIdentifierInfo(RawIdent);
