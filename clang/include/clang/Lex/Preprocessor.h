@@ -284,6 +284,11 @@ public:
   /// The kind of translation unit we are processing.
   const TranslationUnitKind TUKind;
 
+  /// Returns a pointer into the given file's buffer that's guaranteed
+  /// to be between tokens. The returned pointer is always before \p Start.
+  /// The maximum distance betweenthe returned pointer and \p Start is
+  /// limited by a constant value, but also an implementation detail.
+  /// If no such check point exists, \c nullptr is returned.
   const char *getCheckPoint(FileID FID, const char *Start) const;
 
 private:
