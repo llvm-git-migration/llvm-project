@@ -460,7 +460,7 @@ FailureOr<LoopLikeOpInterface> yieldTiledValuesAndReplaceLoop(
 /// the additional values to yield form the innermost loop.
 static LogicalResult addInitOperandsToLoopNest(
     RewriterBase &rewriter, MutableArrayRef<LoopLikeOpInterface> loops,
-    ValueRange newInitValues, const YieldTiledValuesFn &getNewTiledYieldsFn) {
+    ValueRange newInitValues, YieldTiledValuesFn getNewTiledYieldsFn) {
   SmallVector<scf::ForOp> newLoops;
   if (loops.empty())
     return success();
