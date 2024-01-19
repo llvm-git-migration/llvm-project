@@ -91,7 +91,7 @@ attributes #2 = { builtin allocsize(0) }
 !llvm.ident = !{!9}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C_plus_plus_14, file: !1, producer: "clang version 18.0.0git (https://github.com/llvm/llvm-project.git 480cc413b7f7e73f90646e5feeb598e36e4e9565)", isOptimized: false, runtimeVersion: 0, emissionKind: LineTablesOnly, splitDebugInlining: false, debugInfoForProfiling: true, nameTableKind: None)
-!1 = !DIFile(filename: "llvm/test/Transforms/PGOProfile/Inputs/memprof_direct_recursion_b.cc", directory: "/data00/lifengxiang.1025/llvm/llvm-project", checksumkind: CSK_MD5, checksum: "dfaa17f2cd48c9a0a44fa520085af8a0")
+!1 = !DIFile(filename: "llvm/test/Transforms/PGOProfile/Inputs/memprof_direct_recursion_b.cc", directory: "/", checksumkind: CSK_MD5, checksum: "dfaa17f2cd48c9a0a44fa520085af8a0")
 !2 = !{i32 7, !"Dwarf Version", i32 5}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
 !4 = !{i32 1, !"wchar_size", i32 4}
