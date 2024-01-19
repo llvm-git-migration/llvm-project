@@ -145,8 +145,8 @@ Ordering
 
 Synchronization
     If an synchronizing operation has one or more tags, then whether it
-    participate in the  ``seq_cst`` order with other operations is target
-    dependent.
+    synchronizes-with and participates in the  ``seq_cst`` order with
+    other operations is target dependent.
 
     .. code-block::
 
