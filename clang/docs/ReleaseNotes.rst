@@ -109,7 +109,8 @@ Improvements to Clang's time-trace
 
 Bug Fixes in This Version
 -------------------------
-
+- Fixes miscompilation when an enum has a specified value such that the auto
+  increment overflows a signed long. Fixes (`#24667 <https://github.com/llvm/llvm-project/issues/24667>`_)
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
