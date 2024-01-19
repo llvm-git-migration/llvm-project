@@ -34,6 +34,10 @@ static cl::opt<bool> AmdgcnSkipCacheInvalidations(
     "amdgcn-skip-cache-invalidations", cl::init(false), cl::Hidden,
     cl::desc("Use this to skip inserting cache invalidating instructions."));
 
+static cl::opt<bool> VerifyMemoryLegalizer(
+    "amdgcn-verify-memory-legalizer", cl::init(false), cl::Hidden,
+    cl::desc("Verify MIR before and after SIMemoryLegalizer"));
+
 namespace {
 
 LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
@@ -2567,6 +2571,9 @@ bool SIMemoryLegalizer::runOnMachineFunction(MachineFunction &MF) {
   SIMemOpAccess MOA(MF);
   CC = SICacheControl::create(MF.getSubtarget<GCNSubtarget>());
 
+  if (VerifyMemoryLegalizer)
+    MF.verify();
+
   for (auto &MBB : MF) {
     for (auto MI = MBB.begin(); MI != MBB.end(); ++MI) {
 
@@ -2601,6 +2608,10 @@ bool SIMemoryLegalizer::runOnMachineFunction(MachineFunction &MF) {
   }
 
   Changed |= removeAtomicPseudoMIs();
+
+  if (VerifyMemoryLegalizer)
+    MF.verify();
+
   return Changed;
 }
 
