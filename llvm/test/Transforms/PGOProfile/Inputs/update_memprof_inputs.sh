@@ -145,3 +145,37 @@ ${CLANG} ${COMMON_FLAGS} -fmemory-profile -funique-internal-linkage-names ${OUTD
 env MEMPROF_OPTIONS=log_path=stdout ${OUTDIR}/memprof_internal_linkage.exe > ${OUTDIR}/memprof_internal_linkage.memprofraw
 
 rm ${OUTDIR}/memprof_internal_linkage.cc
+
+cat > ${OUTDIR}/memprof_direct_recursion_a.cc << EOF
+extern void foo(int);
+int b = 10;
+int* a;
+int main(){
+    foo(1);
+    b = 10;
+    foo(2);
+    return 0;
+}
+EOF
+
+cat > ${OUTDIR}/memprof_direct_recursion_b.cc << EOF
+#include <string>
+extern int b;
+extern int *a;
+void foo(int c){
+    a = new int[1];
+    if (c&1) {
+        for (int i = 0; i < 100; ++i)
+        a[0] = 1;
+    }
+    --b;
+    if (b) {
+        foo(c);
+    }
+}
+EOF
+
+${CLANG} ${COMMON_FLAGS} -fmemory-profile ${OUTDIR}/memprof_direct_recursion_a.cc ${OUTDIR}/memprof_direct_recursion_b.cc -o ${OUTDIR}/memprof_direct_recursion.exe
+env MEMPROF_OPTIONS=log_path=stdout ${OUTDIR}/memprof_direct_recursion.exe > ${OUTDIR}/memprof_direct_recursion.memprofraw
+
+rm ${OUTDIR}/memprof_direct_recursion_a.cc ${OUTDIR}/memprof_direct_recursion_b.cc
