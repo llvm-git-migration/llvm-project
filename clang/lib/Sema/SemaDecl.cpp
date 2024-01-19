@@ -6334,18 +6334,18 @@ bool Sema::diagnoseQualifiedDeclaration(CXXScopeSpec &SS, DeclContext *DC,
   // C++23 [temp.names]p5:
   //   The keyword template shall not appear immediately after a declarative
   //   nested-name-specifier.
-  if (TemplateId && TemplateId->TemplateKWLoc.isValid()) {
+  //
+  // First check the template-id (if any), and then check each component of the
+  // nested-name-specifier in reverse order.
+  //
+  // FIXME: nested-name-specifiers in friend declarations are declarative,
+  // but we don't call diagnoseQualifiedDeclaration for them. We should.
+  if (TemplateId && TemplateId->TemplateKWLoc.isValid())
     Diag(Loc, diag::ext_template_after_declarative_nns)
         << FixItHint::CreateRemoval(TemplateId->TemplateKWLoc);
-  }
 
   NestedNameSpecifierLoc SpecLoc(SS.getScopeRep(), SS.location_data());
   while (SpecLoc.getPrefix()) {
-    // C++23 [temp.names]p5:
-    //   The keyword template shall not appear immediately after a declarative
-    //   nested-name-specifier.
-    // FIXME: nested-name-specifiers in friend declarations are declarative,
-    // but we don't call diagnoseQualifiedDeclaration for them. We should.
     if (SpecLoc.getNestedNameSpecifier()->getKind() ==
         NestedNameSpecifier::TypeSpecWithTemplate) {
       SourceLocation TemplateKWLoc;
