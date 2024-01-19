@@ -821,6 +821,8 @@ Bug Fixes in This Version
 - Fix an issue with missing symbol definitions when the first coroutine
   statement appears in a discarded ``if constexpr`` branch.
   Fixes (`#78290 <https://github.com/llvm/llvm-project/issues/78290>`_)
+- Clang now accepts elaborated-type-specifiers that explicitly specialize
+  a member class template for an implicit instantiation of a class template.
 
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
