@@ -767,6 +767,8 @@ Bug Fixes in This Version
   label (including ``case`` or ``default`` labels).
 - Fix compiler memory leak for enums with underlying type larger than 64 bits.
   Fixes (`#78311 <https://github.com/llvm/llvm-project/pull/78311>`_)
+- Fixes miscompilation when an enum has a specified value such that the auto
+  increment overflows a signed long. Fixes (`#24667 <https://github.com/llvm/llvm-project/issues/24667>`_)
 
   Before:
 

@@ -19758,8 +19758,8 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
           // Complain if the value is not representable in an int.
           if (!isRepresentableIntegerValue(Context, EnumVal, Context.IntTy))
             Diag(IdLoc, diag::ext_enum_value_not_int)
-              << toString(EnumVal, 10) << Val->getSourceRange()
-              << (EnumVal.isUnsigned() || EnumVal.isNonNegative());
+                << toString(EnumVal, 10) << Val->getSourceRange()
+                << (EnumVal.isUnsigned() || EnumVal.isNonNegative());
           else if (!Context.hasSameType(Val->getType(), Context.IntTy)) {
             // Force the type of the expression to 'int'.
             Val = ImpCastExprToType(Val, Context.IntTy, CK_IntegralCast).get();
@@ -19807,20 +19807,46 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
         //       sufficient to contain the incremented value. If no such type
         //       exists, the program is ill-formed.
         QualType T = getNextLargerIntegralType(Context, EltTy);
-        if (T.isNull() || Enum->isFixed()) {
+        if (Enum->isFixed()) {
           // There is no integral type larger enough to represent this
           // value. Complain, then allow the value to wrap around.
           EnumVal = LastEnumConst->getInitVal();
           EnumVal = EnumVal.zext(EnumVal.getBitWidth() * 2);
           ++EnumVal;
-          if (Enum->isFixed())
-            // When the underlying type is fixed, this is ill-formed.
-            Diag(IdLoc, diag::err_enumerator_wrapped)
-              << toString(EnumVal, 10)
-              << EltTy;
-          else
+          // When the underlying type is fixed, this is ill-formed.
+          Diag(IdLoc, diag::err_enumerator_wrapped)
+              << toString(EnumVal, 10) << EltTy;
+
+        } else if (T.isNull()) {
+          if (EltTy->isSignedIntegerType() &&
+              (getLangOpts().CPlusPlus ||
+               LangStandard::getLangStandardForKind(getLangOpts().LangStd)
+                   .isC23())) {
+            // FIXME: Int128/UInt128 support, which also needs to be introduced
+            // into
+            // enum checking below.
+            // This case can only happen if we are the largest signed type, so
+            // try and become an unsigned type to get more possible values
+            if (EltTy == Context.ShortTy) {
+              EltTy = Context.UnsignedShortTy;
+            } else if (EltTy == Context.IntTy) {
+              EltTy = Context.UnsignedIntTy;
+            } else if (EltTy == Context.LongTy) {
+              EltTy = Context.UnsignedLongTy;
+            } else if (EltTy == Context.LongLongTy) {
+              EltTy = Context.UnsignedLongLongTy;
+            } else {
+              assert(false && "Enum Type is not basic integral type");
+            }
+          } else {
+            // There is no integral type larger enough to represent this
+            // value. Complain, then allow the value to wrap around.
+            EnumVal = LastEnumConst->getInitVal();
+            EnumVal = EnumVal.zext(EnumVal.getBitWidth() * 2);
+            ++EnumVal;
             Diag(IdLoc, diag::ext_enumerator_increment_too_large)
-              << toString(EnumVal, 10);
+                << toString(EnumVal, 10);
+          }
         } else {
           EltTy = T;
         }
