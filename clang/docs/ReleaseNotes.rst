@@ -98,6 +98,9 @@ Attribute Changes in Clang
 Improvements to Clang's diagnostics
 -----------------------------------
 
+- Clang now diagnoses use of the ``template`` keyword after declarative nested name specifiers.
+
+
 Improvements to Clang's time-trace
 ----------------------------------
 
