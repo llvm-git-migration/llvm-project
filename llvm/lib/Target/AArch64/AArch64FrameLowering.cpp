@@ -2616,9 +2616,11 @@ StackOffset AArch64FrameLowering::resolveFrameOffsetReference(
         // via the frame pointer, so we have to use the FP in the parent
         // function.
         (void) Subtarget;
+        // swifttailcc uses FP
         assert(
-            Subtarget.isCallingConvWin64(MF.getFunction().getCallingConv()) &&
-            "Funclets should only be present on Win64");
+            (Subtarget.isCallingConvWin64(MF.getFunction().getCallingConv()) ||
+             MF.getFunction().getCallingConv() == CallingConv::SwiftTail) &&
+            "Funclets should only be present on Win64 or swifttailcc");
         UseFP = true;
       } else {
         // We have the choice between FP and (SP or BP).
