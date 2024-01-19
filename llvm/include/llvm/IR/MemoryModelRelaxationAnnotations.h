@@ -52,6 +52,10 @@ public:
   MMRAMetadata(const Instruction &I);
   MMRAMetadata(MDNode *MD);
 
+  static bool isCompatible(const Instruction &A, const Instruction &B) {
+    return MMRAMetadata(A).isCompatibleWith(B);
+  }
+
   /// Checks another set of tag for compatibility with this set of tags.
   // TODO: Unit test this
   bool isCompatibleWith(const MMRAMetadata &Other) const;

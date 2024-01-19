@@ -64,8 +64,8 @@ MMRAMetadata::MMRAMetadata(MDNode *MD) {
 bool MMRAMetadata::isCompatibleWith(const MMRAMetadata &Other) const {
   // Two sets of tags are compatible iff, for every unique tag prefix P
   // present in at least one set:
-  //   - the other set contains no tag that with the same prefix, or
-  //   - at least one tag with the same prefix is present in both sets.
+  //   - the other set contains no tag with prefix P, or
+  //   - at least one tag with prefix P is common to both sets.
 
   // These sets are generally small so we don't bother uniquing
   // the prefixes beforehand. Checking a prefix twice is likely cheaper
