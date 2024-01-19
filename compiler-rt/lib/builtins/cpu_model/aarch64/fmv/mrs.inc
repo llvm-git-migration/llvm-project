@@ -172,6 +172,11 @@ static void __init_cpu_features_constructor(unsigned long hwcap,
     // ID_AA64ISAR1_EL1.LS64 >= 0b0011
     if (extractBits(ftr, 60, 4) >= 0x3)
       setCPUFeature(FEAT_LS64_ACCDATA);
+
+    getCPUFeature(ID_AA64ISAR2_EL1, ftr);
+    // ID_AA64ISAR2_EL1.MOPS == 0b0001
+    if (extractBits(ftr, 16, 4) == 0x1)
+      setCPUFeature(FEAT_MOPS);
   } else {
     // Set some features in case of no CPUID support
     if (hwcap & (HWCAP_FP | HWCAP_FPHP)) {
