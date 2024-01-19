@@ -31,3 +31,31 @@
 
 // RUN: %clang -fveclib=Accelerate %s -nodefaultlibs -target arm64-apple-ios8.0.0 -### 2>&1 | FileCheck --check-prefix=CHECK-LINK-NODEFAULTLIBS %s
 // CHECK-LINK-NODEFAULTLIBS-NOT: "-framework" "Accelerate"
+
+
+/* Verify that the correct vector library is passed to LTO flags. */
+
+
+// RUN: %clang -### -fveclib=none -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-NOLIB %s
+// CHECK-LTO-NOLIB: "-plugin-opt=-vector-library=none"
+
+// RUN: %clang -### -fveclib=Accelerate -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-ACCELERATE %s
+// CHECK-LTO-ACCELERATE: "-plugin-opt=-vector-library=Accelerate"
+
+// RUN: %clang -### -fveclib=LIBMVEC -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-LIBMVEC %s
+// CHECK-LTO-LIBMVEC: "-plugin-opt=-vector-library=LIBMVEC-X86"
+
+// RUN: %clang -### -fveclib=MASSV -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-MASSV %s
+// CHECK-LTO-MASSV: "-plugin-opt=-vector-library=MASSV"
+
+// RUN: not %clang -### -fveclib=SVML -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-SVML %s
+// CHECK-LTO-SVML: "-plugin-opt=-vector-library=SVML"
+
+// RUN: %clang -### -fveclib=SLEEF -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-SLEEF %s
+// CHECK-LTO-SLEEF: "-plugin-opt=-vector-library=sleefgnuabi"
+
+// RUN: %clang -### -fveclib=Darwin_libsystem_m -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-DARWIN %s
+// CHECK-LTO-DARWIN: "-plugin-opt=-vector-library=Darwin_libsystem_m"
+
+// RUN: %clang -### -fveclib=ArmPL -flto %s -v 2>&1  | FileCheck -check-prefix CHECK-LTO-ARMPL %s
+// CHECK-LTO-ARMPL: "-plugin-opt=-vector-library=ArmPL"
