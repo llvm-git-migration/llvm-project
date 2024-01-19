@@ -960,9 +960,7 @@ void CallsiteContextGraph<DerivedCCG, FuncTy, CallTy>::addStackNodesForMIB(
   // Later when processing the stack ids on non-alloc callsites we will adjust
   // for any inlining in the context.
   ContextNode *PrevNode = AllocNode;
-  // Look for recursion (direct recursion should have been collapsed by
-  // module summary analysis, here we should just be detecting mutual
-  // recursion). Mark these nodes so we don't try to clone.
+  // Look for recursion. Mark these nodes so we don't try to clone.
   SmallSet<uint64_t, 8> StackIdSet;
   // Skip any on the allocation call (inlining).
   for (auto ContextIter = StackContext.beginAfterSharedPrefix(CallsiteContext);
