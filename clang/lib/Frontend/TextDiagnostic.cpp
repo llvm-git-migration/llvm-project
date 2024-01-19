@@ -1149,13 +1149,13 @@ highlightLines(StringRef FileData, unsigned StartLineNumber,
   Lexer L{FID, *Buff, SM, LangOpts};
   L.SetKeepWhitespaceMode(true);
 
-  const char *LineStart =
+  const char *FirstLineStart =
       FileData.data() +
       SM.getDecomposedLoc(SM.translateLineCol(FID, StartLineNumber, 1)).second;
-  if (const char *CheckPoint = PP->getCheckPoint(FID, LineStart)) {
+  if (const char *CheckPoint = PP->getCheckPoint(FID, FirstLineStart)) {
     assert(CheckPoint >= Buff->getBufferStart() &&
            CheckPoint <= Buff->getBufferEnd());
-    assert(CheckPoint <= LineStart);
+    assert(CheckPoint <= FirstLineStart);
     size_t Offset = CheckPoint - Buff->getBufferStart();
     L.seek(Offset, /*IsAtStartOfLine=*/false);
   }
