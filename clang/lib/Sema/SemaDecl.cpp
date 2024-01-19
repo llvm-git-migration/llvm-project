@@ -19797,6 +19797,19 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
           //     - If an initializer is specified for an enumerator, the
           //       initializing value has the same type as the expression.
           EltTy = Val->getType();
+        } else if (getLangOpts().C23) {
+          // C23 6.7.2.2p11 b4
+          // int, if given explicitly with = and the value of the
+          // integer constant expression is representable by an int
+          //
+          // C23 6.7.2.2p11 b5
+          // the type of the integer constant expression, if given
+          // explicitly with = and if the value of the integer
+          // constant expression is not representable by int;
+          if (isRepresentableIntegerValue(Context, EnumVal, Context.IntTy)) {
+            Val = ImpCastExprToType(Val, Context.IntTy, CK_IntegralCast).get();
+          }
+          EltTy = Val->getType();
         } else {
           // C99 6.7.2.2p2:
           //   The expression that defines the value of an enumeration constant
@@ -19806,8 +19819,8 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
           // Complain if the value is not representable in an int.
           if (!isRepresentableIntegerValue(Context, EnumVal, Context.IntTy))
             Diag(IdLoc, diag::ext_enum_value_not_int)
-              << toString(EnumVal, 10) << Val->getSourceRange()
-              << (EnumVal.isUnsigned() || EnumVal.isNonNegative());
+                << toString(EnumVal, 10) << Val->getSourceRange()
+                << (EnumVal.isUnsigned() || EnumVal.isNonNegative());
           else if (!Context.hasSameType(Val->getType(), Context.IntTy)) {
             // Force the type of the expression to 'int'.
             Val = ImpCastExprToType(Val, Context.IntTy, CK_IntegralCast).get();
@@ -19855,20 +19868,28 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
         //       sufficient to contain the incremented value. If no such type
         //       exists, the program is ill-formed.
         QualType T = getNextLargerIntegralType(Context, EltTy);
-        if (T.isNull() || Enum->isFixed()) {
+        if (Enum->isFixed()) {
           // There is no integral type larger enough to represent this
           // value. Complain, then allow the value to wrap around.
           EnumVal = LastEnumConst->getInitVal();
           EnumVal = EnumVal.zext(EnumVal.getBitWidth() * 2);
           ++EnumVal;
-          if (Enum->isFixed())
-            // When the underlying type is fixed, this is ill-formed.
-            Diag(IdLoc, diag::err_enumerator_wrapped)
-              << toString(EnumVal, 10)
-              << EltTy;
-          else
+          // When the underlying type is fixed, this is ill-formed.
+          Diag(IdLoc, diag::err_enumerator_wrapped)
+              << toString(EnumVal, 10) << EltTy;
+
+        } else if (T.isNull()) {
+          if (EltTy->isSignedIntegerType() && getLangOpts().CPlusPlus) {
+            EltTy = Context.getCorrespondingUnsignedType(EltTy);
+          } else {
+            // There is no integral type larger enough to represent this
+            // value. Complain, then allow the value to wrap around.
+            EnumVal = LastEnumConst->getInitVal();
+            EnumVal = EnumVal.zext(EnumVal.getBitWidth() * 2);
+            ++EnumVal;
             Diag(IdLoc, diag::ext_enumerator_increment_too_large)
-              << toString(EnumVal, 10);
+                << toString(EnumVal, 10);
+          }
         } else {
           EltTy = T;
         }
@@ -19886,14 +19907,26 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
         // an int (C99 6.7.2.2p2). However, we support GCC's extension that
         // permits enumerator values that are representable in some larger
         // integral type.
-        if (!getLangOpts().CPlusPlus && !T.isNull())
+        // starting in C23 standard C allows larger enum values
+        // C23 6.7.2.2p11
+        // - the type of the value from the previous enumeration constant with
+        //   one added to it. If such an integer constant expression would
+        //   overflow or wraparound the value of the previous enumeration
+        //   constant from the addition of one, the type takes on either:
+        // - - a suitably sized signed integer type, excluding the bit-precise
+        //     signed integer types, capable of representing the value of the
+        //     previous enumeration constant plus one; or,
+        // - - a suitably sized unsigned integer type, excluding the bit-precise
+        //     unsigned integer types, capable of representing the value of the
+        //     previous enumeration constant plus one.
+
+        if (!getLangOpts().CPlusPlus && !T.isNull() && !getLangOpts().C23)
           Diag(IdLoc, diag::warn_enum_value_overflow);
-      } else if (!getLangOpts().CPlusPlus &&
-                 !EltTy->isDependentType() &&
-                 !isRepresentableIntegerValue(Context, EnumVal, EltTy)) {
+      } else if (!getLangOpts().CPlusPlus && !EltTy->isDependentType() &&
+                 !isRepresentableIntegerValue(Context, EnumVal, EltTy) &&
+                 !getLangOpts().C23) {
         // Enforce C99 6.7.2.2p2 even when we compute the next value.
-        Diag(IdLoc, diag::ext_enum_value_not_int)
-          << toString(EnumVal, 10) << 1;
+        Diag(IdLoc, diag::ext_enum_value_not_int) << toString(EnumVal, 10) << 1;
       }
     }
   }
