@@ -2207,9 +2207,9 @@ def OpenACC_UpdateOp : OpenACC_Op<"update",
 
     /// Return true if the op has the async attribute for the
     /// mlir::acc::DeviceType::None device_type.
-    bool hasAsync();
+    bool hasAsyncOnly();
     /// Return true if the op has the async attribute for the given device_type.
-    bool hasAsync(mlir::acc::DeviceType deviceType);
+    bool hasAsyncOnly(mlir::acc::DeviceType deviceType);
     /// Return the value of the async clause if present.
     mlir::Value getAsyncValue();
     /// Return the value of the async clause for the given device_type if
@@ -2218,9 +2218,9 @@ def OpenACC_UpdateOp : OpenACC_Op<"update",
 
     /// Return true if the op has the wait attribute for the
     /// mlir::acc::DeviceType::None device_type.
-    bool hasWait();
+    bool hasWaitOnly();
     /// Return true if the op has the wait attribute for the given device_type.
-    bool hasWait(mlir::acc::DeviceType deviceType);
+    bool hasWaitOnly(mlir::acc::DeviceType deviceType);
     /// Return the values of the wait clause if present.
     mlir::Operation::operand_range getWaitValues();
     /// Return the values of the wait clause for the given device_type if

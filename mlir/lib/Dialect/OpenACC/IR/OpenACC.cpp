@@ -2567,9 +2567,11 @@ void UpdateOp::getCanonicalizationPatterns(RewritePatternSet &results,
   results.add<RemoveConstantIfCondition<UpdateOp>>(context);
 }
 
-bool UpdateOp::hasAsync() { return hasAsync(mlir::acc::DeviceType::None); }
+bool UpdateOp::hasAsyncOnly() {
+  return hasAsyncOnly(mlir::acc::DeviceType::None);
+}
 
-bool UpdateOp::hasAsync(mlir::acc::DeviceType deviceType) {
+bool UpdateOp::hasAsyncOnly(mlir::acc::DeviceType deviceType) {
   return hasDeviceType(getAsync(), deviceType);
 }
 
@@ -2587,9 +2589,11 @@ mlir::Value UpdateOp::getAsyncValue(mlir::acc::DeviceType deviceType) {
   return {};
 }
 
-bool UpdateOp::hasWait() { return hasWait(mlir::acc::DeviceType::None); }
+bool UpdateOp::hasWaitOnly() {
+  return hasWaitOnly(mlir::acc::DeviceType::None);
+}
 
-bool UpdateOp::hasWait(mlir::acc::DeviceType deviceType) {
+bool UpdateOp::hasWaitOnly(mlir::acc::DeviceType deviceType) {
   return hasDeviceType(getWait(), deviceType);
 }
 
