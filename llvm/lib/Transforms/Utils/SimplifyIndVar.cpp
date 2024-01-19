@@ -644,6 +644,13 @@ bool SimplifyIndvar::replaceIVUserWithLoopInvariant(Instruction *I) {
 
   auto *Invariant = Rewriter.expandCodeFor(S, I->getType(), IP);
 
+  if (!LI->replacementPreservesLCSSAForm(I, Invariant)) {
+    LLVM_DEBUG(dbgs() << "INDVARS: Can not replace IV user: " << *I
+                      << " with loop invariant: " << *S
+                      << " as it breaks LCSSA form " << '\n');
+    return false;
+  }
+
   I->replaceAllUsesWith(Invariant);
   LLVM_DEBUG(dbgs() << "INDVARS: Replace IV user: " << *I
                     << " with loop invariant: " << *S << '\n');
