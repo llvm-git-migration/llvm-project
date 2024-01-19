@@ -2770,6 +2770,20 @@ bool llvm::replaceAllDbgUsesWith(Instruction &From, Value &To,
   return false;
 }
 
+void llvm::handleUnreachableTerminator(Instruction *I) {
+  // RemoveDIs: erase debug-info on this instruction manually.
+  I->dropDbgValues();
+  unsigned Opcode = I->getOpcode();
+  if (Opcode >= Instruction::Ret && Opcode <= Instruction::Invoke &&
+      I->getNumOperands() > 0) {
+    unsigned OpNum = isa<InvokeInst>(I) ? I->getNumOperands() - 1 : 0;
+    Value *Op = I->getOperand(OpNum);
+    if (Op == nullptr || !isa<Instruction>(Op))
+      return;
+    I->setOperand(OpNum, PoisonValue::get(Op->getType()));
+  }
+}
+
 std::pair<unsigned, unsigned>
 llvm::removeAllNonTerminatorAndEHPadInstructions(BasicBlock *BB) {
   unsigned NumDeadInst = 0;
@@ -2777,8 +2791,10 @@ llvm::removeAllNonTerminatorAndEHPadInstructions(BasicBlock *BB) {
   // Delete the instructions backwards, as it has a reduced likelihood of
   // having to update as many def-use and use-def chains.
   Instruction *EndInst = BB->getTerminator(); // Last not to be deleted.
-  // RemoveDIs: erasing debug-info must be done manually.
-  EndInst->dropDbgValues();
+
+  // if terminator refer instruction, transform it into poison.
+  handleUnreachableTerminator(EndInst);
+
   while (EndInst != &BB->front()) {
     // Delete the next to last instruction.
     Instruction *Inst = &*--EndInst->getIterator();
