@@ -3392,6 +3392,24 @@ the configuration (without a prefix: ``Auto``).
         Priority:        1
         SortPriority:    0
 
+.. _MainIncludeChar:
+
+**MainIncludeChar** (``MainIncludeCharDiscriminator``) :versionbadge:`clang-format 18` :ref:`¶ <MainIncludeChar>`
+  When guessing whether a #include is the "main" include (to assign
+  category 0, see above), only the include directives that use the
+  specified character are considered.
+
+  Possible values:
+
+  * ``MICD_Quote`` (the default, in configuration: ``Quote``)
+    The main include uses quotes, e.g. ``#include "foo.hpp"``.
+
+  * ``MICD_Bracket`` (in configuration: ``Bracket``)
+    The main include uses brackets, e.g. ``#include <foo.hpp>``.
+
+  * ``MICD_Any`` (in configuration: ``Any``)
+    The main include uses either quotes or brackets.
+
 .. _IncludeIsMainRegex:
 
 **IncludeIsMainRegex** (``String``) :versionbadge:`clang-format 3.9` :ref:`¶ <IncludeIsMainRegex>`
