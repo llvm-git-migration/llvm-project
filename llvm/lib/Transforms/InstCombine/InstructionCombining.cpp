@@ -3231,9 +3231,7 @@ void InstCombinerImpl::handleUnreachableFrom(
     MadeIRChange = true;
   }
 
-  // RemoveDIs: to match behaviour in dbg.value mode, drop debug-info on
-  // terminator too.
-  BB->getTerminator()->dropDbgValues();
+  MadeIRChange |= handleUnreachableTerminator(BB->getTerminator());
 
   // Handle potentially dead successors.
   for (BasicBlock *Succ : successors(BB))

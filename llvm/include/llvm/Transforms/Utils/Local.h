@@ -357,6 +357,10 @@ Value *salvageDebugInfoImpl(Instruction &I, uint64_t CurrentLocOps,
 bool replaceAllDbgUsesWith(Instruction &From, Value &To, Instruction &DomPoint,
                            DominatorTree &DT);
 
+/// If the terminator in an unreachable basic block refers to an instruction
+/// transform it to poison.
+bool handleUnreachableTerminator(Instruction *I);
+
 /// Remove all instructions from a basic block other than its terminator
 /// and any present EH pad instructions. Returns a pair where the first element
 /// is the number of instructions (excluding debug info intrinsics) that have
