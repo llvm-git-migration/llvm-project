@@ -1119,6 +1119,14 @@ Windows Support
 
 LoongArch Support
 ^^^^^^^^^^^^^^^^^
+- Added a code model attribute for the global variable. The following values
+  are supported: ``normal``, ``medium`` and ``extreme``.
+
+  *Example Code*:
+
+  .. code-block:: c
+
+     int var __attribute((model("extreme")));
 
 RISC-V Support
 ^^^^^^^^^^^^^^
