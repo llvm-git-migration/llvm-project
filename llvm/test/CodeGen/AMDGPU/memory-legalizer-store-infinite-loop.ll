@@ -1,4 +1,4 @@
-; RUN: llc -mtriple=amdgcn--amdhsa -amdgcn-verify-memory-legalizer < %s | FileCheck -check-prefix=GCN %s
+; RUN: llc -mtriple=amdgcn--amdhsa -amdgpu-verify-memory-legalizer < %s | FileCheck -check-prefix=GCN %s
 
 ; Effectively, check that the compile finishes; in the case
 ; of an infinite loop, llc toggles between merging 2 ST4s

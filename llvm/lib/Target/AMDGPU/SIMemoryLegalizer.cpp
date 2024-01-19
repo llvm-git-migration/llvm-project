@@ -35,7 +35,7 @@ static cl::opt<bool> AmdgcnSkipCacheInvalidations(
     cl::desc("Use this to skip inserting cache invalidating instructions."));
 
 static cl::opt<bool> VerifyMemoryLegalizer(
-    "amdgcn-verify-memory-legalizer", cl::init(false), cl::Hidden,
+    "amdgpu-verify-memory-legalizer", cl::init(false), cl::Hidden,
     cl::desc("Verify MIR before and after SIMemoryLegalizer"));
 
 namespace {
