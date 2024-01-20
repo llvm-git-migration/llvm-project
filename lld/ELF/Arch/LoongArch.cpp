@@ -733,7 +733,8 @@ static bool relax(InputSection &sec) {
     uint32_t &cur = aux.relocDeltas[i], remove = 0;
     switch (r.type) {
     case R_LARCH_ALIGN: {
-      const uint64_t addend = r.sym->isUndefined() ? Log2_64(r.addend) + 1 : r.addend;
+      const uint64_t addend =
+          r.sym->isUndefined() ? Log2_64(r.addend) + 1 : r.addend;
       const uint64_t allBytes = (1 << (addend & 0xff)) - 4;
       const uint64_t align = 1 << (addend & 0xff);
       const uint64_t maxBytes = addend >> 8;
