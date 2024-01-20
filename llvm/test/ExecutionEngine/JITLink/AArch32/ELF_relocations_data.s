@@ -57,6 +57,35 @@ got_prel_offset:
 	.size	got_prel_offset, .-got_prel_offset
 	.size	got_prel, .-got_prel
 
+# Dummy personality routine. It will be referenced from .ARM.exidx
+# CHECK-TYPE: {{[0-9a-f]+}} R_ARM_NONE               __aeabi_unwind_cpp_pr0
+	.globl __aeabi_unwind_cpp_pr0
+	.type __aeabi_unwind_cpp_pr0,%function
+	.align 2
+__aeabi_unwind_cpp_pr0:
+	bx lr
+
+# CHECK-TYPE: {{[0-9a-f]+}} R_ARM_PREL31 .text
+#
+# Used in the .ARM.exidx exception tables. The linker must preserve the most-
+# significant bit. It denotes whether the field is an inline entry (1) or a
+# relocation (0).
+#
+# jitlink-check: *{4}(section_addr(out.o, .ARM.exidx)) = (prel31 - (section_addr(out.o, .ARM.exidx))) & 0x7fffffff
+	.globl  prel31
+	.type	prel31,%function
+	.align	2
+prel31:
+	.fnstart
+	.save   {r11, lr}
+	push	{r11, lr}
+	.setfp  r11, sp
+	mov	r11, sp
+	pop	{r11, lr}
+	mov	pc, lr
+	.size	prel31,.-prel31
+	.fnend
+
 # This test is executable with any 4-byte external target:
 #  > echo "unsigned target = 42;" | clang -target armv7-linux-gnueabihf -o target.o -c -xc -
 #  > llvm-jitlink target.o armv7/out.o
@@ -67,5 +96,6 @@ got_prel_offset:
 main:
 	push	{lr}
 	bl	got_prel
+	bl	prel31
 	pop	{pc}
 	.size   main, .-main

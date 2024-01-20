@@ -50,6 +50,8 @@ getJITLinkEdgeKind(uint32_t ELFType, const aarch32::ArmConfig &ArmCfg) {
     return aarch32::Arm_MovtAbs;
   case ELF::R_ARM_NONE:
     return aarch32::None;
+  case ELF::R_ARM_PREL31:
+    return aarch32::Data_PRel31;
   case ELF::R_ARM_TARGET1:
     return (ArmCfg.Target1Rel) ? aarch32::Data_Delta32
                                : aarch32::Data_Pointer32;
@@ -79,6 +81,8 @@ Expected<uint32_t> getELFRelocationType(Edge::Kind Kind) {
     return ELF::R_ARM_REL32;
   case aarch32::Data_Pointer32:
     return ELF::R_ARM_ABS32;
+  case aarch32::Data_PRel31:
+    return ELF::R_ARM_PREL31;
   case aarch32::Data_RequestGOTAndTransformToDelta32:
     return ELF::R_ARM_GOT_PREL;
   case aarch32::Arm_Call:
@@ -147,6 +151,15 @@ private:
     // Handling ABI for the Arm® Architecture -> Index table entries
     if (Sect.sh_type == ELF::SHT_ARM_EXIDX)
       return true;
+    // Skip .ARM.extab sections. They are only ever referenced from .ARM.exidx,
+    // i.e. when unwind instructions don't fit into 4 bytes.
+    if (Sect.sh_type == ELF::SHT_PROGBITS && (Sect.sh_flags & ELF::SHF_ALLOC)) {
+      if (Sect.sh_name && Sect.sh_name < Base::SectionStringTab.size()) {
+        StringRef SectionName = Base::SectionStringTab.data() + Sect.sh_name;
+        if (SectionName.starts_with(".ARM.extab"))
+          return true;
+      }
+    }
     return false;
   }
 
