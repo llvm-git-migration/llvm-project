@@ -135,6 +135,8 @@ enum class StubsFlavor {
 struct ArmConfig {
   bool J1J2BranchEncoding = false;
   StubsFlavor Stubs = StubsFlavor::Unsupported;
+  // We might want a --target1-rel linker switch in the long term.
+  bool Target1Rel = false;
 };
 
 /// Obtain the sub-arch configuration for a given Arm CPU model.
