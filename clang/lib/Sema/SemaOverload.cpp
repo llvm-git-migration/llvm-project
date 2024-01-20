@@ -40,6 +40,7 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Signals.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -6199,7 +6200,8 @@ Sema::EvaluateConvertedConstantExpression(Expr *E, QualType T, APValue &Value,
 
     if (Notes.empty()) {
       // It's a constant expression.
-      Expr *E = ConstantExpr::Create(Context, Result.get(), Value);
+      if (!isa<ConstantExpr>(E))
+        E = ConstantExpr::Create(Context, Result.get(), Value);
       if (!PreNarrowingValue.isAbsent())
         Value = std::move(PreNarrowingValue);
       return E;
