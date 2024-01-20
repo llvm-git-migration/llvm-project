@@ -60,33 +60,6 @@ static std::optional<parser::Message> CheckDefinabilityInPureScope(
   return std::nullopt;
 }
 
-// When a DataRef contains pointers, gets the rightmost one (unless it is
-// the entity being defined, in which case the last pointer above it);
-// otherwise, returns the leftmost symbol.  The resulting symbol is the
-// relevant base object for definabiliy checking.  Examples:
-//   ptr1%ptr2        => ...     -> ptr1
-//   nonptr%ptr       => ...     -> nonptr
-//   nonptr%ptr       =  ...     -> ptr
-//   ptr1%ptr2        =  ...     -> ptr2
-//   ptr1%ptr2%nonptr =  ...     -> ptr2
-//   nonptr1%nonptr2  =  ...     -> nonptr1
-static const Symbol &GetRelevantSymbol(const evaluate::DataRef &dataRef,
-    bool isPointerDefinition, bool acceptAllocatable) {
-  if (isPointerDefinition) {
-    if (const auto *component{std::get_if<evaluate::Component>(&dataRef.u)}) {
-      if (IsPointer(component->GetLastSymbol()) ||
-          (acceptAllocatable && IsAllocatable(component->GetLastSymbol()))) {
-        return GetRelevantSymbol(component->base(), false, false);
-      }
-    }
-  }
-  if (const Symbol * lastPointer{GetLastPointerSymbol(dataRef)}) {
-    return *lastPointer;
-  } else {
-    return dataRef.GetFirstSymbol();
-  }
-}
-
 // Check the leftmost (or only) symbol from a data-ref or expression.
 static std::optional<parser::Message> WhyNotDefinableBase(parser::CharBlock at,
     const Scope &scope, DefinabilityFlags flags, const Symbol &original,
@@ -104,9 +77,8 @@ static std::optional<parser::Message> WhyNotDefinableBase(parser::CharBlock at,
           "Construct association '%s' has a vector subscript"_en_US, original);
     } else if (auto dataRef{evaluate::ExtractDataRef(
                    *association->expr(), true, true)}) {
-      return WhyNotDefinableBase(at, scope, flags,
-          GetRelevantSymbol(*dataRef, isPointerDefinition, acceptAllocatable),
-          isWholeSymbol);
+      return WhyNotDefinableBase(
+          at, scope, flags, dataRef->GetFirstSymbol(), isWholeSymbol);
     }
   }
   if (isTargetDefinition) {
@@ -222,27 +194,13 @@ static std::optional<parser::Message> WhyNotDefinableLast(parser::CharBlock at,
 static std::optional<parser::Message> WhyNotDefinable(parser::CharBlock at,
     const Scope &scope, DefinabilityFlags flags,
     const evaluate::DataRef &dataRef) {
-  const Symbol &base{GetRelevantSymbol(dataRef,
-      flags.test(DefinabilityFlag::PointerDefinition),
-      flags.test(DefinabilityFlag::AcceptAllocatable))};
-  if (auto whyNot{WhyNotDefinableBase(at, scope, flags, base,
-          std::holds_alternative<evaluate::SymbolRef>(dataRef.u))}) {
+  if (auto whyNot{
+          WhyNotDefinableBase(at, scope, flags, dataRef.GetFirstSymbol(),
+              std::holds_alternative<evaluate::SymbolRef>(dataRef.u))}) {
     return whyNot;
   } else {
     return WhyNotDefinableLast(at, scope, flags, dataRef.GetLastSymbol());
   }
-}
-
-// Checks a NOPASS procedure pointer component
-static std::optional<parser::Message> WhyNotDefinable(parser::CharBlock at,
-    const Scope &scope, DefinabilityFlags flags,
-    const evaluate::Component &component) {
-  const evaluate::DataRef &dataRef{component.base()};
-  const Symbol &base{GetRelevantSymbol(dataRef, false, false)};
-  DefinabilityFlags baseFlags{flags};
-  baseFlags.reset(DefinabilityFlag::PointerDefinition);
-  return WhyNotDefinableBase(at, scope, baseFlags, base,
-      std::holds_alternative<evaluate::SymbolRef>(dataRef.u));
 }
 
 std::optional<parser::Message> WhyNotDefinable(parser::CharBlock at,
@@ -370,7 +328,9 @@ std::optional<parser::Message> WhyNotDefinable(parser::CharBlock at,
               *procSym, expr.AsFortran());
         }
         if (const auto *component{procDesignator->GetComponent()}) {
-          return WhyNotDefinable(at, scope, flags, *component);
+          flags.reset(DefinabilityFlag::PointerDefinition);
+          return WhyNotDefinableBase(
+              at, scope, flags, component->GetFirstSymbol(), false);
         } else {
           return WhyNotDefinable(at, scope, flags, *procSym);
         }
