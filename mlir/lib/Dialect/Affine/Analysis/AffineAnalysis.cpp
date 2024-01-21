@@ -12,7 +12,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/Affine/Analysis/AffineAnalysis.h"
+#include "mlir/Analysis/Presburger/IntegerRelation.h"
+#include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/SliceAnalysis.h"
+#include "mlir/Dialect/Affine/Analysis/AffineStructures.h"
 #include "mlir/Dialect/Affine/Analysis/LoopAnalysis.h"
 #include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -385,7 +388,7 @@ static void
 addOrderingConstraints(const FlatAffineValueConstraints &srcDomain,
                        const FlatAffineValueConstraints &dstDomain,
                        unsigned loopDepth,
-                       FlatAffineValueConstraints *dependenceDomain) {
+                       IntegerRelation *dependenceDomain) {
   unsigned numCols = dependenceDomain->getNumCols();
   SmallVector<int64_t, 4> eq(numCols);
   unsigned numSrcDims = srcDomain.getNumDimVars();
@@ -411,7 +414,7 @@ addOrderingConstraints(const FlatAffineValueConstraints &srcDomain,
 static void computeDirectionVector(
     const FlatAffineValueConstraints &srcDomain,
     const FlatAffineValueConstraints &dstDomain, unsigned loopDepth,
-    FlatAffineValueConstraints *dependenceDomain,
+    IntegerRelation *dependenceDomain,
     SmallVector<DependenceComponent, 2> *dependenceComponents) {
   // Find the number of common loops shared by src and dst accesses.
   SmallVector<AffineForOp, 4> commonLoops;
@@ -423,7 +426,7 @@ static void computeDirectionVector(
   unsigned numIdsToEliminate = dependenceDomain->getNumVars();
   // Add new variables to 'dependenceDomain' to represent the direction
   // constraints for each shared loop.
-  dependenceDomain->insertDimVar(/*pos=*/0, /*num=*/numCommonLoops);
+  dependenceDomain->insertVar(VarKind::Domain, /*pos=*/0, /*num=*/numCommonLoops);
 
   // Add equality constraints for each common loop, setting newly introduced
   // variable at column 'j' to the 'dst' IV minus the 'src IV.
@@ -457,7 +460,7 @@ static void computeDirectionVector(
   }
 }
 
-LogicalResult MemRefAccess::getAccessRelation(FlatAffineRelation &rel) const {
+LogicalResult MemRefAccess::getAccessRelation(IntegerRelation &rel) const {
   // Create set corresponding to domain of access.
   FlatAffineValueConstraints domain;
   if (failed(getOpIndexSet(opInst, &domain)))
@@ -469,25 +472,29 @@ LogicalResult MemRefAccess::getAccessRelation(FlatAffineRelation &rel) const {
   if (failed(getRelationFromMap(accessValueMap, rel)))
     return failure();
 
-  FlatAffineRelation domainRel(rel.getNumDomainDims(), /*numRangeDims=*/0,
-                               domain);
+  IntegerRelation domainRel = domain;
+  domainRel.convertVarKind(VarKind::SetDim, 0, rel.getNumDomainVars(), VarKind::Domain);
 
-  // Merge and align domain ids of `ret` and ids of `domain`. Since the domain
+  // Merge and align domain ids of `rel` and ids of `domain`. Since the domain
   // of the access map is a subset of the domain of access, the domain ids of
-  // `ret` are guranteed to be a subset of ids of `domain`.
+  // `rel` are guranteed to be a subset of ids of `domain`.
   for (unsigned i = 0, e = domain.getNumDimVars(); i < e; ++i) {
-    unsigned loc;
-    if (rel.findVar(domain.getValue(i), &loc)) {
-      rel.swapVar(i, loc);
+    const PresburgerSpace &relSpace = rel.getSpace();
+    const Identifier *findBegin = relSpace.getIds(VarKind::Domain).begin() + i;
+    const Identifier *findEnd = relSpace.getIds(VarKind::Domain).end();
+    const Identifier domainIdi = Identifier(domain.getValue(i));
+    const Identifier *itr = std::find(findBegin, findEnd, domainIdi);
+    if (itr != findEnd) {
+      rel.swapVar(i, i + std::distance(findBegin, itr));
     } else {
-      rel.insertDomainVar(i);
-      rel.setValue(i, domain.getValue(i));
+      rel.insertVar(VarKind::Domain, i);
+      rel.setId(VarKind::Domain, i, domainIdi);
     }
   }
 
   // Append domain constraints to `rel`.
-  domainRel.appendRangeVar(rel.getNumRangeDims());
-  domainRel.mergeSymbolVars(rel);
+  domainRel.appendVar(VarKind::Range, rel.getNumRangeVars());
+  domainRel.mergeAndAlignSymbols(rel);
   domainRel.mergeLocalVars(rel);
   rel.append(domainRel);
 
@@ -624,7 +631,8 @@ DependenceResult mlir::affine::checkMemrefAccessDependence(
     return DependenceResult::Failure;
 
   // Create access relation from each MemRefAccess.
-  FlatAffineRelation srcRel, dstRel;
+  PresburgerSpace space = PresburgerSpace::getRelationSpace();
+  IntegerRelation srcRel(space), dstRel(space);
   if (failed(srcAccess.getAccessRelation(srcRel)))
     return DependenceResult::Failure;
   if (failed(dstAccess.getAccessRelation(dstRel)))
@@ -668,7 +676,7 @@ DependenceResult mlir::affine::checkMemrefAccessDependence(
   LLVM_DEBUG(dstRel.dump());
 
   if (dependenceConstraints)
-    *dependenceConstraints = dstRel;
+    *dependenceConstraints = cast<FlatAffineValueConstraints>(dstRel);
   return DependenceResult::HasDependence;
 }
 
