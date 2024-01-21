@@ -1730,6 +1730,10 @@ disassembleObject(ObjectFile &Obj, const ObjectFile &DbgObj,
       WithColor::defaultErrorHandler(std::move(E));
   }
 
+  unsigned ABIVersion = 0;
+  if (auto *ELFObj = dyn_cast<ELFObjectFileBase>(&Obj))
+    ABIVersion = ELFObj->getEIdentABIVersion();
+
   for (const SectionRef &Section : ToolSectionFilter(Obj)) {
     if (FilterSections.empty() && !DisassembleAll &&
         (!Section.isText() || Section.isVirtual()))
@@ -1969,8 +1973,8 @@ disassembleObject(ObjectFile &Obj, const ObjectFile &DbgObj,
         SymbolInfoTy Symbol = SymbolsHere[SHI];
 
         auto Status = DT->DisAsm->onSymbolStart(
-            Symbol, Size, Bytes.slice(Start, End - Start), SectionAddr + Start,
-            CommentStream);
+            Symbol, ABIVersion, Size, Bytes.slice(Start, End - Start),
+            SectionAddr + Start, CommentStream);
 
         if (!Status) {
           // If onSymbolStart returns std::nullopt, that means it didn't trigger

@@ -14,9 +14,9 @@ using namespace llvm;
 MCDisassembler::~MCDisassembler() = default;
 
 std::optional<MCDisassembler::DecodeStatus>
-MCDisassembler::onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size,
-                              ArrayRef<uint8_t> Bytes, uint64_t Address,
-                              raw_ostream &CStream) const {
+MCDisassembler::onSymbolStart(SymbolInfoTy &Symbol, unsigned Version,
+                              uint64_t &Size, ArrayRef<uint8_t> Bytes,
+                              uint64_t Address, raw_ostream &CStream) const {
   return std::nullopt;
 }
 

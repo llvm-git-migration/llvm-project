@@ -143,6 +143,8 @@ public:
   /// to treat symbols separately.
   ///
   /// \param Symbol   - The symbol.
+  /// \param Version  - Target disassembler-specific ABI version number to used
+  ///                   to interpret the symbol.
   /// \param Size     - The number of bytes consumed.
   /// \param Address  - The address, in the memory space of region, of the first
   ///                   byte of the symbol.
@@ -159,8 +161,9 @@ public:
   ///                   symbol separately. Value of Size is ignored in this
   ///                   case.
   virtual std::optional<DecodeStatus>
-  onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size, ArrayRef<uint8_t> Bytes,
-                uint64_t Address, raw_ostream &CStream) const;
+  onSymbolStart(SymbolInfoTy &Symbol, unsigned Version, uint64_t &Size,
+                ArrayRef<uint8_t> Bytes, uint64_t Address,
+                raw_ostream &CStream) const;
   // TODO:
   // Implement similar hooks that can be used at other points during
   // disassembly. Something along the following lines:

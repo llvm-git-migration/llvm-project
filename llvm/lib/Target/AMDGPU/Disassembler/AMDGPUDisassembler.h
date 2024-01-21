@@ -158,16 +158,17 @@ public:
   }
 
   std::optional<DecodeStatus>
-  onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size, ArrayRef<uint8_t> Bytes,
-                uint64_t Address, raw_ostream &CStream) const override;
+  onSymbolStart(SymbolInfoTy &Symbol, unsigned Version, uint64_t &Size,
+                ArrayRef<uint8_t> Bytes, uint64_t Address,
+                raw_ostream &CStream) const override;
 
   DecodeStatus decodeKernelDescriptor(StringRef KdName, ArrayRef<uint8_t> Bytes,
-                                      uint64_t KdAddress) const;
+                                      uint64_t KdAddress,
+                                      unsigned CodeObjectVersion) const;
 
-  DecodeStatus
-  decodeKernelDescriptorDirective(DataExtractor::Cursor &Cursor,
-                                  ArrayRef<uint8_t> Bytes,
-                                  raw_string_ostream &KdStream) const;
+  DecodeStatus decodeKernelDescriptorDirective(
+      DataExtractor::Cursor &Cursor, ArrayRef<uint8_t> Bytes,
+      raw_string_ostream &KdStream, unsigned CodeObjectVersion) const;
 
   /// Decode as directives that handle COMPUTE_PGM_RSRC1.
   /// \param FourByteBuffer - Bytes holding contents of COMPUTE_PGM_RSRC1.

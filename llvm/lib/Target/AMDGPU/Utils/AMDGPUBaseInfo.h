@@ -50,6 +50,9 @@ bool isHsaAbi(const MCSubtargetInfo &STI);
 /// \returns Code object version from the IR module flag.
 unsigned getAMDHSACodeObjectVersion(const Module &M);
 
+/// \returns Code object version from ELF's e_ident[ABIVERSION].
+unsigned getAMDHSACodeObjectVersion(unsigned ABIVersion);
+
 /// \returns The default HSA code object version. This should only be used when
 /// we lack a more accurate CodeObjectVersion value (e.g. from the IR module
 /// flag or a .amdhsa_code_object_version directive)

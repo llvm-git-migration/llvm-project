@@ -47,8 +47,9 @@ class WebAssemblyDisassembler final : public MCDisassembler {
                               ArrayRef<uint8_t> Bytes, uint64_t Address,
                               raw_ostream &CStream) const override;
   std::optional<DecodeStatus>
-  onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size, ArrayRef<uint8_t> Bytes,
-                uint64_t Address, raw_ostream &CStream) const override;
+  onSymbolStart(SymbolInfoTy &Symbol, unsigned Version, uint64_t &Size,
+                ArrayRef<uint8_t> Bytes, uint64_t Address,
+                raw_ostream &CStream) const override;
 
 public:
   WebAssemblyDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx,
@@ -122,8 +123,8 @@ bool parseImmediate(MCInst &MI, uint64_t &Size, ArrayRef<uint8_t> Bytes) {
 }
 
 std::optional<MCDisassembler::DecodeStatus>
-WebAssemblyDisassembler::onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size,
-                                       ArrayRef<uint8_t> Bytes,
+WebAssemblyDisassembler::onSymbolStart(SymbolInfoTy &Symbol, unsigned Version,
+                                       uint64_t &Size, ArrayRef<uint8_t> Bytes,
                                        uint64_t Address,
                                        raw_ostream &CStream) const {
   Size = 0;

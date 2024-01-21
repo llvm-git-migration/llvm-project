@@ -2077,7 +2077,7 @@ MCDisassembler::DecodeStatus AMDGPUDisassembler::decodeCOMPUTE_PGM_RSRC3(
 MCDisassembler::DecodeStatus
 AMDGPUDisassembler::decodeKernelDescriptorDirective(
     DataExtractor::Cursor &Cursor, ArrayRef<uint8_t> Bytes,
-    raw_string_ostream &KdStream) const {
+    raw_string_ostream &KdStream, unsigned CodeObjectVersion) const {
 #define PRINT_DIRECTIVE(DIRECTIVE, MASK)                                       \
   do {                                                                         \
     KdStream << Indent << DIRECTIVE " "                                        \
@@ -2184,8 +2184,7 @@ AMDGPUDisassembler::decodeKernelDescriptorDirective(
                       KERNEL_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32);
     }
 
-    // FIXME: We should be looking at the ELF header ABI version for this.
-    if (AMDGPU::getDefaultAMDHSACodeObjectVersion() >= AMDGPU::AMDHSA_COV5)
+    if (CodeObjectVersion >= AMDGPU::AMDHSA_COV5)
       PRINT_DIRECTIVE(".amdhsa_uses_dynamic_stack",
                       KERNEL_CODE_PROPERTY_USES_DYNAMIC_STACK);
 
@@ -2225,7 +2224,8 @@ AMDGPUDisassembler::decodeKernelDescriptorDirective(
 }
 
 MCDisassembler::DecodeStatus AMDGPUDisassembler::decodeKernelDescriptor(
-    StringRef KdName, ArrayRef<uint8_t> Bytes, uint64_t KdAddress) const {
+    StringRef KdName, ArrayRef<uint8_t> Bytes, uint64_t KdAddress,
+    unsigned CodeObjectVersion) const {
   // CP microcode requires the kernel descriptor to be 64 aligned.
   if (Bytes.size() != 64 || KdAddress % 64 != 0)
     return MCDisassembler::Fail;
@@ -2251,7 +2251,7 @@ MCDisassembler::DecodeStatus AMDGPUDisassembler::decodeKernelDescriptor(
   DataExtractor::Cursor C(0);
   while (C && C.tell() < Bytes.size()) {
     MCDisassembler::DecodeStatus Status =
-        decodeKernelDescriptorDirective(C, Bytes, KdStream);
+        decodeKernelDescriptorDirective(C, Bytes, KdStream, CodeObjectVersion);
 
     cantFail(C.takeError());
 
@@ -2263,10 +2263,9 @@ MCDisassembler::DecodeStatus AMDGPUDisassembler::decodeKernelDescriptor(
   return MCDisassembler::Success;
 }
 
-std::optional<MCDisassembler::DecodeStatus>
-AMDGPUDisassembler::onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size,
-                                  ArrayRef<uint8_t> Bytes, uint64_t Address,
-                                  raw_ostream &CStream) const {
+std::optional<MCDisassembler::DecodeStatus> AMDGPUDisassembler::onSymbolStart(
+    SymbolInfoTy &Symbol, unsigned ABIVersion, uint64_t &Size,
+    ArrayRef<uint8_t> Bytes, uint64_t Address, raw_ostream &CStream) const {
   // Right now only kernel descriptor needs to be handled.
   // We ignore all other symbols for target specific handling.
   // TODO:
@@ -2279,11 +2278,14 @@ AMDGPUDisassembler::onSymbolStart(SymbolInfoTy &Symbol, uint64_t &Size,
     return MCDisassembler::Fail;
   }
 
+  unsigned CodeObjectVersion = AMDGPU::getAMDHSACodeObjectVersion(ABIVersion);
+
   // Code Object V3 kernel descriptors.
   StringRef Name = Symbol.Name;
   if (Symbol.Type == ELF::STT_OBJECT && Name.ends_with(StringRef(".kd"))) {
     Size = 64; // Size = 64 regardless of success or failure.
-    return decodeKernelDescriptor(Name.drop_back(3), Bytes, Address);
+    return decodeKernelDescriptor(Name.drop_back(3), Bytes, Address,
+                                  CodeObjectVersion);
   }
   return std::nullopt;
 }
