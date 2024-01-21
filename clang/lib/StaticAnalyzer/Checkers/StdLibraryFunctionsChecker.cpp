@@ -2219,7 +2219,7 @@ void StdLibraryFunctionsChecker::initFunctionSummaries(
                    ArgumentCondition(0, WithinRange, {{0, UCharRangeMax}})},
                   ErrnoMustNotBeChecked, GenericSuccessMsg)
             .Case({ReturnValueCondition(WithinRange, SingleValue(EOFv)),
-                   ArgumentCondition(0, WithinRange, {{EOFv, EOFv}})},
+                   ArgumentCondition(0, WithinRange, SingleValue(EOFv))},
                   ErrnoNEZeroIrrelevant,
                   "Assuming that 'ungetc' fails because EOF was passed as "
                   "character")
