@@ -119,6 +119,10 @@ class SourceMappingRegion {
   /// as the line execution count if there are no other regions on the line.
   bool GapRegion;
 
+  /// Whetever this region is skipped ('if constexpr' or 'if consteval' untaken
+  /// branch)
+  bool SkippedRegion{false};
+
 public:
   SourceMappingRegion(Counter Count, std::optional<SourceLocation> LocStart,
                       std::optional<SourceLocation> LocEnd,
@@ -173,6 +177,10 @@ public:
   bool isGap() const { return GapRegion; }
 
   void setGap(bool Gap) { GapRegion = Gap; }
+
+  bool isSkipped() const { return SkippedRegion; }
+
+  void setSkipped(bool Skipped) { SkippedRegion = Skipped; }
 
   bool isBranch() const { return FalseCount.has_value(); }
 
@@ -468,6 +476,10 @@ public:
         MappingRegions.push_back(CounterMappingRegion::makeGapRegion(
             Region.getCounter(), *CovFileID, SR.LineStart, SR.ColumnStart,
             SR.LineEnd, SR.ColumnEnd));
+      } else if (Region.isSkipped()) {
+        MappingRegions.push_back(CounterMappingRegion::makeSkipped(
+            *CovFileID, SR.LineStart, SR.ColumnStart, SR.LineEnd,
+            SR.ColumnEnd));
       } else if (Region.isBranch()) {
         MappingRegions.push_back(CounterMappingRegion::makeBranchRegion(
             Region.getCounter(), Region.getFalseCounter(),
@@ -1251,6 +1263,23 @@ struct CounterCoverageMappingBuilder
     popRegions(Index);
   }
 
+  /// Emit a skip region between \p StartLoc and \p EndLoc with the given count.
+  void markSkipArea(SourceLocation StartLoc, SourceLocation EndLoc) {
+    if (StartLoc == EndLoc)
+      return;
+    assert(SpellingRegion(SM, StartLoc, EndLoc).isInSourceOrder());
+    handleFileExit(StartLoc);
+    size_t Index = pushRegion({}, StartLoc, EndLoc);
+    getRegion().setSkipped(true);
+    handleFileExit(EndLoc);
+    popRegions(Index);
+  }
+
+  void findGapAreaBetweenAndMarkSkipArea(SourceLocation AfterLoc,
+                                         SourceLocation BeforeLoc) {
+    markSkipArea(AfterLoc, BeforeLoc);
+  }
+
   /// Keep counts of breaks and continues inside loops.
   struct BreakContinue {
     Counter BreakCount;
@@ -1700,43 +1729,118 @@ struct CounterCoverageMappingBuilder
     Visit(S->getSubStmt());
   }
 
+  void CoverIfConsteval(const IfStmt *S) {
+    assert(S->isConsteval());
+
+    const auto *Then = S->getThen();
+    const auto *Else = S->getElse();
+
+    // I'm using 'propagateCounts' later as new region is better and allows me
+    // to properly calculate line coverage in llvm-cov utility
+    const Counter ParentCount = getRegion().getCounter();
+
+    extendRegion(S);
+
+    if (S->isNegatedConsteval()) {
+      // ignore 'if consteval'
+      findGapAreaBetweenAndMarkSkipArea(S->getIfLoc(), getStart(Then));
+      propagateCounts(ParentCount, Then);
+
+      if (Else) {
+        // ignore 'else <else>'
+        findGapAreaBetweenAndMarkSkipArea(getEnd(Then), getEnd(Else));
+      }
+    } else {
+      assert(S->isNonNegatedConsteval());
+      // ignore 'if consteval <then> [else]'
+      findGapAreaBetweenAndMarkSkipArea(S->getIfLoc(),
+                                        Else ? getStart(Else) : getEnd(Then));
+
+      if (Else)
+        propagateCounts(ParentCount, Else);
+    }
+  }
+
+  void CoverIfConstexpr(const IfStmt *S) {
+    assert(S->isConstexpr());
+
+    // evaluate constant condition...
+    const auto *E = dyn_cast<ConstantExpr>(S->getCond());
+    assert(E != nullptr);
+    const bool isTrue = E->getResultAsAPSInt().getExtValue();
+
+    extendRegion(S);
+
+    const auto *Init = S->getInit();
+    const auto *Then = S->getThen();
+    const auto *Else = S->getElse();
+
+    // I'm using 'propagateCounts' later as new region is better and allows me
+    // to properly calculate line coverage in llvm-cov utility
+    const Counter ParentCount = getRegion().getCounter();
+
+    // ignore 'if constexpr ('
+    SourceLocation startOfSkipped = S->getIfLoc();
+
+    if (Init) {
+      // don't mark initialisation as ignored
+      findGapAreaBetweenAndMarkSkipArea(startOfSkipped, getStart(Init));
+      propagateCounts(ParentCount, Init);
+      // ignore after initialisation: '; <condition>)'...
+      startOfSkipped = getEnd(Init);
+    }
+
+    if (isTrue) {
+      // ignore '<condition>)'
+      findGapAreaBetweenAndMarkSkipArea(startOfSkipped, getStart(Then));
+      propagateCounts(ParentCount, Then);
+
+      if (Else)
+        // ignore 'else <else>'
+        findGapAreaBetweenAndMarkSkipArea(getEnd(Then), getEnd(Else));
+    } else {
+      // ignore '<condition>) <then> [else]'
+      findGapAreaBetweenAndMarkSkipArea(startOfSkipped,
+                                        Else ? getStart(Else) : getEnd(Then));
+
+      if (Else) {
+        propagateCounts(ParentCount, Else);
+      }
+    }
+  }
+
   void VisitIfStmt(const IfStmt *S) {
+    // "if constexpr" and "if consteval" are not normal conditional statements,
+    // they should behave more like a preprocessor conditions
+    if (S->isConsteval())
+      return CoverIfConsteval(S);
+    else if (S->isConstexpr())
+      return CoverIfConstexpr(S);
+
     extendRegion(S);
     if (S->getInit())
       Visit(S->getInit());
 
     // Extend into the condition before we propagate through it below - this is
     // needed to handle macros that generate the "if" but not the condition.
-    if (!S->isConsteval())
-      extendRegion(S->getCond());
+    extendRegion(S->getCond());
 
     Counter ParentCount = getRegion().getCounter();
+    Counter ThenCount = getRegionCounter(S);
 
-    // If this is "if !consteval" the then-branch will never be taken, we don't
-    // need to change counter
-    Counter ThenCount =
-        S->isNegatedConsteval() ? ParentCount : getRegionCounter(S);
+    // Emitting a counter for the condition makes it easier to interpret the
+    // counter for the body when looking at the coverage.
+    propagateCounts(ParentCount, S->getCond());
 
-    if (!S->isConsteval()) {
-      // Emitting a counter for the condition makes it easier to interpret the
-      // counter for the body when looking at the coverage.
-      propagateCounts(ParentCount, S->getCond());
-
-      // The 'then' count applies to the area immediately after the condition.
-      std::optional<SourceRange> Gap =
-          findGapAreaBetween(S->getRParenLoc(), getStart(S->getThen()));
-      if (Gap)
-        fillGapAreaWithCount(Gap->getBegin(), Gap->getEnd(), ThenCount);
-    }
+    // The 'then' count applies to the area immediately after the condition.
+    std::optional<SourceRange> Gap =
+        findGapAreaBetween(S->getRParenLoc(), getStart(S->getThen()));
+    if (Gap)
+      fillGapAreaWithCount(Gap->getBegin(), Gap->getEnd(), ThenCount);
 
     extendRegion(S->getThen());
     Counter OutCount = propagateCounts(ThenCount, S->getThen());
-
-    // If this is "if consteval" the else-branch will never be taken, we don't
-    // need to change counter
-    Counter ElseCount = S->isNonNegatedConsteval()
-                            ? ParentCount
-                            : subtractCounters(ParentCount, ThenCount);
+    Counter ElseCount = subtractCounters(ParentCount, ThenCount);
 
     if (const Stmt *Else = S->getElse()) {
       bool ThenHasTerminateStmt = HasTerminateStmt;
@@ -1759,11 +1863,9 @@ struct CounterCoverageMappingBuilder
       GapRegionCounter = OutCount;
     }
 
-    if (!S->isConsteval()) {
-      // Create Branch Region around condition.
-      createBranchRegion(S->getCond(), ThenCount,
-                         subtractCounters(ParentCount, ThenCount));
-    }
+    // Create Branch Region around condition.
+    createBranchRegion(S->getCond(), ThenCount,
+                       subtractCounters(ParentCount, ThenCount));
   }
 
   void VisitCXXTryStmt(const CXXTryStmt *S) {
