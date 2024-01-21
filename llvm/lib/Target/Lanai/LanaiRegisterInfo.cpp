@@ -165,9 +165,8 @@ bool LanaiRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   if ((isSPLSOpcode(MI.getOpcode()) && !isInt<10>(Offset)) ||
       !isInt<16>(Offset)) {
     assert(RS && "Register scavenging must be on");
-    Register Reg = RS->FindUnusedReg(&Lanai::GPRRegClass);
-    if (!Reg)
-      Reg = RS->scavengeRegisterBackwards(Lanai::GPRRegClass, II, false, SPAdj);
+    Register Reg =
+        RS->scavengeRegisterBackwards(Lanai::GPRRegClass, II, false, SPAdj);
     assert(Reg && "Register scavenger failed");
 
     bool HasNegOffset = false;
