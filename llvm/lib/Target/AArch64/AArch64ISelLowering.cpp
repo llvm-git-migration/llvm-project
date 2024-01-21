@@ -11417,6 +11417,14 @@ static bool isEXTMask(ArrayRef<int> M, EVT VT, bool &ReverseEXT,
   return true;
 }
 
+static bool isTBLMask(ArrayRef<int> M, EVT VT) {
+  // We can handle <16 x i8> and <8 x i8> vector shuffles. If the index in the
+  // mask is out of range, then 0 is placed into the resulting vector. So pretty
+  // much any mask of 16 or 8 elements can work here.
+  return (VT == MVT::v8i8 && M.size() == 8) ||
+         (VT == MVT::v16i8 && M.size() == 16);
+}
+
 /// isREVMask - Check if a vector shuffle corresponds to a REV
 /// instruction with the specified blocksize.  (The order of the elements
 /// within each block of the vector is reversed.)
@@ -11451,7 +11459,7 @@ static bool isZIPMask(ArrayRef<int> M, EVT VT, unsigned &WhichResult) {
     return false;
   WhichResult = (M[0] == 0 ? 0 : 1);
   unsigned Idx = WhichResult * NumElts / 2;
-  for (unsigned i = 0; i != NumElts; i += 2) {
+  for (unsigned i = 0; i < NumElts; i += 2) {
     if ((M[i] >= 0 && (unsigned)M[i] != Idx) ||
         (M[i + 1] >= 0 && (unsigned)M[i + 1] != Idx + NumElts))
       return false;
@@ -12166,7 +12174,7 @@ SDValue AArch64TargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
                        DAG.getConstant(8, dl, MVT::i32));
   }
 
-  bool ReverseEXT = false;
+  bool ReverseEXT;
   unsigned Imm;
   if (isEXTMask(ShuffleMask, VT, ReverseEXT, Imm)) {
     if (ReverseEXT)
@@ -13664,8 +13672,7 @@ bool AArch64TargetLowering::isShuffleMaskLegal(ArrayRef<int> M, EVT VT) const {
 
   return (ShuffleVectorSDNode::isSplatMask(&M[0], VT) || isREVMask(M, VT, 64) ||
           isREVMask(M, VT, 32) || isREVMask(M, VT, 16) ||
-          isEXTMask(M, VT, DummyBool, DummyUnsigned) ||
-          // isTBLMask(M, VT) || // FIXME: Port TBL support from ARM.
+          isEXTMask(M, VT, DummyBool, DummyUnsigned) || isTBLMask(M, VT) ||
           isTRNMask(M, VT, DummyUnsigned) || isUZPMask(M, VT, DummyUnsigned) ||
           isZIPMask(M, VT, DummyUnsigned) ||
           isTRN_v_undef_Mask(M, VT, DummyUnsigned) ||
