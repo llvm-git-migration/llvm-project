@@ -6055,7 +6055,7 @@ define void @vec512_i8_widen_to_i256_factor32_broadcast_to_v2i256_factor2(ptr %i
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX2-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX2-NEXT:    vmovdqa {{.*#+}} xmm1 = [255,0,0,0]
+; AVX2-NEXT:    vmovd {{.*#+}} xmm1 = [255,0,0,0]
 ; AVX2-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX2-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX2-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
@@ -6068,7 +6068,7 @@ define void @vec512_i8_widen_to_i256_factor32_broadcast_to_v2i256_factor2(ptr %i
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX512F-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX512F-NEXT:    vmovdqa {{.*#+}} xmm1 = [255,0,0,0]
+; AVX512F-NEXT:    vmovd {{.*#+}} xmm1 = [255,0,0,0]
 ; AVX512F-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX512F-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX512F-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
@@ -6081,7 +6081,7 @@ define void @vec512_i8_widen_to_i256_factor32_broadcast_to_v2i256_factor2(ptr %i
 ; AVX512DQ:       # %bb.0:
 ; AVX512DQ-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX512DQ-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX512DQ-NEXT:    vmovdqa {{.*#+}} xmm1 = [255,0,0,0]
+; AVX512DQ-NEXT:    vmovd {{.*#+}} xmm1 = [255,0,0,0]
 ; AVX512DQ-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX512DQ-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX512DQ-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
@@ -6520,7 +6520,7 @@ define void @vec512_i16_widen_to_i256_factor16_broadcast_to_v2i256_factor2(ptr %
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX2-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX2-NEXT:    vmovdqa {{.*#+}} xmm1 = [65535,0,0,0]
+; AVX2-NEXT:    vmovd {{.*#+}} xmm1 = [65535,0,0,0]
 ; AVX2-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX2-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX2-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
@@ -6533,7 +6533,7 @@ define void @vec512_i16_widen_to_i256_factor16_broadcast_to_v2i256_factor2(ptr %
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX512F-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX512F-NEXT:    vmovdqa {{.*#+}} xmm1 = [65535,0,0,0]
+; AVX512F-NEXT:    vmovd {{.*#+}} xmm1 = [65535,0,0,0]
 ; AVX512F-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX512F-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX512F-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
@@ -6546,7 +6546,7 @@ define void @vec512_i16_widen_to_i256_factor16_broadcast_to_v2i256_factor2(ptr %
 ; AVX512DQ:       # %bb.0:
 ; AVX512DQ-NEXT:    vmovdqa (%rdi), %ymm0
 ; AVX512DQ-NEXT:    vpaddb (%rsi), %ymm0, %ymm0
-; AVX512DQ-NEXT:    vmovdqa {{.*#+}} xmm1 = [65535,0,0,0]
+; AVX512DQ-NEXT:    vmovd {{.*#+}} xmm1 = [65535,0,0,0]
 ; AVX512DQ-NEXT:    vpand %ymm1, %ymm0, %ymm0
 ; AVX512DQ-NEXT:    vpaddb 32(%rdx), %ymm0, %ymm1
 ; AVX512DQ-NEXT:    vpaddb (%rdx), %ymm0, %ymm0
