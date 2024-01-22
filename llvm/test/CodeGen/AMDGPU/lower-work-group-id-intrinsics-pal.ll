@@ -75,6 +75,25 @@ define amdgpu_cs void @caller() {
 
 declare amdgpu_gfx void @callee(i32)
 
+define amdgpu_gfx void @workgroup_ids_gfx(ptr addrspace(1) %outx, ptr addrspace(1) %outy, ptr addrspace(1) %outz) {
+; GFX9-SDAG-LABEL: workgroup_ids_gfx:
+; GFX9-SDAG:       ; %bb.0:
+; GFX9-SDAG-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX9-SDAG-NEXT:    s_setpc_b64 s[30:31]
+;
+; GFX9-GISEL-LABEL: workgroup_ids_gfx:
+; GFX9-GISEL:       ; %bb.0:
+; GFX9-GISEL-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX9-GISEL-NEXT:    s_setpc_b64 s[30:31]
+  %id.x = call i32 @llvm.amdgcn.workgroup.id.x()
+  %id.y = call i32 @llvm.amdgcn.workgroup.id.y()
+  %id.z = call i32 @llvm.amdgcn.workgroup.id.z()
+  store volatile i32 %id.x, ptr addrspace(1) %outx
+  store volatile i32 %id.y, ptr addrspace(1) %outy
+  store volatile i32 %id.z, ptr addrspace(1) %outz
+  ret void
+}
+
 declare i32 @llvm.amdgcn.workgroup.id.x()
 declare i32 @llvm.amdgcn.workgroup.id.y()
 declare i32 @llvm.amdgcn.workgroup.id.z()
