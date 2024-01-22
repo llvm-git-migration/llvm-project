@@ -137,8 +137,8 @@ public:
   bool prepare(const Selection &Inputs) override;
   Expected<Effect> apply(const Selection &Inputs) override;
   std::string title() const override {
-    return llvm::formatv("Swap operands to binary operator {0}",
-                         Op ? Op->getOpcodeStr() : "");
+    return llvm::formatv("Swap operands to {0}",
+                         Op ? Op->getOpcodeStr() : "binary operator");
   }
   llvm::StringLiteral kind() const override {
     return CodeAction::REFACTOR_KIND;
@@ -163,11 +163,7 @@ bool SwapBinaryOperands::prepare(const Selection &Inputs) {
       Op = nullptr;
     }
   }
-  // avoid dealing with single-statement brances, they require careful handling
-  // to avoid changing semantics of the code (i.e. dangling else).
-  // FIXME: remove this
-  return Op && isa_and_nonnull<CompoundStmt>(Op->getLHS()) &&
-         isa_and_nonnull<CompoundStmt>(Op->getRHS());
+  return Op != nullptr;
 }
 
 Expected<Tweak::Effect> SwapBinaryOperands::apply(const Selection &Inputs) {

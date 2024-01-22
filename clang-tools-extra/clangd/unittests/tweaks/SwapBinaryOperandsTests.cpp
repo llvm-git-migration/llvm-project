@@ -19,9 +19,18 @@ TWEAK_TEST(SwapBinaryOperands);
 
 TEST_F(SwapBinaryOperandsTest, Test) {
   Context = Function;
-  EXPECT_EQ(apply("^p == nullptr"), "nullptr == p");
-  EXPECT_EQ(apply("^p == nullptr"), "nullptr == p");
-  EXPECT_EQ(apply("^x >= 5"), "5 <= x");
+  EXPECT_EQ(apply("int *p = nullptr; bool c = ^p == nullptr;"),
+            "int *p = nullptr; bool c = nullptr == p;");
+  EXPECT_EQ(apply("int *p = nullptr; bool c = p ^== nullptr;"),
+            "int *p = nullptr; bool c = nullptr == p;");
+  EXPECT_EQ(apply("int x = 3; bool c = ^x >= 5;"),
+            "int x = 3; bool c = 5 <= x;");
+  EXPECT_EQ(apply("int x = 3; bool c = x >^= 5;"),
+            "int x = 3; bool c = 5 <= x;");
+  EXPECT_EQ(apply("int x = 3; bool c = x >=^ 5;"),
+            "int x = 3; bool c = 5 <= x;");
+  EXPECT_EQ(apply("int x = 3; bool c = x >=^ 5;"),
+            "int x = 3; bool c = 5 <= x;");
 }
 
 } // namespace
