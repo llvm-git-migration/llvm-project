@@ -1,0 +1,181 @@
+# RUN: llc -o - -run-pass=machine-scheduler -misched=shuffle %s | FileCheck %s
+# RUN: llc -o - -run-pass=postmisched %s | FileCheck %s
+
+--- |
+  target datalayout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64"
+  target triple = "thumbv8.1m.main-arm-none-eabi"
+
+  define dso_local i32 @foo_bti(i32 noundef %a) local_unnamed_addr #7 {
+  entry:
+    %add = add nsw i32 %a, 1
+    ret i32 %add
+  }
+
+    define dso_local i32 @foo_pacbti(i32 noundef %a) local_unnamed_addr #7 {
+  entry:
+    %add = add nsw i32 %a, 1
+    ret i32 %add
+  }
+
+    define dso_local noundef i32 @foo_setjmp() local_unnamed_addr #0 {
+  entry:
+    %buf = alloca [20 x i64], align 8
+    call void @llvm.lifetime.start.p0(i64 160, ptr nonnull %buf) #4
+    %call = call i32 @setjmp(ptr noundef nonnull %buf) #5
+    %tobool.not = icmp eq i32 %call, 0
+    br i1 %tobool.not, label %if.else, label %if.then
+  
+  if.then:                                          ; preds = %entry
+    call void @longjmp(ptr noundef nonnull %buf, i32 noundef 1) #6
+    unreachable
+  
+  if.else:                                          ; preds = %entry
+    call void @llvm.lifetime.end.p0(i64 160, ptr nonnull %buf) #4
+    ret i32 0
+  }
+  
+  declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #1
+  declare dso_local i32 @setjmp(ptr noundef) local_unnamed_addr #2
+  declare dso_local void @longjmp(ptr noundef, i32 noundef) local_unnamed_addr #3
+  declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #1
+  
+  attributes #0 = { nounwind "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="cortex-m55" "target-features"="+armv8.1-m.main,+dsp,+fp-armv8d16,+fp-armv8d16sp,+fp16,+fp64,+fullfp16,+hwdiv,+lob,+mve,+mve.fp,+ras,+strict-align,+thumb-mode,+vfp2,+vfp2sp,+vfp3d16,+vfp3d16sp,+vfp4d16,+vfp4d16sp,-aes,-bf16,-cdecp0,-cdecp1,-cdecp2,-cdecp3,-cdecp4,-cdecp5,-cdecp6,-cdecp7,-crc,-crypto,-d32,-dotprod,-fp-armv8,-fp-armv8sp,-fp16fml,-hwdiv-arm,-i8mm,-neon,-pacbti,-sb,-sha2,-vfp3,-vfp3sp,-vfp4,-vfp4sp" }
+  attributes #1 = { nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
+  attributes #2 = { nounwind returns_twice "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="cortex-m55" "target-features"="+armv8.1-m.main,+dsp,+fp-armv8d16,+fp-armv8d16sp,+fp16,+fp64,+fullfp16,+hwdiv,+lob,+mve,+mve.fp,+ras,+strict-align,+thumb-mode,+vfp2,+vfp2sp,+vfp3d16,+vfp3d16sp,+vfp4d16,+vfp4d16sp,-aes,-bf16,-cdecp0,-cdecp1,-cdecp2,-cdecp3,-cdecp4,-cdecp5,-cdecp6,-cdecp7,-crc,-crypto,-d32,-dotprod,-fp-armv8,-fp-armv8sp,-fp16fml,-hwdiv-arm,-i8mm,-neon,-pacbti,-sb,-sha2,-vfp3,-vfp3sp,-vfp4,-vfp4sp" }
+  attributes #3 = { noreturn nounwind "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="cortex-m55" "target-features"="+armv8.1-m.main,+dsp,+fp-armv8d16,+fp-armv8d16sp,+fp16,+fp64,+fullfp16,+hwdiv,+lob,+mve,+mve.fp,+ras,+strict-align,+thumb-mode,+vfp2,+vfp2sp,+vfp3d16,+vfp3d16sp,+vfp4d16,+vfp4d16sp,-aes,-bf16,-cdecp0,-cdecp1,-cdecp2,-cdecp3,-cdecp4,-cdecp5,-cdecp6,-cdecp7,-crc,-crypto,-d32,-dotprod,-fp-armv8,-fp-armv8sp,-fp16fml,-hwdiv-arm,-i8mm,-neon,-pacbti,-sb,-sha2,-vfp3,-vfp3sp,-vfp4,-vfp4sp" }
+  attributes #4 = { nounwind }
+  attributes #5 = { nounwind returns_twice }
+  attributes #6 = { noreturn nounwind }
+  attributes #7 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="cortex-m55" "target-features"="+armv8.1-m.main,+dsp,+fp-armv8d16,+fp-armv8d16sp,+fp16,+fp64,+fullfp16,+hwdiv,+lob,+mve,+mve.fp,+ras,+strict-align,+thumb-mode,+vfp2,+vfp2sp,+vfp3d16,+vfp3d16sp,+vfp4d16,+vfp4d16sp,-aes,-bf16,-cdecp0,-cdecp1,-cdecp2,-cdecp3,-cdecp4,-cdecp5,-cdecp6,-cdecp7,-crc,-crypto,-d32,-dotprod,-fp-armv8,-fp-armv8sp,-fp16fml,-hwdiv-arm,-i8mm,-neon,-pacbti,-sb,-sha2,-vfp3,-vfp3sp,-vfp4,-vfp4sp" }
+
+...
+---
+name:            foo_bti
+alignment:       4
+tracksRegLiveness: true
+tracksDebugUserValues: true
+liveins:
+  - { reg: '$r0' }
+frameInfo:
+  maxAlignment:    1
+  maxCallFrameSize: 0
+machineFunctionInfo:
+  isLRSpilled:     false
+body:             |
+  bb.0.entry:
+    liveins: $r0
+
+    t2BTI
+    renamable $r0, dead $cpsr = nsw tADDi8 killed renamable $r0, 1, 14 /* CC::al */, $noreg
+    tBX_RET 14 /* CC::al */, $noreg, implicit killed $r0
+
+...
+
+# CHECK-LABEL: name:            foo_bti
+# CHECK:       body:
+# CHECK-NEXT:   bb.0.entry:
+# CHECK-NEXT:     liveins: $r0
+# CHECK-NEXT:     {{^ +$}}
+# CHECK-NEXT:     t2BTI
+
+---
+name:            foo_pacbti
+alignment:       4
+tracksRegLiveness: true
+tracksDebugUserValues: true
+liveins:
+  - { reg: '$r0' }
+frameInfo:
+  stackSize:       12
+  offsetAdjustment: -4
+  maxAlignment:    4
+  maxCallFrameSize: 0
+stack:
+  - { id: 0, type: spill-slot, offset: -4, size: 4, alignment: 4, callee-saved-register: '$lr' }
+  - { id: 1, type: spill-slot, offset: -8, size: 4, alignment: 4, callee-saved-register: '$r7' }
+  - { id: 2, type: spill-slot, offset: -12, size: 4, alignment: 4, callee-saved-register: '$r12' }
+machineFunctionInfo:
+  isLRSpilled:     true
+body:             |
+  bb.0.entry:
+    liveins: $r0, $lr, $r12
+
+    frame-setup t2PAC implicit-def $r12, implicit $lr, implicit $sp
+    renamable $r2 = nsw t2ADDri $r0, 3, 14 /* CC::al */, $noreg, $noreg
+    $sp = frame-setup t2STMDB_UPD $sp, 14 /* CC::al */, $noreg, killed $r7, killed $lr
+    frame-setup CFI_INSTRUCTION def_cfa_offset 8
+    frame-setup CFI_INSTRUCTION offset $lr, -4
+    frame-setup CFI_INSTRUCTION offset $r7, -8
+    $r7 = frame-setup tMOVr killed $sp, 14 /* CC::al */, $noreg
+    frame-setup CFI_INSTRUCTION def_cfa_register $r7
+    early-clobber $sp = frame-setup t2STR_PRE killed $r12, $sp, -4, 14 /* CC::al */, $noreg
+    frame-setup CFI_INSTRUCTION offset $ra_auth_code, -12
+    renamable $r0 = nsw t2ADDri killed renamable $r0, 1, 14 /* CC::al */, $noreg, $noreg
+    $r12, $sp = frame-destroy t2LDR_POST $sp, 4, 14 /* CC::al */, $noreg
+    $sp = frame-destroy t2LDMIA_UPD $sp, 14 /* CC::al */, $noreg, def $r7, def $lr
+    t2AUT implicit $r12, implicit $lr, implicit $sp
+    tBX_RET 14 /* CC::al */, $noreg, implicit $r0
+
+...
+
+# CHECK-LABEL: name:            foo_pacbti
+# CHECK:       body:
+# CHECK-NEXT:    bb.0.entry:
+# CHECK-NEXT:      liveins: $r0, $lr, $r12
+# CHECK-NEXT:      {{^ +$}}
+# CHECK-NEXT:      frame-setup t2PAC implicit-def $r12, implicit $lr, implicit $sp
+
+---
+name:            foo_setjmp
+alignment:       4
+exposesReturnsTwice: true
+tracksRegLiveness: true
+tracksDebugUserValues: true
+frameInfo:
+  stackSize:       168
+  offsetAdjustment: -160
+  maxAlignment:    8
+  adjustsStack:    true
+  hasCalls:        true
+  maxCallFrameSize: 0
+  localFrameSize:  160
+stack:
+  - { id: 0, name: buf, offset: -168, size: 160, alignment: 8, local-offset: -160 }
+  - { id: 1, type: spill-slot, offset: -4, size: 4, alignment: 4, callee-saved-register: '$lr', 
+      callee-saved-restored: false }
+  - { id: 2, type: spill-slot, offset: -8, size: 4, alignment: 4, callee-saved-register: '$r7' }
+machineFunctionInfo:
+  isLRSpilled:     true
+body:             |
+  bb.0.entry:
+    successors: %bb.1
+    liveins: $lr
+  
+    frame-setup tPUSH 14 /* CC::al */, $noreg, $r7, killed $lr, implicit-def $sp, implicit $sp
+    frame-setup CFI_INSTRUCTION def_cfa_offset 8
+    frame-setup CFI_INSTRUCTION offset $lr, -4
+    frame-setup CFI_INSTRUCTION offset $r7, -8
+    $r7 = frame-setup tMOVr $sp, 14 /* CC::al */, $noreg
+    frame-setup CFI_INSTRUCTION def_cfa_register $r7
+    $sp = frame-setup tSUBspi $sp, 40, 14 /* CC::al */, $noreg
+    renamable $r0 = tMOVr $sp, 14 /* CC::al */, $noreg
+    tBL 14 /* CC::al */, $noreg, @setjmp, csr_aapcs, implicit-def dead $lr, implicit $sp, implicit killed $r0, implicit-def $sp, implicit-def $r0
+    t2BTI
+    renamable $r2 = nsw t2ADDri $r0, 3, 14 /* CC::al */, $noreg, $noreg
+    tCMPi8 killed renamable $r0, 0, 14 /* CC::al */, $noreg, implicit-def $cpsr
+    t2IT 0, 2, implicit-def $itstate
+    renamable $r0 = tMOVi8 $noreg, 0, 0 /* CC::eq */, $cpsr, implicit $itstate
+    $sp = frame-destroy tADDspi $sp, 40, 0 /* CC::eq */, $cpsr, implicit $itstate
+    frame-destroy tPOP_RET 0 /* CC::eq */, killed $cpsr, def $r7, def $pc, implicit killed $r0, implicit $sp, implicit killed $itstate
+  
+  bb.1.if.then:
+    renamable $r0 = tMOVr $sp, 14 /* CC::al */, $noreg
+    renamable $r1, dead $cpsr = tMOVi8 1, 14 /* CC::al */, $noreg
+    tBL 14 /* CC::al */, $noreg, @longjmp, csr_aapcs, implicit-def dead $lr, implicit $sp, implicit killed $r0, implicit killed $r1, implicit-def $sp
+
+...
+
+# CHECK-LABEL: name:            foo_setjmp
+# CHECK:       body:
+# CHECK:         tBL 14 /* CC::al */, $noreg, @setjmp, csr_aapcs, implicit-def dead $lr, implicit $sp, implicit killed $r0, implicit-def $sp, implicit-def $r0
+# CHECK-NEXT:    t2BTI
