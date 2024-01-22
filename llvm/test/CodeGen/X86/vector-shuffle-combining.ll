@@ -3187,7 +3187,7 @@ declare <8 x i16> @llvm.x86.sse2.psrli.w(<8 x i16>, i32)
 define void @PR43024() {
 ; SSE2-LABEL: PR43024:
 ; SSE2:       # %bb.0:
-; SSE2-NEXT:    movaps {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
+; SSE2-NEXT:    movsd {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
 ; SSE2-NEXT:    movaps %xmm0, (%rax)
 ; SSE2-NEXT:    addss {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; SSE2-NEXT:    xorps %xmm1, %xmm1
@@ -3198,7 +3198,7 @@ define void @PR43024() {
 ;
 ; SSSE3-LABEL: PR43024:
 ; SSSE3:       # %bb.0:
-; SSSE3-NEXT:    movaps {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
+; SSSE3-NEXT:    movsd {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
 ; SSSE3-NEXT:    movaps %xmm0, (%rax)
 ; SSSE3-NEXT:    addss %xmm0, %xmm0
 ; SSSE3-NEXT:    xorps %xmm1, %xmm1
@@ -3209,7 +3209,7 @@ define void @PR43024() {
 ;
 ; SSE41-LABEL: PR43024:
 ; SSE41:       # %bb.0:
-; SSE41-NEXT:    movaps {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
+; SSE41-NEXT:    movsd {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
 ; SSE41-NEXT:    movaps %xmm0, (%rax)
 ; SSE41-NEXT:    addss %xmm0, %xmm0
 ; SSE41-NEXT:    xorps %xmm1, %xmm1
@@ -3220,7 +3220,7 @@ define void @PR43024() {
 ;
 ; AVX-LABEL: PR43024:
 ; AVX:       # %bb.0:
-; AVX-NEXT:    vmovaps {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
+; AVX-NEXT:    vmovsd {{.*#+}} xmm0 = [NaN,NaN,0.0E+0,0.0E+0]
 ; AVX-NEXT:    vmovaps %xmm0, (%rax)
 ; AVX-NEXT:    vaddss {{\.?LCPI[0-9]+_[0-9]+}}+4(%rip), %xmm0, %xmm0
 ; AVX-NEXT:    vxorps %xmm1, %xmm1, %xmm1
