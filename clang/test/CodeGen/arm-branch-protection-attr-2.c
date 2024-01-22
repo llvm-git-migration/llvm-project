@@ -5,13 +5,11 @@
 // RUN: %clang -target arm-arm-none-eabi -march=armv8.1-m.main -S -emit-llvm -o - -mbranch-protection=pac-ret+b-key %s | FileCheck %s --check-prefix=CHECK --check-prefix=PART
 // RUN: %clang -target arm-arm-none-eabi -march=armv8.1-m.main -S -emit-llvm -o - -mbranch-protection=bti %s           | FileCheck %s --check-prefix=CHECK --check-prefix=BTE
 
-// Check there are no branch protection function attributes
+// Check there is branch protection function attributes
 
 // CHECK-LABEL: @foo() #[[#ATTR:]]
 
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "sign-return-address"
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "sign-return-address-key"
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "branch-target-enforcement"
+// CHECK:  attributes #[[#ATTR]] = { {{.*}} {{.*}} "branch-target-enforcement"{{.*}}"sign-return-address"
 
 // Check module attributes
 

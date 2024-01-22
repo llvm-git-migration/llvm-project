@@ -109,21 +109,18 @@ public:
     if (!FD)
       return;
 
-    const auto *TA = FD->getAttr<TargetAttr>();
-    if (TA == nullptr)
-      return;
+    TargetInfo::BranchProtectionInfo BPI(CGM.getLangOpts());
 
-    ParsedTargetAttr Attr =
-        CGM.getTarget().parseTargetAttr(TA->getFeaturesStr());
-    if (Attr.BranchProtection.empty())
-      return;
-
-    TargetInfo::BranchProtectionInfo BPI;
-    StringRef Error;
-    (void)CGM.getTarget().validateBranchProtection(Attr.BranchProtection,
-                                                   Attr.CPU, BPI, Error);
-    assert(Error.empty());
-
+    if (const auto *TA = FD->getAttr<TargetAttr>()) {
+      ParsedTargetAttr Attr =
+          CGM.getTarget().parseTargetAttr(TA->getFeaturesStr());
+      if (!Attr.BranchProtection.empty()) {
+        StringRef Error;
+        (void)CGM.getTarget().validateBranchProtection(Attr.BranchProtection,
+                                                       Attr.CPU, BPI, Error);
+        assert(Error.empty());
+      }
+    }
     auto *Fn = cast<llvm::Function>(GV);
     Fn->addFnAttr("sign-return-address", BPI.getSignReturnAddrStr());
 

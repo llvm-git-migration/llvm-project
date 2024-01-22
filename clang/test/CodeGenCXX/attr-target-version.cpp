@@ -148,11 +148,11 @@ int bar() {
 // CHECK-NEXT:    ret i32 4
 //
 //.
-// CHECK: attributes #[[ATTR0:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bf16,+sme,+sme-f64f64" }
-// CHECK: attributes #[[ATTR1:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bf16,+fp-armv8,+neon,+sm4" }
-// CHECK: attributes #[[ATTR2:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" }
-// CHECK: attributes #[[ATTR3:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+neon" }
-// CHECK: attributes #[[ATTR4:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+crc" }
+// CHECK: attributes #[[ATTR0:[0-9]+]] = { mustprogress noinline nounwind optnone "branch-protection-pauth-lr"="false" "branch-target-enforcement"="false" "guarded-control-stack"="false" "no-trapping-math"="true" "sign-return-address"="none" "stack-protector-buffer-size"="8" "target-features"="+bf16,+sme,+sme-f64f64" }
+// CHECK: attributes #[[ATTR1:[0-9]+]] = { mustprogress noinline nounwind optnone "branch-protection-pauth-lr"="false" "branch-target-enforcement"="false" "guarded-control-stack"="false" "no-trapping-math"="true" "sign-return-address"="none" "stack-protector-buffer-size"="8" "target-features"="+bf16,+fp-armv8,+neon,+sm4" }
+// CHECK: attributes #[[ATTR2:[0-9]+]] = { mustprogress noinline nounwind optnone "branch-protection-pauth-lr"="false" "branch-target-enforcement"="false" "guarded-control-stack"="false" "no-trapping-math"="true" "sign-return-address"="none" "stack-protector-buffer-size"="8" }
+// CHECK: attributes #[[ATTR3:[0-9]+]] = { mustprogress noinline nounwind optnone "branch-protection-pauth-lr"="false" "branch-target-enforcement"="false" "guarded-control-stack"="false" "no-trapping-math"="true" "sign-return-address"="none" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+neon" }
+// CHECK: attributes #[[ATTR4:[0-9]+]] = { mustprogress noinline nounwind optnone "branch-protection-pauth-lr"="false" "branch-target-enforcement"="false" "guarded-control-stack"="false" "no-trapping-math"="true" "sign-return-address"="none" "stack-protector-buffer-size"="8" "target-features"="+crc" }
 //.
 // CHECK: [[META0:![0-9]+]] = !{i32 1, !"wchar_size", i32 4}
 // CHECK: [[META1:![0-9]+]] = !{!"{{.*}}clang version {{.*}}"}
