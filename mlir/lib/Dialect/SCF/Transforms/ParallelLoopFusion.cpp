@@ -21,6 +21,8 @@
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
+#include "llvm/ADT/SetVector.h"
+
 namespace mlir {
 #define GEN_PASS_DEF_SCFPARALLELLOOPFUSION
 #include "mlir/Dialect/SCF/Transforms/Passes.h.inc"
@@ -63,10 +65,20 @@ static bool haveNoReadsAfterWriteExceptSameIndex(
     llvm::function_ref<bool(Value, Value)> mayAlias) {
   DenseMap<Value, SmallVector<ValueRange, 1>> bufferStores;
   SmallVector<Value> bufferStoresVec;
+  llvm::SmallSetVector<BlockArgument, 10u> writtenArgs;
   firstPloop.getBody()->walk([&](memref::StoreOp store) {
     bufferStores[store.getMemRef()].push_back(store.getIndices());
-    bufferStoresVec.emplace_back(store.getMemRef());
+    const auto storeMemRef = store.getMemRef();
+    bufferStoresVec.emplace_back(storeMemRef);
+    if (llvm::isa<BlockArgument>(storeMemRef))
+      writtenArgs.insert(llvm::cast<BlockArgument>(storeMemRef));
   });
+  secondPloop.getBody()->walk([&](memref::StoreOp store) {
+    const auto storeMemRef = store.getMemRef();
+    if (llvm::isa<BlockArgument>(storeMemRef))
+      writtenArgs.insert(llvm::cast<BlockArgument>(storeMemRef));
+  });
+
   auto walkResult = secondPloop.getBody()->walk([&](memref::LoadOp load) {
     Value loadMem = load.getMemRef();
     // Stop if the memref is defined in secondPloop body. Careful alias analysis
@@ -76,20 +88,28 @@ static bool haveNoReadsAfterWriteExceptSameIndex(
       return WalkResult::interrupt();
 
     for (Value store : bufferStoresVec)
-      if (store != loadMem && mayAlias(store, loadMem))
+      if ((store != loadMem) && (writtenArgs.size() > 1) &&
+          mayAlias(store, loadMem))
         return WalkResult::interrupt();
 
     auto write = bufferStores.find(loadMem);
     if (write == bufferStores.end())
       return WalkResult::advance();
 
-    // Allow only single write access per buffer.
-    if (write->second.size() != 1)
+    // Check that at last one store was retrieved
+    if (!write->second.size())
       return WalkResult::interrupt();
+
+    auto storeIndices = write->second.front();
+
+    // Multiple writes to the same memref are allowed only on the same indices
+    for (const auto &othStoreIndices : write->second) {
+      if (othStoreIndices != storeIndices)
+        return WalkResult::interrupt();
+    }
 
     // Check that the load indices of secondPloop coincide with store indices of
     // firstPloop for the same memrefs.
-    auto storeIndices = write->second.front();
     auto loadIndices = load.getIndices();
     if (storeIndices.size() != loadIndices.size())
       return WalkResult::interrupt();
