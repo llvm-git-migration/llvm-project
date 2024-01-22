@@ -57,3 +57,5 @@ foreach(feature IN LISTS ALL_COMPILER_FEATURES)
 endforeach()
 
 message(STATUS "Compiler features available: ${AVAILABLE_COMPILER_FEATURES}")
+
+check_cxx_compiler_flag("-nostdlib++" LIBC_COMPILER_SUPPORT_NOSTDLIBPP)
