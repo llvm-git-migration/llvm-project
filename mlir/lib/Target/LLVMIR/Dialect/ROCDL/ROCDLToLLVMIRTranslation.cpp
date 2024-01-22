@@ -99,6 +99,12 @@ public:
       if (!llvmFunc->hasFnAttribute("amdgpu-flat-work-group-size")) {
         llvmFunc->addFnAttr("amdgpu-flat-work-group-size", "1,256");
       }
+      // MLIR's GPU kernel APIs all assume and produce uniformly-sized
+      // workgroups, so the lowering of the `rocdl.kernel` marker encodes this
+      // assumption. This assumption may be overridden by setting
+      // `rocdl.uniform_work_group_size` on a given function.
+      if (!llvmFunc->hasFnAttribute("uniform-work-group-size"))
+        llvmFunc->addFnAttr("uniform-work-group-size", "true");
     }
     // Override flat-work-group-size
     // TODO: update clients to rocdl.flat_work_group_size instead,
@@ -133,7 +139,19 @@ public:
       llvmAttrValue.append(value.getValue());
       llvmFunc->addFnAttr("amdgpu-flat-work-group-size", llvmAttrValue);
     }
-
+    if (ROCDL::ROCDLDialect::getUniformWorkGroupSizeAttrName() ==
+        attribute.getName()) {
+      auto func = dyn_cast<LLVM::LLVMFuncOp>(op);
+      if (!func)
+        return failure();
+      auto value = dyn_cast<BoolAttr>(attribute.getValue());
+      if (!value)
+        return failure();
+      llvm::Function *llvmFunc =
+          moduleTranslation.lookupFunction(func.getName());
+      llvmFunc->addFnAttr("uniform-work-group-size",
+                          value.getValue() ? "true" : "false");
+    }
     // Set reqd_work_group_size metadata
     if (ROCDL::ROCDLDialect::getReqdWorkGroupSizeAttrName() ==
         attribute.getName()) {
