@@ -87,26 +87,43 @@ public:
   }
 };
 
+enum class CheckingMode { Forbidden, Required };
+
 class DeclsReaderListener : public ASTDeserializationListener {
+  StringRef SpeficiedName;
+  CheckingMode Mode;
+
+  bool ReadedSpecifiedName = false;
+
 public:
   void DeclRead(serialization::DeclID ID, const Decl *D) override {
     auto *ND = dyn_cast<NamedDecl>(D);
     if (!ND)
       return;
 
-    EXPECT_FALSE(ND->getName().contains(ForbiddenName));
+    ReadedSpecifiedName |= ND->getName().contains(SpeficiedName);
+    if (Mode == CheckingMode::Forbidden) {
+      EXPECT_FALSE(ReadedSpecifiedName);
+    }
   }
 
-  DeclsReaderListener(StringRef ForbiddenName) : ForbiddenName(ForbiddenName) {}
+  DeclsReaderListener(StringRef SpeficiedName, CheckingMode Mode)
+      : SpeficiedName(SpeficiedName), Mode(Mode) {}
 
-  StringRef ForbiddenName;
+  ~DeclsReaderListener() {
+    if (Mode == CheckingMode::Required) {
+      EXPECT_TRUE(ReadedSpecifiedName);
+    }
+  }
 };
 
 class LoadSpecLazilyConsumer : public ASTConsumer {
   DeclsReaderListener Listener;
+  CheckingMode Mode;
 
 public:
-  LoadSpecLazilyConsumer(StringRef ForbiddenName) : Listener(ForbiddenName) {}
+  LoadSpecLazilyConsumer(StringRef SpecifiedName, CheckingMode Mode)
+      : Listener(SpecifiedName, Mode) {}
 
   ASTDeserializationListener *GetASTDeserializationListener() override {
     return &Listener;
@@ -114,16 +131,17 @@ public:
 };
 
 class CheckLoadSpecLazilyAction : public ASTFrontendAction {
-  StringRef ForbiddenName;
+  StringRef SpecifiedName;
+  CheckingMode Mode;
 
 public:
   std::unique_ptr<ASTConsumer>
   CreateASTConsumer(CompilerInstance &CI, StringRef /*Unused*/) override {
-    return std::make_unique<LoadSpecLazilyConsumer>(ForbiddenName);
+    return std::make_unique<LoadSpecLazilyConsumer>(SpecifiedName, Mode);
   }
 
-  CheckLoadSpecLazilyAction(StringRef ForbiddenName)
-      : ForbiddenName(ForbiddenName) {}
+  CheckLoadSpecLazilyAction(StringRef SpecifiedName, CheckingMode Mode)
+      : SpecifiedName(SpecifiedName), Mode(Mode) {}
 };
 
 TEST_F(LoadSpecLazilyTest, BasicTest) {
@@ -144,16 +162,17 @@ import M;
 A<int> a;
   )cpp";
   std::string DepArg = "-fprebuilt-module-path=" + TestDir.str().str();
-  EXPECT_TRUE(runToolOnCodeWithArgs(
-      std::make_unique<CheckLoadSpecLazilyAction>("ShouldNotBeLoaded"),
-      test_file_contents,
-      {
-          "-std=c++20",
-          DepArg.c_str(),
-          "-I",
-          TestDir.c_str(),
-      },
-      "test.cpp"));
+  EXPECT_TRUE(
+      runToolOnCodeWithArgs(std::make_unique<CheckLoadSpecLazilyAction>(
+                                "ShouldNotBeLoaded", CheckingMode::Forbidden),
+                            test_file_contents,
+                            {
+                                "-std=c++20",
+                                DepArg.c_str(),
+                                "-I",
+                                TestDir.c_str(),
+                            },
+                            "test.cpp"));
 }
 
 TEST_F(LoadSpecLazilyTest, ChainedTest) {
@@ -178,16 +197,55 @@ import N;
 A<int> a;
   )cpp";
   std::string DepArg = "-fprebuilt-module-path=" + TestDir.str().str();
-  EXPECT_TRUE(runToolOnCodeWithArgs(
-      std::make_unique<CheckLoadSpecLazilyAction>("ShouldNotBeLoaded"),
-      test_file_contents,
-      {
-          "-std=c++20",
-          DepArg.c_str(),
-          "-I",
-          TestDir.c_str(),
-      },
-      "test.cpp"));
+  EXPECT_TRUE(
+      runToolOnCodeWithArgs(std::make_unique<CheckLoadSpecLazilyAction>(
+                                "ShouldNotBeLoaded", CheckingMode::Forbidden),
+                            test_file_contents,
+                            {
+                                "-std=c++20",
+                                DepArg.c_str(),
+                                "-I",
+                                TestDir.c_str(),
+                            },
+                            "test.cpp"));
+}
+
+// Checking that the option '-fno-load-external-specializations-lazily' can load
+// all specializations expectedly
+TEST_F(LoadSpecLazilyTest, LoadAllTest) {
+  GenerateModuleInterface("M", R"cpp(
+export module M;
+export template <class T>
+class A {};
+  )cpp");
+
+  GenerateModuleInterface("N", R"cpp(
+export module N;
+export import M;
+export class ShouldBeLoaded {};
+
+export class Temp {
+   A<ShouldBeLoaded> AS;
+};
+  )cpp");
+
+  const char *test_file_contents = R"cpp(
+import N;
+A<int> a;
+  )cpp";
+  std::string DepArg = "-fprebuilt-module-path=" + TestDir.str().str();
+  EXPECT_TRUE(
+      runToolOnCodeWithArgs(std::make_unique<CheckLoadSpecLazilyAction>(
+                                "ShouldBeLoaded", CheckingMode::Required),
+                            test_file_contents,
+                            {
+                                "-std=c++20",
+                                "-fno-load-external-specializations-lazily",
+                                DepArg.c_str(),
+                                "-I",
+                                TestDir.c_str(),
+                            },
+                            "test.cpp"));
 }
 
 } // namespace

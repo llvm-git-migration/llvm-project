@@ -2008,6 +2008,8 @@ public:
   LoadExternalSpecializations(const Decl *D,
                               ArrayRef<TemplateArgument> TemplateArgs) override;
 
+  void LoadAllExternalSpecializations(const Decl *D) override;
+
   /// Read all of the declarations lexically stored in a
   /// declaration context.
   ///

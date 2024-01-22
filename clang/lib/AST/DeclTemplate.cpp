@@ -342,6 +342,11 @@ void RedeclarableTemplateDecl::loadExternalSpecializations() const {
     for (uint32_t I = 0, N = *Specs++; I != N; ++I)
       (void)Context.getExternalSource()->GetExternalDecl(Specs[I]);
   }
+
+  if (!getASTContext().getLangOpts().LoadExternalSpecializationsLazily &&
+      getASTContext().getExternalSource())
+    getASTContext().getExternalSource()->LoadAllExternalSpecializations(
+        this->getCanonicalDecl());
 }
 
 template <class EntryType, typename... ProfileArguments>
