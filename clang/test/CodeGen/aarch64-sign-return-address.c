@@ -7,15 +7,33 @@
 // RUN: %clang -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=pac-ret+b-key %s | FileCheck %s --check-prefix=CHECK --check-prefix=B-KEY
 // RUN: %clang -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=bti %s           | FileCheck %s --check-prefix=CHECK --check-prefix=BTE
 
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=none     %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=all      %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=non-leaf %s | FileCheck %s --check-prefix=CHECK-LTO
+
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=none %s          | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=pac-ret+leaf  %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=pac-ret+b-key %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=bti %s           | FileCheck %s --check-prefix=CHECK-LTO
+
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=none     %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=all      %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -msign-return-address=non-leaf %s | FileCheck %s --check-prefix=CHECK-LTO
+
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=none %s          | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=pac-ret+leaf  %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=pac-ret+b-key %s | FileCheck %s --check-prefix=CHECK-LTO
+// RUN: %clang -flto=thin -target aarch64-none-elf -S -emit-llvm -o - -mbranch-protection=bti %s           | FileCheck %s --check-prefix=CHECK-LTO
+
 // REQUIRES: aarch64-registered-target
 
-// Check there are no branch protection function attributes
+// Branch protection function attributes are always expected.
 
 // CHECK-LABEL: @foo() #[[#ATTR:]]
+// CHECK-LTO-LABEL: @foo() #[[#ATTR:]]
 
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "sign-return-address"
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "sign-return-address-key"
-// CHECK-NOT:  attributes #[[#ATTR]] = { {{.*}} "branch-target-enforcement"
+// CHECK:  attributes #[[#ATTR]] = { {{.*}} "branch-protection-pauth-lr"{{.*}}"branch-target-enforcement"{{.*}}"guarded-control-stack"{{.*}}"sign-return-address"
+// CHECK-LTO:  attributes #[[#ATTR]] = { {{.*}} "branch-protection-pauth-lr"{{.*}}"branch-target-enforcement"{{.*}}"guarded-control-stack"{{.*}}"sign-return-address"
 
 // Check module attributes
 
