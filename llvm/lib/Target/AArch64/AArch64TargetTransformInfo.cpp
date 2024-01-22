@@ -235,7 +235,7 @@ bool AArch64TTIImpl::areInlineCompatible(const Function *Caller,
                                          const Function *Callee) const {
   SMEAttrs CallerAttrs(*Caller);
   SMEAttrs CalleeAttrs(*Callee);
-  if (CalleeAttrs.hasNewZABody())
+  if (CalleeAttrs.isNewZA())
     return false;
 
   if (CallerAttrs.requiresLazySave(CalleeAttrs) ||
