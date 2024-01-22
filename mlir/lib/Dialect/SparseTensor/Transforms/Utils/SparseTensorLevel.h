@@ -29,12 +29,12 @@ public:
   /// the given position `p` that the immediate parent level is current at.
   /// Returns a pair of values for *posLo* and *loopHi* respectively.
   ///
-  /// For dense level, the *posLo* is the linearized position at beginning,
+  /// For a dense level, the *posLo* is the linearized position at beginning,
   /// while *loopHi* is the largest *coordinate*, it also implies that the
   /// smallest *coordinate* to start the loop is 0.
   ///
-  /// For sparse level, [posLo, loopHi) specifies the range of index pointer to
-  /// load coordinate from the coordinate buffer.
+  /// For a sparse level, [posLo, loopHi) specifies the range of index pointer
+  /// to load coordinate from the coordinate buffer.
   ///
   /// `bound` is only used when the level is `non-unique` and deduplication is
   /// required. It specifies the max upper bound of the non-unique segment.

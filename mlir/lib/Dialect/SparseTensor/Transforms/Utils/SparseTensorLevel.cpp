@@ -778,7 +778,7 @@ public:
 } // namespace
 
 //===----------------------------------------------------------------------===//
-// Complex SparseIterator derived classes impl.
+// SparseIterator derived classes implementation.
 //===----------------------------------------------------------------------===//
 
 ValueRange SparseIterator::forwardIf(OpBuilder &b, Location l, Value cond) {
@@ -819,7 +819,6 @@ Value DedupIterator::genSegmentHigh(OpBuilder &b, Location l, Value pos) {
       },
       /*afterBuilder=*/
       [](OpBuilder &b, Location l, ValueRange ivs) {
-        // pos ++
         Value nxPos = ADDI(ivs[0], C_IDX(1));
         YIELD(nxPos);
       });
@@ -830,11 +829,11 @@ Value DedupIterator::genSegmentHigh(OpBuilder &b, Location l, Value pos) {
 Value FilterIterator::genCrdNotLegitPredicate(OpBuilder &b, Location l,
                                               Value wrapCrd) {
   Value crd = fromWrapCrd(b, l, wrapCrd);
-  // not on stride
+  // Test whether the coordinate is on stride.
   Value notlegit = CMPI(ne, toWrapCrd(b, l, crd), wrapCrd);
-  // wrapCrd < offset
+  // Test wrapCrd < offset
   notlegit = ORI(CMPI(ult, wrapCrd, offset), notlegit);
-  //  crd >= length
+  // Test crd >= length
   notlegit = ORI(CMPI(uge, crd, size), notlegit);
   return notlegit;
 }
