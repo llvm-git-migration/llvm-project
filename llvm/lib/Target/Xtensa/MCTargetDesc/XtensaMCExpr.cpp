@@ -58,6 +58,6 @@ XtensaMCExpr::VariantKind XtensaMCExpr::getVariantKindForName(StringRef name) {
 StringRef XtensaMCExpr::getVariantKindName(VariantKind Kind) {
   switch (Kind) {
   default:
-    llvm_unreachable("Invalid ELF symbol kind");
+    report_fatal_error("Invalid ELF symbol kind");
   }
 }
