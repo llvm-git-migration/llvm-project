@@ -285,12 +285,18 @@ public:
 
     virtual ~Listener() = default;
 
-    /// Notification handler for when an operation is inserted into the builder.
-    /// `op` is the operation that was inserted.
+    /// Notify the listener that the specified operation was inserted.
+    ///
+    /// Note: Creating an (unlinked) op does not trigger this notification.
+    /// Only when the op is inserted, this notification is triggered. This
+    /// notification is also triggered when moving an operation to a different
+    /// location.
+    // TODO: If needed, the previous location of the operation could be passed
+    // as a parameter. This would also allow listeners to distinguish between
+    // "newly created op was inserted" and "existing op was moved".
     virtual void notifyOperationInserted(Operation *op) {}
 
-    /// Notification handler for when a block is created using the builder.
-    /// `block` is the block that was created.
+    /// Notify the listener that the specified block was inserted.
     virtual void notifyBlockCreated(Block *block) {}
 
   protected:

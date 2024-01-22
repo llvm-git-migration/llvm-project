@@ -60,12 +60,12 @@ static Value insertAllocAndDealloc(MemRefType type, Location loc,
 
   // Make sure to allocate at the beginning of the block.
   auto *parentBlock = alloc->getBlock();
-  alloc->moveBefore(&parentBlock->front());
+  rewriter.moveOpBefore(alloc, &parentBlock->front());
 
   // Make sure to deallocate this alloc at the end of the block. This is fine
   // as toy functions have no control flow.
   auto dealloc = rewriter.create<memref::DeallocOp>(loc, alloc);
-  dealloc->moveBefore(&parentBlock->back());
+  rewriter.moveOpBefore(dealloc, &parentBlock->back());
   return alloc;
 }
 
