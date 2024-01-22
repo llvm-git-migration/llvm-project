@@ -268,12 +268,28 @@ public:
     ShapedType resultType = cast<ShapedType>(sliceOp.getType());
     if (llvm::isa<UnrankedTensorType>(resultType))
       return failure();
+
+    ElementsAttr StartElems;
+    ElementsAttr SizeElems;
+
+    if (!matchPattern(sliceOp.getStart(), m_Constant(&StartElems)))
+      return rewriter.notifyMatchFailure(
+          sliceOp, "start of slice must be a static ranked shape");
+
+    if (!matchPattern(sliceOp.getSize(), m_Constant(&SizeElems)))
+      return rewriter.notifyMatchFailure(
+          sliceOp, "size of slice must be a static ranked shape");
+
+    llvm::SmallVector<int64_t> SliceStarts =
+        llvm::to_vector(StartElems.getValues<int64_t>());
+    llvm::SmallVector<int64_t> SliceSizes =
+        llvm::to_vector(SizeElems.getValues<int64_t>());
+
     SmallVector<int64_t> strides, sizes;
-    ArrayRef<int64_t> starts = sliceOp.getStart();
     strides.resize(cast<ShapedType>(sliceOp.getType()).getRank(), 1);
 
     SmallVector<Value> dynSizes;
-    for (const auto &i : llvm::enumerate(sliceOp.getSize())) {
+    for (const auto &i : llvm::enumerate(SliceSizes)) {
       int64_t size = i.value();
       size_t index = i.index();
       sizes.push_back(size == -1 ? ShapedType::kDynamic : size);
@@ -282,17 +298,27 @@ public:
 
       auto dim = rewriter.create<tensor::DimOp>(loc, input, index);
       auto offset = rewriter.create<arith::ConstantOp>(
-          loc, rewriter.getIndexAttr(starts[index]));
+          loc, rewriter.getIndexAttr(SliceStarts[index]));
       dynSizes.push_back(rewriter.create<arith::SubIOp>(loc, dim, offset));
     }
 
     auto newSliceOp = rewriter.create<tensor::ExtractSliceOp>(
         sliceOp.getLoc(), sliceOp.getType(), input, ValueRange({}), dynSizes,
-        ValueRange({}), rewriter.getDenseI64ArrayAttr(starts),
+        ValueRange({}), rewriter.getDenseI64ArrayAttr(SliceStarts),
         rewriter.getDenseI64ArrayAttr(sizes),
         rewriter.getDenseI64ArrayAttr(strides));
 
     rewriter.replaceOp(sliceOp, newSliceOp.getResult());
+
+    auto removeIfRedundant = [&](Operation *op) {
+      if (op->getResults().size() == 1 && op->getResult(0).hasOneUse())
+        rewriter.eraseOp(op);
+    };
+
+    // Remove const_shape ops when it no longer has use point.
+    removeIfRedundant(sliceOp.getStart().getDefiningOp());
+    removeIfRedundant(sliceOp.getSize().getDefiningOp());
+
     return success();
   }
 };
