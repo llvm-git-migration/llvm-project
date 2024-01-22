@@ -103,7 +103,7 @@
 ! HELP-NEXT: -L <dir>                Add directory to library search path
 ! HELP-NEXT: -march=<value>          For a list of available architectures for the target use '-mcpu=help'
 ! HELP-NEXT: -mcode-object-version=<value>
-! HELP-NEXT:                         Specify code object ABI version. Defaults to 4. (AMDGPU only)
+! HELP-NEXT:                         Specify code object ABI version. Defaults to 5. (AMDGPU only)
 ! HELP-NEXT: -mcpu=<value>           For a list of available CPUs for the target use '-mcpu=help'
 ! HELP-NEXT: -mllvm=<arg>            Alias for -mllvm
 ! HELP-NEXT: -mllvm <value>          Additional arguments to forward to LLVM's option processing
