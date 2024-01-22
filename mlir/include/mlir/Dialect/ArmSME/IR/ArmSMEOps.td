@@ -736,7 +736,6 @@ class OuterProductResultTileTypeConstraint<string operand> :
 
 def OuterProductOp :
   ArmSME_Op<"outerproduct", [
-    Pure,
     ArmSMETileOpInterface,
     AttrSizedOperandSegments,
     AllTypesMatch<["lhs", "rhs"]>,
@@ -820,7 +819,6 @@ class OuterProductWideBase<string mnemonic,
                            list<Type> allowedResultVectorTypes,
                            int numOuterProducts> :
   ArmSME_Op<mnemonic, [
-    Pure,
     ArmSMETileOpInterface,
     AttrSizedOperandSegments,
     AllTypesMatch<["lhs", "rhs"]>,
