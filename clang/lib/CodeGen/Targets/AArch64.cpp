@@ -109,37 +109,32 @@ public:
     if (!FD)
       return;
 
-    const auto *TA = FD->getAttr<TargetAttr>();
-    if (TA == nullptr)
-      return;
+    TargetInfo::BranchProtectionInfo BPI(CGM.getLangOpts());
 
-    ParsedTargetAttr Attr =
-        CGM.getTarget().parseTargetAttr(TA->getFeaturesStr());
-    if (Attr.BranchProtection.empty())
-      return;
-
-    TargetInfo::BranchProtectionInfo BPI;
-    StringRef Error;
-    (void)CGM.getTarget().validateBranchProtection(Attr.BranchProtection,
-                                                   Attr.CPU, BPI, Error);
-    assert(Error.empty());
-
+    if (const auto *TA = FD->getAttr<TargetAttr>()) {
+      ParsedTargetAttr Attr =
+          CGM.getTarget().parseTargetAttr(TA->getFeaturesStr());
+      if (!Attr.BranchProtection.empty()) {
+        StringRef Error;
+        (void)CGM.getTarget().validateBranchProtection(Attr.BranchProtection,
+                                                       Attr.CPU, BPI, Error);
+        assert(Error.empty());
+      }
+    }
     auto *Fn = cast<llvm::Function>(GV);
-    Fn->addFnAttr("sign-return-address", BPI.getSignReturnAddrStr());
-
     if (BPI.SignReturnAddr != LangOptions::SignReturnAddressScopeKind::None) {
+      Fn->addFnAttr("sign-return-address", BPI.getSignReturnAddrStr());
       Fn->addFnAttr("sign-return-address-key",
                     BPI.SignKey == LangOptions::SignReturnAddressKeyKind::AKey
                         ? "a_key"
                         : "b_key");
     }
-
-    Fn->addFnAttr("branch-target-enforcement",
-                  BPI.BranchTargetEnforcement ? "true" : "false");
-    Fn->addFnAttr("branch-protection-pauth-lr",
-                  BPI.BranchProtectionPAuthLR ? "true" : "false");
-    Fn->addFnAttr("guarded-control-stack",
-                  BPI.GuardedControlStack ? "true" : "false");
+    if (BPI.BranchTargetEnforcement)
+      Fn->addFnAttr("branch-target-enforcement", "true");
+    if (BPI.BranchProtectionPAuthLR)
+      Fn->addFnAttr("branch-protection-pauth-lr", "true");
+    if (BPI.GuardedControlStack)
+      Fn->addFnAttr("guarded-control-stack", "true");
   }
 
   bool isScalarizableAsmOperand(CodeGen::CodeGenFunction &CGF,

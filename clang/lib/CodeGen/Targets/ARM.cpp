@@ -167,6 +167,13 @@ public:
               diag::warn_target_unsupported_branch_protection_attribute)
               << Attr.CPU;
       }
+    } else if (CGM.getTarget().isBranchProtectionSupportedArch(
+                   CGM.getTarget().getTargetOpts().CPU)) {
+      TargetInfo::BranchProtectionInfo BPI(CGM.getLangOpts());
+      if (BPI.SignReturnAddr != LangOptions::SignReturnAddressScopeKind::None)
+        Fn->addFnAttr("sign-return-address", BPI.getSignReturnAddrStr());
+      if (BPI.BranchTargetEnforcement)
+        Fn->addFnAttr("branch-target-enforcement", "true");
     }
 
     const ARMInterruptAttr *Attr = FD->getAttr<ARMInterruptAttr>();
