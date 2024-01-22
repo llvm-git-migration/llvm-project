@@ -221,6 +221,8 @@ protected:
   bool HasPseudoScalarTrans = false;
   bool HasRestrictedSOffset = false;
   bool HasPrngInst = false;
+  bool HasPermlane16Swap = false;
+  bool HasPermlane32Swap = false;
   bool HasVcmpxPermlaneHazard = false;
   bool HasVMEMtoScalarWriteHazard = false;
   bool HasSMEMtoVectorWriteHazard = false;
@@ -1319,6 +1321,10 @@ public:
   /// \returns true if the target has instructions with xf32 format support.
   bool hasXF32Insts() const { return HasXF32Insts; }
 
+  bool hasPrngInst() const { return HasPrngInst; }
+  bool hasPermlane16Swap() const { return HasPermlane16Swap; }
+  bool hasPermlane32Swap() const { return HasPermlane32Swap; }
+
   bool hasMinimum3Maximum3F32() const {
     return HasMinimum3Maximum3F32;
   }
@@ -1331,8 +1337,6 @@ public:
   /// S_CLAUSE on the given subtarget, or 0 for targets that do not support that
   /// instruction.
   unsigned maxHardClauseLength() const { return MaxHardClauseLength; }
-
-  bool hasPrngInst() const { return HasPrngInst; }
 
   /// Return the maximum number of waves per SIMD for kernels using \p SGPRs
   /// SGPRs
