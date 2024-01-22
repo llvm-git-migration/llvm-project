@@ -1060,15 +1060,17 @@ void State::addInfoFor(BasicBlock &BB) {
       WorkList.push_back(
           FactOrCheck::getCheck(DT.getNode(&BB), cast<CallInst>(&I)));
       break;
-    // Enqueue the intrinsics to add extra info.
+    // Enqueue the intrinsics to add extra info and simplify them.
     case Intrinsic::abs:
     case Intrinsic::umin:
     case Intrinsic::umax:
     case Intrinsic::smin:
     case Intrinsic::smax:
       WorkList.push_back(FactOrCheck::getInstFact(DT.getNode(&BB), &I));
-      WorkList.push_back(
-          FactOrCheck::getCheck(DT.getNode(&BB), cast<CallInst>(&I)));
+      // TODO: handle llvm.abs as well
+      if (ID != Intrinsic::abs)
+        WorkList.push_back(
+            FactOrCheck::getCheck(DT.getNode(&BB), cast<CallInst>(&I)));
       break;
     }
 
