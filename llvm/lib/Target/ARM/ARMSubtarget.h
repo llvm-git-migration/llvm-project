@@ -277,6 +277,10 @@ public:
     return &InstrInfo->getRegisterInfo();
   }
 
+  bool hasVectorInstructions() const override {
+    return HasMVEIntegerOps || HasMVEFloatOps;
+  }
+
   const CallLowering *getCallLowering() const override;
   InstructionSelector *getInstructionSelector() const override;
   const LegalizerInfo *getLegalizerInfo() const override;

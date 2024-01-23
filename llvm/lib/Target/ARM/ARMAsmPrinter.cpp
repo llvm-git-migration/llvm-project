@@ -2409,7 +2409,11 @@ void ARMAsmPrinter::emitInstruction(const MachineInstr *MI) {
   case ARM::SEH_EpilogEnd:
     ATS.emitARMWinCFIEpilogEnd();
     return;
+
+  case ARM::PseudoARMInitUndef:
+    return;
   }
+
 
   MCInst TmpInst;
   LowerARMMachineInstrToMCInst(MI, TmpInst, *this);
