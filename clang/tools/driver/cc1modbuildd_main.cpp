@@ -18,6 +18,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+#include <system_error>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -68,12 +69,10 @@ public:
   // TODO: modify so when shutdownDaemon is called the daemon stops accepting
   // new client connections and waits for all existing client connections to
   // terminate before closing the file descriptor and exiting
-  void shutdownDaemon() {
-    ServerListener.value().~ListeningSocket();
-    exit(EXIT_SUCCESS);
-  }
+  void shutdownDaemon() { RunServiceLoop = false; }
 
 private:
+  bool RunServiceLoop = true;
   std::optional<llvm::ListeningSocket> ServerListener;
 };
 
@@ -118,7 +117,6 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
       llvm::ListeningSocket::createUnix(SocketPath);
 
   if (llvm::Error Err = MaybeServerListener.takeError()) {
-
     llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
       std::error_code EC = SE.convertToErrorCode();
       // Exit successfully if the socket address is already in use. When
@@ -127,7 +125,8 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
       if (EC == std::errc::address_in_use) {
         exit(EXIT_SUCCESS);
       } else {
-        llvm::errs() << "MBD failed to create unix socket\n" << EC.message();
+        llvm::errs() << "MBD failed to create unix socket: " << SE.message()
+                     << EC.message() << '\n';
         exit(EXIT_FAILURE);
       }
     });
@@ -149,16 +148,16 @@ void ModuleBuildDaemonServer::handleConnection(
   Expected<HandshakeMsg> MaybeHandshakeMsg =
       readMsgStructFromSocket<HandshakeMsg>(Connection);
   if (!MaybeHandshakeMsg) {
-    errs() << "MBD failed to read frontend request\n"
-           << toString(MaybeHandshakeMsg.takeError());
+    errs() << "MBD failed to read frontend request: "
+           << llvm::toString(MaybeHandshakeMsg.takeError()) << '\n';
     return;
   }
 
   // Send response to frontend
   HandshakeMsg Msg(ActionType::HANDSHAKE, StatusType::SUCCESS);
   if (llvm::Error WriteErr = writeMsgStructToSocket(Connection, Msg)) {
-    errs() << "MBD failed to respond to frontend request\n"
-           << toString(std::move(WriteErr));
+    errs() << "MBD failed to respond to frontend request: "
+           << llvm::toString(std::move(WriteErr)) << '\n';
     return;
   }
   return;
@@ -166,17 +165,37 @@ void ModuleBuildDaemonServer::handleConnection(
 
 int ModuleBuildDaemonServer::listenForClients() {
 
+  auto StartTime = std::chrono::steady_clock::now();
   llvm::ThreadPool Pool;
-  while (true) {
 
+  while (RunServiceLoop) {
     Expected<std::unique_ptr<raw_socket_stream>> MaybeConnection =
-        ServerListener.value().accept();
+        ServerListener.value().accept(/*Block*/ false);
+
     if (llvm::Error Err = MaybeConnection.takeError()) {
-      errs() << "MBD failed to accept incoming connection\n"
-             << toString(std::move(Err));
+      llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
+        std::error_code EC = SE.convertToErrorCode();
+#ifdef _WIN32
+        if (EC.value() != WSAEWOULDBLOCK) {
+#else
+        if (EC != std::errc::operation_would_block || EC != std::errc::resource_unavailable_try_again) {
+#endif
+          errs() << "MBD failed to accept incoming connection: "
+                 << SE.getMessage() << EC.message() << '\n';
+        }
+      });
+
+      auto CurrentTime = std::chrono::steady_clock::now();
+      auto ElapsedTime = std::chrono::duration_cast<std::chrono::seconds>(
+          CurrentTime - StartTime);
+      if (ElapsedTime.count() >= 15)
+        shutdownDaemon();
+
       continue;
     }
 
+    // Successfull connection - restart timer
+    StartTime = std::chrono::steady_clock::now();
     std::shared_ptr<raw_socket_stream> Connection(std::move(*MaybeConnection));
     Pool.async(handleConnection, Connection);
   }

@@ -1,13 +1,18 @@
 // Check that the module build daemon can create a unix socket
 
-// REQUIRES: !system-windows
 // RUN: rm -rf mbd-launch %t
 
-// The module build daemon relies on a call to llvm::sys::ExecuteNoWait by the
-// frontend where Detached = true to be detached from the terminal so when 
-// using -cc1modbuildd directly the command needs to be killed manually
+// timeout should exit with status 124 which is treated as a failure on 
+// windows. Ideally we would be like to check the exit code and only return true
+// if it equals 124 but global bash sysmbols like $? are not surported by lit
 
-// RUN: timeout --preserve-status --signal=SIGTERM 2 %clang -cc1modbuildd mbd-launch -v
-// RUN: cat mbd-launch/mbd.out | FileCheck %s
+// RUN: timeout --signal=SIGTERM 2 %clang -cc1modbuildd mbd-launch -v || true
+// RUN: cat mbd-launch/mbd.out | sed 's:\\\\\?:/:g' | FileCheck %s
 
 // CHECK: mbd created and binded to socket at: mbd-launch/mbd.sock
+
+// Make sure socket file is removed when daemon exits
+// [ ! -f "mbd-launch/mbd.socker" ]
+
+// Make sure mbd.err is empty
+// RUN: [ ! -s "mbd-launch/mbd.err" ]

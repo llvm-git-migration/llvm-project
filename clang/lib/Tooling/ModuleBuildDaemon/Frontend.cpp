@@ -123,7 +123,7 @@ getModuleBuildDaemon(const CompilerInvocation &Clang, const char *Argv0,
 
   // After waiting around 30 seconds give up and return an error
   return llvm::make_error<StringError>(
-      "Could not connect to module build daemon",
+      "Max wait time exceeded: ",
       std::make_error_code(std::errc::no_such_process));
 }
 
