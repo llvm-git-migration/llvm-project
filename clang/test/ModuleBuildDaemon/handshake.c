@@ -12,8 +12,8 @@ int main() {return 0;}
 // RUN: %clang -fmodule-build-daemon=mbd-handshake -Rmodule-build-daemon %t/main.c &> %t/output-existing || true
 // RUN: if pgrep -f "cc1modbuildd mbd-handshake"; then pkill -f "cc1modbuildd mbd-handshake"; fi
 
-// RUN: cat %t/output-new | FileCheck %s
-// RUN: cat %t/output-existing | FileCheck %s --check-prefix=CHECK-EXIST
+// RUN: cat %t/output-new |  sed 's:\\\\\?:/:g' | FileCheck %s
+// RUN: cat %t/output-existing |  sed 's:\\\\\?:/:g' | FileCheck %s --check-prefix=CHECK-EXIST
 
 // CHECK: remark: Successfully spawned module build daemon [-Rmodule-build-daemon]
 // CHECK: remark: Successfully connected to module build daemon at mbd-handshake/mbd.sock [-Rmodule-build-daemon]
