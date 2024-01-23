@@ -34,7 +34,7 @@ private:
   // Whether this is assigning args for a return.
   bool IsRet;
 
-  RVVArgDispatcher RVVDispatcher;
+  RVVArgDispatcher &RVVDispatcher;
 
 public:
   RISCVOutgoingValueAssigner(
@@ -408,7 +408,8 @@ bool RISCVCallLowering::lowerReturnVal(MachineIRBuilder &MIRBuilder,
   SmallVector<ArgInfo, 4> SplitRetInfos;
   splitToValueTypes(OrigRetInfo, SplitRetInfos, DL, CC);
 
-  RVVArgDispatcher Dispatcher{&MF, getTLI<RISCVTargetLowering>(), true};
+  RVVArgDispatcher Dispatcher{&MF, getTLI<RISCVTargetLowering>(),
+                              F.getReturnType()};
   RISCVOutgoingValueAssigner Assigner(
       CC == CallingConv::Fast ? RISCV::CC_RISCV_FastCC : RISCV::CC_RISCV,
       /*IsRet=*/true, Dispatcher);
@@ -520,6 +521,7 @@ bool RISCVCallLowering::lowerFormalArguments(MachineIRBuilder &MIRBuilder,
   CallingConv::ID CC = F.getCallingConv();
 
   SmallVector<ArgInfo, 32> SplitArgInfos;
+  std::vector<Type *> TypeList;
   unsigned Index = 0;
   for (auto &Arg : F.args()) {
     // Construct the ArgInfo object from destination register and argument type.
@@ -531,10 +533,12 @@ bool RISCVCallLowering::lowerFormalArguments(MachineIRBuilder &MIRBuilder,
     // correspondingly and appended to SplitArgInfos.
     splitToValueTypes(AInfo, SplitArgInfos, DL, CC);
 
+    TypeList.push_back(Arg.getType());
+
     ++Index;
   }
 
-  RVVArgDispatcher Dispatcher{&MF, getTLI<RISCVTargetLowering>(), false};
+  RVVArgDispatcher Dispatcher{&MF, getTLI<RISCVTargetLowering>(), TypeList};
   RISCVIncomingValueAssigner Assigner(
       CC == CallingConv::Fast ? RISCV::CC_RISCV_FastCC : RISCV::CC_RISCV,
       /*IsRet=*/false, Dispatcher);
@@ -575,11 +579,13 @@ bool RISCVCallLowering::lowerCall(MachineIRBuilder &MIRBuilder,
 
   SmallVector<ArgInfo, 32> SplitArgInfos;
   SmallVector<ISD::OutputArg, 8> Outs;
+  std::vector<Type *> TypeList;
   for (auto &AInfo : Info.OrigArgs) {
     // Handle any required unmerging of split value types from a given VReg into
     // physical registers. ArgInfo objects are constructed correspondingly and
     // appended to SplitArgInfos.
     splitToValueTypes(AInfo, SplitArgInfos, DL, CC);
+    TypeList.push_back(AInfo.Ty);
   }
 
   // TODO: Support tail calls.
@@ -597,8 +603,7 @@ bool RISCVCallLowering::lowerCall(MachineIRBuilder &MIRBuilder,
   const TargetRegisterInfo *TRI = Subtarget.getRegisterInfo();
   Call.addRegMask(TRI->getCallPreservedMask(MF, Info.CallConv));
 
-  RVVArgDispatcher ArgDispatcher{&MF, getTLI<RISCVTargetLowering>(), false,
-                                 nullptr, &Info};
+  RVVArgDispatcher ArgDispatcher{&MF, getTLI<RISCVTargetLowering>(), TypeList};
   RISCVOutgoingValueAssigner ArgAssigner(
       CC == CallingConv::Fast ? RISCV::CC_RISCV_FastCC : RISCV::CC_RISCV,
       /*IsRet=*/false, ArgDispatcher);
@@ -629,7 +634,8 @@ bool RISCVCallLowering::lowerCall(MachineIRBuilder &MIRBuilder,
   SmallVector<ArgInfo, 4> SplitRetInfos;
   splitToValueTypes(Info.OrigRet, SplitRetInfos, DL, CC);
 
-  RVVArgDispatcher RetDispatcher{&MF, getTLI<RISCVTargetLowering>(), true};
+  RVVArgDispatcher RetDispatcher{&MF, getTLI<RISCVTargetLowering>(),
+                                 F.getReturnType()};
   RISCVIncomingValueAssigner RetAssigner(
       CC == CallingConv::Fast ? RISCV::CC_RISCV_FastCC : RISCV::CC_RISCV,
       /*IsRet=*/true, RetDispatcher);

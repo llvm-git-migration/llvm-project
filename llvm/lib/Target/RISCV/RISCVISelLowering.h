@@ -1022,14 +1022,18 @@ public:
     bool FirstVMask = false;
   };
 
-  RVVArgDispatcher() = default;
   RVVArgDispatcher(const MachineFunction *MF, const RISCVTargetLowering *TLI,
-                   bool IsRet, TargetLowering::CallLoweringInfo *CLI = nullptr,
-                   CallLowering::CallLoweringInfo *GISelCLI = nullptr)
-      : MF(MF), TLI(TLI), CLI(CLI), GISelCLI(GISelCLI) {
-    assert((!CLI || !GISelCLI) &&
-           "ISel and Global ISel can't co-exist at the same time");
-    construct(IsRet);
+                   std::vector<Type *> &TypeList)
+      : MF(MF), TLI(TLI) {
+    construct(TypeList);
+    compute();
+  }
+
+  RVVArgDispatcher(const MachineFunction *MF, const RISCVTargetLowering *TLI,
+                   Type *Ty)
+      : MF(MF), TLI(TLI) {
+    std::vector<Type *> TypeList = {Ty};
+    construct(TypeList);
     compute();
   }
 
@@ -1046,7 +1050,7 @@ private:
 
   unsigned CurIdx = 0;
 
-  void construct(bool IsRet);
+  void construct(std::vector<Type *> &TypeList);
   void constructHelper(Type *Ty);
   void compute();
   void allocatePhysReg(unsigned NF = 1, unsigned LMul = 1,

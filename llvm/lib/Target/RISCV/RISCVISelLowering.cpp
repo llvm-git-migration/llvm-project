@@ -18129,7 +18129,13 @@ void RISCVTargetLowering::analyzeInputArgs(
   unsigned NumArgs = Ins.size();
   FunctionType *FType = MF.getFunction().getFunctionType();
 
-  RVVArgDispatcher Dispatcher{&MF, this, IsRet};
+  std::vector<Type *> TypeList;
+  if (IsRet)
+    TypeList.push_back(MF.getFunction().getReturnType());
+  else
+    for (const Argument &Arg : MF.getFunction().args())
+      TypeList.push_back(Arg.getType());
+  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
 
   for (unsigned i = 0; i != NumArgs; ++i) {
     MVT ArgVT = Ins[i].VT;
@@ -18158,7 +18164,13 @@ void RISCVTargetLowering::analyzeOutputArgs(
     CallLoweringInfo *CLI, RISCVCCAssignFn Fn) const {
   unsigned NumArgs = Outs.size();
 
-  RVVArgDispatcher Dispatcher{&MF, this, IsRet, CLI};
+  std::vector<Type *> TypeList;
+  if (IsRet)
+    TypeList.push_back(MF.getFunction().getReturnType());
+  else if (CLI)
+    for (const TargetLowering::ArgListEntry &Arg : CLI->getArgs())
+      TypeList.push_back(Arg.Ty);
+  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
 
   for (unsigned i = 0; i != NumArgs; i++) {
     MVT ArgVT = Outs[i].VT;
@@ -19061,7 +19073,8 @@ bool RISCVTargetLowering::CanLowerReturn(
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, Context);
 
-  RVVArgDispatcher Dispatcher{&MF, this, true};
+  std::vector<Type *> TypeList = {MF.getFunction().getReturnType()};
+  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
 
   for (unsigned i = 0, e = Outs.size(); i != e; ++i) {
     MVT VT = Outs[i].VT;
@@ -20904,20 +20917,9 @@ void RVVArgDispatcher::constructHelper(Type *Ty) {
   }
 }
 
-void RVVArgDispatcher::construct(bool IsRet) {
-  const Function &F = MF->getFunction();
-
-  if (IsRet)
-    constructHelper(F.getReturnType());
-  else if (CLI)
-    for (const TargetLowering::ArgListEntry &Arg : CLI->getArgs())
-      constructHelper(Arg.Ty);
-  else if (GISelCLI)
-    for (const CallLowering::ArgInfo &Arg : GISelCLI->OrigArgs)
-      constructHelper(Arg.Ty);
-  else
-    for (const Argument &Arg : F.args())
-      constructHelper(Arg.getType());
+void RVVArgDispatcher::construct(std::vector<Type *> &TypeList) {
+  for (Type *Ty : TypeList)
+    constructHelper(Ty);
 
   for (auto &Info : RVVArgInfos)
     if (Info.NF == 1 && Info.VT.getVectorElementType() == MVT::i1) {
