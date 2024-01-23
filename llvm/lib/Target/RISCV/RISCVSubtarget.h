@@ -202,7 +202,7 @@ public:
   }
 
   // Vector codegen related methods.
-  bool hasVInstructions() const { return HasStdExtZve32x; }
+  bool hasVectorInstructions() const override { return HasStdExtZve32x; }
   bool hasVInstructionsI64() const { return HasStdExtZve64x; }
   bool hasVInstructionsF16Minimal() const { return HasStdExtZvfhmin; }
   bool hasVInstructionsF16() const { return HasStdExtZvfh; }
@@ -213,7 +213,7 @@ public:
   bool hasVInstructionsAnyF() const { return hasVInstructionsF32(); }
   bool hasVInstructionsFullMultiply() const { return HasStdExtV; }
   unsigned getMaxInterleaveFactor() const {
-    return hasVInstructions() ? MaxInterleaveFactor : 1;
+    return hasVectorInstructions() ? MaxInterleaveFactor : 1;
   }
 
   // Returns VLEN divided by DLEN. Where DLEN is the datapath width of the
