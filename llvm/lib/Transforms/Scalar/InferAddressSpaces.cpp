@@ -300,6 +300,34 @@ static bool isNoopPtrIntCastPair(const Operator *I2P, const DataLayout &DL,
          (P2IOp0AS == I2PAS || TTI->isNoopAddrSpaceCast(P2IOp0AS, I2PAS));
 }
 
+// Check whether that's pointer bitcast using `ptrtoint`-`zext`-`inttoptr`
+static bool isZExtPtrIntCastPair(const Operator *I2P, const DataLayout &DL) {
+  assert(I2P->getOpcode() == Instruction::IntToPtr);
+  auto *ZExt = dyn_cast<Operator>(I2P->getOperand(0));
+  if (!ZExt || ZExt->getOpcode() != Instruction::ZExt)
+    return false;
+  auto *P2I = dyn_cast<Operator>(ZExt->getOperand(0));
+  if (!P2I || P2I->getOpcode() != Instruction::PtrToInt)
+    return false;
+  unsigned P2IOp0AS = P2I->getOperand(0)->getType()->getPointerAddressSpace();
+  unsigned I2PAS = I2P->getType()->getPointerAddressSpace();
+  unsigned P2IOp0SizeInBits =
+      DL.getIntPtrType(P2I->getOperand(0)->getType())->getScalarSizeInBits();
+  unsigned I2PSizeInBits =
+      DL.getIntPtrType(I2P->getType())->getScalarSizeInBits();
+  // Check:
+  // 1. `inttoptr` and `ptrtoint` are no-op casts
+  // 2. src address pointer and dst address pointer should be different address
+  // space and different size
+  return CastInst::isNoopCast(Instruction::CastOps(I2P->getOpcode()),
+                              I2P->getOperand(0)->getType(), I2P->getType(),
+                              DL) &&
+         CastInst::isNoopCast(Instruction::CastOps(P2I->getOpcode()),
+                              P2I->getOperand(0)->getType(), P2I->getType(),
+                              DL) &&
+         (P2IOp0AS != I2PAS) && (P2IOp0SizeInBits < I2PSizeInBits);
+}
+
 // Returns true if V is an address expression.
 // TODO: Currently, we consider only phi, bitcast, addrspacecast, and
 // getelementptr operators.
@@ -324,7 +352,7 @@ static bool isAddressExpression(const Value &V, const DataLayout &DL,
     return II && II->getIntrinsicID() == Intrinsic::ptrmask;
   }
   case Instruction::IntToPtr:
-    return isNoopPtrIntCastPair(Op, DL, TTI);
+    return isNoopPtrIntCastPair(Op, DL, TTI) || isZExtPtrIntCastPair(Op, DL);
   default:
     // That value is an address expression if it has an assumed address space.
     return TTI->getAssumedAddrSpace(&V) != UninitializedAddressSpace;
@@ -356,9 +384,15 @@ getPointerOperands(const Value &V, const DataLayout &DL,
     return {II.getArgOperand(0)};
   }
   case Instruction::IntToPtr: {
-    assert(isNoopPtrIntCastPair(&Op, DL, TTI));
-    auto *P2I = cast<Operator>(Op.getOperand(0));
-    return {P2I->getOperand(0)};
+    assert(isNoopPtrIntCastPair(&Op, DL, TTI) || isZExtPtrIntCastPair(&Op, DL));
+    if (isNoopPtrIntCastPair(&Op, DL, TTI)) {
+      auto *P2I = cast<Operator>(Op.getOperand(0));
+      return {P2I->getOperand(0)};
+    } else {
+      auto *ZExt = cast<Operator>(Op.getOperand(0));
+      auto *P2I = dyn_cast<Operator>(ZExt->getOperand(0));
+      return {P2I->getOperand(0)};
+    }
   }
   default:
     llvm_unreachable("Unexpected instruction type.");
@@ -521,8 +555,13 @@ InferAddressSpacesImpl::collectFlatAddressExpressions(Function &F) const {
     } else if (auto *ASC = dyn_cast<AddrSpaceCastInst>(&I)) {
       PushPtrOperand(ASC->getPointerOperand());
     } else if (auto *I2P = dyn_cast<IntToPtrInst>(&I)) {
-      if (isNoopPtrIntCastPair(cast<Operator>(I2P), *DL, TTI))
+      if (isNoopPtrIntCastPair(cast<Operator>(I2P), *DL, TTI)) {
         PushPtrOperand(cast<Operator>(I2P->getOperand(0))->getOperand(0));
+      } else if (isZExtPtrIntCastPair(cast<Operator>(I2P), *DL)) {
+        auto *ZExt = I2P->getOperand(0);
+        auto *P2I = cast<Operator>(ZExt)->getOperand(0);
+        PushPtrOperand(cast<Operator>(P2I)->getOperand(0));
+      }
     } else if (auto *RI = dyn_cast<ReturnInst>(&I)) {
       if (auto *RV = RI->getReturnValue();
           RV && RV->getType()->isPtrOrPtrVectorTy())
@@ -683,8 +722,16 @@ Value *InferAddressSpacesImpl::cloneInstructionWithNewAddressSpace(
     return SelectInst::Create(I->getOperand(0), NewPointerOperands[1],
                               NewPointerOperands[2], "", nullptr, I);
   case Instruction::IntToPtr: {
-    assert(isNoopPtrIntCastPair(cast<Operator>(I), *DL, TTI));
-    Value *Src = cast<Operator>(I->getOperand(0))->getOperand(0);
+    assert(isNoopPtrIntCastPair(cast<Operator>(I), *DL, TTI) ||
+           isZExtPtrIntCastPair(cast<Operator>(I), *DL));
+    Value *Src;
+    if (isNoopPtrIntCastPair(cast<Operator>(I), *DL, TTI)) {
+      Src = cast<Operator>(I->getOperand(0))->getOperand(0);
+    } else { // isZExtPtrIntCastPair
+      auto *ZExt = I->getOperand(0);
+      auto *P2I = cast<Operator>(ZExt)->getOperand(0);
+      Src = cast<Operator>(P2I)->getOperand(0);
+    }
     if (Src->getType() == NewPtrType)
       return Src;
 
