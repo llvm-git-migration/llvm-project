@@ -846,8 +846,9 @@ static void emitStructGetterCall(CodeGenFunction &CGF, ObjCIvarDecl *ivar,
 /// accesses.  They don't have to be fast, just faster than a function
 /// call and a mutex.
 static bool hasUnalignedAtomics(llvm::Triple::ArchType arch) {
-  // FIXME: Allow unaligned atomic load/store on x86.  (It is not
-  // currently supported by the backend.)
+  // x86 is the only one so far that we know support this as of now
+  if (arch == llvm::Triple::x86 || arch == llvm::Triple::x86_64)
+    return true;
   return false;
 }
 
