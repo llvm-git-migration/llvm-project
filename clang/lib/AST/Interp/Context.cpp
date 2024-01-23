@@ -112,12 +112,15 @@ bool Context::evaluateAsInitializer(State &Parent, const VarDecl *VD,
 #endif
 
   // Ensure global variables are fully initialized.
-  if (shouldBeGloballyIndexed(VD) && !Res.isInvalid() &&
-      (VD->getType()->isRecordType() || VD->getType()->isArrayType())) {
+  if (shouldBeGloballyIndexed(VD) &&
+      (VD->getType()->isRecordType() || VD->getType()->isArrayType() ||
+       VD->getType()->isAnyComplexType())) {
     assert(Res.isLValue());
 
-    if (!Res.checkFullyInitialized(C.getState()))
-      return false;
+    if (!VD->getType()->isAnyComplexType()) {
+      if (!Res.checkFullyInitialized(C.getState()))
+        return false;
+    }
 
     // lvalue-to-rvalue conversion.
     std::optional<APValue> RValueResult = Res.toRValue();
