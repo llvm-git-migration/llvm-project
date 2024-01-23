@@ -1,3 +1,8 @@
+add_llvm_component_library(OptDriver
+  NewPMDriver.cpp
+  opt.cpp
+)
+
 set(LLVM_LINK_COMPONENTS
   AllTargetsAsmParsers
   AllTargetsCodeGens
@@ -27,14 +32,13 @@ set(LLVM_LINK_COMPONENTS
   TransformUtils
   Vectorize
   Passes
+  OptDriver
   )
 
 add_llvm_tool(opt
-  NewPMDriver.cpp
-  opt.cpp
-
   DEPENDS
   intrinsics_gen
   SUPPORT_PLUGINS
+  OptDriver
   )
 export_executable_symbols_for_plugins(opt)
