@@ -102,3 +102,50 @@
 // CHECK-ABI-SOFT-MIPS16: "-target-feature" "+mips16"
 // CHECK-ABI-SOFT-MIPS16: "-msoft-float"
 // CHECK-ABI-SOFT-MIPS16: "-mfloat-abi" "soft"
+
+/// On MIPS, don't accept constraint "f" for soft-float.
+// RUN: not %clang -S %s -o %t.s 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float \
+// RUN:     -DSOFT_FLOAT_NO_CONSTRAINT_F \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-NO-F %s
+// CHECK-SOFTFLOAT-ASM-NO-F: error: invalid input constraint 'f' in asm
+
+#ifdef SOFT_FLOAT_NO_CONSTRAINT_F
+void read_float(float* p) {
+    float result = *p;
+    __asm__("" ::"f"(result));
+}
+#endif // SOFT_FLOAT_NO_CONSTRAINT_F
+
+/// On MIPS, accept constraint "r" for soft-float.
+// RUN: %clang -S %s -o - -O2 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float -mabi=32 \
+// RUN:     -DSOFT_FLOAT_USE_CONSTRAINT_R -DFLOAT=float \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-USE-R-3232 %s
+// CHECK-SOFTFLOAT-ASM-USE-R-3232: lw	$2, 0($4)
+//
+// RUN: %clang -S %s -o - -O2 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float -mabi=32 \
+// RUN:     -DSOFT_FLOAT_USE_CONSTRAINT_R -DFLOAT=double \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-USE-R-3264 %s
+// CHECK-SOFTFLOAT-ASM-USE-R-3264: lw	$2, 4($4)
+// CHECK-SOFTFLOAT-ASM-USE-R-3264: lw	$3, 0($4)
+//
+// RUN: %clang -S %s -o - -O2 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float -mabi=64 \
+// RUN:     -DSOFT_FLOAT_USE_CONSTRAINT_R -DFLOAT=float \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-USE-R-6432 %s
+// CHECK-SOFTFLOAT-ASM-USE-R-6432: lw	$2, 0($4)
+//
+// RUN: %clang -S %s -o - -O2 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float -mabi=64 \
+// RUN:     -DSOFT_FLOAT_USE_CONSTRAINT_R -DFLOAT=double \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-USE-R-6464 %s
+// CHECK-SOFTFLOAT-ASM-USE-R-6464: ld	$2, 0($4)
+
+#ifdef SOFT_FLOAT_USE_CONSTRAINT_R
+void read_float(FLOAT* p) {
+    FLOAT result = *p;
+    __asm__("" ::"r"(result));
+}
+#endif // SOFT_FLOAT_USE_CONSTRAINT_R
