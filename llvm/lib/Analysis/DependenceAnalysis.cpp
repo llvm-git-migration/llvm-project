@@ -3588,7 +3588,7 @@ bool DependenceInfo::invalidate(Function &F, const PreservedAnalyses &PA,
 // up to date with respect to this routine.
 std::unique_ptr<Dependence>
 DependenceInfo::depends(Instruction *Src, Instruction *Dst,
-                        bool PossiblyLoopIndependent) {
+                        bool PossiblyLoopIndependent, bool *HasConstantIndex) {
   if (Src == Dst)
     PossiblyLoopIndependent = false;
 
@@ -3674,6 +3674,9 @@ DependenceInfo::depends(Instruction *Src, Instruction *Dst,
     LLVM_DEBUG(dbgs() << "\tclass = " << Pair[P].Classification << "\n");
     LLVM_DEBUG(dbgs() << "\tloops = ");
     LLVM_DEBUG(dumpSmallBitVector(Pair[P].Loops));
+    if (HasConstantIndex)
+      if (isa<SCEVConstant>(Pair[P].Src) || isa<SCEVConstant>(Pair[P].Dst))
+        *HasConstantIndex = true;
   }
 
   SmallBitVector Separable(Pairs);

@@ -6,13 +6,16 @@
 @cc = global [1024 x [128 x float]] zeroinitializer, align 4
 
 
+;; Loops should not be interchanged in this case as it will change the
+;; cc array results.
+;;
 ;;  for (int j = 1; j < M; j++)
 ;;    for (int i = 1; i < N; i++) {
 ;;      aa[1][j-1] += bb[i][j];
 ;;      cc[i][j] = aa[1][j];
 ;;    }
 
-; CHECK: Loops interchanged.
+; CHECK-NOT: Loops interchanged.
 
 define void @pr54176() {
 entry:

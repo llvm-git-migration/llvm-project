@@ -117,11 +117,12 @@ static bool populateDependencyMatrix(CharMatrix &DepMatrix, unsigned Level,
       std::vector<char> Dep;
       Instruction *Src = cast<Instruction>(*I);
       Instruction *Dst = cast<Instruction>(*J);
+      bool HasConstantIndex = false;
       // Ignore Input dependencies.
       if (isa<LoadInst>(Src) && isa<LoadInst>(Dst))
         continue;
       // Track Output, Flow, and Anti dependencies.
-      if (auto D = DI->depends(Src, Dst, true)) {
+      if (auto D = DI->depends(Src, Dst, true, &HasConstantIndex)) {
         assert(D->isOrdered() && "Expected an output, flow or anti dep.");
         // If the direction vector is negative, normalize it to
         // make it non-negative.
@@ -150,6 +151,13 @@ static bool populateDependencyMatrix(CharMatrix &DepMatrix, unsigned Level,
               Direction = '=';
             else
               Direction = '*';
+
+            // Bail out if there is constant index and the other has loop
+            // carried dependence.
+            if (HasConstantIndex && (Direction == '>' || Direction == '<')) {
+              dbgs() << "Has Constant Index and loop carried dependence\n";
+              return false;
+            }
             Dep.push_back(Direction);
           }
         }
