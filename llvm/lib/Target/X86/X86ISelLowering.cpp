@@ -107,6 +107,7 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     setSchedulingPreference(Sched::RegPressure);
   const X86RegisterInfo *RegInfo = Subtarget.getRegisterInfo();
   setStackPointerRegisterToSaveRestore(RegInfo->getStackRegister());
+  setSupportsUnalignedAtomics(true);
 
   // Bypass expensive divides and use cheaper ones.
   if (TM.getOptLevel() >= CodeGenOptLevel::Default) {
