@@ -311,7 +311,7 @@ void Float2IntPass::walkForwards() {
 }
 
 // If there is a valid transform to be done, do it.
-bool Float2IntPass::validateAndTransform() {
+bool Float2IntPass::validateAndTransform(DataLayout DL) {
   bool MadeChange = false;
 
   // Iterate over every disjoint partition of the def-use graph.
@@ -376,18 +376,17 @@ bool Float2IntPass::validateAndTransform() {
       LLVM_DEBUG(dbgs() << "F2I: Value not guaranteed to be representable!\n");
       continue;
     }
-    if (MinBW > 64) {
-      LLVM_DEBUG(
-          dbgs() << "F2I: Value requires more than 64 bits to represent!\n");
+
+    // OK, R is known to be representable.
+    // Pick the smallest legal type that will fit.
+    Type *Ty = DL.getSmallestLegalIntType(*Ctx, MinBW);
+    if (!Ty) {
+      LLVM_DEBUG(dbgs() << "F2I: Value requires more than bits to represent "
+                           "than the target supports!\n");
       continue;
     }
 
-    // OK, R is known to be representable. Now pick a type for it.
-    // FIXME: Pick the smallest legal type that will fit.
-    Type *Ty = (MinBW > 32) ? Type::getInt64Ty(*Ctx) : Type::getInt32Ty(*Ctx);
-
-    for (auto MI = ECs.member_begin(It), ME = ECs.member_end();
-         MI != ME; ++MI)
+    for (auto MI = ECs.member_begin(It), ME = ECs.member_end(); MI != ME; ++MI)
       convert(*MI, Ty);
     MadeChange = true;
   }
@@ -491,7 +490,9 @@ bool Float2IntPass::runImpl(Function &F, const DominatorTree &DT) {
   walkBackwards();
   walkForwards();
 
-  bool Modified = validateAndTransform();
+  const DataLayout &DL = F.getParent()->getDataLayout();
+
+  bool Modified = validateAndTransform(DL);
   if (Modified)
     cleanup();
   return Modified;

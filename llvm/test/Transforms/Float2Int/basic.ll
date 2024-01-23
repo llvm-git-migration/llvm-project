@@ -7,10 +7,9 @@
 
 define i16 @simple1(i8 %a) {
 ; CHECK-LABEL: @simple1(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 1
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; CHECK-NEXT:    ret i16 [[TMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[T21:%.*]] = add i16 [[TMP1]], 1
+; CHECK-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fadd float %t1, 1.0
@@ -20,9 +19,9 @@ define i16 @simple1(i8 %a) {
 
 define i8 @simple2(i8 %a) {
 ; CHECK-LABEL: @simple2(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i8
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[T21:%.*]] = sub i16 [[TMP1]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = trunc i16 [[T21]] to i8
 ; CHECK-NEXT:    ret i8 [[TMP2]]
 ;
   %t1 = uitofp i8 %a to float
@@ -33,9 +32,10 @@ define i8 @simple2(i8 %a) {
 
 define i32 @simple3(i8 %a) {
 ; CHECK-LABEL: @simple3(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; CHECK-NEXT:    ret i32 [[T21]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[T21:%.*]] = sub i16 [[TMP1]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = zext i16 [[T21]] to i32
+; CHECK-NEXT:    ret i32 [[TMP2]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fsub float %t1, 1.0
@@ -45,9 +45,9 @@ define i32 @simple3(i8 %a) {
 
 define i1 @cmp(i8 %a, i8 %b) {
 ; CHECK-LABEL: @cmp(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
-; CHECK-NEXT:    [[T31:%.*]] = icmp slt i32 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i16
+; CHECK-NEXT:    [[T31:%.*]] = icmp slt i16 [[TMP1]], [[TMP2]]
 ; CHECK-NEXT:    ret i1 [[T31]]
 ;
   %t1 = uitofp i8 %a to float
@@ -106,13 +106,14 @@ define i32 @simple6(i8 %a, i8 %b) {
 
 define i32 @multi1(i8 %a, i8 %b, i8 %c, float %d) {
 ; CHECK-LABEL: @multi1(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i16
 ; CHECK-NEXT:    [[FC:%.*]] = uitofp i8 [[C:%.*]] to float
-; CHECK-NEXT:    [[X1:%.*]] = add i32 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[X1:%.*]] = add i16 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[TMP3:%.*]] = zext i16 [[X1]] to i32
 ; CHECK-NEXT:    [[Z:%.*]] = fadd float [[FC]], [[D:%.*]]
 ; CHECK-NEXT:    [[W:%.*]] = fptoui float [[Z]] to i32
-; CHECK-NEXT:    [[R:%.*]] = add i32 [[X1]], [[W]]
+; CHECK-NEXT:    [[R:%.*]] = add i32 [[TMP3]], [[W]]
 ; CHECK-NEXT:    ret i32 [[R]]
 ;
   %fa = uitofp i8 %a to float
@@ -128,10 +129,9 @@ define i32 @multi1(i8 %a, i8 %b, i8 %c, float %d) {
 
 define i16 @simple_negzero(i8 %a) {
 ; CHECK-LABEL: @simple_negzero(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 0
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; CHECK-NEXT:    ret i16 [[TMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[T21:%.*]] = add i16 [[TMP1]], 0
+; CHECK-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fadd fast float %t1, -0.0
@@ -141,9 +141,9 @@ define i16 @simple_negzero(i8 %a) {
 
 define i32 @simple_negative(i8 %call) {
 ; CHECK-LABEL: @simple_negative(
-; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i32
-; CHECK-NEXT:    [[MUL1:%.*]] = mul i32 [[TMP1]], -3
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc i32 [[MUL1]] to i8
+; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i16
+; CHECK-NEXT:    [[MUL1:%.*]] = mul i16 [[TMP1]], -3
+; CHECK-NEXT:    [[TMP2:%.*]] = trunc i16 [[MUL1]] to i8
 ; CHECK-NEXT:    [[CONV3:%.*]] = sext i8 [[TMP2]] to i32
 ; CHECK-NEXT:    ret i32 [[CONV3]]
 ;
@@ -156,10 +156,9 @@ define i32 @simple_negative(i8 %call) {
 
 define i16 @simple_fneg(i8 %a) {
 ; CHECK-LABEL: @simple_fneg(
-; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; CHECK-NEXT:    [[T21:%.*]] = sub i32 0, [[TMP1]]
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; CHECK-NEXT:    ret i16 [[TMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; CHECK-NEXT:    [[T21:%.*]] = sub i16 0, [[TMP1]]
+; CHECK-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fneg fast float %t1
