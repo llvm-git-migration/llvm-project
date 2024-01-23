@@ -5,11 +5,11 @@
 define amdgpu_kernel void @workgroup_ids_kernel() {
 ; GFX9-SDAG-LABEL: workgroup_ids_kernel:
 ; GFX9-SDAG:       ; %bb.0: ; %.entry
-; GFX9-SDAG-NEXT:    s_lshr_b32 s2, ttmp7, 16
+; GFX9-SDAG-NEXT:    s_lshr_b32 s0, ttmp7, 16
 ; GFX9-SDAG-NEXT:    s_and_b32 s1, ttmp7, 0xffff
 ; GFX9-SDAG-NEXT:    v_mov_b32_e32 v0, ttmp9
 ; GFX9-SDAG-NEXT:    v_mov_b32_e32 v1, s1
-; GFX9-SDAG-NEXT:    v_mov_b32_e32 v2, s2
+; GFX9-SDAG-NEXT:    v_mov_b32_e32 v2, s0
 ; GFX9-SDAG-NEXT:    buffer_store_dwordx3 v[0:2], off, s[0:3], 0
 ; GFX9-SDAG-NEXT:    s_endpgm
 ;
@@ -104,13 +104,15 @@ define void @workgroup_ids_device_func(ptr addrspace(1) %outx, ptr addrspace(1) 
 ; GFX9-SDAG-LABEL: workgroup_ids_device_func:
 ; GFX9-SDAG:       ; %bb.0:
 ; GFX9-SDAG-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
-; GFX9-SDAG-NEXT:    v_mov_b32_e32 v6, s12
+; GFX9-SDAG-NEXT:    v_mov_b32_e32 v6, ttmp9
+; GFX9-SDAG-NEXT:    s_and_b32 s4, ttmp7, 0xffff
 ; GFX9-SDAG-NEXT:    global_store_dword v[0:1], v6, off
 ; GFX9-SDAG-NEXT:    s_waitcnt vmcnt(0)
-; GFX9-SDAG-NEXT:    v_mov_b32_e32 v0, s13
+; GFX9-SDAG-NEXT:    v_mov_b32_e32 v0, s4
+; GFX9-SDAG-NEXT:    s_lshr_b32 s4, ttmp7, 16
 ; GFX9-SDAG-NEXT:    global_store_dword v[2:3], v0, off
 ; GFX9-SDAG-NEXT:    s_waitcnt vmcnt(0)
-; GFX9-SDAG-NEXT:    v_mov_b32_e32 v0, s14
+; GFX9-SDAG-NEXT:    v_mov_b32_e32 v0, s4
 ; GFX9-SDAG-NEXT:    global_store_dword v[4:5], v0, off
 ; GFX9-SDAG-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-SDAG-NEXT:    s_setpc_b64 s[30:31]
@@ -118,13 +120,15 @@ define void @workgroup_ids_device_func(ptr addrspace(1) %outx, ptr addrspace(1) 
 ; GFX9-GISEL-LABEL: workgroup_ids_device_func:
 ; GFX9-GISEL:       ; %bb.0:
 ; GFX9-GISEL-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
-; GFX9-GISEL-NEXT:    v_mov_b32_e32 v6, s12
+; GFX9-GISEL-NEXT:    v_mov_b32_e32 v6, ttmp9
+; GFX9-GISEL-NEXT:    s_and_b32 s4, ttmp7, 0xffff
+; GFX9-GISEL-NEXT:    s_lshr_b32 s5, ttmp7, 16
 ; GFX9-GISEL-NEXT:    global_store_dword v[0:1], v6, off
 ; GFX9-GISEL-NEXT:    s_waitcnt vmcnt(0)
-; GFX9-GISEL-NEXT:    v_mov_b32_e32 v0, s13
+; GFX9-GISEL-NEXT:    v_mov_b32_e32 v0, s4
 ; GFX9-GISEL-NEXT:    global_store_dword v[2:3], v0, off
 ; GFX9-GISEL-NEXT:    s_waitcnt vmcnt(0)
-; GFX9-GISEL-NEXT:    v_mov_b32_e32 v0, s14
+; GFX9-GISEL-NEXT:    v_mov_b32_e32 v0, s5
 ; GFX9-GISEL-NEXT:    global_store_dword v[4:5], v0, off
 ; GFX9-GISEL-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-GISEL-NEXT:    s_setpc_b64 s[30:31]

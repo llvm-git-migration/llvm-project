@@ -6,10 +6,10 @@ define amdgpu_kernel void @workgroup_id_x(ptr addrspace(1) %ptrx) {
 ; GCN-SDAG-LABEL: workgroup_id_x:
 ; GCN-SDAG:       ; %bb.0:
 ; GCN-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[4:5], 0x0
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, 0
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, ttmp9
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, ttmp9
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, 0
 ; GCN-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[0:1]
+; GCN-SDAG-NEXT:    global_store_dword v1, v0, s[0:1]
 ; GCN-SDAG-NEXT:    s_endpgm
 ;
 ; GCN-GISEL-LABEL: workgroup_id_x:
@@ -30,23 +30,25 @@ define amdgpu_kernel void @workgroup_id_xy(ptr addrspace(1) %ptrx, ptr addrspace
 ; GCN-SDAG-LABEL: workgroup_id_xy:
 ; GCN-SDAG:       ; %bb.0:
 ; GCN-SDAG-NEXT:    s_load_dwordx4 s[0:3], s[4:5], 0x0
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, 0
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, ttmp9
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, ttmp9
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, 0
+; GCN-SDAG-NEXT:    s_and_b32 s4, ttmp7, 0xffff
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v2, s4
 ; GCN-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[0:1]
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, ttmp7
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[2:3]
+; GCN-SDAG-NEXT:    global_store_dword v1, v0, s[0:1]
+; GCN-SDAG-NEXT:    global_store_dword v1, v2, s[2:3]
 ; GCN-SDAG-NEXT:    s_endpgm
 ;
 ; GCN-GISEL-LABEL: workgroup_id_xy:
 ; GCN-GISEL:       ; %bb.0:
 ; GCN-GISEL-NEXT:    s_load_dwordx4 s[0:3], s[4:5], 0x0
-; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GCN-GISEL-NEXT:    v_mov_b32_e32 v1, ttmp9
+; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, ttmp9
+; GCN-GISEL-NEXT:    v_mov_b32_e32 v1, 0
+; GCN-GISEL-NEXT:    s_and_b32 s4, ttmp7, 0xffff
+; GCN-GISEL-NEXT:    v_mov_b32_e32 v2, s4
 ; GCN-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-GISEL-NEXT:    global_store_dword v0, v1, s[0:1]
-; GCN-GISEL-NEXT:    v_mov_b32_e32 v1, ttmp7
-; GCN-GISEL-NEXT:    global_store_dword v0, v1, s[2:3]
+; GCN-GISEL-NEXT:    global_store_dword v1, v0, s[0:1]
+; GCN-GISEL-NEXT:    global_store_dword v1, v2, s[2:3]
 ; GCN-GISEL-NEXT:    s_endpgm
   %idx = call i32 @llvm.amdgcn.workgroup.id.x()
   store i32 %idx, ptr addrspace(1) %ptrx
@@ -60,33 +62,33 @@ define amdgpu_kernel void @workgroup_id_xyz(ptr addrspace(1) %ptrx, ptr addrspac
 ; GCN-SDAG-LABEL: workgroup_id_xyz:
 ; GCN-SDAG:       ; %bb.0:
 ; GCN-SDAG-NEXT:    s_load_dwordx4 s[0:3], s[4:5], 0x0
-; GCN-SDAG-NEXT:    s_load_dwordx2 s[6:7], s[4:5], 0x10
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, 0
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, ttmp9
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, ttmp9
+; GCN-SDAG-NEXT:    s_load_dwordx2 s[4:5], s[4:5], 0x10
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, 0
+; GCN-SDAG-NEXT:    s_and_b32 s6, ttmp7, 0xffff
 ; GCN-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[0:1]
-; GCN-SDAG-NEXT:    s_and_b32 s0, ttmp7, 0xffff
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, s0
+; GCN-SDAG-NEXT:    global_store_dword v1, v0, s[0:1]
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, s6
 ; GCN-SDAG-NEXT:    s_lshr_b32 s0, ttmp7, 16
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[2:3]
-; GCN-SDAG-NEXT:    v_mov_b32_e32 v1, s0
-; GCN-SDAG-NEXT:    global_store_dword v0, v1, s[6:7]
+; GCN-SDAG-NEXT:    global_store_dword v1, v0, s[2:3]
+; GCN-SDAG-NEXT:    v_mov_b32_e32 v0, s0
+; GCN-SDAG-NEXT:    global_store_dword v1, v0, s[4:5]
 ; GCN-SDAG-NEXT:    s_endpgm
 ;
 ; GCN-GISEL-LABEL: workgroup_id_xyz:
 ; GCN-GISEL:       ; %bb.0:
 ; GCN-GISEL-NEXT:    s_load_dwordx4 s[0:3], s[4:5], 0x0
-; GCN-GISEL-NEXT:    s_load_dwordx2 s[6:7], s[4:5], 0x10
 ; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, ttmp9
+; GCN-GISEL-NEXT:    s_load_dwordx2 s[4:5], s[4:5], 0x10
 ; GCN-GISEL-NEXT:    v_mov_b32_e32 v1, 0
+; GCN-GISEL-NEXT:    s_and_b32 s6, ttmp7, 0xffff
 ; GCN-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
 ; GCN-GISEL-NEXT:    global_store_dword v1, v0, s[0:1]
-; GCN-GISEL-NEXT:    s_and_b32 s0, ttmp7, 0xffff
-; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, s0
+; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, s6
 ; GCN-GISEL-NEXT:    s_lshr_b32 s0, ttmp7, 16
 ; GCN-GISEL-NEXT:    global_store_dword v1, v0, s[2:3]
 ; GCN-GISEL-NEXT:    v_mov_b32_e32 v0, s0
-; GCN-GISEL-NEXT:    global_store_dword v1, v0, s[6:7]
+; GCN-GISEL-NEXT:    global_store_dword v1, v0, s[4:5]
 ; GCN-GISEL-NEXT:    s_endpgm
   %idx = call i32 @llvm.amdgcn.workgroup.id.x()
   store i32 %idx, ptr addrspace(1) %ptrx
