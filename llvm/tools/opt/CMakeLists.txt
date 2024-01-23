@@ -1,4 +1,12 @@
+add_llvm_component_library(LLVMOptDriver
+  NewPMDriver.cpp
+  opt.cpp
+  DEPENDS
+  intrinsics_gen
+)
+
 set(LLVM_LINK_COMPONENTS
+  OptDriver
   AllTargetsAsmParsers
   AllTargetsCodeGens
   AllTargetsDescs
@@ -30,11 +38,9 @@ set(LLVM_LINK_COMPONENTS
   )
 
 add_llvm_tool(opt
-  NewPMDriver.cpp
-  opt.cpp
-
   DEPENDS
   intrinsics_gen
   SUPPORT_PLUGINS
   )
+set_target_properties(opt PROPERTIES LINKER_LANGUAGE CXX)
 export_executable_symbols_for_plugins(opt)
