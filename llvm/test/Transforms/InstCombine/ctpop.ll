@@ -264,6 +264,23 @@ define <2 x i32> @ctpop_add_no_common_bits_vec_use2(<2 x i32> %a, <2 x i32> %b, 
   ret <2 x i32> %res
 }
 
+define i32 @ctpop_and_or_combine(i32 %a, i32 %b) {
+; CHECK-LABEL: @ctpop_and_or_combine(
+; CHECK-NEXT:    [[AND:%.*]] = and i32 [[A:%.*]], [[B:%.*]]
+; CHECK-NEXT:    [[CTPOP1:%.*]] = tail call i32 @llvm.ctpop.i32(i32 [[AND]]), !range [[RNG1]]
+; CHECK-NEXT:    [[OR:%.*]] = or i32 [[A]], [[B]]
+; CHECK-NEXT:    [[CTPOP2:%.*]] = tail call i32 @llvm.ctpop.i32(i32 [[OR]]), !range [[RNG1]]
+; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw i32 [[CTPOP1]], [[CTPOP2]]
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+  %and = and i32 %a, %b
+  %ctpop1 = tail call i32 @llvm.ctpop.i32(i32 %and)
+  %or = or i32 %a, %b
+  %ctpop2 = tail call i32 @llvm.ctpop.i32(i32 %or)
+  %res = add nuw nsw i32 %ctpop1, %ctpop2
+  ret i32 %res
+}
+
 define i8 @ctpop_rotate_left(i8 %a, i8 %amt)  {
 ; CHECK-LABEL: @ctpop_rotate_left(
 ; CHECK-NEXT:    [[RES:%.*]] = tail call i8 @llvm.ctpop.i8(i8 [[A:%.*]]), !range [[RNG0]]
