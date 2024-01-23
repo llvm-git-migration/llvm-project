@@ -102,3 +102,17 @@
 // CHECK-ABI-SOFT-MIPS16: "-target-feature" "+mips16"
 // CHECK-ABI-SOFT-MIPS16: "-msoft-float"
 // CHECK-ABI-SOFT-MIPS16: "-mfloat-abi" "soft"
+
+/// On MIPS, don't accept constraint "f" for soft-float.
+// RUN: not %clang -S %s -o %t.s 2>&1 \
+// RUN:     -target mips-linux-gnu -msoft-float \
+// RUN:     -DSOFT_FLOAT_NO_CONSTRAINT_F \
+// RUN:   | FileCheck --check-prefix=CHECK-SOFTFLOAT-ASM-NO-F %s
+// CHECK-SOFTFLOAT-ASM-NO-F: error: invalid input constraint 'f' in asm
+
+#ifdef SOFT_FLOAT_NO_CONSTRAINT_F
+void read_float(float* p) {
+    float result = *p;
+    __asm__("" ::"f"(result));
+}
+#endif // SOFT_FLOAT_NO_CONSTRAINT_F
