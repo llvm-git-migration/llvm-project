@@ -708,7 +708,7 @@ RISCVISAInfo::parseNormalizedArchString(StringRef Arch) {
 }
 
 static Error splitExtsByUnderscore(StringRef Exts,
-                                   std::vector<std::string> &SplitedExts) {
+                                   std::vector<std::string> &SplitExts) {
   SmallVector<StringRef, 8> Split;
   if (Exts.empty())
     return Error::success();
@@ -720,7 +720,7 @@ static Error splitExtsByUnderscore(StringRef Exts,
       return createStringError(errc::invalid_argument,
                                "extension name missing after separator '_'");
 
-    SplitedExts.push_back(Ext.str());
+    SplitExts.push_back(Ext.str());
   }
   return Error::success();
 }
