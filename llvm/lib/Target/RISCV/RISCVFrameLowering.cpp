@@ -1110,7 +1110,7 @@ RISCVFrameLowering::assignRVVStackObjectOffsets(MachineFunction &MF) const {
   // First push RVV Callee Saved object, then push RVV stack object
   std::vector<CalleeSavedInfo> &CSI = MF.getFrameInfo().getCalleeSavedInfo();
   const auto &RVVCSI = getRVVCalleeSavedInfo(MF, CSI);
-  if (RVVCSI.size())
+  if (!RVVCSI.empty())
     pushRVVObjects(RVVCSI[0].getFrameIdx(),
                    RVVCSI[RVVCSI.size() - 1].getFrameIdx() + 1);
   pushRVVObjects(0, MFI.getObjectIndexEnd() - RVVCSI.size());
