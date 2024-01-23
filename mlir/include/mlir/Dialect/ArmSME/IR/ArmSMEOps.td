@@ -965,11 +965,11 @@ def FMopaWide2WayOp
 
 	```mlir
     %undef = llvm.mlir.undef : vector<[8]xf16>
-    %a0_ins = vector.scalable.ins %a0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %a1_ins = vector.scalable.ins %a1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a0_ins = vector.scalable.insert %a0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a1_ins = vector.scalable.insert %a1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
     %a_packed = "arm_sve.intr.zip1"(%a0_ins, %a1_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
-    %b0_ins = vector.scalable.ins %b0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %b1_ins = vector.scalable.ins %b1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b0_ins = vector.scalable.insert %b0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b1_ins = vector.scalable.insert %b1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
     %b_packed = "arm_sve.intr.zip1"(%b0_ins, %b1_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
     %0 = arm_sme.fmopa_wide_2way %a_packed, %b_packed : vector<[8]xf16>, vector<[8]xf16> into vector<[4]x[4]xf32>
 	```
@@ -1220,18 +1220,18 @@ def SMopaWide4WayOp
 
 	```mlir
     %undef = llvm.mlir.undef : vector<[8]xf16>
-    %a0_ins = vector.scalable.ins %a0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %a1_ins = vector.scalable.ins %a1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %a2_ins = vector.scalable.ins %a2_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %a3_ins = vector.scalable.ins %a3_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a0_ins = vector.scalable.insert %a0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a1_ins = vector.scalable.insert %a1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a2_ins = vector.scalable.insert %a2_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %a3_ins = vector.scalable.insert %a3_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
     %lhs0 = "arm_sve.intr.zip1"(%a0_ins, %a2_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
     %lhs1 = "arm_sve.intr.zip1"(%a1_ins, %a3_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
     %lhs = "arm_sve.intr.zip1"(%lhs0, %lhs1) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
 
-    %b0_ins = vector.scalable.ins %b0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %b1_ins = vector.scalable.ins %b1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %b2_ins = vector.scalable.ins %b2_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
-    %b3_ins = vector.scalable.ins %b3_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b0_ins = vector.scalable.insert %b0_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b1_ins = vector.scalable.insert %b1_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b2_ins = vector.scalable.insert %b2_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
+    %b3_ins = vector.scalable.insert %b3_ext, %undef[0] : vector<[4]xf16> into vector<[8]xf16>
     %rhs0 = "arm_sve.intr.zip1"(%b0_ins, %b2_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
     %rhs1 = "arm_sve.intr.zip1"(%b1_ins, %b3_ins) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
     %rhs = "arm_sve.intr.zip1"(%rhs0, %rhs1) : (vector<[8]xf16>, vector<[8]xf16>) -> vector<[8]xf16>
