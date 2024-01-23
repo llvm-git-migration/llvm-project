@@ -383,8 +383,17 @@ bool Float2IntPass::validateAndTransform() {
     }
 
     // OK, R is known to be representable. Now pick a type for it.
-    // FIXME: Pick the smallest legal type that will fit.
-    Type *Ty = (MinBW > 32) ? Type::getInt64Ty(*Ctx) : Type::getInt32Ty(*Ctx);
+    // Pick the smallest legal type that will fit.
+    Type *Ty;
+    if (MinBW <= 8) {
+      Ty = Type::getInt8Ty(*Ctx);
+    } else if (MinBW <= 16) {
+      Ty = Type::getInt16Ty(*Ctx);
+    } else if (MinBW <= 32) {
+      Ty = Type::getInt32Ty(*Ctx);
+    } else {
+      Ty = Type::getInt64Ty(*Ctx);
+    }
 
     for (auto MI = ECs.member_begin(It), ME = ECs.member_end();
          MI != ME; ++MI)
