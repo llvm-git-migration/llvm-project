@@ -502,8 +502,12 @@ bool FormatManager::ShouldPrintAsOneLiner(ValueObject &valobj) {
       // wait.. wat? just get out of here..
       if (!synth_sp)
         return false;
-      // but if we only have them to provide a value, keep going
-      if (!synth_sp->MightHaveChildren() &&
+      // but if they can fit in one line or ...
+      if (auto format = synth_sp->GetSummaryFormat()) {
+        is_synth_val = format->IsOneLiner();
+      }
+      // ... if we only have them to provide a value, keep going
+      else if (!synth_sp->MightHaveChildren() &&
           synth_sp->DoesProvideSyntheticValue())
         is_synth_val = true;
       else
