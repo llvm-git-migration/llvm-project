@@ -311,7 +311,7 @@ void Float2IntPass::walkForwards() {
 }
 
 // If there is a valid transform to be done, do it.
-bool Float2IntPass::validateAndTransform() {
+bool Float2IntPass::validateAndTransform(const DataLayout &DL) {
   bool MadeChange = false;
 
   // Iterate over every disjoint partition of the def-use graph.
@@ -321,8 +321,8 @@ bool Float2IntPass::validateAndTransform() {
     Type *ConvertedToTy = nullptr;
 
     // For every member of the partition, union all the ranges together.
-    for (auto MI = ECs.member_begin(It), ME = ECs.member_end();
-         MI != ME; ++MI) {
+    for (auto MI = ECs.member_begin(It), ME = ECs.member_end(); MI != ME;
+         ++MI) {
       Instruction *I = *MI;
       auto SeenI = SeenInsts.find(I);
       if (SeenI == SeenInsts.end())
@@ -352,8 +352,8 @@ bool Float2IntPass::validateAndTransform() {
 
     // If the set was empty, or we failed, or the range is poisonous,
     // bail out.
-    if (ECs.member_begin(It) == ECs.member_end() || Fail ||
-        R.isFullSet() || R.isSignWrappedSet())
+    if (ECs.member_begin(It) == ECs.member_end() || Fail || R.isFullSet() ||
+        R.isSignWrappedSet())
       continue;
     assert(ConvertedToTy && "Must have set the convertedtoty by this point!");
 
@@ -370,24 +370,29 @@ bool Float2IntPass::validateAndTransform() {
     // Do we need more bits than are in the mantissa of the type we converted
     // to? semanticsPrecision returns the number of mantissa bits plus one
     // for the sign bit.
-    unsigned MaxRepresentableBits
-      = APFloat::semanticsPrecision(ConvertedToTy->getFltSemantics()) - 1;
+    unsigned MaxRepresentableBits =
+        APFloat::semanticsPrecision(ConvertedToTy->getFltSemantics()) - 1;
     if (MinBW > MaxRepresentableBits) {
       LLVM_DEBUG(dbgs() << "F2I: Value not guaranteed to be representable!\n");
       continue;
     }
-    if (MinBW > 64) {
-      LLVM_DEBUG(
-          dbgs() << "F2I: Value requires more than 64 bits to represent!\n");
-      continue;
+
+    // OK, R is known to be representable.
+    // Pick the smallest legal type that will fit.
+    Type *Ty = DL.getSmallestLegalIntType(*Ctx, MinBW);
+    if (!Ty) {
+      if (MinBW > 64) {
+        LLVM_DEBUG(dbgs() << "F2I: Value requires more than bits to represent "
+                             "than the target supports!\n");
+        continue;
+      }
+
+      // Pretty much every supported target supports either a 64 or 32-bit
+      // integer.
+      Ty = (MinBW > 32) ? Type::getInt64Ty(*Ctx) : Type::getInt32Ty(*Ctx);
     }
 
-    // OK, R is known to be representable. Now pick a type for it.
-    // FIXME: Pick the smallest legal type that will fit.
-    Type *Ty = (MinBW > 32) ? Type::getInt64Ty(*Ctx) : Type::getInt32Ty(*Ctx);
-
-    for (auto MI = ECs.member_begin(It), ME = ECs.member_end();
-         MI != ME; ++MI)
+    for (auto MI = ECs.member_begin(It), ME = ECs.member_end(); MI != ME; ++MI)
       convert(*MI, Ty);
     MadeChange = true;
   }
@@ -491,7 +496,8 @@ bool Float2IntPass::runImpl(Function &F, const DominatorTree &DT) {
   walkBackwards();
   walkForwards();
 
-  bool Modified = validateAndTransform();
+  const DataLayout &DL = F.getParent()->getDataLayout();
+  bool Modified = validateAndTransform(DL);
   if (Modified)
     cleanup();
   return Modified;
