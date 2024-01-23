@@ -128,7 +128,7 @@ int llvm::compileModuleWithNewPM(
   if (!PassPipeline.empty() && TargetPassConfig::hasLimitedCodeGenPipeline()) {
     WithColor::warning(errs(), Arg0)
         << "run-pass cannot be used with "
-        << TargetPassConfig::getLimitedCodeGenPipelineReason(" and ") << ".\n";
+        << TargetPassConfig::getLimitedCodeGenPipelineReason() << ".\n";
     return 1;
   }
 
