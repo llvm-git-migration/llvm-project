@@ -29,10 +29,16 @@ set(LLVM_LINK_COMPONENTS
   Passes
   )
 
-add_llvm_tool(opt
+add_llvm_component_library(LLVMOptDriver
   NewPMDriver.cpp
   opt.cpp
+)
 
+set(LLVM_LINK_COMPONENTS
+  OptDriver
+  )
+
+add_llvm_tool(opt
   DEPENDS
   intrinsics_gen
   SUPPORT_PLUGINS
