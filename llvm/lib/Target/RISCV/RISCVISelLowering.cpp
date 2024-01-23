@@ -15621,6 +15621,32 @@ SDValue RISCVTargetLowering::PerformDAGCombine(SDNode *N,
     }
     break;
   }
+  case RISCVISD::VMAND_VL: {
+    SDValue N0 = N->getOperand(0);
+    SDValue N1 = N->getOperand(1);
+    if (isNullOrNullSplat(N0))
+      return N0;
+    else if (isNullOrNullSplat(N1))
+      return N1;
+    else if (isOneOrOneSplat(N0))
+      return N1;
+    else if (isOneOrOneSplat(N1))
+      return N0;
+    break;
+  }
+  case RISCVISD::VMOR_VL: {
+    SDValue N0 = N->getOperand(0);
+    SDValue N1 = N->getOperand(1);
+    if (isNullOrNullSplat(N1))
+      return N0;
+    else if (isNullOrNullSplat(N0))
+      return N1;
+    else if (isOneOrOneSplat(N0))
+      return N0;
+    else if (isOneOrOneSplat(N1))
+      return N1;
+    break;
+  }
   case ISD::SRA:
     if (SDValue V = performSRACombine(N, DAG, Subtarget))
       return V;

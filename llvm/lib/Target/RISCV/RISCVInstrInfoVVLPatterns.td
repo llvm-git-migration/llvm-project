@@ -2736,6 +2736,11 @@ foreach mti = AllMasks in {
                                         VLOpFrag)),
               (!cast<Instruction>("PseudoVMANDN_MM_" # mti.LMul.MX)
                    VR:$rs1, VR:$rs2, GPR:$vl, mti.Log2SEW)>;
+    def : Pat<(mti.Mask (riscv_vmor_vl (riscv_vmand_vl VR:$rs1, VR:$rs2, VLOpFrag),
+                                       (riscv_vmnot_vl VR:$rs2, VLOpFrag),
+                                       VLOpFrag)),
+              (!cast<Instruction>("PseudoVMORN_MM_" # mti.LMul.MX)
+                   VR:$rs1, VR:$rs2, GPR:$vl, mti.Log2SEW)>;
     def : Pat<(mti.Mask (riscv_vmor_vl VR:$rs1,
                                        (riscv_vmnot_vl VR:$rs2, VLOpFrag),
                                        VLOpFrag)),
