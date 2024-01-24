@@ -43,6 +43,9 @@ constexpr size_t SOCKET_ADDR_MAX_LENGTH = sizeof(sockaddr_un::sun_path);
 constexpr size_t BASEPATH_MAX_LENGTH =
     SOCKET_ADDR_MAX_LENGTH - SOCKET_FILE_NAME.length();
 
+// How long should the module build daemon sit ideal before exiting
+constexpr int TimeoutSec = 15;
+
 // Get a temprary location where the daemon can store log files and a socket
 // address. Of the format /tmp/clang-<BLAKE3HashOfClangFullVersion>/
 std::string getBasePath();

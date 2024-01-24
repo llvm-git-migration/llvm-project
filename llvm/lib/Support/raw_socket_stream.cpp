@@ -108,70 +108,66 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
 Expected<std::unique_ptr<raw_socket_stream>>
 ListeningSocket::accept(bool Block) {
 
-  std::error_code AcceptEC;
-
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
   if (WinServerSock == INVALID_SOCKET)
     return llvm::make_error<StringError>("Failed to get file handle: ",
                                          getLastSocketErrorCode());
-
-  // Set to non-blocking if required
-  if (!Block) {
-    u_long BlockingMode = 1;
-    if (ioctlsocket(WinServerSock, FIONBIO, &BlockingMode) == SOCKET_ERROR)
-      return llvm::make_error<StringError>(
-          "Failed to set socket to non-blocking: ", getLastSocketErrorCode());
-  }
-
-  SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
-  if (WinAcceptSock == INVALID_SOCKET)
-    AcceptEC = getLastSocketErrorCode();
-
-  // Restore to blocking if required
-  if (!Block) {
-    u_long BlockingMode = 0;
-    if (ioctlsocket(WinServerSock, FIONBIO, &BlockingMode) == SOCKET_ERROR)
-      return llvm::make_error<StringError>(
-          "Failed to reset socket to blocking: ", getLastSocketErrorCode());
-  }
-
-  if (WinAcceptSock == INVALID_SOCKET)
-    return llvm::make_error<StringError>("Accept Failed: ", AcceptEC);
-
-  int AcceptFD = _open_osfhandle(WinAcceptSock, 0);
-  if (AcceptFD == -1)
-    return llvm::make_error<StringError>(
-        "Failed to get file descriptor from handle: ",
-        getLastSocketErrorCode());
 #else
   int Flags = ::fcntl(FD, F_GETFL, 0);
   if (Flags == -1)
     return llvm::make_error<StringError>(
         "Failed to get file descriptor flags: ", getLastSocketErrorCode());
+#endif
 
   // Set to non-blocking if required
   if (!Block) {
+#ifdef _WIN32
+    u_long BlockingMode = 1;
+    if (ioctlsocket(WinServerSock, FIONBIO, &BlockingMode) == SOCKET_ERROR)
+#else
     if (::fcntl(FD, F_SETFL, Flags | O_NONBLOCK) == -1)
+#endif
       return llvm::make_error<StringError>(
           "Failed to set socket to non-blocking: ", getLastSocketErrorCode());
   }
 
+#ifdef _WIN32
+  SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
+  if (WinAcceptSock == INVALID_SOCKET)
+#else
   int AcceptFD = ::accept(FD, NULL, NULL);
+  std::error_code AcceptEC;
   if (AcceptFD == -1)
+#endif
     AcceptEC = getLastSocketErrorCode();
 
   // Restore to blocking if required
   if (!Block) {
+#ifdef _WIN32
+    u_long BlockingMode = 0;
+    if (ioctlsocket(WinServerSock, FIONBIO, &BlockingMode) == SOCKET_ERROR)
+#else
     if (::fcntl(FD, F_SETFL, Flags) == -1)
+#endif
       return llvm::make_error<StringError>(
           "Failed to reset socket to blocking: ", getLastSocketErrorCode());
   }
 
+#ifdef _WIN32
+  if (WinAcceptSock == INVALID_SOCKET)
+#else
   if (AcceptFD == -1)
+#endif
     return llvm::make_error<StringError>("Accept Failed: ", AcceptEC);
 
-#endif //_WIN32
+#ifdef _WIN32
+  int AcceptFD = _open_osfhandle(WinAcceptSock, 0);
+  if (AcceptFD == -1)
+    return llvm::make_error<StringError>(
+        "Failed to get file descriptor from handle: ",
+        getLastSocketErrorCode());
+#endif
 
   return std::make_unique<raw_socket_stream>(AcceptFD);
 }

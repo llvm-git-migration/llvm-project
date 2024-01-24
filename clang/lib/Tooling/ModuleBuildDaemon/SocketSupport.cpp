@@ -30,7 +30,7 @@ connectToSocket(StringRef SocketPath) {
 
 Expected<std::string> readBufferFromSocket(raw_socket_stream &Socket) {
 
-  constexpr const unsigned short MAX_BUFFER = 4096;
+  constexpr unsigned short MAX_BUFFER = 4096;
   char Buffer[MAX_BUFFER];
   std::string ReturnBuffer;
 
@@ -42,16 +42,22 @@ Expected<std::string> readBufferFromSocket(raw_socket_stream &Socket) {
       break;
   }
 
-  if (Socket.has_error())
-    return make_error<StringError>("Failed socket read", Socket.error());
+  if (Socket.has_error()) {
+    std::error_code EC = Socket.error();
+    Socket.clear_error();
+    return make_error<StringError>("Failed socket read: ", EC);
+  }
   return ReturnBuffer;
 }
 
 Error writeBufferToSocket(raw_socket_stream &Socket, StringRef Buffer) {
   Socket << Buffer;
 
-  if (Socket.has_error())
-    return make_error<StringError>("Failed socket write", Socket.error());
+  if (Socket.has_error()) {
+    std::error_code EC = Socket.error();
+    Socket.clear_error();
+    return make_error<StringError>("Failed socket write: ", EC);
+  }
 
   Socket.flush();
   return Error::success();
