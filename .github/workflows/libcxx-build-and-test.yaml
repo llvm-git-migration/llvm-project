@@ -199,3 +199,38 @@ jobs:
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
+  windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          choco install -y ninja wget
+          wget https://github.com/mstorsjo/llvm-mingw/releases/download/20231128/llvm-mingw-20231128-ucrt-x86_64.zip -O llvm-mingw.zip
+          powershell Expand-Archive llvm-mingw.zip -DestinationPath .
+          del llvm-mingw.zip
+          ren llvm-mingw-20231128-ucrt-x86_64 llvm-mingw
+      - name: clang-cl (DLL)
+        run: |
+          powershell -Command                                                                                          `
+            [System.Environment]::SetEnvironmentVariable('PATH',                                                       `
+            [System.Environment]::GetEnvironmentVariable('PATH', 'machine')                                            `
+            + ';C:\Program Files\Git\usr\bin;C:\llvm-mingw\bin'                                                        `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\'                           `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExt ensions\Microsoft\TeamFoundation\Team Explorer' `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin' `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja' `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer' `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow' `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\VC\VCPackages'              `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\'                         `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\devinit'                  `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin'                    `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\bin\Roslyn'             `
+            + ';C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64' `
+            + ';C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\'                         `
+            + ';C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64'                                           `
+            + ';C:\Program Files (x86)\Windows Kits\10\bin\x64'                                                        `
+            + ';C:\Windows\Microsoft.NET\Framework64\v4.0.30319'                                                       `
+            ,'machine')
+          bash libcxx/utils/ci/run-buildbot clang-cl-dll
