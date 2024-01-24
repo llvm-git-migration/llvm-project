@@ -56,6 +56,7 @@
 #include "llvm/IRPrinter/IRPrintingPasses.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCTargetOptions.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/CodeGen.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
@@ -121,7 +122,7 @@ namespace llvm {
     }                                                                          \
     static AnalysisKey Key;                                                    \
   };
-#include "llvm/CodeGen/MachinePassRegistry.def"
+#include "llvm/Passes/MachinePassRegistry.def"
 
 /// This class provides access to building LLVM's passes.
 ///
@@ -142,9 +143,10 @@ namespace llvm {
 
 template <typename DerivedT> class CodeGenPassBuilder {
 public:
-  explicit CodeGenPassBuilder(LLVMTargetMachine &TM, CGPassBuilderOption Opts,
+  explicit CodeGenPassBuilder(LLVMTargetMachine &TM, PassBuilder &PB,
+                              CGPassBuilderOption Opts,
                               PassInstrumentationCallbacks *PIC)
-      : TM(TM), Opt(Opts), PIC(PIC) {
+      : TM(TM), PB(PB), Opt(Opts), PIC(PIC) {
     // Target could set CGPassBuilderOption::MISchedPostRA to true to achieve
     //     substitutePass(&PostRASchedulerID, &PostMachineSchedulerID)
 
@@ -163,28 +165,6 @@ public:
   Error buildPipeline(ModulePassManager &MPM, MachineFunctionPassManager &MFPM,
                       raw_pwrite_stream &Out, raw_pwrite_stream *DwoOut,
                       CodeGenFileType FileType) const;
-
-  /// Parse single non-target-specific MIR pass
-  /// @param Name the pass name
-  /// @return true if failed
-  bool parseMIRPass(MachineFunctionPassManager &MFPM, StringRef Name) const;
-
-  /// Parse MIR pass pipeline. Unlike IR pass pipeline,
-  /// there is only one pass manager for machine function
-  /// so there is no need to specify the pass nesting.
-  /// @param Text a comma separated pass name list
-  Error parseMIRPipeline(MachineFunctionPassManager &MFPM,
-                         StringRef Text) const {
-    for (auto [LHS, RHS] = Text.split(','); LHS != "";
-         std::tie(LHS, RHS) = RHS.split(',')) {
-      if (parseMIRPass(MFPM, LHS) && derived().parseTargetMIRPass(MFPM, LHS)) {
-        return createStringError(
-            std::make_error_code(std::errc::invalid_argument),
-            Twine('\"') + Twine(LHS) + Twine("\" pass could not be found."));
-      }
-    }
-    return Error::success();
-  }
 
   void registerModuleAnalyses(ModuleAnalysisManager &) const;
   void registerFunctionAnalyses(FunctionAnalysisManager &) const;
@@ -279,6 +259,8 @@ protected:
           });
     }
 
+    MachineFunctionPassManager &getPM() { return PM; }
+
     MachineFunctionPassManager releasePM() { return std::move(PM); }
 
   private:
@@ -311,13 +293,9 @@ protected:
   }
 
   LLVMTargetMachine &TM;
+  PassBuilder &PB;
   CGPassBuilderOption Opt;
   PassInstrumentationCallbacks *PIC;
-
-  /// Target override these hooks to parse target-specific analyses.
-  void registerTargetAnalysis(ModuleAnalysisManager &) const {}
-  void registerTargetAnalysis(FunctionAnalysisManager &) const {}
-  void registerTargetAnalysis(MachineFunctionAnalysisManager &) const {}
 
   template <typename TMC> TMC &getTM() const { return static_cast<TMC &>(TM); }
   CodeGenOptLevel getOptLevel() const { return TM.getOptLevel(); }
@@ -555,14 +533,6 @@ protected:
 
   /// Utilities for targets to add passes to the pass manager.
   ///
-
-  /// createTargetRegisterAllocator - Create the register allocator pass for
-  /// this target at the current optimization level.
-  void addTargetRegisterAllocator(AddMachinePass &, bool Optimized) const;
-
-  /// addMachinePasses helper to create the target-selected or overriden
-  /// regalloc pass.
-  void addRegAllocPass(AddMachinePass &, bool Optimized) const;
 
   /// Add core register allocator passes which do the actual register assignment
   /// and rewriting. \returns Error::success() if any passes were added.
@@ -1257,54 +1227,16 @@ void CodeGenPassBuilder<Derived>::addMachineSSAOptimization(
 /// Register Allocation Pass Configuration
 //===---------------------------------------------------------------------===//
 
-/// Instantiate the default register allocator pass for this target for either
-/// the optimized or unoptimized allocation path. This will be added to the pass
-/// manager by addFastRegAlloc in the unoptimized case or addOptimizedRegAlloc
-/// in the optimized case.
-///
-/// A target that uses the standard regalloc pass order for fast or optimized
-/// allocation may still override this for per-target regalloc
-/// selection. But -regalloc=... always takes precedence.
-template <typename Derived>
-void CodeGenPassBuilder<Derived>::addTargetRegisterAllocator(
-    AddMachinePass &addPass, bool Optimized) const {
-  if (Optimized)
-    addPass(RAGreedyPass());
-  else
-    addPass(RAFastPass());
-}
-
-/// Find and instantiate the register allocation pass requested by this target
-/// at the current optimization level.  Different register allocators are
-/// defined as separate passes because they may require different analysis.
-template <typename Derived>
-void CodeGenPassBuilder<Derived>::addRegAllocPass(AddMachinePass &addPass,
-                                                  bool Optimized) const {
-  if (Opt.RegAlloc == RegAllocType::Default)
-    // With no -regalloc= override, ask the target for a regalloc pass.
-    derived().addTargetRegisterAllocator(addPass, Optimized);
-  else if (Opt.RegAlloc == RegAllocType::Basic)
-    addPass(RABasicPass());
-  else if (Opt.RegAlloc == RegAllocType::Fast)
-    addPass(RAFastPass());
-  else if (Opt.RegAlloc == RegAllocType::Greedy)
-    addPass(RAGreedyPass());
-  else if (Opt.RegAlloc == RegAllocType::PBQP)
-    addPass(RAPBQPPass());
-  else
-    llvm_unreachable("unknonwn register allocator type");
-}
-
 template <typename Derived>
 Error CodeGenPassBuilder<Derived>::addRegAssignAndRewriteFast(
     AddMachinePass &addPass) const {
-  if (Opt.RegAlloc != RegAllocType::Default &&
-      Opt.RegAlloc != RegAllocType::Fast)
+  if (Opt.RegAlloc != "default" && !Opt.RegAlloc.starts_with("fast"))
     return make_error<StringError>(
         "Must use fast (default) register allocator for unoptimized regalloc.",
         inconvertibleErrorCode());
 
-  addPass(RegAllocPass(false));
+  if (Error Err = PB.parseRegAllocPass(addPass.getPM(), Opt.RegAlloc, false))
+    return Err;
 
   // Allow targets to change the register assignments after
   // fast register allocation.
@@ -1315,7 +1247,8 @@ template <typename DerivedT>
 Error CodeGenPassBuilder<DerivedT>::addRegAssignAndRewriteOptimized(
     AddMachinePass &addPass) const {
   // Add the selected register allocation pass.
-  addRegAllocPass(addPass, true);
+  if (Error Err = PB.parseRegAllocPass(addPass.getPM(), Opt.RegAlloc, true))
+    return Err;
   // Allow targets to change the register assignments before rewriting.
   addPreRewrite(addPass);
 
@@ -1367,22 +1300,22 @@ Error CodeGenPassBuilder<Derived>::addOptimizedRegAlloc(
   // PreRA instruction scheduling.
   addPass(MachineSchedulerPass());
 
-  Error E = derived().addRegAssignAndRewriteOptimized(addPass);
-  if (!E) {
-    // Allow targets to expand pseudo instructions depending on the choice of
-    // registers before MachineCopyPropagation.
-    derived().addPostRewrite(addPass);
+  if (Error Err = derived().addRegAssignAndRewriteOptimized(addPass))
+    return Err;
 
-    // Copy propagate to forward register uses and try to eliminate COPYs that
-    // were not coalesced.
-    addPass(MachineCopyPropagationPass());
+  // Allow targets to expand pseudo instructions depending on the choice of
+  // registers before MachineCopyPropagation.
+  derived().addPostRewrite(addPass);
 
-    // Run post-ra machine LICM to hoist reloads / remats.
-    //
-    // FIXME: can this move into MachineLateOptimization?
-    addPass(MachineLICMPass());
-  }
-  return E;
+  // Copy propagate to forward register uses and try to eliminate COPYs that
+  // were not coalesced.
+  addPass(MachineCopyPropagationPass());
+
+  // Run post-ra machine LICM to hoist reloads / remats.
+  //
+  // FIXME: can this move into MachineLateOptimization?
+  addPass(MachineLICMPass());
+  return Error::success();
 }
 
 //===---------------------------------------------------------------------===//
