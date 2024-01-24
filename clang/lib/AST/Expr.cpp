@@ -3569,6 +3569,7 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case ConceptSpecializationExprClass:
   case RequiresExprClass:
   case SYCLUniqueStableNameExprClass:
+  case HLSLArrayTemporaryExprClass:
     // These never have a side-effect.
     return false;
 
@@ -5226,4 +5227,14 @@ OMPIteratorExpr *OMPIteratorExpr::CreateEmpty(const ASTContext &Context,
           NumIterators * static_cast<int>(RangeLocOffset::Total), NumIterators),
       alignof(OMPIteratorExpr));
   return new (Mem) OMPIteratorExpr(EmptyShell(), NumIterators);
+}
+
+HLSLArrayTemporaryExpr *
+HLSLArrayTemporaryExpr::Create(const ASTContext &Ctx, Expr *Base) {
+  return new (Ctx) HLSLArrayTemporaryExpr(Base);
+}
+
+HLSLArrayTemporaryExpr *
+HLSLArrayTemporaryExpr::CreateEmpty(const ASTContext &Ctx) {
+  return new (Ctx) HLSLArrayTemporaryExpr(EmptyShell());
 }

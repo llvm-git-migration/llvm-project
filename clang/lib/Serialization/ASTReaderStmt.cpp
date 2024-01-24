@@ -2777,6 +2777,14 @@ void ASTStmtReader::VisitOMPTargetParallelGenericLoopDirective(
 }
 
 //===----------------------------------------------------------------------===//
+// HLSL AST Nodes
+//===----------------------------------------------------------------------===//
+
+void ASTStmtReader::VisitHLSLArrayTemporaryExpr(HLSLArrayTemporaryExpr *S) {
+  VisitExpr(S);
+}
+
+//===----------------------------------------------------------------------===//
 // ASTReader Implementation
 //===----------------------------------------------------------------------===//
 

@@ -10524,6 +10524,11 @@ Sema::PerformCopyInitialization(const InitializedEntity &Entity,
   Expr *InitE = Init.get();
   assert(InitE && "No initialization expression?");
 
+  if (LangOpts.HLSL)
+    if (auto AdjTy = dyn_cast<DecayedType>(Entity.getType()))
+      if (AdjTy->getOriginalType()->isConstantArrayType())
+        InitE = HLSLArrayTemporaryExpr::Create(getASTContext(), InitE);
+
   if (EqualLoc.isInvalid())
     EqualLoc = InitE->getBeginLoc();
 

@@ -6651,6 +6651,44 @@ private:
   friend class ASTStmtWriter;
 };
 
+/// HLSLArrayTemporaryExpr - In HLSL, default parameter passing is by value
+/// including for arrays. This AST node represents a materialized temporary of a
+/// constant size arrray.
+class HLSLArrayTemporaryExpr : public Expr {
+  Expr *SourceExpr;
+
+  HLSLArrayTemporaryExpr(Expr *S)
+      : Expr(HLSLArrayTemporaryExprClass, S->getType(), VK_LValue, OK_Ordinary),
+        SourceExpr(S) {}
+
+  HLSLArrayTemporaryExpr(EmptyShell Empty)
+      : Expr(HLSLArrayTemporaryExprClass, Empty), SourceExpr(nullptr) {}
+
+public:
+  static HLSLArrayTemporaryExpr *Create(const ASTContext &Ctx, Expr *S);
+  static HLSLArrayTemporaryExpr *CreateEmpty(const ASTContext &Ctx);
+
+  const Expr *getSourceExpr() const { return SourceExpr; }
+  Expr *getSourceExpr() { return SourceExpr; }
+  void setSourceExpr(Expr *S) { SourceExpr = S; }
+
+  SourceLocation getBeginLoc() const { return SourceExpr->getBeginLoc(); }
+
+  SourceLocation getEndLoc() const { return SourceExpr->getEndLoc(); }
+
+  static bool classof(const Stmt *T) {
+    return T->getStmtClass() == HLSLArrayTemporaryExprClass;
+  }
+
+  // Iterators
+  child_range children() {
+    return child_range(child_iterator(), child_iterator());
+  }
+  const_child_range children() const {
+    return const_child_range(const_child_iterator(), const_child_iterator());
+  }
+};
+
 } // end namespace clang
 
 #endif // LLVM_CLANG_AST_EXPR_H

@@ -4701,6 +4701,10 @@ recurse:
     E = cast<ConstantExpr>(E)->getSubExpr();
     goto recurse;
 
+  case Expr::HLSLArrayTemporaryExprClass:
+    E = cast<HLSLArrayTemporaryExpr>(E)->getSourceExpr();
+    goto recurse;
+
   // FIXME: invent manglings for all these.
   case Expr::BlockExprClass:
   case Expr::ChooseExprClass:

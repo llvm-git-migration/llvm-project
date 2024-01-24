@@ -15461,6 +15461,19 @@ TreeTransform<Derived>::TransformCapturedStmt(CapturedStmt *S) {
   return getSema().ActOnCapturedRegionEnd(Body.get());
 }
 
+template <typename Derived>
+ExprResult TreeTransform<Derived>::TransformHLSLArrayTemporaryExpr(
+    HLSLArrayTemporaryExpr *E) {
+  ExprResult SrcExpr = getDerived().TransformExpr(E->getSourceExpr());
+  if (SrcExpr.isInvalid())
+    return ExprError();
+
+  if (!getDerived().AlwaysRebuild() && SrcExpr.get() == E->getSourceExpr())
+    return E;
+
+  return HLSLArrayTemporaryExpr::Create(getSema().Context, SrcExpr.get());
+}
+
 } // end namespace clang
 
 #endif // LLVM_CLANG_LIB_SEMA_TREETRANSFORM_H

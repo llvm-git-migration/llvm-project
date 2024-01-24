@@ -1590,6 +1590,7 @@ LValue CodeGenFunction::EmitLValueHelper(const Expr *E,
   case Expr::CXXUuidofExprClass:
     return EmitCXXUuidofLValue(cast<CXXUuidofExpr>(E));
   case Expr::LambdaExprClass:
+  case Expr::HLSLArrayTemporaryExprClass:
     return EmitAggExprToLValue(E);
 
   case Expr::ExprWithCleanupsClass: {

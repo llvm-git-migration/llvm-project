@@ -2433,6 +2433,15 @@ void StmtProfiler::VisitTemplateArgument(const TemplateArgument &Arg) {
   }
 }
 
+//===----------------------------------------------------------------------===//
+// HLSL AST Nodes
+//===----------------------------------------------------------------------===//
+
+void StmtProfiler::VisitHLSLArrayTemporaryExpr(
+    const HLSLArrayTemporaryExpr *S) {
+  VisitExpr(S);
+}
+
 void Stmt::Profile(llvm::FoldingSetNodeID &ID, const ASTContext &Context,
                    bool Canonical, bool ProfileLambdaExpr) const {
   StmtProfilerWithPointers Profiler(ID, Context, Canonical, ProfileLambdaExpr);

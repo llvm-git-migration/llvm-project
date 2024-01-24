@@ -2826,6 +2826,14 @@ void ASTStmtWriter::VisitOMPTargetParallelGenericLoopDirective(
 }
 
 //===----------------------------------------------------------------------===//
+// HLSL AST Nodes
+//===----------------------------------------------------------------------===//
+
+void ASTStmtWriter::VisitHLSLArrayTemporaryExpr(HLSLArrayTemporaryExpr *S) {
+  VisitExpr(S);
+}
+
+//===----------------------------------------------------------------------===//
 // ASTWriter Implementation
 //===----------------------------------------------------------------------===//
 

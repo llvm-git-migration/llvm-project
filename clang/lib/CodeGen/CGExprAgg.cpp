@@ -235,6 +235,8 @@ public:
     RValue Res = CGF.EmitAtomicExpr(E);
     EmitFinalDestCopy(E->getType(), Res);
   }
+
+  void VisitHLSLArrayTemporaryExpr(HLSLArrayTemporaryExpr *E);
 };
 }  // end anonymous namespace.
 
@@ -1921,6 +1923,10 @@ void AggExprEmitter::VisitDesignatedInitUpdateExpr(DesignatedInitUpdateExpr *E) 
   LValue DestLV = CGF.MakeAddrLValue(Dest.getAddress(), E->getType());
   EmitInitializationToLValue(E->getBase(), DestLV);
   VisitInitListExpr(E->getUpdater());
+}
+
+void AggExprEmitter::VisitHLSLArrayTemporaryExpr(HLSLArrayTemporaryExpr *E) {
+  Visit(E->getSourceExpr());
 }
 
 //===----------------------------------------------------------------------===//
