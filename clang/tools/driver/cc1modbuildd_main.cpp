@@ -22,8 +22,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
-#include <unistd.h>
 #endif
 
 using namespace llvm;
@@ -77,10 +75,11 @@ private:
 };
 
 ModuleBuildDaemonServer *DaemonPtr = nullptr;
-void handleSignal() {
-  if (DaemonPtr != nullptr) {
+void handleSignal(int) {
+  if (DaemonPtr != nullptr)
     DaemonPtr->shutdownDaemon();
-  }
+  else
+    exit(EXIT_SUCCESS);
 }
 } // namespace
 
@@ -96,12 +95,19 @@ int ModuleBuildDaemonServer::setupDaemonEnv() {
   freopen(STDOUT.c_str(), "a", stdout);
   freopen(STDERR.c_str(), "a", stderr);
 
-  llvm::sys::SetInterruptFunction(handleSignal);
+  if (std::signal(SIGTERM, handleSignal) == SIG_ERR) {
+    errs() << "failed to handle SIGTERM" << '\n';
+    exit(EXIT_FAILURE);
+  }
+
+  if (std::signal(SIGINT, handleSignal) == SIG_ERR) {
+    errs() << "failed to handle SIGINT" << '\n';
+    exit(EXIT_FAILURE);
+  }
 
 // TODO: Figure out how to do this on windows
 #ifdef SIGHUP
-  // Overides llvm::sys::SetInterruptFunction
-  if (signal(SIGHUP, SIG_IGN) == SIG_ERR) {
+  if (::signal(SIGHUP, SIG_IGN) == SIG_ERR) {
     errs() << "failed to handle SIGHUP" << '\n';
     exit(EXIT_FAILURE);
   }
