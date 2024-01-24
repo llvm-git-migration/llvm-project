@@ -184,11 +184,13 @@ createTargetCodeGenInfo(CodeGenModule &CGM) {
 
     bool IsSoftFloat =
         CodeGenOpts.FloatABI == "soft" || Target.hasFeature("spe");
-    return createPPC32TargetCodeGenInfo(CGM, IsSoftFloat);
+    unsigned RLen = Target.getPointerWidth(LangAS::Default);
+    return createPPC32TargetCodeGenInfo(CGM, IsSoftFloat, RLen);
   }
   case llvm::Triple::ppcle: {
     bool IsSoftFloat = CodeGenOpts.FloatABI == "soft";
-    return createPPC32TargetCodeGenInfo(CGM, IsSoftFloat);
+    unsigned RLen = Target.getPointerWidth(LangAS::Default);
+    return createPPC32TargetCodeGenInfo(CGM, IsSoftFloat, RLen);
   }
   case llvm::Triple::ppc64:
     if (Triple.isOSAIX())
