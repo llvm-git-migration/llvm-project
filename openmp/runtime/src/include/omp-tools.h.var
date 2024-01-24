@@ -1229,20 +1229,44 @@ typedef struct ompd_callbacks_t {
       get_thread_context_for_thread_id;
 } ompd_callbacks_t;
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_parallel_begin(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_parallel_end(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_task_begin(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_task_end(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_thread_begin(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_thread_end(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_device_begin(void);
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 void ompd_bp_device_end(void);
 
 ompd_rc_t ompd_initialize(ompd_word_t api_version,
