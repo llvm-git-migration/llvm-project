@@ -85,8 +85,9 @@ int FormatControl<CONTEXT>::GetIntField(
     ch = PeekNext();
   }
   while (ch >= '0' && ch <= '9') {
-    if (result >
-        std::numeric_limits<int>::max() / 10 - (static_cast<int>(ch) - '0')) {
+    if (result > std::numeric_limits<int>::max() / 10 ||
+        std::numeric_limits<int>::max() - 10 * result <
+            static_cast<int>(ch) - '0') {
       handler.SignalError(
           IostatErrorInFormat, "FORMAT integer field out of range");
       if (hadError) {
