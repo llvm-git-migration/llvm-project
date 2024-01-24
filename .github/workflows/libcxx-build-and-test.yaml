@@ -199,3 +199,17 @@ jobs:
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
+  windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          choco install -y ninja wget
+          wget https://github.com/mstorsjo/llvm-mingw/releases/download/20231128/llvm-mingw-20231128-ucrt-x86_64.zip -O llvm-mingw.zip
+          powershell Expand-Archive llvm-mingw.zip -DestinationPath .
+          del llvm-mingw.zip
+          ren llvm-mingw-20231128-ucrt-x86_64 llvm-mingw
+          setx path "%path%;%cd%\llvm-mingw\bin"
+      - name: clang-cl (DLL)
+        run: bash libcxx/utils/ci/run-buildbot clang-cl-dll
