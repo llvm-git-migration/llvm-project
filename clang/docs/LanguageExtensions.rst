@@ -3380,7 +3380,7 @@ Query for this feature with ``__has_builtin(__builtin_debugtrap)``.
 Query for this feature with ``__has_builtin(__builtin_trap)``.
 
 ``__builtin_verbose_trap``
-------------------
+--------------------------
 
 ``__builtin_verbose_trap`` causes the program to stop its execution abnormally
 and shows a human-readable description of the reason for the termination when a
