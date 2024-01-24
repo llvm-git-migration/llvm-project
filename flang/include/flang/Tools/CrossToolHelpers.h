@@ -13,6 +13,7 @@
 #ifndef FORTRAN_TOOLS_CROSS_TOOL_HELPERS_H
 #define FORTRAN_TOOLS_CROSS_TOOL_HELPERS_H
 
+#include "flang/Common/MathOptionsBase.h"
 #include "flang/Frontend/CodeGenOptions.h"
 #include "flang/Frontend/LangOptions.h"
 #include <cstdint>
@@ -28,7 +29,8 @@ struct MLIRToLLVMPassPipelineConfig {
     OptLevel = level;
   }
   explicit MLIRToLLVMPassPipelineConfig(llvm::OptimizationLevel level,
-      const Fortran::frontend::CodeGenOptions &opts) {
+      const Fortran::frontend::CodeGenOptions &opts,
+      const Fortran::common::MathOptionsBase &mathOpts) {
     OptLevel = level;
     StackArrays = opts.StackArrays;
     Underscoring = opts.Underscoring;
@@ -36,6 +38,13 @@ struct MLIRToLLVMPassPipelineConfig {
     DebugInfo = opts.getDebugInfo();
     AliasAnalysis = opts.AliasAnalysis;
     FramePointerKind = opts.getFramePointer();
+    // TODO: This matches the set of options enabled for Ofast, but this is
+    // probably overkill. Sadly the precise semantics of unsafe-fp-math=true
+    // don't seem to be clearly documented.
+    UnsafeFPMath = mathOpts.getNoHonorNaNs() && mathOpts.getNoHonorInfs() &&
+        mathOpts.getNoSignedZeros() && mathOpts.getReciprocalMath() &&
+        mathOpts.getFPContractEnabled() && mathOpts.getApproxFunc() &&
+        mathOpts.getAssociativeMath();
   }
 
   llvm::OptimizationLevel OptLevel; ///< optimisation level
@@ -49,6 +58,7 @@ struct MLIRToLLVMPassPipelineConfig {
       llvm::FramePointerKind::None; ///< Add frame pointer to functions.
   unsigned VScaleMin = 0; ///< SVE vector range minimum.
   unsigned VScaleMax = 0; ///< SVE vector range maximum.
+  bool UnsafeFPMath = false; ///< Set unsafe-fp-math attribute for functions.
 };
 
 struct OffloadModuleOpts {

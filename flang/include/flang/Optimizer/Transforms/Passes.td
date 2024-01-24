@@ -366,6 +366,9 @@ def FunctionAttr : Pass<"function-attr", "mlir::func::FuncOp"> {
            "mlir::LLVM::framePointerKind::FramePointerKind", 
            /*default=*/"mlir::LLVM::framePointerKind::FramePointerKind{}",
            "frame pointer">,
+    Option<"unsafeFPMath", "unsafe-fp-math",
+           "bool", /*default=*/"false",
+           "Set the unsafe-fp-math attribute on functions in the module.">,
   ];
   let constructor = "::fir::createFunctionAttrPass()";
 }
