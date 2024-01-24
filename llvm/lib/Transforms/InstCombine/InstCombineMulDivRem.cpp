@@ -218,6 +218,17 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
                   : BinaryOperator::CreateNeg(Op0);
   }
 
+  {
+    // abs(a * abs(b)) --> abs(a * b)
+    Value *A, *B;
+    if (match(&I, m_OneUse(m_c_Mul(m_Value(A),
+                                   m_Intrinsic<Intrinsic::abs>(m_Value(B)))))) {
+      Value *New =
+          HasNSW ? Builder.CreateNSWMul(A, B) : Builder.CreateMul(A, B);
+      return replaceInstUsesWith(I, New);
+    }
+  }
+
   // Also allow combining multiply instructions on vectors.
   {
     Value *NewOp;
