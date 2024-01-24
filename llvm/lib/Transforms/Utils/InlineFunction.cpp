@@ -2110,6 +2110,21 @@ llvm::InlineResult llvm::InlineFunction(CallBase &CB, InlineFunctionInfo &IFI,
     return InlineResult::failure("incompatible strictfp attributes");
   }
 
+  // Do not inline function with a different signing scheme.
+  if (CalledFunc->getFnAttribute("sign-return-address") !=
+      Caller->getFnAttribute("sign-return-address")) {
+    return InlineResult::failure("incompatible sign return address attributes");
+  }
+  if (CalledFunc->getFnAttribute("sign-return-address-key") !=
+      Caller->getFnAttribute("sign-return-address-key")) {
+    return InlineResult::failure("incompatible signing keys attributes");
+  }
+  if (CalledFunc->getFnAttribute("branch-protection-pauth-lr") !=
+      Caller->getFnAttribute("branch-protection-pauth-lr")) {
+    return InlineResult::failure(
+        "incompatible sign return address modifier attributes");
+  }
+
   // GC poses two hazards to inlining, which only occur when the callee has GC:
   //  1. If the caller has no GC, then the callee's GC must be propagated to the
   //     caller.
