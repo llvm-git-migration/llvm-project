@@ -990,7 +990,7 @@ def FMopaWide2WayOp
     | ---- | -------- |
     | [FMOPA (widening, 2-way, FP16 to FP32)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/FMOPA--widening--2-way--FP16-to-FP32---Half-precision-floating-point-sum-of-outer-products-and-accumulate-) | +sme |
     | [BFMOPA (widening, 2-way, BF16 to FP32)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/BFMOPA--widening---BFloat16-sum-of-outer-products-and-accumulate-) | +sme |
-me
+
     [1] https://developer.arm.com/documentation/ddi0616
   }];
 }
@@ -1253,7 +1253,7 @@ def SMopaWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [SMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPA--4-way---Signed-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1284,7 +1284,7 @@ def SMopsWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [SMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPS--4-way---Signed-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1312,7 +1312,7 @@ def UMopaWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [UMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPA--4-way---Unsigned-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1340,7 +1340,7 @@ def UMopsWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [UMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPS--4-way---Unsigned-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1368,7 +1368,7 @@ def SuMopaWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [SUMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SUMOPA--Signed-by-unsigned-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1396,7 +1396,7 @@ def SuMopsWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [SUMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SUMOPS--Signed-by-unsigned-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1424,7 +1424,7 @@ def UsMopaWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [USMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/USMOPA--Unsigned-by-signed-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
@@ -1452,7 +1452,7 @@ def UsMopsWide4WayOp
     | Spec | Features |
     | ---- | -------- |
     | [USMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/USMOPS--Unsigned-by-signed-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-me
+
     ```
   }];
 }
