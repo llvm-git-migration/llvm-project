@@ -1402,7 +1402,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
                          ISD::SHL, ISD::STORE, ISD::SPLAT_VECTOR,
                          ISD::BUILD_VECTOR, ISD::CONCAT_VECTORS,
                          ISD::EXPERIMENTAL_VP_REVERSE, ISD::MUL,
-                         ISD::INSERT_VECTOR_ELT});
+                         ISD::INSERT_VECTOR_ELT, ISD::VP_SELECT});
   if (Subtarget.hasVendorXTHeadMemPair())
     setTargetDAGCombine({ISD::LOAD, ISD::STORE});
   if (Subtarget.useRVVForFixedLengthVectors())
@@ -15555,6 +15555,35 @@ SDValue RISCVTargetLowering::PerformDAGCombine(SDNode *N,
                                 ISD::UNINDEXED, false);
     }
     break;
+  }
+  case ISD::VP_SELECT: {
+    EVT VT = N->getOperand(1).getValueType();
+    if (VT.isSimple() && VT.isScalableVector() &&
+        VT.getVectorElementType() == MVT::i1) {
+      SDValue N0 = N->getOperand(0);
+      SDValue N1 = N->getOperand(1);
+      SDValue N2 = N->getOperand(2);
+      SDValue VL = N->getOperand(3);
+      SDLoc DL(N);
+      // vp.select Cond, 0, F, EVL --> and (not Cond), F, EVL
+      // vp.select Cond, T, 0, EVL --> and Cond, T, EVL
+      // vp.select Cond, 1, F, EVL --> or Cond, F, EVL
+      // vp.select Cond, T, 1, EVL --> or (not Cond), T, EVL
+      if (isNullOrNullSplat(N1)) {
+        SDValue Not = DAG.getNode(RISCVISD::VMXOR_VL, DL, VT, N0,
+                                  DAG.getAllOnesConstant(DL, VT), VL);
+        return DAG.getNode(RISCVISD::VMAND_VL, DL, VT, Not, N2, VL);
+      } else if (isNullOrNullSplat(N2)) {
+        return DAG.getNode(RISCVISD::VMAND_VL, DL, VT, N0, N1, VL);
+      } else if (isOneOrOneSplat(N1)) {
+        return DAG.getNode(RISCVISD::VMOR_VL, DL, VT, N0, N1, VL);
+      } else if (isOneOrOneSplat(N2)) {
+        SDValue Not = DAG.getNode(RISCVISD::VMXOR_VL, DL, VT, N0,
+                                  DAG.getAllOnesConstant(DL, VT), VL);
+        return DAG.getNode(RISCVISD::VMOR_VL, DL, VT, Not, N1, VL);
+      }
+    }
+    return SDValue();
   }
   case ISD::VP_GATHER: {
     const auto *VPGN = dyn_cast<VPGatherSDNode>(N);
