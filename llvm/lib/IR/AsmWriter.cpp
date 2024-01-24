@@ -2666,11 +2666,11 @@ public:
   void printFunction(const Function *F);
   void printArgument(const Argument *FA, AttributeSet Attrs);
   void printBasicBlock(const BasicBlock *BB);
-  void printDPValueLine(const DPValue &DPV);
   void printInstructionLine(const Instruction &I);
   void printInstruction(const Instruction &I);
   void printDPMarker(const DPMarker &DPI);
   void printDPValue(const DPValue &DPV);
+  void printDPValueLine(const DPValue &DPV);
 
   void printUseListOrder(const Value *V, const std::vector<unsigned> &Shuffle);
   void printUseLists(const Function *F);
