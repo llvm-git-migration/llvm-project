@@ -543,6 +543,27 @@ public:
       return StrData.getCStr(&Off);
     }
 
+    // Compares the name of this entry against Target, returning true if they
+    // are equal. This is helpful is hot code paths that do not need the length
+    // of the name.
+    bool compareNameAgainst(StringRef Target) const {
+      // Note: this is not the name, but the rest of debug_names starting from
+      // name. This handles corrupt data (non-null terminated) without
+      // overruning the buffer.
+      auto Data = StrData.getData().substr(StringOffset);
+      auto DataSize = Data.size();
+      auto TargetSize = Target.size();
+
+      // Invariant: at the start of the loop, we have non-null characters to
+      // read from Data.
+      size_t Idx = 0;
+      for (; Idx < DataSize && Data[Idx]; Idx++) {
+        if (Idx >= TargetSize || Data[Idx] != Target[Idx])
+          return false;
+      }
+      return Idx == TargetSize;
+    }
+
     /// Returns the offset of the first Entry in the list.
     uint64_t getEntryOffset() const { return EntryOffset; }
   };
