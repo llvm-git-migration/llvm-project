@@ -1395,6 +1395,15 @@ static const IntrinsicInterface intrinsicSubroutine[]{
             {"count_max", AnyInt, Rank::scalar, Optionality::optional,
                 common::Intent::Out}},
         {}, Rank::elemental, IntrinsicClass::impureSubroutine},
+    {"signal",
+        {{"number", AnyInt, Rank::scalar, Optionality::required,
+             common::Intent::In},
+            // note: any pointer also accepts AnyInt
+            {"handler", AnyPointer, Rank::scalar, Optionality::required,
+                common::Intent::In},
+            {"status", AnyInt, Rank::scalar, Optionality::optional,
+                common::Intent::Out}},
+        {}, Rank::elemental, IntrinsicClass::impureSubroutine},
 };
 
 // TODO: Intrinsic subroutine EVENT_QUERY
@@ -1412,9 +1421,12 @@ static DynamicType GetBuiltinDerivedType(
   auto iter{
       builtinsScope->find(semantics::SourceName{which, std::strlen(which)})};
   if (iter == builtinsScope->cend()) {
+    // keep the string all together
+    // clang-format off
     common::die(
         "INTERNAL: The __fortran_builtins module does not define the type '%s'",
         which);
+    // clang-format on
   }
   const semantics::Symbol &symbol{*iter->second};
   const semantics::Scope &scope{DEREF(symbol.scope())};
