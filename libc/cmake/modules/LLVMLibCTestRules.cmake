@@ -5,6 +5,7 @@
 # Usage:
 #   get_object_files_for_test(<result var>
 #                             <skipped_entrypoints_var>
+#                             <internal_obj>
 #                             <target0> [<target1> ...])
 #
 #   The list of object files is collected in <result_var>.
@@ -12,7 +13,8 @@
 #   set to a true value.
 #   targetN is either an "add_entrypoint_target" target or an
 #   "add_object_library" target.
-function(get_object_files_for_test result skipped_entrypoints_list)
+#   If internal_obj is TRUE, then we collect `target.__internal__` for entry points.
+function(get_object_files_for_test result skipped_entrypoints_list internal_obj)
   set(object_files "")
   set(skipped_list "")
   set(checked_list "")
@@ -49,7 +51,7 @@ function(get_object_files_for_test result skipped_entrypoints_list)
       set(dep_skip "")
 
       get_target_property(indirect_deps ${dep} "DEPS")
-      get_object_files_for_test(dep_obj dep_skip ${indirect_deps})
+      get_object_files_for_test(dep_obj dep_skip ${internal_obj} ${indirect_deps})
 
       if(${dep_type} STREQUAL ${OBJECT_LIBRARY_TARGET_TYPE})
         get_target_property(dep_object_files ${dep} "OBJECT_FILES")
@@ -62,7 +64,11 @@ function(get_object_files_for_test result skipped_entrypoints_list)
           list(APPEND dep_skip ${dep})
           list(REMOVE_ITEM dep_obj ${dep})
         endif()
-        get_target_property(object_file_raw ${dep} "OBJECT_FILE_RAW")
+        if(${internal_obj})
+          get_target_property(object_file_raw ${dep} "OBJECT_FILE_RAW")
+        else()
+          get_target_property(object_file_raw ${dep} "OBJECT_FILE")
+        endif()
         if(object_file_raw)
           list(APPEND dep_obj ${object_file_raw})
         endif()
@@ -140,7 +146,7 @@ function(create_libc_unittest fq_target_name)
   endif()
 
   get_object_files_for_test(
-      link_object_files skipped_entrypoints_list ${fq_deps_list})
+      link_object_files skipped_entrypoints_list TRUE ${fq_deps_list})
   if(skipped_entrypoints_list)
     # If a test is OS/target machine independent, it has to be skipped if the
     # OS/target machine combination does not provide any dependent entrypoints.
@@ -389,7 +395,7 @@ function(add_libc_fuzzer target_name)
   get_fq_target_name(${target_name} fq_target_name)
   get_fq_deps_list(fq_deps_list ${LIBC_FUZZER_DEPENDS})
   get_object_files_for_test(
-      link_object_files skipped_entrypoints_list ${fq_deps_list})
+      link_object_files skipped_entrypoints_list TRUE ${fq_deps_list})
   if(skipped_entrypoints_list)
     if(LIBC_CMAKE_VERBOSE_LOGGING)
       set(msg "Skipping fuzzer target ${fq_target_name} as it has missing deps: "
@@ -519,7 +525,7 @@ function(add_integration_test test_name)
   # TODO: Instead of gathering internal object files from entrypoints,
   # collect the object files with public names of entrypoints.
   get_object_files_for_test(
-      link_object_files skipped_entrypoints_list ${fq_deps_list})
+      link_object_files skipped_entrypoints_list FALSE ${fq_deps_list})
   if(skipped_entrypoints_list)
     if(LIBC_CMAKE_VERBOSE_LOGGING)
       set(msg "Skipping integration test ${fq_target_name} as it has missing deps: "
@@ -703,7 +709,7 @@ function(add_libc_hermetic_test test_name)
   # TODO: Instead of gathering internal object files from entrypoints,
   # collect the object files with public names of entrypoints.
   get_object_files_for_test(
-      link_object_files skipped_entrypoints_list ${fq_deps_list})
+      link_object_files skipped_entrypoints_list FALSE ${fq_deps_list})
   if(skipped_entrypoints_list)
     set(msg "Skipping hermetic test ${fq_target_name} as it has missing deps: "
             "${skipped_entrypoints_list}.")
