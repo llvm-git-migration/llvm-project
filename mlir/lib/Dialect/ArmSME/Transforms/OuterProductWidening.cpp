@@ -213,6 +213,268 @@ private:
   }
 };
 
+// Fold four 'arm_sme.outerproduct' operations that are chained via the
+// accumulator into 4-way outer product operation.
+class OuterProduct4WayWidening
+    : public OpRewritePattern<arm_sme::OuterProductOp> {
+public:
+  using OpRewritePattern::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(arm_sme::OuterProductOp op,
+                                PatternRewriter &rewriter) const override {
+    Value acc = op.getAcc();
+    if (!acc)
+      return rewriter.notifyMatchFailure(op, "no accumulator operand");
+
+    arm_sme::OuterProductOp op4 = op;
+    arm_sme::OuterProductOp op3 = acc.getDefiningOp<arm_sme::OuterProductOp>();
+    if (!op3)
+      return rewriter.notifyMatchFailure(op,
+                                         "defining op of accumulator operand "
+                                         "must be an 'arm_sme.outerproduct'");
+
+    acc = op3.getAcc();
+    if (!acc)
+      return rewriter.notifyMatchFailure(op, "no accumulator operand");
+
+    arm_sme::OuterProductOp op2 = acc.getDefiningOp<arm_sme::OuterProductOp>();
+    if (!op2)
+      return rewriter.notifyMatchFailure(op,
+                                         "defining op of accumulator operand "
+                                         "must be an 'arm_sme.outerproduct'");
+
+    acc = op2.getAcc();
+    if (!acc)
+      return rewriter.notifyMatchFailure(op, "no accumulator operand");
+
+    arm_sme::OuterProductOp op1 = acc.getDefiningOp<arm_sme::OuterProductOp>();
+    if (!op1)
+      return rewriter.notifyMatchFailure(op,
+                                         "defining op of accumulator operand "
+                                         "must be an 'arm_sme.outerproduct'");
+
+    arm_sme::CombiningKind kind = op1.getKind();
+    if (op2.getKind() != kind || op3.getKind() != kind || op4.getKind() != kind)
+      return rewriter.notifyMatchFailure(
+          op, "combining kind (add or sub) of outer products must match");
+
+    if (!llvm::hasSingleElement(op1->getUses()) ||
+        !llvm::hasSingleElement(op2->getUses()) ||
+        !llvm::hasSingleElement(op3->getUses()))
+      return rewriter.notifyMatchFailure(
+          op, "outer products are not single use and cannot be removed, "
+              "no benefit to widening");
+
+    auto nxnxv4i32 =
+        VectorType::get({4, 4}, rewriter.getI32Type(), {true, true});
+    auto nxnxv2i64 =
+        VectorType::get({2, 2}, rewriter.getI64Type(), {true, true});
+    auto nxv4i8 = VectorType::get({4}, rewriter.getI8Type(), true);
+    auto nxv2i16 = VectorType::get({2}, rewriter.getI16Type(), true);
+    if (
+        // signed, i8i8i32
+        (failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op1, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op2, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op3, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op4, nxnxv4i32, nxv4i8))) &&
+        // signed, i16i16i64
+        (failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op1, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op2, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op3, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtSIOp>(rewriter, op4, nxnxv2i64, nxv2i16))) &&
+        // unsigned, i8i8i32
+        (failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op1, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op2, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op3, nxnxv4i32, nxv4i8)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op4, nxnxv4i32, nxv4i8))) &&
+        // unsigned, i16i16i64
+        (failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op1, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op2, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op3, nxnxv2i64, nxv2i16)) ||
+         failed(
+             isWidenable<arith::ExtUIOp>(rewriter, op4, nxnxv2i64, nxv2i16))) &&
+        // signed by unsigned, i8i8i32
+        (failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op1, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op2, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op3, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op4, nxnxv4i32, nxv4i8))) &&
+        // signed by unsigned, i16i16i64
+        (failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op1, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op2, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op3, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtSIOp, arith::ExtUIOp>(
+             rewriter, op4, nxnxv2i64, nxv2i16))) &&
+        // unsigned by signed, i8i8i32
+        (failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op1, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op2, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op3, nxnxv4i32, nxv4i8)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op4, nxnxv4i32, nxv4i8))) &&
+        // unsigned by signed, i16i16i64
+        (failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op1, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op2, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op3, nxnxv2i64, nxv2i16)) ||
+         failed(isWidenable<arith::ExtUIOp, arith::ExtSIOp>(
+             rewriter, op4, nxnxv2i64, nxv2i16))))
+      return failure();
+
+    auto loc = op.getLoc();
+
+    auto packInputs = [&](VectorType type, Value lhs, Value rhs) {
+      auto undef = rewriter.create<LLVM::UndefOp>(loc, type);
+      auto insertLHS =
+          rewriter.create<vector::ScalableInsertOp>(loc, lhs, undef, 0);
+      auto insertRHS =
+          rewriter.create<vector::ScalableInsertOp>(loc, rhs, undef, 0);
+      return rewriter.create<arm_sve::Zip1IntrOp>(loc, type, insertLHS,
+                                                  insertRHS);
+    };
+
+    auto lhsExtOp = op.getLhs().getDefiningOp();
+    auto rhsExtOp = op.getRhs().getDefiningOp();
+    VectorType extSourceVectorType =
+        cast<VectorType>(lhsExtOp->getOperand(0).getType());
+    VectorType widenedVectorType =
+        VectorType::Builder(extSourceVectorType)
+            .setDim(0, extSourceVectorType.getShape()[0] * 4);
+    auto lhs0 = packInputs(widenedVectorType,
+                           op1.getLhs().getDefiningOp()->getOperand(0),
+                           op3.getLhs().getDefiningOp()->getOperand(0));
+    auto lhs1 = packInputs(widenedVectorType,
+                           op2.getLhs().getDefiningOp()->getOperand(0),
+                           op4.getLhs().getDefiningOp()->getOperand(0));
+    auto lhs = rewriter.create<arm_sve::Zip1IntrOp>(loc, widenedVectorType,
+                                                    lhs0, lhs1);
+
+    auto rhs0 = packInputs(widenedVectorType,
+                           op1.getRhs().getDefiningOp()->getOperand(0),
+                           op3.getRhs().getDefiningOp()->getOperand(0));
+    auto rhs1 = packInputs(widenedVectorType,
+                           op2.getRhs().getDefiningOp()->getOperand(0),
+                           op4.getRhs().getDefiningOp()->getOperand(0));
+    auto rhs = rewriter.create<arm_sve::Zip1IntrOp>(loc, widenedVectorType,
+                                                    rhs0, rhs1);
+
+    Value lhsMask, rhsMask;
+    if (op1.getLhsMask() || op2.getLhsMask() || op3.getLhsMask() ||
+        op4.getLhsMask()) {
+      if (!(op1.getLhsMask() && op2.getLhsMask() && op3.getLhsMask() &&
+            op4.getLhsMask()))
+        return rewriter.notifyMatchFailure(
+            op, "unsupported masking, either all outerproducts are masked "
+                "or none");
+
+      VectorType maskType = VectorType::Builder(widenedVectorType)
+                                .setElementType(rewriter.getI1Type());
+      auto lhs0Mask = packInputs(maskType, op1.getLhsMask(), op3.getLhsMask());
+      auto lhs1Mask = packInputs(maskType, op2.getLhsMask(), op4.getLhsMask());
+      lhsMask = rewriter.create<arm_sve::Zip1IntrOp>(loc, maskType, lhs0Mask,
+                                                     lhs1Mask);
+
+      auto rhs0Mask = packInputs(maskType, op1.getRhsMask(), op3.getRhsMask());
+      auto rhs1Mask = packInputs(maskType, op2.getRhsMask(), op4.getRhsMask());
+      rhsMask = rewriter.create<arm_sve::Zip1IntrOp>(loc, maskType, rhs0Mask,
+                                                     rhs1Mask);
+    }
+
+    assert((kind == arm_sme::CombiningKind::Add ||
+            kind == arm_sme::CombiningKind::Sub) &&
+           "unhandled arm_sme::CombiningKind!");
+    if (isa<arith::ExtSIOp>(lhsExtOp) && isa<arith::ExtSIOp>(rhsExtOp)) {
+      if (kind == arm_sme::CombiningKind::Add)
+        rewriter.replaceOpWithNewOp<arm_sme::SMopaWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+      else
+        rewriter.replaceOpWithNewOp<arm_sme::SMopsWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+    } else if (isa<arith::ExtUIOp>(lhsExtOp) && isa<arith::ExtUIOp>(rhsExtOp)) {
+      if (kind == arm_sme::CombiningKind::Add)
+        rewriter.replaceOpWithNewOp<arm_sme::UMopaWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+      else
+        rewriter.replaceOpWithNewOp<arm_sme::UMopsWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+    } else if (isa<arith::ExtSIOp>(lhsExtOp) && isa<arith::ExtUIOp>(rhsExtOp)) {
+      if (kind == arm_sme::CombiningKind::Add)
+        rewriter.replaceOpWithNewOp<arm_sme::SuMopaWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+      else
+        rewriter.replaceOpWithNewOp<arm_sme::SuMopsWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+    } else if (isa<arith::ExtUIOp>(lhsExtOp) && isa<arith::ExtSIOp>(rhsExtOp)) {
+      if (kind == arm_sme::CombiningKind::Add)
+        rewriter.replaceOpWithNewOp<arm_sme::UsMopaWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+      else
+        rewriter.replaceOpWithNewOp<arm_sme::UsMopsWide4WayOp>(
+            op4, op.getResultType(), lhs, rhs, lhsMask, rhsMask, op1.getAcc());
+    } else
+      llvm_unreachable("unexpected extend op!");
+
+    op3.erase();
+    op2.erase();
+    op1.erase();
+
+    return success();
+  }
+
+private:
+  template <typename LhsExtOp, typename RhsExtOp = LhsExtOp>
+  LogicalResult isWidenable(PatternRewriter &rewriter,
+                            arm_sme::OuterProductOp op, VectorType resultType,
+                            VectorType inputType) const {
+    if (op.getResultType() != resultType)
+      return rewriter.notifyMatchFailure(
+          op, "unsupported result type, expected 'vector<[4]x[4]xi32>' or "
+              "'vector<[2]x[2]xi64>'");
+
+    auto lhsDefOp = op.getLhs().getDefiningOp<LhsExtOp>();
+    auto rhsDefOp = op.getRhs().getDefiningOp<RhsExtOp>();
+
+    if (!lhsDefOp || !rhsDefOp)
+      return rewriter.notifyMatchFailure(
+          op, "defining op of outerproduct operands must be 'arith.extsi' or "
+              "'arith.extui'");
+
+    auto lhsInType = cast<VectorType>(lhsDefOp->getOperand(0).getType());
+    auto rhsInType = cast<VectorType>(rhsDefOp->getOperand(0).getType());
+
+    if (lhsInType != inputType || rhsInType != inputType)
+      return rewriter.notifyMatchFailure(
+          op, "unsupported input types, expected 'vector<[4]xi8>' or "
+              "'vector<[2]xi16>'");
+    return success();
+  }
+};
+
 struct OuterProductWideningPass
     : public arm_sme::impl::OuterProductWideningBase<OuterProductWideningPass> {
 
@@ -230,7 +492,7 @@ struct OuterProductWideningPass
 
 void mlir::arm_sme::populateOuterProductWideningPatterns(
     RewritePatternSet &patterns) {
-  patterns.add<OuterProduct2WayWidening>(
+  patterns.add<OuterProduct2WayWidening, OuterProduct4WayWidening>(
       patterns.getContext());
 }
 

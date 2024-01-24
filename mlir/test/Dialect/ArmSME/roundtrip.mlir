@@ -1243,3 +1243,163 @@ func.func @arm_sme_umops_wide_2way_i16i16_to_i32(%vecA: vector<[8]xi16>, %vecB: 
   %result = arm_sme.umops_wide_2way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[4]x[4]xi32>
   return %result : vector<[4]x[4]xi32>
 }
+
+//===----------------------------------------------------------------------===//
+// arm_sme.smopa_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_smopa_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.smopa_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.smopa_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_smopa_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.smopa_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.smopa_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.smops_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_smops_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.smops_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.smops_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_smops_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.smops_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.smops_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.umopa_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_umopa_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.umopa_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.umopa_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_umopa_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.umopa_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.umopa_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.umops_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_umops_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.umops_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.umops_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_umops_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.umops_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.umops_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.sumopa_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_sumopa_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.sumopa_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.sumopa_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_sumopa_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.sumopa_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.sumopa_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.sumops_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_sumops_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.sumops_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %result = arm_sme.sumops_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %result : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_sumops_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.sumops_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %result = arm_sme.sumops_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %result : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.usmopa_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_usmopa_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.usmopa_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %reuslt = arm_sme.usmopa_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %reuslt : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_usmopa_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.usmopa_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %reuslt = arm_sme.usmopa_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %reuslt : vector<[2]x[2]xi64>
+}
+
+//===----------------------------------------------------------------------===//
+// arm_sme.usmops_wide_4way
+//===----------------------------------------------------------------------===//
+
+// -----
+
+func.func @arm_sme_usmops_wide_4way_i8i8_to_i32(%vecA: vector<[16]xi8>, %vecB: vector<[16]xi8>) -> vector<[4]x[4]xi32> {
+  // CHECK: arm_sme.usmops_wide_4way {{.*}}, {{.*}} : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  %reuslt = arm_sme.usmops_wide_4way %vecA, %vecB : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
+  return %reuslt : vector<[4]x[4]xi32>
+}
+
+// -----
+
+func.func @arm_sme_usmops_wide_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vector<[8]xi16>) -> vector<[2]x[2]xi64> {
+  // CHECK: arm_sme.usmops_wide_4way {{.*}}, {{.*}} : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  %reuslt = arm_sme.usmops_wide_4way %vecA, %vecB : vector<[8]xi16>, vector<[8]xi16> into vector<[2]x[2]xi64>
+  return %reuslt : vector<[2]x[2]xi64>
+}
