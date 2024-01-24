@@ -20968,9 +20968,10 @@ void RVVArgDispatcher::compute() {
       return;
     }
 
-    unsigned RegsNeeded = std::max(
-        ArgInfo.VT.getSizeInBits().getKnownMinValue() / RISCV::RVVBitsPerBlock,
-        1UL);
+    unsigned RegsNeeded =
+        std::max((unsigned)ArgInfo.VT.getSizeInBits().getKnownMinValue() /
+                     RISCV::RVVBitsPerBlock,
+                 (unsigned)1);
     unsigned TotalRegsNeeded = ArgInfo.NF * RegsNeeded;
     for (unsigned StartReg = 0; StartReg + TotalRegsNeeded <= NumArgVRs;
          StartReg += RegsNeeded) {
