@@ -257,6 +257,12 @@ module {
   llvm.func @frame_pointer_roundtrip() attributes {frame_pointer = #llvm.framePointerKind<"non-leaf">} {
     llvm.return
   }
+
+  llvm.func @unsafe_fp_math_roundtrip() attributes {unsafe_fp_math = true} {
+    // CHECK: @unsafe_fp_math_roundtrip
+    // CHECK-SAME: attributes {unsafe_fp_math = true}
+    llvm.return
+  }
 }
 
 // -----

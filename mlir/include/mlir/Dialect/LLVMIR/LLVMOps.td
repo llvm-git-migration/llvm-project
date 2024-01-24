@@ -1428,7 +1428,8 @@ def LLVM_LLVMFuncOp : LLVM_Op<"func", [
     OptionalAttr<LLVM_VScaleRangeAttr>:$vscale_range,
     OptionalAttr<FramePointerKindAttr>:$frame_pointer,
     OptionalAttr<StrAttr>:$target_cpu,
-    OptionalAttr<LLVM_TargetFeaturesAttr>:$target_features
+    OptionalAttr<LLVM_TargetFeaturesAttr>:$target_features,
+    OptionalAttr<BoolAttr>:$unsafe_fp_math
   );
 
   let regions = (region AnyRegion:$body);
