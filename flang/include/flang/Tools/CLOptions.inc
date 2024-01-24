@@ -315,7 +315,7 @@ inline void createDefaultFIRCodeGenPassPipeline(
   // Add function attributes
   fir::FunctionAttrTypes functionAttrs;
 
-  if (config.FramePointerKind != llvm::FramePointerKind::None) {
+  if (config.FramePointerKind != llvm::FramePointerKind::None || config.UnsafeFPMath) {
     if (config.FramePointerKind == llvm::FramePointerKind::NonLeaf)
       functionAttrs.framePointerKind =
           mlir::LLVM::framePointerKind::FramePointerKind::NonLeaf;
@@ -323,7 +323,7 @@ inline void createDefaultFIRCodeGenPassPipeline(
       functionAttrs.framePointerKind =
           mlir::LLVM::framePointerKind::FramePointerKind::All;
 
-    pm.addPass(fir::createFunctionAttrPass(functionAttrs));
+    pm.addPass(fir::createFunctionAttrPass(functionAttrs, config.UnsafeFPMath));
   }
 
   fir::addFIRToLLVMPass(pm, config);
