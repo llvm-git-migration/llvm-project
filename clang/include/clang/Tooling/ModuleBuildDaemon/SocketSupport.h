@@ -77,9 +77,8 @@ llvm::Expected<T> readMsgStructFromSocket(llvm::raw_socket_stream &Socket) {
   static_assert(std::is_base_of<cc1modbuildd::BaseMsg, T>::value);
 
   llvm::Expected<std::string> MaybeBuffer = readBufferFromSocket(Socket);
-  if (!MaybeBuffer) {
+  if (!MaybeBuffer)
     return std::move(MaybeBuffer.takeError());
-  }
   std::string Buffer = std::move(*MaybeBuffer);
 
   llvm::Expected<T> MaybeMsgStruct = convertBufferToMsgStruct<T>(Buffer);

@@ -128,7 +128,11 @@ int ModuleBuildDaemonServer::createDaemonSocket() {
       // Exit successfully if the socket address is already in use. When
       // translation units are compiled in parallel, until the socket file is
       // created, all clang invocations will try to spawn a module build daemon.
+#ifdef _WIN32
+      if (EC.value() == WSAEADDRINUSE) {
+#else
       if (EC == std::errc::address_in_use) {
+#endif
         exit(EXIT_SUCCESS);
       } else {
         llvm::errs() << "MBD failed to create unix socket: " << SE.message()
@@ -194,9 +198,8 @@ int ModuleBuildDaemonServer::listenForClients() {
       auto CurrentTime = std::chrono::steady_clock::now();
       auto ElapsedTime = std::chrono::duration_cast<std::chrono::seconds>(
           CurrentTime - StartTime);
-      if (ElapsedTime.count() >= 15)
+      if (ElapsedTime.count() >= TimeoutSec)
         shutdownDaemon();
-
       continue;
     }
 
