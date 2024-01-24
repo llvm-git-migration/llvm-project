@@ -132,12 +132,12 @@ ListeningSocket::accept(bool Block) {
           "Failed to set socket to non-blocking: ", getLastSocketErrorCode());
   }
 
+  std::error_code AcceptEC;
 #ifdef _WIN32
   SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
   if (WinAcceptSock == INVALID_SOCKET)
 #else
   int AcceptFD = ::accept(FD, NULL, NULL);
-  std::error_code AcceptEC;
   if (AcceptFD == -1)
 #endif
     AcceptEC = getLastSocketErrorCode();

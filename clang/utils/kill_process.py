@@ -15,16 +15,15 @@ def main():
 
     search_pattern = sys.argv[1]
 
-    for process in psutil.process_iter(['pid', 'name', 'cmdline']):
-        if 'clang' in process.info['name']:
-
+    for process in psutil.process_iter(["pid", "name", "cmdline"]):
+        if "clang" in process.info["name"]:
             PID = []
-            if search_pattern in ' '.join(process.info['cmdline']):
-                PID.append(process.info['pid'])
+            if search_pattern in " ".join(process.info["cmdline"]):
+                PID.append(process.info["pid"])
 
             if len(PID) == 0:
                 return
-            
+
             if len(PID) > 1:
                 sys.stderr.write("Error: more then one process matches search pattern")
 
