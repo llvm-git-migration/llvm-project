@@ -1,5 +1,4 @@
 // Check that a clang invocation can spawn and handshake with a module build daemon
-// REQUIRES: !system-windows
 
 // RUN: %kill-process "-cc1modbuildd mbd-handshake"
 // RUN: rm -rf mbd-handshake %t
