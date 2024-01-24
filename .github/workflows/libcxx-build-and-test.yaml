@@ -199,3 +199,9 @@ jobs:
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
+  windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - name: clang-cl (DLL)
+        run: bash libcxx/utils/ci/run-buildbot clang-cl-dll
