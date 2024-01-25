@@ -22,6 +22,7 @@
 # FULL-NEXT: stackPtrOffsetReg:  '$sgpr13'
 # FULL-NEXT: bytesInStackArgArea: 0
 # FULL-NEXT: returnsVoid: true
+# FULL-NEXT: preserveExecCopyReservedReg: false
 # FULL-NEXT: argumentInfo:
 # FULL-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 # FULL-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }
@@ -127,6 +128,7 @@ body:             |
 # FULL-NEXT: stackPtrOffsetReg:  '$sp_reg'
 # FULL-NEXT: bytesInStackArgArea: 0
 # FULL-NEXT: returnsVoid: true
+# FULL-NEXT: preserveExecCopyReservedReg: false
 # FULL-NEXT: argumentInfo:
 # FULL-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 # FULL-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }
@@ -201,6 +203,7 @@ body:             |
 # FULL-NEXT: stackPtrOffsetReg:  '$sp_reg'
 # FULL-NEXT: bytesInStackArgArea: 0
 # FULL-NEXT: returnsVoid: true
+# FULL-NEXT: preserveExecCopyReservedReg: false
 # FULL-NEXT: argumentInfo:
 # FULL-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 # FULL-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }
@@ -276,6 +279,7 @@ body:             |
 # FULL-NEXT: stackPtrOffsetReg:  '$sp_reg'
 # FULL-NEXT: bytesInStackArgArea: 0
 # FULL-NEXT: returnsVoid: true
+# FULL-NEXT: preserveExecCopyReservedReg: false
 # FULL-NEXT: argumentInfo:
 # FULL-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 # FULL-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }
@@ -519,6 +523,30 @@ body:             |
 name: returns_void_false
 machineFunctionInfo:
   returnsVoid: false
+body:             |
+  bb.0:
+    SI_RETURN
+
+...
+
+---
+# ALL-LABEL: name: preserve_exec_copy_reserved_reg_true
+# FULL: preserveExecCopyReservedReg: true
+name: preserve_exec_copy_reserved_reg_true
+machineFunctionInfo:
+  preserveExecCopyReservedReg: true
+body:             |
+  bb.0:
+    SI_RETURN
+
+...
+
+---
+# ALL-LABEL: name: preserve_exec_copy_reserved_reg_false
+# FULL: preserveExecCopyReservedReg: false
+name: preserve_exec_copy_reserved_reg_false
+machineFunctionInfo:
+  preserveExecCopyReservedReg: false
 body:             |
   bb.0:
     SI_RETURN

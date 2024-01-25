@@ -25,6 +25,7 @@
 ; CHECK-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT: bytesInStackArgArea: 0
 ; CHECK-NEXT: returnsVoid: true
+; CHECK-NEXT: preserveExecCopyReservedReg: false
 ; CHECK-NEXT: argumentInfo:
 ; CHECK-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 ; CHECK-NEXT: kernargSegmentPtr: { reg: '$sgpr4_sgpr5' }
@@ -73,6 +74,7 @@ define amdgpu_kernel void @kernel(i32 %arg0, i64 %arg1, <16 x i32> %arg2) {
 ; CHECK-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT: bytesInStackArgArea: 0
 ; CHECK-NEXT: returnsVoid: true
+; CHECK-NEXT: preserveExecCopyReservedReg: false
 ; CHECK-NEXT: argumentInfo:
 ; CHECK-NEXT: privateSegmentWaveByteOffset: { reg: '$sgpr3' }
 ; CHECK-NEXT: implicitBufferPtr: { reg: '$sgpr0_sgpr1' }
@@ -132,6 +134,7 @@ define amdgpu_ps void @gds_size_shader(i32 %arg0, i32 inreg %arg1) #5 {
 ; CHECK-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT: bytesInStackArgArea: 0
 ; CHECK-NEXT: returnsVoid: true
+; CHECK-NEXT: preserveExecCopyReservedReg: false
 ; CHECK-NEXT: argumentInfo:
 ; CHECK-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 ; CHECK-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }
@@ -183,6 +186,7 @@ define void @function() {
 ; CHECK-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT: bytesInStackArgArea: 0
 ; CHECK-NEXT: returnsVoid: true
+; CHECK-NEXT: preserveExecCopyReservedReg: false
 ; CHECK-NEXT: argumentInfo:
 ; CHECK-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 ; CHECK-NEXT: dispatchPtr:     { reg: '$sgpr4_sgpr5' }

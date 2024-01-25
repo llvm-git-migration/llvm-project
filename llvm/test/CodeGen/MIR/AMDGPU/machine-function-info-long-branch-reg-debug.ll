@@ -22,6 +22,7 @@
 ; CHECK-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT: bytesInStackArgArea: 0
 ; CHECK-NEXT: returnsVoid:     true
+; CHECK-NEXT: preserveExecCopyReservedReg: false
 ; CHECK-NEXT: argumentInfo:
 ; CHECK-NEXT: privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 ; CHECK-NEXT: kernargSegmentPtr: { reg: '$sgpr4_sgpr5' }

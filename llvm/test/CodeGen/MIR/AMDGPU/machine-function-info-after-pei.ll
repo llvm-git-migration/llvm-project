@@ -21,6 +21,7 @@
 ; AFTER-PEI-NEXT: stackPtrOffsetReg: '$sgpr32'
 ; AFTER-PEI-NEXT: bytesInStackArgArea: 0
 ; AFTER-PEI-NEXT: returnsVoid: true
+; AFTER-PEI-NEXT: preserveExecCopyReservedReg: false
 ; AFTER-PEI-NEXT: argumentInfo:
 ; AFTER-PEI-NEXT:   privateSegmentBuffer: { reg: '$sgpr0_sgpr1_sgpr2_sgpr3' }
 ; AFTER-PEI-NEXT:   kernargSegmentPtr: { reg: '$sgpr4_sgpr5' }

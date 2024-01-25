@@ -22,6 +22,7 @@
 ; CHECK-NEXT:   stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT:   bytesInStackArgArea: 0
 ; CHECK-NEXT:   returnsVoid:     true
+; CHECK-NEXT:   preserveExecCopyReservedReg: false
 ; CHECK-NEXT:   argumentInfo:
 ; CHECK-NEXT:     kernargSegmentPtr: { reg: '$sgpr0_sgpr1' }
 ; CHECK-NEXT:     workGroupIDX:    { reg: '$sgpr2' }
@@ -287,6 +288,7 @@
 ; CHECK-NEXT:   stackPtrOffsetReg: '$sgpr32'
 ; CHECK-NEXT:   bytesInStackArgArea: 0
 ; CHECK-NEXT:   returnsVoid:     true
+; CHECK-NEXT:   preserveExecCopyReservedReg: false
 ; CHECK-NEXT:   argumentInfo:
 ; CHECK-NEXT:     kernargSegmentPtr: { reg: '$sgpr0_sgpr1' }
 ; CHECK-NEXT:     workGroupIDX:    { reg: '$sgpr2' }
