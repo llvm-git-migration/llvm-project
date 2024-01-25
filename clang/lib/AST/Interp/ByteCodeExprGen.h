@@ -288,6 +288,7 @@ private:
   }
 
   bool emitComplexReal(const Expr *SubExpr);
+  bool emitComplexBoolCast(const Expr *E);
 
   bool emitRecordDestruction(const Descriptor *Desc);
   unsigned collectBaseOffset(const RecordType *BaseType,

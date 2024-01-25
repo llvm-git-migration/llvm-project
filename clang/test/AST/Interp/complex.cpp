@@ -54,6 +54,8 @@ constexpr int ignoredCast() {
   D1;
   (int)D1;
   (double)D1;
+  (bool)D1;
+  (bool)I2;
   return 0;
 }
 static_assert(ignoredCast() == 0, "");
