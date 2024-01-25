@@ -288,14 +288,16 @@ void test_huge_uninit() {
 
 // UNINIT-LABEL:  test_huge_small_init(
 // ZERO-LABEL:    test_huge_small_init(
-// ZERO: call void @llvm.memset{{.*}}, i8 0, i64 65536,
+// ZERO: %[[v0:.*]] = getelementptr inbounds i8, ptr %{{.*}}, i64 4
+// ZERO: call void @llvm.memset{{.*}}(ptr {{.*}} %[[v0]], i8 0, i64 65532,
 // ZERO-NOT: !annotation
 // ZERO: store i8 97,
 // ZERO: store i8 98,
 // ZERO: store i8 99,
 // ZERO: store i8 100,
 // PATTERN-LABEL: test_huge_small_init(
-// PATTERN: call void @llvm.memset{{.*}}, i8 0, i64 65536,
+// PATTERN: %[[v0:.*]] = getelementptr inbounds i8, ptr %{{.*}}, i64 4
+// PATTERN: call void @llvm.memset{{.*}}(ptr {{.*}} %[[v0]], i8 0, i64 65532,
 // PATTERN-NOT: !annotation
 // PATTERN: store i8 97,
 // PATTERN: store i8 98,
