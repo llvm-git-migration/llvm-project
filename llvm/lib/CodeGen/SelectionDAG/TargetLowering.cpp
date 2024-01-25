@@ -9031,7 +9031,6 @@ SDValue TargetLowering::expandBSWAP(SDNode *N, SelectionDAG &DAG) const {
   SDLoc dl(N);
   EVT VT = N->getValueType(0);
   SDValue Op = N->getOperand(0);
-
   if (!VT.isSimple())
     return SDValue();
 

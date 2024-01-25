@@ -11,12 +11,13 @@ body:             |
 
     ; CHECK-LABEL: name: bswap_s16
     ; CHECK: liveins: $w0
-    ; CHECK: [[COPY:%[0-9]+]]:_(s32) = COPY $w0
-    ; CHECK: [[BSWAP:%[0-9]+]]:_(s32) = G_BSWAP [[COPY]]
-    ; CHECK: [[C:%[0-9]+]]:_(s64) = G_CONSTANT i64 16
-    ; CHECK: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[BSWAP]], [[C]](s64)
-    ; CHECK: $w0 = COPY [[LSHR]](s32)
-    ; CHECK: RET_ReallyLR implicit $w0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $w0
+    ; CHECK-NEXT: [[BSWAP:%[0-9]+]]:_(s32) = G_BSWAP [[COPY]]
+    ; CHECK-NEXT: [[C:%[0-9]+]]:_(s64) = G_CONSTANT i64 16
+    ; CHECK-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[BSWAP]], [[C]](s64)
+    ; CHECK-NEXT: $w0 = COPY [[LSHR]](s32)
+    ; CHECK-NEXT: RET_ReallyLR implicit $w0
     %1:_(s32) = COPY $w0
     %0:_(s16) = G_TRUNC %1(s32)
     %2:_(s16) = G_BSWAP %0
@@ -32,10 +33,11 @@ body:             |
     liveins: $w0
     ; CHECK-LABEL: name: bswap_s32_legal
     ; CHECK: liveins: $w0
-    ; CHECK: %copy:_(s32) = COPY $w0
-    ; CHECK: %bswap:_(s32) = G_BSWAP %copy
-    ; CHECK: $w0 = COPY %bswap(s32)
-    ; CHECK: RET_ReallyLR implicit $w0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(s32) = COPY $w0
+    ; CHECK-NEXT: %bswap:_(s32) = G_BSWAP %copy
+    ; CHECK-NEXT: $w0 = COPY %bswap(s32)
+    ; CHECK-NEXT: RET_ReallyLR implicit $w0
     %copy:_(s32) = COPY $w0
     %bswap:_(s32) = G_BSWAP %copy
     $w0 = COPY %bswap(s32)
@@ -49,14 +51,51 @@ body:             |
     liveins: $x0
     ; CHECK-LABEL: name: bswap_s64_legal
     ; CHECK: liveins: $x0
-    ; CHECK: %copy:_(s64) = COPY $x0
-    ; CHECK: %bswap:_(s64) = G_BSWAP %copy
-    ; CHECK: $x0 = COPY %bswap(s64)
-    ; CHECK: RET_ReallyLR implicit $x0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(s64) = COPY $x0
+    ; CHECK-NEXT: %bswap:_(s64) = G_BSWAP %copy
+    ; CHECK-NEXT: $x0 = COPY %bswap(s64)
+    ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %copy:_(s64) = COPY $x0
     %bswap:_(s64) = G_BSWAP %copy
     $x0 = COPY %bswap(s64)
     RET_ReallyLR implicit $x0
+...
+---
+name:            bswap_v4s16_legal
+tracksRegLiveness: true
+body:             |
+  bb.0:
+    liveins: $d0
+    ; CHECK-LABEL: name: bswap_v4s16_legal
+    ; CHECK: liveins: $d0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(<4 x s16>) = COPY $d0
+    ; CHECK-NEXT: %bswap:_(<4 x s16>) = G_BSWAP %copy
+    ; CHECK-NEXT: $d0 = COPY %bswap(<4 x s16>)
+    ; CHECK-NEXT: RET_ReallyLR implicit $d0
+    %copy:_(<4 x s16>) = COPY $d0
+    %bswap:_(<4 x s16>) = G_BSWAP %copy
+    $d0 = COPY %bswap(<4 x s16>)
+    RET_ReallyLR implicit $d0
+...
+---
+name:            bswap_v8s16_legal
+tracksRegLiveness: true
+body:             |
+  bb.0:
+    liveins: $q0
+    ; CHECK-LABEL: name: bswap_v8s16_legal
+    ; CHECK: liveins: $q0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(<8 x s16>) = COPY $q0
+    ; CHECK-NEXT: %bswap:_(<8 x s16>) = G_BSWAP %copy
+    ; CHECK-NEXT: $q0 = COPY %bswap(<8 x s16>)
+    ; CHECK-NEXT: RET_ReallyLR implicit $q0
+    %copy:_(<8 x s16>) = COPY $q0
+    %bswap:_(<8 x s16>) = G_BSWAP %copy
+    $q0 = COPY %bswap(<8 x s16>)
+    RET_ReallyLR implicit $q0
 ...
 ---
 name:            bswap_v4s32_legal
@@ -66,10 +105,11 @@ body:             |
     liveins: $q0
     ; CHECK-LABEL: name: bswap_v4s32_legal
     ; CHECK: liveins: $q0
-    ; CHECK: %copy:_(<4 x s32>) = COPY $q0
-    ; CHECK: %bswap:_(<4 x s32>) = G_BSWAP %copy
-    ; CHECK: $q0 = COPY %bswap(<4 x s32>)
-    ; CHECK: RET_ReallyLR implicit $q0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(<4 x s32>) = COPY $q0
+    ; CHECK-NEXT: %bswap:_(<4 x s32>) = G_BSWAP %copy
+    ; CHECK-NEXT: $q0 = COPY %bswap(<4 x s32>)
+    ; CHECK-NEXT: RET_ReallyLR implicit $q0
     %copy:_(<4 x s32>) = COPY $q0
     %bswap:_(<4 x s32>) = G_BSWAP %copy
     $q0 = COPY %bswap(<4 x s32>)
@@ -83,10 +123,11 @@ body:             |
     liveins: $d0
     ; CHECK-LABEL: name: bswap_v2s32_legal
     ; CHECK: liveins: $d0
-    ; CHECK: %copy:_(<2 x s32>) = COPY $d0
-    ; CHECK: %bswap:_(<2 x s32>) = G_BSWAP %copy
-    ; CHECK: $d0 = COPY %bswap(<2 x s32>)
-    ; CHECK: RET_ReallyLR implicit $d0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(<2 x s32>) = COPY $d0
+    ; CHECK-NEXT: %bswap:_(<2 x s32>) = G_BSWAP %copy
+    ; CHECK-NEXT: $d0 = COPY %bswap(<2 x s32>)
+    ; CHECK-NEXT: RET_ReallyLR implicit $d0
     %copy:_(<2 x s32>) = COPY $d0
     %bswap:_(<2 x s32>) = G_BSWAP %copy
     $d0 = COPY %bswap(<2 x s32>)
@@ -100,10 +141,11 @@ body:             |
     liveins: $q0
     ; CHECK-LABEL: name: bswap_v2s64_legal
     ; CHECK: liveins: $q0
-    ; CHECK: %copy:_(<2 x s64>) = COPY $q0
-    ; CHECK: %bswap:_(<2 x s64>) = G_BSWAP %copy
-    ; CHECK: $q0 = COPY %bswap(<2 x s64>)
-    ; CHECK: RET_ReallyLR implicit $q0
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %copy:_(<2 x s64>) = COPY $q0
+    ; CHECK-NEXT: %bswap:_(<2 x s64>) = G_BSWAP %copy
+    ; CHECK-NEXT: $q0 = COPY %bswap(<2 x s64>)
+    ; CHECK-NEXT: RET_ReallyLR implicit $q0
     %copy:_(<2 x s64>) = COPY $q0
     %bswap:_(<2 x s64>) = G_BSWAP %copy
     $q0 = COPY %bswap(<2 x s64>)
