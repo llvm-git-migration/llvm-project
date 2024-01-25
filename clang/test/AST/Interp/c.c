@@ -150,3 +150,14 @@ void bar_0(void) {
   *(int *)(&S.a) = 0; // all-warning {{cast from 'const int *' to 'int *' drops const qualifier}}
   *(int *)(&S.b) = 0; // all-warning {{cast from 'const int *' to 'int *' drops const qualifier}}
 }
+
+/// Complex-to-bool casts.
+const int A =  ((_Complex double)1.0 ? 21 : 1);
+_Static_assert(A == 21, ""); // pedantic-ref-warning {{GNU extension}} \
+                             // pedantic-expected-warning {{GNU extension}}
+const int CTI1 = ((_Complex double){0.0, 1.0});
+_Static_assert(CTI1 == 0, "");
+const _Bool CTB2 = (_Bool)(_Complex double){0.0, 1.0};
+_Static_assert(CTB2, "");
+const _Bool CTB3 = (_Complex double){0.0, 1.0};
+_Static_assert(CTB3, "");
