@@ -129,3 +129,7 @@ _Static_assert(sizeof(name2) == 0, ""); // expected-error {{failed}} \
                                         // expected-note {{evaluates to}} \
                                         // pedantic-expected-error {{failed}} \
                                         // pedantic-expected-note {{evaluates to}}
+
+const int A =  ((_Complex double)1.0 ? 21 : 1);
+_Static_assert(A == 21, ""); // pedantic-ref-warning {{GNU extension}} \
+                             // pedantic-expected-warning {{GNU extension}}
