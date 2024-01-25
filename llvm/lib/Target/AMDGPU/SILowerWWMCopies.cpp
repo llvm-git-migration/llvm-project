@@ -137,5 +137,10 @@ bool SILowerWWMCopies::runOnMachineFunction(MachineFunction &MF) {
     }
   }
 
+  // SGPRs reserved for exec copy should be preserved as we encountered WWM_COPY
+  // instances.
+  if (Changed)
+    MFI->setPreserveExecCopyReservedReg();
+
   return Changed;
 }

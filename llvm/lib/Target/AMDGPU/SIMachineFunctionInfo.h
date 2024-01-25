@@ -277,6 +277,7 @@ struct SIMachineFunctionInfo final : public yaml::MachineFunctionInfo {
 
   unsigned BytesInStackArgArea = 0;
   bool ReturnsVoid = true;
+  bool PreserveExecCopyReservedReg = false;
 
   std::optional<SIArgumentInfo> ArgInfo;
 
@@ -321,6 +322,8 @@ template <> struct MappingTraits<SIMachineFunctionInfo> {
                        StringValue("$sp_reg"));
     YamlIO.mapOptional("bytesInStackArgArea", MFI.BytesInStackArgArea, 0u);
     YamlIO.mapOptional("returnsVoid", MFI.ReturnsVoid, true);
+    YamlIO.mapOptional("preserveExecCopyReservedReg",
+                       MFI.PreserveExecCopyReservedReg, false);
     YamlIO.mapOptional("argumentInfo", MFI.ArgInfo);
     YamlIO.mapOptional("psInputAddr", MFI.PSInputAddr, 0u);
     YamlIO.mapOptional("psInputEnable", MFI.PSInputEnable, 0u);
@@ -530,6 +533,11 @@ private:
   // To save/restore EXEC MASK around WWM spills and copies.
   Register SGPRForEXECCopy;
 
+  // To save/restore the exec copy reserved register at function entry/exit.
+  // Since the handling of wwm copies and spills are scattered across multiple
+  // passes, this field would help efficiently insert its spills.
+  bool PreserveExecCopyReservedReg = false;
+
   DenseMap<int, VGPRSpillToAGPR> VGPRToAGPRSpills;
 
   // AGPRs used for VGPR spills.
@@ -687,6 +695,12 @@ public:
   Register getSGPRForEXECCopy() const { return SGPRForEXECCopy; }
 
   void setSGPRForEXECCopy(Register Reg) { SGPRForEXECCopy = Reg; }
+
+  void setPreserveExecCopyReservedReg() { PreserveExecCopyReservedReg = true; }
+
+  bool shouldPreserveExecCopyReservedReg() const {
+    return PreserveExecCopyReservedReg;
+  }
 
   ArrayRef<MCPhysReg> getVGPRSpillAGPRs() const {
     return SpillVGPR;

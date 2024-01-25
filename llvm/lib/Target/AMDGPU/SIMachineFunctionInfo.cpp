@@ -671,8 +671,8 @@ yaml::SIMachineFunctionInfo::SIMachineFunctionInfo(
     const llvm::MachineFunction &MF)
     : ExplicitKernArgSize(MFI.getExplicitKernArgSize()),
       MaxKernArgAlign(MFI.getMaxKernArgAlign()), LDSSize(MFI.getLDSSize()),
-      GDSSize(MFI.getGDSSize()),
-      DynLDSAlign(MFI.getDynLDSAlign()), IsEntryFunction(MFI.isEntryFunction()),
+      GDSSize(MFI.getGDSSize()), DynLDSAlign(MFI.getDynLDSAlign()),
+      IsEntryFunction(MFI.isEntryFunction()),
       NoSignedZerosFPMath(MFI.hasNoSignedZerosFPMath()),
       MemoryBound(MFI.isMemoryBound()), WaveLimiter(MFI.needsWaveLimiter()),
       HasSpilledSGPRs(MFI.hasSpilledSGPRs()),
@@ -684,9 +684,9 @@ yaml::SIMachineFunctionInfo::SIMachineFunctionInfo(
       StackPtrOffsetReg(regToString(MFI.getStackPtrOffsetReg(), TRI)),
       BytesInStackArgArea(MFI.getBytesInStackArgArea()),
       ReturnsVoid(MFI.returnsVoid()),
+      PreserveExecCopyReservedReg(MFI.shouldPreserveExecCopyReservedReg()),
       ArgInfo(convertArgumentInfo(MFI.getArgInfo(), TRI)),
-      PSInputAddr(MFI.getPSInputAddr()),
-      PSInputEnable(MFI.getPSInputEnable()),
+      PSInputAddr(MFI.getPSInputAddr()), PSInputEnable(MFI.getPSInputEnable()),
       Mode(MFI.getMode()) {
   for (Register Reg : MFI.getWWMReservedRegs())
     WWMReservedRegs.push_back(regToString(Reg, TRI));
@@ -728,6 +728,7 @@ bool SIMachineFunctionInfo::initializeBaseYamlFields(
   HasSpilledVGPRs = YamlMFI.HasSpilledVGPRs;
   BytesInStackArgArea = YamlMFI.BytesInStackArgArea;
   ReturnsVoid = YamlMFI.ReturnsVoid;
+  PreserveExecCopyReservedReg = YamlMFI.PreserveExecCopyReservedReg;
 
   if (YamlMFI.ScavengeFI) {
     auto FIOrErr = YamlMFI.ScavengeFI->getFI(MF.getFrameInfo());

@@ -1487,8 +1487,7 @@ void SIFrameLowering::processFunctionBeforeFrameIndicesReplaced(
 // The special SGPR spills like the one needed for FP, BP or any reserved
 // registers delayed until frame lowering.
 void SIFrameLowering::determinePrologEpilogSGPRSaves(
-    MachineFunction &MF, BitVector &SavedVGPRs,
-    bool NeedExecCopyReservedReg) const {
+    MachineFunction &MF, BitVector &SavedVGPRs) const {
   MachineFrameInfo &FrameInfo = MF.getFrameInfo();
   MachineRegisterInfo &MRI = MF.getRegInfo();
   SIMachineFunctionInfo *MFI = MF.getInfo<SIMachineFunctionInfo>();
@@ -1504,9 +1503,10 @@ void SIFrameLowering::determinePrologEpilogSGPRSaves(
 
   const TargetRegisterClass &RC = *TRI->getWaveMaskRegClass();
 
-  if (NeedExecCopyReservedReg) {
+  if (MFI->shouldPreserveExecCopyReservedReg()) {
     Register ReservedReg = MFI->getSGPRForEXECCopy();
     assert(ReservedReg && "Should have reserved an SGPR for EXEC copy.");
+    MRI.reserveReg(ReservedReg, TRI);
     Register UnusedScratchReg = findUnusedRegister(MRI, LiveUnits, RC);
     if (UnusedScratchReg) {
       // If found any unused scratch SGPR, reserve the register itself for Exec
@@ -1570,7 +1570,7 @@ void SIFrameLowering::determineCalleeSaves(MachineFunction &MF,
   const GCNSubtarget &ST = MF.getSubtarget<GCNSubtarget>();
   const SIRegisterInfo *TRI = ST.getRegisterInfo();
   const SIInstrInfo *TII = ST.getInstrInfo();
-  bool NeedExecCopyReservedReg = false;
+  bool NeedsExecCopyReservedReg = false;
 
   MachineInstr *ReturnMI = nullptr;
   for (MachineBasicBlock &MBB : MF) {
@@ -1588,7 +1588,7 @@ void SIFrameLowering::determineCalleeSaves(MachineFunction &MF,
       else if (MI.getOpcode() == AMDGPU::SI_RESTORE_S32_FROM_VGPR)
         MFI->allocateWWMSpill(MF, MI.getOperand(1).getReg());
       else if (TII->isWWMRegSpillOpcode(MI.getOpcode()))
-        NeedExecCopyReservedReg = true;
+        NeedsExecCopyReservedReg = true;
       else if (MI.getOpcode() == AMDGPU::SI_RETURN ||
                MI.getOpcode() == AMDGPU::SI_RETURN_TO_EPILOG ||
                (MFI->isChainFunction() &&
@@ -1601,6 +1601,10 @@ void SIFrameLowering::determineCalleeSaves(MachineFunction &MF,
       }
     }
   }
+
+  // If found any wwm-spills, preserve the register(s) used for exec copy.
+  if (NeedsExecCopyReservedReg)
+    MFI->setPreserveExecCopyReservedReg();
 
   // Remove any VGPRs used in the return value because these do not need to be saved.
   // This prevents CSR restore from clobbering return VGPRs.
@@ -1620,7 +1624,7 @@ void SIFrameLowering::determineCalleeSaves(MachineFunction &MF,
   if (!ST.hasGFX90AInsts())
     SavedVGPRs.clearBitsInMask(TRI->getAllAGPRRegMask());
 
-  determinePrologEpilogSGPRSaves(MF, SavedVGPRs, NeedExecCopyReservedReg);
+  determinePrologEpilogSGPRSaves(MF, SavedVGPRs);
 
   // The Whole-Wave VGPRs need to be specially inserted in the prolog, so don't
   // allow the default insertion to handle them.
