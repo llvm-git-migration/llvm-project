@@ -905,6 +905,47 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
   EmitStoreOfScalar(value, lvalue, /* isInitialization */ true);
 }
 
+static size_t
+CountLeadingNonNullBytes(const llvm::DataLayout &DL, llvm::Constant *Init) {
+  // Zero and Undef never requires any extra stores.
+  if (Init->isNullValue() || isa<llvm::ConstantAggregateZero>(Init) ||
+      isa<llvm::ConstantPointerNull>(Init) || isa<llvm::UndefValue>(Init))
+    return 0u;
+  if (isa<llvm::ConstantInt>(Init) || isa<llvm::ConstantFP>(Init) ||
+      isa<llvm::ConstantVector>(Init) || isa<llvm::BlockAddress>(Init) ||
+      isa<llvm::ConstantExpr>(Init))
+    return DL.getTypeAllocSize(Init->getType());
+
+  // See if we can emit each element.
+  if (isa<llvm::ConstantArray>(Init) || isa<llvm::ConstantStruct>(Init)) {
+    size_t LeadingNonNullBytes = 0;
+    for (unsigned i = 0, e = Init->getNumOperands(); i != e; ++i) {
+      llvm::Constant *Elt = cast<llvm::Constant>(Init->getOperand(i));
+      size_t ExtraBytes = CountLeadingNonNullBytes(DL, Elt);
+      if (!ExtraBytes)
+        return LeadingNonNullBytes;
+      LeadingNonNullBytes += ExtraBytes;
+    }
+    return LeadingNonNullBytes;
+  }
+
+  if (llvm::ConstantDataSequential *CDS =
+          dyn_cast<llvm::ConstantDataSequential>(Init)) {
+    size_t LeadingNonNullBytes = 0;
+    for (unsigned i = 0, e = CDS->getNumElements(); i != e; ++i) {
+      llvm::Constant *Elt = CDS->getElementAsConstant(i);
+      size_t ExtraBytes = CountLeadingNonNullBytes(DL, Elt);
+      if (!ExtraBytes)
+        return LeadingNonNullBytes;
+      LeadingNonNullBytes += ExtraBytes;
+    }
+    return LeadingNonNullBytes;
+  }
+
+  // Anything else is hard and scary.
+  return 0;
+}
+
 /// Decide whether we can emit the non-zero parts of the specified initializer
 /// with equal or fewer than NumStores scalar stores.
 static bool canEmitInitWithFewStoresAfterBZero(llvm::Constant *Init,
@@ -1209,8 +1250,23 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
   // If the initializer is all or mostly the same, codegen with bzero / memset
   // then do a few stores afterward.
   if (shouldUseBZeroPlusStoresToInitialize(constant, ConstantSize)) {
-    auto *I = Builder.CreateMemSet(Loc, llvm::ConstantInt::get(CGM.Int8Ty, 0),
-                                   SizeVal, isVolatile);
+    size_t LeadingNonNullBytes =
+        CountLeadingNonNullBytes(CGM.getDataLayout(), constant);
+    // llvm::errs() << LeadingNonNullBytes << " out of " << ConstantSize <<
+    // "\n";
+
+    llvm::Constant *Z8 = llvm::ConstantInt::get(CGM.Int8Ty, 0);
+    Address AdjustedLoc =
+        LeadingNonNullBytes ? Builder.CreateConstInBoundsByteGEP(
+                                  Loc.withElementType(CGM.Int8Ty),
+                                  CharUnits::fromQuantity(LeadingNonNullBytes))
+                            : Loc;
+    auto *I = Builder.CreateMemSet(
+        AdjustedLoc, Z8,
+        llvm::ConstantInt::get(CGM.IntPtrTy,
+                               ConstantSize - LeadingNonNullBytes),
+        isVolatile);
+
     if (IsAutoInit)
       I->addAnnotationMetadata("auto-init");
 
