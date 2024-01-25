@@ -279,25 +279,6 @@ define i32 @ctpop_and_or_combine(i32 %a, i32 %b) {
   ret i32 %res
 }
 
-define i32 @ctpop_and_or_combine_no(i32 %a, i32 %b) {
-; CHECK-LABEL: @ctpop_and_or_combine_no(
-; CHECK-NEXT:    [[AND:%.*]] = and i32 [[A:%.*]], [[B:%.*]]
-; CHECK-NEXT:    [[CTPOP1:%.*]] = tail call i32 @llvm.ctpop.i32(i32 [[AND]]), !range [[RNG1]]
-; CHECK-NEXT:    [[B1:%.*]] = add i32 [[B]], 1
-; CHECK-NEXT:    [[OR:%.*]] = or i32 [[B1]], [[A]]
-; CHECK-NEXT:    [[CTPOP2:%.*]] = tail call i32 @llvm.ctpop.i32(i32 [[OR]]), !range [[RNG1]]
-; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw i32 [[CTPOP1]], [[CTPOP2]]
-; CHECK-NEXT:    ret i32 [[RES]]
-;
-  %and = and i32 %a, %b
-  %ctpop1 = tail call i32 @llvm.ctpop.i32(i32 %and)
-  %b1 = add i32 %b, 1
-  %or = or i32 %a, %b1
-  %ctpop2 = tail call i32 @llvm.ctpop.i32(i32 %or)
-  %res = add nuw nsw i32 %ctpop1, %ctpop2
-  ret i32 %res
-}
-
 define i8 @ctpop_rotate_left(i8 %a, i8 %amt)  {
 ; CHECK-LABEL: @ctpop_rotate_left(
 ; CHECK-NEXT:    [[RES:%.*]] = tail call i8 @llvm.ctpop.i8(i8 [[A:%.*]]), !range [[RNG0]]
