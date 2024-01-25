@@ -244,12 +244,14 @@ bool CallStackTrie::buildAndAttachMIBMetadata(CallBase *CI) {
   MIBCallStack.push_back(AllocStackId);
   std::vector<Metadata *> MIBNodes;
   assert(!Alloc->Callers.empty() && "addCallStack has not been called yet");
-  buildMIBNodes(Alloc, Ctx, MIBCallStack, MIBNodes,
-                /*CalleeHasAmbiguousCallerContext=*/true);
-  assert(MIBCallStack.size() == 1 &&
-         "Should only be left with Alloc's location in stack");
-  CI->setMetadata(LLVMContext::MD_memprof, MDNode::get(Ctx, MIBNodes));
-  return true;
+  if (buildMIBNodes(Alloc, Ctx, MIBCallStack, MIBNodes,
+                    Alloc->Callers.size() > 1)) {
+    assert(MIBCallStack.size() == 1 &&
+           "Should only be left with Alloc's location in stack");
+    CI->setMetadata(LLVMContext::MD_memprof, MDNode::get(Ctx, MIBNodes));
+    return true;
+  }
+  return false;
 }
 
 template <>
