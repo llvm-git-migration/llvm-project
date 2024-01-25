@@ -902,7 +902,7 @@ struct BBAddrMap {
   // Struct representing the BBAddrMap information for a contiguous range of
   // basic blocks (a function or a basic block section).
   struct BBRangeEntry {
-    uint64_t BaseAddress;           // Base address of the range.
+    uint64_t BaseAddress = 0        // Base address of the range.
     std::vector<BBEntry> BBEntries; // Basic block entries for this range.
 
     // Equality operator for unit testing.
@@ -913,16 +913,14 @@ struct BBAddrMap {
     }
   };
 
-  // All ranges for this function. The first range always corresponds to the
-  // function entry.
+  // All ranges for this function. Cannot be empty. The first range always
+  // corresponds to the function entry.
   std::vector<BBRangeEntry> BBRanges;
 
   // Returns the function address associated with this BBAddrMap, which is
-  // stored as the `BaseAddress` of its first BBRangeEntry. Returns 0 if
-  // BBRanges is empty.
+  // stored as the `BaseAddress` of its first BBRangeEntry.
   uint64_t getFunctionAddress() const {
-    if (BBRanges.empty())
-      return 0;
+    assert(!BBRanges.empty());
     return BBRanges.front().BaseAddress;
   }
 
