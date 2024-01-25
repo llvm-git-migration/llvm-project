@@ -366,6 +366,12 @@ static cl::opt<bool> AlwaysConvertToRanges(
     cl::desc("This option is for testing purposes only. It forces BOLT to "
              "convert low_pc/high_pc to ranges always."),
     cl::ReallyHidden, cl::init(false), cl::cat(BoltCategory));
+
+cl::opt<std::string> CompDirOverride(
+    "comp-dir-override",
+    cl::desc("Overrides DW_AT_comp_dir which is used with DW_AT_dwo_name to "
+             "construct a path to *.dwo files."),
+    cl::init(""), cl::cat(BoltCategory));
 } // namespace opts
 
 static bool getLowAndHighPC(const DIE &Die, const DWARFUnit &DU,
@@ -1969,14 +1975,20 @@ void DWARFRewriter::writeDWOFiles(
     return;
   }
 
-  std::string CompDir = opts::DwarfOutputPath.empty()
-                            ? CU.getCompilationDir()
-                            : opts::DwarfOutputPath.c_str();
-  auto FullPath = CompDir.append("/").append(DWOName);
+  std::string CompDir = CU.getCompilationDir();
+
+  if (!opts::DwarfOutputPath.empty())
+    CompDir = opts::DwarfOutputPath.c_str();
+  else if (!opts::CompDirOverride.empty())
+    CompDir = opts::CompDirOverride;
+
+  SmallString<16> AbsolutePath;
+  sys::path::append(AbsolutePath, CompDir);
+  sys::path::append(AbsolutePath, DWOName);
 
   std::error_code EC;
   std::unique_ptr<ToolOutputFile> TempOut =
-      std::make_unique<ToolOutputFile>(FullPath, EC, sys::fs::OF_None);
+      std::make_unique<ToolOutputFile>(AbsolutePath, EC, sys::fs::OF_None);
 
   const DWARFUnitIndex::Entry *CUDWOEntry = nullptr;
   if (IsDWP)

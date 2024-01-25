@@ -72,6 +72,7 @@ PrintMemData("print-mem-data",
   cl::ZeroOrMore,
   cl::cat(BoltCategory));
 
+extern cl::opt<std::string> CompDirOverride;
 } // namespace opts
 
 namespace llvm {
@@ -1574,12 +1575,21 @@ void BinaryContext::preprocessDWODebugInfo() {
   for (const std::unique_ptr<DWARFUnit> &CU : DwCtx->compile_units()) {
     DWARFUnit *const DwarfUnit = CU.get();
     if (std::optional<uint64_t> DWOId = DwarfUnit->getDWOId()) {
-      DWARFUnit *DWOCU = DwarfUnit->getNonSkeletonUnitDIE(false).getDwarfUnit();
+      DWARFUnit *DWOCU = nullptr;
+      std::string DWOName = dwarf::toString(
+          DwarfUnit->getUnitDIE().find(
+              {dwarf::DW_AT_dwo_name, dwarf::DW_AT_GNU_dwo_name}),
+          "");
+      if (opts::CompDirOverride.empty()) {
+        DWOCU = DwarfUnit->getNonSkeletonUnitDIE(false).getDwarfUnit();
+      } else {
+        SmallString<16> AbsolutePath;
+        sys::path::append(AbsolutePath, opts::CompDirOverride);
+        sys::path::append(AbsolutePath, DWOName);
+        DWOCU = DwarfUnit->getNonSkeletonUnitDIE(false, AbsolutePath)
+                    .getDwarfUnit();
+      }
       if (!DWOCU->isDWOUnit()) {
-        std::string DWOName = dwarf::toString(
-            DwarfUnit->getUnitDIE().find(
-                {dwarf::DW_AT_dwo_name, dwarf::DW_AT_GNU_dwo_name}),
-            "");
         outs() << "BOLT-WARNING: Debug Fission: DWO debug information for "
                << DWOName
                << " was not retrieved and won't be updated. Please check "
