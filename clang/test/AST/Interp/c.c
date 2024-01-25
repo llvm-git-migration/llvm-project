@@ -85,3 +85,7 @@ const intptr_t L = (intptr_t)(&(yy->y)); // expected-error {{not a compile-time 
 const ptrdiff_t m = &m + 137 - &m;
 _Static_assert(m == 137, ""); // pedantic-ref-warning {{GNU extension}} \
                               // pedantic-expected-warning {{GNU extension}}
+
+const int A =  ((_Complex double)1.0 ? 21 : 1);
+_Static_assert(A == 21, ""); // pedantic-ref-warning {{GNU extension}} \
+                             // pedantic-expected-warning {{GNU extension}}
