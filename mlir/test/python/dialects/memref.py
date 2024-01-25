@@ -3,6 +3,8 @@
 from mlir.ir import *
 import mlir.dialects.func as func
 import mlir.dialects.memref as memref
+from mlir.dialects.memref import _infer_memref_subview_result_type
+import mlir.dialects.arith as arith
 import mlir.extras.types as T
 
 
@@ -88,3 +90,97 @@ def testMemRefAttr():
             memref.global_("objFifo_in0", T.memref(16, T.i32()))
         # CHECK: memref.global @objFifo_in0 : memref<16xi32>
         print(module)
+
+
+# CHECK-LABEL: TEST: testSubViewOpInferReturnType
+@run
+def testSubViewOpInferReturnType():
+    with Context() as ctx, Location.unknown(ctx):
+        module = Module.create()
+        with InsertionPoint(module.body):
+            x = memref.alloc(T.memref(10, 10, T.i32()), [], [])
+            # CHECK: %[[ALLOC:.*]] = memref.alloc() : memref<10x10xi32>
+            print(x.owner)
+
+            y = memref.subview(x, [1, 1], [3, 3], [1, 1])
+            # CHECK: %{{.*}} = memref.subview %[[ALLOC]][1, 1] [3, 3] [1, 1] : memref<10x10xi32> to memref<3x3xi32, strided<[10, 1], offset: 11>>
+            print(y.owner)
+
+            z = memref.subview(
+                x,
+                [arith.constant(T.index(), 1), 1],
+                [3, 3],
+                [1, 1],
+            )
+            # CHECK: %{{.*}} =  memref.subview %[[ALLOC]][1, 1] [3, 3] [1, 1] : memref<10x10xi32> to memref<3x3xi32, strided<[10, 1], offset: 11>>
+            print(z.owner)
+
+            z = memref.subview(
+                x,
+                [arith.constant(T.index(), 3), arith.constant(T.index(), 4)],
+                [3, 3],
+                [1, 1],
+            )
+            # CHECK: %{{.*}} =  memref.subview %[[ALLOC]][3, 4] [3, 3] [1, 1] : memref<10x10xi32> to memref<3x3xi32, strided<[10, 1], offset: 34>>
+            print(z.owner)
+
+            try:
+                memref.subview(
+                    x,
+                    [
+                        arith.addi(
+                            arith.constant(T.index(), 3), arith.constant(T.index(), 4)
+                        ),
+                        0,
+                    ],
+                    [3, 3],
+                    [1, 1],
+                )
+            except AssertionError as e:
+                # CHECK: mixed static/dynamic offset/sizes/strides requires explicit result type
+                print(e)
+
+            try:
+                _infer_memref_subview_result_type(
+                    x.type,
+                    [arith.constant(T.index(), 3), arith.constant(T.index(), 4)],
+                    [ShapedType.get_dynamic_size(), 3],
+                    [1, 1],
+                )
+            except AssertionError as e:
+                # CHECK: Only inferring from python or mlir integer constant is supported
+                print(e)
+
+            try:
+                memref.subview(
+                    x,
+                    [arith.constant(T.index(), 3), arith.constant(T.index(), 4)],
+                    [ShapedType.get_dynamic_size(), 3],
+                    [1, 1],
+                )
+            except AssertionError as e:
+                # CHECK: mixed static/dynamic offset/sizes/strides requires explicit result type
+                print(e)
+
+            layout = StridedLayoutAttr.get(ShapedType.get_dynamic_size(), [10, 1])
+            x = memref.alloc(
+                T.memref(
+                    10,
+                    10,
+                    T.i32(),
+                    layout=layout,
+                ),
+                [],
+                [arith.constant(T.index(), 42)],
+            )
+            # CHECK: %[[DYNAMICALLOC:.*]] = memref.alloc()[%c42] : memref<10x10xi32, strided<[10, 1], offset: ?>>
+            print(x.owner)
+            y = memref.subview(
+                x,
+                [1, 1],
+                [3, 3],
+                [1, 1],
+                result_type=T.memref(3, 3, T.i32(), layout=layout),
+            )
+            # CHECK: %subview_9 = memref.subview %[[DYNAMICALLOC]][1, 1] [3, 3] [1, 1] : memref<10x10xi32, strided<[10, 1], offset: ?>> to memref<3x3xi32, strided<[10, 1], offset: ?>>
+            print(y.owner)
