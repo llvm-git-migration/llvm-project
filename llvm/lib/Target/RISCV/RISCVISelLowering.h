@@ -1012,6 +1012,21 @@ private:
   unsigned getMinimumJumpTableEntries() const override;
 };
 
+/// As per the spec, the rules for passing vector arguments are as follows:
+///
+/// 1. For the first vector mask argument, use v0 to pass it.
+/// 2. For vector data arguments or rest vector mask arguments, starting from
+/// the v8 register, if a vector register group between v8-v23 that has not been
+/// allocated can be found and the first register number is a multiple of LMUL,
+/// then allocate this vector register group to the argument and mark these
+/// registers as allocated. Otherwise, pass it by reference and are replaced in
+/// the argument list with the address.
+/// 3. For tuple vector data arguments, starting from the v8 register, if
+/// NFIELDS consecutive vector register groups between v8-v23 that have not been
+/// allocated can be found and the first register number is a multiple of LMUL,
+/// then allocate these vector register groups to the argument and mark these
+/// registers as allocated. Otherwise, pass it by reference and are replaced in
+/// the argument list with the address.
 class RVVArgDispatcher {
 public:
   static constexpr unsigned NumArgVRs = 16;
@@ -1045,13 +1060,11 @@ private:
 
   const MachineFunction *MF = nullptr;
   const RISCVTargetLowering *TLI = nullptr;
-  TargetLowering::CallLoweringInfo *CLI = nullptr;
-  CallLowering::CallLoweringInfo *GISelCLI = nullptr;
 
   unsigned CurIdx = 0;
 
-  void construct(std::vector<Type *> &TypeList);
-  void constructHelper(Type *Ty);
+  void construct(const std::vector<Type *> &TypeList);
+  void constructArgInfos(Type *Ty);
   void compute();
   void allocatePhysReg(unsigned NF = 1, unsigned LMul = 1,
                        unsigned StartReg = 0);

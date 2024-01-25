@@ -20877,7 +20877,7 @@ unsigned RISCVTargetLowering::getMinimumJumpTableEntries() const {
   return Subtarget.getMinimumJumpTableEntries();
 }
 
-void RVVArgDispatcher::constructHelper(Type *Ty) {
+void RVVArgDispatcher::constructArgInfos(Type *Ty) {
   const DataLayout &DL = MF->getDataLayout();
   const Function &F = MF->getFunction();
   LLVMContext &Context = F.getContext();
@@ -20910,16 +20910,14 @@ void RVVArgDispatcher::constructHelper(Type *Ty) {
         RegisterVT = TLI->getContainerForFixedLengthVector(RegisterVT);
 
       RVVArgInfo Info{1, RegisterVT, false};
-
-      while (NumRegs--)
-        RVVArgInfos.push_back(Info);
+      RVVArgInfos.insert(RVVArgInfos.end(), NumRegs, Info);
     }
   }
 }
 
-void RVVArgDispatcher::construct(std::vector<Type *> &TypeList) {
+void RVVArgDispatcher::construct(const std::vector<Type *> &TypeList) {
   for (Type *Ty : TypeList)
-    constructHelper(Ty);
+    constructArgInfos(Ty);
 
   for (auto &Info : RVVArgInfos)
     if (Info.NF == 1 && Info.VT.getVectorElementType() == MVT::i1) {
@@ -20954,28 +20952,27 @@ void RVVArgDispatcher::allocatePhysReg(unsigned NF, unsigned LMul,
     if (StartReg)
       AllocatedPhysRegs.push_back(VRArrays[(StartReg - 8) / LMul + i]);
     else
-      AllocatedPhysRegs.push_back(0);
+      AllocatedPhysRegs.push_back(MCPhysReg());
 }
 
-// This function determines if each RVV argument is passed by register.
+/// This function determines if each RVV argument is passed by register, if the
+/// argument can be assigned to a VR, then give it a specific register.
+/// Otherwise, assign the argument to 0 which is a invalid MCPhysReg.
 void RVVArgDispatcher::compute() {
-  unsigned ToBeAssigned = RVVArgInfos.size();
-  uint64_t AssignedMap = 0;
-  auto tryAllocate = [&](const RVVArgInfo &ArgInfo) {
+  uint32_t AssignedMap = 0;
+  auto allocate = [&](const RVVArgInfo &ArgInfo) {
     // Allocate first vector mask argument to V0.
     if (ArgInfo.FirstVMask) {
       AllocatedPhysRegs.push_back(RISCV::V0);
       return;
     }
 
-    unsigned RegsNeeded =
-        std::max((unsigned)ArgInfo.VT.getSizeInBits().getKnownMinValue() /
-                     RISCV::RVVBitsPerBlock,
-                 (unsigned)1);
+    unsigned RegsNeeded = divideCeil(
+        ArgInfo.VT.getSizeInBits().getKnownMinValue(), RISCV::RVVBitsPerBlock);
     unsigned TotalRegsNeeded = ArgInfo.NF * RegsNeeded;
     for (unsigned StartReg = 0; StartReg + TotalRegsNeeded <= NumArgVRs;
          StartReg += RegsNeeded) {
-      unsigned Map = ((1 << TotalRegsNeeded) - 1) << StartReg;
+      uint32_t Map = ((1 << TotalRegsNeeded) - 1) << StartReg;
       if ((AssignedMap & Map) == 0) {
         allocatePhysReg(ArgInfo.NF, RegsNeeded, StartReg + 8);
         AssignedMap |= Map;
@@ -20984,11 +20981,10 @@ void RVVArgDispatcher::compute() {
     }
 
     allocatePhysReg(ArgInfo.NF, RegsNeeded, 0);
-    return;
   };
 
-  for (unsigned i = 0; i < ToBeAssigned; ++i)
-    tryAllocate(RVVArgInfos[i]);
+  for (unsigned i = 0; i < RVVArgInfos.size(); ++i)
+    allocate(RVVArgInfos[i]);
 }
 
 MCPhysReg RVVArgDispatcher::getNextPhysReg() {
