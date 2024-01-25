@@ -1,0 +1,78 @@
+# RUN: yaml2obj %s -o %t
+# RUN: llvm-objcopy --prefix-symbols-remove __pf_ %t %t2
+# RUN: llvm-readobj --symbols %t2 | FileCheck %s
+
+!ELF
+FileHeader:
+  Class:           ELFCLASS64
+  Data:            ELFDATA2LSB
+  Type:            ET_REL
+  Machine:         EM_X86_64
+Sections:
+  - Name:            .text
+    Type:            SHT_PROGBITS
+    Flags:           [ SHF_ALLOC, SHF_EXECINSTR ]
+    Address:         0x1000
+    AddressAlign:    0x0000000000000010
+    Size:            64
+Symbols:
+  - Name:     __pf_foo
+    Type:     STT_SECTION
+    Section:  .text
+  - Name:     __pf_bar
+    Type:     STT_FILE
+    Section:  .text
+  - Name:     foobar
+    Type:     STT_FUNC
+    Section:  .text
+    Binding:  STB_GLOBAL
+  - Name:     undef
+    Binding:  STB_GLOBAL
+
+# CHECK:  Symbols [
+# NEXT:        Symbol {
+# NEXT:          Name:
+# NEXT:          Value: 0x0
+# NEXT:          Size: 0
+# NEXT:          Binding: Local
+# NEXT:          Type: None
+# NEXT:          Other: 0
+# NEXT:          Section: Undefined
+# NEXT:        }
+# NEXT:        Symbol {
+# NEXT:          Name: foo
+# NEXT:          Value: 0x0
+# NEXT:          Size: 0
+# NEXT:          Binding: Local
+# NEXT:          Type: Section
+# NEXT:          Other: 0
+# NEXT:          Section: .text
+# NEXT:        }
+# NEXT:        Symbol {
+# NEXT:          Name: bar
+# NEXT:          Value: 0x0
+# NEXT:          Size: 0
+# NEXT:          Binding: Local
+# NEXT:          Type: File
+# NEXT:          Other: 0
+# NEXT:          Section: .text
+# NEXT:        }
+# NEXT:        Symbol {
+# NEXT:          Name: foobar
+# NEXT:          Value: 0x0
+# NEXT:          Size: 0
+# NEXT:          Binding: Global
+# NEXT:          Type: Function
+# NEXT:          Other: 0
+# NEXT:          Section: .text
+# NEXT:        }
+# NEXT:        Symbol {
+# NEXT:          Name: undef
+# NEXT:          Value: 0x0
+# NEXT:          Size: 0
+# NEXT:          Binding: Global
+# NEXT:          Type: None
+# NEXT:          Other: 0
+# NEXT:          Section: Undefined
+# NEXT:        }
+# NEXT:      ]

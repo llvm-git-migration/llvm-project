@@ -731,7 +731,15 @@ objcopy::parseObjcopyOptions(ArrayRef<const char *> RawArgsArr,
         llvm::crc32(arrayRefFromStringRef(Debug->getBuffer()));
   }
   Config.SplitDWO = InputArgs.getLastArgValue(OBJCOPY_split_dwo);
+
   Config.SymbolsPrefix = InputArgs.getLastArgValue(OBJCOPY_prefix_symbols);
+  Config.SymbolsPrefixRemove =
+      InputArgs.getLastArgValue(OBJCOPY_prefix_symbols_remove);
+  if (!Config.SymbolsPrefix.empty() && !Config.SymbolsPrefixRemove.empty())
+    return createStringError(
+        errc::invalid_argument,
+        "--prefix-symbols and --prefix-symbols-remove are mutualy exclusive");
+
   Config.AllocSectionsPrefix =
       InputArgs.getLastArgValue(OBJCOPY_prefix_alloc_sections);
   if (auto Arg = InputArgs.getLastArg(OBJCOPY_extract_partition))

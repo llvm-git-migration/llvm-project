@@ -331,6 +331,10 @@ static Error updateAndRemoveSymbols(const CommonConfig &Config,
 
     if (!Config.SymbolsPrefix.empty() && Sym.Type != STT_SECTION)
       Sym.Name = (Config.SymbolsPrefix + Sym.Name).str();
+
+    if (!Config.SymbolsPrefixRemove.empty() && Sym.Type != STT_SECTION)
+      if (Sym.Name.rfind(Config.SymbolsPrefixRemove, 0) == 0)
+        Sym.Name = Sym.Name.substr(Config.SymbolsPrefixRemove.size());
   });
 
   // The purpose of this loop is to mark symbols referenced by sections
