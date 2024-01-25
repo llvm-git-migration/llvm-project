@@ -905,6 +905,11 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
   EmitStoreOfScalar(value, lvalue, /* isInitialization */ true);
 }
 
+static bool isNullOrUndef(llvm::Constant *C) {
+  return C->isNullValue() || isa<llvm::ConstantAggregateZero>(C) ||
+         isa<llvm::ConstantPointerNull>(C) || isa<llvm::UndefValue>(C);
+}
+
 /// Decide whether we can emit the non-zero parts of the specified initializer
 /// with equal or fewer than NumStores scalar stores.
 static bool canEmitInitWithFewStoresAfterBZero(llvm::Constant *Init,
@@ -945,12 +950,14 @@ static bool canEmitInitWithFewStoresAfterBZero(llvm::Constant *Init,
 
 /// For inits that canEmitInitWithFewStoresAfterBZero returned true for, emit
 /// the scalar stores that would be required.
-static void emitStoresForInitAfterBZero(CodeGenModule &CGM,
-                                        llvm::Constant *Init, Address Loc,
-                                        bool isVolatile, CGBuilderTy &Builder,
-                                        bool IsAutoInit) {
+static size_t emitStoresForInitAfterBZero(CodeGenModule &CGM,
+                                          llvm::Constant *Init, Address Loc,
+                                          bool isVolatile, CGBuilderTy &Builder,
+                                          bool IsAutoInit) {
   assert(!Init->isNullValue() && !isa<llvm::UndefValue>(Init) &&
          "called emitStoresForInitAfterBZero for zero or undef value.");
+
+  auto const &DL = CGM.getDataLayout();
 
   if (isa<llvm::ConstantInt>(Init) || isa<llvm::ConstantFP>(Init) ||
       isa<llvm::ConstantVector>(Init) || isa<llvm::BlockAddress>(Init) ||
@@ -958,35 +965,62 @@ static void emitStoresForInitAfterBZero(CodeGenModule &CGM,
     auto *I = Builder.CreateStore(Init, Loc, isVolatile);
     if (IsAutoInit)
       I->addAnnotationMetadata("auto-init");
-    return;
+    return DL.getTypeAllocSize(Init->getType());
   }
 
   if (llvm::ConstantDataSequential *CDS =
           dyn_cast<llvm::ConstantDataSequential>(Init)) {
+    bool CountNonNullBytes = true;
+    size_t LeadingNonNullElementsCount = 0;
     for (unsigned i = 0, e = CDS->getNumElements(); i != e; ++i) {
       llvm::Constant *Elt = CDS->getElementAsConstant(i);
 
       // If necessary, get a pointer to the element and emit it.
-      if (!Elt->isNullValue() && !isa<llvm::UndefValue>(Elt))
+      if (!isNullOrUndef(Elt)) {
         emitStoresForInitAfterBZero(
             CGM, Elt, Builder.CreateConstInBoundsGEP2_32(Loc, 0, i), isVolatile,
             Builder, IsAutoInit);
+        LeadingNonNullElementsCount += CountNonNullBytes;
+      } else if (CountNonNullBytes)
+        CountNonNullBytes = false;
     }
-    return;
+    uint64_t ElementByteCount = DL.getTypeAllocSize(CDS->getElementType());
+    return LeadingNonNullElementsCount * ElementByteCount;
   }
 
   assert((isa<llvm::ConstantStruct>(Init) || isa<llvm::ConstantArray>(Init)) &&
          "Unknown value type!");
 
+  bool CountNonNullBytes = true;
+  uint64_t Offset = DL.getTypeAllocSize(Init->getType());
+  uint64_t PrevOperandOffset = 0;
   for (unsigned i = 0, e = Init->getNumOperands(); i != e; ++i) {
     llvm::Constant *Elt = cast<llvm::Constant>(Init->getOperand(i));
 
     // If necessary, get a pointer to the element and emit it.
-    if (!Elt->isNullValue() && !isa<llvm::UndefValue>(Elt))
-      emitStoresForInitAfterBZero(CGM, Elt,
-                                  Builder.CreateConstInBoundsGEP2_32(Loc, 0, i),
-                                  isVolatile, Builder, IsAutoInit);
+    if (!isNullOrUndef(Elt)) {
+      PrevOperandOffset = emitStoresForInitAfterBZero(
+          CGM, Elt, Builder.CreateConstInBoundsGEP2_32(Loc, 0, i), isVolatile,
+          Builder, IsAutoInit);
+    } else if (CountNonNullBytes) {
+      CountNonNullBytes = false;
+      uint64_t OperandOffset = 0;
+      if (i) {
+        if (auto *CS = dyn_cast<llvm::ConstantStruct>(Init)) {
+          llvm::StructType *CST = CS->getType();
+          const llvm::StructLayout *SL = DL.getStructLayout(CST);
+          OperandOffset = SL->getElementOffset(i - 1);
+        } else if (auto *CA = dyn_cast<llvm::ConstantArray>(Init)) {
+          llvm::ArrayType *CAT = CA->getType();
+          uint64_t ElementByteCount =
+              DL.getTypeAllocSize(CAT->getElementType());
+          OperandOffset = ElementByteCount * (i - 1);
+        }
+      }
+      Offset = PrevOperandOffset + OperandOffset;
+    }
   }
+  return Offset;
 }
 
 /// Decide whether we should use bzero plus some stores to initialize a local
@@ -1205,12 +1239,13 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
   }
 
   auto *SizeVal = llvm::ConstantInt::get(CGM.IntPtrTy, ConstantSize);
-
   // If the initializer is all or mostly the same, codegen with bzero / memset
   // then do a few stores afterward.
   if (shouldUseBZeroPlusStoresToInitialize(constant, ConstantSize)) {
-    auto *I = Builder.CreateMemSet(Loc, llvm::ConstantInt::get(CGM.Int8Ty, 0),
-                                   SizeVal, isVolatile);
+    auto *I = Builder.CreateMemSet(
+        Loc, llvm::ConstantInt::get(CGM.Int8Ty, 0),
+        llvm::ConstantInt::get(CGM.IntPtrTy, ConstantSize), isVolatile);
+
     if (IsAutoInit)
       I->addAnnotationMetadata("auto-init");
 
@@ -1218,8 +1253,22 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
         constant->isNullValue() || isa<llvm::UndefValue>(constant);
     if (!valueAlreadyCorrect) {
       Loc = Loc.withElementType(Ty);
-      emitStoresForInitAfterBZero(CGM, constant, Loc, isVolatile, Builder,
-                                  IsAutoInit);
+      size_t Offset = emitStoresForInitAfterBZero(
+          CGM, constant, Loc, isVolatile, Builder, IsAutoInit);
+      if (Offset) {
+        Loc = Loc.withElementType(CGM.Int8Ty);
+
+        llvm::Value *AdjustedLoc = llvm::GetElementPtrInst::CreateInBounds(
+            CGM.Int8Ty, Loc.getPointer(),
+            {llvm::ConstantInt::get(CGM.IntPtrTy, Offset)}, "", I);
+        I->setOperand(0, AdjustedLoc);
+        I->setOperand(
+            2, llvm::ConstantInt::get(CGM.IntPtrTy, ConstantSize - Offset));
+        cast<llvm::MemSetInst>(I)->setDestAlignment(
+            Loc.getAlignment()
+                .alignmentAtOffset(CharUnits::fromQuantity(Offset))
+                .getAsAlign());
+      }
     }
     return;
   }
