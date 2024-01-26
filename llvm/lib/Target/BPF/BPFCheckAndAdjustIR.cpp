@@ -55,6 +55,7 @@ private:
   bool removeCompareBuiltin(Module &M);
   bool sinkMinMax(Module &M);
   bool removeGEPBuiltins(Module &M);
+  bool insertASpaceBuiltins(Module &M);
 };
 } // End anonymous namespace
 
@@ -416,11 +417,98 @@ bool BPFCheckAndAdjustIR::removeGEPBuiltins(Module &M) {
   return Changed;
 }
 
+static Instruction *aspaceWrapValue(DenseMap<Value *, Instruction *> &Cache,
+                                    Function *F,
+                                    Value *ToWrap,
+                                    unsigned Code) {
+  auto It = Cache.find(ToWrap);
+  if (It != Cache.end())
+    return It->getSecond();
+
+  if (auto *GEP = dyn_cast<GetElementPtrInst>(ToWrap)) {
+    Value *Ptr = GEP->getPointerOperand();
+    Value *WrappedPtr = aspaceWrapValue(Cache, F, Ptr, Code);
+    auto *NewGEP = GEP->clone();
+    NewGEP->insertAfter(GEP);
+    NewGEP->setOperand(GEP->getPointerOperandIndex(), WrappedPtr);
+    NewGEP->setName(GEP->getName());
+    Cache[ToWrap] = NewGEP;
+    return NewGEP;
+  }
+
+  Module *M = F->getParent();
+  IRBuilder IB(F->getContext());
+  if (Instruction *InsnPtr = dyn_cast<Instruction>(ToWrap))
+    IB.SetInsertPoint(*InsnPtr->getInsertionPointAfterDef());
+  else
+    IB.SetInsertPoint(F->getEntryBlock().getFirstInsertionPt());
+  Type *PtrTy = ToWrap->getType();
+  Function *ASpaceFn =
+    Intrinsic::getDeclaration(M, Intrinsic::bpf_addr_space, {PtrTy, PtrTy});
+  auto *Call = IB.CreateCall(ASpaceFn, {ToWrap, IB.getInt32(Code)}, ToWrap->getName());
+  Cache[ToWrap] = Call;
+  return Call;
+}
+
+// Wrap operand with a call to bpf.addr.space() builtin
+static void aspaceWrapOperand(DenseMap<Value *, Instruction *> &Cache,
+                              Instruction *I, unsigned OpNum, unsigned Code) {
+  Value *OldOp = I->getOperand(OpNum);
+  if (OldOp->getType()->getPointerAddressSpace() == 0)
+    return;
+
+  Value *NewOp = aspaceWrapValue(Cache, I->getFunction(), OldOp, Code);
+  I->setOperand(OpNum, NewOp);
+  for (;;) {
+    auto *OldGEP = dyn_cast<GetElementPtrInst>(OldOp);
+    if (!OldGEP)
+      break;
+    if (!OldGEP->use_empty())
+      break;
+    OldOp = OldGEP->getPointerOperand();
+    OldGEP->eraseFromParent();
+  }
+}
+
+enum {
+  ASPACE_TO_KERNEL = 1,
+  ASPACE_TO_USER = 2,
+};
+
+bool BPFCheckAndAdjustIR::insertASpaceBuiltins(Module &M) {
+  bool Changed = false;
+  for (Function &F : M) {
+    DenseMap<Value *, Instruction *> ToKernelCache;
+    DenseMap<Value *, Instruction *> ToUserCache;
+    for (BasicBlock &BB : F) {
+      for (Instruction &I : BB) {
+        if (auto *LD = dyn_cast<LoadInst>(&I)) {
+          aspaceWrapOperand(ToKernelCache,
+                            LD, LD->getPointerOperandIndex(), ASPACE_TO_KERNEL);
+          continue;
+        }
+        if (auto *ST = dyn_cast<StoreInst>(&I)) {
+          aspaceWrapOperand(ToKernelCache,
+                            ST, ST->getPointerOperandIndex(), ASPACE_TO_KERNEL);
+          Value *VO = ST->getValueOperand();
+          PointerType *VOTy = dyn_cast<PointerType>(VO->getType());
+          if (VOTy && VOTy->getAddressSpace() != 0)
+            aspaceWrapOperand(ToUserCache, ST, 0, ASPACE_TO_USER);
+          continue;
+        }
+      }
+    }
+    Changed |= !ToKernelCache.empty() || !ToUserCache.empty();
+  }
+  return Changed;
+}
+
 bool BPFCheckAndAdjustIR::adjustIR(Module &M) {
   bool Changed = removePassThroughBuiltin(M);
   Changed = removeCompareBuiltin(M) || Changed;
   Changed = sinkMinMax(M) || Changed;
   Changed = removeGEPBuiltins(M) || Changed;
+  Changed = insertASpaceBuiltins(M) || Changed;
   return Changed;
 }
 
