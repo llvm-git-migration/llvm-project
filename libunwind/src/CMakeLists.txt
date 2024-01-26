@@ -1,31 +1,38 @@
 # Get sources
 
-set(LIBUNWIND_CXX_SOURCES
-    libunwind.cpp
-    Unwind-EHABI.cpp
-    Unwind-seh.cpp
-    )
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "wasm32" OR
+  ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "wasm64")
+  set(LIBUNWIND_C_SOURCES
+      Unwind-wasm.c
+      )
+else()
+  set(LIBUNWIND_CXX_SOURCES
+      libunwind.cpp
+      Unwind-EHABI.cpp
+      Unwind-seh.cpp
+      )
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "AIX")
-  list(APPEND LIBUNWIND_CXX_SOURCES
-    Unwind_AIXExtras.cpp
-    )
+  if(${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+    list(APPEND LIBUNWIND_CXX_SOURCES
+      Unwind_AIXExtras.cpp
+      )
+  endif()
+
+  set(LIBUNWIND_C_SOURCES
+      UnwindLevel1.c
+      UnwindLevel1-gcc-ext.c
+      Unwind-sjlj.c
+      )
+
+  set(LIBUNWIND_ASM_SOURCES
+      UnwindRegistersRestore.S
+      UnwindRegistersSave.S
+      )
+
+  set_source_files_properties(${LIBUNWIND_C_SOURCES}
+                              PROPERTIES
+                                COMPILE_FLAGS "-std=c99")
 endif()
-
-set(LIBUNWIND_C_SOURCES
-    UnwindLevel1.c
-    UnwindLevel1-gcc-ext.c
-    Unwind-sjlj.c
-    Unwind-wasm.c
-    )
-set_source_files_properties(${LIBUNWIND_C_SOURCES}
-                            PROPERTIES
-                              COMPILE_FLAGS "-std=c99")
-
-set(LIBUNWIND_ASM_SOURCES
-    UnwindRegistersRestore.S
-    UnwindRegistersSave.S
-    )
 
 set(LIBUNWIND_HEADERS
     AddressSpace.hpp
