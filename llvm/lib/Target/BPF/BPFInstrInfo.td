@@ -31,6 +31,9 @@ def SDT_BPFMEMCPY       : SDTypeProfile<0, 4, [SDTCisVT<0, i64>,
                                                SDTCisVT<1, i64>,
                                                SDTCisVT<2, i64>,
                                                SDTCisVT<3, i64>]>;
+def SDT_BPFAddrSpaceCast : SDTypeProfile<0, 3, [SDTCisPtrTy<0>,
+                                                SDTCisVT<1, i64>,
+                                                SDTCisVT<2, i64>]>;
 
 def BPFcall         : SDNode<"BPFISD::CALL", SDT_BPFCall,
                              [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
@@ -49,6 +52,7 @@ def BPFWrapper      : SDNode<"BPFISD::Wrapper", SDT_BPFWrapper>;
 def BPFmemcpy       : SDNode<"BPFISD::MEMCPY", SDT_BPFMEMCPY,
                              [SDNPHasChain, SDNPInGlue, SDNPOutGlue,
                               SDNPMayStore, SDNPMayLoad]>;
+def BPFAddrSpaceCast  : SDNode<"BPFISD::ADDR_SPACE_CAST", SDT_BPFAddrSpaceCast>;
 def BPFIsLittleEndian : Predicate<"Subtarget->isLittleEndian()">;
 def BPFIsBigEndian    : Predicate<"!Subtarget->isLittleEndian()">;
 def BPFHasALU32 : Predicate<"Subtarget->getHasAlu32()">;
@@ -419,6 +423,27 @@ let Predicates = [BPFHasMovsx] in {
                       [(set GPR32:$dst, (sext_inreg GPR32:$src, i16))]>;
 }
 }
+
+def CAST_DIR {
+    int TO_KERN = 1;
+    int TO_USER = 2;
+}
+
+class ADDR_SPACE_CAST<int Code, string AsmPattern>
+    : ALU_RR<BPF_ALU64, BPF_MOV, 64,
+             (outs GPR:$dst),
+             (ins GPR:$src, i64imm:$imm),
+             AsmPattern,
+             []> {
+  bits<64> imm;
+  let Inst{47-32} = Code;
+  let Inst{31-0} = imm{31-0};
+}
+def CAST_KERN : ADDR_SPACE_CAST<CAST_DIR.TO_KERN, "$dst = cast_kern($src, $imm)">;
+def CAST_USER : ADDR_SPACE_CAST<CAST_DIR.TO_USER, "$dst = cast_user($src, $imm)">;
+
+def : Pat<(BPFAddrSpaceCast GPR:$src, CAST_DIR.TO_KERN, i64:$as), (CAST_KERN $src, $as)>;
+def : Pat<(BPFAddrSpaceCast GPR:$src, CAST_DIR.TO_USER, i64:$as), (CAST_USER $src, $as)>;
 
 def FI_ri
     : TYPE_LD_ST<BPF_IMM.Value, BPF_DW.Value,
