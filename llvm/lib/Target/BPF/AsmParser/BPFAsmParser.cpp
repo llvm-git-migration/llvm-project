@@ -270,6 +270,8 @@ public:
         .Case("xchg32_32", true)
         .Case("cmpxchg_64", true)
         .Case("cmpxchg32_32", true)
+        .Case("cast_kern", true)
+        .Case("cast_user", true)
         .Default(false);
   }
 };

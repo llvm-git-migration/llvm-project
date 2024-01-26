@@ -289,3 +289,8 @@ r0 = *(u32*)skb[42]
 r0 = *(u8*)skb[r1]
 r0 = *(u16*)skb[r1]
 r0 = *(u32*)skb[r1]
+
+// CHECK: bf 10 01 00 18 00 00 00	r0 = cast_kern(r1, 0x18)
+// CHECK: bf 32 02 00 28 00 00 00	r2 = cast_user(r3, 0x28)
+r0 = cast_kern(r1, 24)
+r2 = cast_user(r3, 40)
