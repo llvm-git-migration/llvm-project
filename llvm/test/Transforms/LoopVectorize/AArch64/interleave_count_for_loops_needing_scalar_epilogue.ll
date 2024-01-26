@@ -37,15 +37,15 @@ for.end:
 ; This function has the same trip count as loop_with_tc_128 but since the resulting interleaved group
 ; in this case may access memory out-of-bounds, it requires a scalar epilogue iteration for
 ; correctness, making at most 127 iterations available for interleaving. 
-; TODO: The entry block should branch into the vector loop, instead of the scalar epilogue.
-; TODO: When the auto-vectorizer chooses VF 16, it should choose IC 2, to have a smaller scalar remainder
+; The entry block should branch into the vector loop, instead of the scalar epilogue.
+; When the auto-vectorizer chooses VF 16, it should choose IC 2, to have a smaller scalar remainder
 ; than when using IC 4. 
-; CHECK-REMARKS: remark: <unknown>:0:0: vectorized loop (vectorization width: 16, interleaved count: 8)
+; CHECK-REMARKS: remark: <unknown>:0:0: vectorized loop (vectorization width: 16, interleaved count: 2)
 define void @loop_with_tc_128_scalar_epilogue_reqd(ptr noalias %p, ptr noalias %q) {
 ; CHECK-LABEL: define void @loop_with_tc_128_scalar_epilogue_reqd(
 ; CHECK-SAME: ptr noalias [[P:%.*]], ptr noalias [[Q:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    br i1 true, label [[SCALAR_PH:%.*]], label [[VECTOR_PH:%.*]]
+; CHECK-NEXT:    br i1 false, label [[SCALAR_PH:%.*]], label [[VECTOR_PH:%.*]]
 entry:
   br label %for.body
 
@@ -99,9 +99,9 @@ for.end:
 ; This function has the same trip count as loop_with_profile_tc_128 but since the resulting interleaved group
 ; in this case may access memory out-of-bounds, it requires a scalar epilogue iteration for
 ; correctness, making at most 127 iterations available for interleaving.
-; TODO: When the auto-vectorizer chooses VF 16, it should choose IC 2, to have a smaller scalar remainder
+; When the auto-vectorizer chooses VF 16, it should choose IC 2, to have a smaller scalar remainder
 ; than IC 4. 
-; CHECK-REMARKS: remark: <unknown>:0:0: vectorized loop (vectorization width: 16, interleaved count: 4)
+; CHECK-REMARKS: remark: <unknown>:0:0: vectorized loop (vectorization width: 16, interleaved count: 2)
 define void @loop_with_profile_tc_128_scalar_epilogue_reqd(ptr noalias %p, ptr noalias %q, i64 %n) {
 ; CHECK-LABEL: define void @loop_with_profile_tc_128_scalar_epilogue_reqd(
 ; CHECK-SAME: ptr noalias [[P:%.*]], ptr noalias [[Q:%.*]], i64 [[N:%.*]]) {
@@ -109,7 +109,7 @@ define void @loop_with_profile_tc_128_scalar_epilogue_reqd(ptr noalias %p, ptr n
 ; CHECK-NEXT:    [[MIN_ITERS_CHECK:%.*]] = icmp ule i64 [[N]], 8
 ; CHECK-NEXT:    br i1 [[MIN_ITERS_CHECK]], label [[VEC_EPILOG_SCALAR_PH:%.*]], label [[VECTOR_MAIN_LOOP_ITER_CHECK:%.*]], !prof [[PROF6]]
 ; CHECK:       vector.main.loop.iter.check:
-; CHECK-NEXT:    [[MIN_ITERS_CHECK1:%.*]] = icmp ule i64 [[N]], 64
+; CHECK-NEXT:    [[MIN_ITERS_CHECK1:%.*]] = icmp ule i64 [[N]], 32
 ; CHECK-NEXT:    br i1 [[MIN_ITERS_CHECK1]], label [[VEC_EPILOG_PH:%.*]], label [[VECTOR_PH:%.*]], !prof [[PROF6]]
 ;
 entry:
