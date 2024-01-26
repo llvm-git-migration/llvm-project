@@ -196,6 +196,13 @@ public:
     PtrData = (void*) II;
   }
 
+  bool hasIdentifierInfo() {
+    if (is(tok::raw_identifier) || isAnnotation() || isLiteral() ||
+        is(tok::eof))
+      return false;
+    return true;
+  }
+
   const void *getEofData() const {
     assert(is(tok::eof));
     return reinterpret_cast<const void *>(PtrData);
