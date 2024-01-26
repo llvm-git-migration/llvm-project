@@ -11,7 +11,7 @@
 
 namespace LIBC_NAMESPACE {
 
-int abs(int n);
+__attribute__((__const__)) int abs(int n);
 
 } // namespace LIBC_NAMESPACE
 
