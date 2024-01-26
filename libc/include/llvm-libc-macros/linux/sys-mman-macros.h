@@ -9,6 +9,9 @@
 #ifndef __LLVM_LIBC_MACROS_LINUX_SYS_MMAN_MACROS_H
 #define __LLVM_LIBC_MACROS_LINUX_SYS_MMAN_MACROS_H
 
+#if __has_include(<linux/mman.h>)
+#include <linux/mman.h>
+#else
 // Memory protection flags. (mmap, munmap, mprotect)
 #define PROT_NONE 0x0
 #define PROT_READ 0x1
@@ -85,4 +88,7 @@
 #define POSIX_MADV_WILLNEED MADV_WILLNEED
 #define POSIX_MADV_DONTNEED MADV_DONTNEED
 
+// Flags for mlock2.
+#define MLOCK_ONFAULT 0x01
+#endif // __has_include(<linux/mman.h>)
 #endif // __LLVM_LIBC_MACROS_LINUX_SYS_MMAN_MACROS_H
