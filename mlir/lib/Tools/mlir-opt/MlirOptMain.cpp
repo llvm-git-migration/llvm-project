@@ -189,6 +189,11 @@ struct MlirOptMainConfigCLOptions : public MlirOptMainConfig {
         cl::desc("Round-trip the IR after parsing and ensure it succeeds"),
         cl::location(verifyRoundtripFlag), cl::init(false));
 
+    static cl::opt<bool, /*ExternalStorage=*/true> retainIdentifierNames(
+        "retain-identifier-names",
+        cl::desc("Retain the original names of identifiers when printing"),
+        cl::location(retainIdentifierNamesFlag), cl::init(false));
+
     static cl::list<std::string> passPlugins(
         "load-pass-plugin", cl::desc("Load passes from plugin library"));
 
@@ -439,8 +444,9 @@ performActions(raw_ostream &os,
   // untouched.
   PassReproducerOptions reproOptions;
   FallbackAsmResourceMap fallbackResourceMap;
-  ParserConfig parseConfig(context, config.shouldVerifyOnParsing(),
-                           &fallbackResourceMap);
+  ParserConfig parseConfig(
+      context, config.shouldVerifyOnParsing(), &fallbackResourceMap,
+      config.shouldRetainIdentifierNames());
   if (config.shouldRunReproducer())
     reproOptions.attachResourceParser(parseConfig);
 
