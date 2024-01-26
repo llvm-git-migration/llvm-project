@@ -48,14 +48,36 @@ static Status EnsureFDFlags(int fd, int flags) {
   return error;
 }
 
+static Status CanTrace() {
+  int proc_debug, ret;
+  size_t len = sizeof(proc_debug);
+  ret = ::sysctlbyname("security.bsd.unprivileged_proc_debug", &proc_debug,
+                       &len, nullptr, 0);
+  if (ret != 0)
+    return Status("sysctlbyname() security.bsd.unprivileged_proc_debug failed");
+
+  if (proc_debug < 1)
+    return Status(
+        "process debug disabled by security.bsd.unprivileged_proc_debug oid");
+
+  return {};
+}
+
 // Public Static Methods
 
 llvm::Expected<std::unique_ptr<NativeProcessProtocol>>
 NativeProcessFreeBSD::Manager::Launch(ProcessLaunchInfo &launch_info,
                                       NativeDelegate &native_delegate) {
   Log *log = GetLog(POSIXLog::Process);
-
   Status status;
+
+  status = CanTrace();
+
+  if (status.Fail()) {
+    LLDB_LOG(log, "failed to launch process: {0}", status);
+    return status.ToError();
+  }
+
   ::pid_t pid = ProcessLauncherPosixFork()
                     .LaunchProcess(launch_info, status)
                     .GetProcessId();
@@ -387,6 +409,10 @@ Status NativeProcessFreeBSD::PtraceWrapper(int req, lldb::pid_t pid, void *addr,
   Log *log = GetLog(POSIXLog::Ptrace);
   Status error;
   int ret;
+
+  error = CanTrace();
+  if (error.Fail())
+    return error;
 
   errno = 0;
   ret =
