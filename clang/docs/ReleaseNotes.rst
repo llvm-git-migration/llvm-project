@@ -104,6 +104,8 @@ Improvements to Clang's time-trace
 Bug Fixes in This Version
 -------------------------
 
+- Fixed missing warnings when doing bool-like conversions in C23 (`#79435: https://github.com/llvm/llvm-project/issues/79435`_).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
