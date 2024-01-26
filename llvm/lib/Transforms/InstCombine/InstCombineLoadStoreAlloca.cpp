@@ -1385,11 +1385,11 @@ Instruction *InstCombinerImpl::visitStoreInst(StoreInst &SI) {
   if (Ptr->hasOneUse()) {
     if (isa<AllocaInst>(Ptr))
       return eraseInstFromFunction(SI);
-    if (GetElementPtrInst *GEP = dyn_cast<GetElementPtrInst>(Ptr)) {
-      if (isa<AllocaInst>(GEP->getOperand(0))) {
-        if (GEP->getOperand(0)->hasOneUse())
+    if (isa<GetElementPtrInst>(Ptr) || isa<AddrSpaceCastInst>(Ptr)) {
+      Instruction *PtrI = cast<Instruction>(Ptr);
+      if (isa<AllocaInst>(PtrI->getOperand(0)))
+        if (PtrI->getOperand(0)->hasOneUse())
           return eraseInstFromFunction(SI);
-      }
     }
   }
 
