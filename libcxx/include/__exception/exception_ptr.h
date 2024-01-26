@@ -36,7 +36,12 @@ struct __cxa_exception;
 _LIBCPP_OVERRIDABLE_FUNC_VIS __cxa_exception* __cxa_init_primary_exception(
     void*,
     std::type_info*,
-    void(
+#  if defined(__USING_WASM_EXCEPTIONS__)
+    void*
+#  else
+    void
+#  endif
+    (
 #  if defined(_WIN32)
         __thiscall
 #  endif

@@ -206,8 +206,14 @@ void __cxa_free_exception(void *thrown_object) throw() {
     __aligned_free_with_fallback((void *)raw_buffer);
 }
 
+#ifdef __USING_WASM_EXCEPTIONS__
 __cxa_exception* __cxa_init_primary_exception(void* object, std::type_info* tinfo,
-                                              void(_LIBCXXABI_DTOR_FUNC* dest)(void*)) throw() {
+                                              void*(_LIBCXXABI_DTOR_FUNC* dest)(void*)) throw()
+#else
+__cxa_exception* __cxa_init_primary_exception(void* object, std::type_info* tinfo,
+                                              void(_LIBCXXABI_DTOR_FUNC* dest)(void*)) throw()
+#endif
+{
   __cxa_exception* exception_header = cxa_exception_from_thrown_object(object);
   exception_header->referenceCount = 0;
   exception_header->unexpectedHandler = std::get_unexpected();
