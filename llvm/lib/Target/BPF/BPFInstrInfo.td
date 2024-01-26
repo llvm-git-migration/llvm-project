@@ -31,6 +31,9 @@ def SDT_BPFMEMCPY       : SDTypeProfile<0, 4, [SDTCisVT<0, i64>,
                                                SDTCisVT<1, i64>,
                                                SDTCisVT<2, i64>,
                                                SDTCisVT<3, i64>]>;
+def SDT_BPFAddrSpace    : SDTypeProfile<0, 3, [SDTCisPtrTy<0>,
+                                               SDTCisVT<1, i64>,
+                                               SDTCisVT<2, i64>]>;
 
 def BPFcall         : SDNode<"BPFISD::CALL", SDT_BPFCall,
                              [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
@@ -49,6 +52,7 @@ def BPFWrapper      : SDNode<"BPFISD::Wrapper", SDT_BPFWrapper>;
 def BPFmemcpy       : SDNode<"BPFISD::MEMCPY", SDT_BPFMEMCPY,
                              [SDNPHasChain, SDNPInGlue, SDNPOutGlue,
                               SDNPMayStore, SDNPMayLoad]>;
+def BPFAddrSpace      : SDNode<"BPFISD::ADDR_SPACE", SDT_BPFAddrSpace>;
 def BPFIsLittleEndian : Predicate<"Subtarget->isLittleEndian()">;
 def BPFIsBigEndian    : Predicate<"!Subtarget->isLittleEndian()">;
 def BPFHasALU32 : Predicate<"Subtarget->getHasAlu32()">;
@@ -418,7 +422,23 @@ let Predicates = [BPFHasMovsx] in {
                       "$dst = (s16)$src",
                       [(set GPR32:$dst, (sext_inreg GPR32:$src, i16))]>;
 }
+
+class ADDR_SPACE<int Code, string AsmPattern>
+    : ALU_RR<BPF_ALU64, BPF_MOV, 64,
+             (outs GPR:$dst),
+             (ins GPR:$src, i64imm:$imm),
+             AsmPattern,
+             []> {
+  bits<64> imm;
+  let Inst{47-32} = Code;
+  let Inst{31-0} = imm{31-0};
 }
+def ADDR_SPACE_K : ADDR_SPACE<1, "$dst = cast_kern($src, $imm)">;
+def ADDR_SPACE_U : ADDR_SPACE<2, "$dst = cast_user($src, $imm)">;
+}
+
+def : Pat<(BPFAddrSpace GPR:$src, 1, i64:$as), (ADDR_SPACE_K $src, $as)>;
+def : Pat<(BPFAddrSpace GPR:$src, 2, i64:$as), (ADDR_SPACE_U $src, $as)>;
 
 def FI_ri
     : TYPE_LD_ST<BPF_IMM.Value, BPF_DW.Value,

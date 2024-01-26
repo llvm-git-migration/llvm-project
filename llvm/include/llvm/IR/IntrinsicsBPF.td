@@ -76,4 +76,9 @@ let TargetPrefix = "bpf" in {  // All intrinsics start with "llvm.bpf."
                          ImmArg    <ArgIndex<5>>, // alignment
                          ImmArg    <ArgIndex<6>>, // inbounds
                         ]>;
+  def int_bpf_arena_cast :
+              Intrinsic<[llvm_anyptr_ty], [llvm_anyptr_ty, llvm_i32_ty],
+                        [IntrSpeculatable, IntrNoMem,
+                         NoCapture <ArgIndex<0>>,
+                         ImmArg    <ArgIndex<1>>]>;
 }

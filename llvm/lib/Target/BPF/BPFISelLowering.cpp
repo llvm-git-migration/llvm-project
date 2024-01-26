@@ -24,6 +24,7 @@
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
+#include "llvm/IR/IntrinsicsBPF.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
@@ -74,6 +75,8 @@ BPFTargetLowering::BPFTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::DYNAMIC_STACKALLOC, MVT::i64, Custom);
   setOperationAction(ISD::STACKSAVE, MVT::Other, Expand);
   setOperationAction(ISD::STACKRESTORE, MVT::Other, Expand);
+
+  setOperationAction(ISD::ADDRSPACECAST, MVT::i64, Custom);
 
   // Set unsupported atomic operations as Custom so
   // we can emit better error messages than fatal error
@@ -136,6 +139,8 @@ BPFTargetLowering::BPFTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i16, Expand);
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i32, Expand);
   }
+
+  setOperationAction(ISD::INTRINSIC_WO_CHAIN, MVT::Other, Custom);
 
   // Extended load operations for i1 types must be promoted
   for (MVT VT : MVT::integer_valuetypes()) {
@@ -315,6 +320,10 @@ SDValue BPFTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
     return LowerSDIVSREM(Op, DAG);
   case ISD::DYNAMIC_STACKALLOC:
     return LowerDYNAMIC_STACKALLOC(Op, DAG);
+  case ISD::INTRINSIC_WO_CHAIN:
+    return LowerINTRINSIC_WO_CHAIN(Op, DAG);
+  case ISD::ADDRSPACECAST:
+    return LowerADDRSPACECAST(Op, DAG);
   }
 }
 
@@ -638,6 +647,39 @@ SDValue BPFTargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
   return DAG.getMergeValues(Ops, SDLoc());
 }
 
+SDValue BPFTargetLowering::LowerADDRSPACECAST(SDValue Op,
+                                              SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  fail(DL, DAG, "Address space casts are not supported by BPF back-end");
+  return Op.getOperand(0);
+}
+
+void BPFTargetLowering::CollectTargetIntrinsicOperands(
+    const CallInst &I, SmallVectorImpl<SDValue> &Ops, SelectionDAG &DAG) const {
+  Function *Func = I.getCalledFunction();
+  if (!Func)
+    return;
+  if (Func->getIntrinsicID() == Intrinsic::bpf_arena_cast) {
+    unsigned ASpace = I.getOperand(0)->getType()->getPointerAddressSpace();
+    Ops.push_back(DAG.getTargetConstant(ASpace, SDLoc(), MVT::i64));
+  }
+  return;
+}
+
+SDValue BPFTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
+                                                   SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  unsigned IntNo = Op.getConstantOperandVal(0);
+  if (IntNo == Intrinsic::bpf_arena_cast) {
+    SDValue Ptr = Op.getOperand(1);
+    SDValue Code = Op.getOperand(2);
+    SDValue ASpace = Op.getOperand(3);
+    return DAG.getNode(BPFISD::ADDR_SPACE, DL, Op.getValueType(), Ptr, Code,
+                       ASpace);
+  }
+  return SDValue();
+}
+
 SDValue BPFTargetLowering::LowerBR_CC(SDValue Op, SelectionDAG &DAG) const {
   SDValue Chain = Op.getOperand(0);
   ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(1))->get();
@@ -687,6 +729,8 @@ const char *BPFTargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "BPFISD::Wrapper";
   case BPFISD::MEMCPY:
     return "BPFISD::MEMCPY";
+  case BPFISD::ADDR_SPACE:
+    return "BPFISD::ADDR_SPACE";
   }
   return nullptr;
 }
