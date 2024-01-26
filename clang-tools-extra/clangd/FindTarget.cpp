@@ -733,6 +733,18 @@ llvm::SmallVector<ReferenceLoc> refInDecl(const Decl *D,
                                   /*IsDecl=*/true,
                                   {OIMD}});
     }
+
+    void VisitObjCPropertyImplDecl(const ObjCPropertyImplDecl *OPID) {
+      if (OPID->isIvarNameSpecified())
+        Refs.push_back(ReferenceLoc{NestedNameSpecifierLoc(),
+                                    OPID->getPropertyIvarDeclLoc(),
+                                    /*IsDecl=*/false,
+                                    {OPID->getPropertyIvarDecl()}});
+      Refs.push_back(ReferenceLoc{NestedNameSpecifierLoc(),
+                                  OPID->getLocation(),
+                                  /*IsDecl=*/false,
+                                  {OPID->getPropertyDecl()}});
+    }
   };
 
   Visitor V{Resolver};
