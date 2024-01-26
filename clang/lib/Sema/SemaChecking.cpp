@@ -16166,7 +16166,7 @@ static void CheckConditionalOperator(Sema &S, AbstractConditionalOperator *E,
 /// Check conversion of given expression to boolean.
 /// Input argument E is a logical expression.
 static void CheckBoolLikeConversion(Sema &S, Expr *E, SourceLocation CC) {
-  if (S.getLangOpts().Bool)
+  if (S.getLangOpts().Bool && !S.getLangOpts().C23)
     return;
   if (E->IgnoreParenImpCasts()->getType()->isAtomicType())
     return;
