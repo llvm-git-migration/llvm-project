@@ -345,6 +345,22 @@ define void @store_to_readonly_noalias(ptr readonly noalias %0) {
   ret void
 }
 
+; if ptr which store to is addrspacecast, and its target is alloca. remove it.
+define void @src_store_oneuse_addrspaceast_alloca(ptr align 8 %arg) {
+; CHECK-LABEL: @src_store_oneuse_addrspaceast_alloca(
+; CHECK-NEXT:  bb:
+; CHECK-NEXT:    store ptr poison, ptr null, align 8
+; CHECK-NEXT:    ret void
+;
+bb:
+  %i = alloca ptr, align 8, addrspace(5)
+  %i1 = addrspacecast ptr addrspace(5) %i to ptr
+  store ptr %arg, ptr %i1, align 8
+  %i2 = load ptr, ptr %i1, align 8
+  store ptr %i2, ptr null, align 8
+  ret void
+}
+
 !0 = !{!4, !4, i64 0}
 !1 = !{!"omnipotent char", !2}
 !2 = !{!"Simple C/C++ TBAA"}
