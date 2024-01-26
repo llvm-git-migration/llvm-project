@@ -27,6 +27,7 @@
 #include "clang/AST/TypeOrdering.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Sema/EnterExpressionEvaluationContext.h"
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Ownership.h"
@@ -2545,13 +2546,6 @@ StmtResult Sema::ActOnCXXForRangeStmt(
     return StmtError();
   }
 
-  // P2718R0 - Lifetime extension in range-based for loops.
-  if (getLangOpts().CPlusPlus23 && !LifetimeExtendTemps.empty()) {
-    InitializedEntity Entity = InitializedEntity::InitializeVariable(RangeVar);
-    for (auto *MTE : LifetimeExtendTemps)
-      MTE->setExtendingDecl(RangeVar, Entity.allocateManglingNumber());
-  }
-
   // Claim the type doesn't contain auto: we've already done the checking.
   DeclGroupPtrTy RangeGroup =
       BuildDeclaratorGroup(MutableArrayRef<Decl *>((Decl **)&RangeVar, 1));
@@ -2564,7 +2558,7 @@ StmtResult Sema::ActOnCXXForRangeStmt(
   StmtResult R = BuildCXXForRangeStmt(
       ForLoc, CoawaitLoc, InitStmt, ColonLoc, RangeDecl.get(),
       /*BeginStmt=*/nullptr, /*EndStmt=*/nullptr,
-      /*Cond=*/nullptr, /*Inc=*/nullptr, DS, RParenLoc, Kind);
+      /*Cond=*/nullptr, /*Inc=*/nullptr, DS, RParenLoc, Kind, LifetimeExtendTemps);
   if (R.isInvalid()) {
     ActOnInitializerError(LoopVar);
     return StmtError();
@@ -2760,7 +2754,7 @@ StmtResult Sema::BuildCXXForRangeStmt(SourceLocation ForLoc,
                                       Stmt *Begin, Stmt *End, Expr *Cond,
                                       Expr *Inc, Stmt *LoopVarDecl,
                                       SourceLocation RParenLoc,
-                                      BuildForRangeKind Kind) {
+                                      BuildForRangeKind Kind, ArrayRef<MaterializeTemporaryExpr *> LifetimeExtendTemps) {
   // FIXME: This should not be used during template instantiation. We should
   // pick up the set of unqualified lookup results for the != and + operators
   // in the initial parse.
@@ -2819,6 +2813,14 @@ StmtResult Sema::BuildCXXForRangeStmt(SourceLocation ForLoc,
     if (RequireCompleteType(RangeLoc, RangeType,
                             diag::err_for_range_incomplete_type))
       return StmtError();
+
+    // P2718R0 - Lifetime extension in range-based for loops.
+    if (getLangOpts().CPlusPlus23 && !LifetimeExtendTemps.empty()) {
+      InitializedEntity Entity =
+          InitializedEntity::InitializeVariable(RangeVar);
+      for (auto *MTE : LifetimeExtendTemps)
+        MTE->setExtendingDecl(RangeVar, Entity.allocateManglingNumber());
+    }
 
     // Build auto __begin = begin-expr, __end = end-expr.
     // Divide by 2, since the variables are in the inner scope (loop body).

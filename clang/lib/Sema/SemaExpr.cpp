@@ -6298,10 +6298,8 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
             CallLoc, Param, CurContext};
       // Pass down lifetime extending flag, and collect temporaries in
       // CreateMaterializeTemporaryExpr when we rewrite the call argument.
-      auto &LastRecord = ExprEvalContexts.back();
-      auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
-      LastRecord.IsInLifetimeExtendingContext = IsInLifetimeExtendingContext;
-
+      keepInLifetimeExtendingContext();
+      keepMaterializePRValueInDiscardedExpression();
       EnsureImmediateInvocationInDefaultArgs Immediate(*this);
       ExprResult Res;
       runWithSufficientStackSpace(CallLoc, [&] {
@@ -6315,10 +6313,6 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
       if (Res.isInvalid())
         return ExprError();
       Init = Res.get();
-
-      // Collect MaterializeTemporaryExprs in the rewritten CXXDefaultArgExpr.
-      PrevRecord.ForRangeLifetimeExtendTemps.append(
-          LastRecord.ForRangeLifetimeExtendTemps);
     }
   }
 
@@ -6351,7 +6345,7 @@ ExprResult Sema::BuildCXXDefaultInitExpr(SourceLocation Loc, FieldDecl *Field) {
   Expr *Init = nullptr;
 
   bool NestedDefaultChecking = isCheckingDefaultArgumentOrInitializer();
-
+  bool IsInLifetimeExtendingContext = isInLifetimeExtendingContext();
   EnterExpressionEvaluationContext EvalContext(
       *this, ExpressionEvaluationContext::PotentiallyEvaluated, Field);
 
@@ -6386,12 +6380,16 @@ ExprResult Sema::BuildCXXDefaultInitExpr(SourceLocation Loc, FieldDecl *Field) {
   ImmediateCallVisitor V(getASTContext());
   if (!NestedDefaultChecking)
     V.TraverseDecl(Field);
-  if (V.HasImmediateCalls) {
+  if (V.HasImmediateCalls || IsInLifetimeExtendingContext) {
     ExprEvalContexts.back().DelayedDefaultInitializationContext = {Loc, Field,
                                                                    CurContext};
     ExprEvalContexts.back().IsCurrentlyCheckingDefaultArgumentOrInitializer =
         NestedDefaultChecking;
 
+    // Pass down lifetime extending flag, and collect temporaries in
+    // CreateMaterializeTemporaryExpr when we rewrite the call argument.
+    keepInLifetimeExtendingContext();
+    keepMaterializePRValueInDiscardedExpression();
     EnsureImmediateInvocationInDefaultArgs Immediate(*this);
     ExprResult Res;
     runWithSufficientStackSpace(Loc, [&] {
@@ -18662,6 +18660,16 @@ void Sema::PopExpressionEvaluationContext() {
       for (const auto *L : Rec.Lambdas)
         Diag(L->getBeginLoc(), D);
     }
+  }
+
+  // Append the collected materialized temporaries into previous context before
+  // exit if the previous also is a lifetime extending context.
+  auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
+  if (getLangOpts().CPlusPlus23 && isInLifetimeExtendingContext() &&
+      PrevRecord.IsInLifetimeExtendingContext && !ExprEvalContexts.empty()) {
+    auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
+    PrevRecord.ForRangeLifetimeExtendTemps.append(
+        Rec.ForRangeLifetimeExtendTemps);
   }
 
   WarnOnPendingNoDerefs(Rec);

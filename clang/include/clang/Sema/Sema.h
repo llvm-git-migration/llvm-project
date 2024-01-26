@@ -1343,7 +1343,7 @@ public:
     llvm::SmallPtrSet<DeclRefExpr *, 4> ReferenceToConsteval;
 
     /// P2718R0 - Lifetime extension in range-based for loops.
-    /// MaterializeTemporaryExprs in for-range-init expression which need to
+    /// MaterializeTemporaryExprs in for-range-init expressions which need to
     /// extend lifetime. Add MaterializeTemporaryExpr* if the value of
     /// IsInLifetimeExtendingContext is true.
     SmallVector<MaterializeTemporaryExpr *, 8> ForRangeLifetimeExtendTemps;
@@ -1367,8 +1367,9 @@ public:
     // VLAs).
     bool InConditionallyConstantEvaluateContext = false;
 
-    /// Whether we are currently in a context in which temporaries must be
-    /// lifetime-extended (Eg. in a for-range initializer).
+    /// Whether we are currently in a context in which all temporaries must be
+    /// lifetime-extended, even if they're not bound to a reference (for example,
+    /// in a for-range initializer).
     bool IsInLifetimeExtendingContext = false;
 
     /// Whether we should materialize temporaries in discarded expressions.
@@ -5277,7 +5278,8 @@ public:
                                   Expr *Cond, Expr *Inc,
                                   Stmt *LoopVarDecl,
                                   SourceLocation RParenLoc,
-                                  BuildForRangeKind Kind);
+                                  BuildForRangeKind Kind,
+      ArrayRef<MaterializeTemporaryExpr *> LifetimeExtendTemps = {});
   StmtResult FinishCXXForRangeStmt(Stmt *ForRange, Stmt *Body);
 
   StmtResult ActOnGotoStmt(SourceLocation GotoLoc,
@@ -10008,7 +10010,7 @@ public:
     return ExprEvalContexts.back().IsInLifetimeExtendingContext;
   }
 
-  bool ShouldMaterializePRValueInDiscardedExpression() const {
+  bool shouldMaterializePRValueInDiscardedExpression() const {
     assert(!ExprEvalContexts.empty() &&
            "Must be in an expression evaluation context");
     return ExprEvalContexts.back().MaterializePRValueInDiscardedExpression;
@@ -10051,6 +10053,32 @@ public:
       Res = Ctx.DelayedDefaultInitializationContext;
     }
     return Res;
+  }
+
+  /// keepInLifetimeExtendingContext - Pull down IsInLifetimeExtendingContext
+  /// flag from previous context.
+  void keepInLifetimeExtendingContext() {
+    if (ExprEvalContexts.size() > 2 &&
+        ExprEvalContexts[ExprEvalContexts.size() - 2]
+            .IsInLifetimeExtendingContext) {
+      auto &LastRecord = ExprEvalContexts.back();
+      auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
+      LastRecord.IsInLifetimeExtendingContext =
+          PrevRecord.IsInLifetimeExtendingContext;
+    }
+  }
+
+  /// keepInLifetimeExtendingContext - Pull down
+  /// MaterializePRValueInDiscardedExpression flag from previous context.
+  void keepMaterializePRValueInDiscardedExpression() {
+    if (ExprEvalContexts.size() > 2 &&
+        ExprEvalContexts[ExprEvalContexts.size() - 2]
+            .MaterializePRValueInDiscardedExpression) {
+      auto &LastRecord = ExprEvalContexts.back();
+      auto &PrevRecord = ExprEvalContexts[ExprEvalContexts.size() - 2];
+      LastRecord.MaterializePRValueInDiscardedExpression =
+          PrevRecord.MaterializePRValueInDiscardedExpression;
+    }
   }
 
   /// RAII class used to determine whether SFINAE has

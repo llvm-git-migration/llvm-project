@@ -2334,9 +2334,16 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
         FRI->RangeExpr = ParseBraceInitializer();
       else
         FRI->RangeExpr = ParseExpression();
-      if (getLangOpts().CPlusPlus23)
-        FRI->LifetimeExtendTemps = std::move(
-            Actions.ExprEvalContexts.back().ForRangeLifetimeExtendTemps);
+
+      // Before c++23, ForRangeLifetimeExtendTemps should be empty.
+      assert(
+          getLangOpts().CPlusPlus23 ||
+          Actions.ExprEvalContexts.back().ForRangeLifetimeExtendTemps.empty());
+
+      // Move the collected materialized temporaries into ForRangeInit before
+      // ForRangeInitContext exit.
+      FRI->LifetimeExtendTemps = std::move(
+          Actions.ExprEvalContexts.back().ForRangeLifetimeExtendTemps);
     }
 
     Decl *ThisDecl = Actions.ActOnDeclarator(getCurScope(), D);

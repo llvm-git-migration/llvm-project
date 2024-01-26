@@ -5440,6 +5440,8 @@ void Sema::InstantiateVariableInitializer(
     EnterExpressionEvaluationContext Evaluated(
         *this, Sema::ExpressionEvaluationContext::PotentiallyEvaluated, Var);
 
+    keepInLifetimeExtendingContext();
+    keepMaterializePRValueInDiscardedExpression();
     // Instantiate the initializer.
     ExprResult Init;
 
