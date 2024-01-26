@@ -18,6 +18,11 @@ function(add_unittest_framework_library name)
     set(library_type STATIC)
   endif()
 
+  set(clock_target "")
+  if(TARGET libc.src.time.clock)
+    set(clock_target libc.src.time.clock)
+  endif()
+
   foreach(lib IN ITEMS ${name}.unit ${name}.hermetic)
     add_library(
       ${lib}
@@ -28,7 +33,7 @@ function(add_unittest_framework_library name)
     )
     target_include_directories(${lib} PUBLIC ${LIBC_SOURCE_DIR})
     target_compile_options(${lib} PRIVATE -fno-exceptions -fno-rtti)
-    if(TARGET libc.src.time.clock)
+    if(${clock_target})
       target_compile_definitions(${lib} PRIVATE TARGET_SUPPORTS_CLOCK)
     endif()
   endforeach()
@@ -70,6 +75,7 @@ add_unittest_framework_library(
     libc.src.__support.CPP.type_traits
     libc.src.__support.OSUtil.osutil
     libc.src.__support.uint128
+    ${clock_target}
 )
 
 set(libc_death_test_srcs LibcDeathTestExecutors.cpp)
@@ -114,6 +120,7 @@ add_unittest_framework_library(
     libc.src.__support.FPUtil.fpbits_str
     libc.src.__support.FPUtil.fenv_impl
     libc.src.__support.FPUtil.rounding_mode
+    libc.src.errno.errno
 )
 
 add_unittest_framework_library(
