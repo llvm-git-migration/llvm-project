@@ -672,8 +672,7 @@ public:
   FailureOr<OperationName> parseCustomOperationName();
 
   /// Store the SSA names for the current operation as attrs for debug purposes.
-  ParseResult storeSSANames(Operation *&op,
-                            SmallVector<ResultRecord, 1> resultIDs);
+  void storeSSANames(Operation *&op, ArrayRef<ResultRecord> resultIDs);
   DenseMap<BlockArgument, StringRef> blockArgNames;
 
   //===--------------------------------------------------------------------===//
@@ -1264,11 +1263,6 @@ ParseResult OperationParser::parseOperation() {
              << op->getNumResults() << " results but was provided "
              << numExpectedResults << " to bind";
 
-    // If enabled, store the SSA name(s) for the operation
-    llvm::outs() << "parsing operation: " << op->getName() << "\n";
-    if (state.config.shouldRetainIdentifierNames())
-      storeSSANames(op, resultIDs);
-
     // Add this operation to the assembly state if it was provided to populate.
     if (state.asmState) {
       unsigned resultIt = 0;
@@ -1339,15 +1333,12 @@ OperationParser::parseSuccessors(SmallVectorImpl<Block *> &destinations) {
 }
 
 /// Store the SSA names for the current operation as attrs for debug purposes.
-ParseResult
-OperationParser::storeSSANames(Operation *&op,
-                               SmallVector<ResultRecord, 1> resultIDs) {
-  if (op->getNumResults() == 0)
-    emitError("Operation has no results\n");
-  else if (op->getNumResults() > 1)
+void OperationParser::storeSSANames(Operation *&op,
+                                    ArrayRef<ResultRecord> resultIDs) {
+  if (op->getNumResults() > 1)
     emitError("have not yet implemented support for multiple return values\n");
 
-  for (ResultRecord &resIt : resultIDs) {
+  for (const ResultRecord &resIt : resultIDs) {
     for (unsigned subRes : llvm::seq<unsigned>(0, std::get<1>(resIt))) {
       op->setDiscardableAttr(
           "mlir.ssaName",
@@ -1375,8 +1366,6 @@ OperationParser::storeSSANames(Operation *&op,
       }
     }
   }
-
-  return success();
 }
 
 namespace {
@@ -2144,6 +2133,11 @@ OperationParser::parseCustomOperation(ArrayRef<ResultRecord> resultIDs) {
 
   // Otherwise, create the operation and try to parse a location for it.
   Operation *op = opBuilder.create(opState);
+
+  // If enabled, store the SSA name(s) for the operation
+  if (state.config.shouldRetainIdentifierNames())
+    storeSSANames(op, resultIDs);
+
   if (parseTrailingLocationSpecifier(op))
     return nullptr;
 
