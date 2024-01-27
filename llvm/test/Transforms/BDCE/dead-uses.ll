@@ -9,8 +9,7 @@ declare <2 x i32> @llvm.fshr.v2i32(<2 x i32>, <2 x i32>, <2 x i32>)
 ; First fshr operand is dead.
 define i32 @pr39771_fshr_multi_use_instr(i32 %a) {
 ; CHECK-LABEL: @pr39771_fshr_multi_use_instr(
-; CHECK-NEXT:    [[X:%.*]] = or i32 [[A:%.*]], 0
-; CHECK-NEXT:    [[B:%.*]] = tail call i32 @llvm.fshr.i32(i32 0, i32 [[X]], i32 1)
+; CHECK-NEXT:    [[B:%.*]] = tail call i32 @llvm.fshr.i32(i32 0, i32 [[A:%.*]], i32 1)
 ; CHECK-NEXT:    [[C:%.*]] = lshr i32 [[B]], 23
 ; CHECK-NEXT:    [[D:%.*]] = xor i32 [[C]], [[B]]
 ; CHECK-NEXT:    [[E:%.*]] = and i32 [[D]], 31

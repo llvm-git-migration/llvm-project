@@ -5,9 +5,8 @@ define void @or(i64 %a) {
 ; CHECK-LABEL: define void @or(
 ; CHECK-SAME: i64 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR:%.*]] = or i64 [[A]], 3
-; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[OR]], 8
-; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[OR]], 16
+; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[A]], 8
+; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[A]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
 ; CHECK-NEXT:    call void @use(i64 [[RET2]])
 ; CHECK-NEXT:    ret void
@@ -25,9 +24,8 @@ define void @and(i64 %a) {
 ; CHECK-LABEL: define void @and(
 ; CHECK-SAME: i64 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND:%.*]] = and i64 [[A]], 24
-; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[AND]], 8
-; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[AND]], 16
+; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[A]], 8
+; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[A]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
 ; CHECK-NEXT:    call void @use(i64 [[RET2]])
 ; CHECK-NEXT:    ret void
@@ -45,9 +43,7 @@ define void @or_of_and(i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @or_of_and(
 ; CHECK-SAME: i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 24
-; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 25
-; CHECK-NEXT:    [[OR:%.*]] = or i64 [[AND1]], [[AND2]]
+; CHECK-NEXT:    [[OR:%.*]] = or i64 [[A]], [[B]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[OR]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[OR]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -69,9 +65,7 @@ define void @select_of_and(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select_of_and(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 24
-; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 25
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[B]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -93,9 +87,8 @@ define void @select_of_and_2(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select_of_and_2(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 25
 ; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 23
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[AND2]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -117,9 +110,8 @@ define void @select_of_and_multiuse(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select_of_and_multiuse(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 24
 ; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 25
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[AND2]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -165,9 +157,7 @@ define void @select_of_or(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select_of_or(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR1:%.*]] = or i64 [[A]], 3
-; CHECK-NEXT:    [[OR2:%.*]] = or i64 [[B]], 192
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[OR1]], i64 [[OR2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[B]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
