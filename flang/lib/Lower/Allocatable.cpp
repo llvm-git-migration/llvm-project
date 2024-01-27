@@ -747,7 +747,9 @@ static mlir::Value genDeallocate(fir::FirOpBuilder &builder, mlir::Location loc,
   // Deallocate intrinsic types inline.
   if (!box.isDerived() && !box.isPolymorphic() &&
       !box.isUnlimitedPolymorphic() && !errorManager.hasStatSpec() &&
-      !useAllocateRuntime) {
+      !useAllocateRuntime && !box.isPointer()) {
+    // Pointers must use PointerDeallocate so that their deallocations
+    // can be validated.
     return fir::factory::genFreemem(builder, loc, box);
   }
   // Use runtime calls to deallocate descriptor cases. Sync MutableBoxValue
