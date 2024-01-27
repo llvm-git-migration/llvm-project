@@ -2491,8 +2491,8 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
     Value *X;
     Value *Src = II->getArgOperand(0);
     if (match(Src, m_FNeg(m_Value(X))) || match(Src, m_FAbs(m_Value(X)))) {
-      // cos(-x) -> cos(x)
-      // cos(fabs(x)) -> cos(x)
+      // cos(-x) --> cos(x)
+      // cos(fabs(x)) --> cos(x)
       return replaceOperand(*II, 0, X);
     }
     break;
