@@ -125,6 +125,33 @@ static bool bitTrackingDCE(Function &F, DemandedBits &DB) {
       }
     }
 
+    // Simplify select of ands when the mask does not affect the demanded bits.
+    if (SelectInst *SI = dyn_cast<SelectInst>(&I)) {
+      APInt Demanded = DB.getDemandedBits(SI);
+      if (!Demanded.isAllOnes()) {
+        for (Use &U : I.operands()) {
+          auto *And = dyn_cast<BinaryOperator>(&U);
+          if (!And || !And->hasOneUse() || And->getOpcode() != Instruction::And)
+            continue;
+
+          auto *CV = dyn_cast<ConstantInt>(And->getOperand(1));
+          if (!CV)
+            continue;
+
+          APInt Mask = CV->getValue();
+          if ((Mask | ~Demanded).isAllOnes()) {
+            clearAssumptionsOfUsers(And, DB);
+            U.set(And->getOperand(0));
+            Worklist.push_back(And);
+            Changed = true;
+          }
+        }
+      }
+
+      if (Changed)
+        continue;
+    }
+
     for (Use &U : I.operands()) {
       // DemandedBits only detects dead integer uses.
       if (!U->getType()->isIntOrIntVectorTy())

@@ -5,9 +5,7 @@ define void @select(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 24
-; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 25
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[B]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -29,9 +27,8 @@ define void @select_2(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @select_2(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 25
 ; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 23
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[AND2]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
@@ -77,9 +74,8 @@ define void @and_multiuse(i1 %c, i64 %a, i64 %b) {
 ; CHECK-LABEL: define void @and_multiuse(
 ; CHECK-SAME: i1 [[C:%.*]], i64 [[A:%.*]], i64 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND1:%.*]] = and i64 [[A]], 24
 ; CHECK-NEXT:    [[AND2:%.*]] = and i64 [[B]], 25
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[AND1]], i64 [[AND2]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i64 [[A]], i64 [[AND2]]
 ; CHECK-NEXT:    [[RET1:%.*]] = and i64 [[S]], 8
 ; CHECK-NEXT:    [[RET2:%.*]] = and i64 [[S]], 16
 ; CHECK-NEXT:    call void @use(i64 [[RET1]])
