@@ -1935,7 +1935,9 @@ static Value *optimizeTrigReflections(CallInst *Call, LibFunc Func,
   case LibFunc_cosf:
   case LibFunc_cosl:
     // cos(-X) --> cos(X)
-    if (match(Call->getArgOperand(0), m_FNeg(m_Value(X))))
+    // cos(fabs(x)) -> cos(x)
+    if (match(Call->getArgOperand(0), m_FNeg(m_Value(X))) ||
+        match(Call->getArgOperand(0), m_FAbs(m_Value(X))))
       return copyFlags(*Call,
                        B.CreateCall(Call->getCalledFunction(), X, "cos"));
     break;
