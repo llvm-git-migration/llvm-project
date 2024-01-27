@@ -109,9 +109,8 @@ define float @cosf_unary_negated_arg_FMF(float %x) {
 
 define double @cos_unary_fabs_arg(double %x) {
 ; ANY-LABEL: @cos_unary_fabs_arg(
-; ANY-NEXT:    [[FABS:%.*]] = tail call double @llvm.fabs.f64(double [[X:%.*]])
-; ANY-NEXT:    [[R:%.*]] = call double @cos(double [[FABS]])
-; ANY-NEXT:    ret double [[R]]
+; ANY-NEXT:    [[COS:%.*]] = call double @cos(double [[X:%.*]])
+; ANY-NEXT:    ret double [[COS]]
 ;
   %fabs = tail call double @llvm.fabs.f64(double %x)
   %r = call double @cos(double %fabs)
@@ -120,9 +119,8 @@ define double @cos_unary_fabs_arg(double %x) {
 
 define float @cosf_unary_fabs_arg(float %x) {
 ; ANY-LABEL: @cosf_unary_fabs_arg(
-; ANY-NEXT:    [[FABS:%.*]] = tail call float @llvm.fabs.f32(float [[X:%.*]])
-; ANY-NEXT:    [[R:%.*]] = call float @cosf(float [[FABS]])
-; ANY-NEXT:    ret float [[R]]
+; ANY-NEXT:    [[COS:%.*]] = call float @cosf(float [[X:%.*]])
+; ANY-NEXT:    ret float [[COS]]
 ;
   %fabs = tail call float @llvm.fabs.f32(float %x)
   %r = call float @cosf(float %fabs)
@@ -131,9 +129,8 @@ define float @cosf_unary_fabs_arg(float %x) {
 
 define float @cosf_unary_fabs_arg_FMF(float %x) {
 ; ANY-LABEL: @cosf_unary_fabs_arg_FMF(
-; ANY-NEXT:    [[FABS:%.*]] = tail call float @llvm.fabs.f32(float [[X:%.*]])
-; ANY-NEXT:    [[R:%.*]] = call reassoc nnan float @cosf(float [[FABS]])
-; ANY-NEXT:    ret float [[R]]
+; ANY-NEXT:    [[COS:%.*]] = call reassoc nnan float @cosf(float [[X:%.*]])
+; ANY-NEXT:    ret float [[COS]]
 ;
   %fabs = tail call float @llvm.fabs.f32(float %x)
   %r = call nnan reassoc float @cosf(float %fabs)
