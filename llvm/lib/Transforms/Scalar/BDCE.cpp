@@ -125,6 +125,28 @@ static bool bitTrackingDCE(Function &F, DemandedBits &DB) {
       }
     }
 
+    // Simplify `and` or `or` when their mask does not affect the demanded bits.
+    if (auto *BO = dyn_cast<BinaryOperator>(&I)) {
+      unsigned Opc = BO->getOpcode();
+      if (Opc == Instruction::And || Opc == Instruction::Or) {
+        APInt Demanded = DB.getDemandedBits(BO);
+        if (!Demanded.isAllOnes()) {
+          if (auto *CV = dyn_cast<ConstantInt>(BO->getOperand(1))) {
+            APInt Mask = CV->getValue();
+            if ((Opc == Instruction::And && Demanded.isSubsetOf(Mask)) ||
+                (Opc == Instruction::Or && !Demanded.intersects(Mask))) {
+              clearAssumptionsOfUsers(BO, DB);
+              BO->replaceAllUsesWith(BO->getOperand(0));
+              Worklist.push_back(BO);
+              ++NumSimplified;
+              Changed = true;
+              continue;
+            }
+          }
+        }
+      }
+    }
+
     for (Use &U : I.operands()) {
       // DemandedBits only detects dead integer uses.
       if (!U->getType()->isIntOrIntVectorTy())
