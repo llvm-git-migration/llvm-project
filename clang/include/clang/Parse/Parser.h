@@ -2398,7 +2398,7 @@ private:
   struct ForRangeInit {
     SourceLocation ColonLoc;
     ExprResult RangeExpr;
-
+    SmallVector<MaterializeTemporaryExpr *, 8> LifetimeExtendTemps;
     bool ParsedForRangeDecl() { return !ColonLoc.isInvalid(); }
   };
   struct ForRangeInfo : ForRangeInit {
