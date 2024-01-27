@@ -79,6 +79,73 @@ using namespace llvm;
 
 namespace {
 
+// Created on demand if the coro-early pass has work to do.
+class Lowerer : public coro::LowererBase {
+  IRBuilder<> Builder;
+  void lowerAwaitSuspend(CoroAwaitSuspendInst *CB);
+
+public:
+  Lowerer(Module &M) : LowererBase(M), Builder(Context) {}
+
+  void lowerAwaitSuspends(Function &F);
+};
+
+void Lowerer::lowerAwaitSuspend(CoroAwaitSuspendInst *CB) {
+  auto Helper = CB->getHelperFunction();
+  auto Awaiter = CB->getAwaiter();
+  auto FramePtr = CB->getFrame();
+
+  Builder.SetInsertPoint(CB);
+
+  CallBase *NewCall = nullptr;
+  if (auto Invoke = dyn_cast<InvokeInst>(CB)) {
+    auto HelperInvoke =
+        Builder.CreateInvoke(Helper, Invoke->getNormalDest(),
+                             Invoke->getUnwindDest(), {Awaiter, FramePtr});
+
+    HelperInvoke->setCallingConv(Invoke->getCallingConv());
+    std::copy(Invoke->bundle_op_info_begin(), Invoke->bundle_op_info_end(),
+              HelperInvoke->bundle_op_info_begin());
+    AttributeList NewAttributes =
+        Invoke->getAttributes().removeParamAttributes(Context, 2);
+    HelperInvoke->setAttributes(NewAttributes);
+    HelperInvoke->setDebugLoc(Invoke->getDebugLoc());
+    NewCall = HelperInvoke;
+  } else if (auto Call = dyn_cast<CallInst>(CB)) {
+    auto HelperCall = Builder.CreateCall(Helper, {Awaiter, FramePtr});
+
+    AttributeList NewAttributes =
+        Call->getAttributes().removeParamAttributes(Context, 2);
+    HelperCall->setAttributes(NewAttributes);
+    HelperCall->setDebugLoc(Call->getDebugLoc());
+    NewCall = HelperCall;
+  }
+
+  CB->replaceAllUsesWith(NewCall);
+  CB->eraseFromParent();
+
+  InlineFunctionInfo FnInfo;
+  auto InlineRes = InlineFunction(*NewCall, FnInfo);
+  assert(InlineRes.isSuccess() && "Expected inlining to succeed");
+  (void)InlineRes;
+}
+
+void Lowerer::lowerAwaitSuspends(Function &F) {
+  SmallVector<CoroAwaitSuspendInst *, 4> AwaitSuspends;
+
+  for (Instruction &I : llvm::make_early_inc_range(instructions(F))) {
+    auto *CB = dyn_cast<CallBase>(&I);
+    if (!CB)
+      continue;
+
+    if (auto *AWS = dyn_cast<CoroAwaitSuspendInst>(CB))
+      AwaitSuspends.push_back(AWS);
+  }
+
+  for (auto *AWS : AwaitSuspends)
+    lowerAwaitSuspend(AWS);
+}
+
 /// A little helper class for building
 class CoroCloner {
 public:
@@ -1513,6 +1580,11 @@ static void handleNoSuspendCoroutine(coro::Shape &Shape) {
 // the coroutine and if that is the case we cannot eliminate the suspend point.
 static bool hasCallsInBlockBetween(Instruction *From, Instruction *To) {
   for (Instruction *I = From; I != To; I = I->getNextNode()) {
+    // This one could resume the coroutine,
+    // but additional analysis before the check should ensure,
+    // that it can't happen
+    if (isa<CoroAwaitSuspendInst>(I))
+      continue;
     // Assume that no intrinsic can resume the coroutine.
     if (isa<IntrinsicInst>(I))
       continue;
@@ -1553,6 +1625,9 @@ static bool hasCallsInBlocksBetween(BasicBlock *SaveBB, BasicBlock *ResDesBB) {
 }
 
 static bool hasCallsBetween(Instruction *Save, Instruction *ResumeOrDestroy) {
+  if (Save == ResumeOrDestroy)
+    return false;
+
   auto *SaveBB = Save->getParent();
   auto *ResumeOrDestroyBB = ResumeOrDestroy->getParent();
 
@@ -1573,6 +1648,35 @@ static bool hasCallsBetween(Instruction *Save, Instruction *ResumeOrDestroy) {
     return true;
 
   return false;
+}
+
+// Check if await-suspend helper is "simple".
+// The conditions are:
+// 1. There is exactly one ret ptr instruction
+// 2. The return result is exactly coroutine frame parameter, passed to helper
+// FIXME: perform more sophisiticated analysis?
+static bool isSimpleHelper(CoroAwaitSuspendInst *AWS) {
+  auto Helper = AWS->getHelperFunction();
+
+  SmallVector<ReturnInst *, 4> Rets;
+
+  for (auto &BB : *Helper) {
+    if (BB.empty())
+      continue;
+    auto terminator = BB.getTerminator();
+    if (!terminator)
+      continue;
+    if (auto Ret = dyn_cast<ReturnInst>(terminator))
+      Rets.push_back(cast<ReturnInst>(terminator));
+  }
+
+  // FIXME: get rid of magical constant
+  for (auto Ret : Rets)
+    if (Ret->getReturnValue() != Helper->getArg(1) ||
+        hasCallsBetween(Helper->getEntryBlock().getFirstNonPHI(), Ret))
+      return false;
+
+  return true;
 }
 
 // If a SuspendIntrin is preceded by Resume or Destroy, we can eliminate the
@@ -1598,9 +1702,18 @@ static bool simplifySuspendPoint(CoroSuspendInst *Suspend,
   if (!SubFn)
     return false;
 
-  // Does not refer to the current coroutine, we cannot do anything with it.
-  if (SubFn->getFrame() != CoroBegin)
-    return false;
+  auto Frame = SubFn->getFrame();
+
+  // Check that frame directly always refers to the current coroutine,
+  // either directly or via helper
+  if (Frame != CoroBegin) {
+    auto *AWS = dyn_cast<CoroAwaitSuspendInst>(Frame);
+    if (!AWS)
+      return false;
+
+    if (AWS->getFrame() != CoroBegin || !isSimpleHelper(AWS))
+      return false;
+  }
 
   // See if the transformation is safe. Specifically, see if there are any
   // calls in between Save and CallInstr. They can potenitally resume the
@@ -1678,12 +1791,16 @@ static void simplifySuspendPoints(coro::Shape &Shape) {
   }
 }
 
-static void splitSwitchCoroutine(Function &F, coro::Shape &Shape,
+static void splitSwitchCoroutine(Module &M, Function &F, coro::Shape &Shape,
                                  SmallVectorImpl<Function *> &Clones,
                                  TargetTransformInfo &TTI) {
   assert(Shape.ABI == coro::ABI::Switch);
 
   createResumeEntryBlock(F, Shape);
+
+  Lowerer lowerer(M);
+  lowerer.lowerAwaitSuspends(F);
+
   auto ResumeClone = createClone(F, ".resume", Shape,
                                  CoroCloner::Kind::SwitchResume);
   auto DestroyClone = createClone(F, ".destroy", Shape,
@@ -2003,31 +2120,31 @@ namespace {
 }
 
 static coro::Shape
-splitCoroutine(Function &F, SmallVectorImpl<Function *> &Clones,
+splitCoroutine(Module &M, Function &F, SmallVectorImpl<Function *> &Clones,
                TargetTransformInfo &TTI, bool OptimizeFrame,
                std::function<bool(Instruction &)> MaterializableCallback) {
-  PrettyStackTraceFunction prettyStackTrace(F);
+    PrettyStackTraceFunction prettyStackTrace(F);
 
-  // The suspend-crossing algorithm in buildCoroutineFrame get tripped
-  // up by uses in unreachable blocks, so remove them as a first pass.
-  removeUnreachableBlocks(F);
+    // The suspend-crossing algorithm in buildCoroutineFrame get tripped
+    // up by uses in unreachable blocks, so remove them as a first pass.
+    removeUnreachableBlocks(F);
 
-  coro::Shape Shape(F, OptimizeFrame);
-  if (!Shape.CoroBegin)
-    return Shape;
+    coro::Shape Shape(F, OptimizeFrame);
+    if (!Shape.CoroBegin)
+      return Shape;
 
-  simplifySuspendPoints(Shape);
-  buildCoroutineFrame(F, Shape, MaterializableCallback);
-  replaceFrameSizeAndAlignment(Shape);
+    simplifySuspendPoints(Shape);
+    buildCoroutineFrame(F, Shape, MaterializableCallback);
+    replaceFrameSizeAndAlignment(Shape);
 
-  // If there are no suspend points, no split required, just remove
-  // the allocation and deallocation blocks, they are not needed.
-  if (Shape.CoroSuspends.empty()) {
-    handleNoSuspendCoroutine(Shape);
-  } else {
-    switch (Shape.ABI) {
-    case coro::ABI::Switch:
-      splitSwitchCoroutine(F, Shape, Clones, TTI);
+    // If there are no suspend points, no split required, just remove
+    // the allocation and deallocation blocks, they are not needed.
+    if (Shape.CoroSuspends.empty()) {
+      handleNoSuspendCoroutine(Shape);
+    } else {
+      switch (Shape.ABI) {
+      case coro::ABI::Switch:
+      splitSwitchCoroutine(M, F, Shape, Clones, TTI);
       break;
     case coro::ABI::Async:
       splitAsyncCoroutine(F, Shape, Clones);
@@ -2037,7 +2154,7 @@ splitCoroutine(Function &F, SmallVectorImpl<Function *> &Clones,
       splitRetconCoroutine(F, Shape, Clones);
       break;
     }
-  }
+    }
 
   // Replace all the swifterror operations in the original function.
   // This invalidates SwiftErrorOps in the Shape.
@@ -2212,7 +2329,7 @@ PreservedAnalyses CoroSplitPass::run(LazyCallGraph::SCC &C,
     SmallVector<Function *, 4> Clones;
     auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
     const coro::Shape Shape =
-        splitCoroutine(F, Clones, FAM.getResult<TargetIRAnalysis>(F),
+        splitCoroutine(M, F, Clones, FAM.getResult<TargetIRAnalysis>(F),
                        OptimizeFrame, MaterializableCallback);
     updateCallGraphAfterCoroutineSplit(*N, Shape, Clones, C, CG, AM, UR, FAM);
 
