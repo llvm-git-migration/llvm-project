@@ -241,4 +241,23 @@ define i1 @xor_and_or_negative_oneuse(i1 %c, i1 %x, i1 %y) {
   ret i1 %r
 }
 
+@A = global i32 10
+
+define i32 @xor_and_or_constant(i32 %B, i32 %C) {
+; CHECK-LABEL: @xor_and_or_constant(
+; CHECK-NEXT:    [[A_VAL:%.*]] = load i32, ptr @A, align 4
+; CHECK-NEXT:    [[TMP1:%.*]] = or i32 [[A_VAL]], [[B:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = or i32 [[A_VAL]], [[C:%.*]]
+; CHECK-NEXT:    [[TMP3:%.*]] = xor i32 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    ret i32 [[TMP3]]
+;
+  %A_val = load i32, i32* @A
+  %1 = or i32 %A_val, %B
+  %2 = or i32 %A_val, %C
+  %3 = xor i32 %1, %2
+  %4 = xor i32 %A_val, -1
+  %5 = and i32 %3, %4
+  ret i32 %5
+}
+
 declare void @use(i1)
