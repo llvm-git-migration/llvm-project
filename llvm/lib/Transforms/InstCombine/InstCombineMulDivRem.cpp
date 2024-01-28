@@ -1600,7 +1600,18 @@ Instruction *InstCombinerImpl::foldFDivConstantDivisor(BinaryOperator &I) {
   // nnan X / +0.0 -> copysign(inf, X)
   if (I.hasNoNaNs() && match(I.getOperand(1), m_Zero())) {
     IRBuilder<> B(&I);
-    // TODO: nnan nsz X / -0.0 -> copysign(inf, X)
+    CallInst *CopySign = B.CreateIntrinsic(
+        Intrinsic::copysign, {C->getType()},
+        {ConstantFP::getInfinity(I.getType()), I.getOperand(0)}, &I);
+    CopySign->takeName(&I);
+    return replaceInstUsesWith(I, CopySign);
+  }
+
+  // nnan nsz X / -0.0 -> copysign(inf, X)
+  if (I.hasNoNaNs() && I.hasNoSignedZeros() &&
+      match(I.getOperand(1), m_Specific(ConstantFP::get(
+                                 Type::getDoubleTy(I.getContext()), -0.0)))) {
+    IRBuilder<> B(&I);
     CallInst *CopySign = B.CreateIntrinsic(
         Intrinsic::copysign, {C->getType()},
         {ConstantFP::getInfinity(I.getType()), I.getOperand(0)}, &I);
