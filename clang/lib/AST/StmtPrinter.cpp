@@ -1720,6 +1720,12 @@ void StmtPrinter::VisitInitListExpr(InitListExpr* Node) {
   OS << "{";
   for (unsigned i = 0, e = Node->getNumInits(); i != e; ++i) {
     if (i) OS << ", ";
+    // TODO: There is duplicated functionality in APValue::printPretty.
+    // Would be good to consolidate the two.
+    if (!Policy.EntireContentsOfLargeArray && i == 10) {
+      OS << "...";
+      break;
+    }
     if (Node->getInit(i))
       PrintExpr(Node->getInit(i));
     else

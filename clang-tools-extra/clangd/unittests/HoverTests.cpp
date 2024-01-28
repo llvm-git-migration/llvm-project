@@ -3953,8 +3953,27 @@ TEST(Hover, HideBigInitializers) {
   auto H = getHover(AST, T.point(), format::getLLVMStyle(), nullptr);
 
   ASSERT_TRUE(H);
-  EXPECT_EQ(H->Definition, "int arr[]");
+  EXPECT_EQ(H->Definition, "int arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...}");
 }
+
+TEST(Hover, HideBigInitializersIncludedFromThePreamble) {
+  Annotations T(R"cpp(
+  #include "hugearray.h"
+  auto x = a^rr;
+  )cpp");
+  TestTU TU = TestTU::withCode(T.code());
+  TU.AdditionalFiles["hugearray.h"] = R"cpp(
+    #define A(x) x, x, x, x
+    #define B(x) A(A(A(A(x))))
+    int arr[256] = {B(0)};
+  )cpp";
+  auto AST = TU.build();
+  auto H = getHover(AST, T.point(), format::getLLVMStyle(), nullptr);
+  ASSERT_TRUE(H);
+  EXPECT_EQ(H->Definition,
+            "int arr[256] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...}");
+}
+
 
 #if defined(__aarch64__)
 // FIXME: AARCH64 sanitizer buildbots are broken after 72142fbac4.
