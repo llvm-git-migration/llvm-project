@@ -2371,6 +2371,24 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
       return BinaryOperator::CreateNeg(Y);
   }
 
+  {
+    Value *A, *B;
+    // (A & ~B) - (A & B) => (A ^ B) - B
+    if (match(Op0, m_c_And(m_Value(A), m_Not(m_Value(B)))) &&
+        match(Op1, m_c_And(m_Specific(A), m_Specific(B)))) {
+      return BinaryOperator::CreateSub(Builder.CreateXor(A, B), B);
+    }
+  }
+
+  {
+    Value *A, *B;
+    // (A & B) - (A & ~B) => B - (A ^ B)
+    if (match(Op1, m_c_And(m_Value(A), m_Not(m_Value(B)))) &&
+        match(Op0, m_c_And(m_Specific(A), m_Specific(B)))) {
+      return BinaryOperator::CreateSub(Builder.CreateXor(A, B), B);
+    }
+  }
+
   // (sub (or A, B) (and A, B)) --> (xor A, B)
   {
     Value *A, *B;
