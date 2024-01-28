@@ -576,8 +576,13 @@ public:
                           ExtraArgTs...>;
     // Do not use make_unique or emplace_back, they cause too many template
     // instantiations, causing terrible compile times.
-    Passes.push_back(std::unique_ptr<PassConceptT>(
-        new PassModelT(std::forward<PassT>(Pass))));
+    if constexpr (std::is_same_v<IRUnitT, MachineFunction>)
+      Passes.push_back(std::unique_ptr<PassConceptT>(new PassModelT(
+          std::forward<PassT>(Pass), PassT::getRequiredProperties(),
+          PassT::getSetProperties(), PassT::getClearedProperties())));
+    else
+      Passes.push_back(std::unique_ptr<PassConceptT>(
+          new PassModelT(std::forward<PassT>(Pass))));
   }
 
   /// When adding a pass manager pass that has the same type as this pass
@@ -1292,11 +1297,36 @@ struct RequireAnalysisPass
     OS << "require<" << PassName << '>';
   }
   static bool isRequired() { return true; }
+
+  template <typename MachineFunctionT = IRUnitT,
+            typename MachineFunctionPropertiesT = MachineFunctionProperties,
+            typename = std::enable_if_t<
+                std::is_same_v<MachineFunctionT, MachineFunction>>>
+  static MachineFunctionPropertiesT getRequiredProperties() {
+    return MachineFunctionPropertiesT();
+  }
+  template <typename MachineFunctionT = IRUnitT,
+            typename MachineFunctionPropertiesT = MachineFunctionProperties,
+            typename = std::enable_if_t<
+                std::is_same_v<MachineFunctionT, MachineFunction>>>
+  static MachineFunctionPropertiesT getSetProperties() {
+    return MachineFunctionPropertiesT();
+  }
+  template <typename MachineFunctionT = IRUnitT,
+            typename MachineFunctionPropertiesT = MachineFunctionProperties,
+            typename = std::enable_if_t<
+                std::is_same_v<MachineFunctionT, MachineFunction>>>
+  static MachineFunctionPropertiesT getClearedProperties() {
+    return MachineFunctionPropertiesT();
+  }
 };
 
-/// A no-op pass template which simply forces a specific analysis result
+template <typename DerivedT> struct MachineFunctionAnalysisInfoMixin;
+
+/// A no-op IR pass template which simply forces a specific analysis result
 /// to be invalidated.
-template <typename AnalysisT>
+template <typename AnalysisT,
+          bool = std::is_base_of_v<AnalysisInfoMixin<AnalysisT>, AnalysisT>>
 struct InvalidateAnalysisPass
     : PassInfoMixin<InvalidateAnalysisPass<AnalysisT>> {
   /// Run this pass over some unit of IR.
