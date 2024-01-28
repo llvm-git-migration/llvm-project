@@ -138,15 +138,9 @@ std::string getNamespaceScope(const Decl *D) {
 
 std::string printDefinition(const Decl *D, PrintingPolicy PP,
                             const syntax::TokenBuffer &TB) {
-  if (auto *VD = llvm::dyn_cast<VarDecl>(D)) {
-    if (auto *IE = VD->getInit()) {
-      // Initializers might be huge and result in lots of memory allocations in
-      // some catostrophic cases. Such long lists are not useful in hover cards
-      // anyway.
-      if (200 < TB.expandedTokens(IE->getSourceRange()).size())
-        PP.SuppressInitializers = true;
-    }
-  }
+  // Initializers might be huge and result in lots of memory allocations in some
+  // catostrophic cases. Such long lists are not useful in hover cards anyway.
+  PP.EntireContentsOfLargeArray = false;
   std::string Definition;
   llvm::raw_string_ostream OS(Definition);
   D->print(OS, PP);
