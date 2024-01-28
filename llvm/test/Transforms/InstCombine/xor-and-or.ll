@@ -241,4 +241,15 @@ define i1 @xor_and_or_negative_oneuse(i1 %c, i1 %x, i1 %y) {
   ret i1 %r
 }
 
+define i32 @xor_and_or_constant(i32 %B, i32 %C, i32 %D, i32 %E) {
+  %1 = or i32 42, %B
+  %2 = or i32 42, %C
+  %3 = xor i32 %1, %2
+  %4 = add i32 42, %D
+  %5 = mul i32 42, %E
+  %6 = add i32 %3, %4, %5
+  ret i32 %6
+}
+
 declare void @use(i1)
+declare i32 @use2(i32, i32)
