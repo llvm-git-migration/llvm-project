@@ -576,8 +576,13 @@ public:
                           ExtraArgTs...>;
     // Do not use make_unique or emplace_back, they cause too many template
     // instantiations, causing terrible compile times.
-    Passes.push_back(std::unique_ptr<PassConceptT>(
-        new PassModelT(std::forward<PassT>(Pass))));
+    if constexpr (std::is_same_v<IRUnitT, MachineFunction>)
+      Passes.push_back(std::unique_ptr<PassConceptT>(new PassModelT(
+          std::forward<PassT>(Pass), PassT::getRequiredProperties(),
+          PassT::getSetProperties(), PassT::getClearedProperties())));
+    else
+      Passes.push_back(std::unique_ptr<PassConceptT>(
+          new PassModelT(std::forward<PassT>(Pass))));
   }
 
   /// When adding a pass manager pass that has the same type as this pass
