@@ -246,9 +246,9 @@ define i1 @xor_and_or_negative_oneuse(i1 %c, i1 %x, i1 %y) {
 define i32 @xor_and_or_constant(i32 %B, i32 %C) {
 ; CHECK-LABEL: @xor_and_or_constant(
 ; CHECK-NEXT:    [[A_VAL:%.*]] = load i32, ptr @A, align 4
-; CHECK-NEXT:    [[TMP1:%.*]] = or i32 [[A_VAL]], [[B:%.*]]
-; CHECK-NEXT:    [[TMP2:%.*]] = or i32 [[A_VAL]], [[C:%.*]]
-; CHECK-NEXT:    [[TMP3:%.*]] = xor i32 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = xor i32 [[A_VAL]], -1
+; CHECK-NEXT:    [[TMP2:%.*]] = xor i32 [[B:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[TMP3:%.*]] = and i32 [[TMP2]], [[TMP1]]
 ; CHECK-NEXT:    ret i32 [[TMP3]]
 ;
   %A_val = load i32, i32* @A
