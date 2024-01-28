@@ -51,6 +51,8 @@ AST Dumping Potentially Breaking Changes
 
 Clang Frontend Potentially Breaking Changes
 -------------------------------------------
+- Removed support for constructing on-stack ``TemplateArgumentList``s.
+  Interfaces should instead use ``ArrayRef<TemplateArgument>`` to pass template arguments.
 
 Target OS macros extension
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
