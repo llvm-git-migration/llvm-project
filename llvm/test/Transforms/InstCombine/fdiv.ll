@@ -992,3 +992,22 @@ define float @fdiv_nnan_neg_zero_f32(float %x) {
   %fdiv = fdiv nnan float %x, -0.0
   ret float %fdiv
 }
+
+define double @test_positive_zero(double %X) {
+; CHECK-LABEL: @test_positive_zero(
+; CHECK-NEXT:    [[TMP1:%.*]] = call nnan nsz double @llvm.copysign.f64(double 0x7FF0000000000000, double [[X:%.*]])
+; CHECK-NEXT:    ret double [[TMP1]]
+;
+  %1 = fdiv nnan nsz double %X, 0.0
+  ret double %1
+}
+
+define double @test_negative_zero(double %X) {
+; CHECK-LABEL: @test_negative_zero(
+; CHECK-NEXT:    [[TMP1:%.*]] = fdiv nnan nsz double [[X:%.*]], -0.000000e+00
+; CHECK-NEXT:    ret double [[TMP1]]
+;
+  %1 = fdiv nnan nsz double %X, -0.0
+  ret double %1
+}
+
