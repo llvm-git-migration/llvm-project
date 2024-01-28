@@ -165,6 +165,14 @@ __device__ void sync() {
 
 }
 
+__device__ void activemask() {
+
+// CHECK: call i32 @llvm.nvvm.activemask()
+
+  __nvvm_activemask(0);
+
+}
+
 
 // NVVM intrinsics
 
