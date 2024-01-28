@@ -241,4 +241,19 @@ define i1 @xor_and_or_negative_oneuse(i1 %c, i1 %x, i1 %y) {
   ret i1 %r
 }
 
+define i32 @xor_and_or_constant(i32 %B, i32 %C) {
+; CHECK-LABEL: @xor_and_or_constant(
+; CHECK-NEXT:    [[TMP1:%.*]] = or i32 [[B:%.*]], 42
+; CHECK-NEXT:    [[TMP2:%.*]] = or i32 [[C:%.*]], 42
+; CHECK-NEXT:    [[TMP3:%.*]] = xor i32 [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[TMP4:%.*]] = add i32 [[TMP3]], [[TMP1]]
+; CHECK-NEXT:    ret i32 [[TMP4]]
+;
+  %1 = or i32 42, %B
+  %2 = or i32 42, %C
+  %3 = xor i32 %1, %2
+  %4 = add i32 %3, %1 ; thwart one-use optimization
+  ret i32 %4
+}
+
 declare void @use(i1)
