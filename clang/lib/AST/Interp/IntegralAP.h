@@ -263,6 +263,30 @@ public:
       *R = IntegralAP(A.V.lshr(ShiftAmount));
   }
 
+  // === Serialization support ===
+  size_t bytesToSerialize() const {
+    // 1 byte for the BitWidth followed by N bytes for the actual APInt.
+    // FIXME: Is 1 byte enough? APInt::getBitWidth() returns an unsigned.
+    return 1 + (V.getBitWidth() / CHAR_BIT);
+  }
+
+  void serialize(std::byte *Buff) const {
+    assert(V.getBitWidth() < std::numeric_limits<uint8_t>::max());
+    uint8_t BitWidth = V.getBitWidth();
+
+    *Buff = static_cast<std::byte>(BitWidth);
+    llvm::StoreIntToMemory(V, (uint8_t *)(Buff + 1), BitWidth / CHAR_BIT);
+  }
+
+  static IntegralAP<Signed> deserialize(const std::byte *Buff) {
+    uint8_t BitWidth = static_cast<uint8_t>(*Buff);
+    IntegralAP<Signed> Val(APInt(BitWidth, 0ull, !Signed));
+
+    llvm::LoadIntFromMemory(Val.V, (const uint8_t *)Buff + 1,
+                            BitWidth / CHAR_BIT);
+    return Val;
+  }
+
 private:
   template <template <typename T> class Op>
   static bool CheckAddSubMulUB(const IntegralAP &A, const IntegralAP &B,
@@ -287,6 +311,11 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &OS,
                                      IntegralAP<Signed> I) {
   I.print(OS);
   return OS;
+}
+
+template <bool Signed>
+IntegralAP<Signed> getSwappedBytes(IntegralAP<Signed> F) {
+  return F;
 }
 
 } // namespace interp
