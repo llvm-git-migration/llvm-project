@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ; RUN: llc -march=amdgcn -mcpu=verde -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX6789 %s
 ; RUN: llc -march=amdgcn -mcpu=gfx900 -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX6789 %s
 ; RUN: llc -march=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX90A %s
@@ -5,6 +6,15 @@
 ; RUN: llc -march=amdgcn -mcpu=gfx1010 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX10 %s
 ; RUN: llc -march=amdgcn -mcpu=gfx1100 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX10 %s
 ; RUN: llc -march=amdgcn -mcpu=gfx1200 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX12 %s
+=======
+; RUN: llc -mtriple=amdgcn -mcpu=verde -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX6789 %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx900 -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX6789 %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN,GFX90A %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx90a -verify-machineinstrs -early-live-intervals < %s | FileCheck -check-prefixes=GCN,GFX90A %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx1010 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX10 %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx1100 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX10 %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx1200 -verify-machineinstrs -show-mc-encoding < %s | FileCheck -check-prefixes=GCN,GFX12 %s
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 ; GCN-LABEL: {{^}}atomic_swap_1d:
 ; GFX6789: image_atomic_swap v0, v1, s[0:7] dmask:0x1 unorm glc{{$}}

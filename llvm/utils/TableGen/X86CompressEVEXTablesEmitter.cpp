@@ -46,8 +46,17 @@ class X86CompressEVEXTablesEmitter {
 
   typedef std::pair<const CodeGenInstruction *, const CodeGenInstruction *>
       Entry;
+<<<<<<< HEAD
 
   std::vector<Entry> Table;
+=======
+  typedef std::map<const Record *, std::vector<const CodeGenInstruction *>>
+      PredicateInstMap;
+
+  std::vector<Entry> Table;
+  // Hold all compressed instructions that need to check predicate
+  PredicateInstMap PredicateInsts;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 public:
   X86CompressEVEXTablesEmitter(RecordKeeper &R) : Records(R), Target(R) {}
@@ -58,12 +67,22 @@ public:
 private:
   // Prints the given table as a C++ array of type X86CompressEVEXTableEntry
   void printTable(const std::vector<Entry> &Table, raw_ostream &OS);
+<<<<<<< HEAD
+=======
+  // Prints function which checks target feature for compressed instructions.
+  void printCheckPredicate(const PredicateInstMap &PredicateInsts,
+                           raw_ostream &OS);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 };
 
 void X86CompressEVEXTablesEmitter::printTable(const std::vector<Entry> &Table,
                                               raw_ostream &OS) {
 
+<<<<<<< HEAD
   OS << "static const X86CompressEVEXTableEntry X86CompressEVEXTable[] = { \n";
+=======
+  OS << "static const X86CompressEVEXTableEntry X86CompressEVEXTable[] = {\n";
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   // Print all entries added to the table
   for (const auto &Pair : Table)
@@ -73,6 +92,25 @@ void X86CompressEVEXTablesEmitter::printTable(const std::vector<Entry> &Table,
   OS << "};\n\n";
 }
 
+<<<<<<< HEAD
+=======
+void X86CompressEVEXTablesEmitter::printCheckPredicate(
+    const PredicateInstMap &PredicateInsts, raw_ostream &OS) {
+
+  OS << "static bool checkPredicate(unsigned Opc, const X86Subtarget *Subtarget) {\n"
+     << "  switch (Opc) {\n"
+     << "  default: return true;\n";
+  for (const auto &[Key, Val] : PredicateInsts) {
+    for (const auto &Inst : Val)
+      OS << "  case X86::" << Inst->TheDef->getName() << ":\n";
+    OS << "    return " << Key->getValueAsString("CondString") << ";\n";
+  }
+
+  OS << "  }\n";
+  OS << "}\n\n";
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 static uint8_t byteFromBitsInit(const BitsInit *B) {
   unsigned N = B->getNumBits();
   assert(N <= 8 && "Field is too large for uint8_t!");
@@ -196,9 +234,24 @@ void X86CompressEVEXTablesEmitter::run(raw_ostream &OS) {
       continue;
 
     Table.push_back(std::make_pair(Inst, NewInst));
+<<<<<<< HEAD
   }
 
   printTable(Table, OS);
+=======
+    auto Predicates = NewInst->TheDef->getValueAsListOfDefs("Predicates");
+    auto It = llvm::find_if(Predicates, [](const Record *R) {
+      StringRef Name = R->getName();
+      return Name == "HasAVXNECONVERT" || Name == "HasAVXVNNI" ||
+             Name == "HasAVXIFMA";
+    });
+    if(It!= Predicates.end())
+      PredicateInsts[*It].push_back(NewInst);
+  }
+
+  printTable(Table, OS);
+  printCheckPredicate(PredicateInsts, OS);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 } // namespace
 

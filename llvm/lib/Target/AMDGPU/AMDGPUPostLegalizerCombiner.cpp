@@ -411,6 +411,15 @@ bool AMDGPUPostLegalizerCombinerImpl::matchCombineSignExtendInReg(
   case AMDGPU::G_AMDGPU_BUFFER_LOAD_USHORT:
     MatchData = {LoadMI, AMDGPU::G_AMDGPU_BUFFER_LOAD_SSHORT};
     return Width == 16;
+<<<<<<< HEAD
+=======
+  case AMDGPU::G_AMDGPU_S_BUFFER_LOAD_UBYTE:
+    MatchData = {LoadMI, AMDGPU::G_AMDGPU_S_BUFFER_LOAD_SBYTE};
+    return Width == 8;
+  case AMDGPU::G_AMDGPU_S_BUFFER_LOAD_USHORT:
+    MatchData = {LoadMI, AMDGPU::G_AMDGPU_S_BUFFER_LOAD_SSHORT};
+    return Width == 16;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   }
   return false;
 }

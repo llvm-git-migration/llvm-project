@@ -6236,29 +6236,35 @@ static void handleObjCRequiresSuperAttr(Sema &S, Decl *D,
   D->addAttr(::new (S.Context) ObjCRequiresSuperAttr(S.Context, Attrs));
 }
 
-static void handleNSErrorDomain(Sema &S, Decl *D, const ParsedAttr &AL) {
-  auto *E = AL.getArgAsExpr(0);
-  auto Loc = E ? E->getBeginLoc() : AL.getLoc();
+static void handleNSErrorDomain(Sema &S, Decl *D, const ParsedAttr &Attr) {
+  if (!isa<TagDecl>(D)) {
+    S.Diag(D->getBeginLoc(), diag::err_nserrordomain_invalid_decl) << 0;
+    return;
+  }
 
-  auto *DRE = dyn_cast<DeclRefExpr>(AL.getArgAsExpr(0));
-  if (!DRE) {
+  IdentifierLoc *IdentLoc =
+      Attr.isArgIdent(0) ? Attr.getArgAsIdent(0) : nullptr;
+  if (!IdentLoc || !IdentLoc->Ident) {
+    // Try to locate the argument directly.
+    SourceLocation Loc = Attr.getLoc();
+    if (Attr.isArgExpr(0) && Attr.getArgAsExpr(0))
+      Loc = Attr.getArgAsExpr(0)->getBeginLoc();
+
     S.Diag(Loc, diag::err_nserrordomain_invalid_decl) << 0;
     return;
   }
 
-  auto *VD = dyn_cast<VarDecl>(DRE->getDecl());
-  if (!VD) {
-    S.Diag(Loc, diag::err_nserrordomain_invalid_decl) << 1 << DRE->getDecl();
+  // Verify that the identifier is a valid decl in the C decl namespace.
+  LookupResult Result(S, DeclarationName(IdentLoc->Ident), SourceLocation(),
+                      Sema::LookupNameKind::LookupOrdinaryName);
+  if (!S.LookupName(Result, S.TUScope) || !Result.getAsSingle<VarDecl>()) {
+    S.Diag(IdentLoc->Loc, diag::err_nserrordomain_invalid_decl)
+        << 1 << IdentLoc->Ident;
     return;
   }
 
-  if (!isNSStringType(VD->getType(), S.Context) &&
-      !isCFStringType(VD->getType(), S.Context)) {
-    S.Diag(Loc, diag::err_nserrordomain_wrong_type) << VD;
-    return;
-  }
-
-  D->addAttr(::new (S.Context) NSErrorDomainAttr(S.Context, AL, VD));
+  D->addAttr(::new (S.Context)
+                 NSErrorDomainAttr(S.Context, Attr, IdentLoc->Ident));
 }
 
 static void handleObjCBridgeAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
@@ -6684,13 +6690,10 @@ validateSwiftFunctionName(Sema &S, const ParsedAttr &AL, SourceLocation Loc,
 
   // Check whether this will be mapped to a getter or setter of a property.
   bool IsGetter = false, IsSetter = false;
-  if (Name.starts_with("getter:")) {
+  if (Name.consume_front("getter:"))
     IsGetter = true;
-    Name = Name.substr(7);
-  } else if (Name.starts_with("setter:")) {
+  else if (Name.consume_front("setter:"))
     IsSetter = true;
-    Name = Name.substr(7);
-  }
 
   if (Name.back() != ')') {
     S.Diag(Loc, diag::warn_attr_swift_name_function) << AL;
@@ -8988,6 +8991,10 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   }
 
   bool HasZA = false;
+<<<<<<< HEAD
+=======
+  bool HasZT0 = false;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   for (unsigned I = 0, E = AL.getNumArgs(); I != E; ++I) {
     StringRef StateName;
     SourceLocation LiteralLoc;
@@ -8996,16 +9003,26 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
 
     if (StateName == "za")
       HasZA = true;
+<<<<<<< HEAD
+=======
+    else if (StateName == "zt0")
+      HasZT0 = true;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     else {
       S.Diag(LiteralLoc, diag::err_unknown_arm_state) << StateName;
       AL.setInvalid();
       return;
     }
 
+<<<<<<< HEAD
     if (std::find(NewState.begin(), NewState.end(), StateName) ==
         NewState.end()) { // Avoid adding duplicates.
       NewState.push_back(StateName);
     }
+=======
+    if (!llvm::is_contained(NewState, StateName)) // Avoid adding duplicates.
+      NewState.push_back(StateName);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   }
 
   if (auto *FPT = dyn_cast<FunctionProtoType>(D->getFunctionType())) {
@@ -9013,6 +9030,14 @@ static void handleArmNewAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
         FunctionType::getArmZAState(FPT->getAArch64SMEAttributes());
     if (HasZA && ZAState != FunctionType::ARM_None &&
         checkArmNewAttrMutualExclusion(S, AL, FPT, ZAState, "za"))
+<<<<<<< HEAD
+=======
+      return;
+    FunctionType::ArmStateValue ZT0State =
+        FunctionType::getArmZT0State(FPT->getAArch64SMEAttributes());
+    if (HasZT0 && ZT0State != FunctionType::ARM_None &&
+        checkArmNewAttrMutualExclusion(S, AL, FPT, ZT0State, "zt0"))
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
       return;
   }
 

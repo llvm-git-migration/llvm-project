@@ -11,6 +11,10 @@
 
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/SupportFile.h"
+<<<<<<< HEAD
+=======
+#include "lldb/lldb-forward.h"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 #include <cstddef>
 #include <vector>
@@ -40,7 +44,11 @@ public:
   bool AppendIfUnique(const FileSpec &file);
   size_t GetSize() const { return m_files.size(); }
   const FileSpec &GetFileSpecAtIndex(size_t idx) const;
+<<<<<<< HEAD
   std::shared_ptr<SupportFile> GetSupportFileAtIndex(size_t idx) const;
+=======
+  lldb::SupportFileSP GetSupportFileAtIndex(size_t idx) const;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   size_t FindFileIndex(size_t idx, const FileSpec &file, bool full) const;
   /// Find a compatible file index.
   ///

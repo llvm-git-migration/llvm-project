@@ -5,6 +5,7 @@
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
 // RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
+<<<<<<< HEAD
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
 // RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s\
@@ -13,6 +14,16 @@
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+=======
+// RUN: %clang_cc1 -DTEST_SME2 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
+// RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s\
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
+// RUN: %clang_cc1 -DTEST_SME -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s \
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
+// RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+// RUN: %clang_cc1 -DTEST_SME2 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 // REQUIRES: aarch64-registered-target
 
@@ -25,6 +36,15 @@
 #define SVE_ACLE_FUNC(A1,A2,A3,A4) A1##A2##A3##A4
 #endif
 
+<<<<<<< HEAD
+=======
+#ifndef TEST_SME2
+#define ATTR
+#else
+#define ATTR __arm_streaming
+#endif
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 // CHECK-LABEL: @test_svcreate2_b(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = tail call <vscale x 32 x i1> @llvm.vector.insert.nxv32i1.nxv16i1(<vscale x 32 x i1> poison, <vscale x 16 x i1> [[X0:%.*]], i64 0)
@@ -37,7 +57,11 @@
 // CPP-CHECK-NEXT:    [[TMP1:%.*]] = tail call <vscale x 32 x i1> @llvm.vector.insert.nxv32i1.nxv16i1(<vscale x 32 x i1> [[TMP0]], <vscale x 16 x i1> [[X1:%.*]], i64 16)
 // CPP-CHECK-NEXT:    ret <vscale x 32 x i1> [[TMP1]]
 //
+<<<<<<< HEAD
 svboolx2_t test_svcreate2_b(svbool_t x0, svbool_t x1)
+=======
+svboolx2_t test_svcreate2_b(svbool_t x0, svbool_t x1) ATTR
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 {
   return SVE_ACLE_FUNC(svcreate2,_b,,)(x0, x1);
 }

@@ -3580,6 +3580,7 @@ void DwarfDebug::addAccelNameImpl(
     break;
   case AccelTableKind::Dwarf: {
     DWARF5AccelTable &Current = getCurrentDWARF5AccelTable();
+<<<<<<< HEAD
     assert((&Current == &AccelTypeUnitsDebugNames) ||
            ((&Current == &AccelDebugNames) &&
             (Unit.getUnitDie().getTag() != dwarf::DW_TAG_type_unit)) &&
@@ -3587,6 +3588,15 @@ void DwarfDebug::addAccelNameImpl(
     assert((&Current == &AccelDebugNames) ||
            ((&Current == &AccelTypeUnitsDebugNames) &&
             (Unit.getUnitDie().getTag() == dwarf::DW_TAG_type_unit)) &&
+=======
+    assert(((&Current == &AccelTypeUnitsDebugNames) ||
+            ((&Current == &AccelDebugNames) &&
+             (Unit.getUnitDie().getTag() != dwarf::DW_TAG_type_unit))) &&
+               "Kind is CU but TU is being processed.");
+    assert(((&Current == &AccelDebugNames) ||
+            ((&Current == &AccelTypeUnitsDebugNames) &&
+             (Unit.getUnitDie().getTag() == dwarf::DW_TAG_type_unit))) &&
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
                "Kind is TU but CU is being processed.");
     // The type unit can be discarded, so need to add references to final
     // acceleration table once we know it's complete and we emit it.

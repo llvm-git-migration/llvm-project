@@ -1053,6 +1053,26 @@ namespace dr471 { // dr471: 2.8
   struct H : B, G { int f() { return n; } };
   // expected-error@-1 {{'n' is a private member of 'dr471::G'}}
   //   expected-note@#dr471-G-using {{declared private here}}
+<<<<<<< HEAD
+=======
+}
+
+namespace dr472 { // dr472: no drafting
+struct B {
+  int i; // #dr472-i
+};
+struct I : protected B {}; // #dr472-struct-I
+struct D : public I {
+  void f(I *ip) {
+    ip->i = 0;
+    // expected-error@-1 {{'i' is a protected member of 'dr472::B'}}
+    //   expected-note@#dr472-struct-I {{constrained by protected inheritance here}}
+    //   expected-note@#dr472-i {{member is declared here}}
+    B *bp = ip;
+    bp->i = 5;
+  }
+};
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 namespace dr474 { // dr474: 3.4

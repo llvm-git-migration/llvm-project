@@ -6,6 +6,13 @@ static_library("DWARFLinker") {
     "//llvm/lib/DebugInfo/DWARF",
     "//llvm/lib/Object",
     "//llvm/lib/Support",
+<<<<<<< HEAD
+=======
+  ]
+  sources = [
+    "DWARFLinkerBase.cpp",
+    "Utils.cpp",
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   ]
   sources = [ "Utils.cpp" ]
 }

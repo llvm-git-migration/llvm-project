@@ -34,7 +34,11 @@ Getting Started with libc++
 .. toctree::
    :maxdepth: 1
 
+<<<<<<< HEAD
    ReleaseNotes/18
+=======
+   ReleaseNotes
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
    UsingLibcxx
    BuildingLibcxx
    TestingLibcxx
@@ -221,9 +225,8 @@ can ask for support on the `libcxx forum`_ or on IRC.
 
 **Patches**
 
-If you want to contribute a patch to libc++, the best place for that is
-`Phabricator <https://llvm.org/docs/Phabricator.html>`_. Please add `libcxx-commits` as a subscriber.
-Also make sure you are subscribed to the `libcxx-commits mailing list`_.
+If you want to contribute a patch to libc++, please start by reviewing our
+:ref:`documentation about contributing <ContributingToLibcxx>`.
 
 **Discussion and Questions**
 

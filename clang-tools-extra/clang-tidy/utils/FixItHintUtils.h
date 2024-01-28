@@ -51,6 +51,10 @@ std::string formatDereference(const Expr &ExprNode, const ASTContext &Context);
 // \brief Checks whatever a expression require extra () to be always used in
 // safe way in any other expression.
 bool areParensNeededForStatement(const Stmt &Node);
+<<<<<<< HEAD
+=======
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 } // namespace clang::tidy::utils::fixit
 
 #endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_UTILS_FIXITHINTUTILS_H

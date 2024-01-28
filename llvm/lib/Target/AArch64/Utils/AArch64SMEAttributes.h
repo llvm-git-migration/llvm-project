@@ -38,6 +38,7 @@ public:
   // Enum with bitmasks for each individual SME feature.
   enum Mask {
     Normal = 0,
+<<<<<<< HEAD
     SM_Enabled = 1 << 0,    // aarch64_pstate_sm_enabled
     SM_Compatible = 1 << 1, // aarch64_pstate_sm_compatible
     SM_Body = 1 << 2,       // aarch64_pstate_sm_body
@@ -45,6 +46,15 @@ public:
     ZA_New = 1 << 4,        // aarch64_pstate_sm_new
     ZA_Preserved = 1 << 5,  // aarch64_pstate_sm_preserved
     ZA_NoLazySave = 1 << 6, // Used for SME ABI routines to avoid lazy saves
+=======
+    SM_Enabled = 1 << 0,      // aarch64_pstate_sm_enabled
+    SM_Compatible = 1 << 1,   // aarch64_pstate_sm_compatible
+    SM_Body = 1 << 2,         // aarch64_pstate_sm_body
+    ZA_Shared = 1 << 3,       // aarch64_pstate_sm_shared
+    ZA_New = 1 << 4,          // aarch64_pstate_sm_new
+    ZA_Preserved = 1 << 5,    // aarch64_pstate_sm_preserved
+    SME_ABI_Routine = 1 << 6, // Used for SME ABI routines to avoid lazy saves
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     ZT0_Shift = 7,
     ZT0_Mask = 0b111 << ZT0_Shift
   };
@@ -75,14 +85,7 @@ public:
 
   /// \return true if a call from Caller -> Callee requires a change in
   /// streaming mode.
-  /// If \p BodyOverridesInterface is true and Callee has a streaming body,
-  /// then requiresSMChange considers a call to Callee as having a Streaming
-  /// interface. This can be useful when considering e.g. inlining, where we
-  /// explicitly want the body to overrule the interface (because after inlining
-  /// the interface is no longer relevant).
-  std::optional<bool>
-  requiresSMChange(const SMEAttrs &Callee,
-                   bool BodyOverridesInterface = false) const;
+  bool requiresSMChange(const SMEAttrs &Callee) const;
 
   // Interfaces to query PSTATE.ZA
   bool hasNewZABody() const { return Bitmask & ZA_New; }
@@ -93,7 +96,41 @@ public:
   bool hasZAState() const { return hasNewZABody() || sharesZA(); }
   bool requiresLazySave(const SMEAttrs &Callee) const {
     return hasZAState() && Callee.hasPrivateZAInterface() &&
-           !(Callee.Bitmask & ZA_NoLazySave);
+           !(Callee.Bitmask & SME_ABI_Routine);
+  }
+
+  // Interfaces to query ZT0 State
+  static StateValue decodeZT0State(unsigned Bitmask) {
+    return static_cast<StateValue>((Bitmask & ZT0_Mask) >> ZT0_Shift);
+  }
+  static unsigned encodeZT0State(StateValue S) {
+    return static_cast<unsigned>(S) << ZT0_Shift;
+  }
+
+  bool isNewZT0() const { return decodeZT0State(Bitmask) == StateValue::New; }
+  bool isInZT0() const { return decodeZT0State(Bitmask) == StateValue::In; }
+  bool isOutZT0() const { return decodeZT0State(Bitmask) == StateValue::Out; }
+  bool isInOutZT0() const {
+    return decodeZT0State(Bitmask) == StateValue::InOut;
+  }
+  bool isPreservesZT0() const {
+    return decodeZT0State(Bitmask) == StateValue::Preserved;
+  }
+  bool sharesZT0() const {
+    StateValue State = decodeZT0State(Bitmask);
+    return State == StateValue::In || State == StateValue::Out ||
+           State == StateValue::InOut || State == StateValue::Preserved;
+  }
+  bool hasZT0State() const { return isNewZT0() || sharesZT0(); }
+  bool requiresPreservingZT0(const SMEAttrs &Callee) const {
+    return hasZT0State() && !Callee.sharesZT0();
+  }
+  bool requiresDisablingZABeforeCall(const SMEAttrs &Callee) const {
+    return hasZT0State() && !hasZAState() && Callee.hasPrivateZAInterface() &&
+           !(Callee.Bitmask & SME_ABI_Routine);
+  }
+  bool requiresEnablingZAAfterCall(const SMEAttrs &Callee) const {
+    return requiresLazySave(Callee) || requiresDisablingZABeforeCall(Callee);
   }
 
   // Interfaces to query ZT0 State

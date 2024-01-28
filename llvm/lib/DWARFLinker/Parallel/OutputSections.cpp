@@ -14,6 +14,7 @@
 using namespace llvm;
 using namespace dwarf_linker;
 using namespace dwarf_linker::parallel;
+<<<<<<< HEAD
 
 std::optional<DebugSectionKind>
 dwarf_linker::parallel::parseDebugTableName(llvm::StringRef SecName) {
@@ -67,6 +68,8 @@ dwarf_linker::parallel::parseDebugTableName(llvm::StringRef SecName) {
 
   return std::nullopt;
 }
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 DebugDieRefPatch::DebugDieRefPatch(uint64_t PatchOffset, CompileUnit *SrcCU,
                                    CompileUnit *RefCU, uint32_t RefIdx)

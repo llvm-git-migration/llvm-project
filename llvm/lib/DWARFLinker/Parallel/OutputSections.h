@@ -34,6 +34,7 @@ namespace parallel {
 
 class TypeUnit;
 
+<<<<<<< HEAD
 /// List of tracked debug tables.
 enum class DebugSectionKind : uint8_t {
   DebugInfo = 0,
@@ -79,6 +80,8 @@ getSectionName(DebugSectionKind SectionKind) {
 /// Recognise the table name and match it with the DebugSectionKind.
 std::optional<DebugSectionKind> parseDebugTableName(StringRef Name);
 
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 /// There are fields(sizes, offsets) which should be updated after
 /// sections are generated. To remember offsets and related data
 /// the descendants of SectionPatch structure should be used.
@@ -194,12 +197,13 @@ class OutputSections;
 
 /// This structure is used to keep data of the concrete section.
 /// Like data bits, list of patches, format.
-struct SectionDescriptor {
+struct SectionDescriptor : SectionDescriptorBase {
   friend OutputSections;
 
   SectionDescriptor(DebugSectionKind SectionKind, LinkingGlobalData &GlobalData,
                     dwarf::FormParams Format, llvm::endianness Endianess)
-      : OS(Contents), ListDebugStrPatch(&GlobalData.getAllocator()),
+      : SectionDescriptorBase(SectionKind, Format, Endianess), OS(Contents),
+        ListDebugStrPatch(&GlobalData.getAllocator()),
         ListDebugLineStrPatch(&GlobalData.getAllocator()),
         ListDebugRangePatch(&GlobalData.getAllocator()),
         ListDebugLocPatch(&GlobalData.getAllocator()),
@@ -211,10 +215,9 @@ struct SectionDescriptor {
         ListDebugTypeStrPatch(&GlobalData.getAllocator()),
         ListDebugTypeLineStrPatch(&GlobalData.getAllocator()),
         ListDebugTypeDeclFilePatch(&GlobalData.getAllocator()),
-        GlobalData(GlobalData), SectionKind(SectionKind), Format(Format),
-        Endianess(Endianess) {}
+        GlobalData(GlobalData) {}
 
-  /// Erase whole section contents(data bits, list of patches).
+  /// Erase whole section content(data bits, list of patches).
   void clearAllSectionData();
 
   /// Erase only section output data bits.
@@ -263,7 +266,7 @@ struct SectionDescriptor {
   void setSizesForSectionCreatedByAsmPrinter();
 
   /// Returns section content.
-  StringRef getContents() {
+  StringRef getContents() override {
     if (SectionOffsetInsideAsmPrinterOutputStart == 0)
       return StringRef(Contents.data(), Contents.size());
 
@@ -311,18 +314,6 @@ struct SectionDescriptor {
   /// Write specified \p Value of \p AttrForm to the \p PatchOffset.
   void apply(uint64_t PatchOffset, dwarf::Form AttrForm, uint64_t Val);
 
-  /// Returns section kind.
-  DebugSectionKind getKind() { return SectionKind; }
-
-  /// Returns section name.
-  const StringLiteral &getName() const { return getSectionName(SectionKind); }
-
-  /// Returns endianess used by section.
-  llvm::endianness getEndianess() const { return Endianess; }
-
-  /// Returns FormParams used by section.
-  dwarf::FormParams getFormParams() const { return Format; }
-
   /// Returns integer value of \p Size located by specified \p PatchOffset.
   uint64_t getIntVal(uint64_t PatchOffset, unsigned Size);
 
@@ -344,9 +335,6 @@ protected:
 
   LinkingGlobalData &GlobalData;
 
-  /// The section kind.
-  DebugSectionKind SectionKind = DebugSectionKind::NumberOfEnumEntries;
-
   /// Section data bits.
   OutSectionDataTy Contents;
 
@@ -355,10 +343,6 @@ protected:
   /// real section content inside elf file.
   size_t SectionOffsetInsideAsmPrinterOutputStart = 0;
   size_t SectionOffsetInsideAsmPrinterOutputEnd = 0;
-
-  /// Output format.
-  dwarf::FormParams Format = {4, 4, dwarf::DWARF32};
-  llvm::endianness Endianess = llvm::endianness::little;
 };
 
 /// This class keeps contents and offsets to the debug sections. Any objects
@@ -387,7 +371,7 @@ public:
               .str()
               .c_str());
 
-    return It->second;
+    return *It->second;
   }
 
   /// Returns descriptor for the specified section of \p SectionKind.
@@ -402,7 +386,9 @@ public:
               .str()
               .c_str());
 
-    return It->second;
+    assert(It->second.get() != nullptr);
+
+    return *It->second;
   }
 
   /// Returns descriptor for the specified section of \p SectionKind.
@@ -414,7 +400,7 @@ public:
     if (It == SectionDescriptors.end())
       return std::nullopt;
 
-    return &It->second;
+    return It->second.get();
   }
 
   /// Returns descriptor for the specified section of \p SectionKind.
@@ -426,26 +412,44 @@ public:
     if (It == SectionDescriptors.end())
       return std::nullopt;
 
-    return &It->second;
+    return It->second.get();
   }
 
   /// Returns descriptor for the specified section of \p SectionKind.
   /// If descriptor does not exist then creates it.
   SectionDescriptor &
   getOrCreateSectionDescriptor(DebugSectionKind SectionKind) {
-    return SectionDescriptors
-        .try_emplace(SectionKind, SectionKind, GlobalData, Format, Endianness)
-        .first->second;
+    SectionsSetTy::iterator It = SectionDescriptors.find(SectionKind);
+
+    if (It == SectionDescriptors.end()) {
+      SectionDescriptor *Section =
+          new SectionDescriptor(SectionKind, GlobalData, Format, Endianness);
+      auto Result = SectionDescriptors.try_emplace(SectionKind, Section);
+      assert(Result.second);
+
+      It = Result.first;
+    }
+
+    return *It->second;
   }
 
   /// Erases data of all sections.
   void eraseSections() {
     for (auto &Section : SectionDescriptors)
-      Section.second.clearAllSectionData();
+      Section.second->clearAllSectionData();
   }
 
   /// Enumerate all sections and call \p Handler for each.
   void forEach(function_ref<void(SectionDescriptor &)> Handler) {
+    for (auto &Section : SectionDescriptors) {
+      assert(Section.second.get() != nullptr);
+      Handler(*(Section.second));
+    }
+  }
+
+  /// Enumerate all sections and call \p Handler for each.
+  void forEach(
+      function_ref<void(std::shared_ptr<SectionDescriptor> Section)> Handler) {
     for (auto &Section : SectionDescriptors)
       Handler(Section.second);
   }
@@ -456,10 +460,11 @@ public:
   void assignSectionsOffsetAndAccumulateSize(
       std::array<uint64_t, SectionKindsNum> &SectionSizesAccumulator) {
     for (auto &Section : SectionDescriptors) {
-      Section.second.StartOffset = SectionSizesAccumulator[static_cast<uint8_t>(
-          Section.second.getKind())];
-      SectionSizesAccumulator[static_cast<uint8_t>(Section.second.getKind())] +=
-          Section.second.getContents().size();
+      Section.second->StartOffset =
+          SectionSizesAccumulator[static_cast<uint8_t>(
+              Section.second->getKind())];
+      SectionSizesAccumulator[static_cast<uint8_t>(
+          Section.second->getKind())] += Section.second->getContents().size();
     }
   }
 
@@ -505,7 +510,8 @@ protected:
   llvm::endianness Endianness = llvm::endianness::native;
 
   /// All keeping sections.
-  using SectionsSetTy = std::map<DebugSectionKind, SectionDescriptor>;
+  using SectionsSetTy =
+      std::map<DebugSectionKind, std::shared_ptr<SectionDescriptor>>;
   SectionsSetTy SectionDescriptors;
 };
 

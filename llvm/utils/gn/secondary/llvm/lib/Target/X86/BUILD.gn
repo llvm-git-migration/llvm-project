@@ -63,12 +63,14 @@ static_library("LLVMX86CodeGen") {
     "//llvm/lib/CodeGen/GlobalISel",
     "//llvm/lib/CodeGen/SelectionDAG",
     "//llvm/lib/IR",
+    "//llvm/lib/IRPrinter",
     "//llvm/lib/MC",
     "//llvm/lib/Support",
     "//llvm/lib/Target",
     "//llvm/lib/TargetParser",
     "//llvm/lib/Transforms/CFGuard",
     "//llvm/lib/Transforms/Instrumentation",
+    "//llvm/lib/Transforms/Scalar",
   ]
   include_dirs = [ "." ]
   sources = [
@@ -83,6 +85,10 @@ static_library("LLVMX86CodeGen") {
     "X86CallFrameOptimization.cpp",
     "X86CallingConv.cpp",
     "X86CmovConversion.cpp",
+<<<<<<< HEAD
+=======
+    "X86CodeGenPassBuilder.cpp",
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     "X86CompressEVEX.cpp",
     "X86DiscriminateMemOps.cpp",
     "X86DomainReassignment.cpp",

@@ -5,6 +5,7 @@
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
 // RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
+<<<<<<< HEAD
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
 // RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s\
@@ -13,6 +14,16 @@
 // RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
 // RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+=======
+// RUN: %clang_cc1 -DTEST_SME2 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - %s \
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s
+// RUN: %clang_cc1 -DSVE_OVERLOADED_FORMS -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s\
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
+// RUN: %clang_cc1 -DTEST_SME2 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -emit-llvm -o - -x c++ %s \
+// RUN: | opt -S -passes=mem2reg,tailcallelim | FileCheck %s -check-prefix=CPP-CHECK
+// RUN: %clang_cc1 -triple aarch64-none-linux-gnu -target-feature +sve2p1 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+// RUN: %clang_cc1 -DTEST_SME2 -triple aarch64-none-linux-gnu -target-feature +sme2 -S -disable-O0-optnone -Werror -Wall -o /dev/null %s
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 // REQUIRES: aarch64-registered-target
 
@@ -23,6 +34,12 @@
 #define SVE_ACLE_FUNC(A1,A2_UNUSED,A3,A4_UNUSED) A1##A3
 #else
 #define SVE_ACLE_FUNC(A1,A2,A3,A4) A1##A2##A3##A4
+#endif
+
+#ifndef TEST_SME
+#define ATTR
+#else
+#define ATTR __arm_streaming
 #endif
 
 // NOTE: For these tests clang converts the struct parameter into
@@ -37,7 +54,11 @@
 // CPP-CHECK-NEXT:    [[TMP0:%.*]] = tail call <vscale x 16 x i1> @llvm.vector.extract.nxv16i1.nxv64i1(<vscale x 64 x i1> [[TUPLE:%.*]], i64 0)
 // CPP-CHECK-NEXT:    ret <vscale x 16 x i1> [[TMP0]]
 //
+<<<<<<< HEAD
 svbool_t test_svget4_b_0(svboolx4_t tuple)
+=======
+svbool_t test_svget4_b_0(svboolx4_t tuple) ATTR
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 {
   return SVE_ACLE_FUNC(svget4,_b,,)(tuple, 0);
 }
@@ -54,7 +75,11 @@ svbool_t test_svget4_b_0(svboolx4_t tuple)
 // CPP-CHECK-NEXT:    [[TMP0:%.*]] = tail call <vscale x 16 x i1> @llvm.vector.extract.nxv16i1.nxv64i1(<vscale x 64 x i1> [[TUPLE:%.*]], i64 16)
 // CPP-CHECK-NEXT:    ret <vscale x 16 x i1> [[TMP0]]
 //
+<<<<<<< HEAD
 svbool_t test_svget4_b_1(svboolx4_t tuple)
+=======
+svbool_t test_svget4_b_1(svboolx4_t tuple) ATTR
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 {
   return SVE_ACLE_FUNC(svget4,_b,,)(tuple, 1);
 }
@@ -71,7 +96,11 @@ svbool_t test_svget4_b_1(svboolx4_t tuple)
 // CPP-CHECK-NEXT:    [[TMP0:%.*]] = tail call <vscale x 16 x i1> @llvm.vector.extract.nxv16i1.nxv64i1(<vscale x 64 x i1> [[TUPLE:%.*]], i64 48)
 // CPP-CHECK-NEXT:    ret <vscale x 16 x i1> [[TMP0]]
 //
+<<<<<<< HEAD
 svbool_t test_svget4_b_3(svboolx4_t tuple)
+=======
+svbool_t test_svget4_b_3(svboolx4_t tuple) ATTR
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 {
   return SVE_ACLE_FUNC(svget4,_b,,)(tuple, 3);
 }

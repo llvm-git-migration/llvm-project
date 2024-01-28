@@ -123,6 +123,13 @@ isysroot_flag = []
 if config.osx_sysroot:
     isysroot_flag = ["-isysroot", config.osx_sysroot]
 
+<<<<<<< HEAD
+=======
+# Check for DEFAULT_SYSROOT, because when it is set -isysroot has no effect.
+if config.default_sysroot:
+    config.available_features.add("default_sysroot")
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 # For each occurrence of a flang tool name, replace it with the full path to
 # the build directory holding that tool.
 tools = [

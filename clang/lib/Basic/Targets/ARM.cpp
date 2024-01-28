@@ -227,6 +227,8 @@ StringRef ARMTargetInfo::getCPUAttr() const {
     return "9_3A";
   case llvm::ARM::ArchKind::ARMV9_4A:
     return "9_4A";
+  case llvm::ARM::ArchKind::ARMV9_5A:
+    return "9_5A";
   case llvm::ARM::ArchKind::ARMV8MBaseline:
     return "8M_BASE";
   case llvm::ARM::ArchKind::ARMV8MMainline:
@@ -889,6 +891,10 @@ void ARMTargetInfo::getTargetDefines(const LangOptions &Opts,
   case llvm::ARM::ArchKind::ARMV9_2A:
   case llvm::ARM::ArchKind::ARMV9_3A:
   case llvm::ARM::ArchKind::ARMV9_4A:
+<<<<<<< HEAD
+=======
+  case llvm::ARM::ArchKind::ARMV9_5A:
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     // Filter __arm_cdp, __arm_ldcl, __arm_stcl in arm_acle.h
     FeatureCoprocBF = FEATURE_COPROC_B1 | FEATURE_COPROC_B3;
     break;
@@ -1057,6 +1063,7 @@ void ARMTargetInfo::getTargetDefines(const LangOptions &Opts,
   case llvm::ARM::ArchKind::ARMV9_2A:
   case llvm::ARM::ArchKind::ARMV9_3A:
   case llvm::ARM::ArchKind::ARMV9_4A:
+  case llvm::ARM::ArchKind::ARMV9_5A:
     getTargetDefinesARMV83A(Opts, Builder);
     break;
   }

@@ -103,6 +103,12 @@ s_cmpk_lt_u32 s0, 0
 s_cmpk_le_u32 s0, 0
 // CHECK: :[[@LINE-1]]:{{[0-9]+}}: error: instruction not supported on this GPU
 
+<<<<<<< HEAD
+=======
+s_inst_prefetch 1
+// CHECK: :[[@LINE-1]]:{{[0-9]+}}: error: instruction not supported on this GPU
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 buffer_atomic_cmpswap_f32 v[5:6], off, s[96:99], s3
 // CHECK: :[[@LINE-1]]:{{[0-9]+}}: error: instruction not supported on this GPU
 

@@ -260,7 +260,11 @@ inline bool doesKeywordAttributeTakeArgs(tok::TokenKind Kind) {
   switch (Kind) {
   default:
     return false;
+<<<<<<< HEAD
 #define KEYWORD_ATTRIBUTE(NAME, HASARG)                                        \
+=======
+#define KEYWORD_ATTRIBUTE(NAME, HASARG, ...)                                   \
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   case tok::kw_##NAME:                                                         \
     return HASARG;
 #include "clang/Basic/RegularKeywordAttrInfo.inc"

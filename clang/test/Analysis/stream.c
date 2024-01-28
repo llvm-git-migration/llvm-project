@@ -45,6 +45,15 @@ void check_fprintf(void) {
   fclose(fp);
 }
 
+<<<<<<< HEAD
+=======
+void check_fscanf(void) {
+  FILE *fp = tmpfile();
+  fscanf(fp, "ABC"); // expected-warning {{Stream pointer might be NULL}}
+  fclose(fp);
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 void check_ungetc(void) {
   FILE *fp = tmpfile();
   ungetc('A', fp); // expected-warning {{Stream pointer might be NULL}}

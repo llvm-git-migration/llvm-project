@@ -121,6 +121,7 @@ static bool usesExtendedRegister(const MachineInstr &MI) {
   return false;
 }
 
+<<<<<<< HEAD
 static bool checkVEXInstPredicate(unsigned OldOpc, const X86Subtarget &ST) {
   switch (OldOpc) {
   default:
@@ -159,6 +160,8 @@ static bool checkVEXInstPredicate(unsigned OldOpc, const X86Subtarget &ST) {
   }
 }
 
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 // Do any custom cleanup needed to finalize the conversion.
 static bool performCustomAdjustments(MachineInstr &MI, unsigned NewOpc) {
   (void)NewOpc;
@@ -238,7 +241,10 @@ static bool isRedundantNewDataDest(MachineInstr &MI, const X86Subtarget &ST) {
       !MI.getOperand(2).isReg() || MI.getOperand(2).getReg() != Reg0)
     return false;
   // Opcode may change after commute, e.g. SHRD -> SHLD
+<<<<<<< HEAD
   // TODO: Add test for this after ND SHRD/SHLD is supported
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   ST.getInstrInfo()->commuteInstruction(MI, false, 1, 2);
   return true;
 }
@@ -279,7 +285,11 @@ static bool CompressEVEXImpl(MachineInstr &MI, const X86Subtarget &ST) {
   }
 
   if (!IsND) {
+<<<<<<< HEAD
     if (usesExtendedRegister(MI) || !checkVEXInstPredicate(Opc, ST) ||
+=======
+    if (usesExtendedRegister(MI) || !checkPredicate(I->NewOpc, &ST) ||
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
         !performCustomAdjustments(MI, I->NewOpc))
       return false;
   }

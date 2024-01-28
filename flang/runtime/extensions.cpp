@@ -14,8 +14,16 @@
 #include "tools.h"
 #include "flang/Runtime/command.h"
 #include "flang/Runtime/descriptor.h"
+#include "flang/Runtime/entry-names.h"
 #include "flang/Runtime/io-api.h"
+<<<<<<< HEAD
 #include <ctime>
+=======
+#include <chrono>
+#include <ctime>
+#include <signal.h>
+#include <thread>
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 #ifdef _WIN32
 inline void CtimeBuffer(char *buffer, size_t bufsize, const time_t cur_time,
@@ -111,6 +119,27 @@ void FORTRAN_PROCEDURE_NAME(getlog)(char *arg, std::int64_t length) {
 #else
   GetUsernameEnvVar("LOGNAME", arg, length);
 #endif
+}
+
+std::int64_t RTNAME(Signal)(std::int64_t number, void (*handler)(int)) {
+  // using auto for portability:
+  // on Windows, this is a void *
+  // on POSIX, this has the same type as handler
+  auto result = signal(number, handler);
+
+  // GNU defines the intrinsic as returning an integer, not a pointer. So we
+  // have to reinterpret_cast
+  return static_cast<int64_t>(reinterpret_cast<std::uintptr_t>(result));
+}
+
+// CALL SLEEP(SECONDS)
+void RTNAME(Sleep)(std::int64_t seconds) {
+  // ensure that conversion to unsigned makes sense,
+  // sleep(0) is an immidiate return anyway
+  if (seconds < 1) {
+    return;
+  }
+  std::this_thread::sleep_for(std::chrono::seconds(seconds));
 }
 
 } // namespace Fortran::runtime

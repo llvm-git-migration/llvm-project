@@ -319,8 +319,13 @@ TEST_F(ZeroArguments, ECLValidCommandAndPadSync) {
   (*command.get(), wait, exitStat.get(), cmdStat.get(), cmdMsg.get());
 
   std::string spaces(cmdMsg->ElementBytes(), ' ');
+<<<<<<< HEAD
   CheckDescriptorEqInt(exitStat.get(), 0);
   CheckDescriptorEqInt(cmdStat.get(), 0);
+=======
+  CheckDescriptorEqInt<std::int64_t>(exitStat.get(), 0);
+  CheckDescriptorEqInt<std::int64_t>(cmdStat.get(), 0);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   CheckDescriptorEqStr(cmdMsg.get(), "No change");
 }
 
@@ -334,8 +339,13 @@ TEST_F(ZeroArguments, ECLValidCommandStatusSetSync) {
   RTNAME(ExecuteCommandLine)
   (*command.get(), wait, exitStat.get(), cmdStat.get(), cmdMsg.get());
 
+<<<<<<< HEAD
   CheckDescriptorEqInt(exitStat.get(), 0);
   CheckDescriptorEqInt(cmdStat.get(), 0);
+=======
+  CheckDescriptorEqInt<std::int64_t>(exitStat.get(), 0);
+  CheckDescriptorEqInt<std::int64_t>(cmdStat.get(), 0);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   CheckDescriptorEqStr(cmdMsg.get(), "No change");
 }
 
@@ -351,9 +361,15 @@ TEST_F(ZeroArguments, ECLInvalidCommandErrorSync) {
 #ifdef _WIN32
   CheckDescriptorEqInt(exitStat.get(), 1);
 #else
+<<<<<<< HEAD
   CheckDescriptorEqInt(exitStat.get(), 127);
 #endif
   CheckDescriptorEqInt(cmdStat.get(), 3);
+=======
+  CheckDescriptorEqInt<std::int64_t>(exitStat.get(), 127);
+#endif
+  CheckDescriptorEqInt<std::int64_t>(cmdStat.get(), 3);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   CheckDescriptorEqStr(cmdMsg.get(), "Invalid command lineXXXX");
 }
 
@@ -387,7 +403,11 @@ TEST_F(ZeroArguments, ECLValidCommandAndExitStatNoChangeAndCMDStatusSetAsync) {
   (*command.get(), wait, exitStat.get(), cmdStat.get(), cmdMsg.get());
 
   CheckDescriptorEqInt(exitStat.get(), 404);
+<<<<<<< HEAD
   CheckDescriptorEqInt(cmdStat.get(), 0);
+=======
+  CheckDescriptorEqInt<std::int64_t>(cmdStat.get(), 0);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   CheckDescriptorEqStr(cmdMsg.get(), "No change");
 }
 
@@ -404,6 +424,27 @@ TEST_F(ZeroArguments, ECLInvalidCommandParentNotTerminatedAsync) {
   CheckDescriptorEqStr(cmdMsg.get(), "No change");
 }
 
+<<<<<<< HEAD
+=======
+TEST_F(ZeroArguments, ECLInvalidCommandAsyncDontAffectSync) {
+  OwningPtr<Descriptor> command{CharDescriptor("echo hi")};
+
+  EXPECT_NO_FATAL_FAILURE(RTNAME(ExecuteCommandLine)(
+      *command.get(), false, nullptr, nullptr, nullptr));
+  EXPECT_NO_FATAL_FAILURE(RTNAME(ExecuteCommandLine)(
+      *command.get(), true, nullptr, nullptr, nullptr));
+}
+
+TEST_F(ZeroArguments, ECLInvalidCommandAsyncDontAffectAsync) {
+  OwningPtr<Descriptor> command{CharDescriptor("echo hi")};
+
+  EXPECT_NO_FATAL_FAILURE(RTNAME(ExecuteCommandLine)(
+      *command.get(), false, nullptr, nullptr, nullptr));
+  EXPECT_NO_FATAL_FAILURE(RTNAME(ExecuteCommandLine)(
+      *command.get(), false, nullptr, nullptr, nullptr));
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 static const char *oneArgArgv[]{"aProgram", "anArgumentOfLength20"};
 class OneArgument : public CommandFixture {
 protected:

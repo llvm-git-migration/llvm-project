@@ -343,6 +343,13 @@ const Stmt *ExprMutationAnalyzer::findDirectMutation(const Expr *Exp) {
       // in different instantiations of the template.
       binaryOperator(isTypeDependent(),
                      hasEitherOperand(ignoringImpCasts(canResolveToExpr(Exp)))),
+<<<<<<< HEAD
+=======
+      // A fold expression may contain `Exp` as it's initializer.
+      // We don't know if the operator modifies `Exp` because the
+      // operator is type dependent due to the parameter pack.
+      cxxFoldExpr(hasFoldInit(ignoringImpCasts(canResolveToExpr(Exp)))),
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
       // Within class templates and member functions the member expression might
       // not be resolved. In that case, the `callExpr` is considered to be a
       // modification.

@@ -529,13 +529,15 @@ static void CheckExplicitDataArg(const characteristics::DummyDataObject &dummy,
               dummyName);
         }
         if (actualIsArrayElement && actualLastSymbol &&
-            !evaluate::IsContiguous(*actualLastSymbol, foldingContext)) {
+            !evaluate::IsContiguous(*actualLastSymbol, foldingContext) &&
+            !dummy.ignoreTKR.test(common::IgnoreTKR::Contiguous)) {
           if (IsPointer(*actualLastSymbol)) {
             basicError = true;
             messages.Say(
                 "Element of pointer array may not be associated with a %s array"_err_en_US,
                 dummyName);
-          } else if (IsAssumedShape(*actualLastSymbol)) {
+          } else if (IsAssumedShape(*actualLastSymbol) &&
+              !dummy.ignoreTKR.test(common::IgnoreTKR::Contiguous)) {
             basicError = true;
             messages.Say(
                 "Element of assumed-shape array may not be associated with a %s array"_err_en_US,
@@ -1468,6 +1470,33 @@ static void CheckMove_Alloc(evaluate::ActualArguments &arguments,
   }
 }
 
+<<<<<<< HEAD
+=======
+// PRESENT (F'2023 16.9.163)
+static void CheckPresent(evaluate::ActualArguments &arguments,
+    parser::ContextualMessages &messages) {
+  if (arguments.size() == 1) {
+    if (const auto &arg{arguments[0]}; arg) {
+      const Symbol *symbol{nullptr};
+      if (const auto *expr{arg->UnwrapExpr()}) {
+        if (const auto *proc{
+                std::get_if<evaluate::ProcedureDesignator>(&expr->u)}) {
+          symbol = proc->GetSymbol();
+        } else {
+          symbol = evaluate::UnwrapWholeSymbolDataRef(*expr);
+        }
+      } else {
+        symbol = arg->GetAssumedTypeDummy();
+      }
+      if (!symbol || !symbol->attrs().test(semantics::Attr::OPTIONAL)) {
+        messages.Say(arg ? arg->sourceLocation() : messages.at(),
+            "Argument of PRESENT() must be the name of a whole OPTIONAL dummy argument"_err_en_US);
+      }
+    }
+  }
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 // REDUCE (F'2023 16.9.173)
 static void CheckReduce(
     evaluate::ActualArguments &arguments, evaluate::FoldingContext &context) {
@@ -1678,6 +1707,11 @@ static void CheckSpecificIntrinsic(evaluate::ActualArguments &arguments,
     CheckAssociated(arguments, context, scope);
   } else if (intrinsic.name == "move_alloc") {
     CheckMove_Alloc(arguments, context.foldingContext().messages());
+<<<<<<< HEAD
+=======
+  } else if (intrinsic.name == "present") {
+    CheckPresent(arguments, context.foldingContext().messages());
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   } else if (intrinsic.name == "reduce") {
     CheckReduce(arguments, context.foldingContext());
   } else if (intrinsic.name == "transfer") {

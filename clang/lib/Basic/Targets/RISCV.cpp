@@ -241,6 +241,7 @@ ArrayRef<Builtin::Info> RISCVTargetInfo::getTargetBuiltins() const {
                         clang::RISCV::LastTSBuiltin - Builtin::FirstTSBuiltin);
 }
 
+<<<<<<< HEAD
 static std::vector<std::string>
 collectNonISAExtFeature(ArrayRef<std::string> FeaturesNeedOverride, int XLen) {
   std::vector<std::string> NonISAExtFeatureVec;
@@ -274,6 +275,8 @@ resolveTargetAttrOverride(const std::vector<std::string> &FeaturesVec,
   return ResolvedFeature;
 }
 
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 bool RISCVTargetInfo::initFeatureMap(
     llvm::StringMap<bool> &Features, DiagnosticsEngine &Diags, StringRef CPU,
     const std::vector<std::string> &FeaturesVec) const {
@@ -287,10 +290,27 @@ bool RISCVTargetInfo::initFeatureMap(
     Features["32bit"] = true;
   }
 
-  std::vector<std::string> NewFeaturesVec =
-      resolveTargetAttrOverride(FeaturesVec, XLen);
+  // If a target attribute specified a full arch string, override all the ISA
+  // extension target features.
+  const auto I = llvm::find(FeaturesVec, "__RISCV_TargetAttrNeedOverride");
+  if (I != FeaturesVec.end()) {
+    std::vector<std::string> OverrideFeatures(std::next(I), FeaturesVec.end());
 
-  auto ParseResult = llvm::RISCVISAInfo::parseFeatures(XLen, NewFeaturesVec);
+    // Add back any non ISA extension features, e.g. +relax.
+    auto IsNonISAExtFeature = [](StringRef Feature) {
+      assert(Feature.size() > 1 && (Feature[0] == '+' || Feature[0] == '-'));
+      StringRef Ext = Feature.substr(1); // drop the +/-
+      return !llvm::RISCVISAInfo::isSupportedExtensionFeature(Ext);
+    };
+    llvm::copy_if(llvm::make_range(FeaturesVec.begin(), I),
+                  std::back_inserter(OverrideFeatures), IsNonISAExtFeature);
+
+    return TargetInfo::initFeatureMap(Features, Diags, CPU, OverrideFeatures);
+  }
+
+  // Otherwise, parse the features and add any implied extensions.
+  std::vector<std::string> AllFeatures = FeaturesVec;
+  auto ParseResult = llvm::RISCVISAInfo::parseFeatures(XLen, FeaturesVec);
   if (!ParseResult) {
     std::string Buffer;
     llvm::raw_string_ostream OutputErrMsg(Buffer);
@@ -301,6 +321,7 @@ bool RISCVTargetInfo::initFeatureMap(
     return false;
   }
 
+<<<<<<< HEAD
   // RISCVISAInfo makes implications for ISA features
   std::vector<std::string> ImpliedFeatures = (*ParseResult)->toFeatures();
 
@@ -316,6 +337,11 @@ bool RISCVTargetInfo::initFeatureMap(
        ImpliedFeatures.push_back(Feature);
   }
   return TargetInfo::initFeatureMap(Features, Diags, CPU, ImpliedFeatures);
+=======
+  // Append all features, not just new ones, so we override any negatives.
+  llvm::append_range(AllFeatures, (*ParseResult)->toFeatures());
+  return TargetInfo::initFeatureMap(Features, Diags, CPU, AllFeatures);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 std::optional<std::pair<unsigned, unsigned>>
@@ -424,7 +450,14 @@ static void handleFullArchString(StringRef FullArchStr,
     // Forward the invalid FullArchStr.
     Features.push_back("+" + FullArchStr.str());
   } else {
+<<<<<<< HEAD
     std::vector<std::string> FeatStrings = (*RII)->toFeatures();
+=======
+    // Append a full list of features, including any negative extensions so that
+    // we override the CPU's features.
+    std::vector<std::string> FeatStrings =
+        (*RII)->toFeatures(/* AddAllExtensions */ true);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     Features.insert(Features.end(), FeatStrings.begin(), FeatStrings.end());
   }
 }

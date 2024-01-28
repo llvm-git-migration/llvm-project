@@ -69,9 +69,6 @@ Code completion
 Code actions
 ^^^^^^^^^^^^
 
-- The extract variable tweak gained support for extracting lambda expressions to a variable.
-- A new tweak was added for turning unscoped into scoped enums.
-
 Signature help
 ^^^^^^^^^^^^^^
 
@@ -100,6 +97,7 @@ The improvements are...
 Improvements to clang-tidy
 --------------------------
 
+<<<<<<< HEAD
 - Preprocessor-level module header parsing is now disabled by default due to
   the problems it caused in C++20 and above, leading to performance and code
   parsing issues regardless of whether modules were used or not. This change
@@ -241,16 +239,18 @@ New checks
   Detects C++ code where a reference variable is used to extend the lifetime
   of a temporary object that has just been constructed.
 
+=======
+New checks
+^^^^^^^^^^
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 New check aliases
 ^^^^^^^^^^^^^^^^^
-
-- New alias :doc:`cppcoreguidelines-macro-to-enum
-  <clang-tidy/checks/cppcoreguidelines/macro-to-enum>` to :doc:`modernize-macro-to-enum
-  <clang-tidy/checks/modernize/macro-to-enum>` was added.
 
 Changes in existing checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 - Improved :doc:`abseil-string-find-startswith
   <clang-tidy/checks/abseil/string-find-startswith>` check to also consider
   ``std::basic_string_view`` in addition to ``std::basic_string`` by default.
@@ -530,6 +530,8 @@ Changes in existing checks
   <clang-tidy/checks/readability/static-accessed-through-instance>` check to
   identify calls to static member functions with out-of-class inline definitions.
 
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 Removed checks
 ^^^^^^^^^^^^^^
 

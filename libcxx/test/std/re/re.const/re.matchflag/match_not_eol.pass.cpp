@@ -52,6 +52,27 @@ int main(int, char**)
       std::regex re("$");
       assert(std::regex_search(target, re));
       assert(!std::regex_search(target, re, std::regex_constants::match_not_eol));
+<<<<<<< HEAD
+=======
+
+      std::smatch match;
+      assert(std::regex_search(target, match, re));
+      assert(match.position(0) == 3);
+      assert(match.length(0) == 0);
+      assert(!std::regex_search(target, match, re, std::regex_constants::match_not_eol));
+      assert(match.length(0) == 0);
+    }
+
+    {
+      std::string target = "foo";
+      std::regex re("$", std::regex::multiline);
+      std::smatch match;
+      assert(std::regex_search(target, match, re));
+      assert(match.position(0) == 3);
+      assert(match.length(0) == 0);
+      assert(!std::regex_search(target, match, re, std::regex_constants::match_not_eol));
+      assert(match.length(0) == 0);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     }
 
     {
@@ -61,5 +82,15 @@ int main(int, char**)
       assert(!std::regex_match(target, re, std::regex_constants::match_not_eol));
     }
 
+<<<<<<< HEAD
+=======
+    {
+      std::string target = "a";
+      std::regex re("^b*$");
+      assert(!std::regex_search(target, re));
+      assert(!std::regex_search(target, re, std::regex_constants::match_not_eol));
+    }
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   return 0;
 }

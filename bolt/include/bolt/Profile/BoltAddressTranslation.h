@@ -121,13 +121,31 @@ private:
 
   /// Write the serialized address translation table for a function.
   template <bool Cold>
+<<<<<<< HEAD
   void writeMaps(std::map<uint64_t, MapTy> &Maps, raw_ostream &OS);
+=======
+  void writeMaps(std::map<uint64_t, MapTy> &Maps, uint64_t &PrevAddress,
+                 raw_ostream &OS);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   /// Read the serialized address translation table for a function.
   /// Return a parse error if failed.
   template <bool Cold>
+<<<<<<< HEAD
   void parseMaps(std::vector<uint64_t> &HotFuncs, DataExtractor &DE,
                  uint64_t &Offset, Error &Err);
+=======
+  void parseMaps(std::vector<uint64_t> &HotFuncs, uint64_t &PrevAddress,
+                 DataExtractor &DE, uint64_t &Offset, Error &Err);
+
+  /// Returns the bitmask with set bits corresponding to indices of BRANCHENTRY
+  /// entries in function address translation map.
+  APInt calculateBranchEntriesBitMask(MapTy &Map, size_t EqualElems);
+
+  /// Calculate the number of equal offsets (output = input) in the beginning
+  /// of the function.
+  size_t getNumEqualOffsets(const MapTy &Map) const;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   std::map<uint64_t, MapTy> Maps;
 

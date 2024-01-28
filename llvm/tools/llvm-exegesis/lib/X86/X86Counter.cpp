@@ -141,7 +141,11 @@ X86LbrPerfEvent::X86LbrPerfEvent(unsigned SamplingPeriod) {
 }
 
 X86LbrCounter::X86LbrCounter(pfm::PerfEvent &&NewEvent)
+<<<<<<< HEAD
     : CounterGroup(std::move(NewEvent)) {
+=======
+    : CounterGroup(std::move(NewEvent), {}) {
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   MMappedBuffer = mmap(nullptr, kMappedBufferSize, PROT_READ | PROT_WRITE,
                        MAP_SHARED, getFileDescriptor(), 0);
   if (MMappedBuffer == MAP_FAILED)

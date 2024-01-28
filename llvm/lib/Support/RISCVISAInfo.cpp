@@ -55,6 +55,10 @@ static const RISCVSupportedExtension SupportedExtensions[] = {
     {"m", {2, 0}},
 
     {"smaia", {1, 0}},
+<<<<<<< HEAD
+=======
+    {"smepmp", {1, 0}},
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     {"ssaia", {1, 0}},
     {"svinval", {1, 0}},
     {"svnapot", {1, 0}},
@@ -88,6 +92,11 @@ static const RISCVSupportedExtension SupportedExtensions[] = {
     {"xtheadvdot", {1, 0}},
     {"xventanacondops", {1, 0}},
 
+<<<<<<< HEAD
+=======
+    {"za128rs", {1, 0}},
+    {"za64rs", {1, 0}},
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     {"zawrs", {1, 0}},
 
     {"zba", {1, 0}},
@@ -116,9 +125,20 @@ static const RISCVSupportedExtension SupportedExtensions[] = {
     {"zhinx", {1, 0}},
     {"zhinxmin", {1, 0}},
 
+<<<<<<< HEAD
     {"zicbom", {1, 0}},
     {"zicbop", {1, 0}},
     {"zicboz", {1, 0}},
+=======
+    {"zic64b", {1, 0}},
+    {"zicbom", {1, 0}},
+    {"zicbop", {1, 0}},
+    {"zicboz", {1, 0}},
+    {"ziccamoa", {1, 0}},
+    {"ziccif", {1, 0}},
+    {"zicclsm", {1, 0}},
+    {"ziccrse", {1, 0}},
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     {"zicntr", {2, 0}},
     {"zicsr", {2, 0}},
     {"zifencei", {2, 0}},
@@ -182,8 +202,15 @@ static const RISCVSupportedExtension SupportedExtensions[] = {
 };
 
 // NOTE: This table should be sorted alphabetically by extension name.
+// clang-format off
 static const RISCVSupportedExtension SupportedExperimentalExtensions[] = {
+<<<<<<< HEAD
     {"zacas", {1, 0}},
+=======
+    {"zaamo", {0, 2}},
+    {"zacas", {1, 0}},
+    {"zalrsc", {0, 2}},
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
     {"zcmop", {0, 2}},
 
@@ -201,6 +228,7 @@ static const RISCVSupportedExtension SupportedExperimentalExtensions[] = {
     {"zvfbfmin", {1, 0}},
     {"zvfbfwma", {1, 0}},
 };
+// clang-format on
 
 static void verifyTables() {
 #ifndef NDEBUG
@@ -964,8 +992,8 @@ Error RISCVISAInfo::checkDependency() {
         errc::invalid_argument,
         "'zvbc' requires 'v' or 'zve64*' extension to also be specified");
 
-  if ((Exts.count("zvkg") || Exts.count("zvkned") || Exts.count("zvknha") ||
-       Exts.count("zvksed") || Exts.count("zvksh")) &&
+  if ((Exts.count("zvkb") || Exts.count("zvkg") || Exts.count("zvkned") ||
+       Exts.count("zvknha") || Exts.count("zvksed") || Exts.count("zvksh")) &&
       !HasVector)
     return createStringError(
         errc::invalid_argument,

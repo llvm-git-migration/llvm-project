@@ -113,9 +113,14 @@ ConfiguredEvent::ConfiguredEvent(PerfEvent &&EventToConfigure)
 }
 
 #ifdef HAVE_LIBPFM
+<<<<<<< HEAD
 void ConfiguredEvent::initRealEvent(const pid_t ProcessID) {
   const int CPU = -1;
   const int GroupFD = -1;
+=======
+void ConfiguredEvent::initRealEvent(const pid_t ProcessID, const int GroupFD) {
+  const int CPU = -1;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   const uint32_t Flags = 0;
   perf_event_attr AttrCopy = *Event.attribute();
   FileDescriptor = perf_event_open(&AttrCopy, ProcessID, CPU, GroupFD, Flags);
@@ -147,7 +152,11 @@ ConfiguredEvent::readOrError(StringRef /*unused*/) const {
 
 ConfiguredEvent::~ConfiguredEvent() { close(FileDescriptor); }
 #else
+<<<<<<< HEAD
 void ConfiguredEvent::initRealEvent(pid_t ProcessID) {}
+=======
+void ConfiguredEvent::initRealEvent(pid_t ProcessID, const int GroupFD) {}
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 Expected<SmallVector<int64_t>>
 ConfiguredEvent::readOrError(StringRef /*unused*/) const {
@@ -158,6 +167,7 @@ ConfiguredEvent::readOrError(StringRef /*unused*/) const {
 ConfiguredEvent::~ConfiguredEvent() = default;
 #endif // HAVE_LIBPFM
 
+<<<<<<< HEAD
 CounterGroup::CounterGroup(PerfEvent &&E, pid_t ProcessID)
     : EventCounter(std::move(E)) {
   IsDummyEvent = EventCounter.isDummyEvent();
@@ -173,11 +183,40 @@ void CounterGroup::initRealEvent(pid_t ProcessID) {
 void CounterGroup::start() {
   if (!IsDummyEvent)
     ioctl(getFileDescriptor(), PERF_EVENT_IOC_RESET, 0);
+=======
+CounterGroup::CounterGroup(PerfEvent &&E, std::vector<PerfEvent> &&ValEvents,
+                           pid_t ProcessID)
+    : EventCounter(std::move(E)) {
+  IsDummyEvent = EventCounter.isDummyEvent();
+
+  for (auto &&ValEvent : ValEvents)
+    ValidationEventCounters.emplace_back(std::move(ValEvent));
+
+  if (!IsDummyEvent)
+    initRealEvent(ProcessID);
+}
+
+#ifdef HAVE_LIBPFM
+void CounterGroup::initRealEvent(pid_t ProcessID) {
+  EventCounter.initRealEvent(ProcessID);
+
+  for (auto &ValCounter : ValidationEventCounters)
+    ValCounter.initRealEvent(ProcessID, getFileDescriptor());
+}
+
+void CounterGroup::start() {
+  if (!IsDummyEvent)
+    ioctl(getFileDescriptor(), PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 void CounterGroup::stop() {
   if (!IsDummyEvent)
+<<<<<<< HEAD
     ioctl(getFileDescriptor(), PERF_EVENT_IOC_DISABLE, 0);
+=======
+    ioctl(getFileDescriptor(), PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 llvm::Expected<llvm::SmallVector<int64_t, 4>>
@@ -188,6 +227,28 @@ CounterGroup::readOrError(StringRef FunctionBytes) const {
     return SmallVector<int64_t, 1>(1, 42);
 }
 
+<<<<<<< HEAD
+=======
+llvm::Expected<llvm::SmallVector<int64_t>>
+CounterGroup::readValidationCountersOrError() const {
+  llvm::SmallVector<int64_t, 4> Result;
+  for (const auto &ValCounter : ValidationEventCounters) {
+    Expected<SmallVector<int64_t>> ValueOrError =
+        ValCounter.readOrError(StringRef());
+
+    if (!ValueOrError)
+      return ValueOrError.takeError();
+
+    // Reading a validation counter will only return a single value, so it is
+    // safe to only append the first value here. Also assert that this is true.
+    assert(ValueOrError->size() == 1 &&
+           "Validation counters should only return a single value");
+    Result.push_back((*ValueOrError)[0]);
+  }
+  return Result;
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 int CounterGroup::numValues() const { return 1; }
 #else
 
@@ -208,6 +269,14 @@ CounterGroup::readOrError(StringRef /*unused*/) const {
                                              llvm::errc::io_error);
 }
 
+<<<<<<< HEAD
+=======
+llvm::Expected<llvm::SmallVector<int64_t>>
+CounterGroup::readValidationCountersOrError() const {
+  return SmallVector<int64_t>(0);
+}
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 int CounterGroup::numValues() const { return 1; }
 
 #endif

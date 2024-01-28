@@ -559,6 +559,10 @@
   { include: [ "<__numeric/pstl_reduce.h>", "private", "<numeric>", "public" ] },
   { include: [ "<__numeric/pstl_transform_reduce.h>", "private", "<numeric>", "public" ] },
   { include: [ "<__numeric/reduce.h>", "private", "<numeric>", "public" ] },
+<<<<<<< HEAD
+=======
+  { include: [ "<__numeric/saturation_arithmetic.h>", "private", "<numeric>", "public" ] },
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   { include: [ "<__numeric/transform_exclusive_scan.h>", "private", "<numeric>", "public" ] },
   { include: [ "<__numeric/transform_inclusive_scan.h>", "private", "<numeric>", "public" ] },
   { include: [ "<__numeric/transform_reduce.h>", "private", "<numeric>", "public" ] },

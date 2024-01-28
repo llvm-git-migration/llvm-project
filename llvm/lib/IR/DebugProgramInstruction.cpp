@@ -335,6 +335,13 @@ void DPValue::setKillAddress() {
 bool DPValue::isKillAddress() const {
   Value *Addr = getAddress();
   return !Addr || isa<UndefValue>(Addr);
+<<<<<<< HEAD
+=======
+}
+
+const Instruction *DPValue::getInstruction() const {
+  return Marker->MarkedInstr;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 const BasicBlock *DPValue::getParent() const {

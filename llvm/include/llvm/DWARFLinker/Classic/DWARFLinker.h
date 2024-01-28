@@ -15,6 +15,10 @@
 #include "llvm/CodeGen/NonRelocatableStringpool.h"
 #include "llvm/DWARFLinker/Classic/DWARFLinkerCompileUnit.h"
 #include "llvm/DWARFLinker/DWARFLinkerBase.h"
+<<<<<<< HEAD
+=======
+#include "llvm/DWARFLinker/IndexedValuesMap.h"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 #include "llvm/DebugInfo/DWARF/DWARFContext.h"
 #include "llvm/DebugInfo/DWARF/DWARFDebugLine.h"
 #include "llvm/DebugInfo/DWARF/DWARFDebugRangeList.h"
@@ -33,25 +37,7 @@ namespace classic {
 class DeclContextTree;
 
 using Offset2UnitMap = DenseMap<uint64_t, CompileUnit *>;
-
-struct DebugDieValuePool {
-  DenseMap<uint64_t, uint64_t> DieValueMap;
-  SmallVector<uint64_t> DieValues;
-
-  uint64_t getValueIndex(uint64_t Value) {
-    DenseMap<uint64_t, uint64_t>::iterator It = DieValueMap.find(Value);
-    if (It == DieValueMap.end()) {
-      It = DieValueMap.insert(std::make_pair(Value, DieValues.size())).first;
-      DieValues.push_back(Value);
-    }
-    return It->second;
-  }
-
-  void clear() {
-    DieValueMap.clear();
-    DieValues.clear();
-  }
-};
+using DebugDieValuePool = IndexedValuesMap<uint64_t>;
 
 /// DwarfEmitter presents interface to generate all debug info tables.
 class DwarfEmitter {
@@ -59,7 +45,8 @@ public:
   virtual ~DwarfEmitter() = default;
 
   /// Emit section named SecName with data SecData.
-  virtual void emitSectionContents(StringRef SecData, StringRef SecName) = 0;
+  virtual void emitSectionContents(StringRef SecData,
+                                   DebugSectionKind SecKind) = 0;
 
   /// Emit the abbreviation table \p Abbrevs to the .debug_abbrev section.
   virtual void
@@ -205,17 +192,6 @@ public:
 
   /// Dump the file to the disk.
   virtual void finish() = 0;
-
-  /// Emit the swift_ast section stored in \p Buffer.
-  virtual void emitSwiftAST(StringRef Buffer) = 0;
-
-  /// Emit the swift reflection section stored in \p Buffer.
-  virtual void emitSwiftReflectionSection(
-      llvm::binaryformat::Swift5ReflectionSectionKind ReflSectionKind,
-      StringRef Buffer, uint32_t Alignment, uint32_t Size) = 0;
-
-  /// Returns underlying AsmPrinter.
-  virtual AsmPrinter &getAsmPrinter() const = 0;
 };
 
 class DwarfStreamer;
@@ -249,10 +225,17 @@ public:
                                          StringsTranslator);
   }
 
+<<<<<<< HEAD
   Error createEmitter(const Triple &TheTriple, OutputFileType FileType,
                       raw_pwrite_stream &OutFile);
 
   DwarfEmitter *getEmitter();
+=======
+  /// Set output DWARF emitter.
+  void setOutputDWARFEmitter(DwarfEmitter *Emitter) {
+    TheDwarfEmitter = Emitter;
+  }
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   /// Add object file to be linked. Pre-load compile unit die. Call
   /// \p OnCUDieLoaded for each compile unit die. If specified \p File
@@ -779,7 +762,7 @@ private:
   BumpPtrAllocator DIEAlloc;
   /// @}
 
-  std::unique_ptr<DwarfStreamer> TheDwarfEmitter;
+  DwarfEmitter *TheDwarfEmitter = nullptr;
   std::vector<LinkContext> ObjectContexts;
 
   /// The CIEs that have been emitted in the output section. The actual CIE

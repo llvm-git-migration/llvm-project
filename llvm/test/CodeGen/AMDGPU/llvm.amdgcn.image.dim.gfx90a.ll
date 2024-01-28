@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 ; RUN: llc -march=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN %s
 ; RUN: llc -march=amdgcn -mcpu=gfx90a -verify-machineinstrs -early-live-intervals < %s | FileCheck -check-prefixes=GCN %s
 ; RUN: llc -global-isel -march=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN %s
+=======
+; RUN: llc -mtriple=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN %s
+; RUN: llc -mtriple=amdgcn -mcpu=gfx90a -verify-machineinstrs -early-live-intervals < %s | FileCheck -check-prefixes=GCN %s
+; RUN: llc -global-isel -mtriple=amdgcn -mcpu=gfx90a -verify-machineinstrs < %s | FileCheck -check-prefixes=GCN %s
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 ; GCN-LABEL: {{^}}load_1d:
 ; GCN: image_load v[0:3], v0, s[0:7] dmask:0xf unorm{{$}}

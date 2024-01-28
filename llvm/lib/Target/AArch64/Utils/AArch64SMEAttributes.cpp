@@ -27,10 +27,15 @@ void SMEAttrs::set(unsigned M, bool Enable) {
          "ZA_New and ZA_Shared are mutually exclusive");
   assert(!(hasNewZABody() && preservesZA()) &&
          "ZA_New and ZA_Preserved are mutually exclusive");
+<<<<<<< HEAD
   assert(!(hasNewZABody() && (Bitmask & ZA_NoLazySave)) &&
          "ZA_New and ZA_NoLazySave are mutually exclusive");
   assert(!(sharesZA() && (Bitmask & ZA_NoLazySave)) &&
          "ZA_Shared and ZA_NoLazySave are mutually exclusive");
+=======
+  assert(!(hasNewZABody() && (Bitmask & SME_ABI_Routine)) &&
+         "ZA_New and SME_ABI_Routine are mutually exclusive");
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   // ZT0 Attrs
   assert(
@@ -49,11 +54,10 @@ SMEAttrs::SMEAttrs(const CallBase &CB) {
 
 SMEAttrs::SMEAttrs(StringRef FuncName) : Bitmask(0) {
   if (FuncName == "__arm_tpidr2_save" || FuncName == "__arm_sme_state")
-    Bitmask |= (SMEAttrs::SM_Compatible | SMEAttrs::ZA_Preserved |
-                SMEAttrs::ZA_NoLazySave);
+    Bitmask |= (SMEAttrs::SM_Compatible | SMEAttrs::SME_ABI_Routine);
   if (FuncName == "__arm_tpidr2_restore")
     Bitmask |= (SMEAttrs::SM_Compatible | SMEAttrs::ZA_Shared |
-                SMEAttrs::ZA_NoLazySave);
+                SMEAttrs::SME_ABI_Routine);
 }
 
 SMEAttrs::SMEAttrs(const AttributeList &Attrs) {
@@ -82,27 +86,17 @@ SMEAttrs::SMEAttrs(const AttributeList &Attrs) {
     Bitmask |= encodeZT0State(StateValue::New);
 }
 
-std::optional<bool>
-SMEAttrs::requiresSMChange(const SMEAttrs &Callee,
-                           bool BodyOverridesInterface) const {
-  // If the transition is not through a call (e.g. when considering inlining)
-  // and Callee has a streaming body, then we can ignore the interface of
-  // Callee.
-  if (BodyOverridesInterface && Callee.hasStreamingBody()) {
-    return hasStreamingInterfaceOrBody() ? std::nullopt
-                                         : std::optional<bool>(true);
-  }
-
+bool SMEAttrs::requiresSMChange(const SMEAttrs &Callee) const {
   if (Callee.hasStreamingCompatibleInterface())
-    return std::nullopt;
+    return false;
 
   // Both non-streaming
   if (hasNonStreamingInterfaceAndBody() && Callee.hasNonStreamingInterface())
-    return std::nullopt;
+    return false;
 
   // Both streaming
   if (hasStreamingInterfaceOrBody() && Callee.hasStreamingInterface())
-    return std::nullopt;
+    return false;
 
-  return Callee.hasStreamingInterface();
+  return true;
 }

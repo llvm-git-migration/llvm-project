@@ -248,7 +248,10 @@ public:
     }
 
   public:
+<<<<<<< HEAD
     static MachinePassKey Key;
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     PreservedAnalyses run(MachineFunction &IR,
                           MachineFunctionAnalysisManager::Base &AM) {
       return Handle->run(IR, AM);
@@ -280,9 +283,12 @@ struct MockAnalysisHandle : public MockAnalysisHandleBase<MockAnalysisHandle> {
 };
 
 template <typename DerivedT>
+<<<<<<< HEAD
 MachinePassKey MockPassHandleBase<DerivedT>::Pass::Key;
 
 template <typename DerivedT>
+=======
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 AnalysisKey MockAnalysisHandleBase<DerivedT>::Analysis::Key;
 
 class MockPassHandle : public MockPassHandleBase<MockPassHandle> {

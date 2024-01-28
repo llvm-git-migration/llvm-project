@@ -10,8 +10,6 @@
 
 #include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
-#include "mlir/Dialect/Bufferization/IR/BufferDeallocationOpInterface.h"
-#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/Builders.h"
@@ -69,16 +67,7 @@ void ControlFlowDialect::initialize() {
 #define GET_OP_LIST
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.cpp.inc"
       >();
-
   addInterfaces<ControlFlowInlinerInterface>();
-  
-  declarePromisedInterface<BranchOp, bufferization::BufferizableOpInterface>();
-  declarePromisedInterface<CondBranchOp,
-                           bufferization::BufferizableOpInterface>();
-
-  declarePromisedInterface<CondBranchOp,
-                           bufferization::BufferDeallocationOpInterface>();
-  
   declarePromisedInterface<ControlFlowDialect, ConvertToLLVMPatternInterface>();
 }
 
@@ -414,8 +403,8 @@ struct CondBranchTruthPropagation : public OpRewritePattern<CondBranchOp> {
             constantTrue = rewriter.create<arith::ConstantOp>(
                 condbr.getLoc(), ty, rewriter.getBoolAttr(true));
 
-          rewriter.updateRootInPlace(use.getOwner(),
-                                     [&] { use.set(constantTrue); });
+          rewriter.modifyOpInPlace(use.getOwner(),
+                                   [&] { use.set(constantTrue); });
         }
       }
     }
@@ -429,8 +418,8 @@ struct CondBranchTruthPropagation : public OpRewritePattern<CondBranchOp> {
             constantFalse = rewriter.create<arith::ConstantOp>(
                 condbr.getLoc(), ty, rewriter.getBoolAttr(false));
 
-          rewriter.updateRootInPlace(use.getOwner(),
-                                     [&] { use.set(constantFalse); });
+          rewriter.modifyOpInPlace(use.getOwner(),
+                                   [&] { use.set(constantFalse); });
         }
       }
     }

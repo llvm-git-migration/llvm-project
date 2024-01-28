@@ -28,12 +28,26 @@
 
 # RELAX:       Relocations [
 # RELAX-NEXT:    Section ({{.*}}) .rela.text {
+# RELAX-NEXT:      0x4 R_LARCH_ALIGN {{.*}} 0x4
 # RELAX-NEXT:      0x10 R_LARCH_PCALA_HI20 .L1 0x0
 # RELAX-NEXT:      0x10 R_LARCH_RELAX - 0x0
 # RELAX-NEXT:      0x14 R_LARCH_PCALA_LO12 .L1 0x0
 # RELAX-NEXT:      0x14 R_LARCH_RELAX - 0x0
 # RELAX-NEXT:    }
 # RELAX-NEXT:    Section ({{.*}}) .rela.data {
+<<<<<<< HEAD
+=======
+# RELAX-NEXT:      0x10 R_LARCH_ADD8 .L3 0x0
+# RELAX-NEXT:      0x10 R_LARCH_SUB8 .L2 0x0
+# RELAX-NEXT:      0x11 R_LARCH_ADD16 .L3 0x0
+# RELAX-NEXT:      0x11 R_LARCH_SUB16 .L2 0x0
+# RELAX-NEXT:      0x13 R_LARCH_ADD32 .L3 0x0
+# RELAX-NEXT:      0x13 R_LARCH_SUB32 .L2 0x0
+# RELAX-NEXT:      0x17 R_LARCH_ADD64 .L3 0x0
+# RELAX-NEXT:      0x17 R_LARCH_SUB64 .L2 0x0
+# RELAX-NEXT:      0x1F R_LARCH_ADD_ULEB128 .L3 0x0
+# RELAX-NEXT:      0x1F R_LARCH_SUB_ULEB128 .L2 0x0
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 # RELAX-NEXT:      0x20 R_LARCH_ADD8 .L4 0x0
 # RELAX-NEXT:      0x20 R_LARCH_SUB8 .L3 0x0
 # RELAX-NEXT:      0x21 R_LARCH_ADD16 .L4 0x0
@@ -57,7 +71,11 @@
 
 # RELAX:      Hex dump of section '.data':
 # RELAX-NEXT: 0x00000000 04040004 00000004 00000000 00000004
+<<<<<<< HEAD
 # RELAX-NEXT: 0x00000010 0c0c000c 0000000c 00000000 0000000c
+=======
+# RELAX-NEXT: 0x00000010 00000000 00000000 00000000 00000000
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 # RELAX-NEXT: 0x00000020 00000000 00000000 00000000 00000000
 # RELAX-NEXT: 0x00000030 00000000 00000000 00000000 000000
 
@@ -78,7 +96,11 @@
 .word  .L2 - .L1
 .dword .L2 - .L1
 .uleb128 .L2 - .L1
+<<<<<<< HEAD
 ## TODO Handle alignment directive.
+=======
+## With relaxation, emit relocs because the .align makes the diff variable.
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 .byte  .L3 - .L2
 .short .L3 - .L2
 .word  .L3 - .L2

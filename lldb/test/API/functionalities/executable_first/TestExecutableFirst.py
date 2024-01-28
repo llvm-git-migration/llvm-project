@@ -10,6 +10,12 @@ from lldbsuite.test import lldbutil
 class TestExecutableIsFirst(TestBase):
     NO_DEBUG_INFO_TESTCASE = True
 
+<<<<<<< HEAD
+=======
+    # ELF does not have a hard distinction between shared libraries and
+    # (position-independent) executables
+    @skipIf(oslist=no_match(lldbplatformutil.getDarwinOSTriples()+["windows"]))
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     def test_executable_is_first_before_run(self):
         self.build()
 

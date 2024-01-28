@@ -62,6 +62,7 @@ intermediate LLVM representation.
    ReportingGuide
    ResponseGuide
    Remarks
+   RemoveDIsDebugInfo
    RISCVUsage
    SourceLevelDebugging
    SPIRVUsage
@@ -178,6 +179,13 @@ Optimizations
    referencing, to determine variable locations for debug info in the final
    stages of compilation.
 
+<<<<<<< HEAD
+=======
+:doc:`RemoveDIsDebugInfo`
+   This is a migration guide describing how to move from debug info using
+   intrinsics such as dbg.value to using the non-instruction DPValue object.
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 :doc:`InstrProfileFormat`
    This document explains two binary formats of instrumentation-based profiles.
 

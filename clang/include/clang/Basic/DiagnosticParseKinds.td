@@ -1374,6 +1374,10 @@ def err_acc_expected_reduction_operator
 def err_acc_invalid_reduction_operator
     : Error<"invalid reduction operator,  expected '+', '*', 'max', 'min', "
             "'&', '|', '^', '&&', or '||'">;
+<<<<<<< HEAD
+=======
+def err_acc_incorrect_bind_arg : Error<"expected identifier or string literal">;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 // OpenMP support.
 def warn_pragma_omp_ignored : Warning<
@@ -1616,6 +1620,9 @@ def err_pragma_invalid_keyword : Error<
   "invalid argument; expected 'enable'%select{|, 'full'}0%select{|, 'assume_safety'}1 or 'disable'">;
 def err_pragma_pipeline_invalid_keyword : Error<
     "invalid argument; expected 'disable'">;
+
+// API notes.
+def err_type_unparsed : Error<"unparsed tokens following type">;
 
 // Pragma unroll support.
 def warn_pragma_unroll_cuda_value_in_parens : Warning<

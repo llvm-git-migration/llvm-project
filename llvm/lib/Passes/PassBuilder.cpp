@@ -80,7 +80,9 @@
 #include "llvm/CodeGen/ExpandLargeDivRem.h"
 #include "llvm/CodeGen/ExpandLargeFpConvert.h"
 #include "llvm/CodeGen/ExpandMemCmp.h"
+#include "llvm/CodeGen/FreeMachineFunction.h"
 #include "llvm/CodeGen/GCMetadata.h"
+#include "llvm/CodeGen/GlobalMerge.h"
 #include "llvm/CodeGen/HardwareLoops.h"
 #include "llvm/CodeGen/IndirectBrExpand.h"
 #include "llvm/CodeGen/InterleavedAccess.h"
@@ -92,6 +94,10 @@
 #include "llvm/CodeGen/ShadowStackGCLowering.h"
 #include "llvm/CodeGen/SjLjEHPrepare.h"
 #include "llvm/CodeGen/StackProtector.h"
+<<<<<<< HEAD
+=======
+#include "llvm/CodeGen/TargetPassConfig.h"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 #include "llvm/CodeGen/TypePromotion.h"
 #include "llvm/CodeGen/WasmEHPrepare.h"
 #include "llvm/CodeGen/WinEHPrepare.h"
@@ -315,7 +321,8 @@ namespace {
 /// We currently only use this for --print-before/after.
 bool shouldPopulateClassToPassNames() {
   return PrintPipelinePasses || !printBeforePasses().empty() ||
-         !printAfterPasses().empty() || !isFilterPassesEmpty();
+         !printAfterPasses().empty() || !isFilterPassesEmpty() ||
+         TargetPassConfig::hasLimitedCodeGenPipeline();
 }
 
 // A pass for testing -print-on-crash.
@@ -397,7 +404,11 @@ PassBuilder::PassBuilder(TargetMachine *TM, PipelineTuningOptions PTO,
   PIC->addClassToPassName(PASS_NAME::name(), NAME);
 #define MACHINE_FUNCTION_PASS(NAME, PASS_NAME, CONSTRUCTOR)                    \
   PIC->addClassToPassName(PASS_NAME::name(), NAME);
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   }
 }
 
@@ -438,7 +449,11 @@ void PassBuilder::registerMachineFunctionAnalyses(
 
 #define MACHINE_FUNCTION_ANALYSIS(NAME, PASS_NAME, CONSTRUCTOR)                \
   MFAM.registerPass([&] { return PASS_NAME(); });
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   for (auto &C : MachineFunctionAnalysisRegistrationCallbacks)
     C(MFAM);
@@ -658,6 +673,10 @@ Expected<bool> parseGlobalDCEPassOptions(StringRef Params) {
   return parseSinglePassOption(Params, "vfe-linkage-unit-visibility", "GlobalDCE");
 }
 
+Expected<bool> parseCGProfilePassOptions(StringRef Params) {
+  return parseSinglePassOption(Params, "in-lto-post-link", "CGProfile");
+}
+
 Expected<bool> parseInlinerPassOptions(StringRef Params) {
   return parseSinglePassOption(Params, "only-mandatory", "InlinerPass");
 }
@@ -738,6 +757,26 @@ Expected<HWAddressSanitizerOptions> parseHWASanPassOptions(StringRef Params) {
     } else {
       return make_error<StringError>(
           formatv("invalid HWAddressSanitizer pass parameter '{0}' ", ParamName)
+              .str(),
+          inconvertibleErrorCode());
+    }
+  }
+  return Result;
+}
+
+Expected<EmbedBitcodeOptions> parseEmbedBitcodePassOptions(StringRef Params) {
+  EmbedBitcodeOptions Result;
+  while (!Params.empty()) {
+    StringRef ParamName;
+    std::tie(ParamName, Params) = Params.split(';');
+
+    if (ParamName == "thinlto") {
+      Result.IsThinLTO = true;
+    } else if (ParamName == "emit-summary") {
+      Result.EmitLTOSummary = true;
+    } else {
+      return make_error<StringError>(
+          formatv("invalid EmbedBitcode pass parameter '{0}' ", ParamName)
               .str(),
           inconvertibleErrorCode());
     }
@@ -1080,6 +1119,32 @@ Expected<bool> parseStructuralHashPrinterPassOptions(StringRef Params) {
 Expected<bool> parseWinEHPrepareOptions(StringRef Params) {
   return parseSinglePassOption(Params, "demote-catchswitch-only",
                                "WinEHPreparePass");
+}
+
+Expected<GlobalMergeOptions> parseGlobalMergeOptions(StringRef Params) {
+  GlobalMergeOptions Result;
+  while (!Params.empty()) {
+    StringRef ParamName;
+    std::tie(ParamName, Params) = Params.split(';');
+
+    bool Enable = !ParamName.consume_front("no-");
+    if (ParamName == "group-by-use")
+      Result.GroupByUse = Enable;
+    else if (ParamName == "ignore-single-use")
+      Result.IgnoreSingleUse = Enable;
+    else if (ParamName == "merge-const")
+      Result.MergeConst = Enable;
+    else if (ParamName == "merge-external")
+      Result.MergeExternal = Enable;
+    else if (ParamName.consume_front("max-offset=")) {
+      if (ParamName.getAsInteger(0, Result.MaxOffset))
+        return make_error<StringError>(
+            formatv("invalid GlobalMergePass parameter '{0}' ", ParamName)
+                .str(),
+            inconvertibleErrorCode());
+    }
+  }
+  return Result;
 }
 
 } // namespace
@@ -1815,7 +1880,11 @@ Error PassBuilder::parseMachinePass(MachineFunctionPassManager &MFPM,
     MFPM.addPass(PASS_NAME());                                                 \
     return Error::success();                                                   \
   }
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   for (auto &C : MachinePipelineParsingCallbacks)
     if (C(Name, MFPM))
@@ -2126,17 +2195,29 @@ void PassBuilder::printPassNames(raw_ostream &OS) {
   OS << "Machine module passes (WIP):\n";
 #define MACHINE_MODULE_PASS(NAME, PASS_NAME, CONSTRUCTOR)                      \
   printPassName(NAME, OS);
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   OS << "Machine function passes (WIP):\n";
 #define MACHINE_FUNCTION_PASS(NAME, PASS_NAME, CONSTRUCTOR)                    \
   printPassName(NAME, OS);
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
   OS << "Machine function analyses (WIP):\n";
 #define MACHINE_FUNCTION_ANALYSIS(NAME, PASS_NAME, CONSTRUCTOR)                \
   printPassName(NAME, OS);
+<<<<<<< HEAD
 #include "llvm/CodeGen/MachinePassRegistry.def"
+=======
+#include "llvm/Passes/MachinePassRegistry.def"
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 }
 
 void PassBuilder::registerParseTopLevelPipelineCallback(

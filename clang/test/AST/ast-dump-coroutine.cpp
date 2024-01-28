@@ -52,8 +52,12 @@ Task test()  {
 // CHECK-NEXT:       |-CXXMemberCallExpr  {{.*}} 'std::suspend_always'
 // CHECK-NEXT:       |   | `-MemberExpr {{.*}} .initial_suspend
 //                   ...
+<<<<<<< HEAD
 // FIXME: the CoreturnStmt should be marked as implicit
 // CHECK: CoreturnStmt {{.*}} <col:6>{{$}}
+=======
+// CHECK: CoreturnStmt {{.*}} <col:6> implicit
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 
 Task test2()  {
 // Writen souce code, verify no implicit bit for the co_return expr.
@@ -65,5 +69,9 @@ Task test2()  {
 // CHECK:        |-DeclStmt {{.*}}
 // CHECK-NEXT:   | `-VarDecl {{.*}} implicit used __promise
 //               ...
+<<<<<<< HEAD
 // FIXME: the CoreturnStmt should be marked as implicit
 // CHECK: CoreturnStmt {{.*}} <col:6>{{$}}
+=======
+// CHECK: CoreturnStmt {{.*}} <col:6> implicit
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e

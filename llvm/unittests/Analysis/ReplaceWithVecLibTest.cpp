@@ -72,9 +72,17 @@ protected:
     PB.registerFunctionAnalyses(FAM);
 
     // Enable debugging and capture std error
+<<<<<<< HEAD
     llvm::DebugFlag = true;
     testing::internal::CaptureStderr();
     FPM.run(*M->getFunction("foo"), FAM);
+=======
+    bool DebugFlagPrev = llvm::DebugFlag;
+    llvm::DebugFlag = true;
+    testing::internal::CaptureStderr();
+    FPM.run(*M->getFunction("foo"), FAM);
+    llvm::DebugFlag = DebugFlagPrev;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
     return getLastLine(testing::internal::GetCapturedStderr());
   }
 };

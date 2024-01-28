@@ -5,7 +5,16 @@
 ; RUN: %ld64 -lto_library %llvmshlibdir/libLTO.dylib -dylib -arch x86_64 -macos_version_min 10.10.0 -o %t.dylib %t.o -save-temps  -undefined dynamic_lookup -exported_symbol _bar -lSystem -mllvm -lto-discard-value-names=false
 ; RUN: llvm-dis %t.dylib.lto.opt.bc -o - | FileCheck --check-prefix=KEEP %s
 
+<<<<<<< HEAD
 ; FIXME: -lto-discard-value-names is ignored at the moment.
+=======
+; The test requires asserts, as it depends on the default value for
+; -lto-discard-value-names at the moment.
+; FIXME: -lto-discard-value-names is ignored at the moment.
+
+; REQUIRES: asserts
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 ; DISCARD: %cmp.i = icmp
 ; DISCARD: %add = add i32
 

@@ -49,11 +49,22 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "${tmachine}$")
   )
 
   if(LIBOMPTARGET_DEP_LIBFFI_FOUND)
+<<<<<<< HEAD
      libomptarget_say("Building ${tmachine_libname} plugin linked with libffi")
      target_link_libraries("omptarget.rtl.${tmachine_libname}" PRIVATE
                            ${FFI_LIBRARIES})
      target_include_directories("omptarget.rtl.${tmachine_libname}" PRIVATE
                                 ${FFI_INCLUDE_DIRS})
+=======
+    libomptarget_say("Building ${tmachine_libname} plugin linked with libffi")
+    if(FFI_STATIC_LIBRARIES)
+      target_link_libraries(
+        "omptarget.rtl.${tmachine_libname}" PRIVATE FFI::ffi_static)
+    else()
+      target_link_libraries(
+        "omptarget.rtl.${tmachine_libname}" PRIVATE FFI::ffi)
+    endif()
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   else()
      libomptarget_say("Building ${tmachine_libname} plugie for dlopened libffi")
      target_sources("omptarget.rtl.${tmachine_libname}" PRIVATE
@@ -78,10 +89,17 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "${tmachine}$")
     INSTALL_RPATH "$ORIGIN" BUILD_RPATH "$ORIGIN:${CMAKE_CURRENT_BINARY_DIR}/.."
     POSITION_INDEPENDENT_CODE ON
     CXX_VISIBILITY_PRESET protected)
+<<<<<<< HEAD
 
   target_include_directories("omptarget.rtl.${tmachine_libname}" PRIVATE
                              ${LIBOMPTARGET_INCLUDE_DIR})
 
+=======
+
+  target_include_directories("omptarget.rtl.${tmachine_libname}" PRIVATE
+                             ${LIBOMPTARGET_INCLUDE_DIR})
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
   if(LIBOMPTARGET_DEP_LIBFFI_FOUND)
     list(APPEND LIBOMPTARGET_TESTED_PLUGINS "omptarget.rtl.${tmachine_libname}")
     set(LIBOMPTARGET_TESTED_PLUGINS

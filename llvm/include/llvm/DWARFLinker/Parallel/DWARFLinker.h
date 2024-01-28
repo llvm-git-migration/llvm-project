@@ -89,6 +89,7 @@ namespace llvm {
 namespace dwarf_linker {
 namespace parallel {
 
+<<<<<<< HEAD
 /// ExtraDwarfEmitter allows adding extra data to the DWARFLinker output.
 /// The finish() method should be called after all extra data are emitted.
 class ExtraDwarfEmitter {
@@ -113,6 +114,36 @@ public:
   virtual AsmPrinter &getAsmPrinter() const = 0;
 };
 
+=======
+/// This structure keeps data of the concrete section.
+struct SectionDescriptorBase {
+  SectionDescriptorBase(DebugSectionKind SectionKind, dwarf::FormParams Format,
+                        llvm::endianness Endianess)
+      : SectionKind(SectionKind), Format(Format), Endianess(Endianess) {}
+  virtual ~SectionDescriptorBase() = default;
+  /// Returns section content.
+  virtual StringRef getContents() = 0;
+  /// Returns section kind.
+  DebugSectionKind getKind() { return SectionKind; }
+  /// Returns section name.
+  const StringLiteral &getName() const { return getSectionName(SectionKind); }
+  /// Returns endianess used by section.
+  llvm::endianness getEndianess() const { return Endianess; }
+  /// Returns FormParams used by section.
+  dwarf::FormParams getFormParams() const { return Format; }
+
+protected:
+  /// The section kind.
+  DebugSectionKind SectionKind = DebugSectionKind::NumberOfEnumEntries;
+  /// Output format.
+  dwarf::FormParams Format = {4, 4, dwarf::DWARF32};
+  llvm::endianness Endianess = llvm::endianness::little;
+};
+
+using SectionHandlerTy =
+    std::function<void(std::shared_ptr<SectionDescriptorBase> Section)>;
+
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 class DWARFLinker : public DWARFLinkerBase {
 public:
   virtual ~DWARFLinker() = default;
@@ -122,12 +153,20 @@ public:
   createLinker(MessageHandlerTy ErrorHandler, MessageHandlerTy WarningHandler,
                TranslatorFuncTy StringsTranslator = nullptr);
 
+<<<<<<< HEAD
   /// Creates emitter for output dwarf.
   virtual Error createEmitter(const Triple &TheTriple, OutputFileType FileType,
                               raw_pwrite_stream &OutFile) = 0;
 
   /// Returns previously created dwarf emitter. May be nullptr.
   virtual ExtraDwarfEmitter *getEmitter() = 0;
+=======
+  /// Set output DWARF handler. Result of linking DWARF is set of sections
+  /// containing final debug info. DWARFLinkerBase::link() pass generated
+  /// sections using specified \p SectionHandler.
+  virtual void setOutputDWARFHandler(const Triple &TargetTriple,
+                                     SectionHandlerTy SectionHandler) = 0;
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 };
 
 } // end of namespace parallel

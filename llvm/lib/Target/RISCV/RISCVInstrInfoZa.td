@@ -54,7 +54,11 @@ multiclass AMO_cas_aq_rl<bits<5> funct5, bits<3> funct3, string opcodestr,
   def _AQ_RL : AMO_cas<funct5, 1, 1, funct3, opcodestr # ".aqrl", RC>;
 }
 
+<<<<<<< HEAD
 let Predicates = [HasStdExtZacas] in {
+=======
+let Predicates = [HasStdExtZacas], IsSignExtendingOpW = 1 in {
+>>>>>>> faf555f93f3628b7b2b64162c02dd1474540532e
 defm AMOCAS_W : AMO_cas_aq_rl<0b00101, 0b010, "amocas.w", GPR>;
 } // Predicates = [HasStdExtZacas]
 
