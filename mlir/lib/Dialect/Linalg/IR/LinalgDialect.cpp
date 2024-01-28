@@ -20,6 +20,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/DialectImplementation.h"
+#include "mlir/Interfaces/DestinationStyleOpInterface.h"
 #include "mlir/Interfaces/FunctionInterfaces.h"
 #include "mlir/Interfaces/SubsetOpInterface.h"
 #include "mlir/Interfaces/ValueBoundsOpInterface.h"
@@ -99,6 +100,25 @@ void addNamedOpBuilders(
   (addNamedOpBuilderImpl<OpTypes>(map), ...);
 }
 
+template <typename... Ops>
+struct LinalgOpInterfaceHelper {
+  static void declareOpInterface(LinalgDialect *dialect) {
+    (dialect->declarePromisedInterface<Ops, bufferization::BufferizableOpInterface>(), ...);
+  }
+};
+
+template <typename OpType>
+static void declareOne(LinalgDialect *dialect) {
+  dialect->declarePromisedInterface<OpType, TilingInterface>();
+  dialect->declarePromisedInterface<OpType, PartialReductionOpInterface>();
+}
+
+/// Variadic helper function.
+template <typename... OpTypes>
+static void declareAll(LinalgDialect *dialect) {
+  (declareOne<OpTypes>(), ...);
+}
+
 void mlir::linalg::LinalgDialect::initialize() {
   addAttributes<
 #define GET_ATTRDEF_LIST
@@ -120,9 +140,20 @@ void mlir::linalg::LinalgDialect::initialize() {
       >(namedStructuredOpRegionBuilders);
 
   addInterfaces<LinalgInlinerInterface>();
+
   declarePromisedInterface<CopyOp, SubsetOpInterface>();
   declarePromisedInterface<CopyOp, SubsetInsertionOpInterface>();
   declarePromisedInterface<IndexOp, ValueBoundsOpInterface>();
+
+  declareOne<linalg::GenericOp>(this);
+  declareAll<
+#include "mlir/Dialect/Linalg/IR/LinalgStructuredOps.cpp.inc"
+      >(this);
+
+  LinalgOpInterfaceHelper<
+#define GET_OP_LIST
+#include "mlir/Dialect/Linalg/IR/LinalgStructuredOps.cpp.inc"
+        >::declareOpInterface(this);
 }
 
 LogicalResult LinalgDialect::verifyOperationAttribute(Operation *op,
