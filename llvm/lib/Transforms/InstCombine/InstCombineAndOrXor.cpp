@@ -4756,21 +4756,17 @@ Instruction *InstCombinerImpl::visitXor(BinaryOperator &I) {
     return BinaryOperator::CreateNot(Builder.CreateAnd(Op0, B));
 
   // (A | B) ^ (A | C) --> (B ^ C) & ~A -- There are 4 commuted variants.
-  // TODO: Loosen one-use restriction if common operand is a constant.
-  Value *D;
-  if (match(Op0, m_OneUse(m_Or(m_Value(A), m_Value(B)))) &&
-      match(Op1, m_OneUse(m_Or(m_Value(C), m_Value(D))))) {
-    if (B == C || B == D)
-      std::swap(A, B);
-    if (A == C)
-      std::swap(C, D);
-    if (A == D) {
-      Value *NotA = Builder.CreateNot(A);
-      return BinaryOperator::CreateAnd(Builder.CreateXor(B, C), NotA);
+  if (match(Op0, m_c_Or(m_Value(A), m_Value(B))) &&
+      match(Op1, m_c_Or(m_Specific(A), m_Value(C)))) {
+    // Allow the tranformation to happen if A is one use or a constant.
+    if (A->hasOneUse() || match(A, m_ImmConstant())) {
+      return BinaryOperator::CreateAnd(Builder.CreateXor(B, C),
+                                       Builder.CreateNot(A));
     }
   }
 
   // (A & B) ^ (A | C) --> A ? ~B : C -- There are 4 commuted variants.
+  Value *D;
   if (I.getType()->isIntOrIntVectorTy(1) &&
       match(Op0, m_OneUse(m_LogicalAnd(m_Value(A), m_Value(B)))) &&
       match(Op1, m_OneUse(m_LogicalOr(m_Value(C), m_Value(D))))) {
