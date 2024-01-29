@@ -26,6 +26,7 @@ GetChildMemberWithName(ValueObject &obj,
 lldb::ValueObjectSP GetFirstValueOfLibCXXCompressedPair(ValueObject &pair);
 lldb::ValueObjectSP GetSecondValueOfLibCXXCompressedPair(ValueObject &pair);
 
+bool isStdTemplate(ConstString type_name, llvm::StringRef type);
 
 bool LibcxxStringSummaryProviderASCII(
     ValueObject &valobj, Stream &stream,

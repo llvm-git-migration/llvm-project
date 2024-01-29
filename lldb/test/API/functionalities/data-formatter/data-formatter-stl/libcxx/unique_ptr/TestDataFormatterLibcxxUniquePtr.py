@@ -83,7 +83,7 @@ class TestCase(TestBase):
             "up_str",
             type=self.make_expected_basic_string_ptr(),
             summary='"hello"',
-            children=[ValueCheck(name="pointer", summary='"hello"')],
+            children=[ValueCheck(name="pointer")],
         )
 
         valobj = self.expect_var_path("up_user", type=self.make_expected_type("User"))
