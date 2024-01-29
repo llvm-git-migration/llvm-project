@@ -25,7 +25,7 @@ class RecordKeeper;
 
 namespace llvm_libc {
 
-enum class AttributeStyle { None, Gnu, C23, Declspec };
+enum class AttributeStyle { Cxx11 = 0, Gnu = 1, Declspec = 2 };
 
 class PublicAPICommand : public Command {
 private:
