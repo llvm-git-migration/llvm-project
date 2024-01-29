@@ -1075,8 +1075,7 @@ static bool shouldEmitChainedFixups(const InputArgList &args) {
     return false;
   }
 
-  // TODO: Enable by default once stable.
-  return isRequested;
+  return true;
 }
 
 void SymbolPatterns::clear() {

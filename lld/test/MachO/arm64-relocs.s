@@ -22,7 +22,7 @@
 # CHECK-NEXT:  ret
 
 # CHECK-LABEL: Contents of (__DATA_CONST,__const) section
-# CHECK:       [[#PTR_1]]  {{0*}}[[#BAZ]]     00000000 00000000 00000000
+# CHECK:       [[#PTR_1]]  {{0*}}[[#BAZ]]     00200000 00000000 00000000
 # CHECK:       [[#PTR_2]]  {{0*}}[[#BAZ+123]] 00000000 00000000 00000000
 
 .text

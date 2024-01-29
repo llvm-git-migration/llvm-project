@@ -41,18 +41,18 @@
 # CHECK-EMPTY:
 
 # STUB: Contents of (__TEXT,__stubs) section
-# STUB-NEXT:  adrp    x16, 8 ; 0x100008000
+# STUB-NEXT:  adrp    x16, 4 ; 0x100004000
 # STUB-NEXT:  ldr     x16, [x16]
 # STUB-NEXT:  br      x16
 
 # SMALL: Contents of (__TEXT,__objc_stubs) section
 # SMALL-NEXT: _objc_msgSend$foo:
 # SMALL-NEXT: adrp    x1, 8 ; 0x100008000
-# SMALL-NEXT: ldr     x1, [x1, #0x18]
+# SMALL-NEXT: ldr     x1, [x1, #0x10]
 # SMALL-NEXT: b
 # SMALL-NEXT: _objc_msgSend$length:
 # SMALL-NEXT: adrp    x1, 8 ; 0x100008000
-# SMALL-NEXT: ldr     x1, [x1, #0x20]
+# SMALL-NEXT: ldr     x1, [x1, #0x18]
 # SMALL-NEXT: b
 
 .section  __TEXT,__objc_methname,cstring_literals
