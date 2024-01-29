@@ -161,6 +161,11 @@ class DataSharingProcessor {
   const Fortran::parser::OmpClauseList &opClauseList;
   Fortran::lower::pft::Evaluation &eval;
 
+  bool useDelayedPrivatizationWhenPossible;
+  Fortran::lower::SymMap *symTable;
+  llvm::SetVector<mlir::SymbolRefAttr> privateInitializers;
+  llvm::SetVector<mlir::Value> privateSymHostAddrsses;
+
   bool needBarrier();
   void collectSymbols(Fortran::semantics::Symbol::Flag flag);
   void collectOmpObjectListSymbol(
@@ -182,10 +187,14 @@ class DataSharingProcessor {
 public:
   DataSharingProcessor(Fortran::lower::AbstractConverter &converter,
                        const Fortran::parser::OmpClauseList &opClauseList,
-                       Fortran::lower::pft::Evaluation &eval)
+                       Fortran::lower::pft::Evaluation &eval,
+                       bool useDelayedPrivatizationWhenPossible = false,
+                       Fortran::lower::SymMap *symTable = nullptr)
       : hasLastPrivateOp(false), converter(converter),
         firOpBuilder(converter.getFirOpBuilder()), opClauseList(opClauseList),
-        eval(eval) {}
+        eval(eval), useDelayedPrivatizationWhenPossible(
+                        useDelayedPrivatizationWhenPossible),
+        symTable(symTable) {}
   // Privatisation is split into two steps.
   // Step1 performs cloning of all privatisation clauses and copying for
   // firstprivates. Step1 is performed at the place where process/processStep1
@@ -203,6 +212,14 @@ public:
   void setLoopIV(mlir::Value iv) {
     assert(!loopIV && "Loop iteration variable already set");
     loopIV = iv;
+  }
+
+  const llvm::SetVector<mlir::SymbolRefAttr> &getPrivateInitializers() const {
+    return privateInitializers;
+  };
+
+  const llvm::SetVector<mlir::Value> &getPrivateSymHostAddrsses() const {
+    return privateSymHostAddrsses;
   }
 };
 
@@ -496,8 +513,46 @@ void DataSharingProcessor::privatize() {
         copyFirstPrivateSymbol(&*mem);
       }
     } else {
-      cloneSymbol(sym);
-      copyFirstPrivateSymbol(sym);
+      if (useDelayedPrivatizationWhenPossible) {
+        auto ip = firOpBuilder.saveInsertionPoint();
+
+        auto moduleOp = firOpBuilder.getInsertionBlock()
+                            ->getParentOp()
+                            ->getParentOfType<mlir::ModuleOp>();
+
+        firOpBuilder.setInsertionPoint(&moduleOp.getBodyRegion().front(),
+                                       moduleOp.getBodyRegion().front().end());
+
+        Fortran::lower::SymbolBox hsb = converter.lookupOneLevelUpSymbol(*sym);
+        assert(hsb && "Host symbol box not found");
+
+        auto symType = hsb.getAddr().getType();
+        auto symLoc = hsb.getAddr().getLoc();
+        auto privatizerOp = firOpBuilder.create<mlir::omp::PrivateClauseOp>(
+            symLoc, symType, sym->name().ToString());
+        firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
+
+        symTable->pushScope();
+        symTable->addSymbol(*sym, privatizerOp.getArgument(0));
+        symTable->pushScope();
+
+        cloneSymbol(sym);
+        copyFirstPrivateSymbol(sym);
+
+        firOpBuilder.create<mlir::omp::YieldOp>(
+            hsb.getAddr().getLoc(),
+            symTable->shallowLookupSymbol(*sym).getAddr());
+
+        symTable->popScope();
+        symTable->popScope();
+        firOpBuilder.restoreInsertionPoint(ip);
+
+        privateInitializers.insert(mlir::SymbolRefAttr::get(privatizerOp));
+        privateSymHostAddrsses.insert(hsb.getAddr());
+      } else {
+        cloneSymbol(sym);
+        copyFirstPrivateSymbol(sym);
+      }
     }
   }
 }
@@ -2480,12 +2535,12 @@ static OpTy genOpWithBody(Fortran::lower::AbstractConverter &converter,
                           Fortran::lower::pft::Evaluation &eval, bool genNested,
                           mlir::Location currentLocation, bool outerCombined,
                           const Fortran::parser::OmpClauseList *clauseList,
-                          Args &&...args) {
+                          DataSharingProcessor *dsp, Args &&...args) {
   auto op = converter.getFirOpBuilder().create<OpTy>(
       currentLocation, std::forward<Args>(args)...);
   createBodyOfOp<OpTy>(op, converter, currentLocation, eval, genNested,
                        clauseList,
-                       /*args=*/{}, outerCombined);
+                       /*args=*/{}, outerCombined, dsp);
   return op;
 }
 
@@ -2497,6 +2552,7 @@ genMasterOp(Fortran::lower::AbstractConverter &converter,
                                             currentLocation,
                                             /*outerCombined=*/false,
                                             /*clauseList=*/nullptr,
+                                            /*dsp=*/nullptr,
                                             /*resultTypes=*/mlir::TypeRange());
 }
 
@@ -2504,14 +2560,17 @@ static mlir::omp::OrderedRegionOp
 genOrderedRegionOp(Fortran::lower::AbstractConverter &converter,
                    Fortran::lower::pft::Evaluation &eval, bool genNested,
                    mlir::Location currentLocation) {
-  return genOpWithBody<mlir::omp::OrderedRegionOp>(
-      converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false,
-      /*clauseList=*/nullptr, /*simd=*/false);
+  return genOpWithBody<mlir::omp::OrderedRegionOp>(converter, eval, genNested,
+                                                   currentLocation,
+                                                   /*outerCombined=*/false,
+                                                   /*clauseList=*/nullptr,
+                                                   /*dsp=*/nullptr,
+                                                   /*simd=*/false);
 }
 
 static mlir::omp::ParallelOp
 genParallelOp(Fortran::lower::AbstractConverter &converter,
+              Fortran::lower::SymMap &symTable,
               Fortran::lower::pft::Evaluation &eval, bool genNested,
               mlir::Location currentLocation,
               const Fortran::parser::OmpClauseList &clauseList,
@@ -2533,16 +2592,37 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
   if (!outerCombined)
     cp.processReduction(currentLocation, reductionVars, reductionDeclSymbols);
 
+  bool privatize = !outerCombined;
+  DataSharingProcessor dsp(converter, clauseList, eval,
+                           /*useDelayedPrivatizationWhenPossible=*/true,
+                           &symTable);
+
+  if (privatize) {
+    dsp.processStep1();
+  }
+
+  llvm::SmallVector<mlir::Attribute> privateInits(
+      dsp.getPrivateInitializers().begin(), dsp.getPrivateInitializers().end());
+
+  llvm::SmallVector<mlir::Value> privateSymAddresses(
+      dsp.getPrivateSymHostAddrsses().begin(),
+      dsp.getPrivateSymHostAddrsses().end());
+
   return genOpWithBody<mlir::omp::ParallelOp>(
       converter, eval, genNested, currentLocation, outerCombined, &clauseList,
+      &dsp,
       /*resultTypes=*/mlir::TypeRange(), ifClauseOperand,
       numThreadsClauseOperand, allocateOperands, allocatorOperands,
-      reductionVars,
+      reductionVars, privateSymAddresses,
       reductionDeclSymbols.empty()
           ? nullptr
           : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
                                  reductionDeclSymbols),
-      procBindKindAttr);
+      procBindKindAttr,
+      privateInits.empty()
+          ? nullptr
+          : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
+                                 privateInits));
 }
 
 static mlir::omp::SectionOp
@@ -2554,7 +2634,8 @@ genSectionOp(Fortran::lower::AbstractConverter &converter,
   // all privatization is done within `omp.section` operations.
   return genOpWithBody<mlir::omp::SectionOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &sectionsClauseList);
+      /*outerCombined=*/false, &sectionsClauseList,
+      /*dsp=*/nullptr);
 }
 
 static mlir::omp::SingleOp
@@ -2575,8 +2656,8 @@ genSingleOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::SingleOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &beginClauseList, allocateOperands,
-      allocatorOperands, nowaitAttr);
+      /*outerCombined=*/false, &beginClauseList, /*dsp=*/nullptr,
+      allocateOperands, allocatorOperands, nowaitAttr);
 }
 
 static mlir::omp::TaskOp
@@ -2608,8 +2689,8 @@ genTaskOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::TaskOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &clauseList, ifClauseOperand, finalClauseOperand,
-      untiedAttr, mergeableAttr,
+      /*outerCombined=*/false, &clauseList, /*dsp=*/nullptr, ifClauseOperand,
+      finalClauseOperand, untiedAttr, mergeableAttr,
       /*in_reduction_vars=*/mlir::ValueRange(),
       /*in_reductions=*/nullptr, priorityClauseOperand,
       dependTypeOperands.empty()
@@ -2632,6 +2713,7 @@ genTaskGroupOp(Fortran::lower::AbstractConverter &converter,
   return genOpWithBody<mlir::omp::TaskGroupOp>(
       converter, eval, genNested, currentLocation,
       /*outerCombined=*/false, &clauseList,
+      /*dsp=*/nullptr,
       /*task_reduction_vars=*/mlir::ValueRange(),
       /*task_reductions=*/nullptr, allocateOperands, allocatorOperands);
 }
@@ -3015,6 +3097,7 @@ genTeamsOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::TeamsOp>(
       converter, eval, genNested, currentLocation, outerCombined, &clauseList,
+      /*dsp=*/nullptr,
       /*num_teams_lower=*/nullptr, numTeamsClauseOperand, ifClauseOperand,
       threadLimitClauseOperand, allocateOperands, allocatorOperands,
       reductionVars,
@@ -3413,8 +3496,8 @@ static void genOMP(Fortran::lower::AbstractConverter &converter,
     if ((llvm::omp::allParallelSet & llvm::omp::loopConstructSet)
             .test(ompDirective)) {
       validDirective = true;
-      genParallelOp(converter, eval, /*genNested=*/false, currentLocation,
-                    loopOpClauseList,
+      genParallelOp(converter, symTable, eval, /*genNested=*/false,
+                    currentLocation, loopOpClauseList,
                     /*outerCombined=*/true);
     }
   }
@@ -3502,8 +3585,8 @@ genOMP(Fortran::lower::AbstractConverter &converter,
     genOrderedRegionOp(converter, eval, /*genNested=*/true, currentLocation);
     break;
   case llvm::omp::Directive::OMPD_parallel:
-    genParallelOp(converter, eval, /*genNested=*/true, currentLocation,
-                  beginClauseList);
+    genParallelOp(converter, symTable, eval, /*genNested=*/true,
+                  currentLocation, beginClauseList);
     break;
   case llvm::omp::Directive::OMPD_single:
     genSingleOp(converter, eval, /*genNested=*/true, currentLocation,
@@ -3562,8 +3645,8 @@ genOMP(Fortran::lower::AbstractConverter &converter,
           .test(directive.v)) {
     bool outerCombined =
         directive.v != llvm::omp::Directive::OMPD_target_parallel;
-    genParallelOp(converter, eval, /*genNested=*/false, currentLocation,
-                  beginClauseList, outerCombined);
+    genParallelOp(converter, symTable, eval, /*genNested=*/false,
+                  currentLocation, beginClauseList, outerCombined);
     combinedDirective = true;
   }
   if ((llvm::omp::workShareSet & llvm::omp::blockConstructSet)
@@ -3646,7 +3729,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
 
   // Parallel wrapper of PARALLEL SECTIONS construct
   if (dir == llvm::omp::Directive::OMPD_parallel_sections) {
-    genParallelOp(converter, eval,
+    genParallelOp(converter, symTable, eval,
                   /*genNested=*/false, currentLocation, sectionsClauseList,
                   /*outerCombined=*/true);
   } else {
@@ -3663,6 +3746,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
                                        /*genNested=*/false, currentLocation,
                                        /*outerCombined=*/false,
                                        /*clauseList=*/nullptr,
+                                       /*dsp=*/nullptr,
                                        /*reduction_vars=*/mlir::ValueRange(),
                                        /*reductions=*/nullptr, allocateOperands,
                                        allocatorOperands, nowaitClauseOperand);
