@@ -20,8 +20,8 @@ define i32 @test_with_1(i32 %x) {
 
 define i32 @test_with_3(i32 %x) {
 ; CHECK-LABEL: @test_with_3(
-; CHECK-NEXT:    [[SHL:%.*]] = shl i32 3, [[X:%.*]]
-; CHECK-NEXT:    [[AND:%.*]] = and i32 [[SHL]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
+; CHECK-NEXT:    [[AND:%.*]] = zext i1 [[TMP1]] to i32
 ; CHECK-NEXT:    ret i32 [[AND]]
 ;
   %shl = shl i32 3, %x
@@ -31,8 +31,8 @@ define i32 @test_with_3(i32 %x) {
 
 define i32 @test_with_5(i32 %x) {
 ; CHECK-LABEL: @test_with_5(
-; CHECK-NEXT:    [[SHL:%.*]] = shl i32 5, [[X:%.*]]
-; CHECK-NEXT:    [[AND:%.*]] = and i32 [[SHL]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
+; CHECK-NEXT:    [[AND:%.*]] = zext i1 [[TMP1]] to i32
 ; CHECK-NEXT:    ret i32 [[AND]]
 ;
   %shl = shl i32 5, %x
@@ -42,8 +42,8 @@ define i32 @test_with_5(i32 %x) {
 
 define i32 @test_with_neg_5(i32 %x) {
 ; CHECK-LABEL: @test_with_neg_5(
-; CHECK-NEXT:    [[SHL:%.*]] = shl i32 -5, [[X:%.*]]
-; CHECK-NEXT:    [[AND:%.*]] = and i32 [[SHL]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
+; CHECK-NEXT:    [[AND:%.*]] = zext i1 [[TMP1]] to i32
 ; CHECK-NEXT:    ret i32 [[AND]]
 ;
   %shl = shl i32 -5, %x
