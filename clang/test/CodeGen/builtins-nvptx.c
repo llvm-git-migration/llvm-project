@@ -165,6 +165,14 @@ __device__ void sync() {
 
 }
 
+__device__ void exit() {
+
+// CHECK: call void @llvm.nvvm.exit()
+
+  __nvvm_exit();
+
+}
+
 
 // NVVM intrinsics
 

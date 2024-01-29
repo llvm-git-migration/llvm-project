@@ -155,6 +155,7 @@ BUILTIN(__nvvm_read_ptx_sreg_pm3, "i", "n")
 // MISC
 
 BUILTIN(__nvvm_prmt, "UiUiUiUi", "")
+BUILTIN(__nvvm_exit, "v", "r")
 
 // Min Max
 
