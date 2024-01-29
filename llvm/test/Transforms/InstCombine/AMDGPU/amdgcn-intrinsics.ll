@@ -1023,6 +1023,40 @@ define float @cos_fabs_unary_fneg_f32(float %x) {
   ret float %cos
 }
 
+
+; --------------------------------------------------------------------
+; llvm.amdgcn.sin
+; --------------------------------------------------------------------
+declare float @llvm.amdgcn.sin.f32(float) nounwind readnone
+
+; CHECK-LABEL: @sin_fneg_f32(
+; CHECK: %cos = call float @llvm.amdgcn.cos.f32(float %x)
+; CHECK-NEXT: ret float %cos
+define float @sin_fneg_f32(float %x) {
+  %x.fneg = fsub float -0.0, %x
+  %sin = call float @llvm.amdgcn.sin.f32(float %x.fneg)
+  ret float %sin
+}
+
+; CHECK-LABEL: @sin_fabs_f32(
+; CHECK-NEXT: %sin = call float @llvm.amdgcn.sin.f32(float %x)
+; CHECK-NEXT: ret float %sin
+define float @sin_fabs_f32(float %x) {
+  %x.fabs = call float @llvm.fabs.f32(float %x)
+  %sin = call float @llvm.amdgcn.sin.f32(float %x.fabs)
+  ret float %sin
+}
+
+; CHECK-LABEL: @sin_fabs_fneg_f32(
+; CHECK-NEXT: %sin = call float @llvm.amdgcn.sin.f32(float %x)
+; CHECK-NEXT: ret float %sin
+define float @sin_fabs_fneg_f32(float %x) {
+  %x.fabs = call float @llvm.fabs.f32(float %x)
+  %x.fabs.fneg = fsub float -0.0, %x.fabs
+  %sin = call float @llvm.amdgcn.sin.f32(float %x.fabs.fneg)
+  ret float %sin
+}
+
 ; --------------------------------------------------------------------
 ; llvm.amdgcn.cvt.pkrtz
 ; --------------------------------------------------------------------
