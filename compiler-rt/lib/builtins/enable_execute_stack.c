@@ -12,11 +12,6 @@
 #include <sys/mman.h>
 #endif
 
-// #include "config.h"
-// FIXME: CMake - include when cmake system is ready.
-// Remove #define HAVE_SYSCONF 1 line.
-#define HAVE_SYSCONF 1
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -54,7 +49,7 @@ COMPILER_RT_ABI void __enable_execute_stack(void *addr) {
 #error "HAVE_SYSCONF not defined! See enable_execute_stack.c"
 #else
   const uintptr_t pageSize = sysconf(_SC_PAGESIZE);
-#endif // __APPLE__
+#endif
 
   const uintptr_t pageAlignMask = ~(pageSize - 1);
   uintptr_t p = (uintptr_t)addr;
