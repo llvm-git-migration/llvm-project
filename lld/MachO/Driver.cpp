@@ -49,6 +49,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/TimeProfiler.h"
 #include "llvm/TargetParser/Host.h"
+#include "llvm/TextAPI/Architecture.h"
 #include "llvm/TextAPI/PackedVersion.h"
 
 #include <algorithm>
@@ -1042,41 +1043,44 @@ static bool shouldEmitChainedFixups(const InputArgList &args) {
   if (arg && arg->getOption().matches(OPT_no_fixup_chains))
     return false;
 
-  bool isRequested = arg != nullptr;
-
-  // Version numbers taken from the Xcode 13.3 release notes.
-  static const std::array<std::pair<PlatformType, VersionTuple>, 4> minVersion =
-      {{{PLATFORM_MACOS, VersionTuple(11, 0)},
-        {PLATFORM_IOS, VersionTuple(13, 4)},
-        {PLATFORM_TVOS, VersionTuple(14, 0)},
-        {PLATFORM_WATCHOS, VersionTuple(7, 0)}}};
-  PlatformType platform = removeSimulator(config->platformInfo.target.Platform);
-  auto it = llvm::find_if(minVersion,
-                          [&](const auto &p) { return p.first == platform; });
-  if (it != minVersion.end() &&
-      it->second > config->platformInfo.target.MinDeployment) {
-    if (!isRequested)
-      return false;
-
-    warn("-fixup_chains requires " + getPlatformName(config->platform()) + " " +
-         it->second.getAsString() + ", which is newer than target minimum of " +
-         config->platformInfo.target.MinDeployment.getAsString());
-  }
-
-  if (!is_contained({AK_x86_64, AK_x86_64h, AK_arm64}, config->arch())) {
-    if (isRequested)
-      error("-fixup_chains is only supported on x86_64 and arm64 targets");
-    return false;
-  }
-
-  if (!config->isPic) {
-    if (isRequested)
+  if (arg && arg->getOption().matches(OPT_fixup_chains)) {
+    if (!config->isPic) {
       error("-fixup_chains is incompatible with -no_pie");
-    return false;
+      return false;
+    }
+
+    return true;
   }
 
-  // TODO: Enable by default once stable.
-  return isRequested;
+  // https://github.com/apple-oss-distributions/ld64/blob/main/src/ld/ld.hpp#L317-L318
+  static const std::array<std::pair<PlatformType, VersionTuple>, 7> minVersion =
+      {{
+          {PLATFORM_MACOS, VersionTuple(13, 0)},
+          {PLATFORM_IOSSIMULATOR, VersionTuple(16, 0)},
+          {PLATFORM_IOS, VersionTuple(13, 4)},
+          {PLATFORM_WATCHOSSIMULATOR, VersionTuple(8, 0)},
+          {PLATFORM_WATCHOS, VersionTuple(7, 0)},
+          {PLATFORM_TVOSSIMULATOR, VersionTuple(15, 0)},
+          {PLATFORM_TVOS, VersionTuple(14, 0)},
+      }};
+  PlatformType platform = config->platformInfo.target.Platform;
+  const auto *it = llvm::find_if(
+      minVersion, [&](const auto &p) { return p.first == platform; });
+
+  // We don't know the versions for other platforms, so default to disabled.
+  if (it == minVersion.end())
+    return false;
+
+  if (it->second > config->platformInfo.target.MinDeployment)
+    return false;
+
+  if (config->arch() == llvm::MachO::AK_i386)
+    return false;
+
+  if (args.hasArg(OPT_preload))
+    return false;
+
+  return true;
 }
 
 void SymbolPatterns::clear() {
