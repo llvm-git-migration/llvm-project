@@ -101,6 +101,9 @@ struct SymbolBox : public fir::details::matcher<SymbolBox> {
                  [](const fir::FortranVariableOpInterface &x) {
                    return fir::FortranVariableOpInterface(x).getBase();
                  },
+                 [](const fir::MutableBoxValue &x) {
+                   return x.getAddr();
+                 },
                  [](const auto &x) { return x.getAddr(); });
   }
 

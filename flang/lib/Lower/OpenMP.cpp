@@ -169,12 +169,15 @@ class DataSharingProcessor {
   void collectSymbolsForPrivatization();
   void insertBarrier();
   void collectDefaultSymbols();
-  void privatize();
+  void
+  privatize(llvm::SetVector<mlir::omp::PrivateClauseOp> *privateInitializers);
   void defaultPrivatize();
   void copyLastPrivatize(mlir::Operation *op);
   void insertLastPrivateCompare(mlir::Operation *op);
-  void cloneSymbol(const Fortran::semantics::Symbol *sym);
-  void copyFirstPrivateSymbol(const Fortran::semantics::Symbol *sym);
+  void cloneSymbol(const Fortran::semantics::Symbol *sym,
+                   Fortran::lower::SymMap *symMap = nullptr);
+  void copyFirstPrivateSymbol(const Fortran::semantics::Symbol *sym,
+                              Fortran::lower::SymMap *symMap);
   void copyLastPrivateSymbol(const Fortran::semantics::Symbol *sym,
                              mlir::OpBuilder::InsertPoint *lastPrivIP);
   void insertDeallocs();
@@ -197,7 +200,8 @@ public:
   // Step2 performs the copying for lastprivates and requires knowledge of the
   // MLIR operation to insert the last private update. Step2 adds
   // dealocation code as well.
-  void processStep1();
+  void processStep1(llvm::SetVector<mlir::omp::PrivateClauseOp>
+                        *privateInitializers = nullptr);
   void processStep2(mlir::Operation *op, bool isLoop);
 
   void setLoopIV(mlir::Value iv) {
@@ -206,10 +210,11 @@ public:
   }
 };
 
-void DataSharingProcessor::processStep1() {
+void DataSharingProcessor::processStep1(
+    llvm::SetVector<mlir::omp::PrivateClauseOp> *privateInitializers) {
   collectSymbolsForPrivatization();
   collectDefaultSymbols();
-  privatize();
+  privatize(privateInitializers);
   defaultPrivatize();
   insertBarrier();
 }
@@ -239,20 +244,23 @@ void DataSharingProcessor::insertDeallocs() {
     }
 }
 
-void DataSharingProcessor::cloneSymbol(const Fortran::semantics::Symbol *sym) {
+void DataSharingProcessor::cloneSymbol(const Fortran::semantics::Symbol *sym,
+                                       Fortran::lower::SymMap *symMap) {
   // Privatization for symbols which are pre-determined (like loop index
   // variables) happen separately, for everything else privatize here.
   if (sym->test(Fortran::semantics::Symbol::Flag::OmpPreDetermined))
     return;
-  bool success = converter.createHostAssociateVarClone(*sym);
+  bool success = converter.createHostAssociateVarClone(*sym, symMap);
   (void)success;
   assert(success && "Privatization failed due to existing binding");
 }
 
 void DataSharingProcessor::copyFirstPrivateSymbol(
-    const Fortran::semantics::Symbol *sym) {
-  if (sym->test(Fortran::semantics::Symbol::Flag::OmpFirstPrivate))
-    converter.copyHostAssociateVar(*sym);
+    const Fortran::semantics::Symbol *sym,
+    Fortran::lower::SymMap *symMap = nullptr) {
+  if (sym->test(Fortran::semantics::Symbol::Flag::OmpFirstPrivate)) {
+    converter.copyHostAssociateVar(*sym, nullptr, symMap);
+  }
 }
 
 void DataSharingProcessor::copyLastPrivateSymbol(
@@ -487,8 +495,11 @@ void DataSharingProcessor::collectDefaultSymbols() {
   }
 }
 
-void DataSharingProcessor::privatize() {
+void DataSharingProcessor::privatize(
+    llvm::SetVector<mlir::omp::PrivateClauseOp> *privateInitializers) {
+
   for (const Fortran::semantics::Symbol *sym : privatizedSymbols) {
+
     if (const auto *commonDet =
             sym->detailsIf<Fortran::semantics::CommonBlockDetails>()) {
       for (const auto &mem : commonDet->objects()) {
@@ -496,6 +507,42 @@ void DataSharingProcessor::privatize() {
         copyFirstPrivateSymbol(&*mem);
       }
     } else {
+      if (privateInitializers != nullptr) {
+        auto ip = firOpBuilder.saveInsertionPoint();
+
+        auto moduleOp = firOpBuilder.getInsertionBlock()
+                            ->getParentOp()
+                            ->getParentOfType<mlir::ModuleOp>();
+
+        firOpBuilder.setInsertionPoint(&moduleOp.getBodyRegion().front(),
+                                       moduleOp.getBodyRegion().front().end());
+
+        Fortran::lower::SymbolBox hsb = converter.lookupOneLevelUpSymbol(*sym);
+        assert(hsb && "Host symbol box not found");
+
+        auto privatizerOp = firOpBuilder.create<mlir::omp::PrivateClauseOp>(
+            hsb.getAddr().getLoc(), hsb.getAddr().getType(),
+            sym->name().ToString());
+        firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
+
+        Fortran::semantics::Symbol cp = *sym;
+        Fortran::lower::SymMap privatizerSymbolMap;
+        privatizerSymbolMap.addSymbol(cp, privatizerOp.getArgument(0));
+        privatizerSymbolMap.pushScope();
+
+        cloneSymbol(&cp, &privatizerSymbolMap);
+        copyFirstPrivateSymbol(&cp, &privatizerSymbolMap);
+
+        firOpBuilder.create<mlir::omp::YieldOp>(
+            hsb.getAddr().getLoc(),
+            privatizerSymbolMap.shallowLookupSymbol(cp).getAddr());
+
+        firOpBuilder.restoreInsertionPoint(ip);
+      }
+
+      // TODO: This will eventually be an else to the `if` above it. For now, I
+      // emit both the outlined privatizer AND directly emitted cloning and
+      // copying ops while I am testing.
       cloneSymbol(sym);
       copyFirstPrivateSymbol(sym);
     }
@@ -2272,6 +2319,7 @@ static void createBodyOfOp(
     llvm::SmallVector<mlir::Type> tiv(args.size(), loopVarType);
     llvm::SmallVector<mlir::Location> locs(args.size(), loc);
     firOpBuilder.createBlock(&op.getRegion(), {}, tiv, locs);
+
     // The argument is not currently in memory, so make a temporary for the
     // argument, and store it there, then bind that location to the argument.
     mlir::Operation *storeOp = nullptr;
@@ -2291,10 +2339,11 @@ static void createBodyOfOp(
 
   // If it is an unstructured region and is not the outer region of a combined
   // construct, create empty blocks for all evaluations.
-  if (eval.lowerAsUnstructured() && !outerCombined)
+  if (eval.lowerAsUnstructured() && !outerCombined) {
     Fortran::lower::createEmptyRegionBlocks<mlir::omp::TerminatorOp,
                                             mlir::omp::YieldOp>(
         firOpBuilder, eval.getNestedEvaluations());
+  }
 
   // Start with privatization, so that the lowering of the nested
   // code will use the right symbols.
@@ -2307,12 +2356,14 @@ static void createBodyOfOp(
   if (privatize) {
     if (!dsp) {
       tempDsp.emplace(converter, *clauses, eval);
-      tempDsp->processStep1();
+      llvm::SetVector<mlir::omp::PrivateClauseOp> privateInitializers;
+      tempDsp->processStep1(&privateInitializers);
     }
   }
 
   if constexpr (std::is_same_v<Op, mlir::omp::ParallelOp>) {
     threadPrivatizeVars(converter, eval);
+
     if (clauses) {
       firOpBuilder.setInsertionPoint(marker);
       ClauseProcessor(converter, *clauses).processCopyin();
@@ -2361,6 +2412,7 @@ static void createBodyOfOp(
     if (exits.size() == 1)
       return exits[0];
     mlir::Block *exit = firOpBuilder.createBlock(&region);
+
     for (mlir::Block *b : exits) {
       firOpBuilder.setInsertionPointToEnd(b);
       firOpBuilder.create<mlir::cf::BranchOp>(loc, exit);
@@ -2382,8 +2434,9 @@ static void createBodyOfOp(
         assert(tempDsp.has_value());
         tempDsp->processStep2(op, isLoop);
       } else {
-        if (isLoop && args.size() > 0)
+        if (isLoop && args.size() > 0) {
           dsp->setLoopIV(converter.getSymbolAddress(*args[0]));
+        }
         dsp->processStep2(op, isLoop);
       }
     }
