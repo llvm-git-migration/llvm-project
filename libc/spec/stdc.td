@@ -26,6 +26,11 @@ def StdC : StandardSpec<"stdc"> {
       []
   >;
 
+  FunctionAttrSpec ConstAttr = FunctionAttrSpec<"__LIBC_CONST_ATTR", [
+    Cxx11FunctionAttr<"const", "gnu">,
+    GnuFunctionAttr<"const">,
+  ]>;
+
   HeaderSpec CType = HeaderSpec<
       "ctype.h",
       [], // Macros
@@ -364,7 +369,7 @@ def StdC : StandardSpec<"stdc"> {
           FunctionSpec<"ceilf", RetValSpec<FloatType>, [ArgSpec<FloatType>]>,
           FunctionSpec<"ceill", RetValSpec<LongDoubleType>, [ArgSpec<LongDoubleType>]>,
 
-          FunctionSpec<"fabs", RetValSpec<DoubleType>, [ArgSpec<DoubleType>]>,
+          FunctionSpec<"fabs", RetValSpec<DoubleType>, [ArgSpec<DoubleType>], [ConstAttr]>,
           FunctionSpec<"fabsf", RetValSpec<FloatType>, [ArgSpec<FloatType>]>,
           FunctionSpec<"fabsl", RetValSpec<LongDoubleType>, [ArgSpec<LongDoubleType>]>,
           FunctionSpec<"fabsf128", RetValSpec<Float128Type>, [ArgSpec<Float128Type>]>,

@@ -174,17 +174,18 @@ class GnuFunctionAttr<string attr> : FunctionAttr {
   string Attr = attr;
   string Style = "gnu";
 }
-class C23FunctionAttr<string attr, string namespace> : FunctionAttr {
+class Cxx11FunctionAttr<string attr, string namespace> : FunctionAttr {
   string Attr = attr;
   string Namespace = namespace;
-  string Style = "c23";
+  string Style = "cxx11";
 }
 class DeclspecFunctionAttr<string attr> : FunctionAttr {
   string Attr = attr;
   string Style = "declspec";
 }
-class FunctionAttrSpec<list<FunctionAttr> instances> {
+class FunctionAttrSpec<string macro, list<FunctionAttr> instances> {
   list<FunctionAttr> Instances = instances;
+  string Macro = macro;
 }
 
 class FunctionSpec<string name, RetValSpec return, list<ArgSpec> args, list<FunctionAttrSpec> attrs = []> {
