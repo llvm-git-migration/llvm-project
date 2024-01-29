@@ -333,7 +333,7 @@ def TakeAssumedBranchOp : Op<Transform_Dialect, "scf.take_assumed_branch", [
   }];
 }
 
-def LoopFuseSibling : Op<Transform_Dialect, "loop.fuse_sibling",
+def LoopFuseSiblingOp : Op<Transform_Dialect, "loop.fuse_sibling",
   [FunctionalStyleTransformOpTrait, MemoryEffectsOpInterface,
    DeclareOpInterfaceMethods<TransformOpInterface>]> {
   let summary = "Fuse a loop into another loop, assuming the fusion is legal.";
@@ -342,11 +342,13 @@ def LoopFuseSibling : Op<Transform_Dialect, "loop.fuse_sibling",
     Fuses the `target` loop into the `source` loop assuming they are
     independent of each other. It is the responsibility of the user to ensure
     that the given two loops are independent of each other, this operation will
-    not performa any legality checks and will simply fuse the two given loops.
+    not perform any legality checks and will simply fuse the two given loops.
 
-    Currently, the only fusion supported is when both `target` and `source`
-    are `scf.forall` operations. For `scf.forall` fusion, the bounds and the
-    mapping must match, otherwise a silencable failure is produced.
+    Currently, fusion is only supported in case both `target` and `source` are
+    `scf.for` operations or both are `scf.forall` operations. For `scf.for`
+    fusion the bounds and step size must match. For `scf.forall` fusion the
+    bounds and the mapping must match. Otherwise a silencable failure is
+    produced.
 
     The input handles `target` and `source` must map to exactly one operation,
     a definite failure is produced otherwise.
