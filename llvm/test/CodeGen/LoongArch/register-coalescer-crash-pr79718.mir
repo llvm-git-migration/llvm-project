@@ -1,0 +1,317 @@
+# XFAIL: *
+# RUN: llc -o - %s -mtriple=loongarch64 \
+# RUN:  -run-pass=register-coalescer -join-liveintervals=1 -join-splitedges=0 2>&1 | FileCheck %s
+
+--- |
+  source_filename = "register-coalescer-crash-pr79718.ll"
+  target datalayout = "e-m:e-p:64:64-i64:64-i128:128-n64-S128"
+  target triple = "loongarch64"
+
+  define void @foo(ptr nocapture writeonly %0, i1 %1, i1 %2, i1 %3, i1 %4) local_unnamed_addr #0 {
+  start:
+    br label %bb1
+  bb1:                                              ; preds = %bb6, %start
+    %5 = phi i64 [ 0, %start ], [ %20, %bb6 ]
+    %6 = phi i64 [ 0, %start ], [ %21, %bb6 ]
+    %7 = phi i64 [ undef, %start ], [ %23, %bb6 ]
+    br label %bb2
+
+  bb2:                                              ; preds = %bb6, %bb1
+    %8 = phi i64 [ %5, %bb1 ], [ %20, %bb6 ]
+    %9 = phi i64 [ %6, %bb1 ], [ %21, %bb6 ]
+    %10 = phi i64 [ %6, %bb1 ], [ %22, %bb6 ]
+    %11 = phi i64 [ %7, %bb1 ], [ %23, %bb6 ]
+    br i1 %1, label %loopexit, label %preheader.preheader
+
+  preheader.preheader:                              ; preds = %bb2
+    br label %preheader
+
+  preheader:                                        ; preds = %bb4, %preheader.preheader
+    %12 = phi i64 [ %14, %bb4 ], [ %10, %preheader.preheader ]
+    %13 = load volatile { i64, i64 }, ptr null, align 4294967296
+    br i1 %2, label %bb3, label %bb5
+
+  bb3:                                              ; preds = %preheader
+    br i1 %3, label %bb4, label %bb3.bb5_crit_edge
+
+  bb4:                                              ; preds = %bb3
+    %14 = add i64 %12, 1
+    br i1 %4, label %loopexit, label %preheader
+
+  loopexit:                                         ; preds = %bb4, %bb2
+    %15 = phi i64 [ %9, %bb2 ], [ %14, %bb4 ]
+    %16 = phi i64 [ %10, %bb2 ], [ %14, %bb4 ]
+    store i8 0, ptr %0, align 1
+    br label %bb6
+
+  bb3.bb5_crit_edge:                                ; preds = %bb3
+    %17 = add i64 %12, 1
+    br label %bb5
+
+  bb5:                                              ; preds = %preheader, %bb3.bb5_crit_edge
+    %18 = phi i64 [ 1, %bb3.bb5_crit_edge ], [ 0, %preheader ]
+    %19 = phi i64 [ %17, %bb3.bb5_crit_edge ], [ %11, %preheader ]
+    store i64 0, ptr %0, align 8
+    br label %bb6
+
+  bb6:                                              ; preds = %bb5, %loopexit
+    %20 = phi i64 [ %19, %bb5 ], [ %8, %loopexit ]
+    %21 = phi i64 [ %18, %bb5 ], [ %15, %loopexit ]
+    %22 = phi i64 [ %18, %bb5 ], [ %16, %loopexit ]
+    %23 = phi i64 [ %19, %bb5 ], [ %11, %loopexit ]
+    %24 = icmp eq i64 %5, 1
+    br i1 %24, label %bb2, label %bb1
+  }
+
+  attributes #0 = { nofree norecurse noreturn nounwind }
+
+...
+---
+name:            foo
+alignment:       32
+exposesReturnsTwice: false
+legalized:       false
+regBankSelected: false
+selected:        false
+failedISel:      false
+tracksRegLiveness: true
+hasWinCFI:       false
+callsEHReturn:   false
+callsUnwindInit: false
+hasEHCatchret:   false
+hasEHScopes:     false
+hasEHFunclets:   false
+isOutlined:      false
+debugInstrRef:   false
+failsVerification: false
+tracksDebugUserValues: false
+registers:
+  - { id: 0, class: gpr, preferred-register: '' }
+  - { id: 1, class: gpr, preferred-register: '' }
+  - { id: 2, class: gpr, preferred-register: '' }
+  - { id: 3, class: gpr, preferred-register: '' }
+  - { id: 4, class: gpr, preferred-register: '' }
+  - { id: 5, class: gpr, preferred-register: '' }
+  - { id: 6, class: gpr, preferred-register: '' }
+  - { id: 7, class: gpr, preferred-register: '' }
+  - { id: 8, class: gpr, preferred-register: '' }
+  - { id: 9, class: gpr, preferred-register: '' }
+  - { id: 10, class: gpr, preferred-register: '' }
+  - { id: 11, class: gpr, preferred-register: '' }
+  - { id: 12, class: gpr, preferred-register: '' }
+  - { id: 13, class: gpr, preferred-register: '' }
+  - { id: 14, class: gpr, preferred-register: '' }
+  - { id: 15, class: gpr, preferred-register: '' }
+  - { id: 16, class: gpr, preferred-register: '' }
+  - { id: 17, class: gpr, preferred-register: '' }
+  - { id: 18, class: gpr, preferred-register: '' }
+  - { id: 19, class: gpr, preferred-register: '' }
+  - { id: 20, class: gpr, preferred-register: '' }
+  - { id: 21, class: gpr, preferred-register: '' }
+  - { id: 22, class: gpr, preferred-register: '' }
+  - { id: 23, class: gpr, preferred-register: '' }
+  - { id: 24, class: gpr, preferred-register: '' }
+  - { id: 25, class: gpr, preferred-register: '' }
+  - { id: 26, class: gpr, preferred-register: '' }
+  - { id: 27, class: gpr, preferred-register: '' }
+  - { id: 28, class: gpr, preferred-register: '' }
+  - { id: 29, class: gpr, preferred-register: '' }
+  - { id: 30, class: gpr, preferred-register: '' }
+  - { id: 31, class: gpr, preferred-register: '' }
+  - { id: 32, class: gpr, preferred-register: '' }
+  - { id: 33, class: gpr, preferred-register: '' }
+  - { id: 34, class: gpr, preferred-register: '' }
+  - { id: 35, class: gpr, preferred-register: '' }
+  - { id: 36, class: gpr, preferred-register: '' }
+  - { id: 37, class: gpr, preferred-register: '' }
+  - { id: 38, class: gpr, preferred-register: '' }
+  - { id: 39, class: gpr, preferred-register: '' }
+  - { id: 40, class: gpr, preferred-register: '' }
+  - { id: 41, class: gpr, preferred-register: '' }
+  - { id: 42, class: gpr, preferred-register: '' }
+  - { id: 43, class: gpr, preferred-register: '' }
+  - { id: 44, class: gpr, preferred-register: '' }
+  - { id: 45, class: gpr, preferred-register: '' }
+  - { id: 46, class: gpr, preferred-register: '' }
+  - { id: 47, class: gpr, preferred-register: '' }
+  - { id: 48, class: gpr, preferred-register: '' }
+  - { id: 49, class: gpr, preferred-register: '' }
+  - { id: 50, class: gpr, preferred-register: '' }
+  - { id: 51, class: gpr, preferred-register: '' }
+  - { id: 52, class: gpr, preferred-register: '' }
+  - { id: 53, class: gpr, preferred-register: '' }
+  - { id: 54, class: gpr, preferred-register: '' }
+  - { id: 55, class: gpr, preferred-register: '' }
+  - { id: 56, class: gpr, preferred-register: '' }
+  - { id: 57, class: gpr, preferred-register: '' }
+  - { id: 58, class: gpr, preferred-register: '' }
+liveins:
+  - { reg: '$r4', virtual-reg: '%18' }
+  - { reg: '$r5', virtual-reg: '%19' }
+  - { reg: '$r6', virtual-reg: '%20' }
+  - { reg: '$r7', virtual-reg: '%21' }
+  - { reg: '$r8', virtual-reg: '%22' }
+frameInfo:
+  isFrameAddressTaken: false
+  isReturnAddressTaken: false
+  hasStackMap:     false
+  hasPatchPoint:   false
+  stackSize:       0
+  offsetAdjustment: 0
+  maxAlignment:    1
+  adjustsStack:    false
+  hasCalls:        false
+  stackProtector:  ''
+  functionContext: ''
+  maxCallFrameSize: 4294967295
+  cvBytesOfCalleeSavedRegisters: 0
+  hasOpaqueSPAdjustment: false
+  hasVAStart:      false
+  hasMustTailInVarArgFunc: false
+  hasTailCall:     false
+  localFrameSize:  0
+  savePoint:       ''
+  restorePoint:    ''
+fixedStack:      []
+stack:           []
+entry_values:    []
+callSites:       []
+debugValueSubstitutions: []
+constants:       []
+machineFunctionInfo: {}
+body:             |
+  bb.0.start:
+    successors: %bb.1(0x80000000)
+    liveins: $r4, $r5, $r6, $r7, $r8
+
+    %22:gpr = COPY killed $r8
+    %21:gpr = COPY killed $r7
+    %20:gpr = COPY killed $r6
+    %19:gpr = COPY killed $r5
+    %18:gpr = COPY killed $r4
+    %29:gpr = COPY $r0
+    %27:gpr = COPY killed %29
+    %30:gpr = ANDI killed %19, 1
+    %41:gpr = ORI $r0, 1
+    %35:gpr = ANDI killed %20, 1
+    %36:gpr = ANDI killed %21, 1
+    %39:gpr = ANDI killed %22, 1
+    %43:gpr = COPY %27
+    %44:gpr = COPY killed %27
+    %45:gpr = IMPLICIT_DEF
+
+  bb.1.bb1:
+    successors: %bb.2(0x80000000)
+
+    %2:gpr = COPY killed %45
+    %1:gpr = COPY killed %44
+    %0:gpr = COPY killed %43
+    %46:gpr = COPY %0
+    %47:gpr = COPY %1
+    %48:gpr = COPY killed %1
+    %49:gpr = COPY killed %2
+
+  bb.2.bb2:
+    successors: %bb.12(0x40000000), %bb.3(0x40000000)
+
+    %6:gpr = COPY killed %49
+    %5:gpr = COPY killed %48
+    %4:gpr = COPY killed %47
+    %3:gpr = COPY killed %46
+    BEQZ %30, %bb.3
+
+  bb.12:
+    successors: %bb.8(0x80000000)
+
+    %51:gpr = COPY killed %4
+    %52:gpr = COPY killed %5
+    PseudoBR %bb.8
+
+  bb.3.preheader.preheader:
+    successors: %bb.4(0x80000000)
+
+    %50:gpr = COPY killed %5
+
+  bb.4.preheader:
+    successors: %bb.6(0x7c000000), %bb.5(0x04000000)
+
+    %7:gpr = COPY killed %50
+    dead %33:gpr = LD_D $r0, 8 :: (volatile load (s64) from `ptr null` + 8, basealign 4294967296)
+    dead %34:gpr = LD_D $r0, 0 :: (volatile load (s64) from `ptr null`, align 4294967296)
+    BNEZ %35, %bb.6
+
+  bb.5:
+    successors: %bb.10(0x80000000)
+
+    %32:gpr = COPY $r0
+    %31:gpr = COPY killed %32
+    %53:gpr = COPY killed %31
+    %54:gpr = COPY killed %6
+    PseudoBR %bb.10
+
+  bb.6.bb3:
+    successors: %bb.7(0x7c000000), %bb.9(0x04000000)
+
+    BEQZ %36, %bb.9
+    PseudoBR %bb.7
+
+  bb.7.bb4:
+    successors: %bb.8(0x04000000), %bb.4(0x7c000000)
+
+    %8:gpr = ADDI_D killed %7, 1
+    %50:gpr = COPY %8
+    %51:gpr = COPY %8
+    %52:gpr = COPY killed %8
+    BEQZ %39, %bb.4
+    PseudoBR %bb.8
+
+  bb.8.loopexit:
+    successors: %bb.11(0x80000000)
+
+    %10:gpr = COPY killed %52
+    %9:gpr = COPY killed %51
+    %40:gpr = COPY $r0
+    ST_B killed %40, %18, 0 :: (store (s8) into %ir.0)
+    %55:gpr = COPY killed %3
+    %56:gpr = COPY killed %9
+    %57:gpr = COPY killed %10
+    %58:gpr = COPY killed %6
+    PseudoBR %bb.11
+
+  bb.9.bb3.bb5_crit_edge:
+    successors: %bb.10(0x80000000)
+
+    %42:gpr = ADDI_D killed %7, 1
+    %53:gpr = COPY %41
+    %54:gpr = COPY killed %42
+
+  bb.10.bb5:
+    successors: %bb.11(0x80000000)
+
+    %13:gpr = COPY killed %54
+    %12:gpr = COPY killed %53
+    %38:gpr = COPY $r0
+    ST_D killed %38, %18, 0 :: (store (s64) into %ir.0)
+    %55:gpr = COPY %13
+    %56:gpr = COPY %12
+    %57:gpr = COPY killed %12
+    %58:gpr = COPY killed %13
+
+  bb.11.bb6:
+    successors: %bb.2(0x7c000000), %bb.1(0x04000000)
+
+    %17:gpr = COPY killed %58
+    %16:gpr = COPY killed %57
+    %15:gpr = COPY killed %56
+    %14:gpr = COPY killed %55
+    %43:gpr = COPY %14
+    %44:gpr = COPY %15
+    %45:gpr = COPY %17
+    %46:gpr = COPY killed %14
+    %47:gpr = COPY killed %15
+    %48:gpr = COPY killed %16
+    %49:gpr = COPY killed %17
+    BEQ %0, %41, %bb.2
+    PseudoBR %bb.1
+
+...
