@@ -21,16 +21,15 @@ define i16 @simple1(i8 %a) {
 ; NONE-NEXT:    ret i16 [[TMP2]]
 ;
 ; ONLY64-LABEL: @simple1(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 1
-; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[T21:%.*]] = add i64 [[TMP1]], 1
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[T21]] to i16
 ; ONLY64-NEXT:    ret i16 [[TMP2]]
 ;
 ; MULTIPLE-LABEL: @simple1(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 1
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; MULTIPLE-NEXT:    ret i16 [[TMP2]]
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[T21:%.*]] = add i16 [[TMP1]], 1
+; MULTIPLE-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fadd float %t1, 1.0
@@ -52,15 +51,15 @@ define i8 @simple2(i8 %a) {
 ; NONE-NEXT:    ret i8 [[TMP2]]
 ;
 ; ONLY64-LABEL: @simple2(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i8
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[T21:%.*]] = sub i64 [[TMP1]], 1
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[T21]] to i8
 ; ONLY64-NEXT:    ret i8 [[TMP2]]
 ;
 ; MULTIPLE-LABEL: @simple2(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i8
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[T21:%.*]] = sub i16 [[TMP1]], 1
+; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i16 [[T21]] to i8
 ; MULTIPLE-NEXT:    ret i8 [[TMP2]]
 ;
   %t1 = uitofp i8 %a to float
@@ -81,14 +80,16 @@ define i32 @simple3(i8 %a) {
 ; NONE-NEXT:    ret i32 [[T21]]
 ;
 ; ONLY64-LABEL: @simple3(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; ONLY64-NEXT:    ret i32 [[T21]]
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[T21:%.*]] = sub i64 [[TMP1]], 1
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[T21]] to i32
+; ONLY64-NEXT:    ret i32 [[TMP2]]
 ;
 ; MULTIPLE-LABEL: @simple3(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[T21:%.*]] = sub i32 [[TMP1]], 1
-; MULTIPLE-NEXT:    ret i32 [[T21]]
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[T21:%.*]] = sub i16 [[TMP1]], 1
+; MULTIPLE-NEXT:    [[TMP2:%.*]] = zext i16 [[T21]] to i32
+; MULTIPLE-NEXT:    ret i32 [[TMP2]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fsub float %t1, 1.0
@@ -110,15 +111,15 @@ define i1 @cmp(i8 %a, i8 %b) {
 ; NONE-NEXT:    ret i1 [[T31]]
 ;
 ; ONLY64-LABEL: @cmp(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
-; ONLY64-NEXT:    [[T31:%.*]] = icmp slt i32 [[TMP1]], [[TMP2]]
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i64
+; ONLY64-NEXT:    [[T31:%.*]] = icmp slt i64 [[TMP1]], [[TMP2]]
 ; ONLY64-NEXT:    ret i1 [[T31]]
 ;
 ; MULTIPLE-LABEL: @cmp(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
-; MULTIPLE-NEXT:    [[T31:%.*]] = icmp slt i32 [[TMP1]], [[TMP2]]
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i16
+; MULTIPLE-NEXT:    [[T31:%.*]] = icmp slt i16 [[TMP1]], [[TMP2]]
 ; MULTIPLE-NEXT:    ret i1 [[T31]]
 ;
   %t1 = uitofp i8 %a to float
@@ -174,11 +175,12 @@ define i32 @simple5(i8 %a, i8 %b) {
 ; NONE-NEXT:    ret i32 [[T42]]
 ;
 ; ONLY64-LABEL: @simple5(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
-; ONLY64-NEXT:    [[T31:%.*]] = add i32 [[TMP1]], 1
-; ONLY64-NEXT:    [[T42:%.*]] = mul i32 [[T31]], [[TMP2]]
-; ONLY64-NEXT:    ret i32 [[T42]]
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i64
+; ONLY64-NEXT:    [[T31:%.*]] = add i64 [[TMP1]], 1
+; ONLY64-NEXT:    [[T42:%.*]] = mul i64 [[T31]], [[TMP2]]
+; ONLY64-NEXT:    [[TMP3:%.*]] = trunc i64 [[T42]] to i32
+; ONLY64-NEXT:    ret i32 [[TMP3]]
 ;
 ; MULTIPLE-LABEL: @simple5(
 ; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
@@ -211,11 +213,12 @@ define i32 @simple6(i8 %a, i8 %b) {
 ; NONE-NEXT:    ret i32 [[T42]]
 ;
 ; ONLY64-LABEL: @simple6(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
-; ONLY64-NEXT:    [[T31:%.*]] = sub i32 0, [[TMP1]]
-; ONLY64-NEXT:    [[T42:%.*]] = mul i32 [[T31]], [[TMP2]]
-; ONLY64-NEXT:    ret i32 [[T42]]
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i64
+; ONLY64-NEXT:    [[T31:%.*]] = sub i64 0, [[TMP1]]
+; ONLY64-NEXT:    [[T42:%.*]] = mul i64 [[T31]], [[TMP2]]
+; ONLY64-NEXT:    [[TMP3:%.*]] = trunc i64 [[T42]] to i32
+; ONLY64-NEXT:    ret i32 [[TMP3]]
 ;
 ; MULTIPLE-LABEL: @simple6(
 ; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
@@ -257,23 +260,25 @@ define i32 @multi1(i8 %a, i8 %b, i8 %c, float %d) {
 ; NONE-NEXT:    ret i32 [[R]]
 ;
 ; ONLY64-LABEL: @multi1(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i64
 ; ONLY64-NEXT:    [[FC:%.*]] = uitofp i8 [[C:%.*]] to float
-; ONLY64-NEXT:    [[X1:%.*]] = add i32 [[TMP1]], [[TMP2]]
+; ONLY64-NEXT:    [[X1:%.*]] = add i64 [[TMP1]], [[TMP2]]
+; ONLY64-NEXT:    [[TMP3:%.*]] = trunc i64 [[X1]] to i32
 ; ONLY64-NEXT:    [[Z:%.*]] = fadd float [[FC]], [[D:%.*]]
 ; ONLY64-NEXT:    [[W:%.*]] = fptoui float [[Z]] to i32
-; ONLY64-NEXT:    [[R:%.*]] = add i32 [[X1]], [[W]]
+; ONLY64-NEXT:    [[R:%.*]] = add i32 [[TMP3]], [[W]]
 ; ONLY64-NEXT:    ret i32 [[R]]
 ;
 ; MULTIPLE-LABEL: @multi1(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i32
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[TMP2:%.*]] = zext i8 [[B:%.*]] to i16
 ; MULTIPLE-NEXT:    [[FC:%.*]] = uitofp i8 [[C:%.*]] to float
-; MULTIPLE-NEXT:    [[X1:%.*]] = add i32 [[TMP1]], [[TMP2]]
+; MULTIPLE-NEXT:    [[X1:%.*]] = add i16 [[TMP1]], [[TMP2]]
+; MULTIPLE-NEXT:    [[TMP3:%.*]] = zext i16 [[X1]] to i32
 ; MULTIPLE-NEXT:    [[Z:%.*]] = fadd float [[FC]], [[D:%.*]]
 ; MULTIPLE-NEXT:    [[W:%.*]] = fptoui float [[Z]] to i32
-; MULTIPLE-NEXT:    [[R:%.*]] = add i32 [[X1]], [[W]]
+; MULTIPLE-NEXT:    [[R:%.*]] = add i32 [[TMP3]], [[W]]
 ; MULTIPLE-NEXT:    ret i32 [[R]]
 ;
   %fa = uitofp i8 %a to float
@@ -301,16 +306,15 @@ define i16 @simple_negzero(i8 %a) {
 ; NONE-NEXT:    ret i16 [[TMP2]]
 ;
 ; ONLY64-LABEL: @simple_negzero(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 0
-; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[T21:%.*]] = add i64 [[TMP1]], 0
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[T21]] to i16
 ; ONLY64-NEXT:    ret i16 [[TMP2]]
 ;
 ; MULTIPLE-LABEL: @simple_negzero(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[T21:%.*]] = add i32 [[TMP1]], 0
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; MULTIPLE-NEXT:    ret i16 [[TMP2]]
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[T21:%.*]] = add i16 [[TMP1]], 0
+; MULTIPLE-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fadd fast float %t1, -0.0
@@ -334,16 +338,16 @@ define i32 @simple_negative(i8 %call) {
 ; NONE-NEXT:    ret i32 [[CONV3]]
 ;
 ; ONLY64-LABEL: @simple_negative(
-; ONLY64-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i32
-; ONLY64-NEXT:    [[MUL1:%.*]] = mul i32 [[TMP1]], -3
-; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i32 [[MUL1]] to i8
+; ONLY64-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i64
+; ONLY64-NEXT:    [[MUL1:%.*]] = mul i64 [[TMP1]], -3
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[MUL1]] to i8
 ; ONLY64-NEXT:    [[CONV3:%.*]] = sext i8 [[TMP2]] to i32
 ; ONLY64-NEXT:    ret i32 [[CONV3]]
 ;
 ; MULTIPLE-LABEL: @simple_negative(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i32
-; MULTIPLE-NEXT:    [[MUL1:%.*]] = mul i32 [[TMP1]], -3
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i32 [[MUL1]] to i8
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = sext i8 [[CALL:%.*]] to i16
+; MULTIPLE-NEXT:    [[MUL1:%.*]] = mul i16 [[TMP1]], -3
+; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i16 [[MUL1]] to i8
 ; MULTIPLE-NEXT:    [[CONV3:%.*]] = sext i8 [[TMP2]] to i32
 ; MULTIPLE-NEXT:    ret i32 [[CONV3]]
 ;
@@ -368,16 +372,15 @@ define i16 @simple_fneg(i8 %a) {
 ; NONE-NEXT:    ret i16 [[TMP2]]
 ;
 ; ONLY64-LABEL: @simple_fneg(
-; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; ONLY64-NEXT:    [[T21:%.*]] = sub i32 0, [[TMP1]]
-; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
+; ONLY64-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i64
+; ONLY64-NEXT:    [[T21:%.*]] = sub i64 0, [[TMP1]]
+; ONLY64-NEXT:    [[TMP2:%.*]] = trunc i64 [[T21]] to i16
 ; ONLY64-NEXT:    ret i16 [[TMP2]]
 ;
 ; MULTIPLE-LABEL: @simple_fneg(
-; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i32
-; MULTIPLE-NEXT:    [[T21:%.*]] = sub i32 0, [[TMP1]]
-; MULTIPLE-NEXT:    [[TMP2:%.*]] = trunc i32 [[T21]] to i16
-; MULTIPLE-NEXT:    ret i16 [[TMP2]]
+; MULTIPLE-NEXT:    [[TMP1:%.*]] = zext i8 [[A:%.*]] to i16
+; MULTIPLE-NEXT:    [[T21:%.*]] = sub i16 0, [[TMP1]]
+; MULTIPLE-NEXT:    ret i16 [[T21]]
 ;
   %t1 = uitofp i8 %a to float
   %t2 = fneg fast float %t1
