@@ -1594,6 +1594,19 @@ LogicalResult DataBoundsOp::verify() {
   return success();
 }
 
+void PrivateClauseOp::build(OpBuilder &odsBuilder, OperationState &odsState,
+                            Type privateVarType, StringRef privateVarName) {
+  FunctionType initializerType = FunctionType::get(
+      odsBuilder.getContext(), {privateVarType}, {privateVarType});
+  std::string privatizerName = (privateVarName + ".privatizer").str();
+
+  build(odsBuilder, odsState, privatizerName, initializerType);
+
+  mlir::Block &block = odsState.regions.front()->emplaceBlock();
+  block.addArguments({privateVarType},
+                     SmallVector<Location>(1, odsState.location));
+}
+
 #define GET_ATTRDEF_CLASSES
 #include "mlir/Dialect/OpenMP/OpenMPOpsAttributes.cpp.inc"
 

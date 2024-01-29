@@ -16,6 +16,7 @@
 #include "flang/Common/Fortran.h"
 #include "flang/Lower/LoweringOptions.h"
 #include "flang/Lower/PFTDefs.h"
+#include "flang/Lower/SymbolMap.h"
 #include "flang/Optimizer/Builder/BoxValue.h"
 #include "flang/Semantics/symbol.h"
 #include "mlir/IR/Builders.h"
@@ -92,7 +93,8 @@ public:
 
   /// Binds the symbol to an fir extended value. The symbol binding will be
   /// added or replaced at the inner-most level of the local symbol map.
-  virtual void bindSymbol(SymbolRef sym, const fir::ExtendedValue &exval) = 0;
+  virtual void bindSymbol(SymbolRef sym, const fir::ExtendedValue &exval,
+                          Fortran::lower::SymMap *symMap = nullptr) = 0;
 
   /// Override lowering of expression with pre-lowered values.
   /// Associate mlir::Value to evaluate::Expr. All subsequent call to
@@ -111,14 +113,16 @@ public:
   /// For a given symbol which is host-associated, create a clone using
   /// parameters from the host-associated symbol.
   virtual bool
-  createHostAssociateVarClone(const Fortran::semantics::Symbol &sym) = 0;
+  createHostAssociateVarClone(const Fortran::semantics::Symbol &sym,
+                              Fortran::lower::SymMap *symMap = nullptr) = 0;
 
   virtual void
   createHostAssociateVarCloneDealloc(const Fortran::semantics::Symbol &sym) = 0;
 
-  virtual void copyHostAssociateVar(
-      const Fortran::semantics::Symbol &sym,
-      mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr) = 0;
+  virtual void
+  copyHostAssociateVar(const Fortran::semantics::Symbol &sym,
+                       mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr,
+                       Fortran::lower::SymMap *symMap = nullptr) = 0;
 
   /// For a given symbol, check if it is present in the inner-most
   /// level of the symbol map.
@@ -294,6 +298,10 @@ public:
   const Fortran::lower::LoweringOptions &getLoweringOptions() const {
     return loweringOptions;
   }
+
+  virtual Fortran::lower::SymbolBox
+  lookupOneLevelUpSymbol(const Fortran::semantics::Symbol &sym,
+                         Fortran::lower::SymMap *symMap = nullptr) = 0;
 
 private:
   /// Options controlling lowering behavior.
