@@ -9,6 +9,11 @@ declare double @llvm.cos.f64(double)
 declare float @cosf(float)
 declare float @llvm.cos.f32(float)
 
+declare double @fabs(double)
+declare double @llvm.fabs.f64(double)
+declare float @fabsf(float)
+declare float @llvm.fabs.f32(float)
+
 declare double @sin(double)
 declare double @llvm.sin.f64(double)
 declare float @sinf(float)
@@ -97,6 +102,41 @@ define float @cosf_unary_negated_arg_FMF(float %x) {
 ;
   %neg = fneg float %x
   %r = call nnan reassoc float @cosf(float %neg)
+  ret float %r
+}
+
+; cos(fabs(x)) -> cos(x)
+
+define double @cos_unary_fabs_arg(double %x) {
+; ANY-LABEL: @cos_unary_fabs_arg(
+; ANY-NEXT:    [[FABS:%.*]] = tail call double @llvm.fabs.f64(double [[X:%.*]])
+; ANY-NEXT:    [[R:%.*]] = call double @cos(double [[FABS]])
+; ANY-NEXT:    ret double [[R]]
+;
+  %fabs = tail call double @llvm.fabs.f64(double %x)
+  %r = call double @cos(double %fabs)
+  ret double %r
+}
+
+define float @cosf_unary_fabs_arg(float %x) {
+; ANY-LABEL: @cosf_unary_fabs_arg(
+; ANY-NEXT:    [[FABS:%.*]] = tail call float @llvm.fabs.f32(float [[X:%.*]])
+; ANY-NEXT:    [[R:%.*]] = call float @cosf(float [[FABS]])
+; ANY-NEXT:    ret float [[R]]
+;
+  %fabs = tail call float @llvm.fabs.f32(float %x)
+  %r = call float @cosf(float %fabs)
+  ret float %r
+}
+
+define float @cosf_unary_fabs_arg_FMF(float %x) {
+; ANY-LABEL: @cosf_unary_fabs_arg_FMF(
+; ANY-NEXT:    [[FABS:%.*]] = tail call float @llvm.fabs.f32(float [[X:%.*]])
+; ANY-NEXT:    [[R:%.*]] = call reassoc nnan float @cosf(float [[FABS]])
+; ANY-NEXT:    ret float [[R]]
+;
+  %fabs = tail call float @llvm.fabs.f32(float %x)
+  %r = call nnan reassoc float @cosf(float %fabs)
   ret float %r
 }
 
