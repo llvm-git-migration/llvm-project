@@ -5155,7 +5155,39 @@ struct StrictFPUpgradeVisitor : public InstVisitor<StrictFPUpgradeVisitor> {
 };
 } // namespace
 
-void llvm::UpgradeFunctionAttributes(Function &F) {
+static void
+CopyModuleAttributeToFunction(Function &F, StringRef FnAttrName,
+                              StringRef ModAttrName,
+                              std::pair<StringRef, StringRef> Values) {
+  Module *M = F.getParent();
+  if (!M)
+    return;
+  if (F.hasFnAttribute(FnAttrName))
+    return;
+  if (const auto *MAttr = mdconst::extract_or_null<ConstantInt>(
+          M->getModuleFlag(ModAttrName))) {
+    if (MAttr->getZExtValue()) {
+      F.addFnAttr(FnAttrName, Values.first);
+      return;
+    }
+  }
+  F.addFnAttr(FnAttrName, Values.second);
+}
+
+static void CopyModuleAttributeToFunction(Function &F, StringRef AttrName) {
+  CopyModuleAttributeToFunction(
+      F, AttrName, AttrName,
+      std::make_pair<StringRef, StringRef>("true", "false"));
+}
+
+static void
+CopyModuleAttributeToFunction(Function &F, StringRef AttrName,
+                              std::pair<StringRef, StringRef> Values) {
+  CopyModuleAttributeToFunction(F, AttrName, AttrName, Values);
+}
+
+void llvm::UpgradeFunctionAttributes(Function &F,
+                                     bool ModuleMetadataIsMaterialized) {
   // If a function definition doesn't have the strictfp attribute,
   // convert any callsite strictfp attributes to nobuiltin.
   if (!F.isDeclaration() && !F.hasFnAttribute(Attribute::StrictFP)) {
@@ -5167,6 +5199,41 @@ void llvm::UpgradeFunctionAttributes(Function &F) {
   F.removeRetAttrs(AttributeFuncs::typeIncompatible(F.getReturnType()));
   for (auto &Arg : F.args())
     Arg.removeAttrs(AttributeFuncs::typeIncompatible(Arg.getType()));
+
+  if (!ModuleMetadataIsMaterialized)
+    return;
+  if (F.isDeclaration())
+    return;
+  Module *M = F.getParent();
+  if (!M)
+    return;
+
+  Triple T(M->getTargetTriple());
+  // Convert module level attributes to function level attributes because
+  // after merging modules the attributes might change and would have different
+  // effect on the functions as the original module would have.
+  if (T.isThumb() || T.isARM() || T.isAArch64()) {
+    if (!F.hasFnAttribute("sign-return-address")) {
+      StringRef SignType = "none";
+      if (const auto *Sign = mdconst::extract_or_null<ConstantInt>(
+              M->getModuleFlag("sign-return-address")))
+        if (Sign->getZExtValue())
+          SignType = "non-leaf";
+
+      if (const auto *SignAll = mdconst::extract_or_null<ConstantInt>(
+              M->getModuleFlag("sign-return-address-all")))
+        if (SignAll->getZExtValue())
+          SignType = "all";
+
+      F.addFnAttr("sign-return-address", SignType);
+    }
+    CopyModuleAttributeToFunction(F, "branch-target-enforcement");
+    CopyModuleAttributeToFunction(F, "branch-protection-pauth-lr");
+    CopyModuleAttributeToFunction(F, "guarded-control-stack");
+    CopyModuleAttributeToFunction(
+        F, "sign-return-address-key",
+        std::make_pair<StringRef, StringRef>("b_key", "a_key"));
+  }
 }
 
 static bool isOldLoopArgument(Metadata *MD) {

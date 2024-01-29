@@ -6708,7 +6708,7 @@ Error BitcodeReader::materialize(GlobalValue *GV) {
   }
 
   // Look for functions that rely on old function attribute behavior.
-  UpgradeFunctionAttributes(*F);
+  UpgradeFunctionAttributes(*F, true);
 
   // If we've materialized a function set up in "new" debug-info mode, the
   // contents just loaded will still be in dbg.value mode. Switch to the new
