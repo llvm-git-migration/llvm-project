@@ -1138,10 +1138,10 @@ void SlotTracker::processFunctionMetadata(const Function &F) {
 }
 
 void SlotTracker::processDPValueMetadata(const DPValue &DPV) {
-  CreateMetadataSlot(DPV.getVariable());
-  CreateMetadataSlot(DPV.getDebugLoc());
+  CreateMetadataSlot(DPV.getRawVariable());
+  CreateMetadataSlot(DPV.getDebugLoc().getAsMDNode());
   if (DPV.isDbgAssign()) {
-    CreateMetadataSlot(DPV.getAssignID());
+    CreateMetadataSlot(cast<MDNode>(DPV.getRawAssignID()));
   }
 }
 
