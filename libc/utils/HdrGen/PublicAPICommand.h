@@ -25,6 +25,8 @@ class RecordKeeper;
 
 namespace llvm_libc {
 
+enum class AttributeStyle { None, Gnu, C23, Declspec };
+
 class PublicAPICommand : public Command {
 private:
   const std::vector<std::string> &EntrypointNameList;

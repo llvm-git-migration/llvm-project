@@ -15,6 +15,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Record.h"
+#include <llvm/ADT/STLExtras.h>
 
 // Text blocks for macro definitions and type decls can be indented to
 // suit the surrounding tablegen listing. We need to dedent such blocks
@@ -49,7 +50,7 @@ namespace llvm_libc {
 
 void writeAPIFromIndex(APIIndexer &G,
                        std::vector<std::string> EntrypointNameList,
-                       llvm::raw_ostream &OS) {
+                       llvm::raw_ostream &OS, AttributeStyle PreferedStyle) {
   for (auto &Pair : G.MacroDefsMap) {
     const std::string &Name = Pair.first;
     if (G.MacroSpecMap.find(Name) == G.MacroSpecMap.end())
@@ -102,6 +103,62 @@ void writeAPIFromIndex(APIIndexer &G,
     llvm::Record *RetValSpec = FunctionSpec->getValueAsDef("Return");
     llvm::Record *ReturnType = RetValSpec->getValueAsDef("ReturnType");
 
+    auto GetStyle = [](llvm::Record *Instance) {
+      auto Style = Instance->getValueAsString("Style");
+      if (Style == "gnu")
+        return AttributeStyle::Gnu;
+      if (Style == "c23")
+        return AttributeStyle::C23;
+      if (Style == "declspec")
+        return AttributeStyle::Declspec;
+      return AttributeStyle::None;
+    };
+
+    if (PreferedStyle != AttributeStyle::None) {
+      auto Attributes = FunctionSpec->getValueAsListOfDefs("Attributes");
+      llvm::SmallVector<llvm::Record *> Attrs;
+      for (auto *Attr : Attributes) {
+        auto Instances = Attr->getValueAsListOfDefs("Instances");
+        for (auto *Instance : Instances) {
+          if (GetStyle(Instance) == PreferedStyle) {
+            Attrs.push_back(Instance);
+          }
+        }
+      }
+
+      if (Attrs.size() != 0) {
+        if (PreferedStyle == AttributeStyle::Gnu) {
+          OS << "__attribute__((";
+          llvm::interleaveComma(Attrs, OS, [&](llvm::Record *Instance) {
+            OS << Instance->getValueAsString("Attr");
+          });
+          OS << ")) ";
+        }
+
+        if (PreferedStyle == AttributeStyle::C23) {
+          OS << "__attribute__((";
+          llvm::interleaveComma(Attrs, OS, [&](llvm::Record *Instance) {
+            auto Namespace = Instance->getValueAsString("Namespace");
+            if (Namespace != "")
+              OS << Namespace << "::";
+            OS << Instance->getValueAsString("Attr");
+          });
+          OS << ")) ";
+        }
+
+        if (PreferedStyle == AttributeStyle::Declspec) {
+          OS << "__declspec(";
+          llvm::interleave(
+              Attrs.begin(), Attrs.end(),
+              [&](llvm::Record *Instance) {
+                OS << Instance->getValueAsString("Attr");
+              },
+              [&]() { OS << ' '; });
+          OS << ") ";
+        }
+      }
+    }
+
     OS << G.getTypeAsString(ReturnType) << " " << Name << "(";
 
     auto ArgsList = FunctionSpec->getValueAsListOfDefs("Args");
@@ -134,12 +191,24 @@ void PublicAPICommand::run(llvm::raw_ostream &OS, const ArgVector &Args,
                            llvm::StringRef StdHeader,
                            llvm::RecordKeeper &Records,
                            const Command::ErrorReporter &Reporter) const {
-  if (Args.size() != 0) {
-    Reporter.printFatalError("public_api command does not take any arguments.");
+  if (Args.size() > 1) {
+    Reporter.printFatalError(
+        "public_api command does not take more than one arguments.");
+  }
+
+  AttributeStyle PreferedStyle = AttributeStyle::Gnu;
+
+  for (auto &arg : Args) {
+    if (arg == "prefer-c23-attributes") {
+      PreferedStyle = AttributeStyle::C23;
+    }
+    if (arg == "prefer-no-attributes") {
+      PreferedStyle = AttributeStyle::None;
+    }
   }
 
   APIIndexer G(StdHeader, Records);
-  writeAPIFromIndex(G, EntrypointNameList, OS);
+  writeAPIFromIndex(G, EntrypointNameList, OS, PreferedStyle);
 }
 
 } // namespace llvm_libc
