@@ -419,8 +419,10 @@ struct ParallelOpLowering : public OpRewritePattern<scf::ParallelOp> {
         /* allocate_vars = */ llvm::SmallVector<Value>{},
         /* allocators_vars = */ llvm::SmallVector<Value>{},
         /* reduction_vars = */ llvm::SmallVector<Value>{},
+        /*private_vars=*/mlir::ValueRange{},
         /* reductions = */ ArrayAttr{},
-        /* proc_bind_val = */ omp::ClauseProcBindKindAttr{});
+        /* proc_bind_val = */ omp::ClauseProcBindKindAttr{},
+        /*private_inits*/ nullptr);
     {
 
       OpBuilder::InsertionGuard guard(rewriter);
