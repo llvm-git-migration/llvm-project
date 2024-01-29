@@ -931,6 +931,7 @@ computeMemRefRankReductionMask(MemRefType originalType, MemRefType reducedType,
 
   // Early exit for the case where the number of unused dims matches the number
   // of ranks reduced.
+  // TODO: Verify strides.
   if (static_cast<int64_t>(unusedDims.count()) + reducedType.getRank() ==
       originalType.getRank())
     return unusedDims;
@@ -2745,7 +2746,7 @@ void SubViewOp::build(OpBuilder &b, OperationState &result, Value source,
 /// For ViewLikeOpInterface.
 Value SubViewOp::getViewSource() { return getSource(); }
 
-/// Return true if t1 and t2 have equal offsets (both dynamic or of same
+/// Return true if `t1` and `t2` have equal offsets (both dynamic or of same
 /// static value).
 static bool haveCompatibleOffsets(MemRefType t1, MemRefType t2) {
   int64_t t1Offset, t2Offset;
@@ -2753,6 +2754,21 @@ static bool haveCompatibleOffsets(MemRefType t1, MemRefType t2) {
   auto res1 = getStridesAndOffset(t1, t1Strides, t1Offset);
   auto res2 = getStridesAndOffset(t2, t2Strides, t2Offset);
   return succeeded(res1) && succeeded(res2) && t1Offset == t2Offset;
+}
+
+/// Return true if `t1` and `t2` have equal strides (both dynamic or of same
+/// static value).
+static bool haveCompatibleStrides(MemRefType t1, MemRefType t2) {
+  int64_t t1Offset, t2Offset;
+  SmallVector<int64_t> t1Strides, t2Strides;
+  auto res1 = getStridesAndOffset(t1, t1Strides, t1Offset);
+  auto res2 = getStridesAndOffset(t2, t2Strides, t2Offset);
+  if (failed(res1) || failed(res2))
+    return false;
+  for (auto [s1, s2] : llvm::zip_equal(t1Strides, t2Strides))
+    if (s1 != s2)
+      return false;
+  return true;
 }
 
 /// Checks if `original` Type type can be rank reduced to `reduced` type.
@@ -2779,6 +2795,12 @@ isRankReducedMemRefType(MemRefType originalType,
 
   // No amount of stride dropping can reconcile incompatible offsets.
   if (!haveCompatibleOffsets(originalType, candidateRankReducedType))
+    return SliceVerificationResult::LayoutMismatch;
+
+  // Strides must match if there are no rank reductions. In case of rank
+  // reductions, the strides are checked by `computeMemRefRankReductionMask`.
+  if (optionalUnusedDimsMask->none() &&
+      !haveCompatibleStrides(originalType, candidateRankReducedType))
     return SliceVerificationResult::LayoutMismatch;
 
   return SliceVerificationResult::Success;
