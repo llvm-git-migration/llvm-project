@@ -384,7 +384,7 @@ void transform::TakeAssumedBranchOp::getEffects(
 }
 
 //===----------------------------------------------------------------------===//
-// LoopFuseSibling
+// LoopFuseSiblingOp
 //===----------------------------------------------------------------------===//
 
 /// Check if `target` and `source` are siblings, in the context that `target`
@@ -441,8 +441,11 @@ static DiagnosedSilenceableFailure isOpSibling(Operation *target,
     bool failed = false;
     OpOperand *failedValue = nullptr;
     visitUsedValuesDefinedAbove(target->getRegions(), [&](OpOperand *operand) {
-      if (!domInfo.properlyDominates(operand->getOwner(), source,
-                                     /*enclosingOpOk=*/false)) {
+      Operation *operandOp = operand->get().getDefiningOp();
+      if (operandOp && !domInfo.properlyDominates(operandOp, source,
+                                                  /*enclosingOpOk=*/false)) {
+        // `operand` is not a block argument and its defining op does not
+        // dominate `source`
         failed = true;
         failedValue = operand;
       }
@@ -476,21 +479,40 @@ static bool isForallWithIdenticalConfiguration(Operation *target,
          targetOp.getMapping() == sourceOp.getMapping();
 }
 
-/// Fuse `target` into `source` assuming they are siblings and indepndent.
-/// TODO: Add fusion for more operations. Currently, we handle only scf.forall.
+static bool isForWithIdenticalConfiguration(Operation *target,
+                                            Operation *source) {
+  auto targetOp = dyn_cast<scf::ForOp>(target);
+  auto sourceOp = dyn_cast<scf::ForOp>(source);
+  if (!targetOp || !sourceOp)
+    return false;
+
+  return targetOp.getLowerBound() == sourceOp.getLowerBound() &&
+         targetOp.getUpperBound() == sourceOp.getUpperBound() &&
+         targetOp.getStep() == sourceOp.getStep();
+}
+
+/// Fuse `target` into `source` assuming they are siblings and independent.
+/// TODO: Support fusion for operations besides scf.for and scf.forall.
 static Operation *fuseSiblings(Operation *target, Operation *source,
                                RewriterBase &rewriter) {
-  auto targetOp = dyn_cast<scf::ForallOp>(target);
-  auto sourceOp = dyn_cast<scf::ForallOp>(source);
-  if (!targetOp || !sourceOp)
-    return nullptr;
-  return fuseIndependentSiblingForallLoops(targetOp, sourceOp, rewriter);
+  auto targetForOp = dyn_cast<scf::ForOp>(target);
+  auto sourceForOp = dyn_cast<scf::ForOp>(source);
+  if (targetForOp && sourceForOp)
+    return fuseIndependentSiblingForLoops(targetForOp, sourceForOp, rewriter);
+
+  auto targetForallOp = dyn_cast<scf::ForallOp>(target);
+  auto sourceForallOp = dyn_cast<scf::ForallOp>(source);
+  if (targetForallOp && sourceForallOp)
+    return fuseIndependentSiblingForallLoops(targetForallOp, sourceForallOp,
+                                             rewriter);
+
+  return nullptr;
 }
 
 DiagnosedSilenceableFailure
-transform::LoopFuseSibling::apply(transform::TransformRewriter &rewriter,
-                                  transform::TransformResults &results,
-                                  transform::TransformState &state) {
+transform::LoopFuseSiblingOp::apply(transform::TransformRewriter &rewriter,
+                                    transform::TransformResults &results,
+                                    transform::TransformState &state) {
   auto targetOps = state.getPayloadOps(getTarget());
   auto sourceOps = state.getPayloadOps(getSource());
 
@@ -511,7 +533,8 @@ transform::LoopFuseSibling::apply(transform::TransformRewriter &rewriter,
     return diag;
 
   // Check if the target can be fused into source.
-  if (!isForallWithIdenticalConfiguration(target, source)) {
+  if (!isForallWithIdenticalConfiguration(target, source) &&
+      !isForWithIdenticalConfiguration(target, source)) {
     return emitSilenceableFailure(target->getLoc())
            << "operations cannot be fused";
   }
