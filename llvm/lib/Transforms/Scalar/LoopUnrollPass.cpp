@@ -1041,7 +1041,8 @@ bool llvm::computeUnrollCount(
         return false;
       else
         UP.AllowExpensiveTripCount = true;
-    }
+    } else if (isInfiniteTripCount(L))
+        UP.AllowExpensiveTripCount = true;
   }
   UP.Runtime |= PragmaEnableUnroll || PragmaCount > 0 || UserUnrollCount;
   if (!UP.Runtime) {
