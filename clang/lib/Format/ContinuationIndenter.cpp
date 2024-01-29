@@ -1694,8 +1694,11 @@ void ContinuationIndenter::moveStatePastFakeLParens(LineState &State,
     // Special case for generic selection expressions, its comma-separated
     // expressions are not aligned to the opening paren like regular calls, but
     // rather continuation-indented relative to the _Generic keyword.
-    if (Previous && Previous->endsSequence(tok::l_paren, tok::kw__Generic))
-      NewParenState.Indent = CurrentState.LastSpace;
+    if (Previous && Previous->endsSequence(tok::l_paren, tok::kw__Generic) &&
+        State.Stack.size() >= 2) {
+      NewParenState.Indent =
+          State.Stack.end()[-2].Indent + Style.ContinuationIndentWidth;
+    }
 
     if ((shouldUnindentNextOperator(Current) ||
          (Previous &&
