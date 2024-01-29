@@ -8137,9 +8137,7 @@ MachineInstr *X86InstrInfo::foldMemoryBroadcast(
     ArrayRef<MachineOperand> MOs, MachineBasicBlock::iterator InsertPt,
     unsigned BitsSize, Align Alignment, bool AllowCommute) const {
 
-  const X86FoldTableEntry *I = lookupBroadcastFoldTable(MI.getOpcode(), OpNum);
-
-  if (I)
+  if (auto *I = lookupBroadcastFoldTable(MI.getOpcode(), OpNum))
     return matchBroadcastSize(*I, BitsSize)
                ? FuseInst(MF, I->DstOp, OpNum, MOs, InsertPt, MI, *this)
                : nullptr;
