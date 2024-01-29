@@ -170,10 +170,29 @@ class ArgSpec<Type type, list<Annotation> annotations = [], string name = ""> {
   string Name = name;
 }
 
-class FunctionSpec<string name, RetValSpec return, list<ArgSpec> args> {
+class FunctionAttr {}
+class GnuFunctionAttr<string attr> : FunctionAttr {
+  string Attr = attr;
+  string Style = "gnu";
+}
+class C23FunctionAttr<string attr, string namespace> : FunctionAttr {
+  string Attr = attr;
+  string Namespace = namespace;
+  string Style = "c23";
+}
+class DeclspecFunctionAttr<string attr> : FunctionAttr {
+  string Attr = attr;
+  string Style = "declspec";
+}
+class FunctionAttrSpec<list<FunctionAttr> instances> {
+  list<FunctionAttr> Instances = instances;
+}
+
+class FunctionSpec<string name, RetValSpec return, list<ArgSpec> args, list<FunctionAttrSpec> attrs = []> {
   string Name = name;
   RetValSpec Return = return;
   list<ArgSpec> Args = args;
+  list<FunctionAttrSpec> Attributes = attrs;
 }
 
 class ObjectSpec<string name, string type> {
