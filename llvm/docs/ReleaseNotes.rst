@@ -93,6 +93,7 @@ Changes to the RISC-V Backend
 -----------------------------
 
 * Support for the Zicond extension is no longer experimental.
+* The experimental Ssnpm, Smnpm, Smmpm, Sspm, and Supm 0.8.1 Pointer Masking extensions are supported.
 
 Changes to the WebAssembly Backend
 ----------------------------------
