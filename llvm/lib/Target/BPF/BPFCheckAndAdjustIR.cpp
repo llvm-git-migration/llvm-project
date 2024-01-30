@@ -499,6 +499,18 @@ bool BPFCheckAndAdjustIR::insertASpaceBuiltins(Module &M) {
     }
     Changed |= !ToKernelCache.empty() || !ToUserCache.empty();
   }
+  // Merge all globals within same address space into single
+  // .arena.<addr space no> section
+  for (GlobalVariable &G : M.globals()) {
+    if (G.getAddressSpace() == 0 || G.hasSection())
+      continue;
+    SmallString<16> SecName;
+    raw_svector_ostream OS(SecName);
+    OS << ".arena." << G.getAddressSpace();
+    G.setSection(SecName);
+    // Prevent having separate section for constants
+    G.setConstant(false);
+  }
   return Changed;
 }
 
