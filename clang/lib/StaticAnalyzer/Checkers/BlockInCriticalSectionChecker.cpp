@@ -57,6 +57,8 @@ class BlockInCriticalSectionChecker : public Checker<check::PostCall> {
                                 const CallEvent &call,
                                 CheckerContext &C) const;
 
+  const NoteTag *createCriticalSectionNote(CheckerContext &C) const;
+
 public:
   bool isBlockingFunction(const CallEvent &Call) const;
   bool isLockFunction(const CallEvent &Call) const;
@@ -126,8 +128,9 @@ void BlockInCriticalSectionChecker::checkPostCall(const CallEvent &Call,
     State = State->set<MutexCounter>(--mutexCount);
     C.addTransition(State);
   } else if (isLockFunction(Call)) {
+    const NoteTag *Note = createCriticalSectionNote(C);
     State = State->set<MutexCounter>(++mutexCount);
-    C.addTransition(State);
+    C.addTransition(State, Note);
   } else if (mutexCount > 0) {
     SymbolRef BlockDesc = Call.getReturnValue().getAsSymbol();
     reportBlockInCritSection(BlockDesc, Call, C);
@@ -151,10 +154,21 @@ void BlockInCriticalSectionChecker::reportBlockInCritSection(
   C.emitReport(std::move(R));
 }
 
+const NoteTag *BlockInCriticalSectionChecker::createCriticalSectionNote(
+    CheckerContext &C) const {
+  const BugType *BT = &this->BlockInCritSectionBugType;
+  return C.getNoteTag([BT](PathSensitiveBugReport &BR, llvm::raw_ostream &OS) {
+    if (&BR.getBugType() != BT)
+      return;
+    OS << "Entering critical section here";
+  });
+}
+
 void ento::registerBlockInCriticalSectionChecker(CheckerManager &mgr) {
   mgr.registerChecker<BlockInCriticalSectionChecker>();
 }
 
-bool ento::shouldRegisterBlockInCriticalSectionChecker(const CheckerManager &mgr) {
+bool ento::shouldRegisterBlockInCriticalSectionChecker(
+    const CheckerManager &mgr) {
   return true;
 }
