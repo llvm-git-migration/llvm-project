@@ -39,7 +39,7 @@ inline int __attribute__((target_version("memtag3+rcpc3+mops"))) fmv_inline(void
 inline int __attribute__((target_version("aes+dotprod"))) fmv_inline(void) { return 13; }
 inline int __attribute__((target_version("simd+fp16fml"))) fmv_inline(void) { return 14; }
 inline int __attribute__((target_version("fp+sm4"))) fmv_inline(void) { return 15; }
-inline int __attribute__((target_version("lse+rdm"))) fmv_inline(void) { return 16; }
+inline int __attribute__((target_version("lse+rdma"))) fmv_inline(void) { return 16; }
 inline int __attribute__((target_version("default"))) fmv_inline(void) { return 3; }
 
 __attribute__((target_version("ls64"))) int fmv_e(void);
@@ -385,7 +385,7 @@ int hoo(void) {
 // CHECK-NEXT:    [[TMP59:%.*]] = and i1 true, [[TMP58]]
 // CHECK-NEXT:    br i1 [[TMP59]], label [[RESOLVER_RETURN27:%.*]], label [[RESOLVER_ELSE28:%.*]]
 // CHECK:       resolver_return27:
-// CHECK-NEXT:    ret ptr @fmv_inline._MlseMrdm
+// CHECK-NEXT:    ret ptr @fmv_inline._MlseMrdma
 // CHECK:       resolver_else28:
 // CHECK-NEXT:    [[TMP60:%.*]] = load i64, ptr @__aarch64_cpu_features, align 8
 // CHECK-NEXT:    [[TMP61:%.*]] = and i64 [[TMP60]], 32
@@ -673,7 +673,7 @@ int hoo(void) {
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@fmv_inline._MlseMrdm
+// CHECK-LABEL: define {{[^@]+}}@fmv_inline._MlseMrdma
 // CHECK-SAME: () #[[ATTR25:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 16
