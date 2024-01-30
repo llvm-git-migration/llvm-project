@@ -1213,7 +1213,7 @@ def SMopa4WayOp
     The 4 outer products in the example above can be fused into a single outer
     product as follows:
 
-	```mlir
+    ```mlir
     %lhs0 = "llvm.intr.experimental.vector.interleave2"(%a0, %a2) : (vector<[4]xi8>, vector<[4]xi8>) -> vector<[8]xi8>
     %lhs1 = "llvm.intr.experimental.vector.interleave2"(%a1, %a3) : (vector<[4]xi8>, vector<[4]xi8>) -> vector<[8]xi8>
     %lhs = "llvm.intr.experimental.vector.interleave2"(%lhs0, %lhs1) : (vector<[8]xi8>, vector<[8]xi8>) -> vector<[16]xi8>
@@ -1223,7 +1223,7 @@ def SMopa4WayOp
     %rhs = "llvm.intr.experimental.vector.interleave2"(%rhs0, %rhs1) : (vector<[8]xi8>, vector<[8]xi8>) -> vector<[16]xi8>
 
     %0 = arm_sme.smopa_4way %lhs, %rhs : vector<[16]xi8>, vector<[16]xi8> into vector<[4]x[4]xi32>
-	```
+    ```
 
     This is implemented in the `-arm-sme-outer-product-fusion` pass.
 

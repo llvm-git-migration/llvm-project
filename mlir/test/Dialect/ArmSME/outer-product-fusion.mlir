@@ -181,156 +181,6 @@ func.func @outerproduct_sub_widening_2way_unsigned_i16i16i32(
   return %1 : vector<[4]x[4]xi32>
 }
 
-/// Negative tests
-
-// -----
-
-// CHECK-LABEL: @outerproduct_widening_2way__no_acc
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__no_acc(%a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
-  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
-  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
-
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xf32>, vector<[4]xf32>
-
-  return %0 : vector<[4]x[4]xf32>
-}
-
-// -----
-
-/// Defining op of accumulator operand must be an 'arm_sme.outerproduct'.
-
-// CHECK-LABEL: @outerproduct_widening_2way__bad_acc
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__bad_acc(%a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>, %acc : vector<[4]x[4]xf32>) -> vector<[4]x[4]xf32> {
-  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
-  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
-
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext acc(%acc) : vector<[4]xf32>, vector<[4]xf32>
-
-  return %0 : vector<[4]x[4]xf32>
-}
-
-// -----
-
-/// Combining kinds of outer products must match to be fused.
-
-// CHECK-LABEL: @outerproduct_widening_2way__bad_combining_kind
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__bad_combining_kind(
-    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
-    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
-  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
-  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
-  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
-  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
-
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext kind<add> : vector<[4]xf32>, vector<[4]xf32>
-  %1 = arm_sme.outerproduct %a1_ext, %b1_ext kind<sub> acc(%0) : vector<[4]xf32>, vector<[4]xf32>
-
-  return %1 : vector<[4]x[4]xf32>
-}
-
-// -----
-
-/// If the first outer product has uses other than as the input to another
-/// outer product, it can't be erased after fusion. This is a problem when
-/// it also has an accumulator as this will be used as the root for tile
-/// allocation and since the widening outer product uses the same
-/// accumulator it will get assigned the same tile ID, resulting in 3
-/// outer products and incorrect results. Check this is prevented.
-
-// CHECK-LABEL: @outerproduct_widening_2way__cant_erase
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__cant_erase(
-    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
-    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
-  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
-  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
-  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
-  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
-
-  %acc = arith.constant dense<1.0> : vector<[4]x[4]xf32>
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext acc(%acc) : vector<[4]xf32>, vector<[4]xf32>
-  "fake.use"(%0) : (vector<[4]x[4]xf32>) -> ()
-  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xf32>, vector<[4]xf32>
-
-  return %1 : vector<[4]x[4]xf32>
-}
-
-// -----
-
-// CHECK-LABEL: @outerproduct_widening_2way__unsupported_type_f32f32f64
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__unsupported_type_f32f32f64(
-    %a0 : vector<[2]xf32>, %b0 : vector<[2]xf32>,
-    %a1 : vector<[2]xf32>, %b1 : vector<[2]xf32>) -> vector<[2]x[2]xf64> {
-  %a0_ext = arith.extf %a0 : vector<[2]xf32> to vector<[2]xf64>
-  %b0_ext = arith.extf %b0 : vector<[2]xf32> to vector<[2]xf64>
-  %a1_ext = arith.extf %a1 : vector<[2]xf32> to vector<[2]xf64>
-  %b1_ext = arith.extf %b1 : vector<[2]xf32> to vector<[2]xf64>
-
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[2]xf64>, vector<[2]xf64>
-  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[2]xf64>, vector<[2]xf64>
-
-  return %1 : vector<[2]x[2]xf64>
-}
-
-// -----
-
-/// Fusion only occurs if either both outer products are masked, or neither.
-
-// CHECK-LABEL: @outerproduct_widening_2way__bad_masking
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__bad_masking(
-    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
-    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>,
-    %a1_mask : vector<[4]xi1>, %b1_mask : vector<[4]xi1>) -> vector<[4]x[4]xf32> {
-  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
-  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
-  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
-  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
-
-  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xf32>, vector<[4]xf32>
-  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) masks(%a1_mask, %b1_mask) : vector<[4]xf32>, vector<[4]xf32>
-
-  return %1 : vector<[4]x[4]xf32>
-}
-
-// -----
-
-/// Defining op of outer product must be a supported extension op.
-
-// CHECK-LABEL: @outerproduct_widening_2way__bad_defining_op
-// CHECK-NOT: arm_sme.fmopa_2way
-// CHECK: arm_sme.outerproduct
-// CHECK: arm_sme.outerproduct
-// CHECK-NOT: arm_sme.fmopa_2way
-func.func @outerproduct_widening_2way__bad_defining_op(
-    %a0 : vector<[4]xf32>, %b0 : vector<[4]xf32>,
-    %a1 : vector<[4]xf32>, %b1 : vector<[4]xf32>) -> vector<[4]x[4]xf32> {
-  %0 = arm_sme.outerproduct %a0, %b0 : vector<[4]xf32>, vector<[4]xf32>
-  %1 = arm_sme.outerproduct %a1, %b1 acc(%0) : vector<[4]xf32>, vector<[4]xf32>
-
-  return %1 : vector<[4]x[4]xf32>
-}
-
 // -----
 
 // CHECK-LABEL: @outerproduct_add_widening_4way_signed_i8i8i32
@@ -904,4 +754,386 @@ func.func @outerproduct_sub_widening_4way_unsigned_by_signed_i16i16i64(
   %3 = arm_sme.outerproduct %a3_ext, %b3_ext kind<sub> acc(%2) masks(%a3_mask, %b3_mask) : vector<[2]xi64>, vector<[2]xi64>
 
   return %3 : vector<[2]x[2]xi64>
+}
+
+/// Negative tests
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_2way__no_acc
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__no_acc(%a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
+  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
+  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xf32>, vector<[4]xf32>
+
+  return %0 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__no_acc
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__no_acc(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi8>, %b2 : vector<[4]xi8>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a2_ext = arith.extsi %a2 : vector<[4]xi8> to vector<[4]xi32>
+  %b2_ext = arith.extsi %b2 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext acc(%1) : vector<[4]xi32>, vector<[4]xi32>
+
+  return %2 : vector<[4]x[4]xi32>
+}
+
+// -----
+
+/// Defining op of accumulator operand must be an 'arm_sme.outerproduct'.
+
+// CHECK-LABEL: @outerproduct_widening_2way__bad_acc
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__bad_acc(%a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>, %acc : vector<[4]x[4]xf32>) -> vector<[4]x[4]xf32> {
+  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
+  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext acc(%acc) : vector<[4]xf32>, vector<[4]xf32>
+
+  return %0 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__bad_acc
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__bad_acc(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi8>, %b2 : vector<[4]xi8>,
+    %a3 : vector<[4]xi8>, %b3 : vector<[4]xi8>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a2_ext = arith.extsi %a2 : vector<[4]xi8> to vector<[4]xi32>
+  %b2_ext = arith.extsi %b2 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a3_ext = arith.extsi %a3 : vector<[4]xi8> to vector<[4]xi32>
+  %b3_ext = arith.extsi %b3 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext acc(%1) : vector<[4]xi32>, vector<[4]xi32>
+  // break chain
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext : vector<[4]xi32>, vector<[4]xi32>
+
+  return %3 : vector<[4]x[4]xi32>
+}
+
+// -----
+
+/// Combining kinds of outer products must match to be fused.
+
+// CHECK-LABEL: @outerproduct_widening_2way__bad_combining_kind
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__bad_combining_kind(
+    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
+    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
+  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
+  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
+  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
+  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext kind<add> : vector<[4]xf32>, vector<[4]xf32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext kind<sub> acc(%0) : vector<[4]xf32>, vector<[4]xf32>
+
+  return %1 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__bad_combining_kind
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__bad_combining_kind(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi8>, %b2 : vector<[4]xi8>,
+    %a3 : vector<[4]xi8>, %b3 : vector<[4]xi8>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a2_ext = arith.extsi %a2 : vector<[4]xi8> to vector<[4]xi32>
+  %b2_ext = arith.extsi %b2 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a3_ext = arith.extsi %a3 : vector<[4]xi8> to vector<[4]xi32>
+  %b3_ext = arith.extsi %b3 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext kind<sub> : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext kind<add> acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext kind<add> acc(%1) : vector<[4]xi32>, vector<[4]xi32>
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext kind<add> acc(%2) : vector<[4]xi32>, vector<[4]xi32>
+
+  return %3 : vector<[4]x[4]xi32>
+}
+
+// -----
+
+/// If the first outer product has uses other than as the input to another
+/// outer product, it can't be erased after fusion. This is a problem when
+/// it also has an accumulator as this will be used as the root for tile
+/// allocation and since the widening outer product uses the same
+/// accumulator it will get assigned the same tile ID, resulting in 3
+/// outer products and incorrect results. Check this is prevented.
+
+// CHECK-LABEL: @outerproduct_widening_2way__cant_erase
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__cant_erase(
+    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
+    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>) -> vector<[4]x[4]xf32> {
+  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
+  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
+  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
+  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
+
+  %acc = arith.constant dense<1.0> : vector<[4]x[4]xf32>
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext acc(%acc) : vector<[4]xf32>, vector<[4]xf32>
+  "fake.use"(%0) : (vector<[4]x[4]xf32>) -> ()
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xf32>, vector<[4]xf32>
+
+  return %1 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__cant_erase
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__cant_erase(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi8>, %b2 : vector<[4]xi8>,
+    %a3 : vector<[4]xi8>, %b3 : vector<[4]xi8>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a2_ext = arith.extsi %a2 : vector<[4]xi8> to vector<[4]xi32>
+  %b2_ext = arith.extsi %b2 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a3_ext = arith.extsi %a3 : vector<[4]xi8> to vector<[4]xi32>
+  %b3_ext = arith.extsi %b3 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  "fake.use"(%1) : (vector<[4]x[4]xi32>) -> ()
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext acc(%1) : vector<[4]xi32>, vector<[4]xi32>
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext acc(%2) : vector<[4]xi32>, vector<[4]xi32>
+
+  return %3 : vector<[4]x[4]xi32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_2way__unsupported_type_f32f32f64
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__unsupported_type_f32f32f64(
+    %a0 : vector<[2]xf32>, %b0 : vector<[2]xf32>,
+    %a1 : vector<[2]xf32>, %b1 : vector<[2]xf32>) -> vector<[2]x[2]xf64> {
+  %a0_ext = arith.extf %a0 : vector<[2]xf32> to vector<[2]xf64>
+  %b0_ext = arith.extf %b0 : vector<[2]xf32> to vector<[2]xf64>
+  %a1_ext = arith.extf %a1 : vector<[2]xf32> to vector<[2]xf64>
+  %b1_ext = arith.extf %b1 : vector<[2]xf32> to vector<[2]xf64>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[2]xf64>, vector<[2]xf64>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[2]xf64>, vector<[2]xf64>
+
+  return %1 : vector<[2]x[2]xf64>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__unsupported_type_f16f16f64
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__unsupported_type_f16f16f64(
+    %a0 : vector<[2]xf16>, %b0 : vector<[2]xf16>,
+    %a1 : vector<[2]xf16>, %b1 : vector<[2]xf16>,
+    %a2 : vector<[2]xf16>, %b2 : vector<[2]xf16>,
+    %a3 : vector<[2]xf16>, %b3 : vector<[2]xf16>) -> vector<[2]x[2]xf64> {
+  %a0_ext = arith.extf %a0 : vector<[2]xf16> to vector<[2]xf64>
+  %b0_ext = arith.extf %b0 : vector<[2]xf16> to vector<[2]xf64>
+
+  %a1_ext = arith.extf %a1 : vector<[2]xf16> to vector<[2]xf64>
+  %b1_ext = arith.extf %b1 : vector<[2]xf16> to vector<[2]xf64>
+
+  %a2_ext = arith.extf %a2 : vector<[2]xf16> to vector<[2]xf64>
+  %b2_ext = arith.extf %b2 : vector<[2]xf16> to vector<[2]xf64>
+
+  %a3_ext = arith.extf %a3 : vector<[2]xf16> to vector<[2]xf64>
+  %b3_ext = arith.extf %b3 : vector<[2]xf16> to vector<[2]xf64>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[2]xf64>, vector<[2]xf64>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[2]xf64>, vector<[2]xf64>
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext acc(%1) : vector<[2]xf64>, vector<[2]xf64>
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext acc(%2) : vector<[2]xf64>, vector<[2]xf64>
+
+  return %3 : vector<[2]x[2]xf64>
+}
+
+// -----
+
+/// Fusion only occurs if either both outer products are masked, or neither.
+
+// CHECK-LABEL: @outerproduct_widening_2way__bad_masking
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__bad_masking(
+    %a0 : vector<[4]xf16>, %b0 : vector<[4]xf16>,
+    %a1 : vector<[4]xf16>, %b1 : vector<[4]xf16>,
+    %a1_mask : vector<[4]xi1>, %b1_mask : vector<[4]xi1>) -> vector<[4]x[4]xf32> {
+  %a0_ext = arith.extf %a0 : vector<[4]xf16> to vector<[4]xf32>
+  %b0_ext = arith.extf %b0 : vector<[4]xf16> to vector<[4]xf32>
+  %a1_ext = arith.extf %a1 : vector<[4]xf16> to vector<[4]xf32>
+  %b1_ext = arith.extf %b1 : vector<[4]xf16> to vector<[4]xf32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xf32>, vector<[4]xf32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) masks(%a1_mask, %b1_mask) : vector<[4]xf32>, vector<[4]xf32>
+
+  return %1 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__bad_masking
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__bad_masking(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi8>, %b2 : vector<[4]xi8>,
+    %a3 : vector<[4]xi8>, %b3 : vector<[4]xi8>,
+    %a2_mask : vector<[4]xi1>, %b2_mask : vector<[4]xi1>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a2_ext = arith.extsi %a2 : vector<[4]xi8> to vector<[4]xi32>
+  %b2_ext = arith.extsi %b2 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a3_ext = arith.extsi %a3 : vector<[4]xi8> to vector<[4]xi32>
+  %b3_ext = arith.extsi %b3 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  %2 = arm_sme.outerproduct %a2_ext, %b2_ext acc(%1) masks(%a2_mask, %b2_mask) : vector<[4]xi32>, vector<[4]xi32>
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext acc(%2) : vector<[4]xi32>, vector<[4]xi32>
+
+  return %3 : vector<[4]x[4]xi32>
+}
+
+// -----
+
+/// Defining op of outer product must be a supported extension op.
+
+// CHECK-LABEL: @outerproduct_widening_2way__bad_defining_op
+// CHECK-NOT: arm_sme.fmopa_2way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_2way
+func.func @outerproduct_widening_2way__bad_defining_op(
+    %a0 : vector<[4]xf32>, %b0 : vector<[4]xf32>,
+    %a1 : vector<[4]xf32>, %b1 : vector<[4]xf32>) -> vector<[4]x[4]xf32> {
+  %0 = arm_sme.outerproduct %a0, %b0 : vector<[4]xf32>, vector<[4]xf32>
+  %1 = arm_sme.outerproduct %a1, %b1 acc(%0) : vector<[4]xf32>, vector<[4]xf32>
+
+  return %1 : vector<[4]x[4]xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @outerproduct_widening_4way__bad_defining_op
+// CHECK-NOT: arm_sme.fmopa_4way
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK: arm_sme.outerproduct
+// CHECK-NOT: arm_sme.fmopa_4way
+func.func @outerproduct_widening_4way__bad_defining_op(
+    %a0 : vector<[4]xi8>, %b0 : vector<[4]xi8>,
+    %a1 : vector<[4]xi8>, %b1 : vector<[4]xi8>,
+    %a2 : vector<[4]xi32>, %b2 : vector<[4]xi32>,
+    %a3 : vector<[4]xi8>, %b3 : vector<[4]xi8>) -> vector<[4]x[4]xi32> {
+  %a0_ext = arith.extsi %a0 : vector<[4]xi8> to vector<[4]xi32>
+  %b0_ext = arith.extsi %b0 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a1_ext = arith.extsi %a1 : vector<[4]xi8> to vector<[4]xi32>
+  %b1_ext = arith.extsi %b1 : vector<[4]xi8> to vector<[4]xi32>
+
+  %a3_ext = arith.extsi %a3 : vector<[4]xi8> to vector<[4]xi32>
+  %b3_ext = arith.extsi %b3 : vector<[4]xi8> to vector<[4]xi32>
+
+  %0 = arm_sme.outerproduct %a0_ext, %b0_ext : vector<[4]xi32>, vector<[4]xi32>
+  %1 = arm_sme.outerproduct %a1_ext, %b1_ext acc(%0) : vector<[4]xi32>, vector<[4]xi32>
+  %2 = arm_sme.outerproduct %a2, %b2 acc(%1) : vector<[4]xi32>, vector<[4]xi32>
+  %3 = arm_sme.outerproduct %a3_ext, %b3_ext acc(%2) : vector<[4]xi32>, vector<[4]xi32>
+
+  return %3 : vector<[4]x[4]xi32>
 }
