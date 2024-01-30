@@ -8639,6 +8639,21 @@ SDValue TargetLowering::expandCTPOP(SDNode *Node, SelectionDAG &DAG) const {
   if (VT.isVector() && !canExpandVectorCTPOP(*this, VT))
     return SDValue();
 
+  if (VT == MVT::i8 && isOperationLegal(ISD::SRL, MVT::i32) &&
+      isOperationLegal(ISD::MUL, MVT::i32)) {
+    SDValue Mask11 = DAG.getConstant(0x11111111U, dl, MVT::i32);
+    Op = DAG.getZExtOrTrunc(Op, dl, MVT::i32);
+    Op = DAG.getNode(ISD::MUL, dl, MVT::i32, Op,
+                     DAG.getConstant(0x08040201U, dl, MVT::i32));
+    Op = DAG.getNode(ISD::SRL, dl, MVT::i32, Op,
+                     DAG.getShiftAmountConstant(3, MVT::i32, dl));
+    Op = DAG.getNode(ISD::AND, dl, MVT::i32, Op, Mask11);
+    Op = DAG.getNode(ISD::MUL, dl, MVT::i32, Op, Mask11);
+    Op = DAG.getNode(ISD::SRL, dl, MVT::i32, Op,
+                     DAG.getShiftAmountConstant(28, MVT::i32, dl));
+    return DAG.getZExtOrTrunc(Op, dl, MVT::i8);
+  }
+
   // This is the "best" algorithm from
   // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
   SDValue Mask55 =

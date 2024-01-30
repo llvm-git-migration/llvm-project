@@ -10,37 +10,24 @@
 define i8 @cnt8(i8 %x) nounwind readnone {
 ; X86-LABEL: cnt8:
 ; X86:       # %bb.0:
-; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl %ecx, %eax
-; X86-NEXT:    shrb %al
-; X86-NEXT:    andb $85, %al
-; X86-NEXT:    subb %al, %cl
-; X86-NEXT:    movl %ecx, %eax
-; X86-NEXT:    andb $51, %al
-; X86-NEXT:    shrb $2, %cl
-; X86-NEXT:    andb $51, %cl
-; X86-NEXT:    addb %al, %cl
-; X86-NEXT:    movl %ecx, %eax
-; X86-NEXT:    shrb $4, %al
-; X86-NEXT:    addb %cl, %al
-; X86-NEXT:    andb $15, %al
+; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    imull $134480385, %eax, %eax # imm = 0x8040201
+; X86-NEXT:    shrl $3, %eax
+; X86-NEXT:    andl $286331153, %eax # imm = 0x11111111
+; X86-NEXT:    imull $286331153, %eax, %eax # imm = 0x11111111
+; X86-NEXT:    shrl $28, %eax
+; X86-NEXT:    # kill: def $al killed $al killed $eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: cnt8:
 ; X64:       # %bb.0:
-; X64-NEXT:    movl %edi, %eax
-; X64-NEXT:    shrb %al
-; X64-NEXT:    andb $85, %al
-; X64-NEXT:    subb %al, %dil
-; X64-NEXT:    movl %edi, %ecx
-; X64-NEXT:    andb $51, %cl
-; X64-NEXT:    shrb $2, %dil
-; X64-NEXT:    andb $51, %dil
-; X64-NEXT:    addb %dil, %cl
-; X64-NEXT:    movl %ecx, %eax
-; X64-NEXT:    shrb $4, %al
-; X64-NEXT:    addb %cl, %al
-; X64-NEXT:    andb $15, %al
+; X64-NEXT:    movzbl %dil, %eax
+; X64-NEXT:    imull $134480385, %eax, %eax # imm = 0x8040201
+; X64-NEXT:    shrl $3, %eax
+; X64-NEXT:    andl $286331153, %eax # imm = 0x11111111
+; X64-NEXT:    imull $286331153, %eax, %eax # imm = 0x11111111
+; X64-NEXT:    shrl $28, %eax
+; X64-NEXT:    # kill: def $al killed $al killed $eax
 ; X64-NEXT:    retq
 ;
 ; X86-POPCNT-LABEL: cnt8:
@@ -59,16 +46,13 @@ define i8 @cnt8(i8 %x) nounwind readnone {
 ;
 ; X64-NDD-LABEL: cnt8:
 ; X64-NDD:       # %bb.0:
-; X64-NDD-NEXT:    shrb %dil, %al
-; X64-NDD-NEXT:    andb $85, %al
-; X64-NDD-NEXT:    subb %al, %dil, %al
-; X64-NDD-NEXT:    andb $51, %al, %cl
-; X64-NDD-NEXT:    shrb $2, %al
-; X64-NDD-NEXT:    andb $51, %al
-; X64-NDD-NEXT:    addb %cl, %al
-; X64-NDD-NEXT:    shrb $4, %al, %cl
-; X64-NDD-NEXT:    addb %cl, %al
-; X64-NDD-NEXT:    andb $15, %al
+; X64-NDD-NEXT:    movzbl %dil, %eax
+; X64-NDD-NEXT:    imull $134480385, %eax, %eax # imm = 0x8040201
+; X64-NDD-NEXT:    shrl $3, %eax
+; X64-NDD-NEXT:    andl $286331153, %eax # imm = 0x11111111
+; X64-NDD-NEXT:    imull $286331153, %eax, %eax # imm = 0x11111111
+; X64-NDD-NEXT:    shrl $28, %eax
+; X64-NDD-NEXT:    # kill: def $al killed $al killed $eax
 ; X64-NDD-NEXT:    retq
   %cnt = tail call i8 @llvm.ctpop.i8(i8 %x)
   ret i8 %cnt

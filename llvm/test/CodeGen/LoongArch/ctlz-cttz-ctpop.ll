@@ -169,16 +169,16 @@ define i64 @test_not_ctlz_i64(i64 %a) nounwind {
 define i8 @test_ctpop_i8(i8 %a) nounwind {
 ; LA32-LABEL: test_ctpop_i8:
 ; LA32:       # %bb.0:
-; LA32-NEXT:    srli.w $a1, $a0, 1
-; LA32-NEXT:    andi $a1, $a1, 85
-; LA32-NEXT:    sub.w $a0, $a0, $a1
-; LA32-NEXT:    andi $a1, $a0, 51
-; LA32-NEXT:    srli.w $a0, $a0, 2
-; LA32-NEXT:    andi $a0, $a0, 51
-; LA32-NEXT:    add.w $a0, $a1, $a0
-; LA32-NEXT:    srli.w $a1, $a0, 4
-; LA32-NEXT:    add.w $a0, $a0, $a1
-; LA32-NEXT:    andi $a0, $a0, 15
+; LA32-NEXT:    lu12i.w $a1, 32832
+; LA32-NEXT:    ori $a1, $a1, 513
+; LA32-NEXT:    andi $a0, $a0, 255
+; LA32-NEXT:    mul.w $a0, $a0, $a1
+; LA32-NEXT:    srli.w $a0, $a0, 3
+; LA32-NEXT:    lu12i.w $a1, 69905
+; LA32-NEXT:    ori $a1, $a1, 273
+; LA32-NEXT:    and $a0, $a0, $a1
+; LA32-NEXT:    mul.w $a0, $a0, $a1
+; LA32-NEXT:    srli.w $a0, $a0, 28
 ; LA32-NEXT:    ret
 ;
 ; LA64-LABEL: test_ctpop_i8:
