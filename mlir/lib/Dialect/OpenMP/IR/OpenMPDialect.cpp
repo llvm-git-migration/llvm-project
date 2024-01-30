@@ -989,8 +989,9 @@ void ParallelOp::build(OpBuilder &builder, OperationState &state,
   ParallelOp::build(
       builder, state, /*if_expr_var=*/nullptr, /*num_threads_var=*/nullptr,
       /*allocate_vars=*/ValueRange(), /*allocators_vars=*/ValueRange(),
-      /*reduction_vars=*/ValueRange(), /*reductions=*/nullptr,
-      /*proc_bind_val=*/nullptr);
+      /*reduction_vars=*/ValueRange(), /*private_vars=*/ValueRange(),
+      /*reductions=*/nullptr,
+      /*proc_bind_val=*/nullptr, /*private_inits*/ nullptr);
   state.addAttributes(attributes);
 }
 
@@ -1605,6 +1606,84 @@ void PrivateClauseOp::build(OpBuilder &odsBuilder, OperationState &odsState,
   mlir::Block &block = odsState.regions.front()->emplaceBlock();
   block.addArguments({privateVarType},
                      SmallVector<Location>(1, odsState.location));
+}
+
+static ParseResult parsePrivateVarList(
+    OpAsmParser &parser,
+    llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> &privateVarsOperands,
+    llvm::SmallVector<Type, 1> &privateVarsTypes, ArrayAttr &privateInitsAttr) {
+  SymbolRefAttr privatizerSym;
+  OpAsmParser::UnresolvedOperand arg;
+  OpAsmParser::UnresolvedOperand blockArg;
+  Type argType;
+
+  SmallVector<SymbolRefAttr> privateInitsVec;
+
+  auto parsePrivatizers = [&]() -> ParseResult {
+    if (parser.parseAttribute(privatizerSym) || parser.parseOperand(arg) ||
+        parser.parseArrow() || parser.parseOperand(blockArg)) {
+      return failure();
+    }
+
+    privateInitsVec.push_back(privatizerSym);
+    privateVarsOperands.push_back(arg);
+    return success();
+  };
+
+  auto parseTypes = [&]() -> ParseResult {
+    if (parser.parseType(argType))
+      return failure();
+    privateVarsTypes.push_back(argType);
+    return success();
+  };
+
+  if (parser.parseCommaSeparatedList(parsePrivatizers))
+    return failure();
+
+  SmallVector<Attribute> privateInits(privateInitsVec.begin(),
+                                      privateInitsVec.end());
+  privateInitsAttr = ArrayAttr::get(parser.getContext(), privateInits);
+
+  if (parser.parseColon())
+    return failure();
+
+  if (parser.parseCommaSeparatedList(parseTypes))
+    return failure();
+
+  return success();
+}
+
+static void printPrivateVarList(OpAsmPrinter &printer, Operation *op,
+                                OperandRange privateVars,
+                                TypeRange privateVarTypes,
+                                std::optional<ArrayAttr> privateInitsAttr) {
+  auto &region = op->getRegion(0);
+  unsigned argIndex = 0;
+  assert(privateVars.size() == privateVarTypes.size() &&
+         ((privateVars.empty()) ||
+          (*privateInitsAttr &&
+           (privateInitsAttr->size() == privateVars.size()))));
+
+  for (const auto &privateVar : privateVars) {
+    assert(privateInitsAttr);
+    const auto &blockArg = region.front().getArgument(argIndex);
+    const auto &privateInitSym = (*privateInitsAttr)[argIndex];
+    printer << privateInitSym << " " << privateVar << " -> " << blockArg;
+
+    argIndex++;
+    if (argIndex < privateVars.size())
+      printer << ", ";
+  }
+
+  printer << " : ";
+
+  argIndex = 0;
+  for (const auto &mapType : privateVarTypes) {
+    printer << mapType;
+    argIndex++;
+    if (argIndex < privateVarTypes.size())
+      printer << ", ";
+  }
 }
 
 #define GET_ATTRDEF_CLASSES

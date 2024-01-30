@@ -188,8 +188,10 @@ def ParallelOp : OpenMP_Op<"parallel", [
              Variadic<AnyType>:$allocate_vars,
              Variadic<AnyType>:$allocators_vars,
              Variadic<OpenMP_PointerLikeType>:$reduction_vars,
+             Variadic<AnyType>:$private_vars,
              OptionalAttr<SymbolRefArrayAttr>:$reductions,
-             OptionalAttr<ProcBindKindAttr>:$proc_bind_val);
+             OptionalAttr<ProcBindKindAttr>:$proc_bind_val,
+             OptionalAttr<SymbolRefArrayAttr>:$private_inits);
 
   let regions = (region AnyRegion:$region);
 
@@ -213,6 +215,10 @@ def ParallelOp : OpenMP_Op<"parallel", [
                 $allocators_vars, type($allocators_vars)
               ) `)`
           | `proc_bind` `(` custom<ClauseAttr>($proc_bind_val) `)`
+          | `private` `(`
+              custom<PrivateVarList>(
+                $private_vars, type($private_vars), $private_inits
+              ) `)`
     ) $region attr-dict
   }];
   let hasVerifier = 1;

@@ -2572,11 +2572,12 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
       /*resultTypes=*/mlir::TypeRange(), ifClauseOperand,
       numThreadsClauseOperand, allocateOperands, allocatorOperands,
       reductionVars,
+      /*private_vars=*/mlir::ValueRange(),
       reductionDeclSymbols.empty()
           ? nullptr
           : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
                                  reductionDeclSymbols),
-      procBindKindAttr);
+      procBindKindAttr, /*private_inits*/ nullptr);
 }
 
 static mlir::omp::SectionOp
