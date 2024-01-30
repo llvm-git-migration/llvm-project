@@ -2040,6 +2040,40 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       Changed = true;
     }
 
+    // Combine:
+    // (ptrmask (getelementptr i8, ptr p, imm i), imm mask)
+    //   -> (ptrmask (getelementptr i8, ptr p, imm (i & mask)), imm mask)
+    // where only the low bits known to be zero in the pointer are changed
+    uint64_t GEPIndex;
+    uint64_t PtrMaskImmediate;
+    if (match(&CI, m_Intrinsic<Intrinsic::ptrmask>(
+                       m_GEP(m_Value(InnerPtr), m_ConstantInt(GEPIndex)),
+                       m_ConstantInt(PtrMaskImmediate)))) {
+      auto *GEP = cast<GetElementPtrInst>(II->getArgOperand(0));
+
+      if (GEP->getSourceElementType() == Type::getInt8Ty(CI.getContext())) {
+        unsigned Log2Align = llvm::Log2(InnerPtr->getPointerAlignment(DL));
+        uint64_t PointerAlignBits = (uint64_t(1) << Log2Align) - 1;
+
+        uint64_t HighBitsGEPIndex = GEPIndex & ~PointerAlignBits;
+        uint64_t MaskedLowBitsGEPIndex =
+            GEPIndex & PointerAlignBits & PtrMaskImmediate;
+
+        uint64_t MaskedGEPIndex = HighBitsGEPIndex | MaskedLowBitsGEPIndex;
+
+        if (MaskedGEPIndex != GEPIndex) {
+          Type *I64 = Type::getInt64Ty(CI.getContext());
+          auto MaskedGEP =
+              Builder.CreateGEP(GEP->getSourceElementType(), InnerPtr,
+                                ConstantInt::get(I64, MaskedGEPIndex),
+                                GEP->getName(), GEP->isInBounds());
+
+          replaceOperand(CI, 0, MaskedGEP);
+          Changed = true;
+        }
+      }
+    }
+
     // See if we can deduce non-null.
     if (!CI.hasRetAttr(Attribute::NonNull) &&
         (Known.isNonZero() ||
