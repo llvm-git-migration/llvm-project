@@ -3258,6 +3258,12 @@ public:
     return false;
   }
 
+  /// Return true if CTPOP/CTTZ/CTLZ/PARITY expansions should try to use integer
+  /// multiples should the input value be suitable.
+  virtual bool shouldAllowMultiplyInBitCounts(EVT CntVT, EVT MulVT) const {
+    return false;
+  }
+
   // Should we fold (select_cc seteq (and x, y), 0, 0, A) -> (and (sra (shl x))
   // A) where y has a single bit set?
   virtual bool shouldFoldSelectWithSingleBitTest(EVT VT,
