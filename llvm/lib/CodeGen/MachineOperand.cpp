@@ -1240,7 +1240,8 @@ void MachineMemOperand::print(raw_ostream &OS, ModuleSlotTracker &MST,
        << "unknown-address";
   }
   MachineOperand::printOperandOffset(OS, getOffset());
-  if (getSize() > 0 && getAlign() != getSize())
+  unsigned MinSize = getType().getSizeInBytes().getKnownMinValue();
+  if (MinSize > 0 && getAlign() != MinSize)
     OS << ", align " << getAlign().value();
   if (getAlign() != getBaseAlign())
     OS << ", basealign " << getBaseAlign().value();
