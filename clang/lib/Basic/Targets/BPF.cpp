@@ -60,6 +60,8 @@ void BPFTargetInfo::getTargetDefines(const LangOptions &Opts,
     Builder.defineMacro("__BPF_FEATURE_GOTOL");
     Builder.defineMacro("__BPF_FEATURE_ST");
   }
+
+  Builder.defineMacro("__BPF_FEATURE_ARENA_CAST");
 }
 
 static constexpr llvm::StringLiteral ValidCPUNames[] = {"generic", "v1", "v2",

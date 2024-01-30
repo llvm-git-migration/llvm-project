@@ -35,3 +35,10 @@ def PreserveEnumValue : TargetBuiltin {
   let Attributes = [CustomTypeChecking];
   let Prototype = "long int(...)";
 }
+
+// Generating cast_user / cast_kern BPF instructions
+def ArenaCast : TargetBuiltin {
+  let Spellings = ["__builtin_bpf_arena_cast"];
+  let Attributes = [CustomTypeChecking, Const, Pure];
+  let Prototype = "void *(void *, int)";
+}

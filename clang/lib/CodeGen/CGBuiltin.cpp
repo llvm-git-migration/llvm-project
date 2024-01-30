@@ -13207,7 +13207,8 @@ Value *CodeGenFunction::EmitBPFBuiltinExpr(unsigned BuiltinID,
   assert((BuiltinID == BPF::BI__builtin_preserve_field_info ||
           BuiltinID == BPF::BI__builtin_btf_type_id ||
           BuiltinID == BPF::BI__builtin_preserve_type_info ||
-          BuiltinID == BPF::BI__builtin_preserve_enum_value) &&
+          BuiltinID == BPF::BI__builtin_preserve_enum_value ||
+          BuiltinID == BPF::BI__builtin_bpf_arena_cast) &&
          "unexpected BPF builtin");
 
   // A sequence number, injected into IR builtin functions, to
@@ -13305,6 +13306,15 @@ Value *CodeGenFunction::EmitBPFBuiltinExpr(unsigned BuiltinID,
     CallInst *Fn =
         Builder.CreateCall(IntrinsicFn, {SeqNumVal, EnumStrVal, FlagValue});
     Fn->setMetadata(LLVMContext::MD_preserve_access_index, DbgInfo);
+    return Fn;
+  }
+  case BPF::BI__builtin_bpf_arena_cast: {
+    Value *Ptr = EmitScalarExpr(E->getArg(0));
+    Value *Direction = EmitScalarExpr(E->getArg(1));
+    llvm::Function *IntrinsicFn = llvm::Intrinsic::getDeclaration(
+        &CGM.getModule(), llvm::Intrinsic::bpf_arena_cast,
+        {Ptr->getType(), Ptr->getType()});
+    CallInst *Fn = Builder.CreateCall(IntrinsicFn, {Ptr, Direction});
     return Fn;
   }
   }

@@ -102,3 +102,21 @@ unsigned invalid17(void) {
 unsigned invalid18(struct s *arg) {
   return __builtin_preserve_type_info(arg->a + 2, 0); // expected-error {{__builtin_preserve_type_info argument 1 invalid}}
 }
+
+#define __as __attribute__((address_space(7)))
+
+void __as *valid16(void __as *ptr) {
+  return __builtin_bpf_arena_cast(ptr, 1);
+}
+
+void __as *invalid19(void __as *ptr, int i) {
+  return __builtin_bpf_arena_cast(ptr, i); // expected-error {{__builtin_bpf_arena_cast argument 2 not a constant}}
+}
+
+void __as *invalid20(int i) {
+  return __builtin_bpf_arena_cast(i, 1); // expected-error {{__builtin_bpf_arena_cast argument 1 should be a pointer}}
+}
+
+void __as *invalid21(void __as *ptr) {
+  return __builtin_bpf_arena_cast(ptr, 3); // expected-error {{__builtin_bpf_arena_cast argument 2 should be equal to 1 or 2}}
+}
