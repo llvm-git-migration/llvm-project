@@ -7,8 +7,8 @@
 //
 // RUN: %clang -std=c++20 %t/mod.cppm --precompile \
 // RUN:     -o %t/mod.pcm
-// RUN: %clang %t/mod.pcm -c -o %t/mod.o
-// RUN: %clang -shared %t/mod.o -o %t/libmod.so
+// RUN: %clang -fPIC %t/mod.pcm -c -o %t/mod.o
+// RUN: %clang -fPIC -shared %t/mod.o -o %t/libmod.so
 //
 // RUN: cat %t/import.cpp | env LD_LIBRARY_PATH=%t:$LD_LIBRARY_PATH \
 // RUN:     clang-repl -Xcc=-std=c++20 -Xcc=-fmodule-file=M=%t/mod.pcm \
