@@ -498,18 +498,16 @@ public:
   /// Add the symbol binding to the inner-most level of the symbol map and
   /// return true if it is not already present. Otherwise, return false.
   bool bindIfNewSymbol(Fortran::lower::SymbolRef sym,
-                       const fir::ExtendedValue &exval,
-                       Fortran::lower::SymMap *symMap = nullptr) {
-    if (shallowLookupSymbol(sym, symMap))
+                       const fir::ExtendedValue &exval) {
+    if (shallowLookupSymbol(sym))
       return false;
-    bindSymbol(sym, exval, symMap);
+    bindSymbol(sym, exval);
     return true;
   }
 
   void bindSymbol(Fortran::lower::SymbolRef sym,
-                  const fir::ExtendedValue &exval,
-                  Fortran::lower::SymMap *symMap = nullptr) override final {
-    addSymbol(sym, exval, /*forced=*/true, symMap);
+                  const fir::ExtendedValue &exval) override final {
+    addSymbol(sym, exval, /*forced=*/true);
   }
 
   void
@@ -612,15 +610,14 @@ public:
   }
 
   bool createHostAssociateVarClone(
-      const Fortran::semantics::Symbol &sym,
-      Fortran::lower::SymMap *symMap = nullptr) override final {
+      const Fortran::semantics::Symbol &sym) override final {
     mlir::Location loc = genLocation(sym.name());
     mlir::Type symType = genType(sym);
     const auto *details = sym.detailsIf<Fortran::semantics::HostAssocDetails>();
     assert(details && "No host-association found");
     const Fortran::semantics::Symbol &hsym = details->symbol();
     mlir::Type hSymType = genType(hsym);
-    Fortran::lower::SymbolBox hsb = lookupSymbol(hsym, symMap);
+    Fortran::lower::SymbolBox hsb = lookupSymbol(hsym);
 
     auto allocate = [&](llvm::ArrayRef<mlir::Value> shape,
                         llvm::ArrayRef<mlir::Value> typeParams) -> mlir::Value {
@@ -723,7 +720,7 @@ public:
           // Do nothing
         });
 
-    return bindIfNewSymbol(sym, exv, symMap);
+    return bindIfNewSymbol(sym, exv);
   }
 
   void createHostAssociateVarCloneDealloc(
@@ -748,17 +745,16 @@ public:
 
   void copyHostAssociateVar(
       const Fortran::semantics::Symbol &sym,
-      mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr,
-      Fortran::lower::SymMap *symMap = nullptr) override final {
+      mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr) override final {
     // 1) Fetch the original copy of the variable.
     assert(sym.has<Fortran::semantics::HostAssocDetails>() &&
            "No host-association found");
     const Fortran::semantics::Symbol &hsym = sym.GetUltimate();
-    Fortran::lower::SymbolBox hsb = lookupOneLevelUpSymbol(hsym, symMap);
+    Fortran::lower::SymbolBox hsb = lookupOneLevelUpSymbol(hsym);
     assert(hsb && "Host symbol box not found");
 
     // 2) Fetch the copied one that will mask the original.
-    Fortran::lower::SymbolBox sb = shallowLookupSymbol(sym, symMap);
+    Fortran::lower::SymbolBox sb = shallowLookupSymbol(sym);
     assert(sb && "Host-associated symbol box not found");
     assert(hsb.getAddr() != sb.getAddr() &&
            "Host and associated symbol boxes are the same");
@@ -998,6 +994,8 @@ public:
     return name;
   }
 
+  Fortran::lower::SymMap *getLocalSymbols() override { return &localSymbols; }
+
 private:
   FirConverter() = delete;
   FirConverter(const FirConverter &) = delete;
@@ -1065,10 +1063,8 @@ private:
 
   /// Find the symbol in the inner-most level of the local map or return null.
   Fortran::lower::SymbolBox
-  shallowLookupSymbol(const Fortran::semantics::Symbol &sym,
-                      Fortran::lower::SymMap *symMap = nullptr) {
-    auto &map = (symMap == nullptr ? localSymbols : *symMap);
-    if (Fortran::lower::SymbolBox v = map.shallowLookupSymbol(sym))
+  shallowLookupSymbol(const Fortran::semantics::Symbol &sym) {
+    if (Fortran::lower::SymbolBox v = localSymbols.shallowLookupSymbol(sym))
       return v;
     return {};
   }
@@ -1076,10 +1072,8 @@ private:
   /// Find the symbol in one level up of symbol map such as for host-association
   /// in OpenMP code or return null.
   Fortran::lower::SymbolBox
-  lookupOneLevelUpSymbol(const Fortran::semantics::Symbol &sym,
-                         Fortran::lower::SymMap *symMap = nullptr) override {
-    auto &map = (symMap == nullptr ? localSymbols : *symMap);
-    if (Fortran::lower::SymbolBox v = map.lookupOneLevelUpSymbol(sym))
+  lookupOneLevelUpSymbol(const Fortran::semantics::Symbol &sym) override {
+    if (Fortran::lower::SymbolBox v = localSymbols.lookupOneLevelUpSymbol(sym))
       return v;
     return {};
   }
@@ -1088,16 +1082,15 @@ private:
   /// already in the map and \p forced is `false`, the map is not updated.
   /// Instead the value `false` is returned.
   bool addSymbol(const Fortran::semantics::SymbolRef sym,
-                 fir::ExtendedValue val, bool forced = false,
-                 Fortran::lower::SymMap *symMap = nullptr) {
-    auto &map = (symMap == nullptr ? localSymbols : *symMap);
-    if (!forced && lookupSymbol(sym, &map))
+                 fir::ExtendedValue val, bool forced = false) {
+    if (!forced && lookupSymbol(sym))
       return false;
     if (lowerToHighLevelFIR()) {
-      Fortran::lower::genDeclareSymbol(
-          *this, map, sym, val, fir::FortranVariableFlagsEnum::None, forced);
+      Fortran::lower::genDeclareSymbol(*this, localSymbols, sym, val,
+                                       fir::FortranVariableFlagsEnum::None,
+                                       forced);
     } else {
-      map.addSymbol(sym, val, forced);
+      localSymbols.addSymbol(sym, val, forced);
     }
     return true;
   }

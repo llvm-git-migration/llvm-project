@@ -174,10 +174,8 @@ class DataSharingProcessor {
   void defaultPrivatize();
   void copyLastPrivatize(mlir::Operation *op);
   void insertLastPrivateCompare(mlir::Operation *op);
-  void cloneSymbol(const Fortran::semantics::Symbol *sym,
-                   Fortran::lower::SymMap *symMap = nullptr);
-  void copyFirstPrivateSymbol(const Fortran::semantics::Symbol *sym,
-                              Fortran::lower::SymMap *symMap);
+  void cloneSymbol(const Fortran::semantics::Symbol *sym);
+  void copyFirstPrivateSymbol(const Fortran::semantics::Symbol *sym);
   void copyLastPrivateSymbol(const Fortran::semantics::Symbol *sym,
                              mlir::OpBuilder::InsertPoint *lastPrivIP);
   void insertDeallocs();
@@ -244,22 +242,20 @@ void DataSharingProcessor::insertDeallocs() {
     }
 }
 
-void DataSharingProcessor::cloneSymbol(const Fortran::semantics::Symbol *sym,
-                                       Fortran::lower::SymMap *symMap) {
+void DataSharingProcessor::cloneSymbol(const Fortran::semantics::Symbol *sym) {
   // Privatization for symbols which are pre-determined (like loop index
   // variables) happen separately, for everything else privatize here.
   if (sym->test(Fortran::semantics::Symbol::Flag::OmpPreDetermined))
     return;
-  bool success = converter.createHostAssociateVarClone(*sym, symMap);
+  bool success = converter.createHostAssociateVarClone(*sym);
   (void)success;
   assert(success && "Privatization failed due to existing binding");
 }
 
 void DataSharingProcessor::copyFirstPrivateSymbol(
-    const Fortran::semantics::Symbol *sym,
-    Fortran::lower::SymMap *symMap = nullptr) {
+    const Fortran::semantics::Symbol *sym) {
   if (sym->test(Fortran::semantics::Symbol::Flag::OmpFirstPrivate)) {
-    converter.copyHostAssociateVar(*sym, nullptr, symMap);
+    converter.copyHostAssociateVar(*sym, nullptr);
   }
 }
 
@@ -525,18 +521,20 @@ void DataSharingProcessor::privatize(
             sym->name().ToString());
         firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
 
-        Fortran::semantics::Symbol cp = *sym;
-        Fortran::lower::SymMap privatizerSymbolMap;
-        privatizerSymbolMap.addSymbol(cp, privatizerOp.getArgument(0));
-        privatizerSymbolMap.pushScope();
+        converter.getLocalSymbols()->pushScope();
+        converter.getLocalSymbols()->addSymbol(*sym,
+                                               privatizerOp.getArgument(0));
+        converter.getLocalSymbols()->pushScope();
 
-        cloneSymbol(&cp, &privatizerSymbolMap);
-        copyFirstPrivateSymbol(&cp, &privatizerSymbolMap);
+        cloneSymbol(sym);
+        copyFirstPrivateSymbol(sym);
 
         firOpBuilder.create<mlir::omp::YieldOp>(
             hsb.getAddr().getLoc(),
-            privatizerSymbolMap.shallowLookupSymbol(cp).getAddr());
+            converter.getLocalSymbols()->shallowLookupSymbol(*sym).getAddr());
 
+        converter.getLocalSymbols()->popScope();
+        converter.getLocalSymbols()->popScope();
         firOpBuilder.restoreInsertionPoint(ip);
       }
 
