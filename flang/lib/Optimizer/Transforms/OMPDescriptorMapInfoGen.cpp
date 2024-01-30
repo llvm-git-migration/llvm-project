@@ -50,7 +50,7 @@ class OMPDescriptorMapInfoGenPass
     // If we enter this function, but the mapped type itself is not the
     // descriptor, then it's likely the address of the descriptor so we
     // must retrieve the descriptor SSA.
-    if (!fir::isTypeWithDescriptor(op.getVarType())) {
+    if (!fir::isTypeWithDescriptor(op.getVarPtrType().value())) {
       if (auto addrOp = mlir::dyn_cast_if_present<fir::BoxAddrOp>(
               op.getVarPtr().getDefiningOp())) {
         descriptor = addrOp.getVal();
@@ -78,11 +78,12 @@ class OMPDescriptorMapInfoGenPass
 
     // Member of the descriptor pointing at the allocated data
     mlir::Value baseAddr = builder.create<mlir::omp::MapInfoOp>(
-        loc, baseAddrAddr.getType(), baseAddrAddr,
-        llvm::cast<mlir::omp::PointerLikeType>(
-            fir::unwrapRefType(baseAddrAddr.getType()))
-            .getElementType(),
-        mlir::Value{}, mlir::SmallVector<mlir::Value>{}, op.getBounds(),
+        loc, baseAddrAddr.getType(), mlir::Value{}, mlir::TypeAttr{},
+        baseAddrAddr,
+        mlir::TypeAttr::get(llvm::cast<mlir::omp::PointerLikeType>(
+                                fir::unwrapRefType(baseAddrAddr.getType()))
+                                .getElementType()),
+        mlir::SmallVector<mlir::Value>{}, op.getBounds(),
         builder.getIntegerAttr(builder.getIntegerType(64, false),
                                op.getMapType().value()),
         builder.getAttr<mlir::omp::VariableCaptureKindAttr>(
@@ -117,7 +118,8 @@ class OMPDescriptorMapInfoGenPass
 
     mlir::Value newDescParentMapOp = builder.create<mlir::omp::MapInfoOp>(
         op->getLoc(), op.getResult().getType(), descriptor,
-        fir::unwrapRefType(descriptor.getType()), mlir::Value{},
+        mlir::TypeAttr::get(fir::unwrapRefType(descriptor.getType())),
+        mlir::Value{}, mlir::TypeAttr{},
         mlir::SmallVector<mlir::Value>{baseAddr},
         mlir::SmallVector<mlir::Value>{},
         builder.getIntegerAttr(builder.getIntegerType(64, false),
@@ -138,23 +140,25 @@ class OMPDescriptorMapInfoGenPass
     fir::FirOpBuilder builder{module, std::move(kindMap)};
 
     func->walk([&](mlir::omp::MapInfoOp op) {
-      if (fir::isTypeWithDescriptor(op.getVarType()) ||
-          mlir::isa_and_present<fir::BoxAddrOp>(
-              op.getVarPtr().getDefiningOp())) {
-        builder.setInsertionPoint(op);
-        // TODO: Currently only supports a single user for the MapInfoOp, this
-        // is fine for the moment as the Fortran Frontend will generate a
-        // new MapInfoOp per Target operation for the moment. However, when/if
-        // we optimise/cleanup the IR, it likely isn't too difficult to
-        // extend this function, it would require some modification to create a
-        // single new MapInfoOp per new MapInfoOp generated and share it across
-        // all users appropriately, making sure to only add a single member link
-        // per new generation for the original originating descriptor MapInfoOp.
-        assert(llvm::hasSingleElement(op->getUsers()) &&
-               "OMPDescriptorMapInfoGen currently only supports single users "
-               "of a MapInfoOp");
-        genDescriptorMemberMaps(op, builder, *op->getUsers().begin());
-      }
+      if (op.getVarPtr() && op.getVarPtrType().has_value())
+        if (fir::isTypeWithDescriptor(op.getVarPtrType().value()) ||
+            mlir::isa_and_present<fir::BoxAddrOp>(
+                op.getVarPtr().getDefiningOp())) {
+          builder.setInsertionPoint(op);
+          // TODO: Currently only supports a single user for the MapInfoOp, this
+          // is fine for the moment as the Fortran Frontend will generate a
+          // new MapInfoOp per Target operation for the moment. However, when/if
+          // we optimise/cleanup the IR, it likely isn't too difficult to
+          // extend this function, it would require some modification to create
+          // a single new MapInfoOp per new MapInfoOp generated and share it
+          // across all users appropriately, making sure to only add a single
+          // member link per new generation for the original originating
+          // descriptor MapInfoOp.
+          assert(llvm::hasSingleElement(op->getUsers()) &&
+                 "OMPDescriptorMapInfoGen currently only supports single users "
+                 "of a MapInfoOp");
+          genDescriptorMemberMaps(op, builder, *op->getUsers().begin());
+        }
     });
   }
 };
