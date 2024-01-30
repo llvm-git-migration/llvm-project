@@ -1174,6 +1174,10 @@ namespace llvm {
 
     bool shouldSplatInsEltVarIndex(EVT VT) const override;
 
+    bool shouldAllowMultiplyInBitCounts(EVT CntVT, EVT MulVT) const override {
+      return CntVT.isScalarInteger() && isOperationLegal(ISD::MUL, MulVT);
+    }
+
     bool shouldConvertFpToSat(unsigned Op, EVT FPVT, EVT VT) const override {
       // Converting to sat variants holds little benefit on X86 as we will just
       // need to saturate the value back using fp arithmatic.
