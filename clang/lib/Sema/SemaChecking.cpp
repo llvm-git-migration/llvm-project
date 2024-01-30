@@ -3834,7 +3834,8 @@ bool Sema::CheckBPFBuiltinFunctionCall(unsigned BuiltinID,
   assert((BuiltinID == BPF::BI__builtin_preserve_field_info ||
           BuiltinID == BPF::BI__builtin_btf_type_id ||
           BuiltinID == BPF::BI__builtin_preserve_type_info ||
-          BuiltinID == BPF::BI__builtin_preserve_enum_value) &&
+          BuiltinID == BPF::BI__builtin_preserve_enum_value ||
+          BuiltinID == BPF::BI__builtin_bpf_arena_cast) &&
          "unexpected BPF builtin");
 
   if (checkArgCount(*this, TheCall, 2))
@@ -3851,8 +3852,12 @@ bool Sema::CheckBPFBuiltinFunctionCall(unsigned BuiltinID,
       kind = diag::err_btf_type_id_not_const;
     else if (BuiltinID == BPF::BI__builtin_preserve_type_info)
       kind = diag::err_preserve_type_info_not_const;
-    else
+    else if (BuiltinID == BPF::BI__builtin_preserve_enum_value)
       kind = diag::err_preserve_enum_value_not_const;
+    else if (BuiltinID == BPF::BI__builtin_bpf_arena_cast)
+      kind = diag::err_bpf_arena_cast_not_const;
+    else
+      llvm_unreachable("unexpected BuiltinID");
     Diag(Arg->getBeginLoc(), kind) << 2 << Arg->getSourceRange();
     return true;
   }
@@ -3860,7 +3865,7 @@ bool Sema::CheckBPFBuiltinFunctionCall(unsigned BuiltinID,
   // The first argument
   Arg = TheCall->getArg(0);
   bool InvalidArg = false;
-  bool ReturnUnsignedInt = true;
+  QualType ReturnType = Context.UnsignedIntTy;
   if (BuiltinID == BPF::BI__builtin_preserve_field_info) {
     if (!isValidBPFPreserveFieldInfoArg(Arg)) {
       InvalidArg = true;
@@ -3876,9 +3881,15 @@ bool Sema::CheckBPFBuiltinFunctionCall(unsigned BuiltinID,
       InvalidArg = true;
       kind = diag::err_preserve_enum_value_invalid;
     }
-    ReturnUnsignedInt = false;
+    ReturnType = Context.UnsignedLongTy;
   } else if (BuiltinID == BPF::BI__builtin_btf_type_id) {
-    ReturnUnsignedInt = false;
+    ReturnType = Context.UnsignedLongTy;
+  } else if (BuiltinID == BPF::BI__builtin_bpf_arena_cast) {
+    if (!Arg->getType()->isPointerType()) {
+      InvalidArg = true;
+      kind = diag::err_bpf_arena_cast_not_pointer;
+    }
+    ReturnType = Arg->getType();
   }
 
   if (InvalidArg) {
@@ -3886,10 +3897,7 @@ bool Sema::CheckBPFBuiltinFunctionCall(unsigned BuiltinID,
     return true;
   }
 
-  if (ReturnUnsignedInt)
-    TheCall->setType(Context.UnsignedIntTy);
-  else
-    TheCall->setType(Context.UnsignedLongTy);
+  TheCall->setType(ReturnType);
   return false;
 }
 

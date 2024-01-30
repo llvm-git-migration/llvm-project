@@ -12004,6 +12004,10 @@ def err_preserve_enum_value_invalid : Error<
   "__builtin_preserve_enum_value argument %0 invalid">;
 def err_preserve_enum_value_not_const: Error<
   "__builtin_preserve_enum_value argument %0 not a constant">;
+def err_bpf_arena_cast_not_const: Error<
+  "__builtin_bpf_arena_cast argument %0 not a constant">;
+def err_bpf_arena_cast_not_pointer: Error<
+  "__builtin_bpf_arena_cast argument %0 should be a pointer">;
 
 def err_bit_cast_non_trivially_copyable : Error<
   "__builtin_bit_cast %select{source|destination}0 type must be trivially copyable">;
