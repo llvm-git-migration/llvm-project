@@ -111,6 +111,17 @@ void writeAPIFromIndex(APIIndexer &G,
     return AttributeStyle::Declspec;
   };
 
+  auto GetNamespace = [](llvm::Record *Instance) {
+    auto Namespace = Instance->getValueAsString("Namespace");
+    // Empty namespace is likely to be most standard-compliant.
+    if (Namespace == "")
+      return AttributeNamespace::None;
+    // Dispatch clang version before gnu version.
+    if (Namespace == "clang")
+      return AttributeNamespace::Clang;
+    return AttributeNamespace::Gnu;
+  };
+
   for (auto &[Macro, Attr] : MacroAttr) {
     auto Instances = Attr->getValueAsListOfDefs("Instances");
     llvm::SmallVector<std::pair<AttributeStyle, llvm::Record *>> Styles;
@@ -122,14 +133,26 @@ void writeAPIFromIndex(APIIndexer &G,
                      return {Style, Instance};
                    });
     // Effectively sort on the first field
-    std::sort(Styles.begin(), Styles.end());
+    std::sort(Styles.begin(), Styles.end(), [&](auto &a, auto &b) {
+      if (a.first == AttributeStyle::Cxx11 && b.first == AttributeStyle::Cxx11)
+        return GetNamespace(a.second) < GetNamespace(b.second);
+      return a.first < b.first;
+    });
     for (auto &[Style, Instance] : Styles) {
       if (Style == AttributeStyle::Cxx11) {
-        OS << "#if !defined(" << Macro << ") && defined(__cplusplus)\n";
+        OS << "#if !defined(" << Macro << ") && defined(__cplusplus)";
+        auto Namespace = GetNamespace(Instance);
+        if (Namespace == AttributeNamespace::Clang)
+          OS << " && defined(__clang__)\n";
+        else if (Namespace == AttributeNamespace::Gnu)
+          OS << " && defined(__GNUC__)\n";
+        else
+          OS << '\n';
         OS << "#define " << Macro << " [[";
-        auto Namespace = Instance->getValueAsString("Namespace");
-        if (Namespace != "")
-          OS << Namespace << "::";
+        if (Namespace == AttributeNamespace::Clang)
+          OS << "clang::";
+        else if (Namespace == AttributeNamespace::Gnu)
+          OS << "gnu::";
         OS << Instance->getValueAsString("Attr") << "]]\n";
         OS << "#endif\n";
       }
