@@ -315,7 +315,7 @@ template<class T, class charT> requires is-vector-bool-reference<T> // Since C++
 #include <__algorithm/remove_if.h>
 #include <__algorithm/rotate.h>
 #include <__algorithm/unwrap_iter.h>
-#include <__assert> // all public C++ headers provide the assertion handler
+#include <__assert>
 #include <__availability>
 #include <__bit_reference>
 #include <__concepts/same_as.h>
@@ -831,8 +831,8 @@ private:
   // For more details, see the "Using libc++" documentation page or
   // the documentation for __sanitizer_annotate_contiguous_container.
 
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __annotate_contiguous_container(
-      const void* __old_mid, const void* __new_mid) const {
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void
+  __annotate_contiguous_container(const void* __old_mid, const void* __new_mid) const {
     (void)__old_mid;
     (void)__new_mid;
 #ifndef _LIBCPP_HAS_NO_ASAN

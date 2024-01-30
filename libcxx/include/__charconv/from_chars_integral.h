@@ -10,6 +10,7 @@
 #ifndef _LIBCPP___CHARCONV_FROM_CHARS_INTEGRAL_H
 #define _LIBCPP___CHARCONV_FROM_CHARS_INTEGRAL_H
 
+#include <__assert>
 #include <__algorithm/copy_n.h>
 #include <__charconv/from_chars_result.h>
 #include <__charconv/traits.h>

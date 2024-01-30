@@ -10,6 +10,7 @@
 #ifndef _LIBCPP___CHARCONV_TO_CHARS_INTEGRAL_H
 #define _LIBCPP___CHARCONV_TO_CHARS_INTEGRAL_H
 
+#include <__assert>
 #include <__algorithm/copy_n.h>
 #include <__bit/countl.h>
 #include <__charconv/tables.h>
