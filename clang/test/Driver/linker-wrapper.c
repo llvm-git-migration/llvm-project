@@ -181,5 +181,6 @@ __attribute__((visibility("protected"), used)) int x;
 // RUN:   --linker-path=/usr/bin/ld.lld -- -r --whole-archive %t.a --no-whole-archive \
 // RUN:   %t.o -o a.out 2>&1 | FileCheck %s --check-prefix=RELOCATABLE-LINK
 
-// RELOCATABLE-LINK-NOT: clang{{.*}} -o {{.*}}.img --target=x86_64-unknown-linux-gnu
+// RELOCATABLE-LINK: clang{{.*}} -o {{.*}}.img --target=x86_64-unknown-linux-gnu
 // RELOCATABLE-LINK: /usr/bin/ld.lld{{.*}}-r
+// RELOCATABLE-LINK: llvm-objcopy{{.*}}a.out --remove-section .llvm.offloading
