@@ -1509,7 +1509,6 @@ def produce_version_header():
 
 */
 
-#include <__assert> // all public C++ headers provide the assertion handler
 #include <__availability>
 #include <__config>
 

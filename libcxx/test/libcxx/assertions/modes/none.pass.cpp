@@ -6,11 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-// This test checks that if no hardening mode is defined (i.e., in the unchecked mode), by default assertions aren't
-// triggered.
+// This test checks that if no hardening mode is defined (i.e., in the unchecked mode),
+// by default assertions aren't triggered.
 
 // REQUIRES: libcpp-hardening-mode=none
 
+#include <__assert>
 #include <cassert>
 
 bool executed_condition = false;
