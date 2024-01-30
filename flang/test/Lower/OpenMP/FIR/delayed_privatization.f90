@@ -1,8 +1,8 @@
 subroutine private_clause_allocatable()
         integer :: xxx
-        integer :: yyy
 
-!$OMP PARALLEL FIRSTPRIVATE(xxx, yyy)
+!$OMP PARALLEL FIRSTPRIVATE(xxx)
+    xxx = xxx + 2
 !$OMP END PARALLEL
 
 end subroutine

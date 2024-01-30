@@ -1604,8 +1604,7 @@ void PrivateClauseOp::build(OpBuilder &odsBuilder, OperationState &odsState,
   build(odsBuilder, odsState, privatizerName, initializerType);
 
   mlir::Block &block = odsState.regions.front()->emplaceBlock();
-  block.addArguments({privateVarType},
-                     SmallVector<Location>(1, odsState.location));
+  block.addArgument(privateVarType, odsState.location);
 }
 
 static ParseResult parsePrivateVarList(

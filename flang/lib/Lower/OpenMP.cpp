@@ -493,6 +493,7 @@ void DataSharingProcessor::collectDefaultSymbols() {
 
 void DataSharingProcessor::privatize(
     llvm::SetVector<mlir::omp::PrivateClauseOp> *privateInitializers) {
+  auto *op = firOpBuilder.getInsertionBlock()->getParentOp();
 
   for (const Fortran::semantics::Symbol *sym : privatizedSymbols) {
 
@@ -516,9 +517,10 @@ void DataSharingProcessor::privatize(
         Fortran::lower::SymbolBox hsb = converter.lookupOneLevelUpSymbol(*sym);
         assert(hsb && "Host symbol box not found");
 
+        auto symType = hsb.getAddr().getType();
+        auto symLoc = hsb.getAddr().getLoc();
         auto privatizerOp = firOpBuilder.create<mlir::omp::PrivateClauseOp>(
-            hsb.getAddr().getLoc(), hsb.getAddr().getType(),
-            sym->name().ToString());
+            symLoc, symType, sym->name().ToString());
         firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
 
         converter.getLocalSymbols()->pushScope();
@@ -536,13 +538,18 @@ void DataSharingProcessor::privatize(
         converter.getLocalSymbols()->popScope();
         converter.getLocalSymbols()->popScope();
         firOpBuilder.restoreInsertionPoint(ip);
-      }
 
-      // TODO: This will eventually be an else to the `if` above it. For now, I
-      // emit both the outlined privatizer AND directly emitted cloning and
-      // copying ops while I am testing.
-      cloneSymbol(sym);
-      copyFirstPrivateSymbol(sym);
+        privateInitializers->insert(privatizerOp);
+        auto blockArg = op->getRegion(0).front().addArgument(symType, symLoc);
+        converter.bindSymbol(*sym, blockArg);
+      } else {
+
+        // TODO: This will eventually be an else to the `if` above it. For now,
+        // I emit both the outlined privatizer AND directly emitted cloning and
+        // copying ops while I am testing.
+        cloneSymbol(sym);
+        copyFirstPrivateSymbol(sym);
+      }
     }
   }
 }
@@ -2376,8 +2383,10 @@ static void createBodyOfOp(
     firOpBuilder.setInsertionPointToEnd(&op.getRegion().back());
     auto *temp = Fortran::lower::genOpenMPTerminator(firOpBuilder,
                                                      op.getOperation(), loc);
+
     firOpBuilder.setInsertionPointAfter(marker);
     genNestedEvaluations(converter, eval);
+
     temp->erase();
   }
 
