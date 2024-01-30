@@ -682,7 +682,8 @@ bufferization::getBufferType(Value value, const BufferizationOptions &options,
     return bufferizableOp.getBufferType(value, options, invocationStack);
 
   // Op is not bufferizable.
-  auto memSpace = options.getMemorySpace(value.getType().cast<TensorType>());
+  auto memSpace =
+      options.defaultMemorySpaceFn(value.getType().cast<TensorType>());
   if (!memSpace.has_value())
     return op->emitError("could not infer memory space");
 
@@ -936,7 +937,8 @@ FailureOr<BaseMemRefType> bufferization::detail::defaultGetBufferType(
 
   // If we do not know the memory space and there is no default memory space,
   // report a failure.
-  auto memSpace = options.getMemorySpace(value.getType().cast<TensorType>());
+  auto memSpace =
+      options.defaultMemorySpaceFn(value.getType().cast<TensorType>());
   if (!memSpace.has_value())
     return op->emitError("could not infer memory space");
 

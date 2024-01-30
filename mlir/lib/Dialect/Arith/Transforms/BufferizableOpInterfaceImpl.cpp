@@ -33,8 +33,8 @@ struct ConstantOpInterface
       return failure();
 
     Attribute memorySpace;
-    if (options.getMemorySpace(type))
-      memorySpace = *options.getMemorySpace(type);
+    if (auto memSpace = options.defaultMemorySpaceFn(type))
+      memorySpace = *memSpace;
     else
       return constantOp->emitError("could not infer memory space");
 
