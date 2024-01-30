@@ -33,7 +33,6 @@ class ProgressReportTest : public ::testing::Test {
 
 TEST_F(ProgressReportTest, TestReportCreation) {
   std::chrono::milliseconds timeout(100);
-  const unsigned long long NO_TOTAL = 1;
 
   // Set up the debugger, make sure that was done properly
   ArchSpec arch("x86_64-apple-macosx-");
@@ -76,7 +75,7 @@ TEST_F(ProgressReportTest, TestReportCreation) {
   ASSERT_EQ(data->GetDetails(), "Starting report 1");
   ASSERT_FALSE(data->IsFinite());
   ASSERT_FALSE(data->GetCompleted());
-  ASSERT_EQ(data->GetTotal(), NO_TOTAL);
+  ASSERT_EQ(data->GetTotal(), Progress::kNonDeterministicTotal);
   ASSERT_EQ(data->GetMessage(), "Progress report 1: Starting report 1");
 
   EXPECT_TRUE(listener_sp->GetEvent(event_sp, timeout));
@@ -85,7 +84,7 @@ TEST_F(ProgressReportTest, TestReportCreation) {
   ASSERT_EQ(data->GetDetails(), "Starting report 2");
   ASSERT_FALSE(data->IsFinite());
   ASSERT_FALSE(data->GetCompleted());
-  ASSERT_EQ(data->GetTotal(), NO_TOTAL);
+  ASSERT_EQ(data->GetTotal(), Progress::kNonDeterministicTotal);
   ASSERT_EQ(data->GetMessage(), "Progress report 2: Starting report 2");
 
   EXPECT_TRUE(listener_sp->GetEvent(event_sp, timeout));
@@ -93,7 +92,7 @@ TEST_F(ProgressReportTest, TestReportCreation) {
   ASSERT_EQ(data->GetDetails(), "Starting report 3");
   ASSERT_FALSE(data->IsFinite());
   ASSERT_FALSE(data->GetCompleted());
-  ASSERT_EQ(data->GetTotal(), NO_TOTAL);
+  ASSERT_EQ(data->GetTotal(), Progress::kNonDeterministicTotal);
   ASSERT_EQ(data->GetMessage(), "Progress report 3: Starting report 3");
 
   // Progress report objects should be destroyed at this point so
