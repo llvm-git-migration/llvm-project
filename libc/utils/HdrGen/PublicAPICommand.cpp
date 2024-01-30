@@ -114,7 +114,7 @@ void writeAPIFromIndex(APIIndexer &G,
   auto GetNamespace = [](llvm::Record *Instance) {
     auto Namespace = Instance->getValueAsString("Namespace");
     // Empty namespace is likely to be most standard-compliant.
-    if (Namespace == "")
+    if (Namespace.empty())
       return AttributeNamespace::None;
     // Dispatch clang version before gnu version.
     if (Namespace == "clang")
