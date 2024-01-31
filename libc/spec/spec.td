@@ -170,20 +170,23 @@ class ArgSpec<Type type, list<Annotation> annotations = [], string name = ""> {
   string Name = name;
 }
 
-class FunctionAttr {}
-class GnuFunctionAttr<string attr> : FunctionAttr {
+// The following classes are used to describe function attributes.
+// In the future, we may consider supporting parameter attributes as well.
+// https://clang.llvm.org/docs/AttributeReference.html
+class FunctionAttr<string style, string attr> {
   string Attr = attr;
-  string Style = "gnu";
+  // The style of the attribute, e.g. "gnu", "cxx11", "declspec".
+  // - "gnu" is for GNU-style attributes: __attribute__((...))
+  // - "cxx11" is for C++11-style attributes: [[...]]
+  // - "declspec" is for Microsoft-style attributes: __declspec(...)
+  string Style = style;
 }
-class Cxx11FunctionAttr<string attr, string namespace> : FunctionAttr {
-  string Attr = attr;
+class GnuFunctionAttr<string attr> : FunctionAttr<"gnu", attr> {}
+class Cxx11FunctionAttr<string attr, string namespace> : FunctionAttr<"cxx11", attr> {
+  // The namespace of the attribute, e.g. "gnu" or "clang".
   string Namespace = namespace;
-  string Style = "cxx11";
 }
-class DeclspecFunctionAttr<string attr> : FunctionAttr {
-  string Attr = attr;
-  string Style = "declspec";
-}
+class DeclspecFunctionAttr<string attr> : FunctionAttr<"declspec", attr> {}
 class FunctionAttrSpec<string macro, list<FunctionAttr> instances> {
   list<FunctionAttr> Instances = instances;
   string Macro = macro;
