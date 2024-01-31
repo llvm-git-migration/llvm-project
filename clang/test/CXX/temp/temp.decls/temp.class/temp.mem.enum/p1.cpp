@@ -101,10 +101,11 @@ template<> enum class D<short>::E;
 struct F {
   // Per C++11 [class.friend]p3, these friend declarations have no effect.
   // Only classes and functions can be friends.
-  template<typename T> friend enum D<T>::E;
-  template<> friend enum D<short>::E;
+  template<typename T> friend enum D<T>::E; // expected-warning {{elaborated enum specifier cannot be declared as a friend}}
+  template<> friend enum D<short>::E; // expected-warning {{elaborated enum specifier cannot be declared as a friend}}
 
   template<> friend enum D<double>::E { e3 }; // expected-error {{cannot define a type in a friend declaration}}
+                                              // expected-warning@-1 {{elaborated enum specifier cannot be declared as a friend}}
 
 private:
   static const int n = 1; // expected-note {{private here}}
