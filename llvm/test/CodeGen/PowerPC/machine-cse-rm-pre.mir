@@ -60,7 +60,7 @@ body:             |
   ; CHECK-NEXT:   [[COPY2:%[0-9]+]]:gprc = COPY $r2
   ; CHECK-NEXT:   [[COPY3:%[0-9]+]]:gprc = COPY $r1
   ; CHECK-NEXT:   $cr0 = CMPLWI [[COPY3]], 0
-  ; CHECK-NEXT:   %6:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
+  ; CHECK-NEXT:   [[FDIV:%[0-9]+]]:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
   ; CHECK-NEXT:   BCC 44, $cr0, %bb.1
   ; CHECK-NEXT:   B %bb.2
   ; CHECK-NEXT: {{  $}}
@@ -71,7 +71,6 @@ body:             |
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.2.if.else:
   ; CHECK-NEXT:   successors: %bb.3(0x80000000)
-  ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.3.if.end:
   ; CHECK-NEXT:   BLR implicit $lr, implicit $rm
@@ -134,13 +133,13 @@ body:             |
   ; CHECK-NEXT:   successors: %bb.3(0x80000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT:   [[SETRND:%[0-9]+]]:f8rc = SETRND [[COPY2]], implicit-def $rm, implicit $rm
-  ; CHECK-NEXT:   %0:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
+  ; CHECK-NEXT:   [[FDIV:%[0-9]+]]:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
   ; CHECK-NEXT:   B %bb.3
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.2.if.else:
   ; CHECK-NEXT:   successors: %bb.3(0x80000000)
   ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   %1:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
+  ; CHECK-NEXT:   [[FDIV1:%[0-9]+]]:f8rc = nofpexcept FDIV [[COPY1]], [[COPY]], implicit $rm
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.3.if.end:
   ; CHECK-NEXT:   BLR implicit $lr, implicit $rm
