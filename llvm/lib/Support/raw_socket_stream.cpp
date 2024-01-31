@@ -103,18 +103,46 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
   return ListeningSocket{UnixSocket, SocketPath};
 }
 
-Expected<std::unique_ptr<raw_socket_stream>> ListeningSocket::accept() {
+Expected<std::unique_ptr<raw_socket_stream>>
+ListeningSocket::accept(timeval TV) {
+
+  int SelectStatus;
   int AcceptFD;
+
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
-  SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
-  AcceptFD = _open_osfhandle(WinAcceptSock, 0);
+#endif
+
+  fd_set Readfds;
+  if (TV.tv_sec != -1 && TV.tv_usec != -1) {
+    FD_ZERO(&Readfds);
+#ifdef _WIN32
+    FD_SET(WinServerSock, &Readfds);
 #else
-  AcceptFD = ::accept(FD, NULL, NULL);
-#endif //_WIN32
+    FD_SET(FD, &Readfds);
+#endif
+    SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, &TV);
+  } else
+    SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, NULL);
+
+  if (SelectStatus == -1)
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "Select failed");
+  else if (SelectStatus) {
+#ifdef _WIN32
+    SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
+    AcceptFD = _open_osfhandle(WinAcceptSock, 0);
+#else
+    AcceptFD = ::accept(FD, NULL, NULL);
+#endif
+  } else
+    return llvm::make_error<StringError>(
+        std::make_error_code(std::errc::timed_out), "Accept timed out");
+
   if (AcceptFD == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "Accept failed");
+
   return std::make_unique<raw_socket_stream>(AcceptFD);
 }
 

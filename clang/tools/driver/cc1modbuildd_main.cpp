@@ -184,12 +184,17 @@ int ModuleBuildDaemonServer::listenForClients() {
 
   while (RunServiceLoop) {
     Expected<std::unique_ptr<raw_socket_stream>> MaybeConnection =
-        ServerListener.value().accept();
+        ServerListener.value().accept({TimeoutSec, 0});
 
     if (llvm::Error Err = MaybeConnection.takeError()) {
+
       llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
-        errs() << "MBD failed to accept incoming connection: "
-               << SE.getMessage() << SE.convertToErrorCode().message() << '\n';
+        std::error_code EC = SE.convertToErrorCode();
+        if (EC == std::errc::timed_out)
+          RunServiceLoop = false;
+        else
+          errs() << "MBD failed to accept incoming connection: "
+                 << SE.getMessage() << ": " << EC.message() << '\n';
       });
 
       continue;
