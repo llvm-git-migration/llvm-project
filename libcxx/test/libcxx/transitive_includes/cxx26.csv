@@ -86,7 +86,6 @@ chrono sstream
 chrono stdexcept
 chrono string
 chrono string_view
-chrono tuple
 chrono version
 cinttypes cstdint
 cmath limits
@@ -673,5 +672,4 @@ vector new
 vector stdexcept
 vector string
 vector string_view
-vector tuple
 vector version
