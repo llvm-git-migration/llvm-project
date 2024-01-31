@@ -19,6 +19,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/IRMapping.h"
 #include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OperationSupport.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
 namespace mlir {
@@ -52,6 +53,16 @@ static bool equalIterationSpaces(ParallelOp firstPloop,
          matchOperands(firstPloop.getUpperBound(),
                        secondPloop.getUpperBound()) &&
          matchOperands(firstPloop.getStep(), secondPloop.getStep());
+}
+
+static int getInductionVarIndex(Value operand, ParallelOp loop) {
+  auto indVars = loop.getInductionVars();
+  auto it = std::find(indVars.begin(), indVars.end(), operand);
+
+  if (it != indVars.end())
+    return static_cast<int>(std::distance(indVars.begin(), it));
+
+  return -1;
 }
 
 /// Checks if the parallel loops have mixed access to the same buffers. Returns
@@ -102,8 +113,30 @@ static bool haveNoReadsAfterWriteExceptSameIndex(
       return WalkResult::interrupt();
     for (int i = 0, e = storeIndices.size(); i < e; ++i) {
       if (firstToSecondPloopIndices.lookupOrDefault(storeIndices[i]) !=
-          loadIndices[i])
-        return WalkResult::interrupt();
+          loadIndices[i]) {
+        auto *storeIndexDefOp = storeIndices[i].getDefiningOp();
+        auto *loadIndexDefOp = loadIndices[i].getDefiningOp();
+        if (storeIndexDefOp && loadIndexDefOp) {
+          if (!isMemoryEffectFree(storeIndexDefOp))
+            return WalkResult::interrupt();
+          if (!isMemoryEffectFree(loadIndexDefOp))
+            return WalkResult::interrupt();
+          if (!OperationEquivalence::isEquivalentTo(
+                  storeIndexDefOp, loadIndexDefOp,
+                  [&](Value storeIndex, Value loadIndex) {
+                    if (getInductionVarIndex(storeIndex, firstPloop) !=
+                        getInductionVarIndex(loadIndex, secondPloop))
+                      return failure();
+                    else
+                      return success();
+                  },
+                  /*markEquivalent=*/nullptr,
+                  OperationEquivalence::Flags::IgnoreLocations)) {
+            return WalkResult::interrupt();
+          }
+        } else
+          return WalkResult::interrupt();
+      }
     }
     return WalkResult::advance();
   });
