@@ -1083,29 +1083,29 @@ struct iterator_invoker<std::forward_iterator_tag, /*isReverse=*/std::true_type>
 template <typename IsReverse>
 struct reverse_invoker
 {
-    template <typename... Rest>
+    template <typename Policy, typename Op, typename... Rest>
     void
-    operator()(Rest&&... rest)
+    operator()(Policy&& exec, Op op, Rest&&... rest)
     {
         // Random-access iterator
-        iterator_invoker<std::random_access_iterator_tag, IsReverse>()(std::forward<Rest>(rest)...);
+        iterator_invoker<std::random_access_iterator_tag, IsReverse>()(std::forward<Policy>(exec), op, rest...);
 
         // Forward iterator
-        iterator_invoker<std::forward_iterator_tag, IsReverse>()(std::forward<Rest>(rest)...);
+        iterator_invoker<std::forward_iterator_tag, IsReverse>()(std::forward<Policy>(exec), op, rest...);
 
         // Bidirectional iterator
-        iterator_invoker<std::bidirectional_iterator_tag, IsReverse>()(std::forward<Rest>(rest)...);
+        iterator_invoker<std::bidirectional_iterator_tag, IsReverse>()(std::forward<Policy>(exec), op, rest...);
     }
 };
 
 struct invoke_on_all_iterator_types
 {
-    template <typename... Rest>
+    template <typename Policy, typename Op, typename... Rest>
     void
-    operator()(Rest&&... rest)
+    operator()(Policy&& exec, Op op, Rest&&... rest)
     {
-        reverse_invoker</* IsReverse = */ std::false_type>()(std::forward<Rest>(rest)...);
-        reverse_invoker</* IsReverse = */ std::true_type>()(std::forward<Rest>(rest)...);
+        reverse_invoker</* IsReverse = */ std::false_type>()(std::forward<Policy>(exec), op, rest...);
+        reverse_invoker</* IsReverse = */ std::true_type>()(std::forward<Policy>(exec), op, rest...);
     }
 };
 //============================================================================
