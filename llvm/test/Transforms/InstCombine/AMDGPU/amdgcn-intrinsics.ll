@@ -1029,7 +1029,7 @@ define float @cos_fabs_unary_fneg_f32(float %x) {
 ; --------------------------------------------------------------------
 declare float @llvm.amdgcn.sin.f32(float) nounwind readnone
 
-; CHECK-NEXT: ret float %cos
+; CHECK-NEXT: ret float %sin
 define float @sin_fneg_f32(float %x) {
 ; CHECK-LABEL: @sin_fneg_f32(
 ; CHECK-NEXT:    [[X_FNEG:%.*]] = fneg float [[X:%.*]]
