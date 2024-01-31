@@ -143,6 +143,8 @@ Improvements to Clang's diagnostics
 - Clang now applies syntax highlighting to the code snippets it
   prints.
 
+- Clang now diagnoses friend declarations with an ``enum`` elaborated-type-specifier outside of C++98.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
