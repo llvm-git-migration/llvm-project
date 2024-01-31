@@ -145,6 +145,7 @@ Improvements to Clang's diagnostics
   prints.
 
 - Clang now diagnoses member template declarations with multiple declarators.
+- Clang now diagnoses friend declarations with an ``enum`` elaborated-type-specifier outside of C++98.
 
 Improvements to Clang's time-trace
 ----------------------------------

@@ -220,7 +220,7 @@ struct HasExplicitConversion {
 struct Struct {};
 enum Enum { enum_val = 0 };
 struct BadFriends {
-  friend enum ::Enum; // expected-warning {{befriending enumeration type 'enum ::Enum' is incompatible with C++98}}
+  friend enum ::Enum; // expected-warning {{elaborated enumeration type cannot be a friend}}
   friend int; // expected-warning {{non-class friend type 'int' is incompatible with C++98}}
   friend Struct; // expected-warning {{befriending 'Struct' without 'struct' keyword is incompatible with C++98}}
 };

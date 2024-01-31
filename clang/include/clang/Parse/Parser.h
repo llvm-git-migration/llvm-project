@@ -2552,10 +2552,10 @@ private:
   /// Starting with a scope specifier, identifier, or
   /// template-id that refers to the current class, determine whether
   /// this is a constructor declarator.
-  bool isConstructorDeclarator(
-      bool Unqualified, bool DeductionGuide = false,
-      DeclSpec::FriendSpecified IsFriend = DeclSpec::FriendSpecified::No,
-      const ParsedTemplateInfo *TemplateInfo = nullptr);
+  bool
+  isConstructorDeclarator(bool Unqualified, bool DeductionGuide = false,
+                          bool IsFriend = false,
+                          const ParsedTemplateInfo *TemplateInfo = nullptr);
 
   /// Specifies the context in which type-id/expression
   /// disambiguation will occur.
