@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
 
 #include "mlir/Analysis/AliasAnalysis.h"
@@ -27,6 +28,7 @@ namespace mlir {
 } // namespace mlir
 
 using namespace mlir;
+using namespace mlir::affine;
 using namespace mlir::scf;
 
 /// Verify there are no nested ParallelOps.
@@ -52,6 +54,16 @@ static bool equalIterationSpaces(ParallelOp firstPloop,
          matchOperands(firstPloop.getUpperBound(),
                        secondPloop.getUpperBound()) &&
          matchOperands(firstPloop.getStep(), secondPloop.getStep());
+}
+
+static int getInductionVarIndex(Value operand, ParallelOp loop) {
+  auto indVars = loop.getInductionVars();
+  auto it = std::find(indVars.begin(), indVars.end(), operand);
+
+  if (it != indVars.end())
+    return static_cast<int>(std::distance(indVars.begin(), it));
+
+  return -1;
 }
 
 /// Checks if the parallel loops have mixed access to the same buffers. Returns
@@ -102,8 +114,25 @@ static bool haveNoReadsAfterWriteExceptSameIndex(
       return WalkResult::interrupt();
     for (int i = 0, e = storeIndices.size(); i < e; ++i) {
       if (firstToSecondPloopIndices.lookupOrDefault(storeIndices[i]) !=
-          loadIndices[i])
-        return WalkResult::interrupt();
+          loadIndices[i]) {
+        auto storeIndexDef = storeIndices[i].getDefiningOp<AffineApplyOp>();
+        auto loadIndexDef = loadIndices[i].getDefiningOp<AffineApplyOp>();
+        if (storeIndexDef && loadIndexDef) {
+          // When two indices come from affine.apply, we check the results of
+          // these two affine.apply are the same or not.
+          if (storeIndexDef.getAffineMap() != loadIndexDef.getAffineMap())
+            return WalkResult::interrupt();
+          if (storeIndexDef.getNumOperands() != loadIndexDef.getNumOperands())
+            return WalkResult::interrupt();
+          for (unsigned i = 0; i < storeIndexDef.getNumOperands(); ++i) {
+            if (getInductionVarIndex(storeIndexDef.getOperand(i), firstPloop) !=
+                getInductionVarIndex(loadIndexDef.getOperand(i), secondPloop))
+              return WalkResult::interrupt();
+          }
+        } else {
+          return WalkResult::interrupt();
+        }
+      }
     }
     return WalkResult::advance();
   });
