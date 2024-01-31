@@ -37,7 +37,7 @@ public:
 
   lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
 
-  bool Update() override;
+  CacheState Update() override;
 
   bool MightHaveChildren() override;
 
@@ -208,14 +208,14 @@ lldb::ValueObjectSP lldb_private::formatters::
                                    m_element_type);
 }
 
-bool lldb_private::formatters::LibcxxStdUnorderedMapSyntheticFrontEnd::
-    Update() {
+SyntheticChildrenFrontEnd::CacheState
+lldb_private::formatters::LibcxxStdUnorderedMapSyntheticFrontEnd::Update() {
   m_num_elements = 0;
   m_next_element = nullptr;
   m_elements_cache.clear();
   ValueObjectSP table_sp = m_backend.GetChildMemberWithName("__table_");
   if (!table_sp)
-    return false;
+    return CacheState::Invalid;
 
   ValueObjectSP p2_sp = table_sp->GetChildMemberWithName("__p2_");
   ValueObjectSP num_elements_sp = nullptr;
@@ -234,22 +234,22 @@ bool lldb_private::formatters::LibcxxStdUnorderedMapSyntheticFrontEnd::
     break;
   }
   default:
-    return false;
+    return CacheState::Invalid;
   }
 
   if (!num_elements_sp)
-    return false;
+    return CacheState::Invalid;
 
   m_tree = table_sp->GetChildAtNamePath(next_path).get();
   if (m_tree == nullptr)
-    return false;
+    return CacheState::Invalid;
 
   m_num_elements = num_elements_sp->GetValueAsUnsigned(0);
 
   if (m_num_elements > 0)
     m_next_element =
         table_sp->GetChildAtNamePath(next_path).get();
-  return false;
+  return CacheState::Invalid;
 }
 
 bool lldb_private::formatters::LibcxxStdUnorderedMapSyntheticFrontEnd::
