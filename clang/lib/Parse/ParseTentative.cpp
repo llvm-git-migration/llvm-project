@@ -81,7 +81,7 @@ bool Parser::isCXXDeclarationStatement(
             isDeductionGuide) {
           if (isConstructorDeclarator(/*Unqualified=*/SS.isEmpty(),
                                       isDeductionGuide,
-                                      DeclSpec::FriendSpecified::No))
+                                      /*IsFriend*/ false))
             return true;
         } else if (SS.isNotEmpty()) {
           // If the scope is not empty, it could alternatively be something like

@@ -150,6 +150,7 @@ Improvements to Clang's diagnostics
 
 - Clang now diagnoses member template declarations with multiple declarators.
 - Clang now diagnoses use of the ``template`` keyword after declarative nested name specifiers.
+- Clang now diagnoses friend declarations with an ``enum`` elaborated-type-specifier in language modes after C++98.
 
 Improvements to Clang's time-trace
 ----------------------------------
