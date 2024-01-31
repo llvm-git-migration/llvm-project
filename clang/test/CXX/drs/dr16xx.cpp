@@ -107,6 +107,7 @@ namespace dr1638 { // dr1638: 3.1
   struct B {
     friend enum class A<unsigned>::E;
     // since-cxx11-error@-1 {{reference to enumeration must use 'enum' not 'enum class'}}
+    // since-cxx11-error@-2 {{elaborated enumeration type cannot be a friend}}
   };
 #endif
 }
