@@ -85,7 +85,6 @@ chrono sstream
 chrono stdexcept
 chrono string
 chrono string_view
-chrono tuple
 chrono vector
 chrono version
 cinttypes cstdint
@@ -682,6 +681,9 @@ vector new
 vector stdexcept
 vector string
 vector string_view
+<<<<<<< HEAD
 vector tuple
 vector typeinfo
+=======
+>>>>>>> e10abb864306 ([libc++] Remove <tuple> include from <__format/concepts.h>)
 vector version
