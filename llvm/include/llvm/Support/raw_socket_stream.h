@@ -42,16 +42,16 @@ public:
   static Expected<ListeningSocket> createUnix(
       StringRef SocketPath,
       int MaxBacklog = llvm::hardware_concurrency().compute_thread_count());
-  Expected<std::unique_ptr<raw_socket_stream>> accept(bool Block = true);
+  Expected<std::unique_ptr<raw_socket_stream>> accept();
   ListeningSocket(ListeningSocket &&LS);
+  void shutdown();
   ~ListeningSocket();
 };
-
 class raw_socket_stream : public raw_fd_stream {
   uint64_t current_pos() const override { return 0; }
 #ifdef _WIN32
   WSABalancer _;
-#endif
+#endif // _WIN32
 
 public:
   raw_socket_stream(int SocketFD);

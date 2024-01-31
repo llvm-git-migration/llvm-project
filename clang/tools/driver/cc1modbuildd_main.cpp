@@ -69,19 +69,22 @@ public:
   // TODO: modify so when shutdownDaemon is called the daemon stops accepting
   // new client connections and waits for all existing client connections to
   // terminate before closing the file descriptor and exiting
-  void shutdownDaemon() { RunServiceLoop = false; }
+  void shutdownDaemon() { 
+    RunServiceLoop = false; 
+    if(ServerListener.has_value())
+      ServerListener.value().shutdown();
+  }
 
 private:
   bool RunServiceLoop = true;
   std::optional<llvm::ListeningSocket> ServerListener;
 };
 
+// Used to handle signals
 ModuleBuildDaemonServer *DaemonPtr = nullptr;
-void handleSignal(int) {
-  if (DaemonPtr != nullptr)
-    DaemonPtr->shutdownDaemon();
-  else
-    exit(EXIT_SUCCESS);
+void handleSignal(int) {  
+  DaemonPtr->shutdownDaemon();
+  exit(EXIT_SUCCESS);
 }
 } // namespace
 
@@ -177,36 +180,21 @@ void ModuleBuildDaemonServer::handleConnection(
 
 int ModuleBuildDaemonServer::listenForClients() {
 
-  auto StartTime = std::chrono::steady_clock::now();
   llvm::ThreadPool Pool;
 
   while (RunServiceLoop) {
     Expected<std::unique_ptr<raw_socket_stream>> MaybeConnection =
-        ServerListener.value().accept(/*Block*/ false);
+        ServerListener.value().accept();
 
     if (llvm::Error Err = MaybeConnection.takeError()) {
       llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
-        std::error_code EC = SE.convertToErrorCode();
-#ifdef _WIN32
-        if (EC.value() != WSAEWOULDBLOCK) {
-#else
-        if (EC != std::errc::operation_would_block || EC != std::errc::resource_unavailable_try_again) {
-#endif
-          errs() << "MBD failed to accept incoming connection: "
-                 << SE.getMessage() << EC.message() << '\n';
-        }
+        errs() << "MBD failed to accept incoming connection: "
+               << SE.getMessage() << SE.convertToErrorCode().message() << '\n';
       });
 
-      auto CurrentTime = std::chrono::steady_clock::now();
-      auto ElapsedTime = std::chrono::duration_cast<std::chrono::seconds>(
-          CurrentTime - StartTime);
-      if (ElapsedTime.count() >= TimeoutSec)
-        shutdownDaemon();
       continue;
     }
 
-    // Successfull connection - restart timer
-    StartTime = std::chrono::steady_clock::now();
     std::shared_ptr<raw_socket_stream> Connection(std::move(*MaybeConnection));
     Pool.async(handleConnection, Connection);
   }
