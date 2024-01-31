@@ -10,13 +10,13 @@
 
 #include "utils/LibcTableGenUtil/APIIndexer.h"
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Record.h"
 #include <algorithm>
-#include <llvm/ADT/STLExtras.h>
 
 // Text blocks for macro definitions and type decls can be indented to
 // suit the surrounding tablegen listing. We need to dedent such blocks
