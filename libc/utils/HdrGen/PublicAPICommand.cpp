@@ -14,9 +14,11 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Record.h"
 #include <algorithm>
+#include <vector>
 
 // Text blocks for macro definitions and type decls can be indented to
 // suit the surrounding tablegen listing. We need to dedent such blocks
@@ -49,99 +51,74 @@ static std::string getTypeHdrName(const std::string &Name) {
 
 namespace llvm_libc {
 
-void writeAPIFromIndex(APIIndexer &G,
-                       std::vector<std::string> EntrypointNameList,
-                       llvm::raw_ostream &OS) {
-  for (auto &Pair : G.MacroDefsMap) {
-    const std::string &Name = Pair.first;
-    if (G.MacroSpecMap.find(Name) == G.MacroSpecMap.end())
-      llvm::PrintFatalError(Name + " not found in any standard spec.\n");
+static AttributeStyle getAttributeStyle(llvm::Record *Instance) {
+  llvm::StringRef Style = Instance->getValueAsString("Style");
+  return llvm::StringSwitch<AttributeStyle>(Style)
+      .Case("cxx11", AttributeStyle::Cxx11)
+      .Case("gnu", AttributeStyle::Gnu)
+      .Case("declspec", AttributeStyle::Declspec)
+      .Default(AttributeStyle::Gnu);
+}
 
-    llvm::Record *MacroDef = Pair.second;
-    dedentAndWrite(MacroDef->getValueAsString("Defn"), OS);
+static AttributeNamespace getAttributeNamespace(llvm::Record *Instance) {
+  llvm::StringRef Namespace = Instance->getValueAsString("Namespace");
+  return llvm::StringSwitch<AttributeNamespace>(Namespace)
+      .Case("clang", AttributeNamespace::Clang)
+      .Case("gnu", AttributeNamespace::Gnu)
+      .Default(AttributeNamespace::None);
+}
 
-    OS << '\n';
-  }
+using AttributeMap = llvm::DenseMap<llvm::StringRef, llvm::Record *>;
 
-  for (auto &TypeName : G.RequiredTypes) {
-    if (G.TypeSpecMap.find(TypeName) == G.TypeSpecMap.end())
-      llvm::PrintFatalError(TypeName + " not found in any standard spec.\n");
-    OS << "#include <llvm-libc-types/" << getTypeHdrName(TypeName) << ".h>\n";
-  }
-  OS << '\n';
-
-  if (G.Enumerations.size() != 0)
-    OS << "enum {" << '\n';
-  for (const auto &Name : G.Enumerations) {
-    if (G.EnumerationSpecMap.find(Name) == G.EnumerationSpecMap.end())
-      llvm::PrintFatalError(
-          Name + " is not listed as an enumeration in any standard spec.\n");
-
-    llvm::Record *EnumerationSpec = G.EnumerationSpecMap[Name];
-    OS << "  " << EnumerationSpec->getValueAsString("Name");
-    auto Value = EnumerationSpec->getValueAsString("Value");
-    if (Value == "__default__") {
-      OS << ",\n";
-    } else {
-      OS << " = " << Value << ",\n";
-    }
-  }
-  if (G.Enumerations.size() != 0)
-    OS << "};\n\n";
-
-  // declare macros for attributes
+template <class SpecMap, class FuncList>
+static AttributeMap collectAttributeMacros(const SpecMap &Spec,
+                                           const FuncList &Funcs) {
   llvm::DenseMap<llvm::StringRef, llvm::Record *> MacroAttr;
-  for (auto &Name : EntrypointNameList) {
-    if (G.FunctionSpecMap.find(Name) == G.FunctionSpecMap.end()) {
+  for (const auto &Name : Funcs) {
+    if (!Spec.count(Name))
       continue;
-    }
-    llvm::Record *FunctionSpec = G.FunctionSpecMap[Name];
-    auto Attributes = FunctionSpec->getValueAsListOfDefs("Attributes");
-    for (auto *Attr : Attributes) {
+
+    llvm::Record *FunctionSpec = Spec.at(Name);
+    std::vector<llvm::Record *> Attributes =
+        FunctionSpec->getValueAsListOfDefs("Attributes");
+    for (llvm::Record *Attr : Attributes)
       MacroAttr[Attr->getValueAsString("Macro")] = Attr;
-    }
   }
+  return MacroAttr;
+}
 
-  auto GetStyle = [](llvm::Record *Instance) {
-    auto Style = Instance->getValueAsString("Style");
-    if (Style == "cxx11")
-      return AttributeStyle::Cxx11;
-    if (Style == "gnu")
-      return AttributeStyle::Gnu;
-    return AttributeStyle::Declspec;
-  };
-
-  auto GetNamespace = [](llvm::Record *Instance) {
-    auto Namespace = Instance->getValueAsString("Namespace");
-    // Empty namespace is likely to be most standard-compliant.
-    if (Namespace.empty())
-      return AttributeNamespace::None;
-    // Dispatch clang version before gnu version.
-    if (Namespace == "clang")
-      return AttributeNamespace::Clang;
-    return AttributeNamespace::Gnu;
-  };
-
+static void emitAttributeMacroDecls(const AttributeMap &MacroAttr,
+                                    llvm::raw_ostream &OS) {
   for (auto &[Macro, Attr] : MacroAttr) {
-    auto Instances = Attr->getValueAsListOfDefs("Instances");
+    std::vector<llvm::Record *> Instances =
+        Attr->getValueAsListOfDefs("Instances");
     llvm::SmallVector<std::pair<AttributeStyle, llvm::Record *>> Styles;
     std::transform(Instances.begin(), Instances.end(),
                    std::back_inserter(Styles),
                    [&](llvm::Record *Instance)
                        -> std::pair<AttributeStyle, llvm::Record *> {
-                     auto Style = GetStyle(Instance);
+                     auto Style = getAttributeStyle(Instance);
                      return {Style, Instance};
                    });
-    // Effectively sort on the first field
+    // 1. If __cplusplus is defined and cxx11 style is provided, define the
+    // macro using cxx11 version with the following priority:
+    //    1a. If the attribute is a clang attribute, check for __clang__.
+    //    2b. If the attribute is a gnu attribute, check for __GNUC__.
+    // 2. Otherwise, if __GNUC__ is defined and gnu
+    // style is provided, define the macro using gnu version;
+    // 3. Otherwise, if _MSC_VER is defined and __declspec is provided, define
+    // the macro using __declspec version;
+    // 4. Fallback to empty macro.
     std::sort(Styles.begin(), Styles.end(), [&](auto &a, auto &b) {
       if (a.first == AttributeStyle::Cxx11 && b.first == AttributeStyle::Cxx11)
-        return GetNamespace(a.second) < GetNamespace(b.second);
+        return getAttributeNamespace(a.second) <
+               getAttributeNamespace(b.second);
       return a.first < b.first;
     });
     for (auto &[Style, Instance] : Styles) {
       if (Style == AttributeStyle::Cxx11) {
         OS << "#if !defined(" << Macro << ") && defined(__cplusplus)";
-        auto Namespace = GetNamespace(Instance);
+        AttributeNamespace Namespace = getAttributeNamespace(Instance);
         if (Namespace == AttributeNamespace::Clang)
           OS << " && defined(__clang__)\n";
         else if (Namespace == AttributeNamespace::Gnu)
@@ -176,6 +153,72 @@ void writeAPIFromIndex(APIIndexer &G,
 
   if (!MacroAttr.empty())
     OS << '\n';
+}
+
+static void emitAttributeMacroForFunction(const llvm::Record *FunctionSpec,
+                                          llvm::raw_ostream &OS) {
+  std::vector<llvm::Record *> Attributes =
+      FunctionSpec->getValueAsListOfDefs("Attributes");
+  llvm::interleave(
+      Attributes.begin(), Attributes.end(),
+      [&](llvm::Record *Attr) { OS << Attr->getValueAsString("Macro"); },
+      [&]() { OS << ' '; });
+  if (!Attributes.empty())
+    OS << ' ';
+}
+
+static void emitUndefsForAttributeMacros(const AttributeMap &MacroAttr,
+                                         llvm::raw_ostream &OS) {
+  if (!MacroAttr.empty())
+    OS << '\n';
+  for (auto &[Macro, Attr] : MacroAttr)
+    OS << "#undef " << Macro << '\n';
+}
+
+static void writeAPIFromIndex(APIIndexer &G,
+                              std::vector<std::string> EntrypointNameList,
+                              llvm::raw_ostream &OS) {
+  for (auto &Pair : G.MacroDefsMap) {
+    const std::string &Name = Pair.first;
+    if (G.MacroSpecMap.find(Name) == G.MacroSpecMap.end())
+      llvm::PrintFatalError(Name + " not found in any standard spec.\n");
+
+    llvm::Record *MacroDef = Pair.second;
+    dedentAndWrite(MacroDef->getValueAsString("Defn"), OS);
+
+    OS << '\n';
+  }
+
+  for (auto &TypeName : G.RequiredTypes) {
+    if (G.TypeSpecMap.find(TypeName) == G.TypeSpecMap.end())
+      llvm::PrintFatalError(TypeName + " not found in any standard spec.\n");
+    OS << "#include <llvm-libc-types/" << getTypeHdrName(TypeName) << ".h>\n";
+  }
+  OS << '\n';
+
+  if (G.Enumerations.size() != 0)
+    OS << "enum {" << '\n';
+  for (const auto &Name : G.Enumerations) {
+    if (!G.EnumerationSpecMap.count(Name))
+      llvm::PrintFatalError(
+          Name + " is not listed as an enumeration in any standard spec.\n");
+
+    llvm::Record *EnumerationSpec = G.EnumerationSpecMap[Name];
+    OS << "  " << EnumerationSpec->getValueAsString("Name");
+    auto Value = EnumerationSpec->getValueAsString("Value");
+    if (Value == "__default__") {
+      OS << ",\n";
+    } else {
+      OS << " = " << Value << ",\n";
+    }
+  }
+  if (G.Enumerations.size() != 0)
+    OS << "};\n\n";
+
+  // Collect and declare macros for attributes
+  AttributeMap MacroAttr =
+      collectAttributeMacros(G.FunctionSpecMap, EntrypointNameList);
+  emitAttributeMacroDecls(MacroAttr, OS);
 
   OS << "__BEGIN_C_DECLS\n\n";
   for (auto &Name : EntrypointNameList) {
@@ -192,14 +235,8 @@ void writeAPIFromIndex(APIIndexer &G,
     llvm::Record *RetValSpec = FunctionSpec->getValueAsDef("Return");
     llvm::Record *ReturnType = RetValSpec->getValueAsDef("ReturnType");
 
-    auto Attributes = FunctionSpec->getValueAsListOfDefs("Attributes");
-    llvm::interleave(
-        Attributes.begin(), Attributes.end(),
-        [&](llvm::Record *Attr) { OS << Attr->getValueAsString("Macro"); },
-        [&]() { OS << ' '; });
-    if (!Attributes.empty())
-      OS << ' ';
-
+    // Emit attribute macros for the function. Space is automatically added.
+    emitAttributeMacroForFunction(FunctionSpec, OS);
     OS << G.getTypeAsString(ReturnType) << " " << Name << "(";
 
     auto ArgsList = FunctionSpec->getValueAsListOfDefs("Args");
@@ -223,9 +260,8 @@ void writeAPIFromIndex(APIIndexer &G,
   }
   OS << "__END_C_DECLS\n";
 
-  // undef the macros
-  for (auto &[Macro, Attr] : MacroAttr)
-    OS << "\n#undef " << Macro << '\n';
+  // Undef file-level attribute macros.
+  emitUndefsForAttributeMacros(MacroAttr, OS);
 }
 
 void writePublicAPI(llvm::raw_ostream &OS, llvm::RecordKeeper &Records) {}
