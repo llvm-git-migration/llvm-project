@@ -9,7 +9,6 @@
 #include "BinaryHolder.h"
 #include "DebugMap.h"
 #include "MachOUtils.h"
-#include "RelocationMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/Object/MachO.h"
@@ -312,23 +311,6 @@ void MachODebugMapParser::switchToNewLibDebugMapObject(
         &Result->addDebugMapObject(Path, Timestamp, MachO::N_LIB);
 
     CurrentDebugMapObject->setInstallName(Filename);
-
-    SmallString<256> RMPath(DSYMSearchPath);
-    sys::path::append(RMPath, ProductName);
-    RMPath.append(".dSYM");
-    StringRef ArchName = Triple::getArchName(Result->getTriple().getArch(),
-                                             Result->getTriple().getSubArch());
-    sys::path::append(RMPath, "Contents", "Resources", "Relocations", ArchName);
-    sys::path::append(RMPath, LeafName);
-    RMPath.append(".yml");
-    const auto &RelocMapPtrOrErr =
-        RelocationMap::parseYAMLRelocationMap(RMPath, PathPrefix);
-    if (auto EC = RelocMapPtrOrErr.getError()) {
-      Warning("cannot parse relocation map file: " + EC.message(),
-              RMPath.str());
-      return;
-    }
-    CurrentDebugMapObject->setRelocationMap(*RelocMapPtrOrErr->get());
 
     loadCurrentObjectFileSymbols(*Object);
 
