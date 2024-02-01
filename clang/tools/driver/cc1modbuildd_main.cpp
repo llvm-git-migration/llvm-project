@@ -76,7 +76,7 @@ public:
   }
 
 private:
-  bool RunServiceLoop = true;
+  std::atomic<bool> RunServiceLoop = true;
   std::optional<llvm::ListeningSocket> ServerListener;
 };
 
