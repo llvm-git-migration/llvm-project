@@ -1808,12 +1808,24 @@ struct CounterCoverageMappingBuilder
     }
   }
 
+private:
+  static bool evaluateConstantCondition(const Expr *Condition) {
+    if (const auto *Expr = dyn_cast<ConstantExpr>(Condition))
+      return Expr->getResultAsAPSInt().getExtValue();
+
+    if (const auto *Expr = dyn_cast<ExprWithCleanups>(Condition))
+      return evaluateConstantCondition(Expr->getSubExpr()); // recursion
+
+    assert(false && "Unexpected node in 'if constexpr' condition");
+    return false;
+  }
+
+public:
   void coverIfConstexpr(const IfStmt *S) {
     assert(S->isConstexpr());
 
     // evaluate constant condition...
-    const auto *E = cast<ConstantExpr>(S->getCond());
-    const bool isTrue = E->getResultAsAPSInt().getExtValue();
+    const bool isTrue = evaluateConstantCondition(S->getCond());
 
     extendRegion(S);
 
