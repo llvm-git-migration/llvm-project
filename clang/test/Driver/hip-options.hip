@@ -229,3 +229,10 @@
 
 // RUN: %clang -fdriver-only -c -Werror --target=x86_64-unknown-linux-gnu -nogpuinc -nogpulib -fno-offload-uniform-block \
 // RUN:   -foffload-uniform-block --cuda-gpu-arch=gfx906 %s 2>&1 | count 0
+
+// Check -Werror=atomic-alignment is passed for amdpu by default.
+
+// RUN: %clang -### --target=x86_64-unknown-linux-gnu -nogpuinc -nogpulib \
+// RUN:   --cuda-gpu-arch=gfx906 %s 2>&1 | FileCheck -check-prefix=WARN-ATOMIC %s
+// WARN-ATOMIC: clang{{.*}} "-triple" "amdgcn-amd-amdhsa" {{.*}} "-Werror=atomic-alignment"
+// WARN-ATOMIC-NOT: clang{{.*}} "-triple" "x86_64-unknown-linux-gnu" {{.*}} "-Werror=atomic-alignment"
