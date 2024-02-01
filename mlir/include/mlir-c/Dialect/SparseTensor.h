@@ -12,6 +12,7 @@
 
 #include "mlir-c/AffineMap.h"
 #include "mlir-c/IR.h"
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +26,11 @@ MLIR_DECLARE_CAPI_DIALECT_REGISTRATION(SparseTensor, sparse_tensor);
 /// These correspond to SparseTensorEncodingAttr::LevelType in the C++ API.
 /// If updating, keep them in sync and update the static_assert in the impl
 /// file.
-enum MlirSparseTensorLevelType {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfixed-enum-extension"
+
+enum MlirSparseTensorLevelType : uint64_t {
   MLIR_SPARSE_TENSOR_LEVEL_DENSE = 0x000000010000,
   MLIR_SPARSE_TENSOR_LEVEL_COMPRESSED = 0x000000020000,
   MLIR_SPARSE_TENSOR_LEVEL_COMPRESSED_NU = 0x000000020001,
@@ -41,6 +46,11 @@ enum MlirSparseTensorLevelType {
   MLIR_SPARSE_TENSOR_LEVEL_LOOSE_COMPRESSED_NU_NO = 0x000000080003,
   MLIR_SPARSE_TENSOR_LEVEL_N_OUT_OF_M = 0x000000100000,
 };
+
+static_assert((sizeof(enum MlirSparseTensorLevelType) == 8),
+              "MlirSparseTensorLevelType must be 8 bytes");
+
+#pragma GCC diagnostic pop
 
 //===----------------------------------------------------------------------===//
 // SparseTensorEncodingAttr
