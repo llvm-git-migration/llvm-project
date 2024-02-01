@@ -234,7 +234,7 @@ APInt& APInt::operator-=(uint64_t RHS) {
 APInt APInt::operator*(const APInt& RHS) const {
   assert(BitWidth == RHS.BitWidth && "Bit widths must be the same");
   if (isSingleWord())
-    return APInt(BitWidth, U.VAL * RHS.U.VAL);
+    return APInt(BitWidth, (U.VAL * RHS.U.VAL) & maxUIntN(BitWidth));
 
   APInt Result(getMemory(getNumWords()), getBitWidth());
   tcMultiply(Result.U.pVal, U.pVal, RHS.U.pVal, getNumWords());
@@ -907,7 +907,7 @@ APInt APInt::trunc(unsigned width) const {
   assert(width <= BitWidth && "Invalid APInt Truncate request");
 
   if (width <= APINT_BITS_PER_WORD)
-    return APInt(width, getRawData()[0]);
+    return APInt(width, getRawData()[0] & maxUIntN(width));
 
   if (width == BitWidth)
     return *this;
@@ -955,7 +955,7 @@ APInt APInt::sext(unsigned Width) const {
   assert(Width >= BitWidth && "Invalid APInt SignExtend request");
 
   if (Width <= APINT_BITS_PER_WORD)
-    return APInt(Width, SignExtend64(U.VAL, BitWidth));
+    return APInt(Width, SignExtend64(U.VAL, BitWidth), /*isSigned*/ true);
 
   if (Width == BitWidth)
     return *this;

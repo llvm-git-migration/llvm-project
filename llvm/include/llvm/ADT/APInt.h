@@ -108,9 +108,19 @@ public:
   /// \param isSigned how to treat signedness of val
   APInt(unsigned numBits, uint64_t val, bool isSigned = false)
       : BitWidth(numBits) {
+    if (BitWidth == 0) {
+      assert(val == 0 && "Value must be zero for 0-bit APInt");
+    } else if (isSigned) {
+      assert(llvm::isIntN(BitWidth, val) &&
+             "Value is not an N-bit signed value");
+    } else {
+      assert(llvm::isUIntN(BitWidth, val) &&
+             "Value is not an N-bit unsigned value");
+    }
     if (isSingleWord()) {
       U.VAL = val;
-      clearUnusedBits();
+      if (isSigned)
+        clearUnusedBits();
     } else {
       initSlowCase(val, isSigned);
     }
