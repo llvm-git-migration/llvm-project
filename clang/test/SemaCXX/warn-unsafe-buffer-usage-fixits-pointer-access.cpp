@@ -206,4 +206,37 @@ void fixits_in_lambda_capture_rename() {
   };
 
   p[5] = 10;
-} 
+}
+
+void cast_to_int() {
+  int* p = new int[10];
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:3-[[@LINE-1]]:11}:"std::span<int> p"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-2]]:12-[[@LINE-2]]:12}:"{"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-3]]:23-[[@LINE-3]]:23}:", 10}"
+
+  int tmp = p[5];
+  (unsigned long long) p;
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:25-[[@LINE-1]]:25}:".data()"
+}
+
+void ptr_comparison(int* ptr) {
+  int* p = new int[10];
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:3-[[@LINE-1]]:11}:"std::span<int> p"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-2]]:12-[[@LINE-2]]:12}:"{"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-3]]:23-[[@LINE-3]]:23}:", 10}"
+
+  int tmp = p[5];
+  bool comp = p > ptr;
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:16-[[@LINE-1]]:16}:".data()"
+}
+
+void ptr_distance(int* ptr) {
+  int* p = new int[10];
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:3-[[@LINE-1]]:11}:"std::span<int> p"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-2]]:12-[[@LINE-2]]:12}:"{"
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-3]]:23-[[@LINE-3]]:23}:", 10}"
+
+  int tmp = p[5];
+  int dist = p - ptr;
+  // CHECK-DAG: fix-it:"{{.*}}":{[[@LINE-1]]:15-[[@LINE-1]]:15}:".data()"
+}
