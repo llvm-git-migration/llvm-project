@@ -4285,7 +4285,7 @@ void LSRInstance::GenerateICmpZeroScales(LSRUse &LU, unsigned LUIdx,
     // Compensate for the use having MinOffset built into it.
     F.BaseOffset = F.BaseOffset.addUnsigned(Offset).subUnsigned(LU.MinOffset);
 
-    const SCEV *FactorS = SE.getConstant(IntTy, Factor);
+    const SCEV *FactorS = SE.getConstant(IntTy, Factor, /*isSigned*/ true);
 
     // Check that multiplying with each base register doesn't overflow.
     for (size_t i = 0, e = F.BaseRegs.size(); i != e; ++i) {
@@ -4361,7 +4361,7 @@ void LSRInstance::GenerateScales(LSRUse &LU, unsigned LUIdx, Formula Base) {
     for (size_t i = 0, e = Base.BaseRegs.size(); i != e; ++i) {
       const SCEVAddRecExpr *AR = dyn_cast<SCEVAddRecExpr>(Base.BaseRegs[i]);
       if (AR && (AR->getLoop() == L || LU.AllFixupsOutsideLoop)) {
-        const SCEV *FactorS = SE.getConstant(IntTy, Factor);
+        const SCEV *FactorS = SE.getConstant(IntTy, Factor, true);
         if (FactorS->isZero())
           continue;
         // Divide out the factor, ignoring high bits, since we'll be
