@@ -252,4 +252,14 @@ namespace dr2397 { // dr2397: 17
     auto (*c)[5] = &a;
   }
 } // namespace dr2397
+
+// CWG2363 was closed as NAD, but its resolution does affirm that
+// a friend declaration cannot have an opaque-enumm-specifier.
+namespace dr2363 { // dr2363: yes
+struct A {
+  friend enum class E; // since-cxx11-error {{reference to enumeration must use 'enum' not 'enum class'}}
+                       // expected-error@-1 {{elaborated enumeration type cannot be a friend}}
+};
+} // namespace dr2363
+
 #endif
