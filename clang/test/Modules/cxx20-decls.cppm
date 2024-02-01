@@ -31,9 +31,7 @@ using xxx = baz::foo;
 // CHECK-NEXT: | `-BuiltinType {{.*}} 'char'
 // CHECK-NEXT: |-UsingDecl {{.*}} baz::foo
 // CHECK-NEXT: | `-NestedNameSpecifier Namespace {{.*}} 'baz'
-// FIXME: UsingShadowDecl should have been merged
-// CHECK-NOT:  `-UsingShadowDecl 0x{{[^ ]*}} prev 0x{{[^ ]*}} {{.*}} imported in A.<global> {{.*}} 'foo'
-// CHECK-NEXT: `-UsingShadowDecl 0x{{[^ ]*}} {{.*}} imported in A.<global> {{.*}} 'foo'
+// CHECK-NEXT: `-UsingShadowDecl 0x{{[^ ]*}} prev 0x[[SHADOW_ADDR:[^ ]*]] {{.*}} imported in A.<global> {{.*}} 'foo'
 
 // CHECK-LABEL: Dumping baz:
 // CHECK-NEXT: NamespaceDecl {{.*}} baz
@@ -41,4 +39,4 @@ using xxx = baz::foo;
 // CHECK-NEXT: | `-BuiltinType {{.*}} 'char'
 // CHECK-NEXT: |-UsingDecl {{.*}} baz::foo
 // CHECK-NEXT: | `-NestedNameSpecifier Namespace {{.*}} 'baz'
-// CHECK-NEXT:  `-UsingShadowDecl 0x[[SHADOW_ADDR:[^ ]*]] {{.*}} 'foo'
+// CHECK-NEXT:  `-UsingShadowDecl 0x[[SHADOW_ADDR]] {{.*}} 'foo'

@@ -37,6 +37,4 @@ import A;
 import B;
 // Since modules are loaded lazily, force loading by performing a lookup.
 using xxx = bar;
-// FIXME: This is a false positive ODR violation.
-// expected-error@bar.h:2 {{'bar' has different definitions in different modules; first difference is defined here found constructor with 1st parameter of type 'baz::foo' (aka 'char')}}
-// expected-note@bar.h:2 {{but in 'B.<global>' found constructor with 1st parameter of type 'baz::foo' (aka 'char')}}
+// expected-no-diagnostics
