@@ -37,3 +37,10 @@ void instantiateArrayDecay() {
   int a[1];
   arrayDecay(a);
 }
+
+namespace GH79748 {
+typedef decltype(sizeof(0)) size_t;
+struct A {
+  void* operator new(size_t bytes) const; //expected-error {{static member function cannot have 'const' qualifier}}
+};
+}
