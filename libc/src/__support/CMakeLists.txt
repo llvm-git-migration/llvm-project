@@ -250,6 +250,12 @@ add_header_library(
     libc.src.__support.macros.config
 )
 
+add_header_library(
+  invasive_list
+  HDRS
+    invasive_list.h
+)
+
 add_subdirectory(FPUtil)
 add_subdirectory(OSUtil)
 add_subdirectory(StringUtil)
