@@ -31,9 +31,7 @@ using xxx = baz::foo;
 // CHECK-NEXT: | `-BuiltinType 0x{{[^ ]*}} 'char'
 // CHECK-NEXT: |-UsingDecl 0x{{[^ ]*}} first 0x[[USING_ADDR:[^ ]*]] <{{.*}}> col:{{.*}} imported in A.<global> hidden baz::foo
 // CHECK-NEXT: | `-NestedNameSpecifier Namespace 0x[[BAZ_REDECL_ADDR]] 'baz'
-// FIXME: UsingShadowDecl should have been merged
-// CHECK-NOT:  `-UsingShadowDecl 0x{{[^ ]*}} prev 0x{{[^ ]*}} <{{.*}}> col:{{.*}} imported in A.<global> hidden implicit TypeAlias 0x[[ALIAS_REDECL_ADDR]] 'foo'
-// CHECK-NEXT: `-UsingShadowDecl 0x{{[^ ]*}} <{{.*}}> col:{{.*}} imported in A.<global> hidden implicit TypeAlias 0x[[ALIAS_REDECL_ADDR]] 'foo'
+// CHECK-NEXT: `-UsingShadowDecl 0x{{[^ ]*}} prev 0x[[SHADOW_ADDR:[^ ]*]] <{{.*}}> col:{{.*}} imported in A.<global> hidden implicit TypeAlias 0x[[ALIAS_REDECL_ADDR]] 'foo'
 
 // CHECK-LABEL: Dumping baz:
 // CHECK-NEXT: NamespaceDecl 0x[[BAZ_ADDR]] <{{.*}}> line:{{.*}} baz
@@ -41,4 +39,4 @@ using xxx = baz::foo;
 // CHECK-NEXT: | `-BuiltinType 0x{{[^ ]*}} 'char'
 // CHECK-NEXT: |-UsingDecl 0x[[USING_ADDR]] <{{.*}}> col:{{.*}} baz::foo
 // CHECK-NEXT: | `-NestedNameSpecifier Namespace 0x[[BAZ_ADDR]] 'baz'
-// CHECK-NEXT:  `-UsingShadowDecl 0x[[SHADOW_ADDR:[^ ]*]] <{{.*}}> col:{{.*}} implicit TypeAlias 0x[[ALIAS_ADDR]] 'foo'
+// CHECK-NEXT:  `-UsingShadowDecl 0x[[SHADOW_ADDR]] <{{.*}}> col:{{.*}} implicit TypeAlias 0x[[ALIAS_ADDR]] 'foo'
