@@ -10,8 +10,9 @@
 
 // Increment local_iterator past end.
 
-// REQUIRES: has-unix-headers
-// UNSUPPORTED: !libcpp-has-legacy-debug-mode, c++03
+// REQUIRES: has-unix-headers, libcpp-hardening-mode={{extensive|debug}}
+// UNSUPPORTED: c++03
+// XFAIL: libcpp-hardening-mode=debug && availability-verbose_abort-missing
 
 #include <unordered_map>
 #include <string>
@@ -31,6 +32,11 @@ int main(int, char**) {
         ++i;
         assert(i == c.end(b));
         TEST_LIBCPP_ASSERT_FAILURE(++i, "Attempted to increment a non-incrementable unordered container local_iterator");
+        C::const_local_iterator i2 = c.cbegin(b);
+        assert(i2 != c.cend(b));
+        ++i2;
+        assert(i2 == c.cend(b));
+        TEST_LIBCPP_ASSERT_FAILURE(++i2, "Attempted to increment a non-incrementable unordered container const_local_iterator");
     }
 
     {
@@ -43,6 +49,11 @@ int main(int, char**) {
         ++i;
         assert(i == c.end(b));
         TEST_LIBCPP_ASSERT_FAILURE(++i, "Attempted to increment a non-incrementable unordered container local_iterator");
+        C::const_local_iterator i2 = c.cbegin(b);
+        assert(i2 != c.cend(b));
+        ++i2;
+        assert(i2 == c.cend(b));
+        TEST_LIBCPP_ASSERT_FAILURE(++i2, "Attempted to increment a non-incrementable unordered container const_local_iterator");
     }
 
     return 0;
