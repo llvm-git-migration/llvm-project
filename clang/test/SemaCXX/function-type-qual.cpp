@@ -37,3 +37,9 @@ void instantiateArrayDecay() {
   int a[1];
   arrayDecay(a);
 }
+
+namespace GH79748 {
+struct A {
+  void* operator new(unsigned long bytes) const; //expected-error {{static member function cannot have 'const' qualifier}}
+};
+}
