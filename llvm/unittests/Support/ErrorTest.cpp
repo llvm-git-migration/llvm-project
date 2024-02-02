@@ -472,6 +472,23 @@ TEST(Error, createStringError) {
     << "Failed to convert createStringError() result to error_code.";
 }
 
+TEST(Error, createStringErrorv) {
+  static llvm::StringRef Bar("bar");
+  static const std::error_code EC = errc::invalid_argument;
+  std::string Msg;
+  raw_string_ostream S(Msg);
+  logAllUnhandledErrors(createStringErrorv(EC, "foo{0}{1}{2:x}", Bar, 1, 0xff),
+                        S);
+  EXPECT_EQ(S.str(), "foobar10xff\n")
+      << "Unexpected createStringErrorv() log result";
+
+  S.flush();
+  Msg.clear();
+  auto Res = errorToErrorCode(createStringErrorv(EC, "foo{0}", Bar));
+  EXPECT_EQ(Res, EC)
+      << "Failed to convert createStringErrorv() result to error_code.";
+}
+
 // Test that the ExitOnError utility works as expected.
 TEST(ErrorDeathTest, ExitOnError) {
   ExitOnError ExitOnErr;
