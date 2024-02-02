@@ -29,12 +29,13 @@ end subroutine
 !    %c222_i32 = arith.constant 222 : i32
 !    fir.store %c222_i32 to %1 : !fir.ref<i32>
 !    omp.parallel private(@var1.privatizer %0, @var2.privatizer %1 : !fir.ref<i32>, !fir.ref<i32>) {
-!      %2 = fir.load %0 : !fir.ref<i32>
-!      %3 = fir.load %1 : !fir.ref<i32>
+!    ^bb0(%arg0: !fir.ref<i32>, %arg1: !fir.ref<i32>):
+!      %2 = fir.load %arg0 : !fir.ref<i32>
+!      %3 = fir.load %arg1 : !fir.ref<i32>
 !      %4 = arith.addi %2, %3 : i32
 !      %c2_i32 = arith.constant 2 : i32
 !      %5 = arith.addi %4, %c2_i32 : i32
-!      fir.store %5 to %0 : !fir.ref<i32>
+!      fir.store %5 to %arg0 : !fir.ref<i32>
 !      omp.terminator
 !    }
 !    return
@@ -53,7 +54,6 @@ end subroutine
 !    fir.store %1 to %0 : !fir.ref<i32>
 !    omp.yield(%0 : !fir.ref<i32>)
 !  }) : () -> ()
-!}
 !
 ! -----------------------------
 ! ### Conversion to LLVM + OMP:
@@ -69,12 +69,13 @@ end subroutine
 !    %5 = llvm.mlir.constant(222 : i32) : i32
 !    llvm.store %5, %3 : i32, !llvm.ptr
 !    omp.parallel private(@var1.privatizer %1, @var2.privatizer %3 : !llvm.ptr, !llvm.ptr) {
-!      %6 = llvm.load %1 : !llvm.ptr -> i32
-!      %7 = llvm.load %3 : !llvm.ptr -> i32
+!    ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
+!      %6 = llvm.load %arg0 : !llvm.ptr -> i32
+!      %7 = llvm.load %arg1 : !llvm.ptr -> i32
 !      %8 = llvm.add %6, %7  : i32
 !      %9 = llvm.mlir.constant(2 : i32) : i32
 !      %10 = llvm.add %8, %9  : i32
-!      llvm.store %10, %1 : i32, !llvm.ptr
+!      llvm.store %10, %arg0 : i32, !llvm.ptr
 !      omp.terminator
 !    }
 !    llvm.return
