@@ -1099,7 +1099,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
           privInit] = [&]() -> std::pair<mlir::Value, omp::PrivateClauseOp> {
       if (!opInst.getPrivateVars().empty()) {
         auto privVars = opInst.getPrivateVars();
-        auto privInits = opInst.getPrivateInits();
+        auto privInits = opInst.getPrivatizers();
         assert(privInits && privInits->size() == privVars.size());
 
         const auto *privInitIt = privInits->begin();
