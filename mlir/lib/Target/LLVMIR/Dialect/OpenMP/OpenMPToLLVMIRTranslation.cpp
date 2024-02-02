@@ -1000,6 +1000,29 @@ convertOmpWsLoop(Operation &opInst, llvm::IRBuilderBase &builder,
   return success();
 }
 
+/// Replace the region arguments of the parallel op (which correspond to private
+/// variables) with the actual private varibles they correspond to. This
+/// prepares the parallel op so that it matches what is expected by the
+/// OMPIRBuilder.
+static void prepareOmpParallel(omp::ParallelOp opInst) {
+  auto &region = opInst.getRegion();
+  auto privateVars = opInst.getPrivateVars();
+
+  auto privateVarsIt = privateVars.begin();
+  for (size_t argIdx = 0; argIdx < region.getNumArguments();
+       ++argIdx, ++privateVarsIt) {
+    for (auto &block : region) {
+      for (auto &op : block) {
+        op.replaceUsesOfWith(region.getArgument(argIdx), *privateVarsIt);
+      }
+    }
+  }
+
+  for (size_t argIdx = 0; argIdx < region.getNumArguments(); ++argIdx) {
+    region.eraseArgument(argIdx);
+  }
+}
+
 /// Converts the OpenMP parallel operation to LLVM IR.
 static LogicalResult
 convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
@@ -1008,6 +1031,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
   // TODO: support error propagation in OpenMPIRBuilder and use it instead of
   // relying on captured variables.
   LogicalResult bodyGenStatus = success();
+  prepareOmpParallel(opInst);
   llvm::OpenMPIRBuilder *ompBuilder = moduleTranslation.getOpenMPBuilder();
 
   auto bodyGenCB = [&](InsertPointTy allocaIP, InsertPointTy codeGenIP) {

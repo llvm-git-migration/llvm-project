@@ -147,6 +147,14 @@ static void genNestedEvaluations(Fortran::lower::AbstractConverter &converter,
 //===----------------------------------------------------------------------===//
 
 class DataSharingProcessor {
+public:
+  struct DelayedPrivatizationInfo {
+    llvm::SetVector<mlir::SymbolRefAttr> privatizers;
+    llvm::SetVector<mlir::Value> hostAddresses;
+    llvm::SetVector<const Fortran::semantics::Symbol *> hostSymbols;
+  };
+
+private:
   bool hasLastPrivateOp;
   mlir::OpBuilder::InsertPoint lastPrivIP;
   mlir::OpBuilder::InsertPoint insPt;
@@ -163,8 +171,8 @@ class DataSharingProcessor {
 
   bool useDelayedPrivatizationWhenPossible;
   Fortran::lower::SymMap *symTable;
-  llvm::SetVector<mlir::SymbolRefAttr> privatizers;
-  llvm::SetVector<mlir::Value> privateSymHostAddrsses;
+
+  DelayedPrivatizationInfo delayedPrivatizationInfo;
 
   bool needBarrier();
   void collectSymbols(Fortran::semantics::Symbol::Flag flag);
@@ -214,12 +222,8 @@ public:
     loopIV = iv;
   }
 
-  const llvm::SetVector<mlir::SymbolRefAttr> &getPrivatizers() const {
-    return privatizers;
-  };
-
-  const llvm::SetVector<mlir::Value> &getPrivateSymHostAddrsses() const {
-    return privateSymHostAddrsses;
+  const DelayedPrivatizationInfo &getDelayedPrivatizationInfo() const {
+    return delayedPrivatizationInfo;
   }
 };
 
@@ -547,8 +551,10 @@ void DataSharingProcessor::privatize() {
         symTable->popScope();
         firOpBuilder.restoreInsertionPoint(ip);
 
-        privatizers.insert(mlir::SymbolRefAttr::get(privatizerOp));
-        privateSymHostAddrsses.insert(hsb.getAddr());
+        delayedPrivatizationInfo.privatizers.insert(
+            mlir::SymbolRefAttr::get(privatizerOp));
+        delayedPrivatizationInfo.hostAddresses.insert(hsb.getAddr());
+        delayedPrivatizationInfo.hostSymbols.insert(sym);
       } else {
         cloneSymbol(sym);
         copyFirstPrivateSymbol(sym);
@@ -2322,7 +2328,9 @@ static void createBodyOfOp(
     Op &op, Fortran::lower::AbstractConverter &converter, mlir::Location &loc,
     Fortran::lower::pft::Evaluation &eval, bool genNested,
     const Fortran::parser::OmpClauseList *clauses = nullptr,
-    const llvm::SmallVector<const Fortran::semantics::Symbol *> &args = {},
+    std::function<llvm::SmallVector<const Fortran::semantics::Symbol *>(
+        mlir::Operation *)>
+        genRegionEntryCB = nullptr,
     bool outerCombined = false, DataSharingProcessor *dsp = nullptr) {
   fir::FirOpBuilder &firOpBuilder = converter.getFirOpBuilder();
 
@@ -2336,27 +2344,15 @@ static void createBodyOfOp(
   // argument. Also update the symbol's address with the mlir argument value.
   // e.g. For loops the argument is the induction variable. And all further
   // uses of the induction variable should use this mlir value.
-  if (args.size()) {
-    std::size_t loopVarTypeSize = 0;
-    for (const Fortran::semantics::Symbol *arg : args)
-      loopVarTypeSize = std::max(loopVarTypeSize, arg->GetUltimate().size());
-    mlir::Type loopVarType = getLoopVarType(converter, loopVarTypeSize);
-    llvm::SmallVector<mlir::Type> tiv(args.size(), loopVarType);
-    llvm::SmallVector<mlir::Location> locs(args.size(), loc);
-    firOpBuilder.createBlock(&op.getRegion(), {}, tiv, locs);
-    // The argument is not currently in memory, so make a temporary for the
-    // argument, and store it there, then bind that location to the argument.
-    mlir::Operation *storeOp = nullptr;
-    for (auto [argIndex, argSymbol] : llvm::enumerate(args)) {
-      mlir::Value indexVal =
-          fir::getBase(op.getRegion().front().getArgument(argIndex));
-      storeOp =
-          createAndSetPrivatizedLoopVar(converter, loc, indexVal, argSymbol);
+  auto regionArgs =
+      [&]() -> llvm::SmallVector<const Fortran::semantics::Symbol *> {
+    if (genRegionEntryCB != nullptr) {
+      return genRegionEntryCB(op);
     }
-    firOpBuilder.setInsertionPointAfter(storeOp);
-  } else {
+
     firOpBuilder.createBlock(&op.getRegion());
-  }
+    return {};
+  }();
 
   // Mark the earliest insertion point.
   mlir::Operation *marker = insertMarker(firOpBuilder);
@@ -2454,8 +2450,8 @@ static void createBodyOfOp(
         assert(tempDsp.has_value());
         tempDsp->processStep2(op, isLoop);
       } else {
-        if (isLoop && args.size() > 0)
-          dsp->setLoopIV(converter.getSymbolAddress(*args[0]));
+        if (isLoop && regionArgs.size() > 0)
+          dsp->setLoopIV(converter.getSymbolAddress(*regionArgs[0]));
         dsp->processStep2(op, isLoop);
       }
     }
@@ -2531,16 +2527,19 @@ static void genBodyOfTargetDataOp(
 }
 
 template <typename OpTy, typename... Args>
-static OpTy genOpWithBody(Fortran::lower::AbstractConverter &converter,
-                          Fortran::lower::pft::Evaluation &eval, bool genNested,
-                          mlir::Location currentLocation, bool outerCombined,
-                          const Fortran::parser::OmpClauseList *clauseList,
-                          DataSharingProcessor *dsp, Args &&...args) {
+static OpTy genOpWithBody(
+    Fortran::lower::AbstractConverter &converter,
+    Fortran::lower::pft::Evaluation &eval, bool genNested,
+    mlir::Location currentLocation, bool outerCombined,
+    const Fortran::parser::OmpClauseList *clauseList,
+    std::function<llvm::SmallVector<const Fortran::semantics::Symbol *>(
+        mlir::Operation *)>
+        genRegionEntryCB,
+    DataSharingProcessor *dsp, Args &&...args) {
   auto op = converter.getFirOpBuilder().create<OpTy>(
       currentLocation, std::forward<Args>(args)...);
   createBodyOfOp<OpTy>(op, converter, currentLocation, eval, genNested,
-                       clauseList,
-                       /*args=*/{}, outerCombined, dsp);
+                       clauseList, genRegionEntryCB, outerCombined, dsp);
   return op;
 }
 
@@ -2548,24 +2547,24 @@ static mlir::omp::MasterOp
 genMasterOp(Fortran::lower::AbstractConverter &converter,
             Fortran::lower::pft::Evaluation &eval, bool genNested,
             mlir::Location currentLocation) {
-  return genOpWithBody<mlir::omp::MasterOp>(converter, eval, genNested,
-                                            currentLocation,
-                                            /*outerCombined=*/false,
-                                            /*clauseList=*/nullptr,
-                                            /*dsp=*/nullptr,
-                                            /*resultTypes=*/mlir::TypeRange());
+  return genOpWithBody<mlir::omp::MasterOp>(
+      converter, eval, genNested, currentLocation,
+      /*outerCombined=*/false,
+      /*clauseList=*/nullptr, /*genRegionEntryCB=*/nullptr,
+      /*dsp=*/nullptr,
+      /*resultTypes=*/mlir::TypeRange());
 }
 
 static mlir::omp::OrderedRegionOp
 genOrderedRegionOp(Fortran::lower::AbstractConverter &converter,
                    Fortran::lower::pft::Evaluation &eval, bool genNested,
                    mlir::Location currentLocation) {
-  return genOpWithBody<mlir::omp::OrderedRegionOp>(converter, eval, genNested,
-                                                   currentLocation,
-                                                   /*outerCombined=*/false,
-                                                   /*clauseList=*/nullptr,
-                                                   /*dsp=*/nullptr,
-                                                   /*simd=*/false);
+  return genOpWithBody<mlir::omp::OrderedRegionOp>(
+      converter, eval, genNested, currentLocation,
+      /*outerCombined=*/false,
+      /*clauseList=*/nullptr, /*genRegionEntryCB=*/nullptr,
+      /*dsp=*/nullptr,
+      /*simd=*/false);
 }
 
 static mlir::omp::ParallelOp
@@ -2601,16 +2600,44 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
     dsp.processStep1();
   }
 
-  llvm::SmallVector<mlir::Attribute> privatizers(dsp.getPrivatizers().begin(),
-                                                 dsp.getPrivatizers().end());
+  const auto &delayedPrivatizationInfo = dsp.getDelayedPrivatizationInfo();
+  llvm::SmallVector<mlir::Attribute> privatizers(
+      delayedPrivatizationInfo.privatizers.begin(),
+      delayedPrivatizationInfo.privatizers.end());
 
   llvm::SmallVector<mlir::Value> privateSymAddresses(
-      dsp.getPrivateSymHostAddrsses().begin(),
-      dsp.getPrivateSymHostAddrsses().end());
+      delayedPrivatizationInfo.hostAddresses.begin(),
+      delayedPrivatizationInfo.hostAddresses.end());
+
+  auto genRegionEntryCB = [&](mlir::Operation *op) {
+    auto parallelOp = llvm::cast<mlir::omp::ParallelOp>(op);
+    auto privateVars = parallelOp.getPrivateVars();
+    auto &region = parallelOp.getRegion();
+    llvm::SmallVector<mlir::Type> privateVarTypes;
+    llvm::SmallVector<mlir::Location> privateVarLocs;
+
+    for (auto privateVar : privateVars) {
+      privateVarTypes.push_back(privateVar.getType());
+      privateVarLocs.push_back(privateVar.getLoc());
+    }
+
+    converter.getFirOpBuilder().createBlock(&region, {}, privateVarTypes,
+                                            privateVarLocs);
+
+    int argIdx = 0;
+    for (const auto *sym : delayedPrivatizationInfo.hostSymbols) {
+      converter.bindSymbol(*sym, region.getArgument(argIdx));
+      ++argIdx;
+    }
+
+    return llvm::SmallVector<const Fortran::semantics::Symbol *>(
+        delayedPrivatizationInfo.hostSymbols.begin(),
+        delayedPrivatizationInfo.hostSymbols.end());
+  };
 
   return genOpWithBody<mlir::omp::ParallelOp>(
       converter, eval, genNested, currentLocation, outerCombined, &clauseList,
-      &dsp,
+      genRegionEntryCB, &dsp,
       /*resultTypes=*/mlir::TypeRange(), ifClauseOperand,
       numThreadsClauseOperand, allocateOperands, allocatorOperands,
       reductionVars,
@@ -2635,6 +2662,7 @@ genSectionOp(Fortran::lower::AbstractConverter &converter,
   return genOpWithBody<mlir::omp::SectionOp>(
       converter, eval, genNested, currentLocation,
       /*outerCombined=*/false, &sectionsClauseList,
+      /*genRegionEntryCB=*/nullptr,
       /*dsp=*/nullptr);
 }
 
@@ -2656,8 +2684,8 @@ genSingleOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::SingleOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &beginClauseList, /*dsp=*/nullptr,
-      allocateOperands, allocatorOperands, nowaitAttr);
+      /*outerCombined=*/false, &beginClauseList, /*genRegionEntryCB=*/nullptr,
+      /*dsp=*/nullptr, allocateOperands, allocatorOperands, nowaitAttr);
 }
 
 static mlir::omp::TaskOp
@@ -2689,8 +2717,9 @@ genTaskOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::TaskOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &clauseList, /*dsp=*/nullptr, ifClauseOperand,
-      finalClauseOperand, untiedAttr, mergeableAttr,
+      /*outerCombined=*/false, &clauseList, /*genRegionEntryCB=*/nullptr,
+      /*dsp=*/nullptr, ifClauseOperand, finalClauseOperand, untiedAttr,
+      mergeableAttr,
       /*in_reduction_vars=*/mlir::ValueRange(),
       /*in_reductions=*/nullptr, priorityClauseOperand,
       dependTypeOperands.empty()
@@ -2712,7 +2741,7 @@ genTaskGroupOp(Fortran::lower::AbstractConverter &converter,
       currentLocation, llvm::omp::Directive::OMPD_taskgroup);
   return genOpWithBody<mlir::omp::TaskGroupOp>(
       converter, eval, genNested, currentLocation,
-      /*outerCombined=*/false, &clauseList,
+      /*outerCombined=*/false, &clauseList, /*genRegionEntryCB=*/nullptr,
       /*dsp=*/nullptr,
       /*task_reduction_vars=*/mlir::ValueRange(),
       /*task_reductions=*/nullptr, allocateOperands, allocatorOperands);
@@ -3097,6 +3126,7 @@ genTeamsOp(Fortran::lower::AbstractConverter &converter,
 
   return genOpWithBody<mlir::omp::TeamsOp>(
       converter, eval, genNested, currentLocation, outerCombined, &clauseList,
+      /*genRegionEntryCB=*/nullptr,
       /*dsp=*/nullptr,
       /*num_teams_lower=*/nullptr, numTeamsClauseOperand, ifClauseOperand,
       threadLimitClauseOperand, allocateOperands, allocatorOperands,
@@ -3294,6 +3324,33 @@ static void convertLoopBounds(Fortran::lower::AbstractConverter &converter,
   }
 }
 
+static llvm::SmallVector<const Fortran::semantics::Symbol *> genCodeForIterVar(
+    mlir::Operation *op, Fortran::lower::AbstractConverter &converter,
+    mlir::Location &loc,
+    const llvm::SmallVector<const Fortran::semantics::Symbol *> &args) {
+  fir::FirOpBuilder &firOpBuilder = converter.getFirOpBuilder();
+  auto &region = op->getRegion(0);
+
+  std::size_t loopVarTypeSize = 0;
+  for (const Fortran::semantics::Symbol *arg : args)
+    loopVarTypeSize = std::max(loopVarTypeSize, arg->GetUltimate().size());
+  mlir::Type loopVarType = getLoopVarType(converter, loopVarTypeSize);
+  llvm::SmallVector<mlir::Type> tiv(args.size(), loopVarType);
+  llvm::SmallVector<mlir::Location> locs(args.size(), loc);
+  firOpBuilder.createBlock(&region, {}, tiv, locs);
+  // The argument is not currently in memory, so make a temporary for the
+  // argument, and store it there, then bind that location to the argument.
+  mlir::Operation *storeOp = nullptr;
+  for (auto [argIndex, argSymbol] : llvm::enumerate(args)) {
+    mlir::Value indexVal = fir::getBase(region.front().getArgument(argIndex));
+    storeOp =
+        createAndSetPrivatizedLoopVar(converter, loc, indexVal, argSymbol);
+  }
+  firOpBuilder.setInsertionPointAfter(storeOp);
+
+  return args;
+}
+
 static void
 createSimdLoop(Fortran::lower::AbstractConverter &converter,
                Fortran::lower::pft::Evaluation &eval,
@@ -3341,9 +3398,14 @@ createSimdLoop(Fortran::lower::AbstractConverter &converter,
 
   auto *nestedEval = getCollapsedLoopEval(
       eval, Fortran::lower::getCollapseValue(loopOpClauseList));
+
+  auto ivCallback = [&](mlir::Operation *op) {
+    return genCodeForIterVar(op, converter, loc, iv);
+  };
+
   createBodyOfOp<mlir::omp::SimdLoopOp>(simdLoopOp, converter, loc, *nestedEval,
                                         /*genNested=*/true, &loopOpClauseList,
-                                        iv, /*outer=*/false, &dsp);
+                                        ivCallback, /*outer=*/false, &dsp);
 }
 
 static void createWsLoop(Fortran::lower::AbstractConverter &converter,
@@ -3416,8 +3478,14 @@ static void createWsLoop(Fortran::lower::AbstractConverter &converter,
 
   auto *nestedEval = getCollapsedLoopEval(
       eval, Fortran::lower::getCollapseValue(beginClauseList));
+
+  auto ivCallback = [&](mlir::Operation *op) {
+    return genCodeForIterVar(op, converter, loc, iv);
+  };
+
   createBodyOfOp<mlir::omp::WsLoopOp>(wsLoopOp, converter, loc, *nestedEval,
-                                      /*genNested=*/true, &beginClauseList, iv,
+                                      /*genNested=*/true, &beginClauseList,
+                                      ivCallback,
                                       /*outer=*/false, &dsp);
 }
 
@@ -3746,6 +3814,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
                                        /*genNested=*/false, currentLocation,
                                        /*outerCombined=*/false,
                                        /*clauseList=*/nullptr,
+                                       /*genRegionEntryCB=*/nullptr,
                                        /*dsp=*/nullptr,
                                        /*reduction_vars=*/mlir::ValueRange(),
                                        /*reductions=*/nullptr, allocateOperands,
