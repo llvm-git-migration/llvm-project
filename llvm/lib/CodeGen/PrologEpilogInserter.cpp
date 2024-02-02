@@ -228,8 +228,9 @@ bool PEI::runOnMachineFunction(MachineFunction &MF) {
   FrameIndexVirtualScavenging = TRI->requiresFrameIndexScavenging(MF);
   ORE = &getAnalysis<MachineOptimizationRemarkEmitterPass>().getORE();
 
-  // Calculate the MaxCallFrameSize value for the function's frame
-  // information. Also eliminates call frame pseudo instructions.
+  // Calculate the MaxCallFrameSize and AdjustsStack variables for the
+  // function's frame information. Also eliminates call frame pseudo
+  // instructions.
   calculateCallFrameInfo(MF);
 
   // Determine placement of CSR spill/restore code and prolog/epilog code:
@@ -349,8 +350,9 @@ bool PEI::runOnMachineFunction(MachineFunction &MF) {
   return true;
 }
 
-/// Calculate the MaxCallFrameSize variables for the function's frame
-/// information and eliminate call frame pseudo instructions.
+/// Calculate the MaxCallFrameSize and AdjustsStack
+/// variables for the function's frame information and eliminate call frame
+/// pseudo instructions.
 void PEI::calculateCallFrameInfo(MachineFunction &MF) {
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
@@ -366,13 +368,13 @@ void PEI::calculateCallFrameInfo(MachineFunction &MF) {
     return;
 
   // (Re-)Compute the MaxCallFrameSize with some sanity checks.
-  bool WasComputed = MFI.isMaxCallFrameSizeComputed();
+  bool CFSComputedIn = MFI.isMaxCallFrameSizeComputed();
   unsigned MaxCFSIn = MFI.getMaxCallFrameSize();
   bool AdjStackIn = MFI.adjustsStack();
   std::vector<MachineBasicBlock::iterator> FrameSDOps;
   MFI.computeMaxCallFrameSize(MF, &FrameSDOps);
-  assert(!WasComputed || (MaxCFSIn >= MFI.getMaxCallFrameSize() &&
-                          !(!AdjStackIn && MFI.adjustsStack())));
+  assert(!CFSComputedIn || (MaxCFSIn >= MFI.getMaxCallFrameSize() &&
+                            !(!AdjStackIn && MFI.adjustsStack())));
 
   if (TFI->canSimplifyCallFramePseudos(MF)) {
     // If call frames are not being included as part of the stack frame, and

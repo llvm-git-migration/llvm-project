@@ -638,7 +638,7 @@ public:
   bool hasTailCall() const { return HasTailCall; }
   void setHasTailCall(bool V = true) { HasTailCall = V; }
 
-  /// Computes the maximum size of a callframe.
+  /// Computes the maximum size of a callframe and the AdjustsStack property.
   /// This only works for targets defining
   /// TargetInstrInfo::getCallFrameSetupOpcode(), getCallFrameDestroyOpcode(),
   /// and getFrameSize().
