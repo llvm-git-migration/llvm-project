@@ -19,6 +19,7 @@
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 #include <memory>
 #include <optional>
 #include <queue>
@@ -401,6 +402,31 @@ AST_MATCHER(CXXConstructExpr, isSafeSpanTwoParamConstruct) {
   }
   return false;
 }
+
+AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
+  const DeclRefExpr * BaseDRE = dyn_cast_or_null<DeclRefExpr>(Node.getBase()->IgnoreParenImpCasts());
+  if (!BaseDRE)
+    return false;
+  if (!BaseDRE->getDecl())
+    return false;
+  auto BaseVarDeclTy = BaseDRE->getDecl()->getType();
+  if (!BaseVarDeclTy->isConstantArrayType())
+    return false;
+  const auto * CATy = dyn_cast_or_null<ConstantArrayType>(BaseVarDeclTy);
+  if (!CATy)
+    return false;
+  const APInt ArrSize = CATy->getSize();
+
+  if (const auto * IdxLit = dyn_cast<IntegerLiteral>(Node.getIdx())) {
+    const APInt ArrIdx = IdxLit->getValue();
+    // FIXME: ArrIdx.isNegative() we could immediately emit an error as that's a bug
+    if (ArrIdx.isNonNegative() && ArrIdx.getLimitedValue() < ArrSize.getLimitedValue())
+      return true;
+  }
+
+  return false;
+}
+
 } // namespace clang::ast_matchers
 
 namespace {
@@ -593,16 +619,16 @@ public:
   }
 
   static Matcher matcher() {
-    // FIXME: What if the index is integer literal 0? Should this be
-    // a safe gadget in this case?
-      // clang-format off
+    // clang-format off
       return stmt(arraySubscriptExpr(
             hasBase(ignoringParenImpCasts(
               anyOf(hasPointerType(), hasArrayType()))),
-            unless(hasIndex(
-                anyOf(integerLiteral(equals(0)), arrayInitIndexExpr())
-             )))
-            .bind(ArraySubscrTag));
+            unless(anyOf(
+              isSafeArraySubscript(),
+              hasIndex(
+                  anyOf(integerLiteral(equals(0)), arrayInitIndexExpr())
+              )
+            ))).bind(ArraySubscrTag));
     // clang-format on
   }
 
