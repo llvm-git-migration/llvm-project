@@ -11,6 +11,7 @@
 import argparse
 from git import Repo  # type: ignore
 import html
+import json
 import github
 import os
 import re
@@ -293,6 +294,76 @@ If your change does cause a problem, it may be reverted, or you can revert it yo
 This is a normal part of [LLVM development](https://llvm.org/docs/DeveloperPolicy.html#patch-reversion-policy). You can fix your changes and open a new PR to merge them again.
 
 If you don't get any reports, no action is required from you. Your changes are working as expected, well done!
+"""
+        self.pr.as_issue().create_comment(comment)
+        return True
+
+
+class PRMergeOnBehalfInformation:
+    COMMENT_TAG = "<!--LLVM MERGE ON BEHALF INFORMATION COMMENT-->\n"
+
+    def __init__(self, token: str, repo: str, pr_number: int, author: str):
+        repo = github.Github(token).get_repo(repo)
+        self.pr = repo.get_issue(pr_number).as_pull_request()
+        self.author = author
+        self.repo = repo
+        self.token = token
+
+    def author_has_push_permission(self):
+        # https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28#get-repository-permissions-for-a-user
+        response = requests.get(
+            # Where repo is "owner/repo-name".
+            f"https://api.github.com/repos/{self.repo}/collaborators/{self.author}/permission",
+            headers={
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {self.token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+
+        # 404 means this user is not a collaborator.
+        if response.status_code == 404:
+            # Does not have push permission if not a collaborator.
+            return False
+        # User is a collaborator.
+        elif response.status_code == 200:
+            user_details = json.loads(response.text)
+            user = user_details["user"]
+
+            # We may have a list of permissions.
+            if permissions := user.get("permissions"):
+                return permissions["pull"]
+            else:
+                # Otherwise we can always fall back to the permission
+                # on the top level object. The other permissions "read" and
+                # "none" cannot push changes.
+                return user_details["permisson"] in ["admin", "write"]
+        else:
+            # Something went wrong, log and carry on.
+            print("Unexpected response code", response.status_code)
+            # Assume they do have push permissions, so that we don't spam
+            # PRs with comments if there are API problems.
+            return True
+
+    def run(self) -> bool:
+        # A review can be approved more than once, only comment the first time.
+        # Doing this check first as I'm assuming we get the comment data "free" in
+        # terms of API cost.
+        for comment in self.pr.as_issue().get_comments():
+            if self.COMMENT_TAG in comment.body:
+                return
+
+        # Now check whether the author has permissions needed to merge, which
+        # uses a REST API call.
+        if self.author_has_push_permission():
+            return
+
+        # This text is using Markdown formatting.
+        comment = f"""\
+{self.COMMENT_TAG}
+@{self.author}, you do not have permissions to merge your own PRs yet. Please let us know when you are happy for this to be merged, and one of the reviewers can merge it on your behalf.
+
+(if many approvals are required, please wait until everyone has approved before merging)
 """
         self.pr.as_issue().create_comment(comment)
         return True
@@ -647,6 +718,14 @@ pr_buildbot_information_parser = subparsers.add_parser("pr-buildbot-information"
 pr_buildbot_information_parser.add_argument("--issue-number", type=int, required=True)
 pr_buildbot_information_parser.add_argument("--author", type=str, required=True)
 
+pr_merge_on_behalf_information_parser = subparsers.add_parser(
+    "pr-merge-on-behalf-information"
+)
+pr_merge_on_behalf_information_parser.add_argument(
+    "--issue-number", type=int, required=True
+)
+pr_merge_on_behalf_information_parser.add_argument("--author", type=str, required=True)
+
 release_workflow_parser = subparsers.add_parser("release-workflow")
 release_workflow_parser.add_argument(
     "--llvm-project-dir",
@@ -700,6 +779,11 @@ elif args.command == "pr-buildbot-information":
         args.token, args.repo, args.issue_number, args.author
     )
     pr_buildbot_information.run()
+elif args.command == "pr-merge-on-behalf-information":
+    pr_merge_on_behalf_information = PRMergeOnBehalfInformation(
+        args.token, args.repo, args.issue_number, args.author
+    )
+    pr_merge_on_behalf_information.run()
 elif args.command == "release-workflow":
     release_workflow = ReleaseWorkflow(
         args.token,
