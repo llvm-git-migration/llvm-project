@@ -1,4 +1,12 @@
 // RUN: %clang_cc1 -triple x86_64-apple-darwin9 -fsyntax-only -verify %s
+// RUN: %clang_cc1 -triple i586-intel-elfiamcu -fsyntax-only -verify %s
+
+#ifdef __iamcu
+// expected-no-diagnostics
+struct dummy { int x __attribute__((aligned));  };
+int m0[__alignof__(struct dummy) == 4 ? 1 : -1];
+
+#else
 
 int x __attribute__((aligned(3))); // expected-error {{requested alignment is not a power of 2}}
 int y __attribute__((aligned(1ull << 33))); // expected-error {{requested alignment must be 4294967296 bytes or smaller}}
@@ -60,3 +68,5 @@ array_with_overaligned_struct F2;
 char f2[__alignof__(F2) == 16 ? 1 : -1] = { 0 };
 array_with_align_attr F3;
 char f3[__alignof__(F3) == 16 ? 1 : -1] = { 0 };
+
+#endif
