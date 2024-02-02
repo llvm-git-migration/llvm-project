@@ -25,6 +25,7 @@
 #include "PPCInstrInfo.h"
 #include "PPCTargetMachine.h"
 #include "llvm/CodeGen/LiveIntervals.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/InitializePasses.h"
@@ -140,9 +141,11 @@ protected:
         // We don't really need to save data to the stack - the clobbered
         // registers are already saved when the SDNode (e.g. PPCaddiTlsgdLAddr)
         // gets translated to the pseudo instruction (e.g. ADDItlsgdLADDR).
-        if (NeedFence)
+        if (NeedFence) {
+          MBB.getParent()->getFrameInfo().setAdjustsStack(true);
           BuildMI(MBB, I, DL, TII->get(PPC::ADJCALLSTACKDOWN)).addImm(0)
                                                               .addImm(0);
+        }
 
         if (IsAIX) {
           // The variable offset and region handle are copied in r4 and r3. The

@@ -199,14 +199,8 @@ void MachineFrameInfo::computeMaxCallFrameSize(
       if (Opcode == FrameSetupOpcode || Opcode == FrameDestroyOpcode) {
         unsigned Size = TII.getFrameSize(MI);
         MaxCallFrameSize = std::max(MaxCallFrameSize, Size);
-        AdjustsStack = true;
         if (FrameSDOps != nullptr)
           FrameSDOps->push_back(&MI);
-      } else if (MI.isInlineAsm()) {
-        // Some inline asm's need a stack frame, as indicated by operand 1.
-        unsigned ExtraInfo = MI.getOperand(InlineAsm::MIOp_ExtraInfo).getImm();
-        if (ExtraInfo & InlineAsm::Extra_IsAlignStack)
-          AdjustsStack = true;
       }
     }
   }

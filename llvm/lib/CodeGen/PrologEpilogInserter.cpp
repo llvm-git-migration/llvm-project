@@ -228,9 +228,8 @@ bool PEI::runOnMachineFunction(MachineFunction &MF) {
   FrameIndexVirtualScavenging = TRI->requiresFrameIndexScavenging(MF);
   ORE = &getAnalysis<MachineOptimizationRemarkEmitterPass>().getORE();
 
-  // Calculate the MaxCallFrameSize and AdjustsStack variables for the
-  // function's frame information. Also eliminates call frame pseudo
-  // instructions.
+  // Calculate the MaxCallFrameSize value for the function's frame
+  // information. Also eliminates call frame pseudo instructions.
   calculateCallFrameInfo(MF);
 
   // Determine placement of CSR spill/restore code and prolog/epilog code:
@@ -350,9 +349,8 @@ bool PEI::runOnMachineFunction(MachineFunction &MF) {
   return true;
 }
 
-/// Calculate the MaxCallFrameSize and AdjustsStack
-/// variables for the function's frame information and eliminate call frame
-/// pseudo instructions.
+/// Calculate the MaxCallFrameSize variable for the function's frame
+/// information and eliminate call frame pseudo instructions.
 void PEI::calculateCallFrameInfo(MachineFunction &MF) {
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
@@ -367,14 +365,15 @@ void PEI::calculateCallFrameInfo(MachineFunction &MF) {
   if (FrameSetupOpcode == ~0u && FrameDestroyOpcode == ~0u)
     return;
 
-  // (Re-)Compute the MaxCallFrameSize with some sanity checks.
-  bool CFSComputedIn = MFI.isMaxCallFrameSizeComputed();
-  unsigned MaxCFSIn = MFI.getMaxCallFrameSize();
-  bool AdjStackIn = MFI.adjustsStack();
+  // (Re-)Compute the MaxCallFrameSize.
+  uint32_t MaxCFSIn =
+      MFI.isMaxCallFrameSizeComputed() ? MFI.getMaxCallFrameSize() : UINT32_MAX;
   std::vector<MachineBasicBlock::iterator> FrameSDOps;
   MFI.computeMaxCallFrameSize(MF, &FrameSDOps);
-  assert(!CFSComputedIn || (MaxCFSIn >= MFI.getMaxCallFrameSize() &&
-                            !(!AdjStackIn && MFI.adjustsStack())));
+  assert(MFI.getMaxCallFrameSize() <= MaxCFSIn &&
+         "Recomputing MaxCFS gave a larger value.");
+  assert((FrameSDOps.empty() || MF.getFrameInfo().adjustsStack()) &&
+         "AdjustsStack not set in presence of a frame pseudo instruction.");
 
   if (TFI->canSimplifyCallFramePseudos(MF)) {
     // If call frames are not being included as part of the stack frame, and
