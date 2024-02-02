@@ -95,7 +95,7 @@ struct CGRecordLowering {
   CGRecordLowering(CodeGenTypes &Types, const RecordDecl *D, bool Packed);
   // Short helper routines.
   /// Constructs a MemberInfo instance from an offset and llvm::Type *.
-  MemberInfo StorageInfo(CharUnits Offset, llvm::Type *Data) {
+  static MemberInfo StorageInfo(CharUnits Offset, llvm::Type *Data) {
     return MemberInfo(Offset, MemberInfo::Field, Data);
   }
 
@@ -104,7 +104,7 @@ struct CGRecordLowering {
   /// fields of the same formal type.  We want to emit a layout with
   /// these discrete storage units instead of combining them into a
   /// continuous run.
-  bool isDiscreteBitFieldABI() {
+  bool isDiscreteBitFieldABI() const {
     return Context.getTargetInfo().getCXXABI().isMicrosoft() ||
            D->isMsStruct(Context);
   }
@@ -126,7 +126,7 @@ struct CGRecordLowering {
   }
 
   /// Wraps llvm::Type::getIntNTy with some implicit arguments.
-  llvm::Type *getIntNType(uint64_t NumBits) {
+  llvm::Type *getIntNType(uint64_t NumBits) const {
     unsigned AlignedBits = llvm::alignTo(NumBits, Context.getCharWidth());
     return llvm::Type::getIntNTy(Types.getLLVMContext(), AlignedBits);
   }
@@ -152,16 +152,16 @@ struct CGRecordLowering {
                              (unsigned)Context.toBits(getSize(Type))));
   }
   /// Gets the llvm Basesubobject type from a CXXRecordDecl.
-  llvm::Type *getStorageType(const CXXRecordDecl *RD) {
+  llvm::Type *getStorageType(const CXXRecordDecl *RD) const {
     return Types.getCGRecordLayout(RD).getBaseSubobjectLLVMType();
   }
-  CharUnits bitsToCharUnits(uint64_t BitOffset) {
+  CharUnits bitsToCharUnits(uint64_t BitOffset) const {
     return Context.toCharUnitsFromBits(BitOffset);
   }
-  CharUnits getSize(llvm::Type *Type) {
+  CharUnits getSize(llvm::Type *Type) const {
     return CharUnits::fromQuantity(DataLayout.getTypeAllocSize(Type));
   }
-  CharUnits getAlignment(llvm::Type *Type) {
+  CharUnits getAlignment(llvm::Type *Type) const {
     return CharUnits::fromQuantity(DataLayout.getABITypeAlign(Type));
   }
   bool isZeroInitializable(const FieldDecl *FD) {
@@ -174,7 +174,7 @@ struct CGRecordLowering {
     if (!Size.isZero())
       FieldTypes.push_back(getByteArrayType(Size));
   }
-  uint64_t getFieldBitOffset(const FieldDecl *FD) {
+  uint64_t getFieldBitOffset(const FieldDecl *FD) const {
     return Layout.getFieldOffset(FD->getFieldIndex());
   }
   // Layout routines.
