@@ -260,24 +260,18 @@ void AArch64::ExtensionSet::addArchDefaults(const ArchInfo &Arch) {
 bool AArch64::ExtensionSet::parseModifier(StringRef Modifier) {
   LLVM_DEBUG(llvm::dbgs() << "parseModifier(" << Modifier << ")\n");
 
-  // Negative modifiers, with the syntax "no<feat>"
-  if (Modifier.starts_with("no")) {
-    StringRef ModifierBase(Modifier.substr(2));
-    for (const auto &AE : Extensions) {
-      if (!AE.NegFeature.empty() && ModifierBase == AE.Name) {
-        disable(AE.ID);
-        return true;
-      }
-    }
-  }
+  bool IsNegated = Modifier.starts_with("no");
+  StringRef ArchExt = IsNegated ? Modifier.drop_front(2) : Modifier;
 
-  // Positive modifiers
-  for (const auto &AE : Extensions) {
-    if (!AE.Feature.empty() && Modifier == AE.Name) {
-      enable(AE.ID);
+  if (auto AE = parseArchExtension(ArchExt)) {
+    if (IsNegated && !AE->NegFeature.empty()) {
+      disable(AE->ID);
+      return true;
+    }
+    if (!AE->Feature.empty()) {
+      enable(AE->ID);
       return true;
     }
   }
-
   return false;
 }
