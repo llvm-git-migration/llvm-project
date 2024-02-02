@@ -49,8 +49,9 @@ def merge(args):
     )
     parser.add_argument("profdata", help="Path to llvm-profdata tool")
     parser.add_argument("output", help="Output filename")
-    parser.add_argument("paths", nargs='+',
-        help="Folder(s) containing input profraw files")
+    parser.add_argument(
+        "paths", nargs="+", help="Folder(s) containing input profraw files"
+    )
     parser.add_argument("--sample", action="store_true", help="Sample profile")
     opts = parser.parse_args(args)
 
