@@ -86,9 +86,13 @@ public:
 
   /// Returns a dump of the collected statistics.
   ///
+  /// \param[in] summary_only
+  ///   If true, only report high level summary statistics without
+  ///   targets/modules/breakpoints etc.. details.
+  ///
   /// \return
   ///     A SBStructuredData with the statistics collected.
-  lldb::SBStructuredData GetStatistics();
+  lldb::SBStructuredData GetStatistics(bool summary_only = false);
 
   /// Return the platform object associated with the target.
   ///
@@ -326,7 +330,7 @@ public:
   uint32_t GetAddressByteSize();
 
   const char *GetTriple();
-  
+
   const char *GetABIName();
 
   const char *GetLabel() const;
