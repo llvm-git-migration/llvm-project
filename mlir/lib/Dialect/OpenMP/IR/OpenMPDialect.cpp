@@ -989,9 +989,10 @@ void ParallelOp::build(OpBuilder &builder, OperationState &state,
   ParallelOp::build(
       builder, state, /*if_expr_var=*/nullptr, /*num_threads_var=*/nullptr,
       /*allocate_vars=*/ValueRange(), /*allocators_vars=*/ValueRange(),
-      /*reduction_vars=*/ValueRange(), /*private_vars=*/ValueRange(),
+      /*reduction_vars=*/ValueRange(),
       /*reductions=*/nullptr,
-      /*proc_bind_val=*/nullptr, /*private_inits*/ nullptr);
+      /*proc_bind_val=*/nullptr, /*private_vars=*/ValueRange(),
+      /*privatizers*/ nullptr);
   state.addAttributes(attributes);
 }
 
@@ -1610,20 +1611,20 @@ void PrivateClauseOp::build(OpBuilder &odsBuilder, OperationState &odsState,
 static ParseResult parsePrivateVarList(
     OpAsmParser &parser,
     llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> &privateVarsOperands,
-    llvm::SmallVector<Type, 1> &privateVarsTypes, ArrayAttr &privateInitsAttr) {
+    llvm::SmallVector<Type, 1> &privateVarsTypes, ArrayAttr &privatizersAttr) {
   SymbolRefAttr privatizerSym;
   OpAsmParser::UnresolvedOperand arg;
   OpAsmParser::UnresolvedOperand blockArg;
   Type argType;
 
-  SmallVector<SymbolRefAttr> privateInitsVec;
+  SmallVector<SymbolRefAttr> privatizersVec;
 
   auto parsePrivatizers = [&]() -> ParseResult {
     if (parser.parseAttribute(privatizerSym) || parser.parseOperand(arg)) {
       return failure();
     }
 
-    privateInitsVec.push_back(privatizerSym);
+    privatizersVec.push_back(privatizerSym);
     privateVarsOperands.push_back(arg);
     return success();
   };
@@ -1638,9 +1639,9 @@ static ParseResult parsePrivateVarList(
   if (parser.parseCommaSeparatedList(parsePrivatizers))
     return failure();
 
-  SmallVector<Attribute> privateInits(privateInitsVec.begin(),
-                                      privateInitsVec.end());
-  privateInitsAttr = ArrayAttr::get(parser.getContext(), privateInits);
+  SmallVector<Attribute> privatizers(privatizersVec.begin(),
+                                     privatizersVec.end());
+  privatizersAttr = ArrayAttr::get(parser.getContext(), privatizers);
 
   if (parser.parseColon())
     return failure();
@@ -1654,17 +1655,18 @@ static ParseResult parsePrivateVarList(
 static void printPrivateVarList(OpAsmPrinter &printer, Operation *op,
                                 OperandRange privateVars,
                                 TypeRange privateVarTypes,
-                                std::optional<ArrayAttr> privateInitsAttr) {
+                                std::optional<ArrayAttr> privatizersAttr) {
   unsigned argIndex = 0;
-  assert(privateVars.size() == privateVarTypes.size() &&
-         ((privateVars.empty()) ||
-          (*privateInitsAttr &&
-           (privateInitsAttr->size() == privateVars.size()))));
+  // TODO Add an op verifier instead of this assertion.
+  assert(
+      privateVars.size() == privateVarTypes.size() &&
+      ((privateVars.empty()) ||
+       (*privatizersAttr && (privatizersAttr->size() == privateVars.size()))));
 
   for (const auto &privateVar : privateVars) {
-    assert(privateInitsAttr);
-    const auto &privateInitSym = (*privateInitsAttr)[argIndex];
-    printer << privateInitSym << " " << privateVar;
+    assert(privatizersAttr);
+    const auto &privatizerSym = (*privatizersAttr)[argIndex];
+    printer << privatizerSym << " " << privateVar;
 
     argIndex++;
     if (argIndex < privateVars.size())

@@ -163,7 +163,7 @@ class DataSharingProcessor {
 
   bool useDelayedPrivatizationWhenPossible;
   Fortran::lower::SymMap *symTable;
-  llvm::SetVector<mlir::SymbolRefAttr> privateInitializers;
+  llvm::SetVector<mlir::SymbolRefAttr> privatizers;
   llvm::SetVector<mlir::Value> privateSymHostAddrsses;
 
   bool needBarrier();
@@ -214,8 +214,8 @@ public:
     loopIV = iv;
   }
 
-  const llvm::SetVector<mlir::SymbolRefAttr> &getPrivateInitializers() const {
-    return privateInitializers;
+  const llvm::SetVector<mlir::SymbolRefAttr> &getPrivatizers() const {
+    return privatizers;
   };
 
   const llvm::SetVector<mlir::Value> &getPrivateSymHostAddrsses() const {
@@ -547,7 +547,7 @@ void DataSharingProcessor::privatize() {
         symTable->popScope();
         firOpBuilder.restoreInsertionPoint(ip);
 
-        privateInitializers.insert(mlir::SymbolRefAttr::get(privatizerOp));
+        privatizers.insert(mlir::SymbolRefAttr::get(privatizerOp));
         privateSymHostAddrsses.insert(hsb.getAddr());
       } else {
         cloneSymbol(sym);
@@ -2601,8 +2601,8 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
     dsp.processStep1();
   }
 
-  llvm::SmallVector<mlir::Attribute> privateInits(
-      dsp.getPrivateInitializers().begin(), dsp.getPrivateInitializers().end());
+  llvm::SmallVector<mlir::Attribute> privatizers(dsp.getPrivatizers().begin(),
+                                                 dsp.getPrivatizers().end());
 
   llvm::SmallVector<mlir::Value> privateSymAddresses(
       dsp.getPrivateSymHostAddrsses().begin(),
@@ -2613,16 +2613,16 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
       &dsp,
       /*resultTypes=*/mlir::TypeRange(), ifClauseOperand,
       numThreadsClauseOperand, allocateOperands, allocatorOperands,
-      reductionVars, privateSymAddresses,
+      reductionVars,
       reductionDeclSymbols.empty()
           ? nullptr
           : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
                                  reductionDeclSymbols),
-      procBindKindAttr,
-      privateInits.empty()
+      procBindKindAttr, privateSymAddresses,
+      privatizers.empty()
           ? nullptr
           : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
-                                 privateInits));
+                                 privatizers));
 }
 
 static mlir::omp::SectionOp
