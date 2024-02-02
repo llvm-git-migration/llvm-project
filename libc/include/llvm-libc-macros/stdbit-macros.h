@@ -92,12 +92,12 @@ inline unsigned stdc_trailing_ones(unsigned long long x) {
       unsigned: stdc_trailing_zeros_ui,                                        \
       unsigned long: stdc_trailing_zeros_ul,                                   \
       unsigned long long: stdc_trailing_zeros_ull)(x)
-#define stdc_trailing_ones(x)                                                 \
+#define stdc_trailing_ones(x)                                                  \
   _Generic((x),                                                                \
-      unsigned char: stdc_trailing_ones_uc,                                   \
-      unsigned short: stdc_trailing_ones_us,                                  \
-      unsigned: stdc_trailing_ones_ui,                                        \
-      unsigned long: stdc_trailing_ones_ul,                                   \
+      unsigned char: stdc_trailing_ones_uc,                                    \
+      unsigned short: stdc_trailing_ones_us,                                   \
+      unsigned: stdc_trailing_ones_ui,                                         \
+      unsigned long: stdc_trailing_ones_ul,                                    \
       unsigned long long: stdc_trailing_ones_ull)(x)
 #endif // __cplusplus
 
