@@ -4121,6 +4121,13 @@ Value *ScalarExprEmitter::GetWidthMinusOneValue(Value* LHS,Value* RHS) {
     Ty = cast<llvm::IntegerType>(VT->getElementType());
   else
     Ty = cast<llvm::IntegerType>(LHS->getType());
+  // Testing with small _BitInt types has shown that Ty->getBitwidth() - 1
+  // can sometimes overflow the capacity of RHS->getType(), cap the value
+  // to be the largest RHS->getType() can hold
+  llvm::APInt RHSMax =
+      llvm::APInt::getMaxValue(RHS->getType()->getScalarSizeInBits());
+  if (RHSMax.ult(Ty->getBitWidth()))
+    return llvm::ConstantInt::get(RHS->getType(), RHSMax);
   return llvm::ConstantInt::get(RHS->getType(), Ty->getBitWidth() - 1);
 }
 
@@ -4235,7 +4242,7 @@ Value *ScalarExprEmitter::EmitShr(const BinOpInfo &Ops) {
            isa<llvm::IntegerType>(Ops.LHS->getType())) {
     CodeGenFunction::SanitizerScope SanScope(&CGF);
     llvm::Value *Valid =
-        Builder.CreateICmpULE(RHS, GetWidthMinusOneValue(Ops.LHS, RHS));
+        Builder.CreateICmpULE(Ops.RHS, GetWidthMinusOneValue(Ops.LHS, Ops.RHS));
     EmitBinOpCheck(std::make_pair(Valid, SanitizerKind::ShiftExponent), Ops);
   }
 
