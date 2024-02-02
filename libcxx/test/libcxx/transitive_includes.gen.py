@@ -16,7 +16,7 @@
 # forever, however we do try to group removals for a couple of releases
 # to avoid breaking users at every release.
 
-# RUN: %{python} %s %{libcxx}/utils
+# RUN: %{python} %s %{libcxx-dir}/utils
 
 import sys
 sys.path.append(sys.argv[1])
