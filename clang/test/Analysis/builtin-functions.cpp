@@ -1,5 +1,7 @@
 // RUN: %clang_analyze_cc1 -triple x86_64-apple-darwin10 -analyzer-checker=core,debug.ExprInspection %s -std=c++11 -verify
 
+void __analysis_assume(bool);
+void _Analysis_assume_(bool);
 void clang_analyzer_eval(bool);
 void clang_analyzer_warnIfReached();
 
@@ -81,4 +83,24 @@ void test_constant_p(void *ptr) {
   clang_analyzer_eval(__builtin_constant_p(k - 3) == 0); // expected-warning {{FALSE}}
   clang_analyzer_eval(__builtin_constant_p(k - 3) == 1); // expected-warning {{TRUE}}
   clang_analyzer_eval(__builtin_constant_p(ptr == 0)); // expected-warning {{FALSE}}
+}
+
+void test_ms_analysis_assume(int *p) {
+  __analysis_assume(p);
+  if (!p) {
+    clang_analyzer_warnIfReached(); // no-warning: dead code.
+  }
+  clang_analyzer_warnIfReached(); // expected-warning {{REACHABLE}}
+  __analysis_assume(false);
+  clang_analyzer_warnIfReached(); // no-warning: dead code.
+}
+
+void test_ms_Analysis_assume_(int *p) {
+  _Analysis_assume_(p);
+  if (!p) {
+    clang_analyzer_warnIfReached(); // no-warning: dead code.
+  }
+  clang_analyzer_warnIfReached(); // expected-warning {{REACHABLE}}
+  _Analysis_assume_(false);
+  clang_analyzer_warnIfReached(); // no-warning: dead code.
 }

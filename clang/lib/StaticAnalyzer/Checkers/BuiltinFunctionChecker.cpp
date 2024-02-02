@@ -14,6 +14,7 @@
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/CallDescription.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/DynamicExtent.h"
@@ -26,8 +27,39 @@ namespace {
 class BuiltinFunctionChecker : public Checker<eval::Call> {
 public:
   bool evalCall(const CallEvent &Call, CheckerContext &C) const;
+
+private:
+  const CallDescriptionSet MicrosoftAnalysisAssume{
+      {{"__analysis_assume"}, 1},
+      {{"_Analysis_assume_"}, 1},
+  };
+
+  void evalCallAssume(const CallEvent &Call, CheckerContext &C) const;
 };
 
+}
+
+void BuiltinFunctionChecker::evalCallAssume(const CallEvent &Call,
+                                            CheckerContext &C) const {
+  assert(Call.getNumArgs() > 0);
+  assert(Call.getResultType()->isVoidType());
+  SVal Arg = Call.getArgSVal(0);
+
+  if (Arg.isUndef())
+    return; // Return true to model purity.
+
+  ProgramStateRef State = C.getState();
+  State = State->assume(Arg.castAs<DefinedOrUnknownSVal>(), true);
+
+  // FIXME: do we want to warn here? Not right now. The most reports might
+  // come from infeasible paths, thus being false positives.
+  if (!State) {
+    C.generateSink(C.getState(), C.getPredecessor());
+    return;
+  }
+
+  C.addTransition(State);
+  return;
 }
 
 bool BuiltinFunctionChecker::evalCall(const CallEvent &Call,
@@ -39,29 +71,20 @@ bool BuiltinFunctionChecker::evalCall(const CallEvent &Call,
 
   const LocationContext *LCtx = C.getLocationContext();
   const Expr *CE = Call.getOriginExpr();
+  bool ReturnsVoid = Call.getResultType()->isVoidType();
+
+  if (MicrosoftAnalysisAssume.contains(Call) && ReturnsVoid) {
+    evalCallAssume(Call, C);
+    return true;
+  }
 
   switch (FD->getBuiltinID()) {
   default:
     return false;
 
-  case Builtin::BI__builtin_assume: {
-    assert (Call.getNumArgs() > 0);
-    SVal Arg = Call.getArgSVal(0);
-    if (Arg.isUndef())
-      return true; // Return true to model purity.
-
-    state = state->assume(Arg.castAs<DefinedOrUnknownSVal>(), true);
-    // FIXME: do we want to warn here? Not right now. The most reports might
-    // come from infeasible paths, thus being false positives.
-    if (!state) {
-      C.generateSink(C.getState(), C.getPredecessor());
-      return true;
-    }
-
-    C.addTransition(state);
+  case Builtin::BI__builtin_assume:
+    evalCallAssume(Call, C);
     return true;
-  }
-
   case Builtin::BI__builtin_unpredictable:
   case Builtin::BI__builtin_expect:
   case Builtin::BI__builtin_expect_with_probability:
