@@ -439,7 +439,7 @@ bool RISCVPassConfig::addRegAssignAndRewriteOptimized() {
 }
 
 void RISCVPassConfig::addIRPasses() {
-  addPass(createAtomicExpandLegacyPass()());
+  addPass(createAtomicExpandLegacyPass());
 
   if (getOptLevel() != CodeGenOptLevel::None) {
     if (EnableLoopDataPrefetch)

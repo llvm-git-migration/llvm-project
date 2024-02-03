@@ -161,7 +161,7 @@ void LoongArchPassConfig::addIRPasses() {
   // pointer values N iterations ahead.
   if (TM->getOptLevel() != CodeGenOptLevel::None && EnableLoopDataPrefetch)
     addPass(createLoopDataPrefetchPass());
-  addPass(createAtomicExpandLegacyPass()());
+  addPass(createAtomicExpandLegacyPass());
 
   TargetPassConfig::addIRPasses();
 }

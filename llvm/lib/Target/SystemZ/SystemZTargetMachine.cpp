@@ -228,7 +228,7 @@ void SystemZPassConfig::addIRPasses() {
     addPass(createLoopDataPrefetchPass());
   }
 
-  addPass(createAtomicExpandLegacyPass()());
+  addPass(createAtomicExpandLegacyPass());
 
   TargetPassConfig::addIRPasses();
 }

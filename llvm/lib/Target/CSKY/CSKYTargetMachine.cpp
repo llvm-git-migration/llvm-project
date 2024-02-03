@@ -118,7 +118,7 @@ TargetPassConfig *CSKYTargetMachine::createPassConfig(PassManagerBase &PM) {
 }
 
 void CSKYPassConfig::addIRPasses() {
-  addPass(createAtomicExpandLegacyPass()());
+  addPass(createAtomicExpandLegacyPass());
   TargetPassConfig::addIRPasses();
 }
 

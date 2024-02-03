@@ -339,7 +339,7 @@ void HexagonPassConfig::addIRPasses() {
     addPass(createDeadCodeEliminationPass());
   }
 
-  addPass(createAtomicExpandLegacyPass()());
+  addPass(createAtomicExpandLegacyPass());
 
   if (!NoOpt) {
     if (EnableInitialCFGCleanup)
