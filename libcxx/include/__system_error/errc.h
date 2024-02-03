@@ -58,18 +58,18 @@ enum class errc
     no_child_process,                   // ECHILD
     no_link,                            // ENOLINK
     no_lock_available,                  // ENOLCK
-    no_message_available,               // ENODATA
+    no_message_available,               // ENODATA         // deprecated
     no_message,                         // ENOMSG
     no_protocol_option,                 // ENOPROTOOPT
     no_space_on_device,                 // ENOSPC
-    no_stream_resources,                // ENOSR
+    no_stream_resources,                // ENOSR           // deprecated
     no_such_device_or_address,          // ENXIO
     no_such_device,                     // ENODEV
     no_such_file_or_directory,          // ENOENT
     no_such_process,                    // ESRCH
     not_a_directory,                    // ENOTDIR
     not_a_socket,                       // ENOTSOCK
-    not_a_stream,                       // ENOSTR
+    not_a_stream,                       // ENOSTR          // deprecated
     not_connected,                      // ENOTCONN
     not_enough_memory,                  // ENOMEM
     not_supported,                      // ENOTSUP
@@ -87,7 +87,7 @@ enum class errc
     resource_unavailable_try_again,     // EAGAIN
     result_out_of_range,                // ERANGE
     state_not_recoverable,              // ENOTRECOVERABLE
-    stream_timeout,                     // ETIME
+    stream_timeout,                     // ETIME           // deprecated
     text_file_busy,                     // ETXTBSY
     timed_out,                          // ETIMEDOUT
     too_many_files_open_in_system,      // ENFILE
@@ -113,6 +113,15 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // for them:
 
 // enum class errc
+//
+// LWG3869 deprecates the UNIX STREAMS macros and enum values.
+// This makes the code clumbersome:
+// - the enum value is deprecated and should show a diagnostic,
+// - the macro is deprecated and should _not_ show a diagnostic in this
+//   context, and
+// - the macro is not always available.
+// This leads to the odd pushing and popping of the deprecated
+// diagnostic.
 _LIBCPP_DECLARE_STRONG_ENUM(errc){
     address_family_not_supported       = EAFNOSUPPORT,
     address_in_use                     = EADDRINUSE,
@@ -154,30 +163,48 @@ _LIBCPP_DECLARE_STRONG_ENUM(errc){
     no_child_process                   = ECHILD,
     no_link                            = ENOLINK,
     no_lock_available                  = ENOLCK,
+    // clang-format off
+    no_message_available _LIBCPP_DEPRECATED =
+    _LIBCPP_SUPPRESS_DEPRECATED_PUSH
 #ifdef ENODATA
-    no_message_available = ENODATA,
+                                              ENODATA
 #else
-    no_message_available = ENOMSG,
+                                              ENOMSG
 #endif
+    _LIBCPP_SUPPRESS_DEPRECATED_POP
+    ,
+    // clang-format on
     no_message         = ENOMSG,
     no_protocol_option = ENOPROTOOPT,
     no_space_on_device = ENOSPC,
+    // clang-format off
+    no_stream_resources _LIBCPP_DEPRECATED =
+    _LIBCPP_SUPPRESS_DEPRECATED_PUSH
 #ifdef ENOSR
-    no_stream_resources = ENOSR,
+                                              ENOSR
 #else
-    no_stream_resources = ENOMEM,
+                                              ENOMEM
 #endif
+    _LIBCPP_SUPPRESS_DEPRECATED_POP
+    ,
+    // clang-format on
     no_such_device_or_address = ENXIO,
     no_such_device            = ENODEV,
     no_such_file_or_directory = ENOENT,
     no_such_process           = ESRCH,
     not_a_directory           = ENOTDIR,
     not_a_socket              = ENOTSOCK,
+    // clang-format off
+    _LIBCPP_SUPPRESS_DEPRECATED_PUSH
+    not_a_stream _LIBCPP_DEPRECATED =
 #ifdef ENOSTR
-    not_a_stream = ENOSTR,
+                                      ENOSTR
 #else
-    not_a_stream = EINVAL,
+                                      EINVAL
 #endif
+    _LIBCPP_SUPPRESS_DEPRECATED_POP
+    ,
+    // clang-format on
     not_connected                  = ENOTCONN,
     not_enough_memory              = ENOMEM,
     not_supported                  = ENOTSUP,
@@ -195,11 +222,17 @@ _LIBCPP_DECLARE_STRONG_ENUM(errc){
     resource_unavailable_try_again = EAGAIN,
     result_out_of_range            = ERANGE,
     state_not_recoverable          = ENOTRECOVERABLE,
+    // clang-format off
+    _LIBCPP_SUPPRESS_DEPRECATED_PUSH
+    stream_timeout _LIBCPP_DEPRECATED =
 #ifdef ETIME
-    stream_timeout = ETIME,
+                                        ETIME
 #else
-    stream_timeout = ETIMEDOUT,
+                                        ETIMEDOUT
 #endif
+    _LIBCPP_SUPPRESS_DEPRECATED_POP
+    ,
+    // clang-format on
     text_file_busy                = ETXTBSY,
     timed_out                     = ETIMEDOUT,
     too_many_files_open_in_system = ENFILE,
