@@ -1808,7 +1808,7 @@ define i8 @add_xor_and_var_extra_use(i8 noundef %x, i8 noundef %y) {
 ; CHECK-NEXT:    call void @use(i8 [[AND]])
 ; CHECK-NEXT:    [[XOR:%.*]] = xor i8 [[AND]], [[Y]]
 ; CHECK-NEXT:    call void @use(i8 [[XOR]])
-; CHECK-NEXT:    [[ADD:%.*]] = or i8 [[Y]], [[X]]
+; CHECK-NEXT:    [[ADD:%.*]] = or disjoint i8 [[XOR]], [[X]]
 ; CHECK-NEXT:    ret i8 [[ADD]]
 ;
   %and = and i8 %x, %y
