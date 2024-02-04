@@ -1404,10 +1404,10 @@ static bool hasCallsBetween(Instruction *Save, Instruction *ResumeOrDestroy) {
   auto *ResumeOrDestroyBB = ResumeOrDestroy->getParent();
 
   if (SaveBB == ResumeOrDestroyBB)
-    return hasCallsInBlockBetween(Save->getNextNode(), ResumeOrDestroy);
+    return hasCallsInBlockBetween(Save, ResumeOrDestroy);
 
   // Any calls from Save to the end of the block?
-  if (hasCallsInBlockBetween(Save->getNextNode(), nullptr))
+  if (hasCallsInBlockBetween(Save, nullptr))
     return true;
 
   // Any calls from begging of the block up to ResumeOrDestroy?
@@ -1429,7 +1429,10 @@ static bool hasCallsBetween(Instruction *Save, Instruction *ResumeOrDestroy) {
 // resume or destroy it
 // FIXME: perform more sophisiticated analysis?
 static bool isSimpleWrapper(CoroAwaitSuspendInst *AWS) {
-  auto Wrapper = AWS->getWrapperFunction();
+  auto *Wrapper = AWS->getWrapperFunction();
+
+  if (Wrapper->empty())
+    return false;
 
   SmallVector<ReturnInst *, 4> Rets;
 
@@ -1567,17 +1570,12 @@ static void simplifySuspendPoints(coro::Shape &Shape) {
 namespace {
 
 struct SwitchCoroutineSplitter {
-  static void split(Module &M, Function &F, coro::Shape &Shape,
+  static void split(Function &F, coro::Shape &Shape,
                     SmallVectorImpl<Function *> &Clones,
                     TargetTransformInfo &TTI) {
     assert(Shape.ABI == coro::ABI::Switch);
 
     createResumeEntryBlock(F, Shape);
-
-    IRBuilder<> Builder(M.getContext());
-    for (auto *AWS : Shape.CoroAwaitSuspends)
-      lowerAwaitSuspend(Builder, AWS);
-
     auto *ResumeClone =
         createClone(F, ".resume", Shape, CoroCloner::Kind::SwitchResume);
     auto *DestroyClone =
@@ -2106,6 +2104,10 @@ splitCoroutine(Module &M, Function &F, SmallVectorImpl<Function *> &Clones,
   buildCoroutineFrame(F, Shape, MaterializableCallback);
   replaceFrameSizeAndAlignment(Shape);
 
+  IRBuilder<> Builder(M.getContext());
+  for (auto *AWS : Shape.CoroAwaitSuspends)
+    lowerAwaitSuspend(Builder, AWS);
+
   // If there are no suspend points, no split required, just remove
   // the allocation and deallocation blocks, they are not needed.
   if (Shape.CoroSuspends.empty()) {
@@ -2113,7 +2115,7 @@ splitCoroutine(Module &M, Function &F, SmallVectorImpl<Function *> &Clones,
   } else {
     switch (Shape.ABI) {
     case coro::ABI::Switch:
-      SwitchCoroutineSplitter::split(M, F, Shape, Clones, TTI);
+      SwitchCoroutineSplitter::split(F, Shape, Clones, TTI);
       break;
     case coro::ABI::Async:
       splitAsyncCoroutine(F, Shape, Clones);
