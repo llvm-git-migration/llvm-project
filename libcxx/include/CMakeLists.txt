@@ -292,7 +292,6 @@ set(files
   __chrono/time_point.h
   __chrono/time_zone.h
   __chrono/time_zone_link.h
-  __chrono/time_zone_types.h
   __chrono/tzdb.h
   __chrono/tzdb_list.h
   __chrono/weekday.h

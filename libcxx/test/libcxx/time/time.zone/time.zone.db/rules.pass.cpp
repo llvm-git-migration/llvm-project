@@ -17,6 +17,8 @@
 // Tests the IANA database rules parsing and operations.
 // This is not part of the public tzdb interface.
 
+// TODO TZDB Enable the disabled parts of the tests once we can test them using the public interface.
+
 #include <chrono>
 #include <fstream>
 #include <string>
@@ -44,12 +46,12 @@ void write(std::string_view input) {
   f << "# version " << version++ << '\n';
   f.write(input.data(), input.size());
 }
-
+#if 0
 static const std::chrono::tzdb& parse(std::string_view input) {
   write(input);
   return std::chrono::reload_tzdb();
 }
-
+#endif
 static void test_exception(std::string_view input, [[maybe_unused]] std::string_view what) {
   write(input);
 
@@ -73,6 +75,7 @@ static void test_invalid() {
   test_exception("R r x", "corrupt tzdb: expected a digit");
   test_exception("R r +", "corrupt tzdb: expected a digit");
   test_exception("R r mx", "corrupt tzdb year: expected 'min' or 'max'");
+  test_exception("R r -32768", "corrupt tzdb year: year is less than the minimum");
 
   test_exception("R r mix", "corrupt tzdb: expected whitespace");
   test_exception("R r 0", "corrupt tzdb: expected whitespace");
@@ -120,6 +123,7 @@ static void test_invalid() {
   test_exception("R r 0 1 - Ja Su>=31 1w 2s ", "corrupt tzdb: expected a string");
 }
 
+#if 0
 static void test_name() {
   const std::chrono::tzdb& result = parse(
       R"(
@@ -549,9 +553,10 @@ R a 0 1 - Ja Su>=31 1w 2s abc
   assert(result.__rules[0].second[1].__letters == "a");
   assert(result.__rules[0].second[2].__letters == "abc");
 }
-
+#endif
 int main(int, const char**) {
   test_invalid();
+#if 0
   test_name();
   test_from();
   test_to();
@@ -560,6 +565,7 @@ int main(int, const char**) {
   test_at();
   test_save();
   test_letter();
+#endif
 
   return 0;
 }

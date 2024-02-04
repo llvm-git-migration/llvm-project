@@ -15,6 +15,11 @@
 #include <stdexcept>
 #include <string>
 
+#include "include/tzdb/time_zone.h"
+#include "include/tzdb/types.h"
+#include "include/tzdb/tz.h"
+#include "include/tzdb/tzdb_list.h"
+
 // Contains a parser for the IANA time zone data files.
 //
 // These files can be found at https://data.iana.org/time-zones/ and are in the
@@ -183,7 +188,7 @@ static void __matches(istream& __input, string_view __expected) {
       return Saturday;
 
     case 'u':
-      chrono::__skip(__input, "unday");
+      chrono::__skip(__input, "nday");
       return Sunday;
     }
     break;
@@ -281,10 +286,15 @@ static void __matches(istream& __input, string_view __expected) {
   if (__negative) [[unlikely]]
     __input.get();
 
-  static_assert(year::min() == -year::max());
-  int __result = std::min<int64_t>(__parse_integral(__input, true), static_cast<int>(year::max()));
+  int64_t __result = __parse_integral(__input, true);
+  if (__result > static_cast<int>(year::max())) {
+    if (__negative)
+      std::__throw_runtime_error("corrupt tzdb year: year is less than the minimum");
 
-  return year{__negative ? -__result : __result};
+    std::__throw_runtime_error("corrupt tzdb year: year is greater than the minimum");
+  }
+
+  return year{static_cast<int>(__negative ? -__result : __result)};
 }
 
 [[nodiscard]] static year __parse_year(istream& __input) {
@@ -299,7 +309,7 @@ static void __matches(istream& __input, string_view __expected) {
     [[fallthrough]];
 
   case ' ':
-    // The m is minimum, even when that is ambigious.
+    // The m is minimum, even when that is ambiguous.
     return year::min();
 
   case 'a':
@@ -423,6 +433,7 @@ static void __matches(istream& __input, string_view __expected) {
 
 [[nodiscard]] static string __parse_letters(istream& __input) {
   string __result = __parse_string(__input);
+  // Canonicalize "-" to "" since they are equivalent in the specification.
   return __result != "-" ? __result : "";
 }
 
@@ -443,8 +454,10 @@ static void __matches(istream& __input, string_view __expected) {
   return chrono::__parse_string(__input);
 }
 
-[[nodiscard]] static __tz::__continuation __parse_continuation(istream& __input) {
+[[nodiscard]] static __tz::__continuation __parse_continuation(__tz::__rules_storage_type& __rules, istream& __input) {
   __tz::__continuation __result;
+
+  __result.__rule_database_ = std::addressof(__rules);
 
   // Note STDOFF is specified as
   //   This field has the same format as the AT and SAVE fields of rule lines;
@@ -465,7 +478,7 @@ static void __matches(istream& __input, string_view __expected) {
 
   if (chrono::__is_eol(__input.peek()))
     return __result;
-  __result.__in_month = chrono::__parse_month(__input);
+  __result.__in = chrono::__parse_month(__input);
   chrono::__skip_optional_whitespace(__input);
 
   if (chrono::__is_eol(__input.peek()))
@@ -497,14 +510,14 @@ static string __parse_version(istream& __input) {
   return chrono::__parse_string(__input);
 }
 
-static void __parse_rule(tzdb& __tzdb, istream& __input) {
+static void __parse_rule(tzdb& __tzdb, __tz::__rules_storage_type& __rules, istream& __input) {
   chrono::__skip_mandatory_whitespace(__input);
   string __name = chrono::__parse_string(__input);
 
-  if (__tzdb.__rules.empty() || __tzdb.__rules.back().first != __name)
-    __tzdb.__rules.emplace_back(__name, vector<__tz::__rule>{});
+  if (__rules.empty() || __rules.back().first != __name)
+    __rules.emplace_back(__name, vector<__tz::__rule>{});
 
-  __tz::__rule& __rule = __tzdb.__rules.back().second.emplace_back();
+  __tz::__rule& __rule = __rules.back().second.emplace_back();
 
   chrono::__skip_mandatory_whitespace(__input);
   __rule.__from = chrono::__parse_year(__input);
@@ -513,7 +526,7 @@ static void __parse_rule(tzdb& __tzdb, istream& __input) {
   chrono::__skip_mandatory_whitespace(__input);
   chrono::__matches(__input, '-');
   chrono::__skip_mandatory_whitespace(__input);
-  __rule.__in_month = chrono::__parse_month(__input);
+  __rule.__in = chrono::__parse_month(__input);
   chrono::__skip_mandatory_whitespace(__input);
   __rule.__on = chrono::__parse_on(__input);
   chrono::__skip_mandatory_whitespace(__input);
@@ -525,18 +538,20 @@ static void __parse_rule(tzdb& __tzdb, istream& __input) {
   chrono::__skip_line(__input);
 }
 
-static void __parse_zone(tzdb& __tzdb, istream& __input) {
+static void __parse_zone(tzdb& __tzdb, __tz::__rules_storage_type& __rules, istream& __input) {
   chrono::__skip_mandatory_whitespace(__input);
-  vector<__tz::__continuation>& __continuations =
-      __tzdb.zones.emplace_back(chrono::__parse_string(__input)).__continuations();
+  auto __p                                      = std::make_unique<time_zone::__impl>(chrono::__parse_string(__input));
+  vector<__tz::__continuation>& __continuations = __p->__continuations();
   chrono::__skip_mandatory_whitespace(__input);
 
   do {
     // The first line must be valid, continuations are optional.
-    __continuations.emplace_back(__parse_continuation(__input));
+    __continuations.emplace_back(__parse_continuation(__rules, __input));
     chrono::__skip_line(__input);
     chrono::__skip_optional_whitespace(__input);
   } while (std::isdigit(__input.peek()) || __input.peek() == '-');
+
+  __tzdb.zones.emplace_back(std::move(__p));
 }
 
 static void __parse_link(tzdb& __tzdb, istream& __input) {
@@ -549,7 +564,7 @@ static void __parse_link(tzdb& __tzdb, istream& __input) {
   __tzdb.links.emplace_back(std::move(__name), std::move(__target));
 }
 
-static void __parse_tzdata(tzdb& __db, istream& __input) {
+static void __parse_tzdata(tzdb& __db, __tz::__rules_storage_type& __rules, istream& __input) {
   while (true) {
     int __c = std::tolower(__input.get());
 
@@ -568,16 +583,16 @@ static void __parse_tzdata(tzdb& __db, istream& __input) {
 
     case 'r':
       chrono::__skip(__input, "ule");
-      chrono::__parse_rule(__db, __input);
+      chrono::__parse_rule(__db, __rules, __input);
       break;
 
     case 'z':
       chrono::__skip(__input, "one");
-      chrono::__parse_zone(__db, __input);
+      chrono::__parse_zone(__db, __rules, __input);
       break;
 
     case 'l':
-      chrono::__skip(__input, "link");
+      chrono::__skip(__input, "ink");
       chrono::__parse_link(__db, __input);
       break;
 
@@ -587,19 +602,15 @@ static void __parse_tzdata(tzdb& __db, istream& __input) {
   }
 }
 
-static tzdb __make_tzdb() {
-  tzdb __result;
-
+void __init_tzdb(tzdb& __tzdb, __tz::__rules_storage_type& __rules) {
   filesystem::path __root = chrono::__libcpp_tzdb_directory();
   ifstream __tzdata{__root / "tzdata.zi"};
 
-  __result.version = chrono::__parse_version(__tzdata);
-  chrono::__parse_tzdata(__result, __tzdata);
-  std::ranges::sort(__result.__rules, {}, [](const auto& p) { return p.first; });
-  std::ranges::sort(__result.zones);
-  std::ranges::sort(__result.links);
-
-  return __result;
+  __tzdb.version = chrono::__parse_version(__tzdata);
+  chrono::__parse_tzdata(__tzdb, __rules, __tzdata);
+  std::ranges::sort(__tzdb.zones);
+  std::ranges::sort(__tzdb.links);
+  std::ranges::sort(__rules, {}, [](const auto& p) { return p.first; });
 }
 
 //===----------------------------------------------------------------------===//
@@ -607,7 +618,7 @@ static tzdb __make_tzdb() {
 //===----------------------------------------------------------------------===//
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_EXPORTED_FROM_ABI tzdb_list& get_tzdb_list() {
-  static tzdb_list __result{chrono::__make_tzdb()};
+  static tzdb_list __result{new tzdb_list::__impl()};
   return __result;
 }
 
@@ -615,7 +626,7 @@ _LIBCPP_AVAILABILITY_TZDB _LIBCPP_EXPORTED_FROM_ABI const tzdb& reload_tzdb() {
   if (chrono::remote_version() == chrono::get_tzdb().version)
     return chrono::get_tzdb();
 
-  return chrono::get_tzdb_list().__emplace_front(chrono::__make_tzdb());
+  return chrono::get_tzdb_list().__implementation().__load();
 }
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_EXPORTED_FROM_ABI string remote_version() {

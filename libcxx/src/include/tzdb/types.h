@@ -9,36 +9,30 @@
 
 // For information see https://libcxx.llvm.org/DesignDocs/TimeZone.html
 
-#ifndef _LIBCPP___CHRONO_TIME_ZONE_TYPES_H
-#define _LIBCPP___CHRONO_TIME_ZONE_TYPES_H
+#ifndef __LIBCPP_SRC_INCLUDE_TZDB_TYPES_H
+#define __LIBCPP_SRC_INCLUDE_TZDB_TYPES_H
 
-#include <version>
-// Enable the contents of the header only when libc++ was built with experimental features enabled.
-#if !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
-
-#  include <__chrono/day.h>
-#  include <__chrono/duration.h>
-#  include <__chrono/month.h>
-#  include <__chrono/weekday.h>
-#  include <__chrono/year.h>
-#  include <__config>
-#  include <string>
-#  include <variant>
-
-#  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#    pragma GCC system_header
-#  endif
+#include <chrono>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#  if _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM) &&   \
-      !defined(_LIBCPP_HAS_NO_LOCALIZATION)
+// TODO TZDB
+// The helper classes in this header have no constructor but are loaded with
+// dedicated parse functions. In the original design this header was public and
+// the parsing is done in the dylib. In that design having constructors would
+// expand the ABI interface. Since this header is now in the dylib that design
+// should be reconsidered. (For now the design is kept as is, in case this
+// header needs to be public for unforseen reasons.)
 
 namespace chrono::__tz {
 
 // Sun>=8   first Sunday on or after the eighth
 // Sun<=25  last Sunday on or before the 25th
-struct _LIBCPP_AVAILABILITY_TZDB __constrained_weekday {
+struct __constrained_weekday {
   /*  year_month_day operator()(year __year, month __month);*/ // needed but not implemented
 
   weekday __weekday;
@@ -54,30 +48,35 @@ struct _LIBCPP_AVAILABILITY_TZDB __constrained_weekday {
 //  Sun<=25  last Sunday on or before the 25th
 using __on = variant<day, weekday_last, __constrained_weekday>;
 
-enum class _LIBCPP_AVAILABILITY_TZDB __clock { __local, __standard, __universal };
+enum class __clock { __local, __standard, __universal };
 
-struct _LIBCPP_AVAILABILITY_TZDB __at {
+struct __at {
   seconds __time{0};
   __tz::__clock __clock{__tz::__clock::__local};
 };
 
-struct _LIBCPP_AVAILABILITY_TZDB __save {
+struct __save {
   seconds __time;
   bool __is_dst;
 };
 
 // The names of the fields match the fields of a Rule.
-struct _LIBCPP_AVAILABILITY_TZDB __rule {
+struct __rule {
   year __from;
   year __to;
-  month __in_month; // __in is a reserved name
+  month __in;
   __tz::__on __on;
   __tz::__at __at;
   __tz::__save __save;
   string __letters;
 };
 
-struct _LIBCPP_AVAILABILITY_TZDB __continuation {
+using __rules_storage_type = std::vector<std::pair<string, vector<__tz::__rule>>>; // TODO TZDB use flat_map;
+
+struct __continuation {
+  // Non-owning link to the RULE entries.
+  __tz::__rules_storage_type* __rule_database_;
+
   seconds __stdoff;
 
   // The RULES is either a SAVE or a NAME.
@@ -95,18 +94,13 @@ struct _LIBCPP_AVAILABILITY_TZDB __continuation {
   // Parts of the UNTIL, the optional parts are default initialized
   //    optional<year> __until_;
   year __year = chrono::year::min();
-  month __in_month{January}; // __in is a reserved name
+  month __in{January};
   __tz::__on __on{chrono::day{1}};
   __tz::__at __at{chrono::seconds{0}, __tz::__clock::__local};
 };
 
 } // namespace chrono::__tz
 
-#  endif // _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM)
-         // && !defined(_LIBCPP_HAS_NO_LOCALIZATION)
-
 _LIBCPP_END_NAMESPACE_STD
 
-#endif // !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
-
-#endif // _LIBCPP___CHRONO_TIME_ZONE_TYPES_H
+#endif // __LIBCPP_SRC_INCLUDE_TZDB_TYPES_H

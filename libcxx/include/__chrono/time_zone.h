@@ -16,16 +16,17 @@
 // Enable the contents of the header only when libc++ was built with experimental features enabled.
 #if !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 
-#  include <__chrono/time_zone_types.h>
 #  include <__compare/strong_order.h>
 #  include <__config>
-#  include <string>
+#  include <__memory/unique_ptr.h>
 #  include <string_view>
-#  include <vector>
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #    pragma GCC system_header
 #  endif
+
+_LIBCPP_PUSH_MACROS
+#  include <__undef_macros>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
@@ -36,21 +37,17 @@ namespace chrono {
 
 class _LIBCPP_AVAILABILITY_TZDB time_zone {
 public:
-  explicit _LIBCPP_HIDE_FROM_ABI time_zone(string&& __name) : __name_(std::move(__name)) {}
+  class __impl; // public so it can be used by make_unique.
+  _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI explicit time_zone(unique_ptr<__impl>&& __p);
+  _LIBCPP_EXPORTED_FROM_ABI ~time_zone();
 
-  _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI string_view name() const noexcept { return __name_; }
+  time_zone(time_zone&&)            = default;
+  time_zone& operator=(time_zone&&) = default;
 
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI vector<__tz::__continuation>& __continuations() { return __continuations_; }
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const vector<__tz::__continuation>& __continuations() const {
-    return __continuations_;
-  }
+  _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI string_view name() const noexcept;
 
 private:
-  string __name_;
-  // Note the first line has a name + __continuation, the other lines
-  // are just __continuations. So there is always at least one item in
-  // the vector.
-  vector<__tz::__continuation> __continuations_;
+  unique_ptr<__impl> __impl_;
 };
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline bool
@@ -69,6 +66,8 @@ operator<=>(const time_zone& __x, const time_zone& __y) noexcept {
          // && !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 
 _LIBCPP_END_NAMESPACE_STD
+
+_LIBCPP_POP_MACROS
 
 #endif // !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 

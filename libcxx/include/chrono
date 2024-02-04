@@ -865,7 +865,6 @@ constexpr chrono::year                                  operator ""y(unsigned lo
     !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 #  include <__chrono/time_zone.h>
 #  include <__chrono/time_zone_link.h>
-#  include <__chrono/time_zone_types.h>
 #  include <__chrono/tzdb.h>
 #  include <__chrono/tzdb_list.h>
 #endif

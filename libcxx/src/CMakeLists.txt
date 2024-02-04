@@ -336,6 +336,11 @@ endif()
 
 if (LIBCXX_ENABLE_LOCALIZATION AND LIBCXX_ENABLE_FILESYSTEM AND LIBCXX_ENABLE_TIME_ZONE_DATABASE)
   list(APPEND LIBCXX_EXPERIMENTAL_SOURCES
+    include/tzdb/time_zone.h
+    include/tzdb/types.h
+    include/tzdb/tz.h
+    include/tzdb/tzdb_list.h
+    time_zone.cpp
     tz.cpp
     tzdb_list.cpp
     )
