@@ -64,7 +64,7 @@ define amdgpu_kernel void @sdiv24_i32(ptr addrspace(1) %out, ptr addrspace(1) %i
 }
 
 ; FUNC-LABEL: {{^}}sdiv25_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -83,7 +83,7 @@ define amdgpu_kernel void @sdiv25_i32(ptr addrspace(1) %out, ptr addrspace(1) %i
 }
 
 ; FUNC-LABEL: {{^}}test_no_sdiv24_i32_1:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -102,7 +102,7 @@ define amdgpu_kernel void @test_no_sdiv24_i32_1(ptr addrspace(1) %out, ptr addrs
 }
 
 ; FUNC-LABEL: {{^}}test_no_sdiv24_i32_2:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -182,7 +182,7 @@ define amdgpu_kernel void @srem24_i32(ptr addrspace(1) %out, ptr addrspace(1) %i
 }
 
 ; FUNC-LABEL: {{^}}no_srem25_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -201,7 +201,7 @@ define amdgpu_kernel void @no_srem25_i32(ptr addrspace(1) %out, ptr addrspace(1)
 }
 
 ; FUNC-LABEL: {{^}}no_sdiv25_i24_i25_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -220,7 +220,7 @@ define amdgpu_kernel void @no_sdiv25_i24_i25_i32(ptr addrspace(1) %out, ptr addr
 }
 
 ; FUNC-LABEL: {{^}}no_sdiv25_i25_i24_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -239,7 +239,7 @@ define amdgpu_kernel void @no_sdiv25_i25_i24_i32(ptr addrspace(1) %out, ptr addr
 }
 
 ; FUNC-LABEL: {{^}}no_srem25_i24_i25_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
@@ -258,7 +258,7 @@ define amdgpu_kernel void @no_srem25_i24_i25_i32(ptr addrspace(1) %out, ptr addr
 }
 
 ; FUNC-LABEL: {{^}}no_srem25_i25_i24_i32:
-; SI-NOT: v_cvt_f32_i32
+; SI-NOT: v_cvt_f32_u32
 ; SI-NOT: v_rcp_f32
 
 ; EG-NOT: INT_TO_FLT
