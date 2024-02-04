@@ -5182,7 +5182,9 @@ bool TokenAnnotator::mustBreakBefore(const AnnotatedLine &Line,
     // concept ...
     if (Right.is(tok::kw_concept))
       return Style.BreakBeforeConceptDeclarations == FormatStyle::BBCDS_Always;
-    return Style.AlwaysBreakTemplateDeclarations == FormatStyle::BTDS_Yes;
+    return Style.AlwaysBreakTemplateDeclarations == FormatStyle::BTDS_Yes ||
+           (Style.AlwaysBreakTemplateDeclarations == FormatStyle::BTDS_Leave &&
+            Right.NewlinesBefore > 0);
   }
   if (Left.ClosesRequiresClause && Right.isNot(tok::semi)) {
     switch (Style.RequiresClausePosition) {
