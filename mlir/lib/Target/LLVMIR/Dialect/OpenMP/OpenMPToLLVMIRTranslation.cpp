@@ -1165,7 +1165,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
       // `inlineConvertOmpRegions` expects the insertion block to **not**
       // contain a terminator.
       auto &allocaTerminator = builder.GetInsertBlock()->back();
-      assert(lastInstr.isTerminator());
+      assert(allocaTerminator.isTerminator());
       allocaTerminator.removeFromParent();
 
       SmallVector<llvm::Value *, 1> yieldedValues;
