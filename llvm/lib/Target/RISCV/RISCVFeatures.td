@@ -883,13 +883,13 @@ def FeatureStdExtSvpbmt
 // present.
 def FeatureStdExtSsnpm
     : SubtargetFeature<"experimental-ssnpm", "HasStdExtSsnpm", "true",
-                       "'Ssnpm' (Supervisor-level Pointer Masking)">;
+                       "'Ssnpm' (Supervisor-level Pointer Masking for next lower privilege mode)">;
 
 // A machine-level extension that provides pointer masking for the next lower
 // privilege mode (S/HS if S-mode is implemented, or U-mode otherwise).
 def FeatureStdExtSmnpm
     : SubtargetFeature<"experimental-smnpm", "HasStdExtSmnpm", "true",
-                       "'Smnpm' (Machine-level Pointer Masking)">;
+                       "'Smnpm' (Machine-level Pointer Masking for next lower privilege mode)">;
 
 // A machine-level extension that provides pointer masking for M-mode.
 def FeatureStdExtSmmpm
