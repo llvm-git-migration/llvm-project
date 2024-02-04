@@ -16,10 +16,8 @@
 // Enable the contents of the header only when libc++ was built with experimental features enabled.
 #if !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 
-#  include <__availability>
 #  include <__chrono/time_zone.h>
 #  include <__chrono/time_zone_link.h>
-#  include <__chrono/time_zone_types.h>
 #  include <__config>
 #  include <string>
 #  include <vector>
@@ -28,6 +26,9 @@
 #    pragma GCC system_header
 #  endif
 
+_LIBCPP_PUSH_MACROS
+#  include <__undef_macros>
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 #  if _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM) &&   \
@@ -35,9 +36,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace chrono {
 
-struct _LIBCPP_AVAILABILITY_TZDB tzdb {
+struct tzdb {
   string version;
-  vector<pair<string, vector<__tz::__rule>>> __rules;
   vector<time_zone> zones;
   vector<time_zone_link> links;
 };
@@ -48,6 +48,8 @@ struct _LIBCPP_AVAILABILITY_TZDB tzdb {
          // && !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 
 _LIBCPP_END_NAMESPACE_STD
+
+_LIBCPP_POP_MACROS
 
 #endif // !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 

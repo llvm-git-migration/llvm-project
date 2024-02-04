@@ -25,6 +25,9 @@
 #    pragma GCC system_header
 #  endif
 
+_LIBCPP_PUSH_MACROS
+#  include <__undef_macros>
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 #  if _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM) &&   \
@@ -32,7 +35,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace chrono {
 
-class _LIBCPP_AVAILABILITY_TZDB time_zone_link {
+class time_zone_link {
 public:
   _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI explicit time_zone_link(string_view __name, string_view __target)
       : __name_{__name}, __target_{__target} {}
@@ -66,6 +69,8 @@ operator<=>(const time_zone_link& __x, const time_zone_link& __y) noexcept {
 #  endif //_LIBCPP_STD_VER >= 20
 
 _LIBCPP_END_NAMESPACE_STD
+
+_LIBCPP_POP_MACROS
 
 #endif // !defined(_LIBCPP_HAS_NO_INCOMPLETE_TZDB)
 

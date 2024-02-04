@@ -19,7 +19,7 @@
 #  include <__availability>
 #  include <__chrono/tzdb.h>
 #  include <forward_list>
-#  include <string_view>
+#  include <string>
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #    pragma GCC system_header
@@ -34,7 +34,8 @@ namespace chrono {
 
 class _LIBCPP_AVAILABILITY_TZDB tzdb_list {
 public:
-  _LIBCPP_EXPORTED_FROM_ABI explicit tzdb_list(tzdb&& __tzdb);
+  class __impl; // public to allow construction in dylib
+  _LIBCPP_EXPORTED_FROM_ABI explicit tzdb_list(__impl* __p);
   _LIBCPP_EXPORTED_FROM_ABI ~tzdb_list();
 
   tzdb_list(const tzdb_list&)            = delete;
@@ -46,16 +47,15 @@ public:
 
   _LIBCPP_EXPORTED_FROM_ABI const_iterator erase_after(const_iterator __p);
 
-  _LIBCPP_EXPORTED_FROM_ABI tzdb& __emplace_front(tzdb&& __tzdb);
-
   _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI const_iterator begin() const noexcept;
   _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI const_iterator end() const noexcept;
 
   _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI const_iterator cbegin() const noexcept;
   _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI const_iterator cend() const noexcept;
 
+  [[nodiscard]] _LIBCPP_EXPORTED_FROM_ABI __impl& __implementation();
+
 private:
-  class __impl;
   __impl* __impl_;
 };
 

@@ -17,6 +17,8 @@
 // Tests the IANA database zones parsing and operations.
 // This is not part of the public tzdb interface.
 
+// TODO TZDB Enable the disabled parts of the tests once we can test them using the public interface.
+
 #include <cassert>
 #include <chrono>
 #include <fstream>
@@ -92,7 +94,7 @@ Z n 0 r f
   assert(result.zones.size() == 1);
   assert(result.zones[0].name() == "n");
 }
-
+#if 0
 static void test_stdoff() {
   const std::chrono::tzdb& result = parse(
       R"(
@@ -356,16 +358,18 @@ Z na 0 r f
          std::chrono::hours(0)); // The man page expresses it in hours
   assert(result.zones[0].__continuations()[9].__at.__clock == std::chrono::__tz::__clock::__local);
 }
+#endif
 
 int main(int, const char**) {
   test_invalid();
   test_name();
+#if 0
   test_stdoff();
   test_rules();
   test_format();
   test_until();
 
   test_continuation();
-
+#endif
   return 0;
 }
