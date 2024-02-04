@@ -10,6 +10,7 @@
 #include "Parser.h"
 #include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/Presburger/Simplex.h"
+#include "mlir/Dialect/Affine/Analysis/AffineStructures.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -542,8 +543,8 @@ TEST(IntegerRelationTest, convertVarKindToLocal) {
   // Attach identifiers.
   char identifiers[5] = {'x', 'y', 'z', 'N', 'M'};
   space.getId(VarKind::Domain, 0) = Identifier(&identifiers[0]);
-  space.getId(VarKind::Range, 1) = Identifier(&identifiers[1]);
-  space.getId(VarKind::Range, 2) = Identifier(&identifiers[2]);
+  space.getId(VarKind::Range, 0) = Identifier(&identifiers[1]);
+  space.getId(VarKind::Range, 1) = Identifier(&identifiers[2]);
   space.getId(VarKind::Symbol, 0) = Identifier(&identifiers[3]);
   space.getId(VarKind::Symbol, 1) = Identifier(&identifiers[4]);
   rel.setSpace(space);
