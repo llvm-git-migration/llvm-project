@@ -784,6 +784,7 @@ Value *InstCombinerImpl::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
       }
 
       assert(!Known.hasConflict() && "Bits known to be one AND zero?");
+      unsigned MinSignBits = Known.countMinSignBits();
       // Compute the new bits that are at the top now plus sign bits.
       APInt HighBits(APInt::getHighBitsSet(
           BitWidth, std::min(SignBits + ShiftAmt - 1, BitWidth)));
@@ -801,6 +802,10 @@ Value *InstCombinerImpl::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
         LShr->takeName(I);
         return InsertNewInstWith(LShr, I->getIterator());
       } else if (Known.One[BitWidth-ShiftAmt-1]) { // New bits are known one.
+        // Sync SignBits with computeKnownBits to make sure there is no
+        // conflict.
+        HighBits = APInt::getHighBitsSet(
+            BitWidth, std::min(MinSignBits + ShiftAmt - 1, BitWidth));
         Known.One |= HighBits;
       }
     } else {
