@@ -861,6 +861,19 @@ TEST(RenameTest, WithinFileRename) {
 
         void func([[Fo^o]] *f) {}
       )cpp",
+
+      // ObjC property.
+      R"cpp(
+        @interface Foo
+        @property(nonatomic) int [[f^oo]];
+        @end
+        @implementation Foo
+        @end
+
+        void func(Foo *f) {
+          f.[[f^oo]] += [f [[fo^o]]];
+        }
+      )cpp",
   };
   llvm::StringRef NewName = "NewName";
   for (llvm::StringRef T : Tests) {
@@ -879,6 +892,90 @@ TEST(RenameTest, WithinFileRename) {
       EXPECT_EQ(
           applyEdits(std::move(RenameResult->GlobalChanges)).front().second,
           expectedResult(Code, NewName));
+    }
+  }
+}
+
+TEST(RenameTest, WithinFileComplexRename) {
+  // For each "^" this test moves cursor to its location and applies renaming.
+  // This is meant for complex rename cases where multiple distinct tokens can
+  // be renamed differently.
+  struct TestCase {
+    llvm::StringRef NewName;
+    llvm::StringRef Code;
+    llvm::StringRef Renamed;
+  };
+  TestCase Tests[] = {
+      {
+        "setBar:",
+        R"cpp(
+          @interface Foo
+          @property(nonatomic) int foo;
+          @end
+          @implementation Foo
+          @end
+
+          void func(Foo *f) {
+            [f setF^oo:[f foo] ];
+          }
+        )cpp",
+        R"cpp(
+          @interface Foo
+          @property(nonatomic) int bar;
+          @end
+          @implementation Foo
+          @end
+
+          void func(Foo *f) {
+            [f setBar:[f bar] ];
+          }
+        )cpp",
+      },
+
+      {
+        "one:two:",
+        R"cpp(
+          @interface Foo
+          - (void)a:(int)a b:(int)b;
+          @end
+          @implementation Foo
+          - (void)a:(int)a b:(int)b {}
+          @end
+
+          void func(Foo *f) {
+            [f a:1 b:2];
+          }
+        )cpp",
+        R"cpp(
+          @interface Foo
+          - (void)one:(int)a two:(int)b;
+          @end
+          @implementation Foo
+          - (void)one:(int)a two:(int)b {}
+          @end
+
+          void func(Foo *f) {
+            [f one:1 two:2];
+          }
+        )cpp",
+      },
+  };
+  for (TestCase T : Tests) {
+    SCOPED_TRACE(T.Code);
+    Annotations Code(T.Code);
+    auto TU = TestTU::withCode(Code.code());
+    TU.ExtraArgs.push_back("-xobjective-c++");
+    auto AST = TU.build();
+    auto Index = TU.index();
+    for (const auto &RenamePos : Code.points()) {
+      auto RenameResult =
+          rename({RenamePos, T.NewName, AST, testPath(TU.Filename),
+                  getVFSFromAST(AST), Index.get()});
+      ASSERT_TRUE(bool(RenameResult)) << RenameResult.takeError();
+      ASSERT_EQ(1u, RenameResult->GlobalChanges.size());
+      EXPECT_EQ(
+          applyEdits(std::move(RenameResult->GlobalChanges)).front().second,
+          T.Renamed);
     }
   }
 }

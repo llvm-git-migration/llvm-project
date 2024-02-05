@@ -182,7 +182,7 @@ std::string propertySetterName(llvm::StringRef PropertyName) {
   std::string Setter = PropertyName.str();
   if (!Setter.empty())
     Setter[0] = llvm::toUpper(Setter[0]);
-  return "set" + Setter;
+  return "set" + Setter + ":";
 }
 
 // Returns a non-empty string if valid.
@@ -191,6 +191,7 @@ std::string setterToPropertyName(llvm::StringRef Setter) {
   if (!Setter.consume_front("set")) {
     return Result;
   }
+  Setter.consume_back(":"); // Optional.
   Result = Setter.str();
   if (!Result.empty())
     Result[0] = llvm::toLower(Result[0]);
@@ -989,7 +990,6 @@ renameWithinFile(ParsedAST &AST,
         continue;
       Locs.push_back(RenameLoc);
     }
-
     if (const auto *MD = dyn_cast<ObjCMethodDecl>(Entry.first)) {
       if (MD->getSelector().getNumArgs() > 1) {
         auto Res = renameObjCMethodWithinFile(AST, MD, Entry.second, std::move(Locs));
@@ -1001,6 +1001,10 @@ renameWithinFile(ParsedAST &AST,
     }
     for (const auto &Loc : Locs) {
       llvm::StringRef NewName = Entry.second;
+      // Eat trailing : for single argument methods since they're actually
+      // considered a separate token during rename.
+      if (isa<ObjCMethodDecl>(Entry.first))
+        NewName.consume_back(":");
       if (!ImplicitPropName.empty() && !NewImplicitPropName.empty()) {
         const auto T = AST.getTokens().spelledTokenAt(Loc);
         if (T && T->text(SM) == ImplicitPropName) {
