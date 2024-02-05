@@ -201,6 +201,8 @@ Bug Fixes to C++ Support
   parameter where we did an incorrect specialization of the initialization of
   the default parameter.
   Fixes (`#68490 <https://github.com/llvm/llvm-project/issues/68490>`_)
+- Fix evaluation of some immediate calls in default arguments.
+  Fixes (`#80630 <https://github.com/llvm/llvm-project/issues/80630>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
