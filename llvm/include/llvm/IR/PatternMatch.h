@@ -1711,6 +1711,34 @@ m_BitCast(const OpTy &Op) {
   return CastOperator_match<OpTy, Instruction::BitCast>(Op);
 }
 
+template <typename Op_t> struct ElementWiseBitCast_match {
+  Op_t Op;
+
+  ElementWiseBitCast_match(const Op_t &OpMatch) : Op(OpMatch) {}
+
+  template <typename OpTy> bool match(OpTy *V) {
+    if (auto *I = dyn_cast<BitCastInst>(V)) {
+      Type *SrcType = I->getSrcTy();
+      Type *DstType = I->getType();
+      // Make sure the bitcast doesn't change between scalar and vector and
+      // doesn't change the number of vector elements.
+      if (SrcType->isVectorTy() != DstType->isVectorTy())
+        return false;
+      if (SrcType->isVectorTy() &&
+          cast<VectorType>(SrcType)->getElementCount() !=
+              cast<VectorType>(DstType)->getElementCount())
+        return false;
+      return Op.match(I->getOperand(0));
+    }
+    return false;
+  }
+};
+
+template <typename OpTy>
+inline ElementWiseBitCast_match<OpTy> m_ElementWiseBitCast(const OpTy &Op) {
+  return ElementWiseBitCast_match<OpTy>(Op);
+}
+
 /// Matches PtrToInt.
 template <typename OpTy>
 inline CastOperator_match<OpTy, Instruction::PtrToInt>
