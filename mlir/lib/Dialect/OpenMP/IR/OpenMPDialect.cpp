@@ -1597,12 +1597,11 @@ LogicalResult DataBoundsOp::verify() {
 }
 
 void PrivateClauseOp::build(OpBuilder &odsBuilder, OperationState &odsState,
-                            Type privateVarType, StringRef privateVarName) {
-  FunctionType initializerType = FunctionType::get(
+                            Type privateVarType, StringRef privatizerName) {
+  FunctionType privatizerType = FunctionType::get(
       odsBuilder.getContext(), {privateVarType}, {privateVarType});
-  std::string privatizerName = (privateVarName + ".privatizer").str();
 
-  build(odsBuilder, odsState, privatizerName, initializerType);
+  build(odsBuilder, odsState, privatizerName, privatizerType);
 
   mlir::Block &block = odsState.regions.front()->emplaceBlock();
   block.addArgument(privateVarType, odsState.location);
