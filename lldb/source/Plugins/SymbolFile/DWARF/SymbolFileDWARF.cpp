@@ -2687,7 +2687,7 @@ uint64_t SymbolFileDWARF::GetDebugInfoSize() {
     if (cu == nullptr)
       continue;
 
-    SymbolFileDWARFDwo *dwo = cu->GetDwoSymbolFile();
+    SymbolFileDWARFDwo *dwo = cu->GetDwoSymbolFile(false);
     if (dwo)
       debug_info_size += dwo->GetDebugInfoSize();
   }
