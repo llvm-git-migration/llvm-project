@@ -7730,13 +7730,12 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
   if (!isValidOffsetMemOp(N, IsLoad, ExtraAlign))
     return;
 
-  SDValue MemOffset = N->getOperand(IsLoad ? 0 : 1);
   SDValue MemBase = N->getOperand(IsLoad ? 1 : 2);
   unsigned BaseOpc = MemBase.getMachineOpcode();
-  const DataLayout &DL = DAG->getDataLayout();
+  auto *MemOffset = dyn_cast<ConstantSDNode>(N->getOperand(IsLoad ? 0 : 1));
 
   // Only additions with constant offsets will be folded.
-  if (!isa<ConstantSDNode>(MemOffset))
+  if (!MemOffset)
     return;
   assert(MemBase.getNumOperands() == 2 && "Invalid base of memop with offset!");
 
@@ -7751,11 +7750,10 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
   }
 
   MaybeAlign ImmAlign;
-  if (isa<GlobalAddressSDNode>(ImmOp))
-    ImmAlign =
-        cast<GlobalAddressSDNode>(ImmOp)->getGlobal()->getPointerAlignment(DL);
-  else if (isa<ConstantPoolSDNode>(ImmOp))
-    ImmAlign = cast<ConstantPoolSDNode>(ImmOp)->getAlign();
+  if (auto *GA = dyn_cast<GlobalAddressSDNode>(ImmOp))
+    ImmAlign = GA->getGlobal()->getPointerAlignment(DAG->getDataLayout());
+  else if (auto *CP = dyn_cast<ConstantPoolSDNode>(ImmOp))
+    ImmAlign = CP->getAlign();
 
   if (ImmAlign && ExtraAlign && ImmAlign.value() < ExtraAlign.value())
     return;
@@ -7771,7 +7769,7 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
   // If addis also contributes to TOC relocation, it also needs to be updated.
   bool UpdateHaBase = false;
   SDValue HaBase = MemBase.getOperand(0);
-  int64_t Offset = cast<ConstantSDNode>(MemOffset)->getSExtValue();
+  int64_t Offset = MemOffset->getSExtValue();
 
   // Some flags in addition needs to be carried to new memop.
   PPCII::TOF NewOpFlags = PPCII::MO_NO_FLAG;
@@ -7793,15 +7791,14 @@ static void peepholeMemOffset(SDNode *N, SelectionDAG *DAG,
       UpdateHaBase = true;
     }
 
-    if (isa<GlobalAddressSDNode>(ImmOp)) {
+    if (const auto *GA = dyn_cast<GlobalAddressSDNode>(ImmOp)) {
       // We can't perform this optimization for data whose alignment is
       // insufficient for the instruction encoding.
       if (ImmAlign && ImmAlign.value() < Align(4) &&
           (ExtraAlign || (Offset % 4) != 0))
         return;
-      ImmOp = DAG->getTargetGlobalAddress(
-          cast<GlobalAddressSDNode>(ImmOp)->getGlobal(), SDLoc(ImmOp), MVT::i64,
-          Offset, NewOpFlags);
+      ImmOp = DAG->getTargetGlobalAddress(GA->getGlobal(), SDLoc(ImmOp),
+                                          MVT::i64, Offset, NewOpFlags);
     } else if (const auto *CP = dyn_cast<ConstantPoolSDNode>(ImmOp)) {
       ImmOp = DAG->getTargetConstantPool(CP->getConstVal(), MVT::i64,
                                          CP->getAlign(), Offset, NewOpFlags);
