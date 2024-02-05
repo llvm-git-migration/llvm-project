@@ -186,6 +186,10 @@ public:
   GetMangledNamesForFunction(const std::string &scope_qualified_name,
                              std::vector<ConstString> &mangled_names) override;
 
+  // Return total currently loaded debug info
+  // For cases like .dwo files, the debug info = skeleton debug info + all dwo
+  // debug info where .dwo files might not be loaded yet. Calling this function
+  // will not force the loading of any .dwo files.
   uint64_t GetDebugInfoSize() override;
 
   void FindTypes(const lldb_private::TypeQuery &match,
