@@ -1488,8 +1488,8 @@ def PrivateClauseOp : OpenMP_Op<"private", [
   let regions = (region AnyRegion:$body);
 
   let builders = [OpBuilder<(ins
-    "::mlir::Type":$privateVar,
-    "::llvm::StringRef":$privateVarName
+    "::mlir::Type":$privateVarType,
+    "::llvm::StringRef":$privatizerName
   )>];
 
   let extraClassDeclaration = [{

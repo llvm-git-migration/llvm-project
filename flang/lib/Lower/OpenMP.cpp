@@ -32,6 +32,7 @@
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Transforms/RegionUtils.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Frontend/OpenMP/OMPConstants.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -169,7 +170,8 @@ private:
   const Fortran::parser::OmpClauseList &opClauseList;
   Fortran::lower::pft::Evaluation &eval;
 
-  bool useDelayedPrivatizationWhenPossible;
+  bool useDelayedPrivatization;
+  llvm::SetVector<mlir::StringRef> existingPrivatizerNames;
   Fortran::lower::SymMap *symTable;
 
   DelayedPrivatizationInfo delayedPrivatizationInfo;
@@ -184,6 +186,8 @@ private:
   void collectDefaultSymbols();
   void privatize();
   void defaultPrivatize();
+  void doPrivatize(const Fortran::semantics::Symbol *sym);
+
   void copyLastPrivatize(mlir::Operation *op);
   void insertLastPrivateCompare(mlir::Operation *op);
   void cloneSymbol(const Fortran::semantics::Symbol *sym);
@@ -196,13 +200,19 @@ public:
   DataSharingProcessor(Fortran::lower::AbstractConverter &converter,
                        const Fortran::parser::OmpClauseList &opClauseList,
                        Fortran::lower::pft::Evaluation &eval,
-                       bool useDelayedPrivatizationWhenPossible = false,
+                       bool useDelayedPrivatization = false,
                        Fortran::lower::SymMap *symTable = nullptr)
       : hasLastPrivateOp(false), converter(converter),
         firOpBuilder(converter.getFirOpBuilder()), opClauseList(opClauseList),
-        eval(eval), useDelayedPrivatizationWhenPossible(
-                        useDelayedPrivatizationWhenPossible),
-        symTable(symTable) {}
+        eval(eval), useDelayedPrivatization(useDelayedPrivatization),
+        symTable(symTable) {
+    for (auto privateOp : converter.getModuleOp()
+                              .getRegion()
+                              .getOps<mlir::omp::PrivateClauseOp>()) {
+      existingPrivatizerNames.insert(privateOp.getSymName());
+    }
+  }
+
   // Privatisation is split into two steps.
   // Step1 performs cloning of all privatisation clauses and copying for
   // firstprivates. Step1 is performed at the place where process/processStep1
@@ -509,56 +519,15 @@ void DataSharingProcessor::collectDefaultSymbols() {
 }
 
 void DataSharingProcessor::privatize() {
+
   for (const Fortran::semantics::Symbol *sym : privatizedSymbols) {
     if (const auto *commonDet =
             sym->detailsIf<Fortran::semantics::CommonBlockDetails>()) {
       for (const auto &mem : commonDet->objects()) {
-        cloneSymbol(&*mem);
-        copyFirstPrivateSymbol(&*mem);
+        doPrivatize(&*mem);
       }
     } else {
-      if (useDelayedPrivatizationWhenPossible) {
-        auto ip = firOpBuilder.saveInsertionPoint();
-
-        auto moduleOp = firOpBuilder.getInsertionBlock()
-                            ->getParentOp()
-                            ->getParentOfType<mlir::ModuleOp>();
-
-        firOpBuilder.setInsertionPoint(&moduleOp.getBodyRegion().front(),
-                                       moduleOp.getBodyRegion().front().end());
-
-        Fortran::lower::SymbolBox hsb = converter.lookupOneLevelUpSymbol(*sym);
-        assert(hsb && "Host symbol box not found");
-
-        auto symType = hsb.getAddr().getType();
-        auto symLoc = hsb.getAddr().getLoc();
-        auto privatizerOp = firOpBuilder.create<mlir::omp::PrivateClauseOp>(
-            symLoc, symType, sym->name().ToString());
-        firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
-
-        symTable->pushScope();
-        symTable->addSymbol(*sym, privatizerOp.getArgument(0));
-        symTable->pushScope();
-
-        cloneSymbol(sym);
-        copyFirstPrivateSymbol(sym);
-
-        firOpBuilder.create<mlir::omp::YieldOp>(
-            hsb.getAddr().getLoc(),
-            symTable->shallowLookupSymbol(*sym).getAddr());
-
-        symTable->popScope();
-        symTable->popScope();
-        firOpBuilder.restoreInsertionPoint(ip);
-
-        delayedPrivatizationInfo.privatizers.insert(
-            mlir::SymbolRefAttr::get(privatizerOp));
-        delayedPrivatizationInfo.hostAddresses.insert(hsb.getAddr());
-        delayedPrivatizationInfo.hostSymbols.insert(sym);
-      } else {
-        cloneSymbol(sym);
-        copyFirstPrivateSymbol(sym);
-      }
+      doPrivatize(sym);
     }
   }
 }
@@ -584,9 +553,63 @@ void DataSharingProcessor::defaultPrivatize() {
         !symbolsInNestedRegions.contains(sym) &&
         !symbolsInParentRegions.contains(sym) &&
         !privatizedSymbols.contains(sym)) {
-      cloneSymbol(sym);
-      copyFirstPrivateSymbol(sym);
+      doPrivatize(sym);
     }
+  }
+}
+
+void DataSharingProcessor::doPrivatize(const Fortran::semantics::Symbol *sym) {
+  if (useDelayedPrivatization) {
+    auto ip = firOpBuilder.saveInsertionPoint();
+
+    auto moduleOp = firOpBuilder.getInsertionBlock()
+                        ->getParentOp()
+                        ->getParentOfType<mlir::ModuleOp>();
+
+    firOpBuilder.setInsertionPoint(&moduleOp.getBodyRegion().front(),
+                                   moduleOp.getBodyRegion().front().end());
+
+    Fortran::lower::SymbolBox hsb = converter.lookupOneLevelUpSymbol(*sym);
+    assert(hsb && "Host symbol box not found");
+
+    mlir::Type symType = hsb.getAddr().getType();
+    mlir::Location symLoc = hsb.getAddr().getLoc();
+    std::string privatizerName = sym->name().ToString() + ".privatizer";
+
+    unsigned uniquingCounter = 0;
+    auto uniquePrivatizerName = mlir::SymbolTable::generateSymbolName<64>(
+        privatizerName,
+        [&](auto &suggestedName) {
+          return existingPrivatizerNames.count(suggestedName);
+        },
+        uniquingCounter);
+
+    auto privatizerOp = firOpBuilder.create<mlir::omp::PrivateClauseOp>(
+        symLoc, symType, uniquePrivatizerName);
+    firOpBuilder.setInsertionPointToEnd(&privatizerOp.getBody().front());
+
+    symTable->pushScope();
+    symTable->addSymbol(*sym, privatizerOp.getArgument(0));
+    symTable->pushScope();
+
+    cloneSymbol(sym);
+    copyFirstPrivateSymbol(sym);
+
+    firOpBuilder.create<mlir::omp::YieldOp>(
+        hsb.getAddr().getLoc(), symTable->shallowLookupSymbol(*sym).getAddr());
+
+    symTable->popScope();
+    symTable->popScope();
+    firOpBuilder.restoreInsertionPoint(ip);
+
+    delayedPrivatizationInfo.privatizers.insert(
+        mlir::SymbolRefAttr::get(privatizerOp));
+    delayedPrivatizationInfo.hostAddresses.insert(hsb.getAddr());
+    delayedPrivatizationInfo.hostSymbols.insert(sym);
+    existingPrivatizerNames.insert(uniquePrivatizerName);
+  } else {
+    cloneSymbol(sym);
+    copyFirstPrivateSymbol(sym);
   }
 }
 
@@ -2576,8 +2599,7 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
 
   bool privatize = !outerCombined;
   DataSharingProcessor dsp(converter, clauseList, eval,
-                           /*useDelayedPrivatizationWhenPossible=*/true,
-                           &symTable);
+                           /*useDelayedPrivatization=*/true, &symTable);
 
   if (privatize) {
     dsp.processStep1();
