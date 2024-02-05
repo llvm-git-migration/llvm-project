@@ -744,3 +744,12 @@ func.func @illegal_softmax_output_shape(%arg0: tensor<2x16x32xf32>) -> tensor<2x
     -> tensor<2x16xf32>
   return %1 : tensor<2x16xf32>
 }
+
+// -----
+
+func.func @mixed_semantics(%a: tensor<?x?xf32>, %b: tensor<?x?xf32>, %c: memref<?x?xf32>) {
+  // expected-error @+1 {{expected to have pure tensor or buffer semantics}}
+  linalg.matmul ins(%a, %b: tensor<?x?xf32>, tensor<?x?xf32>)
+               outs(%c: memref<?x?xf32>)
+  return
+}
