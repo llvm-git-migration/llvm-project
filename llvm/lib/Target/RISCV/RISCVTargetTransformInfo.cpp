@@ -969,6 +969,39 @@ RISCVTTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *Ty,
       return getArithmeticReductionCost(Instruction::And, Ty, FMF, CostKind);
   }
 
+  if (IID == Intrinsic::maximum || IID == Intrinsic::minimum) {
+    if (LT.second.isScalableVector())
+      return InstructionCost::getInvalid();
+    // Following TargetLowering::expandVecReduce
+    // Example sequences to reduce v8f32 into v4f32
+    //   vsetivli zero, 4, e32, m2, ta, ma
+    //   vslidedown.vi v12, v10, 4
+    //   vsetivli zero, 4, e32, m1, ta, ma
+    //   vmfeq.vv v0, v12, v12
+    //   vmfeq.vv v8, v10, v10
+    //   vmerge.vvm v9, v12, v10, v0
+    //   vmv.v.v v0, v8
+    //   vmerge.vvm v8, v10, v12, v0
+    //   vfmin.vv v9, v9, v8
+    MVT SubTy = LT.second;
+    unsigned ReduceOp =
+        IID == Intrinsic::maximum ? RISCV::VFMAX_VV : RISCV::VFMIN_VV;
+    unsigned Opcodes[] = {RISCV::VSLIDEDOWN_VI,
+                          RISCV::VMFEQ_VV,
+                          RISCV::VMFEQ_VV,
+                          RISCV::VMERGE_VVM,
+                          RISCV::VMV1R_V,
+                          RISCV::VMERGE_VVM,
+                          ReduceOp};
+    InstructionCost SplitCost = 0;
+    while (SubTy.getVectorNumElements() > 1) {
+      SubTy = SubTy.getHalfNumVectorElementsVT();
+      SplitCost += getRISCVInstructionCost(Opcodes, SubTy, CostKind);
+    }
+    return LT.first * SplitCost +
+           getRISCVInstructionCost({RISCV::VFMV_F_S}, SubTy, CostKind);
+  }
+
   // IR Reduction is composed by two vmv and one rvv reduction instruction.
   InstructionCost BaseCost = 2;
 
