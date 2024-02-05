@@ -75,10 +75,11 @@ static AttributeMap collectAttributeMacros(const SpecMap &Spec,
                                            const FuncList &Funcs) {
   llvm::DenseMap<llvm::StringRef, llvm::Record *> MacroAttr;
   for (const auto &Name : Funcs) {
-    if (!Spec.count(Name))
+    auto Iter = Spec.find(Name);
+    if (Iter == Spec.end())
       continue;
 
-    llvm::Record *FunctionSpec = Spec.at(Name);
+    llvm::Record *FunctionSpec = Iter->second;
     std::vector<llvm::Record *> Attributes =
         FunctionSpec->getValueAsListOfDefs("Attributes");
     for (llvm::Record *Attr : Attributes)
@@ -180,7 +181,7 @@ static void writeAPIFromIndex(APIIndexer &G,
                               llvm::raw_ostream &OS) {
   for (auto &Pair : G.MacroDefsMap) {
     const std::string &Name = Pair.first;
-    if (G.MacroSpecMap.find(Name) == G.MacroSpecMap.end())
+    if (!G.MacroSpecMap.count(Name))
       llvm::PrintFatalError(Name + " not found in any standard spec.\n");
 
     llvm::Record *MacroDef = Pair.second;
@@ -190,7 +191,7 @@ static void writeAPIFromIndex(APIIndexer &G,
   }
 
   for (auto &TypeName : G.RequiredTypes) {
-    if (G.TypeSpecMap.find(TypeName) == G.TypeSpecMap.end())
+    if (!G.TypeSpecMap.count(TypeName))
       llvm::PrintFatalError(TypeName + " not found in any standard spec.\n");
     OS << "#include <llvm-libc-types/" << getTypeHdrName(TypeName) << ".h>\n";
   }
@@ -222,16 +223,18 @@ static void writeAPIFromIndex(APIIndexer &G,
 
   OS << "__BEGIN_C_DECLS\n\n";
   for (auto &Name : EntrypointNameList) {
-    if (G.FunctionSpecMap.find(Name) == G.FunctionSpecMap.end()) {
-      continue; // Functions that aren't in this header file are skipped as
-                // opposed to erroring out because the list of functions being
-                // iterated over is the complete list of functions with
-                // entrypoints. Thus this is filtering out the functions that
-                // don't go to this header file, whereas the other, similar
-                // conditionals above are more of a sanity check.
-    }
+    auto Iter = G.FunctionSpecMap.find(Name);
 
-    llvm::Record *FunctionSpec = G.FunctionSpecMap[Name];
+    // Functions that aren't in this header file are skipped as
+    // opposed to erroring out because the list of functions being
+    // iterated over is the complete list of functions with
+    // entrypoints. Thus this is filtering out the functions that
+    // don't go to this header file, whereas the other, similar
+    // conditionals above are more of a sanity check.
+    if (Iter == G.FunctionSpecMap.end())
+      continue;
+
+    llvm::Record *FunctionSpec = Iter->second;
     llvm::Record *RetValSpec = FunctionSpec->getValueAsDef("Return");
     llvm::Record *ReturnType = RetValSpec->getValueAsDef("ReturnType");
 
@@ -252,9 +255,10 @@ static void writeAPIFromIndex(APIIndexer &G,
 
   // Make another pass over entrypoints to emit object declarations.
   for (const auto &Name : EntrypointNameList) {
-    if (G.ObjectSpecMap.find(Name) == G.ObjectSpecMap.end())
+    auto Iter = G.ObjectSpecMap.find(Name);
+    if (Iter == G.ObjectSpecMap.end())
       continue;
-    llvm::Record *ObjectSpec = G.ObjectSpecMap[Name];
+    llvm::Record *ObjectSpec = Iter->second;
     auto Type = ObjectSpec->getValueAsString("Type");
     OS << "extern " << Type << " " << Name << ";\n";
   }
@@ -272,9 +276,8 @@ void PublicAPICommand::run(llvm::raw_ostream &OS, const ArgVector &Args,
                            llvm::StringRef StdHeader,
                            llvm::RecordKeeper &Records,
                            const Command::ErrorReporter &Reporter) const {
-  if (Args.size() != 0) {
+  if (Args.size() != 0)
     Reporter.printFatalError("public_api command does not take any arguments.");
-  }
 
   APIIndexer G(StdHeader, Records);
   writeAPIFromIndex(G, EntrypointNameList, OS);
