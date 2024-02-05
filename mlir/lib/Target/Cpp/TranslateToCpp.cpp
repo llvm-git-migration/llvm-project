@@ -86,13 +86,18 @@ static int getOperatorPrecedence(Operation *operation) {
         case emitc::CmpPredicate::three_way:
           return 10;
         }
+        llvm_unreachable("Unsupported cmp predicate");
+        return 1;
       })
       .Case<emitc::DivOp>([&](auto op) { return 12; })
       .Case<emitc::MulOp>([&](auto op) { return 12; })
       .Case<emitc::RemOp>([&](auto op) { return 12; })
       .Case<emitc::SubOp>([&](auto op) { return 11; })
-      .Case<emitc::CallOpaqueOp>([&](auto op) { return 14; });
-  llvm_unreachable("Unsupported operator");
+      .Case<emitc::CallOpaqueOp>([&](auto op) { return 14; })
+      .Default([](auto op) {
+        llvm_unreachable("Unsupported operator");
+        return 1;
+      });
 }
 
 namespace {
