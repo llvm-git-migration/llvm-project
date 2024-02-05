@@ -914,16 +914,12 @@ bool TwoAddressInstructionPass::rescheduleMIBelowKill(
   }
 
   // Check if the reschedule will not break dependencies.
-  unsigned NumVisited = 0;
   MachineBasicBlock::iterator KillPos = KillMI;
   ++KillPos;
   for (MachineInstr &OtherMI : make_range(End, KillPos)) {
     // Debug or pseudo instructions cannot be counted against the limit.
     if (OtherMI.isDebugOrPseudoInstr())
       continue;
-    if (NumVisited > 10)  // FIXME: Arbitrary limit to reduce compile time cost.
-      return false;
-    ++NumVisited;
     if (OtherMI.hasUnmodeledSideEffects() || OtherMI.isCall() ||
         OtherMI.isBranch() || OtherMI.isTerminator())
       // Don't move pass calls, etc.
@@ -1088,15 +1084,11 @@ bool TwoAddressInstructionPass::rescheduleKillAboveMI(
   }
 
   // Check if the reschedule will not break depedencies.
-  unsigned NumVisited = 0;
   for (MachineInstr &OtherMI :
        make_range(mi, MachineBasicBlock::iterator(KillMI))) {
     // Debug or pseudo instructions cannot be counted against the limit.
     if (OtherMI.isDebugOrPseudoInstr())
       continue;
-    if (NumVisited > 10)  // FIXME: Arbitrary limit to reduce compile time cost.
-      return false;
-    ++NumVisited;
     if (OtherMI.hasUnmodeledSideEffects() || OtherMI.isCall() ||
         OtherMI.isBranch() || OtherMI.isTerminator())
       // Don't move pass calls, etc.
