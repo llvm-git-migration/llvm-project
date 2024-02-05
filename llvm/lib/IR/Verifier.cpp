@@ -2912,9 +2912,11 @@ void Verifier::visitFunction(const Function &F) {
     for (auto &I : BB) {
       VisitDebugLoc(I, I.getDebugLoc().getAsMDNode());
       // The llvm.loop annotations also contain two DILocations.
-      if (auto MD = I.getMetadata(LLVMContext::MD_loop))
-        for (const MDOperand &MDO : llvm::drop_begin(MD->operands()))
-          VisitDebugLoc(I, dyn_cast_or_null<MDNode>(MDO));
+      if (auto MD = I.getMetadata(LLVMContext::MD_loop)) {
+        if (MD->getNumOperands())
+          for (const MDOperand &MDO : llvm::drop_begin(MD->operands()))
+            VisitDebugLoc(I, dyn_cast_or_null<MDNode>(MDO));
+      }
       if (BrokenDebugInfo)
         return;
     }
