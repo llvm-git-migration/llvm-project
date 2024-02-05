@@ -4213,9 +4213,82 @@ llvm::fcmpImpliesClass(CmpInst::Predicate Pred, const Function &F, Value *LHS,
   return fcmpImpliesClass(Pred, F, LHS, *ConstRHS, LookThroughSrc);
 }
 
-static FPClassTest computeKnownFPClassFromAssumes(const Value *V,
-                                                  const SimplifyQuery &Q) {
-  FPClassTest KnownFromAssume = fcAllFlags;
+static void computeKnownFPClassFromCond(const Value *V, Value *Cond,
+                                        bool CondIsTrue,
+                                        const Instruction *CxtI,
+                                        KnownFPClass &KnownFromContext) {
+  CmpInst::Predicate Pred;
+  Value *LHS;
+  Value *RHS;
+  uint64_t ClassVal = 0;
+  if (match(Cond, m_Cmp(Pred, m_Value(LHS), m_Value(RHS)))) {
+    if (CmpInst::isIntPredicate(Pred)) {
+      if (!match(LHS, m_BitCast(m_Specific(V))))
+        return;
+      Type *SrcType = V->getType();
+      Type *DstType = LHS->getType();
+
+      // Make sure the bitcast doesn't change between scalar and vector and
+      // doesn't change the number of vector elements.
+      if (SrcType->isVectorTy() == DstType->isVectorTy() &&
+          SrcType->getScalarSizeInBits() == DstType->getScalarSizeInBits()) {
+        // TODO: move IsSignBitCheck to ValueTracking
+        bool TrueIfSigned;
+        if ((Pred == ICmpInst::ICMP_SLT && match(RHS, m_Zero())) ||
+            (Pred == ICmpInst::ICMP_SLE && match(RHS, m_AllOnes())))
+          TrueIfSigned = true;
+        else if (Pred == ICmpInst::ICMP_SGT && match(RHS, m_AllOnes()) ||
+                 (Pred == ICmpInst::ICMP_SGE && match(RHS, m_Zero())))
+          TrueIfSigned = false;
+        else
+          return;
+        if (TrueIfSigned == CondIsTrue)
+          KnownFromContext.signBitMustBeOne();
+        else
+          KnownFromContext.signBitMustBeZero();
+      }
+    } else {
+      const APFloat *CRHS;
+      if (match(RHS, m_APFloat(CRHS))) {
+        auto [CmpVal, MaskIfTrue, MaskIfFalse] = fcmpImpliesClass(
+            Pred, *CxtI->getParent()->getParent(), LHS, *CRHS, LHS != V);
+        if (CmpVal == V)
+          KnownFromContext.knownNot(~(CondIsTrue ? MaskIfTrue : MaskIfFalse));
+      }
+    }
+  } else if (match(Cond, m_Intrinsic<Intrinsic::is_fpclass>(
+                             m_Value(LHS), m_ConstantInt(ClassVal)))) {
+    FPClassTest Mask = static_cast<FPClassTest>(ClassVal);
+    KnownFromContext.knownNot(CondIsTrue ? ~Mask : Mask);
+  }
+}
+
+static KnownFPClass computeKnownFPClassFromContext(const Value *V,
+                                                   const SimplifyQuery &Q) {
+  KnownFPClass KnownFromContext;
+
+  if (!Q.CxtI)
+    return KnownFromContext;
+
+  if (Q.DC && Q.DT) {
+    // Handle dominating conditions.
+    for (BranchInst *BI : Q.DC->conditionsFor(V)) {
+      Value *Cond = BI->getCondition();
+
+      BasicBlockEdge Edge0(BI->getParent(), BI->getSuccessor(0));
+      if (Q.DT->dominates(Edge0, Q.CxtI->getParent()))
+        computeKnownFPClassFromCond(V, Cond, /*CondIsTrue=*/true, Q.CxtI,
+                                    KnownFromContext);
+
+      BasicBlockEdge Edge1(BI->getParent(), BI->getSuccessor(1));
+      if (Q.DT->dominates(Edge1, Q.CxtI->getParent()))
+        computeKnownFPClassFromCond(V, Cond, /*CondIsTrue=*/false, Q.CxtI,
+                                    KnownFromContext);
+    }
+  }
+
+  if (!Q.AC)
+    return KnownFromContext;
 
   // Try to restrict the floating-point classes based on information from
   // assumptions.
@@ -4233,25 +4306,11 @@ static FPClassTest computeKnownFPClassFromAssumes(const Value *V,
     if (!isValidAssumeForContext(I, Q.CxtI, Q.DT))
       continue;
 
-    CmpInst::Predicate Pred;
-    Value *LHS, *RHS;
-    uint64_t ClassVal = 0;
-    if (match(I->getArgOperand(0), m_FCmp(Pred, m_Value(LHS), m_Value(RHS)))) {
-      const APFloat *CRHS;
-      if (match(RHS, m_APFloat(CRHS))) {
-        auto [CmpVal, MaskIfTrue, MaskIfFalse] =
-            fcmpImpliesClass(Pred, *F, LHS, *CRHS, LHS != V);
-        if (CmpVal == V)
-          KnownFromAssume &= MaskIfTrue;
-      }
-    } else if (match(I->getArgOperand(0),
-                     m_Intrinsic<Intrinsic::is_fpclass>(
-                         m_Value(LHS), m_ConstantInt(ClassVal)))) {
-      KnownFromAssume &= static_cast<FPClassTest>(ClassVal);
-    }
+    computeKnownFPClassFromCond(V, I->getArgOperand(0), /*CondIsTrue=*/true,
+                                Q.CxtI, KnownFromContext);
   }
 
-  return KnownFromAssume;
+  return KnownFromContext;
 }
 
 void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
@@ -4359,10 +4418,8 @@ void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
       KnownNotFromFlags |= fcInf;
   }
 
-  if (Q.AC) {
-    FPClassTest AssumedClasses = computeKnownFPClassFromAssumes(V, Q);
-    KnownNotFromFlags |= ~AssumedClasses;
-  }
+  KnownFPClass AssumedClasses = computeKnownFPClassFromContext(V, Q);
+  KnownNotFromFlags |= ~AssumedClasses.KnownFPClasses;
 
   // We no longer need to find out about these bits from inputs if we can
   // assume this from flags/attributes.
@@ -4370,6 +4427,12 @@ void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
 
   auto ClearClassesFromFlags = make_scope_exit([=, &Known] {
     Known.knownNot(KnownNotFromFlags);
+    if (!Known.SignBit && AssumedClasses.SignBit) {
+      if (*AssumedClasses.SignBit)
+        Known.signBitMustBeOne();
+      else
+        Known.signBitMustBeZero();
+    }
   });
 
   if (!Op)
@@ -5271,7 +5334,8 @@ void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
 
       bool First = true;
 
-      for (Value *IncValue : P->incoming_values()) {
+      for (const Use &U : P->operands()) {
+        Value *IncValue = U.get();
         // Skip direct self references.
         if (IncValue == P)
           continue;
@@ -5280,8 +5344,10 @@ void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
         // Recurse, but cap the recursion to two levels, because we don't want
         // to waste time spinning around in loops. We need at least depth 2 to
         // detect known sign bits.
-        computeKnownFPClass(IncValue, DemandedElts, InterestedClasses, KnownSrc,
-                            PhiRecursionLimit, Q);
+        computeKnownFPClass(
+            IncValue, DemandedElts, InterestedClasses, KnownSrc,
+            PhiRecursionLimit,
+            Q.getWithInstruction(P->getIncomingBlock(U)->getTerminator()));
 
         if (First) {
           Known = KnownSrc;

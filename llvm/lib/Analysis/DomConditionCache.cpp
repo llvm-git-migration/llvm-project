@@ -51,6 +51,9 @@ static void findAffectedValues(Value *Cond,
       // Handle (A + C1) u< C2, which is the canonical form of A > C3 && A < C4.
       if (match(A, m_Add(m_Value(X), m_ConstantInt())))
         AddAffected(X);
+      // Handle icmp slt/sgt (bitcast X to int) 0/-1
+      if (match(A, m_BitCast(m_Value(X))))
+        Affected.push_back(X);
     }
   }
 }
