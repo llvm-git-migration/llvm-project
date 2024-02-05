@@ -125,3 +125,16 @@ _Static_assert(sizeof(name2) == 0, ""); // expected-error {{failed}} \
                                         // expected-note {{evaluates to}} \
                                         // pedantic-expected-error {{failed}} \
                                         // pedantic-expected-note {{evaluates to}}
+
+void t14(void) {
+  int array[256] = { 0 }; // expected-note {{array 'array' declared here}} \
+                          // pedantic-expected-note {{array 'array' declared here}} \
+                          // ref-note {{array 'array' declared here}} \
+                          // pedantic-ref-note {{array 'array' declared here}}
+  const char b = -1;
+  int val = array[b]; // expected-warning {{array index -1 is before the beginning of the array}} \
+                      // pedantic-expected-warning {{array index -1 is before the beginning of the array}} \
+                      // ref-warning {{array index -1 is before the beginning of the array}} \
+                      // pedantic-ref-warning {{array index -1 is before the beginning of the array}}
+
+}
