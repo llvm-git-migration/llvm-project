@@ -502,31 +502,26 @@ accordingly:
 
 ### Example
 
-The following example contains a few interesting cases:
-*   Basic block arguments are modified to also pass along the ownership
-    indicator, but not for entry bocks of non-private functions (assuming the
-    `private-function-dynamic-ownership` pass option is disabled) where the
-    function boundary ABI is applied instead. "Private" in this context refers
-    to functions that cannot be called externally.
-*   The result of `arith.select` initially has 'Unknown' assigned as ownership,
-    but once the `bufferization.dealloc` operation is inserted it is put in the
-    'retained' list (since it has uses in a later basic block) and thus the
-    'Unknown' ownership can be replaced with a 'Unique' ownership using the
-    corresponding result of the dealloc operation.
-*   The `cf.cond_br` operation has more than one successor and thus has to
-    insert two `bufferization.dealloc` operations (one for each successor).
-    While they have the same list of MemRefs to deallocate (because they perform
-    the deallocations for the same block), it must be taken into account that
-    some MemRefs remain *live* for one branch but not the other (thus set
-    intersection is performed on the *live-out* of the current block and the
-    *live-in* of the target block). Also, `cf.cond_br` supports separate
-    forwarding operands for each successor. To make sure that no MemRef is
-    deallocated twice (because there are two `bufferization.dealloc` operations
-    with the same MemRefs to deallocate), the condition operands are adjusted to
-    take the branch condition into account. While a generic lowering for such
-    terminator operations could be implemented, a specialized implementation can
-    take all the semantics of this particular operation into account and thus
-    generate a more efficient lowering.
+The following example contains a few interesting cases: * Basic block arguments
+are modified to also pass along the ownership indicator, but not for entry bocks
+where the function boundary ABI is applied instead. * The result of
+`arith.select` initially has 'Unknown' assigned as ownership, but once the
+`bufferization.dealloc` operation is inserted it is put in the 'retained' list
+(since it has uses in a later basic block) and thus the 'Unknown' ownership can
+be replaced with a 'Unique' ownership using the corresponding result of the
+dealloc operation. * The `cf.cond_br` operation has more than one successor and
+thus has to insert two `bufferization.dealloc` operations (one for each
+successor). While they have the same list of MemRefs to deallocate (because they
+perform the deallocations for the same block), it must be taken into account
+that some MemRefs remain *live* for one branch but not the other (thus set
+intersection is performed on the *live-out* of the current block and the
+*live-in* of the target block). Also, `cf.cond_br` supports separate forwarding
+operands for each successor. To make sure that no MemRef is deallocated twice
+(because there are two `bufferization.dealloc` operations with the same MemRefs
+to deallocate), the condition operands are adjusted to take the branch condition
+into account. While a generic lowering for such terminator operations could be
+implemented, a specialized implementation can take all the semantics of this
+particular operation into account and thus generate a more efficient lowering.
 
 ```mlir
 func.func @example(%memref: memref<?xi8>, %select_cond: i1, %br_cond: i1) {
@@ -543,10 +538,7 @@ func.func @example(%memref: memref<?xi8>, %select_cond: i1, %br_cond: i1) {
 After running `--ownership-based-buffer-deallocation`, it looks as follows:
 
 ```mlir
-// Since this is not a private function, the signature will not be modified even
-// when private-function-dynamic-ownership is enabled. Instead the function
-// boundary ABI has to be applied which means that ownership of `%memref` will
-// never be acquired.
+// Function boundary ABI: ownership of `%memref` will never be acquired.
 func.func @example(%memref: memref<?xi8>, %select_cond: i1, %br_cond: i1) {
   %false = arith.constant false
   %true = arith.constant true
@@ -602,7 +594,7 @@ func.func @example(%memref: memref<?xi8>, %select_cond: i1, %br_cond: i1) {
              : memref<i8>, memref<i8>, memref<i8>)
         if (%false, %not_br_cond, %false)
     retain (%memref, %select : memref<?xi8>, memref<?xi8>)
-  
+
   // Because %select is used in ^bb1 without passing it via block argument, we
   // need to update it's ownership value here by merging the ownership values
   // returned by the dealloc operations
