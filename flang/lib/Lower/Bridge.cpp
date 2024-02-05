@@ -2471,8 +2471,8 @@ private:
     ompDeviceCodeFound =
         ompDeviceCodeFound ||
         Fortran::lower::isOpenMPDeviceDeclareTarget(*this, getEval(), ompDecl);
-    Fortran::lower::gatherDeferredDeclareTargets(*this, getEval(), ompDecl,
-                                                 deferredDeclareTarget);
+    Fortran::lower::gatherOpenMPDeferredDeclareTargets(
+        *this, getEval(), ompDecl, ompDeferredDeclareTarget);
     genOpenMPDeclarativeConstruct(
         *this, localSymbols, bridge.getSemanticsContext(), getEval(), ompDecl);
     builder->restoreInsertionPoint(insertPt);
@@ -4995,10 +4995,10 @@ private:
   /// lowering.
   void finalizeOpenMPLowering(
       const Fortran::semantics::Symbol *globalOmpRequiresSymbol) {
-    if (!deferredDeclareTarget.empty()) {
+    if (!ompDeferredDeclareTarget.empty()) {
       bool deferredDeviceFuncFound =
-          Fortran::lower::markDelayedDeclareTargetFunctions(
-              getModuleOp().getOperation(), deferredDeclareTarget, *this);
+          Fortran::lower::markOpenMPDeferredDeclareTargetFunctions(
+              getModuleOp().getOperation(), ompDeferredDeclareTarget, *this);
       if (!ompDeviceCodeFound)
         ompDeviceCodeFound = deferredDeviceFuncFound;
     }
@@ -5063,12 +5063,8 @@ private:
   /// processed at the time of lowering the declare target construct, such
   /// as certain cases where interfaces are declared but not defined within
   /// a module.
-  llvm::SmallVector<
-      std::tuple<uint32_t /*mlir::omp::DeclareTargetCaptureClause*/,
-                 uint32_t, /*mlir::omp::DeclareTargetDeviceType*/
-                 Fortran::semantics::Symbol>,
-      2>
-      deferredDeclareTarget;
+  llvm::SmallVector<Fortran::lower::OMPDeferredDeclTarInfo, 2>
+      ompDeferredDeclareTarget;
 
   const Fortran::lower::ExprToValueMap *exprValueOverrides{nullptr};
 
