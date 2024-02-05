@@ -6198,7 +6198,7 @@ struct ImmediateCallVisitor : public RecursiveASTVisitor<ImmediateCallVisitor> {
   bool VisitCallExpr(CallExpr *E) {
     if (const FunctionDecl *FD = E->getDirectCallee())
       HasImmediateCalls |= FD->isImmediateFunction();
-    return RecursiveASTVisitor<ImmediateCallVisitor>::VisitStmt(E);
+    return RecursiveASTVisitor<ImmediateCallVisitor>::VisitCallExpr(E);
   }
 
   // SourceLocExpr are not immediate invocations
@@ -6222,9 +6222,9 @@ struct ImmediateCallVisitor : public RecursiveASTVisitor<ImmediateCallVisitor> {
 
   // Blocks don't support default parameters, and, as for lambdas,
   // we don't consider their body a subexpression.
-  bool VisitBlockDecl(BlockDecl *B) { return false; }
+  bool VisitBlockDecl(BlockDecl *B) { return true; }
 
-  bool VisitCompoundStmt(CompoundStmt *B) { return false; }
+  bool VisitCompoundStmt(CompoundStmt *B) { return true; }
 
   bool VisitCXXDefaultArgExpr(CXXDefaultArgExpr *E) {
     return TraverseStmt(E->getExpr());

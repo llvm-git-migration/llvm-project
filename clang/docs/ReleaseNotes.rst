@@ -265,6 +265,8 @@ Bug Fixes to C++ Support
 - No longer reject valid use of the ``_Alignas`` specifier when declaring a
   local variable, which is supported as a C11 extension in C++. Previously, it
   was only accepted at namespace scope but not at local function scope.
+- Fix evaluation of some immediate calls in default arguments.
+  Fixes (`#80630 <https://github.com/llvm/llvm-project/issues/80630>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
