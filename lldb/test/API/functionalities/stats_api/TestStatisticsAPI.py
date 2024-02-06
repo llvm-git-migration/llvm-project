@@ -75,7 +75,9 @@ class TestStatsAPI(TestBase):
         )
 
         # Test statistics summary.
-        stats_summary = target.GetStatistics(True)
+        stats_options = lldb.SBStatisticsOptions()
+        stats_options.SetSummaryOnly(True)
+        stats_summary = target.GetStatistics(stats_options)
         stream_summary = lldb.SBStream()
         res = stats_summary.GetAsJSON(stream_summary)
         debug_stats_summary = json.loads(stream_summary.GetData())
@@ -84,9 +86,13 @@ class TestStatsAPI(TestBase):
         self.assertNotIn("commands", debug_stats_summary)
 
         # Summary values should be the same as in full statistics.
+        print(debug_stats)
+        print("\n")
+        print(debug_stats_summary)
         for key, value in debug_stats_summary.items():
             self.assertIn(key, debug_stats)
             if key != "targets":
+                print(f"\nkey: {key}, value: {value}\n")
                 self.assertEqual(debug_stats[key], value)
 
     def test_command_stats_api(self):
