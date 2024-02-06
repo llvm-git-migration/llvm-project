@@ -1614,7 +1614,19 @@ bool TemplateInstantiator::AlreadyTransformed(QualType T) {
   if (T.isNull())
     return true;
 
-  if (T->isInstantiationDependentType() || T->isVariablyModifiedType())
+  bool DependentLambdaType = false;
+  QualType DesugaredType = T.getDesugaredType(SemaRef.getASTContext());
+  CXXRecordDecl *RD = DesugaredType->getAsCXXRecordDecl();
+  if (RD && RD->isLambda()) {
+    QualType LambdaCallType = RD->getLambdaCallOperator()->getType();
+    if (LambdaCallType->isInstantiationDependentType() ||
+        LambdaCallType->isVariablyModifiedType()) {
+      DependentLambdaType = true;
+    }
+  }
+
+  if (T->isInstantiationDependentType() || T->isVariablyModifiedType() ||
+      DependentLambdaType)
     return false;
 
   getSema().MarkDeclarationsReferencedInType(Loc, T);
@@ -2683,10 +2695,22 @@ QualType Sema::SubstType(QualType T,
          "Cannot perform an instantiation without some context on the "
          "instantiation stack");
 
-  // If T is not a dependent type or a variably-modified type, there
-  // is nothing to do.
-  if (!T->isInstantiationDependentType() && !T->isVariablyModifiedType())
-    return T;
+  // bool DependentLambdaType = false;
+  // QualType DesugaredType = T.getDesugaredType(getASTContext());
+  // CXXRecordDecl *RD = DesugaredType->getAsCXXRecordDecl();
+  // if (RD && RD->isLambda()) {
+  //   QualType LambdaCallType = RD->getLambdaCallOperator()->getType();
+  //   if (LambdaCallType->isInstantiationDependentType() ||
+  //       LambdaCallType->isVariablyModifiedType()) {
+  //     DependentLambdaType = true;
+  //   }
+  // }
+
+  // // If T is not a dependent type or a variably-modified type, there
+  // // is nothing to do.
+  // if (!T->isInstantiationDependentType() && !T->isVariablyModifiedType() &&
+  //     !DependentLambdaType)
+  //   return T;
 
   TemplateInstantiator Instantiator(*this, TemplateArgs, Loc, Entity);
   return Instantiator.TransformType(T);
