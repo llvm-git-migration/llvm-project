@@ -270,6 +270,8 @@ AST Matchers
 clang-format
 ------------
 
+- Add BreakAfterReturnType option to deprecate AlwaysBreakAfterReturnType.
+
 libclang
 --------
 
