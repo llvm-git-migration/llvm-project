@@ -210,6 +210,8 @@ Bug Fixes to C++ Support
   Fixes (`#68490 <https://github.com/llvm/llvm-project/issues/68490>`_)
 - Fix a crash when trying to call a varargs function that also has an explicit object parameter.
   Fixes (`#80971 ICE when explicit object parameter be a function parameter pack`)
+- Fix a crash in codegen when lambdas declared in an unevaluated context.
+  Fixes (`#76674 <https://github.com/llvm/llvm-project/issues/76674>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
