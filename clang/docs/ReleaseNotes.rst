@@ -204,6 +204,8 @@ Bug Fixes to C++ Support
   parameter where we did an incorrect specialization of the initialization of
   the default parameter.
   Fixes (`#68490 <https://github.com/llvm/llvm-project/issues/68490>`_)
+- Fixed a bug where abbreviated function templates would append their invented template parameters to
+  an empty template parameter lists.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
