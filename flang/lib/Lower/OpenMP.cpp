@@ -41,6 +41,12 @@ static llvm::cl::opt<bool> treatIndexAsSection(
     llvm::cl::desc("In the OpenMP data clauses treat `a(N)` as `a(N:N)`."),
     llvm::cl::init(true));
 
+static llvm::cl::opt<bool> enableDelayedPrivatization(
+    "openmp-enable-delayed-privatization",
+    llvm::cl::desc(
+        "Emit `[first]private` variables as clauses on the MLIR ops."),
+    llvm::cl::init(false));
+
 using DeclareTargetCapturePair =
     std::pair<mlir::omp::DeclareTargetCaptureClause,
               Fortran::semantics::Symbol>;
@@ -2613,6 +2619,21 @@ genParallelOp(Fortran::lower::AbstractConverter &converter,
   cp.processAllocate(allocatorOperands, allocateOperands);
   if (!outerCombined)
     cp.processReduction(currentLocation, reductionVars, reductionDeclSymbols);
+
+  if (!enableDelayedPrivatization) {
+    return genOpWithBody<mlir::omp::ParallelOp>(
+        converter, eval, genNested, currentLocation, outerCombined, &clauseList,
+        /*genRegionEntryCB=*/nullptr, /*dsp=*/nullptr,
+        /*resultTypes=*/mlir::TypeRange(), ifClauseOperand,
+        numThreadsClauseOperand, allocateOperands, allocatorOperands,
+        reductionVars,
+        reductionDeclSymbols.empty()
+            ? nullptr
+            : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
+                                   reductionDeclSymbols),
+        procBindKindAttr, /*private_vars=*/llvm::SmallVector<mlir::Value>{},
+        /*privatizers=*/nullptr);
+  }
 
   bool privatize = !outerCombined;
   DataSharingProcessor dsp(converter, clauseList, eval,
