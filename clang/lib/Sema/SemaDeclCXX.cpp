@@ -19303,7 +19303,7 @@ void Sema::ActOnStartFunctionDeclarationDeclarator(
   // 'template<>' is *not* a template-head). Only append the invented
   // template parameters if we matched the nested-name-specifier to a non-empty
   // TemplateParameterList.
-  if (ExplicitParams && ExplicitParams->size()) {
+  if (ExplicitParams && !ExplicitParams->empty()) {
     Info.AutoTemplateParameterDepth = ExplicitParams->getDepth();
     llvm::append_range(Info.TemplateParams, *ExplicitParams);
     Info.NumExplicitTemplateParams = ExplicitParams->size();
