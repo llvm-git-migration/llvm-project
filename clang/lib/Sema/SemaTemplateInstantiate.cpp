@@ -1613,8 +1613,8 @@ namespace {
 bool TemplateInstantiator::AlreadyTransformed(QualType T) {
   if (T.isNull())
     return true;
-
-  if (T->isInstantiationDependentType() || T->isVariablyModifiedType())
+  if (T->isInstantiationDependentType() || T->isVariablyModifiedType() ||
+      (SemaRef.getLangOpts().CPlusPlus20 && T->isDecltypeType()))
     return false;
 
   getSema().MarkDeclarationsReferencedInType(Loc, T);
@@ -2685,7 +2685,8 @@ QualType Sema::SubstType(QualType T,
 
   // If T is not a dependent type or a variably-modified type, there
   // is nothing to do.
-  if (!T->isInstantiationDependentType() && !T->isVariablyModifiedType())
+  if (!T->isInstantiationDependentType() && !T->isVariablyModifiedType() &&
+      (getLangOpts().CPlusPlus20 && !T->isDecltypeType()))
     return T;
 
   TemplateInstantiator Instantiator(*this, TemplateArgs, Loc, Entity);
