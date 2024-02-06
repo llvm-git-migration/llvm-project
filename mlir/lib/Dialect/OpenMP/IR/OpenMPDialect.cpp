@@ -1594,6 +1594,61 @@ LogicalResult DataBoundsOp::verify() {
   return success();
 }
 
+LogicalResult PrivateClauseOp::verify() {
+  Region &body = getBody();
+  auto argumentTypes = getArgumentTypes();
+  auto resultTypes = getResultTypes();
+
+  if (argumentTypes.empty()) {
+    return emitError() << "'" << getOperationName()
+                       << "' must accept at least one argument.";
+  }
+
+  if (resultTypes.empty()) {
+    return emitError() << "'" << getOperationName()
+                       << "' must return at least one result.";
+  }
+
+  for (Block &block : body) {
+    if (block.empty() || !block.mightHaveTerminator())
+      return mlir::emitError(block.empty() ? getLoc() : block.back().getLoc())
+             << "expected all blocks to have terminators.";
+
+    Operation *terminator = block.getTerminator();
+
+    if (!terminator->hasSuccessors() && !llvm::isa<YieldOp>(terminator))
+      return mlir::emitError(terminator->getLoc())
+             << "expected exit block terminator to be an `omp.yield` op.";
+
+    YieldOp yieldOp = llvm::cast<YieldOp>(terminator);
+    auto yieldedTypes = yieldOp.getResults().getTypes();
+
+    if (yieldedTypes.empty())
+      return mlir::emitError(yieldOp.getLoc())
+             << "'" << getOperationName() << "' must yield a value.";
+
+    bool yieldIsValid = [&]() {
+      if (yieldedTypes.size() != resultTypes.size()) {
+        return false;
+      }
+      for (size_t typeIdx = 0; typeIdx < yieldedTypes.size(); ++typeIdx) {
+        if (yieldedTypes[typeIdx] != resultTypes[typeIdx]) {
+          return false;
+        }
+      }
+
+      return true;
+    }();
+
+    if (!yieldIsValid)
+      return mlir::emitError(yieldOp.getLoc())
+             << "Invalid yielded value. Expected type: " << resultTypes
+             << ", got: " << yieldedTypes;
+  }
+
+  return success();
+}
+
 #define GET_ATTRDEF_CLASSES
 #include "mlir/Dialect/OpenMP/OpenMPOpsAttributes.cpp.inc"
 
