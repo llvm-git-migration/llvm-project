@@ -225,6 +225,8 @@ Bug Fixes to C++ Support
   or non-constant more accurately. Previously, only a subset of the initializer
   elements were considered, misclassifying some initializers as constant. Fixes
   some of (`#80510 <https://github.com/llvm/llvm-project/issues/80510>`).
+- Fix a crash in codegen when lambdas declared in an unevaluated context.
+  Fixes (`#76674 <https://github.com/llvm/llvm-project/issues/76674>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
