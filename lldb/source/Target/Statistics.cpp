@@ -216,9 +216,12 @@ void TargetStats::IncreaseSourceMapDeduceCount() {
 
 bool DebuggerStats::g_collecting_stats = false;
 
-llvm::json::Value DebuggerStats::ReportStatistics(Debugger &debugger,
-                                                  Target *target,
-                                                  bool summary_only) {
+llvm::json::Value DebuggerStats::ReportStatistics(
+    Debugger &debugger, Target *target,
+    const lldb_private::StatisticsOptions &options) {
+
+  bool summary_only = options.summary_only;
+
   json::Array json_targets;
   json::Array json_modules;
   double symtab_parse_time = 0.0;
@@ -338,10 +341,10 @@ llvm::json::Value DebuggerStats::ReportStatistics(Debugger &debugger,
   };
 
   if (target) {
-    json_targets.emplace_back(target->ReportStatistics(summary_only));
+    json_targets.emplace_back(target->ReportStatistics(options));
   } else {
     for (const auto &target : debugger.GetTargetList().Targets())
-      json_targets.emplace_back(target->ReportStatistics(summary_only));
+      json_targets.emplace_back(target->ReportStatistics(options));
   }
   global_stats.try_emplace("targets", std::move(json_targets));
 

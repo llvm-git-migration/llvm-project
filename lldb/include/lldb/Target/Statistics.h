@@ -130,6 +130,10 @@ struct ConstStringStats {
   ConstString::MemoryStats stats = ConstString::GetMemoryStats();
 };
 
+struct StatisticsOptions {
+  bool summary_only = false;
+};
+
 /// A class that represents statistics for a since lldb_private::Target.
 class TargetStats {
 public:
@@ -177,8 +181,9 @@ public:
   ///
   /// \return
   ///     Returns a JSON value that contains all target metrics.
-  static llvm::json::Value ReportStatistics(Debugger &debugger, Target *target,
-                                            bool summary_only = false);
+  static llvm::json::Value
+  ReportStatistics(Debugger &debugger, Target *target,
+                   const lldb_private::StatisticsOptions &options);
 
 protected:
   // Collecting stats can be set to true to collect stats that are expensive

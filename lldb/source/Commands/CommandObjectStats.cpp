@@ -93,6 +93,12 @@ class CommandObjectStatsDump : public CommandObjectParsed {
       return llvm::ArrayRef(g_statistics_dump_options);
     }
 
+    StatisticsOptions GetStatisticsOptions() {
+      StatisticsOptions options;
+      options.summary_only = m_summary_only;
+      return options;
+    }
+
     bool m_all_targets = false;
     bool m_summary_only = false;
   };
@@ -114,8 +120,8 @@ protected:
       target = m_exe_ctx.GetTargetPtr();
 
     result.AppendMessageWithFormatv(
-        "{0:2}", DebuggerStats::ReportStatistics(GetDebugger(), target,
-                                                 m_options.m_summary_only));
+        "{0:2}", DebuggerStats::ReportStatistics(
+                     GetDebugger(), target, m_options.GetStatisticsOptions()));
     result.SetStatus(eReturnStatusSuccessFinishResult);
   }
 
