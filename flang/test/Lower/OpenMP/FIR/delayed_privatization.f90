@@ -1,5 +1,7 @@
 ! TODO Convert this file into a bunch of lit tests for each conversion step.
 
+! RUN: bbc -fopenmp -emit-fir --openmp-enable-delayed-privatization -hlfir=false %s -o - 
+
 subroutine delayed_privatization()
   integer :: var1
   integer :: var2
