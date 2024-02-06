@@ -312,16 +312,16 @@ define void @v1v2types(ptr %p) vscale_range(1,16) {
 ; VScale intrinsic offset tests
 
 ; CHECK-LABEL: vscale_neg_notscalable
-; CHECK-DAG:   MayAlias:    <4 x i32>* %p, <4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:     <4 x i32>* %p, <4 x i32>* %vm16
 ; CHECK-DAG:   NoAlias:     <4 x i32>* %m16, <4 x i32>* %p
 ; CHECK-DAG:   MayAlias:    <4 x i32>* %m16, <4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:    <4 x i32>* %p, <4 x i32>* %vm16m16
 ; CHECK-DAG:   NoAlias:     <4 x i32>* %vm16, <4 x i32>* %vm16m16
-; CHECK-DAG:   MayAlias:    <4 x i32>* %m16, <4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:     <4 x i32>* %m16, <4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:    <4 x i32>* %m16pv16, <4 x i32>* %p
 ; CHECK-DAG:   NoAlias:     <4 x i32>* %m16pv16, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:    <4 x i32>* %m16, <4 x i32>* %m16pv16
-; CHECK-DAG:   MayAlias:    <4 x i32>* %m16pv16, <4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:     <4 x i32>* %m16, <4 x i32>* %m16pv16
+; CHECK-DAG:   NoAlias:     <4 x i32>* %m16pv16, <4 x i32>* %vm16m16
 define void @vscale_neg_notscalable(ptr %p) {
   %v = call i64 @llvm.vscale.i64()
   %vp = mul i64 %v, 16
@@ -339,16 +339,16 @@ define void @vscale_neg_notscalable(ptr %p) {
 }
 
 ; CHECK-LABEL: vscale_neg_scalable
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vm16, <vscale x 4 x i32>* %vm16m16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %m16pv16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %m16pv16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16m16
 define void @vscale_neg_scalable(ptr %p) {
   %v = call i64 @llvm.vscale.i64()
   %vp = mul i64 %v, 16
@@ -366,16 +366,16 @@ define void @vscale_neg_scalable(ptr %p) {
 }
 
 ; CHECK-LABEL: vscale_pos_notscalable
-; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %p, <4 x i32>* %vm16
 ; CHECK-DAG:   NoAlias:      <4 x i32>* %m16, <4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <4 x i32>* %vm16m16
 ; CHECK-DAG:   NoAlias:      <4 x i32>* %vm16, <4 x i32>* %vm16m16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %m16, <4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %m16pv16, <4 x i32>* %p
 ; CHECK-DAG:   NoAlias:      <4 x i32>* %m16pv16, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <4 x i32>* %m16pv16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16pv16, <4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %m16, <4 x i32>* %m16pv16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %m16pv16, <4 x i32>* %vm16m16
 define void @vscale_pos_notscalable(ptr %p) {
   %v = call i64 @llvm.vscale.i64()
   %vp = mul i64 %v, 16
@@ -393,16 +393,16 @@ define void @vscale_pos_notscalable(ptr %p) {
 }
 
 ; CHECK-LABEL: vscale_pos_scalable
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vm16, <vscale x 4 x i32>* %vm16m16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16m16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %m16pv16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16m16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %m16pv16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %m16pv16, <vscale x 4 x i32>* %vm16m16
 define void @vscale_pos_scalable(ptr %p) {
   %v = call i64 @llvm.vscale.i64()
   %vp = mul i64 %v, 16
@@ -420,25 +420,25 @@ define void @vscale_pos_scalable(ptr %p) {
 }
 
 ; CHECK-LABEL: vscale_v1v2types
-; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <vscale x 4 x i32>* %p
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <vscale x 4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %vm16, <vscale x 4 x i32>* %vm16
+; CHECK-DAG:   MustAlias:    <4 x i32>* %p, <vscale x 4 x i32>* %p
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %p, <vscale x 4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %p, <4 x i32>* %vm16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %p, <4 x i32>* %vm16
+; CHECK-DAG:   MustAlias:    <4 x i32>* %vm16, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <vscale x 4 x i32>* %p
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <4 x i32>* %p
+; CHECK-DAG:   NoAlias:      <4 x i32>* %m16, <vscale x 4 x i32>* %p
+; CHECK-DAG:   NoAlias:      <4 x i32>* %m16, <4 x i32>* %p
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <vscale x 4 x i32>* %vm16
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <4 x i32>* %vm16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <vscale x 4 x i32>* %m16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vp16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %p, <vscale x 4 x i32>* %vp16
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vm16, <vscale x 4 x i32>* %vp16
-; CHECK-DAG:   MayAlias:     <4 x i32>* %vm16, <vscale x 4 x i32>* %vp16
+; CHECK-DAG:   MustAlias:    <4 x i32>* %m16, <vscale x 4 x i32>* %m16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %p, <vscale x 4 x i32>* %vp16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %p, <vscale x 4 x i32>* %vp16
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %vm16, <vscale x 4 x i32>* %vp16
+; CHECK-DAG:   NoAlias:      <4 x i32>* %vm16, <vscale x 4 x i32>* %vp16
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %m16, <vscale x 4 x i32>* %vp16
 ; CHECK-DAG:   MayAlias:     <4 x i32>* %m16, <vscale x 4 x i32>* %vp16
 define void @vscale_v1v2types(ptr %p) {
@@ -460,7 +460,7 @@ define void @vscale_v1v2types(ptr %p) {
 
 ; CHECK-LABEL: twovscales
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vp161, <vscale x 4 x i32>* %vp162
-; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vp161, <vscale x 4 x i32>* %vp161b
+; CHECK-DAG:   NoAlias:      <vscale x 4 x i32>* %vp161, <vscale x 4 x i32>* %vp161b
 ; CHECK-DAG:   MayAlias:     <vscale x 4 x i32>* %vp161b, <vscale x 4 x i32>* %vp162
 define void @twovscales(ptr %p) {
   %v1 = call i64 @llvm.vscale.i64()
