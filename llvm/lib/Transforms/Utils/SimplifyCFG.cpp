@@ -1701,6 +1701,17 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
     auto OtherSuccIterPairRange =
         iterator_range(SuccIterPairBegin, SuccIterPairs.end());
     Instruction *I1 = &*BB1ItrPair.first;
+    
+    // Skip debug info if it is not identical.
+    bool IdenticalDebugs = all_of(OtherSuccIterRange, [I1](auto &Iter) {
+      Instruction *I2 = &*Iter;
+      return I1->isIdenticalToWhenDefined(I2);
+    });
+    if (!IdenticalDebugs) {
+      while (isa<DbgInfoIntrinsic>(I1))
+        I1 = &*++BB1ItrPair.first;
+    }
+    
     bool HasIdenticalInst = true;
 
     // Check if there are identical instructions in all other successors
@@ -1835,7 +1846,7 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
             unsigned index = 0;
             for (auto &PrevHash : PrevHashCodes) {
               auto NewHash = getHash(PrevUsers[index]);
-              std::swap(map[NewHash], map[PrevHash]);
+              map.insert({NewHash, map[PrevHash]});
               map.erase(PrevHash);
               index++;
             }
@@ -1887,11 +1898,8 @@ bool SimplifyCFGOpt::hoistSuccIdenticalTerminatorToSwitchOrIf(
   // Use only for an if statement.
   auto *I2 = *OtherSuccTIs.begin();
   auto *BB2 = I2->getParent();
-  if (BI) {
+  if (BI) 
     assert(OtherSuccTIs.size() == 1);
-    assert(BI->getSuccessor(0) == I1->getParent());
-    assert(BI->getSuccessor(1) == I2->getParent());
-  }
 
   // In the case of an if statement, we try to hoist an invoke.
   // FIXME: Can we define a safety predicate for CallBr?
@@ -1911,6 +1919,7 @@ bool SimplifyCFGOpt::hoistSuccIdenticalTerminatorToSwitchOrIf(
         Value *BB2V = PN.getIncomingValueForBlock(OtherSuccTI->getParent());
         if (BB1V == BB2V)
           continue;
+
         // In the case of an if statement, check for
         // passingValueIsAlwaysUndefined here because we would rather eliminate
         // undefined control flow then converting it to a select.
@@ -3747,6 +3756,7 @@ static bool FoldTwoEntryPHINode(PHINode *PN, const TargetTransformInfo &TTI,
     // Change the PHI node into a select instruction.
     Value *TrueVal = PN->getIncomingValueForBlock(IfTrue);
     Value *FalseVal = PN->getIncomingValueForBlock(IfFalse);
+    
     Value *Sel = Builder.CreateSelect(IfCond, TrueVal, FalseVal, "", DomBI);
     PN->replaceAllUsesWith(Sel);
     Sel->takeName(PN);
