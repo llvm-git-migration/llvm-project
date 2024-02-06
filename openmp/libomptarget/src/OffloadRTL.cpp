@@ -48,7 +48,8 @@ void deinitRuntime() {
   std::scoped_lock<decltype(PluginMtx)> Lock(PluginMtx);
   assert(PM && "Runtime not initialized");
 
-  if (RefCount-- == 0) {
+  RefCount--;
+  if (RefCount == 0) {
     DP("Deinit offload library!\n");
     delete PM;
   }
