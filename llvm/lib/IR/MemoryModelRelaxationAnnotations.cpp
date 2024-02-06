@@ -73,8 +73,8 @@ bool MMRAMetadata::isCompatibleWith(const MMRAMetadata &Other) const {
   for (const auto &[P, S] : Other)
     PrefixStatuses[P] |= (hasTag(P, S) || !hasTagWithPrefix(P));
 
-  for(auto &[Prefix, Status]: PrefixStatuses) {
-    if(!Status)
+  for (auto &[Prefix, Status] : PrefixStatuses) {
+    if (!Status)
       return false;
   }
 

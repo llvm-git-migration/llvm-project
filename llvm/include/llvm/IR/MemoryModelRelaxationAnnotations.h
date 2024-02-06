@@ -17,10 +17,10 @@
 #ifndef LLVM_IR_MEMORYMODELRELAXATIONANNOTATIONS_H
 #define LLVM_IR_MEMORYMODELRELAXATIONANNOTATIONS_H
 
-#include <vector>
+#include <set>
 #include <string>
 #include <tuple>
-#include <set>
+#include <vector>
 
 namespace llvm {
 

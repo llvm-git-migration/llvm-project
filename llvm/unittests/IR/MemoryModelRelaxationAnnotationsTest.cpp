@@ -7,9 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/IR/MemoryModelRelaxationAnnotations.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
-#include "llvm/ADT/STLExtras.h"
 #include "gtest/gtest.h"
 
 using namespace llvm;
@@ -39,7 +39,8 @@ TEST(MMRATest, MDParse) {
 
   // No nesting:
   // !{!"foo", "!bar"}
-  MDNode *FooBar = MDTuple::get(Ctx, { MDString::get(Ctx, "foo"), MDString::get(Ctx, "bar")});
+  MDNode *FooBar =
+      MDTuple::get(Ctx, {MDString::get(Ctx, "foo"), MDString::get(Ctx, "bar")});
   MMRAMetadata FooBarMMRA(FooBar);
 
   EXPECT_EQ(FooBarMMRA.size(), 1u);
@@ -47,12 +48,14 @@ TEST(MMRATest, MDParse) {
 
   // Nested:
   // !{!{!"foo", "!bar"}, !{!"bux", !"qux"}}
-  MDNode *BuxQux = MDTuple::get(Ctx, { MDString::get(Ctx, "bux"), MDString::get(Ctx, "qux")});
+  MDNode *BuxQux =
+      MDTuple::get(Ctx, {MDString::get(Ctx, "bux"), MDString::get(Ctx, "qux")});
   MDNode *Nested = MDTuple::get(Ctx, {FooBar, BuxQux});
   MMRAMetadata NestedMMRA(Nested);
 
   EXPECT_EQ(NestedMMRA.size(), 2u);
-  EXPECT_EQ(NestedMMRA, MMRAMetadata().addTag("foo", "bar").addTag("bux", "qux"));
+  EXPECT_EQ(NestedMMRA,
+            MMRAMetadata().addTag("foo", "bar").addTag("bux", "qux"));
 }
 
 TEST(MMRATest, MDEmit) {
@@ -62,7 +65,7 @@ TEST(MMRATest, MDEmit) {
   // !{!"foo", "!bar"}
   {
     MMRAMetadata FooBarMMRA = MMRAMetadata().addTag("foo", "bar");
-    MDTuple* FooBar = FooBarMMRA.getAsMD(Ctx);
+    MDTuple *FooBar = FooBarMMRA.getAsMD(Ctx);
 
     ASSERT_NE(FooBar, nullptr);
     ASSERT_EQ(FooBar->getNumOperands(), 2u);
@@ -74,12 +77,12 @@ TEST(MMRATest, MDEmit) {
     EXPECT_EQ(Bar->getString(), std::string("bar"));
   }
 
-
   // Nested MD
   // !{!{!"foo", "!bar"}, !{!"bux", !"qux"}}
   {
-    MMRAMetadata NestedMMRA = MMRAMetadata().addTag("foo", "bar").addTag("bux", "qux");
-    MDTuple* Nested = NestedMMRA.getAsMD(Ctx);
+    MMRAMetadata NestedMMRA =
+        MMRAMetadata().addTag("foo", "bar").addTag("bux", "qux");
+    MDTuple *Nested = NestedMMRA.getAsMD(Ctx);
 
     ASSERT_NE(Nested, nullptr);
     ASSERT_EQ(Nested->getNumOperands(), 2u);
@@ -142,7 +145,6 @@ TEST(MMRATest, Operators) {
   MMRAMetadata B;
   B.addTag("foo", "0");
   B.addTag("bar", "y");
-
 
   // ensure we have different objects by creating copies.
   EXPECT_EQ(MMRAMetadata(A), MMRAMetadata(A));
@@ -216,7 +218,8 @@ TEST(MMRATest, Compatibility) {
   Multiple2.addTag("foo", "x");
   Multiple2.addTag("bux", "y");
 
-  // Multiple0 and Multiple1 are not compatible because "bar" is getting in the way.
+  // Multiple0 and Multiple1 are not compatible because "bar" is getting in the
+  // way.
   EXPECT_FALSE(Multiple0.isCompatibleWith(Multiple1));
   EXPECT_FALSE(Multiple1.isCompatibleWith(Multiple0));
 
@@ -225,7 +228,8 @@ TEST(MMRATest, Compatibility) {
   EXPECT_TRUE(Multiple1.isCompatibleWith(Empty));
   EXPECT_TRUE(Empty.isCompatibleWith(Multiple1));
 
-  // Multiple2 is compatible with both 1/0 because there is always "foo:x" in common, and the other prefixes are unique to each set.
+  // Multiple2 is compatible with both 1/0 because there is always "foo:x" in
+  // common, and the other prefixes are unique to each set.
   EXPECT_TRUE(Multiple2.isCompatibleWith(Multiple0));
   EXPECT_TRUE(Multiple0.isCompatibleWith(Multiple2));
   EXPECT_TRUE(Multiple2.isCompatibleWith(Multiple1));
@@ -253,13 +257,11 @@ TEST(MMRATest, Combine) {
     EXPECT_EQ(Combined, Foo0);
   }
 
-
   {
     // nothing is common
     MMRAMetadata Combined = Foo0.combine(Bar0);
     EXPECT_TRUE(Combined.empty());
   }
-
 
   {
     // only foo:0 is common
