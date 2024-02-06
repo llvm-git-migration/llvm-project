@@ -2375,6 +2375,33 @@ Value *InstCombiner::getFreelyInvertedImpl(Value *V, bool WillInvertAllUses,
     }
   }
 
+  if (PHINode *PN = dyn_cast<PHINode>(V)) {
+    SmallVector<std::pair<Value *, BasicBlock *>, 8> IncomingValues;
+    for (Use &U : PN->operands()) {
+      BasicBlock *IncomingBlock = PN->getIncomingBlock(U);
+      if (isa<PHINode>(U.get()))
+        return nullptr;
+      Value *NewIncomingVal =
+          getFreelyInvertedImpl(U.get(), /*WillInvertAllUses=*/false,
+                                /*Builder=*/nullptr, DoesConsume, Depth);
+      if (NewIncomingVal == nullptr)
+        return nullptr;
+      // Make sure that we can safely erase the original PHI node.
+      if (NewIncomingVal == V)
+        return nullptr;
+      if (Builder != nullptr)
+        IncomingValues.emplace_back(NewIncomingVal, IncomingBlock);
+    }
+    if (Builder != nullptr) {
+      PHINode *NewPN =
+          PHINode::Create(PN->getType(), PN->getNumIncomingValues(), "", PN);
+      for (auto [Val, Pred] : IncomingValues)
+        NewPN->addIncoming(Val, Pred);
+      return NewPN;
+    }
+    return NonNull;
+  }
+
   return nullptr;
 }
 
