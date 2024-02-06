@@ -104,10 +104,11 @@ bool ModuleListProperties::SetEnableExternalLookup(bool new_value) {
   return SetPropertyAtIndex(ePropertyEnableExternalLookup, new_value);
 }
 
-bool ModuleListProperties::GetEnableBackgroundLookup() const {
-  const uint32_t idx = ePropertyEnableBackgroundLookup;
-  return GetPropertyAtIndexAs<bool>(
-      idx, g_modulelist_properties[idx].default_uint_value != 0);
+LazySymbolLookup ModuleListProperties::GetLazySymbolLookup() const {
+  const uint32_t idx = ePropertyLazySymbolLookup;
+  return GetPropertyAtIndexAs<lldb::LazySymbolLookup>(
+      idx, static_cast<lldb::LazySymbolLookup>(
+               g_modulelist_properties[idx].default_uint_value));
 }
 
 FileSpec ModuleListProperties::GetClangModulesCachePath() const {

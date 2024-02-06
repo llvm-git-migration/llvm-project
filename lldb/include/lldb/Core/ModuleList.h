@@ -47,6 +47,26 @@ class UUID;
 class VariableList;
 struct ModuleFunctionSearchOptions;
 
+static constexpr OptionEnumValueElement g_lazy_lookup_enum_values[] = {
+    {
+        lldb::eLazyLookupOff,
+        "off",
+        "Disable lazy symbol lookup.",
+    },
+    {
+        lldb::eLazyLookupBackground,
+        "background",
+        "Lazily look up symbols in the background without blocking the "
+        "debugger.",
+    },
+    {
+        lldb::eLazyLookupForeground,
+        "foreground",
+        "Lazily look up symbols in the foreground and block the debugger until "
+        "they're found.",
+    },
+};
+
 class ModuleListProperties : public Properties {
   mutable llvm::sys::RWMutex m_symlink_paths_mutex;
   PathMappingList m_symlink_paths;
@@ -60,7 +80,6 @@ public:
   bool SetClangModulesCachePath(const FileSpec &path);
   bool GetEnableExternalLookup() const;
   bool SetEnableExternalLookup(bool new_value);
-  bool GetEnableBackgroundLookup() const;
   bool GetEnableLLDBIndexCache() const;
   bool SetEnableLLDBIndexCache(bool new_value);
   uint64_t GetLLDBIndexCacheMaxByteSize();
@@ -70,6 +89,8 @@ public:
   bool SetLLDBIndexCachePath(const FileSpec &path);
 
   bool GetLoadSymbolOnDemand();
+
+  lldb::LazySymbolLookup GetLazySymbolLookup() const;
 
   PathMappingList GetSymlinkMappings() const;
 };

@@ -18,12 +18,10 @@ using namespace lldb;
 using namespace lldb_private;
 
 void SymbolLocator::DownloadSymbolFileAsync(const UUID &uuid) {
-  if (!ModuleList::GetGlobalModuleListProperties().GetEnableBackgroundLookup())
-    return;
-
   static llvm::SmallSet<UUID, 8> g_seen_uuids;
   static std::mutex g_mutex;
-  Debugger::GetThreadPool().async([=]() {
+
+  auto lookup = [=]() {
     {
       std::lock_guard<std::mutex> guard(g_mutex);
       if (g_seen_uuids.count(uuid))
@@ -43,5 +41,16 @@ void SymbolLocator::DownloadSymbolFileAsync(const UUID &uuid) {
       return;
 
     Debugger::ReportSymbolChange(module_spec);
-  });
+  };
+
+  switch (ModuleList::GetGlobalModuleListProperties().GetLazySymbolLookup()) {
+  case eLazyLookupOff:
+    break;
+  case eLazyLookupBackground:
+    Debugger::GetThreadPool().async(lookup);
+    break;
+  case eLazyLookupForeground:
+    lookup();
+    break;
+  };
 }

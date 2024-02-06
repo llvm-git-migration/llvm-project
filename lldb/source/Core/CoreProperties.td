@@ -5,10 +5,11 @@ let Definition = "modulelist" in {
     Global,
     DefaultTrue,
     Desc<"Control the use of external tools and repositories to locate symbol files. Directories listed in target.debug-file-search-paths and directory of the executable are always checked first for separate debug info files. Then depending on this setting: On macOS, Spotlight would be also used to locate a matching .dSYM bundle based on the UUID of the executable. On NetBSD, directory /usr/libdata/debug would be also searched. On platforms other than NetBSD directory /usr/lib/debug would be also searched. If all other methods fail there may be symbol-locator plugins that, if configured properly, will also attempt to acquire symbols. The debuginfod plugin defaults to the DEGUFINFOD_URLS environment variable which is configurable through the 'plugin.symbol-locator.debuginfod.server_urls' setting.">;
-  def EnableBackgroundLookup: Property<"enable-background-lookup", "Boolean">,
+  def LazySymbolLookup: Property<"lazy-lookup", "Enum">,
     Global,
-    DefaultFalse,
-    Desc<"On macOS, enable calling dsymForUUID (or an equivalent script/binary) in the background to locate symbol files that weren't found.">;
+    DefaultEnumValue<"eLazyLookupOff">,
+    EnumValues<"OptionEnumValues(g_lazy_lookup_enum_values)">,
+    Desc<"On macOS, lazily look up symbols with dsymForUUID (or an equivalent script/binary) as images appear in the current backtrace.">;
   def ClangModulesCachePath: Property<"clang-modules-cache-path", "FileSpec">,
     Global,
     DefaultStringValue<"">,

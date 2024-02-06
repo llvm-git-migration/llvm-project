@@ -1305,6 +1305,12 @@ enum CompletionType {
   eTerminatorCompletion = (1ul << 27)
 };
 
+enum LazySymbolLookup {
+  eLazyLookupOff = 0,
+  eLazyLookupBackground = 1,
+  eLazyLookupForeground = 2,
+};
+
 } // namespace lldb
 
 #endif // LLDB_LLDB_ENUMERATIONS_H
