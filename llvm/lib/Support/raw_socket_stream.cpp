@@ -104,7 +104,7 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
 }
 
 Expected<std::unique_ptr<raw_socket_stream>>
-ListeningSocket::accept(timeval TV) {
+ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
 
   int SelectStatus;
   int AcceptFD;
@@ -114,7 +114,8 @@ ListeningSocket::accept(timeval TV) {
 #endif
 
   fd_set Readfds;
-  if (TV.tv_sec != -1 && TV.tv_usec != -1) {
+  if (Timeout.has_value()) {
+    timeval TV = {0, Timeout.value().count()};
     FD_ZERO(&Readfds);
 #ifdef _WIN32
     FD_SET(WinServerSock, &Readfds);
