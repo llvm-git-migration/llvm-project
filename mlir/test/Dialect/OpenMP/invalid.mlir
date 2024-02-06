@@ -1738,3 +1738,49 @@ func.func @omp_distribute(%data_var : memref<i32>) -> () {
       "omp.terminator"() : () -> ()
     }) : (memref<i32>) -> ()
 }
+
+// -----
+
+omp.private @x.privatizer : (i32) -> i32 {
+^bb0(%arg0: i32):
+  %0 = arith.constant 0.0 : f32
+  // expected-error @below {{Invalid yielded value. Expected type: 'i32', got: 'f32'}}
+  omp.yield(%0 : f32)
+}
+
+// -----
+
+omp.private @x.privatizer : (i32) -> i32 {
+^bb0(%arg0: i32):
+  // expected-error @below {{'omp.private' must yield a value.}}
+  omp.yield
+}
+
+// -----
+
+// expected-error @below {{'omp.private' must accept at least one argument.}}
+omp.private @x.privatizer : () -> i32 {
+^bb0:
+  omp.yield
+}
+
+// -----
+
+// expected-error @below {{'omp.private' must return at least one result.}}
+omp.private @x.privatizer : (i32) -> () {
+}
+
+// -----
+
+// expected-error @below {{expected all blocks to have terminators.}}
+omp.private @x.privatizer : (i32) -> i32 {
+^bb0(%arg0: i32):
+}
+
+// -----
+
+omp.private @x.privatizer : (i32) -> i32 {
+^bb0(%arg0: i32):
+  // expected-error @below {{expected exit block terminator to be an `omp.yield` op.}}
+  omp.terminator
+}

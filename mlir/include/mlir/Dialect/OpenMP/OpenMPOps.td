@@ -16,6 +16,7 @@
 
 include "mlir/IR/EnumAttr.td"
 include "mlir/IR/OpBase.td"
+include "mlir/Interfaces/FunctionInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/Interfaces/ControlFlowInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
@@ -131,6 +132,84 @@ def DeclareTargetAttr : OpenMP_Attr<"DeclareTarget", "declaretarget"> {
   );
 
   let assemblyFormat = "`<` struct(params) `>`";
+}
+
+//===----------------------------------------------------------------------===//
+// 2.19.4 Data-Sharing Attribute Clauses
+//===----------------------------------------------------------------------===//
+
+def PrivateClauseOp : OpenMP_Op<"private", [
+    IsolatedFromAbove, FunctionOpInterface
+  ]> {
+  let summary = "Outline [first]private logic in a separate op.";
+  let description = [{
+    Using this operation, the dialect can model the data-sharing attributes of
+    `private` and `firstprivate` variables on the IR level. This means that of
+    "eagerly" privatizing variables in the frontend, we can instead model which
+    variables should be privatized and only materialze the privatization when
+    necessary; e.g. directly before lowring to LLVM IR.
+
+    Examples:
+    ---------
+    * `private(x)` would be emitted as:
+    ```mlir
+    omp.private @x.privatizer : (!fir.ref<i32>) -> !fir.ref<i32> {
+    ^bb0(%arg0: !fir.ref<i32>):
+      %0 = fir.alloca i32
+      omp.yield(%0 : !fir.ref<i32>)
+    }
+    ```
+
+    * `firstprivate(x)` would be emitted as:
+    ```mlir
+    omp.private @x.privatizer : (!fir.ref<i32>) -> !fir.ref<i32> {
+    ^bb0(%arg0: !fir.ref<i32>):
+      %0 = fir.alloca i32
+      %1 = fir.load %arg0 : !fir.ref<i32>
+      fir.store %1 to %0 : !fir.ref<i32>
+      omp.yield(%0 : !fir.ref<i32>)
+    }
+    ```
+
+    However, the body of the `omp.private` op really depends on the code-gen
+    done by the emitting frontend. There are no restrictions on the body except
+    for having the yield a value of the same type as the operand.
+
+    Instances of this op would then be used by ops that model directives that
+    accept data-sharing attribute clauses.
+  }];
+
+  let arguments = (ins SymbolNameAttr:$sym_name,
+                       TypeAttrOf<FunctionType>:$function_type);
+
+  let regions = (region AnyRegion:$body);
+
+  let builders = [OpBuilder<(ins
+    "::mlir::Type":$privateVarType,
+    "::llvm::StringRef":$privatizerName
+  )>];
+
+  let assemblyFormat = [{
+    $sym_name `:` $function_type $body attr-dict
+  }];
+
+  let extraClassDeclaration = [{
+    ::mlir::Region *getCallableRegion() {
+      return &getBody();
+    }
+
+    /// Returns the argument types of this function.
+    ArrayRef<Type> getArgumentTypes() {
+      return getFunctionType().getInputs();
+    }
+
+    /// Returns the result types of this function.
+    ArrayRef<Type> getResultTypes() {
+      return getFunctionType().getResults();
+    }
+  }];
+
+  let hasVerifier = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -612,7 +691,7 @@ def SimdLoopOp : OpenMP_Op<"simdloop", [AttrSizedOperandSegments,
 def YieldOp : OpenMP_Op<"yield",
     [Pure, ReturnLike, Terminator,
      ParentOneOf<["WsLoopOp", "ReductionDeclareOp",
-     "AtomicUpdateOp", "SimdLoopOp"]>]> {
+     "AtomicUpdateOp", "SimdLoopOp", "PrivateClauseOp"]>]> {
   let summary = "loop yield and termination operation";
   let description = [{
     "omp.yield" yields SSA values from the OpenMP dialect op region and
