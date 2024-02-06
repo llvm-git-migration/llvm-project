@@ -11,13 +11,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "AsmWriterInst.h"
-#include "CodeGenInstAlias.h"
-#include "CodeGenInstruction.h"
-#include "CodeGenRegisters.h"
-#include "CodeGenTarget.h"
-#include "SequenceToOffsetTable.h"
-#include "Types.h"
+#include "Basic/SequenceToOffsetTable.h"
+#include "Common/AsmWriterInst.h"
+#include "Common/CodeGenInstAlias.h"
+#include "Common/CodeGenInstruction.h"
+#include "Common/CodeGenRegisters.h"
+#include "Common/CodeGenTarget.h"
+#include "Common/Types.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
@@ -1262,14 +1262,14 @@ void AsmWriterEmitter::EmitPrintAliasInstruction(raw_ostream &O) {
         << "    break;\n";
     }
     O << "  }\n";
-  }    
+  }
   O << "}\n\n";
 
   if (!MCOpPredicates.empty()) {
     O << "static bool " << Target.getName() << ClassName
       << "ValidateMCOperand(const MCOperand &MCOp,\n"
       << "                  const MCSubtargetInfo &STI,\n"
-      << "                  unsigned PredicateIndex) {\n"      
+      << "                  unsigned PredicateIndex) {\n"
       << "  switch (PredicateIndex) {\n"
       << "  default:\n"
       << "    llvm_unreachable(\"Unknown MCOperandPredicate kind\");\n"

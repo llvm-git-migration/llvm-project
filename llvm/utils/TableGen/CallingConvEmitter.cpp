@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "CodeGenTarget.h"
+#include "Common/CodeGenTarget.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
 #include "llvm/TableGen/TableGenBackend.h"
@@ -117,7 +117,7 @@ void CallingConvEmitter::EmitCallingConv(Record *CC, raw_ostream &O) {
     O << "\n";
     EmitAction(Action, 2, O);
   }
-  
+
   O << "\n  return true; // CC didn't match.\n";
   O << "}\n";
 }
@@ -128,7 +128,7 @@ void CallingConvEmitter::EmitAction(Record *Action,
 
   if (Action->isSubClassOf("CCPredicateAction")) {
     O << IndentStr << "if (";
-    
+
     if (Action->isSubClassOf("CCIfType")) {
       ListInit *VTs = Action->getValueAsListInit("VTs");
       for (unsigned i = 0, e = VTs->size(); i != e; ++i) {
@@ -143,7 +143,7 @@ void CallingConvEmitter::EmitAction(Record *Action,
       errs() << *Action;
       PrintFatalError(Action->getLoc(), "Unknown CCPredicateAction!");
     }
-    
+
     O << ") {\n";
     EmitAction(Action->getValueAsDef("SubAction"), Indent+2, O);
     O << IndentStr << "}\n";

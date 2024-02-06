@@ -22,11 +22,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "CodeGenHwModes.h"
-#include "CodeGenInstruction.h"
-#include "CodeGenTarget.h"
-#include "InfoByHwMode.h"
-#include "VarLenCodeEmitterGen.h"
+#include "Common/CodeGenHwModes.h"
+#include "Common/CodeGenInstruction.h"
+#include "Common/CodeGenTarget.h"
+#include "Common/InfoByHwMode.h"
+#include "Common/VarLenCodeEmitterGen.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringExtras.h"
@@ -107,10 +107,10 @@ bool CodeEmitterGen::addCodeToMergeInOperand(Record *R, BitsInit *BI,
   for (; bit >= 0; ) {
     if (getVariableBit(VarName, BI, bit) != -1)
       break;
-    
+
     --bit;
   }
-  
+
   // If we found no bits, ignore this value, otherwise emit the call to get the
   // operand encoding.
   if (bit < 0)
@@ -195,7 +195,7 @@ bool CodeEmitterGen::addCodeToMergeInOperand(Record *R, BitsInit *BI,
   unsigned BitOffset = -1;
   for (; bit >= 0; ) {
     int varBit = getVariableBit(VarName, BI, bit);
-    
+
     // If this bit isn't from a variable, skip it.
     if (varBit == -1) {
       --bit;
