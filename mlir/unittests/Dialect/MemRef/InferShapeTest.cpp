@@ -58,3 +58,12 @@ TEST(InferShapeTest, inferRankReducedShapeToScalar) {
       StridedLayoutAttr::get(&ctx, /*offset=*/2003, /*strides=*/{}));
   EXPECT_EQ(reducedType, expectedType);
 }
+
+TEST(InferShapeTest, inferMapFromAffineExprs) {
+  MLIRContext ctx;
+  OpBuilder b(&ctx);
+  AffineMap map = b.getEmptyAffineMap();
+  DenseMap<AffineExpr, AffineExpr> replacements;
+  map.replace(replacements);
+  EXPECT_EQ(map, map);
+}
