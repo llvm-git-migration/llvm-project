@@ -67,16 +67,14 @@ bool MMRAMetadata::isCompatibleWith(const MMRAMetadata &Other) const {
   //   - the other set contains no tag with prefix P, or
   //   - at least one tag with prefix P is common to both sets.
 
-  // These sets are generally small so we don't bother uniquing
-  // the prefixes beforehand. Checking a prefix twice is likely cheaper
-  // than building a map.
-  for (const auto &[P, S] : Tags) {
-    if (!Other.hasTag(P, S) && Other.hasTagWithPrefix(P))
-      return false;
-  }
+  StringMap<bool> PrefixStatuses;
+  for (const auto &[P, S] : Tags)
+    PrefixStatuses[P] |= (Other.hasTag(P, S) || !Other.hasTagWithPrefix(P));
+  for (const auto &[P, S] : Other)
+    PrefixStatuses[P] |= (hasTag(P, S) || !hasTagWithPrefix(P));
 
-  for (const auto &[P, S] : Other) {
-    if (!hasTag(P, S) && hasTagWithPrefix(P))
+  for(auto &[Prefix, Status]: PrefixStatuses) {
+    if(!Status)
       return false;
   }
 

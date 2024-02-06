@@ -33,7 +33,6 @@
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/CodeGenTypes/MachineValueType.h"
 #include "llvm/IR/DebugLoc.h"
-#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/ArrayRecycler.h"

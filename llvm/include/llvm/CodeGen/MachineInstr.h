@@ -26,7 +26,6 @@
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/InlineAsm.h"
-#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/MC/MCInstrDesc.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/ArrayRecycler.h"
@@ -260,9 +259,6 @@ private:
     }
     size_t numTrailingObjects(OverloadToken<uint32_t>) const {
       return HasCFIType;
-    }
-    size_t numTrailingObjects(OverloadToken<MMRAMetadata>) const {
-      return HasMMRAs;
     }
 
     // Just a boring constructor to allow us to initialize the sizes. Always use

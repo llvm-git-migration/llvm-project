@@ -17,10 +17,10 @@
 #ifndef LLVM_IR_MEMORYMODELRELAXATIONANNOTATIONS_H
 #define LLVM_IR_MEMORYMODELRELAXATIONANNOTATIONS_H
 
-#include "llvm/ADT/STLExtras.h"
+#include <vector>
 #include <string>
 #include <tuple>
-#include <unordered_set>
+#include <set>
 
 namespace llvm {
 
@@ -45,22 +45,23 @@ class Instruction;
 class MMRAMetadata {
 public:
   using TagT = std::pair<std::string, std::string>;
-  using SetT = std::unordered_set<TagT, pair_hash<std::string, std::string>>;
+  using SetT = std::set<TagT>;
   using const_iterator = SetT::const_iterator;
 
   MMRAMetadata() = default;
   MMRAMetadata(const Instruction &I);
   MMRAMetadata(MDNode *MD);
 
-  static bool isCompatible(const Instruction &A, const Instruction &B) {
+  /// \returns whether the MMRAs on \p A and \p B are compatible.
+  static bool checkCompatibility(const Instruction &A, const Instruction &B) {
     return MMRAMetadata(A).isCompatibleWith(B);
   }
 
-  /// Checks another set of tag for compatibility with this set of tags.
-  // TODO: Unit test this
+  /// \returns whether this set of tags is compatible with \p Other.
   bool isCompatibleWith(const MMRAMetadata &Other) const;
 
-  // TODO: Unit test this
+  /// Combines this set of tags with \p Other.
+  /// \returns a new set of tags containing the result.
   MMRAMetadata combine(const MMRAMetadata &Other) const;
 
   MMRAMetadata &addTag(StringRef Prefix, StringRef Suffix);
@@ -72,9 +73,9 @@ public:
   bool hasTag(StringRef Prefix, StringRef Suffix) const;
   bool hasTag(const TagT &Tag) const { return Tags.count(Tag); }
 
-  std::vector<TagT> getAllTagsWithPrefix(StringRef Prefix) const;
-
   bool hasTagWithPrefix(StringRef Prefix) const;
+
+  std::vector<TagT> getAllTagsWithPrefix(StringRef Prefix) const;
 
   MDTuple *getAsMD(LLVMContext &Ctx) const;
 

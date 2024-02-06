@@ -16,6 +16,7 @@
 #include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ModuleSlotTracker.h"

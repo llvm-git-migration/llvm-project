@@ -386,11 +386,11 @@ public:
   /// Set the PC sections metadata to \p MD for all the next build instructions.
   void setPCSections(MDNode *MD) { State.PCSections = MD; }
 
-  /// Set the PC sections metadata to \p MD for all the next build instructions.
-  void setMMRAMetadata(MDNode *MMRA) { State.MMRA = MMRA; }
-
   /// Get the current instruction's PC sections metadata.
   MDNode *getPCSections() { return State.PCSections; }
+
+  /// Set the PC sections metadata to \p MD for all the next build instructions.
+  void setMMRAMetadata(MDNode *MMRA) { State.MMRA = MMRA; }
 
   /// Get the current instruction's MMRA metadata.
   MDNode *getMMRAMetadata() { return State.MMRA; }
