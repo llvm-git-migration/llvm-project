@@ -17,6 +17,8 @@
 #include "llvm/Support/Threading.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <atomic>
+
 namespace llvm {
 
 class raw_socket_stream;
@@ -31,7 +33,7 @@ public:
 #endif // _WIN32
 
 class ListeningSocket {
-  int FD;
+  std::atomic<int> FD;
   std::string SocketPath;
   ListeningSocket(int SocketFD, StringRef SocketPath);
 #ifdef _WIN32
@@ -39,20 +41,21 @@ class ListeningSocket {
 #endif // _WIN32
 
 public:
+  ~ListeningSocket();
+  ListeningSocket(ListeningSocket &&LS);
+  ListeningSocket(ListeningSocket &LS) = delete;
+  ListeningSocket &operator=(const ListeningSocket &) = delete;
+
+  void shutdown();
+
+  Expected<std::unique_ptr<raw_socket_stream>>
+  accept(std::optional<std::chrono::microseconds> Timeout = std::nullopt);
+
   static Expected<ListeningSocket> createUnix(
       StringRef SocketPath,
       int MaxBacklog = llvm::hardware_concurrency().compute_thread_count());
-
-  // The use of a default parameter was choosen over std::optional to more
-  // closely resemble the accept system call. A user should be able to call
-  // ListeningSocket.accept() rather then ListeningSocket.accept(std::nullopt)
-  // if they do not want accept to ever timeout
-  Expected<std::unique_ptr<raw_socket_stream>>
-  accept(std::optional<std::chrono::microseconds> Timeout = std::nullopt);
-  ListeningSocket(ListeningSocket &&LS);
-  void shutdown();
-  ~ListeningSocket();
 };
+
 class raw_socket_stream : public raw_fd_stream {
   uint64_t current_pos() const override { return 0; }
 #ifdef _WIN32

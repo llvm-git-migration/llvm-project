@@ -15,6 +15,8 @@
 #include "llvm/Config/config.h"
 #include "llvm/Support/Error.h"
 
+#include <atomic>
+
 #ifndef _WIN32
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -60,7 +62,9 @@ ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath)
     : FD(SocketFD), SocketPath(SocketPath) {}
 
 ListeningSocket::ListeningSocket(ListeningSocket &&LS)
-    : FD(LS.FD), SocketPath(LS.SocketPath) {
+    : FD(LS.FD.load()), SocketPath(LS.SocketPath) {
+
+  LS.SocketPath.clear();
   LS.FD = -1;
 }
 
