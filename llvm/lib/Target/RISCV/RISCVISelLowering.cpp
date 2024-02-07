@@ -18032,7 +18032,7 @@ bool RISCV::CC_RISCV(const DataLayout &DL, RISCVABI::ABI ABI, unsigned ValNo,
   }
 
   // Allocate to a register if possible, or else a stack slot.
-  Register Reg = MCRegister();
+  Register Reg;
   unsigned StoreSizeBytes = XLen / 8;
   Align StackAlign = Align(XLen / 8);
 
@@ -18129,7 +18129,7 @@ void RISCVTargetLowering::analyzeInputArgs(
   unsigned NumArgs = Ins.size();
   FunctionType *FType = MF.getFunction().getFunctionType();
 
-  std::vector<Type *> TypeList;
+  SmallVector<Type *, 4> TypeList;
   if (IsRet)
     TypeList.push_back(MF.getFunction().getReturnType());
   else
@@ -18164,7 +18164,7 @@ void RISCVTargetLowering::analyzeOutputArgs(
     CallLoweringInfo *CLI, RISCVCCAssignFn Fn) const {
   unsigned NumArgs = Outs.size();
 
-  std::vector<Type *> TypeList;
+  SmallVector<Type *, 4> TypeList;
   if (IsRet)
     TypeList.push_back(MF.getFunction().getReturnType());
   else if (CLI)
@@ -19073,8 +19073,7 @@ bool RISCVTargetLowering::CanLowerReturn(
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, Context);
 
-  std::vector<Type *> TypeList = {MF.getFunction().getReturnType()};
-  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
+  RVVArgDispatcher Dispatcher{&MF, this, MF.getFunction().getReturnType()};
 
   for (unsigned i = 0, e = Outs.size(); i != e; ++i) {
     MVT VT = Outs[i].VT;
@@ -20877,7 +20876,7 @@ unsigned RISCVTargetLowering::getMinimumJumpTableEntries() const {
   return Subtarget.getMinimumJumpTableEntries();
 }
 
-void RVVArgDispatcher::constructArgInfos(Type *Ty) {
+void RVVArgDispatcher::constructArgInfos(Type *Ty, bool &FirstMaskAssigned) {
   const DataLayout &DL = MF->getDataLayout();
   const Function &F = MF->getFunction();
   LLVMContext &Context = F.getContext();
@@ -20909,21 +20908,23 @@ void RVVArgDispatcher::constructArgInfos(Type *Ty) {
       if (RegisterVT.isFixedLengthVector())
         RegisterVT = TLI->getContainerForFixedLengthVector(RegisterVT);
 
-      RVVArgInfo Info{1, RegisterVT, false};
-      RVVArgInfos.insert(RVVArgInfos.end(), NumRegs, Info);
+      if (!FirstMaskAssigned && RegisterVT.getVectorElementType() == MVT::i1) {
+        RVVArgInfos.push_back({1, RegisterVT, true});
+        FirstMaskAssigned = true;
+      } else {
+        RVVArgInfos.push_back({1, RegisterVT, false});
+      }
+
+      RVVArgInfos.insert(RVVArgInfos.end(), --NumRegs, {1, RegisterVT, false});
     }
   }
 }
 
-void RVVArgDispatcher::construct(const std::vector<Type *> &TypeList) {
+void RVVArgDispatcher::constructArgInfos(
+    const SmallVectorImpl<Type *> &TypeList) {
+  bool FirstVMaskAssigned = false;
   for (Type *Ty : TypeList)
-    constructArgInfos(Ty);
-
-  for (auto &Info : RVVArgInfos)
-    if (Info.NF == 1 && Info.VT.getVectorElementType() == MVT::i1) {
-      Info.FirstVMask = true;
-      break;
-    }
+    constructArgInfos(Ty, FirstVMaskAssigned);
 }
 
 void RVVArgDispatcher::allocatePhysReg(unsigned NF, unsigned LMul,

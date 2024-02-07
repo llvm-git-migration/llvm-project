@@ -1038,33 +1038,33 @@ public:
   };
 
   RVVArgDispatcher(const MachineFunction *MF, const RISCVTargetLowering *TLI,
-                   std::vector<Type *> &TypeList)
+                   SmallVectorImpl<Type *> &TypeList)
       : MF(MF), TLI(TLI) {
-    construct(TypeList);
+    constructArgInfos(TypeList);
     compute();
   }
 
   RVVArgDispatcher(const MachineFunction *MF, const RISCVTargetLowering *TLI,
                    Type *Ty)
       : MF(MF), TLI(TLI) {
-    std::vector<Type *> TypeList = {Ty};
-    construct(TypeList);
+    SmallVector<Type *, 4> TypeList = {Ty};
+    constructArgInfos(TypeList);
     compute();
   }
 
   MCPhysReg getNextPhysReg();
 
 private:
-  std::vector<RVVArgInfo> RVVArgInfos;
-  std::vector<MCPhysReg> AllocatedPhysRegs;
+  SmallVector<RVVArgInfo, 4> RVVArgInfos;
+  SmallVector<MCPhysReg, 4> AllocatedPhysRegs;
 
   const MachineFunction *MF = nullptr;
   const RISCVTargetLowering *TLI = nullptr;
 
   unsigned CurIdx = 0;
 
-  void construct(const std::vector<Type *> &TypeList);
-  void constructArgInfos(Type *Ty);
+  void constructArgInfos(const SmallVectorImpl<Type *> &TypeList);
+  void constructArgInfos(Type *Ty, bool &FirstMaskAssigned);
   void compute();
   void allocatePhysReg(unsigned NF = 1, unsigned LMul = 1,
                        unsigned StartReg = 0);
