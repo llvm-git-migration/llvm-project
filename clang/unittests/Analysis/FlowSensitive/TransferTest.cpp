@@ -2313,6 +2313,20 @@ TEST(TransferTest, AssignmentOperatorWithInitAndInheritance) {
          ASTContext &ASTCtx) {});
 }
 
+TEST(TransferTest, InitListExprAsXValue) {
+  // This is a crash repro.
+  std::string Code = R"(
+    void target() {
+      auto&& test{false};
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {});
+}
+
 TEST(TransferTest, CopyConstructor) {
   std::string Code = R"(
     struct A {

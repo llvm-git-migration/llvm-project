@@ -648,6 +648,12 @@ public:
     QualType Type = S->getType();
 
     if (!Type->isStructureOrClassType()) {
+      // It is possible that InitListExpr is not a prvalue, in which case
+      // `setValue` will fail. In this case, we can just let the next
+      // transfer function handle the value creation.
+      if (!S->isPRValue())
+        return;
+
       if (auto *Val = Env.createValue(Type))
         Env.setValue(*S, *Val);
 
