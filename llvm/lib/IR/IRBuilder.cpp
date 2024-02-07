@@ -22,8 +22,8 @@
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
-#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/NoFolder.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IR/Statepoint.h"
@@ -78,7 +78,7 @@ void IRBuilderBase::SetInstDebugLocation(Instruction *I) const {
 
 void IRBuilderBase::AddMetadataToInst(Instruction *I) const {
   for (const auto &KV : MetadataToCopy) {
-    if(KV.first == LLVMContext::MD_mmra && !canInstructionHaveMMRAs(*I))
+    if (KV.first == LLVMContext::MD_mmra && !canInstructionHaveMMRAs(*I))
       continue;
     I->setMetadata(KV.first, KV.second);
   }
