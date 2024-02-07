@@ -86,31 +86,17 @@ MMRAMetadata MMRAMetadata::combine(const MMRAMetadata &Other) const {
   // For every unique tag prefix P present in A or B:
   // * If either A or B has no tags with prefix P, no tags with prefix
   //   P are added to U.
-  // * If both A and B have at least one tag with prefix P, only the tags
-  //   common to A and B are added to U.
-
-  StringSet<> Prefixes;
-  for (const auto &[P, S] : Tags)
-    Prefixes.insert(P);
-  for (const auto &[P, S] : Other)
-    Prefixes.insert(P);
+  // * If both A and B have at least one tag with prefix P, all tags with prefix
+  //   P from both sets are added to U.
 
   MMRAMetadata U;
-  for (StringRef P : Prefixes.keys()) {
-    auto A = getAllTagsWithPrefix(P);
-    auto B = Other.getAllTagsWithPrefix(P);
-
-    if (A.empty() || B.empty())
-      continue;
-
-    for (const auto &Tag : A) {
-      if (hasTag(Tag) && Other.hasTag(Tag))
-        U.addTag(Tag);
-    }
-    for (const auto &Tag : B) {
-      if (hasTag(Tag) && Other.hasTag(Tag))
-        U.addTag(Tag);
-    }
+  for (const auto &[P, S] : Tags) {
+    if(Other.hasTagWithPrefix(P))
+      U.addTag(P, S);
+  }
+  for (const auto &[P, S] : Other.Tags) {
+    if(hasTagWithPrefix(P))
+      U.addTag(P, S);
   }
 
   return U;

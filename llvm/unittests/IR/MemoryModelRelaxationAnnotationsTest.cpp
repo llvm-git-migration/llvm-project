@@ -252,9 +252,9 @@ TEST(MMRATest, Combine) {
   BarFoo0.addTag("foo", "0");
 
   {
-    // only foo:0 is common
+    // foo is common to both sets
     MMRAMetadata Combined = Foo0.combine(Foo10);
-    EXPECT_EQ(Combined, Foo0);
+    EXPECT_EQ(Combined, Foo10);
   }
 
   {
@@ -264,21 +264,21 @@ TEST(MMRATest, Combine) {
   }
 
   {
-    // only foo:0 is common
+    // only foo is common.
     MMRAMetadata Combined = BarFoo0.combine(Foo0);
     EXPECT_EQ(Combined, Foo0);
   }
 
   {
-    // only bar:0 is common
+    // only bar is common.
     MMRAMetadata Combined = BarFoo0.combine(Bar0);
     EXPECT_EQ(Combined, Bar0);
   }
 
   {
-    // only foo:0 is common
+    // only foo is common
     MMRAMetadata Combined = BarFoo0.combine(Foo10);
-    EXPECT_EQ(Combined, Foo0);
+    EXPECT_EQ(Combined, Foo10);
   }
 }
 

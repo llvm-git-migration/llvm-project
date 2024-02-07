@@ -744,16 +744,6 @@ bool Instruction::hasSameSpecialState(const Instruction *I2,
   assert(I1->getOpcode() == I2->getOpcode() &&
          "Can not compare special state of different instructions");
 
-  // MMRAs may change semantics of an operation, e.g. make a fence only
-  // affect a given address space.
-  //
-  // FIXME: Not sure if this stinks or not. Maybe we should just look at
-  // all callers and make them check MMRAs.
-  // OTOH, MMRAs can really alter semantics so this is technically correct
-  // (the best kind of correct).
-  if (MMRAMetadata(*this) != MMRAMetadata(*I2))
-    return false;
-
   if (const AllocaInst *AI = dyn_cast<AllocaInst>(I1))
     return AI->getAllocatedType() == cast<AllocaInst>(I2)->getAllocatedType() &&
            (AI->getAlign() == cast<AllocaInst>(I2)->getAlign() ||

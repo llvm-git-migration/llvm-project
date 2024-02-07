@@ -44,10 +44,7 @@ tag
     An operation may have multiple tags that each represent a different
     property.
 
-    A tag is composed of a pair of metadata nodes:
-
-    * a *prefix* string.
-    * a *suffix* integer or string.
+    A tag is composed of a pair of metadata string: a *prefix and a *suffix*.
 
     In LLVM IR, the pair is represented using a metadata tuple.
     In other cases (comments, documentation, etc.), we may use the
@@ -60,9 +57,6 @@ tag
       !0 = !{!"scope", !"workgroup"}  # scope:workgroup
       !1 = !{!"scope", !"device"}     # scope:device
       !2 = !{!"scope", !"system"}     # scope:system
-      !3 = !{!"sync-as", i32 2}  # sync-as:2
-      !4 = !{!"sync-as", i32 1}  # sync-as:1
-      !5 = !{!"sync-as", i32 0}  # sync-as:0
 
     .. note::
 
@@ -441,8 +435,18 @@ For every unique tag prefix P present in A or B:
 
 * If either A or B has no tags with prefix P, no tags with prefix
   P are added to U.
-* If both A and B have at least one tag with prefix P, only the tags
-  common to A and B are added to U.
+* If both A and B have at least one tag with prefix P, all tags with prefix
+  P from both sets are added to U.
+
+Passes should avoid aggressively combining MMRAs, as this can result
+in significant losses of information. While this cannot affect
+correctness, it may affect performance.
+
+As a general rule of thumb, common passes such as SimplifyCFG that
+aggressively combine/reorder operations should only combine
+instructions that have identical sets of tags.
+Passes that combine less frequently, or that are well aware of the cost
+of combining the MMRAs can use the prefix-wise union described above.
 
 Examples:
 

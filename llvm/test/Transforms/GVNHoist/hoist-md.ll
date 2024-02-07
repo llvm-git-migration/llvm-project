@@ -157,7 +157,7 @@ return:                                           ; preds = %if.end, %if.then
   ret ptr %retval.0
 }
 
-; TODO: Should this work?
+; TODO: We might want to disable GVN if MMRAs differ.
 define void @test6(i1 %b, ptr %x) {
 ; CHECK-LABEL: define void @test6
 ; CHECK-SAME: (i1 [[B:%.*]], ptr [[X:%.*]]) {
@@ -207,5 +207,7 @@ if.end:                                           ; preds = %if.else, %if.then
 ; CHECK: [[META1]] = !{!"omnipotent char", [[META2:![0-9]+]], i64 0}
 ; CHECK: [[META2]] = !{!"Simple C++ TBAA"}
 ; CHECK: [[RNG3]] = !{i32 0, i32 2, i32 3, i32 4}
-; CHECK: [[META4]] = !{!"foo", !"bux"}
+; CHECK: [[META4]] = !{[[META5:![0-9]+]], [[META6:![0-9]+]]}
+; CHECK: [[META5]] = !{!"foo", !"bar"}
+; CHECK: [[META6]] = !{!"foo", !"bux"}
 ;.
