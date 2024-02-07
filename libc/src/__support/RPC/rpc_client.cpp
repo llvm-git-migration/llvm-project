@@ -13,7 +13,7 @@ namespace LIBC_NAMESPACE {
 namespace rpc {
 
 /// The libc client instance used to communicate with the server.
-Client client;
+Client<> client;
 
 /// Externally visible symbol to signify the usage of an RPC client to
 /// whomever needs to run the server as well as provide a way to initialize

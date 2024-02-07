@@ -15,7 +15,7 @@ namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(int, fseek, (::FILE * stream, long offset, int whence)) {
   int ret;
-  rpc::Client::Port port = rpc::client.open<RPC_FSEEK>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_FSEEK>();
   port.send_and_recv(
       [=](rpc::Buffer *buffer) {
         buffer->data[0] = file::from_stream(stream);

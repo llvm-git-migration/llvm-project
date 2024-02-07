@@ -13,12 +13,8 @@
 namespace {
 enum { lane_size = 8, port_count = 4 };
 
-struct Packet {
-  uint64_t unused;
-};
-
-using ProcAType = LIBC_NAMESPACE::rpc::Process<false, Packet>;
-using ProcBType = LIBC_NAMESPACE::rpc::Process<true, Packet>;
+using ProcAType = LIBC_NAMESPACE::rpc::Process<false, 1>;
+using ProcBType = LIBC_NAMESPACE::rpc::Process<true, 1>;
 
 static_assert(ProcAType::inbox_offset(port_count) ==
               ProcBType::outbox_offset(port_count));

@@ -17,7 +17,7 @@ namespace LIBC_NAMESPACE {
 LLVM_LIBC_FUNCTION(::FILE *, fopen,
                    (const char *__restrict path, const char *__restrict mode)) {
   uintptr_t file;
-  rpc::Client::Port port = rpc::client.open<RPC_OPEN_FILE>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_OPEN_FILE>();
   port.send_n(path, internal::string_length(path) + 1);
   port.send_and_recv(
       [=](rpc::Buffer *buffer) {

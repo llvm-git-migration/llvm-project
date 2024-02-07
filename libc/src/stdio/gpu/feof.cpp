@@ -15,7 +15,7 @@ namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(int, feof, (::FILE * stream)) {
   int ret;
-  rpc::Client::Port port = rpc::client.open<RPC_FEOF>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_FEOF>();
   port.send_and_recv(
       [=](rpc::Buffer *buffer) { buffer->data[0] = file::from_stream(stream); },
       [&](rpc::Buffer *buffer) { ret = static_cast<int>(buffer->data[0]); });
