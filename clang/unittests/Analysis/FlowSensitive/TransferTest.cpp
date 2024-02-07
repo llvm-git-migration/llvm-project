@@ -2313,6 +2313,28 @@ TEST(TransferTest, AssignmentOperatorWithInitAndInheritance) {
          ASTContext &ASTCtx) {});
 }
 
+TEST(TransferTest, InitListExprAsXValue) {
+  // This is a crash repro.
+  std::string Code = R"(
+    void target() {
+      bool&& Foo{false};
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        const ValueDecl *FooDecl = findValueDecl(ASTCtx, "Foo");
+        ASSERT_THAT(FooDecl, NotNull());
+        const Environment &Env = getEnvironmentAtAnnotation(Results, "p");
+        const auto *FooVal =
+            dyn_cast_or_null<BoolValue>(Env.getValue(*FooDecl));
+        ASSERT_THAT(FooVal, NotNull());
+        ASSERT_EQ(FooVal, &Env.getBoolLiteralValue(false));
+      });
+}
+
 TEST(TransferTest, CopyConstructor) {
   std::string Code = R"(
     struct A {
