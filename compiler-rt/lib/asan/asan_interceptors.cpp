@@ -558,6 +558,17 @@ INTERCEPTOR(char *, strcpy, char *to, const char *from) {
   return REAL(strcpy)(to, from);
 }
 
+// Windows doesn't always define the strdup identifier,
+// and when it does it's a macro defined to either _strdup
+// or _strdup_dbg, _strdup_dbg ends up calling _strdup, so
+// we want to intercept that. push/pop_macro are used to avoid problems
+// if this file ends up including <string.h> in the future.
+#  if SANITIZER_WINDOWS
+#    pragma push_macro("strdup")
+#    undef strdup
+#    define strdup _strdup
+#  endif
+
 INTERCEPTOR(char*, strdup, const char *s) {
   void *ctx;
   ASAN_INTERCEPTOR_ENTER(ctx, strdup);
@@ -575,7 +586,7 @@ INTERCEPTOR(char*, strdup, const char *s) {
   return reinterpret_cast<char*>(new_mem);
 }
 
-#if ASAN_INTERCEPT___STRDUP
+#  if ASAN_INTERCEPT___STRDUP
 INTERCEPTOR(char*, __strdup, const char *s) {
   void *ctx;
   ASAN_INTERCEPTOR_ENTER(ctx, strdup);
@@ -758,7 +769,7 @@ void InitializeAsanInterceptors() {
   ASAN_INTERCEPT_FUNC(strncat);
   ASAN_INTERCEPT_FUNC(strncpy);
   ASAN_INTERCEPT_FUNC(strdup);
-#if ASAN_INTERCEPT___STRDUP
+#  if ASAN_INTERCEPT___STRDUP
   ASAN_INTERCEPT_FUNC(__strdup);
 #endif
 #if ASAN_INTERCEPT_INDEX && ASAN_USE_ALIAS_ATTRIBUTE_FOR_INDEX
@@ -848,6 +859,10 @@ void InitializeAsanInterceptors() {
 
   VReport(1, "AddressSanitizer: libc interceptors initialized\n");
 }
+
+#  if SANITIZER_WINDOWS
+#    pragma pop_macro("strdup")
+#  endif
 
 } // namespace __asan
 
