@@ -50,7 +50,7 @@ LIBC_INLINE ::FILE *to_stream(uintptr_t f) {
 template <uint16_t opcode>
 LIBC_INLINE uint64_t write_impl(::FILE *file, const void *data, size_t size) {
   uint64_t ret = 0;
-  rpc::Client::Port port = rpc::client.open<opcode>();
+  rpc::Client<>::Port port = rpc::client.open<opcode>();
 
   if constexpr (opcode == RPC_WRITE_TO_STREAM) {
     port.send([&](rpc::Buffer *buffer) {
@@ -78,7 +78,7 @@ LIBC_INLINE uint64_t write(::FILE *f, const void *data, size_t size) {
 LIBC_INLINE uint64_t read_from_stream(::FILE *file, void *buf, size_t size) {
   uint64_t ret = 0;
   uint64_t recv_size;
-  rpc::Client::Port port = rpc::client.open<RPC_READ_FROM_STREAM>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_READ_FROM_STREAM>();
   port.send([=](rpc::Buffer *buffer) {
     buffer->data[0] = size;
     buffer->data[1] = from_stream(file);

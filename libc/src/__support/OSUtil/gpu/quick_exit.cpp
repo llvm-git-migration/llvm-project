@@ -18,7 +18,7 @@ namespace LIBC_NAMESPACE {
 
 void quick_exit(int status) {
   // We want to first make sure the server is listening before we exit.
-  rpc::Client::Port port = rpc::client.open<RPC_EXIT>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_EXIT>();
   port.send_and_recv([](rpc::Buffer *) {}, [](rpc::Buffer *) {});
   port.send([&](rpc::Buffer *buffer) {
     reinterpret_cast<uint32_t *>(buffer->data)[0] = status;

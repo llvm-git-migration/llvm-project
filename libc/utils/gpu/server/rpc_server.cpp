@@ -249,7 +249,7 @@ struct Device {
       : buffer(buffer), server(std::move(server)), client(num_ports, buffer) {}
   void *buffer;
   Server server;
-  rpc::Client client;
+  rpc::Client<> client;
   std::unordered_map<rpc_opcode_t, rpc_opcode_callback_ty> callbacks;
   std::unordered_map<rpc_opcode_t, void *> callback_data;
 };
@@ -394,7 +394,7 @@ const void *rpc_get_client_buffer(uint32_t device_id) {
   return &state->devices[device_id]->client;
 }
 
-uint64_t rpc_get_client_size() { return sizeof(rpc::Client); }
+uint64_t rpc_get_client_size() { return sizeof(rpc::Client<>); }
 
 using ServerPort = std::variant<rpc::Server<1>::Port *, rpc::Server<32>::Port *,
                                 rpc::Server<64>::Port *>;

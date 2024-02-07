@@ -17,7 +17,7 @@ namespace LIBC_NAMESPACE {
 namespace rpc {
 
 /// The libc client instance used to communicate with the server.
-extern Client client;
+extern Client<> client;
 
 } // namespace rpc
 } // namespace LIBC_NAMESPACE

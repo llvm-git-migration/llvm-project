@@ -15,7 +15,7 @@ namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(int, ungetc, (int c, ::FILE *stream)) {
   int ret;
-  rpc::Client::Port port = rpc::client.open<RPC_UNGETC>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_UNGETC>();
   port.send_and_recv(
       [=](rpc::Buffer *buffer) {
         buffer->data[0] = c;

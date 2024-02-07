@@ -125,7 +125,7 @@ done. It can be omitted if asynchronous execution is desired.
 .. code-block:: c++
 
   void rpc_host_call(void *fn, void *data, size_t size) {
-    rpc::Client::Port port = rpc::client.open<RPC_HOST_CALL>();
+    rpc::Client<>::Port port = rpc::client.open<RPC_HOST_CALL>();
     port.send_n(data, size);
     port.send([=](rpc::Buffer *buffer) {
       buffer->data[0] = reinterpret_cast<uintptr_t>(fn);

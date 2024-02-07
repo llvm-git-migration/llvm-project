@@ -13,7 +13,7 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(void, free, (void *ptr)) {
-  rpc::Client::Port port = rpc::client.open<RPC_FREE>();
+  rpc::Client<>::Port port = rpc::client.open<RPC_FREE>();
   port.send([=](rpc::Buffer *buffer) {
     buffer->data[0] = reinterpret_cast<uintptr_t>(ptr);
   });
