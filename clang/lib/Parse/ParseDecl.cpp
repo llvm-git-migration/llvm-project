@@ -5936,7 +5936,7 @@ bool Parser::isDeclarationSpecifier(
 }
 
 bool Parser::isConstructorDeclarator(bool IsUnqualified, bool DeductionGuide,
-                                     bool IsFriend,
+                                     DeclSpec::FriendSpecified IsFriend,
                                      const ParsedTemplateInfo *TemplateInfo) {
   RevertingTentativeParsingAction TPA(*this);
   // Parse the C++ scope specifier.
