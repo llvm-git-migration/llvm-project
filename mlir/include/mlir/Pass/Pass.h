@@ -161,6 +161,9 @@ protected:
   explicit Pass(TypeID passID, std::optional<StringRef> opName = std::nullopt)
       : passID(passID), opName(opName) {}
   Pass(const Pass &other) : Pass(other.passID, other.opName) {}
+  Pass &operator=(const Pass &) = delete;
+  Pass(Pass &&) = delete;
+  Pass &operator=(Pass &&) = delete;
 
   /// Returns the current pass state.
   detail::PassExecutionState &getPassState() {
@@ -352,6 +355,9 @@ class OperationPass : public Pass {
 protected:
   OperationPass(TypeID passID) : Pass(passID, OpT::getOperationName()) {}
   OperationPass(const OperationPass &) = default;
+  OperationPass &operator=(const OperationPass &) = delete;
+  OperationPass(OperationPass &&) = delete;
+  OperationPass &operator=(OperationPass &&) = delete;
 
   /// Support isa/dyn_cast functionality.
   static bool classof(const Pass *pass) {
@@ -391,6 +397,9 @@ class OperationPass<void> : public Pass {
 protected:
   OperationPass(TypeID passID) : Pass(passID) {}
   OperationPass(const OperationPass &) = default;
+  OperationPass &operator=(const OperationPass &) = delete;
+  OperationPass(OperationPass &&) = delete;
+  OperationPass &operator=(OperationPass &&) = delete;
 
   /// Indicate if the current pass can be scheduled on the given operation type.
   /// By default, generic operation passes can be scheduled on any operation.
