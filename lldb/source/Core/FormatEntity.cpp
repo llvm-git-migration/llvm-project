@@ -2203,9 +2203,6 @@ static Status ParseInternal(llvm::StringRef &format, Entry &parent_entry,
                                                  entry.printf_format.c_str());
                   return error;
                 }
-              } else if (FormatManager::GetFormatFromCString(
-                             entry.printf_format.c_str(), true, entry.fmt)) {
-                clear_printf = true;
               } else if (entry.printf_format == "tid") {
                 verify_is_thread_id = true;
               } else {
