@@ -77,3 +77,41 @@ if.end:
   %ret = call float @llvm.fabs.f32(float %value)
   ret float %ret
 }
+
+define <2 x float> @test_signbit_check_wrong_type(<2 x float> %x, i1 %cond) {
+; CHECK-LABEL: define <2 x float> @test_signbit_check_wrong_type(
+; CHECK-SAME: <2 x float> [[X:%.*]], i1 [[COND:%.*]]) {
+; CHECK-NEXT:    [[I32:%.*]] = bitcast <2 x float> [[X]] to i64
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i64 [[I32]], 0
+; CHECK-NEXT:    br i1 [[CMP]], label [[IF_THEN1:%.*]], label [[IF_ELSE:%.*]]
+; CHECK:       if.then1:
+; CHECK-NEXT:    [[FNEG:%.*]] = fneg <2 x float> [[X]]
+; CHECK-NEXT:    br label [[IF_END:%.*]]
+; CHECK:       if.else:
+; CHECK-NEXT:    br i1 [[COND]], label [[IF_THEN2:%.*]], label [[IF_END]]
+; CHECK:       if.then2:
+; CHECK-NEXT:    br label [[IF_END]]
+; CHECK:       if.end:
+; CHECK-NEXT:    [[VALUE:%.*]] = phi <2 x float> [ [[FNEG]], [[IF_THEN1]] ], [ [[X]], [[IF_THEN2]] ], [ [[X]], [[IF_ELSE]] ]
+; CHECK-NEXT:    [[RET:%.*]] = call <2 x float> @llvm.fabs.v2f32(<2 x float> [[VALUE]])
+; CHECK-NEXT:    ret <2 x float> [[RET]]
+;
+  %i32 = bitcast <2 x float> %x to i64
+  %cmp = icmp slt i64 %i32, 0
+  br i1 %cmp, label %if.then1, label %if.else
+
+if.then1:
+  %fneg = fneg <2 x float> %x
+  br label %if.end
+
+if.else:
+  br i1 %cond, label %if.then2, label %if.end
+
+if.then2:
+  br label %if.end
+
+if.end:
+  %value = phi <2 x float> [ %fneg, %if.then1 ], [ %x, %if.then2 ], [ %x, %if.else ]
+  %ret = call <2 x float> @llvm.fabs.v2f32(<2 x float> %value)
+  ret <2 x float> %ret
+}
