@@ -7,13 +7,13 @@ define void @foo(ptr %h) !dbg !4 {
 ; CHECK-LABEL: define void @foo(
 ; CHECK-SAME: ptr [[H:%.*]]) !dbg [[DBG4:![0-9]+]] {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    call void @llvm.dbg.value(metadata i64 0, metadata [[META11:![0-9]+]], metadata !DIExpression()), !dbg [[DBG20:![0-9]+]]
+; CHECK-NEXT:    tail call void @llvm.dbg.value(metadata i64 0, metadata [[META11:![0-9]+]], metadata !DIExpression()), !dbg [[DBG20:![0-9]+]]
 ; CHECK-NEXT:    br i1 false, label [[SCALAR_PH:%.*]], label [[VECTOR_PH:%.*]], !dbg [[DBG21:![0-9]+]]
 ; CHECK:       vector.ph:
 ; CHECK-NEXT:    br label [[VECTOR_BODY:%.*]], !dbg [[DBG21]]
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], [[FOR_COND_CLEANUP32:%.*]] ]
-; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <4 x i64> [ <i64 0, i64 1, i64 2, i64 3>, [[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], [[FOR_COND_CLEANUP32]] ]
+; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <4 x i64> [ <i64 0, i64 1, i64 2, i64 3>, [[VECTOR_PH]] ], [ [[TMP9:%.*]], [[FOR_COND_CLEANUP32]] ]
 ; CHECK-NEXT:    br label [[FOR_COND5_PREHEADER1:%.*]], !dbg [[DBG21]]
 ; CHECK:       for.cond5.preheader1:
 ; CHECK-NEXT:    [[VEC_PHI:%.*]] = phi <4 x i64> [ zeroinitializer, [[VECTOR_BODY]] ], [ [[TMP4:%.*]], [[FOR_COND5_PREHEADER1]] ], !dbg [[DBG21]]
@@ -32,10 +32,10 @@ define void @foo(ptr %h) !dbg !4 {
 ; CHECK:       for.cond.cleanup32:
 ; CHECK-NEXT:    [[TMP7:%.*]] = add nuw nsw <4 x i64> [[VEC_IND]], <i64 1, i64 1, i64 1, i64 1>, !dbg [[DBG26:![0-9]+]]
 ; CHECK-NEXT:    [[TMP8:%.*]] = icmp eq <4 x i64> [[TMP7]], <i64 23, i64 23, i64 23, i64 23>, !dbg [[DBG27:![0-9]+]]
+; CHECK-NEXT:    [[TMP9]] = add <4 x i64> [[VEC_IND]], <i64 4, i64 4, i64 4, i64 4>
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 4
-; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <4 x i64> [[VEC_IND]], <i64 4, i64 4, i64 4, i64 4>
-; CHECK-NEXT:    [[TMP9:%.*]] = icmp eq i64 [[INDEX_NEXT]], 20
-; CHECK-NEXT:    br i1 [[TMP9]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP28:![0-9]+]]
+; CHECK-NEXT:    [[TMP10:%.*]] = icmp eq i64 [[INDEX_NEXT]], 20
+; CHECK-NEXT:    br i1 [[TMP10]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP28:![0-9]+]]
 ; CHECK:       middle.block:
 ; CHECK-NEXT:    br i1 false, label [[EXIT:%.*]], label [[SCALAR_PH]], !dbg [[DBG21]]
 ; CHECK:       scalar.ph:
@@ -43,24 +43,24 @@ define void @foo(ptr %h) !dbg !4 {
 ; CHECK-NEXT:    br label [[FOR_COND1_PREHEADER:%.*]], !dbg [[DBG21]]
 ; CHECK:       for.cond1.preheader:
 ; CHECK-NEXT:    [[I_023:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC13:%.*]], [[FOR_COND_CLEANUP3:%.*]] ]
-; CHECK-NEXT:    call void @llvm.dbg.value(metadata i64 [[I_023]], metadata [[META11]], metadata !DIExpression()), !dbg [[DBG20]]
+; CHECK-NEXT:    tail call void @llvm.dbg.value(metadata i64 [[I_023]], metadata [[META11]], metadata !DIExpression()), !dbg [[DBG20]]
 ; CHECK-NEXT:    br label [[FOR_COND5_PREHEADER:%.*]], !dbg [[DBG32:![0-9]+]]
 ; CHECK:       for.cond5.preheader:
 ; CHECK-NEXT:    [[L_022:%.*]] = phi i64 [ 0, [[FOR_COND1_PREHEADER]] ], [ [[INC10:%.*]], [[FOR_COND5_PREHEADER]] ]
-; CHECK-NEXT:    [[TMP10:%.*]] = getelementptr i32, ptr [[H]], i64 [[L_022]]
-; CHECK-NEXT:    store i32 0, ptr [[TMP10]], align 4, !dbg [[DBG22]]
-; CHECK-NEXT:    [[ARRAYIDX_1:%.*]] = getelementptr i32, ptr [[TMP10]], i64 1, !dbg [[DBG33:![0-9]+]]
+; CHECK-NEXT:    [[TMP11:%.*]] = getelementptr i32, ptr [[H]], i64 [[L_022]]
+; CHECK-NEXT:    store i32 0, ptr [[TMP11]], align 4, !dbg [[DBG22]]
+; CHECK-NEXT:    [[ARRAYIDX_1:%.*]] = getelementptr i32, ptr [[TMP11]], i64 1, !dbg [[DBG33:![0-9]+]]
 ; CHECK-NEXT:    store i32 1, ptr [[ARRAYIDX_1]], align 4, !dbg [[DBG22]]
-; CHECK-NEXT:    [[ARRAYIDX_2:%.*]] = getelementptr i32, ptr [[TMP10]], i64 2, !dbg [[DBG33]]
+; CHECK-NEXT:    [[ARRAYIDX_2:%.*]] = getelementptr i32, ptr [[TMP11]], i64 2, !dbg [[DBG33]]
 ; CHECK-NEXT:    store i32 2, ptr [[ARRAYIDX_2]], align 4, !dbg [[DBG22]]
-; CHECK-NEXT:    [[ARRAYIDX_3:%.*]] = getelementptr i32, ptr [[TMP10]], i64 3, !dbg [[DBG33]]
+; CHECK-NEXT:    [[ARRAYIDX_3:%.*]] = getelementptr i32, ptr [[TMP11]], i64 3, !dbg [[DBG33]]
 ; CHECK-NEXT:    store i32 3, ptr [[ARRAYIDX_3]], align 4, !dbg [[DBG22]]
 ; CHECK-NEXT:    [[INC10]] = add nuw nsw i64 [[L_022]], 1, !dbg [[DBG24]]
 ; CHECK-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INC10]], 5, !dbg [[DBG25]]
 ; CHECK-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP3]], label [[FOR_COND5_PREHEADER]], !dbg [[DBG32]]
 ; CHECK:       for.cond.cleanup3:
 ; CHECK-NEXT:    [[INC13]] = add nuw nsw i64 [[I_023]], 1, !dbg [[DBG26]]
-; CHECK-NEXT:    call void @llvm.dbg.value(metadata i64 [[INC13]], metadata [[META11]], metadata !DIExpression()), !dbg [[DBG20]]
+; CHECK-NEXT:    tail call void @llvm.dbg.value(metadata i64 [[INC13]], metadata [[META11]], metadata !DIExpression()), !dbg [[DBG20]]
 ; CHECK-NEXT:    [[EXITCOND24_NOT:%.*]] = icmp eq i64 [[INC13]], 23, !dbg [[DBG27]]
 ; CHECK-NEXT:    br i1 [[EXITCOND24_NOT]], label [[EXIT]], label [[FOR_COND1_PREHEADER]], !dbg [[DBG21]], !llvm.loop [[LOOP34:![0-9]+]]
 ; CHECK:       exit:
