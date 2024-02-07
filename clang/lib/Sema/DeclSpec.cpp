@@ -1102,13 +1102,12 @@ bool DeclSpec::setFunctionSpecNoreturn(SourceLocation Loc,
 
 bool DeclSpec::SetFriendSpec(SourceLocation Loc, const char *&PrevSpec,
                              unsigned &DiagID) {
-  if (FriendSpecified) {
+  if (isFriendSpecified()) {
     PrevSpec = "friend";
     DiagID = diag::warn_duplicate_declspec;
     return true;
   }
 
-  FriendSpecified = true;
   FriendSpecifiedFirst = isEmpty();
   FriendLoc = Loc;
   return false;
