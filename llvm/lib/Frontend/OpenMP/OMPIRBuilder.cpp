@@ -2319,6 +2319,7 @@ void OpenMPIRBuilder::emitReductionListCopy(
         break;
       }
       case EvaluationKindTy::Complex: {
+        assert(false && "Complex data type not handled");
         break;
       }
       case EvaluationKindTy::Aggregate: {
@@ -2824,15 +2825,17 @@ Function *OpenMPIRBuilder::emitListToGlobalCopyFunction(
       break;
     }
     case EvaluationKindTy::Complex: {
+      assert(false && "Complex data type not handled");
       break;
     }
-    case EvaluationKindTy::Aggregate:
+    case EvaluationKindTy::Aggregate: {
       Value *SizeVal =
           Builder.getInt64(M.getDataLayout().getTypeStoreSize(RI.ElementType));
       Builder.CreateMemCpy(
           GlobVal, M.getDataLayout().getPrefTypeAlign(RI.ElementType), ElemPtr,
           M.getDataLayout().getPrefTypeAlign(RI.ElementType), SizeVal, false);
       break;
+    }
     }
   }
 
@@ -2998,10 +3001,10 @@ Function *OpenMPIRBuilder::emitGlobalToListCopyFunction(
       break;
     }
     case EvaluationKindTy::Complex: {
-      // FIXME(Jan): Complex type
+      assert(false && "Complex data type not handled");
       break;
     }
-    case EvaluationKindTy::Aggregate:
+    case EvaluationKindTy::Aggregate: {
       Value *SizeVal =
           Builder.getInt64(M.getDataLayout().getTypeStoreSize(RI.ElementType));
       Builder.CreateMemCpy(
@@ -3009,6 +3012,7 @@ Function *OpenMPIRBuilder::emitGlobalToListCopyFunction(
           GlobValPtr, M.getDataLayout().getPrefTypeAlign(RI.ElementType),
           SizeVal, false);
       break;
+    }
     }
   }
 
@@ -3220,7 +3224,6 @@ checkReductionInfos(ArrayRef<OpenMPIRBuilder::ReductionInfo> ReductionInfos,
     assert(RI.PrivateVariable && "expected non-null private variable");
     assert((RI.ReductionGen || RI.ReductionGenClang) &&
            "expected non-null reduction generator callback");
-    // JAN: Skip this assertion for GPU, address spaces are present
     if (!IsGPU) {
       assert(
           RI.Variable->getType() == RI.PrivateVariable->getType() &&
@@ -4067,6 +4070,7 @@ static void createTargetLoopWorkshareCall(
   // FIXME(JAN): The trip count is 1 larger than it should be for GPU, this may
   // not be the right way to fix it, but this works for now.
   if (OMPBuilder->Config.isGPU()) {
+    assert(false && "Akash");
     if (LoopType != WorksharingLoopType::DistributeStaticLoop)
       Builder.restoreIP({InsertBlock, std::prev(InsertBlock->end())});
     LLVMContext &Ctx = M.getContext();
