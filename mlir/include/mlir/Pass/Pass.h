@@ -166,8 +166,8 @@ protected:
     this->opName = other.opName;
     return *this;
   }
-  Pass(Pass &&) = default;
-  Pass &operator=(Pass &&) = default;
+  Pass(Pass &&) = delete;
+  Pass &operator=(Pass &&) = delete;
 
   /// Returns the current pass state.
   detail::PassExecutionState &getPassState() {
@@ -360,8 +360,8 @@ protected:
   OperationPass(TypeID passID) : Pass(passID, OpT::getOperationName()) {}
   OperationPass(const OperationPass &) = default;
   OperationPass &operator=(const OperationPass &) = default;
-  OperationPass(OperationPass &&) = default;
-  OperationPass &operator=(OperationPass &&) = default;
+  OperationPass(OperationPass &&) = delete;
+  OperationPass &operator=(OperationPass &&) = delete;
 
   /// Support isa/dyn_cast functionality.
   static bool classof(const Pass *pass) {
@@ -402,8 +402,8 @@ protected:
   OperationPass(TypeID passID) : Pass(passID) {}
   OperationPass(const OperationPass &) = default;
   OperationPass &operator=(const OperationPass &) = default;
-  OperationPass(OperationPass &&) = default;
-  OperationPass &operator=(OperationPass &&) = default;
+  OperationPass(OperationPass &&) = delete;
+  OperationPass &operator=(OperationPass &&) = delete;
 
   /// Indicate if the current pass can be scheduled on the given operation type.
   /// By default, generic operation passes can be scheduled on any operation.
