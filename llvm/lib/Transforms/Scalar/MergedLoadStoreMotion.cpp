@@ -198,10 +198,10 @@ StoreInst *MergedLoadStoreMotion::canSinkFromBlock(BasicBlock *BB1,
         !isStoreSinkBarrierInRange(*Store0->getNextNode(), BB0->back(), Loc0) &&
         Store0->hasSameSpecialState(Store1) &&
         MMRAMetadata(*Store0) == MMRAMetadata(*Store1) &
-        CastInst::isBitOrNoopPointerCastable(
-            Store0->getValueOperand()->getType(),
-            Store1->getValueOperand()->getType(),
-            Store0->getModule()->getDataLayout()))
+            CastInst::isBitOrNoopPointerCastable(
+                Store0->getValueOperand()->getType(),
+                Store1->getValueOperand()->getType(),
+                Store0->getModule()->getDataLayout()))
       return Store1;
   }
   return nullptr;

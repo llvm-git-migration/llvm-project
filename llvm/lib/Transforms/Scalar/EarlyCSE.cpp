@@ -35,8 +35,8 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
-#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/MemoryModelRelaxationAnnotations.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/IR/Type.h"
@@ -365,7 +365,7 @@ static bool isEqualImpl(SimpleValue LHS, SimpleValue RHS) {
     return false;
 
   // Avoid aggressively combining MMRAs.
-  if(MMRAMetadata(*LHSI) != MMRAMetadata(*RHSI))
+  if (MMRAMetadata(*LHSI) != MMRAMetadata(*RHSI))
     return false;
 
   if (LHSI->isIdenticalToWhenDefined(RHSI)) {
@@ -1591,7 +1591,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
-        if(MMRAMetadata(Inst) != MMRAMetadata(*InVal.DefInst)) {
+        if (MMRAMetadata(Inst) != MMRAMetadata(*InVal.DefInst)) {
           LLVM_DEBUG(dbgs() << "Skipping due to MMRAs being different\n");
           continue;
         }
@@ -1642,7 +1642,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
-        if(MMRAMetadata(Inst) != MMRAMetadata(*InVal.first)) {
+        if (MMRAMetadata(Inst) != MMRAMetadata(*InVal.first)) {
           LLVM_DEBUG(dbgs() << "Skipping due to MMRAs being different\n");
           continue;
         }

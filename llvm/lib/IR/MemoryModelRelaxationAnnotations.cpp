@@ -91,11 +91,11 @@ MMRAMetadata MMRAMetadata::combine(const MMRAMetadata &Other) const {
 
   MMRAMetadata U;
   for (const auto &[P, S] : Tags) {
-    if(Other.hasTagWithPrefix(P))
+    if (Other.hasTagWithPrefix(P))
       U.addTag(P, S);
   }
   for (const auto &[P, S] : Other.Tags) {
-    if(hasTagWithPrefix(P))
+    if (hasTagWithPrefix(P))
       U.addTag(P, S);
   }
 
