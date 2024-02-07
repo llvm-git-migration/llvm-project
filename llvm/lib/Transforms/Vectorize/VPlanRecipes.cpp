@@ -355,7 +355,7 @@ Value *VPInstruction::generateInstruction(VPTransformState &State,
   }
   case VPInstruction::ExplicitVectorLength: {
     // Compute EVL
-    auto GetSetVL = [=](VPTransformState &State, Value *AVL) {
+    auto GetEVL = [=](VPTransformState &State, Value *AVL) {
       assert(AVL->getType()->isIntegerTy() &&
              "Requested vector length should be an integer.");
 
@@ -375,7 +375,7 @@ Value *VPInstruction::generateInstruction(VPTransformState &State,
     Value *Index = State.get(getOperand(0), VPIteration(0, 0));
     Value *TripCount = State.get(getOperand(1), VPIteration(0, 0));
     Value *AVL = State.Builder.CreateSub(TripCount, Index);
-    Value *EVL = GetSetVL(State, AVL);
+    Value *EVL = GetEVL(State, AVL);
     assert(!State.EVL && "multiple EVL recipes");
     State.EVL = this;
     return EVL;
