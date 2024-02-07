@@ -2839,7 +2839,7 @@ def int_amdgcn_fdot2_f32_bf16 :
       llvm_v2i16_ty, // %b
       llvm_float_ty, // %c
       llvm_i1_ty     // %clamp
-    ],
+     ],
     [IntrNoMem, IntrSpeculatable, ImmArg<ArgIndex<3>>]
   >;
 
