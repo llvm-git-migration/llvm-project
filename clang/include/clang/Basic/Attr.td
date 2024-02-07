@@ -2981,7 +2981,9 @@ def PreserveNone : DeclOrTypeAttr, TargetSpecificAttr<TargetAnyX86> {
 }
 
 def RISCVVectorCC: DeclOrTypeAttr {
- let Spellings = [Clang<"riscv_vector_cc">];
+ let Spellings = [CXX11<"riscv", "vector_cc">,
+                  C23<"riscv", "vector_cc">,
+                  Clang<"riscv_vector_cc">];
  let Documentation = [RISCVVectorCCDocs];
 }
 
