@@ -54,12 +54,13 @@ struct DXILOperationData {
   StringRef OverloadTypes;       // overload types if applicable
   StringRef FnAttr;              // attribute shorthands: rn=does not access
                                  // memory,ro=only reads from memory
-  StringRef Intrinsic; // The llvm intrinsic map to DXILOp. Default is "" which
-                       // means no map exist
-  bool IsDeriv = false;    // whether this is some kind of derivative
+  StringRef Intrinsic;  // The llvm intrinsic map to DXILOp. Default is "" which
+                        // means no map exist
+  bool IsDeriv = false; // whether this is some kind of derivative
   bool IsGradient = false; // whether this requires a gradient calculation
   bool IsFeedback = false; // whether this is a sampler feedback op
-  bool IsWave = false;     // whether this requires in-wave, cross-lane functionality
+  bool IsWave =
+      false; // whether this requires in-wave, cross-lane functionality
   bool RequiresUniformInputs = false; // whether this operation requires that
                                       // all of its inputs are uniform across
                                       // the wave
