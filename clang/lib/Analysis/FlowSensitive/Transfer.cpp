@@ -648,9 +648,8 @@ public:
     QualType Type = S->getType();
 
     if (!Type->isStructureOrClassType()) {
-      if (auto *Val = Env.createValue(Type))
-        Env.setValue(*S, *Val);
-
+      assert(S->getNumInits() == 1);
+      propagateValueOrStorageLocation(*S->getInit(0), *S, Env);
       return;
     }
 
