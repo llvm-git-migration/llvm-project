@@ -18,6 +18,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/OptBisect.h"
 #include "llvm/IR/PassTimingInfo.h"
@@ -33,6 +34,7 @@ namespace llvm {
 
 class Module;
 class Function;
+class MachineFunction;
 class PassInstrumentationCallbacks;
 
 /// Instrumentation to print IR before/after passes.
@@ -209,6 +211,8 @@ protected:
 
   // Called on the first IR processed.
   virtual void handleInitialIR(Any IR) = 0;
+  // Called on the first MIR processed.
+  virtual void handleInitialMIR(const MachineFunction *IR) = 0;
   // Called before and after a pass to get the representation of the IR.
   virtual void generateIRRepresentation(Any IR, StringRef PassID,
                                         IRUnitT &Output) = 0;
@@ -229,6 +233,8 @@ protected:
   std::vector<IRUnitT> BeforeStack;
   // Is this the first IR seen?
   bool InitialIR = true;
+  // Is this the first MIR seen?
+  bool InitialMIR = true;
 
   // Run in verbose mode, printing everything?
   const bool VerboseMode;
@@ -243,6 +249,8 @@ protected:
 
   // Print a module dump of the first IR that is changed.
   void handleInitialIR(Any IR) override;
+  // Print a module dump of the first MIR that is changed.
+  void handleInitialMIR(const MachineFunction *IR) override;
   // Report that the IR was omitted because it did not change.
   void omitAfter(StringRef PassID, std::string &Name) override;
   // Report that the pass was invalidated.
@@ -289,6 +297,8 @@ protected:
 
   // Check initial IR
   void handleInitialIR(Any IR) override;
+  // Check initial MIR
+  void handleInitialMIR(const MachineFunction *IR) override;
   // Do nothing.
   void omitAfter(StringRef PassID, std::string &Name) override;
   // Do nothing.
@@ -311,6 +321,11 @@ public:
   BlockDataT(const BasicBlock &B) : Label(B.getName().str()), Data(B) {
     raw_string_ostream SS(Body);
     B.print(SS, nullptr, true, true);
+  }
+
+  BlockDataT(const MachineBasicBlock &B) : Label(B.getName().str()), Data(B) {
+    raw_string_ostream SS(Body);
+    B.print(SS);
   }
 
   bool operator==(const BlockDataT &That) const { return Body == That.Body; }
@@ -364,6 +379,7 @@ protected:
 class EmptyData {
 public:
   EmptyData(const BasicBlock &) {}
+  EmptyData(const MachineBasicBlock &) {}
 };
 
 // The data saved for comparing functions.
@@ -405,7 +421,8 @@ public:
 
 protected:
   // Generate the data for \p F into \p Data.
-  static bool generateFunctionData(IRDataT<T> &Data, const Function &F);
+  template <typename FunctionT>
+  static bool generateFunctionData(IRDataT<T> &Data, const FunctionT &F);
 
   const IRDataT<T> &Before;
   const IRDataT<T> &After;
@@ -475,6 +492,7 @@ class DCData {
 public:
   // Fill the map with the transitions from basic block \p B.
   DCData(const BasicBlock &B);
+  DCData(const MachineBasicBlock &B);
 
   // Return an iterator to the names of the successor blocks.
   StringMap<std::string>::const_iterator begin() const {
@@ -514,6 +532,8 @@ protected:
 
   // Called on the first IR processed.
   void handleInitialIR(Any IR) override;
+  // Called on the first MIR processed.
+  void handleInitialMIR(const MachineFunction *IR) override;
   // Called before and after a pass to get the representation of the IR.
   void generateIRRepresentation(Any IR, StringRef PassID,
                                 IRDataT<DCData> &Output) override;

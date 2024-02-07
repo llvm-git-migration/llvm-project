@@ -1,0 +1,112 @@
+# REQUIRES: x86-registered-target
+# RUN: llc -mtriple=x86_64-unknown-linux-gnu -filetype=null %s \
+# RUN: -p no-op-machine-function -print-changed 2>&1 | FileCheck %s --check-prefix=CHECK-NO-OP
+
+# RUN: llc -mtriple=x86_64-unknown-linux-gnu -filetype=null %s \
+# RUN: -p dead-mi-elimination -print-changed 2>&1 | FileCheck %s --check-prefix=CHECK-SIMPLE
+
+--- |
+  ; ModuleID = 'main.ll'
+  source_filename = "main.cpp"
+  target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+  target triple = "x86_64-unknown-linux-gnu"
+  
+  define noundef i32 @_Z4testv() {
+  0:
+    %1 = alloca i32, align 4
+    %2 = alloca i32, align 4
+    %3 = alloca i32, align 4
+    store i32 0, ptr %1, align 4
+    store i32 1, ptr %2, align 4
+    %4 = load i32, ptr %1, align 4
+    %5 = load i32, ptr %2, align 4
+    %6 = add nsw i32 %4, %5
+    store i32 %6, ptr %3, align 4
+    %7 = load i32, ptr %3, align 4
+    ret i32 %7
+  }
+...
+---
+name:            _Z4testv
+alignment:       16
+exposesReturnsTwice: false
+legalized:       false
+regBankSelected: false
+selected:        false
+failedISel:      false
+tracksRegLiveness: true
+hasWinCFI:       false
+callsEHReturn:   false
+callsUnwindInit: false
+hasEHCatchret:   false
+hasEHScopes:     false
+hasEHFunclets:   false
+isOutlined:      false
+debugInstrRef:   false
+failsVerification: false
+tracksDebugUserValues: false
+registers:
+  - { id: 0, class: gr32, preferred-register: '' }
+  - { id: 1, class: gr32, preferred-register: '' }
+  - { id: 2, class: gr32, preferred-register: '' }
+  - { id: 3, class: gr32, preferred-register: '' }
+  - { id: 4, class: gr32, preferred-register: '' }
+  - { id: 5, class: gr32, preferred-register: '' }
+  - { id: 6, class: gr32, preferred-register: '' }
+  - { id: 7, class: gr32, preferred-register: '' }
+liveins:         []
+frameInfo:
+  isFrameAddressTaken: false
+  isReturnAddressTaken: false
+  hasStackMap:     false
+  hasPatchPoint:   false
+  stackSize:       0
+  offsetAdjustment: 0
+  maxAlignment:    4
+  adjustsStack:    false
+  hasCalls:        false
+  stackProtector:  ''
+  functionContext: ''
+  maxCallFrameSize: 4294967295
+  cvBytesOfCalleeSavedRegisters: 0
+  hasOpaqueSPAdjustment: false
+  hasVAStart:      false
+  hasMustTailInVarArgFunc: false
+  hasTailCall:     false
+  localFrameSize:  0
+  savePoint:       ''
+  restorePoint:    ''
+fixedStack:      []
+stack:
+  - { id: 0, name: '', type: default, offset: 0, size: 4, alignment: 4, 
+      stack-id: default, callee-saved-register: '', callee-saved-restored: true, 
+      debug-info-variable: '', debug-info-expression: '', debug-info-location: '' }
+  - { id: 1, name: '', type: default, offset: 0, size: 4, alignment: 4, 
+      stack-id: default, callee-saved-register: '', callee-saved-restored: true, 
+      debug-info-variable: '', debug-info-expression: '', debug-info-location: '' }
+  - { id: 2, name: '', type: default, offset: 0, size: 4, alignment: 4, 
+      stack-id: default, callee-saved-register: '', callee-saved-restored: true, 
+      debug-info-variable: '', debug-info-expression: '', debug-info-location: '' }
+entry_values:    []
+callSites:       []
+debugValueSubstitutions: []
+constants:       []
+machineFunctionInfo: {}
+body:             |
+  bb.0 (%ir-block.0):
+    MOV32mi %stack.0, 1, $noreg, 0, $noreg, 0 :: (store (s32) into %ir.1)
+    MOV32mi %stack.1, 1, $noreg, 0, $noreg, 1 :: (store (s32) into %ir.2)
+    %6:gr32 = MOV32rm %stack.0, 1, $noreg, 0, $noreg :: (load (s32) from %ir.1)
+    %5:gr32 = ADD32rm %6, %stack.1, 1, $noreg, 0, $noreg, implicit-def $eflags :: (load (s32) from %ir.2)
+    MOV32mr %stack.2, 1, $noreg, 0, $noreg, %5 :: (store (s32) into %ir.3)
+    %1:gr32 = MOV32rm %stack.2, 1, $noreg, 0, $noreg :: (load (s32) from %ir.3)
+    %7:gr32 = MOV32rm %stack.0, 1, $noreg, 0, $noreg :: (load (s32) from %ir.1)
+    $eax = COPY %1
+    RET64 implicit $eax
+
+...
+
+# CHECK-NO-OP: *** IR Dump After NoOpMachineFunctionPass on _Z4testv omitted because no change ***
+
+# CHECK-SIMPLE: *** IR Dump After DeadMachineInstructionElimPass on _Z4testv ***
+# CHECK-SIMPLE-NOT: %7:gr32 = MOV32rm %stack.0, 1, $noreg, 0, $noreg :: (load (s32) from %ir.1)
