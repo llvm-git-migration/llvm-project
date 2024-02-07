@@ -2255,7 +2255,7 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
     // This is done in other passes, but we want to be able to consume this
     // pattern in InstCombine so we can generate it without creating infinite
     // loops.
-    if (match(Op0, m_Add(m_Value(X), m_Value(Z))) &&
+    if (match(Op0, m_c_Add(m_Value(X), m_Value(Z))) &&
         match(Op1, m_c_Add(m_Value(Y), m_Specific(Z))))
       return BinaryOperator::CreateSub(X, Y);
 
