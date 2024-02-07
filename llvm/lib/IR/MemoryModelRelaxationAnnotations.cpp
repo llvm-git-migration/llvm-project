@@ -24,7 +24,7 @@ static bool isTagMD(const MDNode *MD) {
 }
 
 MMRAMetadata::MMRAMetadata(const Instruction &I)
-    : MMRAMetadata(I.getMetadata(LLVMContext::MD_MMRA)) {}
+    : MMRAMetadata(I.getMetadata(LLVMContext::MD_mmra)) {}
 
 MMRAMetadata::MMRAMetadata(MDNode *MD) {
   if (!MD)

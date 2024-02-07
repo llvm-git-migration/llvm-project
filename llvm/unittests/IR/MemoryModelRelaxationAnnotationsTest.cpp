@@ -274,6 +274,12 @@ TEST(MMRATest, Combine) {
     MMRAMetadata Combined = BarFoo0.combine(Bar0);
     EXPECT_EQ(Combined, Bar0);
   }
+
+  {
+    // only foo:0 is common
+    MMRAMetadata Combined = BarFoo0.combine(Foo10);
+    EXPECT_EQ(Combined, Foo0);
+  }
 }
 
 } // namespace

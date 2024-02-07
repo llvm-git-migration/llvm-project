@@ -5156,7 +5156,7 @@ void Verifier::visitInstruction(Instruction &I) {
   if (MDNode *MD = I.getMetadata(LLVMContext::MD_DIAssignID))
     visitDIAssignIDMetadata(I, MD);
 
-  if (MDNode *MMRA = I.getMetadata(LLVMContext::MD_MMRA))
+  if (MDNode *MMRA = I.getMetadata(LLVMContext::MD_mmra))
     visitMMRAMetadata(I, MMRA);
 
   if (MDNode *Annotation = I.getMetadata(LLVMContext::MD_annotation))

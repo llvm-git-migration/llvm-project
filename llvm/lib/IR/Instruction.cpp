@@ -479,7 +479,7 @@ void Instruction::dropUBImplyingAttrsAndMetadata() {
   // immediate undefined behavior.
   unsigned KnownIDs[] = {LLVMContext::MD_annotation, LLVMContext::MD_range,
                          LLVMContext::MD_nonnull, LLVMContext::MD_align,
-                         LLVMContext::MD_MMRA};
+                         LLVMContext::MD_mmra};
   dropUBImplyingAttrsAndUnknownMetadata(KnownIDs);
 }
 

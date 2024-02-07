@@ -247,7 +247,7 @@ static void combineKnownMetadata(Instruction *ReplInst, Instruction *I) {
                                       LLVMContext::MD_invariant_load,
                                       LLVMContext::MD_invariant_group,
                                       LLVMContext::MD_access_group,
-                                      LLVMContext::MD_MMRA};
+                                      LLVMContext::MD_mmra};
   combineMetadata(ReplInst, I, KnownIDs, true);
 }
 

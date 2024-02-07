@@ -3268,6 +3268,9 @@ void llvm::combineMetadata(Instruction *K, const Instruction *J,
       case LLVMContext::MD_invariant_group:
         // Preserve !invariant.group in K.
         break;
+      case LLVMContext::MD_mmra:
+        // Combine MMRAs
+        break;
       case LLVMContext::MD_align:
         if (DoesKMove || !K->hasMetadata(LLVMContext::MD_noundef))
           K->setMetadata(
@@ -3310,11 +3313,10 @@ void llvm::combineMetadata(Instruction *K, const Instruction *J,
   // Merge MMRAs.
   // This is handled separately because we also want to handle cases where K
   // doesn't have tags but J does.
-
-  auto JTags = MMRAMetadata(J->getMetadata(LLVMContext::MD_MMRA));
-  auto KTags = MMRAMetadata(K->getMetadata(LLVMContext::MD_MMRA));
+  auto JTags = MMRAMetadata(J->getMetadata(LLVMContext::MD_mmra));
+  auto KTags = MMRAMetadata(K->getMetadata(LLVMContext::MD_mmra));
   if (JTags || KTags) {
-    K->setMetadata(LLVMContext::MD_MMRA,
+    K->setMetadata(LLVMContext::MD_mmra,
                    JTags.combine(KTags).getAsMD(K->getContext()));
   }
 }
@@ -3337,7 +3339,7 @@ void llvm::combineMetadataForCSE(Instruction *K, const Instruction *J,
                          LLVMContext::MD_prof,
                          LLVMContext::MD_nontemporal,
                          LLVMContext::MD_noundef,
-                         LLVMContext::MD_MMRA};
+                         LLVMContext::MD_mmra};
   combineMetadata(K, J, KnownIDs, KDominatesJ);
 }
 
