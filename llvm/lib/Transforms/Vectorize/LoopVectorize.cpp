@@ -4933,11 +4933,17 @@ bool LoopVectorizationPlanner::isMoreProfitable(
       EstimatedWidthB *= *VScale;
   }
 
+  if (MaxTripCount > 0) {
+    EstimatedWidthA = std::min(EstimatedWidthA, MaxTripCount);
+    EstimatedWidthB = std::min(EstimatedWidthB, MaxTripCount);
+  }
+
   // Assume vscale may be larger than 1 (or the value being tuned for),
   // so that scalable vectorization is slightly favorable over fixed-width
   // vectorization.
-  if (A.Width.isScalable() && !B.Width.isScalable())
-    return (CostA * B.Width.getFixedValue()) <= (CostB * EstimatedWidthA);
+  if (A.Width.isScalable() && !B.Width.isScalable() &&
+      MaxTripCount != EstimatedWidthB)
+    return (CostA * EstimatedWidthB) <= (CostB * EstimatedWidthA);
 
   // To avoid the need for FP division:
   //      (CostA / A.Width) < (CostB / B.Width)
