@@ -2313,6 +2313,42 @@ TEST(TransferTest, AssignmentOperatorWithInitAndInheritance) {
          ASTContext &ASTCtx) {});
 }
 
+TEST(TransferTest, CXXOperatorCallExprEqualReturnsVoid) {
+  // This is a crash repro.
+  std::string Code = R"(
+    struct B {
+      void operator=(B&& other);
+    };
+    void target() {
+      B b;
+      b = B();
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {});
+}
+
+TEST(TransferTest, CXXOperatorCallExprEqualReturnsPRValue) {
+  // This is a crash repro.
+  std::string Code = R"(
+    struct B {
+      B operator=(B&& other);
+    };
+    void target() {
+      B b;
+      b = B();
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {});
+}
+
 TEST(TransferTest, CopyConstructor) {
   std::string Code = R"(
     struct A {
