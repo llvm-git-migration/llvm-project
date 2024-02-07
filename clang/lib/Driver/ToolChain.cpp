@@ -655,19 +655,22 @@ std::string ToolChain::getCompilerRT(const ArgList &Args, StringRef Component,
   // Check for runtime files in the new layout without the architecture first.
   std::string CRTBasename =
       buildCompilerRTBasename(Args, Component, Type, /*AddArch=*/false);
+  SmallString<128> Path;
   for (const auto &LibPath : getLibraryPaths()) {
-    SmallString<128> P(LibPath);
-    llvm::sys::path::append(P, CRTBasename);
-    if (getVFS().exists(P))
-      return std::string(P);
+    Path = LibPath;
+    llvm::sys::path::append(Path, CRTBasename);
+    if (getVFS().exists(Path))
+      return std::string(Path);
   }
 
-  // Fall back to the old expected compiler-rt name if the new one does not
-  // exist.
+#if !LLVM_ENABLE_PER_TARGET_RUNTIME_DIR
+  // When LLVM_ENABLE_PER_TARGET_RUNTIME_DIR is off, fall back to the old
+  // expected compiler-rt name if the new one does not exist.
   CRTBasename =
       buildCompilerRTBasename(Args, Component, Type, /*AddArch=*/true);
-  SmallString<128> Path(getCompilerRTPath());
+  Path = getCompilerRTPath();
   llvm::sys::path::append(Path, CRTBasename);
+#endif
   return std::string(Path);
 }
 
