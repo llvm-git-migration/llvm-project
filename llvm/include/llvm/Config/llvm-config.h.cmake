@@ -21,6 +21,8 @@
 /* Doesn't use `cmakedefine` because it is allowed to be empty. */
 #define LLVM_DEFAULT_TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}"
 
+#cmakedefine01 LLVM_ENABLE_PER_TARGET_RUNTIME_DIR
+
 /* Define if threads enabled */
 #cmakedefine01 LLVM_ENABLE_THREADS
 
