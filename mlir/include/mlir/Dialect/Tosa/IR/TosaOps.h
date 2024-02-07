@@ -14,6 +14,7 @@
 #define MLIR_DIALECT_TOSA_IR_TOSAOPS_H
 
 #include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/Dialect/Quant/IR/QuantTypes.h"
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
@@ -28,6 +29,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/Tosa/IR/TosaOpsDialect.h.inc"
+#include "llvm/Support/LogicalResult.h"
 
 namespace mlir {
 class PatternRewriter;
@@ -53,34 +55,37 @@ class MulOperandsAndResultElementType
     : public TraitBase<ConcreteType, MulOperandsAndResultElementType> {
 public:
   static LogicalResult verifyTrait(Operation *op) {
-    auto resElemType = getElementTypeOrSelf(op->getResult(0));
+    // Check we have the three operands; lhs, rhs and shift
+    // and a single result.
+    if (failed(impl::verifyNOperands(op, 3)) ||
+        failed(impl::verifyNResults(op, 1)))
+      return failure();
 
-    // In cases of floating point type, op requires the same element
-    // type for all operands and result.
-    if (llvm::isa<FloatType>(resElemType))
-      return impl::verifySameOperandsAndResultElementType(op);
+    Type resElemType = getElementTypeOrSelf(op->getResult(0));
+    Type lhsElemType = getElementTypeOrSelf(op->getOperand(0));
+    Type rhsElemType = getElementTypeOrSelf(op->getOperand(1));
 
+    // Verify operands type match (ignoring the shift parameter which will
+    // always be i8).
+    if (lhsElemType != rhsElemType)
+      return op->emitOpError("requires the same element type for all operands");
+
+    // Though the spec requires the element type of result to be i32, a more
+    // relaxed way is provided at dialect level for easier cooperating with
+    // other dialects.
     if (auto resIntType = dyn_cast<IntegerType>(resElemType)) {
-      IntegerType lhsIntType =
-          cast<IntegerType>(getElementTypeOrSelf(op->getOperand(0)));
-      IntegerType rhsIntType =
-          cast<IntegerType>(getElementTypeOrSelf(op->getOperand(1)));
-      if (lhsIntType != rhsIntType)
-        return op->emitOpError(
-            "requires the same element type for all operands");
-
-      // Though the spec requires the element type of result to be i32, a more
-      // relaxed way is provided at dialect level for easier cooperating with
-      // other dialects.
+      auto lhsIntType = cast<IntegerType>(lhsElemType);
       if (lhsIntType.getWidth() > resIntType.getWidth())
         return op->emitOpError("invalid data type size for operands or result");
-
-      return success();
+    } else {
+      // In cases of floating point type or quant types, op requires the same
+      // element type for all operands and result (excluding shift).
+      if (resElemType != lhsElemType)
+        return op->emitOpError(
+            "requires the same element type for all operands and results");
     }
 
-    // In cases of all other types, op requires the same element
-    // type for all operands and result.
-    return impl::verifySameOperandsAndResultElementType(op);
+    return llvm::success();
   }
 };
 
