@@ -2774,7 +2774,7 @@ static bool CheckedIntArithmetic(EvalInfo &Info, const Expr *E,
     if (Info.checkingForUndefinedBehavior())
       Info.Ctx.getDiagnostics().Report(E->getExprLoc(),
                                        diag::warn_integer_constant_overflow)
-          << toString(Result, 10, Result.isSigned(), false, true, true)
+          << toString(Value, 10, Value.isSigned(), false, true, true)
           << E->getType() << E->getSourceRange();
     return HandleOverflow(Info, E, Value, E->getType());
   }
