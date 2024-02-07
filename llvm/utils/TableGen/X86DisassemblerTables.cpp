@@ -42,8 +42,8 @@ static inline const char *stringForContext(InstructionContext insnContext) {
 #define ENUM_ENTRY_K_B(n, r, d)                                                \
   ENUM_ENTRY(n, r, d)                                                          \
   ENUM_ENTRY(n##_K_B, r, d)                                                    \
-  ENUM_ENTRY(n##_KZ, r, d) ENUM_ENTRY(n##_K, r, d) ENUM_ENTRY(n##_B, r, d)     \
-      ENUM_ENTRY(n##_KZ_B, r, d)
+  ENUM_ENTRY(n##_KZ, r, d)                                                     \
+  ENUM_ENTRY(n##_K, r, d) ENUM_ENTRY(n##_B, r, d) ENUM_ENTRY(n##_KZ_B, r, d)
     INSTRUCTION_CONTEXTS
 #undef ENUM_ENTRY
 #undef ENUM_ENTRY_K_B
