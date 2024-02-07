@@ -14,6 +14,7 @@
 #include "llvm/Support/raw_socket_stream.h"
 #include "llvm/Config/config.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/FileSystem.h"
 
 #include <atomic>
 
@@ -58,6 +59,35 @@ static std::error_code getLastSocketErrorCode() {
 #endif
 }
 
+static Expected<int> getSocketFD(StringRef SocketPath) {
+#ifdef _WIN32
+  SOCKET MaybeWinsocket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (MaybeWinsocket == INVALID_SOCKET) {
+#else
+  int MaybeWinsocket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (MaybeWinsocket == -1) {
+#endif // _WIN32
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "Create socket failed");
+  }
+
+  struct sockaddr_un Addr;
+  memset(&Addr, 0, sizeof(Addr));
+  Addr.sun_family = AF_UNIX;
+  strncpy(Addr.sun_path, SocketPath.str().c_str(), sizeof(Addr.sun_path) - 1);
+
+  int status = connect(MaybeWinsocket, (struct sockaddr *)&Addr, sizeof(Addr));
+  if (status == -1) {
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "Connect socket failed");
+  }
+#ifdef _WIN32
+  return _open_osfhandle(MaybeWinsocket, 0);
+#else
+  return MaybeWinsocket;
+#endif // _WIN32
+}
+
 ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath)
     : FD(SocketFD), SocketPath(SocketPath) {}
 
@@ -70,6 +100,18 @@ ListeningSocket::ListeningSocket(ListeningSocket &&LS)
 
 Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
                                                       int MaxBacklog) {
+
+  // Identify instances where the target socket address already exist but hasn't
+  // been binded to by another program. If there is already a file (of any type)
+  // at the specified path, ::bind() will fail with an error
+  if (llvm::sys::fs::exists(SocketPath)) {
+    Expected<int> MaybeFD = getSocketFD(SocketPath);
+    if (!MaybeFD) {
+      return llvm::make_error<StringError>(
+          std::make_error_code(std::errc::file_exists),
+          "Cannot create and bind to socket file");
+    }
+  }
 
 #ifdef _WIN32
   WSABalancer _;
@@ -88,13 +130,12 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
   Addr.sun_family = AF_UNIX;
   strncpy(Addr.sun_path, SocketPath.str().c_str(), sizeof(Addr.sun_path) - 1);
 
-  if (bind(MaybeWinsocket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
-    std::error_code Err = getLastSocketErrorCode();
-    if (Err == std::errc::address_in_use)
-      ::close(MaybeWinsocket);
-    return llvm::make_error<StringError>(Err, "Bind error");
+  if (::bind(MaybeWinsocket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
+    std::error_code EC = getLastSocketErrorCode();
+    ::close(MaybeWinsocket);
+    return llvm::make_error<StringError>(EC, "Bind error");
   }
-  if (listen(MaybeWinsocket, MaxBacklog) == -1) {
+  if (::listen(MaybeWinsocket, MaxBacklog) == -1) {
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "Listen error");
   }
@@ -162,35 +203,6 @@ void ListeningSocket::shutdown() {
 
 ListeningSocket::~ListeningSocket() { shutdown(); }
 
-static Expected<int> GetSocketFD(StringRef SocketPath) {
-#ifdef _WIN32
-  SOCKET MaybeWinsocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeWinsocket == INVALID_SOCKET) {
-#else
-  int MaybeWinsocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeWinsocket == -1) {
-#endif // _WIN32
-    return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "Create socket failed");
-  }
-
-  struct sockaddr_un Addr;
-  memset(&Addr, 0, sizeof(Addr));
-  Addr.sun_family = AF_UNIX;
-  strncpy(Addr.sun_path, SocketPath.str().c_str(), sizeof(Addr.sun_path) - 1);
-
-  int status = connect(MaybeWinsocket, (struct sockaddr *)&Addr, sizeof(Addr));
-  if (status == -1) {
-    return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "Connect socket failed");
-  }
-#ifdef _WIN32
-  return _open_osfhandle(MaybeWinsocket, 0);
-#else
-  return MaybeWinsocket;
-#endif // _WIN32
-}
-
 raw_socket_stream::raw_socket_stream(int SocketFD)
     : raw_fd_stream(SocketFD, true) {}
 
@@ -199,7 +211,7 @@ raw_socket_stream::createConnectedUnix(StringRef SocketPath) {
 #ifdef _WIN32
   WSABalancer _;
 #endif // _WIN32
-  Expected<int> FD = GetSocketFD(SocketPath);
+  Expected<int> FD = getSocketFD(SocketPath);
   if (!FD)
     return FD.takeError();
   return std::make_unique<raw_socket_stream>(*FD);
