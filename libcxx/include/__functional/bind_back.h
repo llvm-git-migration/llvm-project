@@ -62,6 +62,20 @@ _LIBCPP_HIDE_FROM_ABI constexpr auto __bind_back(_Fn&& __f, _Args&&... __args) n
       std::forward<_Fn>(__f), std::forward_as_tuple(std::forward<_Args>(__args)...));
 }
 
+#  if _LIBCPP_STD_VER >= 23
+template <class _Fn, class... _Args>
+  requires is_constructible_v<decay_t<_Fn>, _Fn> && is_move_constructible_v<decay_t<_Fn>> &&
+           (is_constructible_v<decay_t<_Args>, _Args> && ...) && (is_move_constructible_v<decay_t<_Args>> && ...)
+_LIBCPP_HIDE_FROM_ABI constexpr auto bind_back(_Fn&& __f, _Args&&... __args) noexcept(
+    noexcept(__bind_back_t<decay_t<_Fn>, tuple<decay_t<_Args>...>>(
+        std::forward<_Fn>(__f), std::forward_as_tuple(std::forward<_Args>(__args)...))))
+    -> decltype(__bind_back_t<decay_t<_Fn>, tuple<decay_t<_Args>...>>(
+        std::forward<_Fn>(__f), std::forward_as_tuple(std::forward<_Args>(__args)...))) {
+  return __bind_back_t<decay_t<_Fn>, tuple<decay_t<_Args>...>>(
+      std::forward<_Fn>(__f), std::forward_as_tuple(std::forward<_Args>(__args)...));
+}
+#  endif // _LIBCPP_STD_VER >= 20
+
 #endif // _LIBCPP_STD_VER >= 20
 
 _LIBCPP_END_NAMESPACE_STD

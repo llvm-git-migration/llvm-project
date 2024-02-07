@@ -11,7 +11,7 @@
 // functional
 
 // template <class F, class... Args>
-// constexpr unspecified bind_front(F&&, Args&&...);
+//   constexpr unspecified bind_front(F&&, Args&&...);
 
 #include <functional>
 #include <cassert>
@@ -20,58 +20,17 @@
 #include <utility>
 
 #include "callable_types.h"
-#include "test_macros.h"
+#include "types.h"
 
-struct CopyMoveInfo {
-  enum { none, copy, move } copy_kind;
-
-  constexpr CopyMoveInfo() : copy_kind(none) {}
-  constexpr CopyMoveInfo(CopyMoveInfo const&) : copy_kind(copy) {}
-  constexpr CopyMoveInfo(CopyMoveInfo&&) : copy_kind(move) {}
-};
-
-template <class ...Args>
+template <class... Args>
 struct is_bind_frontable {
-  template <class ...LocalArgs>
-  static auto test(int)
-      -> decltype((void)std::bind_front(std::declval<LocalArgs>()...), std::true_type());
+  template <class... LocalArgs>
+  static auto test(int) -> decltype((void)std::bind_front(std::declval<LocalArgs>()...), std::true_type());
 
   template <class...>
   static std::false_type test(...);
 
   static constexpr bool value = decltype(test<Args...>(0))::value;
-};
-
-struct NotCopyMove {
-  NotCopyMove() = delete;
-  NotCopyMove(const NotCopyMove&) = delete;
-  NotCopyMove(NotCopyMove&&) = delete;
-  template <class ...Args>
-  void operator()(Args&& ...) const { }
-};
-
-struct NonConstCopyConstructible {
-  explicit NonConstCopyConstructible() {}
-  NonConstCopyConstructible(NonConstCopyConstructible&) {}
-};
-
-struct MoveConstructible {
-  explicit MoveConstructible() {}
-  MoveConstructible(MoveConstructible&&) {}
-};
-
-struct MakeTuple {
-  template <class ...Args>
-  constexpr auto operator()(Args&& ...args) const {
-    return std::make_tuple(std::forward<Args>(args)...);
-  }
-};
-
-template <int X>
-struct Elem {
-  template <int Y>
-  constexpr bool operator==(Elem<Y> const&) const
-  { return X == Y; }
 };
 
 constexpr bool test() {
@@ -142,12 +101,10 @@ constexpr bool test() {
 
   // Basic tests with fundamental types
   {
-    int n = 2;
-    int m = 1;
-    auto add = [](int x, int y) { return x + y; };
-    auto addN = [](int a, int b, int c, int d, int e, int f) {
-      return a + b + c + d + e + f;
-    };
+    int n     = 2;
+    int m     = 1;
+    auto add  = [](int x, int y) { return x + y; };
+    auto addN = [](int a, int b, int c, int d, int e, int f) { return a + b + c + d + e + f; };
 
     auto a = std::bind_front(add, m, n);
     assert(a() == 3);
@@ -170,9 +127,7 @@ constexpr bool test() {
 
   // Make sure we don't treat std::reference_wrapper specially.
   {
-    auto add = [](std::reference_wrapper<int> a, std::reference_wrapper<int> b) {
-      return a.get() + b.get();
-    };
+    auto add = [](std::reference_wrapper<int> a, std::reference_wrapper<int> b) { return a.get() + b.get(); };
     int i = 1, j = 2;
     auto f = std::bind_front(add, std::ref(i));
     assert(f(std::ref(j)) == 3);
@@ -191,9 +146,9 @@ constexpr bool test() {
   // Make sure that we copy the bound arguments into the unspecified-type.
   {
     auto add = [](int x, int y) { return x + y; };
-    int n = 2;
-    auto i = std::bind_front(add, n, 1);
-    n = 100;
+    int n    = 2;
+    auto i   = std::bind_front(add, n, 1);
+    n        = 100;
     assert(i() == 3);
   }
 
@@ -201,18 +156,14 @@ constexpr bool test() {
   // with the right value category.
   {
     {
-      auto wasCopied = [](CopyMoveInfo info) {
-        return info.copy_kind == CopyMoveInfo::copy;
-      };
+      auto wasCopied = [](CopyMoveInfo info) { return info.copy_kind == CopyMoveInfo::copy; };
       CopyMoveInfo info;
       auto copied = std::bind_front(wasCopied, info);
       assert(copied());
     }
 
     {
-      auto wasMoved = [](CopyMoveInfo info) {
-        return info.copy_kind == CopyMoveInfo::move;
-      };
+      auto wasMoved = [](CopyMoveInfo info) { return info.copy_kind == CopyMoveInfo::move; };
       CopyMoveInfo info;
       auto moved = std::bind_front(wasMoved, info);
       assert(std::move(moved)());
@@ -228,7 +179,7 @@ constexpr bool test() {
       constexpr int operator()() && { return 3; }
       constexpr int operator()() const&& { return 4; }
     };
-    auto x = std::bind_front(F{});
+    auto x  = std::bind_front(F{});
     using X = decltype(x);
     assert(static_cast<X&>(x)() == 1);
     assert(static_cast<X const&>(x)() == 2);
@@ -252,9 +203,9 @@ constexpr bool test() {
       };
       using X = decltype(std::bind_front(F{}));
       static_assert(!std::is_invocable_v<X&>);
-      static_assert( std::is_invocable_v<X const&>);
-      static_assert( std::is_invocable_v<X>);
-      static_assert( std::is_invocable_v<X const>);
+      static_assert(std::is_invocable_v<X const&>);
+      static_assert(std::is_invocable_v<X>);
+      static_assert(std::is_invocable_v<X const>);
     }
 
     // There's no way to make sure we delete the const& overload when the underlying call isn't valid,
@@ -269,10 +220,10 @@ constexpr bool test() {
         void operator()() const&&;
       };
       using X = decltype(std::bind_front(F{}));
-      static_assert( std::is_invocable_v<X&>);
-      static_assert( std::is_invocable_v<X const&>);
+      static_assert(std::is_invocable_v<X&>);
+      static_assert(std::is_invocable_v<X const&>);
       static_assert(!std::is_invocable_v<X>);
-      static_assert( std::is_invocable_v<X const>);
+      static_assert(std::is_invocable_v<X const>);
     }
 
     // Make sure we delete the const&& overload when the underlying call isn't valid
@@ -284,9 +235,9 @@ constexpr bool test() {
         void operator()() const&& = delete;
       };
       using X = decltype(std::bind_front(F{}));
-      static_assert( std::is_invocable_v<X&>);
-      static_assert( std::is_invocable_v<X const&>);
-      static_assert( std::is_invocable_v<X>);
+      static_assert(std::is_invocable_v<X&>);
+      static_assert(std::is_invocable_v<X const&>);
+      static_assert(std::is_invocable_v<X>);
       static_assert(!std::is_invocable_v<X const>);
     }
   }
@@ -294,9 +245,9 @@ constexpr bool test() {
   // Some examples by Tim Song
   {
     {
-      struct T { };
+      struct T {};
       struct F {
-        void operator()(T&&) const &;
+        void operator()(T&&) const&;
         void operator()(T&&) && = delete;
       };
       using X = decltype(std::bind_front(F{}));
@@ -304,7 +255,7 @@ constexpr bool test() {
     }
 
     {
-      struct T { };
+      struct T {};
       struct F {
         void operator()(T const&) const;
         void operator()(T&&) const = delete;
@@ -328,7 +279,7 @@ constexpr bool test() {
       assert(ret1(1, 2, 3));
 
       using RetT = decltype(ret);
-      static_assert( std::is_move_constructible<RetT>::value);
+      static_assert(std::is_move_constructible<RetT>::value);
       static_assert(!std::is_copy_constructible<RetT>::value);
       static_assert(!std::is_move_assignable<RetT>::value);
       static_assert(!std::is_copy_assignable<RetT>::value);
@@ -349,8 +300,8 @@ constexpr bool test() {
       assert(ret2(1, 2, 3));
 
       using RetT = decltype(ret);
-      static_assert( std::is_move_constructible<RetT>::value);
-      static_assert( std::is_copy_constructible<RetT>::value);
+      static_assert(std::is_move_constructible<RetT>::value);
+      static_assert(std::is_copy_constructible<RetT>::value);
       static_assert(!std::is_move_assignable<RetT>::value);
       static_assert(!std::is_copy_assignable<RetT>::value);
     }
@@ -367,9 +318,9 @@ constexpr bool test() {
       MoveAssignableWrapper value(true);
       using RetT = decltype(std::bind_front(std::move(value), 1));
 
-      static_assert( std::is_move_constructible<RetT>::value);
+      static_assert(std::is_move_constructible<RetT>::value);
       static_assert(!std::is_copy_constructible<RetT>::value);
-      static_assert( std::is_move_assignable<RetT>::value);
+      static_assert(std::is_move_assignable<RetT>::value);
       static_assert(!std::is_copy_assignable<RetT>::value);
     }
   }
@@ -381,13 +332,13 @@ constexpr bool test() {
     static_assert(!is_bind_frontable<NotCopyMove>::value);
     static_assert(!is_bind_frontable<NotCopyMove&>::value);
 
-    auto takeAnything = [](auto&& ...) { };
+    auto takeAnything = [](auto&&...) {};
     static_assert(!std::is_constructible_v<MoveConstructible, MoveConstructible&>);
-    static_assert( std::is_move_constructible_v<MoveConstructible>);
-    static_assert( is_bind_frontable<decltype(takeAnything), MoveConstructible>::value);
+    static_assert(std::is_move_constructible_v<MoveConstructible>);
+    static_assert(is_bind_frontable<decltype(takeAnything), MoveConstructible>::value);
     static_assert(!is_bind_frontable<decltype(takeAnything), MoveConstructible&>::value);
 
-    static_assert( std::is_constructible_v<NonConstCopyConstructible, NonConstCopyConstructible&>);
+    static_assert(std::is_constructible_v<NonConstCopyConstructible, NonConstCopyConstructible&>);
     static_assert(!std::is_move_constructible_v<NonConstCopyConstructible>);
     static_assert(!is_bind_frontable<decltype(takeAnything), NonConstCopyConstructible&>::value);
     static_assert(!is_bind_frontable<decltype(takeAnything), NonConstCopyConstructible>::value);
@@ -395,9 +346,9 @@ constexpr bool test() {
 
   // Make sure bind_front's unspecified type's operator() is SFINAE-friendly
   {
-    using T = decltype(std::bind_front(std::declval<int(*)(int, int)>(), 1));
+    using T = decltype(std::bind_front(std::declval<int (*)(int, int)>(), 1));
     static_assert(!std::is_invocable<T>::value);
-    static_assert( std::is_invocable<T, int>::value);
+    static_assert(std::is_invocable<T, int>::value);
     static_assert(!std::is_invocable<T, void*>::value);
     static_assert(!std::is_invocable<T, int, int>::value);
   }

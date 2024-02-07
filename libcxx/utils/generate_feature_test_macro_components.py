@@ -205,16 +205,15 @@ feature_test_macros = [
             "name": "__cpp_lib_bind_back",
             "values": {
                 "c++23": 202202,
-                "c++26": 202306,  # P2714R1 Bind front and back to NTTP callables
+                # "c++26": 202306,  # P2714R1 Bind front and back to NTTP callables
             },
             "headers": ["functional"],
-            "unimplemented": True,
         },
         {
             "name": "__cpp_lib_bind_front",
             "values": {
                 "c++20": 201907,
-                "c++26": 202306,  # P2714R1 Bind front and back to NTTP callables
+                # "c++26": 202306,  # P2714R1 Bind front and back to NTTP callables
             },
             "headers": ["functional"],
         },
