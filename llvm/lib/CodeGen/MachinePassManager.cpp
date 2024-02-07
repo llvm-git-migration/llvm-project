@@ -90,7 +90,9 @@ Error MachineFunctionPassManager::run(Module &M,
       for (unsigned I = Begin, E = Idx; I != E; ++I) {
         auto *P = Passes[I].get();
 
-        if (!PI.runBeforePass<MachineFunction>(*P, MF))
+        // Keep BeforeStack empty in ChangeReporter
+        if (P->name() != FreeMachineFunctionPass::name() &&
+            !PI.runBeforePass<MachineFunction>(*P, MF))
           continue;
 
         // TODO: EmitSizeRemarks
