@@ -18,6 +18,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/OptBisect.h"
@@ -234,7 +235,7 @@ protected:
   // Is this the first IR seen?
   bool InitialIR = true;
   // Is this the first MIR seen?
-  bool InitialMIR = true;
+  StringSet<> HandledMIR;
 
   // Run in verbose mode, printing everything?
   const bool VerboseMode;

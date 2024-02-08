@@ -384,11 +384,10 @@ void ChangeReporter<T>::saveIRBeforePass(Any IR, StringRef PassID,
       handleInitialIR(IR);
   }
 
-  if (InitialMIR) {
-    if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
-      InitialMIR = false;
-      if (VerboseMode)
-        handleInitialMIR(MF);
+  if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
+    if (VerboseMode && !HandledMIR.contains(MF->getName()) && !MF->empty()) {
+      handleInitialMIR(MF);
+      HandledMIR.insert(MF->getName());
     }
   }
 
@@ -480,13 +479,8 @@ template <typename T> void TextChangeReporter<T>::handleInitialIR(Any IR) {
 
 template <typename T>
 void TextChangeReporter<T>::handleInitialMIR(const MachineFunction *IR) {
-  // Print all available machine functions.
-  const auto &MMI = IR->getMMI();
-  const auto &M = *MMI.getModule();
   Out << "*** MIR Dump At Start ***\n";
-  for (const Function &F : M)
-    if (auto *MF = MMI.getMachineFunction(F))
-      MF->print(Out);
+  IR->print(Out);
 }
 
 template <typename T>
@@ -2288,33 +2282,26 @@ void DotCfgChangeReporter::handleInitialIR(Any IR) {
 
 void DotCfgChangeReporter::handleInitialMIR(const MachineFunction *IR) {
   assert(HTML && "Expected outstream to be set");
-  *HTML << "<button type=\"button\" class=\"collapsible\">0. "
+  *HTML << "<button type=\"button\" class=\"collapsible\">" << N << ". "
         << "Initial MIR (by machine function)</button>\n"
         << "<div class=\"content\">\n"
         << "  <p>\n";
-
-  auto &MMI = IR->getMMI();
-  const auto *M = MMI.getModule();
-  for (const auto &F : *M) {
-    if (const auto *MF = MMI.getMachineFunction(F)) {
-      // Create representation of IR
-      IRDataT<DCData> Data;
-      IRComparer<DCData>::analyzeIR(llvm::Any(MF), Data);
-      // Now compare it against itself, which will have everything the
-      // same and will generate the files.
-      IRComparer<DCData>(Data, Data)
-          .compare(getModuleForComparison(IR),
-                   [&](bool InModule, unsigned Minor,
-                       const FuncDataT<DCData> &Before,
-                       const FuncDataT<DCData> &After) -> void {
-                     handleFunctionCompare("", " ", "Initial MIR", "", InModule,
-                                           Minor, Before, After);
-                   });
-      ++N;
-    }
-  }
+  // Create representation of IR
+  IRDataT<DCData> Data;
+  IRComparer<DCData>::analyzeIR(llvm::Any(IR), Data);
+  // Now compare it against itself, which will have everything the
+  // same and will generate the files.
+  IRComparer<DCData>(Data, Data)
+      .compare(getModuleForComparison(IR),
+               [&](bool InModule, unsigned Minor,
+                   const FuncDataT<DCData> &Before,
+                   const FuncDataT<DCData> &After) -> void {
+                 handleFunctionCompare("", " ", "Initial MIR", "", InModule,
+                                       Minor, Before, After);
+               });
   *HTML << "  </p>\n"
         << "</div><br/>\n";
+  ++N;
 }
 
 void DotCfgChangeReporter::generateIRRepresentation(Any IR, StringRef PassID,
