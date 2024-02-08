@@ -1453,6 +1453,9 @@ PointerAssignmentGadget::getFixits(const FixitStrategy &S) const {
   return std::nullopt;
 }
 
+/// \returns fixit that adds .data() call after \DRE.
+static inline std::optional<FixItList> createDataFixit(const ASTContext& Ctx, const DeclRefExpr * DRE);
+
 std::optional<FixItList>
 PointerInitGadget::getFixits(const FixitStrategy &S) const {
   const auto *LeftVD = PtrInitLHS;
@@ -1870,6 +1873,18 @@ PointerDereferenceGadget::getFixits(const FixitStrategy &S) const {
   return std::nullopt;
 }
 
+static inline std::optional<FixItList> createDataFixit(const ASTContext& Ctx, const DeclRefExpr * DRE) {
+  const SourceManager &SM = Ctx.getSourceManager();
+  // Inserts the .data() after the DRE
+  std::optional<SourceLocation> EndOfOperand =
+      getPastLoc(DRE, SM, Ctx.getLangOpts());
+
+  if (EndOfOperand)
+    return FixItList{{FixItHint::CreateInsertion(*EndOfOperand, ".data()")}};
+
+  return std::nullopt;
+}
+
 // Generates fix-its replacing an expression of the form UPC(DRE) with
 // `DRE.data()`
 std::optional<FixItList>
@@ -1878,14 +1893,7 @@ UPCStandalonePointerGadget::getFixits(const FixitStrategy &S) const {
   switch (S.lookup(VD)) {
   case FixitStrategy::Kind::Array:
   case FixitStrategy::Kind::Span: {
-    ASTContext &Ctx = VD->getASTContext();
-    SourceManager &SM = Ctx.getSourceManager();
-    // Inserts the .data() after the DRE
-    std::optional<SourceLocation> EndOfOperand =
-        getPastLoc(Node, SM, Ctx.getLangOpts());
-
-    if (EndOfOperand)
-      return FixItList{{FixItHint::CreateInsertion(*EndOfOperand, ".data()")}};
+    return createDataFixit(VD->getASTContext(), Node);
     // FIXME: Points inside a macro expansion.
     break;
   }
