@@ -4,16 +4,17 @@
 
 typedef unsigned int uint;
 typedef half __attribute__((ext_vector_type(2))) half2;
-typedef short __attribute__((ext_vector_type(2))) short2;
+typedef __bf16 bfloat;
+typedef bfloat __attribute__((ext_vector_type(2))) bfloat2;
 typedef unsigned short __attribute__((ext_vector_type(2))) ushort2;
 
 // CHECK-LABEL: @builtins_amdgcn_dl_insts
 // CHECK: call float @llvm.amdgcn.fdot2(<2 x half> %v2hA, <2 x half> %v2hB, float %fC, i1 false)
 // CHECK: call float @llvm.amdgcn.fdot2(<2 x half> %v2hA, <2 x half> %v2hB, float %fC, i1 true)
 // CHECK: call half @llvm.amdgcn.fdot2.f16.f16(<2 x half> %v2hA, <2 x half> %v2hB, half %hC)
-// CHECK: call i16 @llvm.amdgcn.fdot2.bf16.bf16(<2 x i16> %v2ssA, <2 x i16> %v2ssB, i16 %sC)
-// CHECK: call float @llvm.amdgcn.fdot2.f32.bf16(<2 x i16> %v2ssA, <2 x i16> %v2ssB, float %fC, i1 false)
-// CHECK: call float @llvm.amdgcn.fdot2.f32.bf16(<2 x i16> %v2ssA, <2 x i16> %v2ssB, float %fC, i1 true)
+// CHECK: call bfloat @llvm.amdgcn.fdot2.bf16.bf16(<2 x bfloat> %v2ssA, <2 x bfloat> %v2ssB, bfloat %sC)
+// CHECK: call float @llvm.amdgcn.fdot2.f32.bf16(<2 x bfloat> %v2ssA, <2 x bfloat> %v2ssB, float %fC, i1 false)
+// CHECK: call float @llvm.amdgcn.fdot2.f32.bf16(<2 x bfloat> %v2ssA, <2 x bfloat> %v2ssB, float %fC, i1 true)
 // CHECK: call i32 @llvm.amdgcn.udot4(i32 %uiA, i32 %uiB, i32 %uiC, i1 false)
 // CHECK: call i32 @llvm.amdgcn.udot4(i32 %uiA, i32 %uiB, i32 %uiC, i1 true)
 // CHECK: call i32 @llvm.amdgcn.sudot4(i1 true, i32 %A, i1 false, i32 %B, i32 %C, i1 false)
@@ -25,9 +26,9 @@ typedef unsigned short __attribute__((ext_vector_type(2))) ushort2;
 #pragma OPENCL EXTENSION cl_khr_fp16 : enable
 kernel void builtins_amdgcn_dl_insts_err(
     global float *fOut, global int *siOut, global uint *uiOut,
-    global short *sOut, global int *iOut, global half *hOut,
+    global bfloat *sOut, global int *iOut, global half *hOut,
     half2 v2hA, half2 v2hB, float fC, half hC,
-    short2 v2ssA, short2 v2ssB, short sC, int siA, int siB, int siC,
+    bfloat2 v2ssA, bfloat2 v2ssB, bfloat sC, int siA, int siB, int siC,
     ushort2 v2usA, ushort2 v2usB, uint uiA, uint uiB, uint uiC,
     int A, int B, int C) {
   fOut[0] = __builtin_amdgcn_fdot2(v2hA, v2hB, fC, false);
