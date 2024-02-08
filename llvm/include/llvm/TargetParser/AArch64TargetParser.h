@@ -784,27 +784,32 @@ inline constexpr CpuInfo CpuInfos[] = {
      (AArch64::ExtensionBitset(
          {AArch64::AEK_AES, AArch64::AEK_SHA2, AArch64::AEK_CRC}))},
     {"tsv110", ARMV8_2A,
-     (AArch64::ExtensionBitset(
-         {AArch64::AEK_AES, AArch64::AEK_SHA2, AArch64::AEK_DOTPROD,
-          AArch64::AEK_FP16, AArch64::AEK_FP16FML, AArch64::AEK_PROFILE,
-          AArch64::AEK_JSCVT, AArch64::AEK_FCMA}))},
+     (AArch64::ExtensionBitset({AArch64::AEK_AES, AArch64::AEK_SHA2,
+                                AArch64::AEK_DOTPROD, AArch64::AEK_FP16,
+                                AArch64::AEK_FP16FML, AArch64::AEK_PROFILE,
+                                AArch64::AEK_JSCVT, AArch64::AEK_FCMA}))},
     {"a64fx", ARMV8_2A,
      (AArch64::ExtensionBitset({AArch64::AEK_AES, AArch64::AEK_SHA2,
-                                           AArch64::AEK_FP16,
-                                           AArch64::AEK_SVE}))},
+                                AArch64::AEK_FP16, AArch64::AEK_SVE}))},
     {"carmel", ARMV8_2A,
      (AArch64::ExtensionBitset(
          {AArch64::AEK_AES, AArch64::AEK_SHA2, AArch64::AEK_FP16}))},
     {"ampere1", ARMV8_6A,
      (AArch64::ExtensionBitset({AArch64::AEK_AES, AArch64::AEK_SHA2,
-                                           AArch64::AEK_SHA3, AArch64::AEK_FP16,
-                                           AArch64::AEK_SB, AArch64::AEK_SSBS,
-                                           AArch64::AEK_RAND}))},
+                                AArch64::AEK_SHA3, AArch64::AEK_FP16,
+                                AArch64::AEK_SB, AArch64::AEK_SSBS,
+                                AArch64::AEK_RAND}))},
     {"ampere1a", ARMV8_6A,
      (AArch64::ExtensionBitset(
          {AArch64::AEK_FP16, AArch64::AEK_RAND, AArch64::AEK_SM4,
           AArch64::AEK_SHA3, AArch64::AEK_SHA2, AArch64::AEK_AES,
           AArch64::AEK_MTE, AArch64::AEK_SB, AArch64::AEK_SSBS}))},
+    {"ampere1b", ARMV8_7A,
+     (AArch64::ExtensionBitset({AArch64::AEK_FP16, AArch64::AEK_RAND,
+                                AArch64::AEK_SM4, AArch64::AEK_SHA3,
+                                AArch64::AEK_SHA2, AArch64::AEK_AES,
+                                AArch64::AEK_MTE, AArch64::AEK_SB,
+                                AArch64::AEK_SSBS, AArch64::AEK_CSSC}))},
 };
 
 // An alias for a CPU.
