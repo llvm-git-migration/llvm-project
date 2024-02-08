@@ -361,7 +361,7 @@ class PRMergeOnBehalfInformation:
         # This text is using Markdown formatting.
         comment = f"""\
 {self.COMMENT_TAG}
-@{self.author}, you do not have permissions to merge your own PRs yet. Please let us know when you are happy for this to be merged, and one of the reviewers can merge it on your behalf.
+@{self.author} you do not have permissions to merge your own PRs yet. Please let us know when you are happy for this to be merged, and one of the reviewers can merge it on your behalf.
 
 (if many approvals are required, please wait until everyone has approved before merging)
 """
