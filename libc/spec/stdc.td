@@ -15,6 +15,8 @@ def StdC : StandardSpec<"stdc"> {
   PtrType TssTPtr = PtrType<TssTType>;
   NamedType TssDtorTType = NamedType<"tss_dtor_t">;
 
+
+
   HeaderSpec Assert = HeaderSpec<
       "assert.h",
       [
@@ -895,6 +897,22 @@ def StdC : StandardSpec<"stdc"> {
         Macro<"FLT_MANT_DIG">,
         Macro<"DBL_MANT_DIG">,
         Macro<"LDBL_MANT_DIG">,
+      ]
+  >;
+
+  HeaderSpec StdFix = HeaderSpec<
+      "stdfix.h",
+      [],  // macros
+      [],  // types
+      [],  // enums
+      [    // functions
+        FunctionSpec<"abshr", RetValSpec<ShortFractType>, [ArgSpec<ShortFractType>]>,
+        FunctionSpec<"absr", RetValSpec<FractType>, [ArgSpec<FractType>]>,
+        FunctionSpec<"abslr", RetValSpec<LongFractType>, [ArgSpec<LongFractType>]>,
+
+        FunctionSpec<"abshk", RetValSpec<ShortAccumType>, [ArgSpec<ShortAccumType>]>,
+        FunctionSpec<"absk", RetValSpec<AccumType>, [ArgSpec<AccumType>]>,
+        FunctionSpec<"abslk", RetValSpec<LongAccumType>, [ArgSpec<LongAccumType>]>,
       ]
   >;
 

@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 
 # Initialize ALL_COMPILER_FEATURES as empty list.
-set(ALL_COMPILER_FEATURES "float128")
+set(ALL_COMPILER_FEATURES "float128" "fixedpoint")
 
 # Making sure ALL_COMPILER_FEATURES is sorted.
 list(SORT ALL_COMPILER_FEATURES)
@@ -52,6 +52,8 @@ foreach(feature IN LISTS ALL_COMPILER_FEATURES)
     list(APPEND AVAILABLE_COMPILER_FEATURES ${feature})
     if(${feature} STREQUAL "float128")
       set(LIBC_COMPILER_HAS_FLOAT128 TRUE)
+    elseif(${feature} STREQUAL "fixedpoint")
+      set(LIBC_COMPILER_HAS_FIXED_POINT TRUE)
     endif()
   endif()
 endforeach()

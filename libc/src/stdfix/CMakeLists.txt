@@ -1,0 +1,17 @@
+if(NOT LIBC_COMPILER_HAS_FIXED_POINT)
+  return()
+endif()
+
+foreach(suffix IN hr r lr hk k lk)
+  add_entrypoint_object(
+    abs${suffix}
+    HDRS
+      abs${suffix}.h
+    SRCS
+      abs${suffix}.cpp
+    COMPILE_OPTIONS
+      -O3
+    DEPENDS
+      libc.src.__support.fixedpoint.fx_bits
+  )
+endforeach()
