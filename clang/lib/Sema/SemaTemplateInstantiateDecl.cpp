@@ -6316,6 +6316,17 @@ NamedDecl *Sema::FindInstantiatedDecl(SourceLocation Loc, NamedDecl *D,
     // anonymous unions in class templates).
   }
 
+  bool IsInsideLambda =
+      isa<CXXRecordDecl>(ParentDC) && cast<CXXRecordDecl>(ParentDC)->isLambda();
+
+  if (CurrentInstantiationScope && IsInsideLambda) {
+    if (auto *FTD = dyn_cast<FunctionTemplateDecl>(D)) {
+      return cast<NamedDecl>(CurrentInstantiationScope
+                                 ->findInstantiationOf(FTD->getTemplatedDecl())
+                                 ->get<Decl *>());
+    }
+  }
+
   if (!ParentDependsOnArgs)
     return D;
 

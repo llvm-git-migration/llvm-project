@@ -1231,6 +1231,8 @@ namespace {
     // Whether to evaluate the C++20 constraints or simply substitute into them.
     bool EvaluateConstraints = true;
 
+    std::optional<LocalInstantiationScope> LambdaInstantiationScope;
+
   public:
     typedef TreeTransform<TemplateInstantiator> inherited;
 
@@ -1479,8 +1481,15 @@ namespace {
                                            SubstTemplateTypeParmPackTypeLoc TL,
                                            bool SuppressObjCLifetime);
 
+    ExprResult TransformUnresolvedMemberExpr(UnresolvedMemberExpr *Old) {
+      LambdaInstantiationScope.emplace(SemaRef, /*CombineWithOuterScope=*/true);
+      return inherited::TransformUnresolvedMemberExpr(Old);
+    }
+
     ExprResult TransformLambdaExpr(LambdaExpr *E) {
-      LocalInstantiationScope Scope(SemaRef, /*CombineWithOuterScope=*/true);
+      std::optional<LocalInstantiationScope> LocalScope;
+      if (!LambdaInstantiationScope)
+        LocalScope.emplace(SemaRef, /*CombineWithOuterScope=*/true);
       Sema::ConstraintEvalRAII<TemplateInstantiator> RAII(*this);
 
       ExprResult Result = inherited::TransformLambdaExpr(E);
