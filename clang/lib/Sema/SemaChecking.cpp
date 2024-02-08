@@ -2084,6 +2084,8 @@ bool Sema::CheckTSBuiltinFunctionCall(const TargetInfo &TI, unsigned BuiltinID,
     return CheckBPFBuiltinFunctionCall(BuiltinID, TheCall);
   case llvm::Triple::hexagon:
     return CheckHexagonBuiltinFunctionCall(BuiltinID, TheCall);
+  case llvm::Triple::dxil:
+    return CheckHLSLBuiltinFunctionCall(BuiltinID, TheCall);
   case llvm::Triple::mips:
   case llvm::Triple::mipsel:
   case llvm::Triple::mips64:
@@ -2120,10 +2122,11 @@ bool Sema::CheckTSBuiltinFunctionCall(const TargetInfo &TI, unsigned BuiltinID,
 // not a valid type, emit an error message and return true. Otherwise return
 // false.
 static bool checkMathBuiltinElementType(Sema &S, SourceLocation Loc,
-                                        QualType Ty) {
-  if (!Ty->getAs<VectorType>() && !ConstantMatrixType::isValidElementType(Ty)) {
+                                        QualType ArgTy, int ArgIndex) {
+  if (!ArgTy->getAs<VectorType>() &&
+      !ConstantMatrixType::isValidElementType(ArgTy)) {
     return S.Diag(Loc, diag::err_builtin_invalid_arg_type)
-           << 1 << /* vector, integer or float ty*/ 0 << Ty;
+           << ArgIndex << /* vector, integer or float ty*/ 0 << ArgTy;
   }
 
   return false;
@@ -5154,6 +5157,64 @@ bool Sema::CheckPPCMMAType(QualType Type, SourceLocation TypeLoc) {
      ) {
     Diag(TypeLoc, diag::err_ppc_invalid_use_mma_type);
     return true;
+  }
+  return false;
+}
+
+// Note: returning true in this case results in CheckBuiltinFunctionCall
+// returning an ExprError
+bool Sema::CheckHLSLBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
+  switch (BuiltinID) {
+  case hlsl::BI__builtin_hlsl_dot: {
+    if (checkArgCount(*this, TheCall, 2)) {
+      return true;
+    }
+    Expr *Arg0 = TheCall->getArg(0);
+    QualType ArgTy0 = Arg0->getType();
+
+    Expr *Arg1 = TheCall->getArg(1);
+    QualType ArgTy1 = Arg1->getType();
+
+    auto *VecTy0 = ArgTy0->getAs<VectorType>();
+    auto *VecTy1 = ArgTy1->getAs<VectorType>();
+    SourceLocation BuiltinLoc = TheCall->getBeginLoc();
+
+    // if arg0 is bool then call Diag with err_builtin_invalid_arg_type
+    if (checkMathBuiltinElementType(*this, Arg0->getBeginLoc(), ArgTy0, 1)) {
+      return true;
+    }
+
+    // if arg1 is bool then call Diag with err_builtin_invalid_arg_type
+    if (checkMathBuiltinElementType(*this, Arg1->getBeginLoc(), ArgTy1, 2)) {
+      return true;
+    }
+
+    if (VecTy0 == nullptr && VecTy1 == nullptr) {
+      if (ArgTy0 != ArgTy1) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    if ((VecTy0 == nullptr && VecTy1 != nullptr) ||
+        (VecTy0 != nullptr && VecTy1 == nullptr)) {
+
+      Diag(BuiltinLoc, diag::err_vec_builtin_non_vector)
+          << TheCall->getDirectCallee()
+          << SourceRange(TheCall->getArg(0)->getBeginLoc(),
+                         TheCall->getArg(1)->getEndLoc());
+      return true;
+    }
+
+    if (VecTy0->getElementType() != VecTy1->getElementType()) {
+      return true;
+    }
+    if (VecTy0->getNumElements() != VecTy1->getNumElements()) {
+      return true;
+    }
+    break;
+  }
   }
   return false;
 }
@@ -19576,7 +19637,7 @@ bool Sema::PrepareBuiltinElementwiseMathOneArgCall(CallExpr *TheCall) {
   TheCall->setArg(0, A.get());
   QualType TyA = A.get()->getType();
 
-  if (checkMathBuiltinElementType(*this, A.get()->getBeginLoc(), TyA))
+  if (checkMathBuiltinElementType(*this, A.get()->getBeginLoc(), TyA, 1))
     return true;
 
   TheCall->setType(TyA);
@@ -19604,7 +19665,7 @@ bool Sema::SemaBuiltinElementwiseMath(CallExpr *TheCall) {
                 diag::err_typecheck_call_different_arg_types)
            << TyA << TyB;
 
-  if (checkMathBuiltinElementType(*this, A.get()->getBeginLoc(), TyA))
+  if (checkMathBuiltinElementType(*this, A.get()->getBeginLoc(), TyA, 1))
     return true;
 
   TheCall->setArg(0, A.get());
