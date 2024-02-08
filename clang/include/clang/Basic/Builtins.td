@@ -4518,6 +4518,12 @@ def HLSLCreateHandle : LangBuiltin<"HLSL_LANG"> {
   let Prototype = "void*(unsigned char)";
 }
 
+def HLSLDotProduct : LangBuiltin<"HLSL_LANG"> {
+  let Spellings = ["__builtin_hlsl_dot"];
+  let Attributes = [NoThrow, Const, CustomTypeChecking];
+  let Prototype = "void(...)";
+}
+
 // Builtins for XRay.
 def XRayCustomEvent : Builtin {
   let Spellings = ["__xray_customevent"];
