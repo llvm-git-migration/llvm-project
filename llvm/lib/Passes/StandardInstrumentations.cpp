@@ -479,8 +479,7 @@ template <typename T> void TextChangeReporter<T>::handleInitialIR(Any IR) {
 
 template <typename T>
 void TextChangeReporter<T>::handleInitialMIR(const MachineFunction *IR) {
-  Out << "*** MIR Dump At Start ***\n";
-  IR->print(Out);
+  // For simplicity, don't print the initial MIR.
 }
 
 template <typename T>
