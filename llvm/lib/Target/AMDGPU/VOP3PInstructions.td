@@ -818,9 +818,9 @@ defm V_MFMA_F32_32X32X16_F16   : MAIInst<"v_mfma_f32_32x32x16f16",    "F32_V8F16
 defm V_MFMA_F32_32X32X16_BF16  : MAIInst<"v_mfma_f32_32x32x16bf16",   "F32_V8BF16_X16", int_amdgcn_mfma_f32_32x32x16_bf16>;
 
 defm V_MFMA_F32_16X16X128_F8F6F4 : MAIInst<"v_mfma_f32_16x16x128f8f6f4",
-  "F32_V8I32_X128">;
+  "F32_V8I32_X128", mfma_f32_16x16x128_f8f6f4>;
 defm V_MFMA_F32_32X32X64_F8F6F4 : MAIInst<"v_mfma_f32_32x32x64f8f6f4",
-  "F32_V8I32_X512">;
+  "F32_V8I32_X512", mfma_f32_32x32x64_f8f6f4>;
 
 defm V_MFMA_SCALE_F32_16X16X128_F8F6F4 : ScaledMAIInst_mc<
   "v_mfma_scale_f32_16x16x128_f8f6f4", "V_MFMA_F32_16X16X128_F8F6F4",
