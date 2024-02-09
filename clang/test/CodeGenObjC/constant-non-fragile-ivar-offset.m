@@ -6,7 +6,7 @@
 // CHECK: @"OBJC_IVAR_$_AnotherClass.privateId" = constant i64 24
 // CHECK: @"OBJC_IVAR_$_AnotherClass.anotherPrivateId" = hidden constant i64 32
 // CHECK: @"OBJC_IVAR_$_SuperClass.superClassIvar" = constant i64 20
-// CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = global i64 24
+// CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = constant i64 24
 // CHECK: @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar" = hidden global i64 12
 
 @interface NSObject {
@@ -82,7 +82,7 @@
 
 @implementation SubClass
 - (void)exampleMethod {
-    // CHECK: load i64, ptr @"OBJC_IVAR_$SuperClass
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$SuperClass
     superClassIvar = 100; // Access superclass ivar
     subClassIvar = 3.14; // Access subclass ivar
 }
