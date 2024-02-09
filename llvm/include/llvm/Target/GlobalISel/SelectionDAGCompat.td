@@ -167,6 +167,7 @@ def : GINodeEquiv<G_FMAXNUM_IEEE, fmaxnum_ieee>;
 def : GINodeEquiv<G_FMAXIMUM, fmaximum>;
 def : GINodeEquiv<G_FMINIMUM, fminimum>;
 def : GINodeEquiv<G_READCYCLECOUNTER, readcyclecounter>;
+def : GINodeEquiv<G_READFIXEDTIMER, readfixedtimer>;
 def : GINodeEquiv<G_ROTR, rotr>;
 def : GINodeEquiv<G_ROTL, rotl>;
 def : GINodeEquiv<G_LROUND, lround>;

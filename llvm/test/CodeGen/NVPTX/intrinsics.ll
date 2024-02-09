@@ -151,6 +151,17 @@ define i64 @test_globaltimer() {
   ret i64 %ret
 }
 
+; CHECK-LABEL: test_fixedtimer
+define i64 @test_fixedtimer() {
+; CHECK: mov.u64         %r{{.*}}, %globaltimer;
+  %a = tail call i64 @llvm.readfixedtimer()
+; CHECK: mov.u64         %r{{.*}}, %globaltimer;
+  %b = tail call i64 @llvm.readfixedtimer()
+  %ret = add i64 %a, %b
+; CHECK: ret
+  ret i64 %ret
+}
+
 declare float @llvm.fabs.f32(float)
 declare double @llvm.fabs.f64(double)
 declare float @llvm.nvvm.sqrt.f(float)
@@ -161,6 +172,7 @@ declare i16 @llvm.ctpop.i16(i16)
 declare i32 @llvm.ctpop.i32(i32)
 declare i64 @llvm.ctpop.i64(i64)
 
+declare i64 @llvm.readfixedtimer()
 declare i32 @llvm.nvvm.read.ptx.sreg.tid.x()
 declare i32 @llvm.nvvm.read.ptx.sreg.clock()
 declare i64 @llvm.nvvm.read.ptx.sreg.clock64()
