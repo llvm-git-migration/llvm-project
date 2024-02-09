@@ -267,6 +267,8 @@ Bug Fixes to C++ Support
   was only accepted at namespace scope but not at local function scope.
 - Clang no longer tries to call consteval constructors at runtime when they appear in a member initializer.
   (`#782154 <https://github.com/llvm/llvm-project/issues/82154>`_`)
+- Clang now detects illegal copy constructor with template class as its parameter.
+  Fixes (`#80963 https://github.com/llvm/llvm-project/issues/80963`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
