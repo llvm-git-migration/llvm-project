@@ -3759,7 +3759,6 @@ def CALL_PROTOTYPE :
 
 include "NVPTXIntrinsics.td"
 
-
 //-----------------------------------
 // Notes
 //-----------------------------------
