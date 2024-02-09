@@ -1,0 +1,67 @@
+/// Assert the fixed point precision macros according to N1169 7.18a.3 are
+/// defined when -ffixed-point is provided.
+
+// RUN: %clang_cc1 -triple=x86_64 -E -dM -ffixed-point -x c < /dev/null | FileCheck -match-full-lines %s
+// RUN: %clang_cc1 -triple=x86_64 -E -dM -ffixed-point -x c++ < /dev/null | FileCheck -match-full-lines %s
+
+/// These are the implementation-defined values for x86_64.
+// CHECK-DAG:#define __SFRACT_EPSILON__ 0.0078125hr
+// CHECK-DAG:#define __SFRACT_FBIT__ 7
+// CHECK-DAG:#define __SFRACT_MAX__ 0.9921875hr
+// CHECK-DAG:#define __SFRACT_MIN__ (-0.5hr-0.5hr)
+
+// CHECK-DAG:#define __USFRACT_EPSILON__ 0.00390625uhr
+// CHECK-DAG:#define __USFRACT_FBIT__ 8
+// CHECK-DAG:#define __USFRACT_MAX__ 0.99609375uhr
+
+// CHECK-DAG:#define __FRACT_EPSILON__ 0.000030517578125r
+// CHECK-DAG:#define __FRACT_FBIT__ 15
+// CHECK-DAG:#define __FRACT_MAX__ 0.999969482421875r
+// CHECK-DAG:#define __FRACT_MIN__ (-0.5r-0.5r)
+
+// CHECK-DAG:#define __UFRACT_EPSILON__ 0.0000152587890625ur
+// CHECK-DAG:#define __UFRACT_FBIT__ 16
+// CHECK-DAG:#define __UFRACT_MAX__ 0.9999847412109375ur
+
+// CHECK-DAG:#define __LFRACT_EPSILON__ 0.0000000004656612873077392578125lr
+// CHECK-DAG:#define __LFRACT_FBIT__ 31
+// CHECK-DAG:#define __LFRACT_MAX__ 0.9999999995343387126922607421875lr
+// CHECK-DAG:#define __LFRACT_MIN__ (-0.5lr-0.5lr)
+
+// CHECK-DAG:#define __ULFRACT_EPSILON__ 0.00000000023283064365386962890625ulr
+// CHECK-DAG:#define __ULFRACT_FBIT__ 32
+// CHECK-DAG:#define __ULFRACT_MAX__ 0.99999999976716935634613037109375ulr
+
+// CHECK-DAG:#define __SACCUM_EPSILON__ 0.0078125hk
+// CHECK-DAG:#define __SACCUM_FBIT__ 7
+// CHECK-DAG:#define __SACCUM_MAX__ 255.9921875hk
+// CHECK-DAG:#define __SACCUM_MIN__ (-128.0hk-128.0hk)
+
+// CHECK-DAG:#define __USACCUM_EPSILON__ 0.00390625uhk
+// CHECK-DAG:#define __USACCUM_FBIT__ 8
+// CHECK-DAG:#define __USACCUM_MAX__ 255.99609375uhk
+
+// CHECK-DAG:#define __ACCUM_EPSILON__ 0.000030517578125k
+// CHECK-DAG:#define __ACCUM_FBIT__ 15
+// CHECK-DAG:#define __ACCUM_MAX__ 65535.999969482421875k
+// CHECK-DAG:#define __ACCUM_MIN__ (-32768.0k-32768.0k)
+
+// CHECK-DAG:#define __UACCUM_EPSILON__ 0.0000152587890625uk
+// CHECK-DAG:#define __UACCUM_FBIT__ 16
+// CHECK-DAG:#define __UACCUM_MAX__ 65535.9999847412109375uk
+
+// CHECK-DAG:#define __LACCUM_EPSILON__ 0.0000000004656612873077392578125lk
+// CHECK-DAG:#define __LACCUM_FBIT__ 31
+// CHECK-DAG:#define __LACCUM_MAX__ 4294967295.9999999995343387126922607421875lk
+// CHECK-DAG:#define __LACCUM_MIN__ (-2147483648.0lk-2147483648.0lk)
+
+// CHECK-DAG:#define __ULACCUM_EPSILON__ 0.00000000023283064365386962890625ulk
+// CHECK-DAG:#define __ULACCUM_FBIT__ 32
+// CHECK-DAG:#define __ULACCUM_MAX__ 4294967295.99999999976716935634613037109375ulk
+
+// CHECK-DAG:#define __SACCUM_IBIT__ 8
+// CHECK-DAG:#define __USACCUM_IBIT__ 8
+// CHECK-DAG:#define __ACCUM_IBIT__ 16
+// CHECK-DAG:#define __UACCUM_IBIT__ 16
+// CHECK-DAG:#define __LACCUM_IBIT__ 32
+// CHECK-DAG:#define __ULACCUM_IBIT__ 32

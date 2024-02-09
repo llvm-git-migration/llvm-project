@@ -768,6 +768,59 @@ void InitializeOpenCLFeatureTestMacros(const TargetInfo &TI,
   Builder.defineMacro("__opencl_c_int64");
 }
 
+std::string ConstructFixedPointLiteral(llvm::APFixedPoint Val,
+                                       llvm::StringRef Suffix) {
+  if (Val.isSigned() && Val == llvm::APFixedPoint::getMin(Val.getSemantics())) {
+    // When representing the min value of a signed fixed point type in source
+    // code, we cannot simply write `-<lowest value>`. For example, the min
+    // value of a `short _Fract` cannot be written as `-1.0hr`. This is because
+    // the parser will read this (and really any negative numerical literal) as
+    // a UnaryOperator that owns a FixedPointLiteral with a positive value
+    // rather than just a FixedPointLiteral with a negative value. Compiling
+    // `-1.0hr` results in an overflow to the maximal value of that fixed point
+    // type. The correct way to represent a signed min value is to instead split
+    // it into two halves, like `(-0.5hr-0.5hr)` which is what the standard
+    // defines SFRACT_MIN as.
+    std::string Literal;
+    std::string HalfStr = ConstructFixedPointLiteral(Val.shr(1), Suffix);
+    Literal.push_back('(');
+    Literal += HalfStr;
+    Literal += HalfStr;
+    Literal.push_back(')');
+    return Literal;
+  }
+
+  std::string Str(Val.toString());
+  Str += Suffix;
+  return Str;
+}
+
+void DefineFixedPointMacros(const TargetInfo &TI, MacroBuilder &Builder,
+                            llvm::StringRef TypeName, llvm::StringRef Suffix,
+                            unsigned Width, unsigned Scale, bool Signed) {
+  // Saturation doesn't affect the size or scale of a fixed point type, so we
+  // don't need it here.
+  llvm::FixedPointSemantics FXSema(
+      Width, Scale, Signed, /*IsSaturated=*/false,
+      !Signed && TI.doUnsignedFixedPointTypesHavePadding());
+  llvm::SmallString<32> MacroPrefix("__");
+  MacroPrefix += TypeName;
+  Builder.defineMacro(MacroPrefix + "_EPSILON__",
+                      ConstructFixedPointLiteral(
+                          llvm::APFixedPoint::getEpsilon(FXSema), Suffix));
+  Builder.defineMacro(MacroPrefix + "_FBIT__", Twine(Scale));
+  Builder.defineMacro(
+      MacroPrefix + "_MAX__",
+      ConstructFixedPointLiteral(llvm::APFixedPoint::getMax(FXSema), Suffix));
+
+  // N1169 doesn't specify MIN macros for unsigned types since they're all just
+  // zero.
+  if (Signed)
+    Builder.defineMacro(
+        MacroPrefix + "_MIN__",
+        ConstructFixedPointLiteral(llvm::APFixedPoint::getMin(FXSema), Suffix));
+}
+
 static void InitializePredefinedMacros(const TargetInfo &TI,
                                        const LangOptions &LangOpts,
                                        const FrontendOptions &FEOpts,
@@ -1096,6 +1149,47 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   assert(TI.getTypeWidth(TI.getUIntMaxType()) ==
              TI.getTypeWidth(TI.getIntMaxType()) &&
          "uintmax_t and intmax_t have different widths?");
+
+  if (LangOpts.FixedPoint) {
+    // Each unsigned type has the same width as their signed type.
+    DefineFixedPointMacros(TI, Builder, "SFRACT", "hr", TI.getShortFractWidth(),
+                           TI.getShortFractScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "USFRACT", "uhr",
+                           TI.getShortFractWidth(),
+                           TI.getUnsignedShortFractScale(), /*Signed=*/false);
+    DefineFixedPointMacros(TI, Builder, "FRACT", "r", TI.getFractWidth(),
+                           TI.getFractScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "UFRACT", "ur", TI.getFractWidth(),
+                           TI.getUnsignedFractScale(), /*Signed=*/false);
+    DefineFixedPointMacros(TI, Builder, "LFRACT", "lr", TI.getLongFractWidth(),
+                           TI.getLongFractScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "ULFRACT", "ulr",
+                           TI.getLongFractWidth(),
+                           TI.getUnsignedLongFractScale(), /*Signed=*/false);
+    DefineFixedPointMacros(TI, Builder, "SACCUM", "hk", TI.getShortAccumWidth(),
+                           TI.getShortAccumScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "USACCUM", "uhk",
+                           TI.getShortAccumWidth(),
+                           TI.getUnsignedShortAccumScale(), /*Signed=*/false);
+    DefineFixedPointMacros(TI, Builder, "ACCUM", "k", TI.getAccumWidth(),
+                           TI.getAccumScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "UACCUM", "uk", TI.getAccumWidth(),
+                           TI.getUnsignedAccumScale(), /*Signed=*/false);
+    DefineFixedPointMacros(TI, Builder, "LACCUM", "lk", TI.getLongAccumWidth(),
+                           TI.getLongAccumScale(), /*Signed=*/true);
+    DefineFixedPointMacros(TI, Builder, "ULACCUM", "ulk",
+                           TI.getLongAccumWidth(),
+                           TI.getUnsignedLongAccumScale(), /*Signed=*/false);
+
+    Builder.defineMacro("__SACCUM_IBIT__", Twine(TI.getShortAccumIBits()));
+    Builder.defineMacro("__USACCUM_IBIT__",
+                        Twine(TI.getUnsignedShortAccumIBits()));
+    Builder.defineMacro("__ACCUM_IBIT__", Twine(TI.getAccumIBits()));
+    Builder.defineMacro("__UACCUM_IBIT__", Twine(TI.getUnsignedAccumIBits()));
+    Builder.defineMacro("__LACCUM_IBIT__", Twine(TI.getLongAccumIBits()));
+    Builder.defineMacro("__ULACCUM_IBIT__",
+                        Twine(TI.getUnsignedLongAccumIBits()));
+  }
 
   if (TI.hasFloat16Type())
     DefineFloatMacros(Builder, "FLT16", &TI.getHalfFormat(), "F16");
