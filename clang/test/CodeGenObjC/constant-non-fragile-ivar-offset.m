@@ -1,6 +1,12 @@
 // RUN: %clang_cc1 -triple x86_64-apple-macosx10.14.0 -emit-llvm %s -o - | FileCheck %s
 
 // CHECK: @"OBJC_IVAR_$_StaticLayout.static_layout_ivar" = hidden constant i64 20
+// CHECK: @"OBJC_IVAR_$_SuperClass.superClassIvar" = hidden constant i64 20
+// CHECK: @"OBJC_IVAR_$_SuperClass._superClassProperty" = hidden constant i64 24
+// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar" = global i64 32
+// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar2" = global i64 40
+// CHECK: @"OBJC_IVAR_$_IntermediateClass._intermediateProperty" = hidden global i64 48
+// CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = global i64 56
 // CHECK: @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar" = hidden global i64 12
 
 @interface NSObject {
@@ -17,6 +23,58 @@
 -(void)meth {
   static_layout_ivar = 0;
   // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_StaticLayout
+}
+@end
+
+// Ivars declared in the @interface
+@interface SuperClass : NSObject
+@property (nonatomic, assign) int superClassProperty;
+@end
+
+@implementation SuperClass {
+  int superClassIvar; // Declare an ivar
+}
+
+- (void)superClassMethod {
+    _superClassProperty = 42;
+    superClassIvar = 10;
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_SuperClass
+}
+@end
+
+// Inheritance and Ivars
+@interface IntermediateClass : SuperClass
+{
+    double intermediateClassIvar;
+
+    @protected
+    int intermediateClassIvar2;
+}
+@property (nonatomic, strong) SuperClass *intermediateProperty;
+@end
+
+@implementation IntermediateClass
+
+@synthesize intermediateProperty = _intermediateProperty;
+- (void)intermediateClassMethod {
+    intermediateClassIvar = 3.14;
+    _intermediateProperty = 0;
+    // CHECK: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
+}
+@end
+
+@interface SubClass : IntermediateClass
+{
+    double subClassIvar;
+}
+@end
+
+@implementation SubClass
+- (void)subclassVar {
+    intermediateClassIvar = 3.14;
+    subClassIvar = 6.28;
+    // CHECK: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
+    // CHECK: load i64, ptr @"OBJC_IVAR_$_SubClass
 }
 @end
 
