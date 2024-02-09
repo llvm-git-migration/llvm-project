@@ -279,7 +279,7 @@ namespace dr727 { // dr727: partial
     // cxx98-11-error@-1 {{variable templates are a C++14 extension}}
     // cxx98-14-error@-2 {{inline variables are a C++17 extension}}
     template<> static inline int v2<T>; // #dr727-v2-T
-    // cxx98-14-error@-1 {{inline variables are a C++17 extension}} 
+    // cxx98-14-error@-1 {{inline variables are a C++17 extension}}
     template<> static inline int v2<U>;
     // cxx98-14-error@-1 {{inline variables are a C++17 extension}}
     // expected-error@-2 {{duplicate member 'v2'}}
