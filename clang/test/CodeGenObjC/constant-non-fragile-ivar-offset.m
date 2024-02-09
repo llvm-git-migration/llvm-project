@@ -29,7 +29,7 @@
 }
 -(void)meth2 {
   static_layout_ivar2 = 0;
-  // CHECK: load i64, ptr @"OBJC_IVAR_$_StaticLayoutSubClass
+  // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_StaticLayoutSubClass
 }
 @end
 
