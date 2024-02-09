@@ -10918,7 +10918,7 @@ void Sema::CheckConstructor(CXXConstructorDecl *Constructor) {
   //   parameters have default arguments.
   if (!Constructor->isInvalidDecl() &&
       Constructor->hasOneParamOrDefaultArgs() &&
-      Constructor->getTemplateSpecializationKind() !=
+      Constructor->getTemplateSpecializationKind() ==
           TSK_ImplicitInstantiation) {
     QualType ParamType = Constructor->getParamDecl(0)->getType();
     QualType ClassTy = Context.getTagDeclType(ClassDecl);
