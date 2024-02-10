@@ -143,8 +143,16 @@ std::string printDefinition(const Decl *D, PrintingPolicy PP,
       // Initializers might be huge and result in lots of memory allocations in
       // some catostrophic cases. Such long lists are not useful in hover cards
       // anyway.
-      if (200 < TB.expandedTokens(IE->getSourceRange()).size())
+      const auto &SM = VD->getASTContext().getSourceManager();
+      if (!SM.isInMainFile(VD->getLocation())) {
+        const auto &Children = IE->children();
+        const size_t Length = std::distance(Children.begin(), Children.end());
+        if (100 < Length) {
+          PP.SuppressInitializers = true;
+        }
+      } else if (200 < TB.expandedTokens(IE->getSourceRange()).size()) {
         PP.SuppressInitializers = true;
+      }
     }
   }
   std::string Definition;
