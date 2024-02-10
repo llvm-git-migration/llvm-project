@@ -10,6 +10,7 @@
 #define _LIBCPP___FWD_ARRAY_H
 
 #include <__config>
+#include <__fwd/tuple.h>
 #include <cstddef>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -20,6 +21,27 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Tp, size_t _Size>
 struct _LIBCPP_TEMPLATE_VIS array;
+
+#if _LIBCPP_STD_VER >= 20
+
+template <class _Tp, size_t _Size>
+inline constexpr bool __is_tuple_like_v<array<_Tp, _Size>> = true;
+
+#endif
+
+template <size_t _Ip, class _Tp, size_t _Size>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp& get(array<_Tp, _Size>&) _NOEXCEPT;
+
+template <size_t _Ip, class _Tp, size_t _Size>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 const _Tp& get(const array<_Tp, _Size>&) _NOEXCEPT;
+
+#ifndef _LIBCPP_CXX03_LANG
+template <size_t _Ip, class _Tp, size_t _Size>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp&& get(array<_Tp, _Size>&&) _NOEXCEPT;
+
+template <size_t _Ip, class _Tp, size_t _Size>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 const _Tp&& get(const array<_Tp, _Size>&&) _NOEXCEPT;
+#endif
 
 _LIBCPP_END_NAMESPACE_STD
 

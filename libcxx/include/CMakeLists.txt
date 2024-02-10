@@ -427,7 +427,6 @@ set(files
   __fwd/array.h
   __fwd/bit_reference.h
   __fwd/fstream.h
-  __fwd/get.h
   __fwd/hash.h
   __fwd/ios.h
   __fwd/istream.h
@@ -703,7 +702,6 @@ set(files
   __tuple/sfinae_helpers.h
   __tuple/tuple_element.h
   __tuple/tuple_indices.h
-  __tuple/tuple_like.h
   __tuple/tuple_like_ext.h
   __tuple/tuple_size.h
   __tuple/tuple_types.h
