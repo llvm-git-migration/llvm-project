@@ -1571,8 +1571,7 @@ void GCNPostScheduleDAGMILive::schedule() {
   if (HasIGLPInstrs) {
     SavedMutations.clear();
     SavedMutations.swap(Mutations);
-    addMutation(createIGroupLPDAGMutation(/*IsReentry=*/IGLPPhase::PostRA,
-                                          &SavedMutations));
+    addMutation(createIGroupLPDAGMutation(IGLPPhase::PostRA, &SavedMutations));
   }
 
   ScheduleDAGMI::schedule();
