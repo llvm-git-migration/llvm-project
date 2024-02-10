@@ -43,7 +43,7 @@ class ListeningSocket {
 public:
   ~ListeningSocket();
   ListeningSocket(ListeningSocket &&LS);
-  ListeningSocket(ListeningSocket &LS) = delete;
+  ListeningSocket(const ListeningSocket &LS) = delete;
   ListeningSocket &operator=(const ListeningSocket &) = delete;
 
   void shutdown();
