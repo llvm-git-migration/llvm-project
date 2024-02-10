@@ -2655,6 +2655,36 @@ bool isInlinableLiteral16(int16_t Literal, bool HasInv2Pi) {
          Val == 0x3118;   // 1/2pi
 }
 
+bool isInlinableLiteralFP16(int16_t Literal, bool HasInv2Pi) {
+  if (!HasInv2Pi)
+    return false;
+  uint16_t Val = static_cast<uint16_t>(Literal);
+  return Val == 0x3C00 || // 1.0
+         Val == 0xBC00 || // -1.0
+         Val == 0x3800 || // 0.5
+         Val == 0xB800 || // -0.5
+         Val == 0x4000 || // 2.0
+         Val == 0xC000 || // -2.0
+         Val == 0x4400 || // 4.0
+         Val == 0xC400 || // -4.0
+         Val == 0x3118;   // 1/2pi
+}
+
+bool isInlinableLiteralBF16(int16_t Literal, bool HasInv2Pi) {
+  if (!HasInv2Pi)
+    return false;
+  uint16_t Val = static_cast<uint16_t>(Literal);
+  return Val == 0x3F00 || // 0.5
+         Val == 0xBF00 || // -0.5
+         Val == 0x3F80 || // 1.0
+         Val == 0xBF80 || // -1.0
+         Val == 0x4000 || // 2.0
+         Val == 0xC000 || // -2.0
+         Val == 0x4080 || // 4.0
+         Val == 0xC080 || // -4.0
+         Val == 0x3E22;   // 1.0 / (2.0 * pi)
+}
+
 std::optional<unsigned> getInlineEncodingV216(bool IsFloat, uint32_t Literal) {
   // Unfortunately, the Instruction Set Architecture Reference Guide is
   // misleading about how the inline operands work for (packed) 16-bit
