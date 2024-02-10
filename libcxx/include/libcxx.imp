@@ -698,7 +698,6 @@
   { include: [ "<__tuple/sfinae_helpers.h>", "private", "<tuple>", "public" ] },
   { include: [ "<__tuple/tuple_element.h>", "private", "<tuple>", "public" ] },
   { include: [ "<__tuple/tuple_indices.h>", "private", "<tuple>", "public" ] },
-  { include: [ "<__tuple/tuple_like.h>", "private", "<tuple>", "public" ] },
   { include: [ "<__tuple/tuple_like_ext.h>", "private", "<tuple>", "public" ] },
   { include: [ "<__tuple/tuple_size.h>", "private", "<tuple>", "public" ] },
   { include: [ "<__tuple/tuple_types.h>", "private", "<tuple>", "public" ] },

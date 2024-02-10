@@ -10,7 +10,7 @@
 #define _LIBCPP___TUPLE_PAIR_LIKE_H
 
 #include <__config>
-#include <__tuple/tuple_like.h>
+#include <__fwd/tuple.h>
 #include <__tuple/tuple_size.h>
 #include <__type_traits/remove_cvref.h>
 
