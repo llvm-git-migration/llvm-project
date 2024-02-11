@@ -4,9 +4,12 @@
 define i1 @test_is_inf_or_nan(double %arg) {
 ; CHECK-LABEL: test_is_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    andpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    ucomisd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    sete %al
+; CHECK-NEXT:    movq %xmm0, %rax
+; CHECK-NEXT:    movabsq $9223372036854775807, %rcx # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq %rax, %rcx
+; CHECK-NEXT:    movabsq $9218868437227405311, %rax # imm = 0x7FEFFFFFFFFFFFFF
+; CHECK-NEXT:    cmpq %rax, %rcx
+; CHECK-NEXT:    setg %al
 ; CHECK-NEXT:    retq
   %abs = tail call double @llvm.fabs.f64(double %arg)
   %ret = fcmp ueq double %abs, 0x7FF0000000000000
@@ -16,9 +19,12 @@ define i1 @test_is_inf_or_nan(double %arg) {
 define i1 @test_is_not_inf_or_nan(double %arg) {
 ; CHECK-LABEL: test_is_not_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    andpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    ucomisd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    setne %al
+; CHECK-NEXT:    movq %xmm0, %rax
+; CHECK-NEXT:    movabsq $9223372036854775807, %rcx # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq %rax, %rcx
+; CHECK-NEXT:    movabsq $9218868437227405312, %rax # imm = 0x7FF0000000000000
+; CHECK-NEXT:    cmpq %rax, %rcx
+; CHECK-NEXT:    setl %al
 ; CHECK-NEXT:    retq
   %abs = tail call double @llvm.fabs.f64(double %arg)
   %ret = fcmp one double %abs, 0x7FF0000000000000
@@ -28,9 +34,12 @@ define i1 @test_is_not_inf_or_nan(double %arg) {
 define i1 @test_is_inf(double %arg) {
 ; CHECK-LABEL: test_is_inf:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    andpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    ucomisd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    setae %al
+; CHECK-NEXT:    movq %xmm0, %rax
+; CHECK-NEXT:    movabsq $9223372036854775807, %rcx # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq %rax, %rcx
+; CHECK-NEXT:    movabsq $9218868437227405312, %rax # imm = 0x7FF0000000000000
+; CHECK-NEXT:    cmpq %rax, %rcx
+; CHECK-NEXT:    sete %al
 ; CHECK-NEXT:    retq
   %abs = tail call double @llvm.fabs.f64(double %arg)
   %ret = fcmp oeq double %abs, 0x7FF0000000000000
@@ -40,9 +49,12 @@ define i1 @test_is_inf(double %arg) {
 define i1 @test_is_not_inf(double %arg) {
 ; CHECK-LABEL: test_is_not_inf:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    andpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    ucomisd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    setb %al
+; CHECK-NEXT:    movq %xmm0, %rax
+; CHECK-NEXT:    movabsq $9223372036854775807, %rcx # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq %rax, %rcx
+; CHECK-NEXT:    movabsq $9218868437227405312, %rax # imm = 0x7FF0000000000000
+; CHECK-NEXT:    cmpq %rax, %rcx
+; CHECK-NEXT:    setne %al
 ; CHECK-NEXT:    retq
   %abs = tail call double @llvm.fabs.f64(double %arg)
   %ret = fcmp une double %abs, 0x7FF0000000000000
@@ -52,27 +64,12 @@ define i1 @test_is_not_inf(double %arg) {
 define i1 @test_fp128_is_inf_or_nan(fp128 %arg) {
 ; CHECK-LABEL: test_fp128_is_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    pushq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    subq $16, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    .cfi_offset %rbx, -16
-; CHECK-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    movaps %xmm0, (%rsp) # 16-byte Spill
-; CHECK-NEXT:    movaps {{.*#+}} xmm1 = [+Inf]
-; CHECK-NEXT:    callq __eqtf2@PLT
-; CHECK-NEXT:    testl %eax, %eax
-; CHECK-NEXT:    sete %bl
-; CHECK-NEXT:    movaps (%rsp), %xmm0 # 16-byte Reload
-; CHECK-NEXT:    movaps {{.*#+}} xmm1 = [+Inf]
-; CHECK-NEXT:    callq __unordtf2@PLT
-; CHECK-NEXT:    testl %eax, %eax
-; CHECK-NEXT:    setne %al
-; CHECK-NEXT:    orb %bl, %al
-; CHECK-NEXT:    addq $16, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    popq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 8
+; CHECK-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
+; CHECK-NEXT:    movabsq $9223372036854775807, %rax # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq -{{[0-9]+}}(%rsp), %rax
+; CHECK-NEXT:    movabsq $9223090561878065151, %rcx # imm = 0x7FFEFFFFFFFFFFFF
+; CHECK-NEXT:    cmpq %rcx, %rax
+; CHECK-NEXT:    setg %al
 ; CHECK-NEXT:    retq
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
   %ret = fcmp ueq fp128 %abs, 0xL00000000000000007FFF000000000000
@@ -82,27 +79,12 @@ define i1 @test_fp128_is_inf_or_nan(fp128 %arg) {
 define i1 @test_fp128_is_not_inf_or_nan(fp128 %arg) {
 ; CHECK-LABEL: test_fp128_is_not_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    pushq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    subq $16, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    .cfi_offset %rbx, -16
-; CHECK-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-NEXT:    movaps %xmm0, (%rsp) # 16-byte Spill
-; CHECK-NEXT:    movaps {{.*#+}} xmm1 = [+Inf]
-; CHECK-NEXT:    callq __eqtf2@PLT
-; CHECK-NEXT:    testl %eax, %eax
-; CHECK-NEXT:    setne %bl
-; CHECK-NEXT:    movaps (%rsp), %xmm0 # 16-byte Reload
-; CHECK-NEXT:    movaps {{.*#+}} xmm1 = [+Inf]
-; CHECK-NEXT:    callq __unordtf2@PLT
-; CHECK-NEXT:    testl %eax, %eax
-; CHECK-NEXT:    sete %al
-; CHECK-NEXT:    andb %bl, %al
-; CHECK-NEXT:    addq $16, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    popq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 8
+; CHECK-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
+; CHECK-NEXT:    movabsq $9223372036854775807, %rax # imm = 0x7FFFFFFFFFFFFFFF
+; CHECK-NEXT:    andq -{{[0-9]+}}(%rsp), %rax
+; CHECK-NEXT:    movabsq $9223090561878065152, %rcx # imm = 0x7FFF000000000000
+; CHECK-NEXT:    cmpq %rcx, %rax
+; CHECK-NEXT:    setl %al
 ; CHECK-NEXT:    retq
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
   %ret = fcmp one fp128 %abs, 0xL00000000000000007FFF000000000000
@@ -148,13 +130,18 @@ define i1 @test_fp128_is_not_inf(fp128 %arg) {
 define i1 @test_x86_fp80_is_inf_or_nan(x86_fp80 %arg) {
 ; CHECK-LABEL: test_x86_fp80_is_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    fldt {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    fabs
-; CHECK-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}(%rip)
-; CHECK-NEXT:    fxch %st(1)
-; CHECK-NEXT:    fucompi %st(1), %st
-; CHECK-NEXT:    fstp %st(0)
-; CHECK-NEXT:    sete %al
+; CHECK-NEXT:    movzwl {{[0-9]+}}(%rsp), %eax
+; CHECK-NEXT:    btq $63, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    setae %cl
+; CHECK-NEXT:    andl $32767, %eax # imm = 0x7FFF
+; CHECK-NEXT:    leal -1(%rax), %edx
+; CHECK-NEXT:    movzwl %dx, %edx
+; CHECK-NEXT:    cmpl $32766, %edx # imm = 0x7FFE
+; CHECK-NEXT:    setae %dl
+; CHECK-NEXT:    orb %cl, %dl
+; CHECK-NEXT:    testq %rax, %rax
+; CHECK-NEXT:    setne %al
+; CHECK-NEXT:    andb %dl, %al
 ; CHECK-NEXT:    retq
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
   %ret = fcmp ueq x86_fp80 %abs, 0xK7FFF8000000000000000
@@ -164,13 +151,18 @@ define i1 @test_x86_fp80_is_inf_or_nan(x86_fp80 %arg) {
 define i1 @test_x86_fp80_is_not_inf_or_nan(x86_fp80 %arg) {
 ; CHECK-LABEL: test_x86_fp80_is_not_inf_or_nan:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    fldt {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    fabs
-; CHECK-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}(%rip)
-; CHECK-NEXT:    fxch %st(1)
-; CHECK-NEXT:    fucompi %st(1), %st
-; CHECK-NEXT:    fstp %st(0)
-; CHECK-NEXT:    setne %al
+; CHECK-NEXT:    movzwl {{[0-9]+}}(%rsp), %eax
+; CHECK-NEXT:    movq {{[0-9]+}}(%rsp), %rcx
+; CHECK-NEXT:    shrq $63, %rcx
+; CHECK-NEXT:    andl $32767, %eax # imm = 0x7FFF
+; CHECK-NEXT:    leal -1(%rax), %edx
+; CHECK-NEXT:    movzwl %dx, %edx
+; CHECK-NEXT:    cmpl $32766, %edx # imm = 0x7FFE
+; CHECK-NEXT:    setb %dl
+; CHECK-NEXT:    andb %cl, %dl
+; CHECK-NEXT:    testq %rax, %rax
+; CHECK-NEXT:    sete %al
+; CHECK-NEXT:    orb %dl, %al
 ; CHECK-NEXT:    retq
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
   %ret = fcmp one x86_fp80 %abs, 0xK7FFF8000000000000000
@@ -180,13 +172,13 @@ define i1 @test_x86_fp80_is_not_inf_or_nan(x86_fp80 %arg) {
 define i1 @test_x86_fp80_is_inf(x86_fp80 %arg) {
 ; CHECK-LABEL: test_x86_fp80_is_inf:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    fldt {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    fabs
-; CHECK-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}(%rip)
-; CHECK-NEXT:    fxch %st(1)
-; CHECK-NEXT:    fucompi %st(1), %st
-; CHECK-NEXT:    fstp %st(0)
-; CHECK-NEXT:    setae %al
+; CHECK-NEXT:    movl {{[0-9]+}}(%rsp), %eax
+; CHECK-NEXT:    notl %eax
+; CHECK-NEXT:    movabsq $-9223372036854775808, %rcx # imm = 0x8000000000000000
+; CHECK-NEXT:    xorq {{[0-9]+}}(%rsp), %rcx
+; CHECK-NEXT:    andl $32767, %eax # imm = 0x7FFF
+; CHECK-NEXT:    orq %rcx, %rax
+; CHECK-NEXT:    sete %al
 ; CHECK-NEXT:    retq
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
   %ret = fcmp oeq x86_fp80 %abs, 0xK7FFF8000000000000000
@@ -196,13 +188,13 @@ define i1 @test_x86_fp80_is_inf(x86_fp80 %arg) {
 define i1 @test_x86_fp80_is_not_inf(x86_fp80 %arg) {
 ; CHECK-LABEL: test_x86_fp80_is_not_inf:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    fldt {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    fabs
-; CHECK-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}(%rip)
-; CHECK-NEXT:    fxch %st(1)
-; CHECK-NEXT:    fucompi %st(1), %st
-; CHECK-NEXT:    fstp %st(0)
-; CHECK-NEXT:    setb %al
+; CHECK-NEXT:    movl {{[0-9]+}}(%rsp), %eax
+; CHECK-NEXT:    notl %eax
+; CHECK-NEXT:    movabsq $-9223372036854775808, %rcx # imm = 0x8000000000000000
+; CHECK-NEXT:    xorq {{[0-9]+}}(%rsp), %rcx
+; CHECK-NEXT:    andl $32767, %eax # imm = 0x7FFF
+; CHECK-NEXT:    orq %rcx, %rax
+; CHECK-NEXT:    setne %al
 ; CHECK-NEXT:    retq
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
   %ret = fcmp une x86_fp80 %abs, 0xK7FFF8000000000000000
