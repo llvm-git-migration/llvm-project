@@ -990,14 +990,63 @@ void ParallelOp::build(OpBuilder &builder, OperationState &state,
       builder, state, /*if_expr_var=*/nullptr, /*num_threads_var=*/nullptr,
       /*allocate_vars=*/ValueRange(), /*allocators_vars=*/ValueRange(),
       /*reduction_vars=*/ValueRange(), /*reductions=*/nullptr,
-      /*proc_bind_val=*/nullptr);
+      /*proc_bind_val=*/nullptr, /*private_vars=*/ValueRange(),
+      /*privatizers=*/nullptr);
   state.addAttributes(attributes);
+}
+
+static LogicalResult verifyPrivateVarList(ParallelOp &op) {
+  auto privateVars = op.getPrivateVars();
+  auto privatizers = op.getPrivatizersAttr();
+
+  if (privateVars.empty() && (privatizers == nullptr || privatizers.empty()))
+    return success();
+
+  auto numPrivateVars = privateVars.size();
+  auto numPrivatizers = (privatizers == nullptr) ? 0 : privatizers.size();
+
+  if (numPrivateVars != numPrivatizers)
+    return op.emitError() << "inconsistent number of private variables and "
+                             "privatizer op symbols, private vars: "
+                          << numPrivateVars
+                          << " vs. privatizer op symbols: " << numPrivatizers;
+
+  for (auto privateVarInfo : llvm::zip(privateVars, privatizers)) {
+    Type varType = std::get<0>(privateVarInfo).getType();
+    SymbolRefAttr privatizerSym =
+        std::get<1>(privateVarInfo).cast<SymbolRefAttr>();
+    PrivateClauseOp privatizerOp =
+        SymbolTable::lookupNearestSymbolFrom<PrivateClauseOp>(op,
+                                                              privatizerSym);
+
+    if (privatizerOp == nullptr)
+      return op.emitError() << "failed to lookup privatizer op with symbol: '"
+                            << privatizerSym << "'";
+
+    Type privatizerType = privatizerOp.getType();
+
+    if (varType != privatizerType)
+      return op.emitError()
+             << "type mismatch between a "
+             << (privatizerOp.getDataSharingType() ==
+                         DataSharingClauseType::Private
+                     ? "private"
+                     : "firstprivate")
+             << " variable and its privatizer op, var type: " << varType
+             << " vs. privatizer op type: " << privatizerType;
+  }
+
+  return success();
 }
 
 LogicalResult ParallelOp::verify() {
   if (getAllocateVars().size() != getAllocatorsVars().size())
     return emitError(
         "expected equal sizes for allocate and allocator variables");
+
+  if (failed(verifyPrivateVarList(*this)))
+    return failure();
+
   return verifyReductionVarList(*this, getReductions(), getReductionVars());
 }
 
@@ -1668,6 +1717,68 @@ LogicalResult PrivateClauseOp::verify() {
     return failure();
 
   return success();
+}
+
+static ParseResult parsePrivateVarList(
+    OpAsmParser &parser,
+    llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> &privateVarsOperands,
+    llvm::SmallVector<Type, 1> &privateVarsTypes, ArrayAttr &privatizersAttr) {
+  SymbolRefAttr privatizerSym;
+  OpAsmParser::UnresolvedOperand privateArg;
+  OpAsmParser::UnresolvedOperand regionArg;
+  Type argType;
+
+  SmallVector<SymbolRefAttr> privatizersVec;
+
+  auto parsePrivatizers = [&]() -> ParseResult {
+    // @privatizer %var -> %region_arg : type
+    if (parser.parseAttribute(privatizerSym) ||
+        parser.parseOperand(privateArg) || parser.parseArrow() ||
+        parser.parseOperand(regionArg) || parser.parseColon() ||
+        parser.parseType(argType)) {
+      return failure();
+    }
+
+    privatizersVec.push_back(privatizerSym);
+    privateVarsOperands.push_back(privateArg);
+    privateVarsTypes.push_back(argType);
+
+    return success();
+  };
+
+  if (parser.parseCommaSeparatedList(parsePrivatizers))
+    return failure();
+
+  SmallVector<Attribute> privatizers(privatizersVec.begin(),
+                                     privatizersVec.end());
+  privatizersAttr = ArrayAttr::get(parser.getContext(), privatizers);
+
+  return success();
+}
+
+static void printPrivateVarList(OpAsmPrinter &printer, Operation *op,
+                                OperandRange privateVars,
+                                TypeRange privateVarTypes,
+                                std::optional<ArrayAttr> privatizersAttr) {
+  unsigned argIndex = 0;
+  assert(privatizersAttr);
+
+  for (const auto &priateVarArgInfo :
+       llvm::zip(*privatizersAttr, privateVars, op->getRegion(0).getArguments(),
+                 privateVarTypes)) {
+    assert(privatizersAttr);
+    printer << std::get<0>(priateVarArgInfo) << " "
+            << std::get<1>(priateVarArgInfo) << " -> ";
+
+    std::get<2>(priateVarArgInfo)
+        .printAsOperand(printer.getStream(), OpPrintingFlags());
+
+    printer << " : " << std::get<3>(priateVarArgInfo);
+
+    ++argIndex;
+    if (argIndex < privateVars.size())
+      printer << ", ";
+  }
 }
 
 #define GET_ATTRDEF_CLASSES
