@@ -15,6 +15,7 @@
 #include <__atomic/memory_order.h>
 #include <__chrono/duration.h>
 #include <__config>
+#include <__memory/addressof.h>
 #include <__thread/support.h>
 #include <cstdint>
 
@@ -47,13 +48,33 @@ struct atomic_flag {
     __cxx_atomic_store(&__a_, _LIBCPP_ATOMIC_FLAG_TYPE(false), __m);
   }
 
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE
+  __tag_invoke(__atomic_load_cpo, const atomic_flag& __this, memory_order __order) {
+    return std::__cxx_atomic_load(&__this.__a_, __order);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE
+  __tag_invoke(__atomic_load_cpo, const volatile atomic_flag& __this, memory_order __order) {
+    return std::__cxx_atomic_load(&__this.__a_, __order);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE> const*
+  __tag_invoke(__atomic_contention_address_cpo, const atomic_flag& __this) {
+    return std::addressof(__this.__a_);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE> const volatile*
+  __tag_invoke(__atomic_contention_address_cpo, const volatile atomic_flag& __this) {
+    return std::addressof(__this.__a_);
+  }
+
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void wait(bool __v, memory_order __m = memory_order_seq_cst) const
       volatile _NOEXCEPT {
-    __cxx_atomic_wait(&__a_, _LIBCPP_ATOMIC_FLAG_TYPE(__v), __m);
+    std::__atomic_wait(*this, _LIBCPP_ATOMIC_FLAG_TYPE(__v), __m);
   }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void
   wait(bool __v, memory_order __m = memory_order_seq_cst) const _NOEXCEPT {
-    __cxx_atomic_wait(&__a_, _LIBCPP_ATOMIC_FLAG_TYPE(__v), __m);
+    std::__atomic_wait(*this, _LIBCPP_ATOMIC_FLAG_TYPE(__v), __m);
   }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_one() volatile _NOEXCEPT {
     __cxx_atomic_notify_one(&__a_);

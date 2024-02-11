@@ -100,17 +100,8 @@ public:
     }
   }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void acquire() {
-    auto const __poll_fn = [this]() -> bool {
-      auto __old = __a_.load(memory_order_relaxed);
-      return (__old != 0) && __a_.compare_exchange_strong(__old, __old - 1, memory_order_acquire, memory_order_relaxed);
-    };
-    auto const __backoff_test = [this](__cxx_contention_t& __monitor) -> bool {
-      ptrdiff_t __old = __monitor;
-      bool __r        = __try_acquire_impl(__old);
-      __monitor       = static_cast<__cxx_contention_t>(__old);
-      return __r;
-    };
-    __cxx_atomic_wait(&__a_.__a_, __poll_fn, __backoff_test);
+    std::__atomic_wait_unless(
+        __a_, [this](ptrdiff_t& __old) { return __try_acquire_impl(__old); }, memory_order_relaxed);
   }
   template <class _Rep, class _Period>
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI bool

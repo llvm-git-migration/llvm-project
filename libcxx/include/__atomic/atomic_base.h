@@ -102,26 +102,42 @@ struct __atomic_base // false
     return std::__cxx_atomic_compare_exchange_strong(std::addressof(__a_), std::addressof(__e), __d, __m, __m);
   }
 
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _Tp
+  __tag_invoke(__atomic_load_cpo, const __atomic_base& __this, memory_order __order) {
+    return __this.load(__order);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _Tp
+  __tag_invoke(__atomic_load_cpo, const volatile __atomic_base& __this, memory_order __order) {
+    return __this.load(__order);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_Tp> const*
+  __tag_invoke(__atomic_contention_address_cpo, const __atomic_base& __this) {
+    return std::addressof(__this.__a_);
+  }
+
+  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_Tp> const volatile*
+  __tag_invoke(__atomic_contention_address_cpo, const volatile __atomic_base& __this) {
+    return std::addressof(__this.__a_);
+  }
+
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void wait(_Tp __v, memory_order __m = memory_order_seq_cst) const
       volatile _NOEXCEPT {
-    std::__cxx_atomic_wait(std::addressof(__a_), __v, __m);
+    std::__atomic_wait(*this, __v, __m);
   }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void
   wait(_Tp __v, memory_order __m = memory_order_seq_cst) const _NOEXCEPT {
-    std::__cxx_atomic_wait(std::addressof(__a_), __v, __m);
+    std::__atomic_wait(*this, __v, __m);
   }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_one() volatile _NOEXCEPT {
-    std::__cxx_atomic_notify_one(std::addressof(__a_));
+    std::__atomic_notify_one(*this);
   }
-  _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_one() _NOEXCEPT {
-    std::__cxx_atomic_notify_one(std::addressof(__a_));
-  }
+  _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_one() _NOEXCEPT { std::__atomic_notify_one(*this); }
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_all() volatile _NOEXCEPT {
-    std::__cxx_atomic_notify_all(std::addressof(__a_));
+    std::__atomic_notify_all(*this);
   }
-  _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_all() _NOEXCEPT {
-    std::__cxx_atomic_notify_all(std::addressof(__a_));
-  }
+  _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void notify_all() _NOEXCEPT { std::__atomic_notify_all(*this); }
 
 #if _LIBCPP_STD_VER >= 20
   _LIBCPP_HIDE_FROM_ABI constexpr __atomic_base() noexcept(is_nothrow_default_constructible_v<_Tp>) : __a_(_Tp()) {}
