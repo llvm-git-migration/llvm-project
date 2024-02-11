@@ -429,68 +429,98 @@ static void printScheduleClause(OpAsmPrinter &p, Operation *op,
 // Parser, printer and verifier for ReductionVarList
 //===----------------------------------------------------------------------===//
 
-ParseResult
-parseReductionClause(OpAsmParser &parser, Region &region,
-                     SmallVectorImpl<OpAsmParser::UnresolvedOperand> &operands,
-                     SmallVectorImpl<Type> &types, ArrayAttr &reductionSymbols,
-                     SmallVectorImpl<OpAsmParser::Argument> &privates) {
-  if (failed(parser.parseOptionalKeyword("reduction")))
-    return failure();
-
+ParseResult parseClauseWithRegionArgs(
+    OpAsmParser &parser, Region &region,
+    SmallVectorImpl<OpAsmParser::UnresolvedOperand> &operands,
+    SmallVectorImpl<Type> &types, ArrayAttr &symbols,
+    SmallVectorImpl<OpAsmParser::Argument> &regionPrivateArgs) {
   SmallVector<SymbolRefAttr> reductionVec;
+  unsigned regionArgOffset = regionPrivateArgs.size();
 
   if (failed(
           parser.parseCommaSeparatedList(OpAsmParser::Delimiter::Paren, [&]() {
             if (parser.parseAttribute(reductionVec.emplace_back()) ||
                 parser.parseOperand(operands.emplace_back()) ||
                 parser.parseArrow() ||
-                parser.parseArgument(privates.emplace_back()) ||
+                parser.parseArgument(regionPrivateArgs.emplace_back()) ||
                 parser.parseColonType(types.emplace_back()))
               return failure();
             return success();
           })))
     return failure();
 
-  for (auto [prv, type] : llvm::zip_equal(privates, types)) {
+  auto *argsBegin = regionPrivateArgs.begin();
+  MutableArrayRef argsSubrange(argsBegin + regionArgOffset,
+                               argsBegin + regionArgOffset + types.size());
+  for (auto [prv, type] : llvm::zip_equal(argsSubrange, types)) {
     prv.type = type;
   }
   SmallVector<Attribute> reductions(reductionVec.begin(), reductionVec.end());
-  reductionSymbols = ArrayAttr::get(parser.getContext(), reductions);
+  symbols = ArrayAttr::get(parser.getContext(), reductions);
   return success();
 }
 
-static void printReductionClause(OpAsmPrinter &p, Operation *op, Region &region,
-                                 ValueRange operands, TypeRange types,
-                                 ArrayAttr reductionSymbols) {
-  p << "reduction(";
-  llvm::interleaveComma(llvm::zip_equal(reductionSymbols, operands,
-                                        region.front().getArguments(), types),
-                        p, [&p](auto t) {
-                          auto [sym, op, arg, type] = t;
-                          p << sym << " " << op << " -> " << arg << " : "
-                            << type;
-                        });
+static void printClauseWithRegionArgs(OpAsmPrinter &p, Operation *op,
+                                      Region &region, StringRef clauseName,
+                                      ValueRange operands, TypeRange types,
+                                      ArrayAttr symbols,
+                                      unsigned regionArgOffset) {
+  p << clauseName << "(";
+
+  auto *argsBegin = region.front().getArguments().begin();
+  MutableArrayRef argsSubrange(argsBegin + regionArgOffset,
+                               argsBegin + regionArgOffset + types.size());
+  llvm::interleaveComma(
+      llvm::zip_equal(symbols, operands, argsSubrange, types), p, [&p](auto t) {
+        auto [sym, op, arg, type] = t;
+        p << sym << " " << op << " -> " << arg << " : " << type;
+      });
   p << ") ";
 }
 
-static ParseResult
-parseParallelRegion(OpAsmParser &parser, Region &region,
-                    SmallVectorImpl<OpAsmParser::UnresolvedOperand> &operands,
-                    SmallVectorImpl<Type> &types, ArrayAttr &reductionSymbols) {
+static ParseResult parseParallelRegion(
+    OpAsmParser &parser, Region &region,
+    SmallVectorImpl<OpAsmParser::UnresolvedOperand> &reductionVarOperands,
+    SmallVectorImpl<Type> &reductionVarTypes, ArrayAttr &reductionSymbols,
+    llvm::SmallVectorImpl<OpAsmParser::UnresolvedOperand> &privateVarOperands,
+    llvm::SmallVectorImpl<Type> &privateVarsTypes,
+    ArrayAttr &privatizerSymbols) {
+  llvm::SmallVector<OpAsmParser::Argument> regionPrivateArgs;
 
-  llvm::SmallVector<OpAsmParser::Argument> privates;
-  if (succeeded(parseReductionClause(parser, region, operands, types,
-                                     reductionSymbols, privates)))
-    return parser.parseRegion(region, privates);
+  if (succeeded(parser.parseOptionalKeyword("reduction"))) {
+    if (failed(parseClauseWithRegionArgs(parser, region, reductionVarOperands,
+                                         reductionVarTypes, reductionSymbols,
+                                         regionPrivateArgs)))
+      return failure();
+  }
 
-  return parser.parseRegion(region);
+  if (succeeded(parser.parseOptionalKeyword("private"))) {
+    if (failed(parseClauseWithRegionArgs(parser, region, privateVarOperands,
+                                         privateVarsTypes, privatizerSymbols,
+                                         regionPrivateArgs)))
+      return failure();
+  }
+
+  return parser.parseRegion(region, regionPrivateArgs);
 }
 
 static void printParallelRegion(OpAsmPrinter &p, Operation *op, Region &region,
-                                ValueRange operands, TypeRange types,
-                                ArrayAttr reductionSymbols) {
+                                ValueRange reductionVarOperands,
+                                TypeRange reductionVarTypes,
+                                ArrayAttr reductionSymbols,
+                                ValueRange privateVarOperands,
+                                TypeRange privateVarTypes,
+                                ArrayAttr privatizerSymbols) {
   if (reductionSymbols)
-    printReductionClause(p, op, region, operands, types, reductionSymbols);
+    printClauseWithRegionArgs(p, op, region, "reduction", reductionVarOperands,
+                              reductionVarTypes, reductionSymbols,
+                              /*regionArgOffset=*/0);
+
+  if (privatizerSymbols)
+    printClauseWithRegionArgs(p, op, region, "private", privateVarOperands,
+                              privateVarTypes, privatizerSymbols,
+                              reductionVarOperands.size());
+
   p.printRegion(region, /*printEntryBlockArgs=*/false);
 }
 
@@ -1057,14 +1087,63 @@ void ParallelOp::build(OpBuilder &builder, OperationState &state,
       builder, state, /*if_expr_var=*/nullptr, /*num_threads_var=*/nullptr,
       /*allocate_vars=*/ValueRange(), /*allocators_vars=*/ValueRange(),
       /*reduction_vars=*/ValueRange(), /*reductions=*/nullptr,
-      /*proc_bind_val=*/nullptr);
+      /*proc_bind_val=*/nullptr, /*private_vars=*/ValueRange(),
+      /*privatizers=*/nullptr);
   state.addAttributes(attributes);
+}
+
+static LogicalResult verifyPrivateVarList(ParallelOp &op) {
+  auto privateVars = op.getPrivateVars();
+  auto privatizers = op.getPrivatizersAttr();
+
+  if (privateVars.empty() && (privatizers == nullptr || privatizers.empty()))
+    return success();
+
+  auto numPrivateVars = privateVars.size();
+  auto numPrivatizers = (privatizers == nullptr) ? 0 : privatizers.size();
+
+  if (numPrivateVars != numPrivatizers)
+    return op.emitError() << "inconsistent number of private variables and "
+                             "privatizer op symbols, private vars: "
+                          << numPrivateVars
+                          << " vs. privatizer op symbols: " << numPrivatizers;
+
+  for (auto privateVarInfo : llvm::zip(privateVars, privatizers)) {
+    Type varType = std::get<0>(privateVarInfo).getType();
+    SymbolRefAttr privatizerSym =
+        std::get<1>(privateVarInfo).cast<SymbolRefAttr>();
+    PrivateClauseOp privatizerOp =
+        SymbolTable::lookupNearestSymbolFrom<PrivateClauseOp>(op,
+                                                              privatizerSym);
+
+    if (privatizerOp == nullptr)
+      return op.emitError() << "failed to lookup privatizer op with symbol: '"
+                            << privatizerSym << "'";
+
+    Type privatizerType = privatizerOp.getType();
+
+    if (varType != privatizerType)
+      return op.emitError()
+             << "type mismatch between a "
+             << (privatizerOp.getDataSharingType() ==
+                         DataSharingClauseType::Private
+                     ? "private"
+                     : "firstprivate")
+             << " variable and its privatizer op, var type: " << varType
+             << " vs. privatizer op type: " << privatizerType;
+  }
+
+  return success();
 }
 
 LogicalResult ParallelOp::verify() {
   if (getAllocateVars().size() != getAllocatorsVars().size())
     return emitError(
         "expected equal sizes for allocate and allocator variables");
+
+  if (failed(verifyPrivateVarList(*this)))
+    return failure();
+
   return verifyReductionVarList(*this, getReductions(), getReductionVars());
 }
 
