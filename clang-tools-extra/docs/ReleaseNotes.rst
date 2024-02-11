@@ -174,6 +174,10 @@ Changes in existing checks
   <clang-tidy/checks/modernize/use-override>` check to also remove any trailing
   whitespace when deleting the ``virtual`` keyword.
 
+- Improved :doc:`readability-avoid-return-with-void-value
+  <clang-tidy/checks/readability/avoid-return-with-void-value>` check by adding
+  fix-its.
+
 - Improved :doc:`readability-redundant-inline-specifier
   <clang-tidy/checks/readability/redundant-inline-specifier>` check to properly
   emit warnings for static data member with an in-class initializer.
