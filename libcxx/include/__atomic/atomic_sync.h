@@ -38,13 +38,14 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // Note that std::atomic<T>::wait was back-ported to C++03
 // there the below implementations look ugly to support C++03
 
+// NOLINTBEGIN(libcpp-robust-against-adl)
 struct __atomic_load_cpo {
   template <class _Tp>
   using _Ret = decltype(__tag_invoke(
       std::declval<__atomic_load_cpo>(), std::declval<const _Tp&>(), std::declval<memory_order>()));
 
   template <class _Tp>
-  _Ret<_Tp> operator()(const _Tp& __t, memory_order __order) const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _Ret<_Tp> operator()(const _Tp& __t, memory_order __order) const _NOEXCEPT {
     return __tag_invoke(*this, __t, __order);
   }
 };
@@ -56,12 +57,14 @@ struct __atomic_contention_address_cpo {
   using _Ret = decltype(__tag_invoke(std::declval<__atomic_contention_address_cpo>(), std::declval<const _Tp&>()));
 
   template <class _Tp>
-  _Ret<_Tp> operator()(const _Tp& __t) const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _Ret<_Tp> operator()(const _Tp& __t) const _NOEXCEPT {
     return __tag_invoke(*this, __t);
   }
 };
 // TODO: if we can deprecate std::atomic<T>::wait before c++17, we could add
 // inline constexpr __atomic_contention_address_cpo __atomic_contention_address{};
+
+// NOLINTEND(libcpp-robust-against-adl)
 
 template <class _Tp>
 using __atomic_waitable =
