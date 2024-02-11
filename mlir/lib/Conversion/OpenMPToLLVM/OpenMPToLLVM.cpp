@@ -200,16 +200,20 @@ struct ReductionOpConversion : public ConvertOpToLLVMPattern<omp::ReductionOp> {
   }
 };
 
-struct ReductionDeclareOpConversion
-    : public ConvertOpToLLVMPattern<omp::ReductionDeclareOp> {
-  using ConvertOpToLLVMPattern<omp::ReductionDeclareOp>::ConvertOpToLLVMPattern;
+template <typename OpType>
+struct MultiRegionOpConversion : public ConvertOpToLLVMPattern<OpType> {
+  using ConvertOpToLLVMPattern<OpType>::ConvertOpToLLVMPattern;
   LogicalResult
-  matchAndRewrite(omp::ReductionDeclareOp curOp, OpAdaptor adaptor,
+  matchAndRewrite(OpType curOp, typename OpType::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    auto newOp = rewriter.create<omp::ReductionDeclareOp>(
+    auto newOp = rewriter.create<OpType>(
         curOp.getLoc(), TypeRange(), curOp.getSymNameAttr(),
         TypeAttr::get(this->getTypeConverter()->convertType(
             curOp.getTypeAttr().getValue())));
+
+    if constexpr (std::is_same_v<OpType, mlir::omp::PrivateClauseOp>)
+      newOp.setDataSharingType(curOp.getDataSharingType());
+
     for (unsigned idx = 0; idx < curOp.getNumRegions(); idx++) {
       rewriter.inlineRegionBefore(curOp.getRegion(idx), newOp.getRegion(idx),
                                   newOp.getRegion(idx).end());
@@ -231,11 +235,12 @@ void mlir::configureOpenMPToLLVMConversionLegality(
       mlir::omp::DataOp, mlir::omp::OrderedRegionOp, mlir::omp::ParallelOp,
       mlir::omp::WsLoopOp, mlir::omp::SimdLoopOp, mlir::omp::MasterOp,
       mlir::omp::SectionOp, mlir::omp::SectionsOp, mlir::omp::SingleOp,
-      mlir::omp::TaskGroupOp, mlir::omp::TaskOp>([&](Operation *op) {
-    return typeConverter.isLegal(&op->getRegion(0)) &&
-           typeConverter.isLegal(op->getOperandTypes()) &&
-           typeConverter.isLegal(op->getResultTypes());
-  });
+      mlir::omp::TaskGroupOp, mlir::omp::TaskOp, mlir::omp::PrivateClauseOp>(
+      [&](Operation *op) {
+        return typeConverter.isLegal(&op->getRegion(0)) &&
+               typeConverter.isLegal(op->getOperandTypes()) &&
+               typeConverter.isLegal(op->getResultTypes());
+      });
   target.addDynamicallyLegalOp<
       mlir::omp::AtomicReadOp, mlir::omp::AtomicWriteOp, mlir::omp::FlushOp,
       mlir::omp::ThreadprivateOp, mlir::omp::YieldOp, mlir::omp::EnterDataOp,
@@ -267,9 +272,10 @@ void mlir::populateOpenMPToLLVMConversionPatterns(LLVMTypeConverter &converter,
 
   patterns.add<
       AtomicReadOpConversion, MapInfoOpConversion, ReductionOpConversion,
-      ReductionDeclareOpConversion, RegionOpConversion<omp::CriticalOp>,
-      RegionOpConversion<omp::MasterOp>, ReductionOpConversion,
-      RegionOpConversion<omp::OrderedRegionOp>,
+      MultiRegionOpConversion<omp::ReductionDeclareOp>,
+      MultiRegionOpConversion<omp::PrivateClauseOp>,
+      RegionOpConversion<omp::CriticalOp>, RegionOpConversion<omp::MasterOp>,
+      ReductionOpConversion, RegionOpConversion<omp::OrderedRegionOp>,
       RegionOpConversion<omp::ParallelOp>, RegionOpConversion<omp::WsLoopOp>,
       RegionOpConversion<omp::SectionsOp>, RegionOpConversion<omp::SectionOp>,
       RegionOpConversion<omp::SimdLoopOp>, RegionOpConversion<omp::SingleOp>,
