@@ -1595,7 +1595,7 @@ LogicalResult DataBoundsOp::verify() {
 }
 
 LogicalResult PrivateClauseOp::verify() {
-  Type symType = getSymType();
+  Type symType = getType();
 
   auto verifyTerminator = [&](Operation *terminator) -> LogicalResult {
     if (!terminator->hasSuccessors() && !llvm::isa<YieldOp>(terminator))

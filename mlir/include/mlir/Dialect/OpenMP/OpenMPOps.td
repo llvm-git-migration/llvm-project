@@ -153,31 +153,28 @@ def DataSharingClauseTypeAttr : EnumAttr<
   let assemblyFormat = "`{` `type` `=` $value `}`";
 }
 
-def PrivateClauseOp : OpenMP_Op<"private", [
-    IsolatedFromAbove
-  ]> {
-  let summary = "Outline [first]private logic in a separate op.";
+def PrivateClauseOp : OpenMP_Op<"private", [IsolatedFromAbove]> {
+  let summary = "Provides declaration of [first]private logic.";
   let description = [{
-    Using this operation, the dialect can model the data-sharing attributes of
-    `private` and `firstprivate` variables on the IR level. This means that of
-    "eagerly" privatizing variables in the frontend, we can instead model which
-    variables should be privatized and only materialze the privatization when
-    necessary; e.g. directly before lowering to LLVM IR.
+    This operation provides a declaration of how to implement the
+    [first]privatization of a variable. The dialect users should provide
+    information about how to create an instance of the type in the alloc region
+    and how to initialize the copy from the original item in the copy region.
 
     Examples:
     ---------
     * `private(x)` would be emitted as:
     ```mlir
-    omp.private {type = private} @x.privatizer : !fir.ref<i32> (alloc {
+    omp.private {type = private} @x.privatizer : !fir.ref<i32> alloc {
     ^bb0(%arg0: !fir.ref<i32>):
     %0 = ... allocate proper memory for the private clone ...
     omp.yield(%0 : !fir.ref<i32>)
-    })
+    }
     ```
 
     * `firstprivate(x)` would be emitted as:
     ```mlir
-    omp.private {type = firstprivate} @y.privatizer : !fir.ref<i32> (alloc {
+    omp.private {type = firstprivate} @y.privatizer : !fir.ref<i32> alloc {
     ^bb0(%arg0: !fir.ref<i32>):
     %0 = ... allocate proper memory for the private clone ...
     omp.yield(%0 : !fir.ref<i32>)
@@ -187,35 +184,40 @@ def PrivateClauseOp : OpenMP_Op<"private", [
     // %arg1 represents the memory allocated in `alloc`.
     ... copy from host to the privatized clone ....
     omp.yield(%arg1 : !fir.ref<i32>)
-    })
+    }
     ```
 
-    However, the body of the `omp.private` op really depends on the code-gen
-    done by the emitting frontend. There are no restrictions on the body except
-    for:
+    There are no restrictions on the body except for:
     - The `alloc` region has a single argument.
     - The `copy` region has 2 arguments.
-    - Both regions are existed by `omp.yield` ops.
+    - Both regions are terminated by `omp.yield` ops.
     The above restrictions and other obvious restrictions (e.g. verifying the
     type of yielded values) are verified by the custom op verifier. The actual
     contents of the blocks inside both regions are not verified.
 
     Instances of this op would then be used by ops that model directives that
     accept data-sharing attribute clauses.
+
+    The $sym_name attribute provides a symbol by which the privatizer op can be
+    referenced by other dialect ops.
+
+    The $type attribute is the type of the value being privatized.
+
+    The $data_sharing_type attribute specifies whether privatizer corresponds
+    to a `private` or a `firstprivate` clause.
   }];
 
   let arguments = (ins SymbolNameAttr:$sym_name,
-                       TypeAttrOf<AnyType>:$sym_type,
+                       TypeAttrOf<AnyType>:$type,
                        DataSharingClauseTypeAttr:$data_sharing_type);
 
   let regions = (region MinSizedRegion<1>:$alloc_region,
                         AnyRegion:$copy_region);
 
   let assemblyFormat = [{
-    $data_sharing_type $sym_name `:` $sym_type `(`
+    $data_sharing_type $sym_name `:` $type
       `alloc` $alloc_region
       (`copy` $copy_region^)?
-      `)`
       attr-dict
   }];
 
