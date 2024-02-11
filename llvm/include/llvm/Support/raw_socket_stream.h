@@ -63,6 +63,7 @@ class raw_socket_stream : public raw_fd_stream {
 #endif // _WIN32
 
 public:
+  // TODO: Should probably be private
   raw_socket_stream(int SocketFD);
   /// Create a \p raw_socket_stream connected to the Unix domain socket at \p
   /// SocketPath.

@@ -59,6 +59,22 @@ static std::error_code getLastSocketErrorCode() {
 #endif
 }
 
+static void closeFD(int FD) {
+#ifdef _WIN32
+  _close(FD)
+#else
+  ::close(FD);
+#endif
+}
+
+static void unlinkFile(StringRef Path) {
+#ifdef _WIN32
+  _unlink(Path.str().c_str());
+#else
+  ::unlink(Path.str().c_str());
+#endif
+}
+
 static Expected<int> getSocketFD(StringRef SocketPath) {
 #ifdef _WIN32
   SOCKET MaybeWinsocket = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -101,16 +117,27 @@ ListeningSocket::ListeningSocket(ListeningSocket &&LS)
 Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
                                                       int MaxBacklog) {
 
-  // Identify instances where the target socket address already exist but hasn't
-  // been binded to by another program. If there is already a file (of any type)
-  // at the specified path, ::bind() will fail with an error
+  // Handle instances where the target socket address already exists
+  // ::bind will return std::errc:address_in_use if the socket address already
+  // exists (e.g., file was not properly unlinked due to a crash) even if
+  // another socket has not yet binded to that address
   if (llvm::sys::fs::exists(SocketPath)) {
     Expected<int> MaybeFD = getSocketFD(SocketPath);
     if (!MaybeFD) {
+      
+      // Regardless of error returned by getSocketFD notify caller that a file
+      // already exists at the desired socket address
+      consumeError(MaybeFD.takeError());
       return llvm::make_error<StringError>(
           std::make_error_code(std::errc::file_exists),
-          "Cannot create and bind to socket file");
+          "Socket address unavailable");
     }
+    closeFD(std::move(*MaybeFD));
+
+    // Notify caller that the provided socket address already has a bound socket
+    return llvm::make_error<StringError>(
+        std::make_error_code(std::errc::address_in_use),
+        "Socket address unavailable");
   }
 
 #ifdef _WIN32
@@ -195,9 +222,8 @@ ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
 void ListeningSocket::shutdown() {
   if (FD == -1)
     return;
-  ::close(FD);
-  ::unlink(SocketPath.c_str());
-
+  closeFD(FD);
+  unlinkFile(SocketPath);
   FD = -1;
 }
 
