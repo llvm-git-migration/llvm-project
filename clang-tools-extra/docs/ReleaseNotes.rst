@@ -160,6 +160,10 @@ Changes in existing checks
   `AllowStringArrays` option, enabling the exclusion of array types with deduced
   length initialized from string literals.
 
+- Improved :doc:`readability-avoid-return-with-void-value
+  <clang-tidy/checks/readability/avoid-return-with-void-value>` check by adding
+  fix-its.
+
 Removed checks
 ^^^^^^^^^^^^^^
 

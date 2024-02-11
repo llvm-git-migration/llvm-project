@@ -10,6 +10,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Lex/Lexer.h"
 
 using namespace clang::ast_matchers;
 
@@ -42,10 +43,28 @@ void AvoidReturnWithVoidValueCheck::check(
   const auto *VoidReturn = Result.Nodes.getNodeAs<ReturnStmt>("void_return");
   if (IgnoreMacros && VoidReturn->getBeginLoc().isMacroID())
     return;
-  if (!StrictMode && !Result.Nodes.getNodeAs<CompoundStmt>("compound_parent"))
+  const auto *SurroundingBlock =
+      Result.Nodes.getNodeAs<CompoundStmt>("compound_parent");
+  if (!StrictMode && !SurroundingBlock)
     return;
+  const auto ReturnExpr =
+      Lexer::getSourceText(CharSourceRange::getTokenRange(
+                               VoidReturn->getRetValue()->getSourceRange()),
+                           *Result.SourceManager, getLangOpts());
+  SourceLocation SemicolonPos;
+  if (const auto NextToken =
+          Lexer::findNextToken(VoidReturn->getRetValue()->getEndLoc(),
+                               *Result.SourceManager, getLangOpts()))
+    SemicolonPos = NextToken->getEndLoc();
+  auto Replacement = (ReturnExpr + "; return;").str();
+  if (!SurroundingBlock)
+    Replacement = "{" + Replacement + "}";
   diag(VoidReturn->getBeginLoc(), "return statement within a void function "
-                                  "should not have a specified return value");
+                                  "should not have a specified return value")
+      << FixItHint::CreateReplacement(
+             CharSourceRange::getTokenRange(VoidReturn->getBeginLoc(),
+                                            SemicolonPos),
+             Replacement);
 }
 
 void AvoidReturnWithVoidValueCheck::storeOptions(
