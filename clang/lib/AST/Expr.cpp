@@ -263,6 +263,14 @@ namespace {
   }
 }
 
+QualType Expr::getEnumCoercedType(const ASTContext &Ctx) const {
+  bool NotEnumType = dyn_cast<EnumType>(this->getType()) == nullptr;
+  if (NotEnumType)
+    if (const EnumConstantDecl *ECD = this->getEnumConstantDecl())
+      return Ctx.getTypeDeclType(cast<EnumDecl>(ECD->getDeclContext()));
+  return this->getType();
+}
+
 SourceLocation Expr::getExprLoc() const {
   switch (getStmtClass()) {
   case Stmt::NoStmtClass: llvm_unreachable("statement without class");
@@ -4094,6 +4102,14 @@ FieldDecl *Expr::getSourceBitField() {
     if (UnOp->isPrefix() && UnOp->isIncrementDecrementOp())
       return UnOp->getSubExpr()->getSourceBitField();
 
+  return nullptr;
+}
+
+EnumConstantDecl *Expr::getEnumConstantDecl() {
+  Expr *E = this->IgnoreParenImpCasts();
+  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(E))
+    if (EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(DRE->getDecl()))
+      return ECD;
   return nullptr;
 }
 
