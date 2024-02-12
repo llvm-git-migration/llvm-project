@@ -173,7 +173,7 @@ template <class _AtomicWaitable, class _Poll>
 _LIBCPP_HIDE_FROM_ABI void __atomic_wait_unless(const _AtomicWaitable& __a, _Poll&& __poll, memory_order __order) {
   static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
   __atomic_wait_poll_impl<_AtomicWaitable, __decay_t<_Poll> > __poll_fn = {__a, __poll, __order};
-  return std::__libcpp_thread_poll_with_backoff(__poll_fn, __spinning_backoff_policy());
+  std::__libcpp_thread_poll_with_backoff(__poll_fn, __spinning_backoff_policy());
 }
 
 template <class _AtomicWaitable>
