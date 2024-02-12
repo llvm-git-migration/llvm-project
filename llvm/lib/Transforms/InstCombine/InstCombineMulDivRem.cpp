@@ -223,8 +223,8 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
     Value *NewOp;
     Constant *C1, *C2;
     const APInt *IVal;
-    if (match(&I, m_Mul(m_Shl(m_Value(NewOp),
-                        m_Constant(C2)), m_Constant(C1))) &&
+    if (match(&I, m_Mul(m_Shl(m_Value(NewOp), m_Constant(C2)),
+                        m_Constant(C1))) &&
         match(C1, m_APInt(IVal))) {
       // ((X << C2)*C1) == (X * (C1 << C2))
       Constant *Shl = ConstantExpr::getShl(C1, C2);
@@ -1815,15 +1815,17 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
       bool ArgsMatch = match(Op0AsCallBase->getArgOperand(0), m_Value(Y)) &&
                        match(Op1AsCallBase->getArgOperand(0), m_Specific(Y));
 
-      bool IsTanH = ArgsMatch &&
-                    ((Op0LibFunc == LibFunc_sinh && Op1LibFunc == LibFunc_cosh) ||
-                    (Op0LibFunc == LibFunc_sinhf && Op1LibFunc == LibFunc_coshf) ||
-                    (Op0LibFunc == LibFunc_sinhl && Op1LibFunc == LibFunc_coshl));
+      bool IsTanH = 
+        ArgsMatch &&
+        ((Op0LibFunc == LibFunc_sinh && Op1LibFunc == LibFunc_cosh) ||
+         (Op0LibFunc == LibFunc_sinhf && Op1LibFunc == LibFunc_coshf) |
+         (Op0LibFunc == LibFunc_sinhl && Op1LibFunc == LibFunc_coshl));
 
-      bool IsCotH = !IsTanH && ArgsMatch &&
-                    ((Op1LibFunc == LibFunc_sinh && Op0LibFunc == LibFunc_cosh) ||
-                    (Op1LibFunc == LibFunc_sinhf && Op0LibFunc == LibFunc_coshf) ||
-                    (Op1LibFunc == LibFunc_sinhl && Op0LibFunc == LibFunc_coshl)); 
+      bool IsCotH = 
+        !IsTanH && ArgsMatch &&
+        ((Op1LibFunc == LibFunc_sinh && Op0LibFunc == LibFunc_cosh) |
+         (Op1LibFunc == LibFunc_sinhf && Op0LibFunc == LibFunc_coshf) ||
+         (Op1LibFunc == LibFunc_sinhl && Op0LibFunc == LibFunc_coshl)); 
 
       if ((IsTanH || IsCotH) && hasFloatFn(M, &TLI, I.getType(), LibFunc_tanh,
                                            LibFunc_tanhf, LibFunc_tanhl)) {
@@ -1831,7 +1833,7 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
         Value *Res =
             GetReplacement(Y, IsCotH, LibFunc_tanh, LibFunc_tanf, LibFunc_tanl);
 
-        Instruction *Replacement = replaceInstUsesWith(I,Res);
+        Instruction *Replacement = replaceInstUsesWith(I, Res);
 
         // Call instructions of sinh and cosh need to be erased seperatly
         if (!Op0AsCallBase->use_empty())
@@ -1875,7 +1877,7 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
     return Mul;
 
   // pow(X, Y) / X --> pow(X, Y-1)
-  if (I.hasAllowReassoc() && 
+  if (I.hasAllowReassoc() &&
       match(Op0, m_OneUse(m_Intrinsic<Intrinsic::pow>(m_Specific(Op1),
                                                       m_Value(Y))))) {
     Value *Y1 =
