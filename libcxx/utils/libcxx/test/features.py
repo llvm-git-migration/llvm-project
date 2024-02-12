@@ -474,6 +474,7 @@ DEFAULT_FEATURES += [
     ),
 ]
 
+
 # Detect whether LLDB is on the system.
 def check_lldb(cfg):
     lldb_path = shutil.which("lldb")
@@ -490,6 +491,7 @@ DEFAULT_FEATURES += [
         actions=[AddSubstitution("%{lldb}", lambda cfg: shutil.which("lldb"))],
     )
 ]
+
 
 # Detect whether GDB is on the system, has Python scripting and supports
 # adding breakpoint commands. If so add a substitution to access it.
