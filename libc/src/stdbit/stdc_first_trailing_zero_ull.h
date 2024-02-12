@@ -1,4 +1,4 @@
-//===-- Implementation header for stdc_first_trailing_zero_ull ---*- C++ -*-===//
+//===-- Implementation header for stdc_first_trailing_zero_ull --*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.

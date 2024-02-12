@@ -300,9 +300,9 @@ SPECIALIZE_FLO(first_leading_one, unsigned long long, __builtin_clzll)
 #define SPECIALIZE_FTZ(NAME, TYPE, BUILTIN)                                    \
   template <> [[nodiscard]] LIBC_INLINE constexpr int NAME<TYPE>(TYPE value) { \
     static_assert(cpp::is_unsigned_v<TYPE>);                                   \
-    return value == cpp::numeric_limits<TYPE>::max()                                       \
+    return value == cpp::numeric_limits<TYPE>::max()                           \
                ? 0                                                             \
-               : BUILTIN(static_cast<TYPE>(~value)) + 1;                        \
+               : BUILTIN(static_cast<TYPE>(~value)) + 1;                       \
   }
 
 template <typename T, typename = cpp::enable_if_t<cpp::is_unsigned_v<T>>>

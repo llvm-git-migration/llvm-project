@@ -1,4 +1,4 @@
-//===-- Unittests for stdc_first_trailing_zero_ull --------------------------===//
+//===-- Unittests for stdc_first_trailing_zero_ull ------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -16,5 +16,6 @@ TEST(LlvmLibcStdcFirstTrailingZeroUllTest, ALL) {
 
 TEST(LlvmLibcStdcFirstTrailingZeroUllTest, ZeroHot) {
   for (unsigned i = 0U; i != ULLONG_WIDTH; ++i)
-    EXPECT_EQ(LIBC_NAMESPACE::stdc_first_trailing_zero_ull(~(1ULL << i)), i + 1);
+    EXPECT_EQ(LIBC_NAMESPACE::stdc_first_trailing_zero_ull(~(1ULL << i)),
+              i + 1);
 }
