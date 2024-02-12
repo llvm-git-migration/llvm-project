@@ -9,4 +9,4 @@ define void @test2() #0 {
 
 declare void @llvm.arm.dmb(i32)
 
-attributes #0 = { "target-cpu"="cyclone" }
+attributes #0 = { "target-cpu"="apple-a7" }
