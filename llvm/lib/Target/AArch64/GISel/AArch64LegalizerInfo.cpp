@@ -870,8 +870,14 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
       .clampMaxNumElements(1, p0, 2);
 
   getActionDefinitionsBuilder(G_INSERT_VECTOR_ELT)
-      .legalIf(typeInSet(0, {v16s8, v8s8, v8s16, v4s16, v4s32, v2s32, v2s64}))
-      .widenVectorEltsToVectorMinSize(0, 64);
+      .legalIf(typeInSet(0, {v16s8, v8s8, v8s16, v4s16, v4s32, v2s32, v2s64, v2p0}))
+      .widenVectorEltsToVectorMinSize(0, 64)
+      .moreElementsToNextPow2(0)
+      .clampNumElements(0, v8s8, v16s8)
+      .clampNumElements(0, v4s16, v8s16)
+      .clampNumElements(0, v2s32, v4s32)
+      .clampMaxNumElements(0, s64, 2)
+      .clampMaxNumElements(0, p0, 2);
 
   getActionDefinitionsBuilder(G_BUILD_VECTOR)
       .legalFor({{v8s8, s8},
@@ -2001,11 +2007,11 @@ bool AArch64LegalizerInfo::legalizeFCopySign(MachineInstr &MI,
   // Widen In1 and In2 to 128 bits. We want these to eventually become
   // INSERT_SUBREGs.
   auto Undef = MIRBuilder.buildUndef(VecTy);
-  auto Zero = MIRBuilder.buildConstant(DstTy, 0);
+  auto ZeroIdx = MIRBuilder.buildConstant(LLT::scalar(64), 0);
   auto Ins1 = MIRBuilder.buildInsertVectorElement(
-      VecTy, Undef, MI.getOperand(1).getReg(), Zero);
+      VecTy, Undef, MI.getOperand(1).getReg(), ZeroIdx);
   auto Ins2 = MIRBuilder.buildInsertVectorElement(
-      VecTy, Undef, MI.getOperand(2).getReg(), Zero);
+      VecTy, Undef, MI.getOperand(2).getReg(), ZeroIdx);
 
   // Construct the mask.
   auto Mask = MIRBuilder.buildConstant(VecTy, EltMask);
