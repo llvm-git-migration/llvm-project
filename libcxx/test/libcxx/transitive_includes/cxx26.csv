@@ -177,7 +177,6 @@ experimental/utility utility
 filesystem compare
 filesystem cstddef
 filesystem cstdint
-filesystem cstring
 filesystem ctime
 filesystem iomanip
 filesystem limits
