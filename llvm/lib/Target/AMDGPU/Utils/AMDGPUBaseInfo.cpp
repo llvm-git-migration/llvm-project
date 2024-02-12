@@ -2660,15 +2660,34 @@ bool isInlinableLiteral16(int16_t Literal, bool HasInv2Pi) {
     return true;
 
   uint16_t Val = static_cast<uint16_t>(Literal);
-  return Val == 0x3C00 || // 1.0
-         Val == 0xBC00 || // -1.0
-         Val == 0x3800 || // 0.5
-         Val == 0xB800 || // -0.5
-         Val == 0x4000 || // 2.0
-         Val == 0xC000 || // -2.0
-         Val == 0x4400 || // 4.0
-         Val == 0xC400 || // -4.0
-         Val == 0x3118;   // 1/2pi
+
+  // FP16
+  if (Val == 0x3C00 || // 1.0
+      Val == 0xBC00 || // -1.0
+      Val == 0x3800 || // 0.5
+      Val == 0xB800 || // -0.5
+      Val == 0x4000 || // 2.0
+      Val == 0xC000 || // -2.0
+      Val == 0x4400 || // 4.0
+      Val == 0xC400 || // -4.0
+      Val == 0x3118    // 1/2pi
+  )
+    return true;
+
+  // BF16
+  if (Val == 0x3F80 || // 1.0
+      Val == 0xBF80 || // -1.0
+      Val == 0x3F00 || // 0.5
+      Val == 0xBF00 || // -0.5
+      Val == 0x4000 || // 2.0
+      Val == 0xC000 || // -2.0
+      Val == 0x4080 || // 4.0
+      Val == 0xC080 || // -4.0
+      Val == 0x3E22    // 1/2pi
+  )
+    return true;
+
+  return false;
 }
 
 std::optional<unsigned> getInlineEncodingV216(bool IsFloat, uint32_t Literal) {
@@ -2730,6 +2749,12 @@ std::optional<unsigned> getInlineEncodingV2I16(uint32_t Literal) {
   return getInlineEncodingV216(false, Literal);
 }
 
+// Encoding of the literal as an inline constant for a V_PK_*_BF16 instruction
+// or nullopt.
+std::optional<unsigned> getInlineEncodingV2BF16(uint32_t Literal) {
+  return getInlineEncodingV216(true, Literal);
+}
+
 // Encoding of the literal as an inline constant for a V_PK_*_F16 instruction
 // or nullopt.
 std::optional<unsigned> getInlineEncodingV2F16(uint32_t Literal) {
@@ -2755,6 +2780,11 @@ bool isInlinableLiteralV216(uint32_t Literal, uint8_t OpType) {
 // Whether the given literal can be inlined for a V_PK_*_IU16 instruction.
 bool isInlinableLiteralV2I16(uint32_t Literal) {
   return getInlineEncodingV2I16(Literal).has_value();
+}
+
+// Whether the given literal can be inlined for a V_PK_*_BF16 instruction.
+bool isInlinableLiteralV2BF16(uint32_t Literal) {
+  return getInlineEncodingV2BF16(Literal).has_value();
 }
 
 // Whether the given literal can be inlined for a V_PK_*_F16 instruction.
