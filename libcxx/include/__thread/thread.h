@@ -157,7 +157,7 @@ public:
 
   _LIBCPP_HIDE_FROM_ABI thread() _NOEXCEPT : __t_(_LIBCPP_NULL_THREAD) {}
 #ifndef _LIBCPP_CXX03_LANG
-  template <class _Fp, class... _Args, class = __enable_if_t<!is_same<__remove_cvref_t<_Fp>, thread>::value> >
+  template <class _Fp, class... _Args, __enable_if_t<!is_same<__remove_cvref_t<_Fp>, thread>::value, int> = 0>
   _LIBCPP_METHOD_TEMPLATE_IMPLICIT_INSTANTIATION_VIS explicit thread(_Fp&& __f, _Args&&... __args);
 #else // _LIBCPP_CXX03_LANG
   template <class _Fp>
