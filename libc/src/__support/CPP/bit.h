@@ -268,6 +268,35 @@ SPECIALIZE_FLZ(first_leading_zero, unsigned long long, __builtin_clzll)
 
 #undef SPECIALIZE_FLZ
 
+#define SPECIALIZE_FLO(NAME, TYPE, BUILTIN)                                    \
+  template <> [[nodiscard]] LIBC_INLINE constexpr int NAME<TYPE>(TYPE value) { \
+    static_assert(cpp::is_unsigned_v<TYPE>);                                   \
+    return value == static_cast<TYPE>(0)                                       \
+               ? 0                                                             \
+               : BUILTIN(static_cast<TYPE>(value)) + 1;                        \
+  }
+
+template <typename T, typename = cpp::enable_if_t<cpp::is_unsigned_v<T>>>
+[[nodiscard]] LIBC_INLINE constexpr int first_leading_one(T value) {
+  return value == static_cast<T>(0) ? 0
+                                    : countl_zero<T>(static_cast<T>(value)) + 1;
+}
+
+#if LIBC_HAS_BUILTIN(__builtin_clzs)
+SPECIALIZE_FLO(first_leading_one, unsigned short, __builtin_clzs)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clz)
+SPECIALIZE_FLO(first_leading_one, unsigned int, __builtin_clz)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clzl)
+SPECIALIZE_FLO(first_leading_one, unsigned long, __builtin_clzl)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clzll)
+SPECIALIZE_FLO(first_leading_one, unsigned long long, __builtin_clzll)
+#endif
+
+#undef SPECIALIZE_FLO
+
 } // namespace LIBC_NAMESPACE::cpp
 
 #endif // LLVM_LIBC_SRC___SUPPORT_CPP_BIT_H
