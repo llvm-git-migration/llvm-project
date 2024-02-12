@@ -224,8 +224,9 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
       CPU = "yonah";
     else if (Triple.isArm64e())
       CPU = "apple-a12";
-    else if (Triple.getArch() == llvm::Triple::aarch64 ||
-             Triple.getArch() == llvm::Triple::aarch64_32)
+    else if (Triple.getArch() == llvm::Triple::aarch64)
+      CPU = "apple-a7";
+    else if (Triple.getArch() == llvm::Triple::aarch64_32)
       CPU = "cyclone";
   }
 

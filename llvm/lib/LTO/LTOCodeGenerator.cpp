@@ -417,8 +417,9 @@ bool LTOCodeGenerator::determineTarget() {
       Config.CPU = "yonah";
     else if (Triple.isArm64e())
       Config.CPU = "apple-a12";
-    else if (Triple.getArch() == llvm::Triple::aarch64 ||
-             Triple.getArch() == llvm::Triple::aarch64_32)
+    else if (Triple.getArch() == llvm::Triple::aarch64)
+      Config.CPU = "apple-a7";
+    else if (Triple.getArch() == llvm::Triple::aarch64_32)
       Config.CPU = "cyclone";
   }
 

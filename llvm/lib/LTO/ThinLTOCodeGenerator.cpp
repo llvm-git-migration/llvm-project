@@ -546,8 +546,11 @@ static void initTMBuilder(TargetMachineBuilder &TMBuilder,
       TMBuilder.MCpu = "core2";
     else if (TheTriple.getArch() == llvm::Triple::x86)
       TMBuilder.MCpu = "yonah";
-    else if (TheTriple.getArch() == llvm::Triple::aarch64 ||
-             TheTriple.getArch() == llvm::Triple::aarch64_32)
+    else if (TheTriple.isArm64e())
+      TMBuilder.MCpu = "apple-a12";
+    else if (TheTriple.getArch() == llvm::Triple::aarch64)
+      TMBuilder.MCpu = "apple-a7";
+    else if (TheTriple.getArch() == llvm::Triple::aarch64_32)
       TMBuilder.MCpu = "cyclone";
   }
   TMBuilder.TheTriple = std::move(TheTriple);
