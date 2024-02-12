@@ -199,7 +199,6 @@ struct __bind_nonatomic_equal {
 template <class _AtomicWaitable, class _Up>
 _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void
 __atomic_wait(_AtomicWaitable& __a, _Up __val, memory_order __order) {
-  static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
   __bind_nonatomic_equal<_Up> __nonatomic_equal = {__val};
   std::__atomic_wait_unless(__a, __nonatomic_equal, __order);
 }
