@@ -297,6 +297,36 @@ SPECIALIZE_FLO(first_leading_one, unsigned long long, __builtin_clzll)
 
 #undef SPECIALIZE_FLO
 
+#define SPECIALIZE_FTZ(NAME, TYPE, BUILTIN)                                    \
+  template <> [[nodiscard]] LIBC_INLINE constexpr int NAME<TYPE>(TYPE value) { \
+    static_assert(cpp::is_unsigned_v<TYPE>);                                   \
+    return value == cpp::numeric_limits<TYPE>::max()                                       \
+               ? 0                                                             \
+               : BUILTIN(static_cast<TYPE>(~value)) + 1;                        \
+  }
+
+template <typename T, typename = cpp::enable_if_t<cpp::is_unsigned_v<T>>>
+[[nodiscard]] LIBC_INLINE constexpr int first_trailing_zero(T value) {
+  return value == cpp::numeric_limits<T>::max()
+             ? 0
+             : countr_zero(static_cast<T>(~value)) + 1;
+}
+
+#if LIBC_HAS_BUILTIN(__builtin_clzs)
+SPECIALIZE_FTZ(first_trailing_zero, unsigned short, __builtin_ctzs)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clz)
+SPECIALIZE_FTZ(first_trailing_zero, unsigned int, __builtin_ctz)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clzl)
+SPECIALIZE_FTZ(first_trailing_zero, unsigned long, __builtin_ctzl)
+#endif
+#if LIBC_HAS_BUILTIN(__builtin_clzll)
+SPECIALIZE_FTZ(first_trailing_zero, unsigned long long, __builtin_ctzll)
+#endif
+
+#undef SPECIALIZE_FTZ
+
 } // namespace LIBC_NAMESPACE::cpp
 
 #endif // LLVM_LIBC_SRC___SUPPORT_CPP_BIT_H
