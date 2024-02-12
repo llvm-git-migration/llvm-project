@@ -2277,14 +2277,28 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
 
     // max X, -X --> fabs X
     // min X, -X --> -(fabs X)
-    // TODO: Remove one-use limitation? That is obviously better for max.
-    //       It would be an extra instruction for min (fnabs), but that is
-    //       still likely better for analysis and codegen.
-    if ((match(Arg0, m_OneUse(m_FNeg(m_Value(X)))) && Arg1 == X) ||
-        (match(Arg1, m_OneUse(m_FNeg(m_Value(X)))) && Arg0 == X)) {
+
+    // No one-use. Only for max.
+    // TODO: Remove one-use limitation? That is obviously better for max,
+    // hence why we don't check for one-use for that. However,
+    // it would be an extra instruction for min (fnabs), but
+    // that is still likely better for analysis and codegen.
+    // If so, then allow this if-statement clause to handle min,
+    // and delete the clause below this one.
+    if ((((match(Arg0, m_FNeg(m_Value(X)))) && match(Arg1, m_Specific(X))) ||
+         (match(Arg1, m_FNeg(m_Value(X))) && match(Arg0, m_Specific(X)))) &&
+        IID != Intrinsic::minimum && IID != Intrinsic::minnum) {
       Value *R = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, X, II);
-      if (IID == Intrinsic::minimum || IID == Intrinsic::minnum)
-        R = Builder.CreateFNegFMF(R, II);
+      return replaceInstUsesWith(*II, R);
+    }
+
+    // One-use version for min.
+    if ((match(Arg0, m_OneUse(m_FNeg(m_Value(X)))) &&
+         match(Arg1, m_Specific(X))) ||
+        (match(Arg1, m_OneUse(m_FNeg(m_Value(X)))) &&
+         match(Arg0, m_Specific(X)))) {
+      Value *R = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, X, II);
+      R = Builder.CreateFNegFMF(R, II);
       return replaceInstUsesWith(*II, R);
     }
 
