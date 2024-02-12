@@ -419,7 +419,7 @@ bool LTOCodeGenerator::determineTarget() {
       Config.CPU = "apple-a12";
     else if (Triple.getArch() == llvm::Triple::aarch64 ||
              Triple.getArch() == llvm::Triple::aarch64_32)
-      Config.CPU = "cyclone";
+      Config.CPU = "apple-a7";
   }
 
   // If data-sections is not explicitly set or unset, set data-sections by
