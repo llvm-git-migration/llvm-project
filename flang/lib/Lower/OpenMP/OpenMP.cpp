@@ -1053,9 +1053,10 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
   llvm::SmallVector<mlir::Location> mapSymLocs;
   llvm::SmallVector<const Fortran::semantics::Symbol *> mapSymbols;
   llvm::SmallVector<mlir::Value> devicePtrOperands, deviceAddrOperands;
-  llvm::SmallVector<mlir::Type> useDeviceTypes;
-  llvm::SmallVector<mlir::Location> useDeviceLocs;
-  llvm::SmallVector<const Fortran::semantics::Symbol *> useDeviceSymbols;
+  llvm::SmallVector<mlir::Type> devicePtrTypes, deviceAddrTypes;
+  llvm::SmallVector<mlir::Location> devicePtrLocs, deviceAddrLocs;
+  llvm::SmallVector<const Fortran::semantics::Symbol *> devicePtrSymbols,
+                                                        deviceAddrSymbols;
 
   ClauseProcessor cp(converter, semaCtx, clauseList);
   cp.processIf(Fortran::parser::OmpIfClause::DirectiveNameModifier::Target,
@@ -1066,10 +1067,11 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
   cp.processNowait(nowaitAttr);
   cp.processMap(currentLocation, directive, stmtCtx, mapOperands, &mapSymTypes,
                 &mapSymLocs, &mapSymbols);
-  cp.processIsDevicePtr(devicePtrOperands, useDeviceTypes, useDeviceLocs,
-                        useDeviceSymbols);
-  cp.processHasDeviceAddr(deviceAddrOperands, useDeviceTypes, useDeviceLocs,
-                          useDeviceSymbols);
+  cp.processIsDevicePtr(devicePtrOperands, devicePtrTypes, devicePtrLocs,
+                        devicePtrSymbols);
+  cp.processHasDeviceAddr(deviceAddrOperands, deviceAddrTypes, deviceAddrLocs,
+                          deviceAddrSymbols);
+
   cp.processTODO<Fortran::parser::OmpClause::Private,
                  Fortran::parser::OmpClause::Firstprivate,
                  Fortran::parser::OmpClause::Reduction,
