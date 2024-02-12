@@ -16,8 +16,6 @@ define double @fdiv_sinh_cosh(double %a) {
 
 define double @fdiv_reassoc_sinh_strict_cosh_strict(double %a, ptr dereferenceable(2) %dummy) {
 ; CHECK-LABEL: @fdiv_reassoc_sinh_strict_cosh_strict(
-; CHECK-NEXT:    [[TMP1:%.*]] = call double @sinh(double [[A:%.*]])
-; CHECK-NEXT:    [[TMP2:%.*]] = call double @cosh(double [[A]])
 ; CHECK-NEXT:    [[TANH:%.*]] = call reassoc double @tanh(double [[A]])
 ; CHECK-NEXT:    ret double [[TANH]]
 ;
@@ -29,8 +27,6 @@ define double @fdiv_reassoc_sinh_strict_cosh_strict(double %a, ptr dereferenceab
 
 define double @fdiv_reassoc_sinh_reassoc_cosh_strict(double %a) {
 ; CHECK-LABEL: @fdiv_reassoc_sinh_reassoc_cosh_strict(
-; CHECK-NEXT:    [[TMP1:%.*]] = call reassoc double @sinh(double [[A:%.*]])
-; CHECK-NEXT:    [[TMP2:%.*]] = call double @cosh(double [[A]])
 ; CHECK-NEXT:    [[TANH:%.*]] = call reassoc double @tanh(double [[A]])
 ; CHECK-NEXT:    ret double [[TANH]]
 ;
@@ -73,8 +69,6 @@ define double @fdiv_sin_cos_reassoc_multiple_uses_cosh(double %a) {
 
 define double @fdiv_sinh_cosh_reassoc(double %a) {
 ; CHECK-LABEL: @fdiv_sinh_cosh_reassoc(
-; CHECK-NEXT:    [[TMP1:%.*]] = call reassoc double @sinh(double [[A:%.*]])
-; CHECK-NEXT:    [[TMP2:%.*]] = call reassoc double @cosh(double [[A]])
 ; CHECK-NEXT:    [[TANH:%.*]] = call reassoc double @tanh(double [[A]])
 ; CHECK-NEXT:    ret double [[TANH]]
 ;

@@ -15,7 +15,6 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/InstructionSimplify.h"
-#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constant.h"
@@ -224,7 +223,8 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
     Value *NewOp;
     Constant *C1, *C2;
     const APInt *IVal;
-    if (match(&I, m_Mul(m_Shl(m_Value(NewOp), m_Constant(C2)), m_Constant(C1))) &&
+    if (match(&I, m_Mul(m_Shl(m_Value(NewOp),
+                        m_Constant(C2)), m_Constant(C1))) &&
         match(C1, m_APInt(IVal))) {
       // ((X << C2)*C1) == (X * (C1 << C2))
       Constant *Shl = ConstantExpr::getShl(C1, C2);
@@ -410,7 +410,7 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
   //   2) X * Y --> X & Y, iff X, Y can be only {0,1}.
   // Note: We could use known bits to generalize this and related patterns with
   // shifts/truncs
-  if (Ty->isIntOrIntVectorTy(1) || 
+  if (Ty->isIntOrIntVectorTy(1) ||
       (match(Op0, m_And(m_Value(), m_One())) &&
        match(Op1, m_And(m_Value(), m_One()))))
     return BinaryOperator::CreateAnd(Op0, Op1);
@@ -746,10 +746,9 @@ Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
 }
 
 Instruction *InstCombinerImpl::visitFMul(BinaryOperator &I) {
-  if (Value *V =
-          simplifyFMulInst(I.getOperand(0), I.getOperand(1),
-                           I.getFastMathFlags(),
-                           SQ.getWithInstruction(&I)))
+  if (Value *V = simplifyFMulInst(I.getOperand(0), I.getOperand(1),
+                                  I.getFastMathFlags(),
+                                  SQ.getWithInstruction(&I)))
     return replaceInstUsesWith(I, V);
 
   if (SimplifyAssociativeOrCommutative(I))
@@ -1302,7 +1301,7 @@ static Value *takeLog2(IRBuilderBase &Builder, Value *Op, unsigned Depth,
   // log2(Cond ? X : Y) -> Cond ? log2(X) : log2(Y)
   // FIXME: Require one use?
   if (SelectInst *SI = dyn_cast<SelectInst>(Op))
-    if (Value *LogX = takeLog2(Builder, SI->getOperand(1), Depth, 
+    if (Value *LogX = takeLog2(Builder, SI->getOperand(1), Depth,
                                AssumeNonZero, DoFold))
       if (Value *LogY = takeLog2(Builder, SI->getOperand(2), Depth,
                                  AssumeNonZero, DoFold))
@@ -1711,7 +1710,7 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
   Module *M = I.getModule();
 
   if (Value *V = simplifyFDivInst(I.getOperand(0), I.getOperand(1),
-                                  I.getFastMathFlags(), 
+                                  I.getFastMathFlags(),
                                   SQ.getWithInstruction(&I)))
     return replaceInstUsesWith(I, V);
 
@@ -1877,8 +1876,8 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
 
   // pow(X, Y) / X --> pow(X, Y-1)
   if (I.hasAllowReassoc() && 
-      match(Op0, m_OneUse(m_Intrinsic<Intrinsic::pow>(
-                          m_Specific(Op1), m_Value(Y))))) {
+      match(Op0, m_OneUse(m_Intrinsic<Intrinsic::pow>(m_Specific(Op1),
+                                                      m_Value(Y))))) {
     Value *Y1 =
         Builder.CreateFAddFMF(Y, ConstantFP::get(I.getType(), -1.0), &I);
     Value *Pow = Builder.CreateBinaryIntrinsic(Intrinsic::pow, Op1, Y1, &I);
@@ -2205,10 +2204,9 @@ Instruction *InstCombinerImpl::visitSRem(BinaryOperator &I) {
 }
 
 Instruction *InstCombinerImpl::visitFRem(BinaryOperator &I) {
-  if (Value *V =
-          simplifyFRemInst(I.getOperand(0), I.getOperand(1),
-                           I.getFastMathFlags(),
-                           SQ.getWithInstruction(&I)))
+  if (Value *V = simplifyFRemInst(I.getOperand(0), I.getOperand(1),
+                                  I.getFastMathFlags(),
+                                  SQ.getWithInstruction(&I)))
     return replaceInstUsesWith(I, V);
 
   if (Instruction *X = foldVectorBinop(I))
