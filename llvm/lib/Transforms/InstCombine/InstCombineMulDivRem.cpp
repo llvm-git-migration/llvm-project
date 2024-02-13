@@ -1815,23 +1815,23 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
       bool ArgsMatch = match(Op0AsCallBase->getArgOperand(0), m_Value(Y)) &&
                        match(Op1AsCallBase->getArgOperand(0), m_Specific(Y));
 
-      bool IsTanH = 
-        ArgsMatch &&
-        ((Op0LibFunc == LibFunc_sinh && Op1LibFunc == LibFunc_cosh) ||
-         (Op0LibFunc == LibFunc_sinhf && Op1LibFunc == LibFunc_coshf) |
-         (Op0LibFunc == LibFunc_sinhl && Op1LibFunc == LibFunc_coshl));
+      bool IsTanH =
+          ArgsMatch &&
+          ((Op0LibFunc == LibFunc_sinh && Op1LibFunc == LibFunc_cosh) ||
+           (Op0LibFunc == LibFunc_sinhf && Op1LibFunc == LibFunc_coshf) ||
+           (Op0LibFunc == LibFunc_sinhl && Op1LibFunc == LibFunc_coshl));
 
-      bool IsCotH = 
-        !IsTanH && ArgsMatch &&
-        ((Op1LibFunc == LibFunc_sinh && Op0LibFunc == LibFunc_cosh) |
-         (Op1LibFunc == LibFunc_sinhf && Op0LibFunc == LibFunc_coshf) ||
-         (Op1LibFunc == LibFunc_sinhl && Op0LibFunc == LibFunc_coshl)); 
+      bool IsCotH =
+          !IsTanH && ArgsMatch &&
+          ((Op1LibFunc == LibFunc_sinh && Op0LibFunc == LibFunc_cosh) ||
+           (Op1LibFunc == LibFunc_sinhf && Op0LibFunc == LibFunc_coshf) ||
+           (Op1LibFunc == LibFunc_sinhl && Op0LibFunc == LibFunc_coshl));
 
       if ((IsTanH || IsCotH) && hasFloatFn(M, &TLI, I.getType(), LibFunc_tanh,
                                            LibFunc_tanhf, LibFunc_tanhl)) {
 
-        Value *Res =
-            GetReplacement(Y, IsCotH, LibFunc_tanh, LibFunc_tanhf, LibFunc_tanhl);
+        Value *Res = GetReplacement(Y, IsCotH, LibFunc_tanh, LibFunc_tanhf,
+                                    LibFunc_tanhl);
 
         Instruction *Replacement = replaceInstUsesWith(I, Res);
 
