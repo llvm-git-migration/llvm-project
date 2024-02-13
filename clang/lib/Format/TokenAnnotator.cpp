@@ -1856,6 +1856,8 @@ private:
     case tok::pp_elif:
       Contexts.back().IsExpression = true;
       next();
+      if (CurrentToken && CurrentToken->is(tok::l_paren))
+        CurrentToken->SpacesRequiredBefore = true;
       parseLine();
       break;
     default:
