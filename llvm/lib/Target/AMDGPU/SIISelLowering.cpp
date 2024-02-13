@@ -12965,10 +12965,8 @@ SDValue SITargetLowering::performFPMed3ImmCombine(SelectionDAG &DAG,
 
     const SIInstrInfo *TII = getSubtarget()->getInstrInfo();
 
-    if ((!K0->hasOneUse() ||
-         TII->isInlineConstant(K0->getValueAPF().bitcastToAPInt())) &&
-        (!K1->hasOneUse() ||
-         TII->isInlineConstant(K1->getValueAPF().bitcastToAPInt()))) {
+    if ((!K0->hasOneUse() || TII->isInlineConstant(K0->getValueAPF())) &&
+        (!K1->hasOneUse() || TII->isInlineConstant(K1->getValueAPF()))) {
       return DAG.getNode(AMDGPUISD::FMED3, SL, K0->getValueType(0),
                          Var, SDValue(K0, 0), SDValue(K1, 0));
     }
@@ -15391,16 +15389,22 @@ bool SITargetLowering::checkAsmConstraintVal(SDValue Op, StringRef Constraint,
   llvm_unreachable("Invalid asm constraint");
 }
 
-bool SITargetLowering::checkAsmConstraintValA(SDValue Op,
-                                              uint64_t Val,
+bool SITargetLowering::checkAsmConstraintValA(SDValue Op, uint64_t Val,
                                               unsigned MaxSize) const {
   unsigned Size = std::min<unsigned>(Op.getScalarValueSizeInBits(), MaxSize);
   bool HasInv2Pi = Subtarget->hasInv2PiInlineImm();
-  if ((Size == 16 && AMDGPU::isInlinableLiteral16(Val, HasInv2Pi)) ||
-      (Size == 32 && AMDGPU::isInlinableLiteral32(Val, HasInv2Pi)) ||
-      (Size == 64 && AMDGPU::isInlinableLiteral64(Val, HasInv2Pi))) {
-    return true;
+  if (Size == 16) {
+    MVT VT = Op.getSimpleValueType();
+    if (VT == MVT::i16 && AMDGPU::isInlinableLiteralI16(Val, HasInv2Pi))
+      return true;
+    if (VT == MVT::f16 && AMDGPU::isInlinableLiteralFP16(Val, HasInv2Pi))
+      return true;
+    if (VT == MVT::bf16 && AMDGPU::isInlinableLiteralBF16(Val, HasInv2Pi))
+      return true;
   }
+  if ((Size == 32 && AMDGPU::isInlinableLiteral32(Val, HasInv2Pi)) ||
+      (Size == 64 && AMDGPU::isInlinableLiteral64(Val, HasInv2Pi)))
+    return true;
   return false;
 }
 

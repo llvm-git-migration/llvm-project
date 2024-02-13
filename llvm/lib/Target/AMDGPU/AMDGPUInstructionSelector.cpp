@@ -4106,7 +4106,7 @@ InstructionSelector::ComplexRendererFns
 AMDGPUInstructionSelector::selectWMMAVISrc(MachineOperand &Root) const {
   std::optional<FPValueAndVReg> FPValReg;
   if (mi_match(Root.getReg(), *MRI, m_GFCstOrSplat(FPValReg))) {
-    if (TII.isInlineConstant(FPValReg->Value.bitcastToAPInt())) {
+    if (TII.isInlineConstant(FPValReg->Value)) {
       return {{[=](MachineInstrBuilder &MIB) {
         MIB.addImm(FPValReg->Value.bitcastToAPInt().getSExtValue());
       }}};

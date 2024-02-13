@@ -99,7 +99,7 @@ define i32 @inline_A_constraint_H1() {
 ; VI-LABEL: {{^}}inline_A_constraint_H2:
 ; VI: v_mov_b32 {{v[0-9]+}}, 0x3c00
 define i32 @inline_A_constraint_H2() {
-  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(i16 bitcast (half 1.0 to i16))
+  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(trunc i32 bitcast (float 1.0 to i32) to i16)
   ret i32 %v0
 }
 
@@ -107,7 +107,7 @@ define i32 @inline_A_constraint_H2() {
 ; VI-LABEL: {{^}}inline_A_constraint_H3:
 ; VI: v_mov_b32 {{v[0-9]+}}, 0xbc00
 define i32 @inline_A_constraint_H3() {
-  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(i16 bitcast (half -1.0 to i16))
+  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(i16 bitcast (float -1.0 to i16))
   ret i32 %v0
 }
 
@@ -115,7 +115,7 @@ define i32 @inline_A_constraint_H3() {
 ; VI-LABEL: {{^}}inline_A_constraint_H4:
 ; VI: v_mov_b32 {{v[0-9]+}}, 0x3118
 define i32 @inline_A_constraint_H4() {
-  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(half 0xH3118)
+  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(float 0xH3118)
   ret i32 %v0
 }
 
@@ -123,7 +123,7 @@ define i32 @inline_A_constraint_H4() {
 ; VI-LABEL: {{^}}inline_A_constraint_H5:
 ; VI: v_mov_b32 {{v[0-9]+}}, 0x3118
 define i32 @inline_A_constraint_H5() {
-  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(i16 bitcast (half 0xH3118 to i16))
+  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(i16 bitcast (float 0xH3118 to i16))
   ret i32 %v0
 }
 
@@ -131,7 +131,7 @@ define i32 @inline_A_constraint_H5() {
 ; VI-LABEL: {{^}}inline_A_constraint_H6:
 ; VI: v_mov_b32 {{v[0-9]+}}, 0xb800
 define i32 @inline_A_constraint_H6() {
-  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(half -0.5)
+  %v0 = tail call i32 asm "v_mov_b32 $0, $1", "=v,A"(float -0.5)
   ret i32 %v0
 }
 
