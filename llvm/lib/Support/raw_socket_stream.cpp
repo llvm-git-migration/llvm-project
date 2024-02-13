@@ -61,7 +61,7 @@ static std::error_code getLastSocketErrorCode() {
 
 static void closeFD(int FD) {
 #ifdef _WIN32
-  _close(FD)
+  _close(FD);
 #else
   ::close(FD);
 #endif
@@ -124,7 +124,7 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
   if (llvm::sys::fs::exists(SocketPath)) {
     Expected<int> MaybeFD = getSocketFD(SocketPath);
     if (!MaybeFD) {
-      
+
       // Regardless of error returned by getSocketFD notify caller that a file
       // already exists at the desired socket address
       consumeError(MaybeFD.takeError());
