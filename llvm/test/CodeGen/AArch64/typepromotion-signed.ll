@@ -30,9 +30,10 @@ define i16 @test_ashr(i16 zeroext %arg) local_unnamed_addr #1 {
 define i16 @test_sdiv(i16 zeroext %arg) local_unnamed_addr #1 {
 ; CHECK-LABEL: test_sdiv:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, #1
-; CHECK-NEXT:    and w8, w8, #0xffff
-; CHECK-NEXT:    cmp w8, #2
+; CHECK-NEXT:    mov w8, #-65535 // =0xffff0001
+; CHECK-NEXT:    mov w9, #-65534 // =0xffff0002
+; CHECK-NEXT:    add w8, w0, w8
+; CHECK-NEXT:    cmp w8, w9
 ; CHECK-NEXT:    cset w0, hi
 ; CHECK-NEXT:    ret
   %arg.off = add i16 %arg, 1

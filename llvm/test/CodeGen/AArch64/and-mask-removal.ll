@@ -65,9 +65,8 @@ if.end:                                           ; preds = %if.then, %entry
 define zeroext i1 @test8_0(i8 zeroext %x)  align 2 {
 ; CHECK-LABEL: test8_0:
 ; CHECK:       ; %bb.0: ; %entry
-; CHECK-NEXT:    add w8, w0, #74
-; CHECK-NEXT:    and w8, w8, #0xff
-; CHECK-NEXT:    cmp w8, #236
+; CHECK-NEXT:    sub w8, w0, #182
+; CHECK-NEXT:    cmn w8, #20
 ; CHECK-NEXT:    cset w0, lo
 ; CHECK-NEXT:    ret
 entry:
@@ -295,20 +294,20 @@ ret_true:
 define zeroext i1 @test16_2(i16 zeroext %x)  align 2 {
 ; CHECK-SD-LABEL: test16_2:
 ; CHECK-SD:       ; %bb.0: ; %entry
-; CHECK-SD-NEXT:    mov w8, #16882 ; =0x41f2
-; CHECK-SD-NEXT:    mov w9, #40700 ; =0x9efc
+; CHECK-SD-NEXT:    mov w8, #-48654 ; =0xffff41f2
+; CHECK-SD-NEXT:    mov w9, #-24836 ; =0xffff9efc
 ; CHECK-SD-NEXT:    add w8, w0, w8
-; CHECK-SD-NEXT:    cmp w9, w8, uxth
-; CHECK-SD-NEXT:    cset w0, hi
+; CHECK-SD-NEXT:    cmp w8, w9
+; CHECK-SD-NEXT:    cset w0, lo
 ; CHECK-SD-NEXT:    ret
 ;
 ; CHECK-GI-LABEL: test16_2:
 ; CHECK-GI:       ; %bb.0: ; %entry
-; CHECK-GI-NEXT:    mov w8, #16882 ; =0x41f2
-; CHECK-GI-NEXT:    mov w9, #40699 ; =0x9efb
+; CHECK-GI-NEXT:    mov w8, #-48654 ; =0xffff41f2
+; CHECK-GI-NEXT:    mov w9, #-24837 ; =0xffff9efb
 ; CHECK-GI-NEXT:    add w8, w0, w8
-; CHECK-GI-NEXT:    cmp w9, w8, uxth
-; CHECK-GI-NEXT:    cset w0, hs
+; CHECK-GI-NEXT:    cmp w8, w9
+; CHECK-GI-NEXT:    cset w0, ls
 ; CHECK-GI-NEXT:    ret
 entry:
   %0 = add i16 %x, 16882
@@ -349,20 +348,20 @@ ret_true:
 define zeroext i1 @test16_4(i16 zeroext %x)  align 2 {
 ; CHECK-SD-LABEL: test16_4:
 ; CHECK-SD:       ; %bb.0: ; %entry
-; CHECK-SD-NEXT:    mov w8, #29985 ; =0x7521
+; CHECK-SD-NEXT:    mov w8, #-35551 ; =0xffff7521
 ; CHECK-SD-NEXT:    mov w9, #15676 ; =0x3d3c
 ; CHECK-SD-NEXT:    add w8, w0, w8
-; CHECK-SD-NEXT:    cmp w9, w8, uxth
-; CHECK-SD-NEXT:    cset w0, lo
+; CHECK-SD-NEXT:    cmp w8, w9
+; CHECK-SD-NEXT:    cset w0, hi
 ; CHECK-SD-NEXT:    ret
 ;
 ; CHECK-GI-LABEL: test16_4:
 ; CHECK-GI:       ; %bb.0: ; %entry
-; CHECK-GI-NEXT:    mov w8, #29985 ; =0x7521
+; CHECK-GI-NEXT:    mov w8, #-35551 ; =0xffff7521
 ; CHECK-GI-NEXT:    mov w9, #15677 ; =0x3d3d
 ; CHECK-GI-NEXT:    add w8, w0, w8
-; CHECK-GI-NEXT:    cmp w9, w8, uxth
-; CHECK-GI-NEXT:    cset w0, ls
+; CHECK-GI-NEXT:    cmp w8, w9
+; CHECK-GI-NEXT:    cset w0, hs
 ; CHECK-GI-NEXT:    ret
 entry:
   %0 = add i16 %x, -35551
@@ -431,20 +430,20 @@ ret_true:
 define zeroext i1 @test16_7(i16 zeroext %x)  align 2 {
 ; CHECK-SD-LABEL: test16_7:
 ; CHECK-SD:       ; %bb.0: ; %entry
-; CHECK-SD-NEXT:    mov w8, #9272 ; =0x2438
-; CHECK-SD-NEXT:    mov w9, #22619 ; =0x585b
+; CHECK-SD-NEXT:    mov w8, #-56264 ; =0xffff2438
+; CHECK-SD-NEXT:    mov w9, #-42917 ; =0xffff585b
 ; CHECK-SD-NEXT:    add w8, w0, w8
-; CHECK-SD-NEXT:    cmp w9, w8, uxth
-; CHECK-SD-NEXT:    cset w0, lo
+; CHECK-SD-NEXT:    cmp w8, w9
+; CHECK-SD-NEXT:    cset w0, hi
 ; CHECK-SD-NEXT:    ret
 ;
 ; CHECK-GI-LABEL: test16_7:
 ; CHECK-GI:       ; %bb.0: ; %entry
-; CHECK-GI-NEXT:    mov w8, #9272 ; =0x2438
-; CHECK-GI-NEXT:    mov w9, #22620 ; =0x585c
+; CHECK-GI-NEXT:    mov w8, #-56264 ; =0xffff2438
+; CHECK-GI-NEXT:    mov w9, #-42916 ; =0xffff585c
 ; CHECK-GI-NEXT:    add w8, w0, w8
-; CHECK-GI-NEXT:    cmp w9, w8, uxth
-; CHECK-GI-NEXT:    cset w0, ls
+; CHECK-GI-NEXT:    cmp w8, w9
+; CHECK-GI-NEXT:    cset w0, hs
 ; CHECK-GI-NEXT:    ret
 entry:
   %0 = add i16 %x, 9272
@@ -508,16 +507,17 @@ define i64 @pr58109(i8 signext %0) {
 define i64 @pr58109b(i8 signext %0, i64 %a, i64 %b) {
 ; CHECK-SD-LABEL: pr58109b:
 ; CHECK-SD:       ; %bb.0:
-; CHECK-SD-NEXT:    add w8, w0, #1
-; CHECK-SD-NEXT:    tst w8, #0xfe
-; CHECK-SD-NEXT:    csel x0, x1, x2, eq
+; CHECK-SD-NEXT:    and w8, w0, #0xff
+; CHECK-SD-NEXT:    sub w8, w8, #255
+; CHECK-SD-NEXT:    cmn w8, #254
+; CHECK-SD-NEXT:    csel x0, x1, x2, lo
 ; CHECK-SD-NEXT:    ret
 ;
 ; CHECK-GI-LABEL: pr58109b:
 ; CHECK-GI:       ; %bb.0:
-; CHECK-GI-NEXT:    add w8, w0, #1
-; CHECK-GI-NEXT:    and w8, w8, #0xff
-; CHECK-GI-NEXT:    cmp w8, #2
+; CHECK-GI-NEXT:    mov w8, #-255 ; =0xffffff01
+; CHECK-GI-NEXT:    add w8, w8, w0, uxtb
+; CHECK-GI-NEXT:    cmn w8, #254
 ; CHECK-GI-NEXT:    csel x0, x1, x2, lo
 ; CHECK-GI-NEXT:    ret
   %2 = add i8 %0, 1
