@@ -1000,6 +1000,26 @@ convertOmpWsLoop(Operation &opInst, llvm::IRBuilderBase &builder,
   return success();
 }
 
+/// Replace the region arguments of the parallel op (which correspond to private
+/// variables) with the actual private varibles they correspond to. This
+/// prepares the parallel op so that it matches what is expected by the
+/// OMPIRBuilder.
+static void prepareOmpParallelForPrivatization(omp::ParallelOp opInst) {
+  Region &region = opInst.getRegion();
+  auto privateVars = opInst.getPrivateVars();
+
+  auto privateVarsIt = privateVars.begin();
+  // Reduction precede private arguments, so skip them first.
+  unsigned privateArgBeginIdx = opInst.getNumReductionVars();
+  unsigned privateArgEndIdx = privateArgBeginIdx + privateVars.size();
+  for (size_t argIdx = privateArgBeginIdx; argIdx < privateArgEndIdx;
+       ++argIdx, ++privateVarsIt)
+    replaceAllUsesInRegionWith(region.getArgument(argIdx), *privateVarsIt,
+                               region);
+
+  region.front().eraseArguments(privateArgBeginIdx, privateVars.size());
+}
+
 /// Converts the OpenMP parallel operation to LLVM IR.
 static LogicalResult
 convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
@@ -1008,6 +1028,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
   // TODO: support error propagation in OpenMPIRBuilder and use it instead of
   // relying on captured variables.
   LogicalResult bodyGenStatus = success();
+  prepareOmpParallelForPrivatization(opInst);
   llvm::OpenMPIRBuilder *ompBuilder = moduleTranslation.getOpenMPBuilder();
 
   auto bodyGenCB = [&](InsertPointTy allocaIP, InsertPointTy codeGenIP) {
@@ -1091,6 +1112,86 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
                     llvm::Value &, llvm::Value &vPtr,
                     llvm::Value *&replacementValue) -> InsertPointTy {
     replacementValue = &vPtr;
+
+    // If this is a private value, this lambda will return the corresponding
+    // mlir value and its `PrivateClauseOp`. Otherwise, empty values are
+    // returned.
+    auto [privVar, privatizerClone] =
+        [&]() -> std::pair<mlir::Value, omp::PrivateClauseOp> {
+      if (!opInst.getPrivateVars().empty()) {
+        auto privVars = opInst.getPrivateVars();
+        auto privatizers = opInst.getPrivatizers();
+        assert(privatizers && privatizers->size() == privVars.size());
+
+        const auto *privInitIt = privatizers->begin();
+        for (auto privVarIt = privVars.begin(); privVarIt != privVars.end();
+             ++privVarIt, ++privInitIt) {
+          // Find the MLIR private variable corresponding to the LLVM value
+          // being privatized.
+          llvm::Value *llvmPrivVar = moduleTranslation.lookupValue(*privVarIt);
+          if (llvmPrivVar != &vPtr)
+            continue;
+
+          SymbolRefAttr privSym = llvm::cast<SymbolRefAttr>(*privInitIt);
+          omp::PrivateClauseOp privatizer =
+              SymbolTable::lookupNearestSymbolFrom<omp::PrivateClauseOp>(
+                  opInst, privSym);
+
+          assert(privatizer);
+          // Clone the privatizer in case it used by more than one parallel
+          // region. The privatizer is processed in-place (see below) before it
+          // gets inlined in the parallel region and therefore processing the
+          // original op is dangerous.
+          return {*privVarIt, privatizer.clone()};
+        }
+      }
+
+      return {mlir::Value(), omp::PrivateClauseOp()};
+    }();
+
+    if (privVar) {
+      assert(privatizerClone.getDataSharingType() !=
+                 omp::DataSharingClauseType::FirstPrivate &&
+             "TODO: delayed privatization is not supported for `firstprivate` "
+             "clauses yet.");
+      Region &allocRegion = privatizerClone.getAllocRegion();
+      assert(allocRegion.getNumArguments() == 1);
+      assert(allocRegion.hasOneBlock() &&
+             "TODO: multi-block alloc regions are not supported yet. Seems "
+             "like there is a difference in `inlineConvertOmpRegions`'s "
+             "pre-conditions for single- and multi-block regions.");
+
+      // Replace the privatizer block argument with mlir value being privatized.
+      // This way, the body of the privatizer will be changed from using the
+      // region/block argument to the value being privatized.
+      auto allocRegionArg = allocRegion.getArgument(0);
+      replaceAllUsesInRegionWith(allocRegionArg, privVar, allocRegion);
+
+      auto oldIP = builder.saveIP();
+      builder.restoreIP(allocaIP);
+
+      // Temporarily unlink the terminator from its parent since
+      // `inlineConvertOmpRegions` expects the insertion block to **not**
+      // contain a terminator.
+      llvm::Instruction &allocaTerminator = builder.GetInsertBlock()->back();
+      assert(allocaTerminator.isTerminator());
+      allocaTerminator.removeFromParent();
+
+      SmallVector<llvm::Value *, 1> yieldedValues;
+      if (failed(inlineConvertOmpRegions(allocRegion, "omp.privatizer", builder,
+                                         moduleTranslation, &yieldedValues))) {
+        opInst.emitError("failed to inline `alloc` region of an `omp.private` "
+                         "op in the parallel region");
+        bodyGenStatus = failure();
+      } else {
+        assert(yieldedValues.size() == 1);
+        replacementValue = yieldedValues.front();
+      }
+
+      allocaTerminator.insertAfter(&builder.GetInsertBlock()->back());
+      privatizerClone.erase();
+      builder.restoreIP(oldIP);
+    }
 
     return codeGenIP;
   };
@@ -3009,12 +3110,13 @@ LogicalResult OpenMPDialectLLVMIRTranslationInterface::convertOperation(
       .Case([&](omp::TargetOp) {
         return convertOmpTarget(*op, builder, moduleTranslation);
       })
-      .Case<omp::MapInfoOp, omp::DataBoundsOp>([&](auto op) {
-        // No-op, should be handled by relevant owning operations e.g.
-        // TargetOp, EnterDataOp, ExitDataOp, DataOp etc. and then
-        // discarded
-        return success();
-      })
+      .Case<omp::MapInfoOp, omp::DataBoundsOp, omp::PrivateClauseOp>(
+          [&](auto op) {
+            // No-op, should be handled by relevant owning operations e.g.
+            // TargetOp, EnterDataOp, ExitDataOp, DataOp etc. and then
+            // discarded
+            return success();
+          })
       .Default([&](Operation *inst) {
         return inst->emitError("unsupported OpenMP operation: ")
                << inst->getName();
