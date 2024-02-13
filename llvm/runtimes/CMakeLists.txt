@@ -209,7 +209,7 @@ foreach(entry ${runtimes})
 endforeach()
 
 function(runtime_default_target)
-  cmake_parse_arguments(ARG "" "" "DEPENDS;CMAKE_ARGS;PREFIXES" ${ARGN})
+  cmake_parse_arguments(ARG "" "" "DEPENDS;CMAKE_ARGS;PREFIXES;RUNTIMES" ${ARGN})
 
   include(${LLVM_BINARY_DIR}/runtimes/Components.cmake OPTIONAL)
   set(SUB_CHECK_TARGETS ${SUB_CHECK_TARGETS} PARENT_SCOPE)
@@ -236,6 +236,7 @@ function(runtime_default_target)
   endif()
 
   set_enable_per_target_runtime_dir()
+  set(LLVM_ENABLE_RUNTIMES ${ARG_RUNTIMES})
 
   llvm_ExternalProject_Add(runtimes
                            ${CMAKE_CURRENT_SOURCE_DIR}/../../runtimes
@@ -269,7 +270,7 @@ endfunction()
 # runtime_register_target(name)
 #   Utility function to register external runtime target.
 function(runtime_register_target name)
-  cmake_parse_arguments(ARG "" "BASE_NAME" "DEPENDS;CMAKE_ARGS;EXTRA_ARGS" ${ARGN})
+  cmake_parse_arguments(ARG "" "BASE_NAME" "DEPENDS;CMAKE_ARGS;EXTRA_ARGS;RUNTIMES" ${ARGN})
   include(${LLVM_BINARY_DIR}/runtimes/${name}/Components.cmake OPTIONAL)
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${LLVM_BINARY_DIR}/runtimes/${name}/Components.cmake)
 
@@ -338,6 +339,7 @@ function(runtime_register_target name)
   endif()
 
   set(${name}_extra_args ${ARG_CMAKE_ARGS})
+  set(LLVM_ENABLE_RUNTIMES ${ARG_RUNTIMES})
   string(REPLACE ";" "|" LLVM_ENABLE_RUNTIMES_PASSTHROUGH "${LLVM_ENABLE_RUNTIMES}")
   list(APPEND ${name}_extra_args -DLLVM_ENABLE_RUNTIMES=${LLVM_ENABLE_RUNTIMES_PASSTHROUGH})
   list(APPEND ${name}_extra_args -DLLVM_USE_LINKER=${LLVM_USE_LINKER})
@@ -449,39 +451,62 @@ if(runtimes)
       endforeach()
     endif()
   endif()
-  if(NOT LLVM_RUNTIME_TARGETS)
-    runtime_default_target(
-      DEPENDS ${builtins_dep} ${extra_deps}
-      CMAKE_ARGS ${libc_cmake_args}
-      PREFIXES ${prefixes})
-    set(test_targets check-runtimes)
-  else()
-    if("default" IN_LIST LLVM_RUNTIME_TARGETS)
+
+  # Get the list of all target triples requested for this build.
+  set(runtime_targets "default")
+  if (LLVM_RUNTIME_TARGETS)
+    set(runtime_targets ${LLVM_RUNTIME_TARGETS})
+  endif()
+  foreach(proj ${LLVM_ENABLE_RUNTIMES})
+    string(TOUPPER "${proj}" canon_name)
+    string(REGEX REPLACE "-" "_" canon_name ${canon_name})
+    if(LLVM_${canon_name}_RUNTIME_TARGETS)
+      list(APPEND extra_targets ${LLVM_${canon_name}_RUNTIME_TARGETS})
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES extra_targets)
+
+  # If we have any non-default triples we need to create custom targets.
+  if(NOT "default" IN_LIST runtime_targets AND NOT "default" IN_LIST extra_targets)
+    add_custom_target(runtimes)
+    add_custom_target(runtimes-configure)
+    add_custom_target(install-runtimes)
+    add_custom_target(install-runtimes-stripped)
+    if(LLVM_INCLUDE_TESTS)
+      add_custom_target(check-runtimes)
+      add_custom_target(runtimes-test-depends)
+      set(test_targets "")
+    endif()
+    if(LLVM_RUNTIME_DISTRIBUTION_COMPONENTS)
+      foreach(component ${LLVM_RUNTIME_DISTRIBUTION_COMPONENTS})
+        add_custom_target(${component})
+        add_custom_target(install-${component})
+        add_custom_target(install-${component}-stripped)
+      endforeach()
+    endif()
+  endif()
+
+  # Register each requested target triple using the projects that requested that
+  # target.
+  foreach(name ${runtime_targets} ${extra_targets})
+    set(enabled_runtimes "")
+    foreach(proj ${LLVM_ENABLE_RUNTIMES})
+      string(TOUPPER "${proj}" canon_name)
+      string(REGEX REPLACE "-" "_" canon_name ${canon_name})
+      if((NOT LLVM_${canon_name}_RUNTIME_TARGETS AND ${name} IN_LIST runtime_targets) 
+          OR ${name} IN_LIST LLVM_${canon_name}_RUNTIME_TARGETS)
+        list(APPEND enabled_runtimes ${proj})
+      endif()
+    endforeach()
+
+    if("${name}" STREQUAL "default")
       runtime_default_target(
         DEPENDS ${builtins_dep} ${extra_deps}
         CMAKE_ARGS ${libc_cmake_args}
-        PREFIXES ${prefixes})
-      list(REMOVE_ITEM LLVM_RUNTIME_TARGETS "default")
+        PREFIXES ${prefixes}
+        RUNTIMES ${enabled_runtimes})
+      set(test_targets check-runtimes)
     else()
-      add_custom_target(runtimes)
-      add_custom_target(runtimes-configure)
-      add_custom_target(install-runtimes)
-      add_custom_target(install-runtimes-stripped)
-      if(LLVM_INCLUDE_TESTS)
-        add_custom_target(check-runtimes)
-        add_custom_target(runtimes-test-depends)
-        set(test_targets "")
-      endif()
-      if(LLVM_RUNTIME_DISTRIBUTION_COMPONENTS)
-        foreach(component ${LLVM_RUNTIME_DISTRIBUTION_COMPONENTS})
-          add_custom_target(${component})
-          add_custom_target(install-${component})
-          add_custom_target(install-${component}-stripped)
-        endforeach()
-      endif()
-    endif()
-
-    foreach(name ${LLVM_RUNTIME_TARGETS})
       if(builtins_dep)
         if (LLVM_BUILTIN_TARGETS)
           set(builtins_dep_name "${builtins_dep}-${name}")
@@ -495,21 +520,22 @@ if(runtimes)
       runtime_register_target(${name}
         DEPENDS ${builtins_dep_name} ${hdrgen_deps}
         CMAKE_ARGS -DLLVM_DEFAULT_TARGET_TRIPLE=${name} ${libc_cmake_args}
+        RUNTIMES ${enabled_runtimes}
         EXTRA_ARGS TARGET_TRIPLE ${name})
-    endforeach()
 
-    foreach(multilib ${LLVM_RUNTIME_MULTILIBS})
-      foreach(name ${LLVM_RUNTIME_MULTILIB_${multilib}_TARGETS})
+      foreach(multilib ${LLVM_RUNTIME_MULTILIBS})
         runtime_register_target(${name}+${multilib}
           DEPENDS runtimes-${name}
           CMAKE_ARGS -DLLVM_DEFAULT_TARGET_TRIPLE=${name}
+                     -DLLVM_ENABLE_RUNTIMES="${enabled_runtimes}"
                      -DLLVM_RUNTIMES_PREFIX=${name}/
                      -DLLVM_RUNTIMES_LIBDIR_SUBDIR=${multilib}
           BASE_NAME ${name}
+          RUNTIMES ${enabled_runtimes}
           EXTRA_ARGS TARGET_TRIPLE ${name})
       endforeach()
-    endforeach()
-  endif()
+    endif()
+  endforeach()
 
   if(NOT LLVM_BUILD_INSTRUMENTED AND CLANG_ENABLE_BOOTSTRAP)
     # TODO: This is a hack needed because the libcxx headers are copied into the
