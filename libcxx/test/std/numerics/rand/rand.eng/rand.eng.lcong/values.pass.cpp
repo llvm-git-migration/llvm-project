@@ -91,8 +91,12 @@ test()
   test1<T, A, 0, M>();
   test1<T, A, M - 2, M>();
   test1<T, A, M - 1, M>();
+}
 
-  /*
+template <class T>
+void test_ext() {
+  const T M(static_cast<T>(-1));
+
   // Cases where m is odd and m % a > m / a (not implemented)
   test1<T, M - 2, 0, M>();
   test1<T, M - 2, M - 2, M>();
@@ -100,15 +104,20 @@ test()
   test1<T, M - 1, 0, M>();
   test1<T, M - 1, M - 2, M>();
   test1<T, M - 1, M - 1, M>();
-  */
 }
 
 int main(int, char**)
 {
     test<unsigned short>();
+    test_ext<unsigned short>();
     test<unsigned int>();
+    test_ext<unsigned int>();
     test<unsigned long>();
+    test_ext<unsigned long>();
     test<unsigned long long>();
+#ifdef __SIZEOF_INT128__
+    test_ext<unsigned long long>();
+#endif
 
-  return 0;
+    return 0;
 }
