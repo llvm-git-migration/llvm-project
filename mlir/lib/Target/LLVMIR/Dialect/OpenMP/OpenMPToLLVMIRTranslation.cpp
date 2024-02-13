@@ -827,12 +827,12 @@ static void collectReductionInfo(
       atomicGen = owningAtomicReductionGens[i];
     llvm::Value *variable =
         moduleTranslation.lookupValue(loop.getReductionVars()[i]);
-    reductionInfos.push_back(llvm::OpenMPIRBuilder::ReductionInfo(
-        moduleTranslation.convertType(reductionDecls[i].getType()), variable,
-        privateReductionVariables[i],
-        /*EvaluationKind=*/llvm::OpenMPIRBuilder::EvaluationKindTy::Scalar,
-        owningReductionGens[i],
-        /*ReductionGenClang=*/nullptr, atomicGen));
+    reductionInfos.push_back(
+        {moduleTranslation.convertType(reductionDecls[i].getType()), variable,
+         privateReductionVariables[i],
+         /*EvaluationKind=*/llvm::OpenMPIRBuilder::EvaluationKindTy::Scalar,
+         owningReductionGens[i],
+         /*ReductionGenClang=*/nullptr, atomicGen});
   }
 }
 
@@ -2908,17 +2908,6 @@ LogicalResult OpenMPDialectLLVMIRTranslationInterface::amendOperation(
             }
             return failure();
           })
-      .Case("omp.target",
-            [&](Attribute attr) {
-              if (auto targetAttr = attr.dyn_cast<omp::TargetAttr>()) {
-                llvm::OpenMPIRBuilderConfig &config =
-                    moduleTranslation.getOpenMPBuilder()->Config;
-                config.TargetCPU = targetAttr.getTargetCpu();
-                config.TargetFeatures = targetAttr.getTargetFeatures();
-                return success();
-              }
-              return failure();
-            })
       .Default([](Attribute) {
         // Fall through for omp attributes that do not require lowering.
         return success();
