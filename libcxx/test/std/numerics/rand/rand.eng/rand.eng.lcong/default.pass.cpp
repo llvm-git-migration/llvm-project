@@ -59,7 +59,6 @@ test()
   test1<T, A, M - 2, M>();
   test1<T, A, M - 1, M>();
 
-  /*
   // Cases where m is odd and m % a > m / a (not implemented)
   test1<T, M - 2, 0, M>();
   test1<T, M - 2, M - 2, M>();
@@ -67,7 +66,6 @@ test()
   test1<T, M - 1, 0, M>();
   test1<T, M - 1, M - 2, M>();
   test1<T, M - 1, M - 1, M>();
-  */
 }
 
 int main(int, char**)
