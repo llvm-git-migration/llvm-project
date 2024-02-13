@@ -135,6 +135,18 @@ struct COFFShortExport {
   }
 };
 
+/// Writes a COFF import library containing entries described by the Exports
+/// array.
+///
+/// For hybrid targets such as ARM64EC, additional native entry points can be
+/// exposed using the NativeExports parameter. When NativeExports is used, the
+/// output import library will expose these native ARM64 imports alongside the
+/// entries described in the Exports array. Such a library can be used for
+/// linking both ARM64EC and pure ARM64 objects, and the linker will pick only
+/// the exports relevant to the target platform.
+///
+/// For non-hybrid targets, the NativeExports parameter should not be used.
+/// Instead, pass std::nullopt or an empty array to this parameter.
 Error writeImportLibrary(StringRef ImportName, StringRef Path,
                          ArrayRef<COFFShortExport> Exports,
                          ArrayRef<COFFShortExport> NativeExports,
