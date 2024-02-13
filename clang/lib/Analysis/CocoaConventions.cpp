@@ -88,7 +88,7 @@ bool cocoa::isCocoaObjectRef(QualType Ty) {
     return true;
 
   for ( ; ID ; ID = ID->getSuperClass())
-    if (ID->getIdentifier()->getName() == "NSObject")
+    if (ID->getName() == "NSObject")
       return true;
 
   return false;
