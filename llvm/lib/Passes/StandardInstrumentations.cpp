@@ -19,6 +19,8 @@
 #include "llvm/Analysis/CallGraphSCCPass.h"
 #include "llvm/Analysis/LazyCallGraph.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/CodeGen/FreeMachineFunction.h"
+#include "llvm/CodeGen/MIRPrinter.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/IR/Constants.h"
@@ -378,16 +380,13 @@ template <typename T>
 void ChangeReporter<T>::saveIRBeforePass(Any IR, StringRef PassID,
                                          StringRef PassName) {
   // Is this the initial IR?
-  if (InitialIR) {
-    InitialIR = false;
-    if (VerboseMode)
-      handleInitialIR(IR);
-  }
-
-  if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
-    if (VerboseMode && !HandledMIR.contains(MF->getName()) && !MF->empty()) {
-      handleInitialMIR(MF);
-      HandledMIR.insert(MF->getName());
+  // TODO: When Module to MachineFunction adaptor is available
+  // set InitialIR to true when PassID is the adaptor.
+  if (InitialIR && PassID != PrintMIRPreparePass::name()) {
+    if (const auto *MF = unwrapIR<MachineFunction>(IR); !MF || !MF->empty()) {
+      InitialIR = false;
+      if (VerboseMode)
+        handleInitialIR(IR);
     }
   }
 
@@ -438,6 +437,10 @@ template <typename T>
 void ChangeReporter<T>::handleInvalidatedPass(StringRef PassID) {
   assert(!BeforeStack.empty() && "Unexpected empty stack encountered.");
 
+  // Prepare to process the next MIR.
+  if (PassID == FreeMachineFunctionPass::name())
+    InitialIR = true;
+
   // Always flag it as invalidated as we cannot determine when
   // a pass for a filtered function is invalidated since we do not
   // get the IR in the call.  Also, the output is just alternate
@@ -469,17 +472,19 @@ TextChangeReporter<T>::TextChangeReporter(bool Verbose)
     : ChangeReporter<T>(Verbose), Out(dbgs()) {}
 
 template <typename T> void TextChangeReporter<T>::handleInitialIR(Any IR) {
+  // MIR is special, not all MIRs are available at the beginning.
+  if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
+    Out << "*** MIR Dump At Start ***\n";
+    MF->print(Out);
+    return;
+  }
+
   // Always print the module.
   // Unwrap and print directly to avoid filtering problems in general routines.
   auto *M = unwrapModule(IR, /*Force=*/true);
   assert(M && "Expected module to be unwrapped when forced.");
   Out << "*** IR Dump At Start ***\n";
   M->print(Out, nullptr);
-}
-
-template <typename T>
-void TextChangeReporter<T>::handleInitialMIR(const MachineFunction *IR) {
-  // For simplicity, don't print the initial MIR.
 }
 
 template <typename T>
@@ -578,12 +583,6 @@ void IRChangedTester::handleInitialIR(Any IR) {
   std::string S;
   generateIRRepresentation(IR, "Initial IR", S);
   handleIR(S, "Initial IR");
-}
-
-void IRChangedTester::handleInitialMIR(const MachineFunction *IR) {
-  std::string S;
-  generateIRRepresentation(IR, "Initial MIR", S);
-  handleIR(S, "Initial MIR");
 }
 
 void IRChangedTester::omitAfter(StringRef PassID, std::string &Name) {}
@@ -2257,7 +2256,7 @@ std::string DotCfgChangeReporter::genHTML(StringRef Text, StringRef DotFile,
 
 void DotCfgChangeReporter::handleInitialIR(Any IR) {
   assert(HTML && "Expected outstream to be set");
-  *HTML << "<button type=\"button\" class=\"collapsible\">0. "
+  *HTML << "<button type=\"button\" class=\"collapsible\">" << N << ". "
         << "Initial IR (by function)</button>\n"
         << "<div class=\"content\">\n"
         << "  <p>\n";
@@ -2272,30 +2271,6 @@ void DotCfgChangeReporter::handleInitialIR(Any IR) {
                    const FuncDataT<DCData> &Before,
                    const FuncDataT<DCData> &After) -> void {
                  handleFunctionCompare("", " ", "Initial IR", "", InModule,
-                                       Minor, Before, After);
-               });
-  *HTML << "  </p>\n"
-        << "</div><br/>\n";
-  ++N;
-}
-
-void DotCfgChangeReporter::handleInitialMIR(const MachineFunction *IR) {
-  assert(HTML && "Expected outstream to be set");
-  *HTML << "<button type=\"button\" class=\"collapsible\">" << N << ". "
-        << "Initial MIR (by machine function)</button>\n"
-        << "<div class=\"content\">\n"
-        << "  <p>\n";
-  // Create representation of IR
-  IRDataT<DCData> Data;
-  IRComparer<DCData>::analyzeIR(llvm::Any(IR), Data);
-  // Now compare it against itself, which will have everything the
-  // same and will generate the files.
-  IRComparer<DCData>(Data, Data)
-      .compare(getModuleForComparison(IR),
-               [&](bool InModule, unsigned Minor,
-                   const FuncDataT<DCData> &Before,
-                   const FuncDataT<DCData> &After) -> void {
-                 handleFunctionCompare("", " ", "Initial MIR", "", InModule,
                                        Minor, Before, After);
                });
   *HTML << "  </p>\n"
