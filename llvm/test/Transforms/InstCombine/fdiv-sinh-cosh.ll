@@ -78,7 +78,34 @@ define double @fdiv_sinh_cosh_reassoc(double %a) {
   ret double %div
 }
 
+define float @fdiv_sinhf_coshf_reassoc(float %a) {
+; CHECK-LABEL: @fdiv_sinhf_coshf_reassoc(
+; CHECK-NEXT:    [[TANH:%.*]] = call reassoc float @tanhf(float [[A]])
+; CHECK-NEXT:    ret float [[TANH]]
+;
+  %1 = call reassoc float @sinhf(float %a)
+  %2 = call reassoc float @coshf(float %a)
+  %div = fdiv reassoc float %1, %2
+  ret float %div
+}
+
+define fp128 @fdiv_sinhl_coshl_reassoc(fp128 %a) {
+; CHECK-LABEL: @fdiv_sinhl_coshl_reassoc(
+; CHECK-NEXT:    [[TANH:%.*]] = call reassoc fp128 @tanhl(fp128 [[A]])
+; CHECK-NEXT:    ret fp128 [[TANH]]
+;
+  %1 = call reassoc fp128 @sinhl(fp128 %a)
+  %2 = call reassoc fp128 @coshl(fp128 %a)
+  %div = fdiv reassoc fp128 %1, %2
+  ret fp128 %div
+}
+
 declare double @cosh(double)
+declare float @coshf(float)
+declare fp128 @coshl(fp128)
+
 declare double @sinh(double)
+declare float @sinhf(float)
+declare fp128 @sinhl(fp128)
 
 declare void @use(double)

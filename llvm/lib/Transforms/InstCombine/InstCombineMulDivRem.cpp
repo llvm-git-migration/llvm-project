@@ -1831,7 +1831,7 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
                                            LibFunc_tanhf, LibFunc_tanhl)) {
 
         Value *Res =
-            GetReplacement(Y, IsCotH, LibFunc_tanh, LibFunc_tanf, LibFunc_tanl);
+            GetReplacement(Y, IsCotH, LibFunc_tanh, LibFunc_tanhf, LibFunc_tanhl);
 
         Instruction *Replacement = replaceInstUsesWith(I, Res);
 
