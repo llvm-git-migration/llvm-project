@@ -4128,6 +4128,25 @@ bool SIInstrInfo::isInlineConstant(const APInt &Imm) const {
   }
 }
 
+bool SIInstrInfo::isInlineConstant(const APFloat &Imm) const {
+  APInt IntImm = Imm.bitcastToAPInt();
+  bool HasInv2Pi = ST.hasInv2PiInlineImm();
+  switch (IntImm.getBitWidth()) {
+  case 32:
+  case 64:
+    return isInlineConstant(IntImm);
+  case 16:
+    if (Imm.isIEEE())
+      return ST.has16BitInsts() &&
+             AMDGPU::isInlinableLiteralFP16(IntImm.getSExtValue(), HasInv2Pi);
+    else
+      return ST.has16BitInsts() &&
+             AMDGPU::isInlinableLiteralBF16(IntImm.getSExtValue(), HasInv2Pi);
+  default:
+    llvm_unreachable("invalid bitwidth");
+  }
+}
+
 bool SIInstrInfo::isInlineConstant(const MachineOperand &MO,
                                    uint8_t OperandType) const {
   assert(!MO.isReg() && "isInlineConstant called on register operand!");
@@ -4196,7 +4215,7 @@ bool SIInstrInfo::isInlineConstant(const MachineOperand &MO,
       // constants in these cases
       int16_t Trunc = static_cast<int16_t>(Imm);
       return ST.has16BitInsts() &&
-             AMDGPU::isInlinableLiteral16(Trunc, ST.hasInv2PiInlineImm());
+             AMDGPU::isInlinableLiteralFP16(Trunc, ST.hasInv2PiInlineImm());
     }
 
     return false;
