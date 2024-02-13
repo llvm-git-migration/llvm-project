@@ -212,8 +212,6 @@ protected:
 
   // Called on the first IR processed.
   virtual void handleInitialIR(Any IR) = 0;
-  // Called on the first MIR processed.
-  virtual void handleInitialMIR(const MachineFunction *IR) = 0;
   // Called before and after a pass to get the representation of the IR.
   virtual void generateIRRepresentation(Any IR, StringRef PassID,
                                         IRUnitT &Output) = 0;
@@ -234,8 +232,6 @@ protected:
   std::vector<IRUnitT> BeforeStack;
   // Is this the first IR seen?
   bool InitialIR = true;
-  // Is this the first MIR seen?
-  StringSet<> HandledMIR;
 
   // Run in verbose mode, printing everything?
   const bool VerboseMode;
@@ -250,8 +246,6 @@ protected:
 
   // Print a module dump of the first IR that is changed.
   void handleInitialIR(Any IR) override;
-  // Print a module dump of the first MIR that is changed.
-  void handleInitialMIR(const MachineFunction *IR) override;
   // Report that the IR was omitted because it did not change.
   void omitAfter(StringRef PassID, std::string &Name) override;
   // Report that the pass was invalidated.
@@ -298,8 +292,6 @@ protected:
 
   // Check initial IR
   void handleInitialIR(Any IR) override;
-  // Check initial MIR
-  void handleInitialMIR(const MachineFunction *IR) override;
   // Do nothing.
   void omitAfter(StringRef PassID, std::string &Name) override;
   // Do nothing.
@@ -533,8 +525,6 @@ protected:
 
   // Called on the first IR processed.
   void handleInitialIR(Any IR) override;
-  // Called on the first MIR processed.
-  void handleInitialMIR(const MachineFunction *IR) override;
   // Called before and after a pass to get the representation of the IR.
   void generateIRRepresentation(Any IR, StringRef PassID,
                                 IRDataT<DCData> &Output) override;
