@@ -3,10 +3,10 @@
 // CHECK: @"OBJC_IVAR_$_StaticLayout.static_layout_ivar" = hidden constant i64 20
 // CHECK: @"OBJC_IVAR_$_SuperClass.superClassIvar" = hidden constant i64 20
 // CHECK: @"OBJC_IVAR_$_SuperClass._superClassProperty" = hidden constant i64 24
-// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar" = global i64 32
-// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar2" = global i64 40
-// CHECK: @"OBJC_IVAR_$_IntermediateClass._intermediateProperty" = hidden global i64 48
-// CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = global i64 56
+// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar" = constant i64 32
+// CHECK: @"OBJC_IVAR_$_IntermediateClass.intermediateClassIvar2" = constant i64 40
+// CHECK: @"OBJC_IVAR_$_IntermediateClass._intermediateProperty" = hidden constant i64 48
+// CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = constant i64 56
 // CHECK: @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar" = hidden global i64 12
 
 @interface NSObject {
@@ -37,7 +37,7 @@
 - (void)superClassMethod {
     _superClassProperty = 42;
     superClassIvar = 10;
-    // CHECK: load i64, ptr @"OBJC_IVAR_$_SuperClass
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_SuperClass
     // CHECK: getelementptr inbounds i8, ptr %1, i64 20
 }
 @end
@@ -57,7 +57,7 @@
 @synthesize intermediateProperty = _intermediateProperty;
 - (void)intermediateClassMethod {
     intermediateClassIvar = 3.14;
-    // CHECK: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
     // CHECK: getelementptr inbounds i8, ptr %0, i64 %ivar
 }
 
@@ -77,17 +77,16 @@
 - (void)subclassVar {
     
     subClassIvar = 6.28;
-    // CHECK: load i64, ptr @"OBJC_IVAR_$_SubClass
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_SubClass
     // CHECK: getelementptr inbounds i8, ptr %0, i64 %ivar
 }
 
 -(void)intermediateSubclassVar
 {
     intermediateClassIvar = 3.14;
-    // CHECK: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
+    // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_IntermediateClass
     // CHECK: getelementptr inbounds i8, ptr %0, i64 %ivar
 }
-
 @end
 
 @interface NotNSObject {
@@ -103,6 +102,6 @@
 }
 -(void)meth {
   not_static_layout_ivar = 0;
-  // CHECK: load i64, ptr @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar
+  // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar
 }
 @end
