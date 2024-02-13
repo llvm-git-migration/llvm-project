@@ -42,7 +42,7 @@ char *volatile_ptr(char *volatile base, unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_100]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_100]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]

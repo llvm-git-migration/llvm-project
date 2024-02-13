@@ -44,7 +44,7 @@ void foo(void) {
   // CHECK-UBSAN:      %[[ARG:.*]] = ptrtoint {{.*}} %[[PTR]] to i64
   // CHECK-UBSAN-NEXT: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_100]], i64 %[[ARG]])
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 22) [[NR_NUW:#[0-9]+]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 23) [[NR_NUW:#[0-9]+]]
   // CHECK-TRAP-NEXT: unreachable
 #line 100
   u.i=1;
@@ -61,7 +61,7 @@ int bar(int *a) {
 
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_200]], i64 %[[PTRINT]])
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 22) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 23) [[NR_NUW]]
   // CHECK-TRAP-NEXT: unreachable
 
 #line 200
@@ -97,7 +97,7 @@ int lsh_overflow(int a, int b) {
   // CHECK-UBSAN-NEXT: call void @__ubsan_handle_shift_out_of_bounds(ptr @[[LINE_300]], i64 %[[ARG1]], i64 %[[ARG2]])
   // CHECK-UBSAN-NOT:  call void @__ubsan_handle_shift_out_of_bounds
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 20) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 21) [[NR_NUW]]
   // CHECK-TRAP:      unreachable
   // CHECK-TRAP-NOT:  call void @llvm.ubsantrap
 
@@ -116,7 +116,7 @@ int rsh_inbounds(int a, int b) {
   // CHECK-UBSAN-NEXT: %[[ARG2:.*]] = zext
   // CHECK-UBSAN-NEXT: call void @__ubsan_handle_shift_out_of_bounds(ptr @[[LINE_400]], i64 %[[ARG1]], i64 %[[ARG2]])
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 20) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 21) [[NR_NUW]]
   // CHECK-TRAP-NEXT: unreachable
 
   // CHECK-COMMON:      %[[RET:.*]] = ashr i32 {{.*}}, %[[RHS]]
@@ -129,7 +129,7 @@ int rsh_inbounds(int a, int b) {
 int load(int *p) {
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_500]], i64 %{{.*}})
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 22) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 23) [[NR_NUW]]
   // CHECK-TRAP-NEXT: unreachable
 #line 500
   return *p;
@@ -139,7 +139,7 @@ int load(int *p) {
 void store(int *p, int q) {
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_600]], i64 %{{.*}})
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 22) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 23) [[NR_NUW]]
   // CHECK-TRAP-NEXT: unreachable
 #line 600
   *p = q;
@@ -151,7 +151,7 @@ struct S { int k; };
 int *member_access(struct S *p) {
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_700]], i64 %{{.*}})
 
-  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 22) [[NR_NUW]]
+  // CHECK-TRAP:      call void @llvm.ubsantrap(i8 23) [[NR_NUW]]
   // CHECK-TRAP-NEXT: unreachable
 #line 700
   return &p->k;
@@ -289,7 +289,7 @@ signed char fp16_char_overflow(__fp16 *p) {
 // CHECK-COMMON-LABEL: @float_float_overflow
 float float_float_overflow(double f) {
   // CHECK-UBSAN-NOT: call {{.*}} @__ubsan_handle_float_cast_overflow(
-  // CHECK-TRAP-NOT:  call {{.*}} @llvm.ubsantrap(i8 19) [[NR_NUW]]
+  // CHECK-TRAP-NOT:  call {{.*}} @llvm.ubsantrap(i8 20) [[NR_NUW]]
   // CHECK-COMMON: }
   return f;
 }
@@ -326,7 +326,7 @@ _Bool sour_bool(_Bool *p) {
 
   // CHECK-UBSAN: call void @__ubsan_handle_load_invalid_value(ptr {{.*}}, i64 {{.*}})
 
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 10) [[NR_NUW]]
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 11) [[NR_NUW]]
   // CHECK-TRAP: unreachable
   return *p;
 }
@@ -339,7 +339,7 @@ int *ret_nonnull(int *a) {
 
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_return
 
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17) [[NR_NUW]]
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 18) [[NR_NUW]]
   // CHECK-TRAP: unreachable
   return a;
 }
@@ -352,7 +352,7 @@ void call_decl_nonnull(int *a) {
 
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg
 
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16) [[NR_NUW]]
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17) [[NR_NUW]]
   // CHECK-TRAP: unreachable
   decl_nonnull(a);
 }
@@ -363,12 +363,12 @@ extern void *memcpy(void *, const void *, unsigned long) __attribute__((nonnull(
 void call_memcpy_nonnull(void *p, void *q, int sz) {
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON-NOT: call
 
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON-NOT: call
 
   // CHECK-COMMON: call void @llvm.memcpy.p0.p0.i64(ptr align 1 %0, ptr align 1 %1, i64 %conv, i1 false)
@@ -379,19 +379,19 @@ void call_memcpy_nonnull(void *p, void *q, int sz) {
 void call_memcpy(long *p, short *q, int sz) {
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON: and i64 %[[#]], 7, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(ptr @[[LINE_1600]]
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON: and i64 %[[#]], 1, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: call void @llvm.memcpy.p0.p0.i64(ptr align 8 %0, ptr align 2 %1, i64 %conv, i1 false)
 
@@ -408,12 +408,12 @@ void call_memcpy_inline(long *p, short *q) {
   // CHECK-COMMON: and i64 %[[#]], 7, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: and i64 %[[#]], 1, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: call void @llvm.memcpy.inline.p0.p0.i64(ptr align 8 %0, ptr align 2 %1, i64 2, i1 false)
   __builtin_memcpy_inline(p, q, 2);
@@ -425,11 +425,11 @@ extern void *memmove(void *, const void *, unsigned long) __attribute__((nonnull
 void call_memmove_nonnull(void *p, void *q, int sz) {
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
 
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   memmove(p, q, sz);
 }
 
@@ -437,19 +437,19 @@ void call_memmove_nonnull(void *p, void *q, int sz) {
 void call_memmove(long *p, short *q, int sz) {
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON: and i64 %[[#]], 7, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: icmp ne ptr {{.*}}, null
   // CHECK-UBSAN: call void @__ubsan_handle_nonnull_arg(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 16)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 17)
   // CHECK-COMMON: and i64 %[[#]], 1, !nosanitize
   // CHECK-COMMON: icmp eq i64 %[[#]], 0, !nosanitize
   // CHECK-UBSAN: call void @__ubsan_handle_type_mismatch_v1(
-  // CHECK-TRAP: call void @llvm.ubsantrap(i8 22)
+  // CHECK-TRAP: call void @llvm.ubsantrap(i8 23)
 
   // CHECK-COMMON: call void @llvm.memmove.p0.p0.i64(ptr align 8 %0, ptr align 2 %1, i64 %conv, i1 false)
   memmove(p, q, sz);

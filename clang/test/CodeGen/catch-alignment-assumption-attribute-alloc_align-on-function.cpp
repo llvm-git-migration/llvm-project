@@ -80,7 +80,7 @@ passthrough(char **x, unsigned long alignment) {
 // CHECK-SANITIZE-TRAP-NEXT:    [[TMP1:%.*]] = ptrtoint ptr [[CALL]] to i64, !nosanitize !2
 // CHECK-SANITIZE-TRAP-NEXT:    br i1 [[MASKCOND]], label [[CONT:%.*]], label [[TRAP:%.*]], !nosanitize !2
 // CHECK-SANITIZE-TRAP:       trap:
-// CHECK-SANITIZE-TRAP-NEXT:    call void @llvm.ubsantrap(i8 23) #[[ATTR3:[0-9]+]], !nosanitize !2
+// CHECK-SANITIZE-TRAP-NEXT:    call void @llvm.ubsantrap(i8 24) #[[ATTR3:[0-9]+]], !nosanitize !2
 // CHECK-SANITIZE-TRAP-NEXT:    unreachable, !nosanitize !2
 // CHECK-SANITIZE-TRAP:       cont:
 // CHECK-SANITIZE-TRAP-NEXT:    call void @llvm.assume(i1 true) [ "align"(ptr [[CALL]], i64 128) ]

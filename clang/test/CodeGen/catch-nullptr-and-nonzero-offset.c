@@ -69,7 +69,7 @@ char *var_var(char *base, unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_100]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_100]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -96,7 +96,7 @@ char *var_zero(char *base) {
   // CHECK-SANITIZE-C:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-C-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_200]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-C-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_200]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-C-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE-C:                  [[CONT]]:
   // CHECK-NEXT:                          ret ptr %[[ADD_PTR]]
@@ -125,7 +125,7 @@ char *var_one(char *base) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_300]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_300]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -154,7 +154,7 @@ char *var_allones(char *base) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_400]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_400]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -188,7 +188,7 @@ char *nullptr_var(unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_500]], i64 0, i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_500]], i64 0, i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -204,7 +204,7 @@ char *nullptr_zero(void) {
   // CHECK-SANITIZE-C:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-C-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_600]], i64 0, i64 0)
   // CHECK-SANITIZE-RECOVER-C-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_600]], i64 0, i64 0)
-  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-C-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE-C:                  [[CONT]]:
   // CHECK-NEXT:                          ret ptr null
@@ -222,7 +222,7 @@ char *nullptr_one_BAD(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_700]], i64 0, i64 ptrtoint (ptr getelementptr inbounds (i8, ptr null, i64 1) to i64))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_700]], i64 0, i64 ptrtoint (ptr getelementptr inbounds (i8, ptr null, i64 1) to i64))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr null, i64 1)
@@ -240,7 +240,7 @@ char *nullptr_allones_BAD(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_800]], i64 0, i64 ptrtoint (ptr getelementptr inbounds (i8, ptr null, i64 -1) to i64))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_800]], i64 0, i64 ptrtoint (ptr getelementptr inbounds (i8, ptr null, i64 -1) to i64))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr null, i64 -1)
@@ -275,7 +275,7 @@ char *one_var(unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_900]], i64 1, i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_900]], i64 1, i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -291,7 +291,7 @@ char *one_zero(void) {
   // CHECK-SANITIZE-C:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-C-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1000]], i64 1, i64 1)
   // CHECK-SANITIZE-RECOVER-C-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1000]], i64 1, i64 1)
-  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-C-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE-C:                  [[CONT]]:
   // CHECK-NEXT:                          ret ptr inttoptr (i64 1 to ptr)
@@ -310,7 +310,7 @@ char *one_one_OK(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1100]], i64 1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 1) to i64), i64 1), i64 1))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1100]], i64 1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 1) to i64), i64 1), i64 1))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 1)
@@ -329,7 +329,7 @@ char *one_allones_BAD(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1200]], i64 1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 -1) to i64), i64 1), i64 1))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1200]], i64 1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 -1) to i64), i64 1), i64 1))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr inttoptr (i64 1 to ptr), i64 -1)
@@ -364,7 +364,7 @@ char *allones_var(unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1300]], i64 -1, i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1300]], i64 -1, i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
@@ -380,7 +380,7 @@ char *allones_zero_OK(void) {
   // CHECK-SANITIZE-C:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-C-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1400]], i64 -1, i64 -1)
   // CHECK-SANITIZE-RECOVER-C-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1400]], i64 -1, i64 -1)
-  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-C-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-C-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE-C:                  [[CONT]]:
   // CHECK-NEXT:                          ret ptr inttoptr (i64 -1 to ptr)
@@ -399,7 +399,7 @@ char *allones_one_BAD(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1500]], i64 -1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 1) to i64), i64 -1), i64 -1))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1500]], i64 -1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 1) to i64), i64 -1), i64 -1))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 1)
@@ -418,7 +418,7 @@ char *allones_allones_OK(void) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1600]], i64 -1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 -1) to i64), i64 -1), i64 -1))
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1600]], i64 -1, i64 add (i64 sub (i64 ptrtoint (ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 -1) to i64), i64 -1), i64 -1))
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr getelementptr inbounds (i8, ptr inttoptr (i64 -1 to ptr), i64 -1)
@@ -462,7 +462,7 @@ char *void_ptr(void *base, unsigned long offset) {
   // CHECK-SANITIZE:                  [[HANDLER_POINTER_OVERFLOW]]:
   // CHECK-SANITIZE-NORECOVER-NEXT:     call void @__ubsan_handle_pointer_overflow_abort(ptr @[[LINE_1700]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
   // CHECK-SANITIZE-RECOVER-NEXT:       call void @__ubsan_handle_pointer_overflow(ptr @[[LINE_1700]], i64 %[[BASE_RELOADED_INT]], i64 %[[COMPUTED_GEP]])
-  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 19){{.*}}, !nosanitize
+  // CHECK-SANITIZE-TRAP-NEXT:          call void @llvm.ubsantrap(i8 20){{.*}}, !nosanitize
   // CHECK-SANITIZE-UNREACHABLE-NEXT:   unreachable, !nosanitize
   // CHECK-SANITIZE:                  [[CONT]]:
   // CHECK-NEXT:                        ret ptr %[[ADD_PTR]]
