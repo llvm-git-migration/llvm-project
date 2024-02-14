@@ -466,7 +466,7 @@ struct SampleContextFrame {
   LineLocation Location;
 
   SampleContextFrame() : Location(0, 0) {}
-  
+
   SampleContextFrame(FunctionId Func, LineLocation Location)
       : Func(Func), Location(Location) {}
 
@@ -527,7 +527,7 @@ public:
       : Func(Name), State(UnknownContext), Attributes(ContextNone) {
         assert(!Name.empty() && "Name is empty");
       }
-  
+
   SampleContext(FunctionId Func)
       : Func(Func), State(UnknownContext), Attributes(ContextNone) {}
 
@@ -974,6 +974,8 @@ public:
   const CallsiteSampleMap &getCallsiteSamples() const {
     return CallsiteSamples;
   }
+
+  CallsiteSampleMap &getCallsiteSamples() { return CallsiteSamples; }
 
   /// Return the maximum of sample counts in a function body. When SkipCallSite
   /// is false, which is the default, the return count includes samples in the

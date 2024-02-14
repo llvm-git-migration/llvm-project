@@ -108,6 +108,10 @@ protected:
 
   void updateCallsiteSamples();
 
+  void filterAmbiguousProfile(SampleProfileMap &Profiles);
+
+  bool filterAmbiguousProfile(FunctionSamples &FS);
+
   StringRef getCalleeNameForAddress(uint64_t TargetAddress);
 
   void computeSummaryAndThreshold(SampleProfileMap &ProfileMap);
