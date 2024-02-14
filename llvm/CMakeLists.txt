@@ -176,6 +176,14 @@ if ("libc" IN_LIST LLVM_ENABLE_RUNTIMES)
     message(STATUS "Enabling libc project to build libc build tools")
     list(APPEND LLVM_ENABLE_PROJECTS "libc")
   endif()
+
+  # Check if the user is targeting the GPU 'libc' build.
+  foreach(gpu_triple "nvptx64-nvidia-cuda" "amdgcn-amd-amdhsa")
+    if(${gpu_triple} IN_LIST LLVM_RUNTIME_TARGETS OR
+       ${gpu_triple} IN_LIST LLVM_LIBC_RUNTIME_TARGETS)
+      set(LLVM_LIBC_GPU_BUILD ON)
+    endif()
+  endforeach()
 endif()
 
 # LLVM_ENABLE_PROJECTS_USED is `ON` if the user has ever used the

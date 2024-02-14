@@ -394,13 +394,21 @@
 // RUN:   %clang -### --target=x86_64-unknown-linux-gnu -fopenmp=libomp \
 // RUN:      --libomptarget-nvptx-bc-path=%S/Inputs/libomptarget/libomptarget-nvptx-test.bc \
 // RUN:      --cuda-path=%S/Inputs/CUDA_102/usr/local/cuda \
-// RUN:      --offload-arch=sm_52 -gpulibc -nogpuinc %s 2>&1 \
+// RUN:      --offload-arch=sm_52,gfx90a -gpulibc -nogpuinc %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=LIBC-GPU %s
-// LIBC-GPU: "-lcgpu"{{.*}}"-lmgpu"
+// RUN:   %clang -### --target=x86_64-unknown-linux-gnu -fopenmp=libomp \
+// RUN:      --libomptarget-nvptx-bc-path=%S/Inputs/libomptarget/libomptarget-nvptx-test.bc \
+// RUN:      --cuda-path=%S/Inputs/CUDA_102/usr/local/cuda \
+// RUN:      -fopenmp-targets=nvptx64-nvidia-cuda,amdgcn-amd-amdhsa -gpulibc -nogpuinc %s 2>&1 \
+// RUN:   | FileCheck --check-prefix=LIBC-GPU %s
+// LIBC-GPU-DAG: "-lcgpu-amdgpu"
+// LIBC-GPU-DAG: "-lmgpu-amdgpu"
+// LIBC-GPU-DAG: "-lcgpu-nvptx"
+// LIBC-GPU-DAG: "-lmgpu-nvptx"
 
 // RUN:   %clang -### --target=x86_64-unknown-linux-gnu -fopenmp=libomp \
 // RUN:      --libomptarget-nvptx-bc-path=%S/Inputs/libomptarget/libomptarget-nvptx-test.bc \
 // RUN:      --cuda-path=%S/Inputs/CUDA_102/usr/local/cuda \
 // RUN:      --offload-arch=sm_52 -nogpulibc -nogpuinc %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=NO-LIBC-GPU %s
-// NO-LIBC-GPU-NOT: "-lcgpu"{{.*}}"-lmgpu"
+// NO-LIBC-GPU-NOT: -lmgpu{{.*}}-lcgpu
