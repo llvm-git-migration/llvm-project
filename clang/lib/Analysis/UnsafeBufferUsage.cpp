@@ -815,8 +815,8 @@ private:
 public:
   PtrToPtrAssignmentGadget(const MatchFinder::MatchResult &Result)
       : FixableGadget(Kind::PtrToPtrAssignment),
-    PtrLHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignLHSTag)),
-    PtrRHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignRHSTag)) {}
+        PtrLHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignLHSTag)),
+        PtrRHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignRHSTag)) {}
 
   static bool classof(const Gadget *G) {
     return G->getKind() == Kind::PtrToPtrAssignment;
@@ -863,27 +863,28 @@ class CArrayToPtrAssignmentGadget : public FixableGadget {
 private:
   static constexpr const char *const PointerAssignLHSTag = "ptrLHS";
   static constexpr const char *const PointerAssignRHSTag = "ptrRHS";
-  const DeclRefExpr * PtrLHS;         // the LHS pointer expression in `PA`
-  const DeclRefExpr * PtrRHS;         // the RHS pointer expression in `PA`
+  const DeclRefExpr *PtrLHS; // the LHS pointer expression in `PA`
+  const DeclRefExpr *PtrRHS; // the RHS pointer expression in `PA`
 
 public:
   CArrayToPtrAssignmentGadget(const MatchFinder::MatchResult &Result)
       : FixableGadget(Kind::CArrayToPtrAssignment),
-    PtrLHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignLHSTag)),
-    PtrRHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignRHSTag)) {}
+        PtrLHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignLHSTag)),
+        PtrRHS(Result.Nodes.getNodeAs<DeclRefExpr>(PointerAssignRHSTag)) {}
 
   static bool classof(const Gadget *G) {
     return G->getKind() == Kind::CArrayToPtrAssignment;
   }
 
   static Matcher matcher() {
-    auto PtrAssignExpr = binaryOperator(allOf(hasOperatorName("="),
-      hasRHS(ignoringParenImpCasts(declRefExpr(hasType(hasCanonicalType(constantArrayType())),
-                                               toSupportedVariable()).
-                                   bind(PointerAssignRHSTag))),
-                                   hasLHS(declRefExpr(hasPointerType(),
-                                                      toSupportedVariable()).
-                                          bind(PointerAssignLHSTag))));
+    auto PtrAssignExpr = binaryOperator(
+        allOf(hasOperatorName("="),
+              hasRHS(ignoringParenImpCasts(
+                  declRefExpr(hasType(hasCanonicalType(constantArrayType())),
+                              toSupportedVariable())
+                      .bind(PointerAssignRHSTag))),
+              hasLHS(declRefExpr(hasPointerType(), toSupportedVariable())
+                         .bind(PointerAssignLHSTag))));
 
     return stmt(isInUnspecifiedUntypedContext(PtrAssignExpr));
   }
@@ -1550,7 +1551,8 @@ PtrToPtrAssignmentGadget::getFixits(const FixitStrategy &S) const {
 }
 
 /// \returns fixit that adds .data() call after \DRE.
-static inline std::optional<FixItList> createDataFixit(const ASTContext& Ctx, const DeclRefExpr * DRE);
+static inline std::optional<FixItList> createDataFixit(const ASTContext &Ctx,
+                                                       const DeclRefExpr *DRE);
 
 std::optional<FixItList>
 CArrayToPtrAssignmentGadget::getFixits(const FixitStrategy &S) const {
@@ -1985,7 +1987,8 @@ PointerDereferenceGadget::getFixits(const FixitStrategy &S) const {
   return std::nullopt;
 }
 
-static inline std::optional<FixItList> createDataFixit(const ASTContext& Ctx, const DeclRefExpr * DRE) {
+static inline std::optional<FixItList> createDataFixit(const ASTContext &Ctx,
+                                                       const DeclRefExpr *DRE) {
   const SourceManager &SM = Ctx.getSourceManager();
   // Inserts the .data() after the DRE
   std::optional<SourceLocation> EndOfOperand =
