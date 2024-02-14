@@ -2106,18 +2106,20 @@ public:
               BestTripCount = *EstimatedTC;
           }
 
-          InstructionCost NewMemCheckCost = MemCheckCost / BestTripCount;
+          if (BestTripCount > 1) {
+            InstructionCost NewMemCheckCost = MemCheckCost / BestTripCount;
 
-          // Let's ensure the cost is always at least 1.
-          NewMemCheckCost = std::max(*NewMemCheckCost.getValue(),
-                                     (InstructionCost::CostType)1);
+            // Let's ensure the cost is always at least 1.
+            NewMemCheckCost = std::max(*NewMemCheckCost.getValue(),
+                                       (InstructionCost::CostType)1);
 
-          LLVM_DEBUG(dbgs()
-                     << "We expect runtime memory checks to be hoisted "
-                     << "out of the outer loop. Cost reduced from "
-                     << MemCheckCost << " to " << NewMemCheckCost << '\n');
+            LLVM_DEBUG(dbgs()
+                       << "We expect runtime memory checks to be hoisted "
+                       << "out of the outer loop. Cost reduced from "
+                       << MemCheckCost << " to " << NewMemCheckCost << '\n');
 
-          MemCheckCost = NewMemCheckCost;
+            MemCheckCost = NewMemCheckCost;
+          }
         }
       }
 
