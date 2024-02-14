@@ -35,16 +35,19 @@ TEST(raw_socket_streamTest, CLIENT_TO_SERVER_AND_SERVER_TO_CLIENT) {
   llvm::sys::fs::createUniquePath("test_raw_socket_stream.sock", SocketPath,
                                   true);
 
+  // Make sure socket file does not exist. May still be there from the last test
+  std::remove(SocketPath.c_str());
+
   char Bytes[8];
 
   Expected<ListeningSocket> MaybeServerListener =
-      ListeningSocket::createUnix(SocketPath);
+      ListeningSocket::createListeningSocket(SocketPath);
   ASSERT_THAT_EXPECTED(MaybeServerListener, llvm::Succeeded());
 
   ListeningSocket ServerListener = std::move(*MaybeServerListener);
 
   Expected<std::unique_ptr<raw_socket_stream>> MaybeClient =
-      raw_socket_stream::createConnectedUnix(SocketPath);
+      raw_socket_stream::createConnectedSocket(SocketPath);
   ASSERT_THAT_EXPECTED(MaybeClient, llvm::Succeeded());
 
   raw_socket_stream &Client = **MaybeClient;
