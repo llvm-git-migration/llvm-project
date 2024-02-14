@@ -421,3 +421,11 @@
 // MIPSN32R6EL: "-target-cpu" "mips64r6"
 // MIPSN32R6EL: "-target-abi" "n32"
 // MIPSN32R6EL: "-mfloat-abi" "hard"
+
+// RUN: %clang --target=riscv32-unknown-elf --gcc-toolchain="" -### %s 2>&1 | FileCheck %s -check-prefix=NOUWTABLE
+// RUN: %clang --target=riscv32-unknown-elf --gcc-toolchain="" -fasynchronous-unwind-tables -### %s 2>&1 | FileCheck %s -check-prefix=UWTABLE
+// RUN: %clang --target=riscv64-unknown-elf --gcc-toolchain="" -### %s 2>&1 | FileCheck %s -check-prefix=NOUWTABLE
+// RUN: %clang --target=riscv64-unknown-elf --gcc-toolchain="" -fasynchronous-unwind-tables -### %s 2>&1 | FileCheck %s -check-prefix=UWTABLE
+//
+// UWTABLE: "-funwind-tables=2"
+// NOUWTABLE-NOT: "-funwind-tables=2"
