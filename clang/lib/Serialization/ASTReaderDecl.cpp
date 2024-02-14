@@ -2554,8 +2554,7 @@ ASTDeclReader::VisitClassTemplateSpecializationDeclImpl(
   if (Record.readBool()) {
     // FIXME: We don't need to allocate this if ExternLoc and TemplateKeywordLoc
     // are invalid!
-    auto *ExplicitInfo =
-        new (C) ClassTemplateSpecializationDecl::ExplicitInstantiationInfo;
+    auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
     ExplicitInfo->TemplateArgsAsWritten =
         Record.readASTTemplateArgumentListInfo();
     ExplicitInfo->ExternLoc = readSourceLocation();
@@ -2625,8 +2624,7 @@ ASTDeclReader::VisitVarTemplateSpecializationDeclImpl(
   if (Record.readBool()) {
     // FIXME: We don't need to allocate this if ExternLoc and TemplateKeywordLoc
     // are invalid!
-    auto *ExplicitInfo =
-        new (C) VarTemplateSpecializationDecl::ExplicitInstantiationInfo;
+    auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
     ExplicitInfo->TemplateArgsAsWritten =
         Record.readASTTemplateArgumentListInfo();
     ExplicitInfo->ExternLoc = readSourceLocation();
