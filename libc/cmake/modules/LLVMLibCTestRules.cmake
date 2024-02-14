@@ -460,7 +460,7 @@ function(add_integration_test test_name)
     ${fq_build_target_name}
     EXCLUDE_FROM_ALL
     # The NVIDIA 'nvlink' linker does not currently support static libraries.
-    $<$<BOOL:${LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX}>:${link_object_files}>
+    $<$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_NVPTX}>:${link_object_files}>
     ${INTEGRATION_TEST_SRCS}
     ${INTEGRATION_TEST_HDRS}
   )
@@ -471,20 +471,28 @@ function(add_integration_test test_name)
   target_compile_options(${fq_build_target_name}
       PRIVATE -fpie -ffreestanding -fno-exceptions -fno-rtti ${INTEGRATION_TEST_COMPILE_OPTIONS})
   # The GPU build requires overriding the default CMake triple and architecture.
-  if(LIBC_GPU_TARGET_ARCHITECTURE_IS_AMDGPU)
+  if(LIBC_TARGET_ARCHITECTURE_IS_AMDGPU)
     target_compile_options(${fq_build_target_name} PRIVATE
-                           -nogpulib -mcpu=${LIBC_GPU_TARGET_ARCHITECTURE}
-                           -flto --target=${LIBC_GPU_TARGET_TRIPLE}
+                           -nogpulib -mcpu=${LIBC_GPU_TARGET_ARCHITECTURE} -flto
                            -mcode-object-version=${LIBC_GPU_CODE_OBJECT_VERSION})
-  elseif(LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX)
-    get_nvptx_compile_options(nvptx_options ${LIBC_GPU_TARGET_ARCHITECTURE})
+  elseif(LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
     target_compile_options(${fq_build_target_name} PRIVATE
-                           -nogpulib ${nvptx_options} -fno-use-cxa-atexit
-                           --target=${LIBC_GPU_TARGET_TRIPLE})
+                           "SHELL:-mllvm -nvptx-emit-init-fini-kernel=false"
+                           -march=${LIBC_GPU_TARGET_ARCHITECTURE} 
+                           -nogpulib ${nvptx_options} -fno-use-cxa-atexit)
   endif()
 
-  if(LIBC_TARGET_ARCHITECTURE_IS_GPU)
-    target_link_options(${fq_build_target_name} PRIVATE -nostdlib -static)
+  if(LIBC_TARGET_ARCHITECTURE_IS_AMDGPU)
+    target_link_options(${fq_build_target_name} PRIVATE 
+      -mcpu=${LIBC_GPU_TARGET_ARCHITECTURE} -flto
+      "-Wl,-mllvm,-amdgpu-lower-global-ctor-dtor=0" -nostdlib -static
+      "-Wl,-mllvm,-amdhsa-code-object-version=${LIBC_GPU_CODE_OBJECT_VERSION}")
+  elseif(LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
+    # We need to use the internal object versions for NVPTX.
+    set(internal_suffix ".__internal__")
+    target_link_options(${fq_build_target_name} PRIVATE 
+      -march=${LIBC_GPU_TARGET_ARCHITECTURE} -nostdlib -static
+      "--cuda-path=${LIBC_CUDA_ROOT}")
   elseif(LIBC_CC_SUPPORTS_NOSTDLIBPP)
     target_link_options(${fq_build_target_name} PRIVATE -nolibc -nostartfiles -nostdlib++ -static)
   else()
@@ -496,9 +504,10 @@ function(add_integration_test test_name)
   target_link_libraries(
     ${fq_build_target_name}
     # The NVIDIA 'nvlink' linker does not currently support static libraries.
-    $<$<NOT:$<BOOL:${LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX}>>:${fq_target_name}.__libc__>
-    libc.startup.${LIBC_TARGET_OS}.crt1
-    libc.test.IntegrationTest.test)
+    $<$<NOT:$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_NVPTX}>>:${fq_target_name}.__libc__>
+    libc.startup.${LIBC_TARGET_OS}.crt1${internal_suffix}
+    libc.test.IntegrationTest.test${internal_suffix}
+  )
   add_dependencies(${fq_build_target_name}
                    libc.test.IntegrationTest.test
                    ${INTEGRATION_TEST_DEPENDS})
@@ -517,7 +526,7 @@ function(add_integration_test test_name)
   # makes `add_custom_target` construct the correct command and execute it.
   set(test_cmd
       ${INTEGRATION_TEST_ENV}
-      $<$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_GPU}>:${gpu_loader_exe}>
+      $<$<BOOL:${LIBC_TARGET_OS_IS_GPU}>:${gpu_loader_exe}>
       ${CMAKE_CROSSCOMPILING_EMULATOR}
       ${INTEGRATION_TEST_LOADER_ARGS}
       $<TARGET_FILE:${fq_build_target_name}> ${INTEGRATION_TEST_ARGS})
@@ -533,15 +542,14 @@ endfunction(add_integration_test)
 set(LIBC_HERMETIC_TEST_COMPILE_OPTIONS ${LIBC_COMPILE_OPTIONS_DEFAULT}
     -fpie -ffreestanding -fno-exceptions -fno-rtti)
 # The GPU build requires overriding the default CMake triple and architecture.
-if(LIBC_GPU_TARGET_ARCHITECTURE_IS_AMDGPU)
+if(LIBC_TARGET_ARCHITECTURE_IS_AMDGPU)
   list(APPEND LIBC_HERMETIC_TEST_COMPILE_OPTIONS
        -nogpulib -mcpu=${LIBC_GPU_TARGET_ARCHITECTURE} -flto
-       --target=${LIBC_GPU_TARGET_TRIPLE}
        -mcode-object-version=${LIBC_GPU_CODE_OBJECT_VERSION})
-elseif(LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX)
-  get_nvptx_compile_options(nvptx_options ${LIBC_GPU_TARGET_ARCHITECTURE})
+elseif(LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
   list(APPEND LIBC_HERMETIC_TEST_COMPILE_OPTIONS
-       -nogpulib ${nvptx_options} -fno-use-cxa-atexit --target=${LIBC_GPU_TARGET_TRIPLE})
+       "SHELL:-mllvm -nvptx-emit-init-fini-kernel=false"
+       -nogpulib -march=${LIBC_GPU_TARGET_ARCHITECTURE} -fno-use-cxa-atexit)
 endif()
 
 # Rule to add a hermetic test. A hermetic test is one whose executable is fully
@@ -642,7 +650,7 @@ function(add_libc_hermetic_test test_name)
     ${fq_build_target_name}
     EXCLUDE_FROM_ALL
     # The NVIDIA 'nvlink' linker does not currently support static libraries.
-    $<$<BOOL:${LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX}>:${link_object_files}>
+    $<$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_NVPTX}>:${link_object_files}>
     ${HERMETIC_TEST_SRCS}
     ${HERMETIC_TEST_HDRS}
   )
@@ -665,8 +673,17 @@ function(add_libc_hermetic_test test_name)
     endif()
   endforeach()
 
-  if(LIBC_TARGET_ARCHITECTURE_IS_GPU)
-    target_link_options(${fq_build_target_name} PRIVATE -nostdlib -static)
+  if(LIBC_TARGET_ARCHITECTURE_IS_AMDGPU)
+    target_link_options(${fq_build_target_name} PRIVATE 
+      -mcpu=${LIBC_GPU_TARGET_ARCHITECTURE} -flto
+      "-Wl,-mllvm,-amdgpu-lower-global-ctor-dtor=0" -nostdlib -static
+      "-Wl,-mllvm,-amdhsa-code-object-version=${LIBC_GPU_CODE_OBJECT_VERSION}")
+  elseif(LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
+    # We need to use the internal object versions for NVPTX.
+    set(internal_suffix ".__internal__")
+    target_link_options(${fq_build_target_name} PRIVATE 
+      -march=${LIBC_GPU_TARGET_ARCHITECTURE} -nostdlib -static
+      "--cuda-path=${LIBC_CUDA_ROOT}")
   elseif(LIBC_CC_SUPPORTS_NOSTDLIBPP)
     target_link_options(${fq_build_target_name} PRIVATE -nolibc -nostartfiles -nostdlib++ -static)
   else()
@@ -678,12 +695,12 @@ function(add_libc_hermetic_test test_name)
   target_link_libraries(
     ${fq_build_target_name}
     PRIVATE
-      libc.startup.${LIBC_TARGET_OS}.crt1
+      libc.startup.${LIBC_TARGET_OS}.crt1${internal_suffix}
       ${link_libraries}
       LibcTest.hermetic
       LibcHermeticTestSupport.hermetic
       # The NVIDIA 'nvlink' linker does not currently support static libraries.
-      $<$<NOT:$<BOOL:${LIBC_GPU_TARGET_ARCHITECTURE_IS_NVPTX}>>:${fq_target_name}.__libc__>)
+      $<$<NOT:$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_NVPTX}>>:${fq_target_name}.__libc__>)
   add_dependencies(${fq_build_target_name}
                    LibcTest.hermetic
                    libc.test.UnitTest.ErrnoSetterMatcher
@@ -696,7 +713,7 @@ function(add_libc_hermetic_test test_name)
   endif()
 
   set(test_cmd ${HERMETIC_TEST_ENV}
-      $<$<BOOL:${LIBC_TARGET_ARCHITECTURE_IS_GPU}>:${gpu_loader_exe}> ${CMAKE_CROSSCOMPILING_EMULATOR} ${HERMETIC_TEST_LOADER_ARGS}
+      $<$<BOOL:${LIBC_TARGET_OS_IS_GPU}>:${gpu_loader_exe}> ${CMAKE_CROSSCOMPILING_EMULATOR} ${HERMETIC_TEST_LOADER_ARGS}
       $<TARGET_FILE:${fq_build_target_name}> ${HERMETIC_TEST_ARGS})
   add_custom_target(
     ${fq_target_name}
