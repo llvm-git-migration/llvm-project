@@ -11313,18 +11313,15 @@ SDValue AArch64TargetLowering::ReconstructShuffle(SDValue Op,
       LaneMask[j] = ExtractBase + j;
   }
 
-  // Final check before we try to produce nonsense...
-  if (!isShuffleMaskLegal(Mask, ShuffleVT)) {
-    LLVM_DEBUG(dbgs() << "Reshuffle failed: illegal shuffle mask\n");
-    return SDValue();
-  }
-
   SDValue ShuffleOps[] = { DAG.getUNDEF(ShuffleVT), DAG.getUNDEF(ShuffleVT) };
   for (unsigned i = 0; i < Sources.size(); ++i)
     ShuffleOps[i] = Sources[i].ShuffleVec;
 
-  SDValue Shuffle = DAG.getVectorShuffle(ShuffleVT, dl, ShuffleOps[0],
-                                         ShuffleOps[1], Mask);
+  SDValue Shuffle = buildLegalVectorShuffle(ShuffleVT, dl, ShuffleOps[0],
+                                            ShuffleOps[1], Mask, DAG);
+  if (!Shuffle)
+    return SDValue();
+  
   SDValue V;
   if (DAG.getDataLayout().isBigEndian()) {
     V = DAG.getNode(AArch64ISD::NVCAST, dl, VT, Shuffle);
@@ -13825,7 +13822,7 @@ bool AArch64TargetLowering::isShuffleMaskLegal(ArrayRef<int> M, EVT VT) const {
   return (ShuffleVectorSDNode::isSplatMask(&M[0], VT) || isREVMask(M, VT, 64) ||
           isREVMask(M, VT, 32) || isREVMask(M, VT, 16) ||
           isEXTMask(M, VT, DummyBool, DummyUnsigned) ||
-          (isTBLMask(M, VT) && VT.getScalarSizeInBits() < 64) ||
+          isTBLMask(M, VT) ||
           isTRNMask(M, VT, DummyUnsigned) || isUZPMask(M, VT, DummyUnsigned) ||
           isZIPMask(M, VT, DummyUnsigned) ||
           isTRN_v_undef_Mask(M, VT, DummyUnsigned) ||
