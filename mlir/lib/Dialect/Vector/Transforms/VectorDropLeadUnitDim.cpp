@@ -332,9 +332,12 @@ struct CastAwayTransferWriteLeadingOneDim
 LogicalResult
 mlir::vector::castAwayContractionLeadingOneDim(vector::ContractionOp contractOp,
                                                RewriterBase &rewriter) {
-  // TODO(#78787): Not supported masked op yet.
-  if (cast<MaskableOpInterface>(contractOp.getOperation()).isMasked())
-    return failure();
+  // Specifically for masked Ops for which we need to update the insertion
+  // point
+  PatternRewriter::InsertionGuard guard(rewriter);
+
+  auto isMasked =
+      cast<MaskableOpInterface>(contractOp.getOperation()).isMasked();
   VectorType oldAccType = dyn_cast<VectorType>(contractOp.getAccType());
   if (oldAccType == nullptr)
     return failure();
@@ -345,6 +348,12 @@ mlir::vector::castAwayContractionLeadingOneDim(vector::ContractionOp contractOp,
   // currently we support only dropping one dim but the pattern can be applied
   // greedily to drop more.
   int64_t dropDim = 1;
+
+  if (isMasked) {
+    // Update the insertion point to avoid adding more ops to the vector.mask
+    // region corresponding to `mask`
+    rewriter.setInsertionPointAfter(contractOp->getParentOp());
+  }
 
   auto oldIndexingMaps = contractOp.getIndexingMapsArray();
   SmallVector<AffineMap> newIndexingMaps;
@@ -368,6 +377,7 @@ mlir::vector::castAwayContractionLeadingOneDim(vector::ContractionOp contractOp,
   SmallVector<Value> operands = {contractOp.getLhs(), contractOp.getRhs(),
                                  contractOp.getAcc()};
   SmallVector<Value> newOperands;
+  auto loc = contractOp.getLoc();
 
   for (const auto &it : llvm::enumerate(oldIndexingMaps)) {
     // Check if the dim to be dropped exists as a leading dim in the operand
@@ -405,7 +415,7 @@ mlir::vector::castAwayContractionLeadingOneDim(vector::ContractionOp contractOp,
         map = AffineMap::get(map.getNumDims(), 0, transposeResults,
                              contractOp.getContext());
         operands[it.index()] = rewriter.create<vector::TransposeOp>(
-            contractOp.getLoc(), operands[it.index()], perm);
+            loc, operands[it.index()], perm);
       }
     }
     // We have taken care to have the dim to be dropped be
@@ -429,17 +439,30 @@ mlir::vector::castAwayContractionLeadingOneDim(vector::ContractionOp contractOp,
     // Extract if its a valid extraction, otherwise use the operand
     // without extraction.
     newOperands.push_back(
-        validExtract ? rewriter.create<vector::ExtractOp>(contractOp.getLoc(),
-                                                          operands[it.index()],
-                                                          splatZero(dropDim))
+        validExtract ? rewriter.create<vector::ExtractOp>(
+                           loc, operands[it.index()], splatZero(dropDim))
                      : operands[it.index()]);
   }
-  auto newContractOp = rewriter.create<vector::ContractionOp>(
-      contractOp.getLoc(), newOperands[0], newOperands[1], newOperands[2],
+  Operation *newContractOp = rewriter.create<vector::ContractionOp>(
+      loc, newOperands[0], newOperands[1], newOperands[2],
       rewriter.getAffineMapArrayAttr(newIndexingMaps),
       rewriter.getArrayAttr(newIteratorTypes), contractOp.getKind());
-  rewriter.replaceOpWithNewOp<vector::BroadcastOp>(
-      contractOp, contractOp->getResultTypes()[0], newContractOp);
+
+  if (isMasked) {
+    auto mask = contractOp.getMaskingOp();
+    auto newMask = rewriter.create<vector::ExtractOp>(loc, mask.getMask(),
+                                                      splatZero(dropDim));
+
+    newContractOp =
+        mlir::vector::maskOperation(rewriter, newContractOp, newMask);
+    rewriter.replaceOpWithNewOp<vector::BroadcastOp>(
+        mask, contractOp->getResultTypes()[0], newContractOp->getResults()[0]);
+  } else {
+    rewriter.replaceOpWithNewOp<vector::BroadcastOp>(
+        contractOp, contractOp->getResultTypes()[0],
+        newContractOp->getResults()[0]);
+  }
+
   return success();
 }
 
