@@ -1105,6 +1105,33 @@ bool AArch64TargetInfo::initFeatureMap(
   return TargetInfo::initFeatureMap(Features, Diags, CPU, UpdatedFeaturesVec);
 }
 
+std::string AArch64TargetInfo::getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                                         unsigned Index) const {
+  return getManglingSuffixFromStr(Attr->getFeatureStr(Index));
+}
+
+std::string AArch64TargetInfo::getManglingSuffixFromStr(StringRef Str) const {
+  if (Str == "default")
+    return ".default";
+
+  std::string ManglingSuffix("._");
+  SmallVector<StringRef, 8> Features;
+  Str.split(Features, "+");
+  for (auto &Feat : Features)
+    Feat = Feat.trim();
+
+  // TODO Lexicographical order won't break the ABI if priorities change.
+  llvm::sort(Features, [this](const StringRef LHS, const StringRef RHS) {
+    return multiVersionSortPriority(LHS) < multiVersionSortPriority(RHS);
+  });
+
+  for (auto &Feat : Features)
+    if (auto Ext = llvm::AArch64::parseArchExtension(Feat))
+      ManglingSuffix.append(Twine("M", Ext->Name).str());
+
+  return ManglingSuffix;
+}
+
 // Parse AArch64 Target attributes, which are a comma separated list of:
 //  "arch=<arch>" - parsed to features as per -march=..
 //  "cpu=<cpu>" - parsed to features as per -mcpu=.., with CPU set to <cpu>

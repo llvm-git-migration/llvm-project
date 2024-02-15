@@ -164,7 +164,14 @@ public:
                          bool Enabled) const override;
   bool handleTargetFeatures(std::vector<std::string> &Features,
                             DiagnosticsEngine &Diags) override;
+
+  using TargetInfo::getManglingSuffixFromAttr;
+  std::string getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                        unsigned VersionIndex) const override;
+  std::string getManglingSuffixFromStr(StringRef Str) const override;
+
   ParsedTargetAttr parseTargetAttr(StringRef Str) const override;
+
   bool supportsTargetAttributeTune() const override { return true; }
 
   bool checkArithmeticFenceSupported() const override { return true; }

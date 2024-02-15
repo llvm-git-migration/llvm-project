@@ -14,6 +14,7 @@
 #ifndef LLVM_CLANG_BASIC_TARGETINFO_H
 #define LLVM_CLANG_BASIC_TARGETINFO_H
 
+#include "clang/AST/Attr.h"
 #include "clang/Basic/AddressSpaces.h"
 #include "clang/Basic/BitmaskEnum.h"
 #include "clang/Basic/CodeGenOptions.h"
@@ -1320,6 +1321,13 @@ public:
   virtual bool isValidTuneCPUName(StringRef Name) const {
     return isValidCPUName(Name);
   }
+
+  virtual std::string getManglingSuffixFromAttr(TargetAttr *Attr) const;
+  virtual std::string getManglingSuffixFromAttr(TargetVersionAttr *Attr) const;
+  virtual std::string getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                                unsigned VersionIndex) const;
+
+  virtual std::string getManglingSuffixFromStr(StringRef AttrStr) const;
 
   virtual ParsedTargetAttr parseTargetAttr(StringRef Str) const;
 

@@ -535,6 +535,57 @@ bool TargetInfo::initFeatureMap(
   return true;
 }
 
+std::string TargetInfo::getManglingSuffixFromAttr(TargetAttr *Attr) const {
+  if (Attr->isDefaultVersion())
+    return {};
+
+  return getManglingSuffixFromStr(Attr->getFeaturesStr());
+}
+
+std::string
+TargetInfo::getManglingSuffixFromAttr(TargetVersionAttr *Attr) const {
+  return getManglingSuffixFromStr(Attr->getNamesStr());
+}
+
+std::string TargetInfo::getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                                  unsigned Index) const {
+  std::string Suffix = getManglingSuffixFromStr(Attr->getFeatureStr(Index));
+  Suffix.append("." + Twine(Attr->getMangledIndex(Index)).str());
+  return Suffix;
+}
+
+std::string TargetInfo::getManglingSuffixFromStr(StringRef AttrStr) const {
+  if (AttrStr == "default")
+    return ".default";
+
+  std::string ManglingSuffix(".");
+  ParsedTargetAttr Info = parseTargetAttr(AttrStr);
+
+  llvm::sort(Info.Features, [this](StringRef LHS, StringRef RHS) {
+    // Multiversioning doesn't allow "no-${feature}", so we can
+    // only have "+" prefixes here.
+    assert(LHS.starts_with("+") && RHS.starts_with("+") &&
+           "Features should always have a prefix.");
+    return multiVersionSortPriority(LHS.substr(1)) >
+           multiVersionSortPriority(RHS.substr(1));
+   });
+
+   bool IsFirst = true;
+   if (!Info.CPU.empty()) {
+     IsFirst = false;
+     ManglingSuffix.append(Twine("arch_", Info.CPU).str());
+   }
+
+   for (StringRef Feat : Info.Features) {
+     if (!IsFirst)
+       ManglingSuffix.append("_");
+     IsFirst = false;
+     ManglingSuffix.append(Feat.substr(1).str());
+   }
+
+   return ManglingSuffix;
+}
+
 ParsedTargetAttr TargetInfo::parseTargetAttr(StringRef Features) const {
   ParsedTargetAttr Ret;
   if (Features == "default")
