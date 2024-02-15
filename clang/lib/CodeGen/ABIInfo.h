@@ -9,6 +9,7 @@
 #ifndef LLVM_CLANG_LIB_CODEGEN_ABIINFO_H
 #define LLVM_CLANG_LIB_CODEGEN_ABIINFO_H
 
+#include "clang/AST/Attr.h"
 #include "clang/AST/CharUnits.h"
 #include "clang/AST/Type.h"
 #include "llvm/IR/CallingConv.h"
@@ -111,6 +112,13 @@ public:
 
   CodeGen::ABIArgInfo getNaturalAlignIndirectInReg(QualType Ty,
                                                    bool Realign = false) const;
+
+  virtual std::string getManglingSuffixFromAttr(TargetAttr *Attr) const;
+  virtual std::string getManglingSuffixFromAttr(TargetVersionAttr *Attr) const;
+  virtual std::string getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                                unsigned VersionIndex) const;
+
+  virtual std::string getManglingSuffixFromStr(StringRef AttrStr) const;
 };
 
 /// Target specific hooks for defining how a type should be passed or returned

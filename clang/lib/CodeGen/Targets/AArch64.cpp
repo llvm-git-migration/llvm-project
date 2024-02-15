@@ -9,6 +9,7 @@
 #include "ABIInfoImpl.h"
 #include "TargetInfo.h"
 #include "clang/Basic/DiagnosticFrontend.h"
+#include "llvm/TargetParser/AArch64TargetParser.h"
 
 using namespace clang;
 using namespace clang::CodeGen;
@@ -75,6 +76,11 @@ private:
   bool allowBFloatArgsAndRet() const override {
     return getTarget().hasBFloat16Type();
   }
+
+  using ABIInfo::getManglingSuffixFromAttr;
+  std::string getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                        unsigned VersionIndex) const override;
+  std::string getManglingSuffixFromStr(StringRef Str) const override;
 };
 
 class AArch64SwiftABIInfo : public SwiftABIInfo {
@@ -855,6 +861,34 @@ void AArch64TargetCodeGenInfo::checkFunctionCallABI(
     if (NewAttr->isNewZA())
       CGM.getDiags().Report(CallLoc, diag::err_function_always_inline_new_za)
           << Callee->getDeclName();
+}
+
+std::string AArch64ABIInfo::getManglingSuffixFromAttr(TargetClonesAttr *Attr,
+                                                      unsigned Index) const {
+  return getManglingSuffixFromStr(Attr->getFeatureStr(Index));
+}
+
+std::string AArch64ABIInfo::getManglingSuffixFromStr(StringRef Str) const {
+  if (Str == "default")
+    return ".default";
+
+  std::string ManglingSuffix("._");
+  SmallVector<StringRef, 8> Features;
+  Str.split(Features, "+");
+  for (auto &Feat : Features)
+    Feat = Feat.trim();
+
+  // TODO Lexicographical order won't break the ABI if priorities change.
+  const TargetInfo &TI = CGT.getTarget();
+  llvm::sort(Features, [&TI](const StringRef LHS, const StringRef RHS) {
+    return TI.multiVersionSortPriority(LHS) < TI.multiVersionSortPriority(RHS);
+  });
+
+  for (auto &Feat : Features)
+    if (auto Ext = llvm::AArch64::parseArchExtension(Feat))
+      ManglingSuffix.append(Twine("M", Ext->Name).str());
+
+  return ManglingSuffix;
 }
 
 std::unique_ptr<TargetCodeGenInfo>
