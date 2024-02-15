@@ -71,9 +71,8 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
           .addReg(SrcReg, getKillRegState(KillSrc))
           .add(predOps(ARMCC::AL));
       BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
-          .addReg(ARM::R10, getKillRegState(KillSrc))
-          .add(predOps(ARMCC::AL))
-          ->addRegisterDead(ARM::R10, RegInfo);
+          .addReg(ARM::R10, RegState::Kill)
+          .add(predOps(ARMCC::AL));
       return;
     }
 
@@ -84,10 +83,8 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
           .addReg(SrcReg, getKillRegState(KillSrc))
           .add(predOps(ARMCC::AL));
       BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
-          .addReg(ARM::R11, getKillRegState(KillSrc))
-          .add(predOps(ARMCC::AL))
-          ->addRegisterDead(ARM::R11, RegInfo);
-      ;
+          .addReg(ARM::R11, RegState::Kill)
+          .add(predOps(ARMCC::AL));
       return;
     }
 
