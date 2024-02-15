@@ -776,6 +776,11 @@ NVPTXTargetLowering::NVPTXTargetLowering(const NVPTXTargetMachine &TM,
       AddPromotedToType(Op, MVT::bf16, MVT::f32);
   }
 
+  if (STI.getSmVersion() < 90 || STI.getPTXVersion() < 78) {
+    setOperationAction(ISD::FP_EXTEND, MVT::f64, Custom);
+    setOperationAction(ISD::FP_ROUND, MVT::bf16, Custom);
+  }
+
   // sm_80 only has conversions between f32 and bf16. Custom lower all other
   // bf16 conversions.
   if (STI.hasBF16Math() &&
@@ -2465,6 +2470,50 @@ SDValue NVPTXTargetLowering::LowerFP_TO_INT(SDValue Op,
   return Op;
 }
 
+SDValue NVPTXTargetLowering::LowerFP_ROUND(SDValue Op,
+                                           SelectionDAG &DAG) const {
+  if (Op.getValueType() == MVT::bf16) {
+    if (Op.getOperand(0).getValueType() == MVT::f32 &&
+        (STI.getSmVersion() < 80 || STI.getPTXVersion() < 70)) {
+      SDLoc Loc(Op);
+      return DAG.getNode(ISD::FP_TO_BF16, Loc, MVT::bf16, Op.getOperand(0));
+    }
+    if (Op.getOperand(0).getValueType() == MVT::f64 &&
+        (STI.getSmVersion() < 90 || STI.getPTXVersion() < 78)) {
+      SDLoc Loc(Op);
+      return DAG.getNode(ISD::FP_TO_BF16, Loc, MVT::bf16, Op.getOperand(0));
+    }
+  }
+
+  // Everything else is considered legal.
+  return Op;
+}
+
+SDValue NVPTXTargetLowering::LowerFP_EXTEND(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  if (Op.getOperand(0).getValueType() == MVT::bf16) {
+    if (Op.getValueType() == MVT::f32 &&
+        (STI.getSmVersion() < 80 || STI.getPTXVersion() < 71)) {
+      SDLoc Loc(Op);
+      return DAG.getNode(ISD::BF16_TO_FP, Loc, Op.getValueType(),
+                         Op.getOperand(0));
+    }
+    if (Op.getValueType() == MVT::f64 &&
+        (STI.getSmVersion() < 90 || STI.getPTXVersion() < 78)) {
+      SDLoc Loc(Op);
+      if (STI.getSmVersion() >= 80 && STI.getPTXVersion() >= 71) {
+        Op = DAG.getNode(ISD::FP_EXTEND, Loc, MVT::f32, Op.getOperand(0));
+        return DAG.getNode(ISD::FP_EXTEND, Loc, MVT::f64, Op);
+      }
+      return DAG.getNode(ISD::BF16_TO_FP, Loc, Op.getValueType(),
+                         Op.getOperand(0));
+    }
+  }
+
+  // Everything else is considered legal.
+  return Op;
+}
+
 static SDValue LowerVectorArith(SDValue Op, SelectionDAG &DAG) {
   SDLoc DL(Op);
   if (Op.getValueType() != MVT::v2i16)
@@ -2527,6 +2576,10 @@ NVPTXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
   case ISD::FP_TO_SINT:
   case ISD::FP_TO_UINT:
     return LowerFP_TO_INT(Op, DAG);
+  case ISD::FP_ROUND:
+    return LowerFP_ROUND(Op, DAG);
+  case ISD::FP_EXTEND:
+    return LowerFP_EXTEND(Op, DAG);
   case ISD::VAARG:
     return LowerVAARG(Op, DAG);
   case ISD::VASTART:

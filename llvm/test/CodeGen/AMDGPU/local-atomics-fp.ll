@@ -1398,61 +1398,75 @@ define bfloat @lds_atomic_fadd_ret_bf16(ptr addrspace(3) %ptr) nounwind {
 ; VI-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
 ; VI-NEXT:    v_and_b32_e32 v1, -4, v0
 ; VI-NEXT:    s_mov_b32 m0, -1
-; VI-NEXT:    ds_read_b32 v3, v1
+; VI-NEXT:    ds_read_b32 v4, v1
 ; VI-NEXT:    v_lshlrev_b32_e32 v2, 3, v0
 ; VI-NEXT:    s_mov_b32 s4, 0xffff
 ; VI-NEXT:    v_and_b32_e32 v0, 24, v2
 ; VI-NEXT:    v_lshlrev_b32_e64 v2, v2, s4
 ; VI-NEXT:    v_not_b32_e32 v2, v2
 ; VI-NEXT:    s_mov_b64 s[4:5], 0
+; VI-NEXT:    v_mov_b32_e32 v3, 0x7fc0
 ; VI-NEXT:  .LBB10_1: ; %atomicrmw.start
 ; VI-NEXT:    ; =>This Inner Loop Header: Depth=1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v4, v3
-; VI-NEXT:    v_lshrrev_b32_sdwa v3, v0, v4 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
-; VI-NEXT:    v_add_f32_e32 v3, 4.0, v3
-; VI-NEXT:    v_and_b32_e32 v5, v4, v2
-; VI-NEXT:    v_lshlrev_b32_sdwa v3, v0, v3 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:WORD_1
-; VI-NEXT:    v_or_b32_e32 v3, v5, v3
-; VI-NEXT:    ds_cmpst_rtn_b32 v3, v1, v4, v3
+; VI-NEXT:    v_mov_b32_e32 v5, v4
+; VI-NEXT:    v_lshrrev_b32_sdwa v4, v0, v5 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
+; VI-NEXT:    v_add_f32_e32 v4, 4.0, v4
+; VI-NEXT:    v_bfe_u32 v7, v4, 16, 1
+; VI-NEXT:    v_add_u32_e32 v7, vcc, v7, v4
+; VI-NEXT:    v_add_u32_e32 v7, vcc, 0x7fff, v7
+; VI-NEXT:    v_lshrrev_b32_e32 v7, 16, v7
+; VI-NEXT:    v_cmp_o_f32_e32 vcc, v4, v4
+; VI-NEXT:    v_cndmask_b32_e32 v4, v3, v7, vcc
+; VI-NEXT:    v_and_b32_e32 v6, v5, v2
+; VI-NEXT:    v_lshlrev_b32_e32 v4, v0, v4
+; VI-NEXT:    v_or_b32_e32 v4, v6, v4
+; VI-NEXT:    ds_cmpst_rtn_b32 v4, v1, v5, v4
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_cmp_eq_u32_e32 vcc, v3, v4
+; VI-NEXT:    v_cmp_eq_u32_e32 vcc, v4, v5
 ; VI-NEXT:    s_or_b64 s[4:5], vcc, s[4:5]
 ; VI-NEXT:    s_andn2_b64 exec, exec, s[4:5]
 ; VI-NEXT:    s_cbranch_execnz .LBB10_1
 ; VI-NEXT:  ; %bb.2: ; %atomicrmw.end
 ; VI-NEXT:    s_or_b64 exec, exec, s[4:5]
-; VI-NEXT:    v_lshrrev_b32_e32 v0, v0, v3
+; VI-NEXT:    v_lshrrev_b32_e32 v0, v0, v4
 ; VI-NEXT:    s_setpc_b64 s[30:31]
 ;
 ; GFX9-LABEL: lds_atomic_fadd_ret_bf16:
 ; GFX9:       ; %bb.0:
 ; GFX9-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
 ; GFX9-NEXT:    v_and_b32_e32 v1, -4, v0
-; GFX9-NEXT:    ds_read_b32 v2, v1
-; GFX9-NEXT:    v_lshlrev_b32_e32 v3, 3, v0
+; GFX9-NEXT:    ds_read_b32 v4, v1
+; GFX9-NEXT:    v_lshlrev_b32_e32 v2, 3, v0
 ; GFX9-NEXT:    s_mov_b32 s4, 0xffff
-; GFX9-NEXT:    v_and_b32_e32 v0, 24, v3
-; GFX9-NEXT:    v_lshlrev_b32_e64 v3, v3, s4
-; GFX9-NEXT:    v_not_b32_e32 v3, v3
+; GFX9-NEXT:    v_and_b32_e32 v0, 24, v2
+; GFX9-NEXT:    v_lshlrev_b32_e64 v2, v2, s4
+; GFX9-NEXT:    v_not_b32_e32 v2, v2
 ; GFX9-NEXT:    s_mov_b64 s[4:5], 0
+; GFX9-NEXT:    s_movk_i32 s6, 0x7fff
+; GFX9-NEXT:    v_mov_b32_e32 v3, 0x7fc0
 ; GFX9-NEXT:  .LBB10_1: ; %atomicrmw.start
 ; GFX9-NEXT:    ; =>This Inner Loop Header: Depth=1
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    v_mov_b32_e32 v4, v2
-; GFX9-NEXT:    v_lshrrev_b32_sdwa v2, v0, v4 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
-; GFX9-NEXT:    v_add_f32_e32 v2, 4.0, v2
-; GFX9-NEXT:    v_lshlrev_b32_sdwa v2, v0, v2 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:WORD_1
-; GFX9-NEXT:    v_and_or_b32 v2, v4, v3, v2
-; GFX9-NEXT:    ds_cmpst_rtn_b32 v2, v1, v4, v2
+; GFX9-NEXT:    v_mov_b32_e32 v5, v4
+; GFX9-NEXT:    v_lshrrev_b32_sdwa v4, v0, v5 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
+; GFX9-NEXT:    v_add_f32_e32 v4, 4.0, v4
+; GFX9-NEXT:    v_bfe_u32 v6, v4, 16, 1
+; GFX9-NEXT:    v_add3_u32 v6, v6, v4, s6
+; GFX9-NEXT:    v_lshrrev_b32_e32 v6, 16, v6
+; GFX9-NEXT:    v_cmp_o_f32_e32 vcc, v4, v4
+; GFX9-NEXT:    v_cndmask_b32_e32 v4, v3, v6, vcc
+; GFX9-NEXT:    v_lshlrev_b32_e32 v4, v0, v4
+; GFX9-NEXT:    v_and_or_b32 v4, v5, v2, v4
+; GFX9-NEXT:    ds_cmpst_rtn_b32 v4, v1, v5, v4
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, v2, v4
+; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, v4, v5
 ; GFX9-NEXT:    s_or_b64 s[4:5], vcc, s[4:5]
 ; GFX9-NEXT:    s_andn2_b64 exec, exec, s[4:5]
 ; GFX9-NEXT:    s_cbranch_execnz .LBB10_1
 ; GFX9-NEXT:  ; %bb.2: ; %atomicrmw.end
 ; GFX9-NEXT:    s_or_b64 exec, exec, s[4:5]
-; GFX9-NEXT:    v_lshrrev_b32_e32 v0, v0, v2
+; GFX9-NEXT:    v_lshrrev_b32_e32 v0, v0, v4
 ; GFX9-NEXT:    s_setpc_b64 s[30:31]
 ;
 ; GFX7-LABEL: lds_atomic_fadd_ret_bf16:
@@ -1539,19 +1553,26 @@ define void @lds_atomic_fadd_noret_bf16(ptr addrspace(3) %ptr) nounwind {
 ; VI-NEXT:    v_lshlrev_b32_e64 v2, v2, s4
 ; VI-NEXT:    v_not_b32_e32 v2, v2
 ; VI-NEXT:    s_mov_b64 s[4:5], 0
+; VI-NEXT:    v_mov_b32_e32 v4, 0x7fc0
 ; VI-NEXT:  .LBB11_1: ; %atomicrmw.start
 ; VI-NEXT:    ; =>This Inner Loop Header: Depth=1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_lshrrev_b32_sdwa v4, v0, v3 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
-; VI-NEXT:    v_add_f32_e32 v4, 4.0, v4
-; VI-NEXT:    v_and_b32_e32 v5, v3, v2
-; VI-NEXT:    v_lshlrev_b32_sdwa v4, v0, v4 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:WORD_1
-; VI-NEXT:    v_or_b32_e32 v4, v5, v4
-; VI-NEXT:    ds_cmpst_rtn_b32 v4, v1, v3, v4
+; VI-NEXT:    v_lshrrev_b32_sdwa v5, v0, v3 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
+; VI-NEXT:    v_add_f32_e32 v5, 4.0, v5
+; VI-NEXT:    v_bfe_u32 v7, v5, 16, 1
+; VI-NEXT:    v_add_u32_e32 v7, vcc, v7, v5
+; VI-NEXT:    v_add_u32_e32 v7, vcc, 0x7fff, v7
+; VI-NEXT:    v_lshrrev_b32_e32 v7, 16, v7
+; VI-NEXT:    v_cmp_o_f32_e32 vcc, v5, v5
+; VI-NEXT:    v_cndmask_b32_e32 v5, v4, v7, vcc
+; VI-NEXT:    v_and_b32_e32 v6, v3, v2
+; VI-NEXT:    v_lshlrev_b32_e32 v5, v0, v5
+; VI-NEXT:    v_or_b32_e32 v5, v6, v5
+; VI-NEXT:    ds_cmpst_rtn_b32 v5, v1, v3, v5
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_cmp_eq_u32_e32 vcc, v4, v3
+; VI-NEXT:    v_cmp_eq_u32_e32 vcc, v5, v3
 ; VI-NEXT:    s_or_b64 s[4:5], vcc, s[4:5]
-; VI-NEXT:    v_mov_b32_e32 v3, v4
+; VI-NEXT:    v_mov_b32_e32 v3, v5
 ; VI-NEXT:    s_andn2_b64 exec, exec, s[4:5]
 ; VI-NEXT:    s_cbranch_execnz .LBB11_1
 ; VI-NEXT:  ; %bb.2: ; %atomicrmw.end
@@ -1569,18 +1590,25 @@ define void @lds_atomic_fadd_noret_bf16(ptr addrspace(3) %ptr) nounwind {
 ; GFX9-NEXT:    v_lshlrev_b32_e64 v2, v2, s4
 ; GFX9-NEXT:    v_not_b32_e32 v2, v2
 ; GFX9-NEXT:    s_mov_b64 s[4:5], 0
+; GFX9-NEXT:    s_movk_i32 s6, 0x7fff
+; GFX9-NEXT:    v_mov_b32_e32 v4, 0x7fc0
 ; GFX9-NEXT:  .LBB11_1: ; %atomicrmw.start
 ; GFX9-NEXT:    ; =>This Inner Loop Header: Depth=1
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    v_lshrrev_b32_sdwa v4, v0, v3 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
-; GFX9-NEXT:    v_add_f32_e32 v4, 4.0, v4
-; GFX9-NEXT:    v_lshlrev_b32_sdwa v4, v0, v4 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:WORD_1
-; GFX9-NEXT:    v_and_or_b32 v4, v3, v2, v4
-; GFX9-NEXT:    ds_cmpst_rtn_b32 v4, v1, v3, v4
+; GFX9-NEXT:    v_lshrrev_b32_sdwa v5, v0, v3 dst_sel:WORD_1 dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:DWORD
+; GFX9-NEXT:    v_add_f32_e32 v5, 4.0, v5
+; GFX9-NEXT:    v_bfe_u32 v6, v5, 16, 1
+; GFX9-NEXT:    v_add3_u32 v6, v6, v5, s6
+; GFX9-NEXT:    v_lshrrev_b32_e32 v6, 16, v6
+; GFX9-NEXT:    v_cmp_o_f32_e32 vcc, v5, v5
+; GFX9-NEXT:    v_cndmask_b32_e32 v5, v4, v6, vcc
+; GFX9-NEXT:    v_lshlrev_b32_e32 v5, v0, v5
+; GFX9-NEXT:    v_and_or_b32 v5, v3, v2, v5
+; GFX9-NEXT:    ds_cmpst_rtn_b32 v5, v1, v3, v5
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, v4, v3
+; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, v5, v3
 ; GFX9-NEXT:    s_or_b64 s[4:5], vcc, s[4:5]
-; GFX9-NEXT:    v_mov_b32_e32 v3, v4
+; GFX9-NEXT:    v_mov_b32_e32 v3, v5
 ; GFX9-NEXT:    s_andn2_b64 exec, exec, s[4:5]
 ; GFX9-NEXT:    s_cbranch_execnz .LBB11_1
 ; GFX9-NEXT:  ; %bb.2: ; %atomicrmw.end
