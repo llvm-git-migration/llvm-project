@@ -5,6 +5,7 @@ add_flang_library(FortranLower
   Allocatable.cpp
   Bridge.cpp
   CallInterface.cpp
+  ClauseProcessor.cpp
   Coarray.cpp
   ComponentPath.cpp
   ConvertArrayConstructor.cpp
@@ -16,6 +17,7 @@ add_flang_library(FortranLower
   ConvertType.cpp
   ConvertVariable.cpp
   CustomIntrinsicCall.cpp
+  DataSharingProcessor.cpp
   DumpEvaluateExpr.cpp
   HlfirIntrinsics.cpp
   HostAssociations.cpp
@@ -25,6 +27,7 @@ add_flang_library(FortranLower
   Mangler.cpp
   OpenACC.cpp
   OpenMP.cpp
+  OpenMPUtils.cpp
   PFTBuilder.cpp
   Runtime.cpp
   SymbolMap.cpp
