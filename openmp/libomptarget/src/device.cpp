@@ -151,7 +151,7 @@ int32_t DeviceTy::submitData(void *TgtPtrBegin, void *HstPtrBegin, int64_t Size,
   OMPT_IF_BUILT(
       InterfaceRAII TargetDataSubmitRAII(
           RegionInterface.getCallbacks<ompt_target_data_transfer_to_device>(),
-          DeviceID, TgtPtrBegin, HstPtrBegin, Size,
+          omp_get_initial_device(), HstPtrBegin, DeviceID, TgtPtrBegin, Size,
           /*CodePtr=*/OMPT_GET_RETURN_ADDRESS);)
 
   if (!AsyncInfo || !RTL->data_submit_async || !RTL->synchronize)
@@ -173,7 +173,7 @@ int32_t DeviceTy::retrieveData(void *HstPtrBegin, void *TgtPtrBegin,
   OMPT_IF_BUILT(
       InterfaceRAII TargetDataRetrieveRAII(
           RegionInterface.getCallbacks<ompt_target_data_transfer_from_device>(),
-          DeviceID, HstPtrBegin, TgtPtrBegin, Size,
+          DeviceID, TgtPtrBegin, omp_get_initial_device(), HstPtrBegin, Size,
           /*CodePtr=*/OMPT_GET_RETURN_ADDRESS);)
 
   if (!RTL->data_retrieve_async || !RTL->synchronize)
@@ -185,6 +185,12 @@ int32_t DeviceTy::retrieveData(void *HstPtrBegin, void *TgtPtrBegin,
 // Copy data from current device to destination device directly
 int32_t DeviceTy::dataExchange(void *SrcPtr, DeviceTy &DstDev, void *DstPtr,
                                int64_t Size, AsyncInfoTy &AsyncInfo) {
+  /// RAII to establish tool anchors before and after data exchange
+  OMPT_IF_BUILT(
+      InterfaceRAII TargetDataExchangeRAII(
+          RegionInterface.getCallbacks<ompt_target_data_transfer_from_device>(),
+          DeviceID, SrcPtr, DstDev.RTLDeviceID, DstPtr, Size,
+          /*CodePtr=*/OMPT_GET_RETURN_ADDRESS);)
   if (!AsyncInfo || !RTL->data_exchange_async || !RTL->synchronize) {
     assert(RTL->data_exchange && "RTL->data_exchange is nullptr");
     return RTL->data_exchange(RTLDeviceID, SrcPtr, DstDev.RTLDeviceID, DstPtr,
