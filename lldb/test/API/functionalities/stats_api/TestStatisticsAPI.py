@@ -146,7 +146,7 @@ class TestStatsAPI(TestBase):
         self.assertEqual(debug_stats["totalDebugInfoByteSize"], 188)
 
         # Get statistics with force loading
-        stats_options.SetForceLoading(True)
+        stats_options.SetReportAllAvailableDebugInfo(True)
         stats_force = target.GetStatistics(stats_options)
         stream_force = lldb.SBStream()
         stats_force.GetAsJSON(stream_force)
