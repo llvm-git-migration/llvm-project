@@ -53,15 +53,38 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
         .addReg(SrcReg, getKillRegState(KillSrc))
         .add(predOps(ARMCC::AL));
   else {
-    // FIXME: Can also use 'mov hi, $src; mov $dst, hi',
-    // with hi as either r10 or r11.
-
     const TargetRegisterInfo *RegInfo = st.getRegisterInfo();
     if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I)
         == MachineBasicBlock::LQR_Dead) {
       BuildMI(MBB, I, DL, get(ARM::tMOVSr), DestReg)
           .addReg(SrcReg, getKillRegState(KillSrc))
           ->addRegisterDead(ARM::CPSR, RegInfo);
+      return;
+    }
+
+    // Can also use 'mov hi, $src; mov $dst, hi',
+    // with hi as either r10 or r11.
+    if (MBB.computeRegisterLiveness(RegInfo, ARM::R10, I) ==
+        MachineBasicBlock::LQR_Dead) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), ARM::R10)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(ARM::R10, RegState::Kill)
+          .add(predOps(ARMCC::AL));
+      return;
+    }
+
+    if (MBB.computeRegisterLiveness(RegInfo, ARM::R11, I) ==
+        MachineBasicBlock::LQR_Dead) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), ARM::R11)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(ARM::R11, RegState::Kill)
+          .add(predOps(ARMCC::AL));
       return;
     }
 
