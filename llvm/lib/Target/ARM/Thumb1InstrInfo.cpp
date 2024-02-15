@@ -12,6 +12,7 @@
 
 #include "Thumb1InstrInfo.h"
 #include "ARMSubtarget.h"
+#include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -47,21 +48,64 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   assert(ARM::GPRRegClass.contains(DestReg, SrcReg) &&
          "Thumb1 can only copy GPR registers");
 
-  if (st.hasV6Ops() || ARM::hGPRRegClass.contains(SrcReg)
-      || !ARM::tGPRRegClass.contains(DestReg))
+  if (st.hasV6Ops() || ARM::hGPRRegClass.contains(SrcReg) ||
+      !ARM::tGPRRegClass.contains(DestReg))
     BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
         .addReg(SrcReg, getKillRegState(KillSrc))
         .add(predOps(ARMCC::AL));
   else {
-    // FIXME: Can also use 'mov hi, $src; mov $dst, hi',
-    // with hi as either r10 or r11.
-
     const TargetRegisterInfo *RegInfo = st.getRegisterInfo();
-    if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I)
-        == MachineBasicBlock::LQR_Dead) {
+    if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I, MBB.size()) ==
+        MachineBasicBlock::LQR_Dead) {
       BuildMI(MBB, I, DL, get(ARM::tMOVSr), DestReg)
           .addReg(SrcReg, getKillRegState(KillSrc))
           ->addRegisterDead(ARM::CPSR, RegInfo);
+      return;
+    }
+
+    LivePhysRegs UsedRegs(*RegInfo);
+    UsedRegs.addLiveOuts(MBB);
+
+    const MCPhysReg *CSRegs = RegInfo->getCalleeSavedRegs(&MF);
+    for (unsigned i = 0; CSRegs[i]; ++i)
+      UsedRegs.addReg(CSRegs[i]);
+
+    auto InstUpToI = MBB.end();
+    while (InstUpToI != I)
+      // The pre-decrement is on purpose here.
+      // We want to have the liveness right before I.
+      UsedRegs.stepBackward(*--InstUpToI);
+
+    // Look for a temporary register to use.
+    BitVector GPRsNoLRSP = RegInfo->getAllocatableSet(
+        MF, RegInfo->getRegClass(ARM::hGPRRegClassID));
+
+    // Avoid messing with these, just to be safe
+    // NOTE: lr is caller-save, so we can use it
+    GPRsNoLRSP.reset(ARM::SP);
+    GPRsNoLRSP.reset(ARM::PC);
+
+    MachineRegisterInfo &MRI = MF.getRegInfo();
+    Register Reg = ARM::NoRegister;
+
+    // Find the first high-register that is available
+    for (auto RegT : GPRsNoLRSP.set_bits()) {
+      if (UsedRegs.available(MRI, RegT)) {
+        Reg = RegT;
+        break;
+      }
+    }
+
+    // Can also use 'mov hi, $src; mov $dst, hi',
+    // with hi as any of the high registers available
+    if (Reg) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), Reg)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(Reg, RegState::Kill)
+          .add(predOps(ARMCC::AL));
       return;
     }
 
