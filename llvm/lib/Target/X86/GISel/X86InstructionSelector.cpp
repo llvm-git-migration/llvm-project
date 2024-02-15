@@ -107,6 +107,8 @@ private:
                      MachineFunction &MF) const;
   bool selectCondBranch(MachineInstr &I, MachineRegisterInfo &MRI,
                         MachineFunction &MF) const;
+  bool selectBrJT(MachineInstr &I, MachineRegisterInfo &MRI,
+                  MachineFunction &MF) const;
   bool selectTurnIntoCOPY(MachineInstr &I, MachineRegisterInfo &MRI,
                           const unsigned DstReg,
                           const TargetRegisterClass *DstRC,
@@ -421,6 +423,8 @@ bool X86InstructionSelector::select(MachineInstr &I) {
     return selectInsert(I, MRI, MF);
   case TargetOpcode::G_BRCOND:
     return selectCondBranch(I, MRI, MF);
+  case TargetOpcode::G_BRJT:
+    return selectBrJT(I, MRI, MF);
   case TargetOpcode::G_IMPLICIT_DEF:
   case TargetOpcode::G_PHI:
     return selectImplicitDefOrPHI(I, MRI);
@@ -1469,6 +1473,44 @@ bool X86InstructionSelector::selectCondBranch(MachineInstr &I,
   constrainSelectedInstRegOperands(TestInst, TII, TRI, RBI);
 
   I.eraseFromParent();
+  return true;
+}
+
+bool X86InstructionSelector::selectBrJT(MachineInstr &I,
+                                        MachineRegisterInfo &MRI,
+                                        MachineFunction &MF) const {
+  assert((I.getOpcode() == TargetOpcode::G_BRJT) && "unexpected instruction");
+
+  auto Dst = I.getOperand(0).getReg();
+  auto DstTy = MRI.getType(I.getOperand(0).getReg());
+  auto JTI = I.getOperand(1).getIndex();
+  auto Idx = I.getOperand(2).getReg();
+  auto NewDst = MRI.createGenericVirtualRegister(MRI.getType(Dst));
+  auto *MMO = MF.getMachineMemOperand(MachinePointerInfo().getJumpTable(MF),
+                                      MachineMemOperand::MOLoad, DstTy,
+                                      Align(DstTy.getSizeInBytes()));
+
+  auto MovOp = STI.is64Bit() ? X86::MOV64rm : X86::MOV32rm;
+  auto JmpOp = STI.is64Bit() ? X86::JMP64r : X86::JMP32r;
+
+  // TODO: Maybe there is a way to use X86AddressMode
+  auto Mov = BuildMI(I.getParent(), I.getDebugLoc(), TII.get(MovOp))
+                 .addDef(NewDst)
+                 .addReg(0)
+                 .addImm(DstTy.getSizeInBytes())
+                 .addReg(Idx)
+                 .addJumpTableIndex(JTI)
+                 .addReg(0)
+                 .addMemOperand(MMO);
+
+  auto Jmp =
+      BuildMI(I.getParent(), I.getDebugLoc(), TII.get(JmpOp)).addReg(NewDst);
+
+  I.removeFromParent();
+
+  if (!constrainSelectedInstRegOperands(*Mov, TII, TRI, RBI) &&
+      !constrainSelectedInstRegOperands(*Jmp, TII, TRI, RBI))
+    return false;
   return true;
 }
 

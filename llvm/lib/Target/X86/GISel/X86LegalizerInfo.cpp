@@ -326,6 +326,15 @@ X86LegalizerInfo::X86LegalizerInfo(const X86Subtarget &STI,
 
   getActionDefinitionsBuilder(G_BRCOND).legalFor({s1});
 
+  getActionDefinitionsBuilder(G_JUMP_TABLE).legalFor({p0});
+  getActionDefinitionsBuilder(G_BRJT)
+      .legalIf([=](const LegalityQuery &Query) -> bool {
+        return typePairInSet(0, 1, {{p0, s32}})(Query) ||
+               (Is64Bit && typePairInSet(0, 1, {{p0, s64}})(Query));
+      })
+      .widenScalarOrEltToNextPow2(2, 32)
+      .clampScalar(1, s32, sMaxScalar);
+
   // pointer handling
   const std::initializer_list<LLT> PtrTypes32 = {s1, s8, s16, s32};
   const std::initializer_list<LLT> PtrTypes64 = {s1, s8, s16, s32, s64};
