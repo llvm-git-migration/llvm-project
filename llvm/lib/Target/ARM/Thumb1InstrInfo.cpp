@@ -12,6 +12,7 @@
 
 #include "Thumb1InstrInfo.h"
 #include "ARMSubtarget.h"
+#include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -53,15 +54,61 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
         .addReg(SrcReg, getKillRegState(KillSrc))
         .add(predOps(ARMCC::AL));
   else {
-    // FIXME: Can also use 'mov hi, $src; mov $dst, hi',
-    // with hi as either r10 or r11.
-
     const TargetRegisterInfo *RegInfo = st.getRegisterInfo();
     if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I)
         == MachineBasicBlock::LQR_Dead) {
       BuildMI(MBB, I, DL, get(ARM::tMOVSr), DestReg)
           .addReg(SrcReg, getKillRegState(KillSrc))
           ->addRegisterDead(ARM::CPSR, RegInfo);
+      return;
+    }
+
+    LivePhysRegs UsedRegs(*RegInfo);
+    UsedRegs.addLiveOuts(MBB);
+    const MCPhysReg *CSRegs = RegInfo->getCalleeSavedRegs(&MF);
+    if (CSRegs) {
+      for (unsigned i = 0; CSRegs[i]; ++i)
+        UsedRegs.addReg(CSRegs[i]);
+    }
+
+    // Can also use 'mov hi, $src; mov $dst, hi',
+    // with hi as either r10 or r11, or r12 (Scratch Register)
+    bool canUseReg = UsedRegs.available(MF.getRegInfo(), ARM::R10);
+    if (canUseReg && MBB.computeRegisterLiveness(RegInfo, ARM::R10, I) ==
+                         MachineBasicBlock::LQR_Dead) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), ARM::R10)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(ARM::R10, RegState::Kill)
+          .add(predOps(ARMCC::AL));
+      return;
+    }
+
+    canUseReg = UsedRegs.available(MF.getRegInfo(), ARM::R11);
+    if (canUseReg && MBB.computeRegisterLiveness(RegInfo, ARM::R11, I) ==
+                         MachineBasicBlock::LQR_Dead) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), ARM::R11)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(ARM::R11, RegState::Kill)
+          .add(predOps(ARMCC::AL));
+      return;
+    }
+
+    canUseReg = UsedRegs.available(MF.getRegInfo(), ARM::R12);
+    if (canUseReg && MBB.computeRegisterLiveness(RegInfo, ARM::R12, I) ==
+                         MachineBasicBlock::LQR_Dead) {
+      // Use high register to move source to destination
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), ARM::R12)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          .add(predOps(ARMCC::AL));
+      BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+          .addReg(ARM::R11, RegState::Kill)
+          .add(predOps(ARMCC::AL));
       return;
     }
 
