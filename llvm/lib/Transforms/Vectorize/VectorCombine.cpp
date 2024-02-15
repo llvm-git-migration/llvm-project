@@ -111,6 +111,7 @@ private:
   bool scalarizeLoadExtract(Instruction &I);
   bool foldShuffleOfBinops(Instruction &I);
   bool foldShuffleFromReductions(Instruction &I);
+  bool foldTruncFromReductions(Instruction &I);
   bool foldSelectShuffle(Instruction &I, bool FromReduction = false);
 
   void replaceValue(Value &Old, Value &New) {
@@ -1526,6 +1527,67 @@ bool VectorCombine::foldShuffleFromReductions(Instruction &I) {
   return foldSelectShuffle(*Shuffle, true);
 }
 
+/// Determine if its more efficient to fold:
+///   reduce(trunc(x)) -> trunc(reduce(x)).
+bool VectorCombine::foldTruncFromReductions(Instruction &I) {
+  auto *II = dyn_cast<IntrinsicInst>(&I);
+  if (!II)
+    return false;
+
+  unsigned ReductionOpc = 0;
+  switch (II->getIntrinsicID()) {
+  case Intrinsic::vector_reduce_add:
+    ReductionOpc = Instruction::Add;
+    break;
+  case Intrinsic::vector_reduce_mul:
+    ReductionOpc = Instruction::Mul;
+    break;
+  case Intrinsic::vector_reduce_and:
+    ReductionOpc = Instruction::And;
+    break;
+  case Intrinsic::vector_reduce_or:
+    ReductionOpc = Instruction::Or;
+    break;
+  case Intrinsic::vector_reduce_xor:
+    ReductionOpc = Instruction::Xor;
+    break;
+  default:
+    return false;
+  }
+  Value *ReductionSrc = I.getOperand(0);
+
+  Value *TruncSrc;
+  if (!match(ReductionSrc, m_Trunc(m_OneUse(m_Value(TruncSrc)))))
+    return false;
+
+  auto *Trunc = cast<CastInst>(ReductionSrc);
+  auto *TruncTy = cast<VectorType>(TruncSrc->getType());
+  auto *ReductionTy = cast<VectorType>(ReductionSrc->getType());
+  Type *ResultTy = I.getType();
+
+  TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+  InstructionCost OldCost =
+      TTI.getCastInstrCost(Instruction::Trunc, ReductionTy, TruncTy,
+                           TTI::CastContextHint::None, CostKind, Trunc) +
+      TTI.getArithmeticReductionCost(ReductionOpc, ReductionTy, std::nullopt,
+                                     CostKind);
+  InstructionCost NewCost =
+      TTI.getArithmeticReductionCost(ReductionOpc, TruncTy, std::nullopt,
+                                     CostKind) +
+      TTI.getCastInstrCost(Instruction::Trunc, ResultTy,
+                           ReductionTy->getScalarType(),
+                           TTI::CastContextHint::None, CostKind);
+
+  if (OldCost < NewCost || !NewCost.isValid())
+    return false;
+
+  Value *NewReduction = Builder.CreateIntrinsic(
+      TruncTy->getScalarType(), II->getIntrinsicID(), {TruncSrc});
+  Value *NewTruncation = Builder.CreateTrunc(NewReduction, ResultTy);
+  replaceValue(I, *NewTruncation);
+  return true;
+}
+
 /// This method looks for groups of shuffles acting on binops, of the form:
 ///  %x = shuffle ...
 ///  %y = shuffle ...
@@ -1917,6 +1979,7 @@ bool VectorCombine::run() {
       switch (Opcode) {
       case Instruction::Call:
         MadeChange |= foldShuffleFromReductions(I);
+        MadeChange |= foldTruncFromReductions(I);
         break;
       case Instruction::ICmp:
       case Instruction::FCmp:
