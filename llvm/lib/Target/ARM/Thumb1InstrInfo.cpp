@@ -12,6 +12,7 @@
 
 #include "Thumb1InstrInfo.h"
 #include "ARMSubtarget.h"
+#include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -53,27 +54,66 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
         .addReg(SrcReg, getKillRegState(KillSrc))
         .add(predOps(ARMCC::AL));
   else {
-    // FIXME: Can also use 'mov hi, $src; mov $dst, hi',
-    // with hi as either r10 or r11.
-
     const TargetRegisterInfo *RegInfo = st.getRegisterInfo();
-    if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I)
-        == MachineBasicBlock::LQR_Dead) {
+    if (MBB.computeRegisterLiveness(RegInfo, ARM::CPSR, I, 20) ==
+        MachineBasicBlock::LQR_Dead) {
       BuildMI(MBB, I, DL, get(ARM::tMOVSr), DestReg)
           .addReg(SrcReg, getKillRegState(KillSrc))
           ->addRegisterDead(ARM::CPSR, RegInfo);
       return;
     }
 
-    // 'MOV lo, lo' is unpredictable on < v6, so use the stack to do it
-    BuildMI(MBB, I, DL, get(ARM::tPUSH))
-        .add(predOps(ARMCC::AL))
-        .addReg(SrcReg, getKillRegState(KillSrc));
-    BuildMI(MBB, I, DL, get(ARM::tPOP))
-        .add(predOps(ARMCC::AL))
-        .addReg(DestReg, getDefRegState(true));
+    LivePhysRegs UsedRegs(*RegInfo);
+    UsedRegs.addLiveOuts(MBB);
+
+    const MCPhysReg *CSRegs = RegInfo->getCalleeSavedRegs(&MF);
+    for (unsigned i = 0; CSRegs[i]; ++i)
+      UsedRegs.addReg(CSRegs[i]);
+
+    auto InstUpToMBBI = MBB.end();
+    while (InstUpToMBBI != I)
+      // The pre-decrement is on purpose here.
+      // We want to have the liveness right before MBBI.
+      UsedRegs.stepBackward(*--InstUpToMBBI);
+
+    // Look for a temporary register to use.
+
+    BitVector GPRsNoLRSP = RegInfo->getAllocatableSet(
+        MF, RegInfo->getRegClass(ARM::hGPRRegClassID));
+
+    MachineRegisterInfo &MRI = MF.getRegInfo();
+    Register Reg = 0;
+    for (auto RegT : GPRsNoLRSP.set_bits()) {
+      if (UsedRegs.available(MRI, RegT)) {
+        // Remember the first pop-friendly register and exit.
+        Reg = RegT;
+        // Otherwise, remember that the register will be available to
+        // save a pop-friendly register.
+        break;
+      }
+
+      // Can also use 'mov hi, $src; mov $dst, hi',
+      // with hi as either r10 or r11, or r12 (Scratch Register)
+      if (Reg) {
+        // Use high register to move source to destination
+        BuildMI(MBB, I, DL, get(ARM::tMOVr), Reg)
+            .addReg(SrcReg, getKillRegState(KillSrc))
+            .add(predOps(ARMCC::AL));
+        BuildMI(MBB, I, DL, get(ARM::tMOVr), DestReg)
+            .addReg(Reg, RegState::Kill)
+            .add(predOps(ARMCC::AL));
+        return;
+      }
+
+      // 'MOV lo, lo' is unpredictable on < v6, so use the stack to do it
+      BuildMI(MBB, I, DL, get(ARM::tPUSH))
+          .add(predOps(ARMCC::AL))
+          .addReg(SrcReg, getKillRegState(KillSrc));
+      BuildMI(MBB, I, DL, get(ARM::tPOP))
+          .add(predOps(ARMCC::AL))
+          .addReg(DestReg, getDefRegState(true));
+    }
   }
-}
 
 void Thumb1InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                                           MachineBasicBlock::iterator I,
