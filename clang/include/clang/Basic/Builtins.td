@@ -4511,19 +4511,6 @@ def GetDeviceSideMangledName : LangBuiltin<"CUDA_LANG"> {
   let Prototype = "char const*(...)";
 }
 
-// HLSL
-def HLSLWaveActiveCountBits : LangBuiltin<"HLSL_LANG"> {
-  let Spellings = ["__builtin_hlsl_wave_active_count_bits"];
-  let Attributes = [NoThrow, Const];
-  let Prototype = "unsigned int(bool)";
-}
-
-def HLSLCreateHandle : LangBuiltin<"HLSL_LANG"> {
-  let Spellings = ["__builtin_hlsl_create_handle"];
-  let Attributes = [NoThrow, Const];
-  let Prototype = "void*(unsigned char)";
-}
-
 // Builtins for XRay.
 def XRayCustomEvent : Builtin {
   let Spellings = ["__xray_customevent"];
