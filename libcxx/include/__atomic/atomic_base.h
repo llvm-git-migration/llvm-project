@@ -102,26 +102,6 @@ struct __atomic_base // false
     return std::__cxx_atomic_compare_exchange_strong(std::addressof(__a_), std::addressof(__e), __d, __m, __m);
   }
 
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _Tp
-  __tag_invoke(__atomic_load_cpo, const __atomic_base& __this, memory_order __order) {
-    return __this.load(__order);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _Tp
-  __tag_invoke(__atomic_load_cpo, const volatile __atomic_base& __this, memory_order __order) {
-    return __this.load(__order);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_Tp> const*
-  __tag_invoke(__atomic_contention_address_cpo, const __atomic_base& __this) {
-    return std::addressof(__this.__a_);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_Tp> const volatile*
-  __tag_invoke(__atomic_contention_address_cpo, const volatile __atomic_base& __this) {
-    return std::addressof(__this.__a_);
-  }
-
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void wait(_Tp __v, memory_order __m = memory_order_seq_cst) const
       volatile _NOEXCEPT {
     std::__atomic_wait(*this, __v, __m);
@@ -214,6 +194,32 @@ struct __atomic_base<_Tp, true> : public __atomic_base<_Tp, false> {
   _LIBCPP_HIDE_FROM_ABI _Tp operator|=(_Tp __op) _NOEXCEPT { return fetch_or(__op) | __op; }
   _LIBCPP_HIDE_FROM_ABI _Tp operator^=(_Tp __op) volatile _NOEXCEPT { return fetch_xor(__op) ^ __op; }
   _LIBCPP_HIDE_FROM_ABI _Tp operator^=(_Tp __op) _NOEXCEPT { return fetch_xor(__op) ^ __op; }
+};
+
+// here we need _IsIntegral because the default template argument is not enough
+// e.g  __atomic_base<int> is __atomic_base<int, true>, which inherits from
+// __atomic_base<int, false> and the caller of the wait function is
+// __atomic_base<int, false>. So specializing __atomic_base<_Tp> does not work
+template <class _Tp, bool _IsIntegral>
+struct __atomic_waitable_customisations<__atomic_base<_Tp, _IsIntegral> > {
+  static _LIBCPP_HIDE_FROM_ABI _Tp __atomic_load(const __atomic_base<_Tp, _IsIntegral>& __a, memory_order __order) {
+    return __a.load(__order);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI _Tp
+  __atomic_load(const volatile __atomic_base<_Tp, _IsIntegral>& __this, memory_order __order) {
+    return __this.load(__order);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI const __cxx_atomic_impl<_Tp>*
+  __atomic_contention_address(const __atomic_base<_Tp, _IsIntegral>& __a) {
+    return std::addressof(__a.__a_);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI const volatile __cxx_atomic_impl<_Tp>*
+  __atomic_contention_address(const volatile __atomic_base<_Tp, _IsIntegral>& __this) {
+    return std::addressof(__this.__a_);
+  }
 };
 
 _LIBCPP_END_NAMESPACE_STD

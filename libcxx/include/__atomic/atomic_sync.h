@@ -21,6 +21,7 @@
 #include <__type_traits/conjunction.h>
 #include <__type_traits/decay.h>
 #include <__type_traits/invoke.h>
+#include <__type_traits/void_t.h>
 #include <__utility/declval.h>
 #include <cstring>
 
@@ -36,40 +37,30 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // - __atomic_notify_one
 // - __atomic_notify_all
 // Note that std::atomic<T>::wait was back-ported to C++03
-// there the below implementations look ugly to support C++03
+// The below implementations look ugly to support C++03
+template <class _Tp, class = void>
+struct __atomic_waitable_customisations {
+  template <class _AtomicWaitable>
+  static void __atomic_load(_AtomicWaitable&&, memory_order) = delete;
 
-// NOLINTBEGIN(libcpp-robust-against-adl)
-struct __atomic_load_cpo {
-  template <class _Tp>
-  using _Ret = decltype(__tag_invoke(
-      std::declval<__atomic_load_cpo>(), std::declval<const _Tp&>(), std::declval<memory_order>()));
-
-  template <class _Tp>
-  _LIBCPP_HIDE_FROM_ABI _Ret<_Tp> operator()(const _Tp& __t, memory_order __order) const _NOEXCEPT {
-    return __tag_invoke(*this, __t, __order);
-  }
+  template <class _AtomicWaitable>
+  static void __atomic_contention_address(_AtomicWaitable&&) = delete;
 };
-// TODO: if we can deprecate std::atomic<T>::wait before c++17, we could add
-// inline constexpr __atomic_load_cpo __atomic_load{};
-
-struct __atomic_contention_address_cpo {
-  template <class _Tp>
-  using _Ret = decltype(__tag_invoke(std::declval<__atomic_contention_address_cpo>(), std::declval<const _Tp&>()));
-
-  template <class _Tp>
-  _LIBCPP_HIDE_FROM_ABI _Ret<_Tp> operator()(const _Tp& __t) const _NOEXCEPT {
-    return __tag_invoke(*this, __t);
-  }
-};
-// TODO: if we can deprecate std::atomic<T>::wait before c++17, we could add
-// inline constexpr __atomic_contention_address_cpo __atomic_contention_address{};
-
-// NOLINTEND(libcpp-robust-against-adl)
 
 template <class _Tp>
-using __atomic_waitable =
-    _And<__invokable<__atomic_load_cpo, const _Tp&, memory_order>,
-         __invokable<__atomic_contention_address_cpo, const _Tp&> >;
+struct __atomic_waitable_customisations<_Tp, __enable_if_t<!__is_same(_Tp, __decay_t<_Tp>)> >
+    : __atomic_waitable_customisations<__decay_t<_Tp> > {};
+
+template <class _Tp, class = void>
+struct __atomic_waitable : false_type {};
+
+template <class _Tp>
+struct __atomic_waitable<
+    _Tp,
+    __void_t<decltype(__atomic_waitable_customisations<_Tp>::__atomic_load(
+                 std::declval<const _Tp&>(), std::declval<memory_order>())),
+             decltype(__atomic_waitable_customisations<_Tp>::__atomic_contention_address(std::declval<const _Tp&>()))> >
+    : true_type {};
 
 template <class _AtomicWaitable, class _Poll>
 struct __atomic_wait_poll_impl {
@@ -78,8 +69,7 @@ struct __atomic_wait_poll_impl {
   memory_order __order_;
 
   _LIBCPP_HIDE_FROM_ABI bool operator()() const {
-    __atomic_load_cpo __atomic_load = {};
-    auto __current_val              = __atomic_load(__a_, __order_);
+    auto __current_val = __atomic_waitable_customisations<_AtomicWaitable>::__atomic_load(__a_, __order_);
     return __poll_(__current_val);
   }
 };
@@ -111,8 +101,7 @@ struct __atomic_wait_backoff_impl {
   __update_monitor_val_and_poll(__cxx_atomic_contention_t const volatile*, __cxx_contention_t& __monitor_val) const {
     // In case the contention type happens to be __cxx_atomic_contention_t, i.e. __cxx_atomic_impl<int64_t>,
     // the platform wait is directly monitoring the atomic value itself.
-    __atomic_load_cpo __atomic_load = {};
-    __monitor_val                   = __atomic_load(__a_, __order_);
+    __monitor_val = __atomic_waitable_customisations<_AtomicWaitable>::__atomic_load(__a_, __order_);
     return __poll_(__monitor_val);
   }
 
@@ -121,17 +110,15 @@ struct __atomic_wait_backoff_impl {
   __update_monitor_val_and_poll(void const volatile* __contention_address, __cxx_contention_t& __monitor_val) const {
     // In case the contention type is anything else, platform wait is monitoring a __cxx_atomic_contention_t
     // from the global pool, the monitor comes from __libcpp_atomic_monitor
-    __monitor_val                   = std::__libcpp_atomic_monitor(__contention_address);
-    __atomic_load_cpo __atomic_load = {};
-    auto __current_val              = __atomic_load(__a_, __order_);
+    __monitor_val      = std::__libcpp_atomic_monitor(__contention_address);
+    auto __current_val = __atomic_waitable_customisations<_AtomicWaitable>::__atomic_load(__a_, __order_);
     return __poll_(__current_val);
   }
 
   _LIBCPP_AVAILABILITY_SYNC
   _LIBCPP_HIDE_FROM_ABI bool operator()(chrono::nanoseconds __elapsed) const {
     if (__elapsed > chrono::microseconds(64)) {
-      __atomic_contention_address_cpo __atomic_contention_address = {};
-      auto __contention_address                                   = __atomic_contention_address(__a_);
+      auto __contention_address = __atomic_waitable_customisations<_AtomicWaitable>::__atomic_contention_address(__a_);
       __cxx_contention_t __monitor_val;
       if (__update_monitor_val_and_poll(__contention_address, __monitor_val))
         return true;
@@ -156,15 +143,13 @@ __atomic_wait_unless(const _AtomicWaitable& __a, _Poll&& __poll, memory_order __
 template <class _AtomicWaitable>
 _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void __atomic_notify_one(const _AtomicWaitable& __a) {
   static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
-  __atomic_contention_address_cpo __atomic_contention_address = {};
-  std::__cxx_atomic_notify_one(__atomic_contention_address(__a));
+  std::__cxx_atomic_notify_one(__atomic_waitable_customisations<_AtomicWaitable>::__atomic_contention_address(__a));
 }
 
 template <class _AtomicWaitable>
 _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void __atomic_notify_all(const _AtomicWaitable& __a) {
   static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
-  __atomic_contention_address_cpo __atomic_contention_address = {};
-  std::__cxx_atomic_notify_all(__atomic_contention_address(__a));
+  std::__cxx_atomic_notify_all(__atomic_waitable_customisations<_AtomicWaitable>::__atomic_contention_address(__a));
 }
 
 #else // _LIBCPP_HAS_NO_THREADS
@@ -199,6 +184,7 @@ struct __bind_nonatomic_equal {
 template <class _AtomicWaitable, class _Up>
 _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void
 __atomic_wait(_AtomicWaitable& __a, _Up __val, memory_order __order) {
+  static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
   __bind_nonatomic_equal<_Up> __nonatomic_equal = {__val};
   std::__atomic_wait_unless(__a, __nonatomic_equal, __order);
 }

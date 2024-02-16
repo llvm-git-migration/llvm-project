@@ -48,26 +48,6 @@ struct atomic_flag {
     __cxx_atomic_store(&__a_, _LIBCPP_ATOMIC_FLAG_TYPE(false), __m);
   }
 
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE
-  __tag_invoke(__atomic_load_cpo, const atomic_flag& __this, memory_order __order) {
-    return std::__cxx_atomic_load(&__this.__a_, __order);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE
-  __tag_invoke(__atomic_load_cpo, const volatile atomic_flag& __this, memory_order __order) {
-    return std::__cxx_atomic_load(&__this.__a_, __order);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE> const*
-  __tag_invoke(__atomic_contention_address_cpo, const atomic_flag& __this) {
-    return std::addressof(__this.__a_);
-  }
-
-  friend _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE> const volatile*
-  __tag_invoke(__atomic_contention_address_cpo, const volatile atomic_flag& __this) {
-    return std::addressof(__this.__a_);
-  }
-
   _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void wait(bool __v, memory_order __m = memory_order_seq_cst) const
       volatile _NOEXCEPT {
     std::__atomic_wait(*this, _LIBCPP_ATOMIC_FLAG_TYPE(__v), __m);
@@ -96,6 +76,28 @@ struct atomic_flag {
   atomic_flag(const atomic_flag&)                     = delete;
   atomic_flag& operator=(const atomic_flag&)          = delete;
   atomic_flag& operator=(const atomic_flag&) volatile = delete;
+};
+
+template <>
+struct __atomic_waitable_customisations<atomic_flag> {
+  static _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE __atomic_load(const atomic_flag& __a, memory_order __order) {
+    return std::__cxx_atomic_load(&__a.__a_, __order);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI _LIBCPP_ATOMIC_FLAG_TYPE
+  __atomic_load(const volatile atomic_flag& __a, memory_order __order) {
+    return std::__cxx_atomic_load(&__a.__a_, __order);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI const __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE>*
+  __atomic_contention_address(const atomic_flag& __a) {
+    return std::addressof(__a.__a_);
+  }
+
+  static _LIBCPP_HIDE_FROM_ABI const volatile __cxx_atomic_impl<_LIBCPP_ATOMIC_FLAG_TYPE>*
+  __atomic_contention_address(const volatile atomic_flag& __a) {
+    return std::addressof(__a.__a_);
+  }
 };
 
 inline _LIBCPP_HIDE_FROM_ABI bool atomic_flag_test(const volatile atomic_flag* __o) _NOEXCEPT { return __o->test(); }
