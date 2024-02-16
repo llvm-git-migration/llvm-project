@@ -174,8 +174,10 @@ S13 s131 {1, 2};
 
 S9 s92 {A, B};
 // CHECK-MESSAGES-MACROS: :[[@LINE-1]]:9: warning: use designated init expression [modernize-use-designated-initializers]
+// CHECK-MESSAGES-MACROS: :[[@LINE-5]]:11: note: expanded from macro 'A'
 
 #define DECLARE_S93 S9 s93 {1, 2}
 
 DECLARE_S93;
 // CHECK-MESSAGES-MACROS: :[[@LINE-1]]:1: warning: use designated initializer list [modernize-use-designated-initializers]
+// CHECK-MESSAGES-MACROS: :[[@LINE-4]]:28: note: expanded from macro 'DECLARE_S93'
