@@ -635,8 +635,8 @@ def VOPProfile_Base_CVT_F32_F8_OpSel : VOPProfile<[f32, i32, untyped, untyped]> 
   let Src1VOP3DPP = Src1RC64;
 }
 
-let SubtargetPredicate = isGFX12Plus, mayRaiseFPException = 0,
-    SchedRW = [WriteFloatCvt] in {
+let SubtargetPredicate = isGFX12Plus, OtherPredicates = [HasFP8ConversionInsts],
+    mayRaiseFPException = 0, SchedRW = [WriteFloatCvt] in {
   defm V_CVT_F32_FP8_OP_SEL    : VOP1Inst<"v_cvt_f32_fp8_op_sel", VOPProfile_Base_CVT_F32_F8_OpSel>;
   defm V_CVT_F32_BF8_OP_SEL    : VOP1Inst<"v_cvt_f32_bf8_op_sel", VOPProfile_Base_CVT_F32_F8_OpSel>;
   defm V_CVT_PK_F32_FP8_OP_SEL : VOP1Inst<"v_cvt_pk_f32_fp8_op_sel", VOPProfile_Base_CVT_PK_F32_F8_OpSel>;
@@ -653,7 +653,7 @@ class Cvt_F32_F8_Pat_OpSel<SDPatternOperator node, bits<2> index,
          (inst_e32 $src))
 >;
 
-let SubtargetPredicate = isGFX12Plus in {
+let SubtargetPredicate = isGFX12Plus, OtherPredicates = [HasFP8ConversionInsts] in {
   foreach Index = [0, 1, 2, 3] in {
     def : Cvt_F32_F8_Pat_OpSel<int_amdgcn_cvt_f32_fp8, Index,
                                V_CVT_F32_FP8_e32, V_CVT_F32_FP8_OP_SEL_e64>;
@@ -898,7 +898,7 @@ multiclass VOP1_Real_NO_DPP_OP_SEL_with_name<GFXGen Gen, bits<9> op,
   VOP1_Real_e32_with_name<Gen, op, opName, asmName>,
   VOP3_Real_with_name<Gen, {0, 1, 1, op{6-0}}, opName, asmName>;
 
-
+let OtherPredicates = [HasFP8ConversionInsts] in {
 // Define VOP1 instructions using the pseudo instruction with its old profile and
 // VOP3 using the OpSel profile for the pseudo instruction.
 defm V_CVT_F32_FP8      : VOP1_Real_NO_VOP3_with_name_gfx12<0x06c, "V_CVT_F32_FP8", "v_cvt_f32_fp8">;
@@ -912,6 +912,7 @@ defm V_CVT_PK_F32_FP8   : VOP3_Real_with_name<GFX12Gen, 0x1ee, "V_CVT_PK_F32_FP8
 
 defm V_CVT_PK_F32_BF8   : VOP1_Real_e32_with_name<GFX12Gen, 0x06f, "V_CVT_PK_F32_BF8", "v_cvt_pk_f32_bf8">;
 defm V_CVT_PK_F32_BF8   : VOP3_Real_with_name<GFX12Gen, 0x1ef, "V_CVT_PK_F32_BF8_OP_SEL", "v_cvt_pk_f32_bf8">;
+}
 
 defm V_CVT_NEAREST_I32_F32 : VOP1_Real_FULL_with_name_gfx11_gfx12<0x00c,
   "V_CVT_RPI_I32_F32", "v_cvt_nearest_i32_f32">;

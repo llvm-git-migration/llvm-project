@@ -667,6 +667,7 @@ class Cvt_SR_F8_F32_Pat<SDPatternOperator node, bits<2> index, VOP3_Pseudo inst>
           !if(index{0}, SRCMODS.OP_SEL_0, 0), $old, 0)
 >;
 
+let SubtargetPredicate = HasFP8ConversionInsts in {
 foreach Index = [0, -1] in {
   def : Cvt_PK_F8_F32_Pat<int_amdgcn_cvt_pk_fp8_f32, Index, V_CVT_PK_FP8_F32_e64>;
   def : Cvt_PK_F8_F32_Pat<int_amdgcn_cvt_pk_bf8_f32, Index, V_CVT_PK_BF8_F32_e64>;
@@ -676,6 +677,7 @@ foreach Index = [0, 1, 2, 3] in {
   def : Cvt_SR_F8_F32_Pat<int_amdgcn_cvt_sr_fp8_f32, Index, V_CVT_SR_FP8_F32_e64>;
   def : Cvt_SR_F8_F32_Pat<int_amdgcn_cvt_sr_bf8_f32, Index, V_CVT_SR_BF8_F32_e64>;
 }
+} // End SubtargetPredicate = HasFP8ConversionInsts.
 
 class ThreeOp_i32_Pats <SDPatternOperator op1, SDPatternOperator op2, Instruction inst> : GCNPat <
   // This matches (op2 (op1 i32:$src0, i32:$src1), i32:$src2) with conditions.
@@ -1038,10 +1040,12 @@ defm V_MAXIMUM_F16        : VOP3Only_Realtriple_t16_gfx12<0x368>;
 defm V_PERMLANE16_VAR_B32  : VOP3Only_Real_Base_gfx12<0x30f>;
 defm V_PERMLANEX16_VAR_B32 : VOP3Only_Real_Base_gfx12<0x310>;
 
+let SubtargetPredicate = HasFP8ConversionInsts in {
 defm V_CVT_PK_FP8_F32  : VOP3Only_Realtriple_gfx12<0x369>;
 defm V_CVT_PK_BF8_F32  : VOP3Only_Realtriple_gfx12<0x36a>;
 defm V_CVT_SR_FP8_F32  : VOP3Only_Realtriple_gfx12<0x36b>;
 defm V_CVT_SR_BF8_F32  : VOP3Only_Realtriple_gfx12<0x36c>;
+}
 
 //===----------------------------------------------------------------------===//
 // GFX11, GFX12
