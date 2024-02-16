@@ -2084,7 +2084,7 @@ bool ClauseProcessor::processMotionClauses(
 
           mapOperands.push_back(mapOp);
         }
-        });
+      });
 }
 
 bool ClauseProcessor::processIsDevicePtr(
@@ -3043,7 +3043,7 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
   llvm::SmallVector<mlir::Type> devicePtrTypes, deviceAddrTypes;
   llvm::SmallVector<mlir::Location> devicePtrLocs, deviceAddrLocs;
   llvm::SmallVector<const Fortran::semantics::Symbol *> devicePtrSymbols,
-                                                        deviceAddrSymbols;
+      deviceAddrSymbols;
 
   ClauseProcessor cp(converter, semaCtx, clauseList);
   cp.processIf(Fortran::parser::OmpIfClause::DirectiveNameModifier::Target,
