@@ -53,6 +53,15 @@ public:
       bool shouldVisitTemplateInstantiations() const { return true; }
       bool shouldVisitImplicitCode() const { return false; }
 
+      bool VisitCXXMethodDecl(const CXXMethodDecl *D) {
+        if (auto* Class = D->getParent()) {
+          auto name = safeGetName(Class);
+          if (isRefCounted(Class))
+            return false; // Don't visit contents of Ref/RefPtr methods.
+        }
+        return true;
+      }
+
       bool VisitCallExpr(const CallExpr *CE) {
         Checker->visitCallExpr(CE);
         return true;
