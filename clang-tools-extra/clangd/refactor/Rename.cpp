@@ -919,9 +919,9 @@ renameObjCMethodWithinFile(ParsedAST &AST, const ObjCMethodDecl *MD,
 }
 
 // AST-based rename, it renames all occurrences in the main file.
-llvm::Expected<tooling::Replacements>
-renameWithinFile(ParsedAST &AST,
-                 const llvm::DenseMap<const NamedDecl *, std::string> &DeclToNewName) {
+llvm::Expected<tooling::Replacements> renameWithinFile(
+    ParsedAST &AST,
+    const llvm::DenseMap<const NamedDecl *, std::string> &DeclToNewName) {
   trace::Span Tracer("RenameWithinFile");
   const SourceManager &SM = AST.getSourceManager();
 
@@ -961,7 +961,8 @@ renameWithinFile(ParsedAST &AST,
     }
     if (const auto *MD = dyn_cast<ObjCMethodDecl>(Entry.first)) {
       if (MD->getSelector().getNumArgs() > 1) {
-        auto Res = renameObjCMethodWithinFile(AST, MD, Entry.second, std::move(Locs));
+        auto Res =
+            renameObjCMethodWithinFile(AST, MD, Entry.second, std::move(Locs));
         if (!Res)
           return Res.takeError();
         FilteredChanges = FilteredChanges.merge(Res.get());
@@ -1243,7 +1244,7 @@ llvm::Expected<RenameResult> rename(const RenameInputs &RInputs) {
         }
       } else if (const auto *ID = CD->getClassInterface()) {
         if (!ASTCtx.getObjCPropertyImplDeclForPropertyDecl(
-              PD, ID->getImplementation())) {
+                PD, ID->getImplementation())) {
           return makeError(ReasonToReject::OnlyRenameableFromDefinition);
         }
       }
@@ -1264,7 +1265,7 @@ llvm::Expected<RenameResult> rename(const RenameInputs &RInputs) {
       Placeholder = Name;
 
     auto Reject =
-      renameable(*Entry.first, RInputs.MainFilePath, RInputs.Index, Opts);
+        renameable(*Entry.first, RInputs.MainFilePath, RInputs.Index, Opts);
     if (Reject)
       return makeError(*Reject);
   }
@@ -1339,7 +1340,7 @@ llvm::Expected<RenameResult> rename(const RenameInputs &RInputs) {
     auto OtherFilesEdits = renameOutsideFile(
         *Entry.first, RInputs.MainFilePath, Entry.second, *RInputs.Index,
         Opts.LimitFiles == 0 ? std::numeric_limits<size_t>::max()
-                            : Opts.LimitFiles,
+                             : Opts.LimitFiles,
         *RInputs.FS);
     if (!OtherFilesEdits)
       return OtherFilesEdits.takeError();
