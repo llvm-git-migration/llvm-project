@@ -7,8 +7,8 @@ import re
 import subprocess
 import sys
 import os
-from distutils.version import LooseVersion
 from urllib.parse import urlparse
+from pkg_resources import packaging
 
 # LLDB modules
 import lldb
@@ -308,13 +308,21 @@ def expectedCompilerVersion(compiler_version):
         return operator in [">", ">=", "!", "!=", "not"]
 
     if operator == ">":
-        return LooseVersion(test_compiler_version) > LooseVersion(version)
+        return packaging.version.parse(test_compiler_version) > packaging.version.parse(
+            version
+        )
     if operator == ">=" or operator == "=>":
-        return LooseVersion(test_compiler_version) >= LooseVersion(version)
+        return packaging.version.parse(
+            test_compiler_version
+        ) >= packaging.version.parse(version)
     if operator == "<":
-        return LooseVersion(test_compiler_version) < LooseVersion(version)
+        return packaging.version.parse(test_compiler_version) < packaging.version.parse(
+            version
+        )
     if operator == "<=" or operator == "=<":
-        return LooseVersion(test_compiler_version) <= LooseVersion(version)
+        return packaging.version.parse(
+            test_compiler_version
+        ) <= packaging.version.parse(version)
     if operator == "!=" or operator == "!" or operator == "not":
         return str(version) not in str(test_compiler_version)
     return str(version) in str(test_compiler_version)
