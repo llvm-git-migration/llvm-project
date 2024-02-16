@@ -50,6 +50,10 @@ Improvements and New Features
 Deprecations and Removals
 -------------------------
 
+- Support for the C++20 synchronization library (``<barrier>``, ``<latch>``, ``atomic::wait``, etc.) has been
+  removed in language modes prior to C++20. If you are using these features prior to C++20, you will need to
+  update to ``-std=c++20``.
+
 - TODO: The ``LIBCXX_EXECUTOR`` CMake variables have been removed.
 
 - TODO: The ``LIBCXX_ENABLE_ASSERTIONS`` CMake variable that was used to enable the safe mode has been deprecated and setting
