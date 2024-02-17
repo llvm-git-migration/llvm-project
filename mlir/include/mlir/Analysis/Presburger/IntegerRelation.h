@@ -127,6 +127,11 @@ public:
   /// the variable.
   void setId(VarKind kind, unsigned i, Identifier id);
 
+  /// Search for an identifier by skipping offset identifiers. Returns true and
+  /// sets idx to the index of the indentifier if the identifier exists, returns
+  /// false and leaves idx unchanged otherwise.
+  bool findVar(Identifier id, unsigned &idx, unsigned offset) const;
+
   /// Returns a copy of the space without locals.
   PresburgerSpace getSpaceWithoutLocals() const {
     return PresburgerSpace::getRelationSpace(space.getNumDomainVars(),
