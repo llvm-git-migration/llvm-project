@@ -23,6 +23,8 @@
 
 using namespace llvm;
 
+ThreadPoolInterface::~ThreadPoolInterface() = default;
+
 #if LLVM_ENABLE_THREADS
 
 // A note on thread groups: Tasks are by default in no group (represented
