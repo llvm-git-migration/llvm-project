@@ -13,6 +13,7 @@
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "SIMachineFunctionInfo.h"
 #include "llvm/ADT/DepthFirstIterator.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineOperand.h"
 
@@ -74,6 +75,7 @@ public:
   const SIRegisterInfo *TRI;
   const GCNSubtarget *ST;
   const SIMachineFunctionInfo *MFI;
+  mutable DenseSet<MachineInstr *> SeenMI;
 
   bool frameIndexMayFold(const MachineInstr &UseMI, int OpNo,
                          const MachineOperand &OpToFold) const;
@@ -772,7 +774,6 @@ void SIFoldOperands::foldOperand(
   if (UseMI->isRegSequence()) {
     Register RegSeqDstReg = UseMI->getOperand(0).getReg();
     unsigned RegSeqDstSubReg = UseMI->getOperand(UseOpIdx + 1).getImm();
-
     for (auto &RSUse : make_early_inc_range(MRI->use_nodbg_operands(RegSeqDstReg))) {
       MachineInstr *RSUseMI = RSUse.getParent();
 
@@ -782,6 +783,10 @@ void SIFoldOperands::foldOperand(
 
       if (RSUse.getSubReg() != RegSeqDstSubReg)
         continue;
+
+      if (SeenMI.contains(RSUseMI))
+        continue;
+      SeenMI.insert(RSUseMI);
 
       foldOperand(OpToFold, RSUseMI, RSUseMI->getOperandNo(&RSUse), FoldList,
                   CopiesToReplace);
