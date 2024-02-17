@@ -94,34 +94,35 @@ struct Atan2OpConversion : public OpConversionPattern<complex::Atan2Op> {
 
     auto type = cast<ComplexType>(op.getType());
     Type elementType = type.getElementType();
+    arith::FastMathFlagsAttr fmf = op.getFastMathFlagsAttr();
 
     Value lhs = adaptor.getLhs();
     Value rhs = adaptor.getRhs();
 
-    Value rhsSquared = b.create<complex::MulOp>(type, rhs, rhs);
-    Value lhsSquared = b.create<complex::MulOp>(type, lhs, lhs);
+    Value rhsSquared = b.create<complex::MulOp>(type, rhs, rhs, fmf.getValue());
+    Value lhsSquared = b.create<complex::MulOp>(type, lhs, lhs, fmf.getValue());
     Value rhsSquaredPlusLhsSquared =
-        b.create<complex::AddOp>(type, rhsSquared, lhsSquared);
+        b.create<complex::AddOp>(type, rhsSquared, lhsSquared, fmf.getValue());
     Value sqrtOfRhsSquaredPlusLhsSquared =
-        b.create<complex::SqrtOp>(type, rhsSquaredPlusLhsSquared);
+        b.create<complex::SqrtOp>(type, rhsSquaredPlusLhsSquared, fmf.getValue());
 
     Value zero =
         b.create<arith::ConstantOp>(elementType, b.getZeroAttr(elementType));
     Value one = b.create<arith::ConstantOp>(elementType,
                                             b.getFloatAttr(elementType, 1));
     Value i = b.create<complex::CreateOp>(type, zero, one);
-    Value iTimesLhs = b.create<complex::MulOp>(i, lhs);
-    Value rhsPlusILhs = b.create<complex::AddOp>(rhs, iTimesLhs);
+    Value iTimesLhs = b.create<complex::MulOp>(i, lhs, fmf.getValue());
+    Value rhsPlusILhs = b.create<complex::AddOp>(rhs, iTimesLhs, fmf.getValue());
 
     Value divResult =
-        b.create<complex::DivOp>(rhsPlusILhs, sqrtOfRhsSquaredPlusLhsSquared);
-    Value logResult = b.create<complex::LogOp>(divResult);
+        b.create<complex::DivOp>(rhsPlusILhs, sqrtOfRhsSquaredPlusLhsSquared, fmf.getValue());
+    Value logResult = b.create<complex::LogOp>(divResult, fmf.getValue());
 
     Value negativeOne = b.create<arith::ConstantOp>(
         elementType, b.getFloatAttr(elementType, -1));
     Value negativeI = b.create<complex::CreateOp>(type, zero, negativeOne);
 
-    rewriter.replaceOpWithNewOp<complex::MulOp>(op, negativeI, logResult);
+    rewriter.replaceOpWithNewOp<complex::MulOp>(op, negativeI, logResult, fmf.getValue());
     return success();
   }
 };
