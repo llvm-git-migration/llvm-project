@@ -125,6 +125,18 @@ Changes to the C API
 * Added ``LLVMGetBlockAddressFunction`` and ``LLVMGetBlockAddressBasicBlock``
   functions for accessing the values in a blockaddress constant.
 
+* Added the following functions for accessing a function's prefix data:
+
+  * ``LLVMHasPrefixData``
+  * ``LLVMGetPrefixData``
+  * ``LLVMSetPrefixData``
+
+* Added the following functions for accessing a function's prologue data:
+
+  * ``LLVMHasPrologueData``
+  * ``LLVMGetPrologueData``
+  * ``LLVMSetPrologueData``
+
 Changes to the CodeGen infrastructure
 -------------------------------------
 
