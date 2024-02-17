@@ -55,6 +55,10 @@ function remove-unwanted-projects() {
 
 function compute-projects-to-test() {
   projects=${@}
+  if [ "${RUNNER_OS}" = "Windows" ] ; then
+    echo "${projects}"
+    return
+  fi
   for project in ${projects}; do
     echo "${project}"
     case ${project} in
@@ -210,6 +214,7 @@ elif [ "${RUNNER_OS}" = "Windows" ]; then
   projects_to_test=$(exclude-windows $(compute-projects-to-test ${modified_projects}))
 else
   echo "Unknown runner OS: $RUNNER_OS"
+  exit 1
 fi
 check_targets=$(check-targets $(remove-unwanted-projects ${projects_to_test}) | sort | uniq)
 projects=$(remove-unwanted-projects $(add-dependencies ${projects_to_test}) | sort | uniq)
