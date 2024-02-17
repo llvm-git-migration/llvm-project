@@ -28,7 +28,6 @@ extern cl::opt<unsigned> TaskCount;
 } // namespace opts
 
 namespace llvm {
-class ThreadPool;
 
 namespace bolt {
 class BinaryContext;
@@ -51,7 +50,7 @@ enum SchedulingPolicy {
 };
 
 /// Return the managed thread pool and initialize it if not initiliazed.
-ThreadPool &getThreadPool();
+ThreadPoolInterface &getThreadPool();
 
 /// Perform the work on each BinaryFunction except those that are accepted
 /// by SkipPredicate, scheduling heuristic is based on SchedPolicy.
