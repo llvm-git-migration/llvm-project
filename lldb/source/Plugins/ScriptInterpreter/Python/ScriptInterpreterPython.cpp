@@ -97,24 +97,28 @@ public:
   InitializePythonRAII() {
     InitializePythonHome();
 
+    // The table of built-in modules can only be extended before Python is
+    // initialized.
+    if (!Py_IsInitialized()) {
 #ifdef LLDB_USE_LIBEDIT_READLINE_COMPAT_MODULE
-    // Python's readline is incompatible with libedit being linked into lldb.
-    // Provide a patched version local to the embedded interpreter.
-    bool ReadlinePatched = false;
-    for (auto *p = PyImport_Inittab; p->name != nullptr; p++) {
-      if (strcmp(p->name, "readline") == 0) {
-        p->initfunc = initlldb_readline;
-        break;
+      // Python's readline is incompatible with libedit being linked into lldb.
+      // Provide a patched version local to the embedded interpreter.
+      bool ReadlinePatched = false;
+      for (auto *p = PyImport_Inittab; p->name != nullptr; p++) {
+        if (strcmp(p->name, "readline") == 0) {
+          p->initfunc = initlldb_readline;
+          break;
+        }
       }
-    }
-    if (!ReadlinePatched) {
-      PyImport_AppendInittab("readline", initlldb_readline);
-      ReadlinePatched = true;
-    }
+      if (!ReadlinePatched) {
+        PyImport_AppendInittab("readline", initlldb_readline);
+        ReadlinePatched = true;
+      }
 #endif
 
-    // Register _lldb as a built-in module.
-    PyImport_AppendInittab("_lldb", LLDBSwigPyInit);
+      // Register _lldb as a built-in module.
+      PyImport_AppendInittab("_lldb", LLDBSwigPyInit);
+    }
 
 // Python < 3.2 and Python >= 3.2 reversed the ordering requirements for
 // calling `Py_Initialize` and `PyEval_InitThreads`.  < 3.2 requires that you
@@ -2802,7 +2806,7 @@ bool ScriptInterpreterPythonImpl::RunScriptBasedParsedCommand(
       args_arr_sp->AddStringItem(entry.ref());
     }
     StructuredDataImpl args_impl(args_arr_sp);
-    
+
     ret_val = SWIGBridge::LLDBSwigPythonCallParsedCommandObject(
         static_cast<PyObject *>(impl_obj_sp->GetValue()), debugger_sp,
         args_impl, cmd_retobj, exe_ctx_ref_sp);
@@ -2936,7 +2940,7 @@ uint32_t ScriptInterpreterPythonImpl::GetFlagsForCommandObject(
   return result;
 }
 
-StructuredData::ObjectSP 
+StructuredData::ObjectSP
 ScriptInterpreterPythonImpl::GetOptionsForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
   StructuredData::ObjectSP result = {};
@@ -2984,7 +2988,7 @@ ScriptInterpreterPythonImpl::GetOptionsForCommandObject(
     return py_return.CreateStructuredObject();
 }
 
-StructuredData::ObjectSP 
+StructuredData::ObjectSP
 ScriptInterpreterPythonImpl::GetArgumentsForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
   StructuredData::ObjectSP result = {};
@@ -3032,8 +3036,7 @@ ScriptInterpreterPythonImpl::GetArgumentsForCommandObject(
     return py_return.CreateStructuredObject();
 }
 
-void 
-ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
+void ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
     StructuredData::GenericSP cmd_obj_sp) {
 
   Locker py_lock(this, Locker::AcquireLock | Locker::NoSTDIN, Locker::FreeLock);
@@ -3067,7 +3070,7 @@ ScriptInterpreterPythonImpl::OptionParsingStartedForCommandObject(
   if (PyErr_Occurred())
     PyErr_Clear();
 
-  // option_parsing_starting doesn't return anything, ignore anything but 
+  // option_parsing_starting doesn't return anything, ignore anything but
   // python errors.
   unwrapOrSetPythonException(
       As<bool>(implementor.CallMethod(callee_name)));
@@ -3116,15 +3119,15 @@ ScriptInterpreterPythonImpl::SetOptionValueForCommandObject(
 
   if (PyErr_Occurred())
     PyErr_Clear();
-    
+
   lldb::ExecutionContextRefSP exe_ctx_ref_sp;
   if (exe_ctx)
     exe_ctx_ref_sp.reset(new ExecutionContextRef(exe_ctx));
   PythonObject ctx_ref_obj = SWIGBridge::ToSWIGWrapper(exe_ctx_ref_sp);
-    
-  bool py_return = unwrapOrSetPythonException(
-      As<bool>(implementor.CallMethod(callee_name, ctx_ref_obj, long_option.str().c_str(), 
-                                      value.str().c_str())));
+
+  bool py_return = unwrapOrSetPythonException(As<bool>(
+      implementor.CallMethod(callee_name, ctx_ref_obj,
+                             long_option.str().c_str(), value.str().c_str())));
 
   // if it fails, print the error but otherwise go on
   if (PyErr_Occurred()) {
