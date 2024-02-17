@@ -16,14 +16,9 @@ entry:
 define i32 @test2(i32 %x) {
 ; CHECK-LABEL: test2:
 ; CHECK:       @ %bb.0: @ %entry
-; CHECK-NEXT:    lsrs r1, r0, #2
-; CHECK-NEXT:    ldr r0, .LCPI1_0
-; CHECK-NEXT:    ands r0, r1
+; CHECK-NEXT:    uxtb r0, r0
+; CHECK-NEXT:    lsls r0, r0, #2
 ; CHECK-NEXT:    bx lr
-; CHECK-NEXT:    .p2align 2
-; CHECK-NEXT:  @ %bb.1:
-; CHECK-NEXT:  .LCPI1_0:
-; CHECK-NEXT:    .long 1022 @ 0x3fe
 entry:
   %0 = lshr i32 %x, 2
   %shr = and i32 %0, 1022
@@ -70,9 +65,8 @@ define i32 @test6(i32 %x) {
 ; CHECK-LABEL: test6:
 ; CHECK:       @ %bb.0: @ %entry
 ; CHECK-NEXT:    movs r1, #5
-; CHECK-NEXT:    lsls r1, r1, #29
-; CHECK-NEXT:    lsls r0, r0, #29
-; CHECK-NEXT:    ands r0, r1
+; CHECK-NEXT:    ands r1, r0
+; CHECK-NEXT:    lsls r0, r1, #29
 ; CHECK-NEXT:    bx lr
 entry:
   %0 = shl i32 %x, 29
