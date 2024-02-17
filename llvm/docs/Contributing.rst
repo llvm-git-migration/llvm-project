@@ -89,10 +89,9 @@ in order to update the last commit with all pending changes.
   ``clang/tools/clang-format/git-clang-format``.
 
 The LLVM project has migrated to GitHub Pull Requests as its review process.
-We still have an active :ref:`Phabricator <phabricator-reviews>`
-instance for the duration of the migration. If you want to contribute to LLVM
-now, please use GitHub. For more information about the workflow of using GitHub
-Pull Requests see our :ref:`GitHub <github-reviews>` documentation.
+For more information about the workflow of using GitHub Pull Requests see our
+:ref:`GitHub <github-reviews>` documentation. We still have an read-only
+`LLVM's Phabricator`_ instance.
 
 To make sure the right people see your patch, please select suitable reviewers
 and add them to your patch when requesting a review. Suitable reviewers are the
