@@ -711,8 +711,7 @@ Error writeImportLibrary(StringRef ImportName, StringRef Path,
 
   return writeArchive(Path, Members, SymtabWritingMode::NormalSymtab,
                       object::Archive::K_COFF,
-                      /*Deterministic*/ true, /*Thin*/ false,
-                      /*OldArchiveBuf*/ nullptr, isArm64EC(Machine));
+                      /*Deterministic*/ true, /*Thin*/ false);
 }
 
 } // namespace object

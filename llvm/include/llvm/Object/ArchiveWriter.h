@@ -51,8 +51,7 @@ enum class SymtabWritingMode {
 Error writeArchive(StringRef ArcName, ArrayRef<NewArchiveMember> NewMembers,
                    SymtabWritingMode WriteSymtab, object::Archive::Kind Kind,
                    bool Deterministic, bool Thin,
-                   std::unique_ptr<MemoryBuffer> OldArchiveBuf = nullptr,
-                   bool IsEC = false);
+                   std::unique_ptr<MemoryBuffer> OldArchiveBuf = nullptr);
 
 // writeArchiveToBuffer is similar to writeArchive but returns the Archive in a
 // buffer instead of writing it out to a file.

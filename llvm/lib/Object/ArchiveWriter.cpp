@@ -48,7 +48,7 @@ using namespace llvm;
 using namespace llvm::object;
 
 struct SymMap {
-  bool UseECMap;
+  bool UseECMap = false;
   std::map<std::string, uint16_t> Map;
   std::map<std::string, uint16_t> ECMap;
 };
@@ -678,6 +678,25 @@ static bool isECObject(object::SymbolicFile &Obj) {
   return false;
 }
 
+static bool useECMap(object::SymbolicFile &Obj) {
+  if (Obj.isCOFF())
+    return COFF::isAnyArm64(cast<COFFObjectFile>(&Obj)->getMachine());
+
+  if (Obj.isCOFFImportFile())
+    return COFF::isAnyArm64(cast<COFFImportFile>(&Obj)->getMachine());
+
+  if (Obj.isIR()) {
+    Expected<std::string> TripleStr =
+        getBitcodeTargetTriple(Obj.getMemoryBufferRef());
+    if (!TripleStr)
+      return false;
+    Triple T(*TripleStr);
+    return T.getArch() == Triple::aarch64;
+  }
+
+  return false;
+}
+
 bool isImportDescriptor(StringRef Name) {
   return Name.starts_with(ImportDescriptorPrefix) ||
          Name == StringRef{NullImportDescriptorSymbolName} ||
@@ -803,6 +822,11 @@ computeMemberData(raw_ostream &StringTable, raw_ostream &SymNames,
           getSymbolicFile(M.Buf->getMemBufferRef(), Context);
       if (!SymFileOrErr)
         return createFileError(M.MemberName, SymFileOrErr.takeError());
+
+      // Use EC map if any member is ARM64 COFF file.
+      if (Kind == Archive::K_COFF && !SymMap->UseECMap && *SymFileOrErr)
+        SymMap->UseECMap = useECMap(**SymFileOrErr);
+
       SymFiles.push_back(std::move(*SymFileOrErr));
     }
   }
@@ -957,7 +981,7 @@ static Error writeArchiveToStream(raw_ostream &Out,
                                   ArrayRef<NewArchiveMember> NewMembers,
                                   SymtabWritingMode WriteSymtab,
                                   object::Archive::Kind Kind,
-                                  bool Deterministic, bool Thin, bool IsEC) {
+                                  bool Deterministic, bool Thin) {
   assert((!Thin || !isBSDLike(Kind)) && "Only the gnu format has a thin mode");
 
   SmallString<0> SymNamesBuf;
@@ -977,7 +1001,6 @@ static Error writeArchiveToStream(raw_ostream &Out,
   // reference to it, thus SymbolicFile should be destroyed first.
   LLVMContext Context;
 
-  SymMap.UseECMap = IsEC;
   Expected<std::vector<MemberData>> DataOrErr = computeMemberData(
       StringTable, SymNames, Kind, Thin, Deterministic, WriteSymtab,
       isCOFFArchive(Kind) ? &SymMap : nullptr, Context, NewMembers);
@@ -1226,7 +1249,7 @@ static Error writeArchiveToStream(raw_ostream &Out,
 Error writeArchive(StringRef ArcName, ArrayRef<NewArchiveMember> NewMembers,
                    SymtabWritingMode WriteSymtab, object::Archive::Kind Kind,
                    bool Deterministic, bool Thin,
-                   std::unique_ptr<MemoryBuffer> OldArchiveBuf, bool IsEC) {
+                   std::unique_ptr<MemoryBuffer> OldArchiveBuf) {
   Expected<sys::fs::TempFile> Temp =
       sys::fs::TempFile::create(ArcName + ".temp-archive-%%%%%%%.a");
   if (!Temp)
@@ -1234,7 +1257,7 @@ Error writeArchive(StringRef ArcName, ArrayRef<NewArchiveMember> NewMembers,
   raw_fd_ostream Out(Temp->FD, false);
 
   if (Error E = writeArchiveToStream(Out, NewMembers, WriteSymtab, Kind,
-                                     Deterministic, Thin, IsEC)) {
+                                     Deterministic, Thin)) {
     if (Error DiscardError = Temp->discard())
       return joinErrors(std::move(E), std::move(DiscardError));
     return E;
@@ -1263,7 +1286,7 @@ writeArchiveToBuffer(ArrayRef<NewArchiveMember> NewMembers,
   raw_svector_ostream ArchiveStream(ArchiveBufferVector);
 
   if (Error E = writeArchiveToStream(ArchiveStream, NewMembers, WriteSymtab,
-                                     Kind, Deterministic, Thin, false))
+                                     Kind, Deterministic, Thin))
     return std::move(E);
 
   return std::make_unique<SmallVectorMemoryBuffer>(
