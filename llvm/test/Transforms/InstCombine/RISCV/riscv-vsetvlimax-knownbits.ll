@@ -69,8 +69,7 @@ entry:
 define i64 @vsetvlmax_e8m1_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m1_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 0)
   %b = and i64 %a, 16383
@@ -80,8 +79,7 @@ define i64 @vsetvlmax_e8m1_and14bits() {
 define i64 @vsetvlmax_e8m1_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m1_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 0)
   %b = and i64 %a, 8191
@@ -91,8 +89,7 @@ define i64 @vsetvlmax_e8m1_and13bits() {
 define i64 @vsetvlmax_e8m2_and15bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m2_and15bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 32767
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 1)
   %b = and i64 %a, 32767
@@ -102,8 +99,7 @@ define i64 @vsetvlmax_e8m2_and15bits() {
 define i64 @vsetvlmax_e8m2_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m2_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 1)
   %b = and i64 %a, 16383
@@ -113,8 +109,7 @@ define i64 @vsetvlmax_e8m2_and14bits() {
 define i64 @vsetvlmax_e8m4_and16bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m4_and16bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 65535
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 2)
   %b = and i64 %a, 65535
@@ -124,8 +119,7 @@ define i64 @vsetvlmax_e8m4_and16bits() {
 define i64 @vsetvlmax_e8m4_and15bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m4_and15bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 32767
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 2)
   %b = and i64 %a, 32767
@@ -145,8 +139,7 @@ define i64 @vsetvlmax_e8m8_and17bits() {
 define i64 @vsetvlmax_e8m8_and16bits() {
 ; CHECK-LABEL: @vsetvlmax_e8m8_and16bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 65535
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 3)
   %b = and i64 %a, 65535
@@ -156,8 +149,7 @@ define i64 @vsetvlmax_e8m8_and16bits() {
 define i64 @vsetvlmax_e8mf2_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf2_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 5)
   %b = and i64 %a, 2047
@@ -167,8 +159,7 @@ define i64 @vsetvlmax_e8mf2_and11bits() {
 define i64 @vsetvlmax_e8mf2_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf2_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 5)
   %b = and i64 %a, 1023
@@ -178,8 +169,7 @@ define i64 @vsetvlmax_e8mf2_and10bits() {
 define i64 @vsetvlmax_e8mf4_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf4_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 6)
   %b = and i64 %a, 4095
@@ -189,8 +179,7 @@ define i64 @vsetvlmax_e8mf4_and12bits() {
 define i64 @vsetvlmax_e8mf4_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf4_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 6)
   %b = and i64 %a, 2047
@@ -200,8 +189,7 @@ define i64 @vsetvlmax_e8mf4_and11bits() {
 define i64 @vsetvlmax_e8mf8_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf8_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 7)
   %b = and i64 %a, 8191
@@ -211,8 +199,7 @@ define i64 @vsetvlmax_e8mf8_and13bits() {
 define i64 @vsetvlmax_e8mf8_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e8mf8_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 0, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 0, i64 7)
   %b = and i64 %a, 4095
@@ -222,8 +209,7 @@ define i64 @vsetvlmax_e8mf8_and12bits() {
 define i64 @vsetvlmax_e16m1_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m1_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 0)
   %b = and i64 %a, 8191
@@ -233,8 +219,7 @@ define i64 @vsetvlmax_e16m1_and13bits() {
 define i64 @vsetvlmax_e16m1_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m1_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 0)
   %b = and i64 %a, 4095
@@ -244,8 +229,7 @@ define i64 @vsetvlmax_e16m1_and12bits() {
 define i64 @vsetvlmax_e16m2_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m2_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 1)
   %b = and i64 %a, 16383
@@ -255,8 +239,7 @@ define i64 @vsetvlmax_e16m2_and14bits() {
 define i64 @vsetvlmax_e16m2_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m2_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 1)
   %b = and i64 %a, 8191
@@ -266,8 +249,7 @@ define i64 @vsetvlmax_e16m2_and13bits() {
 define i64 @vsetvlmax_e16m4_and15bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m4_and15bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 32767
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 2)
   %b = and i64 %a, 32767
@@ -277,8 +259,7 @@ define i64 @vsetvlmax_e16m4_and15bits() {
 define i64 @vsetvlmax_e16m4_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m4_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 2)
   %b = and i64 %a, 16383
@@ -288,8 +269,7 @@ define i64 @vsetvlmax_e16m4_and14bits() {
 define i64 @vsetvlmax_e16m8_and16bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m8_and16bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 65535
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 3)
   %b = and i64 %a, 65535
@@ -299,8 +279,7 @@ define i64 @vsetvlmax_e16m8_and16bits() {
 define i64 @vsetvlmax_e16m8_and15bits() {
 ; CHECK-LABEL: @vsetvlmax_e16m8_and15bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 32767
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 3)
   %b = and i64 %a, 32767
@@ -310,8 +289,7 @@ define i64 @vsetvlmax_e16m8_and15bits() {
 define i64 @vsetvlmax_e16mf2_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf2_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 5)
   %b = and i64 %a, 1023
@@ -321,8 +299,7 @@ define i64 @vsetvlmax_e16mf2_and10bits() {
 define i64 @vsetvlmax_e16mf2_and9bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf2_and9bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 511
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 5)
   %b = and i64 %a, 511
@@ -332,8 +309,7 @@ define i64 @vsetvlmax_e16mf2_and9bits() {
 define i64 @vsetvlmax_e16mf4_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf4_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 6)
   %b = and i64 %a, 2047
@@ -343,8 +319,7 @@ define i64 @vsetvlmax_e16mf4_and11bits() {
 define i64 @vsetvlmax_e16mf4_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf4_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 6)
   %b = and i64 %a, 1023
@@ -354,8 +329,7 @@ define i64 @vsetvlmax_e16mf4_and10bits() {
 define i64 @vsetvlmax_e16mf8_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf8_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 7)
   %b = and i64 %a, 4095
@@ -365,8 +339,7 @@ define i64 @vsetvlmax_e16mf8_and12bits() {
 define i64 @vsetvlmax_e16mf8_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e16mf8_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 1, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 1, i64 7)
   %b = and i64 %a, 2047
@@ -376,8 +349,7 @@ define i64 @vsetvlmax_e16mf8_and11bits() {
 define i64 @vsetvlmax_e32m1_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m1_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 0)
   %b = and i64 %a, 4095
@@ -387,8 +359,7 @@ define i64 @vsetvlmax_e32m1_and12bits() {
 define i64 @vsetvlmax_e32m1_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m1_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 0)
   %b = and i64 %a, 2047
@@ -398,8 +369,7 @@ define i64 @vsetvlmax_e32m1_and11bits() {
 define i64 @vsetvlmax_e32m2_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m2_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 1)
   %b = and i64 %a, 8191
@@ -409,8 +379,7 @@ define i64 @vsetvlmax_e32m2_and13bits() {
 define i64 @vsetvlmax_e32m2_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m2_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 1)
   %b = and i64 %a, 4095
@@ -420,8 +389,7 @@ define i64 @vsetvlmax_e32m2_and12bits() {
 define i64 @vsetvlmax_e32m4_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m4_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 2)
   %b = and i64 %a, 16383
@@ -431,8 +399,7 @@ define i64 @vsetvlmax_e32m4_and14bits() {
 define i64 @vsetvlmax_e32m4_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m4_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 2)
   %b = and i64 %a, 8191
@@ -442,8 +409,7 @@ define i64 @vsetvlmax_e32m4_and13bits() {
 define i64 @vsetvlmax_e32m8_and15bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m8_and15bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 32767
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 3)
   %b = and i64 %a, 32767
@@ -453,8 +419,7 @@ define i64 @vsetvlmax_e32m8_and15bits() {
 define i64 @vsetvlmax_e32m8_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e32m8_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 3)
   %b = and i64 %a, 16383
@@ -464,8 +429,7 @@ define i64 @vsetvlmax_e32m8_and14bits() {
 define i64 @vsetvlmax_e32mf2_and9bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf2_and9bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 511
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 5)
   %b = and i64 %a, 511
@@ -475,8 +439,7 @@ define i64 @vsetvlmax_e32mf2_and9bits() {
 define i64 @vsetvlmax_e32mf2_and8bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf2_and8bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 255
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 5)
   %b = and i64 %a, 255
@@ -486,8 +449,7 @@ define i64 @vsetvlmax_e32mf2_and8bits() {
 define i64 @vsetvlmax_e32mf4_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf4_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 6)
   %b = and i64 %a, 1023
@@ -497,8 +459,7 @@ define i64 @vsetvlmax_e32mf4_and10bits() {
 define i64 @vsetvlmax_e32mf4_and9bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf4_and9bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 511
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 6)
   %b = and i64 %a, 511
@@ -508,8 +469,7 @@ define i64 @vsetvlmax_e32mf4_and9bits() {
 define i64 @vsetvlmax_e32mf8_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf8_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 7)
   %b = and i64 %a, 2047
@@ -519,8 +479,7 @@ define i64 @vsetvlmax_e32mf8_and11bits() {
 define i64 @vsetvlmax_e32mf8_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e32mf8_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 2, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 2, i64 7)
   %b = and i64 %a, 1023
@@ -530,8 +489,7 @@ define i64 @vsetvlmax_e32mf8_and10bits() {
 define i64 @vsetvlmax_e64m1_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m1_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 0)
   %b = and i64 %a, 2047
@@ -541,8 +499,7 @@ define i64 @vsetvlmax_e64m1_and11bits() {
 define i64 @vsetvlmax_e64m1_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m1_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 0)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 0)
   %b = and i64 %a, 1023
@@ -552,8 +509,7 @@ define i64 @vsetvlmax_e64m1_and10bits() {
 define i64 @vsetvlmax_e64m2_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m2_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 1)
   %b = and i64 %a, 4095
@@ -563,8 +519,7 @@ define i64 @vsetvlmax_e64m2_and12bits() {
 define i64 @vsetvlmax_e64m2_and11bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m2_and11bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 1)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 2047
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 1)
   %b = and i64 %a, 2047
@@ -574,8 +529,7 @@ define i64 @vsetvlmax_e64m2_and11bits() {
 define i64 @vsetvlmax_e64m4_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m4_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 2)
   %b = and i64 %a, 8191
@@ -585,8 +539,7 @@ define i64 @vsetvlmax_e64m4_and13bits() {
 define i64 @vsetvlmax_e64m4_and12bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m4_and12bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 2)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 4095
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 2)
   %b = and i64 %a, 4095
@@ -596,8 +549,7 @@ define i64 @vsetvlmax_e64m4_and12bits() {
 define i64 @vsetvlmax_e64m8_and14bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m8_and14bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 16383
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 3)
   %b = and i64 %a, 16383
@@ -607,8 +559,7 @@ define i64 @vsetvlmax_e64m8_and14bits() {
 define i64 @vsetvlmax_e64m8_and13bits() {
 ; CHECK-LABEL: @vsetvlmax_e64m8_and13bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 3)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 8191
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 [[A]]
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 3)
   %b = and i64 %a, 8191
@@ -618,8 +569,7 @@ define i64 @vsetvlmax_e64m8_and13bits() {
 define i64 @vsetvlmax_e64mf2_and8bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf2_and8bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 255
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 5)
   %b = and i64 %a, 255
@@ -629,8 +579,7 @@ define i64 @vsetvlmax_e64mf2_and8bits() {
 define i64 @vsetvlmax_e64mf2_and7bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf2_and7bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 5)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 127
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 5)
   %b = and i64 %a, 127
@@ -640,8 +589,7 @@ define i64 @vsetvlmax_e64mf2_and7bits() {
 define i64 @vsetvlmax_e64mf4_and9bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf4_and9bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 511
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 6)
   %b = and i64 %a, 511
@@ -651,8 +599,7 @@ define i64 @vsetvlmax_e64mf4_and9bits() {
 define i64 @vsetvlmax_e64mf4_and8bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf4_and8bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 6)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 255
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 6)
   %b = and i64 %a, 255
@@ -662,8 +609,7 @@ define i64 @vsetvlmax_e64mf4_and8bits() {
 define i64 @vsetvlmax_e64mf8_and10bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf8_and10bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 1023
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 7)
   %b = and i64 %a, 1023
@@ -673,8 +619,7 @@ define i64 @vsetvlmax_e64mf8_and10bits() {
 define i64 @vsetvlmax_e64mf8_and9bits() {
 ; CHECK-LABEL: @vsetvlmax_e64mf8_and9bits(
 ; CHECK-NEXT:    [[A:%.*]] = call i64 @llvm.riscv.vsetvlimax.i64(i64 3, i64 7)
-; CHECK-NEXT:    [[B:%.*]] = and i64 [[A]], 511
-; CHECK-NEXT:    ret i64 [[B]]
+; CHECK-NEXT:    ret i64 0
 ;
   %a = call i64 @llvm.riscv.vsetvlimax(i64 3, i64 7)
   %b = and i64 %a, 511
