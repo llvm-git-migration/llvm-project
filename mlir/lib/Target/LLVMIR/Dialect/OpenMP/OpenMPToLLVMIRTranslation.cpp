@@ -1156,15 +1156,6 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
     }();
 
     if (privVar) {
-      if (privatizerClone.getDataSharingType() ==
-          omp::DataSharingClauseType::FirstPrivate) {
-        privatizerClone.emitOpError(
-            "TODO: delayed privatization is not "
-            "supported for `firstprivate` clauses yet.");
-        bodyGenStatus = failure();
-        return codeGenIP;
-      }
-
       Region &allocRegion = privatizerClone.getAllocRegion();
 
       if (!allocRegion.hasOneBlock()) {
@@ -1172,6 +1163,43 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
             "TODO: multi-block alloc regions are not supported yet.");
         bodyGenStatus = failure();
         return codeGenIP;
+      }
+
+      // If this is a `firstprivate` clause, prepare the `omp.private` op by:
+      if (privatizerClone.getDataSharingType() ==
+          omp::DataSharingClauseType::FirstPrivate) {
+        auto oldAllocBackBlock = std::prev(allocRegion.end());
+        omp::YieldOp oldAllockYieldOp =
+            llvm::cast<omp::YieldOp>(oldAllocBackBlock->getTerminator());
+
+        Region &copyRegion = privatizerClone.getCopyRegion();
+
+        if (!copyRegion.hasOneBlock()) {
+          privatizerClone.emitOpError(
+              "TODO: multi-block copy regions are not supported yet.");
+          bodyGenStatus = failure();
+          return codeGenIP;
+        }
+
+        mlir::IRRewriter copyCloneBuilder(&moduleTranslation.getContext());
+        // 1. Cloning the `copy` region to the end of the `alloc` region.
+        copyCloneBuilder.cloneRegionBefore(copyRegion, allocRegion,
+                                           allocRegion.end());
+
+        auto newCopyRegionFrontBlock = std::next(oldAllocBackBlock);
+        // 2. Merging the last `alloc` block with the first block in the `copy`
+        // region clone.
+        // 3. Re-mapping the first argument of the `copy` region to be the
+        // argument of the `alloc` region and the second argument of the `copy`
+        // region to be the yielded value of the `alloc` region (this is the
+        // private clone of the privatized value).
+        copyCloneBuilder.mergeBlocks(
+            &*newCopyRegionFrontBlock, &*oldAllocBackBlock,
+            {allocRegion.getArgument(0), oldAllockYieldOp.getOperand(0)});
+
+        // 4. The old terminator of the `alloc` region is not needed anymore, so
+        // delete it.
+        oldAllockYieldOp.erase();
       }
 
       // Replace the privatizer block argument with mlir value being privatized.
