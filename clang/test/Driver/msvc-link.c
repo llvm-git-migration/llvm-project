@@ -36,3 +36,9 @@
 // VFSOVERLAY: "--vfsoverlay"
 // VFSOVERLAY: lld-link
 // VFSOVERLAY: "/vfsoverlay:{{.*}}" "{{.*}}.obj"
+
+// RUN: %clang -target arm64ec-pc-windows-msvc -fuse-ld=link -### %s 2>&1 | FileCheck --check-prefix=ARM64EC %s
+// ARM64EC: "-machine:arm64ec"
+
+// RUN: %clang -target arm64x-pc-windows-msvc -fuse-ld=link -### %s 2>&1 | FileCheck --check-prefix=ARM64X %s
+// ARM64X: "-machine:arm64x"

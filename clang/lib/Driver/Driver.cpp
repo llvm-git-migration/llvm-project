@@ -1458,8 +1458,7 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
   }
 
   // Report warning when arm64EC option is overridden by specified target
-  if ((TC.getTriple().getArch() != llvm::Triple::aarch64 ||
-       TC.getTriple().getSubArch() != llvm::Triple::AArch64SubArch_arm64ec) &&
+  if (!TC.getTriple().isWindowsArm64EC() &&
       UArgs->hasArg(options::OPT__SLASH_arm64EC)) {
     getDiags().Report(clang::diag::warn_target_override_arm64ec)
         << TC.getTriple().str();

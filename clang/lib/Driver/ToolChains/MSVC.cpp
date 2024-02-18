@@ -79,6 +79,13 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back(
         Args.MakeArgString(std::string("-out:") + Output.getFilename()));
 
+  if (TC.getTriple().isWindowsArm64EC()) {
+    if (TC.getTriple().getSubArch() == llvm::Triple::AArch64SubArch_arm64x)
+      CmdArgs.push_back("-machine:arm64x");
+    else
+      CmdArgs.push_back("-machine:arm64ec");
+  }
+
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles) &&
       !C.getDriver().IsCLMode() && !C.getDriver().IsFlangMode()) {
     CmdArgs.push_back("-defaultlib:libcmt");

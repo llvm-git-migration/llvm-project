@@ -148,6 +148,7 @@ public:
 
     AArch64SubArch_arm64e,
     AArch64SubArch_arm64ec,
+    AArch64SubArch_arm64x,
 
     KalimbaSubArch_v3,
     KalimbaSubArch_v4,
@@ -623,7 +624,8 @@ public:
   // Checks if we're using the Windows Arm64EC ABI.
   bool isWindowsArm64EC() const {
     return getArch() == Triple::aarch64 &&
-           getSubArch() == Triple::AArch64SubArch_arm64ec;
+           (getSubArch() == Triple::AArch64SubArch_arm64ec ||
+            getSubArch() == Triple::AArch64SubArch_arm64x);
   }
 
   bool isWindowsCoreCLREnvironment() const {

@@ -2226,6 +2226,16 @@ TEST(TripleTest, ParseARMArch) {
     T.setArch(Triple::aarch64, Triple::AArch64SubArch_arm64ec);
     EXPECT_EQ("arm64ec", T.getArchName());
   }
+  {
+    Triple T = Triple("arm64x");
+    EXPECT_EQ(Triple::aarch64, T.getArch());
+    EXPECT_EQ(Triple::AArch64SubArch_arm64x, T.getSubArch());
+  }
+  {
+    Triple T;
+    T.setArch(Triple::aarch64, Triple::AArch64SubArch_arm64x);
+    EXPECT_EQ("arm64ec", T.getArchName());
+  }
 }
 
 TEST(TripleTest, isArmT32) {
@@ -2369,6 +2379,21 @@ TEST(TripleTest, isArmMClass) {
   {
     Triple T = Triple("armv8.1m.main");
     EXPECT_TRUE(T.isArmMClass());
+  }
+}
+
+TEST(TripleTest, isWindowsArm64EC) {
+  {
+    Triple T = Triple("arm64ec");
+    EXPECT_TRUE(T.isWindowsArm64EC());
+  }
+  {
+    Triple T = Triple("arm64x");
+    EXPECT_TRUE(T.isWindowsArm64EC());
+  }
+  {
+    Triple T = Triple("aarch64");
+    EXPECT_FALSE(T.isWindowsArm64EC());
   }
 }
 } // end anonymous namespace
