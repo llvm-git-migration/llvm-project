@@ -169,6 +169,40 @@ TEST(LlvmLibcSPrintfTest, IntConv) {
   EXPECT_EQ(written, 20);
   ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
 
+  written = LIBC_NAMESPACE::sprintf(buff, "%w3d", 5807);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "7");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w3d", 1);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "1");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w64u", 18446744073709551615ull);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "18446744073709551615"); // ull max
+
+  written =
+      LIBC_NAMESPACE::sprintf(buff, "%w64d", -9223372036854775807ll - 1ll);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf3d", 5807);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "7");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf3d", 1);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "1");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf64u", 18446744073709551615ull);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "18446744073709551615"); // ull max
+
+  written =
+      LIBC_NAMESPACE::sprintf(buff, "%wf64d", -9223372036854775807ll - 1ll);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
+
   // Min Width Tests.
 
   written = LIBC_NAMESPACE::sprintf(buff, "%4d", 789);
