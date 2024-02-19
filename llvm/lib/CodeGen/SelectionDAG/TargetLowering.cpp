@@ -2313,6 +2313,26 @@ bool TargetLowering::SimplifyDemandedBits(
     Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
     break;
   }
+  case ISD::SINT_TO_FP: {
+    EVT InnerVT = Op.getOperand(0).getValueType();
+    const APInt &DemandedBitsToUse =
+        TLO.DAG.getTargetLoweringInfo().isBitcastFree(VT, InnerVT)
+            ? OriginalDemandedBits
+            : DemandedBits;
+    if (DemandedBitsToUse.isSignMask() &&
+        VT.getScalarSizeInBits() == InnerVT.getScalarSizeInBits())
+      return TLO.CombineTo(Op, TLO.DAG.getBitcast(VT, Op.getOperand(0)));
+
+    Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
+    break;
+  }
+  case ISD::UINT_TO_FP: {
+    if (OriginalDemandedBits.isSignMask())
+      return TLO.CombineTo(Op, TLO.DAG.getConstant(0, dl, VT));
+
+    Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
+    break;
+  }
   case ISD::SIGN_EXTEND_INREG: {
     SDValue Op0 = Op.getOperand(0);
     EVT ExVT = cast<VTSDNode>(Op.getOperand(1))->getVT();
