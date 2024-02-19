@@ -12,6 +12,7 @@
 #include "test/UnitTest/RoundingModeUtils.h"
 #include "test/UnitTest/Test.h"
 #include <inttypes.h>
+#include <src/string/strlen.h>
 
 // TODO: Add a comment here explaining the printf format string.
 
@@ -166,6 +167,52 @@ TEST(LlvmLibcSPrintfTest, IntConv) {
   }
 
   written = LIBC_NAMESPACE::sprintf(buff, "%lld", -9223372036854775807ll - 1ll);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w3d", 5807);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "7");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w3d", 1);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "1");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w64d", 9223372036854775807l);
+  EXPECT_EQ(written, 19);
+  ASSERT_STREQ(buff, "9223372036854775807");
+
+  char format[64];
+  char uintmax[128];
+  LIBC_NAMESPACE::sprintf(format, "%%w%du", UINTMAX_WIDTH);
+  LIBC_NAMESPACE::sprintf(uintmax, "%ju", UINTMAX_MAX);
+  written = LIBC_NAMESPACE::sprintf(buff, format, UINTMAX_MAX);
+  EXPECT_EQ(written, static_cast<int>(strlen(uintmax)));
+  ASSERT_STREQ(buff, uintmax);
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%w64u", 18446744073709551615ull);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "18446744073709551615"); // ull max
+
+  written =
+      LIBC_NAMESPACE::sprintf(buff, "%w64d", -9223372036854775807ll - 1ll);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf3d", 5807);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "7");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf3d", 1);
+  EXPECT_EQ(written, 1);
+  ASSERT_STREQ(buff, "1");
+
+  written = LIBC_NAMESPACE::sprintf(buff, "%wf64u", 18446744073709551615ull);
+  EXPECT_EQ(written, 20);
+  ASSERT_STREQ(buff, "18446744073709551615"); // ull max
+
+  written =
+      LIBC_NAMESPACE::sprintf(buff, "%wf64d", -9223372036854775807ll - 1ll);
   EXPECT_EQ(written, 20);
   ASSERT_STREQ(buff, "-9223372036854775808"); // ll min
 
