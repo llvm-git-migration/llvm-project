@@ -11,6 +11,7 @@
 #define MLIR_C_DIALECT_LLVM_H
 
 #include "mlir-c/IR.h"
+#include "mlir-c/Support.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -97,6 +98,129 @@ MLIR_CAPI_EXPORTED MlirType mlirLLVMStructTypeOpaqueGet(MlirContext ctx,
 MLIR_CAPI_EXPORTED MlirLogicalResult
 mlirLLVMStructTypeSetBody(MlirType structType, intptr_t nFieldTypes,
                           MlirType const *fieldTypes, bool isPacked);
+
+/// Creates a LLVM CConv attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx,
+                                                      uint64_t cconv);
+
+/// Creates a LLVM Comdat attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx,
+                                                       uint64_t comdat);
+
+/// Creates a LLVM Linkage attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx,
+                                                        uint64_t linkage);
+
+/// Creates a LLVM DINullType attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx);
+
+/// Creates a LLVM DIExpressionElem attribute.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDIExpressionElemAttrGet(MlirContext ctx, unsigned int opcode,
+                                intptr_t nArguments, uint64_t const *arguments);
+
+/// Creates a LLVM DIExpression attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIExpressionAttrGet(
+    MlirContext ctx, intptr_t nOperations, MlirAttribute const *operations);
+
+/// Creates a LLVM DIBasicType attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIBasicTypeAttrGet(
+    MlirContext ctx, unsigned int tag, MlirAttribute name, uint64_t sizeInBits,
+    unsigned int encoding);
+
+/// Creates a LLVM DICompositeType attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompositeTypeAttrGet(
+    MlirContext ctx, unsigned int tag, MlirAttribute name, MlirAttribute file,
+    uint32_t line, MlirAttribute scope, MlirAttribute baseType, int64_t flags,
+    uint64_t sizeInBits, uint64_t alignInBits, intptr_t nElements,
+    MlirAttribute const *elements);
+
+/// Creates a LLVM DIDerivedType attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIDerivedTypeAttrGet(
+    MlirContext ctx, unsigned int tag, MlirAttribute name,
+    MlirAttribute baseType, uint64_t sizeInBits, uint32_t alignInBits,
+    uint64_t offsetInBits);
+
+/// Gets the base type from a LLVM DIDerivedType attribute.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDIDerivedTypeAttrGetBaseType(MlirAttribute diDerivedType);
+
+/// Creates a LLVM DIFileAttr attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFileAttrGet(MlirContext ctx,
+                                                       MlirAttribute name,
+                                                       MlirAttribute directory);
+
+/// Creates a LLVM DICompileUnit attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompileUnitAttrGet(
+    MlirContext ctx, MlirAttribute id, unsigned int sourceLanguage,
+    MlirAttribute file, MlirAttribute producer, bool isOptimized,
+    uint64_t emissionKind);
+
+/// Creates a LLVM DIFlags attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFlagsAttrGet(MlirContext ctx,
+                                                        uint64_t value);
+
+/// Creates a LLVM DILexicalBlock attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDILexicalBlockAttrGet(
+    MlirContext ctx, MlirAttribute scope, MlirAttribute file, unsigned int line,
+    unsigned int column);
+
+/// Creates a LLVM DILexicalBlockFile attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDILexicalBlockFileAttrGet(
+    MlirContext ctx, MlirAttribute scope, MlirAttribute file,
+    unsigned int discriminator);
+
+/// Creates a LLVM DILocalVariableAttr attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDILocalVariableAttrGet(
+    MlirContext ctx, MlirAttribute scope, MlirAttribute name,
+    MlirAttribute diFile, unsigned int line, unsigned int arg,
+    unsigned int alignInBits, MlirAttribute diType);
+
+/// Creates a LLVM DISubprogramAttr attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDISubprogramAttrGet(
+    MlirContext ctx, MlirAttribute id, MlirAttribute compileUnit,
+    MlirAttribute scope, MlirAttribute name, MlirAttribute linkageName,
+    MlirAttribute file, unsigned int line, unsigned int scopeLine,
+    uint64_t subprogramFlags, MlirAttribute type);
+
+/// Gets the scope from this DISubprogramAttr.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDISubprogramAttrGetScope(MlirAttribute diSubprogram);
+
+/// Gets the line from this DISubprogramAttr.
+MLIR_CAPI_EXPORTED unsigned int
+mlirLLVMDISubprogramAttrGetLine(MlirAttribute diSubprogram);
+
+/// Gets the scope line from this DISubprogram.
+MLIR_CAPI_EXPORTED unsigned int
+mlirLLVMDISubprogramAttrGetScopeLine(MlirAttribute diSubprogram);
+
+/// Gets the compile unit from this DISubprogram.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDISubprogramAttrGetCompileUnit(MlirAttribute diSubprogram);
+
+/// Gets the file from this DISubprogramAttr.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDISubprogramAttrGetFile(MlirAttribute diSubprogram);
+
+/// Gets the type from this DISubprogramAttr.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDISubprogramAttrGetType(MlirAttribute diSubprogram);
+
+/// Creates a LLVM DISubroutineTypeAttr attribute.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDISubroutineTypeAttrGet(MlirContext ctx, unsigned int callingConvention,
+                                intptr_t nTypes, MlirAttribute const *types);
+
+/// Creates a LLVM DIModuleAttr attribute.
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIModuleAttrGet(
+    MlirContext ctx, MlirAttribute file, MlirAttribute scope,
+    MlirAttribute name, MlirAttribute configMacros, MlirAttribute includePath,
+    MlirAttribute apinotes, unsigned int line, bool isDecl);
+
+/// Gets the scope of this DIModuleAttr.
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMDIModuleAttrGetScope(MlirAttribute diModule);
 
 #ifdef __cplusplus
 }
