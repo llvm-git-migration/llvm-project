@@ -7,6 +7,82 @@
 declare void @use(i64)
 declare void @usei32(i32)
 declare void @usei1(i1)
+declare i32 @llvm.usub.sat.i32(i32, i32)
+declare i16 @llvm.usub.sat.i16(i16, i16)
+
+; usub_sat((sub nuw C1, A), C2) to usub_sat(C1 - C2, A) or 0
+
+define i32 @usub_sat_C1_C2(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2(
+; CHECK-NEXT:    [[ADD:%.*]] = sub nuw i32 64, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub nuw i32 64, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  ret i32 %cond
+}
+
+define i32 @usub_sat_C1_C2_produce_0(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2_produce_0(
+; CHECK-NEXT:    [[ADD:%.*]] = sub nuw i32 14, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub nuw i32 14, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  ret i32 %cond
+}
+
+define i32 @usub_sat_C1_C2_produce_0_too(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2_produce_0_too(
+; CHECK-NEXT:    [[ADD:%.*]] = sub nuw i32 12, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub nuw i32 12, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  ret i32 %cond
+}
+
+; negative tests this souldn't work
+
+define i32 @usub_sat_C1_C2_without_nuw(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2_without_nuw(
+; CHECK-NEXT:    [[ADD:%.*]] = sub i32 12, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub i32 12, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  ret i32 %cond
+}
+
+define i32 @usub_sat_C1_C2_more_than_one_use_with_add(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2_more_than_one_use_with_add(
+; CHECK-NEXT:    [[ADD:%.*]] = sub nuw i32 12, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    call void @usei32(i32 [[ADD]])
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub nuw i32 12, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  call void @usei32(i32 %add)
+  ret i32 %cond
+}
+
+define i32 @usub_sat_C1_C2_more_than_one_use_with_cond(i32 %a){
+; CHECK-LABEL: @usub_sat_C1_C2_more_than_one_use_with_cond(
+; CHECK-NEXT:    [[ADD:%.*]] = sub nuw i32 12, [[A:%.*]]
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[ADD]], i32 14)
+; CHECK-NEXT:    call void @usei32(i32 [[COND]])
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %add = sub nuw i32 12, %a
+  %cond = call i32 @llvm.usub.sat.i32(i32 %add, i32 14)
+  call void @usei32(i32 %cond)
+  ret i32 %cond
+}
 
 ; (a > b) ? a - b : 0 -> usub.sat(a, b)
 
