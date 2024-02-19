@@ -174,7 +174,7 @@ _LIBCPP_HIDE_FROM_ABI bool __cxx_nonatomic_compare_equal(_Tp const& __lhs, _Tp c
 }
 
 template <class _Tp>
-struct __bind_nonatomic_equal {
+struct __atomic_compare_unequal_to {
   _Tp __val_;
   _LIBCPP_HIDE_FROM_ABI bool operator()(const _Tp& __arg) const {
     return !std::__cxx_nonatomic_compare_equal(__arg, __val_);
@@ -185,7 +185,7 @@ template <class _AtomicWaitable, class _Up>
 _LIBCPP_AVAILABILITY_SYNC _LIBCPP_HIDE_FROM_ABI void
 __atomic_wait(_AtomicWaitable& __a, _Up __val, memory_order __order) {
   static_assert(__atomic_waitable<_AtomicWaitable>::value, "");
-  __bind_nonatomic_equal<_Up> __nonatomic_equal = {__val};
+  __atomic_compare_unequal_to<_Up> __nonatomic_equal = {__val};
   std::__atomic_wait_unless(__a, __nonatomic_equal, __order);
 }
 
