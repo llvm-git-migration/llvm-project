@@ -49,6 +49,8 @@ Improvements and New Features
 -----------------------------
 
 - The performance of growing ``std::vector`` has been improved for trivially relocatable types.
+- The ``std::mismatch`` algorithm has been optimized for integral types, which can lead up to 40x performance
+  improvements.
 
 Deprecations and Removals
 -------------------------
