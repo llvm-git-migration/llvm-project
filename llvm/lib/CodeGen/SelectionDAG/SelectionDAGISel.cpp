@@ -775,6 +775,13 @@ void SelectionDAGISel::ComputeLiveOutVRegInfo() {
   } while (!Worklist.empty());
 }
 
+#if 0
+#define NOAH_DUMP(v, todo)                                                     \
+  dbgs() << "-------------------- STAGE" << #v << " ---------------------\n";     \
+  todo;
+#else
+#define NOAH_DUMP(v, todo)
+#endif
 void SelectionDAGISel::CodeGenAndEmitDAG() {
   StringRef GroupName = "sdag";
   StringRef GroupDescription = "Instruction Selection and Scheduling";
@@ -815,6 +822,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   if (ViewDAGCombine1 && MatchFilterBB)
     CurDAG->viewGraph("dag-combine1 input for " + BlockName);
 
+  NOAH_DUMP(0, CurDAG->dump());
   // Run the DAG combiner in pre-legalize mode.
   {
     NamedRegionTimer T("combine1", "DAG Combining 1", GroupName,
@@ -838,6 +846,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
     CurDAG->viewGraph("legalize-types input for " + BlockName);
 
   bool Changed;
+  NOAH_DUMP(1, CurDAG->dump());
   {
     NamedRegionTimer T("legalize_types", "Type Legalization", GroupName,
                        GroupDescription, TimePassesIsEnabled);
@@ -896,6 +905,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
       CurDAG->VerifyDAGDivergence();
 #endif
 
+  NOAH_DUMP(2, CurDAG->dump());
     {
       NamedRegionTimer T("legalize_types2", "Type Legalization 2", GroupName,
                          GroupDescription, TimePassesIsEnabled);
@@ -915,6 +925,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
     if (ViewDAGCombineLT && MatchFilterBB)
       CurDAG->viewGraph("dag-combine-lv input for " + BlockName);
 
+  NOAH_DUMP(3, CurDAG->dump());
     // Run the DAG combiner in post-type-legalize mode.
     {
       NamedRegionTimer T("combine_lv", "DAG Combining after legalize vectors",
@@ -936,6 +947,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   if (ViewLegalizeDAGs && MatchFilterBB)
     CurDAG->viewGraph("legalize input for " + BlockName);
 
+  NOAH_DUMP(4, CurDAG->dump());
   {
     NamedRegionTimer T("legalize", "DAG Legalization", GroupName,
                        GroupDescription, TimePassesIsEnabled);
@@ -955,6 +967,8 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   if (ViewDAGCombine2 && MatchFilterBB)
     CurDAG->viewGraph("dag-combine2 input for " + BlockName);
 
+
+  NOAH_DUMP(5, CurDAG->dump());
   // Run the DAG combiner in post-legalize mode.
   {
     NamedRegionTimer T("combine2", "DAG Combining 2", GroupName,
@@ -966,6 +980,8 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
                    << printMBBReference(*FuncInfo->MBB) << " '" << BlockName
                    << "'\n";
             CurDAG->dump());
+
+  NOAH_DUMP(6, CurDAG->dump());
 
 #ifndef NDEBUG
   if (TTI.hasBranchDivergence())
