@@ -816,6 +816,18 @@ SDValue TargetLowering::SimplifyMultipleUseDemandedBits(
     }
     break;
   }
+  case ISD::SINT_TO_FP: {
+    EVT InnerVT = Op.getOperand(0).getValueType();
+    if (DemandedBits.isSignMask() &&
+        VT.getScalarSizeInBits() == InnerVT.getScalarSizeInBits())
+      return DAG.getBitcast(VT, Op.getOperand(0));
+    break;
+  }
+  case ISD::UINT_TO_FP: {
+    if (DemandedBits.isSignMask())
+      return DAG.getConstant(0, SDLoc(Op), VT);
+    break;
+  }
   case ISD::SIGN_EXTEND_INREG: {
     // If none of the extended bits are demanded, eliminate the sextinreg.
     SDValue Op0 = Op.getOperand(0);
@@ -2309,6 +2321,22 @@ bool TargetLowering::SimplifyDemandedBits(
     if (DemandedBits.isOne() && !TLO.LegalOps && !VT.isVector())
       return TLO.CombineTo(Op, TLO.DAG.getNode(ISD::PARITY, dl, VT,
                                                Op.getOperand(0)));
+
+    Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
+    break;
+  }
+  case ISD::SINT_TO_FP: {
+    EVT InnerVT = Op.getOperand(0).getValueType();
+    if (DemandedBits.isSignMask() &&
+        VT.getScalarSizeInBits() == InnerVT.getScalarSizeInBits())
+      return TLO.CombineTo(Op, TLO.DAG.getBitcast(VT, Op.getOperand(0)));
+
+    Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
+    break;
+  }
+  case ISD::UINT_TO_FP: {
+    if (DemandedBits.isSignMask())
+      return TLO.CombineTo(Op, TLO.DAG.getConstant(0, dl, VT));
 
     Known = TLO.DAG.computeKnownBits(Op, DemandedElts, Depth);
     break;
