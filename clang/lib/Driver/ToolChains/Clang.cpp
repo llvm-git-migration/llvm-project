@@ -5016,11 +5016,27 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     assert(JA.getType() == types::TY_API_INFO &&
            "Extract API actions must generate a API information.");
     CmdArgs.push_back("-extract-api");
+
+    if (Arg *PrettySGFArg = Args.getLastArg(options::OPT_emit_pretty_sgf))
+      PrettySGFArg->render(Args, CmdArgs);
+
+    Arg *SymbolGraphDirArg = Args.getLastArg(options::OPT_symbol_graph_dir_EQ);
+
     if (Arg *ProductNameArg = Args.getLastArg(options::OPT_product_name_EQ))
       ProductNameArg->render(Args, CmdArgs);
     if (Arg *ExtractAPIIgnoresFileArg =
             Args.getLastArg(options::OPT_extract_api_ignores_EQ))
       ExtractAPIIgnoresFileArg->render(Args, CmdArgs);
+    if (Arg *EmitExtensionSymbolGraphs =
+            Args.getLastArg(options::OPT_emit_extension_symbol_graphs)) {
+      if (!Output.isNothing())
+        D.Diag(diag::err_drv_unexpected_symbol_graph_output)
+            << Output.getAsString();
+      if (!SymbolGraphDirArg)
+        D.Diag(diag::err_drv_missing_symbol_graph_dir);
+    }
+    if (SymbolGraphDirArg)
+      SymbolGraphDirArg->render(Args, CmdArgs);
   } else {
     assert((isa<CompileJobAction>(JA) || isa<BackendJobAction>(JA)) &&
            "Invalid action for clang tool.");
