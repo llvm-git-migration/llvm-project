@@ -10,6 +10,7 @@
 // RUN: mlir-capi-llvm-test 2>&1 | FileCheck %s
 
 #include "mlir-c/Dialect/LLVM.h"
+#include "mlir-c/BuiltinAttributes.h"
 #include "mlir-c/BuiltinTypes.h"
 #include "mlir-c/IR.h"
 #include "mlir-c/Support.h"
@@ -77,7 +78,7 @@ static void testTypeCreation(MlirContext ctx) {
 
 // CHECK-LABEL: testStructTypeCreation
 static int testStructTypeCreation(MlirContext ctx) {
-  fprintf(stderr, "testStructTypeCreation");
+  fprintf(stderr, "testStructTypeCreation\n");
 
   // CHECK: !llvm.struct<()>
   mlirTypeDump(mlirLLVMStructTypeLiteralGet(ctx, /*nFieldTypes=*/0,
@@ -225,12 +226,128 @@ static int testStructTypeCreation(MlirContext ctx) {
   return 0;
 }
 
+// CHECK-LABEL: testLLVMAttributes
+static void testLLVMAttributes(MlirContext ctx) {
+  fprintf(stderr, "testLLVMAttributes\n");
+
+  // CHECK: #llvm.linkage<internal>
+  mlirAttributeDump(mlirLLVMLinkageAttrGet(ctx, 0x1));
+  // CHECK: #llvm.cconv<ccc>
+  mlirAttributeDump(mlirLLVMCConvAttrGet(ctx, 0x0));
+  // CHECK: #llvm<comdat any>
+  mlirAttributeDump(mlirLLVMComdatAttrGet(ctx, 0x0));
+}
+
+// CHECK-LABEL: testDebugInfoAttributes
+static void testDebugInfoAttributes(MlirContext ctx) {
+  fprintf(stderr, "testDebugInfoAttributes\n");
+
+  MlirAttribute foo =
+      mlirStringAttrGet(ctx, mlirStringRefCreateFromCString("foo"));
+  MlirAttribute bar =
+      mlirStringAttrGet(ctx, mlirStringRefCreateFromCString("bar"));
+  MlirAttribute id = mlirDisctinctAttrCreate(foo);
+
+  // CHECK: #llvm.di_null_type
+  mlirAttributeDump(mlirLLVMDINullTypeAttrGet(ctx));
+  // CHECK: #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits =
+  // 64, encoding = DW_ATE_signed>
+  MlirAttribute di_type = mlirLLVMDIBasicTypeAttrGet(ctx, 0, foo, 64, 0x5);
+  mlirAttributeDump(di_type);
+
+  MlirAttribute file = mlirLLVMDIFileAttrGet(ctx, foo, bar);
+
+  // CHECK: #llvm.di_file<"foo" in "bar">
+  mlirAttributeDump(file);
+
+  MlirAttribute compile_unit =
+      mlirLLVMDICompileUnitAttrGet(ctx, id, 0x1C, file, foo, false, 0x1);
+
+  // CHECK: #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
+  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
+  // false, emissionKind = Full>
+  mlirAttributeDump(compile_unit);
+
+  // CHECK: 1 : i32
+  mlirAttributeDump(mlirLLVMDIFlagsAttrGet(ctx, 0x1));
+
+  // CHECK: #llvm.di_lexical_block<scope = #llvm.di_compile_unit<id =
+  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
+  // producer = "foo", isOptimized = false, emissionKind = Full>, file = <"foo"
+  // in "bar">, line = 1, column = 2>
+  mlirAttributeDump(
+      mlirLLVMDILexicalBlockAttrGet(ctx, compile_unit, file, 1, 2));
+
+  // CHECK: #llvm.di_lexical_block_file<scope = #llvm.di_compile_unit<id =
+  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
+  // producer = "foo", isOptimized = false, emissionKind = Full>, file = <"foo"
+  // in "bar">, discriminator = 3>
+  mlirAttributeDump(
+      mlirLLVMDILexicalBlockFileAttrGet(ctx, compile_unit, file, 3));
+
+  // CHECK: #llvm.di_local_variable<scope = #llvm.di_compile_unit<id =
+  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
+  // producer = "foo", isOptimized = false, emissionKind = Full>, name = "foo",
+  // file = <"foo" in "bar">, line = 1, alignInBits = 8, type =
+  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
+  // encoding = DW_ATE_signed>>
+  mlirAttributeDump(mlirLLVMDILocalVariableAttrGet(ctx, compile_unit, foo, file,
+                                                   1, 0, 8, di_type));
+  // CHECK: #llvm.di_derived_type<tag = DW_TAG_null, name = "bar", baseType =
+  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
+  // encoding = DW_ATE_signed>, sizeInBits = 64, alignInBits = 8>
+  mlirAttributeDump(
+      mlirLLVMDIDerivedTypeAttrGet(ctx, 0, bar, di_type, 64, 8, 0));
+
+  // CHECK: #llvm.di_composite_type<tag = DW_TAG_null, name = "foo", file =
+  // <"foo" in "bar">, line = 1, scope = #llvm.di_compile_unit<id =
+  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
+  // producer = "foo", isOptimized = false, emissionKind = Full>, baseType =
+  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
+  // encoding = DW_ATE_signed>, sizeInBits = 64, alignInBits = 8, elements =
+  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
+  // encoding = DW_ATE_signed>>
+  mlirAttributeDump(mlirLLVMDICompositeTypeAttrGet(
+      ctx, 0, foo, file, 1, compile_unit, di_type, 0, 64, 8, 1, &di_type));
+
+  MlirAttribute subroutine_type =
+      mlirLLVMDISubroutineTypeAttrGet(ctx, 0x0, 1, &di_type);
+
+  // CHECK: #llvm.di_subroutine_type<types = #llvm.di_basic_type<tag =
+  // DW_TAG_null, name = "foo", sizeInBits = 64, encoding = DW_ATE_signed>>
+  mlirAttributeDump(subroutine_type);
+
+  // CHECK: #llvm.di_subprogram<id = distinct[0]<"foo">, compileUnit = <id =
+  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
+  // producer = "foo", isOptimized = false, emissionKind = Full>, scope =
+  // #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
+  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
+  // false, emissionKind = Full>, name = "foo", linkageName = "bar", file =
+  // <"foo" in "bar">, line = 1, scopeLine = 2, subprogramFlags = , type =
+  // <types = #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits =
+  // 64, encoding = DW_ATE_signed>>>
+  mlirAttributeDump(mlirLLVMDISubprogramAttrGet(ctx, id, compile_unit,
+                                                compile_unit, foo, bar, file, 1,
+                                                2, 0, subroutine_type));
+
+  MlirAttribute expression_elem =
+      mlirLLVMDIExpressionElemAttrGet(ctx, 1, 1, &(uint64_t){1});
+
+  // CHECK: #llvm<di_expression_elem(1)>
+  mlirAttributeDump(expression_elem);
+
+  // CHECK: #llvm.di_expression<[(1)]>
+  mlirAttributeDump(mlirLLVMDIExpressionAttrGet(ctx, 1, &expression_elem));
+}
+
 int main(void) {
   MlirContext ctx = mlirContextCreate();
   mlirDialectHandleRegisterDialect(mlirGetDialectHandle__llvm__(), ctx);
   mlirContextGetOrLoadDialect(ctx, mlirStringRefCreateFromCString("llvm"));
   testTypeCreation(ctx);
   int result = testStructTypeCreation(ctx);
+  testLLVMAttributes(ctx);
+  testDebugInfoAttributes(ctx);
   mlirContextDestroy(ctx);
   if (result)
     fprintf(stderr, "FAILED: code %d", result);
