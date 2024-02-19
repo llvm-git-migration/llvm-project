@@ -5,9 +5,10 @@ template <typename T> struct Ref {
   T *t;
 
   Ref() : t{} {};
-  Ref(T *) {}
+  Ref(T &) {}
   T *get() { return t; }
   T *ptr() { return t; }
+  T *operator->() { return t; }
   operator const T &() const { return *t; }
   operator T &() { return *t; }
 };
