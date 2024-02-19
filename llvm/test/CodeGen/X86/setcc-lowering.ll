@@ -9,10 +9,10 @@
 define <8 x i16> @pr25080(<8 x i32> %a) {
 ; AVX-LABEL: pr25080:
 ; AVX:       # %bb.0: # %entry
+; AVX-NEXT:    vandps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm0, %ymm0
+; AVX-NEXT:    vxorps %xmm1, %xmm1, %xmm1
+; AVX-NEXT:    vcmpeqps %ymm1, %ymm0, %ymm0
 ; AVX-NEXT:    vextractf128 $1, %ymm0, %xmm0
-; AVX-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
-; AVX-NEXT:    vpxor %xmm1, %xmm1, %xmm1
-; AVX-NEXT:    vpcmpeqd %xmm1, %xmm0, %xmm0
 ; AVX-NEXT:    vpackssdw %xmm0, %xmm0, %xmm0
 ; AVX-NEXT:    vpor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
 ; AVX-NEXT:    vzeroupper

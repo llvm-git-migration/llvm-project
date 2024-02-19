@@ -679,15 +679,15 @@ define void @PR54171(ptr %mask0, ptr %mask1, i64 %i) {
 ; AVX1-NEXT:  # %bb.1: # %if.then
 ; AVX1-NEXT:    vmovd %edx, %xmm0
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm0 = xmm0[0,0,0,0]
-; AVX1-NEXT:    vpcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm1
-; AVX1-NEXT:    vpcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm2
-; AVX1-NEXT:    vmovdqa %xmm2, (%rdi)
-; AVX1-NEXT:    vmovdqa %xmm1, 16(%rdi)
-; AVX1-NEXT:    vpcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm1
-; AVX1-NEXT:    vpcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
-; AVX1-NEXT:    vmovdqa %xmm0, (%rsi)
-; AVX1-NEXT:    vmovdqa %xmm1, 16(%rsi)
+; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm0, %ymm0
+; AVX1-NEXT:    vmovaps {{.*#+}} ymm1 = [0,0,1,1,2,2,3,3]
+; AVX1-NEXT:    vcmpltps %ymm0, %ymm1, %ymm1
+; AVX1-NEXT:    vmovaps %ymm1, (%rdi)
+; AVX1-NEXT:    vmovaps {{.*#+}} ymm1 = [4,4,5,5,6,6,7,7]
+; AVX1-NEXT:    vcmpltps %ymm0, %ymm1, %ymm0
+; AVX1-NEXT:    vmovaps %ymm0, (%rsi)
 ; AVX1-NEXT:  .LBB18_2: # %if.end
+; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: PR54171:
