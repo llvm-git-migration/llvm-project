@@ -625,6 +625,8 @@ public:
     return isLoadBitCastBeneficial(StoreVT, BitcastVT, DAG, MMO);
   }
 
+  virtual bool isBitcastFree(EVT DstVT, EVT SrcVT) const { return false; }
+
   /// Return true if it is expected to be cheaper to do a store of vector
   /// constant with the given size and type for the address space than to
   /// store the individual scalar element constants.
