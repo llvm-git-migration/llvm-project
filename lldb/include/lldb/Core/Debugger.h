@@ -593,6 +593,7 @@ protected:
   friend class CommandInterpreter;
   friend class REPL;
   friend class Progress;
+  friend class ProgressManager;
 
   /// Report progress events.
   ///
@@ -626,7 +627,8 @@ protected:
   static void ReportProgress(uint64_t progress_id, std::string title,
                              std::string details, uint64_t completed,
                              uint64_t total,
-                             std::optional<lldb::user_id_t> debugger_id);
+                             std::optional<lldb::user_id_t> debugger_id,
+                             uint32_t progress_category_bit);
 
   static void ReportDiagnosticImpl(DiagnosticEventData::Type type,
                                    std::string message,

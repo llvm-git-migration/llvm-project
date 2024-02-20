@@ -9,10 +9,11 @@
 #ifndef LLDB_CORE_PROGRESS_H
 #define LLDB_CORE_PROGRESS_H
 
-#include "lldb/Utility/ConstString.h"
+#include "lldb/lldb-forward.h"
 #include "lldb/lldb-types.h"
 #include "llvm/ADT/StringMap.h"
 #include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <optional>
 
@@ -97,12 +98,32 @@ public:
   /// Used to indicate a non-deterministic progress report
   static constexpr uint64_t kNonDeterministicTotal = UINT64_MAX;
 
+  /// Use a struct to send data from a Progress object to
+  /// ProgressManager::ReportProgress. In addition to the Progress member fields
+  /// this also passes the debugger progress broadcast bit. Using the progress
+  /// category bit indicates that the given progress report is the initial or
+  /// final report for its category.
+  struct ProgressData {
+    std::string title;
+    std::string details;
+    uint64_t progress_id;
+    uint64_t completed;
+    uint64_t total;
+    std::optional<lldb::user_id_t> debugger_id;
+    uint32_t progress_broadcast_bit;
+  };
+
 private:
+  friend class Debugger;
   void ReportProgress();
   static std::atomic<uint64_t> g_id;
-  /// The title of the progress activity.
+  /// The title of the progress activity, also used as a category to group
+  /// reports.
   std::string m_title;
+  /// More specific information about the current file being displayed in the
+  /// report.
   std::string m_details;
+  /// Mutex for synchronization.
   std::mutex m_mutex;
   /// A unique integer identifier for progress reporting.
   const uint64_t m_id;
@@ -118,6 +139,8 @@ private:
   /// to ensure that we don't send progress updates after progress has
   /// completed.
   bool m_complete = false;
+  /// Data needed by the debugger to broadcast a progress event.
+  ProgressData m_progress_data;
 };
 
 /// A class used to group progress reports by category. This is done by using a
@@ -130,13 +153,21 @@ public:
   ~ProgressManager();
 
   /// Control the refcount of the progress report category as needed.
-  void Increment(std::string category);
-  void Decrement(std::string category);
+  void Increment(Progress::ProgressData);
+  void Decrement(Progress::ProgressData);
 
   static ProgressManager &Instance();
 
+  llvm::StringMap<std::pair<uint64_t, Progress::ProgressData>>
+  GetProgressCategoryMap() {
+    return m_progress_category_map;
+  }
+
+  void ReportProgress(Progress::ProgressData);
+
 private:
-  llvm::StringMap<uint64_t> m_progress_category_map;
+  llvm::StringMap<std::pair<uint64_t, Progress::ProgressData>>
+      m_progress_category_map;
   std::mutex m_progress_map_mutex;
 };
 

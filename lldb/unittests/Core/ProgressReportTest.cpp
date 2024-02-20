@@ -126,3 +126,60 @@ TEST_F(ProgressReportTest, TestReportCreation) {
   ASSERT_FALSE(data->IsFinite());
   ASSERT_EQ(data->GetMessage(), "Progress report 1: Starting report 1");
 }
+
+TEST_F(ProgressReportTest, TestProgressManager) {
+  std::chrono::milliseconds timeout(100);
+
+  // Set up the debugger, make sure that was done properly.
+  ArchSpec arch("x86_64-apple-macosx-");
+  Platform::SetHostPlatform(PlatformRemoteMacOSX::CreateInstance(true, &arch));
+
+  DebuggerSP debugger_sp = Debugger::CreateInstance();
+  ASSERT_TRUE(debugger_sp);
+
+  // Get the debugger's broadcaster.
+  Broadcaster &broadcaster = debugger_sp->GetBroadcaster();
+
+  // Create a listener, make sure it can receive events and that it's
+  // listening to the correct broadcast bit.
+  ListenerSP listener_sp = Listener::MakeListener("progress-category-listener");
+
+  listener_sp->StartListeningForEvents(&broadcaster,
+                                       Debugger::eBroadcastBitProgressCategory);
+  EXPECT_TRUE(broadcaster.EventTypeHasListeners(
+      Debugger::eBroadcastBitProgressCategory));
+
+  EventSP event_sp;
+  const ProgressEventData *data;
+
+  // Create three progress events with the same category then try to pop 2
+  // events from the queue in a row before the progress reports are destroyed.
+  // Since only 1 event should've been broadcast for this category, the second
+  // GetEvent() call should return false.
+  {
+    Progress progress1("Progress report 1", "Starting report 1");
+    Progress progress2("Progress report 1", "Starting report 2");
+    Progress progress3("Progress report 1", "Starting report 3");
+    EXPECT_TRUE(listener_sp->GetEvent(event_sp, timeout));
+    EXPECT_FALSE(listener_sp->GetEvent(event_sp, timeout));
+  }
+
+  data = ProgressEventData::GetEventDataFromEvent(event_sp.get());
+
+  ASSERT_EQ(data->GetDetails(), "");
+  ASSERT_FALSE(data->IsFinite());
+  ASSERT_FALSE(data->GetCompleted());
+  ASSERT_EQ(data->GetTotal(), Progress::kNonDeterministicTotal);
+  ASSERT_EQ(data->GetMessage(), "Progress report 1");
+
+  // Pop another event from the queue, this should be the event for the final
+  // report for this category.
+  EXPECT_TRUE(listener_sp->GetEvent(event_sp, timeout));
+
+  data = ProgressEventData::GetEventDataFromEvent(event_sp.get());
+  ASSERT_EQ(data->GetDetails(), "");
+  ASSERT_FALSE(data->IsFinite());
+  ASSERT_TRUE(data->GetCompleted());
+  ASSERT_EQ(data->GetTotal(), Progress::kNonDeterministicTotal);
+  ASSERT_EQ(data->GetMessage(), "Progress report 1");
+}

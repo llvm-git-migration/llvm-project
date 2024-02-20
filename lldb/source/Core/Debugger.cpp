@@ -15,6 +15,7 @@
 #include "lldb/Core/ModuleList.h"
 #include "lldb/Core/ModuleSpec.h"
 #include "lldb/Core/PluginManager.h"
+#include "lldb/Core/Progress.h"
 #include "lldb/Core/StreamAsynchronousIO.h"
 #include "lldb/DataFormatters/DataVisualization.h"
 #include "lldb/Expression/REPL.h"
@@ -1433,11 +1434,30 @@ void Debugger::SetDestroyCallback(
 static void PrivateReportProgress(Debugger &debugger, uint64_t progress_id,
                                   std::string title, std::string details,
                                   uint64_t completed, uint64_t total,
-                                  bool is_debugger_specific) {
+                                  bool is_debugger_specific,
+                                  uint32_t progress_broadcast_bit) {
   // Only deliver progress events if we have any progress listeners.
   const uint32_t event_type = Debugger::eBroadcastBitProgress;
-  if (!debugger.GetBroadcaster().EventTypeHasListeners(event_type))
+  const uint32_t category_event_type = Debugger::eBroadcastBitProgressCategory;
+  if (!debugger.GetBroadcaster().EventTypeHasListeners(event_type |
+                                                       category_event_type))
     return;
+
+  if (debugger.GetBroadcaster().EventTypeHasListeners(category_event_type)) {
+    ProgressManager &progress_manager = ProgressManager::Instance();
+    auto map_refcount = progress_manager.GetProgressCategoryMap().lookup(title);
+
+    // Only broadcast the event to the progress category bit if it's an initial
+    // or final report for that category. Since we're broadcasting for the
+    // category specifically, clear the details.
+    if (progress_broadcast_bit == Debugger::eBroadcastBitProgressCategory) {
+      EventSP event_sp(new Event(
+          category_event_type,
+          new ProgressEventData(progress_id, std::move(title), "", completed,
+                                total, is_debugger_specific)));
+      debugger.GetBroadcaster().BroadcastEvent(event_sp);
+    }
+  }
   EventSP event_sp(new Event(
       event_type,
       new ProgressEventData(progress_id, std::move(title), std::move(details),
@@ -1448,7 +1468,8 @@ static void PrivateReportProgress(Debugger &debugger, uint64_t progress_id,
 void Debugger::ReportProgress(uint64_t progress_id, std::string title,
                               std::string details, uint64_t completed,
                               uint64_t total,
-                              std::optional<lldb::user_id_t> debugger_id) {
+                              std::optional<lldb::user_id_t> debugger_id,
+                              uint32_t progress_category_bit) {
   // Check if this progress is for a specific debugger.
   if (debugger_id) {
     // It is debugger specific, grab it and deliver the event if the debugger
@@ -1457,7 +1478,8 @@ void Debugger::ReportProgress(uint64_t progress_id, std::string title,
     if (debugger_sp)
       PrivateReportProgress(*debugger_sp, progress_id, std::move(title),
                             std::move(details), completed, total,
-                            /*is_debugger_specific*/ true);
+                            /*is_debugger_specific*/ true,
+                            progress_category_bit);
     return;
   }
   // The progress event is not debugger specific, iterate over all debuggers
@@ -1467,7 +1489,8 @@ void Debugger::ReportProgress(uint64_t progress_id, std::string title,
     DebuggerList::iterator pos, end = g_debugger_list_ptr->end();
     for (pos = g_debugger_list_ptr->begin(); pos != end; ++pos)
       PrivateReportProgress(*(*pos), progress_id, title, details, completed,
-                            total, /*is_debugger_specific*/ false);
+                            total, /*is_debugger_specific*/ false,
+                            progress_category_bit);
   }
 }
 
@@ -1875,7 +1898,8 @@ lldb::thread_result_t Debugger::DefaultEventHandler() {
 
   listener_sp->StartListeningForEvents(
       &m_broadcaster, eBroadcastBitProgress | eBroadcastBitWarning |
-                          eBroadcastBitError | eBroadcastSymbolChange);
+                          eBroadcastBitError | eBroadcastSymbolChange |
+                          eBroadcastBitProgressCategory);
 
   // Let the thread that spawned us know that we have started up and that we
   // are now listening to all required events so no events get missed
@@ -1928,6 +1952,8 @@ lldb::thread_result_t Debugger::DefaultEventHandler() {
             }
           } else if (broadcaster == &m_broadcaster) {
             if (event_type & Debugger::eBroadcastBitProgress)
+              HandleProgressEvent(event_sp);
+            else if (event_type & Debugger::eBroadcastBitProgressCategory)
               HandleProgressEvent(event_sp);
             else if (event_type & Debugger::eBroadcastBitWarning)
               HandleDiagnosticEvent(event_sp);
