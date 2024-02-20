@@ -1031,7 +1031,7 @@ static LogicalResult
 convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
                    LLVM::ModuleTranslation &moduleTranslation) {
   using InsertPointTy = llvm::OpenMPIRBuilder::InsertPointTy;
-  omp::ParallelOp opInstClone = prepareOmpParallelForPrivatization(opInst);
+  //omp::ParallelOp opInstClone = prepareOmpParallelForPrivatization(opInst);
 
   // TODO: support error propagation in OpenMPIRBuilder and use it instead of
   // relying on captured variables.
@@ -1041,12 +1041,12 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
   auto bodyGenCB = [&](InsertPointTy allocaIP, InsertPointTy codeGenIP) {
     // Collect reduction declarations
     SmallVector<omp::ReductionDeclareOp> reductionDecls;
-    collectReductionDecls(opInstClone, reductionDecls);
+    collectReductionDecls(opInst, reductionDecls);
 
     // Allocate reduction vars
     SmallVector<llvm::Value *> privateReductionVariables;
     DenseMap<Value, llvm::Value *> reductionVariableMap;
-    allocReductionVars(opInstClone, builder, moduleTranslation, allocaIP,
+    allocReductionVars(opInst, builder, moduleTranslation, allocaIP,
                        reductionDecls, privateReductionVariables,
                        reductionVariableMap);
 
@@ -1058,7 +1058,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
 
     // Initialize reduction vars
     builder.restoreIP(allocaIP);
-    for (unsigned i = 0; i < opInstClone.getNumReductionVars(); ++i) {
+    for (unsigned i = 0; i < opInst.getNumReductionVars(); ++i) {
       SmallVector<llvm::Value *> phis;
       if (failed(inlineConvertOmpRegions(
               reductionDecls[i].getInitializerRegion(), "omp.reduction.neutral",
@@ -1079,16 +1079,16 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
     // ParallelOp has only one region associated with it.
     builder.restoreIP(codeGenIP);
     auto regionBlock =
-        convertOmpOpRegions(opInstClone.getRegion(), "omp.par.region", builder,
+        convertOmpOpRegions(opInst.getRegion(), "omp.par.region", builder,
                             moduleTranslation, bodyGenStatus);
 
     // Process the reductions if required.
-    if (opInstClone.getNumReductionVars() > 0) {
+    if (opInst.getNumReductionVars() > 0) {
       // Collect reduction info
       SmallVector<OwningReductionGen> owningReductionGens;
       SmallVector<OwningAtomicReductionGen> owningAtomicReductionGens;
       SmallVector<llvm::OpenMPIRBuilder::ReductionInfo> reductionInfos;
-      collectReductionInfo(opInstClone, builder, moduleTranslation,
+      collectReductionInfo(opInst, builder, moduleTranslation,
                            reductionDecls, owningReductionGens,
                            owningAtomicReductionGens, privateReductionVariables,
                            reductionInfos);
@@ -1104,7 +1104,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
           ompBuilder->createReductions(builder.saveIP(), allocaIP,
                                        reductionInfos, false);
       if (!contInsertPoint.getBlock()) {
-        bodyGenStatus = opInstClone->emitOpError()
+        bodyGenStatus = opInst->emitOpError()
                         << "failed to convert reductions";
         return;
       }
@@ -1128,9 +1128,9 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
     // returned.
     auto [privVar, privatizerClone] =
         [&]() -> std::pair<mlir::Value, omp::PrivateClauseOp> {
-      if (!opInstClone.getPrivateVars().empty()) {
-        auto privVars = opInstClone.getPrivateVars();
-        auto privatizers = opInstClone.getPrivatizers();
+      if (!opInst.getPrivateVars().empty()) {
+        auto privVars = opInst.getPrivateVars();
+        auto privatizers = opInst.getPrivatizers();
 
         for (auto [privVar, privatizerAttr] :
              llvm::zip_equal(privVars, *privatizers)) {
@@ -1143,7 +1143,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
           SymbolRefAttr privSym = llvm::cast<SymbolRefAttr>(privatizerAttr);
           omp::PrivateClauseOp privatizer =
               SymbolTable::lookupNearestSymbolFrom<omp::PrivateClauseOp>(
-                  opInstClone, privSym);
+                  opInst, privSym);
 
           // Clone the privatizer in case it used by more than one parallel
           // region. The privatizer is processed in-place (see below) before it
@@ -1194,7 +1194,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
       SmallVector<llvm::Value *, 1> yieldedValues;
       if (failed(inlineConvertOmpRegions(allocRegion, "omp.privatizer", builder,
                                          moduleTranslation, &yieldedValues))) {
-        opInstClone.emitError(
+        opInst.emitError(
             "failed to inline `alloc` region of an `omp.private` "
             "op in the parallel region");
         bodyGenStatus = failure();
@@ -1216,13 +1216,13 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
   auto finiCB = [&](InsertPointTy codeGenIP) {};
 
   llvm::Value *ifCond = nullptr;
-  if (auto ifExprVar = opInstClone.getIfExprVar())
+  if (auto ifExprVar = opInst.getIfExprVar())
     ifCond = moduleTranslation.lookupValue(ifExprVar);
   llvm::Value *numThreads = nullptr;
-  if (auto numThreadsVar = opInstClone.getNumThreadsVar())
+  if (auto numThreadsVar = opInst.getNumThreadsVar())
     numThreads = moduleTranslation.lookupValue(numThreadsVar);
   auto pbKind = llvm::omp::OMP_PROC_BIND_default;
-  if (auto bind = opInstClone.getProcBindVal())
+  if (auto bind = opInst.getProcBindVal())
     pbKind = getProcBindKind(*bind);
   // TODO: Is the Parallel construct cancellable?
   bool isCancellable = false;
@@ -1235,7 +1235,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
       ompBuilder->createParallel(ompLoc, allocaIP, bodyGenCB, privCB, finiCB,
                                  ifCond, numThreads, pbKind, isCancellable));
 
-  opInstClone.erase();
+  opInst.erase();
   return bodyGenStatus;
 }
 
