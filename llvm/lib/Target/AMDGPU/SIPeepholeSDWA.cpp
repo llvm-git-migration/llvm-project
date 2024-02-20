@@ -739,6 +739,11 @@ SIPeepholeSDWA::matchSDWAOperand(MachineInstr &MI) {
     MachineInstr *SDWAInst = OrSDWADef->getParent();
     MachineInstr *OtherInst = OrOtherDef->getParent();
 
+    // Instruction and operand sources should reside in the same BB.
+    if (SDWAInst->getParent() != MI.getParent() ||
+        OtherInst->getParent() != MI.getParent())
+      break;
+
     // Check that OtherInstr is actually bitwise compatible with SDWAInst = their
     // destination patterns don't overlap. Compatible instruction can be either
     // regular instruction with compatible bitness or SDWA instruction with
@@ -815,7 +820,6 @@ SIPeepholeSDWA::matchSDWAOperand(MachineInstr &MI) {
 
     return std::make_unique<SDWADstPreserveOperand>(
       OrDst, OrSDWADef, OrOtherDef, DstSel);
-
   }
   }
 
