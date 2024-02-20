@@ -201,6 +201,8 @@ Improvements to Clang's diagnostics
 - Added diagnostics for C11 keywords being incompatible with language standards
   before C11, under a new warning group: ``-Wpre-c11-compat``.
 
+- Clang now diagnoses extraneous template parameter lists as a language extension.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
