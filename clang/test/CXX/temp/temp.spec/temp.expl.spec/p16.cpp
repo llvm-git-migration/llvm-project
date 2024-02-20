@@ -39,7 +39,9 @@ namespace PR10024 {
 
 namespace extraneous {
   template<typename T> struct A;
+
   template<typename T> int x;
+
   template<typename T> void f();
 
   template<> // expected-error{{extraneous template parameter list in template specialization}}
@@ -70,6 +72,11 @@ namespace extraneous {
 
     template<typename U>
     void h();
+
+    enum class E;
+
+    enum class E;
+    enum F : int;
   };
 
   template<>
@@ -113,4 +120,14 @@ namespace extraneous {
   template<> // expected-error{{extraneous template parameter list in template specialization}}
   template<typename U>
   void B<int>::h<int>(); // expected-error{{function template partial specialization is not allowed}}
+
+  // FIXME: We should diagnose this as having an extraneous 'template<>'
+  template<>
+  template<>
+  enum class B<int>::E; // expected-error{{enumeration cannot be a template}}
+
+  // FIXME: We should diagnose this as having an extraneous 'template<>'
+  template<>
+  template<>
+  enum B<int>::F : int; // expected-error{{enumeration cannot be a template}}
 }
