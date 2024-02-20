@@ -1,9 +1,6 @@
 // RUN: %clang_cc1 -std=hlsl2021 -finclude-default-header -x hlsl -triple \
 // RUN:   dxil-pc-shadermodel6.3-library %s -fnative-half-type \
 // RUN:   -emit-llvm -disable-llvm-passes -verify -verify-ignore-unexpected
-// NOTE: This test is marked XFAIL because when overload resolution merges
-// NOTE: test_dot_element_type_mismatch & test_dot_scalar_mismatch will have different behavior 
-// XFAIL: *
 
 float test_first_arg_is_not_vector ( float p0, float2 p1 ) {
   return dot ( p0, p1 );
