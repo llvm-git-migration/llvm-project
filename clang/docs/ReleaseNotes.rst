@@ -267,6 +267,11 @@ Bug Fixes to C++ Support
   was only accepted at namespace scope but not at local function scope.
 - Clang no longer tries to call consteval constructors at runtime when they appear in a member initializer.
   (`#782154 <https://github.com/llvm/llvm-project/issues/82154>`_`)
+- Clang now supports direct lambda calls inside of a type alias template declarations.
+  This addresses (`#70601 <https://github.com/llvm/llvm-project/issues/70601>`_),
+  (`#76674 <https://github.com/llvm/llvm-project/issues/76674>`_),
+  (`#79555 <https://github.com/llvm/llvm-project/issues/79555>`_),
+  (`#81145 <https://github.com/llvm/llvm-project/issues/81145>`_), and so on.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
