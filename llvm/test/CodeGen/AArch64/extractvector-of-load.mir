@@ -1,0 +1,91 @@
+# RUN: llc -run-pass=aarch64-prelegalizer-combiner %s -o - | FileCheck %s
+
+--- |
+  ; ModuleID = 'in.ll'
+  source_filename = "in.ll"
+  target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128"
+  
+  define i32 @f(ptr %0) {
+    %2 = load <2 x i32>, ptr %0, align 8
+    store <4 x i32> zeroinitializer, ptr %0, align 16
+    %3 = extractelement <2 x i32> %2, i64 0
+    ret i32 %3
+  }
+
+...
+---
+name:            f
+alignment:       4
+exposesReturnsTwice: false
+legalized:       false
+regBankSelected: false
+selected:        false
+failedISel:      false
+tracksRegLiveness: true
+hasWinCFI:       false
+callsEHReturn:   false
+callsUnwindInit: false
+hasEHCatchret:   false
+hasEHScopes:     false
+hasEHFunclets:   false
+isOutlined:      false
+debugInstrRef:   false
+failsVerification: false
+tracksDebugUserValues: false
+registers:
+  - { id: 0, class: _, preferred-register: '' }
+  - { id: 1, class: _, preferred-register: '' }
+  - { id: 2, class: _, preferred-register: '' }
+  - { id: 3, class: _, preferred-register: '' }
+  - { id: 4, class: _, preferred-register: '' }
+  - { id: 5, class: _, preferred-register: '' }
+liveins:
+  - { reg: '$x0', virtual-reg: '' }
+frameInfo:
+  isFrameAddressTaken: false
+  isReturnAddressTaken: false
+  hasStackMap:     false
+  hasPatchPoint:   false
+  stackSize:       0
+  offsetAdjustment: 0
+  maxAlignment:    1
+  adjustsStack:    false
+  hasCalls:        false
+  stackProtector:  ''
+  functionContext: ''
+  maxCallFrameSize: 4294967295
+  cvBytesOfCalleeSavedRegisters: 0
+  hasOpaqueSPAdjustment: false
+  hasVAStart:      false
+  hasMustTailInVarArgFunc: false
+  hasTailCall:     false
+  localFrameSize:  0
+  savePoint:       ''
+  restorePoint:    ''
+fixedStack:      []
+stack:           []
+entry_values:    []
+callSites:       []
+debugValueSubstitutions: []
+constants:       []
+machineFunctionInfo: {}
+body:             |
+  bb.1 (%ir-block.1):
+    liveins: $x0
+  
+    %0:_(p0) = COPY $x0
+    %3:_(s32) = G_CONSTANT i32 0
+    %2:_(<4 x s32>) = G_BUILD_VECTOR %3(s32), %3(s32), %3(s32), %3(s32)
+    %5:_(s64) = G_CONSTANT i64 0
+    %1:_(<2 x s32>) = G_LOAD %0(p0) :: (load (<2 x s32>) from %ir.0)
+    G_STORE %2(<4 x s32>), %0(p0) :: (store (<4 x s32>) into %ir.0)
+    %4:_(s32) = G_EXTRACT_VECTOR_ELT %1(<2 x s32>), %5(s64)
+    $w0 = COPY %4(s32)
+    RET_ReallyLR implicit $w0
+
+...
+
+# CHECK: bb.0
+# CHECK: G_LOAD
+# CHECK: G_STORE
+# CHECK: G_EXTRACT_VECTOR_ELT
