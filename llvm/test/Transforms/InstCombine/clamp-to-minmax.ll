@@ -472,7 +472,7 @@ define float @ui32_clamp_and_cast_to_float(i32 %x) {
 ; CHECK-LABEL: @ui32_clamp_and_cast_to_float(
 ; CHECK-NEXT:    [[LO_CMP:%.*]] = icmp eq i32 [[X:%.*]], 0
 ; CHECK-NEXT:    [[MIN1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 255)
-; CHECK-NEXT:    [[MIN:%.*]] = uitofp i32 [[MIN1]] to float
+; CHECK-NEXT:    [[MIN:%.*]] = sitofp i32 [[MIN1]] to float
 ; CHECK-NEXT:    [[R:%.*]] = select i1 [[LO_CMP]], float 1.000000e+00, float [[MIN]]
 ; CHECK-NEXT:    ret float [[R]]
 ;
@@ -488,7 +488,7 @@ define float @ui64_clamp_and_cast_to_float(i64 %x) {
 ; CHECK-LABEL: @ui64_clamp_and_cast_to_float(
 ; CHECK-NEXT:    [[LO_CMP:%.*]] = icmp eq i64 [[X:%.*]], 0
 ; CHECK-NEXT:    [[MIN1:%.*]] = call i64 @llvm.umin.i64(i64 [[X]], i64 255)
-; CHECK-NEXT:    [[MIN:%.*]] = uitofp i64 [[MIN1]] to float
+; CHECK-NEXT:    [[MIN:%.*]] = sitofp i64 [[MIN1]] to float
 ; CHECK-NEXT:    [[R:%.*]] = select i1 [[LO_CMP]], float 1.000000e+00, float [[MIN]]
 ; CHECK-NEXT:    ret float [[R]]
 ;

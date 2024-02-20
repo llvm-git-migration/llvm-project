@@ -67,9 +67,8 @@ define double @test_2_uitofp(i32 %a, i32 %b) {
 ; CHECK-LABEL: @test_2_uitofp(
 ; CHECK-NEXT:    [[A_AND:%.*]] = and i32 [[A:%.*]], 1073741823
 ; CHECK-NEXT:    [[B_AND:%.*]] = and i32 [[B:%.*]], 1073741823
-; CHECK-NEXT:    [[A_AND_FP:%.*]] = uitofp i32 [[A_AND]] to double
-; CHECK-NEXT:    [[B_AND_FP:%.*]] = uitofp i32 [[B_AND]] to double
-; CHECK-NEXT:    [[RES:%.*]] = fadd double [[A_AND_FP]], [[B_AND_FP]]
+; CHECK-NEXT:    [[ADDCONV:%.*]] = add nuw nsw i32 [[A_AND]], [[B_AND]]
+; CHECK-NEXT:    [[RES:%.*]] = sitofp i32 [[ADDCONV]] to double
 ; CHECK-NEXT:    ret double [[RES]]
 ;
   ; Drop two highest bits to guarantee that %a + %b doesn't overflow
