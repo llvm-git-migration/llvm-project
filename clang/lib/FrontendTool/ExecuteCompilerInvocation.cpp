@@ -70,9 +70,8 @@ CreateFrontendBaseAction(CompilerInstance &CI) {
   case GeneratePCH:            return std::make_unique<GeneratePCHAction>();
   case GenerateInterfaceStubs:
     return std::make_unique<GenerateInterfaceStubsAction>();
-  case InitOnly:               return std::make_unique<InitOnlyAction>();
-  case InstallAPI:
-    return std::make_unique<InstallAPIAction>();
+  case InitOnly:
+    return std::make_unique<InitOnlyAction>();
   case ParseSyntaxOnly:        return std::make_unique<SyntaxOnlyAction>();
   case ModuleFileInfo:         return std::make_unique<DumpModuleInfoAction>();
   case VerifyPCH:              return std::make_unique<VerifyPCHAction>();
