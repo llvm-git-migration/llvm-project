@@ -1520,7 +1520,7 @@ private:
     constexpr u32 kStacksPerRingBufferEntry = 2;
     constexpr u32 kMaxU32Pow2 = ~(UINT32_MAX >> 1);
     static_assert(isPowerOfTwo(kMaxU32Pow2));
-    constexpr u32 kFramesPerStack = 8;
+    constexpr u32 kFramesPerStack = 16;
     static_assert(isPowerOfTwo(kFramesPerStack));
 
     // We need StackDepot to be aligned to 8-bytes so the ring we store after
