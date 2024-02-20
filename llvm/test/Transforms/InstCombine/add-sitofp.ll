@@ -63,6 +63,26 @@ define double @test_2(i32 %a, i32 %b) {
   ret double %res
 }
 
+define double @test_2_uitofp(i32 %a, i32 %b) {
+; CHECK-LABEL: @test_2_uitofp(
+; CHECK-NEXT:    [[A_AND:%.*]] = and i32 [[A:%.*]], 1073741823
+; CHECK-NEXT:    [[B_AND:%.*]] = and i32 [[B:%.*]], 1073741823
+; CHECK-NEXT:    [[A_AND_FP:%.*]] = uitofp i32 [[A_AND]] to double
+; CHECK-NEXT:    [[B_AND_FP:%.*]] = uitofp i32 [[B_AND]] to double
+; CHECK-NEXT:    [[RES:%.*]] = fadd double [[A_AND_FP]], [[B_AND_FP]]
+; CHECK-NEXT:    ret double [[RES]]
+;
+  ; Drop two highest bits to guarantee that %a + %b doesn't overflow
+  %a_and = and i32 %a, 1073741823
+  %b_and = and i32 %b, 1073741823
+
+  %a_and_fp = uitofp i32 %a_and to double
+  %b_and_fp = uitofp i32 %b_and to double
+
+  %res = fadd double %a_and_fp, %b_and_fp
+  ret double %res
+}
+
 define float @test_2_neg(i32 %a, i32 %b) {
 ; CHECK-LABEL: @test_2_neg(
 ; CHECK-NEXT:    [[A_AND:%.*]] = and i32 [[A:%.*]], 1073741823
