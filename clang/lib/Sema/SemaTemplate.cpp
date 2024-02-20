@@ -9706,9 +9706,17 @@ bool Sema::CheckFunctionTemplateSpecialization(
   if (Result == Candidates.end())
     return true;
 
-  // Ignore access information;  it doesn't figure into redeclaration checking.
   FunctionDecl *Specialization = cast<FunctionDecl>(*Result);
+  auto *SpecializationFPT =
+      Specialization->getType()->castAs<FunctionProtoType>();
+  // If the function has a dependent exception specification, resolve it after
+  // we have selected the primary template so we can check whether it matches.
+  if (getLangOpts().CPlusPlus17 &&
+      isUnresolvedExceptionSpec(SpecializationFPT->getExceptionSpecType()) &&
+      !ResolveExceptionSpec(FD->getLocation(), SpecializationFPT))
+    return true;
 
+  // Ignore access information;  it doesn't figure into redeclaration checking.
   FunctionTemplateSpecializationInfo *SpecInfo
     = Specialization->getTemplateSpecializationInfo();
   assert(SpecInfo && "Function template specialization info missing?");
