@@ -224,19 +224,19 @@ public:
   /// @{
   // Note: These need to be pulled in manually. Otherwise, they get hidden by
   // the mutable getters with the same names.
+  using CompilerInvocationBase::getLangOpts;
+  using CompilerInvocationBase::getTargetOpts;
+  using CompilerInvocationBase::getDiagnosticOpts;
+  using CompilerInvocationBase::getHeaderSearchOpts;
+  using CompilerInvocationBase::getPreprocessorOpts;
   using CompilerInvocationBase::getAnalyzerOpts;
+  using CompilerInvocationBase::getMigratorOpts;
   using CompilerInvocationBase::getAPINotesOpts;
   using CompilerInvocationBase::getCodeGenOpts;
-  using CompilerInvocationBase::getDependencyOutputOpts;
-  using CompilerInvocationBase::getDiagnosticOpts;
   using CompilerInvocationBase::getFileSystemOpts;
   using CompilerInvocationBase::getFrontendOpts;
-  using CompilerInvocationBase::getHeaderSearchOpts;
-  using CompilerInvocationBase::getLangOpts;
-  using CompilerInvocationBase::getMigratorOpts;
-  using CompilerInvocationBase::getPreprocessorOpts;
+  using CompilerInvocationBase::getDependencyOutputOpts;
   using CompilerInvocationBase::getPreprocessorOutputOpts;
-  using CompilerInvocationBase::getTargetOpts;
   /// @}
 
   /// Mutable getters.
