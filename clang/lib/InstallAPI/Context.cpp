@@ -17,11 +17,10 @@ using namespace llvm::MachO;
 void InstallAPIConsumer::HandleTranslationUnit(ASTContext &Context) {
   if (Context.getDiagnostics().hasErrorOccurred())
     return;
-  InterfaceFile IF;
-  // Set library attributes captured through cc1 args.
-  Target T(Ctx.TargetTriple);
-  IF.addTarget(T);
-  IF.setFromBinaryAttrs(Ctx.BA, T);
-  if (auto Err = TextAPIWriter::writeToStream(*Ctx.OS, IF, Ctx.FT))
-    Ctx.Diags->Report(diag::err_cannot_open_file) << Ctx.OutputLoc;
+}
+
+std::unique_ptr<ASTConsumer>
+InstallAPIAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
+  InstallAPIContext Ctx;
+  return std::make_unique<InstallAPIConsumer>(std::move(Ctx));
 }
