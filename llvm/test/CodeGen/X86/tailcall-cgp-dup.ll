@@ -362,8 +362,30 @@ return:
   ret ptr %src
 }
 
+@i = global i32 0, align 4
+
+define i32 @undef_tailc() nounwind {
+; CHECK-LABEL: undef_tailc:
+; CHECK:       ## %bb.0:
+; CHECK-NEXT:    cmpl $0, _i(%rip)
+; CHECK-NEXT:    jne _qux ## TAILCALL
+; CHECK-NEXT:  ## %bb.1:
+; CHECK-NEXT:    retq
+  %1 = load i32, ptr @i, align 4
+  %2 = icmp eq i32 %1, 0
+  br i1 %2, label %5, label %3
+
+3:
+  %4 = tail call i32 @qux()
+  br label %5
+
+5:
+  ret i32 undef
+}
+
 declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1)
 declare void @llvm.memset.p0.i64(ptr nocapture writeonly, i8, i64, i1)
 declare noalias ptr @malloc(i64)
 declare ptr @strcpy(ptr noalias returned writeonly, ptr noalias nocapture readonly)
 declare ptr @baz(ptr, ptr)
+declare i32 @qux()
