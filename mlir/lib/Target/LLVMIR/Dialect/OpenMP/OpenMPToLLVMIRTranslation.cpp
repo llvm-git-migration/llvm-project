@@ -1120,6 +1120,7 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
   auto privCB = [&](InsertPointTy allocaIP, InsertPointTy codeGenIP,
                     llvm::Value &, llvm::Value &vPtr,
                     llvm::Value *&replacementValue) -> InsertPointTy {
+    llvm::errs() << ">>>> calling privCB for: " << vPtr << "\n";
     replacementValue = &vPtr;
 
     // If this is a private value, this lambda will return the corresponding

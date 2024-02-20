@@ -1501,6 +1501,10 @@ IRBuilder<>::InsertPoint OpenMPIRBuilder::createParallel(
   Extractor.findAllocas(CEAC, SinkingCands, HoistingCands, CommonExit);
   Extractor.findInputsOutputs(Inputs, Outputs, SinkingCands);
 
+  for (auto* Input : Inputs) {
+    llvm::errs() << ">>>> collected input: " << *Input << "\n";
+  }
+
   LLVM_DEBUG(dbgs() << "Before privatization: " << *OuterFn << "\n");
 
   FunctionCallee TIDRTLFn =
