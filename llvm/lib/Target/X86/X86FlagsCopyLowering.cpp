@@ -683,6 +683,8 @@ bool X86FlagsCopyLoweringPass::runOnMachineFunction(MachineFunction &MF) {
     // Now rewrite the jumps that use the flags. These we handle specially
     // because if there are multiple jumps in a single basic block we'll have
     // to do surgery on the CFG.
+    bool CopyDefIsKill = CopyDefI.killsRegister(X86::EFLAGS);
+    MachineOperand *LastEflagsUse = nullptr;
     MachineBasicBlock *LastJmpMBB = nullptr;
     for (MachineInstr *JmpI : JmpIs) {
       // Past the first jump within a basic block we need to split the blocks
@@ -693,10 +695,13 @@ bool X86FlagsCopyLoweringPass::runOnMachineFunction(MachineFunction &MF) {
         LastJmpMBB = JmpI->getParent();
 
       rewriteCondJmp(*TestMBB, TestPos, TestLoc, *JmpI, CondRegs);
+      if (JmpI->readsRegister(X86::EFLAGS))
+        LastEflagsUse = JmpI->findRegisterUseOperand(X86::EFLAGS);
     }
 
-    // FIXME: Mark the last use of EFLAGS before the copy's def as a kill if
-    // the copy's def operand is itself a kill.
+    // After the loop that processes jumps:
+    if (LastEflagsUse && CopyDefIsKill)
+      LastEflagsUse->setIsKill(true);
   }
 
 #ifndef NDEBUG
