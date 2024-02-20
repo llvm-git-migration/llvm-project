@@ -2194,13 +2194,46 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
   // flag (DF in EFLAGS register). Clear this flag by creating "cld" instruction
   // in each prologue of interrupt handler function.
   //
-  // FIXME: Create "cld" instruction only in these cases:
+  // Create "cld" instruction only in these cases:
   // 1. The interrupt handling function uses any of the "rep" instructions.
   // 2. Interrupt handling function calls another function.
   //
-  if (Fn.getCallingConv() == CallingConv::X86_INTR)
-    BuildMI(MBB, MBBI, DL, TII.get(X86::CLD))
-        .setMIFlag(MachineInstr::FrameSetup);
+  if (Fn.getCallingConv() == CallingConv::X86_INTR) {
+    bool NeedsCLD = false;
+
+    // Check if the function calls another function.
+    for (const BasicBlock &BB : Fn) {
+      for (const Instruction &I : BB) {
+        if (isa<CallInst>(I)) {
+          NeedsCLD = true;
+          break;
+        }
+
+        // Check for rep opcode.
+        unsigned Opcode = I.getOpcode();
+        static_assert(X86::REP_STOSW_64 - X86::REP_MOVSB_32 == 16);
+        if (X86::REP_MOVSB_32 <= Opcode && Opcode <= X86::REP_STOSW_64) {
+          NeedsCLD = true;
+          break;
+        }
+
+        if (auto *MI = dyn_cast<MachineInstr>(&I)) {
+          if (MI->isInlineAsm()) {
+            // TODO: Parse asm for rep instructions or call sites?
+            // For now, let's play it safe and emit a cld instruction
+            // just in case.
+            NeedsCLD = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (NeedsCLD) {
+      BuildMI(MBB, MBBI, DL, TII.get(X86::CLD))
+          .setMIFlag(MachineInstr::FrameSetup);
+    }
+  }
 
   // At this point we know if the function has WinCFI or not.
   MF.setHasWinCFI(HasWinCFI);
