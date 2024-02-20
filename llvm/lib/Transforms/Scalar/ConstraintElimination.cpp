@@ -507,6 +507,13 @@ static Decomposition decompose(Value *V,
     }
     Value *Op0;
     Value *Op1;
+
+    if (match(V, m_SExt(m_Value(Op0))))
+      return Op0;
+
+    if (match(V, m_NNegZExt(m_Value(Op0))))
+      return {Op0, /*IsKnownNonNegative=*/true};
+
     if (match(V, m_NSWAdd(m_Value(Op0), m_Value(Op1))))
       return MergeResults(Op0, Op1, IsSigned);
 
