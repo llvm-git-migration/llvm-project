@@ -56,11 +56,14 @@ static bool splitGlobal(GlobalVariable &GV) {
       return false;
 
     auto *GEP = dyn_cast<GEPOperator>(U);
-    if (!GEP || !GEP->getInRangeIndex() || *GEP->getInRangeIndex() != 1 ||
+    if (!GEP || !GEP->getInRange() ||
         !isa<ConstantInt>(GEP->getOperand(1)) ||
         !cast<ConstantInt>(GEP->getOperand(1))->isZero() ||
         !isa<ConstantInt>(GEP->getOperand(2)))
       return false;
+
+    // TODO(inrange)
+    return false;
   }
 
   SmallVector<MDNode *, 2> Types;
