@@ -675,6 +675,8 @@ public:
       // funclet opbundles are only valid in monochromatic BBs.
       // Note that unreachable BBs are seen as colorless by colorEHFunclets()
       // and will be DCE'ed later.
+      if (Colors.empty())
+        continue;
       if (Colors.size() != 1) {
         OwnerFn->getContext().emitError(
             "Instruction's BasicBlock is not monochromatic");
