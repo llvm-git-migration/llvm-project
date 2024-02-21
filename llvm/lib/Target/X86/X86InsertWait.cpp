@@ -106,16 +106,20 @@ bool WaitInsert::runOnMachineFunction(MachineFunction &MF) {
       // Jump non X87 instruction.
       if (!X86::isX87Instruction(*MI))
         continue;
+
       // If the instruction instruction neither has float exception nor is
       // a load/store instruction, or the instruction is x87 control
       // instruction, do not insert wait.
       if (!(MI->mayRaiseFPException() || MI->mayLoadOrStore()) ||
           isX87ControlInstruction(*MI))
         continue;
+
       // If the following instruction is an X87 instruction and isn't an X87
       // non-waiting control instruction, we can omit insert wait instruction.
       MachineBasicBlock::iterator AfterMI = std::next(MI);
       if (AfterMI != MBB.end() && !AfterMI->isCall() &&
+          !AfterMI->isTerminator() && !AfterMI->isReturn() &&
+          !AfterMI->hasUnmodeledSideEffects() &&
           X86::isX87Instruction(*AfterMI) &&
           !isX87NonWaitingControlInstruction(*AfterMI))
         continue;
