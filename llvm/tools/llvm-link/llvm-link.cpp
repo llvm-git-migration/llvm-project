@@ -393,8 +393,17 @@ static bool linkFiles(const char *argv0, LLVMContext &Context, Linker &L,
   // Similar to some flags, internalization doesn't apply to the first file.
   bool InternalizeLinkedSymbols = false;
   for (const auto &File : Files) {
+    auto ErrOrExpected = MemoryBuffer::getFileOrSTDIN(File);
+
+    // When we encounter a missing file, print all missing files to stderr.
+    if (auto EC = ErrOrExpected.getError())
+      if (EC == std::errc::no_such_file_or_directory)
+        for (auto &F : Files)
+          if (!llvm::sys::fs::exists(F))
+            errs() << "No such file or directory: '" << F << "'\n";
+
     std::unique_ptr<MemoryBuffer> Buffer =
-        ExitOnErr(errorOrToExpected(MemoryBuffer::getFileOrSTDIN(File)));
+        ExitOnErr(errorOrToExpected(std::move(ErrOrExpected)));
 
     std::unique_ptr<Module> M =
         identify_magic(Buffer->getBuffer()) == file_magic::archive
