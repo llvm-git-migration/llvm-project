@@ -116,6 +116,8 @@ bool WaitInsert::runOnMachineFunction(MachineFunction &MF) {
       // non-waiting control instruction, we can omit insert wait instruction.
       MachineBasicBlock::iterator AfterMI = std::next(MI);
       if (AfterMI != MBB.end() && !AfterMI->isCall() &&
+          !AfterMI->isTerminator() && !AfterMI->isReturn() &&
+          !AfterMI->hasUnmodeledSideEffects() &&
           X86::isX87Instruction(*AfterMI) &&
           !isX87NonWaitingControlInstruction(*AfterMI))
         continue;
