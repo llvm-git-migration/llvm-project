@@ -660,7 +660,6 @@ define double @fma_f64(double %a, double %b, double %c) nounwind strictfp {
 ; X87-NEXT:    fstpl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll fma
 ; X87-NEXT:    addl $24, %esp
 ; X87-NEXT:    retl
@@ -717,7 +716,6 @@ define float @fma_f32(float %a, float %b, float %c) nounwind strictfp {
 ; X87-NEXT:    fstps {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll fmaf
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    retl
