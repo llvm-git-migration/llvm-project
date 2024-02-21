@@ -165,7 +165,6 @@ define void @float_to_half(float %0) strictfp {
 ; X32-NOF16C-NEXT:    .cfi_def_cfa_offset 16
 ; X32-NOF16C-NEXT:    flds {{[0-9]+}}(%esp)
 ; X32-NOF16C-NEXT:    fstps (%esp)
-; X32-NOF16C-NEXT:    wait
 ; X32-NOF16C-NEXT:    calll __gnu_f2h_ieee
 ; X32-NOF16C-NEXT:    movw %ax, a
 ; X32-NOF16C-NEXT:    addl $12, %esp
@@ -213,7 +212,6 @@ define void @double_to_half(double %0) strictfp {
 ; X32-NOF16C-NEXT:    .cfi_def_cfa_offset 16
 ; X32-NOF16C-NEXT:    fldl {{[0-9]+}}(%esp)
 ; X32-NOF16C-NEXT:    fstpl (%esp)
-; X32-NOF16C-NEXT:    wait
 ; X32-NOF16C-NEXT:    calll __truncdfhf2
 ; X32-NOF16C-NEXT:    movw %ax, a
 ; X32-NOF16C-NEXT:    addl $12, %esp
@@ -266,7 +264,6 @@ define void @fp80_to_half(x86_fp80 %0) strictfp {
 ; X32-NOF16C-NEXT:    .cfi_def_cfa_offset 16
 ; X32-NOF16C-NEXT:    fldt {{[0-9]+}}(%esp)
 ; X32-NOF16C-NEXT:    fstpt (%esp)
-; X32-NOF16C-NEXT:    wait
 ; X32-NOF16C-NEXT:    calll __truncxfhf2
 ; X32-NOF16C-NEXT:    movw %ax, a
 ; X32-NOF16C-NEXT:    addl $12, %esp
@@ -279,7 +276,6 @@ define void @fp80_to_half(x86_fp80 %0) strictfp {
 ; X32-F16C-NEXT:    .cfi_def_cfa_offset 16
 ; X32-F16C-NEXT:    fldt {{[0-9]+}}(%esp)
 ; X32-F16C-NEXT:    fstpt (%esp)
-; X32-F16C-NEXT:    wait
 ; X32-F16C-NEXT:    calll __truncxfhf2
 ; X32-F16C-NEXT:    vpextrw $0, %xmm0, a
 ; X32-F16C-NEXT:    addl $12, %esp
@@ -292,7 +288,6 @@ define void @fp80_to_half(x86_fp80 %0) strictfp {
 ; X64-NOF16C-NEXT:    .cfi_def_cfa_offset 32
 ; X64-NOF16C-NEXT:    fldt {{[0-9]+}}(%rsp)
 ; X64-NOF16C-NEXT:    fstpt (%rsp)
-; X64-NOF16C-NEXT:    wait
 ; X64-NOF16C-NEXT:    callq __truncxfhf2@PLT
 ; X64-NOF16C-NEXT:    pextrw $0, %xmm0, %eax
 ; X64-NOF16C-NEXT:    movq a@GOTPCREL(%rip), %rcx
@@ -307,7 +302,6 @@ define void @fp80_to_half(x86_fp80 %0) strictfp {
 ; X64-F16C-NEXT:    .cfi_def_cfa_offset 32
 ; X64-F16C-NEXT:    fldt {{[0-9]+}}(%rsp)
 ; X64-F16C-NEXT:    fstpt (%rsp)
-; X64-F16C-NEXT:    wait
 ; X64-F16C-NEXT:    callq __truncxfhf2@PLT
 ; X64-F16C-NEXT:    movq a@GOTPCREL(%rip), %rax
 ; X64-F16C-NEXT:    vpextrw $0, %xmm0, (%rax)
@@ -335,7 +329,6 @@ define void @add() strictfp {
 ; X32-NOF16C-NEXT:    flds {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Folded Reload
 ; X32-NOF16C-NEXT:    faddp %st, %st(1)
 ; X32-NOF16C-NEXT:    fstps (%esp)
-; X32-NOF16C-NEXT:    wait
 ; X32-NOF16C-NEXT:    calll __gnu_f2h_ieee
 ; X32-NOF16C-NEXT:    movw %ax, c
 ; X32-NOF16C-NEXT:    addl $12, %esp

@@ -26,7 +26,6 @@ define x86_fp80 @test_strict_ldexp_f80_i32(ptr addrspace(1) %out, x86_fp80 %a, i
 ; X64-NEXT:    movl %esi, %edi
 ; X64-NEXT:    fldt {{[0-9]+}}(%rsp)
 ; X64-NEXT:    fstpt (%rsp)
-; X64-NEXT:    wait
 ; X64-NEXT:    callq ldexpl@PLT
 ; X64-NEXT:    addq $24, %rsp
 ; X64-NEXT:    .cfi_def_cfa_offset 8
