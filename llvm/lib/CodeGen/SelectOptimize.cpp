@@ -712,7 +712,7 @@ void SelectOptimizeImpl::convertProfitableSIGroups(SelectGroups &ProfSIGroups) {
                                    SI.getCondition()->getName() + ".frozen");
 
     SmallPtrSet<const Instruction *, 2> INS;
-    for (auto SI : ASI)
+    for (auto &SI : ASI)
       INS.insert(SI.getI());
 
     // Use reverse iterator because later select may use the value of the
