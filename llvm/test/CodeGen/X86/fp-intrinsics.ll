@@ -301,7 +301,6 @@ define double @f6() #0 {
 ; X87-NEXT:    fstpl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fldl {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll pow
 ; X87-NEXT:    addl $28, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -413,7 +412,6 @@ define double @f8() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll sin
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -464,7 +462,6 @@ define double @f9() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll cos
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -515,7 +512,6 @@ define double @f10() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll exp
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -566,7 +562,6 @@ define double @f11() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll exp2
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -617,7 +612,6 @@ define double @f12() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll log
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -668,7 +662,6 @@ define double @f13() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll log10
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -719,7 +712,6 @@ define double @f14() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll log2
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -770,7 +762,6 @@ define double @f15() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll rint
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -818,7 +809,6 @@ define double @f16() #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{\.?LCPI[0-9]+_[0-9]+}}
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll nearbyint
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -867,7 +857,6 @@ define double @f19() #0 {
 ; X87-NEXT:    fstpl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fld1
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll fmod
 ; X87-NEXT:    addl $28, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1607,7 +1596,6 @@ define i32 @f23(double %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll lrint
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1655,7 +1643,6 @@ define i32 @f24(float %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll lrintf
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1703,7 +1690,6 @@ define i64 @f25(double %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll llrint
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1751,7 +1737,6 @@ define i64 @f26(float %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll llrintf
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1799,7 +1784,6 @@ define i32 @f27(double %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll lround
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1846,7 +1830,6 @@ define i32 @f28(float %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll lroundf
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1893,7 +1876,6 @@ define i64 @f29(double %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    fldl {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstpl (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll llround
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4
@@ -1940,7 +1922,6 @@ define i64 @f30(float %x) #0 {
 ; X87-NEXT:    .cfi_def_cfa_offset 16
 ; X87-NEXT:    flds {{[0-9]+}}(%esp)
 ; X87-NEXT:    fstps (%esp)
-; X87-NEXT:    wait
 ; X87-NEXT:    calll llroundf
 ; X87-NEXT:    addl $12, %esp
 ; X87-NEXT:    .cfi_def_cfa_offset 4

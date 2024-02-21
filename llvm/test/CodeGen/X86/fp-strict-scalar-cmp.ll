@@ -4186,7 +4186,6 @@ define void @foo(float %0, float %1) #0 {
 ; X87-CMOV-NEXT:    flds {{[0-9]+}}(%esp)
 ; X87-CMOV-NEXT:    fucompi %st(1), %st
 ; X87-CMOV-NEXT:    fstp %st(0)
-; X87-CMOV-NEXT:    wait
 ; X87-CMOV-NEXT:    ja bar # TAILCALL
 ; X87-CMOV-NEXT:  # %bb.1:
 ; X87-CMOV-NEXT:    retl
