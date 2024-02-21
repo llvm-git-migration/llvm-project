@@ -2778,6 +2778,9 @@ Instruction *InstCombinerImpl::visitFSub(BinaryOperator &I) {
   if (Instruction *X = foldFNegIntoConstant(I, DL))
     return X;
 
+  if (Instruction *R = foldFBinOpOfIntCasts(I))
+    return R;
+
   Value *X, *Y;
   Constant *C;
 
