@@ -67,11 +67,17 @@ Changes to Interprocedural Optimizations
 Changes to the AArch64 Backend
 ------------------------------
 
+* Switch to soft-promoting half types. See "Changes to the CodeGen
+  infrastructure" for more details.
+
 Changes to the AMDGPU Backend
 -----------------------------
 
 Changes to the ARM Backend
 --------------------------
+
+* Switch to soft-promoting half types. See "Changes to the CodeGen
+  infrastructure" for more details.
 
 Changes to the AVR Backend
 --------------------------
@@ -127,6 +133,12 @@ Changes to the C API
 
 Changes to the CodeGen infrastructure
 -------------------------------------
+
+* Added ``useFPRegsForHalfType`` to allow the soft-promote half support for
+  half-precision floating point types to be used without breaking ABI
+  compatibility with previous LLVM releases. Soft-promote half avoids bugs
+  where LLVM would keep intermediate half results in higher precision than
+  permitted.
 
 Changes to the Metadata Info
 ---------------------------------
