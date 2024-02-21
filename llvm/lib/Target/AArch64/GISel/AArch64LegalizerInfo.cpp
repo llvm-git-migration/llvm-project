@@ -52,6 +52,7 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
   const LLT v16s8 = LLT::fixed_vector(16, 8);
   const LLT v8s8 = LLT::fixed_vector(8, 8);
   const LLT v4s8 = LLT::fixed_vector(4, 8);
+  const LLT v2s8 = LLT::fixed_vector(2, 8);
   const LLT v8s16 = LLT::fixed_vector(8, 16);
   const LLT v4s16 = LLT::fixed_vector(4, 16);
   const LLT v2s16 = LLT::fixed_vector(2, 16);
@@ -422,8 +423,10 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
       .clampMaxNumElements(0, s64, 2)
       .clampMaxNumElements(0, p0, 2)
       .lowerIfMemSizeNotPow2()
+      // TODO: Use BITCAST for v2i8, v2i16
+      .customIf(typeInSet(0, {v4s8}))
       .customIf(IsPtrVecPred)
-      .scalarizeIf(typeIs(0, v2s16), 0);
+      .scalarizeIf(typeInSet(0, {v2s16, v2s8}), 0);
 
   getActionDefinitionsBuilder(G_INDEXED_STORE)
       // Idx 0 == Ptr, Idx 1 == Val
@@ -1598,6 +1601,18 @@ bool AArch64LegalizerInfo::legalizeLoadStore(
 
   Register ValReg = MI.getOperand(0).getReg();
   const LLT ValTy = MRI.getType(ValReg);
+
+  // G_STORE v4s8, ptr => s32 = G_BITCAST v4s8
+  //                      G_STORE s32, ptr
+  if (ValTy.isVector() && ValTy.getNumElements() == 4 &&
+      ValTy.getScalarSizeInBits() == 8) {
+    Register MidReg =
+        MIRBuilder.buildBitcast(LLT::scalar(ValTy.getSizeInBits()), ValReg)
+            .getReg(0);
+    MI.getOperand(0).setReg(MidReg);
+    if (!ValTy.isPointerVector() || ValTy.getAddressSpace() != 0)
+      return true;
+  }
 
   if (ValTy == LLT::scalar(128)) {
 
