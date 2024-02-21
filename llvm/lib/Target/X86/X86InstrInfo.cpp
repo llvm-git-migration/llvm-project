@@ -3443,6 +3443,8 @@ static bool isX87Reg(unsigned Reg) {
 
 /// check if the instruction is X87 instruction
 bool X86::isX87Instruction(MachineInstr &MI) {
+  if (MI.isCall())
+    return false;
   for (const MachineOperand &MO : MI.operands()) {
     if (!MO.isReg())
       continue;
