@@ -62,6 +62,12 @@ set(LIBCXX_SOURCES
   verbose_abort.cpp
   )
 
+if (LIBCXX_ENABLE_SHARED_RECURSIVE_MUTEX)
+  list(APPEND LIBCXX_SOURCES
+    shared_recursive_mutex.cpp
+    )
+endif()
+
 if (LIBCXX_ENABLE_THREADS)
   list(APPEND LIBCXX_SOURCES
     atomic.cpp
