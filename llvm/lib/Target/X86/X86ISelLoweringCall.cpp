@@ -670,7 +670,7 @@ const MCPhysReg *X86TargetLowering::getScratchRegisters(CallingConv::ID) const {
 }
 
 ArrayRef<MCPhysReg> X86TargetLowering::getRoundingControlRegisters() const {
-  static const MCPhysReg RCRegs[] = {X86::FPCW, X86::MXCSR};
+  static const MCPhysReg RCRegs[] = {X86::FPCW};
   return RCRegs;
 }
 
