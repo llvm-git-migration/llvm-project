@@ -28,7 +28,7 @@ define dso_local void @TestFPExtF16_F128() nounwind strictfp {
 ; X64-AVX512-LABEL: TestFPExtF16_F128:
 ; X64-AVX512:       # %bb.0: # %entry
 ; X64-AVX512-NEXT:    pushq %rax
-; X64-AVX512-NEXT:    vmovsh vf16(%rip), %xmm0
+; X64-AVX512-NEXT:    vmovsh {{.*#+}} xmm0 = mem[0],zero,zero,zero,zero,zero,zero,zero
 ; X64-AVX512-NEXT:    callq __extendhftf2@PLT
 ; X64-AVX512-NEXT:    vmovaps %xmm0, vf128(%rip)
 ; X64-AVX512-NEXT:    popq %rax
@@ -167,7 +167,6 @@ define dso_local void @TestFPExtF80_F128() nounwind strictfp {
 ; X64-SSE-NEXT:    subq $24, %rsp
 ; X64-SSE-NEXT:    fldt vf80(%rip)
 ; X64-SSE-NEXT:    fstpt (%rsp)
-; X64-SSE-NEXT:    wait
 ; X64-SSE-NEXT:    callq __extendxftf2@PLT
 ; X64-SSE-NEXT:    movaps %xmm0, vf128(%rip)
 ; X64-SSE-NEXT:    addq $24, %rsp
@@ -178,7 +177,6 @@ define dso_local void @TestFPExtF80_F128() nounwind strictfp {
 ; X64-AVX-NEXT:    subq $24, %rsp
 ; X64-AVX-NEXT:    fldt vf80(%rip)
 ; X64-AVX-NEXT:    fstpt (%rsp)
-; X64-AVX-NEXT:    wait
 ; X64-AVX-NEXT:    callq __extendxftf2@PLT
 ; X64-AVX-NEXT:    vmovaps %xmm0, vf128(%rip)
 ; X64-AVX-NEXT:    addq $24, %rsp
