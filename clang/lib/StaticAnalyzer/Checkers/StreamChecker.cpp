@@ -21,6 +21,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/Sequence.h"
 #include <functional>
 #include <optional>
@@ -234,6 +235,9 @@ class StreamChecker : public Checker<check::PreCall, eval::Call,
   BugType BT_StreamEof{this, "Stream already in EOF", "Stream handling error"};
   BugType BT_ResourceLeak{this, "Resource leak", "Stream handling error",
                           /*SuppressOnSink =*/true};
+  BugType BT_SizeNull{this, "NULL size pointer", "Stream handling error"};
+  BugType BT_SizeNotZero{this, "NULL line pointer and size not zero",
+                         "Stream handling error"};
 
 public:
   void checkPreCall(const CallEvent &Call, CheckerContext &C) const;
@@ -346,10 +350,10 @@ private:
        {&StreamChecker::preWrite,
         std::bind(&StreamChecker::evalUngetc, _1, _2, _3, _4), 1}},
       {{{"getdelim"}, 4},
-       {&StreamChecker::preRead,
+       {std::bind(&StreamChecker::preGetdelim, _1, _2, _3, _4),
         std::bind(&StreamChecker::evalGetdelim, _1, _2, _3, _4), 3}},
       {{{"getline"}, 3},
-       {&StreamChecker::preRead,
+       {std::bind(&StreamChecker::preGetdelim, _1, _2, _3, _4),
         std::bind(&StreamChecker::evalGetdelim, _1, _2, _3, _4), 2}},
       {{{"fseek"}, 3},
        {&StreamChecker::preFseek, &StreamChecker::evalFseek, 0}},
@@ -445,6 +449,9 @@ private:
   void evalUngetc(const FnDescription *Desc, const CallEvent &Call,
                   CheckerContext &C) const;
 
+  void preGetdelim(const FnDescription *Desc, const CallEvent &Call,
+                   CheckerContext &C) const;
+
   void evalGetdelim(const FnDescription *Desc, const CallEvent &Call,
                     CheckerContext &C) const;
 
@@ -518,6 +525,14 @@ private:
   /// (State is not changed here because the "whence" value is already known.)
   ProgramStateRef ensureFseekWhenceCorrect(SVal WhenceVal, CheckerContext &C,
                                            ProgramStateRef State) const;
+
+  ProgramStateRef ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
+                                   CheckerContext &C, ProgramStateRef State,
+                                   const StringRef PtrDescr) const;
+  ProgramStateRef
+  ensureSizeZeroIfLineNull(SVal LinePtrPtrSVal, SVal SizePtrSVal,
+                           const Expr *LinePtrPtrExpr, const Expr *SizePtrExpr,
+                           CheckerContext &C, ProgramStateRef State) const;
 
   /// Generate warning about stream in EOF state.
   /// There will be always a state transition into the passed State,
@@ -1179,6 +1194,123 @@ void StreamChecker::evalUngetc(const FnDescription *Desc, const CallEvent &Call,
   C.addTransition(StateFailed);
 }
 
+ProgramStateRef
+StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
+                                CheckerContext &C, ProgramStateRef State,
+                                const StringRef PtrDescr) const {
+  const auto Ptr = PtrVal.getAs<DefinedSVal>();
+  if (!Ptr)
+    return nullptr;
+
+  assert(PtrExpr && "Expected an argument");
+
+  const auto [PtrNotNull, PtrNull] = State->assume(*Ptr);
+  if (!PtrNotNull && PtrNull) {
+    if (ExplodedNode *N = C.generateErrorNode(PtrNull)) {
+      SmallString<256> buf;
+      llvm::raw_svector_ostream os(buf);
+      os << PtrDescr << " pointer might be NULL.";
+
+      auto R = std::make_unique<PathSensitiveBugReport>(BT_SizeNull, buf, N);
+      bugreporter::trackExpressionValue(N, PtrExpr, *R);
+      C.emitReport(std::move(R));
+    }
+    return nullptr;
+  }
+
+  return PtrNotNull;
+}
+
+ProgramStateRef StreamChecker::ensureSizeZeroIfLineNull(
+    SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
+    const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
+  static constexpr char SizeNotZeroMsg[] =
+      "Line pointer might be null while n value is not zero";
+
+  // We have a pointer to a pointer to the buffer, and a pointer to the size.
+  // We want what they point at.
+  auto LinePtrSVal = getPointeeDefVal(LinePtrPtrSVal, State);
+  auto NSVal = getPointeeDefVal(SizePtrSVal, State);
+  if (!LinePtrSVal || !NSVal)
+    return nullptr;
+
+  assert(LinePtrPtrExpr &&
+         "Expected an argument with a pointer to a pointer to the buffer.");
+  assert(SizePtrExpr &&
+         "Expected an argument with a pointer to the buffer size.");
+
+  // If the line pointer is null, and n is > 0, there is UB.
+  const auto [LinePtrNotNull, LinePtrNull] = State->assume(*LinePtrSVal);
+  if (LinePtrNull && !LinePtrNotNull) {
+    const auto [NIsNotZero, NIsZero] = LinePtrNull->assume(*NSVal);
+    if (NIsNotZero && !NIsZero) {
+      if (ExplodedNode *N = C.generateErrorNode(NIsNotZero)) {
+        auto R = std::make_unique<PathSensitiveBugReport>(BT_SizeNotZero,
+                                                          SizeNotZeroMsg, N);
+        bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
+        bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
+        C.emitReport(std::move(R));
+      }
+      return nullptr;
+    }
+    return NIsZero;
+  }
+  return LinePtrNotNull;
+}
+
+void StreamChecker::preGetdelim(const FnDescription *Desc,
+                                const CallEvent &Call,
+                                CheckerContext &C) const {
+  ProgramStateRef State = C.getState();
+  SVal StreamVal = getStreamArg(Desc, Call);
+
+  auto AddTransitionOnReturn = llvm::make_scope_exit([&] {
+    if (State != nullptr) {
+      C.addTransition(State);
+    }
+  });
+
+  State = ensureStreamNonNull(StreamVal, Call.getArgExpr(Desc->StreamArgNo), C,
+                              State);
+  if (!State)
+    return;
+  State = ensureStreamOpened(StreamVal, C, State);
+  if (!State)
+    return;
+  State = ensureNoFilePositionIndeterminate(StreamVal, C, State);
+  if (!State)
+    return;
+
+  // n must not be NULL
+  SVal SizePtrSval = Call.getArgSVal(1);
+  State = ensurePtrNotNull(SizePtrSval, Call.getArgExpr(1), C, State, "Size");
+  if (!State)
+    return;
+
+  // lineptr must not be NULL
+  SVal LinePtrPtrSVal = Call.getArgSVal(0);
+  State =
+      ensurePtrNotNull(LinePtrPtrSVal, Call.getArgExpr(0), C, State, "Line");
+  if (!State)
+    return;
+
+  // If lineptr points to a NULL pointer, *n must be 0
+  State =
+      ensureSizeZeroIfLineNull(LinePtrPtrSVal, SizePtrSval, Call.getArgExpr(0),
+                               Call.getArgExpr(1), C, State);
+  if (!State)
+    return;
+
+  SymbolRef Sym = StreamVal.getAsSymbol();
+  if (Sym && State->get<StreamMap>(Sym)) {
+    const StreamState *SS = State->get<StreamMap>(Sym);
+    if (SS->ErrorState & ErrorFEof)
+      reportFEofWarning(Sym, C, State);
+  } else {
+    C.addTransition(State);
+  }
+}
+
 void StreamChecker::evalGetdelim(const FnDescription *Desc,
                                  const CallEvent &Call,
                                  CheckerContext &C) const {
@@ -1204,6 +1336,20 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
         State->BindExpr(E.CE, C.getLocationContext(), RetVal);
     StateNotFailed =
         E.assumeBinOpNN(StateNotFailed, BO_GE, RetVal, E.getZeroVal(Call));
+    // The buffer size *n must be enough to hold the whole line, and
+    // greater than the return value, since it has to account for \0
+    auto SizePtrSval = Call.getArgSVal(1);
+    auto NVal = getPointeeDefVal(SizePtrSval, State);
+    if (NVal) {
+      StateNotFailed = StateNotFailed->assume(
+          E.SVB
+              .evalBinOp(StateNotFailed, BinaryOperator::Opcode::BO_GT, *NVal,
+                         RetVal, E.SVB.getConditionType())
+              .castAs<DefinedOrUnknownSVal>(),
+          true);
+      StateNotFailed =
+          StateNotFailed->BindExpr(E.CE, C.getLocationContext(), RetVal);
+    }
     if (!StateNotFailed)
       return;
     C.addTransition(StateNotFailed);
@@ -1217,6 +1363,11 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
       E.isStreamEof() ? ErrorFEof : ErrorFEof | ErrorFError;
   StateFailed = E.setStreamState(
       StateFailed, StreamState::getOpened(Desc, NewES, !NewES.isFEof()));
+  // On failure, the content of the buffer is undefined
+  if (auto NewLinePtr = getPointeeDefVal(Call.getArgSVal(0), State)) {
+    StateFailed = StateFailed->bindLoc(*NewLinePtr, UndefinedVal(),
+                                       C.getLocationContext());
+  }
   C.addTransition(StateFailed, E.getFailureNoteTag(this, C));
 }
 
