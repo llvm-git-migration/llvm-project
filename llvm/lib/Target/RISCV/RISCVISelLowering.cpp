@@ -7355,6 +7355,26 @@ SDValue RISCVTargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
     if (isNullConstant(TrueV))
       return DAG.getNode(RISCVISD::CZERO_NEZ, DL, VT, FalseV, CondV);
 
+    // (select c, c1, c2) -> (add (czero_nez c2 - c1, c), c1)
+    // (select c, c1, c2) -> (add (czero_eqz c1 - c2, c), c2)
+    if (isa<ConstantSDNode>(TrueV) && isa<ConstantSDNode>(FalseV)) {
+      const APInt &TrueVal = TrueV->getAsAPIntVal();
+      const APInt &FalseVal = FalseV->getAsAPIntVal();
+      const int TrueValCost = RISCVMatInt::getIntMatCost(
+          TrueVal, Subtarget.getXLen(), Subtarget, /*CompressionCost=*/true);
+      const int FalseValCost = RISCVMatInt::getIntMatCost(
+          FalseVal, Subtarget.getXLen(), Subtarget, /*CompressionCost=*/true);
+      bool IsCZERO_NEZ = TrueValCost <= FalseValCost;
+      SDValue LHSVal = DAG.getConstant(
+          IsCZERO_NEZ ? FalseVal - TrueVal : TrueVal - FalseVal, DL, VT);
+      SDValue RHSVal =
+          DAG.getConstant(IsCZERO_NEZ ? TrueVal : FalseVal, DL, VT);
+      SDValue CMOV =
+          DAG.getNode(IsCZERO_NEZ ? RISCVISD::CZERO_NEZ : RISCVISD::CZERO_EQZ,
+                      DL, VT, LHSVal, CondV);
+      return DAG.getNode(ISD::ADD, DL, VT, CMOV, RHSVal);
+    }
+
     // (select c, (and f, x), f) -> (or (and f, x), (czero_nez f, c))
     if (TrueV.getOpcode() == ISD::AND &&
         (TrueV.getOperand(0) == FalseV || TrueV.getOperand(1) == FalseV))
