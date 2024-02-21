@@ -445,11 +445,11 @@ def ST5 : X86Reg<"st(5)", 5>, DwarfRegNum<[38, 17, 16]>;
 def ST6 : X86Reg<"st(6)", 6>, DwarfRegNum<[39, 18, 17]>;
 def ST7 : X86Reg<"st(7)", 7>, DwarfRegNum<[40, 19, 18]>;
 
-// Floating-point status word
-def FPSW : X86Reg<"fpsr", 0>;
-
 // Floating-point control word
 def FPCW : X86Reg<"fpcr", 0>;
+
+// Floating-point status word
+def FPSW : X86Reg<"fpsr", 0>;
 
 // SIMD Floating-point control register.
 // Note: We only model the "Uses" of the control bits: current rounding modes,
