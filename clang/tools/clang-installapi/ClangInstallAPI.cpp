@@ -12,12 +12,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "Options.h"
-#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticFrontend.h"
+#include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/DriverDiagnostic.h"
-#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Driver/Tool.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
-#include "clang/InstallAPI/Context.h"
+#include "clang/InstallAPI/Frontend.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/Option/Option.h"
 #include "llvm/Support/CommandLine.h"
@@ -27,13 +30,101 @@
 #include "llvm/Support/Process.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/TargetParser/Host.h"
+#include "llvm/TextAPI/RecordVisitor.h"
 #include "llvm/TextAPI/TextAPIWriter.h"
+#include <memory>
 
 using namespace clang;
 using namespace clang::installapi;
 using namespace clang::driver::options;
 using namespace llvm::opt;
 using namespace llvm::MachO;
+
+static const ArgStringList *
+getCC1Arguments(clang::DiagnosticsEngine &Diags,
+                clang::driver::Compilation *Compilation) {
+  const auto &Jobs = Compilation->getJobs();
+  if (Jobs.size() != 1 || !isa<clang::driver::Command>(*Jobs.begin())) {
+    SmallString<256> error_msg;
+    llvm::raw_svector_ostream error_stream(error_msg);
+    Jobs.Print(error_stream, "; ", true);
+    Diags.Report(clang::diag::err_fe_expected_compiler_job)
+        << error_stream.str();
+    return nullptr;
+  }
+
+  // The one job we find should be to invoke clang again.
+  const auto &Cmd = cast<clang::driver::Command>(*Jobs.begin());
+  if (StringRef(Cmd.getCreator().getName()) != "clang") {
+    Diags.Report(clang::diag::err_fe_expected_clang_command);
+    return nullptr;
+  }
+
+  return &Cmd.getArguments();
+}
+
+static CompilerInvocation *createInvocation(clang::DiagnosticsEngine &Diags,
+                                            const ArgStringList &cc1Args) {
+  assert(!cc1Args.empty() && "Must at least contain the program name!");
+  CompilerInvocation *Invocation = new CompilerInvocation;
+  CompilerInvocation::CreateFromArgs(*Invocation, cc1Args, Diags);
+  Invocation->getFrontendOpts().DisableFree = false;
+  Invocation->getCodeGenOpts().DisableFree = false;
+  return Invocation;
+}
+
+static bool runFrontend(StringRef ProgName, bool Verbose,
+                        const InstallAPIContext &Ctx,
+                        clang::driver::Driver &Driver, CompilerInstance &CI,
+                        const ArrayRef<std::string> InitialArgs) {
+
+  std::unique_ptr<llvm::MemoryBuffer> ProcessedInput = createInputBuffer(Ctx);
+  // Skip invoking cc1 when there are no header inputs.
+  if (!ProcessedInput)
+    return true;
+
+  if (Verbose)
+    llvm::errs() << getName(Ctx.Type) << " Headers:\n"
+                 << ProcessedInput->getBuffer() << "\n";
+
+  // Reconstruct arguments with unique values like target triple or input
+  // headers.
+  std::vector<const char *> Args = {ProgName.data(), "-target",
+                                    Ctx.Records->getTriple().str().c_str()};
+  llvm::transform(InitialArgs, std::back_inserter(Args),
+                  [](const std::string &A) { return A.c_str(); });
+  Args.push_back(ProcessedInput->getBufferIdentifier().data());
+
+  // Set up compilation, invocation, and action to execute.
+  const std::unique_ptr<clang::driver::Compilation> Compilation(
+      Driver.BuildCompilation(Args));
+  if (!Compilation)
+    return false;
+  const llvm::opt::ArgStringList *const CC1Args =
+      getCC1Arguments(*Ctx.Diags, Compilation.get());
+  if (!CC1Args)
+    return false;
+  std::unique_ptr<clang::CompilerInvocation> Invocation(
+      createInvocation(*Ctx.Diags, *CC1Args));
+
+  if (Verbose) {
+    llvm::errs() << "CC1 Invocation:\n";
+    Compilation->getJobs().Print(llvm::errs(), "\n", true);
+    llvm::errs() << "\n";
+  }
+
+  Invocation->getPreprocessorOpts().addRemappedFile(
+      ProcessedInput->getBufferIdentifier(), ProcessedInput.release());
+
+  CI.setInvocation(std::move(Invocation));
+  CI.setFileManager(Ctx.FM);
+  auto Action = std::make_unique<InstallAPIAction>(*Ctx.Records);
+  CI.createDiagnostics();
+  if (!CI.hasDiagnostics())
+    return false;
+  CI.createSourceManager(*Ctx.FM);
+  return CI.ExecuteAction(*Action);
+}
 
 static bool run(ArrayRef<const char *> Args, const char *ProgName) {
   // Setup Diagnostics engine.
@@ -71,7 +162,10 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
   Options Opts(*Diag, FM.get(), ArgList);
   if (Diag->hasErrorOccurred())
     return EXIT_FAILURE;
+
   InstallAPIContext Ctx = Opts.createContext();
+  if (Diag->hasErrorOccurred())
+    return EXIT_FAILURE;
 
   // Set up compilation.
   std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
@@ -80,6 +174,21 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
   if (!CI->hasDiagnostics())
     return EXIT_FAILURE;
 
+  // Execute and gather AST results.
+  llvm::MachO::Records FrontendResults;
+  for (const auto &[Targ, Trip] : Opts.DriverOpts.Targets) {
+    for (const HeaderType Type :
+         {HeaderType::Public, HeaderType::Private, HeaderType::Project}) {
+      Ctx.Records = std::make_shared<RecordsSlice>(Trip);
+      Ctx.Type = Type;
+      if (!runFrontend(ProgName, Opts.DriverOpts.Verbose, Ctx, Driver, *CI,
+                       Opts.getClangFrontendArgs()))
+        return EXIT_FAILURE;
+      FrontendResults.emplace_back(std::move(Ctx.Records));
+    }
+  }
+
+  // After symbols have been collected, prepare to write output.
   auto Out = CI->createOutputFile(Ctx.OutputLoc, /*Binary=*/false,
                                   /*RemoveFileOnSignal=*/false,
                                   /*UseTemporary=*/false,
@@ -88,7 +197,13 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
     return EXIT_FAILURE;
 
   // Assign attributes for serialization.
-  InterfaceFile IF;
+  auto Symbols = std::make_unique<SymbolSet>();
+  for (const auto &FR : FrontendResults) {
+    SymbolConverter Converter(Symbols.get(), FR->getTarget());
+    FR->visit(Converter);
+  }
+
+  InterfaceFile IF(std::move(Symbols));
   for (const auto &TargetInfo : Opts.DriverOpts.Targets) {
     IF.addTarget(TargetInfo.first);
     IF.setFromBinaryAttrs(Ctx.BA, TargetInfo.first);
