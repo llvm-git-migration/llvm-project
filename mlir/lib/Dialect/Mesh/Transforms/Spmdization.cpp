@@ -619,7 +619,7 @@ static SmallVector<MeshShardingAttr> getResultShardings(Operation &op) {
   return res;
 }
 
-ShardOp getSourceShardOpOrNull(ShardOp targetShardOp) {
+static ShardOp getSourceShardOpOrNull(ShardOp targetShardOp) {
   Operation *srcOp = targetShardOp.getOperand().getDefiningOp();
   if (!srcOp) {
     return ShardOp();
