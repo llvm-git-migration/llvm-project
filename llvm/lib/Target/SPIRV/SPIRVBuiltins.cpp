@@ -2043,7 +2043,8 @@ static bool generateVectorLoadStoreInst(const SPIRV::IncomingCall *Call,
           .addImm(Builtin->Number);
   for (auto Argument : Call->Arguments)
     MIB.addUse(Argument);
-  MIB.addImm(Builtin->ElementCount);
+  if (Builtin->Name.contains("load") && Builtin->ElementCount > 1)
+    MIB.addImm(Builtin->ElementCount);
 
   // Rounding mode should be passed as a last argument in the MI for builtins
   // like "vstorea_halfn_r".
@@ -2177,6 +2178,74 @@ std::optional<bool> lowerBuiltin(const StringRef DemangledCall,
     return generateGroupUniformInst(Call.get(), MIRBuilder, GR);
   }
   return false;
+}
+
+Type *parseBuiltinCallArgumentBaseType(const StringRef DemangledCall,
+                                   unsigned ArgIdx, LLVMContext &Ctx) {
+  SmallVector<StringRef, 10> BuiltinArgsTypeStrs;
+  StringRef BuiltinArgs =
+      DemangledCall.slice(DemangledCall.find('(') + 1, DemangledCall.find(')'));
+  BuiltinArgs.split(BuiltinArgsTypeStrs, ',', -1, false);
+  StringRef TypeStr = BuiltinArgsTypeStrs[ArgIdx].trim();
+  assert(ArgIdx < BuiltinArgsTypeStrs.size() && "Out of bounds argument index");
+  bool IsBaseType = TypeStr.ends_with("*") || TypeStr.ends_with("_t") ||
+                    TypeStr.starts_with("ocl_");
+  assert(IsBaseType && "Parsing only ptr element type/builtin base type");
+
+  // Parse type name in either "typeN" or "type vector[N]" format, where
+  // N is the number of elements of the vector.
+  Type *BaseType;
+  unsigned VecElts = 0;
+
+  TypeStr.consume_front("atomic_");
+
+  if (TypeStr.starts_with("void")) {
+    BaseType = Type::getVoidTy(Ctx);
+    TypeStr = TypeStr.substr(strlen("void"));
+  } else if (TypeStr.starts_with("bool")) {
+    BaseType = Type::getIntNTy(Ctx, 1);
+    TypeStr = TypeStr.substr(strlen("bool"));
+  } else if (TypeStr.starts_with("char") || TypeStr.starts_with("uchar")) {
+    BaseType = Type::getInt8Ty(Ctx);
+    TypeStr = TypeStr.starts_with("char") ? TypeStr.substr(strlen("char"))
+                                          : TypeStr.substr(strlen("uchar"));
+  } else if (TypeStr.starts_with("short") || TypeStr.starts_with("ushort")) {
+    BaseType = Type::getInt16Ty(Ctx);
+    TypeStr = TypeStr.starts_with("short") ? TypeStr.substr(strlen("short"))
+                                           : TypeStr.substr(strlen("ushort"));
+  } else if (TypeStr.starts_with("int") || TypeStr.starts_with("uint")) {
+    BaseType = Type::getInt32Ty(Ctx);
+    TypeStr = TypeStr.starts_with("int") ? TypeStr.substr(strlen("int"))
+                                         : TypeStr.substr(strlen("uint"));
+  } else if (TypeStr.starts_with("long") || TypeStr.starts_with("ulong")) {
+    BaseType = Type::getInt64Ty(Ctx);
+    TypeStr = TypeStr.starts_with("long") ? TypeStr.substr(strlen("long"))
+                                          : TypeStr.substr(strlen("ulong"));
+  } else if (TypeStr.starts_with("half")) {
+    BaseType = Type::getHalfTy(Ctx);
+    TypeStr = TypeStr.substr(strlen("half"));
+  } else if (TypeStr.starts_with("float")) {
+    BaseType = Type::getFloatTy(Ctx);
+    TypeStr = TypeStr.substr(strlen("float"));
+  } else if (TypeStr.starts_with("double")) {
+    BaseType = Type::getDoubleTy(Ctx);
+    TypeStr = TypeStr.substr(strlen("double"));
+  } else {
+    // Unable to recognize SPIRV type name
+    return nullptr;
+  }
+
+  // Handle "typeN*" or "type vector[N]*".
+  bool IsPtrToVec = TypeStr.consume_back("*");
+
+  if (TypeStr.consume_front(" vector["))
+    TypeStr = TypeStr.substr(0, TypeStr.find(']'));
+
+  TypeStr.getAsInteger(10, VecElts);
+  if (VecElts > 0)
+    BaseType = VectorType::get(BaseType, VecElts, false);
+
+  return BaseType;
 }
 
 struct BuiltinType {

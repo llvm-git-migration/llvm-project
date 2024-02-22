@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "SPIRV.h"
+#include "SPIRVBuiltins.h"
 #include "SPIRVMetadata.h"
 #include "SPIRVTargetMachine.h"
 #include "SPIRVUtils.h"
@@ -75,6 +76,9 @@ class SPIRVEmitIntrinsics
   void processInstrAfterVisit(Instruction *I);
   void insertAssignPtrTypeIntrs(Instruction *I);
   void insertAssignTypeIntrs(Instruction *I);
+  void replacePointerOperandWithPtrCast(Instruction *I, Value *Pointer,
+                                        Type *ExpectedElementType,
+                                        unsigned OperandToReplace);
   void insertPtrCastInstr(Instruction *I);
   void processGlobalValue(GlobalVariable &GV);
 
@@ -286,34 +290,9 @@ Instruction *SPIRVEmitIntrinsics::visitBitCastInst(BitCastInst &I) {
   return NewI;
 }
 
-void SPIRVEmitIntrinsics::insertPtrCastInstr(Instruction *I) {
-  Value *Pointer;
-  Type *ExpectedElementType;
-  unsigned OperandToReplace;
-
-  StoreInst *SI = dyn_cast<StoreInst>(I);
-  if (SI && F->getCallingConv() == CallingConv::SPIR_KERNEL &&
-      SI->getValueOperand()->getType()->isPointerTy() &&
-      isa<Argument>(SI->getValueOperand())) {
-    Pointer = SI->getValueOperand();
-    ExpectedElementType = IntegerType::getInt8Ty(F->getContext());
-    OperandToReplace = 0;
-  } else if (SI) {
-    Pointer = SI->getPointerOperand();
-    ExpectedElementType = SI->getValueOperand()->getType();
-    OperandToReplace = 1;
-  } else if (LoadInst *LI = dyn_cast<LoadInst>(I)) {
-    Pointer = LI->getPointerOperand();
-    ExpectedElementType = LI->getType();
-    OperandToReplace = 0;
-  } else if (GetElementPtrInst *GEPI = dyn_cast<GetElementPtrInst>(I)) {
-    Pointer = GEPI->getPointerOperand();
-    ExpectedElementType = GEPI->getSourceElementType();
-    OperandToReplace = 0;
-  } else {
-    return;
-  }
-
+void SPIRVEmitIntrinsics::replacePointerOperandWithPtrCast(
+    Instruction *I, Value *Pointer, Type *ExpectedElementType,
+    unsigned OperandToReplace) {
   // If Pointer is the result of nop BitCastInst (ptr -> ptr), use the source
   // pointer instead. The BitCastInst should be later removed when visited.
   while (BitCastInst *BC = dyn_cast<BitCastInst>(Pointer))
@@ -410,6 +389,45 @@ void SPIRVEmitIntrinsics::insertPtrCastInstr(Instruction *I) {
         IRB->CreateIntrinsic(Intrinsic::spv_ptrcast, {Types}, Args);
     I->setOperand(OperandToReplace, PtrCastI);
     return;
+  }
+}
+
+void SPIRVEmitIntrinsics::insertPtrCastInstr(Instruction *I) {
+  // Handle basic instructions:
+  StoreInst *SI = dyn_cast<StoreInst>(I);
+  if (SI && F->getCallingConv() == CallingConv::SPIR_KERNEL &&
+      SI->getValueOperand()->getType()->isPointerTy() &&
+      isa<Argument>(SI->getValueOperand())) {
+    return replacePointerOperandWithPtrCast(
+        I, SI->getValueOperand(), IntegerType::getInt8Ty(F->getContext()), 0);
+  } else if (SI) {
+    return replacePointerOperandWithPtrCast(
+        I, SI->getPointerOperand(), SI->getValueOperand()->getType(), 1);
+  } else if (LoadInst *LI = dyn_cast<LoadInst>(I)) {
+    return replacePointerOperandWithPtrCast(I, LI->getPointerOperand(),
+                                            LI->getType(), 0);
+  } else if (GetElementPtrInst *GEPI = dyn_cast<GetElementPtrInst>(I)) {
+    return replacePointerOperandWithPtrCast(I, GEPI->getPointerOperand(),
+                                            GEPI->getSourceElementType(), 0);
+  }
+
+  // Handle calls to builtins (non-intrinsics):
+  CallInst *CI = dyn_cast<CallInst>(I);
+  if (!CI || CI->isIndirectCall() || CI->getCalledFunction()->isIntrinsic())
+    return;
+
+  std::string DemangledName =
+      getOclOrSpirvBuiltinDemangledName(CI->getCalledFunction()->getName());
+  if (DemangledName.empty())
+    return;
+
+  for (unsigned OpIdx = 0; OpIdx < CI->arg_size(); OpIdx++) {
+    if (!isa<PointerType>(CI->getArgOperand(OpIdx)->getType()))
+      continue;
+    Type *ExpectedType = SPIRV::parseBuiltinCallArgumentBaseType(
+        DemangledName, OpIdx, I->getContext());
+    replacePointerOperandWithPtrCast(CI, CI->getArgOperand(OpIdx), ExpectedType,
+                                     OpIdx);
   }
 }
 
