@@ -44,6 +44,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
@@ -4524,6 +4525,26 @@ std::optional<NullabilityKind> Type::getNullability() const {
   return std::nullopt;
 }
 
+// Smart pointers are well-known stdlib types or marked with [[gsl::Pointer]].
+static bool classCanHaveNullability(CXXRecordDecl *CRD) {
+  if (!CRD)
+    return false;
+  if (CRD->hasAttr<PointerAttr>())
+    return true;
+  if (auto *CTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(CRD))
+    if (CTSD->getSpecializedTemplate()
+            ->getTemplatedDecl()
+            ->hasAttr<PointerAttr>())
+      return true;
+  if (CRD->isInStdNamespace())
+    if (auto *II = CRD->getIdentifier())
+      return llvm::StringSwitch<bool>(II->getName())
+          .Cases("auto_ptr", "inout_ptr_t", "out_ptr_t", "shared_ptr",
+                 "unique_ptr", true)
+          .Default(false);
+  return false;
+}
+
 bool Type::canHaveNullability(bool ResultIfUnknown) const {
   QualType type = getCanonicalTypeInternal();
 
@@ -4556,16 +4577,15 @@ bool Type::canHaveNullability(bool ResultIfUnknown) const {
   case Type::Auto:
     return ResultIfUnknown;
 
-  // Dependent template specializations can instantiate to pointer
-  // types unless they're known to be specializations of a class
-  // template.
+  // Dependent template specializations could instantiate to pointer types.
   case Type::TemplateSpecialization:
-    if (TemplateDecl *templateDecl
-          = cast<TemplateSpecializationType>(type.getTypePtr())
-              ->getTemplateName().getAsTemplateDecl()) {
-      if (isa<ClassTemplateDecl>(templateDecl))
-        return false;
-    }
+    // If it's a known class template, we can already check if it's a pointer.
+    if (TemplateDecl *templateDecl =
+            cast<TemplateSpecializationType>(type.getTypePtr())
+                ->getTemplateName()
+                .getAsTemplateDecl())
+      if (auto *CTD = dyn_cast<ClassTemplateDecl>(templateDecl))
+        return classCanHaveNullability(CTD->getTemplatedDecl());
     return ResultIfUnknown;
 
   case Type::Builtin:
@@ -4622,6 +4642,10 @@ bool Type::canHaveNullability(bool ResultIfUnknown) const {
     }
     llvm_unreachable("unknown builtin type");
 
+  case Type::Record:
+    return classCanHaveNullability(
+        cast<RecordType>(type)->getAsCXXRecordDecl());
+
   // Non-pointer types.
   case Type::Complex:
   case Type::LValueReference:
@@ -4639,7 +4663,6 @@ bool Type::canHaveNullability(bool ResultIfUnknown) const {
   case Type::DependentAddressSpace:
   case Type::FunctionProto:
   case Type::FunctionNoProto:
-  case Type::Record:
   case Type::DeducedTemplateSpecialization:
   case Type::Enum:
   case Type::InjectedClassName:
