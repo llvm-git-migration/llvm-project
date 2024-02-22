@@ -235,3 +235,34 @@ define i8 @test19(i8 %x) {
   %r = call i8 @llvm.smax(i8 %x, i8 42)
   ret i8 %r
 }
+
+declare void @body(i32)
+
+define void @test() {
+; CHECK-LABEL: @test(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
+; CHECK:       for.body:
+; CHECK-NEXT:    [[INDVAR:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
+; CHECK-NEXT:    [[SMAX:%.*]] = call i32 @llvm.smax.i32(i32 [[INDVAR]], i32 65535)
+; CHECK-NEXT:    call void @body(i32 [[SMAX]])
+; CHECK-NEXT:    [[INC]] = add nsw i32 [[INDVAR]], 1
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i32 [[INDVAR]], 65535
+; CHECK-NEXT:    br i1 [[CMP]], label [[FOR_BODY]], label [[EXIT:%.*]]
+; CHECK:       exit:
+; CHECK-NEXT:    ret void
+;
+entry:
+  br label %for.body
+
+for.body:
+  %indvar = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+  %smax = call i32 @llvm.smax.i32(i32 %indvar, i32 65535)
+  call void @body(i32 %smax)
+  %inc = add nsw i32 %indvar, 1
+  %cmp = icmp slt i32 %indvar, 65535
+  br i1 %cmp, label %for.body, label %exit
+
+exit:
+  ret void
+}
