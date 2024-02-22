@@ -699,7 +699,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
         ISD::VP_FCEIL,       ISD::VP_FFLOOR,      ISD::VP_FROUND,
         ISD::VP_FROUNDEVEN,  ISD::VP_FCOPYSIGN,   ISD::VP_FROUNDTOZERO,
         ISD::VP_FRINT,       ISD::VP_FNEARBYINT,  ISD::VP_IS_FPCLASS,
-        ISD::VP_FMINIMUM,    ISD::VP_FMAXIMUM,    ISD::EXPERIMENTAL_VP_REVERSE,
+        ISD::VP_FMINIMUM,    ISD::VP_FMAXIMUM,    ISD::VP_LRINT,
+        ISD::VP_LLRINT,      ISD::EXPERIMENTAL_VP_REVERSE,
         ISD::EXPERIMENTAL_VP_SPLICE};
 
     static const unsigned IntegerVecReduceOps[] = {
@@ -5690,6 +5691,9 @@ static unsigned getRISCVVLOp(SDValue Op) {
   switch (Op.getOpcode()) {
   default:
     llvm_unreachable("don't have RISC-V specified VL op for this SDNode");
+  case ISD::VP_LRINT:
+  case ISD::VP_LLRINT:
+    return RISCVISD::VFCVT_X_F_VL;
   OP_CASE(ADD)
   OP_CASE(SUB)
   OP_CASE(MUL)
@@ -6793,6 +6797,8 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   case ISD::VP_UDIV:
   case ISD::VP_SREM:
   case ISD::VP_UREM:
+  case ISD::VP_LRINT:
+  case ISD::VP_LLRINT:
     return lowerVPOp(Op, DAG);
   case ISD::VP_AND:
   case ISD::VP_OR:
