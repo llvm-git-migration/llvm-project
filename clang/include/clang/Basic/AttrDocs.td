@@ -4096,6 +4096,10 @@ non-underscored keywords. For example:
       @property (assign, nullable) NSView *superview;
       @property (readonly, nonnull) NSArray *subviews;
     @end
+
+As well as built-in pointer types, ithe nullability attributes can be attached
+to the standard C++ pointer types ``std::unique_ptr`` and ``std::shared_ptr``,
+as well as C++ classes marked with the ``gsl::Pointer`` attribute.
   }];
 }
 
