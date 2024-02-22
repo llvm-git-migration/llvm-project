@@ -8004,6 +8004,9 @@ public:
   /// Add [[gsl::Pointer]] attributes for std:: types.
   void inferGslPointerAttribute(TypedefNameDecl *TD);
 
+  /// Add _Nullable attributes for std:: types.
+  void inferNullableClassAttribute(CXXRecordDecl *CRD);
+
   void CheckCompletedCXXClass(Scope *S, CXXRecordDecl *Record);
 
   /// Check that the C++ class annoated with "trivial_abi" satisfies all the
