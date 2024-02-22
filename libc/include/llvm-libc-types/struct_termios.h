@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__
-#define __LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__
+#ifndef LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__
+#define LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__
 
 #include <llvm-libc-types/cc_t.h>
 #include <llvm-libc-types/speed_t.h>
@@ -29,4 +29,4 @@ struct termios {
 #endif              // __linux__
 };
 
-#endif // __LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__
+#endif // LLVM_LIBC_TYPES_STRUCT_TERMIOS_H__

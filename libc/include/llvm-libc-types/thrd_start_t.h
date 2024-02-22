@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __LLVM_LIBC_TYPES_THRD_START_T_H__
-#define __LLVM_LIBC_TYPES_THRD_START_T_H__
+#ifndef LLVM_LIBC_TYPES_THRD_START_T_H__
+#define LLVM_LIBC_TYPES_THRD_START_T_H__
 
 typedef int (*thrd_start_t)(void *);
 
-#endif // __LLVM_LIBC_TYPES_THRD_START_T_H__
+#endif // LLVM_LIBC_TYPES_THRD_START_T_H__

@@ -6,12 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __LLVM_LIBC_TYPES_IMAXDIV_T_H__
-#define __LLVM_LIBC_TYPES_IMAXDIV_T_H__
+#ifndef LLVM_LIBC_TYPES_IMAXDIV_T_H__
+#define LLVM_LIBC_TYPES_IMAXDIV_T_H__
 
 typedef struct {
   intmax_t quot;
   intmax_t rem;
 } imaxdiv_t;
 
-#endif // __LLVM_LIBC_TYPES_IMAXDIV_T_H__
+#endif // LLVM_LIBC_TYPES_IMAXDIV_T_H__

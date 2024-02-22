@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __LLVM_LIBC_TYPES_EPOLL_EVENT_H__
-#define __LLVM_LIBC_TYPES_EPOLL_EVENT_H__
+#ifndef LLVM_LIBC_TYPES_EPOLL_EVENT_H__
+#define LLVM_LIBC_TYPES_EPOLL_EVENT_H__
 
 #include <llvm-libc-types/struct_epoll_data.h>
 
@@ -16,4 +16,4 @@ typedef struct epoll_event {
   epoll_data_t data;
 } epoll_event;
 
-#endif // __LLVM_LIBC_TYPES_EPOLL_EVENT_H__
+#endif // LLVM_LIBC_TYPES_EPOLL_EVENT_H__

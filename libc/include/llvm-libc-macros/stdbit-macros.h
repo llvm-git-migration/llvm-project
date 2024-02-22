@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __LLVM_LIBC_MACROS_STDBIT_MACROS_H
-#define __LLVM_LIBC_MACROS_STDBIT_MACROS_H
+#ifndef LLVM_LIBC_MACROS_STDBIT_MACROS_H
+#define LLVM_LIBC_MACROS_STDBIT_MACROS_H
 
 // TODO(https://github.com/llvm/llvm-project/issues/80509): support _BitInt().
 #ifdef __cplusplus
@@ -190,4 +190,4 @@ inline unsigned stdc_first_trailing_one(unsigned long long x) {
       unsigned long long: stdc_first_trailing_one_ull)(x)
 #endif // __cplusplus
 
-#endif // __LLVM_LIBC_MACROS_STDBIT_MACROS_H
+#endif // LLVM_LIBC_MACROS_STDBIT_MACROS_H
