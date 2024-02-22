@@ -90,6 +90,8 @@ STATISTIC(NumSaturating,
     "Number of saturating arithmetics converted to normal arithmetics");
 STATISTIC(NumNonNull, "Number of function pointer arguments marked non-null");
 STATISTIC(NumMinMax, "Number of llvm.[us]{min,max} intrinsics removed");
+STATISTIC(NumSMinMax,
+          "Number of llvm.s{min,max} intrinsics simplified to unsigned");
 STATISTIC(NumUDivURemsNarrowedExpanded,
           "Number of bound udiv's/urem's expanded");
 STATISTIC(NumZExt, "Number of non-negative deductions");
@@ -528,6 +530,7 @@ static bool processAbsIntrinsic(IntrinsicInst *II, LazyValueInfo *LVI) {
 }
 
 // See if this min/max intrinsic always picks it's one specific operand.
+// If not, check whether we can canonicalize signed minmax into unsigned version
 static bool processMinMaxIntrinsic(MinMaxIntrinsic *MM, LazyValueInfo *LVI) {
   CmpInst::Predicate Pred = CmpInst::getNonStrictPredicate(MM->getPredicate());
   ConstantRange LHS_CR = LVI->getConstantRangeAtUse(MM->getOperandUse(0),
@@ -546,6 +549,24 @@ static bool processMinMaxIntrinsic(MinMaxIntrinsic *MM, LazyValueInfo *LVI) {
     MM->eraseFromParent();
     return true;
   }
+
+  // To match the behavior of processICmp
+  if (!CanonicalizeICmpPredicatesToUnsigned)
+    return false;
+
+  if (MM->isSigned() &&
+      ConstantRange::areInsensitiveToSignednessOfICmpPredicate(LHS_CR,
+                                                               RHS_CR)) {
+    ++NumSMinMax;
+    IRBuilder<> B(MM);
+    MM->replaceAllUsesWith(B.CreateBinaryIntrinsic(
+        MM->getIntrinsicID() == Intrinsic::smin ? Intrinsic::umin
+                                                : Intrinsic::umax,
+        MM->getLHS(), MM->getRHS()));
+    MM->eraseFromParent();
+    return true;
+  }
+
   return false;
 }
 
