@@ -330,7 +330,8 @@ void UseAfterMoveFinder::getReinits(
                             traverse(TK_AsIs, DeclRefMatcher),
                             unless(parmVarDecl(hasType(
                                 references(qualType(isConstQualified())))))),
-                        unless(callee(functionDecl(hasName("::std::move")))))))
+                        unless(callee(functionDecl(
+                            hasAnyName("::std::move", "::std::forward")))))))
           .bind("reinit");
 
   Stmts->clear();
@@ -387,22 +388,23 @@ void UseAfterMoveCheck::registerMatchers(MatchFinder *Finder) {
   // the bool.
   auto TryEmplaceMatcher =
       cxxMemberCallExpr(callee(cxxMethodDecl(hasName("try_emplace"))));
-  auto CallMoveMatcher =
-      callExpr(argumentCountIs(1), callee(functionDecl(hasName("::std::move"))),
-               hasArgument(0, declRefExpr().bind("arg")),
-               unless(inDecltypeOrTemplateArg()),
-               unless(hasParent(TryEmplaceMatcher)), expr().bind("call-move"),
-               anyOf(hasAncestor(compoundStmt(
-                         hasParent(lambdaExpr().bind("containing-lambda")))),
-                     hasAncestor(functionDecl(anyOf(
-                         cxxConstructorDecl(
-                             hasAnyConstructorInitializer(withInitializer(
-                                 expr(anyOf(equalsBoundNode("call-move"),
-                                            hasDescendant(expr(
-                                                equalsBoundNode("call-move")))))
-                                     .bind("containing-ctor-init"))))
-                             .bind("containing-ctor"),
-                         functionDecl().bind("containing-func"))))));
+  auto CallMoveMatcher = callExpr(
+      argumentCountIs(1),
+      callee(functionDecl(hasAnyName("::std::move", "::std::forward"))),
+      hasArgument(0, declRefExpr().bind("arg")),
+      unless(inDecltypeOrTemplateArg()), unless(hasParent(TryEmplaceMatcher)),
+      expr().bind("call-move"),
+      anyOf(hasAncestor(compoundStmt(
+                hasParent(lambdaExpr().bind("containing-lambda")))),
+            hasAncestor(functionDecl(
+                anyOf(cxxConstructorDecl(
+                          hasAnyConstructorInitializer(withInitializer(
+                              expr(anyOf(equalsBoundNode("call-move"),
+                                         hasDescendant(expr(
+                                             equalsBoundNode("call-move")))))
+                                  .bind("containing-ctor-init"))))
+                          .bind("containing-ctor"),
+                      functionDecl().bind("containing-func"))))));
 
   Finder->addMatcher(
       traverse(
