@@ -4683,6 +4683,9 @@ bool InstCombinerImpl::run() {
 #endif
     LLVM_DEBUG(raw_string_ostream SS(OrigI); I->print(SS); OrigI = SS.str(););
     LLVM_DEBUG(dbgs() << "IC: Visiting: " << OrigI << '\n');
+#ifndef NDEBUG
+    ValueTrackingCache Cache(I, SQ);
+#endif
 
     if (Instruction *Result = visit(*I)) {
       ++NumCombined;
@@ -4694,6 +4697,9 @@ bool InstCombinerImpl::run() {
         Result->copyMetadata(*I,
                              {LLVMContext::MD_dbg, LLVMContext::MD_annotation});
         // Everything uses the new instruction now.
+#ifndef NDEBUG
+        Cache.detectInformationLoss(Result, SQ);
+#endif
         I->replaceAllUsesWith(Result);
 
         // Move the name to the new instruction first.
