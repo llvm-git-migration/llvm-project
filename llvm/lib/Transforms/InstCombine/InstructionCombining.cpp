@@ -4694,6 +4694,7 @@ bool InstCombinerImpl::run() {
         Result->copyMetadata(*I,
                              {LLVMContext::MD_dbg, LLVMContext::MD_annotation});
         // Everything uses the new instruction now.
+        detectInformationLoss(I, Result, SQ);
         I->replaceAllUsesWith(Result);
 
         // Move the name to the new instruction first.

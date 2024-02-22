@@ -401,6 +401,7 @@ public:
     if (V->use_empty() && isa<Instruction>(V) && !V->hasName() && I.hasName())
       V->takeName(&I);
 
+    detectInformationLoss(&I, V, SQ);
     I.replaceAllUsesWith(V);
     return &I;
   }

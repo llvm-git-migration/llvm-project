@@ -87,6 +87,9 @@ using namespace llvm::PatternMatch;
 static cl::opt<unsigned> DomConditionsMaxUses("dom-conditions-max-uses",
                                               cl::Hidden, cl::init(20));
 
+// Checks whether we will lose information after simplification.
+static cl::opt<bool> DetectInformationLoss("detect-information-loss",
+                                           cl::Hidden, cl::init(false));
 
 /// Returns the bitwidth of the given scalar or pointer type. For vector types,
 /// returns the element type's bitwidth.
@@ -9052,4 +9055,82 @@ ConstantRange llvm::computeConstantRange(const Value *V, bool ForSigned,
   }
 
   return CR;
+}
+
+void llvm::detectInformationLoss(Instruction *From, Value *To,
+                                 const SimplifyQuery &SQ) {
+#ifdef NDEBUG
+  return;
+#endif
+  if (!DetectInformationLoss)
+    return;
+
+  if (From == To)
+    return;
+  Instruction *ToInst = dyn_cast<Instruction>(To);
+  if (!ToInst)
+    return;
+
+  bool Inserted = false;
+  if (!ToInst->getParent()) {
+    ToInst->insertAfter(From);
+    Inserted = true;
+  }
+
+  auto WarnOnInformationLoss = [&](StringRef Attr) {
+    errs() << "Warning: the attribute " << Attr << " got lost when simplifying "
+           << *From << " into " << *To << '\n';
+  };
+
+  // Poison
+  if (isGuaranteedNotToBePoison(From, SQ.AC, From, SQ.DT) &&
+      !isGuaranteedNotToBePoison(To, SQ.AC, ToInst, SQ.DT))
+    WarnOnInformationLoss("non-poison");
+
+  // Undef
+  if (isGuaranteedNotToBeUndef(From, SQ.AC, From, SQ.DT) &&
+      !isGuaranteedNotToBeUndef(To, SQ.AC, ToInst, SQ.DT))
+    WarnOnInformationLoss("non-undef");
+
+  Type *Ty = From->getType();
+  if (Ty->isIntOrIntVectorTy() || Ty->isPtrOrPtrVectorTy()) {
+    // KnownBits
+    KnownBits Before =
+        computeKnownBits(From, /*Depth=*/0, SQ.getWithInstruction(From));
+    KnownBits After =
+        computeKnownBits(To, /*Depth=*/0, SQ.getWithInstruction(ToInst));
+    // KnownBits of From should be a subset of KnownBits of To.
+    if (!Before.Zero.isSubsetOf(After.Zero) ||
+        !Before.One.isSubsetOf(After.One)) {
+      WarnOnInformationLoss("knownbits");
+      errs() << "Before: " << Before << '\n';
+      errs() << "After: " << After << '\n';
+    }
+    assert((Before.One & After.Zero).isZero() && "Possible miscompilation");
+    assert((Before.Zero & After.One).isZero() && "Possible miscompilation");
+  } else if (Ty->isFPOrFPVectorTy()) {
+    // KnownFPClass
+    // TODO: use FMF flags
+    KnownFPClass Before = computeKnownFPClass(From, fcAllFlags, /*Depth=*/0,
+                                              SQ.getWithInstruction(From));
+    KnownFPClass After = computeKnownFPClass(To, fcAllFlags, /*Depth=*/0,
+                                             SQ.getWithInstruction(ToInst));
+    // KnownFPClass of From should be a subset of KnownFPClass of To.
+    if ((Before.KnownFPClasses & After.KnownFPClasses) !=
+        Before.KnownFPClasses) {
+      WarnOnInformationLoss("fpclasses");
+      errs() << "Before: " << Before.KnownFPClasses << '\n';
+      errs() << "After: " << After.KnownFPClasses << '\n';
+    }
+    assert((Before.KnownFPClasses & After.KnownFPClasses) != fcNone &&
+           "Possible miscompilation");
+    if (Before.SignBit.has_value() && !After.SignBit.has_value())
+      WarnOnInformationLoss("sign");
+    assert((!Before.SignBit.has_value() || !After.SignBit.has_value() ||
+            Before.SignBit == After.SignBit) &&
+           "Possible miscompilation");
+  }
+
+  if (Inserted)
+    ToInst->removeFromParent();
 }

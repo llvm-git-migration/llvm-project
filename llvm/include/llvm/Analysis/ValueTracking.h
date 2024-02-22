@@ -1195,6 +1195,12 @@ std::optional<bool> isImpliedByDomCondition(CmpInst::Predicate Pred,
                                             const Value *LHS, const Value *RHS,
                                             const Instruction *ContextI,
                                             const DataLayout &DL);
+
+/// A helper function to see whether we will lose information (KnownBits,
+/// KnownFPClass...) after replacing all uses of \p From to \p To . It will help
+/// us salvage information during transformation.
+void detectInformationLoss(Instruction *From, Value *To,
+                           const SimplifyQuery &SQ);
 } // end namespace llvm
 
 #endif // LLVM_ANALYSIS_VALUETRACKING_H
