@@ -195,6 +195,7 @@ struct TrigonometricOpConversion : public OpConversionPattern<TrigonometricOp> {
     auto loc = op.getLoc();
     auto type = cast<ComplexType>(adaptor.getComplex().getType());
     auto elementType = cast<FloatType>(type.getElementType());
+    arith::FastMathFlagsAttr fmf = op.getFastMathFlagsAttr();
 
     Value real =
         rewriter.create<complex::ReOp>(loc, elementType, adaptor.getComplex());
@@ -206,11 +207,13 @@ struct TrigonometricOpConversion : public OpConversionPattern<TrigonometricOp> {
     // implementation in the subclass to combine them.
     Value half = rewriter.create<arith::ConstantOp>(
         loc, elementType, rewriter.getFloatAttr(elementType, 0.5));
-    Value exp = rewriter.create<math::ExpOp>(loc, imag);
-    Value scaledExp = rewriter.create<arith::MulFOp>(loc, half, exp);
-    Value reciprocalExp = rewriter.create<arith::DivFOp>(loc, half, exp);
-    Value sin = rewriter.create<math::SinOp>(loc, real);
-    Value cos = rewriter.create<math::CosOp>(loc, real);
+    Value exp = rewriter.create<math::ExpOp>(loc, imag, fmf.getValue());
+    Value scaledExp =
+        rewriter.create<arith::MulFOp>(loc, half, exp, fmf.getValue());
+    Value reciprocalExp =
+        rewriter.create<arith::DivFOp>(loc, half, exp, fmf.getValue());
+    Value sin = rewriter.create<math::SinOp>(loc, real, fmf.getValue());
+    Value cos = rewriter.create<math::CosOp>(loc, real, fmf.getValue());
 
     auto resultPair =
         combine(loc, scaledExp, reciprocalExp, sin, cos, rewriter);
@@ -257,6 +260,7 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
     auto loc = op.getLoc();
     auto type = cast<ComplexType>(adaptor.getLhs().getType());
     auto elementType = cast<FloatType>(type.getElementType());
+    arith::FastMathFlagsAttr fmf = op.getFastMathFlagsAttr();
 
     Value lhsReal =
         rewriter.create<complex::ReOp>(loc, elementType, adaptor.getLhs());
@@ -290,45 +294,59 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
     //
     // See https://dl.acm.org/citation.cfm?id=368661 for more details.
     Value rhsRealImagRatio =
-        rewriter.create<arith::DivFOp>(loc, rhsReal, rhsImag);
+        rewriter.create<arith::DivFOp>(loc, rhsReal, rhsImag, fmf.getValue());
     Value rhsRealImagDenom = rewriter.create<arith::AddFOp>(
         loc, rhsImag,
-        rewriter.create<arith::MulFOp>(loc, rhsRealImagRatio, rhsReal));
+        rewriter.create<arith::MulFOp>(loc, rhsRealImagRatio, rhsReal,
+                                       fmf.getValue()),
+        fmf.getValue());
     Value realNumerator1 = rewriter.create<arith::AddFOp>(
-        loc, rewriter.create<arith::MulFOp>(loc, lhsReal, rhsRealImagRatio),
-        lhsImag);
-    Value resultReal1 =
-        rewriter.create<arith::DivFOp>(loc, realNumerator1, rhsRealImagDenom);
+        loc,
+        rewriter.create<arith::MulFOp>(loc, lhsReal, rhsRealImagRatio,
+                                       fmf.getValue()),
+        lhsImag, fmf.getValue());
+    Value resultReal1 = rewriter.create<arith::DivFOp>(
+        loc, realNumerator1, rhsRealImagDenom, fmf.getValue());
     Value imagNumerator1 = rewriter.create<arith::SubFOp>(
-        loc, rewriter.create<arith::MulFOp>(loc, lhsImag, rhsRealImagRatio),
-        lhsReal);
-    Value resultImag1 =
-        rewriter.create<arith::DivFOp>(loc, imagNumerator1, rhsRealImagDenom);
+        loc,
+        rewriter.create<arith::MulFOp>(loc, lhsImag, rhsRealImagRatio,
+                                       fmf.getValue()),
+        lhsReal, fmf.getValue());
+    Value resultImag1 = rewriter.create<arith::DivFOp>(
+        loc, imagNumerator1, rhsRealImagDenom, fmf.getValue());
 
     Value rhsImagRealRatio =
-        rewriter.create<arith::DivFOp>(loc, rhsImag, rhsReal);
+        rewriter.create<arith::DivFOp>(loc, rhsImag, rhsReal, fmf.getValue());
     Value rhsImagRealDenom = rewriter.create<arith::AddFOp>(
         loc, rhsReal,
-        rewriter.create<arith::MulFOp>(loc, rhsImagRealRatio, rhsImag));
+        rewriter.create<arith::MulFOp>(loc, rhsImagRealRatio, rhsImag,
+                                       fmf.getValue()),
+        fmf.getValue());
     Value realNumerator2 = rewriter.create<arith::AddFOp>(
         loc, lhsReal,
-        rewriter.create<arith::MulFOp>(loc, lhsImag, rhsImagRealRatio));
-    Value resultReal2 =
-        rewriter.create<arith::DivFOp>(loc, realNumerator2, rhsImagRealDenom);
+        rewriter.create<arith::MulFOp>(loc, lhsImag, rhsImagRealRatio,
+                                       fmf.getValue()),
+        fmf.getValue());
+    Value resultReal2 = rewriter.create<arith::DivFOp>(
+        loc, realNumerator2, rhsImagRealDenom, fmf.getValue());
     Value imagNumerator2 = rewriter.create<arith::SubFOp>(
         loc, lhsImag,
-        rewriter.create<arith::MulFOp>(loc, lhsReal, rhsImagRealRatio));
-    Value resultImag2 =
-        rewriter.create<arith::DivFOp>(loc, imagNumerator2, rhsImagRealDenom);
+        rewriter.create<arith::MulFOp>(loc, lhsReal, rhsImagRealRatio,
+                                       fmf.getValue()),
+        fmf.getValue());
+    Value resultImag2 = rewriter.create<arith::DivFOp>(
+        loc, imagNumerator2, rhsImagRealDenom, fmf.getValue());
 
     // Consider corner cases.
     // Case 1. Zero denominator, numerator contains at most one NaN value.
     Value zero = rewriter.create<arith::ConstantOp>(
         loc, elementType, rewriter.getZeroAttr(elementType));
-    Value rhsRealAbs = rewriter.create<math::AbsFOp>(loc, rhsReal);
+    Value rhsRealAbs =
+        rewriter.create<math::AbsFOp>(loc, rhsReal, fmf.getValue());
     Value rhsRealIsZero = rewriter.create<arith::CmpFOp>(
         loc, arith::CmpFPredicate::OEQ, rhsRealAbs, zero);
-    Value rhsImagAbs = rewriter.create<math::AbsFOp>(loc, rhsImag);
+    Value rhsImagAbs =
+        rewriter.create<math::AbsFOp>(loc, rhsImag, fmf.getValue());
     Value rhsImagIsZero = rewriter.create<arith::CmpFOp>(
         loc, arith::CmpFPredicate::OEQ, rhsImagAbs, zero);
     Value lhsRealIsNotNaN = rewriter.create<arith::CmpFOp>(
@@ -346,10 +364,10 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
             elementType, APFloat::getInf(elementType.getFloatSemantics())));
     Value infWithSignOfRhsReal =
         rewriter.create<math::CopySignOp>(loc, inf, rhsReal);
-    Value infinityResultReal =
-        rewriter.create<arith::MulFOp>(loc, infWithSignOfRhsReal, lhsReal);
-    Value infinityResultImag =
-        rewriter.create<arith::MulFOp>(loc, infWithSignOfRhsReal, lhsImag);
+    Value infinityResultReal = rewriter.create<arith::MulFOp>(
+        loc, infWithSignOfRhsReal, lhsReal, fmf.getValue());
+    Value infinityResultImag = rewriter.create<arith::MulFOp>(
+        loc, infWithSignOfRhsReal, lhsImag, fmf.getValue());
 
     // Case 2. Infinite numerator, finite denominator.
     Value rhsRealFinite = rewriter.create<arith::CmpFOp>(
@@ -358,10 +376,12 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
         loc, arith::CmpFPredicate::ONE, rhsImagAbs, inf);
     Value rhsFinite =
         rewriter.create<arith::AndIOp>(loc, rhsRealFinite, rhsImagFinite);
-    Value lhsRealAbs = rewriter.create<math::AbsFOp>(loc, lhsReal);
+    Value lhsRealAbs =
+        rewriter.create<math::AbsFOp>(loc, lhsReal, fmf.getValue());
     Value lhsRealInfinite = rewriter.create<arith::CmpFOp>(
         loc, arith::CmpFPredicate::OEQ, lhsRealAbs, inf);
-    Value lhsImagAbs = rewriter.create<math::AbsFOp>(loc, lhsImag);
+    Value lhsImagAbs =
+        rewriter.create<math::AbsFOp>(loc, lhsImag, fmf.getValue());
     Value lhsImagInfinite = rewriter.create<arith::CmpFOp>(
         loc, arith::CmpFPredicate::OEQ, lhsImagAbs, inf);
     Value lhsInfinite =
@@ -376,22 +396,26 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
     Value lhsImagIsInfWithSign = rewriter.create<math::CopySignOp>(
         loc, rewriter.create<arith::SelectOp>(loc, lhsImagInfinite, one, zero),
         lhsImag);
-    Value lhsRealIsInfWithSignTimesRhsReal =
-        rewriter.create<arith::MulFOp>(loc, lhsRealIsInfWithSign, rhsReal);
-    Value lhsImagIsInfWithSignTimesRhsImag =
-        rewriter.create<arith::MulFOp>(loc, lhsImagIsInfWithSign, rhsImag);
+    Value lhsRealIsInfWithSignTimesRhsReal = rewriter.create<arith::MulFOp>(
+        loc, lhsRealIsInfWithSign, rhsReal, fmf.getValue());
+    Value lhsImagIsInfWithSignTimesRhsImag = rewriter.create<arith::MulFOp>(
+        loc, lhsImagIsInfWithSign, rhsImag, fmf.getValue());
     Value resultReal3 = rewriter.create<arith::MulFOp>(
         loc, inf,
         rewriter.create<arith::AddFOp>(loc, lhsRealIsInfWithSignTimesRhsReal,
-                                       lhsImagIsInfWithSignTimesRhsImag));
-    Value lhsRealIsInfWithSignTimesRhsImag =
-        rewriter.create<arith::MulFOp>(loc, lhsRealIsInfWithSign, rhsImag);
-    Value lhsImagIsInfWithSignTimesRhsReal =
-        rewriter.create<arith::MulFOp>(loc, lhsImagIsInfWithSign, rhsReal);
+                                       lhsImagIsInfWithSignTimesRhsImag,
+                                       fmf.getValue()),
+        fmf.getValue());
+    Value lhsRealIsInfWithSignTimesRhsImag = rewriter.create<arith::MulFOp>(
+        loc, lhsRealIsInfWithSign, rhsImag, fmf.getValue());
+    Value lhsImagIsInfWithSignTimesRhsReal = rewriter.create<arith::MulFOp>(
+        loc, lhsImagIsInfWithSign, rhsReal, fmf.getValue());
     Value resultImag3 = rewriter.create<arith::MulFOp>(
         loc, inf,
         rewriter.create<arith::SubFOp>(loc, lhsImagIsInfWithSignTimesRhsReal,
-                                       lhsRealIsInfWithSignTimesRhsImag));
+                                       lhsRealIsInfWithSignTimesRhsImag,
+                                       fmf.getValue()),
+        fmf.getValue());
 
     // Case 3: Finite numerator, infinite denominator.
     Value lhsRealFinite = rewriter.create<arith::CmpFOp>(
@@ -414,22 +438,26 @@ struct DivOpConversion : public OpConversionPattern<complex::DivOp> {
     Value rhsImagIsInfWithSign = rewriter.create<math::CopySignOp>(
         loc, rewriter.create<arith::SelectOp>(loc, rhsImagInfinite, one, zero),
         rhsImag);
-    Value rhsRealIsInfWithSignTimesLhsReal =
-        rewriter.create<arith::MulFOp>(loc, lhsReal, rhsRealIsInfWithSign);
-    Value rhsImagIsInfWithSignTimesLhsImag =
-        rewriter.create<arith::MulFOp>(loc, lhsImag, rhsImagIsInfWithSign);
+    Value rhsRealIsInfWithSignTimesLhsReal = rewriter.create<arith::MulFOp>(
+        loc, lhsReal, rhsRealIsInfWithSign, fmf.getValue());
+    Value rhsImagIsInfWithSignTimesLhsImag = rewriter.create<arith::MulFOp>(
+        loc, lhsImag, rhsImagIsInfWithSign, fmf.getValue());
     Value resultReal4 = rewriter.create<arith::MulFOp>(
         loc, zero,
         rewriter.create<arith::AddFOp>(loc, rhsRealIsInfWithSignTimesLhsReal,
-                                       rhsImagIsInfWithSignTimesLhsImag));
-    Value rhsRealIsInfWithSignTimesLhsImag =
-        rewriter.create<arith::MulFOp>(loc, lhsImag, rhsRealIsInfWithSign);
-    Value rhsImagIsInfWithSignTimesLhsReal =
-        rewriter.create<arith::MulFOp>(loc, lhsReal, rhsImagIsInfWithSign);
+                                       rhsImagIsInfWithSignTimesLhsImag,
+                                       fmf.getValue()),
+        fmf.getValue());
+    Value rhsRealIsInfWithSignTimesLhsImag = rewriter.create<arith::MulFOp>(
+        loc, lhsImag, rhsRealIsInfWithSign, fmf.getValue());
+    Value rhsImagIsInfWithSignTimesLhsReal = rewriter.create<arith::MulFOp>(
+        loc, lhsReal, rhsImagIsInfWithSign, fmf.getValue());
     Value resultImag4 = rewriter.create<arith::MulFOp>(
         loc, zero,
         rewriter.create<arith::SubFOp>(loc, rhsRealIsInfWithSignTimesLhsImag,
-                                       rhsImagIsInfWithSignTimesLhsReal));
+                                       rhsImagIsInfWithSignTimesLhsReal,
+                                       fmf.getValue()),
+        fmf.getValue());
 
     Value realAbsSmallerThanImagAbs = rewriter.create<arith::CmpFOp>(
         loc, arith::CmpFPredicate::OLT, rhsRealAbs, rhsImagAbs);
