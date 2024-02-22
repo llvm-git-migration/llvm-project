@@ -130,6 +130,10 @@ Changes in existing checks
   <clang-tidy/checks/bugprone/unused-local-non-trivial-variable>` check by
   ignoring local variable with ``[maybe_unused]`` attribute.
 
+- Improved :doc:`bugprone-use-after-move
+  <clang-tidy/checks/bugprone/use-after-move>` check to also handle
+  calls to ``std::forward``.
+
 - Cleaned up :doc:`cppcoreguidelines-prefer-member-initializer
   <clang-tidy/checks/cppcoreguidelines/prefer-member-initializer>`
   by removing enforcement of rule `C.48

@@ -330,7 +330,8 @@ void UseAfterMoveFinder::getReinits(
                             traverse(TK_AsIs, DeclRefMatcher),
                             unless(parmVarDecl(hasType(
                                 references(qualType(isConstQualified())))))),
-                        unless(callee(functionDecl(hasName("::std::move")))))))
+                        unless(callee(functionDecl(
+                            hasAnyName("::std::move", "::std::forward")))))))
           .bind("reinit");
 
   Stmts->clear();
@@ -359,24 +360,52 @@ void UseAfterMoveFinder::getReinits(
   }
 }
 
+enum class MoveType {
+  Move,    // std::move
+  Forward, // std::forward
+};
+
+static MoveType determineMoveType(const FunctionDecl *FuncDecl) {
+  if (FuncDecl->getName() == "move")
+    return MoveType::Move;
+  if (FuncDecl->getName() == "forward")
+    return MoveType::Forward;
+
+  assert(false && "Invalid move type");
+}
+
 static void emitDiagnostic(const Expr *MovingCall, const DeclRefExpr *MoveArg,
                            const UseAfterMove &Use, ClangTidyCheck *Check,
-                           ASTContext *Context) {
+                           ASTContext *Context, MoveType Type) {
   SourceLocation UseLoc = Use.DeclRef->getExprLoc();
   SourceLocation MoveLoc = MovingCall->getExprLoc();
 
-  Check->diag(UseLoc, "'%0' used after it was moved")
-      << MoveArg->getDecl()->getName();
-  Check->diag(MoveLoc, "move occurred here", DiagnosticIDs::Note);
+  StringRef ActionType;
+  StringRef ActionTypePastTense;
+  switch (Type) {
+  case MoveType::Move:
+    ActionType = "move";
+    ActionTypePastTense = "moved";
+    break;
+  case MoveType::Forward:
+    ActionType = "forward";
+    ActionTypePastTense = "forwarded";
+    break;
+  }
+
+  Check->diag(UseLoc, "'%0' used after it was %1")
+      << MoveArg->getDecl()->getName() << ActionTypePastTense;
+  Check->diag(MoveLoc, "%0 occurred here", DiagnosticIDs::Note) << ActionType;
   if (Use.EvaluationOrderUndefined) {
     Check->diag(UseLoc,
-                "the use and move are unsequenced, i.e. there is no guarantee "
+                "the use and %0 are unsequenced, i.e. there is no guarantee "
                 "about the order in which they are evaluated",
-                DiagnosticIDs::Note);
+                DiagnosticIDs::Note)
+        << ActionType;
   } else if (UseLoc < MoveLoc || Use.DeclRef == MoveArg) {
-    Check->diag(UseLoc,
-                "the use happens in a later loop iteration than the move",
-                DiagnosticIDs::Note);
+    Check->diag(UseLoc, "the use happens in a later loop iteration than the %0",
+                DiagnosticIDs::Note)
+        << ActionType;
   }
 }
 
@@ -388,7 +417,9 @@ void UseAfterMoveCheck::registerMatchers(MatchFinder *Finder) {
   auto TryEmplaceMatcher =
       cxxMemberCallExpr(callee(cxxMethodDecl(hasName("try_emplace"))));
   auto CallMoveMatcher =
-      callExpr(argumentCountIs(1), callee(functionDecl(hasName("::std::move"))),
+      callExpr(argumentCountIs(1),
+               callee(functionDecl(hasAnyName("::std::move", "::std::forward"))
+                          .bind("move-decl")),
                hasArgument(0, declRefExpr().bind("arg")),
                unless(inDecltypeOrTemplateArg()),
                unless(hasParent(TryEmplaceMatcher)), expr().bind("call-move"),
@@ -436,6 +467,7 @@ void UseAfterMoveCheck::check(const MatchFinder::MatchResult &Result) {
   const auto *CallMove = Result.Nodes.getNodeAs<CallExpr>("call-move");
   const auto *MovingCall = Result.Nodes.getNodeAs<Expr>("moving-call");
   const auto *Arg = Result.Nodes.getNodeAs<DeclRefExpr>("arg");
+  const auto *MoveDecl = Result.Nodes.getNodeAs<FunctionDecl>("move-decl");
 
   if (!MovingCall || !MovingCall->getExprLoc().isValid())
     MovingCall = CallMove;
@@ -470,7 +502,8 @@ void UseAfterMoveCheck::check(const MatchFinder::MatchResult &Result) {
     UseAfterMoveFinder Finder(Result.Context);
     UseAfterMove Use;
     if (Finder.find(CodeBlock, MovingCall, Arg->getDecl(), &Use))
-      emitDiagnostic(MovingCall, Arg, Use, this, Result.Context);
+      emitDiagnostic(MovingCall, Arg, Use, this, Result.Context,
+                     determineMoveType(MoveDecl));
   }
 }
 
