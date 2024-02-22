@@ -63,6 +63,9 @@ struct Config {
   /// Use the standard optimization pipeline.
   bool UseDefaultPipeline = false;
 
+  /// Use pre-link pipeline.
+  bool UsePreLinkPipeline = false;
+
   /// Flag to indicate that the optimizer should not assume builtins are present
   /// on the target.
   bool Freestanding = false;

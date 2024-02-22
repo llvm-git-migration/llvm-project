@@ -333,9 +333,13 @@ static void runNewPMPasses(const Config &Conf, Module &Mod, TargetMachine *TM,
   } else if (Conf.UseDefaultPipeline) {
     MPM.addPass(PB.buildPerModuleDefaultPipeline(OL));
   } else if (IsThinLTO) {
-    MPM.addPass(PB.buildThinLTODefaultPipeline(OL, ImportSummary));
+    MPM.addPass(Conf.UsePreLinkPipeline
+                    ? PB.buildThinLTOPreLinkDefaultPipeline(OL)
+                    : PB.buildThinLTODefaultPipeline(OL, ImportSummary));
   } else {
-    MPM.addPass(PB.buildLTODefaultPipeline(OL, ExportSummary));
+    MPM.addPass(Conf.UsePreLinkPipeline
+                    ? PB.buildLTOPreLinkDefaultPipeline(OL)
+                    : PB.buildLTODefaultPipeline(OL, ExportSummary));
   }
 
   if (!Conf.DisableVerify)
