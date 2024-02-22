@@ -71,7 +71,6 @@ define i8 @test6(i8 %x) {
 ; CHECK-LABEL: @test6(
 ; CHECK-NEXT:    [[LIM:%.*]] = icmp uge i8 [[X:%.*]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[LIM]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @llvm.umin.i8(i8 [[X]], i8 42)
 ; CHECK-NEXT:    ret i8 42
 ;
   %lim = icmp uge i8 %x, 42
@@ -119,7 +118,6 @@ define i8 @test10(i8 %x) {
 ; CHECK-LABEL: @test10(
 ; CHECK-NEXT:    [[LIM:%.*]] = icmp ule i8 [[X:%.*]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[LIM]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @llvm.umax.i8(i8 [[X]], i8 42)
 ; CHECK-NEXT:    ret i8 42
 ;
   %lim = icmp ule i8 %x, 42
@@ -167,7 +165,6 @@ define i8 @test14(i8 %x) {
 ; CHECK-LABEL: @test14(
 ; CHECK-NEXT:    [[LIM:%.*]] = icmp sge i8 [[X:%.*]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[LIM]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @llvm.smin.i8(i8 [[X]], i8 42)
 ; CHECK-NEXT:    ret i8 42
 ;
   %lim = icmp sge i8 %x, 42
@@ -215,7 +212,6 @@ define i8 @test18(i8 %x) {
 ; CHECK-LABEL: @test18(
 ; CHECK-NEXT:    [[LIM:%.*]] = icmp sle i8 [[X:%.*]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[LIM]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @llvm.smax.i8(i8 [[X]], i8 42)
 ; CHECK-NEXT:    ret i8 42
 ;
   %lim = icmp sle i8 %x, 42
@@ -244,8 +240,7 @@ define void @test() {
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK:       for.body:
 ; CHECK-NEXT:    [[INDVAR:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
-; CHECK-NEXT:    [[SMAX:%.*]] = call i32 @llvm.smax.i32(i32 [[INDVAR]], i32 65535)
-; CHECK-NEXT:    call void @body(i32 [[SMAX]])
+; CHECK-NEXT:    call void @body(i32 65535)
 ; CHECK-NEXT:    [[INC]] = add nsw i32 [[INDVAR]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i32 [[INDVAR]], 65535
 ; CHECK-NEXT:    br i1 [[CMP]], label [[FOR_BODY]], label [[EXIT:%.*]]
