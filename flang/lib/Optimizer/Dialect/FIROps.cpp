@@ -3870,13 +3870,13 @@ llvm::SmallVector<mlir::Region *> fir::CUDAKernelOp::getLoopRegions() {
   return {&getRegion()};
 }
 
-mlir::ParseResult
-parseCUFKernelValues(mlir::OpAsmParser &parser,
-                     llvm::SmallVectorImpl<mlir::OpAsmParser::UnresolvedOperand> &values,
-                     llvm::SmallVectorImpl<mlir::Type> &types) {
+mlir::ParseResult parseCUFKernelValues(
+    mlir::OpAsmParser &parser,
+    llvm::SmallVectorImpl<mlir::OpAsmParser::UnresolvedOperand> &values,
+    llvm::SmallVectorImpl<mlir::Type> &types) {
   if (mlir::succeeded(parser.parseOptionalStar()))
     return mlir::success();
-  
+
   if (parser.parseOptionalLParen()) {
     if (mlir::failed(parser.parseCommaSeparatedList(
             mlir::AsmParser::Delimiter::None, [&]() {
@@ -3902,14 +3902,13 @@ void printCUFKernelValues(mlir::OpAsmPrinter &p, mlir::Operation *op,
 
   if (values.size() > 1)
     p << "(";
-  llvm::interleaveComma(values, p,
-                        [&p](mlir::Value v) { p << v; });
+  llvm::interleaveComma(values, p, [&p](mlir::Value v) { p << v; });
   if (values.size() > 1)
     p << ")";
 }
 
-mlir::ParseResult
-parseCUFKernelLoopControl(mlir::OpAsmParser &parser, mlir::Region &region,
+mlir::ParseResult parseCUFKernelLoopControl(
+    mlir::OpAsmParser &parser, mlir::Region &region,
     llvm::SmallVectorImpl<mlir::OpAsmParser::UnresolvedOperand> &lowerbound,
     llvm::SmallVectorImpl<mlir::Type> &lowerboundType,
     llvm::SmallVectorImpl<mlir::OpAsmParser::UnresolvedOperand> &upperbound,
@@ -3919,8 +3918,9 @@ parseCUFKernelLoopControl(mlir::OpAsmParser &parser, mlir::Region &region,
 
   llvm::SmallVector<mlir::OpAsmParser::Argument> inductionVars;
   if (parser.parseLParen() ||
-      parser.parseArgumentList(inductionVars, mlir::OpAsmParser::Delimiter::None,
-                                /*allowType=*/true) ||
+      parser.parseArgumentList(inductionVars,
+                               mlir::OpAsmParser::Delimiter::None,
+                               /*allowType=*/true) ||
       parser.parseRParen() || parser.parseEqual() || parser.parseLParen() ||
       parser.parseOperandList(lowerbound, inductionVars.size(),
                               mlir::OpAsmParser::Delimiter::None) ||
@@ -3937,20 +3937,19 @@ parseCUFKernelLoopControl(mlir::OpAsmParser &parser, mlir::Region &region,
   return parser.parseRegion(region, inductionVars);
 }
 
-void printCUFKernelLoopControl(mlir::OpAsmPrinter &p, mlir::Operation *op,
-                      mlir::Region &region, mlir::ValueRange lowerbound,
-                      mlir::TypeRange lowerboundType,
-                      mlir::ValueRange upperbound,
-                      mlir::TypeRange upperboundType, mlir::ValueRange steps,
-                      mlir::TypeRange stepType) {
+void printCUFKernelLoopControl(
+    mlir::OpAsmPrinter &p, mlir::Operation *op, mlir::Region &region,
+    mlir::ValueRange lowerbound, mlir::TypeRange lowerboundType,
+    mlir::ValueRange upperbound, mlir::TypeRange upperboundType,
+    mlir::ValueRange steps, mlir::TypeRange stepType) {
   mlir::ValueRange regionArgs = region.front().getArguments();
   if (!regionArgs.empty()) {
     p << "(";
-    llvm::interleaveComma(regionArgs, p,
-                          [&p](mlir::Value v) { p << v << " : " << v.getType(); });
+    llvm::interleaveComma(
+        regionArgs, p, [&p](mlir::Value v) { p << v << " : " << v.getType(); });
     p << ") = (" << lowerbound << " : " << lowerboundType << ") to ("
-      << upperbound << " : " << upperboundType << ") "
-      << " step (" << steps << " : " << stepType << ") ";
+      << upperbound << " : " << upperboundType << ") " << " step (" << steps
+      << " : " << stepType << ") ";
   }
   p.printRegion(region, /*printEntryBlockArgs=*/false);
 }
