@@ -724,10 +724,22 @@ static void computeKnownBitsFromCond(const Value *V, Value *Cond,
     Known = Known.unionWith(Known2);
   }
 
-  if (auto *Cmp = dyn_cast<ICmpInst>(Cond))
-    computeKnownBitsFromCmp(
-        V, Invert ? Cmp->getInversePredicate() : Cmp->getPredicate(),
-        Cmp->getOperand(0), Cmp->getOperand(1), Known, SQ);
+  if (auto *Cmp = dyn_cast<ICmpInst>(Cond)) {
+    ICmpInst::Predicate Pred =
+        Invert ? Cmp->getInversePredicate() : Cmp->getPredicate();
+    Value *LHS = Cmp->getOperand(0);
+    Value *RHS = Cmp->getOperand(1);
+
+    // Handle icmp pred (trunc V), C
+    if (match(LHS, m_Trunc(m_Specific(V)))) {
+      KnownBits DstKnown(LHS->getType()->getScalarSizeInBits());
+      computeKnownBitsFromCmp(LHS, Pred, LHS, RHS, DstKnown, SQ);
+      Known = Known.unionWith(DstKnown.anyext(Known.getBitWidth()));
+      return;
+    }
+
+    computeKnownBitsFromCmp(V, Pred, LHS, RHS, Known, SQ);
+  }
 }
 
 void llvm::computeKnownBitsFromContext(const Value *V, KnownBits &Known,
@@ -9111,7 +9123,7 @@ addValueAffectedByCondition(Value *V,
 
     // Peek through unary operators to find the source of the condition.
     Value *Op;
-    if (match(I, m_PtrToInt(m_Value(Op)))) {
+    if (match(I, m_CombineOr(m_PtrToInt(m_Value(Op)), m_Trunc(m_Value(Op))))) {
       if (isa<Instruction>(Op) || isa<Argument>(Op))
         InsertAffected(Op);
     }
