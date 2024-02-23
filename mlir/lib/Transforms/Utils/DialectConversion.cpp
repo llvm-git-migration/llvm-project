@@ -1034,15 +1034,15 @@ void BlockTypeConversionRewrite::rollback() {
 
 LogicalResult BlockTypeConversionRewrite::materializeLiveConversions(
     function_ref<Operation *(Value)> findLiveUser) {
-  auto builder = OpBuilder::atBlockBegin(block, /*listener=*/&rewriterImpl);
-
   // Process the remapping for each of the original arguments.
   for (auto it : llvm::enumerate(origBlock->getArguments())) {
-    OpBuilder::InsertionGuard g(builder);
+    BlockArgument origArg = it.value();
+    // Note: `block` may be detached, so OpBuilder::atBlockBegin cannot be used.
+    OpBuilder builder(it.value().getContext(), /*listener=*/&rewriterImpl);
+    builder.setInsertionPointToStart(block);
 
     // If the type of this argument changed and the argument is still live, we
     // need to materialize a conversion.
-    BlockArgument origArg = it.value();
     if (rewriterImpl.mapping.lookupOrNull(origArg, origArg.getType()))
       continue;
     Operation *liveUser = findLiveUser(origArg);
