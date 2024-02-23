@@ -1400,8 +1400,10 @@ static const Symbol *GetAssociatedVariable(const AssocEntityDetails &details) {
 const Symbol &GetAssociationRoot(const Symbol &original) {
   const Symbol &symbol{ResolveAssociations(original)};
   if (const auto *details{symbol.detailsIf<AssocEntityDetails>()}) {
-    if (const Symbol * root{GetAssociatedVariable(*details)}) {
-      return *root;
+    if (!details->rank()) {
+      if (const Symbol * root{GetAssociatedVariable(*details)}) {
+        return *root;
+      }
     }
   }
   return symbol;
