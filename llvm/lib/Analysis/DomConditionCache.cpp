@@ -27,7 +27,8 @@ static void findAffectedValues(Value *Cond,
 
       // Peek through unary operators to find the source of the condition.
       Value *Op;
-      if (match(I, m_PtrToInt(m_Value(Op)))) {
+      if (match(I,
+                m_CombineOr(m_PtrToInt(m_Value(Op)), m_Trunc(m_Value(Op))))) {
         if (isa<Instruction>(Op) || isa<Argument>(Op))
           Affected.push_back(Op);
       }

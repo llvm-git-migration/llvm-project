@@ -717,10 +717,22 @@ static void computeKnownBitsFromCond(const Value *V, Value *Cond,
     computeKnownBitsFromCond(V, B, Known, Depth + 1, SQ, Invert);
   }
 
-  if (auto *Cmp = dyn_cast<ICmpInst>(Cond))
-    computeKnownBitsFromCmp(
-        V, Invert ? Cmp->getInversePredicate() : Cmp->getPredicate(),
-        Cmp->getOperand(0), Cmp->getOperand(1), Known, SQ);
+  if (auto *Cmp = dyn_cast<ICmpInst>(Cond)) {
+    ICmpInst::Predicate Pred =
+        Invert ? Cmp->getInversePredicate() : Cmp->getPredicate();
+    Value *LHS = Cmp->getOperand(0);
+    Value *RHS = Cmp->getOperand(1);
+
+    // Handle icmp pred (trunc V), C
+    if (match(LHS, m_Trunc(m_Specific(V)))) {
+      KnownBits DstKnown(LHS->getType()->getScalarSizeInBits());
+      computeKnownBitsFromCmp(LHS, Pred, LHS, RHS, DstKnown, SQ);
+      Known = Known.unionWith(DstKnown.anyext(Known.getBitWidth()));
+      return;
+    }
+
+    computeKnownBitsFromCmp(V, Pred, LHS, RHS, Known, SQ);
+  }
 }
 
 void llvm::computeKnownBitsFromContext(const Value *V, KnownBits &Known,
