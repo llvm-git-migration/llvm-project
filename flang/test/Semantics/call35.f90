@@ -12,7 +12,7 @@ end
 
 subroutine s3
   interface
-    !WARNING: The global subprogram 'ext' is not compatible with its local procedure declaration (incompatible procedure attributes: ImplicitInterface)
+    !WARNING: The global subprogram 'ext' is not compatible with its local procedure declaration (distinct numbers of dummy arguments)
     subroutine ext(n)
       integer n
     end
