@@ -622,7 +622,18 @@ class BothFusionPredicateWithMCInstPredicate<MCInstPredicate pred>
 // Tie firstOpIdx and secondOpIdx. The operand of `FirstMI` at position
 // `firstOpIdx` should be the same as the operand of `SecondMI` at position
 // `secondOpIdx`.
+// If the operand at `secondOpIdx` has commutable operand, then the commutable
+// operand will be checked too.
 class TieReg<int firstOpIdx, int secondOpIdx> : BothFusionPredicate {
+  int FirstOpIdx = firstOpIdx;
+  int SecondOpIdx = secondOpIdx;
+}
+
+// The operand of `SecondMI` at position `firstOpIdx` should be the same as the
+// operand at position `secondOpIdx`.
+// If the operand at `secondOpIdx` has commutable operand, then the commutable
+// operand will be checked too.
+class SameReg<int firstOpIdx, int secondOpIdx> : SecondFusionPredicate {
   int FirstOpIdx = firstOpIdx;
   int SecondOpIdx = secondOpIdx;
 }
@@ -688,11 +699,7 @@ class SimpleFusion<string name, string fieldName, string desc,
                 SecondFusionPredicateWithMCInstPredicate<secondPred>,
                 WildcardTrue,
                 FirstFusionPredicateWithMCInstPredicate<firstPred>,
-                SecondFusionPredicateWithMCInstPredicate<
-                  CheckAny<[
-                    CheckIsVRegOperand<0>,
-                    CheckSameRegOperand<0, 1>
-                  ]>>,
+                SameReg<0, 1>,
                 OneUse,
                 TieReg<0, 1>,
               ],

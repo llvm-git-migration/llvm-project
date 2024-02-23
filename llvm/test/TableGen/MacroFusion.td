@@ -99,13 +99,15 @@ def TestFusion: SimpleFusion<"test-fusion", "HasTestFusion", "Test Fusion",
 // CHECK-PREDICATOR-NEXT:      if (( MI->getOpcode() != Test::Inst0 ))
 // CHECK-PREDICATOR-NEXT:        return false;
 // CHECK-PREDICATOR-NEXT:    }
-// CHECK-PREDICATOR-NEXT:    {
-// CHECK-PREDICATOR-NEXT:      const MachineInstr *MI = &SecondMI;
-// CHECK-PREDICATOR-NEXT:      if (!(
-// CHECK-PREDICATOR-NEXT:          MI->getOperand(0).getReg().isVirtual()
-// CHECK-PREDICATOR-NEXT:          || MI->getOperand(0).getReg() == MI->getOperand(1).getReg()
-// CHECK-PREDICATOR-NEXT:        ))
-// CHECK-PREDICATOR-NEXT:        return false;
+// CHECK-PREDICATOR-NEXT:    if (!SecondMI.getOperand(0).getReg().isVirtual()) {                                                                                                                                                                                      
+// CHECK-PREDICATOR-NEXT:      if (SecondMI.getOperand(0).getReg() != SecondMI.getOperand(1).getReg()) {                                                                                                                                                              
+// CHECK-PREDICATOR-NEXT:        if (!SecondMI.getDesc().isCommutable())                                                                                                                                                                                              
+// CHECK-PREDICATOR-NEXT:          return false;
+// CHECK-PREDICATOR-NEXT:        unsigned SrcOpIdx1 = 1, SrcOpIdx2 = TargetInstrInfo::CommuteAnyOperandIndex;
+// CHECK-PREDICATOR-NEXT:        if (TII.findCommutedOpIndices(SecondMI, SrcOpIdx1, SrcOpIdx2))
+// CHECK-PREDICATOR-NEXT:          if (SecondMI.getOperand(0).getReg() != SecondMI.getOperand(SrcOpIdx2).getReg())
+// CHECK-PREDICATOR-NEXT:            return false;
+// CHECK-PREDICATOR-NEXT:      }
 // CHECK-PREDICATOR-NEXT:    }
 // CHECK-PREDICATOR-NEXT:    {
 // CHECK-PREDICATOR-NEXT:      Register FirstDest = FirstMI->getOperand(0).getReg();
@@ -114,8 +116,14 @@ def TestFusion: SimpleFusion<"test-fusion", "HasTestFusion", "Test Fusion",
 // CHECK-PREDICATOR-NEXT:    }
 // CHECK-PREDICATOR-NEXT:    if (!(FirstMI->getOperand(0).isReg() &&
 // CHECK-PREDICATOR-NEXT:          SecondMI.getOperand(1).isReg() &&
-// CHECK-PREDICATOR-NEXT:          FirstMI->getOperand(0).getReg() == SecondMI.getOperand(1).getReg()))
-// CHECK-PREDICATOR-NEXT:      return false;
+// CHECK-PREDICATOR-NEXT:          FirstMI->getOperand(0).getReg() == SecondMI.getOperand(1).getReg())) {
+// CHECK-PREDICATOR-NEXT:      if (!SecondMI.getDesc().isCommutable())
+// CHECK-PREDICATOR-NEXT:        return false;
+// CHECK-PREDICATOR-NEXT:      unsigned SrcOpIdx1 = 1, SrcOpIdx2 = TargetInstrInfo::CommuteAnyOperandIndex;
+// CHECK-PREDICATOR-NEXT:      if (TII.findCommutedOpIndices(SecondMI, SrcOpIdx1, SrcOpIdx2))
+// CHECK-PREDICATOR-NEXT:        if (FirstMI->getOperand(0).getReg() != SecondMI.getOperand(SrcOpIdx2).getReg())
+// CHECK-PREDICATOR-NEXT:          return false;
+// CHECK-PREDICATOR-NEXT:    }
 // CHECK-PREDICATOR-NEXT:    return true;
 // CHECK-PREDICATOR-NEXT:  }
 // CHECK-PREDICATOR-NEXT:  } // end namespace llvm

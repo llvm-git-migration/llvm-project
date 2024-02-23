@@ -182,6 +182,28 @@ void MacroFusionPredicatorEmitter::emitSecondPredicate(Record *Predicate,
     OS << ")\n";
     OS.indent(4) << "  return false;\n";
     OS.indent(2) << "}\n";
+  } else if (Predicate->isSubClassOf("SameReg")) {
+    int FirstOpIdx = Predicate->getValueAsInt("FirstOpIdx");
+    int SecondOpIdx = Predicate->getValueAsInt("SecondOpIdx");
+
+    OS.indent(2) << "if (!SecondMI.getOperand(" << FirstOpIdx
+                 << ").getReg().isVirtual()) {\n";
+    OS.indent(4) << "if (SecondMI.getOperand(" << FirstOpIdx
+                 << ").getReg() != SecondMI.getOperand(" << SecondOpIdx
+                 << ").getReg()) {\n";
+
+    OS.indent(6) << "if (!SecondMI.getDesc().isCommutable())\n";
+    OS.indent(6) << "  return false;\n";
+
+    OS.indent(6) << "unsigned SrcOpIdx1 = " << SecondOpIdx
+                 << ", SrcOpIdx2 = TargetInstrInfo::CommuteAnyOperandIndex;\n";
+    OS.indent(6)
+        << "if (TII.findCommutedOpIndices(SecondMI, SrcOpIdx1, SrcOpIdx2))\n";
+    OS.indent(6) << "  if (SecondMI.getOperand(" << FirstOpIdx
+                 << ").getReg() != SecondMI.getOperand(SrcOpIdx2).getReg())\n";
+    OS.indent(6) << "    return false;\n";
+    OS.indent(4) << "}\n";
+    OS.indent(2) << "}\n";
   } else {
     PrintFatalError(Predicate->getLoc(),
                     "Unsupported predicate for second instruction: " +
@@ -206,8 +228,19 @@ void MacroFusionPredicatorEmitter::emitBothPredicate(Record *Predicate,
                  << ").isReg() &&\n";
     OS.indent(2) << "      FirstMI->getOperand(" << FirstOpIdx
                  << ").getReg() == SecondMI.getOperand(" << SecondOpIdx
-                 << ").getReg()))\n";
-    OS.indent(2) << "  return false;\n";
+                 << ").getReg())) {\n";
+
+    OS.indent(4) << "if (!SecondMI.getDesc().isCommutable())\n";
+    OS.indent(4) << "  return false;\n";
+
+    OS.indent(4) << "unsigned SrcOpIdx1 = " << SecondOpIdx
+                 << ", SrcOpIdx2 = TargetInstrInfo::CommuteAnyOperandIndex;\n";
+    OS.indent(4)
+        << "if (TII.findCommutedOpIndices(SecondMI, SrcOpIdx1, SrcOpIdx2))\n";
+    OS.indent(4) << "  if (FirstMI->getOperand(" << FirstOpIdx
+                 << ").getReg() != SecondMI.getOperand(SrcOpIdx2).getReg())\n";
+    OS.indent(4) << "    return false;\n";
+    OS.indent(2) << "}\n";
   } else
     PrintFatalError(Predicate->getLoc(),
                     "Unsupported predicate for both instruction: " +
