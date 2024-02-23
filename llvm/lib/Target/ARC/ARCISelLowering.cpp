@@ -737,6 +737,10 @@ bool ARCTargetLowering::isLegalAddressingMode(const DataLayout &DL,
                                               const AddrMode &AM, Type *Ty,
                                               unsigned AS,
                                               Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   return AM.Scale == 0;
 }
 

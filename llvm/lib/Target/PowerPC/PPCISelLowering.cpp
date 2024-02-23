@@ -16814,6 +16814,10 @@ bool PPCTargetLowering::isLegalAddressingMode(const DataLayout &DL,
                                               const AddrMode &AM, Type *Ty,
                                               unsigned AS,
                                               Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   // Vector type r+i form is supported since power9 as DQ form. We don't check
   // the offset matching DQ form requirement(off % 16 == 0), because on PowerPC,
   // imm form is preferred and the offset can be adjusted to use imm form later

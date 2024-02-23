@@ -1058,6 +1058,10 @@ bool AVRTargetLowering::isLegalAddressingMode(const DataLayout &DL,
                                               const AddrMode &AM, Type *Ty,
                                               unsigned AS,
                                               Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   int64_t Offs = AM.BaseOffs;
 
   // Allow absolute addresses.

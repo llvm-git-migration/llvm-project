@@ -5092,6 +5092,10 @@ bool NVPTXTargetLowering::isLegalAddressingMode(const DataLayout &DL,
   // - [areg+immoff]
   // - [immAddr]
 
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   if (AM.BaseGV) {
     return !AM.BaseOffs && !AM.HasBaseReg && !AM.Scale;
   }

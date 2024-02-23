@@ -19645,6 +19645,10 @@ bool ARMTargetLowering::isLegalT1ScaledAddressingMode(const AddrMode &AM,
 bool ARMTargetLowering::isLegalAddressingMode(const DataLayout &DL,
                                               const AddrMode &AM, Type *Ty,
                                               unsigned AS, Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   EVT VT = getValueType(DL, Ty, true);
   if (!isLegalAddressImmediate(AM.BaseOffs, VT, Subtarget))
     return false;

@@ -784,6 +784,10 @@ bool WebAssemblyTargetLowering::isLegalAddressingMode(const DataLayout &DL,
                                                       const AddrMode &AM,
                                                       Type *Ty, unsigned AS,
                                                       Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   // WebAssembly offsets are added as unsigned without wrapping. The
   // isLegalAddressingMode gives us no way to determine if wrapping could be
   // happening, so we approximate this by accepting only non-negative offsets.

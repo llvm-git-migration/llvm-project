@@ -1058,6 +1058,10 @@ supportedAddressingMode(Instruction *I, bool HasVector) {
 
 bool SystemZTargetLowering::isLegalAddressingMode(const DataLayout &DL,
        const AddrMode &AM, Type *Ty, unsigned AS, Instruction *I) const {
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   // Punt on globals for now, although they can be used in limited
   // RELATIVE LONG cases.
   if (AM.BaseGV)

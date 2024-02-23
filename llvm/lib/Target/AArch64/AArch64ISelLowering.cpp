@@ -16345,6 +16345,10 @@ bool AArch64TargetLowering::isLegalAddressingMode(const DataLayout &DL,
   //  reg1 + reg2
   //  reg + SIZE_IN_BYTES * reg
 
+  // No scalable offsets allowed.
+  if (AMode.OffsetIsScalable)
+    return false;
+
   // No global is ever allowed as a base.
   if (AMode.BaseGV)
     return false;

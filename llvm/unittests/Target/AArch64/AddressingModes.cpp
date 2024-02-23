@@ -13,11 +13,13 @@ using namespace llvm;
 namespace {
 
 struct AddrMode : public TargetLowering::AddrMode {
-  constexpr AddrMode(GlobalValue *GV, int64_t Offs, bool HasBase, int64_t S) {
+  constexpr AddrMode(GlobalValue *GV, int64_t Offs, bool HasBase, int64_t S,
+                     bool ScalableOffset = false) {
     BaseGV = GV;
     BaseOffs = Offs;
     HasBaseReg = HasBase;
     Scale = S;
+    OffsetIsScalable = ScalableOffset;
   }
 };
 struct TestCase {

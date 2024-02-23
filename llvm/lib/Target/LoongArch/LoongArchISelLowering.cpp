@@ -4895,6 +4895,10 @@ bool LoongArchTargetLowering::isLegalAddressingMode(const DataLayout &DL,
   //  4. reg1 + reg2
   // TODO: Add more checks after support vector extension.
 
+  // No scalable offsets allowed.
+  if (AM.OffsetIsScalable)
+    return false;
+
   // No global is ever allowed as a base.
   if (AM.BaseGV)
     return false;
