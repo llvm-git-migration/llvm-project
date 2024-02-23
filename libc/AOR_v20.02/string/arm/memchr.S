@@ -49,7 +49,7 @@ __memchr_arm:
 	and	r1,r1,#0xff	@ Don't think we can trust the caller to actually pass a char
 
 	cmp	r2,#16		@ If it's short don't bother with anything clever
-	blt	20f 
+	blt	20f
 
 	tst	r0, #7		@ If it's already aligned skip the next bit
 	beq	10f
@@ -87,7 +87,7 @@ __memchr_arm:
 	pop	{r4,r5,r6,r7}
 	and	r1,r1,#0xff	@ Get r1 back to a single character from the expansion above
 	and	r2,r2,#7	@ Leave the count remaining as the number after the double words have been done
- 
+
 20:
 	cbz	r2, 40f		@ 0 length or hit the end already then not found
 
