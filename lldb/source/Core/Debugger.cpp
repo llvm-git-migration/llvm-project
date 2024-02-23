@@ -103,7 +103,14 @@ static std::recursive_mutex *g_debugger_list_mutex_ptr =
     nullptr; // NOTE: intentional leak to avoid issues with C++ destructor chain
 static Debugger::DebuggerList *g_debugger_list_ptr =
     nullptr; // NOTE: intentional leak to avoid issues with C++ destructor chain
+
+/// Thread Pool
+/// @{
 static llvm::ThreadPool *g_thread_pool = nullptr;
+static std::chrono::milliseconds g_timeout_milliseconds;
+static lldb::TimeoutCallback g_timeout_callback = nullptr;
+static void *g_timeout_callback_baton = nullptr;
+/// @}
 
 static constexpr OptionEnumValueElement g_show_disassembly_enum_values[] = {
     {
@@ -623,8 +630,20 @@ void Debugger::Terminate() {
   }
 
   if (g_thread_pool) {
-    // The destructor will wait for all the threads to complete.
-    delete g_thread_pool;
+    // Delete the thread pool in a different thread so we can set a timeout.
+    std::future<void> future = std::async(std::launch::async, []() {
+      // The destructor will wait for all the threads to complete.
+      delete g_thread_pool;
+    });
+
+    if (g_timeout_callback) {
+      if (future.wait_for(g_timeout_milliseconds) ==
+          std::future_status::timeout)
+        g_timeout_callback(g_timeout_callback_baton);
+    }
+
+    // Wait for the asynchronous task to complete.
+    future.wait();
   }
 
   if (g_debugger_list_ptr && g_debugger_list_mutex_ptr) {
@@ -2194,4 +2213,12 @@ llvm::ThreadPool &Debugger::GetThreadPool() {
   assert(g_thread_pool &&
          "Debugger::GetThreadPool called before Debugger::Initialize");
   return *g_thread_pool;
+}
+
+void Debugger::SetThreadPoolTimeoutCallback(
+    std::chrono::milliseconds timeout_milliseconds,
+    lldb::TimeoutCallback timeout_callback, void *baton) {
+  g_timeout_milliseconds = timeout_milliseconds;
+  g_timeout_callback = timeout_callback;
+  g_timeout_callback_baton = baton;
 }

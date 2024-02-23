@@ -69,6 +69,7 @@ typedef int pipe_t;                     // Host pipe type
 #define LLDB_INVALID_HOST_THREAD ((lldb::thread_t)NULL)
 #define LLDB_INVALID_PIPE ((lldb::pipe_t)-1)
 
+typedef void (*TimeoutCallback)(void *baton);
 typedef void (*LogOutputCallback)(const char *, void *baton);
 typedef bool (*CommandOverrideCallback)(void *baton, const char **argv);
 typedef bool (*ExpressionCancelCallback)(ExpressionEvaluationPhase phase,

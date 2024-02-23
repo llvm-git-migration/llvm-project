@@ -96,6 +96,10 @@ static void reset_stdin_termios() {
   }
 }
 
+static void thread_pool_timeout_callback(void *) {
+  fprintf(stderr, "Waiting for background tasks to complete...");
+}
+
 Driver::Driver()
     : SBBroadcaster("Driver"), m_debugger(SBDebugger::Create(false)) {
   // We want to be able to handle CTRL+D in the terminal to have it terminate
@@ -816,6 +820,8 @@ int main(int argc, char const *argv[]) {
     }
   }
 
+  SBDebugger::SetThreadPoolTimeoutCallback(
+      /*timeout_milliseconds=*/1000, &thread_pool_timeout_callback, nullptr);
   SBDebugger::Terminate();
   return exit_code;
 }

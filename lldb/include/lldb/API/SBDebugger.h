@@ -331,6 +331,13 @@ public:
   void SetDestroyCallback(lldb::SBDebuggerDestroyCallback destroy_callback,
                           void *baton);
 
+  /// Register a callback that is called when destroying the thread pool exceeds
+  /// the given timeout.
+  static void
+  SetThreadPoolTimeoutCallback(uint64_t timeout_milliseconds,
+                               lldb::SBDebuggerTimeoutCallback timeout_callback,
+                               void *baton);
+
 #ifndef SWIG
   LLDB_DEPRECATED_FIXME("Use DispatchInput(const void *, size_t)",
                         "DispatchInput(const void *, size_t)")

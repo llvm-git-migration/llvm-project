@@ -250,6 +250,11 @@ public:
 
   void SetLoggingCallback(lldb::LogOutputCallback log_callback, void *baton);
 
+  static void
+  SetThreadPoolTimeoutCallback(std::chrono::milliseconds timeout_milliseconds,
+                               lldb::TimeoutCallback timeout_callback,
+                               void *baton);
+
   // Properties Functions
   enum StopDisassemblyType {
     eStopDisassemblyTypeNever = 0,

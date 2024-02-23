@@ -1695,6 +1695,14 @@ void SBDebugger::SetDestroyCallback(
   }
 }
 
+void SBDebugger::SetThreadPoolTimeoutCallback(
+    uint64_t timeout_milliseconds,
+    lldb::SBDebuggerTimeoutCallback timeout_callback, void *baton) {
+  LLDB_INSTRUMENT_VA(timeout_milliseconds, timeout_callback, baton);
+  Debugger::SetThreadPoolTimeoutCallback(
+      std::chrono::milliseconds(timeout_milliseconds), timeout_callback, baton);
+}
+
 SBTrace
 SBDebugger::LoadTraceFromFile(SBError &error,
                               const SBFileSpec &trace_description_file) {
