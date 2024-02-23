@@ -1265,6 +1265,7 @@ bool Procedure::IsCompatibleWith(const Procedure &actual, std::string *whyNot,
   }
   Attrs differences{attrs ^ actualAttrs};
   differences.reset(Attr::Subroutine); // dealt with specifically later
+  differences.reset(Attr::ImplicitInterface);
   if (!differences.empty()) {
     if (whyNot) {
       auto sep{": "s};
