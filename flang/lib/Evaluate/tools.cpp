@@ -1097,7 +1097,8 @@ std::optional<parser::MessageFixedText> CheckProcCompatibility(bool isCall,
           *rhsProcedure->functionResult, &whyNotCompatible)) {
     msg =
         "Function %s associated with incompatible function designator '%s': %s"_err_en_US;
-  } else if (lhsProcedure->IsCompatibleWith(*rhsProcedure, &whyNotCompatible,
+  } else if (lhsProcedure->IsCompatibleWith(*rhsProcedure,
+                 /*ignoreImplictVsExplicit=*/true, &whyNotCompatible,
                  specificIntrinsic, &warning)) {
     // OK
   } else if (isCall) {

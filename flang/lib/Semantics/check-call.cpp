@@ -975,7 +975,8 @@ static void CheckProcedureArg(evaluate::ActualArgument &arg,
           if (interface.HasExplicitInterface()) {
             std::string whyNot;
             std::optional<std::string> warning;
-            if (!interface.IsCompatibleWith(argInterface, &whyNot,
+            if (!interface.IsCompatibleWith(argInterface,
+                    /*ignoreImplicitVsExplicit=*/true, &whyNot,
                     /*specificIntrinsic=*/nullptr, &warning)) {
               // 15.5.2.9(1): Explicit interfaces must match
               if (argInterface.HasExplicitInterface()) {
