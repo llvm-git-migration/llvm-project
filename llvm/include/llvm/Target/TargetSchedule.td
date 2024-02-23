@@ -620,6 +620,8 @@ class BothFusionPredicateWithMCInstPredicate<MCInstPredicate pred>
 // Tie firstOpIdx and secondOpIdx. The operand of `FirstMI` at position
 // `firstOpIdx` should be the same as the operand of `SecondMI` at position
 // `secondOpIdx`.
+// If the operand at `secondOpIdx` has commutable operand, then the commutable
+// operand will be checked too.
 class TieReg<int firstOpIdx, int secondOpIdx> : BothFusionPredicate {
   int FirstOpIdx = firstOpIdx;
   int SecondOpIdx = secondOpIdx;
