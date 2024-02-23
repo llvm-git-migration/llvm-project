@@ -3986,8 +3986,8 @@ SUnit *PostGenericScheduler::pickNode(bool &IsTopNode) {
       } else {
         CandPolicy NoPolicy;
         SchedCandidate BotCand(NoPolicy);
-        // Set the top-down policy based on the state of the current top zone
-        // and the instructions outside the zone, including the bottom zone.
+        // Set the bottom-up policy based on the state of the current bottom
+        // zone and the instructions outside the zone, including the top zone.
         setPolicy(BotCand.Policy, /*IsPostRA=*/true, Bot, nullptr);
         pickNodeFromQueue(Bot, BotCand);
         assert(BotCand.Reason != NoCand && "failed to find a candidate");
