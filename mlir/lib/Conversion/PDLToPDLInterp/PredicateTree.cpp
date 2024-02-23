@@ -15,6 +15,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "llvm/ADT/MapVector.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
 #include <queue>
@@ -272,8 +273,17 @@ static void getConstraintPredicates(pdl::ApplyNativeConstraintOp op,
   // Push the constraint to the furthest position.
   Position *pos = *std::max_element(allPositions.begin(), allPositions.end(),
                                     comparePosDepth);
-  PredicateBuilder::Predicate pred =
-      builder.getConstraint(op.getName(), allPositions, op.getIsNegated());
+  ResultRange results = op.getResults();
+  PredicateBuilder::Predicate pred = builder.getConstraint(
+      op.getName(), allPositions, SmallVector<Type>(results.getTypes()),
+      op.getIsNegated());
+
+  // for each result register a position so it can be used later
+  for (auto result : llvm::enumerate(results)) {
+    ConstraintQuestion *q = cast<ConstraintQuestion>(pred.first);
+    ConstraintPosition *pos = builder.getConstraintPosition(q, result.index());
+    inputs[result.value()] = pos;
+  }
   predList.emplace_back(pos, pred);
 }
 
@@ -875,6 +885,27 @@ static void insertExitNode(std::unique_ptr<MatcherNode> *root) {
   *root = std::make_unique<ExitNode>();
 }
 
+/// Sorts the range begin/end with the partial order given by cmp.
+template <typename Iterator, typename Compare>
+void stableTopologicalSort(Iterator begin, Iterator end, Compare cmp) {
+  while (begin != end) {
+    // Cannot compute sortBeforeOthers in the predicate of stable_partition
+    // because stable_partition will not keep the [begin, end) range intact
+    // while it runs.
+    llvm::SmallPtrSet<typename Iterator::value_type, 16> sortBeforeOthers;
+    for (auto i = begin; i != end; ++i) {
+      if (std::none_of(begin, end, [&](auto const &b) { return cmp(b, *i); }))
+        sortBeforeOthers.insert(*i);
+    }
+
+    auto const next = std::stable_partition(begin, end, [&](auto const &a) {
+      return sortBeforeOthers.contains(a);
+    });
+    assert(next != begin && "not a partial ordering");
+    begin = next;
+  }
+}
+
 /// Given a module containing PDL pattern operations, generate a matcher tree
 /// using the patterns within the given module and return the root matcher node.
 std::unique_ptr<MatcherNode>
@@ -954,6 +985,24 @@ MatcherNode::generateMatcherTree(ModuleOp module, PredicateBuilder &builder,
   llvm::sort(ordered, [](OrderedPredicate *lhs, OrderedPredicate *rhs) {
     return *lhs < *rhs;
   });
+
+  // Mostly keep the now established order, but also ensure that
+  // ConstraintQuestions come after the results they use.
+  stableTopologicalSort(ordered.begin(), ordered.end(),
+                        [](OrderedPredicate *a, OrderedPredicate *b) {
+                          auto *cqa = dyn_cast<ConstraintQuestion>(a->question);
+                          auto *cqb = dyn_cast<ConstraintQuestion>(b->question);
+                          if (cqa && cqb) {
+                            // Does any argument of b use a? Then b must be
+                            // sorted after a.
+                            return llvm::any_of(
+                                cqb->getArgs(), [&](Position *p) {
+                                  auto *cp = dyn_cast<ConstraintPosition>(p);
+                                  return cp && cp->getQuestion() == cqa;
+                                });
+                          }
+                          return false;
+                        });
 
   // Build the matchers for each of the pattern predicate lists.
   std::unique_ptr<MatcherNode> root;

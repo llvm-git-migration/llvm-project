@@ -148,6 +148,12 @@ private:
   /// A mapping between pattern operations and the corresponding configuration
   /// set.
   DenseMap<Operation *, PDLPatternConfigSet *> *configMap;
+
+  /// A mapping from a constraint question and result index that together
+  /// refer to a value created by a constraint to the temporary placeholder
+  /// values created for them.
+  std::multimap<std::pair<ConstraintQuestion *, unsigned>, Value>
+      constraintResultMap;
 };
 } // namespace
 
@@ -364,6 +370,21 @@ Value PatternLowering::getValueAt(Block *&currentBlock, Position *pos) {
           loc, cast<ArrayAttr>(rawTypeAttr));
     break;
   }
+  case Predicates::ConstraintResultPos: {
+    // The corresponding pdl.ApplyNativeConstraint op has already been deleted
+    // and the new pdl_interp.ApplyConstraint has not been created yet. To
+    // enable referring to results created by this operation we build a
+    // placeholder value that will be replaced when the actual
+    // pdl_interp.ApplyConstraint operation is created.
+    auto *constrResPos = cast<ConstraintPosition>(pos);
+    Value placeholderValue = builder.create<pdl_interp::CreateAttributeOp>(
+        loc, StringAttr::get(builder.getContext(), "placeholder"));
+    constraintResultMap.insert(
+        {{constrResPos->getQuestion(), constrResPos->getIndex()},
+         placeholderValue});
+    value = placeholderValue;
+    break;
+  }
   default:
     llvm_unreachable("Generating unknown Position getter");
     break;
@@ -447,9 +468,25 @@ void PatternLowering::generate(BoolNode *boolNode, Block *&currentBlock,
   }
   case Predicates::ConstraintQuestion: {
     auto *cstQuestion = cast<ConstraintQuestion>(question);
-    builder.create<pdl_interp::ApplyConstraintOp>(
-        loc, cstQuestion->getName(), args, cstQuestion->getIsNegated(), success,
-        failure);
+    auto applyConstraintOp = builder.create<pdl_interp::ApplyConstraintOp>(
+        loc, cstQuestion->getResultTypes(), cstQuestion->getName(), args,
+        cstQuestion->getIsNegated(), success, failure);
+    // Replace the generated placeholders with the results of the constraint and
+    // erase them
+    for (auto result : llvm::enumerate(applyConstraintOp.getResults())) {
+      std::pair<ConstraintQuestion *, unsigned> substitutionKey = {
+          cstQuestion, result.index()};
+      // Check if there are substitutions to perform. If the result is never
+      // used or multiple calls to the same constraint have been merged,
+      // no substitutions will have been generated for this specific op.
+      auto range = constraintResultMap.equal_range(substitutionKey);
+      std::for_each(range.first, range.second, [&](const auto &elem) {
+        Value placeholder = elem.second;
+        placeholder.replaceAllUsesWith(result.value());
+        placeholder.getDefiningOp()->erase();
+      });
+      constraintResultMap.erase(substitutionKey);
+    }
     break;
   }
   default:
