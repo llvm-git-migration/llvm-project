@@ -61,6 +61,10 @@ static cl::opt<bool> UserSwitchRangeToICmp(
     cl::desc(
         "Convert switches into an integer range comparison (default = false)"));
 
+static cl::opt<bool> UserSwitchToSelect(
+    "switch-to-select", cl::Hidden, cl::init(false),
+    cl::desc("Convert switches into icmp + select (default = false)"));
+
 static cl::opt<bool> UserSwitchToLookup(
     "switch-to-lookup", cl::Hidden, cl::init(false),
     cl::desc("Convert switches to lookup tables (default = false)"));
@@ -323,6 +327,8 @@ static void applyCommandLineOverridesToOptions(SimplifyCFGOptions &Options) {
     Options.HoistCommonInsts = UserHoistCommonInsts;
   if (UserSinkCommonInsts.getNumOccurrences())
     Options.SinkCommonInsts = UserSinkCommonInsts;
+  if (UserSwitchToSelect.getNumOccurrences())
+    Options.ConvertSwitchToSelect = UserSwitchToSelect;
 }
 
 SimplifyCFGPass::SimplifyCFGPass() {

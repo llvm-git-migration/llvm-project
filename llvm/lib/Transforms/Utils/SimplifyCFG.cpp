@@ -5916,7 +5916,7 @@ static bool initializeUniqueCases(SwitchInst *SI, PHINode *&PHI,
       return false;
 
     // Only one value per case is permitted.
-    if (Results.size() > 1)
+    if (Results.size() > 3) // How many PHI instructions are hendled
       return false;
 
     // Add the case->result mapping to UniqueResults.
@@ -5953,12 +5953,31 @@ static bool initializeUniqueCases(SwitchInst *SI, PHINode *&PHI,
   return true;
 }
 
+Value *createSelectChain(Value *Condition, Constant *DefaultResult,
+                         const SwitchCaseResultVectorTy &ResultVector,
+                         unsigned StartIndex, IRBuilder<> &Builder) {
+  if (StartIndex >= ResultVector.size() && DefaultResult) {
+    return DefaultResult;
+  }
+
+  ConstantInt *CurrentCase = ResultVector[StartIndex].second[0];
+  Value *ValueCompare =
+      Builder.CreateICmpEQ(Condition, CurrentCase, "switch.selectcmp");
+
+  Value *NextSelect = createSelectChain(Condition, DefaultResult, ResultVector,
+                                        StartIndex + 1, Builder);
+
+  return Builder.CreateSelect(ValueCompare, ResultVector[StartIndex].first,
+                              NextSelect, "switch.select");
+}
+
 // Helper function that checks if it is possible to transform a switch with only
 // two cases (or two cases + default) that produces a result into a select.
 // TODO: Handle switches with more than 2 cases that map to the same result.
 static Value *foldSwitchToSelect(const SwitchCaseResultVectorTy &ResultVector,
                                  Constant *DefaultResult, Value *Condition,
-                                 IRBuilder<> &Builder) {
+                                 IRBuilder<> &Builder,
+                                 bool IsComplexSwitchTransform = false) {
   // If we are selecting between only two cases transform into a simple
   // select or a two-way select if default is possible.
   // Example:
@@ -5967,6 +5986,22 @@ static Value *foldSwitchToSelect(const SwitchCaseResultVectorTy &ResultVector,
   //   case 20: return 2;   ---->  %2 = icmp eq i32 %a, 20
   //   default: return 4;          %3 = select i1 %2, i32 2, i32 %1
   // }
+
+  if (IsComplexSwitchTransform) {
+    bool IsSizeOkay = true;
+
+    for (int i = 0; i < ResultVector.size(); i++)
+      if (ResultVector[i].second.size() != 1)
+        IsSizeOkay = false;
+
+    if (IsSizeOkay && ResultVector.size() > 2) {
+      Value *FinalSelect =
+          createSelectChain(Condition, DefaultResult, ResultVector, 0, Builder);
+      if (FinalSelect)
+        return FinalSelect;
+    }
+  }
+
   if (ResultVector.size() == 2 && ResultVector[0].second.size() == 1 &&
       ResultVector[1].second.size() == 1) {
     ConstantInt *FirstCase = ResultVector[0].second[0];
@@ -6071,21 +6106,29 @@ static void removeSwitchAfterSelectFold(SwitchInst *SI, PHINode *PHI,
 /// switch with a select. Returns true if the fold was made.
 static bool trySwitchToSelect(SwitchInst *SI, IRBuilder<> &Builder,
                               DomTreeUpdater *DTU, const DataLayout &DL,
-                              const TargetTransformInfo &TTI) {
+                              const TargetTransformInfo &TTI,
+                              bool IsComplexSwitchTransform = false) {
   Value *const Cond = SI->getCondition();
   PHINode *PHI = nullptr;
   BasicBlock *CommonDest = nullptr;
   Constant *DefaultResult;
   SwitchCaseResultVectorTy UniqueResults;
   // Collect all the cases that will deliver the same value from the switch.
-  if (!initializeUniqueCases(SI, PHI, CommonDest, UniqueResults, DefaultResult,
-                             DL, TTI, /*MaxUniqueResults*/ 2))
+  if (!initializeUniqueCases(
+          SI, PHI, CommonDest, UniqueResults, DefaultResult, DL, TTI,
+          /*MaxUniqueResults*/ 7)) // I think that the next step is to expand
+                                   // this function to return a list of basic
+                                   // blocks that can be merged
     return false;
 
   assert(PHI != nullptr && "PHI for value select not found");
   Builder.SetInsertPoint(SI);
-  Value *SelectValue =
-      foldSwitchToSelect(UniqueResults, DefaultResult, Cond, Builder);
+  Value *SelectValue = foldSwitchToSelect(
+      UniqueResults, DefaultResult, Cond, Builder,
+      IsComplexSwitchTransform); //  Afterwards this function should just merge
+                                 //  these blocks with the predaccessor of the
+                                 //  switch. Also, UniqueResults would no longer
+                                 //  be just constants
   if (!SelectValue)
     return false;
 
@@ -7028,7 +7071,11 @@ bool SimplifyCFGOpt::simplifySwitch(SwitchInst *SI, IRBuilder<> &Builder) {
   if (eliminateDeadSwitchCases(SI, DTU, Options.AC, DL))
     return requestResimplify();
 
-  if (trySwitchToSelect(SI, Builder, DTU, DL, TTI))
+  bool IsSwitchToSelect = false;
+  if (Options.ConvertSwitchToSelect)
+    IsSwitchToSelect = true;
+
+  if (trySwitchToSelect(SI, Builder, DTU, DL, TTI, IsSwitchToSelect))
     return requestResimplify();
 
   if (Options.ForwardSwitchCondToPhi && ForwardSwitchConditionToPHI(SI))

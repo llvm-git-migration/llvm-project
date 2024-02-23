@@ -30,6 +30,7 @@ struct SimplifyCFGOptions {
   bool SinkCommonInsts = false;
   bool SimplifyCondBranch = true;
   bool SpeculateBlocks = true;
+  bool ConvertSwitchToSelect = false;
 
   AssumptionCache *AC = nullptr;
 
@@ -44,6 +45,10 @@ struct SimplifyCFGOptions {
   }
   SimplifyCFGOptions &convertSwitchRangeToICmp(bool B) {
     ConvertSwitchRangeToICmp = B;
+    return *this;
+  }
+  SimplifyCFGOptions &convertSwitchToSelect(bool B) {
+    ConvertSwitchToSelect = B;
     return *this;
   }
   SimplifyCFGOptions &convertSwitchToLookupTable(bool B) {
