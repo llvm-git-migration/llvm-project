@@ -91,3 +91,25 @@ def TuneLDADDFusion
                    CheckIsImmOperand<2>,
                    CheckImmOperand<2, 0>
                  ]>>;
+
+// These should be covered by Zba extension.
+// * shift left by one and add:
+//   slli r1, r0, 1
+//   add r1, r1, r2
+// * shift left by two and add:
+//   slli r1, r0, 2
+//   add r1, r1, r2
+// * shift left by three and add:
+//   slli r1, r0, 3
+//   add r1, r1, r2
+let IsCommutable = 1 in
+def ShiftNAddFusion
+  : SimpleFusion<"shift-n-add-fusion", "HasShiftNAddFusion",
+                 "Enable SLLI+ADD to be fused to shift left by 1/2/3 and add",
+                 CheckAll<[
+                   CheckOpcode<[SLLI]>,
+                   CheckAny<[CheckImmOperand<2, 1>,
+                             CheckImmOperand<2, 2>,
+                             CheckImmOperand<2, 3>]>
+                 ]>,
+                 CheckOpcode<[ADD]>>;
