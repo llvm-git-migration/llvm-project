@@ -50,7 +50,8 @@ private:
 
   /// Generate interpreter operations for the tree rooted at the given matcher
   /// node, in the specified region.
-  Block *generateMatcher(MatcherNode &node, Region &region);
+  Block *generateMatcher(MatcherNode &node, Region &region,
+                         Block *block = nullptr);
 
   /// Get or create an access to the provided positional value in the current
   /// block. This operation may mutate the provided block pointer if nested
@@ -148,6 +149,12 @@ private:
   /// A mapping between pattern operations and the corresponding configuration
   /// set.
   DenseMap<Operation *, PDLPatternConfigSet *> *configMap;
+
+  /// A mapping from a constraint question and result index that together
+  /// refer to a value created by a constraint to the temporary placeholder
+  /// values created for them.
+  std::multimap<std::pair<ConstraintQuestion *, unsigned>, Value>
+      constraintResultMap;
 };
 } // namespace
 
@@ -182,9 +189,12 @@ void PatternLowering::lower(ModuleOp module) {
   firstMatcherBlock->erase();
 }
 
-Block *PatternLowering::generateMatcher(MatcherNode &node, Region &region) {
+Block *PatternLowering::generateMatcher(MatcherNode &node, Region &region,
+                                        Block *block) {
   // Push a new scope for the values used by this matcher.
-  Block *block = &region.emplaceBlock();
+  if (!block) {
+    block = &region.emplaceBlock();
+  }
   ValueMapScope scope(values);
 
   // If this is the return node, simply insert the corresponding interpreter
@@ -364,6 +374,19 @@ Value PatternLowering::getValueAt(Block *&currentBlock, Position *pos) {
           loc, cast<ArrayAttr>(rawTypeAttr));
     break;
   }
+  case Predicates::ConstraintResultPos: {
+    // The corresponding pdl.ApplyNativeConstraint op has already been deleted
+    // and the new pdl_interp.ApplyConstraint has not been created yet. To
+    // enable referring to results created by this operation we build a
+    // placeholder value that will be replaced when the actual
+    // pdl_interp.ApplyConstraint operation is created.
+    auto *constrResPos = cast<ConstraintPosition>(pos);
+    auto i = constraintResultMap.find(
+        {constrResPos->getQuestion(), constrResPos->getIndex()});
+    assert(i != constraintResultMap.end());
+    value = i->second;
+    break;
+  }
   default:
     llvm_unreachable("Generating unknown Position getter");
     break;
@@ -390,12 +413,11 @@ void PatternLowering::generate(BoolNode *boolNode, Block *&currentBlock,
       args.push_back(getValueAt(currentBlock, position));
   }
 
-  // Generate the matcher in the current (potentially nested) region
-  // and get the failure successor.
-  Block *success = generateMatcher(*boolNode->getSuccessNode(), *region);
+  // Generate a new block as success successor and get the failure successor.
+  Block *success = &region->emplaceBlock();
   Block *failure = failureBlockStack.back();
 
-  // Finally, create the predicate.
+  // Create the predicate.
   builder.setInsertionPointToEnd(currentBlock);
   Predicates::Kind kind = question->getKind();
   switch (kind) {
@@ -447,14 +469,26 @@ void PatternLowering::generate(BoolNode *boolNode, Block *&currentBlock,
   }
   case Predicates::ConstraintQuestion: {
     auto *cstQuestion = cast<ConstraintQuestion>(question);
-    builder.create<pdl_interp::ApplyConstraintOp>(
-        loc, cstQuestion->getName(), args, cstQuestion->getIsNegated(), success,
-        failure);
+    auto applyConstraintOp = builder.create<pdl_interp::ApplyConstraintOp>(
+        loc, cstQuestion->getResultTypes(), cstQuestion->getName(), args,
+        cstQuestion->getIsNegated(), success, failure);
+
+    // Replace the generated placeholders with the results of the constraint and
+    // erase them
+    for (auto result : llvm::enumerate(applyConstraintOp.getResults())) {
+      std::pair<ConstraintQuestion *, unsigned> substitutionKey = {
+          cstQuestion, result.index()};
+      constraintResultMap.insert({substitutionKey, result.value()});
+    }
     break;
   }
   default:
     llvm_unreachable("Generating unknown Predicate operation");
   }
+
+  // Generate the matcher in the current (potentially nested) region.
+  // This might use the results of the current predicate.
+  generateMatcher(*boolNode->getSuccessNode(), *region, success);
 }
 
 template <typename OpT, typename PredT, typename ValT = typename PredT::KeyTy>
