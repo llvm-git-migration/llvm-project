@@ -1342,7 +1342,7 @@ public:
   bool isAsmOnlyOpcode(int MCOp) const;
 
   bool isRenamedInGFX9(int Opcode) const;
-  
+
   const TargetRegisterClass *getRegClass(const MCInstrDesc &TID, unsigned OpNum,
                                          const TargetRegisterInfo *TRI,
                                          const MachineFunction &MF)
