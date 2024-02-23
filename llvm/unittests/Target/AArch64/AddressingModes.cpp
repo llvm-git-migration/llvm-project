@@ -155,6 +155,41 @@ const std::initializer_list<TestCase> Tests = {
     {{nullptr, 4096 + 1, true, 0}, 8, false},
 
 };
+
+struct SVETestCase {
+  AddrMode AM;
+  unsigned TypeBits;
+  unsigned NumElts;
+  bool Result;
+};
+
+const std::initializer_list<SVETestCase> SVETests = {
+    // {BaseGV, BaseOffs, HasBaseReg, Scale, Scalable}, EltBits, Count, Result
+    // Test immediate range -- [-8,7] vector's worth.
+    // <vscale x 16 x i8>, increment by one vector
+    {{nullptr, 16, true, 0, true}, 8, 16, false},
+    // <vscale x 4 x i32>, increment by eight vectors
+    {{nullptr, 128, true, 0, true}, 32, 4, false},
+    // <vscale x 8 x i16>, increment by seven vectors
+    {{nullptr, 112, true, 0, true}, 16, 8, false},
+    // <vscale x 2 x i64>, decrement by eight vectors
+    {{nullptr, -128, true, 0, true}, 64, 2, false},
+    // <vscale x 16 x i8>, decrement by nine vectors
+    {{nullptr, -144, true, 0, true}, 8, 16, false},
+
+    // Half the size of a vector register, but allowable with extending
+    // loads and truncating stores
+    // <vscale x 8 x i8>, increment by three vectors
+    {{nullptr, 24, true, 0, true}, 8, 8, false},
+
+    // Test invalid types or offsets
+    // <vscale x 5 x i32>, increment by one vector (base size > 16B)
+    {{nullptr, 20, true, 0, true}, 32, 5, false},
+    // <vscale x 8 x i16>, increment by half a vector
+    {{nullptr, 8, true, 0, true}, 16, 8, false},
+    // <vscale x 3 x i8>, increment by 3 vectors (non-power-of-two)
+    {{nullptr, 9, true, 0, true}, 8, 3, false},
+};
 } // namespace
 
 TEST(AddressingModes, AddressingModes) {
@@ -180,5 +215,12 @@ TEST(AddressingModes, AddressingModes) {
   for (const auto &Test : Tests) {
     Type *Typ = Type::getIntNTy(Ctx, Test.TypeBits);
     ASSERT_EQ(TLI->isLegalAddressingMode(DL, Test.AM, Typ, 0), Test.Result);
+  }
+
+  for (const auto &SVETest : SVETests) {
+    Type *Ty = VectorType::get(Type::getIntNTy(Ctx, SVETest.TypeBits),
+                               ElementCount::getScalable(SVETest.NumElts));
+    ASSERT_EQ(TLI->isLegalAddressingMode(DL, SVETest.AM, Ty, 0),
+              SVETest.Result);
   }
 }
