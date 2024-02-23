@@ -8398,6 +8398,7 @@ bool ResolveNamesVisitor::Pre(const parser::PointerAssignmentStmt &x) {
   Walk(expr);
   return false;
 }
+
 void ResolveNamesVisitor::Post(const parser::Designator &x) {
   ResolveDesignator(x);
 }
@@ -8405,7 +8406,6 @@ void ResolveNamesVisitor::Post(const parser::SubstringInquiry &x) {
   Walk(std::get<parser::SubstringRange>(x.v.t).t);
   ResolveDataRef(std::get<parser::DataRef>(x.v.t));
 }
-
 void ResolveNamesVisitor::Post(const parser::ProcComponentRef &x) {
   ResolveStructureComponent(x.v.thing);
 }
@@ -8413,6 +8413,7 @@ void ResolveNamesVisitor::Post(const parser::TypeGuardStmt &x) {
   DeclTypeSpecVisitor::Post(x);
   ConstructVisitor::Post(x);
 }
+
 bool ResolveNamesVisitor::Pre(const parser::StmtFunctionStmt &x) {
   if (HandleStmtFunction(x)) {
     return false;
@@ -8950,6 +8951,8 @@ void ResolveNamesVisitor::EndScopeForNode(const ProgramTree &node) {
 // pointers, are deferred until all of the pertinent specification parts
 // have been visited.  This deferred processing enables the use of forward
 // references in these circumstances.
+// Data statement objects with implicit derived types are finally
+// resolved here.
 class DeferredCheckVisitor {
 public:
   explicit DeferredCheckVisitor(ResolveNamesVisitor &resolver)
@@ -9010,6 +9013,16 @@ public:
       resolver_.CheckBindings(tbps);
     }
   }
+  bool Pre(const parser::DataStmtObject &) {
+    ++dataStmtObjectNesting_;
+    return true;
+  }
+  void Post(const parser::DataStmtObject &) { --dataStmtObjectNesting_; }
+  void Post(const parser::Designator &x) {
+    if (dataStmtObjectNesting_ > 0) {
+      resolver_.ResolveDesignator(x);
+    }
+  }
 
 private:
   void Init(const parser::Name &name,
@@ -9032,6 +9045,7 @@ private:
 
   ResolveNamesVisitor &resolver_;
   bool pushedScope_{false};
+  int dataStmtObjectNesting_{0};
 };
 
 // Perform checks and completions that need to happen after all of
