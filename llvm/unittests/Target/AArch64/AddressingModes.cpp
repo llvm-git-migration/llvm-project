@@ -167,20 +167,20 @@ const std::initializer_list<SVETestCase> SVETests = {
     // {BaseGV, BaseOffs, HasBaseReg, Scale, Scalable}, EltBits, Count, Result
     // Test immediate range -- [-8,7] vector's worth.
     // <vscale x 16 x i8>, increment by one vector
-    {{nullptr, 16, true, 0, true}, 8, 16, false},
+    {{nullptr, 16, true, 0, true}, 8, 16, true},
     // <vscale x 4 x i32>, increment by eight vectors
     {{nullptr, 128, true, 0, true}, 32, 4, false},
     // <vscale x 8 x i16>, increment by seven vectors
-    {{nullptr, 112, true, 0, true}, 16, 8, false},
+    {{nullptr, 112, true, 0, true}, 16, 8, true},
     // <vscale x 2 x i64>, decrement by eight vectors
-    {{nullptr, -128, true, 0, true}, 64, 2, false},
+    {{nullptr, -128, true, 0, true}, 64, 2, true},
     // <vscale x 16 x i8>, decrement by nine vectors
     {{nullptr, -144, true, 0, true}, 8, 16, false},
 
     // Half the size of a vector register, but allowable with extending
     // loads and truncating stores
     // <vscale x 8 x i8>, increment by three vectors
-    {{nullptr, 24, true, 0, true}, 8, 8, false},
+    {{nullptr, 24, true, 0, true}, 8, 8, true},
 
     // Test invalid types or offsets
     // <vscale x 5 x i32>, increment by one vector (base size > 16B)
