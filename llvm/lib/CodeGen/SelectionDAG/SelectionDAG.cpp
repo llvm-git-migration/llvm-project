@@ -4004,6 +4004,19 @@ KnownBits SelectionDAG::computeKnownBits(SDValue Op, const APInt &DemandedElts,
 
     break;
   }
+  case ISD::UINT_TO_FP: {
+    Known.makeNonNegative();
+    break;
+  }
+  case ISD::SINT_TO_FP: {
+    Known2 = computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
+    if (Known2.isNonNegative())
+      Known.makeNonNegative();
+    // For fp -> sint, need to guard -0 case.
+    else if (Known2.isNegative())
+      Known.makeNegative();
+    break;
+  }
   case ISD::FP_TO_UINT_SAT: {
     // FP_TO_UINT_SAT produces an unsigned value that fits in the saturating VT.
     EVT VT = cast<VTSDNode>(Op.getOperand(1))->getVT();
