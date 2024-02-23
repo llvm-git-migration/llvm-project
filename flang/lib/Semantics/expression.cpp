@@ -973,7 +973,8 @@ MaybeExpr ExpressionAnalyzer::Analyze(const parser::Name &n) {
         }
       }
       if (!isWholeAssumedSizeArrayOk_ &&
-          semantics::IsAssumedSizeArray(*n.symbol)) { // C1002, C1014, C1231
+          semantics::IsAssumedSizeArray(
+              ResolveAssociations(*n.symbol))) { // C1002, C1014, C1231
         AttachDeclaration(
             SayAt(n,
                 "Whole assumed-size array '%s' may not appear here without subscripts"_err_en_US,
@@ -3741,9 +3742,12 @@ MaybeExpr ExpressionAnalyzer::Analyze(const parser::Selector &selector) {
         }
       }
     }
+    // Not a Variable -> FunctionReference
+    auto restorer{AllowWholeAssumedSizeArray()};
+    return Analyze(selector.u);
+  } else { // Expr
+    return Analyze(selector.u);
   }
-  // Not a Variable -> FunctionReference; handle normally as Variable or Expr
-  return Analyze(selector.u);
 }
 
 MaybeExpr ExpressionAnalyzer::Analyze(const parser::DataStmtConstant &x) {
@@ -3999,6 +4003,7 @@ void ArgumentAnalyzer::Analyze(
     const parser::ActualArgSpec &arg, bool isSubroutine) {
   // TODO: C1534: Don't allow a "restricted" specific intrinsic to be passed.
   std::optional<ActualArgument> actual;
+  auto restorer{context_.AllowWholeAssumedSizeArray()};
   common::visit(
       common::visitors{
           [&](const common::Indirection<parser::Expr> &x) {
