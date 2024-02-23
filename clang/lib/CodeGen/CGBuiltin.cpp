@@ -16679,7 +16679,7 @@ Value *CodeGenFunction::EmitPPCBuiltinExpr(unsigned BuiltinID,
     }
 
     assert(Triple.isOSLinux() &&
-           "__builtin_cpu_support() is only supported for AIX and Linux.");
+           "__builtin_cpu_supports() is only supported for AIX and Linux.");
     unsigned FeatureWord;
     unsigned BitMask;
     std::tie(FeatureWord, BitMask) =

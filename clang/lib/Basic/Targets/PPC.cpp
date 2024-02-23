@@ -899,7 +899,8 @@ ArrayRef<Builtin::Info> PPCTargetInfo::getTargetBuiltins() const {
 bool PPCTargetInfo::validateCpuSupports(StringRef FeatureStr) const {
   llvm::Triple Triple = getTriple();
   if (Triple.isOSAIX()) {
-#define PPC_AIX_FEATURE(NAME, DESC, SUPPORT_METHOD, INDEX, MASK, OP, VALUE)    \
+#define PPC_AIX_FEATURE(NAME, DESC, SUPPORT_METHOD, INDEX, MASK, COMP_OP,      \
+                        VALUE)                                                 \
   .Case(NAME, true)
     return llvm::StringSwitch<bool>(FeatureStr)
 #include "llvm/TargetParser/PPCTargetParser.def"

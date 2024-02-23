@@ -172,7 +172,7 @@ PPC_LNX_CPU("power10",47)
   #define PPC_AIX_CPU(NAME, SUPPORT_METHOD, INDEX, COMPARE_OP, VALUE)
 #endif
 
-// __builtin_cpu_is() and __builtin_cpu_support() are supported only on Power7 and up.
+// __builtin_cpu_is() and __builtin_cpu_supports() are supported only on Power7 and up.
 PPC_AIX_CPU("power4",AIX_BUILTIN_PPC_FALSE,0,0,0)
 PPC_AIX_CPU("ppc970",AIX_BUILTIN_PPC_FALSE,0,0,0)
 PPC_AIX_CPU("power5",AIX_BUILTIN_PPC_FALSE,0,0,0)
