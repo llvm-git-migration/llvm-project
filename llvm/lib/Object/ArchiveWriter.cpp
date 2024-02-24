@@ -966,10 +966,12 @@ static Error writeArchiveToStream(raw_ostream &Out,
   SmallString<0> StringTableBuf;
   raw_svector_ostream StringTable(StringTableBuf);
   SymMap SymMap;
+  bool ShouldWriteSymtab = WriteSymtab != SymtabWritingMode::NoSymtab;
 
   // COFF symbol map uses 16-bit indexes, so we can't use it if there are too
-  // many members.
-  if (isCOFFArchive(Kind) && NewMembers.size() > 0xfffe)
+  // many members. COFF format also requires symbol table presence, so use
+  // GNU format when NoSymtab is requested.
+  if (isCOFFArchive(Kind) && (NewMembers.size() > 0xfffe || !ShouldWriteSymtab))
     Kind = object::Archive::K_GNU;
 
   // In the scenario when LLVMContext is populated SymbolicFile will contain a
@@ -998,7 +1000,6 @@ static Error writeArchiveToStream(raw_ostream &Out,
   uint64_t LastMemberHeaderOffset = 0;
   uint64_t NumSyms = 0;
   uint64_t NumSyms32 = 0; // Store symbol number of 32-bit member files.
-  bool ShouldWriteSymtab = WriteSymtab != SymtabWritingMode::NoSymtab;
 
   for (const auto &M : Data) {
     // Record the start of the member's offset
