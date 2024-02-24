@@ -37,10 +37,13 @@ void GetMemoryProfile(fill_profile_f cb, uptr *stats) {
     getpid()
   }; 
 
-  struct kinfo_proc InfoProc;
-  uptr Len = sizeof(InfoProc);
-  CHECK_EQ(internal_sysctl(Mib, ARRAY_SIZE(Mib), nullptr, (uptr *)&InfoProc, &Len, 0), 0);
-  cb(0, InfoProc.ki_rssize * GetPageSizeCached(), false, stats);
+  struct kinfo_proc *InfoProc;
+  uptr Len = sizeof(*InfoProc);
+  uptr Size = Len;
+  InfoProc = (struct kinfo_proc *)MmapOrDie(Size, "GetMemoryProfile()");
+  CHECK_EQ(internal_sysctl(Mib, ARRAY_SIZE(Mib), nullptr, (uptr *)InfoProc, &Len, 0), 0);
+  cb(0, InfoProc->ki_rssize * GetPageSizeCached(), false, stats);
+  UnmapOrDie(InfoProc, Size, true);
 }
 #endif
 
