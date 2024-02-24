@@ -74,6 +74,19 @@ void IntegerRelation::setId(VarKind kind, unsigned i, Identifier id) {
   space.getId(kind, i) = id;
 }
 
+bool IntegerRelation::findVar(Identifier id, unsigned &idx, unsigned offset)
+  const {
+  assert(space.isUsingIds() && "space must be using identifiers to findVar");
+  ArrayRef<Identifier> ids = space.getIds();
+  for (unsigned i = 0, e = ids.size(); i <= e; ++i) {
+    if (ids[i].isEqual(id)) {
+      idx = i;
+      return true;
+    }
+    }
+    return false;
+}
+
 void IntegerRelation::append(const IntegerRelation &other) {
   assert(space.isEqual(other.getSpace()) && "Spaces must be equal.");
 
