@@ -338,7 +338,7 @@ public:
 
   Kind kind() const { return (Kind)Format; }
   bool isThin() const { return IsThin; }
-  static object::Archive::Kind getDefaultKindForHost();
+  static object::Archive::Kind getDefaultKind();
   static object::Archive::Kind getDefaultKindForTriple(Triple &T);
 
   child_iterator child_begin(Error &Err, bool SkipInternal = true) const;

@@ -979,8 +979,8 @@ object::Archive::Kind Archive::getDefaultKindForTriple(Triple &T) {
   return object::Archive::K_GNU;
 }
 
-object::Archive::Kind Archive::getDefaultKindForHost() {
-  Triple HostTriple(sys::getProcessTriple());
+object::Archive::Kind Archive::getDefaultKind() {
+  Triple HostTriple(sys::getDefaultTargetTriple());
   return getDefaultKindForTriple(HostTriple);
 }
 

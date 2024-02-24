@@ -91,7 +91,7 @@ object::Archive::Kind NewArchiveMember::detectKindFromObject() const {
     }
   }
 
-  return object::Archive::getDefaultKindForHost();
+  return object::Archive::getDefaultKind();
 }
 
 Expected<NewArchiveMember>
