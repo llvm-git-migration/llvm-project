@@ -74,6 +74,19 @@ void IntegerRelation::setId(VarKind kind, unsigned i, Identifier id) {
   space.getId(kind, i) = id;
 }
 
+bool IntegerRelation::findVar(Identifier id, unsigned &idx, unsigned offset)
+  const {
+  assert(space.isUsingIds() && "space must be using identifiers to findVar");
+  ArrayRef<Identifier> ids = space.getIds();
+  for (unsigned i = 0, e = ids.size(); i <= e; ++i) {
+    if (ids[i].isEqual(id)) {
+      idx = i;
+      return true;
+    }
+    }
+    return false;
+}
+
 void IntegerRelation::append(const IntegerRelation &other) {
   assert(space.isEqual(other.getSpace()) && "Spaces must be equal.");
 
@@ -2490,6 +2503,65 @@ void IntegerRelation::applyRange(const IntegerRelation &rel) { compose(rel); }
 void IntegerRelation::printSpace(raw_ostream &os) const {
   space.print(os);
   os << getNumConstraints() << " constraints\n";
+}
+
+void IntegerRelation::composeOther(const IntegerRelation &other) {
+  assert(getNumDomainVars() == other.getNumRangeVars() &&
+         "Domain of this and range of other do not match");
+  // assert(std::equal(values.begin(), values.begin() + other.getNumDomainVars(),
+  //                   otherValues.begin() + other.getNumDomainVars()) &&
+  //        "Domain of this and range of other do not match");
+
+  IntegerRelation result = other;
+
+  unsigned thisDomain = getNumDomainVars();
+  unsigned thisRange = getNumRangeVars();
+  unsigned otherDomain = other.getNumDomainVars();
+  unsigned otherRange = other.getNumRangeVars();
+
+  // Add dimension variables temporarily to merge symbol and local vars.
+  // Convert `this` from
+  //    [thisDomain] -> [thisRange]
+  // to
+  //    [otherDomain thisDomain] -> [otherRange thisRange].
+  // and `result` from
+  //    [otherDomain] -> [otherRange]
+  // to
+  //    [otherDomain thisDomain] -> [otherRange thisRange]
+  insertVar(VarKind::Domain, 0, otherDomain);
+  insertVar(VarKind::Range, 0, otherRange);
+  result.insertVar(VarKind::Domain, otherDomain, thisDomain);
+  result.insertVar(VarKind::Range, otherRange, thisRange);
+
+  // Merge symbol and local variables.
+  mergeAndAlignSymbols(result);
+  mergeLocalVars(result);
+
+  // Convert `result` from [otherDomain thisDomain] -> [otherRange thisRange] to
+  //                       [otherDomain] -> [thisRange]
+  result.removeVarRange(VarKind::Domain, otherDomain, otherDomain + thisDomain);
+  result.convertToLocal(VarKind::Range, 0, otherRange);
+  // Convert `this` from [otherDomain thisDomain] -> [otherRange thisRange] to
+  //                     [otherDomain] -> [thisRange]
+  convertToLocal(VarKind::Domain, otherDomain, otherDomain + thisDomain);
+  removeVarRange(VarKind::Range, 0, otherRange);
+
+  // Add and match domain of `result` to domain of `this`.
+  for (unsigned i = 0, e = result.getNumDomainVars(); i < e; ++i)
+    if (result.getSpace().getId(VarKind::Domain, i).hasValue())
+      setId(VarKind::Domain, i, result.getSpace().getId(VarKind::Domain, i));
+  // Add and match range of `this` to range of `result`.
+  for (unsigned i = 0, e = getNumRangeVars(); i < e; ++i) {
+    if (space.getId(VarKind::Range, i).hasValue()) {
+      result.setId(VarKind::Range, i, space.getId(VarKind::Range, i));
+    }
+  }
+
+  // Append `this` to `result` and simplify constraints.
+  result.append(*this);
+  result.removeRedundantLocalVars();
+
+  *this = result;
 }
 
 void IntegerRelation::print(raw_ostream &os) const {
