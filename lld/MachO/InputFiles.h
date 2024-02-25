@@ -161,7 +161,7 @@ class ObjFile final : public InputFile {
 public:
   ObjFile(MemoryBufferRef mb, uint32_t modTime, StringRef archiveName,
           bool lazy = false, bool forceHidden = false, bool compatArch = true,
-          bool builtFromBitcode = false);
+          bool builtFromBitcode = false, bool isLinkerGenerated = false);
   ArrayRef<llvm::MachO::data_in_code_entry> getDataInCode() const;
   ArrayRef<uint8_t> getOptimizationHints() const;
   template <class LP> void parse();
@@ -181,6 +181,7 @@ public:
   const uint32_t modTime;
   bool forceHidden;
   bool builtFromBitcode;
+  bool isLinkerGenerated;
   std::vector<ConcatInputSection *> debugSections;
   std::vector<CallGraphEntry> callGraph;
   llvm::DenseMap<ConcatInputSection *, FDE> fdes;

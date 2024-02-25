@@ -22,7 +22,7 @@ constexpr const char ivar[] = "_OBJC_IVAR_$_";
 
 // Check for duplicate method names within related categories / classes.
 void checkCategories();
-
+void mergeCategories();
 } // namespace objc
 
 bool hasObjCSection(llvm::MemoryBufferRef);
