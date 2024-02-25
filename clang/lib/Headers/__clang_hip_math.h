@@ -1306,14 +1306,50 @@ float min(float __x, float __y) { return __builtin_fminf(__x, __y); }
 __DEVICE__
 double min(double __x, double __y) { return __builtin_fmin(__x, __y); }
 
+// Define host min/max functions.
+
 #if !defined(__HIPCC_RTC__) && !defined(__OPENMP_AMDGCN__)
-__host__ inline static int min(int __arg1, int __arg2) {
-  return __arg1 < __arg2 ? __arg1 : __arg2;
+
+#pragma push_macro("DEFINE_MIN_MAX_FUNCTIONS")
+#define DEFINE_MIN_MAX_FUNCTIONS(type1, type2) \
+static inline auto min(const type1 __a, const type2 __b) \
+  -> typename std::remove_reference<decltype(__a < __b ? __a : __b)>::type { \
+  return (__a < __b) ? __a : __b; \
+} \
+static inline auto max(const type1 __a, const type2 __b) \
+  -> typename std::remove_reference<decltype(__a > __b ? __a : __b)>::type { \
+  return (__a > __b) ? __a : __b; \
 }
 
-__host__ inline static int max(int __arg1, int __arg2) {
-  return __arg1 > __arg2 ? __arg1 : __arg2;
-}
+// Define min and max functions for same type comparisons
+DEFINE_MIN_MAX_FUNCTIONS(int, int)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned int, unsigned int)
+DEFINE_MIN_MAX_FUNCTIONS(long, long)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned long, unsigned long)
+DEFINE_MIN_MAX_FUNCTIONS(long long, long long)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned long long, unsigned long long)
+
+// Define min and max functions for mixed type comparisons
+DEFINE_MIN_MAX_FUNCTIONS(int, unsigned int)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned int, int)
+DEFINE_MIN_MAX_FUNCTIONS(long, unsigned long)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned long, long)
+DEFINE_MIN_MAX_FUNCTIONS(long long, unsigned long long)
+DEFINE_MIN_MAX_FUNCTIONS(unsigned long long, long long)
+
+// Floating-point comparisons using built-in functions
+static inline float min(float const __a, float const __b) { return __builtin_fminf(__a, __b); }
+static inline double min(double const __a, double const __b) { return __builtin_fmin(__a, __b); }
+static inline double min(float const __a, double const __b) { return __builtin_fmin(__a, __b); }
+static inline double min(double const __a, float const __b) { return __builtin_fmin(__a, __b); }
+
+static inline float max(float const __a, float const __b) { return __builtin_fmaxf(__a, __b); }
+static inline double max(double const __a, double const __b) { return __builtin_fmax(__a, __b); }
+static inline double max(float const __a, double const __b) { return __builtin_fmax(__a, __b); }
+static inline double max(double const __a, float const __b) { return __builtin_fmax(__a, __b); }
+
+#pragma pop_macro("DEFINE_MIN_MAX_FUNCTIONS")
+
 #endif // !defined(__HIPCC_RTC__) && !defined(__OPENMP_AMDGCN__)
 #endif
 
