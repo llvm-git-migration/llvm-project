@@ -1,16 +1,19 @@
 // REQUIRES: arm-registered-target
 
-// RUN: %clang -flto -target thumbv7m-unknown-unknown-eabi -mbranch-protection=pac-ret %s -S -o - 2>&1 | FileCheck %s
-// RUN: %clang -flto -target thumbv7m-unknown-unknown-eabi -mbranch-protection=bti %s -S -o - 2>&1 | FileCheck %s
-// RUN: %clang -flto -target thumbv7m-unknown-unknown-eabi -mbranch-protection=bti+pac-ret %s -S -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -triple=thumbv7m-unknown-unknown-eabi -msign-return-address=non-leaf %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce -msign-return-address=all %s -S -emit-llvm -o - 2>&1 | FileCheck %s
 
+// RUN: %clang_cc1 -flto -triple=thumbv7m-unknown-unknown-eabi -msign-return-address=non-leaf %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -flto -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -flto -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce -msign-return-address=all %s -S -emit-llvm -o - 2>&1 | FileCheck %s
 
-// RUN: %clang -flto=thin -target thumbv7m-unknown-unknown-eabi -mbranch-protection=pac-ret %s -S -o - 2>&1 | FileCheck %s
-// RUN: %clang -flto=thin -target thumbv7m-unknown-unknown-eabi -mbranch-protection=bti %s -S -o - 2>&1 | FileCheck %s
-// RUN: %clang -flto=thin -target thumbv7m-unknown-unknown-eabi -mbranch-protection=bti+pac-ret %s -S -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -flto=thin -triple=thumbv7m-unknown-unknown-eabi -msign-return-address=non-leaf %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -flto=thin -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce  %s -S -emit-llvm -o - 2>&1 | FileCheck %s
+// RUN: %clang_cc1 -flto=thin -triple=thumbv7m-unknown-unknown-eabi -mbranch-target-enforce -msign-return-address=all %s -S -emit-llvm -o - 2>&1 | FileCheck %s
 
 void foo() {}
 
-/// Check there are branch protection function attributes while compiling for LTO
+// Check there are branch protection function attributes.
 // CHECK-LABEL: @foo() #[[#ATTR:]]
 // CHECK: attributes #[[#ATTR]] = { {{.*}} "branch-target-enforcement"{{.*}} "sign-return-address"
