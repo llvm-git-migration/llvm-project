@@ -1973,15 +1973,20 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
     }
 
     gatherInputSections();
+
+    // Run category checking & merging before anything else, it operates
+    // directly on inputSections.
+    if (args.hasArg(OPT_check_category_conflicts))
+      objc::checkCategories();
+
+    if (args.hasArg(OPT_merge_objc_categories))
+      objc::mergeCategories();
+
     if (config->callGraphProfileSort)
       priorityBuilder.extractCallGraphProfile();
 
     if (config->deadStrip)
       markLive();
-
-    if (args.hasArg(OPT_check_category_conflicts))
-      objc::checkCategories();
-
     // ICF assumes that all literals have been folded already, so we must run
     // foldIdenticalLiterals before foldIdenticalSections.
     foldIdenticalLiterals();
