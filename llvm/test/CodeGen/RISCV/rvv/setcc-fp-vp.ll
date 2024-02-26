@@ -2280,7 +2280,7 @@ define <vscale x 64 x i1> @fcmp_oeq_vv_nxv64f16(<vscale x 64 x half> %va, <vscal
 ; ZVFHMIN-NEXT:    add t0, sp, t0
 ; ZVFHMIN-NEXT:    addi t0, t0, 16
 ; ZVFHMIN-NEXT:    vs1r.v v0, (t0) # Unknown-size Folded Spill
-; ZVFHMIN-NEXT:    vslidedown.vx v0, v0, a1
+; ZVFHMIN-NEXT:    vslidedown.vx v1, v0, a1
 ; ZVFHMIN-NEXT:    srli a3, a3, 2
 ; ZVFHMIN-NEXT:    vl8re16.v v8, (a0)
 ; ZVFHMIN-NEXT:    csrr a0, vlenb
@@ -2291,8 +2291,8 @@ define <vscale x 64 x i1> @fcmp_oeq_vv_nxv64f16(<vscale x 64 x half> %va, <vscal
 ; ZVFHMIN-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
 ; ZVFHMIN-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
 ; ZVFHMIN-NEXT:    addi a0, sp, 16
-; ZVFHMIN-NEXT:    vs1r.v v0, (a0) # Unknown-size Folded Spill
-; ZVFHMIN-NEXT:    vslidedown.vx v0, v0, a3
+; ZVFHMIN-NEXT:    vs1r.v v1, (a0) # Unknown-size Folded Spill
+; ZVFHMIN-NEXT:    vslidedown.vx v0, v1, a3
 ; ZVFHMIN-NEXT:    vsetvli a0, zero, e16, m4, ta, ma
 ; ZVFHMIN-NEXT:    csrr a0, vlenb
 ; ZVFHMIN-NEXT:    slli a0, a0, 1
