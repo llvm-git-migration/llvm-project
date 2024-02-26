@@ -342,3 +342,21 @@ typedef int InExternCPP;
 // CHECK-FIXES: using InExternCPP = int;
 
 }
+
+namespace ISSUE_72179
+{  
+  void foo()
+  {
+    typedef int a;
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use 'using' instead of 'typedef' [modernize-use-using]
+    // CHECK-FIXES: using a = int;
+
+  }
+
+  void foo2()
+  {
+    typedef struct { int a; union { int b; }; } c;
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use 'using' instead of 'typedef' [modernize-use-using]
+    // CHECK-FIXES: using c = struct { int a; union { int b; }; };
+  }
+}

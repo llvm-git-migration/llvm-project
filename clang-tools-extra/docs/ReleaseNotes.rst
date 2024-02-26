@@ -183,6 +183,9 @@ Changes in existing checks
   <clang-tidy/checks/modernize/use-override>` check to also remove any trailing
   whitespace when deleting the ``virtual`` keyword.
 
+- Improved :doc:`modernize-use-using <clang-tidy/checks/modernize/use-using>`
+  check by fixing false-negative in functions.
+
 - Improved :doc:`readability-implicit-bool-conversion
   <clang-tidy/checks/readability/implicit-bool-conversion>` check to provide
   valid fix suggestions for ``static_cast`` without a preceding space and
