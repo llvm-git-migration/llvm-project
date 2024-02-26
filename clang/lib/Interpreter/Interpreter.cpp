@@ -283,10 +283,12 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
     return PTU.takeError();
 
   Interp->ValuePrintingInfo.resize(4);
+
   // FIXME: This is a ugly hack. Undo command checks its availability by looking
   // at the size of the PTU list. However we have parsed something in the
   // beginning of the REPL so we have to mark them as 'Irrevocable'.
-  Interp->InitPTUSize = Interp->IncrParser->getPTUs().size();
+  Interp->finalizeInitPTUStack();
+
   return std::move(Interp);
 }
 
@@ -341,6 +343,11 @@ ASTContext &Interpreter::getASTContext() {
 
 const ASTContext &Interpreter::getASTContext() const {
   return getCompilerInstance()->getASTContext();
+}
+
+void Interpreter::finalizeInitPTUStack() {
+  assert(!InitPTUSize && "We only do this once");
+  InitPTUSize = IncrParser->getPTUs().size();
 }
 
 size_t Interpreter::getEffectivePTUSize() const {
@@ -505,9 +512,16 @@ static constexpr llvm::StringRef MagicRuntimeInterface[] = {
     "__clang_Interpreter_SetValueWithAlloc",
     "__clang_Interpreter_SetValueCopyArr", "__ci_newtag"};
 
-bool Interpreter::FindRuntimeInterface() {
+static std::unique_ptr<RuntimeInterfaceBuilder>
+createInProcessRuntimeInterfaceBuilder(Interpreter &Interp, ASTContext &Ctx,
+                                       Sema &S);
+
+RuntimeInterfaceBuilder *Interpreter::FindRuntimeInterface() {
+  if (RuntimeIB)
+    return RuntimeIB.get();
+
   if (llvm::all_of(ValuePrintingInfo, [](Expr *E) { return E != nullptr; }))
-    return true;
+    return nullptr;
 
   Sema &S = getCompilerInstance()->getSema();
   ASTContext &Ctx = S.getASTContext();
@@ -526,24 +540,26 @@ bool Interpreter::FindRuntimeInterface() {
 
   if (!LookupInterface(ValuePrintingInfo[NoAlloc],
                        MagicRuntimeInterface[NoAlloc]))
-    return false;
+    return nullptr;
   if (!LookupInterface(ValuePrintingInfo[WithAlloc],
                        MagicRuntimeInterface[WithAlloc]))
-    return false;
+    return nullptr;
   if (!LookupInterface(ValuePrintingInfo[CopyArray],
                        MagicRuntimeInterface[CopyArray]))
-    return false;
+    return nullptr;
   if (!LookupInterface(ValuePrintingInfo[NewTag],
                        MagicRuntimeInterface[NewTag]))
-    return false;
-  return true;
+    return nullptr;
+
+  RuntimeIB = createInProcessRuntimeInterfaceBuilder(*this, Ctx, S);
+  return RuntimeIB.get();
 }
 
 namespace {
 
 class InterfaceKindVisitor
     : public TypeVisitor<InterfaceKindVisitor, Interpreter::InterfaceKind> {
-  friend class RuntimeInterfaceBuilder;
+  friend class InProcessRuntimeInterfaceBuilder;
 
   ASTContext &Ctx;
   Sema &S;
@@ -625,16 +641,16 @@ private:
   }
 };
 
-class RuntimeInterfaceBuilder {
-  clang::Interpreter &Interp;
+class InProcessRuntimeInterfaceBuilder : public RuntimeInterfaceBuilder {
+  Interpreter &Interp;
   ASTContext &Ctx;
   Sema &S;
 
 public:
-  RuntimeInterfaceBuilder(clang::Interpreter &In, ASTContext &C, Sema &SemaRef)
-      : Interp(In), Ctx(C), S(SemaRef) {}
+  InProcessRuntimeInterfaceBuilder(Interpreter &Interp, ASTContext &C, Sema &S)
+      : Interp(Interp), Ctx(C), S(S) {}
 
-  ExprResult getCall(Expr *E, ArrayRef<Expr *> FixedArgs) {
+  ExprResult getCall(Expr *E, ArrayRef<Expr *> FixedArgs) override {
     // Get rid of ExprWithCleanups.
     if (auto *EWC = llvm::dyn_cast_if_present<ExprWithCleanups>(E))
       E = EWC->getSubExpr();
@@ -725,6 +741,12 @@ public:
 };
 } // namespace
 
+static std::unique_ptr<RuntimeInterfaceBuilder>
+createInProcessRuntimeInterfaceBuilder(Interpreter &Interp, ASTContext &Ctx,
+                                       Sema &S) {
+  return std::make_unique<InProcessRuntimeInterfaceBuilder>(Interp, Ctx, S);
+}
+
 // This synthesizes a call expression to a speciall
 // function that is responsible for generating the Value.
 // In general, we transform:
@@ -743,10 +765,8 @@ Expr *Interpreter::SynthesizeExpr(Expr *E) {
   Sema &S = getCompilerInstance()->getSema();
   ASTContext &Ctx = S.getASTContext();
 
-  if (!FindRuntimeInterface())
-    llvm_unreachable("We can't find the runtime iterface for pretty print!");
-
-  RuntimeInterfaceBuilder Builder(*this, Ctx, S);
+  RuntimeInterfaceBuilder *Builder = FindRuntimeInterface();
+  assert(Builder && "We can't find the runtime interface for pretty print!");
 
   // Create parameter `ThisInterp`.
   auto *ThisInterp = CStyleCastPtrExpr(S, Ctx.VoidPtrTy, (uintptr_t)this);
@@ -755,7 +775,7 @@ Expr *Interpreter::SynthesizeExpr(Expr *E) {
   auto *OutValue = CStyleCastPtrExpr(S, Ctx.VoidPtrTy, (uintptr_t)&LastValue);
 
   // Build `__clang_Interpreter_SetValue*` call.
-  ExprResult Result = Builder.getCall(E, {ThisInterp, OutValue});
+  ExprResult Result = Builder->getCall(E, {ThisInterp, OutValue});
 
   // It could fail, like printing an array type in C. (not supported)
   if (Result.isInvalid())
