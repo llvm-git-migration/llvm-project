@@ -312,6 +312,10 @@ public:
                                               SIMemOp Op, bool IsVolatile,
                                               bool IsNonTemporal) const = 0;
 
+  virtual bool expandSystemScopeStore(MachineBasicBlock::iterator &MI) const {
+    return false;
+  };
+
   /// Inserts any necessary instructions at position \p Pos relative
   /// to instruction \p MI to ensure memory instructions before \p Pos of kind
   /// \p Op associated with address spaces \p AddrSpace have completed. Used
@@ -603,6 +607,8 @@ public:
                                       SIAtomicAddrSpace AddrSpace, SIMemOp Op,
                                       bool IsVolatile,
                                       bool IsNonTemporal) const override;
+
+  bool expandSystemScopeStore(MachineBasicBlock::iterator &MI) const override;
 };
 
 class SIMemoryLegalizer final : public MachineFunctionPass {
@@ -2381,6 +2387,34 @@ bool SIGfx12CacheControl::enableVolatileAndOrNonTemporal(
   return Changed;
 }
 
+bool SIGfx12CacheControl::expandSystemScopeStore(
+    MachineBasicBlock::iterator &MI) const {
+
+  MachineOperand *CPol = TII->getNamedOperand(*MI, OpName::cpol);
+  if (CPol && ((CPol->getImm() & CPol::SCOPE) == CPol::SCOPE_SYS)) {
+    // Stores with system scope (SCOPE_SYS) need to wait for:
+    // - loads or atomics(returning) - wait for {LOAD|SAMPLE|BVH|KM}CNT==0
+    // - non-returning-atomics       - wait for STORECNT==0
+    //   TODO: SIInsertWaitcnts will not always be able to remove STORECNT waits
+    //   since it does not distinguish atomics-with-return from regular stores.
+
+    // There is no need to wait if memory is cached (mtype != UC).
+    // For example shader-visible memory is cached.
+    // TODO: implement flag for frontend to give us a hint not to insert waits.
+    MachineBasicBlock &MBB = *MI->getParent();
+    DebugLoc DL = MI->getDebugLoc();
+
+    BuildMI(MBB, MI, DL, TII->get(S_WAIT_LOADCNT_soft)).addImm(0);
+    BuildMI(MBB, MI, DL, TII->get(S_WAIT_SAMPLECNT_soft)).addImm(0);
+    BuildMI(MBB, MI, DL, TII->get(S_WAIT_BVHCNT_soft)).addImm(0);
+    BuildMI(MBB, MI, DL, TII->get(S_WAIT_KMCNT_soft)).addImm(0);
+    BuildMI(MBB, MI, DL, TII->get(S_WAIT_STORECNT_soft)).addImm(0);
+    return true;
+  }
+
+  return false;
+}
+
 bool SIMemoryLegalizer::removeAtomicPseudoMIs() {
   if (AtomicPseudoMIs.empty())
     return false;
@@ -2467,6 +2501,10 @@ bool SIMemoryLegalizer::expandStore(const SIMemOpInfo &MOI,
   Changed |= CC->enableVolatileAndOrNonTemporal(
       MI, MOI.getInstrAddrSpace(), SIMemOp::STORE, MOI.isVolatile(),
       MOI.isNonTemporal());
+
+  // GFX12 specific, scope(desired coherence domain in cache hierarchy) is
+  // instruction field, do not confuse it with atomic scope.
+  Changed |= CC->expandSystemScopeStore(MI);
   return Changed;
 }
 
