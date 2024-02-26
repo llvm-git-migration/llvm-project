@@ -2733,13 +2733,28 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     // return/frame address.
     Expr::EvalResult Result;
     if (!TheCall->getArg(0)->isValueDependent() &&
-        TheCall->getArg(0)->EvaluateAsInt(Result, getASTContext()) &&
-        Result.Val.getInt() != 0)
-      Diag(TheCall->getBeginLoc(), diag::warn_frame_address)
-          << ((BuiltinID == Builtin::BI__builtin_return_address)
-                  ? "__builtin_return_address"
-                  : "__builtin_frame_address")
-          << TheCall->getSourceRange();
+        TheCall->getArg(0)->EvaluateAsInt(Result, getASTContext())) {
+      const char *BuiltinName =
+          (BuiltinID == Builtin::BI__builtin_return_address)
+               ? "__builtin_return_address"
+               : "__builtin_frame_address";
+
+      if (Result.Val.getInt() != 0) {
+        Diag(TheCall->getBeginLoc(), diag::warn_frame_address)
+            << BuiltinName << TheCall->getSourceRange();
+      }
+
+      // Check if enclosing function is marked noinline
+      if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(CurContext)) {
+        if (!FD->hasAttr<NoInlineAttr>() && !FD->isMain()) {
+          const char *ShortName =
+              (BuiltinID == Builtin::BI__builtin_return_address)
+                  ? "return" : "frame";
+          Diag(TheCall->getBeginLoc(), diag::warn_frame_address_missing_noinline)
+              << BuiltinName << ShortName << TheCall->getSourceRange();
+        }
+      }
+    }
     break;
   }
 
