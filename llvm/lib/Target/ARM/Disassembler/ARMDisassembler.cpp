@@ -700,7 +700,10 @@ DecodeMVEOverlappingLongShift(MCInst &Inst, unsigned Insn, uint64_t Address,
 static DecodeStatus DecodeT2AddSubSPImm(MCInst &Inst, unsigned Insn,
                                         uint64_t Address,
                                         const MCDisassembler *Decoder);
-
+static DecodeStatus DecodeLazyLoadStoreMul(MCInst &Inst, unsigned Insn,
+                                           uint64_t Address,
+                                           const MCDisassembler *Decoder);
+                                           
 #include "ARMGenDisassemblerTables.inc"
 
 static MCDisassembler *createARMDisassembler(const Target &T,
@@ -7029,4 +7032,27 @@ static DecodeStatus DecodeT2AddSubSPImm(MCInst &Inst, unsigned Insn,
   }
 
   return DS;
+}
+
+static DecodeStatus DecodeLazyLoadStoreMul(MCInst &Inst, unsigned Insn,
+                                           uint64_t Address,
+                                           const MCDisassembler *Decoder) {
+  DecodeStatus S = MCDisassembler::Success;
+
+  const unsigned Rn = fieldFromInstruction(Insn, 16, 4);
+  // Adding Rn, holding memory location to save/load to/from, the only argument
+  // that being encoded.
+  // '$Rn' in the assembly.
+  if (!Check(S, DecodeGPRRegisterClass(Inst, Rn, Address, Decoder)))
+    return MCDisassembler::Fail;
+  // An optional predicate, '$p' in the assembly.
+  Inst.addOperand(MCOperand::createImm(0));
+  // A register that required for when the predicate exists (see function
+  // 'UpdateThumbVFPPredicate' and 'ARMInstrFormats.td::pred')
+  Inst.addOperand(MCOperand::createReg(ARM::NoRegister));
+  // Am immediate that represnts a floating point registers list. '$regs' in the
+  // assembly.
+  Inst.addOperand(MCOperand::createImm(0)); // Arbitrary value, has no effect.
+
+  return S;
 }
