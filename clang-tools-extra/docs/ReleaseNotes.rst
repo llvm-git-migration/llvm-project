@@ -224,6 +224,9 @@ Changes in existing checks
   analyzed, se the check now handles the common patterns
   `const auto e = (*vector_ptr)[i]` and `const auto e = vector_ptr->at(i);`.
 
+- Improved :doc:`modernize-use-using <clang-tidy/checks/modernize/use-using>`
+  check by fixing false-negative in functions.
+
 - Improved :doc:`readability-implicit-bool-conversion
   <clang-tidy/checks/readability/implicit-bool-conversion>` check to provide
   valid fix suggestions for ``static_cast`` without a preceding space and
