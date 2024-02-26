@@ -5504,6 +5504,7 @@ cc_library(
         ],
     ),
     hdrs = glob(["include/mlir/Dialect/GPU/Transforms/*.h"]),
+    defines = if_cuda_available(["MLIR_CUDA_CONVERSIONS_ENABLED"]),
     includes = ["include"],
     local_defines = if_cuda_available(["MLIR_GPU_TO_CUBIN_PASS_ENABLE"]),
     deps = [
@@ -6168,6 +6169,9 @@ cc_library(
     srcs = ["lib/Target/LLVM/NVVM/Target.cpp"],
     hdrs = glob(["include/mlir/Target/LLVM/NVVM/*.h"]),
     includes = ["include"],
+    local_defines = [
+        "MLIR_CUDA_CONVERSIONS_ENABLED",
+    ],
     deps = [
         ":GPUDialect",
         ":GPUToLLVMIRTranslation",
