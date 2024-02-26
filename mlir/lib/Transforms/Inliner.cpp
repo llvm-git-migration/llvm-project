@@ -455,6 +455,14 @@ static bool shouldInline(ResolvedCall &resolvedCall) {
   if (callableRegion->isAncestor(resolvedCall.call->getParentRegion()))
     return false;
 
+  // Don't allow inlining if the target is a self-recursive function.
+  if (std::count_if(resolvedCall.targetNode->begin(),
+                    resolvedCall.targetNode->end(),
+                    [&](CallGraphNode::Edge const &edge) -> bool {
+                      return edge.getTarget() == resolvedCall.targetNode;
+                    }) > 0)
+    return false;
+
   // Don't allow inlining if the callee has multiple blocks (unstructured
   // control flow) but we cannot be sure that the caller region supports that.
   bool calleeHasMultipleBlocks =
