@@ -624,6 +624,10 @@ private:
 
   StackProtectorDescriptor SPDescriptor;
 
+  const TargetLowering &getTargetLowering() {
+    return *MF->getSubtarget().getTargetLowering();
+  }
+
   /// Switch analysis and optimization.
   class GISelSwitchLowering : public SwitchCG::SwitchLowering {
   public:
