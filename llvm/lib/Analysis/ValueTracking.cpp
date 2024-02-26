@@ -813,6 +813,8 @@ void llvm::computeKnownBitsFromContext(const Value *V, KnownBits &Known,
     if (!isValidAssumeForContext(I, Q.CxtI, Q.DT))
       continue;
 
+    // Change to `computeKnownBitsFromCond` if we start supporting assume of
+    // logic op in ConditionCacheUtil.
     computeKnownBitsFromCmp(V, Cmp->getPredicate(), Cmp->getOperand(0),
                             Cmp->getOperand(1), Known, Q);
   }
