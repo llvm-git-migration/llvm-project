@@ -192,8 +192,10 @@ struct StringPiece {
   // Only set if deduplicating literals
   uint32_t hash : 31;
   // Offset from the start of the containing output section.
-  uint64_t outSecOff : 56;
-  LinkerOptReason linkerOptimizeReason : 8;
+  uint64_t outSecOff : 48;
+  // Have to declare the 'linkerOptimizeReason' and 'live' as uint64_t so that
+  // the MSVC compiler will merge the storage of it and 'outSecOff' above.
+  uint64_t /*LinkerOptReason*/ linkerOptimizeReason : 8;
 
   bool shouldOmitFromOutput() const {
     return !live || linkerOptimizeReason != LinkerOptReason::NotOptimized;

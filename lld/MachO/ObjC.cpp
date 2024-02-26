@@ -786,7 +786,7 @@ bool ObjcCategoryMerger::parseCatInfoToExtInfo(InfoInputCategory &catInfo,
 
   if (extInfo.baseClassName.empty()) {
     llvm::StringRef classPrefix("_OBJC_CLASS_$_");
-    if (!classSym->getName().startswith(classPrefix))
+    if (!classSym->getName().starts_with(classPrefix))
       return registerError(
           "Base class symbol does not start with '_OBJC_CLASS_$_'");
 
@@ -1137,7 +1137,7 @@ bool ObjcCategoryMerger::collectAndValidateCategoriesData() {
 
     for (const Reloc &r : catListCisec->relocs) {
       auto *sym = cast<Defined>(r.referent.get<Symbol *>());
-      if (!sym || !sym->getName().startswith("__OBJC_$_CATEGORY_"))
+      if (!sym || !sym->getName().starts_with("__OBJC_$_CATEGORY_"))
         continue; // Only support ObjC categories (no swift + @objc)
 
       auto *catBodyIsec =
