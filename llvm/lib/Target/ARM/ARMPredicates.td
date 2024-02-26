@@ -183,6 +183,10 @@ def UseNegativeImmediates :
             AssemblerPredicate<(all_of (not FeatureNoNegativeImmediates)),
                                "NegativeImmediates">;
 
+def HasD32    : Predicate<"Subtarget->hasD32()">,
+                           AssemblerPredicate<(all_of FeatureD32),
+                           "32 D registers">;
+
 // FIXME: Eventually this will be just "hasV6T2Ops".
 let RecomputePerFunction = 1 in {
   def UseMovt          : Predicate<"Subtarget->useMovt()">;
