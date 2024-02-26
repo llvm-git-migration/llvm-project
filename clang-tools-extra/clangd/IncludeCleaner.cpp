@@ -116,7 +116,8 @@ std::vector<Diag> generateMissingIncludeDiagnostics(
   const SourceManager &SM = AST.getSourceManager();
   const FileEntry *MainFile = SM.getFileEntryForID(SM.getMainFileID());
 
-  auto FileStyle = getFormatStyleForFile(AST.tuPath(), Code, TFS);
+  auto FileStyle =
+      getFormatStyleForFile(AST.tuPath(), Code, TFS, FormatKind::Replacements);
 
   tooling::HeaderIncludes HeaderIncludes(AST.tuPath(), Code,
                                          FileStyle.IncludeStyle);

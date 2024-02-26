@@ -166,6 +166,20 @@ TextEdit toTextEdit(const FixItHint &FixIt, const SourceManager &M,
 std::optional<std::string> getCanonicalPath(const FileEntryRef F,
                                             FileManager &FileMgr);
 
+/// A flag passed to getFormatStyleForFile() that specifies what kind of
+/// formatting operation the returned FormatStyle will be used for.
+enum class FormatKind {
+  // Formatting a snippet of synthesized code (e.g. a code snippet
+  // shown in a hover) that's not part of the main file.
+  Snippet,
+  // Formatting edits made by an editor action such as code completion
+  // or rename.
+  Replacements,
+  // Formatting the entire main file (or a range selected by the user,
+  // which can be arbitrarily long).
+  EntireFileOrRange
+};
+
 /// Choose the clang-format style we should apply to a certain file.
 /// This will usually use FS to look for .clang-format directories.
 /// FIXME: should we be caching the .clang-format file search?
@@ -173,7 +187,8 @@ std::optional<std::string> getCanonicalPath(const FileEntryRef F,
 /// though the latter may have been overridden in main()!
 format::FormatStyle getFormatStyleForFile(llvm::StringRef File,
                                           llvm::StringRef Content,
-                                          const ThreadsafeFS &TFS);
+                                          const ThreadsafeFS &TFS,
+                                          FormatKind Kind);
 
 /// Cleanup and format the given replacements.
 llvm::Expected<tooling::Replacements>

@@ -523,7 +523,8 @@ void ClangdServer::formatFile(PathRef File, std::optional<Range> Rng,
   auto Action = [File = File.str(), Code = std::move(*Code),
                  Ranges = std::vector<tooling::Range>{RequestedRange},
                  CB = std::move(CB), this]() mutable {
-    format::FormatStyle Style = getFormatStyleForFile(File, Code, TFS);
+    format::FormatStyle Style =
+        getFormatStyleForFile(File, Code, TFS, FormatKind::EntireFileOrRange);
     tooling::Replacements IncludeReplaces =
         format::sortIncludes(Style, Code, Ranges, File);
     auto Changed = tooling::applyAllReplacements(Code, IncludeReplaces);
@@ -551,7 +552,8 @@ void ClangdServer::formatOnType(PathRef File, Position Pos,
   auto Action = [File = File.str(), Code = std::move(*Code),
                  TriggerText = TriggerText.str(), CursorPos = *CursorPos,
                  CB = std::move(CB), this]() mutable {
-    auto Style = getFormatStyleForFile(File, Code, TFS);
+    auto Style =
+        getFormatStyleForFile(File, Code, TFS, FormatKind::Replacements);
     std::vector<TextEdit> Result;
     for (const tooling::Replacement &R :
          formatIncremental(Code, CursorPos, TriggerText, Style))
@@ -604,8 +606,9 @@ void ClangdServer::rename(PathRef File, Position Pos, llvm::StringRef NewName,
       return CB(R.takeError());
 
     if (Opts.WantFormat) {
-      auto Style = getFormatStyleForFile(File, InpAST->Inputs.Contents,
-                                         *InpAST->Inputs.TFS);
+      auto Style =
+          getFormatStyleForFile(File, InpAST->Inputs.Contents,
+                                *InpAST->Inputs.TFS, FormatKind::Replacements);
       llvm::Error Err = llvm::Error::success();
       for (auto &E : R->GlobalChanges)
         Err =
@@ -761,8 +764,8 @@ void ClangdServer::applyTweak(PathRef File, Range Sel, StringRef TweakID,
       // Format tweaks that require it centrally here.
       for (auto &It : (*Effect)->ApplyEdits) {
         Edit &E = It.second;
-        format::FormatStyle Style =
-            getFormatStyleForFile(File, E.InitialCode, TFS);
+        format::FormatStyle Style = getFormatStyleForFile(
+            File, E.InitialCode, TFS, FormatKind::Replacements);
         if (llvm::Error Err = reformatEdit(E, Style))
           elog("Failed to format {0}: {1}", It.first(), std::move(Err));
       }
@@ -824,8 +827,9 @@ void ClangdServer::findHover(PathRef File, Position Pos,
                  this](llvm::Expected<InputsAndAST> InpAST) mutable {
     if (!InpAST)
       return CB(InpAST.takeError());
-    format::FormatStyle Style = getFormatStyleForFile(
-        File, InpAST->Inputs.Contents, *InpAST->Inputs.TFS);
+    format::FormatStyle Style =
+        getFormatStyleForFile(File, InpAST->Inputs.Contents,
+                              *InpAST->Inputs.TFS, FormatKind::Snippet);
     CB(clangd::getHover(InpAST->AST, Pos, std::move(Style), Index));
   };
 
