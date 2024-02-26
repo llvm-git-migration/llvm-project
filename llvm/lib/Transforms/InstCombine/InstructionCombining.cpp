@@ -2295,9 +2295,11 @@ Value *InstCombiner::getFreelyInvertedImpl(Value *V, bool WillInvertAllUses,
   // If `V` is of the form `A + B` then `-1 - V` can be folded into
   // `(-1 - B) - A` if we are willing to invert all of the uses.
   if (match(V, m_Add(m_Value(A), m_Value(B)))) {
+    bool DoesConsumeOldValue = DoesConsume;
     if (auto *BV = getFreelyInvertedImpl(B, B->hasOneUse(), Builder,
                                          DoesConsume, Depth))
       return Builder ? Builder->CreateSub(BV, A) : NonNull;
+    DoesConsume = DoesConsumeOldValue;
     if (auto *AV = getFreelyInvertedImpl(A, A->hasOneUse(), Builder,
                                          DoesConsume, Depth))
       return Builder ? Builder->CreateSub(AV, B) : NonNull;
@@ -2307,9 +2309,11 @@ Value *InstCombiner::getFreelyInvertedImpl(Value *V, bool WillInvertAllUses,
   // If `V` is of the form `A ^ ~B` then `~(A ^ ~B)` can be folded
   // into `A ^ B` if we are willing to invert all of the uses.
   if (match(V, m_Xor(m_Value(A), m_Value(B)))) {
+    bool DoesConsumeOldValue = DoesConsume;
     if (auto *BV = getFreelyInvertedImpl(B, B->hasOneUse(), Builder,
                                          DoesConsume, Depth))
       return Builder ? Builder->CreateXor(A, BV) : NonNull;
+    DoesConsume = DoesConsumeOldValue;
     if (auto *AV = getFreelyInvertedImpl(A, A->hasOneUse(), Builder,
                                          DoesConsume, Depth))
       return Builder ? Builder->CreateXor(AV, B) : NonNull;
