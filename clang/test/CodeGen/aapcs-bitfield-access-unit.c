@@ -1,8 +1,8 @@
-// RUN: %clang_cc1 -triple armv8-none-linux-eabi -fno-aapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_LE
-// RUN: %clang_cc1 -triple armebv8-none-linux-eabi -fno-aapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_BE
+// RUN: %clang_cc1 -triple armv8-none-linux-eabi   -fno-aapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_LE
+// RUN: %clang_cc1 -triple armebv8-none-linux-eabi   -fno-aapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_BE
 
-// RUN: %clang_cc1 -triple armv8-none-linux-eabi -faapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_LE
-// RUN: %clang_cc1 -triple armebv8-none-linux-eabi -faapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_BE
+// RUN: %clang_cc1 -triple armv8-none-linux-eabi   -faapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_LE
+// RUN: %clang_cc1 -triple armebv8-none-linux-eabi   -faapcs-bitfield-width -fdump-record-layouts-simple -emit-llvm -o /dev/null %s | FileCheck %s -check-prefixes=LAYOUT,LAYOUT_BE
 
 struct st0 {
   short c : 7;
@@ -32,12 +32,12 @@ struct st2 {
   short c : 7;
 } st2;
 // LAYOUT-LABEL: LLVMType:%struct.st2 =
-// LAYOUT-SAME: type { i16, i8 }
+// LAYOUT-SAME: type { i32 }
 // LAYOUT: BitFields:[
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:10 IsSigned:1 StorageSize:16 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:2
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:6 Size:10 IsSigned:1 StorageSize:16 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:2
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:10 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:16 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:22 Size:10 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
 // LAYOUT-NEXT: ]>
 
 struct st3 {
@@ -159,7 +159,7 @@ struct st12{
   int f : 16;
 } st12;
 // LAYOUT-LABEL: LLVMType:%struct.st12 =
-// LAYOUT-SAME: type { i24 }
+// LAYOUT-SAME: type { i32 }
 // LAYOUT: BitFields:[
 // LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:32 StorageOffset:0
 // LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:32 StorageOffset:0
@@ -172,12 +172,12 @@ struct st13 {
   int b : 32;
 } __attribute__((packed)) st13;
 // LAYOUT-LABEL: LLVMType:%struct.st13 =
-// LAYOUT-SAME: type { [5 x i8] }
+// LAYOUT-SAME: type <{ i8, i32 }>
 // LAYOUT: BitFields:[
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:8 Size:32 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:32 Size:8 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:40 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:1
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:1
 // LAYOUT-NEXT: ]>
 
 struct st14 {
@@ -207,16 +207,16 @@ struct st16 {
   int d : 16;
 } st16;
 // LAYOUT-LABEL: LLVMType:%struct.st16 =
-// LAYOUT-SAME: type { i48, i48 }
+// LAYOUT-SAME: type { i32, i16, i32, i16 }
 // LAYOUT: BitFields:[
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:64 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:32 Size:16 IsSigned:1 StorageSize:64 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:64 StorageOffset:8
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:32 Size:16 IsSigned:1 StorageSize:64 StorageOffset:8
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:32 Size:32 IsSigned:1 StorageSize:64 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:64 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:32 Size:32 IsSigned:1 StorageSize:64 StorageOffset:8
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:64 StorageOffset:8
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:4
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:8
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:12
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:4
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:8
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:12
 // LAYOUT-NEXT: ]>
 
 struct st17 {
@@ -224,12 +224,12 @@ int b : 32;
 char c : 8;
 } __attribute__((packed)) st17;
 // LAYOUT-LABEL: LLVMType:%struct.st17 =
-// LAYOUT-SAME: type { [5 x i8] }
+// LAYOUT-SAME: type <{ i32, i8 }>
 // LAYOUT: BitFields:[
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:32 Size:8 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:8 Size:32 IsSigned:1 StorageSize:40 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:40 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:4
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:32 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:4
 // LAYOUT-NEXT: ]>
 
 struct zero_bitfield {
@@ -253,7 +253,7 @@ struct zero_bitfield_ok {
   int b : 24;
 } st19;
 // LAYOUT-LABEL: LLVMType:%struct.zero_bitfield_ok =
-// LAYOUT-SAME: type { i16, i24 }
+// LAYOUT-SAME: type { i16, i32 }
 // LAYOUT: BitFields:[
 // LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:0
 // LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:0
