@@ -48,8 +48,8 @@ struct Pod {
   int b : 8;
 } P;
 // CHECK-LABEL: LLVMType:%struct.Pod =
-// LAYOUT-SAME: type { i24 }
-// LAYOUT-DWN32-SAME: type { [3 x i8] }
+// LAYOUT-SAME: type { i32 }
+// LAYOUT-DWN32-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.Pod =
 // CHECK: BitFields:[
 // PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:32 StorageOffset:0
@@ -57,8 +57,8 @@ struct Pod {
 // PLACE-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:32 StorageOffset:0
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
 
 // No tail padding
@@ -67,17 +67,17 @@ struct __attribute__((packed)) PPod {
   int b : 8;
 } PP;
 // CHECK-LABEL: LLVMType:%struct.PPod =
-// LAYOUT-SAME: type { [3 x i8] }
-// LAYOUT-DWN32-SAME: type { [3 x i8] }
+// LAYOUT-SAME: type <{ i16, i8 }>
+// LAYOUT-DWN32-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.PPod =
 // CHECK: BitFields:[
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
 
 // Cannot use tail padding
@@ -87,19 +87,19 @@ struct NonPod {
   int b : 8;
 } NP;
 // CHECK-LABEL: LLVMType:%struct.NonPod =
-// LAYOUT-SAME: type { [3 x i8], i8 }
-// LAYOUT-DWN32-SAME: type { [3 x i8] }
+// LAYOUT-SAME: type <{ i16, i8, i8 }>
+// LAYOUT-DWN32-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.
-// LAYOUT-SAME: NonPod.base = type { [3 x i8] }
-// LAYOUT-DWN32-SAME: NonPod = type { [3 x i8] }
+// LAYOUT-SAME: NonPod.base = type <{ i16, i8 }>
+// LAYOUT-DWN32-SAME: NonPod = type <{ i16, i8 }>
 // CHECK: BitFields:[
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>
 
 // No tail padding
@@ -109,15 +109,15 @@ struct __attribute__((packed)) PNonPod {
   int b : 8;
 } PNP;
 // CHECK-LABEL: LLVMType:%struct.PNonPod =
-// LAYOUT-SAME: type { [3 x i8] }
-// LAYOUT-DWN32-SAME: type { [3 x i8] }
+// LAYOUT-SAME: type <{ i16, i8 }>
+// LAYOUT-DWN32-SAME: type <{ i16, i8 }>
 // CHECK-NEXT: NonVirtualBaseLLVMType:%struct.PNonPod =
 // CHECK: BitFields:[
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:24 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:24 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
 // CHECK-NEXT: ]>

@@ -62,14 +62,14 @@ struct A {
   char b : 7;
 } a;
 // CHECK-LABEL: LLVMType:%struct.A =
-// LAYOUT-FLEX-SAME: type { i8, i8 }
+// LAYOUT-FLEX-SAME: type { i16 }
 // LAYOUT-STRICT-SAME: type { i8, i8 }
 // LAYOUT-DWN32-SAME: type { i16 }
 // CHECK: BitFields:[
-// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:1
-// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:1
+// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:8 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
 
 // PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
 // PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:1
@@ -86,13 +86,13 @@ struct __attribute__((aligned(2))) B {
   char b : 7;
 } b;
 // CHECK-LABEL: LLVMType:%struct.B =
-// LAYOUT-SAME: type { i8, i8 }
+// LAYOUT-SAME: type { i16 }
 // LAYOUT-DWN32-SAME: type { i16 }
 // CHECK: BitFields:[
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:1
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:1
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:8 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
 
 // PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
 // PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:7 Size:7 IsSigned:1 StorageSize:16 StorageOffset:0
@@ -106,14 +106,14 @@ struct C {
   char b : 7;
 } c;
 // CHECK-LABEL: LLVMType:%struct.C =
-// LAYOUT-FLEX-SAME: type { i32, i8, i8, i8 }
+// LAYOUT-FLEX-SAME: type <{ i32, i8, i16, i8 }>
 // LAYOUT-STRICT-SAME: type { i32, i8, i8, i8 }
 // LAYOUT-DWN32-SAME: type <{ i32, i8, i16, i8 }>
 // CHECK: BitFields:[
-// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:5
-// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
-// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:5
-// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
+// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:16 StorageOffset:5
+// PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:8 Size:7 IsSigned:1 StorageSize:16 StorageOffset:5
+// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:16 StorageOffset:5
+// PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:16 StorageOffset:5
 
 // PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:5
 // PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
@@ -133,25 +133,24 @@ struct __attribute__((packed)) D {
 } d;
 // CHECK-LABEL: LLVMType:%struct.D =
 // LAYOUT-FLEX-SAME: type <{ i32, i16, i8 }>
-// LAYOUT-STRICT-SAME: type <{ i32, i16, i8 }>
+// LAYOUT-STRICT-SAME: type <{ i32, i8, i8, i8 }>
 // LAYOUT-DWN32-FLEX-SAME: type <{ i32, i16, i8 }>
-// LAYOUT-DWN32-STRICT-SAME: type <{ i32, i16, i8 }>
+// LAYOUT-DWN32-STRICT-SAME: type <{ i32, i8, i8, i8 }>
 // CHECK: BitFields:[
 // PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
 // PLACE-FLEX-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
 // PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
 // PLACE-FLEX-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
 
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:4
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:5
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:4
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:5
 
 // PLACE-DWN32-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
 // PLACE-DWN32-FLEX-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
-
-// PLACE-DWN32-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
-// PLACE-DWN32-STRICT-LE-NEXT: <CGBitFieldInfo Offset:8 Size:8 IsSigned:1 StorageSize:16 StorageOffset:4
+// PLACE-DWN32-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:4
+// PLACE-DWN32-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:5
 // CHECK-NEXT: ]>
 
 struct E {
@@ -160,31 +159,30 @@ struct E {
   unsigned c : 12;
 } e;
 // CHECK-LABEL: LLVMType:%struct.E =
-// LAYOUT-FLEX64-SAME: type { i8, i16, i16, [2 x i8] }
-// LAYOUT-FLEX32-SAME: type { i8, i16, i16, [2 x i8] }
-// LAYOUT-STRICT-SAME: type { i8, i16, i16, [2 x i8] }
+// LAYOUT-FLEX64-SAME: type { i64 }
+// LAYOUT-FLEX32-SAME: type { i32, i16 }
+// LAYOUT-STRICT-SAME: type { i32, i16 }
 // LAYOUT-DWN32-SAME: type { i32 }
 // CHECK: BitFields:[
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:32 Size:12 IsSigned:0 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:57 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:35 Size:13 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:64 StorageOffset:0
 
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
 
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
 
 // PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
@@ -199,42 +197,42 @@ struct F {
   signed char d : 7;
 } f;
 // CHECK-LABEL: LLVMType:%struct.F =
-// LAYOUT-FLEX64-SAME: type { i8, i16, i16, i8 }
-// LAYOUT-FLEX32-SAME: type { i8, i16, i16, i8 }
-// LAYOUT-STRICT-SAME: type { i8, i16, i16, i8 }
-// LAYOUT-DWN32-SAME: type { [5 x i8] }
+// LAYOUT-FLEX64-SAME: type { i64 }
+// LAYOUT-FLEX32-SAME: type { i32, i32 }
+// LAYOUT-STRICT-SAME: type { i32, i32 }
+// LAYOUT-DWN32-SAME: type <{ i32, i8 }>
 // CHECK: BitFields:[
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:32 Size:12 IsSigned:0 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-LE-NEXT: <CGBitFieldInfo Offset:48 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:57 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:35 Size:13 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:64 StorageOffset:0
+// PLACE-FLEX64-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
 
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:32 StorageOffset:4
+// PLACE-FLEX32-LE-NEXT: <CGBitFieldInfo Offset:16 Size:7 IsSigned:1 StorageSize:32 StorageOffset:4
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:32 StorageOffset:4
+// PLACE-FLEX32-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:32 StorageOffset:4
 
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
-// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:32 StorageOffset:4
+// PLACE-STRICT-LE-NEXT: <CGBitFieldInfo Offset:16 Size:7 IsSigned:1 StorageSize:32 StorageOffset:4
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:32 StorageOffset:4
+// PLACE-STRICT-BE-NEXT: <CGBitFieldInfo Offset:9 Size:7 IsSigned:1 StorageSize:32 StorageOffset:4
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:7 Size:13 IsSigned:1 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:32 Size:7 IsSigned:1 StorageSize:40 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:7 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:4
 // CHECK-NEXT: ]>
 
 struct G {
@@ -245,22 +243,22 @@ struct G {
   signed char e;
 } g;
 // CHECK-LABEL: LLVMType:%struct.G =
-// LAYOUT-SAME: type { i8, i16, i16, i8, i8 }
-// LAYOUT-DWN32-SAME: type { [5 x i8], i8 }
+// LAYOUT-SAME: type { i32, i16, i8, i8 }
+// LAYOUT-DWN32-SAME: type <{ i32, i8, i8 }>
 // CHECK: BitFields:[
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-LE-NEXT: <CGBitFieldInfo Offset:16 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
 // PLACE-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:0
-// PLACE-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:16 StorageOffset:2
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:25 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-BE-NEXT: <CGBitFieldInfo Offset:3 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
 // PLACE-BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:0 StorageSize:16 StorageOffset:4
 // PLACE-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:6
 
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:7 Size:13 IsSigned:1 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:40 StorageOffset:0
-// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:32 Size:7 IsSigned:1 StorageSize:40 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:7 Size:13 IsSigned:1 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:0 StorageSize:32 StorageOffset:0
+// PLACE-DWN32-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:4
 // CHECK-NEXT: ]>
 
 #if _LP64
@@ -301,32 +299,32 @@ struct B64 {
   signed char e; // not a bitfield
 } b64;
 // CHECK-64-LABEL: LLVMType:%struct.B64 =
-// LAYOUT-64-FLEX-SAME: type { [7 x i8], i8 }
-// LAYOUT-64-STRICT-SAME: type { [7 x i8], i8 }
-// LAYOUT-64-DWN-SAME: type { [7 x i8], i8 }
+// LAYOUT-64-FLEX-SAME: type <{ i16, i8, i32, i8 }>
+// LAYOUT-64-STRICT-SAME: type <{ i16, i8, i16, i16, i8 }>
+// LAYOUT-64-DWN-SAME: type <{ i16, i8, i32, i8 }>
 // CHECK-64: BitFields:[
-// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:40 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:40 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:32 Size:8 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
+// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
+// PLACE-64-FLEX-LE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
+// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
+// PLACE-64-FLEX-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
 
-// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:40 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:40 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:32 Size:8 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
+// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:3
+// PLACE-64-STRICT-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:5
+// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:3
+// PLACE-64-STRICT-BE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:5
 
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:40 Size:16 IsSigned:1 StorageSize:56 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:16 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:8 StorageOffset:2
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:32 StorageOffset:3
 // CHECK-64-NEXT: ]>
 
 struct C64 {
@@ -337,25 +335,25 @@ struct C64 {
   signed char e : 7;
 } c64;
 // CHECK-64-LABEL: LLVMType:%struct.C64 =
-// LAYOUT-64-SAME: type { i16, [5 x i8], i8 }
-// LAYOUT-64-DWN-SAME: type { i16, [5 x i8], i8 }
+// LAYOUT-64-SAME: type {  i64 }
+// LAYOUT-64-DWN-SAME: type {  i64 }
 // CHECK-64: BitFields:[
-// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:1 StorageSize:16 StorageOffset:0
-// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:24 Size:15 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:7
-// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:15 IsSigned:1 StorageSize:16 StorageOffset:0
-// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:32 Size:8 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:16 Size:16 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:15 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:8 StorageOffset:7
+// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:40 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-LE-NEXT: <CGBitFieldInfo Offset:56 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:49 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:40 Size:8 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:9 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-BE-NEXT: <CGBitFieldInfo Offset:1 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
 
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:1 StorageSize:16 StorageOffset:0
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:8 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:8 Size:16 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:24 Size:15 IsSigned:1 StorageSize:40 StorageOffset:2
-// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:7 IsSigned:1 StorageSize:8 StorageOffset:7
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:0 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:16 Size:8 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:24 Size:16 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:40 Size:15 IsSigned:1 StorageSize:64 StorageOffset:0
+// PLACE-64-DWN-LE-NEXT: <CGBitFieldInfo Offset:56 Size:7 IsSigned:1 StorageSize:64 StorageOffset:0
 // CHECK-64-NEXT: ]>
 
 #endif
