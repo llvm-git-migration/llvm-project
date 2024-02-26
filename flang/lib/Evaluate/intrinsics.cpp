@@ -1120,7 +1120,9 @@ static const SpecificIntrinsicInterface specificIntrinsicFunction[]{
     {{"iiabs", {{"a", TypePattern{IntType, KindCode::exactKind, 2}}},
          TypePattern{IntType, KindCode::exactKind, 2}},
         "abs"},
-    {{"index", {{"string", DefaultChar}, {"substring", DefaultChar}},
+    {{"index",
+        {{"string", DefaultChar}, {"substring", DefaultChar},
+            {"back", AnyLogical, Rank::elemental, Optionality::optional}},
         DefaultInt}},
     {{"isign", {{"a", DefaultInt}, {"b", DefaultInt}}, DefaultInt}, "sign"},
     {{"jiabs", {{"a", TypePattern{IntType, KindCode::exactKind, 4}}},
@@ -3220,6 +3222,11 @@ IntrinsicProcTable::Implementation::IsSpecificIntrinsicFunction(
       characteristics::DummyDataObject dummy{
           GetSpecificType(specific.dummy[j].typePattern)};
       dummy.intent = specific.dummy[j].intent;
+      dummy.attrs.set(
+          characteristics::DummyDataObject::Attr::DeducedFromActual);
+      if (specific.dummy[j].optionality == Optionality::optional) {
+        dummy.attrs.set(characteristics::DummyDataObject::Attr::Optional);
+      }
       args.emplace_back(
           std::string{specific.dummy[j].keyword}, std::move(dummy));
     }

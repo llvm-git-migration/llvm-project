@@ -311,8 +311,9 @@ bool DummyDataObject::IsCompatibleWith(const DummyDataObject &actual,
   }
   if (type.type().category() == TypeCategory::Character &&
       !deducedAssumedLength) {
-    if (actual.type.type().IsAssumedLengthCharacter() !=
-        type.type().IsAssumedLengthCharacter()) {
+    if (!actual.attrs.test(Attr::DeducedFromActual) &&
+        actual.type.type().IsAssumedLengthCharacter() !=
+            type.type().IsAssumedLengthCharacter()) {
       if (whyNot) {
         *whyNot = "assumed-length character vs explicit-length character";
       }
@@ -336,10 +337,15 @@ bool DummyDataObject::IsCompatibleWith(const DummyDataObject &actual,
       }
     }
   }
-  if (!IdenticalSignificantAttrs(attrs, actual.attrs) ||
-      type.attrs() != actual.type.attrs()) {
+  if (!IdenticalSignificantAttrs(attrs, actual.attrs)) {
     if (whyNot) {
       *whyNot = "incompatible dummy data object attributes";
+    }
+    return false;
+  }
+  if (type.attrs() != actual.type.attrs()) {
+    if (whyNot) {
+      *whyNot = "incompatible dummy data object type attributes";
     }
     return false;
   }
