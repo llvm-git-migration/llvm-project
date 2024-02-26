@@ -265,6 +265,8 @@ public:
     return {identifiers.data() + getVarKindOffset(kind), getNumVarKind(kind)};
   }
 
+  ArrayRef<Identifier> getIds() const { return identifiers; }
+
   /// Returns if identifiers are being used.
   bool isUsingIds() const { return usingIds; }
 
