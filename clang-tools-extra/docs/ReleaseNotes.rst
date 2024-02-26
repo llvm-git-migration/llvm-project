@@ -134,6 +134,10 @@ Changes in existing checks
   <clang-tidy/checks/bugprone/unused-local-non-trivial-variable>` check by
   ignoring local variable with ``[maybe_unused]`` attribute.
 
+ - Improved :doc:`bugprone-unused-return-value
+   <clang-tidy/checks/bugprone/unused-return-value>` check by updating the
+   parameter `CheckedFunctions` to support regex
+
 - Cleaned up :doc:`cppcoreguidelines-prefer-member-initializer
   <clang-tidy/checks/cppcoreguidelines/prefer-member-initializer>`
   by removing enforcement of rule `C.48
