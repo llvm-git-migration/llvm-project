@@ -266,18 +266,62 @@ static LogicalResult doVerifyRoundTrip(Operation *op,
                                        const MlirOptMainConfig &config,
                                        bool useBytecode) {
   // We use a new context to avoid resource handle renaming issue in the diff.
+  auto initializeNewContext = [&](MLIRContext &newContext) -> LogicalResult {
+    OwningOpRef<Operation *> roundtripModule;
+    newContext.appendDialectRegistry(op->getContext()->getDialectRegistry());
+    if (op->getContext()->allowsUnregisteredDialects())
+      newContext.allowUnregisteredDialects();
+    StringRef irdlFile = config.getIrdlFile();
+    if (!irdlFile.empty() && failed(loadIRDLDialects(irdlFile, newContext)))
+      return failure();
+    return success();
+  };
   MLIRContext roundtripContext;
-  OwningOpRef<Operation *> roundtripModule;
-  roundtripContext.appendDialectRegistry(
-      op->getContext()->getDialectRegistry());
-  if (op->getContext()->allowsUnregisteredDialects())
-    roundtripContext.allowUnregisteredDialects();
-  StringRef irdlFile = config.getIrdlFile();
-  if (!irdlFile.empty() && failed(loadIRDLDialects(irdlFile, roundtripContext)))
+  if (failed(initializeNewContext(roundtripContext)))
     return failure();
+
+  auto parseMLIRString = [&](const std::string &stringBuffer,
+                             MLIRContext &context) -> OwningOpRef<Operation *> {
+    FallbackAsmResourceMap fallbackResourceMap;
+    ParserConfig parseConfig(&context, /*verifyAfterParse=*/true,
+                             &fallbackResourceMap);
+    OwningOpRef<Operation *> roundtripModule =
+        parseSourceString<Operation *>(stringBuffer, parseConfig);
+    return roundtripModule;
+  };
+
+  // Print the operation to string. If we are going to verify the roundtrip to
+  // bytecode, make sure first that a roundtrip to text of the same IR is
+  // possible.
+  std::string reference;
+  {
+    llvm::raw_string_ostream ostream(reference);
+    op->print(ostream,
+              OpPrintingFlags().printGenericOpForm().enableDebugInfo());
+    // When testing a bytecode roundtrip, we don't want to report failure if the
+    // textual roundtrip also fails.
+    if (useBytecode) {
+      MLIRContext textualContext;
+      if (failed(initializeNewContext(textualContext)))
+        return failure();
+      OwningOpRef<Operation *> textualModule =
+          parseMLIRString(ostream.str(), textualContext);
+      // If we can't parse the string back, we can't guarantee that bytecode
+      // will be parsed correctly.
+      if (!textualModule)
+        return success();
+
+      // Clear the reference, and print the textual roundtrip.
+      reference.clear();
+      llvm::raw_string_ostream ostreamref(reference);
+      textualModule->print(
+          ostreamref, OpPrintingFlags().printGenericOpForm().enableDebugInfo());
+    }
+  }
 
   // Print a first time with custom format (or bytecode) and parse it back to
   // the roundtripModule.
+  std::string roundtrip;
   {
     std::string buffer;
     llvm::raw_string_ostream ostream(buffer);
@@ -291,25 +335,11 @@ static LogicalResult doVerifyRoundTrip(Operation *op,
       op->print(ostream,
                 OpPrintingFlags().printGenericOpForm(false).enableDebugInfo());
     }
-    FallbackAsmResourceMap fallbackResourceMap;
-    ParserConfig parseConfig(&roundtripContext, /*verifyAfterParse=*/true,
-                             &fallbackResourceMap);
-    roundtripModule =
-        parseSourceString<Operation *>(ostream.str(), parseConfig);
-    if (!roundtripModule) {
-      op->emitOpError()
-          << "failed to parse bytecode back, cannot verify round-trip.\n";
-      return failure();
-    }
-  }
-
-  // Print in the generic form for the reference module and the round-tripped
-  // one and compare the outputs.
-  std::string reference, roundtrip;
-  {
-    llvm::raw_string_ostream ostreamref(reference);
-    op->print(ostreamref,
-              OpPrintingFlags().printGenericOpForm().enableDebugInfo());
+    OwningOpRef<Operation *> roundtripModule =
+        parseMLIRString(ostream.str(), roundtripContext);
+    if (!roundtripModule)
+      return op->emitOpError()
+             << "failed to parse bytecode back, cannot verify round-trip.\n";
     llvm::raw_string_ostream ostreamrndtrip(roundtrip);
     roundtripModule.get()->print(
         ostreamrndtrip,
