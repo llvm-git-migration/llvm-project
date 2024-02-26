@@ -2,30 +2,30 @@
 
 // Configs that have cheap unaligned access
 // Little Endian
-// RUN: %clang_cc1 -triple=aarch64-linux-gnu %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
-// RUN: %clang_cc1 -triple=arm-none-eabi %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
-// RUN: %clang_cc1 -triple=i686-linux-gnu %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
-// RUN: %clang_cc1 -triple=x86_64-linux-gnu %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=aarch64-linux-gnu %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=arm-none-eabi %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=i686-linux-gnu %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=x86_64-linux-gnu %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
 // Big Endian
-// RUN: %clang_cc1 -triple=powerpc-linux-gnu %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
-// RUN: %clang_cc1 -triple=powerpc64-linux-gnu %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
+// RUN: %clang_cc1 -triple=powerpc-linux-gnu %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
+// RUN: %clang_cc1 -triple=powerpc64-linux-gnu %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
 
 // Configs that have expensive unaligned access
 // Little Endian
-// RUN: %clang_cc1 -triple=hexagon-elf %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
-// RUN: %clang_cc1 -triple=le64-elf %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=hexagon-elf %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
+// RUN: %clang_cc1 -triple=le64-elf %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-LE %s
 // Big endian
-// RUN: %clang_cc1 -triple=m68k-elf %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
-// RUN: %clang_cc1 -triple=mips-elf %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
+// RUN: %clang_cc1 -triple=m68k-elf %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
+// RUN: %clang_cc1 -triple=mips-elf %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKT,CHECKT-BE %s
 
 // And now a few with -fno-bitfield-type-align (where zero-length fields behave
 // differently)
-// RUN: %clang_cc1 -triple=i686-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-LE %s
-// RUN: %clang_cc1 -triple=x86_64-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-LE %s
-// RUN: %clang_cc1 -triple=powerpc-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-BE %s
-// RUN: %clang_cc1 -triple=powerpc64-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-BE %s
-// RUN: %clang_cc1 -triple=hexagon-elf -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNTZ,CHECKNTZ-LE %s
-// RUN: %clang_cc1 -triple=mips-elf -fno-bitfield-type-align %s -emit-llvm -o /dev/null -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNTZ,CHECKNTZ-BE %s
+// RUN: %clang_cc1 -triple=i686-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-LE %s
+// RUN: %clang_cc1 -triple=x86_64-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-LE %s
+// RUN: %clang_cc1 -triple=powerpc-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-BE %s
+// RUN: %clang_cc1 -triple=powerpc64-linux-gnu -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNT,CHECKNT-BE %s
+// RUN: %clang_cc1 -triple=hexagon-elf -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNTZ,CHECKNTZ-LE %s
+// RUN: %clang_cc1 -triple=mips-elf -fno-bitfield-type-align %s -emit-llvm -o %t -fdump-record-layouts-simple | FileCheck --check-prefixes CHECK,CHECKNTZ,CHECKNTZ-BE %s
 
 struct P1 {
   unsigned a :8;
