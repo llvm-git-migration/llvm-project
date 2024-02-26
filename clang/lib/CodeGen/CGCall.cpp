@@ -2465,6 +2465,15 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
 
     if (TargetDecl->hasAttr<ArmLocallyStreamingAttr>())
       FuncAttrs.addAttribute("aarch64_pstate_sm_body");
+
+    for (auto Attr : TargetDecl->specific_attrs<LLVMFuncAttr>()) {
+      auto name = Attr->getLLVMAttrName();
+      auto value = Attr->getLLVMAttrValue();
+
+      auto Attr = llvm::Attribute::parseAttr(
+          getLLVMContext(), AttributeAndValue.first, AttributeAndValue.second);
+      FuncAttrs.addAttribute(Attr);
+    }
   }
 
   // Attach "no-builtins" attributes to:

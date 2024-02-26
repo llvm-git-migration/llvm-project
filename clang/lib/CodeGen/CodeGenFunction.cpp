@@ -831,6 +831,17 @@ void CodeGenFunction::StartFunction(GlobalDecl GD, QualType RetTy,
         FD->getBody()->getStmtClass() == Stmt::CoroutineBodyStmtClass)
       SanOpts.Mask &= ~SanitizerKind::Null;
 
+  if (D) {
+    for (auto Attr : TargetDecl->specific_attrs<LLVMFuncAttr>()) {
+      auto name = Attr->getLLVMAttrName();
+      auto value = Attr->getLLVMAttrValue();
+
+      auto Attr = llvm::Attribute::parseAttr(
+          getLLVMContext(), AttributeAndValue.first, AttributeAndValue.second);
+      Fn->addFnAttr(Attr);
+    }
+  }
+
   // Apply xray attributes to the function (as a string, for now)
   bool AlwaysXRayAttr = false;
   if (const auto *XRayAttr = D ? D->getAttr<XRayInstrumentAttr>() : nullptr) {
