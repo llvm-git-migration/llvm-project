@@ -12831,6 +12831,20 @@ SDValue SITargetLowering::performFCanonicalizeCombine(
     }
   }
 
+  // The TRUNC parameter of FP_ROUND specifies whether the operation may be
+  // optimized away because the operation is known to be exact. Even if the
+  // operation would be considered exact in normal circumstances where we do not
+  // care about SNaN, we do care about SNaN here and must preserve the operation
+  // unless its input is known to be canonicalized.
+  if (SrcOpc == ISD::FP_ROUND || SrcOpc == ISD::STRICT_FP_ROUND) {
+    if (N0.getConstantOperandVal(1) == 0 ||
+        isCanonicalized(DAG, N0.getOperand(0)))
+      return N0;
+    SDLoc SL(N0);
+    return DAG.getNode(SrcOpc, SL, VT, N0.getOperand(0),
+                       DAG.getTargetConstant(0, SL, MVT::i32));
+  }
+
   return isCanonicalized(DAG, N0) ? N0 : SDValue();
 }
 
