@@ -10,6 +10,7 @@
 #define __LLVM_LIBC_MACROS_MATH_MACROS_H
 
 #include "limits-macros.h"
+#include "src/__support/macros/properties/architectures.h"
 
 #define MATH_ERRNO 1
 #define MATH_ERREXCEPT 2
@@ -32,6 +33,8 @@
 #define math_errhandling 0
 #elif defined(__NO_MATH_ERRNO__)
 #define math_errhandling (MATH_ERREXCEPT)
+#elif defined(LIBC_TARGET_ARCH_IS_GPU)
+#define math_errhandling (MATH_ERRNO)
 #else
 #define math_errhandling (MATH_ERRNO | MATH_ERREXCEPT)
 #endif
