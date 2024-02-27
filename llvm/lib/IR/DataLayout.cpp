@@ -216,6 +216,8 @@ void DataLayout::reset(StringRef Desc) {
   if (Error Err = setPointerAlignmentInBits(0, Align(8), Align(8), 64, 64))
     return report_fatal_error(std::move(Err));
 
+  setNullPointerValue(INT_MAX, 0);
+
   if (Error Err = parseSpecifier(Desc))
     return report_fatal_error(std::move(Err));
 }
@@ -248,6 +250,15 @@ template <typename IntTy> static Error getInt(StringRef R, IntTy &Result) {
   bool error = R.getAsInteger(10, Result); (void)error;
   if (error)
     return reportError("not a number, or does not fit in an unsigned int");
+  return Error::success();
+}
+
+template <typename IntTy>
+static Error getIntForAddrSpace(StringRef R, IntTy &Result) {
+  if (R.equals("neg"))
+    Result = -1;
+  else
+    return getInt<IntTy>(R, Result);
   return Error::success();
 }
 
@@ -500,6 +511,31 @@ Error DataLayout::parseSpecifier(StringRef Desc) {
     case 'A': { // Default stack/alloca address space.
       if (Error Err = getAddrSpace(Tok, AllocaAddrSpace))
         return Err;
+      break;
+    }
+    case 'z': {
+      unsigned AddrSpace = 0;
+      if (!Tok.empty())
+        if (Error Err = getInt(Tok, AddrSpace))
+          return Err;
+      if (!isUInt<24>(AddrSpace))
+        return reportError("Invalid address space, must be a 24-bit integer");
+
+      if (Rest.empty())
+        return reportError("Missing address space specification for pointer in "
+                           "datalayout string");
+      if (Error Err = ::split(Rest, ':', Split))
+        return Err;
+      int64_t Value;
+      if (Error Err = getIntForAddrSpace(Tok, Value))
+        return Err;
+
+      // for default address space e.g., z:0
+      if (AddrSpace == 0) {
+        setNullPointerValue(INT_MAX, 0);
+        break;
+      }
+      setNullPointerValue(AddrSpace, Value);
       break;
     }
     case 'G': { // Default address space for global variables.
