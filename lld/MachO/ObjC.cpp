@@ -454,7 +454,8 @@ private:
   bool emitCatListEntrySec(std::string &forCateogryName,
                            std::string &forBaseClassName, Defined *&catListSym);
   bool emitCategoryBody(std::string &name, Defined *nameSym,
-                        Symbol *baseClassSym, Defined *&catBodySym);
+                        Symbol *baseClassSym, std::string &baseClassName,
+                        Defined *&catBodySym);
   bool emitCategoryName(std::string &name, Defined *&catNameSym);
   bool createSymbolReference(Defined *refFrom, Symbol *refTo, uint32_t offset,
                              Reloc &relocTemplate);
@@ -979,6 +980,7 @@ bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
 // class/instance methods/props.
 bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
                                           Symbol *baseClassSym,
+                                          std::string &baseClassName,
                                           Defined *&catBodySym) {
   generatedSectionData.push_back(SmallVector<uint8_t>(catLayout.totalSize, 0));
   llvm::ArrayRef<uint8_t> bodyData = generatedSectionData.back();
@@ -995,7 +997,8 @@ bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
 
   newBodySec->parent = infoCategoryWriter.catBodyInfo.outputSection;
 
-  std::string symName = "__OBJC_$_CATEGORY_NSArray_$_(" + name + ")";
+  std::string symName =
+      "__OBJC_$_CATEGORY_" + baseClassName + "_$_(" + name + ")";
   generatedNames.push_back(StringRef(symName));
   catBodySym = make<Defined>(
       StringRef(generatedNames.back()), /*file=*/getGenObjFile(), newBodySec,
@@ -1059,7 +1062,7 @@ bool ObjcCategoryMerger::emitCategory(ClassExtensionInfo &extInfo,
     return false;
 
   if (!emitCategoryBody(extInfo.mergedContainerName, catNameSym,
-                        extInfo.baseClass, catBodySym))
+                        extInfo.baseClass, extInfo.baseClassName, catBodySym))
     return false;
 
   Defined *catListSym = nullptr;

@@ -13,7 +13,7 @@
 # RUN: llvm-objdump --objc-meta-data --macho a64_file2_merge.exe | FileCheck %s --check-prefixes=MERGE_CATS
 
 
-MERGE_CATS: __OBJC_$_CATEGORY_NSArray_$_(Category02|Category03)
+MERGE_CATS: __OBJC_$_CATEGORY_MyBaseClass_$_(Category02|Category03)
 MERGE_CATS: instanceMethods
 MERGE_CATS-NEXT: 24
 MERGE_CATS-NEXT: 4
