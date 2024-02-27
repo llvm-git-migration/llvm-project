@@ -6962,12 +6962,12 @@ bool CombinerHelper::matchAddOverflow(MachineInstr &MI, BuildFnTy &MatchInfo) {
         B.buildSAddo(Dst, Carry, RHS, LHS);
       };
       return true;
-    } else {
-      MatchInfo = [=](MachineIRBuilder &B) {
-        B.buildUAddo(Dst, Carry, RHS, LHS);
-      };
-      return true;
     }
+    // !IsSigned
+    MatchInfo = [=](MachineIRBuilder &B) {
+      B.buildUAddo(Dst, Carry, RHS, LHS);
+    };
+    return true;
   }
 
   std::optional<APInt> MaybeLHS = getConstantOrConstantSplatVector(LHS);
