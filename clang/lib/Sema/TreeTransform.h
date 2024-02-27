@@ -12731,7 +12731,7 @@ TreeTransform<Derived>::TransformCXXNewExpr(CXXNewExpr *E) {
   }
 
   QualType AllocType = AllocTypeInfo->getType();
-  if (!ArraySize) {
+  if (ArraySize) {
     // If no array size was specified, but the new expression was
     // instantiated with an array type (e.g., "new T" where T is
     // instantiated with "int[4]"), extract the outer bound from the
