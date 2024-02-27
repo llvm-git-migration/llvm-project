@@ -609,7 +609,7 @@ void Debugger::Initialize(LoadPluginCallbackType load_plugin_callback) {
          "Debugger::Initialize called more than once!");
   g_debugger_list_mutex_ptr = new std::recursive_mutex();
   g_debugger_list_ptr = new DebuggerList();
-  g_thread_pool = new llvm::ThreadPool(llvm::optimal_concurrency());
+  g_thread_pool = new llvm::DefaultThreadPool(llvm::optimal_concurrency());
   g_load_plugin_callback = load_plugin_callback;
 }
 

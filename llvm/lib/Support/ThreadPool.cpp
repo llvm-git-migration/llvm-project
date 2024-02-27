@@ -20,7 +20,7 @@
 
 using namespace llvm;
 
-ThreadPoolInterface::~ThreadPoolInterface() = default;
+ThreadPool::~ThreadPool() = default;
 
 // A note on thread groups: Tasks are by default in no group (represented
 // by nullptr ThreadPoolTaskGroup pointer in the Tasks queue) and functionality

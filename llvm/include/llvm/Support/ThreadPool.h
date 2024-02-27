@@ -46,7 +46,7 @@ class ThreadPoolTaskGroup;
 /// available threads are used up by tasks waiting for a task that has no thread
 /// left to run on (this includes waiting on the returned future). It should be
 /// generally safe to wait() for a group as long as groups do not form a cycle.
-class ThreadPoolInterface {
+class ThreadPool {
   /// The actual method to enqueue a task to be defined by the concrete
   /// implementation.
   virtual void asyncEnqueue(std::function<void()> Task,
@@ -55,7 +55,7 @@ class ThreadPoolInterface {
 public:
   /// Destroying the pool will drain the pending tasks and wait. The current
   /// thread may participate in the execution of the pending tasks.
-  virtual ~ThreadPoolInterface();
+  virtual ~ThreadPool();
 
   /// Blocking wait for all the threads to complete and the queue to be empty.
   /// It is an error to try to add new tasks while blocking on this call.
@@ -121,7 +121,7 @@ private:
 ///
 /// The pool keeps a vector of threads alive, waiting on a condition variable
 /// for some work to become available.
-class StdThreadPool : public ThreadPoolInterface {
+class StdThreadPool : public ThreadPool {
 public:
   /// Construct a pool using the hardware strategy \p S for mapping hardware
   /// execution resources (threads, cores, CPUs)
@@ -212,11 +212,10 @@ private:
   /// Maximum number of threads to potentially grow this pool to.
   const unsigned MaxThreadCount;
 };
-
-#endif // LLVM_ENABLE_THREADS Disabled
+#endif // LLVM_ENABLE_THREADS
 
 /// A non-threaded implementation.
-class SingleThreadExecutor : public ThreadPoolInterface {
+class SingleThreadExecutor : public ThreadPool {
 public:
   /// Construct a non-threaded pool, ignoring using the hardware strategy.
   SingleThreadExecutor(ThreadPoolStrategy ignored = {});
@@ -253,9 +252,9 @@ private:
 };
 
 #if LLVM_ENABLE_THREADS
-using ThreadPool = StdThreadPool;
+using DefaultThreadPool = StdThreadPool;
 #else
-using ThreadPool = SingleThreadExecutor;
+using DefaultThreadPool = SingleThreadExecutor;
 #endif
 
 /// A group of tasks to be run on a thread pool. Thread pool tasks in different
@@ -265,7 +264,7 @@ using ThreadPool = SingleThreadExecutor;
 class ThreadPoolTaskGroup {
 public:
   /// The ThreadPool argument is the thread pool to forward calls to.
-  ThreadPoolTaskGroup(ThreadPoolInterface &Pool) : Pool(Pool) {}
+  ThreadPoolTaskGroup(ThreadPool &Pool) : Pool(Pool) {}
 
   /// Blocking destructor: will wait for all the tasks in the group to complete
   /// by calling ThreadPool::wait().
@@ -282,7 +281,7 @@ public:
   void wait() { Pool.wait(*this); }
 
 private:
-  ThreadPoolInterface &Pool;
+  ThreadPool &Pool;
 };
 
 } // namespace llvm

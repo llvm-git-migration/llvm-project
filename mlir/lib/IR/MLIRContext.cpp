@@ -170,11 +170,11 @@ public:
   /// It can't be nullptr when multi-threading is enabled. Otherwise if
   /// multi-threading is disabled, and the threadpool wasn't externally provided
   /// using `setThreadPool`, this will be nullptr.
-  llvm::ThreadPoolInterface *threadPool = nullptr;
+  llvm::ThreadPool *threadPool = nullptr;
 
   /// In case where the thread pool is owned by the context, this ensures
   /// destruction with the context.
-  std::unique_ptr<llvm::ThreadPoolInterface> ownedThreadPool;
+  std::unique_ptr<llvm::ThreadPool> ownedThreadPool;
 
   /// An allocator used for AbstractAttribute and AbstractType objects.
   llvm::BumpPtrAllocator abstractDialectSymbolAllocator;
@@ -274,7 +274,7 @@ public:
   MLIRContextImpl(bool threadingIsEnabled)
       : threadingIsEnabled(threadingIsEnabled) {
     if (threadingIsEnabled) {
-      ownedThreadPool = std::make_unique<llvm::ThreadPool>();
+      ownedThreadPool = std::make_unique<llvm::DefaultThreadPool>();
       threadPool = ownedThreadPool.get();
     }
   }
@@ -621,12 +621,12 @@ void MLIRContext::disableMultithreading(bool disable) {
   } else if (!impl->threadPool) {
     // The thread pool isn't externally provided.
     assert(!impl->ownedThreadPool);
-    impl->ownedThreadPool = std::make_unique<llvm::ThreadPool>();
+    impl->ownedThreadPool = std::make_unique<llvm::DefaultThreadPool>();
     impl->threadPool = impl->ownedThreadPool.get();
   }
 }
 
-void MLIRContext::setThreadPool(llvm::ThreadPoolInterface &pool) {
+void MLIRContext::setThreadPool(llvm::ThreadPool &pool) {
   assert(!isMultithreadingEnabled() &&
          "expected multi-threading to be disabled when setting a ThreadPool");
   impl->threadPool = &pool;
@@ -644,7 +644,7 @@ unsigned MLIRContext::getNumThreads() {
   return 1;
 }
 
-llvm::ThreadPoolInterface &MLIRContext::getThreadPool() {
+llvm::ThreadPool &MLIRContext::getThreadPool() {
   assert(isMultithreadingEnabled() &&
          "expected multi-threading to be enabled within the context");
   assert(impl->threadPool &&
