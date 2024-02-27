@@ -12416,7 +12416,7 @@ SDValue SITargetLowering::performRcpCombine(SDNode *N,
 }
 
 bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
-                                       unsigned MaxDepth) const {
+                                       bool &Trunc, unsigned MaxDepth) const {
   unsigned Opcode = Op.getOpcode();
   if (Opcode == ISD::FCANONICALIZE)
     return true;
@@ -12450,7 +12450,6 @@ bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
   case ISD::FSQRT:
   case ISD::FDIV:
   case ISD::FREM:
-  case ISD::FP_ROUND:
   case ISD::FP_EXTEND:
   case ISD::FLDEXP:
   case AMDGPUISD::FMUL_LEGACY:
@@ -12473,12 +12472,17 @@ bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
   case AMDGPUISD::CVT_F32_UBYTE3:
     return true;
 
+  case ISD::FP_ROUND:
+    if (Op.getConstantOperandVal(1))
+      Trunc = true;
+    return true;
+
   // It can/will be lowered or combined as a bit operation.
   // Need to check their input recursively to handle.
   case ISD::FNEG:
   case ISD::FABS:
   case ISD::FCOPYSIGN:
-    return isCanonicalized(DAG, Op.getOperand(0), MaxDepth - 1);
+    return isCanonicalized(DAG, Op.getOperand(0), Trunc, MaxDepth - 1);
 
   case ISD::FSIN:
   case ISD::FCOS:
@@ -12513,20 +12517,20 @@ bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
 
     // FIXME: Does this apply with clamp? It's implemented with max.
     for (unsigned I = 0, E = Op.getNumOperands(); I != E; ++I) {
-      if (!isCanonicalized(DAG, Op.getOperand(I), MaxDepth - 1))
+      if (!isCanonicalized(DAG, Op.getOperand(I), Trunc, MaxDepth - 1))
         return false;
     }
 
     return true;
   }
   case ISD::SELECT: {
-    return isCanonicalized(DAG, Op.getOperand(1), MaxDepth - 1) &&
-           isCanonicalized(DAG, Op.getOperand(2), MaxDepth - 1);
+    return isCanonicalized(DAG, Op.getOperand(1), Trunc, MaxDepth - 1) &&
+           isCanonicalized(DAG, Op.getOperand(2), Trunc, MaxDepth - 1);
   }
   case ISD::BUILD_VECTOR: {
     for (unsigned i = 0, e = Op.getNumOperands(); i != e; ++i) {
       SDValue SrcOp = Op.getOperand(i);
-      if (!isCanonicalized(DAG, SrcOp, MaxDepth - 1))
+      if (!isCanonicalized(DAG, SrcOp, Trunc, MaxDepth - 1))
         return false;
     }
 
@@ -12534,18 +12538,18 @@ bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
   }
   case ISD::EXTRACT_VECTOR_ELT:
   case ISD::EXTRACT_SUBVECTOR: {
-    return isCanonicalized(DAG, Op.getOperand(0), MaxDepth - 1);
+    return isCanonicalized(DAG, Op.getOperand(0), Trunc, MaxDepth - 1);
   }
   case ISD::INSERT_VECTOR_ELT: {
-    return isCanonicalized(DAG, Op.getOperand(0), MaxDepth - 1) &&
-           isCanonicalized(DAG, Op.getOperand(1), MaxDepth - 1);
+    return isCanonicalized(DAG, Op.getOperand(0), Trunc, MaxDepth - 1) &&
+           isCanonicalized(DAG, Op.getOperand(1), Trunc, MaxDepth - 1);
   }
   case ISD::UNDEF:
     // Could be anything.
     return false;
 
   case ISD::BITCAST:
-    return isCanonicalized(DAG, Op.getOperand(0), MaxDepth - 1);
+    return isCanonicalized(DAG, Op.getOperand(0), Trunc, MaxDepth - 1);
   case ISD::TRUNCATE: {
     // Hack round the mess we make when legalizing extract_vector_elt
     if (Op.getValueType() == MVT::i16) {
@@ -12553,7 +12557,8 @@ bool SITargetLowering::isCanonicalized(SelectionDAG &DAG, SDValue Op,
       if (TruncSrc.getValueType() == MVT::i32 &&
           TruncSrc.getOpcode() == ISD::BITCAST &&
           TruncSrc.getOperand(0).getValueType() == MVT::v2f16) {
-        return isCanonicalized(DAG, TruncSrc.getOperand(0), MaxDepth - 1);
+        return isCanonicalized(DAG, TruncSrc.getOperand(0), Trunc,
+                               MaxDepth - 1);
       }
     }
     return false;
@@ -12831,7 +12836,10 @@ SDValue SITargetLowering::performFCanonicalizeCombine(
     }
   }
 
-  return isCanonicalized(DAG, N0) ? N0 : SDValue();
+  bool Trunc = false;
+  return isCanonicalized(DAG, N0, Trunc)
+             ? Trunc ? DAG.getNode(ISD::FREEZE, SDLoc(N), VT, N0) : N0
+             : SDValue();
 }
 
 static unsigned minMaxOpcToMin3Max3Opc(unsigned Opc) {
