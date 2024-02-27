@@ -17,4 +17,11 @@ u32 computeHardwareCRC32(u32 Crc, uptr Data) {
 #endif // defined(__CRC32__) || defined(__SSE4_2__) ||
        // defined(__ARM_FEATURE_CRC32)
 
+#if defined(__loongarch_lp64)
+u32 computeHardwareCRC32(u32 Crc, uptr Data) {
+  // The LoongArch CRC intrinsics have the two input arguments swapped.
+  return static_cast<u32>(CRC32_INTRINSIC(Data, Crc));
+}
+#endif // defined(__loongarch_lp64)
+
 } // namespace scudo
