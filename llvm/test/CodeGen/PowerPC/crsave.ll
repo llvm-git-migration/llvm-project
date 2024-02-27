@@ -15,11 +15,12 @@ entry:
 }
 
 ; PPC32-LABEL: test_cr2:
-; PPC32: stwu 1, -32(1)
-; PPC32: stw 31, 28(1)
+; PPC32: stwu 1, -[[#%u,AMT:]](1)
+; PPC32: stw 31, [[#AMT - 4]](1)
+; PPC32: .cfi_offset cr2, -[[#%u,DOWN:]]
 ; PPC32: mfcr 12
-; PPC32-NEXT: stw 12, 24(31)
-; PPC32: lwz 12, 24(31)
+; PPC32-NEXT: stw 12, [[#AMT - DOWN]](31)
+; PPC32: lwz 12, [[#AMT - DOWN]](31)
 ; PPC32-NEXT: mtocrf 32, 12
 
 ; PPC64: .cfi_startproc
@@ -34,7 +35,7 @@ entry:
 ; PPC64: mtocrf 32, 12
 ; PPC64: .cfi_endproc
 
-define i32 @test_cr234() nounwind {
+define i32 @test_cr234() nounwind uwtable {
 entry:
   %ret = alloca i32, align 4
   %0 = call i32 asm sideeffect "\0A\09mtcr $4\0A\09cmpw 2,$2,$1\0A\09cmpw 3,$2,$2\0A\09cmpw 4,$2,$3\0A\09mfcr $0", "=r,r,r,r,r,~{cr2},~{cr3},~{cr4}"(i32 1, i32 2, i32 3, i32 0) nounwind
@@ -45,11 +46,14 @@ entry:
 }
 
 ; PPC32-LABEL: test_cr234:
-; PPC32: stwu 1, -32(1)
-; PPC32: stw 31, 28(1)
+; PPC32: stwu 1, -[[#%u,AMT:]](1)
+; PPC32: stw 31, [[#AMT - 4]](1)
+; PPC32: .cfi_offset cr2, -[[#%u,DOWN:]]
+; PPC32: .cfi_offset cr3, -[[#DOWN]]
+; PPC32: .cfi_offset cr4, -[[#DOWN]]
 ; PPC32: mfcr 12
-; PPC32-NEXT: stw 12, 24(31)
-; PPC32: lwz 12, 24(31)
+; PPC32-NEXT: stw 12, [[#AMT - DOWN]](31)
+; PPC32: lwz 12, [[#AMT - DOWN]](31)
 ; PPC32-NEXT: mtocrf 32, 12
 ; PPC32-NEXT: mtocrf 16, 12
 ; PPC32-NEXT: mtocrf 8, 12
