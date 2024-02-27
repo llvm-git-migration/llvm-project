@@ -6680,7 +6680,7 @@ multiclass sve_mem_z_spill<string asm> {
 }
 
 class sve_mem_p_spill<string asm>
-: I<(outs), (ins PPRAny:$Pt, GPR64sp:$Rn, simm9:$imm9),
+: I<(outs), (ins PPRorPNRAny:$Pt, GPR64sp:$Rn, simm9:$imm9),
   asm, "\t$Pt, [$Rn, $imm9, mul vl]",
   "",
   []>, Sched<[]> {
@@ -6703,7 +6703,7 @@ multiclass sve_mem_p_spill<string asm> {
   def NAME : sve_mem_p_spill<asm>;
 
   def : InstAlias<asm # "\t$Pt, [$Rn]",
-                  (!cast<Instruction>(NAME) PPRAny:$Pt, GPR64sp:$Rn, 0), 1>;
+                  (!cast<Instruction>(NAME) PPRorPNRAny:$Pt, GPR64sp:$Rn, 0), 1>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -7915,7 +7915,7 @@ multiclass sve_mem_z_fill<string asm> {
 }
 
 class sve_mem_p_fill<string asm>
-: I<(outs PPRAny:$Pt), (ins GPR64sp:$Rn, simm9:$imm9),
+: I<(outs PPRorPNRAny:$Pt), (ins GPR64sp:$Rn, simm9:$imm9),
   asm, "\t$Pt, [$Rn, $imm9, mul vl]",
   "",
   []>, Sched<[]> {
