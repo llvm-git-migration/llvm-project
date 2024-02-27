@@ -285,6 +285,10 @@ Bug Fixes to C++ Support
   templates when determining the primary template of an explicit specialization.
 - Fixed a crash in Microsoft compatibility mode where unqualified dependent base class
   lookup searches the bases of an incomplete class.
+  (`#782154 <https://github.com/llvm/llvm-project/issues/82154>`_`)
+- Clang now properly reports supported C++11 attributes when using
+  ``__has_cpp_attribute`` and parses attributes with arguments in C++03
+  (`#82995 <https://github.com/llvm/llvm-project/issues/82995>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
