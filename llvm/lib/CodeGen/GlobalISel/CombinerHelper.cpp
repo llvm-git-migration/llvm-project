@@ -1490,7 +1490,7 @@ void CombinerHelper::applyOptBrCondByInvertingCond(MachineInstr &MI,
   Observer.changedInstr(*BrCond);
 }
 
- 
+
 bool CombinerHelper::tryEmitMemcpyInline(MachineInstr &MI) {
   MachineIRBuilder HelperBuilder(MI);
   GISelObserverWrapper DummyObserver;
@@ -5284,6 +5284,65 @@ MachineInstr *CombinerHelper::buildSDivUsingMul(MachineInstr &MI) {
     Res = MIB.buildAShr(Ty, Res, Shift, MachineInstr::IsExact).getReg(0);
 
   return MIB.buildMul(Ty, Res, Factor);
+}
+
+bool CombinerHelper::matchSDivByPow2(MachineInstr &MI) {
+  assert(MI.getOpcode() == TargetOpcode::G_SDIV && "Expected SDIV");
+  auto &SDiv = cast<GenericMachineInstr>(MI);
+  Register RHS = SDiv.getReg(2);
+  auto MatchPow2 = [&](const Constant *C) {
+    if (auto *CI = dyn_cast<ConstantInt>(C))
+      return CI->getValue().isPowerOf2() || CI->getValue().isNegatedPowerOf2();
+    return false;
+  };
+  return matchUnaryPredicate(MRI, RHS, MatchPow2, /* AllowUndefs */ false);
+}
+
+void CombinerHelper::applySDivByPow2(MachineInstr &MI) {
+  assert(MI.getOpcode() == TargetOpcode::G_SDIV && "Expected SDIV");
+  auto &SDiv = cast<GenericMachineInstr>(MI);
+  Register Dst = SDiv.getReg(0);
+  Register LHS = SDiv.getReg(1);
+  Register RHS = SDiv.getReg(2);
+  LLT Ty = MRI.getType(Dst);
+  LLT ShiftAmtTy = getTargetLowering().getPreferredShiftAmountTy(Ty);
+
+  Builder.setInstrAndDebugLoc(MI);
+
+  auto RHSC = getIConstantVRegValWithLookThrough(RHS, MRI);
+  assert(RHSC.has_value() && "RHS must be a constant");
+  auto RHSCV = RHSC->Value;
+  auto Zero = Builder.buildConstant(Ty, 0);
+
+  // Special case: (sdiv X, 1) -> X
+  if (RHSCV.isOne()) {
+    replaceSingleDefInstWithReg(MI, LHS);
+    return;
+  }
+  // Special Case: (sdiv X, -1) -> 0-X
+  if (RHSCV.isAllOnes()) {
+    auto Sub = Builder.buildSub(Ty, Zero, LHS);
+    replaceSingleDefInstWithReg(MI, Sub->getOperand(0).getReg());
+    return;
+  }
+
+  unsigned Bitwidth = Ty.getScalarSizeInBits();
+  auto Bits = Builder.buildConstant(ShiftAmtTy, Bitwidth);
+  auto C1 = Builder.buildCTTZ(Ty, RHS);
+  C1 = Builder.buildZExtOrTrunc(ShiftAmtTy, C1);
+  auto Inexact = Builder.buildSub(ShiftAmtTy, Bits, C1);
+  // TODO: Need to check whether Inexact is constant
+  auto Sign = Builder.buildAShr(
+      Ty, LHS, Builder.buildConstant(ShiftAmtTy, Bitwidth - 1));
+  // Add (LHS < 0) ? abs2 - 1 : 0;
+  auto Srl = Builder.buildShl(Ty, Sign, Inexact);
+  auto Add = Builder.buildAdd(Ty, LHS, Srl);
+  auto Sra = Builder.buildAShr(Ty, Add, C1);
+
+  // If dividing by a positive value, we're done. Otherwise, the result must
+  // be negated.
+  auto Res = RHSCV.isNegative() ? Builder.buildSub(Ty, Zero, Sra) : Sra;
+  replaceSingleDefInstWithReg(MI, Res->getOperand(0).getReg());
 }
 
 bool CombinerHelper::matchUMulHToLShr(MachineInstr &MI) {
