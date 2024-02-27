@@ -674,6 +674,11 @@ public:
   /// this for uniformity with `applyDomain`.
   void applyRange(const IntegerRelation &rel);
 
+  /// Given a relation `other: (A -> B)`, this operation merges the symbol and
+  /// local variables and then takes the composition of `other` on `this: (B ->
+  /// C)`. The resulting relation represents tuples of the form: `A -> C`.
+  void mergeAndCompose(const IntegerRelation &other);
+
   /// Compute an equivalent representation of the same set, such that all local
   /// vars in all disjuncts have division representations. This representation
   /// may involve local vars that correspond to divisions, and may also be a
