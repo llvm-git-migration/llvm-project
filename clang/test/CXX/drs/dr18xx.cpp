@@ -287,6 +287,11 @@ namespace dr1837 { // dr1837: 3.3
       };
     };
   };
+  /* since-cxx11-warning@-6{{address of function '[] {
+    struct Local {
+        static_assert(sizeof (this->f()) == sizeof(int), "");
+    };
+}' will always evaluate to 'true'}} */
 #endif
 }
 

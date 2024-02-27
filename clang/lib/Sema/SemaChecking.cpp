@@ -16538,6 +16538,24 @@ void Sema::DiagnoseAlwaysNonNullPointer(Expr *E,
     }
   }
 
+  // Complain if we are converting a lambda expression to a boolean value
+  if (const auto *MCallExpr = dyn_cast<CXXMemberCallExpr>(E)) {
+    if (MCallExpr->getObjectType()->isRecordType()) {
+      if (const auto *MRecordDecl = MCallExpr->getRecordDecl()) {
+        if (MRecordDecl->isLambda()) {
+          std::string Str;
+          llvm::raw_string_ostream S(Str);
+
+          E->printPretty(S, nullptr, getPrintingPolicy());
+          Diag(E->getExprLoc(), diag::warn_impcast_pointer_to_bool)
+              << /*FunctionPointerType*/ 1 << S.str() << E->getSourceRange()
+              << Range << IsEqual;
+          return;
+        }
+      }
+    }
+  }
+
   // Expect to find a single Decl.  Skip anything more complicated.
   ValueDecl *D = nullptr;
   if (DeclRefExpr *R = dyn_cast<DeclRefExpr>(E)) {
