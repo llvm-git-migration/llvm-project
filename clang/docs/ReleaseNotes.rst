@@ -285,6 +285,8 @@ Bug Fixes to C++ Support
   templates when determining the primary template of an explicit specialization.
 - Fixed a crash in Microsoft compatibility mode where unqualified dependent base class
   lookup searches the bases of an incomplete class.
+- placement new initializes typedef array with correct size
+  (`#41441 <https://github.com/llvm/llvm-project/issues/41441>`_)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
