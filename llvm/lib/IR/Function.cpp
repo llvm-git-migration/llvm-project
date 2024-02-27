@@ -65,6 +65,8 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ModRef.h"
+#include "llvm/TargetParser/ARMTargetParser.h"
+#include "llvm/TargetParser/Triple.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -378,6 +380,40 @@ Function *Function::createWithDefaultAttr(FunctionType *Ty,
   }
   if (M->getModuleFlag("function_return_thunk_extern"))
     B.addAttribute(Attribute::FnRetThunkExtern);
+
+  Triple T(M->getTargetTriple());
+
+  auto Profile = llvm::ARM::parseArchProfile(T.getArchName());
+  if ((T.isArmT32() && Profile == llvm::ARM::ProfileKind::M) || T.isAArch64()) {
+    // Check if the module attribute is present and not zero.
+    auto isModuleAttributeSet = [&](const StringRef &ModAttr) -> bool {
+      const auto *Attr =
+          mdconst::extract_or_null<ConstantInt>(M->getModuleFlag(ModAttr));
+      return Attr && Attr->getZExtValue();
+    };
+
+    auto AddAttributeIfSet = [&](const StringRef &ModAttr) {
+      if (isModuleAttributeSet(ModAttr))
+        B.addAttribute(ModAttr, "true");
+    };
+
+    StringRef SignType = "none";
+    if (isModuleAttributeSet("sign-return-address"))
+      SignType = "non-leaf";
+    if (isModuleAttributeSet("sign-return-address-all"))
+      SignType = "all";
+    if (SignType != "none") {
+      B.addAttribute("sign-return-address", SignType);
+      if (T.isAArch64())
+        B.addAttribute("sign-return-address-key",
+                       isModuleAttributeSet("sign-return-address-with-bkey")
+                           ? "b_key"
+                           : "a_key");
+    }
+    AddAttributeIfSet("branch-target-enforcement");
+    AddAttributeIfSet("branch-protection-pauth-lr");
+    AddAttributeIfSet("guarded-control-stack");
+  }
   F->addFnAttrs(B);
   return F;
 }
