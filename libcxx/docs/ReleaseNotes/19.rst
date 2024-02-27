@@ -41,6 +41,7 @@ Implemented Papers
 - P2637R3 - Member ``visit``
 - P2652R2 - Disallow User Specialization of ``allocator_traits``
 - P2819R2 - Add ``tuple`` protocol to ``complex``
+- P0448R4 - A ``strstream`` replacement using ``span<charT>`` as buffer
 - P2302R4 - ``std::ranges::contains``
 - P1659R3 - ``std::ranges::starts_with`` and ``std::ranges::ends_with``
 
