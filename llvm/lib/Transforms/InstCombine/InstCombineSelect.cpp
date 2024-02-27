@@ -527,8 +527,11 @@ Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
     // instructions have different flags and add tests to ensure the
     // behaviour is correct.
     FastMathFlags FMF;
-    if (isa<FPMathOperator>(&SI))
+    if (isa<FPMathOperator>(&SI)) {
       FMF = SI.getFastMathFlags();
+      if (!computeKnownFPClass(FalseVal, FMF, fcNan, &SI).isKnownNeverNaN())
+        return nullptr;
+    }
     Constant *C = ConstantExpr::getBinOpIdentity(
         TVI->getOpcode(), TVI->getType(), true, FMF.noSignedZeros());
     Value *OOp = TVI->getOperand(2 - OpToFold);
