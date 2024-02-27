@@ -502,6 +502,27 @@ Error DataLayout::parseSpecifier(StringRef Desc) {
         return Err;
       break;
     }
+    case 'z': {
+      uint64_t AddrSpace = 0;
+      if (!Tok.empty())
+        if (Error Err = getInt(Tok, AddrSpace))
+          return Err;
+      if (!isUInt<24>(AddrSpace))
+        return reportError("Invalid address space, must be a 24-bit integer");
+
+      if (Rest.empty())
+        return reportError(
+            "Missing address space specification for pointer in datalayout string");
+      if (Error Err = ::split(Rest, ':', Split))
+        return Err;
+      uint64_t Value;
+      if (Error Err = getInt(Tok, Value))
+        return Err;
+      
+      setNonZeroValueForAddrSpace(AddrSpace, Value);
+
+      break;
+    }
     case 'G': { // Default address space for global variables.
       if (Error Err = getAddrSpace(Tok, DefaultGlobalsAddrSpace))
         return Err;
