@@ -281,12 +281,17 @@ namespace dr1837 { // dr1837: 3.3
 
   struct A {
     int f();
-    bool b = [] {
+    bool b = [] { // #dr1837-a
       struct Local {
         static_assert(sizeof(this->f()) == sizeof(int), "");
       };
     };
   };
+  /* since-cxx11-warning@#dr1837-a{{address of lambda function pointer conversion operator '[] {
+    struct Local {
+        static_assert(sizeof (this->f()) == sizeof(int), "");
+    };
+}' will always evaluate to 'true'}} */
 #endif
 }
 
