@@ -516,6 +516,11 @@ public:
                            Register N1) const override;
 
   bool isCanonicalized(SelectionDAG &DAG, SDValue Op,
+                       unsigned MaxDepth = 5) const {
+    bool Trunc;
+    return isCanonicalized(DAG, Op, Trunc, MaxDepth);
+  }
+  bool isCanonicalized(SelectionDAG &DAG, SDValue Op, bool &Trunc,
                        unsigned MaxDepth = 5) const;
   bool isCanonicalized(Register Reg, MachineFunction &MF,
                        unsigned MaxDepth = 5) const;

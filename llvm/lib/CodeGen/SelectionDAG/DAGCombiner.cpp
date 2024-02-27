@@ -26258,6 +26258,24 @@ SDValue DAGCombiner::visitFP_TO_FP16(SDNode *N) {
   if (N0->getOpcode() == ISD::FP16_TO_FP)
     return N0->getOperand(0);
 
+  // fold (fp_to_fp16 (freeze (fp16_to_fp (fp_to_fp16 op))))
+  // -> (fp_to_fp16 (freeze op))
+  if (N0->getOpcode() == ISD::FREEZE) {
+    if (auto fp16_to_fp = N0->getOperand(0);
+        fp16_to_fp->getOpcode() == ISD::FP16_TO_FP) {
+      if (auto new_fp16_to_fp = visitFP16_TO_FP(fp16_to_fp.getNode()))
+        if (new_fp16_to_fp->getOpcode() == ISD::FP16_TO_FP)
+          fp16_to_fp = new_fp16_to_fp;
+      if (auto fp_to_fp16 = fp16_to_fp->getOperand(0);
+          fp_to_fp16->getOpcode() == ISD::FP_TO_FP16) {
+        return DAG.getNode(N->getOpcode(), SDLoc(N), N->getValueType(0),
+                           DAG.getNode(N0->getOpcode(), SDLoc(N0),
+                                       N0.getValueType(),
+                                       fp_to_fp16->getOperand(0)));
+      }
+    }
+  }
+
   return SDValue();
 }
 
@@ -26285,6 +26303,24 @@ SDValue DAGCombiner::visitFP_TO_BF16(SDNode *N) {
   // fold (fp_to_bf16 (bf16_to_fp op)) -> op
   if (N0->getOpcode() == ISD::BF16_TO_FP)
     return N0->getOperand(0);
+
+  // fold (fp_to_bf16 (freeze (fp16_to_fp (fp_to_bf16 op))))
+  // -> (fp_to_bf16 (freeze op))
+  if (N0->getOpcode() == ISD::FREEZE) {
+    if (auto bf16_to_fp = N0->getOperand(0);
+        bf16_to_fp->getOpcode() == ISD::BF16_TO_FP) {
+      if (auto new_bf16_to_fp = visitBF16_TO_FP(bf16_to_fp.getNode()))
+        if (new_bf16_to_fp->getOpcode() == ISD::BF16_TO_FP)
+          bf16_to_fp = new_bf16_to_fp;
+      if (auto fp_to_bf16 = bf16_to_fp->getOperand(0);
+          fp_to_bf16->getOpcode() == ISD::FP_TO_BF16) {
+        return DAG.getNode(N->getOpcode(), SDLoc(N), N->getValueType(0),
+                           DAG.getNode(N0->getOpcode(), SDLoc(N0),
+                                       N0.getValueType(),
+                                       fp_to_bf16->getOperand(0)));
+      }
+    }
+  }
 
   return SDValue();
 }

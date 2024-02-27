@@ -26818,11 +26818,15 @@ define bfloat @v_canonicalize_bf16(bfloat %a) {
 ; GCN-LABEL: v_canonicalize_bf16:
 ; GCN:       ; %bb.0:
 ; GCN-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GCN-NEXT:    v_mul_f32_e32 v0, 1.0, v0
+; GCN-NEXT:    v_and_b32_e32 v0, 0xffff0000, v0
 ; GCN-NEXT:    s_setpc_b64 s[30:31]
 ;
 ; GFX7-LABEL: v_canonicalize_bf16:
 ; GFX7:       ; %bb.0:
 ; GFX7-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX7-NEXT:    v_mul_f32_e32 v0, 1.0, v0
+; GFX7-NEXT:    v_and_b32_e32 v0, 0xffff0000, v0
 ; GFX7-NEXT:    s_setpc_b64 s[30:31]
 ;
 ; GFX8-LABEL: v_canonicalize_bf16:

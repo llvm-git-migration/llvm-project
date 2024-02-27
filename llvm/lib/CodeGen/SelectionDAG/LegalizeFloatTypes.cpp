@@ -2398,6 +2398,7 @@ void DAGTypeLegalizer::PromoteFloatResult(SDNode *N, unsigned ResNo) {
     case ISD::FCOPYSIGN:  R = PromoteFloatRes_FCOPYSIGN(N); break;
 
     // Unary FP Operations
+    case ISD::FREEZE:
     case ISD::FABS:
     case ISD::FCBRT:
     case ISD::FCEIL:
