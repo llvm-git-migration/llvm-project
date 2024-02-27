@@ -1589,8 +1589,7 @@ static void computeKnownBitsFromOperator(const Operator *I,
       case Intrinsic::riscv_vsetvli:
       case Intrinsic::riscv_vsetvlimax: {
         bool HasAVL = II->getIntrinsicID() == Intrinsic::riscv_vsetvli;
-        const ConstantRange &Range =
-            getVScaleRange(II->getFunction(), BitWidth);
+        const ConstantRange Range = getVScaleRange(II->getFunction(), BitWidth);
         uint64_t VSEW =
             cast<ConstantInt>(II->getArgOperand(HasAVL))->getZExtValue();
         uint64_t SEW = 1 << (VSEW + 3);
