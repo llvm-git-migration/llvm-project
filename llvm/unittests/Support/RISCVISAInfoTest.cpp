@@ -906,3 +906,22 @@ For example, clang -march=rv32i_v1p0)";
                 return Captured.find(Expected) != std::string::npos;
               }(CapturedOutput, ExpectedOutput));
 }
+
+TEST(RISCVVType, CheckSameRatioLMUL) {
+  // Smaller LMUL.
+  EXPECT_EQ(RISCVII::LMUL_1,
+            RISCVVType::getSameRatioLMUL(16, RISCVII::LMUL_2, 8));
+  EXPECT_EQ(RISCVII::LMUL_F2,
+            RISCVVType::getSameRatioLMUL(16, RISCVII::LMUL_1, 8));
+  // Smaller fractional LMUL.
+  EXPECT_EQ(RISCVII::LMUL_F8,
+            RISCVVType::getSameRatioLMUL(16, RISCVII::LMUL_F4, 8));
+  // Bigger LMUL.
+  EXPECT_EQ(RISCVII::LMUL_2,
+            RISCVVType::getSameRatioLMUL(8, RISCVII::LMUL_1, 16));
+  EXPECT_EQ(RISCVII::LMUL_1,
+            RISCVVType::getSameRatioLMUL(8, RISCVII::LMUL_F2, 16));
+  // Bigger fractional LMUL.
+  EXPECT_EQ(RISCVII::LMUL_F2,
+            RISCVVType::getSameRatioLMUL(8, RISCVII::LMUL_F4, 16));
+}
