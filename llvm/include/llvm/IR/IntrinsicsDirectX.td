@@ -24,4 +24,6 @@ def int_dx_dot :
     Intrinsic<[LLVMVectorElementType<0>], 
     [llvm_anyvector_ty, LLVMScalarOrSameVectorWidth<0, LLVMVectorElementType<0>>],
     [IntrNoMem, IntrWillReturn, Commutative] >;
+
+def int_dx_frac  : DefaultAttrsIntrinsic<[llvm_anyfloat_ty], [LLVMMatchType<0>]>;
 }

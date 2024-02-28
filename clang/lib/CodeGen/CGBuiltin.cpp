@@ -18007,6 +18007,14 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
         /*ReturnType*/ T0->getScalarType(), Intrinsic::dx_dot,
         ArrayRef<Value *>{Op0, Op1}, nullptr, "dx.dot");
   } break;
+  case Builtin::BI__builtin_hlsl_elementwise_frac: {
+    Value *Op0 = EmitScalarExpr(E->getArg(0));
+    if (!E->getArg(0)->getType()->hasFloatingRepresentation())
+      llvm_unreachable("frac operand must have a float representation");
+    return Builder.CreateIntrinsic(
+        /*ReturnType*/ Op0->getType(), Intrinsic::dx_frac,
+        ArrayRef<Value *>{Op0}, nullptr, "dx.frac");
+  }
   }
   return nullptr;
 }

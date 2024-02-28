@@ -5247,6 +5247,21 @@ bool Sema::CheckHLSLBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
     break;
   }
+  case Builtin::BI__builtin_hlsl_elementwise_frac: {
+    if (PrepareBuiltinElementwiseMathOneArgCall(TheCall))
+      return true;
+    QualType PassedType = TheCall->getArg(0)->getType();
+    if (!PassedType->hasFloatingRepresentation()) {
+      QualType ExpectedType = this->Context.FloatTy;
+      if (auto *VecTyA = PassedType->getAs<VectorType>())
+        ExpectedType = this->Context.getVectorType(
+            ExpectedType, VecTyA->getNumElements(), VecTyA->getVectorKind());
+      Diag(TheCall->getArg(0)->getBeginLoc(),
+           diag::err_typecheck_convert_incompatible)
+          << PassedType << ExpectedType << 1 << 0 << 0;
+      return true;
+    }
+  }
   }
   return false;
 }
