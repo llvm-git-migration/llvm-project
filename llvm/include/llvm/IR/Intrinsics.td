@@ -1527,6 +1527,12 @@ def int_umin : DefaultAttrsIntrinsic<
     [llvm_anyint_ty], [LLVMMatchType<0>, LLVMMatchType<0>],
     [IntrNoMem, IntrSpeculatable, IntrWillReturn]>;
 
+//===------------------ Integer 3 Way Compare Intrinsics --------------------===//
+//
+def int_sthreewaycmp : 
+
+def int_uthreewaycmp : 
+
 //===------------------------- Memory Use Markers -------------------------===//
 //
 def int_lifetime_start  : DefaultAttrsIntrinsic<[],
