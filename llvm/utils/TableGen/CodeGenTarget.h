@@ -99,6 +99,11 @@ public:
   ///
   bool getAllowRegisterRenaming() const;
 
+  /// getSortBySize - Return the SortBySize flag value for
+  /// this target.
+  ///
+  bool getSortBySize() const;
+
   /// getAsmParser - Return the AssemblyParser definition for this target.
   ///
   Record *getAsmParser() const;
