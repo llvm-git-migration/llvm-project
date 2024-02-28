@@ -1240,7 +1240,9 @@ void MachineMemOperand::print(raw_ostream &OS, ModuleSlotTracker &MST,
        << "unknown-address";
   }
   MachineOperand::printOperandOffset(OS, getOffset());
-  uint64_t MinSize = MemoryType.isValid() ? getType().getSizeInBytes().getKnownMinValue() : ~UINT64_C(0);
+  uint64_t MinSize = MemoryType.isValid()
+                         ? getType().getSizeInBytes().getKnownMinValue()
+                         : ~UINT64_C(0);
   // TODO: getSize should return TypeSize
   if (MinSize > 0 && getAlign() != MinSize)
     OS << ", align " << getAlign().value();
