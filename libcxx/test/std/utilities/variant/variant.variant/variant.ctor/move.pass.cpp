@@ -32,16 +32,16 @@ struct NoCopy {
 
 struct MoveOnly {
   int value;
-  MoveOnly(int v) : value(v) {}
+  constexpr MoveOnly(int v) : value(v) {}
   MoveOnly(const MoveOnly&) = delete;
   MoveOnly(MoveOnly&&)      = default;
 };
 
 struct MoveOnlyNT {
   int value;
-  MoveOnlyNT(int v) : value(v) {}
+  constexpr MoveOnlyNT(int v) : value(v) {}
   MoveOnlyNT(const MoveOnlyNT&) = delete;
-  MoveOnlyNT(MoveOnlyNT&& other) : value(other.value) { other.value = -1; }
+  constexpr MoveOnlyNT(MoveOnlyNT&& other) : value(other.value) { other.value = -1; }
 };
 
 struct NTMove {
@@ -164,7 +164,7 @@ struct Result {
   T value;
 };
 
-void test_move_ctor_basic() {
+TEST_CONSTEXPR_CXX20 bool test_move_ctor_basic() {
   {
     std::variant<int> v(std::in_place_index<0>, 42);
     std::variant<int> v2 = std::move(v);
@@ -281,6 +281,7 @@ void test_move_ctor_basic() {
     static_assert(result.index == 1, "");
     static_assert(result.value.value == 42, "");
   }
+  return true;
 }
 
 void test_move_ctor_valueless_by_exception() {
@@ -349,6 +350,10 @@ int main(int, char**) {
   test_move_noexcept();
   test_move_ctor_sfinae();
   test_constexpr_move_ctor();
+
+#if TEST_STD_VER >= 20
+  static_assert(test_move_ctor_basic());
+#endif
 
   return 0;
 }
