@@ -288,7 +288,8 @@ Value *InstrProfIncrementInst::getStep() const {
   }
   const Module *M = getModule();
   LLVMContext &Context = M->getContext();
-  return ConstantInt::get(Type::getInt64Ty(Context), 1);
+  const auto &DL = M->getDataLayout();
+  return ConstantInt::get(DL.getIntPtrType(Context), 1);
 }
 
 std::optional<RoundingMode> ConstrainedFPIntrinsic::getRoundingMode() const {
