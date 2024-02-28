@@ -22,8 +22,8 @@
 #include "test_workarounds.h"
 
 struct NonT {
-  NonT(int v) : value(v) {}
-  NonT(const NonT& o) : value(o.value) {}
+  constexpr NonT(int v) : value(v) {}
+  constexpr NonT(const NonT& o) : value(o.value) {}
   int value;
 };
 static_assert(!std::is_trivially_copy_constructible<NonT>::value, "");
@@ -137,7 +137,7 @@ void test_copy_ctor_sfinae() {
   }
 }
 
-void test_copy_ctor_basic() {
+TEST_CONSTEXPR_CXX20 bool test_copy_ctor_basic() {
   {
     std::variant<int> v(std::in_place_index<0>, 42);
     std::variant<int> v2 = v;
@@ -208,6 +208,7 @@ void test_copy_ctor_basic() {
     static_assert(v2.index() == 1, "");
     static_assert(std::get<1>(v2).value == 42, "");
   }
+  return true;
 }
 
 void test_copy_ctor_valueless_by_exception() {
@@ -274,5 +275,9 @@ int main(int, char**) {
   test_copy_ctor_valueless_by_exception();
   test_copy_ctor_sfinae();
   test_constexpr_copy_ctor();
+
+#if TEST_STD_VER >= 20
+  static_assert(test_copy_ctor_basic());
+#endif
   return 0;
 }
