@@ -6,6 +6,7 @@ from lldbsuite.test.lldbtest import *
 
 
 class DAPTestCaseBase(TestBase):
+    timeoutval = 10 * (10 if ('ASAN_OPTIONS' in os.environ) else 1)
     NO_DEBUG_INFO_TESTCASE = True
 
     def create_debug_adaptor(self, lldbDAPEnv=None):
