@@ -709,19 +709,25 @@ OpFoldResult arith::FloorDivSIOp::fold(FoldAdaptor adaptor) {
         }
         if (!aGtZero && !bGtZero) {
           // Both negative, return -a / -b.
-          APInt posA = zero.ssub_ov(a, overflowOrDiv0);
-          APInt posB = zero.ssub_ov(b, overflowOrDiv0);
-          return posA.sdiv_ov(posB, overflowOrDiv0);
+          return a.sdiv_ov(b, overflowOrDiv0);
         }
         if (!aGtZero && bGtZero) {
           // A is negative, b is positive, return - ceil(-a, b).
           APInt posA = zero.ssub_ov(a, overflowOrDiv0);
+          if (overflowOrDiv0)
+            return a;
           APInt ceil = signedCeilNonnegInputs(posA, b, overflowOrDiv0);
+          if (overflowOrDiv0)
+            return a;
           return zero.ssub_ov(ceil, overflowOrDiv0);
         }
         // A is positive, b is negative, return - ceil(a, -b).
         APInt posB = zero.ssub_ov(b, overflowOrDiv0);
+        if (overflowOrDiv0)
+          return a;
         APInt ceil = signedCeilNonnegInputs(a, posB, overflowOrDiv0);
+        if (overflowOrDiv0)
+          return a;
         return zero.ssub_ov(ceil, overflowOrDiv0);
       });
 
