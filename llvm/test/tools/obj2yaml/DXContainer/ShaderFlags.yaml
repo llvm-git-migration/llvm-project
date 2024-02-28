@@ -44,6 +44,9 @@ Parts:
       AtomicInt64OnHeapResource: false
       AdvancedTextureOps: true
       WriteableMSAATextures: false
+      WaveMMA: false
+      SampleCmpGradientOrBias: false
+      ExtendedCommandInfo: false
       NextUnusedBit:   true
   - Name:            FKE0
     Size:            8
@@ -84,4 +87,7 @@ Parts:
 # CHECK-NEXT:       AtomicInt64OnHeapResource: false
 # CHECK-NEXT:       AdvancedTextureOps: true
 # CHECK-NEXT:       WriteableMSAATextures: false
+# CHECK-NEXT:       WaveMMA: false
+# CHECK-NEXT:       SampleCmpGradientOrBias: false
+# CHECK-NEXT:       ExtendedCommandInfo: false
 # CHECK-NEXT:       NextUnusedBit:   true

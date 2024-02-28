@@ -43,6 +43,9 @@ Parts:
       AtomicInt64OnHeapResource: false
       AdvancedTextureOps: false
       WriteableMSAATextures: false
+      WaveMMA: false
+      SampleCmpGradientOrBias: false
+      ExtendedCommandInfo: false
       NextUnusedBit:   false
   - Name:            FKE0
     Size:            8

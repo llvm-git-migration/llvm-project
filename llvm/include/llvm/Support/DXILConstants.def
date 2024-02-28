@@ -1,0 +1,76 @@
+
+#ifdef DXIL_MODULE_FLAG
+
+// DXIL_MODULE_FLAG(bit offset for the flag, bit offset for feature flag (-1 for no feature flag), name, description.
+DXIL_MODULE_FLAG( 0, -1,  DisableOptimizations,   "D3D11_1_SB_GLOBAL_FLAG_SKIP_OPTIMIZATION")
+DXIL_MODULE_FLAG( 1, -1,  DisableMathRefactoring, "D3D10_SB_GLOBAL_FLAG_REFACTORING_ALLOWED")
+DXIL_MODULE_FLAG( 2,  0,  EnableDoublePrecision,  "Double-precision floating point")
+DXIL_MODULE_FLAG( 3, -1,  ForceEarlyDepthStencil, "D3D11_SB_GLOBAL_FLAG_FORCE_EARLY_DEPTH_STENCIL")
+
+DXIL_MODULE_FLAG( 4,  1,  EnableRawAndStructuredBuffers,   "Raw and Structured buffers")
+DXIL_MODULE_FLAG( 5,  4,  LowPrecisionPresent, "Minimum-precision data types")
+DXIL_MODULE_FLAG( 6,  5,  EnableDoubleExtensions,  "Double-precision extensions for 11.1")
+DXIL_MODULE_FLAG( 7,  6,  EnableMSAD, "Shader extensions for 11.1")
+
+DXIL_MODULE_FLAG( 8,  1,  AllResourcesBound,   "D3D12_SB_GLOBAL_FLAG_ALL_RESOURCES_BOUND")
+DXIL_MODULE_FLAG( 9, 13,  ViewportAndRTArrayIndex, "SV_RenderTargetArrayIndex or SV_ViewportArrayIndex from any shader feeding rasterizer")
+DXIL_MODULE_FLAG(10, 10,  InnerCoverage,  "PS Inner Coverage")
+DXIL_MODULE_FLAG(11,  9,  StencilRef, "PS Output Stencil Ref")
+
+DXIL_MODULE_FLAG(12,  8,  TiledResources,   "Tiled resources")
+DXIL_MODULE_FLAG(13, 11,  UAVLoadAdditionalFormats, "Typed UAV Load Additional Formats")
+DXIL_MODULE_FLAG(14,  7,  Level9ComparisonFiltering,  "Comparison filtering for feature level 9")
+DXIL_MODULE_FLAG(15,  3,  Max64UAVs, "64 UAV slots")
+
+DXIL_MODULE_FLAG(16,  2,  UAVsAtEveryStage,   "UAVs at every shader stage")
+DXIL_MODULE_FLAG(17, -1,  CSRawAndStructuredViaShader4X, "SHADER_FEATURE_COMPUTE_SHADERS_PLUS_RAW_AND_STRUCTURED_BUFFERS_VIA_SHADER_4_X")
+DXIL_MODULE_FLAG(18, 12,  ROVS,  "Raster Ordered UAVs")
+DXIL_MODULE_FLAG(19,  14,  WaveOps, "Wave level operations")
+
+DXIL_MODULE_FLAG(20, 15,  Int64Ops,   "64-Bit integer")
+
+// SM 6.1+
+DXIL_MODULE_FLAG(21, 16,  ViewID, "View Instancing")
+DXIL_MODULE_FLAG(22, 17,  Barycentrics,  "Barycentrics")
+
+// SM 6.2+
+DXIL_MODULE_FLAG(23, 18,  UseNativeLowPrecision, "Use native low precision")
+
+// SM 6.4+
+DXIL_MODULE_FLAG(24, 19,  ShadingRate,   "Shading Rate")
+
+// SM 6.5+
+DXIL_MODULE_FLAG(25, 20,  RaytracingTier1_1, "Raytracing tier 1.1 features")
+DXIL_MODULE_FLAG(26, 21,  SamplerFeedback,  "Sampler feedback")
+
+// SM 6.6+
+DXIL_MODULE_FLAG(27, 22,  AtomicInt64OnTypedResource, "64-bit Atomics on Typed Resources")
+
+DXIL_MODULE_FLAG(28, 23,  AtomicInt64OnGroupShared,   "64-bit Atomics on Group Shared")
+DXIL_MODULE_FLAG(29, 24,  DerivativesInMeshAndAmpShaders, "Derivatives in mesh and amplification shaders")
+DXIL_MODULE_FLAG(30, 25,  ResourceDescriptorHeapIndexing,  "Resource descriptor heap indexing")
+DXIL_MODULE_FLAG(31, 26,  SamplerDescriptorHeapIndexing, "Sampler descriptor heap indexing")
+
+DXIL_MODULE_FLAG(32, 28,  AtomicInt64OnHeapResource,   "64-bit Atomics on Heap Resources")
+
+// SM 6.7+
+// Global flag indicating that any UAV may not alias any other UAV.
+// Set if UAVs are used, unless -res-may-alias was specified.
+// For modules compiled against validator version < 1.7, this flag will be
+// cleared, and it must be assumed that UAV resources may alias.
+DXIL_MODULE_FLAG(33, -1,  ResMayNotAlias, "Any UAV may not alias any other UAV")
+
+DXIL_MODULE_FLAG(34, 29,  AdvancedTextureOps,  "Advanced Texture Ops")
+DXIL_MODULE_FLAG(35, 30,  WriteableMSAATextures, "Writeable MSAA Textures")
+
+// Experimental SM 6.9+ - Reserved, not yet supported.
+DXIL_MODULE_FLAG(36, 31,  WaveMMA,   "Wave Matrix Multiply Accumulate")
+
+// SM 6.8+
+DXIL_MODULE_FLAG(37, 32,  SampleCmpGradientOrBias, "SampleCmpGradient or SampleCmpLevelZeroBias")
+DXIL_MODULE_FLAG(38, 33,  ExtendedCommandInfo,  "StartVertexLocation and StartInstanceLocation")
+DXIL_MODULE_FLAG(39, -1,  UsesDerivatives, "SHADER_FEATURE_OPT_USES_DERIVATIVES")
+
+#undef DXIL_MODULE_FLAG
+#endif
+

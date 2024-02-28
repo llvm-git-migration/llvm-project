@@ -23,14 +23,14 @@ using namespace llvm::dxil;
 static void updateFlags(ComputedShaderFlags &Flags, const Instruction &I) {
   Type *Ty = I.getType();
   if (Ty->isDoubleTy()) {
-    Flags.Doubles = true;
+    Flags.EnableDoublePrecision = true;
     switch (I.getOpcode()) {
     case Instruction::FDiv:
     case Instruction::UIToFP:
     case Instruction::SIToFP:
     case Instruction::FPToUI:
     case Instruction::FPToSI:
-      Flags.DX11_1_DoubleExtensions = true;
+      Flags.EnableDoubleExtensions = true;
       break;
     }
   }
@@ -51,10 +51,10 @@ void ComputedShaderFlags::print(raw_ostream &OS) const {
   if (FlagVal == 0)
     return;
   OS << "; Note: shader requires additional functionality:\n";
-#define SHADER_FEATURE_FLAG(bit, FlagName, Str)                                \
+#define DXIL_MODULE_FLAG(bit, featureBit, FlagName, Str)                       \
   if (FlagName)                                                                \
     OS << ";       " Str "\n";
-#include "llvm/BinaryFormat/DXContainerConstants.def"
+#include "llvm/Support/DXILConstants.def"
   OS << ";\n";
 }
 
