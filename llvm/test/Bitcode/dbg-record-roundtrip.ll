@@ -7,6 +7,7 @@
 ;; Confirm we're producing RemoveDI records from various tools.
 ; RUN: opt %s -o - | llvm-bcanalyzer - | FileCheck %s --check-prefix=BITCODE
 ; RUN: llvm-as %s -o - | llvm-bcanalyzer - | FileCheck %s --check-prefix=BITCODE
+; BITCODE-DAG: DEBUG_RECORD_LABEL
 ; BITCODE-DAG: DEBUG_RECORD_VALUE
 ; BITCODE-DAG: DEBUG_RECORD_ASSIGN
 ; BITCODE-DAG: DEBUG_RECORD_DECLARE
