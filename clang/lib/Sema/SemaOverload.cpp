@@ -10526,14 +10526,24 @@ bool clang::isBetterOverloadCandidate(
   //      according to the partial ordering rules described in 14.5.5.2, or,
   //      if not that,
   if (Cand1IsSpecialization && Cand2IsSpecialization) {
+    const auto *ObjContext1 =
+        dyn_cast<CXXRecordDecl>(Cand1.FoundDecl->getDeclContext());
+    const auto *ObjContext2 =
+        dyn_cast<CXXRecordDecl>(Cand2.FoundDecl->getDeclContext());
     if (FunctionTemplateDecl *BetterTemplate = S.getMoreSpecializedTemplate(
             Cand1.Function->getPrimaryTemplate(),
             Cand2.Function->getPrimaryTemplate(), Loc,
             isa<CXXConversionDecl>(Cand1.Function) ? TPOC_Conversion
                                                    : TPOC_Call,
             Cand1.ExplicitCallArguments, Cand2.ExplicitCallArguments,
-            Cand1.isReversed() ^ Cand2.isReversed()))
+            ObjContext1 ? QualType(ObjContext1->getTypeForDecl(), 0)
+                        : QualType{},
+            ObjContext2 ? QualType(ObjContext2->getTypeForDecl(), 0)
+                        : QualType{},
+            Cand1.isReversed() ^ Cand2.isReversed())) {
       return BetterTemplate == Cand1.Function->getPrimaryTemplate();
+    }
+
   }
 
   //   -— F1 and F2 are non-template functions with the same
