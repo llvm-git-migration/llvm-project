@@ -235,6 +235,7 @@ struct CommonConfig {
   NameMatcher UnneededSymbolsToRemove;
   NameMatcher SymbolsToWeaken;
   NameMatcher SymbolsToKeepGlobal;
+  NameMatcher SymbolsToSkip;
 
   // Map options
   StringMap<SectionRename> SectionsToRename;
