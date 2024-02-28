@@ -386,6 +386,13 @@ enum NodeType {
   SDIVFIXSAT,
   UDIVFIXSAT,
 
+  /// RESULT = [US]THREEWAYCMP(LHS, RHS) - Perform 3 way comparison and return
+  /// the values -1, 0, or 1 depending on whether the values compare lower,
+  /// equal
+  /// or greater.
+  UTHREEWAYCMP,
+  STHREEWAYCMP,
+
   /// Simple binary floating point operators.
   FADD,
   FSUB,
