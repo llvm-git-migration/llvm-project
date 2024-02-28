@@ -4121,8 +4121,26 @@ bool SIInstrInfo::isInlineConstant(const APInt &Imm) const {
                                         ST.hasInv2PiInlineImm());
   case 16:
     return ST.has16BitInsts() &&
-           AMDGPU::isInlinableLiteral16(Imm.getSExtValue(),
-                                        ST.hasInv2PiInlineImm());
+           AMDGPU::isInlinableLiteralI16(Imm.getSExtValue(),
+                                         ST.hasInv2PiInlineImm());
+  default:
+    llvm_unreachable("invalid bitwidth");
+  }
+}
+
+bool SIInstrInfo::isInlineConstant(const APFloat &Imm) const {
+  APInt IntImm = Imm.bitcastToAPInt();
+  bool HasInv2Pi = ST.hasInv2PiInlineImm();
+  switch (IntImm.getBitWidth()) {
+  case 32:
+  case 64:
+    return isInlineConstant(IntImm);
+  case 16:
+    return ST.has16BitInsts() &&
+           (Imm.isIEEE() ? AMDGPU::isInlinableLiteralFP16(IntImm.getSExtValue(),
+                                                          HasInv2Pi)
+                         : AMDGPU::isInlinableLiteralBF16(IntImm.getSExtValue(),
+                                                          HasInv2Pi));
   default:
     llvm_unreachable("invalid bitwidth");
   }
@@ -4200,7 +4218,7 @@ bool SIInstrInfo::isInlineConstant(const MachineOperand &MO,
       // constants in these cases
       int16_t Trunc = static_cast<int16_t>(Imm);
       return ST.has16BitInsts() &&
-             AMDGPU::isInlinableLiteral16(Trunc, ST.hasInv2PiInlineImm());
+             AMDGPU::isInlinableLiteralFP16(Trunc, ST.hasInv2PiInlineImm());
     }
 
     return false;
