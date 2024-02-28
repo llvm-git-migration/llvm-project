@@ -330,6 +330,10 @@ bool CodeGenTarget::getAllowRegisterRenaming() const {
   return TargetRec->getValueAsInt("AllowRegisterRenaming");
 }
 
+bool CodeGenTarget::getSortBySize() const {
+  return TargetRec->getValueAsInt("SortBySize");
+}
+
 /// getAsmParser - Return the AssemblyParser definition for this target.
 ///
 Record *CodeGenTarget::getAsmParser() const {
