@@ -203,3 +203,6 @@
 // RELOCATABLE-NOT: "-l
 // RELOCATABLE-NOT: crt{{[^./\\]+}}.o
 
+// RUN: %clang --target=riscv64-unknown-freebsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAGS %s
+// CHECK-RISCV64-FLAGS: "-X" "--no-relax"

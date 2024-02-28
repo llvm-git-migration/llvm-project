@@ -342,3 +342,9 @@
 // DRIVER-PASS-INCLUDES:      "-cc1" {{.*}}"-resource-dir" "[[RESOURCE:[^"]+]]"
 // DRIVER-PASS-INCLUDES-SAME: "-internal-isystem" "[[RESOURCE]]{{/|\\\\}}include"
 // DRIVER-PASS-INCLUDES-SAME: {{^}} "-internal-externc-isystem" "{{.*}}/usr/include"
+
+// RUN: %clang --target=riscv32-unknown-netbsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAGS %s
+// RUN: %clang --target=riscv64-unknown-netbsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAGS %s
+// CHECK-RISCV-FLAGS: "-X" "--no-relax"
