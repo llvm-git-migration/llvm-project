@@ -925,7 +925,7 @@ protected:
   }
 
   template <class _That>
-  _LIBCPP_HIDE_FROM_ABI void __generic_assign(_That&& __that) {
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __generic_assign(_That&& __that) {
     if (this->valueless_by_exception() && __that.valueless_by_exception()) {
       // do nothing.
     } else if (__that.valueless_by_exception()) {
@@ -962,19 +962,21 @@ class _LIBCPP_TEMPLATE_VIS __move_assignment;
       move_assignment                                                                                                  \
     }
 
-_LIBCPP_VARIANT_MOVE_ASSIGNMENT(_Trait::_TriviallyAvailable,
-                                __move_assignment& operator=(__move_assignment&& __that) = default;);
+_LIBCPP_VARIANT_MOVE_ASSIGNMENT(
+    _Trait::_TriviallyAvailable,
+    _LIBCPP_CONSTEXPR_SINCE_CXX20 __move_assignment& operator=(__move_assignment&& __that) = default;);
 
 _LIBCPP_VARIANT_MOVE_ASSIGNMENT(
     _Trait::_Available,
-    __move_assignment&
+    _LIBCPP_CONSTEXPR_SINCE_CXX20 __move_assignment&
     operator=(__move_assignment&& __that) noexcept(
         __all<(is_nothrow_move_constructible_v<_Types> && is_nothrow_move_assignable_v<_Types>)...>::value) {
       this->__generic_assign(std::move(__that));
       return *this;
     });
 
-_LIBCPP_VARIANT_MOVE_ASSIGNMENT(_Trait::_Unavailable, __move_assignment& operator=(__move_assignment&&) = delete;);
+_LIBCPP_VARIANT_MOVE_ASSIGNMENT(
+    _Trait::_Unavailable, _LIBCPP_CONSTEXPR_SINCE_CXX20 __move_assignment& operator=(__move_assignment&&) = delete;);
 
 #  undef _LIBCPP_VARIANT_MOVE_ASSIGNMENT
 
@@ -997,16 +999,19 @@ class _LIBCPP_TEMPLATE_VIS __copy_assignment;
       copy_assignment __copy_assignment& operator=(__copy_assignment&&) = default;                                     \
     }
 
-_LIBCPP_VARIANT_COPY_ASSIGNMENT(_Trait::_TriviallyAvailable,
-                                __copy_assignment& operator=(const __copy_assignment& __that) = default;);
+_LIBCPP_VARIANT_COPY_ASSIGNMENT(
+    _Trait::_TriviallyAvailable,
+    _LIBCPP_CONSTEXPR_SINCE_CXX20 __copy_assignment& operator=(const __copy_assignment& __that) = default;);
 
 _LIBCPP_VARIANT_COPY_ASSIGNMENT(
-    _Trait::_Available, __copy_assignment& operator=(const __copy_assignment& __that) {
+    _Trait::_Available, _LIBCPP_CONSTEXPR_SINCE_CXX20 __copy_assignment& operator=(const __copy_assignment& __that) {
       this->__generic_assign(__that);
       return *this;
     });
 
-_LIBCPP_VARIANT_COPY_ASSIGNMENT(_Trait::_Unavailable, __copy_assignment& operator=(const __copy_assignment&) = delete;);
+_LIBCPP_VARIANT_COPY_ASSIGNMENT(
+    _Trait::_Unavailable,
+    _LIBCPP_CONSTEXPR_SINCE_CXX20 __copy_assignment& operator=(const __copy_assignment&) = delete;);
 
 #  undef _LIBCPP_VARIANT_COPY_ASSIGNMENT
 
@@ -1022,11 +1027,11 @@ public:
   _LIBCPP_HIDE_FROM_ABI __impl& operator=(__impl&&)      = default;
 
   template <size_t _Ip, class _Arg>
-  _LIBCPP_HIDE_FROM_ABI void __assign(_Arg&& __arg) {
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __assign(_Arg&& __arg) {
     this->__assign_alt(__access::__base::__get_alt<_Ip>(*this), std::forward<_Arg>(__arg));
   }
 
-  inline _LIBCPP_HIDE_FROM_ABI void __swap(__impl& __that) {
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 inline _LIBCPP_HIDE_FROM_ABI void __swap(__impl& __that) {
     if (this->valueless_by_exception() && __that.valueless_by_exception()) {
       // do nothing.
     } else if (this->index() == __that.index()) {
@@ -1071,7 +1076,7 @@ public:
   }
 
 private:
-  inline _LIBCPP_HIDE_FROM_ABI bool __move_nothrow() const {
+  constexpr inline _LIBCPP_HIDE_FROM_ABI bool __move_nothrow() const {
     constexpr bool __results[] = {is_nothrow_move_constructible_v<_Types>...};
     return this->valueless_by_exception() || __results[this->index()];
   }
@@ -1235,7 +1240,7 @@ public:
       _Args&&... __args) noexcept(is_nothrow_constructible_v<_Tp, initializer_list< _Up>&, _Args...>)
       : __impl_(in_place_index<_Ip>, __il, std::forward<_Args>(__args)...) {}
 
-  _LIBCPP_HIDE_FROM_ABI ~variant() = default;
+  _LIBCPP_HIDE_FROM_ABI constexpr ~variant() = default;
 
   _LIBCPP_HIDE_FROM_ABI constexpr variant& operator=(const variant&) = default;
   _LIBCPP_HIDE_FROM_ABI constexpr variant& operator=(variant&&)      = default;
@@ -1245,7 +1250,7 @@ public:
              class _Tp  = __variant_detail::__best_match_t<_Arg, _Types...>,
              size_t _Ip = __find_detail::__find_unambiguous_index_sfinae<_Tp, _Types...>::value,
              enable_if_t<is_assignable_v<_Tp&, _Arg> && is_constructible_v<_Tp, _Arg>, int> = 0>
-  _LIBCPP_HIDE_FROM_ABI variant&
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI variant&
   operator=(_Arg&& __arg) noexcept(is_nothrow_assignable_v<_Tp&, _Arg> && is_nothrow_constructible_v<_Tp, _Arg>) {
     __impl_.template __assign<_Ip>(std::forward<_Arg>(__arg));
     return *this;
@@ -1297,7 +1302,7 @@ public:
              enable_if_t< __all<(__dependent_type<is_move_constructible<_Types>, _Dummy>::value &&
                                  __dependent_type<is_swappable<_Types>, _Dummy>::value)...>::value,
                           int> = 0>
-  _LIBCPP_HIDE_FROM_ABI void swap(variant& __that) noexcept(
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void swap(variant& __that) noexcept(
       __all<(is_nothrow_move_constructible_v<_Types> && is_nothrow_swappable_v<_Types>)...>::value) {
     __impl_.__swap(__that.__impl_);
   }
