@@ -374,10 +374,6 @@ class ObjcCategoryMerger {
     InfroWriteSection<CStringSection> catNameInfo;
     InfroWriteSection<ConcatOutputSection> catBodyInfo;
     InfroWriteSection<ConcatOutputSection> catPtrListInfo;
-
-    // Linker-generated ObjFile for all the binary data that we will be
-    // generating (category body, method lists, strings, etc ...)
-    ObjFile *generatedDataObjFile = nullptr;
   };
 
   // Information about a pointer list in the original categories (method lists,
@@ -401,6 +397,8 @@ class ObjcCategoryMerger {
     std::string mergedContainerName;
     std::string baseClassName;
     Symbol *baseClass = nullptr;
+    // In case we generate new data, mark the new data as belonging to this file
+    ObjFile *objFileForMergeData = nullptr;
 
     PointerListInfo instanceMethods = "__OBJC_$_CATEGORY_INSTANCE_METHODS_";
     PointerListInfo classMethods = "__OBJC_$_CATEGORY_CLASS_METHODS_";
@@ -422,11 +420,9 @@ private:
   mergeCategoriesIntoSingleCategory(std::vector<InfoInputCategory> &categories);
   bool eraseMergedCategories();
 
-  ObjFile *getGenObjFile();
-
   bool generateCatListForNonErasedCategories(
-      std::map<ConcatInputSection *, std::set<uint64_t>> catListToErasedOffsets,
-      uint32_t remainingCategories);
+      std::map<ConcatInputSection *, std::set<uint64_t>>
+          catListToErasedOffsets);
   template <typename T>
   bool collectSectionWriteInfoFromIsec(InputSection *isec,
                                        InfroWriteSection<T> &catWriteInfo);
@@ -452,11 +448,13 @@ private:
 
   bool emitCategory(ClassExtensionInfo &extInfo, Defined *&catBodySym);
   bool emitCatListEntrySec(std::string &forCateogryName,
-                           std::string &forBaseClassName, Defined *&catListSym);
+                           std::string &forBaseClassName, ObjFile *objFile,
+                           Defined *&catListSym);
   bool emitCategoryBody(std::string &name, Defined *nameSym,
                         Symbol *baseClassSym, std::string &baseClassName,
-                        Defined *&catBodySym);
-  bool emitCategoryName(std::string &name, Defined *&catNameSym);
+                        ObjFile *objFile, Defined *&catBodySym);
+  bool emitCategoryName(std::string &name, ObjFile *objFile,
+                        Defined *&catNameSym);
   bool createSymbolReference(Defined *refFrom, Symbol *refTo, uint32_t offset,
                              Reloc &relocTemplate);
   bool tryGetSymbolAtIsecOffset(ConcatInputSection *isec, uint32_t offset,
@@ -503,25 +501,6 @@ bool ObjcCategoryMerger::registerError(const char *msg) {
   err += msg;
   error(err);
   return false; // Always return false for easy 'return registerError()' syntax.
-}
-
-ObjFile *ObjcCategoryMerger::getGenObjFile() {
-  // Only create the linker-generated ObjFile on-demand - so if it's not needed
-  // (i.e. no categories are to be merged) then we don't need to create it.
-  if (infoCategoryWriter.generatedDataObjFile)
-    return infoCategoryWriter.generatedDataObjFile;
-
-  SmallString<32> objBuf;
-
-  infoCategoryWriter.generatedDataObjFile = make<ObjFile>(
-      MemoryBufferRef(objBuf, "<-merge-objc-categories>"), 0,
-      /*archiveName=*/"<Linker generated module for category merging>",
-      /*lazy=*/false, /*forceHidden=*/false, /*compatArch=*/false,
-      /*builtFromBitcode=*/false, /*isLinkerGenerated=*/true);
-
-  inputFiles.insert(infoCategoryWriter.generatedDataObjFile);
-
-  return infoCategoryWriter.generatedDataObjFile;
 }
 
 // This is a template so that it can be used both for CStringSection and
@@ -767,6 +746,10 @@ bool ObjcCategoryMerger::parseCatInfoToExtInfo(InfoInputCategory &catInfo,
   if (!extInfo.mergedContainerName.empty())
     extInfo.mergedContainerName += "|";
 
+  if (!extInfo.objFileForMergeData)
+    extInfo.objFileForMergeData =
+        dyn_cast_or_null<ObjFile>(catInfo.catBodyIsec->getFile());
+
   StringRef catName = getReferentString(*catNameReloc);
   extInfo.mergedContainerName += catName.str();
 
@@ -856,14 +839,14 @@ bool ObjcCategoryMerger::emitAndLinkProtocolList(Defined *parentSym,
   symName += extInfo.baseClassName + "_$_(" + extInfo.mergedContainerName + ")";
 
   Defined *ptrListSym = make<Defined>(
-      symName.c_str(), /*file=*/getGenObjFile(), listSec,
+      symName.c_str(), /*file=*/parentSym->getObjectFile(), listSec,
       /*value=*/0, bodyData.size(),
       /*isWeakDef=*/false, /*isExternal=*/false, /*isPrivateExtern=*/false,
       /*includeInSymtab=*/true, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
   ptrListSym->used = true;
-  getGenObjFile()->symbols.push_back(ptrListSym);
+  parentSym->getObjectFile()->symbols.push_back(ptrListSym);
 
   if (!createSymbolReference(parentSym, ptrListSym, linkAtOffset,
                              infoCategoryWriter.catBodyInfo.relocTemplate))
@@ -922,14 +905,14 @@ bool ObjcCategoryMerger::emitAndLinkPointerList(Defined *parentSym,
   symName += extInfo.baseClassName + "_$_" + extInfo.mergedContainerName;
 
   Defined *ptrListSym = make<Defined>(
-      symName.c_str(), /*file=*/getGenObjFile(), listSec,
+      symName.c_str(), /*file=*/parentSym->getObjectFile(), listSec,
       /*value=*/0, bodyData.size(),
       /*isWeakDef=*/false, /*isExternal=*/false, /*isPrivateExtern=*/false,
       /*includeInSymtab=*/true, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
   ptrListSym->used = true;
-  getGenObjFile()->symbols.push_back(ptrListSym);
+  parentSym->getObjectFile()->symbols.push_back(ptrListSym);
 
   if (!createSymbolReference(parentSym, ptrListSym, linkAtOffset,
                              infoCategoryWriter.catBodyInfo.relocTemplate))
@@ -950,6 +933,7 @@ bool ObjcCategoryMerger::emitAndLinkPointerList(Defined *parentSym,
 // This method creates an __objc_catlist ConcatInputSection with a single slot
 bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
                                              std::string &forBaseClassName,
+                                             ObjFile *objFile,
                                              Defined *&catListSym) {
   uint32_t sectionSize = target->wordSize;
   generatedSectionData.push_back(SmallVector<uint8_t>(sectionSize, 0));
@@ -965,19 +949,19 @@ bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
   newCatList->parent = infoCategoryWriter.catListInfo.outputSection;
 
   SmallString<0> catSymName;
-  catSymName += "<linker-generated __objc_catlist slot for category ";
-  catSymName += forBaseClassName + "(" + forCateogryName + ")";
+  catSymName += "<__objc_catlist slot for merged category ";
+  catSymName += forBaseClassName + "(" + forCateogryName + ")>";
   generatedNames.push_back(StringRef(catSymName));
 
   catListSym = make<Defined>(
-      StringRef(generatedNames.back()), /*file=*/getGenObjFile(), newCatList,
+      StringRef(generatedNames.back()), /*file=*/objFile, newCatList,
       /*value=*/0, bodyData.size(), /*isWeakDef=*/false, /*isExternal=*/false,
       /*isPrivateExtern=*/false, /*includeInSymtab=*/false,
       /*isReferencedDynamically=*/false, /*noDeadStrip=*/false,
       /*isWeakDefCanBeHidden=*/false);
 
   catListSym->used = true;
-  getGenObjFile()->symbols.push_back(catListSym);
+  objFile->symbols.push_back(catListSym);
   return true;
 }
 
@@ -987,6 +971,7 @@ bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
 bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
                                           Symbol *baseClassSym,
                                           std::string &baseClassName,
+                                          ObjFile *objFile,
                                           Defined *&catBodySym) {
   generatedSectionData.push_back(SmallVector<uint8_t>(catLayout.totalSize, 0));
   llvm::ArrayRef<uint8_t> bodyData = generatedSectionData.back();
@@ -1008,14 +993,14 @@ bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
       "__OBJC_$_CATEGORY_" + baseClassName + "_$_(" + name + ")";
   generatedNames.push_back(StringRef(symName));
   catBodySym = make<Defined>(
-      StringRef(generatedNames.back()), /*file=*/getGenObjFile(), newBodySec,
+      StringRef(generatedNames.back()), /*file=*/objFile, newBodySec,
       /*value=*/0, bodyData.size(), /*isWeakDef=*/false, /*isExternal=*/false,
       /*isPrivateExtern=*/false, /*includeInSymtab=*/true,
       /*isReferencedDynamically=*/false, /*noDeadStrip=*/false,
       /*isWeakDefCanBeHidden=*/false);
 
   catBodySym->used = true;
-  getGenObjFile()->symbols.push_back(catBodySym);
+  objFile->symbols.push_back(catBodySym);
 
   if (!createSymbolReference(catBodySym, nameSym, catLayout.nameOffset,
                              infoCategoryWriter.catBodyInfo.relocTemplate))
@@ -1031,7 +1016,7 @@ bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
 
 // This writes the new category name (for the merged category) into the binary
 // and returns the sybmol for it.
-bool ObjcCategoryMerger::emitCategoryName(std::string &name,
+bool ObjcCategoryMerger::emitCategoryName(std::string &name, ObjFile *objFile,
                                           Defined *&catNamdeSym) {
   llvm::ArrayRef<uint8_t> inputNameArrData(
       reinterpret_cast<const uint8_t *>(name.c_str()), name.size() + 1);
@@ -1048,14 +1033,14 @@ bool ObjcCategoryMerger::emitCategoryName(std::string &name,
   newStringSec->parent = infoCategoryWriter.catNameInfo.outputSection;
 
   catNamdeSym = make<Defined>(
-      "<merged category name>", /*file=*/getGenObjFile(), newStringSec,
+      "<merged category name>", /*file=*/objFile, newStringSec,
       /*value=*/0, nameData.size(),
       /*isWeakDef=*/false, /*isExternal=*/false, /*isPrivateExtern=*/false,
       /*includeInSymtab=*/false, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
   catNamdeSym->used = true;
-  getGenObjFile()->symbols.push_back(catNamdeSym);
+  objFile->symbols.push_back(catNamdeSym);
   return true;
 }
 
@@ -1067,16 +1052,18 @@ bool ObjcCategoryMerger::emitCategoryName(std::string &name,
 bool ObjcCategoryMerger::emitCategory(ClassExtensionInfo &extInfo,
                                       Defined *&catBodySym) {
   Defined *catNameSym = nullptr;
-  if (!emitCategoryName(extInfo.mergedContainerName, catNameSym))
+  if (!emitCategoryName(extInfo.mergedContainerName,
+                        extInfo.objFileForMergeData, catNameSym))
     return false;
 
   if (!emitCategoryBody(extInfo.mergedContainerName, catNameSym,
-                        extInfo.baseClass, extInfo.baseClassName, catBodySym))
+                        extInfo.baseClass, extInfo.baseClassName,
+                        extInfo.objFileForMergeData, catBodySym))
     return false;
 
   Defined *catListSym = nullptr;
   if (!emitCatListEntrySec(extInfo.mergedContainerName, extInfo.baseClassName,
-                           catListSym))
+                           extInfo.objFileForMergeData, catListSym))
     return false;
 
   const uint32_t offsetFirstCat = 0;
@@ -1203,63 +1190,68 @@ bool ObjcCategoryMerger::collectAndValidateCategoriesData() {
 // In the input we have multiple __objc_catlist InputSection, each of which may
 // contain links to multiple categories. Of these categories, we will merge (and
 // erase) only some. There will be some categories that will remain unoutched
-// (not erased). For these not erased categories, we need to copy them over to a
-// new __objc_catlist InputSection. We do this because we will destroy the
-// original __objc_catlist's as they also contain links to the merged (and by
-// now erased) categories.
+// (not erased). For these not erased categories, we generate new __objc_catlist
+// entries since the parent __objc_catlist entry will be erased
 bool ObjcCategoryMerger::generateCatListForNonErasedCategories(
-    std::map<ConcatInputSection *, std::set<uint64_t>> catListToErasedOffsets,
-    uint32_t remainingCategories) {
-  uint32_t bodySize = remainingCategories * target->wordSize;
-  generatedSectionData.push_back(SmallVector<uint8_t>(bodySize, 0));
-  llvm::ArrayRef<uint8_t> bodyData = generatedSectionData.back();
+    std::map<ConcatInputSection *, std::set<uint64_t>> catListToErasedOffsets) {
 
-  ConcatInputSection *listSec =
-      make<ConcatInputSection>(*infoCategoryWriter.catListInfo.inputSection,
-                               bodyData, infoCategoryWriter.catListInfo.align);
-  listSec->parent = infoCategoryWriter.catListInfo.outputSection;
-  listSec->live = true;
-  allInputSections.push_back(listSec);
-
-  Defined *mergedCatListSym = make<Defined>(
-      "<category merging __objc_catlist>", /*file=*/getGenObjFile(), listSec,
-      /*value=*/0, bodyData.size(),
-      /*isWeakDef=*/false, /*isExternal=*/false, /*isPrivateExtern=*/false,
-      /*includeInSymtab=*/false, /*isReferencedDynamically=*/false,
-      /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
-
-  mergedCatListSym->used = true;
-  getGenObjFile()->symbols.push_back(mergedCatListSym);
-
-  uint32_t outSecOffset = 0;
-  // Copy over all the un-merged categories
+  // Go through all offsets of all __objc_catlist's that we process and if there
+  // are categories that we didn't process - generate a new __objv_catlist for
+  // each.
   for (auto &mapEntry : catListToErasedOffsets) {
     ConcatInputSection *catListIsec = mapEntry.first;
     uint32_t catListIsecOffset = 0;
     while (catListIsecOffset < catListIsec->data.size()) {
-      // This was erased, no need to copy it over
+      // This slot was erased, we can jsut skip it
       if (mapEntry.second.count(catListIsecOffset)) {
         catListIsecOffset += target->wordSize;
         continue;
       }
 
-      Defined *nonErasedCat = nullptr;
+      Defined *nonErasedCatBody = nullptr;
       if (!tryGetDefinedAtIsecOffset(catListIsec, catListIsecOffset,
-                                     nonErasedCat))
-        return registerError("Failed to relocate non-delted category");
+                                     nonErasedCatBody))
+        return registerError("Failed to relocate non-deleted category");
 
-      if (!createSymbolReference(mergedCatListSym, nonErasedCat, outSecOffset,
+      // Allocate data for the new __objc_catlist slot
+      generatedSectionData.push_back(SmallVector<uint8_t>(target->wordSize, 0));
+      llvm::ArrayRef<uint8_t> bodyData = generatedSectionData.back();
+
+      // We mark the __objc_catlist slot as belonging to the same file as the
+      // category
+      ObjFile *objFile = dyn_cast<ObjFile>(nonErasedCatBody->getFile());
+
+      ConcatInputSection *listSec = make<ConcatInputSection>(
+          *infoCategoryWriter.catListInfo.inputSection, bodyData,
+          infoCategoryWriter.catListInfo.align);
+      listSec->parent = infoCategoryWriter.catListInfo.outputSection;
+      listSec->live = true;
+      allInputSections.push_back(listSec);
+
+      generatedNames.push_back(StringRef("<__objc_catlist slot for category "));
+      auto &slotSymName = generatedNames.back();
+      slotSymName += nonErasedCatBody->getName();
+      slotSymName += ">";
+
+      Defined *catListSlotSym = make<Defined>(
+          slotSymName.c_str(), /*file=*/objFile, listSec,
+          /*value=*/0, bodyData.size(),
+          /*isWeakDef=*/false, /*isExternal=*/false, /*isPrivateExtern=*/false,
+          /*includeInSymtab=*/false, /*isReferencedDynamically=*/false,
+          /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
+
+      catListSlotSym->used = true;
+      objFile->symbols.push_back(catListSlotSym);
+
+      // Now link the category body into the newly created slot
+      if (!createSymbolReference(catListSlotSym, nonErasedCatBody, 0,
                                  infoCategoryWriter.catListInfo.relocTemplate))
         return registerError(
             "Failed to create symbol reference to non-deleted category");
 
       catListIsecOffset += target->wordSize;
-      outSecOffset += target->wordSize;
     }
   }
-  assert(outSecOffset == bodyData.size() &&
-         "Unexpected mismatch between size/max offset of generated "
-         "__objc_catlist section");
   return true;
 }
 
@@ -1289,21 +1281,11 @@ bool ObjcCategoryMerger::eraseMergedCategories() {
     }
   }
 
-  // The number of categories that were not touched (need to keep them as-is)
-  uint32_t remainingCategories = 0;
-  for (auto &mapEntry : catListToErasedOffsets) {
-    // total categories - erased categories = remaining categories
-    remainingCategories += mapEntry.first->data.size() / target->wordSize;
-    remainingCategories -= mapEntry.second.size();
-  }
-
   // If there were categories that we did not erase, we need to generate a new
   // __objc_catList that contains only the un-merged categories, and get rid of
   // the references to the ones we merged.
-  if (remainingCategories > 0)
-    if (!generateCatListForNonErasedCategories(catListToErasedOffsets,
-                                               remainingCategories))
-      return false;
+  if (!generateCatListForNonErasedCategories(catListToErasedOffsets))
+    return false;
 
   // Erase the old method lists & names of the categories that were merged
   for (auto &mapEntry : categoryMap) {

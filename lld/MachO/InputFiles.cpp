@@ -965,23 +965,21 @@ void ObjFile::parseLinkerOptions(SmallVectorImpl<StringRef> &LCLinkerOptions) {
 SmallVector<StringRef> macho::unprocessedLCLinkerOptions;
 ObjFile::ObjFile(MemoryBufferRef mb, uint32_t modTime, StringRef archiveName,
                  bool lazy, bool forceHidden, bool compatArch,
-                 bool builtFromBitcode, bool isLinkerGenerated)
+                 bool builtFromBitcode)
     : InputFile(ObjKind, mb, lazy), modTime(modTime), forceHidden(forceHidden),
-      builtFromBitcode(builtFromBitcode), isLinkerGenerated(isLinkerGenerated) {
+      builtFromBitcode(builtFromBitcode) {
   this->archiveName = std::string(archiveName);
   this->compatArch = compatArch;
-  if (!isLinkerGenerated) {
-    if (lazy) {
-      if (target->wordSize == 8)
-        parseLazy<LP64>();
-      else
-        parseLazy<ILP32>();
-    } else {
-      if (target->wordSize == 8)
-        parse<LP64>();
-      else
-        parse<ILP32>();
-    }
+  if (lazy) {
+    if (target->wordSize == 8)
+      parseLazy<LP64>();
+    else
+      parseLazy<ILP32>();
+  } else {
+    if (target->wordSize == 8)
+      parse<LP64>();
+    else
+      parse<ILP32>();
   }
 }
 
@@ -1105,8 +1103,6 @@ void ObjFile::parseDebugInfo() {
 }
 
 ArrayRef<data_in_code_entry> ObjFile::getDataInCode() const {
-  if (!mb.getBufferSize())
-    return {};
   const auto *buf = reinterpret_cast<const uint8_t *>(mb.getBufferStart());
   const load_command *cmd = findCommand(buf, LC_DATA_IN_CODE);
   if (!cmd)
@@ -1117,8 +1113,6 @@ ArrayRef<data_in_code_entry> ObjFile::getDataInCode() const {
 }
 
 ArrayRef<uint8_t> ObjFile::getOptimizationHints() const {
-  if (!mb.getBufferSize())
-    return {};
   const auto *buf = reinterpret_cast<const uint8_t *>(mb.getBufferStart());
   if (auto *cmd =
           findCommand<linkedit_data_command>(buf, LC_LINKER_OPTIMIZATION_HINT))
