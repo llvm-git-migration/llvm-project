@@ -846,6 +846,7 @@ bool ObjcCategoryMerger::emitAndLinkProtocolList(Defined *parentSym,
       *infoCategoryWriter.catPtrListInfo.inputSection, bodyData,
       infoCategoryWriter.catPtrListInfo.align);
   listSec->parent = infoCategoryWriter.catPtrListInfo.outputSection;
+  listSec->live = true;
   allInputSections.push_back(listSec);
 
   listSec->parent = infoCategoryWriter.catPtrListInfo.outputSection;
@@ -861,6 +862,7 @@ bool ObjcCategoryMerger::emitAndLinkProtocolList(Defined *parentSym,
       /*includeInSymtab=*/true, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
+  ptrListSym->used = true;
   getGenObjFile()->symbols.push_back(ptrListSym);
 
   if (!createSymbolReference(parentSym, ptrListSym, linkAtOffset,
@@ -910,6 +912,7 @@ bool ObjcCategoryMerger::emitAndLinkPointerList(Defined *parentSym,
       *infoCategoryWriter.catPtrListInfo.inputSection, bodyData,
       infoCategoryWriter.catPtrListInfo.align);
   listSec->parent = infoCategoryWriter.catPtrListInfo.outputSection;
+  listSec->live = true;
   allInputSections.push_back(listSec);
 
   listSec->parent = infoCategoryWriter.catPtrListInfo.outputSection;
@@ -925,6 +928,7 @@ bool ObjcCategoryMerger::emitAndLinkPointerList(Defined *parentSym,
       /*includeInSymtab=*/true, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
+  ptrListSym->used = true;
   getGenObjFile()->symbols.push_back(ptrListSym);
 
   if (!createSymbolReference(parentSym, ptrListSym, linkAtOffset,
@@ -955,6 +959,7 @@ bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
       make<ConcatInputSection>(*infoCategoryWriter.catListInfo.inputSection,
                                bodyData, infoCategoryWriter.catListInfo.align);
   newCatList->parent = infoCategoryWriter.catListInfo.outputSection;
+  newCatList->live = true;
   allInputSections.push_back(newCatList);
 
   newCatList->parent = infoCategoryWriter.catListInfo.outputSection;
@@ -971,6 +976,7 @@ bool ObjcCategoryMerger::emitCatListEntrySec(std::string &forCateogryName,
       /*isReferencedDynamically=*/false, /*noDeadStrip=*/false,
       /*isWeakDefCanBeHidden=*/false);
 
+  catListSym->used = true;
   getGenObjFile()->symbols.push_back(catListSym);
   return true;
 }
@@ -993,6 +999,7 @@ bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
       make<ConcatInputSection>(*infoCategoryWriter.catBodyInfo.inputSection,
                                bodyData, infoCategoryWriter.catBodyInfo.align);
   newBodySec->parent = infoCategoryWriter.catBodyInfo.outputSection;
+  newBodySec->live = true;
   allInputSections.push_back(newBodySec);
 
   newBodySec->parent = infoCategoryWriter.catBodyInfo.outputSection;
@@ -1007,6 +1014,7 @@ bool ObjcCategoryMerger::emitCategoryBody(std::string &name, Defined *nameSym,
       /*isReferencedDynamically=*/false, /*noDeadStrip=*/false,
       /*isWeakDefCanBeHidden=*/false);
 
+  catBodySym->used = true;
   getGenObjFile()->symbols.push_back(catBodySym);
 
   if (!createSymbolReference(catBodySym, nameSym, catLayout.nameOffset,
@@ -1046,6 +1054,7 @@ bool ObjcCategoryMerger::emitCategoryName(std::string &name,
       /*includeInSymtab=*/false, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
+  catNamdeSym->used = true;
   getGenObjFile()->symbols.push_back(catNamdeSym);
   return true;
 }
@@ -1184,7 +1193,7 @@ bool ObjcCategoryMerger::collectAndValidateCategoriesData() {
                (a.offCatListIsec < b.offCatListIsec);
       };
 
-      std::stable_sort(entry.second.begin(), entry.second.end(), cmpFn);
+      llvm::sort(entry.second, cmpFn);
     }
   }
 
@@ -1209,6 +1218,7 @@ bool ObjcCategoryMerger::generateCatListForNonErasedCategories(
       make<ConcatInputSection>(*infoCategoryWriter.catListInfo.inputSection,
                                bodyData, infoCategoryWriter.catListInfo.align);
   listSec->parent = infoCategoryWriter.catListInfo.outputSection;
+  listSec->live = true;
   allInputSections.push_back(listSec);
 
   Defined *mergedCatListSym = make<Defined>(
@@ -1218,6 +1228,7 @@ bool ObjcCategoryMerger::generateCatListForNonErasedCategories(
       /*includeInSymtab=*/false, /*isReferencedDynamically=*/false,
       /*noDeadStrip=*/false, /*isWeakDefCanBeHidden=*/false);
 
+  mergedCatListSym->used = true;
   getGenObjFile()->symbols.push_back(mergedCatListSym);
 
   uint32_t outSecOffset = 0;
