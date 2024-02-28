@@ -129,8 +129,13 @@
 
 // Check that the -X flag is passed to the linker on riscv64
 // RUN: %clang --target=riscv64-unknown-openbsd -### %s 2>&1 \
-// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAGS %s
-// CHECK-RISCV64-FLAGS: "-X"
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-X %s
+// CHECK-RISCV64-FLAG-X: "-X"
+
+// Check that the --no-relax flag is passed to the linker on riscv64
+// RUN: %clang --target=riscv64-unknown-openbsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-NO-RELAX %s
+// CHECK-RISCV64-FLAG-NO-RELAX: "--no-relax"
 
 // Check passing LTO flags to the linker
 // RUN: %clang --target=amd64-unknown-openbsd -flto -### %s 2>&1 \

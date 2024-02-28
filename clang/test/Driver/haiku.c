@@ -76,6 +76,16 @@
 // RUN:   | FileCheck --check-prefix=CHECK-ARM-CPU %s
 // CHECK-ARM-CPU: "-target-cpu" "arm1176jzf-s"
 
+// Check that the -X flag is passed to the linker on riscv64
+// RUN: %clang --target=riscv64-unknown-haiku -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-X %s
+// CHECK-RISCV64-FLAG-X: "-X"
+
+// Check that the --no-relax flag is passed to the linker on riscv64
+// RUN: %clang --target=riscv64-unknown-haiku -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-NO-RELAX %s
+// CHECK-RISCV64-FLAG-NO-RELAX: "--no-relax"
+
 // Check passing LTO flags to the linker
 // RUN: %clang --target=x86_64-unknown-haiku -flto -### %s 2>&1 \
 // RUN:   | FileCheck -check-prefix=CHECK-LTO-FLAGS %s

@@ -342,3 +342,17 @@
 // DRIVER-PASS-INCLUDES:      "-cc1" {{.*}}"-resource-dir" "[[RESOURCE:[^"]+]]"
 // DRIVER-PASS-INCLUDES-SAME: "-internal-isystem" "[[RESOURCE]]{{/|\\\\}}include"
 // DRIVER-PASS-INCLUDES-SAME: {{^}} "-internal-externc-isystem" "{{.*}}/usr/include"
+
+// Check that the -X flag is passed to the linker on riscv
+// RUN: %clang --target=riscv32-unknown-netbsd -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAG-X %s
+// RUN: %clang --target=riscv64-unknown-netbsd -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAG-X %s
+// CHECK-RISCV-FLAG-X: "-X"
+
+// Check that the --no-relax flag is passed to the linker on riscv
+// RUN: %clang --target=riscv32-unknown-netbsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAG-NO-RELAX %s
+// RUN: %clang --target=riscv64-unknown-netbsd -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV-FLAG-NO-RELAX %s
+// CHECK-RISCV-FLAG-NO-RELAX: "--no-relax"

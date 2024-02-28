@@ -292,3 +292,13 @@
 // RUN:     | FileCheck %s -check-prefix=CHECK-PROFRT-X86_64
 // CHECK-PROFRT-X86_64: "-resource-dir" "[[RESOURCE_DIR:[^"]+]]"
 // CHECK-PROFRT-X86_64: "[[RESOURCE_DIR]]{{/|\\\\}}lib{{/|\\\\}}x86_64-unknown-fuchsia{{/|\\\\}}libclang_rt.profile.a"
+
+// Check that the -X flag is passed to the linker on riscv64
+// RUN: %clang --target=riscv64-unknown-fuchsia -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-X %s
+// CHECK-RISCV64-FLAG-X: "-X"
+
+// Check that the --no-relax flag is passed to the linker on riscv64
+// RUN: %clang --target=riscv64-unknown-fuchsia -mno-relax -### %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-RISCV64-FLAG-NO-RELAX %s
+// CHECK-RISCV64-FLAG-NO-RELAX: "--no-relax"
