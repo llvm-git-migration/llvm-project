@@ -1198,7 +1198,8 @@ void MachineVerifier::verifyPreISelGenericInstruction(const MachineInstr *MI) {
         if (MMO.getSizeInBits() >= ValTy.getSizeInBits())
           report("Generic extload must have a narrower memory type", MI);
       } else if (MI->getOpcode() == TargetOpcode::G_LOAD) {
-        if (TypeSize::isKnownGT(MMO.getType().getSizeInBytes(), ValTy.getSizeInBytes()))
+        if (TypeSize::isKnownGT(MMO.getType().getSizeInBytes(),
+                                ValTy.getSizeInBytes()))
           report("load memory size cannot exceed result size", MI);
       } else if (MI->getOpcode() == TargetOpcode::G_STORE) {
         if (ValTy.getSizeInBytes() < MMO.getSize())
