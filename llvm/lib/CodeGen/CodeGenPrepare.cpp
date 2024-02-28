@@ -7397,11 +7397,30 @@ bool CodeGenPrepare::optimizeSwitchType(SwitchInst *SI) {
     if (Arg->hasZExtAttr())
       ExtType = Instruction::ZExt;
   }
-
-  auto *ExtInst = CastInst::Create(ExtType, Cond, NewType);
-  ExtInst->insertBefore(SI);
-  ExtInst->setDebugLoc(SI->getDebugLoc());
-  SI->setCondition(ExtInst);
+  // If Cond has already a zext or sext don't insert another one.
+  bool ExtExists = false;
+  if(auto *I = dyn_cast<Instruction>(Cond)){
+    unsigned Opc = I->getOpcode();
+    if(Opc == Instruction::SExt || Opc == Instruction::ZExt){
+      ExtExists = true;
+    }
+    /* TODO check if something can be done with signed compares
+    else if(Opc == Instruction::ICmp){
+      auto *CI = dyn_cast<ICmpInst>(I);
+      if(CI->isSigned()){
+      }
+    }*/
+  }
+  // Extension exists but has smaller type we need to widen it to 
+  // the preferred switch type
+  if(ExtExists){
+    Cond->mutateType(NewType); 
+  }else{
+    auto *ExtInst = CastInst::Create(ExtType, Cond, NewType);
+    ExtInst->insertBefore(SI);
+    ExtInst->setDebugLoc(SI->getDebugLoc());
+    SI->setCondition(ExtInst);
+  }
   for (auto Case : SI->cases()) {
     const APInt &NarrowConst = Case.getCaseValue()->getValue();
     APInt WideConst = (ExtType == Instruction::ZExt)
