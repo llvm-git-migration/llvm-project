@@ -10543,7 +10543,6 @@ bool clang::isBetterOverloadCandidate(
             Cand1.isReversed() ^ Cand2.isReversed())) {
       return BetterTemplate == Cand1.Function->getPrimaryTemplate();
     }
-
   }
 
   //   -— F1 and F2 are non-template functions with the same
