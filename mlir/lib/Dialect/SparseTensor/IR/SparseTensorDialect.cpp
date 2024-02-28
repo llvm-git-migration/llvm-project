@@ -1445,6 +1445,38 @@ OpFoldResult ReinterpretMapOp::fold(FoldAdaptor adaptor) {
   return {};
 }
 
+template <typename ToBufferOp>
+static LogicalResult inferSparseBufferType(ValueRange ops,
+                                           SmallVectorImpl<mlir::Type> &ret) {
+  typename ToBufferOp::Adaptor adaptor(ops);
+  SparseTensorType stt = getSparseTensorType(adaptor.getTensor());
+  Type elemTp = nullptr;
+  bool withStride;
+  if constexpr (std::is_same_v<ToBufferOp, ToPositionsOp>) {
+    elemTp = stt.getPosType();
+    withStride = false;
+  } else if constexpr (std::is_same_v<ToBufferOp, ToCoordinatesOp> ||
+                       std::is_same_v<ToBufferOp, ToCoordinatesBufferOp>) {
+    elemTp = stt.getCrdType();
+    withStride = std::is_same_v<ToBufferOp, ToCoordinatesOp> &&
+                 stt.getAoSCOOStart() < stt.getLvlRank();
+  } else if constexpr (std::is_same_v<ToBufferOp, ToValuesOp>) {
+    elemTp = stt.getElementType();
+    withStride = false;
+  }
+
+  assert(elemTp && "unhandled operation.");
+  SmallVector<int64_t> bufShape = stt.getBatchLvlShape();
+  bufShape.push_back(ShapedType::kDynamic);
+
+  auto layout = withStride ? StridedLayoutAttr::StridedLayoutAttr::get(
+                                 stt.getContext(), ShapedType::kDynamic,
+                                 {ShapedType::kDynamic})
+                           : StridedLayoutAttr();
+  ret.emplace_back(MemRefType::get(bufShape, elemTp, layout));
+  return success();
+}
+
 LogicalResult ToPositionsOp::verify() {
   auto stt = getSparseTensorType(getTensor());
   if (failed(lvlIsInBounds(getLevel(), getTensor())))
@@ -1452,6 +1484,12 @@ LogicalResult ToPositionsOp::verify() {
   if (failed(isMatchingWidth(getResult(), stt.getPosWidth())))
     return emitError("unexpected type for positions");
   return success();
+}
+
+LogicalResult ToPositionsOp::inferReturnTypes(
+    MLIRContext *, std::optional<Location>, ValueRange ops, DictionaryAttr,
+    OpaqueProperties, RegionRange, SmallVectorImpl<mlir::Type> &ret) {
+  return inferSparseBufferType<ToPositionsOp>(ops, ret);
 }
 
 LogicalResult ToCoordinatesOp::verify() {
@@ -1463,11 +1501,23 @@ LogicalResult ToCoordinatesOp::verify() {
   return success();
 }
 
+LogicalResult ToCoordinatesOp::inferReturnTypes(
+    MLIRContext *, std::optional<Location>, ValueRange ops, DictionaryAttr,
+    OpaqueProperties, RegionRange, SmallVectorImpl<mlir::Type> &ret) {
+  return inferSparseBufferType<ToCoordinatesOp>(ops, ret);
+}
+
 LogicalResult ToCoordinatesBufferOp::verify() {
   auto stt = getSparseTensorType(getTensor());
   if (stt.getAoSCOOStart() >= stt.getLvlRank())
     return emitError("expected sparse tensor with a COO region");
   return success();
+}
+
+LogicalResult ToCoordinatesBufferOp::inferReturnTypes(
+    MLIRContext *, std::optional<Location>, ValueRange ops, DictionaryAttr,
+    OpaqueProperties, RegionRange, SmallVectorImpl<mlir::Type> &ret) {
+  return inferSparseBufferType<ToCoordinatesBufferOp>(ops, ret);
 }
 
 LogicalResult ToValuesOp::verify() {
@@ -1476,6 +1526,14 @@ LogicalResult ToValuesOp::verify() {
   if (stt.getElementType() != mtp.getElementType())
     return emitError("unexpected mismatch in element types");
   return success();
+}
+
+LogicalResult ToValuesOp::inferReturnTypes(MLIRContext *,
+                                           std::optional<Location>,
+                                           ValueRange ops, DictionaryAttr,
+                                           OpaqueProperties, RegionRange,
+                                           SmallVectorImpl<mlir::Type> &ret) {
+  return inferSparseBufferType<ToValuesOp>(ops, ret);
 }
 
 LogicalResult ToSliceOffsetOp::verify() {
