@@ -23,29 +23,29 @@
 
 struct NonT {
   NonT(int v) : value(v) {}
-  NonT(const NonT &o) : value(o.value) {}
+  NonT(const NonT& o) : value(o.value) {}
   int value;
 };
 static_assert(!std::is_trivially_copy_constructible<NonT>::value, "");
 
 struct NoCopy {
-  NoCopy(const NoCopy &) = delete;
+  NoCopy(const NoCopy&) = delete;
 };
 
 struct MoveOnly {
-  MoveOnly(const MoveOnly &) = delete;
-  MoveOnly(MoveOnly &&) = default;
+  MoveOnly(const MoveOnly&) = delete;
+  MoveOnly(MoveOnly&&)      = default;
 };
 
 struct MoveOnlyNT {
-  MoveOnlyNT(const MoveOnlyNT &) = delete;
-  MoveOnlyNT(MoveOnlyNT &&) {}
+  MoveOnlyNT(const MoveOnlyNT&) = delete;
+  MoveOnlyNT(MoveOnlyNT&&) {}
 };
 
 struct NTCopy {
   constexpr NTCopy(int v) : value(v) {}
-  NTCopy(const NTCopy &that) : value(that.value) {}
-  NTCopy(NTCopy &&) = delete;
+  NTCopy(const NTCopy& that) : value(that.value) {}
+  NTCopy(NTCopy&&) = delete;
   int value;
 };
 
@@ -54,8 +54,8 @@ static_assert(std::is_copy_constructible<NTCopy>::value, "");
 
 struct TCopy {
   constexpr TCopy(int v) : value(v) {}
-  TCopy(TCopy const &) = default;
-  TCopy(TCopy &&) = delete;
+  TCopy(TCopy const&) = default;
+  TCopy(TCopy&&)      = delete;
   int value;
 };
 
@@ -74,20 +74,21 @@ static_assert(std::is_trivially_copy_constructible<TCopyNTMove>::value, "");
 struct MakeEmptyT {
   static int alive;
   MakeEmptyT() { ++alive; }
-  MakeEmptyT(const MakeEmptyT &) {
+  MakeEmptyT(const MakeEmptyT&) {
     ++alive;
     // Don't throw from the copy constructor since variant's assignment
     // operator performs a copy before committing to the assignment.
   }
-  MakeEmptyT(MakeEmptyT &&) { throw 42; }
-  MakeEmptyT &operator=(const MakeEmptyT &) { throw 42; }
-  MakeEmptyT &operator=(MakeEmptyT &&) { throw 42; }
+  MakeEmptyT(MakeEmptyT&&) { throw 42; }
+  MakeEmptyT& operator=(const MakeEmptyT&) { throw 42; }
+  MakeEmptyT& operator=(MakeEmptyT&&) { throw 42; }
   ~MakeEmptyT() { --alive; }
 };
 
 int MakeEmptyT::alive = 0;
 
-template <class Variant> void makeEmpty(Variant &v) {
+template <class Variant>
+void makeEmpty(Variant& v) {
   Variant v2(std::in_place_type<MakeEmptyT>);
   try {
     v = std::move(v2);
@@ -214,35 +215,58 @@ void test_copy_ctor_valueless_by_exception() {
   using V = std::variant<int, MakeEmptyT>;
   V v1;
   makeEmpty(v1);
-  const V &cv1 = v1;
+  const V& cv1 = v1;
   V v(cv1);
   assert(v.valueless_by_exception());
 #endif // TEST_HAS_NO_EXCEPTIONS
 }
 
-template <std::size_t Idx>
-constexpr bool test_constexpr_copy_ctor_imp(std::variant<long, void*, const int> const& v) {
+template <std::size_t Idx, class T>
+constexpr bool test_constexpr_copy_ctor_imp(const T& v) {
   auto v2 = v;
-  return v2.index() == v.index() &&
-         v2.index() == Idx &&
-         std::get<Idx>(v2) == std::get<Idx>(v);
+  return v2.index() == v.index() && v2.index() == Idx && std::get<Idx>(v2) == std::get<Idx>(v);
 }
+#if TEST_STD_VER >= 20
+struct NonTrivialCopyCtor {
+  int i = 0;
+  constexpr NonTrivialCopyCtor(int ii) : i(ii) {}
+  constexpr NonTrivialCopyCtor(const NonTrivialCopyCtor& other) : i(other.i) {}
+  constexpr NonTrivialCopyCtor(NonTrivialCopyCtor&& other)                               = default;
+  constexpr ~NonTrivialCopyCtor()                                                        = default;
+  friend constexpr bool operator==(const NonTrivialCopyCtor&, const NonTrivialCopyCtor&) = default;
+};
+#endif
 
 void test_constexpr_copy_ctor() {
-  // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
-  using V = std::variant<long, void*, const int>;
+  {
+    // Test is_trivially_copy_constructible
+    // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
+    using V = std::variant<long, void*, const int>;
 #ifdef TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-  static_assert(std::is_trivially_destructible<V>::value, "");
-  static_assert(std::is_trivially_copy_constructible<V>::value, "");
-  static_assert(std::is_trivially_move_constructible<V>::value, "");
-  static_assert(!std::is_copy_assignable<V>::value, "");
-  static_assert(!std::is_move_assignable<V>::value, "");
-#else // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-  static_assert(std::is_trivially_copyable<V>::value, "");
+    static_assert(std::is_trivially_destructible<V>::value, "");
+    static_assert(std::is_trivially_copy_constructible<V>::value, "");
+    static_assert(std::is_trivially_move_constructible<V>::value, "");
+    static_assert(!std::is_copy_assignable<V>::value, "");
+    static_assert(!std::is_move_assignable<V>::value, "");
+#else  // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
+    static_assert(std::is_trivially_copyable<V>::value, "");
 #endif // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-  static_assert(test_constexpr_copy_ctor_imp<0>(V(42l)), "");
-  static_assert(test_constexpr_copy_ctor_imp<1>(V(nullptr)), "");
-  static_assert(test_constexpr_copy_ctor_imp<2>(V(101)), "");
+    static_assert(std::is_trivially_copy_constructible<V>::value, "");
+    static_assert(test_constexpr_copy_ctor_imp<0>(V(42l)), "");
+    static_assert(test_constexpr_copy_ctor_imp<1>(V(nullptr)), "");
+    static_assert(test_constexpr_copy_ctor_imp<2>(V(101)), "");
+  }
+
+#if TEST_STD_VER >= 20
+  {
+    // Test !is_trivially_move_constructible
+    using V = std::variant<long, NonTrivialCopyCtor, void*>;
+    static_assert(!std::is_trivially_copy_constructible<V>::value, "");
+    static_assert(test_constexpr_copy_ctor_imp<0>(V(42l)), "");
+    static_assert(test_constexpr_copy_ctor_imp<1>(V(NonTrivialCopyCtor(5))), "");
+    static_assert(test_constexpr_copy_ctor_imp<2>(V(nullptr)), "");
+  }
+#endif
 }
 
 int main(int, char**) {

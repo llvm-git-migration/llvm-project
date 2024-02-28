@@ -32,13 +32,12 @@ struct InitList {
 struct InitListArg {
   std::size_t size;
   int value;
-  constexpr InitListArg(std::initializer_list<int> il, int v)
-      : size(il.size()), value(v) {}
+  constexpr InitListArg(std::initializer_list<int> il, int v) : size(il.size()), value(v) {}
 };
 
 template <class Var, std::size_t I, class... Args>
-constexpr auto test_emplace_exists_imp(int) -> decltype(
-    std::declval<Var>().template emplace<I>(std::declval<Args>()...), true) {
+constexpr auto test_emplace_exists_imp(int)
+    -> decltype(std::declval<Var>().template emplace<I>(std::declval<Args>()...), true) {
   return true;
 }
 
@@ -47,13 +46,13 @@ constexpr auto test_emplace_exists_imp(long) -> bool {
   return false;
 }
 
-template <class Var, std::size_t I, class... Args> constexpr bool emplace_exists() {
+template <class Var, std::size_t I, class... Args>
+constexpr bool emplace_exists() {
   return test_emplace_exists_imp<Var, I, Args...>(0);
 }
 
 void test_emplace_sfinae() {
-  using V =
-      std::variant<int, TestTypes::NoCtors, InitList, InitListArg, long, long>;
+  using V  = std::variant<int, TestTypes::NoCtors, InitList, InitListArg, long, long>;
   using IL = std::initializer_list<int>;
   static_assert(!emplace_exists<V, 1, IL>(), "no such constructor");
   static_assert(emplace_exists<V, 2, IL>(), "");
@@ -65,8 +64,12 @@ void test_emplace_sfinae() {
   static_assert(!emplace_exists<V, 3, IL, int, int>(), "too many args");
 }
 
-void test_basic() {
-  using V = std::variant<int, InitList, InitListArg, TestTypes::NoCtors>;
+struct NoCtor {
+  NoCtor() = delete;
+};
+
+TEST_CONSTEXPR_CXX20 bool test_basic() {
+  using V = std::variant<int, InitList, InitListArg, NoCtor>;
   V v;
   auto& ref1 = v.emplace<1>({1, 2, 3});
   static_assert(std::is_same_v<InitList&, decltype(ref1)>, "");
@@ -81,10 +84,15 @@ void test_basic() {
   static_assert(std::is_same_v<InitList&, decltype(ref3)>, "");
   assert(std::get<1>(v).size == 1);
   assert(&ref3 == &std::get<1>(v));
+
+  return true;
 }
 
 int main(int, char**) {
   test_basic();
+#if TEST_STD_VER >= 20
+  static_assert(test_basic());
+#endif
   test_emplace_sfinae();
 
   return 0;
