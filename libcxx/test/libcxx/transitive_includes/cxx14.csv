@@ -241,7 +241,6 @@ experimental/iterator type_traits
 experimental/memory cstddef
 experimental/memory cstdint
 experimental/memory cstring
-experimental/memory limits
 experimental/propagate_const cstddef
 experimental/propagate_const type_traits
 experimental/simd cstddef
