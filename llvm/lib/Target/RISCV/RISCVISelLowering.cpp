@@ -10460,6 +10460,7 @@ SDValue RISCVTargetLowering::lowerMaskedStore(SDValue Op,
   SDValue BasePtr = MemSD->getBasePtr();
   SDValue Val, Mask, VL;
 
+  bool IsCompressingStore = false;
   if (const auto *VPStore = dyn_cast<VPStoreSDNode>(Op)) {
     Val = VPStore->getValue();
     Mask = VPStore->getMask();
@@ -10468,9 +10469,11 @@ SDValue RISCVTargetLowering::lowerMaskedStore(SDValue Op,
     const auto *MStore = cast<MaskedStoreSDNode>(Op);
     Val = MStore->getValue();
     Mask = MStore->getMask();
+    IsCompressingStore = MStore->isCompressingStore();
   }
 
-  bool IsUnmasked = ISD::isConstantSplatVectorAllOnes(Mask.getNode());
+  bool IsUnmasked =
+      ISD::isConstantSplatVectorAllOnes(Mask.getNode()) || IsCompressingStore;
 
   MVT VT = Val.getSimpleValueType();
   MVT XLenVT = Subtarget.getXLenVT();
@@ -10480,7 +10483,7 @@ SDValue RISCVTargetLowering::lowerMaskedStore(SDValue Op,
     ContainerVT = getContainerForFixedLengthVector(VT);
 
     Val = convertToScalableVector(ContainerVT, Val, DAG, Subtarget);
-    if (!IsUnmasked) {
+    if (!IsUnmasked || IsCompressingStore) {
       MVT MaskVT = getMaskTypeFor(ContainerVT);
       Mask = convertToScalableVector(MaskVT, Mask, DAG, Subtarget);
     }
@@ -10488,6 +10491,15 @@ SDValue RISCVTargetLowering::lowerMaskedStore(SDValue Op,
 
   if (!VL)
     VL = getDefaultVLOps(VT, ContainerVT, DL, DAG, Subtarget).second;
+
+  if (IsCompressingStore) {
+    Val = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, ContainerVT,
+                      DAG.getConstant(Intrinsic::riscv_vcompress, DL, XLenVT),
+                      DAG.getUNDEF(ContainerVT), Val, Mask, VL);
+    VL =
+        DAG.getNode(RISCVISD::VCPOP_VL, DL, XLenVT, Mask,
+                    getAllOnesMask(Mask.getSimpleValueType(), VL, DL, DAG), VL);
+  }
 
   unsigned IntID =
       IsUnmasked ? Intrinsic::riscv_vse : Intrinsic::riscv_vse_mask;
