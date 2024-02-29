@@ -17626,6 +17626,25 @@ public:
     for (unsigned I = 0; I < Elts.size(); ++I)
       Tree.merge(Elts[I]);
   }
+
+  void VisitCXXParenListInitExpr(const CXXParenListInitExpr *PLIE) {
+    // C++20 parenthesized list initializations are sequenced. See C++20
+    // [decl.init]p17.5 and [decl.init]p17.6.2.2
+    SmallVector<SequenceTree::Seq, 32> Elts;
+    SequenceTree::Seq Parent = Region;
+    for (const Expr *E : PLIE->getInitExprs()) {
+      if (!E)
+        continue;
+      Region = Tree.allocate(Parent);
+      Elts.push_back(Region);
+      Visit(E);
+    }
+
+    // Forget that the initializers are sequenced.
+    Region = Parent;
+    for (unsigned I = 0; I < Elts.size(); ++I)
+      Tree.merge(Elts[I]);
+  }
 };
 
 SequenceChecker::UsageInfo::UsageInfo() = default;
