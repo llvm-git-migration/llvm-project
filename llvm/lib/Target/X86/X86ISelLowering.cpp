@@ -393,7 +393,7 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
   }
 
   for (auto Op : {ISD::FP16_TO_FP, ISD::STRICT_FP16_TO_FP, ISD::FP_TO_FP16,
-                  ISD::STRICT_FP_TO_FP16}) {
+                  ISD::STRICT_FP_TO_FP16, ISD::STRICT_FP_TO_BF16}) {
     // Special handling for half-precision floating point conversions.
     // If we don't have F16C support, then lower half float conversions
     // into library calls.
