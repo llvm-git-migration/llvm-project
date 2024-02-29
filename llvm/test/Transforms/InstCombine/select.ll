@@ -3672,3 +3672,32 @@ define i32 @src_select_xxory_eq0_xorxy_y(i32 %x, i32 %y) {
   %cond = select i1 %xor0, i32 %xor, i32 %y
   ret i32 %cond
 }
+
+define i32 @sequence_select_with_same_cond (i1 %c1, i1 %c2){
+; CHECK-LABEL: @sequence_select_with_same_cond(
+; CHECK-NEXT:    [[S2:%.*]] = select i1 [[C2:%.*]], i32 666, i32 45
+; CHECK-NEXT:    [[S3:%.*]] = select i1 [[C1:%.*]], i32 789, i32 [[S2]]
+; CHECK-NEXT:    ret i32 [[S3]]
+;
+  %s1 = select i1 %c1, i32 23, i32 45
+  %s2 = select i1 %c2, i32 666, i32 %s1
+  %s3 = select i1 %c1, i32 789, i32 %s2
+  ret i32 %s3
+}
+
+declare void @use32(i32)
+
+define i32 @sequence_select_with_same_cond_extra_use (i1 %c1, i1 %c2){
+; CHECK-LABEL: @sequence_select_with_same_cond_extra_use(
+; CHECK-NEXT:    [[S1:%.*]] = select i1 [[C1:%.*]], i32 23, i32 45
+; CHECK-NEXT:    call void @use32(i32 [[S1]])
+; CHECK-NEXT:    [[S2:%.*]] = select i1 [[C2:%.*]], i32 666, i32 45
+; CHECK-NEXT:    [[S3:%.*]] = select i1 [[C1]], i32 789, i32 [[S2]]
+; CHECK-NEXT:    ret i32 [[S3]]
+;
+  %s1 = select i1 %c1, i32 23, i32 45
+  call void @use32(i32 %s1)
+  %s2 = select i1 %c2, i32 666, i32 %s1
+  %s3 = select i1 %c1, i32 789, i32 %s2
+  ret i32 %s3
+}

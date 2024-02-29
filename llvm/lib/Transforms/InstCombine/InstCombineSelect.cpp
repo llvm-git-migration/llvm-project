@@ -500,6 +500,42 @@ static bool isSelect01(const APInt &C1I, const APInt &C2I) {
   return C1I.isOne() || C1I.isAllOnes() || C2I.isOne() || C2I.isAllOnes();
 }
 
+/// Try to simplify a select instruction when the user of its select user
+/// indicates the condition.
+static bool simplifySeqSelectWithSameCond(SelectInst &SI,
+                                          const SimplifyQuery &SQ,
+                                          InstCombinerImpl &IC) {
+  Value *CondVal = SI.getCondition();
+  Type *CondType = CondVal->getType();
+
+  SelectInst *SINext = &SI;
+  Type *SelType = SINext->getType();
+  Value *FalseVal = SINext->getFalseValue();
+  Value *CondNext;
+  Value *FalseNext;
+  while (match(FalseVal,
+               m_Select(m_Value(CondNext), m_Value(), m_Value(FalseNext)))) {
+    // If the type of select is not an integer type or if the condition and
+    // the selection type are not both scalar nor both vector types, there is no
+    // point in attempting to match these patterns.
+    if (!isa<Constant>(CondVal) && SelType->isIntOrIntVectorTy() &&
+        CondType->isVectorTy() == SelType->isVectorTy())
+      if (CondNext == CondVal) {
+        if (Value *S = simplifyWithOpReplaced(
+                FalseVal, CondVal, ConstantInt::getFalse(CondType), SQ,
+                /* AllowRefinement */ true)) {
+          IC.replaceOperand(*SINext, 2, S);
+          return true;
+        }
+      }
+
+    SINext = cast<SelectInst>(FalseVal);
+    FalseVal = SINext->getFalseValue();
+  }
+
+  return false;
+}
+
 /// Try to fold the select into one of the operands to allow further
 /// optimization.
 Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
@@ -556,6 +592,9 @@ Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
 
   if (Instruction *R = TryFoldSelectIntoOp(SI, FalseVal, TrueVal, true))
     return R;
+
+  if (simplifySeqSelectWithSameCond(SI, SQ, *this))
+    return &SI;
 
   return nullptr;
 }
