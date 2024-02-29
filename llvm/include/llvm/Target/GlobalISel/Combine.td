@@ -952,6 +952,17 @@ def redundant_binop_in_equality : GICombineRule<
          [{ return Helper.matchRedundantBinOpInEquality(*${root}, ${info}); }]),
   (apply [{ Helper.applyBuildFn(*${root}, ${info}); }])>;
 
+// Move the freeze upper if only one freeze is needed for the ICMP, this way
+// allowing other combines to match
+def canonicalize_icmp_freeze_with_const: GICombineRule<
+  (defs root:$root),
+  (match (G_ICMP $dst, $p, $src1, $src2),
+         (G_FREEZE $root, $dst),
+         [{ return !!isConstantOrConstantSplatVector(*MRI.getVRegDef(${src2}.getReg()), MRI); }]),
+  (apply (G_FREEZE $new_src1, $src1),
+         (G_ICMP $root, $p, $new_src1, $src2))
+>;
+
 // Transform: (X == 0 & Y == 0) -> (X | Y) == 0
 def double_icmp_zero_and_combine: GICombineRule<
   (defs root:$root),
@@ -1374,7 +1385,8 @@ def all_combines : GICombineGroup<[trivial_combines, insert_vec_elt_combines,
     and_or_disjoint_mask, fma_combines, fold_binop_into_select,
     sub_add_reg, select_to_minmax, redundant_binop_in_equality,
     fsub_to_fneg, commute_constant_to_rhs, match_ands, match_ors, 
-    combine_concat_vector, double_icmp_zero_and_or_combine]>;
+    combine_concat_vector, double_icmp_zero_and_or_combine,
+    canonicalize_icmp_freeze_with_const]>;
 
 // A combine group used to for prelegalizer combiners at -O0. The combines in
 // this group have been selected based on experiments to balance code size and
