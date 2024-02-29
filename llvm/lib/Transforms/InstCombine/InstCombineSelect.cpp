@@ -500,6 +500,29 @@ static bool isSelect01(const APInt &C1I, const APInt &C2I) {
   return C1I.isOne() || C1I.isAllOnes() || C2I.isOne() || C2I.isAllOnes();
 }
 
+/// Try to simplify a select instruction when the user of its select user
+/// indicates the condition.
+static bool simplifySeqSelectWithSameCond(Value *Cond, Value *F) {
+  Value *FalseVal = F;
+  Value *CondNext;
+  Value *FalseNext;
+  while (match(FalseVal, m_Select(m_Value(CondNext), m_Value(),
+                                  m_OneUse(m_Value(FalseNext))))) {
+    if (CondNext == Cond) {
+      auto *SI = cast<SelectInst>(FalseVal);
+      LLVM_DEBUG(dbgs() << "IC: Fold " << SI << " with " << *FalseNext << '\n');
+
+      SI->replaceAllUsesWith(FalseNext);
+      SI->eraseFromParent();
+      return true;
+    }
+
+    FalseVal = FalseNext;
+  }
+
+  return false;
+}
+
 /// Try to fold the select into one of the operands to allow further
 /// optimization.
 Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
@@ -556,6 +579,9 @@ Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
 
   if (Instruction *R = TryFoldSelectIntoOp(SI, FalseVal, TrueVal, true))
     return R;
+
+  if (simplifySeqSelectWithSameCond(SI.getCondition(), FalseVal))
+    return &SI;
 
   return nullptr;
 }
