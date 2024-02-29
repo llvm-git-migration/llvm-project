@@ -223,6 +223,7 @@ Legalizer::legalizeMachineFunction(MachineFunction &MF, const LegalizerInfo &LI,
   SmallVector<MachineInstr *, 128> RetryList;
   do {
     LLVM_DEBUG(dbgs() << "=== New Iteration ===\n");
+    LLVM_DEBUG(MF.dump());
     assert(RetryList.empty() && "Expected no instructions in RetryList");
     unsigned NumArtifacts = ArtifactList.size();
     while (!InstList.empty()) {
