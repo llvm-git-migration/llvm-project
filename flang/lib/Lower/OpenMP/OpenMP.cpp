@@ -840,7 +840,7 @@ genEnterExitUpdateDataOp(Fortran::lower::AbstractConverter &converter,
   llvm::SmallVector<mlir::Attribute> dependTypeOperands;
 
   Fortran::parser::OmpIfClause::DirectiveNameModifier directiveName;
-  llvm::omp::Directive directive;
+  [[maybe_unused]] llvm::omp::Directive directive;
   if constexpr (std::is_same_v<OpTy, mlir::omp::EnterDataOp>) {
     directiveName =
         Fortran::parser::OmpIfClause::DirectiveNameModifier::TargetEnterData;
