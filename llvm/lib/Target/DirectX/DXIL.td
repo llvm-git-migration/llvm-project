@@ -233,3 +233,6 @@ def FlattenedThreadIdInGroup : DXILOpMapping<96, flattenedThreadIdInGroup,
                                              "Provides a flattened index for a "
                                              "given thread within a given "
                                              "group (SV_GroupIndex)">;
+def Frac : DXILOpMapping<22, unary, int_dx_frac,
+                         "Returns a fraction from 0 to 1 that represents the "
+                         "decimal part of the input.">;
