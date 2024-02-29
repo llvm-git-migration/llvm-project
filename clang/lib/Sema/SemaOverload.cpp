@@ -7976,7 +7976,8 @@ void Sema::AddConversionCandidate(
 
   if (Conversion->getTrailingRequiresClause()) {
     ConstraintSatisfaction Satisfaction;
-    if (CheckFunctionConstraints(Conversion, Satisfaction) ||
+    if (CheckFunctionConstraints(Conversion, Satisfaction, /*UsageLoc=*/{},
+                                 /*ShouldAddDeclsFromParentScope=*/true) ||
         !Satisfaction.IsSatisfied) {
       Candidate.Viable = false;
       Candidate.FailureKind = ovl_fail_constraints_not_satisfied;
