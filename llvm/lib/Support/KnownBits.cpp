@@ -54,7 +54,7 @@ KnownBits KnownBits::computeForAddCarry(
       LHS, RHS, Carry.Zero.getBoolValue(), Carry.One.getBoolValue());
 }
 
-KnownBits KnownBits::computeForAddSub(bool Add, bool NSW,
+KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool /*NUW*/,
                                       const KnownBits &LHS, KnownBits RHS) {
   KnownBits KnownOut;
   if (Add) {
@@ -443,7 +443,7 @@ KnownBits KnownBits::abs(bool IntMinIsPoison) const {
       Tmp.One.setBit(countMinTrailingZeros());
 
     KnownAbs = computeForAddSub(
-        /*Add*/ false, IntMinIsPoison,
+        /*Add*/ false, IntMinIsPoison, /*NUW=*/false,
         KnownBits::makeConstant(APInt(getBitWidth(), 0)), Tmp);
 
     // One more special case for IntMinIsPoison. If we don't know any ones other
@@ -489,7 +489,8 @@ static KnownBits computeForSatAddSub(bool Add, bool Signed,
   assert(!LHS.hasConflict() && !RHS.hasConflict() && "Bad inputs");
   // We don't see NSW even for sadd/ssub as we want to check if the result has
   // signed overflow.
-  KnownBits Res = KnownBits::computeForAddSub(Add, /*NSW*/ false, LHS, RHS);
+  KnownBits Res =
+      KnownBits::computeForAddSub(Add, /*NSW=*/false, /*NUW=*/false, LHS, RHS);
   unsigned BitWidth = Res.getBitWidth();
   auto SignBitKnown = [&](const KnownBits &K) {
     return K.Zero[BitWidth - 1] || K.One[BitWidth - 1];
