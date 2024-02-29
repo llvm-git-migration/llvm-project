@@ -27,6 +27,7 @@
 #include "llvm/Support/Windows/WindowsSupport.h"
 #include <shellapi.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 
 #undef max
 
@@ -619,6 +620,14 @@ std::error_code access(const Twine &Path, AccessMode Mode) {
 
   if (std::error_code EC = widenPath(Path, PathUtf16))
     return EC;
+
+  if (Mode == AccessMode::Exist) {
+    if (::PathFileExistsW(PathUtf16.begin())) {
+      return std::error_code();
+    } else {
+      return errc::no_such_file_or_directory;
+    }
+  }
 
   DWORD Attributes = ::GetFileAttributesW(PathUtf16.begin());
 
