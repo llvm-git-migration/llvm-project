@@ -7397,7 +7397,19 @@ bool CodeGenPrepare::optimizeSwitchType(SwitchInst *SI) {
     if (Arg->hasZExtAttr())
       ExtType = Instruction::ZExt;
   }
-
+  // If Cond has 2 users and one of them is a sext don't use a zext.
+  bool HaveSExtUser = false;
+  if (Cond->hasNUses(2)) {
+    for (auto &U : Cond->uses()) {
+      Value *V = U.get();
+      if (isa<SExtInst>(V)) {
+        HaveSExtUser = true;
+      }
+    }
+  }
+  if (HaveSExtUser) {
+    ExtType = Instruction::SExt;
+  }
   auto *ExtInst = CastInst::Create(ExtType, Cond, NewType);
   ExtInst->insertBefore(SI);
   ExtInst->setDebugLoc(SI->getDebugLoc());
