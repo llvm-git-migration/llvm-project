@@ -39,13 +39,13 @@ E func(E in)
 }
 )cpp";
   std::string Expected = R"cpp(
-enum class E { EV1, EV2, EV3 };
+enum class E { V1, V2, V3 };
 enum class E;
 E func(E in)
 {
-  E out = E::EV1;
-  if (in == E::EV2)
-    out = E::EV3;
+  E out = E::V1;
+  if (in == E::V2)
+    out = E::V3;
   return out;
 }
 )cpp";
