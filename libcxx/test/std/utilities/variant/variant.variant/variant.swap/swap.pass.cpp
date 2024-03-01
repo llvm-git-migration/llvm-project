@@ -399,8 +399,6 @@ void test_swap_different_alternatives_throws() {
 // FIXME: The tests below are just very libc++ specific
 #  ifdef _LIBCPP_VERSION
   {
-    using T1        = ThrowsOnSecondMove;
-    using T2        = NonThrowingNonNoexceptType;
     using V         = std::variant<ThrowsOnSecondMove, NonThrowingNonNoexceptType>;
     int move_called = 0;
     V v1(std::in_place_index<0>, 42);
