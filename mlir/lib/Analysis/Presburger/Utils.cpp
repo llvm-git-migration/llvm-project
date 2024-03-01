@@ -551,8 +551,7 @@ std::vector<Fraction> presburger::multiplyPolynomials(ArrayRef<Fraction> a,
   auto getCoeff = [](ArrayRef<Fraction> arr, unsigned i) -> Fraction {
     if (i < arr.size())
       return arr[i];
-    else
-      return 0;
+    return 0;
   };
 
   std::vector<Fraction> convolution;
