@@ -470,23 +470,54 @@ void test_assignment_throw() {
 #endif // TEST_HAS_NO_EXCEPTIONS
 }
 
-template <std::size_t NewIdx, class ValueType>
-constexpr bool test_constexpr_assign_imp(std::variant<long, void*, int>&& v, ValueType&& new_value) {
-  std::variant<long, void*, int> v2(std::forward<ValueType>(new_value));
+template <std::size_t NewIdx, class T, class ValueType>
+constexpr void test_constexpr_assign_imp(T&& v, ValueType&& new_value) {
+  using Variant = std::decay_t<T>;
+  Variant v2(std::forward<ValueType>(new_value));
   const auto cp = v2;
   v             = std::move(v2);
-  return v.index() == NewIdx && std::get<NewIdx>(v) == std::get<NewIdx>(cp);
+  assert(v.index() == NewIdx);
+  assert(std::get<NewIdx>(v) == std::get<NewIdx>(cp));
 }
 
-void test_constexpr_move_assignment() {
+constexpr bool test_constexpr_move_assignment_trivial() {
   // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
   using V = std::variant<long, void*, int>;
   static_assert(std::is_trivially_copyable<V>::value, "");
   static_assert(std::is_trivially_move_assignable<V>::value, "");
-  static_assert(test_constexpr_assign_imp<0>(V(42l), 101l), "");
-  static_assert(test_constexpr_assign_imp<0>(V(nullptr), 101l), "");
-  static_assert(test_constexpr_assign_imp<1>(V(42l), nullptr), "");
-  static_assert(test_constexpr_assign_imp<2>(V(42l), 101), "");
+  test_constexpr_assign_imp<0>(V(42l), 101l);
+  test_constexpr_assign_imp<0>(V(nullptr), 101l);
+  test_constexpr_assign_imp<1>(V(42l), nullptr);
+  test_constexpr_assign_imp<2>(V(42l), 101);
+
+  return true;
+}
+
+struct NonTrivialMoveAssign {
+  int i = 0;
+  constexpr NonTrivialMoveAssign(int ii) : i(ii) {}
+  constexpr NonTrivialMoveAssign(const NonTrivialMoveAssign& other) = default;
+  constexpr NonTrivialMoveAssign(NonTrivialMoveAssign&& other) : i(other.i) {}
+  constexpr NonTrivialMoveAssign& operator=(const NonTrivialMoveAssign&) = default;
+  constexpr NonTrivialMoveAssign& operator=(NonTrivialMoveAssign&& o) {
+    i = o.i;
+    return *this;
+  }
+  TEST_CONSTEXPR_CXX20 ~NonTrivialMoveAssign() = default;
+  friend constexpr bool operator==(const NonTrivialMoveAssign& x, const NonTrivialMoveAssign& y) { return x.i == y.i; }
+};
+
+TEST_CONSTEXPR_CXX20 bool test_constexpr_move_assignment_non_trivial() {
+  using V = std::variant<long, void*, NonTrivialMoveAssign>;
+  static_assert(!std::is_trivially_copyable<V>::value);
+  static_assert(!std::is_trivially_move_assignable<V>::value);
+  test_constexpr_assign_imp<0>(V(42l), 101l);
+  test_constexpr_assign_imp<0>(V(nullptr), 101l);
+  test_constexpr_assign_imp<1>(V(42l), nullptr);
+  test_constexpr_assign_imp<2>(V(42l), NonTrivialMoveAssign(5));
+  test_constexpr_assign_imp<2>(V(NonTrivialMoveAssign(3)), NonTrivialMoveAssign(5));
+
+  return true;
 }
 
 int main(int, char**) {
@@ -498,11 +529,15 @@ int main(int, char**) {
   test_move_assignment_different_index();
   test_move_assignment_sfinae();
   test_move_assignment_noexcept();
-  test_constexpr_move_assignment();
 
+  test_constexpr_move_assignment_trivial();
+  test_constexpr_move_assignment_non_trivial();
+
+  static_assert(test_constexpr_move_assignment_trivial());
 #if TEST_STD_VER >= 20
   static_assert(test_move_assignment_same_index());
   static_assert(test_move_assignment_different_index());
+  static_assert(test_constexpr_move_assignment_non_trivial());
 #endif
   return 0;
 }
