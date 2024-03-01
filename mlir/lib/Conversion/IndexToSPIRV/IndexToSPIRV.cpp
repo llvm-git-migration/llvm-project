@@ -108,16 +108,16 @@ struct ConvertIndexCeilDivSPattern final : OpConversionPattern<CeilDivSOp> {
                   ConversionPatternRewriter &rewriter) const override {
     Location loc = op.getLoc();
     Value n = adaptor.getLhs();
-    Type n_type = n.getType();
+    Type nType = n.getType();
     Value m = adaptor.getRhs();
 
     // Define the constants
-    Value zero = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, 0));
+    Value zero = rewriter.create<spirv::ConstantOp>(loc, nType,
+                                                    IntegerAttr::get(nType, 0));
     Value posOne = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, 1));
+        loc, nType, IntegerAttr::get(nType, 1));
     Value negOne = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, -1));
+        loc, nType, IntegerAttr::get(nType, -1));
 
     // Compute `x`.
     Value mPos = rewriter.create<spirv::SGreaterThanOp>(loc, m, zero);
@@ -158,14 +158,14 @@ struct ConvertIndexCeilDivUPattern final : OpConversionPattern<CeilDivUOp> {
                   ConversionPatternRewriter &rewriter) const override {
     Location loc = op.getLoc();
     Value n = adaptor.getLhs();
-    Type n_type = n.getType();
+    Type nType = n.getType();
     Value m = adaptor.getRhs();
 
     // Define the constants
-    Value zero = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, 0));
-    Value one = rewriter.create<spirv::ConstantOp>(loc, n_type,
-                                                   IntegerAttr::get(n_type, 1));
+    Value zero = rewriter.create<spirv::ConstantOp>(loc, nType,
+                                                    IntegerAttr::get(nType, 0));
+    Value one = rewriter.create<spirv::ConstantOp>(loc, nType,
+                                                   IntegerAttr::get(nType, 1));
 
     // Compute the non-zero result.
     Value minusOne = rewriter.create<spirv::ISubOp>(loc, n, one);
@@ -194,16 +194,16 @@ struct ConvertIndexFloorDivSPattern final : OpConversionPattern<FloorDivSOp> {
                   ConversionPatternRewriter &rewriter) const override {
     Location loc = op.getLoc();
     Value n = adaptor.getLhs();
-    Type n_type = n.getType();
+    Type nType = n.getType();
     Value m = adaptor.getRhs();
 
     // Define the constants
-    Value zero = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, 0));
+    Value zero = rewriter.create<spirv::ConstantOp>(loc, nType,
+                                                    IntegerAttr::get(nType, 0));
     Value posOne = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, 1));
+        loc, nType, IntegerAttr::get(nType, 1));
     Value negOne = rewriter.create<spirv::ConstantOp>(
-        loc, n_type, IntegerAttr::get(n_type, -1));
+        loc, nType, IntegerAttr::get(nType, -1));
 
     // Compute `x`.
     Value mNeg = rewriter.create<spirv::SLessThanOp>(loc, m, zero);
