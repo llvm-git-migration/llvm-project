@@ -1150,7 +1150,7 @@ public:
   LivenessQueryResult computeRegisterLiveness(const TargetRegisterInfo *TRI,
                                               MCRegister Reg,
                                               const_iterator Before,
-                                              unsigned Neighborhood = 10) const;
+                                              unsigned Neighborhood = 0) const;
 
   // Debugging methods.
   void dump() const;
