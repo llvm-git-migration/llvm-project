@@ -9,6 +9,7 @@
 #ifndef MLIR_DIALECT_VECTOR_UTILS_VECTORUTILS_H_
 #define MLIR_DIALECT_VECTOR_UTILS_VECTORUTILS_H_
 
+#include "mlir/Analysis/Presburger/IntegerRelation.h"
 #include "mlir/Dialect/Utils/IndexingUtils.h"
 #include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -97,6 +98,34 @@ bool isContiguousSlice(MemRefType memrefType, VectorType vectorType);
 ///
 std::optional<StaticTileOffsetRange>
 createUnrollIterator(VectorType vType, int64_t targetRank = 1);
+
+struct ConstantOrScalableBound {
+  AffineMap map;
+
+  struct BoundSize {
+    int64_t baseSize{0};
+    bool scalable{false};
+  };
+
+  /// Get the (possibly) scalable size of the bound, returns failure if the
+  /// bound cannot be represented as a single quantity.
+  FailureOr<BoundSize> getSize() const;
+};
+
+/// Computes a (possibly) scalable bound for a given value. This is similar to
+/// `ValueBoundsConstraintSet::computeConstantBound()`, but uses knowledge of
+/// the range of vscale to compute either a constant bound, an expression in
+/// terms of vscale, or failure if no bound can be computed.
+///
+/// The resulting `AffineMap` will always take at most one parameter, vscale,
+/// and return a single result, which is the bound of `value`.
+///
+/// Note: `vscaleMin` must be `<=` to `vscaleMax`. If `vscaleMin` ==
+/// `vscaleMax`, the resulting bound (if found), will be constant.
+FailureOr<ConstantOrScalableBound>
+computeScalableBound(Value value, std::optional<int64_t> dim,
+                     unsigned vscaleMin, unsigned vscaleMax,
+                     presburger::BoundType boundType);
 
 } // namespace vector
 

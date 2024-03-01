@@ -24,6 +24,7 @@
 #include "mlir/IR/IntegerSet.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/TypeUtilities.h"
+#include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Support/MathExtras.h"
 
@@ -299,4 +300,133 @@ vector::createUnrollIterator(VectorType vType, int64_t targetRank) {
   // Create an unroll iterator for leading dimensions.
   shapeToUnroll = shapeToUnroll.slice(0, firstScalableDim);
   return StaticTileOffsetRange(shapeToUnroll, /*unrollStep=*/1);
+}
+
+FailureOr<vector::ConstantOrScalableBound::BoundSize>
+vector::ConstantOrScalableBound::getSize() const {
+  if (map.isSingleConstant())
+    return BoundSize{map.getSingleConstantResult(), /*scalable=*/false};
+  if (map.getNumResults() != 1 || map.getNumInputs() != 1)
+    return failure();
+  auto binop = dyn_cast<AffineBinaryOpExpr>(map.getResult(0));
+  if (!binop || binop.getKind() != AffineExprKind::Mul)
+    return failure();
+  auto matchConstant = [&](AffineExpr expr, int64_t &constant) -> bool {
+    if (auto cst = dyn_cast<AffineConstantExpr>(expr)) {
+      constant = cst.getValue();
+      return true;
+    }
+    return false;
+  };
+  // Match `s0 * cst` or `cst * s0`:
+  int64_t cst = 0;
+  auto lhs = binop.getLHS();
+  auto rhs = binop.getRHS();
+  if ((matchConstant(lhs, cst) && isa<AffineSymbolExpr>(rhs)) ||
+      (matchConstant(rhs, cst) && isa<AffineSymbolExpr>(lhs))) {
+    return BoundSize{cst, /*scalable=*/true};
+  }
+  return failure();
+}
+
+namespace {
+struct ScalableValueBoundsConstraintSet : public ValueBoundsConstraintSet {
+  using ValueBoundsConstraintSet::ValueBoundsConstraintSet;
+
+  static Operation *getOwnerOfValue(Value value) {
+    if (auto bbArg = dyn_cast<BlockArgument>(value))
+      return bbArg.getOwner()->getParentOp();
+    return value.getDefiningOp();
+  }
+
+  static FailureOr<AffineMap>
+  computeScalableBound(Value value, std::optional<int64_t> dim,
+                       unsigned vscaleMin, unsigned vscaleMax,
+                       presburger::BoundType boundType) {
+    using namespace presburger;
+
+    assert(vscaleMin <= vscaleMax);
+    ScalableValueBoundsConstraintSet cstr(value.getContext());
+
+    Value vscale;
+    int64_t pos = cstr.populateConstraintsSet(
+        value, dim,
+        /* Custom vscale value bounds */
+        [&vscale, vscaleMin, vscaleMax](Value value, int64_t dim,
+                                        ValueBoundsConstraintSet &cstr) {
+          if (dim != ValueBoundsConstraintSet::kIndexValue)
+            return;
+          if (isa_and_present<vector::VectorScaleOp>(getOwnerOfValue(value))) {
+            if (vscale) {
+              // All copies of vscale are equivalent.
+              cstr.bound(value) == cstr.getExpr(vscale);
+            } else {
+              // We know vscale is confined to [vscaleMin, vscaleMax].
+              cstr.bound(value) >= vscaleMin;
+              cstr.bound(value) <= vscaleMax;
+              vscale = value;
+            }
+          }
+        },
+        /* Stop condition */
+        [](auto, auto) {
+          // Keep adding constraints till the worklist is empty.
+          return false;
+        });
+
+    // Project out all variables apart from the first vscale.
+    cstr.projectOut([&](ValueDim p) { return p.first != vscale; });
+
+    assert(cstr.cstr.getNumDimAndSymbolVars() ==
+               cstr.positionToValueDim.size() &&
+           "inconsistent mapping state");
+
+    for (int64_t i = 0; i < cstr.cstr.getNumDimAndSymbolVars(); ++i) {
+      if (i == pos)
+        continue;
+      if (cstr.positionToValueDim[i] !=
+          ValueDim(vscale, ValueBoundsConstraintSet::kIndexValue)) {
+        return failure();
+      }
+    }
+
+    SmallVector<AffineMap, 1> lowerBound(1), upperBound(1);
+    cstr.cstr.getSliceBounds(pos, 1, value.getContext(), &lowerBound,
+                             &upperBound,
+                             /*closedUB=*/true);
+
+    auto invalidBound = [](auto &bound) {
+      return !bound[0] || bound[0].getNumResults() != 1;
+    };
+
+    AffineMap bound = [&] {
+      if (boundType == BoundType::EQ && !invalidBound(lowerBound) &&
+          lowerBound[0] == lowerBound[0]) {
+        return lowerBound[0];
+      } else if (boundType == BoundType::LB && !invalidBound(lowerBound)) {
+        return lowerBound[0];
+      } else if (boundType == BoundType::UB && !invalidBound(upperBound)) {
+        return upperBound[0];
+      }
+      return AffineMap{};
+    }();
+
+    if (!bound)
+      return failure();
+
+    return bound;
+  }
+};
+
+} // namespace
+
+FailureOr<vector::ConstantOrScalableBound>
+vector::computeScalableBound(Value value, std::optional<int64_t> dim,
+                             unsigned vscaleMin, unsigned vscaleMax,
+                             presburger::BoundType boundType) {
+  auto bound = ScalableValueBoundsConstraintSet::computeScalableBound(
+      value, dim, vscaleMin, vscaleMax, boundType);
+  if (failed(bound))
+    return failure();
+  return ConstantOrScalableBound{*bound};
 }
