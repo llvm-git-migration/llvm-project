@@ -85,6 +85,16 @@ private:
       if (Substitution.empty())
         PrintFatalError(Loc, "Not a template");
       ParseType(Substitution);
+    } else if (T.consume_front("ext_vector_type_")) {
+      // Clang extended vector types are mangled as follows:
+      //
+      //    ext_vector_type_<lanes>_<scalar type>
+      unsigned long long Lanes;
+      if (llvm::consumeUnsignedInteger(T, 10, Lanes))
+        PrintFatalError(Loc, "Expected number of lanes ");
+      Type += "E" + std::to_string(Lanes);
+      T.consume_front("_");
+      ParseType(T);
     } else {
       auto ReturnTypeVal = StringSwitch<std::string>(T)
                                .Case("__builtin_va_list_ref", "A")
