@@ -573,8 +573,8 @@ define <4 x i64> @ne_1_v4i64(<4 x i64> %0) {
 ; AVX512VPOPCNTDQ-LABEL: ne_1_v4i64:
 ; AVX512VPOPCNTDQ:       # %bb.0:
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $ymm0 killed $ymm0 def $zmm0
-; AVX512VPOPCNTDQ-NEXT:    vpopcntq %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpbroadcastq {{.*#+}} ymm1 = [1,1,1,1]
+; AVX512VPOPCNTDQ-NEXT:    vpopcntq %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpcmpeqq %ymm1, %ymm0, %ymm0
 ; AVX512VPOPCNTDQ-NEXT:    vpternlogq $15, %zmm0, %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $ymm0 killed $ymm0 killed $zmm0
@@ -582,8 +582,8 @@ define <4 x i64> @ne_1_v4i64(<4 x i64> %0) {
 ;
 ; AVX512VPOPCNTDQVL-LABEL: ne_1_v4i64:
 ; AVX512VPOPCNTDQVL:       # %bb.0:
-; AVX512VPOPCNTDQVL-NEXT:    vpopcntq %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpbroadcastq {{.*#+}} ymm1 = [1,1,1,1]
+; AVX512VPOPCNTDQVL-NEXT:    vpopcntq %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpcmpeqq %ymm1, %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpternlogq $15, %ymm0, %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    retq
@@ -734,8 +734,8 @@ define <8 x i32> @ne_1_v8i32(<8 x i32> %0) {
 ; AVX512VPOPCNTDQ-LABEL: ne_1_v8i32:
 ; AVX512VPOPCNTDQ:       # %bb.0:
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $ymm0 killed $ymm0 def $zmm0
-; AVX512VPOPCNTDQ-NEXT:    vpopcntd %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpbroadcastd {{.*#+}} ymm1 = [1,1,1,1,1,1,1,1]
+; AVX512VPOPCNTDQ-NEXT:    vpopcntd %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpcmpeqd %ymm1, %ymm0, %ymm0
 ; AVX512VPOPCNTDQ-NEXT:    vpternlogq $15, %zmm0, %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $ymm0 killed $ymm0 killed $zmm0
@@ -743,8 +743,8 @@ define <8 x i32> @ne_1_v8i32(<8 x i32> %0) {
 ;
 ; AVX512VPOPCNTDQVL-LABEL: ne_1_v8i32:
 ; AVX512VPOPCNTDQVL:       # %bb.0:
-; AVX512VPOPCNTDQVL-NEXT:    vpopcntd %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpbroadcastd {{.*#+}} ymm1 = [1,1,1,1,1,1,1,1]
+; AVX512VPOPCNTDQVL-NEXT:    vpopcntd %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpcmpeqd %ymm1, %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpternlogq $15, %ymm0, %ymm0, %ymm0
 ; AVX512VPOPCNTDQVL-NEXT:    retq

@@ -23,7 +23,7 @@ define void @constant_fold_vector_to_half() {
 ; AVX512FP16-LABEL: constant_fold_vector_to_half:
 ; AVX512FP16:       # %bb.0:
 ; AVX512FP16-NEXT:    movw $16384, -{{[0-9]+}}(%rsp) # imm = 0x4000
-; AVX512FP16-NEXT:    vmovsh -{{[0-9]+}}(%rsp), %xmm0
+; AVX512FP16-NEXT:    vmovsh {{.*#+}} xmm0 = mem[0],zero,zero,zero,zero,zero,zero,zero
 ; AVX512FP16-NEXT:    vmovsh %xmm0, (%rax)
 ; AVX512FP16-NEXT:    retq
   store volatile half bitcast (<4 x i4> <i4 0, i4 0, i4 0, i4 4> to half), ptr undef

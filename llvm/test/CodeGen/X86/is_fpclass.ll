@@ -1511,35 +1511,30 @@ entry:
 define <4 x i1> @isnan_v4f_strictfp(<4 x float> %x) strictfp {
 ; CHECK-32-LABEL: isnan_v4f_strictfp:
 ; CHECK-32:       # %bb.0: # %entry
-; CHECK-32-NEXT:    pushl %esi
-; CHECK-32-NEXT:    .cfi_def_cfa_offset 8
-; CHECK-32-NEXT:    .cfi_offset %esi, -8
-; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; CHECK-32-NEXT:    movl $2147483647, %ecx # imm = 0x7FFFFFFF
+; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; CHECK-32-NEXT:    andl %ecx, %eax
+; CHECK-32-NEXT:    cmpl $2139095041, %eax # imm = 0x7F800001
+; CHECK-32-NEXT:    setge %al
+; CHECK-32-NEXT:    shlb $2, %al
 ; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; CHECK-32-NEXT:    andl %ecx, %edx
 ; CHECK-32-NEXT:    cmpl $2139095041, %edx # imm = 0x7F800001
-; CHECK-32-NEXT:    setge %dh
-; CHECK-32-NEXT:    shlb $2, %dh
-; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %esi
-; CHECK-32-NEXT:    andl %ecx, %esi
-; CHECK-32-NEXT:    cmpl $2139095041, %esi # imm = 0x7F800001
 ; CHECK-32-NEXT:    setge %dl
 ; CHECK-32-NEXT:    shlb $3, %dl
-; CHECK-32-NEXT:    orb %dh, %dl
-; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %esi
-; CHECK-32-NEXT:    andl %ecx, %esi
-; CHECK-32-NEXT:    cmpl $2139095041, %esi # imm = 0x7F800001
+; CHECK-32-NEXT:    orb %al, %dl
+; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; CHECK-32-NEXT:    andl %ecx, %eax
+; CHECK-32-NEXT:    cmpl $2139095041, %eax # imm = 0x7F800001
 ; CHECK-32-NEXT:    setge %dh
 ; CHECK-32-NEXT:    andl {{[0-9]+}}(%esp), %ecx
+; CHECK-32-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; CHECK-32-NEXT:    cmpl $2139095041, %ecx # imm = 0x7F800001
 ; CHECK-32-NEXT:    setge %cl
 ; CHECK-32-NEXT:    addb %cl, %cl
 ; CHECK-32-NEXT:    orb %dh, %cl
 ; CHECK-32-NEXT:    orb %dl, %cl
 ; CHECK-32-NEXT:    movb %cl, (%eax)
-; CHECK-32-NEXT:    popl %esi
-; CHECK-32-NEXT:    .cfi_def_cfa_offset 4
 ; CHECK-32-NEXT:    retl $4
 ;
 ; CHECK-64-LABEL: isnan_v4f_strictfp:

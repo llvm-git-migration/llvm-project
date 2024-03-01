@@ -6093,14 +6093,14 @@ define void @fmadd_ss_maskz_memfold(ptr %a, ptr %b, i8 %c) {
 ;
 ; X86-LABEL: fmadd_ss_maskz_memfold:
 ; X86:       # %bb.0:
-; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; X86-NEXT:    vmovss {{.*#+}} xmm0 = mem[0],zero,zero,zero
 ; X86-NEXT:    vfmadd231ss {{.*#+}} xmm0 = (xmm0 * mem) + xmm0
+; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    kmovw %eax, %k1
 ; X86-NEXT:    vmovss %xmm0, %xmm0, %xmm0 {%k1} {z}
-; X86-NEXT:    vmovss %xmm0, (%edx)
+; X86-NEXT:    vmovss %xmm0, (%ecx)
 ; X86-NEXT:    retl
   %a.val = load float, ptr %a
   %av0 = insertelement <4 x float> undef, float %a.val, i32 0
@@ -6181,14 +6181,14 @@ define void @fmadd_sd_maskz_memfold(ptr %a, ptr %b, i8 %c) {
 ;
 ; X86-LABEL: fmadd_sd_maskz_memfold:
 ; X86:       # %bb.0:
-; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; X86-NEXT:    vmovsd {{.*#+}} xmm0 = mem[0],zero
 ; X86-NEXT:    vfmadd231sd {{.*#+}} xmm0 = (xmm0 * mem) + xmm0
+; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    kmovw %eax, %k1
 ; X86-NEXT:    vmovsd %xmm0, %xmm0, %xmm0 {%k1} {z}
-; X86-NEXT:    vmovsd %xmm0, (%edx)
+; X86-NEXT:    vmovsd %xmm0, (%ecx)
 ; X86-NEXT:    retl
   %a.val = load double, ptr %a
   %av0 = insertelement <2 x double> undef, double %a.val, i32 0
@@ -7577,9 +7577,9 @@ define <16 x float> @bad_mask_transition(<8 x double> %a, <8 x double> %b, <8 x 
 ; X86-NEXT:    andl $-64, %esp
 ; X86-NEXT:    subl $64, %esp
 ; X86-NEXT:    vmovaps 72(%ebp), %zmm3
-; X86-NEXT:    vcmplt_oqpd %zmm1, %zmm0, %k0
-; X86-NEXT:    vcmplt_oqpd 8(%ebp), %zmm2, %k1
-; X86-NEXT:    kunpckbw %k0, %k1, %k1
+; X86-NEXT:    vcmplt_oqpd 8(%ebp), %zmm2, %k0
+; X86-NEXT:    vcmplt_oqpd %zmm1, %zmm0, %k1
+; X86-NEXT:    kunpckbw %k1, %k0, %k1
 ; X86-NEXT:    vmovaps 136(%ebp), %zmm3 {%k1}
 ; X86-NEXT:    vmovaps %zmm3, %zmm0
 ; X86-NEXT:    movl %ebp, %esp

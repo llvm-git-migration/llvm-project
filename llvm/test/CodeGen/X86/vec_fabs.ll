@@ -155,15 +155,15 @@ define <8 x half> @fabs_v8f16(ptr %p) nounwind {
 ;
 ; X86-AVX2-LABEL: fabs_v8f16:
 ; X86-AVX2:       # %bb.0:
-; X86-AVX2-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX2-NEXT:    vpbroadcastw {{.*#+}} xmm0 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; X86-AVX2-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX2-NEXT:    vpand (%eax), %xmm0, %xmm0
 ; X86-AVX2-NEXT:    retl
 ;
 ; X86-AVX512-LABEL: fabs_v8f16:
 ; X86-AVX512:       # %bb.0:
-; X86-AVX512-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512-NEXT:    vpbroadcastw {{.*#+}} xmm0 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; X86-AVX512-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512-NEXT:    vpand (%eax), %xmm0, %xmm0
 ; X86-AVX512-NEXT:    retl
 ;
@@ -361,15 +361,15 @@ define <16 x half> @fabs_v16f16(ptr %p) nounwind {
 ;
 ; X86-AVX2-LABEL: fabs_v16f16:
 ; X86-AVX2:       # %bb.0:
-; X86-AVX2-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX2-NEXT:    vpbroadcastw {{.*#+}} ymm0 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; X86-AVX2-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX2-NEXT:    vpand (%eax), %ymm0, %ymm0
 ; X86-AVX2-NEXT:    retl
 ;
 ; X86-AVX512-LABEL: fabs_v16f16:
 ; X86-AVX512:       # %bb.0:
-; X86-AVX512-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512-NEXT:    vpbroadcastw {{.*#+}} ymm0 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; X86-AVX512-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512-NEXT:    vpand (%eax), %ymm0, %ymm0
 ; X86-AVX512-NEXT:    retl
 ;
@@ -594,8 +594,8 @@ define <32 x half> @fabs_v32f16(ptr %p) nounwind {
 ;
 ; X86-AVX512FP16-LABEL: fabs_v32f16:
 ; X86-AVX512FP16:       # %bb.0:
-; X86-AVX512FP16-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512FP16-NEXT:    vpbroadcastw {{.*#+}} zmm0 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; X86-AVX512FP16-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-AVX512FP16-NEXT:    vpandq (%eax), %zmm0, %zmm0
 ; X86-AVX512FP16-NEXT:    retl
 ;

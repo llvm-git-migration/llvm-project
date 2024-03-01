@@ -665,12 +665,12 @@ define <2 x i32> @simplify_select(i32 %x, <2 x i1> %z) {
 ; AVX-LABEL: simplify_select:
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vpshufd {{.*#+}} xmm0 = xmm0[0,2,2,3]
-; AVX-NEXT:    vpslld $31, %xmm0, %xmm0
 ; AVX-NEXT:    vmovd %edi, %xmm1
 ; AVX-NEXT:    vpshufd {{.*#+}} xmm2 = xmm1[1,0,1,1]
 ; AVX-NEXT:    vpor %xmm1, %xmm2, %xmm1
 ; AVX-NEXT:    vpshufd {{.*#+}} xmm2 = xmm1[1,1,1,1]
 ; AVX-NEXT:    vpinsrd $1, %edi, %xmm2, %xmm2
+; AVX-NEXT:    vpslld $31, %xmm0, %xmm0
 ; AVX-NEXT:    vblendvps %xmm0, %xmm1, %xmm2, %xmm0
 ; AVX-NEXT:    retq
   %a = insertelement <2 x i32> <i32 0, i32 undef>, i32 %x, i32 1

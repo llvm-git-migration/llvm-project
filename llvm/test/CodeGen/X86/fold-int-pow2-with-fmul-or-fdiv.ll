@@ -261,8 +261,8 @@ define <8 x half> @fmul_pow2_8xhalf(<8 x i16> %i) {
 ; CHECK-AVX2:       # %bb.0:
 ; CHECK-AVX2-NEXT:    subq $120, %rsp
 ; CHECK-AVX2-NEXT:    .cfi_def_cfa_offset 128
-; CHECK-AVX2-NEXT:    vpmovzxwd {{.*#+}} ymm0 = xmm0[0],zero,xmm0[1],zero,xmm0[2],zero,xmm0[3],zero,xmm0[4],zero,xmm0[5],zero,xmm0[6],zero,xmm0[7],zero
 ; CHECK-AVX2-NEXT:    vpbroadcastd {{.*#+}} ymm1 = [1,1,1,1,1,1,1,1]
+; CHECK-AVX2-NEXT:    vpmovzxwd {{.*#+}} ymm0 = xmm0[0],zero,xmm0[1],zero,xmm0[2],zero,xmm0[3],zero,xmm0[4],zero,xmm0[5],zero,xmm0[6],zero,xmm0[7],zero
 ; CHECK-AVX2-NEXT:    vpsllvd %ymm0, %ymm1, %ymm0
 ; CHECK-AVX2-NEXT:    vpshufb {{.*#+}} ymm0 = ymm0[0,1,4,5,8,9,12,13,u,u,u,u,u,u,u,u,16,17,20,21,24,25,28,29,u,u,u,u,u,u,u,u]
 ; CHECK-AVX2-NEXT:    vpermq {{.*#+}} ymm0 = ymm0[0,2,2,3]
@@ -368,15 +368,15 @@ define <8 x half> @fmul_pow2_8xhalf(<8 x i16> %i) {
 ;
 ; CHECK-NO-FASTFMA-LABEL: fmul_pow2_8xhalf:
 ; CHECK-NO-FASTFMA:       # %bb.0:
-; CHECK-NO-FASTFMA-NEXT:    vpmovzxwd {{.*#+}} ymm0 = xmm0[0],zero,xmm0[1],zero,xmm0[2],zero,xmm0[3],zero,xmm0[4],zero,xmm0[5],zero,xmm0[6],zero,xmm0[7],zero
 ; CHECK-NO-FASTFMA-NEXT:    vpbroadcastd {{.*#+}} ymm1 = [1,1,1,1,1,1,1,1]
+; CHECK-NO-FASTFMA-NEXT:    vpmovzxwd {{.*#+}} ymm0 = xmm0[0],zero,xmm0[1],zero,xmm0[2],zero,xmm0[3],zero,xmm0[4],zero,xmm0[5],zero,xmm0[6],zero,xmm0[7],zero
 ; CHECK-NO-FASTFMA-NEXT:    vpsllvd %ymm0, %ymm1, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vpxor %xmm1, %xmm1, %xmm1
 ; CHECK-NO-FASTFMA-NEXT:    vpblendw {{.*#+}} ymm0 = ymm0[0],ymm1[1],ymm0[2],ymm1[3],ymm0[4],ymm1[5],ymm0[6],ymm1[7],ymm0[8],ymm1[9],ymm0[10],ymm1[11],ymm0[12],ymm1[13],ymm0[14],ymm1[15]
 ; CHECK-NO-FASTFMA-NEXT:    vcvtdq2ps %ymm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vcvtps2ph $4, %ymm0, %xmm0
-; CHECK-NO-FASTFMA-NEXT:    vcvtph2ps %xmm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vbroadcastss {{.*#+}} ymm1 = [8.192E+3,8.192E+3,8.192E+3,8.192E+3,8.192E+3,8.192E+3,8.192E+3,8.192E+3]
+; CHECK-NO-FASTFMA-NEXT:    vcvtph2ps %xmm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vmulps %ymm1, %ymm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vcvtps2ph $4, %ymm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    vzeroupper
@@ -968,16 +968,16 @@ define <4 x float> @fmul_pow_shl_cnt_vec_preserve_fma(<4 x i32> %cnt, <4 x float
 ;
 ; CHECK-AVX2-LABEL: fmul_pow_shl_cnt_vec_preserve_fma:
 ; CHECK-AVX2:       # %bb.0:
-; CHECK-AVX2-NEXT:    vpslld $23, %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1092616192,1092616192,1092616192,1092616192]
+; CHECK-AVX2-NEXT:    vpslld $23, %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    vpaddd %xmm2, %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    vaddps %xmm1, %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    retq
 ;
 ; CHECK-NO-FASTFMA-LABEL: fmul_pow_shl_cnt_vec_preserve_fma:
 ; CHECK-NO-FASTFMA:       # %bb.0:
-; CHECK-NO-FASTFMA-NEXT:    vpslld $23, %xmm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1092616192,1092616192,1092616192,1092616192]
+; CHECK-NO-FASTFMA-NEXT:    vpslld $23, %xmm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    vpaddd %xmm2, %xmm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    vaddps %xmm1, %xmm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    retq
@@ -1077,22 +1077,22 @@ define <2 x half> @fmul_pow_shl_cnt_vec_fail_to_large(<2 x i16> %cnt) nounwind {
 ; CHECK-AVX2-NEXT:    vcvtsi2ss %eax, %xmm2, %xmm0
 ; CHECK-AVX2-NEXT:    vzeroupper
 ; CHECK-AVX2-NEXT:    callq __truncsfhf2@PLT
+; CHECK-AVX2-NEXT:    vmovdqu {{[-0-9]+}}(%r{{[sb]}}p), %ymm1 # 32-byte Reload
+; CHECK-AVX2-NEXT:    vpextrw $0, %xmm1, %eax
 ; CHECK-AVX2-NEXT:    vmovss %xmm0, {{[-0-9]+}}(%r{{[sb]}}p) # 4-byte Spill
-; CHECK-AVX2-NEXT:    vmovdqu {{[-0-9]+}}(%r{{[sb]}}p), %ymm0 # 32-byte Reload
-; CHECK-AVX2-NEXT:    vpextrw $0, %xmm0, %eax
 ; CHECK-AVX2-NEXT:    vcvtsi2ss %eax, %xmm2, %xmm0
 ; CHECK-AVX2-NEXT:    vzeroupper
 ; CHECK-AVX2-NEXT:    callq __truncsfhf2@PLT
 ; CHECK-AVX2-NEXT:    callq __extendhfsf2@PLT
 ; CHECK-AVX2-NEXT:    vmulss {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    callq __truncsfhf2@PLT
-; CHECK-AVX2-NEXT:    vmovaps %xmm0, {{[-0-9]+}}(%r{{[sb]}}p) # 16-byte Spill
+; CHECK-AVX2-NEXT:    vmovaps %xmm0, (%rsp) # 16-byte Spill
 ; CHECK-AVX2-NEXT:    vmovss {{[-0-9]+}}(%r{{[sb]}}p), %xmm0 # 4-byte Reload
 ; CHECK-AVX2-NEXT:    # xmm0 = mem[0],zero,zero,zero
 ; CHECK-AVX2-NEXT:    callq __extendhfsf2@PLT
 ; CHECK-AVX2-NEXT:    vmulss {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
 ; CHECK-AVX2-NEXT:    callq __truncsfhf2@PLT
-; CHECK-AVX2-NEXT:    vmovdqa {{[-0-9]+}}(%r{{[sb]}}p), %xmm1 # 16-byte Reload
+; CHECK-AVX2-NEXT:    vmovdqa (%rsp), %xmm1 # 16-byte Reload
 ; CHECK-AVX2-NEXT:    vpunpcklwd {{.*#+}} xmm0 = xmm1[0],xmm0[0],xmm1[1],xmm0[1],xmm1[2],xmm0[2],xmm1[3],xmm0[3]
 ; CHECK-AVX2-NEXT:    addq $56, %rsp
 ; CHECK-AVX2-NEXT:    retq
@@ -1106,8 +1106,8 @@ define <2 x half> @fmul_pow_shl_cnt_vec_fail_to_large(<2 x i16> %cnt) nounwind {
 ; CHECK-NO-FASTFMA-NEXT:    vpmovzxwd {{.*#+}} xmm0 = xmm0[0],zero,xmm0[1],zero,xmm0[2],zero,xmm0[3],zero
 ; CHECK-NO-FASTFMA-NEXT:    vcvtdq2ps %ymm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vcvtps2ph $4, %ymm0, %xmm0
-; CHECK-NO-FASTFMA-NEXT:    vcvtph2ps %xmm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vbroadcastss {{.*#+}} ymm1 = [1.5E+1,1.5E+1,1.5E+1,1.5E+1,1.5E+1,1.5E+1,1.5E+1,1.5E+1]
+; CHECK-NO-FASTFMA-NEXT:    vcvtph2ps %xmm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vmulps %ymm1, %ymm0, %ymm0
 ; CHECK-NO-FASTFMA-NEXT:    vcvtps2ph $4, %ymm0, %xmm0
 ; CHECK-NO-FASTFMA-NEXT:    vzeroupper

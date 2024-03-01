@@ -44,16 +44,16 @@ define <16 x float> @test_buildvector_v16f32(float %a0, float %a1, float %a2, fl
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm4 = xmm4[0,1,2],xmm7[0]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[2,3]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm0 = xmm0[0,1],xmm2[0],xmm0[3]
-; AVX-64-NEXT:    vinsertps {{.*#+}} xmm0 = xmm0[0,1,2],xmm3[0]
-; AVX-64-NEXT:    vinsertf128 $1, %xmm4, %ymm0, %ymm0
 ; AVX-64-NEXT:    vmovss {{.*#+}} xmm1 = mem[0],zero,zero,zero
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm1 = xmm1[0],mem[0],xmm1[2,3]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm1 = xmm1[0,1],mem[0],xmm1[3]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm1 = xmm1[0,1,2],mem[0]
+; AVX-64-NEXT:    vinsertps {{.*#+}} xmm0 = xmm0[0,1,2],xmm3[0]
 ; AVX-64-NEXT:    vmovss {{.*#+}} xmm2 = mem[0],zero,zero,zero
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm2 = xmm2[0],mem[0],xmm2[2,3]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm2 = xmm2[0,1],mem[0],xmm2[3]
 ; AVX-64-NEXT:    vinsertps {{.*#+}} xmm2 = xmm2[0,1,2],mem[0]
+; AVX-64-NEXT:    vinsertf128 $1, %xmm4, %ymm0, %ymm0
 ; AVX-64-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vinsertf64x4 $1, %ymm1, %zmm0, %zmm0
 ; AVX-64-NEXT:    retq
@@ -124,16 +124,16 @@ define <16 x i32> @test_buildvector_v16i32(i32 %a0, i32 %a1, i32 %a2, i32 %a3, i
 ; AVX-64-NEXT:    vpinsrd $1, %r9d, %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrd $2, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrd $3, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
-; AVX-64-NEXT:    vmovd {{.*#+}} xmm1 = mem[0],zero,zero,zero
-; AVX-64-NEXT:    vpinsrd $1, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrd $2, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrd $3, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vmovd {{.*#+}} xmm2 = mem[0],zero,zero,zero
 ; AVX-64-NEXT:    vpinsrd $1, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrd $2, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrd $3, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vinserti128 $1, %xmm2, %ymm1, %ymm1
+; AVX-64-NEXT:    vmovd {{.*#+}} xmm3 = mem[0],zero,zero,zero
+; AVX-64-NEXT:    vpinsrd $1, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrd $2, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrd $3, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; AVX-64-NEXT:    vinserti128 $1, %xmm3, %ymm2, %ymm1
 ; AVX-64-NEXT:    vinserti64x4 $1, %ymm1, %zmm0, %zmm0
 ; AVX-64-NEXT:    retq
   %ins0  = insertelement <16 x i32> undef,  i32 %a0,  i32 0
@@ -174,15 +174,6 @@ define <32 x i16> @test_buildvector_v32i16(i16 %a0, i16 %a1, i16 %a2, i16 %a3, i
 ; AVX-32-NEXT:    vpinsrw $5, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vpinsrw $6, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vpinsrw $7, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
-; AVX-32-NEXT:    vmovd {{.*#+}} xmm1 = mem[0],zero,zero,zero
-; AVX-32-NEXT:    vpinsrw $1, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $2, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $3, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $4, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $5, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $6, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrw $7, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vmovd {{.*#+}} xmm2 = mem[0],zero,zero,zero
 ; AVX-32-NEXT:    vpinsrw $1, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrw $2, {{[0-9]+}}(%esp), %xmm2, %xmm2
@@ -191,7 +182,16 @@ define <32 x i16> @test_buildvector_v32i16(i16 %a0, i16 %a1, i16 %a2, i16 %a3, i
 ; AVX-32-NEXT:    vpinsrw $5, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrw $6, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrw $7, {{[0-9]+}}(%esp), %xmm2, %xmm2
-; AVX-32-NEXT:    vinserti128 $1, %xmm2, %ymm1, %ymm1
+; AVX-32-NEXT:    vmovd {{.*#+}} xmm3 = mem[0],zero,zero,zero
+; AVX-32-NEXT:    vpinsrw $1, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $2, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $3, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $4, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $5, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $6, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrw $7, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; AVX-32-NEXT:    vinserti128 $1, %xmm3, %ymm2, %ymm1
 ; AVX-32-NEXT:    vinserti64x4 $1, %ymm0, %zmm1, %zmm0
 ; AVX-32-NEXT:    retl
 ;
@@ -213,24 +213,24 @@ define <32 x i16> @test_buildvector_v32i16(i16 %a0, i16 %a1, i16 %a2, i16 %a3, i
 ; AVX-64-NEXT:    vpinsrw $5, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrw $6, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrw $7, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
-; AVX-64-NEXT:    vmovd %edi, %xmm1
-; AVX-64-NEXT:    vpinsrw $1, %esi, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $2, %edx, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $3, %ecx, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $4, %r8d, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $5, %r9d, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $6, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrw $7, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vmovd {{.*#+}} xmm2 = mem[0],zero,zero,zero
-; AVX-64-NEXT:    vpinsrw $1, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrw $2, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrw $3, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrw $4, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrw $5, {{[0-9]+}}(%rsp), %xmm2, %xmm2
+; AVX-64-NEXT:    vmovd %edi, %xmm2
+; AVX-64-NEXT:    vpinsrw $1, %esi, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrw $2, %edx, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrw $3, %ecx, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrw $4, %r8d, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrw $5, %r9d, %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrw $6, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrw $7, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vinserti128 $1, %xmm2, %ymm1, %ymm1
+; AVX-64-NEXT:    vmovd {{.*#+}} xmm3 = mem[0],zero,zero,zero
+; AVX-64-NEXT:    vpinsrw $1, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $2, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $3, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $4, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $5, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $6, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrw $7, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; AVX-64-NEXT:    vinserti128 $1, %xmm3, %ymm2, %ymm1
 ; AVX-64-NEXT:    vinserti64x4 $1, %ymm0, %zmm1, %zmm0
 ; AVX-64-NEXT:    retq
   %ins0  = insertelement <32 x i16> undef,  i16 %a0,  i32 0
@@ -303,23 +303,6 @@ define <64 x i8> @test_buildvector_v64i8(i8 %a0, i8 %a1, i8 %a2, i8 %a3, i8 %a4,
 ; AVX-32-NEXT:    vpinsrb $13, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vpinsrb $14, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vpinsrb $15, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
-; AVX-32-NEXT:    vmovd {{.*#+}} xmm1 = mem[0],zero,zero,zero
-; AVX-32-NEXT:    vpinsrb $1, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $2, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $3, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $4, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $5, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $6, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $7, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $8, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $9, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $10, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $11, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $12, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $13, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $14, {{[0-9]+}}(%esp), %xmm1, %xmm1
-; AVX-32-NEXT:    vpinsrb $15, {{[0-9]+}}(%esp), %xmm1, %xmm1
 ; AVX-32-NEXT:    vmovd {{.*#+}} xmm2 = mem[0],zero,zero,zero
 ; AVX-32-NEXT:    vpinsrb $1, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrb $2, {{[0-9]+}}(%esp), %xmm2, %xmm2
@@ -336,7 +319,24 @@ define <64 x i8> @test_buildvector_v64i8(i8 %a0, i8 %a1, i8 %a2, i8 %a3, i8 %a4,
 ; AVX-32-NEXT:    vpinsrb $13, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrb $14, {{[0-9]+}}(%esp), %xmm2, %xmm2
 ; AVX-32-NEXT:    vpinsrb $15, {{[0-9]+}}(%esp), %xmm2, %xmm2
-; AVX-32-NEXT:    vinserti128 $1, %xmm2, %ymm1, %ymm1
+; AVX-32-NEXT:    vmovd {{.*#+}} xmm3 = mem[0],zero,zero,zero
+; AVX-32-NEXT:    vpinsrb $1, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $2, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $3, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $4, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $5, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $6, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $7, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $8, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $9, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $10, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $11, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $12, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $13, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $14, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vpinsrb $15, {{[0-9]+}}(%esp), %xmm3, %xmm3
+; AVX-32-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; AVX-32-NEXT:    vinserti128 $1, %xmm3, %ymm2, %ymm1
 ; AVX-32-NEXT:    vinserti64x4 $1, %ymm0, %zmm1, %zmm0
 ; AVX-32-NEXT:    retl
 ;
@@ -374,29 +374,12 @@ define <64 x i8> @test_buildvector_v64i8(i8 %a0, i8 %a1, i8 %a2, i8 %a3, i8 %a4,
 ; AVX-64-NEXT:    vpinsrb $13, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrb $14, {{[0-9]+}}(%rsp), %xmm1, %xmm1
 ; AVX-64-NEXT:    vpinsrb $15, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
-; AVX-64-NEXT:    vmovd %edi, %xmm1
-; AVX-64-NEXT:    vpinsrb $1, %esi, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $2, %edx, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $3, %ecx, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $4, %r8d, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $5, %r9d, %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $6, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $7, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $8, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $9, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $10, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $11, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $12, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $13, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $14, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vpinsrb $15, {{[0-9]+}}(%rsp), %xmm1, %xmm1
-; AVX-64-NEXT:    vmovd {{.*#+}} xmm2 = mem[0],zero,zero,zero
-; AVX-64-NEXT:    vpinsrb $1, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrb $2, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrb $3, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrb $4, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vpinsrb $5, {{[0-9]+}}(%rsp), %xmm2, %xmm2
+; AVX-64-NEXT:    vmovd %edi, %xmm2
+; AVX-64-NEXT:    vpinsrb $1, %esi, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrb $2, %edx, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrb $3, %ecx, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrb $4, %r8d, %xmm2, %xmm2
+; AVX-64-NEXT:    vpinsrb $5, %r9d, %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrb $6, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrb $7, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrb $8, {{[0-9]+}}(%rsp), %xmm2, %xmm2
@@ -407,7 +390,24 @@ define <64 x i8> @test_buildvector_v64i8(i8 %a0, i8 %a1, i8 %a2, i8 %a3, i8 %a4,
 ; AVX-64-NEXT:    vpinsrb $13, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrb $14, {{[0-9]+}}(%rsp), %xmm2, %xmm2
 ; AVX-64-NEXT:    vpinsrb $15, {{[0-9]+}}(%rsp), %xmm2, %xmm2
-; AVX-64-NEXT:    vinserti128 $1, %xmm2, %ymm1, %ymm1
+; AVX-64-NEXT:    vmovd {{.*#+}} xmm3 = mem[0],zero,zero,zero
+; AVX-64-NEXT:    vpinsrb $1, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $2, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $3, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $4, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $5, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $6, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $7, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $8, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $9, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $10, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $11, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $12, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $13, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $14, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vpinsrb $15, {{[0-9]+}}(%rsp), %xmm3, %xmm3
+; AVX-64-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; AVX-64-NEXT:    vinserti128 $1, %xmm3, %ymm2, %ymm1
 ; AVX-64-NEXT:    vinserti64x4 $1, %ymm0, %zmm1, %zmm0
 ; AVX-64-NEXT:    retq
   %ins0  = insertelement <64 x i8> undef,  i8 %a0,  i32 0

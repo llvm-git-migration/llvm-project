@@ -1032,8 +1032,8 @@ define void @infiniteloop3() {
 ; ENABLE-NEXT:  LBB12_4: ## %loop1
 ; ENABLE-NEXT:    ## =>This Inner Loop Header: Depth=1
 ; ENABLE-NEXT:    movq %rcx, %rdx
-; ENABLE-NEXT:    testq %rax, %rax
 ; ENABLE-NEXT:    movq (%rax), %rcx
+; ENABLE-NEXT:    testq %rax, %rax
 ; ENABLE-NEXT:    jne LBB12_3
 ; ENABLE-NEXT:  ## %bb.5: ## in Loop: Header=BB12_4 Depth=1
 ; ENABLE-NEXT:    movq %rdx, %rax
@@ -1064,8 +1064,8 @@ define void @infiniteloop3() {
 ; DISABLE-NEXT:  LBB12_4: ## %loop1
 ; DISABLE-NEXT:    ## =>This Inner Loop Header: Depth=1
 ; DISABLE-NEXT:    movq %rcx, %rdx
-; DISABLE-NEXT:    testq %rax, %rax
 ; DISABLE-NEXT:    movq (%rax), %rcx
+; DISABLE-NEXT:    testq %rax, %rax
 ; DISABLE-NEXT:    jne LBB12_3
 ; DISABLE-NEXT:  ## %bb.5: ## in Loop: Header=BB12_4 Depth=1
 ; DISABLE-NEXT:    movq %rdx, %rax

@@ -1160,38 +1160,38 @@ define <8 x i64> @v8i64(<8 x i64> %x, <8 x i64> %y) nounwind {
 define <2 x i128> @v2i128(<2 x i128> %x, <2 x i128> %y) nounwind {
 ; SSE-LABEL: v2i128:
 ; SSE:       # %bb.0:
-; SSE-NEXT:    movq %rdi, %rax
 ; SSE-NEXT:    addq {{[0-9]+}}(%rsp), %rsi
 ; SSE-NEXT:    adcq {{[0-9]+}}(%rsp), %rdx
-; SSE-NEXT:    movq $-1, %rdi
-; SSE-NEXT:    cmovbq %rdi, %rdx
-; SSE-NEXT:    cmovbq %rdi, %rsi
+; SSE-NEXT:    movq $-1, %r9
+; SSE-NEXT:    cmovbq %r9, %rdx
+; SSE-NEXT:    cmovbq %r9, %rsi
 ; SSE-NEXT:    addq {{[0-9]+}}(%rsp), %rcx
 ; SSE-NEXT:    adcq {{[0-9]+}}(%rsp), %r8
-; SSE-NEXT:    cmovbq %rdi, %r8
-; SSE-NEXT:    cmovbq %rdi, %rcx
-; SSE-NEXT:    movq %r8, 24(%rax)
-; SSE-NEXT:    movq %rcx, 16(%rax)
-; SSE-NEXT:    movq %rdx, 8(%rax)
-; SSE-NEXT:    movq %rsi, (%rax)
+; SSE-NEXT:    cmovbq %r9, %r8
+; SSE-NEXT:    movq %rdi, %rax
+; SSE-NEXT:    cmovbq %r9, %rcx
+; SSE-NEXT:    movq %r8, 24(%rdi)
+; SSE-NEXT:    movq %rcx, 16(%rdi)
+; SSE-NEXT:    movq %rdx, 8(%rdi)
+; SSE-NEXT:    movq %rsi, (%rdi)
 ; SSE-NEXT:    retq
 ;
 ; AVX-LABEL: v2i128:
 ; AVX:       # %bb.0:
-; AVX-NEXT:    movq %rdi, %rax
 ; AVX-NEXT:    addq {{[0-9]+}}(%rsp), %rsi
 ; AVX-NEXT:    adcq {{[0-9]+}}(%rsp), %rdx
-; AVX-NEXT:    movq $-1, %rdi
-; AVX-NEXT:    cmovbq %rdi, %rdx
-; AVX-NEXT:    cmovbq %rdi, %rsi
+; AVX-NEXT:    movq $-1, %r9
+; AVX-NEXT:    cmovbq %r9, %rdx
+; AVX-NEXT:    cmovbq %r9, %rsi
 ; AVX-NEXT:    addq {{[0-9]+}}(%rsp), %rcx
 ; AVX-NEXT:    adcq {{[0-9]+}}(%rsp), %r8
-; AVX-NEXT:    cmovbq %rdi, %r8
-; AVX-NEXT:    cmovbq %rdi, %rcx
-; AVX-NEXT:    movq %r8, 24(%rax)
-; AVX-NEXT:    movq %rcx, 16(%rax)
-; AVX-NEXT:    movq %rdx, 8(%rax)
-; AVX-NEXT:    movq %rsi, (%rax)
+; AVX-NEXT:    cmovbq %r9, %r8
+; AVX-NEXT:    movq %rdi, %rax
+; AVX-NEXT:    cmovbq %r9, %rcx
+; AVX-NEXT:    movq %r8, 24(%rdi)
+; AVX-NEXT:    movq %rcx, 16(%rdi)
+; AVX-NEXT:    movq %rdx, 8(%rdi)
+; AVX-NEXT:    movq %rsi, (%rdi)
 ; AVX-NEXT:    retq
   %z = call <2 x i128> @llvm.uadd.sat.v2i128(<2 x i128> %x, <2 x i128> %y)
   ret <2 x i128> %z
