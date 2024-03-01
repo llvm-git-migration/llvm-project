@@ -224,10 +224,12 @@ public:
 
   ~VectorTypeSyntheticFrontEnd() override = default;
 
-  uint32_t CalculateNumChildren() override { return m_num_children; }
+  llvm::Expected<uint32_t> CalculateNumChildren() override {
+    return m_num_children;
+  }
 
   lldb::ValueObjectSP GetChildAtIndex(uint32_t idx) override {
-    if (idx >= CalculateNumChildren())
+    if (idx >= llvm::expectedToStdOptional(CalculateNumChildren()).value_or(0))
       return {};
     std::optional<uint64_t> size = m_child_type.GetByteSize(nullptr);
     if (!size)
@@ -266,7 +268,8 @@ public:
   size_t GetIndexOfChildWithName(ConstString name) override {
     const char *item_name = name.GetCString();
     uint32_t idx = ExtractIndexFromString(item_name);
-    if (idx < UINT32_MAX && idx >= CalculateNumChildren())
+    if (idx < UINT32_MAX &&
+        idx >= llvm::expectedToStdOptional(CalculateNumChildren()).value_or(0))
       return UINT32_MAX;
     return idx;
   }
@@ -293,7 +296,9 @@ bool lldb_private::formatters::VectorTypeSummaryProvider(
   s.PutChar('(');
   bool first = true;
 
-  size_t idx = 0, len = synthetic_children->CalculateNumChildren();
+  size_t idx = 0, len = llvm::expectedToStdOptional(
+                            synthetic_children->CalculateNumChildren())
+                            .value_or(0);
 
   for (; idx < len; idx++) {
     auto child_sp = synthetic_children->GetChildAtIndex(idx);

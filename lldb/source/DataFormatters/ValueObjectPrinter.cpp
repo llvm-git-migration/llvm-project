@@ -627,7 +627,8 @@ uint32_t ValueObjectPrinter::GetMaxNumChildrenToPrint(bool &print_dotdotdot) {
   if (m_options.m_pointer_as_array)
     return m_options.m_pointer_as_array.m_element_count;
 
-  size_t num_children = synth_valobj.GetNumChildren();
+  size_t num_children =
+      llvm::expectedToStdOptional(synth_valobj.GetNumChildren()).value_or(0);
   print_dotdotdot = false;
   if (num_children) {
     const size_t max_num_children = GetMostSpecializedValue()

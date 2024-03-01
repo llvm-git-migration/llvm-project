@@ -859,8 +859,9 @@ ValueObjectSP StackFrame::GetValueForVariableExpressionPath(
                   var_expr_path_strm.GetData());
             } else if (
                 static_cast<uint32_t>(child_index) >=
-                synthetic
-                    ->GetNumChildren() /* synthetic does not have that many values */) {
+                llvm::expectedToStdOptional(synthetic->GetNumChildren())
+                    .value_or(
+                        0) /* synthetic does not have that many values */) {
               valobj_sp->GetExpressionPath(var_expr_path_strm);
               error.SetErrorStringWithFormat(
                   "array index %ld is not valid for \"(%s) %s\"", child_index,
@@ -931,8 +932,8 @@ ValueObjectSP StackFrame::GetValueForVariableExpressionPath(
                 var_expr_path_strm.GetData());
           } else if (
               static_cast<uint32_t>(child_index) >=
-              synthetic
-                  ->GetNumChildren() /* synthetic does not have that many values */) {
+              llvm::expectedToStdOptional(synthetic->GetNumChildren())
+                  .value_or(0) /* synthetic does not have that many values */) {
             valobj_sp->GetExpressionPath(var_expr_path_strm);
             error.SetErrorStringWithFormat(
                 "array index %ld is not valid for \"(%s) %s\"", child_index,
@@ -1397,7 +1398,9 @@ ValueObjectSP GetValueForOffset(StackFrame &frame, ValueObjectSP &parent,
     return parent;
   }
 
-  for (int ci = 0, ce = parent->GetNumChildren(); ci != ce; ++ci) {
+  for (int ci = 0, ce = llvm::expectedToStdOptional(parent->GetNumChildren())
+                            .value_or(0);
+       ci != ce; ++ci) {
     ValueObjectSP child_sp = parent->GetChildAtIndex(ci);
 
     if (!child_sp) {

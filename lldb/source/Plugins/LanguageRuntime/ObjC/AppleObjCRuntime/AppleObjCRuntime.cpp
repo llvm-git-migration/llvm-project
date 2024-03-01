@@ -539,7 +539,10 @@ ThreadSP AppleObjCRuntime::GetBacktraceThreadFromException(
     return object;
   };
 
-  for (size_t idx = 0; idx < reserved_dict->GetNumChildren(); idx++) {
+  for (size_t idx = 0;
+       idx <
+       llvm::expectedToStdOptional(reserved_dict->GetNumChildren()).value_or(0);
+       idx++) {
     ValueObjectSP dict_entry = reserved_dict->GetChildAtIndex(idx);
 
     DataExtractor data;

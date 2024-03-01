@@ -178,13 +178,15 @@ bool ScriptedSyntheticChildren::FrontEnd::IsValid() {
   return (m_wrapper_sp && m_wrapper_sp->IsValid() && m_interpreter);
 }
 
-uint32_t ScriptedSyntheticChildren::FrontEnd::CalculateNumChildren() {
+llvm::Expected<uint32_t>
+ScriptedSyntheticChildren::FrontEnd::CalculateNumChildren() {
   if (!m_wrapper_sp || m_interpreter == nullptr)
     return 0;
   return m_interpreter->CalculateNumChildren(m_wrapper_sp, UINT32_MAX);
 }
 
-uint32_t ScriptedSyntheticChildren::FrontEnd::CalculateNumChildren(uint32_t max) {
+llvm::Expected<uint32_t>
+ScriptedSyntheticChildren::FrontEnd::CalculateNumChildren(uint32_t max) {
   if (!m_wrapper_sp || m_interpreter == nullptr)
     return 0;
   return m_interpreter->CalculateNumChildren(m_wrapper_sp, max);

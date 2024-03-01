@@ -947,7 +947,8 @@ uint32_t SBValue::GetNumChildren(uint32_t max) {
   ValueLocker locker;
   lldb::ValueObjectSP value_sp(GetSP(locker));
   if (value_sp)
-    num_children = value_sp->GetNumChildren(max);
+    num_children =
+        llvm::expectedToStdOptional(value_sp->GetNumChildren(max)).value_or(0);
 
   return num_children;
 }

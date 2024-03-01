@@ -4519,7 +4519,8 @@ struct Row {
       calculated_children = true;
       ValueObjectSP valobj = value.GetSP();
       if (valobj) {
-        const size_t num_children = valobj->GetNumChildren();
+        const size_t num_children =
+            llvm::expectedToStdOptional(valobj->GetNumChildren()).value_or(0);
         for (size_t i = 0; i < num_children; ++i) {
           children.push_back(Row(valobj->GetChildAtIndex(i), this));
         }

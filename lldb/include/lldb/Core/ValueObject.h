@@ -476,7 +476,7 @@ public:
 
   virtual size_t GetIndexOfChildWithName(llvm::StringRef name);
 
-  uint32_t GetNumChildren(uint32_t max = UINT32_MAX);
+  llvm::Expected<uint32_t> GetNumChildren(uint32_t max = UINT32_MAX);
 
   const Value &GetValue() const { return m_value; }
 
@@ -958,7 +958,8 @@ protected:
                                           int32_t synthetic_index);
 
   /// Should only be called by ValueObject::GetNumChildren().
-  virtual uint32_t CalculateNumChildren(uint32_t max = UINT32_MAX) = 0;
+  virtual llvm::Expected<uint32_t>
+  CalculateNumChildren(uint32_t max = UINT32_MAX) = 0;
 
   void SetNumChildren(uint32_t num_children);
 

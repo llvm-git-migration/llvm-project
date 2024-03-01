@@ -31,7 +31,9 @@ public:
   DummySyntheticFrontEnd(ValueObject &backend)
       : SyntheticChildrenFrontEnd(backend) {}
 
-  uint32_t CalculateNumChildren() override { return m_backend.GetNumChildren(); }
+  llvm::Expected<uint32_t> CalculateNumChildren() override {
+    return m_backend.GetNumChildren();
+  }
 
   lldb::ValueObjectSP GetChildAtIndex(uint32_t idx) override {
     return m_backend.GetChildAtIndex(idx);
@@ -84,7 +86,8 @@ ConstString ValueObjectSynthetic::GetDisplayTypeName() {
   return m_parent->GetDisplayTypeName();
 }
 
-uint32_t ValueObjectSynthetic::CalculateNumChildren(uint32_t max) {
+llvm::Expected<uint32_t>
+ValueObjectSynthetic::CalculateNumChildren(uint32_t max) {
   Log *log = GetLog(LLDBLog::DataFormatters);
 
   UpdateValueIfNeeded();
@@ -92,18 +95,22 @@ uint32_t ValueObjectSynthetic::CalculateNumChildren(uint32_t max) {
     return m_synthetic_children_count <= max ? m_synthetic_children_count : max;
 
   if (max < UINT32_MAX) {
-    size_t num_children = m_synth_filter_up->CalculateNumChildren(max);
+    auto num_children = m_synth_filter_up->CalculateNumChildren(max);
     LLDB_LOGF(log,
               "[ValueObjectSynthetic::CalculateNumChildren] for VO of name "
-              "%s and type %s, the filter returned %zu child values",
-              GetName().AsCString(), GetTypeName().AsCString(), num_children);
+              "%s and type %s, the filter returned %u child values",
+              GetName().AsCString(), GetTypeName().AsCString(),
+              num_children ? *num_children : 0);
     return num_children;
   } else {
-    size_t num_children = (m_synthetic_children_count =
-                               m_synth_filter_up->CalculateNumChildren(max));
+    // FIXME: this drops the error.
+    auto num_children = (m_synthetic_children_count =
+                             llvm::expectedToStdOptional(
+                                 m_synth_filter_up->CalculateNumChildren(max))
+                                 .value_or(0));
     LLDB_LOGF(log,
               "[ValueObjectSynthetic::CalculateNumChildren] for VO of name "
-              "%s and type %s, the filter returned %zu child values",
+              "%s and type %s, the filter returned %u child values",
               GetName().AsCString(), GetTypeName().AsCString(), num_children);
     return num_children;
   }

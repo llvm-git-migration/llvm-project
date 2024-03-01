@@ -926,7 +926,8 @@ static bool DumpValue(Stream &s, const SymbolContext *sc,
     s.PutChar('[');
 
     if (index_higher < 0)
-      index_higher = valobj->GetNumChildren() - 1;
+      index_higher =
+          llvm::expectedToStdOptional(valobj->GetNumChildren()).value_or(0) - 1;
 
     uint32_t max_num_children =
         target->GetTargetSP()->GetMaximumNumberOfChildrenToDisplay();

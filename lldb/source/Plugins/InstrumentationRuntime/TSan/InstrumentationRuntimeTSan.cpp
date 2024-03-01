@@ -211,7 +211,9 @@ CreateStackTrace(ValueObjectSP o,
   auto trace_sp = std::make_shared<StructuredData::Array>();
   ValueObjectSP trace_value_object =
       o->GetValueForExpressionPath(trace_item_name.c_str());
-  size_t count = trace_value_object->GetNumChildren();
+  size_t count =
+      llvm::expectedToStdOptional(trace_value_object->GetNumChildren())
+          .value_or(0);
   for (size_t j = 0; j < count; j++) {
     addr_t trace_addr =
         trace_value_object->GetChildAtIndex(j)->GetValueAsUnsigned(0);
