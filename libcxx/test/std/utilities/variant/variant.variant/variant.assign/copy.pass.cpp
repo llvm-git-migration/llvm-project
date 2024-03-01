@@ -590,22 +590,52 @@ void test_assignment_throw() {
 #endif // TEST_HAS_NO_EXCEPTIONS
 }
 
-template <std::size_t NewIdx, class ValueType>
-constexpr bool test_constexpr_assign_imp(std::variant<long, void*, int>&& v, ValueType&& new_value) {
-  const std::variant<long, void*, int> cp(std::forward<ValueType>(new_value));
+template <std::size_t NewIdx, class T, class ValueType>
+constexpr void test_constexpr_assign_imp(T&& v, ValueType&& new_value) {
+  using Variant = std::decay_t<T>;
+  const Variant cp(std::forward<ValueType>(new_value));
   v = cp;
-  return v.index() == NewIdx && std::get<NewIdx>(v) == std::get<NewIdx>(cp);
+  assert(v.index() == NewIdx);
+  assert(std::get<NewIdx>(v) == std::get<NewIdx>(cp));
 }
 
-void test_constexpr_copy_assignment() {
+constexpr bool test_constexpr_copy_assignment_trivial() {
   // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
   using V = std::variant<long, void*, int>;
   static_assert(std::is_trivially_copyable<V>::value, "");
   static_assert(std::is_trivially_copy_assignable<V>::value, "");
-  static_assert(test_constexpr_assign_imp<0>(V(42l), 101l), "");
-  static_assert(test_constexpr_assign_imp<0>(V(nullptr), 101l), "");
-  static_assert(test_constexpr_assign_imp<1>(V(42l), nullptr), "");
-  static_assert(test_constexpr_assign_imp<2>(V(42l), 101), "");
+  test_constexpr_assign_imp<0>(V(42l), 101l);
+  test_constexpr_assign_imp<0>(V(nullptr), 101l);
+  test_constexpr_assign_imp<1>(V(42l), nullptr);
+  test_constexpr_assign_imp<2>(V(42l), 101);
+
+  return true;
+}
+
+struct NonTrivialCopyAssign {
+  int i = 0;
+  constexpr NonTrivialCopyAssign(int ii) : i(ii) {}
+  constexpr NonTrivialCopyAssign(const NonTrivialCopyAssign& other) : i(other.i) {}
+  constexpr NonTrivialCopyAssign& operator=(const NonTrivialCopyAssign& o) {
+    i = o.i;
+    return *this;
+  }
+  TEST_CONSTEXPR_CXX20 ~NonTrivialCopyAssign() = default;
+  friend constexpr bool operator==(const NonTrivialCopyAssign& x, const NonTrivialCopyAssign& y) { return x.i == y.i; }
+};
+
+constexpr bool test_constexpr_copy_assignment_non_trivial() {
+  // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
+  using V = std::variant<long, void*, NonTrivialCopyAssign>;
+  static_assert(!std::is_trivially_copyable<V>::value, "");
+  static_assert(!std::is_trivially_copy_assignable<V>::value, "");
+  test_constexpr_assign_imp<0>(V(42l), 101l);
+  test_constexpr_assign_imp<0>(V(nullptr), 101l);
+  test_constexpr_assign_imp<1>(V(42l), nullptr);
+  test_constexpr_assign_imp<2>(V(42l), NonTrivialCopyAssign(5));
+  test_constexpr_assign_imp<2>(V(NonTrivialCopyAssign(3)), NonTrivialCopyAssign(5));
+
+  return true;
 }
 
 int main(int, char**) {
@@ -617,11 +647,14 @@ int main(int, char**) {
   test_copy_assignment_different_index();
   test_copy_assignment_sfinae();
   test_copy_assignment_not_noexcept();
-  test_constexpr_copy_assignment();
+  test_constexpr_copy_assignment_trivial();
+  test_constexpr_copy_assignment_non_trivial();
 
+  static_assert(test_constexpr_copy_assignment_trivial());
 #if TEST_STD_VER >= 20
   static_assert(test_copy_assignment_same_index());
   static_assert(test_copy_assignment_different_index());
+  static_assert(test_constexpr_copy_assignment_non_trivial());
 #endif
 
   return 0;

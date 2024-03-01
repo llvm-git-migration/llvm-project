@@ -223,61 +223,64 @@ void test_copy_ctor_valueless_by_exception() {
 }
 
 template <std::size_t Idx, class T>
-constexpr bool test_constexpr_copy_ctor_imp(const T& v) {
+constexpr void test_constexpr_copy_ctor_imp(const T& v) {
   auto v2 = v;
-  return v2.index() == v.index() && v2.index() == Idx && std::get<Idx>(v2) == std::get<Idx>(v);
+  assert(v2.index() == v.index());
+  assert(v2.index() == Idx);
+  assert(std::get<Idx>(v2) == std::get<Idx>(v));
 }
-#if TEST_STD_VER >= 20
+
+constexpr bool test_constexpr_copy_ctor_trivial() {
+  // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
+  using V = std::variant<long, void*, const int>;
+#ifdef TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
+  static_assert(std::is_trivially_destructible<V>::value, "");
+  static_assert(std::is_trivially_copy_constructible<V>::value, "");
+  static_assert(std::is_trivially_move_constructible<V>::value, "");
+  static_assert(!std::is_copy_assignable<V>::value, "");
+  static_assert(!std::is_move_assignable<V>::value, "");
+#else  // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
+  static_assert(std::is_trivially_copyable<V>::value, "");
+#endif // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
+  static_assert(std::is_trivially_copy_constructible<V>::value, "");
+  test_constexpr_copy_ctor_imp<0>(V(42l));
+  test_constexpr_copy_ctor_imp<1>(V(nullptr));
+  test_constexpr_copy_ctor_imp<2>(V(101));
+
+  return true;
+}
+
 struct NonTrivialCopyCtor {
   int i = 0;
   constexpr NonTrivialCopyCtor(int ii) : i(ii) {}
   constexpr NonTrivialCopyCtor(const NonTrivialCopyCtor& other) : i(other.i) {}
-  constexpr NonTrivialCopyCtor(NonTrivialCopyCtor&& other)                               = default;
-  constexpr ~NonTrivialCopyCtor()                                                        = default;
-  friend constexpr bool operator==(const NonTrivialCopyCtor&, const NonTrivialCopyCtor&) = default;
+  constexpr NonTrivialCopyCtor(NonTrivialCopyCtor&& other) = default;
+  TEST_CONSTEXPR_CXX20 ~NonTrivialCopyCtor()               = default;
+  friend constexpr bool operator==(const NonTrivialCopyCtor& x, const NonTrivialCopyCtor& y) { return x.i == y.i; }
 };
-#endif
 
-void test_constexpr_copy_ctor() {
-  {
-    // Test is_trivially_copy_constructible
-    // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
-    using V = std::variant<long, void*, const int>;
-#ifdef TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-    static_assert(std::is_trivially_destructible<V>::value, "");
-    static_assert(std::is_trivially_copy_constructible<V>::value, "");
-    static_assert(std::is_trivially_move_constructible<V>::value, "");
-    static_assert(!std::is_copy_assignable<V>::value, "");
-    static_assert(!std::is_move_assignable<V>::value, "");
-#else  // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-    static_assert(std::is_trivially_copyable<V>::value, "");
-#endif // TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
-    static_assert(std::is_trivially_copy_constructible<V>::value, "");
-    static_assert(test_constexpr_copy_ctor_imp<0>(V(42l)), "");
-    static_assert(test_constexpr_copy_ctor_imp<1>(V(nullptr)), "");
-    static_assert(test_constexpr_copy_ctor_imp<2>(V(101)), "");
-  }
+TEST_CONSTEXPR_CXX20 bool test_constexpr_copy_ctor_non_trivial() {
+  // Test !is_trivially_move_constructible
+  using V = std::variant<long, NonTrivialCopyCtor, void*>;
+  static_assert(!std::is_trivially_copy_constructible<V>::value, "");
+  test_constexpr_copy_ctor_imp<0>(V(42l));
+  test_constexpr_copy_ctor_imp<1>(V(NonTrivialCopyCtor(5)));
+  test_constexpr_copy_ctor_imp<2>(V(nullptr));
 
-#if TEST_STD_VER >= 20
-  {
-    // Test !is_trivially_move_constructible
-    using V = std::variant<long, NonTrivialCopyCtor, void*>;
-    static_assert(!std::is_trivially_copy_constructible<V>::value, "");
-    static_assert(test_constexpr_copy_ctor_imp<0>(V(42l)), "");
-    static_assert(test_constexpr_copy_ctor_imp<1>(V(NonTrivialCopyCtor(5))), "");
-    static_assert(test_constexpr_copy_ctor_imp<2>(V(nullptr)), "");
-  }
-#endif
+  return true;
 }
 
 int main(int, char**) {
   test_copy_ctor_basic();
   test_copy_ctor_valueless_by_exception();
   test_copy_ctor_sfinae();
-  test_constexpr_copy_ctor();
+  test_constexpr_copy_ctor_trivial();
+  test_constexpr_copy_ctor_non_trivial();
 
+  static_assert(test_constexpr_copy_ctor_trivial());
 #if TEST_STD_VER >= 20
   static_assert(test_copy_ctor_basic());
+  static_assert(test_constexpr_copy_ctor_non_trivial());
 #endif
   return 0;
 }
