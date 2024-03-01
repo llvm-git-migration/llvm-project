@@ -375,7 +375,7 @@ bool SIFoldOperands::updateOperand(FoldCandidate &Fold) const {
 
   if ((Fold.isImm() || Fold.isFI() || Fold.isGlobal()) && Fold.needsShrink()) {
     MachineBasicBlock *MBB = MI->getParent();
-    auto Liveness = MBB->computeRegisterLiveness(TRI, AMDGPU::VCC, MI, 16);
+    auto Liveness = MBB->computeRegisterLiveness(TRI, AMDGPU::VCC, MI);
     if (Liveness != MachineBasicBlock::LQR_Dead) {
       LLVM_DEBUG(dbgs() << "Not shrinking " << MI << " due to vcc liveness\n");
       return false;

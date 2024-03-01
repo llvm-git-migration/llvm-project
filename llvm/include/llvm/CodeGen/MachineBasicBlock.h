@@ -1149,8 +1149,7 @@ public:
   /// \p Reg must be a physical register.
   LivenessQueryResult computeRegisterLiveness(const TargetRegisterInfo *TRI,
                                               MCRegister Reg,
-                                              const_iterator Before,
-                                              unsigned Neighborhood = 10) const;
+                                              const_iterator Before) const;
 
   // Debugging methods.
   void dump() const;

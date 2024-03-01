@@ -1604,11 +1604,12 @@ MachineBasicBlock::getProbabilityIterator(MachineBasicBlock::succ_iterator I) {
 /// Search is localised to a neighborhood of
 /// Neighborhood instructions before (searching for defs or kills) and N
 /// instructions after (searching just for defs) MI.
+/// Special value of 0: Check size of the whole block
 MachineBasicBlock::LivenessQueryResult
 MachineBasicBlock::computeRegisterLiveness(const TargetRegisterInfo *TRI,
-                                           MCRegister Reg, const_iterator Before,
-                                           unsigned Neighborhood) const {
-  unsigned N = Neighborhood;
+                                           MCRegister Reg,
+                                           const_iterator Before) const {
+  unsigned N = this->size();
 
   // Try searching forwards from Before, looking for reads or defs.
   const_iterator I(Before);
@@ -1641,8 +1642,7 @@ MachineBasicBlock::computeRegisterLiveness(const TargetRegisterInfo *TRI,
     return LQR_Dead;
   }
 
-
-  N = Neighborhood;
+  N = this->size();
 
   // Start by searching backwards from Before, looking for kills, reads or defs.
   I = const_iterator(Before);

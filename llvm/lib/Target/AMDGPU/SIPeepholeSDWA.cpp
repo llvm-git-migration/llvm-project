@@ -886,7 +886,7 @@ void SIPeepholeSDWA::pseudoOpConvertToVOP2(MachineInstr &MI,
     return;
   // Make sure VCC or its subregs are dead before MI.
   MachineBasicBlock &MBB = *MI.getParent();
-  auto Liveness = MBB.computeRegisterLiveness(TRI, AMDGPU::VCC, MI, 25);
+  auto Liveness = MBB.computeRegisterLiveness(TRI, AMDGPU::VCC, MI);
   if (Liveness != MachineBasicBlock::LQR_Dead)
     return;
   // Check if VCC is referenced in range of (MI,MISucc].
