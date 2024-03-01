@@ -36836,12 +36836,23 @@ void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
     break;
   }
   case X86ISD::PSADBW: {
+    SDValue LHS = Op.getOperand(0);
+    SDValue RHS = Op.getOperand(1);
     assert(VT.getScalarType() == MVT::i64 &&
-           Op.getOperand(0).getValueType().getScalarType() == MVT::i8 &&
+           LHS.getValueType() == RHS.getValueType() &&
+           LHS.getValueType().getScalarType() == MVT::i8 &&
            "Unexpected PSADBW types");
 
-    // PSADBW - fills low 16 bits and zeros upper 48 bits of each i64 result.
-    Known.Zero.setBitsFrom(16);
+    KnownBits Known2;
+    unsigned NumSrcElts = LHS.getValueType().getVectorNumElements();
+    APInt DemandedSrcElts = APIntOps::ScaleBitMask(DemandedElts, NumSrcElts);
+    Known = DAG.computeKnownBits(RHS, DemandedSrcElts, Depth + 1);
+    Known2 = DAG.computeKnownBits(LHS, DemandedSrcElts, Depth + 1);
+    Known = KnownBits::absdiff(Known, Known2).zext(16);
+    Known = KnownBits::computeForAddSub(true, true, Known, Known);
+    Known = KnownBits::computeForAddSub(true, true, Known, Known);
+    Known = KnownBits::computeForAddSub(true, true, Known, Known);
+    Known = Known.zext(64);
     break;
   }
   case X86ISD::PCMPGT:
@@ -54853,6 +54864,7 @@ static SDValue combineSub(SDNode *N, SelectionDAG &DAG,
 }
 
 static SDValue combineVectorCompare(SDNode *N, SelectionDAG &DAG,
+                                    TargetLowering::DAGCombinerInfo &DCI,
                                     const X86Subtarget &Subtarget) {
   MVT VT = N->getSimpleValueType(0);
   SDLoc DL(N);
@@ -54863,6 +54875,11 @@ static SDValue combineVectorCompare(SDNode *N, SelectionDAG &DAG,
     if (N->getOpcode() == X86ISD::PCMPGT)
       return DAG.getConstant(0, DL, VT);
   }
+
+  const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+  if (TLI.SimplifyDemandedBits(
+          SDValue(N, 0), APInt::getAllOnes(VT.getScalarSizeInBits()), DCI))
+    return SDValue(N, 0);
 
   return SDValue();
 }
@@ -56587,7 +56604,7 @@ SDValue X86TargetLowering::PerformDAGCombine(SDNode *N,
   case ISD::MGATHER:
   case ISD::MSCATTER:       return combineGatherScatter(N, DAG, DCI);
   case X86ISD::PCMPEQ:
-  case X86ISD::PCMPGT:      return combineVectorCompare(N, DAG, Subtarget);
+  case X86ISD::PCMPGT:      return combineVectorCompare(N, DAG, DCI, Subtarget);
   case X86ISD::PMULDQ:
   case X86ISD::PMULUDQ:     return combinePMULDQ(N, DAG, DCI, Subtarget);
   case X86ISD::VPMADDUBSW:
