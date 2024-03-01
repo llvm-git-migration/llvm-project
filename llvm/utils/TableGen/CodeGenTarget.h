@@ -99,7 +99,7 @@ public:
   ///
   bool getAllowRegisterRenaming() const;
 
-  /// getPreferSmallerInstructions  - Return the PreferSmallerInstructions 
+  /// getPreferSmallerInstructions  - Return the PreferSmallerInstructions
   /// flag value for this target.
   ///
   bool getPreferSmallerInstructions() const;
