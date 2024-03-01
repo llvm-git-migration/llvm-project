@@ -87,7 +87,6 @@
 ; TEXT-10-NEXT: <.text>:
 ; TEXT-10-NEXT: retq
 ; TEXT-10-NEXT: nopw %cs:(%rax,%rax)
-; TEXT-10-NEXT: nopl (%rax,%rax)
 ; TEXT-10-NEXT: retq
 ; TEXT-10-NEXT: int3
 ; TEXT-10-NEXT: int3

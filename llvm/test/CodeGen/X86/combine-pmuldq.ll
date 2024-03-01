@@ -336,7 +336,7 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; SSE-NEXT:    movd %esi, %xmm0
 ; SSE-NEXT:    pshufd {{.*#+}} xmm2 = xmm0[0,1,0,1]
 ; SSE-NEXT:    pxor %xmm0, %xmm0
-; SSE-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; SSE-NEXT:    xorl %eax, %eax
 ; SSE-NEXT:    pxor %xmm1, %xmm1
 ; SSE-NEXT:    .p2align 4, 0x90
 ; SSE-NEXT:  .LBB7_1: # %loop
@@ -353,7 +353,8 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; SSE-NEXT:    pmuludq %xmm2, %xmm3
 ; SSE-NEXT:    shufps {{.*#+}} xmm4 = xmm4[1,3],xmm3[1,3]
 ; SSE-NEXT:    paddd %xmm4, %xmm1
-; SSE-NEXT:    subq $-128, %rax
+; SSE-NEXT:    addq $32, %rax
+; SSE-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; SSE-NEXT:    jne .LBB7_1
 ; SSE-NEXT:  # %bb.2: # %end
 ; SSE-NEXT:    retq
@@ -365,7 +366,7 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm0 = xmm0[0,1,0,1]
 ; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm0, %ymm1
 ; AVX1-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX1-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX1-NEXT:    xorl %eax, %eax
 ; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm2
 ; AVX1-NEXT:    .p2align 4, 0x90
 ; AVX1-NEXT:  .LBB7_1: # %loop
@@ -384,7 +385,8 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX1-NEXT:    vpaddd %xmm4, %xmm5, %xmm4
 ; AVX1-NEXT:    vpaddd %xmm0, %xmm3, %xmm0
 ; AVX1-NEXT:    vinsertf128 $1, %xmm4, %ymm0, %ymm0
-; AVX1-NEXT:    subq $-128, %rax
+; AVX1-NEXT:    addq $32, %rax
+; AVX1-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX1-NEXT:    jne .LBB7_1
 ; AVX1-NEXT:  # %bb.2: # %end
 ; AVX1-NEXT:    retq
@@ -395,7 +397,7 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX2-NEXT:    vmovq %rax, %xmm0
 ; AVX2-NEXT:    vpbroadcastq %xmm0, %ymm1
 ; AVX2-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX2-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX2-NEXT:    xorl %eax, %eax
 ; AVX2-NEXT:    .p2align 4, 0x90
 ; AVX2-NEXT:  .LBB7_1: # %loop
 ; AVX2-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -407,7 +409,8 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX2-NEXT:    vinserti128 $1, %xmm2, %ymm3, %ymm2
 ; AVX2-NEXT:    vshufps {{.*#+}} ymm2 = ymm2[1,3],ymm4[1,3],ymm2[5,7],ymm4[5,7]
 ; AVX2-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX2-NEXT:    subq $-128, %rax
+; AVX2-NEXT:    addq $32, %rax
+; AVX2-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX2-NEXT:    jne .LBB7_1
 ; AVX2-NEXT:  # %bb.2: # %end
 ; AVX2-NEXT:    retq
@@ -417,7 +420,7 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX512VL-NEXT:    movl %esi, %eax
 ; AVX512VL-NEXT:    vpbroadcastq %rax, %zmm1
 ; AVX512VL-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX512VL-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX512VL-NEXT:    xorl %eax, %eax
 ; AVX512VL-NEXT:    .p2align 4, 0x90
 ; AVX512VL-NEXT:  .LBB7_1: # %loop
 ; AVX512VL-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -426,7 +429,8 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX512VL-NEXT:    vpsrlq $32, %zmm2, %zmm2
 ; AVX512VL-NEXT:    vpmovqd %zmm2, %ymm2
 ; AVX512VL-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX512VL-NEXT:    subq $-128, %rax
+; AVX512VL-NEXT:    addq $32, %rax
+; AVX512VL-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX512VL-NEXT:    jne .LBB7_1
 ; AVX512VL-NEXT:  # %bb.2: # %end
 ; AVX512VL-NEXT:    retq
@@ -436,7 +440,7 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX512DQVL-NEXT:    movl %esi, %eax
 ; AVX512DQVL-NEXT:    vpbroadcastq %rax, %zmm1
 ; AVX512DQVL-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX512DQVL-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX512DQVL-NEXT:    xorl %eax, %eax
 ; AVX512DQVL-NEXT:    .p2align 4, 0x90
 ; AVX512DQVL-NEXT:  .LBB7_1: # %loop
 ; AVX512DQVL-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -445,7 +449,8 @@ define <8 x i32> @PR49658_zext(ptr %ptr, i32 %mul) {
 ; AVX512DQVL-NEXT:    vpsrlq $32, %zmm2, %zmm2
 ; AVX512DQVL-NEXT:    vpmovqd %zmm2, %ymm2
 ; AVX512DQVL-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX512DQVL-NEXT:    subq $-128, %rax
+; AVX512DQVL-NEXT:    addq $32, %rax
+; AVX512DQVL-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX512DQVL-NEXT:    jne .LBB7_1
 ; AVX512DQVL-NEXT:  # %bb.2: # %end
 ; AVX512DQVL-NEXT:    retq
@@ -478,17 +483,17 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; SSE-NEXT:    movq %rax, %xmm0
 ; SSE-NEXT:    pshufd {{.*#+}} xmm2 = xmm0[0,1,0,1]
 ; SSE-NEXT:    pxor %xmm0, %xmm0
-; SSE-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; SSE-NEXT:    xorl %eax, %eax
 ; SSE-NEXT:    movdqa %xmm2, %xmm3
 ; SSE-NEXT:    psrlq $32, %xmm3
 ; SSE-NEXT:    pxor %xmm1, %xmm1
 ; SSE-NEXT:    .p2align 4, 0x90
 ; SSE-NEXT:  .LBB8_1: # %loop
 ; SSE-NEXT:    # =>This Inner Loop Header: Depth=1
-; SSE-NEXT:    pmovsxdq 2097176(%rdi,%rax), %xmm5
-; SSE-NEXT:    pmovsxdq 2097168(%rdi,%rax), %xmm4
-; SSE-NEXT:    pmovsxdq 2097152(%rdi,%rax), %xmm6
-; SSE-NEXT:    pmovsxdq 2097160(%rdi,%rax), %xmm7
+; SSE-NEXT:    pmovsxdq 24(%rdi,%rax,4), %xmm5
+; SSE-NEXT:    pmovsxdq 16(%rdi,%rax,4), %xmm4
+; SSE-NEXT:    pmovsxdq (%rdi,%rax,4), %xmm6
+; SSE-NEXT:    pmovsxdq 8(%rdi,%rax,4), %xmm7
 ; SSE-NEXT:    movdqa %xmm3, %xmm8
 ; SSE-NEXT:    pmuludq %xmm7, %xmm8
 ; SSE-NEXT:    movdqa %xmm2, %xmm9
@@ -529,7 +534,8 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; SSE-NEXT:    paddq %xmm7, %xmm5
 ; SSE-NEXT:    shufps {{.*#+}} xmm4 = xmm4[1,3],xmm5[1,3]
 ; SSE-NEXT:    paddd %xmm4, %xmm1
-; SSE-NEXT:    subq $-128, %rax
+; SSE-NEXT:    addq $32, %rax
+; SSE-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; SSE-NEXT:    jne .LBB8_1
 ; SSE-NEXT:  # %bb.2: # %end
 ; SSE-NEXT:    retq
@@ -541,15 +547,15 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm0 = xmm0[0,1,0,1]
 ; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm0, %ymm1
 ; AVX1-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX1-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX1-NEXT:    xorl %eax, %eax
 ; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm2
 ; AVX1-NEXT:    .p2align 4, 0x90
 ; AVX1-NEXT:  .LBB8_1: # %loop
 ; AVX1-NEXT:    # =>This Inner Loop Header: Depth=1
-; AVX1-NEXT:    vpmovsxdq 2097152(%rdi,%rax), %xmm3
-; AVX1-NEXT:    vpmovsxdq 2097160(%rdi,%rax), %xmm4
-; AVX1-NEXT:    vpmovsxdq 2097168(%rdi,%rax), %xmm5
-; AVX1-NEXT:    vpmovsxdq 2097176(%rdi,%rax), %xmm6
+; AVX1-NEXT:    vpmovsxdq (%rdi,%rax,4), %xmm3
+; AVX1-NEXT:    vpmovsxdq 8(%rdi,%rax,4), %xmm4
+; AVX1-NEXT:    vpmovsxdq 16(%rdi,%rax,4), %xmm5
+; AVX1-NEXT:    vpmovsxdq 24(%rdi,%rax,4), %xmm6
 ; AVX1-NEXT:    vpmuldq %xmm6, %xmm2, %xmm6
 ; AVX1-NEXT:    vpmuldq %xmm5, %xmm1, %xmm5
 ; AVX1-NEXT:    vshufps {{.*#+}} xmm5 = xmm5[1,3],xmm6[1,3]
@@ -560,7 +566,8 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX1-NEXT:    vpaddd %xmm4, %xmm5, %xmm4
 ; AVX1-NEXT:    vpaddd %xmm0, %xmm3, %xmm0
 ; AVX1-NEXT:    vinsertf128 $1, %xmm4, %ymm0, %ymm0
-; AVX1-NEXT:    subq $-128, %rax
+; AVX1-NEXT:    addq $32, %rax
+; AVX1-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX1-NEXT:    jne .LBB8_1
 ; AVX1-NEXT:  # %bb.2: # %end
 ; AVX1-NEXT:    retq
@@ -571,19 +578,20 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX2-NEXT:    vmovq %rax, %xmm0
 ; AVX2-NEXT:    vpbroadcastq %xmm0, %ymm1
 ; AVX2-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX2-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX2-NEXT:    xorl %eax, %eax
 ; AVX2-NEXT:    .p2align 4, 0x90
 ; AVX2-NEXT:  .LBB8_1: # %loop
 ; AVX2-NEXT:    # =>This Inner Loop Header: Depth=1
-; AVX2-NEXT:    vpmovsxdq 2097168(%rdi,%rax), %ymm2
-; AVX2-NEXT:    vpmovsxdq 2097152(%rdi,%rax), %ymm3
+; AVX2-NEXT:    vpmovsxdq 16(%rdi,%rax,4), %ymm2
+; AVX2-NEXT:    vpmovsxdq (%rdi,%rax,4), %ymm3
 ; AVX2-NEXT:    vpmuldq %ymm3, %ymm1, %ymm3
 ; AVX2-NEXT:    vpmuldq %ymm2, %ymm1, %ymm2
 ; AVX2-NEXT:    vperm2i128 {{.*#+}} ymm4 = ymm3[2,3],ymm2[2,3]
 ; AVX2-NEXT:    vinserti128 $1, %xmm2, %ymm3, %ymm2
 ; AVX2-NEXT:    vshufps {{.*#+}} ymm2 = ymm2[1,3],ymm4[1,3],ymm2[5,7],ymm4[5,7]
 ; AVX2-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX2-NEXT:    subq $-128, %rax
+; AVX2-NEXT:    addq $32, %rax
+; AVX2-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX2-NEXT:    jne .LBB8_1
 ; AVX2-NEXT:  # %bb.2: # %end
 ; AVX2-NEXT:    retq
@@ -593,7 +601,7 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX512VL-NEXT:    movslq %esi, %rax
 ; AVX512VL-NEXT:    vpbroadcastq %rax, %zmm1
 ; AVX512VL-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX512VL-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX512VL-NEXT:    xorl %eax, %eax
 ; AVX512VL-NEXT:    .p2align 4, 0x90
 ; AVX512VL-NEXT:  .LBB8_1: # %loop
 ; AVX512VL-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -602,7 +610,8 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX512VL-NEXT:    vpsrlq $32, %zmm2, %zmm2
 ; AVX512VL-NEXT:    vpmovqd %zmm2, %ymm2
 ; AVX512VL-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX512VL-NEXT:    subq $-128, %rax
+; AVX512VL-NEXT:    addq $32, %rax
+; AVX512VL-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX512VL-NEXT:    jne .LBB8_1
 ; AVX512VL-NEXT:  # %bb.2: # %end
 ; AVX512VL-NEXT:    retq
@@ -612,7 +621,7 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX512DQVL-NEXT:    movslq %esi, %rax
 ; AVX512DQVL-NEXT:    vpbroadcastq %rax, %zmm1
 ; AVX512DQVL-NEXT:    vpxor %xmm0, %xmm0, %xmm0
-; AVX512DQVL-NEXT:    movq $-2097152, %rax # imm = 0xFFE00000
+; AVX512DQVL-NEXT:    xorl %eax, %eax
 ; AVX512DQVL-NEXT:    .p2align 4, 0x90
 ; AVX512DQVL-NEXT:  .LBB8_1: # %loop
 ; AVX512DQVL-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -621,7 +630,8 @@ define <8 x i32> @PR49658_sext(ptr %ptr, i32 %mul) {
 ; AVX512DQVL-NEXT:    vpsrlq $32, %zmm2, %zmm2
 ; AVX512DQVL-NEXT:    vpmovqd %zmm2, %ymm2
 ; AVX512DQVL-NEXT:    vpaddd %ymm0, %ymm2, %ymm0
-; AVX512DQVL-NEXT:    subq $-128, %rax
+; AVX512DQVL-NEXT:    addq $32, %rax
+; AVX512DQVL-NEXT:    cmpq $524288, %rax # imm = 0x80000
 ; AVX512DQVL-NEXT:    jne .LBB8_1
 ; AVX512DQVL-NEXT:  # %bb.2: # %end
 ; AVX512DQVL-NEXT:    retq

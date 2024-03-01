@@ -3,7 +3,7 @@
 
 ; RUN: %lld %t.o -o %t.dylib -dylib
 ; RUN: llvm-objdump -d --section="__text" --no-leading-addr --no-show-raw-insn %t.dylib | FileCheck %s
-; CHECK: nop{{$}}
+; CHECK: nopw
 
 ; RUN: %lld -mcpu znver1 %t.o -o %t.znver1.dylib -dylib
 ; RUN: llvm-objdump -d --section="__text" --no-leading-addr --no-show-raw-insn %t.znver1.dylib | FileCheck %s --check-prefix=ZNVER1

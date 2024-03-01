@@ -1179,13 +1179,13 @@ define <16 x float> @v16f32_one_step2(<16 x float> %x) #1 {
 ; FMA-RECIP-NEXT:    vrcpps %ymm0, %ymm2
 ; FMA-RECIP-NEXT:    vmovaps {{.*#+}} ymm3 = [1.0E+0,2.0E+0,3.0E+0,4.0E+0,5.0E+0,6.0E+0,7.0E+0,8.0E+0]
 ; FMA-RECIP-NEXT:    vmulps %ymm3, %ymm2, %ymm4
+; FMA-RECIP-NEXT:    vrcpps %ymm1, %ymm5
 ; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm0 = (ymm4 * ymm0) - ymm3
 ; FMA-RECIP-NEXT:    vfnmadd213ps {{.*#+}} ymm0 = -(ymm2 * ymm0) + ymm4
-; FMA-RECIP-NEXT:    vrcpps %ymm1, %ymm2
-; FMA-RECIP-NEXT:    vmovaps {{.*#+}} ymm3 = [9.0E+0,1.0E+1,1.1E+1,1.2E+1,1.3E+1,1.4E+1,1.5E+1,1.6E+1]
-; FMA-RECIP-NEXT:    vmulps %ymm3, %ymm2, %ymm4
-; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm1 = (ymm4 * ymm1) - ymm3
-; FMA-RECIP-NEXT:    vfnmadd213ps {{.*#+}} ymm1 = -(ymm2 * ymm1) + ymm4
+; FMA-RECIP-NEXT:    vmovaps {{.*#+}} ymm2 = [9.0E+0,1.0E+1,1.1E+1,1.2E+1,1.3E+1,1.4E+1,1.5E+1,1.6E+1]
+; FMA-RECIP-NEXT:    vmulps %ymm2, %ymm5, %ymm3
+; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm1 = (ymm3 * ymm1) - ymm2
+; FMA-RECIP-NEXT:    vfnmadd213ps {{.*#+}} ymm1 = -(ymm5 * ymm1) + ymm3
 ; FMA-RECIP-NEXT:    retq
 ;
 ; BDVER2-LABEL: v16f32_one_step2:
@@ -1346,11 +1346,11 @@ define <16 x float> @v16f32_one_step_2_divs(<16 x float> %x) #1 {
 ; FMA-RECIP:       # %bb.0:
 ; FMA-RECIP-NEXT:    vrcpps %ymm0, %ymm2
 ; FMA-RECIP-NEXT:    vbroadcastss {{.*#+}} ymm3 = [1.0E+0,1.0E+0,1.0E+0,1.0E+0,1.0E+0,1.0E+0,1.0E+0,1.0E+0]
+; FMA-RECIP-NEXT:    vrcpps %ymm1, %ymm4
 ; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm0 = (ymm2 * ymm0) - ymm3
 ; FMA-RECIP-NEXT:    vfnmadd132ps {{.*#+}} ymm0 = -(ymm0 * ymm2) + ymm2
-; FMA-RECIP-NEXT:    vrcpps %ymm1, %ymm2
-; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm1 = (ymm2 * ymm1) - ymm3
-; FMA-RECIP-NEXT:    vfnmadd132ps {{.*#+}} ymm1 = -(ymm1 * ymm2) + ymm2
+; FMA-RECIP-NEXT:    vfmsub213ps {{.*#+}} ymm1 = (ymm4 * ymm1) - ymm3
+; FMA-RECIP-NEXT:    vfnmadd132ps {{.*#+}} ymm1 = -(ymm1 * ymm4) + ymm4
 ; FMA-RECIP-NEXT:    vmulps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm1, %ymm2
 ; FMA-RECIP-NEXT:    vmulps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm0, %ymm3
 ; FMA-RECIP-NEXT:    vmulps %ymm0, %ymm3, %ymm0

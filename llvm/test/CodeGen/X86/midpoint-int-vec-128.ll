@@ -109,9 +109,9 @@ define <4 x i32> @vec128_i32_signed_reg_reg(<4 x i32> %a1, <4 x i32> %a2) nounwi
 ;
 ; XOPAVX2-LABEL: vec128_i32_signed_reg_reg:
 ; XOPAVX2:       # %bb.0:
-; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm2
-; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [1,1,1,1]
-; XOPAVX2-NEXT:    vpor %xmm3, %xmm2, %xmm2
+; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1,1,1,1]
+; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm3
+; XOPAVX2-NEXT:    vpor %xmm2, %xmm3, %xmm2
 ; XOPAVX2-NEXT:    vpminsd %xmm1, %xmm0, %xmm3
 ; XOPAVX2-NEXT:    vpmaxsd %xmm1, %xmm0, %xmm1
 ; XOPAVX2-NEXT:    vpsubd %xmm3, %xmm1, %xmm1
@@ -237,9 +237,9 @@ define <4 x i32> @vec128_i32_unsigned_reg_reg(<4 x i32> %a1, <4 x i32> %a2) noun
 ; AVX2-NEXT:    vpminud %xmm1, %xmm0, %xmm2
 ; AVX2-NEXT:    vpcmpeqd %xmm2, %xmm0, %xmm3
 ; AVX2-NEXT:    vpcmpeqd %xmm4, %xmm4, %xmm4
+; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm5 = [1,1,1,1]
 ; AVX2-NEXT:    vpxor %xmm4, %xmm3, %xmm3
-; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm4 = [1,1,1,1]
-; AVX2-NEXT:    vpor %xmm4, %xmm3, %xmm3
+; AVX2-NEXT:    vpor %xmm5, %xmm3, %xmm3
 ; AVX2-NEXT:    vpmaxud %xmm1, %xmm0, %xmm1
 ; AVX2-NEXT:    vpsubd %xmm2, %xmm1, %xmm1
 ; AVX2-NEXT:    vpsrld $1, %xmm1, %xmm1
@@ -271,9 +271,9 @@ define <4 x i32> @vec128_i32_unsigned_reg_reg(<4 x i32> %a1, <4 x i32> %a2) noun
 ;
 ; XOPAVX2-LABEL: vec128_i32_unsigned_reg_reg:
 ; XOPAVX2:       # %bb.0:
-; XOPAVX2-NEXT:    vpcomgtud %xmm1, %xmm0, %xmm2
-; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [1,1,1,1]
-; XOPAVX2-NEXT:    vpor %xmm3, %xmm2, %xmm2
+; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1,1,1,1]
+; XOPAVX2-NEXT:    vpcomgtud %xmm1, %xmm0, %xmm3
+; XOPAVX2-NEXT:    vpor %xmm2, %xmm3, %xmm2
 ; XOPAVX2-NEXT:    vpminud %xmm1, %xmm0, %xmm3
 ; XOPAVX2-NEXT:    vpmaxud %xmm1, %xmm0, %xmm1
 ; XOPAVX2-NEXT:    vpsubd %xmm3, %xmm1, %xmm1
@@ -433,9 +433,9 @@ define <4 x i32> @vec128_i32_signed_mem_reg(ptr %a1_addr, <4 x i32> %a2) nounwin
 ; XOPAVX2-LABEL: vec128_i32_signed_mem_reg:
 ; XOPAVX2:       # %bb.0:
 ; XOPAVX2-NEXT:    vmovdqa (%rdi), %xmm1
-; XOPAVX2-NEXT:    vpcomgtd %xmm0, %xmm1, %xmm2
-; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [1,1,1,1]
-; XOPAVX2-NEXT:    vpor %xmm3, %xmm2, %xmm2
+; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1,1,1,1]
+; XOPAVX2-NEXT:    vpcomgtd %xmm0, %xmm1, %xmm3
+; XOPAVX2-NEXT:    vpor %xmm2, %xmm3, %xmm2
 ; XOPAVX2-NEXT:    vpminsd %xmm0, %xmm1, %xmm3
 ; XOPAVX2-NEXT:    vpmaxsd %xmm0, %xmm1, %xmm0
 ; XOPAVX2-NEXT:    vpsubd %xmm3, %xmm0, %xmm0
@@ -595,9 +595,9 @@ define <4 x i32> @vec128_i32_signed_reg_mem(<4 x i32> %a1, ptr %a2_addr) nounwin
 ; XOPAVX2-LABEL: vec128_i32_signed_reg_mem:
 ; XOPAVX2:       # %bb.0:
 ; XOPAVX2-NEXT:    vmovdqa (%rdi), %xmm1
-; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm2
-; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [1,1,1,1]
-; XOPAVX2-NEXT:    vpor %xmm3, %xmm2, %xmm2
+; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1,1,1,1]
+; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm3
+; XOPAVX2-NEXT:    vpor %xmm2, %xmm3, %xmm2
 ; XOPAVX2-NEXT:    vpminsd %xmm1, %xmm0, %xmm3
 ; XOPAVX2-NEXT:    vpmaxsd %xmm1, %xmm0, %xmm1
 ; XOPAVX2-NEXT:    vpsubd %xmm3, %xmm1, %xmm1
@@ -764,9 +764,9 @@ define <4 x i32> @vec128_i32_signed_mem_mem(ptr %a1_addr, ptr %a2_addr) nounwind
 ; XOPAVX2:       # %bb.0:
 ; XOPAVX2-NEXT:    vmovdqa (%rdi), %xmm0
 ; XOPAVX2-NEXT:    vmovdqa (%rsi), %xmm1
-; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm2
-; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [1,1,1,1]
-; XOPAVX2-NEXT:    vpor %xmm3, %xmm2, %xmm2
+; XOPAVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [1,1,1,1]
+; XOPAVX2-NEXT:    vpcomgtd %xmm1, %xmm0, %xmm3
+; XOPAVX2-NEXT:    vpor %xmm2, %xmm3, %xmm2
 ; XOPAVX2-NEXT:    vpminsd %xmm1, %xmm0, %xmm3
 ; XOPAVX2-NEXT:    vpmaxsd %xmm1, %xmm0, %xmm1
 ; XOPAVX2-NEXT:    vpsubd %xmm3, %xmm1, %xmm1

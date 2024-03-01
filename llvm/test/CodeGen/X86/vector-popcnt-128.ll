@@ -593,8 +593,8 @@ define <16 x i8> @testv16i8(<16 x i8> %in) nounwind {
 ; XOP:       # %bb.0:
 ; XOP-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm1
 ; XOP-NEXT:    vmovdqa {{.*#+}} xmm2 = [0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4]
-; XOP-NEXT:    vpshufb %xmm1, %xmm2, %xmm1
 ; XOP-NEXT:    vpshlb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
+; XOP-NEXT:    vpshufb %xmm1, %xmm2, %xmm1
 ; XOP-NEXT:    vpshufb %xmm0, %xmm2, %xmm0
 ; XOP-NEXT:    vpaddb %xmm1, %xmm0, %xmm0
 ; XOP-NEXT:    retq
@@ -844,8 +844,8 @@ define <2 x i64> @ne_1_v2i64(<2 x i64> %0) {
 ;
 ; AVX512VPOPCNTDQVL-LABEL: ne_1_v2i64:
 ; AVX512VPOPCNTDQVL:       # %bb.0:
-; AVX512VPOPCNTDQVL-NEXT:    vpopcntq %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpbroadcastq {{.*#+}} xmm1 = [1,1]
+; AVX512VPOPCNTDQVL-NEXT:    vpopcntq %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpcmpeqq %xmm1, %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpternlogq $15, %xmm0, %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    retq
@@ -1037,8 +1037,8 @@ define <4 x i32> @ne_1_v4i32(<4 x i32> %0) {
 ; AVX512VPOPCNTDQ-LABEL: ne_1_v4i32:
 ; AVX512VPOPCNTDQ:       # %bb.0:
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $xmm0 killed $xmm0 def $zmm0
-; AVX512VPOPCNTDQ-NEXT:    vpopcntd %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpbroadcastd {{.*#+}} xmm1 = [1,1,1,1]
+; AVX512VPOPCNTDQ-NEXT:    vpopcntd %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpcmpeqd %xmm1, %xmm0, %xmm0
 ; AVX512VPOPCNTDQ-NEXT:    vpternlogq $15, %zmm0, %zmm0, %zmm0
 ; AVX512VPOPCNTDQ-NEXT:    # kill: def $xmm0 killed $xmm0 killed $zmm0
@@ -1047,8 +1047,8 @@ define <4 x i32> @ne_1_v4i32(<4 x i32> %0) {
 ;
 ; AVX512VPOPCNTDQVL-LABEL: ne_1_v4i32:
 ; AVX512VPOPCNTDQVL:       # %bb.0:
-; AVX512VPOPCNTDQVL-NEXT:    vpopcntd %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpbroadcastd {{.*#+}} xmm1 = [1,1,1,1]
+; AVX512VPOPCNTDQVL-NEXT:    vpopcntd %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpcmpeqd %xmm1, %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    vpternlogq $15, %xmm0, %xmm0, %xmm0
 ; AVX512VPOPCNTDQVL-NEXT:    retq

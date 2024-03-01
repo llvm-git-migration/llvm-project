@@ -78,18 +78,20 @@ define void @maxArray(ptr noalias nocapture %x, ptr noalias nocapture readonly %
 ;
 ; BASE-LABEL: maxArray:
 ; BASE:       # %bb.0: # %entry
-; BASE-NEXT:    movq $-524288, %rax # imm = 0xFFF80000
+; BASE-NEXT:    xorl %eax, %eax
 ; BASE-NEXT:    .p2align 4, 0x90
 ; BASE-NEXT:  .LBB0_1: # %vector.body
 ; BASE-NEXT:    # =>This Inner Loop Header: Depth=1
-; BASE-NEXT:    movupd 524288(%rdi,%rax), %xmm0
-; BASE-NEXT:    movupd 524288(%rsi,%rax), %xmm1
+; BASE-NEXT:    movupd (%rdi,%rax,8), %xmm0
+; BASE-NEXT:    movupd (%rsi,%rax,8), %xmm1
 ; BASE-NEXT:    maxpd %xmm0, %xmm1
-; BASE-NEXT:    movupd %xmm1, 524288(%rdi,%rax)
-; BASE-NEXT:    addq $16, %rax
+; BASE-NEXT:    movupd %xmm1, (%rdi,%rax,8)
+; BASE-NEXT:    addq $2, %rax
+; BASE-NEXT:    cmpq $65536, %rax # imm = 0x10000
 ; BASE-NEXT:    jne .LBB0_1
 ; BASE-NEXT:  # %bb.2: # %exit
 ; BASE-NEXT:    retq
+;
 ; FUSE-LABEL: maxArray:
 ; FUSE:       # %bb.0: # %entry
 ; FUSE-NEXT:    xorl %eax, %eax

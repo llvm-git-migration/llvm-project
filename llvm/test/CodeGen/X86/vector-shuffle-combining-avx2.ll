@@ -872,16 +872,16 @@ define void @PR63030(ptr %p0) {
 ; X86-AVX2-LABEL: PR63030:
 ; X86-AVX2:       # %bb.0:
 ; X86-AVX2-NEXT:    movl {{[0-9]+}}(%esp), %eax
-; X86-AVX2-NEXT:    vmovaps (%eax), %xmm0
-; X86-AVX2-NEXT:    vmovddup {{.*#+}} xmm1 = [3,0,3,0]
-; X86-AVX2-NEXT:    # xmm1 = mem[0,0]
-; X86-AVX2-NEXT:    vpermpd {{.*#+}} ymm2 = ymm0[1,1,0,0]
-; X86-AVX2-NEXT:    vblendps {{.*#+}} ymm1 = ymm2[0,1],ymm1[2,3],ymm2[4,5,6,7]
+; X86-AVX2-NEXT:    vmovddup {{.*#+}} xmm0 = [3,0,3,0]
+; X86-AVX2-NEXT:    # xmm0 = mem[0,0]
+; X86-AVX2-NEXT:    vmovaps (%eax), %xmm1
+; X86-AVX2-NEXT:    vpermpd {{.*#+}} ymm2 = ymm1[1,1,0,0]
+; X86-AVX2-NEXT:    vblendps {{.*#+}} ymm0 = ymm2[0,1],ymm0[2,3],ymm2[4,5,6,7]
 ; X86-AVX2-NEXT:    vmovaps {{.*#+}} xmm2 = [3,0,2,0]
-; X86-AVX2-NEXT:    vpermpd {{.*#+}} ymm0 = ymm0[0,1,1,1]
-; X86-AVX2-NEXT:    vblendps {{.*#+}} ymm0 = ymm0[0,1],ymm2[2,3],ymm0[4,5,6,7]
-; X86-AVX2-NEXT:    vmovaps %ymm0, (%eax)
+; X86-AVX2-NEXT:    vpermpd {{.*#+}} ymm1 = ymm1[0,1,1,1]
+; X86-AVX2-NEXT:    vblendps {{.*#+}} ymm1 = ymm1[0,1],ymm2[2,3],ymm1[4,5,6,7]
 ; X86-AVX2-NEXT:    vmovaps %ymm1, (%eax)
+; X86-AVX2-NEXT:    vmovaps %ymm0, (%eax)
 ; X86-AVX2-NEXT:    vzeroupper
 ; X86-AVX2-NEXT:    retl
 ;
@@ -897,16 +897,16 @@ define void @PR63030(ptr %p0) {
 ;
 ; X64-AVX2-LABEL: PR63030:
 ; X64-AVX2:       # %bb.0:
-; X64-AVX2-NEXT:    vmovaps (%rdi), %xmm0
-; X64-AVX2-NEXT:    vmovddup {{.*#+}} xmm1 = [3,3]
-; X64-AVX2-NEXT:    # xmm1 = mem[0,0]
-; X64-AVX2-NEXT:    vpermpd {{.*#+}} ymm2 = ymm0[1,1,0,0]
-; X64-AVX2-NEXT:    vblendps {{.*#+}} ymm1 = ymm2[0,1],ymm1[2,3],ymm2[4,5,6,7]
+; X64-AVX2-NEXT:    vmovddup {{.*#+}} xmm0 = [3,3]
+; X64-AVX2-NEXT:    # xmm0 = mem[0,0]
+; X64-AVX2-NEXT:    vmovaps (%rdi), %xmm1
+; X64-AVX2-NEXT:    vpermpd {{.*#+}} ymm2 = ymm1[1,1,0,0]
+; X64-AVX2-NEXT:    vblendps {{.*#+}} ymm0 = ymm2[0,1],ymm0[2,3],ymm2[4,5,6,7]
 ; X64-AVX2-NEXT:    vmovaps {{.*#+}} xmm2 = [3,2]
-; X64-AVX2-NEXT:    vpermpd {{.*#+}} ymm0 = ymm0[0,1,1,1]
-; X64-AVX2-NEXT:    vblendps {{.*#+}} ymm0 = ymm0[0,1],ymm2[2,3],ymm0[4,5,6,7]
-; X64-AVX2-NEXT:    vmovaps %ymm0, (%rax)
+; X64-AVX2-NEXT:    vpermpd {{.*#+}} ymm1 = ymm1[0,1,1,1]
+; X64-AVX2-NEXT:    vblendps {{.*#+}} ymm1 = ymm1[0,1],ymm2[2,3],ymm1[4,5,6,7]
 ; X64-AVX2-NEXT:    vmovaps %ymm1, (%rax)
+; X64-AVX2-NEXT:    vmovaps %ymm0, (%rax)
 ; X64-AVX2-NEXT:    vzeroupper
 ; X64-AVX2-NEXT:    retq
 ;

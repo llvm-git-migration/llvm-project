@@ -514,9 +514,9 @@ define <4 x i64> @blend_splat1_mask_cond_v4i64(<4 x i64> %x, <4 x i64> %y, <4 x 
 ; AVX512F-LABEL: blend_splat1_mask_cond_v4i64:
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    # kill: def $ymm2 killed $ymm2 def $zmm2
-; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 def $zmm0
 ; AVX512F-NEXT:    vptestnmq {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %zmm0, %k1
+; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    vpblendmq %zmm1, %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 killed $zmm0
 ; AVX512F-NEXT:    retq
@@ -554,9 +554,9 @@ define <4 x i32> @blend_splat1_mask_cond_v4i32(<4 x i32> %x, <4 x i32> %y, <4 x 
 ; AVX512F-LABEL: blend_splat1_mask_cond_v4i32:
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    # kill: def $xmm2 killed $xmm2 def $zmm2
-; AVX512F-NEXT:    # kill: def $xmm1 killed $xmm1 def $zmm1
 ; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 def $zmm0
 ; AVX512F-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm0, %k1
+; AVX512F-NEXT:    # kill: def $xmm1 killed $xmm1 def $zmm1
 ; AVX512F-NEXT:    vpblendmd %zmm1, %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 killed $zmm0
 ; AVX512F-NEXT:    vzeroupper
@@ -716,9 +716,9 @@ define <8 x i32> @blend_splatmax_mask_cond_v8i32(<8 x i32> %x, <8 x i32> %y, <8 
 ; AVX512F-LABEL: blend_splatmax_mask_cond_v8i32:
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    # kill: def $ymm2 killed $ymm2 def $zmm2
-; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 def $zmm0
 ; AVX512F-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm0, %k1
+; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    vpblendmd %zmm1, %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 killed $zmm0
 ; AVX512F-NEXT:    retq
@@ -843,9 +843,9 @@ define <4 x i64> @blend_splat_mask_cond_v4i64(<4 x i64> %x, <4 x i64> %y, <4 x i
 ; AVX512F-LABEL: blend_splat_mask_cond_v4i64:
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    # kill: def $ymm2 killed $ymm2 def $zmm2
-; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 def $zmm0
 ; AVX512F-NEXT:    vptestnmq {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %zmm0, %k1
+; AVX512F-NEXT:    # kill: def $ymm1 killed $ymm1 def $zmm1
 ; AVX512F-NEXT:    vpblendmq %zmm1, %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    # kill: def $ymm0 killed $ymm0 killed $zmm0
 ; AVX512F-NEXT:    retq
@@ -883,9 +883,9 @@ define <4 x i32> @blend_splat_mask_cond_v4i32(<4 x i32> %x, <4 x i32> %y, <4 x i
 ; AVX512F-LABEL: blend_splat_mask_cond_v4i32:
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    # kill: def $xmm2 killed $xmm2 def $zmm2
-; AVX512F-NEXT:    # kill: def $xmm1 killed $xmm1 def $zmm1
 ; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 def $zmm0
 ; AVX512F-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm0, %k1
+; AVX512F-NEXT:    # kill: def $xmm1 killed $xmm1 def $zmm1
 ; AVX512F-NEXT:    vpblendmd %zmm1, %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 killed $zmm0
 ; AVX512F-NEXT:    vzeroupper
@@ -1381,8 +1381,8 @@ define void @PR46531(ptr %x, ptr %y, ptr %z) {
 ; AVX512F:       # %bb.0:
 ; AVX512F-NEXT:    vmovdqu (%rsi), %xmm0
 ; AVX512F-NEXT:    vmovdqu (%rdx), %xmm1
-; AVX512F-NEXT:    vpor %xmm0, %xmm1, %xmm2
 ; AVX512F-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm1, %k1
+; AVX512F-NEXT:    vpor %xmm0, %xmm1, %xmm2
 ; AVX512F-NEXT:    vpxor %xmm0, %xmm1, %xmm0
 ; AVX512F-NEXT:    vmovdqa32 %zmm2, %zmm0 {%k1}
 ; AVX512F-NEXT:    vmovdqu %xmm0, (%rdi)
@@ -1391,11 +1391,11 @@ define void @PR46531(ptr %x, ptr %y, ptr %z) {
 ;
 ; AVX512VL-LABEL: PR46531:
 ; AVX512VL:       # %bb.0:
-; AVX512VL-NEXT:    vmovdqu (%rsi), %xmm0
-; AVX512VL-NEXT:    vmovdqu (%rdx), %xmm1
-; AVX512VL-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to4}, %xmm1, %k1
-; AVX512VL-NEXT:    vpxor %xmm0, %xmm1, %xmm2
-; AVX512VL-NEXT:    vpord %xmm0, %xmm1, %xmm2 {%k1}
+; AVX512VL-NEXT:    vmovdqu (%rdx), %xmm0
+; AVX512VL-NEXT:    vptestnmd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to4}, %xmm0, %k1
+; AVX512VL-NEXT:    vmovdqu (%rsi), %xmm1
+; AVX512VL-NEXT:    vpxor %xmm1, %xmm0, %xmm2
+; AVX512VL-NEXT:    vpord %xmm1, %xmm0, %xmm2 {%k1}
 ; AVX512VL-NEXT:    vmovdqu %xmm2, (%rdi)
 ; AVX512VL-NEXT:    retq
 ;
