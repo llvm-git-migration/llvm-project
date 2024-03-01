@@ -168,7 +168,7 @@ QuasiPolynomial QuasiPolynomial::collectTerms() {
 Fraction QuasiPolynomial::getConstantTerm() {
   Fraction constTerm = 0;
   for (unsigned i = 0, e = coefficients.size(); i < e; ++i)
-    if (affine[i].size() == 0)
+    if (affine[i].empty())
       constTerm += coefficients[i];
   return constTerm;
 }
