@@ -94,6 +94,7 @@ struct Params {
   constexpr Params(Format F)
       : format(F), level(F == Format::Zlib ? zlib::DefaultCompression
                                            : zstd::DefaultCompression) {}
+  constexpr Params(Format F, int L) : format(F), level(L) {}
   Params(DebugCompressionType Type) : Params(formatFor(Type)) {}
 
   Format format;
