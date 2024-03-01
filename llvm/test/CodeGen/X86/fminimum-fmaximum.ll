@@ -19,25 +19,25 @@ declare <4 x float> @llvm.maximum.v4f32(<4 x float>, <4 x float>)
 define float @test_fmaximum(float %x, float %y) nounwind {
 ; SSE2-LABEL: test_fmaximum:
 ; SSE2:       # %bb.0:
-; SSE2-NEXT:    movdqa %xmm0, %xmm2
 ; SSE2-NEXT:    movd %xmm0, %eax
-; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    movdqa %xmm0, %xmm3
+; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    js .LBB0_2
 ; SSE2-NEXT:  # %bb.1:
 ; SSE2-NEXT:    movdqa %xmm1, %xmm3
 ; SSE2-NEXT:  .LBB0_2:
-; SSE2-NEXT:    movdqa %xmm3, %xmm0
-; SSE2-NEXT:    cmpunordss %xmm3, %xmm0
-; SSE2-NEXT:    movaps %xmm0, %xmm4
+; SSE2-NEXT:    movdqa %xmm3, %xmm2
+; SSE2-NEXT:    cmpunordss %xmm3, %xmm2
+; SSE2-NEXT:    movaps %xmm2, %xmm4
 ; SSE2-NEXT:    andps %xmm3, %xmm4
 ; SSE2-NEXT:    js .LBB0_4
 ; SSE2-NEXT:  # %bb.3:
-; SSE2-NEXT:    movdqa %xmm2, %xmm1
+; SSE2-NEXT:    movdqa %xmm0, %xmm1
 ; SSE2-NEXT:  .LBB0_4:
 ; SSE2-NEXT:    maxss %xmm1, %xmm3
-; SSE2-NEXT:    andnps %xmm3, %xmm0
-; SSE2-NEXT:    orps %xmm4, %xmm0
+; SSE2-NEXT:    andnps %xmm3, %xmm2
+; SSE2-NEXT:    orps %xmm4, %xmm2
+; SSE2-NEXT:    movaps %xmm2, %xmm0
 ; SSE2-NEXT:    retq
 ;
 ; AVX1-LABEL: test_fmaximum:
@@ -408,8 +408,8 @@ define float @test_fmaximum_combine_cmps(float %x, float %y) nounwind {
 ; SSE2:       # %bb.0:
 ; SSE2-NEXT:    divss %xmm0, %xmm1
 ; SSE2-NEXT:    movd %xmm0, %eax
-; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    movaps %xmm0, %xmm3
+; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    js .LBB9_2
 ; SSE2-NEXT:  # %bb.1:
 ; SSE2-NEXT:    movaps %xmm1, %xmm3
@@ -508,8 +508,8 @@ define float @test_fminimum(float %x, float %y) nounwind {
 ; SSE2-LABEL: test_fminimum:
 ; SSE2:       # %bb.0:
 ; SSE2-NEXT:    movd %xmm0, %eax
-; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    movdqa %xmm1, %xmm3
+; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    js .LBB10_2
 ; SSE2-NEXT:  # %bb.1:
 ; SSE2-NEXT:    movdqa %xmm0, %xmm3
@@ -735,9 +735,9 @@ define double @test_fminimum_zero0(double %x, double %y) nounwind {
 ;
 ; AVX1-LABEL: test_fminimum_zero0:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vcmpunordsd %xmm1, %xmm1, %xmm0
-; AVX1-NEXT:    vminsd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
-; AVX1-NEXT:    vblendvpd %xmm0, %xmm1, %xmm2, %xmm0
+; AVX1-NEXT:    vminsd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm0
+; AVX1-NEXT:    vcmpunordsd %xmm1, %xmm1, %xmm2
+; AVX1-NEXT:    vblendvpd %xmm2, %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX512-LABEL: test_fminimum_zero0:
@@ -781,9 +781,9 @@ define double @test_fminimum_zero1(double %x, double %y) nounwind {
 ;
 ; AVX1-LABEL: test_fminimum_zero1:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vcmpunordsd %xmm0, %xmm0, %xmm1
-; AVX1-NEXT:    vminsd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm2
-; AVX1-NEXT:    vblendvpd %xmm1, %xmm0, %xmm2, %xmm0
+; AVX1-NEXT:    vminsd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm1
+; AVX1-NEXT:    vcmpunordsd %xmm0, %xmm0, %xmm2
+; AVX1-NEXT:    vblendvpd %xmm2, %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX512-LABEL: test_fminimum_zero1:
@@ -881,8 +881,8 @@ define float @test_fminimum_combine_cmps(float %x, float %y) nounwind {
 ; SSE2:       # %bb.0:
 ; SSE2-NEXT:    divss %xmm0, %xmm1
 ; SSE2-NEXT:    movd %xmm0, %eax
-; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    movaps %xmm1, %xmm3
+; SSE2-NEXT:    testl %eax, %eax
 ; SSE2-NEXT:    js .LBB19_2
 ; SSE2-NEXT:  # %bb.1:
 ; SSE2-NEXT:    movaps %xmm0, %xmm3
@@ -1253,16 +1253,16 @@ define <2 x double> @test_fminimum_vector_signed_zero(<2 x double> %x) {
 ;
 ; AVX-LABEL: test_fminimum_vector_signed_zero:
 ; AVX:       # %bb.0:
-; AVX-NEXT:    vcmpunordpd %xmm0, %xmm0, %xmm1
-; AVX-NEXT:    vminpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm2
-; AVX-NEXT:    vblendvpd %xmm1, %xmm0, %xmm2, %xmm0
+; AVX-NEXT:    vminpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm1
+; AVX-NEXT:    vcmpunordpd %xmm0, %xmm0, %xmm2
+; AVX-NEXT:    vblendvpd %xmm2, %xmm0, %xmm1, %xmm0
 ; AVX-NEXT:    retq
 ;
 ; X86-LABEL: test_fminimum_vector_signed_zero:
 ; X86:       # %bb.0:
-; X86-NEXT:    vcmpunordpd %xmm0, %xmm0, %xmm1
-; X86-NEXT:    vminpd {{\.?LCPI[0-9]+_[0-9]+}}, %xmm0, %xmm2
-; X86-NEXT:    vblendvpd %xmm1, %xmm0, %xmm2, %xmm0
+; X86-NEXT:    vminpd {{\.?LCPI[0-9]+_[0-9]+}}, %xmm0, %xmm1
+; X86-NEXT:    vcmpunordpd %xmm0, %xmm0, %xmm2
+; X86-NEXT:    vblendvpd %xmm2, %xmm0, %xmm1, %xmm0
 ; X86-NEXT:    retl
   %r = call <2 x double> @llvm.minimum.v2f64(<2 x double> %x, <2 x double> <double -0., double -0.>)
   ret <2 x double> %r

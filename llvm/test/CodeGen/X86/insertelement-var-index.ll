@@ -1018,7 +1018,7 @@ define <2 x i64> @arg_i64_v2i64(<2 x i64> %v, i64 %x, i32 %y) nounwind {
 ; X86AVX2-NEXT:    movl %eax, (%esp,%esi,4)
 ; X86AVX2-NEXT:    vmovaps (%esp), %xmm0
 ; X86AVX2-NEXT:    vmovaps %xmm0, {{[0-9]+}}(%esp)
-; X86AVX2-NEXT:    leal 1(%edx,%edx), %eax
+; X86AVX2-NEXT:    leal 1(,%edx,2), %eax
 ; X86AVX2-NEXT:    andl $3, %eax
 ; X86AVX2-NEXT:    movl %ecx, 16(%esp,%eax,4)
 ; X86AVX2-NEXT:    vmovaps {{[0-9]+}}(%esp), %xmm0
@@ -1053,19 +1053,19 @@ define <4 x float> @arg_f32_v4f32(<4 x float> %v, float %x, i32 %y) nounwind {
 ;
 ; AVX1-LABEL: arg_f32_v4f32:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vshufps {{.*#+}} xmm1 = xmm1[0,0,0,0]
 ; AVX1-NEXT:    vmovd %edi, %xmm2
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm2 = xmm2[0,0,0,0]
 ; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
+; AVX1-NEXT:    vshufps {{.*#+}} xmm1 = xmm1[0,0,0,0]
 ; AVX1-NEXT:    vblendvps %xmm2, %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: arg_f32_v4f32:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vbroadcastss %xmm1, %xmm1
 ; AVX2-NEXT:    vmovd %edi, %xmm2
 ; AVX2-NEXT:    vpbroadcastd %xmm2, %xmm2
 ; AVX2-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
+; AVX2-NEXT:    vbroadcastss %xmm1, %xmm1
 ; AVX2-NEXT:    vblendvps %xmm2, %xmm1, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
 ;
@@ -1110,20 +1110,20 @@ define <2 x double> @arg_f64_v2f64(<2 x double> %v, double %x, i32 %y) nounwind 
 ;
 ; AVX1-LABEL: arg_f64_v2f64:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vmovddup {{.*#+}} xmm1 = xmm1[0,0]
 ; AVX1-NEXT:    vmovd %edi, %xmm2
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm2 = xmm2[0,1,0,1]
 ; AVX1-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
+; AVX1-NEXT:    vmovddup {{.*#+}} xmm1 = xmm1[0,0]
 ; AVX1-NEXT:    vblendvpd %xmm2, %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: arg_f64_v2f64:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vmovddup {{.*#+}} xmm1 = xmm1[0,0]
 ; AVX2-NEXT:    movl %edi, %eax
 ; AVX2-NEXT:    vmovq %rax, %xmm2
 ; AVX2-NEXT:    vpbroadcastq %xmm2, %xmm2
 ; AVX2-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
+; AVX2-NEXT:    vmovddup {{.*#+}} xmm1 = xmm1[0,0]
 ; AVX2-NEXT:    vblendvpd %xmm2, %xmm1, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
 ;
@@ -1367,7 +1367,7 @@ define <2 x i64> @load_i64_v2i64(<2 x i64> %v, ptr %p, i32 %y) nounwind {
 ; X86AVX2-NEXT:    movl %edx, (%esp,%esi,4)
 ; X86AVX2-NEXT:    vmovaps (%esp), %xmm0
 ; X86AVX2-NEXT:    vmovaps %xmm0, {{[0-9]+}}(%esp)
-; X86AVX2-NEXT:    leal 1(%eax,%eax), %eax
+; X86AVX2-NEXT:    leal 1(,%eax,2), %eax
 ; X86AVX2-NEXT:    andl $3, %eax
 ; X86AVX2-NEXT:    movl %ecx, 16(%esp,%eax,4)
 ; X86AVX2-NEXT:    vmovaps {{[0-9]+}}(%esp), %xmm0
@@ -1405,20 +1405,20 @@ define <4 x float> @load_f32_v4f32(<4 x float> %v, ptr %p, i32 %y) nounwind {
 ;
 ; AVX1-LABEL: load_f32_v4f32:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vbroadcastss (%rdi), %xmm1
-; AVX1-NEXT:    vmovd %esi, %xmm2
-; AVX1-NEXT:    vpshufd {{.*#+}} xmm2 = xmm2[0,0,0,0]
-; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
-; AVX1-NEXT:    vblendvps %xmm2, %xmm1, %xmm0, %xmm0
+; AVX1-NEXT:    vmovd %esi, %xmm1
+; AVX1-NEXT:    vpshufd {{.*#+}} xmm1 = xmm1[0,0,0,0]
+; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
+; AVX1-NEXT:    vbroadcastss (%rdi), %xmm2
+; AVX1-NEXT:    vblendvps %xmm1, %xmm2, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: load_f32_v4f32:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vbroadcastss (%rdi), %xmm1
-; AVX2-NEXT:    vmovd %esi, %xmm2
-; AVX2-NEXT:    vpbroadcastd %xmm2, %xmm2
-; AVX2-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
-; AVX2-NEXT:    vblendvps %xmm2, %xmm1, %xmm0, %xmm0
+; AVX2-NEXT:    vmovd %esi, %xmm1
+; AVX2-NEXT:    vpbroadcastd %xmm1, %xmm1
+; AVX2-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
+; AVX2-NEXT:    vbroadcastss (%rdi), %xmm2
+; AVX2-NEXT:    vblendvps %xmm1, %xmm2, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
 ;
 ; AVX512-LABEL: load_f32_v4f32:
@@ -1465,21 +1465,21 @@ define <2 x double> @load_f64_v2f64(<2 x double> %v, ptr %p, i32 %y) nounwind {
 ;
 ; AVX1-LABEL: load_f64_v2f64:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vmovddup {{.*#+}} xmm1 = mem[0,0]
-; AVX1-NEXT:    vmovd %esi, %xmm2
-; AVX1-NEXT:    vpshufd {{.*#+}} xmm2 = xmm2[0,1,0,1]
-; AVX1-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
-; AVX1-NEXT:    vblendvpd %xmm2, %xmm1, %xmm0, %xmm0
+; AVX1-NEXT:    vmovd %esi, %xmm1
+; AVX1-NEXT:    vpshufd {{.*#+}} xmm1 = xmm1[0,1,0,1]
+; AVX1-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
+; AVX1-NEXT:    vmovddup {{.*#+}} xmm2 = mem[0,0]
+; AVX1-NEXT:    vblendvpd %xmm1, %xmm2, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: load_f64_v2f64:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vmovddup {{.*#+}} xmm1 = mem[0,0]
 ; AVX2-NEXT:    movl %esi, %eax
-; AVX2-NEXT:    vmovq %rax, %xmm2
-; AVX2-NEXT:    vpbroadcastq %xmm2, %xmm2
-; AVX2-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2, %xmm2
-; AVX2-NEXT:    vblendvpd %xmm2, %xmm1, %xmm0, %xmm0
+; AVX2-NEXT:    vmovq %rax, %xmm1
+; AVX2-NEXT:    vpbroadcastq %xmm1, %xmm1
+; AVX2-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
+; AVX2-NEXT:    vmovddup {{.*#+}} xmm2 = mem[0,0]
+; AVX2-NEXT:    vblendvpd %xmm1, %xmm2, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
 ;
 ; AVX512-LABEL: load_f64_v2f64:
@@ -1751,7 +1751,7 @@ define <4 x i64> @arg_i64_v4i64(<4 x i64> %v, i64 %x, i32 %y) nounwind {
 ; X86AVX2-NEXT:    movl %eax, (%esp,%esi,4)
 ; X86AVX2-NEXT:    vmovaps (%esp), %ymm0
 ; X86AVX2-NEXT:    vmovaps %ymm0, {{[0-9]+}}(%esp)
-; X86AVX2-NEXT:    leal 1(%edx,%edx), %eax
+; X86AVX2-NEXT:    leal 1(,%edx,2), %eax
 ; X86AVX2-NEXT:    andl $7, %eax
 ; X86AVX2-NEXT:    movl %ecx, 32(%esp,%eax,4)
 ; X86AVX2-NEXT:    vmovaps {{[0-9]+}}(%esp), %ymm0
@@ -1789,10 +1789,10 @@ define <8 x float> @arg_f32_v8f32(<8 x float> %v, float %x, i32 %y) nounwind {
 ;
 ; AVX2-LABEL: arg_f32_v8f32:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vbroadcastss %xmm1, %ymm1
 ; AVX2-NEXT:    vmovd %edi, %xmm2
 ; AVX2-NEXT:    vpbroadcastd %xmm2, %ymm2
 ; AVX2-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
+; AVX2-NEXT:    vbroadcastss %xmm1, %ymm1
 ; AVX2-NEXT:    vblendvps %ymm2, %ymm1, %ymm0, %ymm0
 ; AVX2-NEXT:    retq
 ;
@@ -1841,11 +1841,11 @@ define <4 x double> @arg_f64_v4f64(<4 x double> %v, double %x, i32 %y) nounwind 
 ;
 ; AVX2-LABEL: arg_f64_v4f64:
 ; AVX2:       # %bb.0:
-; AVX2-NEXT:    vbroadcastsd %xmm1, %ymm1
 ; AVX2-NEXT:    movl %edi, %eax
 ; AVX2-NEXT:    vmovq %rax, %xmm2
 ; AVX2-NEXT:    vpbroadcastq %xmm2, %ymm2
 ; AVX2-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
+; AVX2-NEXT:    vbroadcastsd %xmm1, %ymm1
 ; AVX2-NEXT:    vblendvpd %ymm2, %ymm1, %ymm0, %ymm0
 ; AVX2-NEXT:    retq
 ;
@@ -2133,7 +2133,7 @@ define <4 x i64> @load_i64_v4i64(<4 x i64> %v, ptr %p, i32 %y) nounwind {
 ; X86AVX2-NEXT:    movl %edx, (%esp,%esi,4)
 ; X86AVX2-NEXT:    vmovaps (%esp), %ymm0
 ; X86AVX2-NEXT:    vmovaps %ymm0, {{[0-9]+}}(%esp)
-; X86AVX2-NEXT:    leal 1(%eax,%eax), %eax
+; X86AVX2-NEXT:    leal 1(,%eax,2), %eax
 ; X86AVX2-NEXT:    andl $7, %eax
 ; X86AVX2-NEXT:    movl %ecx, 32(%esp,%eax,4)
 ; X86AVX2-NEXT:    vmovaps {{[0-9]+}}(%esp), %ymm0
@@ -2165,9 +2165,9 @@ define <8 x float> @load_f32_v8f32(<8 x float> %v, ptr %p, i32 %y) nounwind {
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm1 = xmm1[0,0,0,0]
 ; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
 ; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}+16(%rip), %xmm1, %xmm1
+; AVX1-NEXT:    vbroadcastss (%rdi), %ymm3
 ; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm2, %ymm1
-; AVX1-NEXT:    vbroadcastss (%rdi), %ymm2
-; AVX1-NEXT:    vblendvps %ymm1, %ymm2, %ymm0, %ymm0
+; AVX1-NEXT:    vblendvps %ymm1, %ymm3, %ymm0, %ymm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: load_f32_v8f32:
@@ -2219,9 +2219,9 @@ define <4 x double> @load_f64_v4f64(<4 x double> %v, ptr %p, i32 %y) nounwind {
 ; AVX1-NEXT:    vpshufd {{.*#+}} xmm1 = xmm1[0,1,0,1]
 ; AVX1-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
 ; AVX1-NEXT:    vpcmpeqq {{\.?LCPI[0-9]+_[0-9]+}}+16(%rip), %xmm1, %xmm1
+; AVX1-NEXT:    vbroadcastsd (%rdi), %ymm3
 ; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm2, %ymm1
-; AVX1-NEXT:    vbroadcastsd (%rdi), %ymm2
-; AVX1-NEXT:    vblendvpd %ymm1, %ymm2, %ymm0, %ymm0
+; AVX1-NEXT:    vblendvpd %ymm1, %ymm3, %ymm0, %ymm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: load_f64_v4f64:
@@ -2268,8 +2268,8 @@ define <4 x double> @load_f64_v4f64(<4 x double> %v, ptr %p, i32 %y) nounwind {
 define i32 @PR44139(ptr %p) {
 ; SSE-LABEL: PR44139:
 ; SSE:       # %bb.0:
-; SSE-NEXT:    movl (%rdi), %eax
 ; SSE-NEXT:    pshufd {{.*#+}} xmm0 = mem[0,1,0,1]
+; SSE-NEXT:    movl (%rdi), %eax
 ; SSE-NEXT:    movdqa %xmm0, 96(%rdi)
 ; SSE-NEXT:    movdqa %xmm0, 112(%rdi)
 ; SSE-NEXT:    movdqa %xmm0, 64(%rdi)
@@ -2277,10 +2277,10 @@ define i32 @PR44139(ptr %p) {
 ; SSE-NEXT:    movdqa %xmm0, 32(%rdi)
 ; SSE-NEXT:    movdqa %xmm0, 48(%rdi)
 ; SSE-NEXT:    movdqa %xmm0, (%rdi)
-; SSE-NEXT:    movdqa %xmm0, 16(%rdi)
 ; SSE-NEXT:    leal 2147483647(%rax), %ecx
 ; SSE-NEXT:    testl %eax, %eax
 ; SSE-NEXT:    cmovnsl %eax, %ecx
+; SSE-NEXT:    movdqa %xmm0, 16(%rdi)
 ; SSE-NEXT:    andl $-2147483648, %ecx # imm = 0x80000000
 ; SSE-NEXT:    addl %eax, %ecx
 ; SSE-NEXT:    # kill: def $eax killed $eax killed $rax
@@ -2297,10 +2297,10 @@ define i32 @PR44139(ptr %p) {
 ; AVX1-NEXT:    vmovaps %ymm0, 96(%rdi)
 ; AVX1-NEXT:    vmovaps %ymm0, 32(%rdi)
 ; AVX1-NEXT:    movl (%rdi), %eax
-; AVX1-NEXT:    vmovaps %ymm1, (%rdi)
 ; AVX1-NEXT:    leal 2147483647(%rax), %ecx
 ; AVX1-NEXT:    testl %eax, %eax
 ; AVX1-NEXT:    cmovnsl %eax, %ecx
+; AVX1-NEXT:    vmovaps %ymm1, (%rdi)
 ; AVX1-NEXT:    andl $-2147483648, %ecx # imm = 0x80000000
 ; AVX1-NEXT:    addl %eax, %ecx
 ; AVX1-NEXT:    # kill: def $eax killed $eax killed $rax
@@ -2318,10 +2318,10 @@ define i32 @PR44139(ptr %p) {
 ; AVX2-NEXT:    vmovdqa %ymm0, 96(%rdi)
 ; AVX2-NEXT:    vmovdqa %ymm0, 32(%rdi)
 ; AVX2-NEXT:    movl (%rdi), %eax
-; AVX2-NEXT:    vmovdqa %ymm1, (%rdi)
 ; AVX2-NEXT:    leal 2147483647(%rax), %ecx
 ; AVX2-NEXT:    testl %eax, %eax
 ; AVX2-NEXT:    cmovnsl %eax, %ecx
+; AVX2-NEXT:    vmovdqa %ymm1, (%rdi)
 ; AVX2-NEXT:    andl $-2147483648, %ecx # imm = 0x80000000
 ; AVX2-NEXT:    addl %eax, %ecx
 ; AVX2-NEXT:    # kill: def $eax killed $eax killed $rax
@@ -2334,15 +2334,15 @@ define i32 @PR44139(ptr %p) {
 ; AVX512:       # %bb.0:
 ; AVX512-NEXT:    vmovdqa64 (%rdi), %zmm0
 ; AVX512-NEXT:    vpbroadcastq (%rdi), %zmm1
-; AVX512-NEXT:    vpmovqd %zmm0, %ymm0
 ; AVX512-NEXT:    vpinsrq $1, (%rdi), %xmm1, %xmm2
+; AVX512-NEXT:    vpmovqd %zmm0, %ymm0
 ; AVX512-NEXT:    vinserti32x4 $0, %xmm2, %zmm1, %zmm2
 ; AVX512-NEXT:    vmovdqa64 %zmm1, 64(%rdi)
-; AVX512-NEXT:    vmovdqa64 %zmm2, (%rdi)
 ; AVX512-NEXT:    vmovd %xmm0, %eax
 ; AVX512-NEXT:    leal 2147483647(%rax), %ecx
 ; AVX512-NEXT:    testl %eax, %eax
 ; AVX512-NEXT:    cmovnsl %eax, %ecx
+; AVX512-NEXT:    vmovdqa64 %zmm2, (%rdi)
 ; AVX512-NEXT:    andl $-2147483648, %ecx # imm = 0x80000000
 ; AVX512-NEXT:    addl %eax, %ecx
 ; AVX512-NEXT:    # kill: def $eax killed $eax killed $rax
@@ -2353,6 +2353,9 @@ define i32 @PR44139(ptr %p) {
 ;
 ; X86AVX2-LABEL: PR44139:
 ; X86AVX2:       # %bb.0:
+; X86AVX2-NEXT:    pushl %esi
+; X86AVX2-NEXT:    .cfi_def_cfa_offset 8
+; X86AVX2-NEXT:    .cfi_offset %esi, -8
 ; X86AVX2-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; X86AVX2-NEXT:    vbroadcastsd (%ecx), %ymm0
 ; X86AVX2-NEXT:    vunpcklpd {{.*#+}} xmm1 = xmm0[0],mem[0]
@@ -2361,14 +2364,16 @@ define i32 @PR44139(ptr %p) {
 ; X86AVX2-NEXT:    vmovaps %ymm0, 96(%ecx)
 ; X86AVX2-NEXT:    vmovaps %ymm0, 32(%ecx)
 ; X86AVX2-NEXT:    movl (%ecx), %eax
-; X86AVX2-NEXT:    vmovaps %ymm1, (%ecx)
-; X86AVX2-NEXT:    leal 2147483647(%eax), %ecx
+; X86AVX2-NEXT:    leal 2147483647(%eax), %esi
 ; X86AVX2-NEXT:    testl %eax, %eax
-; X86AVX2-NEXT:    cmovnsl %eax, %ecx
-; X86AVX2-NEXT:    andl $-2147483648, %ecx # imm = 0x80000000
-; X86AVX2-NEXT:    addl %eax, %ecx
+; X86AVX2-NEXT:    cmovnsl %eax, %esi
+; X86AVX2-NEXT:    vmovaps %ymm1, (%ecx)
+; X86AVX2-NEXT:    andl $-2147483648, %esi # imm = 0x80000000
+; X86AVX2-NEXT:    addl %eax, %esi
 ; X86AVX2-NEXT:    xorl %edx, %edx
-; X86AVX2-NEXT:    divl %ecx
+; X86AVX2-NEXT:    divl %esi
+; X86AVX2-NEXT:    popl %esi
+; X86AVX2-NEXT:    .cfi_def_cfa_offset 4
 ; X86AVX2-NEXT:    vzeroupper
 ; X86AVX2-NEXT:    retl
   %L = load <16 x i64>, ptr %p

@@ -484,10 +484,10 @@ define i32 @main() nounwind {
 ; X64-AVX-NEXT:    vmovaps %ymm0, (%rsp)
 ; X64-AVX-NEXT:    vmovaps (%rsp), %ymm0
 ; X64-AVX-NEXT:    vextractps $2, %xmm0, %esi
+; X64-AVX-NEXT:    vextractps $1, %xmm0, %edi
 ; X64-AVX-NEXT:    xorl %edx, %edx
 ; X64-AVX-NEXT:    divl %esi
 ; X64-AVX-NEXT:    movl %eax, %esi
-; X64-AVX-NEXT:    vextractps $1, %xmm0, %edi
 ; X64-AVX-NEXT:    movl %ecx, %eax
 ; X64-AVX-NEXT:    xorl %edx, %edx
 ; X64-AVX-NEXT:    divl %edi

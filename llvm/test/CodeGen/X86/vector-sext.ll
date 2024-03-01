@@ -3525,9 +3525,9 @@ define <32 x i8> @sext_32xi1_to_32xi8(<32 x i16> %c1, <32 x i16> %c2)nounwind {
 ; X86-SSE-NEXT:    movdqa 8(%ebp), %xmm3
 ; X86-SSE-NEXT:    pcmpeqw 40(%ebp), %xmm1
 ; X86-SSE-NEXT:    pcmpeqw 24(%ebp), %xmm0
-; X86-SSE-NEXT:    packsswb %xmm1, %xmm0
 ; X86-SSE-NEXT:    pcmpeqw 72(%ebp), %xmm3
 ; X86-SSE-NEXT:    pcmpeqw 56(%ebp), %xmm2
+; X86-SSE-NEXT:    packsswb %xmm1, %xmm0
 ; X86-SSE-NEXT:    packsswb %xmm3, %xmm2
 ; X86-SSE-NEXT:    movdqa %xmm2, %xmm1
 ; X86-SSE-NEXT:    movl %ebp, %esp
@@ -3713,11 +3713,11 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ;
 ; X86-SSE2-LABEL: sext_4i17_to_4i32:
 ; X86-SSE2:       # %bb.0:
-; X86-SSE2-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-SSE2-NEXT:    movl (%edx), %ecx
-; X86-SSE2-NEXT:    movl 4(%edx), %eax
-; X86-SSE2-NEXT:    movl 8(%edx), %edx
+; X86-SSE2-NEXT:    movl {{[0-9]+}}(%esp), %ecx
+; X86-SSE2-NEXT:    movl 4(%ecx), %eax
+; X86-SSE2-NEXT:    movl 8(%ecx), %edx
 ; X86-SSE2-NEXT:    shldl $13, %eax, %edx
+; X86-SSE2-NEXT:    movl (%ecx), %ecx
 ; X86-SSE2-NEXT:    shll $15, %edx
 ; X86-SSE2-NEXT:    sarl $15, %edx
 ; X86-SSE2-NEXT:    movd %edx, %xmm0
@@ -3745,9 +3745,9 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ; X86-SSE41-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; X86-SSE41-NEXT:    movl (%edx), %eax
 ; X86-SSE41-NEXT:    movl 4(%edx), %ecx
-; X86-SSE41-NEXT:    movl %ecx, %esi
 ; X86-SSE41-NEXT:    movl 8(%edx), %edx
 ; X86-SSE41-NEXT:    shldl $13, %ecx, %edx
+; X86-SSE41-NEXT:    movl %ecx, %esi
 ; X86-SSE41-NEXT:    shldl $15, %eax, %ecx
 ; X86-SSE41-NEXT:    shll $15, %ecx
 ; X86-SSE41-NEXT:    sarl $15, %ecx

@@ -348,8 +348,8 @@ define void @test6(i32 %C, ptr %A, ptr %B) nounwind {
 ; MCU-NEXT:    fmul %st, %st(0)
 ; MCU-NEXT:    fxch %st(3)
 ; MCU-NEXT:    fmul %st, %st(0)
-; MCU-NEXT:    testl %eax, %eax
 ; MCU-NEXT:    flds (%edx)
+; MCU-NEXT:    testl %eax, %eax
 ; MCU-NEXT:    je .LBB5_2
 ; MCU-NEXT:  # %bb.1:
 ; MCU-NEXT:    fstp %st(1)
@@ -1330,14 +1330,14 @@ define void @clamp_i8(i32 %src, ptr %dst) {
 ;
 ; MCU-LABEL: clamp_i8:
 ; MCU:       # %bb.0:
-; MCU-NEXT:    cmpl $127, %eax
 ; MCU-NEXT:    movl $127, %ecx
+; MCU-NEXT:    cmpl $127, %eax
 ; MCU-NEXT:    jg .LBB26_2
 ; MCU-NEXT:  # %bb.1:
 ; MCU-NEXT:    movl %eax, %ecx
 ; MCU-NEXT:  .LBB26_2:
-; MCU-NEXT:    cmpl $-128, %ecx
 ; MCU-NEXT:    movb $-128, %al
+; MCU-NEXT:    cmpl $-128, %ecx
 ; MCU-NEXT:    jl .LBB26_4
 ; MCU-NEXT:  # %bb.3:
 ; MCU-NEXT:    movl %ecx, %eax
@@ -1392,14 +1392,14 @@ define void @clamp(i32 %src, ptr %dst) {
 ;
 ; MCU-LABEL: clamp:
 ; MCU:       # %bb.0:
-; MCU-NEXT:    cmpl $32768, %eax # imm = 0x8000
 ; MCU-NEXT:    movl $32767, %ecx # imm = 0x7FFF
+; MCU-NEXT:    cmpl $32768, %eax # imm = 0x8000
 ; MCU-NEXT:    jge .LBB27_2
 ; MCU-NEXT:  # %bb.1:
 ; MCU-NEXT:    movl %eax, %ecx
 ; MCU-NEXT:  .LBB27_2:
-; MCU-NEXT:    cmpl $-32768, %ecx # imm = 0x8000
 ; MCU-NEXT:    movl $32768, %eax # imm = 0x8000
+; MCU-NEXT:    cmpl $-32768, %ecx # imm = 0x8000
 ; MCU-NEXT:    jl .LBB27_4
 ; MCU-NEXT:  # %bb.3:
 ; MCU-NEXT:    movl %ecx, %eax

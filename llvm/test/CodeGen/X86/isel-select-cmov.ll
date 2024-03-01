@@ -178,8 +178,8 @@ define zeroext i16 @select_cmov_i16(i1 zeroext %cond, i16 zeroext %a, i16 zeroex
 ;
 ; FAST-X86-CMOV-LABEL: select_cmov_i16:
 ; FAST-X86-CMOV:       ## %bb.0:
-; FAST-X86-CMOV-NEXT:    movzwl {{[0-9]+}}(%esp), %eax
 ; FAST-X86-CMOV-NEXT:    testb $1, {{[0-9]+}}(%esp)
+; FAST-X86-CMOV-NEXT:    movzwl {{[0-9]+}}(%esp), %eax
 ; FAST-X86-CMOV-NEXT:    cmovew {{[0-9]+}}(%esp), %ax
 ; FAST-X86-CMOV-NEXT:    movzwl %ax, %eax
 ; FAST-X86-CMOV-NEXT:    retl
@@ -548,10 +548,10 @@ define i64 @select_cmov_i64(i1 zeroext %cond, i64 %a, i64 %b) {
 ;
 ; FAST-X86-CMOV-LABEL: select_cmov_i64:
 ; FAST-X86-CMOV:       ## %bb.0:
-; FAST-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; FAST-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; FAST-X86-CMOV-NEXT:    cmpb $0, {{[0-9]+}}(%esp)
+; FAST-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; FAST-X86-CMOV-NEXT:    cmovel {{[0-9]+}}(%esp), %eax
+; FAST-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; FAST-X86-CMOV-NEXT:    cmovel {{[0-9]+}}(%esp), %edx
 ; FAST-X86-CMOV-NEXT:    retl
 ;
@@ -579,9 +579,9 @@ define i64 @select_cmov_i64(i1 zeroext %cond, i64 %a, i64 %b) {
 ; GISEL-X86-CMOV:       ## %bb.0:
 ; GISEL-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; GISEL-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %eax
-; GISEL-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; GISEL-X86-CMOV-NEXT:    testl %ecx, %ecx
 ; GISEL-X86-CMOV-NEXT:    cmovnel {{[0-9]+}}(%esp), %eax
+; GISEL-X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; GISEL-X86-CMOV-NEXT:    cmovnel {{[0-9]+}}(%esp), %edx
 ; GISEL-X86-CMOV-NEXT:    retl
   %1 = select i1 %cond, i64 %a, i64 %b

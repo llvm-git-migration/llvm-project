@@ -36,6 +36,92 @@
 ; ALIGN256-NEXT: .LBB0_3: # %for.body
 
 define void @test1(i32 %a) nounwind {
+; ALIGN-LABEL: test1:
+; ALIGN:       # %bb.0: # %entry
+; ALIGN-NEXT:    testl %edi, %edi
+; ALIGN-NEXT:    jle .LBB0_5
+; ALIGN-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN-NEXT:    pushq %rbp
+; ALIGN-NEXT:    pushq %rbx
+; ALIGN-NEXT:    pushq %rax
+; ALIGN-NEXT:    movl %edi, %ebx
+; ALIGN-NEXT:    movl %edi, %ebp
+; ALIGN-NEXT:    .p2align 6, 0x90
+; ALIGN-NEXT:  .LBB0_2: # %for.body
+; ALIGN-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN-NEXT:    callq bar@PLT
+; ALIGN-NEXT:    decl %ebp
+; ALIGN-NEXT:    jne .LBB0_2
+; ALIGN-NEXT:    .p2align 9, 0x90
+; ALIGN-NEXT:  .LBB0_3: # %for.body5
+; ALIGN-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN-NEXT:    callq var@PLT
+; ALIGN-NEXT:    decl %ebx
+; ALIGN-NEXT:    jne .LBB0_3
+; ALIGN-NEXT:  # %bb.4:
+; ALIGN-NEXT:    addq $8, %rsp
+; ALIGN-NEXT:    popq %rbx
+; ALIGN-NEXT:    popq %rbp
+; ALIGN-NEXT:  .LBB0_5: # %for.cond.cleanup4
+; ALIGN-NEXT:    retq
+;
+; ALIGN32-LABEL: test1:
+; ALIGN32:       # %bb.0: # %entry
+; ALIGN32-NEXT:    testl %edi, %edi
+; ALIGN32-NEXT:    jle .LBB0_5
+; ALIGN32-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN32-NEXT:    pushq %rbp
+; ALIGN32-NEXT:    pushq %rbx
+; ALIGN32-NEXT:    pushq %rax
+; ALIGN32-NEXT:    movl %edi, %ebx
+; ALIGN32-NEXT:    movl %edi, %ebp
+; ALIGN32-NEXT:    .p2align 6, 0x90
+; ALIGN32-NEXT:  .LBB0_2: # %for.body
+; ALIGN32-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN32-NEXT:    callq bar@PLT
+; ALIGN32-NEXT:    decl %ebp
+; ALIGN32-NEXT:    jne .LBB0_2
+; ALIGN32-NEXT:    .p2align 9, 0x90
+; ALIGN32-NEXT:  .LBB0_3: # %for.body5
+; ALIGN32-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN32-NEXT:    callq var@PLT
+; ALIGN32-NEXT:    decl %ebx
+; ALIGN32-NEXT:    jne .LBB0_3
+; ALIGN32-NEXT:  # %bb.4:
+; ALIGN32-NEXT:    addq $8, %rsp
+; ALIGN32-NEXT:    popq %rbx
+; ALIGN32-NEXT:    popq %rbp
+; ALIGN32-NEXT:  .LBB0_5: # %for.cond.cleanup4
+; ALIGN32-NEXT:    retq
+;
+; ALIGN256-LABEL: test1:
+; ALIGN256:       # %bb.0: # %entry
+; ALIGN256-NEXT:    testl %edi, %edi
+; ALIGN256-NEXT:    jle .LBB0_5
+; ALIGN256-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN256-NEXT:    pushq %rbp
+; ALIGN256-NEXT:    pushq %rbx
+; ALIGN256-NEXT:    pushq %rax
+; ALIGN256-NEXT:    movl %edi, %ebx
+; ALIGN256-NEXT:    movl %edi, %ebp
+; ALIGN256-NEXT:    .p2align 8, 0x90
+; ALIGN256-NEXT:  .LBB0_2: # %for.body
+; ALIGN256-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN256-NEXT:    callq bar@PLT
+; ALIGN256-NEXT:    decl %ebp
+; ALIGN256-NEXT:    jne .LBB0_2
+; ALIGN256-NEXT:    .p2align 9, 0x90
+; ALIGN256-NEXT:  .LBB0_3: # %for.body5
+; ALIGN256-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN256-NEXT:    callq var@PLT
+; ALIGN256-NEXT:    decl %ebx
+; ALIGN256-NEXT:    jne .LBB0_3
+; ALIGN256-NEXT:  # %bb.4:
+; ALIGN256-NEXT:    addq $8, %rsp
+; ALIGN256-NEXT:    popq %rbx
+; ALIGN256-NEXT:    popq %rbp
+; ALIGN256-NEXT:  .LBB0_5: # %for.cond.cleanup4
+; ALIGN256-NEXT:    retq
 entry:
   %cmp12 = icmp sgt i32 %a, 0
   br i1 %cmp12, label %for.body, label %for.cond.cleanup4
@@ -74,6 +160,92 @@ for.body5:                                        ; preds = %for.body, %for.body
 ; ALIGN256: .p2align 9, 0x90
 ; ALIGN256-NEXT: .LBB1_3: # %for.body
 define void @test2(i32 %a) nounwind {
+; ALIGN-LABEL: test2:
+; ALIGN:       # %bb.0: # %entry
+; ALIGN-NEXT:    testl %edi, %edi
+; ALIGN-NEXT:    jle .LBB1_5
+; ALIGN-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN-NEXT:    pushq %rbp
+; ALIGN-NEXT:    pushq %rbx
+; ALIGN-NEXT:    pushq %rax
+; ALIGN-NEXT:    movl %edi, %ebx
+; ALIGN-NEXT:    movl %edi, %ebp
+; ALIGN-NEXT:    .p2align 4, 0x90
+; ALIGN-NEXT:  .LBB1_2: # %for.body
+; ALIGN-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN-NEXT:    callq bar@PLT
+; ALIGN-NEXT:    decl %ebp
+; ALIGN-NEXT:    jne .LBB1_2
+; ALIGN-NEXT:    .p2align 9, 0x90
+; ALIGN-NEXT:  .LBB1_3: # %for.body5
+; ALIGN-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN-NEXT:    callq var@PLT
+; ALIGN-NEXT:    decl %ebx
+; ALIGN-NEXT:    jne .LBB1_3
+; ALIGN-NEXT:  # %bb.4:
+; ALIGN-NEXT:    addq $8, %rsp
+; ALIGN-NEXT:    popq %rbx
+; ALIGN-NEXT:    popq %rbp
+; ALIGN-NEXT:  .LBB1_5: # %for.cond.cleanup4
+; ALIGN-NEXT:    retq
+;
+; ALIGN32-LABEL: test2:
+; ALIGN32:       # %bb.0: # %entry
+; ALIGN32-NEXT:    testl %edi, %edi
+; ALIGN32-NEXT:    jle .LBB1_5
+; ALIGN32-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN32-NEXT:    pushq %rbp
+; ALIGN32-NEXT:    pushq %rbx
+; ALIGN32-NEXT:    pushq %rax
+; ALIGN32-NEXT:    movl %edi, %ebx
+; ALIGN32-NEXT:    movl %edi, %ebp
+; ALIGN32-NEXT:    .p2align 5, 0x90
+; ALIGN32-NEXT:  .LBB1_2: # %for.body
+; ALIGN32-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN32-NEXT:    callq bar@PLT
+; ALIGN32-NEXT:    decl %ebp
+; ALIGN32-NEXT:    jne .LBB1_2
+; ALIGN32-NEXT:    .p2align 9, 0x90
+; ALIGN32-NEXT:  .LBB1_3: # %for.body5
+; ALIGN32-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN32-NEXT:    callq var@PLT
+; ALIGN32-NEXT:    decl %ebx
+; ALIGN32-NEXT:    jne .LBB1_3
+; ALIGN32-NEXT:  # %bb.4:
+; ALIGN32-NEXT:    addq $8, %rsp
+; ALIGN32-NEXT:    popq %rbx
+; ALIGN32-NEXT:    popq %rbp
+; ALIGN32-NEXT:  .LBB1_5: # %for.cond.cleanup4
+; ALIGN32-NEXT:    retq
+;
+; ALIGN256-LABEL: test2:
+; ALIGN256:       # %bb.0: # %entry
+; ALIGN256-NEXT:    testl %edi, %edi
+; ALIGN256-NEXT:    jle .LBB1_5
+; ALIGN256-NEXT:  # %bb.1: # %for.body.preheader
+; ALIGN256-NEXT:    pushq %rbp
+; ALIGN256-NEXT:    pushq %rbx
+; ALIGN256-NEXT:    pushq %rax
+; ALIGN256-NEXT:    movl %edi, %ebx
+; ALIGN256-NEXT:    movl %edi, %ebp
+; ALIGN256-NEXT:    .p2align 8, 0x90
+; ALIGN256-NEXT:  .LBB1_2: # %for.body
+; ALIGN256-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN256-NEXT:    callq bar@PLT
+; ALIGN256-NEXT:    decl %ebp
+; ALIGN256-NEXT:    jne .LBB1_2
+; ALIGN256-NEXT:    .p2align 9, 0x90
+; ALIGN256-NEXT:  .LBB1_3: # %for.body5
+; ALIGN256-NEXT:    # =>This Inner Loop Header: Depth=1
+; ALIGN256-NEXT:    callq var@PLT
+; ALIGN256-NEXT:    decl %ebx
+; ALIGN256-NEXT:    jne .LBB1_3
+; ALIGN256-NEXT:  # %bb.4:
+; ALIGN256-NEXT:    addq $8, %rsp
+; ALIGN256-NEXT:    popq %rbx
+; ALIGN256-NEXT:    popq %rbp
+; ALIGN256-NEXT:  .LBB1_5: # %for.cond.cleanup4
+; ALIGN256-NEXT:    retq
 entry:
   %cmp12 = icmp sgt i32 %a, 0
   br i1 %cmp12, label %for.body, label %for.cond.cleanup4
@@ -103,3 +275,5 @@ declare void @var()
 !1 = !{!"llvm.loop.align", i32 64}
 !2 = distinct !{!2, !3}
 !3 = !{!"llvm.loop.align", i32 512}
+;; NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
+; CHECK: {{.*}}

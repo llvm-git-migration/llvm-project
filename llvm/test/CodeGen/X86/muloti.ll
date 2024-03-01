@@ -15,16 +15,16 @@ define %0 @x(i64 %a.coerce0, i64 %a.coerce1, i64 %b.coerce0, i64 %b.coerce1) nou
 ; CHECK-NEXT:    .cfi_offset %r14, -16
 ; CHECK-NEXT:    movq %rdx, %r11
 ; CHECK-NEXT:    movq %rdi, %r10
-; CHECK-NEXT:    movq %rsi, %rdx
-; CHECK-NEXT:    sarq $63, %rdx
-; CHECK-NEXT:    movq %rcx, %rdi
-; CHECK-NEXT:    imulq %rdx, %rdi
-; CHECK-NEXT:    movq %r11, %rax
-; CHECK-NEXT:    mulq %rdx
-; CHECK-NEXT:    movq %rdx, %r9
-; CHECK-NEXT:    movq %rax, %rbx
-; CHECK-NEXT:    addq %rax, %r9
-; CHECK-NEXT:    addq %rdi, %r9
+; CHECK-NEXT:    movq %rsi, %rdi
+; CHECK-NEXT:    sarq $63, %rdi
+; CHECK-NEXT:    movq %rcx, %r8
+; CHECK-NEXT:    movq %rdx, %rax
+; CHECK-NEXT:    mulq %rdi
+; CHECK-NEXT:    movq %rax, %r9
+; CHECK-NEXT:    movq %rdx, %rbx
+; CHECK-NEXT:    imulq %rdi, %r8
+; CHECK-NEXT:    addq %r8, %rbx
+; CHECK-NEXT:    addq %rax, %rbx
 ; CHECK-NEXT:    movq %rcx, %rax
 ; CHECK-NEXT:    sarq $63, %rax
 ; CHECK-NEXT:    movq %rax, %r14
@@ -34,8 +34,8 @@ define %0 @x(i64 %a.coerce0, i64 %a.coerce1, i64 %b.coerce0, i64 %b.coerce1) nou
 ; CHECK-NEXT:    movq %rdx, %rdi
 ; CHECK-NEXT:    addq %r14, %rdi
 ; CHECK-NEXT:    addq %rax, %rdi
-; CHECK-NEXT:    addq %rbx, %r8
-; CHECK-NEXT:    adcq %r9, %rdi
+; CHECK-NEXT:    addq %r9, %r8
+; CHECK-NEXT:    adcq %rbx, %rdi
 ; CHECK-NEXT:    movq %r10, %rax
 ; CHECK-NEXT:    mulq %r11
 ; CHECK-NEXT:    movq %rdx, %rbx

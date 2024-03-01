@@ -1682,18 +1682,18 @@ define <16 x float> @f16xf32_f64(<16 x float> %a) {
 ; AVX-LABEL: f16xf32_f64:
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vbroadcastsd {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0]
-; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-NEXT:    retl
 ;
 ; AVX2-LABEL: f16xf32_f64:
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcastsd {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0]
-; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-NEXT:    retl
 ;
@@ -1707,18 +1707,18 @@ define <16 x float> @f16xf32_f64(<16 x float> %a) {
 ; AVX-64-LABEL: f16xf32_f64:
 ; AVX-64:       # %bb.0:
 ; AVX-64-NEXT:    vbroadcastsd {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0]
-; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-64-NEXT:    retq
 ;
 ; AVX2-64-LABEL: f16xf32_f64:
 ; AVX2-64:       # %bb.0:
 ; AVX2-64-NEXT:    vbroadcastsd {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0,2.0E+0,1.0E+0]
-; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-64-NEXT:    retq
 ;
@@ -1739,9 +1739,9 @@ define <16 x float> @f16xf32_f128(<16 x float> %a) {
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,1.0E+0,2.0E+0,3.0E+0]
 ; AVX-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-NEXT:    retl
 ;
@@ -1749,9 +1749,9 @@ define <16 x float> @f16xf32_f128(<16 x float> %a) {
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,1.0E+0,2.0E+0,3.0E+0]
 ; AVX2-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-NEXT:    retl
 ;
@@ -1767,9 +1767,9 @@ define <16 x float> @f16xf32_f128(<16 x float> %a) {
 ; AVX-64:       # %bb.0:
 ; AVX-64-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,1.0E+0,2.0E+0,3.0E+0]
 ; AVX-64-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-64-NEXT:    retq
 ;
@@ -1777,9 +1777,9 @@ define <16 x float> @f16xf32_f128(<16 x float> %a) {
 ; AVX2-64:       # %bb.0:
 ; AVX2-64-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,1.0E+0,2.0E+0,3.0E+0]
 ; AVX2-64-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-64-NEXT:    retq
 ;
@@ -1800,18 +1800,18 @@ define <16 x float> @f16xf32_f256(<16 x float> %a) {
 ; AVX-LABEL: f16xf32_f256:
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vmovaps {{.*#+}} ymm2 = [8.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,5.0E+0,6.0E+0,7.0E+0]
-; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-NEXT:    retl
 ;
 ; AVX2-LABEL: f16xf32_f256:
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vmovaps {{.*#+}} ymm2 = [8.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,5.0E+0,6.0E+0,7.0E+0]
-; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-NEXT:    retl
 ;
@@ -1826,18 +1826,18 @@ define <16 x float> @f16xf32_f256(<16 x float> %a) {
 ; AVX-64-LABEL: f16xf32_f256:
 ; AVX-64:       # %bb.0:
 ; AVX-64-NEXT:    vmovaps {{.*#+}} ymm2 = [8.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,5.0E+0,6.0E+0,7.0E+0]
-; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX-64-NEXT:    retq
 ;
 ; AVX2-64-LABEL: f16xf32_f256:
 ; AVX2-64:       # %bb.0:
 ; AVX2-64-NEXT:    vmovaps {{.*#+}} ymm2 = [8.0E+0,1.0E+0,2.0E+0,3.0E+0,4.0E+0,5.0E+0,6.0E+0,7.0E+0]
-; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vaddps %ymm2, %ymm0, %ymm0
 ; AVX2-64-NEXT:    vdivps %ymm0, %ymm2, %ymm0
+; AVX2-64-NEXT:    vaddps %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vdivps %ymm1, %ymm2, %ymm1
 ; AVX2-64-NEXT:    retq
 ;
@@ -1897,9 +1897,9 @@ define <8 x double> @f8xf64_f128(<8 x double> %a) {
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0]
 ; AVX-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX-NEXT:    retl
 ;
@@ -1907,9 +1907,9 @@ define <8 x double> @f8xf64_f128(<8 x double> %a) {
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0]
 ; AVX2-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX2-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX2-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX2-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX2-NEXT:    retl
 ;
@@ -1925,9 +1925,9 @@ define <8 x double> @f8xf64_f128(<8 x double> %a) {
 ; AVX-64:       # %bb.0:
 ; AVX-64-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0]
 ; AVX-64-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX-64-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX-64-NEXT:    retq
 ;
@@ -1935,9 +1935,9 @@ define <8 x double> @f8xf64_f128(<8 x double> %a) {
 ; AVX2-64:       # %bb.0:
 ; AVX2-64-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [2.0E+0,1.0E+0,2.0E+0,1.0E+0]
 ; AVX2-64-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX2-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX2-64-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX2-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX2-64-NEXT:    retq
 ;
@@ -1958,18 +1958,18 @@ define <8 x double> @f8xf64_f256(<8 x double> %a) {
 ; AVX-LABEL: f8xf64_f256:
 ; AVX:       # %bb.0:
 ; AVX-NEXT:    vmovapd {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0]
-; AVX-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX-NEXT:    retl
 ;
 ; AVX2-LABEL: f8xf64_f256:
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vmovapd {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0]
-; AVX2-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX2-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX2-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX2-NEXT:    retl
 ;
@@ -1984,18 +1984,18 @@ define <8 x double> @f8xf64_f256(<8 x double> %a) {
 ; AVX-64-LABEL: f8xf64_f256:
 ; AVX-64:       # %bb.0:
 ; AVX-64-NEXT:    vmovapd {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0]
-; AVX-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX-64-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX-64-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX-64-NEXT:    retq
 ;
 ; AVX2-64-LABEL: f8xf64_f256:
 ; AVX2-64:       # %bb.0:
 ; AVX2-64-NEXT:    vmovapd {{.*#+}} ymm2 = [4.0E+0,1.0E+0,2.0E+0,3.0E+0]
-; AVX2-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vaddpd %ymm2, %ymm0, %ymm0
 ; AVX2-64-NEXT:    vdivpd %ymm0, %ymm2, %ymm0
+; AVX2-64-NEXT:    vaddpd %ymm2, %ymm1, %ymm1
 ; AVX2-64-NEXT:    vdivpd %ymm1, %ymm2, %ymm1
 ; AVX2-64-NEXT:    retq
 ;

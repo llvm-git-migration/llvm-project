@@ -638,10 +638,10 @@ define <2 x i32> @v2i32(<2 x i32> %x, <2 x i32> %y) nounwind {
 ; AVX1:       # %bb.0:
 ; AVX1-NEXT:    vpaddd %xmm1, %xmm0, %xmm2
 ; AVX1-NEXT:    vpcmpgtd %xmm2, %xmm0, %xmm0
+; AVX1-NEXT:    vpsrad $31, %xmm2, %xmm3
+; AVX1-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm3, %xmm3
 ; AVX1-NEXT:    vpxor %xmm0, %xmm1, %xmm0
-; AVX1-NEXT:    vpsrad $31, %xmm2, %xmm1
-; AVX1-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vblendvps %xmm0, %xmm1, %xmm2, %xmm0
+; AVX1-NEXT:    vblendvps %xmm0, %xmm3, %xmm2, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: v2i32:
@@ -729,10 +729,10 @@ define <4 x i32> @v4i32(<4 x i32> %x, <4 x i32> %y) nounwind {
 ; AVX1:       # %bb.0:
 ; AVX1-NEXT:    vpaddd %xmm1, %xmm0, %xmm2
 ; AVX1-NEXT:    vpcmpgtd %xmm2, %xmm0, %xmm0
+; AVX1-NEXT:    vpsrad $31, %xmm2, %xmm3
+; AVX1-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm3, %xmm3
 ; AVX1-NEXT:    vpxor %xmm0, %xmm1, %xmm0
-; AVX1-NEXT:    vpsrad $31, %xmm2, %xmm1
-; AVX1-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vblendvps %xmm0, %xmm1, %xmm2, %xmm0
+; AVX1-NEXT:    vblendvps %xmm0, %xmm3, %xmm2, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: v4i32:
@@ -861,12 +861,12 @@ define <8 x i32> @v8i32(<8 x i32> %x, <8 x i32> %y) nounwind {
 ; AVX1-NEXT:    vpcmpgtd %xmm2, %xmm3, %xmm3
 ; AVX1-NEXT:    vpcmpgtd %xmm4, %xmm0, %xmm0
 ; AVX1-NEXT:    vinsertf128 $1, %xmm3, %ymm0, %ymm0
-; AVX1-NEXT:    vxorps %ymm0, %ymm1, %ymm0
-; AVX1-NEXT:    vpsrad $31, %xmm4, %xmm1
+; AVX1-NEXT:    vpsrad $31, %xmm4, %xmm3
 ; AVX1-NEXT:    vpsrad $31, %xmm2, %xmm2
-; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
-; AVX1-NEXT:    vxorps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm1, %ymm1
-; AVX1-NEXT:    vblendvps %ymm0, %ymm1, %ymm5, %ymm0
+; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm3, %ymm2
+; AVX1-NEXT:    vxorps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
+; AVX1-NEXT:    vxorps %ymm0, %ymm1, %ymm0
+; AVX1-NEXT:    vblendvps %ymm0, %ymm2, %ymm5, %ymm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: v8i32:
@@ -1363,14 +1363,14 @@ define <4 x i64> @v4i64(<4 x i64> %x, <4 x i64> %y) nounwind {
 ; SSE41-NEXT:    pshufd {{.*#+}} xmm5 = xmm0[0,0,2,2]
 ; SSE41-NEXT:    pand %xmm7, %xmm5
 ; SSE41-NEXT:    por %xmm0, %xmm5
-; SSE41-NEXT:    pxor %xmm2, %xmm5
 ; SSE41-NEXT:    movapd {{.*#+}} xmm7 = [9223372036854775807,9223372036854775807]
 ; SSE41-NEXT:    movapd {{.*#+}} xmm8 = [9223372036854775808,9223372036854775808]
-; SSE41-NEXT:    movapd %xmm8, %xmm2
+; SSE41-NEXT:    movapd %xmm8, %xmm9
 ; SSE41-NEXT:    movdqa %xmm4, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm7, %xmm2
+; SSE41-NEXT:    blendvpd %xmm0, %xmm7, %xmm9
+; SSE41-NEXT:    pxor %xmm2, %xmm5
 ; SSE41-NEXT:    movdqa %xmm5, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm2, %xmm4
+; SSE41-NEXT:    blendvpd %xmm0, %xmm9, %xmm4
 ; SSE41-NEXT:    movdqa %xmm1, %xmm0
 ; SSE41-NEXT:    pxor %xmm6, %xmm0
 ; SSE41-NEXT:    paddq %xmm3, %xmm1
@@ -1399,13 +1399,13 @@ define <4 x i64> @v4i64(<4 x i64> %x, <4 x i64> %y) nounwind {
 ; AVX1-NEXT:    vpcmpgtq %xmm2, %xmm3, %xmm3
 ; AVX1-NEXT:    vpcmpgtq %xmm4, %xmm0, %xmm0
 ; AVX1-NEXT:    vinsertf128 $1, %xmm3, %ymm0, %ymm0
+; AVX1-NEXT:    vpxor %xmm3, %xmm3, %xmm3
+; AVX1-NEXT:    vpcmpgtq %xmm2, %xmm3, %xmm2
+; AVX1-NEXT:    vpcmpgtq %xmm4, %xmm3, %xmm3
+; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm3, %ymm2
+; AVX1-NEXT:    vxorpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
 ; AVX1-NEXT:    vxorpd %ymm0, %ymm1, %ymm0
-; AVX1-NEXT:    vpxor %xmm1, %xmm1, %xmm1
-; AVX1-NEXT:    vpcmpgtq %xmm2, %xmm1, %xmm2
-; AVX1-NEXT:    vpcmpgtq %xmm4, %xmm1, %xmm1
-; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
-; AVX1-NEXT:    vxorpd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm1, %ymm1
-; AVX1-NEXT:    vblendvpd %ymm0, %ymm1, %ymm5, %ymm0
+; AVX1-NEXT:    vblendvpd %ymm0, %ymm2, %ymm5, %ymm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: v4i64:
@@ -1661,14 +1661,14 @@ define <8 x i64> @v8i64(<8 x i64> %x, <8 x i64> %y) nounwind {
 ; SSE41-NEXT:    pshufd {{.*#+}} xmm9 = xmm0[0,0,2,2]
 ; SSE41-NEXT:    pand %xmm11, %xmm9
 ; SSE41-NEXT:    por %xmm0, %xmm9
-; SSE41-NEXT:    pxor %xmm4, %xmm9
 ; SSE41-NEXT:    movapd {{.*#+}} xmm12 = [9223372036854775807,9223372036854775807]
 ; SSE41-NEXT:    movapd {{.*#+}} xmm11 = [9223372036854775808,9223372036854775808]
-; SSE41-NEXT:    movapd %xmm11, %xmm4
+; SSE41-NEXT:    movapd %xmm11, %xmm13
 ; SSE41-NEXT:    movdqa %xmm8, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm12, %xmm4
+; SSE41-NEXT:    blendvpd %xmm0, %xmm12, %xmm13
+; SSE41-NEXT:    pxor %xmm4, %xmm9
 ; SSE41-NEXT:    movdqa %xmm9, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm4, %xmm8
+; SSE41-NEXT:    blendvpd %xmm0, %xmm13, %xmm8
 ; SSE41-NEXT:    movdqa %xmm1, %xmm0
 ; SSE41-NEXT:    pxor %xmm10, %xmm0
 ; SSE41-NEXT:    paddq %xmm5, %xmm1
@@ -1680,12 +1680,12 @@ define <8 x i64> @v8i64(<8 x i64> %x, <8 x i64> %y) nounwind {
 ; SSE41-NEXT:    pshufd {{.*#+}} xmm4 = xmm0[0,0,2,2]
 ; SSE41-NEXT:    pand %xmm9, %xmm4
 ; SSE41-NEXT:    por %xmm0, %xmm4
-; SSE41-NEXT:    pxor %xmm5, %xmm4
-; SSE41-NEXT:    movapd %xmm11, %xmm5
+; SSE41-NEXT:    movapd %xmm11, %xmm9
 ; SSE41-NEXT:    movdqa %xmm1, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm12, %xmm5
+; SSE41-NEXT:    blendvpd %xmm0, %xmm12, %xmm9
+; SSE41-NEXT:    pxor %xmm5, %xmm4
 ; SSE41-NEXT:    movdqa %xmm4, %xmm0
-; SSE41-NEXT:    blendvpd %xmm0, %xmm5, %xmm1
+; SSE41-NEXT:    blendvpd %xmm0, %xmm9, %xmm1
 ; SSE41-NEXT:    movdqa %xmm2, %xmm0
 ; SSE41-NEXT:    pxor %xmm10, %xmm0
 ; SSE41-NEXT:    paddq %xmm6, %xmm2
@@ -1713,9 +1713,9 @@ define <8 x i64> @v8i64(<8 x i64> %x, <8 x i64> %y) nounwind {
 ; SSE41-NEXT:    pshufd {{.*#+}} xmm4 = xmm0[0,0,2,2]
 ; SSE41-NEXT:    pand %xmm5, %xmm4
 ; SSE41-NEXT:    por %xmm0, %xmm4
-; SSE41-NEXT:    pxor %xmm7, %xmm4
 ; SSE41-NEXT:    movdqa %xmm3, %xmm0
 ; SSE41-NEXT:    blendvpd %xmm0, %xmm12, %xmm11
+; SSE41-NEXT:    pxor %xmm7, %xmm4
 ; SSE41-NEXT:    movdqa %xmm4, %xmm0
 ; SSE41-NEXT:    blendvpd %xmm0, %xmm11, %xmm3
 ; SSE41-NEXT:    movapd %xmm8, %xmm0
@@ -1791,20 +1791,20 @@ define <8 x i64> @v8i64(<8 x i64> %x, <8 x i64> %y) nounwind {
 define <2 x i128> @v2i128(<2 x i128> %x, <2 x i128> %y) nounwind {
 ; SSE-LABEL: v2i128:
 ; SSE:       # %bb.0:
-; SSE-NEXT:    movq %rdi, %rax
 ; SSE-NEXT:    addq {{[0-9]+}}(%rsp), %rcx
 ; SSE-NEXT:    adcq {{[0-9]+}}(%rsp), %r8
-; SSE-NEXT:    seto %dil
+; SSE-NEXT:    seto %al
 ; SSE-NEXT:    movq %r8, %r9
 ; SSE-NEXT:    sarq $63, %r9
-; SSE-NEXT:    testb %dil, %dil
+; SSE-NEXT:    testb %al, %al
 ; SSE-NEXT:    cmovneq %r9, %rcx
 ; SSE-NEXT:    movabsq $-9223372036854775808, %r10 # imm = 0x8000000000000000
 ; SSE-NEXT:    xorq %r10, %r9
-; SSE-NEXT:    testb %dil, %dil
+; SSE-NEXT:    testb %al, %al
 ; SSE-NEXT:    cmoveq %r8, %r9
 ; SSE-NEXT:    addq {{[0-9]+}}(%rsp), %rsi
 ; SSE-NEXT:    adcq {{[0-9]+}}(%rsp), %rdx
+; SSE-NEXT:    movq %rdi, %rax
 ; SSE-NEXT:    seto %dil
 ; SSE-NEXT:    movq %rdx, %r8
 ; SSE-NEXT:    sarq $63, %r8
@@ -1821,20 +1821,20 @@ define <2 x i128> @v2i128(<2 x i128> %x, <2 x i128> %y) nounwind {
 ;
 ; AVX-LABEL: v2i128:
 ; AVX:       # %bb.0:
-; AVX-NEXT:    movq %rdi, %rax
 ; AVX-NEXT:    addq {{[0-9]+}}(%rsp), %rcx
 ; AVX-NEXT:    adcq {{[0-9]+}}(%rsp), %r8
-; AVX-NEXT:    seto %dil
+; AVX-NEXT:    seto %al
 ; AVX-NEXT:    movq %r8, %r9
 ; AVX-NEXT:    sarq $63, %r9
-; AVX-NEXT:    testb %dil, %dil
+; AVX-NEXT:    testb %al, %al
 ; AVX-NEXT:    cmovneq %r9, %rcx
 ; AVX-NEXT:    movabsq $-9223372036854775808, %r10 # imm = 0x8000000000000000
 ; AVX-NEXT:    xorq %r10, %r9
-; AVX-NEXT:    testb %dil, %dil
+; AVX-NEXT:    testb %al, %al
 ; AVX-NEXT:    cmoveq %r8, %r9
 ; AVX-NEXT:    addq {{[0-9]+}}(%rsp), %rsi
 ; AVX-NEXT:    adcq {{[0-9]+}}(%rsp), %rdx
+; AVX-NEXT:    movq %rdi, %rax
 ; AVX-NEXT:    seto %dil
 ; AVX-NEXT:    movq %rdx, %r8
 ; AVX-NEXT:    sarq $63, %r8

@@ -302,8 +302,10 @@ define i64 @tt0(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt0:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddb (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -335,8 +337,10 @@ define i64 @tt1(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt1:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddw (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -367,8 +371,10 @@ define i64 @tt2(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt2:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddd (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -399,8 +405,10 @@ define i64 @tt3(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt3:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddq (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -431,8 +439,10 @@ define i64 @tt4(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt4:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddusb (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -463,8 +473,10 @@ define i64 @tt5(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt5:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    paddusw (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -495,8 +507,10 @@ define i64 @tt6(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt6:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    psrlw (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -527,8 +541,10 @@ define i64 @tt7(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt7:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    psrld (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q
@@ -559,8 +575,10 @@ define i64 @tt8(x86_mmx %t, ptr %q) nounwind {
 ; X64-LABEL: tt8:
 ; X64:       # %bb.0: # %entry
 ; X64-NEXT:    psrlq (%rdi), %mm0
-; X64-NEXT:    movq %mm0, %rax
+; X64-NEXT:    movq %mm0, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
 ; X64-NEXT:    emms
+; X64-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Reload
+; X64-NEXT:    movq %mm0, %rax
 ; X64-NEXT:    retq
 entry:
   %v = load x86_mmx, ptr %q

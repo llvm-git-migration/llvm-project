@@ -306,8 +306,8 @@ define <4 x i64> @bitselect_v4i64_rr(<4 x i64>, <4 x i64>) {
 ; SSE-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
 ; SSE-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; SSE-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm3
-; SSE-NEXT:    orps %xmm3, %xmm1
 ; SSE-NEXT:    andps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm2
+; SSE-NEXT:    orps %xmm3, %xmm1
 ; SSE-NEXT:    orps %xmm2, %xmm0
 ; SSE-NEXT:    retq
 ;
@@ -456,8 +456,8 @@ define <4 x i64> @bitselect_v4i64_mm(ptr nocapture readonly, ptr nocapture reado
 ; SSE-NEXT:    andps %xmm1, %xmm3
 ; SSE-NEXT:    movaps %xmm1, %xmm0
 ; SSE-NEXT:    andnps (%rdi), %xmm0
-; SSE-NEXT:    orps %xmm3, %xmm0
 ; SSE-NEXT:    andnps 16(%rdi), %xmm1
+; SSE-NEXT:    orps %xmm3, %xmm0
 ; SSE-NEXT:    orps %xmm2, %xmm1
 ; SSE-NEXT:    retq
 ;
@@ -837,14 +837,14 @@ define <8 x i64> @bitselect_v8i64_mm(ptr nocapture readonly, ptr nocapture reado
 ;
 ; AVX-LABEL: bitselect_v8i64_mm:
 ; AVX:       # %bb.0:
-; AVX-NEXT:    vbroadcastf128 {{.*#+}} ymm1 = [18446744073709551612,18446744065119617022,18446744073709551612,18446744065119617022]
-; AVX-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX-NEXT:    vandps 32(%rsi), %ymm1, %ymm2
-; AVX-NEXT:    vandps (%rsi), %ymm1, %ymm0
-; AVX-NEXT:    vandnps (%rdi), %ymm1, %ymm3
-; AVX-NEXT:    vorps %ymm3, %ymm0, %ymm0
-; AVX-NEXT:    vandnps 32(%rdi), %ymm1, %ymm1
-; AVX-NEXT:    vorps %ymm1, %ymm2, %ymm1
+; AVX-NEXT:    vbroadcastf128 {{.*#+}} ymm0 = [18446744073709551612,18446744065119617022,18446744073709551612,18446744065119617022]
+; AVX-NEXT:    # ymm0 = mem[0,1,0,1]
+; AVX-NEXT:    vandps 32(%rsi), %ymm0, %ymm1
+; AVX-NEXT:    vandps (%rsi), %ymm0, %ymm2
+; AVX-NEXT:    vandnps (%rdi), %ymm0, %ymm3
+; AVX-NEXT:    vandnps 32(%rdi), %ymm0, %ymm4
+; AVX-NEXT:    vorps %ymm3, %ymm2, %ymm0
+; AVX-NEXT:    vorps %ymm4, %ymm1, %ymm1
 ; AVX-NEXT:    retq
 ;
 ; AVX512-LABEL: bitselect_v8i64_mm:
@@ -1005,27 +1005,27 @@ define <4 x i1> @bitselect_v4i1_loop(<4 x i32> %a0, <4 x i32> %a1) {
 ; XOP-LABEL: bitselect_v4i1_loop:
 ; XOP:       # %bb.0: # %bb
 ; XOP-NEXT:    vpxor %xmm2, %xmm2, %xmm2
-; XOP-NEXT:    vpcomneqd %xmm2, %xmm0, %xmm0
-; XOP-NEXT:    vpcomeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
+; XOP-NEXT:    vpcomeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; XOP-NEXT:    vpcomeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; XOP-NEXT:    vblendvps %xmm0, %xmm2, %xmm1, %xmm0
+; XOP-NEXT:    vpcomneqd %xmm2, %xmm0, %xmm0
+; XOP-NEXT:    vblendvps %xmm0, %xmm3, %xmm1, %xmm0
 ; XOP-NEXT:    retq
 ;
 ; AVX1-LABEL: bitselect_v4i1_loop:
 ; AVX1:       # %bb.0: # %bb
 ; AVX1-NEXT:    vpxor %xmm2, %xmm2, %xmm2
-; AVX1-NEXT:    vpcmpeqd %xmm2, %xmm0, %xmm0
-; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
+; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; AVX1-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vblendvps %xmm0, %xmm1, %xmm2, %xmm0
+; AVX1-NEXT:    vpcmpeqd %xmm2, %xmm0, %xmm0
+; AVX1-NEXT:    vblendvps %xmm0, %xmm1, %xmm3, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: bitselect_v4i1_loop:
 ; AVX2:       # %bb.0: # %bb
 ; AVX2-NEXT:    vpxor %xmm2, %xmm2, %xmm2
+; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [12,12,12,12]
 ; AVX2-NEXT:    vpcmpeqd %xmm2, %xmm0, %xmm0
-; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm2 = [12,12,12,12]
-; AVX2-NEXT:    vpcmpeqd %xmm2, %xmm1, %xmm2
+; AVX2-NEXT:    vpcmpeqd %xmm3, %xmm1, %xmm2
 ; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [15,15,15,15]
 ; AVX2-NEXT:    vpcmpeqd %xmm3, %xmm1, %xmm1
 ; AVX2-NEXT:    vblendvps %xmm0, %xmm1, %xmm2, %xmm0
@@ -1034,8 +1034,8 @@ define <4 x i1> @bitselect_v4i1_loop(<4 x i32> %a0, <4 x i32> %a1) {
 ; AVX512F-LABEL: bitselect_v4i1_loop:
 ; AVX512F:       # %bb.0: # %bb
 ; AVX512F-NEXT:    # kill: def $xmm1 killed $xmm1 def $zmm1
-; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 def $zmm0
 ; AVX512F-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm1, %k1
+; AVX512F-NEXT:    # kill: def $xmm0 killed $xmm0 def $zmm0
 ; AVX512F-NEXT:    vpcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to16}, %zmm1, %k2
 ; AVX512F-NEXT:    vptestnmd %zmm0, %zmm0, %k0 {%k2}
 ; AVX512F-NEXT:    vptestmd %zmm0, %zmm0, %k1 {%k1}

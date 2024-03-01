@@ -3,7 +3,7 @@
 
 ; RUN: lld-link %t.obj -noentry -nodefaultlib -out:%t.dll -dll
 ; RUN: llvm-objdump -d --section=".text" --no-leading-addr --no-show-raw-insn %t.dll | FileCheck %s
-; CHECK: nop{{$}}
+; CHECK: nopw
 
 ; RUN: lld-link -mllvm:-mcpu=znver1 -noentry -nodefaultlib %t.obj -out:%t.znver1.dll -dll
 ; RUN: llvm-objdump -d --section=".text" --no-leading-addr --no-show-raw-insn %t.znver1.dll | FileCheck --check-prefix=ZNVER1 %s

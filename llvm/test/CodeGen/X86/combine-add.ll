@@ -298,9 +298,9 @@ define <4 x i32> @combine_vec_add_uniquebits(<4 x i32> %a, <4 x i32> %b) {
 ; AVX2-LABEL: combine_vec_add_uniquebits:
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcastss {{.*#+}} xmm2 = [61680,61680,61680,61680]
+; AVX2-NEXT:    vbroadcastss {{.*#+}} xmm3 = [3855,3855,3855,3855]
 ; AVX2-NEXT:    vandps %xmm2, %xmm0, %xmm0
-; AVX2-NEXT:    vbroadcastss {{.*#+}} xmm2 = [3855,3855,3855,3855]
-; AVX2-NEXT:    vandps %xmm2, %xmm1, %xmm1
+; AVX2-NEXT:    vandps %xmm3, %xmm1, %xmm1
 ; AVX2-NEXT:    vorps %xmm1, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
   %1 = and <4 x i32> %a, <i32 61680, i32 61680, i32 61680, i32 61680>
