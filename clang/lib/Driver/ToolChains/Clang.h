@@ -157,6 +157,8 @@ public:
                                    const InputInfoList &Inputs,
                                    const llvm::opt::ArgList &TCArgs,
                                    const char *LinkingOutput) const override;
+  static void addCommonArgs(const llvm::opt::ArgList &TCArgs,
+                            llvm::opt::ArgStringList &CmdArgs);
 };
 
 /// Offload binary tool.
