@@ -18,12 +18,14 @@
 #include <errno.h>
 #include <io.h>
 #include <iomanip>
-#include <libloaderapi.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stringapiset.h>
 #include <sys/types.h>
+// clang-format off
 #include <windows.h>
+#include <libloaderapi.h>
+#include <stringapiset.h>
+// clang-format on
 
 // This must be included after windows.h.
 #include <psapi.h>
