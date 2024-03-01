@@ -580,7 +580,8 @@ static std::optional<StringRef> wmmaOpToIntrinsic(WMMAOp wmma,
   }
   if (elemSourceType.isBF16() && elemDestType.isF32()) {
     return ROCDL::wmma_f32_16x16x16_bf16::getOperationName();
-  } else if (elemSourceType.isF16() && elemDestType.isF16()) {
+  }
+  if (elemSourceType.isF16() && elemDestType.isF16()) {
     return ROCDL::wmma_f16_16x16x16_f16::getOperationName();
   } else if (elemSourceType.isBF16() && elemDestType.isBF16()) {
     return ROCDL::wmma_bf16_16x16x16_bf16::getOperationName();
