@@ -6826,10 +6826,9 @@ CGObjCNonFragileABIMac::ObjCIvarOffsetVariable(const ObjCInterfaceDecl *ID,
   Name += Ivar->getName();
   llvm::GlobalVariable *IvarOffsetGV = CGM.getModule().getGlobalVariable(Name);
   if (!IvarOffsetGV) {
-    IvarOffsetGV =
-        new llvm::GlobalVariable(CGM.getModule(), ObjCTypes.IvarOffsetVarTy,
-                                 false, llvm::GlobalValue::ExternalLinkage,
-                                 nullptr, Name.str());
+    IvarOffsetGV = new llvm::GlobalVariable(
+        CGM.getModule(), ObjCTypes.IvarOffsetVarTy, false,
+        llvm::GlobalValue::ExternalLinkage, nullptr, Name.str());
     if (CGM.getTriple().isOSBinFormatCOFF()) {
       bool IsPrivateOrPackage =
           Ivar->getAccessControl() == ObjCIvarDecl::Private ||
@@ -6838,11 +6837,16 @@ CGObjCNonFragileABIMac::ObjCIvarOffsetVariable(const ObjCInterfaceDecl *ID,
       const ObjCInterfaceDecl *ContainingID = Ivar->getContainingInterface();
 
       if (ContainingID->hasAttr<DLLImportAttr>())
-        IvarOffsetGV
-            ->setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
+        IvarOffsetGV->setDLLStorageClass(
+            llvm::GlobalValue::DLLImportStorageClass);
       else if (ContainingID->hasAttr<DLLExportAttr>() && !IsPrivateOrPackage)
-        IvarOffsetGV
-            ->setDLLStorageClass(llvm::GlobalValue::DLLExportStorageClass);
+        IvarOffsetGV->setDLLStorageClass(
+            llvm::GlobalValue::DLLExportStorageClass);
+
+      if (IsPrivateOrPackage || ID->getVisibility() == HiddenVisibility)
+        IvarOffsetGV->setVisibility(llvm::GlobalValue::HiddenVisibility);
+      else
+        IvarOffsetGV->setVisibility(llvm::GlobalValue::DefaultVisibility);
     }
   }
   return IvarOffsetGV;
