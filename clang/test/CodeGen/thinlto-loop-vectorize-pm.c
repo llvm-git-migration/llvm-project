@@ -27,7 +27,7 @@
 // O2-InterLeave-COUNT-2: store <2 x double>
 // O2-InterLeave: = !{!"llvm.loop.isvectorized", i32 1}
 // O2-NoInterLeave-COUNT-1: store <2 x double>
-// O2-NoInterLeave-NOT: store <2 x double>
+// O2-NoInterLeave: store <2 x double>
 // O2-NoInterLeave: = !{!"llvm.loop.isvectorized", i32 1}
 // O0-InterLeave-NOT: = !{!"llvm.loop.isvectorized", i32 1}
 

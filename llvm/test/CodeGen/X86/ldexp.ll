@@ -12,8 +12,8 @@ define float @ldexp_f32(i8 zeroext %x) {
 ; WIN32:       # %bb.0:
 ; WIN32-NEXT:    pushl %eax
 ; WIN32-NEXT:    movzbl {{[0-9]+}}(%esp), %ecx
-; WIN32-NEXT:    cmpl $381, %ecx # imm = 0x17D
 ; WIN32-NEXT:    movl %ecx, %eax
+; WIN32-NEXT:    cmpl $381, %ecx # imm = 0x17D
 ; WIN32-NEXT:    jl LBB0_2
 ; WIN32-NEXT:  # %bb.1:
 ; WIN32-NEXT:    movl $381, %eax # imm = 0x17D
@@ -33,15 +33,15 @@ define float @ldexp_f32(i8 zeroext %x) {
 ; WIN32-NEXT:    fldz
 ; WIN32-NEXT:  LBB0_6:
 ; WIN32-NEXT:    fstp %st(0)
-; WIN32-NEXT:    cmpl $-329, %ecx # imm = 0xFEB7
 ; WIN32-NEXT:    movl %ecx, %edx
+; WIN32-NEXT:    cmpl $-329, %ecx # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB0_8
 ; WIN32-NEXT:  # %bb.7:
 ; WIN32-NEXT:    movl $-330, %edx # imm = 0xFEB6
 ; WIN32-NEXT:  LBB0_8:
-; WIN32-NEXT:    cmpl $-228, %ecx
 ; WIN32-NEXT:    fldz
 ; WIN32-NEXT:    flds __real@0c800000
+; WIN32-NEXT:    cmpl $-228, %ecx
 ; WIN32-NEXT:    jb LBB0_9
 ; WIN32-NEXT:  # %bb.10:
 ; WIN32-NEXT:    fstp %st(1)
@@ -134,8 +134,8 @@ define <2 x float> @ldexp_v2f32(<2 x float> %val, <2 x i32> %exp) {
 ; WIN32-NEXT:    subl $8, %esp
 ; WIN32-NEXT:    flds {{[0-9]+}}(%esp)
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %eax
-; WIN32-NEXT:    cmpl $-329, %eax # imm = 0xFEB7
 ; WIN32-NEXT:    movl %eax, %edx
+; WIN32-NEXT:    cmpl $-329, %eax # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB2_2
 ; WIN32-NEXT:  # %bb.1:
 ; WIN32-NEXT:    movl $-330, %edx # imm = 0xFEB6
@@ -166,8 +166,8 @@ define <2 x float> @ldexp_v2f32(<2 x float> %val, <2 x i32> %exp) {
 ; WIN32-NEXT:    fld %st(1)
 ; WIN32-NEXT:    movl %eax, %edx
 ; WIN32-NEXT:  LBB2_8:
-; WIN32-NEXT:    cmpl $381, %eax # imm = 0x17D
 ; WIN32-NEXT:    movl %eax, %esi
+; WIN32-NEXT:    cmpl $381, %eax # imm = 0x17D
 ; WIN32-NEXT:    jl LBB2_10
 ; WIN32-NEXT:  # %bb.9:
 ; WIN32-NEXT:    movl $381, %esi # imm = 0x17D
@@ -187,15 +187,15 @@ define <2 x float> @ldexp_v2f32(<2 x float> %val, <2 x i32> %exp) {
 ; WIN32-NEXT:    addl $-254, %esi
 ; WIN32-NEXT:    movl %esi, %ecx
 ; WIN32-NEXT:  LBB2_13:
-; WIN32-NEXT:    cmpl $127, %eax
 ; WIN32-NEXT:    flds {{[0-9]+}}(%esp)
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %esi
+; WIN32-NEXT:    cmpl $127, %eax
 ; WIN32-NEXT:    jg LBB2_15
 ; WIN32-NEXT:  # %bb.14:
 ; WIN32-NEXT:    movl %edx, %ecx
 ; WIN32-NEXT:  LBB2_15:
-; WIN32-NEXT:    cmpl $381, %esi # imm = 0x17D
 ; WIN32-NEXT:    movl %esi, %edx
+; WIN32-NEXT:    cmpl $381, %esi # imm = 0x17D
 ; WIN32-NEXT:    jl LBB2_17
 ; WIN32-NEXT:  # %bb.16:
 ; WIN32-NEXT:    movl $381, %edx # imm = 0x17D
@@ -216,8 +216,8 @@ define <2 x float> @ldexp_v2f32(<2 x float> %val, <2 x i32> %exp) {
 ; WIN32-NEXT:    fldz
 ; WIN32-NEXT:  LBB2_21:
 ; WIN32-NEXT:    fstp %st(0)
-; WIN32-NEXT:    cmpl $-329, %esi # imm = 0xFEB7
 ; WIN32-NEXT:    movl %esi, %edi
+; WIN32-NEXT:    cmpl $-329, %esi # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB2_23
 ; WIN32-NEXT:  # %bb.22:
 ; WIN32-NEXT:    movl $-330, %edi # imm = 0xFEB6
@@ -342,8 +342,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fxch %st(1)
 ; WIN32-NEXT:  LBB3_2:
 ; WIN32-NEXT:    fstp %st(1)
-; WIN32-NEXT:    cmpl $-329, %ecx # imm = 0xFEB7
 ; WIN32-NEXT:    movl %ecx, %esi
+; WIN32-NEXT:    cmpl $-329, %ecx # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB3_4
 ; WIN32-NEXT:  # %bb.3:
 ; WIN32-NEXT:    movl $-330, %esi # imm = 0xFEB6
@@ -400,8 +400,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fstp %st(1)
 ; WIN32-NEXT:    fxch %st(1)
 ; WIN32-NEXT:    fstps {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Folded Spill
-; WIN32-NEXT:    cmpl $-329, %edi # imm = 0xFEB7
 ; WIN32-NEXT:    movl %edi, %eax
+; WIN32-NEXT:    cmpl $-329, %edi # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB3_16
 ; WIN32-NEXT:  # %bb.15:
 ; WIN32-NEXT:    movl $-330, %eax # imm = 0xFEB6
@@ -440,8 +440,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fxch %st(3)
 ; WIN32-NEXT:  LBB3_23:
 ; WIN32-NEXT:    fstp %st(3)
-; WIN32-NEXT:    cmpl $381, %edi # imm = 0x17D
 ; WIN32-NEXT:    movl %edi, %eax
+; WIN32-NEXT:    cmpl $381, %edi # imm = 0x17D
 ; WIN32-NEXT:    jge LBB3_24
 ; WIN32-NEXT:  # %bb.25:
 ; WIN32-NEXT:    cmpl $255, %edi
@@ -452,15 +452,15 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:  LBB3_28:
 ; WIN32-NEXT:    movl %ecx, %esi
 ; WIN32-NEXT:  LBB3_29:
-; WIN32-NEXT:    cmpl $381, %ecx # imm = 0x17D
 ; WIN32-NEXT:    movl %ecx, %eax
+; WIN32-NEXT:    cmpl $381, %ecx # imm = 0x17D
 ; WIN32-NEXT:    jl LBB3_31
 ; WIN32-NEXT:  # %bb.30:
 ; WIN32-NEXT:    movl $381, %eax # imm = 0x17D
 ; WIN32-NEXT:  LBB3_31:
-; WIN32-NEXT:    cmpl $255, %ecx
 ; WIN32-NEXT:    flds {{[0-9]+}}(%esp)
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %ebp
+; WIN32-NEXT:    cmpl $255, %ecx
 ; WIN32-NEXT:    jb LBB3_33
 ; WIN32-NEXT:  # %bb.32:
 ; WIN32-NEXT:    addl $-254, %eax
@@ -469,8 +469,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fxch %st(3)
 ; WIN32-NEXT:    fstps {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Folded Spill
 ; WIN32-NEXT:    movl %esi, {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Spill
-; WIN32-NEXT:    cmpl $381, %ebp # imm = 0x17D
 ; WIN32-NEXT:    movl %ebp, %eax
+; WIN32-NEXT:    cmpl $381, %ebp # imm = 0x17D
 ; WIN32-NEXT:    jl LBB3_35
 ; WIN32-NEXT:  # %bb.34:
 ; WIN32-NEXT:    movl $381, %eax # imm = 0x17D
@@ -500,8 +500,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    addl $-254, %eax
 ; WIN32-NEXT:    movl %eax, %edi
 ; WIN32-NEXT:  LBB3_38:
-; WIN32-NEXT:    cmpl $-329, %ebp # imm = 0xFEB7
 ; WIN32-NEXT:    movl %ebp, %ecx
+; WIN32-NEXT:    cmpl $-329, %ebp # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB3_40
 ; WIN32-NEXT:  # %bb.39:
 ; WIN32-NEXT:    movl $-330, %ecx # imm = 0xFEB6
@@ -533,15 +533,15 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fxch %st(4)
 ; WIN32-NEXT:  LBB3_46:
 ; WIN32-NEXT:    fstp %st(4)
-; WIN32-NEXT:    cmpl $127, %ebp
 ; WIN32-NEXT:    flds {{[0-9]+}}(%esp)
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %esi
+; WIN32-NEXT:    cmpl $127, %ebp
 ; WIN32-NEXT:    jg LBB3_48
 ; WIN32-NEXT:  # %bb.47:
 ; WIN32-NEXT:    movl %ecx, %edi
 ; WIN32-NEXT:  LBB3_48:
-; WIN32-NEXT:    cmpl $381, %esi # imm = 0x17D
 ; WIN32-NEXT:    movl %esi, %ecx
+; WIN32-NEXT:    cmpl $381, %esi # imm = 0x17D
 ; WIN32-NEXT:    jl LBB3_50
 ; WIN32-NEXT:  # %bb.49:
 ; WIN32-NEXT:    movl $381, %ecx # imm = 0x17D
@@ -562,8 +562,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:    fldz
 ; WIN32-NEXT:  LBB3_54:
 ; WIN32-NEXT:    fstp %st(0)
-; WIN32-NEXT:    cmpl $-329, %esi # imm = 0xFEB7
 ; WIN32-NEXT:    movl %esi, %eax
+; WIN32-NEXT:    cmpl $-329, %esi # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB3_56
 ; WIN32-NEXT:  # %bb.55:
 ; WIN32-NEXT:    movl $-330, %eax # imm = 0xFEB6
@@ -611,8 +611,8 @@ define <4 x float> @ldexp_v4f32(<4 x float> %val, <4 x i32> %exp) {
 ; WIN32-NEXT:  # %bb.66:
 ; WIN32-NEXT:    movl {{[-0-9]+}}(%e{{[sb]}}p), %edx # 4-byte Reload
 ; WIN32-NEXT:  LBB3_67:
-; WIN32-NEXT:    cmpl $127, %ebp
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; WIN32-NEXT:    cmpl $127, %ebp
 ; WIN32-NEXT:    jg LBB3_69
 ; WIN32-NEXT:  # %bb.68:
 ; WIN32-NEXT:    fstp %st(2)
@@ -834,8 +834,8 @@ define half @ldexp_f16(half %arg0, i32 %arg1) {
 ; WIN32-NEXT:    movl {{[0-9]+}}(%esp), %edi
 ; WIN32-NEXT:    movzwl {{[0-9]+}}(%esp), %eax
 ; WIN32-NEXT:    movl %eax, (%esp)
-; WIN32-NEXT:    cmpl $381, %edi # imm = 0x17D
 ; WIN32-NEXT:    movl %edi, %esi
+; WIN32-NEXT:    cmpl $381, %edi # imm = 0x17D
 ; WIN32-NEXT:    jl LBB6_2
 ; WIN32-NEXT:  # %bb.1:
 ; WIN32-NEXT:    movl $381, %esi # imm = 0x17D
@@ -858,8 +858,8 @@ define half @ldexp_f16(half %arg0, i32 %arg1) {
 ; WIN32-NEXT:    fldz
 ; WIN32-NEXT:  LBB6_6:
 ; WIN32-NEXT:    fstp %st(0)
-; WIN32-NEXT:    cmpl $-329, %edi # imm = 0xFEB7
 ; WIN32-NEXT:    movl %edi, %eax
+; WIN32-NEXT:    cmpl $-329, %edi # imm = 0xFEB7
 ; WIN32-NEXT:    jge LBB6_8
 ; WIN32-NEXT:  # %bb.7:
 ; WIN32-NEXT:    movl $-330, %eax # imm = 0xFEB6

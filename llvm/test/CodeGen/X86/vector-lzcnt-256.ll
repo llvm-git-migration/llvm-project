@@ -731,14 +731,14 @@ define <16 x i16> @testv16i16(<16 x i16> %in) nounwind {
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX2-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX2-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX2-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX2-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm3, %ymm3
+; AVX2-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX2-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
+; AVX2-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX2-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX2-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX2-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX2-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX2-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX2-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX2-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX2-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX2-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -750,14 +750,14 @@ define <16 x i16> @testv16i16(<16 x i16> %in) nounwind {
 ; AVX512VL:       # %bb.0:
 ; AVX512VL-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX512VL-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX512VL-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX512VL-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX512VL-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm3, %ymm3
+; AVX512VL-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX512VL-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm2, %ymm2
+; AVX512VL-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX512VL-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX512VL-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX512VL-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX512VL-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX512VL-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX512VL-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX512VL-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX512VL-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX512VL-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -769,14 +769,14 @@ define <16 x i16> @testv16i16(<16 x i16> %in) nounwind {
 ; AVX512VLBWDQ:       # %bb.0:
 ; AVX512VLBWDQ-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX512VLBWDQ-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX512VLBWDQ-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX512VLBWDQ-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX512VLBWDQ-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm3, %ymm3
+; AVX512VLBWDQ-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX512VLBWDQ-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm2, %ymm2
+; AVX512VLBWDQ-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX512VLBWDQ-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX512VLBWDQ-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX512VLBWDQ-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX512VLBWDQ-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX512VLBWDQ-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX512VLBWDQ-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX512VLBWDQ-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX512VLBWDQ-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX512VLBWDQ-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -796,14 +796,14 @@ define <16 x i16> @testv16i16(<16 x i16> %in) nounwind {
 ; X86-AVX:       # %bb.0:
 ; X86-AVX-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; X86-AVX-NEXT:    # ymm1 = mem[0,1,0,1]
-; X86-AVX-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; X86-AVX-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; X86-AVX-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}, %ymm3, %ymm3
+; X86-AVX-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; X86-AVX-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}, %ymm2, %ymm2
+; X86-AVX-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; X86-AVX-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; X86-AVX-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; X86-AVX-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; X86-AVX-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; X86-AVX-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; X86-AVX-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; X86-AVX-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; X86-AVX-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; X86-AVX-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -852,14 +852,14 @@ define <16 x i16> @testv16i16u(<16 x i16> %in) nounwind {
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX2-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX2-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX2-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX2-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm3, %ymm3
+; AVX2-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX2-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm2, %ymm2
+; AVX2-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX2-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX2-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX2-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX2-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX2-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX2-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX2-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX2-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX2-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX2-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -871,14 +871,14 @@ define <16 x i16> @testv16i16u(<16 x i16> %in) nounwind {
 ; AVX512VL:       # %bb.0:
 ; AVX512VL-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX512VL-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX512VL-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX512VL-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX512VL-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm3, %ymm3
+; AVX512VL-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX512VL-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm2, %ymm2
+; AVX512VL-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX512VL-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX512VL-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX512VL-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX512VL-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX512VL-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX512VL-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX512VL-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX512VL-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX512VL-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX512VL-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -890,14 +890,14 @@ define <16 x i16> @testv16i16u(<16 x i16> %in) nounwind {
 ; AVX512VLBWDQ:       # %bb.0:
 ; AVX512VLBWDQ-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; AVX512VLBWDQ-NEXT:    # ymm1 = mem[0,1,0,1]
-; AVX512VLBWDQ-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; AVX512VLBWDQ-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; AVX512VLBWDQ-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm3, %ymm3
+; AVX512VLBWDQ-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; AVX512VLBWDQ-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to8}, %ymm2, %ymm2
+; AVX512VLBWDQ-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; AVX512VLBWDQ-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; AVX512VLBWDQ-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; AVX512VLBWDQ-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; AVX512VLBWDQ-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; AVX512VLBWDQ-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; AVX512VLBWDQ-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; AVX512VLBWDQ-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; AVX512VLBWDQ-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; AVX512VLBWDQ-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; AVX512VLBWDQ-NEXT:    vpand %ymm0, %ymm1, %ymm0
@@ -917,14 +917,14 @@ define <16 x i16> @testv16i16u(<16 x i16> %in) nounwind {
 ; X86-AVX:       # %bb.0:
 ; X86-AVX-NEXT:    vbroadcasti128 {{.*#+}} ymm1 = [4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,4,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0]
 ; X86-AVX-NEXT:    # ymm1 = mem[0,1,0,1]
-; X86-AVX-NEXT:    vpshufb %ymm0, %ymm1, %ymm2
-; X86-AVX-NEXT:    vpsrlw $4, %ymm0, %ymm3
-; X86-AVX-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}, %ymm3, %ymm3
+; X86-AVX-NEXT:    vpsrlw $4, %ymm0, %ymm2
+; X86-AVX-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}, %ymm2, %ymm2
+; X86-AVX-NEXT:    vpshufb %ymm0, %ymm1, %ymm3
 ; X86-AVX-NEXT:    vpxor %xmm4, %xmm4, %xmm4
-; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm3, %ymm5
-; X86-AVX-NEXT:    vpand %ymm5, %ymm2, %ymm2
-; X86-AVX-NEXT:    vpshufb %ymm3, %ymm1, %ymm1
-; X86-AVX-NEXT:    vpaddb %ymm1, %ymm2, %ymm1
+; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm2, %ymm5
+; X86-AVX-NEXT:    vpand %ymm5, %ymm3, %ymm3
+; X86-AVX-NEXT:    vpshufb %ymm2, %ymm1, %ymm1
+; X86-AVX-NEXT:    vpaddb %ymm1, %ymm3, %ymm1
 ; X86-AVX-NEXT:    vpcmpeqb %ymm4, %ymm0, %ymm0
 ; X86-AVX-NEXT:    vpsrlw $8, %ymm0, %ymm0
 ; X86-AVX-NEXT:    vpand %ymm0, %ymm1, %ymm0

@@ -31,9 +31,9 @@ define <8 x i64> @insert_subvector_512(i32 %x0, i32 %x1, <8 x i64> %v) nounwind 
 ; X86_AVX256-LABEL: insert_subvector_512:
 ; X86_AVX256:       # %bb.0:
 ; X86_AVX256-NEXT:    vbroadcastss {{[0-9]+}}(%esp), %ymm2
+; X86_AVX256-NEXT:    vbroadcastss {{[0-9]+}}(%esp), %ymm3
 ; X86_AVX256-NEXT:    vblendps {{.*#+}} ymm0 = ymm0[0,1,2,3],ymm2[4],ymm0[5,6,7]
-; X86_AVX256-NEXT:    vbroadcastss {{[0-9]+}}(%esp), %ymm2
-; X86_AVX256-NEXT:    vblendps {{.*#+}} ymm0 = ymm0[0,1,2,3,4],ymm2[5],ymm0[6,7]
+; X86_AVX256-NEXT:    vblendps {{.*#+}} ymm0 = ymm0[0,1,2,3,4],ymm3[5],ymm0[6,7]
 ; X86_AVX256-NEXT:    retl
 ;
 ; X64_AVX256-LABEL: insert_subvector_512:

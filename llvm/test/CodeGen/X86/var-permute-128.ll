@@ -907,10 +907,11 @@ define <16 x i8> @var_shuffle_v16i8_from_v32i8_v16i8(<32 x i8> %v, <16 x i8> %in
 ; SSE41-LABEL: var_shuffle_v16i8_from_v32i8_v16i8:
 ; SSE41:       # %bb.0:
 ; SSE41-NEXT:    subq $392, %rsp # imm = 0x188
-; SSE41-NEXT:    movd %xmm2, %eax
+; SSE41-NEXT:    movd %xmm2, %ecx
+; SSE41-NEXT:    pextrb $1, %xmm2, %eax
 ; SSE41-NEXT:    movaps %xmm1, {{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm0, {{[0-9]+}}(%rsp)
-; SSE41-NEXT:    andl $31, %eax
+; SSE41-NEXT:    andl $31, %ecx
 ; SSE41-NEXT:    movaps %xmm1, {{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm0, {{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm1, {{[0-9]+}}(%rsp)
@@ -941,9 +942,8 @@ define <16 x i8> @var_shuffle_v16i8_from_v32i8_v16i8(<32 x i8> %v, <16 x i8> %in
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm1, -{{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
-; SSE41-NEXT:    movzbl 352(%rsp,%rax), %eax
-; SSE41-NEXT:    movd %eax, %xmm0
-; SSE41-NEXT:    pextrb $1, %xmm2, %eax
+; SSE41-NEXT:    movzbl 352(%rsp,%rcx), %ecx
+; SSE41-NEXT:    movd %ecx, %xmm0
 ; SSE41-NEXT:    andl $31, %eax
 ; SSE41-NEXT:    pinsrb $1, 320(%rsp,%rax), %xmm0
 ; SSE41-NEXT:    pextrb $2, %xmm2, %eax
@@ -1002,9 +1002,9 @@ define <16 x i8> @var_shuffle_v16i8_from_v32i8_v16i8(<32 x i8> %v, <16 x i8> %in
 ; AVX1:       # %bb.0:
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm2
 ; AVX1-NEXT:    vpshufb %xmm1, %xmm2, %xmm2
+; AVX1-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; AVX1-NEXT:    vpshufb %xmm1, %xmm0, %xmm0
-; AVX1-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vpblendvb %xmm1, %xmm2, %xmm0, %xmm0
+; AVX1-NEXT:    vpblendvb %xmm3, %xmm2, %xmm0, %xmm0
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -1012,9 +1012,9 @@ define <16 x i8> @var_shuffle_v16i8_from_v32i8_v16i8(<32 x i8> %v, <16 x i8> %in
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vextracti128 $1, %ymm0, %xmm2
 ; AVX2-NEXT:    vpshufb %xmm1, %xmm2, %xmm2
+; AVX2-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; AVX2-NEXT:    vpshufb %xmm1, %xmm0, %xmm0
-; AVX2-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX2-NEXT:    vpblendvb %xmm1, %xmm2, %xmm0, %xmm0
+; AVX2-NEXT:    vpblendvb %xmm3, %xmm2, %xmm0, %xmm0
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
 ;
@@ -1022,9 +1022,9 @@ define <16 x i8> @var_shuffle_v16i8_from_v32i8_v16i8(<32 x i8> %v, <16 x i8> %in
 ; AVX512:       # %bb.0:
 ; AVX512-NEXT:    vextracti128 $1, %ymm0, %xmm2
 ; AVX512-NEXT:    vpshufb %xmm1, %xmm2, %xmm2
+; AVX512-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; AVX512-NEXT:    vpshufb %xmm1, %xmm0, %xmm0
-; AVX512-NEXT:    vpcmpgtb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX512-NEXT:    vpblendvb %xmm1, %xmm2, %xmm0, %xmm0
+; AVX512-NEXT:    vpblendvb %xmm3, %xmm2, %xmm0, %xmm0
 ; AVX512-NEXT:    vzeroupper
 ; AVX512-NEXT:    retq
 ;
@@ -1143,8 +1143,8 @@ define void @indices_convert() {
 ; SSE41-NEXT:    extractps $2, %xmm0, %eax
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
-; SSE41-NEXT:    andl $3, %eax
 ; SSE41-NEXT:    extractps $3, %xmm0, %ecx
+; SSE41-NEXT:    andl $3, %eax
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    movaps %xmm0, -{{[0-9]+}}(%rsp)
 ; SSE41-NEXT:    andl $3, %ecx
