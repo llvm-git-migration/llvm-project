@@ -1747,4 +1747,5 @@ def ARM : Target {
   let AssemblyParsers = [ARMAsmParser];
   let AssemblyParserVariants = [ARMAsmParserVariant];
   let AllowRegisterRenaming = 1;
+  let PreferSmallerInstructions= true;
 }
