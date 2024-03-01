@@ -5263,9 +5263,10 @@ GetDynamicArrayInfo(TypeSystemClang &ast, SymbolFile *sym_file,
   return std::nullopt;
 }
 
-uint32_t TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
-                                         bool omit_empty_base_classes,
-                                         const ExecutionContext *exe_ctx) {
+llvm::Expected<uint32_t>
+TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
+                                bool omit_empty_base_classes,
+                                const ExecutionContext *exe_ctx) {
   if (!type)
     return 0;
 
@@ -5362,8 +5363,10 @@ uint32_t TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
 
     uint32_t num_pointee_children = 0;
     if (pointee_clang_type.IsAggregateType())
-      num_pointee_children =
-          pointee_clang_type.GetNumChildren(omit_empty_base_classes, exe_ctx);
+      num_pointee_children = ValueOrLogV(
+          GetLog(LLDBLog::Types),
+          pointee_clang_type.GetNumChildren(omit_empty_base_classes, exe_ctx),
+          0u);
     // If this type points to a simple type, then it has 1 child
     if (num_pointee_children == 0)
       num_children = 1;
@@ -5398,8 +5401,10 @@ uint32_t TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
     CompilerType pointee_clang_type(GetType(pointee_type));
     uint32_t num_pointee_children = 0;
     if (pointee_clang_type.IsAggregateType())
-      num_pointee_children =
-          pointee_clang_type.GetNumChildren(omit_empty_base_classes, exe_ctx);
+      num_pointee_children = ValueOrLogV(
+          GetLog(LLDBLog::Types),
+          pointee_clang_type.GetNumChildren(omit_empty_base_classes, exe_ctx),
+          0u);
     if (num_pointee_children == 0) {
       // We have a pointer to a pointee type that claims it has no children. We
       // will want to look at
@@ -6109,7 +6114,9 @@ CompilerType TypeSystemClang::GetChildCompilerTypeAtIndex(
   language_flags = 0;
 
   const bool idx_is_valid =
-      idx < GetNumChildren(type, omit_empty_base_classes, exe_ctx);
+      idx < ValueOrLogV(GetLog(LLDBLog::Types),
+                        GetNumChildren(type, omit_empty_base_classes, exe_ctx),
+                        0u);
   int32_t bit_offset;
   switch (parent_type_class) {
   case clang::Type::Builtin:
@@ -6265,8 +6272,10 @@ CompilerType TypeSystemClang::GetChildCompilerTypeAtIndex(
               CompilerType base_class_clang_type =
                   GetType(getASTContext().getObjCInterfaceType(
                       superclass_interface_decl));
-              if (base_class_clang_type.GetNumChildren(omit_empty_base_classes,
-                                                       exe_ctx) > 0) {
+              if (ValueOrLogV(GetLog(LLDBLog::Types),
+                              base_class_clang_type.GetNumChildren(
+                                  omit_empty_base_classes, exe_ctx),
+                              0u) > 0) {
                 if (idx == 0) {
                   clang::QualType ivar_qual_type(
                       getASTContext().getObjCInterfaceType(

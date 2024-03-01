@@ -74,7 +74,7 @@ public:
 
   ~BlockPointerSyntheticFrontEnd() override = default;
 
-  uint32_t CalculateNumChildren() override {
+  llvm::Expected<uint32_t> CalculateNumChildren() override {
     const bool omit_empty_base_classes = false;
     return m_block_struct_type.GetNumChildren(omit_empty_base_classes, nullptr);
   }
@@ -84,7 +84,8 @@ public:
       return lldb::ValueObjectSP();
     }
 
-    if (idx >= CalculateNumChildren()) {
+    if (idx >= ValueOrLogV(GetLog(LLDBLog::DataFormatters),
+                           CalculateNumChildren(), 0u)) {
       return lldb::ValueObjectSP();
     }
 

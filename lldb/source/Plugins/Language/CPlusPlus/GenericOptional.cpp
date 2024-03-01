@@ -18,8 +18,10 @@ using namespace lldb_private;
 
 bool lldb_private::formatters::GenericOptionalSummaryProvider(
     ValueObject &valobj, Stream &stream, const TypeSummaryOptions &options) {
-  stream.Printf(" Has Value=%s ",
-                valobj.GetNumChildren() == 0 ? "false" : "true");
+  stream.Printf(" Has Value=%s ", ValueOrLogV(GetLog(LLDBLog::DataFormatters),
+                                              valobj.GetNumChildren(), 0u) == 0
+                                      ? "false"
+                                      : "true");
 
   return true;
 }
@@ -41,7 +43,9 @@ public:
   }
 
   bool MightHaveChildren() override { return true; }
-  uint32_t CalculateNumChildren() override { return m_has_value ? 1U : 0U; }
+  llvm::Expected<uint32_t> CalculateNumChildren() override {
+    return m_has_value ? 1U : 0U;
+  }
 
   ValueObjectSP GetChildAtIndex(uint32_t idx) override;
   lldb::ChildCacheState Update() override;

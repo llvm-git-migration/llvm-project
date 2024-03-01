@@ -373,4 +373,16 @@ template <typename Cat> Log *GetLog(Cat mask) {
       ::llvm::consumeError(::std::move(error_private));                        \
   } while (0)
 
+/// Like \c llvm::expectedToStdOptional(value_or_err).value_or(value) but
+/// logs any error to channel.
+template <typename T>
+T ValueOrLogV(lldb_private::Log *log, llvm::Expected<T> &&value_or_err,
+              T value) {
+  if (value_or_err)
+    return *value_or_err;
+  if (log && log->GetVerbose())
+    LLDB_LOG_ERROR(log, value_or_err.takeError(), "{0}");
+  return value;
+}
+
 #endif // LLDB_UTILITY_LOG_H
