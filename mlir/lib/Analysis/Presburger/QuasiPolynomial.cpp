@@ -19,7 +19,7 @@ QuasiPolynomial::QuasiPolynomial(
     std::vector<std::vector<SmallVector<Fraction>>> aff)
     : PresburgerSpace(/*numDomain=*/numVars, /*numRange=*/1, /*numSymbols=*/0,
                       /*numLocals=*/0),
-      coefficients(coeffs), affine(aff) {
+      coefficients(std::move(coeffs)), affine(std::move(aff)) {
 #ifndef NDEBUG
   // For each term which involves at least one affine function,
   for (const std::vector<SmallVector<Fraction>> &term : affine) {
@@ -40,7 +40,7 @@ QuasiPolynomial::QuasiPolynomial(
 QuasiPolynomial::QuasiPolynomial(unsigned numVars, Fraction constant)
     : PresburgerSpace(/*numDomain=*/numVars, /*numRange=*/1, /*numSymbols=*/0,
                       /*numLocals=*/0),
-      coefficients({constant}), affine({{}}) {}
+      coefficients({std::move(constant)}), affine({{}}) {}
 
 QuasiPolynomial QuasiPolynomial::operator+(const QuasiPolynomial &x) const {
   assert(getNumInputs() == x.getNumInputs() &&
@@ -89,7 +89,7 @@ QuasiPolynomial QuasiPolynomial::operator*(const QuasiPolynomial &x) const {
   return QuasiPolynomial(getNumInputs(), coeffs, aff);
 }
 
-QuasiPolynomial QuasiPolynomial::operator/(const Fraction x) const {
+QuasiPolynomial QuasiPolynomial::operator/(const Fraction &x) const {
   assert(x != 0 && "division by zero!");
   QuasiPolynomial qp(*this);
   for (Fraction &coeff : qp.coefficients)
@@ -131,7 +131,7 @@ QuasiPolynomial QuasiPolynomial::simplify() {
     newCoeff = coefficients[i];
     for (ArrayRef<Fraction> term : affine[i]) {
       bool allCoeffsZero = llvm::all_of(
-          term.slice(0, numParam), [](const Fraction c) { return c == 0; });
+          term.slice(0, numParam), [](const Fraction &c) { return c == 0; });
       if (allCoeffsZero)
         newCoeff *= term[numParam];
       else
