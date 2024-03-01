@@ -48,7 +48,8 @@ namespace std {
     constexpr variant& operator=(const variant&);
     constexpr variant& operator=(variant&&) noexcept(see below);
 
-    template <class T> variant& operator=(T&&) noexcept(see below);
+    template <class T>
+    constexpr variant& operator=(T&&) noexcept(see below); // constexpr since c++20
 
     // 20.7.2.4, modifiers
     template <class T, class... Args>
@@ -688,7 +689,7 @@ union _LIBCPP_TEMPLATE_VIS __union<_DestructibleTrait, _Index> {};
       __union(const __union&) = default;                                                                               \
       __union(__union&&)      = default;                                                                               \
                                                                                                                        \
-      destructor                                                                                                       \
+      _LIBCPP_HIDE_FROM_ABI destructor                                                                                 \
                                                                                                                        \
           __union&                                                                                                     \
           operator=(const __union&) = default;                                                                         \
@@ -758,10 +759,10 @@ class _LIBCPP_TEMPLATE_VIS __dtor;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      __dtor(const __dtor&)                       = default;                                                           \
-      __dtor(__dtor&&)                            = default;                                                           \
-      destructor __dtor& operator=(const __dtor&) = default;                                                           \
-      __dtor& operator=(__dtor&&)                 = default;                                                           \
+      __dtor(const __dtor&)                                             = default;                                     \
+      __dtor(__dtor&&)                                                  = default;                                     \
+      _LIBCPP_HIDE_FROM_ABI destructor __dtor& operator=(const __dtor&) = default;                                     \
+      __dtor& operator=(__dtor&&)                                       = default;                                     \
                                                                                                                        \
     protected:                                                                                                         \
       inline _LIBCPP_HIDE_FROM_ABI destroy                                                                             \
@@ -801,7 +802,7 @@ public:
 
 protected:
   template <class _Rhs>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI static void __generic_construct(__ctor& __lhs, _Rhs&& __rhs) {
+  _LIBCPP_HIDE_FROM_ABI static _LIBCPP_CONSTEXPR_SINCE_CXX20 void __generic_construct(__ctor& __lhs, _Rhs&& __rhs) {
     __lhs.__destroy();
     if (!__rhs.valueless_by_exception()) {
       // We cannot directly construct at the target __alt because its direct enclosing union is not activated yet.
@@ -835,10 +836,10 @@ class _LIBCPP_TEMPLATE_VIS __move_constructor;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      __move_constructor(const __move_constructor&)            = default;                                              \
-      move_constructor ~__move_constructor()                   = default;                                              \
-      __move_constructor& operator=(const __move_constructor&) = default;                                              \
-      __move_constructor& operator=(__move_constructor&&)      = default;                                              \
+      __move_constructor(const __move_constructor&)                = default;                                          \
+      _LIBCPP_HIDE_FROM_ABI move_constructor ~__move_constructor() = default;                                          \
+      __move_constructor& operator=(const __move_constructor&)     = default;                                          \
+      __move_constructor& operator=(__move_constructor&&)          = default;                                          \
     }
 
 _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(
@@ -869,10 +870,10 @@ class _LIBCPP_TEMPLATE_VIS __copy_constructor;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      copy_constructor __copy_constructor(__copy_constructor&&) = default;                                             \
-      ~__copy_constructor()                                     = default;                                             \
-      __copy_constructor& operator=(const __copy_constructor&)  = default;                                             \
-      __copy_constructor& operator=(__copy_constructor&&)       = default;                                             \
+      _LIBCPP_HIDE_FROM_ABI copy_constructor __copy_constructor(__copy_constructor&&) = default;                       \
+      ~__copy_constructor()                                                           = default;                       \
+      __copy_constructor& operator=(const __copy_constructor&)                        = default;                       \
+      __copy_constructor& operator=(__copy_constructor&&)                             = default;                       \
     }
 
 _LIBCPP_VARIANT_COPY_CONSTRUCTOR(
@@ -897,7 +898,7 @@ public:
   using __base_type::operator=;
 
   template <size_t _Ip, class... _Args>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI auto& __emplace(_Args&&... __args) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 auto& __emplace(_Args&&... __args) {
     this->__destroy();
     std::__construct_at(std::addressof(this->__data), in_place_index<_Ip>, std::forward<_Args>(__args)...);
     this->__index = _Ip;
@@ -906,15 +907,15 @@ public:
 
 protected:
   template <size_t _Ip, class _Tp, class _Arg>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __assign_alt(__alt<_Ip, _Tp>& __a, _Arg&& __arg) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __assign_alt(__alt<_Ip, _Tp>& __a, _Arg&& __arg) {
     if (this->index() == _Ip) {
       __a.__value = std::forward<_Arg>(__arg);
     } else {
       struct {
-        _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void operator()(true_type) const {
+        _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void operator()(true_type) const {
           __this->__emplace<_Ip>(std::forward<_Arg>(__arg));
         }
-        _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void operator()(false_type) const {
+        _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void operator()(false_type) const {
           __this->__emplace<_Ip>(_Tp(std::forward<_Arg>(__arg)));
         }
         __assignment* __this;
@@ -925,7 +926,7 @@ protected:
   }
 
   template <class _That>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __generic_assign(_That&& __that) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __generic_assign(_That&& __that) {
     if (this->valueless_by_exception() && __that.valueless_by_exception()) {
       // do nothing.
     } else if (__that.valueless_by_exception()) {
@@ -959,7 +960,7 @@ class _LIBCPP_TEMPLATE_VIS __move_assignment;
       __move_assignment(__move_assignment&&)                 = default;                                                \
       ~__move_assignment()                                   = default;                                                \
       __move_assignment& operator=(const __move_assignment&) = default;                                                \
-      move_assignment                                                                                                  \
+      _LIBCPP_HIDE_FROM_ABI move_assignment                                                                            \
     }
 
 _LIBCPP_VARIANT_MOVE_ASSIGNMENT(
@@ -993,10 +994,10 @@ class _LIBCPP_TEMPLATE_VIS __copy_assignment;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      __copy_assignment(const __copy_assignment&)                       = default;                                     \
-      __copy_assignment(__copy_assignment&&)                            = default;                                     \
-      ~__copy_assignment()                                              = default;                                     \
-      copy_assignment __copy_assignment& operator=(__copy_assignment&&) = default;                                     \
+      __copy_assignment(const __copy_assignment&)                                             = default;               \
+      __copy_assignment(__copy_assignment&&)                                                  = default;               \
+      ~__copy_assignment()                                                                    = default;               \
+      _LIBCPP_HIDE_FROM_ABI copy_assignment __copy_assignment& operator=(__copy_assignment&&) = default;               \
     }
 
 _LIBCPP_VARIANT_COPY_ASSIGNMENT(
@@ -1027,11 +1028,11 @@ public:
   _LIBCPP_HIDE_FROM_ABI __impl& operator=(__impl&&)      = default;
 
   template <size_t _Ip, class _Arg>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __assign(_Arg&& __arg) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __assign(_Arg&& __arg) {
     this->__assign_alt(__access::__base::__get_alt<_Ip>(*this), std::forward<_Arg>(__arg));
   }
 
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 inline _LIBCPP_HIDE_FROM_ABI void __swap(__impl& __that) {
+  inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __swap(__impl& __that) {
     if (this->valueless_by_exception() && __that.valueless_by_exception()) {
       // do nothing.
     } else if (this->index() == __that.index()) {
@@ -1240,7 +1241,7 @@ public:
       _Args&&... __args) noexcept(is_nothrow_constructible_v<_Tp, initializer_list< _Up>&, _Args...>)
       : __impl_(in_place_index<_Ip>, __il, std::forward<_Args>(__args)...) {}
 
-  _LIBCPP_HIDE_FROM_ABI constexpr ~variant() = default;
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 ~variant() = default;
 
   _LIBCPP_HIDE_FROM_ABI constexpr variant& operator=(const variant&) = default;
   _LIBCPP_HIDE_FROM_ABI constexpr variant& operator=(variant&&)      = default;
@@ -1250,7 +1251,7 @@ public:
              class _Tp  = __variant_detail::__best_match_t<_Arg, _Types...>,
              size_t _Ip = __find_detail::__find_unambiguous_index_sfinae<_Tp, _Types...>::value,
              enable_if_t<is_assignable_v<_Tp&, _Arg> && is_constructible_v<_Tp, _Arg>, int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI variant&
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 variant&
   operator=(_Arg&& __arg) noexcept(is_nothrow_assignable_v<_Tp&, _Arg> && is_nothrow_constructible_v<_Tp, _Arg>) {
     __impl_.template __assign<_Ip>(std::forward<_Arg>(__arg));
     return *this;
@@ -1261,7 +1262,7 @@ public:
              enable_if_t<(_Ip < sizeof...(_Types)), int>         = 0,
              class _Tp                                           = variant_alternative_t<_Ip, variant<_Types...>>,
              enable_if_t<is_constructible_v<_Tp, _Args...>, int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI _Tp& emplace(_Args&&... __args) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _Tp& emplace(_Args&&... __args) {
     return __impl_.template __emplace<_Ip>(std::forward<_Args>(__args)...);
   }
 
@@ -1271,7 +1272,7 @@ public:
              enable_if_t<(_Ip < sizeof...(_Types)), int> = 0,
              class _Tp                                   = variant_alternative_t<_Ip, variant<_Types...>>,
              enable_if_t<is_constructible_v<_Tp, initializer_list<_Up>&, _Args...>, int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI _Tp& emplace(initializer_list<_Up> __il, _Args&&... __args) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _Tp& emplace(initializer_list<_Up> __il, _Args&&... __args) {
     return __impl_.template __emplace<_Ip>(__il, std::forward<_Args>(__args)...);
   }
 
@@ -1279,7 +1280,7 @@ public:
              class... _Args,
              size_t _Ip = __find_detail::__find_unambiguous_index_sfinae<_Tp, _Types...>::value,
              enable_if_t<is_constructible_v<_Tp, _Args...>, int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI _Tp& emplace(_Args&&... __args) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _Tp& emplace(_Args&&... __args) {
     return __impl_.template __emplace<_Ip>(std::forward<_Args>(__args)...);
   }
 
@@ -1288,7 +1289,7 @@ public:
              class... _Args,
              size_t _Ip = __find_detail::__find_unambiguous_index_sfinae<_Tp, _Types...>::value,
              enable_if_t<is_constructible_v<_Tp, initializer_list<_Up>&, _Args...>, int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI _Tp& emplace(initializer_list<_Up> __il, _Args&&... __args) {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _Tp& emplace(initializer_list<_Up> __il, _Args&&... __args) {
     return __impl_.template __emplace<_Ip>(__il, std::forward<_Args>(__args)...);
   }
 
@@ -1302,7 +1303,7 @@ public:
              enable_if_t< __all<(__dependent_type<is_move_constructible<_Types>, _Dummy>::value &&
                                  __dependent_type<is_swappable<_Types>, _Dummy>::value)...>::value,
                           int> = 0>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void swap(variant& __that) noexcept(
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void swap(variant& __that) noexcept(
       __all<(is_nothrow_move_constructible_v<_Types> && is_nothrow_swappable_v<_Types>)...>::value) {
     __impl_.__swap(__that.__impl_);
   }
