@@ -342,6 +342,10 @@ Record *CodeGenTarget::getAsmParser() const {
   return LI[AsmParserNum];
 }
 
+bool CodeGenTarget::getPreferSmallerInstructions() const {
+  return getAsmParser()->getValueAsBit("PreferSmallerInstructions");
+}
+
 /// getAsmParserVariant - Return the AssemblyParserVariant definition for
 /// this target.
 ///
