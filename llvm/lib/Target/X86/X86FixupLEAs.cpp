@@ -698,7 +698,7 @@ void FixupLEAPass::processInstructionForSlowLEA(MachineBasicBlock::iterator &I,
   const MachineOperand &Segment = MI.getOperand(1 + X86::AddrSegmentReg);
 
   if (Segment.getReg() != 0 || !Offset.isImm() ||
-      MBB.computeRegisterLiveness(TRI, X86::EFLAGS, I, 4) !=
+      MBB.computeRegisterLiveness(TRI, X86::EFLAGS, I) !=
           MachineBasicBlock::LQR_Dead)
     return;
   const Register DstR = Dst.getReg();
@@ -750,7 +750,7 @@ void FixupLEAPass::processInstrForSlow3OpLEA(MachineBasicBlock::iterator &I,
   const MachineOperand &Segment = MI.getOperand(1 + X86::AddrSegmentReg);
 
   if (!(TII->isThreeOperandsLEA(MI) || hasInefficientLEABaseReg(Base, Index)) ||
-      MBB.computeRegisterLiveness(TRI, X86::EFLAGS, I, 4) !=
+      MBB.computeRegisterLiveness(TRI, X86::EFLAGS, I) !=
           MachineBasicBlock::LQR_Dead ||
       Segment.getReg() != X86::NoRegister)
     return;
