@@ -41,6 +41,7 @@
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Operator.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/User.h"
 #include "llvm/Support/Casting.h"
@@ -1111,6 +1112,12 @@ NextIteration:
         // Add N incoming values to the PHI node.
         for (unsigned i = 0; i != NumEdges; ++i)
           APN->addIncoming(IncomingVals[AllocaNo], Pred);
+
+        if (APN->isComplete() &&
+            APN->getFunction()->hasFnAttribute("no-signed-zeros-fp-math") &&
+            isa<FPMathOperator>(APN)) {
+          APN->setHasNoSignedZeros(true);
+        }
 
         // The currently active variable for this block is now the PHI.
         IncomingVals[AllocaNo] = APN;
