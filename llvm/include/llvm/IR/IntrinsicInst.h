@@ -1428,8 +1428,15 @@ public:
 };
 
 /// A base class for all instrprof intrinsics.
+class InstrProfInstBase;
+class InstrProfMCDCBitmapInstBase;
+class InstrProfMCDCCondBitmapUpdate;
 class InstrProfInstBase : public IntrinsicInst {
 public:
+  static bool classof(const Value *V) {
+    return isa<InstrProfInstBase>(V) || isa<InstrProfMCDCBitmapInstBase>(V) ||
+           isa<InstrProfMCDCCondBitmapUpdate>(V);
+  }
   // The name of the instrumented function.
   GlobalVariable *getName() const {
     return cast<GlobalVariable>(
@@ -1442,8 +1449,17 @@ public:
 };
 
 /// A base class for all instrprof counter intrinsics.
+class InstProfCoverInst;
+class InstProfIncrementInst;
+class InstrProfTimestampInst;
+class InstrProfValueProfileInst;
 class InstrProfCntrInstBase : public InstrProfInstBase {
 public:
+  static bool classof(const Value *V){
+    return isa<InstProfCoverInst>(V) || isa<InstProfIncrementInst>(V) ||
+           isa<InstrProfTimestampInst>(V) || isa<InstrProfValueProfileInst>(V);
+  }
+
   // The number of counters for the instrumented function.
   ConstantInt *getNumCounters() const;
   // The index of the counter that this instruction acts on.
