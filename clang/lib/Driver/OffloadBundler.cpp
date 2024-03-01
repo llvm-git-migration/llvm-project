@@ -942,12 +942,19 @@ CompressedOffloadBundle::compress(const llvm::MemoryBuffer &Input,
       Input.getBuffer().size());
 
   llvm::compression::Format CompressionFormat;
+  int Level;
 
-  if (llvm::compression::zstd::isAvailable())
+  if (llvm::compression::zstd::isAvailable()) {
     CompressionFormat = llvm::compression::Format::Zstd;
-  else if (llvm::compression::zlib::isAvailable())
+    // Use a high zstd compress level by default for better size reduction.
+    const int DefaultZstdLevel = 20;
+    Level = DefaultZstdLevel;
+  } else if (llvm::compression::zlib::isAvailable()) {
     CompressionFormat = llvm::compression::Format::Zlib;
-  else
+    // Use default level for zlib since higher level does not have significant
+    // improvement.
+    Level = llvm::compression::zlib::DefaultCompression;
+  } else
     return createStringError(llvm::inconvertibleErrorCode(),
                              "Compression not supported");
 
@@ -955,7 +962,8 @@ CompressedOffloadBundle::compress(const llvm::MemoryBuffer &Input,
                             ClangOffloadBundlerTimerGroup);
   if (Verbose)
     CompressTimer.startTimer();
-  llvm::compression::compress(CompressionFormat, BufferUint8, CompressedBuffer);
+  llvm::compression::compress({CompressionFormat, Level}, BufferUint8,
+                              CompressedBuffer);
   if (Verbose)
     CompressTimer.stopTimer();
 
@@ -980,6 +988,7 @@ CompressedOffloadBundle::compress(const llvm::MemoryBuffer &Input,
         CompressionFormat == llvm::compression::Format::Zstd ? "zstd" : "zlib";
     llvm::errs() << "Compressed bundle format version: " << Version << "\n"
                  << "Compression method used: " << MethodUsed << "\n"
+                 << "Compression level: " << Level << "\n"
                  << "Binary size before compression: " << UncompressedSize
                  << " bytes\n"
                  << "Binary size after compression: " << CompressedBuffer.size()

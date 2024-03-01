@@ -1,4 +1,4 @@
-// REQUIRES: zlib
+// REQUIRES: zlib && !zstd
 // REQUIRES: x86-registered-target
 // UNSUPPORTED: target={{.*}}-darwin{{.*}}, target={{.*}}-aix{{.*}}
 
@@ -34,7 +34,8 @@
 // RUN: diff %t.tgt2 %t.res.tgt2
 
 //
-// COMPRESS: Compression method used:
+// COMPRESS: Compression method used: zlib
+// COMPRESS: Compression level: 6
 // DECOMPRESS: Decompression method:
 // NOHOST-NOT: host-
 // NOHOST-DAG: hip-amdgcn-amd-amdhsa--gfx900

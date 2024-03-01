@@ -31,7 +31,8 @@
 // RUN: diff %t.tgt1 %t.res.tgt1
 // RUN: diff %t.tgt2 %t.res.tgt2
 //
-// COMPRESS: Compression method used
+// COMPRESS: Compression method used: zstd
+// COMPRESS: Compression level: 20
 // DECOMPRESS: Decompression method
 // NOHOST-NOT: host-
 // NOHOST-DAG: hip-amdgcn-amd-amdhsa--gfx900
