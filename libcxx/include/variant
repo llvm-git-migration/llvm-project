@@ -1586,7 +1586,7 @@ visit(_Visitor&& __visitor, _Vs&&... __vs) {
 #  endif
 
 template <class... _Types>
-_LIBCPP_HIDE_FROM_ABI auto
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 auto
 swap(variant<_Types...>& __lhs, variant<_Types...>& __rhs) noexcept(noexcept(__lhs.swap(__rhs)))
     -> decltype(__lhs.swap(__rhs)) {
   return __lhs.swap(__rhs);
