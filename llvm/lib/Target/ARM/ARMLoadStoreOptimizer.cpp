@@ -635,9 +635,9 @@ MachineInstr *ARMLoadStoreOpt::CreateLoadStoreMulti(
 
   // For Thumb1 targets, it might be necessary to clobber the CPSR to merge.
   // Compute liveness information for that register to make the decision.
-  bool SafeToClobberCPSR = !isThumb1 ||
-    (MBB.computeRegisterLiveness(TRI, ARM::CPSR, InsertBefore, 20) ==
-     MachineBasicBlock::LQR_Dead);
+  bool SafeToClobberCPSR =
+      !isThumb1 || (MBB.computeRegisterLiveness(TRI, ARM::CPSR, InsertBefore) ==
+                    MachineBasicBlock::LQR_Dead);
 
   bool Writeback = isThumb1; // Thumb1 LDM/STM have base reg writeback.
 
