@@ -10,10 +10,12 @@
 /// TODO: Port CodeGen passes to new pass manager.
 //===----------------------------------------------------------------------===//
 
+#include "X86ISelDAGToDAG.h"
 #include "X86TargetMachine.h"
 
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/Passes/CodeGenPassBuilder.h"
+#include "llvm/Passes/PassBuilder.h"
 
 using namespace llvm;
 
@@ -39,12 +41,21 @@ void X86CodeGenPassBuilder::addAsmPrinter(AddMachinePass &addPass,
   // TODO: Add AsmPrinter.
 }
 
-Error X86CodeGenPassBuilder::addInstSelector(AddMachinePass &) const {
+Error X86CodeGenPassBuilder::addInstSelector(AddMachinePass &addPass) const {
   // TODO: Add instruction selector.
+  addPass(X86ISelDAGToDAGPass(static_cast<X86TargetMachine &>(TM)));
   return Error::success();
 }
 
 } // namespace
+
+void X86TargetMachine::registerPassBuilderCallbacks(
+    PassBuilder &PB, bool PopulateClassToPassNames) {
+  if (PopulateClassToPassNames) {
+    auto *PIC = PB.getPassInstrumentationCallbacks();
+    PIC->addClassToPassName(X86ISelDAGToDAGPass::name(), "x86-isel");
+  }
+}
 
 Error X86TargetMachine::buildCodeGenPipeline(
     ModulePassManager &MPM, raw_pwrite_stream &Out, raw_pwrite_stream *DwoOut,
