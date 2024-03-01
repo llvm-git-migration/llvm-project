@@ -4,11 +4,11 @@
 include "clang/Basic/BuiltinsBase.td"
 
 def : Builtin {
+// CHECK: BUILTIN(__builtin_test_use_clang_extended_vectors, "E8idE4b", "")
   let Prototype = "ext_vector_type_8_int(double, ext_vector_type_4_bool)";
   let Spellings = ["__builtin_test_use_clang_extended_vectors"];
 }
 
-// CHECK: BUILTIN(__builtin_test_use_clang_extended_vectors, "E8idE4b", "")
 
 #ifdef ERROR_EXPECTED_LANES
 def : Builtin {
