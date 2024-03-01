@@ -561,11 +561,10 @@ declare x86_mmx @llvm.x86.mmx.pcmpgt.w(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phaddd(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phaddd:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phaddd %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phaddd {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()
@@ -577,11 +576,10 @@ declare x86_mmx @llvm.x86.ssse3.phadd.d(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phaddsw(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phaddsw:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phaddsw %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phaddsw {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()
@@ -593,11 +591,10 @@ declare x86_mmx @llvm.x86.ssse3.phadd.sw(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phaddw(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phaddw:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phaddw %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phaddw {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()
@@ -609,11 +606,10 @@ declare x86_mmx @llvm.x86.ssse3.phadd.w(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phsubd(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phsubd:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phsubd %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phsubd {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()
@@ -625,11 +621,10 @@ declare x86_mmx @llvm.x86.ssse3.phsub.d(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phsubsw(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phsubsw:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phsubsw %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phsubsw {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()
@@ -641,11 +636,10 @@ declare x86_mmx @llvm.x86.ssse3.phsub.sw(x86_mmx, x86_mmx) nounwind readnone
 define x86_mmx @stack_fold_phsubw(x86_mmx %a, x86_mmx %b) {
 ; CHECK-LABEL: stack_fold_phsubw:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movq %mm1, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    phsubw %mm1, %mm0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    phsubw {{[-0-9]+}}(%r{{[sb]}}p), %mm0 # 8-byte Folded Reload
 ; CHECK-NEXT:    movq2dq %mm0, %xmm0
 ; CHECK-NEXT:    retq
   %1 = tail call x86_mmx asm sideeffect "nop", "=y,~{mm2},~{mm3},~{mm4},~{mm5},~{mm6},~{mm7}"()

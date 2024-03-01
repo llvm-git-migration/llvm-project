@@ -469,9 +469,9 @@ define <4 x i1> @shl_to_ror_eq_4xi32_s7_fail_no_p2(<4 x i32> %x) {
 ;
 ; CHECK-AVX512-LABEL: shl_to_ror_eq_4xi32_s7_fail_no_p2:
 ; CHECK-AVX512:       # %bb.0:
-; CHECK-AVX512-NEXT:    vpslld $7, %xmm0, %xmm1
-; CHECK-AVX512-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to4}, %xmm0, %xmm0
-; CHECK-AVX512-NEXT:    vpcmpeqd %xmm0, %xmm1, %xmm0
+; CHECK-AVX512-NEXT:    vpandd {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to4}, %xmm0, %xmm1
+; CHECK-AVX512-NEXT:    vpslld $7, %xmm0, %xmm0
+; CHECK-AVX512-NEXT:    vpcmpeqd %xmm1, %xmm0, %xmm0
 ; CHECK-AVX512-NEXT:    vpternlogq $15, %xmm0, %xmm0, %xmm0
 ; CHECK-AVX512-NEXT:    retq
   %shr = shl <4 x i32> %x, <i32 7, i32 7, i32 7, i32 7>
@@ -580,8 +580,8 @@ define <16 x i1> @shl_to_ror_eq_16xi16_s8_fail_preserve_i16(<16 x i16> %x) {
 ; CHECK-AVX1:       # %bb.0:
 ; CHECK-AVX1-NEXT:    vpsllw $8, %xmm0, %xmm1
 ; CHECK-AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm2
-; CHECK-AVX1-NEXT:    vpsllw $8, %xmm2, %xmm2
 ; CHECK-AVX1-NEXT:    vandps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm0, %ymm0
+; CHECK-AVX1-NEXT:    vpsllw $8, %xmm2, %xmm2
 ; CHECK-AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm3
 ; CHECK-AVX1-NEXT:    vpcmpeqw %xmm3, %xmm2, %xmm2
 ; CHECK-AVX1-NEXT:    vpcmpeqw %xmm0, %xmm1, %xmm0

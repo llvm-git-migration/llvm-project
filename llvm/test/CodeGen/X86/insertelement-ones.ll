@@ -351,8 +351,8 @@ define <32 x i8> @insert_v32i8_x123456789ABCDEzGHIJKLMNOPQRSTxx(<32 x i8> %a) {
 ; SSE2:       # %bb.0:
 ; SSE2-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; SSE2-NEXT:    movaps {{.*#+}} xmm2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255]
-; SSE2-NEXT:    orps %xmm2, %xmm0
 ; SSE2-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; SSE2-NEXT:    orps %xmm2, %xmm0
 ; SSE2-NEXT:    orps %xmm2, %xmm1
 ; SSE2-NEXT:    retq
 ;
@@ -360,8 +360,8 @@ define <32 x i8> @insert_v32i8_x123456789ABCDEzGHIJKLMNOPQRSTxx(<32 x i8> %a) {
 ; SSE3:       # %bb.0:
 ; SSE3-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; SSE3-NEXT:    movaps {{.*#+}} xmm2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255]
-; SSE3-NEXT:    orps %xmm2, %xmm0
 ; SSE3-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; SSE3-NEXT:    orps %xmm2, %xmm0
 ; SSE3-NEXT:    orps %xmm2, %xmm1
 ; SSE3-NEXT:    retq
 ;
@@ -369,8 +369,8 @@ define <32 x i8> @insert_v32i8_x123456789ABCDEzGHIJKLMNOPQRSTxx(<32 x i8> %a) {
 ; SSSE3:       # %bb.0:
 ; SSSE3-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; SSSE3-NEXT:    movaps {{.*#+}} xmm2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255]
-; SSSE3-NEXT:    orps %xmm2, %xmm0
 ; SSSE3-NEXT:    orps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; SSSE3-NEXT:    orps %xmm2, %xmm0
 ; SSSE3-NEXT:    orps %xmm2, %xmm1
 ; SSSE3-NEXT:    retq
 ;

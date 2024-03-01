@@ -189,16 +189,16 @@ define <2 x i1> @t3_wide(<2 x i64> %X) nounwind {
 ; CHECK-SSE2-NEXT:    pmuludq %xmm1, %xmm2
 ; CHECK-SSE2-NEXT:    movdqa %xmm0, %xmm3
 ; CHECK-SSE2-NEXT:    psrlq $32, %xmm3
-; CHECK-SSE2-NEXT:    pmuludq %xmm1, %xmm3
 ; CHECK-SSE2-NEXT:    pmuludq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
+; CHECK-SSE2-NEXT:    pmuludq %xmm1, %xmm3
 ; CHECK-SSE2-NEXT:    paddq %xmm3, %xmm0
 ; CHECK-SSE2-NEXT:    psllq $32, %xmm0
 ; CHECK-SSE2-NEXT:    paddq %xmm2, %xmm0
 ; CHECK-SSE2-NEXT:    pxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; CHECK-SSE2-NEXT:    pshufd {{.*#+}} xmm1 = xmm0[1,1,3,3]
 ; CHECK-SSE2-NEXT:    pcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-SSE2-NEXT:    pshufd {{.*#+}} xmm2 = xmm0[0,0,2,2]
 ; CHECK-SSE2-NEXT:    pcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; CHECK-SSE2-NEXT:    pshufd {{.*#+}} xmm2 = xmm0[0,0,2,2]
 ; CHECK-SSE2-NEXT:    pand %xmm2, %xmm1
 ; CHECK-SSE2-NEXT:    pshufd {{.*#+}} xmm0 = xmm0[1,1,3,3]
 ; CHECK-SSE2-NEXT:    por %xmm1, %xmm0
@@ -214,16 +214,16 @@ define <2 x i1> @t3_wide(<2 x i64> %X) nounwind {
 ; CHECK-SSE41-NEXT:    pmuludq %xmm1, %xmm2
 ; CHECK-SSE41-NEXT:    movdqa %xmm0, %xmm3
 ; CHECK-SSE41-NEXT:    psrlq $32, %xmm3
-; CHECK-SSE41-NEXT:    pmuludq %xmm1, %xmm3
 ; CHECK-SSE41-NEXT:    pmuludq {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
+; CHECK-SSE41-NEXT:    pmuludq %xmm1, %xmm3
 ; CHECK-SSE41-NEXT:    paddq %xmm3, %xmm0
 ; CHECK-SSE41-NEXT:    psllq $32, %xmm0
 ; CHECK-SSE41-NEXT:    paddq %xmm2, %xmm0
 ; CHECK-SSE41-NEXT:    pxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
 ; CHECK-SSE41-NEXT:    pshufd {{.*#+}} xmm1 = xmm0[1,1,3,3]
 ; CHECK-SSE41-NEXT:    pcmpgtd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
-; CHECK-SSE41-NEXT:    pmovsxdq %xmm0, %xmm2
 ; CHECK-SSE41-NEXT:    pcmpeqd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; CHECK-SSE41-NEXT:    pmovsxdq %xmm0, %xmm2
 ; CHECK-SSE41-NEXT:    pand %xmm2, %xmm1
 ; CHECK-SSE41-NEXT:    pshufd {{.*#+}} xmm0 = xmm0[1,1,3,3]
 ; CHECK-SSE41-NEXT:    por %xmm1, %xmm0

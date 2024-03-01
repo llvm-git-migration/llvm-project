@@ -13094,8 +13094,8 @@ define void @mask_replication_factor8_vf16(ptr %in.maskvec, ptr %in.vec, ptr %ou
 ; AVX512BW-NEXT:    vpmovm2b %k0, %zmm0
 ; AVX512BW-NEXT:    vshufi64x2 {{.*#+}} zmm0 = zmm0[0,1,0,1,0,1,0,1]
 ; AVX512BW-NEXT:    vpshufb {{.*#+}} zmm1 = zmm0[8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,26,26,26,26,26,26,26,26,27,27,27,27,27,27,27,27,44,44,44,44,44,44,44,44,45,45,45,45,45,45,45,45,62,62,62,62,62,62,62,62,63,63,63,63,63,63,63,63]
-; AVX512BW-NEXT:    vpmovb2m %zmm1, %k1
 ; AVX512BW-NEXT:    vpshufb {{.*#+}} zmm0 = zmm0[0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,36,36,36,36,36,36,36,36,37,37,37,37,37,37,37,37,54,54,54,54,54,54,54,54,55,55,55,55,55,55,55,55]
+; AVX512BW-NEXT:    vpmovb2m %zmm1, %k1
 ; AVX512BW-NEXT:    vpmovb2m %zmm0, %k2
 ; AVX512BW-NEXT:    kshiftrd $16, %k2, %k3
 ; AVX512BW-NEXT:    vmovdqa32 64(%rsi), %zmm0 {%k3} {z}

@@ -70,8 +70,8 @@ define <16 x i8> @ashr_xor_and_commute_uses(<16 x i8> %x, ptr %p1, ptr %p2) noun
 ; SSE:       # %bb.0:
 ; SSE-NEXT:    pxor %xmm1, %xmm1
 ; SSE-NEXT:    pcmpgtb %xmm0, %xmm1
-; SSE-NEXT:    movdqa %xmm1, (%rdi)
 ; SSE-NEXT:    pxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
+; SSE-NEXT:    movdqa %xmm1, (%rdi)
 ; SSE-NEXT:    movdqa %xmm0, (%rsi)
 ; SSE-NEXT:    pand %xmm1, %xmm0
 ; SSE-NEXT:    retq
@@ -80,8 +80,8 @@ define <16 x i8> @ashr_xor_and_commute_uses(<16 x i8> %x, ptr %p1, ptr %p2) noun
 ; AVX1:       # %bb.0:
 ; AVX1-NEXT:    vpxor %xmm1, %xmm1, %xmm1
 ; AVX1-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm1
-; AVX1-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX1-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
+; AVX1-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX1-NEXT:    vmovdqa %xmm0, (%rsi)
 ; AVX1-NEXT:    vpand %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
@@ -90,8 +90,8 @@ define <16 x i8> @ashr_xor_and_commute_uses(<16 x i8> %x, ptr %p1, ptr %p2) noun
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vpxor %xmm1, %xmm1, %xmm1
 ; AVX2-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm1
-; AVX2-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX2-NEXT:    vpxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
+; AVX2-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX2-NEXT:    vmovdqa %xmm0, (%rsi)
 ; AVX2-NEXT:    vpand %xmm1, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
@@ -100,8 +100,8 @@ define <16 x i8> @ashr_xor_and_commute_uses(<16 x i8> %x, ptr %p1, ptr %p2) noun
 ; AVX512:       # %bb.0:
 ; AVX512-NEXT:    vpxor %xmm1, %xmm1, %xmm1
 ; AVX512-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm1
-; AVX512-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX512-NEXT:    vpxord {{\.?LCPI[0-9]+_[0-9]+}}(%rip){1to4}, %xmm0, %xmm0
+; AVX512-NEXT:    vmovdqa %xmm1, (%rdi)
 ; AVX512-NEXT:    vmovdqa %xmm0, (%rsi)
 ; AVX512-NEXT:    vpand %xmm1, %xmm0, %xmm0
 ; AVX512-NEXT:    retq
@@ -1750,13 +1750,13 @@ define <8 x i16> @psubus_8i64_max(<8 x i16> %x, <8 x i64> %y) nounwind {
 ; AVX2-LABEL: psubus_8i64_max:
 ; AVX2:       # %bb.0: # %vector.ph
 ; AVX2-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-NEXT:    vpxor %ymm3, %ymm2, %ymm4
-; AVX2-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372036854841343,9223372036854841343,9223372036854841343,9223372036854841343]
-; AVX2-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372036854841343,9223372036854841343,9223372036854841343,9223372036854841343]
+; AVX2-NEXT:    vpxor %ymm3, %ymm2, %ymm5
+; AVX2-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [65535,65535,65535,65535]
-; AVX2-NEXT:    vblendvpd %ymm4, %ymm2, %ymm6, %ymm2
+; AVX2-NEXT:    vblendvpd %ymm5, %ymm2, %ymm6, %ymm2
 ; AVX2-NEXT:    vpxor %ymm3, %ymm1, %ymm3
-; AVX2-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-NEXT:    vblendvpd %ymm3, %ymm1, %ymm6, %ymm1
 ; AVX2-NEXT:    vpackusdw %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vextracti128 $1, %ymm1, %xmm2
@@ -2501,10 +2501,10 @@ define <64 x i8> @test28(<64 x i8> %x) {
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm0
 ; AVX1-NEXT:    vpsubusb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
 ; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm3, %ymm0
-; AVX1-NEXT:    vpsubusb %xmm2, %xmm1, %xmm2
-; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm1
-; AVX1-NEXT:    vpsubusb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm2, %ymm1
+; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm3
+; AVX1-NEXT:    vpsubusb {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm3, %xmm3
+; AVX1-NEXT:    vpsubusb %xmm2, %xmm1, %xmm1
+; AVX1-NEXT:    vinsertf128 $1, %xmm3, %ymm1, %ymm1
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: test28:
@@ -2538,11 +2538,11 @@ define <32 x i16> @test29(<32 x i16> %x) {
 ; AVX1-NEXT:    vpsubusw {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm2
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm0
 ; AVX1-NEXT:    vpsubusw {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
-; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm2, %ymm0
-; AVX1-NEXT:    vpsubusw {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm2
+; AVX1-NEXT:    vpsubusw {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm3
 ; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm1
 ; AVX1-NEXT:    vpsubusw {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
-; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm2, %ymm1
+; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm2, %ymm0
+; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm3, %ymm1
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: test29:
@@ -2855,13 +2855,13 @@ define <8 x i32> @test33(<8 x i32> %a0, <8 x i64> %a1) {
 ; AVX2-SLOW-LABEL: test33:
 ; AVX2-SLOW:       # %bb.0:
 ; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm2, %ymm4
-; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
-; AVX2-SLOW-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
+; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm2, %ymm5
+; AVX2-SLOW-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-SLOW-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [4294967295,4294967295,4294967295,4294967295]
-; AVX2-SLOW-NEXT:    vblendvpd %ymm4, %ymm2, %ymm6, %ymm2
+; AVX2-SLOW-NEXT:    vblendvpd %ymm5, %ymm2, %ymm6, %ymm2
 ; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm1, %ymm3
-; AVX2-SLOW-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-SLOW-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-SLOW-NEXT:    vblendvpd %ymm3, %ymm1, %ymm6, %ymm1
 ; AVX2-SLOW-NEXT:    vperm2f128 {{.*#+}} ymm3 = ymm1[2,3],ymm2[2,3]
 ; AVX2-SLOW-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
@@ -2892,13 +2892,13 @@ define <8 x i32> @test33(<8 x i32> %a0, <8 x i64> %a1) {
 ; AVX2-FAST-PERLANE-LABEL: test33:
 ; AVX2-FAST-PERLANE:       # %bb.0:
 ; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm2, %ymm4
-; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
-; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
+; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm2, %ymm5
+; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-FAST-PERLANE-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [4294967295,4294967295,4294967295,4294967295]
-; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm4, %ymm2, %ymm6, %ymm2
+; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm5, %ymm2, %ymm6, %ymm2
 ; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm1, %ymm3
-; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm3, %ymm1, %ymm6, %ymm1
 ; AVX2-FAST-PERLANE-NEXT:    vperm2f128 {{.*#+}} ymm3 = ymm1[2,3],ymm2[2,3]
 ; AVX2-FAST-PERLANE-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
@@ -3084,13 +3084,13 @@ define <8 x i32> @test34(<8 x i32> %a0, <8 x i64> %a1) {
 ; AVX2-SLOW-NEXT:    vpbroadcastd {{.*#+}} ymm3 = [1,1,1,1,1,1,1,1]
 ; AVX2-SLOW-NEXT:    vpand %ymm3, %ymm0, %ymm0
 ; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm2, %ymm4
-; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
-; AVX2-SLOW-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-SLOW-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
+; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm2, %ymm5
+; AVX2-SLOW-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-SLOW-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [4294967295,4294967295,4294967295,4294967295]
-; AVX2-SLOW-NEXT:    vblendvpd %ymm4, %ymm2, %ymm6, %ymm2
+; AVX2-SLOW-NEXT:    vblendvpd %ymm5, %ymm2, %ymm6, %ymm2
 ; AVX2-SLOW-NEXT:    vpxor %ymm3, %ymm1, %ymm3
-; AVX2-SLOW-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-SLOW-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-SLOW-NEXT:    vblendvpd %ymm3, %ymm1, %ymm6, %ymm1
 ; AVX2-SLOW-NEXT:    vperm2f128 {{.*#+}} ymm3 = ymm1[2,3],ymm2[2,3]
 ; AVX2-SLOW-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
@@ -3101,20 +3101,20 @@ define <8 x i32> @test34(<8 x i32> %a0, <8 x i64> %a1) {
 ;
 ; AVX2-FAST-ALL-LABEL: test34:
 ; AVX2-FAST-ALL:       # %bb.0:
-; AVX2-FAST-ALL-NEXT:    vpbroadcastd {{.*#+}} ymm3 = [1,1,1,1,1,1,1,1]
-; AVX2-FAST-ALL-NEXT:    vpand %ymm3, %ymm0, %ymm0
 ; AVX2-FAST-ALL-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-FAST-ALL-NEXT:    vpxor %ymm3, %ymm1, %ymm4
-; AVX2-FAST-ALL-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
-; AVX2-FAST-ALL-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-FAST-ALL-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
+; AVX2-FAST-ALL-NEXT:    vpxor %ymm3, %ymm1, %ymm5
+; AVX2-FAST-ALL-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-FAST-ALL-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [4294967295,4294967295,4294967295,4294967295]
-; AVX2-FAST-ALL-NEXT:    vblendvpd %ymm4, %ymm1, %ymm6, %ymm1
-; AVX2-FAST-ALL-NEXT:    vmovapd {{.*#+}} ymm4 = [0,2,4,6,4,6,6,7]
-; AVX2-FAST-ALL-NEXT:    vpermps %ymm1, %ymm4, %ymm1
+; AVX2-FAST-ALL-NEXT:    vblendvpd %ymm5, %ymm1, %ymm6, %ymm1
+; AVX2-FAST-ALL-NEXT:    vpbroadcastd {{.*#+}} ymm5 = [1,1,1,1,1,1,1,1]
+; AVX2-FAST-ALL-NEXT:    vpand %ymm5, %ymm0, %ymm0
+; AVX2-FAST-ALL-NEXT:    vmovapd {{.*#+}} ymm5 = [0,2,4,6,4,6,6,7]
+; AVX2-FAST-ALL-NEXT:    vpermps %ymm1, %ymm5, %ymm1
 ; AVX2-FAST-ALL-NEXT:    vpxor %ymm3, %ymm2, %ymm3
-; AVX2-FAST-ALL-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-FAST-ALL-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-FAST-ALL-NEXT:    vblendvpd %ymm3, %ymm2, %ymm6, %ymm2
-; AVX2-FAST-ALL-NEXT:    vpermps %ymm2, %ymm4, %ymm2
+; AVX2-FAST-ALL-NEXT:    vpermps %ymm2, %ymm5, %ymm2
 ; AVX2-FAST-ALL-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1
 ; AVX2-FAST-ALL-NEXT:    vpmaxud %ymm1, %ymm0, %ymm0
 ; AVX2-FAST-ALL-NEXT:    vpsubd %ymm1, %ymm0, %ymm0
@@ -3125,13 +3125,13 @@ define <8 x i32> @test34(<8 x i32> %a0, <8 x i64> %a1) {
 ; AVX2-FAST-PERLANE-NEXT:    vpbroadcastd {{.*#+}} ymm3 = [1,1,1,1,1,1,1,1]
 ; AVX2-FAST-PERLANE-NEXT:    vpand %ymm3, %ymm0, %ymm0
 ; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm3 = [9223372036854775808,9223372036854775808,9223372036854775808,9223372036854775808]
-; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm2, %ymm4
-; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm5 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
-; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm4, %ymm5, %ymm4
+; AVX2-FAST-PERLANE-NEXT:    vpbroadcastq {{.*#+}} ymm4 = [9223372041149743103,9223372041149743103,9223372041149743103,9223372041149743103]
+; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm2, %ymm5
+; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm5, %ymm4, %ymm5
 ; AVX2-FAST-PERLANE-NEXT:    vbroadcastsd {{.*#+}} ymm6 = [4294967295,4294967295,4294967295,4294967295]
-; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm4, %ymm2, %ymm6, %ymm2
+; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm5, %ymm2, %ymm6, %ymm2
 ; AVX2-FAST-PERLANE-NEXT:    vpxor %ymm3, %ymm1, %ymm3
-; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm3, %ymm5, %ymm3
+; AVX2-FAST-PERLANE-NEXT:    vpcmpgtq %ymm3, %ymm4, %ymm3
 ; AVX2-FAST-PERLANE-NEXT:    vblendvpd %ymm3, %ymm1, %ymm6, %ymm1
 ; AVX2-FAST-PERLANE-NEXT:    vperm2f128 {{.*#+}} ymm3 = ymm1[2,3],ymm2[2,3]
 ; AVX2-FAST-PERLANE-NEXT:    vinsertf128 $1, %xmm2, %ymm1, %ymm1

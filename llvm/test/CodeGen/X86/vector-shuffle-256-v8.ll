@@ -905,10 +905,10 @@ define <8 x float> @shuffle_v8f32_c348cda0(<8 x float> %a, <8 x float> %b) {
 ; AVX2-FAST-ALL:       # %bb.0:
 ; AVX2-FAST-ALL-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [0,3,4,0,0,3,4,0]
 ; AVX2-FAST-ALL-NEXT:    # ymm2 = mem[0,1,0,1]
+; AVX2-FAST-ALL-NEXT:    vbroadcastf128 {{.*#+}} ymm3 = [4,5,2,0,4,5,2,0]
+; AVX2-FAST-ALL-NEXT:    # ymm3 = mem[0,1,0,1]
 ; AVX2-FAST-ALL-NEXT:    vpermps %ymm0, %ymm2, %ymm0
-; AVX2-FAST-ALL-NEXT:    vbroadcastf128 {{.*#+}} ymm2 = [4,5,2,0,4,5,2,0]
-; AVX2-FAST-ALL-NEXT:    # ymm2 = mem[0,1,0,1]
-; AVX2-FAST-ALL-NEXT:    vpermps %ymm1, %ymm2, %ymm1
+; AVX2-FAST-ALL-NEXT:    vpermps %ymm1, %ymm3, %ymm1
 ; AVX2-FAST-ALL-NEXT:    vblendps {{.*#+}} ymm0 = ymm1[0],ymm0[1,2],ymm1[3,4,5,6],ymm0[7]
 ; AVX2-FAST-ALL-NEXT:    retq
 ;
@@ -3639,10 +3639,10 @@ define <8 x i32> @add_v8i32_02468ACE_13579BDF(<8 x i32> %a, <8 x i32> %b) {
 ; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm2
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm3
 ; AVX1-NEXT:    vphaddd %xmm2, %xmm3, %xmm2
-; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm2, %ymm2
 ; AVX1-NEXT:    vphaddd %xmm1, %xmm0, %xmm0
+; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm2, %ymm1
 ; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm0, %ymm0
-; AVX1-NEXT:    vshufpd {{.*#+}} ymm0 = ymm0[0],ymm2[0],ymm0[3],ymm2[3]
+; AVX1-NEXT:    vshufpd {{.*#+}} ymm0 = ymm0[0],ymm1[0],ymm0[3],ymm1[3]
 ; AVX1-NEXT:    retq
 ;
 ; AVX2OR512VL-LABEL: add_v8i32_02468ACE_13579BDF:
@@ -3663,10 +3663,10 @@ define <8 x i32> @add_v8i32_8ACE0246_9BDF1357(<8 x i32> %a, <8 x i32> %b) {
 ; AVX1-NEXT:    vextractf128 $1, %ymm1, %xmm2
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm3
 ; AVX1-NEXT:    vphaddd %xmm2, %xmm3, %xmm2
-; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm2, %ymm2
 ; AVX1-NEXT:    vphaddd %xmm1, %xmm0, %xmm0
+; AVX1-NEXT:    vinsertf128 $1, %xmm2, %ymm2, %ymm1
 ; AVX1-NEXT:    vinsertf128 $1, %xmm0, %ymm0, %ymm0
-; AVX1-NEXT:    vshufpd {{.*#+}} ymm0 = ymm0[1],ymm2[1],ymm0[2],ymm2[2]
+; AVX1-NEXT:    vshufpd {{.*#+}} ymm0 = ymm0[1],ymm1[1],ymm0[2],ymm1[2]
 ; AVX1-NEXT:    retq
 ;
 ; AVX2OR512VL-LABEL: add_v8i32_8ACE0246_9BDF1357:

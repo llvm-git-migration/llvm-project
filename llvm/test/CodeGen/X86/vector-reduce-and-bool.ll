@@ -519,8 +519,8 @@ define i1 @trunc_v32i16_v32i1(<32 x i16>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand %xmm0, %xmm1
 ; X86-SSE2-NEXT:    psllw $7, %xmm1
 ; X86-SSE2-NEXT:    pmovmskb %xmm1, %eax
@@ -923,8 +923,8 @@ define i1 @icmp0_v8i64_v8i1(<8 x i64>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pxor %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqd %xmm1, %xmm0
@@ -991,8 +991,8 @@ define i1 @icmp0_v16i32_v16i1(<16 x i32>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pxor %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqd %xmm1, %xmm0
@@ -1059,8 +1059,8 @@ define i1 @icmp0_v32i16_v32i1(<32 x i16>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pxor %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqb %xmm1, %xmm0
@@ -1127,8 +1127,8 @@ define i1 @icmp0_v64i8_v64i1(<64 x i8>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    por %xmm2, %xmm0
 ; X86-SSE2-NEXT:    por %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pxor %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqb %xmm1, %xmm0
@@ -1567,8 +1567,8 @@ define i1 @icmp1_v8i64_v8i1(<8 x i64>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pcmpeqd %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqd %xmm1, %xmm0
@@ -1640,8 +1640,8 @@ define i1 @icmp1_v16i32_v16i1(<16 x i32>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pcmpeqd %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqd %xmm1, %xmm0
@@ -1713,8 +1713,8 @@ define i1 @icmp1_v32i16_v32i1(<32 x i16>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pcmpeqd %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqb %xmm1, %xmm0
@@ -1786,8 +1786,8 @@ define i1 @icmp1_v64i8_v64i1(<64 x i8>) nounwind {
 ; X86-SSE2-NEXT:    movl %esp, %ebp
 ; X86-SSE2-NEXT:    andl $-16, %esp
 ; X86-SSE2-NEXT:    subl $16, %esp
-; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand 8(%ebp), %xmm1
+; X86-SSE2-NEXT:    pand %xmm2, %xmm0
 ; X86-SSE2-NEXT:    pand %xmm0, %xmm1
 ; X86-SSE2-NEXT:    pcmpeqd %xmm0, %xmm0
 ; X86-SSE2-NEXT:    pcmpeqb %xmm1, %xmm0

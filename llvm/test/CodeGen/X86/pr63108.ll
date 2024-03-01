@@ -21,8 +21,8 @@ define i32 @PR63108() {
 ; SSE-NEXT:  .LBB0_3: # %vector.body
 ; SSE-NEXT:    # =>This Inner Loop Header: Depth=1
 ; SSE-NEXT:    movdqa %xmm1, %xmm2
-; SSE-NEXT:    testb %al, %al
 ; SSE-NEXT:    pxor %xmm1, %xmm1
+; SSE-NEXT:    testb %al, %al
 ; SSE-NEXT:    jne .LBB0_3
 ; SSE-NEXT:  # %bb.4: # %middle.block
 ; SSE-NEXT:    pxor %xmm2, %xmm0

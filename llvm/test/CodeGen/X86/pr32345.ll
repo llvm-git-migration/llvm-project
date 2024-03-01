@@ -92,10 +92,10 @@ define void @foo() {
 ; 686-NEXT:    movzbl var_27, %ecx
 ; 686-NEXT:    movzwl var_22, %eax
 ; 686-NEXT:    movl %eax, (%esp)
-; 686-NEXT:    movl $0, {{[0-9]+}}(%esp)
 ; 686-NEXT:    addb $30, %cl
 ; 686-NEXT:    xorl %edx, %edx
 ; 686-NEXT:    shrdl %cl, %edx, %eax
+; 686-NEXT:    movl $0, {{[0-9]+}}(%esp)
 ; 686-NEXT:    testb $32, %cl
 ; 686-NEXT:    jne .LBB0_2
 ; 686-NEXT:  # %bb.1: # %bb

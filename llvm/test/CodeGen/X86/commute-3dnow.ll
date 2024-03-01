@@ -7,11 +7,11 @@ define void @commute_m_pfadd(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pfadd (%eax), %mm0
-; X86-NEXT:    pfadd (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pfadd (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pfadd:
@@ -36,11 +36,11 @@ define void @commute_m_pfsub(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pfsub (%eax), %mm0
-; X86-NEXT:    pfsubr (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pfsubr (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pfsub:
@@ -65,11 +65,11 @@ define void @commute_m_pfsubr(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pfsubr (%eax), %mm0
-; X86-NEXT:    pfsub (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pfsub (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pfsubr:
@@ -94,11 +94,11 @@ define void @commute_m_pfmul(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pfmul (%eax), %mm0
-; X86-NEXT:    pfmul (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pfmul (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pfmul:
@@ -187,11 +187,11 @@ define void @commute_m_pfcmpeq(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pfcmpeq (%eax), %mm0
-; X86-NEXT:    pfcmpeq (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pfcmpeq (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pfcmpeq:
@@ -216,11 +216,11 @@ define void @commute_m_pavgusb(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pavgusb (%eax), %mm0
-; X86-NEXT:    pavgusb (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pavgusb (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pavgusb:
@@ -245,11 +245,11 @@ define void @commute_m_pmulhrw(ptr%a0, ptr%a1, ptr%a2) nounwind {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movq (%edx), %mm0
+; X86-NEXT:    movq (%ecx), %mm0
 ; X86-NEXT:    pmulhrw (%eax), %mm0
-; X86-NEXT:    pmulhrw (%ecx), %mm0
-; X86-NEXT:    movq %mm0, (%ecx)
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    pmulhrw (%eax), %mm0
+; X86-NEXT:    movq %mm0, (%eax)
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: commute_m_pmulhrw:

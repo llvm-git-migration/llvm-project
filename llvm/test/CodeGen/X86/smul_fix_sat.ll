@@ -62,12 +62,12 @@ define i64 @func2(i64 %x, i64 %y) nounwind {
 ; X86-NEXT:    pushl %esi
 ; X86-NEXT:    subl $8, %esp
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %ebx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    mull %esi
-; X86-NEXT:    movl %edx, %edi
 ; X86-NEXT:    movl %eax, %ebp
+; X86-NEXT:    movl %edx, %edi
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %ebx
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    mull %ebx
 ; X86-NEXT:    movl %eax, {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Spill
@@ -200,45 +200,43 @@ define <4 x i32> @vec(<4 x i32> %x, <4 x i32> %y) nounwind {
 ; X64-NEXT:    movd %xmm2, %ecx
 ; X64-NEXT:    movslq %ecx, %rdx
 ; X64-NEXT:    imulq %rax, %rdx
-; X64-NEXT:    movq %rdx, %rcx
-; X64-NEXT:    shrq $32, %rcx
-; X64-NEXT:    shrdl $2, %ecx, %edx
-; X64-NEXT:    cmpl $2, %ecx
-; X64-NEXT:    movl $2147483647, %eax # imm = 0x7FFFFFFF
-; X64-NEXT:    cmovgel %eax, %edx
-; X64-NEXT:    cmpl $-2, %ecx
-; X64-NEXT:    movl $-2147483648, %ecx # imm = 0x80000000
-; X64-NEXT:    cmovll %ecx, %edx
+; X64-NEXT:    movq %rdx, %rax
+; X64-NEXT:    shrq $32, %rax
+; X64-NEXT:    shrdl $2, %eax, %edx
+; X64-NEXT:    cmpl $2, %eax
+; X64-NEXT:    movl $2147483647, %ecx # imm = 0x7FFFFFFF
+; X64-NEXT:    cmovgel %ecx, %edx
+; X64-NEXT:    cmpl $-2, %eax
+; X64-NEXT:    movl $-2147483648, %eax # imm = 0x80000000
+; X64-NEXT:    cmovll %eax, %edx
+; X64-NEXT:    pshufd {{.*#+}} xmm2 = xmm1[2,3,2,3]
+; X64-NEXT:    movd %xmm2, %esi
+; X64-NEXT:    movslq %esi, %rdi
+; X64-NEXT:    pshufd {{.*#+}} xmm2 = xmm0[2,3,2,3]
+; X64-NEXT:    movd %xmm2, %esi
+; X64-NEXT:    movslq %esi, %rsi
+; X64-NEXT:    imulq %rdi, %rsi
+; X64-NEXT:    movq %rsi, %rdi
+; X64-NEXT:    shrq $32, %rdi
+; X64-NEXT:    shrdl $2, %edi, %esi
+; X64-NEXT:    cmpl $2, %edi
+; X64-NEXT:    cmovgel %ecx, %esi
+; X64-NEXT:    cmpl $-2, %edi
+; X64-NEXT:    cmovll %eax, %esi
+; X64-NEXT:    movd %xmm1, %edi
+; X64-NEXT:    movslq %edi, %r8
+; X64-NEXT:    movd %xmm0, %edi
+; X64-NEXT:    movslq %edi, %rdi
+; X64-NEXT:    imulq %r8, %rdi
+; X64-NEXT:    movq %rdi, %r8
+; X64-NEXT:    shrq $32, %r8
+; X64-NEXT:    shrdl $2, %r8d, %edi
+; X64-NEXT:    cmpl $2, %r8d
+; X64-NEXT:    cmovgel %ecx, %edi
 ; X64-NEXT:    movd %edx, %xmm2
-; X64-NEXT:    pshufd {{.*#+}} xmm3 = xmm1[2,3,2,3]
-; X64-NEXT:    movd %xmm3, %edx
-; X64-NEXT:    movslq %edx, %rdx
-; X64-NEXT:    pshufd {{.*#+}} xmm3 = xmm0[2,3,2,3]
-; X64-NEXT:    movd %xmm3, %esi
-; X64-NEXT:    movslq %esi, %rsi
-; X64-NEXT:    imulq %rdx, %rsi
-; X64-NEXT:    movq %rsi, %rdx
-; X64-NEXT:    shrq $32, %rdx
-; X64-NEXT:    shrdl $2, %edx, %esi
-; X64-NEXT:    cmpl $2, %edx
-; X64-NEXT:    cmovgel %eax, %esi
-; X64-NEXT:    cmpl $-2, %edx
-; X64-NEXT:    cmovll %ecx, %esi
+; X64-NEXT:    cmpl $-2, %r8d
+; X64-NEXT:    cmovll %eax, %edi
 ; X64-NEXT:    movd %esi, %xmm3
-; X64-NEXT:    punpckldq {{.*#+}} xmm3 = xmm3[0],xmm2[0],xmm3[1],xmm2[1]
-; X64-NEXT:    movd %xmm1, %edx
-; X64-NEXT:    movslq %edx, %rdx
-; X64-NEXT:    movd %xmm0, %esi
-; X64-NEXT:    movslq %esi, %rsi
-; X64-NEXT:    imulq %rdx, %rsi
-; X64-NEXT:    movq %rsi, %rdx
-; X64-NEXT:    shrq $32, %rdx
-; X64-NEXT:    shrdl $2, %edx, %esi
-; X64-NEXT:    cmpl $2, %edx
-; X64-NEXT:    cmovgel %eax, %esi
-; X64-NEXT:    cmpl $-2, %edx
-; X64-NEXT:    cmovll %ecx, %esi
-; X64-NEXT:    movd %esi, %xmm2
 ; X64-NEXT:    pshufd {{.*#+}} xmm1 = xmm1[1,1,1,1]
 ; X64-NEXT:    movd %xmm1, %edx
 ; X64-NEXT:    movslq %edx, %rdx
@@ -250,13 +248,14 @@ define <4 x i32> @vec(<4 x i32> %x, <4 x i32> %y) nounwind {
 ; X64-NEXT:    shrq $32, %rdx
 ; X64-NEXT:    shrdl $2, %edx, %esi
 ; X64-NEXT:    cmpl $2, %edx
-; X64-NEXT:    cmovgel %eax, %esi
+; X64-NEXT:    cmovgel %ecx, %esi
+; X64-NEXT:    punpckldq {{.*#+}} xmm3 = xmm3[0],xmm2[0],xmm3[1],xmm2[1]
+; X64-NEXT:    movd %edi, %xmm0
 ; X64-NEXT:    cmpl $-2, %edx
-; X64-NEXT:    cmovll %ecx, %esi
-; X64-NEXT:    movd %esi, %xmm0
-; X64-NEXT:    punpckldq {{.*#+}} xmm2 = xmm2[0],xmm0[0],xmm2[1],xmm0[1]
-; X64-NEXT:    punpcklqdq {{.*#+}} xmm2 = xmm2[0],xmm3[0]
-; X64-NEXT:    movdqa %xmm2, %xmm0
+; X64-NEXT:    cmovll %eax, %esi
+; X64-NEXT:    movd %esi, %xmm1
+; X64-NEXT:    punpckldq {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[1],xmm1[1]
+; X64-NEXT:    punpcklqdq {{.*#+}} xmm0 = xmm0[0],xmm3[0]
 ; X64-NEXT:    retq
 ;
 ; X86-LABEL: vec:
@@ -265,45 +264,43 @@ define <4 x i32> @vec(<4 x i32> %x, <4 x i32> %y) nounwind {
 ; X86-NEXT:    pushl %ebx
 ; X86-NEXT:    pushl %edi
 ; X86-NEXT:    pushl %esi
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %ebx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edi
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    imull {{[0-9]+}}(%esp)
 ; X86-NEXT:    movl %eax, %ecx
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    shrdl $2, %edx, %ecx
 ; X86-NEXT:    cmpl $2, %edx
-; X86-NEXT:    movl $2147483647, %ebp # imm = 0x7FFFFFFF
-; X86-NEXT:    cmovgel %ebp, %ecx
+; X86-NEXT:    movl $2147483647, %ebx # imm = 0x7FFFFFFF
+; X86-NEXT:    cmovgel %ebx, %ecx
 ; X86-NEXT:    cmpl $-2, %edx
-; X86-NEXT:    movl $-2147483648, %esi # imm = 0x80000000
-; X86-NEXT:    cmovll %esi, %ecx
-; X86-NEXT:    movl %edi, %eax
+; X86-NEXT:    movl $-2147483648, %ebp # imm = 0x80000000
+; X86-NEXT:    cmovll %ebp, %ecx
+; X86-NEXT:    imull {{[0-9]+}}(%esp)
+; X86-NEXT:    movl %eax, %esi
+; X86-NEXT:    shrdl $2, %edx, %esi
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    cmpl $2, %edx
+; X86-NEXT:    cmovgel %ebx, %esi
+; X86-NEXT:    cmpl $-2, %edx
+; X86-NEXT:    cmovll %ebp, %esi
 ; X86-NEXT:    imull {{[0-9]+}}(%esp)
 ; X86-NEXT:    movl %eax, %edi
 ; X86-NEXT:    shrdl $2, %edx, %edi
-; X86-NEXT:    cmpl $2, %edx
-; X86-NEXT:    cmovgel %ebp, %edi
-; X86-NEXT:    cmpl $-2, %edx
-; X86-NEXT:    cmovll %esi, %edi
-; X86-NEXT:    movl %ebx, %eax
-; X86-NEXT:    imull {{[0-9]+}}(%esp)
-; X86-NEXT:    movl %eax, %ebx
-; X86-NEXT:    shrdl $2, %edx, %ebx
-; X86-NEXT:    cmpl $2, %edx
-; X86-NEXT:    cmovgel %ebp, %ebx
-; X86-NEXT:    cmpl $-2, %edx
-; X86-NEXT:    cmovll %esi, %ebx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    cmpl $2, %edx
+; X86-NEXT:    cmovgel %ebx, %edi
+; X86-NEXT:    cmpl $-2, %edx
+; X86-NEXT:    cmovll %ebp, %edi
 ; X86-NEXT:    imull {{[0-9]+}}(%esp)
 ; X86-NEXT:    shrdl $2, %edx, %eax
 ; X86-NEXT:    cmpl $2, %edx
-; X86-NEXT:    cmovgel %ebp, %eax
+; X86-NEXT:    cmovgel %ebx, %eax
 ; X86-NEXT:    cmpl $-2, %edx
-; X86-NEXT:    cmovll %esi, %eax
+; X86-NEXT:    cmovll %ebp, %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; X86-NEXT:    movl %eax, 12(%edx)
-; X86-NEXT:    movl %ebx, 8(%edx)
-; X86-NEXT:    movl %edi, 4(%edx)
+; X86-NEXT:    movl %edi, 8(%edx)
+; X86-NEXT:    movl %esi, 4(%edx)
 ; X86-NEXT:    movl %ecx, (%edx)
 ; X86-NEXT:    movl %edx, %eax
 ; X86-NEXT:    popl %esi
@@ -384,9 +381,8 @@ define i64 @func5(i64 %x, i64 %y) {
 ; X86-NEXT:    movl %esi, %ebp
 ; X86-NEXT:    imull %edx, %ebx
 ; X86-NEXT:    mull %edx
-; X86-NEXT:    movl %edx, %esi
 ; X86-NEXT:    movl %eax, %edi
-; X86-NEXT:    addl %eax, %esi
+; X86-NEXT:    movl %edx, %esi
 ; X86-NEXT:    addl %ebx, %esi
 ; X86-NEXT:    movl %ebp, %eax
 ; X86-NEXT:    sarl $31, %eax
@@ -395,6 +391,7 @@ define i64 @func5(i64 %x, i64 %y) {
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
 ; X86-NEXT:    movl %edx, %ebx
 ; X86-NEXT:    addl %ebp, %ebx
+; X86-NEXT:    addl %edi, %esi
 ; X86-NEXT:    addl %eax, %ebx
 ; X86-NEXT:    addl %edi, %eax
 ; X86-NEXT:    movl %eax, {{[-0-9]+}}(%e{{[sb]}}p) # 4-byte Spill
@@ -558,25 +555,25 @@ define <4 x i32> @vec2(<4 x i32> %x, <4 x i32> %y) nounwind {
 ; X86-NEXT:    pushl %esi
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ebp
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %ebx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %edi
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    xorl %eax, %eax
+; X86-NEXT:    xorl %ebx, %ebx
 ; X86-NEXT:    movl %ecx, %edx
-; X86-NEXT:    xorl %edi, %edx
+; X86-NEXT:    xorl %eax, %edx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    sets %al
-; X86-NEXT:    addl $2147483647, %eax # imm = 0x7FFFFFFF
-; X86-NEXT:    imull %edi, %ecx
-; X86-NEXT:    cmovol %eax, %ecx
+; X86-NEXT:    sets %bl
+; X86-NEXT:    addl $2147483647, %ebx # imm = 0x7FFFFFFF
+; X86-NEXT:    imull %eax, %ecx
+; X86-NEXT:    cmovol %ebx, %ecx
 ; X86-NEXT:    xorl %eax, %eax
-; X86-NEXT:    movl %edx, %edi
-; X86-NEXT:    xorl %ebx, %edi
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %edi
+; X86-NEXT:    movl %edx, %ebx
+; X86-NEXT:    xorl %edi, %ebx
 ; X86-NEXT:    sets %al
 ; X86-NEXT:    addl $2147483647, %eax # imm = 0x7FFFFFFF
-; X86-NEXT:    imull %ebx, %edx
+; X86-NEXT:    imull %edi, %edx
 ; X86-NEXT:    cmovol %eax, %edx
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %edi
 ; X86-NEXT:    xorl %eax, %eax
 ; X86-NEXT:    movl %edi, %ebx
 ; X86-NEXT:    xorl %esi, %ebx
@@ -628,32 +625,32 @@ define i64 @func7(i64 %x, i64 %y) nounwind {
 ; X86-NEXT:    pushl %esi
 ; X86-NEXT:    pushl %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
+; X86-NEXT:    movl %ecx, %eax
+; X86-NEXT:    mull {{[0-9]+}}(%esp)
+; X86-NEXT:    movl %eax, %ebx
+; X86-NEXT:    movl %edx, %edi
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    movl %edx, %edi
-; X86-NEXT:    movl %eax, %ebp
-; X86-NEXT:    movl %ecx, %eax
-; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    addl %edx, %ebp
+; X86-NEXT:    addl %edx, %ebx
 ; X86-NEXT:    adcl $0, %edi
 ; X86-NEXT:    movl %esi, %eax
 ; X86-NEXT:    imull {{[0-9]+}}(%esp)
-; X86-NEXT:    movl %edx, %ebx
+; X86-NEXT:    movl %edx, %ebp
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    movl %esi, %eax
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    addl %ebp, %eax
+; X86-NEXT:    addl %ebx, %eax
 ; X86-NEXT:    adcl %edi, %edx
-; X86-NEXT:    adcl $0, %ebx
+; X86-NEXT:    adcl $0, %ebp
 ; X86-NEXT:    addl %ecx, %edx
-; X86-NEXT:    adcl $0, %ebx
+; X86-NEXT:    adcl $0, %ebp
 ; X86-NEXT:    movl %edx, %ecx
 ; X86-NEXT:    subl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl %ebx, %esi
+; X86-NEXT:    movl %ebp, %esi
 ; X86-NEXT:    sbbl $0, %esi
 ; X86-NEXT:    cmpl $0, {{[0-9]+}}(%esp)
-; X86-NEXT:    cmovnsl %ebx, %esi
+; X86-NEXT:    cmovnsl %ebp, %esi
 ; X86-NEXT:    cmovsl %ecx, %edx
 ; X86-NEXT:    movl %edx, %edi
 ; X86-NEXT:    subl {{[0-9]+}}(%esp), %edi
@@ -716,39 +713,39 @@ define i64 @func8(i64 %x, i64 %y) nounwind {
 ; X86-NEXT:    pushl %edi
 ; X86-NEXT:    pushl %esi
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    movl %edx, %edi
-; X86-NEXT:    movl %eax, %ebp
+; X86-NEXT:    movl %eax, %ebx
+; X86-NEXT:    movl %edx, %esi
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %edi
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    addl %edx, %ebp
-; X86-NEXT:    adcl $0, %edi
-; X86-NEXT:    movl %esi, %eax
+; X86-NEXT:    addl %edx, %ebx
+; X86-NEXT:    adcl $0, %esi
+; X86-NEXT:    movl %edi, %eax
 ; X86-NEXT:    imull {{[0-9]+}}(%esp)
-; X86-NEXT:    movl %edx, %ebx
+; X86-NEXT:    movl %edx, %ebp
 ; X86-NEXT:    movl %eax, %ecx
-; X86-NEXT:    movl %esi, %eax
+; X86-NEXT:    movl %edi, %eax
 ; X86-NEXT:    mull {{[0-9]+}}(%esp)
-; X86-NEXT:    addl %ebp, %eax
-; X86-NEXT:    adcl %edx, %edi
-; X86-NEXT:    adcl $0, %ebx
-; X86-NEXT:    addl %ecx, %edi
-; X86-NEXT:    adcl $0, %ebx
-; X86-NEXT:    movl %edi, %edx
+; X86-NEXT:    addl %ebx, %eax
+; X86-NEXT:    adcl %edx, %esi
+; X86-NEXT:    adcl $0, %ebp
+; X86-NEXT:    addl %ecx, %esi
+; X86-NEXT:    adcl $0, %ebp
+; X86-NEXT:    movl %esi, %edx
 ; X86-NEXT:    subl {{[0-9]+}}(%esp), %edx
-; X86-NEXT:    movl %ebx, %ebp
-; X86-NEXT:    sbbl $0, %ebp
-; X86-NEXT:    testl %esi, %esi
-; X86-NEXT:    cmovnsl %ebx, %ebp
-; X86-NEXT:    cmovnsl %edi, %edx
+; X86-NEXT:    movl %ebp, %edi
+; X86-NEXT:    sbbl $0, %edi
+; X86-NEXT:    cmpl $0, {{[0-9]+}}(%esp)
+; X86-NEXT:    cmovnsl %ebp, %edi
+; X86-NEXT:    cmovnsl %esi, %edx
 ; X86-NEXT:    movl %edx, %esi
 ; X86-NEXT:    subl {{[0-9]+}}(%esp), %esi
-; X86-NEXT:    movl %ebp, %ecx
+; X86-NEXT:    movl %edi, %ecx
 ; X86-NEXT:    sbbl $0, %ecx
 ; X86-NEXT:    cmpl $0, {{[0-9]+}}(%esp)
-; X86-NEXT:    cmovnsl %ebp, %ecx
+; X86-NEXT:    cmovnsl %edi, %ecx
 ; X86-NEXT:    cmovnsl %edx, %esi
 ; X86-NEXT:    shrdl $31, %esi, %eax
 ; X86-NEXT:    shrdl $31, %ecx, %esi
