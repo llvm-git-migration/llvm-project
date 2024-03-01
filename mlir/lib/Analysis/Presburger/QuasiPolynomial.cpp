@@ -135,7 +135,7 @@ QuasiPolynomial QuasiPolynomial::simplify() {
       if (allCoeffsZero)
         newCoeff *= term[numParam];
       else
-        newAffineTerm.push_back(SmallVector<Fraction>(term));
+        newAffineTerm.emplace_back(term);
     }
 
     newCoeffs.push_back(newCoeff);
