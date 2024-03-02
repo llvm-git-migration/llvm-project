@@ -345,7 +345,7 @@ define <32 x i1> @test_cmp_v32i8(<32 x i8> %a0, <32 x i8> %a1) nounwind {
 ; SSE-NEXT:    pcmpgtb %xmm3, %xmm1
 ; SSE-NEXT:    pmovmskb %xmm1, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    movl %edx, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -698,7 +698,7 @@ define <32 x i1> @test_cmp_v32i16(<32 x i16> %a0, <32 x i16> %a1) nounwind {
 ; SSE-NEXT:    packsswb %xmm3, %xmm2
 ; SSE-NEXT:    pmovmskb %xmm2, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    movl %edx, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -764,15 +764,15 @@ define <64 x i1> @test_cmp_v64i8(<64 x i8> %a0, <64 x i8> %a1) nounwind {
 ; SSE-NEXT:    pcmpgtb %xmm5, %xmm1
 ; SSE-NEXT:    pmovmskb %xmm1, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    pcmpgtb %xmm6, %xmm2
 ; SSE-NEXT:    pmovmskb %xmm2, %ecx
 ; SSE-NEXT:    pcmpgtb %xmm7, %xmm3
 ; SSE-NEXT:    pmovmskb %xmm3, %esi
 ; SSE-NEXT:    shll $16, %esi
-; SSE-NEXT:    orl %ecx, %esi
+; SSE-NEXT:    addl %ecx, %esi
 ; SSE-NEXT:    shlq $32, %rsi
-; SSE-NEXT:    orq %rdx, %rsi
+; SSE-NEXT:    addq %rdx, %rsi
 ; SSE-NEXT:    movq %rsi, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -786,7 +786,7 @@ define <64 x i1> @test_cmp_v64i8(<64 x i8> %a0, <64 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm2, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edx
 ; AVX1-NEXT:    shll $16, %edx
-; AVX1-NEXT:    orl %ecx, %edx
+; AVX1-NEXT:    addl %ecx, %edx
 ; AVX1-NEXT:    vpcmpgtb %xmm3, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    vextractf128 $1, %ymm3, %xmm0
@@ -794,9 +794,9 @@ define <64 x i1> @test_cmp_v64i8(<64 x i8> %a0, <64 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %esi
 ; AVX1-NEXT:    shll $16, %esi
-; AVX1-NEXT:    orl %ecx, %esi
+; AVX1-NEXT:    addl %ecx, %esi
 ; AVX1-NEXT:    shlq $32, %rsi
-; AVX1-NEXT:    orq %rdx, %rsi
+; AVX1-NEXT:    addq %rdx, %rsi
 ; AVX1-NEXT:    movq %rsi, (%rdi)
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
@@ -809,7 +809,7 @@ define <64 x i1> @test_cmp_v64i8(<64 x i8> %a0, <64 x i8> %a1) nounwind {
 ; AVX2-NEXT:    vpcmpgtb %ymm3, %ymm1, %ymm0
 ; AVX2-NEXT:    vpmovmskb %ymm0, %edx
 ; AVX2-NEXT:    shlq $32, %rdx
-; AVX2-NEXT:    orq %rcx, %rdx
+; AVX2-NEXT:    addq %rcx, %rdx
 ; AVX2-NEXT:    movq %rdx, (%rdi)
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
@@ -1003,7 +1003,7 @@ define <32 x i1> @test_cmp_v32f32(<32 x float> %a0, <32 x float> %a1) nounwind {
 ; SSE-NEXT:    packsswb %xmm9, %xmm8
 ; SSE-NEXT:    pmovmskb %xmm8, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    movl %edx, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -1292,7 +1292,7 @@ define <32 x i1> @test_cmp_v32i32(<32 x i32> %a0, <32 x i32> %a1) nounwind {
 ; SSE-NEXT:    packsswb %xmm6, %xmm4
 ; SSE-NEXT:    pmovmskb %xmm4, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    movl %edx, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -1384,7 +1384,7 @@ define <64 x i1> @test_cmp_v64i16(<64 x i16> %a0, <64 x i16> %a1) nounwind {
 ; SSE-NEXT:    packsswb %xmm3, %xmm2
 ; SSE-NEXT:    pmovmskb %xmm2, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    pcmpgtw {{[0-9]+}}(%rsp), %xmm5
 ; SSE-NEXT:    pcmpgtw {{[0-9]+}}(%rsp), %xmm4
 ; SSE-NEXT:    packsswb %xmm5, %xmm4
@@ -1394,9 +1394,9 @@ define <64 x i1> @test_cmp_v64i16(<64 x i16> %a0, <64 x i16> %a1) nounwind {
 ; SSE-NEXT:    packsswb %xmm7, %xmm6
 ; SSE-NEXT:    pmovmskb %xmm6, %esi
 ; SSE-NEXT:    shll $16, %esi
-; SSE-NEXT:    orl %ecx, %esi
+; SSE-NEXT:    addl %ecx, %esi
 ; SSE-NEXT:    shlq $32, %rsi
-; SSE-NEXT:    orq %rdx, %rsi
+; SSE-NEXT:    addq %rdx, %rsi
 ; SSE-NEXT:    movq %rsi, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -1416,7 +1416,7 @@ define <64 x i1> @test_cmp_v64i16(<64 x i16> %a0, <64 x i16> %a1) nounwind {
 ; AVX1-NEXT:    vpacksswb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edx
 ; AVX1-NEXT:    shll $16, %edx
-; AVX1-NEXT:    orl %ecx, %edx
+; AVX1-NEXT:    addl %ecx, %edx
 ; AVX1-NEXT:    vextractf128 $1, %ymm6, %xmm0
 ; AVX1-NEXT:    vextractf128 $1, %ymm2, %xmm1
 ; AVX1-NEXT:    vpcmpgtw %xmm0, %xmm1, %xmm0
@@ -1430,9 +1430,9 @@ define <64 x i1> @test_cmp_v64i16(<64 x i16> %a0, <64 x i16> %a1) nounwind {
 ; AVX1-NEXT:    vpacksswb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %esi
 ; AVX1-NEXT:    shll $16, %esi
-; AVX1-NEXT:    orl %ecx, %esi
+; AVX1-NEXT:    addl %ecx, %esi
 ; AVX1-NEXT:    shlq $32, %rsi
-; AVX1-NEXT:    orq %rdx, %rsi
+; AVX1-NEXT:    addq %rdx, %rsi
 ; AVX1-NEXT:    movq %rsi, (%rdi)
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
@@ -1451,7 +1451,7 @@ define <64 x i1> @test_cmp_v64i16(<64 x i16> %a0, <64 x i16> %a1) nounwind {
 ; AVX2-NEXT:    vpermq {{.*#+}} ymm0 = ymm0[0,2,1,3]
 ; AVX2-NEXT:    vpmovmskb %ymm0, %edx
 ; AVX2-NEXT:    shlq $32, %rdx
-; AVX2-NEXT:    orq %rcx, %rdx
+; AVX2-NEXT:    addq %rcx, %rdx
 ; AVX2-NEXT:    movq %rdx, (%rdi)
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
@@ -1528,29 +1528,29 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm1
 ; SSE-NEXT:    pmovmskb %xmm1, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm2
 ; SSE-NEXT:    pmovmskb %xmm2, %esi
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm3
 ; SSE-NEXT:    pmovmskb %xmm3, %ecx
 ; SSE-NEXT:    shll $16, %ecx
-; SSE-NEXT:    orl %esi, %ecx
+; SSE-NEXT:    addl %esi, %ecx
 ; SSE-NEXT:    shlq $32, %rcx
-; SSE-NEXT:    orq %rdx, %rcx
+; SSE-NEXT:    addq %rdx, %rcx
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm4
 ; SSE-NEXT:    pmovmskb %xmm4, %edx
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm5
 ; SSE-NEXT:    pmovmskb %xmm5, %esi
 ; SSE-NEXT:    shll $16, %esi
-; SSE-NEXT:    orl %edx, %esi
+; SSE-NEXT:    addl %edx, %esi
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm6
 ; SSE-NEXT:    pmovmskb %xmm6, %edx
 ; SSE-NEXT:    pcmpgtb {{[0-9]+}}(%rsp), %xmm7
 ; SSE-NEXT:    pmovmskb %xmm7, %edi
 ; SSE-NEXT:    shll $16, %edi
-; SSE-NEXT:    orl %edx, %edi
+; SSE-NEXT:    addl %edx, %edi
 ; SSE-NEXT:    shlq $32, %rdi
-; SSE-NEXT:    orq %rsi, %rdi
+; SSE-NEXT:    addq %rsi, %rdi
 ; SSE-NEXT:    movq %rdi, 8(%rax)
 ; SSE-NEXT:    movq %rcx, (%rax)
 ; SSE-NEXT:    retq
@@ -1565,7 +1565,7 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm4, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edx
 ; AVX1-NEXT:    shll $16, %edx
-; AVX1-NEXT:    orl %ecx, %edx
+; AVX1-NEXT:    addl %ecx, %edx
 ; AVX1-NEXT:    vpcmpgtb %xmm5, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %esi
 ; AVX1-NEXT:    vextractf128 $1, %ymm5, %xmm0
@@ -1573,9 +1573,9 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    shll $16, %ecx
-; AVX1-NEXT:    orl %esi, %ecx
+; AVX1-NEXT:    addl %esi, %ecx
 ; AVX1-NEXT:    shlq $32, %rcx
-; AVX1-NEXT:    orq %rdx, %rcx
+; AVX1-NEXT:    addq %rdx, %rcx
 ; AVX1-NEXT:    vpcmpgtb %xmm6, %xmm2, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edx
 ; AVX1-NEXT:    vextractf128 $1, %ymm6, %xmm0
@@ -1583,7 +1583,7 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %esi
 ; AVX1-NEXT:    shll $16, %esi
-; AVX1-NEXT:    orl %edx, %esi
+; AVX1-NEXT:    addl %edx, %esi
 ; AVX1-NEXT:    vpcmpgtb %xmm7, %xmm3, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edx
 ; AVX1-NEXT:    vextractf128 $1, %ymm7, %xmm0
@@ -1591,9 +1591,9 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; AVX1-NEXT:    vpcmpgtb %xmm0, %xmm1, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %edi
 ; AVX1-NEXT:    shll $16, %edi
-; AVX1-NEXT:    orl %edx, %edi
+; AVX1-NEXT:    addl %edx, %edi
 ; AVX1-NEXT:    shlq $32, %rdi
-; AVX1-NEXT:    orq %rsi, %rdi
+; AVX1-NEXT:    addq %rsi, %rdi
 ; AVX1-NEXT:    movq %rdi, 8(%rax)
 ; AVX1-NEXT:    movq %rcx, (%rax)
 ; AVX1-NEXT:    vzeroupper
@@ -1607,13 +1607,13 @@ define <128 x i1> @test_cmp_v128i8(<128 x i8> %a0, <128 x i8> %a1) nounwind {
 ; AVX2-NEXT:    vpcmpgtb %ymm5, %ymm1, %ymm0
 ; AVX2-NEXT:    vpmovmskb %ymm0, %edx
 ; AVX2-NEXT:    shlq $32, %rdx
-; AVX2-NEXT:    orq %rcx, %rdx
+; AVX2-NEXT:    addq %rcx, %rdx
 ; AVX2-NEXT:    vpcmpgtb %ymm6, %ymm2, %ymm0
 ; AVX2-NEXT:    vpmovmskb %ymm0, %ecx
 ; AVX2-NEXT:    vpcmpgtb %ymm7, %ymm3, %ymm0
 ; AVX2-NEXT:    vpmovmskb %ymm0, %esi
 ; AVX2-NEXT:    shlq $32, %rsi
-; AVX2-NEXT:    orq %rcx, %rsi
+; AVX2-NEXT:    addq %rcx, %rsi
 ; AVX2-NEXT:    movq %rsi, 8(%rdi)
 ; AVX2-NEXT:    movq %rdx, (%rdi)
 ; AVX2-NEXT:    vzeroupper
@@ -1773,7 +1773,7 @@ define <32 x i1> @test_cmp_v32f64(<32 x double> %a0, <32 x double> %a1) nounwind
 ; SSE-NEXT:    packsswb %xmm1, %xmm0
 ; SSE-NEXT:    pmovmskb %xmm0, %edx
 ; SSE-NEXT:    shll $16, %edx
-; SSE-NEXT:    orl %ecx, %edx
+; SSE-NEXT:    addl %ecx, %edx
 ; SSE-NEXT:    movl %edx, (%rdi)
 ; SSE-NEXT:    retq
 ;
@@ -2117,7 +2117,7 @@ define <32 x i1> @test_cmp_v32i64(<32 x i64> %a0, <32 x i64> %a1) nounwind {
 ; SSE2-NEXT:    packsswb %xmm0, %xmm4
 ; SSE2-NEXT:    pmovmskb %xmm4, %edx
 ; SSE2-NEXT:    shll $16, %edx
-; SSE2-NEXT:    orl %ecx, %edx
+; SSE2-NEXT:    addl %ecx, %edx
 ; SSE2-NEXT:    movl %edx, (%rdi)
 ; SSE2-NEXT:    retq
 ;
@@ -2165,7 +2165,7 @@ define <32 x i1> @test_cmp_v32i64(<32 x i64> %a0, <32 x i64> %a1) nounwind {
 ; SSE42-NEXT:    packsswb %xmm9, %xmm8
 ; SSE42-NEXT:    pmovmskb %xmm8, %edx
 ; SSE42-NEXT:    shll $16, %edx
-; SSE42-NEXT:    orl %ecx, %edx
+; SSE42-NEXT:    addl %ecx, %edx
 ; SSE42-NEXT:    movl %edx, (%rdi)
 ; SSE42-NEXT:    retq
 ;

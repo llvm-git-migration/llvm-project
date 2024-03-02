@@ -20,7 +20,7 @@ define <2 x i16> @test_bitreverse_v2i16(<2 x i16> %a) nounwind {
 ; X86-NEXT:    shll $4, %edx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $3855, %eax # imm = 0xF0F
-; X86-NEXT:    orl %edx, %eax
+; X86-NEXT:    addl %edx, %eax
 ; X86-NEXT:    movl %eax, %edx
 ; X86-NEXT:    andl $13107, %edx # imm = 0x3333
 ; X86-NEXT:    shrl $2, %eax
@@ -37,7 +37,7 @@ define <2 x i16> @test_bitreverse_v2i16(<2 x i16> %a) nounwind {
 ; X86-NEXT:    shll $4, %edx
 ; X86-NEXT:    shrl $4, %ecx
 ; X86-NEXT:    andl $3855, %ecx # imm = 0xF0F
-; X86-NEXT:    orl %edx, %ecx
+; X86-NEXT:    addl %edx, %ecx
 ; X86-NEXT:    movl %ecx, %edx
 ; X86-NEXT:    andl $13107, %edx # imm = 0x3333
 ; X86-NEXT:    shrl $2, %ecx
@@ -108,7 +108,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %edx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %edx, %eax
+; X86-NEXT:    addl %edx, %eax
 ; X86-NEXT:    movl %eax, %edx
 ; X86-NEXT:    andl $858993459, %edx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -125,7 +125,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %edx
 ; X86-NEXT:    shrl $4, %ecx
 ; X86-NEXT:    andl $252645135, %ecx # imm = 0xF0F0F0F
-; X86-NEXT:    orl %edx, %ecx
+; X86-NEXT:    addl %edx, %ecx
 ; X86-NEXT:    movl %ecx, %edx
 ; X86-NEXT:    andl $858993459, %edx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %ecx
@@ -147,7 +147,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; X64-NEXT:    andq %rcx, %rax
 ; X64-NEXT:    andq %rcx, %rdi
 ; X64-NEXT:    shlq $4, %rdi
-; X64-NEXT:    orq %rax, %rdi
+; X64-NEXT:    addq %rax, %rdi
 ; X64-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; X64-NEXT:    movq %rdi, %rcx
 ; X64-NEXT:    andq %rax, %rcx
@@ -179,7 +179,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; GFNI-NEXT:    andq %rcx, %rax
 ; GFNI-NEXT:    andq %rcx, %rdi
 ; GFNI-NEXT:    shlq $4, %rdi
-; GFNI-NEXT:    orq %rax, %rdi
+; GFNI-NEXT:    addq %rax, %rdi
 ; GFNI-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; GFNI-NEXT:    movq %rdi, %rcx
 ; GFNI-NEXT:    andq %rax, %rcx
@@ -209,7 +209,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -231,7 +231,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; X64-NEXT:    shrl $2, %edi
@@ -260,7 +260,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; GFNI-NEXT:    shll $4, %eax
 ; GFNI-NEXT:    shrl $4, %edi
 ; GFNI-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; GFNI-NEXT:    orl %eax, %edi
+; GFNI-NEXT:    addl %eax, %edi
 ; GFNI-NEXT:    movl %edi, %eax
 ; GFNI-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; GFNI-NEXT:    shrl $2, %edi
@@ -288,7 +288,7 @@ define i24 @test_bitreverse_i24(i24 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -311,7 +311,7 @@ define i24 @test_bitreverse_i24(i24 %a) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; X64-NEXT:    shrl $2, %edi
@@ -342,7 +342,7 @@ define i24 @test_bitreverse_i24(i24 %a) nounwind {
 ; GFNI-NEXT:    shll $4, %eax
 ; GFNI-NEXT:    shrl $4, %edi
 ; GFNI-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; GFNI-NEXT:    orl %eax, %edi
+; GFNI-NEXT:    addl %eax, %edi
 ; GFNI-NEXT:    movl %edi, %eax
 ; GFNI-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; GFNI-NEXT:    shrl $2, %edi
@@ -371,7 +371,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $3855, %eax # imm = 0xF0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $13107, %ecx # imm = 0x3333
 ; X86-NEXT:    shrl $2, %eax
@@ -394,7 +394,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $3855, %edi # imm = 0xF0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $13107, %eax # imm = 0x3333
 ; X64-NEXT:    shrl $2, %edi
@@ -425,7 +425,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; GFNI-NEXT:    shll $4, %eax
 ; GFNI-NEXT:    shrl $4, %edi
 ; GFNI-NEXT:    andl $3855, %edi # imm = 0xF0F
-; GFNI-NEXT:    orl %eax, %edi
+; GFNI-NEXT:    addl %eax, %edi
 ; GFNI-NEXT:    movl %edi, %eax
 ; GFNI-NEXT:    andl $13107, %eax # imm = 0x3333
 ; GFNI-NEXT:    shrl $2, %edi
@@ -454,13 +454,13 @@ define i8 @test_bitreverse_i8(i8 %a) {
 ; X86-NEXT:    shlb $2, %cl
 ; X86-NEXT:    shrb $2, %al
 ; X86-NEXT:    andb $51, %al
-; X86-NEXT:    orb %cl, %al
+; X86-NEXT:    addb %cl, %al
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andb $85, %cl
 ; X86-NEXT:    addb %cl, %cl
 ; X86-NEXT:    shrb %al
 ; X86-NEXT:    andb $85, %al
-; X86-NEXT:    orb %cl, %al
+; X86-NEXT:    addb %cl, %al
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: test_bitreverse_i8:
@@ -471,13 +471,13 @@ define i8 @test_bitreverse_i8(i8 %a) {
 ; X64-NEXT:    shlb $2, %al
 ; X64-NEXT:    shrb $2, %dil
 ; X64-NEXT:    andb $51, %dil
-; X64-NEXT:    orb %dil, %al
+; X64-NEXT:    addb %dil, %al
 ; X64-NEXT:    movl %eax, %ecx
 ; X64-NEXT:    andb $85, %cl
 ; X64-NEXT:    addb %cl, %cl
 ; X64-NEXT:    shrb %al
 ; X64-NEXT:    andb $85, %al
-; X64-NEXT:    orb %cl, %al
+; X64-NEXT:    addb %cl, %al
 ; X64-NEXT:    retq
 ;
 ; X86XOP-LABEL: test_bitreverse_i8:
@@ -496,13 +496,13 @@ define i8 @test_bitreverse_i8(i8 %a) {
 ; GFNI-NEXT:    shlb $2, %al
 ; GFNI-NEXT:    shrb $2, %dil
 ; GFNI-NEXT:    andb $51, %dil
-; GFNI-NEXT:    orb %dil, %al
+; GFNI-NEXT:    addb %dil, %al
 ; GFNI-NEXT:    movl %eax, %ecx
 ; GFNI-NEXT:    andb $85, %cl
 ; GFNI-NEXT:    addb %cl, %cl
 ; GFNI-NEXT:    shrb %al
 ; GFNI-NEXT:    andb $85, %al
-; GFNI-NEXT:    orb %cl, %al
+; GFNI-NEXT:    addb %cl, %al
 ; GFNI-NEXT:    retq
   %b = call i8 @llvm.bitreverse.i8(i8 %a)
   ret i8 %b
@@ -522,12 +522,12 @@ define i4 @test_bitreverse_i4(i4 %a) {
 ; X86-NEXT:    movb %cl, %ah
 ; X86-NEXT:    shlb $3, %ah
 ; X86-NEXT:    andb $8, %ah
-; X86-NEXT:    orb %dl, %ah
+; X86-NEXT:    addb %dl, %ah
 ; X86-NEXT:    shrb %cl
 ; X86-NEXT:    andb $2, %cl
-; X86-NEXT:    orb %ah, %cl
 ; X86-NEXT:    shrb $3, %al
-; X86-NEXT:    orb %cl, %al
+; X86-NEXT:    addb %cl, %al
+; X86-NEXT:    addb %ah, %al
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: test_bitreverse_i4:
@@ -539,12 +539,12 @@ define i4 @test_bitreverse_i4(i4 %a) {
 ; X64-NEXT:    andb $4, %cl
 ; X64-NEXT:    leal (,%rdi,8), %edx
 ; X64-NEXT:    andb $8, %dl
-; X64-NEXT:    orb %cl, %dl
+; X64-NEXT:    addb %cl, %dl
 ; X64-NEXT:    shrb %dil
 ; X64-NEXT:    andb $2, %dil
-; X64-NEXT:    orb %dil, %dl
 ; X64-NEXT:    shrb $3, %al
-; X64-NEXT:    orb %dl, %al
+; X64-NEXT:    addb %dil, %al
+; X64-NEXT:    addb %dl, %al
 ; X64-NEXT:    retq
 ;
 ; X86XOP-LABEL: test_bitreverse_i4:
@@ -565,12 +565,12 @@ define i4 @test_bitreverse_i4(i4 %a) {
 ; GFNI-NEXT:    andb $4, %cl
 ; GFNI-NEXT:    leal (,%rdi,8), %edx
 ; GFNI-NEXT:    andb $8, %dl
-; GFNI-NEXT:    orb %cl, %dl
+; GFNI-NEXT:    addb %cl, %dl
 ; GFNI-NEXT:    shrb %dil
 ; GFNI-NEXT:    andb $2, %dil
-; GFNI-NEXT:    orb %dil, %dl
 ; GFNI-NEXT:    shrb $3, %al
-; GFNI-NEXT:    orb %dl, %al
+; GFNI-NEXT:    addb %dil, %al
+; GFNI-NEXT:    addb %dl, %al
 ; GFNI-NEXT:    retq
   %b = call i4 @llvm.bitreverse.i4(i4 %a)
   ret i4 %b
@@ -723,7 +723,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ebp
 ; X86-NEXT:    shrl $4, %ebx
 ; X86-NEXT:    andl $252645135, %ebx # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ebp, %ebx
+; X86-NEXT:    addl %ebp, %ebx
 ; X86-NEXT:    movl %ebx, %ebp
 ; X86-NEXT:    andl $858993459, %ebp # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %ebx
@@ -740,7 +740,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ebx
 ; X86-NEXT:    shrl $4, %edi
 ; X86-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ebx, %edi
+; X86-NEXT:    addl %ebx, %edi
 ; X86-NEXT:    movl %edi, %ebx
 ; X86-NEXT:    andl $858993459, %ebx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %edi
@@ -758,7 +758,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %edi
 ; X86-NEXT:    shrl $4, %esi
 ; X86-NEXT:    andl $252645135, %esi # imm = 0xF0F0F0F
-; X86-NEXT:    orl %edi, %esi
+; X86-NEXT:    addl %edi, %esi
 ; X86-NEXT:    movl %esi, %edi
 ; X86-NEXT:    andl $858993459, %edi # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %esi
@@ -775,7 +775,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %esi
 ; X86-NEXT:    shrl $4, %edx
 ; X86-NEXT:    andl $252645135, %edx # imm = 0xF0F0F0F
-; X86-NEXT:    orl %esi, %edx
+; X86-NEXT:    addl %esi, %edx
 ; X86-NEXT:    movl %edx, %esi
 ; X86-NEXT:    andl $858993459, %esi # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %edx
@@ -793,7 +793,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %edx
 ; X86-NEXT:    shrl $4, %ecx
 ; X86-NEXT:    andl $252645135, %ecx # imm = 0xF0F0F0F
-; X86-NEXT:    orl %edx, %ecx
+; X86-NEXT:    addl %edx, %ecx
 ; X86-NEXT:    movl %ecx, %edx
 ; X86-NEXT:    andl $858993459, %edx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %ecx
@@ -811,7 +811,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -830,7 +830,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -849,7 +849,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -868,7 +868,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -887,7 +887,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -905,7 +905,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -924,7 +924,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -943,7 +943,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -962,7 +962,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -981,7 +981,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -1000,7 +1000,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -1019,7 +1019,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -1128,7 +1128,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r10
 ; X64-NEXT:    andq %r11, %rdi
 ; X64-NEXT:    shlq $4, %rdi
-; X64-NEXT:    orq %r10, %rdi
+; X64-NEXT:    addq %r10, %rdi
 ; X64-NEXT:    movabsq $3689348814741910323, %r10 # imm = 0x3333333333333333
 ; X64-NEXT:    movq %rdi, %r14
 ; X64-NEXT:    andq %r10, %r14
@@ -1147,7 +1147,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r14
 ; X64-NEXT:    andq %r11, %rbx
 ; X64-NEXT:    shlq $4, %rbx
-; X64-NEXT:    orq %r14, %rbx
+; X64-NEXT:    addq %r14, %rbx
 ; X64-NEXT:    movq %rbx, %r14
 ; X64-NEXT:    andq %r10, %r14
 ; X64-NEXT:    shrq $2, %rbx
@@ -1166,7 +1166,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %r15
 ; X64-NEXT:    shlq $4, %r15
-; X64-NEXT:    orq %r13, %r15
+; X64-NEXT:    addq %r13, %r15
 ; X64-NEXT:    movq %r15, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %r15
@@ -1184,7 +1184,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %r12
 ; X64-NEXT:    shlq $4, %r12
-; X64-NEXT:    orq %r13, %r12
+; X64-NEXT:    addq %r13, %r12
 ; X64-NEXT:    movq %r12, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %r12
@@ -1202,7 +1202,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %r9
 ; X64-NEXT:    shlq $4, %r9
-; X64-NEXT:    orq %r13, %r9
+; X64-NEXT:    addq %r13, %r9
 ; X64-NEXT:    movq %r9, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %r9
@@ -1220,7 +1220,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %r8
 ; X64-NEXT:    shlq $4, %r8
-; X64-NEXT:    orq %r13, %r8
+; X64-NEXT:    addq %r13, %r8
 ; X64-NEXT:    movq %r8, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %r8
@@ -1238,7 +1238,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %rcx
 ; X64-NEXT:    shlq $4, %rcx
-; X64-NEXT:    orq %r13, %rcx
+; X64-NEXT:    addq %r13, %rcx
 ; X64-NEXT:    movq %rcx, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %rcx
@@ -1256,7 +1256,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %rdx
 ; X64-NEXT:    shlq $4, %rdx
-; X64-NEXT:    orq %r13, %rdx
+; X64-NEXT:    addq %r13, %rdx
 ; X64-NEXT:    movq %rdx, %r13
 ; X64-NEXT:    andq %r10, %r13
 ; X64-NEXT:    shrq $2, %rdx
@@ -1274,7 +1274,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; X64-NEXT:    andq %r11, %r13
 ; X64-NEXT:    andq %r11, %rsi
 ; X64-NEXT:    shlq $4, %rsi
-; X64-NEXT:    orq %r13, %rsi
+; X64-NEXT:    addq %r13, %rsi
 ; X64-NEXT:    movq %rsi, %r11
 ; X64-NEXT:    andq %r10, %r11
 ; X64-NEXT:    shrq $2, %rsi
@@ -1429,7 +1429,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r10
 ; GFNI-NEXT:    andq %r11, %rdi
 ; GFNI-NEXT:    shlq $4, %rdi
-; GFNI-NEXT:    orq %r10, %rdi
+; GFNI-NEXT:    addq %r10, %rdi
 ; GFNI-NEXT:    movabsq $3689348814741910323, %r10 # imm = 0x3333333333333333
 ; GFNI-NEXT:    movq %rdi, %r14
 ; GFNI-NEXT:    andq %r10, %r14
@@ -1448,7 +1448,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r14
 ; GFNI-NEXT:    andq %r11, %rbx
 ; GFNI-NEXT:    shlq $4, %rbx
-; GFNI-NEXT:    orq %r14, %rbx
+; GFNI-NEXT:    addq %r14, %rbx
 ; GFNI-NEXT:    movq %rbx, %r14
 ; GFNI-NEXT:    andq %r10, %r14
 ; GFNI-NEXT:    shrq $2, %rbx
@@ -1467,7 +1467,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %r15
 ; GFNI-NEXT:    shlq $4, %r15
-; GFNI-NEXT:    orq %r13, %r15
+; GFNI-NEXT:    addq %r13, %r15
 ; GFNI-NEXT:    movq %r15, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %r15
@@ -1485,7 +1485,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %r12
 ; GFNI-NEXT:    shlq $4, %r12
-; GFNI-NEXT:    orq %r13, %r12
+; GFNI-NEXT:    addq %r13, %r12
 ; GFNI-NEXT:    movq %r12, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %r12
@@ -1503,7 +1503,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %r9
 ; GFNI-NEXT:    shlq $4, %r9
-; GFNI-NEXT:    orq %r13, %r9
+; GFNI-NEXT:    addq %r13, %r9
 ; GFNI-NEXT:    movq %r9, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %r9
@@ -1521,7 +1521,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %r8
 ; GFNI-NEXT:    shlq $4, %r8
-; GFNI-NEXT:    orq %r13, %r8
+; GFNI-NEXT:    addq %r13, %r8
 ; GFNI-NEXT:    movq %r8, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %r8
@@ -1539,7 +1539,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %rcx
 ; GFNI-NEXT:    shlq $4, %rcx
-; GFNI-NEXT:    orq %r13, %rcx
+; GFNI-NEXT:    addq %r13, %rcx
 ; GFNI-NEXT:    movq %rcx, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %rcx
@@ -1557,7 +1557,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %rdx
 ; GFNI-NEXT:    shlq $4, %rdx
-; GFNI-NEXT:    orq %r13, %rdx
+; GFNI-NEXT:    addq %r13, %rdx
 ; GFNI-NEXT:    movq %rdx, %r13
 ; GFNI-NEXT:    andq %r10, %r13
 ; GFNI-NEXT:    shrq $2, %rdx
@@ -1575,7 +1575,7 @@ define i528 @large_promotion(i528 %A) nounwind {
 ; GFNI-NEXT:    andq %r11, %r13
 ; GFNI-NEXT:    andq %r11, %rsi
 ; GFNI-NEXT:    shlq $4, %rsi
-; GFNI-NEXT:    orq %r13, %rsi
+; GFNI-NEXT:    addq %r13, %rsi
 ; GFNI-NEXT:    movq %rsi, %r11
 ; GFNI-NEXT:    andq %r10, %r11
 ; GFNI-NEXT:    shrq $2, %rsi

@@ -21,7 +21,7 @@ define i64 @foo(i64 %b) nounwind readnone {
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    movsbq %dil, %rax
 ; CHECK-NEXT:    shlq $8, %rax
-; CHECK-NEXT:    orq $1, %rax
+; CHECK-NEXT:    incq %rax
 ; CHECK-NEXT:    retq
 entry:
 	%shl = shl i64 %b, 56		; <i64> [#uses=1]

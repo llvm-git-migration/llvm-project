@@ -3282,7 +3282,7 @@ define void @store_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %val) {
 ; SSE2-NEXT:    pcmpeqb %xmm4, %xmm1
 ; SSE2-NEXT:    pmovmskb %xmm1, %eax
 ; SSE2-NEXT:    shll $16, %eax
-; SSE2-NEXT:    orl %ecx, %eax
+; SSE2-NEXT:    addl %ecx, %eax
 ; SSE2-NEXT:    testb $1, %al
 ; SSE2-NEXT:    movd %xmm2, %ecx
 ; SSE2-NEXT:    jne LBB16_1
@@ -3490,7 +3490,7 @@ define void @store_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %val) {
 ; SSE4-NEXT:    pcmpeqb %xmm4, %xmm1
 ; SSE4-NEXT:    pmovmskb %xmm1, %eax
 ; SSE4-NEXT:    shll $16, %eax
-; SSE4-NEXT:    orl %ecx, %eax
+; SSE4-NEXT:    addl %ecx, %eax
 ; SSE4-NEXT:    testb $1, %al
 ; SSE4-NEXT:    jne LBB16_1
 ; SSE4-NEXT:  ## %bb.2: ## %else
@@ -3725,7 +3725,7 @@ define void @store_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %val) {
 ; AVX1-NEXT:    vpcmpeqb %xmm2, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    testb $1, %al
 ; AVX1-NEXT:    jne LBB16_1
 ; AVX1-NEXT:  ## %bb.2: ## %else
@@ -5273,10 +5273,10 @@ define void @widen_masked_store(<3 x i32> %v, ptr %p, <3 x i1> %mask) {
 ; SSE2-NEXT:    andb $1, %sil
 ; SSE2-NEXT:    andb $1, %dl
 ; SSE2-NEXT:    addb %dl, %dl
-; SSE2-NEXT:    orb %sil, %dl
+; SSE2-NEXT:    addb %sil, %dl
 ; SSE2-NEXT:    andb $1, %cl
 ; SSE2-NEXT:    shlb $2, %cl
-; SSE2-NEXT:    orb %dl, %cl
+; SSE2-NEXT:    addb %dl, %cl
 ; SSE2-NEXT:    testb $1, %cl
 ; SSE2-NEXT:    jne LBB28_1
 ; SSE2-NEXT:  ## %bb.2: ## %else
@@ -5306,10 +5306,10 @@ define void @widen_masked_store(<3 x i32> %v, ptr %p, <3 x i1> %mask) {
 ; SSE4-NEXT:    andb $1, %sil
 ; SSE4-NEXT:    andb $1, %dl
 ; SSE4-NEXT:    addb %dl, %dl
-; SSE4-NEXT:    orb %sil, %dl
+; SSE4-NEXT:    addb %sil, %dl
 ; SSE4-NEXT:    andb $1, %cl
 ; SSE4-NEXT:    shlb $2, %cl
-; SSE4-NEXT:    orb %dl, %cl
+; SSE4-NEXT:    addb %dl, %cl
 ; SSE4-NEXT:    testb $1, %cl
 ; SSE4-NEXT:    jne LBB28_1
 ; SSE4-NEXT:  ## %bb.2: ## %else
@@ -5665,7 +5665,7 @@ define void @store_v24i32_v24i32_stride6_vf4_only_even_numbered_elts(ptr %trigge
 ; SSE2-NEXT:    pmovmskb %xmm8, %ecx
 ; SSE2-NEXT:    andl $85, %ecx
 ; SSE2-NEXT:    shll $16, %ecx
-; SSE2-NEXT:    orl %edi, %ecx
+; SSE2-NEXT:    addl %edi, %ecx
 ; SSE2-NEXT:    testb $1, %cl
 ; SSE2-NEXT:    jne LBB31_1
 ; SSE2-NEXT:  ## %bb.2: ## %else
@@ -5926,7 +5926,7 @@ define void @store_v24i32_v24i32_stride6_vf4_only_even_numbered_elts(ptr %trigge
 ; SSE4-NEXT:    pmovmskb %xmm0, %edi
 ; SSE4-NEXT:    andl $85, %edi
 ; SSE4-NEXT:    shll $16, %edi
-; SSE4-NEXT:    orl %eax, %edi
+; SSE4-NEXT:    addl %eax, %edi
 ; SSE4-NEXT:    movl 48(%rsi), %r13d
 ; SSE4-NEXT:    testb $1, %dil
 ; SSE4-NEXT:    movl 44(%rsi), %eax

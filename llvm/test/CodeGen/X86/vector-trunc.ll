@@ -2000,7 +2000,7 @@ define i16 @PR66194(i8 %q) {
 ; SSE2-SSSE3-NEXT:    sete %cl
 ; SSE2-SSSE3-NEXT:    movl %ecx, %edx
 ; SSE2-SSSE3-NEXT:    shll $16, %edx
-; SSE2-SSSE3-NEXT:    orl %eax, %edx
+; SSE2-SSSE3-NEXT:    addl %eax, %edx
 ; SSE2-SSSE3-NEXT:    movd %edx, %xmm0
 ; SSE2-SSSE3-NEXT:    pinsrw $2, %eax, %xmm0
 ; SSE2-SSSE3-NEXT:    pinsrw $3, %eax, %xmm0

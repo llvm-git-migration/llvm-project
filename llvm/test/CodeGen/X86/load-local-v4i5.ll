@@ -17,13 +17,13 @@ define void @_start() {
 ; CHECK-NEXT:    andl $31, %eax
 ; CHECK-NEXT:    andl $31, %esi
 ; CHECK-NEXT:    shll $5, %esi
-; CHECK-NEXT:    orl %eax, %esi
+; CHECK-NEXT:    addl %eax, %esi
 ; CHECK-NEXT:    andl $31, %edx
 ; CHECK-NEXT:    shll $10, %edx
-; CHECK-NEXT:    orl %esi, %edx
 ; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    shll $15, %eax
-; CHECK-NEXT:    orl %edx, %eax
+; CHECK-NEXT:    addl %edx, %eax
+; CHECK-NEXT:    addl %esi, %eax
 ; CHECK-NEXT:    movw %ax, -4(%rsp)
 ; CHECK-NEXT:    movb %dil, -5(%rsp)
 ; CHECK-NEXT:    cmpb $31, %dil

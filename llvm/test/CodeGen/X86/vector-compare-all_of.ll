@@ -903,7 +903,7 @@ define i32 @test_v32i8_muti_uses(<32 x i8> %x, <32 x i8>%y, i32 %z) {
 ; SSE-NEXT:    pcmpeqb %xmm3, %xmm1
 ; SSE-NEXT:    pmovmskb %xmm1, %ecx
 ; SSE-NEXT:    shll $16, %ecx
-; SSE-NEXT:    orl %eax, %ecx
+; SSE-NEXT:    addl %eax, %ecx
 ; SSE-NEXT:    cmpl $-1, %ecx
 ; SSE-NEXT:    movl $16, %eax
 ; SSE-NEXT:    cmovnel %ecx, %eax
@@ -918,7 +918,7 @@ define i32 @test_v32i8_muti_uses(<32 x i8> %x, <32 x i8>%y, i32 %z) {
 ; AVX1-NEXT:    vpcmpeqb %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    shll $16, %ecx
-; AVX1-NEXT:    orl %eax, %ecx
+; AVX1-NEXT:    addl %eax, %ecx
 ; AVX1-NEXT:    cmpl $-1, %ecx
 ; AVX1-NEXT:    movl $16, %eax
 ; AVX1-NEXT:    cmovnel %ecx, %eax

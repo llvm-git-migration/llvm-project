@@ -14,7 +14,7 @@ define void @translate(ptr %ptr) nounwind {
 ; CHECK-NEXT:    movl $-32707, %ebp # imm = 0x803D
 ; CHECK-NEXT:    andl (%rdi), %ebp
 ; CHECK-NEXT:    callq maybe_mutate@PLT
-; CHECK-NEXT:    orl $514, %ebp # imm = 0x202
+; CHECK-NEXT:    addl $514, %ebp # imm = 0x202
 ; CHECK-NEXT:    movw %bp, (%rbx)
 ; CHECK-NEXT:    addq $8, %rsp
 ; CHECK-NEXT:    popq %rbx

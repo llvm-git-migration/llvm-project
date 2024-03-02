@@ -84,7 +84,7 @@ define i32 @kshiftl_v32i1_1(<32 x i16> %x, <32 x i16> %y) {
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0 {%k2}
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %ecx, %eax
+; KNL-NEXT:    addl %ecx, %eax
 ; KNL-NEXT:    vzeroupper
 ; KNL-NEXT:    retq
 ;
@@ -146,15 +146,15 @@ define i64 @kshiftl_v64i1_1(<64 x i8> %x, <64 x i8> %y) {
 ; KNL-NEXT:    vptestmd %zmm4, %zmm4, %k0 {%k4}
 ; KNL-NEXT:    kmovw %k0, %ecx
 ; KNL-NEXT:    shll $16, %ecx
-; KNL-NEXT:    orl %eax, %ecx
+; KNL-NEXT:    addl %eax, %ecx
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0 {%k2}
 ; KNL-NEXT:    kmovw %k0, %edx
 ; KNL-NEXT:    vptestmd %zmm3, %zmm3, %k0 {%k1}
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %edx, %eax
+; KNL-NEXT:    addl %edx, %eax
 ; KNL-NEXT:    shlq $32, %rax
-; KNL-NEXT:    orq %rcx, %rax
+; KNL-NEXT:    addq %rcx, %rax
 ; KNL-NEXT:    vzeroupper
 ; KNL-NEXT:    retq
 ;
@@ -381,7 +381,7 @@ define i32 @kshiftr_v32i1_1(<32 x i16> %x, <32 x i16> %y) {
 ; KNL-NEXT:    shll $16, %ecx
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0 {%k2}
 ; KNL-NEXT:    kmovw %k0, %eax
-; KNL-NEXT:    orl %ecx, %eax
+; KNL-NEXT:    addl %ecx, %eax
 ; KNL-NEXT:    vzeroupper
 ; KNL-NEXT:    retq
 ;
@@ -443,15 +443,15 @@ define i64 @kshiftr_v64i1_1(<64 x i8> %x, <64 x i8> %y) {
 ; KNL-NEXT:    shll $16, %eax
 ; KNL-NEXT:    vptestmd %zmm3, %zmm3, %k0 {%k4}
 ; KNL-NEXT:    kmovw %k0, %ecx
-; KNL-NEXT:    orl %eax, %ecx
+; KNL-NEXT:    addl %eax, %ecx
 ; KNL-NEXT:    shlq $32, %rcx
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0 {%k2}
 ; KNL-NEXT:    kmovw %k0, %edx
 ; KNL-NEXT:    vptestmd %zmm4, %zmm4, %k0 {%k1}
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %edx, %eax
-; KNL-NEXT:    orq %rcx, %rax
+; KNL-NEXT:    addl %edx, %eax
+; KNL-NEXT:    addq %rcx, %rax
 ; KNL-NEXT:    vzeroupper
 ; KNL-NEXT:    retq
 ;

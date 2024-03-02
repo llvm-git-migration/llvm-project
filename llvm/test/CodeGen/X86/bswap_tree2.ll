@@ -58,8 +58,8 @@ define i32 @test2(i32 %x) nounwind {
 ; CHECK-NEXT:    andl $65280, %edx # imm = 0xFF00
 ; CHECK-NEXT:    andl $-16777216, %ecx # imm = 0xFF000000
 ; CHECK-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; CHECK-NEXT:    orl %ecx, %eax
-; CHECK-NEXT:    orl %edx, %eax
+; CHECK-NEXT:    addl %ecx, %eax
+; CHECK-NEXT:    addl %edx, %eax
 ; CHECK-NEXT:    retl
 ;
 ; CHECK64-LABEL: test2:
@@ -71,8 +71,8 @@ define i32 @test2(i32 %x) nounwind {
 ; CHECK64-NEXT:    andl $65280, %ecx # imm = 0xFF00
 ; CHECK64-NEXT:    andl $-16777216, %edi # imm = 0xFF000000
 ; CHECK64-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; CHECK64-NEXT:    orl %edi, %eax
-; CHECK64-NEXT:    orl %ecx, %eax
+; CHECK64-NEXT:    addl %edi, %eax
+; CHECK64-NEXT:    addl %ecx, %eax
 ; CHECK64-NEXT:    retq
   %byte1 = lshr i32 %x, 8
   %byte0 = shl  i32 %x, 8
@@ -109,8 +109,8 @@ define i32 @test3(float %x) nounwind {
 ; CHECK-NEXT:    andl $65280, %ecx # imm = 0xFF00
 ; CHECK-NEXT:    andl $-16777216, %edx # imm = 0xFF000000
 ; CHECK-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; CHECK-NEXT:    orl %edx, %eax
-; CHECK-NEXT:    orl %ecx, %eax
+; CHECK-NEXT:    addl %edx, %eax
+; CHECK-NEXT:    addl %ecx, %eax
 ; CHECK-NEXT:    addl $8, %esp
 ; CHECK-NEXT:    retl
 ;
@@ -124,8 +124,8 @@ define i32 @test3(float %x) nounwind {
 ; CHECK64-NEXT:    andl $65280, %ecx # imm = 0xFF00
 ; CHECK64-NEXT:    andl $-16777216, %edx # imm = 0xFF000000
 ; CHECK64-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; CHECK64-NEXT:    orl %edx, %eax
-; CHECK64-NEXT:    orl %ecx, %eax
+; CHECK64-NEXT:    addl %edx, %eax
+; CHECK64-NEXT:    addl %ecx, %eax
 ; CHECK64-NEXT:    retq
   %integer = fptosi float %x to i32
   %byte0 = shl  i32 %integer, 8

@@ -1229,7 +1229,7 @@ define half @fcopysign(half %x, half %y) {
 ; CHECK-LIBCALL-NEXT:    andl $-32768, %eax # imm = 0x8000
 ; CHECK-LIBCALL-NEXT:    pextrw $0, %xmm0, %ecx
 ; CHECK-LIBCALL-NEXT:    andl $32767, %ecx # imm = 0x7FFF
-; CHECK-LIBCALL-NEXT:    orl %eax, %ecx
+; CHECK-LIBCALL-NEXT:    addl %eax, %ecx
 ; CHECK-LIBCALL-NEXT:    pinsrw $0, %ecx, %xmm0
 ; CHECK-LIBCALL-NEXT:    retq
 ;
@@ -1239,7 +1239,7 @@ define half @fcopysign(half %x, half %y) {
 ; BWON-F16C-NEXT:    andl $-32768, %eax # imm = 0x8000
 ; BWON-F16C-NEXT:    vpextrw $0, %xmm0, %ecx
 ; BWON-F16C-NEXT:    andl $32767, %ecx # imm = 0x7FFF
-; BWON-F16C-NEXT:    orl %eax, %ecx
+; BWON-F16C-NEXT:    addl %eax, %ecx
 ; BWON-F16C-NEXT:    vpinsrw $0, %ecx, %xmm0, %xmm0
 ; BWON-F16C-NEXT:    retq
 ;
@@ -1249,7 +1249,7 @@ define half @fcopysign(half %x, half %y) {
 ; CHECK-I686-NEXT:    andl {{[0-9]+}}(%esp), %eax
 ; CHECK-I686-NEXT:    movzwl {{[0-9]+}}(%esp), %ecx
 ; CHECK-I686-NEXT:    andl $32767, %ecx # imm = 0x7FFF
-; CHECK-I686-NEXT:    orl %eax, %ecx
+; CHECK-I686-NEXT:    addl %eax, %ecx
 ; CHECK-I686-NEXT:    pinsrw $0, %ecx, %xmm0
 ; CHECK-I686-NEXT:    retl
   %a = call half @llvm.copysign.f16(half %x, half %y)

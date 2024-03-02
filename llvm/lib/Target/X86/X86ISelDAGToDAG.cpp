@@ -5295,6 +5295,20 @@ void X86DAGToDAGISel::Select(SDNode *Node) {
     if (tryVPTERNLOG(Node))
       return;
 
+    // Convert addlike to add before final selection. Do this before we drop
+    // flags like `disjoint`.
+    // NB: Conversion to add is preferable so we use `lea` in codegen.
+    if (NVT.isScalarInteger() &&
+        (Opcode == ISD::OR ||
+         (NVT == MVT::i8 || NVT == MVT::i16 || NVT == MVT::i32)) &&
+        CurDAG->isADDLike(SDValue(Node, 0))) {
+      SDValue AsAdd = CurDAG->getNode(ISD::ADD, SDLoc(Node), NVT,
+                                      Node->getOperand(0), Node->getOperand(1));
+      ReplaceUses(SDValue(Node, 0), AsAdd);
+      CurDAG->RemoveDeadNode(Node);
+      Node = AsAdd.getNode();
+      Opcode = ISD::ADD;
+    }
     [[fallthrough]];
   case ISD::ADD:
     if (Opcode == ISD::ADD && matchBitExtract(Node))

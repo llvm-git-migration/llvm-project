@@ -2644,7 +2644,7 @@ define <16 x i8> @PR31364(ptr nocapture readonly %a, ptr nocapture readonly %b) 
 ; SSE2-NEXT:    movzbl (%rdi), %eax
 ; SSE2-NEXT:    movzbl (%rsi), %ecx
 ; SSE2-NEXT:    shll $8, %ecx
-; SSE2-NEXT:    orl %eax, %ecx
+; SSE2-NEXT:    addl %eax, %ecx
 ; SSE2-NEXT:    movd %ecx, %xmm1
 ; SSE2-NEXT:    pxor %xmm0, %xmm0
 ; SSE2-NEXT:    punpcklbw {{.*#+}} xmm1 = xmm1[0],xmm0[0],xmm1[1],xmm0[1],xmm1[2],xmm0[2],xmm1[3],xmm0[3],xmm1[4],xmm0[4],xmm1[5],xmm0[5],xmm1[6],xmm0[6],xmm1[7],xmm0[7]
@@ -2661,7 +2661,7 @@ define <16 x i8> @PR31364(ptr nocapture readonly %a, ptr nocapture readonly %b) 
 ; SSSE3-NEXT:    movzbl (%rdi), %eax
 ; SSSE3-NEXT:    movzbl (%rsi), %ecx
 ; SSSE3-NEXT:    shll $8, %ecx
-; SSSE3-NEXT:    orl %eax, %ecx
+; SSSE3-NEXT:    addl %eax, %ecx
 ; SSSE3-NEXT:    movd %ecx, %xmm0
 ; SSSE3-NEXT:    pshufb {{.*#+}} xmm0 = xmm0[1,1,1,1,1,1,1],zero,xmm0[1,1,1,1,1,0,0,0]
 ; SSSE3-NEXT:    retq

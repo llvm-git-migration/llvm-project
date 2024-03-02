@@ -441,7 +441,7 @@ define i5 @rotl_merge_i5(i5 %x) {
 ; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    andb $24, %al
 ; CHECK-NEXT:    shrb $3, %al
-; CHECK-NEXT:    orb %cl, %al
+; CHECK-NEXT:    addb %cl, %al
 ; CHECK-NEXT:    retq
   %r1 = call i5 @llvm.fshl.i5(i5 %x, i5 %x, i5 -1)
   %r2 = call i5 @llvm.fshl.i5(i5 %r1, i5 %r1, i5 1)

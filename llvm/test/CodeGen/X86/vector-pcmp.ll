@@ -1845,7 +1845,7 @@ define <32 x i1> @is_positive_mask_v32i8_v32i1(<32 x i8> %x, <32 x i1> %y) {
 ; SSE2-NEXT:    shll $16, %ecx
 ; SSE2-NEXT:    psllw $7, %xmm0
 ; SSE2-NEXT:    pmovmskb %xmm0, %edx
-; SSE2-NEXT:    orl %ecx, %edx
+; SSE2-NEXT:    addl %ecx, %edx
 ; SSE2-NEXT:    movl %edx, (%rdi)
 ; SSE2-NEXT:    retq
 ;
@@ -1894,7 +1894,7 @@ define <32 x i1> @is_positive_mask_v32i8_v32i1(<32 x i8> %x, <32 x i1> %y) {
 ; SSE42-NEXT:    psllw $7, %xmm1
 ; SSE42-NEXT:    pmovmskb %xmm1, %edx
 ; SSE42-NEXT:    shll $16, %edx
-; SSE42-NEXT:    orl %ecx, %edx
+; SSE42-NEXT:    addl %ecx, %edx
 ; SSE42-NEXT:    movl %edx, (%rdi)
 ; SSE42-NEXT:    retq
 ;

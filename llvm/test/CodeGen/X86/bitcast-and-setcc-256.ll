@@ -812,7 +812,7 @@ define i32 @v32i8(<32 x i8> %a, <32 x i8> %b, <32 x i8> %c, <32 x i8> %d) {
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm4, %ecx
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm5, %eax
 ; SSE2-SSSE3-NEXT:    shll $16, %eax
-; SSE2-SSSE3-NEXT:    orl %ecx, %eax
+; SSE2-SSSE3-NEXT:    addl %ecx, %eax
 ; SSE2-SSSE3-NEXT:    retq
 ;
 ; AVX1-LABEL: v32i8:
@@ -830,7 +830,7 @@ define i32 @v32i8(<32 x i8> %a, <32 x i8> %b, <32 x i8> %c, <32 x i8> %d) {
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    vpmovmskb %xmm1, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;

@@ -550,7 +550,7 @@ define i8 @select_pow2_diff(i1 zeroext %cond) {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    shlb $4, %al
-; X86-NEXT:    orb $3, %al
+; X86-NEXT:    addb $3, %al
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: select_pow2_diff:
@@ -571,7 +571,7 @@ define i16 @select_pow2_diff_invert(i1 zeroext %cond) {
 ; X86-NEXT:    xorb $1, %al
 ; X86-NEXT:    movzbl %al, %eax
 ; X86-NEXT:    shll $6, %eax
-; X86-NEXT:    orl $7, %eax
+; X86-NEXT:    addl $7, %eax
 ; X86-NEXT:    # kill: def $ax killed $ax killed $eax
 ; X86-NEXT:    retl
 ;
@@ -580,7 +580,7 @@ define i16 @select_pow2_diff_invert(i1 zeroext %cond) {
 ; X64-NEXT:    xorb $1, %dil
 ; X64-NEXT:    movzbl %dil, %eax
 ; X64-NEXT:    shll $6, %eax
-; X64-NEXT:    orl $7, %eax
+; X64-NEXT:    addl $7, %eax
 ; X64-NEXT:    # kill: def $ax killed $ax killed $eax
 ; X64-NEXT:    retq
   %sel = select i1 %cond, i16 7, i16 71

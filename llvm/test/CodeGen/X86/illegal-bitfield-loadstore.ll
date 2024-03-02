@@ -9,7 +9,7 @@ define void @i24_or(ptr %a) {
 ; X86-NEXT:    movzwl (%eax), %ecx
 ; X86-NEXT:    movzbl 2(%eax), %edx
 ; X86-NEXT:    shll $16, %edx
-; X86-NEXT:    orl %ecx, %edx
+; X86-NEXT:    addl %ecx, %edx
 ; X86-NEXT:    orl $384, %edx # imm = 0x180
 ; X86-NEXT:    movw %dx, (%eax)
 ; X86-NEXT:    retl
@@ -19,7 +19,7 @@ define void @i24_or(ptr %a) {
 ; X64-NEXT:    movzwl (%rdi), %eax
 ; X64-NEXT:    movzbl 2(%rdi), %ecx
 ; X64-NEXT:    shll $16, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    orl $384, %ecx # imm = 0x180
 ; X64-NEXT:    movw %cx, (%rdi)
 ; X64-NEXT:    retq
@@ -36,7 +36,7 @@ define void @i24_and_or(ptr %a) {
 ; X86-NEXT:    movzwl (%eax), %ecx
 ; X86-NEXT:    movzbl 2(%eax), %edx
 ; X86-NEXT:    shll $16, %edx
-; X86-NEXT:    orl %ecx, %edx
+; X86-NEXT:    addl %ecx, %edx
 ; X86-NEXT:    orl $384, %edx # imm = 0x180
 ; X86-NEXT:    andl $-128, %edx
 ; X86-NEXT:    movw %dx, (%eax)
@@ -47,7 +47,7 @@ define void @i24_and_or(ptr %a) {
 ; X64-NEXT:    movzwl (%rdi), %eax
 ; X64-NEXT:    movzbl 2(%rdi), %ecx
 ; X64-NEXT:    shll $16, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    orl $384, %ecx # imm = 0x180
 ; X64-NEXT:    andl $-128, %ecx
 ; X64-NEXT:    movw %cx, (%rdi)
@@ -70,10 +70,10 @@ define void @i24_insert_bit(ptr %a, i1 zeroext %bit) {
 ; X86-NEXT:    movzwl (%eax), %edx
 ; X86-NEXT:    movzbl 2(%eax), %esi
 ; X86-NEXT:    shll $16, %esi
-; X86-NEXT:    orl %edx, %esi
+; X86-NEXT:    addl %edx, %esi
 ; X86-NEXT:    shll $13, %ecx
 ; X86-NEXT:    andl $16769023, %esi # imm = 0xFFDFFF
-; X86-NEXT:    orl %ecx, %esi
+; X86-NEXT:    addl %ecx, %esi
 ; X86-NEXT:    movw %si, (%eax)
 ; X86-NEXT:    popl %esi
 ; X86-NEXT:    .cfi_def_cfa_offset 4
@@ -84,10 +84,10 @@ define void @i24_insert_bit(ptr %a, i1 zeroext %bit) {
 ; X64-NEXT:    movzwl (%rdi), %eax
 ; X64-NEXT:    movzbl 2(%rdi), %ecx
 ; X64-NEXT:    shll $16, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    shll $13, %esi
 ; X64-NEXT:    andl $16769023, %ecx # imm = 0xFFDFFF
-; X64-NEXT:    orl %esi, %ecx
+; X64-NEXT:    addl %esi, %ecx
 ; X64-NEXT:    movw %cx, (%rdi)
 ; X64-NEXT:    retq
   %extbit = zext i1 %bit to i24
@@ -131,10 +131,10 @@ define void @i56_and_or(ptr %a) {
 ; X64-NEXT:    movzwl 4(%rdi), %eax
 ; X64-NEXT:    movzbl 6(%rdi), %ecx
 ; X64-NEXT:    shll $16, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    shlq $32, %rcx
 ; X64-NEXT:    movl (%rdi), %eax
-; X64-NEXT:    orq %rcx, %rax
+; X64-NEXT:    addq %rcx, %rax
 ; X64-NEXT:    orq $384, %rax # imm = 0x180
 ; X64-NEXT:    movabsq $72057594037927808, %rcx # imm = 0xFFFFFFFFFFFF80
 ; X64-NEXT:    andq %rax, %rcx
@@ -157,7 +157,7 @@ define void @i56_insert_bit(ptr %a, i1 zeroext %bit) {
 ; X86-NEXT:    shll $13, %ecx
 ; X86-NEXT:    movl $-8193, %edx # imm = 0xDFFF
 ; X86-NEXT:    andl (%eax), %edx
-; X86-NEXT:    orl %ecx, %edx
+; X86-NEXT:    addl %ecx, %edx
 ; X86-NEXT:    movl %edx, (%eax)
 ; X86-NEXT:    retl
 ;
@@ -166,13 +166,13 @@ define void @i56_insert_bit(ptr %a, i1 zeroext %bit) {
 ; X64-NEXT:    movzwl 4(%rdi), %eax
 ; X64-NEXT:    movzbl 6(%rdi), %ecx
 ; X64-NEXT:    shll $16, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    shlq $32, %rcx
 ; X64-NEXT:    movl (%rdi), %eax
-; X64-NEXT:    orq %rcx, %rax
+; X64-NEXT:    addq %rcx, %rax
 ; X64-NEXT:    shll $13, %esi
 ; X64-NEXT:    andq $-8193, %rax # imm = 0xDFFF
-; X64-NEXT:    orl %eax, %esi
+; X64-NEXT:    addl %eax, %esi
 ; X64-NEXT:    shrq $32, %rax
 ; X64-NEXT:    movw %ax, 4(%rdi)
 ; X64-NEXT:    movl %esi, (%rdi)

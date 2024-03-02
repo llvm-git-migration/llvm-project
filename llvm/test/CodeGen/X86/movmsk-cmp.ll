@@ -3615,7 +3615,7 @@ define i32 @movmskb256(<32 x i8> %x) {
 ; SSE-NEXT:    pmovmskb %xmm0, %ecx
 ; SSE-NEXT:    pmovmskb %xmm1, %eax
 ; SSE-NEXT:    shll $16, %eax
-; SSE-NEXT:    orl %ecx, %eax
+; SSE-NEXT:    addl %ecx, %eax
 ; SSE-NEXT:    retq
 ;
 ; AVX1-LABEL: movmskb256:
@@ -3624,7 +3624,7 @@ define i32 @movmskb256(<32 x i8> %x) {
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;

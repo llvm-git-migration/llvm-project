@@ -498,7 +498,7 @@ define i64 @v16i8_widened_with_ones(<16 x i8> %a, <16 x i8> %b) {
 ; SSE2-SSSE3:       # %bb.0: # %entry
 ; SSE2-SSSE3-NEXT:    pcmpeqb %xmm1, %xmm0
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm0, %ecx
-; SSE2-SSSE3-NEXT:    orl $-65536, %ecx # imm = 0xFFFF0000
+; SSE2-SSSE3-NEXT:    addl $-65536, %ecx # imm = 0xFFFF0000
 ; SSE2-SSSE3-NEXT:    movabsq $-4294967296, %rax # imm = 0xFFFFFFFF00000000
 ; SSE2-SSSE3-NEXT:    orq %rcx, %rax
 ; SSE2-SSSE3-NEXT:    retq
@@ -507,7 +507,7 @@ define i64 @v16i8_widened_with_ones(<16 x i8> %a, <16 x i8> %b) {
 ; AVX1:       # %bb.0: # %entry
 ; AVX1-NEXT:    vpcmpeqb %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
-; AVX1-NEXT:    orl $-65536, %ecx # imm = 0xFFFF0000
+; AVX1-NEXT:    addl $-65536, %ecx # imm = 0xFFFF0000
 ; AVX1-NEXT:    movabsq $-4294967296, %rax # imm = 0xFFFFFFFF00000000
 ; AVX1-NEXT:    orq %rcx, %rax
 ; AVX1-NEXT:    retq

@@ -23,7 +23,7 @@ define i8 @bitselect_i8(i8 %a, i8 %b, i8 %m) nounwind {
 ; X64-NEXT:    movl %edx, %eax
 ; X64-NEXT:    notb %al
 ; X64-NEXT:    andb %dil, %al
-; X64-NEXT:    orb %sil, %al
+; X64-NEXT:    addb %sil, %al
 ; X64-NEXT:    retq
   %not = xor i8 %m, -1
   %ma = and i8 %a, %not
@@ -45,11 +45,12 @@ define i16 @bitselect_i16(i16 %a, i16 %b, i16 %m) nounwind {
 ;
 ; X64-NOBMI-LABEL: bitselect_i16:
 ; X64-NOBMI:       # %bb.0:
-; X64-NOBMI-NEXT:    movl %edx, %eax
+; X64-NOBMI-NEXT:    # kill: def $edx killed $edx def $rdx
+; X64-NOBMI-NEXT:    # kill: def $esi killed $esi def $rsi
 ; X64-NOBMI-NEXT:    andl %edx, %esi
-; X64-NOBMI-NEXT:    notl %eax
-; X64-NOBMI-NEXT:    andl %edi, %eax
-; X64-NOBMI-NEXT:    orl %esi, %eax
+; X64-NOBMI-NEXT:    notl %edx
+; X64-NOBMI-NEXT:    andl %edi, %edx
+; X64-NOBMI-NEXT:    leal (%rdx,%rsi), %eax
 ; X64-NOBMI-NEXT:    # kill: def $ax killed $ax killed $eax
 ; X64-NOBMI-NEXT:    retq
 ;
@@ -57,7 +58,7 @@ define i16 @bitselect_i16(i16 %a, i16 %b, i16 %m) nounwind {
 ; X64-BMI:       # %bb.0:
 ; X64-BMI-NEXT:    andnl %edi, %edx, %eax
 ; X64-BMI-NEXT:    andl %edx, %esi
-; X64-BMI-NEXT:    orl %esi, %eax
+; X64-BMI-NEXT:    addl %esi, %eax
 ; X64-BMI-NEXT:    # kill: def $ax killed $ax killed $eax
 ; X64-BMI-NEXT:    retq
   %not = xor i16 %m, -1
@@ -89,7 +90,7 @@ define i32 @bitselect_i32(i32 %a, i32 %b, i32 %m) nounwind {
 ; X64-BMI:       # %bb.0:
 ; X64-BMI-NEXT:    andnl %edi, %edx, %eax
 ; X64-BMI-NEXT:    andl %edx, %esi
-; X64-BMI-NEXT:    orl %esi, %eax
+; X64-BMI-NEXT:    addl %esi, %eax
 ; X64-BMI-NEXT:    retq
   %not = xor i32 %m, -1
   %ma = and i32 %a, %not
@@ -127,7 +128,7 @@ define i64 @bitselect_i64(i64 %a, i64 %b, i64 %m) nounwind {
 ; X64-BMI:       # %bb.0:
 ; X64-BMI-NEXT:    andnq %rdi, %rdx, %rax
 ; X64-BMI-NEXT:    andq %rdx, %rsi
-; X64-BMI-NEXT:    orq %rsi, %rax
+; X64-BMI-NEXT:    addq %rsi, %rax
 ; X64-BMI-NEXT:    retq
   %not = xor i64 %m, -1
   %ma = and i64 %a, %not
@@ -189,9 +190,9 @@ define i128 @bitselect_i128(i128 %a, i128 %b, i128 %m) nounwind {
 ; X64-BMI-NEXT:    andnq %rsi, %r9, %rsi
 ; X64-BMI-NEXT:    andnq %rdi, %r8, %rax
 ; X64-BMI-NEXT:    andq %r9, %rcx
-; X64-BMI-NEXT:    orq %rcx, %rsi
+; X64-BMI-NEXT:    addq %rcx, %rsi
 ; X64-BMI-NEXT:    andq %r8, %rdx
-; X64-BMI-NEXT:    orq %rdx, %rax
+; X64-BMI-NEXT:    addq %rdx, %rax
 ; X64-BMI-NEXT:    movq %rsi, %rdx
 ; X64-BMI-NEXT:    retq
   %not = xor i128 %m, -1
@@ -228,7 +229,7 @@ define i32 @bitselect_constants_i32(i32 %m) nounwind {
 ; X64-BMI-NEXT:    notl %eax
 ; X64-BMI-NEXT:    andl $52, %eax
 ; X64-BMI-NEXT:    andl $-6553, %edi # imm = 0xE667
-; X64-BMI-NEXT:    orl %edi, %eax
+; X64-BMI-NEXT:    addl %edi, %eax
 ; X64-BMI-NEXT:    retq
   %not = xor i32 %m, -1
   %ma = and i32 52, %not

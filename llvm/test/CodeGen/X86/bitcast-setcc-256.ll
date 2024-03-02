@@ -158,7 +158,7 @@ define i32 @v32i8(<32 x i8> %a, <32 x i8> %b) {
 ; SSE2-SSSE3-NEXT:    pcmpgtb %xmm3, %xmm1
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm1, %eax
 ; SSE2-SSSE3-NEXT:    shll $16, %eax
-; SSE2-SSSE3-NEXT:    orl %ecx, %eax
+; SSE2-SSSE3-NEXT:    addl %ecx, %eax
 ; SSE2-SSSE3-NEXT:    retq
 ;
 ; AVX1-LABEL: v32i8:
@@ -170,7 +170,7 @@ define i32 @v32i8(<32 x i8> %a, <32 x i8> %b) {
 ; AVX1-NEXT:    vpcmpgtb %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -307,7 +307,7 @@ define void @bitcast_32i8_store(ptr %p, <32 x i8> %a0) {
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm0, %eax
 ; SSE2-SSSE3-NEXT:    pmovmskb %xmm1, %ecx
 ; SSE2-SSSE3-NEXT:    shll $16, %ecx
-; SSE2-SSSE3-NEXT:    orl %eax, %ecx
+; SSE2-SSSE3-NEXT:    addl %eax, %ecx
 ; SSE2-SSSE3-NEXT:    movl %ecx, (%rdi)
 ; SSE2-SSSE3-NEXT:    retq
 ;
@@ -317,7 +317,7 @@ define void @bitcast_32i8_store(ptr %p, <32 x i8> %a0) {
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    shll $16, %ecx
-; AVX1-NEXT:    orl %eax, %ecx
+; AVX1-NEXT:    addl %eax, %ecx
 ; AVX1-NEXT:    movl %ecx, (%rdi)
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq

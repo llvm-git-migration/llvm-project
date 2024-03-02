@@ -179,7 +179,7 @@ define void @int12_int12_pair(i12 signext %tmp1, i12 signext %tmp2, ptr %ref.tmp
 ; CHECK-NEXT:    movl %esi, %eax
 ; CHECK-NEXT:    shll $12, %eax
 ; CHECK-NEXT:    andl $4095, %edi # imm = 0xFFF
-; CHECK-NEXT:    orl %eax, %edi
+; CHECK-NEXT:    addl %eax, %edi
 ; CHECK-NEXT:    shrl $4, %esi
 ; CHECK-NEXT:    movb %sil, 2(%rdx)
 ; CHECK-NEXT:    movw %di, (%rdx)
@@ -199,7 +199,7 @@ define void @int7_int7_pair(i7 signext %tmp1, i7 signext %tmp2, ptr %ref.tmp) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    shll $7, %esi
 ; CHECK-NEXT:    andl $127, %edi
-; CHECK-NEXT:    orl %esi, %edi
+; CHECK-NEXT:    addl %esi, %edi
 ; CHECK-NEXT:    andl $16383, %edi # imm = 0x3FFF
 ; CHECK-NEXT:    movw %di, (%rdx)
 ; CHECK-NEXT:    retq
