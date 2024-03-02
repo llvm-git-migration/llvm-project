@@ -43,7 +43,7 @@ define i32 @decode_sb(ptr %t, i32 %bl, i32 %_msprop1966, i32 %sub.i, i64 %idxpro
 ; CHECK-NEXT:    andl $1, %r10d
 ; CHECK-NEXT:    andl $1, %r8d
 ; CHECK-NEXT:    movabsq $17592186044416, %rax # imm = 0x100000000000
-; CHECK-NEXT:    orq %r8, %rax
+; CHECK-NEXT:    addq %r8, %rax
 ; CHECK-NEXT:    movl %esi, %r8d
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
 ; CHECK-NEXT:    shrl %cl, %r8d

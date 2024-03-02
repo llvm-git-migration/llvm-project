@@ -25,13 +25,13 @@ define i8 @test_bitreverse_i8(i8 %a) nounwind {
 ; SSE-NEXT:    shlb $2, %al
 ; SSE-NEXT:    shrb $2, %dil
 ; SSE-NEXT:    andb $51, %dil
-; SSE-NEXT:    orb %dil, %al
+; SSE-NEXT:    addb %dil, %al
 ; SSE-NEXT:    movl %eax, %ecx
 ; SSE-NEXT:    andb $85, %cl
 ; SSE-NEXT:    addb %cl, %cl
 ; SSE-NEXT:    shrb %al
 ; SSE-NEXT:    andb $85, %al
-; SSE-NEXT:    orb %cl, %al
+; SSE-NEXT:    addb %cl, %al
 ; SSE-NEXT:    retq
 ;
 ; AVX-LABEL: test_bitreverse_i8:
@@ -42,13 +42,13 @@ define i8 @test_bitreverse_i8(i8 %a) nounwind {
 ; AVX-NEXT:    shlb $2, %al
 ; AVX-NEXT:    shrb $2, %dil
 ; AVX-NEXT:    andb $51, %dil
-; AVX-NEXT:    orb %dil, %al
+; AVX-NEXT:    addb %dil, %al
 ; AVX-NEXT:    movl %eax, %ecx
 ; AVX-NEXT:    andb $85, %cl
 ; AVX-NEXT:    addb %cl, %cl
 ; AVX-NEXT:    shrb %al
 ; AVX-NEXT:    andb $85, %al
-; AVX-NEXT:    orb %cl, %al
+; AVX-NEXT:    addb %cl, %al
 ; AVX-NEXT:    retq
 ;
 ; XOP-LABEL: test_bitreverse_i8:
@@ -67,13 +67,13 @@ define i8 @test_bitreverse_i8(i8 %a) nounwind {
 ; GFNISSE-NEXT:    shlb $2, %al
 ; GFNISSE-NEXT:    shrb $2, %dil
 ; GFNISSE-NEXT:    andb $51, %dil
-; GFNISSE-NEXT:    orb %dil, %al
+; GFNISSE-NEXT:    addb %dil, %al
 ; GFNISSE-NEXT:    movl %eax, %ecx
 ; GFNISSE-NEXT:    andb $85, %cl
 ; GFNISSE-NEXT:    addb %cl, %cl
 ; GFNISSE-NEXT:    shrb %al
 ; GFNISSE-NEXT:    andb $85, %al
-; GFNISSE-NEXT:    orb %cl, %al
+; GFNISSE-NEXT:    addb %cl, %al
 ; GFNISSE-NEXT:    retq
 ;
 ; GFNIAVX-LABEL: test_bitreverse_i8:
@@ -84,13 +84,13 @@ define i8 @test_bitreverse_i8(i8 %a) nounwind {
 ; GFNIAVX-NEXT:    shlb $2, %al
 ; GFNIAVX-NEXT:    shrb $2, %dil
 ; GFNIAVX-NEXT:    andb $51, %dil
-; GFNIAVX-NEXT:    orb %dil, %al
+; GFNIAVX-NEXT:    addb %dil, %al
 ; GFNIAVX-NEXT:    movl %eax, %ecx
 ; GFNIAVX-NEXT:    andb $85, %cl
 ; GFNIAVX-NEXT:    addb %cl, %cl
 ; GFNIAVX-NEXT:    shrb %al
 ; GFNIAVX-NEXT:    andb $85, %al
-; GFNIAVX-NEXT:    orb %cl, %al
+; GFNIAVX-NEXT:    addb %cl, %al
 ; GFNIAVX-NEXT:    retq
   %b = call i8 @llvm.bitreverse.i8(i8 %a)
   ret i8 %b
@@ -106,7 +106,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; SSE-NEXT:    shll $4, %eax
 ; SSE-NEXT:    shrl $4, %edi
 ; SSE-NEXT:    andl $3855, %edi # imm = 0xF0F
-; SSE-NEXT:    orl %eax, %edi
+; SSE-NEXT:    addl %eax, %edi
 ; SSE-NEXT:    movl %edi, %eax
 ; SSE-NEXT:    andl $13107, %eax # imm = 0x3333
 ; SSE-NEXT:    shrl $2, %edi
@@ -129,7 +129,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; AVX-NEXT:    shll $4, %eax
 ; AVX-NEXT:    shrl $4, %edi
 ; AVX-NEXT:    andl $3855, %edi # imm = 0xF0F
-; AVX-NEXT:    orl %eax, %edi
+; AVX-NEXT:    addl %eax, %edi
 ; AVX-NEXT:    movl %edi, %eax
 ; AVX-NEXT:    andl $13107, %eax # imm = 0x3333
 ; AVX-NEXT:    shrl $2, %edi
@@ -160,7 +160,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; GFNISSE-NEXT:    shll $4, %eax
 ; GFNISSE-NEXT:    shrl $4, %edi
 ; GFNISSE-NEXT:    andl $3855, %edi # imm = 0xF0F
-; GFNISSE-NEXT:    orl %eax, %edi
+; GFNISSE-NEXT:    addl %eax, %edi
 ; GFNISSE-NEXT:    movl %edi, %eax
 ; GFNISSE-NEXT:    andl $13107, %eax # imm = 0x3333
 ; GFNISSE-NEXT:    shrl $2, %edi
@@ -183,7 +183,7 @@ define i16 @test_bitreverse_i16(i16 %a) nounwind {
 ; GFNIAVX-NEXT:    shll $4, %eax
 ; GFNIAVX-NEXT:    shrl $4, %edi
 ; GFNIAVX-NEXT:    andl $3855, %edi # imm = 0xF0F
-; GFNIAVX-NEXT:    orl %eax, %edi
+; GFNIAVX-NEXT:    addl %eax, %edi
 ; GFNIAVX-NEXT:    movl %edi, %eax
 ; GFNIAVX-NEXT:    andl $13107, %eax # imm = 0x3333
 ; GFNIAVX-NEXT:    shrl $2, %edi
@@ -210,7 +210,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; SSE-NEXT:    shll $4, %eax
 ; SSE-NEXT:    shrl $4, %edi
 ; SSE-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; SSE-NEXT:    orl %eax, %edi
+; SSE-NEXT:    addl %eax, %edi
 ; SSE-NEXT:    movl %edi, %eax
 ; SSE-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; SSE-NEXT:    shrl $2, %edi
@@ -232,7 +232,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; AVX-NEXT:    shll $4, %eax
 ; AVX-NEXT:    shrl $4, %edi
 ; AVX-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; AVX-NEXT:    orl %eax, %edi
+; AVX-NEXT:    addl %eax, %edi
 ; AVX-NEXT:    movl %edi, %eax
 ; AVX-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; AVX-NEXT:    shrl $2, %edi
@@ -261,7 +261,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; GFNISSE-NEXT:    shll $4, %eax
 ; GFNISSE-NEXT:    shrl $4, %edi
 ; GFNISSE-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; GFNISSE-NEXT:    orl %eax, %edi
+; GFNISSE-NEXT:    addl %eax, %edi
 ; GFNISSE-NEXT:    movl %edi, %eax
 ; GFNISSE-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; GFNISSE-NEXT:    shrl $2, %edi
@@ -283,7 +283,7 @@ define i32 @test_bitreverse_i32(i32 %a) nounwind {
 ; GFNIAVX-NEXT:    shll $4, %eax
 ; GFNIAVX-NEXT:    shrl $4, %edi
 ; GFNIAVX-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; GFNIAVX-NEXT:    orl %eax, %edi
+; GFNIAVX-NEXT:    addl %eax, %edi
 ; GFNIAVX-NEXT:    movl %edi, %eax
 ; GFNIAVX-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; GFNIAVX-NEXT:    shrl $2, %edi
@@ -309,7 +309,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; SSE-NEXT:    andq %rcx, %rax
 ; SSE-NEXT:    andq %rcx, %rdi
 ; SSE-NEXT:    shlq $4, %rdi
-; SSE-NEXT:    orq %rax, %rdi
+; SSE-NEXT:    addq %rax, %rdi
 ; SSE-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; SSE-NEXT:    movq %rdi, %rcx
 ; SSE-NEXT:    andq %rax, %rcx
@@ -333,7 +333,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; AVX-NEXT:    andq %rcx, %rax
 ; AVX-NEXT:    andq %rcx, %rdi
 ; AVX-NEXT:    shlq $4, %rdi
-; AVX-NEXT:    orq %rax, %rdi
+; AVX-NEXT:    addq %rax, %rdi
 ; AVX-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; AVX-NEXT:    movq %rdi, %rcx
 ; AVX-NEXT:    andq %rax, %rcx
@@ -364,7 +364,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; GFNISSE-NEXT:    andq %rcx, %rax
 ; GFNISSE-NEXT:    andq %rcx, %rdi
 ; GFNISSE-NEXT:    shlq $4, %rdi
-; GFNISSE-NEXT:    orq %rax, %rdi
+; GFNISSE-NEXT:    addq %rax, %rdi
 ; GFNISSE-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; GFNISSE-NEXT:    movq %rdi, %rcx
 ; GFNISSE-NEXT:    andq %rax, %rcx
@@ -388,7 +388,7 @@ define i64 @test_bitreverse_i64(i64 %a) nounwind {
 ; GFNIAVX-NEXT:    andq %rcx, %rax
 ; GFNIAVX-NEXT:    andq %rcx, %rdi
 ; GFNIAVX-NEXT:    shlq $4, %rdi
-; GFNIAVX-NEXT:    orq %rax, %rdi
+; GFNIAVX-NEXT:    addq %rax, %rdi
 ; GFNIAVX-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; GFNIAVX-NEXT:    movq %rdi, %rcx
 ; GFNIAVX-NEXT:    andq %rax, %rcx

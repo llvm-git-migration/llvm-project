@@ -172,7 +172,7 @@ define i1 @fshl_eq_n1(i8 %x, i8 %y, i8 %z) nounwind {
 ; CHECK-NEXT:    movl %edx, %ecx
 ; CHECK-NEXT:    shll $8, %edi
 ; CHECK-NEXT:    movzbl %sil, %eax
-; CHECK-NEXT:    orl %edi, %eax
+; CHECK-NEXT:    addl %edi, %eax
 ; CHECK-NEXT:    andb $7, %cl
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
 ; CHECK-NEXT:    shll %cl, %eax

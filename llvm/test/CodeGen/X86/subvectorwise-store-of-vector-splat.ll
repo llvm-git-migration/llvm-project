@@ -2394,7 +2394,7 @@ define void @vec384_v3i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.p
 ; SCALAR-NEXT:    notb %dil
 ; SCALAR-NEXT:    movzbl %dil, %ecx
 ; SCALAR-NEXT:    shll $8, %ecx
-; SCALAR-NEXT:    orl %r8d, %ecx
+; SCALAR-NEXT:    addl %r8d, %ecx
 ; SCALAR-NEXT:    notb %al
 ; SCALAR-NEXT:    movb %al, 2(%rsi)
 ; SCALAR-NEXT:    movw %cx, (%rsi)
@@ -3065,7 +3065,7 @@ define void @vec384_v3i32(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notl %edi
 ; SCALAR-NEXT:    shlq $32, %rdi
 ; SCALAR-NEXT:    notl %ecx
-; SCALAR-NEXT:    orq %rdi, %rcx
+; SCALAR-NEXT:    addq %rdi, %rcx
 ; SCALAR-NEXT:    notl %eax
 ; SCALAR-NEXT:    movl %eax, 8(%rsi)
 ; SCALAR-NEXT:    movq %rcx, (%rsi)
@@ -3201,7 +3201,7 @@ define void @vec384_v3f32(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notl %edi
 ; SCALAR-NEXT:    shlq $32, %rdi
 ; SCALAR-NEXT:    notl %ecx
-; SCALAR-NEXT:    orq %rdi, %rcx
+; SCALAR-NEXT:    addq %rdi, %rcx
 ; SCALAR-NEXT:    notl %eax
 ; SCALAR-NEXT:    movl %eax, 8(%rsi)
 ; SCALAR-NEXT:    movq %rcx, (%rsi)
@@ -3810,23 +3810,23 @@ define void @vec384_v6i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.p
 ; SCALAR-NEXT:    notb %r10b
 ; SCALAR-NEXT:    movzbl %r10b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %edi, %r10d
+; SCALAR-NEXT:    addl %edi, %r10d
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %edi
 ; SCALAR-NEXT:    notb %r8b
 ; SCALAR-NEXT:    movzbl %r8b, %r8d
 ; SCALAR-NEXT:    shll $8, %r8d
-; SCALAR-NEXT:    orl %edi, %r8d
+; SCALAR-NEXT:    addl %edi, %r8d
 ; SCALAR-NEXT:    notb %cl
 ; SCALAR-NEXT:    movzbl %cl, %ecx
 ; SCALAR-NEXT:    notb %al
 ; SCALAR-NEXT:    movzbl %al, %eax
 ; SCALAR-NEXT:    shll $8, %eax
-; SCALAR-NEXT:    orl %ecx, %eax
+; SCALAR-NEXT:    addl %ecx, %eax
 ; SCALAR-NEXT:    movw %ax, 4(%rsi)
 ; SCALAR-NEXT:    shll $16, %r8d
 ; SCALAR-NEXT:    movzwl %r10w, %ecx
-; SCALAR-NEXT:    orl %r8d, %ecx
+; SCALAR-NEXT:    addl %r8d, %ecx
 ; SCALAR-NEXT:    movl %ecx, (%rsi)
 ; SCALAR-NEXT:    movw %ax, 4(%rdx)
 ; SCALAR-NEXT:    movl %ecx, (%rdx)
@@ -4082,12 +4082,12 @@ define void @vec384_v6i16(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    shll $16, %r8d
 ; SCALAR-NEXT:    notl %edi
 ; SCALAR-NEXT:    movzwl %di, %edi
-; SCALAR-NEXT:    orl %r8d, %edi
+; SCALAR-NEXT:    addl %r8d, %edi
 ; SCALAR-NEXT:    notl %ecx
 ; SCALAR-NEXT:    notl %eax
 ; SCALAR-NEXT:    movl %eax, 8(%rsi)
 ; SCALAR-NEXT:    shlq $32, %rdi
-; SCALAR-NEXT:    orq %rdi, %rcx
+; SCALAR-NEXT:    addq %rdi, %rcx
 ; SCALAR-NEXT:    movq %rcx, (%rsi)
 ; SCALAR-NEXT:    movl %eax, 8(%rdx)
 ; SCALAR-NEXT:    movq %rcx, (%rdx)
@@ -4226,15 +4226,15 @@ define void @vec384_v6i32(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notl %r10d
 ; SCALAR-NEXT:    shlq $32, %r10
 ; SCALAR-NEXT:    notl %edi
-; SCALAR-NEXT:    orq %r10, %rdi
+; SCALAR-NEXT:    addq %r10, %rdi
 ; SCALAR-NEXT:    notl %r9d
 ; SCALAR-NEXT:    shlq $32, %r9
 ; SCALAR-NEXT:    notl %ecx
-; SCALAR-NEXT:    orq %r9, %rcx
+; SCALAR-NEXT:    addq %r9, %rcx
 ; SCALAR-NEXT:    notl %r8d
 ; SCALAR-NEXT:    shlq $32, %r8
 ; SCALAR-NEXT:    notl %eax
-; SCALAR-NEXT:    orq %r8, %rax
+; SCALAR-NEXT:    addq %r8, %rax
 ; SCALAR-NEXT:    movq %rax, (%rsi)
 ; SCALAR-NEXT:    movq %rcx, 8(%rsi)
 ; SCALAR-NEXT:    movq %rdi, 16(%rsi)
@@ -4313,15 +4313,15 @@ define void @vec384_v6f32(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notl %r10d
 ; SCALAR-NEXT:    shlq $32, %r10
 ; SCALAR-NEXT:    notl %edi
-; SCALAR-NEXT:    orq %r10, %rdi
+; SCALAR-NEXT:    addq %r10, %rdi
 ; SCALAR-NEXT:    notl %r9d
 ; SCALAR-NEXT:    shlq $32, %r9
 ; SCALAR-NEXT:    notl %ecx
-; SCALAR-NEXT:    orq %r9, %rcx
+; SCALAR-NEXT:    addq %r9, %rcx
 ; SCALAR-NEXT:    notl %r8d
 ; SCALAR-NEXT:    shlq $32, %r8
 ; SCALAR-NEXT:    notl %eax
-; SCALAR-NEXT:    orq %r8, %rax
+; SCALAR-NEXT:    addq %r8, %rax
 ; SCALAR-NEXT:    movq %rax, (%rsi)
 ; SCALAR-NEXT:    movq %rcx, 8(%rsi)
 ; SCALAR-NEXT:    movq %rdi, 16(%rsi)
@@ -4651,49 +4651,49 @@ define void @vec384_v12i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r15b
 ; SCALAR-NEXT:    movzbl %r15b, %r15d
 ; SCALAR-NEXT:    shll $8, %r15d
-; SCALAR-NEXT:    orl %r12d, %r15d
+; SCALAR-NEXT:    addl %r12d, %r15d
 ; SCALAR-NEXT:    shll $16, %r15d
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r9d
 ; SCALAR-NEXT:    notb %bpl
 ; SCALAR-NEXT:    movzbl %bpl, %ebp
 ; SCALAR-NEXT:    shll $8, %ebp
-; SCALAR-NEXT:    orl %r9d, %ebp
+; SCALAR-NEXT:    addl %r9d, %ebp
 ; SCALAR-NEXT:    movzwl %bp, %r9d
-; SCALAR-NEXT:    orl %r15d, %r9d
+; SCALAR-NEXT:    addl %r15d, %r9d
 ; SCALAR-NEXT:    notb %r14b
 ; SCALAR-NEXT:    movzbl %r14b, %ebp
 ; SCALAR-NEXT:    notb %bl
 ; SCALAR-NEXT:    movzbl %bl, %ebx
 ; SCALAR-NEXT:    shll $8, %ebx
-; SCALAR-NEXT:    orl %ebp, %ebx
+; SCALAR-NEXT:    addl %ebp, %ebx
 ; SCALAR-NEXT:    shll $16, %ebx
 ; SCALAR-NEXT:    notb %r11b
 ; SCALAR-NEXT:    movzbl %r11b, %r11d
 ; SCALAR-NEXT:    notb %r10b
 ; SCALAR-NEXT:    movzbl %r10b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r11d, %r10d
+; SCALAR-NEXT:    addl %r11d, %r10d
 ; SCALAR-NEXT:    movzwl %r10w, %r10d
-; SCALAR-NEXT:    orl %ebx, %r10d
+; SCALAR-NEXT:    addl %ebx, %r10d
 ; SCALAR-NEXT:    notb %r8b
 ; SCALAR-NEXT:    movzbl %r8b, %r8d
 ; SCALAR-NEXT:    notb %dil
 ; SCALAR-NEXT:    movzbl %dil, %edi
 ; SCALAR-NEXT:    shll $8, %edi
-; SCALAR-NEXT:    orl %r8d, %edi
+; SCALAR-NEXT:    addl %r8d, %edi
 ; SCALAR-NEXT:    shll $16, %edi
 ; SCALAR-NEXT:    notb %cl
 ; SCALAR-NEXT:    movzbl %cl, %ecx
 ; SCALAR-NEXT:    notb %al
 ; SCALAR-NEXT:    movzbl %al, %eax
 ; SCALAR-NEXT:    shll $8, %eax
-; SCALAR-NEXT:    orl %ecx, %eax
+; SCALAR-NEXT:    addl %ecx, %eax
 ; SCALAR-NEXT:    movzwl %ax, %eax
-; SCALAR-NEXT:    orl %edi, %eax
+; SCALAR-NEXT:    addl %edi, %eax
 ; SCALAR-NEXT:    movl %eax, 8(%rsi)
 ; SCALAR-NEXT:    shlq $32, %r10
-; SCALAR-NEXT:    orq %r10, %r9
+; SCALAR-NEXT:    addq %r10, %r9
 ; SCALAR-NEXT:    movq %r9, (%rsi)
 ; SCALAR-NEXT:    movl %eax, 8(%rdx)
 ; SCALAR-NEXT:    movq %r9, (%rdx)
@@ -4846,26 +4846,26 @@ define void @vec384_v12i16(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec
 ; SCALAR-NEXT:    shll $16, %r14d
 ; SCALAR-NEXT:    notl %ebx
 ; SCALAR-NEXT:    movzwl %bx, %ebx
-; SCALAR-NEXT:    orl %r14d, %ebx
+; SCALAR-NEXT:    addl %r14d, %ebx
 ; SCALAR-NEXT:    shlq $32, %rbx
 ; SCALAR-NEXT:    notl %edi
-; SCALAR-NEXT:    orq %rbx, %rdi
+; SCALAR-NEXT:    addq %rbx, %rdi
 ; SCALAR-NEXT:    notl %r11d
 ; SCALAR-NEXT:    shll $16, %r11d
 ; SCALAR-NEXT:    notl %r10d
 ; SCALAR-NEXT:    movzwl %r10w, %r10d
-; SCALAR-NEXT:    orl %r11d, %r10d
+; SCALAR-NEXT:    addl %r11d, %r10d
 ; SCALAR-NEXT:    shlq $32, %r10
 ; SCALAR-NEXT:    notl %ecx
-; SCALAR-NEXT:    orq %r10, %rcx
+; SCALAR-NEXT:    addq %r10, %rcx
 ; SCALAR-NEXT:    notl %r9d
 ; SCALAR-NEXT:    shll $16, %r9d
 ; SCALAR-NEXT:    notl %r8d
 ; SCALAR-NEXT:    movzwl %r8w, %r8d
-; SCALAR-NEXT:    orl %r9d, %r8d
+; SCALAR-NEXT:    addl %r9d, %r8d
 ; SCALAR-NEXT:    shlq $32, %r8
 ; SCALAR-NEXT:    notl %eax
-; SCALAR-NEXT:    orq %r8, %rax
+; SCALAR-NEXT:    addq %r8, %rax
 ; SCALAR-NEXT:    movq %rax, (%rsi)
 ; SCALAR-NEXT:    movq %rcx, 8(%rsi)
 ; SCALAR-NEXT:    movq %rdi, 16(%rsi)
@@ -5136,7 +5136,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r9d
 ; SCALAR-NEXT:    shll $8, %r9d
-; SCALAR-NEXT:    orl %r10d, %r9d
+; SCALAR-NEXT:    addl %r10d, %r9d
 ; SCALAR-NEXT:    movq %rdi, %r10
 ; SCALAR-NEXT:    shrq $32, %r10
 ; SCALAR-NEXT:    notb %r10b
@@ -5144,12 +5144,12 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r8b
 ; SCALAR-NEXT:    movzbl %r8b, %r8d
 ; SCALAR-NEXT:    shll $8, %r8d
-; SCALAR-NEXT:    orl %r10d, %r8d
+; SCALAR-NEXT:    addl %r10d, %r8d
 ; SCALAR-NEXT:    movl %edi, %r10d
 ; SCALAR-NEXT:    shrl $24, %r10d
 ; SCALAR-NEXT:    shll $16, %r9d
 ; SCALAR-NEXT:    movzwl %r8w, %r8d
-; SCALAR-NEXT:    orl %r9d, %r8d
+; SCALAR-NEXT:    addl %r9d, %r8d
 ; SCALAR-NEXT:    movl %edi, %r9d
 ; SCALAR-NEXT:    shrl $16, %r9d
 ; SCALAR-NEXT:    notb %r9b
@@ -5157,7 +5157,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r10b
 ; SCALAR-NEXT:    movzbl %r10b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r9d, %r10d
+; SCALAR-NEXT:    addl %r9d, %r10d
 ; SCALAR-NEXT:    movl %edi, %r9d
 ; SCALAR-NEXT:    shrl $8, %r9d
 ; SCALAR-NEXT:    notb %dil
@@ -5165,16 +5165,16 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r11d
 ; SCALAR-NEXT:    shll $8, %r11d
-; SCALAR-NEXT:    orl %edi, %r11d
+; SCALAR-NEXT:    addl %edi, %r11d
 ; SCALAR-NEXT:    movq %rcx, %r9
 ; SCALAR-NEXT:    shrq $40, %r9
 ; SCALAR-NEXT:    shll $16, %r10d
 ; SCALAR-NEXT:    movzwl %r11w, %edi
-; SCALAR-NEXT:    orl %r10d, %edi
+; SCALAR-NEXT:    addl %r10d, %edi
 ; SCALAR-NEXT:    movq %rcx, %r10
 ; SCALAR-NEXT:    shrq $56, %r10
 ; SCALAR-NEXT:    shlq $32, %r8
-; SCALAR-NEXT:    orq %r8, %rdi
+; SCALAR-NEXT:    addq %r8, %rdi
 ; SCALAR-NEXT:    movq %rcx, %r8
 ; SCALAR-NEXT:    shrq $48, %r8
 ; SCALAR-NEXT:    notb %r8b
@@ -5182,7 +5182,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r10b
 ; SCALAR-NEXT:    movzbl %r10b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r8d, %r10d
+; SCALAR-NEXT:    addl %r8d, %r10d
 ; SCALAR-NEXT:    movq %rcx, %r8
 ; SCALAR-NEXT:    shrq $32, %r8
 ; SCALAR-NEXT:    notb %r8b
@@ -5190,12 +5190,12 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r9d
 ; SCALAR-NEXT:    shll $8, %r9d
-; SCALAR-NEXT:    orl %r8d, %r9d
+; SCALAR-NEXT:    addl %r8d, %r9d
 ; SCALAR-NEXT:    movl %ecx, %r11d
 ; SCALAR-NEXT:    shrl $24, %r11d
 ; SCALAR-NEXT:    shll $16, %r10d
 ; SCALAR-NEXT:    movzwl %r9w, %r8d
-; SCALAR-NEXT:    orl %r10d, %r8d
+; SCALAR-NEXT:    addl %r10d, %r8d
 ; SCALAR-NEXT:    movl %ecx, %r9d
 ; SCALAR-NEXT:    shrl $16, %r9d
 ; SCALAR-NEXT:    notb %r9b
@@ -5203,7 +5203,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r11b
 ; SCALAR-NEXT:    movzbl %r11b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r9d, %r10d
+; SCALAR-NEXT:    addl %r9d, %r10d
 ; SCALAR-NEXT:    movl %ecx, %r9d
 ; SCALAR-NEXT:    shrl $8, %r9d
 ; SCALAR-NEXT:    notb %cl
@@ -5211,16 +5211,16 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r11d
 ; SCALAR-NEXT:    shll $8, %r11d
-; SCALAR-NEXT:    orl %ecx, %r11d
+; SCALAR-NEXT:    addl %ecx, %r11d
 ; SCALAR-NEXT:    movq %rax, %r9
 ; SCALAR-NEXT:    shrq $40, %r9
 ; SCALAR-NEXT:    shll $16, %r10d
 ; SCALAR-NEXT:    movzwl %r11w, %ecx
-; SCALAR-NEXT:    orl %r10d, %ecx
+; SCALAR-NEXT:    addl %r10d, %ecx
 ; SCALAR-NEXT:    movq %rax, %r10
 ; SCALAR-NEXT:    shrq $56, %r10
 ; SCALAR-NEXT:    shlq $32, %r8
-; SCALAR-NEXT:    orq %r8, %rcx
+; SCALAR-NEXT:    addq %r8, %rcx
 ; SCALAR-NEXT:    movq %rax, %r8
 ; SCALAR-NEXT:    shrq $48, %r8
 ; SCALAR-NEXT:    notb %r8b
@@ -5228,7 +5228,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r10b
 ; SCALAR-NEXT:    movzbl %r10b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r8d, %r10d
+; SCALAR-NEXT:    addl %r8d, %r10d
 ; SCALAR-NEXT:    movq %rax, %r8
 ; SCALAR-NEXT:    shrq $32, %r8
 ; SCALAR-NEXT:    notb %r8b
@@ -5236,12 +5236,12 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r9d
 ; SCALAR-NEXT:    shll $8, %r9d
-; SCALAR-NEXT:    orl %r8d, %r9d
+; SCALAR-NEXT:    addl %r8d, %r9d
 ; SCALAR-NEXT:    movl %eax, %r11d
 ; SCALAR-NEXT:    shrl $24, %r11d
 ; SCALAR-NEXT:    shll $16, %r10d
 ; SCALAR-NEXT:    movzwl %r9w, %r8d
-; SCALAR-NEXT:    orl %r10d, %r8d
+; SCALAR-NEXT:    addl %r10d, %r8d
 ; SCALAR-NEXT:    movl %eax, %r9d
 ; SCALAR-NEXT:    shrl $16, %r9d
 ; SCALAR-NEXT:    notb %r9b
@@ -5249,7 +5249,7 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r11b
 ; SCALAR-NEXT:    movzbl %r11b, %r10d
 ; SCALAR-NEXT:    shll $8, %r10d
-; SCALAR-NEXT:    orl %r9d, %r10d
+; SCALAR-NEXT:    addl %r9d, %r10d
 ; SCALAR-NEXT:    movl %eax, %r9d
 ; SCALAR-NEXT:    shrl $8, %r9d
 ; SCALAR-NEXT:    notb %al
@@ -5257,12 +5257,12 @@ define void @vec384_v24i8(ptr %in.subvec.ptr, ptr %out.subvec.ptr, ptr %out.vec.
 ; SCALAR-NEXT:    notb %r9b
 ; SCALAR-NEXT:    movzbl %r9b, %r9d
 ; SCALAR-NEXT:    shll $8, %r9d
-; SCALAR-NEXT:    orl %eax, %r9d
+; SCALAR-NEXT:    addl %eax, %r9d
 ; SCALAR-NEXT:    shll $16, %r10d
 ; SCALAR-NEXT:    movzwl %r9w, %eax
-; SCALAR-NEXT:    orl %r10d, %eax
+; SCALAR-NEXT:    addl %r10d, %eax
 ; SCALAR-NEXT:    shlq $32, %r8
-; SCALAR-NEXT:    orq %r8, %rax
+; SCALAR-NEXT:    addq %r8, %rax
 ; SCALAR-NEXT:    movq %rax, (%rsi)
 ; SCALAR-NEXT:    movq %rcx, 8(%rsi)
 ; SCALAR-NEXT:    movq %rdi, 16(%rsi)

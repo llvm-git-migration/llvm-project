@@ -209,7 +209,7 @@ define i64 @fun10(i8 zeroext %v) {
 ; X86-NEXT:    movzbl %al, %ecx
 ; X86-NEXT:    movl %ecx, %eax
 ; X86-NEXT:    shll $4, %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    xorl %edx, %edx
 ; X86-NEXT:    retl
 ;
@@ -220,7 +220,7 @@ define i64 @fun10(i8 zeroext %v) {
 ; X64-NEXT:    shrb $4, %al
 ; X64-NEXT:    movzbl %al, %eax
 ; X64-NEXT:    andl $-16, %edi
-; X64-NEXT:    orq %rdi, %rax
+; X64-NEXT:    addq %rdi, %rax
 ; X64-NEXT:    retq
 entry:
   %shr = lshr i8 %v, 4

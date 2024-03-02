@@ -1275,14 +1275,14 @@ define i32 @trunc_select_miscompile(i32 %a, i1 zeroext %cc) {
 ; ATHLON:       ## %bb.0:
 ; ATHLON-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; ATHLON-NEXT:    movzbl {{[0-9]+}}(%esp), %ecx
-; ATHLON-NEXT:    orb $2, %cl
+; ATHLON-NEXT:    addb $2, %cl
 ; ATHLON-NEXT:    shll %cl, %eax
 ; ATHLON-NEXT:    retl
 ;
 ; MCU-LABEL: trunc_select_miscompile:
 ; MCU:       # %bb.0:
 ; MCU-NEXT:    movl %edx, %ecx
-; MCU-NEXT:    orb $2, %cl
+; MCU-NEXT:    addb $2, %cl
 ; MCU-NEXT:    # kill: def $cl killed $cl killed $ecx
 ; MCU-NEXT:    shll %cl, %eax
 ; MCU-NEXT:    retl

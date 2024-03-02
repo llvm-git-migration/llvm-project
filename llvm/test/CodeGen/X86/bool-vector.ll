@@ -16,12 +16,12 @@ define i32 @PR15215_bad(<4 x i32> %input) {
 ; X86-NEXT:    shlb $3, %ah
 ; X86-NEXT:    andb $1, %cl
 ; X86-NEXT:    shlb $2, %cl
-; X86-NEXT:    orb %ah, %cl
+; X86-NEXT:    addb %ah, %cl
 ; X86-NEXT:    addb %dl, %dl
 ; X86-NEXT:    andb $1, %al
-; X86-NEXT:    orb %dl, %al
+; X86-NEXT:    addb %dl, %al
 ; X86-NEXT:    andb $3, %al
-; X86-NEXT:    orb %cl, %al
+; X86-NEXT:    addb %cl, %al
 ; X86-NEXT:    movzbl %al, %eax
 ; X86-NEXT:    andl $15, %eax
 ; X86-NEXT:    retl
@@ -31,12 +31,12 @@ define i32 @PR15215_bad(<4 x i32> %input) {
 ; X64-NEXT:    shlb $3, %cl
 ; X64-NEXT:    andb $1, %dl
 ; X64-NEXT:    shlb $2, %dl
-; X64-NEXT:    orb %cl, %dl
+; X64-NEXT:    addb %cl, %dl
 ; X64-NEXT:    addb %sil, %sil
 ; X64-NEXT:    andb $1, %dil
-; X64-NEXT:    orb %sil, %dil
+; X64-NEXT:    addb %sil, %dil
 ; X64-NEXT:    andb $3, %dil
-; X64-NEXT:    orb %dl, %dil
+; X64-NEXT:    addb %dl, %dil
 ; X64-NEXT:    movzbl %dil, %eax
 ; X64-NEXT:    andl $15, %eax
 ; X64-NEXT:    retq

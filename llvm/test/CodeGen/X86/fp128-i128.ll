@@ -54,7 +54,7 @@ define dso_local void @TestUnionLD1(fp128 %s, i64 %n) #0 {
 ; SSE-NEXT:    movq -{{[0-9]+}}(%rsp), %rcx
 ; SSE-NEXT:    movabsq $281474976710655, %rdx # imm = 0xFFFFFFFFFFFF
 ; SSE-NEXT:    andq %rdi, %rdx
-; SSE-NEXT:    orq %rax, %rdx
+; SSE-NEXT:    addq %rax, %rdx
 ; SSE-NEXT:    movq %rcx, -{{[0-9]+}}(%rsp)
 ; SSE-NEXT:    movq %rdx, -{{[0-9]+}}(%rsp)
 ; SSE-NEXT:    movaps -{{[0-9]+}}(%rsp), %xmm0
@@ -68,7 +68,7 @@ define dso_local void @TestUnionLD1(fp128 %s, i64 %n) #0 {
 ; AVX-NEXT:    movq -{{[0-9]+}}(%rsp), %rcx
 ; AVX-NEXT:    movabsq $281474976710655, %rdx # imm = 0xFFFFFFFFFFFF
 ; AVX-NEXT:    andq %rdi, %rdx
-; AVX-NEXT:    orq %rax, %rdx
+; AVX-NEXT:    addq %rax, %rdx
 ; AVX-NEXT:    movq %rcx, -{{[0-9]+}}(%rsp)
 ; AVX-NEXT:    movq %rdx, -{{[0-9]+}}(%rsp)
 ; AVX-NEXT:    vmovaps -{{[0-9]+}}(%rsp), %xmm0
@@ -231,7 +231,7 @@ define fp128 @TestI128_3(fp128 %x, ptr nocapture readnone %ex) #0 {
 ; SSE-NEXT:    movabsq $-9223090561878065153, %rdx # imm = 0x8000FFFFFFFFFFFF
 ; SSE-NEXT:    andq {{[0-9]+}}(%rsp), %rdx
 ; SSE-NEXT:    movabsq $4611123068473966592, %rax # imm = 0x3FFE000000000000
-; SSE-NEXT:    orq %rdx, %rax
+; SSE-NEXT:    addq %rdx, %rax
 ; SSE-NEXT:  .LBB4_3: # %if.end
 ; SSE-NEXT:    movq %rcx, (%rsp)
 ; SSE-NEXT:    movq %rax, {{[0-9]+}}(%rsp)
@@ -258,7 +258,7 @@ define fp128 @TestI128_3(fp128 %x, ptr nocapture readnone %ex) #0 {
 ; AVX-NEXT:    movabsq $-9223090561878065153, %rdx # imm = 0x8000FFFFFFFFFFFF
 ; AVX-NEXT:    andq {{[0-9]+}}(%rsp), %rdx
 ; AVX-NEXT:    movabsq $4611123068473966592, %rax # imm = 0x3FFE000000000000
-; AVX-NEXT:    orq %rdx, %rax
+; AVX-NEXT:    addq %rdx, %rax
 ; AVX-NEXT:  .LBB4_3: # %if.end
 ; AVX-NEXT:    movq %rcx, (%rsp)
 ; AVX-NEXT:    movq %rax, {{[0-9]+}}(%rsp)

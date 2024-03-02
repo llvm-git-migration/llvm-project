@@ -69,7 +69,7 @@ define i32 @xor_sminval_i32(i32 %x) {
 ; X86-LABEL: xor_sminval_i32:
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl $-2147483648, %eax # imm = 0x80000000
-; X86-NEXT:    xorl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    addl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: xor_sminval_i32:
@@ -103,7 +103,7 @@ define i64 @xor_sminval_i64(i64 %x) {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl $-2147483648, %edx # imm = 0x80000000
-; X86-NEXT:    xorl {{[0-9]+}}(%esp), %edx
+; X86-NEXT:    addl {{[0-9]+}}(%esp), %edx
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: xor_sminval_i64:

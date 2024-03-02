@@ -905,7 +905,7 @@ define i8 @or_fshl_commute3(i8 %x, i8 %y) {
 ; CHECK-NEXT:    orl %edi, %esi
 ; CHECK-NEXT:    shlb $5, %sil
 ; CHECK-NEXT:    shrb $3, %al
-; CHECK-NEXT:    orb %sil, %al
+; CHECK-NEXT:    addb %sil, %al
 ; CHECK-NEXT:    # kill: def $al killed $al killed $eax
 ; CHECK-NEXT:    retq
   %or1 = or i8 %y, %x
@@ -983,7 +983,7 @@ define i8 @or_fshr_commute3(i8 %x, i8 %y) {
 ; CHECK-NEXT:    orl %edi, %esi
 ; CHECK-NEXT:    shrb $6, %sil
 ; CHECK-NEXT:    leal (,%rdi,4), %eax
-; CHECK-NEXT:    orb %sil, %al
+; CHECK-NEXT:    addb %sil, %al
 ; CHECK-NEXT:    # kill: def $al killed $al killed $eax
 ; CHECK-NEXT:    retq
   %or1 = or i8 %y, %x

@@ -448,7 +448,7 @@ define i64 @test_bswap64_shift48_multiuse(i64 %a0, ptr %a1) {
 ; X64-NEXT:    shlq $48, %rdi
 ; X64-NEXT:    movq %rdi, %rax
 ; X64-NEXT:    bswapq %rax
-; X64-NEXT:    orq %rax, %rdi
+; X64-NEXT:    addq %rax, %rdi
 ; X64-NEXT:    movq %rdi, (%rsi)
 ; X64-NEXT:    retq
   %s = shl i64 %a0, 48

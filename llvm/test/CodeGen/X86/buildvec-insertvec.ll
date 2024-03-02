@@ -661,7 +661,7 @@ define <16 x i8> @test_buildvector_v16i8_register_zero_2(i8 %a2, i8 %a3, i8 %a6,
 ; SSE2:       # %bb.0:
 ; SSE2-NEXT:    shll $8, %esi
 ; SSE2-NEXT:    movzbl %dil, %eax
-; SSE2-NEXT:    orl %esi, %eax
+; SSE2-NEXT:    addl %esi, %eax
 ; SSE2-NEXT:    pxor %xmm0, %xmm0
 ; SSE2-NEXT:    pinsrw $1, %eax, %xmm0
 ; SSE2-NEXT:    movzbl %dl, %eax
@@ -831,7 +831,7 @@ define void @pr59781(ptr %in, ptr %out) {
 ; CHECK-NEXT:    movzwl (%rdi), %eax
 ; CHECK-NEXT:    movzbl 2(%rdi), %ecx
 ; CHECK-NEXT:    shll $16, %ecx
-; CHECK-NEXT:    orq %rax, %rcx
+; CHECK-NEXT:    addq %rax, %rcx
 ; CHECK-NEXT:    movq %rcx, (%rsi)
 ; CHECK-NEXT:    retq
   %bf.load = load i24, ptr %in, align 8

@@ -2772,7 +2772,7 @@ define i64 @sum_and_sum_of_squares(ptr %a, i32 %n) {
 ; SSE2-NEXT:    paddd %xmm0, %xmm1
 ; SSE2-NEXT:    movd %xmm1, %eax
 ; SSE2-NEXT:    shlq $32, %rcx
-; SSE2-NEXT:    orq %rcx, %rax
+; SSE2-NEXT:    addq %rcx, %rax
 ; SSE2-NEXT:    retq
 ;
 ; AVX1-LABEL: sum_and_sum_of_squares:
@@ -2814,7 +2814,7 @@ define i64 @sum_and_sum_of_squares(ptr %a, i32 %n) {
 ; AVX1-NEXT:    vpaddd %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    vmovd %xmm0, %eax
 ; AVX1-NEXT:    shlq $32, %rcx
-; AVX1-NEXT:    orq %rcx, %rax
+; AVX1-NEXT:    addq %rcx, %rax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -2849,7 +2849,7 @@ define i64 @sum_and_sum_of_squares(ptr %a, i32 %n) {
 ; AVX256-NEXT:    vpaddd %xmm1, %xmm0, %xmm0
 ; AVX256-NEXT:    vmovd %xmm0, %eax
 ; AVX256-NEXT:    shlq $32, %rcx
-; AVX256-NEXT:    orq %rcx, %rax
+; AVX256-NEXT:    addq %rcx, %rax
 ; AVX256-NEXT:    vzeroupper
 ; AVX256-NEXT:    retq
 entry:

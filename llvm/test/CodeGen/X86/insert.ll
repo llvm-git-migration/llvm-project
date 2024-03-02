@@ -32,7 +32,7 @@ define i64 @sub16(i64 noundef %res, ptr %byte) {
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movzwl (%eax), %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: sub16:
@@ -76,7 +76,7 @@ define i32 @sub16_32(i32 noundef %res, ptr %byte) {
 ; X86-NEXT:    shll $16, %ecx
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movzwl (%eax), %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: sub16_32:

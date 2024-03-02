@@ -2335,7 +2335,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; SSE2-NEXT:    shll $13, %ecx
 ; SSE2-NEXT:    movq %rax, %rdx
 ; SSE2-NEXT:    shrq $51, %rdx
-; SSE2-NEXT:    orl %ecx, %edx
+; SSE2-NEXT:    addl %ecx, %edx
 ; SSE2-NEXT:    movd %edx, %xmm1
 ; SSE2-NEXT:    shrq $34, %rax
 ; SSE2-NEXT:    movd %eax, %xmm2
@@ -2356,7 +2356,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; SSSE3-NEXT:    shll $13, %ecx
 ; SSSE3-NEXT:    movq %rax, %rdx
 ; SSSE3-NEXT:    shrq $51, %rdx
-; SSSE3-NEXT:    orl %ecx, %edx
+; SSSE3-NEXT:    addl %ecx, %edx
 ; SSSE3-NEXT:    movd %edx, %xmm1
 ; SSSE3-NEXT:    shrq $34, %rax
 ; SSSE3-NEXT:    movd %eax, %xmm2
@@ -2372,7 +2372,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; SSE41-NEXT:    movq (%rdi), %rcx
 ; SSE41-NEXT:    movq %rcx, %rdx
 ; SSE41-NEXT:    shrq $51, %rdx
-; SSE41-NEXT:    orl %eax, %edx
+; SSE41-NEXT:    addl %eax, %edx
 ; SSE41-NEXT:    movq %rcx, %rax
 ; SSE41-NEXT:    shrq $17, %rax
 ; SSE41-NEXT:    movd %ecx, %xmm0
@@ -2390,7 +2390,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; AVX1-NEXT:    movq (%rdi), %rcx
 ; AVX1-NEXT:    movq %rcx, %rdx
 ; AVX1-NEXT:    shrq $51, %rdx
-; AVX1-NEXT:    orl %eax, %edx
+; AVX1-NEXT:    addl %eax, %edx
 ; AVX1-NEXT:    movq %rcx, %rax
 ; AVX1-NEXT:    shrq $17, %rax
 ; AVX1-NEXT:    vmovd %ecx, %xmm0
@@ -2408,7 +2408,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; AVX2-NEXT:    movq (%rdi), %rcx
 ; AVX2-NEXT:    movq %rcx, %rdx
 ; AVX2-NEXT:    shrq $51, %rdx
-; AVX2-NEXT:    orl %eax, %edx
+; AVX2-NEXT:    addl %eax, %edx
 ; AVX2-NEXT:    movq %rcx, %rax
 ; AVX2-NEXT:    shrq $17, %rax
 ; AVX2-NEXT:    vmovd %ecx, %xmm0
@@ -2427,7 +2427,7 @@ define <4 x i32> @zext_4i17_to_4i32(ptr %ptr) {
 ; AVX512-NEXT:    movq (%rdi), %rcx
 ; AVX512-NEXT:    movq %rcx, %rdx
 ; AVX512-NEXT:    shrq $51, %rdx
-; AVX512-NEXT:    orl %eax, %edx
+; AVX512-NEXT:    addl %eax, %edx
 ; AVX512-NEXT:    movq %rcx, %rax
 ; AVX512-NEXT:    shrq $17, %rax
 ; AVX512-NEXT:    vmovd %ecx, %xmm0

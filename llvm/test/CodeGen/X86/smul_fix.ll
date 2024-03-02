@@ -108,7 +108,7 @@ define i4 @func3(i4 %x, i4 %y) nounwind {
 ; X64-NEXT:    shrb $2, %cl
 ; X64-NEXT:    shrl $8, %eax
 ; X64-NEXT:    shlb $6, %al
-; X64-NEXT:    orb %cl, %al
+; X64-NEXT:    addb %cl, %al
 ; X64-NEXT:    # kill: def $al killed $al killed $eax
 ; X64-NEXT:    retq
 ;
@@ -125,7 +125,7 @@ define i4 @func3(i4 %x, i4 %y) nounwind {
 ; X86-NEXT:    imull %ecx, %eax
 ; X86-NEXT:    shlb $6, %ah
 ; X86-NEXT:    shrb $2, %al
-; X86-NEXT:    orb %ah, %al
+; X86-NEXT:    addb %ah, %al
 ; X86-NEXT:    # kill: def $al killed $al killed $eax
 ; X86-NEXT:    retl
   %tmp = call i4 @llvm.smul.fix.i4(i4 %x, i4 %y, i32 2)

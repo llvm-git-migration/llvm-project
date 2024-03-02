@@ -17,7 +17,7 @@ define dso_local void @PR35763() {
 ; CHECK-NEXT:    movl z+6(%rip), %eax
 ; CHECK-NEXT:    movzbl z+10(%rip), %ecx
 ; CHECK-NEXT:    shlq $32, %rcx
-; CHECK-NEXT:    orq %rax, %rcx
+; CHECK-NEXT:    addq %rax, %rcx
 ; CHECK-NEXT:    movabsq $1090921758719, %rax # imm = 0xFE0000FFFF
 ; CHECK-NEXT:    andq %rcx, %rax
 ; CHECK-NEXT:    movl %eax, z+6(%rip)

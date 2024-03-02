@@ -150,7 +150,7 @@ define i4 @func3(i4 %x, i4 %y) nounwind {
 ; X64-NEXT:    shrl $8, %ecx
 ; X64-NEXT:    movl %ecx, %edx
 ; X64-NEXT:    shlb $6, %dl
-; X64-NEXT:    orb %al, %dl
+; X64-NEXT:    addb %al, %dl
 ; X64-NEXT:    movzbl %dl, %eax
 ; X64-NEXT:    cmpb $2, %cl
 ; X64-NEXT:    movl $127, %edx
@@ -175,7 +175,7 @@ define i4 @func3(i4 %x, i4 %y) nounwind {
 ; X86-NEXT:    movb %ah, %cl
 ; X86-NEXT:    shlb $6, %cl
 ; X86-NEXT:    shrb $2, %al
-; X86-NEXT:    orb %cl, %al
+; X86-NEXT:    addb %cl, %al
 ; X86-NEXT:    movzbl %al, %ecx
 ; X86-NEXT:    cmpb $2, %ah
 ; X86-NEXT:    movl $127, %edx

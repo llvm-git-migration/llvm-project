@@ -14,13 +14,13 @@ define i4 @reverse_cmp_v4i1(<4 x i32> %a0, <4 x i32> %a1) {
 ; SSE2-NEXT:    andb $4, %cl
 ; SSE2-NEXT:    leal (,%rax,8), %edx
 ; SSE2-NEXT:    andb $8, %dl
-; SSE2-NEXT:    orb %cl, %dl
+; SSE2-NEXT:    addb %cl, %dl
 ; SSE2-NEXT:    movl %eax, %ecx
 ; SSE2-NEXT:    shrb %cl
 ; SSE2-NEXT:    andb $2, %cl
-; SSE2-NEXT:    orb %dl, %cl
 ; SSE2-NEXT:    shrb $3, %al
-; SSE2-NEXT:    orb %cl, %al
+; SSE2-NEXT:    addb %cl, %al
+; SSE2-NEXT:    addb %dl, %al
 ; SSE2-NEXT:    # kill: def $al killed $al killed $rax
 ; SSE2-NEXT:    retq
 ;
@@ -67,13 +67,13 @@ define i8 @reverse_cmp_v8i1(<8 x i16> %a0, <8 x i16> %a1) {
 ; SSE2-NEXT:    shlb $2, %cl
 ; SSE2-NEXT:    shrb $2, %al
 ; SSE2-NEXT:    andb $51, %al
-; SSE2-NEXT:    orb %cl, %al
+; SSE2-NEXT:    addb %cl, %al
 ; SSE2-NEXT:    movl %eax, %ecx
 ; SSE2-NEXT:    andb $85, %cl
 ; SSE2-NEXT:    addb %cl, %cl
 ; SSE2-NEXT:    shrb %al
 ; SSE2-NEXT:    andb $85, %al
-; SSE2-NEXT:    orb %cl, %al
+; SSE2-NEXT:    addb %cl, %al
 ; SSE2-NEXT:    # kill: def $al killed $al killed $eax
 ; SSE2-NEXT:    retq
 ;
@@ -123,7 +123,7 @@ define i16 @reverse_cmp_v16i1(<16 x i8> %a0, <16 x i8> %a1) {
 ; SSE2-NEXT:    shll $4, %ecx
 ; SSE2-NEXT:    shrl $4, %eax
 ; SSE2-NEXT:    andl $3855, %eax # imm = 0xF0F
-; SSE2-NEXT:    orl %ecx, %eax
+; SSE2-NEXT:    addl %ecx, %eax
 ; SSE2-NEXT:    movl %eax, %ecx
 ; SSE2-NEXT:    andl $13107, %ecx # imm = 0x3333
 ; SSE2-NEXT:    shrl $2, %eax
@@ -179,14 +179,14 @@ define i32 @reverse_cmp_v32i1(<32 x i8> %a0, <32 x i8> %a1) {
 ; SSE2-NEXT:    pcmpeqb %xmm3, %xmm1
 ; SSE2-NEXT:    pmovmskb %xmm1, %ecx
 ; SSE2-NEXT:    shll $16, %ecx
-; SSE2-NEXT:    orl %eax, %ecx
+; SSE2-NEXT:    addl %eax, %ecx
 ; SSE2-NEXT:    bswapl %ecx
 ; SSE2-NEXT:    movl %ecx, %eax
 ; SSE2-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
 ; SSE2-NEXT:    shll $4, %eax
 ; SSE2-NEXT:    shrl $4, %ecx
 ; SSE2-NEXT:    andl $252645135, %ecx # imm = 0xF0F0F0F
-; SSE2-NEXT:    orl %eax, %ecx
+; SSE2-NEXT:    addl %eax, %ecx
 ; SSE2-NEXT:    movl %ecx, %eax
 ; SSE2-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; SSE2-NEXT:    shrl $2, %ecx
@@ -209,7 +209,7 @@ define i32 @reverse_cmp_v32i1(<32 x i8> %a0, <32 x i8> %a1) {
 ; SSE42-NEXT:    pshufb %xmm2, %xmm0
 ; SSE42-NEXT:    pmovmskb %xmm0, %eax
 ; SSE42-NEXT:    shll $16, %eax
-; SSE42-NEXT:    orl %ecx, %eax
+; SSE42-NEXT:    addl %ecx, %eax
 ; SSE42-NEXT:    retq
 ;
 ; AVX2-LABEL: reverse_cmp_v32i1:
@@ -257,15 +257,15 @@ define i64 @reverse_cmp_v64i1(<64 x i8> %a0, <64 x i8> %a1) {
 ; SSE2-NEXT:    pcmpeqb %xmm5, %xmm1
 ; SSE2-NEXT:    pmovmskb %xmm1, %ecx
 ; SSE2-NEXT:    shll $16, %ecx
-; SSE2-NEXT:    orl %eax, %ecx
+; SSE2-NEXT:    addl %eax, %ecx
 ; SSE2-NEXT:    pcmpeqb %xmm6, %xmm2
 ; SSE2-NEXT:    pmovmskb %xmm2, %eax
 ; SSE2-NEXT:    pcmpeqb %xmm7, %xmm3
 ; SSE2-NEXT:    pmovmskb %xmm3, %edx
 ; SSE2-NEXT:    shll $16, %edx
-; SSE2-NEXT:    orl %eax, %edx
+; SSE2-NEXT:    addl %eax, %edx
 ; SSE2-NEXT:    shlq $32, %rdx
-; SSE2-NEXT:    orq %rcx, %rdx
+; SSE2-NEXT:    addq %rcx, %rdx
 ; SSE2-NEXT:    bswapq %rdx
 ; SSE2-NEXT:    movq %rdx, %rax
 ; SSE2-NEXT:    shrq $4, %rax
@@ -273,7 +273,7 @@ define i64 @reverse_cmp_v64i1(<64 x i8> %a0, <64 x i8> %a1) {
 ; SSE2-NEXT:    andq %rcx, %rax
 ; SSE2-NEXT:    andq %rcx, %rdx
 ; SSE2-NEXT:    shlq $4, %rdx
-; SSE2-NEXT:    orq %rax, %rdx
+; SSE2-NEXT:    addq %rax, %rdx
 ; SSE2-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; SSE2-NEXT:    movq %rdx, %rcx
 ; SSE2-NEXT:    andq %rax, %rcx
@@ -300,15 +300,15 @@ define i64 @reverse_cmp_v64i1(<64 x i8> %a0, <64 x i8> %a1) {
 ; SSE42-NEXT:    pshufb %xmm4, %xmm2
 ; SSE42-NEXT:    pmovmskb %xmm2, %ecx
 ; SSE42-NEXT:    shll $16, %ecx
-; SSE42-NEXT:    orl %eax, %ecx
+; SSE42-NEXT:    addl %eax, %ecx
 ; SSE42-NEXT:    pshufb %xmm4, %xmm1
 ; SSE42-NEXT:    pmovmskb %xmm1, %edx
 ; SSE42-NEXT:    pshufb %xmm4, %xmm0
 ; SSE42-NEXT:    pmovmskb %xmm0, %eax
 ; SSE42-NEXT:    shll $16, %eax
-; SSE42-NEXT:    orl %edx, %eax
+; SSE42-NEXT:    addl %edx, %eax
 ; SSE42-NEXT:    shlq $32, %rax
-; SSE42-NEXT:    orq %rcx, %rax
+; SSE42-NEXT:    addq %rcx, %rax
 ; SSE42-NEXT:    retq
 ;
 ; AVX2-LABEL: reverse_cmp_v64i1:
@@ -324,7 +324,7 @@ define i64 @reverse_cmp_v64i1(<64 x i8> %a0, <64 x i8> %a1) {
 ; AVX2-NEXT:    vpermq {{.*#+}} ymm0 = ymm0[2,3,0,1]
 ; AVX2-NEXT:    vpmovmskb %ymm0, %eax
 ; AVX2-NEXT:    shlq $32, %rax
-; AVX2-NEXT:    orq %rcx, %rax
+; AVX2-NEXT:    addq %rcx, %rax
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
 ;

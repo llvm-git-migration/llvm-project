@@ -24,7 +24,7 @@ define i64 @test2(i8 %A, i8 %B) nounwind {
 ; CHECK-NEXT:    andl $48, %edi
 ; CHECK-NEXT:    movzbl %sil, %eax
 ; CHECK-NEXT:    shrl $4, %eax
-; CHECK-NEXT:    orl %edi, %eax
+; CHECK-NEXT:    addl %edi, %eax
 ; CHECK-NEXT:    retq
   %C = zext i8 %A to i64
   %D = shl i64 %C, 4
@@ -42,7 +42,7 @@ define void @test3(i32 %x, ptr %P) nounwind readnone ssp {
 ; CHECK-LABEL: test3:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    shll $5, %edi
-; CHECK-NEXT:    orl $3, %edi
+; CHECK-NEXT:    addl $3, %edi
 ; CHECK-NEXT:    movl %edi, (%rsi)
 ; CHECK-NEXT:    retq
   %t0 = shl i32 %x, 5
@@ -71,7 +71,7 @@ define void @test5(i32 %a, i32 %b, ptr nocapture %P) nounwind ssp {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    andl $6, %edi
 ; CHECK-NEXT:    andl $16, %esi
-; CHECK-NEXT:    orl %edi, %esi
+; CHECK-NEXT:    addl %edi, %esi
 ; CHECK-NEXT:    movl %esi, (%rdx)
 ; CHECK-NEXT:    retq
   %and = and i32 %a, 6

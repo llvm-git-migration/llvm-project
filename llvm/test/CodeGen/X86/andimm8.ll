@@ -29,7 +29,7 @@ define void @foo(i64 %zed, ptr %x) nounwind {
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx # encoding: [0x8b,0x4c,0x24,0x04]
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %edx # encoding: [0x8b,0x54,0x24,0x08]
 ; X86-NEXT:    andl $-4, %ecx # encoding: [0x83,0xe1,0xfc]
-; X86-NEXT:    orl $2, %ecx # encoding: [0x83,0xc9,0x02]
+; X86-NEXT:    addl $2, %ecx # encoding: [0x83,0xc1,0x02]
 ; X86-NEXT:    movl %edx, 4(%eax) # encoding: [0x89,0x50,0x04]
 ; X86-NEXT:    movl %ecx, (%eax) # encoding: [0x89,0x08]
 ; X86-NEXT:    retl # encoding: [0xc3]
@@ -37,7 +37,7 @@ define void @foo(i64 %zed, ptr %x) nounwind {
 ; X64-LABEL: foo:
 ; X64:       # %bb.0:
 ; X64-NEXT:    andq $-4, %rdi # encoding: [0x48,0x83,0xe7,0xfc]
-; X64-NEXT:    orq $2, %rdi # encoding: [0x48,0x83,0xcf,0x02]
+; X64-NEXT:    addq $2, %rdi # encoding: [0x48,0x83,0xc7,0x02]
 ; X64-NEXT:    movq %rdi, (%rsi) # encoding: [0x48,0x89,0x3e]
 ; X64-NEXT:    retq # encoding: [0xc3]
   %t1 = and i64 %zed, -4

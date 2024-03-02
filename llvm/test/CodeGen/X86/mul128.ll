@@ -111,7 +111,7 @@ define void @PR13897() nounwind {
 ; X64-NEXT:    movq bbb(%rip), %rax
 ; X64-NEXT:    movl %eax, %ecx
 ; X64-NEXT:    shlq $32, %rax
-; X64-NEXT:    orq %rcx, %rax
+; X64-NEXT:    addq %rcx, %rax
 ; X64-NEXT:    movq %rax, aaa+8(%rip)
 ; X64-NEXT:    movq %rax, aaa(%rip)
 ; X64-NEXT:    retq

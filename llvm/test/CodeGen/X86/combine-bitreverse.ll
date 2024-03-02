@@ -50,7 +50,7 @@ define i32 @test_bitreverse_srli_bitreverse(i32 %a0) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -68,7 +68,7 @@ define i32 @test_bitreverse_srli_bitreverse(i32 %a0) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645120, %eax # imm = 0xF0F0F00
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993424, %ecx # imm = 0x33333310
 ; X86-NEXT:    shrl $2, %eax
@@ -90,7 +90,7 @@ define i32 @test_bitreverse_srli_bitreverse(i32 %a0) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; X64-NEXT:    shrl $2, %edi
@@ -108,7 +108,7 @@ define i32 @test_bitreverse_srli_bitreverse(i32 %a0) nounwind {
 ; X64-NEXT:    shll $4, %ecx
 ; X64-NEXT:    shrl $4, %eax
 ; X64-NEXT:    andl $252645120, %eax # imm = 0xF0F0F00
-; X64-NEXT:    orl %ecx, %eax
+; X64-NEXT:    addl %ecx, %eax
 ; X64-NEXT:    movl %eax, %ecx
 ; X64-NEXT:    andl $858993424, %ecx # imm = 0x33333310
 ; X64-NEXT:    shrl $2, %eax
@@ -136,7 +136,7 @@ define i64 @test_bitreverse_srli_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -154,7 +154,7 @@ define i64 @test_bitreverse_srli_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645127, %eax # imm = 0xF0F0F07
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -177,7 +177,7 @@ define i64 @test_bitreverse_srli_bitreverse_i64(i64 %a) nounwind {
 ; X64-NEXT:    andq %rcx, %rax
 ; X64-NEXT:    andq %rcx, %rdi
 ; X64-NEXT:    shlq $4, %rdi
-; X64-NEXT:    orq %rax, %rdi
+; X64-NEXT:    addq %rax, %rdi
 ; X64-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; X64-NEXT:    movq %rdi, %rcx
 ; X64-NEXT:    andq %rax, %rcx
@@ -198,7 +198,7 @@ define i64 @test_bitreverse_srli_bitreverse_i64(i64 %a) nounwind {
 ; X64-NEXT:    movabsq $1085102557958766592, %rdx # imm = 0xF0F0F0700000000
 ; X64-NEXT:    andq %rax, %rdx
 ; X64-NEXT:    shlq $4, %rcx
-; X64-NEXT:    orq %rdx, %rcx
+; X64-NEXT:    addq %rdx, %rcx
 ; X64-NEXT:    movabsq $3689348813882916864, %rax # imm = 0x3333333300000000
 ; X64-NEXT:    andq %rcx, %rax
 ; X64-NEXT:    shrq $2, %rcx
@@ -229,7 +229,7 @@ define i32 @test_bitreverse_shli_bitreverse(i32 %a0) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -240,14 +240,14 @@ define i32 @test_bitreverse_shli_bitreverse(i32 %a0) nounwind {
 ; X86-NEXT:    shll $6, %ecx
 ; X86-NEXT:    andl $-1431655808, %ecx # imm = 0xAAAAAA80
 ; X86-NEXT:    shll $8, %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    bswapl %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $986895, %ecx # imm = 0xF0F0F
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $135204623, %eax # imm = 0x80F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $3355443, %ecx # imm = 0x333333
 ; X86-NEXT:    shrl $2, %eax
@@ -269,7 +269,7 @@ define i32 @test_bitreverse_shli_bitreverse(i32 %a0) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; X64-NEXT:    shrl $2, %edi
@@ -280,14 +280,14 @@ define i32 @test_bitreverse_shli_bitreverse(i32 %a0) nounwind {
 ; X64-NEXT:    shll $6, %eax
 ; X64-NEXT:    andl $-1431655808, %eax # imm = 0xAAAAAA80
 ; X64-NEXT:    shll $8, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    bswapl %ecx
 ; X64-NEXT:    movl %ecx, %eax
 ; X64-NEXT:    andl $986895, %eax # imm = 0xF0F0F
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %ecx
 ; X64-NEXT:    andl $135204623, %ecx # imm = 0x80F0F0F
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    movl %ecx, %eax
 ; X64-NEXT:    andl $3355443, %eax # imm = 0x333333
 ; X64-NEXT:    shrl $2, %ecx
@@ -315,7 +315,7 @@ define i64 @test_bitreverse_shli_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $858993459, %ecx # imm = 0x33333333
 ; X86-NEXT:    shrl $2, %eax
@@ -331,7 +331,7 @@ define i64 @test_bitreverse_shli_bitreverse_i64(i64 %a) nounwind {
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    shrl $4, %eax
 ; X86-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    movl %eax, %ecx
 ; X86-NEXT:    andl $590558003, %ecx # imm = 0x23333333
 ; X86-NEXT:    shrl $2, %eax
@@ -353,7 +353,7 @@ define i64 @test_bitreverse_shli_bitreverse_i64(i64 %a) nounwind {
 ; X64-NEXT:    shll $4, %eax
 ; X64-NEXT:    shrl $4, %edi
 ; X64-NEXT:    andl $252645135, %edi # imm = 0xF0F0F0F
-; X64-NEXT:    orl %eax, %edi
+; X64-NEXT:    addl %eax, %edi
 ; X64-NEXT:    movl %edi, %eax
 ; X64-NEXT:    andl $858993459, %eax # imm = 0x33333333
 ; X64-NEXT:    shrl $2, %edi
@@ -371,7 +371,7 @@ define i64 @test_bitreverse_shli_bitreverse_i64(i64 %a) nounwind {
 ; X64-NEXT:    shll $4, %ecx
 ; X64-NEXT:    shrl $4, %eax
 ; X64-NEXT:    andl $252645135, %eax # imm = 0xF0F0F0F
-; X64-NEXT:    orl %ecx, %eax
+; X64-NEXT:    addl %ecx, %eax
 ; X64-NEXT:    movl %eax, %ecx
 ; X64-NEXT:    andl $590558003, %ecx # imm = 0x23333333
 ; X64-NEXT:    shrl $2, %eax
