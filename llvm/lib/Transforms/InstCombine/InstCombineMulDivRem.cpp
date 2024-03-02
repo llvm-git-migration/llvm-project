@@ -573,6 +573,17 @@ Instruction *InstCombinerImpl::foldFPSignBitOps(BinaryOperator &I) {
 
 Instruction *InstCombinerImpl::foldPowiReassoc(BinaryOperator &I) {
   Value *X, *Y, *Z;
+
+  // Make sure all operands have reassoc flag if they are powi.
+  if (!all_of(I.operands(), [](Value *V) {
+        if (match(V, m_Intrinsic<Intrinsic::powi>(m_Value(), m_Value()))) {
+          Instruction *Powi = cast<Instruction>(V);
+          return Powi->hasAllowReassoc();
+        }
+        return true;
+      }))
+    return nullptr;
+
   auto createPowiExpr = [](BinaryOperator &I, InstCombinerImpl &IC, Value *X,
                            Value *Y, Value *Z) {
     Value *YZ;
