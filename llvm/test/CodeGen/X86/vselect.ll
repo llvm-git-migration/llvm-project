@@ -8,41 +8,26 @@
 ; condition used by the vector select is a vector of constants.
 
 define <2 x i64> @masked_select_const(<2 x i64> %a, <2 x i64> %x, <2 x i64> %y) {
-; SSE2-LABEL: masked_select_const:
-; SSE2:       # %bb.0:
-; SSE2-NEXT:    movdqa {{.*#+}} xmm3 = [4294967272,4294967272,4294967272,4294967272]
-; SSE2-NEXT:    paddd %xmm0, %xmm3
-; SSE2-NEXT:    pcmpgtd %xmm2, %xmm1
-; SSE2-NEXT:    pand %xmm1, %xmm3
-; SSE2-NEXT:    pandn %xmm0, %xmm1
-; SSE2-NEXT:    por %xmm1, %xmm3
-; SSE2-NEXT:    movdqa %xmm3, %xmm0
-; SSE2-NEXT:    retq
-;
-; SSE41-LABEL: masked_select_const:
-; SSE41:       # %bb.0:
-; SSE41-NEXT:    movdqa %xmm0, %xmm3
-; SSE41-NEXT:    pmovsxbd {{.*#+}} xmm4 = [4294967272,4294967272,4294967272,4294967272]
-; SSE41-NEXT:    paddd %xmm0, %xmm4
-; SSE41-NEXT:    pcmpgtd %xmm2, %xmm1
-; SSE41-NEXT:    movdqa %xmm1, %xmm0
-; SSE41-NEXT:    blendvps %xmm0, %xmm4, %xmm3
-; SSE41-NEXT:    movaps %xmm3, %xmm0
-; SSE41-NEXT:    retq
+; SSE-LABEL: masked_select_const:
+; SSE:       # %bb.0:
+; SSE-NEXT:    pcmpgtd %xmm2, %xmm1
+; SSE-NEXT:    pand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1
+; SSE-NEXT:    paddd %xmm1, %xmm0
+; SSE-NEXT:    retq
 ;
 ; AVX1-LABEL: masked_select_const:
 ; AVX1:       # %bb.0:
-; AVX1-NEXT:    vpaddd {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm3
 ; AVX1-NEXT:    vpcmpgtd %xmm2, %xmm1, %xmm1
-; AVX1-NEXT:    vblendvps %xmm1, %xmm3, %xmm0, %xmm0
+; AVX1-NEXT:    vpand {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm1
+; AVX1-NEXT:    vpaddd %xmm1, %xmm0, %xmm0
 ; AVX1-NEXT:    retq
 ;
 ; AVX2-LABEL: masked_select_const:
 ; AVX2:       # %bb.0:
 ; AVX2-NEXT:    vpbroadcastd {{.*#+}} xmm3 = [4294967272,4294967272,4294967272,4294967272]
-; AVX2-NEXT:    vpaddd %xmm3, %xmm0, %xmm3
 ; AVX2-NEXT:    vpcmpgtd %xmm2, %xmm1, %xmm1
-; AVX2-NEXT:    vblendvps %xmm1, %xmm3, %xmm0, %xmm0
+; AVX2-NEXT:    vpand %xmm3, %xmm1, %xmm1
+; AVX2-NEXT:    vpaddd %xmm1, %xmm0, %xmm0
 ; AVX2-NEXT:    retq
   %bit_a = bitcast <2 x i64> %a to <4 x i32>
   %sub.i = add <4 x i32> %bit_a, <i32 -24, i32 -24, i32 -24, i32 -24>
