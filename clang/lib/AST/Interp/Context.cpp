@@ -10,7 +10,6 @@
 #include "ByteCodeEmitter.h"
 #include "ByteCodeExprGen.h"
 #include "ByteCodeGenError.h"
-#include "ByteCodeStmtGen.h"
 #include "EvalEmitter.h"
 #include "Interp.h"
 #include "InterpFrame.h"
@@ -31,7 +30,7 @@ bool Context::isPotentialConstantExpr(State &Parent, const FunctionDecl *FD) {
   assert(Stk.empty());
   Function *Func = P->getFunction(FD);
   if (!Func || !Func->hasBody())
-    Func = ByteCodeStmtGen<ByteCodeEmitter>(*this, *P).compileFunc(FD);
+    Func = ByteCodeExprGen<ByteCodeEmitter>(*this, *P).compileFunc(FD);
 
   APValue DummyResult;
   if (!Run(Parent, Func, DummyResult))
@@ -267,7 +266,7 @@ const Function *Context::getOrCreateFunction(const FunctionDecl *FD) {
     return Func;
 
   if (!Func || WasNotDefined) {
-    if (auto F = ByteCodeStmtGen<ByteCodeEmitter>(*this, *P).compileFunc(FD))
+    if (auto F = ByteCodeExprGen<ByteCodeEmitter>(*this, *P).compileFunc(FD))
       Func = F;
   }
 
