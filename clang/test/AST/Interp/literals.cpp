@@ -1168,3 +1168,17 @@ namespace incdecbool {
 
 
 }
+
+#if __cplusplus >= 201402L
+namespace StmtExprs {
+  constexpr int foo() {
+     ({
+       int i;
+       for (i = 0; i < 76; i++) {}
+       i; // both-warning {{expression result unused}}
+    });
+    return 76;
+  }
+  static_assert(foo() == 76, "");
+}
+#endif
