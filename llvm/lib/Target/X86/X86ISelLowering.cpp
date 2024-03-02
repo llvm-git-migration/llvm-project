@@ -424,7 +424,7 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
   }
 
   for (auto Op : {ISD::FP16_TO_FP, ISD::STRICT_FP16_TO_FP, ISD::FP_TO_FP16,
-                  ISD::STRICT_FP_TO_FP16}) {
+                  ISD::STRICT_FP_TO_FP16, ISD::STRICT_FP_TO_BF16}) {
     // Special handling for half-precision floating point conversions.
     // If we don't have F16C support, then lower half float conversions
     // into library calls.
@@ -436,6 +436,13 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     setOperationAction(Op, MVT::f80, Expand);
     setOperationAction(Op, MVT::f128, Expand);
   }
+
+  // FIXME: If a target has F16C, it needs to be Custom.
+  setOperationAction(ISD::STRICT_FP_TO_BF16, MVT::f32, Expand);
+  setOperationAction(ISD::STRICT_FP_TO_BF16, MVT::f64, Expand);
+
+  setOperationAction(ISD::STRICT_BF16_TO_FP, MVT::f32, Expand);
+  setOperationAction(ISD::STRICT_BF16_TO_FP, MVT::f64, Expand);
 
   for (MVT VT : {MVT::f32, MVT::f64, MVT::f80, MVT::f128}) {
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
