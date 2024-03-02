@@ -165,6 +165,7 @@ public:
       {{CDM::CLibrary, {"explicit_bzero"}, 2}, &CStringChecker::evalBzero},
       {{CDM::CLibrary, {"sprintf"}, 2}, &CStringChecker::evalSprintf},
       {{CDM::CLibrary, {"snprintf"}, 2}, &CStringChecker::evalSnprintf},
+      {{CDM::CLibrary, {"getentropy"}, 2}, &CStringChecker::evalGetentropy},
   };
 
   // These require a bit of special handling.
@@ -219,6 +220,7 @@ public:
   void evalSnprintf(CheckerContext &C, const CallEvent &Call) const;
   void evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
                          bool IsBounded, bool IsBuiltin) const;
+  void evalGetentropy(CheckerContext &C, const CallEvent &Call) const;
 
   // Utility methods
   std::pair<ProgramStateRef , ProgramStateRef >
@@ -2511,6 +2513,47 @@ void CStringChecker::evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
     if (!State)
       return;
   }
+
+  C.addTransition(State);
+}
+
+void CStringChecker::evalGetentropy(CheckerContext &C,
+                                    const CallEvent &Call) const {
+  DestinationArgExpr Buffer = {{Call.getArgExpr(0), 0}};
+  SizeArgExpr Size = {{Call.getArgExpr(1), 1}};
+  ProgramStateRef State = C.getState();
+  constexpr int BufferMaxSize = 256;
+
+  SVal SizeVal = C.getSVal(Size.Expression);
+  QualType SizeTy = Size.Expression->getType();
+
+  ProgramStateRef StateZeroSize, StateNonZeroSize;
+  std::tie(StateZeroSize, StateNonZeroSize) =
+      assumeZero(C, State, SizeVal, SizeTy);
+
+  SVal Buff = C.getSVal(Buffer.Expression);
+  State = checkNonNull(C, StateNonZeroSize, Buffer, Buff);
+  if (!State)
+    return;
+
+  State = CheckBufferAccess(C, State, Buffer, Size, AccessKind::write);
+  if (!State)
+    return;
+
+  auto SizeLoc = SizeVal.getAs<nonloc::ConcreteInt>();
+  auto size = SizeLoc->getValue().getExtValue();
+
+  if (size > BufferMaxSize) {
+    ErrorMessage Message;
+    llvm::raw_svector_ostream Os(Message);
+    Os << " destination buffer size is greater than " << BufferMaxSize;
+    emitOutOfBoundsBug(C, StateNonZeroSize, Buffer.Expression, Message);
+    return;
+  }
+
+  State = invalidateDestinationBufferBySize(C, State, Buffer.Expression,
+                                            C.getSVal(Buffer.Expression),
+                                            SizeVal, SizeTy);
 
   C.addTransition(State);
 }
