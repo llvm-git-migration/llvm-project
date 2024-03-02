@@ -134,6 +134,7 @@ public:
   bool VisitConvertVectorExpr(const ConvertVectorExpr *E);
   bool VisitShuffleVectorExpr(const ShuffleVectorExpr *E);
   bool VisitObjCBoxedExpr(const ObjCBoxedExpr *E);
+  bool VisitStmtExpr(const StmtExpr *E);
 
   // Statements.
   bool visitCompoundStmt(const CompoundStmt *S);
