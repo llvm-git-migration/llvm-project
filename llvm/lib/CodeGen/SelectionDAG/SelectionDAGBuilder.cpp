@@ -2450,11 +2450,11 @@ SelectionDAGBuilder::EmitBranchForMergedCondition(const Value *Cond,
 
 // Collect dependencies on V recursively. This is used for the cost analysis in
 // `shouldKeepJumpConditionsTogether`.
-static bool
-collectInstructionDeps(SmallPtrSet<const Instruction *, 8> *Deps,
-                       const Value *V,
-                       SmallPtrSet<const Instruction *, 8> *Necessary = nullptr,
-                       unsigned Depth = 0) {
+static bool collectInstructionDeps(
+    SmallPtrSetImpl<const Instruction *> *Deps, const Value *V,
+    SmallPtrSetImpl<const Instruction *> *Necessary = nullptr,
+    SmallVectorImpl<const Instruction *> *ItOrder = nullptr,
+    unsigned Depth = 0) {
   // Return false if we have an incomplete count.
   if (Depth >= SelectionDAG::MaxRecursionDepth)
     return false;
@@ -2474,8 +2474,11 @@ collectInstructionDeps(SmallPtrSet<const Instruction *, 8> *Deps,
   if (!Deps->insert(I).second)
     return true;
 
+  if (ItOrder != nullptr)
+    ItOrder->push_back(I);
+
   for (unsigned OpIdx = 0, E = I->getNumOperands(); OpIdx < E; ++OpIdx)
-    if (!collectInstructionDeps(Deps, I->getOperand(OpIdx), Necessary,
+    if (!collectInstructionDeps(Deps, I->getOperand(OpIdx), Necessary, ItOrder,
                                 Depth + 1))
       return false;
   return true;
@@ -2527,16 +2530,20 @@ bool SelectionDAGBuilder::shouldKeepJumpConditionsTogether(
 
   // Collect "all" instructions that lhs condition is dependent on.
   SmallPtrSet<const Instruction *, 8> LhsDeps, RhsDeps;
+  SmallVector<const Instruction *> RhsDepsItOrder;
   collectInstructionDeps(&LhsDeps, Lhs);
   // Collect "all" instructions that rhs condition is dependent on AND are
   // dependencies of lhs. This gives us an estimate on which instructions we
   // stand to save by splitting the condition.
-  if (!collectInstructionDeps(&RhsDeps, Rhs, &LhsDeps))
+  if (!collectInstructionDeps(&RhsDeps, Rhs, &LhsDeps, &RhsDepsItOrder))
     return false;
   // Add the compare instruction itself unless its a dependency on the LHS.
-  if (const auto *RhsI = dyn_cast<Instruction>(Rhs))
-    if (!LhsDeps.contains(RhsI))
+  if (const auto *RhsI = dyn_cast<Instruction>(Rhs)) {
+    if (!LhsDeps.contains(RhsI)) {
       RhsDeps.insert(RhsI);
+      RhsDepsItOrder.push_back(RhsI);
+    }
+  }
 
   const auto &TLI = DAG.getTargetLoweringInfo();
   const auto &TTI =
@@ -2555,31 +2562,19 @@ bool SelectionDAGBuilder::shouldKeepJumpConditionsTogether(
     return true;
   };
 
-  // Prune instructions from RHS Deps that are dependencies of unrelated
-  // instructions. The value (SelectionDAG::MaxRecursionDepth) is fairly
-  // arbitrary and just meant to cap the how much time we spend in the pruning
-  // loop. Its highly unlikely to come into affect.
-  const unsigned MaxPruneIters = SelectionDAG::MaxRecursionDepth;
-  // Stop after a certain point. No incorrectness from including too many
-  // instructions.
-  for (unsigned PruneIters = 0; PruneIters < MaxPruneIters; ++PruneIters) {
-    const Instruction *ToDrop = nullptr;
-    for (const auto *Ins : RhsDeps) {
-      if (!ShouldCountInsn(Ins)) {
-        ToDrop = Ins;
-        break;
-      }
+  // Finally accumulate latency that we can only attribute to computing the
+  // RHS condition. Use latency because we are essentially trying to calculate
+  // the cost of the dependency chain.
+  // Possible TODO: We could try to estimate ILP and make this more precise.
+  // NB: This loop is capped by the number of rhs dep instructions we added
+  // which in turn is roughly limitted by `MaxRecursiveDepth`
+  for (const auto *Ins : RhsDepsItOrder) {
+    // Skip instructions that are dependencies of unrelated
+    // instructions (will need to the computed anyways).
+    if (!ShouldCountInsn(Ins)) {
+      RhsDeps.erase(Ins);
+      continue;
     }
-    if (ToDrop == nullptr)
-      break;
-    RhsDeps.erase(ToDrop);
-  }
-
-  for (const auto *Ins : RhsDeps) {
-    // Finally accumulate latency that we can only attribute to computing the
-    // RHS condition. Use latency because we are essentially trying to calculate
-    // the cost of the dependency chain.
-    // Possible TODO: We could try to estimate ILP and make this more precise.
     CostOfIncluding +=
         TTI.getInstructionCost(Ins, TargetTransformInfo::TCK_Latency);
 
