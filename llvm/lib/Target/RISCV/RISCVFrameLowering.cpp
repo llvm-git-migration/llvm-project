@@ -1565,12 +1565,12 @@ bool RISCVFrameLowering::spillCalleeSavedRegisters(
   const auto &RVVCSI = getRVVCalleeSavedInfo(*MF, CSI);
 
   auto storeRegToStackSlot = [&](decltype(UnmanagedCSI) CSInfo) {
-    for (auto &CS: CSInfo) {
+    for (auto &CS : CSInfo) {
       // Insert the spill to the stack frame.
       Register Reg = CS.getReg();
       const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
-      TII.storeRegToStackSlot(MBB, MI, Reg, !MBB.isLiveIn(Reg), CS.getFrameIdx(),
-                              RC, TRI, Register());
+      TII.storeRegToStackSlot(MBB, MI, Reg, !MBB.isLiveIn(Reg),
+                              CS.getFrameIdx(), RC, TRI, Register());
     }
   };
   storeRegToStackSlot(UnmanagedCSI);
@@ -1658,12 +1658,13 @@ bool RISCVFrameLowering::restoreCalleeSavedRegisters(
   const auto &RVVCSI = getRVVCalleeSavedInfo(*MF, CSI);
 
   auto loadRegFromStackSlot = [&](decltype(UnmanagedCSI) CSInfo) {
-    for (auto &CS: CSInfo) {
+    for (auto &CS : CSInfo) {
       Register Reg = CS.getReg();
       const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
       TII.loadRegFromStackSlot(MBB, MI, Reg, CS.getFrameIdx(), RC, TRI,
                                Register());
-      assert(MI != MBB.begin() && "loadRegFromStackSlot didn't insert any code!");
+      assert(MI != MBB.begin() &&
+             "loadRegFromStackSlot didn't insert any code!");
     }
   };
   loadRegFromStackSlot(RVVCSI);

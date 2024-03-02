@@ -74,7 +74,8 @@ unsigned CodeGenTypes::ClangCallConvToLLVMCallConv(CallingConv CC) {
   case CC_SwiftAsync: return llvm::CallingConv::SwiftTail;
   case CC_M68kRTD: return llvm::CallingConv::M68k_RTD;
   case CC_PreserveNone: return llvm::CallingConv::PreserveNone;
-  case CC_RISCVVectorCall: return llvm::CallingConv::RISCV_VectorCall;
+  case CC_RISCVVectorCall:
+    return llvm::CallingConv::RISCV_VectorCall;
   }
 }
 
