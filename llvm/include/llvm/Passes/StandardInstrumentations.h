@@ -563,6 +563,11 @@ private:
   static void SignalHandler(void *);
 };
 
+class MachineFunctionPropertiesInstrumentation {
+public:
+  void registerCallbacks(PassInstrumentationCallbacks &PIC, bool Verify);
+};
+
 /// This class provides an interface to register all the standard pass
 /// instrumentations and manages their state (if any).
 class StandardInstrumentations {
@@ -580,6 +585,7 @@ class StandardInstrumentations {
   PrintCrashIRInstrumentation PrintCrashIR;
   IRChangedTester ChangeTester;
   VerifyInstrumentation Verify;
+  MachineFunctionPropertiesInstrumentation MFProp;
 
   bool VerifyEach;
 

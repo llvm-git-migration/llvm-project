@@ -58,6 +58,13 @@
 
 namespace llvm {
 
+namespace detail {
+
+struct MachinePassConcept;
+
+}
+
+class MachineFunction;
 class PreservedAnalyses;
 class StringRef;
 
@@ -78,7 +85,12 @@ public:
   using BeforePassFunc = bool(StringRef, Any);
   using BeforeSkippedPassFunc = void(StringRef, Any);
   using BeforeNonSkippedPassFunc = void(StringRef, Any);
+  using BeforeNonSkippedMachineFunctionPassFunc =
+      void(const detail::MachinePassConcept &, MachineFunction &);
   using AfterPassFunc = void(StringRef, Any, const PreservedAnalyses &);
+  using AfterMachineFunctionPassFunc = void(const detail::MachinePassConcept &,
+                                            MachineFunction &,
+                                            const PreservedAnalyses &);
   using AfterPassInvalidatedFunc = void(StringRef, const PreservedAnalyses &);
   using BeforeAnalysisFunc = void(StringRef, Any);
   using AfterAnalysisFunc = void(StringRef, Any);
@@ -108,11 +120,21 @@ public:
   }
 
   template <typename CallableT>
+  void registerBeforeNonSkippedMachineFunctionPassCallback(CallableT C) {
+    BeforeNonSkippedMachineFunctionPassCallbacks.emplace_back(std::move(C));
+  }
+
+  template <typename CallableT>
   void registerAfterPassCallback(CallableT C, bool ToFront = false) {
     if (ToFront)
       AfterPassCallbacks.insert(AfterPassCallbacks.begin(), std::move(C));
     else
       AfterPassCallbacks.emplace_back(std::move(C));
+  }
+
+  template <typename CallableT>
+  void registerAfterMachineFunctionPassCallback(CallableT C) {
+    AfterMachineFunctionPassCallbacks.emplace_back(std::move(C));
   }
 
   template <typename CallableT>
@@ -166,8 +188,12 @@ private:
   /// These are run on passes that are about to be run.
   SmallVector<llvm::unique_function<BeforeNonSkippedPassFunc>, 4>
       BeforeNonSkippedPassCallbacks;
+  SmallVector<llvm::unique_function<BeforeNonSkippedMachineFunctionPassFunc>, 4>
+      BeforeNonSkippedMachineFunctionPassCallbacks;
   /// These are run on passes that have just run.
   SmallVector<llvm::unique_function<AfterPassFunc>, 4> AfterPassCallbacks;
+  SmallVector<llvm::unique_function<AfterMachineFunctionPassFunc>, 4>
+      AfterMachineFunctionPassCallbacks;
   /// These are run passes that have just run on invalidated IR.
   SmallVector<llvm::unique_function<AfterPassInvalidatedFunc>, 4>
       AfterPassInvalidatedCallbacks;
@@ -247,6 +273,9 @@ public:
     return ShouldRun;
   }
 
+  bool runBeforeMachineFunctionPass(const detail::MachinePassConcept &Pass,
+                                    MachineFunction &MF) const;
+
   /// AfterPass instrumentation point - takes \p Pass instance that has
   /// just been executed and constant reference to \p IR it operates on.
   /// \p IR is guaranteed to be valid at this point.
@@ -257,6 +286,10 @@ public:
       for (auto &C : Callbacks->AfterPassCallbacks)
         C(Pass.name(), llvm::Any(&IR), PA);
   }
+
+  void runAfterMachineFunctionPass(const detail::MachinePassConcept &Pass,
+                                   MachineFunction &MF,
+                                   const PreservedAnalyses &PA) const;
 
   /// AfterPassInvalidated instrumentation point - takes \p Pass instance
   /// that has just been executed. For use when IR has been invalidated

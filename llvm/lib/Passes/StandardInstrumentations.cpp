@@ -20,6 +20,7 @@
 #include "llvm/Analysis/LazyCallGraph.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
@@ -2415,6 +2416,35 @@ void PrintCrashIRInstrumentation::registerCallbacks(
       });
 }
 
+void MachineFunctionPropertiesInstrumentation::registerCallbacks(
+    PassInstrumentationCallbacks &PIC, bool Verify) {
+  if (Verify) {
+    PIC.registerBeforeNonSkippedMachineFunctionPassCallback(
+        [](const detail::MachinePassConcept &Pass, MachineFunction &MF) {
+          auto &MFProps = MF.getProperties();
+          auto RequiredProperties = Pass.getRequiredProperties();
+          if (!MFProps.verifyRequiredProperties(RequiredProperties)) {
+            errs() << "MachineFunctionProperties required by " << Pass.name()
+                   << " pass are not met by function " << MF.getName() << ".\n"
+                   << "Required properties: ";
+            RequiredProperties.print(errs());
+            errs() << "\nCurrent properties: ";
+            MFProps.print(errs());
+            errs() << "\n";
+            report_fatal_error("MachineFunctionProperties check failed");
+          }
+        });
+  }
+
+  PIC.registerAfterMachineFunctionPassCallback(
+      [](const detail::MachinePassConcept &Pass, MachineFunction &MF,
+         const PreservedAnalyses &) {
+        auto &MFProp = MF.getProperties();
+        MFProp.reset(Pass.getClearedProperties());
+        MFProp.set(Pass.getSetProperties());
+      });
+}
+
 void StandardInstrumentations::registerCallbacks(
     PassInstrumentationCallbacks &PIC, ModuleAnalysisManager *MAM) {
   PrintIR.registerCallbacks(PIC);
@@ -2440,6 +2470,7 @@ void StandardInstrumentations::registerCallbacks(
   // AfterCallbacks by its `registerCallbacks`. This is necessary
   // to ensure that other callbacks are not included in the timings.
   TimeProfilingPasses.registerCallbacks(PIC);
+  MFProp.registerCallbacks(PIC, VerifyEach);
 }
 
 template class ChangeReporter<std::string>;
