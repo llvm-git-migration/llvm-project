@@ -4516,7 +4516,7 @@ define <32 x i8> @load_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %dst
 ; SSE2-NEXT:    pmovmskb %xmm0, %ecx
 ; SSE2-NEXT:    pmovmskb %xmm1, %eax
 ; SSE2-NEXT:    shll $16, %eax
-; SSE2-NEXT:    orl %ecx, %eax
+; SSE2-NEXT:    addl %ecx, %eax
 ; SSE2-NEXT:    testb $1, %al
 ; SSE2-NEXT:    jne LBB24_1
 ; SSE2-NEXT:  ## %bb.2: ## %else
@@ -4935,7 +4935,7 @@ define <32 x i8> @load_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %dst
 ; SSE42-NEXT:    pmovmskb %xmm0, %ecx
 ; SSE42-NEXT:    pmovmskb %xmm1, %eax
 ; SSE42-NEXT:    shll $16, %eax
-; SSE42-NEXT:    orl %ecx, %eax
+; SSE42-NEXT:    addl %ecx, %eax
 ; SSE42-NEXT:    testb $1, %al
 ; SSE42-NEXT:    jne LBB24_1
 ; SSE42-NEXT:  ## %bb.2: ## %else
@@ -5169,7 +5169,7 @@ define <32 x i8> @load_v32i8_v32i8(<32 x i8> %trigger, ptr %addr, <32 x i8> %dst
 ; AVX1-NEXT:    vextractf128 $1, %ymm0, %xmm0
 ; AVX1-NEXT:    vpmovmskb %xmm0, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    testb $1, %al
 ; AVX1-NEXT:    jne LBB24_1
 ; AVX1-NEXT:  ## %bb.2: ## %else

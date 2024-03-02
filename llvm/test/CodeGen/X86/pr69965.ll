@@ -15,7 +15,7 @@ define i64 @PR69965(ptr %input_ptrs, ptr %output_ptrs) {
 ; X86-NEXT:    movl (%ecx), %ecx
 ; X86-NEXT:    addb %al, %al
 ; X86-NEXT:    movzbl %al, %eax
-; X86-NEXT:    orl %edx, %eax
+; X86-NEXT:    addl %edx, %eax
 ; X86-NEXT:    orl $32768, %eax # imm = 0x8000
 ; X86-NEXT:    movw %ax, (%ecx)
 ; X86-NEXT:    xorl %eax, %eax
@@ -32,7 +32,7 @@ define i64 @PR69965(ptr %input_ptrs, ptr %output_ptrs) {
 ; X64-NEXT:    shll $8, %eax
 ; X64-NEXT:    movq (%rsi), %rdx
 ; X64-NEXT:    movzbl %cl, %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    orl $32768, %ecx # imm = 0x8000
 ; X64-NEXT:    movw %cx, (%rdx)
 ; X64-NEXT:    xorl %eax, %eax

@@ -38,7 +38,7 @@ define i16 @out16_constmask(i16 %x, i16 %y) {
 ; CHECK-NOBMI:       # %bb.0:
 ; CHECK-NOBMI-NEXT:    movzbl %dil, %eax
 ; CHECK-NOBMI-NEXT:    andl $-256, %esi
-; CHECK-NOBMI-NEXT:    orl %esi, %eax
+; CHECK-NOBMI-NEXT:    addl %esi, %eax
 ; CHECK-NOBMI-NEXT:    # kill: def $ax killed $ax killed $eax
 ; CHECK-NOBMI-NEXT:    retq
 ;
@@ -46,7 +46,7 @@ define i16 @out16_constmask(i16 %x, i16 %y) {
 ; CHECK-BMI:       # %bb.0:
 ; CHECK-BMI-NEXT:    movzbl %dil, %eax
 ; CHECK-BMI-NEXT:    andl $-256, %esi
-; CHECK-BMI-NEXT:    orl %esi, %eax
+; CHECK-BMI-NEXT:    addl %esi, %eax
 ; CHECK-BMI-NEXT:    # kill: def $ax killed $ax killed $eax
 ; CHECK-BMI-NEXT:    retq
   %mx = and i16 %x, 255
@@ -60,14 +60,14 @@ define i32 @out32_constmask(i32 %x, i32 %y) {
 ; CHECK-NOBMI:       # %bb.0:
 ; CHECK-NOBMI-NEXT:    movzwl %di, %eax
 ; CHECK-NOBMI-NEXT:    andl $-65536, %esi # imm = 0xFFFF0000
-; CHECK-NOBMI-NEXT:    orl %esi, %eax
+; CHECK-NOBMI-NEXT:    addl %esi, %eax
 ; CHECK-NOBMI-NEXT:    retq
 ;
 ; CHECK-BMI-LABEL: out32_constmask:
 ; CHECK-BMI:       # %bb.0:
 ; CHECK-BMI-NEXT:    movzwl %di, %eax
 ; CHECK-BMI-NEXT:    andl $-65536, %esi # imm = 0xFFFF0000
-; CHECK-BMI-NEXT:    orl %esi, %eax
+; CHECK-BMI-NEXT:    addl %esi, %eax
 ; CHECK-BMI-NEXT:    retq
   %mx = and i32 %x, 65535
   %my = and i32 %y, -65536
@@ -81,7 +81,7 @@ define i64 @out64_constmask(i64 %x, i64 %y) {
 ; CHECK-NOBMI-NEXT:    movl %edi, %ecx
 ; CHECK-NOBMI-NEXT:    movabsq $-4294967296, %rax # imm = 0xFFFFFFFF00000000
 ; CHECK-NOBMI-NEXT:    andq %rsi, %rax
-; CHECK-NOBMI-NEXT:    orq %rcx, %rax
+; CHECK-NOBMI-NEXT:    addq %rcx, %rax
 ; CHECK-NOBMI-NEXT:    retq
 ;
 ; CHECK-BMI-LABEL: out64_constmask:
@@ -89,7 +89,7 @@ define i64 @out64_constmask(i64 %x, i64 %y) {
 ; CHECK-BMI-NEXT:    movl %edi, %ecx
 ; CHECK-BMI-NEXT:    movabsq $-4294967296, %rax # imm = 0xFFFFFFFF00000000
 ; CHECK-BMI-NEXT:    andq %rsi, %rax
-; CHECK-BMI-NEXT:    orq %rcx, %rax
+; CHECK-BMI-NEXT:    addq %rcx, %rax
 ; CHECK-BMI-NEXT:    retq
   %mx = and i64 %x, 4294967295
   %my = and i64 %y, -4294967296

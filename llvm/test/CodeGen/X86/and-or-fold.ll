@@ -45,7 +45,7 @@ define i32 @test1(i32 %x, i16 %y) {
 ; DARWIN-NEXT:    movzwl {{[0-9]+}}(%esp), %ecx
 ; DARWIN-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; DARWIN-NEXT:    shll $16, %eax
-; DARWIN-NEXT:    orl %ecx, %eax
+; DARWIN-NEXT:    addl %ecx, %eax
 ; DARWIN-NEXT:    andl $16711807, %eax ## imm = 0xFF007F
 ; DARWIN-NEXT:    retl
 ;
@@ -54,7 +54,7 @@ define i32 @test1(i32 %x, i16 %y) {
 ; DARWIN-OPT-NEXT:    andl $127, %esi
 ; DARWIN-OPT-NEXT:    movzbl %dil, %eax
 ; DARWIN-OPT-NEXT:    shll $16, %eax
-; DARWIN-OPT-NEXT:    orl %esi, %eax
+; DARWIN-OPT-NEXT:    addl %esi, %eax
 ; DARWIN-OPT-NEXT:    retq
   %tmp1 = zext i16 %y to i32
   %tmp2 = and i32 %tmp1, 127

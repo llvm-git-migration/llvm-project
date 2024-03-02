@@ -5,7 +5,7 @@ define void @shrink(ptr %ptr) {
 ; CHECK-LABEL: shrink:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    movzbl (%rdi), %eax
-; CHECK-NEXT:    orl $25600, %eax # imm = 0x6400
+; CHECK-NEXT:    addl $25600, %eax # imm = 0x6400
 ; CHECK-NEXT:    movw %ax, (%rdi)
 ; CHECK-NEXT:    retq
 entry:

@@ -24,7 +24,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %r10
 ; CHECK-NEXT:    andq %rsi, %r12
 ; CHECK-NEXT:    shlq $4, %r12
-; CHECK-NEXT:    orq %r10, %r12
+; CHECK-NEXT:    addq %r10, %r12
 ; CHECK-NEXT:    movabsq $3689348814741910323, %r10 # imm = 0x3333333333333333
 ; CHECK-NEXT:    movq %r12, %r13
 ; CHECK-NEXT:    andq %r10, %r13
@@ -44,7 +44,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %r12
 ; CHECK-NEXT:    andq %rsi, %r14
 ; CHECK-NEXT:    shlq $4, %r14
-; CHECK-NEXT:    orq %r12, %r14
+; CHECK-NEXT:    addq %r12, %r14
 ; CHECK-NEXT:    movq %r14, %r12
 ; CHECK-NEXT:    andq %r10, %r12
 ; CHECK-NEXT:    shrq $2, %r14
@@ -63,7 +63,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %r12
 ; CHECK-NEXT:    andq %rsi, %r15
 ; CHECK-NEXT:    shlq $4, %r15
-; CHECK-NEXT:    orq %r12, %r15
+; CHECK-NEXT:    addq %r12, %r15
 ; CHECK-NEXT:    movq %r15, %r12
 ; CHECK-NEXT:    andq %r10, %r12
 ; CHECK-NEXT:    shrq $2, %r15
@@ -81,7 +81,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %r15
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    shlq $4, %rbx
-; CHECK-NEXT:    orq %r15, %rbx
+; CHECK-NEXT:    addq %r15, %rbx
 ; CHECK-NEXT:    movq %rbx, %r15
 ; CHECK-NEXT:    andq %r10, %r15
 ; CHECK-NEXT:    shrq $2, %rbx
@@ -99,7 +99,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -118,7 +118,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -137,7 +137,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -156,7 +156,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -175,7 +175,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -194,7 +194,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rbx
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rbx, %rdi
+; CHECK-NEXT:    addq %rbx, %rdi
 ; CHECK-NEXT:    movq %rdi, %rbx
 ; CHECK-NEXT:    andq %r10, %rbx
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -213,7 +213,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %rdi
 ; CHECK-NEXT:    shlq $4, %rdi
-; CHECK-NEXT:    orq %rax, %rdi
+; CHECK-NEXT:    addq %rax, %rdi
 ; CHECK-NEXT:    movq %rdi, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %rdi
@@ -230,7 +230,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %r9
 ; CHECK-NEXT:    shlq $4, %r9
-; CHECK-NEXT:    orq %rax, %r9
+; CHECK-NEXT:    addq %rax, %r9
 ; CHECK-NEXT:    movq %r9, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %r9
@@ -248,7 +248,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %r8
 ; CHECK-NEXT:    shlq $4, %r8
-; CHECK-NEXT:    orq %rax, %r8
+; CHECK-NEXT:    addq %rax, %r8
 ; CHECK-NEXT:    movq %r8, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %r8
@@ -266,7 +266,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %rcx
 ; CHECK-NEXT:    shlq $4, %rcx
-; CHECK-NEXT:    orq %rax, %rcx
+; CHECK-NEXT:    addq %rax, %rcx
 ; CHECK-NEXT:    movq %rcx, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %rcx
@@ -283,7 +283,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %rdx
 ; CHECK-NEXT:    shlq $4, %rdx
-; CHECK-NEXT:    orq %rax, %rdx
+; CHECK-NEXT:    addq %rax, %rdx
 ; CHECK-NEXT:    movq %rdx, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %rdx
@@ -301,7 +301,7 @@ define i1000 @square(i1000 %A) nounwind {
 ; CHECK-NEXT:    andq %rsi, %rax
 ; CHECK-NEXT:    andq %rsi, %rcx
 ; CHECK-NEXT:    shlq $4, %rcx
-; CHECK-NEXT:    orq %rax, %rcx
+; CHECK-NEXT:    addq %rax, %rcx
 ; CHECK-NEXT:    movq %rcx, %rax
 ; CHECK-NEXT:    andq %r10, %rax
 ; CHECK-NEXT:    shrq $2, %rcx

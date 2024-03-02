@@ -90,7 +90,7 @@ define i64 @out64_constmask(i64 %x, i64 %y) {
 ; CHECK-NOBMI-NEXT:    andq %rdi, %rcx
 ; CHECK-NOBMI-NEXT:    movabsq $-1085102592571150096, %rax # imm = 0xF0F0F0F0F0F0F0F0
 ; CHECK-NOBMI-NEXT:    andq %rsi, %rax
-; CHECK-NOBMI-NEXT:    orq %rcx, %rax
+; CHECK-NOBMI-NEXT:    addq %rcx, %rax
 ; CHECK-NOBMI-NEXT:    retq
 ;
 ; CHECK-BMI-LABEL: out64_constmask:
@@ -99,7 +99,7 @@ define i64 @out64_constmask(i64 %x, i64 %y) {
 ; CHECK-BMI-NEXT:    andq %rdi, %rcx
 ; CHECK-BMI-NEXT:    movabsq $-1085102592571150096, %rax # imm = 0xF0F0F0F0F0F0F0F0
 ; CHECK-BMI-NEXT:    andq %rsi, %rax
-; CHECK-BMI-NEXT:    orq %rcx, %rax
+; CHECK-BMI-NEXT:    addq %rcx, %rax
 ; CHECK-BMI-NEXT:    retq
   %mx = and i64 %x, 1085102592571150095
   %my = and i64 %y, -1085102592571150096

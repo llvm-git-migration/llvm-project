@@ -23,7 +23,7 @@ define void @memset_2(ptr %a, i8 %value) nounwind {
 ; GPR:       # %bb.0:
 ; GPR-NEXT:    movzbl %sil, %eax
 ; GPR-NEXT:    shll $8, %esi
-; GPR-NEXT:    orl %esi, %eax
+; GPR-NEXT:    addl %esi, %eax
 ; GPR-NEXT:    movw %ax, (%rdi)
 ; GPR-NEXT:    retq
   tail call void @llvm.memset.inline.p0.i64(ptr %a, i8 %value, i64 2, i1 0)

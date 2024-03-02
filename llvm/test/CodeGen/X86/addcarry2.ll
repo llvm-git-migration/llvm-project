@@ -138,7 +138,7 @@ define void @adc_load_store_32_127(ptr inreg %x, ptr inreg %x2, i32 inreg %y) no
 ; X64-NEXT:    movl (%rdi), %eax # encoding: [0x8b,0x07]
 ; X64-NEXT:    shlq $32, %rax # encoding: [0x48,0xc1,0xe0,0x20]
 ; X64-NEXT:    movl %edx, %ecx # encoding: [0x89,0xd1]
-; X64-NEXT:    orq %rax, %rcx # encoding: [0x48,0x09,0xc1]
+; X64-NEXT:    addq %rax, %rcx # encoding: [0x48,0x01,0xc1]
 ; X64-NEXT:    movabsq $545460846593, %rax # encoding: [0x48,0xb8,0x01,0x00,0x00,0x00,0x7f,0x00,0x00,0x00]
 ; X64-NEXT:    # imm = 0x7F00000001
 ; X64-NEXT:    xorl %edx, %edx # encoding: [0x31,0xd2]
@@ -178,7 +178,7 @@ define void @adc_load_store_32_128(ptr inreg %x, ptr inreg %x2, i32 inreg %y) no
 ; X64-NEXT:    movl (%rdi), %eax # encoding: [0x8b,0x07]
 ; X64-NEXT:    shlq $32, %rax # encoding: [0x48,0xc1,0xe0,0x20]
 ; X64-NEXT:    movl %edx, %ecx # encoding: [0x89,0xd1]
-; X64-NEXT:    orq %rax, %rcx # encoding: [0x48,0x09,0xc1]
+; X64-NEXT:    addq %rax, %rcx # encoding: [0x48,0x01,0xc1]
 ; X64-NEXT:    movabsq $549755813889, %rax # encoding: [0x48,0xb8,0x01,0x00,0x00,0x00,0x80,0x00,0x00,0x00]
 ; X64-NEXT:    # imm = 0x8000000001
 ; X64-NEXT:    xorl %edx, %edx # encoding: [0x31,0xd2]

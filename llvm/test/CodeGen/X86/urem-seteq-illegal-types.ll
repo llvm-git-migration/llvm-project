@@ -36,7 +36,7 @@ define i1 @test_urem_even(i27 %X) nounwind {
 ; X86-NEXT:    shll $26, %ecx
 ; X86-NEXT:    andl $134217726, %eax # imm = 0x7FFFFFE
 ; X86-NEXT:    shrl %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    andl $134217727, %eax # imm = 0x7FFFFFF
 ; X86-NEXT:    cmpl $9586981, %eax # imm = 0x924925
 ; X86-NEXT:    setb %al
@@ -49,7 +49,7 @@ define i1 @test_urem_even(i27 %X) nounwind {
 ; X64-NEXT:    shll $26, %ecx
 ; X64-NEXT:    andl $134217726, %eax # imm = 0x7FFFFFE
 ; X64-NEXT:    shrl %eax
-; X64-NEXT:    orl %ecx, %eax
+; X64-NEXT:    addl %ecx, %eax
 ; X64-NEXT:    andl $134217727, %eax # imm = 0x7FFFFFF
 ; X64-NEXT:    cmpl $9586981, %eax # imm = 0x924925
 ; X64-NEXT:    setb %al
@@ -113,7 +113,7 @@ define <3 x i1> @test_urem_vec(<3 x i11> %X) nounwind {
 ; X86-NEXT:    shll $10, %ecx
 ; X86-NEXT:    andl $2046, %eax # imm = 0x7FE
 ; X86-NEXT:    shrl %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    andl $2047, %eax # imm = 0x7FF
 ; X86-NEXT:    cmpl $342, %eax # imm = 0x156
 ; X86-NEXT:    setae %al

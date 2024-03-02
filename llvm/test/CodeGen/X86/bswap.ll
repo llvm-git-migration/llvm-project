@@ -159,7 +159,7 @@ define i64 @not_bswap() {
 ; CHECK-NEXT:    movl %eax, %ecx
 ; CHECK-NEXT:    shrl $8, %ecx
 ; CHECK-NEXT:    shll $8, %eax
-; CHECK-NEXT:    orl %ecx, %eax
+; CHECK-NEXT:    addl %ecx, %eax
 ; CHECK-NEXT:    xorl %edx, %edx
 ; CHECK-NEXT:    retl
 ;
@@ -169,7 +169,7 @@ define i64 @not_bswap() {
 ; CHECK64-NEXT:    movl %eax, %ecx
 ; CHECK64-NEXT:    shrl $8, %ecx
 ; CHECK64-NEXT:    shll $8, %eax
-; CHECK64-NEXT:    orl %ecx, %eax
+; CHECK64-NEXT:    addl %ecx, %eax
 ; CHECK64-NEXT:    retq
   %init = load i16, ptr @var16
   %big = zext i16 %init to i64

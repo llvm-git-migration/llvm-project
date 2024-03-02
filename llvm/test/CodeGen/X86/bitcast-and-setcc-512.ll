@@ -213,7 +213,7 @@ define i32 @v32i16(<32 x i16> %a, <32 x i16> %b, <32 x i16> %c, <32 x i16> %d) {
 ; SSE-NEXT:    pmovmskb %xmm11, %ecx
 ; SSE-NEXT:    pmovmskb %xmm9, %eax
 ; SSE-NEXT:    shll $16, %eax
-; SSE-NEXT:    orl %ecx, %eax
+; SSE-NEXT:    addl %ecx, %eax
 ; SSE-NEXT:    retq
 ;
 ; AVX1-LABEL: v32i16:
@@ -243,7 +243,7 @@ define i32 @v32i16(<32 x i16> %a, <32 x i16> %b, <32 x i16> %c, <32 x i16> %d) {
 ; AVX1-NEXT:    vpmovmskb %xmm0, %ecx
 ; AVX1-NEXT:    vpmovmskb %xmm1, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -280,7 +280,7 @@ define i32 @v32i16(<32 x i16> %a, <32 x i16> %b, <32 x i16> %c, <32 x i16> %d) {
 ; AVX512F-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; AVX512F-NEXT:    kmovw %k0, %eax
 ; AVX512F-NEXT:    shll $16, %eax
-; AVX512F-NEXT:    orl %ecx, %eax
+; AVX512F-NEXT:    addl %ecx, %eax
 ; AVX512F-NEXT:    vzeroupper
 ; AVX512F-NEXT:    retq
 ;
@@ -510,13 +510,13 @@ define i64 @v64i8(<64 x i8> %a, <64 x i8> %b, <64 x i8> %c, <64 x i8> %d) {
 ; SSE-NEXT:    pmovmskb %xmm11, %eax
 ; SSE-NEXT:    pmovmskb %xmm10, %ecx
 ; SSE-NEXT:    shll $16, %ecx
-; SSE-NEXT:    orl %eax, %ecx
+; SSE-NEXT:    addl %eax, %ecx
 ; SSE-NEXT:    pmovmskb %xmm9, %edx
 ; SSE-NEXT:    pmovmskb %xmm8, %eax
 ; SSE-NEXT:    shll $16, %eax
-; SSE-NEXT:    orl %edx, %eax
+; SSE-NEXT:    addl %edx, %eax
 ; SSE-NEXT:    shlq $32, %rax
-; SSE-NEXT:    orq %rcx, %rax
+; SSE-NEXT:    addq %rcx, %rax
 ; SSE-NEXT:    retq
 ;
 ; AVX1-LABEL: v64i8:
@@ -544,13 +544,13 @@ define i64 @v64i8(<64 x i8> %a, <64 x i8> %b, <64 x i8> %c, <64 x i8> %d) {
 ; AVX1-NEXT:    vpmovmskb %xmm0, %eax
 ; AVX1-NEXT:    vpmovmskb %xmm3, %ecx
 ; AVX1-NEXT:    shll $16, %ecx
-; AVX1-NEXT:    orl %eax, %ecx
+; AVX1-NEXT:    addl %eax, %ecx
 ; AVX1-NEXT:    vpmovmskb %xmm1, %edx
 ; AVX1-NEXT:    vpmovmskb %xmm2, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %edx, %eax
+; AVX1-NEXT:    addl %edx, %eax
 ; AVX1-NEXT:    shlq $32, %rax
-; AVX1-NEXT:    orq %rcx, %rax
+; AVX1-NEXT:    addq %rcx, %rax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -565,7 +565,7 @@ define i64 @v64i8(<64 x i8> %a, <64 x i8> %b, <64 x i8> %c, <64 x i8> %d) {
 ; AVX2-NEXT:    vpmovmskb %ymm0, %ecx
 ; AVX2-NEXT:    vpmovmskb %ymm1, %eax
 ; AVX2-NEXT:    shlq $32, %rax
-; AVX2-NEXT:    orq %rcx, %rax
+; AVX2-NEXT:    addq %rcx, %rax
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
 ;
@@ -584,7 +584,7 @@ define i64 @v64i8(<64 x i8> %a, <64 x i8> %b, <64 x i8> %c, <64 x i8> %d) {
 ; AVX512F-NEXT:    vpmovmskb %ymm0, %ecx
 ; AVX512F-NEXT:    vpmovmskb %ymm1, %eax
 ; AVX512F-NEXT:    shlq $32, %rax
-; AVX512F-NEXT:    orq %rcx, %rax
+; AVX512F-NEXT:    addq %rcx, %rax
 ; AVX512F-NEXT:    vzeroupper
 ; AVX512F-NEXT:    retq
 ;

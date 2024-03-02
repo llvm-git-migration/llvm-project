@@ -855,7 +855,7 @@ define i32 @test_insertelement_v32i1(i32 %a, i32 %b, <32 x i32> %x , <32 x i32> 
 ; KNL-NEXT:    kshiftrw $11, %k1, %k1
 ; KNL-NEXT:    korw %k1, %k0, %k0
 ; KNL-NEXT:    kmovw %k0, %eax
-; KNL-NEXT:    orl %ecx, %eax
+; KNL-NEXT:    addl %ecx, %eax
 ; KNL-NEXT:    vzeroupper
 ; KNL-NEXT:    retq
 ;
@@ -1666,7 +1666,7 @@ define i32 @test_insertelement_variable_v32i1(<32 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %ecx, %eax
+; KNL-NEXT:    addl %ecx, %eax
 ; KNL-NEXT:    movq %rbp, %rsp
 ; KNL-NEXT:    popq %rbp
 ; KNL-NEXT:    vzeroupper
@@ -1720,7 +1720,7 @@ define i64 @test_insertelement_variable_v64i1(<64 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %ecx
 ; KNL-NEXT:    shll $16, %ecx
-; KNL-NEXT:    orl %eax, %ecx
+; KNL-NEXT:    addl %eax, %ecx
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -1730,9 +1730,9 @@ define i64 @test_insertelement_variable_v64i1(<64 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %edx, %eax
+; KNL-NEXT:    addl %edx, %eax
 ; KNL-NEXT:    shlq $32, %rax
-; KNL-NEXT:    orq %rcx, %rax
+; KNL-NEXT:    addq %rcx, %rax
 ; KNL-NEXT:    movq %rbp, %rsp
 ; KNL-NEXT:    popq %rbp
 ; KNL-NEXT:    vzeroupper
@@ -1888,7 +1888,7 @@ define i96 @test_insertelement_variable_v96i1(<96 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %ecx
 ; KNL-NEXT:    shll $16, %ecx
-; KNL-NEXT:    orl %eax, %ecx
+; KNL-NEXT:    addl %eax, %ecx
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -1898,9 +1898,9 @@ define i96 @test_insertelement_variable_v96i1(<96 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %edx, %eax
+; KNL-NEXT:    addl %edx, %eax
 ; KNL-NEXT:    shlq $32, %rax
-; KNL-NEXT:    orq %rcx, %rax
+; KNL-NEXT:    addq %rcx, %rax
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -1910,7 +1910,7 @@ define i96 @test_insertelement_variable_v96i1(<96 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %esi
 ; KNL-NEXT:    shll $16, %esi
-; KNL-NEXT:    orl %ecx, %esi
+; KNL-NEXT:    addl %ecx, %esi
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -1920,9 +1920,9 @@ define i96 @test_insertelement_variable_v96i1(<96 x i8> %a, i8 %b, i32 %index) n
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %edx
 ; KNL-NEXT:    shll $16, %edx
-; KNL-NEXT:    orl %ecx, %edx
+; KNL-NEXT:    addl %ecx, %edx
 ; KNL-NEXT:    shlq $32, %rdx
-; KNL-NEXT:    orq %rsi, %rdx
+; KNL-NEXT:    addq %rsi, %rdx
 ; KNL-NEXT:    movq %rbp, %rsp
 ; KNL-NEXT:    popq %rbp
 ; KNL-NEXT:    vzeroupper
@@ -2094,7 +2094,7 @@ define i128 @test_insertelement_variable_v128i1(<128 x i8> %a, i8 %b, i32 %index
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %ecx
 ; KNL-NEXT:    shll $16, %ecx
-; KNL-NEXT:    orl %eax, %ecx
+; KNL-NEXT:    addl %eax, %ecx
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -2104,9 +2104,9 @@ define i128 @test_insertelement_variable_v128i1(<128 x i8> %a, i8 %b, i32 %index
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %eax
 ; KNL-NEXT:    shll $16, %eax
-; KNL-NEXT:    orl %edx, %eax
+; KNL-NEXT:    addl %edx, %eax
 ; KNL-NEXT:    shlq $32, %rax
-; KNL-NEXT:    orq %rcx, %rax
+; KNL-NEXT:    addq %rcx, %rax
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -2116,7 +2116,7 @@ define i128 @test_insertelement_variable_v128i1(<128 x i8> %a, i8 %b, i32 %index
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %esi
 ; KNL-NEXT:    shll $16, %esi
-; KNL-NEXT:    orl %ecx, %esi
+; KNL-NEXT:    addl %ecx, %esi
 ; KNL-NEXT:    vpmovsxbd {{[0-9]+}}(%rsp), %zmm0
 ; KNL-NEXT:    vpslld $31, %zmm0, %zmm0
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
@@ -2126,9 +2126,9 @@ define i128 @test_insertelement_variable_v128i1(<128 x i8> %a, i8 %b, i32 %index
 ; KNL-NEXT:    vptestmd %zmm0, %zmm0, %k0
 ; KNL-NEXT:    kmovw %k0, %edx
 ; KNL-NEXT:    shll $16, %edx
-; KNL-NEXT:    orl %ecx, %edx
+; KNL-NEXT:    addl %ecx, %edx
 ; KNL-NEXT:    shlq $32, %rdx
-; KNL-NEXT:    orq %rsi, %rdx
+; KNL-NEXT:    addq %rsi, %rdx
 ; KNL-NEXT:    movq %rbp, %rsp
 ; KNL-NEXT:    popq %rbp
 ; KNL-NEXT:    vzeroupper

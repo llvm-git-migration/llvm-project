@@ -2271,7 +2271,7 @@ define <32 x i1> @pr51133(<32 x i8> %x, <32 x i8> %y) {
 ; CHECK-SSE2-NEXT:    pmovmskb %xmm2, %ecx
 ; CHECK-SSE2-NEXT:    pmovmskb %xmm3, %edx
 ; CHECK-SSE2-NEXT:    shll $16, %edx
-; CHECK-SSE2-NEXT:    orl %ecx, %edx
+; CHECK-SSE2-NEXT:    addl %ecx, %edx
 ; CHECK-SSE2-NEXT:    movl %edx, (%rdi)
 ; CHECK-SSE2-NEXT:    retq
 ;
@@ -2333,7 +2333,7 @@ define <32 x i1> @pr51133(<32 x i8> %x, <32 x i8> %y) {
 ; CHECK-SSE41-NEXT:    pmovmskb %xmm2, %ecx
 ; CHECK-SSE41-NEXT:    pmovmskb %xmm3, %edx
 ; CHECK-SSE41-NEXT:    shll $16, %edx
-; CHECK-SSE41-NEXT:    orl %ecx, %edx
+; CHECK-SSE41-NEXT:    addl %ecx, %edx
 ; CHECK-SSE41-NEXT:    movl %edx, (%rdi)
 ; CHECK-SSE41-NEXT:    retq
 ;

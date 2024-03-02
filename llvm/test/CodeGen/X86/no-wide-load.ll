@@ -8,7 +8,7 @@ define void @foo(ptr %p, i16 signext %s) {
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    movzwl 4(%rdi), %eax
 ; CHECK-NEXT:    andl $-1121, %eax # imm = 0xFB9F
-; CHECK-NEXT:    orl $1024, %eax # imm = 0x400
+; CHECK-NEXT:    addl $1024, %eax # imm = 0x400
 ; CHECK-NEXT:    movw %ax, 4(%rdi)
 ; CHECK-NEXT:    retq
 entry:

@@ -127,7 +127,7 @@ define i32 @or_shift4_and1(i32 %x, i32 %y) {
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; X86-NEXT:    shll $4, %ecx
 ; X86-NEXT:    andl $1, %eax
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: or_shift4_and1:
@@ -831,7 +831,7 @@ define i32 @or_shift1_disjoint(i32 %x, i32 %y) {
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    addl %eax, %eax
-; X86-NEXT:    orl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    addl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: or_shift1_disjoint:

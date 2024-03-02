@@ -77,7 +77,7 @@ define <4 x i8> @test_signed_v4i8_v4f32(<4 x float> %f) nounwind {
 ; CHECK-NEXT:    cvttss2si %xmm3, %ecx
 ; CHECK-NEXT:    movzbl %cl, %ecx
 ; CHECK-NEXT:    shll $8, %ecx
-; CHECK-NEXT:    orl %eax, %ecx
+; CHECK-NEXT:    addl %eax, %ecx
 ; CHECK-NEXT:    movaps %xmm0, %xmm3
 ; CHECK-NEXT:    unpckhpd {{.*#+}} xmm3 = xmm3[1],xmm0[1]
 ; CHECK-NEXT:    movaps %xmm1, %xmm4
@@ -87,14 +87,14 @@ define <4 x i8> @test_signed_v4i8_v4f32(<4 x float> %f) nounwind {
 ; CHECK-NEXT:    cvttss2si %xmm3, %eax
 ; CHECK-NEXT:    movzbl %al, %eax
 ; CHECK-NEXT:    shll $16, %eax
-; CHECK-NEXT:    orl %ecx, %eax
 ; CHECK-NEXT:    shufps {{.*#+}} xmm0 = xmm0[3,3,3,3]
 ; CHECK-NEXT:    maxss %xmm0, %xmm1
 ; CHECK-NEXT:    minss %xmm1, %xmm2
-; CHECK-NEXT:    cvttss2si %xmm2, %ecx
-; CHECK-NEXT:    shll $24, %ecx
-; CHECK-NEXT:    orl %eax, %ecx
-; CHECK-NEXT:    movd %ecx, %xmm0
+; CHECK-NEXT:    cvttss2si %xmm2, %edx
+; CHECK-NEXT:    shll $24, %edx
+; CHECK-NEXT:    addl %eax, %edx
+; CHECK-NEXT:    addl %ecx, %edx
+; CHECK-NEXT:    movd %edx, %xmm0
 ; CHECK-NEXT:    retq
   %x = call <4 x i8> @llvm.fptosi.sat.v4i8.v4f32(<4 x float> %f)
   ret <4 x i8> %x
@@ -387,7 +387,7 @@ define <2 x i8> @test_signed_v2i8_v2f64(<2 x double> %f) nounwind {
 ; CHECK-NEXT:    minsd %xmm1, %xmm3
 ; CHECK-NEXT:    cvttsd2si %xmm3, %ecx
 ; CHECK-NEXT:    shll $8, %ecx
-; CHECK-NEXT:    orl %eax, %ecx
+; CHECK-NEXT:    addl %eax, %ecx
 ; CHECK-NEXT:    movd %ecx, %xmm0
 ; CHECK-NEXT:    retq
   %x = call <2 x i8> @llvm.fptosi.sat.v2i8.v2f64(<2 x double> %f)
@@ -700,7 +700,7 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
 ; CHECK-NEXT:    movzbl %al, %r15d
-; CHECK-NEXT:    orl %r12d, %r15d
+; CHECK-NEXT:    addl %r12d, %r15d
 ; CHECK-NEXT:    movaps (%rsp), %xmm0 # 16-byte Reload
 ; CHECK-NEXT:    callq __extendhfsf2@PLT
 ; CHECK-NEXT:    cvttss2si %xmm0, %eax
@@ -710,7 +710,7 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    cmoval %ebp, %eax
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
-; CHECK-NEXT:    movzbl %al, %r12d
+; CHECK-NEXT:    movzbl %al, %r13d
 ; CHECK-NEXT:    movdqa (%rsp), %xmm0 # 16-byte Reload
 ; CHECK-NEXT:    psrld $16, %xmm0
 ; CHECK-NEXT:    callq __extendhfsf2@PLT
@@ -721,9 +721,9 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    cmoval %ebp, %eax
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
-; CHECK-NEXT:    movzbl %al, %r13d
-; CHECK-NEXT:    shll $8, %r13d
-; CHECK-NEXT:    orl %r12d, %r13d
+; CHECK-NEXT:    movzbl %al, %r12d
+; CHECK-NEXT:    shll $8, %r12d
+; CHECK-NEXT:    addl %r13d, %r12d
 ; CHECK-NEXT:    movaps (%rsp), %xmm0 # 16-byte Reload
 ; CHECK-NEXT:    shufps {{.*#+}} xmm0 = xmm0[1,1,1,1]
 ; CHECK-NEXT:    callq __extendhfsf2@PLT
@@ -734,9 +734,8 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    cmoval %ebp, %eax
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
-; CHECK-NEXT:    movzbl %al, %r12d
-; CHECK-NEXT:    shll $16, %r12d
-; CHECK-NEXT:    orl %r13d, %r12d
+; CHECK-NEXT:    movzbl %al, %r13d
+; CHECK-NEXT:    shll $16, %r13d
 ; CHECK-NEXT:    movdqa (%rsp), %xmm0 # 16-byte Reload
 ; CHECK-NEXT:    psrlq $48, %xmm0
 ; CHECK-NEXT:    callq __extendhfsf2@PLT
@@ -748,7 +747,8 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
 ; CHECK-NEXT:    shll $24, %eax
-; CHECK-NEXT:    orl %r12d, %eax
+; CHECK-NEXT:    addl %r13d, %eax
+; CHECK-NEXT:    addl %r12d, %eax
 ; CHECK-NEXT:    movd %eax, %xmm0
 ; CHECK-NEXT:    pinsrw $2, %r15d, %xmm0
 ; CHECK-NEXT:    movdqa %xmm0, {{[-0-9]+}}(%r{{[sb]}}p) # 16-byte Spill
@@ -774,7 +774,7 @@ define <8 x i8> @test_signed_v8i8_v8f16(<8 x half> %f) nounwind {
 ; CHECK-NEXT:    ucomiss %xmm0, %xmm0
 ; CHECK-NEXT:    cmovpl %r14d, %eax
 ; CHECK-NEXT:    movzbl %al, %eax
-; CHECK-NEXT:    orl %r15d, %eax
+; CHECK-NEXT:    addl %r15d, %eax
 ; CHECK-NEXT:    movdqa {{[-0-9]+}}(%r{{[sb]}}p), %xmm0 # 16-byte Reload
 ; CHECK-NEXT:    pinsrw $3, %eax, %xmm0
 ; CHECK-NEXT:    addq $40, %rsp

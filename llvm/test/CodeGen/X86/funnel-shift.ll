@@ -988,7 +988,7 @@ define void @PR45265(i32 %0, ptr nocapture readonly %1) nounwind {
 ; X86-SSE2-NEXT:    sarl $31, %eax
 ; X86-SSE2-NEXT:    movzbl 10(%ecx,%esi,4), %ecx
 ; X86-SSE2-NEXT:    shll $16, %ecx
-; X86-SSE2-NEXT:    orl %edx, %ecx
+; X86-SSE2-NEXT:    addl %edx, %ecx
 ; X86-SSE2-NEXT:    shll $8, %ecx
 ; X86-SSE2-NEXT:    movl %ecx, %edx
 ; X86-SSE2-NEXT:    sarl $8, %edx
@@ -1013,7 +1013,7 @@ define void @PR45265(i32 %0, ptr nocapture readonly %1) nounwind {
 ; X64-AVX2-NEXT:    movsbq 10(%rsi,%rcx,4), %rdx
 ; X64-AVX2-NEXT:    shlq $16, %rdx
 ; X64-AVX2-NEXT:    movzwl 8(%rsi,%rcx,4), %edi
-; X64-AVX2-NEXT:    orq %rdx, %rdi
+; X64-AVX2-NEXT:    addq %rdx, %rdi
 ; X64-AVX2-NEXT:    movq (%rsi,%rcx,4), %rcx
 ; X64-AVX2-NEXT:    shrdq $40, %rdi, %rcx
 ; X64-AVX2-NEXT:    cmpq %rax, %rcx

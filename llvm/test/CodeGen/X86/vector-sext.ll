@@ -3619,7 +3619,7 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ; SSE2-NEXT:    movq %rax, %rdx
 ; SSE2-NEXT:    shrq $51, %rdx
 ; SSE2-NEXT:    shll $15, %edx
-; SSE2-NEXT:    orl %ecx, %edx
+; SSE2-NEXT:    addl %ecx, %edx
 ; SSE2-NEXT:    sarl $15, %edx
 ; SSE2-NEXT:    movd %edx, %xmm1
 ; SSE2-NEXT:    shrq $34, %rax
@@ -3648,7 +3648,7 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ; SSSE3-NEXT:    movq %rax, %rdx
 ; SSSE3-NEXT:    shrq $51, %rdx
 ; SSSE3-NEXT:    shll $15, %edx
-; SSSE3-NEXT:    orl %ecx, %edx
+; SSSE3-NEXT:    addl %ecx, %edx
 ; SSSE3-NEXT:    sarl $15, %edx
 ; SSSE3-NEXT:    movd %edx, %xmm1
 ; SSSE3-NEXT:    shrq $34, %rax
@@ -3680,7 +3680,7 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ; SSE41-NEXT:    shll $28, %ecx
 ; SSE41-NEXT:    shrq $51, %rax
 ; SSE41-NEXT:    shll $15, %eax
-; SSE41-NEXT:    orl %ecx, %eax
+; SSE41-NEXT:    addl %ecx, %eax
 ; SSE41-NEXT:    sarl $15, %eax
 ; SSE41-NEXT:    pinsrd $3, %eax, %xmm0
 ; SSE41-NEXT:    retq
@@ -3706,7 +3706,7 @@ define <4 x i32> @sext_4i17_to_4i32(ptr %ptr) {
 ; AVX-NEXT:    shll $28, %ecx
 ; AVX-NEXT:    shrq $51, %rax
 ; AVX-NEXT:    shll $15, %eax
-; AVX-NEXT:    orl %ecx, %eax
+; AVX-NEXT:    addl %ecx, %eax
 ; AVX-NEXT:    sarl $15, %eax
 ; AVX-NEXT:    vpinsrd $3, %eax, %xmm0, %xmm0
 ; AVX-NEXT:    retq

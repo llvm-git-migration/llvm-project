@@ -1261,7 +1261,7 @@ define void @compressstore_v32f32_v32i32(ptr %base, <32 x float> %V, <32 x i32> 
 ; SSE2-NEXT:    packsswb %xmm10, %xmm8
 ; SSE2-NEXT:    pmovmskb %xmm8, %eax
 ; SSE2-NEXT:    shll $16, %eax
-; SSE2-NEXT:    orl %ecx, %eax
+; SSE2-NEXT:    addl %ecx, %eax
 ; SSE2-NEXT:    testb $1, %al
 ; SSE2-NEXT:    jne LBB6_1
 ; SSE2-NEXT:  ## %bb.2: ## %else
@@ -1585,7 +1585,7 @@ define void @compressstore_v32f32_v32i32(ptr %base, <32 x float> %V, <32 x i32> 
 ; SSE42-NEXT:    packsswb %xmm10, %xmm8
 ; SSE42-NEXT:    pmovmskb %xmm8, %eax
 ; SSE42-NEXT:    shll $16, %eax
-; SSE42-NEXT:    orl %ecx, %eax
+; SSE42-NEXT:    addl %ecx, %eax
 ; SSE42-NEXT:    testb $1, %al
 ; SSE42-NEXT:    jne LBB6_1
 ; SSE42-NEXT:  ## %bb.2: ## %else
@@ -1866,7 +1866,7 @@ define void @compressstore_v32f32_v32i32(ptr %base, <32 x float> %V, <32 x i32> 
 ; AVX1-NEXT:    vpacksswb %xmm4, %xmm5, %xmm4
 ; AVX1-NEXT:    vpmovmskb %xmm4, %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    testb $1, %al
 ; AVX1-NEXT:    jne LBB6_1
 ; AVX1-NEXT:  ## %bb.2: ## %else

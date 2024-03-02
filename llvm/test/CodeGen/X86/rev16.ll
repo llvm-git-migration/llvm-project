@@ -35,7 +35,7 @@ define i32 @not_rev16(i32 %a) {
 ; X86-NEXT:    shrl $8, %ecx
 ; X86-NEXT:    andl $65280, %ecx # imm = 0xFF00
 ; X86-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: not_rev16:
@@ -45,7 +45,7 @@ define i32 @not_rev16(i32 %a) {
 ; X64-NEXT:    shrl $8, %edi
 ; X64-NEXT:    andl $65280, %edi # imm = 0xFF00
 ; X64-NEXT:    andl $16711680, %eax # imm = 0xFF0000
-; X64-NEXT:    orl %edi, %eax
+; X64-NEXT:    addl %edi, %eax
 ; X64-NEXT:    retq
   %l8 = shl i32 %a, 8
   %r8 = lshr i32 %a, 8
@@ -123,7 +123,7 @@ define i32 @different_shift_amount(i32 %a) {
 ; X86-NEXT:    shrl $8, %eax
 ; X86-NEXT:    andl $-16712192, %ecx # imm = 0xFF00FE00
 ; X86-NEXT:    andl $16711935, %eax # imm = 0xFF00FF
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: different_shift_amount:
@@ -133,7 +133,7 @@ define i32 @different_shift_amount(i32 %a) {
 ; X64-NEXT:    shrl $8, %edi
 ; X64-NEXT:    andl $-16712192, %eax # imm = 0xFF00FE00
 ; X64-NEXT:    andl $16711935, %edi # imm = 0xFF00FF
-; X64-NEXT:    orl %edi, %eax
+; X64-NEXT:    addl %edi, %eax
 ; X64-NEXT:    retq
   %l8 = shl i32 %a, 9
   %r8 = lshr i32 %a, 8
@@ -203,7 +203,7 @@ define i32 @different_vars(i32 %a, i32 %b) {
 ; X86-NEXT:    shrl $8, %eax
 ; X86-NEXT:    andl $-16711936, %ecx # imm = 0xFF00FF00
 ; X86-NEXT:    andl $16711935, %eax # imm = 0xFF00FF
-; X86-NEXT:    orl %ecx, %eax
+; X86-NEXT:    addl %ecx, %eax
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: different_vars:

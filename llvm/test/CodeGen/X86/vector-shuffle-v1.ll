@@ -856,10 +856,10 @@ define i64 @shuf64i1_zero(i64 %a) {
 ; AVX512F-NEXT:    kmovw %k0, %eax
 ; AVX512F-NEXT:    kmovw %k0, %ecx
 ; AVX512F-NEXT:    shll $16, %ecx
-; AVX512F-NEXT:    orl %eax, %ecx
+; AVX512F-NEXT:    addl %eax, %ecx
 ; AVX512F-NEXT:    movq %rcx, %rax
 ; AVX512F-NEXT:    shlq $32, %rax
-; AVX512F-NEXT:    orq %rcx, %rax
+; AVX512F-NEXT:    addq %rcx, %rax
 ; AVX512F-NEXT:    vzeroupper
 ; AVX512F-NEXT:    retq
 ;
@@ -872,10 +872,10 @@ define i64 @shuf64i1_zero(i64 %a) {
 ; AVX512VL-NEXT:    kmovw %k0, %eax
 ; AVX512VL-NEXT:    kmovw %k0, %ecx
 ; AVX512VL-NEXT:    shll $16, %ecx
-; AVX512VL-NEXT:    orl %eax, %ecx
+; AVX512VL-NEXT:    addl %eax, %ecx
 ; AVX512VL-NEXT:    movq %rcx, %rax
 ; AVX512VL-NEXT:    shlq $32, %rax
-; AVX512VL-NEXT:    orq %rcx, %rax
+; AVX512VL-NEXT:    addq %rcx, %rax
 ; AVX512VL-NEXT:    vzeroupper
 ; AVX512VL-NEXT:    retq
 ;

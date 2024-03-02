@@ -1246,7 +1246,7 @@ define i64 @ctlz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-CLZ-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-CLZ-NEXT:    orl $1, %eax
 ; X86-CLZ-NEXT:    lzcntl %eax, %eax
-; X86-CLZ-NEXT:    orl $32, %eax
+; X86-CLZ-NEXT:    addl $32, %eax
 ; X86-CLZ-NEXT:    xorl %edx, %edx
 ; X86-CLZ-NEXT:    retl
 ; X86-CLZ-NEXT:  .LBB21_1:
@@ -1275,7 +1275,7 @@ define i64 @ctlz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-FASTLZCNT-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-FASTLZCNT-NEXT:    orl $1, %eax
 ; X86-FASTLZCNT-NEXT:    lzcntl %eax, %eax
-; X86-FASTLZCNT-NEXT:    orl $32, %eax
+; X86-FASTLZCNT-NEXT:    addl $32, %eax
 ; X86-FASTLZCNT-NEXT:    xorl %edx, %edx
 ; X86-FASTLZCNT-NEXT:    retl
 ; X86-FASTLZCNT-NEXT:  .LBB21_1:
@@ -1299,7 +1299,7 @@ define i64 @cttz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-NOCMOV-NEXT:    movl $-2147483648, %eax # imm = 0x80000000
 ; X86-NOCMOV-NEXT:    orl {{[0-9]+}}(%esp), %eax
 ; X86-NOCMOV-NEXT:    rep bsfl %eax, %eax
-; X86-NOCMOV-NEXT:    orl $32, %eax
+; X86-NOCMOV-NEXT:    addl $32, %eax
 ; X86-NOCMOV-NEXT:    xorl %edx, %edx
 ; X86-NOCMOV-NEXT:    retl
 ; X86-NOCMOV-NEXT:  .LBB22_1:
@@ -1314,7 +1314,7 @@ define i64 @cttz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-CMOV-NEXT:    orl {{[0-9]+}}(%esp), %eax
 ; X86-CMOV-NEXT:    rep bsfl %ecx, %edx
 ; X86-CMOV-NEXT:    rep bsfl %eax, %eax
-; X86-CMOV-NEXT:    orl $32, %eax
+; X86-CMOV-NEXT:    addl $32, %eax
 ; X86-CMOV-NEXT:    testl %ecx, %ecx
 ; X86-CMOV-NEXT:    cmovnel %edx, %eax
 ; X86-CMOV-NEXT:    xorl %edx, %edx
@@ -1336,7 +1336,7 @@ define i64 @cttz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-CLZ-NEXT:    movl $-2147483648, %eax # imm = 0x80000000
 ; X86-CLZ-NEXT:    orl {{[0-9]+}}(%esp), %eax
 ; X86-CLZ-NEXT:    tzcntl %eax, %eax
-; X86-CLZ-NEXT:    orl $32, %eax
+; X86-CLZ-NEXT:    addl $32, %eax
 ; X86-CLZ-NEXT:    xorl %edx, %edx
 ; X86-CLZ-NEXT:    retl
 ; X86-CLZ-NEXT:  .LBB22_1:
@@ -1367,7 +1367,7 @@ define i64 @cttz_i64_zero_test_knownneverzero(i64 %n) {
 ; X86-FASTLZCNT-NEXT:    movl $-2147483648, %eax # imm = 0x80000000
 ; X86-FASTLZCNT-NEXT:    orl {{[0-9]+}}(%esp), %eax
 ; X86-FASTLZCNT-NEXT:    tzcntl %eax, %eax
-; X86-FASTLZCNT-NEXT:    orl $32, %eax
+; X86-FASTLZCNT-NEXT:    addl $32, %eax
 ; X86-FASTLZCNT-NEXT:    xorl %edx, %edx
 ; X86-FASTLZCNT-NEXT:    retl
 ; X86-FASTLZCNT-NEXT:  .LBB22_1:

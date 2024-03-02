@@ -4384,7 +4384,7 @@ define void @truncstore_v32i16_v32i8(<32 x i16> %x, ptr %p, <32 x i8> %mask) {
 ; SSE2-NEXT:    pmovmskb %xmm5, %eax
 ; SSE2-NEXT:    notl %eax
 ; SSE2-NEXT:    shll $16, %eax
-; SSE2-NEXT:    orl %ecx, %eax
+; SSE2-NEXT:    addl %ecx, %eax
 ; SSE2-NEXT:    testb $1, %al
 ; SSE2-NEXT:    movd %xmm0, %ecx
 ; SSE2-NEXT:    jne .LBB15_1
@@ -4601,7 +4601,7 @@ define void @truncstore_v32i16_v32i8(<32 x i16> %x, ptr %p, <32 x i8> %mask) {
 ; SSE4-NEXT:    pmovmskb %xmm5, %eax
 ; SSE4-NEXT:    notl %eax
 ; SSE4-NEXT:    shll $16, %eax
-; SSE4-NEXT:    orl %ecx, %eax
+; SSE4-NEXT:    addl %ecx, %eax
 ; SSE4-NEXT:    testb $1, %al
 ; SSE4-NEXT:    jne .LBB15_1
 ; SSE4-NEXT:  # %bb.2: # %else
@@ -4846,7 +4846,7 @@ define void @truncstore_v32i16_v32i8(<32 x i16> %x, ptr %p, <32 x i8> %mask) {
 ; AVX1-NEXT:    vpmovmskb %xmm1, %eax
 ; AVX1-NEXT:    notl %eax
 ; AVX1-NEXT:    shll $16, %eax
-; AVX1-NEXT:    orl %ecx, %eax
+; AVX1-NEXT:    addl %ecx, %eax
 ; AVX1-NEXT:    testb $1, %al
 ; AVX1-NEXT:    jne .LBB15_1
 ; AVX1-NEXT:  # %bb.2: # %else

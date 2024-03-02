@@ -2359,7 +2359,7 @@ define i16 @load_combine(ptr %p) {
 ; CHECK-O3-NEXT:    movzbl (%rdi), %ecx
 ; CHECK-O3-NEXT:    movzbl 1(%rdi), %eax
 ; CHECK-O3-NEXT:    shll $8, %eax
-; CHECK-O3-NEXT:    orl %ecx, %eax
+; CHECK-O3-NEXT:    addl %ecx, %eax
 ; CHECK-O3-NEXT:    # kill: def $ax killed $ax killed $eax
 ; CHECK-O3-NEXT:    retq
   %v1 = load atomic i8, ptr %p unordered, align 2

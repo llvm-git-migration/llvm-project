@@ -88,7 +88,7 @@ define void @func_03() nounwind {
 ; X86-NOSSE-NEXT:    fnstcw (%esp)
 ; X86-NOSSE-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X86-NOSSE-NEXT:    andl (%esp), %eax
-; X86-NOSSE-NEXT:    orl $2048, %eax # imm = 0x800
+; X86-NOSSE-NEXT:    addl $2048, %eax # imm = 0x800
 ; X86-NOSSE-NEXT:    movw %ax, (%esp)
 ; X86-NOSSE-NEXT:    fldcw (%esp)
 ; X86-NOSSE-NEXT:    popl %eax
@@ -100,13 +100,13 @@ define void @func_03() nounwind {
 ; X86-SSE-NEXT:    fnstcw (%esp)
 ; X86-SSE-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X86-SSE-NEXT:    andl (%esp), %eax
-; X86-SSE-NEXT:    orl $2048, %eax # imm = 0x800
+; X86-SSE-NEXT:    addl $2048, %eax # imm = 0x800
 ; X86-SSE-NEXT:    movw %ax, (%esp)
 ; X86-SSE-NEXT:    fldcw (%esp)
 ; X86-SSE-NEXT:    stmxcsr (%esp)
 ; X86-SSE-NEXT:    movl $-24577, %eax # imm = 0x9FFF
 ; X86-SSE-NEXT:    andl (%esp), %eax
-; X86-SSE-NEXT:    orl $16384, %eax # imm = 0x4000
+; X86-SSE-NEXT:    addl $16384, %eax # imm = 0x4000
 ; X86-SSE-NEXT:    movl %eax, (%esp)
 ; X86-SSE-NEXT:    ldmxcsr (%esp)
 ; X86-SSE-NEXT:    popl %eax
@@ -117,13 +117,13 @@ define void @func_03() nounwind {
 ; X64-NEXT:    fnstcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X64-NEXT:    andl -{{[0-9]+}}(%rsp), %eax
-; X64-NEXT:    orl $2048, %eax # imm = 0x800
+; X64-NEXT:    addl $2048, %eax # imm = 0x800
 ; X64-NEXT:    movw %ax, -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    fldcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    stmxcsr -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    movl $-24577, %eax # imm = 0x9FFF
 ; X64-NEXT:    andl -{{[0-9]+}}(%rsp), %eax
-; X64-NEXT:    orl $16384, %eax # imm = 0x4000
+; X64-NEXT:    addl $16384, %eax # imm = 0x4000
 ; X64-NEXT:    movl %eax, -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    ldmxcsr -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    retq
@@ -138,7 +138,7 @@ define void @func_04() nounwind {
 ; X86-NOSSE-NEXT:    fnstcw (%esp)
 ; X86-NOSSE-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X86-NOSSE-NEXT:    andl (%esp), %eax
-; X86-NOSSE-NEXT:    orl $1024, %eax # imm = 0x400
+; X86-NOSSE-NEXT:    addl $1024, %eax # imm = 0x400
 ; X86-NOSSE-NEXT:    movw %ax, (%esp)
 ; X86-NOSSE-NEXT:    fldcw (%esp)
 ; X86-NOSSE-NEXT:    popl %eax
@@ -150,13 +150,13 @@ define void @func_04() nounwind {
 ; X86-SSE-NEXT:    fnstcw (%esp)
 ; X86-SSE-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X86-SSE-NEXT:    andl (%esp), %eax
-; X86-SSE-NEXT:    orl $1024, %eax # imm = 0x400
+; X86-SSE-NEXT:    addl $1024, %eax # imm = 0x400
 ; X86-SSE-NEXT:    movw %ax, (%esp)
 ; X86-SSE-NEXT:    fldcw (%esp)
 ; X86-SSE-NEXT:    stmxcsr (%esp)
 ; X86-SSE-NEXT:    movl $-24577, %eax # imm = 0x9FFF
 ; X86-SSE-NEXT:    andl (%esp), %eax
-; X86-SSE-NEXT:    orl $8192, %eax # imm = 0x2000
+; X86-SSE-NEXT:    addl $8192, %eax # imm = 0x2000
 ; X86-SSE-NEXT:    movl %eax, (%esp)
 ; X86-SSE-NEXT:    ldmxcsr (%esp)
 ; X86-SSE-NEXT:    popl %eax
@@ -167,13 +167,13 @@ define void @func_04() nounwind {
 ; X64-NEXT:    fnstcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    movl $-3073, %eax # imm = 0xF3FF
 ; X64-NEXT:    andl -{{[0-9]+}}(%rsp), %eax
-; X64-NEXT:    orl $1024, %eax # imm = 0x400
+; X64-NEXT:    addl $1024, %eax # imm = 0x400
 ; X64-NEXT:    movw %ax, -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    fldcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    stmxcsr -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    movl $-24577, %eax # imm = 0x9FFF
 ; X64-NEXT:    andl -{{[0-9]+}}(%rsp), %eax
-; X64-NEXT:    orl $8192, %eax # imm = 0x2000
+; X64-NEXT:    addl $8192, %eax # imm = 0x2000
 ; X64-NEXT:    movl %eax, -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    ldmxcsr -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    retq
@@ -194,7 +194,7 @@ define void @func_05(i32 %x) nounwind {
 ; X86-NOSSE-NEXT:    fnstcw (%esp)
 ; X86-NOSSE-NEXT:    movl $-3073, %ecx # imm = 0xF3FF
 ; X86-NOSSE-NEXT:    andl (%esp), %ecx
-; X86-NOSSE-NEXT:    orl %eax, %ecx
+; X86-NOSSE-NEXT:    addl %eax, %ecx
 ; X86-NOSSE-NEXT:    movw %cx, (%esp)
 ; X86-NOSSE-NEXT:    fldcw (%esp)
 ; X86-NOSSE-NEXT:    popl %eax
@@ -212,7 +212,7 @@ define void @func_05(i32 %x) nounwind {
 ; X86-SSE-NEXT:    fnstcw (%esp)
 ; X86-SSE-NEXT:    movl $-3073, %ecx # imm = 0xF3FF
 ; X86-SSE-NEXT:    andl (%esp), %ecx
-; X86-SSE-NEXT:    orl %eax, %ecx
+; X86-SSE-NEXT:    addl %eax, %ecx
 ; X86-SSE-NEXT:    movw %cx, (%esp)
 ; X86-SSE-NEXT:    fldcw (%esp)
 ; X86-SSE-NEXT:    stmxcsr (%esp)
@@ -235,7 +235,7 @@ define void @func_05(i32 %x) nounwind {
 ; X64-NEXT:    fnstcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    movl $-3073, %ecx # imm = 0xF3FF
 ; X64-NEXT:    andl -{{[0-9]+}}(%rsp), %ecx
-; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    addl %eax, %ecx
 ; X64-NEXT:    movw %cx, -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    fldcw -{{[0-9]+}}(%rsp)
 ; X64-NEXT:    stmxcsr -{{[0-9]+}}(%rsp)

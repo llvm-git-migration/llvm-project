@@ -183,7 +183,7 @@ define i32 @sel_constants_shl_constant(i1 %cond) {
 ; CHECK-NEXT:    notb %dil
 ; CHECK-NEXT:    movzbl %dil, %eax
 ; CHECK-NEXT:    andl $1, %eax
-; CHECK-NEXT:    orl $2, %eax
+; CHECK-NEXT:    addl $2, %eax
 ; CHECK-NEXT:    shll $8, %eax
 ; CHECK-NEXT:    retq
   %sel = select i1 %cond, i32 2, i32 3
