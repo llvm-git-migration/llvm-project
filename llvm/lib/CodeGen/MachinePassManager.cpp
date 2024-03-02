@@ -119,13 +119,13 @@ PassManager<MachineFunction>::run(MachineFunction &MF,
           ->getMMI();
   PreservedAnalyses PA = PreservedAnalyses::all();
   for (auto &Pass : Passes) {
-    if (!PI.runBeforePass<MachineFunction>(*Pass, MF))
+    if (!PI.runBeforeMachineFunctionPass(*Pass, MF))
       continue;
 
     PreservedAnalyses PassPA = Pass->run(MF, MFAM);
     if (MMI.getMachineFunction(F)) {
       MFAM.invalidate(MF, PassPA);
-      PI.runAfterPass(*Pass, MF, PassPA);
+      PI.runAfterMachineFunctionPass(*Pass, MF, PassPA);
     } else {
       MFAM.clear(MF, F.getName());
       PI.runAfterPassInvalidated<MachineFunction>(*Pass, PassPA);
@@ -133,6 +133,27 @@ PassManager<MachineFunction>::run(MachineFunction &MF,
     PA.intersect(std::move(PassPA));
   }
   return PA;
+}
+
+bool PassInstrumentation::runBeforeMachineFunctionPass(
+    const detail::MachinePassConcept &Pass, MachineFunction &MF) const {
+  bool ShouldRun = runBeforePass(Pass, MF);
+  if (!ShouldRun)
+    return false;
+
+  if (Callbacks)
+    for (auto &C : Callbacks->BeforeNonSkippedMachineFunctionPassCallbacks)
+      C(Pass, MF);
+  return true;
+}
+
+void PassInstrumentation::runAfterMachineFunctionPass(
+    const detail::MachinePassConcept &Pass, MachineFunction &MF,
+    const PreservedAnalyses &PA) const {
+  runAfterPass(Pass, MF, PA);
+  if (Callbacks)
+    for (auto &C : Callbacks->AfterMachineFunctionPassCallbacks)
+      C(Pass, MF, PA);
 }
 
 } // namespace llvm
