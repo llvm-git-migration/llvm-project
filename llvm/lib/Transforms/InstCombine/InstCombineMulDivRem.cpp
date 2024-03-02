@@ -571,6 +571,22 @@ Instruction *InstCombinerImpl::foldFPSignBitOps(BinaryOperator &I) {
   return nullptr;
 }
 
+static Instruction *createPowiExpr(BinaryOperator &I, InstCombinerImpl &IC,
+                                   Value *X, Value *Y, Value *Z) {
+  Value *YZ;
+  InstCombiner::BuilderTy &Builder = IC.Builder;
+
+  if (auto *C = dyn_cast<ConstantInt>(Z)) {
+    if (C->isOne())
+      YZ = Builder.CreateAdd(Y, ConstantInt::get(Y->getType(), 1));
+  } else
+    YZ = Builder.CreateAdd(Y, Z);
+
+  auto *NewPow = Builder.CreateIntrinsic(
+      Intrinsic::powi, {X->getType(), YZ->getType()}, {X, YZ}, &I);
+  return IC.replaceInstUsesWith(I, NewPow);
+}
+
 Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
   Value *Op0 = I.getOperand(0);
   Value *Op1 = I.getOperand(1);
@@ -688,12 +704,8 @@ Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
   if (match(&I, m_c_FMul(m_OneUse(m_Intrinsic<Intrinsic::powi>(m_Value(X),
                                                                m_Value(Y))),
                          m_Deferred(X))) &&
-      willNotOverflowSignedAdd(Y, ConstantInt::get(Y->getType(), 1), I)) {
-    auto *Y1 = Builder.CreateAdd(Y, ConstantInt::get(Y->getType(), 1));
-    auto *NewPow = Builder.CreateIntrinsic(
-        Intrinsic::powi, {X->getType(), Y1->getType()}, {X, Y1}, &I);
-    return replaceInstUsesWith(I, NewPow);
-  }
+      willNotOverflowSignedAdd(Y, ConstantInt::get(Y->getType(), 1), I))
+    return createPowiExpr(I, *this, X, Y, ConstantInt::get(Y->getType(), 1));
 
   if (I.isOnlyUserOfAnyOperand()) {
     // pow(X, Y) * pow(X, Z) -> pow(X, Y + Z)
@@ -714,12 +726,8 @@ Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
     // powi(x, y) * powi(x, z) -> powi(x, y + z)
     if (match(Op0, m_Intrinsic<Intrinsic::powi>(m_Value(X), m_Value(Y))) &&
         match(Op1, m_Intrinsic<Intrinsic::powi>(m_Specific(X), m_Value(Z))) &&
-        Y->getType() == Z->getType()) {
-      auto *YZ = Builder.CreateAdd(Y, Z);
-      auto *NewPow = Builder.CreateIntrinsic(
-          Intrinsic::powi, {X->getType(), YZ->getType()}, {X, YZ}, &I);
-      return replaceInstUsesWith(I, NewPow);
-    }
+        Y->getType() == Z->getType())
+      return createPowiExpr(I, *this, X, Y, Z);
 
     // exp(X) * exp(Y) -> exp(X + Y)
     if (match(Op0, m_Intrinsic<Intrinsic::exp>(m_Value(X))) &&
