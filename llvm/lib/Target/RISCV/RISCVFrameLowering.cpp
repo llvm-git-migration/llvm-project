@@ -478,9 +478,9 @@ static MCCFIInstruction createDefCFAExpression(const TargetRegisterInfo &TRI,
   else
     Comment << printReg(Reg, &TRI);
 
-  appendScalableVectorExpression(
-      Expr, FixedOffset, ScalableOffset,
-      TRI.getDwarfRegNum(RISCV::VLENB, true), Comment);
+  appendScalableVectorExpression(Expr, FixedOffset, ScalableOffset,
+                                 TRI.getDwarfRegNum(RISCV::VLENB, true),
+                                 Comment);
 
   SmallString<64> DefCfaExpr;
   uint8_t buffer[16];
@@ -493,8 +493,7 @@ static MCCFIInstruction createDefCFAExpression(const TargetRegisterInfo &TRI,
 }
 
 static MCCFIInstruction createDefCFAOffset(const TargetRegisterInfo &TRI,
-                                           Register Reg,
-                                           uint64_t FixedOffset,
+                                           Register Reg, uint64_t FixedOffset,
                                            uint64_t ScalableOffset) {
   assert(ScalableOffset != 0 && "Did not need to adjust CFA for RVV");
   SmallString<64> Expr;
@@ -503,9 +502,9 @@ static MCCFIInstruction createDefCFAOffset(const TargetRegisterInfo &TRI,
   Comment << printReg(Reg, &TRI) << "  @ cfa";
 
   // Build up the expression (FixedOffset + ScalableOffset * VLENB).
-  appendScalableVectorExpression(
-      Expr, FixedOffset, ScalableOffset,
-      TRI.getDwarfRegNum(RISCV::VLENB, true), Comment);
+  appendScalableVectorExpression(Expr, FixedOffset, ScalableOffset,
+                                 TRI.getDwarfRegNum(RISCV::VLENB, true),
+                                 Comment);
 
   SmallString<64> DefCfaExpr;
   uint8_t buffer[16];
@@ -1593,8 +1592,7 @@ void RISCVFrameLowering::emitCalleeSavedRVVPrologCFI(
     return;
 
   uint64_t FixedSize = getStackSizeWithRVVPadding(*MF) +
-                       RVFI->getLibCallStackSize() +
-                       RVFI->getRVPushStackSize();
+                       RVFI->getLibCallStackSize() + RVFI->getRVPushStackSize();
   if (!HasFP) {
     uint64_t ScalarLocalVarSize =
         MFI.getStackSize() - RVFI->getCalleeSavedStackSize() -
@@ -1603,13 +1601,13 @@ void RISCVFrameLowering::emitCalleeSavedRVVPrologCFI(
     FixedSize -= ScalarLocalVarSize;
   }
 
-  for (auto &CS: RVVCSI) {
+  for (auto &CS : RVVCSI) {
     // Insert the spill to the stack frame.
     int FI = CS.getFrameIdx();
     if (FI >= 0 && MFI.getStackID(FI) == TargetStackID::ScalableVector) {
-      unsigned CFIIndex = MF->addFrameInst(createDefCFAOffset(
-          *STI.getRegisterInfo(), CS.getReg(),
-          -FixedSize, MFI.getObjectOffset(FI) / 8));
+      unsigned CFIIndex = MF->addFrameInst(
+          createDefCFAOffset(*STI.getRegisterInfo(), CS.getReg(), -FixedSize,
+                             MFI.getObjectOffset(FI) / 8));
       BuildMI(MBB, MI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION))
           .addCFIIndex(CFIIndex)
           .setMIFlag(MachineInstr::FrameSetup);
