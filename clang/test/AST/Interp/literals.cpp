@@ -1174,4 +1174,16 @@ constexpr int externvar1() { // both-error {{never produces a constant expressio
   extern char arr[]; // both-note {{declared here}}
   return arr[0]; // both-note {{read of non-constexpr variable 'arr'}}
 }
+
+namespace StmtExprs {
+  constexpr int foo() {
+     ({
+       int i;
+       for (i = 0; i < 76; i++) {}
+       i; // both-warning {{expression result unused}}
+    });
+    return 76;
+  }
+  static_assert(foo() == 76, "");
+}
 #endif
