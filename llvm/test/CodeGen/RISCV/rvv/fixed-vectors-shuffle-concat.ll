@@ -257,6 +257,7 @@ define <32 x i32> @concat_8xv4i32(<4 x i32> %a, <4 x i32> %b, <4 x i32> %c, <4 x
 ; VLA-NEXT:    csrr a0, vlenb
 ; VLA-NEXT:    slli a0, a0, 5
 ; VLA-NEXT:    add sp, sp, a0
+; VLA-NEXT:    .cfi_def_cfa sp, 16
 ; VLA-NEXT:    addi sp, sp, 16
 ; VLA-NEXT:    ret
 ;
@@ -303,6 +304,7 @@ define <32 x i32> @concat_8xv4i32(<4 x i32> %a, <4 x i32> %b, <4 x i32> %c, <4 x
 ; VLS-NEXT:    vl8r.v v16, (a0) # Unknown-size Folded Reload
 ; VLS-NEXT:    vslideup.vi v8, v16, 28
 ; VLS-NEXT:    addi sp, sp, 512
+; VLS-NEXT:    .cfi_def_cfa sp, 16
 ; VLS-NEXT:    addi sp, sp, 16
 ; VLS-NEXT:    ret
   %ab = shufflevector <4 x i32> %a, <4 x i32> %b, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
