@@ -99,7 +99,7 @@ void makeEmpty(Variant& v) {
 }
 #endif // TEST_HAS_NO_EXCEPTIONS
 
-void test_copy_ctor_sfinae() {
+constexpr void test_copy_ctor_sfinae() {
   {
     using V = std::variant<int, long>;
     static_assert(std::is_copy_constructible<V>::value, "");
@@ -137,7 +137,7 @@ void test_copy_ctor_sfinae() {
   }
 }
 
-TEST_CONSTEXPR_CXX20 bool test_copy_ctor_basic() {
+TEST_CONSTEXPR_CXX20 void test_copy_ctor_basic() {
   {
     std::variant<int> v(std::in_place_index<0>, 42);
     std::variant<int> v2 = v;
@@ -208,7 +208,6 @@ TEST_CONSTEXPR_CXX20 bool test_copy_ctor_basic() {
     static_assert(v2.index() == 1, "");
     static_assert(std::get<1>(v2).value == 42, "");
   }
-  return true;
 }
 
 void test_copy_ctor_valueless_by_exception() {
@@ -230,7 +229,7 @@ constexpr void test_constexpr_copy_ctor_imp(const T& v) {
   assert(std::get<Idx>(v2) == std::get<Idx>(v));
 }
 
-constexpr bool test_constexpr_copy_ctor_trivial() {
+constexpr void test_constexpr_copy_ctor_trivial() {
   // Make sure we properly propagate triviality, which implies constexpr-ness (see P0602R4).
   using V = std::variant<long, void*, const int>;
 #ifdef TEST_WORKAROUND_MSVC_BROKEN_IS_TRIVIALLY_COPYABLE
@@ -246,8 +245,6 @@ constexpr bool test_constexpr_copy_ctor_trivial() {
   test_constexpr_copy_ctor_imp<0>(V(42l));
   test_constexpr_copy_ctor_imp<1>(V(nullptr));
   test_constexpr_copy_ctor_imp<2>(V(101));
-
-  return true;
 }
 
 struct NonTrivialCopyCtor {
@@ -259,28 +256,39 @@ struct NonTrivialCopyCtor {
   friend constexpr bool operator==(const NonTrivialCopyCtor& x, const NonTrivialCopyCtor& y) { return x.i == y.i; }
 };
 
-TEST_CONSTEXPR_CXX20 bool test_constexpr_copy_ctor_non_trivial() {
+TEST_CONSTEXPR_CXX20 void test_constexpr_copy_ctor_non_trivial() {
   // Test !is_trivially_move_constructible
   using V = std::variant<long, NonTrivialCopyCtor, void*>;
   static_assert(!std::is_trivially_copy_constructible<V>::value, "");
   test_constexpr_copy_ctor_imp<0>(V(42l));
   test_constexpr_copy_ctor_imp<1>(V(NonTrivialCopyCtor(5)));
   test_constexpr_copy_ctor_imp<2>(V(nullptr));
+}
+
+void non_constexpr_test() { test_copy_ctor_valueless_by_exception(); }
+
+constexpr bool cxx17_constexpr_test() {
+  test_copy_ctor_sfinae();
+  test_constexpr_copy_ctor_trivial();
+
+  return true;
+}
+
+TEST_CONSTEXPR_CXX20 bool cxx20_constexpr_test() {
+  test_copy_ctor_basic();
+  test_constexpr_copy_ctor_non_trivial();
 
   return true;
 }
 
 int main(int, char**) {
-  test_copy_ctor_basic();
-  test_copy_ctor_valueless_by_exception();
-  test_copy_ctor_sfinae();
-  test_constexpr_copy_ctor_trivial();
-  test_constexpr_copy_ctor_non_trivial();
+  non_constexpr_test();
+  cxx17_constexpr_test();
+  cxx20_constexpr_test();
 
-  static_assert(test_constexpr_copy_ctor_trivial());
+  static_assert(cxx17_constexpr_test());
 #if TEST_STD_VER >= 20
-  static_assert(test_copy_ctor_basic());
-  static_assert(test_constexpr_copy_ctor_non_trivial());
+  static_assert(cxx20_constexpr_test());
 #endif
   return 0;
 }

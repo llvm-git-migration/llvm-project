@@ -204,7 +204,7 @@ void test_swap_valueless_by_exception() {
 #endif
 }
 
-TEST_CONSTEXPR_CXX20 bool test_swap_same_alternative() {
+TEST_CONSTEXPR_CXX20 void test_swap_same_alternative() {
   {
     using V                = std::variant<ThrowingTypeWithNothrowSwap, int>;
     int move_called        = 0;
@@ -249,7 +249,6 @@ TEST_CONSTEXPR_CXX20 bool test_swap_same_alternative() {
     assert(std::get<0>(v1).value == 42);
     assert(std::get<0>(v2).value == 100);
   }
-  return true;
 }
 
 void test_swap_same_alternative_throws(){
@@ -311,7 +310,7 @@ assert(std::get<0>(v2).value == 100);
 #endif
 }
 
-TEST_CONSTEXPR_CXX20 bool test_swap_different_alternatives() {
+TEST_CONSTEXPR_CXX20 void test_swap_different_alternatives() {
   {
     using V                = std::variant<NothrowMoveCtorWithThrowingSwap, int>;
     int move_called        = 0;
@@ -341,8 +340,6 @@ TEST_CONSTEXPR_CXX20 bool test_swap_different_alternatives() {
     assert(std::get<0>(v1).value == 42);
     assert(std::get<1>(v2) == 100);
   }
-
-  return true;
 }
 
 void test_swap_different_alternatives_throws() {
@@ -493,7 +490,7 @@ constexpr bool has_swap_member() {
   return has_swap_member_imp<Var>(0);
 }
 
-void test_swap_sfinae() {
+constexpr void test_swap_sfinae() {
   {
     // This variant type does not provide either a member or non-member swap
     // but is still swappable via the generic swap algorithm, since the
@@ -519,7 +516,7 @@ void test_swap_sfinae() {
   }
 }
 
-_LIBCPP_CONSTEXPR_SINCE_CXX20 bool test_swap_noexcept() {
+_LIBCPP_CONSTEXPR_SINCE_CXX20 void test_swap_noexcept() {
   {
     using V = std::variant<int, NothrowMoveable>;
     static_assert(std::is_swappable_v<V> && has_swap_member<V>(), "");
@@ -585,27 +582,34 @@ _LIBCPP_CONSTEXPR_SINCE_CXX20 bool test_swap_noexcept() {
     V v1, v2;
     swap(v1, v2);
   }
-
-  return true;
 }
 
 #ifdef _LIBCPP_VERSION
 // This is why variant should SFINAE member swap. :-)
 template class std::variant<int, NotSwappable>;
 #endif
-int main(int, char**) {
+
+void non_constexpr_test() {
   test_swap_valueless_by_exception();
-  test_swap_same_alternative();
   test_swap_same_alternative_throws();
-  test_swap_different_alternatives();
   test_swap_different_alternatives_throws();
+}
+
+TEST_CONSTEXPR_CXX20 bool test() {
+  test_swap_same_alternative();
+  test_swap_different_alternatives();
   test_swap_sfinae();
   test_swap_noexcept();
 
+  return true;
+}
+
+int main(int, char**) {
+  non_constexpr_test();
+  test();
+
 #if TEST_STD_VER >= 20
-  static_assert(test_swap_same_alternative());
-  static_assert(test_swap_different_alternatives());
-  static_assert(test_swap_noexcept());
+  static_assert(test());
 #endif
 
   return 0;
