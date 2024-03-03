@@ -686,14 +686,13 @@ union _LIBCPP_TEMPLATE_VIS __union<_DestructibleTrait, _Index> {};
       _LIBCPP_HIDE_FROM_ABI explicit constexpr __union(in_place_index_t<_Ip>, _Args&&... __args)                       \
           : __tail(in_place_index<_Ip - 1>, std::forward<_Args>(__args)...) {}                                         \
                                                                                                                        \
-      _LIBCPP_HIDE_FROM_ABI __union(const __union&) = default;                                                         \
-      _LIBCPP_HIDE_FROM_ABI __union(__union&&)      = default;                                                         \
-      destructor;                                                                                                      \
+      _LIBCPP_HIDE_FROM_ABI __union(const __union&)            = default;                                              \
+      _LIBCPP_HIDE_FROM_ABI __union(__union&&)                 = default;                                              \
       _LIBCPP_HIDE_FROM_ABI __union& operator=(const __union&) = default;                                              \
       _LIBCPP_HIDE_FROM_ABI __union& operator=(__union&&)      = default;                                              \
+      destructor                                                                                                       \
                                                                                                                        \
-    private:                                                                                                           \
-      char __dummy;                                                                                                    \
+          private : char __dummy;                                                                                      \
       __alt<_Index, _Tp> __head;                                                                                       \
       __union<destructible_trait, _Index + 1, _Types...> __tail;                                                       \
                                                                                                                        \
@@ -756,14 +755,13 @@ class _LIBCPP_TEMPLATE_VIS __dtor;
     public:                                                                                                            \
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
-      _LIBCPP_HIDE_FROM_ABI __dtor(const __dtor&) = default;                                                           \
-      _LIBCPP_HIDE_FROM_ABI __dtor(__dtor&&)      = default;                                                           \
-      destructor;                                                                                                      \
+      _LIBCPP_HIDE_FROM_ABI __dtor(const __dtor&)            = default;                                                \
+      _LIBCPP_HIDE_FROM_ABI __dtor(__dtor&&)                 = default;                                                \
       _LIBCPP_HIDE_FROM_ABI __dtor& operator=(const __dtor&) = default;                                                \
       _LIBCPP_HIDE_FROM_ABI __dtor& operator=(__dtor&&)      = default;                                                \
+      destructor                                                                                                       \
                                                                                                                        \
-    protected:                                                                                                         \
-      destroy                                                                                                          \
+          protected : destroy                                                                                          \
     }
 
 _LIBCPP_VARIANT_DESTRUCTOR(
@@ -832,11 +830,11 @@ class _LIBCPP_TEMPLATE_VIS __move_constructor;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      _LIBCPP_HIDE_FROM_ABI __move_constructor(const __move_constructor&) = default;                                   \
-      move_constructor;                                                                                                \
+      _LIBCPP_HIDE_FROM_ABI __move_constructor(const __move_constructor&)            = default;                        \
       _LIBCPP_HIDE_FROM_ABI ~__move_constructor()                                    = default;                        \
       _LIBCPP_HIDE_FROM_ABI __move_constructor& operator=(const __move_constructor&) = default;                        \
       _LIBCPP_HIDE_FROM_ABI __move_constructor& operator=(__move_constructor&&)      = default;                        \
+      move_constructor                                                                                                 \
     }
 
 _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(
@@ -868,11 +866,11 @@ class _LIBCPP_TEMPLATE_VIS __copy_constructor;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      copy_constructor;                                                                                                \
       _LIBCPP_HIDE_FROM_ABI __copy_constructor(__copy_constructor&&)                 = default;                        \
       _LIBCPP_HIDE_FROM_ABI ~__copy_constructor()                                    = default;                        \
       _LIBCPP_HIDE_FROM_ABI __copy_constructor& operator=(const __copy_constructor&) = default;                        \
       _LIBCPP_HIDE_FROM_ABI __copy_constructor& operator=(__copy_constructor&&)      = default;                        \
+      copy_constructor                                                                                                 \
     }
 
 _LIBCPP_VARIANT_COPY_CONSTRUCTOR(_Trait::_TriviallyAvailable,
@@ -996,11 +994,11 @@ class _LIBCPP_TEMPLATE_VIS __copy_assignment;
       using __base_type::__base_type;                                                                                  \
       using __base_type::operator=;                                                                                    \
                                                                                                                        \
-      _LIBCPP_HIDE_FROM_ABI __copy_assignment(const __copy_assignment&) = default;                                     \
-      _LIBCPP_HIDE_FROM_ABI __copy_assignment(__copy_assignment&&)      = default;                                     \
-      _LIBCPP_HIDE_FROM_ABI ~__copy_assignment()                        = default;                                     \
-      copy_assignment;                                                                                                 \
+      _LIBCPP_HIDE_FROM_ABI __copy_assignment(const __copy_assignment&)       = default;                               \
+      _LIBCPP_HIDE_FROM_ABI __copy_assignment(__copy_assignment&&)            = default;                               \
+      _LIBCPP_HIDE_FROM_ABI ~__copy_assignment()                              = default;                               \
       _LIBCPP_HIDE_FROM_ABI __copy_assignment& operator=(__copy_assignment&&) = default;                               \
+      copy_assignment                                                                                                  \
     }
 
 _LIBCPP_VARIANT_COPY_ASSIGNMENT(_Trait::_TriviallyAvailable,
