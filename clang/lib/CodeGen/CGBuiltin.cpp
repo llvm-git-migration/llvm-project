@@ -18057,6 +18057,14 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
         /*ReturnType*/ Op0->getType(), Intrinsic::dx_frac,
         ArrayRef<Value *>{Op0}, nullptr, "dx.frac");
   }
+  case Builtin::BI__builtin_hlsl_elementwise_rcp: {
+    Value *Op0 = EmitScalarExpr(E->getArg(0));
+    if (!E->getArg(0)->getType()->hasFloatingRepresentation())
+      llvm_unreachable("rcp operand must have a float representation");
+    return Builder.CreateIntrinsic(
+        /*ReturnType*/ Op0->getType(), Intrinsic::dx_rcp,
+        ArrayRef<Value *>{Op0}, nullptr, "dx.rcp");
+  }
   }
   return nullptr;
 }

@@ -31,4 +31,6 @@ def int_dx_lerp :
     Intrinsic<[LLVMScalarOrSameVectorWidth<0, LLVMVectorElementType<0>>],
     [llvm_anyvector_ty, LLVMScalarOrSameVectorWidth<0, LLVMVectorElementType<0>>,LLVMScalarOrSameVectorWidth<0, LLVMVectorElementType<0>>],
     [IntrNoMem, IntrWillReturn] >;
+
+def int_dx_rcp  : DefaultAttrsIntrinsic<[llvm_anyfloat_ty], [LLVMMatchType<0>]>;
 }
