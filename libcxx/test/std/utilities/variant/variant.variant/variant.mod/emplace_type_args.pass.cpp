@@ -40,7 +40,7 @@ constexpr bool emplace_exists() {
   return test_emplace_exists_imp<Args...>(0);
 }
 
-void test_emplace_sfinae() {
+constexpr void test_emplace_sfinae() {
   {
     using V = std::variant<int, void*, const void*, TestTypes::NoCtors>;
     static_assert(emplace_exists<V, int>(), "");
@@ -60,7 +60,7 @@ struct NoCtor {
   NoCtor() = delete;
 };
 
-TEST_CONSTEXPR_CXX20 bool test_basic() {
+TEST_CONSTEXPR_CXX20 void test_basic() {
   {
     using V = std::variant<int>;
     V v(42);
@@ -92,15 +92,21 @@ TEST_CONSTEXPR_CXX20 bool test_basic() {
     assert(std::get<4>(v) == "aaa");
     assert(&ref3 == &std::get<4>(v));
   }
+}
+
+TEST_CONSTEXPR_CXX20 bool test() {
+  test_basic();
+  test_emplace_sfinae();
+
   return true;
 }
 
 int main(int, char**) {
-  test_basic();
+  test();
+
 #if TEST_STD_VER >= 20
-  static_assert(test_basic());
+  static_assert(test());
 #endif
-  test_emplace_sfinae();
 
   return 0;
 }

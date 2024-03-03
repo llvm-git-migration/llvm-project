@@ -106,7 +106,7 @@ struct NoThrowT {
 #endif // !defined(TEST_HAS_NO_EXCEPTIONS)
 } // namespace RuntimeHelpers
 
-void test_T_assignment_noexcept() {
+constexpr void test_T_assignment_noexcept() {
   using namespace MetaHelpers;
   {
     using V = std::variant<Dummy, NoThrowT>;
@@ -122,7 +122,7 @@ void test_T_assignment_noexcept() {
   }
 }
 
-void test_T_assignment_sfinae() {
+constexpr void test_T_assignment_sfinae() {
   {
     using V = std::variant<long, long long>;
     static_assert(!std::is_assignable<V, int>::value, "ambiguous");
@@ -170,7 +170,7 @@ void test_T_assignment_sfinae() {
 #endif // TEST_VARIANT_HAS_NO_REFERENCES
 }
 
-TEST_CONSTEXPR_CXX20 bool test_T_assignment_basic() {
+TEST_CONSTEXPR_CXX20 void test_T_assignment_basic() {
   {
     std::variant<int> v(43);
     v = 42;
@@ -203,7 +203,6 @@ TEST_CONSTEXPR_CXX20 bool test_T_assignment_basic() {
     assert(v.index() == 0);
     assert(std::get<0>(v) == "bar");
   }
-  return true;
 }
 
 void test_T_assignment_basic_no_constexpr() {
@@ -279,7 +278,7 @@ void test_T_assignment_performs_assignment() {
 #endif // TEST_HAS_NO_EXCEPTIONS
 }
 
-TEST_CONSTEXPR_CXX20 bool test_T_assignment_vector_bool() {
+TEST_CONSTEXPR_CXX20 void test_T_assignment_vector_bool() {
 #ifndef _LIBCPP_ENABLE_NARROWING_CONVERSIONS_IN_VARIANT
   std::vector<bool> vec = {true};
   std::variant<bool, int> v;
@@ -287,21 +286,29 @@ TEST_CONSTEXPR_CXX20 bool test_T_assignment_vector_bool() {
   assert(v.index() == 0);
   assert(std::get<0>(v) == true);
 #endif
-  return true;
 }
 
-int main(int, char**) {
-  test_T_assignment_basic();
+void non_constexpr_test() {
   test_T_assignment_basic_no_constexpr();
   test_T_assignment_performs_construction();
   test_T_assignment_performs_assignment();
+}
+
+TEST_CONSTEXPR_CXX20 bool test() {
+  test_T_assignment_basic();
   test_T_assignment_noexcept();
   test_T_assignment_sfinae();
   test_T_assignment_vector_bool();
 
+  return true;
+}
+
+int main(int, char**) {
+  test();
+  non_constexpr_test();
+
 #if TEST_STD_VER >= 20
-  static_assert(test_T_assignment_basic());
-  static_assert(test_T_assignment_vector_bool());
+  static_assert(test());
 #endif
   return 0;
 }
