@@ -254,6 +254,9 @@ struct AccessTarget : public AccessedEntity {
       namingClass = cast<CXXRecordDecl>(namingClass->getParent());
     return namingClass->getCanonicalDecl();
   }
+  void setNestedNameSpecifier(NestedNameSpecifier *Q) { Qualifier = Q; }
+
+  NestedNameSpecifier *getNestedNameSpecifier() const { return Qualifier; }
 
 private:
   void initialize() {
@@ -274,6 +277,7 @@ private:
   mutable bool CalculatedInstanceContext : 1;
   mutable const CXXRecordDecl *InstanceContext;
   const CXXRecordDecl *DeclaringClass;
+  NestedNameSpecifier *Qualifier = nullptr;
 };
 
 }
@@ -1481,6 +1485,20 @@ static Sema::AccessResult CheckAccess(Sema &S, SourceLocation Loc,
   }
 
   EffectiveContext EC(S.CurContext);
+  if (Entity.getNestedNameSpecifier())
+    if (const Type *Ty = Entity.getNestedNameSpecifier()->getAsType())
+      switch (Ty->getTypeClass()) {
+      case Type::TypeClass::SubstTemplateTypeParm:
+        if (auto *SubstTemplateTy = Ty->getAs<SubstTemplateTypeParmType>())
+          if (auto *D = SubstTemplateTy->getAssociatedDecl())
+            if (auto *RD = dyn_cast_or_null<CXXRecordDecl>(D->getDeclContext()))
+              EC.Records.push_back(RD);
+
+        break;
+      default:
+        break;
+      }
+
   switch (CheckEffectiveAccess(S, EC, Loc, Entity)) {
   case AR_accessible: return Sema::AR_accessible;
   case AR_inaccessible: return Sema::AR_inaccessible;
@@ -1916,6 +1934,7 @@ void Sema::CheckLookupAccess(const LookupResult &R) {
       AccessTarget Entity(Context, AccessedEntity::Member,
                           R.getNamingClass(), I.getPair(),
                           R.getBaseObjectType());
+      Entity.setNestedNameSpecifier(R.getNestedNameSpecifier());
       Entity.setDiag(diag::err_access);
       CheckAccess(*this, R.getNameLoc(), Entity);
     }
