@@ -254,6 +254,10 @@ Bug Fixes in This Version
   operator.
   Fixes (#GH83267).
 
+- Allow access to a public template alias declaration that refers to friend's
+  private nested type.
+  Fixes (#GH25708).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
