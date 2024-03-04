@@ -11273,6 +11273,7 @@ Sema::CheckTypenameType(ElaboratedTypeKeyword Keyword,
 
   DeclarationName Name(&II);
   LookupResult Result(*this, Name, IILoc, LookupOrdinaryName);
+  Result.setNestedNameSpecifier(QualifierLoc.getNestedNameSpecifier());
   if (Ctx)
     LookupQualifiedName(Result, Ctx, SS);
   else
