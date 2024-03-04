@@ -72,10 +72,10 @@ template <class T, std::size_t>
 struct CheckReferenceAssignment {
   template <class SimdAbi>
   void operator()() {
-    types::for_each(arithmetic_no_bool_types(), CheckSimdReferenceAssignmentHelper<T, SimdAbi>());
-    types::for_each(arithmetic_no_bool_types(), CheckMaskReferenceAssignmentHelper<T, SimdAbi>());
+    types::for_each(types_for_template_parameter(), CheckSimdReferenceAssignmentHelper<T, SimdAbi>());
+    types::for_each(types_for_template_parameter(), CheckMaskReferenceAssignmentHelper<T, SimdAbi>());
 
-    types::for_each(arithmetic_no_bool_types(), CheckReferenceAssignmentTraitsHelper<T, SimdAbi>());
+    types::for_each(types_for_template_parameter(), CheckReferenceAssignmentTraitsHelper<T, SimdAbi>());
   }
 };
 

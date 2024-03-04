@@ -110,7 +110,7 @@ template <class T, std::size_t>
 struct CheckBroadcastCtorTraits {
   template <class SimdAbi>
   void operator()() {
-    types::for_each(arithmetic_no_bool_types(), CheckBroadcastCtorTraitsHelper<T, SimdAbi>());
+    types::for_each(types_for_template_parameter(), CheckBroadcastCtorTraitsHelper<T, SimdAbi>());
 
     static_assert(!has_broadcast_ctor<no_implicit_type<T>, T, SimdAbi>::value);
     static_assert(has_broadcast_ctor<implicit_type<T>, T, SimdAbi>::value);

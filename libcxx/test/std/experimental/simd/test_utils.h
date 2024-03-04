@@ -48,6 +48,16 @@ using arithmetic_no_bool_types = types::concatenate_t<types::integer_types, type
 using arithmetic_no_bool_types = types::concatenate_t<types::integer_types, types::floating_point_types>;
 #endif
 
+using types_for_template_parameter =
+    types::type_list<char,
+                     unsigned,
+                     int,
+#ifndef TEST_HAS_NO_INT128
+                     __int128_t,
+#endif
+                     float,
+                     double>;
+
 template <template <class T, std::size_t N> class Func>
 void test_all_simd_abi() {
   types::for_each(arithmetic_no_bool_types(), TestAllSimdAbiFunctor<Func>());
