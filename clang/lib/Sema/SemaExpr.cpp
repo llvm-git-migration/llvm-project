@@ -19211,7 +19211,9 @@ MarkVarDeclODRUsed(ValueDecl *V, SourceLocation Loc, Sema &SemaRef,
     } else if (VarTarget == Sema::CVT_Device &&
                !Var->hasAttr<CUDASharedAttr>() &&
                (UserTarget == Sema::CFT_Host ||
-                UserTarget == Sema::CFT_HostDevice)) {
+                UserTarget == Sema::CFT_HostDevice) &&
+               SemaRef.getASTContext().GetGVALinkageForFunction(FD) ==
+                   GVA_StrongExternal) {
       // Record a CUDA/HIP device side variable if it is ODR-used
       // by host code. This is done conservatively, when the variable is
       // referenced in any of the following contexts:
