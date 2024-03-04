@@ -752,6 +752,10 @@ public:
       IDNS &= ~Decl::IDNS_LocalExtern;
   }
 
+  void setNestedNameSpecifier(NestedNameSpecifier *Q) { Qualifier = Q; }
+
+  NestedNameSpecifier *getNestedNameSpecifier() const { return Qualifier; }
+
 private:
   void diagnoseAccess() {
     if (!isAmbiguous() && isClassLookup() &&
@@ -792,6 +796,7 @@ private:
   CXXBasePaths *Paths = nullptr;
   CXXRecordDecl *NamingClass = nullptr;
   QualType BaseObjectType;
+  NestedNameSpecifier *Qualifier = nullptr;
 
   // Parameters.
   Sema *SemaPtr;
