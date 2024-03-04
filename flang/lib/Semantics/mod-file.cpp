@@ -924,8 +924,8 @@ void ModFileWriter::PutProcEntity(llvm::raw_ostream &os, const Symbol &symbol) {
       os, symbol,
       [&]() {
         os << "procedure(";
-        if (details.procInterface()) {
-          os << details.procInterface()->name();
+        if (details.rawProcInterface()) {
+          os << details.rawProcInterface()->name();
         } else if (details.type()) {
           PutType(os, *details.type());
         }
@@ -1563,7 +1563,7 @@ void SubprogramSymbolCollector::Collect() {
         // Is 's' a procedure with interface 'symbol'?
         if (s) {
           if (const auto *sDetails{s->detailsIf<ProcEntityDetails>()}) {
-            if (sDetails->procInterface() == &symbol) {
+            if (sDetails->resolvedProcInterface() == &symbol) {
               return true;
             }
           }
@@ -1622,8 +1622,8 @@ void SubprogramSymbolCollector::DoSymbol(
                       }
                     },
                     [this](const ProcEntityDetails &details) {
-                      if (details.procInterface()) {
-                        DoSymbol(*details.procInterface());
+                      if (details.rawProcInterface()) {
+                        DoSymbol(*details.rawProcInterface());
                       } else {
                         DoType(details.type());
                       }

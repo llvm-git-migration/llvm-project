@@ -1437,9 +1437,9 @@ static bool IsPureProcedureImpl(
   }
   set.emplace(symbol);
   if (const auto *procDetails{symbol.detailsIf<ProcEntityDetails>()}) {
-    if (procDetails->procInterface()) {
+    if (procDetails->resolvedProcInterface()) {
       // procedure with a pure interface
-      return IsPureProcedureImpl(*procDetails->procInterface(), set);
+      return IsPureProcedureImpl(*procDetails->resolvedProcInterface(), set);
     }
   } else if (const auto *details{symbol.detailsIf<ProcBindingDetails>()}) {
     return IsPureProcedureImpl(details->symbol(), set);
@@ -1509,7 +1509,7 @@ bool IsFunction(const Symbol &symbol) {
               common::visitors{
                   [](const SubprogramDetails &x) { return x.isFunction(); },
                   [](const ProcEntityDetails &x) {
-                    const Symbol *ifc{x.procInterface()};
+                    const Symbol *ifc{x.resolvedProcInterface()};
                     return x.type() || (ifc && IsFunction(*ifc));
                   },
                   [](const ProcBindingDetails &x) {
@@ -1828,7 +1828,7 @@ static const Symbol *FindFunctionResult(
                          return subp.isFunction() ? &subp.result() : nullptr;
                        },
           [&](const ProcEntityDetails &proc) {
-            const Symbol *iface{proc.procInterface()};
+            const Symbol *iface{proc.resolvedProcInterface()};
             return iface ? FindFunctionResult(*iface, seen) : nullptr;
           },
           [&](const ProcBindingDetails &binding) {

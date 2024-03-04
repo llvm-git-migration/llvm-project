@@ -289,9 +289,9 @@ bool IsPointerDummy(const Symbol &symbol) {
 bool IsBindCProcedure(const Symbol &original) {
   const Symbol &symbol{original.GetUltimate()};
   if (const auto *procDetails{symbol.detailsIf<ProcEntityDetails>()}) {
-    if (procDetails->procInterface()) {
+    if (procDetails->resolvedProcInterface()) {
       // procedure component with a BIND(C) interface
-      return IsBindCProcedure(*procDetails->procInterface());
+      return IsBindCProcedure(*procDetails->resolvedProcInterface());
     }
   }
   return symbol.attrs().test(Attr::BIND_C) && IsProcedure(symbol);
@@ -465,9 +465,7 @@ const Symbol *FindInterface(const Symbol &symbol) {
   return common::visit(
       common::visitors{
           [](const ProcEntityDetails &details) {
-            const Symbol *interface {
-              details.procInterface()
-            };
+            const Symbol *interface{details.resolvedProcInterface()};
             return interface ? FindInterface(*interface) : nullptr;
           },
           [](const ProcBindingDetails &details) {
@@ -493,8 +491,8 @@ const Symbol *FindSubprogram(const Symbol &symbol) {
   return common::visit(
       common::visitors{
           [&](const ProcEntityDetails &details) -> const Symbol * {
-            if (details.procInterface()) {
-              return FindSubprogram(*details.procInterface());
+            if (details.resolvedProcInterface()) {
+              return FindSubprogram(*details.resolvedProcInterface());
             } else {
               return &symbol;
             }
@@ -775,7 +773,7 @@ const Symbol *IsFinalizable(const DerivedTypeSpec &derived,
       symbol = &binding->symbol();
     }
     if (const auto *proc{symbol->detailsIf<ProcEntityDetails>()}) {
-      symbol = proc->procInterface();
+      symbol = proc->resolvedProcInterface();
     }
     if (!symbol) {
     } else if (IsElementalProcedure(*symbol)) {

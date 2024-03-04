@@ -499,7 +499,7 @@ void InstantiateHelper::InstantiateComponent(const Symbol &oldSymbol) {
   } else if (auto *procDetails{newSymbol.detailsIf<ProcEntityDetails>()}) {
     // We have a procedure pointer.  Instantiate its return type
     if (const DeclTypeSpec * returnType{InstantiateType(newSymbol)}) {
-      if (!procDetails->procInterface()) {
+      if (!procDetails->resolvedProcInterface()) {
         procDetails->ReplaceType(*returnType);
       }
     }

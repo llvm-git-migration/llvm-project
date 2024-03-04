@@ -417,8 +417,12 @@ public:
   ProcEntityDetails(ProcEntityDetails &&) = default;
   ProcEntityDetails &operator=(const ProcEntityDetails &) = default;
 
-  const Symbol *procInterface() const { return procInterface_; }
-  void set_procInterface(const Symbol &sym) { procInterface_ = &sym; }
+  const Symbol *rawProcInterface() const { return rawProcInterface_; }
+  const Symbol *resolvedProcInterface() const { return resolvedProcInterface_; }
+  void set_procInterfaces(const Symbol &raw, const Symbol &resolved) {
+    rawProcInterface_ = &raw;
+    resolvedProcInterface_ = &resolved;
+  }
   inline bool HasExplicitInterface() const;
 
   // Be advised: !init().has_value() => uninitialized pointer,
@@ -430,7 +434,8 @@ public:
   void set_isCUDAKernel(bool yes = true) { isCUDAKernel_ = yes; }
 
 private:
-  const Symbol *procInterface_{nullptr};
+  const Symbol *rawProcInterface_{nullptr};
+  const Symbol *resolvedProcInterface_{nullptr};
   std::optional<const Symbol *> init_;
   bool isCUDAKernel_{false};
   friend llvm::raw_ostream &operator<<(
@@ -909,7 +914,7 @@ private:
             },
             [](const ObjectEntityDetails &oed) { return oed.shape().Rank(); },
             [&](const ProcEntityDetails &ped) {
-              const Symbol *iface{ped.procInterface()};
+              const Symbol *iface{ped.resolvedProcInterface()};
               return iface ? iface->RankImpl(depth) : 0;
             },
             [](const AssocEntityDetails &aed) {
@@ -974,7 +979,8 @@ private:
 // between the two shared libraries.
 
 inline bool ProcEntityDetails::HasExplicitInterface() const {
-  return procInterface_ && procInterface_->HasExplicitInterface();
+  return resolvedProcInterface_ &&
+      resolvedProcInterface_->HasExplicitInterface();
 }
 
 inline Symbol &Symbol::GetUltimate() {
@@ -1008,7 +1014,7 @@ inline const DeclTypeSpec *Symbol::GetTypeImpl(int depth) const {
             return x.isFunction() ? x.result().GetTypeImpl(depth) : nullptr;
           },
           [&](const ProcEntityDetails &x) {
-            const Symbol *symbol{x.procInterface()};
+            const Symbol *symbol{x.resolvedProcInterface()};
             return symbol ? symbol->GetTypeImpl(depth) : x.type();
           },
           [&](const ProcBindingDetails &x) {

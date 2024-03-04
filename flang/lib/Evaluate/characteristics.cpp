@@ -85,9 +85,9 @@ std::optional<TypeAndShape> TypeAndShape::Characterize(
   return common::visit(
       common::visitors{
           [&](const semantics::ProcEntityDetails &proc) {
-            if (proc.procInterface()) {
+            if (proc.resolvedProcInterface()) {
               return Characterize(
-                  *proc.procInterface(), context, invariantOnly);
+                  *proc.resolvedProcInterface(), context, invariantOnly);
             } else if (proc.type()) {
               return Characterize(*proc.type(), context, invariantOnly);
             } else {
@@ -640,7 +640,7 @@ static std::optional<Procedure> CharacterizeProcedure(
               return intrinsic;
             }
             if (const semantics::Symbol *
-                interfaceSymbol{proc.procInterface()}) {
+                interfaceSymbol{proc.resolvedProcInterface()}) {
               auto result{
                   CharacterizeProcedure(*interfaceSymbol, context, seenProcs)};
               if (result && (IsDummy(symbol) || IsPointer(symbol))) {

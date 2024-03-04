@@ -1253,7 +1253,7 @@ RuntimeDerivedTypeTables BuildRuntimeDerivedTypeTables(
 static const DeclTypeSpec *GetDefinedIoSpecificArgType(const Symbol &specific) {
   const Symbol *interface{&specific.GetUltimate()};
   if (const auto *procEntity{specific.detailsIf<ProcEntityDetails>()}) {
-    interface = procEntity->procInterface();
+    interface = procEntity->resolvedProcInterface();
   }
   if (interface) {
     if (const SubprogramDetails *

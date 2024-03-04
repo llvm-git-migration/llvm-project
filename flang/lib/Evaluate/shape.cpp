@@ -741,7 +741,7 @@ auto GetShapeHelper::operator()(const Symbol &symbol) const -> Result {
             return ScalarShape(); // no dimensions seen
           },
           [&](const semantics::ProcEntityDetails &proc) {
-            if (const Symbol * interface{proc.procInterface()}) {
+            if (const Symbol * interface{proc.resolvedProcInterface()}) {
               return (*this)(*interface);
             } else {
               return ScalarShape();

@@ -1195,9 +1195,7 @@ void CheckHelper::CheckArraySpec(
 void CheckHelper::CheckProcEntity(
     const Symbol &symbol, const ProcEntityDetails &details) {
   CheckSymbolType(symbol);
-  const Symbol *interface {
-    details.procInterface() ? &details.procInterface()->GetUltimate() : nullptr
-  };
+  const Symbol *interface{details.resolvedProcInterface()};
   if (details.isDummy()) {
     if (!symbol.attrs().test(Attr::POINTER) && // C843
         (symbol.attrs().test(Attr::INTENT_IN) ||
@@ -2847,8 +2845,8 @@ void CheckHelper::CheckBindC(const Symbol &symbol) {
           "An interoperable pointer must not be CONTIGUOUS"_err_en_US);
     }
   } else if (const auto *proc{symbol.detailsIf<ProcEntityDetails>()}) {
-    if (!proc->procInterface() ||
-        !proc->procInterface()->attrs().test(Attr::BIND_C)) {
+    if (!proc->resolvedProcInterface() ||
+        !proc->resolvedProcInterface()->attrs().test(Attr::BIND_C)) {
       if (proc->isDummy()) {
         messages_.Say(symbol.name(),
             "A dummy procedure to an interoperable procedure must also be interoperable"_err_en_US);
