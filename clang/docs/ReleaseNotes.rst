@@ -241,6 +241,9 @@ Bug Fixes in This Version
   for variables created through copy initialization having side-effects in C++17 and later.
   Fixes (#GH64356) (#GH79518).
 
+- Allow access to a public template alias declaration that refers to friend's
+  private nested type (`#25708 <https://github.com/llvm/llvm-project/issues/25708>`).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
