@@ -33,6 +33,9 @@ void X86InstPrinterCommon::printCondCode(const MCInst *MI, unsigned Op,
                 MI->getOpcode() == X86::CMPCCXADDmr64 ||
                 MI->getOpcode() == X86::CMPCCXADDmr32_EVEX ||
                 MI->getOpcode() == X86::CMPCCXADDmr64_EVEX;
+  bool IsCCMPOrCTEST =
+      X86::isCCMPCC(MI->getOpcode()) || X86::isCTESTCC(MI->getOpcode());
+
   switch (Imm) {
   default: llvm_unreachable("Invalid condcode argument!");
   case    0: O << "o";  break;
@@ -45,13 +48,34 @@ void X86InstPrinterCommon::printCondCode(const MCInst *MI, unsigned Op,
   case    7: O << (Flavor ? "nbe" : "a"); break;
   case    8: O << "s";  break;
   case    9: O << "ns"; break;
-  case  0xa: O << "p";  break;
-  case  0xb: O << "np"; break;
+  case  0xa: O << (IsCCMPOrCTEST ? "t" : "p");  break;
+  case  0xb: O << (IsCCMPOrCTEST ? "f" : "np"); break;
   case  0xc: O << "l";  break;
   case  0xd: O << (Flavor ? "nl" : "ge"); break;
   case  0xe: O << "le"; break;
   case  0xf: O << (Flavor ? "nle" : "g"); break;
   }
+}
+
+void X86InstPrinterCommon::printCondFlags(const MCInst *MI, unsigned Op,
+                                          raw_ostream &O) {
+  // +----+----+----+----+
+  // | OF | SF | ZF | CF |
+  // +----+----+----+----+
+  int64_t Imm = MI->getOperand(Op).getImm();
+  assert(Imm >= 0 && Imm < 16 && "Invalid condition flags");
+  O << "{";
+  std::string Flags;
+  if (Imm & 0x8)
+    Flags += "of,";
+  if (Imm & 0x4)
+    Flags += "sf,";
+  if (Imm & 0x2)
+    Flags += "zf,";
+  if (Imm & 0x1)
+    Flags += "cf,";
+  StringRef SimplifiedFlags = StringRef(Flags).rtrim(",");
+  O << SimplifiedFlags << "}";
 }
 
 void X86InstPrinterCommon::printSSEAVXCC(const MCInst *MI, unsigned Op,
