@@ -1483,6 +1483,9 @@ bool AMDGPUCallLowering::lowerCall(MachineIRBuilder &MIRBuilder,
 
   const SIMachineFunctionInfo *MFI = MF.getInfo<SIMachineFunctionInfo>();
 
+  if (Info.ConvergenceCtrlToken) {
+    MIB.addUse(Info.ConvergenceCtrlToken, RegState::Implicit);
+  }
   handleImplicitCallArguments(MIRBuilder, MIB, ST, *MFI, Info.CallConv,
                               ImplicitArgRegs);
 
