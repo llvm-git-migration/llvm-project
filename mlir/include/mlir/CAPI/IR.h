@@ -16,6 +16,7 @@
 #define MLIR_CAPI_IR_H
 
 #include "mlir/Bytecode/BytecodeWriter.h"
+#include "mlir/Bytecode/BytecodeReader.h"
 #include "mlir/CAPI/Wrap.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -23,6 +24,7 @@
 
 DEFINE_C_API_PTR_METHODS(MlirAsmState, mlir::AsmState)
 DEFINE_C_API_PTR_METHODS(MlirBytecodeWriterConfig, mlir::BytecodeWriterConfig)
+DEFINE_C_API_PTR_METHODS(MlirBytecodeReaderConfig, mlir::BytecodeReaderConfig)
 DEFINE_C_API_PTR_METHODS(MlirContext, mlir::MLIRContext)
 DEFINE_C_API_PTR_METHODS(MlirDialect, mlir::Dialect)
 DEFINE_C_API_PTR_METHODS(MlirDialectRegistry, mlir::DialectRegistry)

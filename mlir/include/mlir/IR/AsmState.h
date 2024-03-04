@@ -464,9 +464,11 @@ public:
   /// `fallbackResourceMap` is an optional fallback handler that can be used to
   /// parse external resources not explicitly handled by another parser.
   ParserConfig(MLIRContext *context, bool verifyAfterParse = true,
-               FallbackAsmResourceMap *fallbackResourceMap = nullptr)
+               FallbackAsmResourceMap *fallbackResourceMap = nullptr,
+               BytecodeReaderConfig bytecodeReaderConfig = {})
       : context(context), verifyAfterParse(verifyAfterParse),
-        fallbackResourceMap(fallbackResourceMap) {
+        fallbackResourceMap(fallbackResourceMap),
+        bytecodeReaderConfig{std::move(bytecodeReaderConfig)} {
     assert(context && "expected valid MLIR context");
   }
 
