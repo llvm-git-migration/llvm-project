@@ -1481,6 +1481,13 @@ static Sema::AccessResult CheckAccess(Sema &S, SourceLocation Loc,
   }
 
   EffectiveContext EC(S.CurContext);
+  auto &Active = S.CodeSynthesisContexts.back();
+  if (Active.Kind == Sema::CodeSynthesisContext::TemplateInstantiation &&
+      Active.Entity)
+    if (auto *RD =
+            dyn_cast_or_null<CXXRecordDecl>(Active.Entity->getDeclContext()))
+      EC.Records.push_back(RD);
+
   switch (CheckEffectiveAccess(S, EC, Loc, Entity)) {
   case AR_accessible: return Sema::AR_accessible;
   case AR_inaccessible: return Sema::AR_inaccessible;
