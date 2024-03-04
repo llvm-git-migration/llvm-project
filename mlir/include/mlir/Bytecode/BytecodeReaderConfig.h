@@ -43,7 +43,7 @@ public:
                     CallableT, std::function<LogicalResult(
                                    DialectBytecodeReader &, StringRef, T &)>>,
                 bool> = true>
-  static std::unique_ptr<AttrTypeBytecodeReader<T>>
+  static std::shared_ptr<AttrTypeBytecodeReader<T>>
   fromCallable(CallableT &&readFn) {
     struct Processor : public AttrTypeBytecodeReader<T> {
       Processor(CallableT &&readFn)
@@ -55,7 +55,7 @@ public:
 
       std::decay_t<CallableT> readFn;
     };
-    return std::make_unique<Processor>(std::forward<CallableT>(readFn));
+    return std::make_shared<Processor>(std::forward<CallableT>(readFn));
   }
 };
 
@@ -69,11 +69,11 @@ public:
   BytecodeReaderConfig() = default;
 
   /// Returns the callbacks available to the parser.
-  ArrayRef<std::unique_ptr<AttrTypeBytecodeReader<Attribute>>>
+  ArrayRef<std::shared_ptr<AttrTypeBytecodeReader<Attribute>>>
   getAttributeCallbacks() const {
     return attributeBytecodeParsers;
   }
-  ArrayRef<std::unique_ptr<AttrTypeBytecodeReader<Type>>>
+  ArrayRef<std::shared_ptr<AttrTypeBytecodeReader<Type>>>
   getTypeCallbacks() const {
     return typeBytecodeParsers;
   }
@@ -81,11 +81,11 @@ public:
   /// Attach a custom bytecode parser callback to the configuration for parsing
   /// of custom type/attributes encodings.
   void attachAttributeCallback(
-      std::unique_ptr<AttrTypeBytecodeReader<Attribute>> parser) {
+      std::shared_ptr<AttrTypeBytecodeReader<Attribute>> parser) {
     attributeBytecodeParsers.emplace_back(std::move(parser));
   }
   void
-  attachTypeCallback(std::unique_ptr<AttrTypeBytecodeReader<Type>> parser) {
+  attachTypeCallback(std::shared_ptr<AttrTypeBytecodeReader<Type>> parser) {
     typeBytecodeParsers.emplace_back(std::move(parser));
   }
 
@@ -109,9 +109,9 @@ public:
   }
 
 private:
-  llvm::SmallVector<std::unique_ptr<AttrTypeBytecodeReader<Attribute>>>
+  llvm::SmallVector<std::shared_ptr<AttrTypeBytecodeReader<Attribute>>>
       attributeBytecodeParsers;
-  llvm::SmallVector<std::unique_ptr<AttrTypeBytecodeReader<Type>>>
+  llvm::SmallVector<std::shared_ptr<AttrTypeBytecodeReader<Type>>>
       typeBytecodeParsers;
 };
 
