@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/Statistic.h"
-#include "llvm/CodeGen/LivePhysRegs.h"
+#include "llvm/CodeGen/LiveRegUnits.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -49,7 +49,7 @@ namespace {
 /// aformentioned intrinsic to function.
 class StackMapLiveness : public MachineFunctionPass {
   const TargetRegisterInfo *TRI = nullptr;
-  LivePhysRegs LiveRegs;
+  LiveRegUnits LiveRegs;
 
 public:
   static char ID;
@@ -126,8 +126,7 @@ bool StackMapLiveness::calculateLiveness(MachineFunction &MF) {
   for (auto &MBB : MF) {
     LLVM_DEBUG(dbgs() << "****** BB " << MBB.getName() << " ******\n");
     LiveRegs.init(*TRI);
-    // FIXME: This should probably be addLiveOuts().
-    LiveRegs.addLiveOutsNoPristines(MBB);
+    LiveRegs.addLiveOuts(MBB);
     bool HasStackMap = false;
     // Reverse iterate over all instructions and add the current live register
     // set to an instruction if we encounter a patchpoint instruction.
@@ -161,7 +160,7 @@ void StackMapLiveness::addLiveOutSetToMI(MachineFunction &MF,
 uint32_t *StackMapLiveness::createRegisterMask(MachineFunction &MF) const {
   // The mask is owned and cleaned up by the Machine Function.
   uint32_t *Mask = MF.allocateRegMask();
-  for (auto Reg : LiveRegs)
+  for (auto Reg : LiveRegs.getBitVector().set_bits())
     Mask[Reg / 32] |= 1U << (Reg % 32);
 
   // Give the target a chance to adjust the mask.
