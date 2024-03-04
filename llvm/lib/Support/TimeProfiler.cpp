@@ -293,6 +293,16 @@ void llvm::timeTraceProfilerInitialize(unsigned TimeTraceGranularity,
       TimeTraceGranularity, llvm::sys::path::filename(ProcName));
 }
 
+TimeTraceProfiler *llvm::newTimeTraceProfiler(unsigned TimeTraceGranularity,
+                                              StringRef ProcName) {
+  TimeTraceProfiler *Profiler =
+      new TimeTraceProfiler(TimeTraceGranularity, ProcName);
+  auto &Instances = getTimeTraceProfilerInstances();
+  std::lock_guard<std::mutex> Lock(Instances.Lock);
+  Instances.List.push_back(Profiler);
+  return Profiler;
+}
+
 // Removes all TimeTraceProfilerInstances.
 // Called from main thread.
 void llvm::timeTraceProfilerCleanup() {
@@ -353,7 +363,18 @@ void llvm::timeTraceProfilerBegin(StringRef Name,
     TimeTraceProfilerInstance->begin(std::string(Name), Detail);
 }
 
+void llvm::timeTraceProfilerBegin(TimeTraceProfiler *Profiler, StringRef Name,
+                                  StringRef Detail) {
+  if (Profiler != nullptr)
+    Profiler->begin(std::string(Name), [&]() { return std::string(Detail); });
+}
+
 void llvm::timeTraceProfilerEnd() {
   if (TimeTraceProfilerInstance != nullptr)
     TimeTraceProfilerInstance->end();
+}
+
+void llvm::timeTraceProfilerEnd(TimeTraceProfiler *Profiler) {
+  if (Profiler != nullptr)
+    Profiler->end();
 }

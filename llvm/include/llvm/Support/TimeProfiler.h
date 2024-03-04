@@ -86,6 +86,9 @@ class raw_pwrite_stream;
 struct TimeTraceProfiler;
 TimeTraceProfiler *getTimeTraceProfilerInstance();
 
+TimeTraceProfiler *newTimeTraceProfiler(unsigned TimeTraceGranularity = 0,
+                                        StringRef ProcName = "");
+
 /// Initialize the time trace profiler.
 /// This sets up the global \p TimeTraceProfilerInstance
 /// variable to be the profiler instance.
@@ -123,9 +126,12 @@ Error timeTraceProfilerWrite(StringRef PreferredFileName,
 void timeTraceProfilerBegin(StringRef Name, StringRef Detail);
 void timeTraceProfilerBegin(StringRef Name,
                             llvm::function_ref<std::string()> Detail);
+void timeTraceProfilerBegin(TimeTraceProfiler *Profiler, StringRef Name,
+                            StringRef Detail);
 
 /// Manually end the last time section.
 void timeTraceProfilerEnd();
+void timeTraceProfilerEnd(TimeTraceProfiler *Profiler);
 
 /// The TimeTraceScope is a helper class to call the begin and end functions
 /// of the time trace profiler.  When the object is constructed, it begins
