@@ -4342,10 +4342,17 @@ QualType Sema::CheckTemplateIdType(TemplateName Name,
     InstantiatingTemplate Inst(*this, TemplateLoc, Template);
     if (Inst.isInvalid())
       return QualType();
+    if (!AliasTemplate->getDeclContext()->isFileContext()) {
+      ContextRAII SavedContext(*this, AliasTemplate->getDeclContext());
+      CanonType =
+          SubstType(Pattern->getUnderlyingType(), TemplateArgLists,
+                    AliasTemplate->getLocation(), AliasTemplate->getDeclName());
+    } else {
 
-    CanonType = SubstType(Pattern->getUnderlyingType(),
-                          TemplateArgLists, AliasTemplate->getLocation(),
-                          AliasTemplate->getDeclName());
+      CanonType =
+          SubstType(Pattern->getUnderlyingType(), TemplateArgLists,
+                    AliasTemplate->getLocation(), AliasTemplate->getDeclName());
+    }
     if (CanonType.isNull()) {
       // If this was enable_if and we failed to find the nested type
       // within enable_if in a SFINAE context, dig out the specific
