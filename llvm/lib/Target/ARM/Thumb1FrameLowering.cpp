@@ -676,6 +676,14 @@ bool Thumb1FrameLowering::emitPopSpecialFixUp(MachineBasicBlock &MBB,
   LiveRegUnits UsedRegs(TRI);
   UsedRegs.addLiveOuts(MBB);
 
+  // The semantic of pristines changed recently and now,
+  // the callee-saved registers that are touched in the function
+  // are not part of the pristines set anymore.
+  // Add those callee-saved now.
+  const MCPhysReg *CSRegs = TRI.getCalleeSavedRegs(&MF);
+  for (unsigned i = 0; CSRegs[i]; ++i)
+    UsedRegs.addReg(CSRegs[i]);
+
   DebugLoc dl = DebugLoc();
   if (MBBI != MBB.end()) {
     dl = MBBI->getDebugLoc();
