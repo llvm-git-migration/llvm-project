@@ -768,7 +768,7 @@ MachineFunction *MachineOutliner::createOutlinedFunction(
   for (auto &Cand : OF.Candidates) {
     // Figure out live-ins at the first instruction.
     MachineBasicBlock &OutlineBB = *Cand.front().getParent();
-    LivePhysRegs CandLiveIns(TRI);
+    LiveRegUnits CandLiveIns(TRI);
     CandLiveIns.addLiveOuts(OutlineBB);
     for (const MachineInstr &MI :
          reverse(make_range(Cand.begin(), OutlineBB.end())))
@@ -776,7 +776,7 @@ MachineFunction *MachineOutliner::createOutlinedFunction(
 
     // The live-in set for the outlined function is the union of the live-ins
     // from all the outlining points.
-    for (MCPhysReg Reg : CandLiveIns)
+    for (MCPhysReg Reg : CandLiveIns.getBitVector().set_bits())
       LiveIns.addReg(Reg);
   }
   addLiveIns(MBB, LiveIns);
