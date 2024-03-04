@@ -458,6 +458,10 @@ private:
   // user arguments. This is an offset from the KernargSegmentPtr.
   bool ImplicitArgPtr : 1;
 
+  bool WorkGroupSizeX : 1;
+  bool WorkGroupSizeY : 1;
+  bool WorkGroupSizeZ : 1;
+
   bool MayNeedAGPRs : 1;
 
   // The hard-wired high half of the address of the global information table
@@ -740,8 +744,11 @@ public:
   Register addLDSKernelId();
   SmallVectorImpl<MCRegister> *
   addPreloadedKernArg(const SIRegisterInfo &TRI, const TargetRegisterClass *RC,
-                      unsigned AllocSizeDWord, int KernArgIdx,
-                      int PaddingSGPRs);
+                      unsigned AllocSizeDWord, int KernArgIdx, int PaddingSGPRs,
+                      unsigned Offset = 0);
+
+  /// Reserve up to \p Number of user SGPRs.
+  bool allocateUserSGPRs(unsigned Number);
 
   /// Increment user SGPRs used for padding the argument list only.
   Register addReservedUserSGPR() {
@@ -835,6 +842,18 @@ public:
 
   bool hasImplicitArgPtr() const {
     return ImplicitArgPtr;
+  }
+
+  bool hasWorkGroupSizeX() const {
+    return WorkGroupSizeX;
+  }
+
+  bool hasWorkGroupSizeY() const {
+    return WorkGroupSizeY;
+  }
+
+  bool hasWorkGroupSizeZ() const {
+    return WorkGroupSizeZ;
   }
 
   AMDGPUFunctionArgInfo &getArgInfo() {

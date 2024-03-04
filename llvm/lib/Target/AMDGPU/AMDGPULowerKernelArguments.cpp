@@ -13,8 +13,10 @@
 
 #include "AMDGPU.h"
 #include "GCNSubtarget.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/IntrinsicsAMDGPU.h"
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/Target/TargetMachine.h"
@@ -31,9 +33,13 @@ private:
   const GCNSubtarget &ST;
   unsigned NumFreeUserSGPRs;
 
-public:
-  SmallVector<llvm::Metadata *, 8> KernelArgMetadata;
+  enum ImplicitArgOffsets {
+    HIDDEN_GROUP_SIZE_X_OFFSET = 12,
+    HIDDEN_GROUP_SIZE_Y_OFFSET = 14,
+    HIDDEN_GROUP_SIZE_Z_OFFSET = 16,
+  };
 
+public:
   PreloadKernelArgInfo(Function &F, const GCNSubtarget &ST) : F(F), ST(ST) {
     setInitialFreeUserSGPRsCount();
   }
@@ -63,6 +69,111 @@ public:
 
     NumFreeUserSGPRs -= (NumPreloadSGPRs + PaddingSGPRs);
     return true;
+  }
+
+  // Try to allocate SGPRs to preload implicit kernel arguments.
+  void tryAllocImplicitArgPreloadSGPRs(unsigned ImplicitArgsBaseOffset,
+                                       IRBuilder<> &Builder) {
+    unsigned LastExplicitArgOffset = ImplicitArgsBaseOffset;
+    IntrinsicInst *ImplicitArgPtr = nullptr;
+    for (Function::iterator B = F.begin(), BE = F.end(); B != BE; ++B) {
+      for (BasicBlock::iterator I = B->begin(), IE = B->end(); I != IE; ++I) {
+        if (IntrinsicInst *CI = dyn_cast<IntrinsicInst>(I))
+          if (CI->getIntrinsicID() == Intrinsic::amdgcn_implicitarg_ptr) {
+            ImplicitArgPtr = CI;
+            break;
+          }
+      }
+    }
+    if (!ImplicitArgPtr)
+      return;
+    const DataLayout &DL = F.getParent()->getDataLayout();
+    Value *GroupSizes[3] = {nullptr, nullptr, nullptr};
+    for (auto *U : ImplicitArgPtr->users()) {
+      if (!U->hasOneUse())
+        continue;
+
+      // FIXME: The loop below is mostly copied from
+      // AMDGPULowerKernelAttributes.cpp, should combine the logic somewhere.
+      int64_t Offset = 0;
+      auto *Load =
+          dyn_cast<LoadInst>(U); // Load from ImplicitArgPtr/DispatchPtr?
+      auto *BCI = dyn_cast<BitCastInst>(U);
+      if (!Load && !BCI) {
+        if (GetPointerBaseWithConstantOffset(U, Offset, DL) != ImplicitArgPtr)
+          continue;
+        Load = dyn_cast<LoadInst>(*U->user_begin()); // Load from GEP?
+        BCI = dyn_cast<BitCastInst>(*U->user_begin());
+      }
+
+      if (BCI) {
+        if (!BCI->hasOneUse())
+          continue;
+        Load = dyn_cast<LoadInst>(*BCI->user_begin()); // Load from BCI?
+      }
+
+      if (!Load || !Load->isSimple())
+        continue;
+
+      unsigned LoadSize = DL.getTypeStoreSize(Load->getType());
+      switch (Offset) {
+      case HIDDEN_GROUP_SIZE_X_OFFSET:
+        if (LoadSize == 2)
+          GroupSizes[0] = Load;
+        break;
+      case HIDDEN_GROUP_SIZE_Y_OFFSET:
+        if (LoadSize == 2)
+          GroupSizes[1] = Load;
+        break;
+      case HIDDEN_GROUP_SIZE_Z_OFFSET:
+        if (LoadSize == 2)
+          GroupSizes[2] = Load;
+        break;
+      default:
+        break;
+      }
+    }
+
+    // If we fail to preload any implicit argument we know we don't have SGPRs
+    // to preload any subsequent ones with larger offsets.
+    if (GroupSizes[0]) {
+      if (!tryAllocPreloadSGPRs(
+              2, ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_X_OFFSET,
+              LastExplicitArgOffset))
+        return;
+      LastExplicitArgOffset =
+          ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_X_OFFSET + 2;
+      CallInst *CI =
+          Builder.CreateIntrinsic(Intrinsic::amdgcn_workgroup_size_x, {}, {});
+      GroupSizes[0]->replaceAllUsesWith(CI);
+      F.addFnAttr("amdgpu-preload-work-group-size-x");
+    }
+
+    if (GroupSizes[1]) {
+      if (!tryAllocPreloadSGPRs(
+              2, ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_Y_OFFSET,
+              LastExplicitArgOffset))
+        return;
+      LastExplicitArgOffset =
+          ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_Y_OFFSET + 2;
+      CallInst *CI =
+          Builder.CreateIntrinsic(Intrinsic::amdgcn_workgroup_size_y, {}, {});
+      GroupSizes[1]->replaceAllUsesWith(CI);
+      F.addFnAttr("amdgpu-preload-work-group-size-y");
+    }
+
+    if (GroupSizes[2]) {
+      if (!tryAllocPreloadSGPRs(
+              2, ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_Z_OFFSET,
+              LastExplicitArgOffset))
+        return;
+      LastExplicitArgOffset =
+          ImplicitArgsBaseOffset + HIDDEN_GROUP_SIZE_Z_OFFSET + 2;
+      CallInst *CI =
+          Builder.CreateIntrinsic(Intrinsic::amdgcn_workgroup_size_z, {}, {});
+      GroupSizes[2]->replaceAllUsesWith(CI);
+      F.addFnAttr("amdgpu-preload-work-group-size-z");
+    }
   }
 };
 
@@ -281,6 +392,15 @@ static bool lowerKernelArguments(Function &F, const TargetMachine &TM) {
 
   KernArgSegment->addRetAttr(
       Attribute::getWithAlignment(Ctx, std::max(KernArgBaseAlign, MaxAlign)));
+
+  if (InPreloadSequence) {
+    // Alignment for first implicit arg is 4 from hidden_block_count_x.
+    const unsigned FirstImplicitArgAlignment = 4;
+    uint64_t ImplicitArgsBaseOffset =
+        alignTo(ExplicitArgOffset, Align(FirstImplicitArgAlignment)) +
+        BaseOffset;
+    PreloadInfo.tryAllocImplicitArgPreloadSGPRs(ImplicitArgsBaseOffset, Builder);
+  }
 
   return true;
 }

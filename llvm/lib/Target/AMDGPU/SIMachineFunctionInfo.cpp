@@ -42,6 +42,7 @@ SIMachineFunctionInfo::SIMachineFunctionInfo(const Function &F,
       WorkGroupIDZ(false), WorkGroupInfo(false), LDSKernelId(false),
       PrivateSegmentWaveByteOffset(false), WorkItemIDX(false),
       WorkItemIDY(false), WorkItemIDZ(false), ImplicitArgPtr(false),
+      WorkGroupSizeX(false), WorkGroupSizeY(false), WorkGroupSizeZ(false),
       GITPtrHigh(0xffffffff), HighBitsOf32BitAddress(0) {
   const GCNSubtarget &ST = *static_cast<const GCNSubtarget *>(STI);
   FlatWorkGroupSizes = ST.getFlatWorkGroupSizes(F);
@@ -58,6 +59,15 @@ SIMachineFunctionInfo::SIMachineFunctionInfo(const Function &F,
   if (IsKernel) {
     WorkGroupIDX = true;
     WorkItemIDX = true;
+    if (F.hasFnAttribute("amdgpu-preload-work-group-size-x"))
+      WorkGroupSizeX = true;
+
+    if (F.hasFnAttribute("amdgpu-preload-work-group-size-y"))
+      WorkGroupSizeY = true;
+
+    if (F.hasFnAttribute("amdgpu-preload-work-group-size-z"))
+      WorkGroupSizeZ = true;
+
   } else if (CC == CallingConv::AMDGPU_PS) {
     PSInputAddr = AMDGPU::getInitialPSInputAddr(F);
   }
@@ -245,7 +255,8 @@ Register SIMachineFunctionInfo::addLDSKernelId() {
 
 SmallVectorImpl<MCRegister> *SIMachineFunctionInfo::addPreloadedKernArg(
     const SIRegisterInfo &TRI, const TargetRegisterClass *RC,
-    unsigned AllocSizeDWord, int KernArgIdx, int PaddingSGPRs) {
+    unsigned AllocSizeDWord, int KernArgIdx, int PaddingSGPRs,
+    unsigned ByteOffset) {
   assert(!ArgInfo.PreloadKernArgs.count(KernArgIdx) &&
          "Preload kernel argument allocated twice.");
   NumUserSGPRs += PaddingSGPRs;
@@ -254,6 +265,7 @@ SmallVectorImpl<MCRegister> *SIMachineFunctionInfo::addPreloadedKernArg(
   // merge them.
   Register PreloadReg =
       TRI.getMatchingSuperReg(getNextUserSGPR(), AMDGPU::sub0, RC);
+  ArgInfo.PreloadKernArgs[KernArgIdx].ByteOffset = ByteOffset;
   if (PreloadReg &&
       (RC == &AMDGPU::SReg_32RegClass || RC == &AMDGPU::SReg_64RegClass)) {
     ArgInfo.PreloadKernArgs[KernArgIdx].Regs.push_back(PreloadReg);
@@ -268,6 +280,15 @@ SmallVectorImpl<MCRegister> *SIMachineFunctionInfo::addPreloadedKernArg(
   // Track the actual number of SGPRs that HW will preload to.
   UserSGPRInfo.allocKernargPreloadSGPRs(AllocSizeDWord + PaddingSGPRs);
   return &ArgInfo.PreloadKernArgs[KernArgIdx].Regs;
+}
+
+bool SIMachineFunctionInfo::allocateUserSGPRs(
+    unsigned Number) {
+  if (Number <= getNumUserSGPRs())
+    return false;
+
+  NumUserSGPRs = Number;
+  return true;
 }
 
 void SIMachineFunctionInfo::allocateWWMSpill(MachineFunction &MF, Register VGPR,
