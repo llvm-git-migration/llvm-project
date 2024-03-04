@@ -42,11 +42,8 @@ void __attribute__((target_version("ssbs+fp16fml"))) two(void) {}
 //expected-error@+1 {{'main' cannot be a multiversioned function}}
 int __attribute__((target_version("lse"))) main(void) { return 1; }
 
-//expected-note@+1 {{previous definition is here}}
+// It is ok for the default version to appear first.
 int hoo(void) { return 1; }
-//expected-note@-1 {{previous definition is here}}
-//expected-warning@+2 {{attribute declaration must precede definition}}
-//expected-error@+1 {{redefinition of 'hoo'}}
 int __attribute__((target_version("dit"))) hoo(void) { return 2; }
 
 //expected-warning@+1 {{unsupported '' in the 'target_version' attribute string; 'target_version' attribute ignored}}
