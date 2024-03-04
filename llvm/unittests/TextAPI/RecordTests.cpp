@@ -30,6 +30,7 @@ TEST(TAPIRecord, Simple) {
   EXPECT_FALSE(API.isWeakDefined());
   EXPECT_FALSE(API.isWeakReferenced());
   EXPECT_FALSE(API.isVariable());
+  EXPECT_FALSE(API.isInlined());
 }
 
 TEST(TAPIRecord, SimpleObjC) {
