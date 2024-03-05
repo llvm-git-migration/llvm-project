@@ -27,7 +27,7 @@ public:
 
   ~LibcxxStdRangesRefViewSyntheticFrontEnd() override = default;
 
-  size_t CalculateNumChildren() override {
+  uint64_t CalculateNumChildren() override {
     // __range_ will be the sole child of this type
     return 1;
   }

@@ -34,7 +34,7 @@ public:
 
   ~StdlibCoroutineHandleSyntheticFrontEnd() override;
 
-  size_t CalculateNumChildren() override;
+  uint64_t CalculateNumChildren() override;
 
   lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
 
