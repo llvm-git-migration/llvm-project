@@ -6,7 +6,9 @@ typedef enum EnumA {
 } EnumA;
 
 enum EnumB {
-  B
+  B,
+  B1 = 1,
+  B2 = A == B1
 };
 
 enum {
