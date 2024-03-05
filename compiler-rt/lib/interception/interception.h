@@ -205,6 +205,7 @@ const interpose_substitution substitution_##func_name[]             \
          ASM_TYPE_FUNCTION_STR "\n"                                            \
        SANITIZER_STRINGIFY(TRAMPOLINE(func)) ":\n"                             \
        SANITIZER_STRINGIFY(CFI_STARTPROC) "\n"                                 \
+       SANITIZER_STRINGIFY(ASM_PAC_STARTPROC) "\n"                             \
        C_ASM_TAIL_CALL(SANITIZER_STRINGIFY(TRAMPOLINE(func)),                  \
                        "__interceptor_"                                        \
                          SANITIZER_STRINGIFY(ASM_PREEMPTIBLE_SYM(func))) "\n"  \

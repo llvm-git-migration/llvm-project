@@ -42,6 +42,12 @@
 # define CFI_RESTORE(reg)
 #endif
 
+#if defined(__aarch64__)
+# define ASM_PAC_STARTPROC paciasp
+#else
+# define ASM_PAC_STARTPROC
+#endif
+
 #if defined(__x86_64__) || defined(__i386__) || defined(__sparc__)
 # define ASM_TAIL_CALL jmp
 #elif defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
@@ -115,6 +121,7 @@
          ASM_TYPE_FUNCTION(__interceptor_trampoline_##name);                   \
          __interceptor_trampoline_##name:                                      \
                  CFI_STARTPROC;                                                \
+                 ASM_PAC_STARTPROC;                                            \
                  ASM_TAIL_CALL ASM_PREEMPTIBLE_SYM(__interceptor_##name);      \
                  CFI_ENDPROC;                                                  \
          ASM_SIZE(__interceptor_trampoline_##name)
