@@ -164,7 +164,7 @@ class ValueObjectRecognizerSynthesizedValue : public ValueObject {
     m_value = m_parent->GetValue();
     return true;
   }
-  size_t CalculateNumChildren(uint32_t max = UINT32_MAX) override {
+  uint64_t CalculateNumChildren(uint64_t max = UINT32_MAX) override {
     return m_parent->GetNumChildren(max);
   }
   CompilerType GetCompilerTypeImpl() override {

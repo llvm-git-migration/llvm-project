@@ -94,7 +94,7 @@ ConstString ValueObjectVariable::GetQualifiedTypeName() {
   return ConstString();
 }
 
-size_t ValueObjectVariable::CalculateNumChildren(uint32_t max) {
+uint64_t ValueObjectVariable::CalculateNumChildren(uint64_t max) {
   CompilerType type(GetCompilerType());
 
   if (!type.IsValid())

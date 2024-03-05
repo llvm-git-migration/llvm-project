@@ -33,7 +33,7 @@ public:
 
   std::optional<uint64_t> GetByteSize() override;
 
-  size_t CalculateNumChildren(uint32_t max) override;
+  uint64_t CalculateNumChildren(uint64_t max) override;
 
   lldb::ValueType GetValueType() const override;
 
