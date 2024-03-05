@@ -43,7 +43,7 @@ public:
   bool MightHaveChildren() override { return true; }
   uint64_t CalculateNumChildren() override { return m_has_value ? 1U : 0U; }
 
-  ValueObjectSP GetChildAtIndex(size_t idx) override;
+  ValueObjectSP GetChildAtIndex(uint64_t idx) override;
   lldb::ChildCacheState Update() override;
 
 private:
@@ -81,7 +81,7 @@ lldb::ChildCacheState GenericOptionalFrontend::Update() {
   return lldb::ChildCacheState::eRefetch;
 }
 
-ValueObjectSP GenericOptionalFrontend::GetChildAtIndex(size_t _idx) {
+ValueObjectSP GenericOptionalFrontend::GetChildAtIndex(uint64_t _idx) {
   if (!m_has_value)
     return ValueObjectSP();
 

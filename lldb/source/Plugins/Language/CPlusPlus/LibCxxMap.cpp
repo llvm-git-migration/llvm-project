@@ -179,7 +179,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 
@@ -308,7 +308,7 @@ void lldb_private::formatters::LibcxxStdMapSyntheticFrontEnd::GetValueOffset(
 
 lldb::ValueObjectSP
 lldb_private::formatters::LibcxxStdMapSyntheticFrontEnd::GetChildAtIndex(
-    size_t idx) {
+    uint64_t idx) {
   static ConstString g_cc_("__cc_"), g_cc("__cc");
   static ConstString g_nc("__nc");
 

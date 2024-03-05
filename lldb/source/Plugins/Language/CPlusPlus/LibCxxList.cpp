@@ -137,7 +137,7 @@ public:
   ForwardListFrontEnd(ValueObject &valobj);
 
   uint64_t CalculateNumChildren() override;
-  ValueObjectSP GetChildAtIndex(size_t idx) override;
+  ValueObjectSP GetChildAtIndex(uint64_t idx) override;
   lldb::ChildCacheState Update() override;
 };
 
@@ -149,7 +149,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 
@@ -253,7 +253,7 @@ uint64_t ForwardListFrontEnd::CalculateNumChildren() {
   return m_count;
 }
 
-ValueObjectSP ForwardListFrontEnd::GetChildAtIndex(size_t idx) {
+ValueObjectSP ForwardListFrontEnd::GetChildAtIndex(uint64_t idx) {
   if (idx >= CalculateNumChildren())
     return nullptr;
 
@@ -343,7 +343,7 @@ uint64_t ListFrontEnd::CalculateNumChildren() {
   }
 }
 
-lldb::ValueObjectSP ListFrontEnd::GetChildAtIndex(size_t idx) {
+lldb::ValueObjectSP ListFrontEnd::GetChildAtIndex(uint64_t idx) {
   static ConstString g_value("__value_");
   static ConstString g_next("__next_");
 

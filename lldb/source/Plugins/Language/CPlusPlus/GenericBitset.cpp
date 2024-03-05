@@ -35,7 +35,7 @@ public:
   bool MightHaveChildren() override { return true; }
   lldb::ChildCacheState Update() override;
   uint64_t CalculateNumChildren() override { return m_elements.size(); }
-  ValueObjectSP GetChildAtIndex(size_t idx) override;
+  ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
 private:
   llvm::StringRef GetDataContainerMemberName();
@@ -97,7 +97,7 @@ lldb::ChildCacheState GenericBitsetFrontEnd::Update() {
   return lldb::ChildCacheState::eRefetch;
 }
 
-ValueObjectSP GenericBitsetFrontEnd::GetChildAtIndex(size_t idx) {
+ValueObjectSP GenericBitsetFrontEnd::GetChildAtIndex(uint64_t idx) {
   if (idx >= m_elements.size() || !m_first)
     return ValueObjectSP();
 

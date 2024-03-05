@@ -28,7 +28,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 
@@ -89,7 +89,7 @@ lldb::ChildCacheState LibStdcppTupleSyntheticFrontEnd::Update() {
 bool LibStdcppTupleSyntheticFrontEnd::MightHaveChildren() { return true; }
 
 lldb::ValueObjectSP
-LibStdcppTupleSyntheticFrontEnd::GetChildAtIndex(size_t idx) {
+LibStdcppTupleSyntheticFrontEnd::GetChildAtIndex(uint64_t idx) {
   if (idx < m_members.size() && m_members[idx])
     return m_members[idx]->GetSP();
   return lldb::ValueObjectSP();

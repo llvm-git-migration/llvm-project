@@ -26,7 +26,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 

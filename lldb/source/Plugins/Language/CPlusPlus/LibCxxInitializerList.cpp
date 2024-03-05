@@ -28,7 +28,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 
@@ -69,7 +69,7 @@ uint64_t lldb_private::formatters::LibcxxInitializerListSyntheticFrontEnd::
 }
 
 lldb::ValueObjectSP lldb_private::formatters::
-    LibcxxInitializerListSyntheticFrontEnd::GetChildAtIndex(size_t idx) {
+    LibcxxInitializerListSyntheticFrontEnd::GetChildAtIndex(uint64_t idx) {
   if (!m_start)
     return lldb::ValueObjectSP();
 

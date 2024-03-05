@@ -92,7 +92,7 @@ public:
 
   uint64_t CalculateNumChildren() override;
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override;
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override;
 
   lldb::ChildCacheState Update() override;
 
@@ -131,7 +131,7 @@ uint64_t lldb_private::formatters::LibcxxStdAtomicSyntheticFrontEnd::
 
 lldb::ValueObjectSP
 lldb_private::formatters::LibcxxStdAtomicSyntheticFrontEnd::GetChildAtIndex(
-    size_t idx) {
+    uint64_t idx) {
   if (idx == 0)
     return m_real_child->GetSP()->Clone(ConstString("Value"));
   return nullptr;

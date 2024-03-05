@@ -42,7 +42,7 @@ public:
 
   uint64_t CalculateNumChildren() override { return m_impl.GetNumIndexes(); }
 
-  lldb::ValueObjectSP GetChildAtIndex(size_t idx) override {
+  lldb::ValueObjectSP GetChildAtIndex(uint64_t idx) override {
     return m_impl.GetIndexAtIndex(idx, m_uint_star_type);
   }
 
