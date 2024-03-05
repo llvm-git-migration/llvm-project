@@ -880,3 +880,25 @@ define <vscale x 2 x i64>  @vload_nx2i64_align32(ptr %pa) {
   ret <vscale x 2 x i64> %va
 }
 
+define <vscale x 8 x i64*>  @vload_nx8i64_ptrs(ptr %pa) {
+  ; RV32-LABEL: name: vload_nx8i64_ptrs
+  ; RV32: bb.1 (%ir-block.0):
+  ; RV32-NEXT:   liveins: $x10
+  ; RV32-NEXT: {{  $}}
+  ; RV32-NEXT:   [[COPY:%[0-9]+]]:_(p0) = COPY $x10
+  ; RV32-NEXT:   [[LOAD:%[0-9]+]]:_(<vscale x 8 x p0>) = G_LOAD [[COPY]](p0) :: (load (<vscale x 8 x p0>) from %ir.pa)
+  ; RV32-NEXT:   $v8m4 = COPY [[LOAD]](<vscale x 8 x p0>)
+  ; RV32-NEXT:   PseudoRET implicit $v8m4
+  ;
+  ; RV64-LABEL: name: vload_nx8i64_ptrs
+  ; RV64: bb.1 (%ir-block.0):
+  ; RV64-NEXT:   liveins: $x10
+  ; RV64-NEXT: {{  $}}
+  ; RV64-NEXT:   [[COPY:%[0-9]+]]:_(p0) = COPY $x10
+  ; RV64-NEXT:   [[LOAD:%[0-9]+]]:_(<vscale x 8 x p0>) = G_LOAD [[COPY]](p0) :: (load (<vscale x 8 x p0>) from %ir.pa)
+  ; RV64-NEXT:   $v8m8 = COPY [[LOAD]](<vscale x 8 x p0>)
+  ; RV64-NEXT:   PseudoRET implicit $v8m8
+  %va = load <vscale x 8 x i64*>, ptr %pa
+  ret <vscale x 8 x i64*> %va
+}
+
