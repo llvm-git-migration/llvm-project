@@ -10,7 +10,6 @@
 
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
-
 #include "src/errno/libc_errno.h"
 #include <sys/syscall.h> // For syscall numbers.
 
@@ -20,6 +19,7 @@
 // #include "include/llvm-libc-types/struct_timespec.h"
 
 #include <sys/epoll.h>
+#include <signal.h> // for NSIG
 
 namespace LIBC_NAMESPACE {
 
@@ -29,7 +29,7 @@ LLVM_LIBC_FUNCTION(int, epoll_pwait2,
   int ret = LIBC_NAMESPACE::syscall_impl<int>(
       SYS_epoll_pwait2, epfd, reinterpret_cast<long>(events), maxevents,
       reinterpret_cast<long>(timeout), reinterpret_cast<long>(sigmask),
-      sizeof(sigset_t));
+      NSIG / 8);
 
   // A negative return value indicates an error with the magnitude of the
   // value being the error code.
@@ -38,7 +38,7 @@ LLVM_LIBC_FUNCTION(int, epoll_pwait2,
     return -1;
   }
 
-  return 0;
+  return ret;
 }
 
 } // namespace LIBC_NAMESPACE
