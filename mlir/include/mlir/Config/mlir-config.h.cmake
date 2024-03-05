@@ -33,4 +33,7 @@
    and targets. */
 #cmakedefine01 MLIR_ENABLE_CUDA_CONVERSIONS
 
+/* If set, enable deprecated serialization passes. */
+#cmakedefine01 MLIR_DEPRECATED_GPU_SERIALIZATION_ENABLE
+
 #endif
