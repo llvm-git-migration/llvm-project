@@ -40,8 +40,8 @@ define void @test(ptr %B) {
 ;
 ; AVX512-LABEL: 'test'
 ; AVX512:  LV: Found an estimated cost of 1 for VF 1 For instruction: %valB.loaded = load i16, ptr %inB, align 2
-; AVX512:  LV: Found an estimated cost of 2 for VF 2 For instruction: %valB.loaded = load i16, ptr %inB, align 2
-; AVX512:  LV: Found an estimated cost of 2 for VF 4 For instruction: %valB.loaded = load i16, ptr %inB, align 2
+; AVX512:  LV: Found an estimated cost of 1 for VF 2 For instruction: %valB.loaded = load i16, ptr %inB, align 2
+; AVX512:  LV: Found an estimated cost of 1 for VF 4 For instruction: %valB.loaded = load i16, ptr %inB, align 2
 ; AVX512:  LV: Found an estimated cost of 1 for VF 8 For instruction: %valB.loaded = load i16, ptr %inB, align 2
 ; AVX512:  LV: Found an estimated cost of 1 for VF 16 For instruction: %valB.loaded = load i16, ptr %inB, align 2
 ; AVX512:  LV: Found an estimated cost of 1 for VF 32 For instruction: %valB.loaded = load i16, ptr %inB, align 2

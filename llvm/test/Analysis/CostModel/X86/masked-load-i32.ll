@@ -24,7 +24,7 @@ define void @test(ptr %B) {
 ;
 ; AVX1-LABEL: 'test'
 ; AVX1:  LV: Found an estimated cost of 1 for VF 1 For instruction: %valB.loaded = load i32, ptr %inB, align 4
-; AVX1:  LV: Found an estimated cost of 3 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
+; AVX1:  LV: Found an estimated cost of 2 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX1:  LV: Found an estimated cost of 2 for VF 4 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX1:  LV: Found an estimated cost of 2 for VF 8 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX1:  LV: Found an estimated cost of 4 for VF 16 For instruction: %valB.loaded = load i32, ptr %inB, align 4
@@ -32,7 +32,7 @@ define void @test(ptr %B) {
 ;
 ; AVX2-LABEL: 'test'
 ; AVX2:  LV: Found an estimated cost of 1 for VF 1 For instruction: %valB.loaded = load i32, ptr %inB, align 4
-; AVX2:  LV: Found an estimated cost of 3 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
+; AVX2:  LV: Found an estimated cost of 2 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX2:  LV: Found an estimated cost of 2 for VF 4 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX2:  LV: Found an estimated cost of 2 for VF 8 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX2:  LV: Found an estimated cost of 4 for VF 16 For instruction: %valB.loaded = load i32, ptr %inB, align 4
@@ -40,7 +40,7 @@ define void @test(ptr %B) {
 ;
 ; AVX512-LABEL: 'test'
 ; AVX512:  LV: Found an estimated cost of 1 for VF 1 For instruction: %valB.loaded = load i32, ptr %inB, align 4
-; AVX512:  LV: Found an estimated cost of 2 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
+; AVX512:  LV: Found an estimated cost of 1 for VF 2 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX512:  LV: Found an estimated cost of 1 for VF 4 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX512:  LV: Found an estimated cost of 1 for VF 8 For instruction: %valB.loaded = load i32, ptr %inB, align 4
 ; AVX512:  LV: Found an estimated cost of 1 for VF 16 For instruction: %valB.loaded = load i32, ptr %inB, align 4
