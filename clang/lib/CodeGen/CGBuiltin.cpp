@@ -17996,7 +17996,7 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
            "Dot product requires vectors to be of the same size.");
 
     return Builder.CreateIntrinsic(
-        /*ReturnType*/ T0->getScalarType(), Intrinsic::dx_dot,
+        /*ReturnType=*/T0->getScalarType(), Intrinsic::dx_dot,
         ArrayRef<Value *>{Op0, Op1}, nullptr, "dx.dot");
   } break;
   case Builtin::BI__builtin_hlsl_lerp: {
@@ -18033,7 +18033,7 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
            XVecTy->getElementType() == SVecTy->getElementType() &&
            "Lerp requires float vectors to be of the same type.");
     return Builder.CreateIntrinsic(
-        /*ReturnType*/ Xty, Intrinsic::dx_lerp, ArrayRef<Value *>{X, Y, S},
+        /*ReturnType=*/Xty, Intrinsic::dx_lerp, ArrayRef<Value *>{X, Y, S},
         nullptr, "dx.lerp");
   }
   case Builtin::BI__builtin_hlsl_elementwise_frac: {
@@ -18041,7 +18041,7 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
     if (!E->getArg(0)->getType()->hasFloatingRepresentation())
       llvm_unreachable("frac operand must have a float representation");
     return Builder.CreateIntrinsic(
-        /*ReturnType*/ Op0->getType(), Intrinsic::dx_frac,
+        /*ReturnType=*/Op0->getType(), Intrinsic::dx_frac,
         ArrayRef<Value *>{Op0}, nullptr, "dx.frac");
   }
   case Builtin::BI__builtin_hlsl_elementwise_rcp: {
@@ -18049,7 +18049,7 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
     if (!E->getArg(0)->getType()->hasFloatingRepresentation())
       llvm_unreachable("rcp operand must have a float representation");
     return Builder.CreateIntrinsic(
-        /*ReturnType*/ Op0->getType(), Intrinsic::dx_rcp,
+        /*ReturnType=*/Op0->getType(), Intrinsic::dx_rcp,
         ArrayRef<Value *>{Op0}, nullptr, "dx.rcp");
   }
   }
