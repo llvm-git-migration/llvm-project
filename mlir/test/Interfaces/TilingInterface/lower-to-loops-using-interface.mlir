@@ -11,7 +11,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %matmul = transform.structured.match ops{["linalg.matmul"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %matmul : !transform.any_op
+    %0:3 = transform.structured.convert_to_loops %matmul
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -66,7 +67,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %generic = transform.structured.match ops{["linalg.generic"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %generic : !transform.any_op
+    %0:2 = transform.structured.convert_to_loops %generic
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -111,7 +113,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %conv = transform.structured.match ops{["linalg.conv_2d_nhwc_hwcf"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %conv : !transform.any_op
+    %0:7 = transform.structured.convert_to_loops %conv
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -165,7 +168,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %pool = transform.structured.match ops{["linalg.pooling_nhwc_max"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %pool : !transform.any_op
+    %0:6 = transform.structured.convert_to_loops %pool
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -216,7 +220,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %map = transform.structured.match ops{["linalg.map"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %map : !transform.any_op
+    %0 = transform.structured.convert_to_loops %map
+      : (!transform.any_op) -> (!transform.any_op)
     transform.yield
   }
 }
@@ -248,7 +253,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %transpose = transform.structured.match ops{["linalg.transpose"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %transpose : !transform.any_op
+    %0:3 = transform.structured.convert_to_loops %transpose
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -285,7 +291,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %reduce = transform.structured.match ops{["linalg.reduce"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %reduce : !transform.any_op
+    %0:3 = transform.structured.convert_to_loops %reduce
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }
@@ -322,7 +329,8 @@ module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1 : !transform.any_op {transform.readonly}) {
     %broadcast = transform.structured.match ops{["linalg.broadcast"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
-    transform.structured.convert_to_loops %broadcast : !transform.any_op
+    %0:3 = transform.structured.convert_to_loops %broadcast
+      : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
     transform.yield
   }
 }

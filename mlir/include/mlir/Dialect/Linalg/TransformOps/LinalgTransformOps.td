@@ -1281,14 +1281,14 @@ def ConvertToLoopsOp : Op<Transform_Dialect, "structured.convert_to_loops",
   let description = [{
     For operations that implement the `TilingInterface`, and implement
     the `generateScalarImplementation` method, lowers the operation to
-    loops. This operation does not return any handles.
+    loops. The return handles point to the generated loops.
   }];
 
   let arguments = (ins TransformHandleTypeInterface:$target);
-  let results = (outs);
+  let results = (outs Variadic<TransformHandleTypeInterface>:$result);
 
   let assemblyFormat = [{
-    $target attr-dict `:` type($target)
+    $target attr-dict `:` functional-type(operands, results)
   }];
 
   let extraClassDeclaration = [{

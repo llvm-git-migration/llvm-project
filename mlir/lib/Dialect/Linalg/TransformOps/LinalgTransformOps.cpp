@@ -2122,6 +2122,9 @@ DiagnosedSilenceableFailure transform::ConvertToLoopsOp::applyToOne(
   if (failed(loops))
     return emitDefaultDefiniteFailure(target);
   rewriter.eraseOp(target);
+  for (auto &loop : *loops) {
+    results.push_back(loop);
+  }
   return DiagnosedSilenceableFailure::success();
 }
 
