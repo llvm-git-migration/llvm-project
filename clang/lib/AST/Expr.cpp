@@ -2237,6 +2237,11 @@ bool BinaryOperator::isNullPointerArithmeticExtension(ASTContext &Ctx,
   return true;
 }
 
+bool BinaryOperator::hasWrappingOperand(const ASTContext &Ctx) const {
+  return getLHS()->getType().hasWrapsAttr() ||
+         getRHS()->getType().hasWrapsAttr();
+}
+
 SourceLocExpr::SourceLocExpr(const ASTContext &Ctx, SourceLocIdentKind Kind,
                              QualType ResultTy, SourceLocation BLoc,
                              SourceLocation RParenLoc,
@@ -4754,6 +4759,8 @@ BinaryOperator::BinaryOperator(const ASTContext &Ctx, Expr *lhs, Expr *rhs,
   if (hasStoredFPFeatures())
     setStoredFPFeatures(FPFeatures);
   setDependence(computeDependence(this));
+  if (hasWrappingOperand(Ctx))
+    setType(Ctx.getAttributedType(attr::Wraps, getType(), getType()));
 }
 
 BinaryOperator::BinaryOperator(const ASTContext &Ctx, Expr *lhs, Expr *rhs,
@@ -4771,6 +4778,8 @@ BinaryOperator::BinaryOperator(const ASTContext &Ctx, Expr *lhs, Expr *rhs,
   if (hasStoredFPFeatures())
     setStoredFPFeatures(FPFeatures);
   setDependence(computeDependence(this));
+  if (hasWrappingOperand(Ctx))
+    setType(Ctx.getAttributedType(attr::Wraps, getType(), getType()));
 }
 
 BinaryOperator *BinaryOperator::CreateEmpty(const ASTContext &C,
