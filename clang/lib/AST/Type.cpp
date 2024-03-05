@@ -2875,6 +2875,10 @@ bool QualType::isTriviallyEqualityComparableType(
       CanonicalType, /*CheckIfTriviallyCopyable=*/false);
 }
 
+bool QualType::hasWrapsAttr() const {
+  return !isNull() && getTypePtr()->hasAttr(attr::Wraps);
+}
+
 bool QualType::isNonWeakInMRRWithObjCWeak(const ASTContext &Context) const {
   return !Context.getLangOpts().ObjCAutoRefCount &&
          Context.getLangOpts().ObjCWeak &&
