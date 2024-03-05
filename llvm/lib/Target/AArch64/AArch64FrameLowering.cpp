@@ -197,6 +197,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/LivePhysRegs.h"
+#include "llvm/CodeGen/LiveRegUnits.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -988,7 +989,7 @@ void AArch64FrameLowering::emitZeroCallUsedRegs(BitVector RegsToZero,
   }
 }
 
-static void getLiveRegsForEntryMBB(LivePhysRegs &LiveRegs,
+static void getLiveRegsForEntryMBB(LiveRegUnits &LiveRegs,
                                    const MachineBasicBlock &MBB) {
   const MachineFunction *MF = MBB.getParent();
   LiveRegs.addLiveIns(MBB);
@@ -1018,16 +1019,15 @@ static Register findScratchNonCalleeSaveRegister(MachineBasicBlock *MBB) {
 
   const AArch64Subtarget &Subtarget = MF->getSubtarget<AArch64Subtarget>();
   const AArch64RegisterInfo &TRI = *Subtarget.getRegisterInfo();
-  LivePhysRegs LiveRegs(TRI);
+  LiveRegUnits LiveRegs(TRI);
   getLiveRegsForEntryMBB(LiveRegs, *MBB);
 
   // Prefer X9 since it was historically used for the prologue scratch reg.
-  const MachineRegisterInfo &MRI = MF->getRegInfo();
-  if (LiveRegs.available(MRI, AArch64::X9))
+  if (LiveRegs.available(AArch64::X9))
     return AArch64::X9;
 
-  for (unsigned Reg : AArch64::GPR64RegClass) {
-    if (LiveRegs.available(MRI, Reg))
+  for (Register Reg : AArch64::GPR64RegClass) {
+    if (LiveRegs.available(Reg))
       return Reg;
   }
   return AArch64::NoRegister;
@@ -1044,13 +1044,11 @@ bool AArch64FrameLowering::canUseAsPrologue(
 
   if (AFI->hasSwiftAsyncContext()) {
     const AArch64RegisterInfo &TRI = *Subtarget.getRegisterInfo();
-    const MachineRegisterInfo &MRI = MF->getRegInfo();
-    LivePhysRegs LiveRegs(TRI);
+    LiveRegUnits LiveRegs(TRI);
     getLiveRegsForEntryMBB(LiveRegs, MBB);
     // The StoreSwiftAsyncContext clobbers X16 and X17. Make sure they are
     // available.
-    if (!LiveRegs.available(MRI, AArch64::X16) ||
-        !LiveRegs.available(MRI, AArch64::X17))
+    if (!LiveRegs.available(AArch64::X16) || !LiveRegs.available(AArch64::X17))
       return false;
   }
 
