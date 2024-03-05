@@ -33,4 +33,7 @@
    and targets. */
 #cmakedefine01 MLIR_ENABLE_CUDA_CONVERSIONS
 
+/* If set, enables features that depend on the NVIDIA's PTX compiler. */
+#cmakedefine01 MLIR_ENABLE_NVPTXCOMPILER
+
 #endif
