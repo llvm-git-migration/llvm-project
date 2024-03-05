@@ -351,6 +351,11 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
     // $f10_d = COPY %1(s32)
     if (anyUseOnlyUseFP(Dst, MRI, TRI))
       Mapping = getFPValueMapping(MRI.getType(Dst).getSizeInBits());
+
+    LLT DstTy = MRI.getType(Dst);
+    if (DstTy.isVector())
+      Mapping = getVRBValueMapping(DstTy.getSizeInBits().getKnownMinValue());
+
     return getInstructionMapping(DefaultMappingID, /*Cost=*/1, Mapping,
                                  NumOperands);
   }
