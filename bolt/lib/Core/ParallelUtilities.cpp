@@ -106,7 +106,7 @@ ThreadPool &getThreadPool() {
   if (ThreadPoolPtr.get())
     return *ThreadPoolPtr;
 
-  ThreadPoolPtr = std::make_unique<ThreadPool>(
+  ThreadPoolPtr = std::make_unique<DefaultThreadPool>(
       llvm::hardware_concurrency(opts::ThreadCount));
   return *ThreadPoolPtr;
 }
