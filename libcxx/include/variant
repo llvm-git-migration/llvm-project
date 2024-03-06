@@ -42,27 +42,28 @@ namespace std {
         in_place_index_t<I>, initializer_list<U>, Args&&...);
 
     // 20.7.2.2, destructor
-    constexpr ~variant();  // constexpr since c++20
+    constexpr ~variant();                                             // constexpr since c++20
 
     // 20.7.2.3, assignment
     constexpr variant& operator=(const variant&);
     constexpr variant& operator=(variant&&) noexcept(see below);
 
     template <class T>
-    constexpr variant& operator=(T&&) noexcept(see below); // constexpr since c++20
+    constexpr variant& operator=(T&&) noexcept(see below);            // constexpr since c++20
 
     // 20.7.2.4, modifiers
     template <class T, class... Args>
-    constexpr T& emplace(Args&&...);  // constexpr since c++20
+    constexpr T& emplace(Args&&...);                                  // constexpr since c++20
 
     template <class T, class U, class... Args>
-    constexpr T& emplace(initializer_list<U>, Args&&...);  // constexpr since c++20
+    constexpr T& emplace(initializer_list<U>, Args&&...);             // constexpr since c++20
 
     template <size_t I, class... Args>
     constexpr variant_alternative_t<I, variant>& emplace(Args&&...);  // constexpr since c++20
 
     template <size_t I, class U, class...  Args>
-    constexpr variant_alternative_t<I, variant>& emplace(initializer_list<U>, Args&&...);  // constexpr since c++20
+    constexpr variant_alternative_t<I, variant>& 
+        emplace(initializer_list<U>, Args&&...);                      // constexpr since c++20
 
     // 20.7.2.5, value status
     constexpr bool valueless_by_exception() const noexcept;
