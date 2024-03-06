@@ -235,6 +235,7 @@ public:
   LLT getMemoryType() const { return MemoryType; }
 
   /// Return the size in bytes of the memory reference.
+  // TODO: should return TypeSize
   uint64_t getSize() const {
     return MemoryType.isValid() ? MemoryType.getSizeInBytes() : ~UINT64_C(0);
   }
