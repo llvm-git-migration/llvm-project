@@ -24,6 +24,7 @@
 #include "llvm/Support/ManagedStatic.h" // llvm_shutdown
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/TargetParser/Host.h"
 #include <optional>
 
 // Disable LSan for this test.
@@ -109,7 +110,8 @@ ReplListCompleter::operator()(llvm::StringRef Buffer, size_t Pos,
   std::vector<llvm::LineEditor::Completion> Comps;
   std::vector<std::string> Results;
 
-  auto CI = CB.CreateCpp();
+  llvm::Triple TT(MainInterp.getCompilerInstance()->getTargetOpts().Triple);
+  auto CI = CB.CreateCpp(TT);
   if (auto Err = CI.takeError()) {
     ErrRes = std::move(Err);
     return {};
@@ -167,6 +169,8 @@ int main(int argc, const char **argv) {
   clang::IncrementalCompilerBuilder CB;
   CB.SetCompilerArgs(ClangArgv);
 
+  llvm::Triple TT(llvm::sys::getProcessTriple());
+
   std::unique_ptr<clang::CompilerInstance> DeviceCI;
   if (CudaEnabled) {
     if (!CudaPath.empty())
@@ -177,16 +181,16 @@ int main(int argc, const char **argv) {
     }
     CB.SetOffloadArch(OffloadArch);
 
-    DeviceCI = ExitOnErr(CB.CreateCudaDevice());
+    DeviceCI = ExitOnErr(CB.CreateCudaDevice(TT));
   }
 
   // FIXME: Investigate if we could use runToolOnCodeWithArgs from tooling. It
   // can replace the boilerplate code for creation of the compiler instance.
   std::unique_ptr<clang::CompilerInstance> CI;
   if (CudaEnabled) {
-    CI = ExitOnErr(CB.CreateCudaHost());
+    CI = ExitOnErr(CB.CreateCudaHost(TT));
   } else {
-    CI = ExitOnErr(CB.CreateCpp());
+    CI = ExitOnErr(CB.CreateCpp(TT));
   }
 
   // Set an error handler, so that any LLVM backend diagnostics go through our

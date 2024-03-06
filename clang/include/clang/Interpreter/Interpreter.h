@@ -49,7 +49,7 @@ public:
   }
 
   // General C++
-  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCpp();
+  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCpp(llvm::Triple TT);
 
   // Offload options
   void SetOffloadArch(llvm::StringRef Arch) { OffloadArch = Arch; };
@@ -57,14 +57,17 @@ public:
   // CUDA specific
   void SetCudaSDK(llvm::StringRef path) { CudaSDKPath = path; };
 
-  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCudaHost();
-  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCudaDevice();
+  llvm::Expected<std::unique_ptr<CompilerInstance>>
+  CreateCudaHost(llvm::Triple TT);
+  llvm::Expected<std::unique_ptr<CompilerInstance>>
+  CreateCudaDevice(llvm::Triple TT);
 
 private:
   static llvm::Expected<std::unique_ptr<CompilerInstance>>
-  create(std::vector<const char *> &ClangArgv);
+  create(llvm::Triple TT, std::vector<const char *> &ClangArgv);
 
-  llvm::Expected<std::unique_ptr<CompilerInstance>> createCuda(bool device);
+  llvm::Expected<std::unique_ptr<CompilerInstance>> createCuda(llvm::Triple TT,
+                                                               bool device);
 
   std::vector<const char *> UserArgs;
 

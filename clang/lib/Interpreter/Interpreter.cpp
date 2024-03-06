@@ -132,7 +132,8 @@ CreateCI(const llvm::opt::ArgStringList &Argv) {
 } // anonymous namespace
 
 llvm::Expected<std::unique_ptr<CompilerInstance>>
-IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
+IncrementalCompilerBuilder::create(llvm::Triple TT,
+                                   std::vector<const char *> &ClangArgv) {
 
   // If we don't know ClangArgv0 or the address of main() at this point, try
   // to guess it anyway (it's possible on some platforms).
@@ -162,8 +163,7 @@ IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
   TextDiagnosticBuffer *DiagsBuffer = new TextDiagnosticBuffer;
   DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagsBuffer);
 
-  driver::Driver Driver(/*MainBinaryName=*/ClangArgv[0],
-                        llvm::sys::getProcessTriple(), Diags);
+  driver::Driver Driver(/*MainBinaryName=*/ClangArgv[0], TT.str(), Diags);
   Driver.setCheckInputsExist(false); // the input comes from mem buffers
   llvm::ArrayRef<const char *> RF = llvm::ArrayRef(ClangArgv);
   std::unique_ptr<driver::Compilation> Compilation(Driver.BuildCompilation(RF));
@@ -179,17 +179,17 @@ IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
 }
 
 llvm::Expected<std::unique_ptr<CompilerInstance>>
-IncrementalCompilerBuilder::CreateCpp() {
+IncrementalCompilerBuilder::CreateCpp(llvm::Triple TT) {
   std::vector<const char *> Argv;
   Argv.reserve(5 + 1 + UserArgs.size());
   Argv.push_back("-xc++");
   Argv.insert(Argv.end(), UserArgs.begin(), UserArgs.end());
 
-  return IncrementalCompilerBuilder::create(Argv);
+  return IncrementalCompilerBuilder::create(TT, Argv);
 }
 
 llvm::Expected<std::unique_ptr<CompilerInstance>>
-IncrementalCompilerBuilder::createCuda(bool device) {
+IncrementalCompilerBuilder::createCuda(llvm::Triple TT, bool device) {
   std::vector<const char *> Argv;
   Argv.reserve(5 + 4 + UserArgs.size());
 
@@ -213,17 +213,17 @@ IncrementalCompilerBuilder::createCuda(bool device) {
 
   Argv.insert(Argv.end(), UserArgs.begin(), UserArgs.end());
 
-  return IncrementalCompilerBuilder::create(Argv);
+  return IncrementalCompilerBuilder::create(TT, Argv);
 }
 
 llvm::Expected<std::unique_ptr<CompilerInstance>>
-IncrementalCompilerBuilder::CreateCudaDevice() {
-  return IncrementalCompilerBuilder::createCuda(true);
+IncrementalCompilerBuilder::CreateCudaDevice(llvm::Triple TT) {
+  return IncrementalCompilerBuilder::createCuda(TT, true);
 }
 
 llvm::Expected<std::unique_ptr<CompilerInstance>>
-IncrementalCompilerBuilder::CreateCudaHost() {
-  return IncrementalCompilerBuilder::createCuda(false);
+IncrementalCompilerBuilder::CreateCudaHost(llvm::Triple TT) {
+  return IncrementalCompilerBuilder::createCuda(TT, false);
 }
 
 Interpreter::Interpreter(std::unique_ptr<CompilerInstance> CI,
