@@ -20448,17 +20448,18 @@ Decl *Sema::ActOnFileScopeAsmDecl(Expr *expr,
 
 TopLevelStmtDecl *Sema::ActOnStartTopLevelStmtDecl(Scope *S) {
   auto *New = TopLevelStmtDecl::Create(Context, /*Statement=*/nullptr);
+  CurContext->addDecl(New);
+  PushDeclContext(S, New);
   PushFunctionScope();
   PushCompoundScope(false);
-  PushDeclContext(S, New);
   return New;
 }
 
 void Sema::ActOnFinishTopLevelStmtDecl(TopLevelStmtDecl *D, Stmt *Statement) {
   D->setStmt(Statement);
-  PopDeclContext();
   PopCompoundScope();
   PopFunctionScopeInfo();
+  PopDeclContext();
 }
 
 void Sema::ActOnPragmaRedefineExtname(IdentifierInfo* Name,
