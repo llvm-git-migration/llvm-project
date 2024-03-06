@@ -32,22 +32,19 @@ TEST(raw_socket_streamTest, CLIENT_TO_SERVER_AND_SERVER_TO_CLIENT) {
     GTEST_SKIP();
 
   SmallString<100> SocketPath;
-  llvm::sys::fs::createUniquePath("test_raw_socket_stream.sock", SocketPath,
-                                  true);
+  llvm::sys::fs::createUniquePath("client_server_comms.sock", SocketPath, true);
 
   // Make sure socket file does not exist. May still be there from the last test
   std::remove(SocketPath.c_str());
 
-  char Bytes[8];
-
   Expected<ListeningSocket> MaybeServerListener =
-      ListeningSocket::createListeningSocket(SocketPath);
+      ListeningSocket::createListeningUnixSocket(SocketPath);
   ASSERT_THAT_EXPECTED(MaybeServerListener, llvm::Succeeded());
 
   ListeningSocket ServerListener = std::move(*MaybeServerListener);
 
   Expected<std::unique_ptr<raw_socket_stream>> MaybeClient =
-      raw_socket_stream::createConnectedSocket(SocketPath);
+      raw_socket_stream::createConnectedUnixSocket(SocketPath);
   ASSERT_THAT_EXPECTED(MaybeClient, llvm::Succeeded());
 
   raw_socket_stream &Client = **MaybeClient;
@@ -61,11 +58,43 @@ TEST(raw_socket_streamTest, CLIENT_TO_SERVER_AND_SERVER_TO_CLIENT) {
   Client << "01234567";
   Client.flush();
 
+  char Bytes[8];
   ssize_t BytesRead = Server.read(Bytes, 8);
 
   std::string string(Bytes, 8);
 
   ASSERT_EQ(8, BytesRead);
   ASSERT_EQ("01234567", string);
+}
+
+TEST(raw_socket_streamTest, TIMEOUT_PROVIDED) {
+  if (!hasUnixSocketSupport())
+    GTEST_SKIP();
+
+  SmallString<100> SocketPath;
+  llvm::sys::fs::createUniquePath("timout_provided.sock", SocketPath, true);
+
+  // Make sure socket file does not exist. May still be there from the last test
+  std::remove(SocketPath.c_str());
+
+  Expected<ListeningSocket> MaybeServerListener =
+      ListeningSocket::createListeningUnixSocket(SocketPath);
+  ASSERT_THAT_EXPECTED(MaybeServerListener, llvm::Succeeded());
+  ListeningSocket ServerListener = std::move(*MaybeServerListener);
+
+  std::chrono::seconds Timeout = std::chrono::seconds(5);
+  auto Start = std::chrono::steady_clock::now();
+  Expected<std::unique_ptr<raw_socket_stream>> MaybeServer =
+      ServerListener.accept(Timeout);
+  auto End = std::chrono::steady_clock::now();
+  auto Duration = std::chrono::duration_cast<std::chrono::seconds>(End - Start);
+  ASSERT_NEAR(Duration.count(), Timeout.count(), 1);
+
+  ASSERT_THAT_EXPECTED(MaybeServer, Failed());
+  llvm::Error Err = MaybeServer.takeError();
+  llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
+    std::error_code EC = SE.convertToErrorCode();
+    ASSERT_EQ(EC, std::errc::timed_out);
+  });
 }
 } // namespace

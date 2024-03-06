@@ -25,9 +25,8 @@ namespace llvm {
 class raw_socket_stream;
 
 #ifdef _WIN32
-/// @brief Ensures proper initialization and cleanup of winsock resources
+/// \brief Ensures proper initialization and cleanup of winsock resources
 ///
-/// @details
 /// Make sure that calls to WSAStartup and WSACleanup are balanced.
 class WSABalancer {
 public:
@@ -36,27 +35,27 @@ public:
 };
 #endif // _WIN32
 
-/// @class ListeningSocket
-/// @brief Manages a passive (i.e., listening) UNIX domain socket
+/// \class ListeningSocket
+/// \brief Manages a passive (i.e., listening) UNIX domain socket
 ///
 /// The ListeningSocket class encapsulates a UNIX domain socket that can listen
 /// and accept incoming connections. ListeningSocket is portable and supports
 /// Windows builds begining with Insider Build 17063. ListeningSocket is
-/// designed for server-side operations, working alongside raw_socket_streams
+/// designed for server-side operations, working alongside \p raw_socket_streams
 /// that function as client connections.
 ///
 /// Usage example:
-/// @code{.cpp}
+/// \code{.cpp}
 /// std::string Path = "/path/to/socket"
 /// Expected<ListeningSocket> S = ListeningSocket::createListeningSocket(Path);
 ///
-/// if (listeningSocket) {
-///     auto connection = S->accept();
-///     if (connection) {
-///         // Use the accepted raw_socket_stream for communication.
-///     }
+/// if (S) {
+///   Expected<std::unique_ptr<raw_socket_stream>> connection = S->accept();
+///   if (connection) {
+///     // Use the accepted raw_socket_stream for communication.
+///   }
 /// }
-/// @endcode
+/// \endcode
 ///
 class ListeningSocket {
   std::atomic<int> FD;
@@ -74,7 +73,7 @@ public:
   ListeningSocket &operator=(const ListeningSocket &) = delete;
 
   /// Closes the socket's FD and unlinks the socket file from the file system.
-  /// The method is idempotent
+  /// The method is thread and signal safe
   void shutdown();
 
   /// Accepts an incoming connection on the listening socket. This method can
@@ -82,7 +81,7 @@ public:
   /// specified amount of time has passed. By default the method will block
   /// until the socket has recieved a connection
   ///
-  /// @param Timeout An optional timeout duration in microseconds
+  /// \param Timeout An optional timeout duration in microseconds
   ///
   Expected<std::unique_ptr<raw_socket_stream>>
   accept(std::optional<std::chrono::microseconds> Timeout = std::nullopt);
@@ -91,10 +90,10 @@ public:
   /// Handles the socket creation, binding, and immediately starts listening for
   /// incoming connections.
   ///
-  /// @param SocketPath The file system path where the socket will be created
-  /// @param MaxBacklog The max number of connections in a socket's backlog
+  /// \param SocketPath The file system path where the socket will be created
+  /// \param MaxBacklog The max number of connections in a socket's backlog
   ///
-  static Expected<ListeningSocket> createListeningSocket(
+  static Expected<ListeningSocket> createListeningUnixSocket(
       StringRef SocketPath,
       int MaxBacklog = llvm::hardware_concurrency().compute_thread_count());
 };
@@ -110,12 +109,11 @@ class raw_socket_stream : public raw_fd_stream {
 #endif // _WIN32
 
 public:
-  // TODO: Should probably be private
   raw_socket_stream(int SocketFD);
-  /// Create a \p raw_socket_stream connected to the Unix domain socket at \p
+  /// Create a \p raw_socket_stream connected to the UNIX domain socket at \p
   /// SocketPath.
   static Expected<std::unique_ptr<raw_socket_stream>>
-  createConnectedSocket(StringRef SocketPath);
+  createConnectedUnixSocket(StringRef SocketPath);
   ~raw_socket_stream();
 };
 

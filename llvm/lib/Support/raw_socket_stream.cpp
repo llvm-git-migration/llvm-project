@@ -58,24 +58,6 @@ static std::error_code getLastSocketErrorCode() {
 #endif
 }
 
-static void closeFD(int FD) {
-#ifdef _WIN32
-  // on windows ::close is a deprecated alias for _close
-  _close(FD);
-#else
-  ::close(FD);
-#endif
-}
-
-static void unlinkFile(StringRef Path) {
-#ifdef _WIN32
-  // on windows ::unlink is a deprecated alias for _unlink
-  _unlink(Path.str().c_str());
-#else
-  ::unlink(Path.str().c_str());
-#endif
-}
-
 static sockaddr_un setSocketAddr(StringRef SocketPath) {
   struct sockaddr_un Addr;
   memset(&Addr, 0, sizeof(Addr));
@@ -119,7 +101,8 @@ ListeningSocket::ListeningSocket(ListeningSocket &&LS)
 }
 
 Expected<ListeningSocket>
-ListeningSocket::createListeningSocket(StringRef SocketPath, int MaxBacklog) {
+ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
+                                           int MaxBacklog) {
 
   // Handle instances where the target socket address already exists and
   // differentiate between a preexisting file with and without a bound socket
@@ -132,14 +115,14 @@ ListeningSocket::createListeningSocket(StringRef SocketPath, int MaxBacklog) {
     if (!MaybeFD) {
 
       // Regardless of the error, notify the caller that a file already exists
-      // at the desired socket address. The file must be removed before ::bind
-      // can use the socket address
+      // at the desired socket address and that there is no bound socket at that
+      // address. The file must be removed before ::bind can use the address
       consumeError(MaybeFD.takeError());
       return llvm::make_error<StringError>(
           std::make_error_code(std::errc::file_exists),
           "Socket address unavailable");
     }
-    closeFD(std::move(*MaybeFD));
+    ::close(std::move(*MaybeFD));
 
     // Notify caller that the provided socket address already has a bound socket
     return llvm::make_error<StringError>(
@@ -184,31 +167,28 @@ ListeningSocket::createListeningSocket(StringRef SocketPath, int MaxBacklog) {
 Expected<std::unique_ptr<raw_socket_stream>>
 ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
 
-  int SelectStatus;
-  int AcceptFD;
-
+  fd_set Readfds;
+  FD_ZERO(&Readfds);
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
+  FD_SET(WinServerSock, &Readfds);
+#else
+  FD_SET(FD, &Readfds);
 #endif
 
-  fd_set Readfds;
+  int SelectStatus;
   if (Timeout.has_value()) {
     timeval TV = {0, Timeout.value().count()};
-    FD_ZERO(&Readfds);
-#ifdef _WIN32
-    FD_SET(WinServerSock, &Readfds);
-#else
-    FD_SET(FD, &Readfds);
-#endif
     SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, &TV);
   } else {
-    SelectStatus = 1;
+    SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, NULL);
   }
 
   if (SelectStatus == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "Select failed");
+                                         "select failed");
 
+  int AcceptFD;
   if (SelectStatus) {
 #ifdef _WIN32
     SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
@@ -218,11 +198,11 @@ ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
 #endif
   } else
     return llvm::make_error<StringError>(
-        std::make_error_code(std::errc::timed_out), "Accept timed out");
+        std::make_error_code(std::errc::timed_out), "accept timed out");
 
   if (AcceptFD == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "Accept failed");
+                                         "accept failed");
 
   return std::make_unique<raw_socket_stream>(AcceptFD);
 }
@@ -230,8 +210,8 @@ ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
 void ListeningSocket::shutdown() {
   if (FD == -1)
     return;
-  closeFD(FD);
-  unlinkFile(SocketPath);
+  ::close(FD);
+  ::unlink(SocketPath.c_str());
   FD = -1;
 }
 
@@ -245,7 +225,7 @@ raw_socket_stream::raw_socket_stream(int SocketFD)
     : raw_fd_stream(SocketFD, true) {}
 
 Expected<std::unique_ptr<raw_socket_stream>>
-raw_socket_stream::createConnectedSocket(StringRef SocketPath) {
+raw_socket_stream::createConnectedUnixSocket(StringRef SocketPath) {
 #ifdef _WIN32
   WSABalancer _;
 #endif // _WIN32
