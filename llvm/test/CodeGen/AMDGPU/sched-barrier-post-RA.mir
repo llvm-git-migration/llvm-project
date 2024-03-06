@@ -24,9 +24,9 @@ body: |
     ; CHECK-NEXT: }
     ; CHECK-NEXT: renamable $vgpr1 = nsw V_MUL_LO_U32_e64 killed $vgpr1, $vgpr1, implicit $exec
     ; CHECK-NEXT: renamable $vgpr2 = nsw V_MUL_LO_U32_e64 killed $vgpr2, $vgpr2, implicit $exec
-    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit $exec, implicit killed $vgpr2 {
+    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit killed $exec, implicit killed $vgpr2 {
     ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR renamable $vgpr0, killed renamable $vgpr1, renamable $sgpr0_sgpr1, 0, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
-    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
+    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit killed $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
     ; CHECK-NEXT: }
     ; CHECK-NEXT: S_ENDPGM 0
     renamable $sgpr0_sgpr1 = IMPLICIT_DEF
@@ -61,9 +61,9 @@ body: |
     ; CHECK-NEXT: renamable $vgpr1 = nsw V_MUL_LO_U32_e64 killed $vgpr1, $vgpr1, implicit $exec
     ; CHECK-NEXT: SCHED_BARRIER 0
     ; CHECK-NEXT: renamable $vgpr2 = nsw V_MUL_LO_U32_e64 killed $vgpr2, $vgpr2, implicit $exec
-    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit $exec, implicit killed $vgpr2 {
+    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit killed $exec, implicit killed $vgpr2 {
     ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR renamable $vgpr0, killed renamable $vgpr1, renamable $sgpr0_sgpr1, 0, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
-    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
+    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit killed $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
     ; CHECK-NEXT: }
     ; CHECK-NEXT: S_ENDPGM 0
     renamable $sgpr0_sgpr1 = IMPLICIT_DEF
@@ -100,9 +100,9 @@ body: |
     ; CHECK-NEXT: SCHED_BARRIER 1
     ; CHECK-NEXT: renamable $vgpr1 = nsw V_MUL_LO_U32_e64 killed $vgpr1, $vgpr1, implicit $exec
     ; CHECK-NEXT: renamable $vgpr2 = nsw V_MUL_LO_U32_e64 killed $vgpr2, $vgpr2, implicit $exec
-    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit $exec, implicit killed $vgpr2 {
+    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $vgpr1, implicit killed $sgpr0_sgpr1, implicit killed $exec, implicit killed $vgpr2 {
     ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR renamable $vgpr0, killed renamable $vgpr1, renamable $sgpr0_sgpr1, 0, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
-    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
+    ; CHECK-NEXT:   GLOBAL_STORE_DWORD_SADDR killed renamable $vgpr0, killed renamable $vgpr2, killed renamable $sgpr0_sgpr1, 512, 0, implicit killed $exec :: (store (s32) into %ir.out, !noalias !0, addrspace 1)
     ; CHECK-NEXT: }
     ; CHECK-NEXT: S_ENDPGM 0
     renamable $sgpr0_sgpr1 = IMPLICIT_DEF
