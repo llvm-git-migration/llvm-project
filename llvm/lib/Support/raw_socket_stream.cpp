@@ -17,6 +17,7 @@
 #include "llvm/Support/FileSystem.h"
 
 #include <atomic>
+#include <poll.h>
 
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -165,45 +166,44 @@ ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
 }
 
 Expected<std::unique_ptr<raw_socket_stream>>
-ListeningSocket::accept(std::optional<std::chrono::microseconds> Timeout) {
+ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
 
-  fd_set Readfds;
-  FD_ZERO(&Readfds);
+  struct pollfd FDs[1];
+  FDs[0].events = POLLIN;
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
-  FD_SET(WinServerSock, &Readfds);
+  FDs[0].fd = WinServerSock;
 #else
-  FD_SET(FD, &Readfds);
+  FDs[0].fd = FD;
 #endif
 
-  int SelectStatus;
-  if (Timeout.has_value()) {
-    timeval TV = {0, Timeout.value().count()};
-    SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, &TV);
-  } else {
-    SelectStatus = ::select(FD + 1, &Readfds, NULL, NULL, NULL);
-  }
+  int TimeoutCount = Timeout.value_or(std::chrono::milliseconds(-1)).count();
+  int PollStatus = ::poll(FDs, 1, TimeoutCount);
 
-  if (SelectStatus == -1)
+  if (PollStatus == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "select failed");
+                                         "poll failed");
+  if (PollStatus == 0)
+    return llvm::make_error<StringError>(
+        std::make_error_code(std::errc::timed_out),
+        "No client requests within timeout window");
+
+  if (FDs[0].revents & POLLNVAL)
+    return llvm::make_error<StringError>(
+        std::make_error_code(std::errc::bad_file_descriptor),
+        "File descriptor closed by another thread");
 
   int AcceptFD;
-  if (SelectStatus) {
 #ifdef _WIN32
     SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
     AcceptFD = _open_osfhandle(WinAcceptSock, 0);
 #else
     AcceptFD = ::accept(FD, NULL, NULL);
 #endif
-  } else
-    return llvm::make_error<StringError>(
-        std::make_error_code(std::errc::timed_out), "accept timed out");
 
   if (AcceptFD == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "accept failed");
-
   return std::make_unique<raw_socket_stream>(AcceptFD);
 }
 

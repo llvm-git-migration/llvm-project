@@ -81,10 +81,10 @@ public:
   /// specified amount of time has passed. By default the method will block
   /// until the socket has recieved a connection
   ///
-  /// \param Timeout An optional timeout duration in microseconds
+  /// \param Timeout An optional timeout duration in milliseconds
   ///
   Expected<std::unique_ptr<raw_socket_stream>>
-  accept(std::optional<std::chrono::microseconds> Timeout = std::nullopt);
+  accept(std::optional<std::chrono::milliseconds> Timeout = std::nullopt);
 
   /// Creates a listening socket bound to the specified file system path.
   /// Handles the socket creation, binding, and immediately starts listening for
