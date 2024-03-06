@@ -13,12 +13,9 @@
 #include "mlir/CAPI/Wrap.h"
 #include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Dialect/LLVMIR/LLVMOpsAttrDefs.h.inc"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
-#include "mlir/IR/Attributes.h"
-#include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/Support/LLVM.h"
-#include <stdint.h>
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/SmallVectorExtras.h"
 
 using namespace mlir;
 using namespace mlir::LLVM;
@@ -124,7 +121,7 @@ MlirAttribute mlirLLVMDIExpressionElemAttrGet(MlirContext ctx,
                                               unsigned int opcode,
                                               intptr_t nArguments,
                                               uint64_t const *arguments) {
-  auto list = mlir::ArrayRef<uint64_t>(arguments, nArguments);
+  auto list = ArrayRef<uint64_t>(arguments, nArguments);
   return wrap(DIExpressionElemAttr::get(unwrap(ctx), opcode, list));
 }
 
@@ -132,17 +129,12 @@ MlirAttribute mlirLLVMDIExpressionAttrGet(MlirContext ctx, intptr_t nOperations,
                                           MlirAttribute const *operations) {
   SmallVector<Attribute, 2> attrStorage;
   attrStorage.reserve(nOperations);
-  mlir::ArrayRef<Attribute> tempList =
-      unwrapList(nOperations, operations, attrStorage);
 
-  SmallVector<DIExpressionElemAttr, 2> diExpressionElemStorage;
-  diExpressionElemStorage.reserve(tempList.size());
-
-  for (auto attr : tempList) {
-    diExpressionElemStorage.push_back(attr.cast<DIExpressionElemAttr>());
-  }
-
-  return wrap(DIExpressionAttr::get(unwrap(ctx), diExpressionElemStorage));
+  return wrap(DIExpressionAttr::get(
+      unwrap(ctx),
+      llvm::map_to_vector(
+          unwrapList(nOperations, operations, attrStorage),
+          [](Attribute a) { return a.cast<DIExpressionElemAttr>(); })));
 }
 
 MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx) {
@@ -165,7 +157,7 @@ MlirAttribute mlirLLVMDICompositeTypeAttrGet(
   SmallVector<Attribute, 2> elementsStorage;
   elementsStorage.reserve(nElements);
 
-  mlir::ArrayRef<Attribute> tempList =
+  ArrayRef<Attribute> tempList =
       unwrapList(nElements, elements, elementsStorage);
 
   SmallVector<DINodeAttr, 2> diNodesStorage;
@@ -269,17 +261,11 @@ MlirAttribute mlirLLVMDISubroutineTypeAttrGet(MlirContext ctx,
                                               MlirAttribute const *types) {
   SmallVector<Attribute, 2> attrStorage;
   attrStorage.reserve(nTypes);
-  mlir::ArrayRef<Attribute> tempList = unwrapList(nTypes, types, attrStorage);
 
-  SmallVector<DITypeAttr, 2> diTypesStorage;
-  diTypesStorage.reserve(tempList.size());
-
-  for (auto attr : tempList) {
-    diTypesStorage.push_back(attr.cast<DITypeAttr>());
-  }
-
-  return wrap(DISubroutineTypeAttr::get(unwrap(ctx), callingConvention,
-                                        diTypesStorage));
+  return wrap(DISubroutineTypeAttr::get(
+      unwrap(ctx), callingConvention,
+      llvm::map_to_vector(unwrapList(nTypes, types, attrStorage),
+                          [](Attribute a) { return a.cast<DITypeAttr>(); })));
 }
 
 MlirAttribute mlirLLVMDISubprogramAttrGet(
