@@ -278,15 +278,14 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
   if (Err)
     return std::move(Err);
 
+  // Runtimes contain essential definitions that are irrevocable. Lock their
+  // stack of initial PTUs to make them unavailable for undo.
   auto PTU = Interp->Parse(Runtimes);
   if (!PTU)
     return PTU.takeError();
+  Interp->finalizeInitPTUStack();
 
   Interp->ValuePrintingInfo.resize(4);
-  // FIXME: This is a ugly hack. Undo command checks its availability by looking
-  // at the size of the PTU list. However we have parsed something in the
-  // beginning of the REPL so we have to mark them as 'Irrevocable'.
-  Interp->InitPTUSize = Interp->IncrParser->getPTUs().size();
   return std::move(Interp);
 }
 
@@ -341,6 +340,11 @@ ASTContext &Interpreter::getASTContext() {
 
 const ASTContext &Interpreter::getASTContext() const {
   return getCompilerInstance()->getASTContext();
+}
+
+void Interpreter::finalizeInitPTUStack() {
+  assert(!InitPTUSize && "We only do this once");
+  InitPTUSize = IncrParser->getPTUs().size();
 }
 
 size_t Interpreter::getEffectivePTUSize() const {
