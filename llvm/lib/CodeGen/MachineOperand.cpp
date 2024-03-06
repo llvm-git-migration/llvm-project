@@ -1243,7 +1243,7 @@ void MachineMemOperand::print(raw_ostream &OS, ModuleSlotTracker &MST,
   uint64_t MinSize = MemoryType.isValid()
                          ? getType().getSizeInBytes().getKnownMinValue()
                          : ~UINT64_C(0);
-  // TODO: getSize should return TypeSize
+
   if (MinSize > 0 && getAlign() != MinSize)
     OS << ", align " << getAlign().value();
   if (getAlign() != getBaseAlign())
