@@ -2679,7 +2679,8 @@ MCSection *TargetLoweringObjectFileXCOFF::getSectionForFunctionDescriptor(
 }
 
 MCSection *TargetLoweringObjectFileXCOFF::getSectionForTOCEntry(
-    const MCSymbol *Sym, const TargetMachine &TM) const {
+    const MCSymbol *Sym, const TargetMachine &TM,
+    const MCSymbolRefExpr::VariantKind VK) const {
   // Use TE storage-mapping class when large code model is enabled so that
   // the chance of needing -bbigtoc is decreased. Also, the toc-entry for
   // EH info is never referenced directly using instructions so it can be
@@ -2694,7 +2695,10 @@ MCSection *TargetLoweringObjectFileXCOFF::getSectionForTOCEntry(
            cast<MCSymbolXCOFF>(Sym)->isEHInfo())
               ? XCOFF::XMC_TE
               : XCOFF::XMC_TC,
-          XCOFF::XTY_SD));
+          XCOFF::XTY_SD),
+      /*MultiSymbolsAllowed=*/false, /*BeginSymName=*/nullptr,
+      /*DwarfSubtypeFlags=*/std::nullopt,
+      (VK == MCSymbolRefExpr::VK_PPC_AIX_TLSLD ? "_$TLSLD." : StringRef()));
 }
 
 MCSection *TargetLoweringObjectFileXCOFF::getSectionForLSDA(
