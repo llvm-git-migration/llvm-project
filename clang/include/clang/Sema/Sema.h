@@ -3308,7 +3308,7 @@ public:
                               SourceLocation RParenLoc);
 
   TopLevelStmtDecl *ActOnStartTopLevelStmtDecl(Scope *S);
-  void ActOnFinishTopLevelStmtDecl(TopLevelStmtDecl* D, Stmt *Statement);
+  void ActOnFinishTopLevelStmtDecl(TopLevelStmtDecl *D, Stmt *Statement);
 
   /// Handle a C++11 empty-declaration and attribute-declaration.
   Decl *ActOnEmptyDeclaration(Scope *S, const ParsedAttributesView &AttrList,

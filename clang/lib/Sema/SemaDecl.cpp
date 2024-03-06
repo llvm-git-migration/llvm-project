@@ -20453,7 +20453,7 @@ TopLevelStmtDecl *Sema::ActOnStartTopLevelStmtDecl(Scope *S) {
   return New;
 }
 
-void Sema::ActOnFinishTopLevelStmtDecl(TopLevelStmtDecl* D, Stmt *Statement) {
+void Sema::ActOnFinishTopLevelStmtDecl(TopLevelStmtDecl *D, Stmt *Statement) {
   D->setStmt(Statement);
   PopDeclContext();
   PopFunctionScopeInfo();
