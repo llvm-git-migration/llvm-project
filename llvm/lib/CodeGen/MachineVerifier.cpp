@@ -1603,6 +1603,17 @@ void MachineVerifier::verifyPreISelGenericInstruction(const MachineInstr *MI) {
       report("G_BSWAP size must be a multiple of 16 bits", MI);
     break;
   }
+  case TargetOpcode::G_VSCALE: {
+    if (!MI->getOperand(1).isImm()) {
+      report("G_VSCALE operand #1 must be an immediate", MI);
+      break;
+    }
+    if (MI->getOperand(1).getImm() == 0) {
+      report("G_VSCALE immediate cannot be zero", MI);
+      break;
+    }
+    break;
+  }
   case TargetOpcode::G_SHUFFLE_VECTOR: {
     const MachineOperand &MaskOp = MI->getOperand(3);
     if (!MaskOp.isShuffleMask()) {
