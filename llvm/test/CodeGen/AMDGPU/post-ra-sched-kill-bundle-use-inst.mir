@@ -24,8 +24,8 @@ body:             |
     ; CHECK-NEXT:   DS_GWS_INIT $vgpr0, 8, implicit $m0, implicit $exec
     ; CHECK-NEXT:   S_WAITCNT 0
     ; CHECK-NEXT: }
-    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit $m0, implicit $exec {
-    ; CHECK-NEXT:   DS_GWS_BARRIER killed $vgpr0, 8, implicit $m0, implicit $exec
+    ; CHECK-NEXT: BUNDLE implicit killed $vgpr0, implicit killed $m0, implicit killed $exec {
+    ; CHECK-NEXT:   DS_GWS_BARRIER killed $vgpr0, 8, implicit killed $m0, implicit killed $exec
     ; CHECK-NEXT:   S_WAITCNT 0
     ; CHECK-NEXT: }
     renamable $sgpr0 = S_LOAD_DWORD_IMM killed renamable $sgpr4_sgpr5, 0, 0
