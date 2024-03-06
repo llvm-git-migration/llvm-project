@@ -194,7 +194,7 @@ public:
   // information, or has access to it in other ways. Its advantage is that
   // it will never be a fir.box for explicit shape arrays, leading to simpler
   // FIR code generation.
-  mlir::Value getFirBase() const;
+  mlir::Value getFirBase(bool forceDeclBaseHACK = false) const;
 };
 
 /// Wrapper over an mlir::Value that can be viewed as a Fortran entity.
@@ -230,7 +230,8 @@ translateToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
 /// on the IR.
 fir::ExtendedValue
 translateToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
-                         fir::FortranVariableOpInterface fortranVariable);
+                         fir::FortranVariableOpInterface fortranVariable,
+                         bool forceDeclBaseHACK = false);
 
 /// Generate declaration for a fir::ExtendedValue in memory.
 fir::FortranVariableOpInterface

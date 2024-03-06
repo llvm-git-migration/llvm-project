@@ -183,11 +183,12 @@ static fir::CharBoxValue genUnboxChar(mlir::Location loc,
   return {addr, len};
 }
 
-mlir::Value hlfir::Entity::getFirBase() const {
+mlir::Value hlfir::Entity::getFirBase(bool forceDeclBaseHACK) const {
   if (fir::FortranVariableOpInterface variable = getIfVariableInterface()) {
     if (auto declareOp =
             mlir::dyn_cast<hlfir::DeclareOp>(variable.getOperation()))
-      return declareOp.getOriginalBase();
+      return forceDeclBaseHACK ? declareOp.getBase()
+                               : declareOp.getOriginalBase();
     if (auto associateOp =
             mlir::dyn_cast<hlfir::AssociateOp>(variable.getOperation()))
       return associateOp.getFirBase();
@@ -848,11 +849,12 @@ hlfir::LoopNest hlfir::genLoopNest(mlir::Location loc,
 
 static fir::ExtendedValue
 translateVariableToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
-                                 hlfir::Entity variable) {
+                                 hlfir::Entity variable,
+                                 bool forceDeclBaseHACK = false) {
   assert(variable.isVariable() && "must be a variable");
   /// When going towards FIR, use the original base value to avoid
   /// introducing descriptors at runtime when they are not required.
-  mlir::Value firBase = variable.getFirBase();
+  mlir::Value firBase = variable.getFirBase(forceDeclBaseHACK);
   if (variable.isMutableBox())
     return fir::MutableBoxValue(firBase, getExplicitTypeParams(variable),
                                 fir::MutableProperties{});
@@ -900,8 +902,9 @@ translateVariableToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
 
 fir::ExtendedValue
 hlfir::translateToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
-                                fir::FortranVariableOpInterface var) {
-  return translateVariableToExtendedValue(loc, builder, var);
+                                fir::FortranVariableOpInterface var,
+                                bool forceDeclBaseHACK) {
+  return translateVariableToExtendedValue(loc, builder, var, forceDeclBaseHACK);
 }
 
 std::pair<fir::ExtendedValue, std::optional<hlfir::CleanupFunction>>
