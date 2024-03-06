@@ -127,7 +127,7 @@ MlirAttribute mlirLLVMDIExpressionElemAttrGet(MlirContext ctx,
 
 MlirAttribute mlirLLVMDIExpressionAttrGet(MlirContext ctx, intptr_t nOperations,
                                           MlirAttribute const *operations) {
-  SmallVector<Attribute, 2> attrStorage;
+  SmallVector<Attribute> attrStorage;
   attrStorage.reserve(nOperations);
 
   return wrap(DIExpressionAttr::get(
@@ -154,24 +154,16 @@ MlirAttribute mlirLLVMDICompositeTypeAttrGet(
     uint32_t line, MlirAttribute scope, MlirAttribute baseType, int64_t flags,
     uint64_t sizeInBits, uint64_t alignInBits, intptr_t nElements,
     MlirAttribute const *elements) {
-  SmallVector<Attribute, 2> elementsStorage;
+  SmallVector<Attribute> elementsStorage;
   elementsStorage.reserve(nElements);
-
-  ArrayRef<Attribute> tempList =
-      unwrapList(nElements, elements, elementsStorage);
-
-  SmallVector<DINodeAttr, 2> diNodesStorage;
-  diNodesStorage.reserve(tempList.size());
-
-  for (auto attr : tempList) {
-    diNodesStorage.push_back(attr.cast<DINodeAttr>());
-  }
 
   return wrap(DICompositeTypeAttr::get(
       unwrap(ctx), tag, cast<StringAttr>(unwrap(name)),
       cast<DIFileAttr>(unwrap(file)), line, cast<DIScopeAttr>(unwrap(scope)),
       cast<DITypeAttr>(unwrap(baseType)), DIFlags(flags), sizeInBits,
-      alignInBits, diNodesStorage));
+      alignInBits,
+      llvm::map_to_vector(unwrapList(nElements, elements, elementsStorage),
+                          [](Attribute a) { return a.cast<DINodeAttr>(); })));
 }
 
 MlirAttribute mlirLLVMDIDerivedTypeAttrGet(MlirContext ctx, unsigned int tag,
@@ -259,7 +251,7 @@ MlirAttribute mlirLLVMDISubroutineTypeAttrGet(MlirContext ctx,
                                               unsigned int callingConvention,
                                               intptr_t nTypes,
                                               MlirAttribute const *types) {
-  SmallVector<Attribute, 2> attrStorage;
+  SmallVector<Attribute> attrStorage;
   attrStorage.reserve(nTypes);
 
   return wrap(DISubroutineTypeAttr::get(
