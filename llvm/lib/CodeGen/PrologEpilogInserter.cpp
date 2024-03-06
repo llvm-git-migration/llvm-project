@@ -358,7 +358,7 @@ void PEI::calculateCallFrameInfo(MachineFunction &MF) {
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
   MachineFrameInfo &MFI = MF.getFrameInfo();
 
-  unsigned MaxCallFrameSize = 0;
+  unsigned long MaxCallFrameSize = 0;
   bool AdjustsStack = MFI.adjustsStack();
 
   // Get the function call frame set-up and tear-down instruction opcode
@@ -374,7 +374,7 @@ void PEI::calculateCallFrameInfo(MachineFunction &MF) {
   for (MachineBasicBlock &BB : MF)
     for (MachineBasicBlock::iterator I = BB.begin(); I != BB.end(); ++I)
       if (TII.isFrameInstr(*I)) {
-        unsigned Size = TII.getFrameSize(*I);
+        unsigned long Size = TII.getFrameSize(*I);
         if (Size > MaxCallFrameSize) MaxCallFrameSize = Size;
         AdjustsStack = true;
         FrameSDOps.push_back(I);
