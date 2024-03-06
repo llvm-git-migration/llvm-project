@@ -6898,10 +6898,18 @@ public:
                                    BinaryOperatorKind Operator);
 
   //// ActOnCXXThis -  Parse 'this' pointer.
-  ExprResult ActOnCXXThis(SourceLocation loc);
+  ///
+  /// \param SkipLambdaCaptureCheck Whether to skip the 'this' check for a
+  /// lambda because 'this' is the lambda's 'this'-pointer.
+  ExprResult ActOnCXXThis(SourceLocation loc,
+                          bool SkipLambdaCaptureCheck = false);
 
   /// Build a CXXThisExpr and mark it referenced in the current context.
-  Expr *BuildCXXThisExpr(SourceLocation Loc, QualType Type, bool IsImplicit);
+  ///
+  /// \param SkipLambdaCaptureCheck Whether to skip the 'this' check for a
+  /// lambda because 'this' is the lambda's 'this'-pointer.
+  Expr *BuildCXXThisExpr(SourceLocation Loc, QualType Type, bool IsImplicit,
+                         bool SkipLambdaCaptureCheck = false);
   void MarkThisReferenced(CXXThisExpr *This);
 
   /// Try to retrieve the type of the 'this' pointer.

@@ -1414,7 +1414,7 @@ bool Sema::CheckCXXThisCapture(SourceLocation Loc, const bool Explicit,
   return false;
 }
 
-ExprResult Sema::ActOnCXXThis(SourceLocation Loc) {
+ExprResult Sema::ActOnCXXThis(SourceLocation Loc, bool SkipLambdaCaptureCheck) {
   /// C++ 9.3.2: In the body of a non-static member function, the keyword this
   /// is a non-lvalue expression whose value is the address of the object for
   /// which the function is called.
@@ -1434,13 +1434,18 @@ ExprResult Sema::ActOnCXXThis(SourceLocation Loc) {
     return Diag(Loc, diag::err_invalid_this_use) << 0;
   }
 
-  return BuildCXXThisExpr(Loc, ThisTy, /*IsImplicit=*/false);
+  return BuildCXXThisExpr(Loc, ThisTy, /*IsImplicit=*/false,
+                          SkipLambdaCaptureCheck);
 }
 
-Expr *Sema::BuildCXXThisExpr(SourceLocation Loc, QualType Type,
-                             bool IsImplicit) {
+Expr *Sema::BuildCXXThisExpr(SourceLocation Loc, QualType Type, bool IsImplicit,
+                             bool SkipLambdaCaptureCheck) {
   auto *This = CXXThisExpr::Create(Context, Loc, Type, IsImplicit);
-  MarkThisReferenced(This);
+
+  if (!SkipLambdaCaptureCheck) {
+    MarkThisReferenced(This);
+  }
+
   return This;
 }
 
