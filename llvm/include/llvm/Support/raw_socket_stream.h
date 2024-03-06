@@ -58,8 +58,15 @@ public:
 /// \endcode
 ///
 class ListeningSocket {
+
+  /// If ListeningSocket::shutdown is used by a signal handler to clean up
+  /// ListeningSocket resources FD may be closed while ::poll is waiting for
+  /// FD to become ready to perform I/O. When FD is closed ::poll will
+  /// continue to block so use the self-pipe trick to get ::poll to return
+  int PipeFD[2];
+  std::mutex PipeMutex;
   std::atomic<int> FD;
-  std::string SocketPath;
+  std::string SocketPath; // Never modified
   ListeningSocket(int SocketFD, StringRef SocketPath);
 
 #ifdef _WIN32

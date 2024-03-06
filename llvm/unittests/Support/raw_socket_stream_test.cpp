@@ -97,4 +97,40 @@ TEST(raw_socket_streamTest, TIMEOUT_PROVIDED) {
     ASSERT_EQ(EC, std::errc::timed_out);
   });
 }
+
+TEST(raw_socket_streamTest, FILE_DESCRIPTOR_CLOSED) {
+  if (!hasUnixSocketSupport())
+    GTEST_SKIP();
+
+  SmallString<100> SocketPath;
+  llvm::sys::fs::createUniquePath("fd_closed.sock", SocketPath, true);
+
+  // Make sure socket file does not exist. May still be there from the last test
+  std::remove(SocketPath.c_str());
+
+  Expected<ListeningSocket> MaybeServerListener =
+      ListeningSocket::createListeningUnixSocket(SocketPath);
+  ASSERT_THAT_EXPECTED(MaybeServerListener, llvm::Succeeded());
+  ListeningSocket ServerListener = std::move(*MaybeServerListener);
+
+  // Create a separate thread to close the socket after a delay. Simulates a
+  // signal handler calling ServerListener::shutdown
+  std::thread CloseThread([&]() {
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    ServerListener.shutdown();
+  });
+
+  Expected<std::unique_ptr<raw_socket_stream>> MaybeServer =
+      ServerListener.accept();
+
+  // Wait for the CloseThread to finish
+  CloseThread.join();
+
+  ASSERT_THAT_EXPECTED(MaybeServer, Failed());
+  llvm::Error Err = MaybeServer.takeError();
+  llvm::handleAllErrors(std::move(Err), [&](const llvm::StringError &SE) {
+    std::error_code EC = SE.convertToErrorCode();
+    ASSERT_EQ(EC, std::errc::bad_file_descriptor);
+  });
+}
 } // namespace

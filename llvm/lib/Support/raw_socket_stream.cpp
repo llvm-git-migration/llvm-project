@@ -17,7 +17,9 @@
 #include "llvm/Support/FileSystem.h"
 
 #include <atomic>
+#include <fcntl.h>
 #include <poll.h>
+#include <thread>
 
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -168,7 +170,7 @@ ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
 Expected<std::unique_ptr<raw_socket_stream>>
 ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
 
-  struct pollfd FDs[1];
+  struct pollfd FDs[2];
   FDs[0].events = POLLIN;
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
@@ -177,8 +179,16 @@ ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
   FDs[0].fd = FD;
 #endif
 
+  FDs[1].events = POLLIN;
+  PipeMutex.lock();
+  if (::pipe(PipeFD) == -1)
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "pipe failed");
+  FDs[1].fd = PipeFD[0];
+  PipeMutex.unlock();
+
   int TimeoutCount = Timeout.value_or(std::chrono::milliseconds(-1)).count();
-  int PollStatus = ::poll(FDs, 1, TimeoutCount);
+  int PollStatus = ::poll(FDs, 2, TimeoutCount);
 
   if (PollStatus == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
@@ -212,6 +222,11 @@ void ListeningSocket::shutdown() {
     return;
   ::close(FD);
   ::unlink(SocketPath.c_str());
+
+  char Byte = 'A';
+  PipeMutex.lock();
+  write(PipeFD[1], &Byte, 1);
+  PipeMutex.unlock();
   FD = -1;
 }
 
