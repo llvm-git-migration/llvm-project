@@ -1084,6 +1084,11 @@ bool DenseElementsAttr::isValidRawBuffer(ShapedType type,
     return rawBufferWidth == llvm::alignTo<8>(numElements);
   }
 
+  llvm::errs() << "storage width: " << storageWidth
+               << " rawBufferWidth: " << rawBufferWidth
+               << " numElements: " << numElements << "\n";
+  type.dump();
+
   // All other types are 8-bit aligned, so we can just check the buffer width
   // to know if only a single initializer element was passed in.
   if (rawBufferWidth == storageWidth) {
