@@ -1,8 +1,5 @@
 # RUN: llc -start-before=prologepilog -stop-after=livedebugvalues -mattr=+sve -o - %s | FileCheck %s
-#
-# FIXME: re-enable this run line when InstrRef LiveDebugValues is able to
-# rely on the target spill/restore inst recognisers.
-# run: llc -start-before=prologepilog -stop-after=livedebugvalues -experimental-debug-variable-locations -mattr=+sve -o - %s | FileCheck %s
+# RUN: llc -start-before=prologepilog -stop-after=livedebugvalues -experimental-debug-variable-locations -mattr=+sve -o - %s | FileCheck %s
 #
 # Test that the LiveDebugValues pass can correctly handle the address
 # of the SVE spill (at a scalable address location) which is expressed
@@ -17,7 +14,7 @@
 # correctly recognize debug-value !27 is in $z1 after the following reload:
 #
 # CHECK: renamable $z1 = LD1W_IMM renamable $p0, $fp, -[[#OFFSET]], debug-location !34 :: (load unknown-size from %stack.0, align 16)
-# CHECK-DAG: ST1W_IMM killed renamable $z3, killed renamable $p0, $fp, -[[#OFFSET]] :: (store unknown-size into %stack.0, align 16)
+# CHECK-DAG: ST1W_IMM killed renamable $z3, killed renamable $p0, killed $fp, -[[#OFFSET]] :: (store unknown-size into %stack.0, align 16)
 # CHECK-DAG: DBG_VALUE $noreg, $noreg, !27, !DIExpression(), debug-location !30
 
 --- |
