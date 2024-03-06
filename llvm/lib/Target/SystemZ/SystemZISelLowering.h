@@ -477,7 +477,7 @@ public:
   AtomicExpansionKind
   shouldExpandAtomicRMWInIR(AtomicRMWInst *RMW) const override;
   bool isLegalICmpImmediate(int64_t Imm) const override;
-  bool isLegalAddImmediate(int64_t Imm) const override;
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm = 0) const override;
   bool isLegalAddressingMode(const DataLayout &DL, const AddrMode &AM, Type *Ty,
                              unsigned AS,
                              Instruction *I = nullptr) const override;

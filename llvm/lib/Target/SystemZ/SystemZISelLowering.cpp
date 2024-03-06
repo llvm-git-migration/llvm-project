@@ -944,7 +944,8 @@ bool SystemZTargetLowering::isLegalICmpImmediate(int64_t Imm) const {
   return isInt<32>(Imm) || isUInt<32>(Imm);
 }
 
-bool SystemZTargetLowering::isLegalAddImmediate(int64_t Imm) const {
+bool SystemZTargetLowering::isLegalAddImmediate(int64_t Imm,
+                                                int64_t ScalableImm) const {
   // We can use ALGFI or SLGFI.
   return isUInt<32>(Imm) || isUInt<32>(-Imm);
 }

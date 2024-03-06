@@ -222,7 +222,7 @@ public:
                              Instruction *I = nullptr) const override;
 
   bool isLegalICmpImmediate(int64_t Imm) const override;
-  bool isLegalAddImmediate(int64_t Imm) const override;
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm = 0) const override;
   bool isZExtFree(SDValue Val, EVT VT2) const override;
   bool isSExtCheaperThanZExt(EVT SrcVT, EVT DstVT) const override;
 

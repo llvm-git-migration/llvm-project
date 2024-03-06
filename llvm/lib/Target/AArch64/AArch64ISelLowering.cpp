@@ -16559,7 +16559,11 @@ LLT AArch64TargetLowering::getOptimalMemOpLLT(
 }
 
 // 12-bit optionally shifted immediates are legal for adds.
-bool AArch64TargetLowering::isLegalAddImmediate(int64_t Immed) const {
+bool AArch64TargetLowering::isLegalAddImmediate(int64_t Immed,
+                                                int64_t ScalableImm) const {
+  if (ScalableImm)
+    return false;
+
   if (Immed == std::numeric_limits<int64_t>::min()) {
     LLVM_DEBUG(dbgs() << "Illegal add imm " << Immed
                       << ": avoid UB for INT64_MIN\n");

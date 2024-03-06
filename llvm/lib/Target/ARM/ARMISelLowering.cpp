@@ -19722,7 +19722,8 @@ bool ARMTargetLowering::isLegalICmpImmediate(int64_t Imm) const {
 /// *or sub* immediate, that is the target has add or sub instructions which can
 /// add a register with the immediate without having to materialize the
 /// immediate into a register.
-bool ARMTargetLowering::isLegalAddImmediate(int64_t Imm) const {
+bool ARMTargetLowering::isLegalAddImmediate(int64_t Imm,
+                                            int64_t ScalableImm) const {
   // Same encoding for add/sub, just flip the sign.
   int64_t AbsImm = std::abs(Imm);
   if (!Subtarget->isThumb())

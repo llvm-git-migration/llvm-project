@@ -391,8 +391,9 @@ void TargetTransformInfo::getPeelingPreferences(Loop *L, ScalarEvolution &SE,
   return TTIImpl->getPeelingPreferences(L, SE, PP);
 }
 
-bool TargetTransformInfo::isLegalAddImmediate(int64_t Imm) const {
-  return TTIImpl->isLegalAddImmediate(Imm);
+bool TargetTransformInfo::isLegalAddImmediate(int64_t Imm,
+                                              int64_t ScalableImm) const {
+  return TTIImpl->isLegalAddImmediate(Imm, ScalableImm);
 }
 
 bool TargetTransformInfo::isLegalICmpImmediate(int64_t Imm) const {

@@ -17300,7 +17300,8 @@ bool PPCTargetLowering::isLegalICmpImmediate(int64_t Imm) const {
   return isInt<16>(Imm) || isUInt<16>(Imm);
 }
 
-bool PPCTargetLowering::isLegalAddImmediate(int64_t Imm) const {
+bool PPCTargetLowering::isLegalAddImmediate(int64_t Imm,
+                                            int64_t ScalableImm) const {
   return isInt<16>(Imm) || isUInt<16>(Imm);
 }
 

@@ -1023,7 +1023,8 @@ namespace llvm {
     /// add immediate, that is the target has add instructions which can
     /// add a register and the immediate without having to materialize
     /// the immediate into a register.
-    bool isLegalAddImmediate(int64_t Imm) const override;
+    bool isLegalAddImmediate(int64_t Imm,
+                             int64_t ScalableImm = 0) const override;
 
     /// isTruncateFree - Return true if it's free to truncate a value of
     /// type Ty1 to type Ty2. e.g. On PPC it's free to truncate a i64 value in

@@ -494,7 +494,8 @@ class VectorType;
     /// add immediate, that is the target has add instructions which can
     /// add a register and the immediate without having to materialize
     /// the immediate into a register.
-    bool isLegalAddImmediate(int64_t Imm) const override;
+    bool isLegalAddImmediate(int64_t Imm,
+                             int64_t ScalableImm = 0) const override;
 
     /// getPreIndexedAddressParts - returns true by value, base pointer and
     /// offset pointer and addressing mode by reference if the node's address

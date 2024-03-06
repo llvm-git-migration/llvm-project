@@ -1783,8 +1783,9 @@ bool RISCVTargetLowering::isLegalICmpImmediate(int64_t Imm) const {
   return isInt<12>(Imm);
 }
 
-bool RISCVTargetLowering::isLegalAddImmediate(int64_t Imm) const {
-  return isInt<12>(Imm);
+bool RISCVTargetLowering::isLegalAddImmediate(int64_t Imm,
+                                              int64_t ScalableImm) const {
+  return !ScalableImm && isInt<12>(Imm);
 }
 
 // On RV32, 64-bit integers are split into their high and low parts and held

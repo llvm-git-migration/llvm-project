@@ -2766,8 +2766,8 @@ public:
   /// Return true if the specified immediate is legal add immediate, that is the
   /// target has add instructions which can add a register with the immediate
   /// without having to materialize the immediate into a register.
-  virtual bool isLegalAddImmediate(int64_t) const {
-    return true;
+  virtual bool isLegalAddImmediate(int64_t, int64_t ScalableImm = 0) const {
+    return !ScalableImm;
   }
 
   /// Return true if the specified immediate is legal for the value input of a

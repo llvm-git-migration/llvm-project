@@ -324,8 +324,8 @@ public:
     return nullptr;
   }
 
-  bool isLegalAddImmediate(int64_t imm) {
-    return getTLI()->isLegalAddImmediate(imm);
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm) {
+    return getTLI()->isLegalAddImmediate(Imm, ScalableImm);
   }
 
   bool isLegalICmpImmediate(int64_t imm) {

@@ -475,7 +475,7 @@ public:
                              unsigned AS,
                              Instruction *I = nullptr) const override;
   bool isLegalICmpImmediate(int64_t Imm) const override;
-  bool isLegalAddImmediate(int64_t Imm) const override;
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm = 0) const override;
   bool isTruncateFree(Type *SrcTy, Type *DstTy) const override;
   bool isTruncateFree(EVT SrcVT, EVT DstVT) const override;
   bool isZExtFree(SDValue Val, EVT VT2) const override;

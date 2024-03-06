@@ -688,7 +688,7 @@ public:
   bool lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
                                        StoreInst *SI) const override;
 
-  bool isLegalAddImmediate(int64_t) const override;
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm = 0) const override;
   bool isLegalICmpImmediate(int64_t) const override;
 
   bool isMulAddWithConstProfitable(SDValue AddNode,

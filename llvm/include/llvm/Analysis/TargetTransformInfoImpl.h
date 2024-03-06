@@ -214,7 +214,9 @@ public:
   void getPeelingPreferences(Loop *, ScalarEvolution &,
                              TTI::PeelingPreferences &) const {}
 
-  bool isLegalAddImmediate(int64_t Imm) const { return false; }
+  bool isLegalAddImmediate(int64_t Imm, int64_t ScalableImm) const {
+    return false;
+  }
 
   bool isLegalICmpImmediate(int64_t Imm) const { return false; }
 

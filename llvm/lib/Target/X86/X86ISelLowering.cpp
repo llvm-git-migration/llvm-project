@@ -33882,7 +33882,8 @@ bool X86TargetLowering::isLegalICmpImmediate(int64_t Imm) const {
   return isInt<32>(Imm);
 }
 
-bool X86TargetLowering::isLegalAddImmediate(int64_t Imm) const {
+bool X86TargetLowering::isLegalAddImmediate(int64_t Imm,
+                                            int64_t ScalableImm) const {
   // Can also use sub to handle negated immediates.
   return isInt<32>(Imm);
 }
