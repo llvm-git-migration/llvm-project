@@ -165,7 +165,8 @@ public:
       {{CDM::CLibrary, {"explicit_bzero"}, 2}, &CStringChecker::evalBzero},
       {{CDM::CLibrary, {"sprintf"}, 2}, &CStringChecker::evalSprintf},
       {{CDM::CLibrary, {"snprintf"}, 2}, &CStringChecker::evalSnprintf},
-      {{CDM::CLibrary, {"getentropy"}, 2}, &CStringChecker::evalGetentropy},
+      {{CDM::CLibrary, {"getentropy"}, 2},
+       std::bind(&CStringChecker::evalGetentropy, _1, _2, _3, CK_Regular)},
   };
 
   // These require a bit of special handling.
@@ -220,7 +221,7 @@ public:
   void evalSnprintf(CheckerContext &C, const CallEvent &Call) const;
   void evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
                          bool IsBounded, bool IsBuiltin) const;
-  void evalGetentropy(CheckerContext &C, const CallEvent &Call) const;
+  void evalGetentropy(CheckerContext &C, const CallEvent &Call, CharKind CK) const;
 
   // Utility methods
   std::pair<ProgramStateRef , ProgramStateRef >
@@ -2518,11 +2519,13 @@ void CStringChecker::evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
 }
 
 void CStringChecker::evalGetentropy(CheckerContext &C,
-                                    const CallEvent &Call) const {
+                                    const CallEvent &Call, CharKind CK) const {
   DestinationArgExpr Buffer = {{Call.getArgExpr(0), 0}};
   SizeArgExpr Size = {{Call.getArgExpr(1), 1}};
   ProgramStateRef State = C.getState();
-  constexpr int BufferMaxSize = 256;
+  const LocationContext *LCtx = C.getLocationContext();
+  SValBuilder &Builder = C.getSValBuilder();
+  SVal MaxLength = Builder.makeIntVal(256, C.getASTContext().IntTy);
 
   SVal SizeVal = C.getSVal(Size.Expression);
   QualType SizeTy = Size.Expression->getType();
@@ -2531,31 +2534,39 @@ void CStringChecker::evalGetentropy(CheckerContext &C,
   std::tie(StateZeroSize, StateNonZeroSize) =
       assumeZero(C, State, SizeVal, SizeTy);
 
+  if (StateZeroSize) {
+    StateZeroSize = State->BindExpr(Call.getOriginExpr(), LCtx,
+                              Builder.makeZeroVal(C.getASTContext().IntTy));
+    C.addTransition(StateZeroSize);
+    return;
+  }
+
   SVal Buff = C.getSVal(Buffer.Expression);
   State = checkNonNull(C, StateNonZeroSize, Buffer, Buff);
   if (!State)
     return;
 
-  State = CheckBufferAccess(C, State, Buffer, Size, AccessKind::write);
-  if (!State)
-    return;
-
-  auto SizeLoc = SizeVal.getAs<nonloc::ConcreteInt>();
-  auto size = SizeLoc->getValue().getExtValue();
-
-  if (size > BufferMaxSize) {
+  QualType cmpTy = C.getSValBuilder().getConditionType();
+  ProgramStateRef bufferTooLong, bufferNotTooLong;
+  std::tie(bufferTooLong, bufferNotTooLong) = State->assume(
+	 Builder
+	.evalBinOpNN(State, BO_GT, *SizeVal.getAs<NonLoc>(), *MaxLength.getAs<NonLoc>(), cmpTy)
+	.castAs<DefinedOrUnknownSVal>());
+  if (bufferTooLong) {
     ErrorMessage Message;
     llvm::raw_svector_ostream Os(Message);
-    Os << " destination buffer size is greater than " << BufferMaxSize;
-    emitOutOfBoundsBug(C, StateNonZeroSize, Buffer.Expression, Message);
-    return;
-  }
+    Os << "size is greater than 256";
+    emitOutOfBoundsBug(C, bufferTooLong, Buffer.Expression, Message);
+  } else {
+    State = CheckBufferAccess(C, State, Buffer, Size, AccessKind::write, CK);
+    if (!State)
+      return;
 
-  State = invalidateDestinationBufferBySize(C, State, Buffer.Expression,
-                                            C.getSVal(Buffer.Expression),
+    State = invalidateDestinationBufferBySize(C, State, Buffer.Expression,
+                                            Buff,
                                             SizeVal, SizeTy);
-
-  C.addTransition(State);
+    C.addTransition(State);
+  }
 }
 
 //===----------------------------------------------------------------------===//
