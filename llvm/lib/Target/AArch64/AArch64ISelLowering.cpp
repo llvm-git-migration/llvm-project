@@ -16561,8 +16561,22 @@ LLT AArch64TargetLowering::getOptimalMemOpLLT(
 // 12-bit optionally shifted immediates are legal for adds.
 bool AArch64TargetLowering::isLegalAddImmediate(int64_t Immed,
                                                 int64_t ScalableImm) const {
-  if (ScalableImm)
-    return false;
+  if (ScalableImm) {
+    // Scalable immediates require SVE support; mixed fixed + scalable
+    // immediates are not supported by the current instructions.
+    if (Immed || !Subtarget->hasSVE())
+      return false;
+
+    // addvl's immediates are in terms of the number of bytes in a register.
+    // Since there are 16 in the base supported size (128bits), we need to
+    // divide the immediate by that much to give us a useful immediate to
+    // multiply by vscale. We can't have a remainder as a result of this.
+    if (ScalableImm % 16 != 0)
+      return false;
+    int64_t Imm = ScalableImm / 16;
+
+    return Imm >= -32 && Imm <= 31;
+  }
 
   if (Immed == std::numeric_limits<int64_t>::min()) {
     LLVM_DEBUG(dbgs() << "Illegal add imm " << Immed

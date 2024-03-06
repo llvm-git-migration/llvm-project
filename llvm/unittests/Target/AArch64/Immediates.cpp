@@ -31,15 +31,15 @@ const std::initializer_list<TestCase> Tests = {
 
     // Scalable; addvl increments by whole registers, range [-32,31]
     // +(16 * vscale), one register's worth
-    {0, 16, false},
+    {0, 16, true},
     // +(8 * vscale), half a register's worth
     {0, 8, false},
     // -(32 * 16 * vscale)
-    {0, -512, false},
+    {0, -512, true},
     // -(33 * 16 * vscale)
     {0, -528, false},
     // +(31 * 16 * vscale)
-    {0, 496, false},
+    {0, 496, true},
     // +(32 * 16 * vscale)
     {0, 512, false},
 
