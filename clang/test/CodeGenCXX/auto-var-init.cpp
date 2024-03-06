@@ -1504,9 +1504,7 @@ TEST_CUSTOM(unmatchedreverse, unmatchedreverse, { .c = 42  });
 // PATTERN-O1-NEXT:  store i8 -86, ptr %[[I]], align {{.*}}
 // PATTERN-O1-NEXT:  %[[I:[^ ]*]] = getelementptr inbounds i8, ptr %custom, i64 3
 // PATTERN-O1-NEXT:  store i8 -86, ptr %[[I]], align {{.*}}
-// ZERO-O1:     store i8 42, ptr {{.*}}, align 4
-// ZERO-O1-NEXT:  %[[I:[^ ]*]] = getelementptr inbounds i8, ptr %custom, i64 1
-// ZERO-O1-NEXT:  call void @llvm.memset.{{.*}}({{.*}}, i8 0, i64 3, {{.*}})
+// ZERO-O1:     store i32 42, ptr {{.*}}, align 4
 
 TEST_UNINIT(unmatchedfp, unmatchedfp);
 // CHECK-LABEL: @test_unmatchedfp_uninit()
@@ -1531,7 +1529,7 @@ TEST_CUSTOM(unmatchedfp, unmatchedfp, { .d = 3.1415926535897932384626433 });
 // CHECK-O0:    call void @llvm.memcpy
 // CHECK-NOT:   !annotation
 // CHECK-O0:    call void @{{.*}}used{{.*}}%custom)
-// CHECK-O1:    store double 0x400921FB54442D18, ptr %custom, align 8
+// CHECK-O1:    store i64 4614256656552045848, ptr %custom, align 8
 // CHECK-NOT:   !annotation
 
 TEST_UNINIT(emptyenum, emptyenum);
