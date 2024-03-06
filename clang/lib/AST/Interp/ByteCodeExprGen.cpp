@@ -232,7 +232,15 @@ bool ByteCodeExprGen<Emitter>::VisitCastExpr(const CastExpr *CE) {
                                 /*IsMutable=*/false, nullptr);
     }
 
-    return this->emitGetIntPtr(T, Desc, CE);
+    if (!this->emitGetIntPtr(T, Desc, CE))
+      return false;
+
+    PrimType DestPtrT = classifyPrim(PtrType);
+    if (DestPtrT == PT_Ptr)
+      return true;
+
+    // // In case we're converting the integer to a non-Pointer.
+    return this->emitDecayPtr(PT_Ptr, DestPtrT, CE);
   }
 
   case CK_AtomicToNonAtomic:

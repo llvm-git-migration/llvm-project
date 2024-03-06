@@ -533,7 +533,7 @@ def GetFnPtr : Opcode {
 }
 
 def GetIntPtr : Opcode {
-  let Types = [IntegerTypeClass];
+  let Types = [AluTypeClass];
   let Args = [ArgDesc];
   let HasGroup = 1;
 }
