@@ -1590,16 +1590,13 @@ static void computeKnownBitsFromOperator(const Operator *I,
       case Intrinsic::riscv_vsetvlimax: {
         bool HasAVL = II->getIntrinsicID() == Intrinsic::riscv_vsetvli;
         const ConstantRange Range = getVScaleRange(II->getFunction(), BitWidth);
-        uint64_t VSEW =
-            cast<ConstantInt>(II->getArgOperand(HasAVL))->getZExtValue();
-        uint64_t SEW = 1 << (VSEW + 3);
-        uint64_t VLMUL =
-            cast<ConstantInt>(II->getArgOperand(1 + HasAVL))->getZExtValue();
-        bool Fractional = VLMUL > 4;
-        uint64_t LMUL = Fractional ? (1 << (8 - VLMUL)) : (1 << VLMUL);
-        uint64_t MaxVL =
-            Range.getUpper().getZExtValue() * RISCV::RVVBitsPerBlock / SEW;
-        MaxVL = Fractional ? MaxVL / LMUL : MaxVL * LMUL;
+        uint64_t SEW = RISCVVType::decodeVSEW(
+            cast<ConstantInt>(II->getArgOperand(HasAVL))->getZExtValue());
+        RISCVII::VLMUL VLMUL = static_cast<RISCVII::VLMUL>(
+            cast<ConstantInt>(II->getArgOperand(1 + HasAVL))->getZExtValue());
+        uint64_t MaxVLEN =
+            (Range.getUpper().getZExtValue() - 1) * RISCV::RVVBitsPerBlock;
+        uint64_t MaxVL = MaxVLEN / RISCVVType::getSEWLMULRatio(SEW, VLMUL);
 
         // Result of vsetvli must be not larger than AVL.
         if (HasAVL)
