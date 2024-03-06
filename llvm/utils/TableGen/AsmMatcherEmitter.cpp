@@ -678,7 +678,7 @@ struct MatchableInfo {
       return false;
 
     // The size of instruction is unambiguous.
-    if (Target.getPreferSmallerInstructions() && ResInstSize != RHS.ResInstSize)
+    if (getPreferSmallerInstructions(Target) && ResInstSize != RHS.ResInstSize)
       return false;
 
     // The number of operands is unambiguous.
