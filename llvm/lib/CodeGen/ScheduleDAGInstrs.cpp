@@ -1103,7 +1103,7 @@ void ScheduleDAGInstrs::reduceHugeMemNodeMaps(Value2SUsMap &stores,
              dbgs() << "Loading SUnits:\n"; loads.dump());
 }
 
-static void toggleKills(const MachineRegisterInfo &MRI, LivePhysRegs &LiveRegs,
+static void toggleKills(const MachineRegisterInfo &MRI, LiveRegUnits &LiveRegs,
                         MachineInstr &MI, bool addToLiveRegs) {
   for (MachineOperand &MO : MI.operands()) {
     if (!MO.isReg() || !MO.readsReg())
@@ -1113,7 +1113,7 @@ static void toggleKills(const MachineRegisterInfo &MRI, LivePhysRegs &LiveRegs,
       continue;
 
     // Things that are available after the instruction are killed by it.
-    bool IsKill = LiveRegs.available(MRI, Reg);
+    bool IsKill = LiveRegs.available(Reg);
     MO.setIsKill(IsKill);
     if (addToLiveRegs)
       LiveRegs.addReg(Reg);
@@ -1144,7 +1144,7 @@ void ScheduleDAGInstrs::fixupKills(MachineBasicBlock &MBB) {
           continue;
         LiveRegs.removeReg(Reg);
       } else if (MO.isRegMask()) {
-        LiveRegs.removeRegsInMask(MO);
+        LiveRegs.removeRegsNotPreserved(MO.getRegMask());
       }
     }
 

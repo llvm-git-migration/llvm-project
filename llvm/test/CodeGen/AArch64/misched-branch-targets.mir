@@ -65,7 +65,7 @@ body:             |
 # CHECK-NEXT:    bb.0.entry:
 # CHECK-NEXT:      liveins: $w0, $w1, $w2, $lr
 #
-# CHECK:           frame-setup PAUTH_PROLOGUE implicit-def $lr, implicit {{.*}}$lr, implicit $sp
+# CHECK:           frame-setup PAUTH_PROLOGUE implicit-def $lr, implicit $lr, implicit $sp
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
 # CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
@@ -91,7 +91,7 @@ body:             |
 # CHECK-NEXT:    bb.0.entry:
 # CHECK-NEXT:      liveins: $w0, $w1, $w2, $lr
 #
-# CHECK:           frame-setup PACIASP implicit-def $lr, implicit {{.*}}$lr, implicit $sp
+# CHECK:           frame-setup PACIASP implicit-def $lr, implicit $lr, implicit $sp
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
 # CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
@@ -117,7 +117,7 @@ body:             |
 #
 # CHECK:           HINT 34
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
-# CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
+# CHECK-NEXT:      $w0 = MADDWrrr $w8, $w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
 
 ...
@@ -141,7 +141,7 @@ body:             |
 #
 # CHECK:           BRK 1
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
-# CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
+# CHECK-NEXT:      $w0 = MADDWrrr $w8, $w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
 
 ...
@@ -165,7 +165,7 @@ body:             |
 #
 # CHECK:           HLT 1
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
-# CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
+# CHECK-NEXT:      $w0 = MADDWrrr $w8, $w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
 
 ...
@@ -191,7 +191,7 @@ body:             |
 # CHECK-NEXT:      liveins: $w0, $w1, $w2, $lr
 #
 # CHECK:           $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
-# CHECK-DAG:       $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
+# CHECK-DAG:       $w0 = MADDWrrr $w8, $w2, $wzr
 # CHECK-DAG:       HINT 0
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
 

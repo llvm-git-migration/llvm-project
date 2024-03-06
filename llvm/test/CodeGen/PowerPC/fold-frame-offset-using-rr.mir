@@ -18,7 +18,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -76
+    ; CHECK: $x3 = ADDI8 killed $x1, -76
     $x4 = ADD8 killed $x3, killed $x4
     ; CHECK-NOT: ADD8
     $x6 = LD 4, killed $x4
@@ -34,7 +34,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -76
+    ; CHECK: $x3 = ADDI8 killed $x1, -76
     $x3 = ADD8 killed $x3, killed $x4
     ; CHECK-NOT: ADD8
     $x6 = LD 4, killed $x3
@@ -50,7 +50,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     $x3 = ADD8 killed $x3, killed $x4
     ; CHECK: $x3 = ADD8 killed $x3, killed $x4
     STD $x3, killed $x6, 100
@@ -68,7 +68,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     STD $x3, killed $x6, 100
     ; CHECK: STD $x3, killed $x6, 100
     $x3 = ADD8 killed $x3, killed $x4
@@ -86,7 +86,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     $x4 = ADD8 $x3, killed $x4
     ; CHECK: $x4 = ADD8 $x3, killed $x4
     STD killed $x3, killed $x6, 100
@@ -104,7 +104,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     $x4 = ADD8 killed $x3, killed $x4
     ; CHECK: $x4 = ADD8 killed $x3, killed $x4
     $x6 = LD 4, $x4
@@ -121,7 +121,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x5, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     $x4 = ADD8 killed $x3, killed $x5
     ; CHECK: $x4 = ADD8 killed $x3, killed $x5
     $x3 = LD 100, $x6
@@ -141,7 +141,7 @@ body: |
   bb.0.entry:
     liveins: $x3, $x1, $x4, $x5, $x6
     $x3 = ADDI8 $x1, -80
-    ; CHECK: $x3 = ADDI8 $x1, -80
+    ; CHECK: $x3 = ADDI8 killed $x1, -80
     $x4 = ADD8 killed $x3, killed $x5
     ; CHECK: $x4 = ADD8 killed $x3, killed $x5
     $x5 = LD 100, $x6

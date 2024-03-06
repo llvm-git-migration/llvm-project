@@ -13,37 +13,37 @@
 declare i32 @thunk_called_fn(i32, i32, i32, i32)
 
 define i32 @a() #0 {
-; ARM-LABEL: name:             a
+; ARM-LABEL: name: a
 ; ARM:       bb.0.entry:
 ; ARM-NEXT:    liveins: $r11, $lr
-; ARM:         $sp = frame-setup STMDB_UPD $sp, 14 /* CC::al */, $noreg, killed $r11, killed $lr
+; ARM:         $sp = frame-setup STMDB_UPD killed $sp, 14 /* CC::al */, $noreg, killed $r11, killed $lr
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 8
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION offset $r11, -8
 ; ARM-NEXT:    BL @OUTLINED_FUNCTION_0{{.*}}
 ; ARM-NEXT:    renamable $r0 = ADDri killed renamable $r0, 8, 14 /* CC::al */, $noreg, $noreg
-; ARM-NEXT:    $sp = frame-destroy LDMIA_RET $sp, 14 /* CC::al */, $noreg, def $r11, def $pc, implicit killed $r0
+; ARM-NEXT:    $sp = frame-destroy LDMIA_RET killed $sp, 14 /* CC::al */, $noreg, def $r11, def $pc, implicit killed $r0
 
-; THUMB-LABEL: name:             a
+; THUMB-LABEL: name: a
 ; THUMB:       bb.0.entry:
 ; THUMB-NEXT:    liveins: $r7, $lr
-; THUMB:         frame-setup tPUSH 14 /* CC::al */, $noreg, killed $r7, killed $lr
+; THUMB:         frame-setup tPUSH 14 /* CC::al */, $noreg, killed $r7, killed $lr, implicit-def $sp, implicit killed $sp
 ; THUMB-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 8
 ; THUMB-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
 ; THUMB-NEXT:    frame-setup CFI_INSTRUCTION offset $r7, -8
-; THUMB-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0{{.*}}
+; THUMB-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0, implicit-def $lr, implicit $sp, implicit-def $cpsr, implicit-def $lr, implicit-def $sp, implicit-def $r0, implicit-def $r1, implicit-def $r2, implicit-def $r3, implicit $noreg, implicit $sp
 ; THUMB-NEXT:    renamable $r0, dead $cpsr = tADDi8 killed renamable $r0, 8, 14 /* CC::al */, $noreg
-; THUMB-NEXT:    tPOP_RET 14 /* CC::al */, $noreg, def $r7, def $pc
+; THUMB-NEXT:    frame-destroy tPOP_RET 14 /* CC::al */, $noreg, def $r7, def $pc, implicit killed $r0
 
-; MACHO-LABEL: name:             a
+; MACHO-LABEL: name: a
 ; MACHO:       bb.0.entry:
 ; MACHO-NEXT:    liveins: $lr
-; MACHO:         early-clobber $sp = frame-setup t2STR_PRE killed $lr, $sp, -4, 14 /* CC::al */, $noreg
+; MACHO:         early-clobber $sp = frame-setup t2STR_PRE killed $lr, killed $sp, -4, 14 /* CC::al */, $noreg
 ; MACHO-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 4
 ; MACHO-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
-; MACHO-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0{{.*}}
+; MACHO-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0, implicit-def $lr, implicit $sp, implicit-def $cpsr, implicit-def $lr, implicit-def $sp, implicit-def $r0, implicit-def $r1, implicit-def $r2, implicit-def $r3, implicit $noreg, implicit $sp
 ; MACHO-NEXT:    renamable $r0, dead $cpsr = tADDi8 killed renamable $r0, 8, 14 /* CC::al */, $noreg
-; MACHO-NEXT:    $lr, $sp = frame-destroy t2LDR_POST $sp, 4, 14 /* CC::al */, $noreg
+; MACHO-NEXT:    $lr, $sp = frame-destroy t2LDR_POST killed $sp, 4, 14 /* CC::al */, $noreg
 ; MACHO-NEXT:    tBX_RET 14 /* CC::al */, $noreg, implicit killed $r0
 
 ; THUMB1-NOT: OUTLINED_FUNCTION_0
@@ -55,37 +55,37 @@ entry:
 }
 
 define i32 @b() #0 {
-; ARM-LABEL: name:             b
+; ARM-LABEL: name: b
 ; ARM:       bb.0.entry:
 ; ARM-NEXT:    liveins: $r11, $lr
-; ARM:         $sp = frame-setup STMDB_UPD $sp, 14 /* CC::al */, $noreg, killed $r11, killed $lr
+; ARM:         $sp = frame-setup STMDB_UPD killed $sp, 14 /* CC::al */, $noreg, killed $r11, killed $lr
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 8
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
 ; ARM-NEXT:    frame-setup CFI_INSTRUCTION offset $r11, -8
 ; ARM-NEXT:    BL @OUTLINED_FUNCTION_0{{.*}}
 ; ARM-NEXT:    renamable $r0 = ADDri killed renamable $r0, 88, 14 /* CC::al */, $noreg, $noreg
-; ARM-NEXT:    $sp = frame-destroy LDMIA_RET $sp, 14 /* CC::al */, $noreg, def $r11, def $pc, implicit killed $r0
+; ARM-NEXT:    $sp = frame-destroy LDMIA_RET killed $sp, 14 /* CC::al */, $noreg, def $r11, def $pc, implicit killed $r0
 
-; THUMB-LABEL: name:             b
+; THUMB-LABEL: name: b
 ; THUMB:       bb.0.entry:
 ; THUMB-NEXT:    liveins: $r7, $lr
-; THUMB:         frame-setup tPUSH 14 /* CC::al */, $noreg, killed $r7, killed $lr
-; THUMB-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 8
-; THUMB-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
-; THUMB-NEXT:    frame-setup CFI_INSTRUCTION offset $r7, -8
-; THUMB-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0{{.*}}
-; THUMB-NEXT:    renamable $r0, dead $cpsr = tADDi8 killed renamable $r0, 88, 14 /* CC::al */, $noreg
-; THUMB-NEXT:    tPOP_RET 14 /* CC::al */, $noreg, def $r7, def $pc
+; THUMB:         frame-setup tPUSH 14 /* CC::al */, $noreg, killed $r7, killed $lr, implicit-def $sp, implicit killed $sp
+; THUMB-NEXT:   frame-setup CFI_INSTRUCTION def_cfa_offset 8
+; THUMB-NEXT:   frame-setup CFI_INSTRUCTION offset $lr, -4
+; THUMB-NEXT:   frame-setup CFI_INSTRUCTION offset $r7, -8
+; THUMB-NEXT:   tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0, implicit-def $lr, implicit $sp, implicit-def $cpsr, implicit-def $lr, implicit-def $sp, implicit-def $r0, implicit-def $r1, implicit-def $r2, implicit-def $r3, implicit $noreg, implicit $sp
+; THUMB-NEXT:   renamable $r0, dead $cpsr = tADDi8 killed renamable $r0, 88, 14 /* CC::al */, $noreg
+; THUMB-NEXT:   frame-destroy tPOP_RET 14 /* CC::al */, $noreg, def $r7, def $pc, implicit killed $r0
 
-; MACHO-LABEL: name:             b
+; MACHO-LABEL: name: b
 ; MACHO:       bb.0.entry:
 ; MACHO-NEXT:    liveins: $lr
-; MACHO:         early-clobber $sp = frame-setup t2STR_PRE killed $lr, $sp, -4, 14 /* CC::al */, $noreg
+; MACHO:         early-clobber $sp = frame-setup t2STR_PRE killed $lr, killed $sp, -4, 14 /* CC::al */, $noreg
 ; MACHO-NEXT:    frame-setup CFI_INSTRUCTION def_cfa_offset 4
 ; MACHO-NEXT:    frame-setup CFI_INSTRUCTION offset $lr, -4
-; MACHO-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0{{.*}}
+; MACHO-NEXT:    tBL 14 /* CC::al */, $noreg, @OUTLINED_FUNCTION_0, implicit-def $lr, implicit $sp, implicit-def $cpsr, implicit-def $lr, implicit-def $sp, implicit-def $r0, implicit-def $r1, implicit-def $r2, implicit-def $r3, implicit $noreg, implicit $sp
 ; MACHO-NEXT:    renamable $r0, dead $cpsr = tADDi8 killed renamable $r0, 88, 14 /* CC::al */, $noreg
-; MACHO-NEXT:    $lr, $sp = frame-destroy t2LDR_POST $sp, 4, 14 /* CC::al */, $noreg
+; MACHO-NEXT:    $lr, $sp = frame-destroy t2LDR_POST killed $sp, 4, 14 /* CC::al */, $noreg
 ; MACHO-NEXT:    tBX_RET 14 /* CC::al */, $noreg, implicit killed $r0
 entry:
   %call = tail call i32 @thunk_called_fn(i32 1, i32 2, i32 3, i32 4)

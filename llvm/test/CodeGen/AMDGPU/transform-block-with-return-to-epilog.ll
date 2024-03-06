@@ -31,7 +31,7 @@ define amdgpu_ps float @test_return_to_epilog_into_end_block(i32 inreg %a, float
   ; GCN-NEXT:   successors:
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $vgpr0 = V_MOV_B32_e32 0, implicit $exec
-  ; GCN-NEXT:   GLOBAL_STORE_DWORD undef renamable $vgpr0_vgpr1, killed renamable $vgpr0, 0, 0, implicit $exec :: (volatile store (s32) into `ptr addrspace(1) undef`, addrspace 1)
+  ; GCN-NEXT:   GLOBAL_STORE_DWORD undef renamable $vgpr0_vgpr1, killed renamable $vgpr0, 0, 0, implicit killed $exec :: (volatile store (s32) into `ptr addrspace(1) undef`, addrspace 1)
   ; GCN-NEXT:   S_WAITCNT_soft 3952
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.3:
@@ -71,14 +71,14 @@ define amdgpu_ps float @test_unify_return_to_epilog_into_end_block(i32 inreg %a,
   ; GCN-NEXT:   successors: %bb.5(0x80000000)
   ; GCN-NEXT:   liveins: $vgpr1
   ; GCN-NEXT: {{  $}}
-  ; GCN-NEXT:   $vgpr0 = V_MOV_B32_e32 killed $vgpr1, implicit $exec, implicit $exec
+  ; GCN-NEXT:   $vgpr0 = V_MOV_B32_e32 killed $vgpr1, implicit killed $exec, implicit $exec
   ; GCN-NEXT:   S_BRANCH %bb.5
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.4.else:
   ; GCN-NEXT:   successors:
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $vgpr0 = V_MOV_B32_e32 0, implicit $exec
-  ; GCN-NEXT:   GLOBAL_STORE_DWORD undef renamable $vgpr0_vgpr1, killed renamable $vgpr0, 0, 0, implicit $exec :: (volatile store (s32) into `ptr addrspace(1) undef`, addrspace 1)
+  ; GCN-NEXT:   GLOBAL_STORE_DWORD undef renamable $vgpr0_vgpr1, killed renamable $vgpr0, 0, 0, implicit killed $exec :: (volatile store (s32) into `ptr addrspace(1) undef`, addrspace 1)
   ; GCN-NEXT:   S_WAITCNT_soft 3952
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.5:
@@ -105,30 +105,30 @@ define amdgpu_ps { <4 x float> } @test_return_to_epilog_with_optimized_kill(floa
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $vgpr1 = nofpexcept V_RCP_F32_e32 $vgpr0, implicit $mode, implicit $exec
   ; GCN-NEXT:   $sgpr0_sgpr1 = S_MOV_B64 $exec
-  ; GCN-NEXT:   nofpexcept V_CMP_NGT_F32_e32 0, killed $vgpr1, implicit-def $vcc, implicit $mode, implicit $exec
-  ; GCN-NEXT:   $sgpr2_sgpr3 = S_AND_SAVEEXEC_B64 killed $vcc, implicit-def $exec, implicit-def $scc, implicit $exec
+  ; GCN-NEXT:   nofpexcept V_CMP_NGT_F32_e32 0, killed $vgpr1, implicit-def $vcc, implicit killed $mode, implicit $exec
+  ; GCN-NEXT:   $sgpr2_sgpr3 = S_AND_SAVEEXEC_B64 killed $vcc, implicit-def $exec, implicit-def $scc, implicit killed $exec
   ; GCN-NEXT:   renamable $sgpr2_sgpr3 = S_XOR_B64 $exec, killed renamable $sgpr2_sgpr3, implicit-def dead $scc
-  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.3, implicit $exec
+  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.3, implicit killed $exec
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.1.Flow1:
   ; GCN-NEXT:   successors: %bb.6(0x40000000), %bb.2(0x40000000)
   ; GCN-NEXT:   liveins: $sgpr0_sgpr1, $sgpr2_sgpr3
   ; GCN-NEXT: {{  $}}
-  ; GCN-NEXT:   $sgpr2_sgpr3 = S_ANDN2_SAVEEXEC_B64 killed $sgpr2_sgpr3, implicit-def $exec, implicit-def $scc, implicit $exec
-  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.6, implicit $exec
+  ; GCN-NEXT:   $sgpr2_sgpr3 = S_ANDN2_SAVEEXEC_B64 killed $sgpr2_sgpr3, implicit-def $exec, implicit-def $scc, implicit killed $exec
+  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.6, implicit killed $exec
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.2.end:
   ; GCN-NEXT:   successors: %bb.9(0x80000000)
   ; GCN-NEXT:   liveins: $sgpr2_sgpr3
   ; GCN-NEXT: {{  $}}
-  ; GCN-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr2_sgpr3, implicit-def $scc
+  ; GCN-NEXT:   $exec = S_OR_B64 killed $exec, killed renamable $sgpr2_sgpr3, implicit-def $scc
   ; GCN-NEXT:   S_BRANCH %bb.9
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.3.flow.preheader:
   ; GCN-NEXT:   successors: %bb.4(0x80000000)
   ; GCN-NEXT:   liveins: $vgpr0, $sgpr0_sgpr1, $sgpr2_sgpr3
   ; GCN-NEXT: {{  $}}
-  ; GCN-NEXT:   nofpexcept V_CMP_NGT_F32_e32 0, killed $vgpr0, implicit-def $vcc, implicit $mode, implicit $exec
+  ; GCN-NEXT:   nofpexcept V_CMP_NGT_F32_e32 0, killed $vgpr0, implicit-def $vcc, implicit killed $mode, implicit killed $exec
   ; GCN-NEXT:   renamable $sgpr4_sgpr5 = S_MOV_B64 0
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.4.flow:
@@ -137,16 +137,16 @@ define amdgpu_ps { <4 x float> } @test_return_to_epilog_with_optimized_kill(floa
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr6_sgpr7 = S_AND_B64 $exec, renamable $vcc, implicit-def $scc
   ; GCN-NEXT:   renamable $sgpr4_sgpr5 = S_OR_B64 killed renamable $sgpr6_sgpr7, killed renamable $sgpr4_sgpr5, implicit-def $scc
-  ; GCN-NEXT:   $exec = S_ANDN2_B64 $exec, renamable $sgpr4_sgpr5, implicit-def $scc
-  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.4, implicit $exec
+  ; GCN-NEXT:   $exec = S_ANDN2_B64 killed $exec, renamable $sgpr4_sgpr5, implicit-def $scc
+  ; GCN-NEXT:   S_CBRANCH_EXECNZ %bb.4, implicit killed $exec
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.5.Flow:
   ; GCN-NEXT:   successors: %bb.6(0x40000000), %bb.2(0x40000000)
   ; GCN-NEXT:   liveins: $sgpr0_sgpr1, $sgpr2_sgpr3, $sgpr4_sgpr5
   ; GCN-NEXT: {{  $}}
-  ; GCN-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr4_sgpr5, implicit-def $scc
-  ; GCN-NEXT:   $sgpr2_sgpr3 = S_ANDN2_SAVEEXEC_B64 killed $sgpr2_sgpr3, implicit-def $exec, implicit-def $scc, implicit $exec
-  ; GCN-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; GCN-NEXT:   $exec = S_OR_B64 killed $exec, killed renamable $sgpr4_sgpr5, implicit-def $scc
+  ; GCN-NEXT:   $sgpr2_sgpr3 = S_ANDN2_SAVEEXEC_B64 killed $sgpr2_sgpr3, implicit-def $exec, implicit-def $scc, implicit killed $exec
+  ; GCN-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit killed $exec
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.6.kill0:
   ; GCN-NEXT:   successors: %bb.7(0x40000000), %bb.8(0x40000000)
@@ -160,7 +160,7 @@ define amdgpu_ps { <4 x float> } @test_return_to_epilog_with_optimized_kill(floa
   ; GCN-NEXT:   liveins: $sgpr2_sgpr3, $scc
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   $exec = S_MOV_B64 0
-  ; GCN-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr2_sgpr3, implicit-def $scc
+  ; GCN-NEXT:   $exec = S_OR_B64 killed $exec, killed renamable $sgpr2_sgpr3, implicit-def $scc
   ; GCN-NEXT:   S_BRANCH %bb.9
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.8:
