@@ -14,6 +14,7 @@
 #include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
+#include "llvm-c/Core.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/SmallVectorExtras.h"
 
@@ -144,7 +145,8 @@ MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx) {
 MlirAttribute mlirLLVMDIBasicTypeAttrGet(MlirContext ctx, unsigned int tag,
                                          MlirAttribute name,
                                          uint64_t sizeInBits,
-                                         unsigned int encoding) {
+                                         LLVMDWARFTypeEncoding encoding) {
+
   return wrap(DIBasicTypeAttr::get(
       unwrap(ctx), tag, cast<StringAttr>(unwrap(name)), sizeInBits, encoding));
 }
@@ -183,15 +185,16 @@ mlirLLVMDIDerivedTypeAttrGetBaseType(MlirAttribute diDerivedType) {
   return wrap(cast<DIDerivedTypeAttr>(unwrap(diDerivedType)).getBaseType());
 }
 
-MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx, uint64_t cconv) {
+MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx, LLVMCallConv cconv) {
   return wrap(CConvAttr::get(unwrap(ctx), CConv(cconv)));
 }
 
-MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx, uint64_t comdat) {
+MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx,
+                                    LLVMComdatSelectionKind comdat) {
   return wrap(ComdatAttr::get(unwrap(ctx), comdat::Comdat(comdat)));
 }
 
-MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx, uint64_t linkage) {
+MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx, LLVMLinkage linkage) {
   return wrap(LinkageAttr::get(unwrap(ctx), linkage::Linkage(linkage)));
 }
 
@@ -206,7 +209,7 @@ MlirAttribute mlirLLVMDICompileUnitAttrGet(MlirContext ctx, MlirAttribute id,
                                            MlirAttribute file,
                                            MlirAttribute producer,
                                            bool isOptimized,
-                                           uint64_t emissionKind) {
+                                           LLVMDWARFEmissionKind emissionKind) {
   return wrap(DICompileUnitAttr::get(
       unwrap(ctx), cast<DistinctAttr>(unwrap(id)), sourceLanguage,
       cast<DIFileAttr>(unwrap(file)), cast<StringAttr>(unwrap(producer)),

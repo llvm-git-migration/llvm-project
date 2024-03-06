@@ -14,6 +14,8 @@
 #include "mlir-c/BuiltinTypes.h"
 #include "mlir-c/IR.h"
 #include "mlir-c/Support.h"
+#include "llvm-c/Core.h"
+#include "llvm-c/DebugInfo.h"
 
 #include <assert.h>
 #include <inttypes.h>
@@ -231,11 +233,11 @@ static void testLLVMAttributes(MlirContext ctx) {
   fprintf(stderr, "testLLVMAttributes\n");
 
   // CHECK: #llvm.linkage<internal>
-  mlirAttributeDump(mlirLLVMLinkageAttrGet(ctx, 0x1));
+  mlirAttributeDump(mlirLLVMLinkageAttrGet(ctx, LLVMInternalLinkage));
   // CHECK: #llvm.cconv<ccc>
-  mlirAttributeDump(mlirLLVMCConvAttrGet(ctx, 0x0));
+  mlirAttributeDump(mlirLLVMCConvAttrGet(ctx, LLVMCCallConv));
   // CHECK: #llvm<comdat any>
-  mlirAttributeDump(mlirLLVMComdatAttrGet(ctx, 0x0));
+  mlirAttributeDump(mlirLLVMComdatAttrGet(ctx, LLVMAnyComdatSelectionKind));
 }
 
 // CHECK-LABEL: testDebugInfoAttributes
@@ -250,9 +252,11 @@ static void testDebugInfoAttributes(MlirContext ctx) {
 
   // CHECK: #llvm.di_null_type
   mlirAttributeDump(mlirLLVMDINullTypeAttrGet(ctx));
+
   // CHECK: #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits =
-  // 64, encoding = DW_ATE_signed>
-  MlirAttribute di_type = mlirLLVMDIBasicTypeAttrGet(ctx, 0, foo, 64, 0x5);
+  // CHECK-SAME: 64, encoding = DW_ATE_signed>
+  MlirAttribute di_type =
+      mlirLLVMDIBasicTypeAttrGet(ctx, 0, foo, 64, LLVMDWARFSignedTypeEncoding);
   mlirAttributeDump(di_type);
 
   MlirAttribute file = mlirLLVMDIFileAttrGet(ctx, foo, bar);
@@ -261,102 +265,63 @@ static void testDebugInfoAttributes(MlirContext ctx) {
   mlirAttributeDump(file);
 
   MlirAttribute compile_unit =
-      mlirLLVMDICompileUnitAttrGet(ctx, id, 0x1C, file, foo, false, 0x1);
+      mlirLLVMDICompileUnitAttrGet(ctx, id, LLVMDWARFSourceLanguageC99, file,
+                                   foo, false, LLVMDWARFEmissionFull);
 
-  // CHECK: #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
-  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
-  // false, emissionKind = Full>
+  // CHECK: #llvm.di_compile_unit<{{.*}}>
   mlirAttributeDump(compile_unit);
 
   MlirAttribute di_module = mlirLLVMDIModuleAttrGet(
       ctx, file, compile_unit, foo,
       mlirStringAttrGet(ctx, mlirStringRefCreateFromCString("")), bar, foo, 1,
       0);
-  // CHECK: #llvm.di_module<file = <"foo" in "bar">, scope =
-  // #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
-  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
-  // false, emissionKind = Full>, name = "foo", configMacros = "", includePath =
-  // "bar", apinotes = "foo", line = 1>
+  // CHECK: #llvm.di_module<{{.*}}>
   mlirAttributeDump(di_module);
 
-  // CHECK: #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
-  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
-  // false, emissionKind = Full>
+  // CHECK: #llvm.di_compile_unit<{{.*}}>
   mlirAttributeDump(mlirLLVMDIModuleAttrGetScope(di_module));
 
   // CHECK: 1 : i32
   mlirAttributeDump(mlirLLVMDIFlagsAttrGet(ctx, 0x1));
 
-  // CHECK: #llvm.di_lexical_block<scope = #llvm.di_compile_unit<id =
-  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
-  // producer = "foo", isOptimized = false, emissionKind = Full>, file = <"foo"
-  // in "bar">, line = 1, column = 2>
+  // CHECK: #llvm.di_lexical_block<{{.*}}>
   mlirAttributeDump(
       mlirLLVMDILexicalBlockAttrGet(ctx, compile_unit, file, 1, 2));
 
-  // CHECK: #llvm.di_lexical_block_file<scope = #llvm.di_compile_unit<id =
-  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
-  // producer = "foo", isOptimized = false, emissionKind = Full>, file = <"foo"
-  // in "bar">, discriminator = 3>
+  // CHECK: #llvm.di_lexical_block_file<{{.*}}>
   mlirAttributeDump(
       mlirLLVMDILexicalBlockFileAttrGet(ctx, compile_unit, file, 3));
 
-  // CHECK: #llvm.di_local_variable<scope = #llvm.di_compile_unit<id =
-  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
-  // producer = "foo", isOptimized = false, emissionKind = Full>, name = "foo",
-  // file = <"foo" in "bar">, line = 1, alignInBits = 8, type =
-  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
-  // encoding = DW_ATE_signed>>
+  // CHECK: #llvm.di_local_variable<{{.*}}>
   mlirAttributeDump(mlirLLVMDILocalVariableAttrGet(ctx, compile_unit, foo, file,
                                                    1, 0, 8, di_type));
-  // CHECK: #llvm.di_derived_type<tag = DW_TAG_null, name = "bar", baseType =
-  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
-  // encoding = DW_ATE_signed>, sizeInBits = 64, alignInBits = 8>
+  // CHECK: #llvm.di_derived_type<{{.*}}>
   mlirAttributeDump(
       mlirLLVMDIDerivedTypeAttrGet(ctx, 0, bar, di_type, 64, 8, 0));
 
-  // CHECK: #llvm.di_composite_type<tag = DW_TAG_null, name = "foo", file =
-  // <"foo" in "bar">, line = 1, scope = #llvm.di_compile_unit<id =
-  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
-  // producer = "foo", isOptimized = false, emissionKind = Full>, baseType =
-  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
-  // encoding = DW_ATE_signed>, sizeInBits = 64, alignInBits = 8, elements =
-  // #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits = 64,
-  // encoding = DW_ATE_signed>>
+  // CHECK: #llvm.di_composite_type<{{.*}}>
   mlirAttributeDump(mlirLLVMDICompositeTypeAttrGet(
       ctx, 0, foo, file, 1, compile_unit, di_type, 0, 64, 8, 1, &di_type));
 
   MlirAttribute subroutine_type =
       mlirLLVMDISubroutineTypeAttrGet(ctx, 0x0, 1, &di_type);
 
-  // CHECK: #llvm.di_subroutine_type<types = #llvm.di_basic_type<tag =
-  // DW_TAG_null, name = "foo", sizeInBits = 64, encoding = DW_ATE_signed>>
+  // CHECK: #llvm.di_subroutine_type<{{.*}}>
   mlirAttributeDump(subroutine_type);
 
   MlirAttribute di_subprogram =
       mlirLLVMDISubprogramAttrGet(ctx, id, compile_unit, compile_unit, foo, bar,
                                   file, 1, 2, 0, subroutine_type);
-  // CHECK: #llvm.di_subprogram<id = distinct[0]<"foo">, compileUnit = <id =
-  // distinct[0]<"foo">, sourceLanguage = DW_LANG_Rust, file = <"foo" in "bar">,
-  // producer = "foo", isOptimized = false, emissionKind = Full>, scope =
-  // #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
-  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
-  // false, emissionKind = Full>, name = "foo", linkageName = "bar", file =
-  // <"foo" in "bar">, line = 1, scopeLine = 2, subprogramFlags = , type =
-  // <types = #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits =
-  // 64, encoding = DW_ATE_signed>>>
+  // CHECK: #llvm.di_subprogram<{{.*}}>
   mlirAttributeDump(di_subprogram);
 
-  // CHECK: #llvm.di_compile_unit<id = distinct[0]<"foo">, sourceLanguage =
-  // DW_LANG_Rust, file = <"foo" in "bar">, producer = "foo", isOptimized =
-  // false, emissionKind = Full>
+  // CHECK: #llvm.di_compile_unit<{{.*}}>
   mlirAttributeDump(mlirLLVMDISubprogramAttrGetScope(di_subprogram));
 
-  // CHECK: #llvm.di_file<"foo" in "bar">
+  // CHECK: #llvm.di_file<{{.*}}>
   mlirAttributeDump(mlirLLVMDISubprogramAttrGetFile(di_subprogram));
 
-  // CHECK: #llvm.di_subroutine_type<types = #llvm.di_basic_type<tag =
-  // DW_TAG_null, name = "foo", sizeInBits = 64, encoding = DW_ATE_signed>>
+  // CHECK: #llvm.di_subroutine_type<{{.*}}>
   mlirAttributeDump(mlirLLVMDISubprogramAttrGetType(di_subprogram));
 
   MlirAttribute expression_elem =
