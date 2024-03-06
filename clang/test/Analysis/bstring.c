@@ -529,3 +529,42 @@ void nocrash_on_locint_offset(void *addr, void* from, struct S s) {
   size_t iAdd = (size_t) addr;
   memcpy(((void *) &(s.f)), from, iAdd);
 }
+
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+/* present in both glibc 2.25 and musl 1.1.20 */
+
+//===----------------------------------------------------------------------===
+// getentropy()
+//===----------------------------------------------------------------------===
+
+int getentropy(void *d, size_t n);
+
+int getentropy0(void) {
+  char buf[16] = {0};
+
+  int r = getentropy(buf, sizeof(buf)); // no-warning
+  return r;
+}
+
+int getentropy1(void) {
+  char buf[257] = {0};
+
+  int r = getentropy(buf, 256); // no-warning
+  return r;
+}
+
+int getentropy2(void) {
+  char buf[1024] = {0};
+
+  int r = getentropy(buf, sizeof(buf)); // expected-warning{{size is greater than 256}}
+  return r;
+}
+
+int getentropy3(void) {
+  char buf[256] = {0};
+
+  int r = getentropy(buf, 0); // no-wwarning
+  return r;
+}
+
+#endif
