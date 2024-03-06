@@ -1326,28 +1326,29 @@ public:
       auto *VecSrcTy = cast<VectorType>(Operands[0]->getType());
       int NumSubElts, SubIndex;
 
+      // TODO: move more of this inside improveShuffleKindFromMask.
       if (Shuffle->changesLength()) {
+        ArrayRef<int> Mask = Shuffle->getShuffleMask();
+
         // Treat a 'subvector widening' as a free shuffle.
         if (Shuffle->increasesLength() && Shuffle->isIdentityWithPadding())
           return 0;
 
         if (Shuffle->isExtractSubvectorMask(SubIndex))
           return TargetTTI->getShuffleCost(TTI::SK_ExtractSubvector, VecSrcTy,
-                                           Shuffle->getShuffleMask(), CostKind,
-                                           SubIndex, VecTy, Operands);
+                                           Mask, CostKind, SubIndex, VecTy,
+                                           Operands);
 
         if (Shuffle->isInsertSubvectorMask(NumSubElts, SubIndex))
           return TargetTTI->getShuffleCost(
-              TTI::SK_InsertSubvector, VecTy, Shuffle->getShuffleMask(),
-              CostKind, SubIndex,
+              TTI::SK_InsertSubvector, VecTy, Mask, CostKind, SubIndex,
               FixedVectorType::get(VecTy->getScalarType(), NumSubElts),
               Operands);
 
         int ReplicationFactor, VF;
         if (Shuffle->isReplicationMask(ReplicationFactor, VF)) {
-          APInt DemandedDstElts =
-              APInt::getZero(Shuffle->getShuffleMask().size());
-          for (auto I : enumerate(Shuffle->getShuffleMask())) {
+          APInt DemandedDstElts = APInt::getZero(Mask.size());
+          for (auto I : enumerate(Mask)) {
             if (I.value() != PoisonMaskElem)
               DemandedDstElts.setBit(I.index());
           }
@@ -1356,7 +1357,35 @@ public:
               DemandedDstElts, CostKind);
         }
 
-        return CostKind == TTI::TCK_RecipThroughput ? -1 : 1;
+        bool IsUnary = isa<UndefValue>(Operands[1]);
+        NumSubElts = VecSrcTy->getElementCount().getKnownMinValue();
+        SmallVector<int, 16> AdjustMask(Mask.begin(), Mask.end());
+
+        // Widening shuffle - widening the source(s) to the new length
+        // (treated as free - see above), and then perform the adjusted
+        // shuffle at that width.
+        if (Shuffle->increasesLength()) {
+          for (int &M : AdjustMask)
+            M = M >= NumSubElts ? (M + (Mask.size() - NumSubElts)) : M;
+
+          return TargetTTI->getShuffleCost(
+              IsUnary ? TTI::SK_PermuteSingleSrc : TTI::SK_PermuteTwoSrc, VecTy,
+              AdjustMask, CostKind, 0, nullptr);
+        }
+
+        // Narrowing shuffle - perform shuffle at original wider width and
+        // then extract the lower elements.
+        AdjustMask.append(NumSubElts - Mask.size(), -1);
+
+        InstructionCost ShuffleCost = TargetTTI->getShuffleCost(
+            IsUnary ? TTI::SK_PermuteSingleSrc : TTI::SK_PermuteTwoSrc,
+            VecSrcTy, AdjustMask, CostKind, 0, nullptr);
+
+        SmallVector<int, 16> ExtractMask(Mask.size(), -1);
+        std::iota(ExtractMask.begin(), ExtractMask.end(), 0);
+        return ShuffleCost + TargetTTI->getShuffleCost(
+                                 TTI::SK_ExtractSubvector, VecTy, ExtractMask,
+                                 CostKind, 0, VecSrcTy, Operands);
       }
 
       if (Shuffle->isIdentity())
