@@ -28927,6 +28927,9 @@ SDValue X86TargetLowering::LowerWin64_INT128_TO_FP(SDValue Op,
 // supported by the Subtarget
 static bool supportedVectorShiftWithImm(EVT VT, const X86Subtarget &Subtarget,
                                         unsigned Opcode) {
+  assert(Opcode == ISD::SHL || Opcode == ISD::SRA || Opcode == ISD::SRL &&
+        "Unexpected Opcode!");
+
   if (!VT.isSimple())
     return false;
 
@@ -47290,6 +47293,17 @@ static SDValue combineShiftRightArithmetic(SDNode *N, SelectionDAG &DAG,
 
   if (SDValue V = combineShiftToPMULH(N, DAG, Subtarget))
     return V;
+
+  APInt ShiftAmt;
+  SDNode *UMinNode = N1.getNode();
+  if (supportedVectorVarShift(VT, Subtarget, ISD::SRA) &&
+      UMinNode->getOpcode() == ISD::UMIN &&
+      ISD::isConstantSplatVector(UMinNode->getOperand(1).getNode(), ShiftAmt) &&
+      ShiftAmt == VT.getScalarSizeInBits() - 1) {
+    SDValue ShrAmtVal = UMinNode->getOperand(0);
+    SDLoc DL(N);
+    return DAG.getNode(X86ISD::VSRAV, DL, N->getVTList(), N0, ShrAmtVal);
+  }
 
   // fold (ashr (shl, a, [56,48,32,24,16]), SarConst)
   // into (shl, (sext (a), [56,48,32,24,16] - SarConst)) or
