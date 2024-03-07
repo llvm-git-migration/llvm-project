@@ -3969,8 +3969,11 @@ void CodeGenModule::EmitMultiVersionFunctionDefinition(GlobalDecl GD,
         EmitGlobalFunctionDefinition(GD.getWithMultiVersionIndex(I), nullptr);
     // Ensure that the resolver function is also emitted.
     GetOrCreateMultiVersionResolver(GD);
-  } else if (FD->hasAttr<TargetVersionAttr>()) {
-    GetOrCreateMultiVersionResolver(GD);
+  } else if (auto *TVA = FD->getAttr<TargetVersionAttr>()) {
+    EmitGlobalFunctionDefinition(GD, GV);
+    // Emit the resolver alongside with the default version definition.
+    if (TVA->isDefaultVersion() && FD->doesThisDeclarationHaveABody())
+      GetOrCreateMultiVersionResolver(GD);
   } else
     EmitGlobalFunctionDefinition(GD, GV);
 }
