@@ -504,7 +504,9 @@ void NVPTX::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
 }
 
 static bool shouldIncludePTX(const ArgList &Args, const char *gpu_arch) {
-  bool includePTX = true;
+  // The new driver does not include PTX by default.
+  bool includePTX = !Args.hasFlag(options::OPT_offload_new_driver,
+                                  options::OPT_no_offload_new_driver, false);
   for (Arg *A : Args) {
     if (!(A->getOption().matches(options::OPT_cuda_include_ptx_EQ) ||
           A->getOption().matches(options::OPT_no_cuda_include_ptx_EQ)))
