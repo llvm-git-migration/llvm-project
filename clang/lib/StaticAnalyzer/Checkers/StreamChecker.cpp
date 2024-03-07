@@ -1207,11 +1207,7 @@ StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
   const auto [PtrNotNull, PtrNull] = State->assume(*Ptr);
   if (!PtrNotNull && PtrNull) {
     if (ExplodedNode *N = C.generateErrorNode(PtrNull)) {
-      SmallString<256> buf;
-      llvm::raw_svector_ostream os(buf);
-      os << PtrDescr << " pointer might be NULL.";
-
-      auto R = std::make_unique<PathSensitiveBugReport>(BT_SizeNull, buf, N);
+      auto R = std::make_unique<PathSensitiveBugReport>(BT_SizeNull, (PtrDescr + " pointer might be NULL.").str(), N);
       bugreporter::trackExpressionValue(N, PtrExpr, *R);
       C.emitReport(std::move(R));
     }
