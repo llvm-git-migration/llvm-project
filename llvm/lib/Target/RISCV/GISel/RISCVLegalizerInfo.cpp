@@ -236,6 +236,9 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
 
   getActionDefinitionsBuilder(G_ICMP)
       .legalFor({{sXLen, sXLen}, {sXLen, p0}})
+      .legalIf(all(typeIsLegalBoolVec(0, BoolVecTys, ST),
+                   typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)))
+      .widenScalarOrEltToNextPow2OrMinSize(1, 8)
       .widenScalarToNextPow2(1)
       .clampScalar(1, sXLen, sXLen)
       .clampScalar(0, sXLen, sXLen);
