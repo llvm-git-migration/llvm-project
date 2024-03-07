@@ -31,7 +31,7 @@ namespace AMDGPU {
 using FunctionVariableMap = DenseMap<Function *, DenseSet<GlobalVariable *>>;
 using VariableFunctionMap = DenseMap<GlobalVariable *, DenseSet<Function *>>;
 
-Align getAlign(const DataLayout &DL, const GlobalVariable *GV);
+Align getAlign(DataLayout const &DL, const GlobalVariable *GV);
 
 bool isDynamicLDS(const GlobalVariable &GV);
 bool isLDSVariableToLower(const GlobalVariable &GV);
