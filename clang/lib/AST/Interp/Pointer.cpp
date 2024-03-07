@@ -48,9 +48,8 @@ Pointer::Pointer(Pointer &&P)
     : Offset(P.Offset), PointeeStorage(P.PointeeStorage),
       StorageKind(P.StorageKind) {
 
-  if (StorageKind == Storage::Block && PointeeStorage.BS.Pointee) {
+  if (StorageKind == Storage::Block && PointeeStorage.BS.Pointee)
     PointeeStorage.BS.Pointee->replacePointer(&P, this);
-  }
 }
 
 Pointer::~Pointer() {
@@ -65,10 +64,8 @@ Pointer::~Pointer() {
 
 void Pointer::operator=(const Pointer &P) {
 
-  if (this->isIntegralPointer() && P.isBlockPointer()) {
-  } else {
+  if (!this->isIntegralPointer() || !P.isBlockPointer())
     assert(P.StorageKind == StorageKind);
-  }
 
   bool WasBlockPointer = isBlockPointer();
   StorageKind = P.StorageKind;
@@ -88,15 +85,14 @@ void Pointer::operator=(const Pointer &P) {
 
   } else if (StorageKind == Storage::Int) {
     PointeeStorage.Int = P.PointeeStorage.Int;
-  } else
-    assert(false);
+  } else {
+    assert(false && "Unhandled storage kind");
+  }
 }
 
 void Pointer::operator=(Pointer &&P) {
-  if (this->isIntegralPointer() && P.isBlockPointer()) {
-  } else {
+  if (!this->isIntegralPointer() || !P.isBlockPointer())
     assert(P.StorageKind == StorageKind);
-  }
 
   bool WasBlockPointer = isBlockPointer();
   StorageKind = P.StorageKind;
@@ -116,8 +112,9 @@ void Pointer::operator=(Pointer &&P) {
 
   } else if (StorageKind == Storage::Int) {
     PointeeStorage.Int = P.PointeeStorage.Int;
-  } else
-    assert(false);
+  } else {
+    assert(false && "Unhandled storage kind");
+  }
 }
 
 APValue Pointer::toAPValue() const {
@@ -126,12 +123,11 @@ APValue Pointer::toAPValue() const {
   if (isZero())
     return APValue(static_cast<const Expr *>(nullptr), CharUnits::Zero(), Path,
                    /*IsOnePastEnd=*/false, /*IsNullPtr=*/true);
-  if (isIntegralPointer()) {
+  if (isIntegralPointer())
     return APValue(static_cast<const Expr *>(nullptr),
                    CharUnits::fromQuantity(asIntPointer().Value + this->Offset),
                    Path,
                    /*IsOnePastEnd=*/false, /*IsNullPtr=*/false);
-  }
 
   // Build the lvalue base from the block.
   const Descriptor *Desc = getDeclDesc();
@@ -167,9 +163,8 @@ APValue Pointer::toAPValue() const {
         Path.push_back(APValue::LValuePathEntry({BaseOrMember, IsVirtual}));
         Ptr = Ptr.getBase();
         continue;
-
-        llvm_unreachable("Invalid field type");
       }
+      llvm_unreachable("Invalid field type");
     }
   }
 
@@ -213,8 +208,7 @@ std::string Pointer::toDiagnosticString(const ASTContext &Ctx) const {
     return "nullptr";
 
   if (isIntegralPointer())
-    return std::string("&(") + std::to_string(asIntPointer().Value + Offset) +
-           ")";
+    return (Twine("&(") + Twine(asIntPointer().Value + Offset) + ")").str();
 
   return toAPValue().getAsString(Ctx, getType());
 }

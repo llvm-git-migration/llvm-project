@@ -814,7 +814,7 @@ inline bool CmpHelperEQ<Pointer>(InterpState &S, CodePtr OpPC, CompareFn Fn) {
     // by comparing pointers to the first elements.
     if (!LHS.isZero() && !LHS.isDummy() && LHS.isArrayRoot())
       VL = LHS.atIndex(0).getByteOffset();
-    if (!RHS.isDummy() && !RHS.isDummy() && RHS.isArrayRoot())
+    if (!RHS.isZero() && !RHS.isDummy() && RHS.isArrayRoot())
       VR = RHS.atIndex(0).getByteOffset();
 
     S.Stk.push<BoolT>(BoolT::from(Fn(Compare(VL, VR))));
@@ -1522,16 +1522,15 @@ bool OffsetHelper(InterpState &S, CodePtr OpPC, const T &Offset,
   }
 
   if (!CheckNull(S, OpPC, Ptr, CSK_ArrayIndex)) {
-    // The CheckNul will have emitted a note already, but we only
+    // The CheckNull will have emitted a note already, but we only
     // abort in C++, since this is fine in C.
     if (S.getLangOpts().CPlusPlus)
       return false;
   }
 
   // Arrays of unknown bounds cannot have pointers into them.
-  if (!CheckArray(S, OpPC, Ptr)) {
+  if (!CheckArray(S, OpPC, Ptr))
     return false;
-  }
 
   // Get a version of the index comparable to the type.
   T Index = T::from(Ptr.getIndex(), Offset.bitWidth());
