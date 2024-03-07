@@ -5268,7 +5268,8 @@ TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
                                 bool omit_empty_base_classes,
                                 const ExecutionContext *exe_ctx) {
   if (!type)
-    return 0;
+    return llvm::make_error<llvm::StringError>("invalid clang type",
+                                               llvm::inconvertibleErrorCode());
 
   uint32_t num_children = 0;
   clang::QualType qual_type(RemoveWrappingTypes(GetQualType(type)));
@@ -5326,8 +5327,9 @@ TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
       num_children += std::distance(record_decl->field_begin(),
                                record_decl->field_end());
     }
-    break;
-
+    return llvm::make_error<llvm::StringError>(
+        "incomplete type \"" + GetDisplayTypeName(type).GetString() + "\"",
+        llvm::inconvertibleErrorCode());
   case clang::Type::ObjCObject:
   case clang::Type::ObjCInterface:
     if (GetCompleteQualType(&getASTContext(), qual_type)) {
@@ -5400,11 +5402,13 @@ TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
     clang::QualType pointee_type(pointer_type->getPointeeType());
     CompilerType pointee_clang_type(GetType(pointee_type));
     uint32_t num_pointee_children = 0;
-    if (pointee_clang_type.IsAggregateType())
-      num_pointee_children =
-          llvm::expectedToStdOptional(pointee_clang_type.GetNumChildren(
-                                          omit_empty_base_classes, exe_ctx))
-              .value_or(0);
+    if (pointee_clang_type.IsAggregateType()) {
+      auto num_children_or_err =
+          pointee_clang_type.GetNumChildren(omit_empty_base_classes, exe_ctx);
+      if (!num_children_or_err)
+        return num_children_or_err;
+      num_pointee_children = *num_children_or_err;
+    }
     if (num_pointee_children == 0) {
       // We have a pointer to a pointee type that claims it has no children. We
       // will want to look at
