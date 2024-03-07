@@ -9,6 +9,7 @@
 #ifndef LLDB_CORE_PROGRESS_H
 #define LLDB_CORE_PROGRESS_H
 
+#include "lldb/Host/Alarm.h"
 #include "lldb/lldb-forward.h"
 #include "lldb/lldb-types.h"
 #include "llvm/ADT/StringMap.h"
@@ -146,9 +147,12 @@ public:
   void Increment(const Progress::ProgressData &);
   void Decrement(const Progress::ProgressData &);
 
+  static void Initialize();
+  static void Terminate();
+  static bool Enabled();
   static ProgressManager &Instance();
 
-private:
+protected:
   enum class EventType {
     Begin,
     End,
@@ -156,9 +160,18 @@ private:
   static void ReportProgress(const Progress::ProgressData &progress_data,
                              EventType type);
 
-  llvm::StringMap<std::pair<uint64_t, Progress::ProgressData>>
-      m_progress_category_map;
-  std::mutex m_progress_map_mutex;
+  static std::optional<ProgressManager> &InstanceImpl();
+
+  void Expire(llvm::StringRef key);
+  struct Entry {
+    uint64_t refcount = 0;
+    Progress::ProgressData data;
+    Alarm::Handle handle = Alarm::INVALID_HANDLE;
+  };
+
+  Alarm m_alarm;
+  llvm::StringMap<Entry> m_entries;
+  std::mutex m_entries_mutex;
 };
 
 } // namespace lldb_private
