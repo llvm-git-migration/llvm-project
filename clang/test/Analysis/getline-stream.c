@@ -325,3 +325,28 @@ void test_getline_ret_value() {
   fclose(file);
   free(buffer);
 }
+
+void test_getline_negative_buffer() {
+  FILE *file = fopen("file.txt", "r");
+  if (file == NULL) {
+    return;
+  }
+
+  char *buffer = NULL;
+  size_t n = -1;
+  getline(&buffer, &n, file); // expected-warning {{Line pointer might be null while n value is not zero}}
+}
+
+void test_getline_negative_buffer_2(char *buffer) {
+  FILE *file = fopen("file.txt", "r");
+  if (file == NULL) {
+    return;
+  }
+
+  size_t n = -1;
+  ssize_t ret = getline(&buffer, &n, file);
+  if (ret > 0) {
+    clang_analyzer_eval(ret < n); // expected-warning {{TRUE}}
+  }
+  fclose(file);
+}
