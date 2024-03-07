@@ -65,7 +65,7 @@ body:             |
 # CHECK-NEXT:    bb.0.entry:
 # CHECK-NEXT:      liveins: $w0, $w1, $w2, $lr
 #
-# CHECK:           frame-setup PAUTH_PROLOGUE implicit-def $lr, implicit $lr, implicit $sp
+# CHECK:           frame-setup PAUTH_PROLOGUE implicit-def $lr, implicit killed $lr, implicit killed $sp
 # CHECK-NEXT:      $w8 = ADDWrs {{.*}}$w0, {{.*}}$w1, 0
 # CHECK-NEXT:      $w0 = MADDWrrr {{.*}}$w8, {{.*}}$w2, $wzr
 # CHECK-NEXT:      RET undef $lr, implicit {{.*}}$w0
