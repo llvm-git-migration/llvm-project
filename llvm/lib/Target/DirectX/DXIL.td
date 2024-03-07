@@ -222,13 +222,17 @@ defset list<DXILOpClass> OpClasses = {
 
 class DXILType : LLVMType<OtherVT> {
   let isAny = 1;
+  int isI16OrI32 = 0;
+  int isHalfOrFloat = 0;
 }
 
 // Concrete records for various overload types supported specifically by
 // DXIL Operations.
+let isI16OrI32 = 1 in
+  def llvm_i16ori32_ty : DXILType;
 
-def llvm_i16ori32_ty : DXILType;
-def llvm_halforfloat_ty : DXILType;
+let isHalfOrFloat = 1 in
+  def llvm_halforfloat_ty : DXILType;
 
 // Abstraction DXIL Operation to LLVM intrinsic
 class DXILOpMappingBase {
@@ -257,7 +261,6 @@ def Sin  : DXILOpMapping<13, unary, int_sin,
 def Exp2 : DXILOpMapping<21, unary, int_exp2,
                          "Returns the base 2 exponential, or 2**x, of the specified value."
                          "exp2(x) = 2**x.">;
-                         "Returns sine(theta) for theta in radians.">;
 def Frac : DXILOpMapping<22, unary, int_dx_frac,
                          "Returns a fraction from 0 to 1 that represents the "
                          "decimal part of the input.",
