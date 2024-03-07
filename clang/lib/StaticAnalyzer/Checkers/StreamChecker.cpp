@@ -1281,20 +1281,20 @@ void StreamChecker::preGetdelim(const FnDescription *Desc,
   if (!State)
     return;
 
-  // n must not be NULL
+  // The parameter `n` must not be NULL.
   SVal SizePtrSval = Call.getArgSVal(1);
   State = ensurePtrNotNull(SizePtrSval, Call.getArgExpr(1), C, State, "Size");
   if (!State)
     return;
 
-  // lineptr must not be NULL
+  // The parameter `lineptr` must not be NULL.
   SVal LinePtrPtrSVal = Call.getArgSVal(0);
   State =
       ensurePtrNotNull(LinePtrPtrSVal, Call.getArgExpr(0), C, State, "Line");
   if (!State)
     return;
 
-  // If lineptr points to a NULL pointer, *n must be 0
+  // If `lineptr` points to a NULL pointer, `*n` must be 0.
   State =
       ensureSizeZeroIfLineNull(LinePtrPtrSVal, SizePtrSval, Call.getArgExpr(0),
                                Call.getArgExpr(1), C, State);
@@ -1336,8 +1336,8 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
         State->BindExpr(E.CE, C.getLocationContext(), RetVal);
     StateNotFailed =
         E.assumeBinOpNN(StateNotFailed, BO_GE, RetVal, E.getZeroVal(Call));
-    // The buffer size *n must be enough to hold the whole line, and
-    // greater than the return value, since it has to account for \0
+    // The buffer size `*n` must be enough to hold the whole line, and
+    // greater than the return value, since it has to account for '\0'.
     auto SizePtrSval = Call.getArgSVal(1);
     auto NVal = getPointeeDefVal(SizePtrSval, State);
     if (NVal) {
@@ -1363,7 +1363,7 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
       E.isStreamEof() ? ErrorFEof : ErrorFEof | ErrorFError;
   StateFailed = E.setStreamState(
       StateFailed, StreamState::getOpened(Desc, NewES, !NewES.isFEof()));
-  // On failure, the content of the buffer is undefined
+  // On failure, the content of the buffer is undefined.
   if (auto NewLinePtr = getPointeeDefVal(Call.getArgSVal(0), State)) {
     StateFailed = StateFailed->bindLoc(*NewLinePtr, UndefinedVal(),
                                        C.getLocationContext());

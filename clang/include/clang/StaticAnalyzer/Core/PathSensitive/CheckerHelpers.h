@@ -15,7 +15,6 @@
 
 #include "ProgramState_Fwd.h"
 #include "SVals.h"
-
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/Basic/OperatorKinds.h"

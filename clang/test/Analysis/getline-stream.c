@@ -6,8 +6,8 @@
 
 void clang_analyzer_eval(int);
 void clang_analyzer_dump_int(int);
-extern void clang_analyzer_dump_ptr(void*);
-extern void clang_analyzer_warnIfReached();
+void clang_analyzer_dump_ptr(void*);
+void clang_analyzer_warnIfReached();
 
 void test_getline_null_file() {
   char *buffer = NULL;
