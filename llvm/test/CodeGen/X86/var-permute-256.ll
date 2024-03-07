@@ -1171,8 +1171,8 @@ define <4 x i64> @PR50356(<4 x i64> %0, <4 x i32> %1, <4 x i64> %2) unnamed_addr
 ; AVX1-NEXT:    vblendvpd %xmm1, %xmm3, %xmm0, %xmm0
 ; AVX1-NEXT:    vpcmpgtq %xmm0, %xmm2, %xmm0
 ; AVX1-NEXT:    vextractf128 $1, %ymm2, %xmm1
-; AVX1-NEXT:    vpxor %xmm2, %xmm2, %xmm2
-; AVX1-NEXT:    vpcmpgtq %xmm2, %xmm1, %xmm1
+; AVX1-NEXT:    vpcmpeqd %xmm2, %xmm2, %xmm2
+; AVX1-NEXT:    vpxor %xmm2, %xmm1, %xmm1
 ; AVX1-NEXT:    vinsertf128 $1, %xmm1, %ymm0, %ymm0
 ; AVX1-NEXT:    vmovapd {{.*#+}} ymm1 = [34,68,102,136]
 ; AVX1-NEXT:    vblendvpd %ymm0, {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %ymm1, %ymm0
