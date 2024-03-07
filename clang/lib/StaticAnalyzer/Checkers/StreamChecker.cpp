@@ -1338,7 +1338,8 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
     if (NVal) {
       StateNotFailed = StateNotFailed->assume(
           E.SVB
-              .evalBinOp(StateNotFailed, BO_GT, *NVal, RetVal, E.SVB.getConditionType())
+              .evalBinOp(StateNotFailed, BO_GT, *NVal, RetVal,
+                         E.SVB.getConditionType())
               .castAs<DefinedOrUnknownSVal>(),
           true);
       StateNotFailed =
