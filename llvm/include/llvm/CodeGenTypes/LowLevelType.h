@@ -47,8 +47,9 @@ public:
 
   /// Get a low-level token; just a scalar with zero bits (or no size).
   static constexpr LLT token() {
-    return LLT{/*isPointer=*/false, /*isVector=*/false, /*isScalar=*/true,
-               ElementCount::getFixed(0), /*SizeInBits=*/0,
+    return LLT{/*isPointer=*/false, /*isVector=*/false,
+               /*isScalar=*/true,   ElementCount::getFixed(0),
+               /*SizeInBits=*/0,
                /*AddressSpace=*/0};
   }
 
@@ -148,7 +149,9 @@ public:
     return isValid() && IsPointer && !IsVector;
   }
   constexpr bool isPointerVector() const { return IsPointer && isVector(); }
-  constexpr bool isPointerOrPointerVector() const { return IsPointer && isValid(); }
+  constexpr bool isPointerOrPointerVector() const {
+    return IsPointer && isValid();
+  }
 
   /// Returns the number of elements in a vector LLT. Must only be called on
   /// vector types.
