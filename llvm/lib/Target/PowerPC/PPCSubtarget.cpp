@@ -208,10 +208,10 @@ void PPCSubtarget::tocDataChecks(unsigned PointerSize,
 }
 
 bool PPCSubtarget::isGVIndirectSymbol(const GlobalValue *GV) const {
-  if (isAIXABI() && isa<GlobalVariable>(GV)) {
-    // On AIX the only symbols that aren't indirect are toc-data.
-    if (cast<GlobalVariable>(GV)->hasAttribute("toc-data"))
-      return false;
+  if (isAIXABI()) {
+    if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV))
+      // On AIX the only symbols that aren't indirect are toc-data.
+      return !GVar->hasAttribute("toc-data");
 
     return true;
   }
