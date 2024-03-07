@@ -694,7 +694,6 @@ public:
     Match_RequiresThumb2,
     Match_RequiresV8,
     Match_RequiresFlagSetting,
-    Match_RequiresDestinationRegisterMatchASourceRegister,
 #define GET_OPERAND_DIAGNOSTIC_TYPES
 #include "ARMGenAsmMatcher.inc"
 
@@ -11071,8 +11070,10 @@ unsigned ARMAsmParser::checkTargetMatchPredicate(MCInst &Inst) {
   case ARM::tMUL:
     // The second source operand must be the same register as the destination
     // operand.
+    // FIXME: Ideally this would be handled by ARMGenAsmMatcher and
+    // emitAsmTiedOperandConstraints.
     if (Inst.getOperand(0).getReg() != Inst.getOperand(3).getReg())
-      return Match_RequiresDestinationRegisterMatchASourceRegister;
+      return Match_InvalidTiedOperand;
     break;
   default:
     break;
@@ -12597,6 +12598,8 @@ ARMAsmParser::FilterNearMisses(SmallVectorImpl<NearMissInfo> &NearMissesIn,
   SmallSet<FeatureBitset, 4> FeatureMissesSeen;
   bool ReportedTooFewOperands = false;
 
+  unsigned MnemonicOpsEndInd = getMnemonicOpsEndInd(Operands);
+
   // Process the near-misses in reverse order, so that we see more general ones
   // first, and so can avoid emitting more specific ones.
   for (NearMissInfo &I : reverse(NearMissesIn)) {
@@ -12705,9 +12708,16 @@ ARMAsmParser::FilterNearMisses(SmallVectorImpl<NearMissInfo> &NearMissesIn,
       case Match_RequiresFlagSetting:
         Message.Message = "no flag-preserving variant of this instruction available";
         break;
-      case Match_RequiresDestinationRegisterMatchASourceRegister:
-        Message.Message = "destination register must match a source register";
+      case Match_InvalidTiedOperand: {
+        ARMOperand &Op = static_cast<ARMOperand &>(*Operands[0]);
+        if (Op.isToken() && Op.getToken() == "mul") {
+          Message.Message = "destination register must match a source register";
+          Message.Loc = Operands[MnemonicOpsEndInd]->getStartLoc();
+        } else {
+          llvm_unreachable("Match_InvalidTiedOperand only used for tMUL.");
+        }
         break;
+      }
       case Match_InvalidOperand:
         Message.Message = "invalid operand for instruction";
         break;
@@ -12907,6 +12917,10 @@ unsigned ARMAsmParser::validateTargetOperandClass(MCParsedAsmOperand &AsmOp,
     if (hasV8Ops() && Op.isReg() && Op.getReg() == ARM::SP)
       return Match_Success;
     return Match_rGPR;
+  // Note: This mutates the operand which could cause issues for future
+  // matches if this one fails later.
+  // It would be better to do this in addVecList but as this doesn't have access
+  // to MRI this isn't possible.
   // If trying to match a VecListDPair with a Q register, convert Q to list.
   case MCK_VecListDPair:
     if (Op.isQReg() && !hasMVE()) {
@@ -12917,6 +12931,7 @@ unsigned ARMAsmParser::validateTargetOperandClass(MCParsedAsmOperand &AsmOp,
       return Match_Success;
     }
     return Match_InvalidOperand;
+  // Note: This mutates the operand (see above).
   // If trying to match a VecListDPair with a D register, convert D singleton
   // list.
   case MCK_VecListOneD:
