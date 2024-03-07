@@ -12,9 +12,6 @@
 
 #include "mlir-c/IR.h"
 #include "mlir-c/Support.h"
-#include "llvm-c/Comdat.h"
-#include "llvm-c/Core.h"
-#include "llvm-c/DebugInfo.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,17 +99,92 @@ MLIR_CAPI_EXPORTED MlirLogicalResult
 mlirLLVMStructTypeSetBody(MlirType structType, intptr_t nFieldTypes,
                           MlirType const *fieldTypes, bool isPacked);
 
+enum MlirLLVMCConv {
+  MlirLLVMCConvC = 0,
+  MlirLLVMCConvFast = 8,
+  MlirLLVMCConvCold = 9,
+  MlirLLVMCConvGHC = 10,
+  MlirLLVMCConvHiPE = 11,
+  MlirLLVMCConvAnyReg = 13,
+  MlirLLVMCConvPreserveMost = 14,
+  MlirLLVMCConvPreserveAll = 15,
+  MlirLLVMCConvSwift = 16,
+  MlirLLVMCConvCXX_FAST_TLS = 17,
+  MlirLLVMCConvTail = 18,
+  MlirLLVMCConvCFGuard_Check = 19,
+  MlirLLVMCConvSwiftTail = 20,
+  MlirLLVMCConvX86_StdCall = 64,
+  MlirLLVMCConvX86_FastCall = 65,
+  MlirLLVMCConvARM_APCS = 66,
+  MlirLLVMCConvARM_AAPCS = 67,
+  MlirLLVMCConvARM_AAPCS_VFP = 68,
+  MlirLLVMCConvMSP430_INTR = 69,
+  MlirLLVMCConvX86_ThisCall = 70,
+  MlirLLVMCConvPTX_Kernel = 71,
+  MlirLLVMCConvPTX_Device = 72,
+  MlirLLVMCConvSPIR_FUNC = 75,
+  MlirLLVMCConvSPIR_KERNEL = 76,
+  MlirLLVMCConvIntel_OCL_BI = 77,
+  MlirLLVMCConvX86_64_SysV = 78,
+  MlirLLVMCConvWin64 = 79,
+  MlirLLVMCConvX86_VectorCall = 80,
+  MlirLLVMCConvDUMMY_HHVM = 81,
+  MlirLLVMCConvDUMMY_HHVM_C = 82,
+  MlirLLVMCConvX86_INTR = 83,
+  MlirLLVMCConvAVR_INTR = 84,
+  MlirLLVMCConvAVR_BUILTIN = 86,
+  MlirLLVMCConvAMDGPU_VS = 87,
+  MlirLLVMCConvAMDGPU_GS = 88,
+  MlirLLVMCConvAMDGPU_CS = 90,
+  MlirLLVMCConvAMDGPU_KERNEL = 91,
+  MlirLLVMCConvX86_RegCall = 92,
+  MlirLLVMCConvAMDGPU_HS = 93,
+  MlirLLVMCConvMSP430_BUILTIN = 94,
+  MlirLLVMCConvAMDGPU_LS = 95,
+  MlirLLVMCConvAMDGPU_ES = 96,
+  MlirLLVMCConvAArch64_VectorCall = 97,
+  MlirLLVMCConvAArch64_SVE_VectorCall = 98,
+  MlirLLVMCConvWASM_EmscriptenInvoke = 99,
+  MlirLLVMCConvAMDGPU_Gfx = 100,
+  MlirLLVMCConvM68k_INTR = 101,
+};
+typedef enum MlirLLVMCConv MlirLLVMCConv;
+
 /// Creates a LLVM CConv attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx,
-                                                      LLVMCallConv cconv);
+                                                      MlirLLVMCConv cconv);
+
+enum MlirLLVMComdat {
+  MlirLLVMComdatAny = 0,
+  MlirLLVMComdatExactMatch = 1,
+  MlirLLVMComdatLargest = 2,
+  MlirLLVMComdatNoDeduplicate = 3,
+  MlirLLVMComdatSameSize = 4,
+};
+typedef enum MlirLLVMComdat MlirLLVMComdat;
 
 /// Creates a LLVM Comdat attribute.
-MLIR_CAPI_EXPORTED MlirAttribute
-mlirLLVMComdatAttrGet(MlirContext ctx, LLVMComdatSelectionKind comdat);
+MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx,
+                                                       MlirLLVMComdat comdat);
+
+enum MlirLLVMLinkage {
+  MlirLLVMLinkagePrivate = 0,
+  MlirLLVMLinkageInternal = 1,
+  MlirLLVMLinkageAvailableExternally = 2,
+  MlirLLVMLinkageLinkonce = 3,
+  MlirLLVMLinkageWeak = 4,
+  MlirLLVMLinkageCommon = 5,
+  MlirLLVMLinkageAppending = 6,
+  MlirLLVMLinkageExternWeak = 7,
+  MlirLLVMLinkageLinkonceODR = 8,
+  MlirLLVMLinkageWeakODR = 9,
+  MlirLLVMLinkageExternal = 10,
+};
+typedef enum MlirLLVMLinkage MlirLLVMLinkage;
 
 /// Creates a LLVM Linkage attribute.
 MLIR_CAPI_EXPORTED MlirAttribute
-mlirLLVMLinkageAttrGet(MlirContext ctx, LLVMLinkage linkage);
+mlirLLVMLinkageAttrGet(MlirContext ctx, MlirLLVMLinkage linkage);
 
 /// Creates a LLVM DINullType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx);
@@ -126,10 +198,34 @@ mlirLLVMDIExpressionElemAttrGet(MlirContext ctx, unsigned int opcode,
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIExpressionAttrGet(
     MlirContext ctx, intptr_t nOperations, MlirAttribute const *operations);
 
+enum MlirLLVMTypeEncoding {
+  MlirLLVMTypeEncodingAddress = 0x1,
+  MlirLLVMTypeEncodingBoolean = 0x2,
+  MlirLLVMTypeEncodingComplexFloat = 0x31,
+  MlirLLVMTypeEncodingFloatT = 0x4,
+  MlirLLVMTypeEncodingSigned = 0x5,
+  MlirLLVMTypeEncodingSignedChar = 0x6,
+  MlirLLVMTypeEncodingUnsigned = 0x7,
+  MlirLLVMTypeEncodingUnsignedChar = 0x08,
+  MlirLLVMTypeEncodingImaginaryFloat = 0x09,
+  MlirLLVMTypeEncodingPackedDecimal = 0x0a,
+  MlirLLVMTypeEncodingNumericString = 0x0b,
+  MlirLLVMTypeEncodingEdited = 0x0c,
+  MlirLLVMTypeEncodingSignedFixed = 0x0d,
+  MlirLLVMTypeEncodingUnsignedFixed = 0x0e,
+  MlirLLVMTypeEncodingDecimalFloat = 0x0f,
+  MlirLLVMTypeEncodingUTF = 0x10,
+  MlirLLVMTypeEncodingUCS = 0x11,
+  MlirLLVMTypeEncodingASCII = 0x12,
+  MlirLLVMTypeEncodingLoUser = 0x80,
+  MlirLLVMTypeEncodingHiUser = 0xff,
+};
+typedef enum MlirLLVMTypeEncoding MlirLLVMTypeEncoding;
+
 /// Creates a LLVM DIBasicType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIBasicTypeAttrGet(
     MlirContext ctx, unsigned int tag, MlirAttribute name, uint64_t sizeInBits,
-    LLVMDWARFTypeEncoding encoding);
+    MlirLLVMTypeEncoding encoding);
 
 /// Creates a LLVM DICompositeType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompositeTypeAttrGet(
@@ -153,11 +249,19 @@ MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFileAttrGet(MlirContext ctx,
                                                        MlirAttribute name,
                                                        MlirAttribute directory);
 
+enum MlirLLVMDIEmissionKind {
+  MlirLLVMDIEmissionKindNone = 0,
+  MlirLLVMDIEmissionKindFull = 1,
+  MlirLLVMDIEmissionKindLineTablesOnly = 2,
+  MlirLLVMDIEmissionKindDebugDirectivesOnly = 3,
+};
+typedef enum MlirLLVMDIEmissionKind MlirLLVMDIEmissionKind;
+
 /// Creates a LLVM DICompileUnit attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompileUnitAttrGet(
     MlirContext ctx, MlirAttribute id, unsigned int sourceLanguage,
     MlirAttribute file, MlirAttribute producer, bool isOptimized,
-    LLVMDWARFEmissionKind emissionKind);
+    MlirLLVMDIEmissionKind emissionKind);
 
 /// Creates a LLVM DIFlags attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFlagsAttrGet(MlirContext ctx,

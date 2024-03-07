@@ -233,11 +233,11 @@ static void testLLVMAttributes(MlirContext ctx) {
   fprintf(stderr, "testLLVMAttributes\n");
 
   // CHECK: #llvm.linkage<internal>
-  mlirAttributeDump(mlirLLVMLinkageAttrGet(ctx, LLVMInternalLinkage));
+  mlirAttributeDump(mlirLLVMLinkageAttrGet(ctx, MlirLLVMLinkageInternal));
   // CHECK: #llvm.cconv<ccc>
-  mlirAttributeDump(mlirLLVMCConvAttrGet(ctx, LLVMCCallConv));
+  mlirAttributeDump(mlirLLVMCConvAttrGet(ctx, MlirLLVMCConvC));
   // CHECK: #llvm<comdat any>
-  mlirAttributeDump(mlirLLVMComdatAttrGet(ctx, LLVMAnyComdatSelectionKind));
+  mlirAttributeDump(mlirLLVMComdatAttrGet(ctx, MlirLLVMComdatAny));
 }
 
 // CHECK-LABEL: testDebugInfoAttributes
@@ -256,7 +256,7 @@ static void testDebugInfoAttributes(MlirContext ctx) {
   // CHECK: #llvm.di_basic_type<tag = DW_TAG_null, name = "foo", sizeInBits =
   // CHECK-SAME: 64, encoding = DW_ATE_signed>
   MlirAttribute di_type =
-      mlirLLVMDIBasicTypeAttrGet(ctx, 0, foo, 64, LLVMDWARFSignedTypeEncoding);
+      mlirLLVMDIBasicTypeAttrGet(ctx, 0, foo, 64, MlirLLVMTypeEncodingSigned);
   mlirAttributeDump(di_type);
 
   MlirAttribute file = mlirLLVMDIFileAttrGet(ctx, foo, bar);
@@ -266,7 +266,7 @@ static void testDebugInfoAttributes(MlirContext ctx) {
 
   MlirAttribute compile_unit =
       mlirLLVMDICompileUnitAttrGet(ctx, id, LLVMDWARFSourceLanguageC99, file,
-                                   foo, false, LLVMDWARFEmissionFull);
+                                   foo, false, MlirLLVMDIEmissionKindFull);
 
   // CHECK: #llvm.di_compile_unit<{{.*}}>
   mlirAttributeDump(compile_unit);

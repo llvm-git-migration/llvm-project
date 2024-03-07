@@ -145,7 +145,7 @@ MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx) {
 MlirAttribute mlirLLVMDIBasicTypeAttrGet(MlirContext ctx, unsigned int tag,
                                          MlirAttribute name,
                                          uint64_t sizeInBits,
-                                         LLVMDWARFTypeEncoding encoding) {
+                                         MlirLLVMTypeEncoding encoding) {
 
   return wrap(DIBasicTypeAttr::get(
       unwrap(ctx), tag, cast<StringAttr>(unwrap(name)), sizeInBits, encoding));
@@ -185,16 +185,15 @@ mlirLLVMDIDerivedTypeAttrGetBaseType(MlirAttribute diDerivedType) {
   return wrap(cast<DIDerivedTypeAttr>(unwrap(diDerivedType)).getBaseType());
 }
 
-MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx, LLVMCallConv cconv) {
+MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx, MlirLLVMCConv cconv) {
   return wrap(CConvAttr::get(unwrap(ctx), CConv(cconv)));
 }
 
-MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx,
-                                    LLVMComdatSelectionKind comdat) {
+MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx, MlirLLVMComdat comdat) {
   return wrap(ComdatAttr::get(unwrap(ctx), comdat::Comdat(comdat)));
 }
 
-MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx, LLVMLinkage linkage) {
+MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx, MlirLLVMLinkage linkage) {
   return wrap(LinkageAttr::get(unwrap(ctx), linkage::Linkage(linkage)));
 }
 
@@ -204,12 +203,11 @@ MlirAttribute mlirLLVMDIFileAttrGet(MlirContext ctx, MlirAttribute name,
                               cast<StringAttr>(unwrap(directory))));
 }
 
-MlirAttribute mlirLLVMDICompileUnitAttrGet(MlirContext ctx, MlirAttribute id,
-                                           unsigned int sourceLanguage,
-                                           MlirAttribute file,
-                                           MlirAttribute producer,
-                                           bool isOptimized,
-                                           LLVMDWARFEmissionKind emissionKind) {
+MlirAttribute
+mlirLLVMDICompileUnitAttrGet(MlirContext ctx, MlirAttribute id,
+                             unsigned int sourceLanguage, MlirAttribute file,
+                             MlirAttribute producer, bool isOptimized,
+                             MlirLLVMDIEmissionKind emissionKind) {
   return wrap(DICompileUnitAttr::get(
       unwrap(ctx), cast<DistinctAttr>(unwrap(id)), sourceLanguage,
       cast<DIFileAttr>(unwrap(file)), cast<StringAttr>(unwrap(producer)),
