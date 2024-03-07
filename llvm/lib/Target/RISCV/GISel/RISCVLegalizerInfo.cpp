@@ -111,18 +111,20 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
       .clampScalar(0, s32, sXLen)
       .minScalarSameAs(1, 0);
 
+  auto &ExtActions =
+      getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
+          .customIf(typeIsLegalBoolVec(1, BoolVecTys, ST))
+          .legalIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
+                       typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)))
+          .maxScalar(0, sXLen);
   if (ST.is64Bit()) {
-    getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
-        .legalFor({{sXLen, s32}})
-        .maxScalar(0, sXLen);
+    ExtActions.legalFor({{sXLen, s32}});
 
     getActionDefinitionsBuilder(G_SEXT_INREG)
         .customFor({sXLen})
         .maxScalar(0, sXLen)
         .lower();
   } else {
-    getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT}).maxScalar(0, sXLen);
-
     getActionDefinitionsBuilder(G_SEXT_INREG).maxScalar(0, sXLen).lower();
   }
 
@@ -495,6 +497,44 @@ bool RISCVLegalizerInfo::shouldBeInConstantPool(APInt APImm,
   return !(!SeqLo.empty() && (SeqLo.size() + 2) <= STI.getMaxBuildIntsCost());
 }
 
+// Custom-lower extensions from mask vectors by using a vselect either with 1
+// for zero/any-extension or -1 for sign-extension:
+//   (vXiN = (s|z)ext vXi1:vmask) -> (vXiN = vselect vmask, (-1 or 1), 0)
+// Note that any-extension is lowered identically to zero-extension.
+bool RISCVLegalizerInfo::legalizeExt(MachineInstr &MI,
+                                     MachineIRBuilder &MIB) const {
+
+  unsigned Opc = MI.getOpcode();
+  assert(Opc == TargetOpcode::G_ZEXT || Opc == TargetOpcode::G_SEXT ||
+         Opc == TargetOpcode::G_ANYEXT);
+
+  MachineRegisterInfo &MRI = *MIB.getMRI();
+  Register Dst = MI.getOperand(0).getReg();
+  Register Src = MI.getOperand(1).getReg();
+
+  LLT DstTy = MRI.getType(Dst);
+  LLT SrcTy = MRI.getType(Src);
+
+  // The only custom legalization of extends we handle are vector extends.
+  if (!DstTy.isVector() || !SrcTy.isVector())
+    return false;
+
+  // The only custom legalization of extends is from mask types
+  if (SrcTy.getElementType().getSizeInBits() != 1)
+    return false;
+
+  int64_t ExtTrueVal =
+      Opc == TargetOpcode::G_ZEXT || Opc == TargetOpcode::G_ANYEXT ? 1 : -1;
+  LLT DstEltTy = DstTy.getElementType();
+  auto SplatZero = MIB.buildSplatVector(DstTy, MIB.buildConstant(DstEltTy, 0));
+  auto SplatTrue =
+      MIB.buildSplatVector(DstTy, MIB.buildConstant(DstEltTy, ExtTrueVal));
+  MIB.buildSelect(Dst, Src, SplatTrue, SplatZero);
+  MI.eraseFromParent();
+  return true;
+}
+
+
 bool RISCVLegalizerInfo::legalizeCustom(
     LegalizerHelper &Helper, MachineInstr &MI,
     LostDebugLocObserver &LocObserver) const {
@@ -552,6 +592,10 @@ bool RISCVLegalizerInfo::legalizeCustom(
   }
   case TargetOpcode::G_VASTART:
     return legalizeVAStart(MI, MIRBuilder);
+  case TargetOpcode::G_ZEXT:
+  case TargetOpcode::G_SEXT:
+  case TargetOpcode::G_ANYEXT:
+    return legalizeExt(MI, MIRBuilder);
   }
 
   llvm_unreachable("expected switch to return");
