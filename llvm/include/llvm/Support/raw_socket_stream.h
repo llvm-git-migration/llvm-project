@@ -59,15 +59,16 @@ public:
 ///
 class ListeningSocket {
 
-  /// If ListeningSocket::shutdown is used by a signal handler to clean up
-  /// ListeningSocket resources FD may be closed while ::poll is waiting for
-  /// FD to become ready to perform I/O. When FD is closed ::poll will
-  /// continue to block so use the self-pipe trick to get ::poll to return
-  int PipeFD[2];
-  std::mutex PipeMutex;
   std::atomic<int> FD;
-  std::string SocketPath; // Never modified
-  ListeningSocket(int SocketFD, StringRef SocketPath);
+  std::string SocketPath; // Never modified after construction
+
+  /// If a seperate thread calls ListeningSocket::shutdown, the ListeningSocket
+  /// file descriptor (FD) could be closed while ::poll is waiting for it to be
+  /// ready to performa I/O operations. ::poll with continue to block even after
+  /// FD is closed so use a self-pipe mechanism to get ::poll to return
+  int PipeFD[2]; // Never modified after construction
+
+  ListeningSocket(int SocketFD, StringRef SocketPath, int PipeFD[2]);
 
 #ifdef _WIN32
   WSABalancer _;
@@ -79,14 +80,20 @@ public:
   ListeningSocket(const ListeningSocket &LS) = delete;
   ListeningSocket &operator=(const ListeningSocket &) = delete;
 
-  /// Closes the socket's FD and unlinks the socket file from the file system.
-  /// The method is thread and signal safe
+  /// Closes the FD, unlinks the socket file, and writes to PipeFD.
+  ///
+  /// After the construction of the ListeningSocket, shutdown is signal safe if
+  /// it is called during the lifetime of the object. shutdown can be called
+  /// concurrently with ListeningSocket::accept as writing to PipeFD will cause
+  /// a blocking call to ::poll to return.
+  ///
+  /// Once shutdown is called there is no way to reinitialize ListeningSocket.
   void shutdown();
 
   /// Accepts an incoming connection on the listening socket. This method can
   /// optionally either block until a connection is available or timeout after a
   /// specified amount of time has passed. By default the method will block
-  /// until the socket has recieved a connection
+  /// until the socket has recieved a connection.
   ///
   /// \param Timeout An optional timeout duration in milliseconds
   ///

@@ -71,36 +71,40 @@ static sockaddr_un setSocketAddr(StringRef SocketPath) {
 
 static Expected<int> getSocketFD(StringRef SocketPath) {
 #ifdef _WIN32
-  SOCKET MaybeSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeSocket == INVALID_SOCKET) {
+  SOCKET Socket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (Socket == INVALID_SOCKET) {
 #else
-  int MaybeSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeSocket == -1) {
+  int Socket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (Socket == -1) {
 #endif // _WIN32
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "Create socket failed");
   }
 
   struct sockaddr_un Addr = setSocketAddr(SocketPath);
-  if (::connect(MaybeSocket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1)
+  if (::connect(Socket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "Connect socket failed");
 
 #ifdef _WIN32
-  return _open_osfhandle(MaybeWinsocket, 0);
+  return _open_osfhandle(Socket, 0);
 #else
-  return MaybeSocket;
+  return Socket;
 #endif // _WIN32
 }
 
-ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath)
-    : FD(SocketFD), SocketPath(SocketPath) {}
+ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath,
+                                 int PipeFD[2])
+    : FD(SocketFD), SocketPath(SocketPath), PipeFD{PipeFD[0], PipeFD[1]} {}
 
 ListeningSocket::ListeningSocket(ListeningSocket &&LS)
-    : FD(LS.FD.load()), SocketPath(LS.SocketPath) {
+    : FD(LS.FD.load()),
+      SocketPath(LS.SocketPath), PipeFD{LS.PipeFD[0], LS.PipeFD[1]} {
 
-  LS.SocketPath.clear();
   LS.FD = -1;
+  LS.SocketPath.clear();
+  LS.PipeFD[0] = -1;
+  LS.PipeFD[1] = -1;
 }
 
 Expected<ListeningSocket>
@@ -135,36 +139,38 @@ ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
 
 #ifdef _WIN32
   WSABalancer _;
-  SOCKET MaybeSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeSocket == INVALID_SOCKET) {
+  SOCKET Socket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (Socket == INVALID_SOCKET) {
 #else
-  int MaybeSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (MaybeSocket == -1) {
+  int Socket = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (Socket == -1)
 #endif
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "socket create failed");
-  }
 
   struct sockaddr_un Addr = setSocketAddr(SocketPath);
-  if (::bind(MaybeSocket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
+  if (::bind(Socket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
     // Grab error code from call to ::bind before calling ::close
     std::error_code EC = getLastSocketErrorCode();
-    ::close(MaybeSocket);
+    ::close(Socket);
     return llvm::make_error<StringError>(EC, "Bind error");
   }
 
   // Mark socket as passive so incoming connections can be accepted
-  if (::listen(MaybeSocket, MaxBacklog) == -1)
+  if (::listen(Socket, MaxBacklog) == -1)
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "Listen error");
 
-  int Socket;
+  int PipeFD[2];
+  if (::pipe(PipeFD) == -1)
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "pipe failed");
+
 #ifdef _WIN32
-  Socket = _open_osfhandle(MaybeWinsocket, 0);
+  return ListeningSocket{_open_osfhandle(Socket, 0), SocketPath, PipeFD};
 #else
-  Socket = MaybeSocket;
+  return ListeningSocket{Socket, SocketPath, PipeFD};
 #endif // _WIN32
-  return ListeningSocket{Socket, SocketPath};
 }
 
 Expected<std::unique_ptr<raw_socket_stream>>
@@ -180,12 +186,7 @@ ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
 #endif
 
   FDs[1].events = POLLIN;
-  PipeMutex.lock();
-  if (::pipe(PipeFD) == -1)
-    return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                         "pipe failed");
   FDs[1].fd = PipeFD[0];
-  PipeMutex.unlock();
 
   int TimeoutCount = Timeout.value_or(std::chrono::milliseconds(-1)).count();
   int PollStatus = ::poll(FDs, 2, TimeoutCount);
@@ -223,14 +224,22 @@ void ListeningSocket::shutdown() {
   ::close(FD);
   ::unlink(SocketPath.c_str());
 
+  // Ensure ::poll returns if shutdown is called by a seperate thread
   char Byte = 'A';
-  PipeMutex.lock();
-  write(PipeFD[1], &Byte, 1);
-  PipeMutex.unlock();
+  ::write(PipeFD[1], &Byte, 1);
+
   FD = -1;
 }
 
-ListeningSocket::~ListeningSocket() { shutdown(); }
+ListeningSocket::~ListeningSocket() {
+  shutdown();
+
+  // Close the pipe's FDs in the destructor instead of within
+  // ListeningSocket::shutdown to avoid unnecessary synchronization issues that
+  // would occur as PipeFD's values would have to be changed to -1
+  ::close(PipeFD[0]);
+  ::close(PipeFD[1]);
+}
 
 //===----------------------------------------------------------------------===//
 //  raw_socket_stream
