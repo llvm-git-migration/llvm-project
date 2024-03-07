@@ -382,3 +382,32 @@ define <4 x i32> @combine_vec_ashr_positive_splat(<4 x i32> %x, <4 x i32> %y) {
   %2 = ashr <4 x i32> %1, <i32 10, i32 10, i32 10, i32 10>
   ret <4 x i32> %2
 }
+
+define <4 x i32> @combine_vec_ashr_out_of_bound(<4 x i32> %x, <4 x i32> %y) {
+; SSE-LABEL: combine_vec_ashr_out_of_bound:
+; SSE:       # %bb.0:
+; SSE-NEXT:    pshuflw {{.*#+}} xmm2 = xmm1[2,3,3,3,4,5,6,7]
+; SSE-NEXT:    movdqa %xmm0, %xmm3
+; SSE-NEXT:    psrad %xmm2, %xmm3
+; SSE-NEXT:    pshufd {{.*#+}} xmm2 = xmm1[2,3,2,3]
+; SSE-NEXT:    pshuflw {{.*#+}} xmm4 = xmm2[2,3,3,3,4,5,6,7]
+; SSE-NEXT:    movdqa %xmm0, %xmm5
+; SSE-NEXT:    psrad %xmm4, %xmm5
+; SSE-NEXT:    pblendw {{.*#+}} xmm5 = xmm3[0,1,2,3],xmm5[4,5,6,7]
+; SSE-NEXT:    pshuflw {{.*#+}} xmm1 = xmm1[0,1,1,1,4,5,6,7]
+; SSE-NEXT:    movdqa %xmm0, %xmm3
+; SSE-NEXT:    psrad %xmm1, %xmm3
+; SSE-NEXT:    pshuflw {{.*#+}} xmm1 = xmm2[0,1,1,1,4,5,6,7]
+; SSE-NEXT:    psrad %xmm1, %xmm0
+; SSE-NEXT:    pblendw {{.*#+}} xmm0 = xmm3[0,1,2,3],xmm0[4,5,6,7]
+; SSE-NEXT:    pblendw {{.*#+}} xmm0 = xmm0[0,1],xmm5[2,3],xmm0[4,5],xmm5[6,7]
+; SSE-NEXT:    retq
+;
+; AVX-LABEL: combine_vec_ashr_out_of_bound:
+; AVX:       # %bb.0:
+; AVX-NEXT:    vpsravd %xmm1, %xmm0, %xmm0
+; AVX-NEXT:    retq
+  %1 = tail call <4 x i32> @llvm.umin.v4i32(<4 x i32> %y, <4 x i32> <i32 31, i32 31, i32 31, i32 31>)
+  %2 = ashr <4 x i32> %x, %1
+  ret <4 x i32> %2
+}
