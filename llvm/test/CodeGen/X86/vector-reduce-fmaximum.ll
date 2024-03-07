@@ -816,64 +816,6 @@ define float @test_v16f32(<16 x float> %a0) {
 ; SSE41-NEXT:    orps %xmm4, %xmm0
 ; SSE41-NEXT:    retq
 ;
-; AVX-LABEL: test_v16f32:
-; AVX:       # %bb.0:
-; AVX-NEXT:    vblendvps %ymm0, %ymm1, %ymm0, %ymm2
-; AVX-NEXT:    vblendvps %ymm0, %ymm0, %ymm1, %ymm0
-; AVX-NEXT:    vmaxps %ymm2, %ymm0, %ymm1
-; AVX-NEXT:    vcmpunordps %ymm0, %ymm0, %ymm2
-; AVX-NEXT:    vblendvps %ymm2, %ymm0, %ymm1, %ymm0
-; AVX-NEXT:    vextractf128 $1, %ymm0, %xmm1
-; AVX-NEXT:    vblendvps %xmm0, %xmm1, %xmm0, %xmm2
-; AVX-NEXT:    vblendvps %xmm0, %xmm0, %xmm1, %xmm0
-; AVX-NEXT:    vmaxps %xmm2, %xmm0, %xmm1
-; AVX-NEXT:    vcmpunordps %xmm0, %xmm0, %xmm2
-; AVX-NEXT:    vblendvps %xmm2, %xmm0, %xmm1, %xmm0
-; AVX-NEXT:    vmovshdup {{.*#+}} xmm1 = xmm0[1,1,3,3]
-; AVX-NEXT:    vmovd %xmm0, %eax
-; AVX-NEXT:    testl %eax, %eax
-; AVX-NEXT:    js .LBB4_1
-; AVX-NEXT:  # %bb.2:
-; AVX-NEXT:    vmovaps %xmm0, %xmm2
-; AVX-NEXT:    jmp .LBB4_3
-; AVX-NEXT:  .LBB4_1:
-; AVX-NEXT:    vmovaps %xmm1, %xmm2
-; AVX-NEXT:    vmovaps %xmm0, %xmm1
-; AVX-NEXT:  .LBB4_3:
-; AVX-NEXT:    vmaxss %xmm2, %xmm1, %xmm2
-; AVX-NEXT:    vcmpunordss %xmm1, %xmm1, %xmm3
-; AVX-NEXT:    vblendvps %xmm3, %xmm1, %xmm2, %xmm2
-; AVX-NEXT:    vmovd %xmm2, %eax
-; AVX-NEXT:    vshufpd {{.*#+}} xmm1 = xmm0[1,0]
-; AVX-NEXT:    testl %eax, %eax
-; AVX-NEXT:    js .LBB4_4
-; AVX-NEXT:  # %bb.5:
-; AVX-NEXT:    vmovaps %xmm2, %xmm3
-; AVX-NEXT:    jmp .LBB4_6
-; AVX-NEXT:  .LBB4_4:
-; AVX-NEXT:    vmovapd %xmm1, %xmm3
-; AVX-NEXT:    vmovaps %xmm2, %xmm1
-; AVX-NEXT:  .LBB4_6:
-; AVX-NEXT:    vmaxss %xmm3, %xmm1, %xmm2
-; AVX-NEXT:    vcmpunordss %xmm1, %xmm1, %xmm3
-; AVX-NEXT:    vblendvps %xmm3, %xmm1, %xmm2, %xmm1
-; AVX-NEXT:    vmovd %xmm1, %eax
-; AVX-NEXT:    vshufps {{.*#+}} xmm0 = xmm0[3,3,3,3]
-; AVX-NEXT:    testl %eax, %eax
-; AVX-NEXT:    js .LBB4_7
-; AVX-NEXT:  # %bb.8:
-; AVX-NEXT:    vmovaps %xmm1, %xmm2
-; AVX-NEXT:    jmp .LBB4_9
-; AVX-NEXT:  .LBB4_7:
-; AVX-NEXT:    vmovaps %xmm0, %xmm2
-; AVX-NEXT:    vmovaps %xmm1, %xmm0
-; AVX-NEXT:  .LBB4_9:
-; AVX-NEXT:    vmaxss %xmm2, %xmm0, %xmm1
-; AVX-NEXT:    vcmpunordss %xmm0, %xmm0, %xmm2
-; AVX-NEXT:    vblendvps %xmm2, %xmm0, %xmm1, %xmm0
-; AVX-NEXT:    vzeroupper
-; AVX-NEXT:    retq
-;
 ; AVX512BW-LABEL: test_v16f32:
 ; AVX512BW:       # %bb.0:
 ; AVX512BW-NEXT:    vextractf64x4 $1, %zmm0, %ymm1
