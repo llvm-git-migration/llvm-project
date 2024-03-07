@@ -12,6 +12,9 @@
 
 #include "mlir-c/IR.h"
 #include "mlir-c/Support.h"
+#include "llvm-c/Comdat.h"
+#include "llvm-c/Core.h"
+#include "llvm-c/DebugInfo.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,15 +104,15 @@ mlirLLVMStructTypeSetBody(MlirType structType, intptr_t nFieldTypes,
 
 /// Creates a LLVM CConv attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMCConvAttrGet(MlirContext ctx,
-                                                      uint64_t cconv);
+                                                      LLVMCallConv cconv);
 
 /// Creates a LLVM Comdat attribute.
-MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMComdatAttrGet(MlirContext ctx,
-                                                       uint64_t comdat);
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMComdatAttrGet(MlirContext ctx, LLVMComdatSelectionKind comdat);
 
 /// Creates a LLVM Linkage attribute.
-MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMLinkageAttrGet(MlirContext ctx,
-                                                        uint64_t linkage);
+MLIR_CAPI_EXPORTED MlirAttribute
+mlirLLVMLinkageAttrGet(MlirContext ctx, LLVMLinkage linkage);
 
 /// Creates a LLVM DINullType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDINullTypeAttrGet(MlirContext ctx);
@@ -126,7 +129,7 @@ MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIExpressionAttrGet(
 /// Creates a LLVM DIBasicType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIBasicTypeAttrGet(
     MlirContext ctx, unsigned int tag, MlirAttribute name, uint64_t sizeInBits,
-    unsigned int encoding);
+    LLVMDWARFTypeEncoding encoding);
 
 /// Creates a LLVM DICompositeType attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompositeTypeAttrGet(
@@ -154,7 +157,7 @@ MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFileAttrGet(MlirContext ctx,
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDICompileUnitAttrGet(
     MlirContext ctx, MlirAttribute id, unsigned int sourceLanguage,
     MlirAttribute file, MlirAttribute producer, bool isOptimized,
-    uint64_t emissionKind);
+    LLVMDWARFEmissionKind emissionKind);
 
 /// Creates a LLVM DIFlags attribute.
 MLIR_CAPI_EXPORTED MlirAttribute mlirLLVMDIFlagsAttrGet(MlirContext ctx,
