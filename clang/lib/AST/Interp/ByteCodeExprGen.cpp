@@ -222,15 +222,14 @@ bool ByteCodeExprGen<Emitter>::VisitCastExpr(const CastExpr *CE) {
     assert(PtrType->isPointerType());
 
     const Descriptor *Desc;
-    if (std::optional<PrimType> T = classify(PtrType->getPointeeType())) {
+    if (std::optional<PrimType> T = classify(PtrType->getPointeeType()))
       Desc = P.createDescriptor(SubExpr, *T);
-    } else if (PtrType->getPointeeType()->isVoidType())
+    else if (PtrType->getPointeeType()->isVoidType())
       Desc = nullptr;
-    else {
+    else
       Desc = P.createDescriptor(CE, PtrType->getPointeeType().getTypePtr(),
                                 Descriptor::InlineDescMD, true, false,
                                 /*IsMutable=*/false, nullptr);
-    }
 
     if (!this->emitGetIntPtr(T, Desc, CE))
       return false;

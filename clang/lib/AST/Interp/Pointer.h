@@ -246,9 +246,8 @@ public:
 
     if (isBlockPointer())
       return asBlockPointer().Pointee == nullptr;
-    else if (isIntegralPointer())
-      return asIntPointer().Value == 0;
-    llvm_unreachable("zomg");
+    assert(isIntegralPointer());
+    return asIntPointer().Value == 0;
   }
   /// Checks if the pointer is live.
   bool isLive() const {
