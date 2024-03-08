@@ -165,8 +165,7 @@ public:
       {{CDM::CLibrary, {"explicit_bzero"}, 2}, &CStringChecker::evalBzero},
       {{CDM::CLibrary, {"sprintf"}, 2}, &CStringChecker::evalSprintf},
       {{CDM::CLibrary, {"snprintf"}, 2}, &CStringChecker::evalSnprintf},
-      {{CDM::CLibrary, {"getentropy"}, 2},
-       std::bind(&CStringChecker::evalGetentropy, _1, _2, _3, CK_Regular)},
+      {{CDM::CLibrary, {"getentropy"}, 2}, &CStringChecker::evalGetentropy},
   };
 
   // These require a bit of special handling.
@@ -221,7 +220,7 @@ public:
   void evalSnprintf(CheckerContext &C, const CallEvent &Call) const;
   void evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
                          bool IsBounded, bool IsBuiltin) const;
-  void evalGetentropy(CheckerContext &C, const CallEvent &Call, CharKind CK) const;
+  void evalGetentropy(CheckerContext &C, const CallEvent &Call) const;
 
   // Utility methods
   std::pair<ProgramStateRef , ProgramStateRef >
@@ -2518,53 +2517,48 @@ void CStringChecker::evalSprintfCommon(CheckerContext &C, const CallEvent &Call,
   C.addTransition(State);
 }
 
-void CStringChecker::evalGetentropy(CheckerContext &C,
-                                    const CallEvent &Call, CharKind CK) const {
+void CStringChecker::evalGetentropy(CheckerContext &C, const CallEvent &Call) const {
   DestinationArgExpr Buffer = {{Call.getArgExpr(0), 0}};
   SizeArgExpr Size = {{Call.getArgExpr(1), 1}};
   ProgramStateRef State = C.getState();
-  const LocationContext *LCtx = C.getLocationContext();
-  SValBuilder &Builder = C.getSValBuilder();
-  SVal MaxLength = Builder.makeIntVal(256, C.getASTContext().IntTy);
+  SValBuilder &SVB = C.getSValBuilder();
 
-  SVal SizeVal = C.getSVal(Size.Expression);
+  std::optional<NonLoc> SizeVal = C.getSVal(Size.Expression).getAs<NonLoc>();
+  if (!SizeVal) {
+    return;
+  }
+  std::optional<NonLoc> MaxLength = SVB.makeIntVal(256, C.getASTContext().IntTy).getAs<NonLoc>();
   QualType SizeTy = Size.Expression->getType();
 
-  ProgramStateRef StateZeroSize, StateNonZeroSize;
-  std::tie(StateZeroSize, StateNonZeroSize) =
-      assumeZero(C, State, SizeVal, SizeTy);
+  SVal Buff = C.getSVal(Buffer.Expression);
+  auto [StateZeroSize, StateNonZeroSize] =
+      assumeZero(C, State, *SizeVal, SizeTy);
 
-  if (StateZeroSize) {
-    StateZeroSize = State->BindExpr(Call.getOriginExpr(), LCtx,
-                              Builder.makeZeroVal(C.getASTContext().IntTy));
-    C.addTransition(StateZeroSize);
+  if (StateZeroSize && !StateNonZeroSize) {
+    State = invalidateDestinationBufferBySize(C, State, Buffer.Expression, Buff, *SizeVal, SizeTy);
+    C.addTransition(State);
     return;
   }
 
-  SVal Buff = C.getSVal(Buffer.Expression);
   State = checkNonNull(C, StateNonZeroSize, Buffer, Buff);
   if (!State)
     return;
 
   QualType cmpTy = C.getSValBuilder().getConditionType();
-  ProgramStateRef bufferTooLong, bufferNotTooLong;
-  std::tie(bufferTooLong, bufferNotTooLong) = State->assume(
-	 Builder
-	.evalBinOpNN(State, BO_GT, *SizeVal.getAs<NonLoc>(), *MaxLength.getAs<NonLoc>(), cmpTy)
+  auto [sizeAboveLimit, sizeNotAboveLimit] = State->assume(
+	 SVB
+	.evalBinOpNN(State, BO_GT, *SizeVal, *MaxLength, cmpTy)
 	.castAs<DefinedOrUnknownSVal>());
-  if (bufferTooLong) {
-    ErrorMessage Message;
-    llvm::raw_svector_ostream Os(Message);
-    Os << "size is greater than 256";
-    emitOutOfBoundsBug(C, bufferTooLong, Buffer.Expression, Message);
+  if (sizeAboveLimit && !sizeNotAboveLimit) {
+    emitOutOfBoundsBug(C, sizeAboveLimit, Buffer.Expression, "must be smaller than or equal to 256");
   } else {
-    State = CheckBufferAccess(C, State, Buffer, Size, AccessKind::write, CK);
+    State = CheckBufferAccess(C, sizeNotAboveLimit, Buffer, Size, AccessKind::write);
     if (!State)
       return;
 
-    State = invalidateDestinationBufferBySize(C, State, Buffer.Expression,
+    State = invalidateDestinationBufferBySize(C, sizeNotAboveLimit, Buffer.Expression,
                                             Buff,
-                                            SizeVal, SizeTy);
+                                            *SizeVal, SizeTy);
     C.addTransition(State);
   }
 }
