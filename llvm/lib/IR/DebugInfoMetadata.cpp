@@ -1774,7 +1774,8 @@ DIExpression *DIExpression::appendOpsToArg(const DIExpression *Expr,
     assert(ArgNo == 0 &&
            "Location Index must be 0 for a non-variadic expression.");
     SmallVector<uint64_t, 8> NewOps(Ops.begin(), Ops.end());
-    return DIExpression::prependOpcodes(Expr, NewOps, StackValue);
+    return DIExpression::prependOpcodes(Expr, NewOps, StackValue)
+        ->foldConstantMath();
   }
 
   SmallVector<uint64_t, 8> NewOps;
@@ -1795,7 +1796,7 @@ DIExpression *DIExpression::appendOpsToArg(const DIExpression *Expr,
   if (StackValue)
     NewOps.push_back(dwarf::DW_OP_stack_value);
 
-  return DIExpression::get(Expr->getContext(), NewOps);
+  return DIExpression::get(Expr->getContext(), NewOps)->foldConstantMath();
 }
 
 DIExpression *DIExpression::replaceArg(const DIExpression *Expr,
@@ -1871,7 +1872,8 @@ DIExpression *DIExpression::append(const DIExpression *Expr,
     Op.appendToVector(NewOps);
   }
   NewOps.append(Ops.begin(), Ops.end());
-  auto *result = DIExpression::get(Expr->getContext(), NewOps);
+  auto *result =
+      DIExpression::get(Expr->getContext(), NewOps)->foldConstantMath();
   assert(result->isValid() && "concatenated expression is not valid");
   return result;
 }
