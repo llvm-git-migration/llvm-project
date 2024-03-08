@@ -342,6 +342,9 @@ public:
     ScanInstance.getHeaderSearchOpts().ModulesIncludeVFSUsage =
         any(OptimizeArgs & ScanningOptimizations::VFS);
 
+    // FileMgr was created before option parsing; set its FileSystemOptions now.
+    FileMgr->getFileSystemOpts() = ScanInstance.getFileSystemOpts();
+
     ScanInstance.setFileManager(FileMgr);
     // Support for virtual file system overlays.
     FileMgr->setVirtualFileSystem(createVFSFromCompilerInvocation(
@@ -624,9 +627,8 @@ bool DependencyScanningWorker::computeDependencies(
       ModifiedCommandLine ? *ModifiedCommandLine : CommandLine;
   auto &FinalFS = ModifiedFS ? ModifiedFS : BaseFS;
 
-  FileSystemOptions FSOpts;
-  FSOpts.WorkingDir = WorkingDirectory.str();
-  auto FileMgr = llvm::makeIntrusiveRefCnt<FileManager>(FSOpts, FinalFS);
+  auto FileMgr =
+      llvm::makeIntrusiveRefCnt<FileManager>(FileSystemOptions{}, FinalFS);
 
   std::vector<const char *> FinalCCommandLine(FinalCommandLine.size(), nullptr);
   llvm::transform(FinalCommandLine, FinalCCommandLine.begin(),
