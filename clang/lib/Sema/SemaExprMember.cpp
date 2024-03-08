@@ -816,6 +816,9 @@ ExprResult Sema::BuildMemberReferenceExpr(
     ActOnMemberAccessExtraArgs *ExtraArgs) {
   LookupResult R(*this, NameInfo, LookupMemberName);
 
+  if (SS.isInvalid())
+    SS.clear();
+
   // Implicit member accesses.
   if (!Base) {
     TypoExpr *TE = nullptr;
@@ -1015,7 +1018,7 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
                                const Scope *S,
                                bool SuppressQualifierCheck,
                                ActOnMemberAccessExtraArgs *ExtraArgs) {
-
+  assert(!SS.isInvalid() && "nested-name-specifier cannot be invalid");
   if (R.wasNotFoundInCurrentInstantiation() ||
       (SS.isValid() && !computeDeclContext(SS, false))) {
     return ActOnDependentMemberExpr(BaseExpr, BaseExprType, IsArrow, OpLoc, SS,
@@ -1060,7 +1063,8 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
   if (R.empty()) {
     // Rederive where we looked up.
     DeclContext *DC = (SS.isSet() ? computeDeclContext(SS, false)
-                                  : BaseType->getAsRecordDecl());
+                                  : computeDeclContext(BaseType));
+                                  // : BaseType->getAsRecordDecl());
 
     if (ExtraArgs) {
       ExprResult RetryExpr;
@@ -1087,7 +1091,10 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
       }
     }
 
-    if (DC) {
+    if (SS.isInvalid() || (SS.isNotEmpty() && !DC)) {
+      Diag(R.getNameLoc(), diag::err_undeclared_use)
+            << MemberName << SS.getRange();
+    } else if (DC) {
       Diag(R.getNameLoc(), diag::err_no_member)
           << MemberName << DC
           << (BaseExpr ? BaseExpr->getSourceRange() : SourceRange());
@@ -1096,6 +1103,16 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
       Diag(R.getNameLoc(), diag::err_no_member)
           << MemberName << BaseExprType
           << (BaseExpr ? BaseExpr->getSourceRange() : SourceRange());
+    }
+
+    if (DC) {
+    } else {
+      #if 0
+      // FIXME: Is this needed?
+      Diag(R.getNameLoc(), diag::err_no_member)
+          << MemberName << BaseExprType
+          << (BaseExpr ? BaseExpr->getSourceRange() : SourceRange());
+      #endif
     }
     return ExprError();
   }
