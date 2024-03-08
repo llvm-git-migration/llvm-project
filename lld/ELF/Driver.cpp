@@ -2659,6 +2659,59 @@ static void postParseObjectFile(ELFFileBase *file) {
   }
 }
 
+// Returns true if the provide symbol should be added to the link.
+bool shouldAddProvideSym(StringRef symName) {
+  Symbol *b = symtab.find(symName);
+  return b && !b->isDefined() && !b->isCommon();
+}
+
+// Add symbols referred by the provide symbol to the symbol table.
+// This function must only be called for provide symbols that should be added
+// to the link.
+static void
+addProvideSymReferences(StringRef provideSym,
+                        llvm::StringSet<> &addedRefsFromProvideSym) {
+
+  if (addedRefsFromProvideSym.count(provideSym))
+    return;
+  assert((shouldAddProvideSym(provideSym) || !symtab.find(provideSym)) &&
+         "This function must only be called for provide symbols that should be "
+         "added to the link.");
+  addedRefsFromProvideSym.insert(provideSym);
+  for (StringRef name : script->provideMap[provideSym].keys()) {
+    Symbol *sym = addUnusedUndefined(name);
+    sym->isUsedInRegularObj = true;
+    sym->referenced = true;
+    script->referencedSymbols.push_back(name);
+    if (script->provideMap.count(name) &&
+        (shouldAddProvideSym(name) || !symtab.find(name)) &&
+        !addedRefsFromProvideSym.count(name))
+      addProvideSymReferences(name, addedRefsFromProvideSym);
+  }
+}
+
+// Add symbols that are referenced in the linker script.
+// Symbols referenced in a PROVIDE command are only added to the symbol table if
+// the PROVIDE command actually provides the symbol.
+static void addScriptReferencedSymbols() {
+  // Some symbols (such as __ehdr_start) are defined lazily only when there
+  // are undefined symbols for them, so we add these to trigger that logic.
+  for (StringRef name : script->referencedSymbols) {
+    Symbol *sym = addUnusedUndefined(name);
+    sym->isUsedInRegularObj = true;
+    sym->referenced = true;
+  }
+
+  // Keeps track of references from which PROVIDE symbols have been added to the
+  // symbol table.
+  llvm::StringSet<> addedRefsFromProvideSym;
+  for (StringRef provideSym : script->provideMap.keys()) {
+    if (!addedRefsFromProvideSym.count(provideSym) &&
+        shouldAddProvideSym(provideSym))
+      addProvideSymReferences(provideSym, addedRefsFromProvideSym);
+  }
+}
+
 // Do actual linking. Note that when this function is called,
 // all linker scripts have already been parsed.
 void LinkerDriver::link(opt::InputArgList &args) {
@@ -2735,13 +2788,7 @@ void LinkerDriver::link(opt::InputArgList &args) {
   config->hasDynSymTab =
       !ctx.sharedFiles.empty() || config->isPic || config->exportDynamic;
 
-  // Some symbols (such as __ehdr_start) are defined lazily only when there
-  // are undefined symbols for them, so we add these to trigger that logic.
-  for (StringRef name : script->referencedSymbols) {
-    Symbol *sym = addUnusedUndefined(name);
-    sym->isUsedInRegularObj = true;
-    sym->referenced = true;
-  }
+  addScriptReferencedSymbols();
 
   // Prevent LTO from removing any definition referenced by -u.
   for (StringRef name : config->undefined)
