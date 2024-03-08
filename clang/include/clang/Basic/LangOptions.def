@@ -453,6 +453,7 @@ LANGOPT(MatrixTypes, 1, 0, "Enable or disable the builtin matrix type")
 ENUM_LANGOPT(StrictFlexArraysLevel, StrictFlexArraysLevelKind, 2,
              StrictFlexArraysLevelKind::Default,
              "Rely on strict definition of flexible arrays")
+COMPATIBLE_LANGOPT(FlexArrayExtensions, 1, 0, "Enable flexible array extensions")
 
 COMPATIBLE_VALUE_LANGOPT(MaxTokens, 32, 0, "Max number of tokens per TU or 0")
 

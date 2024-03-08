@@ -19355,17 +19355,18 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
           EnclosingDecl->setInvalidDecl();
           continue;
         } else if (Record->isUnion())
-          DiagID = getLangOpts().MicrosoftExt
-                       ? diag::ext_flexible_array_union_ms
-                       : getLangOpts().CPlusPlus
-                             ? diag::ext_flexible_array_union_gnu
-                             : diag::err_flexible_array_union;
+          DiagID =
+              getLangOpts().FlexArrayExtensions ? 0
+              : getLangOpts().MicrosoftExt ? diag::ext_flexible_array_union_ms
+              : getLangOpts().CPlusPlus    ? diag::ext_flexible_array_union_gnu
+                                           : diag::err_flexible_array_union;
         else if (NumNamedMembers < 1)
-          DiagID = getLangOpts().MicrosoftExt
+          DiagID = getLangOpts().FlexArrayExtensions ? 0
+                   : getLangOpts().MicrosoftExt
                        ? diag::ext_flexible_array_empty_aggregate_ms
-                       : getLangOpts().CPlusPlus
-                             ? diag::ext_flexible_array_empty_aggregate_gnu
-                             : diag::err_flexible_array_empty_aggregate;
+                   : getLangOpts().CPlusPlus
+                       ? diag::ext_flexible_array_empty_aggregate_gnu
+                       : diag::err_flexible_array_empty_aggregate;
 
         if (DiagID)
           Diag(FD->getLocation(), DiagID)

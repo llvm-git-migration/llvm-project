@@ -2819,6 +2819,11 @@ defm fine_grained_bitfield_accesses : BoolOption<"f", "fine-grained-bitfield-acc
   BothFlags<[], [ClangOption, CC1Option]>>,
   Group<f_clang_Group>;
 
+def fflex_array_extensions : Flag<["-"], "fflex-array-extensions">, Group<f_Group>,
+  Visibility<[ClangOption, CC1Option]>,
+  HelpText<"Enable flexible array extensions from GNU and MSVC">,
+  MarshallingInfoFlag<LangOpts<"FlexArrayExtensions">>;
+
 def fexperimental_relative_cxx_abi_vtables :
   Flag<["-"], "fexperimental-relative-c++-abi-vtables">,
   Group<f_clang_Group>, Visibility<[ClangOption, CC1Option]>,

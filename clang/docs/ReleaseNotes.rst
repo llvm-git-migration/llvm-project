@@ -164,6 +164,12 @@ New Compiler Flags
   This diagnostic can be disabled to make ``-Wmissing-field-initializers`` behave
   like it did before Clang 18.x. Fixes (`#56628 <https://github.com/llvm/llvm-project/issues/68933>`_)
 
+- ``-fflex-array-extensions``. Allows for the use of extensions to flexible array members
+  syntax so they can be directly used in unions and alone in structs. This construction is
+  already fully supported by Clang under certain conditions, so this provide support for
+  codebases that would otherwise not be able to migrate from 0-sized "fake" flexible array
+  members to C99 flexible array members.
+
 Deprecated Compiler Flags
 -------------------------
 
