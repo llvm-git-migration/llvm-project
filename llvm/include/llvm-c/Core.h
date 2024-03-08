@@ -2165,10 +2165,20 @@ double LLVMConstRealGetDouble(LLVMValueRef ConstantVal, LLVMBool *losesInfo);
 /**
  * Create a ConstantDataSequential and initialize it with a string.
  *
+ * @deprecated LLVMConstStringInContext is deprecated in favor of the API accurate
+ * LLVMConstStringInContext2
  * @see llvm::ConstantDataArray::getString()
  */
 LLVMValueRef LLVMConstStringInContext(LLVMContextRef C, const char *Str,
                                       unsigned Length, LLVMBool DontNullTerminate);
+
+/**
+ * Create a ConstantDataSequential and initialize it with a string.
+ *
+ * @see llvm::ConstantDataArray::getString()
+ */
+LLVMValueRef LLVMConstStringInContext2(LLVMContextRef C, const char *Str,
+                                       size_t Length, LLVMBool DontNullTerminate);
 
 /**
  * Create a ConstantDataSequential with string content in the global context.
@@ -2176,11 +2186,26 @@ LLVMValueRef LLVMConstStringInContext(LLVMContextRef C, const char *Str,
  * This is the same as LLVMConstStringInContext except it operates on the
  * global context.
  *
+ * @deprecated LLVMConstString is deprecated in favor of the API accurate
+ * LLVMConstString2
  * @see LLVMConstStringInContext()
  * @see llvm::ConstantDataArray::getString()
  */
 LLVMValueRef LLVMConstString(const char *Str, unsigned Length,
                              LLVMBool DontNullTerminate);
+
+/**
+ * Create a ConstantDataSequential with string content in the global context.
+ *
+ * This is the same as LLVMConstStringInContext2 except it operates on the
+ * global context.
+ *
+ * @see LLVMConstStringInContext2()
+ * @see llvm::ConstantDataArray::getString()
+ */
+LLVMValueRef LLVMConstString2(const char *Str, unsigned Length,
+                              LLVMBool DontNullTerminate);
+
 
 /**
  * Returns true if the specified constant is an array of i8.
