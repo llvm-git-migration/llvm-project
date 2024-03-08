@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#define _POSIX_C_SOURCE 200809
+
 #include "big-radix-floating-point.h"
 #include "flang/Common/bit-population-count.h"
 #include "flang/Common/leading-zero-bit-count.h"
