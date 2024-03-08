@@ -214,6 +214,9 @@ Improvements to Clang's diagnostics
 - Clang now diagnoses lambda function expressions being implicitly cast to boolean values, under ``-Wpointer-bool-conversion``.
   Fixes #GH82512.
 
+- ``-Wmicrosoft`` or ``-Wgnu`` is now required to diagnose C99 flexible
+  array members in a union or alone in a struct.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
