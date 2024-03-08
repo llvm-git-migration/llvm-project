@@ -5267,7 +5267,8 @@ uint32_t TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
                                          bool omit_empty_base_classes,
                                          const ExecutionContext *exe_ctx) {
   if (!type)
-    return 0;
+    return llvm::make_error<llvm::StringError>("invalid clang type",
+                                               llvm::inconvertibleErrorCode());
 
   uint32_t num_children = 0;
   clang::QualType qual_type(RemoveWrappingTypes(GetQualType(type)));
@@ -5325,8 +5326,9 @@ uint32_t TypeSystemClang::GetNumChildren(lldb::opaque_compiler_type_t type,
       num_children += std::distance(record_decl->field_begin(),
                                record_decl->field_end());
     }
-    break;
-
+    return llvm::make_error<llvm::StringError>(
+        "incomplete type \"" + GetDisplayTypeName(type).GetString() + "\"",
+        llvm::inconvertibleErrorCode());
   case clang::Type::ObjCObject:
   case clang::Type::ObjCInterface:
     if (GetCompleteQualType(&getASTContext(), qual_type)) {
