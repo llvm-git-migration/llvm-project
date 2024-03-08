@@ -68,9 +68,9 @@ public:
   ///            invalidate the match and try another pattern.
   LogicalResult
   matchAndRewrite(Operation *op, PatternRewriter &rewriter,
-                  function_ref<bool(const Pattern &)> canApply = {},
-                  function_ref<void(const Pattern &)> onFailure = {},
-                  function_ref<LogicalResult(const Pattern &)> onSuccess = {});
+                  std::function<bool(const Pattern &)> canApply = {},
+                  std::function<void(const Pattern &)> onFailure = {},
+                  std::function<LogicalResult(const Pattern &)> onSuccess = {});
 
   /// Apply a cost model to the patterns within this applicator.
   void applyCostModel(CostModel model);

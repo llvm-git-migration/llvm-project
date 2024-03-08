@@ -129,9 +129,9 @@ void PatternApplicator::walkAllPatterns(
 
 LogicalResult PatternApplicator::matchAndRewrite(
     Operation *op, PatternRewriter &rewriter,
-    function_ref<bool(const Pattern &)> canApply,
-    function_ref<void(const Pattern &)> onFailure,
-    function_ref<LogicalResult(const Pattern &)> onSuccess) {
+    std::function<bool(const Pattern &)> canApply,
+    std::function<void(const Pattern &)> onFailure,
+    std::function<LogicalResult(const Pattern &)> onSuccess) {
   // Before checking native patterns, first match against the bytecode. This
   // won't automatically perform any rewrites so there is no need to worry about
   // conflicts.
