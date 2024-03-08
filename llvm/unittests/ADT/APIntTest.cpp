@@ -2877,6 +2877,56 @@ TEST(APIntTest, RoundingSDiv) {
   }
 }
 
+TEST(APIntTest, Average) {
+  APInt A2(32, 2);
+  APInt A100(32, 100);
+  APInt A101(32, 101);
+  APInt A200(32, 200, false);
+  APInt avg = APIntOps::avgFloorU(A100, A200);
+
+  EXPECT_EQ(APInt(32, 150), APIntOps::avgFloorU(A100, A200));
+  EXPECT_EQ(APIntOps::RoundingUDiv(A100 + A200, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorU(A100, A200));
+  EXPECT_EQ(APIntOps::RoundingUDiv(A100 + A200, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilU(A100, A200));
+  EXPECT_EQ(APIntOps::RoundingUDiv(A100 + A101, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorU(A100, A101));
+  EXPECT_EQ(APIntOps::RoundingUDiv(A100 + A101, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilU(A100, A101));
+
+  APInt Ap100(32, +100);
+  APInt Ap101(32, +101);
+  APInt Ap200(32, +200);
+  APInt Am100(32, -100);
+  APInt Am101(32, -101);
+  APInt Am200(32, -200);
+  EXPECT_EQ(APInt(32, +150), APIntOps::avgFloorS(Ap100, Ap200));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Ap100 + Ap200, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorS(Ap100, Ap200));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Ap100 + Ap200, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilS(Ap100, Ap200));
+
+  EXPECT_EQ(APInt(32, -150), APIntOps::avgFloorS(Am100, Am200));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Am100 + Am200, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorS(Am100, Am200));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Am100 + Am200, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilS(Am100, Am200));
+
+  EXPECT_EQ(APInt(32, +100), APIntOps::avgFloorS(Ap100, Ap101));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Ap100 + Ap101, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorS(Ap100, Ap101));
+  EXPECT_EQ(APInt(32, +101), APIntOps::avgCeilS(Ap100, Ap101));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Ap100 + Ap101, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilS(Ap100, Ap101));
+
+  EXPECT_EQ(APInt(32, -101), APIntOps::avgFloorS(Am100, Am101));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Am100 + Am101, A2, APInt::Rounding::DOWN),
+            APIntOps::avgFloorS(Am100, Am101));
+  EXPECT_EQ(APInt(32, -100), APIntOps::avgCeilS(Am100, Am101));
+  EXPECT_EQ(APIntOps::RoundingSDiv(Am100 + Am101, A2, APInt::Rounding::UP),
+            APIntOps::avgCeilS(Am100, Am101));
+}
+
 TEST(APIntTest, umul_ov) {
   const std::pair<uint64_t, uint64_t> Overflows[] = {
       {0x8000000000000000, 2},
