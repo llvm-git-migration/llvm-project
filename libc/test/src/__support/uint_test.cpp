@@ -8,12 +8,197 @@
 
 #include "src/__support/CPP/optional.h"
 #include "src/__support/UInt.h"
+#include "src/__support/integer_literals.h"        // parse_unsigned_bigint
 #include "src/__support/macros/properties/types.h" // LIBC_TYPES_HAS_INT128
 
 #include "include/llvm-libc-macros/math-macros.h" // HUGE_VALF, HUGE_VALF
 #include "test/UnitTest/Test.h"
 
 namespace LIBC_NAMESPACE {
+
+enum Value { ZERO, ONE, TWO, MIN, MAX };
+
+template <typename T> auto create(Value value) {
+  switch (value) {
+  case ZERO:
+    return T(0);
+  case ONE:
+    return T(1);
+  case TWO:
+    return T(2);
+  case MIN:
+    return T::min();
+  case MAX:
+    return T::max();
+  }
+}
+
+using Types = testing::TypeList< //
+#ifdef LIBC_TYPES_HAS_INT64
+    BigInt<64, false, uint64_t>, // 64-bits unsigned (1 x uint64_t)
+    BigInt<64, true, uint64_t>,  // 64-bits   signed (1 x uint64_t)
+#endif
+#ifdef LIBC_TYPES_HAS_INT128
+    BigInt<128, false, __uint128_t>, // 128-bits unsigned (1 x __uint128_t)
+    BigInt<128, true, __uint128_t>,  // 128-bits   signed (1 x __uint128_t)
+#endif
+    BigInt<16, false, uint16_t>, // 16-bits unsigned (1 x uint16_t)
+    BigInt<16, true, uint16_t>,  // 16-bits   signed (1 x uint16_t)
+    BigInt<64, false, uint16_t>, // 64-bits unsigned (4 x uint16_t)
+    BigInt<64, true, uint16_t>   // 64-bits   signed (4 x uint16_t)
+    >;
+
+#define ASSERT_SAME(A, B) ASSERT_TRUE((A) == (B))
+
+TYPED_TEST(LlvmLibcUIntClassTest, Additions, Types) {
+  ASSERT_SAME(create<T>(ZERO) + create<T>(ZERO), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ONE) + create<T>(ZERO), create<T>(ONE));
+  ASSERT_SAME(create<T>(ZERO) + create<T>(ONE), create<T>(ONE));
+  ASSERT_SAME(create<T>(ONE) + create<T>(ONE), create<T>(TWO));
+  // 2's complement addition works for signed and unsigned types.
+  // - unsigned : 0xff + 0x01 = 0x00 (255 + 1 = 0)
+  // -   signed : 0xef + 0x01 = 0xf0 (127 + 1 = -128)
+  ASSERT_SAME(create<T>(MAX) + create<T>(ONE), create<T>(MIN));
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, Subtraction, Types) {
+  ASSERT_SAME(create<T>(ZERO) - create<T>(ZERO), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ONE) - create<T>(ONE), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ONE) - create<T>(ZERO), create<T>(ONE));
+  // 2's complement subtraction works for signed and unsigned types.
+  // - unsigned : 0x00 - 0x01 = 0xff (   0 - 1 = 255)
+  // -   signed : 0xf0 - 0x01 = 0xef (-128 - 1 = 127)
+  ASSERT_SAME(create<T>(MIN) - create<T>(ONE), create<T>(MAX));
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, Multiplication, Types) {
+  ASSERT_SAME(create<T>(ZERO) * create<T>(ZERO), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ZERO) * create<T>(ONE), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ONE) * create<T>(ZERO), create<T>(ZERO));
+  ASSERT_SAME(create<T>(ONE) * create<T>(ONE), create<T>(ONE));
+  ASSERT_SAME(create<T>(ONE) * create<T>(TWO), create<T>(TWO));
+  ASSERT_SAME(create<T>(TWO) * create<T>(ONE), create<T>(TWO));
+  // - unsigned : 0xff x 0xff = 0x01 (mod 0xff)
+  // -   signed : 0xef x 0xef = 0x01 (mod 0xff)
+  ASSERT_SAME(create<T>(MAX) * create<T>(MAX), create<T>(ONE));
+}
+
+template <typename T> void print(const char *msg, T value) {
+  testing::tlog << msg;
+  IntegerToString<T, radix::Hex> buffer(value);
+  testing::tlog << buffer.view() << "\n";
+}
+
+TEST(LlvmLibcUIntClassTest, SignedAddSub) {
+  // Computations performed by https://www.wolframalpha.com/
+  using T = BigInt<128, true, uint32_t>;
+  const T a = parse_bigint<T>("1927508279017230597");
+  const T b = parse_bigint<T>("278789278723478925");
+  const T s = parse_bigint<T>("2206297557740709522");
+  // Addition
+  ASSERT_SAME(a + b, s);
+  ASSERT_SAME(b + a, s); // commutative
+  // Subtraction
+  ASSERT_SAME(a - s, -b);
+  ASSERT_SAME(s - a, b);
+}
+
+TEST(LlvmLibcUIntClassTest, SignedMulDiv) {
+  // Computations performed by https://www.wolframalpha.com/
+  using T = BigInt<128, true, uint16_t>;
+  struct {
+    const char *a;
+    const char *b;
+    const char *mul;
+  } const test_cases[] = {{"-4", "3", "-12"},
+                          {"-3", "-3", "9"},
+                          {"1927508279017230597", "278789278723478925",
+                           "537368642840747885329125014794668225"}};
+  for (auto tc : test_cases) {
+    const T a = parse_bigint<T>(tc.a);
+    const T b = parse_bigint<T>(tc.b);
+    const T mul = parse_bigint<T>(tc.mul);
+    // Multiplication
+    ASSERT_SAME(a * b, mul);
+    ASSERT_SAME(b * a, mul);   // commutative
+    ASSERT_SAME(a * -b, -mul); // sign
+    ASSERT_SAME(-a * b, -mul); // sign
+    ASSERT_SAME(-a * -b, mul); // sign
+    // Division
+    ASSERT_SAME(mul / a, b);
+    ASSERT_SAME(mul / b, a);
+    ASSERT_SAME(-mul / a, -b); // sign
+    ASSERT_SAME(mul / -a, -b); // sign
+    ASSERT_SAME(-mul / -a, b); // sign
+  }
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, Division, Types) {
+  ASSERT_SAME(create<T>(ZERO) / create<T>(ONE), create<T>(ZERO));
+  ASSERT_SAME(create<T>(MAX) / create<T>(ONE), create<T>(MAX));
+  ASSERT_SAME(create<T>(MAX) / create<T>(MAX), create<T>(ONE));
+  // - unsigned : 0xff / 0x02 = 0x7f
+  // -   signed : 0xef / 0x02 = 0x77
+  ASSERT_SAME(create<T>(MAX) / create<T>(TWO), (create<T>(MAX) >> 1));
+
+  using word_type = typename T::word_type;
+  const T zero_one_repeated = T::all_ones() / T(0xff);
+  const word_type pattern = word_type(~0) / word_type(0xff);
+  for (const word_type part : zero_one_repeated.val) {
+    if constexpr (T::SIGNED == false) {
+      EXPECT_EQ(part, pattern);
+    }
+  }
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, is_neg, Types) {
+  EXPECT_FALSE(create<T>(ZERO).is_neg());
+  EXPECT_FALSE(create<T>(ONE).is_neg());
+  EXPECT_FALSE(create<T>(TWO).is_neg());
+  EXPECT_EQ(create<T>(MIN).is_neg(), T::SIGNED);
+  EXPECT_FALSE(create<T>(MAX).is_neg());
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, Masks, Types) {
+  if constexpr (!T::SIGNED) {
+    constexpr size_t BITS = T::BITS;
+    // mask_trailing_ones
+    ASSERT_SAME((mask_trailing_ones<T, 0>()), T::zero());
+    ASSERT_SAME((mask_trailing_ones<T, 1>()), T::one());
+    ASSERT_SAME((mask_trailing_ones<T, BITS - 1>()), T::all_ones() >> 1);
+    ASSERT_SAME((mask_trailing_ones<T, BITS>()), T::all_ones());
+    // mask_leading_ones
+    ASSERT_SAME((mask_leading_ones<T, 0>()), T::zero());
+    ASSERT_SAME((mask_leading_ones<T, 1>()), T::one() << (BITS - 1));
+    ASSERT_SAME((mask_leading_ones<T, BITS - 1>()), T::all_ones() - T::one());
+    ASSERT_SAME((mask_leading_ones<T, BITS>()), T::all_ones());
+    // mask_trailing_zeros
+    ASSERT_SAME((mask_trailing_zeros<T, 0>()), T::all_ones());
+    ASSERT_SAME((mask_trailing_zeros<T, 1>()), T::all_ones() - T::one());
+    ASSERT_SAME((mask_trailing_zeros<T, BITS - 1>()), T::one() << (BITS - 1));
+    ASSERT_SAME((mask_trailing_zeros<T, BITS>()), T::zero());
+    // mask_trailing_zeros
+    ASSERT_SAME((mask_leading_zeros<T, 0>()), T::all_ones());
+    ASSERT_SAME((mask_leading_zeros<T, 1>()), T::all_ones() >> 1);
+    ASSERT_SAME((mask_leading_zeros<T, BITS - 1>()), T::one());
+    ASSERT_SAME((mask_leading_zeros<T, BITS>()), T::zero());
+  }
+}
+
+TYPED_TEST(LlvmLibcUIntClassTest, CountBits, Types) {
+  if constexpr (!T::SIGNED) {
+    for (int i = 0; i <= T::BITS; ++i) {
+      const auto l_one = T::all_ones() << i; // 0b111...000
+      const auto r_one = T::all_ones() >> i; // 0b000...111
+      const int zeros = i;
+      const int ones = T::BITS - zeros;
+      ASSERT_EQ(cpp::countr_one(r_one), ones);
+      ASSERT_EQ(cpp::countl_one(l_one), ones);
+      ASSERT_EQ(cpp::countr_zero(l_one), zeros);
+      ASSERT_EQ(cpp::countl_zero(r_one), zeros);
+    }
+  }
+}
 
 using LL_UInt64 = UInt<64>;
 // We want to test UInt<128> explicitly. So, for
@@ -502,12 +687,13 @@ TEST(LlvmLibcUIntClassTest, UnaryPredecrement) {
 }
 
 TEST(LlvmLibcUIntClassTest, EqualsTests) {
-  LL_UInt128 a1({0xffffffff00000000, 0xffff00000000ffff});
-  LL_UInt128 a2({0xffffffff00000000, 0xffff00000000ffff});
-  LL_UInt128 b({0xff00ff0000ff00ff, 0xf0f0f0f00f0f0f0f});
-  LL_UInt128 a_reversed({0xffff00000000ffff, 0xffffffff00000000});
-  LL_UInt128 a_upper(0xffff00000000ffff);
-  LL_UInt128 a_lower(0xffffffff00000000);
+  auto a1 = parse_bigint<LL_UInt128>("0xffff00000000ffff'ffffffff00000000");
+  auto a2 = parse_bigint<LL_UInt128>("0xffff00000000ffff'ffffffff00000000");
+  auto b = parse_bigint<LL_UInt128>("0xf0f0f0f00f0f0f0f'ff00ff0000ff00ff");
+  auto a_reversed =
+      parse_bigint<LL_UInt128>("0xffffffff00000000'ffff00000000ffff");
+  auto a_upper = parse_bigint<LL_UInt128>("0xffff00000000ffff");
+  auto a_lower = parse_bigint<LL_UInt128>("0xffffffff00000000");
   ASSERT_TRUE(a1 == a1);
   ASSERT_TRUE(a1 == a2);
   ASSERT_FALSE(a1 == b);
@@ -518,15 +704,15 @@ TEST(LlvmLibcUIntClassTest, EqualsTests) {
 }
 
 TEST(LlvmLibcUIntClassTest, ComparisonTests) {
-  LL_UInt128 a({0xffffffff00000000, 0xffff00000000ffff});
-  LL_UInt128 b({0xff00ff0000ff00ff, 0xf0f0f0f00f0f0f0f});
+  auto a = parse_bigint<LL_UInt128>("0xffff00000000ffff'ffffffff00000000");
+  auto b = parse_bigint<LL_UInt128>("0xf0f0f0f00f0f0f0f'ff00ff0000ff00ff");
   EXPECT_GT(a, b);
   EXPECT_GE(a, b);
   EXPECT_LT(b, a);
   EXPECT_LE(b, a);
 
-  LL_UInt128 x(0xffffffff00000000);
-  LL_UInt128 y(0x00000000ffffffff);
+  auto x = parse_bigint<LL_UInt128>("0xffffffff00000000");
+  auto y = parse_bigint<LL_UInt128>("0x00000000ffffffff");
   EXPECT_GT(x, y);
   EXPECT_GE(x, y);
   EXPECT_LT(y, x);
@@ -537,20 +723,20 @@ TEST(LlvmLibcUIntClassTest, ComparisonTests) {
 }
 
 TEST(LlvmLibcUIntClassTest, FullMulTests) {
-  LL_UInt128 a({0xffffffffffffffffULL, 0xffffffffffffffffULL});
-  LL_UInt128 b({0xfedcba9876543210ULL, 0xfefdfcfbfaf9f8f7ULL});
-  LL_UInt256 r({0x0123456789abcdf0ULL, 0x0102030405060708ULL,
-                0xfedcba987654320fULL, 0xfefdfcfbfaf9f8f7ULL});
-  LL_UInt128 r_hi({0xfedcba987654320eULL, 0xfefdfcfbfaf9f8f7ULL});
+  auto a = parse_bigint<LL_UInt128>("0xffffffffffffffffffffffffffffffff");
+  auto b = parse_bigint<LL_UInt128>("0xfefdfcfbfaf9f8f7fedcba9876543210");
+  auto r1 = parse_bigint<LL_UInt128>("0xfefdfcfbfaf9f8f7fedcba987654320e");
+  auto r2 = parse_bigint<LL_UInt256>("0xfefdfcfbfaf9f8f7fedcba987654320f"
+                                     "01020304050607080123456789abcdf0");
 
-  EXPECT_EQ(a.ful_mul(b), r);
-  EXPECT_EQ(a.quick_mul_hi(b), r_hi);
+  EXPECT_EQ(a.quick_mul_hi(b), r1);
+  EXPECT_EQ(a.ful_mul(b), r2);
 
-  LL_UInt192 c(
-      {0x7766554433221101ULL, 0xffeeddccbbaa9988ULL, 0x1f2f3f4f5f6f7f8fULL});
-  LL_UInt320 rr({0x8899aabbccddeeffULL, 0x0011223344556677ULL,
-                 0x583715f4d3b29171ULL, 0xffeeddccbbaa9988ULL,
-                 0x1f2f3f4f5f6f7f8fULL});
+  auto c = parse_bigint<LL_UInt192>(
+      "0x1f2f3f4f5f6f7f8fffeeddccbbaa99887766554433221101");
+  auto rr =
+      parse_bigint<LL_UInt320>("0x1f2f3f4f5f6f7f8fffeeddccbbaa9988583715f4d3b29"
+                               "17100112233445566778899aabbccddeeff");
 
   EXPECT_EQ(a.ful_mul(c), rr);
   EXPECT_EQ(a.ful_mul(c), c.ful_mul(a));
@@ -561,7 +747,7 @@ TEST(LlvmLibcUIntClassTest, FullMulTests) {
     LL_UInt##Bits a = ~LL_UInt##Bits(0);                                       \
     LL_UInt##Bits hi = a.quick_mul_hi(a);                                      \
     LL_UInt##Bits trunc = static_cast<LL_UInt##Bits>(a.ful_mul(a) >> Bits);    \
-    uint64_t overflow = trunc.sub(hi);                                         \
+    uint64_t overflow = trunc.sub_overflow(hi);                                \
     EXPECT_EQ(overflow, uint64_t(0));                                          \
     EXPECT_LE(uint64_t(trunc), uint64_t(Error));                               \
   } while (0)
