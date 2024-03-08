@@ -138,26 +138,44 @@ template <typename PassT> struct MachinePassModel : MachinePassConcept {
     return getSetPropertiesImpl<PassT>();
   }
 
-  template <typename T>
-  using has_get_cleared_properties_t =
-      decltype(std::declval<T &>().getClearedProperties());
-  template <typename T>
-  static std::enable_if_t<is_detected<has_get_cleared_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getClearedPropertiesImpl() {
-    return PassT::getClearedProperties();
-  }
-  template <typename T>
-  static std::enable_if_t<!is_detected<has_get_cleared_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getClearedPropertiesImpl() {
-    return MachineFunctionProperties();
-  }
-  MachineFunctionProperties getClearedProperties() const override {
-    return getClearedPropertiesImpl<PassT>();
-  }
+    template <typename T>
+    using has_get_cleared_properties_t =
+        decltype(std::declval<T &>().getClearedProperties());
 
-  PassT Pass;
+  public:
+    PropertyChanger(MachineFunction &MF) : MF(MF) {
+#ifndef NDEBUG
+      if constexpr (is_detected<has_get_required_properties_t,
+                                DerivedT>::value) {
+        auto &MFProps = MF.getProperties();
+        auto RequiredProperties = DerivedT::getRequiredProperties();
+        if (!MFProps.verifyRequiredProperties(RequiredProperties)) {
+          errs() << "MachineFunctionProperties required by " << DerivedT::name()
+                 << " pass are not met by function " << MF.getName() << ".\n"
+                 << "Required properties: ";
+          RequiredProperties.print(errs());
+          errs() << "\nCurrent properties: ";
+          MFProps.print(errs());
+          errs() << '\n';
+          report_fatal_error("MachineFunctionProperties check failed");
+        }
+#endif
+      }
+    }
+
+    ~PropertyChanger() {
+      if constexpr (is_detected<has_get_set_properties_t, DerivedT>::value)
+        MF.getProperties().set(DerivedT::getSetProperties());
+      if constexpr (is_detected<has_get_cleared_properties_t, DerivedT>::value)
+        MF.getProperties().reset(DerivedT::getClearedProperties());
+    }
+  };
+
+  PreservedAnalyses run(MachineFunction &MF,
+                        MachineFunctionAnalysisManager &MFAM) {
+    PropertyChanger PC(MF);
+    return static_cast<DerivedT *>(this)->run(MF, MFAM);
+  }
 };
 } // namespace detail
 
@@ -278,6 +296,27 @@ createModuleToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
   return ModuleToMachineFunctionPassAdaptor(
       std::unique_ptr<detail::MachinePassConcept>(
           new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
+}
+
+template <>
+template <typename PassT>
+std::enable_if_t<!std::is_same<PassT, PassManager<MachineFunction>>::value>
+PassManager<MachineFunction>::addPass(PassT &&Pass) {
+  using PassModelT =
+      detail::PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>;
+  using MachineFunctionPassModelT =
+      detail::PassModel<MachineFunction, MachinePassInfoMixin<PassT>,
+                        MachineFunctionAnalysisManager>;
+  // Do not use make_unique or emplace_back, they cause too many template
+  // instantiations, causing terrible compile times.
+  if constexpr (std::is_base_of_v<MachinePassInfoMixin<PassT>, PassT>) {
+    Passes.push_back(
+        std::unique_ptr<PassConceptT>(new MachineFunctionPassModelT(
+            std::forward<MachinePassInfoMixin<PassT>>(Pass))));
+  } else {
+    Passes.push_back(std::unique_ptr<PassConceptT>(
+        new PassModelT(std::forward<PassT>(Pass))));
+  }
 }
 
 template <>
