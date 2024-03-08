@@ -339,6 +339,7 @@ libc_support_library(
         "src/__support/CPP/type_traits/is_base_of.h",
         "src/__support/CPP/type_traits/is_class.h",
         "src/__support/CPP/type_traits/is_const.h",
+        "src/__support/CPP/type_traits/is_constant_evaluated.h",
         "src/__support/CPP/type_traits/is_convertible.h",
         "src/__support/CPP/type_traits/is_destructible.h",
         "src/__support/CPP/type_traits/is_enum.h",
