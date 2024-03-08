@@ -23,9 +23,16 @@
 
 # CHECK:      0000000000001000 a f1
 # CHECK-NEXT: 0000000000001000 A f2
-# CHECK-NEXT: 0000000000001000 a g1
-# CHECK-NEXT: 0000000000001000 A g2
+# CHECK-NEXT: 0000000000001000 A f3
+# CHECK-NEXT: 0000000000001000 A f4
+# CHECK-NEXT: 0000000000001000 A f5
+# CHECK-NEXT: 0000000000001000 A f6
+# CHECK-NEXT: 0000000000001000 A f7
 # CHECK-NEXT: 0000000000001000 A newsym
+# CHECK-NOT: g1
+# CHECK-NOT: g2
+# CHECK-NOT: unused
+# CHECK-NOT: another_unused
 
 # RUN: not ld.lld -T chain2.t a.o 2>&1 | FileCheck %s --check-prefix=ERR --implicit-check-not=error:
 # ERR-COUNT-3: error: chain2.t:1: symbol not found: undef
@@ -40,13 +47,19 @@ patatino:
   movl newsym, %eax
 
 #--- chain.t
-PROVIDE(f2 = 0x1000);
+PROVIDE(f7 = 0x1000);
+PROVIDE(f5 = f6);
+PROVIDE(f6 = f7);
+PROVIDE(f4 = f5);
+PROVIDE(f3 = f4);
+PROVIDE(f2 = f3);
 PROVIDE_HIDDEN(f1 = f2);
 PROVIDE(newsym = f1);
 
 PROVIDE(g2 = 0x1000);
 PROVIDE_HIDDEN(g1 = g2);
 PROVIDE(unused = g1);
+PROVIDE_HIDDEN(another_unused = g1);
 
 #--- chain2.t
 PROVIDE(f2 = undef);

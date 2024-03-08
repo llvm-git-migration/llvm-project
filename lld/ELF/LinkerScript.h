@@ -16,7 +16,9 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/MapVector.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Compiler.h"
 #include <cstddef>
 #include <cstdint>
@@ -379,6 +381,14 @@ public:
 
   // Sections that will be warned/errored by --orphan-handling.
   SmallVector<const InputSectionBase *, 0> orphanSections;
+
+  // Stores the mapping: provide symbol -> symbols referred in the provide
+  // expression. For example, if the PROVIDE command is:
+  //
+  // PROVIDE(v = a + b + c);
+  //
+  // then provideMap should contain the mapping: 'v' -> ['a', 'b', 'c']
+  llvm::StringMap<llvm::StringSet<>> provideMap;
 };
 
 LLVM_LIBRARY_VISIBILITY extern std::unique_ptr<LinkerScript> script;
