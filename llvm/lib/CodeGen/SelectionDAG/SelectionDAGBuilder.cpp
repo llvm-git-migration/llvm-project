@@ -3037,7 +3037,8 @@ static SDValue getLoadStackGuard(SelectionDAG &DAG, const SDLoc &DL,
     auto Flags = MachineMemOperand::MOLoad | MachineMemOperand::MOInvariant |
                  MachineMemOperand::MODereferenceable;
     MachineMemOperand *MemRef = MF.getMachineMemOperand(
-        MPInfo, Flags, PtrTy.getSizeInBits() / 8, DAG.getEVTAlign(PtrTy));
+        MPInfo, Flags, LocationSize::precise(PtrTy.getSizeInBits() / 8),
+        DAG.getEVTAlign(PtrTy));
     DAG.setNodeMemRefs(Node, {MemRef});
   }
   if (PtrTy != PtrMemTy)
@@ -5000,9 +5001,9 @@ void SelectionDAGBuilder::visitAtomicCmpXchg(const AtomicCmpXchgInst &I) {
 
   MachineFunction &MF = DAG.getMachineFunction();
   MachineMemOperand *MMO = MF.getMachineMemOperand(
-      MachinePointerInfo(I.getPointerOperand()), Flags, MemVT.getStoreSize(),
-      DAG.getEVTAlign(MemVT), AAMDNodes(), nullptr, SSID, SuccessOrdering,
-      FailureOrdering);
+      MachinePointerInfo(I.getPointerOperand()), Flags,
+      LocationSize::precise(MemVT.getStoreSize()), DAG.getEVTAlign(MemVT),
+      AAMDNodes(), nullptr, SSID, SuccessOrdering, FailureOrdering);
 
   SDValue L = DAG.getAtomicCmpSwap(ISD::ATOMIC_CMP_SWAP_WITH_SUCCESS,
                                    dl, MemVT, VTs, InChain,
@@ -5054,8 +5055,9 @@ void SelectionDAGBuilder::visitAtomicRMW(const AtomicRMWInst &I) {
 
   MachineFunction &MF = DAG.getMachineFunction();
   MachineMemOperand *MMO = MF.getMachineMemOperand(
-      MachinePointerInfo(I.getPointerOperand()), Flags, MemVT.getStoreSize(),
-      DAG.getEVTAlign(MemVT), AAMDNodes(), nullptr, SSID, Ordering);
+      MachinePointerInfo(I.getPointerOperand()), Flags,
+      LocationSize::precise(MemVT.getStoreSize()), DAG.getEVTAlign(MemVT),
+      AAMDNodes(), nullptr, SSID, Ordering);
 
   SDValue L =
     DAG.getAtomic(NT, dl, MemVT, InChain,
@@ -5100,8 +5102,9 @@ void SelectionDAGBuilder::visitAtomicLoad(const LoadInst &I) {
   auto Flags = TLI.getLoadMemOperandFlags(I, DAG.getDataLayout(), AC, LibInfo);
 
   MachineMemOperand *MMO = DAG.getMachineFunction().getMachineMemOperand(
-      MachinePointerInfo(I.getPointerOperand()), Flags, MemVT.getStoreSize(),
-      I.getAlign(), AAMDNodes(), nullptr, SSID, Order);
+      MachinePointerInfo(I.getPointerOperand()), Flags,
+      LocationSize::precise(MemVT.getStoreSize()), I.getAlign(), AAMDNodes(),
+      nullptr, SSID, Order);
 
   InChain = TLI.prepareVolatileOrAtomicLoad(InChain, dl, DAG);
 
@@ -5137,8 +5140,9 @@ void SelectionDAGBuilder::visitAtomicStore(const StoreInst &I) {
 
   MachineFunction &MF = DAG.getMachineFunction();
   MachineMemOperand *MMO = MF.getMachineMemOperand(
-      MachinePointerInfo(I.getPointerOperand()), Flags, MemVT.getStoreSize(),
-      I.getAlign(), AAMDNodes(), nullptr, SSID, Ordering);
+      MachinePointerInfo(I.getPointerOperand()), Flags,
+      LocationSize::precise(MemVT.getStoreSize()), I.getAlign(), AAMDNodes(),
+      nullptr, SSID, Ordering);
 
   SDValue Val = getValue(I.getValueOperand());
   if (Val.getValueType() != MemVT)

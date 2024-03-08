@@ -24222,7 +24222,7 @@ static SDValue narrowExtractedVectorLoad(SDNode *Extract, SelectionDAG &DAG) {
   // TODO: Use "BaseIndexOffset" to make this more effective.
   SDValue NewAddr = DAG.getMemBasePlusOffset(Ld->getBasePtr(), Offset, DL);
 
-  TypeSize StoreSize = VT.getStoreSize();
+  LocationSize StoreSize = LocationSize::precise(VT.getStoreSize());
   MachineFunction &MF = DAG.getMachineFunction();
   MachineMemOperand *MMO;
   if (Offset.isScalable()) {
@@ -27863,11 +27863,10 @@ bool DAGCombiner::mayAlias(SDNode *Op0, SDNode *Op1) const {
     if (const auto *LSN = dyn_cast<LSBaseSDNode>(N)) {
       int64_t Offset = 0;
       if (auto *C = dyn_cast<ConstantSDNode>(LSN->getOffset()))
-        Offset = (LSN->getAddressingMode() == ISD::PRE_INC)
-                     ? C->getSExtValue()
-                     : (LSN->getAddressingMode() == ISD::PRE_DEC)
-                           ? -1 * C->getSExtValue()
-                           : 0;
+        Offset = (LSN->getAddressingMode() == ISD::PRE_INC) ? C->getSExtValue()
+                 : (LSN->getAddressingMode() == ISD::PRE_DEC)
+                     ? -1 * C->getSExtValue()
+                     : 0;
       TypeSize Size = LSN->getMemoryVT().getStoreSize();
       return {LSN->isVolatile(),           LSN->isAtomic(),
               LSN->getBasePtr(),           Offset /*base offset*/,

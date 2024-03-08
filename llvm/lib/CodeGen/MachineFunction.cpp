@@ -484,12 +484,16 @@ void MachineFunction::deleteMachineBasicBlock(MachineBasicBlock *MBB) {
 }
 
 MachineMemOperand *MachineFunction::getMachineMemOperand(
-    MachinePointerInfo PtrInfo, MachineMemOperand::Flags F, LocationSize TS,
+    MachinePointerInfo PtrInfo, MachineMemOperand::Flags F, LocationSize Size,
     Align BaseAlignment, const AAMDNodes &AAInfo, const MDNode *Ranges,
     SyncScope::ID SSID, AtomicOrdering Ordering,
     AtomicOrdering FailureOrdering) {
+  assert((!Size.hasValue() ||
+          Size.getValue().getKnownMinValue() != ~UINT64_C(0)) &&
+         "Unexpected an unknown size to be represented using "
+         "LocationSize::beforeOrAfter()");
   return new (Allocator)
-      MachineMemOperand(PtrInfo, F, TS, BaseAlignment, AAInfo, Ranges, SSID,
+      MachineMemOperand(PtrInfo, F, Size, BaseAlignment, AAInfo, Ranges, SSID,
                         Ordering, FailureOrdering);
 }
 
@@ -506,9 +510,13 @@ MachineMemOperand *MachineFunction::getMachineMemOperand(
 MachineMemOperand *
 MachineFunction::getMachineMemOperand(const MachineMemOperand *MMO,
                                       const MachinePointerInfo &PtrInfo,
-                                      LocationSize TS) {
+                                      LocationSize Size) {
+  assert((!Size.hasValue() ||
+          Size.getValue().getKnownMinValue() != ~UINT64_C(0)) &&
+         "Unexpected an unknown size to be represented using "
+         "LocationSize::beforeOrAfter()");
   return new (Allocator)
-      MachineMemOperand(PtrInfo, MMO->getFlags(), TS, MMO->getBaseAlign(),
+      MachineMemOperand(PtrInfo, MMO->getFlags(), Size, MMO->getBaseAlign(),
                         AAMDNodes(), nullptr, MMO->getSyncScopeID(),
                         MMO->getSuccessOrdering(), MMO->getFailureOrdering());
 }

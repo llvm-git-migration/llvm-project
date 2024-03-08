@@ -1341,8 +1341,8 @@ static bool MemOperandsHaveAlias(const MachineFrameInfo &MFI, AAResults *AA,
   assert((OffsetA >= 0) && "Negative MachineMemOperand offset");
   assert((OffsetB >= 0) && "Negative MachineMemOperand offset");
 
-  // If Scalable Location Size has non-zero offset,
-  // Width + Offset does not work at the moment
+  // If Scalable Location Size has non-zero offset, Width + Offset does not work
+  // at the moment
   if ((WidthA.isScalable() && OffsetA > 0) ||
       (WidthB.isScalable() && OffsetB > 0))
     return true;

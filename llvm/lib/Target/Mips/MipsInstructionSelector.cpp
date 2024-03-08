@@ -456,7 +456,8 @@ bool MipsInstructionSelector::select(MachineInstr &I) {
     }
 
     // Unaligned memory access
-    if ((!MMO->getSize().hasValue() || MMO->getAlign() < MMO->getSize().getValue()) &&
+    if ((!MMO->getSize().hasValue() ||
+         MMO->getAlign() < MMO->getSize().getValue()) &&
         !STI.systemSupportsUnalignedAccess()) {
       if (MMO->getSize() != 4 || !isRegInGprb(I.getOperand(0).getReg(), MRI))
         return false;

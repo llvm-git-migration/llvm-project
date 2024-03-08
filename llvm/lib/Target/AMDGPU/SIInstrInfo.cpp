@@ -422,10 +422,9 @@ bool SIInstrInfo::getMemOperandsWithOffsetWidth(
       DataOpIdx = AMDGPU::getNamedOperandIdx(Opc, AMDGPU::OpName::vdst);
       if (DataOpIdx == -1) {
         DataOpIdx = AMDGPU::getNamedOperandIdx(Opc, AMDGPU::OpName::data0);
-        unsigned Width2 = getOpSize(LdSt, DataOpIdx);
+        Width = getOpSize(LdSt, DataOpIdx);
         DataOpIdx = AMDGPU::getNamedOperandIdx(Opc, AMDGPU::OpName::data1);
-        Width2 += getOpSize(LdSt, DataOpIdx);
-        Width = LocationSize::precise(Width2);
+        Width = Width.getValue() + getOpSize(LdSt, DataOpIdx);
       } else {
         Width = getOpSize(LdSt, DataOpIdx);
       }
