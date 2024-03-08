@@ -5182,7 +5182,14 @@ void llvm::UpgradeFunctionAttributes(Function &F) {
 static bool isModuleAttributeSet(Module &M, const StringRef &ModAttr) {
   const auto *Attr =
       mdconst::extract_or_null<ConstantInt>(M.getModuleFlag(ModAttr));
-  return Attr && Attr->getZExtValue();
+  return Attr && Attr->isOne();
+}
+
+// Check if the function attribute is not present and set it.
+static void SetFunctionAttrIfNotSet(Function &F, StringRef FnAttrName,
+                                    StringRef Value) {
+  if (!F.hasFnAttribute(FnAttrName))
+    F.addFnAttr(FnAttrName, Value);
 }
 
 void llvm::CopyModuleAttrToFunctions(Module &M) {
@@ -5191,10 +5198,10 @@ void llvm::CopyModuleAttrToFunctions(Module &M) {
     return;
 
   StringRef SignTypeValue = "none";
-  if (isModuleAttributeSet(M, "sign-return-address"))
-    SignTypeValue = "non-leaf";
   if (isModuleAttributeSet(M, "sign-return-address-all"))
     SignTypeValue = "all";
+  else if (isModuleAttributeSet(M, "sign-return-address"))
+    SignTypeValue = "non-leaf";
 
   StringRef BTEValue =
       isModuleAttributeSet(M, "branch-target-enforcement") ? "true" : "false";
@@ -5209,16 +5216,12 @@ void llvm::CopyModuleAttrToFunctions(Module &M) {
   for (Function &F : M.getFunctionList()) {
     if (F.isDeclaration())
       continue;
-    auto SetFunctionAttrIfNotSet = [&](StringRef FnAttrName, StringRef Value) {
-      if (!F.hasFnAttribute(FnAttrName))
-        F.addFnAttr(FnAttrName, Value);
-    };
 
-    SetFunctionAttrIfNotSet("sign-return-address", SignTypeValue);
-    SetFunctionAttrIfNotSet("branch-target-enforcement", BTEValue);
-    SetFunctionAttrIfNotSet("branch-protection-pauth-lr", BPPLValue);
-    SetFunctionAttrIfNotSet("guarded-control-stack", GCSValue);
-    SetFunctionAttrIfNotSet("sign-return-address-key", SignKeyValue);
+    SetFunctionAttrIfNotSet(F, "sign-return-address", SignTypeValue);
+    SetFunctionAttrIfNotSet(F, "branch-target-enforcement", BTEValue);
+    SetFunctionAttrIfNotSet(F, "branch-protection-pauth-lr", BPPLValue);
+    SetFunctionAttrIfNotSet(F, "guarded-control-stack", GCSValue);
+    SetFunctionAttrIfNotSet(F, "sign-return-address-key", SignKeyValue);
   }
 }
 

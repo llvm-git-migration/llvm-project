@@ -29,9 +29,9 @@ entry:
 !3 = !{i32 8, !"sign-return-address-with-bkey", i32 0}
 
 ; CHECK-DUMP: <foo>:
-; CHECK-DUMP:     paciasp
+; CHECK-DUMP:     pacibsp
 ; CHECK-DUMP:     mov     w0, #0x2a
-; CHECK-DUMP:     autiasp
+; CHECK-DUMP:     autibsp
 ; CHECK-DUMP:     ret
 ; CHECK-DUMP: <main>:
 ; CHECK-DUMP-NOT:  paciasp
