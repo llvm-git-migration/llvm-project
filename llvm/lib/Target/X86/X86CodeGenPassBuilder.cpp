@@ -53,8 +53,22 @@ void X86TargetMachine::registerPassBuilderCallbacks(
     PassBuilder &PB, bool PopulateClassToPassNames) {
   if (PopulateClassToPassNames) {
     auto *PIC = PB.getPassInstrumentationCallbacks();
-    PIC->addClassToPassName(X86ISelDAGToDAGPass::name(), "x86-isel");
+#define MACHINE_FUNCTION_PASS(NAME, CREATE_PASS)                               \
+  PIC->addClassToPassName(decltype(CREATE_PASS)::name(), NAME);
+#include "X86PassRegistry.def"
   }
+
+  PB.registerPipelineParsingCallback(
+      [this](StringRef Name, MachineFunctionPassManager &MFPM,
+             ArrayRef<PassBuilder::PipelineElement>) {
+#define MACHINE_FUNCTION_PASS(NAME, CREATE_PASS)                               \
+  if (Name == NAME) {                                                          \
+    MFPM.addPass(CREATE_PASS);                                                 \
+    return true;                                                               \
+  }
+#include "X86PassRegistry.def"
+        return false;
+      });
 }
 
 Error X86TargetMachine::buildCodeGenPipeline(
