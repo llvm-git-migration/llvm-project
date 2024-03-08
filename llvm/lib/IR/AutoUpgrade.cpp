@@ -5185,62 +5185,39 @@ static bool isModuleAttributeSet(Module &M, const StringRef &ModAttr) {
   return Attr && Attr->getZExtValue();
 }
 
-// Copy an attribute from module to the function if exists.
-// First value of the pair is used when the module attribute is not zero
-// the second otherwise.
-static void
-CopyModuleAttributeToFunction(Function &F, StringRef FnAttrName,
-                              StringRef ModAttrName,
-                              std::pair<StringRef, StringRef> Values) {
-  if (F.hasFnAttribute(FnAttrName))
-    return;
-  F.addFnAttr(FnAttrName, isModuleAttributeSet(*F.getParent(), ModAttrName)
-                              ? Values.first
-                              : Values.second);
-}
-
-// Copy a boolean attribute from module to the function if exists.
-// Module attribute treated false if zero otherwise true.
-static void CopyModuleAttributeToFunction(Function &F, StringRef AttrName) {
-  CopyModuleAttributeToFunction(
-      F, AttrName, AttrName,
-      std::make_pair<StringRef, StringRef>("true", "false"));
-}
-
-// Copy an attribute from module to the function if exists.
-// First value of the pair is used when the module attribute is not zero
-// the second otherwise.
-static void
-CopyModuleAttributeToFunction(Function &F, StringRef AttrName,
-                              std::pair<StringRef, StringRef> Values) {
-  CopyModuleAttributeToFunction(F, AttrName, AttrName, Values);
-}
-
 void llvm::CopyModuleAttrToFunctions(Module &M) {
   Triple T(M.getTargetTriple());
   if (!T.isThumb() && !T.isARM() && !T.isAArch64())
     return;
 
+  StringRef SignTypeValue = "none";
+  if (isModuleAttributeSet(M, "sign-return-address"))
+    SignTypeValue = "non-leaf";
+  if (isModuleAttributeSet(M, "sign-return-address-all"))
+    SignTypeValue = "all";
+
+  StringRef BTEValue =
+      isModuleAttributeSet(M, "branch-target-enforcement") ? "true" : "false";
+  StringRef BPPLValue =
+      isModuleAttributeSet(M, "branch-protection-pauth-lr") ? "true" : "false";
+  StringRef GCSValue =
+      isModuleAttributeSet(M, "guarded-control-stack") ? "true" : "false";
+  StringRef SignKeyValue =
+      isModuleAttributeSet(M, "sign-return-address-with-bkey") ? "b_key" : "a_key";
+
   for (Function &F : M.getFunctionList()) {
     if (F.isDeclaration())
       continue;
+    auto SetFunctionAttrIfNotSet = [&](StringRef FnAttrName, StringRef Value) {
+      if (!F.hasFnAttribute(FnAttrName))
+        F.addFnAttr(FnAttrName, Value);
+    };
 
-    if (!F.hasFnAttribute("sign-return-address")) {
-      StringRef SignType = "none";
-      if (isModuleAttributeSet(M, "sign-return-address"))
-        SignType = "non-leaf";
-
-      if (isModuleAttributeSet(M, "sign-return-address-all"))
-        SignType = "all";
-
-      F.addFnAttr("sign-return-address", SignType);
-    }
-    CopyModuleAttributeToFunction(F, "branch-target-enforcement");
-    CopyModuleAttributeToFunction(F, "branch-protection-pauth-lr");
-    CopyModuleAttributeToFunction(F, "guarded-control-stack");
-    CopyModuleAttributeToFunction(
-        F, "sign-return-address-key",
-        std::make_pair<StringRef, StringRef>("b_key", "a_key"));
+    SetFunctionAttrIfNotSet("sign-return-address", SignTypeValue);
+    SetFunctionAttrIfNotSet("branch-target-enforcement", BTEValue);
+    SetFunctionAttrIfNotSet("branch-protection-pauth-lr", BPPLValue);
+    SetFunctionAttrIfNotSet("guarded-control-stack", GCSValue);
+    SetFunctionAttrIfNotSet("sign-return-address-key", SignKeyValue);
   }
 }
 
