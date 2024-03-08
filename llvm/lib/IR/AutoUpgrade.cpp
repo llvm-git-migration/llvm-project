@@ -5203,7 +5203,8 @@ void llvm::CopyModuleAttrToFunctions(Module &M) {
   StringRef GCSValue =
       isModuleAttributeSet(M, "guarded-control-stack") ? "true" : "false";
   StringRef SignKeyValue =
-      isModuleAttributeSet(M, "sign-return-address-with-bkey") ? "b_key" : "a_key";
+      isModuleAttributeSet(M, "sign-return-address-with-bkey") ? "b_key"
+                                                               : "a_key";
 
   for (Function &F : M.getFunctionList()) {
     if (F.isDeclaration())
