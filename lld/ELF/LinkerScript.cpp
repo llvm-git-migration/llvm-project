@@ -198,15 +198,7 @@ static bool shouldDefineSym(SymbolAssignment *cmd) {
   if (cmd->name == ".")
     return false;
 
-  if (!cmd->provide)
-    return true;
-
-  // If a symbol was in PROVIDE(), we need to define it only
-  // when it is a referenced undefined symbol.
-  Symbol *b = symtab.find(cmd->name);
-  if (b && !b->isDefined() && !b->isCommon())
-    return true;
-  return false;
+  return !cmd->provide || LinkerScript::shouldAddProvideSym(cmd->name);
 }
 
 // Called by processSymbolAssignments() to assign definitions to
@@ -1516,4 +1508,51 @@ void LinkerScript::checkFinalScriptConditions() const {
     if (const MemoryRegion *lmaRegion = sec->lmaRegion)
       checkMemoryRegion(lmaRegion, sec, sec->getLMA());
   }
+}
+
+// Add symbols referred by the PROVIDE symbol to the symbol table.
+// This function must only be called for PROVIDE symbols that should be added
+// to the link.
+static void
+addProvideSymReferences(StringRef provideSym,
+                        llvm::StringSet<> &addedRefsFromProvideSym) {
+  assert(LinkerScript::shouldAddProvideSym(provideSym) &&
+         "This function must only be called for PROVIDE symbols that should be "
+         "added to the link.");
+  addedRefsFromProvideSym.insert(provideSym);
+  for (StringRef name : script->provideMap[provideSym]) {
+    Symbol *sym = symtab.addUnusedUndefined(name);
+    sym->isUsedInRegularObj = true;
+    sym->referenced = true;
+    script->referencedSymbols.push_back(name);
+    if (script->provideMap.count(name) &&
+        LinkerScript::shouldAddProvideSym(name) &&
+        !addedRefsFromProvideSym.count(name))
+      addProvideSymReferences(name, addedRefsFromProvideSym);
+  }
+}
+
+void LinkerScript::addScriptReferencedSymbolsToSymTable() {
+  // Some symbols (such as __ehdr_start) are defined lazily only when there
+  // are undefined symbols for them, so we add these to trigger that logic.
+  for (StringRef name : referencedSymbols) {
+    Symbol *sym = symtab.addUnusedUndefined(name);
+    sym->isUsedInRegularObj = true;
+    sym->referenced = true;
+  }
+
+  // Keeps track of references from which PROVIDE symbols have been added to the
+  // symbol table.
+  llvm::StringSet<> addedRefsFromProvideSym;
+  for (const auto &provideEntry : provideMap) {
+    StringRef provideSym = provideEntry.first;
+    if (LinkerScript::shouldAddProvideSym(provideSym) &&
+        !addedRefsFromProvideSym.count(provideSym))
+      addProvideSymReferences(provideSym, addedRefsFromProvideSym);
+  }
+}
+
+bool LinkerScript::shouldAddProvideSym(StringRef symName) {
+  Symbol *sym = symtab.find(symName);
+  return sym && !sym->isDefined() && !sym->isCommon();
 }
