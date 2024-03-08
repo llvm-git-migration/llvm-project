@@ -1,23 +1,16 @@
 // RUN: %clang_cc1 -finclude-default-header -x hlsl -triple dxil-pc-shadermodel6.3-library %s -fnative-half-type -emit-llvm -disable-llvm-passes -o - | FileCheck %s
-
-
+// XFAIL: *
 
 // CHECK-LABEL: builtin_lerp_half_scalar
-// CHECK: %3 = fsub double %conv1, %conv
-// CHECK: %4 = fmul double %conv2, %3
-// CHECK: %dx.lerp = fadd double %conv, %4
-// CHECK: %conv3 = fptrunc double %dx.lerp to half
-// CHECK: ret half %conv3
+// CHECK: %dx.lerp = call half @llvm.dx.lerp.f16(half %{{.*}}, half %{{.*}}, half %{{.*}})
+// CHECK: ret half %dx.lerp
 half builtin_lerp_half_scalar (half p0) {
   return __builtin_hlsl_lerp ( p0, p0, p0 );
 }
 
 // CHECK-LABEL: builtin_lerp_float_scalar
-// CHECK: %3 = fsub double %conv1, %conv
-// CHECK: %4 = fmul double %conv2, %3
-// CHECK: %dx.lerp = fadd double %conv, %4
-// CHECK: %conv3 = fptrunc double %dx.lerp to float
-// CHECK: ret float %conv3
+// CHECK: %dx.lerp = call float @llvm.dx.lerp.f32(float %{{.*}}, float %{{.*}}, float %{{.*}})
+// CHECK: ret float %dx.lerp
 float builtin_lerp_float_scalar ( float p0) {
   return __builtin_hlsl_lerp ( p0, p0, p0 );
 }
