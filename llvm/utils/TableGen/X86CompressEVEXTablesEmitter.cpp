@@ -82,15 +82,27 @@ void X86CompressEVEXTablesEmitter::printTable(const std::vector<Entry> &Table,
 
 void X86CompressEVEXTablesEmitter::printCheckPredicate(
     const PredicateInstMap &PredicateInsts, raw_ostream &OS) {
+  // Create a sorted list of the map entries so that the tablegen output is
+  // deterministic.
+  typedef std::pair<StringRef, const std::vector<const CodeGenInstruction *> *>
+      PredicateInstsTy;
+  std::vector<PredicateInstsTy> SortedPredicateInsts;
+  for (const auto &[Key, Val] : PredicateInsts) {
+    SortedPredicateInsts.push_back({Key->getValueAsString("CondString"), &Val});
+  }
+  llvm::sort(SortedPredicateInsts,
+             [](const PredicateInstsTy &LHS, const PredicateInstsTy &RHS) {
+               return LHS.first < RHS.first;
+             });
 
   OS << "static bool checkPredicate(unsigned Opc, const X86Subtarget "
         "*Subtarget) {\n"
      << "  switch (Opc) {\n"
      << "  default: return true;\n";
-  for (const auto &[Key, Val] : PredicateInsts) {
-    for (const auto &Inst : Val)
+  for (const auto &[Key, Val] : SortedPredicateInsts) {
+    for (const auto &Inst : *Val)
       OS << "  case X86::" << Inst->TheDef->getName() << ":\n";
-    OS << "    return " << Key->getValueAsString("CondString") << ";\n";
+    OS << "    return " << Key << ";\n";
   }
 
   OS << "  }\n";
