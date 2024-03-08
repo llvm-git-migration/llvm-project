@@ -6,13 +6,10 @@
 // RUN:   dxil-pc-shadermodel6.3-library %s -emit-llvm -disable-llvm-passes \
 // RUN:   -o - | FileCheck %s --check-prefixes=CHECK,NO_HALF
 
-// NATIVE_HALF: %3 = fsub half %1, %0
-// NATIVE_HALF: %4 = fmul half %2, %3
-// NATIVE_HALF: %dx.lerp = fadd half %0, %4
+
+// NATIVE_HALF: %dx.lerp = call half @llvm.dx.lerp.f16(half %0, half %1, half %2)
 // NATIVE_HALF: ret half %dx.lerp
-// NO_HALF: %3 = fsub float %1, %0
-// NO_HALF: %4 = fmul float %2, %3
-// NO_HALF: %dx.lerp = fadd float %0, %4
+// NO_HALF: %dx.lerp = call float @llvm.dx.lerp.f32(float %0, float %1, float %2)
 // NO_HALF: ret float %dx.lerp
 half test_lerp_half(half p0) { return lerp(p0, p0, p0); }
 
@@ -34,9 +31,7 @@ half3 test_lerp_half3(half3 p0, half3 p1) { return lerp(p0, p0, p0); }
 // NO_HALF: ret <4 x float> %dx.lerp
 half4 test_lerp_half4(half4 p0, half4 p1) { return lerp(p0, p0, p0); }
 
-// CHECK: %3 = fsub float %1, %0
-// CHECK: %4 = fmul float %2, %3
-// CHECK: %dx.lerp = fadd float %0, %4
+// CHECK: %dx.lerp = call float @llvm.dx.lerp.f32(float %0, float %1, float %2)
 // CHECK: ret float %dx.lerp
 float test_lerp_float(float p0, float p1) { return lerp(p0, p0, p0); }
 
