@@ -35,8 +35,8 @@ public:
     StorageType step = (endingBit - startingBit) / N;
     for (StorageType bitsX = startingBit, bitsY = endingBit;;
          bitsX += step, bitsY -= step) {
-      T x = T(FPBits(bitsX));
-      T y = T(FPBits(bitsY));
+      T x = FPBits(bitsX).get_val();
+      T y = FPBits(bitsY).get_val();
       FPBits myBits = FPBits(myFunc(x, y));
       FPBits otherBits = FPBits(otherFunc(x, y));
       if (myBits.uintval() != otherBits.uintval()) {
@@ -69,8 +69,8 @@ public:
       StorageType step = (endingBit - startingBit) / N;
       for (StorageType bitsX = startingBit, bitsY = endingBit;;
            bitsX += step, bitsY -= step) {
-        T x = T(FPBits(bitsX));
-        T y = T(FPBits(bitsY));
+        T x = FPBits(bitsX).get_val();
+        T y = FPBits(bitsY).get_val();
         result = func(x, y);
         if (endingBit - bitsX < step) {
           break;
@@ -110,17 +110,17 @@ public:
     log << " Performance tests with inputs in denormal range:\n";
     run_perf_in_range(myFunc, otherFunc, /* startingBit= */ StorageType(0),
                       /* endingBit= */ FPBits::max_subnormal().uintval(),
-                      1'000'001, log);
+                      1'001'001, log);
     log << "\n Performance tests with inputs in normal range:\n";
     run_perf_in_range(myFunc, otherFunc,
                       /* startingBit= */ FPBits::min_normal().uintval(),
                       /* endingBit= */ FPBits::max_normal().uintval(),
-                      100'000'001, log);
+                      1'001'001, log);
     log << "\n Performance tests with inputs in normal range with exponents "
            "close to each other:\n";
     run_perf_in_range(
         myFunc, otherFunc, /* startingBit= */ FPBits(T(0x1.0p-10)).uintval(),
-        /* endingBit= */ FPBits(T(0x1.0p+10)).uintval(), 10'000'001, log);
+        /* endingBit= */ FPBits(T(0x1.0p+10)).uintval(), 1'001'001, log);
   }
 
   static void run_diff(Func myFunc, Func otherFunc, const char *logFile) {
