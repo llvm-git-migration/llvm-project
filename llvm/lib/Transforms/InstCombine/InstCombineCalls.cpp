@@ -2139,6 +2139,23 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       }
     }
 
+    // usub_sat((sub nuw C1, A), C2) -> usub_sat(C1 - C2, A) if C2 u< C1
+    // usub_sat((sub nuw C1, A), C2) -> 0 otherwise
+    const APInt *C1, *C2;
+    Value *A;
+    if (IID == Intrinsic::usub_sat &&
+        match(Arg0, m_OneUse(m_NUWSub(m_APInt(C1), m_Value(A)))) &&
+        match(Arg1, m_APInt(C2))) {
+
+      if (C2->ult(*C1)) {
+        auto *New = Builder.CreateBinaryIntrinsic(
+            Intrinsic::usub_sat, ConstantInt::get(Ty, *C1 - *C2), A);
+        return replaceInstUsesWith(*SI, New);
+      } else {
+        return replaceInstUsesWith(*SI, ConstantInt::get(Ty, 0));
+      }
+    }
+
     // ssub.sat(X, C) -> sadd.sat(X, -C) if C != MIN
     Constant *C;
     if (IID == Intrinsic::ssub_sat && match(Arg1, m_Constant(C)) &&
