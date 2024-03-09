@@ -532,6 +532,27 @@ static bool simplifySeqSelectWithSameCond(SelectInst &SI,
     FalseVal = SINext->getFalseValue();
   }
 
+  // Resuming from SI
+  SINext = &SI;
+  Value *TrueVal = SINext->getTrueValue();
+  while (match(TrueVal, m_Select(m_Value(CondNext), m_Value(), m_Value()))) {
+    // If the type of select is not an integer type or if the condition and
+    // the selection type are not both scalar nor both vector types, there is no
+    // point in attempting to match these patterns.
+    if (CondNext == CondVal && SelType->isIntOrIntVectorTy() &&
+        CondType->isVectorTy() == SelType->isVectorTy())
+      if (Value *S = simplifyWithOpReplaced(TrueVal, CondVal,
+                                            ConstantInt::getTrue(CondType), SQ,
+                                            /* AllowRefinement */ true)) {
+        IC.replaceOperand(*SINext, 1, S);
+        return true;
+      }
+
+    SINext = cast<SelectInst>(TrueVal);
+    SelType = SINext->getType();
+    TrueVal = SINext->getTrueValue();
+  }
+
   return false;
 }
 
