@@ -692,6 +692,10 @@ OpFoldResult arith::FloorDivSIOp::fold(FoldAdaptor adaptor) {
   bool overflowOrDiv = false;
   auto result = constFoldBinaryOp<IntegerAttr>(
       adaptor.getOperands(), [&](APInt a, const APInt &b) {
+        if (b.isZero()) {
+          overflowOrDiv = true;
+          return a;
+        }
         return a.sfloordiv_ov(b, overflowOrDiv);
       });
 

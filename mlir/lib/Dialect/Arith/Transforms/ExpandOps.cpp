@@ -110,10 +110,53 @@ struct CeilDivSIOpConverter : public OpRewritePattern<arith::CeilDivSIOp> {
   }
 };
 
+/// Expands FloorDivSIOp (x, y) into
+/// z = x / y
+/// if (z * y != x && (x < 0) != (y < 0)) {
+///   return  z - 1;
+/// } else {
+///   return z;
+/// }
+struct FloorDivSIOpConverter : public OpRewritePattern<arith::FloorDivSIOp> {
+  using OpRewritePattern::OpRewritePattern;
+  LogicalResult matchAndRewrite(arith::FloorDivSIOp op,
+                                PatternRewriter &rewriter) const final {
+    Location loc = op.getLoc();
+    Type type = op.getType();
+    Value a = op.getLhs();
+    Value b = op.getRhs();
+
+    Value quotient = rewriter.create<arith::DivSIOp>(loc, a, b);
+    Value product = rewriter.create<arith::MulIOp>(loc, quotient, b);
+    Value notEqualDivisor = rewriter.create<arith::CmpIOp>(
+        loc, arith::CmpIPredicate::ne, a, product);
+    Value zero = createConst(loc, type, 0, rewriter);
+
+    Value aNeg =
+        rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::slt, a, zero);
+    Value bNeg =
+        rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::slt, b, zero);
+
+    Value signOpposite = rewriter.create<arith::CmpIOp>(
+        loc, arith::CmpIPredicate::ne, aNeg, bNeg);
+    Value cond =
+        rewriter.create<arith::AndIOp>(loc, notEqualDivisor, signOpposite);
+
+    Value minusOne = createConst(loc, type, -1, rewriter);
+    Value quotientMinusOne =
+        rewriter.create<arith::SubIOp>(loc, quotient, minusOne);
+
+    rewriter.replaceOpWithNewOp<arith::SelectOp>(op, cond, quotientMinusOne,
+                                                 quotient);
+    return success();
+  }
+};
+
 /// Expands FloorDivSIOp (n, m) into
 ///   1)  x = (m<0) ? 1 : -1
 ///   2)  return (n*m<0) ? - ((-n+x) / m) -1 : n / m
-struct FloorDivSIOpConverter : public OpRewritePattern<arith::FloorDivSIOp> {
+struct AggressiveFloorDivSIOpConverter
+    : public OpRewritePattern<arith::FloorDivSIOp> {
   using OpRewritePattern::OpRewritePattern;
   LogicalResult matchAndRewrite(arith::FloorDivSIOp op,
                                 PatternRewriter &rewriter) const final {
