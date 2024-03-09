@@ -30,9 +30,11 @@ entry:
 
 ; CHECK-NOT: linking module flags 'branch-target-enforcement': IDs have conflicting values in
 ; CHECK-DUMP: <main>:
+; CHECK-DUMP:      paciasp
+; CHECK-DUMP:      str
 ; CHECK-DUMP:      bl      0x8 <main+0x8>
 ; CHECK-DUMP: <foo>:
-; CHECK-DUMP:     paciasp
+; CHECK-DUMP:     pacibsp
 
 ; `main` doesn't support BTI while `foo` does, so in the binary
 ; we should see only PAC which is supported by both.
