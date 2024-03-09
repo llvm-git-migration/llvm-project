@@ -547,8 +547,7 @@ define <4 x float> @insert_in_splat_variable_index(float %x, i32 %y) {
 
 define <4 x float> @insert_in_nonsplat(float %x, <4 x float> %y) {
 ; CHECK-LABEL: @insert_in_nonsplat(
-; CHECK-NEXT:    [[XV:%.*]] = insertelement <4 x float> poison, float [[X:%.*]], i64 0
-; CHECK-NEXT:    [[SPLAT:%.*]] = shufflevector <4 x float> [[XV]], <4 x float> [[Y:%.*]], <4 x i32> <i32 poison, i32 0, i32 4, i32 poison>
+; CHECK-NEXT:    [[SPLAT:%.*]] = insertelement <4 x float> [[Y:%.*]], float [[X:%.*]], i64 1
 ; CHECK-NEXT:    [[R:%.*]] = insertelement <4 x float> [[SPLAT]], float [[X]], i64 3
 ; CHECK-NEXT:    ret <4 x float> [[R]]
 ;

@@ -239,24 +239,22 @@ define <4 x double> @test_v4f64_partial_swizzle(<4 x double> %a, <4 x double> %b
 ; AVX1-NEXT:    [[A0:%.*]] = extractelement <4 x double> [[A:%.*]], i64 0
 ; AVX1-NEXT:    [[A1:%.*]] = extractelement <4 x double> [[A]], i64 1
 ; AVX1-NEXT:    [[R0:%.*]] = fadd double [[A0]], [[A1]]
-; AVX1-NEXT:    [[TMP1:%.*]] = shufflevector <4 x double> [[B:%.*]], <4 x double> poison, <2 x i32> <i32 1, i32 2>
-; AVX1-NEXT:    [[TMP2:%.*]] = shufflevector <4 x double> [[B]], <4 x double> poison, <2 x i32> <i32 0, i32 3>
+; AVX1-NEXT:    [[TMP1:%.*]] = shufflevector <4 x double> [[B:%.*]], <4 x double> poison, <2 x i32> <i32 poison, i32 2>
+; AVX1-NEXT:    [[TMP2:%.*]] = shufflevector <4 x double> [[B]], <4 x double> poison, <2 x i32> <i32 poison, i32 3>
 ; AVX1-NEXT:    [[TMP3:%.*]] = fadd <2 x double> [[TMP1]], [[TMP2]]
-; AVX1-NEXT:    [[R00:%.*]] = insertelement <4 x double> poison, double [[R0]], i64 0
-; AVX1-NEXT:    [[TMP4:%.*]] = shufflevector <2 x double> [[TMP3]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 poison, i32 poison>
-; AVX1-NEXT:    [[R031:%.*]] = shufflevector <4 x double> [[R00]], <4 x double> [[TMP4]], <4 x i32> <i32 0, i32 poison, i32 4, i32 5>
+; AVX1-NEXT:    [[TMP4:%.*]] = shufflevector <2 x double> [[TMP3]], <2 x double> poison, <4 x i32> <i32 poison, i32 1, i32 poison, i32 poison>
+; AVX1-NEXT:    [[R031:%.*]] = insertelement <4 x double> [[TMP4]], double [[R0]], i64 0
 ; AVX1-NEXT:    ret <4 x double> [[R031]]
 ;
 ; AVX2-LABEL: @test_v4f64_partial_swizzle(
 ; AVX2-NEXT:    [[A0:%.*]] = extractelement <4 x double> [[A:%.*]], i64 0
 ; AVX2-NEXT:    [[A1:%.*]] = extractelement <4 x double> [[A]], i64 1
 ; AVX2-NEXT:    [[R0:%.*]] = fadd double [[A0]], [[A1]]
-; AVX2-NEXT:    [[TMP1:%.*]] = shufflevector <4 x double> [[B:%.*]], <4 x double> poison, <2 x i32> <i32 1, i32 2>
-; AVX2-NEXT:    [[TMP2:%.*]] = shufflevector <4 x double> [[B]], <4 x double> poison, <2 x i32> <i32 0, i32 3>
+; AVX2-NEXT:    [[TMP1:%.*]] = shufflevector <4 x double> [[B:%.*]], <4 x double> poison, <2 x i32> <i32 poison, i32 2>
+; AVX2-NEXT:    [[TMP2:%.*]] = shufflevector <4 x double> [[B]], <4 x double> poison, <2 x i32> <i32 poison, i32 3>
 ; AVX2-NEXT:    [[TMP3:%.*]] = fadd <2 x double> [[TMP1]], [[TMP2]]
-; AVX2-NEXT:    [[R00:%.*]] = insertelement <4 x double> poison, double [[R0]], i64 0
-; AVX2-NEXT:    [[TMP4:%.*]] = shufflevector <2 x double> [[TMP3]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 poison, i32 poison>
-; AVX2-NEXT:    [[R031:%.*]] = shufflevector <4 x double> [[R00]], <4 x double> [[TMP4]], <4 x i32> <i32 0, i32 poison, i32 4, i32 5>
+; AVX2-NEXT:    [[TMP4:%.*]] = shufflevector <2 x double> [[TMP3]], <2 x double> poison, <4 x i32> <i32 poison, i32 1, i32 poison, i32 poison>
+; AVX2-NEXT:    [[R031:%.*]] = insertelement <4 x double> [[TMP4]], double [[R0]], i64 0
 ; AVX2-NEXT:    ret <4 x double> [[R031]]
 ;
 ; AVX512-LABEL: @test_v4f64_partial_swizzle(
