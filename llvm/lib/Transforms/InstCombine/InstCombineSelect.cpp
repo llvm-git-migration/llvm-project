@@ -515,12 +515,10 @@ static bool simplifySeqSelectWithSameCond(SelectInst &SI,
     Value *RepOp = OpIndex == 1 ? ConstantInt::getTrue(CondType)
                                 : ConstantInt::getFalse(CondType);
     SelectInst *SINext = &SI;
-    Type *SelType = SINext->getType();
     Value *ValOp = SINext->getOperand(OpIndex);
     Value *CondNext;
     while (match(ValOp, m_Select(m_Value(CondNext), m_Value(), m_Value()))) {
-      if (CondNext == CondVal && SelType->isIntOrIntVectorTy() &&
-          CondType->isVectorTy() == SelType->isVectorTy())
+      if (CondNext == CondVal)
         if (Value *S = simplifyWithOpReplaced(ValOp, CondVal, RepOp, SQ,
                                               /* AllowRefinement */ true)) {
           IC.replaceOperand(*SINext, OpIndex, S);
@@ -528,7 +526,6 @@ static bool simplifySeqSelectWithSameCond(SelectInst &SI,
         }
 
       SINext = cast<SelectInst>(ValOp);
-      SelType = SINext->getType();
       ValOp = SINext->getOperand(OpIndex);
     }
     return false;

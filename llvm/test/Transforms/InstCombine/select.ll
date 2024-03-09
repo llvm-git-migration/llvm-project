@@ -3734,6 +3734,21 @@ define i32 @sequence_select_with_same_cond_true (i1 %c1, i1 %c2){
   ret i32 %s3
 }
 
+; https://alive2.llvm.org/ce/z/3Uaiis
+define double @sequence_select_with_same_cond_double(double %a, i1 %c1, i1 %c2, double %r1, double %r2){
+; CHECK-LABEL: @sequence_select_with_same_cond_double(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[S2:%.*]] = select i1 [[C2:%.*]], double 1.000000e+00, double 2.000000e+00
+; CHECK-NEXT:    [[S3:%.*]] = select i1 [[C1:%.*]], double [[S2]], double 3.000000e+00
+; CHECK-NEXT:    ret double [[S3]]
+;
+entry:
+  %s1 = select i1 %c1, double 1.0, double 0.0
+  %s2 = select i1 %c2, double %s1, double 2.0
+  %s3 = select i1 %c1, double %s2, double 3.0
+  ret double %s3
+}
+
 declare void @use32(i32)
 
 define i32 @sequence_select_with_same_cond_extra_use (i1 %c1, i1 %c2){
