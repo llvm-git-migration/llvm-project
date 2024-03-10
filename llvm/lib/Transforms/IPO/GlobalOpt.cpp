@@ -204,8 +204,9 @@ CleanupPointerRootUsers(GlobalVariable *GV,
   // If Dead[n].first is the only use of a malloc result, we can delete its
   // chain of computation and the store to the global in Dead[n].second.
   SmallVector<std::pair<Instruction *, Instruction *>, 32> Dead;
-
+  SmallVector<StoreInst *> StoresToGV;
   SmallVector<User *> Worklist(GV->users());
+
   // Constants can't be pointers to dynamically allocated memory.
   while (!Worklist.empty()) {
     User *U = Worklist.pop_back_val();
@@ -217,6 +218,8 @@ CleanupPointerRootUsers(GlobalVariable *GV,
       } else if (Instruction *I = dyn_cast<Instruction>(V)) {
         if (I->hasOneUse())
           Dead.push_back(std::make_pair(I, SI));
+        else
+          StoresToGV.push_back(SI);
       }
     } else if (MemSetInst *MSI = dyn_cast<MemSetInst>(U)) {
       if (isa<Constant>(MSI->getValue())) {
@@ -240,6 +243,11 @@ CleanupPointerRootUsers(GlobalVariable *GV,
         append_range(Worklist, CE->users());
     }
   }
+
+  // We can safely remove all stores to GV here
+  // as GV is never read.
+  for (StoreInst *SI : StoresToGV)
+    SI->eraseFromParent();
 
   for (int i = 0, e = Dead.size(); i != e; ++i) {
     if (IsSafeComputationToRemove(Dead[i].first, GetTLI)) {
