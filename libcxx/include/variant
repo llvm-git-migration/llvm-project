@@ -62,7 +62,7 @@ namespace std {
     constexpr variant_alternative_t<I, variant>& emplace(Args&&...);  // constexpr since c++20
 
     template <size_t I, class U, class...  Args>
-    constexpr variant_alternative_t<I, variant>& 
+    constexpr variant_alternative_t<I, variant>&
         emplace(initializer_list<U>, Args&&...);                      // constexpr since c++20
 
     // 20.7.2.5, value status
@@ -673,7 +673,7 @@ union _LIBCPP_TEMPLATE_VIS __union;
 template <_Trait _DestructibleTrait, size_t _Index>
 union _LIBCPP_TEMPLATE_VIS __union<_DestructibleTrait, _Index> {};
 
-#  define _LIBCPP_VARIANT_UNION(destructible_trait, destructor)                                                        \
+#  define _LIBCPP_VARIANT_UNION(destructible_trait, destructor_definition)                                             \
     template <size_t _Index, class _Tp, class... _Types>                                                               \
     union _LIBCPP_TEMPLATE_VIS __union<destructible_trait, _Index, _Tp, _Types...> {                                   \
     public:                                                                                                            \
@@ -691,7 +691,7 @@ union _LIBCPP_TEMPLATE_VIS __union<_DestructibleTrait, _Index> {};
       _LIBCPP_HIDE_FROM_ABI __union(__union&&)                 = default;                                              \
       _LIBCPP_HIDE_FROM_ABI __union& operator=(const __union&) = default;                                              \
       _LIBCPP_HIDE_FROM_ABI __union& operator=(__union&&)      = default;                                              \
-      destructor                                                                                                       \
+      destructor_definition                                                                                            \
                                                                                                                        \
           private : char __dummy;                                                                                      \
       __alt<_Index, _Tp> __head;                                                                                       \
@@ -746,7 +746,7 @@ protected:
 template <class _Traits, _Trait = _Traits::__destructible_trait>
 class _LIBCPP_TEMPLATE_VIS __dtor;
 
-#  define _LIBCPP_VARIANT_DESTRUCTOR(destructible_trait, destructor, destroy)                                          \
+#  define _LIBCPP_VARIANT_DESTRUCTOR(destructible_trait, destructor_definition, destroy)                               \
     template <class... _Types>                                                                                         \
     class _LIBCPP_TEMPLATE_VIS __dtor<__traits<_Types...>, destructible_trait>                                         \
         : public __base<destructible_trait, _Types...> {                                                               \
@@ -760,7 +760,7 @@ class _LIBCPP_TEMPLATE_VIS __dtor;
       _LIBCPP_HIDE_FROM_ABI __dtor(__dtor&&)                 = default;                                                \
       _LIBCPP_HIDE_FROM_ABI __dtor& operator=(const __dtor&) = default;                                                \
       _LIBCPP_HIDE_FROM_ABI __dtor& operator=(__dtor&&)      = default;                                                \
-      destructor                                                                                                       \
+      destructor_definition                                                                                            \
                                                                                                                        \
           protected : destroy                                                                                          \
     }
@@ -821,7 +821,7 @@ protected:
 template <class _Traits, _Trait = _Traits::__move_constructible_trait>
 class _LIBCPP_TEMPLATE_VIS __move_constructor;
 
-#  define _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(move_constructible_trait, move_constructor)                                 \
+#  define _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(move_constructible_trait, move_constructor_definition)                      \
     template <class... _Types>                                                                                         \
     class _LIBCPP_TEMPLATE_VIS __move_constructor<__traits<_Types...>, move_constructible_trait>                       \
         : public __ctor<__traits<_Types...>> {                                                                         \
@@ -835,7 +835,7 @@ class _LIBCPP_TEMPLATE_VIS __move_constructor;
       _LIBCPP_HIDE_FROM_ABI ~__move_constructor()                                    = default;                        \
       _LIBCPP_HIDE_FROM_ABI __move_constructor& operator=(const __move_constructor&) = default;                        \
       _LIBCPP_HIDE_FROM_ABI __move_constructor& operator=(__move_constructor&&)      = default;                        \
-      move_constructor                                                                                                 \
+      move_constructor_definition                                                                                      \
     }
 
 _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(
@@ -857,7 +857,7 @@ _LIBCPP_VARIANT_MOVE_CONSTRUCTOR(
 template <class _Traits, _Trait = _Traits::__copy_constructible_trait>
 class _LIBCPP_TEMPLATE_VIS __copy_constructor;
 
-#  define _LIBCPP_VARIANT_COPY_CONSTRUCTOR(copy_constructible_trait, copy_constructor)                                 \
+#  define _LIBCPP_VARIANT_COPY_CONSTRUCTOR(copy_constructible_trait, copy_constructor_definition)                      \
     template <class... _Types>                                                                                         \
     class _LIBCPP_TEMPLATE_VIS __copy_constructor<__traits<_Types...>, copy_constructible_trait>                       \
         : public __move_constructor<__traits<_Types...>> {                                                             \
@@ -871,7 +871,7 @@ class _LIBCPP_TEMPLATE_VIS __copy_constructor;
       _LIBCPP_HIDE_FROM_ABI ~__copy_constructor()                                    = default;                        \
       _LIBCPP_HIDE_FROM_ABI __copy_constructor& operator=(const __copy_constructor&) = default;                        \
       _LIBCPP_HIDE_FROM_ABI __copy_constructor& operator=(__copy_constructor&&)      = default;                        \
-      copy_constructor                                                                                                 \
+      copy_constructor_definition                                                                                      \
     }
 
 _LIBCPP_VARIANT_COPY_CONSTRUCTOR(_Trait::_TriviallyAvailable,
@@ -946,7 +946,7 @@ protected:
 template <class _Traits, _Trait = _Traits::__move_assignable_trait>
 class _LIBCPP_TEMPLATE_VIS __move_assignment;
 
-#  define _LIBCPP_VARIANT_MOVE_ASSIGNMENT(move_assignable_trait, move_assignment)                                      \
+#  define _LIBCPP_VARIANT_MOVE_ASSIGNMENT(move_assignable_trait, move_assignment_definition)                           \
     template <class... _Types>                                                                                         \
     class _LIBCPP_TEMPLATE_VIS __move_assignment<__traits<_Types...>, move_assignable_trait>                           \
         : public __assignment<__traits<_Types...>> {                                                                   \
@@ -960,7 +960,7 @@ class _LIBCPP_TEMPLATE_VIS __move_assignment;
       _LIBCPP_HIDE_FROM_ABI __move_assignment(__move_assignment&&)                 = default;                          \
       _LIBCPP_HIDE_FROM_ABI ~__move_assignment()                                   = default;                          \
       _LIBCPP_HIDE_FROM_ABI __move_assignment& operator=(const __move_assignment&) = default;                          \
-      move_assignment                                                                                                  \
+      move_assignment_definition                                                                                       \
     }
 
 _LIBCPP_VARIANT_MOVE_ASSIGNMENT(_Trait::_TriviallyAvailable,
@@ -985,7 +985,7 @@ _LIBCPP_VARIANT_MOVE_ASSIGNMENT(
 template <class _Traits, _Trait = _Traits::__copy_assignable_trait>
 class _LIBCPP_TEMPLATE_VIS __copy_assignment;
 
-#  define _LIBCPP_VARIANT_COPY_ASSIGNMENT(copy_assignable_trait, copy_assignment)                                      \
+#  define _LIBCPP_VARIANT_COPY_ASSIGNMENT(copy_assignable_trait, copy_assignment_definition)                           \
     template <class... _Types>                                                                                         \
     class _LIBCPP_TEMPLATE_VIS __copy_assignment<__traits<_Types...>, copy_assignable_trait>                           \
         : public __move_assignment<__traits<_Types...>> {                                                              \
@@ -999,7 +999,7 @@ class _LIBCPP_TEMPLATE_VIS __copy_assignment;
       _LIBCPP_HIDE_FROM_ABI __copy_assignment(__copy_assignment&&)            = default;                               \
       _LIBCPP_HIDE_FROM_ABI ~__copy_assignment()                              = default;                               \
       _LIBCPP_HIDE_FROM_ABI __copy_assignment& operator=(__copy_assignment&&) = default;                               \
-      copy_assignment                                                                                                  \
+      copy_assignment_definition                                                                                       \
     }
 
 _LIBCPP_VARIANT_COPY_ASSIGNMENT(_Trait::_TriviallyAvailable,
