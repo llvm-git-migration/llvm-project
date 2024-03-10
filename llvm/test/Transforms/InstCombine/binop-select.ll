@@ -274,7 +274,7 @@ define i32 @and_sel_op0_use(i1 %b) {
 ; CHECK-LABEL: @and_sel_op0_use(
 ; CHECK-NEXT:    [[S:%.*]] = select i1 [[B:%.*]], i32 25, i32 0
 ; CHECK-NEXT:    call void @use(i32 [[S]])
-; CHECK-NEXT:    [[R:%.*]] = and i32 [[S]], 1
+; CHECK-NEXT:    [[R:%.*]] = zext i1 [[B]] to i32
 ; CHECK-NEXT:    ret i32 [[R]]
 ;
   %s = select i1 %b, i32 25, i32 0
@@ -408,8 +408,8 @@ define i32 @ashr_sel_op1_use(i1 %b) {
 define i32 @test_mul_to_const_Cmul(i32 %x) {
 ; CHECK-LABEL: @test_mul_to_const_Cmul(
 ; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 14
-; CHECK-NEXT:    [[R:%.*]] = mul i32 [[COND]], [[X]]
+; CHECK-NEXT:    [[TMP1:%.*]] = mul i32 [[X]], 14
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[C]], i32 549, i32 [[TMP1]]
 ; CHECK-NEXT:    ret i32 [[R]]
 ;
   %c = icmp eq i32 %x, 61
@@ -421,8 +421,8 @@ define i32 @test_mul_to_const_Cmul(i32 %x) {
 define i32 @test_mul_to_const_mul(i32 %x, i32 %y) {
 ; CHECK-LABEL: @test_mul_to_const_mul(
 ; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 [[Y:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = mul i32 [[COND]], [[X]]
+; CHECK-NEXT:    [[TMP1:%.*]] = mul i32 [[Y:%.*]], [[X]]
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[C]], i32 549, i32 [[TMP1]]
 ; CHECK-NEXT:    ret i32 [[R]]
 ;
   %c = icmp eq i32 %x, 61

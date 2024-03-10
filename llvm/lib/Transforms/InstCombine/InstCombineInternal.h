@@ -610,7 +610,10 @@ public:
   Instruction *FoldOpIntoSelect(Instruction &Op, SelectInst *SI,
                                 bool FoldWithMultiUse = false);
 
-  /// This is a convenience wrapper function for the above two functions.
+  /// This is a convenience wrapper function for the above function.
+  Instruction *foldBinOpIntoSelect(BinaryOperator &I);
+
+  /// This is a convenience wrapper function for the above three functions.
   Instruction *foldBinOpIntoSelectOrPhi(BinaryOperator &I);
 
   Instruction *foldAddWithConstant(BinaryOperator &Add);
