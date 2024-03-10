@@ -1026,6 +1026,20 @@ static void computeKnownBitsFromOperator(const Operator *I,
     computeKnownBits(I->getOperand(2), Known, Depth + 1, Q);
     computeKnownBits(I->getOperand(1), Known2, Depth + 1, Q);
 
+    // See what condition implies about the bits of the two select arms.
+    if (!Known.isConstant()) {
+      KnownBits KnownFromCond(Known.getBitWidth());
+      computeKnownBitsFromCond(I->getOperand(2), I->getOperand(0),
+                               KnownFromCond, Depth + 1, Q, /*Invert=*/true);
+      Known = Known.unionWith(KnownFromCond);
+    }
+    if (!Known2.isConstant()) {
+      KnownBits KnownFromCond(Known2.getBitWidth());
+      computeKnownBitsFromCond(I->getOperand(1), I->getOperand(0),
+                               KnownFromCond, Depth + 1, Q, /*Invert=*/false);
+      Known2 = Known2.unionWith(KnownFromCond);
+    }
+
     // Only known if known in both the LHS and RHS.
     Known = Known.intersectWith(Known2);
     break;
