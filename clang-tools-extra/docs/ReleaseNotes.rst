@@ -225,7 +225,7 @@ Changes in existing checks
   `const auto e = (*vector_ptr)[i]` and `const auto e = vector_ptr->at(i);`.
 
 - Improved :doc:`modernize-use-using <clang-tidy/checks/modernize/use-using>`
-  check by fixing false-negative in functions.
+  check by adding support for detection of typedefs declared on function level.
 
 - Improved :doc:`readability-implicit-bool-conversion
   <clang-tidy/checks/readability/implicit-bool-conversion>` check to provide
