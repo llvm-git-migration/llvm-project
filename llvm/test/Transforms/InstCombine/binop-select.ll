@@ -403,3 +403,75 @@ define i32 @ashr_sel_op1_use(i1 %b) {
   %r = ashr i32 -2, %s
   ret i32 %r
 }
+
+
+define i32 @test_mul_to_const_Cmul(i32 %x) {
+; CHECK-LABEL: @test_mul_to_const_Cmul(
+; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 14
+; CHECK-NEXT:    [[R:%.*]] = mul i32 [[COND]], [[X]]
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %c = icmp eq i32 %x, 61
+  %cond = select i1 %c, i32 9, i32 14
+  %r = mul i32 %x, %cond
+  ret i32 %r
+}
+
+define i32 @test_mul_to_const_mul(i32 %x, i32 %y) {
+; CHECK-LABEL: @test_mul_to_const_mul(
+; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 [[Y:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = mul i32 [[COND]], [[X]]
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %c = icmp eq i32 %x, 61
+  %cond = select i1 %c, i32 9, i32 %y
+  %r = mul i32 %x, %cond
+  ret i32 %r
+}
+
+
+define i32 @test_mul_to_const_Cmul_fail_multiuse(i32 %x, i32 %y) {
+; CHECK-LABEL: @test_mul_to_const_Cmul_fail_multiuse(
+; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 14
+; CHECK-NEXT:    [[R:%.*]] = mul i32 [[COND]], [[X]]
+; CHECK-NEXT:    call void @use(i32 [[COND]])
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %c = icmp eq i32 %x, 61
+  %cond = select i1 %c, i32 9, i32 14
+  %r = mul i32 %x, %cond
+  call void @use(i32 %cond)
+  ret i32 %r
+}
+
+
+define i32 @test_div_to_const_div_fail_non_speculatable(i32 %x, i32 %y) {
+; CHECK-LABEL: @test_div_to_const_div_fail_non_speculatable(
+; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 [[Y:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = udiv i32 [[X]], [[COND]]
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %c = icmp eq i32 %x, 61
+  %cond = select i1 %c, i32 9, i32 %y
+  %r = udiv i32 %x, %cond
+  ret i32 %r
+}
+
+
+define i32 @test_div_to_const_Cdiv_todo(i32 %x, i32 %y) {
+; CHECK-LABEL: @test_div_to_const_Cdiv_todo(
+; CHECK-NEXT:    [[C:%.*]] = icmp eq i32 [[X:%.*]], 61
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[C]], i32 9, i32 14
+; CHECK-NEXT:    [[R:%.*]] = udiv i32 [[X]], [[COND]]
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %c = icmp eq i32 %x, 61
+  %cond = select i1 %c, i32 9, i32 14
+  %r = udiv i32 %x, %cond
+  ret i32 %r
+}
+
