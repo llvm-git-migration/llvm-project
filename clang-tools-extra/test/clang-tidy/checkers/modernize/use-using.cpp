@@ -359,4 +359,27 @@ namespace ISSUE_72179
     // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use 'using' instead of 'typedef' [modernize-use-using]
     // CHECK-FIXES: using c = struct { int a; union { int b; }; };
   }
+
+  template <typename T>
+  void foo3()
+  {
+    typedef T b;
+    // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use 'using' instead of 'typedef' [modernize-use-using]
+    // CHECK-FIXES: using b = T;
+  }
+
+  template <typename T>
+  class MyClass
+  {
+    void foo()
+    {
+      typedef MyClass c;
+      // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use 'using' instead of 'typedef' [modernize-use-using]
+      // CHECK-FIXES: using c = MyClass;
+    }
+  };
+
+  const auto foo4 = [](int a){typedef int d;};
+  // CHECK-MESSAGES: :[[@LINE-1]]:31: warning: use 'using' instead of 'typedef' [modernize-use-using]
+  // CHECK-FIXES: const auto foo4 = [](int a){using d = int;};
 }
