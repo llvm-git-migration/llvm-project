@@ -1010,6 +1010,18 @@ Function *CodeExtractor::constructFunction(const ValueSet &inputs,
 
     newFunction->addFnAttr(Attr);
   }
+
+  if (NumExitBlocks == 0) {
+    // Mark the new function `noreturn` if applicable. Terminators which resume
+    // exception propagation are treated as returning instructions. This is to
+    // avoid inserting traps after calls to outlined functions which unwind.
+    if (none_of(Blocks, [](const BasicBlock *BB) {
+          const Instruction *Term = BB->getTerminator();
+          return isa<ReturnInst>(Term) || isa<ResumeInst>(Term);
+        }))
+      newFunction->setDoesNotReturn();
+  }
+
   newFunction->insert(newFunction->end(), newRootNode);
 
   // Create scalar and aggregate iterators to name all of the arguments we
@@ -1390,12 +1402,16 @@ CallInst *CodeExtractor::emitCallAndSwitchStatement(Function *newFunction,
   Type *OldFnRetTy = TheSwitch->getParent()->getParent()->getReturnType();
   switch (NumExitBlocks) {
   case 0:
+      // If fn is no return, end with an unreachable terminator.
+    if (newFunction->doesNotReturn()) {
+      (void)new UnreachableInst(Context, TheSwitch->getIterator());
+    }
     // There are no successors (the block containing the switch itself), which
     // means that previously this was the last part of the function, and hence
     // this should be rewritten as a `ret'
 
     // Check if the function should return a value
-    if (OldFnRetTy->isVoidTy()) {
+    else if (OldFnRetTy->isVoidTy()) {
       ReturnInst::Create(Context, nullptr, TheSwitch->getIterator());  // Return void
     } else if (OldFnRetTy == TheSwitch->getCondition()->getType()) {
       // return what we have
@@ -1894,16 +1910,6 @@ CodeExtractor::extractCodeRegion(const CodeExtractorAnalysisCache &CEAC,
     }
 
   fixupDebugInfoPostExtraction(*oldFunction, *newFunction, *TheCall);
-
-  // Mark the new function `noreturn` if applicable. Terminators which resume
-  // exception propagation are treated as returning instructions. This is to
-  // avoid inserting traps after calls to outlined functions which unwind.
-  bool doesNotReturn = none_of(*newFunction, [](const BasicBlock &BB) {
-    const Instruction *Term = BB.getTerminator();
-    return isa<ReturnInst>(Term) || isa<ResumeInst>(Term);
-  });
-  if (doesNotReturn)
-    newFunction->setDoesNotReturn();
 
   LLVM_DEBUG(if (verifyFunction(*newFunction, &errs())) {
     newFunction->dump();
