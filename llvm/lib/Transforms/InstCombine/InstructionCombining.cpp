@@ -3834,6 +3834,16 @@ Instruction *InstCombinerImpl::visitExtractValueInst(ExtractValueInst &EV) {
     if (Instruction *Res = foldOpIntoPhi(EV, PN))
       return Res;
 
+  // Canonicalize extract (select Cond, TV, FV)
+  // -> select cond, (extract TV), (extract FV)
+  if (auto *SI = dyn_cast<SelectInst>(Agg)) {
+    Value *Cond = SI->getCondition();
+    Value *TV = Builder.CreateExtractValue(SI->getTrueValue(), EV.getIndices());
+    Value *FV =
+        Builder.CreateExtractValue(SI->getFalseValue(), EV.getIndices());
+    return SelectInst::Create(Cond, TV, FV);
+  }
+
   // We could simplify extracts from other values. Note that nested extracts may
   // already be simplified implicitly by the above: extract (extract (insert) )
   // will be translated into extract ( insert ( extract ) ) first and then just
