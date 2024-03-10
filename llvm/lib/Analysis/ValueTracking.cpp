@@ -1023,11 +1023,30 @@ static void computeKnownBitsFromOperator(const Operator *I,
     break;
   }
   case Instruction::Select: {
-    computeKnownBits(I->getOperand(2), Known, Depth + 1, Q);
-    computeKnownBits(I->getOperand(1), Known2, Depth + 1, Q);
-
+    auto ComputeForArm = [&](bool Arm) {
+      unsigned ArmIdx = 1 + static_cast<unsigned>(!Arm);
+      KnownBits Res(Known.getBitWidth());
+      computeKnownBits(I->getOperand(ArmIdx), Res, Depth + 1, Q);
+      // See what condition implies about the bits of the two select arms.
+      if (!Known.isConstant()) {
+        KnownBits KnownFromCond(Known.getBitWidth());
+        computeKnownBitsFromCond(I->getOperand(ArmIdx), I->getOperand(0),
+                                 KnownFromCond, Depth + 1, Q, !Arm);
+        KnownFromCond = KnownFromCond.unionWith(Res);
+        // We can have conflict if the condition is dead. I.e if we have
+        // (x | 64) < 32 ? (x | 64) : y
+        // we will have conflict at bit 6 from the condition/the `or`.
+        // In that case, we just ignore the bits from the condition. Its not
+        // particularly important what we do, as this select is going to be
+        // simplified soon.
+        if (!KnownFromCond.hasConflict())
+          Res = KnownFromCond;
+      }
+      return Res;
+    };
     // Only known if known in both the LHS and RHS.
-    Known = Known.intersectWith(Known2);
+    Known =
+        ComputeForArm(/*Arm=*/true).intersectWith(ComputeForArm(/*Arm=*/false));
     break;
   }
   case Instruction::FPTrunc:
