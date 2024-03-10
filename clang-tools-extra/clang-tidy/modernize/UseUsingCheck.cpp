@@ -8,6 +8,7 @@
 
 #include "UseUsingCheck.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclGroup.h"
 #include "clang/Lex/Lexer.h"
 
 using namespace clang::ast_matchers;
@@ -69,8 +70,14 @@ void UseUsingCheck::check(const MatchFinder::MatchResult &Result) {
 
   if (!ParentDecl) {
     const auto *ParentDeclStmt = Result.Nodes.getNodeAs<DeclStmt>(DeclStmtName);
-    if (ParentDeclStmt)
-      ParentDecl = ParentDeclStmt->getSingleDecl();
+    if (ParentDeclStmt) {
+      if (ParentDeclStmt->isSingleDecl())
+        ParentDecl = ParentDeclStmt->getSingleDecl();
+      else
+        ParentDecl =
+            ParentDeclStmt->getDeclGroup().getDeclGroup()
+                [ParentDeclStmt->getDeclGroup().getDeclGroup().size() - 1];
+    }
   }
 
   if (!ParentDecl)
