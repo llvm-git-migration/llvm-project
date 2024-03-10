@@ -259,6 +259,8 @@ Bug Fixes in This Version
   operator.
   Fixes (#GH83267).
 
+- Fix a bug on type constraint checking (#GH84368).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
