@@ -17,6 +17,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "clang/Analysis/FlowSensitive/Transfer.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
@@ -706,6 +707,12 @@ Environment Environment::join(const Environment &EnvA, const Environment &EnvB,
     JoinedEnv.ExprToLoc = joinExprMaps(EnvA.ExprToLoc, EnvB.ExprToLoc);
   }
 
+  for (auto &Entry : EnvA.AtomToVal) {
+    auto It = EnvB.AtomToVal.find(Entry.first);
+    if (It != EnvB.AtomToVal.end() && Entry.second == It->second)
+      JoinedEnv.AtomToVal.insert({Entry.first, Entry.second});
+  }
+
   return JoinedEnv;
 }
 
@@ -1059,9 +1066,16 @@ void Environment::assume(const Formula &F) {
   DACtx->addFlowConditionConstraint(FlowConditionToken, F);
 }
 
+#if 0
 bool Environment::proves(const Formula &F) const {
   return DACtx->flowConditionImplies(FlowConditionToken, F);
 }
+#else
+bool Environment::proves(const Formula &F) const {
+  auto V = simple_bool_model::getLiteralValue(F, *this);
+  return V.has_value() && *V;
+}
+#endif
 
 bool Environment::allows(const Formula &F) const {
   return DACtx->flowConditionAllows(FlowConditionToken, F);
@@ -1118,6 +1132,15 @@ void Environment::dump(raw_ostream &OS) const {
 void Environment::dump() const {
   dump(llvm::dbgs());
 }
+
+std::optional<bool> Environment::getAtomValue(Atom A) const {
+  auto It = AtomToVal.find(A);
+  if (It == AtomToVal.end())
+    return std::nullopt;
+  return It->second;
+}
+
+void Environment::setAtomValue(Atom A, bool b) { AtomToVal[A] = b; }
 
 RecordStorageLocation *getImplicitObjectLocation(const CXXMemberCallExpr &MCE,
                                                  const Environment &Env) {
