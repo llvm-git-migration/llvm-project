@@ -11,6 +11,7 @@
 
 #include <__config>
 #include <__type_traits/integral_constant.h>
+#include <__type_traits/is_integral.h>
 #include <__type_traits/operation_traits.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -41,6 +42,9 @@ struct __less<void, void> {
     return __lhs < __rhs;
   }
 };
+
+template <class _Tp>
+struct __desugars_to<__totally_ordered_less_tag, __less<>, _Tp, _Tp> : is_integral<_Tp> {};
 
 _LIBCPP_END_NAMESPACE_STD
 
