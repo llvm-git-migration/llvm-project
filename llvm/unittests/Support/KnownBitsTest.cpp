@@ -362,7 +362,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return KnownBits::absdiff(Known1, Known2);
       },
       [](const APInt &N1, const APInt &N2) {
-        return APIntOps::absdiff(N1, N2);
+        return APIntOps::abdu(N1, N2);
       },
       checkCorrectnessOnlyBinary);
   testBinaryOpExhaustive(
