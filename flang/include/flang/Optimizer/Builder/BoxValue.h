@@ -535,6 +535,17 @@ public:
 
   const VT &matchee() const { return box; }
 
+  /// Clone an ExtendedValue to a new instance changing the base address.
+  ///
+  /// TODO So far, this is only a shallow clone; only the base address is
+  /// replaced. This will probably be extended to implement deep cloning to
+  /// support scenarios such as delayed privatization for ArrayBoxValue's.
+  ExtendedValue clone(mlir::Value newBase) const {
+    return match(
+        [&](const UnboxedValue &box) -> ExtendedValue { return newBase; },
+        [&](const auto &box) -> ExtendedValue { return box.clone(newBase); });
+  }
+
 private:
   VT box;
 };
