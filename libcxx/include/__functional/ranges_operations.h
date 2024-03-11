@@ -100,6 +100,9 @@ struct greater_equal {
 template <class _Tp, class _Up>
 struct __desugars_to<__equal_tag, ranges::equal_to, _Tp, _Up> : true_type {};
 
+template <class _Tp, class _Up>
+struct __desugars_to<__totally_ordered_less_tag, ranges::less, _Tp, _Up> : true_type {};
+
 #endif // _LIBCPP_STD_VER >= 20
 
 _LIBCPP_END_NAMESPACE_STD

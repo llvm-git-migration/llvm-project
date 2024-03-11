@@ -14,6 +14,7 @@
 #include <__functional/binary_function.h>
 #include <__functional/unary_function.h>
 #include <__type_traits/integral_constant.h>
+#include <__type_traits/is_integral.h>
 #include <__type_traits/operation_traits.h>
 #include <__utility/forward.h>
 
@@ -360,6 +361,9 @@ struct _LIBCPP_TEMPLATE_VIS less : __binary_function<_Tp, _Tp, bool> {
 };
 _LIBCPP_CTAD_SUPPORTED_FOR_TYPE(less);
 
+template <class _Tp>
+struct __desugars_to<__totally_ordered_less_tag, less<_Tp>, _Tp, _Tp> : is_integral<_Tp> {};
+
 #if _LIBCPP_STD_VER >= 14
 template <>
 struct _LIBCPP_TEMPLATE_VIS less<void> {
@@ -371,6 +375,9 @@ struct _LIBCPP_TEMPLATE_VIS less<void> {
   }
   typedef void is_transparent;
 };
+
+template <class _Tp>
+struct __desugars_to<__totally_ordered_less_tag, less<>, _Tp, _Tp> : is_integral<_Tp> {};
 #endif
 
 #if _LIBCPP_STD_VER >= 14

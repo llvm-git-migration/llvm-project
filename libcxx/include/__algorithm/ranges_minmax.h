@@ -24,6 +24,8 @@
 #include <__ranges/access.h>
 #include <__ranges/concepts.h>
 #include <__type_traits/is_reference.h>
+#include <__type_traits/is_trivially_copyable.h>
+#include <__type_traits/operation_traits.h>
 #include <__type_traits/remove_cvref.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
@@ -83,7 +85,18 @@ struct __fn {
 
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(__first != __last, "range has to contain at least one element");
 
-    if constexpr (forward_range<_Range>) {
+    if constexpr (contiguous_range<_Range> && is_integral_v<_ValueT> &&
+                  __is_cheap_to_copy<_ValueT> & __is_identity<_Proj>::value &&
+                  __desugars_to<__totally_ordered_less_tag, _Comp, _ValueT, _ValueT>::value) {
+      minmax_result<_ValueT> __result = {__r[0], __r[0]};
+      for (auto __e : __r) {
+        if (__e < __result.min)
+          __result.min = __e;
+        if (__result.max < __e)
+          __result.max = __e;
+      }
+      return __result;
+    } else if constexpr (forward_range<_Range>) {
       // Special-case the one element case. Avoid repeatedly initializing objects from the result of an iterator
       // dereference when doing so might not be idempotent. The `if constexpr` avoids the extra branch in cases where
       // it's not needed.
