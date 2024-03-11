@@ -1399,8 +1399,7 @@ private:
 
       for (GlobalVariable *GV : Sorted) {
         unsigned Size = DL.getTypeAllocSize(GV->getValueType());
-        OptimizedStructLayoutField F(GV,
-                                     Size ? Size : 1,
+        OptimizedStructLayoutField F(GV, Size ? Size : 1,
                                      AMDGPU::getAlign(DL, GV));
         LayoutFields.emplace_back(F);
       }
