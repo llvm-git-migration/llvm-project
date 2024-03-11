@@ -21,9 +21,9 @@
 #include <thread>
 
 #ifndef _WIN32
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <poll.h>
 #else
 #include "llvm/Support/Windows/WindowsSupport.h"
 // winsock2.h must be included before afunix.h. Briefly turn off clang-format to
@@ -98,8 +98,8 @@ ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath,
     : FD(SocketFD), SocketPath(SocketPath), PipeFD{PipeFD[0], PipeFD[1]} {}
 
 ListeningSocket::ListeningSocket(ListeningSocket &&LS)
-    : FD(LS.FD.load()),
-      SocketPath(LS.SocketPath), PipeFD{LS.PipeFD[0], LS.PipeFD[1]} {
+    : FD(LS.FD.load()), SocketPath(LS.SocketPath),
+      PipeFD{LS.PipeFD[0], LS.PipeFD[1]} {
 
   LS.FD = -1;
   LS.SocketPath.clear();
@@ -148,35 +148,35 @@ ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "socket create failed");
 
-    struct sockaddr_un Addr = setSocketAddr(SocketPath);
-    if (::bind(Socket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
-      // Grab error code from call to ::bind before calling ::close
-      std::error_code EC = getLastSocketErrorCode();
-      ::close(Socket);
-      return llvm::make_error<StringError>(EC, "Bind error");
-    }
+  struct sockaddr_un Addr = setSocketAddr(SocketPath);
+  if (::bind(Socket, (struct sockaddr *)&Addr, sizeof(Addr)) == -1) {
+    // Grab error code from call to ::bind before calling ::close
+    std::error_code EC = getLastSocketErrorCode();
+    ::close(Socket);
+    return llvm::make_error<StringError>(EC, "Bind error");
+  }
 
-    // Mark socket as passive so incoming connections can be accepted
-    if (::listen(Socket, MaxBacklog) == -1)
-      return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                           "Listen error");
+  // Mark socket as passive so incoming connections can be accepted
+  if (::listen(Socket, MaxBacklog) == -1)
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "Listen error");
 
-    int PipeFD[2];
+  int PipeFD[2];
 #ifdef _WIN32
-    // Reserve 1 byte for the pipe and use default textmode
-    if (::_pipe(PipeFD, 1, 0) == -1)
+  // Reserve 1 byte for the pipe and use default textmode
+  if (::_pipe(PipeFD, 1, 0) == -1)
 #else
   if (::pipe(PipeFD) == -1)
 #endif // _WIN32
-      return llvm::make_error<StringError>(getLastSocketErrorCode(),
-                                           "pipe failed");
+    return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                         "pipe failed");
 
 #ifdef _WIN32
-    return ListeningSocket{_open_osfhandle(Socket, 0), SocketPath, PipeFD};
+  return ListeningSocket{_open_osfhandle(Socket, 0), SocketPath, PipeFD};
 #else
   return ListeningSocket{Socket, SocketPath, PipeFD};
 #endif // _WIN32
-  }
+}
 
 Expected<std::unique_ptr<raw_socket_stream>>
 ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
@@ -214,10 +214,10 @@ ListeningSocket::accept(std::optional<std::chrono::milliseconds> Timeout) {
 
   int AcceptFD;
 #ifdef _WIN32
-    SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
-    AcceptFD = _open_osfhandle(WinAcceptSock, 0);
+  SOCKET WinAcceptSock = ::accept(WinServerSock, NULL, NULL);
+  AcceptFD = _open_osfhandle(WinAcceptSock, 0);
 #else
-    AcceptFD = ::accept(FD, NULL, NULL);
+  AcceptFD = ::accept(FD, NULL, NULL);
 #endif
 
   if (AcceptFD == -1)
