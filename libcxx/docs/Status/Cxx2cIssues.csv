@@ -34,7 +34,7 @@
 "`3957 <https://wg21.link/LWG3957>`__","[container.alloc.reqmts] The value category of v should be claimed","Kona November 2023","","",""
 "`3965 <https://wg21.link/LWG3965>`__","Incorrect example in [format.string.escaped] p3 for formatting of combining characters","Kona November 2023","","","|format|"
 "`3970 <https://wg21.link/LWG3970>`__","[mdspan.syn] Missing definition of ``full_extent_t`` and ``full_extent``","Kona November 2023","","",""
-"`3973 <https://wg21.link/LWG3973>`__","Monadic operations should be ADL-proof","Kona November 2023","","",""
+"`3973 <https://wg21.link/LWG3973>`__","Monadic operations should be ADL-proof","Kona November 2023","|Complete|","19.0",""
 "`3974 <https://wg21.link/LWG3974>`__","``mdspan::operator[]`` should not copy ``OtherIndexTypes``","Kona November 2023","","",""
 "`3987 <https://wg21.link/LWG3987>`__","Including ``<flat_foo>`` doesn't provide ``std::begin``/``end``","Kona November 2023","","","|flat_containers|"
 "`3990 <https://wg21.link/LWG3990>`__","Program-defined specializations of ``std::tuple`` and ``std::variant`` can't be properly supported","Kona November 2023","","",""
