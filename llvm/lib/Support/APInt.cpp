@@ -3094,3 +3094,31 @@ void llvm::LoadIntFromMemory(APInt &IntVal, const uint8_t *Src,
     memcpy(Dst + sizeof(uint64_t) - LoadBytes, Src, LoadBytes);
   }
 }
+
+APInt APIntOps::mulHiS(const APInt &C1, const APInt &C2) {
+  unsigned FullWidth = C1.getBitWidth() * 2;
+  APInt C1Ext = C1.sext(FullWidth);
+  APInt C2Ext = C2.sext(FullWidth);
+  return (C1Ext * C2Ext).extractBits(C1.getBitWidth(), C1.getBitWidth());
+}
+
+APInt APIntOps::mulHiU(const APInt &C1, const APInt &C2) {
+  unsigned FullWidth = C1.getBitWidth() * 2;
+  APInt C1Ext = C1.zext(FullWidth);
+  APInt C2Ext = C2.zext(FullWidth);
+  return (C1Ext * C2Ext).extractBits(C1.getBitWidth(), C1.getBitWidth());
+}
+
+APInt APIntOps::mulLoS(const APInt &C1, const APInt &C2) {
+  unsigned FullWidth = C1.getBitWidth() * 2;
+  APInt C1Ext = C1.sext(FullWidth);
+  APInt C2Ext = C2.sext(FullWidth);
+  return (C1Ext * C2Ext).trunc(C1.getBitWidth());
+}
+
+APInt APIntOps::mulLoU(const APInt &C1, const APInt &C2) {
+  unsigned FullWidth = C1.getBitWidth() * 2;
+  APInt C1Ext = C1.zext(FullWidth);
+  APInt C2Ext = C2.zext(FullWidth);
+  return (C1Ext * C2Ext).trunc(C1.getBitWidth());
+}

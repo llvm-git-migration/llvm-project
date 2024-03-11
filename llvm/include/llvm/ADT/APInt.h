@@ -2193,6 +2193,18 @@ inline const APInt absdiff(const APInt &A, const APInt &B) {
   return A.uge(B) ? (A - B) : (B - A);
 }
 
+/// Return the high bits of the signed multiplication of C1 and C2
+APInt mulHiS(const APInt &C1, const APInt &C2);
+
+/// Return the high bits of the unsigned multiplication of C1 and C2
+APInt mulHiU(const APInt &C1, const APInt &C2);
+
+/// Return the low bits of the signed multiplication of C1 and C2
+APInt mulLoS(const APInt &C1, const APInt &C2);
+
+/// Return the low bits of the unsigned multiplication of C1 and C2
+APInt mulLoU(const APInt &C1, const APInt &C2);
+
 /// Compute GCD of two unsigned APInt values.
 ///
 /// This function returns the greatest common divisor of the two APInt values

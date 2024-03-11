@@ -10,6 +10,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Alignment.h"
 #include "gtest/gtest.h"
@@ -2803,6 +2804,89 @@ TEST(APIntTest, multiply) {
   EXPECT_EQ(32U, i96.countl_one());
   EXPECT_EQ(32U, i96.popcount());
   EXPECT_EQ(64U, i96.countr_zero());
+}
+
+TEST(APIntOpsTest, MulHiLo) {
+
+  // Unsigned
+
+  // 32 bits
+  APInt i32a(32, 0x0001'E235);
+  APInt i32b(32, 0xF623'55AD);
+  EXPECT_EQ(0x0001'CFA1, APIntOps::mulHiU(i32a, i32b));
+  EXPECT_EQ(0x7CA0'76D1, APIntOps::mulLoU(i32a, i32b));
+
+  // 64 bits
+  APInt i64a(64, 0x1234'5678'90AB'CDEF);
+  APInt i64b(64, 0xFEDC'BA09'8765'4321);
+  EXPECT_EQ(0x121F'A000'A372'3A57, APIntOps::mulHiU(i64a, i64b));
+  EXPECT_EQ(0xC24A'442F'E556'18CF, APIntOps::mulLoU(i64a, i64b));
+
+  // 128 bits
+  APInt i128a(128, "1234567890ABCDEF1234567890ABCDEF", 16);
+  APInt i128b(128, "FEDCBA0987654321FEDCBA0987654321", 16);
+  APInt i128ResHi = APIntOps::mulHiU(i128a, i128b);
+  std::string strResHi = toString(i128ResHi, 16, false, true, true, true);
+  EXPECT_STREQ("0x121F'A000'A372'3A57'E689'8431'2C3A'8D7E", strResHi.c_str());
+  APInt i128ResLo = APIntOps::mulLoU(i128a, i128b);
+  std::string strResLo = toString(i128ResLo, 16, false, true, true, true);
+  EXPECT_STREQ("0x96B4'2860'6E1E'6BF5'C24A'442F'E556'18CF", strResLo.c_str());
+
+  // Signed
+
+  // 32 bits
+  APInt i32c(32, 0x1234'5678); // +ve
+  APInt i32d(32, 0x10AB'CDEF); // +ve
+  APInt i32e(32, 0xFEDC'BA09); // -ve
+
+  EXPECT_EQ(0x012F'7D02, APIntOps::mulHiS(i32c, i32d));
+  EXPECT_EQ(0x2A42'D208, APIntOps::mulLoS(i32c, i32d));
+
+  EXPECT_EQ(0xFFEB'4988, APIntOps::mulHiS(i32c, i32e));
+  EXPECT_EQ(0x09CA'3A38, APIntOps::mulLoS(i32c, i32e));
+
+  EXPECT_EQ(0x0001'4B68, APIntOps::mulHiS(i32e, i32e));
+  EXPECT_EQ(0x22A9'1451, APIntOps::mulLoS(i32e, i32e));
+
+  // 64 bits
+  APInt i64c(64, 0x1234'5678'90AB'CDEF); // +ve
+  APInt i64d(64, 0x1234'5678'90FE'DCBA); // +ve
+  APInt i64e(64, 0xFEDC'BA09'8765'4321); // -ve
+
+  EXPECT_EQ(0x014B'66DC'328E'10C1, APIntOps::mulHiS(i64c, i64d));
+  EXPECT_EQ(0xFB99'7041'84EF'03A6, APIntOps::mulLoS(i64c, i64d));
+
+  EXPECT_EQ(0xFFEB'4988'12C6'6C68, APIntOps::mulHiS(i64c, i64e));
+  EXPECT_EQ(0xC24A'442F'E556'18CF, APIntOps::mulLoS(i64c, i64e));
+
+  EXPECT_EQ(0x0001'4B68'2174'FA18, APIntOps::mulHiS(i64e, i64e));
+  EXPECT_EQ(0xCEFE'A12C'D7A4'4A41, APIntOps::mulLoS(i64e, i64e));
+
+  // 128 bits
+  APInt i128c(128, "1234567890ABCDEF1234567890ABCDEF", 16); // +ve
+  APInt i128d(128, "1234567890FEDCBA1234567890FEDCBA", 16); // +ve
+  APInt i128e(128, "FEDCBA0987654321FEDCBA0987654321", 16); // -ve
+
+  i128ResHi = APIntOps::mulHiS(i128c, i128d);
+  strResHi = toString(i128ResHi, 16, false, true, true, true);
+  EXPECT_STREQ("0x14B'66DC'328E'10C1'FE30'3DF9'EA0B'2529", strResHi.c_str());
+  i128ResLo = APIntOps::mulLoS(i128c, i128d);
+  strResLo = toString(i128ResLo, 16, false, true, true, true);
+  EXPECT_STREQ("0xF87E'475F'3C6C'180D'FB99'7041'84EF'03A6", strResLo.c_str());
+
+  i128ResHi = APIntOps::mulHiS(i128c, i128e);
+  strResHi = toString(i128ResHi, 16, false, true, true, true);
+  EXPECT_STREQ("0xFFEB'4988'12C6'6C68'D455'2DB8'9B8E'BF8F", strResHi.c_str());
+  i128ResLo = APIntOps::mulLoS(i128c, i128e);
+  strResLo = toString(i128ResLo, 16, false, true, true, true);
+  EXPECT_STREQ("0x96B4'2860'6E1E'6BF5'C24A'442F'E556'18CF", strResLo.c_str());
+
+  i128ResHi = APIntOps::mulHiS(i128e, i128e);
+  strResHi = toString(i128ResHi, 16, false, true, true, true);
+  EXPECT_STREQ("0x1'4B68'2174'FA18'CCBA'AC10'2958'C4B5", strResHi.c_str());
+  i128ResLo = APIntOps::mulLoS(i128e, i128e);
+  strResLo = toString(i128ResLo, 16, false, true, true, true);
+  EXPECT_STREQ("0x9BB8'01D4'DF88'14DC'CEFE'A12C'D7A4'4A41", strResLo.c_str());
 }
 
 TEST(APIntTest, RoundingUDiv) {
