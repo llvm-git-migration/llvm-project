@@ -18,12 +18,12 @@
 
 #include <atomic>
 #include <fcntl.h>
-#include <poll.h>
 #include <thread>
 
 #ifndef _WIN32
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <poll.h>
 #else
 #include "llvm/Support/Windows/WindowsSupport.h"
 // winsock2.h must be included before afunix.h. Briefly turn off clang-format to
@@ -162,7 +162,12 @@ ListeningSocket::createListeningUnixSocket(StringRef SocketPath,
                                          "Listen error");
 
   int PipeFD[2];
+#ifdef _WIN32
+  // Reserve 1 byte for the pipe and use default textmode
+  if (::_pipe(PipeFD, 1, 0) == -1)
+#else
   if (::pipe(PipeFD) == -1)
+#endif // _WIN32
     return llvm::make_error<StringError>(getLastSocketErrorCode(),
                                          "pipe failed");
 
