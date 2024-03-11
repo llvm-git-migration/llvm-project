@@ -235,7 +235,7 @@ class StreamChecker : public Checker<check::PreCall, eval::Call,
   BugType BT_StreamEof{this, "Stream already in EOF", "Stream handling error"};
   BugType BT_ResourceLeak{this, "Resource leak", "Stream handling error",
                           /*SuppressOnSink =*/true};
-  BugType BT_SizeNull{this, "NULL size pointer", "Stream handling error"};
+  BugType BT_ArgumentNull{this, "NULL pointer", categories::UnixAPI};
   BugType BT_IllegalSize{this, "Invalid buffer size", categories::MemoryError};
 
 public:
@@ -502,6 +502,12 @@ private:
                                       CheckerContext &C,
                                       ProgramStateRef State) const;
 
+  ProgramStateRef
+  ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr, CheckerContext &C,
+                   ProgramStateRef State, const StringRef PtrDescr,
+                   std::optional<std::reference_wrapper<const BugType>> BT =
+                       std::nullopt) const;
+
   /// Check that the stream is the opened state.
   /// If the stream is known to be not opened an error is generated
   /// and nullptr returned, otherwise the original state is returned.
@@ -525,9 +531,6 @@ private:
   ProgramStateRef ensureFseekWhenceCorrect(SVal WhenceVal, CheckerContext &C,
                                            ProgramStateRef State) const;
 
-  ProgramStateRef ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
-                                   CheckerContext &C, ProgramStateRef State,
-                                   const StringRef PtrDescr) const;
   ProgramStateRef ensureGetdelimBufferAndSizeCorrect(
       SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
       const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const;
@@ -1192,30 +1195,6 @@ void StreamChecker::evalUngetc(const FnDescription *Desc, const CallEvent &Call,
   C.addTransition(StateFailed);
 }
 
-ProgramStateRef
-StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
-                                CheckerContext &C, ProgramStateRef State,
-                                const StringRef PtrDescr) const {
-  const auto Ptr = PtrVal.getAs<DefinedSVal>();
-  if (!Ptr)
-    return nullptr;
-
-  assert(PtrExpr && "Expected an argument");
-
-  const auto [PtrNotNull, PtrNull] = State->assume(*Ptr);
-  if (!PtrNotNull && PtrNull) {
-    if (ExplodedNode *N = C.generateErrorNode(PtrNull)) {
-      auto R = std::make_unique<PathSensitiveBugReport>(
-          BT_SizeNull, (PtrDescr + " pointer might be NULL.").str(), N);
-      bugreporter::trackExpressionValue(N, PtrExpr, *R);
-      C.emitReport(std::move(R));
-    }
-    return nullptr;
-  }
-
-  return PtrNotNull;
-}
-
 ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
     const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
@@ -1697,27 +1676,31 @@ ProgramStateRef
 StreamChecker::ensureStreamNonNull(SVal StreamVal, const Expr *StreamE,
                                    CheckerContext &C,
                                    ProgramStateRef State) const {
-  auto Stream = StreamVal.getAs<DefinedSVal>();
-  if (!Stream)
+  return ensurePtrNotNull(StreamVal, StreamE, C, State, "Stream", BT_FileNull);
+}
+
+ProgramStateRef StreamChecker::ensurePtrNotNull(
+    SVal PtrVal, const Expr *PtrExpr, CheckerContext &C, ProgramStateRef State,
+    const StringRef PtrDescr,
+    std::optional<std::reference_wrapper<const BugType>> BT) const {
+  const auto Ptr = PtrVal.getAs<DefinedSVal>();
+  if (!Ptr)
     return State;
 
-  ConstraintManager &CM = C.getConstraintManager();
-
-  ProgramStateRef StateNotNull, StateNull;
-  std::tie(StateNotNull, StateNull) = CM.assumeDual(State, *Stream);
-
-  if (!StateNotNull && StateNull) {
-    if (ExplodedNode *N = C.generateErrorNode(StateNull)) {
+  const auto [PtrNotNull, PtrNull] = State->assume(*Ptr);
+  if (!PtrNotNull && PtrNull) {
+    if (ExplodedNode *N = C.generateErrorNode(PtrNull)) {
       auto R = std::make_unique<PathSensitiveBugReport>(
-          BT_FileNull, "Stream pointer might be NULL.", N);
-      if (StreamE)
-        bugreporter::trackExpressionValue(N, StreamE, *R);
+          BT.value_or(std::cref(BT_ArgumentNull)),
+          (PtrDescr + " pointer might be NULL.").str(), N);
+      if (PtrExpr)
+        bugreporter::trackExpressionValue(N, PtrExpr, *R);
       C.emitReport(std::move(R));
     }
     return nullptr;
   }
 
-  return StateNotNull;
+  return PtrNotNull;
 }
 
 ProgramStateRef StreamChecker::ensureStreamOpened(SVal StreamVal,
