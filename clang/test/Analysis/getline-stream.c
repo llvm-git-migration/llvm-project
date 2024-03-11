@@ -1,4 +1,4 @@
-// RUN: %clang_analyze_cc1 -analyzer-checker=core,alpha.unix.Stream,debug.ExprInspection -verify %s
+// RUN: %clang_analyze_cc1 -analyzer-checker=core,unix,alpha.unix.Stream,debug.ExprInspection -verify %s
 
 #include "Inputs/system-header-simulator.h"
 #include "Inputs/system-header-simulator-for-malloc.h"
@@ -35,24 +35,26 @@ void test_getline_null_size() {
   fclose(F1);
 }
 
-void test_getline_null_buffer_bad_size() {
+void test_getline_null_buffer_size_gt0() {
   FILE *F1 = tmpfile();
   if (!F1)
     return;
   char *buffer = NULL;
   size_t n = 8;
-  getline(&buffer, &n, F1); // expected-warning {{Line pointer might be null while n value is not zero}}
+  getline(&buffer, &n, F1); // ok since posix 2018
+  free(buffer);
   fclose(F1);
 }
 
-void test_getline_null_buffer_bad_size_2(size_t n) {
+void test_getline_null_buffer_size_gt0_2(size_t n) {
   FILE *F1 = tmpfile();
   if (!F1)
     return;
   char *buffer = NULL;
   if (n > 0) {
-    getline(&buffer, &n, F1);  // expected-warning {{Line pointer might be null while n value is not zero}}
+    getline(&buffer, &n, F1); // ok since posix 2018
   }
+  free(buffer);
   fclose(F1);
 }
 
@@ -63,6 +65,58 @@ void test_getline_null_buffer_unknown_size(size_t n) {
   char *buffer = NULL;
 
   getline(&buffer, &n, F1);  // ok
+  fclose(F1);
+  free(buffer);
+}
+
+void test_getline_null_buffer_undef_size() {
+  FILE *F1 = tmpfile();
+  if (!F1)
+    return;
+
+  char *buffer = NULL;
+  size_t n;
+
+  getline(&buffer, &n, F1); // ok since posix 2018
+  fclose(F1);
+  free(buffer);
+}
+
+void test_getline_buffer_size_0() {
+  FILE *F1 = tmpfile();
+  if (!F1)
+    return;
+
+  char *buffer = malloc(10);
+  size_t n = 0;
+  if (buffer != NULL)
+    getline(&buffer, &n, F1); // ok, the buffer is enough for 0 character
+  fclose(F1);
+  free(buffer);
+}
+
+void test_getline_buffer_bad_size() {
+  FILE *F1 = tmpfile();
+  if (!F1)
+    return;
+
+  char *buffer = malloc(10);
+  size_t n = 100;
+  if (buffer != NULL)
+    getline(&buffer, &n, F1); // expected-warning {{The buffer from the first argument is smaller than the size specified by the second parameter}}
+  fclose(F1);
+  free(buffer);
+}
+
+void test_getline_buffer_smaller_size() {
+  FILE *F1 = tmpfile();
+  if (!F1)
+    return;
+
+  char *buffer = malloc(100);
+  size_t n = 10;
+  if (buffer != NULL)
+    getline(&buffer, &n, F1); // ok, there is enough space for 10 characters
   fclose(F1);
   free(buffer);
 }
@@ -101,24 +155,26 @@ void test_getdelim_null_size() {
   fclose(F1);
 }
 
-void test_getdelim_null_buffer_bad_size() {
+void test_getdelim_null_buffer_size_gt0() {
   FILE *F1 = tmpfile();
   if (!F1)
     return;
   char *buffer = NULL;
   size_t n = 8;
-  getdelim(&buffer, &n, ';', F1); // expected-warning {{Line pointer might be null while n value is not zero}}
+  getdelim(&buffer, &n, ';', F1); // ok since posix 2018
+  free(buffer);
   fclose(F1);
 }
 
-void test_getdelim_null_buffer_bad_size_2(size_t n) {
+void test_getdelim_null_buffer_size_gt0_2(size_t n) {
   FILE *F1 = tmpfile();
   if (!F1)
     return;
   char *buffer = NULL;
   if (n > 0) {
-    getdelim(&buffer, &n, ' ', F1);  // expected-warning {{Line pointer might be null while n value is not zero}}
+    getdelim(&buffer, &n, ' ', F1);  // ok since posix 2018
   }
+  free(buffer);
   fclose(F1);
 }
 
@@ -289,18 +345,21 @@ void test_getline_not_null(char **buffer, size_t *size) {
   }
 }
 
-void test_getline_size_0(size_t size) {
+void test_getline_size_constraint(size_t size) {
   FILE *file = fopen("file.txt", "r");
   if (file == NULL) {
     return;
   }
 
   size_t old_size = size;
-  char *buffer = NULL;
-  ssize_t r = getline(&buffer, &size, file);
-  if (r >= 0) {
-    // Since buffer is NULL, old_size should be 0. Otherwise, there would be UB.
-    clang_analyzer_eval(old_size == 0); // expected-warning{{TRUE}}
+  char *buffer = malloc(10);
+  if (buffer != NULL) {
+    ssize_t r = getline(&buffer, &size, file);
+    if (r >= 0) {
+      // Since buffer has a size of 10, old_size must be less than or equal to 10.
+      // Otherwise, there would be UB.
+      clang_analyzer_eval(old_size <= 10); // expected-warning{{TRUE}}
+    }
   }
   fclose(file);
   free(buffer);
@@ -334,7 +393,9 @@ void test_getline_negative_buffer() {
 
   char *buffer = NULL;
   size_t n = -1;
-  getline(&buffer, &n, file); // expected-warning {{Line pointer might be null while n value is not zero}}
+  getline(&buffer, &n, file); // ok since posix 2018
+  free(buffer);
+  fclose(file);
 }
 
 void test_getline_negative_buffer_2(char *buffer) {
@@ -348,5 +409,6 @@ void test_getline_negative_buffer_2(char *buffer) {
   if (ret > 0) {
     clang_analyzer_eval(ret < n); // expected-warning {{TRUE}}
   }
+  free(buffer);
   fclose(file);
 }

@@ -18,6 +18,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerHelpers.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/DynamicExtent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
@@ -235,8 +236,9 @@ class StreamChecker : public Checker<check::PreCall, eval::Call,
   BugType BT_ResourceLeak{this, "Resource leak", "Stream handling error",
                           /*SuppressOnSink =*/true};
   BugType BT_SizeNull{this, "NULL size pointer", "Stream handling error"};
-  BugType BT_SizeNotZero{this, "NULL line pointer and size not zero",
-                         "Stream handling error"};
+  BugType BT_SizeGreaterThanBufferSize{
+      this, "Size greater than the allocated buffer size",
+      categories::MemoryError};
 
 public:
   void checkPreCall(const CallEvent &Call, CheckerContext &C) const;
@@ -1219,8 +1221,11 @@ StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
 ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
     const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
-  static constexpr char SizeNotZeroMsg[] =
-      "Line pointer might be null while n value is not zero";
+  // If the argument `*n` is non-zero, `*lineptr` must point to an object of
+  // size at least `*n` bytes, or a `NULL` pointer.
+  static constexpr char SizeGreaterThanBufferSize[] =
+      "The buffer from the first argument is smaller than the size "
+      "specified by the second parameter";
 
   // We have a pointer to a pointer to the buffer, and a pointer to the size.
   // We want what they point at.
@@ -1231,23 +1236,31 @@ ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
 
   assert(LinePtrPtrExpr && SizePtrExpr);
 
-  // If the line pointer is null, and n is > 0, there is UB.
   const auto [LinePtrNotNull, LinePtrNull] = State->assume(*LinePtrSVal);
-  if (LinePtrNull && !LinePtrNotNull) {
-    const auto [NIsNotZero, NIsZero] = LinePtrNull->assume(*NSVal);
-    if (NIsNotZero && !NIsZero) {
-      if (ExplodedNode *N = C.generateErrorNode(NIsNotZero)) {
-        auto R = std::make_unique<PathSensitiveBugReport>(BT_SizeNotZero,
-                                                          SizeNotZeroMsg, N);
-        bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
-        bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
-        C.emitReport(std::move(R));
-      }
-      return nullptr;
+  if (LinePtrNotNull && !LinePtrNull) {
+    auto &SVB = C.getSValBuilder();
+    auto LineBufSize =
+        getDynamicExtent(LinePtrNotNull, LinePtrSVal->getAsRegion(), SVB);
+    auto LineBufSizeGtN = SVB.evalBinOp(LinePtrNotNull, BO_GE, LineBufSize,
+                                        *NSVal, SVB.getConditionType())
+                              .getAs<DefinedOrUnknownSVal>();
+    if (!LineBufSizeGtN) {
+      return LinePtrNotNull;
     }
-    return NIsZero;
+    if (auto LineBufSizeOk = LinePtrNotNull->assume(*LineBufSizeGtN, true)) {
+      return LineBufSizeOk;
+    }
+
+    if (ExplodedNode *N = C.generateErrorNode(LinePtrNotNull)) {
+      auto R = std::make_unique<PathSensitiveBugReport>(
+          BT_SizeGreaterThanBufferSize, SizeGreaterThanBufferSize, N);
+      bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
+      bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
+      C.emitReport(std::move(R));
+    }
+    return nullptr;
   }
-  return LinePtrNotNull;
+  return State;
 }
 
 void StreamChecker::preGetdelim(const FnDescription *Desc,
