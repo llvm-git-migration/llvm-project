@@ -529,10 +529,9 @@ private:
   ProgramStateRef ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
                                    CheckerContext &C, ProgramStateRef State,
                                    const StringRef PtrDescr) const;
-  ProgramStateRef
-  ensureSizeZeroIfLineNull(SVal LinePtrPtrSVal, SVal SizePtrSVal,
-                           const Expr *LinePtrPtrExpr, const Expr *SizePtrExpr,
-                           CheckerContext &C, ProgramStateRef State) const;
+  ProgramStateRef ensureGetdelimBufferAndSizeCorrect(
+      SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
+      const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const;
 
   /// Generate warning about stream in EOF state.
   /// There will be always a state transition into the passed State,
@@ -1218,7 +1217,7 @@ StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
   return PtrNotNull;
 }
 
-ProgramStateRef StreamChecker::ensureSizeZeroIfLineNull(
+ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
     const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
   static constexpr char SizeNotZeroMsg[] =
@@ -1291,10 +1290,9 @@ void StreamChecker::preGetdelim(const FnDescription *Desc,
   if (!State)
     return;
 
-  // If `lineptr` points to a NULL pointer, `*n` must be 0.
-  State =
-      ensureSizeZeroIfLineNull(LinePtrPtrSVal, SizePtrSval, Call.getArgExpr(0),
-                               Call.getArgExpr(1), C, State);
+  State = ensureGetdelimBufferAndSizeCorrect(LinePtrPtrSVal, SizePtrSval,
+                                             Call.getArgExpr(0),
+                                             Call.getArgExpr(1), C, State);
   if (!State)
     return;
 
