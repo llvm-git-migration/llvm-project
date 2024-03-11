@@ -236,9 +236,7 @@ class StreamChecker : public Checker<check::PreCall, eval::Call,
   BugType BT_ResourceLeak{this, "Resource leak", "Stream handling error",
                           /*SuppressOnSink =*/true};
   BugType BT_SizeNull{this, "NULL size pointer", "Stream handling error"};
-  BugType BT_SizeGreaterThanBufferSize{
-      this, "Size greater than the allocated buffer size",
-      categories::MemoryError};
+  BugType BT_IllegalSize{this, "Invalid buffer size", categories::MemoryError};
 
 public:
   void checkPreCall(const CallEvent &Call, CheckerContext &C) const;
@@ -1221,28 +1219,50 @@ StreamChecker::ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr,
 ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
     const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
-  // If the argument `*n` is non-zero, `*lineptr` must point to an object of
-  // size at least `*n` bytes, or a `NULL` pointer.
   static constexpr char SizeGreaterThanBufferSize[] =
       "The buffer from the first argument is smaller than the size "
       "specified by the second parameter";
+  static constexpr char SizeUndef[] =
+      "The buffer from the first argument is not NULL, but the size specified "
+      "by the second parameter is undefined.";
+
+  auto EmitBugReport = [this, &C, SizePtrExpr,
+                        LinePtrPtrExpr](const ProgramStateRef &BugState,
+                                        const char *ErrMsg) {
+    if (ExplodedNode *N = C.generateErrorNode(BugState)) {
+      auto R =
+          std::make_unique<PathSensitiveBugReport>(BT_IllegalSize, ErrMsg, N);
+      bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
+      bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
+      C.emitReport(std::move(R));
+    }
+  };
 
   // We have a pointer to a pointer to the buffer, and a pointer to the size.
   // We want what they point at.
-  auto LinePtrSVal = getPointeeDefVal(LinePtrPtrSVal, State);
-  auto NSVal = getPointeeDefVal(SizePtrSVal, State);
-  if (!LinePtrSVal || !NSVal)
+  auto LinePtrSVal = getPointeeVal(LinePtrPtrSVal, State)->getAs<DefinedSVal>();
+  auto NSVal = getPointeeVal(SizePtrSVal, State);
+  if (!LinePtrSVal || !NSVal || NSVal->isUnknown())
     return nullptr;
 
   assert(LinePtrPtrExpr && SizePtrExpr);
 
   const auto [LinePtrNotNull, LinePtrNull] = State->assume(*LinePtrSVal);
   if (LinePtrNotNull && !LinePtrNull) {
+    // If `*lineptr` is not null, but `*n` is undefined, there is UB.
+    if (NSVal->isUndef()) {
+      EmitBugReport(LinePtrNotNull, SizeUndef);
+      return nullptr;
+    }
+
+    // If it is defined, and known, its size must be less than or equal to
+    // the buffer size.
+    auto NDefSVal = NSVal->getAs<DefinedSVal>();
     auto &SVB = C.getSValBuilder();
     auto LineBufSize =
         getDynamicExtent(LinePtrNotNull, LinePtrSVal->getAsRegion(), SVB);
     auto LineBufSizeGtN = SVB.evalBinOp(LinePtrNotNull, BO_GE, LineBufSize,
-                                        *NSVal, SVB.getConditionType())
+                                        *NDefSVal, SVB.getConditionType())
                               .getAs<DefinedOrUnknownSVal>();
     if (!LineBufSizeGtN) {
       return LinePtrNotNull;
@@ -1251,13 +1271,7 @@ ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
       return LineBufSizeOk;
     }
 
-    if (ExplodedNode *N = C.generateErrorNode(LinePtrNotNull)) {
-      auto R = std::make_unique<PathSensitiveBugReport>(
-          BT_SizeGreaterThanBufferSize, SizeGreaterThanBufferSize, N);
-      bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
-      bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
-      C.emitReport(std::move(R));
-    }
+    EmitBugReport(LinePtrNotNull, SizeGreaterThanBufferSize);
     return nullptr;
   }
   return State;
@@ -1337,7 +1351,7 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
     // The buffer size `*n` must be enough to hold the whole line, and
     // greater than the return value, since it has to account for '\0'.
     auto SizePtrSval = Call.getArgSVal(1);
-    auto NVal = getPointeeDefVal(SizePtrSval, State);
+    auto NVal = getPointeeVal(SizePtrSval, State);
     if (NVal) {
       StateNotFailed = StateNotFailed->assume(
           E.SVB
@@ -1362,7 +1376,7 @@ void StreamChecker::evalGetdelim(const FnDescription *Desc,
   StateFailed = E.setStreamState(
       StateFailed, StreamState::getOpened(Desc, NewES, !NewES.isFEof()));
   // On failure, the content of the buffer is undefined.
-  if (auto NewLinePtr = getPointeeDefVal(Call.getArgSVal(0), State)) {
+  if (auto NewLinePtr = getPointeeVal(Call.getArgSVal(0), State)) {
     StateFailed = StateFailed->bindLoc(*NewLinePtr, UndefinedVal(),
                                        C.getLocationContext());
   }

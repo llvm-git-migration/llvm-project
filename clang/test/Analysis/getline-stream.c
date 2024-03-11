@@ -121,6 +121,20 @@ void test_getline_buffer_smaller_size() {
   free(buffer);
 }
 
+void test_getline_buffer_undef_size() {
+  FILE *F1 = tmpfile();
+  if (!F1)
+    return;
+
+  char *buffer = malloc(100);
+  size_t n;
+  if (buffer != NULL)
+    getline(&buffer, &n, F1); // expected-warning {{The buffer from the first argument is not NULL, but the size specified by the second parameter is undefined}}
+  fclose(F1);
+  free(buffer);
+}
+
+
 void test_getline_null_buffer() {
   FILE *F1 = tmpfile();
   if (!F1)

@@ -112,8 +112,7 @@ public:
 OperatorKind operationKindFromOverloadedOperator(OverloadedOperatorKind OOK,
                                                  bool IsBinary);
 
-std::optional<DefinedSVal> getPointeeDefVal(SVal PtrSVal,
-                                            ProgramStateRef State);
+std::optional<SVal> getPointeeVal(SVal PtrSVal, ProgramStateRef State);
 
 } // namespace ento
 
