@@ -62,6 +62,8 @@ int main(int, char**)
       assert(p.second == 'x');
     }
 
+    static_assert(!std::is_trivially_copy_assignable<std::pair<int, int>>::value);
+
   return 0;
 }
 
