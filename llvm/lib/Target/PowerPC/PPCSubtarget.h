@@ -247,6 +247,10 @@ public:
 
   void tocDataChecks(unsigned PointerSize, const GlobalVariable *GV) const;
 
+  /// Calculates the effective code model for argument GV.
+  CodeModel::Model getCodeModel(const TargetMachine &TM,
+                                const GlobalValue *GV) const;
+
   /// True if the ABI is descriptor based.
   bool usesFunctionDescriptors() const {
     // Both 32-bit and 64-bit AIX are descriptor based. For ELF only the 64-bit
