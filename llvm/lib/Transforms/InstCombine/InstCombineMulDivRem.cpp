@@ -198,6 +198,22 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
   if (SimplifyAssociativeOrCommutative(I))
     return &I;
 
+  // mul (sext (icmp eq x, 0)), x -> 0
+  Value *SExtOp, *V0;
+  if ((match(Op0, m_SExt(m_Value(SExtOp))) && match(Op1, m_Value(V0))) ||
+      (match(Op1, m_SExt(m_Value(SExtOp))) && match(Op0, m_Value(V0)))) {
+    Constant *CV;
+    ICmpInst::Predicate Pred;
+    Value *V1;
+    const APInt *IV;
+    if ((match(SExtOp, m_ICmp(Pred, m_Value(V1), m_Constant(CV))) ||
+         match(SExtOp, m_ICmp(Pred, m_Constant(CV), m_Value(V1)))) &&
+        Pred == ICmpInst::Predicate::ICMP_EQ && match(CV, m_APInt(IV)) &&
+        *IV == 0 && V0 == V1) {
+      return replaceInstUsesWith(I, CV);
+    }
+  }
+
   if (Instruction *X = foldVectorBinop(I))
     return X;
 

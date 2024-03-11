@@ -2049,3 +2049,13 @@ define i32 @zext_negpow2_use(i8 %x) {
   %r = mul i32 %zx, -16777216 ; -1 << 24
   ret i32 %r
 }
+
+define <4 x i32> @mul_icmp_with_zero(<4 x i32> %x) {
+; CHECK-LABEL: @mul_icmp_with_zero(
+; CHECK-NEXT:    ret <4 x i32> zeroinitializer
+;
+  %cmp = icmp eq <4 x i32> %x, zeroinitializer
+  %sext = sext <4 x i1> %cmp to <4 x i32>
+  %mul = mul <4 x i32> %sext, %x
+  ret <4 x i32> %mul
+}
