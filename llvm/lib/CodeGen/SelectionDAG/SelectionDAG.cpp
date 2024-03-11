@@ -6009,18 +6009,6 @@ static std::optional<APInt> FoldValue(unsigned Opcode, const APInt &C1,
     if (!C2.getBoolValue())
       break;
     return C1.srem(C2);
-  case ISD::MULHS: {
-    unsigned FullWidth = C1.getBitWidth() * 2;
-    APInt C1Ext = C1.sext(FullWidth);
-    APInt C2Ext = C2.sext(FullWidth);
-    return (C1Ext * C2Ext).extractBits(C1.getBitWidth(), C1.getBitWidth());
-  }
-  case ISD::MULHU: {
-    unsigned FullWidth = C1.getBitWidth() * 2;
-    APInt C1Ext = C1.zext(FullWidth);
-    APInt C2Ext = C2.zext(FullWidth);
-    return (C1Ext * C2Ext).extractBits(C1.getBitWidth(), C1.getBitWidth());
-  }
   case ISD::AVGFLOORS:
     return APIntOps::avgFloorS(C1, C2);
   case ISD::AVGFLOORU:
@@ -6029,13 +6017,10 @@ static std::optional<APInt> FoldValue(unsigned Opcode, const APInt &C1,
     return APIntOps::avgCeilS(C1, C2);
   case ISD::AVGCEILU:
     return APIntOps::avgCeilU(C1, C2);
-  case ISD::ABDS:
-    return APIntOps::smax(C1, C2) - APIntOps::smin(C1, C2);
-  case ISD::ABDU:
-    return APIntOps::umax(C1, C2) - APIntOps::umin(C1, C2);
-  }
-  return std::nullopt;
-}
+  case ISD::MULHS:
+    return APIntOps::mulhs(C1, C2);
+  case ISD::MULHU:
+    return APIntOps::mulhu(C1, C2);
 
 // Handle constant folding with UNDEF.
 // TODO: Handle more cases.
