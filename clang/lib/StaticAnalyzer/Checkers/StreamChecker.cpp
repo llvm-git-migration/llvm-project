@@ -1230,10 +1230,7 @@ ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
   if (!LinePtrSVal || !NSVal)
     return nullptr;
 
-  assert(LinePtrPtrExpr &&
-         "Expected an argument with a pointer to a pointer to the buffer.");
-  assert(SizePtrExpr &&
-         "Expected an argument with a pointer to the buffer size.");
+  assert(LinePtrPtrExpr && SizePtrExpr);
 
   // If the line pointer is null, and n is > 0, there is UB.
   const auto [LinePtrNotNull, LinePtrNull] = State->assume(*LinePtrSVal);
