@@ -260,7 +260,8 @@ def Sin  : DXILOpMapping<13, unary, int_sin,
                          [llvm_halforfloat_ty, LLVMMatchType<0>]>;
 def Exp2 : DXILOpMapping<21, unary, int_exp2,
                          "Returns the base 2 exponential, or 2**x, of the specified value."
-                         "exp2(x) = 2**x.">;
+                         "exp2(x) = 2**x.",
+                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
 def Frac : DXILOpMapping<22, unary, int_dx_frac,
                          "Returns a fraction from 0 to 1 that represents the "
                          "decimal part of the input.",

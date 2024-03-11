@@ -95,12 +95,9 @@ static ParameterKind getParameterKind(const Record *R) {
   case MVT::Other:
     // Handle DXIL-specific overload types
     {
-      auto RetKind = StringSwitch<ParameterKind>(R->getNameInitAsString())
-                         .Cases("llvm_i16ori32_ty", "llvm_halforfloat_ty",
-                                ParameterKind::OVERLOAD)
-                         .Default(ParameterKind::INVALID);
-      if (RetKind != ParameterKind::INVALID) {
-        return RetKind;
+      if ((R->getValueAsInt("isHalfOrFloat")) ||
+          (R->getValueAsInt("isI16OrI32"))) {
+        return ParameterKind::OVERLOAD;
       }
     }
     LLVM_FALLTHROUGH;
