@@ -21,7 +21,6 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
-#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/Sequence.h"
 #include <functional>
 #include <optional>
@@ -1257,12 +1256,6 @@ void StreamChecker::preGetdelim(const FnDescription *Desc,
   ProgramStateRef State = C.getState();
   SVal StreamVal = getStreamArg(Desc, Call);
 
-  auto AddTransitionOnReturn = llvm::make_scope_exit([&] {
-    if (State != nullptr) {
-      C.addTransition(State);
-    }
-  });
-
   State = ensureStreamNonNull(StreamVal, Call.getArgExpr(Desc->StreamArgNo), C,
                               State);
   if (!State)
@@ -1299,6 +1292,8 @@ void StreamChecker::preGetdelim(const FnDescription *Desc,
     if (SS->ErrorState & ErrorFEof)
       reportFEofWarning(Sym, C, State);
   }
+
+  C.addTransition(State);
 }
 
 void StreamChecker::evalGetdelim(const FnDescription *Desc,
