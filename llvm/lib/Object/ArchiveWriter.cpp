@@ -677,6 +677,16 @@ static bool isECObject(object::SymbolicFile &Obj) {
   return false;
 }
 
+bool isImportDescriptor(const std::string_view Name) {
+  return Name.substr(0, ImportDescriptorPrefix.size()) ==
+             ImportDescriptorPrefix ||
+         Name == NullImportDescriptorSymbolName ||
+         (Name.substr(0, NullThunkDataPrefix.size()) == NullThunkDataPrefix &&
+          Name.size() > NullThunkDataSuffix.size() &&
+          Name.substr(Name.size() - NullThunkDataSuffix.size()) ==
+              NullThunkDataSuffix);
+}
+
 static Expected<std::vector<unsigned>> getSymbols(SymbolicFile *Obj,
                                                   uint16_t Index,
                                                   raw_ostream &SymNames,
@@ -704,6 +714,10 @@ static Expected<std::vector<unsigned>> getSymbols(SymbolicFile *Obj,
       if (Map == &SymMap->Map) {
         Ret.push_back(SymNames.tell());
         SymNames << Name << '\0';
+        // If EC is enabled, then the import descriptors are NOT put into EC
+        // objects so we need to copy them to the EC map manually.
+        if (SymMap->UseECMap && isImportDescriptor(Name))
+          SymMap->ECMap[Name] = Index;
       }
     } else {
       Ret.push_back(SymNames.tell());
