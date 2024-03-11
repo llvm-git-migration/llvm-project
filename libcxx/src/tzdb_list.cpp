@@ -19,25 +19,25 @@ namespace chrono {
 _LIBCPP_EXPORTED_FROM_ABI tzdb_list::~tzdb_list() { delete __impl_; }
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI const tzdb& tzdb_list::front() const noexcept {
-  return __impl_->front();
+  return __impl_->__front();
 }
 
 _LIBCPP_EXPORTED_FROM_ABI tzdb_list::const_iterator tzdb_list::erase_after(const_iterator __p) {
-  return __impl_->erase_after(__p);
+  return __impl_->__erase_after(__p);
 }
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI tzdb_list::const_iterator tzdb_list::begin() const noexcept {
-  return __impl_->begin();
+  return __impl_->__begin();
 }
 _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI tzdb_list::const_iterator tzdb_list::end() const noexcept {
-  return __impl_->end();
+  return __impl_->__end();
 }
 
 _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI tzdb_list::const_iterator tzdb_list::cbegin() const noexcept {
-  return __impl_->cbegin();
+  return __impl_->__begin();
 }
 _LIBCPP_NODISCARD_EXT _LIBCPP_EXPORTED_FROM_ABI tzdb_list::const_iterator tzdb_list::cend() const noexcept {
-  return __impl_->cend();
+  return __impl_->__end();
 }
 
 } // namespace chrono
