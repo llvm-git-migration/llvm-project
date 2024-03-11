@@ -9,6 +9,7 @@
 #include <future>
 #include <iostream>
 #include <stdlib.h>
+#include <thread>
 
 #ifdef _WIN32
 #include "llvm/Support/Windows/WindowsSupport.h"
