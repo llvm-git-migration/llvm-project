@@ -5267,6 +5267,15 @@ bool CheckAllArgsHaveFloatRepresentation(Sema *S, CallExpr *TheCall) {
   return false;
 }
 
+void SetInputRepresentationReturnType(Sema *S, CallExpr *TheCall,
+                                      QualType ReturnType) {
+  auto *VecTyA = TheCall->getArg(0)->getType()->getAs<VectorType>();
+  if (VecTyA)
+    ReturnType = S->Context.getVectorType(ReturnType, VecTyA->getNumElements(),
+                                          VectorKind::Generic);
+  TheCall->setType(ReturnType);
+}
+
 // Note: returning true in this case results in CheckBuiltinFunctionCall
 // returning an ExprError
 bool Sema::CheckHLSLBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
@@ -5285,6 +5294,13 @@ bool Sema::CheckHLSLBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
     break;
   }
+  case Builtin::BI__builtin_hlsl_elementwise_isinf:
+    if (checkArgCount(*this, TheCall, 1))
+      return true;
+    if (CheckAllArgsHaveFloatRepresentation(this, TheCall))
+      return true;
+    SetInputRepresentationReturnType(this, TheCall, this->Context.BoolTy);
+    break;
   case Builtin::BI__builtin_hlsl_elementwise_rcp:
   case Builtin::BI__builtin_hlsl_elementwise_frac: {
     if (PrepareBuiltinElementwiseMathOneArgCall(TheCall))
