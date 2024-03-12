@@ -1490,3 +1490,26 @@ define { i64, i64 } @addcarry_commutative_2(i64 %x0, i64 %x1, i64 %y0, i64 %y1) 
   %r1 = insertvalue { i64, i64 } %r0, i64 %b1s, 1
   ret { i64, i64 } %r1
 }
+
+define i1 @pr84831(i64 %0) {
+; CHECK-LABEL: pr84831:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    testq %rdi, %rdi
+; CHECK-NEXT:    setne %al
+; CHECK-NEXT:    xorl %ecx, %ecx
+; CHECK-NEXT:    addb $-1, %al
+; CHECK-NEXT:    adcq $1, %rcx
+; CHECK-NEXT:    setb %al
+; CHECK-NEXT:    retq
+  %2 = icmp ult i64 0, %0
+  %3 = add i64 0, 1
+  %4 = icmp ult i64 %3, 0
+  %5 = zext i1 %2 to i64
+  %6 = add i64 %3, %5
+  %7 = icmp ult i64 %6, %3
+  %8 = zext i1 %4 to i63
+  %9 = zext i1 %7 to i63
+  %new0 = or i63 %8, %9
+  %last = trunc i63 %new0 to i1
+  ret i1 %last
+}
