@@ -105,8 +105,9 @@ public:
   std::optional<DataEdit> GetNextDataEdit(Context &, int maxRepeat = 1);
 
   // Emit any remaining character literals after the last data item (on output)
-  // and perform remaining record positioning actions.
-  void Finish(Context &);
+  // and perform remaining record positioning actions.  Returns true if the
+  // outermost closing parenthesis of the format was reached.
+  bool Finish(Context &);
 
 private:
   static constexpr std::uint8_t maxMaxHeight{100};
