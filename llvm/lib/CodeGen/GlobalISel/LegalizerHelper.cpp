@@ -8220,6 +8220,19 @@ LegalizerHelper::lowerAbsToMaxNeg(MachineInstr &MI) {
 }
 
 LegalizerHelper::LegalizeResult
+LegalizerHelper::lowerAbsToCNeg(MachineInstr &MI) {
+  Register SrcReg = MI.getOperand(1).getReg();
+  Register DestReg = MI.getOperand(0).getReg();
+  LLT Ty = MRI.getType(SrcReg);
+  auto Zero = MIRBuilder.buildConstant(Ty, 0).getReg(0);
+  auto Sub = MIRBuilder.buildSub(Ty, Zero, SrcReg).getReg(0);
+  auto ICmp = MIRBuilder.buildICmp(CmpInst::ICMP_SGT, Ty, SrcReg, Zero);
+  MIRBuilder.buildSelect(DestReg, ICmp, SrcReg, Sub);
+  MI.eraseFromParent();
+  return Legalized;
+}
+
+LegalizerHelper::LegalizeResult
 LegalizerHelper::lowerVectorReduction(MachineInstr &MI) {
   Register SrcReg = MI.getOperand(1).getReg();
   LLT SrcTy = MRI.getType(SrcReg);
