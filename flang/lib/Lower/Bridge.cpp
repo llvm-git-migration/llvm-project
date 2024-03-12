@@ -1084,6 +1084,16 @@ private:
 
     bool isBoxAllocatable = dst.match(
         [](const fir::MutableBoxValue &box) { return box.isAllocatable(); },
+        [](const fir::FortranVariableOpInterface &box) {
+          return fir::FortranVariableOpInterface(box).isAllocatable();
+        },
+        [](const auto &box) { return false; });
+
+    bool isBoxPointer = dst.match(
+        [](const fir::MutableBoxValue &box) { return box.isPointer(); },
+        [](const fir::FortranVariableOpInterface &box) {
+          return fir::FortranVariableOpInterface(box).isPointer();
+        },
         [](const auto &box) { return false; });
 
     if (isBoxAllocatable) {
@@ -1101,7 +1111,7 @@ private:
             copyData(lhs, rhs);
           })
           .end();
-    } else if (lhs.isPointer()) {
+    } else if (isBoxPointer) {
       // Set LHS target to the target of RHS (do not copy the RHS
       // target data into the LHS target storage).
       auto loadVal = builder->create<fir::LoadOp>(loc, rhs);
