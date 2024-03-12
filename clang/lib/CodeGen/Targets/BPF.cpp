@@ -22,6 +22,20 @@ class BPFABIInfo : public DefaultABIInfo {
 public:
   BPFABIInfo(CodeGenTypes &CGT) : DefaultABIInfo(CGT) {}
 
+  bool isPromotableIntegerTypeForABI(QualType Ty) const {
+    if (ABIInfo::isPromotableIntegerTypeForABI(Ty) == true)
+      return true;
+
+    if (const auto *BT = Ty->getAs<BuiltinType>()) {
+      // For Int/UInt type, return true to allow proper sign/zero extension.
+      if (BT->getKind() == BuiltinType::Int ||
+          BT->getKind() == BuiltinType::UInt)
+        return true;
+    }
+
+    return false;
+  }
+
   ABIArgInfo classifyArgumentType(QualType Ty) const {
     Ty = useFirstFieldIfTransparentUnion(Ty);
 
