@@ -118,6 +118,16 @@ template <Direction DIR> void InternalIoStatementState<DIR>::BackspaceRecord() {
   unit_.BackspaceRecord(*this);
 }
 
+template <Direction DIR>
+void InternalIoStatementState<DIR>::CompleteOperation() {
+  if (!this->completedOperation()) {
+    if constexpr (DIR == Direction::Output) {
+      unit_.AdvanceRecord(*this);
+    }
+    IoStatementBase::CompleteOperation();
+  }
+}
+
 template <Direction DIR> int InternalIoStatementState<DIR>::EndIoStatement() {
   if constexpr (DIR == Direction::Output) {
     unit_.EndIoStatement(); // fill
@@ -164,10 +174,8 @@ InternalFormattedIoStatementState<DIR, CHAR>::InternalFormattedIoStatementState(
 template <Direction DIR, typename CHAR>
 void InternalFormattedIoStatementState<DIR, CHAR>::CompleteOperation() {
   if (!this->completedOperation()) {
-    if constexpr (DIR == Direction::Output) {
-      format_.Finish(*this); // ignore any remaining input positioning actions
-    }
-    IoStatementBase::CompleteOperation();
+    format_.Finish(*this);
+    InternalIoStatementState<DIR>::CompleteOperation();
   }
 }
 

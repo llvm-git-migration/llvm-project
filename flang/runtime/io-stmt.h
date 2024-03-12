@@ -346,6 +346,7 @@ public:
       const char *sourceFile = nullptr, int sourceLine = 0);
   InternalIoStatementState(
       const Descriptor &, const char *sourceFile = nullptr, int sourceLine = 0);
+  void CompleteOperation();
   int EndIoStatement();
 
   bool Emit(const char *data, std::size_t bytes, std::size_t elementBytes = 0);
