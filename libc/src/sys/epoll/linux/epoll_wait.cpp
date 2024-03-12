@@ -8,15 +8,13 @@
 
 #include "src/sys/epoll/epoll_wait.h"
 
+#include "include/llvm-libc-macros/signal-macros.h" // for NSIG
+#include "include/llvm-libc-types/sigset_t.h"
+#include "include/llvm-libc-types/struct_epoll_event.h"
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
 #include "src/errno/libc_errno.h"
 #include <sys/syscall.h> // For syscall numbers.
-
-// Since this is a function available in overlay mode, it uses the public
-// headers.
-#include <signal.h> // for NSIG
-#include <sys/epoll.h>
 
 namespace LIBC_NAMESPACE {
 
