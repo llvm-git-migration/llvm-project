@@ -2626,3 +2626,66 @@ define i8 @sub_of_adds_2xc(i8 %x, i8 %y) {
   %r = sub i8 %xc, %yc
   ret i8 %r
 }
+
+define i8 @test_neg_of_udiv_of_nonnegs(i8 %a, i8 %b) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[COND2:%.*]] = icmp sgt i8 [[B:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND2]])
+; CHECK-NEXT:    ret i8 0
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %cond2 = icmp sgt i8 %b, -1
+  call void @llvm.assume(i1 %cond2)
+  %div = udiv i8 %a, %b
+  %neg = sub nuw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_2(i8 %a, i8 %b) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[COND2:%.*]] = icmp sgt i8 [[B:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND2]])
+; CHECK-NEXT:    [[B_NEG:%.*]] = sub nsw i8 0, [[B]]
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], [[B_NEG]]
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %cond2 = icmp sgt i8 %b, -1
+  call void @llvm.assume(i1 %cond2)
+  %div = udiv i8 %a, %b
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_3(i8 %a, i8 %b) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[COND2:%.*]] = icmp sgt i8 [[B:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND2]])
+; CHECK-NEXT:    [[B_NEG:%.*]] = sub nsw i8 0, [[B]]
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], [[B_NEG]]
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %cond2 = icmp sgt i8 %b, -1
+  call void @llvm.assume(i1 %cond2)
+  %div = udiv i8 %a, %b
+  %neg = sub i8 0, %div
+  ret i8 %neg
+}
+
+declare void @llvm.assume(i1)
