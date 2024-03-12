@@ -473,6 +473,8 @@ libclang
 Static Analyzer
 ---------------
 
+- Support C++23 static operator calls.
+
 New features
 ^^^^^^^^^^^^
 
