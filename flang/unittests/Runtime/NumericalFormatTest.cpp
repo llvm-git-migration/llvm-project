@@ -104,7 +104,7 @@ TEST(IOApiTests, HelloWorldOutputTest) {
 
 TEST(IOApiTests, MultilineOutputTest) {
   // Allocate buffer for multiline output
-  static constexpr int numLines{5};
+  static constexpr int numLines{6};
   static constexpr int lineLength{32};
   char buffer[numLines][lineLength];
 
@@ -159,6 +159,7 @@ TEST(IOApiTests, MultilineOutputTest) {
                                   "                                "
                                   "789                 abcd 666 777"
                                   " 888 999                        "
+                                  "                                "
                                   "................................"};
   // Ensure formatted string matches expected output
   EXPECT_TRUE(

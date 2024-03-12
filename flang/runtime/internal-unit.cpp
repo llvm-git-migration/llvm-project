@@ -109,7 +109,11 @@ std::size_t InternalDescriptorUnit<DIR>::GetNextInputBytes(
 template <Direction DIR>
 bool InternalDescriptorUnit<DIR>::AdvanceRecord(IoErrorHandler &handler) {
   if (currentRecordNumber >= endfileRecordNumber.value_or(0)) {
-    handler.SignalEnd();
+    if constexpr (DIR == Direction::Input) {
+      handler.SignalEnd();
+    } else {
+      handler.SignalError(IostatInternalWriteOverrun);
+    }
     return false;
   }
   if constexpr (DIR == Direction::Output) {
