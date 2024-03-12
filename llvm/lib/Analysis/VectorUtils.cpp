@@ -796,12 +796,10 @@ Instruction *llvm::propagateMetadata(Instruction *Inst, ArrayRef<Value *> VL) {
                     LLVMContext::MD_nontemporal, LLVMContext::MD_invariant_load,
                     LLVMContext::MD_access_group, LLVMContext::MD_mmra}) {
     MDNode *MD = I0->getMetadata(Kind);
-    if (Kind == LLVMContext::MD_mmra && !MD)
-      continue;
-
     for (int J = 1, E = VL.size(); MD && J != E; ++J) {
       const Instruction *IJ = cast<Instruction>(VL[J]);
       MDNode *IMD = IJ->getMetadata(Kind);
+
       switch (Kind) {
       case LLVMContext::MD_mmra: {
         auto Tags = MMRAMetadata(dyn_cast_or_null<MDTuple>(MD));

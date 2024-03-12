@@ -19,13 +19,13 @@
 
 #include <set>
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace llvm {
 
 class MDNode;
 class MDTuple;
+class Metadata;
 class StringRef;
 class raw_ostream;
 class LLVMContext;
@@ -56,6 +56,9 @@ public:
   static bool checkCompatibility(const Instruction &A, const Instruction &B) {
     return MMRAMetadata(A).isCompatibleWith(B);
   }
+
+  /// \returns true if \p MD is a well-formed MMRA tag.
+  static bool isTagMD(const Metadata *MD);
 
   /// \returns whether this set of tags is compatible with \p Other.
   bool isCompatibleWith(const MMRAMetadata &Other) const;

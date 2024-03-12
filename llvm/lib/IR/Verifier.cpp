@@ -4829,14 +4829,18 @@ void Verifier::visitMMRAMetadata(Instruction &I, MDNode *MD) {
            isa<MDString>(Tuple->getOperand(1));
   };
 
-  // Simple MMRA metadata like !{!"foo", "!bar"} -> ok.
-  if (IsLeaf(MD))
+  // MMRA Metadata should either be a tag, e.g. !{!"foo", !"bar"}, or a
+  // list of tags such as !2 in the following example:
+  //    !0 = !{!"a", !"b"}
+  //    !1 = !{!"c", !"d"}
+  //    !2 = !{!0, !1}
+  if (MMRAMetadata::isTagMD(MD))
     return;
 
   Check(isa<MDTuple>(MD), "!mmra expected to be a metadata tuple", I, MD);
   for (const MDOperand &MDOp : MD->operands())
-    Check(IsLeaf(MDOp), "!mmra metadata tuple operand is not an MMRA tag", I,
-          MDOp.get());
+    Check(MMRAMetadata::isTagMD(MDOp.get()),
+          "!mmra metadata tuple operand is not an MMRA tag", I, MDOp.get());
 }
 
 void Verifier::visitCallStackMetadata(MDNode *MD) {

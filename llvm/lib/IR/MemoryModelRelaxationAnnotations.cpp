@@ -34,8 +34,7 @@ MMRAMetadata::MMRAMetadata(MDNode *MD) {
   // CTor can use the tryParse & just fatal on err.
 
   MDTuple *Tuple = dyn_cast<MDTuple>(MD);
-  if (!Tuple)
-    report_fatal_error("MMRAs should always be MDTuples!");
+  assert(Tuple && "Invalid MMRA structure");
 
   const auto HandleTagMD = [this](MDNode *TagMD) {
     addTag(cast<MDString>(TagMD->getOperand(0))->getString(),
@@ -49,16 +48,18 @@ MMRAMetadata::MMRAMetadata(MDNode *MD) {
 
   for (const MDOperand &Op : Tuple->operands()) {
     MDNode *MDOp = cast<MDNode>(Op.get());
-    if (!isTagMD(MDOp)) {
-      errs() << "MD Node:\n";
-      MD->print(errs());
-      errs() << "Operand:\n";
-      Op->print(errs());
-      report_fatal_error("Invalid MMRA Metadata Structure!");
-    }
-
+    assert(isTagMD(MDOp));
     HandleTagMD(MDOp);
   }
+}
+
+bool MMRAMetadata::isTagMD(const Metadata *MD) {
+  if (auto *Tuple = dyn_cast<MDTuple>(MD)) {
+    return Tuple->getNumOperands() == 2 &&
+           isa<MDString>(Tuple->getOperand(0)) &&
+           isa<MDString>(Tuple->getOperand(1));
+  }
+  return false;
 }
 
 bool MMRAMetadata::isCompatibleWith(const MMRAMetadata &Other) const {
