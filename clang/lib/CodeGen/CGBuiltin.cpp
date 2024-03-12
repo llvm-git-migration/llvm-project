@@ -1132,14 +1132,14 @@ struct BitTest {
 };
 
 // Returns the first convergence entry/loop/anchor instruction found in |BB|.
-// std::nullopt otherwise.
-std::optional<llvm::IntrinsicInst *> getConvergenceToken(llvm::BasicBlock *BB) {
+// std::nullptr otherwise.
+llvm::IntrinsicInst *getConvergenceToken(llvm::BasicBlock *BB) {
   for (auto &I : *BB) {
     auto *II = dyn_cast<llvm::IntrinsicInst>(&I);
     if (II && isConvergenceControlIntrinsic(II->getIntrinsicID()))
       return II;
   }
-  return std::nullopt;
+  return nullptr;
 }
 
 } // namespace
@@ -1166,19 +1166,15 @@ CodeGenFunction::EmitConvergenceLoop(llvm::BasicBlock *BB,
   Builder.restoreIP(IP);
 
   auto I = AddConvergenceControlAttr(CB, ParentToken);
-  // Controlled convergence is incompatible with uncontrolled convergence.
-  // Removing any old attributes.
-  I->setNotConvergent();
-
   return cast<llvm::IntrinsicInst>(I);
 }
 
 llvm::IntrinsicInst *
 CodeGenFunction::getOrEmitConvergenceEntryToken(llvm::Function *F) {
   auto *BB = &F->getEntryBlock();
-  auto token = getConvergenceToken(BB);
-  if (token.has_value())
-    return token.value();
+  auto *token = getConvergenceToken(BB);
+  if (token)
+    return token;
 
   // Adding a convergence token requires the function to be marked as
   // convergent.
@@ -1198,9 +1194,9 @@ llvm::IntrinsicInst *
 CodeGenFunction::getOrEmitConvergenceLoopToken(const LoopInfo *LI) {
   assert(LI != nullptr);
 
-  auto token = getConvergenceToken(LI->getHeader());
-  if (token.has_value())
-    return *token;
+  auto *token = getConvergenceToken(LI->getHeader());
+  if (token)
+    return token;
 
   llvm::IntrinsicInst *PII =
       LI->getParent()
