@@ -3914,8 +3914,12 @@ LegalizerHelper::lower(MachineInstr &MI, unsigned TypeIdx, LLT LowerHintTy) {
   case G_SSHLSAT:
   case G_USHLSAT:
     return lowerShlSat(MI);
-  case G_ABS:
+  case G_ABS: {
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
+    if (Ty.isScalar() &&  LI.isLegalOrCustom({G_ICMP, {Ty, Ty}}))
+        return lowerAbsToCNeg(MI);
     return lowerAbsToAddXor(MI);
+  }
   case G_SELECT:
     return lowerSelect(MI);
   case G_IS_FPCLASS:
@@ -8215,9 +8219,22 @@ LegalizerHelper::lowerAbsToMaxNeg(MachineInstr &MI) {
   // %res = G_SMAX %a, %v2
   Register SrcReg = MI.getOperand(1).getReg();
   LLT Ty = MRI.getType(SrcReg);
+  auto Zero = MIRBuilder.buildConstant(Ty, 0);
+  auto Sub = MIRBuilder.buildSub(Ty, Zero, SrcReg);
+  MIRBuilder.buildSMax(MI.getOperand(0), SrcReg, Sub);
+  MI.eraseFromParent();
+  return Legalized;
+}
+
+LegalizerHelper::LegalizeResult
+LegalizerHelper::lowerAbsToCNeg(MachineInstr &MI) {
+  Register SrcReg = MI.getOperand(1).getReg();
+  Register DestReg = MI.getOperand(0).getReg();
+  LLT Ty = MRI.getType(SrcReg);
   auto Zero = MIRBuilder.buildConstant(Ty, 0).getReg(0);
   auto Sub = MIRBuilder.buildSub(Ty, Zero, SrcReg).getReg(0);
-  MIRBuilder.buildSMax(MI.getOperand(0), SrcReg, Sub);
+  auto ICmp = MIRBuilder.buildICmp(CmpInst::ICMP_SGT, Ty, SrcReg, Zero);
+  MIRBuilder.buildSelect(DestReg, ICmp, SrcReg, Sub);
   MI.eraseFromParent();
   return Legalized;
 }
