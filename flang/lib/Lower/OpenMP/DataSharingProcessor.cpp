@@ -50,7 +50,7 @@ void DataSharingProcessor::processStep2(mlir::Operation *op, bool isLoop) {
 }
 
 void DataSharingProcessor::insertDeallocs() {
-  // TODO Extend delayed privatization to include a `dealloc` region?
+  // TODO Extend delayed privatization to include a `dealloc` region.
   for (const Fortran::semantics::Symbol *sym : privatizedSymbols)
     if (Fortran::semantics::IsAllocatable(sym->GetUltimate())) {
       converter.createHostAssociateVarCloneDealloc(*sym);
@@ -388,7 +388,8 @@ void DataSharingProcessor::doPrivatize(const Fortran::semantics::Symbol *sym) {
           &allocRegion, /*insertPt=*/{}, symType, symLoc);
 
       firOpBuilder.setInsertionPointToEnd(allocEntryBlock);
-      symTable->addSymbol(*sym, symExV.clone(allocRegion.getArgument(0)));
+      symTable->addSymbol(*sym,
+                          fir::substBase(symExV, allocRegion.getArgument(0)));
       symTable->pushScope();
       cloneSymbol(sym);
       firOpBuilder.create<mlir::omp::YieldOp>(
@@ -405,10 +406,10 @@ void DataSharingProcessor::doPrivatize(const Fortran::semantics::Symbol *sym) {
       mlir::Block *copyEntryBlock = firOpBuilder.createBlock(
           &copyRegion, /*insertPt=*/{}, {symType, symType}, {symLoc, symLoc});
       firOpBuilder.setInsertionPointToEnd(copyEntryBlock);
-      symTable->addSymbol(*sym, symExV.clone(copyRegion.getArgument(0)),
+      symTable->addSymbol(*sym, fir::substBase(symExV, copyRegion.getArgument(0)),
                           /*force=*/true);
       symTable->pushScope();
-      symTable->addSymbol(*sym, symExV.clone(copyRegion.getArgument(1)));
+      symTable->addSymbol(*sym, fir::substBase(symExV, copyRegion.getArgument(1)));
       auto ip = firOpBuilder.saveInsertionPoint();
       copyFirstPrivateSymbol(sym, &ip);
 
