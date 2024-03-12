@@ -5233,10 +5233,6 @@ bool CheckVectorElementCallArgs(Sema *S, CallExpr *TheCall) {
                            TheCall->getArg(1)->getEndLoc());
         retValue = true;
       }
-
-      if (!retValue)
-        TheCall->setType(VecTyA->getElementType());
-
       return retValue;
     }
   }
@@ -5254,7 +5250,11 @@ bool CheckAllArgsHaveFloatRepresentation(Sema *S, CallExpr *TheCall) {
   QualType ExpectedType = S->Context.FloatTy;
   for (unsigned i = 0; i < TheCall->getNumArgs(); ++i) {
     QualType PassedType = TheCall->getArg(i)->getType();
-    if (!PassedType->hasFloatingRepresentation()) {
+    ExpectedType = PassedType->isHalfType() && S->getLangOpts().NativeHalfType
+                       ? S->Context.HalfTy
+                       : S->Context.FloatTy;
+    if (PassedType == S->Context.DoubleTy ||
+        !PassedType->hasFloatingRepresentation()) {
       if (auto *VecTyA = PassedType->getAs<VectorType>())
         ExpectedType = S->Context.getVectorType(
             ExpectedType, VecTyA->getNumElements(), VecTyA->getVectorKind());
@@ -5299,6 +5299,8 @@ bool Sema::CheckHLSLBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     if (CheckVectorElementCallArgs(this, TheCall))
       return true;
     if (SemaBuiltinElementwiseTernaryMath(TheCall))
+      return true;
+    if (CheckAllArgsHaveFloatRepresentation(this, TheCall))
       return true;
     break;
   }
