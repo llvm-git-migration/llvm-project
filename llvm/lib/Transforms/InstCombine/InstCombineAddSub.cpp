@@ -2062,6 +2062,25 @@ static Instruction *foldSubOfMinMax(BinaryOperator &I,
   return nullptr;
 }
 
+/// Fold `sub 0, (udiv nneg X, nneg C)` into `sdiv nneg X, -C`
+static Instruction *foldNegationOfUDivOfNonNegatives(BinaryOperator &I,
+                                                     InstCombinerImpl &IC) {
+  Value *RHS = I.getOperand(1);
+  Value *X;
+  Constant *C;
+
+  const auto &SQ = IC.getSimplifyQuery().getWithInstruction(&I);
+  if (match(RHS, m_OneUse(m_UDiv(m_Value(X), m_Constant(C)))) &&
+      isKnownNonNegative(X, SQ) && isKnownNonNegative(C, SQ)) {
+    bool HasNSW = I.hasNoSignedWrap();
+    auto *NegC = HasNSW ? IC.Builder.CreateNSWNeg(C, C->getName() + ".neg")
+                        : IC.Builder.CreateNeg(C, C->getName() + ".neg");
+    return BinaryOperator::CreateSDiv(X, NegC);
+  }
+
+  return nullptr;
+}
+
 Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
   if (Value *V = simplifySubInst(I.getOperand(0), I.getOperand(1),
                                  I.hasNoSignedWrap(), I.hasNoUnsignedWrap(),
@@ -2153,8 +2172,12 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
                                         Op1, *this))
       return BinaryOperator::CreateAdd(NegOp1, Op0);
   }
-  if (IsNegation)
+  if (IsNegation) {
+    if (Instruction *Res = foldNegationOfUDivOfNonNegatives(I, *this))
+      return Res;
+
     return TryToNarrowDeduceFlags(); // Should have been handled in Negator!
+  }
 
   // (A*B)-(A*C) -> A*(B-C) etc
   if (Value *V = foldUsingDistributiveLaws(I))

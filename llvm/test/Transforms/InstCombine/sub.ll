@@ -2626,3 +2626,83 @@ define i8 @sub_of_adds_2xc(i8 %x, i8 %y) {
   %r = sub i8 %xc, %yc
   ret i8 %r
 }
+
+define i8 @test_neg_of_udiv_of_nonnegs(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    ret i8 0
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub nuw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_2(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_3(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_4(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_4(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv exact i8 %a, 3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_wrong(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_wrong(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    ret i8 0
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, -3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+declare void @llvm.assume(i1)
