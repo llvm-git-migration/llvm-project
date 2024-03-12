@@ -5073,6 +5073,16 @@ bool SelectionDAG::canCreateUndefOrPoison(SDValue Op, const APInt &DemandedElts,
   case ISD::FREEZE:
   case ISD::CONCAT_VECTORS:
   case ISD::INSERT_SUBVECTOR:
+  case ISD::SADDSAT:
+  case ISD::UADDSAT:
+  case ISD::SSUBSAT:
+  case ISD::USUBSAT:
+  case ISD::MULHU:
+  case ISD::MULHS:
+  case ISD::SMIN:
+  case ISD::SMAX:
+  case ISD::UMIN:
+  case ISD::UMAX:
   case ISD::AND:
   case ISD::XOR:
   case ISD::ROTL:
@@ -5091,7 +5101,17 @@ bool SelectionDAG::canCreateUndefOrPoison(SDValue Op, const APInt &DemandedElts,
   case ISD::BITCAST:
   case ISD::BUILD_VECTOR:
   case ISD::BUILD_PAIR:
+  case ISD::SELECT:
     return false;
+
+  case ISD::SELECT_CC: {
+    // Integer select_cc cannot create undef or poison.
+    if (Op.getOperand(0).getValueType().isInteger())
+      return false;
+
+    // FIXME: Handle FP compares.
+    return true;
+  }
 
   case ISD::SETCC: {
     // Integer setcc cannot create undef or poison.
@@ -5123,7 +5143,7 @@ bool SelectionDAG::canCreateUndefOrPoison(SDValue Op, const APInt &DemandedElts,
     return ConsiderFlags && (Op->getFlags().hasNoSignedWrap() ||
                              Op->getFlags().hasNoUnsignedWrap());
 
-  case ISD::SHL:
+  case ISD::SHL: {
     // If the max shift amount isn't in range, then the shift can create poison.
     if (!getValidMaximumShiftAmountConstant(Op, DemandedElts))
       return true;
@@ -5131,15 +5151,28 @@ bool SelectionDAG::canCreateUndefOrPoison(SDValue Op, const APInt &DemandedElts,
     // Matches hasPoisonGeneratingFlags().
     return ConsiderFlags && (Op->getFlags().hasNoSignedWrap() ||
                              Op->getFlags().hasNoUnsignedWrap());
+  }
+
+  case ISD::SRL:
+  case ISD::SRA: {
+    // If the max shift amount isn't in range, then the shift can create poison.
+    if (!getValidMaximumShiftAmountConstant(Op, DemandedElts))
+      return true;
+
+    // Matches hasPoisonGeneratingFlags().
+    return ConsiderFlags && Op->getFlags().hasExact();
+  }
 
   // Matches hasPoisonGeneratingFlags().
   case ISD::OR:
     return ConsiderFlags && Op->getFlags().hasDisjoint();
 
+  case ISD::EXTRACT_VECTOR_ELT:
   case ISD::INSERT_VECTOR_ELT:{
     // Ensure that the element index is in bounds.
     EVT VecVT = Op.getOperand(0).getValueType();
-    KnownBits KnownIdx = computeKnownBits(Op.getOperand(2), Depth + 1);
+    unsigned IdxOp = Opcode == ISD::INSERT_VECTOR_ELT ? 2 : 1;
+    KnownBits KnownIdx = computeKnownBits(Op.getOperand(IdxOp), Depth + 1);
     return KnownIdx.getMaxValue().uge(VecVT.getVectorMinNumElements());
   }
 
