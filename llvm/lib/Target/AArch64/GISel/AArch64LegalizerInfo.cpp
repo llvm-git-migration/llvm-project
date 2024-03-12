@@ -515,6 +515,7 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
   getActionDefinitionsBuilder(G_ICMP)
       .legalFor({{s32, s32},
                  {s32, s64},
+                 {s64, s64},
                  {s32, p0},
                  {v4s32, v4s32},
                  {v2s32, v2s32},
@@ -724,7 +725,7 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
   getActionDefinitionsBuilder(G_BRINDIRECT).legalFor({p0});
 
   getActionDefinitionsBuilder(G_SELECT)
-      .legalFor({{s32, s32}, {s64, s32}, {p0, s32}})
+      .legalFor({{s32, s32}, {s64, s32}, {s64, s64}, {p0, s32}})
       .widenScalarToNextPow2(0)
       .clampScalar(0, s32, s64)
       .clampScalar(1, s32, s32)
@@ -1010,6 +1011,9 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
     ABSActions
         .legalFor({s32, s64});
   ABSActions.legalFor(PackedVectorAllTypeList)
+      .customIf([=](const LegalityQuery &Q) {
+        LLT SrcTy = Q.Types[0];
+        return SrcTy.isScalar(); })
       .widenScalarIf(
           [=](const LegalityQuery &Query) { return Query.Types[0] == v4s8; },
           [=](const LegalityQuery &Query) { return std::make_pair(0, v4s16); })
@@ -1262,6 +1266,8 @@ bool AArch64LegalizerInfo::legalizeCustom(
     return legalizeDynStackAlloc(MI, Helper);
   case TargetOpcode::G_PREFETCH:
     return legalizePrefetch(MI, Helper);
+  case TargetOpcode::G_ABS:
+      return Helper.lowerAbsToCNeg(MI);
   }
 
   llvm_unreachable("expected switch to return");
