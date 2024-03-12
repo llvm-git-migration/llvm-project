@@ -3330,8 +3330,12 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
   LLT MemTy = MMO.getMemoryType();
   MachineFunction &MF = MIRBuilder.getMF();
 
-  unsigned MemSizeInBits = MemTy.getSizeInBits();
-  unsigned MemStoreSizeInBits = 8 * MemTy.getSizeInBytes();
+  unsigned MemSizeInBits = MemTy.isVector()
+                               ? MemTy.getSizeInBits().getKnownMinValue()
+                               : MemTy.getSizeInBits();
+  unsigned MemStoreSizeInBits =
+      MemTy.isVector() ? 8 * MemTy.getSizeInBytes().getKnownMinValue()
+                       : 8 * MemTy.getSizeInBytes();
 
   if (MemSizeInBits != MemStoreSizeInBits) {
     if (MemTy.isVector())
@@ -3406,6 +3410,7 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
     if (TLI.allowsMemoryAccess(Ctx, MIRBuilder.getDataLayout(), MemTy, MMO))
       return UnableToLegalize;
 
+    llvm::errs() << "able to legalize\n";
     SmallSplitSize = LargeSplitSize = MemSizeInBits / 2;
   }
 
@@ -3637,7 +3642,7 @@ void LegalizerHelper::changeOpcode(MachineInstr &MI, unsigned NewOpcode) {
 LegalizerHelper::LegalizeResult
 LegalizerHelper::lower(MachineInstr &MI, unsigned TypeIdx, LLT LowerHintTy) {
   using namespace TargetOpcode;
-
+  llvm::errs() << "Helper\n";
   switch(MI.getOpcode()) {
   default:
     return UnableToLegalize;
