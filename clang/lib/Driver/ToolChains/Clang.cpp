@@ -4045,9 +4045,26 @@ static bool RenderModulesOptions(Compilation &C, const Driver &D,
   // module fragment.
   CmdArgs.push_back("-fskip-odr-check-in-gmf");
 
-  // Claim `-fmodule-output` and `-fmodule-output=` to avoid unused warnings.
-  Args.ClaimAllArgs(options::OPT_fmodule_output);
-  Args.ClaimAllArgs(options::OPT_fmodule_output_EQ);
+  // Noop if we see '-fgen-reduced-bmi' with other translation units than module
+  // units. This is more user friendly to allow end uers to enable this feature
+  // without asking for help from build systems.
+  if (Args.hasArg(options::OPT_gen_reduced_bmi) &&
+      (Input.getType() == driver::types::TY_CXXModule ||
+       Input.getType() == driver::types::TY_PP_CXXModule)) {
+    CmdArgs.push_back("-fgen-reduced-bmi");
+
+    if (Args.hasArg(options::OPT_fmodule_output_EQ))
+      Args.AddLastArg(CmdArgs, options::OPT_fmodule_output_EQ);
+    else
+      CmdArgs.push_back(Args.MakeArgString(
+          "-fmodule-output=" +
+          getCXX20NamedModuleOutputPath(Args, Input.getBaseInput())));
+  } else {
+    // To avoid unused warnings.
+    Args.ClaimAllArgs(options::OPT_gen_reduced_bmi);
+    Args.ClaimAllArgs(options::OPT_fmodule_output);
+    Args.ClaimAllArgs(options::OPT_fmodule_output_EQ);
+  }
 
   return HaveModules;
 }
