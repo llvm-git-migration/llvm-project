@@ -2626,3 +2626,141 @@ define i8 @sub_of_adds_2xc(i8 %x, i8 %y) {
   %r = sub i8 %xc, %yc
   ret i8 %r
 }
+
+define i8 @test_neg_of_udiv_of_nonnegs(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    ret i8 0
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub nuw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_2(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_3(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, 3
+  %neg = sub i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_4(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_4(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    [[NEG:%.*]] = sdiv i8 [[A]], -3
+; CHECK-NEXT:    ret i8 [[NEG]]
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv exact i8 %a, 3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define i8 @test_neg_of_udiv_of_nonnegs_wrong(i8 %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_wrong(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1:%.*]] = icmp sgt i8 [[A:%.*]], -1
+; CHECK-NEXT:    call void @llvm.assume(i1 [[COND1]])
+; CHECK-NEXT:    ret i8 0
+;
+entry:
+  %cond1 = icmp sgt i8 %a, -1
+  call void @llvm.assume(i1 %cond1)
+  %div = udiv i8 %a, -3
+  %neg = sub nsw i8 0, %div
+  ret i8 %neg
+}
+
+define <4 x i8> @test_neg_of_udiv_of_nonnegs_vec_splat(<4 x i8> %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_vec_splat(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[TMP0:%.*]] = icmp slt <4 x i8> [[A:%.*]], zeroinitializer
+; CHECK-NEXT:    [[TMP1:%.*]] = bitcast <4 x i1> [[TMP0]] to i4
+; CHECK-NEXT:    [[EQ:%.*]] = icmp eq i4 [[TMP1]], 0
+; CHECK-NEXT:    br i1 [[EQ]], label [[TRUE:%.*]], label [[FALSE:%.*]]
+; CHECK:       true:
+; CHECK-NEXT:    [[DIV:%.*]] = udiv <4 x i8> [[A]], <i8 3, i8 3, i8 3, i8 3>
+; CHECK-NEXT:    [[NEG:%.*]] = sub nsw <4 x i8> zeroinitializer, [[DIV]]
+; CHECK-NEXT:    ret <4 x i8> [[NEG]]
+; CHECK:       false:
+; CHECK-NEXT:    ret <4 x i8> undef
+;
+entry:
+  %cond = icmp sgt <4 x i8> %a, <i8 -1, i8 -1, i8 -1, i8 -1>
+  %bitcast = bitcast <4 x i1> %cond to i4
+  %eq = icmp eq i4 %bitcast, 15
+  br i1 %eq, label %true, label %false
+
+true:
+  %div = udiv <4 x i8> %a, <i8 3, i8 3, i8 3, i8 3>
+  %neg = sub <4 x i8> zeroinitializer, %div
+  ret <4 x i8> %neg
+
+false:
+  ret <4 x i8> undef
+}
+
+define <4 x i8> @test_neg_of_udiv_of_nonnegs_vec_nonsplat(<4 x i8> %a) {
+; CHECK-LABEL: @test_neg_of_udiv_of_nonnegs_vec_nonsplat(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[TMP0:%.*]] = icmp slt <4 x i8> [[A:%.*]], zeroinitializer
+; CHECK-NEXT:    [[TMP1:%.*]] = bitcast <4 x i1> [[TMP0]] to i4
+; CHECK-NEXT:    [[EQ:%.*]] = icmp eq i4 [[TMP1]], 0
+; CHECK-NEXT:    br i1 [[EQ]], label [[TRUE:%.*]], label [[FALSE:%.*]]
+; CHECK:       true:
+; CHECK-NEXT:    [[DIV:%.*]] = udiv <4 x i8> [[A]], <i8 1, i8 2, i8 3, i8 4>
+; CHECK-NEXT:    [[NEG:%.*]] = sub <4 x i8> zeroinitializer, [[DIV]]
+; CHECK-NEXT:    ret <4 x i8> [[NEG]]
+; CHECK:       false:
+; CHECK-NEXT:    ret <4 x i8> undef
+;
+entry:
+  %cond = icmp sgt <4 x i8> %a, <i8 -1, i8 -1, i8 -1, i8 -1>
+  %bitcast = bitcast <4 x i1> %cond to i4
+  %eq = icmp eq i4 %bitcast, 15
+  br i1 %eq, label %true, label %false
+
+true:
+  %div = udiv <4 x i8> %a, <i8 1, i8 2, i8 3, i8 4>
+  %neg = sub <4 x i8> zeroinitializer, %div
+  ret <4 x i8> %neg
+
+false:
+  ret <4 x i8> undef
+}
+
+declare void @llvm.assume(i1)
