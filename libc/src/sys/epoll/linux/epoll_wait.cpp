@@ -15,8 +15,8 @@
 
 // Since this is a function available in overlay mode, it uses the public
 // headers.
-#include <sys/epoll.h>
 #include <signal.h> // for NSIG
+#include <sys/epoll.h>
 
 namespace LIBC_NAMESPACE {
 
