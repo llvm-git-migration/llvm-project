@@ -251,6 +251,9 @@ Miscellaneous
   option is specified. Now ``clang-apply-replacements`` applies formatting only with
   the option.
 
+- Fixed bug where big values for unsigned check options overflowed into negative values
+  when being printed with ``--dump-config``.
+
 Improvements to include-fixer
 -----------------------------
 
