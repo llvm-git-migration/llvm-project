@@ -1948,11 +1948,20 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
     break;
 
   case Intrinsic::cttz:
-  case Intrinsic::ctlz:
+  case Intrinsic::ctlz: {
+    // If ctlz/cttz is only used as a shift amount, set is_zero_poison to true.
+    bool Changed = false;
+    if (II->hasOneUse() && match(II->getArgOperand(1), m_Zero()) &&
+        match(II->user_back(), m_Shift(m_Value(), m_Specific(II)))) {
+      replaceOperand(*II, 1, Builder.getTrue());
+      Changed = true;
+    }
     if (auto *I = foldCttzCtlz(*II, *this))
       return I;
+    if (Changed)
+      return II;
     break;
-
+  }
   case Intrinsic::ctpop:
     if (auto *I = foldCtpop(*II, *this))
       return I;
