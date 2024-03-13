@@ -48215,7 +48215,7 @@ static SDValue combineAndShuffleNot(SDNode *N, SelectionDAG &DAG,
 
   // We do not split for SSE at all, but we need to split vectors for AVX1 and
   // AVX2.
-  if (!Subtarget.useAVX512Regs() && VT.is512BitVector() && 
+  if (!Subtarget.useAVX512Regs() && VT.is512BitVector() &&
       TLI.isTypeLegal(VT.getHalfNumVectorElementsVT(*DAG.getContext()))) {
     SDValue LoX, HiX;
     std::tie(LoX, HiX) = splitVector(X, DAG, DL);

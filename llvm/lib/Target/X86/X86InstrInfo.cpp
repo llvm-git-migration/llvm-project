@@ -10572,8 +10572,11 @@ bool X86InstrInfo::getMachineCombinerPatterns(
   case X86::VPDPWSSDrm:
   case X86::VPDPWSSDYrr:
   case X86::VPDPWSSDYrm: {
-    Patterns.push_back(MachineCombinerPattern::DPWSSD);
-    return true;
+    if (!Subtarget.hasFastPWSSD()) {
+      Patterns.push_back(MachineCombinerPattern::DPWSSD);
+      return true;
+    }
+    return false;
   }
   case X86::VPDPWSSDZ128r:
   case X86::VPDPWSSDZ128m:
@@ -10581,9 +10584,11 @@ bool X86InstrInfo::getMachineCombinerPatterns(
   case X86::VPDPWSSDZ256m:
   case X86::VPDPWSSDZr:
   case X86::VPDPWSSDZm: {
-    if (Subtarget.hasBWI())
+    if (Subtarget.hasBWI() && !Subtarget.hasFastPWSSD()) {
       Patterns.push_back(MachineCombinerPattern::DPWSSD);
-    return true;
+      return true;
+    }
+    return false;
   }
   }
 }
