@@ -1467,14 +1467,21 @@ static void computeKnownBitsFromOperator(const Operator *I,
     break;
   }
   case Instruction::Call:
-  case Instruction::Invoke:
+  case Instruction::Invoke: {
     // If range metadata is attached to this call, set known bits from that,
     // and then intersect with known bits based on other properties of the
     // function.
     if (MDNode *MD =
             Q.IIQ.getMetadata(cast<Instruction>(I), LLVMContext::MD_range))
       computeKnownBitsFromRangeMetadata(*MD, Known);
-    if (const Value *RV = cast<CallBase>(I)->getReturnedArgOperand()) {
+
+    const CallBase *CB = cast<CallBase>(I);
+
+    const Attribute RangeAttr = CB->getRetAttr(llvm::Attribute::Range);
+    if (RangeAttr.isValid())
+      Known = RangeAttr.getRange().toKnownBits();
+
+    if (const Value *RV = CB->getReturnedArgOperand()) {
       if (RV->getType() == I->getType()) {
         computeKnownBits(RV, Known2, Depth + 1, Q);
         Known = Known.unionWith(Known2);
@@ -1646,6 +1653,7 @@ static void computeKnownBitsFromOperator(const Operator *I,
       }
     }
     break;
+  }
   case Instruction::ShuffleVector: {
     auto *Shuf = dyn_cast<ShuffleVectorInst>(I);
     // FIXME: Do we need to handle ConstantExpr involving shufflevectors?
@@ -1899,6 +1907,12 @@ void computeKnownBits(const Value *V, const APInt &DemandedElts,
   // There's no point in looking through other users of ConstantData for
   // assumptions.  Confirm that we've handled them all.
   assert(!isa<ConstantData>(V) && "Unhandled constant data!");
+
+  if (const Argument *A = dyn_cast<Argument>(V)) {
+    Attribute Range = A->getAttribute(llvm::Attribute::Range);
+    if (Range.isValid())
+      Known = Range.getRange().toKnownBits();
+  }
 
   // All recursive calls that increase depth must come after this.
   if (Depth == MaxAnalysisRecursionDepth)
@@ -2891,6 +2905,20 @@ bool isKnownNonZero(const Value *V, const APInt &DemandedElts, unsigned Depth,
           return true;
       }
     }
+  }
+
+  Attribute RangeAttr;
+  if (const CallBase *CB = dyn_cast<CallBase>(V))
+    RangeAttr = CB->getRetAttr(llvm::Attribute::Range);
+
+  if (const Argument *A = dyn_cast<Argument>(V))
+    RangeAttr = A->getAttribute(llvm::Attribute::Range);
+
+  if (RangeAttr.isValid()) {
+    const ConstantRange Range = RangeAttr.getRange();
+    const APInt ZeroValue(Range.getBitWidth(), 0);
+    if (!Range.contains(ZeroValue))
+      return true;
   }
 
   if (!isa<Constant>(V) && isKnownNonZeroFromAssume(V, Q))
@@ -9114,11 +9142,23 @@ ConstantRange llvm::computeConstantRange(const Value *V, bool ForSigned,
     // TODO: Return ConstantRange.
     setLimitForFPToI(cast<Instruction>(V), Lower, Upper);
     CR = ConstantRange::getNonEmpty(Lower, Upper);
+  } else if (const Argument *A = dyn_cast<Argument>(V)) {
+    const Attribute RangeAttr = A->getAttribute(llvm::Attribute::Range);
+    if (RangeAttr.isValid()) {
+      CR = RangeAttr.getRange();
+    }
   }
 
-  if (auto *I = dyn_cast<Instruction>(V))
+  if (auto *I = dyn_cast<Instruction>(V)) {
     if (auto *Range = IIQ.getMetadata(I, LLVMContext::MD_range))
       CR = CR.intersectWith(getConstantRangeFromMetadata(*Range));
+
+    if (const CallBase *CB = dyn_cast<CallBase>(V)) {
+      const Attribute RangeAttr = CB->getRetAttr(llvm::Attribute::Range);
+      if (RangeAttr.isValid())
+        CR = CR.intersectWith(RangeAttr.getRange());
+    }
+  }
 
   if (CtxI && AC) {
     // Try to restrict the range based on information from assumptions.

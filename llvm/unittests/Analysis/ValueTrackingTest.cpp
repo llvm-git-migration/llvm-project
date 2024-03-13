@@ -2085,6 +2085,76 @@ TEST_F(ValueTrackingTest, KnownNonZeroFromDomCond2) {
   EXPECT_EQ(isKnownNonZero(A, DL, 0, &AC, CxtI2, &DT), false);
 }
 
+TEST_F(ValueTrackingTest, KnownNonZeroFromRangeAttributeArgument) {
+  parseAssembly(R"(
+    define i8 @test(i8 range(i8 1, 5) %q) {
+      %A = bitcast i8 %q to i8
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_TRUE(isKnownNonZero(A, DL, 0));
+}
+
+TEST_F(ValueTrackingTest, PossibleZeroFromRangeAttributeArgument) {
+  parseAssembly(R"(
+    define i8 @test(i8 range(i8 0, 5) %q) {
+      %A = bitcast i8 %q to i8
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_FALSE(isKnownNonZero(A, DL, 0));
+}
+
+TEST_F(ValueTrackingTest, KnownNonZeroFromCallRangeAttribute) {
+  parseAssembly(R"(
+    declare i8 @f()
+    define i8 @test() {
+      %A = call range(i8 1, 5) i8 @f()
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_TRUE(isKnownNonZero(A, DL, 0));
+}
+
+TEST_F(ValueTrackingTest, PossibleZeroFromCallRangeAttribute) {
+  parseAssembly(R"(
+    declare i8 @f()
+    define i8 @test() {
+      %A = call range(i8 0, 5) i8 @f()
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_FALSE(isKnownNonZero(A, DL, 0));
+}
+
+TEST_F(ValueTrackingTest, KnownNonZeroFromRangeAttributeResult) {
+  parseAssembly(R"(
+    declare range(i8 1, 5) i8 @f()
+    define i8 @test() {
+      %A = call i8 @f()
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_TRUE(isKnownNonZero(A, DL, 0));
+}
+
+TEST_F(ValueTrackingTest, PossibleZeroFromRangeAttributeResult) {
+  parseAssembly(R"(
+    declare range(i8 0, 5) i8 @f()
+    define i8 @test() {
+      %A = call i8 @f()
+      ret i8 %A
+    }
+  )");
+  const DataLayout &DL = M->getDataLayout();
+  EXPECT_FALSE(isKnownNonZero(A, DL, 0));
+}
+
 TEST_F(ValueTrackingTest, IsImpliedConditionAnd) {
   parseAssembly(R"(
     define void @test(i32 %x, i32 %y) {
@@ -2599,6 +2669,38 @@ TEST_F(ComputeKnownBitsTest, ComputeKnownBitsAbsoluteSymbol) {
   EXPECT_EQ(3u, Known_0_256_Align8.countMinTrailingZeros());
   EXPECT_EQ(0u, Known_0_256_Align8.countMinLeadingOnes());
   EXPECT_EQ(0u, Known_0_256_Align8.countMinTrailingOnes());
+}
+
+TEST_F(ComputeKnownBitsTest, KnownBitsFromRangeAttributeArgument) {
+  parseAssembly(R"(
+    define i8 @test(i8 range(i8 80, 84) %q) {
+      %A = bitcast i8 %q to i8
+      ret i8 %A
+    }
+  )");
+  expectKnownBits(/*zero*/ 172u, /*one*/ 80u);
+}
+
+TEST_F(ComputeKnownBitsTest, KnownBitsFromCallRangeAttribute) {
+  parseAssembly(R"(
+    declare i8 @f()
+    define i8 @test() {
+      %A = call range(i8 80, 84) i8 @f()
+      ret i8 %A
+    }
+  )");
+  expectKnownBits(/*zero*/ 172u, /*one*/ 80u);
+}
+
+TEST_F(ComputeKnownBitsTest, KnownBitsFromRangeAttributeResult) {
+  parseAssembly(R"(
+    declare range(i8 80, 84) i8 @f()
+    define i8 @test() {
+      %A = call i8 @f()
+      ret i8 %A
+    }
+  )");
+  expectKnownBits(/*zero*/ 172u, /*one*/ 80u);
 }
 
 TEST_F(ValueTrackingTest, HaveNoCommonBitsSet) {
@@ -3123,6 +3225,41 @@ TEST_F(ValueTrackingTest, ComputeConstantRange) {
     // If we don't know the value of x.2, we don't know the value of x.1.
     EXPECT_TRUE(CR1.isFullSet());
   }
+}
+
+TEST_F(ValueTrackingTest, ComputeConstantRangeFromRangeAttributeArgument) {
+  parseAssembly(R"(
+    define i8 @test(i8 range(i8 32, 36) %q) {
+      %A = bitcast i8 %q to i8
+      ret i8 %A
+    }
+  )");
+  EXPECT_EQ(computeConstantRange(F->arg_begin(), false),
+            ConstantRange(APInt(8, 32), APInt(8, 36)));
+}
+
+TEST_F(ValueTrackingTest, ComputeConstantRangeFromCallRangeAttribute) {
+  parseAssembly(R"(
+    declare i8 @f()
+    define i8 @test() {
+      %A = call range(i8 32, 36) i8 @f()
+      ret i8 %A
+    }
+  )");
+  EXPECT_EQ(computeConstantRange(A, false),
+            ConstantRange(APInt(8, 32), APInt(8, 36)));
+}
+
+TEST_F(ValueTrackingTest, ComputeConstantRangeFromRangeAttributeResult) {
+  parseAssembly(R"(
+    declare range(i8 32, 36) i8 @f()
+    define i8 @test() {
+      %A = call i8 @f()
+      ret i8 %A
+    }
+  )");
+  EXPECT_EQ(computeConstantRange(A, false),
+            ConstantRange(APInt(8, 32), APInt(8, 36)));
 }
 
 struct FindAllocaForValueTestParams {
