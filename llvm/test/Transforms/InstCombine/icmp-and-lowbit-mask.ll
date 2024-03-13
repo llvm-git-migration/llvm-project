@@ -682,8 +682,7 @@ define i1 @src_x_and_mask_slt(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-NEXT:    [[MASK:%.*]] = select i1 [[COND:%.*]], i8 [[MASK0]], i8 0
 ; CHECK-NEXT:    [[MASK_POS:%.*]] = icmp sgt i8 [[MASK]], -1
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[MASK_POS]])
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp slt i8 [[AND]], [[X]]
+; CHECK-NEXT:    [[R:%.*]] = icmp slt i8 [[MASK]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %mask0 = lshr i8 -1, %y
@@ -701,8 +700,7 @@ define i1 @src_x_and_mask_sge(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-NEXT:    [[MASK:%.*]] = select i1 [[COND:%.*]], i8 [[MASK0]], i8 0
 ; CHECK-NEXT:    [[MASK_POS:%.*]] = icmp sgt i8 [[MASK]], -1
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[MASK_POS]])
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp sge i8 [[AND]], [[X]]
+; CHECK-NEXT:    [[R:%.*]] = icmp sge i8 [[MASK]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %mask0 = lshr i8 -1, %y
@@ -747,9 +745,9 @@ define i1 @src_x_and_mask_sge_fail_maybe_neg(i8 %x, i8 %y, i1 %cond) {
 define i1 @src_x_and_nmask_eq(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-LABEL: @src_x_and_nmask_eq(
 ; CHECK-NEXT:    [[NOT_MASK0:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[NOT_MASK:%.*]] = select i1 [[COND:%.*]], i8 [[NOT_MASK0]], i8 0
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[NOT_MASK]], [[AND]]
+; CHECK-NEXT:    [[R1:%.*]] = icmp ule i8 [[NOT_MASK0]], [[X:%.*]]
+; CHECK-NEXT:    [[NOT_COND:%.*]] = xor i1 [[COND:%.*]], true
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[NOT_COND]], i1 true, i1 [[R1]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask0 = shl i8 -1, %y
@@ -762,9 +760,8 @@ define i1 @src_x_and_nmask_eq(i8 %x, i8 %y, i1 %cond) {
 define i1 @src_x_and_nmask_ne(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-LABEL: @src_x_and_nmask_ne(
 ; CHECK-NEXT:    [[NOT_MASK0:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[NOT_MASK:%.*]] = select i1 [[COND:%.*]], i8 [[NOT_MASK0]], i8 0
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND]], [[NOT_MASK]]
+; CHECK-NEXT:    [[R1:%.*]] = icmp ugt i8 [[NOT_MASK0]], [[X:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[COND:%.*]], i1 [[R1]], i1 false
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask0 = shl i8 -1, %y
@@ -777,9 +774,8 @@ define i1 @src_x_and_nmask_ne(i8 %x, i8 %y, i1 %cond) {
 define i1 @src_x_and_nmask_ult(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-LABEL: @src_x_and_nmask_ult(
 ; CHECK-NEXT:    [[NOT_MASK0:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[NOT_MASK:%.*]] = select i1 [[COND:%.*]], i8 [[NOT_MASK0]], i8 0
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND]], [[NOT_MASK]]
+; CHECK-NEXT:    [[R1:%.*]] = icmp ugt i8 [[NOT_MASK0]], [[X:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[COND:%.*]], i1 [[R1]], i1 false
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask0 = shl i8 -1, %y
@@ -792,9 +788,9 @@ define i1 @src_x_and_nmask_ult(i8 %x, i8 %y, i1 %cond) {
 define i1 @src_x_and_nmask_uge(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-LABEL: @src_x_and_nmask_uge(
 ; CHECK-NEXT:    [[NOT_MASK0:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[NOT_MASK:%.*]] = select i1 [[COND:%.*]], i8 [[NOT_MASK0]], i8 0
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[AND]], [[NOT_MASK]]
+; CHECK-NEXT:    [[R1:%.*]] = icmp ule i8 [[NOT_MASK0]], [[X:%.*]]
+; CHECK-NEXT:    [[NOT_COND:%.*]] = xor i1 [[COND:%.*]], true
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[NOT_COND]], i1 true, i1 [[R1]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask0 = shl i8 -1, %y
@@ -807,8 +803,7 @@ define i1 @src_x_and_nmask_uge(i8 %x, i8 %y, i1 %cond) {
 define i1 @src_x_and_nmask_slt(i8 %x, i8 %y) {
 ; CHECK-LABEL: @src_x_and_nmask_slt(
 ; CHECK-NEXT:    [[NOT_MASK:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp slt i8 [[AND]], [[NOT_MASK]]
+; CHECK-NEXT:    [[R:%.*]] = icmp sgt i8 [[NOT_MASK]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask = shl i8 -1, %y
@@ -820,8 +815,7 @@ define i1 @src_x_and_nmask_slt(i8 %x, i8 %y) {
 define i1 @src_x_and_nmask_sge(i8 %x, i8 %y) {
 ; CHECK-LABEL: @src_x_and_nmask_sge(
 ; CHECK-NEXT:    [[NOT_MASK:%.*]] = shl nsw i8 -1, [[Y:%.*]]
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[NOT_MASK]], [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = icmp sge i8 [[AND]], [[NOT_MASK]]
+; CHECK-NEXT:    [[R:%.*]] = icmp sle i8 [[NOT_MASK]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %not_mask = shl i8 -1, %y
@@ -867,9 +861,8 @@ define i1 @src_x_or_mask_eq(i8 %x, i8 %y, i8 %z, i1 %c2, i1 %cond) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = xor i8 [[X:%.*]], -124
 ; CHECK-NEXT:    [[TMP2:%.*]] = select i1 [[C2:%.*]], i8 [[TMP1]], i8 -46
 ; CHECK-NEXT:    [[TMP3:%.*]] = call i8 @llvm.umax.i8(i8 [[Z:%.*]], i8 [[TMP2]])
-; CHECK-NEXT:    [[NX_CCC:%.*]] = sub i8 11, [[TMP3]]
-; CHECK-NEXT:    [[OR:%.*]] = or i8 [[NX_CCC]], [[MASK]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[OR]], -1
+; CHECK-NEXT:    [[TMP4:%.*]] = add i8 [[TMP3]], -12
+; CHECK-NEXT:    [[R:%.*]] = icmp ule i8 [[TMP4]], [[MASK]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %mask0 = lshr i8 -1, %y
@@ -888,9 +881,7 @@ define i1 @src_x_or_mask_ne(i8 %x, i8 %y, i1 %cond) {
 ; CHECK-LABEL: @src_x_or_mask_ne(
 ; CHECK-NEXT:    [[MASK0:%.*]] = lshr i8 -1, [[Y:%.*]]
 ; CHECK-NEXT:    [[MASK:%.*]] = select i1 [[COND:%.*]], i8 [[MASK0]], i8 0
-; CHECK-NEXT:    [[NX:%.*]] = xor i8 [[X:%.*]], -1
-; CHECK-NEXT:    [[OR:%.*]] = or i8 [[MASK]], [[NX]]
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[OR]], -1
+; CHECK-NEXT:    [[R:%.*]] = icmp ult i8 [[MASK]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %mask0 = lshr i8 -1, %y
