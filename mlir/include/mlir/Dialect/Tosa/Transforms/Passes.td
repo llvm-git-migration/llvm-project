@@ -96,6 +96,12 @@ def TosaValidation : Pass<"tosa-validate", "mlir::ModuleOp"> {
     criteria, e.g. TOSA profile.
   }];
 
+  let dependentDialects = [
+    "func::FuncDialect",
+    "tensor::TensorDialect",
+    "tosa::TosaDialect",
+  ];
+
   let options = [
       ListOption<"profile", "profile", "std::string",
              "Validate if operations match for the given profile set">,
