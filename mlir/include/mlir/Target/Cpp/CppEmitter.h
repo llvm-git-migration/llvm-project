@@ -13,11 +13,7 @@
 #ifndef MLIR_TARGET_CPP_CPPEMITTER_H
 #define MLIR_TARGET_CPP_CPPEMITTER_H
 
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/Value.h"
-#include "llvm/ADT/ScopedHashTable.h"
 #include "llvm/Support/raw_ostream.h"
-#include <stack>
 
 namespace mlir {
 namespace emitc {
