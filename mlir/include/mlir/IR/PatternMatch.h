@@ -12,6 +12,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/FunctionExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Support/TypeName.h"
 #include <optional>
 
@@ -695,6 +696,14 @@ public:
     return replaceUsesWithIf(from, to, [&](OpOperand &use) {
       Operation *user = use.getOwner();
       return user != exceptedUser;
+    });
+  }
+  void
+  replaceAllUsesExcept(Value from, Value to,
+                       const SmallPtrSetImpl<Operation *> &preservedUsers) {
+    return replaceUsesWithIf(from, to, [&](OpOperand &use) {
+      Operation *user = use.getOwner();
+      return !preservedUsers.contains(user);
     });
   }
 

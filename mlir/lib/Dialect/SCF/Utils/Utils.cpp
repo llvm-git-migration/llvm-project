@@ -12,7 +12,9 @@
 
 #include "mlir/Dialect/SCF/Utils/Utils.h"
 #include "mlir/Analysis/SliceAnalysis.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -472,61 +474,6 @@ LogicalResult mlir::loopUnrollByFactor(
   return success();
 }
 
-/// Return the new lower bound, upper bound, and step in that order. Insert any
-/// additional bounds calculations before the given builder and any additional
-/// conversion back to the original loop induction value inside the given Block.
-static LoopParams normalizeLoop(OpBuilder &boundsBuilder,
-                                OpBuilder &insideLoopBuilder, Location loc,
-                                Value lowerBound, Value upperBound, Value step,
-                                Value inductionVar) {
-  // Check if the loop is already known to have a constant zero lower bound or
-  // a constant one step.
-  bool isZeroBased = false;
-  if (auto ubCst = getConstantIntValue(lowerBound))
-    isZeroBased = ubCst.value() == 0;
-
-  bool isStepOne = false;
-  if (auto stepCst = getConstantIntValue(step))
-    isStepOne = stepCst.value() == 1;
-
-  // Compute the number of iterations the loop executes: ceildiv(ub - lb, step)
-  // assuming the step is strictly positive.  Update the bounds and the step
-  // of the loop to go from 0 to the number of iterations, if necessary.
-  if (isZeroBased && isStepOne)
-    return {/*lowerBound=*/lowerBound, /*upperBound=*/upperBound,
-            /*step=*/step};
-
-  Value diff = boundsBuilder.create<arith::SubIOp>(loc, upperBound, lowerBound);
-  Value newUpperBound =
-      boundsBuilder.create<arith::CeilDivSIOp>(loc, diff, step);
-
-  Value newLowerBound =
-      isZeroBased ? lowerBound
-                  : boundsBuilder.create<arith::ConstantOp>(
-                        loc, boundsBuilder.getZeroAttr(lowerBound.getType()));
-  Value newStep =
-      isStepOne ? step
-                : boundsBuilder.create<arith::ConstantOp>(
-                      loc, boundsBuilder.getIntegerAttr(step.getType(), 1));
-
-  // Insert code computing the value of the original loop induction variable
-  // from the "normalized" one.
-  Value scaled =
-      isStepOne
-          ? inductionVar
-          : insideLoopBuilder.create<arith::MulIOp>(loc, inductionVar, step);
-  Value shifted =
-      isZeroBased
-          ? scaled
-          : insideLoopBuilder.create<arith::AddIOp>(loc, scaled, lowerBound);
-
-  SmallPtrSet<Operation *, 2> preserve{scaled.getDefiningOp(),
-                                       shifted.getDefiningOp()};
-  inductionVar.replaceAllUsesExcept(shifted, preserve);
-  return {/*lowerBound=*/newLowerBound, /*upperBound=*/newUpperBound,
-          /*step=*/newStep};
-}
-
 /// Transform a loop with a strictly positive step
 ///   for %i = %lb to %ub step %s
 /// into a 0-based loop with step 1
@@ -536,19 +483,167 @@ static LoopParams normalizeLoop(OpBuilder &boundsBuilder,
 /// expected to be either `loop` or another loop perfectly nested under `loop`.
 /// Insert the definition of new bounds immediate before `outer`, which is
 /// expected to be either `loop` or its parent in the loop nest.
-static void normalizeLoop(scf::ForOp loop, scf::ForOp outer, scf::ForOp inner) {
-  OpBuilder builder(outer);
-  OpBuilder innerBuilder = OpBuilder::atBlockBegin(inner.getBody());
-  auto loopPieces = normalizeLoop(builder, innerBuilder, loop.getLoc(),
-                                  loop.getLowerBound(), loop.getUpperBound(),
-                                  loop.getStep(), loop.getInductionVar());
+static OpFoldResult normalizeLoop(RewriterBase &rewriter, Location loc,
+                                  OpFoldResult lb, OpFoldResult ub,
+                                  OpFoldResult step) {
+  AffineExpr s0, s1, s2;
+  bindSymbols(rewriter.getContext(), s0, s1, s2);
+  AffineExpr normalizeExpr = (s1 - s0).ceilDiv(s2);
 
-  loop.setLowerBound(loopPieces.lowerBound);
-  loop.setUpperBound(loopPieces.upperBound);
-  loop.setStep(loopPieces.step);
+  OpFoldResult newUb = affine::makeComposedFoldedAffineApply(
+      rewriter, loc, normalizeExpr, {lb, ub, step});
+  return newUb;
+}
+static LoopParams normalizeLoop(RewriterBase &rewriter, Location loc, Value lb,
+                                Value ub, Value step) {
+  auto isIndexType = [](Value v) { return v.getType().isa<IndexType>(); };
+  if (isIndexType(lb) && isIndexType(ub) && isIndexType(step)) {
+    OpFoldResult newUb =
+        normalizeLoop(rewriter, loc, getAsOpFoldResult(lb),
+                      getAsOpFoldResult(ub), getAsOpFoldResult(step));
+    Value zero = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+    Value one = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+    return {zero, getValueOrCreateConstantIndexOp(rewriter, loc, newUb), one};
+  }
+  // For non-index types, generate `arith` instructions
+  // Check if the loop is already known to have a constant zero lower bound or
+  // a constant one step.
+  bool isZeroBased = false;
+  if (auto lbCst = getConstantIntValue(lb))
+    isZeroBased = lbCst.value() == 0;
+
+  bool isStepOne = false;
+  if (auto stepCst = getConstantIntValue(step))
+    isStepOne = stepCst.value() == 1;
+
+  // Compute the number of iterations the loop executes: ceildiv(ub - lb, step)
+  // assuming the step is strictly positive.  Update the bounds and the step
+  // of the loop to go from 0 to the number of iterations, if necessary.
+  if (isZeroBased && isStepOne)
+    return {lb, ub, step};
+
+  Value diff = isZeroBased ? ub : rewriter.create<arith::SubIOp>(loc, ub, lb);
+  Value newUpperBound =
+      isStepOne ? diff : rewriter.create<arith::CeilDivSIOp>(loc, diff, step);
+
+  Value newLowerBound = isZeroBased
+                            ? lb
+                            : rewriter.create<arith::ConstantOp>(
+                                  loc, rewriter.getZeroAttr(lb.getType()));
+  Value newStep = isStepOne
+                      ? step
+                      : rewriter.create<arith::ConstantOp>(
+                            loc, rewriter.getIntegerAttr(step.getType(), 1));
+
+  return {newLowerBound, newUpperBound, newStep};
 }
 
-LogicalResult mlir::coalesceLoops(MutableArrayRef<scf::ForOp> loops) {
+/// Get back the original induction variable values after loop normalization
+static void unNormalizeInductionVariable(RewriterBase &rewriter, Location loc,
+                                         Value normalizedIv, Value origLb,
+                                         Value origStep) {
+  Value unNormalizedIv;
+  std::optional<Operation *> preserve;
+  if (normalizedIv.getType().isa<IndexType>()) {
+    AffineExpr s0, s1, s2;
+    bindSymbols(rewriter.getContext(), s0, s1, s2);
+    AffineExpr ivExpr = (s0 * s1) + s2;
+    OpFoldResult newIv = affine::makeComposedFoldedAffineApply(
+        rewriter, loc, ivExpr,
+        ArrayRef<OpFoldResult>{normalizedIv, origStep, origLb});
+    unNormalizedIv = getValueOrCreateConstantIndexOp(rewriter, loc, newIv);
+    preserve = unNormalizedIv.getDefiningOp();
+  } else {
+    bool isStepOne = isConstantIntValue(origStep, 1);
+    bool isZeroBased = isConstantIntValue(origLb, 0);
+
+    Value scaled = normalizedIv;
+    if (!isStepOne) {
+      scaled = rewriter.create<arith::MulIOp>(loc, normalizedIv, origStep);
+      preserve = scaled.getDefiningOp();
+    }
+    unNormalizedIv = scaled;
+    if (!isZeroBased)
+      unNormalizedIv = rewriter.create<arith::AddIOp>(loc, scaled, origLb);
+  }
+
+  if (preserve) {
+    rewriter.replaceAllUsesExcept(normalizedIv, unNormalizedIv,
+                                  preserve.value());
+  } else {
+    rewriter.replaceAllUsesWith(normalizedIv, unNormalizedIv);
+  }
+  return;
+}
+
+/// Helper function to multiply a sequence of values.
+static OpFoldResult getProductOfIndexes(RewriterBase &rewriter, Location loc,
+                                        ArrayRef<OpFoldResult> values) {
+  AffineExpr s0, s1;
+  bindSymbols(rewriter.getContext(), s0, s1);
+  AffineExpr mulExpr = s0 * s1;
+  OpFoldResult productOf = rewriter.getIndexAttr(1);
+  for (auto v : values) {
+    productOf = affine::makeComposedFoldedAffineApply(rewriter, loc, mulExpr,
+                                                      {productOf, v});
+  }
+  return productOf;
+}
+static Value getProductOfIntsOrIndexes(RewriterBase &rewriter, Location loc,
+                                       ArrayRef<Value> values) {
+  assert(!values.empty() && "unexpected empty list");
+  if (values.front().getType().isa<IndexType>()) {
+    return getValueOrCreateConstantIndexOp(
+        rewriter, loc,
+        getProductOfIndexes(rewriter, loc, getAsOpFoldResult(values)));
+  }
+  Value productOf = values.front();
+  for (auto v : values.drop_front()) {
+    productOf = rewriter.create<arith::MulIOp>(loc, productOf, v);
+  }
+  return productOf;
+}
+
+// For each original loop, the value of the
+// induction variable can be obtained by dividing the induction variable of
+// the linearized loop by the total number of iterations of the loops nested
+// in it modulo the number of iterations in this loop (remove the values
+// related to the outer loops):
+//   iv_i = floordiv(iv_linear, product-of-loop-ranges-until-i) mod range_i.
+// Compute these iteratively from the innermost loop by creating a "running
+// quotient" of division by the range.
+static std::pair<SmallVector<Value>, SmallPtrSet<Operation *, 2>>
+delinearizeInductionVariable(RewriterBase &rewriter, Location loc,
+                             Value linearizedIv, ArrayRef<Value> ubs) {
+  auto isIndexType = [](Value v) { return v.getType().isa<IndexType>(); };
+  if (linearizedIv.getType().isa<IndexType>()) {
+    auto delinearizeIvs = rewriter.create<affine::AffineDelinearizeIndexOp>(
+        loc, linearizedIv, ubs);
+    return {llvm::map_to_vector(delinearizeIvs.getResults(),
+                                [](OpResult res) -> Value { return res; }),
+            {delinearizeIvs}};
+  }
+  Value previous = linearizedIv;
+  SmallVector<Value> delinearizedIvs(ubs.size());
+  SmallPtrSet<Operation *, 2> preservedUsers;
+  for (unsigned i = 0, e = ubs.size(); i < e; ++i) {
+    unsigned idx = ubs.size() - i - 1;
+    if (i != 0) {
+      previous = rewriter.create<arith::DivSIOp>(loc, previous, ubs[idx + 1]);
+      preservedUsers.insert(previous.getDefiningOp());
+    }
+    Value iv = previous;
+    if (i != e - 1) {
+      iv = rewriter.create<arith::RemSIOp>(loc, previous, ubs[idx]);
+      preservedUsers.insert(iv.getDefiningOp());
+    }
+    delinearizedIvs[idx] = iv;
+  }
+  return {delinearizedIvs, preservedUsers};
+}
+
+LogicalResult mlir::coalesceLoops(RewriterBase &rewriter,
+                                  MutableArrayRef<scf::ForOp> loops) {
   if (loops.size() < 2)
     return failure();
 
@@ -557,57 +652,151 @@ LogicalResult mlir::coalesceLoops(MutableArrayRef<scf::ForOp> loops) {
 
   // 1. Make sure all loops iterate from 0 to upperBound with step 1.  This
   // allows the following code to assume upperBound is the number of iterations.
-  for (auto loop : loops)
-    normalizeLoop(loop, outermost, innermost);
+  for (auto loop : loops) {
+    OpBuilder::InsertionGuard g(rewriter);
+    rewriter.setInsertionPoint(outermost);
+    Value lb = loop.getLowerBound();
+    Value ub = loop.getUpperBound();
+    Value step = loop.getStep();
+    auto newLoopParams = normalizeLoop(rewriter, loop.getLoc(), lb, ub, step);
+    loop.setLowerBound(newLoopParams.lowerBound);
+    loop.setUpperBound(newLoopParams.upperBound);
+    loop.setStep(newLoopParams.step);
+
+    rewriter.setInsertionPointToStart(innermost.getBody());
+    unNormalizeInductionVariable(rewriter, loop.getLoc(),
+                                 loop.getInductionVar(), lb, step);
+  }
 
   // 2. Emit code computing the upper bound of the coalesced loop as product
   // of the number of iterations of all loops.
-  OpBuilder builder(outermost);
+  OpBuilder::InsertionGuard g(rewriter);
+  rewriter.setInsertionPoint(outermost);
   Location loc = outermost.getLoc();
-  Value upperBound = outermost.getUpperBound();
-  for (auto loop : loops.drop_front())
-    upperBound =
-        builder.create<arith::MulIOp>(loc, upperBound, loop.getUpperBound());
+  SmallVector<Value> upperBounds = llvm::map_to_vector(
+      loops, [](auto loop) { return loop.getUpperBound(); });
+  Value upperBound = getProductOfIntsOrIndexes(rewriter, loc, upperBounds);
   outermost.setUpperBound(upperBound);
 
-  builder.setInsertionPointToStart(outermost.getBody());
+  rewriter.setInsertionPointToStart(innermost.getBody());
+  auto [delinearizeIvs, preservedUsers] = delinearizeInductionVariable(
+      rewriter, loc, outermost.getInductionVar(), upperBounds);
+  rewriter.replaceAllUsesExcept(outermost.getInductionVar(), delinearizeIvs[0],
+                                preservedUsers);
 
-  // 3. Remap induction variables. For each original loop, the value of the
-  // induction variable can be obtained by dividing the induction variable of
-  // the linearized loop by the total number of iterations of the loops nested
-  // in it modulo the number of iterations in this loop (remove the values
-  // related to the outer loops):
-  //   iv_i = floordiv(iv_linear, product-of-loop-ranges-until-i) mod range_i.
-  // Compute these iteratively from the innermost loop by creating a "running
-  // quotient" of division by the range.
-  Value previous = outermost.getInductionVar();
-  for (unsigned i = 0, e = loops.size(); i < e; ++i) {
-    unsigned idx = loops.size() - i - 1;
-    if (i != 0)
-      previous = builder.create<arith::DivSIOp>(loc, previous,
-                                                loops[idx + 1].getUpperBound());
+  for (int i = loops.size() - 1; i > 0; --i) {
+    auto outerLoop = loops[i - 1];
+    auto innerLoop = loops[i];
 
-    Value iv = (i == e - 1) ? previous
-                            : builder.create<arith::RemSIOp>(
-                                  loc, previous, loops[idx].getUpperBound());
-    replaceAllUsesInRegionWith(loops[idx].getInductionVar(), iv,
-                               loops.back().getRegion());
+    rewriter.replaceAllUsesWith(innerLoop.getInductionVar(), delinearizeIvs[i]);
+    for (auto [outerLoopIterArg, innerLoopIterArg] : llvm::zip_equal(
+             outerLoop.getRegionIterArgs(), innerLoop.getRegionIterArgs())) {
+      rewriter.replaceAllUsesExcept(innerLoopIterArg, outerLoopIterArg,
+                                    preservedUsers);
+    }
+    Operation *innerTerminator = innerLoop.getBody()->getTerminator();
+    auto yieldedVals = llvm::to_vector(innerTerminator->getOperands());
+    rewriter.eraseOp(innerTerminator);
+    outerLoop.getBody()->getOperations().splice(
+        Block::iterator(innerLoop), innerLoop.getBody()->getOperations());
+    rewriter.replaceOp(innerLoop, yieldedVals);
   }
-
-  // 4. Move the operations from the innermost just above the second-outermost
-  // loop, delete the extra terminator and the second-outermost loop.
-  scf::ForOp second = loops[1];
-  innermost.getBody()->back().erase();
-  outermost.getBody()->getOperations().splice(
-      Block::iterator(second.getOperation()),
-      innermost.getBody()->getOperations());
-  second.erase();
   return success();
 }
 
+LogicalResult mlir::coalesceLoops(MutableArrayRef<scf::ForOp> loops) {
+  if (loops.empty()) {
+    return success();
+  }
+  IRRewriter rewriter(loops.front().getContext());
+  return coalesceLoops(rewriter, loops);
+}
+
+LogicalResult mlir::coalescePerfectlyNestedSCFForLoops(scf::ForOp op) {
+  LogicalResult result(failure());
+  SmallVector<scf::ForOp> loops;
+  getPerfectlyNestedLoops(loops, op);
+
+  // Look for a band of loops that can be coalesced, i.e. perfectly nested
+  // loops with bounds defined above some loop.
+
+  // 1. For each loop, find above which parent loop its bounds operands are
+  // defined.
+  SmallVector<unsigned, 4> operandsDefinedAbove(loops.size());
+  for (unsigned i = 0, e = loops.size(); i < e; ++i) {
+    operandsDefinedAbove[i] = i;
+    for (unsigned j = 0; j < i; ++j) {
+      SmallVector<Value> boundsOperands = {loops[i].getLowerBound(),
+                                           loops[i].getUpperBound(),
+                                           loops[i].getStep()};
+      if (areValuesDefinedAbove(boundsOperands, loops[j].getRegion())) {
+        operandsDefinedAbove[i] = j;
+        break;
+      }
+    }
+  }
+
+  // 2. For each inner loop check that the iter_args for the immediately outer
+  // loop are the init for the immediately inner loop and that the yields of the
+  // return of the inner loop is the yield for the immediately outer loop. Keep
+  // track of where the chain starts from for each loop.
+  SmallVector<unsigned> iterArgChainStart(loops.size());
+  iterArgChainStart[0] = 0;
+  for (unsigned i = 1, e = loops.size(); i < e; ++i) {
+    // By default set the start of the chain to itself.
+    iterArgChainStart[i] = i;
+    auto outerloop = loops[i - 1];
+    auto innerLoop = loops[i];
+    if (outerloop.getNumRegionIterArgs() != innerLoop.getNumRegionIterArgs()) {
+      continue;
+    }
+    if (llvm::any_of(
+            llvm::zip_equal(outerloop.getRegionIterArgs(),
+                            innerLoop.getInitArgs()),
+            [](auto it) { return std::get<0>(it) != std::get<1>(it); })) {
+      continue;
+    }
+    auto outerloopTerminator = outerloop.getBody()->getTerminator();
+    if (llvm::any_of(
+            llvm::zip_equal(outerloopTerminator->getOperands(),
+                            innerLoop.getResults()),
+            [](auto it) { return std::get<0>(it) != std::get<1>(it); })) {
+      continue;
+    }
+    iterArgChainStart[i] = iterArgChainStart[i - 1];
+  }
+
+  // 3. Identify bands of loops such that the operands of all of them are
+  // defined above the first loop in the band.  Traverse the nest bottom-up
+  // so that modifications don't invalidate the inner loops.
+  for (unsigned end = loops.size(); end > 0; --end) {
+    unsigned start = 0;
+    for (; start < end - 1; ++start) {
+      auto maxPos =
+          *std::max_element(std::next(operandsDefinedAbove.begin(), start),
+                            std::next(operandsDefinedAbove.begin(), end));
+      if (maxPos > start)
+        continue;
+      if (iterArgChainStart[end - 1] > start)
+        continue;
+      auto band = llvm::MutableArrayRef(loops.data() + start, end - start);
+      if (succeeded(coalesceLoops(band)))
+        result = success();
+      break;
+    }
+    // If a band was found and transformed, keep looking at the loops above
+    // the outermost transformed loop.
+    if (start != end - 1)
+      end = start + 1;
+  }
+  return result;
+}
+
 void mlir::collapseParallelLoops(
-    scf::ParallelOp loops, ArrayRef<std::vector<unsigned>> combinedDimensions) {
-  OpBuilder outsideBuilder(loops);
+    RewriterBase &rewriter, scf::ParallelOp loops,
+    ArrayRef<std::vector<unsigned>> combinedDimensions) {
+  OpBuilder::InsertionGuard g(rewriter);
+  rewriter.setInsertionPoint(loops);
   Location loc = loops.getLoc();
 
   // Presort combined dimensions.
@@ -619,25 +808,29 @@ void mlir::collapseParallelLoops(
   SmallVector<Value, 3> normalizedLowerBounds, normalizedSteps,
       normalizedUpperBounds;
   for (unsigned i = 0, e = loops.getNumLoops(); i < e; ++i) {
-    OpBuilder insideLoopBuilder = OpBuilder::atBlockBegin(loops.getBody());
-    auto resultBounds =
-        normalizeLoop(outsideBuilder, insideLoopBuilder, loc,
-                      loops.getLowerBound()[i], loops.getUpperBound()[i],
-                      loops.getStep()[i], loops.getBody()->getArgument(i));
+    OpBuilder::InsertionGuard g2(rewriter);
+    rewriter.setInsertionPoint(loops);
+    Value lb = loops.getLowerBound()[i];
+    Value ub = loops.getUpperBound()[i];
+    Value step = loops.getStep()[i];
+    auto newLoopParams = normalizeLoop(rewriter, loc, lb, ub, step);
+    normalizedLowerBounds.push_back(newLoopParams.lowerBound);
+    normalizedUpperBounds.push_back(newLoopParams.upperBound);
+    normalizedSteps.push_back(newLoopParams.step);
 
-    normalizedLowerBounds.push_back(resultBounds.lowerBound);
-    normalizedUpperBounds.push_back(resultBounds.upperBound);
-    normalizedSteps.push_back(resultBounds.step);
+    rewriter.setInsertionPointToStart(loops.getBody());
+    unNormalizeInductionVariable(rewriter, loc, loops.getInductionVars()[i], lb,
+                                 step);
   }
 
   // Combine iteration spaces.
   SmallVector<Value, 3> lowerBounds, upperBounds, steps;
-  auto cst0 = outsideBuilder.create<arith::ConstantIndexOp>(loc, 0);
-  auto cst1 = outsideBuilder.create<arith::ConstantIndexOp>(loc, 1);
+  auto cst0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+  auto cst1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
   for (auto &sortedDimension : sortedDimensions) {
-    Value newUpperBound = outsideBuilder.create<arith::ConstantIndexOp>(loc, 1);
+    Value newUpperBound = rewriter.create<arith::ConstantIndexOp>(loc, 1);
     for (auto idx : sortedDimension) {
-      newUpperBound = outsideBuilder.create<arith::MulIOp>(
+      newUpperBound = rewriter.create<arith::MulIOp>(
           loc, newUpperBound, normalizedUpperBounds[idx]);
     }
     lowerBounds.push_back(cst0);
@@ -651,7 +844,7 @@ void mlir::collapseParallelLoops(
   // value. The remainders then determine based on that range, which iteration
   // of the original induction value this represents. This is a normalized value
   // that is un-normalized already by the previous logic.
-  auto newPloop = outsideBuilder.create<scf::ParallelOp>(
+  auto newPloop = rewriter.create<scf::ParallelOp>(
       loc, lowerBounds, upperBounds, steps,
       [&](OpBuilder &insideBuilder, Location, ValueRange ploopIVs) {
         for (unsigned i = 0, e = combinedDimensions.size(); i < e; ++i) {
