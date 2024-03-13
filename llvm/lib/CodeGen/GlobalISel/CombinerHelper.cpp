@@ -6943,7 +6943,7 @@ bool CombinerHelper::matchAddOverflow(MachineInstr &MI, BuildFnTy &MatchInfo) {
   LLT DstTy = MRI.getType(Dst);
   LLT CarryTy = MRI.getType(Carry);
 
-  // We want do fold the [u|s]addo.
+  // We want to fold the [u|s]addo.
   if (!MRI.hasOneNonDBGUse(Dst))
     return false;
 
@@ -6957,7 +6957,7 @@ bool CombinerHelper::matchAddOverflow(MachineInstr &MI, BuildFnTy &MatchInfo) {
     return true;
   }
 
-  // We want do fold the [u|s]addo.
+  // We want to fold the [u|s]addo.
   if (!MRI.hasOneNonDBGUse(Carry))
     return false;
 
@@ -6992,7 +6992,7 @@ bool CombinerHelper::matchAddOverflow(MachineInstr &MI, BuildFnTy &MatchInfo) {
     return true;
   }
 
-  // Fold (addo x, 0) -> x, no borrow
+  // Fold (addo x, 0) -> x, no carry
   if (MaybeRHS && *MaybeRHS == 0 && isConstantLegalOrBeforeLegalizer(CarryTy)) {
     MatchInfo = [=](MachineIRBuilder &B) {
       B.buildCopy(Dst, LHS);
