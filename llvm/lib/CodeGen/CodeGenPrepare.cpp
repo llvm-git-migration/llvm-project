@@ -8418,7 +8418,7 @@ bool CodeGenPrepare::optimizeInst(Instruction *I, ModifyDT &ModifiedDT) {
       }
     }
   }
-  [[fallthrough]]
+    [[fallthrough]];
   case Instruction::LShr:
   case Instruction::AShr:
     return optimizeShiftInst(cast<BinaryOperator>(I));
