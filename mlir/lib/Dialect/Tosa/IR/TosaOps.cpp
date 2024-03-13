@@ -271,6 +271,55 @@ LogicalResult tosa::ConstOp::verify() {
   return success();
 }
 
+template <typename T>
+static LogicalResult verifyConvOpModes(T op) {
+  auto inputEType =
+      llvm::cast<ShapedType>(op.getInput().getType()).getElementType();
+
+  if (auto quantType =
+          llvm::dyn_cast<mlir::quant::UniformQuantizedType>(inputEType))
+    inputEType = quantType.getStorageType();
+
+  auto accType = op.getAccType();
+  if (inputEType.isInteger(8) && !accType.isInteger(32))
+    return op.emitOpError("accumulator type for i8 tensor is not i32");
+
+  if (inputEType.isInteger(16) && !accType.isInteger(48))
+    return op.emitOpError("accumulator type for i16 tensor is not i48");
+
+  if ((inputEType.isFloat8E5M2() || inputEType.isFloat8E4M3FN()) &&
+      !accType.isF16())
+    return op.emitOpError("accumulator type for f8 tensor is not f16");
+
+  if (inputEType.isF16() && !(accType.isF16() || accType.isF32()))
+    return op.emitOpError("accumulator type for f16 tensor is not f16/f32");
+
+  if (inputEType.isBF16() && !accType.isF32())
+    return op.emitOpError("accumulator type for bf16 tensor is not f32");
+
+  if (inputEType.isF32() && !accType.isF32())
+    return op.emitOpError("accumulator type for f32 tensor is not f32");
+
+  auto resultEType =
+      llvm::cast<ShapedType>(op.getResult().getType()).getElementType();
+
+  if (auto quantType =
+          llvm::dyn_cast<mlir::quant::UniformQuantizedType>(resultEType))
+    resultEType = quantType.getStorageType();
+
+  // check allowed input/result element types combinations
+  if ((inputEType.isInteger(8) && resultEType.isInteger(32)) ||
+      (inputEType.isInteger(16) && resultEType.isInteger(48)) ||
+      (inputEType.isFloat8E5M2() && resultEType.isF16()) ||
+      (inputEType.isFloat8E4M3FN() && resultEType.isF16()) ||
+      (inputEType.isF16() && resultEType.isF16()) ||
+      (inputEType.isBF16() && resultEType.isBF16()) ||
+      (inputEType.isF32() && resultEType.isF32()))
+    return success();
+
+  return op.emitOpError("input/output element types are incompatible.");
+}
+
 LogicalResult tosa::ArgMaxOp::verify() {
   // Ensure output is of 32-bit integer
   const auto resultETy = llvm::cast<ShapedType>(getType()).getElementType();
@@ -368,12 +417,14 @@ static void buildConvOpWithQuantInfo(OpBuilder &builder, OperationState &result,
                                      Type outputType, Value input, Value weight,
                                      Value bias, DenseI64ArrayAttr pad,
                                      DenseI64ArrayAttr stride,
-                                     DenseI64ArrayAttr dilation) {
+                                     DenseI64ArrayAttr dilation,
+                                     TypeAttr accType) {
 
   result.addOperands({input, weight, bias});
   result.addAttribute("pad", pad);
   result.addAttribute("stride", stride);
   result.addAttribute("dilation", dilation);
+  result.addAttribute("acc_type", accType);
 
   auto quantAttr = buildConvOpQuantizationAttr(builder, input, weight);
   if (quantAttr) {
@@ -390,11 +441,12 @@ static void buildConvOpWithQuantInfo(OpBuilder &builder, OperationState &result,
 static void buildTransConvOpWithQuantInfo(
     OpBuilder &builder, OperationState &result, Type outputType, Value input,
     Value weight, Value bias, DenseI64ArrayAttr outpad,
-    DenseI64ArrayAttr stride, DenseI64ArrayAttr outputShape) {
+    DenseI64ArrayAttr stride, DenseI64ArrayAttr outputShape, TypeAttr accType) {
   result.addOperands({input, weight, bias});
   result.addAttribute("out_pad", outpad);
   result.addAttribute("stride", stride);
   result.addAttribute("out_shape", outputShape);
+  result.addAttribute("acc_type", accType);
   auto quantAttr = ::buildConvOpQuantizationAttr(builder, input, weight);
 
   if (quantAttr) {
@@ -1595,7 +1647,11 @@ LogicalResult Conv2DOp::inferReturnTypeComponents(
   return success();
 }
 
-LogicalResult Conv2DOp::verify() { return verifyConvOp(*this); }
+LogicalResult Conv2DOp::verify() {
+  if (verifyConvOp(*this).failed() || verifyConvOpModes(*this).failed())
+    return failure();
+  return success();
+}
 
 LogicalResult Conv3DOp::inferReturnTypeComponents(
     MLIRContext *context, ::std::optional<Location> location,
@@ -1667,7 +1723,11 @@ LogicalResult Conv3DOp::inferReturnTypeComponents(
   return success();
 }
 
-LogicalResult Conv3DOp::verify() { return verifyConvOp(*this); }
+LogicalResult Conv3DOp::verify() {
+  if (verifyConvOp(*this).failed() || verifyConvOpModes(*this).failed())
+    return failure();
+  return success();
+}
 
 LogicalResult AvgPool2dOp::inferReturnTypeComponents(
     MLIRContext *context, ::std::optional<Location> location,
@@ -1762,7 +1822,11 @@ LogicalResult DepthwiseConv2DOp::inferReturnTypeComponents(
   return success();
 }
 
-LogicalResult DepthwiseConv2DOp::verify() { return verifyConvOp(*this); }
+LogicalResult DepthwiseConv2DOp::verify() {
+  if (verifyConvOp(*this).failed() || verifyConvOpModes(*this).failed())
+    return failure();
+  return success();
+}
 
 LogicalResult TransposeConv2DOp::inferReturnTypeComponents(
     MLIRContext *context, ::std::optional<Location> location,
