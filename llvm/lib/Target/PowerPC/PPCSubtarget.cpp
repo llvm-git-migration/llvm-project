@@ -208,6 +208,11 @@ void PPCSubtarget::tocDataChecks(unsigned PointerSize,
 }
 
 bool PPCSubtarget::isGVIndirectSymbol(const GlobalValue *GV) const {
+  // toc-data attribute means skip the indirection we usually use on AIX
+  if (isAIXABI())
+    if (const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV))
+      if (GVar->hasAttribute("toc-data"))
+        return false;
   // Large code model always uses the TOC even for local symbols.
   if (TM.getCodeModel() == CodeModel::Large)
     return true;
