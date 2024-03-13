@@ -893,10 +893,11 @@ translateVariableToExtendedValue(mlir::Location loc, fir::FirOpBuilder &builder,
     extents = getVariableExtents(loc, builder, variable);
     nonDefaultLbounds = getNonDefaultLowerBounds(loc, builder, variable);
   }
-  if (variable.isCharacter())
+  if (variable.isCharacter()) {
     return fir::CharArrayBoxValue{
         base, genCharacterVariableLength(loc, builder, variable), extents,
         nonDefaultLbounds};
+  }
   return fir::ArrayBoxValue{base, extents, nonDefaultLbounds};
 }
 
