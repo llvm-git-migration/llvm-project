@@ -60,6 +60,35 @@ public:
   size_t read_count() const { return arg_counter; }
 };
 
+// Used for the GPU implementation of `printf`. This models a variadic list as a
+// simple array of pointers that are built manually by the implementation.
+class StructArgList {
+  void *ptr;
+
+public:
+  LIBC_INLINE StructArgList(void *ptr) : ptr(ptr) {}
+  LIBC_INLINE StructArgList(const StructArgList &other) { ptr = other.ptr; }
+  LIBC_INLINE StructArgList() = default;
+  LIBC_INLINE ~StructArgList() = default;
+
+  LIBC_INLINE StructArgList &operator=(const StructArgList &rhs) {
+    ptr = rhs.ptr;
+    return *this;
+  }
+
+  LIBC_INLINE void *get_ptr() const { return ptr; }
+
+  template <class T> LIBC_INLINE T next_var() {
+    ptr = reinterpret_cast<void *>(
+        ((reinterpret_cast<uintptr_t>(ptr) + alignof(T) - 1) / alignof(T)) *
+        alignof(T));
+
+    T val = *reinterpret_cast<T *>(ptr);
+    ptr = reinterpret_cast<unsigned char *>(ptr) + sizeof(T);
+    return val;
+  }
+}; // namespace __llvm_libc
+
 } // namespace internal
 } // namespace LIBC_NAMESPACE
 
