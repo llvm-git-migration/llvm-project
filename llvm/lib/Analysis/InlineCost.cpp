@@ -710,8 +710,7 @@ class InlineCostCallAnalyzer final : public CallAnalyzer {
       if (!DefaultDestUndefined)
         addCost(2 * InstrCost);
       // The jump table only requires a jump instruction.
-      int64_t JTCost =
-          static_cast<int64_t>(JumpTableSize) * InstrCost + InstrCost;
+      int64_t JTCost = InstrCost;
       addCost(JTCost);
       return;
     }
@@ -1245,8 +1244,7 @@ private:
       if (!DefaultDestUndefined)
         increment(InlineCostFeatureIndex::switch_default_dest_penalty,
                   SwitchDefaultDestCostMultiplier * InstrCost);
-      int64_t JTCost = static_cast<int64_t>(JumpTableSize) * InstrCost +
-                       JTCostMultiplier * InstrCost;
+      int64_t JTCost = JTCostMultiplier * InstrCost;
       increment(InlineCostFeatureIndex::jump_table_penalty, JTCost);
       return;
     }
