@@ -411,7 +411,10 @@ public:
     std::enable_if_t<std::is_integral_v<T>>
     store(ClangTidyOptions::OptionMap &Options, StringRef LocalName,
           T Value) const {
-      storeInt(Options, LocalName, Value);
+      if(constexpr(std::is_signed_v<T>))
+        storeInt(Options, LocalName, Value);
+      else
+        storeUnsigned(Options, LocalName, Value);
     }
 
     /// Stores an option with the check-local name \p LocalName with
@@ -421,8 +424,10 @@ public:
     std::enable_if_t<std::is_integral_v<T>>
     store(ClangTidyOptions::OptionMap &Options, StringRef LocalName,
           std::optional<T> Value) const {
-      if (Value)
+      if (Value && constexpr(std::is_signed_v<T>))
         storeInt(Options, LocalName, *Value);
+      else if (Value)
+        storeUnsigned(Options, LocalName, *Value);
       else
         store(Options, LocalName, "none");
     }
@@ -470,6 +475,8 @@ public:
     void storeInt(ClangTidyOptions::OptionMap &Options, StringRef LocalName,
                   int64_t Value) const;
 
+    void storeUnsigned(ClangTidyOptions::OptionMap &Options,
+                       StringRef LocalName, uint64_t Value) const;
 
     std::string NamePrefix;
     const ClangTidyOptions::OptionMap &CheckOptions;
