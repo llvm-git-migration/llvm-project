@@ -4992,6 +4992,7 @@ static bool isPPC_64Builtin(unsigned BuiltinID) {
   case PPC::BI__builtin_ppc_fetch_and_andlp:
   case PPC::BI__builtin_ppc_fetch_and_orlp:
   case PPC::BI__builtin_ppc_fetch_and_swaplp:
+  case PPC::BI__builtin_ppc_rldimi:
     return true;
   }
   return false;
@@ -5093,9 +5094,33 @@ bool Sema::CheckPPCBuiltinFunctionCall(const TargetInfo &TI, unsigned BuiltinID,
   case PPC::BI__builtin_ppc_rlwnm:
     return SemaValueIsRunOfOnes(TheCall, 2);
   case PPC::BI__builtin_ppc_rlwimi:
-  case PPC::BI__builtin_ppc_rldimi:
     return SemaBuiltinConstantArg(TheCall, 2, Result) ||
            SemaValueIsRunOfOnes(TheCall, 3);
+  case PPC::BI__builtin_ppc_rldimi: {
+    llvm::APSInt SH;
+    if (SemaBuiltinConstantArg(TheCall, 2, SH) ||
+        SemaBuiltinConstantArg(TheCall, 3, Result))
+      return true;
+    if (SH > 63)
+      return Diag(TheCall->getBeginLoc(), diag::err_argument_invalid_range)
+             << toString(Result, 10) << 0 << 63 << TheCall->getSourceRange();
+    unsigned MB = 0, ML = 0;
+    if (Result.isShiftedMask(MB, ML)) {
+      MB = 64 - MB - ML;
+    } else if ((~Result).isShiftedMask(MB, ML)) {
+      MB = 64 - MB;
+      ML = 64 - ML;
+    } else {
+      return Diag(TheCall->getBeginLoc(),
+                  diag::err_argument_not_contiguous_bit_field)
+             << 3 << TheCall->getSourceRange();
+    }
+    if ((MB + ML - 1) % 64 != 63 - SH.getZExtValue())
+      return Diag(TheCall->getBeginLoc(),
+                  diag::err_argument_not_contiguous_bit_field_ends_at_nth)
+             << 3 << 63 - SH.getZExtValue() << TheCall->getSourceRange();
+    return false;
+  }
   case PPC::BI__builtin_ppc_addex: {
     if (SemaBuiltinConstantArgRange(TheCall, 2, 0, 3))
       return true;

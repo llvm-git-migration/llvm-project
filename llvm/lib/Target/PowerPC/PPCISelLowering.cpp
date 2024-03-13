@@ -10764,6 +10764,7 @@ SDValue PPCTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     return DAG.getRegister(PPC::R2, MVT::i32);
 
   case Intrinsic::ppc_rldimi: {
+    assert(Subtarget.isPPC64() && "rldimi is only available in 64-bit!");
     uint64_t SH = Op.getConstantOperandVal(3);
     unsigned MB = 0, ME = 0;
     if (!isRunOfOnes64(Op.getConstantOperandVal(4), MB, ME) || ME != 63 - SH)
