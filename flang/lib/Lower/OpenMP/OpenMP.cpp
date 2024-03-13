@@ -170,9 +170,10 @@ static void threadPrivatizeVars(Fortran::lower::AbstractConverter &converter,
   };
 
   llvm::SetVector<const Fortran::semantics::Symbol *> threadprivateSyms;
-  converter.collectSymbolSet(
-      eval, threadprivateSyms,
-      Fortran::semantics::Symbol::Flag::OmpThreadprivate);
+  converter.collectSymbolSet(eval, threadprivateSyms,
+                             Fortran::semantics::Symbol::Flag::OmpThreadprivate,
+                             /*collectSymbols=*/true,
+                             /*collectHostAssociatedSymbols=*/true);
   std::set<Fortran::semantics::SourceName> threadprivateSymNames;
 
   // For a COMMON block, the ThreadprivateOp is generated for itself instead of
@@ -1120,7 +1121,21 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
         if (auto refType = baseOp.getType().dyn_cast<fir::ReferenceType>())
           eleType = refType.getElementType();
 
-        if (fir::isa_trivial(eleType) || fir::isa_char(eleType)) {
+        // If a variable is specified in declare target link and if device
+        // type is not specified as `nohost`, it needs to be mapped tofrom
+        mlir::ModuleOp mod = converter.getFirOpBuilder().getModule();
+        mlir::Operation *op = mod.lookupSymbol(converter.mangleName(sym));
+        auto declareTargetOp =
+            llvm::dyn_cast_if_present<mlir::omp::DeclareTargetInterface>(op);
+        if (declareTargetOp && declareTargetOp.isDeclareTarget()) {
+          if (declareTargetOp.getDeclareTargetCaptureClause() ==
+                  mlir::omp::DeclareTargetCaptureClause::link &&
+              declareTargetOp.getDeclareTargetDeviceType() !=
+                  mlir::omp::DeclareTargetDeviceType::nohost) {
+            mapFlag |= llvm::omp::OpenMPOffloadMappingFlags::OMP_MAP_TO;
+            mapFlag |= llvm::omp::OpenMPOffloadMappingFlags::OMP_MAP_FROM;
+          }
+        } else if (fir::isa_trivial(eleType) || fir::isa_char(eleType)) {
           captureKind = mlir::omp::VariableCaptureKind::ByCopy;
         } else if (!fir::isa_builtin_cptr_type(eleType)) {
           mapFlag |= llvm::omp::OpenMPOffloadMappingFlags::OMP_MAP_TO;
@@ -2262,8 +2277,15 @@ void Fortran::lower::genThreadprivateOp(
     // variable in main program, and it has implicit SAVE attribute. Take it as
     // with SAVE attribute, so to create GlobalOp for it to simplify the
     // translation to LLVM IR.
-    fir::GlobalOp global = globalInitialization(converter, firOpBuilder, sym,
-                                                var, currentLocation);
+    // Avoids performing multiple globalInitializations.
+    fir::GlobalOp global;
+    auto module = converter.getModuleOp();
+    std::string globalName = converter.mangleName(sym);
+    if (module.lookupSymbol<fir::GlobalOp>(globalName))
+      global = module.lookupSymbol<fir::GlobalOp>(globalName);
+    else
+      global = globalInitialization(converter, firOpBuilder, sym, var,
+                                    currentLocation);
 
     mlir::Value symValue = firOpBuilder.create<fir::AddrOfOp>(
         currentLocation, global.resultType(), global.getSymbol());
