@@ -297,10 +297,11 @@ InstallAPIContext Options::createContext() {
     }
   }
 
-  // Parse binary dylib.
-  // TODO: Initialize verifier.
-  if (DriverOpts.DylibToVerify.empty())
+  // Parse binary dylib and initialize verifier.
+  if (DriverOpts.DylibToVerify.empty()) {
+    Ctx.Verifier = std::make_unique<DylibVerifier>();
     return Ctx;
+  }
 
   auto Buffer = FM->getBufferForFile(DriverOpts.DylibToVerify);
   if (auto Err = Buffer.getError()) {
@@ -318,6 +319,8 @@ InstallAPIContext Options::createContext() {
     return Ctx;
   }
 
+  Ctx.Verifier = std::make_unique<DylibVerifier>(
+      std::move(*Slices), Diags, DriverOpts.VerifyMode, DriverOpts.Demangle);
   return Ctx;
 }
 
