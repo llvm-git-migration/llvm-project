@@ -2657,13 +2657,13 @@ static bool rewriteDebugUsers(
     if (UndefOrSalvageDVR.count(DVR))
       continue;
 
-    DbgValReplacement DVR = RewriteDVRExpr(*DVR);
+    DbgValReplacement DVRepl = RewriteDVRExpr(*DVR);
     if (!DVR)
       continue;
 
     DVR->replaceVariableLocationOp(&From, &To);
-    DVR->setExpression(*DVR);
-    LLVM_DEBUG(dbgs() << "REWRITE:  " << DVR << '\n');
+    DVR->setExpression(*DVRepl);
+    LLVM_DEBUG(dbgs() << "REWRITE:  " << DVRepl << '\n');
     Changed = true;
   }
 
