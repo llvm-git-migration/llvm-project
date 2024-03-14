@@ -496,13 +496,9 @@ void SelectionDAGISel::initialize(MachineFunctionAnalysisManager &MFAM) {
   FAM.getResult<BranchProbabilityAnalysis>(Fn);
   if (UseMBPI && OptLevel != CodeGenOptLevel::None)
     FuncInfo->BPI = &FAM.getResult<BranchProbabilityAnalysis>(Fn);
-  else
-    FuncInfo->BPI = nullptr;
 
   if (OptLevel != CodeGenOptLevel::None)
     AA = &FAM.getResult<AAManager>(Fn);
-  else
-    AA = nullptr;
 
   SP = &FAM.getResult<SSPLayoutAnalysis>(Fn);
 
