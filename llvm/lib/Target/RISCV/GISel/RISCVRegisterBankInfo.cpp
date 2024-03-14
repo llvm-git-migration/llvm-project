@@ -520,6 +520,20 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
     break;
   }
   default:
+    if (MRI.getType(MI.getOperand(0).getReg()).isVector()) {
+      for (unsigned Idx = 0; Idx < NumOperands; ++Idx) {
+        auto &MO = MI.getOperand(Idx);
+        if (!MO.isReg() || !MO.getReg())
+          continue;
+        LLT Ty = MRI.getType(MO.getReg());
+        if (!Ty.isValid())
+          continue;
+        OpdsMapping[Idx] =
+            getVRBValueMapping(Ty.getSizeInBits().getKnownMinValue());
+      }
+      break;
+    }
+
     // By default map all scalars to GPR.
     for (unsigned Idx = 0; Idx < NumOperands; ++Idx) {
        auto &MO = MI.getOperand(Idx);
