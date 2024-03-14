@@ -54,14 +54,12 @@ public:
       : converter(converter), semaCtx(semaCtx), clauses(clauses) {}
 
   // 'Unique' clauses: They can appear at most once in the clause list.
-  bool
-  processCollapse(mlir::Location currentLocation,
-                  Fortran::lower::pft::Evaluation &eval,
-                  llvm::SmallVectorImpl<mlir::Value> &lowerBound,
-                  llvm::SmallVectorImpl<mlir::Value> &upperBound,
-                  llvm::SmallVectorImpl<mlir::Value> &step,
-                  llvm::SmallVectorImpl<const Fortran::semantics::Symbol *> &iv,
-                  std::size_t &loopVarTypeSize) const;
+  bool processCollapse(
+      mlir::Location currentLocation, Fortran::lower::pft::Evaluation &eval,
+      llvm::SmallVectorImpl<mlir::Value> &lowerBound,
+      llvm::SmallVectorImpl<mlir::Value> &upperBound,
+      llvm::SmallVectorImpl<mlir::Value> &step,
+      llvm::SmallVectorImpl<const Fortran::semantics::Symbol *> &iv) const;
   bool processDefault() const;
   bool processDevice(Fortran::lower::StatementContext &stmtCtx,
                      mlir::Value &result) const;
@@ -125,6 +123,7 @@ public:
   bool
   processReduction(mlir::Location currentLocation,
                    llvm::SmallVectorImpl<mlir::Value> &reductionVars,
+                   llvm::SmallVectorImpl<mlir::Type> &reductionTypes,
                    llvm::SmallVectorImpl<mlir::Attribute> &reductionDeclSymbols,
                    llvm::SmallVectorImpl<const Fortran::semantics::Symbol *>
                        *reductionSymbols = nullptr) const;
