@@ -2168,7 +2168,8 @@ static bool is_sync_signal(ThreadSignalContext *sctx, int sig,
     return false;
 #endif
   return sig == SIGSEGV || sig == SIGBUS || sig == SIGILL || sig == SIGTRAP ||
-         sig == SIGABRT || sig == SIGFPE || sig == SIGPIPE || sig == SIGSYS;
+         sig == SIGABRT || sig == SIGFPE || sig == SIGPIPE || sig == SIGSYS ||
+         sig == SIGPROF;
 }
 
 void sighandler(int sig, __sanitizer_siginfo *info, void *ctx) {
