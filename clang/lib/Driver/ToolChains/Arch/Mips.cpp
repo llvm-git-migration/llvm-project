@@ -341,6 +341,8 @@ void mips::getMIPSTargetFeatures(const Driver &D, const llvm::Triple &Triple,
                    "dspr2");
   AddTargetFeature(Args, Features, options::OPT_mmsa, options::OPT_mno_msa,
                    "msa");
+  AddTargetFeature(Args, Features, options::OPT_mno_unaligned_access,
+                   options::OPT_munaligned_access, "no-unaligned-access");
 
   // Add the last -mfp32/-mfpxx/-mfp64, if none are given and the ABI is O32
   // pass -mfpxx, or if none are given and fp64a is default, pass fp64 and

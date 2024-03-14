@@ -208,6 +208,10 @@ def FeatureUseIndirectJumpsHazard : SubtargetFeature<"use-indirect-jump-hazard",
                                                     "true", "Use indirect jump"
                         " guards to prevent certain speculation based attacks">;
 
+def FeatureNoUnalignedAccess
+    : SubtargetFeature<"no-unaligned-access", "NoUnalignedAccess", "true",
+                       "Disable unaligned load store for r6">;
+
 //===----------------------------------------------------------------------===//
 // Register File, Calling Conv, Instruction Descriptions
 //===----------------------------------------------------------------------===//
