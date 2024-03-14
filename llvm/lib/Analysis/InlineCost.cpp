@@ -536,7 +536,10 @@ public:
 // Considering comparisons from leaf and non-leaf nodes, we can estimate the
 // number of comparisons in a simple closed form :
 //   n + n / 2 - 1 = n * 3 / 2 - 1
-int64_t getExpectedNumberOfCompare(int NumCaseCluster) {
+int64_t getExpectedNumberOfCompare(int NumCaseCluster,
+                                   bool DefaultDestUndefined) {
+  if (DefaultDestUndefined)
+    return static_cast<int64_t>(NumCaseCluster) - 1;
   return 3 * static_cast<int64_t>(NumCaseCluster) / 2 - 1;
 }
 
@@ -724,9 +727,8 @@ class InlineCostCallAnalyzer final : public CallAnalyzer {
       return;
     }
 
-    // FIXME: Consider the case when default branch is undefined.
     int64_t ExpectedNumberOfCompare =
-        getExpectedNumberOfCompare(NumCaseCluster);
+        getExpectedNumberOfCompare(NumCaseCluster, DefaultDestUndefined);
     int64_t SwitchCost = ExpectedNumberOfCompare * 2 * InstrCost;
 
     addCost(SwitchCost);
@@ -1258,9 +1260,8 @@ private:
       return;
     }
 
-    // FIXME: Consider the case when default branch is undefined.
     int64_t ExpectedNumberOfCompare =
-        getExpectedNumberOfCompare(NumCaseCluster);
+        getExpectedNumberOfCompare(NumCaseCluster, DefaultDestUndefined);
 
     int64_t SwitchCost =
         ExpectedNumberOfCompare * SwitchCostMultiplier * InstrCost;
