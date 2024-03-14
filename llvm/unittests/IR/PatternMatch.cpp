@@ -614,6 +614,102 @@ TEST_F(PatternMatchTest, Power2) {
   EXPECT_TRUE(m_NegatedPower2OrZero().match(CZero));
 }
 
+TEST_F(PatternMatchTest, NonZero) {
+  Type *I8Ty = IRB.getInt8Ty();
+
+  EXPECT_FALSE(m_NonZero().match(ConstantInt::get(I8Ty, 0)));
+  EXPECT_TRUE(m_NonZero().match(ConstantInt::get(I8Ty, 1)));
+  EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantInt::get(I8Ty, 0)));
+  EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantInt::get(I8Ty, 1)));
+
+  EXPECT_FALSE(m_NonZero().match(UndefValue::get(I8Ty)));
+  EXPECT_FALSE(m_NonZero().match(PoisonValue::get(I8Ty)));
+  EXPECT_FALSE(m_NonZeroAllowUndef().match(UndefValue::get(I8Ty)));
+  EXPECT_FALSE(m_NonZeroAllowUndef().match(PoisonValue::get(I8Ty)));
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 1));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 1));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_TRUE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 3> VecElemIdxs;
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 3));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 3> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 3));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_TRUE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+    EXPECT_FALSE(m_NonZeroAllowUndef().match(ConstantVector::get(VecElemIdxs)));
+  }
+}
+
 TEST_F(PatternMatchTest, Not) {
   Value *C1 = IRB.getInt32(1);
   Value *C2 = IRB.getInt32(2);

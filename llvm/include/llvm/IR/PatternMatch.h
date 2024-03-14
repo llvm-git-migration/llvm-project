@@ -330,14 +330,15 @@ template <int64_t Val> inline constantint_match<Val> m_ConstantInt() {
 /// This helper class is used to match constant scalars, vector splats,
 /// and fixed width vectors that satisfy a specified predicate.
 /// For fixed width vector constants, undefined elements are ignored.
-template <typename Predicate, typename ConstantVal>
+template <typename Predicate, typename ConstantVal, bool AllowUndef>
 struct cstval_pred_ty : public Predicate {
   template <typename ITy> bool match(ITy *V) {
     if (const auto *CV = dyn_cast<ConstantVal>(V))
       return this->isValue(CV->getValue());
     if (const auto *VTy = dyn_cast<VectorType>(V->getType())) {
       if (const auto *C = dyn_cast<Constant>(V)) {
-        if (const auto *CV = dyn_cast_or_null<ConstantVal>(C->getSplatValue()))
+        if (const auto *CV =
+                dyn_cast_or_null<ConstantVal>(C->getSplatValue(AllowUndef)))
           return this->isValue(CV->getValue());
 
         // Number of elements of a scalable vector unknown at compile time
@@ -353,8 +354,11 @@ struct cstval_pred_ty : public Predicate {
           Constant *Elt = C->getAggregateElement(i);
           if (!Elt)
             return false;
-          if (isa<UndefValue>(Elt))
+          if (isa<UndefValue>(Elt)) {
+            if (!AllowUndef)
+              return false;
             continue;
+          }
           auto *CV = dyn_cast<ConstantVal>(Elt);
           if (!CV || !this->isValue(CV->getValue()))
             return false;
@@ -368,19 +372,20 @@ struct cstval_pred_ty : public Predicate {
 };
 
 /// specialization of cstval_pred_ty for ConstantInt
-template <typename Predicate>
-using cst_pred_ty = cstval_pred_ty<Predicate, ConstantInt>;
+template <typename Predicate, bool AllowUndef = true>
+using cst_pred_ty = cstval_pred_ty<Predicate, ConstantInt, AllowUndef>;
 
 /// specialization of cstval_pred_ty for ConstantFP
-template <typename Predicate>
-using cstfp_pred_ty = cstval_pred_ty<Predicate, ConstantFP>;
+template <typename Predicate, bool AllowUndef = true>
+using cstfp_pred_ty = cstval_pred_ty<Predicate, ConstantFP, AllowUndef>;
 
 /// This helper class is used to match scalar and vector constants that
 /// satisfy a specified predicate, and bind them to an APInt.
 template <typename Predicate> struct api_pred_ty : public Predicate {
   const APInt *&Res;
-
-  api_pred_ty(const APInt *&R) : Res(R) {}
+  bool AllowUndef;
+  api_pred_ty(const APInt *&R, bool AllowUndef = true)
+      : Res(R), AllowUndef(AllowUndef) {}
 
   template <typename ITy> bool match(ITy *V) {
     if (const auto *CI = dyn_cast<ConstantInt>(V))
@@ -390,7 +395,8 @@ template <typename Predicate> struct api_pred_ty : public Predicate {
       }
     if (V->getType()->isVectorTy())
       if (const auto *C = dyn_cast<Constant>(V))
-        if (auto *CI = dyn_cast_or_null<ConstantInt>(C->getSplatValue()))
+        if (auto *CI =
+                dyn_cast_or_null<ConstantInt>(C->getSplatValue(AllowUndef)))
           if (this->isValue(CI->getValue())) {
             Res = &CI->getValue();
             return true;
@@ -543,6 +549,30 @@ struct is_zero {
 /// Match any null constant or a vector with all elements equal to 0.
 /// For vectors, this includes constants with undefined elements.
 inline is_zero m_Zero() { return is_zero(); }
+
+struct is_non_zero {
+  bool isValue(const APInt &C) { return !C.isZero(); }
+};
+
+/// Match any constant s.t all elements are non-zero. For a scalar, this is the
+/// same as !m_Zero. For vectors is ensures that !m_Zero holds for all elements.
+/// This does not include undefined elements.
+inline cst_pred_ty<is_non_zero, false> m_NonZero() {
+  return cst_pred_ty<is_non_zero, /*AllowUndef=*/false>();
+}
+inline api_pred_ty<is_non_zero> m_NonZero(const APInt *&V) {
+  return api_pred_ty<is_non_zero>(V, /*AllowUndef=*/false);
+}
+
+/// Match any constant s.t all elements are non-zero. For a scalar, this is the
+/// same as !m_Zero. For vectors is ensures that !m_Zero holds for all elements.
+/// This includes undefined elements.
+inline cst_pred_ty<is_non_zero> m_NonZeroAllowUndef() {
+  return cst_pred_ty<is_non_zero>();
+}
+inline api_pred_ty<is_non_zero> m_NonZeroAllowUndef(const APInt *&V) {
+  return V;
+}
 
 struct is_power2 {
   bool isValue(const APInt &C) { return C.isPowerOf2(); }
