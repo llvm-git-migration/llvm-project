@@ -1139,12 +1139,26 @@ const RetainSummary *RetainSummaryManager::getInstanceMethodSummary(
   if (!ReceiverClass)
     ReceiverClass = ME->getReceiverInterface();
 
-  // FIXME: The receiver could be a reference to a class, meaning that
-  //  we should use the class method.
+  // The receiver could be a reference to a class, meaning that
+  // we should use the class method.
   // id x = [NSObject class];
   // [x performSelector:... withObject:... afterDelay:...];
   Selector S = ME->getSelector();
   const ObjCMethodDecl *Method = ME->getMethodDecl();
+
+  if (!Method) {
+    if (ReceiverClass) {
+      if (ReceiverType->isObjCClassType() ||
+          ReceiverType->isObjCQualifiedClassType()) {
+        // The receiver is a class reference, use the class method.
+        Method = ReceiverClass->getClassMethod(S);
+      } else {
+        // The receiver is an instance reference, use the instance method.
+        Method = ReceiverClass->getInstanceMethod(S);
+      }
+    }
+  }
+
   if (!Method && ReceiverClass)
     Method = ReceiverClass->getInstanceMethod(S);
 
