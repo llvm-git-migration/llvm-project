@@ -578,3 +578,48 @@ define float @test18(float %A, float %B) {
   %Z = fadd fast float %Y, 1.200000e+01
   ret float %Z
 }
+
+; Do not fneg fast float unless it has nnan
+define float @scalar(float %a) {
+; CHECK-LABEL: @scalar(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[NEG:%.*]] = fneg fast float [[A:%.*]]
+; CHECK-NEXT:    ret float [[NEG]]
+;
+entry:
+  %neg = fneg fast float %a
+  ret float %neg
+}
+
+define float @scalar_nnan(float %a) {
+; CHECK-LABEL: @scalar_nnan(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[NEG:%.*]] = fneg fast float [[A:%.*]]
+; CHECK-NEXT:    ret float [[NEG]]
+;
+entry:
+  %neg = fneg fast nnan float %a
+  ret float %neg
+}
+
+define <4 x float> @vector(<4 x float> %a) {
+; CHECK-LABEL: @vector(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[NEG:%.*]] = fneg fast <4 x float> [[A:%.*]]
+; CHECK-NEXT:    ret <4 x float> [[NEG]]
+;
+entry:
+  %neg = fneg fast <4 x float> %a
+  ret <4 x float> %neg
+}
+
+define <4 x float> @vector_nnan(<4 x float> %a) {
+; CHECK-LABEL: @vector_nnan(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[NEG:%.*]] = fneg fast <4 x float> [[A:%.*]]
+; CHECK-NEXT:    ret <4 x float> [[NEG]]
+;
+entry:
+  %neg = fneg fast nnan <4 x float> %a
+  ret <4 x float> %neg
+}
