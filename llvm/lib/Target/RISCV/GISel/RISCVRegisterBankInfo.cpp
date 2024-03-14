@@ -488,6 +488,19 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
     OpdsMapping[1] = GPRValueMapping;
     break;
   }
+  case TargetOpcode::G_ICMP: {
+    if (MRI.getType(MI.getOperand(0).getReg()).isVector()) {
+      LLT DstTy = MRI.getType(MI.getOperand(0).getReg());
+      LLT SrcTy = MRI.getType(MI.getOperand(2).getReg());
+      OpdsMapping[0] =
+          getVRBValueMapping(DstTy.getSizeInBits().getKnownMinValue());
+      OpdsMapping[2] = OpdsMapping[3] =
+          getVRBValueMapping(SrcTy.getSizeInBits().getKnownMinValue());
+    } else {
+      OpdsMapping[0] = OpdsMapping[2] = OpdsMapping[3] = GPRValueMapping;
+    }
+    break;
+  }
   case TargetOpcode::G_FCMP: {
     LLT Ty = MRI.getType(MI.getOperand(2).getReg());
 
