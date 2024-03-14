@@ -2,6 +2,9 @@
 ; RUN: opt -aarch64-lit -aarch64-lit-verify -verify-dom-info -mtriple aarch64-unknown-linux-gnu -mattr=+sve -S < %s | FileCheck %s
 ; RUN: opt -aarch64-lit -simplifycfg -mtriple aarch64-unknown-linux-gnu -mattr=+sve -S < %s | FileCheck %s --check-prefix=LOOP-DEL
 ; RUN: opt -aarch64-lit -mtriple aarch64-unknown-linux-gnu -S < %s | FileCheck %s --check-prefix=NO-TRANSFORM
+; RUN: opt -p aarch64-lit -aarch64-lit-verify -verify-dom-info -mtriple aarch64-unknown-linux-gnu -mattr=+sve -S < %s | FileCheck %s --check-prefix=CHECK-NPM
+; RUN: opt -p 'simplifycfg,loop(aarch64-lit)' -mtriple aarch64-unknown-linux-gnu -mattr=+sve -S < %s | FileCheck %s --check-prefix=LOOP-DEL-NPM
+; RUN: opt -p aarch64-lit -mtriple aarch64-unknown-linux-gnu -S < %s | FileCheck %s --check-prefix=NO-TRANSFORM-NPM
 
 define i32 @compare_bytes_simple(ptr %a, ptr %b, i32 %len, i32 %extra, i32 %n) {
 ; CHECK-LABEL: define i32 @compare_bytes_simple(
@@ -199,6 +202,223 @@ define i32 @compare_bytes_simple(ptr %a, ptr %b, i32 %len, i32 %extra, i32 %n) {
 ; NO-TRANSFORM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
 ; NO-TRANSFORM-NEXT:    ret i32 [[RES]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) #[[ATTR0:[0-9]+]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; CHECK-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; CHECK-NPM:       mismatch_min_it_check:
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; CHECK-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; CHECK-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0:![0-9]+]]
+; CHECK-NPM:       mismatch_mem_check:
+; CHECK-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; CHECK-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; CHECK-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; CHECK-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; CHECK-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; CHECK-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; CHECK-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; CHECK-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; CHECK-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; CHECK-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; CHECK-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; CHECK-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1:![0-9]+]]
+; CHECK-NPM:       mismatch_sve_loop_preheader:
+; CHECK-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; CHECK-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; CHECK-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; CHECK-NPM:       mismatch_sve_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; CHECK-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; CHECK-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; CHECK-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; CHECK-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; CHECK-NPM:       mismatch_sve_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; CHECK-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; CHECK-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; CHECK-NPM:       mismatch_sve_loop_found:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; CHECK-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; CHECK-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; CHECK-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; CHECK-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; CHECK-NPM-NEXT:    br label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_pre:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; CHECK-NPM:       mismatch_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; CHECK-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; CHECK-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; CHECK-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; CHECK-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP43]] = add i32 [[MISMATCH_INDEX]], 1
+; CHECK-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; CHECK-NPM:       mismatch_end:
+; CHECK-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; CHECK-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       byte.compare:
+; CHECK-NPM-NEXT:    br label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ], [ [[EXTRA]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; CHECK-NPM-NEXT:    ret i32 [[RES]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) #[[ATTR0:[0-9]+]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; LOOP-DEL-NPM:       mismatch_min_it_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0:![0-9]+]]
+; LOOP-DEL-NPM:       mismatch_mem_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; LOOP-DEL-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; LOOP-DEL-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1:![0-9]+]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_preheader:
+; LOOP-DEL-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; LOOP-DEL-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; LOOP-DEL-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; LOOP-DEL-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; LOOP-DEL-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_found:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; LOOP-DEL-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; LOOP-DEL-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; LOOP-DEL-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_pre:
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP43]] = add i32 [[MISMATCH_INDEX]], 1
+; LOOP-DEL-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; LOOP-DEL-NPM:       mismatch_end:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; LOOP-DEL-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       byte.compare:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; LOOP-DEL-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ], [ [[EXTRA]], [[BYTE_COMPARE]] ]
+; LOOP-DEL-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[RES]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[RES]]
 ;
 entry:
   br label %while.cond
@@ -417,6 +637,217 @@ define i32 @compare_bytes_signed_wrap(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_signed_wrap(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; CHECK-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; CHECK-NPM:       mismatch_min_it_check:
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; CHECK-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; CHECK-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; CHECK-NPM:       mismatch_mem_check:
+; CHECK-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; CHECK-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; CHECK-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; CHECK-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; CHECK-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; CHECK-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; CHECK-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; CHECK-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; CHECK-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; CHECK-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; CHECK-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; CHECK-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; CHECK-NPM:       mismatch_sve_loop_preheader:
+; CHECK-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; CHECK-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; CHECK-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; CHECK-NPM:       mismatch_sve_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; CHECK-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; CHECK-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; CHECK-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; CHECK-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; CHECK-NPM:       mismatch_sve_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; CHECK-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; CHECK-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; CHECK-NPM:       mismatch_sve_loop_found:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; CHECK-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; CHECK-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; CHECK-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; CHECK-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; CHECK-NPM-NEXT:    br label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_pre:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; CHECK-NPM:       mismatch_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; CHECK-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; CHECK-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; CHECK-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; CHECK-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP43]] = add nsw i32 [[MISMATCH_INDEX]], 1
+; CHECK-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; CHECK-NPM:       mismatch_end:
+; CHECK-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; CHECK-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC:%.*]] = add nsw i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       byte.compare:
+; CHECK-NPM-NEXT:    br label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_signed_wrap(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; LOOP-DEL-NPM:       mismatch_min_it_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; LOOP-DEL-NPM:       mismatch_mem_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; LOOP-DEL-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; LOOP-DEL-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_preheader:
+; LOOP-DEL-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; LOOP-DEL-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; LOOP-DEL-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; LOOP-DEL-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; LOOP-DEL-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_found:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; LOOP-DEL-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; LOOP-DEL-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; LOOP-DEL-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_pre:
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP43]] = add nsw i32 [[MISMATCH_INDEX]], 1
+; LOOP-DEL-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; LOOP-DEL-NPM:       mismatch_end:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; LOOP-DEL-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC:%.*]] = add nsw i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       byte.compare:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_signed_wrap(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add nsw i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -659,6 +1090,166 @@ define i32 @compare_bytes_simple_end_ne_found(ptr %a, ptr %b, ptr %c, ptr %d, i3
 ; NO-TRANSFORM-NEXT:    store i32 [[MISMATCH_INDEX]], ptr [[STORE_PTR]], align 4
 ; NO-TRANSFORM-NEXT:    ret i32 [[MISMATCH_INDEX]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_end_ne_found(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; CHECK-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; CHECK-NPM:       mismatch_min_it_check:
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; CHECK-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; CHECK-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; CHECK-NPM:       mismatch_mem_check:
+; CHECK-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; CHECK-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; CHECK-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; CHECK-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; CHECK-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; CHECK-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; CHECK-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; CHECK-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; CHECK-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; CHECK-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; CHECK-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; CHECK-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; CHECK-NPM:       mismatch_sve_loop_preheader:
+; CHECK-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; CHECK-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; CHECK-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; CHECK-NPM:       mismatch_sve_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; CHECK-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; CHECK-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; CHECK-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; CHECK-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; CHECK-NPM:       mismatch_sve_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; CHECK-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; CHECK-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; CHECK-NPM:       mismatch_sve_loop_found:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; CHECK-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; CHECK-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; CHECK-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; CHECK-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; CHECK-NPM-NEXT:    br label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_pre:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; CHECK-NPM:       mismatch_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX3:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX3]] to i64
+; CHECK-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; CHECK-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; CHECK-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; CHECK-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP43]] = add i32 [[MISMATCH_INDEX3]], 1
+; CHECK-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; CHECK-NPM:       mismatch_end:
+; CHECK-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX3]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; CHECK-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_FOUND:%.*]]
+; CHECK-NPM:       while.found:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX1:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    [[FOUND_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ], [ [[C]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    br label [[END:%.*]]
+; CHECK-NPM:       byte.compare:
+; CHECK-NPM-NEXT:    [[TMP47:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP47]], label [[WHILE_END]], label [[WHILE_FOUND]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX2:%.*]] = phi i32 [ [[N]], [[WHILE_COND]] ], [ [[N]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    [[END_PTR:%.*]] = phi ptr [ [[D]], [[WHILE_COND]] ], [ [[D]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    br label [[END]]
+; CHECK-NPM:       end:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[MISMATCH_INDEX1]], [[WHILE_FOUND]] ], [ [[MISMATCH_INDEX2]], [[WHILE_END]] ]
+; CHECK-NPM-NEXT:    [[STORE_PTR:%.*]] = phi ptr [ [[END_PTR]], [[WHILE_END]] ], [ [[FOUND_PTR]], [[WHILE_FOUND]] ]
+; CHECK-NPM-NEXT:    store i32 [[MISMATCH_INDEX]], ptr [[STORE_PTR]], align 4
+; CHECK-NPM-NEXT:    ret i32 [[MISMATCH_INDEX]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_end_ne_found(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[END]]
+; LOOP-DEL-NPM:       end:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[N]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    [[STORE_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ], [ [[D]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    store i32 [[MISMATCH_INDEX]], ptr [[STORE_PTR]], align 4
+; LOOP-DEL-NPM-NEXT:    ret i32 [[MISMATCH_INDEX]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_end_ne_found(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_FOUND:%.*]]
+; NO-TRANSFORM-NPM:       while.found:
+; NO-TRANSFORM-NPM-NEXT:    [[MISMATCH_INDEX1:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[FOUND_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ]
+; NO-TRANSFORM-NPM-NEXT:    br label [[END:%.*]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[MISMATCH_INDEX2:%.*]] = phi i32 [ [[N]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[END_PTR:%.*]] = phi ptr [ [[D]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    br label [[END]]
+; NO-TRANSFORM-NPM:       end:
+; NO-TRANSFORM-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[MISMATCH_INDEX1]], [[WHILE_FOUND]] ], [ [[MISMATCH_INDEX2]], [[WHILE_END]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[STORE_PTR:%.*]] = phi ptr [ [[END_PTR]], [[WHILE_END]] ], [ [[FOUND_PTR]], [[WHILE_FOUND]] ]
+; NO-TRANSFORM-NPM-NEXT:    store i32 [[MISMATCH_INDEX]], ptr [[STORE_PTR]], align 4
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[MISMATCH_INDEX]]
+;
 entry:
   br label %while.cond
 
@@ -897,6 +1488,235 @@ define i32 @compare_bytes_extra_cmp(ptr %a, ptr %b, i32 %len, i32 %n, i32 %x) {
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ], [ [[X]], [[ENTRY:%.*]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_extra_cmp(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]], i32 [[X:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    [[CMP_X:%.*]] = icmp ult i32 [[N]], [[X]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_X]], label [[PH:%.*]], label [[WHILE_END:%.*]]
+; CHECK-NPM:       ph:
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; CHECK-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; CHECK-NPM:       mismatch_min_it_check:
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; CHECK-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; CHECK-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; CHECK-NPM:       mismatch_mem_check:
+; CHECK-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; CHECK-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; CHECK-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; CHECK-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; CHECK-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; CHECK-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; CHECK-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; CHECK-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; CHECK-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; CHECK-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; CHECK-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; CHECK-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; CHECK-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; CHECK-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; CHECK-NPM:       mismatch_sve_loop_preheader:
+; CHECK-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; CHECK-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; CHECK-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; CHECK-NPM:       mismatch_sve_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; CHECK-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; CHECK-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; CHECK-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; CHECK-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; CHECK-NPM:       mismatch_sve_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; CHECK-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; CHECK-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; CHECK-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; CHECK-NPM:       mismatch_sve_loop_found:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; CHECK-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; CHECK-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; CHECK-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; CHECK-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; CHECK-NPM-NEXT:    br label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_pre:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; CHECK-NPM:       mismatch_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; CHECK-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; CHECK-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; CHECK-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; CHECK-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; CHECK-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP43]] = add i32 [[MISMATCH_INDEX]], 1
+; CHECK-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; CHECK-NPM:       mismatch_end:
+; CHECK-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; CHECK-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[MISMATCH_END]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END_LOOPEXIT:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END_LOOPEXIT]]
+; CHECK-NPM:       byte.compare:
+; CHECK-NPM-NEXT:    br label [[WHILE_END_LOOPEXIT]]
+; CHECK-NPM:       while.end.loopexit:
+; CHECK-NPM-NEXT:    [[INC_LCSSA1:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    br label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[X]], [[ENTRY:%.*]] ], [ [[INC_LCSSA1]], [[WHILE_END_LOOPEXIT]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_extra_cmp(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]], i32 [[X:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    [[CMP_X:%.*]] = icmp ult i32 [[N]], [[X]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_X]], label [[WHILE_COND_PREHEADER:%.*]], label [[WHILE_END:%.*]]
+; LOOP-DEL-NPM:       while.cond.preheader:
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = add i32 [[LEN]], 1
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; LOOP-DEL-NPM:       mismatch_min_it_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = zext i32 [[TMP0]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP2:%.*]] = zext i32 [[N]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP3:%.*]] = icmp ule i32 [[TMP0]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP3]], label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; LOOP-DEL-NPM:       mismatch_mem_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP8:%.*]] = getelementptr i8, ptr [[A]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP9:%.*]] = getelementptr i8, ptr [[B]], i64 [[TMP2]]
+; LOOP-DEL-NPM-NEXT:    [[TMP10:%.*]] = ptrtoint ptr [[TMP8]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP11:%.*]] = ptrtoint ptr [[TMP9]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP12:%.*]] = lshr i64 [[TMP7]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP13:%.*]] = lshr i64 [[TMP10]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP14:%.*]] = lshr i64 [[TMP6]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP15:%.*]] = lshr i64 [[TMP11]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP16:%.*]] = icmp ne i64 [[TMP12]], [[TMP13]]
+; LOOP-DEL-NPM-NEXT:    [[TMP17:%.*]] = icmp ne i64 [[TMP14]], [[TMP15]]
+; LOOP-DEL-NPM-NEXT:    [[TMP18:%.*]] = or i1 [[TMP16]], [[TMP17]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP18]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_preheader:
+; LOOP-DEL-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP1]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP20:%.*]] = call i64 @llvm.vscale.i64()
+; LOOP-DEL-NPM-NEXT:    [[TMP21:%.*]] = mul nuw nsw i64 [[TMP20]], 16
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP19]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP30:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ [[TMP1]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP29:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP23:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP22]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP25:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP24]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP26:%.*]] = icmp ne <vscale x 16 x i8> [[TMP23]], [[TMP25]]
+; LOOP-DEL-NPM-NEXT:    [[TMP27:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP26]], <vscale x 16 x i1> zeroinitializer
+; LOOP-DEL-NPM-NEXT:    [[TMP28:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP27]])
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP28]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP29]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP21]]
+; LOOP-DEL-NPM-NEXT:    [[TMP30]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP29]], i64 [[TMP2]])
+; LOOP-DEL-NPM-NEXT:    [[TMP31:%.*]] = extractelement <vscale x 16 x i1> [[TMP30]], i64 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP31]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_found:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP27]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP32:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; LOOP-DEL-NPM-NEXT:    [[TMP33:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP32]], i1 true)
+; LOOP-DEL-NPM-NEXT:    [[TMP34:%.*]] = zext i32 [[TMP33]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP35:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP34]]
+; LOOP-DEL-NPM-NEXT:    [[TMP36:%.*]] = trunc i64 [[TMP35]] to i32
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_pre:
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ [[TMP0]], [[MISMATCH_LOOP_PRE]] ], [ [[TMP43:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP37:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP38:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP39:%.*]] = load i8, ptr [[TMP38]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP40:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[TMP40]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP42:%.*]] = icmp eq i8 [[TMP39]], [[TMP41]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP42]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP43]] = add i32 [[MISMATCH_INDEX]], 1
+; LOOP-DEL-NPM-NEXT:    [[TMP44:%.*]] = icmp eq i32 [[TMP43]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP44]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; LOOP-DEL-NPM:       mismatch_end:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ [[N]], [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ [[N]], [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP36]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; LOOP-DEL-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ], [ [[LEN]], [[MISMATCH_END]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END_LOOPEXIT:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP45:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP46:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP45]], [[TMP46]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END_LOOPEXIT]]
+; LOOP-DEL-NPM:       byte.compare:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_END_LOOPEXIT]]
+; LOOP-DEL-NPM:       while.end.loopexit:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA1:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_COND]] ], [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[X]], [[ENTRY:%.*]] ], [ [[INC_LCSSA1]], [[WHILE_END_LOOPEXIT]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_extra_cmp(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]], i32 [[X:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_X:%.*]] = icmp ult i32 [[N]], [[X]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_X]], label [[PH:%.*]], label [[WHILE_END:%.*]]
+; NO-TRANSFORM-NPM:       ph:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[PH]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END_LOOPEXIT:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END_LOOPEXIT]]
+; NO-TRANSFORM-NPM:       while.end.loopexit:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA1:%.*]] = phi i32 [ [[INC]], [[WHILE_COND]] ], [ [[INC]], [[WHILE_BODY]] ]
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[X]], [[ENTRY:%.*]] ], [ [[INC_LCSSA1]], [[WHILE_END_LOOPEXIT]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
 entry:
   %cmp.x = icmp ult i32 %n, %x
   br i1 %cmp.x, label %ph, label %while.end
@@ -1061,6 +1881,213 @@ define void @compare_bytes_cleanup_block(ptr %src1, ptr %src2) {
 ; NO-TRANSFORM-NEXT:    [[RES:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ]
 ; NO-TRANSFORM-NEXT:    ret void
 ;
+; CHECK-NPM-LABEL: define void @compare_bytes_cleanup_block(
+; CHECK-NPM-SAME: ptr [[SRC1:%.*]], ptr [[SRC2:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; CHECK-NPM:       mismatch_min_it_check:
+; CHECK-NPM-NEXT:    br i1 false, label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; CHECK-NPM:       mismatch_mem_check:
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = getelementptr i8, ptr [[SRC1]], i64 1
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = getelementptr i8, ptr [[SRC2]], i64 1
+; CHECK-NPM-NEXT:    [[TMP2:%.*]] = ptrtoint ptr [[TMP1]] to i64
+; CHECK-NPM-NEXT:    [[TMP3:%.*]] = ptrtoint ptr [[TMP0]] to i64
+; CHECK-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[SRC1]], i64 0
+; CHECK-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[SRC2]], i64 0
+; CHECK-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; CHECK-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; CHECK-NPM-NEXT:    [[TMP8:%.*]] = lshr i64 [[TMP3]], 12
+; CHECK-NPM-NEXT:    [[TMP9:%.*]] = lshr i64 [[TMP6]], 12
+; CHECK-NPM-NEXT:    [[TMP10:%.*]] = lshr i64 [[TMP2]], 12
+; CHECK-NPM-NEXT:    [[TMP11:%.*]] = lshr i64 [[TMP7]], 12
+; CHECK-NPM-NEXT:    [[TMP12:%.*]] = icmp ne i64 [[TMP8]], [[TMP9]]
+; CHECK-NPM-NEXT:    [[TMP13:%.*]] = icmp ne i64 [[TMP10]], [[TMP11]]
+; CHECK-NPM-NEXT:    [[TMP14:%.*]] = or i1 [[TMP12]], [[TMP13]]
+; CHECK-NPM-NEXT:    br i1 [[TMP14]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; CHECK-NPM:       mismatch_sve_loop_preheader:
+; CHECK-NPM-NEXT:    [[TMP15:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 1, i64 0)
+; CHECK-NPM-NEXT:    [[TMP16:%.*]] = call i64 @llvm.vscale.i64()
+; CHECK-NPM-NEXT:    [[TMP17:%.*]] = mul nuw nsw i64 [[TMP16]], 16
+; CHECK-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; CHECK-NPM:       mismatch_sve_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP15]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP26:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ 1, [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP25:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; CHECK-NPM-NEXT:    [[TMP18:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP18]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP20:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[MISMATCH_SVE_INDEX]]
+; CHECK-NPM-NEXT:    [[TMP21:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP20]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; CHECK-NPM-NEXT:    [[TMP22:%.*]] = icmp ne <vscale x 16 x i8> [[TMP19]], [[TMP21]]
+; CHECK-NPM-NEXT:    [[TMP23:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP22]], <vscale x 16 x i1> zeroinitializer
+; CHECK-NPM-NEXT:    [[TMP24:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP23]])
+; CHECK-NPM-NEXT:    br i1 [[TMP24]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; CHECK-NPM:       mismatch_sve_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP25]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP17]]
+; CHECK-NPM-NEXT:    [[TMP26]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP25]], i64 0)
+; CHECK-NPM-NEXT:    [[TMP27:%.*]] = extractelement <vscale x 16 x i1> [[TMP26]], i64 0
+; CHECK-NPM-NEXT:    br i1 [[TMP27]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; CHECK-NPM:       mismatch_sve_loop_found:
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP23]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; CHECK-NPM-NEXT:    [[TMP28:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; CHECK-NPM-NEXT:    [[TMP29:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP28]], i1 true)
+; CHECK-NPM-NEXT:    [[TMP30:%.*]] = zext i32 [[TMP29]] to i64
+; CHECK-NPM-NEXT:    [[TMP31:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP30]]
+; CHECK-NPM-NEXT:    [[TMP32:%.*]] = trunc i64 [[TMP31]] to i32
+; CHECK-NPM-NEXT:    br label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_pre:
+; CHECK-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; CHECK-NPM:       mismatch_loop:
+; CHECK-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ 1, [[MISMATCH_LOOP_PRE]] ], [ [[TMP39:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; CHECK-NPM-NEXT:    [[TMP33:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; CHECK-NPM-NEXT:    [[TMP34:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[TMP33]]
+; CHECK-NPM-NEXT:    [[TMP35:%.*]] = load i8, ptr [[TMP34]], align 1
+; CHECK-NPM-NEXT:    [[TMP36:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[TMP33]]
+; CHECK-NPM-NEXT:    [[TMP37:%.*]] = load i8, ptr [[TMP36]], align 1
+; CHECK-NPM-NEXT:    [[TMP38:%.*]] = icmp eq i8 [[TMP35]], [[TMP37]]
+; CHECK-NPM-NEXT:    br i1 [[TMP38]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; CHECK-NPM:       mismatch_loop_inc:
+; CHECK-NPM-NEXT:    [[TMP39]] = add i32 [[MISMATCH_INDEX]], 1
+; CHECK-NPM-NEXT:    [[TMP40:%.*]] = icmp eq i32 [[TMP39]], 0
+; CHECK-NPM-NEXT:    br i1 [[TMP40]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; CHECK-NPM:       mismatch_end:
+; CHECK-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ 0, [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ 0, [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP32]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; CHECK-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ], [ 0, [[MISMATCH_END]] ]
+; CHECK-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], 0
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[CLEANUP_THREAD:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP42:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP41]], [[TMP42]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[IF_END:%.*]]
+; CHECK-NPM:       byte.compare:
+; CHECK-NPM-NEXT:    [[TMP43:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], 0
+; CHECK-NPM-NEXT:    br i1 [[TMP43]], label [[CLEANUP_THREAD]], label [[IF_END]]
+; CHECK-NPM:       cleanup.thread:
+; CHECK-NPM-NEXT:    ret void
+; CHECK-NPM:       if.end:
+; CHECK-NPM-NEXT:    [[RES:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY]] ], [ [[MISMATCH_RESULT]], [[BYTE_COMPARE]] ]
+; CHECK-NPM-NEXT:    ret void
+;
+; LOOP-DEL-NPM-LABEL: define void @compare_bytes_cleanup_block(
+; LOOP-DEL-NPM-SAME: ptr [[SRC1:%.*]], ptr [[SRC2:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_MIN_IT_CHECK:%.*]]
+; LOOP-DEL-NPM:       mismatch_min_it_check:
+; LOOP-DEL-NPM-NEXT:    br i1 false, label [[MISMATCH_MEM_CHECK:%.*]], label [[MISMATCH_LOOP_PRE:%.*]], !prof [[PROF0]]
+; LOOP-DEL-NPM:       mismatch_mem_check:
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = getelementptr i8, ptr [[SRC1]], i64 1
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = getelementptr i8, ptr [[SRC2]], i64 1
+; LOOP-DEL-NPM-NEXT:    [[TMP2:%.*]] = ptrtoint ptr [[TMP1]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP3:%.*]] = ptrtoint ptr [[TMP0]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP4:%.*]] = getelementptr i8, ptr [[SRC1]], i64 0
+; LOOP-DEL-NPM-NEXT:    [[TMP5:%.*]] = getelementptr i8, ptr [[SRC2]], i64 0
+; LOOP-DEL-NPM-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[TMP4]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[TMP5]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP8:%.*]] = lshr i64 [[TMP3]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP9:%.*]] = lshr i64 [[TMP6]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP10:%.*]] = lshr i64 [[TMP2]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP11:%.*]] = lshr i64 [[TMP7]], 12
+; LOOP-DEL-NPM-NEXT:    [[TMP12:%.*]] = icmp ne i64 [[TMP8]], [[TMP9]]
+; LOOP-DEL-NPM-NEXT:    [[TMP13:%.*]] = icmp ne i64 [[TMP10]], [[TMP11]]
+; LOOP-DEL-NPM-NEXT:    [[TMP14:%.*]] = or i1 [[TMP12]], [[TMP13]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP14]], label [[MISMATCH_LOOP_PRE]], label [[MISMATCH_SVE_LOOP_PREHEADER:%.*]], !prof [[PROF1]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_preheader:
+; LOOP-DEL-NPM-NEXT:    [[TMP15:%.*]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 1, i64 0)
+; LOOP-DEL-NPM-NEXT:    [[TMP16:%.*]] = call i64 @llvm.vscale.i64()
+; LOOP-DEL-NPM-NEXT:    [[TMP17:%.*]] = mul nuw nsw i64 [[TMP16]], 16
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_SVE_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP15]], [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP26:%.*]], [[MISMATCH_SVE_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_INDEX:%.*]] = phi i64 [ 1, [[MISMATCH_SVE_LOOP_PREHEADER]] ], [ [[TMP25:%.*]], [[MISMATCH_SVE_LOOP_INC]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP18:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP19:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP18]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP20:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[MISMATCH_SVE_INDEX]]
+; LOOP-DEL-NPM-NEXT:    [[TMP21:%.*]] = call <vscale x 16 x i8> @llvm.masked.load.nxv16i8.p0(ptr [[TMP20]], i32 1, <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i8> zeroinitializer)
+; LOOP-DEL-NPM-NEXT:    [[TMP22:%.*]] = icmp ne <vscale x 16 x i8> [[TMP19]], [[TMP21]]
+; LOOP-DEL-NPM-NEXT:    [[TMP23:%.*]] = select <vscale x 16 x i1> [[MISMATCH_SVE_LOOP_PRED]], <vscale x 16 x i1> [[TMP22]], <vscale x 16 x i1> zeroinitializer
+; LOOP-DEL-NPM-NEXT:    [[TMP24:%.*]] = call i1 @llvm.vector.reduce.or.nxv16i1(<vscale x 16 x i1> [[TMP23]])
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP24]], label [[MISMATCH_SVE_LOOP_FOUND:%.*]], label [[MISMATCH_SVE_LOOP_INC]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP25]] = add nuw nsw i64 [[MISMATCH_SVE_INDEX]], [[TMP17]]
+; LOOP-DEL-NPM-NEXT:    [[TMP26]] = call <vscale x 16 x i1> @llvm.get.active.lane.mask.nxv16i1.i64(i64 [[TMP25]], i64 0)
+; LOOP-DEL-NPM-NEXT:    [[TMP27:%.*]] = extractelement <vscale x 16 x i1> [[TMP26]], i64 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP27]], label [[MISMATCH_SVE_LOOP]], label [[MISMATCH_END:%.*]]
+; LOOP-DEL-NPM:       mismatch_sve_loop_found:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_PRED:%.*]] = phi <vscale x 16 x i1> [ [[TMP23]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_LAST_LOOP_PRED:%.*]] = phi <vscale x 16 x i1> [ [[MISMATCH_SVE_LOOP_PRED]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_SVE_FOUND_INDEX:%.*]] = phi i64 [ [[MISMATCH_SVE_INDEX]], [[MISMATCH_SVE_LOOP]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP28:%.*]] = and <vscale x 16 x i1> [[MISMATCH_SVE_LAST_LOOP_PRED]], [[MISMATCH_SVE_FOUND_PRED]]
+; LOOP-DEL-NPM-NEXT:    [[TMP29:%.*]] = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> [[TMP28]], i1 true)
+; LOOP-DEL-NPM-NEXT:    [[TMP30:%.*]] = zext i32 [[TMP29]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP31:%.*]] = add nuw nsw i64 [[MISMATCH_SVE_FOUND_INDEX]], [[TMP30]]
+; LOOP-DEL-NPM-NEXT:    [[TMP32:%.*]] = trunc i64 [[TMP31]] to i32
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_pre:
+; LOOP-DEL-NPM-NEXT:    br label [[MISMATCH_LOOP:%.*]]
+; LOOP-DEL-NPM:       mismatch_loop:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_INDEX:%.*]] = phi i32 [ 1, [[MISMATCH_LOOP_PRE]] ], [ [[TMP39:%.*]], [[MISMATCH_LOOP_INC:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[TMP33:%.*]] = zext i32 [[MISMATCH_INDEX]] to i64
+; LOOP-DEL-NPM-NEXT:    [[TMP34:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[TMP33]]
+; LOOP-DEL-NPM-NEXT:    [[TMP35:%.*]] = load i8, ptr [[TMP34]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP36:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[TMP33]]
+; LOOP-DEL-NPM-NEXT:    [[TMP37:%.*]] = load i8, ptr [[TMP36]], align 1
+; LOOP-DEL-NPM-NEXT:    [[TMP38:%.*]] = icmp eq i8 [[TMP35]], [[TMP37]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP38]], label [[MISMATCH_LOOP_INC]], label [[MISMATCH_END]]
+; LOOP-DEL-NPM:       mismatch_loop_inc:
+; LOOP-DEL-NPM-NEXT:    [[TMP39]] = add i32 [[MISMATCH_INDEX]], 1
+; LOOP-DEL-NPM-NEXT:    [[TMP40:%.*]] = icmp eq i32 [[TMP39]], 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[TMP40]], label [[MISMATCH_END]], label [[MISMATCH_LOOP]]
+; LOOP-DEL-NPM:       mismatch_end:
+; LOOP-DEL-NPM-NEXT:    [[MISMATCH_RESULT:%.*]] = phi i32 [ 0, [[MISMATCH_LOOP_INC]] ], [ [[MISMATCH_INDEX]], [[MISMATCH_LOOP]] ], [ 0, [[MISMATCH_SVE_LOOP_INC]] ], [ [[TMP32]], [[MISMATCH_SVE_LOOP_FOUND]] ]
+; LOOP-DEL-NPM-NEXT:    br i1 true, label [[BYTE_COMPARE:%.*]], label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN:%.*]] = phi i32 [ [[MISMATCH_RESULT]], [[WHILE_BODY:%.*]] ], [ 0, [[MISMATCH_END]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC:%.*]] = add i32 [[LEN]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[MISMATCH_RESULT]], 0
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[COMMON_RET:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[MISMATCH_RESULT]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP41:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP42:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP41]], [[TMP42]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[COMMON_RET]]
+; LOOP-DEL-NPM:       byte.compare:
+; LOOP-DEL-NPM-NEXT:    br label [[COMMON_RET]]
+; LOOP-DEL-NPM:       common.ret:
+; LOOP-DEL-NPM-NEXT:    ret void
+;
+; NO-TRANSFORM-NPM-LABEL: define void @compare_bytes_cleanup_block(
+; NO-TRANSFORM-NPM-SAME: ptr [[SRC1:%.*]], ptr [[SRC2:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN:%.*]] = phi i32 [ [[INC:%.*]], [[WHILE_BODY:%.*]] ], [ 0, [[ENTRY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], 0
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[CLEANUP_THREAD:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr i8, ptr [[SRC1]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr i8, ptr [[SRC2]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[IF_END:%.*]]
+; NO-TRANSFORM-NPM:       cleanup.thread:
+; NO-TRANSFORM-NPM-NEXT:    ret void
+; NO-TRANSFORM-NPM:       if.end:
+; NO-TRANSFORM-NPM-NEXT:    [[RES:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret void
+;
 entry:
   br label %while.cond
 
@@ -1164,6 +2191,75 @@ define i32 @compare_bytes_simple2(ptr %a, ptr %b, ptr %c, ptr %d, i32 %len, i32 
 ; NO-TRANSFORM-NEXT:    store i32 [[INC_LCSSA]], ptr [[FINAL_PTR]], align 4
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple2(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    [[FINAL_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ], [ [[D]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    store i32 [[INC_LCSSA]], ptr [[FINAL_PTR]], align 4
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple2(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    [[FINAL_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ], [ [[D]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    store i32 [[INC_LCSSA]], ptr [[FINAL_PTR]], align 4
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple2(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], ptr [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[FINAL_PTR:%.*]] = phi ptr [ [[C]], [[WHILE_BODY]] ], [ [[D]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    store i32 [[INC_LCSSA]], ptr [[FINAL_PTR]], align 4
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
 entry:
   br label %while.cond
 
@@ -1259,6 +2355,72 @@ define i32 @compare_bytes_simple3(ptr %a, ptr %b, ptr %c, i32 %d, i32 %len, i32 
 ; NO-TRANSFORM-NEXT:    store i32 [[FINAL_VAL]], ptr [[C]], align 4
 ; NO-TRANSFORM-NEXT:    ret i32 [[FINAL_VAL]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple3(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], i32 [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[FINAL_VAL:%.*]] = phi i32 [ [[D]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    store i32 [[FINAL_VAL]], ptr [[C]], align 4
+; CHECK-NPM-NEXT:    ret i32 [[FINAL_VAL]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple3(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], i32 [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[FINAL_VAL:%.*]] = phi i32 [ [[D]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    store i32 [[FINAL_VAL]], ptr [[C]], align 4
+; LOOP-DEL-NPM-NEXT:    ret i32 [[FINAL_VAL]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple3(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], ptr [[C:%.*]], i32 [[D:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[FINAL_VAL:%.*]] = phi i32 [ [[D]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    store i32 [[FINAL_VAL]], ptr [[C]], align 4
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[FINAL_VAL]]
+;
 entry:
   br label %while.cond
 
@@ -1347,6 +2509,69 @@ define i32 @compare_bytes_sign_ext(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_sign_ext(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = sext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_sign_ext(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = sext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_sign_ext(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = sext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -1439,6 +2664,72 @@ define i32 @compare_bytes_outside_uses(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM-NEXT:    [[EXT_RES:%.*]] = zext i1 [[RES]] to i32
 ; NO-TRANSFORM-NEXT:    ret i32 [[EXT_RES]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_outside_uses(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[IV:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[IV]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[LEN]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[RES:%.*]] = phi i1 [ [[CMP_NOT2]], [[WHILE_BODY]] ], [ [[CMP_NOT]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    [[EXT_RES:%.*]] = zext i1 [[RES]] to i32
+; CHECK-NPM-NEXT:    ret i32 [[EXT_RES]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_outside_uses(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[IV:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[IV]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[LEN]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[RES:%.*]] = phi i1 [ [[CMP_NOT2]], [[WHILE_BODY]] ], [ [[CMP_NOT]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    [[EXT_RES:%.*]] = zext i1 [[RES]] to i32
+; LOOP-DEL-NPM-NEXT:    ret i32 [[EXT_RES]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_outside_uses(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[IV:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[IV]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[LEN]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[RES:%.*]] = phi i1 [ [[CMP_NOT2]], [[WHILE_BODY]] ], [ [[CMP_NOT]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[EXT_RES:%.*]] = zext i1 [[RES]] to i32
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[EXT_RES]]
+;
 entry:
   br label %while.cond
 
@@ -1523,6 +2814,66 @@ define i64 @compare_bytes_i64_index(ptr %a, ptr %b, i64 %len, i64 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i64 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i64 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i64 @compare_bytes_i64_index(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i64 [[LEN:%.*]], i64 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i64 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i64 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i64 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[INC]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[INC]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i64 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i64 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i64 @compare_bytes_i64_index(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i64 [[LEN:%.*]], i64 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i64 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i64 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i64 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[INC]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[INC]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i64 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i64 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i64 @compare_bytes_i64_index(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i64 [[LEN:%.*]], i64 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i64 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i64 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i64 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[INC]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[INC]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i64 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i64 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -1609,6 +2960,69 @@ define i32 @compare_bytes_simple_wrong_icmp1(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp1(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp ne i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp1(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp ne i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp1(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp ne i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -1697,6 +3111,69 @@ define i32 @compare_bytes_simple_wrong_icmp2(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp2(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_BODY]], label [[WHILE_END:%.*]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp2(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_BODY]], label [[WHILE_END:%.*]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp2(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_BODY]], label [[WHILE_END:%.*]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
 entry:
   br label %while.cond
 
@@ -1783,6 +3260,69 @@ define i32 @compare_bytes_simple_wrong_icmp3(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp3(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp ne i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp3(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp ne i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp3(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp ne i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -1871,6 +3411,69 @@ define i32 @compare_bytes_simple_wrong_icmp4(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp4(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_END]], label [[WHILE_COND]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp4(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_END]], label [[WHILE_COND]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_wrong_icmp4(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_END]], label [[WHILE_COND]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
 entry:
   br label %while.cond
 
@@ -1957,6 +3560,69 @@ define i32 @compare_bytes_bad_load_type(ptr %a, ptr %b, i32 %len, i32 %n) {
 ; NO-TRANSFORM:       while.end:
 ; NO-TRANSFORM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_bad_load_type(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i16, ptr [[ARRAYIDX]], align 2
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i16, ptr [[ARRAYIDX2]], align 2
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i16 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_bad_load_type(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) #[[ATTR0]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i16, ptr [[ARRAYIDX]], align 2
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i16, ptr [[ARRAYIDX2]], align 2
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i16 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[INC_LCSSA]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_bad_load_type(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[N:%.*]]) {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i16, ptr [[ARRAYIDX]], align 2
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i16, ptr [[ARRAYIDX2]], align 2
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i16 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[INC_LCSSA]]
 ;
 entry:
   br label %while.cond
@@ -2051,6 +3717,75 @@ define i32 @compare_bytes_simple_optsize(ptr %a, ptr %b, i32 %len, i32 %extra, i
 ; NO-TRANSFORM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
 ; NO-TRANSFORM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
 ; NO-TRANSFORM-NEXT:    ret i32 [[RES]]
+;
+; CHECK-NPM-LABEL: define i32 @compare_bytes_simple_optsize(
+; CHECK-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) #[[ATTR1:[0-9]+]] {
+; CHECK-NPM-NEXT:  entry:
+; CHECK-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; CHECK-NPM:       while.cond:
+; CHECK-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; CHECK-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; CHECK-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; CHECK-NPM:       while.body:
+; CHECK-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; CHECK-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; CHECK-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; CHECK-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; CHECK-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; CHECK-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; CHECK-NPM:       while.end:
+; CHECK-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
+; CHECK-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; CHECK-NPM-NEXT:    ret i32 [[RES]]
+;
+; LOOP-DEL-NPM-LABEL: define i32 @compare_bytes_simple_optsize(
+; LOOP-DEL-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) #[[ATTR1:[0-9]+]] {
+; LOOP-DEL-NPM-NEXT:  entry:
+; LOOP-DEL-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; LOOP-DEL-NPM:       while.cond:
+; LOOP-DEL-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; LOOP-DEL-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; LOOP-DEL-NPM:       while.body:
+; LOOP-DEL-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; LOOP-DEL-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; LOOP-DEL-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; LOOP-DEL-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; LOOP-DEL-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; LOOP-DEL-NPM:       while.end:
+; LOOP-DEL-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
+; LOOP-DEL-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; LOOP-DEL-NPM-NEXT:    ret i32 [[RES]]
+;
+; NO-TRANSFORM-NPM-LABEL: define i32 @compare_bytes_simple_optsize(
+; NO-TRANSFORM-NPM-SAME: ptr [[A:%.*]], ptr [[B:%.*]], i32 [[LEN:%.*]], i32 [[EXTRA:%.*]], i32 [[N:%.*]]) #[[ATTR0:[0-9]+]] {
+; NO-TRANSFORM-NPM-NEXT:  entry:
+; NO-TRANSFORM-NPM-NEXT:    br label [[WHILE_COND:%.*]]
+; NO-TRANSFORM-NPM:       while.cond:
+; NO-TRANSFORM-NPM-NEXT:    [[LEN_ADDR:%.*]] = phi i32 [ [[LEN]], [[ENTRY:%.*]] ], [ [[INC:%.*]], [[WHILE_BODY:%.*]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[INC]] = add i32 [[LEN_ADDR]], 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT:%.*]] = icmp eq i32 [[INC]], [[N]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT]], label [[WHILE_END:%.*]], label [[WHILE_BODY]]
+; NO-TRANSFORM-NPM:       while.body:
+; NO-TRANSFORM-NPM-NEXT:    [[IDXPROM:%.*]] = zext i32 [[INC]] to i64
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[A]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP0:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i8, ptr [[B]], i64 [[IDXPROM]]
+; NO-TRANSFORM-NPM-NEXT:    [[TMP1:%.*]] = load i8, ptr [[ARRAYIDX2]], align 1
+; NO-TRANSFORM-NPM-NEXT:    [[CMP_NOT2:%.*]] = icmp eq i8 [[TMP0]], [[TMP1]]
+; NO-TRANSFORM-NPM-NEXT:    br i1 [[CMP_NOT2]], label [[WHILE_COND]], label [[WHILE_END]]
+; NO-TRANSFORM-NPM:       while.end:
+; NO-TRANSFORM-NPM-NEXT:    [[INC_LCSSA:%.*]] = phi i32 [ [[INC]], [[WHILE_BODY]] ], [ [[INC]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[EXTRA_PHI:%.*]] = phi i32 [ [[EXTRA]], [[WHILE_BODY]] ], [ [[EXTRA]], [[WHILE_COND]] ]
+; NO-TRANSFORM-NPM-NEXT:    [[RES:%.*]] = add i32 [[INC_LCSSA]], [[EXTRA_PHI]]
+; NO-TRANSFORM-NPM-NEXT:    ret i32 [[RES]]
 ;
 entry:
   br label %while.cond
