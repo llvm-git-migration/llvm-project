@@ -44,99 +44,16 @@ using MachineFunctionAnalysisManager = AnalysisManager<MachineFunction>;
 /// automatically mixes in \c PassInfoMixin.
 template <typename DerivedT>
 struct MachinePassInfoMixin : public PassInfoMixin<DerivedT> {
-  // TODO: Add MachineFunctionProperties support.
-};
+  class PropertyChanger {
+    MachineFunction &MF;
 
-namespace detail {
-struct MachinePassConcept
-    : PassConcept<MachineFunction, MachineFunctionAnalysisManager> {
-  virtual MachineFunctionProperties getRequiredProperties() const = 0;
-  virtual MachineFunctionProperties getSetProperties() const = 0;
-  virtual MachineFunctionProperties getClearedProperties() const = 0;
-};
+    template <typename T>
+    using has_get_required_properties_t =
+        decltype(std::declval<T &>().getRequiredProperties());
 
-template <typename PassT> struct MachinePassModel : MachinePassConcept {
-  explicit MachinePassModel(PassT &&Pass) : Pass(std::move(Pass)) {}
-  // We have to explicitly define all the special member functions because MSVC
-  // refuses to generate them.
-  MachinePassModel(const MachinePassModel &Arg) : Pass(Arg.Pass) {}
-  MachinePassModel(MachinePassModel &&Arg) : Pass(std::move(Arg.Pass)) {}
-
-  friend void swap(MachinePassModel &LHS, MachinePassModel &RHS) {
-    using std::swap;
-    swap(LHS.Pass, RHS.Pass);
-  }
-
-  MachinePassModel &operator=(MachinePassModel RHS) {
-    swap(*this, RHS);
-    return *this;
-  }
-
-  MachinePassModel &operator=(const MachinePassModel &) = delete;
-  PreservedAnalyses run(MachineFunction &IR,
-                        MachineFunctionAnalysisManager &AM) override {
-    return Pass.run(IR, AM);
-  }
-
-  void printPipeline(
-      raw_ostream &OS,
-      function_ref<StringRef(StringRef)> MapClassName2PassName) override {
-    Pass.printPipeline(OS, MapClassName2PassName);
-  }
-
-  StringRef name() const override { return PassT::name(); }
-
-  template <typename T>
-  using has_required_t = decltype(std::declval<T &>().isRequired());
-  template <typename T>
-  static std::enable_if_t<is_detected<has_required_t, T>::value, bool>
-  passIsRequiredImpl() {
-    return T::isRequired();
-  }
-  template <typename T>
-  static std::enable_if_t<!is_detected<has_required_t, T>::value, bool>
-  passIsRequiredImpl() {
-    return false;
-  }
-  bool isRequired() const override { return passIsRequiredImpl<PassT>(); }
-
-  template <typename T>
-  using has_get_required_properties_t =
-      decltype(std::declval<T &>().getRequiredProperties());
-  template <typename T>
-  static std::enable_if_t<is_detected<has_get_required_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getRequiredPropertiesImpl() {
-    return PassT::getRequiredProperties();
-  }
-  template <typename T>
-  static std::enable_if_t<!is_detected<has_get_required_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getRequiredPropertiesImpl() {
-    return MachineFunctionProperties();
-  }
-  MachineFunctionProperties getRequiredProperties() const override {
-    return getRequiredPropertiesImpl<PassT>();
-  }
-
-  template <typename T>
-  using has_get_set_properties_t =
-      decltype(std::declval<T &>().getSetProperties());
-  template <typename T>
-  static std::enable_if_t<is_detected<has_get_set_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getSetPropertiesImpl() {
-    return PassT::getSetProperties();
-  }
-  template <typename T>
-  static std::enable_if_t<!is_detected<has_get_set_properties_t, T>::value,
-                          MachineFunctionProperties>
-  getSetPropertiesImpl() {
-    return MachineFunctionProperties();
-  }
-  MachineFunctionProperties getSetProperties() const override {
-    return getSetPropertiesImpl<PassT>();
-  }
+    template <typename T>
+    using has_get_set_properties_t =
+        decltype(std::declval<T &>().getSetProperties());
 
     template <typename T>
     using has_get_cleared_properties_t =
@@ -175,6 +92,40 @@ template <typename PassT> struct MachinePassModel : MachinePassConcept {
                         MachineFunctionAnalysisManager &MFAM) {
     PropertyChanger PC(MF);
     return static_cast<DerivedT *>(this)->run(MF, MFAM);
+  }
+};
+
+namespace detail {
+
+template <typename PassT>
+struct MachinePassModel
+    : PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager> {
+  explicit MachinePassModel(PassT &&Pass)
+      : PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>(
+            std::move(Pass)) {}
+  // We have to explicitly define all the special member functions because MSVC
+  // refuses to generate them.
+  MachinePassModel(const MachinePassModel &Arg)
+      : PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>(
+            Arg.Pass) {}
+  MachinePassModel(MachinePassModel &&Arg)
+      : PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>(
+            std::move(Arg.Pass)) {}
+
+  friend void swap(MachinePassModel &LHS, MachinePassModel &RHS) {
+    using std::swap;
+    swap(LHS.Pass, RHS.Pass);
+  }
+
+  MachinePassModel &operator=(MachinePassModel RHS) {
+    swap(*this, RHS);
+    return *this;
+  }
+
+  MachinePassModel &operator=(const MachinePassModel &) = delete;
+  PreservedAnalyses run(MachineFunction &IR,
+                        MachineFunctionAnalysisManager &AM) override {
+    return this->Pass.MachinePassInfoMixin<PassT>::run(IR, AM);
   }
 };
 } // namespace detail
@@ -269,11 +220,12 @@ private:
 
 class ModuleToMachineFunctionPassAdaptor
     : public PassInfoMixin<ModuleToMachineFunctionPassAdaptor> {
-  using MachinePassConcept = detail::MachinePassConcept;
-
 public:
+  using PassConceptT =
+      detail::PassConcept<MachineFunction, MachineFunctionAnalysisManager>;
+
   explicit ModuleToMachineFunctionPassAdaptor(
-      std::unique_ptr<MachinePassConcept> Pass)
+      std::unique_ptr<PassConceptT> Pass)
       : Pass(std::move(Pass)) {}
 
   /// Runs the function pass across every function in the module.
@@ -284,17 +236,18 @@ public:
   static bool isRequired() { return true; }
 
 private:
-  std::unique_ptr<MachinePassConcept> Pass;
+  std::unique_ptr<PassConceptT> Pass;
 };
 
 template <typename MachineFunctionPassT>
 ModuleToMachineFunctionPassAdaptor
 createModuleToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
-  using PassModelT = detail::MachinePassModel<MachineFunctionPassT>;
+  using PassModelT = detail::PassModel<MachineFunction, MachineFunctionPassT,
+                                       MachineFunctionAnalysisManager>;
   // Do not use make_unique, it causes too many template instantiations,
   // causing terrible compile times.
   return ModuleToMachineFunctionPassAdaptor(
-      std::unique_ptr<detail::MachinePassConcept>(
+      std::unique_ptr<ModuleToMachineFunctionPassAdaptor::PassConceptT>(
           new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
 }
 
@@ -304,15 +257,11 @@ std::enable_if_t<!std::is_same<PassT, PassManager<MachineFunction>>::value>
 PassManager<MachineFunction>::addPass(PassT &&Pass) {
   using PassModelT =
       detail::PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>;
-  using MachineFunctionPassModelT =
-      detail::PassModel<MachineFunction, MachinePassInfoMixin<PassT>,
-                        MachineFunctionAnalysisManager>;
   // Do not use make_unique or emplace_back, they cause too many template
   // instantiations, causing terrible compile times.
   if constexpr (std::is_base_of_v<MachinePassInfoMixin<PassT>, PassT>) {
-    Passes.push_back(
-        std::unique_ptr<PassConceptT>(new MachineFunctionPassModelT(
-            std::forward<MachinePassInfoMixin<PassT>>(Pass))));
+    Passes.push_back(std::unique_ptr<PassConceptT>(
+        new detail::MachinePassModel<PassT>(std::forward<PassT>(Pass))));
   } else {
     Passes.push_back(std::unique_ptr<PassConceptT>(
         new PassModelT(std::forward<PassT>(Pass))));
