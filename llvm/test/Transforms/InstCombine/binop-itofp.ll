@@ -1012,8 +1012,14 @@ define float @test_ui_add_with_signed_constant(i32 %shr.i) {
 define i32 @missed_nonzero_check_on_constant_for_si_fmul(ptr %g_12, i1 %.b, ptr %g_2345) {
 ; CHECK-LABEL: @missed_nonzero_check_on_constant_for_si_fmul(
 ; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[DOTB:%.*]], i32 65529, i32 53264
+; CHECK-NEXT:    [[CONV_I:%.*]] = trunc i32 [[SEL]] to i16
+; CHECK-NEXT:    [[CONV1_I:%.*]] = sitofp i16 [[CONV_I]] to float
+; CHECK-NEXT:    [[MUL3_I_I:%.*]] = fmul float [[CONV1_I]], 0.000000e+00
 ; CHECK-NEXT:    store i32 [[SEL]], ptr [[G_2345:%.*]], align 4
-; CHECK-NEXT:    ret i32 1
+; CHECK-NEXT:    [[A_0_COPYLOAD_CAST:%.*]] = bitcast float [[MUL3_I_I]] to i32
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[A_0_COPYLOAD_CAST]], -1
+; CHECK-NEXT:    [[CONV:%.*]] = zext i1 [[CMP]] to i32
+; CHECK-NEXT:    ret i32 [[CONV]]
 ;
   %.b1 = load i1, ptr %g_12, align 4
   %sel = select i1 %.b, i32 65529, i32 53264

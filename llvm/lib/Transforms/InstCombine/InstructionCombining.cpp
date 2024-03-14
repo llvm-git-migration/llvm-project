@@ -1491,6 +1491,11 @@ Instruction *InstCombinerImpl::foldFBinOpOfIntCastsFromSign(
                                 Op1IntC, FPTy, DL) != Op1FpC)
       return nullptr;
 
+    // Signed + Mul req non-zero
+    if (OpsFromSigned && BO.getOpcode() == Instruction::FMul &&
+        !match(Op1IntC, m_NonZero()))
+      return nullptr;
+
     // First try to keep sign of cast the same.
     IntOps[1] = Op1IntC;
   }

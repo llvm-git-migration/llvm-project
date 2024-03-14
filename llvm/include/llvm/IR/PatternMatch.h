@@ -544,6 +544,17 @@ struct is_zero {
 /// For vectors, this includes constants with undefined elements.
 inline is_zero m_Zero() { return is_zero(); }
 
+struct is_non_zero {
+  bool isValue(const APInt &C) { return !C.isZero(); }
+};
+
+/// Match any constant s.t all elements are non-zero. For a scalar, this is the
+/// same as !m_Zero. For vectors is ensures that !m_Zero holds for all elements.
+inline cst_pred_ty<is_non_zero> m_NonZero() {
+  return cst_pred_ty<is_non_zero>();
+}
+inline api_pred_ty<is_non_zero> m_NonZero(const APInt *&V) { return V; }
+
 struct is_power2 {
   bool isValue(const APInt &C) { return C.isPowerOf2(); }
 };

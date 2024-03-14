@@ -614,6 +614,69 @@ TEST_F(PatternMatchTest, Power2) {
   EXPECT_TRUE(m_NegatedPower2OrZero().match(CZero));
 }
 
+TEST_F(PatternMatchTest, NonZero) {
+  EXPECT_FALSE(m_NonZero().match(IRB.getInt32(0)));
+  EXPECT_TRUE(m_NonZero().match(IRB.getInt32(1)));
+
+  Type *I8Ty = IRB.getInt8Ty();
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 1));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 1));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_TRUE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_TRUE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 2));
+    EXPECT_TRUE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(ConstantInt::get(I8Ty, 0));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+
+  {
+    SmallVector<Constant *, 2> VecElemIdxs;
+    VecElemIdxs.push_back(PoisonValue::get(I8Ty));
+    VecElemIdxs.push_back(UndefValue::get(I8Ty));
+    EXPECT_FALSE(m_NonZero().match(ConstantVector::get(VecElemIdxs)));
+  }
+}
+
 TEST_F(PatternMatchTest, Not) {
   Value *C1 = IRB.getInt32(1);
   Value *C2 = IRB.getInt32(2);
