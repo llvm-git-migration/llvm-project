@@ -1004,3 +1004,25 @@ define float @test_ui_add_with_signed_constant(i32 %shr.i) {
   %add = fadd float %sub, -16383.0
   ret float %add
 }
+
+
+;; Reduced form of bug noticed due to #82555
+@g_12 = global i1 false
+@g_2345 = global i32 1
+define i32 @missed_nonzero_check_on_constant_for_si_fmul(ptr %g_12, i1 %.b, ptr %g_2345) {
+; CHECK-LABEL: @missed_nonzero_check_on_constant_for_si_fmul(
+; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[DOTB:%.*]], i32 65529, i32 53264
+; CHECK-NEXT:    store i32 [[SEL]], ptr [[G_2345:%.*]], align 4
+; CHECK-NEXT:    ret i32 1
+;
+  %.b1 = load i1, ptr %g_12, align 4
+  %sel = select i1 %.b, i32 65529, i32 53264
+  %conv.i = trunc i32 %sel to i16
+  %conv1.i = sitofp i16 %conv.i to float
+  %mul3.i.i = fmul float %conv1.i, 0.000000e+00
+  store i32 %sel, ptr %g_2345, align 4
+  %a.0.copyload.cast = bitcast float %mul3.i.i to i32
+  %cmp = icmp sgt i32 %a.0.copyload.cast, -1
+  %conv = zext i1 %cmp to i32
+  ret i32 %conv
+}
