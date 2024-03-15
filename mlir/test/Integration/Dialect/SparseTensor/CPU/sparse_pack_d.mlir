@@ -140,10 +140,16 @@ module {
     sparse_tensor.print %s1 : tensor<4x3x2xf32, #BatchedCSR>
     sparse_tensor.print %s2 : tensor<4x3x2xf32, #CSRDense>
 
-    // FIXME: doing this explicitly crashes runtime
-    // bufferization.dealloc_tensor %s0 : tensor<4x3x2xf32, #CCC>
-    // bufferization.dealloc_tensor %s1 : tensor<4x3x2xf32, #BatchedCSR>
-    // bufferization.dealloc_tensor %s2 : tensor<4x3x2xf32, #CSRDense>
+    %has_runtime = sparse_tensor.has_runtime_library
+    scf.if %has_runtime {
+      // sparse_tensor.assemble copies buffers when running with the runtime
+      // library. Deallocations are needed not needed when running in codgen
+      // mode.
+      bufferization.dealloc_tensor %s0 : tensor<4x3x2xf32, #CCC>
+      bufferization.dealloc_tensor %s1 : tensor<4x3x2xf32, #BatchedCSR>
+      bufferization.dealloc_tensor %s2 : tensor<4x3x2xf32, #CSRDense>
+    }
+
     return
   }
 }
