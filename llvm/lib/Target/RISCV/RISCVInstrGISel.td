@@ -24,3 +24,19 @@ def G_FCLASS : RISCVGenericInstruction {
   let hasSideEffects = false;
 }
 def : GINodeEquiv<G_FCLASS, riscv_fclass>;
+
+// Pseudo equivalent to a RISCVISD::VMCLR_VL
+def G_VMCLR_VL : RISCVGenericInstruction {
+  let OutOperandList = (outs type0:$dst);
+  let InOperandList = (ins type1:$vl);
+  let hasSideEffects = false;
+}
+def : GINodeEquiv<G_VMCLR_VL, riscv_vmclr_vl>;
+
+// Pseudo equivalent to a RISCVISD::VMSET_VL
+def G_VMSET_VL : RISCVGenericInstruction {
+  let OutOperandList = (outs type0:$dst);
+  let InOperandList = (ins type1:$vl);
+  let hasSideEffects = false;
+}
+def : GINodeEquiv<G_VMSET_VL, riscv_vmset_vl>;

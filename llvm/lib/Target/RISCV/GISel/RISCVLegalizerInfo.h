@@ -43,6 +43,7 @@ private:
 
   bool legalizeVAStart(MachineInstr &MI, MachineIRBuilder &MIRBuilder) const;
   bool legalizeExt(MachineInstr &MI, MachineIRBuilder &MIRBuilder) const;
+  bool legalizeSplatVector(MachineInstr &MI, MachineIRBuilder &MIB) const;
 };
 } // end namespace llvm
 #endif
