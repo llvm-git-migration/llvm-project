@@ -1360,6 +1360,15 @@ KMP_LABEL(kmp_1):
 	DEBUG_INFO __kmp_invoke_microtask
 // -- End  __kmp_invoke_microtask
 
+// kmp_uint64
+// __kmp_hardware_timestamp(void)
+   PROC __kmp_hardware_timestamp
+   mrs x0, cntfrq_el0
+   mov x30, x0
+   ret
+   DEBUG_INFO __kmp_hardware_timestamp
+// -- End  __kmp_hardware_timestamp
+
 #endif /* (KMP_OS_LINUX || KMP_OS_DARWIN || KMP_OS_WINDOWS) && KMP_ARCH_AARCH64 */
 
 #if (KMP_OS_LINUX || KMP_OS_DARWIN || KMP_OS_WINDOWS) && KMP_ARCH_ARM
