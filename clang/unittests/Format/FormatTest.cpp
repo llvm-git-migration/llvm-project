@@ -11449,6 +11449,11 @@ TEST_F(FormatTest, UnderstandsNewAndDelete) {
                "void delete(link p);",
                "void new (link p);\n"
                "void delete (link p);");
+  
+  verifyFormat("{ p->delete(); }\n"
+               "{ p->new(); }",
+               "{ p->delete (); }\n"
+               "{ p->new (); }");
 
   FormatStyle AfterPlacementOperator = getLLVMStyle();
   AfterPlacementOperator.SpaceBeforeParens = FormatStyle::SBPO_Custom;
