@@ -330,22 +330,33 @@ namespace {
 class PPC32_SVR4_ABIInfo : public DefaultABIInfo {
   bool IsSoftFloatABI;
   bool IsRetSmallStructInRegABI;
+  bool IsComplexInRegABI;
+  // Size of GPR in bits.
+  static const unsigned RegLen = 32;
+  static const int ArgGPRsNum = 8;
 
   CharUnits getParamTypeAlignment(QualType Ty) const;
+  ABIArgInfo handleComplex(uint64_t &TypeSize) const;
 
 public:
   PPC32_SVR4_ABIInfo(CodeGen::CodeGenTypes &CGT, bool SoftFloatABI,
-                     bool RetSmallStructInRegABI)
+                     bool RetSmallStructInRegABI, bool ComplexInRegABI)
       : DefaultABIInfo(CGT), IsSoftFloatABI(SoftFloatABI),
-        IsRetSmallStructInRegABI(RetSmallStructInRegABI) {}
+        IsRetSmallStructInRegABI(RetSmallStructInRegABI),
+        IsComplexInRegABI(ComplexInRegABI) {}
 
   ABIArgInfo classifyReturnType(QualType RetTy) const;
+  ABIArgInfo classifyArgumentType(QualType Ty, int &ArgGPRsLeft) const;
 
   void computeInfo(CGFunctionInfo &FI) const override {
+
     if (!getCXXABI().classifyReturnType(FI))
       FI.getReturnInfo() = classifyReturnType(FI.getReturnType());
+
+    int ArgGPRsLeft = ArgGPRsNum;
+
     for (auto &I : FI.arguments())
-      I.info = classifyArgumentType(I.type);
+      I.info = classifyArgumentType(I.type, ArgGPRsLeft);
   }
 
   Address EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
@@ -355,9 +366,9 @@ public:
 class PPC32TargetCodeGenInfo : public TargetCodeGenInfo {
 public:
   PPC32TargetCodeGenInfo(CodeGenTypes &CGT, bool SoftFloatABI,
-                         bool RetSmallStructInRegABI)
+                         bool RetSmallStructInRegABI, bool ComplexInRegABI)
       : TargetCodeGenInfo(std::make_unique<PPC32_SVR4_ABIInfo>(
-            CGT, SoftFloatABI, RetSmallStructInRegABI)) {}
+            CGT, SoftFloatABI, RetSmallStructInRegABI, ComplexInRegABI)) {}
 
   static bool isStructReturnInRegABI(const llvm::Triple &Triple,
                                      const CodeGenOptions &Opts);
@@ -396,12 +407,77 @@ CharUnits PPC32_SVR4_ABIInfo::getParamTypeAlignment(QualType Ty) const {
   return CharUnits::fromQuantity(4);
 }
 
+ABIArgInfo PPC32_SVR4_ABIInfo::handleComplex(uint64_t &TypeSize) const {
+  llvm::Type *ElemTy;
+  unsigned RegsNeeded; // Registers Needed for Complex.
+
+  // Choice of using llvm::Type::getInt64Ty(getVMContext()) for complex
+  // single-precision floats is based on the ABI ATR-PASS-COMPLEX-IN-GPRS
+  // specification. According to the specification:
+  // - For complex single-precision floats: If the register (gr) is even, it's
+  // incremented by one, and the lower-addressed word of the argument is loaded
+  // into gr, while the higher-addressed word is loaded into gr + 1. Then, gr is
+  // incremented by 2.
+  // - For complex double-precision floats: The words of the argument are loaded
+  // in memory-address order into gr, gr + 1, gr + 2, and gr + 3, with gr being
+  // incremented by 4. Thus, to maintain even alignment and adhere to the ABI
+  // specification, llvm::Type::getInt64Ty(getVMContext()) is used when TypeSize
+  // is 64. Powerpc backend handles this alignment requirement. Specifically,
+  // you can refer to the CC_PPC32_SVR4_Custom_AlignArgRegs method from
+  // PPCCallingconvention.cpp. For more context, refer to the previous
+  // discussion: https://reviews.llvm.org/D146942 and the related LLVM pull
+  // request: #77732
+
+  if (TypeSize == 64) {
+    ElemTy = llvm::Type::getInt64Ty(getVMContext());
+    RegsNeeded = 1;
+  } else {
+    ElemTy = llvm::Type::getInt32Ty(getVMContext());
+    RegsNeeded = TypeSize >> 5;
+  }
+  return ABIArgInfo::getDirect(llvm::ArrayType::get(ElemTy, RegsNeeded));
+}
+
+ABIArgInfo PPC32_SVR4_ABIInfo::classifyArgumentType(QualType Ty,
+                                                    int &ArgGPRsLeft) const {
+  assert(ArgGPRsLeft >= 0 && "Arg GPR must be large or equal than zero");
+  Ty = useFirstFieldIfTransparentUnion(Ty);
+
+  ASTContext &Context = getContext();
+
+  uint64_t TypeSize = Context.getTypeSize(Ty);
+
+  if (Ty->isAnyComplexType() && TypeSize <= RegLen * ArgGPRsLeft) {
+    assert(Ty->isAnyComplexType() && "Ty must be Complex type.");
+    if (IsComplexInRegABI) {
+      ArgGPRsLeft -= TypeSize / RegLen;
+      return handleComplex(TypeSize);
+    } else
+      ArgGPRsLeft--;
+  }
+
+  if (ArgGPRsLeft) {
+    // Records with non-trivial destructors/copy-constructors should not be
+    // passed by value.
+    if (isAggregateTypeForABI(Ty))
+      ArgGPRsLeft -= 1;
+    else if (!Ty->isFloatingType()) {
+      // For other premitive types.
+      if (TypeSize > RegLen && TypeSize <= ArgGPRsLeft * RegLen)
+        ArgGPRsLeft -= TypeSize / RegLen;
+      else
+        ArgGPRsLeft--;
+    }
+  }
+
+  return DefaultABIInfo::classifyArgumentType(Ty);
+}
+
 ABIArgInfo PPC32_SVR4_ABIInfo::classifyReturnType(QualType RetTy) const {
-  uint64_t Size;
+  uint64_t Size = getContext().getTypeSize(RetTy);
 
   // -msvr4-struct-return puts small aggregates in GPR3 and GPR4.
-  if (isAggregateTypeForABI(RetTy) && IsRetSmallStructInRegABI &&
-      (Size = getContext().getTypeSize(RetTy)) <= 64) {
+  if (isAggregateTypeForABI(RetTy) && IsRetSmallStructInRegABI && Size <= 64) {
     // System V ABI (1995), page 3-22, specified:
     // > A structure or union whose size is less than or equal to 8 bytes
     // > shall be returned in r3 and r4, as if it were first stored in the
@@ -420,6 +496,10 @@ ABIArgInfo PPC32_SVR4_ABIInfo::classifyReturnType(QualType RetTy) const {
       return ABIArgInfo::getDirect(CoerceTy);
     }
   }
+  if (IsComplexInRegABI && RetTy->isAnyComplexType()) {
+    assert(RetTy->isAnyComplexType() && "RetTy must be Complex type.");
+    return handleComplex(Size);
+  }
 
   return DefaultABIInfo::classifyReturnType(RetTy);
 }
@@ -431,11 +511,12 @@ Address PPC32_SVR4_ABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAList,
   if (getTarget().getTriple().isOSDarwin()) {
     auto TI = getContext().getTypeInfoInChars(Ty);
     TI.Align = getParamTypeAlignment(Ty);
+    int ArgGPRs = ArgGPRsNum;
 
     CharUnits SlotSize = CharUnits::fromQuantity(4);
     return emitVoidPtrVAArg(CGF, VAList, Ty,
-                            classifyArgumentType(Ty).isIndirect(), TI, SlotSize,
-                            /*AllowHigherAlign=*/true);
+                            classifyArgumentType(Ty, ArgGPRs).isIndirect(), TI,
+                            SlotSize, /*AllowHigherAlign=*/true);
   }
 
   const unsigned OverflowLimit = 8;
@@ -1036,8 +1117,10 @@ std::unique_ptr<TargetCodeGenInfo>
 CodeGen::createPPC32TargetCodeGenInfo(CodeGenModule &CGM, bool SoftFloatABI) {
   bool RetSmallStructInRegABI = PPC32TargetCodeGenInfo::isStructReturnInRegABI(
       CGM.getTriple(), CGM.getCodeGenOpts());
-  return std::make_unique<PPC32TargetCodeGenInfo>(CGM.getTypes(), SoftFloatABI,
-                                                  RetSmallStructInRegABI);
+  bool IsComplexInRegABI = (CGM.getCodeGenOpts().getComplexInRegABI() ==
+                            CodeGenOptions::CMPLX_InGPR);
+  return std::make_unique<PPC32TargetCodeGenInfo>(
+      CGM.getTypes(), SoftFloatABI, RetSmallStructInRegABI, IsComplexInRegABI);
 }
 
 std::unique_ptr<TargetCodeGenInfo>
