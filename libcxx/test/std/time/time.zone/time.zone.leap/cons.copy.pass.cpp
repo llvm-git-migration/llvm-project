@@ -32,7 +32,7 @@
 constexpr bool test() {
   std::chrono::leap_second a =
       test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1});
-  std::chrono::leap_second b(a);
+  std::chrono::leap_second b = a;
 
   //  operator== only compares the date member.
   assert(a.date() == b.date());

@@ -10,19 +10,17 @@
 #ifndef SUPPORT_TEST_CHRONO_LEAP_SECOND_HPP
 #define SUPPORT_TEST_CHRONO_LEAP_SECOND_HPP
 
-/**
- * @file Helper functions to create a @ref std::chrono::leap_second.
- *
- * Since the standard doesn't specify how a @ref std::chrono::leap_second is
- * constructed this is implementation defined. To make the public API tests of
- * the class generic this header defines helper functions to create the
- * required object.
- *
- * @note This requires every standard library implementation to write their own
- * helper function. Vendors are encouraged to create a pull request at
- * https://github.com/llvm/llvm-project so their specific implementation can be
- * part of this file.
- */
+// Contains helper functions to create a std::chrono::leap_second.
+//
+// Since the standard doesn't specify how a @ref std::chrono::leap_second is
+// constructed this is implementation defined. To make the public API tests of
+// the class generic this header defines helper functions to create the
+// required object.
+//
+// Note This requires every standard library implementation to write their own
+// helper function. Vendors are encouraged to create a pull request at
+// https://github.com/llvm/llvm-project so their specific implementation can be
+// part of this file.
 
 #include "test_macros.h"
 
@@ -36,7 +34,7 @@
 
 // In order to find this include the calling test needs to provide this path in
 // the search path. Typically this looks like:
-//   REMOVE_THIS_PREFIX__ADDITIONAL_COMPILE_FLAGS(stdlib=libc++): -I %S/../../../../../../src/include
+//   ADDITIONAL_COMPILE_FLAGS(stdlib=libc++): -I %S/../../../../../../src/include
 // where the number of `../` sequences depends on the subdirectory level of the
 // test.
 #  include "tzdb/leap_second_private.h" // Header in the dylib
@@ -47,7 +45,8 @@ test_leap_second_create(const std::chrono::sys_seconds& date, const std::chrono:
 }
 
 #else // _LIBCPP_VERSION
-#  error "Please create a vendor specific version of the test functions and file a review at https://reviews.llvm.org/"
+#  error                                                                                                               \
+      "Please create a vendor specific version of the test typedef and file a PR at https://github.com/llvm/llvm-project"
 #endif // _LIBCPP_VERSION
 
 #endif // SUPPORT_TEST_CHRONO_LEAP_SECOND_HPP

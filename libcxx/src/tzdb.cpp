@@ -669,8 +669,9 @@ void __init_tzdb(tzdb& __tzdb, __tz::__rules_storage_type& __rules) {
   // The latter is much easier to parse, it seems Howard shares that
   // opinion.
   chrono::__parse_leap_seconds(__tzdb.leap_seconds, ifstream{__root / "leap-seconds.list"});
-  // Note the input is sorted, but that does not seem to be are
-  // requirement, it is a requirement in the Standard.
+  // The Standard requires the leap seconds to be sorted. The file
+  // leap-seconds.list usually provides them in sorted order, but that is not
+  // guaranteed so we ensure it here.
   std::ranges::sort(__tzdb.leap_seconds);
 }
 

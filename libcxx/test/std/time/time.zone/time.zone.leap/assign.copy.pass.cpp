@@ -22,6 +22,7 @@
 // };
 
 #include <chrono>
+#include <memory>
 #include <type_traits>
 #include <cassert>
 
@@ -39,7 +40,9 @@ constexpr bool test() {
   assert(a.date() != b.date());
   assert(a.value() != b.value());
 
-  b = a;
+  std::same_as<std::chrono::leap_second&> decltype(auto) result(b = a);
+  assert(std::addressof(result) == std::addressof(b));
+
   assert(a.date() == b.date());
   assert(a.value() == b.value());
 

@@ -75,23 +75,28 @@ static void test_invalid() {
 static void test_leap_seconds() {
   using namespace std::chrono;
 
+  // Test whether loading also sorts the entries in the proper order.
   const tzdb& result = parse(
       R"(
-2272060800  10  # 1 Jan 1972
-2287785600  11  # 1 Jul 1972
 2303683200  12  # 1 Jan 1973
+2287785600  11  # 1 Jul 1972
+2272060800  10  # 1 Jan 1972
+86400        1  # 2 Jan 1900 Dummy entry to test before 1970
 )");
 
-  assert(result.leap_seconds.size() == 3);
+  assert(result.leap_seconds.size() == 4);
 
-  assert(result.leap_seconds[0].date() == sys_seconds{sys_days{1972y / January / 1}});
-  assert(result.leap_seconds[0].value() == 10s);
+  assert(result.leap_seconds[0].date() == sys_seconds{sys_days{1900y / January / 2}});
+  assert(result.leap_seconds[0].value() == 1s);
 
-  assert(result.leap_seconds[1].date() == sys_seconds{sys_days{1972y / July / 1}});
-  assert(result.leap_seconds[1].value() == 11s);
+  assert(result.leap_seconds[1].date() == sys_seconds{sys_days{1972y / January / 1}});
+  assert(result.leap_seconds[1].value() == 10s);
 
-  assert(result.leap_seconds[2].date() == sys_seconds{sys_days{1973y / January / 1}});
-  assert(result.leap_seconds[2].value() == 12s);
+  assert(result.leap_seconds[2].date() == sys_seconds{sys_days{1972y / July / 1}});
+  assert(result.leap_seconds[2].value() == 11s);
+
+  assert(result.leap_seconds[3].date() == sys_seconds{sys_days{1973y / January / 1}});
+  assert(result.leap_seconds[3].value() == 12s);
 }
 
 int main(int, const char**) {
