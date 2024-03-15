@@ -604,7 +604,7 @@ body:             |
     %2 = LI 48
     %5 = COPY %0.sub_32
     %8 = SRW killed %5, killed %2
-    ; CHECK: LI 0
+    ; CHECK: LI8 0
     ; CHECK-LATE: li 3, 0
     $x3 = EXTSW_32_64 %8
     BLR8 implicit $lr8, implicit $rm, implicit $x3
