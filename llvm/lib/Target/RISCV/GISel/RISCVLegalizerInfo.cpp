@@ -414,6 +414,11 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
       .clampScalar(0, sXLen, sXLen)
       .customFor({sXLen});
 
+  getActionDefinitionsBuilder(G_SPLAT_VECTOR)
+      .legalIf(
+          all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST), typeIs(1, sXLen)))
+      .customIf(all(typeIsLegalBoolVec(0, BoolVecTys, ST), typeInSet(1, {s1})));
+
   getLegacyLegalizerInfo().computeTables();
 }
 
@@ -593,15 +598,7 @@ bool RISCVLegalizerInfo::legalizeExt(MachineInstr &MI,
 
   LLT DstTy = MRI.getType(Dst);
   LLT SrcTy = MRI.getType(Src);
-
-  // The only custom legalization of extends we handle are vector extends.
-  if (!DstTy.isVector() || !SrcTy.isVector())
-    return false;
-
-  // The only custom legalization of extends is from mask types
-  if (SrcTy.getElementType().getSizeInBits() != 1)
-    return false;
-
+  
   int64_t ExtTrueVal =
       Opc == TargetOpcode::G_ZEXT || Opc == TargetOpcode::G_ANYEXT ? 1 : -1;
   LLT DstEltTy = DstTy.getElementType();
@@ -610,6 +607,87 @@ bool RISCVLegalizerInfo::legalizeExt(MachineInstr &MI,
       MIB.buildSplatVector(DstTy, MIB.buildConstant(DstEltTy, ExtTrueVal));
   MIB.buildSelect(Dst, Src, SplatTrue, SplatZero);
 
+  MI.eraseFromParent();
+  return true;
+}
+
+/// Return the type of the mask type suitable for masking the provided
+/// vector type.  This is simply an i1 element type vector of the same
+/// (possibly scalable) length.
+static LLT getMaskTypeFor(LLT VecTy) {
+  assert(VecTy.isVector());
+  ElementCount EC = VecTy.getElementCount();
+  return LLT::vector(EC, LLT::scalar(1));
+}
+
+/// Creates an all ones mask suitable for masking a vector of type VecTy with
+/// vector length VL.
+static MachineInstrBuilder buildAllOnesMask(LLT VecTy, const SrcOp &VL,
+                                            MachineIRBuilder &MIB,
+                                            MachineRegisterInfo &MRI) {
+  LLT MaskTy = getMaskTypeFor(VecTy);
+  return MIB.buildInstr(RISCV::G_VMSET_VL, {MaskTy}, {VL});
+}
+
+/// Gets the two common "VL" operands: an all-ones mask and the vector length.
+/// VecTy is a scalable vector type.
+static std::pair<MachineInstrBuilder, Register>
+buildDefaultVLOps(const DstOp &Dst, MachineIRBuilder &MIB,
+                  MachineRegisterInfo &MRI) {
+  LLT VecTy = Dst.getLLTTy(MRI);
+  assert(VecTy.isScalableVector() && "Expecting scalable container type");
+  Register VL(RISCV::X0);
+  MachineInstrBuilder Mask = buildAllOnesMask(VecTy, VL, MIB, MRI);
+  return {Mask, VL};
+}
+
+// Lower splats of s1 types to G_ICMP. For each mask vector type, we have a
+// legal equivalently-sized i8 type, so we can use that as a go-between.
+// Splats of s1 types that have constant value can be legalized as VMSET_VL or
+// VMCLR_VL.
+bool RISCVLegalizerInfo::legalizeSplatVector(MachineInstr &MI,
+                                             MachineIRBuilder &MIB) const {
+  assert(MI.getOpcode() == TargetOpcode::G_SPLAT_VECTOR);
+
+  MachineRegisterInfo &MRI = *MIB.getMRI();
+
+  Register Dst = MI.getOperand(0).getReg();
+  Register SplatVal = MI.getOperand(1).getReg();
+
+  LLT VecTy = MRI.getType(Dst);
+  LLT SplatTy = MRI.getType(SplatVal);
+
+  // We should not see any splats on sizes larger than s1 since those are legal
+  // and do not need custom legalization.
+  if (SplatTy.getSizeInBits() != 1)
+    return false;
+
+  // All-zeros or all-ones splats are handled specially.
+  MachineInstr &SplatValMI = *MRI.getVRegDef(SplatVal);
+  if (isAllOnesOrAllOnesSplat(SplatValMI, MRI)) {
+    auto VL = buildDefaultVLOps(VecTy, MIB, MRI).second;
+    MIB.buildInstr(RISCV::G_VMSET_VL, {Dst}, {VL});
+    MI.eraseFromParent();
+    return true;
+  }
+  if (isNullOrNullSplat(SplatValMI, MRI)) {
+    auto VL = buildDefaultVLOps(VecTy, MIB, MRI).second;
+    MIB.buildInstr(RISCV::G_VMCLR_VL, {Dst}, {VL});
+    MI.eraseFromParent();
+    return true;
+  }
+
+  // Handle non-constant mask splat (i.e. not sure if it's all zeros or all
+  // ones) by promoting it to an s8 splat.
+  LLT InterEltTy = LLT::scalar(8);
+  LLT InterTy = VecTy.changeElementType(InterEltTy);
+  auto ZExtSplatVal = MIB.buildZExt(InterEltTy, SplatVal);
+  auto And =
+      MIB.buildAnd(InterEltTy, ZExtSplatVal, MIB.buildConstant(InterEltTy, 1));
+  auto LHS = MIB.buildSplatVector(InterTy, And);
+  auto ZeroSplat =
+      MIB.buildSplatVector(InterTy, MIB.buildConstant(InterEltTy, 0));
+  MIB.buildICmp(CmpInst::Predicate::ICMP_NE, Dst, LHS, ZeroSplat);
   MI.eraseFromParent();
   return true;
 }
@@ -677,6 +755,8 @@ bool RISCVLegalizerInfo::legalizeCustom(
   case TargetOpcode::G_SEXT:
   case TargetOpcode::G_ANYEXT:
     return legalizeExt(MI, MIRBuilder);
+  case TargetOpcode::G_SPLAT_VECTOR:
+    return legalizeSplatVector(MI, MIRBuilder);
   }
 
   llvm_unreachable("expected switch to return");
