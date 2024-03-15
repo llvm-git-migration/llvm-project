@@ -336,7 +336,7 @@ define <4 x i32> @srem(<4 x i32> %v) {
 
 ; Try FP ops/types.
 
-define <4 x float> @fadd(<4 x float> %v) {
+define <4 x float> @fadd(<4 x float> nofpclass(nan) %v) {
 ; CHECK-LABEL: @fadd(
 ; CHECK-NEXT:    [[S:%.*]] = fadd <4 x float> [[V:%.*]], <float 4.100000e+01, float 4.200000e+01, float -0.000000e+00, float -0.000000e+00>
 ; CHECK-NEXT:    ret <4 x float> [[S]]
@@ -359,7 +359,7 @@ define <4 x double> @fsub(<4 x double> %v) {
 
 ; Propagate any FMF.
 
-define <4 x float> @fmul(<4 x float> %v) {
+define <4 x float> @fmul(<4 x float> nofpclass(nan) %v) {
 ; CHECK-LABEL: @fmul(
 ; CHECK-NEXT:    [[S:%.*]] = fmul nnan ninf <4 x float> [[V:%.*]], <float 4.100000e+01, float 1.000000e+00, float 1.000000e+00, float 1.000000e+00>
 ; CHECK-NEXT:    ret <4 x float> [[S]]
@@ -380,7 +380,7 @@ define <4 x double> @fdiv_constant_op0(<4 x double> %v) {
   ret <4 x double> %s
 }
 
-define <4 x double> @fdiv_constant_op1(<4 x double> %v) {
+define <4 x double> @fdiv_constant_op1(<4 x double> nofpclass(nan) %v) {
 ; CHECK-LABEL: @fdiv_constant_op1(
 ; CHECK-NEXT:    [[S:%.*]] = fdiv reassoc <4 x double> [[V:%.*]], <double undef, double 1.000000e+00, double 4.300000e+01, double 4.400000e+01>
 ; CHECK-NEXT:    ret <4 x double> [[S]]
