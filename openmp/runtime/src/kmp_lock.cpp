@@ -2646,9 +2646,13 @@ static void __kmp_set_drdpa_lock_flags(kmp_drdpa_lock_t *lck,
 kmp_backoff_t __kmp_spin_backoff_params = {1, 4096, 100};
 #else
 // Use nanoseconds for other platforms
+#if KMP_ARCH_ARM64
+#define __kmp_tsc() __kmp_hardware_timestamp()
+#else
 extern kmp_uint64 __kmp_now_nsec();
-kmp_backoff_t __kmp_spin_backoff_params = {1, 256, 100};
 #define __kmp_tsc() __kmp_now_nsec()
+#endif
+kmp_backoff_t __kmp_spin_backoff_params = {1, 256, 100};
 #endif
 
 // A useful predicate for dealing with timestamps that may wrap.
