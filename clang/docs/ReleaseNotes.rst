@@ -215,6 +215,12 @@ for the full list.
 
   This allows the ``_Nullable`` and ``_Nonnull` family of type attributes to
   apply to this class.
+- The ``swiftasynccc`` attribute is now considered to be a Clang extension
+  rather than a language standard feature. Please use
+  ``__has_extension(swiftasynccc)`` to check the availability of this attribute
+  for the target platform instead of ``__has_feature(swiftasynccc)``. Also,
+  added a new extension query ``__has_extension(swiftcc)`` corresponding to the
+  ``__attribute__((swiftcc))`` attribute.
 
 Improvements to Clang's diagnostics
 -----------------------------------
