@@ -211,6 +211,24 @@ define double @fmul_nnan_ninf_nneg_n0.0_commute(i127 %x) {
   ret double %r
 }
 
+define float @src_mul_nzero_neg(float nofpclass(inf nan pzero psub pnorm) %f) {
+; CHECK-LABEL: @src_mul_nzero_neg(
+; CHECK-NEXT:    [[R:%.*]] = fmul float [[F:%.*]], -0.000000e+00
+; CHECK-NEXT:    ret float [[R]]
+;
+  %r = fmul float %f, -0.0
+  ret float %r
+}
+
+define float @src_mul_zero_neg(float nofpclass(inf nan pzero psub pnorm) %f) {
+; CHECK-LABEL: @src_mul_zero_neg(
+; CHECK-NEXT:    [[R:%.*]] = fmul float [[F:%.*]], 0.000000e+00
+; CHECK-NEXT:    ret float [[R]]
+;
+  %r = fmul float %f, 0.0
+  ret float %r
+}
+
 ; Make sure we can infer %x can't be 0 based on assumes.
 define { float, float } @test_fmul_0_assumed_finite(float %x) {
 ; CHECK-LABEL: @test_fmul_0_assumed_finite(
