@@ -328,7 +328,7 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
   case TargetOpcode::G_ANYEXT:
   case TargetOpcode::G_SEXT:
   case TargetOpcode::G_ZEXT: {
-    // Handle vector extends below
+    // Handle vector extends in the default case below.
     if (MRI.getType(MI.getOperand(0).getReg()).isVector())
       break;
     return getInstructionMapping(DefaultMappingID, /*Cost=*/1, GPRValueMapping,
@@ -372,19 +372,6 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
   SmallVector<const ValueMapping *, 4> OpdsMapping(NumOperands);
 
   switch (Opc) {
-  case TargetOpcode::G_ANYEXT:
-  case TargetOpcode::G_SEXT:
-  case TargetOpcode::G_ZEXT: {
-    // Scalar extends are handled above
-    assert(MRI.getType(MI.getOperand(0).getReg()).isVector());
-    LLT DstTy = MRI.getType(MI.getOperand(0).getReg());
-    LLT SrcTy = MRI.getType(MI.getOperand(1).getReg());
-    OpdsMapping[0] =
-        getVRBValueMapping(DstTy.getSizeInBits().getKnownMinValue());
-    OpdsMapping[1] =
-        getVRBValueMapping(SrcTy.getSizeInBits().getKnownMinValue());
-    break;
-  }
   case TargetOpcode::G_LOAD: {
     LLT Ty = MRI.getType(MI.getOperand(0).getReg());
     OpdsMapping[0] = GPRValueMapping;
@@ -539,6 +526,20 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
     break;
   }
   default:
+    if (MRI.getType(MI.getOperand(0).getReg()).isVector()) {
+      for (unsigned Idx = 0; Idx < NumOperands; ++Idx) {
+        auto &MO = MI.getOperand(Idx);
+        if (!MO.isReg() || !MO.getReg())
+          continue;
+        LLT Ty = MRI.getType(MO.getReg());
+        if (!Ty.isValid())
+          continue;
+        OpdsMapping[Idx] =
+            getVRBValueMapping(Ty.getSizeInBits().getKnownMinValue());
+      }
+      break;
+    }
+
     // By default map all scalars to GPR.
     for (unsigned Idx = 0; Idx < NumOperands; ++Idx) {
        auto &MO = MI.getOperand(Idx);
