@@ -109,7 +109,7 @@ int unused_with_implicit_default_def(void) { return 1; }
 int unused_with_implicit_forward_default_def(void) { return 0; }
 __attribute__((target_version("lse"))) int unused_with_implicit_forward_default_def(void) { return 1; }
 
-// This should generate a normal function.
+// This should generate a target version despite the default not being declared.
 __attribute__((target_version("rdm"))) int unused_without_default(void) { return 0; }
 
 //.
@@ -136,92 +136,113 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 // CHECK: @unused_with_implicit_forward_default_def = weak_odr ifunc i32 (), ptr @unused_with_implicit_forward_default_def.resolver
 //.
 // CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@fmv._Mflagm2Msme-i16i64
+// CHECK-LABEL: define {{[^@]+}}@fmv._MflagmMfp16fmlMrng
 // CHECK-SAME: () #[[ATTR0:[0-9]+]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@fmv._Mflagm2Msme-i16i64
+// CHECK-SAME: () #[[ATTR1:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 2
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._MlseMsha2
-// CHECK-SAME: () #[[ATTR1:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR2:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 3
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._MdotprodMls64_accdata
-// CHECK-SAME: () #[[ATTR2:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR3:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 4
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._Mfp16fmlMmemtag
-// CHECK-SAME: () #[[ATTR3:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR4:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 5
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._MaesMfp
-// CHECK-SAME: () #[[ATTR4:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR5:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 6
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._McrcMls64_v
-// CHECK-SAME: () #[[ATTR5:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR6:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 7
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._Mbti
-// CHECK-SAME: () #[[ATTR6:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR7:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 8
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv._Msme2
-// CHECK-SAME: () #[[ATTR7:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR8:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 9
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@fmv_one._Mls64Msimd
+// CHECK-SAME: () #[[ATTR5]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_one._Mdpb
-// CHECK-SAME: () #[[ATTR8:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR9:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 2
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@fmv_two._Mfp
+// CHECK-SAME: () #[[ATTR5]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_two._Msimd
-// CHECK-SAME: () #[[ATTR4]] {
+// CHECK-SAME: () #[[ATTR5]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 2
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_two._Mdgh
-// CHECK-SAME: () #[[ATTR9:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR10:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 3
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_two._Mfp16Msimd
-// CHECK-SAME: () #[[ATTR10:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR11:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 4
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@foo
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[CALL:%.*]] = call i32 @fmv()
 // CHECK-NEXT:    [[CALL1:%.*]] = call i32 @fmv_one()
@@ -371,35 +392,35 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_e.default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 20
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 111
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_c._Mssbs
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret void
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_c.default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret void
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@goo
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[CALL:%.*]] = call i32 @fmv_inline()
 // CHECK-NEXT:    [[CALL1:%.*]] = call i32 @fmv_e()
@@ -587,7 +608,7 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@recur
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    call void @reca()
 // CHECK-NEXT:    ret void
@@ -595,7 +616,7 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@main
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[RETVAL:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    store i32 0, ptr [[RETVAL]], align 4
@@ -606,7 +627,7 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@hoo
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[FP1:%.*]] = alloca ptr, align 8
 // CHECK-NEXT:    [[FP2:%.*]] = alloca ptr, align 8
@@ -623,90 +644,69 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@unused_with_forward_default_decl._Mmops
-// CHECK-SAME: () #[[ATTR12:[0-9]+]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 0
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_extern_forward_default_decl._Mdotprod
 // CHECK-SAME: () #[[ATTR13:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_with_default_def.default
-// CHECK-SAME: () #[[ATTR9]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_default_def.default
-// CHECK-SAME: () #[[ATTR9]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_forward_default_def.default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_extern_forward_default_decl._Mdotprod
+// CHECK-SAME: () #[[ATTR14:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_forward_default_def._Mlse
-// CHECK-SAME: () #[[ATTR14:[0-9]+]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@fmv._MflagmMfp16fmlMrng
-// CHECK-SAME: () #[[ATTR15:[0-9]+]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@fmv_one._Mls64Msimd
-// CHECK-SAME: () #[[ATTR4]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@fmv_two._Mfp
-// CHECK-SAME: () #[[ATTR4]] {
-// CHECK-NEXT:  entry:
-// CHECK-NEXT:    ret i32 1
-//
-//
-// CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@unused_with_default_decl._Maes
-// CHECK-SAME: () #[[ATTR4]] {
+// CHECK-SAME: () #[[ATTR5]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@unused_with_default_def._Msve
-// CHECK-SAME: () #[[ATTR16:[0-9]+]] {
+// CHECK-SAME: () #[[ATTR15:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@unused_with_default_def.default
+// CHECK-SAME: () #[[ATTR10]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_default_def._Mfp16
+// CHECK-SAME: () #[[ATTR11]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 0
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_default_def.default
+// CHECK-SAME: () #[[ATTR10]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_forward_default_def.default
 // CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
-// CHECK-LABEL: define {{[^@]+}}@unused_without_default
+// CHECK-LABEL: define {{[^@]+}}@unused_with_implicit_forward_default_def._Mlse
+// CHECK-SAME: () #[[ATTR16:[0-9]+]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
+// CHECK: Function Attrs: noinline nounwind optnone
+// CHECK-LABEL: define {{[^@]+}}@unused_without_default._Mrdm
 // CHECK-SAME: () #[[ATTR17:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 0
@@ -798,14 +798,14 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_inline._MaesMdotprod
-// CHECK-SAME: () #[[ATTR13]] {
+// CHECK-SAME: () #[[ATTR14]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 13
 //
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_inline._Mfp16fmlMsimd
-// CHECK-SAME: () #[[ATTR3]] {
+// CHECK-SAME: () #[[ATTR4]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 14
 //
@@ -826,7 +826,7 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_inline.default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 3
 //
@@ -840,7 +840,7 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 //
 // CHECK: Function Attrs: noinline nounwind optnone
 // CHECK-LABEL: define {{[^@]+}}@fmv_d.default
-// CHECK-SAME: () #[[ATTR9]] {
+// CHECK-SAME: () #[[ATTR10]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 1
 //
@@ -996,23 +996,23 @@ __attribute__((target_version("rdm"))) int unused_without_default(void) { return
 // CHECK-NOFMV-NEXT:    ret i32 0
 //
 //.
-// CHECK: attributes #[[ATTR0]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+altnzcv,+bf16,+flagm,+sme,+sme-i16i64,-v9.5a" }
-// CHECK: attributes #[[ATTR1]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+lse,+neon,+sha2,-v9.5a" }
-// CHECK: attributes #[[ATTR2]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+ls64,+neon,-v9.5a" }
-// CHECK: attributes #[[ATTR3]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fp16fml,+fullfp16,+neon,-v9.5a" }
-// CHECK: attributes #[[ATTR4]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+neon,-v9.5a" }
-// CHECK: attributes #[[ATTR5]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+crc,-v9.5a" }
-// CHECK: attributes #[[ATTR6]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bti,-v9.5a" }
-// CHECK: attributes #[[ATTR7]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bf16,+sme,+sme2,-v9.5a" }
-// CHECK: attributes #[[ATTR8]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+ccpp,-v9.5a" }
-// CHECK: attributes #[[ATTR9]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="-v9.5a" }
-// CHECK: attributes #[[ATTR10]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fullfp16,+neon,-v9.5a" }
-// CHECK: attributes #[[ATTR11:[0-9]+]] = { "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="-v9.5a" }
-// CHECK: attributes #[[ATTR12]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+mops,-v9.5a" }
-// CHECK: attributes #[[ATTR13]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+neon,-v9.5a" }
-// CHECK: attributes #[[ATTR14]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+lse,-v9.5a" }
-// CHECK: attributes #[[ATTR15]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+flagm,+fp-armv8,+fp16fml,+fullfp16,+neon,+rand,-v9.5a" }
-// CHECK: attributes #[[ATTR16]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fullfp16,+neon,+sve,-v9.5a" }
+// CHECK: attributes #[[ATTR0]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+flagm,+fp-armv8,+fp16fml,+fullfp16,+neon,+rand,-v9.5a" }
+// CHECK: attributes #[[ATTR1]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+altnzcv,+bf16,+flagm,+sme,+sme-i16i64,-v9.5a" }
+// CHECK: attributes #[[ATTR2]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+lse,+neon,+sha2,-v9.5a" }
+// CHECK: attributes #[[ATTR3]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+ls64,+neon,-v9.5a" }
+// CHECK: attributes #[[ATTR4]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fp16fml,+fullfp16,+neon,-v9.5a" }
+// CHECK: attributes #[[ATTR5]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+neon,-v9.5a" }
+// CHECK: attributes #[[ATTR6]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+crc,-v9.5a" }
+// CHECK: attributes #[[ATTR7]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bti,-v9.5a" }
+// CHECK: attributes #[[ATTR8]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bf16,+sme,+sme2,-v9.5a" }
+// CHECK: attributes #[[ATTR9]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+ccpp,-v9.5a" }
+// CHECK: attributes #[[ATTR10]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="-v9.5a" }
+// CHECK: attributes #[[ATTR11]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fullfp16,+neon,-v9.5a" }
+// CHECK: attributes #[[ATTR12:[0-9]+]] = { "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="-v9.5a" }
+// CHECK: attributes #[[ATTR13]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+mops,-v9.5a" }
+// CHECK: attributes #[[ATTR14]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+dotprod,+fp-armv8,+neon,-v9.5a" }
+// CHECK: attributes #[[ATTR15]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+fullfp16,+neon,+sve,-v9.5a" }
+// CHECK: attributes #[[ATTR16]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+lse,-v9.5a" }
 // CHECK: attributes #[[ATTR17]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+fp-armv8,+neon,+rdm,-v9.5a" }
 // CHECK: attributes #[[ATTR18]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+aes,+f64mm,+fp-armv8,+fullfp16,+neon,+sve,-v9.5a" }
 // CHECK: attributes #[[ATTR19]] = { noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+bf16,+complxnum,+fp-armv8,+fullfp16,+neon,+rdm,+sme,-v9.5a" }
