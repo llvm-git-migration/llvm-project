@@ -1787,6 +1787,8 @@ void X86_64ABIInfo::classify(QualType Ty, uint64_t OffsetBase, Class &Lo,
   Lo = Hi = NoClass;
 
   Class &Current = OffsetBase < 64 ? Lo : Hi;
+  bool IsSplit =
+      OffsetBase < 64 && (OffsetBase + getContext().getTypeSize(Ty)) > 64;
   Current = Memory;
 
   if (const BuiltinType *BT = Ty->getAs<BuiltinType>()) {
@@ -1798,9 +1800,13 @@ void X86_64ABIInfo::classify(QualType Ty, uint64_t OffsetBase, Class &Lo,
       Lo = Integer;
       Hi = Integer;
     } else if (k >= BuiltinType::Bool && k <= BuiltinType::LongLong) {
+      if (IsSplit)
+        return;
       Current = Integer;
     } else if (k == BuiltinType::Float || k == BuiltinType::Double ||
                k == BuiltinType::Float16 || k == BuiltinType::BFloat16) {
+      if (IsSplit)
+        return;
       Current = SSE;
     } else if (k == BuiltinType::Float128) {
       Lo = SSE;
