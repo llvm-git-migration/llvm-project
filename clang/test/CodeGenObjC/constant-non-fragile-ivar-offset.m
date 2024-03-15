@@ -8,6 +8,12 @@
 // CHECK: @"OBJC_IVAR_$_IntermediateClass._intermediateProperty" = hidden constant i64 48
 // CHECK: @"OBJC_IVAR_$_SubClass.subClassIvar" = constant i64 56
 // CHECK: @"OBJC_IVAR_$_SubClass._subClassProperty" = hidden constant i64 64
+
+// CHECK: @"OBJC_IVAR_$_RootClass.these" = constant i64 0
+// CHECK: @"OBJC_IVAR_$_RootClass.dont" = constant i64 4
+// CHECK: @"OBJC_IVAR_$_RootClass.change" = constant i64 4
+// CHECK: @"OBJC_IVAR_$_StillStaticLayout.static_layout_ivar" = hidden global i32 12
+
 // CHECK: @"OBJC_IVAR_$_NotStaticLayout.not_static_layout_ivar" = hidden global i64 12
 
 @interface NSObject {
@@ -120,7 +126,29 @@
 // CHECK: getelementptr inbounds i8, ptr %1, i64 64
 @end
 
-@interface NotNSObject {
+ __attribute((objc_root_class))  @interface RootClass {
+  int these, dont, change;
+}
+@end
+
+@implementation RootClass 
+@end
+
+@interface StillStaticLayout : RootClass
+@end
+
+@implementation StillStaticLayout {
+  int static_layout_ivar;
+}
+
+// CHECK-LABEL: define internal void @"\01-[StillStaticLayout meth]"
+-(void)meth {
+  static_layout_ivar = 0;
+  // CHECK-NOT: load i64, ptr @"OBJC_IVAR_$StillStaticLayout.static_layout_ivar
+}
+@end
+
+__attribute((objc_root_class))  @interface NotNSObject {
   int these, might, change;
 }
 @end
