@@ -1284,3 +1284,26 @@ define <1 x i1> @bitcast_1vec_eq0(i32 %x) {
   %cmp = fcmp oeq <1 x float> %f, zeroinitializer
   ret <1 x i1> %cmp
 }
+
+define i1 @fcmp_fsub_const(float %x, float %y) {
+; CHECK-LABEL: @fcmp_fsub_const(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ogt float [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %fs = fsub float %x, %y
+  %cmp = fcmp ogt float %fs, 0.000000e+00
+  ret i1 %cmp
+}
+
+define i1 @fcmp_fsub_const_extra(float %x, float %y) {
+; CHECK-LABEL: @fcmp_fsub_const_extra(
+; CHECK-NEXT:    [[FS:%.*]] = fsub float [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    call void @use(float [[FS]])
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ogt float [[FS]], 0.000000e+00
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %fs = fsub float %x, %y
+  call void @use(float %fs)
+  %cmp = fcmp ogt float %fs, 0.000000e+00
+  ret i1 %cmp
+}
