@@ -241,6 +241,35 @@ TEST_F(SelectionDAGPatternMatchTest, patternCombinators) {
   EXPECT_TRUE(sd_match(Add, m_AllOf(m_Opc(ISD::ADD), m_OneUse())));
 }
 
+TEST_F(SelectionDAGPatternMatchTest, optionalResizing) {
+  SDLoc DL;
+  auto Int32VT = EVT::getIntegerVT(Context, 32);
+
+  SDValue Op0 = DAG->getCopyFromReg(DAG->getEntryNode(), DL, 1, Int32VT);
+
+  // zero extend
+  SDValue ZExt = DAG->getNode(ISD::ZERO_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalZExt = DAG->getNode(ISD::OR, DL, Int32VT, Op0, ZExt);
+
+  // sign extend
+  SDValue SExt = DAG->getNode(ISD::SIGN_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalSExt = DAG->getNode(ISD::OR, DL, Int32VT, Op0, SExt);
+
+  // any extend
+  SDValue AExt = DAG->getNode(ISD::ANY_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalAExt = DAG->getNode(ISD::OR, DL, Int32VT, Op0, AExt);
+
+  // truncate
+  SDValue Trunc = DAG->getNode(ISD::TRUNCATE, DL, Int32VT, Op0);
+  SDValue OptionalTrunc = DAG->getNode(ISD::OR, DL, Int32VT, Op0, Trunc);
+
+  using namespace SDPatternMatch;
+  EXPECT_TRUE(sd_match(OptionalZExt, m_ZExtOrSelf(m_Value(), m_Value())));
+  EXPECT_TRUE(sd_match(OptionalSExt, m_SExtOrSelf(m_Value(), m_Value())));
+  EXPECT_TRUE(sd_match(OptionalAExt, m_AExtOrSelf(m_Value(), m_Value())));
+  EXPECT_TRUE(sd_match(OptionalTrunc, m_TruncOrSelf(m_Value(), m_Value())));
+}
+
 TEST_F(SelectionDAGPatternMatchTest, matchNode) {
   SDLoc DL;
   auto Int32VT = EVT::getIntegerVT(Context, 32);
