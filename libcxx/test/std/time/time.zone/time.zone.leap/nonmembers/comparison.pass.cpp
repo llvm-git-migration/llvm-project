@@ -51,7 +51,7 @@
 // ADDITIONAL_COMPILE_FLAGS(stdlib=libc++): -I %S/../../../../../../src/include
 #include "test_chrono_leap_second.h"
 
-constexpr bool test(const std::chrono::leap_second lhs, const std::chrono::leap_second rhs) {
+constexpr void test(const std::chrono::leap_second lhs, const std::chrono::leap_second rhs) {
   AssertOrderReturn<std::strong_ordering, std::chrono::leap_second>();
   assert(testOrder(lhs, rhs, std::strong_ordering::less));
 
@@ -60,18 +60,23 @@ constexpr bool test(const std::chrono::leap_second lhs, const std::chrono::leap_
 
   AssertOrderReturn<std::strong_ordering, std::chrono::sys_seconds, std::chrono::leap_second>();
   assert(testOrder(lhs.date(), rhs, std::strong_ordering::less));
+}
+
+constexpr bool test() {
+  test(test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1}),
+       test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{1}}, std::chrono::seconds{2}));
 
   return true;
 }
 
 int main(int, const char**) {
+  test();
+  static_assert(test());
+
+  // test with the real tzdb
   const std::chrono::tzdb& tzdb = std::chrono::get_tzdb();
   assert(tzdb.leap_seconds.size() > 2);
   test(tzdb.leap_seconds[0], tzdb.leap_seconds[1]);
-
-  static_assert(
-      test(test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1}),
-           test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{1}}, std::chrono::seconds{2})));
 
   return 0;
 }

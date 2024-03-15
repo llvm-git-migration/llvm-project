@@ -52,10 +52,10 @@ private:
   seconds __value_;
 };
 
-_LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const leap_second& __x, const leap_second& __y) {
+_LIBCPP_HIDE_FROM_ABI inline constexpr bool operator==(const leap_second& __x, const leap_second& __y) {
   return __x.date() == __y.date();
 }
-_LIBCPP_HIDE_FROM_ABI constexpr strong_ordering operator<=>(const leap_second& __x, const leap_second& __y) {
+_LIBCPP_HIDE_FROM_ABI inline constexpr strong_ordering operator<=>(const leap_second& __x, const leap_second& __y) {
   return __x.date() <=> __y.date();
 }
 

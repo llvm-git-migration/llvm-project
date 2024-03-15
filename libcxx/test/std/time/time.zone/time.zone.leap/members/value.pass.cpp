@@ -27,22 +27,27 @@
 // ADDITIONAL_COMPILE_FLAGS(stdlib=libc++): -I %S/../../../../../../src/include
 #include "test_chrono_leap_second.h"
 
-constexpr bool test(const std::chrono::leap_second leap_second, std::chrono::seconds expected) {
+constexpr void test(const std::chrono::leap_second leap_second, std::chrono::seconds expected) {
   std::same_as<std::chrono::seconds> auto value = leap_second.value();
   assert(value == expected);
   static_assert(noexcept(leap_second.value()));
+}
+
+constexpr bool test() {
+  test(test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1}),
+       std::chrono::seconds{1});
 
   return true;
 }
 
 int main(int, const char**) {
+  test();
+  static_assert(test());
+
+  // test with the real tzdb
   const std::chrono::tzdb& tzdb = std::chrono::get_tzdb();
   assert(!tzdb.leap_seconds.empty());
   test(tzdb.leap_seconds[0], tzdb.leap_seconds[0].value());
-
-  static_assert(
-      test(test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1}),
-           std::chrono::seconds{1}));
 
   return 0;
 }
