@@ -53,6 +53,27 @@ add_entrypoint_object(
 )
 
 add_entrypoint_object(
+  strfromf
+  SRCS
+    strfromf.cpp
+  HDRS
+    strfromf.h
+  DEPENDS
+    .str_from_util
+)
+
+add_header_library(
+  str_from_util
+  HDRS
+    str_from_util.h
+  DEPENDS
+    libc.src.stdio.printf_core.converter_atlas
+    libc.src.stdio.printf_core.core_structs
+    libc.src.stdio.printf_core.writer
+    libc.src.__support.str_to_integer
+)
+
+add_entrypoint_object(
   strtof
   SRCS
     strtof.cpp
