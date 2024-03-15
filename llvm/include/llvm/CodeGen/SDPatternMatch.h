@@ -737,6 +737,39 @@ template <typename ValTy>
 inline BinaryOpc_match<ValTy, SpecificInt_match, true> m_Not(const ValTy &V) {
   return m_Xor(V, m_AllOnes());
 }
+
+/// Match a zext or identity
+/// Allows to peek through optional extensions
+template <typename Opnd>
+inline Or<UnaryOpc_match<Opnd>, Opnd> m_ZExtOrSelf(Opnd &&Op) {
+  return Or<UnaryOpc_match<Opnd>, Opnd>(m_ZExt(std::forward<Opnd>(Op)),
+                                        std::forward<Opnd>(Op));
+}
+
+/// Match a sext or identity
+/// Allows to peek through optional extensions
+template <typename Opnd>
+inline Or<UnaryOpc_match<Opnd>, Opnd> m_SExtOrSelf(Opnd &&Op) {
+  return Or<UnaryOpc_match<Opnd>, Opnd>(m_SExt(std::forward<Opnd>(Op)),
+                                        std::forward<Opnd>(Op));
+}
+
+/// Match a aext or identity
+/// Allows to peek through optional extensions
+template <typename Opnd>
+inline Or<UnaryOpc_match<Opnd>, Opnd> m_AExtOrSelf(Opnd &&Op) {
+  return Or<UnaryOpc_match<Opnd>, Opnd>(m_AnyExt(std::forward<Opnd>(Op)),
+                                        std::forward<Opnd>(Op));
+}
+
+/// Match a trunc or identity
+/// Allows to peek through optional truncations
+template <typename Opnd>
+inline Or<UnaryOpc_match<Opnd>, Opnd> m_TruncOrSelf(Opnd &&Op) {
+  return Or<UnaryOpc_match<Opnd>, Opnd>(m_Trunc(std::forward<Opnd>(Op)),
+                                        std::forward<Opnd>(Op));
+}
+
 } // namespace SDPatternMatch
 } // namespace llvm
 #endif
