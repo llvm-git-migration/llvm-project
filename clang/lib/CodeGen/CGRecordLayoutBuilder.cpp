@@ -482,23 +482,22 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   // to keep access-units naturally aligned, to avoid similar bit
   // manipulation synthesizing larger unaligned accesses.
 
-  // We do this in two phases, processing a sequential run of bitfield
-  // declarations.
+  // Bitfields that share parts of a single byte are, of necessity, placed in
+  // the same access unit. That unit will encompass a consecutive run where
+  // adjacent bitfields share parts of a byte. (The first bitfield of such an
+  // access unit will start at the beginning of a byte.)
 
-  // a) Bitfields that share parts of a single byte are, of necessity, placed in
-  // the same access unit. That unit will encompass a consecutive
-  // run where adjacent bitfields share parts of a byte. (The first bitfield of
-  // such an access unit will start at the beginning of a byte.)
+  // We then try and accumulate adjacent access units when the combined unit is
+  // naturally sized, no larger than a register, and (on a strict alignment
+  // ISA), naturally aligned. Note that this requires lookahead to one or more
+  // subsequent access units. For instance, consider a 2-byte access-unit
+  // followed by 2 1-byte units. We can merge that into a 4-byte access-unit,
+  // but we would not want to merge a 2-byte followed by a single 1-byte (and no
+  // available tail padding). We keep track of the best access unit seen so far,
+  // and use that when we determine we cannot accumulate any more. Then we start
+  // again at the bitfield following that best one.
 
-  // b) Accumulate adjacent access units when the combined unit is naturally
-  // sized, no larger than a register, and on a strict alignment ISA,
-  // aligned. Note that this requires lookahead to one or more subsequent access
-  // units. For instance, consider a 2-byte access-unit followed by 2 1-byte
-  // units. We can merge that into a 4-byte access-unit, but we would not want
-  // to merge a 2-byte followed by a single 1-byte (and no available tail
-  // padding).
-
-  // This accumulation is prevented when:
+  // The accumulation is also prevented when:
   // *) it would cross a zero-width bitfield (ABI-dependent), or
   // *) one of the candidate access units contains a volatile bitfield, or
   // *) fine-grained bitfield access option is in effect.
@@ -507,124 +506,186 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
       bitsToCharUnits(Context.getTargetInfo().getRegisterWidth());
   unsigned CharBits = Context.getCharWidth();
 
+  // Data about the start of the span we're accumulating to create an access
+  // unit from. Begin is the first bitfield of the span. If Begin is FieldEnd,
+  // we've not got a current span. The span starts at the BeginOffset character
+  // boundary. BitSizeSinceBegin is the size (in bits) of the span -- this might
+  // include padding when we've advanced to a subsequent bitfield run.
   RecordDecl::field_iterator Begin = FieldEnd;
-  CharUnits StartOffset;
-  uint64_t BitSize;
-  CharUnits BestEndOffset;
+  CharUnits BeginOffset;
+  uint64_t BitSizeSinceBegin;
+
+  // The (non-inclusive) end of the largest acceptable access unit we've found
+  // since Begin. If this is Begin, we're gathering the initial set of bitfields
+  // of a new span. BestEndOffset is the end of that acceptable access unit --
+  // it might extend beyond the last character of the bitfield run, using
+  // available padding characters.
   RecordDecl::field_iterator BestEnd = Begin;
-  bool Volatile;
+  CharUnits BestEndOffset;
+
+  bool Volatile; // True iff the initial span or post-BestEnd span contains a
+                 // volatile bitfield. We do not want to merge spans containing
+                 // a volatile bitfield.
 
   for (;;) {
-    CharUnits Limit;
-    bool Barrier;
-    bool Install = false;
+    // AtAlignedBoundary is true iff Field is the (potential) start of a new
+    // span (or the end of the bitfields). When true, LimitOffset is the
+    // character offset of that span and Barrier indicates whether the that new
+    // span cannot be merged into the current one.
+    bool AtAlignedBoundary = false;
+    CharUnits LimitOffset;
+    bool Barrier = false;
 
     if (Field != FieldEnd && Field->isBitField()) {
       uint64_t BitOffset = getFieldBitOffset(*Field);
       if (Begin == FieldEnd) {
-        // Beginning a new access unit.
+        // Beginning a new span.
         Begin = Field;
         BestEnd = Begin;
 
-        assert(!(BitOffset % CharBits) && "Not at start of char");
-        StartOffset = bitsToCharUnits(BitOffset);
-        BitSize = 0;
+        assert((BitOffset % CharBits) == 0 && "Not at start of char");
+        BeginOffset = bitsToCharUnits(BitOffset);
+        BitSizeSinceBegin = 0;
         Volatile = false;
-      } else if (BitOffset % CharBits) {
-        // Bitfield occupies the same char as previous.
-        assert(BitOffset == Context.toBits(StartOffset) + BitSize &&
+      } else if ((BitOffset % CharBits) != 0) {
+        // Bitfield occupies the same char as previous, it must be part of the
+        // same span.
+        assert(BitOffset == Context.toBits(BeginOffset) + BitSizeSinceBegin &&
                "Concatenating non-contiguous bitfields");
       } else {
-        // Bitfield begins a new access unit.
-        Limit = bitsToCharUnits(BitOffset);
-        Barrier = false;
+        // Bitfield could begin a new span.
+        LimitOffset = bitsToCharUnits(BitOffset);
         if (Field->isZeroLengthBitField(Context) &&
             (Context.getTargetInfo().useZeroLengthBitfieldAlignment() ||
              Context.getTargetInfo().useBitFieldTypeAlignment()))
           Barrier = true;
-        Install = true;
+        AtAlignedBoundary = true;
       }
     } else if (Begin == FieldEnd) {
       // Completed the bitfields.
       break;
     } else {
-      // End of the bitfield span, with active access unit.
+      // We've reached the end of the bitfield run while accumulating a span.
+      // Determine the limit of that span: either the offset of the next field,
+      // or if we're at the end of the record the end of its non-reuseable tail
+      // padding. (I.e. treat the next unusable char as the start of an
+      // unmergeable span.)
       auto Probe = Field;
       while (Probe != FieldEnd && Probe->isZeroSize(Context))
         ++Probe;
       // We can't necessarily use tail padding in C++ structs, so the NonVirtual
       // size is what we must use there.
-      Limit = Probe != FieldEnd ? bitsToCharUnits(getFieldBitOffset(*Probe))
-              : RD              ? Layout.getNonVirtualSize()
-                                : Layout.getDataSize();
+      LimitOffset = Probe != FieldEnd
+                        ? bitsToCharUnits(getFieldBitOffset(*Probe))
+                    : RD ? Layout.getNonVirtualSize()
+                         : Layout.getDataSize();
       Barrier = true;
-      Install = true;
+      AtAlignedBoundary = true;
     }
 
-    if (Install) {
-      // Found the start of a new access unit. Determine if that completes the
-      // current one, or potentially extends it.
-      Install = false;
-      CharUnits Size = bitsToCharUnits(BitSize + CharBits - 1);
+    // InstallBest indicates whether we should create an access unit for the
+    // current best span: fields [Begin, BestEnd) occupying characters
+    // [BeginOffset, BestEndOffset).
+    bool InstallBest = false;
+    if (AtAlignedBoundary) {
+      // Field is the start of a new span. The just-seen span is now extended to
+      // BitSizeSinceBegin. Determine if we can accumulate that just-seen span
+      // into the current accumulation.
+      CharUnits AccessSize = bitsToCharUnits(BitSizeSinceBegin + CharBits - 1);
       if (BestEnd == Begin) {
-        // This is the initial access unit.
+        // This is the initial run at the start of a new span. By definition,
+        // this is the best seen so far.
         BestEnd = Field;
-        BestEndOffset = StartOffset + Size;
-        if (!BitSize || Types.getCodeGenOpts().FineGrainedBitfieldAccesses)
-          // A barrier, or we're fine grained.
-          Install = true;
-      } else if (Size > RegSize || Volatile)
-        // Too big to accumulate, or just-seen access unit contains a volatile.
-        Install = true;
+        BestEndOffset = BeginOffset + AccessSize;
+        if (Types.getCodeGenOpts().FineGrainedBitfieldAccesses)
+          // Fine-grained access, so no merging of spans.
+          InstallBest = true;
+        else if (!BitSizeSinceBegin)
+          // A zero-sized initial span -- this will install nothing and reset
+          // for another.
+          InstallBest = true;
+      } else if (Volatile) {
+        // We've encountered a volatile bitfield in the just-seen non-initial
+        // span. It should not be merged into the current accumulation.
+        InstallBest = true;
+      } else if (AccessSize > RegSize)
+        // Accumulating the just-seen span would create a multi-register access
+        // unit, which would increase register pressure.
+        InstallBest = true;
 
-      if (!Install) {
-        llvm::Type *Type = getIntNType(Context.toBits(Size));
+      if (!InstallBest) {
+        // Determine if accumulating the just-seen span will create an expensive
+        // access-unit or not.
+        llvm::Type *Type = getIntNType(Context.toBits(AccessSize));
         if (!Context.getTargetInfo().hasCheapUnalignedBitFieldAccess()) {
-          // This alignment is that of the storage used -- for instance
-          // (usually) 4 bytes for a 24-bit type.
+          // Unaligned accesses are expensive. Only accumulate if the new unit
+          // is naturally aligned. Otherwise install the best we have, which is
+          // either the initial access unit (can't do better), or a naturally
+          // aligned subsequent accumulation.
           CharUnits Align = getAlignment(Type);
-          if (Align > Layout.getAlignment() || !StartOffset.isMultipleOf(Align))
-            // Not naturally aligned.
-            Install = true;
+          if (Align > Layout.getAlignment())
+            // The alignment required is greater than the containing structure
+            // itself.
+            InstallBest = true;
+          else if (!BeginOffset.isMultipleOf(Align))
+            // The access unit is not at a naturally aligned offset within the
+            // structure.
+            InstallBest = true;
         }
 
-        if (!Install) {
-          Size = getSize(Type);
-          if (StartOffset + Size <= Limit) {
-            // The next unit starts later, extend the current access unit to
-            // include the just-gathered access unit.
-            BestEndOffset = StartOffset + Size;
+        if (!InstallBest) {
+          CharUnits TypeSize = getSize(Type);
+          if (BeginOffset + TypeSize <= LimitOffset) {
+            // There is padding before LimitOffset that we can extend into,
+            // creating a naturally-sized access unit.
+            BestEndOffset = BeginOffset + TypeSize;
             BestEnd = Field;
           }
 
-          if (Volatile || Barrier)
-            // Contained a volatile, or next access unit is a barrier.
-            Install = true;
+          if (Barrier)
+            // The next field is a barrier that we cannot merge-across.
+            InstallBest = true;
+          else if (Volatile)
+            // The initial span contains a volatile bitfield, do not merge any
+            // subsequent spans. (We can only get here for the initial span, any
+            // subsequent potential volatile span will have already bailed
+            // above.)
+            InstallBest = true;
           else
-            BitSize = Context.toBits(Limit - StartOffset);
+            // LimitOffset is the offset of the (aligned) next bitfield in this
+            // case.
+            BitSizeSinceBegin = Context.toBits(LimitOffset - BeginOffset);
         }
       }
     }
 
-    if (Install) {
-      CharUnits Size = BestEndOffset - StartOffset;
-      if (!Size.isZero()) {
+    if (InstallBest) {
+      assert((Field == FieldEnd || !Field->isBitField() ||
+              (getFieldBitOffset(*Field) % CharBits) == 0) &&
+             "Installing but not at an aligned bitfield or limit");
+      CharUnits AccessSize = BestEndOffset - BeginOffset;
+      if (!AccessSize.isZero()) {
         // Add the storage member for the access unit to the record. The
         // bitfields get the offset of their storage but come afterward and
         // remain there after a stable sort.
-        llvm::Type *Type = getIntNType(Context.toBits(Size));
-        Members.push_back(StorageInfo(StartOffset, Type));
+        llvm::Type *Type = getIntNType(Context.toBits(AccessSize));
+        Members.push_back(StorageInfo(BeginOffset, Type));
         for (; Begin != BestEnd; ++Begin)
           if (!Begin->isZeroLengthBitField(Context))
             Members.push_back(
-                MemberInfo(StartOffset, MemberInfo::Field, nullptr, *Begin));
+                MemberInfo(BeginOffset, MemberInfo::Field, nullptr, *Begin));
       }
-      // Reset to start a new Access Unit.
+      // Reset to start a new span.
       Field = BestEnd;
       Begin = FieldEnd;
     } else {
-      // Accumulate this bitfield into the (potentially) current access unit.
-      BitSize += Field->getBitWidthValue(Context);
+      assert(Field != FieldEnd && Field->isBitField() &&
+             "Accumulating past end of bitfields");
+      assert(((getFieldBitOffset(*Field) % CharBits) != 0 ||
+              (!Volatile && !Barrier)) &&
+             "Accumulating across volatile or barrier");
+      // Accumulate this bitfield into the current (potential) span.
+      BitSizeSinceBegin += Field->getBitWidthValue(Context);
       if (Field->getType().isVolatileQualified())
         Volatile = true;
       ++Field;
