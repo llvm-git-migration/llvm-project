@@ -1276,7 +1276,7 @@ MachineIRBuilder::buildInstr(unsigned Opc, ArrayRef<DstOp> DstOps,
         return DstTy.isScalar();
       else
         return DstTy.isVector() &&
-               DstTy.getNumElements() == Op0Ty.getNumElements();
+               DstTy.getElementCount() == Op0Ty.getElementCount();
     }() && "Type Mismatch");
     break;
   }
