@@ -241,6 +241,43 @@ TEST_F(SelectionDAGPatternMatchTest, patternCombinators) {
   EXPECT_TRUE(sd_match(Add, m_AllOf(m_Opc(ISD::ADD), m_OneUse())));
 }
 
+TEST_F(SelectionDAGPatternMatchTest, optionalResizing) {
+  SDLoc DL;
+  auto Int32VT = EVT::getIntegerVT(Context, 32);
+
+  SDValue Op0 = DAG->getCopyFromReg(DAG->getEntryNode(), DL, 1, Int32VT);
+
+  // zero extend
+  SDValue ZExt = DAG->getNode(ISD::ZERO_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalZExtLhs = DAG->getNode(ISD::OR, DL, Int32VT, ZExt, Op0);
+  SDValue OptionalZExtRhs = DAG->getNode(ISD::OR, DL, Int32VT, Op0, ZExt);
+
+  // sign extend
+  SDValue SExt = DAG->getNode(ISD::SIGN_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalSExtLhs = DAG->getNode(ISD::OR, DL, Int32VT, SExt, Op0);
+  SDValue OptionalSExtRhs = DAG->getNode(ISD::OR, DL, Int32VT, Op0, SExt);
+
+  // any extend
+  SDValue AExt = DAG->getNode(ISD::ANY_EXTEND, DL, Int32VT, Op0);
+  SDValue OptionalAExtLhs = DAG->getNode(ISD::OR, DL, Int32VT, AExt, Op0);
+  SDValue OptionalAExtRhs = DAG->getNode(ISD::OR, DL, Int32VT, Op0, AExt);
+
+  // truncate
+  SDValue Trunc = DAG->getNode(ISD::TRUNCATE, DL, Int32VT, Op0);
+  SDValue OptionalTruncLhs = DAG->getNode(ISD::OR, DL, Int32VT, Trunc, Op0);
+  SDValue OptionalTruncRhs = DAG->getNode(ISD::OR, DL, Int32VT, Op0, Trunc);
+
+  using namespace SDPatternMatch;
+  EXPECT_TRUE(sd_match(OptionalZExtLhs, m_ZExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalZExtRhs, m_ZExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalSExtLhs, m_SExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalSExtRhs, m_SExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalAExtLhs, m_AExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalAExtRhs, m_AExtOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalTruncLhs, m_TruncOrSelf(m_Specific(Op0))));
+  EXPECT_TRUE(sd_match(OptionalTruncRhs, m_TruncOrSelf(m_Specific(Op0))));
+}
+
 TEST_F(SelectionDAGPatternMatchTest, matchNode) {
   SDLoc DL;
   auto Int32VT = EVT::getIntegerVT(Context, 32);

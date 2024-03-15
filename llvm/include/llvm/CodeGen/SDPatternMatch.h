@@ -725,6 +725,39 @@ inline auto m_False() {
       },
       m_Value()};
 }
+
+/// Match a zext or identity
+/// Allows to peek through optional extensions
+template <typename ValTy>
+inline BinaryOpc_match<UnaryOpc_match<ValTy>, ValTy, true>
+m_ZExtOrSelf(const ValTy &V) {
+  return m_Or(m_ZExt(V), V);
+}
+
+/// Match a sext or identity
+/// Allows to peek through optional extensions
+template <typename ValTy>
+inline BinaryOpc_match<UnaryOpc_match<ValTy>, ValTy, true>
+m_SExtOrSelf(const ValTy &V) {
+  return m_Or(m_SExt(V), V);
+}
+
+/// Match a aext or identity
+/// Allows to peek through optional extensions
+template <typename ValTy>
+inline BinaryOpc_match<UnaryOpc_match<ValTy>, ValTy, true>
+m_AExtOrSelf(const ValTy &V) {
+  return m_Or(m_AnyExt(V), V);
+}
+
+/// Match a trunc or identity
+/// Allows to peek through optional truncations
+template <typename ValTy>
+inline BinaryOpc_match<UnaryOpc_match<ValTy>, ValTy, true>
+m_TruncOrSelf(const ValTy &V) {
+  return m_Or(m_Trunc(V), V);
+}
+
 } // namespace SDPatternMatch
 } // namespace llvm
 #endif
