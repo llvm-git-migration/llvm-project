@@ -60,6 +60,7 @@ class ELFObjectFileBase : public ObjectFile {
 
   SubtargetFeatures getMIPSFeatures() const;
   SubtargetFeatures getARMFeatures() const;
+  SubtargetFeatures getHexagonFeatures() const;
   Expected<SubtargetFeatures> getRISCVFeatures() const;
   SubtargetFeatures getLoongArchFeatures() const;
 
@@ -395,7 +396,8 @@ protected:
 
     for (const Elf_Shdr &Sec : *SectionsOrErr) {
       if (Sec.sh_type == ELF::SHT_ARM_ATTRIBUTES ||
-          Sec.sh_type == ELF::SHT_RISCV_ATTRIBUTES) {
+          Sec.sh_type == ELF::SHT_RISCV_ATTRIBUTES ||
+          Sec.sh_type == ELF::SHT_HEXAGON_ATTRIBUTES) {
         auto ErrorOrContents = EF.getSectionContents(Sec);
         if (!ErrorOrContents)
           return ErrorOrContents.takeError();
