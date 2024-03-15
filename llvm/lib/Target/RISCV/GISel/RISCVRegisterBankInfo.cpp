@@ -290,7 +290,10 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
 
   switch (Opc) {
   case TargetOpcode::G_ADD:
-  case TargetOpcode::G_SUB: {
+  case TargetOpcode::G_SUB:
+  case TargetOpcode::G_ANYEXT:
+  case TargetOpcode::G_SEXT:
+  case TargetOpcode::G_ZEXT: {
     if (MRI.getType(MI.getOperand(0).getReg()).isVector()) {
       LLT Ty = MRI.getType(MI.getOperand(0).getReg());
       return getInstructionMapping(
@@ -298,8 +301,9 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
           getVRBValueMapping(Ty.getSizeInBits().getKnownMinValue()),
           NumOperands);
     }
+    return getInstructionMapping(DefaultMappingID, /*Cost=*/1, GPRValueMapping,
+                                 NumOperands);
   }
-    LLVM_FALLTHROUGH;
   case TargetOpcode::G_SHL:
   case TargetOpcode::G_ASHR:
   case TargetOpcode::G_LSHR:
@@ -321,9 +325,6 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
   case TargetOpcode::G_PTRTOINT:
   case TargetOpcode::G_INTTOPTR:
   case TargetOpcode::G_TRUNC:
-  case TargetOpcode::G_ANYEXT:
-  case TargetOpcode::G_SEXT:
-  case TargetOpcode::G_ZEXT:
   case TargetOpcode::G_SEXTLOAD:
   case TargetOpcode::G_ZEXTLOAD:
     return getInstructionMapping(DefaultMappingID, /*Cost=*/1, GPRValueMapping,
