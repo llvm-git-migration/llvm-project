@@ -82,8 +82,8 @@ struct ImplicitTypeIDRegistry {
 
 TypeID detail::FallbackTypeIDResolver::registerImplicitTypeID(StringRef name) {
   // To prevent race conditions when one thread is accessing this `static`
-  // variable while other thread destructing it; construct the `registry`
-  // on the heap.
+  // variable while the program is exiting and another thread already destroyed
+  // it; intentionally construct the `registry` on the heap and never delete it.
   static auto *registry = new ImplicitTypeIDRegistry();
   return registry->lookupOrInsert(name);
 }
