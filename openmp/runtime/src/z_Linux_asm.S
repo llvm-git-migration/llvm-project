@@ -1362,9 +1362,14 @@ KMP_LABEL(kmp_1):
 
 // kmp_uint64
 // __kmp_hardware_timestamp(void)
+// we load the current frequency of the system counter
+// then the system counter. frequency * counter gives
+// current time
    PROC __kmp_hardware_timestamp
    mrs x0, cntfrq_el0
-   mov x30, x0
+   mrs x1, cntvct_el0
+   mul x2, x1, x0
+   mov x30, x2
    ret
    DEBUG_INFO __kmp_hardware_timestamp
 // -- End  __kmp_hardware_timestamp
