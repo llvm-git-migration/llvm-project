@@ -375,3 +375,82 @@ define i1 @sdiv_eq_smin_use(i32 %x, i32 %y) {
   %r = icmp eq i32 %d, -2147483648
   ret i1 %r
 }
+
+; Folding (X / C) < X => X > 0 for C != 1
+
+define i1 @sdiv_x_by_const_cmp_x(i32 %x) {
+; CHECK-LABEL: @sdiv_x_by_const_cmp_x(
+; CHECK-NEXT:    [[TMP2:%.*]] = sdiv i32 [[X:%.*]], 123
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[TMP2]], [[X]]
+; CHECK-NEXT:    ret i1 [[TMP1]]
+;
+  %1 = sdiv i32 %x, 123
+  %2 = icmp slt i32 %1, %x
+  ret i1 %2
+}
+
+define i1 @udiv_x_by_const_cmp_x(i32 %x) {
+; CHECK-LABEL: @udiv_x_by_const_cmp_x(
+; CHECK-NEXT:    [[TMP2:%.*]] = udiv i32 [[X:%.*]], 123
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[TMP2]], [[X]]
+; CHECK-NEXT:    ret i1 [[TMP1]]
+;
+  %1 = udiv i32 %x, 123
+  %2 = icmp slt i32 %1, %x
+  ret i1 %2
+}
+
+; Same as above but with right shift instead of division (C != 0)
+
+define i1 @lshr_x_by_const_cmp_x(i32 %x) {
+; CHECK-LABEL: @lshr_x_by_const_cmp_x(
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[X:%.*]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[TMP2]], [[X]]
+; CHECK-NEXT:    ret i1 [[TMP1]]
+;
+  %1 = lshr i32 %x, 1
+  %2 = icmp slt i32 %1, %x
+  ret i1 %2
+}
+
+; Negative tests for the folds above
+
+define i1 @sdiv_x_by_1_cmp_x_negative(i32 %x) {
+; CHECK-LABEL: @sdiv_x_by_1_cmp_x_negative(
+; CHECK-NEXT:    ret i1 false
+;
+  %1 = sdiv i32 %x, 1
+  %2 = icmp slt i32 %1, %x
+  ret i1 %2
+}
+
+define i1 @sdiv_x_by_1_cmp_y(i32 %x, i32 %y) {
+; CHECK-LABEL: @sdiv_x_by_1_cmp_y(
+; CHECK-NEXT:    [[TMP1:%.*]] = sdiv i32 [[X:%.*]], 123
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp slt i32 [[TMP1]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[TMP2]]
+;
+  %1 = sdiv i32 %x, 123
+  %2 = icmp slt i32 %1, %y
+  ret i1 %2
+}
+
+define i1 @lshr_x_by_0_cmp_x(i32 %x) {
+; CHECK-LABEL: @lshr_x_by_0_cmp_x(
+; CHECK-NEXT:    ret i1 false
+;
+  %1 = lshr i32 %x, 0
+  %2 = icmp slt i32 %1, %x
+  ret i1 %2
+}
+
+define i1 @lshr_x_by_const_cmp_y(i32 %x, i32 %y) {
+; CHECK-LABEL: @lshr_x_by_const_cmp_y(
+; CHECK-NEXT:    [[X:%.*]] = lshr i32 [[X1:%.*]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[X]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[TMP1]]
+;
+  %1 = lshr i32 %x, 1
+  %2 = icmp slt i32 %1, %y
+  ret i1 %2
+}
