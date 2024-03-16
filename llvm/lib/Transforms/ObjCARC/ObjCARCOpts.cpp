@@ -521,6 +521,9 @@ class ObjCARCOpt {
                                         Instruction *AutoreleaseRV,
                                         const Value *&AutoreleaseRVArg);
 
+  /// Remove any autorelease pools if nothing is released between them
+  void ObjCARCOpt::OptimizeAutoreleasePools(Function &F);
+
   void CheckForCFGHazards(const BasicBlock *BB,
                           DenseMap<const BasicBlock *, BBState> &BBStates,
                           BBState &MyStates) const;
@@ -754,6 +757,73 @@ void ObjCARCOpt::OptimizeAutoreleaseRVCall(Function &F,
   Class = ARCInstKind::Autorelease;
 
   LLVM_DEBUG(dbgs() << "New: " << *AutoreleaseRV << "\n");
+}
+
+/// Interprocedurally determine if calls made by the given call site can
+/// possibly produce autoreleases.
+bool MayAutorelease(const CallBase &CB, unsigned Depth = 0) {
+  if (const Function *Callee = CB.getCalledFunction()) {
+    if (!Callee->hasExactDefinition())
+      return true;
+    // This recursion depth limit is big enough to cover the vast majority
+    // of cases this will ever require.
+    if (Depth > 64)
+      return true;
+    for (const BasicBlock &BB : *Callee) {
+      for (const Instruction &I : BB)
+        if (const CallBase *JCB = dyn_cast<CallBase>(&I))
+          if (!JCB->onlyReadsMemory() && MayAutorelease(*JCB, Depth + 1))
+            return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+// Remove autorelease pools if nothing is in between then
+void ObjCARCOpt::OptimizeAutoreleasePools(Function &F) {
+  Instruction *Push = nullptr;
+  for (BasicBlock &BB : F) {
+    bool foundAnyInBlock = false;
+    for (Instruction &Inst : BB) {
+      // FIXME: For now, only support pairs that are in the same block.
+      // It is possible to do this across other blocks, but only if you can
+      // prove every single pop call site corresponds to the push via going
+      // through each successor and checking every single one, and I don't even
+      // know if the push call could be split across call sites.
+      switch (GetBasicARCInstKind(&Inst)) {
+      case ARCInstKind::AutoreleasepoolPush:
+        Push = &Inst;
+        foundAnyInBlock = true;
+        break;
+      case ARCInstKind::AutoreleasepoolPop:
+        // If this pop matches a push and nothing in between can autorelease,
+        // zap the pair.
+        if (cast<CallInst>(&Inst)->getArgOperand(0) == Push &&
+            foundAnyInBlock) {
+          Changed = true;
+          LLVM_DEBUG(dbgs()
+                     << "ObjCARCAPElim::OptimizeBB: Zapping push pop "
+                        "autorelease pair:\n"
+                        "                           Pop: "
+                     << Inst << "\n"
+                     << "                           Push: " << *Push << "\n");
+
+          Inst.eraseFromParent();
+          Push->eraseFromParent();
+        }
+        Push = nullptr;
+        break;
+      case ARCInstKind::CallOrUser:
+        if (MayAutorelease(cast<CallBase>(Inst)))
+          Push = nullptr;
+        break;
+      default:
+        break;
+      }
+    }
+  }
 }
 
 /// Visit each call, one at a time, and make simplifications without doing any
@@ -2485,7 +2555,13 @@ bool ObjCARCOpt::run(Function &F, AAResults &AA) {
                             (1 << unsigned(ARCInstKind::AutoreleaseRV))))
     OptimizeReturns(F);
 
-  // Gather statistics after optimization.
+  if (UsedInThisFunction & (1 << unsigned(ARCInstKind::AutoreleasepoolPush)))
+    // Normally should not happen but there has been code where manual calls to
+    // objc autorelease have been made.
+    if (UsedInThisFunction & (1 << unsigned(ARCInstKind::AutoreleasepoolPop)))
+      OptimizeAutoreleasePools(F);
+
+      // Gather statistics after optimization.
 #ifndef NDEBUG
   if (AreStatisticsEnabled()) {
     GatherStatistics(F, true);
