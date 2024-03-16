@@ -7406,6 +7406,31 @@ Instruction *InstCombinerImpl::visitICmpInst(ICmpInst &I) {
   if (Instruction *Res = foldReductionIdiom(I, Builder, DL))
     return Res;
 
+  // Folding (X / Y) < X => X > 0 for some constant Y other than 0 or 1
+  {
+    Constant *Divisor;
+    Value *Dividend;
+    if (match(Op0,
+              m_CombineOr(m_SDiv(m_Value(Dividend), m_ImmConstant(Divisor)),
+                          m_UDiv(m_Value(Dividend), m_ImmConstant(Divisor)))) &&
+        match(Op1, m_Deferred(Dividend)) &&
+        !(Divisor->isZeroValue() || Divisor->isOneValue())) {
+      return new ICmpInst(ICmpInst::ICMP_SGT, Dividend,
+                          Constant::getNullValue(Dividend->getType()));
+    }
+  }
+
+  // Another case of this fold is (X >> Y) < X => X > 0 if Y != 0
+  {
+    Constant *Shift;
+    Value *V;
+    if (match(Op0, m_LShr(m_Value(V), m_ImmConstant(Shift))) &&
+        match(Op1, m_Deferred(V)) && !Shift->isZeroValue()) {
+      return new ICmpInst(ICmpInst::ICMP_SGT, V,
+                          Constant::getNullValue(V->getType()));
+    }
+  }
+
   return Changed ? &I : nullptr;
 }
 
