@@ -273,9 +273,7 @@ pushTemporaryCleanup(CodeGenFunction &CGF, const MaterializeTemporaryExpr *M,
   // Objective-C++ ARC:
   //   If we are binding a reference to a temporary that has ownership, we
   //   need to perform retain/release operations on the temporary.
-  //
-  // FIXME: This should be looking at E, not M.
-  if (auto Lifetime = M->getType().getObjCLifetime()) {
+  if (auto Lifetime = E->getType().getObjCLifetime()) {
     switch (Lifetime) {
     case Qualifiers::OCL_None:
     case Qualifiers::OCL_ExplicitNone:
