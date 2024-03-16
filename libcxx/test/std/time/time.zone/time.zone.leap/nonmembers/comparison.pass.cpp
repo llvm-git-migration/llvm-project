@@ -9,6 +9,8 @@
 // UNSUPPORTED: c++03, c++11, c++14, c++17
 // UNSUPPORTED: no-filesystem, no-localization, no-tzdb
 
+// UNSUPPORTED: GCC-ALWAYS_INLINE-FIXME
+
 // XFAIL: libcpp-has-no-incomplete-tzdb
 // XFAIL: availability-tzdb-missing
 
