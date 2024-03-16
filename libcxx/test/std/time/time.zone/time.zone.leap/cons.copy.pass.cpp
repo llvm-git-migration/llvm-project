@@ -32,11 +32,27 @@
 constexpr bool test() {
   std::chrono::leap_second a =
       test_leap_second_create(std::chrono::sys_seconds{std::chrono::seconds{0}}, std::chrono::seconds{1});
-  std::chrono::leap_second b = a;
 
-  //  operator== only compares the date member.
-  assert(a.date() == b.date());
-  assert(a.value() == b.value());
+  {
+    std::chrono::leap_second b = a;
+
+    //  operator== only compares the date member.
+    assert(a.date() == b.date());
+    assert(a.value() == b.value());
+  }
+
+#ifdef _LIBCPP_VERSION
+  {
+    // Tests an rvalue uses the copy constructor.
+    // Since implementations are allowed to add additional constructors this is
+    // a libc++ specific test.
+    std::chrono::leap_second b = std::move(a);
+
+    //  operator== only compares the date member.
+    assert(a.date() == b.date());
+    assert(a.value() == b.value());
+  }
+#endif // _LIBCPP_VERSION
 
   return true;
 }

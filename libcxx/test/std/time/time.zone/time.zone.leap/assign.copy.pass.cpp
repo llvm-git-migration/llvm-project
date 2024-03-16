@@ -40,11 +40,22 @@ constexpr bool test() {
   assert(a.date() != b.date());
   assert(a.value() != b.value());
 
-  std::same_as<std::chrono::leap_second&> decltype(auto) result(b = a);
-  assert(std::addressof(result) == std::addressof(b));
+  {
+    std::same_as<std::chrono::leap_second&> decltype(auto) result(b = a);
+    assert(std::addressof(result) == std::addressof(b));
 
-  assert(a.date() == b.date());
-  assert(a.value() == b.value());
+    assert(a.date() == b.date());
+    assert(a.value() == b.value());
+  }
+
+  {
+    // Tests an rvalue uses the copy assignment.
+    std::same_as<std::chrono::leap_second&> decltype(auto) result(b = std::move(a));
+    assert(std::addressof(result) == std::addressof(b));
+
+    assert(a.date() == b.date());
+    assert(a.value() == b.value());
+  }
 
   return true;
 }
