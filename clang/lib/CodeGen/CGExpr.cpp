@@ -317,11 +317,11 @@ pushTemporaryCleanup(CodeGenFunction &CGF, const MaterializeTemporaryExpr *M,
         }
         if (Duration == SD_FullExpression)
           CGF.pushDestroy(CleanupKind, ReferenceTemporary,
-                          M->getType(), *Destroy,
+                          E->getType(), *Destroy,
                           CleanupKind & EHCleanup);
         else
           CGF.pushLifetimeExtendedDestroy(CleanupKind, ReferenceTemporary,
-                                          M->getType(),
+                                          E->getType(),
                                           *Destroy, CleanupKind & EHCleanup);
         return;
 
@@ -445,7 +445,7 @@ EmitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *M) {
 
   // FIXME: ideally this would use EmitAnyExprToMem, however, we cannot do so
   // as that will cause the lifetime adjustment to be lost for ARC
-  auto ownership = M->getType().getObjCLifetime();
+  auto ownership = E->getType().getObjCLifetime();
   if (ownership != Qualifiers::OCL_None &&
       ownership != Qualifiers::OCL_ExplicitNone) {
     Address Object = createReferenceTemporary(*this, M, E);
