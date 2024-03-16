@@ -1028,11 +1028,11 @@ void MachineOutliner::populateMapper(InstructionMapper &Mapper, Module &M,
       LLVM_DEBUG(dbgs() << "  MAPPING MBB: '" << MBB.getName() << "'\n");
       // If there isn't anything in MBB, then there's no point in outlining from
       // it.
-      // If there are fewer than 2 instructions in the MBB, then it can't ever
+      // If there is only 1 instruction in the MBB, then it can't ever
       // contain something worth outlining.
       // FIXME: This should be based off of the maximum size in B of an outlined
       // call versus the size in B of the MBB.
-      if (MBB.size() < MinMBBSize) {
+      if (!MBB.sizeWithoutDebugLargerThan(MinMBBSize - 1)) {
         LLVM_DEBUG(dbgs() << "    SKIP: MBB size less than minimum size of "
                           << MinMBBSize << "\n");
         continue;
