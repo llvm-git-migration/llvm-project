@@ -5083,7 +5083,18 @@ SDValue DAGCombiner::visitAVG(SDNode *N) {
   if (N0 == N1 && Level >= AfterLegalizeTypes)
     return N0;
 
-  // TODO If we use avg for scalars anywhere, we can add (avgfl x, 0) -> x >> 1
+  // Fold (avg x, 0) -> x >> 1
+  if (isNullOrNullSplat(N0))
+    return DAG.getNode((Opcode == ISD::AVGFLOORS || Opcode == ISD::AVGCEILS)
+                           ? ISD::SRA
+                           : ISD::SRL,
+                       DL, VT, N1, DAG.getConstant(1, DL, VT));
+
+  if (isNullOrNullSplat(N1))
+    return DAG.getNode((Opcode == ISD::AVGFLOORS || Opcode == ISD::AVGCEILS)
+                           ? ISD::SRA
+                           : ISD::SRL,
+                       DL, VT, N0, DAG.getConstant(1, DL, VT));
 
   return SDValue();
 }
