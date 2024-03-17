@@ -381,8 +381,7 @@ define i1 @sdiv_eq_smin_use(i32 %x, i32 %y) {
 
 define i1 @sdiv_x_by_const_cmp_x(i32 %x) {
 ; CHECK-LABEL: @sdiv_x_by_const_cmp_x(
-; CHECK-NEXT:    [[V:%.*]] = udiv i32 [[X:%.*]], 13
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[V]], [[X]]
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %v = udiv i32 %x, 13
@@ -392,8 +391,7 @@ define i1 @sdiv_x_by_const_cmp_x(i32 %x) {
 
 define i1 @udiv_x_by_const_cmp_x(i32 %x) {
 ; CHECK-LABEL: @udiv_x_by_const_cmp_x(
-; CHECK-NEXT:    [[TMP2:%.*]] = udiv i32 [[X:%.*]], 123
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[TMP2]], [[X]]
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp sgt i32 [[X:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %1 = udiv i32 %x, 123
@@ -405,8 +403,7 @@ define i1 @udiv_x_by_const_cmp_x(i32 %x) {
 
 define i1 @lshr_x_by_const_cmp_x(i32 %x) {
 ; CHECK-LABEL: @lshr_x_by_const_cmp_x(
-; CHECK-NEXT:    [[V:%.*]] = lshr i32 [[X:%.*]], 1
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[V]], [[X]]
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp ne i32 [[X:%.*]], 0
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %v = lshr i32 %x, 1
