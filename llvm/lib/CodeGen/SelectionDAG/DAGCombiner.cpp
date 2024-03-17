@@ -13802,11 +13802,16 @@ SDValue DAGCombiner::visitZERO_EXTEND(SDNode *N) {
         if (N0.getOpcode() == ISD::SHL) {
           // If the original shl may be shifting out bits, do not perform this
           // transformation.
-          // TODO: Add MaskedValueIsZero check.
-          unsigned KnownZeroBits = ShVal.getValueSizeInBits() -
-                                   ShVal.getOperand(0).getValueSizeInBits();
-          if (ShAmtC->getAPIntValue().ugt(KnownZeroBits))
+
+          // Create a mask that has ones for the bits being shifted out.
+          llvm::APInt ShiftOutMask = llvm::APInt::getHighBitsSet(
+              ShVal.getValueSizeInBits(),
+              ShAmtC->getAPIntValue().getZExtValue());
+
+          // Check if the bits being shifted out are known to be zero.
+          if (!DAG.MaskedValueIsZero(ShVal, ShiftOutMask)) {
             return SDValue();
+          }
         }
 
         // Ensure that the shift amount is wide enough for the shifted value.
