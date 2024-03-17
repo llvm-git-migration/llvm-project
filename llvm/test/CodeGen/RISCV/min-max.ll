@@ -600,55 +600,20 @@ define signext i32 @smax_i32_pos_constant(i32 signext %a) {
 }
 
 define signext i32 @smin_i32_neg_constant(i32 signext %a) {
-; RV32I-LABEL: smin_i32_neg_constant:
-; RV32I:       # %bb.0:
-; RV32I-NEXT:    addi sp, sp, -16
-; RV32I-NEXT:    .cfi_def_cfa_offset 16
-; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    .cfi_offset ra, -4
-; RV32I-NEXT:    li a1, -1
-; RV32I-NEXT:    call llvm.min.i32
-; RV32I-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32I-NEXT:    addi sp, sp, 16
-; RV32I-NEXT:    ret
+; NOZBB-LABEL: smax_i32_pos_constant:
+; NOZBB:       # %bb.0:
+; NOZBB-NEXT:    li a1, 10
+; NOZBB-NEXT:    blt a1, a0, .LBB24_2
+; NOZBB-NEXT:  # %bb.1:
+; NOZBB-NEXT:    li a0, 10
+; NOZBB-NEXT:  .LBB24_2:
+; NOZBB-NEXT:    ret
 ;
-; RV64I-LABEL: smin_i32_neg_constant:
-; RV64I:       # %bb.0:
-; RV64I-NEXT:    addi sp, sp, -16
-; RV64I-NEXT:    .cfi_def_cfa_offset 16
-; RV64I-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    .cfi_offset ra, -8
-; RV64I-NEXT:    li a1, -1
-; RV64I-NEXT:    call llvm.min.i32
-; RV64I-NEXT:    sext.w a0, a0
-; RV64I-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
-; RV64I-NEXT:    addi sp, sp, 16
-; RV64I-NEXT:    ret
-;
-; RV32ZBB-LABEL: smin_i32_neg_constant:
-; RV32ZBB:       # %bb.0:
-; RV32ZBB-NEXT:    addi sp, sp, -16
-; RV32ZBB-NEXT:    .cfi_def_cfa_offset 16
-; RV32ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32ZBB-NEXT:    .cfi_offset ra, -4
-; RV32ZBB-NEXT:    li a1, -1
-; RV32ZBB-NEXT:    call llvm.min.i32
-; RV32ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32ZBB-NEXT:    addi sp, sp, 16
-; RV32ZBB-NEXT:    ret
-;
-; RV64ZBB-LABEL: smin_i32_neg_constant:
-; RV64ZBB:       # %bb.0:
-; RV64ZBB-NEXT:    addi sp, sp, -16
-; RV64ZBB-NEXT:    .cfi_def_cfa_offset 16
-; RV64ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
-; RV64ZBB-NEXT:    .cfi_offset ra, -8
-; RV64ZBB-NEXT:    li a1, -1
-; RV64ZBB-NEXT:    call llvm.min.i32
-; RV64ZBB-NEXT:    sext.w a0, a0
-; RV64ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
-; RV64ZBB-NEXT:    addi sp, sp, 16
-; RV64ZBB-NEXT:    ret
+; ZBB-LABEL: smax_i32_pos_constant:
+; ZBB:       # %bb.0:
+; ZBB-NEXT:    li a1, 10
+; ZBB-NEXT:    max a0, a0, a1
+; ZBB-NEXT:    ret
   %c = call i32 @llvm.min.i32(i32 %a, i32 -1)
   ret i32 %c
 }
@@ -658,10 +623,10 @@ define signext i32 @smax_i32_pos_constant_trailing_zeros(i32 signext %a) {
 ; NOZBB:       # %bb.0:
 ; NOZBB-NEXT:    andi a0, a0, -8
 ; NOZBB-NEXT:    li a1, 16
-; NOZBB-NEXT:    blt a1, a0, .LBB26_2
+; NOZBB-NEXT:    blt a1, a0, .LBB25_2
 ; NOZBB-NEXT:  # %bb.1:
 ; NOZBB-NEXT:    li a0, 16
-; NOZBB-NEXT:  .LBB26_2:
+; NOZBB-NEXT:  .LBB25_2:
 ; NOZBB-NEXT:    ret
 ;
 ; ZBB-LABEL: smax_i32_pos_constant_trailing_zeros:
@@ -734,15 +699,15 @@ define i64 @umax_i64_one(i64 %a, i64 %b) {
 ; RV32I-LABEL: umax_i64_one:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    mv a2, a0
-; RV32I-NEXT:    beqz a1, .LBB29_3
+; RV32I-NEXT:    beqz a1, .LBB28_3
 ; RV32I-NEXT:  # %bb.1:
-; RV32I-NEXT:    beqz a1, .LBB29_4
-; RV32I-NEXT:  .LBB29_2:
+; RV32I-NEXT:    beqz a1, .LBB28_4
+; RV32I-NEXT:  .LBB28_2:
 ; RV32I-NEXT:    ret
-; RV32I-NEXT:  .LBB29_3:
+; RV32I-NEXT:  .LBB28_3:
 ; RV32I-NEXT:    li a0, 1
-; RV32I-NEXT:    bnez a1, .LBB29_2
-; RV32I-NEXT:  .LBB29_4:
+; RV32I-NEXT:    bnez a1, .LBB28_2
+; RV32I-NEXT:  .LBB28_4:
 ; RV32I-NEXT:    seqz a0, a2
 ; RV32I-NEXT:    add a0, a2, a0
 ; RV32I-NEXT:    ret
@@ -757,15 +722,15 @@ define i64 @umax_i64_one(i64 %a, i64 %b) {
 ; RV32ZBB:       # %bb.0:
 ; RV32ZBB-NEXT:    mv a2, a0
 ; RV32ZBB-NEXT:    li a3, 1
-; RV32ZBB-NEXT:    beqz a1, .LBB29_3
+; RV32ZBB-NEXT:    beqz a1, .LBB28_3
 ; RV32ZBB-NEXT:  # %bb.1:
-; RV32ZBB-NEXT:    beqz a1, .LBB29_4
-; RV32ZBB-NEXT:  .LBB29_2:
+; RV32ZBB-NEXT:    beqz a1, .LBB28_4
+; RV32ZBB-NEXT:  .LBB28_2:
 ; RV32ZBB-NEXT:    ret
-; RV32ZBB-NEXT:  .LBB29_3:
+; RV32ZBB-NEXT:  .LBB28_3:
 ; RV32ZBB-NEXT:    li a0, 1
-; RV32ZBB-NEXT:    bnez a1, .LBB29_2
-; RV32ZBB-NEXT:  .LBB29_4:
+; RV32ZBB-NEXT:    bnez a1, .LBB28_2
+; RV32ZBB-NEXT:  .LBB28_4:
 ; RV32ZBB-NEXT:    maxu a0, a2, a3
 ; RV32ZBB-NEXT:    ret
 ;
