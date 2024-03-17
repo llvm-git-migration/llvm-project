@@ -13698,6 +13698,10 @@ TreeTransform<Derived>::TransformLambdaExpr(LambdaExpr *E) {
                              E->hasExplicitParameters(), E->isMutable());
 
   // Introduce the context of the call operator.
+  // We need ThisType in lambda instantiation.
+  std::optional<Sema::CXXThisScopeRAII> ThisScope;
+  if (auto *RD = dyn_cast<CXXRecordDecl>(SemaRef.getFunctionLevelDeclContext()))
+    ThisScope.emplace(SemaRef, RD, Qualifiers());
   Sema::ContextRAII SavedContext(getSema(), NewCallOperator,
                                  /*NewThisContext*/false);
 

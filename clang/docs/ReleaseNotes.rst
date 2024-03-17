@@ -392,6 +392,7 @@ Bug Fixes to C++ Support
   Fixes (#GH84368).
 - Fixed a crash while checking constraints of a trailing requires-expression of a lambda, that the
   expression references to an entity declared outside of the lambda. (#GH64808)
+- Fix a crash in lambda instantiation that missing set ``ThisType`` when checking capture. Fixes (#GH85343).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
