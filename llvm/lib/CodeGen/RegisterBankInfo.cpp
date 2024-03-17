@@ -221,8 +221,8 @@ RegisterBankInfo::getInstrMappingImpl(const MachineInstr &MI) const {
       if (!OperandsMapping[0]) {
         if (MI.isRegSequence()) {
           // For reg_sequence, the result size does not match the input.
-          unsigned ResultSize = getSizeInBits(MI.getOperand(0).getReg(),
-                                              MRI, TRI);
+          unsigned ResultSize =
+              getSizeInBits(MI.getOperand(0).getReg(), MRI, TRI);
           OperandsMapping[0] = &getValueMapping(0, ResultSize, *CurRegBank);
         } else {
           OperandsMapping[0] = ValMapping;
@@ -332,7 +332,6 @@ RegisterBankInfo::getValueMapping(const PartialMapping *BreakDown,
 template <typename Iterator>
 const RegisterBankInfo::ValueMapping *
 RegisterBankInfo::getOperandsMapping(Iterator Begin, Iterator End) const {
-
   ++NumOperandsMappingsAccessed;
 
   // The addresses of the value mapping are unique.
