@@ -464,8 +464,7 @@ define <8 x i16> @rhaddu_i_const_lhs(<8 x i16> %src1) {
 define <8 x i16> @rhaddu_i_const_zero(<8 x i16> %src1) {
 ; CHECK-LABEL: rhaddu_i_const_zero:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    movi v1.2d, #0000000000000000
-; CHECK-NEXT:    urhadd v0.8h, v0.8h, v1.8h
+; CHECK-NEXT:    ushr v0.8h, v0.8h, #1
 ; CHECK-NEXT:    ret
   %result = call <8 x i16> @llvm.aarch64.neon.urhadd.v8i16(<8 x i16> <i16 0, i16 0, i16 0, i16 0, i16 0, i16 0, i16 0, i16 0>, <8 x i16> %src1)
   ret <8 x i16> %result
@@ -633,8 +632,7 @@ define <8 x i16> @rhadds_i_const_lhs(<8 x i16> %src1) {
 define <8 x i16> @rhadds_i_const_zero(<8 x i16> %src1) {
 ; CHECK-LABEL: rhadds_i_const_zero:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    movi v1.2d, #0000000000000000
-; CHECK-NEXT:    srhadd v0.8h, v0.8h, v1.8h
+; CHECK-NEXT:    sshr v0.8h, v0.8h, #1
 ; CHECK-NEXT:    ret
   %result = call <8 x i16> @llvm.aarch64.neon.srhadd.v8i16(<8 x i16> <i16 0, i16 0, i16 0, i16 0, i16 0, i16 0, i16 0, i16 0>, <8 x i16> %src1)
   ret <8 x i16> %result
