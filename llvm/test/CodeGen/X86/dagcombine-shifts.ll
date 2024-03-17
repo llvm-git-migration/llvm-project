@@ -322,5 +322,49 @@ define void @g(i32 %a) nounwind {
   ret void
 }
 
+define i32 @shift_zext_shl(i8 zeroext %x) {
+; X86-LABEL: shift_zext_shl:
+; X86:       # %bb.0:
+; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    andb $64, %al
+; X86-NEXT:    movzbl %al, %eax
+; X86-NEXT:    shll $9, %eax
+; X86-NEXT:    movzwl %ax, %eax
+; X86-NEXT:    retl
+;
+; X64-LABEL: shift_zext_shl:
+; X64:       # %bb.0:
+; X64-NEXT:    andb $64, %dil
+; X64-NEXT:    movzbl %dil, %eax
+; X64-NEXT:    shll $9, %eax
+; X64-NEXT:    movzwl %ax, %eax
+; X64-NEXT:    retq
+  %1 = and i8 %x, 64
+  %2 = zext i8 %1 to i16
+  %3 = shl i16 %2, 9
+  %4 = zext i16 %3 to i32
+  ret i32 %4
+}
+
+define i32 @shift_zext_shl2(i8 zeroext %x) {
+; X86-LABEL: shift_zext_shl2:
+; X86:       # %bb.0:
+; X86-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    andl $64, %eax
+; X86-NEXT:    shll $9, %eax
+; X86-NEXT:    retl
+;
+; X64-LABEL: shift_zext_shl2:
+; X64:       # %bb.0:
+; X64-NEXT:    movl %edi, %eax
+; X64-NEXT:    andl $64, %eax
+; X64-NEXT:    shll $9, %eax
+; X64-NEXT:    retq
+  %1 = and i8 %x, 64
+  %2 = zext i8 %1 to i32
+  %3 = shl i32 %2, 9
+  ret i32 %3
+}
+
 declare dso_local void @f(i64)
 
