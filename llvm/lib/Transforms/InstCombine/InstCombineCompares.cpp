@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "InstCombineInternal.h"
+#include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SetVector.h"
@@ -23,6 +24,7 @@
 #include "llvm/Analysis/VectorUtils.h"
 #include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/KnownBits.h"
@@ -7102,6 +7104,34 @@ Instruction *InstCombinerImpl::foldICmpCommutative(ICmpInst::Predicate Pred,
   const SimplifyQuery Q = SQ.getWithInstruction(&CxtI);
   if (Value *V = foldICmpWithLowBitMaskedVal(Pred, Op0, Op1, Q, *this))
     return replaceInstUsesWith(CxtI, V);
+
+  // Folding (X / Y) < X => X > 0 for some constant Y other than 0 or 1
+  {
+    const APInt *Divisor;
+    Value *Dividend;
+    if (match(Op0, m_UDiv(m_Value(Dividend), m_APInt(Divisor))) &&
+        Op1 == Dividend && Divisor->ugt(1)) {
+      return new ICmpInst(ICmpInst::getSwappedPredicate(Pred), Dividend,
+                          Constant::getNullValue(Dividend->getType()));
+    }
+
+    if (match(Op0, m_SDiv(m_Value(Dividend), m_APInt(Divisor))) &&
+        Op1 == Dividend && Divisor->ugt(1) && !ICmpInst::isUnsigned(Pred)) {
+      return new ICmpInst(ICmpInst::getSwappedPredicate(Pred), Dividend,
+                          Constant::getNullValue(Dividend->getType()));
+    }
+  }
+
+  // Another case of this fold is (X >> Y) < X => X > 0 if Y != 0
+  {
+    const APInt *Shift;
+    Value *V;
+    if (match(Op0, m_LShr(m_Value(V), m_APInt(Shift))) && Op1 == V &&
+        Shift->ugt(0) && !ICmpInst::isUnsigned(Pred)) {
+      return new ICmpInst(ICmpInst::getInversePredicate(Pred), V,
+                          Constant::getNullValue(V->getType()));
+    }
+  }
 
   return nullptr;
 }
