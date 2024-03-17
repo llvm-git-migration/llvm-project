@@ -5182,6 +5182,10 @@ void Sema::InstantiateFunctionDefinition(SourceLocation PointOfInstantiation,
     // Enter the scope of this instantiation. We don't use
     // PushDeclContext because we don't have a scope.
     Sema::ContextRAII savedContext(*this, Function);
+    // We need ThisType in lambda instantiation.
+    Sema::CXXThisScopeRAII ThisScope(
+        *this, dyn_cast<CXXRecordDecl>(Function->getDeclContext()),
+        Qualifiers());
 
     FPFeaturesStateRAII SavedFPFeatures(*this);
     CurFPFeatures = FPOptions(getLangOpts());
