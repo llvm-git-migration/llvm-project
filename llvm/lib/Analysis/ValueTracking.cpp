@@ -8532,6 +8532,15 @@ static std::optional<bool> isImpliedCondICmps(const ICmpInst *LHS,
   CmpInst::Predicate LPred =
       LHSIsTrue ? LHS->getPredicate() : LHS->getInversePredicate();
 
+  // We can have non-canonical operands here so canonicalize constant to L1/R1.
+  if (match(L0, m_ImmConstant())) {
+    std::swap(L0, L1);
+    LPred = ICmpInst::getSwappedPredicate(LPred);
+  }
+  if (match(R0, m_ImmConstant())) {
+    std::swap(R0, R1);
+    RPred = ICmpInst::getSwappedPredicate(RPred);
+  }
   // Can we infer anything when the 0-operands match and the 1-operands are
   // constants (not necessarily matching)?
   const APInt *LC, *RC;
