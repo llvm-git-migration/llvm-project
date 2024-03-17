@@ -2893,6 +2893,18 @@ bool isKnownNonZero(const Value *V, const APInt &DemandedElts, unsigned Depth,
     }
   }
 
+  std::optional<ConstantRange> Range;
+  if (const CallBase *CB = dyn_cast<CallBase>(V))
+    Range = CB->getRange();
+  else if (const Argument *A = dyn_cast<Argument>(V))
+    Range = A->getRange();
+
+  if (Range) {
+    const APInt ZeroValue(Range->getBitWidth(), 0);
+    if (!Range->contains(ZeroValue))
+      return true;
+  }
+
   if (!isa<Constant>(V) && isKnownNonZeroFromAssume(V, Q))
     return true;
 

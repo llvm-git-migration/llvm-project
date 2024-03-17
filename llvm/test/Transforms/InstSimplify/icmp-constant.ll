@@ -1143,8 +1143,7 @@ define <2 x i1> @heterogeneous_constvector(<2 x i8> %x) {
 
 define i1 @icmp_eq_non_zero_range_attr(i8 range(i8 1, 0) %i) {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_attr(
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[I:%.*]], 0
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 false
 ;
   %cmp = icmp eq i8 %i, 0
   ret i1 %cmp
@@ -1165,8 +1164,7 @@ declare range(i8 -1, 1) i8 @returns_contain_zero_range_helper()
 define i1 @icmp_eq_non_zero_range_return() {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_return(
 ; CHECK-NEXT:    [[I:%.*]] = call i8 @returns_non_zero_range_helper()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[I]], 0
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 false
 ;
   %i = call i8 @returns_non_zero_range_helper()
   %cmp = icmp eq i8 %i, 0
@@ -1189,8 +1187,7 @@ declare i8 @returns_i8_helper()
 define i1 @icmp_eq_non_zero_range_call() {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_call(
 ; CHECK-NEXT:    [[I:%.*]] = call range(i8 1, 0) i8 @returns_i8_helper()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[I]], 0
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 false
 ;
   %i = call range(i8 1, 0) i8 @returns_i8_helper()
   %cmp = icmp eq i8 %i, 0
@@ -1210,8 +1207,7 @@ define i1 @neg_icmp_eq_non_zero_range_call() {
 
 define <2 x i1> @icmp_eq_non_zero_range_attr_vec(<2 x i8> range(i8 1, 0) %i) {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_attr_vec(
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I:%.*]], zeroinitializer
-; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+; CHECK-NEXT:    ret <2 x i1> zeroinitializer
 ;
   %cmp = icmp eq <2 x i8> %i, <i8 0, i8 0>
   ret <2 x i1> %cmp
@@ -1232,8 +1228,7 @@ declare range(i8 -1, 1) <2 x i8> @returns_contain_zero_range_helper_vec()
 define <2 x i1> @icmp_eq_non_zero_range_return_vec() {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_return_vec(
 ; CHECK-NEXT:    [[I:%.*]] = call <2 x i8> @returns_non_zero_range_helper_vec()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], zeroinitializer
-; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+; CHECK-NEXT:    ret <2 x i1> zeroinitializer
 ;
   %i = call <2 x i8> @returns_non_zero_range_helper_vec()
   %cmp = icmp eq <2 x i8> %i, <i8 0, i8 0>
@@ -1256,8 +1251,7 @@ declare <2 x i8> @returns_i8_helper_vec()
 define <2 x i1> @icmp_eq_non_zero_range_call_vec() {
 ; CHECK-LABEL: @icmp_eq_non_zero_range_call_vec(
 ; CHECK-NEXT:    [[I:%.*]] = call range(i8 1, 0) <2 x i8> @returns_i8_helper_vec()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], zeroinitializer
-; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+; CHECK-NEXT:    ret <2 x i1> zeroinitializer
 ;
   %i = call range(i8 1, 0) <2 x i8> @returns_i8_helper_vec()
   %cmp = icmp eq <2 x i8> %i, <i8 0, i8 0>
