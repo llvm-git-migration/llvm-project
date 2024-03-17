@@ -419,12 +419,8 @@ static void computeKnownBitsMul(const Value *Op0, const Value *Op1, bool NSW,
 
 void llvm::computeKnownBitsFromRangeMetadata(const MDNode &Ranges,
                                              KnownBits &Known) {
-  unsigned BitWidth = Known.getBitWidth();
   unsigned NumRanges = Ranges.getNumOperands() / 2;
   assert(NumRanges >= 1);
-
-  Known.Zero.setAllBits();
-  Known.One.setAllBits();
 
   for (unsigned i = 0; i < NumRanges; ++i) {
     ConstantInt *Lower =
@@ -432,14 +428,7 @@ void llvm::computeKnownBitsFromRangeMetadata(const MDNode &Ranges,
     ConstantInt *Upper =
         mdconst::extract<ConstantInt>(Ranges.getOperand(2 * i + 1));
     ConstantRange Range(Lower->getValue(), Upper->getValue());
-
-    // The first CommonPrefixBits of all values in Range are equal.
-    unsigned CommonPrefixBits =
-        (Range.getUnsignedMax() ^ Range.getUnsignedMin()).countl_zero();
-    APInt Mask = APInt::getHighBitsSet(BitWidth, CommonPrefixBits);
-    APInt UnsignedMax = Range.getUnsignedMax().zextOrTrunc(BitWidth);
-    Known.One &= UnsignedMax & Mask;
-    Known.Zero &= ~UnsignedMax & Mask;
+    Known = Known.unionWith(Range.toKnownBits());
   }
 }
 
