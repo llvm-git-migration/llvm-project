@@ -110,6 +110,12 @@ New checks
   Detects error-prone Curiously Recurring Template Pattern usage, when the CRTP
   can be constructed outside itself and the derived class.
 
+- New :doc:`modernize-min-max-use-initializer-list
+  <clang-tidy/checks/modernize/min-max-use-initializer-list>` check.
+
+  Replaces chained ``std::min`` and ``std::max`` calls that can be written as
+  initializer lists.
+
 - New :doc:`modernize-use-designated-initializers
   <clang-tidy/checks/modernize/use-designated-initializers>` check.
 
