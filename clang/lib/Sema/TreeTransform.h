@@ -13714,6 +13714,12 @@ TreeTransform<Derived>::TransformLambdaExpr(LambdaExpr *E) {
 
     // Capturing 'this' is trivial.
     if (C->capturesThis()) {
+      // We need ThisType when build capture in CheckCXXThisCapture.
+      Sema::CXXThisScopeRAII ThisScope(
+          getSema(),
+          dyn_cast_if_present<CXXRecordDecl>(
+              getSema().getFunctionLevelDeclContext()),
+          Qualifiers());
       getSema().CheckCXXThisCapture(C->getLocation(), C->isExplicit(),
                                     /*BuildAndDiagnose*/ true, nullptr,
                                     C->getCaptureKind() == LCK_StarThis);
