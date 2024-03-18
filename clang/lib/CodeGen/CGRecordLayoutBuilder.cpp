@@ -554,30 +554,41 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
         // Bitfield potentially begins a new span. This includes zero-length
         // bitfields on non-aligning targets that lie at character boundaries
         // (those are barriers to merging).
-        LimitOffset = bitsToCharUnits(BitOffset);
         if (Field->isZeroLengthBitField(Context))
+          // This is a barrier, but it might be followed by padding we could
+          // use. Hence handle exactly as if we reached the end of the bitfield
+          // run.
           Barrier = true;
-        AtAlignedBoundary = true;
+        else {
+          LimitOffset = bitsToCharUnits(BitOffset);
+          AtAlignedBoundary = true;
+        }
       }
-    } else if (Begin == FieldEnd) {
-      // Completed the bitfields.
-      break;
     } else {
-      // We've reached the end of the bitfield run while accumulating a span.
-      // Determine the limit of that span: either the offset of the next field,
-      // or if we're at the end of the record the end of its non-reuseable tail
-      // padding. (I.e. treat the next unusable char as the start of an
-      // unmergeable span.)
+      // We've reached the end of the bitfield run. Either we're done, or this
+      // is a barrier for the current span.
+      if (Begin == FieldEnd)
+        break;
+
+      Barrier = true;
+    }
+
+    if (Barrier) {
+      // We're at a barrier, find the next used storage to determine what the
+      // limit of the current span is. That's wither the offset of the next
+      // field with storage or the end of the non-reusable tail padding.
       auto Probe = Field;
       while (Probe != FieldEnd && Probe->isZeroSize(Context))
         ++Probe;
-      // We can't necessarily use tail padding in C++ structs, so the NonVirtual
-      // size is what we must use there.
-      LimitOffset = Probe != FieldEnd
-                        ? bitsToCharUnits(getFieldBitOffset(*Probe))
-                    : RD ? Layout.getNonVirtualSize()
-                         : Layout.getDataSize();
-      Barrier = true;
+      if (Probe != FieldEnd) {
+        assert((getFieldBitOffset(*Field) % CharBits) == 0 &&
+               "Next storage is not byte-aligned");
+        LimitOffset = bitsToCharUnits(getFieldBitOffset(*Probe));
+      } else {
+        // We can't necessarily use tail padding in C++ structs, so the
+        // NonVirtual size is what we must use there.
+        LimitOffset = RD ? Layout.getNonVirtualSize() : Layout.getDataSize();
+      }
       AtAlignedBoundary = true;
     }
 

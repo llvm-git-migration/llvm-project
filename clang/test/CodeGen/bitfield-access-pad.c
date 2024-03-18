@@ -334,8 +334,8 @@ struct __attribute__((aligned(4))) P10 {
   char : 0;
 } p10;
 // CHECK-LABEL: LLVMType:%struct.P10 =
-// LAYOUT-T-SAME: type { i24 }
-// LAYOUT-ARM64-T-SAME: type { i24 }
+// LAYOUT-T-SAME: type { i32 }
+// LAYOUT-ARM64-T-SAME: type { i32 }
 // LAYOUT-NT-SAME: type { i32 }
 // LAYOUT-STRICT-NT-SAME: type { i32 }
 // LAYOUT-DWN32-SAME: type { i32 }
@@ -368,10 +368,10 @@ struct __attribute__((aligned(4))) P11 {
   char : 0; // at a char boundary
 } p11;
 // CHECK-LABEL: LLVMType:%struct.P11 =
-// LAYOUT-T-SAME: type { i24 }
-// LAYOUT-ARM64-T-SAME: type { i24 }
-// LAYOUT-NT-SAME: type { i24 }
-// LAYOUT-STRICT-NT-SAME: type { i24 }
+// LAYOUT-T-SAME: type { i32 }
+// LAYOUT-ARM64-T-SAME: type { i32 }
+// LAYOUT-NT-SAME: type { i32 }
+// LAYOUT-STRICT-NT-SAME: type { i32 }
 // LAYOUT-DWN32-SAME: type { i32 }
 // CHECK: BitFields:[
 // LAYOUT-T-NEXT: <CGBitFieldInfo Offset:{{[0-9]+}} Size:7 IsSigned:0 StorageSize:32 StorageOffset:0
