@@ -351,6 +351,15 @@ public:
     Tree,
   };
 
+  /// The different output formats for printing the timers.
+  enum class OutputFormat {
+    /// In this format the results are displayed in text format.
+    Text,
+
+    /// In this format the results are displayed in JSON format.
+    Json,
+  };
+
   DefaultTimingManager();
   DefaultTimingManager(DefaultTimingManager &&rhs);
   ~DefaultTimingManager() override;
@@ -372,10 +381,7 @@ public:
   DisplayMode getDisplayMode() const;
 
   /// Change the stream where the output will be printed to.
-  void setOutput(raw_ostream &os);
-
-  /// Return the current output stream where the output will be printed to.
-  raw_ostream &getOutput() const;
+  void setOutput(raw_ostream &os, OutputFormat outputFormat);
 
   /// Print and clear the timing results. Only call this when there are no more
   /// references to nested timers around, as printing post-processes and clears
