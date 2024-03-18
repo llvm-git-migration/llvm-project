@@ -980,8 +980,11 @@ Error BitcodeAnalyzer::parseBlock(unsigned BlockID, unsigned IndentLevel,
 
             if (BlobIsPrintable)
               O->OS << "'" << Blob << "'";
-            else
-              O->OS << "unprintable, " << Blob.size() << " bytes.";
+            else {
+              O->OS << "unprintable blob, " << Blob.size() << " bytes: ";
+              for (char C : Blob)
+                O->OS << (unsigned)C << " ";
+            }
           }
         }
       }

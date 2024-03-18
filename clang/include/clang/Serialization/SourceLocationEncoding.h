@@ -52,11 +52,19 @@ class SourceLocationEncoding {
   friend SourceLocationSequence;
 
 public:
-  static uint64_t encode(SourceLocation Loc,
+  using RawLocEncoding = uint64_t;
+
+  static RawLocEncoding encode(SourceLocation Loc,
+                         UIntTy BaseOffset,
+                         unsigned BaseModuleFileIndex,
                          SourceLocationSequence * = nullptr);
-  static SourceLocation decode(uint64_t, SourceLocationSequence * = nullptr);
+  static std::pair<SourceLocation, unsigned> decode(RawLocEncoding, SourceLocationSequence * = nullptr);
 };
 
+/// TODO: Remove SourceLocationSequence since it is not used now.
+/// Since we will put the index for ModuleFile in the high bits in the encodings
+/// for source locations, it is meaningless to reduce the size of source locations.
+///
 /// Serialized encoding of a sequence of SourceLocations.
 ///
 /// Optimized to produce small values when locations with the sequence are
@@ -149,14 +157,30 @@ public:
   operator SourceLocationSequence *() { return &Seq; }
 };
 
-inline uint64_t SourceLocationEncoding::encode(SourceLocation Loc,
+inline SourceLocationEncoding::RawLocEncoding
+SourceLocationEncoding::encode(SourceLocation Loc,
+                                               UIntTy BaseOffset,
+                                               unsigned BaseModuleFileIndex,
                                                SourceLocationSequence *Seq) {
-  return Seq ? Seq->encode(Loc) : encodeRaw(Loc.getRawEncoding());
+  if (Loc.isInvalid())
+    return 0;
+
+  assert(Loc.getOffset() > BaseOffset);
+  Loc = Loc.getLocWithOffset(-BaseOffset);
+  RawLocEncoding Encoded = encodeRaw(Loc.getRawEncoding());
+  assert(Encoded < ((RawLocEncoding)1 << 32));
+
+  assert(BaseModuleFileIndex < ((RawLocEncoding)1 << 32));
+  Encoded |= (RawLocEncoding)BaseModuleFileIndex << 32;
+  return Encoded;
 }
-inline SourceLocation
-SourceLocationEncoding::decode(uint64_t Encoded, SourceLocationSequence *Seq) {
-  return Seq ? Seq->decode(Encoded)
-             : SourceLocation::getFromRawEncoding(decodeRaw(Encoded));
+inline std::pair<SourceLocation, unsigned>
+SourceLocationEncoding::decode(RawLocEncoding Encoded, SourceLocationSequence *Seq) {
+  unsigned ModuleFileIndex = Encoded >> 32;
+  Encoded &= ((RawLocEncoding)1 << 33) - 1;
+  SourceLocation Loc = SourceLocation::getFromRawEncoding(decodeRaw(Encoded));
+
+  return {Loc, ModuleFileIndex};
 }
 
 } // namespace clang
