@@ -68,12 +68,12 @@ struct st5 {
   volatile char c : 5;
 } st5;
 // LAYOUT-LABEL: LLVMType:%struct.st5 =
-// LAYOUT-SAME: type { i16, i8 }
+// LAYOUT-SAME: type { i32 }
 // LAYOUT: BitFields:[
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:1 StorageSize:16 StorageOffset:0
-// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:5 IsSigned:1 StorageSize:8 StorageOffset:2
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:4 Size:12 IsSigned:1 StorageSize:16 StorageOffset:0
-// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:3 Size:5 IsSigned:1 StorageSize:8 StorageOffset:2
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:0 Size:12 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_LE-NEXT: <CGBitFieldInfo Offset:16 Size:5 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:20 Size:12 IsSigned:1 StorageSize:32 StorageOffset:0
+// LAYOUT_BE-NEXT: <CGBitFieldInfo Offset:11 Size:5 IsSigned:1 StorageSize:32 StorageOffset:0
 // LAYOUT-NEXT: ]>
 
 struct st6 {

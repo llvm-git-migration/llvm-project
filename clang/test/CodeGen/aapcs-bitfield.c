@@ -809,42 +809,44 @@ struct st5 {
 
 // LE-LABEL: @st5_check_load(
 // LE-NEXT:  entry:
-// LE-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LE-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// LE-NEXT:    [[BF_SHL:%.*]] = shl i8 [[BF_LOAD]], 3
-// LE-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_SHL]], 3
-// LE-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
+// LE-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// LE-NEXT:    [[BF_SHL:%.*]] = shl i32 [[BF_LOAD]], 11
+// LE-NEXT:    [[BF_ASHR:%.*]] = ashr i32 [[BF_SHL]], 27
+// LE-NEXT:    [[BF_CAST:%.*]] = trunc i32 [[BF_ASHR]] to i8
+// LE-NEXT:    [[CONV:%.*]] = sext i8 [[BF_CAST]] to i32
 // LE-NEXT:    ret i32 [[CONV]]
 //
 // BE-LABEL: @st5_check_load(
 // BE-NEXT:  entry:
-// BE-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BE-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// BE-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_LOAD]], 3
-// BE-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
+// BE-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// BE-NEXT:    [[BF_SHL:%.*]] = shl i32 [[BF_LOAD]], 16
+// BE-NEXT:    [[BF_ASHR:%.*]] = ashr i32 [[BF_SHL]], 27
+// BE-NEXT:    [[BF_CAST:%.*]] = trunc i32 [[BF_ASHR]] to i8
+// BE-NEXT:    [[CONV:%.*]] = sext i8 [[BF_CAST]] to i32
 // BE-NEXT:    ret i32 [[CONV]]
 //
 // LENUMLOADS-LABEL: @st5_check_load(
 // LENUMLOADS-NEXT:  entry:
-// LENUMLOADS-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// LENUMLOADS-NEXT:    [[BF_SHL:%.*]] = shl i8 [[BF_LOAD]], 3
-// LENUMLOADS-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_SHL]], 3
-// LENUMLOADS-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
+// LENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// LENUMLOADS-NEXT:    [[BF_SHL:%.*]] = shl i32 [[BF_LOAD]], 11
+// LENUMLOADS-NEXT:    [[BF_ASHR:%.*]] = ashr i32 [[BF_SHL]], 27
+// LENUMLOADS-NEXT:    [[BF_CAST:%.*]] = trunc i32 [[BF_ASHR]] to i8
+// LENUMLOADS-NEXT:    [[CONV:%.*]] = sext i8 [[BF_CAST]] to i32
 // LENUMLOADS-NEXT:    ret i32 [[CONV]]
 //
 // BENUMLOADS-LABEL: @st5_check_load(
 // BENUMLOADS-NEXT:  entry:
-// BENUMLOADS-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// BENUMLOADS-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_LOAD]], 3
-// BENUMLOADS-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
+// BENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// BENUMLOADS-NEXT:    [[BF_SHL:%.*]] = shl i32 [[BF_LOAD]], 16
+// BENUMLOADS-NEXT:    [[BF_ASHR:%.*]] = ashr i32 [[BF_SHL]], 27
+// BENUMLOADS-NEXT:    [[BF_CAST:%.*]] = trunc i32 [[BF_ASHR]] to i8
+// BENUMLOADS-NEXT:    [[CONV:%.*]] = sext i8 [[BF_CAST]] to i32
 // BENUMLOADS-NEXT:    ret i32 [[CONV]]
 //
 // LEWIDTH-LABEL: @st5_check_load(
 // LEWIDTH-NEXT:  entry:
-// LEWIDTH-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// LEWIDTH-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// LEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // LEWIDTH-NEXT:    [[BF_SHL:%.*]] = shl i8 [[BF_LOAD]], 3
 // LEWIDTH-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_SHL]], 3
 // LEWIDTH-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
@@ -852,16 +854,16 @@ struct st5 {
 //
 // BEWIDTH-LABEL: @st5_check_load(
 // BEWIDTH-NEXT:  entry:
-// BEWIDTH-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// BEWIDTH-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// BEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // BEWIDTH-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_LOAD]], 3
 // BEWIDTH-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
 // BEWIDTH-NEXT:    ret i32 [[CONV]]
 //
 // LEWIDTHNUM-LABEL: @st5_check_load(
 // LEWIDTHNUM-NEXT:  entry:
-// LEWIDTHNUM-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// LEWIDTHNUM-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// LEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // LEWIDTHNUM-NEXT:    [[BF_SHL:%.*]] = shl i8 [[BF_LOAD]], 3
 // LEWIDTHNUM-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_SHL]], 3
 // LEWIDTHNUM-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
@@ -869,8 +871,8 @@ struct st5 {
 //
 // BEWIDTHNUM-LABEL: @st5_check_load(
 // BEWIDTHNUM-NEXT:  entry:
-// BEWIDTHNUM-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// BEWIDTHNUM-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// BEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // BEWIDTHNUM-NEXT:    [[BF_ASHR:%.*]] = ashr i8 [[BF_LOAD]], 3
 // BEWIDTHNUM-NEXT:    [[CONV:%.*]] = sext i8 [[BF_ASHR]] to i32
 // BEWIDTHNUM-NEXT:    ret i32 [[CONV]]
@@ -881,74 +883,70 @@ int st5_check_load(struct st5 *m) {
 
 // LE-LABEL: @st5_check_store(
 // LE-NEXT:  entry:
-// LE-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LE-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// LE-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], -32
-// LE-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 1
-// LE-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// LE-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// LE-NEXT:    [[BF_CLEAR:%.*]] = and i32 [[BF_LOAD]], -2031617
+// LE-NEXT:    [[BF_SET:%.*]] = or i32 [[BF_CLEAR]], 65536
+// LE-NEXT:    store volatile i32 [[BF_SET]], ptr [[M]], align 4
 // LE-NEXT:    ret void
 //
 // BE-LABEL: @st5_check_store(
 // BE-NEXT:  entry:
-// BE-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BE-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// BE-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], 7
-// BE-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 8
-// BE-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// BE-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// BE-NEXT:    [[BF_CLEAR:%.*]] = and i32 [[BF_LOAD]], -63489
+// BE-NEXT:    [[BF_SET:%.*]] = or i32 [[BF_CLEAR]], 2048
+// BE-NEXT:    store volatile i32 [[BF_SET]], ptr [[M]], align 4
 // BE-NEXT:    ret void
 //
 // LENUMLOADS-LABEL: @st5_check_store(
 // LENUMLOADS-NEXT:  entry:
-// LENUMLOADS-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// LENUMLOADS-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], -32
-// LENUMLOADS-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 1
-// LENUMLOADS-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// LENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// LENUMLOADS-NEXT:    [[BF_CLEAR:%.*]] = and i32 [[BF_LOAD]], -2031617
+// LENUMLOADS-NEXT:    [[BF_SET:%.*]] = or i32 [[BF_CLEAR]], 65536
+// LENUMLOADS-NEXT:    store volatile i32 [[BF_SET]], ptr [[M]], align 4
 // LENUMLOADS-NEXT:    ret void
 //
 // BENUMLOADS-LABEL: @st5_check_store(
 // BENUMLOADS-NEXT:  entry:
-// BENUMLOADS-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
-// BENUMLOADS-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], 7
-// BENUMLOADS-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 8
-// BENUMLOADS-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// BENUMLOADS-NEXT:    [[BF_LOAD:%.*]] = load volatile i32, ptr [[M:%.*]], align 4
+// BENUMLOADS-NEXT:    [[BF_CLEAR:%.*]] = and i32 [[BF_LOAD]], -63489
+// BENUMLOADS-NEXT:    [[BF_SET:%.*]] = or i32 [[BF_CLEAR]], 2048
+// BENUMLOADS-NEXT:    store volatile i32 [[BF_SET]], ptr [[M]], align 4
 // BENUMLOADS-NEXT:    ret void
 //
 // LEWIDTH-LABEL: @st5_check_store(
 // LEWIDTH-NEXT:  entry:
-// LEWIDTH-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// LEWIDTH-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// LEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // LEWIDTH-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], -32
 // LEWIDTH-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 1
-// LEWIDTH-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// LEWIDTH-NEXT:    store volatile i8 [[BF_SET]], ptr [[TMP0]], align 2
 // LEWIDTH-NEXT:    ret void
 //
 // BEWIDTH-LABEL: @st5_check_store(
 // BEWIDTH-NEXT:  entry:
-// BEWIDTH-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// BEWIDTH-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// BEWIDTH-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // BEWIDTH-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], 7
 // BEWIDTH-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 8
-// BEWIDTH-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// BEWIDTH-NEXT:    store volatile i8 [[BF_SET]], ptr [[TMP0]], align 2
 // BEWIDTH-NEXT:    ret void
 //
 // LEWIDTHNUM-LABEL: @st5_check_store(
 // LEWIDTHNUM-NEXT:  entry:
-// LEWIDTHNUM-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// LEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// LEWIDTHNUM-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// LEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // LEWIDTHNUM-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], -32
 // LEWIDTHNUM-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 1
-// LEWIDTHNUM-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// LEWIDTHNUM-NEXT:    store volatile i8 [[BF_SET]], ptr [[TMP0]], align 2
 // LEWIDTHNUM-NEXT:    ret void
 //
 // BEWIDTHNUM-LABEL: @st5_check_store(
 // BEWIDTHNUM-NEXT:  entry:
-// BEWIDTHNUM-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_ST5:%.*]], ptr [[M:%.*]], i32 0, i32 1
-// BEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[C]], align 2
+// BEWIDTHNUM-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[M:%.*]], i32 2
+// BEWIDTHNUM-NEXT:    [[BF_LOAD:%.*]] = load volatile i8, ptr [[TMP0]], align 2
 // BEWIDTHNUM-NEXT:    [[BF_CLEAR:%.*]] = and i8 [[BF_LOAD]], 7
 // BEWIDTHNUM-NEXT:    [[BF_SET:%.*]] = or i8 [[BF_CLEAR]], 8
-// BEWIDTHNUM-NEXT:    store volatile i8 [[BF_SET]], ptr [[C]], align 2
+// BEWIDTHNUM-NEXT:    store volatile i8 [[BF_SET]], ptr [[TMP0]], align 2
 // BEWIDTHNUM-NEXT:    ret void
 //
 void st5_check_store(struct st5 *m) {
