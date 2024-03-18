@@ -43,7 +43,7 @@ struct BlockPointer {
 
 struct IntPointer {
   const Descriptor *Desc;
-  int Value;
+  uint64_t Value;
 };
 
 enum class Storage { Block, Int };
@@ -124,10 +124,10 @@ public:
   /// Converts the pointer to a string usable in diagnostics.
   std::string toDiagnosticString(const ASTContext &Ctx) const;
 
-  unsigned getIntegerRepresentation() const {
+  uint64_t getIntegerRepresentation() const {
     if (isIntegralPointer())
       return asIntPointer().Value + (Offset * elemSize());
-    return reinterpret_cast<uintptr_t>(asBlockPointer().Pointee) + Offset;
+    return reinterpret_cast<uint64_t>(asBlockPointer().Pointee) + Offset;
   }
 
   /// Converts the pointer to an APValue that is an rvalue.
