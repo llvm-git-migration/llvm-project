@@ -499,7 +499,6 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
 
   // The accumulation is also prevented when:
   // *) it would cross a zero-width bitfield (ABI-dependent), or
-  // *) one of the candidate access units contains a volatile bitfield, or
   // *) fine-grained bitfield access option is in effect.
 
   CharUnits RegSize =
@@ -523,10 +522,6 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   RecordDecl::field_iterator BestEnd = Begin;
   CharUnits BestEndOffset;
 
-  bool Volatile; // True iff the initial span or post-BestEnd span contains a
-                 // volatile bitfield. We do not want to merge spans containing
-                 // a volatile bitfield.
-
   for (;;) {
     // AtAlignedBoundary is true iff Field is the (potential) start of a new
     // span (or the end of the bitfields). When true, LimitOffset is the
@@ -546,7 +541,6 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
         assert((BitOffset % CharBits) == 0 && "Not at start of char");
         BeginOffset = bitsToCharUnits(BitOffset);
         BitSizeSinceBegin = 0;
-        Volatile = false;
       } else if ((BitOffset % CharBits) != 0) {
         // Bitfield occupies the same char as previous, it must be part of the
         // same span.
@@ -604,10 +598,6 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
           // A zero-sized initial span -- this will install nothing and reset
           // for another.
           InstallBest = true;
-      } else if (Volatile) {
-        // We've encountered a volatile bitfield in the just-seen non-initial
-        // span. It should not be merged into the current accumulation.
-        InstallBest = true;
       } else if (AccessSize > RegSize)
         // Accumulating the just-seen span would create a multi-register access
         // unit, which would increase register pressure.
@@ -645,12 +635,6 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
           if (Barrier)
             // The next field is a barrier that we cannot merge-across.
             InstallBest = true;
-          else if (Volatile)
-            // The initial span contains a volatile bitfield, do not merge any
-            // subsequent spans. (We can only get here for the initial span, any
-            // subsequent potential volatile span will have already bailed
-            // above.)
-            InstallBest = true;
           else
             // LimitOffset is the offset of the (aligned) next bitfield in this
             // case.
@@ -682,12 +666,10 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
       assert(Field != FieldEnd && Field->isBitField() &&
              "Accumulating past end of bitfields");
       assert(((getFieldBitOffset(*Field) % CharBits) != 0 ||
-              (!Volatile && !Barrier)) &&
+              !Barrier) &&
              "Accumulating across volatile or barrier");
       // Accumulate this bitfield into the current (potential) span.
       BitSizeSinceBegin += Field->getBitWidthValue(Context);
-      if (Field->getType().isVolatileQualified())
-        Volatile = true;
       ++Field;
     }
   }
