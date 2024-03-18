@@ -130,7 +130,20 @@ void CommandObjectDWIMPrint::DoExecute(StringRef command,
     }
   };
 
-  // First, try `expr` as the name of a frame variable.
+  // Dump `valobj` according to whether `po` was requested or not.
+  auto dump_val_object = [&](ValueObject &valobj) {
+    if (is_po) {
+      StreamString temp_result_stream;
+      valobj.Dump(temp_result_stream, dump_options);
+      llvm::StringRef output = temp_result_stream.GetString();
+      maybe_add_hint(output);
+      result.GetOutputStream() << output;
+    } else {
+      valobj.Dump(result.GetOutputStream(), dump_options);
+    }
+  };
+
+  // Try `expr` as the name of a frame variable.
   if (frame) {
     auto valobj_sp = frame->FindVariable(ConstString(expr));
     if (valobj_sp && valobj_sp->GetError().Success()) {
@@ -147,21 +160,13 @@ void CommandObjectDWIMPrint::DoExecute(StringRef command,
                                         flags, expr);
       }
 
-      if (is_po) {
-        StreamString temp_result_stream;
-        valobj_sp->Dump(temp_result_stream, dump_options);
-        llvm::StringRef output = temp_result_stream.GetString();
-        maybe_add_hint(output);
-        result.GetOutputStream() << output;
-      } else {
-        valobj_sp->Dump(result.GetOutputStream(), dump_options);
-      }
+      dump_val_object(*valobj_sp);
       result.SetStatus(eReturnStatusSuccessFinishResult);
       return;
     }
   }
 
-  // Second, also lastly, try `expr` as a source expression to evaluate.
+  // Try `expr` as a source expression to evaluate.
   {
     auto *exe_scope = m_exe_ctx.GetBestExecutionContextScope();
     ValueObjectSP valobj_sp;
@@ -187,17 +192,8 @@ void CommandObjectDWIMPrint::DoExecute(StringRef command,
                                         expr);
       }
 
-      if (valobj_sp->GetError().GetError() != UserExpression::kNoResult) {
-        if (is_po) {
-          StreamString temp_result_stream;
-          valobj_sp->Dump(temp_result_stream, dump_options);
-          llvm::StringRef output = temp_result_stream.GetString();
-          maybe_add_hint(output);
-          result.GetOutputStream() << output;
-        } else {
-          valobj_sp->Dump(result.GetOutputStream(), dump_options);
-        }
-      }
+      if (valobj_sp->GetError().GetError() != UserExpression::kNoResult)
+        dump_val_object(*valobj_sp);
 
       if (suppress_result)
         if (auto result_var_sp =
