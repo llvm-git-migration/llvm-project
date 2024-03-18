@@ -491,6 +491,13 @@ enum OverflowingBinaryOperatorOptionalFlags {
   OBO_NO_SIGNED_WRAP = 1
 };
 
+/// PossiblyNoWrapInstOptionalFlags - Flags for serializing
+/// PossiblyNoWrapInstOptionalFlags's SubclassOptionalData contents.
+enum PossiblyNoWrapInstOptionalFlags {
+  PNWIO_NO_UNSIGNED_WRAP = 0,
+  PNWIO_NO_SIGNED_WRAP = 1
+};
+
 /// FastMath Flags
 /// This is a fixed layout derived from the bitcode emitted by LLVM 5.0
 /// intended to decouple the in-memory representation from the serialization.

@@ -11295,6 +11295,9 @@ Syntax:
 ::
 
       <result> = trunc <ty> <value> to <ty2>             ; yields ty2
+      <result> = trunc nsw <ty> <value> to <ty2>         ; yields ty2
+      <result> = trunc nuw <ty> <value> to <ty2>         ; yields ty2
+      <result> = trunc nuw nsw <ty> <value> to <ty2>     ; yields ty2
 
 Overview:
 """""""""
@@ -11317,6 +11320,13 @@ The '``trunc``' instruction truncates the high order bits in ``value``
 and converts the remaining bits to ``ty2``. Since the source size must
 be larger than the destination size, ``trunc`` cannot be a *no-op cast*.
 It will always truncate bits.
+
+``nuw`` and ``nsw`` stand for "No Unsigned Wrap" and "No Signed Wrap",
+respectively. If the ``nuw`` and/or ``nsw`` keywords are present, the
+result value of the ``add`` is a :ref:`poison value <poisonvalues>` if
+any of the truncated bits are non-zero and/or any of the truncated bits
+are not the same as the top bit of the truncation result,respectively,
+occurs.
 
 Example:
 """"""""

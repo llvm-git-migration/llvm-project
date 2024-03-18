@@ -27,6 +27,10 @@ bool Operator::hasPoisonGeneratingFlags() const {
     auto *OBO = cast<OverflowingBinaryOperator>(this);
     return OBO->hasNoUnsignedWrap() || OBO->hasNoSignedWrap();
   }
+  case Instruction::Trunc: {
+    auto *PNWI = dyn_cast<PossiblyNoWrapInst>(this);
+    return PNWI->hasNoUnsignedWrap() || PNWI->hasNoSignedWrap();
+  }
   case Instruction::UDiv:
   case Instruction::SDiv:
   case Instruction::AShr:

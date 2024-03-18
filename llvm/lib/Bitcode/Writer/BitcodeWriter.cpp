@@ -1636,6 +1636,11 @@ static uint64_t getOptimizationFlags(const Value *V) {
   } else if (const auto *NNI = dyn_cast<PossiblyNonNegInst>(V)) {
     if (NNI->hasNonNeg())
       Flags |= 1 << bitc::PNNI_NON_NEG;
+  } else if (const auto *PNWI = dyn_cast<PossiblyNoWrapInst>(V)) {
+    if (PNWI->hasNoSignedWrap())
+      Flags |= 1 << bitc::PNWIO_NO_SIGNED_WRAP;
+    if (PNWI->hasNoUnsignedWrap())
+      Flags |= 1 << bitc::PNWIO_NO_UNSIGNED_WRAP;
   }
 
   return Flags;

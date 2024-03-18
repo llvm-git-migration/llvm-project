@@ -368,11 +368,19 @@ bool Instruction::isOnlyUserOfAnyOperand() {
 }
 
 void Instruction::setHasNoUnsignedWrap(bool b) {
-  cast<OverflowingBinaryOperator>(this)->setHasNoUnsignedWrap(b);
+  if (auto Inst = cast<OverflowingBinaryOperator>(this)) {
+    Inst->setHasNoUnsignedWrap(b);
+  } else {
+    cast<PossiblyNoWrapInst>(this)->setHasNoUnsignedWrap(b);
+  }
 }
 
 void Instruction::setHasNoSignedWrap(bool b) {
-  cast<OverflowingBinaryOperator>(this)->setHasNoSignedWrap(b);
+  if (auto Inst = cast<OverflowingBinaryOperator>(this)) {
+    Inst->setHasNoSignedWrap(b);
+  } else {
+    cast<PossiblyNoWrapInst>(this)->setHasNoSignedWrap(b);
+  }
 }
 
 void Instruction::setIsExact(bool b) {
@@ -386,11 +394,17 @@ void Instruction::setNonNeg(bool b) {
 }
 
 bool Instruction::hasNoUnsignedWrap() const {
-  return cast<OverflowingBinaryOperator>(this)->hasNoUnsignedWrap();
+  if (auto Inst = cast<OverflowingBinaryOperator>(this))
+    return Inst->hasNoUnsignedWrap();
+
+  return cast<PossiblyNoWrapInst>(this)->hasNoUnsignedWrap();
 }
 
 bool Instruction::hasNoSignedWrap() const {
-  return cast<OverflowingBinaryOperator>(this)->hasNoSignedWrap();
+  if (auto Inst = cast<OverflowingBinaryOperator>(this))
+    return Inst->hasNoSignedWrap();
+
+  return cast<PossiblyNoWrapInst>(this)->hasNoSignedWrap();
 }
 
 bool Instruction::hasNonNeg() const {
@@ -429,6 +443,11 @@ void Instruction::dropPoisonGeneratingFlags() {
 
   case Instruction::ZExt:
     setNonNeg(false);
+    break;
+
+  case Instruction::Trunc:
+    cast<PossiblyNoWrapInst>(this)->setHasNoUnsignedWrap(false);
+    cast<PossiblyNoWrapInst>(this)->setHasNoSignedWrap(false);
     break;
   }
 
@@ -621,6 +640,13 @@ void Instruction::andIRFlags(const Value *V) {
     if (isa<OverflowingBinaryOperator>(this)) {
       setHasNoSignedWrap(hasNoSignedWrap() && OB->hasNoSignedWrap());
       setHasNoUnsignedWrap(hasNoUnsignedWrap() && OB->hasNoUnsignedWrap());
+    }
+  }
+
+  if (auto *PNWI = dyn_cast<PossiblyNoWrapInst>(V)) {
+    if (isa<PossiblyNoWrapInst>(this)) {
+      setHasNoSignedWrap(hasNoSignedWrap() && PNWI->hasNoSignedWrap());
+      setHasNoUnsignedWrap(hasNoUnsignedWrap() && PNWI->hasNoUnsignedWrap());
     }
   }
 

@@ -1411,6 +1411,11 @@ static void WriteOptimizationInfo(raw_ostream &Out, const User *U) {
   } else if (const auto *NNI = dyn_cast<PossiblyNonNegInst>(U)) {
     if (NNI->hasNonNeg())
       Out << " nneg";
+  } else if (const auto *PNWI = dyn_cast<PossiblyNoWrapInst>(U)) {
+    if (PNWI->hasNoUnsignedWrap())
+      Out << " nuw";
+    if (PNWI->hasNoSignedWrap())
+      Out << " nsw";
   }
 }
 
