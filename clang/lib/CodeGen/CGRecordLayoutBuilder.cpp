@@ -498,7 +498,7 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   // again at the bitfield following that best one.
 
   // The accumulation is also prevented when:
-  // *) it would cross a zero-width bitfield (ABI-dependent), or
+  // *) it would cross a character-aigned zero-width bitfield, or
   // *) fine-grained bitfield access option is in effect.
 
   CharUnits RegSize =
@@ -542,16 +542,20 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
         BeginOffset = bitsToCharUnits(BitOffset);
         BitSizeSinceBegin = 0;
       } else if ((BitOffset % CharBits) != 0) {
-        // Bitfield occupies the same char as previous, it must be part of the
-        // same span.
+        // Bitfield occupies the same character as previous bitfield, it must be
+        // part of the same span. This can include zero-length bitfields, should
+        // the target not align them to character boundaries. Such non-alignment
+        // is at variance with the C++ std that requires zero-length bitfields
+        // be a barrier between access units. But of course we can't achieve
+        // that in the middle of a character.
         assert(BitOffset == Context.toBits(BeginOffset) + BitSizeSinceBegin &&
                "Concatenating non-contiguous bitfields");
       } else {
-        // Bitfield could begin a new span.
+        // Bitfield potentially begins a new span. This includes zero-length
+        // bitfields on non-aligning targets that lie at character boundaries
+        // (those are barriers to merging).
         LimitOffset = bitsToCharUnits(BitOffset);
-        if (Field->isZeroLengthBitField(Context) &&
-            (Context.getTargetInfo().useZeroLengthBitfieldAlignment() ||
-             Context.getTargetInfo().useBitFieldTypeAlignment()))
+        if (Field->isZeroLengthBitField(Context))
           Barrier = true;
         AtAlignedBoundary = true;
       }
