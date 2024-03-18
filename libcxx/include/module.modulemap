@@ -1809,7 +1809,10 @@ module std_private_tuple_sfinae_helpers   [system] { header "__tuple/sfinae_help
 module std_private_tuple_tuple_element    [system] { header "__tuple/tuple_element.h" }
 module std_private_tuple_tuple_fwd        [system] { header "__fwd/tuple.h" }
 module std_private_tuple_tuple_indices    [system] { header "__tuple/tuple_indices.h" }
-module std_private_tuple_tuple_like       [system] { header "__tuple/tuple_like.h" }
+module std_private_tuple_tuple_like       [system] {
+  header "__tuple/tuple_like.h"
+  export *
+}
 module std_private_tuple_tuple_like_ext   [system] { header "__tuple/tuple_like_ext.h" }
 module std_private_tuple_tuple_size       [system] { header "__tuple/tuple_size.h" }
 module std_private_tuple_tuple_types      [system] { header "__tuple/tuple_types.h" }
