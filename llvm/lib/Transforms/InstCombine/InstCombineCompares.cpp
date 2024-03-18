@@ -7103,6 +7103,35 @@ Instruction *InstCombinerImpl::foldICmpCommutative(ICmpInst::Predicate Pred,
   if (Value *V = foldICmpWithLowBitMaskedVal(Pred, Op0, Op1, Q, *this))
     return replaceInstUsesWith(CxtI, V);
 
+  // Folding (X / Y) cmp X => X ~cmp 0 for some constant Y other than 0 or 1
+  {
+    Value *Dividend;
+    const APInt *Divisor;
+    if (match(Op0, m_UDiv(m_Value(Dividend), m_APInt(Divisor))) &&
+        Op1 == Dividend && !Divisor->isZero() && !Divisor->isOne()) {
+      return new ICmpInst(ICmpInst::getSwappedPredicate(Pred), Dividend,
+                          Constant::getNullValue(Dividend->getType()));
+    }
+
+    if (match(Op0, m_UDiv(m_Value(Dividend), m_APInt(Divisor))) &&
+        Op1 == Dividend && !Divisor->isZero() && !Divisor->isOne() &&
+        !ICmpInst::isUnsigned(Pred)) {
+      return new ICmpInst(ICmpInst::getSwappedPredicate(Pred), Dividend,
+                          Constant::getNullValue(Dividend->getType()));
+    }
+  }
+
+  // Another case of this fold is (X >> Y) cmp X => X ~cmp 0 if Y != 0
+  {
+    Value *V;
+    const APInt *Shift;
+    if (match(Op0, m_LShr(m_Value(V), m_APInt(Shift))) && Op1 == V &&
+        !Shift->isZero()) {
+      return new ICmpInst(ICmpInst::getInversePredicate(Pred), V,
+                          Constant::getNullValue(V->getType()));
+    }
+  }
+
   return nullptr;
 }
 
