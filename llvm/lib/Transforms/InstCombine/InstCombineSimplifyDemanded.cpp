@@ -420,6 +420,15 @@ Value *InstCombinerImpl::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
     break;
   }
   case Instruction::Trunc: {
+    unsigned SrcBitWidth = I->getOperand(0)->getType()->getScalarSizeInBits();
+    APInt InputDemandedMask = DemandedMask.zextOrTrunc(SrcBitWidth);
+    KnownBits InputKnown(SrcBitWidth);
+    if (SimplifyDemandedBits(I, 0, InputDemandedMask, InputKnown, Depth + 1)) {
+      // We may drop the nowrap flags
+      I->dropPoisonGeneratingFlags();
+      return I;
+    }
+
     // If we do not demand the high bits of a right-shifted and truncated value,
     // then we may be able to truncate it before the shift.
     Value *X;
