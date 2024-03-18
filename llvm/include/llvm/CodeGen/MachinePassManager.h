@@ -87,6 +87,12 @@ struct MachinePassInfoMixin : public PassInfoMixin<DerivedT> {
         MF.getProperties().reset(DerivedT::getClearedProperties());
     }
   };
+
+  PreservedAnalyses run(MachineFunction &MF,
+                        MachineFunctionAnalysisManager &MFAM) {
+    PropertyChanger PC(MF);
+    return static_cast<DerivedT *>(this)->run(MF, MFAM);
+  }
 };
 
 using MachineFunctionAnalysisManagerModuleProxy =
@@ -208,6 +214,27 @@ createModuleToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
   return ModuleToMachineFunctionPassAdaptor(
       std::unique_ptr<ModuleToMachineFunctionPassAdaptor::PassConceptT>(
           new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
+}
+
+template <>
+template <typename PassT>
+std::enable_if_t<!std::is_same<PassT, PassManager<MachineFunction>>::value>
+PassManager<MachineFunction>::addPass(PassT &&Pass) {
+  using PassModelT =
+      detail::PassModel<MachineFunction, PassT, MachineFunctionAnalysisManager>;
+  using MachineFunctionPassModelT =
+      detail::PassModel<MachineFunction, MachinePassInfoMixin<PassT>,
+                        MachineFunctionAnalysisManager>;
+  // Do not use make_unique or emplace_back, they cause too many template
+  // instantiations, causing terrible compile times.
+  if constexpr (std::is_base_of_v<MachinePassInfoMixin<PassT>, PassT>) {
+    Passes.push_back(
+        std::unique_ptr<PassConceptT>(new MachineFunctionPassModelT(
+            std::forward<MachinePassInfoMixin<PassT>>(Pass))));
+  } else {
+    Passes.push_back(
+        std::unique_ptr<PassConceptT>(new PassModelT(std::forward(Pass))));
+  }
 }
 
 template <>
