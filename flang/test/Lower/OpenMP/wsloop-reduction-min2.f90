@@ -17,6 +17,8 @@ print *,r
 
 end program
 
+! TODO: REBASE: fix reduction name
+
 ! TODO: the reduction is not curently lowered correctly. This test is checking
 ! that we do not crash and we still produce the same broken IR as before.
 
