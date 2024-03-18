@@ -5559,9 +5559,6 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
   }
 }
 
-static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
-                                    QualType RhsT, SourceLocation KeyLoc);
-
 static bool EvaluateBooleanTypeTrait(Sema &S, TypeTrait Kind,
                                      SourceLocation KWLoc,
                                      ArrayRef<TypeSourceInfo *> Args,
@@ -5576,8 +5573,8 @@ static bool EvaluateBooleanTypeTrait(Sema &S, TypeTrait Kind,
   // Evaluate ReferenceBindsToTemporary and ReferenceConstructsFromTemporary
   // alongside the IsConstructible traits to avoid duplication.
   if (Kind <= BTT_Last && Kind != BTT_ReferenceBindsToTemporary && Kind != BTT_ReferenceConstructsFromTemporary)
-    return EvaluateBinaryTypeTrait(S, Kind, Args[0]->getType(),
-                                   Args[1]->getType(), RParenLoc);
+    return S.EvaluateBinaryTypeTrait(Kind, Args[0]->getType(),
+                                     Args[1]->getType(), RParenLoc);
 
   switch (Kind) {
   case clang::BTT_ReferenceBindsToTemporary:
@@ -5674,7 +5671,8 @@ static bool EvaluateBooleanTypeTrait(Sema &S, TypeTrait Kind,
 
       QualType TPtr = S.Context.getPointerType(S.BuiltinRemoveReference(T, UnaryTransformType::RemoveCVRef, {}));
       QualType UPtr = S.Context.getPointerType(S.BuiltinRemoveReference(U, UnaryTransformType::RemoveCVRef, {}));
-      return EvaluateBinaryTypeTrait(S, TypeTrait::BTT_IsConvertibleTo, UPtr, TPtr, RParenLoc);
+      return S.EvaluateBinaryTypeTrait(TypeTrait::BTT_IsConvertibleTo, UPtr,
+                                       TPtr, RParenLoc);
     }
 
     if (Kind == clang::TT_IsNothrowConstructible)
@@ -5807,8 +5805,8 @@ ExprResult Sema::ActOnTypeTrait(TypeTrait Kind, SourceLocation KWLoc,
   return BuildTypeTrait(Kind, KWLoc, ConvertedArgs, RParenLoc);
 }
 
-static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
-                                    QualType RhsT, SourceLocation KeyLoc) {
+bool Sema::EvaluateBinaryTypeTrait(TypeTrait BTT, QualType LhsT, QualType RhsT,
+                                   SourceLocation KeyLoc) {
   assert(!LhsT->isDependentType() && !RhsT->isDependentType() &&
          "Cannot evaluate traits of dependent types");
 
@@ -5832,15 +5830,15 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
       if (!BaseInterface || !DerivedInterface)
         return false;
 
-      if (Self.RequireCompleteType(
+      if (RequireCompleteType(
               KeyLoc, RhsT, diag::err_incomplete_type_used_in_type_trait_expr))
         return false;
 
       return BaseInterface->isSuperClassOf(DerivedInterface);
     }
 
-    assert(Self.Context.hasSameUnqualifiedType(LhsT, RhsT)
-             == (lhsRecord == rhsRecord));
+    assert(Context.hasSameUnqualifiedType(LhsT, RhsT) ==
+           (lhsRecord == rhsRecord));
 
     // Unions are never base classes, and never have base classes.
     // It doesn't matter if they are complete or not. See PR#41843
@@ -5856,21 +5854,21 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     //   If Base and Derived are class types and are different types
     //   (ignoring possible cv-qualifiers) then Derived shall be a
     //   complete type.
-    if (Self.RequireCompleteType(KeyLoc, RhsT,
-                          diag::err_incomplete_type_used_in_type_trait_expr))
+    if (RequireCompleteType(KeyLoc, RhsT,
+                            diag::err_incomplete_type_used_in_type_trait_expr))
       return false;
 
     return cast<CXXRecordDecl>(rhsRecord->getDecl())
       ->isDerivedFrom(cast<CXXRecordDecl>(lhsRecord->getDecl()));
   }
   case BTT_IsSame:
-    return Self.Context.hasSameType(LhsT, RhsT);
+    return Context.hasSameType(LhsT, RhsT);
   case BTT_TypeCompatible: {
     // GCC ignores cv-qualifiers on arrays for this builtin.
     Qualifiers LhsQuals, RhsQuals;
-    QualType Lhs = Self.getASTContext().getUnqualifiedArrayType(LhsT, LhsQuals);
-    QualType Rhs = Self.getASTContext().getUnqualifiedArrayType(RhsT, RhsQuals);
-    return Self.Context.typesAreCompatible(Lhs, Rhs);
+    QualType Lhs = getASTContext().getUnqualifiedArrayType(LhsT, LhsQuals);
+    QualType Rhs = getASTContext().getUnqualifiedArrayType(RhsT, RhsQuals);
+    return Context.typesAreCompatible(Lhs, Rhs);
   }
   case BTT_IsConvertible:
   case BTT_IsConvertibleTo:
@@ -5909,16 +5907,16 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
       return LhsT->isVoidType();
 
     // A function definition requires a complete, non-abstract return type.
-    if (!Self.isCompleteType(KeyLoc, RhsT) || Self.isAbstractType(KeyLoc, RhsT))
+    if (!isCompleteType(KeyLoc, RhsT) || isAbstractType(KeyLoc, RhsT))
       return false;
 
     // Compute the result of add_rvalue_reference.
     if (LhsT->isObjectType() || LhsT->isFunctionType())
-      LhsT = Self.Context.getRValueReferenceType(LhsT);
+      LhsT = Context.getRValueReferenceType(LhsT);
 
     // Build a fake source and destination for initialization.
     InitializedEntity To(InitializedEntity::InitializeTemporary(RhsT));
-    OpaqueValueExpr From(KeyLoc, LhsT.getNonLValueExprType(Self.Context),
+    OpaqueValueExpr From(KeyLoc, LhsT.getNonLValueExprType(Context),
                          Expr::getValueKindForType(LhsT));
     Expr *FromPtr = &From;
     InitializationKind Kind(InitializationKind::CreateCopy(KeyLoc,
@@ -5927,21 +5925,21 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     // Perform the initialization in an unevaluated context within a SFINAE
     // trap at translation unit scope.
     EnterExpressionEvaluationContext Unevaluated(
-        Self, Sema::ExpressionEvaluationContext::Unevaluated);
-    Sema::SFINAETrap SFINAE(Self, /*AccessCheckingSFINAE=*/true);
-    Sema::ContextRAII TUContext(Self, Self.Context.getTranslationUnitDecl());
-    InitializationSequence Init(Self, To, Kind, FromPtr);
+        *this, Sema::ExpressionEvaluationContext::Unevaluated);
+    Sema::SFINAETrap SFINAE(*this, /*AccessCheckingSFINAE=*/true);
+    Sema::ContextRAII TUContext(*this, Context.getTranslationUnitDecl());
+    InitializationSequence Init(*this, To, Kind, FromPtr);
     if (Init.Failed())
       return false;
 
-    ExprResult Result = Init.Perform(Self, To, Kind, FromPtr);
+    ExprResult Result = Init.Perform(*this, To, Kind, FromPtr);
     if (Result.isInvalid() || SFINAE.hasErrorOccurred())
       return false;
 
     if (BTT != BTT_IsNothrowConvertible)
       return true;
 
-    return Self.canThrow(Result.get()) == CT_Cannot;
+    return canThrow(Result.get()) == CT_Cannot;
   }
 
   case BTT_IsAssignable:
@@ -5959,12 +5957,12 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     //   For both, T and U shall be complete types, (possibly cv-qualified)
     //   void, or arrays of unknown bound.
     if (!LhsT->isVoidType() && !LhsT->isIncompleteArrayType() &&
-        Self.RequireCompleteType(KeyLoc, LhsT,
-          diag::err_incomplete_type_used_in_type_trait_expr))
+        RequireCompleteType(KeyLoc, LhsT,
+                            diag::err_incomplete_type_used_in_type_trait_expr))
       return false;
     if (!RhsT->isVoidType() && !RhsT->isIncompleteArrayType() &&
-        Self.RequireCompleteType(KeyLoc, RhsT,
-          diag::err_incomplete_type_used_in_type_trait_expr))
+        RequireCompleteType(KeyLoc, RhsT,
+                            diag::err_incomplete_type_used_in_type_trait_expr))
       return false;
 
     // cv void is never assignable.
@@ -5974,27 +5972,27 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     // Build expressions that emulate the effect of declval<T>() and
     // declval<U>().
     if (LhsT->isObjectType() || LhsT->isFunctionType())
-      LhsT = Self.Context.getRValueReferenceType(LhsT);
+      LhsT = Context.getRValueReferenceType(LhsT);
     if (RhsT->isObjectType() || RhsT->isFunctionType())
-      RhsT = Self.Context.getRValueReferenceType(RhsT);
-    OpaqueValueExpr Lhs(KeyLoc, LhsT.getNonLValueExprType(Self.Context),
+      RhsT = Context.getRValueReferenceType(RhsT);
+    OpaqueValueExpr Lhs(KeyLoc, LhsT.getNonLValueExprType(Context),
                         Expr::getValueKindForType(LhsT));
-    OpaqueValueExpr Rhs(KeyLoc, RhsT.getNonLValueExprType(Self.Context),
+    OpaqueValueExpr Rhs(KeyLoc, RhsT.getNonLValueExprType(Context),
                         Expr::getValueKindForType(RhsT));
 
     // Attempt the assignment in an unevaluated context within a SFINAE
     // trap at translation unit scope.
     EnterExpressionEvaluationContext Unevaluated(
-        Self, Sema::ExpressionEvaluationContext::Unevaluated);
-    Sema::SFINAETrap SFINAE(Self, /*AccessCheckingSFINAE=*/true);
-    Sema::ContextRAII TUContext(Self, Self.Context.getTranslationUnitDecl());
-    ExprResult Result = Self.BuildBinOp(/*S=*/nullptr, KeyLoc, BO_Assign, &Lhs,
-                                        &Rhs);
+        *this, Sema::ExpressionEvaluationContext::Unevaluated);
+    Sema::SFINAETrap SFINAE(*this, /*AccessCheckingSFINAE=*/true);
+    Sema::ContextRAII TUContext(*this, Context.getTranslationUnitDecl());
+    ExprResult Result =
+        BuildBinOp(/*S=*/nullptr, KeyLoc, BO_Assign, &Lhs, &Rhs);
     if (Result.isInvalid())
       return false;
 
     // Treat the assignment as unused for the purpose of -Wdeprecated-volatile.
-    Self.CheckUnusedVolatileAssignment(Result.get());
+    CheckUnusedVolatileAssignment(Result.get());
 
     if (SFINAE.hasErrorOccurred())
       return false;
@@ -6003,7 +6001,7 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
       return true;
 
     if (BTT == BTT_IsNothrowAssignable)
-      return Self.canThrow(Result.get()) == CT_Cannot;
+      return canThrow(Result.get()) == CT_Cannot;
 
     if (BTT == BTT_IsTriviallyAssignable) {
       // Under Objective-C ARC and Weak, if the destination has non-trivial
@@ -6011,14 +6009,14 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
       if (LhsT.getNonReferenceType().hasNonTrivialObjCLifetime())
         return false;
 
-      return !Result.get()->hasNonTrivialCall(Self.Context);
+      return !Result.get()->hasNonTrivialCall(Context);
     }
 
     llvm_unreachable("unhandled type trait");
     return false;
   }
   case BTT_IsLayoutCompatible: {
-    return Self.IsLayoutCompatible(LhsT, RhsT);
+    return IsLayoutCompatible(LhsT, RhsT);
   }
     default: llvm_unreachable("not a BTT");
   }

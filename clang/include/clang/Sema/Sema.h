@@ -7011,6 +7011,8 @@ public:
   ExprResult BuildTypeTrait(TypeTrait Kind, SourceLocation KWLoc,
                             ArrayRef<TypeSourceInfo *> Args,
                             SourceLocation RParenLoc);
+  bool EvaluateBinaryTypeTrait(TypeTrait BTT, QualType LhsT, QualType RhsT,
+                               SourceLocation KeyLoc);
 
   /// ActOnArrayTypeTrait - Parsed one of the binary type trait support
   /// pseudo-functions.
