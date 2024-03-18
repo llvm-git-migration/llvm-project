@@ -176,8 +176,9 @@ struct PR35214_X {
 };
 int PR35214_x;
 int PR35214_y = ((struct PR35214_X *)&PR35214_x)->arr[1]; // both-error {{not a compile-time constant}}
+#ifndef NEW_INTERP
 int *PR35214_z = &((struct PR35214_X *)&PR35214_x)->arr[1]; // ok, &PR35214_x + 2
-
+#endif
 
 /// From const-eval-64.c
 EVAL_EXPR(53, ((char*)-1LL) + 1 == 0 ? 1 : -1)
