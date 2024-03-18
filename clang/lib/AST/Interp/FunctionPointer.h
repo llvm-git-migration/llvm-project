@@ -57,8 +57,8 @@ public:
     return toAPValue().getAsString(Ctx, Func->getDecl()->getType());
   }
 
-  uint32_t getIntegerRepresentation() const {
-    return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(Func));
+  uint64_t getIntegerRepresentation() const {
+    return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(Func));
   }
 
   ComparisonCategoryResult compare(const FunctionPointer &RHS) const {
