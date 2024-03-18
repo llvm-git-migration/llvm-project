@@ -339,6 +339,9 @@ Bug Fixes in This Version
 - Fixes an assertion failure on invalid code when trying to define member
   functions in lambdas.
 
+- Clang now emits errors for coroutine `await_suspend` functions whose return type is not
+  one of `void`, `bool`, or `std::coroutine_handle`.
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
