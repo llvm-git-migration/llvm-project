@@ -19056,6 +19056,9 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
   verifyFormat("int    a(int x);\n"
                "double b();",
                Alignment);
+  verifyFormat("int    a(const Test & = Test());\n"
+               "double b();",
+               Alignment);
   verifyFormat("struct Test {\n"
                "  Test(const Test &) = default;\n"
                "  ~Test() = default;\n"
@@ -19275,6 +19278,10 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "int**  b;\n"
                "int*** c;\n"
                "int    foobar;",
+               AlignmentLeft);
+
+  verifyFormat("int    a(const Test& = Test());\n"
+               "double b();",
                AlignmentLeft);
 
   // PAS_Middle
