@@ -7463,11 +7463,8 @@ public:
                            bool InUnqualifiedLookup = false);
   bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
                            CXXScopeSpec &SS);
-  bool LookupParsedName(LookupResult &R,
-                        Scope *S,
-                        CXXScopeSpec *SS,
-                        QualType ObjectType,
-                        bool AllowBuiltinCreation = false,
+  bool LookupParsedName(LookupResult &R, Scope *S, CXXScopeSpec *SS,
+                        QualType ObjectType, bool AllowBuiltinCreation = false,
                         bool EnteringContext = false);
   ObjCProtocolDecl *LookupProtocol(
       IdentifierInfo *II, SourceLocation IdLoc,
@@ -8881,12 +8878,13 @@ public:
       bool EnteringContext, bool &MemberOfUnknownSpecialization,
       RequiredTemplateKind RequiredTemplate = SourceLocation(),
       AssumedTemplateKind *ATK = nullptr, bool AllowTypoCorrection = true);
-  
-  bool LookupTemplateName(
-      LookupResult &R, Scope *S, CXXScopeSpec &SS, QualType ObjectType,
-      bool EnteringContext,
-      RequiredTemplateKind RequiredTemplate = SourceLocation(),
-      AssumedTemplateKind *ATK = nullptr, bool AllowTypoCorrection = true);
+
+  bool
+  LookupTemplateName(LookupResult &R, Scope *S, CXXScopeSpec &SS,
+                     QualType ObjectType, bool EnteringContext,
+                     RequiredTemplateKind RequiredTemplate = SourceLocation(),
+                     AssumedTemplateKind *ATK = nullptr,
+                     bool AllowTypoCorrection = true);
 
   TemplateNameKind isTemplateName(Scope *S, CXXScopeSpec &SS,
                                   bool hasTemplateKeyword,
