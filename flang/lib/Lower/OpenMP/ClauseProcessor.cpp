@@ -891,8 +891,8 @@ bool ClauseProcessor::processMap(
 
           Fortran::lower::AddrAndBoundsInfo info =
               Fortran::lower::gatherDataOperandAddrAndBounds<
-                  Fortran::parser::OmpObject, mlir::omp::DataBoundsOp,
-                  mlir::omp::DataBoundsType>(
+                  Fortran::parser::OmpObject, mlir::omp::MapBoundsOp,
+                  mlir::omp::MapBoundsType>(
                   converter, firOpBuilder, semaCtx, stmtCtx, ompObject,
                   clauseLocation, asFortran, bounds, treatIndexAsSection);
 
@@ -936,8 +936,9 @@ bool ClauseProcessor::processReduction(
       [&](const omp::clause::Reduction &clause,
           const Fortran::parser::CharBlock &) {
         ReductionProcessor rp;
-        rp.addReductionDecl(currentLocation, converter, clause, reductionVars,
-                            reductionDeclSymbols, reductionSymbols);
+        rp.addDeclareReduction(currentLocation, converter, clause,
+                               reductionVars, reductionDeclSymbols,
+                               reductionSymbols);
         reductionTypes.reserve(reductionVars.size());
         llvm::transform(reductionVars, std::back_inserter(reductionTypes),
                         [](mlir::Value v) { return v.getType(); });
