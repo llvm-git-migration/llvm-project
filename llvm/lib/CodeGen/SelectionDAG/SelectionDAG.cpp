@@ -4007,13 +4007,21 @@ KnownBits SelectionDAG::computeKnownBits(SDValue Op, const APInt &DemandedElts,
 
     // For SMAX, if CstLow is non-negative we know the result will be
     // non-negative and thus all sign bits are 0.
-    // TODO: There's an equivalent of this for smin with negative constant for
-    // known ones.
     if (IsMax && CstLow) {
       const APInt &ValueLow = CstLow->getAPIntValue();
       if (ValueLow.isNonNegative()) {
         unsigned SignBits = ComputeNumSignBits(Op.getOperand(0), Depth + 1);
         Known.Zero.setHighBits(std::min(SignBits, ValueLow.getNumSignBits()));
+      }
+    }
+
+    // For SMAX, if CstHigh is negative we know the result will be
+    // negative and thus all sign bits are 1.
+    if (!IsMax && CstHigh) {
+      const APInt &ValueHigh = CstHigh->getAPIntValue();
+      if (ValueHigh.isNegative()) {
+        unsigned SignBits = ComputeNumSignBits(Op.getOperand(0), Depth + 1);
+        Known.One.setHighBits(std::min(SignBits, ValueHigh.getNumSignBits()));
       }
     }
 
@@ -5360,10 +5368,20 @@ bool SelectionDAG::isKnownNeverZero(SDValue Op, unsigned Depth) const {
     return isKnownNeverZero(Op.getOperand(1), Depth + 1) ||
            isKnownNeverZero(Op.getOperand(0), Depth + 1);
 
-    // TODO for smin/smax: If either operand is known negative/positive
+    // For smin/smax: If either operand is known negative/positive
     // respectively we don't need the other to be known at all.
   case ISD::SMAX:
+    if (computeKnownBits(Op.getOperand(1), Depth + 1).isStrictlyPositive() ||
+        computeKnownBits(Op.getOperand(0), Depth + 1).isStrictlyPositive())
+      return true;
+    return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
+           isKnownNeverZero(Op.getOperand(0), Depth + 1);
   case ISD::SMIN:
+    if (computeKnownBits(Op.getOperand(1), Depth + 1).isNegative() ||
+        computeKnownBits(Op.getOperand(0), Depth + 1).isNegative())
+      return true;
+    return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
+           isKnownNeverZero(Op.getOperand(0), Depth + 1);
   case ISD::UMIN:
     return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
            isKnownNeverZero(Op.getOperand(0), Depth + 1);
