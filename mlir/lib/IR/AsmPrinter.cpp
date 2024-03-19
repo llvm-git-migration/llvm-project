@@ -206,12 +206,17 @@ OpPrintingFlags::OpPrintingFlags()
     : printDebugInfoFlag(false), printDebugInfoPrettyFormFlag(false),
       printGenericOpFormFlag(false), skipRegionsFlag(false),
       assumeVerifiedFlag(false), printLocalScope(false),
-      printValueUsersFlag(false) {
+      printValueUsersFlag(false), allowPrintingElementsAttrWithHexFlag(true) {
   // Initialize based upon command line options, if they are available.
   if (!clOptions.isConstructed())
     return;
   if (clOptions->elideElementsAttrIfLarger.getNumOccurrences())
     elementsAttrElementLimit = clOptions->elideElementsAttrIfLarger;
+  if (clOptions->printElementsAttrWithHexIfLarger.getNumOccurrences()) {
+    // Note: -1 disables the "print with hex string" feature
+    allowPrintingElementsAttrWithHexFlag =
+        (clOptions->printElementsAttrWithHexIfLarger.getValue() != -1);
+  }
   if (clOptions->elideResourceStringsIfLarger.getNumOccurrences())
     resourceStringCharLimit = clOptions->elideResourceStringsIfLarger;
   printDebugInfoFlag = clOptions->printDebugInfoOpt;
@@ -230,6 +235,12 @@ OpPrintingFlags::OpPrintingFlags()
 OpPrintingFlags &
 OpPrintingFlags::elideLargeElementsAttrs(int64_t largeElementLimit) {
   elementsAttrElementLimit = largeElementLimit;
+  return *this;
+}
+
+OpPrintingFlags &
+OpPrintingFlags::allowPrintingElementsAttrWithHex(bool allowHex) {
+  allowPrintingElementsAttrWithHexFlag = allowHex;
   return *this;
 }
 
@@ -285,6 +296,10 @@ bool OpPrintingFlags::shouldElideElementsAttr(ElementsAttr attr) const {
   return elementsAttrElementLimit &&
          *elementsAttrElementLimit < int64_t(attr.getNumElements()) &&
          !llvm::isa<SplatElementsAttr>(attr);
+}
+
+bool OpPrintingFlags::shouldAllowPrintingElementsAttrWithHex() const {
+  return allowPrintingElementsAttrWithHexFlag;
 }
 
 /// Return the size limit for printing large ElementsAttr.
@@ -2301,7 +2316,9 @@ void AsmPrinter::Impl::printAttributeImpl(Attribute attr,
       printElidedElementsAttr(os);
     } else {
       os << "dense<";
-      printDenseIntOrFPElementsAttr(intOrFpEltAttr, /*allowHex=*/true);
+      printDenseIntOrFPElementsAttr(
+          intOrFpEltAttr,
+          printerFlags.shouldAllowPrintingElementsAttrWithHex());
       os << '>';
     }
 
@@ -2324,7 +2341,9 @@ void AsmPrinter::Impl::printAttributeImpl(Attribute attr,
       if (indices.getNumElements() != 0) {
         printDenseIntOrFPElementsAttr(indices, /*allowHex=*/false);
         os << ", ";
-        printDenseElementsAttr(sparseEltAttr.getValues(), /*allowHex=*/true);
+        printDenseElementsAttr(
+            sparseEltAttr.getValues(),
+            printerFlags.shouldAllowPrintingElementsAttrWithHex());
       }
       os << '>';
     }

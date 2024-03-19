@@ -1131,6 +1131,10 @@ public:
   /// elements.
   OpPrintingFlags &elideLargeElementsAttrs(int64_t largeElementLimit = 16);
 
+  /// Enable or disable printing of large element attributes as a hex string. By
+  /// default, printing as hex is allowed (enabled).
+  OpPrintingFlags &allowPrintingElementsAttrWithHex(bool allowHex = true);
+
   /// Enables the elision of large resources strings by omitting them from the
   /// `dialect_resources` section. The `largeResourceLimit` is used to configure
   /// what is considered to be a "large" resource by providing an upper limit to
@@ -1163,6 +1167,9 @@ public:
 
   /// Return if the given ElementsAttr should be elided.
   bool shouldElideElementsAttr(ElementsAttr attr) const;
+
+  /// Return if ElementsAttr could be printed in hexadecimal form.
+  bool shouldAllowPrintingElementsAttrWithHex() const;
 
   /// Return the size limit for printing large ElementsAttr.
   std::optional<int64_t> getLargeElementsAttrLimit() const;
@@ -1217,6 +1224,9 @@ private:
 
   /// Print users of values.
   bool printValueUsersFlag : 1;
+
+  /// Print ElementsAttr in hex form.
+  bool allowPrintingElementsAttrWithHexFlag : 1;
 };
 
 //===----------------------------------------------------------------------===//
