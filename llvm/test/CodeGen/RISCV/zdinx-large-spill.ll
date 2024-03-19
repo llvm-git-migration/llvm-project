@@ -32,2057 +32,2057 @@ define void @foo(ptr nocapture noundef %0) nounwind {
 ; CHECK-NEXT:    lw a3, 4(a0)
 ; CHECK-NEXT:    lui a1, 1
 ; CHECK-NEXT:    add a1, sp, a1
-; CHECK-NEXT:    sw a2, -2044(a1)
-; CHECK-NEXT:    sw a3, -2040(a1)
+; CHECK-NEXT:    sw a2, -2044(a1) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, -2040(a1) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 8(a0)
 ; CHECK-NEXT:    lw a3, 12(a0)
 ; CHECK-NEXT:    addi a1, sp, 2044
-; CHECK-NEXT:    sw a2, 0(a1)
-; CHECK-NEXT:    sw a3, 4(a1)
+; CHECK-NEXT:    sw a2, 0(a1) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 4(a1) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 16(a0)
 ; CHECK-NEXT:    lw a3, 20(a0)
-; CHECK-NEXT:    sw a2, 2036(sp)
-; CHECK-NEXT:    sw a3, 2040(sp)
+; CHECK-NEXT:    sw a2, 2036(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2040(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 24(a0)
 ; CHECK-NEXT:    lw a3, 28(a0)
-; CHECK-NEXT:    sw a2, 2028(sp)
-; CHECK-NEXT:    sw a3, 2032(sp)
+; CHECK-NEXT:    sw a2, 2028(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2032(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 32(a0)
 ; CHECK-NEXT:    lw a3, 36(a0)
-; CHECK-NEXT:    sw a2, 2020(sp)
-; CHECK-NEXT:    sw a3, 2024(sp)
+; CHECK-NEXT:    sw a2, 2020(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2024(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 40(a0)
 ; CHECK-NEXT:    lw a3, 44(a0)
-; CHECK-NEXT:    sw a2, 2012(sp)
-; CHECK-NEXT:    sw a3, 2016(sp)
+; CHECK-NEXT:    sw a2, 2012(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2016(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 48(a0)
 ; CHECK-NEXT:    lw a3, 52(a0)
-; CHECK-NEXT:    sw a2, 2004(sp)
-; CHECK-NEXT:    sw a3, 2008(sp)
+; CHECK-NEXT:    sw a2, 2004(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2008(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 56(a0)
 ; CHECK-NEXT:    lw a3, 60(a0)
-; CHECK-NEXT:    sw a2, 1996(sp)
-; CHECK-NEXT:    sw a3, 2000(sp)
+; CHECK-NEXT:    sw a2, 1996(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 2000(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 64(a0)
 ; CHECK-NEXT:    lw a3, 68(a0)
-; CHECK-NEXT:    sw a2, 1988(sp)
-; CHECK-NEXT:    sw a3, 1992(sp)
+; CHECK-NEXT:    sw a2, 1988(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1992(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 72(a0)
 ; CHECK-NEXT:    lw a3, 76(a0)
-; CHECK-NEXT:    sw a2, 1980(sp)
-; CHECK-NEXT:    sw a3, 1984(sp)
+; CHECK-NEXT:    sw a2, 1980(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1984(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 80(a0)
 ; CHECK-NEXT:    lw a3, 84(a0)
-; CHECK-NEXT:    sw a2, 1972(sp)
-; CHECK-NEXT:    sw a3, 1976(sp)
+; CHECK-NEXT:    sw a2, 1972(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1976(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 88(a0)
 ; CHECK-NEXT:    lw a3, 92(a0)
-; CHECK-NEXT:    sw a2, 1964(sp)
-; CHECK-NEXT:    sw a3, 1968(sp)
+; CHECK-NEXT:    sw a2, 1964(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1968(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 96(a0)
 ; CHECK-NEXT:    lw a3, 100(a0)
-; CHECK-NEXT:    sw a2, 1956(sp)
-; CHECK-NEXT:    sw a3, 1960(sp)
+; CHECK-NEXT:    sw a2, 1956(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1960(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 104(a0)
 ; CHECK-NEXT:    lw a3, 108(a0)
-; CHECK-NEXT:    sw a2, 1948(sp)
-; CHECK-NEXT:    sw a3, 1952(sp)
+; CHECK-NEXT:    sw a2, 1948(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1952(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 112(a0)
 ; CHECK-NEXT:    lw a3, 116(a0)
-; CHECK-NEXT:    sw a2, 1940(sp)
-; CHECK-NEXT:    sw a3, 1944(sp)
+; CHECK-NEXT:    sw a2, 1940(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1944(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 120(a0)
 ; CHECK-NEXT:    lw a3, 124(a0)
-; CHECK-NEXT:    sw a2, 1932(sp)
-; CHECK-NEXT:    sw a3, 1936(sp)
+; CHECK-NEXT:    sw a2, 1932(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1936(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 128(a0)
 ; CHECK-NEXT:    lw a3, 132(a0)
-; CHECK-NEXT:    sw a2, 1924(sp)
-; CHECK-NEXT:    sw a3, 1928(sp)
+; CHECK-NEXT:    sw a2, 1924(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1928(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 136(a0)
 ; CHECK-NEXT:    lw a3, 140(a0)
-; CHECK-NEXT:    sw a2, 1916(sp)
-; CHECK-NEXT:    sw a3, 1920(sp)
+; CHECK-NEXT:    sw a2, 1916(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1920(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 144(a0)
 ; CHECK-NEXT:    lw a3, 148(a0)
-; CHECK-NEXT:    sw a2, 1908(sp)
-; CHECK-NEXT:    sw a3, 1912(sp)
+; CHECK-NEXT:    sw a2, 1908(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1912(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 152(a0)
 ; CHECK-NEXT:    lw a3, 156(a0)
-; CHECK-NEXT:    sw a2, 1900(sp)
-; CHECK-NEXT:    sw a3, 1904(sp)
+; CHECK-NEXT:    sw a2, 1900(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1904(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 160(a0)
 ; CHECK-NEXT:    lw a3, 164(a0)
-; CHECK-NEXT:    sw a2, 1892(sp)
-; CHECK-NEXT:    sw a3, 1896(sp)
+; CHECK-NEXT:    sw a2, 1892(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1896(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 168(a0)
 ; CHECK-NEXT:    lw a3, 172(a0)
-; CHECK-NEXT:    sw a2, 1884(sp)
-; CHECK-NEXT:    sw a3, 1888(sp)
+; CHECK-NEXT:    sw a2, 1884(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1888(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 176(a0)
 ; CHECK-NEXT:    lw a3, 180(a0)
-; CHECK-NEXT:    sw a2, 1876(sp)
-; CHECK-NEXT:    sw a3, 1880(sp)
+; CHECK-NEXT:    sw a2, 1876(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1880(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 184(a0)
 ; CHECK-NEXT:    lw a3, 188(a0)
-; CHECK-NEXT:    sw a2, 1868(sp)
-; CHECK-NEXT:    sw a3, 1872(sp)
+; CHECK-NEXT:    sw a2, 1868(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1872(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 192(a0)
 ; CHECK-NEXT:    lw a3, 196(a0)
-; CHECK-NEXT:    sw a2, 1860(sp)
-; CHECK-NEXT:    sw a3, 1864(sp)
+; CHECK-NEXT:    sw a2, 1860(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1864(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 200(a0)
 ; CHECK-NEXT:    lw a3, 204(a0)
-; CHECK-NEXT:    sw a2, 1852(sp)
-; CHECK-NEXT:    sw a3, 1856(sp)
+; CHECK-NEXT:    sw a2, 1852(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1856(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 208(a0)
 ; CHECK-NEXT:    lw a3, 212(a0)
-; CHECK-NEXT:    sw a2, 1844(sp)
-; CHECK-NEXT:    sw a3, 1848(sp)
+; CHECK-NEXT:    sw a2, 1844(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1848(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 216(a0)
 ; CHECK-NEXT:    lw a3, 220(a0)
-; CHECK-NEXT:    sw a2, 1836(sp)
-; CHECK-NEXT:    sw a3, 1840(sp)
+; CHECK-NEXT:    sw a2, 1836(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1840(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 224(a0)
 ; CHECK-NEXT:    lw a3, 228(a0)
-; CHECK-NEXT:    sw a2, 1828(sp)
-; CHECK-NEXT:    sw a3, 1832(sp)
+; CHECK-NEXT:    sw a2, 1828(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1832(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 232(a0)
 ; CHECK-NEXT:    lw a3, 236(a0)
-; CHECK-NEXT:    sw a2, 1820(sp)
-; CHECK-NEXT:    sw a3, 1824(sp)
+; CHECK-NEXT:    sw a2, 1820(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1824(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 240(a0)
 ; CHECK-NEXT:    lw a3, 244(a0)
-; CHECK-NEXT:    sw a2, 1812(sp)
-; CHECK-NEXT:    sw a3, 1816(sp)
+; CHECK-NEXT:    sw a2, 1812(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1816(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 248(a0)
 ; CHECK-NEXT:    lw a3, 252(a0)
-; CHECK-NEXT:    sw a2, 1804(sp)
-; CHECK-NEXT:    sw a3, 1808(sp)
+; CHECK-NEXT:    sw a2, 1804(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1808(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 256(a0)
 ; CHECK-NEXT:    lw a3, 260(a0)
-; CHECK-NEXT:    sw a2, 1796(sp)
-; CHECK-NEXT:    sw a3, 1800(sp)
+; CHECK-NEXT:    sw a2, 1796(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1800(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 264(a0)
 ; CHECK-NEXT:    lw a3, 268(a0)
-; CHECK-NEXT:    sw a2, 1788(sp)
-; CHECK-NEXT:    sw a3, 1792(sp)
+; CHECK-NEXT:    sw a2, 1788(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1792(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 272(a0)
 ; CHECK-NEXT:    lw a3, 276(a0)
-; CHECK-NEXT:    sw a2, 1780(sp)
-; CHECK-NEXT:    sw a3, 1784(sp)
+; CHECK-NEXT:    sw a2, 1780(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1784(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 280(a0)
 ; CHECK-NEXT:    lw a3, 284(a0)
-; CHECK-NEXT:    sw a2, 1772(sp)
-; CHECK-NEXT:    sw a3, 1776(sp)
+; CHECK-NEXT:    sw a2, 1772(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1776(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 288(a0)
 ; CHECK-NEXT:    lw a3, 292(a0)
-; CHECK-NEXT:    sw a2, 1764(sp)
-; CHECK-NEXT:    sw a3, 1768(sp)
+; CHECK-NEXT:    sw a2, 1764(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1768(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 296(a0)
 ; CHECK-NEXT:    lw a3, 300(a0)
-; CHECK-NEXT:    sw a2, 1756(sp)
-; CHECK-NEXT:    sw a3, 1760(sp)
+; CHECK-NEXT:    sw a2, 1756(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1760(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 304(a0)
 ; CHECK-NEXT:    lw a3, 308(a0)
-; CHECK-NEXT:    sw a2, 1748(sp)
-; CHECK-NEXT:    sw a3, 1752(sp)
+; CHECK-NEXT:    sw a2, 1748(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1752(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 312(a0)
 ; CHECK-NEXT:    lw a3, 316(a0)
-; CHECK-NEXT:    sw a2, 1740(sp)
-; CHECK-NEXT:    sw a3, 1744(sp)
+; CHECK-NEXT:    sw a2, 1740(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1744(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 320(a0)
 ; CHECK-NEXT:    lw a3, 324(a0)
-; CHECK-NEXT:    sw a2, 1732(sp)
-; CHECK-NEXT:    sw a3, 1736(sp)
+; CHECK-NEXT:    sw a2, 1732(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1736(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 328(a0)
 ; CHECK-NEXT:    lw a3, 332(a0)
-; CHECK-NEXT:    sw a2, 1724(sp)
-; CHECK-NEXT:    sw a3, 1728(sp)
+; CHECK-NEXT:    sw a2, 1724(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1728(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 336(a0)
 ; CHECK-NEXT:    lw a3, 340(a0)
-; CHECK-NEXT:    sw a2, 1716(sp)
-; CHECK-NEXT:    sw a3, 1720(sp)
+; CHECK-NEXT:    sw a2, 1716(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1720(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 344(a0)
 ; CHECK-NEXT:    lw a3, 348(a0)
-; CHECK-NEXT:    sw a2, 1708(sp)
-; CHECK-NEXT:    sw a3, 1712(sp)
+; CHECK-NEXT:    sw a2, 1708(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1712(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 352(a0)
 ; CHECK-NEXT:    lw a3, 356(a0)
-; CHECK-NEXT:    sw a2, 1700(sp)
-; CHECK-NEXT:    sw a3, 1704(sp)
+; CHECK-NEXT:    sw a2, 1700(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1704(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 360(a0)
 ; CHECK-NEXT:    lw a3, 364(a0)
-; CHECK-NEXT:    sw a2, 1692(sp)
-; CHECK-NEXT:    sw a3, 1696(sp)
+; CHECK-NEXT:    sw a2, 1692(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1696(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 368(a0)
 ; CHECK-NEXT:    lw a3, 372(a0)
-; CHECK-NEXT:    sw a2, 1684(sp)
-; CHECK-NEXT:    sw a3, 1688(sp)
+; CHECK-NEXT:    sw a2, 1684(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1688(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 376(a0)
 ; CHECK-NEXT:    lw a3, 380(a0)
-; CHECK-NEXT:    sw a2, 1676(sp)
-; CHECK-NEXT:    sw a3, 1680(sp)
+; CHECK-NEXT:    sw a2, 1676(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1680(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 384(a0)
 ; CHECK-NEXT:    lw a3, 388(a0)
-; CHECK-NEXT:    sw a2, 1668(sp)
-; CHECK-NEXT:    sw a3, 1672(sp)
+; CHECK-NEXT:    sw a2, 1668(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1672(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 392(a0)
 ; CHECK-NEXT:    lw a3, 396(a0)
-; CHECK-NEXT:    sw a2, 1660(sp)
-; CHECK-NEXT:    sw a3, 1664(sp)
+; CHECK-NEXT:    sw a2, 1660(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1664(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 400(a0)
 ; CHECK-NEXT:    lw a3, 404(a0)
-; CHECK-NEXT:    sw a2, 1652(sp)
-; CHECK-NEXT:    sw a3, 1656(sp)
+; CHECK-NEXT:    sw a2, 1652(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1656(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 408(a0)
 ; CHECK-NEXT:    lw a3, 412(a0)
-; CHECK-NEXT:    sw a2, 1644(sp)
-; CHECK-NEXT:    sw a3, 1648(sp)
+; CHECK-NEXT:    sw a2, 1644(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1648(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 416(a0)
 ; CHECK-NEXT:    lw a3, 420(a0)
-; CHECK-NEXT:    sw a2, 1636(sp)
-; CHECK-NEXT:    sw a3, 1640(sp)
+; CHECK-NEXT:    sw a2, 1636(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1640(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 424(a0)
 ; CHECK-NEXT:    lw a3, 428(a0)
-; CHECK-NEXT:    sw a2, 1628(sp)
-; CHECK-NEXT:    sw a3, 1632(sp)
+; CHECK-NEXT:    sw a2, 1628(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1632(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 432(a0)
 ; CHECK-NEXT:    lw a3, 436(a0)
-; CHECK-NEXT:    sw a2, 1620(sp)
-; CHECK-NEXT:    sw a3, 1624(sp)
+; CHECK-NEXT:    sw a2, 1620(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1624(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 440(a0)
 ; CHECK-NEXT:    lw a3, 444(a0)
-; CHECK-NEXT:    sw a2, 1612(sp)
-; CHECK-NEXT:    sw a3, 1616(sp)
+; CHECK-NEXT:    sw a2, 1612(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1616(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 448(a0)
 ; CHECK-NEXT:    lw a3, 452(a0)
-; CHECK-NEXT:    sw a2, 1604(sp)
-; CHECK-NEXT:    sw a3, 1608(sp)
+; CHECK-NEXT:    sw a2, 1604(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1608(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 456(a0)
 ; CHECK-NEXT:    lw a3, 460(a0)
-; CHECK-NEXT:    sw a2, 1596(sp)
-; CHECK-NEXT:    sw a3, 1600(sp)
+; CHECK-NEXT:    sw a2, 1596(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1600(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 464(a0)
 ; CHECK-NEXT:    lw a3, 468(a0)
-; CHECK-NEXT:    sw a2, 1588(sp)
-; CHECK-NEXT:    sw a3, 1592(sp)
+; CHECK-NEXT:    sw a2, 1588(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1592(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 472(a0)
 ; CHECK-NEXT:    lw a3, 476(a0)
-; CHECK-NEXT:    sw a2, 1580(sp)
-; CHECK-NEXT:    sw a3, 1584(sp)
+; CHECK-NEXT:    sw a2, 1580(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1584(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 480(a0)
 ; CHECK-NEXT:    lw a3, 484(a0)
-; CHECK-NEXT:    sw a2, 1572(sp)
-; CHECK-NEXT:    sw a3, 1576(sp)
+; CHECK-NEXT:    sw a2, 1572(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1576(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 488(a0)
 ; CHECK-NEXT:    lw a3, 492(a0)
-; CHECK-NEXT:    sw a2, 1564(sp)
-; CHECK-NEXT:    sw a3, 1568(sp)
+; CHECK-NEXT:    sw a2, 1564(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1568(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 496(a0)
 ; CHECK-NEXT:    lw a3, 500(a0)
-; CHECK-NEXT:    sw a2, 1556(sp)
-; CHECK-NEXT:    sw a3, 1560(sp)
+; CHECK-NEXT:    sw a2, 1556(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1560(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 504(a0)
 ; CHECK-NEXT:    lw a3, 508(a0)
-; CHECK-NEXT:    sw a2, 1548(sp)
-; CHECK-NEXT:    sw a3, 1552(sp)
+; CHECK-NEXT:    sw a2, 1548(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1552(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 512(a0)
 ; CHECK-NEXT:    lw a3, 516(a0)
-; CHECK-NEXT:    sw a2, 1540(sp)
-; CHECK-NEXT:    sw a3, 1544(sp)
+; CHECK-NEXT:    sw a2, 1540(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1544(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 520(a0)
 ; CHECK-NEXT:    lw a3, 524(a0)
-; CHECK-NEXT:    sw a2, 1532(sp)
-; CHECK-NEXT:    sw a3, 1536(sp)
+; CHECK-NEXT:    sw a2, 1532(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1536(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 528(a0)
 ; CHECK-NEXT:    lw a3, 532(a0)
-; CHECK-NEXT:    sw a2, 1524(sp)
-; CHECK-NEXT:    sw a3, 1528(sp)
+; CHECK-NEXT:    sw a2, 1524(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1528(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 536(a0)
 ; CHECK-NEXT:    lw a3, 540(a0)
-; CHECK-NEXT:    sw a2, 1516(sp)
-; CHECK-NEXT:    sw a3, 1520(sp)
+; CHECK-NEXT:    sw a2, 1516(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1520(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 544(a0)
 ; CHECK-NEXT:    lw a3, 548(a0)
-; CHECK-NEXT:    sw a2, 1508(sp)
-; CHECK-NEXT:    sw a3, 1512(sp)
+; CHECK-NEXT:    sw a2, 1508(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1512(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 552(a0)
 ; CHECK-NEXT:    lw a3, 556(a0)
-; CHECK-NEXT:    sw a2, 1500(sp)
-; CHECK-NEXT:    sw a3, 1504(sp)
+; CHECK-NEXT:    sw a2, 1500(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1504(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 560(a0)
 ; CHECK-NEXT:    lw a3, 564(a0)
-; CHECK-NEXT:    sw a2, 1492(sp)
-; CHECK-NEXT:    sw a3, 1496(sp)
+; CHECK-NEXT:    sw a2, 1492(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1496(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 568(a0)
 ; CHECK-NEXT:    lw a3, 572(a0)
-; CHECK-NEXT:    sw a2, 1484(sp)
-; CHECK-NEXT:    sw a3, 1488(sp)
+; CHECK-NEXT:    sw a2, 1484(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1488(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 576(a0)
 ; CHECK-NEXT:    lw a3, 580(a0)
-; CHECK-NEXT:    sw a2, 1476(sp)
-; CHECK-NEXT:    sw a3, 1480(sp)
+; CHECK-NEXT:    sw a2, 1476(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1480(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 584(a0)
 ; CHECK-NEXT:    lw a3, 588(a0)
-; CHECK-NEXT:    sw a2, 1468(sp)
-; CHECK-NEXT:    sw a3, 1472(sp)
+; CHECK-NEXT:    sw a2, 1468(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1472(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 592(a0)
 ; CHECK-NEXT:    lw a3, 596(a0)
-; CHECK-NEXT:    sw a2, 1460(sp)
-; CHECK-NEXT:    sw a3, 1464(sp)
+; CHECK-NEXT:    sw a2, 1460(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1464(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 600(a0)
 ; CHECK-NEXT:    lw a3, 604(a0)
-; CHECK-NEXT:    sw a2, 1452(sp)
-; CHECK-NEXT:    sw a3, 1456(sp)
+; CHECK-NEXT:    sw a2, 1452(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1456(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 608(a0)
 ; CHECK-NEXT:    lw a3, 612(a0)
-; CHECK-NEXT:    sw a2, 1444(sp)
-; CHECK-NEXT:    sw a3, 1448(sp)
+; CHECK-NEXT:    sw a2, 1444(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1448(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 616(a0)
 ; CHECK-NEXT:    lw a3, 620(a0)
-; CHECK-NEXT:    sw a2, 1436(sp)
-; CHECK-NEXT:    sw a3, 1440(sp)
+; CHECK-NEXT:    sw a2, 1436(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1440(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 624(a0)
 ; CHECK-NEXT:    lw a3, 628(a0)
-; CHECK-NEXT:    sw a2, 1428(sp)
-; CHECK-NEXT:    sw a3, 1432(sp)
+; CHECK-NEXT:    sw a2, 1428(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1432(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 632(a0)
 ; CHECK-NEXT:    lw a3, 636(a0)
-; CHECK-NEXT:    sw a2, 1420(sp)
-; CHECK-NEXT:    sw a3, 1424(sp)
+; CHECK-NEXT:    sw a2, 1420(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1424(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 640(a0)
 ; CHECK-NEXT:    lw a3, 644(a0)
-; CHECK-NEXT:    sw a2, 1412(sp)
-; CHECK-NEXT:    sw a3, 1416(sp)
+; CHECK-NEXT:    sw a2, 1412(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1416(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 648(a0)
 ; CHECK-NEXT:    lw a3, 652(a0)
-; CHECK-NEXT:    sw a2, 1404(sp)
-; CHECK-NEXT:    sw a3, 1408(sp)
+; CHECK-NEXT:    sw a2, 1404(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1408(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 656(a0)
 ; CHECK-NEXT:    lw a3, 660(a0)
-; CHECK-NEXT:    sw a2, 1396(sp)
-; CHECK-NEXT:    sw a3, 1400(sp)
+; CHECK-NEXT:    sw a2, 1396(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1400(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 664(a0)
 ; CHECK-NEXT:    lw a3, 668(a0)
-; CHECK-NEXT:    sw a2, 1388(sp)
-; CHECK-NEXT:    sw a3, 1392(sp)
+; CHECK-NEXT:    sw a2, 1388(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1392(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 672(a0)
 ; CHECK-NEXT:    lw a3, 676(a0)
-; CHECK-NEXT:    sw a2, 1380(sp)
-; CHECK-NEXT:    sw a3, 1384(sp)
+; CHECK-NEXT:    sw a2, 1380(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1384(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 680(a0)
 ; CHECK-NEXT:    lw a3, 684(a0)
-; CHECK-NEXT:    sw a2, 1372(sp)
-; CHECK-NEXT:    sw a3, 1376(sp)
+; CHECK-NEXT:    sw a2, 1372(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1376(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 688(a0)
 ; CHECK-NEXT:    lw a3, 692(a0)
-; CHECK-NEXT:    sw a2, 1364(sp)
-; CHECK-NEXT:    sw a3, 1368(sp)
+; CHECK-NEXT:    sw a2, 1364(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1368(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 696(a0)
 ; CHECK-NEXT:    lw a3, 700(a0)
-; CHECK-NEXT:    sw a2, 1356(sp)
-; CHECK-NEXT:    sw a3, 1360(sp)
+; CHECK-NEXT:    sw a2, 1356(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1360(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 704(a0)
 ; CHECK-NEXT:    lw a3, 708(a0)
-; CHECK-NEXT:    sw a2, 1348(sp)
-; CHECK-NEXT:    sw a3, 1352(sp)
+; CHECK-NEXT:    sw a2, 1348(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1352(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 712(a0)
 ; CHECK-NEXT:    lw a3, 716(a0)
-; CHECK-NEXT:    sw a2, 1340(sp)
-; CHECK-NEXT:    sw a3, 1344(sp)
+; CHECK-NEXT:    sw a2, 1340(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1344(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 720(a0)
 ; CHECK-NEXT:    lw a3, 724(a0)
-; CHECK-NEXT:    sw a2, 1332(sp)
-; CHECK-NEXT:    sw a3, 1336(sp)
+; CHECK-NEXT:    sw a2, 1332(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1336(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 728(a0)
 ; CHECK-NEXT:    lw a3, 732(a0)
-; CHECK-NEXT:    sw a2, 1324(sp)
-; CHECK-NEXT:    sw a3, 1328(sp)
+; CHECK-NEXT:    sw a2, 1324(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1328(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 736(a0)
 ; CHECK-NEXT:    lw a3, 740(a0)
-; CHECK-NEXT:    sw a2, 1316(sp)
-; CHECK-NEXT:    sw a3, 1320(sp)
+; CHECK-NEXT:    sw a2, 1316(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1320(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 744(a0)
 ; CHECK-NEXT:    lw a3, 748(a0)
-; CHECK-NEXT:    sw a2, 1308(sp)
-; CHECK-NEXT:    sw a3, 1312(sp)
+; CHECK-NEXT:    sw a2, 1308(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1312(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 752(a0)
 ; CHECK-NEXT:    lw a3, 756(a0)
-; CHECK-NEXT:    sw a2, 1300(sp)
-; CHECK-NEXT:    sw a3, 1304(sp)
+; CHECK-NEXT:    sw a2, 1300(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1304(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 760(a0)
 ; CHECK-NEXT:    lw a3, 764(a0)
-; CHECK-NEXT:    sw a2, 1292(sp)
-; CHECK-NEXT:    sw a3, 1296(sp)
+; CHECK-NEXT:    sw a2, 1292(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1296(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 768(a0)
 ; CHECK-NEXT:    lw a3, 772(a0)
-; CHECK-NEXT:    sw a2, 1284(sp)
-; CHECK-NEXT:    sw a3, 1288(sp)
+; CHECK-NEXT:    sw a2, 1284(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1288(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 776(a0)
 ; CHECK-NEXT:    lw a3, 780(a0)
-; CHECK-NEXT:    sw a2, 1276(sp)
-; CHECK-NEXT:    sw a3, 1280(sp)
+; CHECK-NEXT:    sw a2, 1276(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1280(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 784(a0)
 ; CHECK-NEXT:    lw a3, 788(a0)
-; CHECK-NEXT:    sw a2, 1268(sp)
-; CHECK-NEXT:    sw a3, 1272(sp)
+; CHECK-NEXT:    sw a2, 1268(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1272(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 792(a0)
 ; CHECK-NEXT:    lw a3, 796(a0)
-; CHECK-NEXT:    sw a2, 1260(sp)
-; CHECK-NEXT:    sw a3, 1264(sp)
+; CHECK-NEXT:    sw a2, 1260(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1264(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 800(a0)
 ; CHECK-NEXT:    lw a3, 804(a0)
-; CHECK-NEXT:    sw a2, 1252(sp)
-; CHECK-NEXT:    sw a3, 1256(sp)
+; CHECK-NEXT:    sw a2, 1252(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1256(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 808(a0)
 ; CHECK-NEXT:    lw a3, 812(a0)
-; CHECK-NEXT:    sw a2, 1244(sp)
-; CHECK-NEXT:    sw a3, 1248(sp)
+; CHECK-NEXT:    sw a2, 1244(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1248(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 816(a0)
 ; CHECK-NEXT:    lw a3, 820(a0)
-; CHECK-NEXT:    sw a2, 1236(sp)
-; CHECK-NEXT:    sw a3, 1240(sp)
+; CHECK-NEXT:    sw a2, 1236(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1240(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 824(a0)
 ; CHECK-NEXT:    lw a3, 828(a0)
-; CHECK-NEXT:    sw a2, 1228(sp)
-; CHECK-NEXT:    sw a3, 1232(sp)
+; CHECK-NEXT:    sw a2, 1228(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1232(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 832(a0)
 ; CHECK-NEXT:    lw a3, 836(a0)
-; CHECK-NEXT:    sw a2, 1220(sp)
-; CHECK-NEXT:    sw a3, 1224(sp)
+; CHECK-NEXT:    sw a2, 1220(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1224(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 840(a0)
 ; CHECK-NEXT:    lw a3, 844(a0)
-; CHECK-NEXT:    sw a2, 1212(sp)
-; CHECK-NEXT:    sw a3, 1216(sp)
+; CHECK-NEXT:    sw a2, 1212(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1216(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 848(a0)
 ; CHECK-NEXT:    lw a3, 852(a0)
-; CHECK-NEXT:    sw a2, 1204(sp)
-; CHECK-NEXT:    sw a3, 1208(sp)
+; CHECK-NEXT:    sw a2, 1204(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1208(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 856(a0)
 ; CHECK-NEXT:    lw a3, 860(a0)
-; CHECK-NEXT:    sw a2, 1196(sp)
-; CHECK-NEXT:    sw a3, 1200(sp)
+; CHECK-NEXT:    sw a2, 1196(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1200(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 864(a0)
 ; CHECK-NEXT:    lw a3, 868(a0)
-; CHECK-NEXT:    sw a2, 1188(sp)
-; CHECK-NEXT:    sw a3, 1192(sp)
+; CHECK-NEXT:    sw a2, 1188(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1192(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 872(a0)
 ; CHECK-NEXT:    lw a3, 876(a0)
-; CHECK-NEXT:    sw a2, 1180(sp)
-; CHECK-NEXT:    sw a3, 1184(sp)
+; CHECK-NEXT:    sw a2, 1180(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1184(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 880(a0)
 ; CHECK-NEXT:    lw a3, 884(a0)
-; CHECK-NEXT:    sw a2, 1172(sp)
-; CHECK-NEXT:    sw a3, 1176(sp)
+; CHECK-NEXT:    sw a2, 1172(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1176(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 888(a0)
 ; CHECK-NEXT:    lw a3, 892(a0)
-; CHECK-NEXT:    sw a2, 1164(sp)
-; CHECK-NEXT:    sw a3, 1168(sp)
+; CHECK-NEXT:    sw a2, 1164(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1168(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 896(a0)
 ; CHECK-NEXT:    lw a3, 900(a0)
-; CHECK-NEXT:    sw a2, 1156(sp)
-; CHECK-NEXT:    sw a3, 1160(sp)
+; CHECK-NEXT:    sw a2, 1156(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1160(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 904(a0)
 ; CHECK-NEXT:    lw a3, 908(a0)
-; CHECK-NEXT:    sw a2, 1148(sp)
-; CHECK-NEXT:    sw a3, 1152(sp)
+; CHECK-NEXT:    sw a2, 1148(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1152(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 912(a0)
 ; CHECK-NEXT:    lw a3, 916(a0)
-; CHECK-NEXT:    sw a2, 1140(sp)
-; CHECK-NEXT:    sw a3, 1144(sp)
+; CHECK-NEXT:    sw a2, 1140(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1144(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 920(a0)
 ; CHECK-NEXT:    lw a3, 924(a0)
-; CHECK-NEXT:    sw a2, 1132(sp)
-; CHECK-NEXT:    sw a3, 1136(sp)
+; CHECK-NEXT:    sw a2, 1132(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1136(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 928(a0)
 ; CHECK-NEXT:    lw a3, 932(a0)
-; CHECK-NEXT:    sw a2, 1124(sp)
-; CHECK-NEXT:    sw a3, 1128(sp)
+; CHECK-NEXT:    sw a2, 1124(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1128(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 936(a0)
 ; CHECK-NEXT:    lw a3, 940(a0)
-; CHECK-NEXT:    sw a2, 1116(sp)
-; CHECK-NEXT:    sw a3, 1120(sp)
+; CHECK-NEXT:    sw a2, 1116(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1120(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 944(a0)
 ; CHECK-NEXT:    lw a3, 948(a0)
-; CHECK-NEXT:    sw a2, 1108(sp)
-; CHECK-NEXT:    sw a3, 1112(sp)
+; CHECK-NEXT:    sw a2, 1108(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1112(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 952(a0)
 ; CHECK-NEXT:    lw a3, 956(a0)
-; CHECK-NEXT:    sw a2, 1100(sp)
-; CHECK-NEXT:    sw a3, 1104(sp)
+; CHECK-NEXT:    sw a2, 1100(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1104(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 960(a0)
 ; CHECK-NEXT:    lw a3, 964(a0)
-; CHECK-NEXT:    sw a2, 1092(sp)
-; CHECK-NEXT:    sw a3, 1096(sp)
+; CHECK-NEXT:    sw a2, 1092(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1096(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 968(a0)
 ; CHECK-NEXT:    lw a3, 972(a0)
-; CHECK-NEXT:    sw a2, 1084(sp)
-; CHECK-NEXT:    sw a3, 1088(sp)
+; CHECK-NEXT:    sw a2, 1084(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1088(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 976(a0)
 ; CHECK-NEXT:    lw a3, 980(a0)
-; CHECK-NEXT:    sw a2, 1076(sp)
-; CHECK-NEXT:    sw a3, 1080(sp)
+; CHECK-NEXT:    sw a2, 1076(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1080(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 984(a0)
 ; CHECK-NEXT:    lw a3, 988(a0)
-; CHECK-NEXT:    sw a2, 1068(sp)
-; CHECK-NEXT:    sw a3, 1072(sp)
+; CHECK-NEXT:    sw a2, 1068(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1072(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 992(a0)
 ; CHECK-NEXT:    lw a3, 996(a0)
-; CHECK-NEXT:    sw a2, 1060(sp)
-; CHECK-NEXT:    sw a3, 1064(sp)
+; CHECK-NEXT:    sw a2, 1060(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1064(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1000(a0)
 ; CHECK-NEXT:    lw a3, 1004(a0)
-; CHECK-NEXT:    sw a2, 1052(sp)
-; CHECK-NEXT:    sw a3, 1056(sp)
+; CHECK-NEXT:    sw a2, 1052(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1056(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1008(a0)
 ; CHECK-NEXT:    lw a3, 1012(a0)
-; CHECK-NEXT:    sw a2, 1044(sp)
-; CHECK-NEXT:    sw a3, 1048(sp)
+; CHECK-NEXT:    sw a2, 1044(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1048(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1016(a0)
 ; CHECK-NEXT:    lw a3, 1020(a0)
-; CHECK-NEXT:    sw a2, 1036(sp)
-; CHECK-NEXT:    sw a3, 1040(sp)
+; CHECK-NEXT:    sw a2, 1036(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1040(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1024(a0)
 ; CHECK-NEXT:    lw a3, 1028(a0)
-; CHECK-NEXT:    sw a2, 1028(sp)
-; CHECK-NEXT:    sw a3, 1032(sp)
+; CHECK-NEXT:    sw a2, 1028(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1032(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1032(a0)
 ; CHECK-NEXT:    lw a3, 1036(a0)
-; CHECK-NEXT:    sw a2, 1020(sp)
-; CHECK-NEXT:    sw a3, 1024(sp)
+; CHECK-NEXT:    sw a2, 1020(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1024(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1040(a0)
 ; CHECK-NEXT:    lw a3, 1044(a0)
-; CHECK-NEXT:    sw a2, 1012(sp)
-; CHECK-NEXT:    sw a3, 1016(sp)
+; CHECK-NEXT:    sw a2, 1012(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1016(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1048(a0)
 ; CHECK-NEXT:    lw a3, 1052(a0)
-; CHECK-NEXT:    sw a2, 1004(sp)
-; CHECK-NEXT:    sw a3, 1008(sp)
+; CHECK-NEXT:    sw a2, 1004(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1008(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1056(a0)
 ; CHECK-NEXT:    lw a3, 1060(a0)
-; CHECK-NEXT:    sw a2, 996(sp)
-; CHECK-NEXT:    sw a3, 1000(sp)
+; CHECK-NEXT:    sw a2, 996(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 1000(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1064(a0)
 ; CHECK-NEXT:    lw a3, 1068(a0)
-; CHECK-NEXT:    sw a2, 988(sp)
-; CHECK-NEXT:    sw a3, 992(sp)
+; CHECK-NEXT:    sw a2, 988(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 992(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1072(a0)
 ; CHECK-NEXT:    lw a3, 1076(a0)
-; CHECK-NEXT:    sw a2, 980(sp)
-; CHECK-NEXT:    sw a3, 984(sp)
+; CHECK-NEXT:    sw a2, 980(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 984(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1080(a0)
 ; CHECK-NEXT:    lw a3, 1084(a0)
-; CHECK-NEXT:    sw a2, 972(sp)
-; CHECK-NEXT:    sw a3, 976(sp)
+; CHECK-NEXT:    sw a2, 972(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 976(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1088(a0)
 ; CHECK-NEXT:    lw a3, 1092(a0)
-; CHECK-NEXT:    sw a2, 964(sp)
-; CHECK-NEXT:    sw a3, 968(sp)
+; CHECK-NEXT:    sw a2, 964(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 968(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1096(a0)
 ; CHECK-NEXT:    lw a3, 1100(a0)
-; CHECK-NEXT:    sw a2, 956(sp)
-; CHECK-NEXT:    sw a3, 960(sp)
+; CHECK-NEXT:    sw a2, 956(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 960(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1104(a0)
 ; CHECK-NEXT:    lw a3, 1108(a0)
-; CHECK-NEXT:    sw a2, 948(sp)
-; CHECK-NEXT:    sw a3, 952(sp)
+; CHECK-NEXT:    sw a2, 948(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 952(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1112(a0)
 ; CHECK-NEXT:    lw a3, 1116(a0)
-; CHECK-NEXT:    sw a2, 940(sp)
-; CHECK-NEXT:    sw a3, 944(sp)
+; CHECK-NEXT:    sw a2, 940(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 944(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1120(a0)
 ; CHECK-NEXT:    lw a3, 1124(a0)
-; CHECK-NEXT:    sw a2, 932(sp)
-; CHECK-NEXT:    sw a3, 936(sp)
+; CHECK-NEXT:    sw a2, 932(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 936(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1128(a0)
 ; CHECK-NEXT:    lw a3, 1132(a0)
-; CHECK-NEXT:    sw a2, 924(sp)
-; CHECK-NEXT:    sw a3, 928(sp)
+; CHECK-NEXT:    sw a2, 924(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 928(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1136(a0)
 ; CHECK-NEXT:    lw a3, 1140(a0)
-; CHECK-NEXT:    sw a2, 916(sp)
-; CHECK-NEXT:    sw a3, 920(sp)
+; CHECK-NEXT:    sw a2, 916(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 920(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1144(a0)
 ; CHECK-NEXT:    lw a3, 1148(a0)
-; CHECK-NEXT:    sw a2, 908(sp)
-; CHECK-NEXT:    sw a3, 912(sp)
+; CHECK-NEXT:    sw a2, 908(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 912(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1152(a0)
 ; CHECK-NEXT:    lw a3, 1156(a0)
-; CHECK-NEXT:    sw a2, 900(sp)
-; CHECK-NEXT:    sw a3, 904(sp)
+; CHECK-NEXT:    sw a2, 900(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 904(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1160(a0)
 ; CHECK-NEXT:    lw a3, 1164(a0)
-; CHECK-NEXT:    sw a2, 892(sp)
-; CHECK-NEXT:    sw a3, 896(sp)
+; CHECK-NEXT:    sw a2, 892(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 896(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1168(a0)
 ; CHECK-NEXT:    lw a3, 1172(a0)
-; CHECK-NEXT:    sw a2, 884(sp)
-; CHECK-NEXT:    sw a3, 888(sp)
+; CHECK-NEXT:    sw a2, 884(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 888(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1176(a0)
 ; CHECK-NEXT:    lw a3, 1180(a0)
-; CHECK-NEXT:    sw a2, 876(sp)
-; CHECK-NEXT:    sw a3, 880(sp)
+; CHECK-NEXT:    sw a2, 876(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 880(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1184(a0)
 ; CHECK-NEXT:    lw a3, 1188(a0)
-; CHECK-NEXT:    sw a2, 868(sp)
-; CHECK-NEXT:    sw a3, 872(sp)
+; CHECK-NEXT:    sw a2, 868(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 872(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1192(a0)
 ; CHECK-NEXT:    lw a3, 1196(a0)
-; CHECK-NEXT:    sw a2, 860(sp)
-; CHECK-NEXT:    sw a3, 864(sp)
+; CHECK-NEXT:    sw a2, 860(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 864(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1200(a0)
 ; CHECK-NEXT:    lw a3, 1204(a0)
-; CHECK-NEXT:    sw a2, 852(sp)
-; CHECK-NEXT:    sw a3, 856(sp)
+; CHECK-NEXT:    sw a2, 852(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 856(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1208(a0)
 ; CHECK-NEXT:    lw a3, 1212(a0)
-; CHECK-NEXT:    sw a2, 844(sp)
-; CHECK-NEXT:    sw a3, 848(sp)
+; CHECK-NEXT:    sw a2, 844(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 848(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1216(a0)
 ; CHECK-NEXT:    lw a3, 1220(a0)
-; CHECK-NEXT:    sw a2, 836(sp)
-; CHECK-NEXT:    sw a3, 840(sp)
+; CHECK-NEXT:    sw a2, 836(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 840(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1224(a0)
 ; CHECK-NEXT:    lw a3, 1228(a0)
-; CHECK-NEXT:    sw a2, 828(sp)
-; CHECK-NEXT:    sw a3, 832(sp)
+; CHECK-NEXT:    sw a2, 828(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 832(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1232(a0)
 ; CHECK-NEXT:    lw a3, 1236(a0)
-; CHECK-NEXT:    sw a2, 820(sp)
-; CHECK-NEXT:    sw a3, 824(sp)
+; CHECK-NEXT:    sw a2, 820(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 824(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1240(a0)
 ; CHECK-NEXT:    lw a3, 1244(a0)
-; CHECK-NEXT:    sw a2, 812(sp)
-; CHECK-NEXT:    sw a3, 816(sp)
+; CHECK-NEXT:    sw a2, 812(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 816(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1248(a0)
 ; CHECK-NEXT:    lw a3, 1252(a0)
-; CHECK-NEXT:    sw a2, 804(sp)
-; CHECK-NEXT:    sw a3, 808(sp)
+; CHECK-NEXT:    sw a2, 804(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 808(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1256(a0)
 ; CHECK-NEXT:    lw a3, 1260(a0)
-; CHECK-NEXT:    sw a2, 796(sp)
-; CHECK-NEXT:    sw a3, 800(sp)
+; CHECK-NEXT:    sw a2, 796(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 800(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1264(a0)
 ; CHECK-NEXT:    lw a3, 1268(a0)
-; CHECK-NEXT:    sw a2, 788(sp)
-; CHECK-NEXT:    sw a3, 792(sp)
+; CHECK-NEXT:    sw a2, 788(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 792(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1272(a0)
 ; CHECK-NEXT:    lw a3, 1276(a0)
-; CHECK-NEXT:    sw a2, 780(sp)
-; CHECK-NEXT:    sw a3, 784(sp)
+; CHECK-NEXT:    sw a2, 780(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 784(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1280(a0)
 ; CHECK-NEXT:    lw a3, 1284(a0)
-; CHECK-NEXT:    sw a2, 772(sp)
-; CHECK-NEXT:    sw a3, 776(sp)
+; CHECK-NEXT:    sw a2, 772(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 776(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1288(a0)
 ; CHECK-NEXT:    lw a3, 1292(a0)
-; CHECK-NEXT:    sw a2, 764(sp)
-; CHECK-NEXT:    sw a3, 768(sp)
+; CHECK-NEXT:    sw a2, 764(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 768(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1296(a0)
 ; CHECK-NEXT:    lw a3, 1300(a0)
-; CHECK-NEXT:    sw a2, 756(sp)
-; CHECK-NEXT:    sw a3, 760(sp)
+; CHECK-NEXT:    sw a2, 756(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 760(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1304(a0)
 ; CHECK-NEXT:    lw a3, 1308(a0)
-; CHECK-NEXT:    sw a2, 748(sp)
-; CHECK-NEXT:    sw a3, 752(sp)
+; CHECK-NEXT:    sw a2, 748(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 752(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1312(a0)
 ; CHECK-NEXT:    lw a3, 1316(a0)
-; CHECK-NEXT:    sw a2, 740(sp)
-; CHECK-NEXT:    sw a3, 744(sp)
+; CHECK-NEXT:    sw a2, 740(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 744(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1320(a0)
 ; CHECK-NEXT:    lw a3, 1324(a0)
-; CHECK-NEXT:    sw a2, 732(sp)
-; CHECK-NEXT:    sw a3, 736(sp)
+; CHECK-NEXT:    sw a2, 732(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 736(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1328(a0)
 ; CHECK-NEXT:    lw a3, 1332(a0)
-; CHECK-NEXT:    sw a2, 724(sp)
-; CHECK-NEXT:    sw a3, 728(sp)
+; CHECK-NEXT:    sw a2, 724(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 728(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1336(a0)
 ; CHECK-NEXT:    lw a3, 1340(a0)
-; CHECK-NEXT:    sw a2, 716(sp)
-; CHECK-NEXT:    sw a3, 720(sp)
+; CHECK-NEXT:    sw a2, 716(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 720(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1344(a0)
 ; CHECK-NEXT:    lw a3, 1348(a0)
-; CHECK-NEXT:    sw a2, 708(sp)
-; CHECK-NEXT:    sw a3, 712(sp)
+; CHECK-NEXT:    sw a2, 708(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 712(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1352(a0)
 ; CHECK-NEXT:    lw a3, 1356(a0)
-; CHECK-NEXT:    sw a2, 700(sp)
-; CHECK-NEXT:    sw a3, 704(sp)
+; CHECK-NEXT:    sw a2, 700(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 704(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1360(a0)
 ; CHECK-NEXT:    lw a3, 1364(a0)
-; CHECK-NEXT:    sw a2, 692(sp)
-; CHECK-NEXT:    sw a3, 696(sp)
+; CHECK-NEXT:    sw a2, 692(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 696(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1368(a0)
 ; CHECK-NEXT:    lw a3, 1372(a0)
-; CHECK-NEXT:    sw a2, 684(sp)
-; CHECK-NEXT:    sw a3, 688(sp)
+; CHECK-NEXT:    sw a2, 684(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 688(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1376(a0)
 ; CHECK-NEXT:    lw a3, 1380(a0)
-; CHECK-NEXT:    sw a2, 676(sp)
-; CHECK-NEXT:    sw a3, 680(sp)
+; CHECK-NEXT:    sw a2, 676(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 680(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1384(a0)
 ; CHECK-NEXT:    lw a3, 1388(a0)
-; CHECK-NEXT:    sw a2, 668(sp)
-; CHECK-NEXT:    sw a3, 672(sp)
+; CHECK-NEXT:    sw a2, 668(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 672(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1392(a0)
 ; CHECK-NEXT:    lw a3, 1396(a0)
-; CHECK-NEXT:    sw a2, 660(sp)
-; CHECK-NEXT:    sw a3, 664(sp)
+; CHECK-NEXT:    sw a2, 660(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 664(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1400(a0)
 ; CHECK-NEXT:    lw a3, 1404(a0)
-; CHECK-NEXT:    sw a2, 652(sp)
-; CHECK-NEXT:    sw a3, 656(sp)
+; CHECK-NEXT:    sw a2, 652(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 656(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1408(a0)
 ; CHECK-NEXT:    lw a3, 1412(a0)
-; CHECK-NEXT:    sw a2, 644(sp)
-; CHECK-NEXT:    sw a3, 648(sp)
+; CHECK-NEXT:    sw a2, 644(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 648(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1416(a0)
 ; CHECK-NEXT:    lw a3, 1420(a0)
-; CHECK-NEXT:    sw a2, 636(sp)
-; CHECK-NEXT:    sw a3, 640(sp)
+; CHECK-NEXT:    sw a2, 636(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 640(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1424(a0)
 ; CHECK-NEXT:    lw a3, 1428(a0)
-; CHECK-NEXT:    sw a2, 628(sp)
-; CHECK-NEXT:    sw a3, 632(sp)
+; CHECK-NEXT:    sw a2, 628(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 632(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1432(a0)
 ; CHECK-NEXT:    lw a3, 1436(a0)
-; CHECK-NEXT:    sw a2, 620(sp)
-; CHECK-NEXT:    sw a3, 624(sp)
+; CHECK-NEXT:    sw a2, 620(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 624(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1440(a0)
 ; CHECK-NEXT:    lw a3, 1444(a0)
-; CHECK-NEXT:    sw a2, 612(sp)
-; CHECK-NEXT:    sw a3, 616(sp)
+; CHECK-NEXT:    sw a2, 612(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 616(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1448(a0)
 ; CHECK-NEXT:    lw a3, 1452(a0)
-; CHECK-NEXT:    sw a2, 604(sp)
-; CHECK-NEXT:    sw a3, 608(sp)
+; CHECK-NEXT:    sw a2, 604(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 608(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1456(a0)
 ; CHECK-NEXT:    lw a3, 1460(a0)
-; CHECK-NEXT:    sw a2, 596(sp)
-; CHECK-NEXT:    sw a3, 600(sp)
+; CHECK-NEXT:    sw a2, 596(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 600(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1464(a0)
 ; CHECK-NEXT:    lw a3, 1468(a0)
-; CHECK-NEXT:    sw a2, 588(sp)
-; CHECK-NEXT:    sw a3, 592(sp)
+; CHECK-NEXT:    sw a2, 588(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 592(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1472(a0)
 ; CHECK-NEXT:    lw a3, 1476(a0)
-; CHECK-NEXT:    sw a2, 580(sp)
-; CHECK-NEXT:    sw a3, 584(sp)
+; CHECK-NEXT:    sw a2, 580(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 584(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1480(a0)
 ; CHECK-NEXT:    lw a3, 1484(a0)
-; CHECK-NEXT:    sw a2, 572(sp)
-; CHECK-NEXT:    sw a3, 576(sp)
+; CHECK-NEXT:    sw a2, 572(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 576(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1488(a0)
 ; CHECK-NEXT:    lw a3, 1492(a0)
-; CHECK-NEXT:    sw a2, 564(sp)
-; CHECK-NEXT:    sw a3, 568(sp)
+; CHECK-NEXT:    sw a2, 564(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 568(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1496(a0)
 ; CHECK-NEXT:    lw a3, 1500(a0)
-; CHECK-NEXT:    sw a2, 556(sp)
-; CHECK-NEXT:    sw a3, 560(sp)
+; CHECK-NEXT:    sw a2, 556(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 560(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1504(a0)
 ; CHECK-NEXT:    lw a3, 1508(a0)
-; CHECK-NEXT:    sw a2, 548(sp)
-; CHECK-NEXT:    sw a3, 552(sp)
+; CHECK-NEXT:    sw a2, 548(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 552(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1512(a0)
 ; CHECK-NEXT:    lw a3, 1516(a0)
-; CHECK-NEXT:    sw a2, 540(sp)
-; CHECK-NEXT:    sw a3, 544(sp)
+; CHECK-NEXT:    sw a2, 540(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 544(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1520(a0)
 ; CHECK-NEXT:    lw a3, 1524(a0)
-; CHECK-NEXT:    sw a2, 532(sp)
-; CHECK-NEXT:    sw a3, 536(sp)
+; CHECK-NEXT:    sw a2, 532(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 536(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1528(a0)
 ; CHECK-NEXT:    lw a3, 1532(a0)
-; CHECK-NEXT:    sw a2, 524(sp)
-; CHECK-NEXT:    sw a3, 528(sp)
+; CHECK-NEXT:    sw a2, 524(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 528(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1536(a0)
 ; CHECK-NEXT:    lw a3, 1540(a0)
-; CHECK-NEXT:    sw a2, 516(sp)
-; CHECK-NEXT:    sw a3, 520(sp)
+; CHECK-NEXT:    sw a2, 516(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 520(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1544(a0)
 ; CHECK-NEXT:    lw a3, 1548(a0)
-; CHECK-NEXT:    sw a2, 508(sp)
-; CHECK-NEXT:    sw a3, 512(sp)
+; CHECK-NEXT:    sw a2, 508(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 512(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1552(a0)
 ; CHECK-NEXT:    lw a3, 1556(a0)
-; CHECK-NEXT:    sw a2, 500(sp)
-; CHECK-NEXT:    sw a3, 504(sp)
+; CHECK-NEXT:    sw a2, 500(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 504(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1560(a0)
 ; CHECK-NEXT:    lw a3, 1564(a0)
-; CHECK-NEXT:    sw a2, 492(sp)
-; CHECK-NEXT:    sw a3, 496(sp)
+; CHECK-NEXT:    sw a2, 492(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 496(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1568(a0)
 ; CHECK-NEXT:    lw a3, 1572(a0)
-; CHECK-NEXT:    sw a2, 484(sp)
-; CHECK-NEXT:    sw a3, 488(sp)
+; CHECK-NEXT:    sw a2, 484(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 488(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1576(a0)
 ; CHECK-NEXT:    lw a3, 1580(a0)
-; CHECK-NEXT:    sw a2, 476(sp)
-; CHECK-NEXT:    sw a3, 480(sp)
+; CHECK-NEXT:    sw a2, 476(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 480(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1584(a0)
 ; CHECK-NEXT:    lw a3, 1588(a0)
-; CHECK-NEXT:    sw a2, 468(sp)
-; CHECK-NEXT:    sw a3, 472(sp)
+; CHECK-NEXT:    sw a2, 468(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 472(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1592(a0)
 ; CHECK-NEXT:    lw a3, 1596(a0)
-; CHECK-NEXT:    sw a2, 460(sp)
-; CHECK-NEXT:    sw a3, 464(sp)
+; CHECK-NEXT:    sw a2, 460(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 464(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1600(a0)
 ; CHECK-NEXT:    lw a3, 1604(a0)
-; CHECK-NEXT:    sw a2, 452(sp)
-; CHECK-NEXT:    sw a3, 456(sp)
+; CHECK-NEXT:    sw a2, 452(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 456(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1608(a0)
 ; CHECK-NEXT:    lw a3, 1612(a0)
-; CHECK-NEXT:    sw a2, 444(sp)
-; CHECK-NEXT:    sw a3, 448(sp)
+; CHECK-NEXT:    sw a2, 444(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 448(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1616(a0)
 ; CHECK-NEXT:    lw a3, 1620(a0)
-; CHECK-NEXT:    sw a2, 436(sp)
-; CHECK-NEXT:    sw a3, 440(sp)
+; CHECK-NEXT:    sw a2, 436(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 440(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1624(a0)
 ; CHECK-NEXT:    lw a3, 1628(a0)
-; CHECK-NEXT:    sw a2, 428(sp)
-; CHECK-NEXT:    sw a3, 432(sp)
+; CHECK-NEXT:    sw a2, 428(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 432(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1632(a0)
 ; CHECK-NEXT:    lw a3, 1636(a0)
-; CHECK-NEXT:    sw a2, 420(sp)
-; CHECK-NEXT:    sw a3, 424(sp)
+; CHECK-NEXT:    sw a2, 420(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 424(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1640(a0)
 ; CHECK-NEXT:    lw a3, 1644(a0)
-; CHECK-NEXT:    sw a2, 412(sp)
-; CHECK-NEXT:    sw a3, 416(sp)
+; CHECK-NEXT:    sw a2, 412(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 416(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1648(a0)
 ; CHECK-NEXT:    lw a3, 1652(a0)
-; CHECK-NEXT:    sw a2, 404(sp)
-; CHECK-NEXT:    sw a3, 408(sp)
+; CHECK-NEXT:    sw a2, 404(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 408(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1656(a0)
 ; CHECK-NEXT:    lw a3, 1660(a0)
-; CHECK-NEXT:    sw a2, 396(sp)
-; CHECK-NEXT:    sw a3, 400(sp)
+; CHECK-NEXT:    sw a2, 396(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 400(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1664(a0)
 ; CHECK-NEXT:    lw a3, 1668(a0)
-; CHECK-NEXT:    sw a2, 388(sp)
-; CHECK-NEXT:    sw a3, 392(sp)
+; CHECK-NEXT:    sw a2, 388(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 392(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1672(a0)
 ; CHECK-NEXT:    lw a3, 1676(a0)
-; CHECK-NEXT:    sw a2, 380(sp)
-; CHECK-NEXT:    sw a3, 384(sp)
+; CHECK-NEXT:    sw a2, 380(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 384(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1680(a0)
 ; CHECK-NEXT:    lw a3, 1684(a0)
-; CHECK-NEXT:    sw a2, 372(sp)
-; CHECK-NEXT:    sw a3, 376(sp)
+; CHECK-NEXT:    sw a2, 372(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 376(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1688(a0)
 ; CHECK-NEXT:    lw a3, 1692(a0)
-; CHECK-NEXT:    sw a2, 364(sp)
-; CHECK-NEXT:    sw a3, 368(sp)
+; CHECK-NEXT:    sw a2, 364(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 368(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1696(a0)
 ; CHECK-NEXT:    lw a3, 1700(a0)
-; CHECK-NEXT:    sw a2, 356(sp)
-; CHECK-NEXT:    sw a3, 360(sp)
+; CHECK-NEXT:    sw a2, 356(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 360(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1704(a0)
 ; CHECK-NEXT:    lw a3, 1708(a0)
-; CHECK-NEXT:    sw a2, 348(sp)
-; CHECK-NEXT:    sw a3, 352(sp)
+; CHECK-NEXT:    sw a2, 348(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 352(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1712(a0)
 ; CHECK-NEXT:    lw a3, 1716(a0)
-; CHECK-NEXT:    sw a2, 340(sp)
-; CHECK-NEXT:    sw a3, 344(sp)
+; CHECK-NEXT:    sw a2, 340(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 344(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1720(a0)
 ; CHECK-NEXT:    lw a3, 1724(a0)
-; CHECK-NEXT:    sw a2, 332(sp)
-; CHECK-NEXT:    sw a3, 336(sp)
+; CHECK-NEXT:    sw a2, 332(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 336(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1728(a0)
 ; CHECK-NEXT:    lw a3, 1732(a0)
-; CHECK-NEXT:    sw a2, 324(sp)
-; CHECK-NEXT:    sw a3, 328(sp)
+; CHECK-NEXT:    sw a2, 324(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 328(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1736(a0)
 ; CHECK-NEXT:    lw a3, 1740(a0)
-; CHECK-NEXT:    sw a2, 316(sp)
-; CHECK-NEXT:    sw a3, 320(sp)
+; CHECK-NEXT:    sw a2, 316(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 320(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1744(a0)
 ; CHECK-NEXT:    lw a3, 1748(a0)
-; CHECK-NEXT:    sw a2, 308(sp)
-; CHECK-NEXT:    sw a3, 312(sp)
+; CHECK-NEXT:    sw a2, 308(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 312(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1752(a0)
 ; CHECK-NEXT:    lw a3, 1756(a0)
-; CHECK-NEXT:    sw a2, 300(sp)
-; CHECK-NEXT:    sw a3, 304(sp)
+; CHECK-NEXT:    sw a2, 300(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 304(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1760(a0)
 ; CHECK-NEXT:    lw a3, 1764(a0)
-; CHECK-NEXT:    sw a2, 292(sp)
-; CHECK-NEXT:    sw a3, 296(sp)
+; CHECK-NEXT:    sw a2, 292(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 296(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1768(a0)
 ; CHECK-NEXT:    lw a3, 1772(a0)
-; CHECK-NEXT:    sw a2, 284(sp)
-; CHECK-NEXT:    sw a3, 288(sp)
+; CHECK-NEXT:    sw a2, 284(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 288(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1776(a0)
 ; CHECK-NEXT:    lw a3, 1780(a0)
-; CHECK-NEXT:    sw a2, 276(sp)
-; CHECK-NEXT:    sw a3, 280(sp)
+; CHECK-NEXT:    sw a2, 276(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 280(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1784(a0)
 ; CHECK-NEXT:    lw a3, 1788(a0)
-; CHECK-NEXT:    sw a2, 268(sp)
-; CHECK-NEXT:    sw a3, 272(sp)
+; CHECK-NEXT:    sw a2, 268(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 272(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1792(a0)
 ; CHECK-NEXT:    lw a3, 1796(a0)
-; CHECK-NEXT:    sw a2, 260(sp)
-; CHECK-NEXT:    sw a3, 264(sp)
+; CHECK-NEXT:    sw a2, 260(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 264(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1800(a0)
 ; CHECK-NEXT:    lw a3, 1804(a0)
-; CHECK-NEXT:    sw a2, 252(sp)
-; CHECK-NEXT:    sw a3, 256(sp)
+; CHECK-NEXT:    sw a2, 252(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 256(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1808(a0)
 ; CHECK-NEXT:    lw a3, 1812(a0)
-; CHECK-NEXT:    sw a2, 244(sp)
-; CHECK-NEXT:    sw a3, 248(sp)
+; CHECK-NEXT:    sw a2, 244(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 248(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1816(a0)
 ; CHECK-NEXT:    lw a3, 1820(a0)
-; CHECK-NEXT:    sw a2, 236(sp)
-; CHECK-NEXT:    sw a3, 240(sp)
+; CHECK-NEXT:    sw a2, 236(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 240(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1824(a0)
 ; CHECK-NEXT:    lw a3, 1828(a0)
-; CHECK-NEXT:    sw a2, 228(sp)
-; CHECK-NEXT:    sw a3, 232(sp)
+; CHECK-NEXT:    sw a2, 228(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 232(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1832(a0)
 ; CHECK-NEXT:    lw a3, 1836(a0)
-; CHECK-NEXT:    sw a2, 220(sp)
-; CHECK-NEXT:    sw a3, 224(sp)
+; CHECK-NEXT:    sw a2, 220(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 224(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1840(a0)
 ; CHECK-NEXT:    lw a3, 1844(a0)
-; CHECK-NEXT:    sw a2, 212(sp)
-; CHECK-NEXT:    sw a3, 216(sp)
+; CHECK-NEXT:    sw a2, 212(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 216(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1848(a0)
 ; CHECK-NEXT:    lw a3, 1852(a0)
-; CHECK-NEXT:    sw a2, 204(sp)
-; CHECK-NEXT:    sw a3, 208(sp)
+; CHECK-NEXT:    sw a2, 204(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 208(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1856(a0)
 ; CHECK-NEXT:    lw a3, 1860(a0)
-; CHECK-NEXT:    sw a2, 196(sp)
-; CHECK-NEXT:    sw a3, 200(sp)
+; CHECK-NEXT:    sw a2, 196(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 200(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1864(a0)
 ; CHECK-NEXT:    lw a3, 1868(a0)
-; CHECK-NEXT:    sw a2, 188(sp)
-; CHECK-NEXT:    sw a3, 192(sp)
+; CHECK-NEXT:    sw a2, 188(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 192(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1872(a0)
 ; CHECK-NEXT:    lw a3, 1876(a0)
-; CHECK-NEXT:    sw a2, 180(sp)
-; CHECK-NEXT:    sw a3, 184(sp)
+; CHECK-NEXT:    sw a2, 180(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 184(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1880(a0)
 ; CHECK-NEXT:    lw a3, 1884(a0)
-; CHECK-NEXT:    sw a2, 172(sp)
-; CHECK-NEXT:    sw a3, 176(sp)
+; CHECK-NEXT:    sw a2, 172(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 176(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1888(a0)
 ; CHECK-NEXT:    lw a3, 1892(a0)
-; CHECK-NEXT:    sw a2, 164(sp)
-; CHECK-NEXT:    sw a3, 168(sp)
+; CHECK-NEXT:    sw a2, 164(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 168(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1896(a0)
 ; CHECK-NEXT:    lw a3, 1900(a0)
-; CHECK-NEXT:    sw a2, 156(sp)
-; CHECK-NEXT:    sw a3, 160(sp)
+; CHECK-NEXT:    sw a2, 156(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 160(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1904(a0)
 ; CHECK-NEXT:    lw a3, 1908(a0)
-; CHECK-NEXT:    sw a2, 148(sp)
-; CHECK-NEXT:    sw a3, 152(sp)
+; CHECK-NEXT:    sw a2, 148(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 152(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1912(a0)
 ; CHECK-NEXT:    lw a3, 1916(a0)
-; CHECK-NEXT:    sw a2, 140(sp)
-; CHECK-NEXT:    sw a3, 144(sp)
+; CHECK-NEXT:    sw a2, 140(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 144(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1920(a0)
 ; CHECK-NEXT:    lw a3, 1924(a0)
-; CHECK-NEXT:    sw a2, 132(sp)
-; CHECK-NEXT:    sw a3, 136(sp)
+; CHECK-NEXT:    sw a2, 132(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 136(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1928(a0)
 ; CHECK-NEXT:    lw a3, 1932(a0)
-; CHECK-NEXT:    sw a2, 124(sp)
-; CHECK-NEXT:    sw a3, 128(sp)
+; CHECK-NEXT:    sw a2, 124(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 128(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1936(a0)
 ; CHECK-NEXT:    lw a3, 1940(a0)
-; CHECK-NEXT:    sw a2, 116(sp)
-; CHECK-NEXT:    sw a3, 120(sp)
+; CHECK-NEXT:    sw a2, 116(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 120(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1944(a0)
 ; CHECK-NEXT:    lw a3, 1948(a0)
-; CHECK-NEXT:    sw a2, 108(sp)
-; CHECK-NEXT:    sw a3, 112(sp)
+; CHECK-NEXT:    sw a2, 108(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 112(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1952(a0)
 ; CHECK-NEXT:    lw a3, 1956(a0)
-; CHECK-NEXT:    sw a2, 100(sp)
-; CHECK-NEXT:    sw a3, 104(sp)
+; CHECK-NEXT:    sw a2, 100(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 104(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1960(a0)
 ; CHECK-NEXT:    lw a3, 1964(a0)
-; CHECK-NEXT:    sw a2, 92(sp)
-; CHECK-NEXT:    sw a3, 96(sp)
+; CHECK-NEXT:    sw a2, 92(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 96(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1968(a0)
 ; CHECK-NEXT:    lw a3, 1972(a0)
-; CHECK-NEXT:    sw a2, 84(sp)
-; CHECK-NEXT:    sw a3, 88(sp)
+; CHECK-NEXT:    sw a2, 84(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 88(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1976(a0)
 ; CHECK-NEXT:    lw a3, 1980(a0)
-; CHECK-NEXT:    sw a2, 76(sp)
-; CHECK-NEXT:    sw a3, 80(sp)
+; CHECK-NEXT:    sw a2, 76(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 80(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1984(a0)
 ; CHECK-NEXT:    lw a3, 1988(a0)
-; CHECK-NEXT:    sw a2, 68(sp)
-; CHECK-NEXT:    sw a3, 72(sp)
+; CHECK-NEXT:    sw a2, 68(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 72(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 1992(a0)
 ; CHECK-NEXT:    lw a3, 1996(a0)
-; CHECK-NEXT:    sw a2, 60(sp)
-; CHECK-NEXT:    sw a3, 64(sp)
+; CHECK-NEXT:    sw a2, 60(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 64(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2000(a0)
 ; CHECK-NEXT:    lw a3, 2004(a0)
-; CHECK-NEXT:    sw a2, 52(sp)
-; CHECK-NEXT:    sw a3, 56(sp)
+; CHECK-NEXT:    sw a2, 52(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 56(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2008(a0)
 ; CHECK-NEXT:    lw a3, 2012(a0)
-; CHECK-NEXT:    sw a2, 44(sp)
-; CHECK-NEXT:    sw a3, 48(sp)
+; CHECK-NEXT:    sw a2, 44(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 48(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2016(a0)
 ; CHECK-NEXT:    lw a3, 2020(a0)
-; CHECK-NEXT:    sw a2, 36(sp)
-; CHECK-NEXT:    sw a3, 40(sp)
+; CHECK-NEXT:    sw a2, 36(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 40(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2024(a0)
 ; CHECK-NEXT:    lw a3, 2028(a0)
-; CHECK-NEXT:    sw a2, 28(sp)
-; CHECK-NEXT:    sw a3, 32(sp)
+; CHECK-NEXT:    sw a2, 28(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 32(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2032(a0)
 ; CHECK-NEXT:    lw a3, 2036(a0)
-; CHECK-NEXT:    sw a2, 20(sp)
-; CHECK-NEXT:    sw a3, 24(sp)
+; CHECK-NEXT:    sw a2, 20(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 24(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    lw a2, 2040(a0)
 ; CHECK-NEXT:    lw a3, 2044(a0)
-; CHECK-NEXT:    sw a2, 12(sp)
-; CHECK-NEXT:    sw a3, 16(sp)
+; CHECK-NEXT:    sw a2, 12(sp) # 4-byte Folded Spill
+; CHECK-NEXT:    sw a3, 16(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    lw a0, 8(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    lui a1, 1
 ; CHECK-NEXT:    add a1, sp, a1
-; CHECK-NEXT:    lw a2, -2044(a1)
-; CHECK-NEXT:    lw a3, -2040(a1)
+; CHECK-NEXT:    lw a2, -2044(a1) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, -2040(a1) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 0(a0)
 ; CHECK-NEXT:    sw a3, 4(a0)
 ; CHECK-NEXT:    addi a1, sp, 2044
-; CHECK-NEXT:    lw a2, 0(a1)
-; CHECK-NEXT:    lw a3, 4(a1)
+; CHECK-NEXT:    lw a2, 0(a1) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 4(a1) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 8(a0)
 ; CHECK-NEXT:    sw a3, 12(a0)
-; CHECK-NEXT:    lw a2, 2036(sp)
-; CHECK-NEXT:    lw a3, 2040(sp)
+; CHECK-NEXT:    lw a2, 2036(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2040(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 16(a0)
 ; CHECK-NEXT:    sw a3, 20(a0)
-; CHECK-NEXT:    lw a2, 2028(sp)
-; CHECK-NEXT:    lw a3, 2032(sp)
+; CHECK-NEXT:    lw a2, 2028(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2032(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 24(a0)
 ; CHECK-NEXT:    sw a3, 28(a0)
-; CHECK-NEXT:    lw a2, 2020(sp)
-; CHECK-NEXT:    lw a3, 2024(sp)
+; CHECK-NEXT:    lw a2, 2020(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2024(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 32(a0)
 ; CHECK-NEXT:    sw a3, 36(a0)
-; CHECK-NEXT:    lw a2, 2012(sp)
-; CHECK-NEXT:    lw a3, 2016(sp)
+; CHECK-NEXT:    lw a2, 2012(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2016(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 40(a0)
 ; CHECK-NEXT:    sw a3, 44(a0)
-; CHECK-NEXT:    lw a2, 2004(sp)
-; CHECK-NEXT:    lw a3, 2008(sp)
+; CHECK-NEXT:    lw a2, 2004(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2008(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 48(a0)
 ; CHECK-NEXT:    sw a3, 52(a0)
-; CHECK-NEXT:    lw a2, 1996(sp)
-; CHECK-NEXT:    lw a3, 2000(sp)
+; CHECK-NEXT:    lw a2, 1996(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 2000(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 56(a0)
 ; CHECK-NEXT:    sw a3, 60(a0)
-; CHECK-NEXT:    lw a2, 1988(sp)
-; CHECK-NEXT:    lw a3, 1992(sp)
+; CHECK-NEXT:    lw a2, 1988(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1992(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 64(a0)
 ; CHECK-NEXT:    sw a3, 68(a0)
-; CHECK-NEXT:    lw a2, 1980(sp)
-; CHECK-NEXT:    lw a3, 1984(sp)
+; CHECK-NEXT:    lw a2, 1980(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1984(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 72(a0)
 ; CHECK-NEXT:    sw a3, 76(a0)
-; CHECK-NEXT:    lw a2, 1972(sp)
-; CHECK-NEXT:    lw a3, 1976(sp)
+; CHECK-NEXT:    lw a2, 1972(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1976(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 80(a0)
 ; CHECK-NEXT:    sw a3, 84(a0)
-; CHECK-NEXT:    lw a2, 1964(sp)
-; CHECK-NEXT:    lw a3, 1968(sp)
+; CHECK-NEXT:    lw a2, 1964(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1968(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 88(a0)
 ; CHECK-NEXT:    sw a3, 92(a0)
-; CHECK-NEXT:    lw a2, 1956(sp)
-; CHECK-NEXT:    lw a3, 1960(sp)
+; CHECK-NEXT:    lw a2, 1956(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1960(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 96(a0)
 ; CHECK-NEXT:    sw a3, 100(a0)
-; CHECK-NEXT:    lw a2, 1948(sp)
-; CHECK-NEXT:    lw a3, 1952(sp)
+; CHECK-NEXT:    lw a2, 1948(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1952(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 104(a0)
 ; CHECK-NEXT:    sw a3, 108(a0)
-; CHECK-NEXT:    lw a2, 1940(sp)
-; CHECK-NEXT:    lw a3, 1944(sp)
+; CHECK-NEXT:    lw a2, 1940(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1944(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 112(a0)
 ; CHECK-NEXT:    sw a3, 116(a0)
-; CHECK-NEXT:    lw a2, 1932(sp)
-; CHECK-NEXT:    lw a3, 1936(sp)
+; CHECK-NEXT:    lw a2, 1932(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1936(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 120(a0)
 ; CHECK-NEXT:    sw a3, 124(a0)
-; CHECK-NEXT:    lw a2, 1924(sp)
-; CHECK-NEXT:    lw a3, 1928(sp)
+; CHECK-NEXT:    lw a2, 1924(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1928(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 128(a0)
 ; CHECK-NEXT:    sw a3, 132(a0)
-; CHECK-NEXT:    lw a2, 1916(sp)
-; CHECK-NEXT:    lw a3, 1920(sp)
+; CHECK-NEXT:    lw a2, 1916(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1920(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 136(a0)
 ; CHECK-NEXT:    sw a3, 140(a0)
-; CHECK-NEXT:    lw a2, 1908(sp)
-; CHECK-NEXT:    lw a3, 1912(sp)
+; CHECK-NEXT:    lw a2, 1908(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1912(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 144(a0)
 ; CHECK-NEXT:    sw a3, 148(a0)
-; CHECK-NEXT:    lw a2, 1900(sp)
-; CHECK-NEXT:    lw a3, 1904(sp)
+; CHECK-NEXT:    lw a2, 1900(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1904(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 152(a0)
 ; CHECK-NEXT:    sw a3, 156(a0)
-; CHECK-NEXT:    lw a2, 1892(sp)
-; CHECK-NEXT:    lw a3, 1896(sp)
+; CHECK-NEXT:    lw a2, 1892(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1896(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 160(a0)
 ; CHECK-NEXT:    sw a3, 164(a0)
-; CHECK-NEXT:    lw a2, 1884(sp)
-; CHECK-NEXT:    lw a3, 1888(sp)
+; CHECK-NEXT:    lw a2, 1884(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1888(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 168(a0)
 ; CHECK-NEXT:    sw a3, 172(a0)
-; CHECK-NEXT:    lw a2, 1876(sp)
-; CHECK-NEXT:    lw a3, 1880(sp)
+; CHECK-NEXT:    lw a2, 1876(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1880(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 176(a0)
 ; CHECK-NEXT:    sw a3, 180(a0)
-; CHECK-NEXT:    lw a2, 1868(sp)
-; CHECK-NEXT:    lw a3, 1872(sp)
+; CHECK-NEXT:    lw a2, 1868(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1872(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 184(a0)
 ; CHECK-NEXT:    sw a3, 188(a0)
-; CHECK-NEXT:    lw a2, 1860(sp)
-; CHECK-NEXT:    lw a3, 1864(sp)
+; CHECK-NEXT:    lw a2, 1860(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1864(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 192(a0)
 ; CHECK-NEXT:    sw a3, 196(a0)
-; CHECK-NEXT:    lw a2, 1852(sp)
-; CHECK-NEXT:    lw a3, 1856(sp)
+; CHECK-NEXT:    lw a2, 1852(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1856(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 200(a0)
 ; CHECK-NEXT:    sw a3, 204(a0)
-; CHECK-NEXT:    lw a2, 1844(sp)
-; CHECK-NEXT:    lw a3, 1848(sp)
+; CHECK-NEXT:    lw a2, 1844(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1848(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 208(a0)
 ; CHECK-NEXT:    sw a3, 212(a0)
-; CHECK-NEXT:    lw a2, 1836(sp)
-; CHECK-NEXT:    lw a3, 1840(sp)
+; CHECK-NEXT:    lw a2, 1836(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1840(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 216(a0)
 ; CHECK-NEXT:    sw a3, 220(a0)
-; CHECK-NEXT:    lw a2, 1828(sp)
-; CHECK-NEXT:    lw a3, 1832(sp)
+; CHECK-NEXT:    lw a2, 1828(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1832(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 224(a0)
 ; CHECK-NEXT:    sw a3, 228(a0)
-; CHECK-NEXT:    lw a2, 1820(sp)
-; CHECK-NEXT:    lw a3, 1824(sp)
+; CHECK-NEXT:    lw a2, 1820(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1824(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 232(a0)
 ; CHECK-NEXT:    sw a3, 236(a0)
-; CHECK-NEXT:    lw a2, 1812(sp)
-; CHECK-NEXT:    lw a3, 1816(sp)
+; CHECK-NEXT:    lw a2, 1812(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1816(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 240(a0)
 ; CHECK-NEXT:    sw a3, 244(a0)
-; CHECK-NEXT:    lw a2, 1804(sp)
-; CHECK-NEXT:    lw a3, 1808(sp)
+; CHECK-NEXT:    lw a2, 1804(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1808(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 248(a0)
 ; CHECK-NEXT:    sw a3, 252(a0)
-; CHECK-NEXT:    lw a2, 1796(sp)
-; CHECK-NEXT:    lw a3, 1800(sp)
+; CHECK-NEXT:    lw a2, 1796(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1800(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 256(a0)
 ; CHECK-NEXT:    sw a3, 260(a0)
-; CHECK-NEXT:    lw a2, 1788(sp)
-; CHECK-NEXT:    lw a3, 1792(sp)
+; CHECK-NEXT:    lw a2, 1788(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1792(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 264(a0)
 ; CHECK-NEXT:    sw a3, 268(a0)
-; CHECK-NEXT:    lw a2, 1780(sp)
-; CHECK-NEXT:    lw a3, 1784(sp)
+; CHECK-NEXT:    lw a2, 1780(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1784(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 272(a0)
 ; CHECK-NEXT:    sw a3, 276(a0)
-; CHECK-NEXT:    lw a2, 1772(sp)
-; CHECK-NEXT:    lw a3, 1776(sp)
+; CHECK-NEXT:    lw a2, 1772(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1776(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 280(a0)
 ; CHECK-NEXT:    sw a3, 284(a0)
-; CHECK-NEXT:    lw a2, 1764(sp)
-; CHECK-NEXT:    lw a3, 1768(sp)
+; CHECK-NEXT:    lw a2, 1764(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1768(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 288(a0)
 ; CHECK-NEXT:    sw a3, 292(a0)
-; CHECK-NEXT:    lw a2, 1756(sp)
-; CHECK-NEXT:    lw a3, 1760(sp)
+; CHECK-NEXT:    lw a2, 1756(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1760(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 296(a0)
 ; CHECK-NEXT:    sw a3, 300(a0)
-; CHECK-NEXT:    lw a2, 1748(sp)
-; CHECK-NEXT:    lw a3, 1752(sp)
+; CHECK-NEXT:    lw a2, 1748(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1752(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 304(a0)
 ; CHECK-NEXT:    sw a3, 308(a0)
-; CHECK-NEXT:    lw a2, 1740(sp)
-; CHECK-NEXT:    lw a3, 1744(sp)
+; CHECK-NEXT:    lw a2, 1740(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1744(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 312(a0)
 ; CHECK-NEXT:    sw a3, 316(a0)
-; CHECK-NEXT:    lw a2, 1732(sp)
-; CHECK-NEXT:    lw a3, 1736(sp)
+; CHECK-NEXT:    lw a2, 1732(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1736(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 320(a0)
 ; CHECK-NEXT:    sw a3, 324(a0)
-; CHECK-NEXT:    lw a2, 1724(sp)
-; CHECK-NEXT:    lw a3, 1728(sp)
+; CHECK-NEXT:    lw a2, 1724(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1728(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 328(a0)
 ; CHECK-NEXT:    sw a3, 332(a0)
-; CHECK-NEXT:    lw a2, 1716(sp)
-; CHECK-NEXT:    lw a3, 1720(sp)
+; CHECK-NEXT:    lw a2, 1716(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1720(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 336(a0)
 ; CHECK-NEXT:    sw a3, 340(a0)
-; CHECK-NEXT:    lw a2, 1708(sp)
-; CHECK-NEXT:    lw a3, 1712(sp)
+; CHECK-NEXT:    lw a2, 1708(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1712(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 344(a0)
 ; CHECK-NEXT:    sw a3, 348(a0)
-; CHECK-NEXT:    lw a2, 1700(sp)
-; CHECK-NEXT:    lw a3, 1704(sp)
+; CHECK-NEXT:    lw a2, 1700(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1704(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 352(a0)
 ; CHECK-NEXT:    sw a3, 356(a0)
-; CHECK-NEXT:    lw a2, 1692(sp)
-; CHECK-NEXT:    lw a3, 1696(sp)
+; CHECK-NEXT:    lw a2, 1692(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1696(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 360(a0)
 ; CHECK-NEXT:    sw a3, 364(a0)
-; CHECK-NEXT:    lw a2, 1684(sp)
-; CHECK-NEXT:    lw a3, 1688(sp)
+; CHECK-NEXT:    lw a2, 1684(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1688(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 368(a0)
 ; CHECK-NEXT:    sw a3, 372(a0)
-; CHECK-NEXT:    lw a2, 1676(sp)
-; CHECK-NEXT:    lw a3, 1680(sp)
+; CHECK-NEXT:    lw a2, 1676(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1680(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 376(a0)
 ; CHECK-NEXT:    sw a3, 380(a0)
-; CHECK-NEXT:    lw a2, 1668(sp)
-; CHECK-NEXT:    lw a3, 1672(sp)
+; CHECK-NEXT:    lw a2, 1668(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1672(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 384(a0)
 ; CHECK-NEXT:    sw a3, 388(a0)
-; CHECK-NEXT:    lw a2, 1660(sp)
-; CHECK-NEXT:    lw a3, 1664(sp)
+; CHECK-NEXT:    lw a2, 1660(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1664(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 392(a0)
 ; CHECK-NEXT:    sw a3, 396(a0)
-; CHECK-NEXT:    lw a2, 1652(sp)
-; CHECK-NEXT:    lw a3, 1656(sp)
+; CHECK-NEXT:    lw a2, 1652(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1656(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 400(a0)
 ; CHECK-NEXT:    sw a3, 404(a0)
-; CHECK-NEXT:    lw a2, 1644(sp)
-; CHECK-NEXT:    lw a3, 1648(sp)
+; CHECK-NEXT:    lw a2, 1644(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1648(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 408(a0)
 ; CHECK-NEXT:    sw a3, 412(a0)
-; CHECK-NEXT:    lw a2, 1636(sp)
-; CHECK-NEXT:    lw a3, 1640(sp)
+; CHECK-NEXT:    lw a2, 1636(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1640(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 416(a0)
 ; CHECK-NEXT:    sw a3, 420(a0)
-; CHECK-NEXT:    lw a2, 1628(sp)
-; CHECK-NEXT:    lw a3, 1632(sp)
+; CHECK-NEXT:    lw a2, 1628(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1632(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 424(a0)
 ; CHECK-NEXT:    sw a3, 428(a0)
-; CHECK-NEXT:    lw a2, 1620(sp)
-; CHECK-NEXT:    lw a3, 1624(sp)
+; CHECK-NEXT:    lw a2, 1620(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1624(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 432(a0)
 ; CHECK-NEXT:    sw a3, 436(a0)
-; CHECK-NEXT:    lw a2, 1612(sp)
-; CHECK-NEXT:    lw a3, 1616(sp)
+; CHECK-NEXT:    lw a2, 1612(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1616(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 440(a0)
 ; CHECK-NEXT:    sw a3, 444(a0)
-; CHECK-NEXT:    lw a2, 1604(sp)
-; CHECK-NEXT:    lw a3, 1608(sp)
+; CHECK-NEXT:    lw a2, 1604(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1608(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 448(a0)
 ; CHECK-NEXT:    sw a3, 452(a0)
-; CHECK-NEXT:    lw a2, 1596(sp)
-; CHECK-NEXT:    lw a3, 1600(sp)
+; CHECK-NEXT:    lw a2, 1596(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1600(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 456(a0)
 ; CHECK-NEXT:    sw a3, 460(a0)
-; CHECK-NEXT:    lw a2, 1588(sp)
-; CHECK-NEXT:    lw a3, 1592(sp)
+; CHECK-NEXT:    lw a2, 1588(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1592(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 464(a0)
 ; CHECK-NEXT:    sw a3, 468(a0)
-; CHECK-NEXT:    lw a2, 1580(sp)
-; CHECK-NEXT:    lw a3, 1584(sp)
+; CHECK-NEXT:    lw a2, 1580(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1584(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 472(a0)
 ; CHECK-NEXT:    sw a3, 476(a0)
-; CHECK-NEXT:    lw a2, 1572(sp)
-; CHECK-NEXT:    lw a3, 1576(sp)
+; CHECK-NEXT:    lw a2, 1572(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1576(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 480(a0)
 ; CHECK-NEXT:    sw a3, 484(a0)
-; CHECK-NEXT:    lw a2, 1564(sp)
-; CHECK-NEXT:    lw a3, 1568(sp)
+; CHECK-NEXT:    lw a2, 1564(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1568(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 488(a0)
 ; CHECK-NEXT:    sw a3, 492(a0)
-; CHECK-NEXT:    lw a2, 1556(sp)
-; CHECK-NEXT:    lw a3, 1560(sp)
+; CHECK-NEXT:    lw a2, 1556(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1560(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 496(a0)
 ; CHECK-NEXT:    sw a3, 500(a0)
-; CHECK-NEXT:    lw a2, 1548(sp)
-; CHECK-NEXT:    lw a3, 1552(sp)
+; CHECK-NEXT:    lw a2, 1548(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1552(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 504(a0)
 ; CHECK-NEXT:    sw a3, 508(a0)
-; CHECK-NEXT:    lw a2, 1540(sp)
-; CHECK-NEXT:    lw a3, 1544(sp)
+; CHECK-NEXT:    lw a2, 1540(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1544(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 512(a0)
 ; CHECK-NEXT:    sw a3, 516(a0)
-; CHECK-NEXT:    lw a2, 1532(sp)
-; CHECK-NEXT:    lw a3, 1536(sp)
+; CHECK-NEXT:    lw a2, 1532(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1536(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 520(a0)
 ; CHECK-NEXT:    sw a3, 524(a0)
-; CHECK-NEXT:    lw a2, 1524(sp)
-; CHECK-NEXT:    lw a3, 1528(sp)
+; CHECK-NEXT:    lw a2, 1524(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1528(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 528(a0)
 ; CHECK-NEXT:    sw a3, 532(a0)
-; CHECK-NEXT:    lw a2, 1516(sp)
-; CHECK-NEXT:    lw a3, 1520(sp)
+; CHECK-NEXT:    lw a2, 1516(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1520(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 536(a0)
 ; CHECK-NEXT:    sw a3, 540(a0)
-; CHECK-NEXT:    lw a2, 1508(sp)
-; CHECK-NEXT:    lw a3, 1512(sp)
+; CHECK-NEXT:    lw a2, 1508(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1512(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 544(a0)
 ; CHECK-NEXT:    sw a3, 548(a0)
-; CHECK-NEXT:    lw a2, 1500(sp)
-; CHECK-NEXT:    lw a3, 1504(sp)
+; CHECK-NEXT:    lw a2, 1500(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1504(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 552(a0)
 ; CHECK-NEXT:    sw a3, 556(a0)
-; CHECK-NEXT:    lw a2, 1492(sp)
-; CHECK-NEXT:    lw a3, 1496(sp)
+; CHECK-NEXT:    lw a2, 1492(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1496(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 560(a0)
 ; CHECK-NEXT:    sw a3, 564(a0)
-; CHECK-NEXT:    lw a2, 1484(sp)
-; CHECK-NEXT:    lw a3, 1488(sp)
+; CHECK-NEXT:    lw a2, 1484(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1488(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 568(a0)
 ; CHECK-NEXT:    sw a3, 572(a0)
-; CHECK-NEXT:    lw a2, 1476(sp)
-; CHECK-NEXT:    lw a3, 1480(sp)
+; CHECK-NEXT:    lw a2, 1476(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1480(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 576(a0)
 ; CHECK-NEXT:    sw a3, 580(a0)
-; CHECK-NEXT:    lw a2, 1468(sp)
-; CHECK-NEXT:    lw a3, 1472(sp)
+; CHECK-NEXT:    lw a2, 1468(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1472(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 584(a0)
 ; CHECK-NEXT:    sw a3, 588(a0)
-; CHECK-NEXT:    lw a2, 1460(sp)
-; CHECK-NEXT:    lw a3, 1464(sp)
+; CHECK-NEXT:    lw a2, 1460(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1464(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 592(a0)
 ; CHECK-NEXT:    sw a3, 596(a0)
-; CHECK-NEXT:    lw a2, 1452(sp)
-; CHECK-NEXT:    lw a3, 1456(sp)
+; CHECK-NEXT:    lw a2, 1452(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1456(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 600(a0)
 ; CHECK-NEXT:    sw a3, 604(a0)
-; CHECK-NEXT:    lw a2, 1444(sp)
-; CHECK-NEXT:    lw a3, 1448(sp)
+; CHECK-NEXT:    lw a2, 1444(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1448(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 608(a0)
 ; CHECK-NEXT:    sw a3, 612(a0)
-; CHECK-NEXT:    lw a2, 1436(sp)
-; CHECK-NEXT:    lw a3, 1440(sp)
+; CHECK-NEXT:    lw a2, 1436(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1440(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 616(a0)
 ; CHECK-NEXT:    sw a3, 620(a0)
-; CHECK-NEXT:    lw a2, 1428(sp)
-; CHECK-NEXT:    lw a3, 1432(sp)
+; CHECK-NEXT:    lw a2, 1428(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1432(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 624(a0)
 ; CHECK-NEXT:    sw a3, 628(a0)
-; CHECK-NEXT:    lw a2, 1420(sp)
-; CHECK-NEXT:    lw a3, 1424(sp)
+; CHECK-NEXT:    lw a2, 1420(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1424(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 632(a0)
 ; CHECK-NEXT:    sw a3, 636(a0)
-; CHECK-NEXT:    lw a2, 1412(sp)
-; CHECK-NEXT:    lw a3, 1416(sp)
+; CHECK-NEXT:    lw a2, 1412(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1416(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 640(a0)
 ; CHECK-NEXT:    sw a3, 644(a0)
-; CHECK-NEXT:    lw a2, 1404(sp)
-; CHECK-NEXT:    lw a3, 1408(sp)
+; CHECK-NEXT:    lw a2, 1404(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1408(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 648(a0)
 ; CHECK-NEXT:    sw a3, 652(a0)
-; CHECK-NEXT:    lw a2, 1396(sp)
-; CHECK-NEXT:    lw a3, 1400(sp)
+; CHECK-NEXT:    lw a2, 1396(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1400(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 656(a0)
 ; CHECK-NEXT:    sw a3, 660(a0)
-; CHECK-NEXT:    lw a2, 1388(sp)
-; CHECK-NEXT:    lw a3, 1392(sp)
+; CHECK-NEXT:    lw a2, 1388(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1392(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 664(a0)
 ; CHECK-NEXT:    sw a3, 668(a0)
-; CHECK-NEXT:    lw a2, 1380(sp)
-; CHECK-NEXT:    lw a3, 1384(sp)
+; CHECK-NEXT:    lw a2, 1380(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1384(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 672(a0)
 ; CHECK-NEXT:    sw a3, 676(a0)
-; CHECK-NEXT:    lw a2, 1372(sp)
-; CHECK-NEXT:    lw a3, 1376(sp)
+; CHECK-NEXT:    lw a2, 1372(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1376(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 680(a0)
 ; CHECK-NEXT:    sw a3, 684(a0)
-; CHECK-NEXT:    lw a2, 1364(sp)
-; CHECK-NEXT:    lw a3, 1368(sp)
+; CHECK-NEXT:    lw a2, 1364(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1368(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 688(a0)
 ; CHECK-NEXT:    sw a3, 692(a0)
-; CHECK-NEXT:    lw a2, 1356(sp)
-; CHECK-NEXT:    lw a3, 1360(sp)
+; CHECK-NEXT:    lw a2, 1356(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1360(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 696(a0)
 ; CHECK-NEXT:    sw a3, 700(a0)
-; CHECK-NEXT:    lw a2, 1348(sp)
-; CHECK-NEXT:    lw a3, 1352(sp)
+; CHECK-NEXT:    lw a2, 1348(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1352(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 704(a0)
 ; CHECK-NEXT:    sw a3, 708(a0)
-; CHECK-NEXT:    lw a2, 1340(sp)
-; CHECK-NEXT:    lw a3, 1344(sp)
+; CHECK-NEXT:    lw a2, 1340(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1344(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 712(a0)
 ; CHECK-NEXT:    sw a3, 716(a0)
-; CHECK-NEXT:    lw a2, 1332(sp)
-; CHECK-NEXT:    lw a3, 1336(sp)
+; CHECK-NEXT:    lw a2, 1332(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1336(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 720(a0)
 ; CHECK-NEXT:    sw a3, 724(a0)
-; CHECK-NEXT:    lw a2, 1324(sp)
-; CHECK-NEXT:    lw a3, 1328(sp)
+; CHECK-NEXT:    lw a2, 1324(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1328(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 728(a0)
 ; CHECK-NEXT:    sw a3, 732(a0)
-; CHECK-NEXT:    lw a2, 1316(sp)
-; CHECK-NEXT:    lw a3, 1320(sp)
+; CHECK-NEXT:    lw a2, 1316(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1320(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 736(a0)
 ; CHECK-NEXT:    sw a3, 740(a0)
-; CHECK-NEXT:    lw a2, 1308(sp)
-; CHECK-NEXT:    lw a3, 1312(sp)
+; CHECK-NEXT:    lw a2, 1308(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1312(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 744(a0)
 ; CHECK-NEXT:    sw a3, 748(a0)
-; CHECK-NEXT:    lw a2, 1300(sp)
-; CHECK-NEXT:    lw a3, 1304(sp)
+; CHECK-NEXT:    lw a2, 1300(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1304(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 752(a0)
 ; CHECK-NEXT:    sw a3, 756(a0)
-; CHECK-NEXT:    lw a2, 1292(sp)
-; CHECK-NEXT:    lw a3, 1296(sp)
+; CHECK-NEXT:    lw a2, 1292(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1296(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 760(a0)
 ; CHECK-NEXT:    sw a3, 764(a0)
-; CHECK-NEXT:    lw a2, 1284(sp)
-; CHECK-NEXT:    lw a3, 1288(sp)
+; CHECK-NEXT:    lw a2, 1284(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1288(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 768(a0)
 ; CHECK-NEXT:    sw a3, 772(a0)
-; CHECK-NEXT:    lw a2, 1276(sp)
-; CHECK-NEXT:    lw a3, 1280(sp)
+; CHECK-NEXT:    lw a2, 1276(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1280(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 776(a0)
 ; CHECK-NEXT:    sw a3, 780(a0)
-; CHECK-NEXT:    lw a2, 1268(sp)
-; CHECK-NEXT:    lw a3, 1272(sp)
+; CHECK-NEXT:    lw a2, 1268(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1272(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 784(a0)
 ; CHECK-NEXT:    sw a3, 788(a0)
-; CHECK-NEXT:    lw a2, 1260(sp)
-; CHECK-NEXT:    lw a3, 1264(sp)
+; CHECK-NEXT:    lw a2, 1260(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1264(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 792(a0)
 ; CHECK-NEXT:    sw a3, 796(a0)
-; CHECK-NEXT:    lw a2, 1252(sp)
-; CHECK-NEXT:    lw a3, 1256(sp)
+; CHECK-NEXT:    lw a2, 1252(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1256(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 800(a0)
 ; CHECK-NEXT:    sw a3, 804(a0)
-; CHECK-NEXT:    lw a2, 1244(sp)
-; CHECK-NEXT:    lw a3, 1248(sp)
+; CHECK-NEXT:    lw a2, 1244(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1248(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 808(a0)
 ; CHECK-NEXT:    sw a3, 812(a0)
-; CHECK-NEXT:    lw a2, 1236(sp)
-; CHECK-NEXT:    lw a3, 1240(sp)
+; CHECK-NEXT:    lw a2, 1236(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1240(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 816(a0)
 ; CHECK-NEXT:    sw a3, 820(a0)
-; CHECK-NEXT:    lw a2, 1228(sp)
-; CHECK-NEXT:    lw a3, 1232(sp)
+; CHECK-NEXT:    lw a2, 1228(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1232(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 824(a0)
 ; CHECK-NEXT:    sw a3, 828(a0)
-; CHECK-NEXT:    lw a2, 1220(sp)
-; CHECK-NEXT:    lw a3, 1224(sp)
+; CHECK-NEXT:    lw a2, 1220(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1224(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 832(a0)
 ; CHECK-NEXT:    sw a3, 836(a0)
-; CHECK-NEXT:    lw a2, 1212(sp)
-; CHECK-NEXT:    lw a3, 1216(sp)
+; CHECK-NEXT:    lw a2, 1212(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1216(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 840(a0)
 ; CHECK-NEXT:    sw a3, 844(a0)
-; CHECK-NEXT:    lw a2, 1204(sp)
-; CHECK-NEXT:    lw a3, 1208(sp)
+; CHECK-NEXT:    lw a2, 1204(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1208(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 848(a0)
 ; CHECK-NEXT:    sw a3, 852(a0)
-; CHECK-NEXT:    lw a2, 1196(sp)
-; CHECK-NEXT:    lw a3, 1200(sp)
+; CHECK-NEXT:    lw a2, 1196(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1200(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 856(a0)
 ; CHECK-NEXT:    sw a3, 860(a0)
-; CHECK-NEXT:    lw a2, 1188(sp)
-; CHECK-NEXT:    lw a3, 1192(sp)
+; CHECK-NEXT:    lw a2, 1188(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1192(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 864(a0)
 ; CHECK-NEXT:    sw a3, 868(a0)
-; CHECK-NEXT:    lw a2, 1180(sp)
-; CHECK-NEXT:    lw a3, 1184(sp)
+; CHECK-NEXT:    lw a2, 1180(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1184(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 872(a0)
 ; CHECK-NEXT:    sw a3, 876(a0)
-; CHECK-NEXT:    lw a2, 1172(sp)
-; CHECK-NEXT:    lw a3, 1176(sp)
+; CHECK-NEXT:    lw a2, 1172(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1176(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 880(a0)
 ; CHECK-NEXT:    sw a3, 884(a0)
-; CHECK-NEXT:    lw a2, 1164(sp)
-; CHECK-NEXT:    lw a3, 1168(sp)
+; CHECK-NEXT:    lw a2, 1164(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1168(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 888(a0)
 ; CHECK-NEXT:    sw a3, 892(a0)
-; CHECK-NEXT:    lw a2, 1156(sp)
-; CHECK-NEXT:    lw a3, 1160(sp)
+; CHECK-NEXT:    lw a2, 1156(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1160(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 896(a0)
 ; CHECK-NEXT:    sw a3, 900(a0)
-; CHECK-NEXT:    lw a2, 1148(sp)
-; CHECK-NEXT:    lw a3, 1152(sp)
+; CHECK-NEXT:    lw a2, 1148(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1152(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 904(a0)
 ; CHECK-NEXT:    sw a3, 908(a0)
-; CHECK-NEXT:    lw a2, 1140(sp)
-; CHECK-NEXT:    lw a3, 1144(sp)
+; CHECK-NEXT:    lw a2, 1140(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1144(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 912(a0)
 ; CHECK-NEXT:    sw a3, 916(a0)
-; CHECK-NEXT:    lw a2, 1132(sp)
-; CHECK-NEXT:    lw a3, 1136(sp)
+; CHECK-NEXT:    lw a2, 1132(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1136(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 920(a0)
 ; CHECK-NEXT:    sw a3, 924(a0)
-; CHECK-NEXT:    lw a2, 1124(sp)
-; CHECK-NEXT:    lw a3, 1128(sp)
+; CHECK-NEXT:    lw a2, 1124(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1128(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 928(a0)
 ; CHECK-NEXT:    sw a3, 932(a0)
-; CHECK-NEXT:    lw a2, 1116(sp)
-; CHECK-NEXT:    lw a3, 1120(sp)
+; CHECK-NEXT:    lw a2, 1116(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1120(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 936(a0)
 ; CHECK-NEXT:    sw a3, 940(a0)
-; CHECK-NEXT:    lw a2, 1108(sp)
-; CHECK-NEXT:    lw a3, 1112(sp)
+; CHECK-NEXT:    lw a2, 1108(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1112(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 944(a0)
 ; CHECK-NEXT:    sw a3, 948(a0)
-; CHECK-NEXT:    lw a2, 1100(sp)
-; CHECK-NEXT:    lw a3, 1104(sp)
+; CHECK-NEXT:    lw a2, 1100(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1104(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 952(a0)
 ; CHECK-NEXT:    sw a3, 956(a0)
-; CHECK-NEXT:    lw a2, 1092(sp)
-; CHECK-NEXT:    lw a3, 1096(sp)
+; CHECK-NEXT:    lw a2, 1092(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1096(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 960(a0)
 ; CHECK-NEXT:    sw a3, 964(a0)
-; CHECK-NEXT:    lw a2, 1084(sp)
-; CHECK-NEXT:    lw a3, 1088(sp)
+; CHECK-NEXT:    lw a2, 1084(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1088(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 968(a0)
 ; CHECK-NEXT:    sw a3, 972(a0)
-; CHECK-NEXT:    lw a2, 1076(sp)
-; CHECK-NEXT:    lw a3, 1080(sp)
+; CHECK-NEXT:    lw a2, 1076(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1080(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 976(a0)
 ; CHECK-NEXT:    sw a3, 980(a0)
-; CHECK-NEXT:    lw a2, 1068(sp)
-; CHECK-NEXT:    lw a3, 1072(sp)
+; CHECK-NEXT:    lw a2, 1068(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1072(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 984(a0)
 ; CHECK-NEXT:    sw a3, 988(a0)
-; CHECK-NEXT:    lw a2, 1060(sp)
-; CHECK-NEXT:    lw a3, 1064(sp)
+; CHECK-NEXT:    lw a2, 1060(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1064(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 992(a0)
 ; CHECK-NEXT:    sw a3, 996(a0)
-; CHECK-NEXT:    lw a2, 1052(sp)
-; CHECK-NEXT:    lw a3, 1056(sp)
+; CHECK-NEXT:    lw a2, 1052(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1056(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1000(a0)
 ; CHECK-NEXT:    sw a3, 1004(a0)
-; CHECK-NEXT:    lw a2, 1044(sp)
-; CHECK-NEXT:    lw a3, 1048(sp)
+; CHECK-NEXT:    lw a2, 1044(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1048(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1008(a0)
 ; CHECK-NEXT:    sw a3, 1012(a0)
-; CHECK-NEXT:    lw a2, 1036(sp)
-; CHECK-NEXT:    lw a3, 1040(sp)
+; CHECK-NEXT:    lw a2, 1036(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1040(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1016(a0)
 ; CHECK-NEXT:    sw a3, 1020(a0)
-; CHECK-NEXT:    lw a2, 1028(sp)
-; CHECK-NEXT:    lw a3, 1032(sp)
+; CHECK-NEXT:    lw a2, 1028(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1032(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1024(a0)
 ; CHECK-NEXT:    sw a3, 1028(a0)
-; CHECK-NEXT:    lw a2, 1020(sp)
-; CHECK-NEXT:    lw a3, 1024(sp)
+; CHECK-NEXT:    lw a2, 1020(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1024(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1032(a0)
 ; CHECK-NEXT:    sw a3, 1036(a0)
-; CHECK-NEXT:    lw a2, 1012(sp)
-; CHECK-NEXT:    lw a3, 1016(sp)
+; CHECK-NEXT:    lw a2, 1012(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1016(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1040(a0)
 ; CHECK-NEXT:    sw a3, 1044(a0)
-; CHECK-NEXT:    lw a2, 1004(sp)
-; CHECK-NEXT:    lw a3, 1008(sp)
+; CHECK-NEXT:    lw a2, 1004(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1008(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1048(a0)
 ; CHECK-NEXT:    sw a3, 1052(a0)
-; CHECK-NEXT:    lw a2, 996(sp)
-; CHECK-NEXT:    lw a3, 1000(sp)
+; CHECK-NEXT:    lw a2, 996(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 1000(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1056(a0)
 ; CHECK-NEXT:    sw a3, 1060(a0)
-; CHECK-NEXT:    lw a2, 988(sp)
-; CHECK-NEXT:    lw a3, 992(sp)
+; CHECK-NEXT:    lw a2, 988(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 992(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1064(a0)
 ; CHECK-NEXT:    sw a3, 1068(a0)
-; CHECK-NEXT:    lw a2, 980(sp)
-; CHECK-NEXT:    lw a3, 984(sp)
+; CHECK-NEXT:    lw a2, 980(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 984(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1072(a0)
 ; CHECK-NEXT:    sw a3, 1076(a0)
-; CHECK-NEXT:    lw a2, 972(sp)
-; CHECK-NEXT:    lw a3, 976(sp)
+; CHECK-NEXT:    lw a2, 972(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 976(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1080(a0)
 ; CHECK-NEXT:    sw a3, 1084(a0)
-; CHECK-NEXT:    lw a2, 964(sp)
-; CHECK-NEXT:    lw a3, 968(sp)
+; CHECK-NEXT:    lw a2, 964(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 968(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1088(a0)
 ; CHECK-NEXT:    sw a3, 1092(a0)
-; CHECK-NEXT:    lw a2, 956(sp)
-; CHECK-NEXT:    lw a3, 960(sp)
+; CHECK-NEXT:    lw a2, 956(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 960(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1096(a0)
 ; CHECK-NEXT:    sw a3, 1100(a0)
-; CHECK-NEXT:    lw a2, 948(sp)
-; CHECK-NEXT:    lw a3, 952(sp)
+; CHECK-NEXT:    lw a2, 948(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 952(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1104(a0)
 ; CHECK-NEXT:    sw a3, 1108(a0)
-; CHECK-NEXT:    lw a2, 940(sp)
-; CHECK-NEXT:    lw a3, 944(sp)
+; CHECK-NEXT:    lw a2, 940(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 944(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1112(a0)
 ; CHECK-NEXT:    sw a3, 1116(a0)
-; CHECK-NEXT:    lw a2, 932(sp)
-; CHECK-NEXT:    lw a3, 936(sp)
+; CHECK-NEXT:    lw a2, 932(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 936(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1120(a0)
 ; CHECK-NEXT:    sw a3, 1124(a0)
-; CHECK-NEXT:    lw a2, 924(sp)
-; CHECK-NEXT:    lw a3, 928(sp)
+; CHECK-NEXT:    lw a2, 924(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 928(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1128(a0)
 ; CHECK-NEXT:    sw a3, 1132(a0)
-; CHECK-NEXT:    lw a2, 916(sp)
-; CHECK-NEXT:    lw a3, 920(sp)
+; CHECK-NEXT:    lw a2, 916(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 920(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1136(a0)
 ; CHECK-NEXT:    sw a3, 1140(a0)
-; CHECK-NEXT:    lw a2, 908(sp)
-; CHECK-NEXT:    lw a3, 912(sp)
+; CHECK-NEXT:    lw a2, 908(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 912(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1144(a0)
 ; CHECK-NEXT:    sw a3, 1148(a0)
-; CHECK-NEXT:    lw a2, 900(sp)
-; CHECK-NEXT:    lw a3, 904(sp)
+; CHECK-NEXT:    lw a2, 900(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 904(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1152(a0)
 ; CHECK-NEXT:    sw a3, 1156(a0)
-; CHECK-NEXT:    lw a2, 892(sp)
-; CHECK-NEXT:    lw a3, 896(sp)
+; CHECK-NEXT:    lw a2, 892(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 896(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1160(a0)
 ; CHECK-NEXT:    sw a3, 1164(a0)
-; CHECK-NEXT:    lw a2, 884(sp)
-; CHECK-NEXT:    lw a3, 888(sp)
+; CHECK-NEXT:    lw a2, 884(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 888(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1168(a0)
 ; CHECK-NEXT:    sw a3, 1172(a0)
-; CHECK-NEXT:    lw a2, 876(sp)
-; CHECK-NEXT:    lw a3, 880(sp)
+; CHECK-NEXT:    lw a2, 876(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 880(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1176(a0)
 ; CHECK-NEXT:    sw a3, 1180(a0)
-; CHECK-NEXT:    lw a2, 868(sp)
-; CHECK-NEXT:    lw a3, 872(sp)
+; CHECK-NEXT:    lw a2, 868(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 872(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1184(a0)
 ; CHECK-NEXT:    sw a3, 1188(a0)
-; CHECK-NEXT:    lw a2, 860(sp)
-; CHECK-NEXT:    lw a3, 864(sp)
+; CHECK-NEXT:    lw a2, 860(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 864(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1192(a0)
 ; CHECK-NEXT:    sw a3, 1196(a0)
-; CHECK-NEXT:    lw a2, 852(sp)
-; CHECK-NEXT:    lw a3, 856(sp)
+; CHECK-NEXT:    lw a2, 852(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 856(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1200(a0)
 ; CHECK-NEXT:    sw a3, 1204(a0)
-; CHECK-NEXT:    lw a2, 844(sp)
-; CHECK-NEXT:    lw a3, 848(sp)
+; CHECK-NEXT:    lw a2, 844(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 848(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1208(a0)
 ; CHECK-NEXT:    sw a3, 1212(a0)
-; CHECK-NEXT:    lw a2, 836(sp)
-; CHECK-NEXT:    lw a3, 840(sp)
+; CHECK-NEXT:    lw a2, 836(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 840(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1216(a0)
 ; CHECK-NEXT:    sw a3, 1220(a0)
-; CHECK-NEXT:    lw a2, 828(sp)
-; CHECK-NEXT:    lw a3, 832(sp)
+; CHECK-NEXT:    lw a2, 828(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 832(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1224(a0)
 ; CHECK-NEXT:    sw a3, 1228(a0)
-; CHECK-NEXT:    lw a2, 820(sp)
-; CHECK-NEXT:    lw a3, 824(sp)
+; CHECK-NEXT:    lw a2, 820(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 824(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1232(a0)
 ; CHECK-NEXT:    sw a3, 1236(a0)
-; CHECK-NEXT:    lw a2, 812(sp)
-; CHECK-NEXT:    lw a3, 816(sp)
+; CHECK-NEXT:    lw a2, 812(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 816(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1240(a0)
 ; CHECK-NEXT:    sw a3, 1244(a0)
-; CHECK-NEXT:    lw a2, 804(sp)
-; CHECK-NEXT:    lw a3, 808(sp)
+; CHECK-NEXT:    lw a2, 804(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 808(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1248(a0)
 ; CHECK-NEXT:    sw a3, 1252(a0)
-; CHECK-NEXT:    lw a2, 796(sp)
-; CHECK-NEXT:    lw a3, 800(sp)
+; CHECK-NEXT:    lw a2, 796(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 800(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1256(a0)
 ; CHECK-NEXT:    sw a3, 1260(a0)
-; CHECK-NEXT:    lw a2, 788(sp)
-; CHECK-NEXT:    lw a3, 792(sp)
+; CHECK-NEXT:    lw a2, 788(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 792(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1264(a0)
 ; CHECK-NEXT:    sw a3, 1268(a0)
-; CHECK-NEXT:    lw a2, 780(sp)
-; CHECK-NEXT:    lw a3, 784(sp)
+; CHECK-NEXT:    lw a2, 780(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 784(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1272(a0)
 ; CHECK-NEXT:    sw a3, 1276(a0)
-; CHECK-NEXT:    lw a2, 772(sp)
-; CHECK-NEXT:    lw a3, 776(sp)
+; CHECK-NEXT:    lw a2, 772(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 776(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1280(a0)
 ; CHECK-NEXT:    sw a3, 1284(a0)
-; CHECK-NEXT:    lw a2, 764(sp)
-; CHECK-NEXT:    lw a3, 768(sp)
+; CHECK-NEXT:    lw a2, 764(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 768(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1288(a0)
 ; CHECK-NEXT:    sw a3, 1292(a0)
-; CHECK-NEXT:    lw a2, 756(sp)
-; CHECK-NEXT:    lw a3, 760(sp)
+; CHECK-NEXT:    lw a2, 756(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 760(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1296(a0)
 ; CHECK-NEXT:    sw a3, 1300(a0)
-; CHECK-NEXT:    lw a2, 748(sp)
-; CHECK-NEXT:    lw a3, 752(sp)
+; CHECK-NEXT:    lw a2, 748(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 752(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1304(a0)
 ; CHECK-NEXT:    sw a3, 1308(a0)
-; CHECK-NEXT:    lw a2, 740(sp)
-; CHECK-NEXT:    lw a3, 744(sp)
+; CHECK-NEXT:    lw a2, 740(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 744(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1312(a0)
 ; CHECK-NEXT:    sw a3, 1316(a0)
-; CHECK-NEXT:    lw a2, 732(sp)
-; CHECK-NEXT:    lw a3, 736(sp)
+; CHECK-NEXT:    lw a2, 732(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 736(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1320(a0)
 ; CHECK-NEXT:    sw a3, 1324(a0)
-; CHECK-NEXT:    lw a2, 724(sp)
-; CHECK-NEXT:    lw a3, 728(sp)
+; CHECK-NEXT:    lw a2, 724(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 728(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1328(a0)
 ; CHECK-NEXT:    sw a3, 1332(a0)
-; CHECK-NEXT:    lw a2, 716(sp)
-; CHECK-NEXT:    lw a3, 720(sp)
+; CHECK-NEXT:    lw a2, 716(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 720(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1336(a0)
 ; CHECK-NEXT:    sw a3, 1340(a0)
-; CHECK-NEXT:    lw a2, 708(sp)
-; CHECK-NEXT:    lw a3, 712(sp)
+; CHECK-NEXT:    lw a2, 708(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 712(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1344(a0)
 ; CHECK-NEXT:    sw a3, 1348(a0)
-; CHECK-NEXT:    lw a2, 700(sp)
-; CHECK-NEXT:    lw a3, 704(sp)
+; CHECK-NEXT:    lw a2, 700(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 704(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1352(a0)
 ; CHECK-NEXT:    sw a3, 1356(a0)
-; CHECK-NEXT:    lw a2, 692(sp)
-; CHECK-NEXT:    lw a3, 696(sp)
+; CHECK-NEXT:    lw a2, 692(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 696(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1360(a0)
 ; CHECK-NEXT:    sw a3, 1364(a0)
-; CHECK-NEXT:    lw a2, 684(sp)
-; CHECK-NEXT:    lw a3, 688(sp)
+; CHECK-NEXT:    lw a2, 684(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 688(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1368(a0)
 ; CHECK-NEXT:    sw a3, 1372(a0)
-; CHECK-NEXT:    lw a2, 676(sp)
-; CHECK-NEXT:    lw a3, 680(sp)
+; CHECK-NEXT:    lw a2, 676(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 680(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1376(a0)
 ; CHECK-NEXT:    sw a3, 1380(a0)
-; CHECK-NEXT:    lw a2, 668(sp)
-; CHECK-NEXT:    lw a3, 672(sp)
+; CHECK-NEXT:    lw a2, 668(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 672(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1384(a0)
 ; CHECK-NEXT:    sw a3, 1388(a0)
-; CHECK-NEXT:    lw a2, 660(sp)
-; CHECK-NEXT:    lw a3, 664(sp)
+; CHECK-NEXT:    lw a2, 660(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 664(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1392(a0)
 ; CHECK-NEXT:    sw a3, 1396(a0)
-; CHECK-NEXT:    lw a2, 652(sp)
-; CHECK-NEXT:    lw a3, 656(sp)
+; CHECK-NEXT:    lw a2, 652(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 656(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1400(a0)
 ; CHECK-NEXT:    sw a3, 1404(a0)
-; CHECK-NEXT:    lw a2, 644(sp)
-; CHECK-NEXT:    lw a3, 648(sp)
+; CHECK-NEXT:    lw a2, 644(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 648(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1408(a0)
 ; CHECK-NEXT:    sw a3, 1412(a0)
-; CHECK-NEXT:    lw a2, 636(sp)
-; CHECK-NEXT:    lw a3, 640(sp)
+; CHECK-NEXT:    lw a2, 636(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 640(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1416(a0)
 ; CHECK-NEXT:    sw a3, 1420(a0)
-; CHECK-NEXT:    lw a2, 628(sp)
-; CHECK-NEXT:    lw a3, 632(sp)
+; CHECK-NEXT:    lw a2, 628(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 632(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1424(a0)
 ; CHECK-NEXT:    sw a3, 1428(a0)
-; CHECK-NEXT:    lw a2, 620(sp)
-; CHECK-NEXT:    lw a3, 624(sp)
+; CHECK-NEXT:    lw a2, 620(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 624(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1432(a0)
 ; CHECK-NEXT:    sw a3, 1436(a0)
-; CHECK-NEXT:    lw a2, 612(sp)
-; CHECK-NEXT:    lw a3, 616(sp)
+; CHECK-NEXT:    lw a2, 612(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 616(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1440(a0)
 ; CHECK-NEXT:    sw a3, 1444(a0)
-; CHECK-NEXT:    lw a2, 604(sp)
-; CHECK-NEXT:    lw a3, 608(sp)
+; CHECK-NEXT:    lw a2, 604(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 608(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1448(a0)
 ; CHECK-NEXT:    sw a3, 1452(a0)
-; CHECK-NEXT:    lw a2, 596(sp)
-; CHECK-NEXT:    lw a3, 600(sp)
+; CHECK-NEXT:    lw a2, 596(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 600(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1456(a0)
 ; CHECK-NEXT:    sw a3, 1460(a0)
-; CHECK-NEXT:    lw a2, 588(sp)
-; CHECK-NEXT:    lw a3, 592(sp)
+; CHECK-NEXT:    lw a2, 588(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 592(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1464(a0)
 ; CHECK-NEXT:    sw a3, 1468(a0)
-; CHECK-NEXT:    lw a2, 580(sp)
-; CHECK-NEXT:    lw a3, 584(sp)
+; CHECK-NEXT:    lw a2, 580(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 584(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1472(a0)
 ; CHECK-NEXT:    sw a3, 1476(a0)
-; CHECK-NEXT:    lw a2, 572(sp)
-; CHECK-NEXT:    lw a3, 576(sp)
+; CHECK-NEXT:    lw a2, 572(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 576(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1480(a0)
 ; CHECK-NEXT:    sw a3, 1484(a0)
-; CHECK-NEXT:    lw a2, 564(sp)
-; CHECK-NEXT:    lw a3, 568(sp)
+; CHECK-NEXT:    lw a2, 564(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 568(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1488(a0)
 ; CHECK-NEXT:    sw a3, 1492(a0)
-; CHECK-NEXT:    lw a2, 556(sp)
-; CHECK-NEXT:    lw a3, 560(sp)
+; CHECK-NEXT:    lw a2, 556(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 560(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1496(a0)
 ; CHECK-NEXT:    sw a3, 1500(a0)
-; CHECK-NEXT:    lw a2, 548(sp)
-; CHECK-NEXT:    lw a3, 552(sp)
+; CHECK-NEXT:    lw a2, 548(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 552(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1504(a0)
 ; CHECK-NEXT:    sw a3, 1508(a0)
-; CHECK-NEXT:    lw a2, 540(sp)
-; CHECK-NEXT:    lw a3, 544(sp)
+; CHECK-NEXT:    lw a2, 540(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 544(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1512(a0)
 ; CHECK-NEXT:    sw a3, 1516(a0)
-; CHECK-NEXT:    lw a2, 532(sp)
-; CHECK-NEXT:    lw a3, 536(sp)
+; CHECK-NEXT:    lw a2, 532(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 536(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1520(a0)
 ; CHECK-NEXT:    sw a3, 1524(a0)
-; CHECK-NEXT:    lw a2, 524(sp)
-; CHECK-NEXT:    lw a3, 528(sp)
+; CHECK-NEXT:    lw a2, 524(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 528(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1528(a0)
 ; CHECK-NEXT:    sw a3, 1532(a0)
-; CHECK-NEXT:    lw a2, 516(sp)
-; CHECK-NEXT:    lw a3, 520(sp)
+; CHECK-NEXT:    lw a2, 516(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 520(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1536(a0)
 ; CHECK-NEXT:    sw a3, 1540(a0)
-; CHECK-NEXT:    lw a2, 508(sp)
-; CHECK-NEXT:    lw a3, 512(sp)
+; CHECK-NEXT:    lw a2, 508(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 512(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1544(a0)
 ; CHECK-NEXT:    sw a3, 1548(a0)
-; CHECK-NEXT:    lw a2, 500(sp)
-; CHECK-NEXT:    lw a3, 504(sp)
+; CHECK-NEXT:    lw a2, 500(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 504(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1552(a0)
 ; CHECK-NEXT:    sw a3, 1556(a0)
-; CHECK-NEXT:    lw a2, 492(sp)
-; CHECK-NEXT:    lw a3, 496(sp)
+; CHECK-NEXT:    lw a2, 492(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 496(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1560(a0)
 ; CHECK-NEXT:    sw a3, 1564(a0)
-; CHECK-NEXT:    lw a2, 484(sp)
-; CHECK-NEXT:    lw a3, 488(sp)
+; CHECK-NEXT:    lw a2, 484(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 488(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1568(a0)
 ; CHECK-NEXT:    sw a3, 1572(a0)
-; CHECK-NEXT:    lw a2, 476(sp)
-; CHECK-NEXT:    lw a3, 480(sp)
+; CHECK-NEXT:    lw a2, 476(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 480(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1576(a0)
 ; CHECK-NEXT:    sw a3, 1580(a0)
-; CHECK-NEXT:    lw a2, 468(sp)
-; CHECK-NEXT:    lw a3, 472(sp)
+; CHECK-NEXT:    lw a2, 468(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 472(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1584(a0)
 ; CHECK-NEXT:    sw a3, 1588(a0)
-; CHECK-NEXT:    lw a2, 460(sp)
-; CHECK-NEXT:    lw a3, 464(sp)
+; CHECK-NEXT:    lw a2, 460(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 464(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1592(a0)
 ; CHECK-NEXT:    sw a3, 1596(a0)
-; CHECK-NEXT:    lw a2, 452(sp)
-; CHECK-NEXT:    lw a3, 456(sp)
+; CHECK-NEXT:    lw a2, 452(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 456(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1600(a0)
 ; CHECK-NEXT:    sw a3, 1604(a0)
-; CHECK-NEXT:    lw a2, 444(sp)
-; CHECK-NEXT:    lw a3, 448(sp)
+; CHECK-NEXT:    lw a2, 444(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 448(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1608(a0)
 ; CHECK-NEXT:    sw a3, 1612(a0)
-; CHECK-NEXT:    lw a2, 436(sp)
-; CHECK-NEXT:    lw a3, 440(sp)
+; CHECK-NEXT:    lw a2, 436(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 440(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1616(a0)
 ; CHECK-NEXT:    sw a3, 1620(a0)
-; CHECK-NEXT:    lw a2, 428(sp)
-; CHECK-NEXT:    lw a3, 432(sp)
+; CHECK-NEXT:    lw a2, 428(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 432(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1624(a0)
 ; CHECK-NEXT:    sw a3, 1628(a0)
-; CHECK-NEXT:    lw a2, 420(sp)
-; CHECK-NEXT:    lw a3, 424(sp)
+; CHECK-NEXT:    lw a2, 420(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 424(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1632(a0)
 ; CHECK-NEXT:    sw a3, 1636(a0)
-; CHECK-NEXT:    lw a2, 412(sp)
-; CHECK-NEXT:    lw a3, 416(sp)
+; CHECK-NEXT:    lw a2, 412(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 416(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1640(a0)
 ; CHECK-NEXT:    sw a3, 1644(a0)
-; CHECK-NEXT:    lw a2, 404(sp)
-; CHECK-NEXT:    lw a3, 408(sp)
+; CHECK-NEXT:    lw a2, 404(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 408(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1648(a0)
 ; CHECK-NEXT:    sw a3, 1652(a0)
-; CHECK-NEXT:    lw a2, 396(sp)
-; CHECK-NEXT:    lw a3, 400(sp)
+; CHECK-NEXT:    lw a2, 396(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 400(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1656(a0)
 ; CHECK-NEXT:    sw a3, 1660(a0)
-; CHECK-NEXT:    lw a2, 388(sp)
-; CHECK-NEXT:    lw a3, 392(sp)
+; CHECK-NEXT:    lw a2, 388(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 392(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1664(a0)
 ; CHECK-NEXT:    sw a3, 1668(a0)
-; CHECK-NEXT:    lw a2, 380(sp)
-; CHECK-NEXT:    lw a3, 384(sp)
+; CHECK-NEXT:    lw a2, 380(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 384(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1672(a0)
 ; CHECK-NEXT:    sw a3, 1676(a0)
-; CHECK-NEXT:    lw a2, 372(sp)
-; CHECK-NEXT:    lw a3, 376(sp)
+; CHECK-NEXT:    lw a2, 372(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 376(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1680(a0)
 ; CHECK-NEXT:    sw a3, 1684(a0)
-; CHECK-NEXT:    lw a2, 364(sp)
-; CHECK-NEXT:    lw a3, 368(sp)
+; CHECK-NEXT:    lw a2, 364(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 368(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1688(a0)
 ; CHECK-NEXT:    sw a3, 1692(a0)
-; CHECK-NEXT:    lw a2, 356(sp)
-; CHECK-NEXT:    lw a3, 360(sp)
+; CHECK-NEXT:    lw a2, 356(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 360(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1696(a0)
 ; CHECK-NEXT:    sw a3, 1700(a0)
-; CHECK-NEXT:    lw a2, 348(sp)
-; CHECK-NEXT:    lw a3, 352(sp)
+; CHECK-NEXT:    lw a2, 348(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 352(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1704(a0)
 ; CHECK-NEXT:    sw a3, 1708(a0)
-; CHECK-NEXT:    lw a2, 340(sp)
-; CHECK-NEXT:    lw a3, 344(sp)
+; CHECK-NEXT:    lw a2, 340(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 344(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1712(a0)
 ; CHECK-NEXT:    sw a3, 1716(a0)
-; CHECK-NEXT:    lw a2, 332(sp)
-; CHECK-NEXT:    lw a3, 336(sp)
+; CHECK-NEXT:    lw a2, 332(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 336(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1720(a0)
 ; CHECK-NEXT:    sw a3, 1724(a0)
-; CHECK-NEXT:    lw a2, 324(sp)
-; CHECK-NEXT:    lw a3, 328(sp)
+; CHECK-NEXT:    lw a2, 324(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 328(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1728(a0)
 ; CHECK-NEXT:    sw a3, 1732(a0)
-; CHECK-NEXT:    lw a2, 316(sp)
-; CHECK-NEXT:    lw a3, 320(sp)
+; CHECK-NEXT:    lw a2, 316(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 320(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1736(a0)
 ; CHECK-NEXT:    sw a3, 1740(a0)
-; CHECK-NEXT:    lw a2, 308(sp)
-; CHECK-NEXT:    lw a3, 312(sp)
+; CHECK-NEXT:    lw a2, 308(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 312(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1744(a0)
 ; CHECK-NEXT:    sw a3, 1748(a0)
-; CHECK-NEXT:    lw a2, 300(sp)
-; CHECK-NEXT:    lw a3, 304(sp)
+; CHECK-NEXT:    lw a2, 300(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 304(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1752(a0)
 ; CHECK-NEXT:    sw a3, 1756(a0)
-; CHECK-NEXT:    lw a2, 292(sp)
-; CHECK-NEXT:    lw a3, 296(sp)
+; CHECK-NEXT:    lw a2, 292(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 296(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1760(a0)
 ; CHECK-NEXT:    sw a3, 1764(a0)
-; CHECK-NEXT:    lw a2, 284(sp)
-; CHECK-NEXT:    lw a3, 288(sp)
+; CHECK-NEXT:    lw a2, 284(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 288(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1768(a0)
 ; CHECK-NEXT:    sw a3, 1772(a0)
-; CHECK-NEXT:    lw a2, 276(sp)
-; CHECK-NEXT:    lw a3, 280(sp)
+; CHECK-NEXT:    lw a2, 276(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 280(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1776(a0)
 ; CHECK-NEXT:    sw a3, 1780(a0)
-; CHECK-NEXT:    lw a2, 268(sp)
-; CHECK-NEXT:    lw a3, 272(sp)
+; CHECK-NEXT:    lw a2, 268(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 272(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1784(a0)
 ; CHECK-NEXT:    sw a3, 1788(a0)
-; CHECK-NEXT:    lw a2, 260(sp)
-; CHECK-NEXT:    lw a3, 264(sp)
+; CHECK-NEXT:    lw a2, 260(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 264(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1792(a0)
 ; CHECK-NEXT:    sw a3, 1796(a0)
-; CHECK-NEXT:    lw a2, 252(sp)
-; CHECK-NEXT:    lw a3, 256(sp)
+; CHECK-NEXT:    lw a2, 252(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 256(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1800(a0)
 ; CHECK-NEXT:    sw a3, 1804(a0)
-; CHECK-NEXT:    lw a2, 244(sp)
-; CHECK-NEXT:    lw a3, 248(sp)
+; CHECK-NEXT:    lw a2, 244(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 248(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1808(a0)
 ; CHECK-NEXT:    sw a3, 1812(a0)
-; CHECK-NEXT:    lw a2, 236(sp)
-; CHECK-NEXT:    lw a3, 240(sp)
+; CHECK-NEXT:    lw a2, 236(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 240(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1816(a0)
 ; CHECK-NEXT:    sw a3, 1820(a0)
-; CHECK-NEXT:    lw a2, 228(sp)
-; CHECK-NEXT:    lw a3, 232(sp)
+; CHECK-NEXT:    lw a2, 228(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 232(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1824(a0)
 ; CHECK-NEXT:    sw a3, 1828(a0)
-; CHECK-NEXT:    lw a2, 220(sp)
-; CHECK-NEXT:    lw a3, 224(sp)
+; CHECK-NEXT:    lw a2, 220(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 224(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1832(a0)
 ; CHECK-NEXT:    sw a3, 1836(a0)
-; CHECK-NEXT:    lw a2, 212(sp)
-; CHECK-NEXT:    lw a3, 216(sp)
+; CHECK-NEXT:    lw a2, 212(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 216(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1840(a0)
 ; CHECK-NEXT:    sw a3, 1844(a0)
-; CHECK-NEXT:    lw a2, 204(sp)
-; CHECK-NEXT:    lw a3, 208(sp)
+; CHECK-NEXT:    lw a2, 204(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 208(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1848(a0)
 ; CHECK-NEXT:    sw a3, 1852(a0)
-; CHECK-NEXT:    lw a2, 196(sp)
-; CHECK-NEXT:    lw a3, 200(sp)
+; CHECK-NEXT:    lw a2, 196(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 200(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1856(a0)
 ; CHECK-NEXT:    sw a3, 1860(a0)
-; CHECK-NEXT:    lw a2, 188(sp)
-; CHECK-NEXT:    lw a3, 192(sp)
+; CHECK-NEXT:    lw a2, 188(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 192(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1864(a0)
 ; CHECK-NEXT:    sw a3, 1868(a0)
-; CHECK-NEXT:    lw a2, 180(sp)
-; CHECK-NEXT:    lw a3, 184(sp)
+; CHECK-NEXT:    lw a2, 180(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 184(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1872(a0)
 ; CHECK-NEXT:    sw a3, 1876(a0)
-; CHECK-NEXT:    lw a2, 172(sp)
-; CHECK-NEXT:    lw a3, 176(sp)
+; CHECK-NEXT:    lw a2, 172(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 176(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1880(a0)
 ; CHECK-NEXT:    sw a3, 1884(a0)
-; CHECK-NEXT:    lw a2, 164(sp)
-; CHECK-NEXT:    lw a3, 168(sp)
+; CHECK-NEXT:    lw a2, 164(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 168(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1888(a0)
 ; CHECK-NEXT:    sw a3, 1892(a0)
-; CHECK-NEXT:    lw a2, 156(sp)
-; CHECK-NEXT:    lw a3, 160(sp)
+; CHECK-NEXT:    lw a2, 156(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 160(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1896(a0)
 ; CHECK-NEXT:    sw a3, 1900(a0)
-; CHECK-NEXT:    lw a2, 148(sp)
-; CHECK-NEXT:    lw a3, 152(sp)
+; CHECK-NEXT:    lw a2, 148(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 152(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1904(a0)
 ; CHECK-NEXT:    sw a3, 1908(a0)
-; CHECK-NEXT:    lw a2, 140(sp)
-; CHECK-NEXT:    lw a3, 144(sp)
+; CHECK-NEXT:    lw a2, 140(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 144(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1912(a0)
 ; CHECK-NEXT:    sw a3, 1916(a0)
-; CHECK-NEXT:    lw a2, 132(sp)
-; CHECK-NEXT:    lw a3, 136(sp)
+; CHECK-NEXT:    lw a2, 132(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 136(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1920(a0)
 ; CHECK-NEXT:    sw a3, 1924(a0)
-; CHECK-NEXT:    lw a2, 124(sp)
-; CHECK-NEXT:    lw a3, 128(sp)
+; CHECK-NEXT:    lw a2, 124(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 128(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1928(a0)
 ; CHECK-NEXT:    sw a3, 1932(a0)
-; CHECK-NEXT:    lw a2, 116(sp)
-; CHECK-NEXT:    lw a3, 120(sp)
+; CHECK-NEXT:    lw a2, 116(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 120(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1936(a0)
 ; CHECK-NEXT:    sw a3, 1940(a0)
-; CHECK-NEXT:    lw a2, 108(sp)
-; CHECK-NEXT:    lw a3, 112(sp)
+; CHECK-NEXT:    lw a2, 108(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 112(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1944(a0)
 ; CHECK-NEXT:    sw a3, 1948(a0)
-; CHECK-NEXT:    lw a2, 100(sp)
-; CHECK-NEXT:    lw a3, 104(sp)
+; CHECK-NEXT:    lw a2, 100(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 104(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1952(a0)
 ; CHECK-NEXT:    sw a3, 1956(a0)
-; CHECK-NEXT:    lw a2, 92(sp)
-; CHECK-NEXT:    lw a3, 96(sp)
+; CHECK-NEXT:    lw a2, 92(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 96(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1960(a0)
 ; CHECK-NEXT:    sw a3, 1964(a0)
-; CHECK-NEXT:    lw a2, 84(sp)
-; CHECK-NEXT:    lw a3, 88(sp)
+; CHECK-NEXT:    lw a2, 84(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 88(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1968(a0)
 ; CHECK-NEXT:    sw a3, 1972(a0)
-; CHECK-NEXT:    lw a2, 76(sp)
-; CHECK-NEXT:    lw a3, 80(sp)
+; CHECK-NEXT:    lw a2, 76(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 80(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1976(a0)
 ; CHECK-NEXT:    sw a3, 1980(a0)
-; CHECK-NEXT:    lw a2, 68(sp)
-; CHECK-NEXT:    lw a3, 72(sp)
+; CHECK-NEXT:    lw a2, 68(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 72(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1984(a0)
 ; CHECK-NEXT:    sw a3, 1988(a0)
-; CHECK-NEXT:    lw a2, 60(sp)
-; CHECK-NEXT:    lw a3, 64(sp)
+; CHECK-NEXT:    lw a2, 60(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 64(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 1992(a0)
 ; CHECK-NEXT:    sw a3, 1996(a0)
-; CHECK-NEXT:    lw a2, 52(sp)
-; CHECK-NEXT:    lw a3, 56(sp)
+; CHECK-NEXT:    lw a2, 52(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 56(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2000(a0)
 ; CHECK-NEXT:    sw a3, 2004(a0)
-; CHECK-NEXT:    lw a2, 44(sp)
-; CHECK-NEXT:    lw a3, 48(sp)
+; CHECK-NEXT:    lw a2, 44(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 48(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2008(a0)
 ; CHECK-NEXT:    sw a3, 2012(a0)
-; CHECK-NEXT:    lw a2, 36(sp)
-; CHECK-NEXT:    lw a3, 40(sp)
+; CHECK-NEXT:    lw a2, 36(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 40(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2016(a0)
 ; CHECK-NEXT:    sw a3, 2020(a0)
-; CHECK-NEXT:    lw a2, 28(sp)
-; CHECK-NEXT:    lw a3, 32(sp)
+; CHECK-NEXT:    lw a2, 28(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 32(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2024(a0)
 ; CHECK-NEXT:    sw a3, 2028(a0)
-; CHECK-NEXT:    lw a2, 20(sp)
-; CHECK-NEXT:    lw a3, 24(sp)
+; CHECK-NEXT:    lw a2, 20(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 24(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2032(a0)
 ; CHECK-NEXT:    sw a3, 2036(a0)
-; CHECK-NEXT:    lw a2, 12(sp)
-; CHECK-NEXT:    lw a3, 16(sp)
+; CHECK-NEXT:    lw a2, 12(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lw a3, 16(sp) # 4-byte Folded Reload
 ; CHECK-NEXT:    sw a2, 2040(a0)
 ; CHECK-NEXT:    sw a3, 2044(a0)
 ; CHECK-NEXT:    addi sp, sp, 80
