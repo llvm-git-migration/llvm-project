@@ -2324,7 +2324,8 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       CheckFailed("invalid value for 'sign-return-address-key' attribute: " + S,
                   V);
     if (auto AA = Attrs.getFnAttr("sign-return-address"); !AA.isValid()) {
-      CheckFailed("invalid value for 'sign-return-address-key' present without sign-return-address ");
+      CheckFailed("invalid value for 'sign-return-address-key' present without "
+                  "sign-return-address ");
     }
   }
 
@@ -2345,8 +2346,8 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
   if (auto A = Attrs.getFnAttr("guarded-control-stack"); A.isValid()) {
     StringRef S = A.getValueAsString();
     if (S != "")
-      CheckFailed(
-          "invalid value for 'guarded-control-stack' attribute: " + S, V);
+      CheckFailed("invalid value for 'guarded-control-stack' attribute: " + S,
+                  V);
   }
 
   if (auto A = Attrs.getFnAttr("vector-function-abi-variant"); A.isValid()) {

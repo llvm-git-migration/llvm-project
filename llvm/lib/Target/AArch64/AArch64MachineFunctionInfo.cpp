@@ -80,10 +80,8 @@ AArch64FunctionInfo::AArch64FunctionInfo(const Function &F,
   IsMTETagged = F.hasFnAttribute(Attribute::SanitizeMemTag);
 
   // BTI/PAuthLR are set on the function attribute.
-  BranchTargetEnforcement =
-      F.hasFnAttribute("branch-target-enforcement");
-  BranchProtectionPAuthLR =
-      F.hasFnAttribute("branch-protection-pauth-lr");
+  BranchTargetEnforcement = F.hasFnAttribute("branch-target-enforcement");
+  BranchProtectionPAuthLR = F.hasFnAttribute("branch-protection-pauth-lr");
 
   // The default stack probe size is 4096 if the function has no
   // stack-probe-size attribute. This is a safe default because it is the
