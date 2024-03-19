@@ -10920,7 +10920,7 @@ QualType Sema::DeduceTemplateSpecializationFromInitializer(
 
         if (FunctionTemplateDecl *TD =
                 DeclareImplicitDeductionGuideFromInitList(
-                    Template, ElementTypes, TSInfo->getTypeLoc().getEndLoc())) {
+                    LookupTemplateDecl, ElementTypes, TSInfo->getTypeLoc().getEndLoc())) {
           auto *GD = cast<CXXDeductionGuideDecl>(TD->getTemplatedDecl());
           addDeductionCandidate(TD, GD, DeclAccessPair::make(TD, AS_public),
                                 OnlyListConstructors,
