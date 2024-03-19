@@ -110,7 +110,7 @@ bool GCNRegPressure::less(const MachineFunction &MF, const GCNRegPressure &O,
   if (Occ != OtherOcc)
     return Occ > OtherOcc;
 
-  unsigned MaxVGPRs = ST.getMaxNumVGPRs(MF);
+  unsigned MaxVGPRs = ST.getMaxNumVGPRs(MF, /*WholeRegisterFile*/ true);
   unsigned MaxSGPRs = ST.getMaxNumSGPRs(MF);
 
   // SGPR excess pressure conditions
@@ -124,7 +124,7 @@ bool GCNRegPressure::less(const MachineFunction &MF, const GCNRegPressure &O,
   unsigned OtherVGPRForSGPRSpills =
       (OtherExcessSGPR + (WaveSize - 1)) / WaveSize;
 
-  unsigned MaxArchVGPRs = ST.getAddressableNumArchVGPRs();
+  unsigned MaxArchVGPRs = ST.getMaxNumVGPRs(MF, /*WholeRegisterFile*/ false);
 
   // Unified excess pressure conditions, accounting for VGPRs used for SGPR
   // spills

@@ -974,11 +974,13 @@ void GCNSchedStage::checkScheduling() {
                       << DAG.MinOccupancy << ".\n");
   }
 
-  unsigned MaxVGPRs = ST.getMaxNumVGPRs(MF);
+  unsigned MaxVGPRs = ST.getMaxNumVGPRs(MF, /*WholeRegisterFile*/ true);
+  unsigned MaxArchVGPRs = ST.getMaxNumVGPRs(MF, /*WholeRegisterFile*/ false);
   unsigned MaxSGPRs = ST.getMaxNumSGPRs(MF);
 
-  if (PressureAfter.getVGPRNum(false) > MaxVGPRs ||
-      PressureAfter.getAGPRNum() > MaxVGPRs ||
+  if (PressureAfter.getVGPRNum(ST.hasGFX90AInsts()) > MaxVGPRs ||
+      PressureAfter.getVGPRNum(false) > MaxArchVGPRs ||
+      PressureAfter.getAGPRNum() > MaxArchVGPRs ||
       PressureAfter.getSGPRNum() > MaxSGPRs) {
     DAG.RescheduleRegions[RegionIdx] = true;
     DAG.RegionsWithHighRP[RegionIdx] = true;

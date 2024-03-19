@@ -1155,12 +1155,15 @@ unsigned getMinNumVGPRs(const MCSubtargetInfo *STI, unsigned WavesPerEU) {
   return std::min(MinNumVGPRs, AddrsableNumVGPRs);
 }
 
-unsigned getMaxNumVGPRs(const MCSubtargetInfo *STI, unsigned WavesPerEU) {
+unsigned getMaxNumVGPRs(const MCSubtargetInfo *STI, unsigned WavesPerEU,
+                        bool WholeRegisterFile) {
   assert(WavesPerEU != 0);
 
   unsigned MaxNumVGPRs = alignDown(getTotalNumVGPRs(STI) / WavesPerEU,
                                    getVGPRAllocGranule(STI));
-  unsigned AddressableNumVGPRs = getAddressableNumVGPRs(STI);
+  unsigned AddressableNumVGPRs = WholeRegisterFile
+                                     ? getAddressableNumVGPRs(STI)
+                                     : getAddressableNumArchVGPRs(STI);
   return std::min(MaxNumVGPRs, AddressableNumVGPRs);
 }
 

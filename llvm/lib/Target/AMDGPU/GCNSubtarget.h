@@ -1414,26 +1414,32 @@ public:
 
   /// \returns the maximum number of VGPRs that can be used and still achieved
   /// at least the specified number of waves \p WavesPerEU.
-  unsigned getMaxNumVGPRs(unsigned WavesPerEU) const {
-    return AMDGPU::IsaInfo::getMaxNumVGPRs(this, WavesPerEU);
+  unsigned getMaxNumVGPRs(unsigned WavesPerEU,
+                          bool WholeRegisterFile = true) const {
+    return AMDGPU::IsaInfo::getMaxNumVGPRs(this, WavesPerEU, WholeRegisterFile);
   }
 
   /// \returns max num VGPRs. This is the common utility function
   /// called by MachineFunction and Function variants of getMaxNumVGPRs.
   unsigned getBaseMaxNumVGPRs(const Function &F,
-                              std::pair<unsigned, unsigned> WavesPerEU) const;
+                              std::pair<unsigned, unsigned> WavesPerEU,
+                              bool WholeRegisterFile) const;
   /// \returns Maximum number of VGPRs that meets number of waves per execution
   /// unit requirement for function \p F, or number of VGPRs explicitly
   /// requested using "amdgpu-num-vgpr" attribute attached to function \p F.
+  /// If \p WholeRegisterFile is false and our target has a unified register
+  /// file, getMaxNumVGPRs will instead \return the maxmium number of ArchVGPRs.
   ///
   /// \returns Value that meets number of waves per execution unit requirement
   /// if explicitly requested value cannot be converted to integer, violates
   /// subtarget's specifications, or does not meet number of waves per execution
   /// unit requirement.
-  unsigned getMaxNumVGPRs(const Function &F) const;
+  unsigned getMaxNumVGPRs(const Function &F,
+                          bool WholeRegisterFile = true) const;
 
-  unsigned getMaxNumAGPRs(const Function &F) const {
-    return getMaxNumVGPRs(F);
+  unsigned getMaxNumAGPRs(const Function &F,
+                          bool WholeRegisterFile = true) const {
+    return getMaxNumVGPRs(F, WholeRegisterFile);
   }
 
   /// \returns Maximum number of VGPRs that meets number of waves per execution
@@ -1444,7 +1450,8 @@ public:
   /// if explicitly requested value cannot be converted to integer, violates
   /// subtarget's specifications, or does not meet number of waves per execution
   /// unit requirement.
-  unsigned getMaxNumVGPRs(const MachineFunction &MF) const;
+  unsigned getMaxNumVGPRs(const MachineFunction &MF,
+                          bool WholeRegisterFile = true) const;
 
   void getPostRAMutations(
       std::vector<std::unique_ptr<ScheduleDAGMutation>> &Mutations)
