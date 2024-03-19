@@ -273,9 +273,7 @@ define i32 @smin_known_zero_2(i32 %x, i32 %y) {
 ; CHECK-NEXT:    cmpl $-54, %edi
 ; CHECK-NEXT:    movl $-54, %eax
 ; CHECK-NEXT:    cmovll %edi, %eax
-; CHECK-NEXT:    bsfl %eax, %ecx
-; CHECK-NEXT:    movl $32, %eax
-; CHECK-NEXT:    cmovnel %ecx, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
   %z = call i32 @llvm.smin.i32(i32 %x, i32 -54)
   %r = call i32 @llvm.cttz.i32(i32 %z, i1 false)
@@ -326,9 +324,7 @@ define i32 @smax_known_zero_2(i32 %x, i32 %y) {
 ; CHECK-NEXT:    cmpl $55, %edi
 ; CHECK-NEXT:    movl $54, %eax
 ; CHECK-NEXT:    cmovgel %edi, %eax
-; CHECK-NEXT:    bsfl %eax, %ecx
-; CHECK-NEXT:    movl $32, %eax
-; CHECK-NEXT:    cmovnel %ecx, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
   %z = call i32 @llvm.smax.i32(i32 %x, i32 54)
   %r = call i32 @llvm.cttz.i32(i32 %z, i1 false)
