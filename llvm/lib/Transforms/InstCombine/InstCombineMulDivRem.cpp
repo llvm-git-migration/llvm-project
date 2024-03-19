@@ -814,8 +814,17 @@ Instruction *InstCombinerImpl::visitFMul(BinaryOperator &I) {
   if (match(Op1, m_SpecificFP(-1.0)))
     return UnaryOperator::CreateFNegFMF(Op0, &I);
 
-  // With no-nans: X * 0.0 --> copysign(0.0, X)
-  if (I.hasNoNaNs() && match(Op1, m_PosZeroFP())) {
+  // With no-nans:
+  // X * 0.0 --> copysign(0.0, X)
+  // X * -0.0 --> copysign(0.0, -X)
+  if (match(Op1, m_AnyZeroFP()) &&
+      isKnownNeverNaN(&I, /*Depth=*/0, SQ.getWithInstruction(&I))) {
+    if (match(Op1, m_NegZeroFP())) {
+      Op0 = Builder.CreateFNegFMF(Op0, &I);
+      // Canonicalize -0.0 to 0.0
+      Op1 = ConstantFoldUnaryOpOperand(Instruction::FNeg, cast<Constant>(Op1),
+                                       DL);
+    }
     CallInst *CopySign = Builder.CreateIntrinsic(Intrinsic::copysign,
                                                  {I.getType()}, {Op1, Op0}, &I);
     return replaceInstUsesWith(I, CopySign);
