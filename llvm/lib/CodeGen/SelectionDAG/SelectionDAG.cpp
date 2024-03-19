@@ -5360,10 +5360,20 @@ bool SelectionDAG::isKnownNeverZero(SDValue Op, unsigned Depth) const {
     return isKnownNeverZero(Op.getOperand(1), Depth + 1) ||
            isKnownNeverZero(Op.getOperand(0), Depth + 1);
 
-    // TODO for smin/smax: If either operand is known negative/positive
+    // For smin/smax: If either operand is known negative/positive
     // respectively we don't need the other to be known at all.
   case ISD::SMAX:
+    if (computeKnownBits(Op.getOperand(1), Depth + 1).isStrictlyPositive() ||
+        computeKnownBits(Op.getOperand(0), Depth + 1).isStrictlyPositive())
+      return true;
+    return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
+           isKnownNeverZero(Op.getOperand(0), Depth + 1);
   case ISD::SMIN:
+    if (computeKnownBits(Op.getOperand(1), Depth + 1).isNegative() ||
+        computeKnownBits(Op.getOperand(0), Depth + 1).isNegative())
+      return true;
+    return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
+           isKnownNeverZero(Op.getOperand(0), Depth + 1);
   case ISD::UMIN:
     return isKnownNeverZero(Op.getOperand(1), Depth + 1) &&
            isKnownNeverZero(Op.getOperand(0), Depth + 1);
