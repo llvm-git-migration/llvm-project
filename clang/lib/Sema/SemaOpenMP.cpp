@@ -19159,7 +19159,8 @@ buildDeclareReductionRef(Sema &SemaRef, SourceLocation Loc, SourceRange Range,
   if (S) {
     LookupResult Lookup(SemaRef, ReductionId, Sema::LookupOMPReductionName);
     Lookup.suppressDiagnostics();
-    while (S && SemaRef.LookupParsedName(Lookup, S, &ReductionIdScopeSpec, /*ObjectType=*/QualType())) {
+    while (S && SemaRef.LookupParsedName(Lookup, S, &ReductionIdScopeSpec,
+                                         /*ObjectType=*/QualType())) {
       NamedDecl *D = Lookup.getRepresentativeDecl();
       do {
         S = S->getParent();
@@ -22012,7 +22013,8 @@ static ExprResult buildUserDefinedMapperRef(Sema &SemaRef, Scope *S,
   LookupResult Lookup(SemaRef, MapperId, Sema::LookupOMPMapperName);
   Lookup.suppressDiagnostics();
   if (S) {
-    while (S && SemaRef.LookupParsedName(Lookup, S, &MapperIdScopeSpec, /*ObjectType=*/QualType())) {
+    while (S && SemaRef.LookupParsedName(Lookup, S, &MapperIdScopeSpec,
+                                         /*ObjectType=*/QualType())) {
       NamedDecl *D = Lookup.getRepresentativeDecl();
       while (S && !S->isDeclScope(D))
         S = S->getParent();
