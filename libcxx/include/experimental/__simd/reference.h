@@ -132,6 +132,32 @@ public:
     __set(__get() >> static_cast<value_type>(std::forward<_Up>(__v)));
     return {__s_, __idx_};
   }
+
+  template <class _Up = value_type, class = decltype(std::declval<_Up>()++)>
+  __simd_reference _LIBCPP_HIDE_FROM_ABI operator++() && noexcept {
+    __set(__get() + 1);
+    return {__s_, __idx_};
+  }
+
+  template <class _Up = value_type, class = decltype(++std::declval<_Up>())>
+  value_type _LIBCPP_HIDE_FROM_ABI operator++(int) && noexcept {
+    auto __r = __get();
+    __set(__get() + 1);
+    return __r;
+  }
+
+  template <class _Up = value_type, class = decltype(std::declval<_Up>()--)>
+  __simd_reference _LIBCPP_HIDE_FROM_ABI operator--() && noexcept {
+    __set(__get() - 1);
+    return {__s_, __idx_};
+  }
+
+  template <class _Up = value_type, class = decltype(--std::declval<_Up>())>
+  value_type _LIBCPP_HIDE_FROM_ABI operator--(int) && noexcept {
+    auto __r = __get();
+    __set(__get() - 1);
+    return __r;
+  }
 };
 
 template <class _Tp, class _Storage, class _Vp>
