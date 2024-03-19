@@ -414,9 +414,7 @@ define i1 @and_mask1_eq(i32 %conv) {
 ; CHECK-NEXT:    ret i1 false
 ; CHECK:       else:
 ; CHECK-NEXT:    call void @dummy()
-; CHECK-NEXT:    [[AND1:%.*]] = and i32 [[CONV]], 3
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp eq i32 [[AND1]], 0
-; CHECK-NEXT:    ret i1 [[CMP1]]
+; CHECK-NEXT:    ret i1 false
 ;
 entry:
   %and = and i32 %conv, 1
@@ -443,9 +441,7 @@ define i1 @and_mask1_ne(i32 %conv) {
 ; CHECK-NEXT:    ret i1 false
 ; CHECK:       else:
 ; CHECK-NEXT:    call void @dummy()
-; CHECK-NEXT:    [[AND1:%.*]] = and i32 [[CONV]], 3
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ne i32 [[AND1]], 0
-; CHECK-NEXT:    ret i1 [[CMP1]]
+; CHECK-NEXT:    ret i1 true
 ;
 entry:
   %and = and i32 %conv, 1

@@ -1771,11 +1771,14 @@ Instruction *InstCombinerImpl::foldICmpAndConstConst(ICmpInst &Cmp,
       return new ICmpInst(NewPred, X, Zero);
     }
 
-    APInt NewC2 = *C2;
     KnownBits Know = computeKnownBits(And->getOperand(0), 0, And);
+    if (Know.One.intersects(*C2))
+      return replaceInstUsesWith(
+          Cmp, ConstantInt::getBool(Cmp.getType(), isICMP_NE));
+
     // Set high zeros of C2 to allow matching negated power-of-2.
-    NewC2 = *C2 | APInt::getHighBitsSet(C2->getBitWidth(),
-                                        Know.countMinLeadingZeros());
+    APInt NewC2 = *C2 | APInt::getHighBitsSet(C2->getBitWidth(),
+                                              Know.countMinLeadingZeros());
 
     // Restrict this fold only for single-use 'and' (PR10267).
     // ((%x & C) == 0) --> %x u< (-C)  iff (-C) is power of two.
