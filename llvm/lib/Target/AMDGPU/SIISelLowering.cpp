@@ -5408,6 +5408,14 @@ MachineBasicBlock *SITargetLowering::EmitInstrWithCustomInserter(
     MI.eraseFromParent();
     return SplitBB;
   }
+  case AMDGPU::SIMULATED_TRAP: {
+    assert(Subtarget->requiresSimulatedTrap());
+    MachineRegisterInfo &MRI = BB->getParent()->getRegInfo();
+    MachineBasicBlock *SplitBB =
+        TII->insertSimulatedTrap(MRI, *BB, MI, MI.getDebugLoc());
+    MI.eraseFromParent();
+    return SplitBB;
+  }
   default:
     return AMDGPUTargetLowering::EmitInstrWithCustomInserter(MI, BB);
   }
@@ -6620,6 +6628,9 @@ SDValue SITargetLowering::lowerTrapHsa(
     SDValue Op, SelectionDAG &DAG) const {
   SDLoc SL(Op);
   SDValue Chain = Op.getOperand(0);
+
+  if (Subtarget->requiresSimulatedTrap())
+    return DAG.getNode(AMDGPUISD::SIMULATED_TRAP, SL, MVT::Other, Chain);
 
   uint64_t TrapID = static_cast<uint64_t>(GCNSubtarget::TrapID::LLVMAMDHSATrap);
   SDValue Ops[] = {
