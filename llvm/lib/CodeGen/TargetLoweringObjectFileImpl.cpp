@@ -2744,9 +2744,13 @@ MCSection *TargetLoweringObjectFileGOFF::getSectionForLSDA(
 MCSection *TargetLoweringObjectFileGOFF::SelectSectionForGlobal(
     const GlobalObject *GO, SectionKind Kind, const TargetMachine &TM) const {
   auto *Symbol = TM.getSymbol(GO);
+  if (Kind.isData())
+    return getContext().getGOFFSection(Symbol->getName(),
+                                       SectionKind::getData());
+
   if (Kind.isBSS())
-    return getContext().getGOFFSection(Symbol->getName(), SectionKind::getBSS(),
-                                       nullptr, nullptr);
+    return getContext().getGOFFSection(Symbol->getName(),
+                                       SectionKind::getBSS());
 
   return getContext().getObjectFileInfo()->getTextSection();
 }
