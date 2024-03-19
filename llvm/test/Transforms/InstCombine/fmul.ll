@@ -1250,7 +1250,7 @@ define half @mul_zero_nnan(half %x) {
 
 define <2 x float> @mul_zero_nnan_vec_poison(<2 x float> %x) {
 ; CHECK-LABEL: @mul_zero_nnan_vec_poison(
-; CHECK-NEXT:    [[R:%.*]] = call nnan <2 x float> @llvm.copysign.v2f32(<2 x float> <float 0.000000e+00, float poison>, <2 x float> [[X:%.*]])
+; CHECK-NEXT:    [[R:%.*]] = call nnan <2 x float> @llvm.copysign.v2f32(<2 x float> zeroinitializer, <2 x float> [[X:%.*]])
 ; CHECK-NEXT:    ret <2 x float> [[R]]
 ;
   %r = fmul nnan <2 x float> %x, <float 0.0, float poison>
@@ -1272,7 +1272,8 @@ define half @mul_zero(half %x) {
 
 define half @mul_negzero_nnan(half %x) {
 ; CHECK-LABEL: @mul_negzero_nnan(
-; CHECK-NEXT:    [[R:%.*]] = fmul nnan half [[X:%.*]], 0xH8000
+; CHECK-NEXT:    [[TMP1:%.*]] = fneg nnan half [[X:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call nnan half @llvm.copysign.f16(half 0xH8000, half [[TMP1]])
 ; CHECK-NEXT:    ret half [[R]]
 ;
   %r = fmul nnan half %x, -0.0
@@ -1282,7 +1283,7 @@ define half @mul_negzero_nnan(half %x) {
 define float @mul_pos_zero_nnan_ninf(float nofpclass(inf nan) %a) {
 ; CHECK-LABEL: @mul_pos_zero_nnan_ninf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul float [[A:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[RET:%.*]] = call float @llvm.copysign.f32(float 0.000000e+00, float [[A:%.*]])
 ; CHECK-NEXT:    ret float [[RET]]
 ;
 entry:
@@ -1304,7 +1305,7 @@ entry:
 define float @mul_pos_zero_nnan_ninf_fmf(float nofpclass(nan) %a) {
 ; CHECK-LABEL: @mul_pos_zero_nnan_ninf_fmf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul ninf float [[A:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[RET:%.*]] = call ninf float @llvm.copysign.f32(float 0.000000e+00, float [[A:%.*]])
 ; CHECK-NEXT:    ret float [[RET]]
 ;
 entry:
@@ -1315,7 +1316,8 @@ entry:
 define float @mul_neg_zero_nnan_ninf(float nofpclass(inf nan) %a) {
 ; CHECK-LABEL: @mul_neg_zero_nnan_ninf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul float [[A:%.*]], -0.000000e+00
+; CHECK-NEXT:    [[TMP0:%.*]] = fneg float [[A:%.*]]
+; CHECK-NEXT:    [[RET:%.*]] = call float @llvm.copysign.f32(float -0.000000e+00, float [[TMP0]])
 ; CHECK-NEXT:    ret float [[RET]]
 ;
 entry:
@@ -1326,7 +1328,8 @@ entry:
 define float @mul_neg_zero_nnan_fmf(float %a) {
 ; CHECK-LABEL: @mul_neg_zero_nnan_fmf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul nnan float [[A:%.*]], -0.000000e+00
+; CHECK-NEXT:    [[TMP0:%.*]] = fneg nnan float [[A:%.*]]
+; CHECK-NEXT:    [[RET:%.*]] = call nnan float @llvm.copysign.f32(float -0.000000e+00, float [[TMP0]])
 ; CHECK-NEXT:    ret float [[RET]]
 ;
 entry:
@@ -1337,7 +1340,8 @@ entry:
 define float @mul_neg_zero_nnan_ninf_fmf(float nofpclass(inf nan) %a) {
 ; CHECK-LABEL: @mul_neg_zero_nnan_ninf_fmf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul nnan ninf float [[A:%.*]], -0.000000e+00
+; CHECK-NEXT:    [[TMP0:%.*]] = fneg nnan ninf float [[A:%.*]]
+; CHECK-NEXT:    [[RET:%.*]] = call nnan ninf float @llvm.copysign.f32(float -0.000000e+00, float [[TMP0]])
 ; CHECK-NEXT:    ret float [[RET]]
 ;
 entry:
@@ -1350,7 +1354,8 @@ entry:
 define <3 x float> @mul_neg_zero_nnan_ninf_vec(<3 x float> nofpclass(inf nan) %a) {
 ; CHECK-LABEL: @mul_neg_zero_nnan_ninf_vec(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = fmul <3 x float> [[A:%.*]], <float -0.000000e+00, float undef, float poison>
+; CHECK-NEXT:    [[TMP0:%.*]] = fneg <3 x float> [[A:%.*]]
+; CHECK-NEXT:    [[RET:%.*]] = call <3 x float> @llvm.copysign.v3f32(<3 x float> <float -0.000000e+00, float -0.000000e+00, float -0.000000e+00>, <3 x float> [[TMP0]])
 ; CHECK-NEXT:    ret <3 x float> [[RET]]
 ;
 entry:
