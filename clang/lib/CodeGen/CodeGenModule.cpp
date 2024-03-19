@@ -4243,8 +4243,15 @@ void CodeGenModule::emitMultiVersionFunctions() {
                                  CurFD->doesThisDeclarationHaveABody();
             HasDefaultDecl |= TVA->isDefaultVersion();
             ShouldEmitResolver |= (CurFD->isUsed() || HasDefaultDef);
-            TVA->getFeatures(Feats);
             llvm::Function *Func = createFunction(CurFD);
+            if (getTarget().getTriple().isRISCV()) {
+              llvm::AttrBuilder FuncAttrs(Func->getContext());
+              ParsedTargetAttr PTA =
+                  getTarget().parseTargetAttr(TVA->getName());
+              Feats.push_back(TVA->getName());
+            } else {
+              TVA->getFeatures(Feats);
+            }
             Options.emplace_back(Func, /*Architecture*/ "", Feats);
           } else if (const auto *TC = CurFD->getAttr<TargetClonesAttr>()) {
             ShouldEmitResolver |= CurFD->doesThisDeclarationHaveABody();

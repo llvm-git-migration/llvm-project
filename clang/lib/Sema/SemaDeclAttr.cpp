@@ -3015,6 +3015,21 @@ bool Sema::checkTargetVersionAttr(SourceLocation LiteralLoc, Decl *D,
   enum SecondParam { None };
   enum ThirdParam { Target, TargetClones, TargetVersion };
   llvm::SmallVector<StringRef, 8> Features;
+  if (Context.getTargetInfo().getTriple().isRISCV()) {
+
+    if (AttrStr.starts_with("default"))
+      return false;
+
+    ParsedTargetAttr ParsedAttrs =
+        Context.getTargetInfo().parseTargetAttr(AttrStr);
+
+    if (AttrStr.starts_with("arch=+") &&
+        (!ParsedAttrs.Features.empty() || !ParsedAttrs.Tune.empty()))
+      return false;
+
+    return Diag(LiteralLoc, diag::warn_unsupported_target_attribute)
+           << Unsupported << None << AttrStr << TargetVersion;
+  }
   AttrStr.split(Features, "+");
   for (auto &CurFeature : Features) {
     CurFeature = CurFeature.trim();
