@@ -89,9 +89,9 @@ MinMaxUseInitializerListCheck::findArgs(const MatchFinder::MatchResult &Match,
   Result.Compare = nullptr;
 
   if (Call->getNumArgs() > 2) {
-    auto argIterator = Call->arguments().begin();
-    std::advance(argIterator, 2);
-    Result.Compare = *argIterator;
+    auto ArgIterator = Call->arguments().begin();
+    std::advance(ArgIterator, 2);
+    Result.Compare = *ArgIterator;
   }
 
   for (const Expr *Arg : Call->arguments()) {
