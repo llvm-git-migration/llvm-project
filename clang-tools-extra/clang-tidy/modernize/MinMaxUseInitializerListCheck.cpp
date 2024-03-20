@@ -153,15 +153,19 @@ std::string MinMaxUseInitializerListCheck::generateReplacement(
   for (const Expr *Arg : Result.Args) {
     QualType ArgType = Arg->getType();
 
-    // check if expression is std::min or std::max
     if (const auto *InnerCall = dyn_cast<CallExpr>(Arg)) {
-      if (InnerCall->getDirectCallee() &&
-          InnerCall->getDirectCallee()->getNameAsString() !=
-              TopCall->getDirectCallee()->getNameAsString()) {
-        FindArgsResult innerResult = findArgs(Match, InnerCall);
-        ReplacementText += generateReplacement(Match, InnerCall, innerResult) +=
-            "})";
-        continue;
+      if (InnerCall->getDirectCallee()) {
+        std::string InnerCallNameStr =
+            InnerCall->getDirectCallee()->getNameAsString();
+
+        if (InnerCallNameStr != TopCall->getDirectCallee()->getNameAsString() &&
+            (InnerCallNameStr == "std::min" ||
+             InnerCallNameStr == "std::max")) {
+          FindArgsResult innerResult = findArgs(Match, InnerCall);
+          ReplacementText +=
+              generateReplacement(Match, InnerCall, innerResult);
+          continue;
+        }
       }
     }
 
