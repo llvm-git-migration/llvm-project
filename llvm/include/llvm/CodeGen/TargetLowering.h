@@ -3005,6 +3005,12 @@ public:
     return false;
   }
 
+  /// Return true if sitofp from FromTy to ToTy is cheaper than
+  /// uitofp.
+  virtual bool isSIToFPCheaperThanUIToFP(EVT FromTy, EVT ToTy) const {
+    return false;
+  }
+
   /// Return true if this constant should be sign extended when promoting to
   /// a larger type.
   virtual bool signExtendConstant(const ConstantInt *C) const { return false; }

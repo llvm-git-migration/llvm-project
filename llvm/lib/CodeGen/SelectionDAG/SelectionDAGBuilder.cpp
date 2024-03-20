@@ -3882,7 +3882,15 @@ void SelectionDAGBuilder::visitUIToFP(const User &I) {
   SDValue N = getValue(I.getOperand(0));
   EVT DestVT = DAG.getTargetLoweringInfo().getValueType(DAG.getDataLayout(),
                                                         I.getType());
-  setValue(&I, DAG.getNode(ISD::UINT_TO_FP, getCurSDLoc(), DestVT, N));
+  bool IsNonNeg = false;
+  if (auto *PNI = dyn_cast<PossiblyNonNegInst>(&I))
+    IsNonNeg = true;
+
+  unsigned Opc = ISD::UINT_TO_FP;
+  if (IsNonNeg && DAG.getTargetLoweringInfo().isSIToFPCheaperThanUIToFP(
+                      N.getValueType(), DestVT))
+    Opc = ISD::SINT_TO_FP;
+  setValue(&I, DAG.getNode(Opc, getCurSDLoc(), DestVT, N));
 }
 
 void SelectionDAGBuilder::visitSIToFP(const User &I) {
