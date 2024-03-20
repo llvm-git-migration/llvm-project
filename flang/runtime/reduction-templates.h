@@ -86,13 +86,22 @@ inline RT_API_ATTRS CppTypeFor<CAT, KIND> GetTotalReduction(const Descriptor &x,
   RUNTIME_CHECK(terminator, TypeCode(CAT, KIND) == x.type());
   using CppType = CppTypeFor<CAT, KIND>;
   DoTotalReduction<CppType>(x, dim, mask, accumulator, intrinsic, terminator);
-  CppType result;
+  if constexpr (std::is_void_v<CppType>) {
+    // Result is returned from accumulator, as in REDUCE() for derived type
 #ifdef _MSC_VER // work around MSVC spurious error
-  accumulator.GetResult(&result);
+    accumulator.GetResult();
 #else
-  accumulator.template GetResult(&result);
+    accumulator.template GetResult();
 #endif
-  return result;
+  } else {
+    CppType result;
+#ifdef _MSC_VER // work around MSVC spurious error
+    accumulator.GetResult(&result);
+#else
+    accumulator.template GetResult(&result);
+#endif
+    return result;
+  }
 }
 
 // For reductions on a dimension, e.g. SUM(array,DIM=2) where the shape
@@ -162,35 +171,6 @@ inline RT_API_ATTRS void ReduceDimMaskToScalar(const Descriptor &x,
 #else
   accumulator.template GetResult(result, zeroBasedDim);
 #endif
-}
-
-// Utility: establishes & allocates the result array for a partial
-// reduction (i.e., one with DIM=).
-static RT_API_ATTRS void CreatePartialReductionResult(Descriptor &result,
-    const Descriptor &x, std::size_t resultElementSize, int dim,
-    Terminator &terminator, const char *intrinsic, TypeCode typeCode) {
-  int xRank{x.rank()};
-  if (dim < 1 || dim > xRank) {
-    terminator.Crash(
-        "%s: bad DIM=%d for ARRAY with rank %d", intrinsic, dim, xRank);
-  }
-  int zeroBasedDim{dim - 1};
-  SubscriptValue resultExtent[maxRank];
-  for (int j{0}; j < zeroBasedDim; ++j) {
-    resultExtent[j] = x.GetDimension(j).Extent();
-  }
-  for (int j{zeroBasedDim + 1}; j < xRank; ++j) {
-    resultExtent[j - 1] = x.GetDimension(j).Extent();
-  }
-  result.Establish(typeCode, resultElementSize, nullptr, xRank - 1,
-      resultExtent, CFI_attribute_allocatable);
-  for (int j{0}; j + 1 < xRank; ++j) {
-    result.GetDimension(j).SetBounds(1, resultExtent[j]);
-  }
-  if (int stat{result.Allocate()}) {
-    terminator.Crash(
-        "%s: could not allocate memory for result; STAT=%d", intrinsic, stat);
-  }
 }
 
 // Partial reductions with DIM=
