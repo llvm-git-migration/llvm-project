@@ -3057,26 +3057,26 @@ LogicalResult OpenMPDialectLLVMIRTranslationInterface::amendOperation(
                                                 moduleTranslation);
               return failure();
             })
-      .Case(
-          "omp.requires",
-          [&](Attribute attr) {
-            if (auto requiresAttr = attr.dyn_cast<omp::ClauseRequiresAttr>()) {
-              using Requires = omp::ClauseRequires;
-              Requires flags = requiresAttr.getValue();
-              llvm::OpenMPIRBuilderConfig &config =
-                  moduleTranslation.getOpenMPBuilder()->Config;
-              config.setHasRequiresReverseOffload(
-                  bitEnumContainsAll(flags, Requires::reverse_offload));
-              config.setHasRequiresUnifiedAddress(
-                  bitEnumContainsAll(flags, Requires::unified_address));
-              config.setHasRequiresUnifiedSharedMemory(
-                  bitEnumContainsAll(flags, Requires::unified_shared_memory));
-              config.setHasRequiresDynamicAllocators(
-                  bitEnumContainsAll(flags, Requires::dynamic_allocators));
-              return convertRequiresAttr(*op, requiresAttr, moduleTranslation);
-            }
-            return failure();
-          })
+      .Case("omp.requires",
+            [&](Attribute attr) {
+              if (auto requiresAttr =
+                      attr.dyn_cast<omp::ClauseRequiresAttr>()) {
+                using Requires = omp::ClauseRequires;
+                Requires flags = requiresAttr.getValue();
+                llvm::OpenMPIRBuilderConfig &config =
+                    moduleTranslation.getOpenMPBuilder()->Config;
+                config.setHasRequiresReverseOffload(
+                    bitEnumContainsAll(flags, Requires::reverse_offload));
+                config.setHasRequiresUnifiedAddress(
+                    bitEnumContainsAll(flags, Requires::unified_address));
+                config.setHasRequiresUnifiedSharedMemory(
+                    bitEnumContainsAll(flags, Requires::unified_shared_memory));
+                config.setHasRequiresDynamicAllocators(
+                    bitEnumContainsAll(flags, Requires::dynamic_allocators));
+                return success();
+              }
+              return failure();
+            })
       .Default([](Attribute) {
         // Fall through for omp attributes that do not require lowering.
         return success();
