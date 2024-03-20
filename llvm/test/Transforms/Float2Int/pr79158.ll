@@ -6,8 +6,9 @@ define i32 @pr79158(i32 %x) {
 ; CHECK-SAME: i32 [[X:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP_I:%.*]] = icmp sgt i32 [[X]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = zext i1 [[CMP_I]] to i32
-; CHECK-NEXT:    [[MUL_I1:%.*]] = mul i32 [[TMP0]], 2147483647
+; CHECK-NEXT:    [[TMP0:%.*]] = zext i1 [[CMP_I]] to i64
+; CHECK-NEXT:    [[MUL_I2:%.*]] = mul i64 [[TMP0]], 4294967295
+; CHECK-NEXT:    [[MUL_I1:%.*]] = trunc i64 [[MUL_I2]] to i32
 ; CHECK-NEXT:    ret i32 [[MUL_I1]]
 ;
 entry:
