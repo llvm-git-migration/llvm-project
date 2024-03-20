@@ -1198,16 +1198,15 @@ void StreamChecker::evalUngetc(const FnDescription *Desc, const CallEvent &Call,
 ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
     const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
-  static constexpr char SizeGreaterThanBufferSize[] =
+  static constexpr llvm::StringLiteral SizeGreaterThanBufferSize =
       "The buffer from the first argument is smaller than the size "
       "specified by the second parameter";
-  static constexpr char SizeUndef[] =
+  static constexpr llvm::StringLiteral SizeUndef =
       "The buffer from the first argument is not NULL, but the size specified "
       "by the second parameter is undefined.";
 
-  auto EmitBugReport = [this, &C, SizePtrExpr,
-                        LinePtrPtrExpr](const ProgramStateRef &BugState,
-                                        const char *ErrMsg) {
+  auto EmitBugReport = [this, &C, SizePtrExpr, LinePtrPtrExpr](
+                           ProgramStateRef BugState, StringRef ErrMsg) {
     if (ExplodedNode *N = C.generateErrorNode(BugState)) {
       auto R =
           std::make_unique<PathSensitiveBugReport>(BT_IllegalSize, ErrMsg, N);
@@ -1243,12 +1242,10 @@ ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
     auto LineBufSizeGtN = SVB.evalBinOp(LinePtrNotNull, BO_GE, LineBufSize,
                                         *NDefSVal, SVB.getConditionType())
                               .getAs<DefinedOrUnknownSVal>();
-    if (!LineBufSizeGtN) {
+    if (!LineBufSizeGtN)
       return LinePtrNotNull;
-    }
-    if (auto LineBufSizeOk = LinePtrNotNull->assume(*LineBufSizeGtN, true)) {
+    if (auto LineBufSizeOk = LinePtrNotNull->assume(*LineBufSizeGtN, true))
       return LineBufSizeOk;
-    }
 
     EmitBugReport(LinePtrNotNull, SizeGreaterThanBufferSize);
     return nullptr;
