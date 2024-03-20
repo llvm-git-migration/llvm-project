@@ -162,8 +162,7 @@ std::string MinMaxUseInitializerListCheck::generateReplacement(
             (InnerCallNameStr == "std::min" ||
              InnerCallNameStr == "std::max")) {
           FindArgsResult innerResult = findArgs(Match, InnerCall);
-          ReplacementText +=
-              generateReplacement(Match, InnerCall, innerResult);
+          ReplacementText += generateReplacement(Match, InnerCall, innerResult);
           continue;
         }
       }
