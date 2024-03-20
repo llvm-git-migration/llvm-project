@@ -4019,13 +4019,13 @@ SDValue DAGCombiner::visitSUB(SDNode *N) {
   }
 
   // smax(a,b) - smin(a,b) --> abds(a,b)
-  if (hasOperation(ISD::ABDS, VT)  && 
+  if (hasOperation(ISD::ABDS, VT)  &&
       sd_match(N0, m_SMax(m_Value(A), m_Value(B))) &&
       sd_match(N1, m_SMin(m_Specific(A), m_Specific(B))))
     return DAG.getNode(ISD::ABDS, DL, VT, A, B);
 
   // umax(a,b) - umin(a,b) --> abdu(a,b)
-  if (hasOperation(ISD::ABDU, VT)  && 
+  if (hasOperation(ISD::ABDU, VT)  &&
       sd_match(N0, m_UMax(m_Value(A), m_Value(B))) &&
       sd_match(N1, m_UMin(m_Specific(A), m_Specific(B))))
     return DAG.getNode(ISD::ABDU, DL, VT, A, B);
@@ -17413,12 +17413,16 @@ SDValue DAGCombiner::visitUINT_TO_FP(SDNode *N) {
        TLI.isOperationLegalOrCustom(ISD::ConstantFP, VT)))
     return DAG.getNode(ISD::UINT_TO_FP, SDLoc(N), VT, N0);
 
-  // If the input is a legal type, and UINT_TO_FP is not legal on this target,
-  // but SINT_TO_FP is legal on this target, try to convert.
-  if (!hasOperation(ISD::UINT_TO_FP, OpVT) &&
-      hasOperation(ISD::SINT_TO_FP, OpVT)) {
-    // If the sign bit is known to be zero, we can change this to SINT_TO_FP.
-    if (DAG.SignBitIsZero(N0))
+  SDNodeFlags Flags = N->getFlags();
+  bool NonNeg = Flags.hasNonNeg() || DAG.SignBitIsZero(N0);
+
+  // If the sign bit is known to be zero, we can change this to SINT_TO_FP.
+  if (NonNeg && hasOperation(ISD::SINT_TO_FP, OpVT)) {
+    // If the input is a legal type, and UINT_TO_FP is not legal on this target,
+    // but SINT_TO_FP is legal on this target, convert it.
+    // Or, if the target prefers SINT_TO_FP, convert it.
+    if (!hasOperation(ISD::UINT_TO_FP, OpVT) ||
+        DAG.getTargetLoweringInfo().isSIToFPCheaperThanUIToFP(VT, OpVT))
       return DAG.getNode(ISD::SINT_TO_FP, SDLoc(N), VT, N0);
   }
 
