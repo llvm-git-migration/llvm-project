@@ -17434,8 +17434,9 @@ SDValue DAGCombiner::visitUINT_TO_FP(SDNode *N) {
   // but SINT_TO_FP is legal on this target, try to convert.
   if (!hasOperation(ISD::UINT_TO_FP, OpVT) &&
       hasOperation(ISD::SINT_TO_FP, OpVT)) {
+    SDNodeFlags Flags = N->getFlags();
     // If the sign bit is known to be zero, we can change this to SINT_TO_FP.
-    if (DAG.SignBitIsZero(N0))
+    if (Flags.hasNonNeg() || DAG.SignBitIsZero(N0))
       return DAG.getNode(ISD::SINT_TO_FP, SDLoc(N), VT, N0);
   }
 
