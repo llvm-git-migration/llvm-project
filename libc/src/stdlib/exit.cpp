@@ -16,10 +16,9 @@ namespace internal {
 void call_exit_callbacks();
 }
 
-LLVM_LIBC_FUNCTION(void, exit, (int status)) {
+[[noreturn]] LLVM_LIBC_FUNCTION(void, exit, (int status)) {
   internal::call_exit_callbacks();
   quick_exit(status);
-  __builtin_unreachable();
 }
 
 } // namespace LIBC_NAMESPACE
