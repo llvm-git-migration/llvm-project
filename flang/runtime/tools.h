@@ -490,5 +490,9 @@ RT_API_ATTRS void CopyAndPad(
   }
 }
 
+RT_API_ATTRS void CreatePartialReductionResult(Descriptor &result,
+    const Descriptor &x, std::size_t resultElementSize, int dim, Terminator &,
+    const char *intrinsic, TypeCode);
+
 } // namespace Fortran::runtime
 #endif // FORTRAN_RUNTIME_TOOLS_H_
