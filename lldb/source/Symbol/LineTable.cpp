@@ -289,7 +289,7 @@ bool LineTable::ConvertEntryAtIndexToLineEntry(uint32_t idx,
     line_entry.range.SetByteSize(0);
 
   line_entry.SetFile(
-      m_comp_unit->GetSupportFiles().GetFileSpecAtIndex(entry.file_idx));
+      m_comp_unit->GetSupportFiles().GetSupportFileAtIndex(entry.file_idx));
   line_entry.original_file_sp =
       m_comp_unit->GetSupportFiles().GetSupportFileAtIndex(entry.file_idx);
   line_entry.line = entry.line;

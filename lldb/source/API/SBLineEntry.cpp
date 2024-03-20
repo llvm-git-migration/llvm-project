@@ -109,9 +109,9 @@ void SBLineEntry::SetFileSpec(lldb::SBFileSpec filespec) {
   LLDB_INSTRUMENT_VA(this, filespec);
 
   if (filespec.IsValid())
-    ref().SetFile(filespec.ref());
+    ref().SetFile(std::make_shared<SupportFile>(filespec.ref()));
   else
-    ref().SetFile(FileSpec());
+    ref().SetFile(std::make_shared<SupportFile>());
 }
 void SBLineEntry::SetLine(uint32_t line) {
   LLDB_INSTRUMENT_VA(this, line);
