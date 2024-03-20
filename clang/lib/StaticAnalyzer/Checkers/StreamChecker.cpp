@@ -18,7 +18,6 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerHelpers.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/DynamicExtent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
@@ -235,8 +234,6 @@ class StreamChecker : public Checker<check::PreCall, eval::Call,
   BugType BT_StreamEof{this, "Stream already in EOF", "Stream handling error"};
   BugType BT_ResourceLeak{this, "Resource leak", "Stream handling error",
                           /*SuppressOnSink =*/true};
-  BugType BT_ArgumentNull{this, "NULL pointer", categories::UnixAPI};
-  BugType BT_IllegalSize{this, "Invalid buffer size", categories::MemoryError};
 
 public:
   void checkPreCall(const CallEvent &Call, CheckerContext &C) const;
@@ -349,10 +346,10 @@ private:
        {&StreamChecker::preWrite,
         std::bind(&StreamChecker::evalUngetc, _1, _2, _3, _4), 1}},
       {{{"getdelim"}, 4},
-       {std::bind(&StreamChecker::preGetdelim, _1, _2, _3, _4),
+       {&StreamChecker::preRead,
         std::bind(&StreamChecker::evalGetdelim, _1, _2, _3, _4), 3}},
       {{{"getline"}, 3},
-       {std::bind(&StreamChecker::preGetdelim, _1, _2, _3, _4),
+       {&StreamChecker::preRead,
         std::bind(&StreamChecker::evalGetdelim, _1, _2, _3, _4), 2}},
       {{{"fseek"}, 3},
        {&StreamChecker::preFseek, &StreamChecker::evalFseek, 0}},
@@ -448,9 +445,6 @@ private:
   void evalUngetc(const FnDescription *Desc, const CallEvent &Call,
                   CheckerContext &C) const;
 
-  void preGetdelim(const FnDescription *Desc, const CallEvent &Call,
-                   CheckerContext &C) const;
-
   void evalGetdelim(const FnDescription *Desc, const CallEvent &Call,
                     CheckerContext &C) const;
 
@@ -502,12 +496,6 @@ private:
                                       CheckerContext &C,
                                       ProgramStateRef State) const;
 
-  ProgramStateRef
-  ensurePtrNotNull(SVal PtrVal, const Expr *PtrExpr, CheckerContext &C,
-                   ProgramStateRef State, const StringRef PtrDescr,
-                   std::optional<std::reference_wrapper<const BugType>> BT =
-                       std::nullopt) const;
-
   /// Check that the stream is the opened state.
   /// If the stream is known to be not opened an error is generated
   /// and nullptr returned, otherwise the original state is returned.
@@ -530,10 +518,6 @@ private:
   /// (State is not changed here because the "whence" value is already known.)
   ProgramStateRef ensureFseekWhenceCorrect(SVal WhenceVal, CheckerContext &C,
                                            ProgramStateRef State) const;
-
-  ProgramStateRef ensureGetdelimBufferAndSizeCorrect(
-      SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
-      const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const;
 
   /// Generate warning about stream in EOF state.
   /// There will be always a state transition into the passed State,
@@ -1195,110 +1179,6 @@ void StreamChecker::evalUngetc(const FnDescription *Desc, const CallEvent &Call,
   C.addTransition(StateFailed);
 }
 
-ProgramStateRef StreamChecker::ensureGetdelimBufferAndSizeCorrect(
-    SVal LinePtrPtrSVal, SVal SizePtrSVal, const Expr *LinePtrPtrExpr,
-    const Expr *SizePtrExpr, CheckerContext &C, ProgramStateRef State) const {
-  static constexpr llvm::StringLiteral SizeGreaterThanBufferSize =
-      "The buffer from the first argument is smaller than the size "
-      "specified by the second parameter";
-  static constexpr llvm::StringLiteral SizeUndef =
-      "The buffer from the first argument is not NULL, but the size specified "
-      "by the second parameter is undefined.";
-
-  auto EmitBugReport = [this, &C, SizePtrExpr, LinePtrPtrExpr](
-                           ProgramStateRef BugState, StringRef ErrMsg) {
-    if (ExplodedNode *N = C.generateErrorNode(BugState)) {
-      auto R =
-          std::make_unique<PathSensitiveBugReport>(BT_IllegalSize, ErrMsg, N);
-      bugreporter::trackExpressionValue(N, SizePtrExpr, *R);
-      bugreporter::trackExpressionValue(N, LinePtrPtrExpr, *R);
-      C.emitReport(std::move(R));
-    }
-  };
-
-  // We have a pointer to a pointer to the buffer, and a pointer to the size.
-  // We want what they point at.
-  auto LinePtrSVal = getPointeeVal(LinePtrPtrSVal, State)->getAs<DefinedSVal>();
-  auto NSVal = getPointeeVal(SizePtrSVal, State);
-  if (!LinePtrSVal || !NSVal || NSVal->isUnknown())
-    return nullptr;
-
-  assert(LinePtrPtrExpr && SizePtrExpr);
-
-  const auto [LinePtrNotNull, LinePtrNull] = State->assume(*LinePtrSVal);
-  if (LinePtrNotNull && !LinePtrNull) {
-    // If `*lineptr` is not null, but `*n` is undefined, there is UB.
-    if (NSVal->isUndef()) {
-      EmitBugReport(LinePtrNotNull, SizeUndef);
-      return nullptr;
-    }
-
-    // If it is defined, and known, its size must be less than or equal to
-    // the buffer size.
-    auto NDefSVal = NSVal->getAs<DefinedSVal>();
-    auto &SVB = C.getSValBuilder();
-    auto LineBufSize =
-        getDynamicExtent(LinePtrNotNull, LinePtrSVal->getAsRegion(), SVB);
-    auto LineBufSizeGtN = SVB.evalBinOp(LinePtrNotNull, BO_GE, LineBufSize,
-                                        *NDefSVal, SVB.getConditionType())
-                              .getAs<DefinedOrUnknownSVal>();
-    if (!LineBufSizeGtN)
-      return LinePtrNotNull;
-    if (auto LineBufSizeOk = LinePtrNotNull->assume(*LineBufSizeGtN, true))
-      return LineBufSizeOk;
-
-    EmitBugReport(LinePtrNotNull, SizeGreaterThanBufferSize);
-    return nullptr;
-  }
-  return State;
-}
-
-void StreamChecker::preGetdelim(const FnDescription *Desc,
-                                const CallEvent &Call,
-                                CheckerContext &C) const {
-  ProgramStateRef State = C.getState();
-  SVal StreamVal = getStreamArg(Desc, Call);
-
-  State = ensureStreamNonNull(StreamVal, Call.getArgExpr(Desc->StreamArgNo), C,
-                              State);
-  if (!State)
-    return;
-  State = ensureStreamOpened(StreamVal, C, State);
-  if (!State)
-    return;
-  State = ensureNoFilePositionIndeterminate(StreamVal, C, State);
-  if (!State)
-    return;
-
-  // The parameter `n` must not be NULL.
-  SVal SizePtrSval = Call.getArgSVal(1);
-  State = ensurePtrNotNull(SizePtrSval, Call.getArgExpr(1), C, State, "Size");
-  if (!State)
-    return;
-
-  // The parameter `lineptr` must not be NULL.
-  SVal LinePtrPtrSVal = Call.getArgSVal(0);
-  State =
-      ensurePtrNotNull(LinePtrPtrSVal, Call.getArgExpr(0), C, State, "Line");
-  if (!State)
-    return;
-
-  State = ensureGetdelimBufferAndSizeCorrect(LinePtrPtrSVal, SizePtrSval,
-                                             Call.getArgExpr(0),
-                                             Call.getArgExpr(1), C, State);
-  if (!State)
-    return;
-
-  SymbolRef Sym = StreamVal.getAsSymbol();
-  if (Sym && State->get<StreamMap>(Sym)) {
-    const StreamState *SS = State->get<StreamMap>(Sym);
-    if (SS->ErrorState & ErrorFEof)
-      reportFEofWarning(Sym, C, State);
-  }
-
-  C.addTransition(State);
-}
-
 void StreamChecker::evalGetdelim(const FnDescription *Desc,
                                  const CallEvent &Call,
                                  CheckerContext &C) const {
@@ -1673,31 +1553,27 @@ ProgramStateRef
 StreamChecker::ensureStreamNonNull(SVal StreamVal, const Expr *StreamE,
                                    CheckerContext &C,
                                    ProgramStateRef State) const {
-  return ensurePtrNotNull(StreamVal, StreamE, C, State, "Stream", BT_FileNull);
-}
-
-ProgramStateRef StreamChecker::ensurePtrNotNull(
-    SVal PtrVal, const Expr *PtrExpr, CheckerContext &C, ProgramStateRef State,
-    const StringRef PtrDescr,
-    std::optional<std::reference_wrapper<const BugType>> BT) const {
-  const auto Ptr = PtrVal.getAs<DefinedSVal>();
-  if (!Ptr)
+  auto Stream = StreamVal.getAs<DefinedSVal>();
+  if (!Stream)
     return State;
 
-  const auto [PtrNotNull, PtrNull] = State->assume(*Ptr);
-  if (!PtrNotNull && PtrNull) {
-    if (ExplodedNode *N = C.generateErrorNode(PtrNull)) {
+  ConstraintManager &CM = C.getConstraintManager();
+
+  ProgramStateRef StateNotNull, StateNull;
+  std::tie(StateNotNull, StateNull) = CM.assumeDual(State, *Stream);
+
+  if (!StateNotNull && StateNull) {
+    if (ExplodedNode *N = C.generateErrorNode(StateNull)) {
       auto R = std::make_unique<PathSensitiveBugReport>(
-          BT.value_or(std::cref(BT_ArgumentNull)),
-          (PtrDescr + " pointer might be NULL.").str(), N);
-      if (PtrExpr)
-        bugreporter::trackExpressionValue(N, PtrExpr, *R);
+          BT_FileNull, "Stream pointer might be NULL.", N);
+      if (StreamE)
+        bugreporter::trackExpressionValue(N, StreamE, *R);
       C.emitReport(std::move(R));
     }
     return nullptr;
   }
 
-  return PtrNotNull;
+  return StateNotNull;
 }
 
 ProgramStateRef StreamChecker::ensureStreamOpened(SVal StreamVal,
