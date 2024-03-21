@@ -587,6 +587,22 @@ define i1 @test_assume_cmp_with_offset(i64 %idx) {
   ret i1 %cmp2
 }
 
+define i1 @test_assume_cmp_with_offset_or(i64 %idx) {
+; CHECK-LABEL: @test_assume_cmp_with_offset_or(
+; CHECK-NEXT:    [[IDX_OFF1:%.*]] = add i64 [[IDX:%.*]], -5
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult i64 [[IDX_OFF1]], 3
+; CHECK-NEXT:    tail call void @llvm.assume(i1 [[CMP1]])
+; CHECK-NEXT:    [[IDX_OFF2:%.*]] = or disjoint i64 [[IDX]], 1
+; CHECK-NEXT:    ret i1 true
+;
+  %idx.off1 = add i64 %idx, -5
+  %cmp1 = icmp ult i64 %idx.off1, 3
+  tail call void @llvm.assume(i1 %cmp1)
+  %idx.off2 = or disjoint i64 %idx, 1
+  %cmp2 = icmp ult i64 %idx.off2, 10
+  ret i1 %cmp2
+}
+
 define void @test_cmp_phi(i8 %a) {
 ; CHECK-LABEL: @test_cmp_phi(
 ; CHECK-NEXT:  entry:
