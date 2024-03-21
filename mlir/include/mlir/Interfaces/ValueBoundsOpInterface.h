@@ -280,12 +280,13 @@ protected:
 
   /// Insert a value/dimension into the constraint set. If `isSymbol` is set to
   /// "false", a dimension is added. The value/dimension is added to the
-  /// worklist.
+  /// worklist if `addToWorklist` is set.
   ///
   /// Note: There are certain affine restrictions wrt. dimensions. E.g., they
   /// cannot be multiplied. Furthermore, bounds can only be queried for
   /// dimensions but not for symbols.
-  int64_t insert(Value value, std::optional<int64_t> dim, bool isSymbol = true);
+  int64_t insert(Value value, std::optional<int64_t> dim, bool isSymbol = true,
+                 bool addToWorklist = true);
 
   /// Insert an anonymous column into the constraint set. The column is not
   /// bound to any value/dimension. If `isSymbol` is set to "false", a dimension
