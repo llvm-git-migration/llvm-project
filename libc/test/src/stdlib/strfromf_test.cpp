@@ -9,29 +9,22 @@
 #include "src/stdlib/strfromf.h"
 #include "test/UnitTest/Test.h"
 
+#define ASSERT_STREQ_LEN_STRFROMF(actual_written, actual_str, expected_str)    \
+  EXPECT_EQ(actual_written, static_cast<int>(sizeof(expected_str) - 1));       \
+  EXPECT_STREQ(actual_str, expected_str);
+
 TEST(LlvmLibcStrfromfTest, DecimalFloatFormat) {
   char buff[100];
   int written;
 
   written = LIBC_NAMESPACE::strfromf(buff, 16, "%f", 1.0);
-  EXPECT_EQ(written, 8);
-  ASSERT_STREQ(buff, "1.000000");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.000000");
 
   written = LIBC_NAMESPACE::strfromf(buff, 20, "%f", 1234567890.0);
-  EXPECT_EQ(written, 17);
-  ASSERT_STREQ(buff, "1234567936.000000");
-
-  written = LIBC_NAMESPACE::strfromf(buff, 5, "%f", 1234567890.0);
-  EXPECT_EQ(written, 17);
-  ASSERT_STREQ(buff, "1234");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1234567936.000000");
 
   written = LIBC_NAMESPACE::strfromf(buff, 67, "%.3f", 1.0);
-  EXPECT_EQ(written, 5);
-  ASSERT_STREQ(buff, "1.000");
-
-  written = LIBC_NAMESPACE::strfromf(buff, 20, "%1f", 1234567890.0);
-  EXPECT_EQ(written, 3);
-  ASSERT_STREQ(buff, "%1f");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.000");
 }
 
 TEST(LlvmLibcStrfromfTest, HexExpFloatFormat) {
@@ -54,12 +47,10 @@ TEST(LlvmLibcStrfromfTest, DecimalExpFloatFormat) {
   char buff[100];
   int written;
   written = LIBC_NAMESPACE::strfromf(buff, 20, "%.9e", 1234567890.0);
-  EXPECT_EQ(written, 15);
-  ASSERT_STREQ(buff, "1.234567936e+09");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.234567936e+09");
 
   written = LIBC_NAMESPACE::strfromf(buff, 20, "%.9E", 1234567890.0);
-  EXPECT_EQ(written, 15);
-  ASSERT_STREQ(buff, "1.234567936E+09");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.234567936E+09");
 }
 
 TEST(LlvmLibcStrfromfTest, AutoDecimalFloatFormat) {
@@ -67,41 +58,55 @@ TEST(LlvmLibcStrfromfTest, AutoDecimalFloatFormat) {
   int written;
 
   written = LIBC_NAMESPACE::strfromf(buff, 20, "%.9g", 1234567890.0);
-  EXPECT_EQ(written, 14);
-  ASSERT_STREQ(buff, "1.23456794e+09");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.23456794e+09");
 
   written = LIBC_NAMESPACE::strfromf(buff, 20, "%.9G", 1234567890.0);
-  EXPECT_EQ(written, 14);
-  ASSERT_STREQ(buff, "1.23456794E+09");
-
-  written = LIBC_NAMESPACE::strfromf(buff, 0, "%G", 1.0);
-  EXPECT_EQ(written, 1);
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "1.23456794E+09");
 }
 
 TEST(LlvmLibcStrfromfTest, ImproperFormatString) {
-
   char buff[100];
-  int retval;
-  retval = LIBC_NAMESPACE::strfromf(
+  int written;
+  written = LIBC_NAMESPACE::strfromf(
       buff, 37, "A simple string with no conversions.", 1.0);
-  EXPECT_EQ(retval, 36);
-  ASSERT_STREQ(buff, "A simple string with no conversions.");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff,
+                            "A simple string with no conversions.");
 
-  retval = LIBC_NAMESPACE::strfromf(
+  written = LIBC_NAMESPACE::strfromf(
       buff, 37, "%A simple string with one conversion, should overwrite.", 1.0);
-  EXPECT_EQ(retval, 6);
-  ASSERT_STREQ(buff, "0X1P+0");
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "0X1P+0");
 
-  retval = LIBC_NAMESPACE::strfromf(buff, 74,
-                                    "A simple string with one conversion in %A "
-                                    "between, writes string as it is",
-                                    1.0);
-  EXPECT_EQ(retval, 73);
-  ASSERT_STREQ(buff, "A simple string with one conversion in %A between, "
-                     "writes string as it is");
+  written =
+      LIBC_NAMESPACE::strfromf(buff, 74,
+                               "A simple string with one conversion in %A "
+                               "between, writes string as it is",
+                               1.0);
+  ASSERT_STREQ_LEN_STRFROMF(
+      written, buff,
+      "A simple string with one conversion in %A between, "
+      "writes string as it is");
 
-  retval = LIBC_NAMESPACE::strfromf(buff, 36,
-                                    "A simple string with one conversion", 1.0);
-  EXPECT_EQ(retval, 35);
-  ASSERT_STREQ(buff, "A simple string with one conversion");
+  written = LIBC_NAMESPACE::strfromf(
+      buff, 36, "A simple string with one conversion", 1.0);
+  ASSERT_STREQ_LEN_STRFROMF(written, buff,
+                            "A simple string with one conversion");
+
+  written = LIBC_NAMESPACE::strfromf(buff, 20, "%1f", 1234567890.0);
+  ASSERT_STREQ_LEN_STRFROMF(written, buff, "%1f");
+}
+
+TEST(LlvmLibcStrfromfTest, InsufficientBufsize) {
+  char buff[20];
+  int written;
+
+  written = LIBC_NAMESPACE::strfromf(buff, 5, "%f", 1234567890.0);
+  EXPECT_EQ(written, 17);
+  ASSERT_STREQ(buff, "1234");
+
+  written = LIBC_NAMESPACE::strfromf(buff, 5, "%.5f", 1.05);
+  EXPECT_EQ(written, 7);
+  ASSERT_STREQ(buff, "1.05");
+
+  written = LIBC_NAMESPACE::strfromf(buff, 0, "%g", 1.0);
+  EXPECT_EQ(written, 1);
 }

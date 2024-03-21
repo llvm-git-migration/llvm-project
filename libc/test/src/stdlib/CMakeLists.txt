@@ -179,6 +179,26 @@ add_libc_test(
 )
 
 add_libc_test(
+  strfromd_test
+  SUITE
+    libc-stdlib-tests
+  SRCS
+    strfromd_test.cpp
+  DEPENDS
+    libc.src.stdlib.strfromd
+)
+
+add_libc_test(
+  strfroml_test
+  SUITE
+    libc-stdlib-tests
+  SRCS
+    strfroml_test.cpp
+  DEPENDS
+    libc.src.stdlib.strfroml
+)
+
+add_libc_test(
   abs_test
   SUITE
     libc-stdlib-tests
