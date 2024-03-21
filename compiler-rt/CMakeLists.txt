@@ -36,6 +36,7 @@ include(SetPlatformToolchainTools)
 include(base-config-ix)
 include(CompilerRTUtils)
 include(CMakeDependentOption)
+include(GetDarwinLinkerVersion)
 
 option(COMPILER_RT_BUILD_BUILTINS "Build builtins" ON)
 mark_as_advanced(COMPILER_RT_BUILD_BUILTINS)
@@ -442,6 +443,15 @@ if(FUCHSIA OR UNIX)
   set(SANITIZER_USE_SYMBOLS TRUE)
 else()
   set(SANITIZER_USE_SYMBOLS FALSE)
+endif()
+
+# Get the linker version while configuring compiler-rt and explicitly pass it
+# in cflags during testing. This fixes the compiler/linker version mismatch
+# issue when running a clang built with a newer Xcode in an older Xcode
+set(HOST_LINK_VERSION)
+if (APPLE AND NOT CMAKE_LINKER MATCHES ".*lld.*")
+  get_darwin_linker_version()
+  message(STATUS "Host linker version: ${HOST_LINK_VERSION}")
 endif()
 
 # Build sanitizer runtimes with debug info.
