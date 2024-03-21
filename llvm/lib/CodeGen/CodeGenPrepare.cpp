@@ -8433,7 +8433,29 @@ bool CodeGenPrepare::optimizeInst(Instruction *I, ModifyDT &ModifiedDT) {
     return true;
 
   switch (I->getOpcode()) {
-  case Instruction::Shl:
+  case Instruction::Shl: {
+    // shl X, cttz(Y) -> mul (Y & -Y), X if cttz is unsupported on the target.
+    Value *Y;
+    if (match(I->getOperand(1),
+              m_OneUse(m_Intrinsic<Intrinsic::cttz>(m_Value(Y))))) {
+      EVT VT = TLI->getValueType(*DL, Y->getType());
+      if (!TLI->isOperationLegalOrCustom(ISD::CTTZ, VT) &&
+          TLI->isOperationLegalOrCustom(ISD::MUL, VT)) {
+        IRBuilder<> Builder(I);
+        Value *NegY = Builder.CreateNeg(Y);
+        Value *Power2 = Builder.CreateAnd(Y, NegY);
+        Value *New = Builder.CreateMul(Power2, I->getOperand(0), "",
+                                       /*HasNUW=*/I->hasNoUnsignedWrap(),
+                                       /*HasNSW=*/false);
+        replaceAllUsesWith(I, New, FreshBBs, IsHugeFunc);
+        RecursivelyDeleteTriviallyDeadInstructions(
+            I, TLInfo, nullptr,
+            [&](Value *V) { removeAllAssertingVHReferences(V); });
+        return true;
+      }
+    }
+  }
+    [[fallthrough]];
   case Instruction::LShr:
   case Instruction::AShr:
     return optimizeShiftInst(cast<BinaryOperator>(I));
