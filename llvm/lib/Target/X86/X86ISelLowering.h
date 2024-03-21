@@ -1066,6 +1066,11 @@ namespace llvm {
     bool preferSextInRegOfTruncate(EVT TruncVT, EVT VT,
                                    EVT ExtVT) const override;
 
+    /// Always prefer signed cast from int -> fp.
+    bool isSIToFPCheaperThanUIToFP(EVT FromTy, EVT ToTy) const override {
+      return true;
+    }
+
     bool isXAndYEqZeroPreferableToXAndYEqY(ISD::CondCode Cond,
                                            EVT VT) const override;
 
