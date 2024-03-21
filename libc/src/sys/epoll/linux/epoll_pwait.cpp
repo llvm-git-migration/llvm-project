@@ -8,8 +8,11 @@
 
 #include "src/sys/epoll/epoll_pwait.h"
 
-#include "include/llvm-libc-macros/signal-macros.h" // for NSIG
-#include "include/llvm-libc-types/sigset_t.h"
+// TODO: use our internal sigset_t type and macros (issue #86034)
+// #include "include/llvm-libc-types/sigset_t.h"
+// #include "include/llvm-libc-macros/signal-macros.h" // for NSIG
+#include <signal.h>
+
 #include "include/llvm-libc-types/struct_epoll_event.h"
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
