@@ -84,6 +84,15 @@
 // RUN:     -frtlib-add-rpath \
 // RUN:   | FileCheck --check-prefixes=PERTARGET %s
 
+// Test that the driver adds an per-target arch-specific subdirectory to the
+// stdlib path.
+//
+// RUN: %clang %s -### 2>&1 --target=x86_64-linux-gnu \
+// RUN:     -fsanitize=address -shared-libasan \
+// RUN:     -resource-dir=%S/Inputs/resource_dir_with_per_target_subdir \
+// RUN:     -frtlib-add-rpath \
+// RUN:   | FileCheck --check-prefixes=STDLIB %s
+
 // RESDIR: "-resource-dir" "[[RESDIR:[^"]*]]"
 //
 // LIBPATH-X86_64: -L[[RESDIR]]{{(/|\\\\)lib(/|\\\\)linux(/|\\\\)x86_64}}
@@ -101,3 +110,7 @@
 // PERTARGET: "-resource-dir" "[[PTRESDIR:[^"]*]]"
 // PERTARGET: -L[[PTRESDIR]]{{(/|\\\\)lib(/|\\\\)x86_64-unknown-linux-gnu}}
 // PERTARGET:   "-rpath" "[[PTRESDIR]]{{(/|\\\\)lib(/|\\\\)x86_64-unknown-linux-gnu}}"
+
+// STDLIB: InstalledDir: [[LIBDIR:.+$]]
+// STDLIB: -L[[LIBDIR]]/..{{(/|\\\\)lib(/|\\\\)x86_64-unknown-linux-gnu}}
+// STDLIB:   "-rpath" "[[LIBDIR]]/..{{(/|\\\\)lib(/|\\\\)x86_64-unknown-linux-gnu}}"
