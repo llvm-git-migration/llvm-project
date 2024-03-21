@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/__support/common.h"
-#include "syscall.h" // For internal syscall function.
+#include "syscall.h"     // For internal syscall function.
 #include <sys/syscall.h> // For syscall numbers.
 
 namespace LIBC_NAMESPACE {
