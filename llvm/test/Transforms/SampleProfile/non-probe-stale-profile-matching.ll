@@ -5,21 +5,10 @@
 
 ; CHECK: Run stale profile matching for main
 
-; CHECK: Location is matched from 1 to 1
-; CHECK: Location is matched from 2 to 2
-; CHECK: Location is matched from 4 to 4
-; CHECK: Location is matched from 6 to 6
-; CHECK: Location is matched from 7 to 7
-; CHECK: Location is matched from 8 to 8
-; CHECK: Location is matched from 10 to 10
-
-; CHECK: Callsite with callee:foo is matched from 12 to 6
-; CHECK: Location is rematched backwards from 7 to 1
-; CHECK: Location is rematched backwards from 8 to 2
-; CHECK: Location is rematched backwards from 10 to 4
-; CHECK: Callsite with callee:bar is matched from 13 to 7
-; CHECK: Callsite with callee:foo is matched from 14 to 8
-; CHECK: Callsite with callee:bar is matched from 15 to 9
+; CHECK: Callsite with callee:foo is matched from 3.12 to 6
+; CHECK: Callsite with callee:bar is matched from 4.13 to 7
+; CHECK: Callsite with callee:foo is matched from 7.14 to 8
+; CHECK: Callsite with callee:bar is matched from 8.15 to 9
 
 
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
