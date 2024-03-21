@@ -67,8 +67,9 @@ static std::optional<int64_t> getConstantIntValue(OpFoldResult ofr) {
   return std::nullopt;
 }
 
-ValueBoundsConstraintSet::ValueBoundsConstraintSet(MLIRContext *ctx)
-    : builder(ctx) {}
+ValueBoundsConstraintSet::ValueBoundsConstraintSet(
+    MLIRContext *ctx, StopConditionFn stopCondition)
+    : builder(ctx), stopCondition(stopCondition) {}
 
 #ifndef NDEBUG
 static void assertValidValueDim(Value value, std::optional<int64_t> dim) {
@@ -228,7 +229,8 @@ static Operation *getOwnerOfValue(Value value) {
   return value.getDefiningOp();
 }
 
-void ValueBoundsConstraintSet::processWorklist(StopConditionFn stopCondition) {
+void ValueBoundsConstraintSet::processWorklist() {
+  LLVM_DEBUG(llvm::dbgs() << "Processing value bounds worklist...\n");
   while (!worklist.empty()) {
     int64_t pos = worklist.front();
     worklist.pop();
@@ -249,13 +251,19 @@ void ValueBoundsConstraintSet::processWorklist(StopConditionFn stopCondition) {
 
     // Do not process any further if the stop condition is met.
     auto maybeDim = dim == kIndexValue ? std::nullopt : std::make_optional(dim);
-    if (stopCondition(value, maybeDim))
+    if (stopCondition(value, maybeDim, *this)) {
+      LLVM_DEBUG(llvm::dbgs() << "Stop condition met for: " << value
+                              << " (dim: " << maybeDim << ")\n");
       continue;
+    }
 
     // Query `ValueBoundsOpInterface` for constraints. New items may be added to
     // the worklist.
     auto valueBoundsOp =
         dyn_cast<ValueBoundsOpInterface>(getOwnerOfValue(value));
+    LLVM_DEBUG(llvm::dbgs()
+               << "Query value bounds for: " << value
+               << " (owner: " << getOwnerOfValue(value)->getName() << ")\n");
     if (valueBoundsOp) {
       if (dim == kIndexValue) {
         valueBoundsOp.populateBoundsForIndexValue(value, *this);
@@ -264,6 +272,7 @@ void ValueBoundsConstraintSet::processWorklist(StopConditionFn stopCondition) {
       }
       continue;
     }
+    LLVM_DEBUG(llvm::dbgs() << "--> ValueBoundsOpInterface not implemented\n");
 
     // If the op does not implement `ValueBoundsOpInterface`, check if it
     // implements the `DestinationStyleOpInterface`. OpResults of such ops are
@@ -313,8 +322,6 @@ LogicalResult ValueBoundsConstraintSet::computeBound(
     bool closedUB) {
 #ifndef NDEBUG
   assertValidValueDim(value, dim);
-  assert(!stopCondition(value, dim) &&
-         "stop condition should not be satisfied for starting point");
 #endif // NDEBUG
 
   int64_t ubAdjustment = closedUB ? 0 : 1;
@@ -324,9 +331,11 @@ LogicalResult ValueBoundsConstraintSet::computeBound(
   // Process the backward slice of `value` (i.e., reverse use-def chain) until
   // `stopCondition` is met.
   ValueDim valueDim = std::make_pair(value, dim.value_or(kIndexValue));
-  ValueBoundsConstraintSet cstr(value.getContext());
+  ValueBoundsConstraintSet cstr(value.getContext(), stopCondition);
+  assert(!stopCondition(value, dim, cstr) &&
+         "stop condition should not be satisfied for starting point");
   int64_t pos = cstr.insert(value, dim, /*isSymbol=*/false);
-  cstr.processWorklist(stopCondition);
+  cstr.processWorklist();
 
   // Project out all variables (apart from `valueDim`) that do not match the
   // stop condition.
@@ -336,7 +345,7 @@ LogicalResult ValueBoundsConstraintSet::computeBound(
       return false;
     auto maybeDim =
         p.second == kIndexValue ? std::nullopt : std::make_optional(p.second);
-    return !stopCondition(p.first, maybeDim);
+    return !stopCondition(p.first, maybeDim, cstr);
   });
 
   // Compute lower and upper bounds for `valueDim`.
@@ -442,7 +451,7 @@ LogicalResult ValueBoundsConstraintSet::computeDependentBound(
     bool closedUB) {
   return computeBound(
       resultMap, mapOperands, type, value, dim,
-      [&](Value v, std::optional<int64_t> d) {
+      [&](Value v, std::optional<int64_t> d, ValueBoundsConstraintSet &cstr) {
         return llvm::is_contained(dependencies, std::make_pair(v, d));
       },
       closedUB);
@@ -478,7 +487,9 @@ LogicalResult ValueBoundsConstraintSet::computeIndependentBound(
   // Reify bounds in terms of any independent values.
   return computeBound(
       resultMap, mapOperands, type, value, dim,
-      [&](Value v, std::optional<int64_t> d) { return isIndependent(v); },
+      [&](Value v, std::optional<int64_t> d, ValueBoundsConstraintSet &cstr) {
+        return isIndependent(v);
+      },
       closedUB);
 }
 
@@ -500,8 +511,18 @@ FailureOr<int64_t> ValueBoundsConstraintSet::computeConstantBound(
     presburger::BoundType type, AffineMap map, ValueDimList operands,
     StopConditionFn stopCondition, bool closedUB) {
   assert(map.getNumResults() == 1 && "expected affine map with one result");
-  ValueBoundsConstraintSet cstr(map.getContext());
-  int64_t pos = cstr.insert(/*isSymbol=*/false);
+
+  // Default stop condition if none was specified: Keep adding constraints until
+  // a bound could be computed.
+  int64_t pos;
+  auto defaultStopCondition = [&](Value v, std::optional<int64_t> dim,
+                                  ValueBoundsConstraintSet &cstr) {
+    return cstr.cstr.getConstantBound64(type, pos).has_value();
+  };
+
+  ValueBoundsConstraintSet cstr(
+      map.getContext(), stopCondition ? stopCondition : defaultStopCondition);
+  pos = cstr.insert(/*isSymbol=*/false);
 
   // Add map and operands to the constraint set. Dimensions are converted to
   // symbols. All operands are added to the worklist.
@@ -517,17 +538,8 @@ FailureOr<int64_t> ValueBoundsConstraintSet::computeConstantBound(
       map.getResult(0).replaceDimsAndSymbols(dimReplacements, symReplacements));
 
   // Process the backward slice of `operands` (i.e., reverse use-def chain)
-  // until `stopCondition` is met.
-  if (stopCondition) {
-    cstr.processWorklist(stopCondition);
-  } else {
-    // No stop condition specified: Keep adding constraints until a bound could
-    // be computed.
-    cstr.processWorklist(
-        /*stopCondition=*/[&](Value v, std::optional<int64_t> dim) {
-          return cstr.cstr.getConstantBound64(type, pos).has_value();
-        });
-  }
+  // until the stop condition is met.
+  cstr.processWorklist();
 
   // Compute constant bound for `valueDim`.
   int64_t ubAdjustment = closedUB ? 0 : 1;
