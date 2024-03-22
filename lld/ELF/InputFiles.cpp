@@ -194,6 +194,10 @@ static void updateSupportedARMFeatures(const ARMAttributeParser &attributes) {
   if (arch >= ARMBuildAttrs::CPUArch::v8_M_Base &&
       profile == ARMBuildAttrs::MicroControllerProfile)
     config->armCMSESupport = true;
+
+  // The Cortex-M processors only support Thumb.
+  if (profile == ARMBuildAttrs::MicroControllerProfile)
+    config->armAlwaysThumb = true;
 }
 
 InputFile::InputFile(Kind k, MemoryBufferRef m)

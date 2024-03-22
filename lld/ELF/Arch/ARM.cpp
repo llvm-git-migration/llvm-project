@@ -231,36 +231,68 @@ static void writePltHeaderLong(uint8_t *buf) {
 // The default PLT header requires the .got.plt to be within 128 Mb of the
 // .plt in the positive direction.
 void ARM::writePltHeader(uint8_t *buf) const {
-  // Use a similar sequence to that in writePlt(), the difference is the calling
-  // conventions mean we use lr instead of ip. The PLT entry is responsible for
-  // saving lr on the stack, the dynamic loader is responsible for reloading
-  // it.
-  const uint32_t pltData[] = {
-      0xe52de004, // L1: str lr, [sp,#-4]!
-      0xe28fe600, //     add lr, pc,  #0x0NN00000 &(.got.plt - L1 - 4)
-      0xe28eea00, //     add lr, lr,  #0x000NN000 &(.got.plt - L1 - 4)
-      0xe5bef000, //     ldr pc, [lr, #0x00000NNN] &(.got.plt -L1 - 4)
-  };
+  if (!config->armAlwaysThumb) {
+    // Use a similar sequence to that in writePlt(), the difference is the calling
+    // conventions mean we use lr instead of ip. The PLT entry is responsible for
+    // saving lr on the stack, the dynamic loader is responsible for reloading
+    // it.
+    const uint32_t pltData[] = {
+        0xe52de004, // L1: str lr, [sp,#-4]!
+        0xe28fe600, //     add lr, pc,  #0x0NN00000 &(.got.plt - L1 - 4)
+        0xe28eea00, //     add lr, lr,  #0x000NN000 &(.got.plt - L1 - 4)
+        0xe5bef000, //     ldr pc, [lr, #0x00000NNN] &(.got.plt -L1 - 4)
+    };
 
-  uint64_t offset = in.gotPlt->getVA() - in.plt->getVA() - 4;
-  if (!llvm::isUInt<27>(offset)) {
-    // We cannot encode the Offset, use the long form.
-    writePltHeaderLong(buf);
-    return;
+    uint64_t offset = in.gotPlt->getVA() - in.plt->getVA() - 4;
+    if (!llvm::isUInt<27>(offset)) {
+      // We cannot encode the Offset, use the long form.
+      writePltHeaderLong(buf);
+      return;
+    }
+    write32(buf + 0, pltData[0]);
+    write32(buf + 4, pltData[1] | ((offset >> 20) & 0xff));
+    write32(buf + 8, pltData[2] | ((offset >> 12) & 0xff));
+    write32(buf + 12, pltData[3] | (offset & 0xfff));
+    memcpy(buf + 16, trapInstr.data(), 4); // Pad to 32-byte boundary
+    memcpy(buf + 20, trapInstr.data(), 4);
+    memcpy(buf + 24, trapInstr.data(), 4);
+    memcpy(buf + 28, trapInstr.data(), 4);
+  } else {
+    uint64_t offset = in.gotPlt->getVA() - in.plt->getVA() - 16;
+
+    if (!llvm::isUInt<32>(offset)) {
+      // We cannot encode the Offset, use the long form.
+      llvm::errs() << "TODO: Implement long thumb plt header?\n";
+      __builtin_trap();
+    }
+    // 32: b500          push    {lr}
+    // 34: f8df e008     ldr.w   lr, [pc, #0x8]          @ 0x40 <func+0x40>
+    // 38: 44fe          add     lr, pc
+    // 3a: f85e ff08     ldr     pc, [lr, #8]!
+    write16(buf + 0, 0xb500);
+    write32(buf + 2, 0xe008f8df);
+    write16(buf + 6, 0x44fe);
+    write32(buf + 8, 0xff08f85e);
+    buf[12] = (offset >> 0) & 0xff;
+    buf[13] = (offset >> 8) & 0xff;
+    buf[14] = (offset >> 16) & 0xff;
+    buf[15] = (offset >> 24) & 0xff;
+
+    memcpy(buf + 16, trapInstr.data(), 4);  // Pad to 32-byte boundary
+    memcpy(buf + 20, trapInstr.data(), 4);
+    memcpy(buf + 24, trapInstr.data(), 4);
+    memcpy(buf + 28, trapInstr.data(), 4);
   }
-  write32(buf + 0, pltData[0]);
-  write32(buf + 4, pltData[1] | ((offset >> 20) & 0xff));
-  write32(buf + 8, pltData[2] | ((offset >> 12) & 0xff));
-  write32(buf + 12, pltData[3] | (offset & 0xfff));
-  memcpy(buf + 16, trapInstr.data(), 4); // Pad to 32-byte boundary
-  memcpy(buf + 20, trapInstr.data(), 4);
-  memcpy(buf + 24, trapInstr.data(), 4);
-  memcpy(buf + 28, trapInstr.data(), 4);
 }
 
 void ARM::addPltHeaderSymbols(InputSection &isec) const {
-  addSyntheticLocal("$a", STT_NOTYPE, 0, 0, isec);
-  addSyntheticLocal("$d", STT_NOTYPE, 16, 0, isec);
+  if (!config->armAlwaysThumb) {
+    addSyntheticLocal("$a", STT_NOTYPE, 0, 0, isec);
+    addSyntheticLocal("$d", STT_NOTYPE, 16, 0, isec);
+  } else {
+    addSyntheticLocal("$t", STT_NOTYPE, 0, 0, isec);
+    addSyntheticLocal("$d", STT_NOTYPE, 12, 0, isec);
+  }
 }
 
 // Long form PLT entries that do not have any restrictions on the displacement
@@ -279,32 +311,114 @@ static void writePltLong(uint8_t *buf, uint64_t gotPltEntryAddr,
 // .plt in the positive direction.
 void ARM::writePlt(uint8_t *buf, const Symbol &sym,
                    uint64_t pltEntryAddr) const {
-  // The PLT entry is similar to the example given in Appendix A of ELF for
-  // the Arm Architecture. Instead of using the Group Relocations to find the
-  // optimal rotation for the 8-bit immediate used in the add instructions we
-  // hard code the most compact rotations for simplicity. This saves a load
-  // instruction over the long plt sequences.
-  const uint32_t pltData[] = {
-      0xe28fc600, // L1: add ip, pc,  #0x0NN00000  Offset(&(.got.plt) - L1 - 8
-      0xe28cca00, //     add ip, ip,  #0x000NN000  Offset(&(.got.plt) - L1 - 8
-      0xe5bcf000, //     ldr pc, [ip, #0x00000NNN] Offset(&(.got.plt) - L1 - 8
-  };
 
-  uint64_t offset = sym.getGotPltVA() - pltEntryAddr - 8;
-  if (!llvm::isUInt<27>(offset)) {
-    // We cannot encode the Offset, use the long form.
-    writePltLong(buf, sym.getGotPltVA(), pltEntryAddr);
-    return;
+  if (!config->armAlwaysThumb) {
+    uint64_t offset = sym.getGotPltVA() - pltEntryAddr - 8;
+    //llvm::errs() << "sym: " << sym.getName() << "\n";
+    //llvm::errs() << "offset: " << (void*)offset << "\n";
+
+    // The PLT entry is similar to the example given in Appendix A of ELF for
+    // the Arm Architecture. Instead of using the Group Relocations to find the
+    // optimal rotation for the 8-bit immediate used in the add instructions we
+    // hard code the most compact rotations for simplicity. This saves a load
+    // instruction over the long plt sequences.
+    const uint32_t pltData[] = {
+        0xe28fc600, // L1: add ip, pc,  #0x0NN00000  Offset(&(.got.plt) - L1 - 8
+        0xe28cca00, //     add ip, ip,  #0x000NN000  Offset(&(.got.plt) - L1 - 8
+        0xe5bcf000, //     ldr pc, [ip, #0x00000NNN] Offset(&(.got.plt) - L1 - 8
+    };
+    if (!llvm::isUInt<27>(offset)) {
+      // We cannot encode the Offset, use the long form.
+      writePltLong(buf, sym.getGotPltVA(), pltEntryAddr);
+      return;
+    }
+    write32(buf + 0, pltData[0] | ((offset >> 20) & 0xff));
+    write32(buf + 4, pltData[1] | ((offset >> 12) & 0xff));
+    write32(buf + 8, pltData[2] | (offset & 0xfff));
+    memcpy(buf + 12, trapInstr.data(), 4); // Pad to 16-byte boundary
+  } else {
+    uint64_t offset = sym.getGotPltVA() - pltEntryAddr - 12;
+    //llvm::errs() << "sym: " << sym.getName() << "\n";
+    //llvm::errs() << "offset: " << (void*)offset << "\n";
+
+    if (!llvm::isUInt<32>(offset)) {
+      llvm::errs() << "TODO: Implement long thumb plt?\n";
+      __builtin_trap();
+    }
+    // MOVW: https://developer.arm.com/documentation/ddi0308/d/Thumb-Instructions/Alphabetical-list-of-Thumb-instructions/MOV--immediate-
+    // MOVT: https://developer.arm.com/documentation/ddi0308/d/Thumb-Instructions/Alphabetical-list-of-Thumb-instructions/MOVT
+    // Emit
+    //
+    //   movw ip, #<lower 16 bits>
+    //   movt ip, #<upper 16 bits>
+    //   add ip, pc
+    //   ldr.w pc, [ip]
+    //
+    // where ip = r12 = 0xc
+    //
+    constexpr uint32_t pltData[] = {
+        0x0c00f240, //     movw ip, <offset lower 16>
+        0x0c00f2c0, //     movt ip, <offset higher 16>
+    };
+    // movw encoding:
+    //
+    //   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+    //   1  1  1  1  0  i  1 0 0 1 0 0 imm4
+    //
+    //   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+    //   0  imm3     Rd0       imm8
+    //
+    //   imm16 = imm4:i:imm3:imm8, i = bit 11
+    //
+    uint16_t offset_lower = offset & 0xffff;
+    //llvm::errs() << "offset_lower: " << format_hex(offset_lower, 4) << "\n";
+    uint32_t movwImm8 = offset_lower & 0xff;
+    uint32_t movwImm3 = (offset_lower >> 8) & 0x7;
+    uint32_t movwI = (offset_lower >> 11) & 0x1;
+    uint32_t movwImm4 = (offset_lower >> 12) & 0xf;
+    uint32_t movwBits = (movwI << 10) | (movwImm4 << 0) | (movwImm3 << 28) | (movwImm8 << 16);
+    //uint32_t movwBits = (movwI << 26) | (movwImm4 << 16) | (movwImm3 << 12) | movwImm8;
+    //llvm::errs() << "movwBits: " << format_hex(movwBits, 4) << "\n";
+    write32(buf + 0, pltData[0] | movwBits);
+
+    // movt encoding:
+    //
+    //   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+    //   1  1  1  1  0  i  1 0 1 1 0 0 imm4
+    //
+    //   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+    //   0  imm3     Rd0       imm8
+    //
+    //   imm16 = imm4:i:imm3:imm8, i = bit 11
+    //
+    uint16_t offset_upper = static_cast<uint16_t>(offset >> 16);
+    //llvm::errs() << "offset_upper: " << format_hex(offset_upper, 4) << "\n";
+    uint32_t movtImm8 = offset_upper & 0xff;
+    uint32_t movtImm3 = (offset_upper >> 8) & 0x7;
+    uint32_t movtI = (offset_upper >> 11) & 0x1;
+    uint32_t movtImm4 = (offset_upper >> 12) & 0xf;
+    //uint32_t movtBits = (movtI << 26) | (movtImm4 << 16) | (movtImm3 << 12) | movtImm8;
+    uint32_t movtBits = (movtI << 10) | (movtImm4 << 0) | (movtImm3 << 28) | (movtImm8 << 16);
+    //llvm::errs() << "movtBits: " << format_hex(movtBits, 4) << "\n";
+    write32(buf + 4, pltData[1] | movtBits);
+
+    write16(buf + 8, 0x44fc);  // add ip, pc
+    write32(buf + 10, 0xf000f8dc);  // ldr.w   pc, [ip]
+    //write32(buf + 10, 0xf8dcf000);  // ldr.w   pc, [ip]
+    write16(buf + 14, 0xe7fc);  // Branch to the previous instruction.
+    //memcpy(buf + 14, trapInstr.data(), 2); // Pad to 16-byte boundary
+
+    // The PLT size for ARM is 16 bytes and the above sequence is 14 bytes so we could potentially fit one more instruction.
   }
-  write32(buf + 0, pltData[0] | ((offset >> 20) & 0xff));
-  write32(buf + 4, pltData[1] | ((offset >> 12) & 0xff));
-  write32(buf + 8, pltData[2] | (offset & 0xfff));
-  memcpy(buf + 12, trapInstr.data(), 4); // Pad to 16-byte boundary
 }
 
 void ARM::addPltSymbols(InputSection &isec, uint64_t off) const {
-  addSyntheticLocal("$a", STT_NOTYPE, off, 0, isec);
-  addSyntheticLocal("$d", STT_NOTYPE, off + 12, 0, isec);
+  if (!config->armAlwaysThumb) {
+    addSyntheticLocal("$a", STT_NOTYPE, off, 0, isec);
+    addSyntheticLocal("$d", STT_NOTYPE, off + 12, 0, isec);
+  } else {
+    addSyntheticLocal("$t", STT_NOTYPE, off, 0, isec);
+  }
 }
 
 bool ARM::needsThunk(RelExpr expr, RelType type, const InputFile *file,
@@ -337,7 +451,7 @@ bool ARM::needsThunk(RelExpr expr, RelType type, const InputFile *file,
   case R_ARM_THM_JUMP24:
     // Source is Thumb, all PLT entries are ARM so interworking is required.
     // Otherwise we need to interwork if STT_FUNC Symbol has bit 0 clear (ARM).
-    if (expr == R_PLT_PC || (s.isFunc() && (s.getVA() & 1) == 0))
+    if ((expr == R_PLT_PC && !config->armAlwaysThumb) || (s.isFunc() && (s.getVA() & 1) == 0))
       return true;
     [[fallthrough]];
   case R_ARM_THM_CALL: {
@@ -606,12 +720,13 @@ void ARM::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {
     // PLT entries are always ARM state so we know we need to interwork.
     assert(rel.sym); // R_ARM_THM_CALL is always reached via relocate().
     bool bit0Thumb = val & 1;
+    bool useThumb = bit0Thumb || config->armAlwaysThumb;
     bool isBlx = (read16(loc + 2) & 0x1000) == 0;
     // lld 10.0 and before always used bit0Thumb when deciding to write a BLX
     // even when type not STT_FUNC. PLT entries generated by LLD are always ARM.
-    if (!rel.sym->isFunc() && !rel.sym->isInPlt() && isBlx == bit0Thumb)
+    if (!rel.sym->isFunc() && !rel.sym->isInPlt() && isBlx == useThumb)
       stateChangeWarning(loc, rel.type, *rel.sym);
-    if (rel.sym->isFunc() || rel.sym->isInPlt() ? !bit0Thumb : isBlx) {
+    if ((rel.sym->isFunc() || rel.sym->isInPlt()) ? !useThumb : isBlx) {
       // We are writing a BLX. Ensure BLX destination is 4-byte aligned. As
       // the BLX instruction may only be two byte aligned. This must be done
       // before overflow check.
