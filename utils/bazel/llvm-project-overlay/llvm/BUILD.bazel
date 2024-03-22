@@ -4,6 +4,7 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("//mlir:tblgen.bzl", "td_library")
 load(":binary_alias.bzl", "binary_alias")
 load(":config.bzl", "llvm_config_defines")
 load(":enum_targets_gen.bzl", "enum_targets_gen")
@@ -5337,4 +5338,10 @@ cc_binary(
     deps = [
         ":Support",
     ],
+)
+
+td_library(
+    name = "OptParserTdFiles",
+    srcs = ["include/llvm/Option/OptParser.td"],
+    includes = ["include"],
 )
