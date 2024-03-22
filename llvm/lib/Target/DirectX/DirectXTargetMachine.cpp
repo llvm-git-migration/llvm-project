@@ -104,19 +104,8 @@ DirectXTargetMachine::~DirectXTargetMachine() {}
 
 void DirectXTargetMachine::registerPassBuilderCallbacks(
     PassBuilder &PB, bool PopulateClassToPassNames) {
-  PB.registerPipelineParsingCallback(
-      [](StringRef PassName, ModulePassManager &PM,
-         ArrayRef<PassBuilder::PipelineElement>) {
-        if (PassName == "print-dxil-resource") {
-          PM.addPass(DXILResourcePrinterPass(dbgs()));
-          return true;
-        }
-        if (PassName == "print-dx-shader-flags") {
-          PM.addPass(dxil::ShaderFlagsAnalysisPrinter(dbgs()));
-          return true;
-        }
-        return false;
-      });
+#define GET_PASS_REGISTRY "DirectXPassRegistry.def"
+#include "llvm/Passes/TargetPassRegistry.inc"
 
   PB.registerAnalysisRegistrationCallback([](ModuleAnalysisManager &MAM) {
     MAM.registerPass([&] { return DXILResourceAnalysis(); });
