@@ -1280,7 +1280,9 @@ def SparseTensor_SelectOp : SparseTensor_Op<"select", [Pure, SameOperandsAndResu
   let hasVerifier = 1;
 }
 
-def SparseTensor_YieldOp : SparseTensor_Op<"yield", [Pure, Terminator]>,
+def SparseTensor_YieldOp : SparseTensor_Op<"yield", [Pure, Terminator,
+    ParentOneOf<["BinaryOp", "UnaryOp", "ReduceOp", "SelectOp", "ForeachOp",
+                 "IterateOp"]>]>,
     Arguments<(ins Optional<AnyType>:$result)> {
   let summary = "Yield from sparse_tensor set-like operations";
   let description = [{
@@ -1311,7 +1313,6 @@ def SparseTensor_YieldOp : SparseTensor_Op<"yield", [Pure, Terminator]>,
   let assemblyFormat = [{
         $result attr-dict `:` type($result)
   }];
-  let hasVerifier = 1;
 }
 
 def SparseTensor_ForeachOp : SparseTensor_Op<"foreach",
@@ -1440,8 +1441,18 @@ def ExtractIterSpaceOp : SparseTensor_Op<"iteration.extract_space",
   }];
 
   let hasVerifier = 1;
-  let assemblyFormat = "$tensor (`at`$parentIter^)? `lvls` `=` custom<LevelRange>($loLvl, $hiLvl) "
+  let assemblyFormat = "$tensor (`at` $parentIter^)? `lvls` `=` custom<LevelRange>($loLvl, $hiLvl) "
                        " attr-dict `:` type($tensor) (`,` type($parentIter)^)?";
+}
+
+def CoordinateOp : SparseTensor_Op<"iteration.coordinate",
+    [Pure, DeclareOpInterfaceMethods<SparseCollapsableOpInterface>]> {
+  let arguments = (ins AnySparseIterator:$iterator);
+  let results = (outs Variadic<Index>:$crds);
+
+  let extraClassDeclaration = [{ }];
+  // let hasVerifier = 1;
+  let assemblyFormat = " $iterator attr-dict `:` type($iterator) `->` type($crds)";
 }
 
 def IterateOp : SparseTensor_Op<"iterate",
