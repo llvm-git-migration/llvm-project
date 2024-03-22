@@ -272,6 +272,22 @@ MachineInstrBuilder CSEMIRBuilder::buildInstr(unsigned Opc,
           buildConstant(VecTy.getScalarType(), Cst).getReg(0));
     return buildBuildVector(DstOps[0], ConstantRegs);
   }
+  case TargetOpcode::G_CTTZ: {
+    assert(SrcOps.size() == 1 && "Expected one source");
+    assert(DstOps.size() == 1 && "Expected one dest");
+    auto MaybeCsts = ConstantFoldCTTZ(SrcOps[0].getReg(), *getMRI());
+    if (!MaybeCsts)
+      break;
+    if (MaybeCsts->size() == 1)
+      return buildConstant(DstOps[0], (*MaybeCsts)[0]);
+    // This was a vector constant. Build a G_BUILD_VECTOR for them.
+    SmallVector<Register> ConstantRegs;
+    LLT VecTy = DstOps[0].getLLTTy(*getMRI());
+    for (unsigned Cst : *MaybeCsts)
+      ConstantRegs.emplace_back(
+          buildConstant(VecTy.getScalarType(), Cst).getReg(0));
+    return buildBuildVector(DstOps[0], ConstantRegs);
+  }
   }
   bool CanCopy = checkCopyToDefsPossible(DstOps);
   if (!canPerformCSEForOpc(Opc))

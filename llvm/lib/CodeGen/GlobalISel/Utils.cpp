@@ -996,6 +996,37 @@ llvm::ConstantFoldCTLZ(Register Src, const MachineRegisterInfo &MRI) {
   return std::nullopt;
 }
 
+std::optional<SmallVector<unsigned>>
+llvm::ConstantFoldCTTZ(Register Src, const MachineRegisterInfo &MRI) {
+  LLT Ty = MRI.getType(Src);
+  SmallVector<unsigned> FoldedCTTZs;
+  auto tryFoldScalar = [&](Register R) -> std::optional<unsigned> {
+    auto MaybeCst = getIConstantVRegVal(R, MRI);
+    if (!MaybeCst)
+      return std::nullopt;
+    return MaybeCst->countTrailingZeros();
+  };
+  if (Ty.isVector()) {
+    // Try to constant fold each element.
+    auto *BV = getOpcodeDef<GBuildVector>(Src, MRI);
+    if (!BV)
+      return std::nullopt;
+    for (unsigned SrcIdx = 0; SrcIdx < BV->getNumSources(); ++SrcIdx) {
+      if (auto MaybeFold = tryFoldScalar(BV->getSourceReg(SrcIdx))) {
+        FoldedCTTZs.emplace_back(*MaybeFold);
+        continue;
+      }
+      return std::nullopt;
+    }
+    return FoldedCTTZs;
+  }
+  if (auto MaybeCst = tryFoldScalar(Src)) {
+    FoldedCTTZs.emplace_back(*MaybeCst);
+    return FoldedCTTZs;
+  }
+  return std::nullopt;
+}
+
 bool llvm::isKnownToBeAPowerOfTwo(Register Reg, const MachineRegisterInfo &MRI,
                                   GISelKnownBits *KB) {
   std::optional<DefinitionAndSourceRegister> DefSrcReg =
