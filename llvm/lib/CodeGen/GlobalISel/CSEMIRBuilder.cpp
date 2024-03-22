@@ -174,6 +174,20 @@ MachineInstrBuilder CSEMIRBuilder::buildInstr(unsigned Opc,
   switch (Opc) {
   default:
     break;
+  case TargetOpcode::G_ICMP: {
+    assert(SrcOps.size() == 3 && "Invalid sources");
+    assert(DstOps.size() == 1 && "Invalid dsts");
+    LLT SrcTy = SrcOps[1].getLLTTy(*getMRI());
+
+    if (std::optional<SmallVector<APInt>> Cst =
+            ConstantFoldICmp(SrcOps[0].getPredicate(), SrcOps[1].getReg(),
+                             SrcOps[2].getReg(), *getMRI())) {
+      if (SrcTy.isVector())
+        return buildBuildVectorConstant(DstOps[0], *Cst);
+      return buildConstant(DstOps[0], Cst->front());
+    }
+    break;
+  }
   case TargetOpcode::G_ADD:
   case TargetOpcode::G_PTR_ADD:
   case TargetOpcode::G_AND:
@@ -260,6 +274,22 @@ MachineInstrBuilder CSEMIRBuilder::buildInstr(unsigned Opc,
     assert(SrcOps.size() == 1 && "Expected one source");
     assert(DstOps.size() == 1 && "Expected one dest");
     auto MaybeCsts = ConstantFoldCTLZ(SrcOps[0].getReg(), *getMRI());
+    if (!MaybeCsts)
+      break;
+    if (MaybeCsts->size() == 1)
+      return buildConstant(DstOps[0], (*MaybeCsts)[0]);
+    // This was a vector constant. Build a G_BUILD_VECTOR for them.
+    SmallVector<Register> ConstantRegs;
+    LLT VecTy = DstOps[0].getLLTTy(*getMRI());
+    for (unsigned Cst : *MaybeCsts)
+      ConstantRegs.emplace_back(
+          buildConstant(VecTy.getScalarType(), Cst).getReg(0));
+    return buildBuildVector(DstOps[0], ConstantRegs);
+  }
+  case TargetOpcode::G_CTTZ: {
+    assert(SrcOps.size() == 1 && "Expected one source");
+    assert(DstOps.size() == 1 && "Expected one dest");
+    auto MaybeCsts = ConstantFoldCTTZ(SrcOps[0].getReg(), *getMRI());
     if (!MaybeCsts)
       break;
     if (MaybeCsts->size() == 1)
