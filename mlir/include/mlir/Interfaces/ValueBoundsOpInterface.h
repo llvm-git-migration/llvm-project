@@ -199,6 +199,28 @@ public:
                        std::optional<int64_t> dim1 = std::nullopt,
                        std::optional<int64_t> dim2 = std::nullopt);
 
+  /// Traverse the IR starting from the given value/dim and add populate
+  /// constraints as long as the currently set stop condition holds. Also
+  /// processes all values/dims that are already on the worklist.
+  void populateConstraints(Value value, std::optional<int64_t> dim);
+
+  /// Comparison operator for `ValueBoundsConstraintSet::compare`.
+  enum ComparisonOperator { LT, LE, EQ, GT, GE };
+
+  /// Try to prove that, based on the current state of this constraint set
+  /// (i.e., without analyzing additional IR or adding new constraints), it can
+  /// be deduced that the first given value/dim is LE/LT/EQ/GT/GE than the
+  /// second given value/dim.
+  ///
+  /// Return "true" if the specified relation between the two values/dims was
+  /// proven to hold. Return "false" if the specified relation could not be
+  /// proven. This could be because the specified relation does in fact not hold
+  /// or because there is not enough information in the constraint set. In other
+  /// words, if we do not know for sure, this function returns "false".
+  bool compare(Value value1, std::optional<int64_t> dim1,
+               ComparisonOperator cmp, Value value2,
+               std::optional<int64_t> dim2);
+
   /// Compute whether the given values/dimensions are equal. Return "failure" if
   /// equality could not be determined.
   ///

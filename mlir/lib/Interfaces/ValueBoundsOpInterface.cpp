@@ -575,6 +575,68 @@ ValueBoundsConstraintSet::computeConstantDelta(Value value1, Value value2,
                               {{value1, dim1}, {value2, dim2}});
 }
 
+void ValueBoundsConstraintSet::populateConstraints(Value value,
+                                                   std::optional<int64_t> dim) {
+  // `getExpr` pushes the value/dim onto the worklist (unless it was already
+  // analyzed).
+  (void)getExpr(value, dim);
+  // Process all values/dims on the worklist. This may traverse and analyze
+  // additional IR, depending the current stop function.
+  processWorklist();
+}
+
+bool ValueBoundsConstraintSet::compare(Value value1,
+                                       std::optional<int64_t> dim1,
+                                       ComparisonOperator cmp, Value value2,
+                                       std::optional<int64_t> dim2) {
+  // This function returns "true" if value1/dim1 CMP value2/dim2 is proved to
+  // hold.
+  //
+  // Example for ComparisonOperator::LE and index-typed values: We would like to
+  // prove that value1 <= value2. Proof by contradiction: add the inverse
+  // relation (value1 > value2) to the constraint set and check if the resulting
+  // constraint set is "empty" (i.e. has no solution). In that case,
+  // value1 > value2 must be incorrect and we can deduce that value1 <= value2
+  // holds.
+
+  // We cannot use prove anything if the constraint set is already empty.
+  if (cstr.isEmpty()) {
+    LLVM_DEBUG(
+        llvm::dbgs()
+        << "cannot compare value/dims: constraint system is already empty");
+    return false;
+  }
+
+  // EQ can be expressed as LE and GE.
+  if (cmp == EQ)
+    return compare(value1, dim1, ComparisonOperator::LE, value2, dim2) &&
+           compare(value1, dim1, ComparisonOperator::GE, value2, dim2);
+
+  // Construct inequality. For the above example: value1 > value2.
+  // `IntegerRelation` inequalities are expressed in the "flattened" form and
+  // with ">= 0". I.e., value1 - value2 - 1 >= 0.
+  SmallVector<int64_t> eq(cstr.getNumDimAndSymbolVars() + 1, 0);
+  if (cmp == LT || cmp == LE) {
+    eq[getPos(value1, dim1)]++;
+    eq[getPos(value2, dim2)]--;
+  } else if (cmp == GT || cmp == GE) {
+    eq[getPos(value1, dim1)]--;
+    eq[getPos(value2, dim2)]++;
+  } else {
+    llvm_unreachable("unsupported comparison operator");
+  }
+  if (cmp == LE || cmp == GE)
+    eq[cstr.getNumDimAndSymbolVars()] -= 1;
+
+  // Add inequality to the constraint set and check if it made the constraint
+  // set empty.
+  int64_t ineqPos = cstr.getNumInequalities();
+  cstr.addInequality(eq);
+  bool isEmpty = cstr.isEmpty();
+  cstr.removeInequality(ineqPos);
+  return isEmpty;
+}
+
 FailureOr<bool>
 ValueBoundsConstraintSet::areEqual(Value value1, Value value2,
                                    std::optional<int64_t> dim1,

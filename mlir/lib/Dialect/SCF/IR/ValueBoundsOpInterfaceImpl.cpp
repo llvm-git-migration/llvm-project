@@ -111,6 +111,68 @@ struct ForOpInterface
   }
 };
 
+struct IfOpInterface
+    : public ValueBoundsOpInterface::ExternalModel<IfOpInterface, IfOp> {
+
+  void populateBoundsForIndexValue(Operation *op, Value value,
+                                   ValueBoundsConstraintSet &cstr) const {
+    auto ifOp = cast<IfOp>(op);
+    unsigned int resultNum = cast<OpResult>(value).getResultNumber();
+    Value thenValue = ifOp.thenYield().getResults()[resultNum];
+    Value elseValue = ifOp.elseYield().getResults()[resultNum];
+
+    // Populate constraints for the yielded value (and all values on the
+    // backward slice, as long as the current stop condition is not satisfied).
+    cstr.populateConstraints(thenValue, /*valueDim=*/std::nullopt);
+    cstr.populateConstraints(elseValue, /*valueDim=*/std::nullopt);
+
+    // Compare yielded values.
+    // If thenValue <= elseValue:
+    // * result <= elseValue
+    // * result >= thenValue
+    if (cstr.compare(thenValue, /*dim1=*/std::nullopt,
+                     ValueBoundsConstraintSet::ComparisonOperator::LE,
+                     elseValue, /*dim2=*/std::nullopt)) {
+      cstr.bound(value) >= thenValue;
+      cstr.bound(value) <= elseValue;
+    }
+    // If elseValue <= thenValue:
+    // * result <= thenValue
+    // * result >= elseValue
+    if (cstr.compare(elseValue, /*dim1=*/std::nullopt,
+                     ValueBoundsConstraintSet::ComparisonOperator::LE,
+                     thenValue, /*dim2=*/std::nullopt)) {
+      cstr.bound(value) >= elseValue;
+      cstr.bound(value) <= thenValue;
+    }
+  }
+
+  void populateBoundsForShapedValueDim(Operation *op, Value value, int64_t dim,
+                                       ValueBoundsConstraintSet &cstr) const {
+    // See `populateBoundsForIndexValue` for documentation.
+    auto ifOp = cast<IfOp>(op);
+    unsigned int resultNum = cast<OpResult>(value).getResultNumber();
+    Value thenValue = ifOp.thenYield().getResults()[resultNum];
+    Value elseValue = ifOp.elseYield().getResults()[resultNum];
+
+    cstr.populateConstraints(thenValue, dim);
+    cstr.populateConstraints(elseValue, dim);
+
+    if (cstr.compare(thenValue, dim,
+                     ValueBoundsConstraintSet::ComparisonOperator::LE,
+                     elseValue, dim)) {
+      cstr.bound(value)[dim] >= cstr.getExpr(thenValue, dim);
+      cstr.bound(value)[dim] <= cstr.getExpr(elseValue, dim);
+    }
+    if (cstr.compare(elseValue, dim,
+                     ValueBoundsConstraintSet::ComparisonOperator::LE,
+                     thenValue, dim)) {
+      cstr.bound(value)[dim] >= cstr.getExpr(elseValue, dim);
+      cstr.bound(value)[dim] <= cstr.getExpr(thenValue, dim);
+    }
+  }
+};
+
 } // namespace
 } // namespace scf
 } // namespace mlir
@@ -119,5 +181,6 @@ void mlir::scf::registerValueBoundsOpInterfaceExternalModels(
     DialectRegistry &registry) {
   registry.addExtension(+[](MLIRContext *ctx, scf::SCFDialect *dialect) {
     scf::ForOp::attachInterface<scf::ForOpInterface>(*ctx);
+    scf::IfOp::attachInterface<scf::IfOpInterface>(*ctx);
   });
 }
