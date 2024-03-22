@@ -10,12 +10,9 @@ define i32 @thread_uncond_bb_cmp(i1 %c, i32 %v) {
 ; CHECK-NEXT:    br i1 [[C]], label [[DO_END:%.*]], label [[IF_THEN:%.*]]
 ; CHECK:       if.then:
 ; CHECK-NEXT:    call void @dummy()
-; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp eq i32 [[V]], 0
-; CHECK-NEXT:    br i1 [[TOBOOL]], label [[DO_END]], label [[RETURN:%.*]]
-; CHECK:       do.end:
-; CHECK-NEXT:    br label [[RETURN]]
+; CHECK-NEXT:    br label [[DO_END]]
 ; CHECK:       return:
-; CHECK-NEXT:    [[RETVAL:%.*]] = phi i32 [ 0, [[DO_END]] ], [ [[V]], [[IF_THEN]] ]
+; CHECK-NEXT:    [[RETVAL:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[V]], [[IF_THEN]] ]
 ; CHECK-NEXT:    ret i32 [[RETVAL]]
 ;
 entry:
@@ -41,12 +38,11 @@ define i32 @thread_uncond_bb_cmp_zext(i1 %c, i32 %v) {
 ; CHECK-NEXT:    br i1 [[C]], label [[DO_END:%.*]], label [[IF_THEN:%.*]]
 ; CHECK:       if.then:
 ; CHECK-NEXT:    call void @dummy()
-; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp eq i32 [[V]], 0
-; CHECK-NEXT:    br i1 [[TOBOOL]], label [[DO_END]], label [[RETURN:%.*]]
-; CHECK:       do.end:
-; CHECK-NEXT:    br label [[RETURN]]
+; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp ne i32 [[V]], 0
+; CHECK-NEXT:    [[SPEC_SELECT:%.*]] = zext i1 [[TOBOOL]] to i32
+; CHECK-NEXT:    br label [[DO_END]]
 ; CHECK:       return:
-; CHECK-NEXT:    [[RETVAL:%.*]] = phi i32 [ 0, [[DO_END]] ], [ 1, [[IF_THEN]] ]
+; CHECK-NEXT:    [[RETVAL:%.*]] = phi i32 [ 0, [[ENTRY:%.*]] ], [ [[SPEC_SELECT]], [[IF_THEN]] ]
 ; CHECK-NEXT:    ret i32 [[RETVAL]]
 ;
 entry:
