@@ -1308,6 +1308,7 @@ module std_private_format_enable_insertable               [system] { header "__f
 module std_private_format_escaped_output_table            [system] { header "__format/escaped_output_table.h" }
 module std_private_format_extended_grapheme_cluster_table [system] { header "__format/extended_grapheme_cluster_table.h" }
 module std_private_format_format_arg                      [system] { header "__format/format_arg.h" }
+module std_private_format_indic_conjunct_break_table      [system] { header "__format/indic_conjunct_break_table.h" }
 module std_private_format_format_arg_store                [system] { header "__format/format_arg_store.h" }
 module std_private_format_format_args                     [system] { header "__format/format_args.h" }
 module std_private_format_format_context                  [system] {

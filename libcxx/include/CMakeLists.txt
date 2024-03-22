@@ -382,6 +382,7 @@ set(files
   __format/format_error.h
   __format/format_functions.h
   __format/format_parse_context.h
+  __format/indic_conjunct_break_table.h
   __format/format_string.h
   __format/format_to_n_result.h
   __format/formatter.h
