@@ -240,18 +240,23 @@ class DXILOpMappingBase {
   DXILOpClass OpClass = UnknownOpClass;// Class of DXIL Operation.
   Intrinsic LLVMIntrinsic = ?;         // LLVM Intrinsic DXIL Operation maps to
   string Doc = "";                     // A short description of the operation
-  list<LLVMType> OpTypes = ?;          // Valid types of DXIL Operation in the
-                                       // format [returnTy, param1ty, ...]
+  // The following fields denote the same semantics as those of Intrinsic class
+  // and are initialized with the same values as those of LLVMIntrinsic unless
+  // overridden in the definition of a record.
+  list<LLVMType> OpRetTypes = ?;    // Valid return types of DXIL Operation
+  list<LLVMType> OpParamTypes = ?;     // Valid parameter types of DXIL Operation
 }
 
 class DXILOpMapping<int opCode, DXILOpClass opClass,
                     Intrinsic intrinsic, string doc,
-                    list<LLVMType> opTys = []> : DXILOpMappingBase {
+                    list<LLVMType> retTys = [],
+                    list<LLVMType> paramTys = []> : DXILOpMappingBase {
   int OpCode = opCode;                 // Opcode corresponding to DXIL Operation
   DXILOpClass OpClass = opClass;       // Class of DXIL Operation.
   Intrinsic LLVMIntrinsic = intrinsic; // LLVM Intrinsic the DXIL Operation maps
   string Doc = doc;                    // to a short description of the operation
-  list<LLVMType> OpTypes = !if(!eq(!size(opTys), 0), LLVMIntrinsic.Types, opTys);
+  list<LLVMType> OpRetTypes = !if(!eq(!size(retTys), 0), LLVMIntrinsic.RetTypes, retTys);
+  list<LLVMType> OpParamTypes = !if(!eq(!size(paramTys), 0), LLVMIntrinsic.ParamTypes, paramTys);
 }
 
 // Concrete definition of DXIL Operation mapping to corresponding LLVM intrinsic
@@ -259,32 +264,32 @@ def Abs : DXILOpMapping<6, unary, int_fabs,
                          "Returns the absolute value of the input.">;
 def IsInf : DXILOpMapping<9, isSpecialFloat, int_dx_isinf,
                          "Determines if the specified value is infinite.",
-                         [llvm_i1_ty, llvm_halforfloat_ty]>;
+                         [llvm_i1_ty], [llvm_halforfloat_ty]>;
 def Cos  : DXILOpMapping<12, unary, int_cos,
                          "Returns cosine(theta) for theta in radians.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def Sin  : DXILOpMapping<13, unary, int_sin,
                          "Returns sine(theta) for theta in radians.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def Exp2 : DXILOpMapping<21, unary, int_exp2,
                          "Returns the base 2 exponential, or 2**x, of the specified value."
                          "exp2(x) = 2**x.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def Frac : DXILOpMapping<22, unary, int_dx_frac,
                          "Returns a fraction from 0 to 1 that represents the "
                          "decimal part of the input.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def RSqrt : DXILOpMapping<25, unary, int_dx_rsqrt,
                          "Returns the reciprocal of the square root of the specified value."
                          "rsqrt(x) = 1 / sqrt(x).",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def Round : DXILOpMapping<26, unary, int_round,
                          "Returns the input rounded to the nearest integer"
                          "within a floating-point type.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def Floor : DXILOpMapping<27, unary, int_floor,
                          "Returns the largest integer that is less than or equal to the input.",
-                         [llvm_halforfloat_ty, LLVMMatchType<0>]>;
+                         [llvm_halforfloat_ty], [LLVMMatchType<0>]>;
 def FMax : DXILOpMapping<35, binary, int_maxnum,
                          "Float maximum. FMax(a,b) = a > b ? a : b">;
 def FMin : DXILOpMapping<36, binary, int_minnum,
@@ -303,6 +308,8 @@ def IMad : DXILOpMapping<48, tertiary, int_dx_imad,
                          "Signed integer arithmetic multiply/add operation. imad(m,a,b) = m * a + b.">;
 def UMad : DXILOpMapping<49, tertiary, int_dx_umad,
                          "Unsigned integer arithmetic multiply/add operation. umad(m,a,b) = m * a + b.">;
+def Barrier : DXILOpMapping<80, barrier, int_dx_barrier,
+                          "Inserts a memory barrier in the shader">;
 def ThreadId : DXILOpMapping<93, threadId, int_dx_thread_id,
                              "Reads the thread ID">;
 def GroupId  : DXILOpMapping<94, groupId, int_dx_group_id,
