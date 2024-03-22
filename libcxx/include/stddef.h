@@ -7,8 +7,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if defined(__need_ptrdiff_t) || defined(__need_size_t) || defined(__need_wchar_t) || defined(__need_NULL) ||          \
-    defined(__need_wint_t)
+#if defined(__need_ptrdiff_t) || defined(__need_size_t) || defined(__need_rsize_t) || defined(__need_wchar_t) ||       \
+    defined(__need_NULL) || defined(__need_nullptr_t) || defined(__need_unreachable) || defined(__need_max_align_t) || \
+    defined(__need_offsetof) || defined(__need_wint_t)
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #    pragma GCC system_header
@@ -16,7 +17,7 @@
 
 #  include_next <stddef.h>
 
-#elif !defined(_LIBCPP_STDDEF_H)
+#elif !defined(_LIBCPP_STDDEF_H) || (defined(__STDC_WANT_LIB_EXT1__) && __STDC_WANT_LIB_EXT1__ >= 1)
 #  define _LIBCPP_STDDEF_H
 
 /*
