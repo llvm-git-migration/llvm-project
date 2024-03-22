@@ -1647,11 +1647,6 @@ LLVMValueRef LLVMConstNSWNeg(LLVMValueRef ConstantVal) {
   return wrap(ConstantExpr::getNSWNeg(unwrap<Constant>(ConstantVal)));
 }
 
-LLVMValueRef LLVMConstNUWNeg(LLVMValueRef ConstantVal) {
-  return wrap(ConstantExpr::getNUWNeg(unwrap<Constant>(ConstantVal)));
-}
-
-
 LLVMValueRef LLVMConstNot(LLVMValueRef ConstantVal) {
   return wrap(ConstantExpr::getNot(unwrap<Constant>(ConstantVal)));
 }
@@ -3553,11 +3548,6 @@ LLVMValueRef LLVMBuildNeg(LLVMBuilderRef B, LLVMValueRef V, const char *Name) {
 LLVMValueRef LLVMBuildNSWNeg(LLVMBuilderRef B, LLVMValueRef V,
                              const char *Name) {
   return wrap(unwrap(B)->CreateNSWNeg(unwrap(V), Name));
-}
-
-LLVMValueRef LLVMBuildNUWNeg(LLVMBuilderRef B, LLVMValueRef V,
-                             const char *Name) {
-  return wrap(unwrap(B)->CreateNUWNeg(unwrap(V), Name));
 }
 
 LLVMValueRef LLVMBuildFNeg(LLVMBuilderRef B, LLVMValueRef V, const char *Name) {
