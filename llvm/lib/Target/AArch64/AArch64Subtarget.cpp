@@ -472,6 +472,52 @@ void AArch64Subtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
   Policy.DisableLatencyHeuristic = DisableLatencySchedHeuristic;
 }
 
+void AArch64Subtarget::adjustSchedDependency(
+    SUnit *Def, int DefOpIdx, SUnit *Use, int UseOpIdx, SDep &Dep,
+    const TargetSchedModel *SchedModel) const {
+  if (!SchedModel || Dep.getKind() != SDep::Kind::Data || !Dep.getReg() ||
+      !Def->isInstr() || !Use->isInstr() ||
+      (Def->getInstr()->getOpcode() != TargetOpcode::BUNDLE &&
+       Use->getInstr()->getOpcode() != TargetOpcode::BUNDLE))
+    return;
+
+  // If the Def is a BUNDLE, find the last instruction in the bundle that defs
+  // the register.
+  MachineInstr *DefMI = Def->getInstr();
+  if (DefMI->getOpcode() == TargetOpcode::BUNDLE) {
+    Register Reg = DefMI->getOperand(DefOpIdx).getReg();
+    MachineBasicBlock::instr_iterator I = std::next(DefMI->getIterator());
+    while (I != DefMI->getParent()->end() && I->isBundledWithPred()) {
+      int Idx =
+          I->findRegisterDefOperandIdx(Reg, false, false, getRegisterInfo());
+      if (Idx != -1) {
+        DefMI = &*I;
+        DefOpIdx = Idx;
+      }
+      ++I;
+    }
+  }
+
+  // If the Use is a BUNDLE, find the first instruction that uses the Reg.
+  MachineInstr *UseMI = Use->getInstr();
+  if (UseMI->getOpcode() == TargetOpcode::BUNDLE) {
+    Register Reg = UseMI->getOperand(UseOpIdx).getReg();
+    MachineBasicBlock::instr_iterator I = std::next(UseMI->getIterator());
+    while (I != UseMI->getParent()->end() && I->isBundledWithPred()) {
+      int Idx = I->findRegisterUseOperandIdx(Reg, false, getRegisterInfo());
+      if (Idx != -1) {
+        UseMI = &*I;
+        UseOpIdx = Idx;
+        break;
+      }
+      ++I;
+    }
+  }
+
+  Dep.setLatency(
+      SchedModel->computeOperandLatency(DefMI, DefOpIdx, UseMI, UseOpIdx));
+}
+
 bool AArch64Subtarget::enableEarlyIfConversion() const {
   return EnableEarlyIfConvert;
 }
