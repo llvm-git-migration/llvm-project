@@ -21,3 +21,18 @@ empty empty_record_test(int z, ...) {
   __builtin_va_start(list, z);
   return __builtin_va_arg(list, empty);
 }
+
+typedef struct {
+  struct{} a;
+  double b;
+} s1;
+
+// CHECK-LABEL: define{{.*}} double @{{.*}}f
+// CHECK: vaarg.in_reg:
+// CHECK: vaarg.in_mem:
+// CHECK: vaarg.end:
+s1 f(int z, ...) {
+  __builtin_va_list list;
+  __builtin_va_start(list, z);
+  return __builtin_va_arg(list, s1);
+}
