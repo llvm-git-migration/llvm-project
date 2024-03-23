@@ -15,7 +15,7 @@
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 #include "InterpreterUtils.h"
-#include "WASM.h"
+#include "Wasm.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Mangle.h"
@@ -388,7 +388,7 @@ llvm::Error Interpreter::CreateExecutor() {
   const clang::TargetInfo &TI =
       getCompilerInstance()->getASTContext().getTargetInfo();
 #ifdef __EMSCRIPTEN__
-  auto Executor = std::make_unique<WASMIncrementalExecutor>(*TSCtx, Err, TI);
+  auto Executor = std::make_unique<WasmIncrementalExecutor>(*TSCtx, Err, TI);
 #else
   auto Executor = std::make_unique<IncrementalExecutor>(*TSCtx, Err, TI);
 #endif
