@@ -313,6 +313,10 @@ std::optional<APFloat> ConstantFoldIntToFloat(unsigned Opcode, LLT DstTy,
 std::optional<SmallVector<unsigned>>
 ConstantFoldCTLZ(Register Src, const MachineRegisterInfo &MRI);
 
+std::optional<SmallVector<APInt>>
+ConstantFoldICmp(unsigned Pred, const Register Op1, const Register Op2,
+                 const MachineRegisterInfo &MRI);
+
 /// Test if the given value is known to have exactly one bit set. This differs
 /// from computeKnownBits in that it doesn't necessarily determine which bit is
 /// set.
