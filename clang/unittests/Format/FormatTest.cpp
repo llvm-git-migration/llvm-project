@@ -21101,6 +21101,11 @@ TEST_F(FormatTest, CatchAlignArrayOfStructuresRightAlignment) {
                 "    [1] { 1, 1, },\n"
                 "    [2] { 1, 1, },\n"
                 "};");
+  verifyNoCrash("test arr[] = {\n"
+                "#define FOO(i) {i, i},\n"
+                "SOME_GENERATOR(FOO)\n"
+                "{2, 2}\n"
+                "};");
 
   verifyFormat("return GradForUnaryCwise(g, {\n"
                "                                {{\"sign\"}, \"Sign\",  "
@@ -21353,6 +21358,11 @@ TEST_F(FormatTest, CatchAlignArrayOfStructuresLeftAlignment) {
                 "    [0] = {1, 1},\n"
                 "    [1] { 1, 1, },\n"
                 "    [2] { 1, 1, },\n"
+                "};");
+  verifyNoCrash("test arr[] = {\n"
+                "#define FOO(i) {i, i},\n"
+                "SOME_GENERATOR(FOO)\n"
+                "{2, 2}\n"
                 "};");
 
   verifyFormat("return GradForUnaryCwise(g, {\n"
