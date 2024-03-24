@@ -41,10 +41,11 @@ namespace {
 ///   contains enough information to determine where the runs break.  Microsoft
 ///   and Itanium follow different rules and use different codepaths.
 /// * It is desired that, when possible, bitfields use the appropriate iN type
-///   when lowered to llvm types.  For example unsigned x : 24 gets lowered to
+///   when lowered to llvm types. For example unsigned x : 24 gets lowered to
 ///   i24.  This isn't always possible because i24 has storage size of 32 bit
-///   and if it is possible to use that extra byte of padding we must use
-///   [i8 x 3] instead of i24.  The function clipTailPadding does this.
+///   and if it is possible to use that extra byte of padding we must use [i8 x
+///   3] instead of i24. This is computed when accumulating bitfields in
+///   accumulateBitfields.
 ///   C++ examples that require clipping:
 ///   struct { int a : 24; char b; }; // a must be clipped, b goes at offset 3
 ///   struct A { int a : 24; ~A(); }; // a must be clipped because:
@@ -197,9 +198,7 @@ struct CGRecordLowering {
   /// not the primary vbase of some base class.
   bool hasOwnStorage(const CXXRecordDecl *Decl, const CXXRecordDecl *Query);
   void calculateZeroInit();
-  /// Lowers bitfield storage types to I8 arrays for bitfields with tail
-  /// padding that is or can potentially be used.
-  void clipTailPadding();
+  void checkTailPadding();
   /// Determines if we need a packed llvm struct.
   void determinePacked(bool NVBaseType);
   /// Inserts padding everywhere it's needed.
@@ -302,7 +301,7 @@ void CGRecordLowering::lower(bool NVBaseType) {
   }
   llvm::stable_sort(Members);
   Members.push_back(StorageInfo(Size, getIntNType(8)));
-  clipTailPadding();
+  checkTailPadding();
   determinePacked(NVBaseType);
   insertPadding();
   Members.pop_back();
@@ -521,6 +520,7 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   // available padding characters.
   RecordDecl::field_iterator BestEnd = Begin;
   CharUnits BestEndOffset;
+  bool BestClipped; // Whether the representation must be in a byte array.
 
   for (;;) {
     // AtAlignedBoundary is true iff Field is the (potential) start of a new
@@ -583,10 +583,9 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
         // this is the best seen so far.
         BestEnd = Field;
         BestEndOffset = BeginOffset + AccessSize;
-        if (Types.getCodeGenOpts().FineGrainedBitfieldAccesses)
-          // Fine-grained access, so no merging of spans.
-          InstallBest = true;
-        else if (!BitSizeSinceBegin)
+        // Assume clipped until proven not below.
+        BestClipped = true;
+        if (!BitSizeSinceBegin)
           // A zero-sized initial span -- this will install nothing and reset
           // for another.
           InstallBest = true;
@@ -614,6 +613,12 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
             // The access unit is not at a naturally aligned offset within the
             // structure.
             InstallBest = true;
+
+          if (InstallBest && BestEnd == Field)
+            // We're installing the first span, who's clipping was
+            // conservatively presumed above. Compute it correctly.
+            if (getSize(Type) == AccessSize)
+              BestClipped = false;
         }
 
         if (!InstallBest) {
@@ -642,10 +647,14 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
             // access unit.
             BestEndOffset = BeginOffset + TypeSize;
             BestEnd = Field;
+            BestClipped = false;
           }
 
           if (Barrier)
             // The next field is a barrier that we cannot merge across.
+            InstallBest = true;
+          else if (Types.getCodeGenOpts().FineGrainedBitfieldAccesses)
+            // Fine-grained access, so no merging of spans.
             InstallBest = true;
           else
             // Otherwise, we're not installing. Update the bit size
@@ -665,7 +674,17 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
         // Add the storage member for the access unit to the record. The
         // bitfields get the offset of their storage but come afterward and
         // remain there after a stable sort.
-        llvm::Type *Type = getIntNType(Context.toBits(AccessSize));
+        llvm::Type *Type;
+        if (BestClipped) {
+          assert(getSize(getIntNType(Context.toBits(AccessSize))) >
+                     AccessSize &&
+                 "Clipped access need not be clipped");
+          Type = getByteArrayType(AccessSize);
+        } else {
+          Type = getIntNType(Context.toBits(AccessSize));
+          assert(getSize(Type) == AccessSize &&
+                 "Unclipped access must be clipped");
+        }
         Members.push_back(StorageInfo(BeginOffset, Type));
         for (; Begin != BestEnd; ++Begin)
           if (!Begin->isZeroLengthBitField(Context))
@@ -911,7 +930,9 @@ void CGRecordLowering::calculateZeroInit() {
   }
 }
 
-void CGRecordLowering::clipTailPadding() {
+// Verify accumulateBitfields computed the correct storage representations.
+void CGRecordLowering::checkTailPadding() {
+#ifndef NDEBUG
   std::vector<MemberInfo>::iterator Prior = Members.begin();
   CharUnits Tail = getSize(Prior->Data);
   for (std::vector<MemberInfo>::iterator Member = Prior + 1,
@@ -920,23 +941,13 @@ void CGRecordLowering::clipTailPadding() {
     // Only members with data and the scissor can cut into tail padding.
     if (!Member->Data && Member->Kind != MemberInfo::Scissor)
       continue;
-    if (Member->Offset < Tail) {
-      assert(Prior->Kind == MemberInfo::Field &&
-             "Only storage fields have tail padding!");
-      if (!Prior->FD || Prior->FD->isBitField())
-        Prior->Data = getByteArrayType(bitsToCharUnits(llvm::alignTo(
-            cast<llvm::IntegerType>(Prior->Data)->getIntegerBitWidth(), 8)));
-      else {
-        assert(Prior->FD->hasAttr<NoUniqueAddressAttr>() &&
-               "should not have reused this field's tail padding");
-        Prior->Data = getByteArrayType(
-            Context.getTypeInfoDataSizeInChars(Prior->FD->getType()).Width);
-      }
-    }
+
+    assert(Member->Offset >= Tail && "bitfield not already clipped");
     if (Member->Data)
       Prior = Member;
     Tail = Prior->Offset + getSize(Prior->Data);
   }
+#endif
 }
 
 void CGRecordLowering::determinePacked(bool NVBaseType) {
