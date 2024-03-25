@@ -290,7 +290,16 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
 
   switch (Opc) {
   case TargetOpcode::G_ADD:
-  case TargetOpcode::G_SUB:
+  case TargetOpcode::G_SUB: {
+    if (MRI.getType(MI.getOperand(0).getReg()).isVector()) {
+      LLT Ty = MRI.getType(MI.getOperand(0).getReg());
+      return getInstructionMapping(
+          DefaultMappingID, /*Cost=*/1,
+          getVRBValueMapping(Ty.getSizeInBits().getKnownMinValue()),
+          NumOperands);
+    }
+  }
+    LLVM_FALLTHROUGH;
   case TargetOpcode::G_ANYEXT:
   case TargetOpcode::G_SEXT:
   case TargetOpcode::G_ZEXT: {
@@ -496,9 +505,10 @@ RISCVRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
           getVRBValueMapping(DstTy.getSizeInBits().getKnownMinValue());
       OpdsMapping[2] = OpdsMapping[3] =
           getVRBValueMapping(SrcTy.getSizeInBits().getKnownMinValue());
+      break;
     }
-    break;
   }
+    LLVM_FALLTHROUGH;
   case TargetOpcode::G_FCMP: {
     LLT Ty = MRI.getType(MI.getOperand(2).getReg());
 
