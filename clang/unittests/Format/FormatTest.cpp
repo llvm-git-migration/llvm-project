@@ -19057,6 +19057,8 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "double b();",
                Alignment);
   verifyFormat("int    a(const Test & = Test());\n"
+               "int    a1(int &foo, const Test & = Test());\n"
+               "int    a2(int &foo, const Test &name = Test());\n"
                "double b();",
                Alignment);
   verifyFormat("struct Test {\n"
@@ -19094,6 +19096,13 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
   verifyFormat("int function(\n"
                "    int  x,\n"
                "    bool y);",
+               Alignment);
+  // Set ColumnLimit low so that we break the argument list in multiple lines.
+  Alignment.ColumnLimit = 35;
+  verifyFormat("int    a3(SomeTypeName1 &x,\n"
+               "          SomeTypeName2 &y,\n"
+               "          const Test & = Test());\n"
+               "double b();",
                Alignment);
   Alignment.ColumnLimit = OldColumnLimit;
   // Ensure function pointers don't screw up recursive alignment
@@ -19280,7 +19289,7 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "int    foobar;",
                AlignmentLeft);
 
-  verifyFormat("int    a(const Test& = Test());\n"
+  verifyFormat("int    a(SomeType& foo, const Test& = Test());\n"
                "double b();",
                AlignmentLeft);
 
@@ -19342,6 +19351,10 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "int *   b;\n"
                "int *** c;\n"
                "int     foobar;",
+               AlignmentMiddle);
+
+  verifyFormat("int    a(SomeType & foo, const Test & = Test());\n"
+               "double b();",
                AlignmentMiddle);
 
   Alignment.AlignConsecutiveAssignments.Enabled = false;
