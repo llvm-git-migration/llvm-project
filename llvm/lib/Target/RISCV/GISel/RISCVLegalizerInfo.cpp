@@ -210,12 +210,12 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
       .clampScalar(0, s32, (XLen == 64 || ST.hasStdExtD()) ? s64 : s32)
       .clampScalar(1, sXLen, sXLen);
 
-  auto &LoadStoreActions =
-      getActionDefinitionsBuilder({G_LOAD, G_STORE})
-          .legalForTypesWithMemDesc({{s32, p0, s8, 8},
-                                     {s32, p0, s16, 16},
-                                     {s32, p0, s32, 32},
-                                     {p0, p0, sXLen, XLen}});
+  auto &LoadStoreActions = getActionDefinitionsBuilder({G_LOAD, G_STORE})
+                               .legalForTypesWithMemDesc({{s32, p0, s8, 8},
+                                                          {s32, p0, s16, 16},
+                                                          {s32, p0, s32, 32},
+                                                          {p0, p0, sXLen, XLen},
+                                                          {nxv1s8, p0, s8, 8}});
   auto &ExtLoadActions =
       getActionDefinitionsBuilder({G_SEXTLOAD, G_ZEXTLOAD})
           .legalForTypesWithMemDesc({{s32, p0, s8, 8}, {s32, p0, s16, 16}});
