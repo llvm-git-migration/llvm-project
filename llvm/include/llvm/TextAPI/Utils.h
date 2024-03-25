@@ -75,5 +75,8 @@ bool isPrivateLibrary(StringRef Path, bool IsSymLink = false);
 /// \return The equivalent regex rule.
 llvm::Expected<llvm::Regex> createRegexFromGlob(llvm::StringRef Glob);
 
+/// Infer the name of a framework by it's install name.
+StringRef getFrameworkNameFromInstallName(StringRef InstallName);
+
 } // namespace llvm::MachO
 #endif // LLVM_TEXTAPI_UTILS_H

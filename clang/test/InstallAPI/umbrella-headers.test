@@ -1,0 +1,59 @@
+; RUN: rm -rf %t
+; RUN: split-file %s %t
+; RUN: sed -e "s|DSTROOT|%/t|g" %t/inputs.json.in > %t/inputs.json
+
+// Try umbrella header flags with different spellings.
+; RUN: clang-installapi --target=arm64-apple-macosx13 \
+; RUN:  -install_name /System/Library/Frameworks/Umbrella2.framework/Versions/A/Umbrella2 \
+; RUN: -ObjC -F%t/Frameworks/ %t/inputs.json \
+; RUN: --public-umbrella-header=%t/Frameworks/Umbrella2.framework/Headers/SpecialUmbrella.h \
+; RUN: -private-umbrella-header \
+; RUN: %t/Frameworks/Umbrella2.framework/PrivateHeaders/SpecialPrivateUmbrella.h \
+; RUN: -o %t/output.tbd 2>&1 | FileCheck -allow-empty %s
+
+; RUN: clang-installapi --target=arm64-apple-macosx13 \
+; RUN: -install_name /System/Library/Frameworks/Umbrella2.framework/Versions/A/Umbrella2 \
+; RUN: -ObjC -F%t/Frameworks/ %t/inputs.json \
+; RUN: --public-umbrella-header=SpecialUmbrella.h \
+; RUN: --private-umbrella-header=SpecialPrivateUmbrella.h \
+; RUN: -o %t/output.tbd 2>&1 | FileCheck -allow-empty %s
+
+; CHECK-NOT: error
+; CHECK-NOT: warning
+
+;--- Frameworks/Umbrella2.framework/Headers/SpecialUmbrella.h
+#define PUBLIC_UMBRELLA_HEADER_FIRST
+
+;--- Frameworks/Umbrella2.framework/Headers/AAA.h
+#ifndef PUBLIC_UMBRELLA_HEADER_FIRST
+#error "Public umbrella header was not included first!"
+#endif
+
+;--- Frameworks/Umbrella2.framework/PrivateHeaders/AAA_Private.h
+#ifndef PRIVATE_UMBRELLA_HEADER_FIRST
+#error "Private umbrella header was not included first!"
+#endif
+
+;--- Frameworks/Umbrella2.framework/PrivateHeaders/SpecialPrivateUmbrella.h
+#define PRIVATE_UMBRELLA_HEADER_FIRST
+
+;--- inputs.json.in
+{
+  "headers": [ {
+    "path" : "DSTROOT/Frameworks/Umbrella2.framework/Headers/AAA.h",
+    "type" : "public"
+  }, 
+  {
+    "path" : "DSTROOT/Frameworks/Umbrella2.framework/Headers/SpecialUmbrella.h",
+    "type" : "public"
+  },
+  {
+    "path" : "DSTROOT/Frameworks/Umbrella2.framework/PrivateHeaders/AAA_Private.h",
+    "type" : "private"
+  },
+  {
+    "path" : "DSTROOT/Frameworks/Umbrella2.framework/PrivateHeaders/SpecialPrivateUmbrella.h",
+    "type" : "private"
+  }],
+  "version": "3"
+}
