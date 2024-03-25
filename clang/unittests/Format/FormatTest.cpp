@@ -19056,7 +19056,8 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
   verifyFormat("int    a(int x);\n"
                "double b();",
                Alignment);
-  verifyFormat("int    a(const Test & = Test());\n"
+  verifyFormat("int    a(int &count, SomeType &foo, const Test & = Test());\n"
+               "int    a2(int &foo, const Test &name = Test());\n"
                "double b();",
                Alignment);
   verifyFormat("struct Test {\n"
@@ -19280,7 +19281,7 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "int    foobar;",
                AlignmentLeft);
 
-  verifyFormat("int    a(const Test& = Test());\n"
+  verifyFormat("int    a(int& count, SomeType& foo, const Test& = Test());\n"
                "double b();",
                AlignmentLeft);
 
@@ -19342,6 +19343,10 @@ TEST_F(FormatTest, AlignConsecutiveDeclarations) {
                "int *   b;\n"
                "int *** c;\n"
                "int     foobar;",
+               AlignmentMiddle);
+
+  verifyFormat("int    a(int & count, SomeType & foo, const Test & = Test());\n"
+               "double b();",
                AlignmentMiddle);
 
   Alignment.AlignConsecutiveAssignments.Enabled = false;
