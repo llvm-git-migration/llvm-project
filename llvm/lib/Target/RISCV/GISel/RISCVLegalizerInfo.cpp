@@ -600,8 +600,6 @@ bool RISCVLegalizerInfo::legalizeExt(MachineInstr &MI,
   Register Src = MI.getOperand(1).getReg();
 
   LLT DstTy = MRI.getType(Dst);
-  LLT SrcTy = MRI.getType(Src);
-  
   int64_t ExtTrueVal =
       Opc == TargetOpcode::G_ZEXT || Opc == TargetOpcode::G_ANYEXT ? 1 : -1;
   LLT DstEltTy = DstTy.getElementType();
