@@ -368,6 +368,12 @@ void ReductionProcessor::addReductionDecl(
     llvm::SmallVectorImpl<const Fortran::semantics::Symbol *>
         *reductionSymbols) {
   fir::FirOpBuilder &firOpBuilder = converter.getFirOpBuilder();
+
+  if (std::get<std::optional<omp::clause::Reduction::ReductionModifier>>(
+          reduction.t)) {
+    TODO(currentLocation, "Reduction modifiers are not supported");
+  }
+
   mlir::omp::ReductionDeclareOp decl;
   const auto &redOperator{
       std::get<omp::clause::ReductionOperator>(reduction.t)};

@@ -596,8 +596,12 @@ struct ProcBindT {
 
 template <typename I, typename E>
 struct ReductionT {
+  using ReductionModifier =
+      Fortran::parser::OmpReductionClause::ReductionModifier;
   using TupleTrait = std::true_type;
-  std::tuple<ReductionOperatorT<I, E>, ObjectListT<I, E>> t;
+  std::tuple<std::optional<ReductionModifier>, ReductionOperatorT<I, E>,
+             ObjectListT<I, E>>
+      t;
 };
 
 template <typename I, typename E>

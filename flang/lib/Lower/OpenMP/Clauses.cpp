@@ -616,9 +616,13 @@ ProcBind make(const parser::OmpClause::ProcBind &inp,
 Reduction make(const parser::OmpClause::Reduction &inp,
                semantics::SemanticsContext &semaCtx) {
   // inp.v -> parser::OmpReductionClause
-  auto &t0 = std::get<parser::OmpReductionOperator>(inp.v.t);
-  auto &t1 = std::get<parser::OmpObjectList>(inp.v.t);
-  return Reduction{{makeReductionOperator(t0, semaCtx), makeList(t1, semaCtx)}};
+  auto &t0 =
+      std::get<std::optional<parser::OmpReductionClause::ReductionModifier>>(
+          inp.v.t);
+  auto &t1 = std::get<parser::OmpReductionOperator>(inp.v.t);
+  auto &t2 = std::get<parser::OmpObjectList>(inp.v.t);
+  return Reduction{
+      {t0, makeReductionOperator(t1, semaCtx), makeList(t2, semaCtx)}};
 }
 
 Safelen make(const parser::OmpClause::Safelen &inp,
