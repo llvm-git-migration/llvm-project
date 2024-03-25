@@ -68,6 +68,8 @@ template <typename... LAMBDAS> visitors(LAMBDAS... x) -> visitors<LAMBDAS...>;
 [[noreturn]] void die(const char *, ...);
 
 #define DIE(x) Fortran::common::die(x " at " __FILE__ "(%d)", __LINE__)
+#define DIE_MSG(x, y) \
+  Fortran::common::die(x " at " __FILE__ "(%d): %s", __LINE__, y)
 
 // For switch statement default: labels.
 #define CRASH_NO_CASE DIE("no case")
@@ -87,6 +89,8 @@ template <typename... LAMBDAS> visitors(LAMBDAS... x) -> visitors<LAMBDAS...>;
 // To disable, compile with '-DCHECK=(void)'
 #ifndef CHECK
 #define CHECK(x) ((x) || (DIE("CHECK(" #x ") failed"), false))
+// Same as above, but with a custom error message.
+#define CHECK_MSG(x, y) ((x) || (DIE_MSG("CHECK(" #x ") failed: ", y), false))
 #endif
 
 // User-defined type traits that default to false:
