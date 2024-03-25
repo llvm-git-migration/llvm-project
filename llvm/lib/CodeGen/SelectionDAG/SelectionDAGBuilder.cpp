@@ -6011,7 +6011,7 @@ bool SelectionDAGBuilder::EmitFuncArgumentDbgValue(
       if (ArgNo >= FuncInfo.DescribedArgs.size())
         FuncInfo.DescribedArgs.resize(ArgNo + 1, false);
       else if (!IsInPrologue && FuncInfo.DescribedArgs.test(ArgNo))
-        return false;
+        return !NodeMap[V].getNode();
       FuncInfo.DescribedArgs.set(ArgNo);
     }
   }
