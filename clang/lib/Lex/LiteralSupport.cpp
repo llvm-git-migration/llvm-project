@@ -925,7 +925,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
   isAccum = false;
   hadError = false;
   isBitInt = false;
-  
+
   // This routine assumes that the range begin/end matches the regex for integer
   // and FP constants (specifically, the 'pp-number' regex), and assumes that
   // the byte at "*end" is both valid and not part of the regex.  Because of
@@ -1119,9 +1119,12 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
       isImaginary = true;
       continue;  // Success.
     case '_':
-      if (isFPConstant) break; // Invalid for floats
-      if (HasSize) break;
-      if (possibleBitInt) break; // Cannot be repeated.
+      if (isFPConstant)
+        break; // Invalid for floats
+      if (HasSize)
+        break;
+      if (possibleBitInt)
+        break; // Cannot be repeated.
       if (LangOpts.CPlusPlus && s[1] == '_') {
         // Scan ahead to find possible rest of BitInt suffix
         for (const char *c = s; c != ThisTokEnd; ++c) {
@@ -1131,7 +1134,8 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
             break;
           }
         }
-        if (possibleBitInt) continue;
+        if (possibleBitInt)
+          continue;
       }
       break;
     case 'w':
@@ -1143,9 +1147,8 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
 
       // wb and WB are allowed, but a mixture of cases like Wb or wB is not.
       // The same rules apply for __wb/__WB.
-      if ((!LangOpts.CPlusPlus || possibleBitInt) && 
-          ((s[0] == 'w' && s[1] == 'b') ||
-          (s[0] == 'W' && s[1] == 'B'))) {
+      if ((!LangOpts.CPlusPlus || possibleBitInt) &&
+          ((s[0] == 'w' && s[1] == 'b') || (s[0] == 'W' && s[1] == 'B'))) {
         isBitInt = true;
         HasSize = true;
         ++s; // Skip both characters (2nd char skipped on continue).
@@ -1194,7 +1197,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
     }
   }
 
-    if (!hadError && saw_fixed_point_suffix) {
+  if (!hadError && saw_fixed_point_suffix) {
     assert(isFract || isAccum);
   }
 }
@@ -1257,7 +1260,8 @@ bool NumericLiteralParser::isValidUDSuffix(const LangOptions &LangOpts,
     return false;
 
   // By C++11 [lex.ext]p10, ud-suffixes starting with an '_' are always valid.
-  // Suffixes starting with '__' (double underscore) are for use by implementation.
+  // Suffixes starting with '__' (double underscore) are for use by
+  // implementation.
   if (Suffix[0] == '_' && Suffix[1] != '_')
     return true;
 
