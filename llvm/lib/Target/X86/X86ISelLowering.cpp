@@ -47428,6 +47428,8 @@ static SDValue combineShiftRightArithmetic(SDNode *N, SelectionDAG &DAG,
   APInt SarConst = N1->getAsAPIntVal();
   EVT CVT = N1.getValueType();
 
+  if (CVT != N01.getValueType())
+    return SDValue();
   if (SarConst.isNegative())
     return SDValue();
 
@@ -47440,14 +47442,13 @@ static SDValue combineShiftRightArithmetic(SDNode *N, SelectionDAG &DAG,
     SDLoc DL(N);
     SDValue NN =
         DAG.getNode(ISD::SIGN_EXTEND_INREG, DL, VT, N00, DAG.getValueType(SVT));
-    SarConst = SarConst - (Size - ShiftSize);
-    if (SarConst == 0)
+    if (SarConst.eq(ShlConst))
       return NN;
-    if (SarConst.isNegative())
+    if (SarConst.ult(ShlConst))
       return DAG.getNode(ISD::SHL, DL, VT, NN,
-                         DAG.getConstant(-SarConst, DL, CVT));
+                         DAG.getConstant(ShlConst - SarConst, DL, CVT));
     return DAG.getNode(ISD::SRA, DL, VT, NN,
-                       DAG.getConstant(SarConst, DL, CVT));
+                       DAG.getConstant(SarConst - ShlConst, DL, CVT));
   }
   return SDValue();
 }
