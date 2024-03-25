@@ -8709,11 +8709,21 @@ SDValue TargetLowering::expandCTPOP(SDNode *Node, SelectionDAG &DAG) const {
                      DAG.getConstant(0xFF, dl, VT));
   }
 
-  // v = (v * 0x01010101...) >> (Len - 8)
-  SDValue Mask01 =
-      DAG.getConstant(APInt::getSplat(Len, APInt(8, 0x01)), dl, VT);
-  return DAG.getNode(ISD::SRL, dl, VT,
-                     DAG.getNode(ISD::MUL, dl, VT, Op, Mask01),
+  SDValue V;
+  if (isOperationLegalOrCustomOrPromote(ISD::MUL, VT)) {
+    // v = (v * 0x01010101...) >> (Len - 8)
+    SDValue Mask01 =
+        DAG.getConstant(APInt::getSplat(Len, APInt(8, 0x01)), dl, VT);
+    V = DAG.getNode(ISD::MUL, dl, VT, Op, Mask01);
+  } else {
+    V = Op;
+    SDValue ShiftC = DAG.getConstant(8, dl, VT);
+    for (unsigned I = 8; I < Len; I += 8) {
+      V = DAG.getNode(ISD::ADD, dl, VT, Op,
+                      DAG.getNode(ISD::SHL, dl, VT, V, ShiftC));
+    }
+  }
+  return DAG.getNode(ISD::SRL, dl, VT, V,
                      DAG.getConstant(Len - 8, dl, ShVT));
 }
 

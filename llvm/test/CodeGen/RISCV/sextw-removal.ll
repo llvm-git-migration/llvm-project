@@ -182,8 +182,7 @@ define void @test5(i32 signext %arg, i32 signext %arg1) nounwind {
 ; RV64I-NEXT:    addiw s1, a1, 819
 ; RV64I-NEXT:    lui a1, 61681
 ; RV64I-NEXT:    addi s2, a1, -241
-; RV64I-NEXT:    lui a1, 4112
-; RV64I-NEXT:    addi s3, a1, 257
+; RV64I-NEXT:    addi s3, a1, -256
 ; RV64I-NEXT:  .LBB4_1: # %bb2
 ; RV64I-NEXT:    # =>This Inner Loop Header: Depth=1
 ; RV64I-NEXT:    call bar
@@ -197,8 +196,14 @@ define void @test5(i32 signext %arg, i32 signext %arg1) nounwind {
 ; RV64I-NEXT:    add a0, a2, a0
 ; RV64I-NEXT:    srli a2, a0, 4
 ; RV64I-NEXT:    add a0, a0, a2
-; RV64I-NEXT:    and a0, a0, s2
-; RV64I-NEXT:    mul a0, a0, s3
+; RV64I-NEXT:    and a2, a0, s2
+; RV64I-NEXT:    slli a0, a0, 8
+; RV64I-NEXT:    and a0, a0, s3
+; RV64I-NEXT:    add a0, a2, a0
+; RV64I-NEXT:    slli a0, a0, 8
+; RV64I-NEXT:    add a0, a2, a0
+; RV64I-NEXT:    slli a0, a0, 8
+; RV64I-NEXT:    add a0, a2, a0
 ; RV64I-NEXT:    srliw a0, a0, 24
 ; RV64I-NEXT:    bnez a1, .LBB4_1
 ; RV64I-NEXT:  # %bb.2: # %bb7
