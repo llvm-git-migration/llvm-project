@@ -3741,9 +3741,11 @@ LegalizerHelper::lower(MachineInstr &MI, unsigned TypeIdx, LLT LowerHintTy) {
   }
   case TargetOpcode::G_ATOMIC_CMPXCHG_WITH_SUCCESS: {
     auto [OldValRes, SuccessRes, Addr, CmpVal, NewVal] = MI.getFirst5Regs();
-    MIRBuilder.buildAtomicCmpXchg(OldValRes, Addr, CmpVal, NewVal,
+    auto Tmp = MRI.createGenericVirtualRegister(MRI.getType(OldValRes));
+    MIRBuilder.buildAtomicCmpXchg(Tmp, Addr, CmpVal, NewVal,
                                   **MI.memoperands_begin());
-    MIRBuilder.buildICmp(CmpInst::ICMP_EQ, SuccessRes, OldValRes, CmpVal);
+    MIRBuilder.buildCopy(OldValRes, Tmp);
+    MIRBuilder.buildICmp(CmpInst::ICMP_EQ, SuccessRes, Tmp, CmpVal);
     MI.eraseFromParent();
     return Legalized;
   }
@@ -7622,10 +7624,14 @@ LegalizerHelper::lowerSADDO_SSUBO(MachineInstr &MI) {
   LLT Ty = Dst0Ty;
   LLT BoolTy = Dst1Ty;
 
+  auto Tmp = MRI.createGenericVirtualRegister(MRI.getType(Dst0));
+
   if (IsAdd)
-    MIRBuilder.buildAdd(Dst0, LHS, RHS);
+    MIRBuilder.buildAdd(Tmp, LHS, RHS);
   else
-    MIRBuilder.buildSub(Dst0, LHS, RHS);
+    MIRBuilder.buildSub(Tmp, LHS, RHS);
+
+  MIRBuilder.buildCopy(Dst0, Tmp);
 
   // TODO: If SADDSAT/SSUBSAT is legal, compare results to detect overflow.
 
@@ -7638,7 +7644,7 @@ LegalizerHelper::lowerSADDO_SSUBO(MachineInstr &MI) {
   // (LHS) if and only if the other operand (RHS) is (non-zero) positive,
   // otherwise there will be overflow.
   auto ResultLowerThanLHS =
-      MIRBuilder.buildICmp(CmpInst::ICMP_SLT, BoolTy, Dst0, LHS);
+      MIRBuilder.buildICmp(CmpInst::ICMP_SLT, BoolTy, Tmp, LHS);
   auto ConditionRHS = MIRBuilder.buildICmp(
       IsAdd ? CmpInst::ICMP_SLT : CmpInst::ICMP_SGT, BoolTy, RHS, Zero);
 
