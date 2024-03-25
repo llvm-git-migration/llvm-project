@@ -88,6 +88,7 @@ sections with improvements to Clang's support for those languages.
 
 C++ Language Changes
 --------------------
+- Implemented _BitInt literal suffixes as ``__wb`` or ``__WB`` with unsigned modifiers also allowed. (#GH85223).
 
 C++20 Feature Support
 ^^^^^^^^^^^^^^^^^^^^^
