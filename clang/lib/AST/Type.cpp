@@ -2749,6 +2749,17 @@ bool QualType::isTriviallyCopyableType(const ASTContext &Context) const {
                                      /*IsCopyConstructible=*/false);
 }
 
+bool QualType::isBitwiseCloneableType(const ASTContext & Context) const {
+  if (const auto *RD = getCanonicalType()->getAsCXXRecordDecl()) {
+    // Never allow memcpy when we're adding poisoned padding bits to the struct.
+    // Accessing these posioned bits will trigger false alarm on
+    // SanitizeAddressFieldPadding etc.
+    if (RD->mayInsertExtraPadding())
+      return false;
+  }
+  return true;
+}
+
 bool QualType::isTriviallyCopyConstructibleType(
     const ASTContext &Context) const {
   return isTriviallyCopyableTypeImpl(*this, Context,
