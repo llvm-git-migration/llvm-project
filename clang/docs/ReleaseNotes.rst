@@ -318,6 +318,9 @@ Non-comprehensive list of changes in this release
 - Builtins ``__builtin_shufflevector()`` and ``__builtin_convertvector()`` may
   now be used within constant expressions.
 
+- Added ``__buitlin_bitwise_clonable`` which is used to check whether a type
+  can be safely copied by memcpy/memmove.
+
 New Compiler Flags
 ------------------
 - ``-fsanitize=implicit-bitfield-conversion`` checks implicit truncation and
