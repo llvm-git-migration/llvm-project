@@ -72,7 +72,7 @@ _LIBCPP_HIDE_FROM_ABI inline unsigned char _BitScanForward64(unsigned long* __in
   if (__mask == 0) {
     return false;
   }
-  *__index = __builtin_ctzll(__mask);
+  *__index = __builtin_ctzg(__mask);
   return true;
 }
 
@@ -80,7 +80,7 @@ _LIBCPP_HIDE_FROM_ABI inline unsigned char _BitScanForward(unsigned long* __inde
   if (__mask == 0) {
     return false;
   }
-  *__index = __builtin_ctz(__mask);
+  *__index = __builtin_ctzg(__mask);
   return true;
 }
 #endif  // !_MSC_VER
