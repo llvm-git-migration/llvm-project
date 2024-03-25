@@ -139,20 +139,25 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
       .clampScalar(0, s32, sXLen)
       .minScalarSameAs(1, 0);
 
-  auto &ExtActions =
-      getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
-          .customIf(typeIsLegalBoolVec(1, BoolVecTys, ST))
-          .legalIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
-                       typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)))
-          .maxScalar(0, sXLen);
   if (ST.is64Bit()) {
-    ExtActions.legalFor({{sXLen, s32}});
+    getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
+        .customIf(typeIsLegalBoolVec(1, BoolVecTys, ST))
+        .legalIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
+                     typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)))
+        .legalFor({{sXLen, s32}})
+        .maxScalar(0, sXLen);
 
     getActionDefinitionsBuilder(G_SEXT_INREG)
         .customFor({sXLen})
         .maxScalar(0, sXLen)
         .lower();
   } else {
+    getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
+        .customIf(typeIsLegalBoolVec(1, BoolVecTys, ST))
+        .legalIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
+                     typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)))
+        .maxScalar(0, sXLen);
+
     getActionDefinitionsBuilder(G_SEXT_INREG).maxScalar(0, sXLen).lower();
   }
 
