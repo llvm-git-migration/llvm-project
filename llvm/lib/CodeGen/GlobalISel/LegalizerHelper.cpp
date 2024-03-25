@@ -3334,13 +3334,13 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
   unsigned MinMemStoreSizeInBits =
       8 * MemTy.getSizeInBytes().getKnownMinValue();
 
-  if (MemSizeInBits != MemStoreSizeInBits) {
+  if (MinMemSizeInBits != MinMemStoreSizeInBits) {
     if (MemTy.isVector())
       return UnableToLegalize;
 
     // Promote to a byte-sized load if not loading an integral number of
     // bytes.  For example, promote EXTLOAD:i20 -> EXTLOAD:i24.
-    LLT WideMemTy = LLT::scalar(MemStoreSizeInBits);
+    LLT WideMemTy = LLT::scalar(MinMemStoreSizeInBits);
     MachineMemOperand *NewMMO =
         MF.getMachineMemOperand(&MMO, MMO.getPointerInfo(), WideMemTy);
 
@@ -3349,19 +3349,19 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
 
     // If this wasn't already an extending load, we need to widen the result
     // register to avoid creating a load with a narrower result than the source.
-    if (MemStoreSizeInBits > DstTy.getSizeInBits()) {
+    if (MinMemStoreSizeInBits > DstTy.getSizeInBits()) {
       LoadTy = WideMemTy;
       LoadReg = MRI.createGenericVirtualRegister(WideMemTy);
     }
 
     if (isa<GSExtLoad>(LoadMI)) {
       auto NewLoad = MIRBuilder.buildLoad(LoadTy, PtrReg, *NewMMO);
-      MIRBuilder.buildSExtInReg(LoadReg, NewLoad, MemSizeInBits);
+      MIRBuilder.buildSExtInReg(LoadReg, NewLoad, MinMemSizeInBits);
     } else if (isa<GZExtLoad>(LoadMI) || WideMemTy == LoadTy) {
       auto NewLoad = MIRBuilder.buildLoad(LoadTy, PtrReg, *NewMMO);
       // The extra bits are guaranteed to be zero, since we stored them that
       // way.  A zext load from Wide thus automatically gives zext from MemVT.
-      MIRBuilder.buildAssertZExt(LoadReg, NewLoad, MemSizeInBits);
+      MIRBuilder.buildAssertZExt(LoadReg, NewLoad, MinMemSizeInBits);
     } else {
       MIRBuilder.buildLoad(LoadReg, PtrReg, *NewMMO);
     }
@@ -3394,10 +3394,10 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
 
   uint64_t LargeSplitSize, SmallSplitSize;
 
-  if (!isPowerOf2_32(MemSizeInBits)) {
+  if (!isPowerOf2_32(MinMemSizeInBits)) {
     // This load needs splitting into power of 2 sized loads.
-    LargeSplitSize = llvm::bit_floor(MemSizeInBits);
-    SmallSplitSize = MemSizeInBits - LargeSplitSize;
+    LargeSplitSize = llvm::bit_floor(MinMemSizeInBits);
+    SmallSplitSize = MinMemSizeInBits - LargeSplitSize;
   } else {
     // This is already a power of 2, but we still need to split this in half.
     //
@@ -3407,7 +3407,7 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
     if (TLI.allowsMemoryAccess(Ctx, MIRBuilder.getDataLayout(), MemTy, MMO))
       return UnableToLegalize;
 
-    SmallSplitSize = LargeSplitSize = MemSizeInBits / 2;
+    SmallSplitSize = LargeSplitSize = MinMemSizeInBits / 2;
   }
 
   if (MemTy.isVector()) {
