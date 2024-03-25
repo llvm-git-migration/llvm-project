@@ -43,6 +43,27 @@ _LIBCPP_PUSH_MACROS
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
+template <class _Tp>
+inline constexpr bool __can_map_to_integer_v =
+    sizeof(_Tp) == alignof(_Tp) && (sizeof(_Tp) == 1 || sizeof(_Tp) == 2 || sizeof(_Tp) == 4 || sizeof(_Tp) == 8);
+
+template <class _Tp>
+auto __get_as_integer_type_impl() {
+  if constexpr (sizeof(_Tp) == 1)
+    return uint8_t{};
+  else if constexpr (sizeof(_Tp) == 2)
+    return uint16_t{};
+  else if constexpr (sizeof(_Tp) == 4)
+    return uint32_t{};
+  else if constexpr (sizeof(_Tp) == 8)
+    return uint64_t{};
+  else
+    static_assert(false, "Unexpected size type");
+}
+
+template <class _Tp>
+using __get_as_integer_type = decltype(std::__get_as_integer_type_impl<_Tp>());
+
 // This isn't specialized for 64 byte vectors on purpose. They have the potential to significantly reduce performance
 // in mixed simd/non-simd workloads and don't provide any performance improvement for currently vectorized algorithms
 // as far as benchmarks are concerned.
@@ -83,7 +104,8 @@ using __simd_vector_underlying_type_t = decltype(std::__simd_vector_underlying_t
 template <class _VecT, class _Tp>
 _LIBCPP_NODISCARD _LIBCPP_ALWAYS_INLINE _LIBCPP_HIDE_FROM_ABI _VecT __load_vector(const _Tp* __ptr) noexcept {
   return [=]<size_t... _Indices>(index_sequence<_Indices...>) _LIBCPP_ALWAYS_INLINE noexcept {
-    return _VecT{__ptr[_Indices]...};
+    [[__gnu__::__may_alias__]] const _Tp* __aliasing_ptr = __ptr;
+    return _VecT{__aliasing_ptr[_Indices]...};
   }(make_index_sequence<__simd_vector_size_v<_VecT>>{});
 }
 
