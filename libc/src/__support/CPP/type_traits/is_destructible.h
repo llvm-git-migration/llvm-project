@@ -21,7 +21,7 @@
 namespace LIBC_NAMESPACE::cpp {
 
 // is_destructible
-#if LIBC_HAS_BUILTIN(__is_destructible)
+#if __has_builtin(__is_destructible)
 template <typename T>
 struct is_destructible : bool_constant<__is_destructible(T)> {};
 #else
