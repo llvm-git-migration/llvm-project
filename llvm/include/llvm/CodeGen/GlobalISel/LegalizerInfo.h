@@ -220,7 +220,8 @@ struct TypePairAndMemDesc {
            Align >= Other.Align &&
            // FIXME: This perhaps should be stricter, but the current legality
            // rules are written only considering the size.
-           MemTy.getSizeInBits() == Other.MemTy.getSizeInBits();
+           MemTy.getSizeInBits().getKnownMinValue() ==
+               Other.MemTy.getSizeInBits().getKnownMinValue();
   }
 };
 

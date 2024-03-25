@@ -3330,8 +3330,12 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
   LLT MemTy = MMO.getMemoryType();
   MachineFunction &MF = MIRBuilder.getMF();
 
-  unsigned MemSizeInBits = MemTy.getSizeInBits();
-  unsigned MemStoreSizeInBits = 8 * MemTy.getSizeInBytes();
+  unsigned MemSizeInBits = MemTy.isScalable()
+                               ? MemTy.getSizeInBits().getKnownMinValue()
+                               : MemTy.getSizeInBits();
+  unsigned MemStoreSizeInBits =
+      MemTy.isScalable() ? 8 * MemTy.getSizeInBytes().getKnownMinValue()
+                         : 8 * MemTy.getSizeInBytes();
 
   if (MemSizeInBits != MemStoreSizeInBits) {
     if (MemTy.isVector())
