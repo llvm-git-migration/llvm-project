@@ -974,6 +974,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
   bool isFixedPointConstant = isFixedPointLiteral();
   bool isFPConstant = isFloatingLiteral();
   bool HasSize = false;
+  bool possibleBitInt = false;
 
   // Loop over all of the characters of the suffix.  If we see something bad,
   // we break out of the loop.
@@ -1117,6 +1118,26 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
       if (isImaginary) break;   // Cannot be repeated.
       isImaginary = true;
       continue;  // Success.
+    case '_':
+      if (isFPConstant)
+        break; // Invalid for floats
+      if (HasSize)
+        break;
+      if (possibleBitInt)
+        break; // Cannot be repeated.
+      if (LangOpts.CPlusPlus && s[1] == '_') {
+        // Scan ahead to find possible rest of BitInt suffix
+        for (const char *c = s; c != ThisTokEnd; ++c) {
+          if (*c == 'w' || *c == 'W') {
+            possibleBitInt = true;
+            ++s;
+            break;
+          }
+        }
+        if (possibleBitInt)
+          continue;
+      }
+      break;
     case 'w':
     case 'W':
       if (isFPConstant)
@@ -1124,12 +1145,10 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
       if (HasSize)
         break; // Invalid if we already have a size for the literal.
 
-      // wb and WB are allowed, but a mixture of cases like Wb or wB is not. We
-      // explicitly do not support the suffix in C++ as an extension because a
-      // library-based UDL that resolves to a library type may be more
-      // appropriate there.
-      if (!LangOpts.CPlusPlus && ((s[0] == 'w' && s[1] == 'b') ||
-          (s[0] == 'W' && s[1] == 'B'))) {
+      // wb and WB are allowed, but a mixture of cases like Wb or wB is not.
+      // The same rules apply for __wb/__WB.
+      if ((!LangOpts.CPlusPlus || possibleBitInt) &&
+          ((s[0] == 'w' && s[1] == 'b') || (s[0] == 'W' && s[1] == 'B'))) {
         isBitInt = true;
         HasSize = true;
         ++s; // Skip both characters (2nd char skipped on continue).
@@ -1241,7 +1260,9 @@ bool NumericLiteralParser::isValidUDSuffix(const LangOptions &LangOpts,
     return false;
 
   // By C++11 [lex.ext]p10, ud-suffixes starting with an '_' are always valid.
-  if (Suffix[0] == '_')
+  // Suffixes starting with '__' (double underscore) are for use by
+  // implementation.
+  if (Suffix[0] == '_' && Suffix[1] != '_')
     return true;
 
   // In C++11, there are no library suffixes.

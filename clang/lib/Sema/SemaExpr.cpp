@@ -4161,14 +4161,14 @@ ExprResult Sema::ActOnNumericConstant(const Token &Tok, Scope *UDLScope) {
                                         : diag::ext_cxx23_size_t_suffix
                                   : diag::err_cxx23_size_t_suffix);
 
-    // 'wb/uwb' literals are a C23 feature. We support _BitInt as a type in C++,
-    // but we do not currently support the suffix in C++ mode because it's not
-    // entirely clear whether WG21 will prefer this suffix to return a library
-    // type such as std::bit_int instead of returning a _BitInt.
+    // 'wb/uwb' literals are a C23 feature.
+    // '__wb/__uwb' literals are a C++ extension.
     if (Literal.isBitInt && !getLangOpts().CPlusPlus)
       PP.Diag(Tok.getLocation(), getLangOpts().C23
                                      ? diag::warn_c23_compat_bitint_suffix
                                      : diag::ext_c23_bitint_suffix);
+    else if (Literal.isBitInt)
+      PP.Diag(Tok.getLocation(), diag::ext_cpp_bitint_suffix);
 
     // Get the value in the widest-possible width. What is "widest" depends on
     // whether the literal is a bit-precise integer or not. For a bit-precise
