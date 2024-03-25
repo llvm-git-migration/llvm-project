@@ -8723,8 +8723,7 @@ SDValue TargetLowering::expandCTPOP(SDNode *Node, SelectionDAG &DAG) const {
                       DAG.getNode(ISD::SHL, dl, VT, V, ShiftC));
     }
   }
-  return DAG.getNode(ISD::SRL, dl, VT, V,
-                     DAG.getConstant(Len - 8, dl, ShVT));
+  return DAG.getNode(ISD::SRL, dl, VT, V, DAG.getConstant(Len - 8, dl, ShVT));
 }
 
 SDValue TargetLowering::expandVPCTPOP(SDNode *Node, SelectionDAG &DAG) const {
