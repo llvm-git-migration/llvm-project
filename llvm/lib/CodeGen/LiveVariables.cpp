@@ -38,6 +38,8 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/TargetParser/Triple.h"
 #include <algorithm>
 using namespace llvm;
 
@@ -494,6 +496,8 @@ void LiveVariables::runOnInstr(MachineInstr &MI,
   SmallVector<unsigned, 4> UseRegs;
   SmallVector<unsigned, 4> DefRegs;
   SmallVector<unsigned, 1> RegMasks;
+  Triple::ArchType Arch = MF->getTarget().getTargetTriple().getArch();
+  bool isMips = Triple::getArchTypePrefix(Arch) == "mips";
   for (unsigned i = 0; i != NumOperandsToProcess; ++i) {
     MachineOperand &MO = MI.getOperand(i);
     if (MO.isRegMask()) {
@@ -512,8 +516,13 @@ void LiveVariables::runOnInstr(MachineInstr &MI,
       assert(MO.isDef());
       // FIXME: We should not remove any dead flags. However the MIPS RDDSP
       // instruction needs it at the moment: http://llvm.org/PR27116.
-      if (MOReg.isPhysical() && !MRI->isReserved(MOReg))
-        MO.setIsDead(false);
+      if (isMips) {
+        if (MOReg.isPhysical() && !MRI->isReserved(MOReg))
+          MO.setIsDead(false);
+      } else {
+        if (!(MOReg.isPhysical() && MRI->isReserved(MOReg)))
+          MO.setIsDead(false);
+      }
       DefRegs.push_back(MOReg);
     }
   }
