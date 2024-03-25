@@ -16,7 +16,7 @@
 namespace LIBC_NAMESPACE::cpp {
 
 // remove_all_extents
-#if LIBC_HAS_BUILTIN(__remove_all_extents)
+#if __has_builtin(__remove_all_extents)
 template <typename T> using remove_all_extents_t = __remove_all_extents(T);
 template <typename T>
 struct remove_all_extents : cpp::type_identity<remove_all_extents_t<T>> {};
