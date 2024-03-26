@@ -1594,6 +1594,11 @@ bool AMDGPUCodeGenPrepareImpl::visitBinaryOperator(BinaryOperator &I) {
           }
         }
 
+        if (auto *NewEltI = dyn_cast<Instruction>(NewElt))
+          if (PossiblyExactOperator::isPossiblyExactOpcode(
+                  NewEltI->getOpcode()))
+            NewEltI->setIsExact(I.isExact());
+
         NewDiv = Builder.CreateInsertElement(NewDiv, NewElt, N);
       }
     } else {
