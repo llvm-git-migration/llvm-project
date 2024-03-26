@@ -127,7 +127,7 @@ public:
 #if TEST_STD_VER > 14
     noexcept(std::is_nothrow_swappable<nested_container>::value)
 #elif defined(_LIBCPP_VERSION)
-    TEST_NOEXCEPT_COND(std::__is_nothrow_swappable<nested_container>::value)
+    TEST_NOEXCEPT_COND(std::__is_nothrow_swappable_v<nested_container>)
 #endif
     { v_.swap(nv.v_); }
 
@@ -256,7 +256,7 @@ public:
 #if TEST_STD_VER > 14
     noexcept(std::is_nothrow_swappable<nested_container>::value)
 #elif defined(_LIBCPP_VERSION)
-    TEST_NOEXCEPT_COND(std::__is_nothrow_swappable<nested_container>::value)
+    TEST_NOEXCEPT_COND(std::__is_nothrow_swappable_v<nested_container>)
 #endif
     { l_.swap(nl.l_); }
 
