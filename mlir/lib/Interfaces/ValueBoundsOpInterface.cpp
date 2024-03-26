@@ -715,6 +715,27 @@ ValueBoundsConstraintSet::areEquivalentSlices(MLIRContext *ctx,
   return true;
 }
 
+void ValueBoundsConstraintSet::dump() const {
+  llvm::errs() << "==========\nColumns:\n";
+  llvm::errs() << "column\tdim\tvalue owner\n";
+  for (auto it : llvm::enumerate(positionToValueDim)) {
+    llvm::errs() << it.index() << "\t";
+    if (auto valueDim = it.value()) {
+      if (valueDim->second == kIndexValue) {
+        llvm::errs() << "n/a\t";
+      } else {
+        llvm::errs() << valueDim->second << "\t";
+      }
+      llvm::errs() << getOwnerOfValue(valueDim->first)->getName() << "\n";
+    } else {
+      llvm::errs() << "n/a\tn/a\n";
+    }
+  }
+  llvm::errs() << "\nConstraint set:\n";
+  cstr.dump();
+  llvm::errs() << "==========\n";
+}
+
 ValueBoundsConstraintSet::BoundBuilder &
 ValueBoundsConstraintSet::BoundBuilder::operator[](int64_t dim) {
   assert(!this->dim.has_value() && "dim was already set");
