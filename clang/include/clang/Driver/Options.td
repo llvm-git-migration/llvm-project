@@ -3031,8 +3031,8 @@ defm skip_odr_check_in_gmf : BoolOption<"f", "skip-odr-check-in-gmf",
           "Perform ODR checks for decls in the global module fragment.">>,
   Group<f_Group>;
 
-def gen_reduced_bmi : Flag<["-"], "fgen-reduced-bmi">,
-  Group<i_Group>, Visibility<[ClangOption, CC1Option]>,
+def modules_reduced_bmi : Flag<["-"], "fmodules-reduced-bmi">,
+  Group<f_Group>, Visibility<[ClangOption, CC1Option]>,
   HelpText<"Generate the reduced BMI">,
   MarshallingInfoFlag<FrontendOpts<"GenReducedBMI">>;
 
