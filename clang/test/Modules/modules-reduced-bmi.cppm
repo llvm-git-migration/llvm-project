@@ -3,10 +3,10 @@
 // RUN: split-file %s %t
 //
 // RUN: %clang_cc1 -std=c++20 %t/a.cppm -emit-reduced-module-interface -o %t/a.reduced.pcm
-// RUN: %clang_cc1 -std=c++20 %t/a.cppm -fgen-reduced-bmi -fmodule-output=%t/a.pcm \
+// RUN: %clang_cc1 -std=c++20 %t/a.cppm -fmodules-reduced-bmi -fmodule-output=%t/a.pcm \
 // RUN:     -S -emit-llvm -o %t/a.ll
 //
-// Test that the generated BMI from `-fgen-reduced-bmi -fmodule-output=` is same with
+// Test that the generated BMI from `-fmodules-reduced-bmi -fmodule-output=` is same with
 // `-emit-reduced-module-interface`.
 // RUN: diff %t/a.reduced.pcm %t/a.pcm
 //
@@ -14,7 +14,7 @@
 // RUN: %clang_cc1 -std=c++20 %t/b.cppm -fmodule-file=a=%t/a.pcm -fsyntax-only -verify
 //
 // RUN: rm -f %t/a.pcm
-// RUN: %clang_cc1 -std=c++20 %t/a.cppm -fgen-reduced-bmi -fmodule-output=%t/a.pcm \
+// RUN: %clang_cc1 -std=c++20 %t/a.cppm -fmodules-reduced-bmi -fmodule-output=%t/a.pcm \
 // RUN:     -emit-module-interface -o %t/a.full.pcm
 // RUN: diff %t/a.reduced.pcm %t/a.pcm
 // RUN: not diff %t/a.pcm %t/a.full.pcm
