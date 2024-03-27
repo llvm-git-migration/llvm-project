@@ -571,7 +571,7 @@ template <class ELFT> void elf::createSyntheticSections() {
   }
 
   if (config->debugNames)
-    add(*DebugNamesSection::create<ELFT>());
+    add(*DebugNamesSection<ELFT>::create());
 
   // .note.GNU-stack is always added when we are creating a re-linkable
   // object file. Other linkers are using the presence of this marker
