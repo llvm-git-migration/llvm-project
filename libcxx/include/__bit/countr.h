@@ -45,7 +45,7 @@ _LIBCPP_NODISCARD _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 int __coun
   if (__t == 0)
     return numeric_limits<_Tp>::digits;
 
-  return __builtin_ctz(__t);
+  return __builtin_ctzg(__t);
 }
 
 #else // __has_builtin(__builtin_ctzg)
