@@ -867,7 +867,7 @@ static void collectReductionInfo(
   // Collect the reduction information.
   reductionInfos.reserve(numReductions);
   for (unsigned i = 0; i < numReductions; ++i) {
-    llvm::OpenMPIRBuilder::AtomicReductionGenCB atomicGen = nullptr;
+    llvm::OpenMPIRBuilder::ReductionGenAtomicCBTy atomicGen = nullptr;
     if (owningAtomicReductionGens[i])
       atomicGen = owningAtomicReductionGens[i];
     llvm::Value *variable =
@@ -875,7 +875,7 @@ static void collectReductionInfo(
     reductionInfos.push_back(
         {moduleTranslation.convertType(reductionDecls[i].getType()), variable,
          privateReductionVariables[i],
-         /*EvaluationKind=*/llvm::OpenMPIRBuilder::EvaluationKindTy::Scalar,
+         /*EvaluationKind=*/llvm::OpenMPIRBuilder::EvaluationKind::Scalar,
          owningReductionGens[i],
          /*ReductionGenClang=*/nullptr, atomicGen});
   }
