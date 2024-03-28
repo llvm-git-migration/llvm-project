@@ -63,14 +63,41 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
   if (DstPtrInfo.getAddrSpace() >= 256)
     return SDValue();
 
+  if (!ConstantSize)
+    return SDValue();
+
   // If not DWORD aligned or size is more than the threshold, call the library.
   // The libc version is likely to be faster for these cases. It can use the
   // address value and run time information about the CPU.
-  if (Alignment < Align(4) || !ConstantSize ||
-      ConstantSize->getZExtValue() > Subtarget.getMaxInlineSizeThreshold()) 
-    return SDValue();
+  //
+  // If we MUST inline, then don't care about the alignment.
+  // On x86, the CPU doesn't care and neither should you.
+  // As long as the count is aligned, we can use less instructions.
+  //
+  // They're not slower than reading the same value byte by byte
+  // They're slower than aligned reads.
+  // But we don't have the option here.
+  // Really, the slowdown comes from the fact that, if the value straddles
+  // cache lines, the CPU has to read in two cache lines (likewise with
+  // writes) but that's unavoidable here, since we have to read the range one
+  // way or another so  we take the penalty either way.
+  //
+  // We need to instead change the alignment to be based on the actual type.
 
   uint64_t SizeVal = ConstantSize->getZExtValue();
+  if (AlwaysInline || DAG.getMachineFunction().getFunction().hasMinSize()) {
+    if (SizeVal & 7 == 0 && Subtarget.is64Bit())
+      Alignment = Align(8);
+    else if (SizeVal & 3 == 0)
+      Alignment = Align(4);
+    else if (SizeVal & 1 == 0)
+      Alignment = Align(2);
+    else
+      Alignment = Align(1);
+  } else if (Alignment < Align(4) ||
+             SizeVal > Subtarget.getMaxInlineSizeThreshold())
+    return SDValue();
+
   SDValue InGlue;
   EVT AVT;
   SDValue Count;
@@ -142,7 +169,7 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
                       DAG.getNode(ISD::ADD, dl, AddrVT, Dst,
                                   DAG.getConstant(Offset, dl, AddrVT)),
                       Val, DAG.getConstant(BytesLeft, dl, SizeVT), Alignment,
-                      isVolatile, AlwaysInline,
+                      isVolatile, /* AlwaysInline */ true,
                       /* isTailCall */ false, DstPtrInfo.getWithOffset(Offset));
   }
 
@@ -208,19 +235,43 @@ static SDValue emitConstantSizeRepmov(
     Align Alignment, bool isVolatile, bool AlwaysInline,
     MachinePointerInfo DstPtrInfo, MachinePointerInfo SrcPtrInfo) {
 
-  /// TODO: Revisit next line: big copy with ERMSB on march >= haswell are very
-  /// efficient.
-  if (!AlwaysInline && Size > Subtarget.getMaxInlineSizeThreshold())
-    return SDValue();
+  // If we MUST inline, then don't care about the alignment.
+  // On x86, the CPU doesn't care and neither should you
+  // as long as the count is aligned.
+  //
+  // They're not slower than reading the same value byte by byte
+  // They're slower than aligned reads.
+  // But we don't have the option here.
+  // Really, the slowdown comes from the fact that, if the value straddles
+  // cache lines, the CPU has to read in two cache lines (likewise with
+  // writes) but that's unavoidable here, since you have to read the range one
+  // way or another so you we take the penalty either way.
+
+  // We need to instead change the alignment to be based on the actual type.
+
+  /// In case we optimize for size we use repmovsb even if it's less efficient
+  /// so we can save the loads/stores of the leftover.
 
   /// If we have enhanced repmovs we use it.
   if (Subtarget.hasERMSB())
     return emitRepmovsB(Subtarget, DAG, dl, Chain, Dst, Src, Size);
 
   assert(!Subtarget.hasERMSB() && "No efficient RepMovs");
-  /// We assume runtime memcpy will do a better job for unaligned copies when
-  /// ERMS is not present.
-  if (!AlwaysInline && (Alignment.value() & 3) != 0)
+
+  if (AlwaysInline || DAG.getMachineFunction().getFunction().hasMinSize()) {
+    if (Size & 7 == 0 && Subtarget.is64Bit())
+      Alignment = Align(8);
+    else if (Size & 3 == 0)
+      Alignment = Align(4);
+    else if (Size & 1 == 0)
+      Alignment = Align(2);
+    else
+      Alignment = Align(1);
+
+    /// We assume runtime memcpy will do a better job for unaligned copies when
+    /// ERMS is not present.
+  } else if (Alignment < Align(4) ||
+             Size > Subtarget.getMaxInlineSizeThreshold())
     return SDValue();
 
   const MVT BlockType = getOptimalRepmovsType(Subtarget, Alignment);
