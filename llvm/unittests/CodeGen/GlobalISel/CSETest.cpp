@@ -275,4 +275,207 @@ TEST_F(AArch64GISelMITest, TestConstantFoldCTT) {
   EXPECT_TRUE(CheckMachineFunction(*MF, CheckStr)) << *MF;
 }
 
+TEST_F(AArch64GISelMITest, TestConstantFoldICMP) {
+  setUp();
+  if (!TM)
+    GTEST_SKIP();
+
+  LLT s32 = LLT::scalar(32);
+
+  GISelCSEInfo CSEInfo;
+  CSEInfo.setCSEConfig(std::make_unique<CSEConfigConstantOnly>());
+  CSEInfo.analyze(*MF);
+  B.setCSEInfo(&CSEInfo);
+  CSEMIRBuilder CSEB(B.getState());
+
+  auto One = CSEB.buildConstant(s32, 1);
+  auto Two = CSEB.buildConstant(s32, 2);
+  auto MinusOne = CSEB.buildConstant(s32, -1);
+  auto MinusTwo = CSEB.buildConstant(s32, -2);
+
+  // ICMP_EQ
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_EQ, s32, One, One);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_NE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_NE, s32, One, Two);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_UGT
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_UGT, s32, Two, One);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_UGE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_UGE, s32, One, One);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_ULT
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_UGE, s32, One, Two);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_ULE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_UGE, s32, Two, Two);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_SGT
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_SGT, s32, MinusOne, MinusTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_SGE
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_SGE, s32, MinusOne, MinusOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_SLT
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_SGE, s32, MinusTwo, MinusOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  // ICMP_SLE
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_SLE, s32, MinusTwo, MinusTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+    EXPECT_TRUE(I->getOperand(0).getCImm()->getZExtValue());
+  }
+
+  LLT VecTy = LLT::fixed_vector(2, s32);
+  LLT DstTy = LLT::fixed_vector(2, LLT::scalar(1));
+  auto Three = CSEB.buildConstant(s32, 3);
+  auto MinusThree = CSEB.buildConstant(s32, -3);
+  auto OneOne = CSEB.buildBuildVector(VecTy, {One.getReg(0), One.getReg(0)});
+  auto OneTwo = CSEB.buildBuildVector(VecTy, {One.getReg(0), Two.getReg(0)});
+  auto TwoThree =
+      CSEB.buildBuildVector(VecTy, {Two.getReg(0), Three.getReg(0)});
+  auto MinusOneOne =
+      CSEB.buildBuildVector(VecTy, {MinusOne.getReg(0), MinusOne.getReg(0)});
+  auto MinusOneTwo =
+      CSEB.buildBuildVector(VecTy, {MinusOne.getReg(0), MinusTwo.getReg(0)});
+  auto MinusTwoThree =
+      CSEB.buildBuildVector(VecTy, {MinusTwo.getReg(0), MinusThree.getReg(0)});
+
+  // ICMP_EQ
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy, OneOne, OneOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_NE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_NE, DstTy, OneOne, OneTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_UGT
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_UGT, DstTy, TwoThree, OneTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_UGE
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_UGE, DstTy, OneTwo, OneOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_ULT
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_ULT, DstTy, OneOne, OneTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_ULE
+  {
+    auto I =
+        CSEB.buildICmp(CmpInst::Predicate::ICMP_ULE, DstTy, OneTwo, OneOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_SGT
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_SGT, DstTy, MinusOneTwo,
+                            MinusTwoThree);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_SGE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_SGE, DstTy, MinusOneTwo,
+                            MinusOneOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_SLT
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_SLT, DstTy, MinusTwoThree,
+                            MinusOneTwo);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  // ICMP_SLE
+  {
+    auto I = CSEB.buildICmp(CmpInst::Predicate::ICMP_SLE, DstTy, MinusOneTwo,
+                            MinusOneOne);
+    EXPECT_TRUE(I->getOpcode() == TargetOpcode::G_CONSTANT);
+  }
+
+  auto CheckStr = R"(
+  ; CHECK: [[One:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+  ; CHECK: [[Two:%[0-9]+]]:_(s32) = G_CONSTANT i32 2
+  ; CHECK: [[MinusOne:%[0-9]+]]:_(s32) = G_CONSTANT i32 -1
+  ; CHECK: [[MinusTwo:%[0-9]+]]:_(s32) = G_CONSTANT i32 -2
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[%[0-9]+]]:_(s1) = G_CONSTANT i1 1
+  ; CHECK: [[Three:%[0-9]+]]:_(s32) = G_CONSTANT i32 3
+  ; CHECK: [[MinusThree:%[0-9]+]]:_(s32) = G_CONSTANT i32 -3
+  ; CHECK: [[OneOne:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[One]]:_(s32), [[One]]:_(s32)
+  ; CHECK: [[OneTwo:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[One]]:_(s32), [[Two]]:_(s32)
+  ; CHECK: [[TwoThree:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[Two]]:_(s32), [[Three]]:_(s32)
+  ; CHECK: [[MinusOneOne:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[MinusOne]]:_(s32), [[MinusOne]]:_(s32)
+  ; CHECK: [[MinusOneTwo:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[MinusOne]]:_(s32), [[MinusTwo]]:_(s32)
+  ; CHECK: [[MinusTwoThree:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[MinusTwo]]:_(s32), [[MinusThree]]:_(s32)
+  )";
+
+  EXPECT_TRUE(CheckMachineFunction(*MF, CheckStr)) << *MF;
+}
+
 } // namespace
