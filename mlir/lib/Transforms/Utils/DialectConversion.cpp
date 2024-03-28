@@ -277,8 +277,10 @@ public:
       blockOps.remove(blockOps.begin());
     if (block->getParent())
       eraseBlock(block);
-    else
+    else {
+      block->dropAllDefinedValueUses();
       delete block;
+    }
   }
 };
 
