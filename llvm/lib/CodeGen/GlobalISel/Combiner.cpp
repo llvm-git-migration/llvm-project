@@ -162,6 +162,7 @@ bool Combiner::combineMachineInstrs() {
     while (!WorkList.empty()) {
       MachineInstr *CurrInst = WorkList.pop_back_val();
       LLVM_DEBUG(dbgs() << "\nTry combining " << *CurrInst;);
+      Builder->setInstrAndDebugLoc(*CurrInst);
       Changed |= tryCombineAll(*CurrInst);
       WLObserver->reportFullyCreatedInstrs();
     }
