@@ -31,13 +31,12 @@ struct DenseMapInfo<clang::tidy::RenamerClangTidyCheck::NamingCheckId> {
   using NamingCheckId = clang::tidy::RenamerClangTidyCheck::NamingCheckId;
 
   static inline NamingCheckId getEmptyKey() {
-    return {DenseMapInfo<clang::SourceLocation>::getEmptyKey(),
-                         "EMPTY"};
+    return {DenseMapInfo<clang::SourceLocation>::getEmptyKey(), "EMPTY"};
   }
 
   static inline NamingCheckId getTombstoneKey() {
     return {DenseMapInfo<clang::SourceLocation>::getTombstoneKey(),
-                         "TOMBSTONE"};
+            "TOMBSTONE"};
   }
 
   static unsigned getHashValue(NamingCheckId Val) {
@@ -363,6 +362,24 @@ public:
       const DependentTemplateSpecializationTypeLoc &Loc) {
     if (const TagDecl *Decl = Loc.getTypePtr()->getAsTagDecl())
       Check->addUsage(Decl, Loc.getSourceRange(), SM);
+
+    return true;
+  }
+
+  bool VisitDesignatedInitExpr(DesignatedInitExpr *Expr) {
+    for (const auto &Designator : Expr->designators()) {
+      if (!Designator.isFieldDesignator())
+        continue;
+      const FieldDecl *FD = Designator.getFieldDecl();
+      if (!FD)
+        continue;
+      const IdentifierInfo *II = FD->getIdentifier();
+      if (!II)
+        continue;
+      SourceRange FixLocation{Designator.getFieldLoc(),
+                              Designator.getFieldLoc()};
+      Check->addUsage(FD, FixLocation, SM);
+    }
 
     return true;
   }
