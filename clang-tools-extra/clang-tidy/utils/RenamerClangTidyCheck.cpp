@@ -367,6 +367,24 @@ public:
     return true;
   }
 
+  bool VisitDesignatedInitExpr(DesignatedInitExpr *Expr) {
+    for (const auto &Designator : Expr->designators()) {
+      if (!Designator.isFieldDesignator())
+        continue;
+      FieldDecl *FD = Designator.getFieldDecl();
+      if (!FD)
+        continue;
+      IdentifierInfo *II = FD->getIdentifier();
+      if (!II)
+        continue;
+      SourceRange FixLocation{Designator.getFieldLoc(),
+                              Designator.getFieldLoc()};
+      Check->addUsage(FD, FixLocation, SM);
+    }
+
+    return true;
+  }
+
 private:
   RenamerClangTidyCheck *Check;
   const SourceManager *SM;
