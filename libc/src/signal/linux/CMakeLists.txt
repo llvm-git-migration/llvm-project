@@ -3,8 +3,10 @@ add_header_library(
   HDRS
     signal_utils.h
   DEPENDS
+    libc.include.signal
     libc.include.sys_syscall
     libc.src.__support.OSUtil.osutil
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -28,9 +30,9 @@ add_entrypoint_object(
     ../raise.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.include.sys_syscall
     libc.src.__support.OSUtil.osutil
+    libc.src.signal.sigset_t
 )
 
 add_object_library(
@@ -57,10 +59,10 @@ add_entrypoint_object(
     ../sigaction.h
   DEPENDS
     .__restore
-    libc.include.signal
     libc.include.sys_syscall
     libc.src.__support.OSUtil.osutil
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -84,10 +86,10 @@ add_entrypoint_object(
     ../sigprocmask.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.include.sys_syscall
     libc.src.__support.OSUtil.osutil
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -98,8 +100,8 @@ add_entrypoint_object(
     ../sigemptyset.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -110,8 +112,8 @@ add_entrypoint_object(
     ../sigaddset.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -133,8 +135,8 @@ add_entrypoint_object(
     ../sigfillset.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )
 
 add_entrypoint_object(
@@ -145,6 +147,6 @@ add_entrypoint_object(
     ../sigdelset.h
   DEPENDS
     .signal_utils
-    libc.include.signal
     libc.src.errno.errno
+    libc.src.signal.sigset_t
 )

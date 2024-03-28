@@ -11,9 +11,10 @@
 #include "src/__support/CPP/limits.h"
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
-
 #include "src/errno/libc_errno.h"
-#include <signal.h>
+#include "src/signal/sigset_t.h"
+#include "src/time/struct_timespec.h"
+
 #include <stddef.h> // For size_t
 #include <sys/select.h>
 #include <sys/syscall.h> // For syscall numbers.

@@ -2,6 +2,14 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIBC_TARGET_OS})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/${LIBC_TARGET_OS})
 endif()
 
+add_header_library(
+  struct_epoll_event
+  HDRS
+    struct_epoll_event.h
+  DEPENDS
+    libc.include.llvm-libc-types.struct_epoll_event
+)
+
 add_entrypoint_object(
   epoll_wait
   ALIAS

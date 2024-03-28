@@ -10,15 +10,11 @@
 
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
-
 #include "src/errno/libc_errno.h"
+#include "src/signal/sigset_t.h"
+#include "src/sys/epoll/struct_epoll_event.h"
+
 #include <sys/syscall.h> // For syscall numbers.
-
-// TODO: Use this include once the include headers are also using quotes.
-// #include "include/llvm-libc-types/sigset_t.h"
-// #include "include/llvm-libc-types/struct_epoll_event.h"
-
-#include <sys/epoll.h>
 
 namespace LIBC_NAMESPACE {
 

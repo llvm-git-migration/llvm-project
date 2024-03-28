@@ -71,3 +71,12 @@ add_entrypoint_object(
   DEPENDS
     .${LIBC_TARGET_OS}.sigdelset
 )
+
+add_header_library(
+  sigset_t
+  HDRS
+    sigset_t.h
+  DEPENDS
+    # TODO: this dependency is only for fullbuild mode...
+    libc.include.llvm-libc-types.sigset_t
+  )
