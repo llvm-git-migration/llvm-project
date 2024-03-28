@@ -48,19 +48,18 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
     SelectionDAG &DAG, const SDLoc &dl, SDValue Chain, SDValue Dst, SDValue Val,
     SDValue Size, Align Alignment, bool isVolatile, bool AlwaysInline,
     MachinePointerInfo DstPtrInfo) const {
+  // If to a segment-relative address space, use the default lowering.
+  if (DstPtrInfo.getAddrSpace() >= 256)
+    return SDValue();
+
   ConstantSDNode *ConstantSize = dyn_cast<ConstantSDNode>(Size);
   const X86Subtarget &Subtarget =
       DAG.getMachineFunction().getSubtarget<X86Subtarget>();
 
-#ifndef NDEBUG
   // If the base register might conflict with our physical registers, bail out.
   const MCPhysReg ClobberSet[] = {X86::RCX, X86::RAX, X86::RDI,
                                   X86::ECX, X86::EAX, X86::EDI};
-  assert(!isBaseRegConflictPossible(DAG, ClobberSet));
-#endif
-
-  // If to a segment-relative address space, use the default lowering.
-  if (DstPtrInfo.getAddrSpace() >= 256)
+  if (isBaseRegConflictPossible(DAG, ClobberSet))
     return SDValue();
 
   // If not DWORD aligned or size is more than the threshold, call the library.
