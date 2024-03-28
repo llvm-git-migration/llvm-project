@@ -1,0 +1,39 @@
+# REQUIRES: aarch64
+# RUN: yaml2obj %s -o %t.o
+# RUN: ld.lld %t.o -o %t.out
+# RUN: llvm-objdump -t %t.out | FileCheck %s
+
+# CHECK:      SYMBOL TABLE:
+# CHECK-NEXT: 0000000000210120 g     F foo	0000000000000000 _start
+---
+!ELF
+FileHeader:
+  Class: ELFCLASS64
+  Data: ELFDATA2LSB
+  Type: ET_REL
+  Machine: EM_AARCH64
+Sections:
+  - Name: bar
+    Type: SHT_PROGBITS
+    Flags: [SHF_ALLOC, SHF_EXECINSTR]
+  - Name: foo
+    Type: SHT_PROGBITS
+    Flags: [SHF_ALLOC, SHF_EXECINSTR]
+  - Name: .relfoo
+    Type: SHT_REL
+    Link: .symtab
+    Info: foo
+    Relocations:
+      - Symbol: bar
+        Type: R_AARCH64_CALL26
+Symbols:
+  - Name: bar
+    Type: STT_SECTION
+    Section: bar
+  - Name: foo
+    Type: STT_SECTION
+    Section: bar
+  - Name: _start
+    Type: STT_FUNC
+    Section: foo
+    Binding: STB_GLOBAL

@@ -217,6 +217,10 @@ int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
   case R_AARCH64_GLOB_DAT:
   case R_AARCH64_JUMP_SLOT:
     return 0;
+  case R_AARCH64_ABS16:
+  case R_AARCH64_PREL16:
+    return SignExtend64<16>(read16(buf));
+  case R_AARCH64_ABS32:
   case R_AARCH64_PREL32:
     return SignExtend64<32>(read32(buf));
   case R_AARCH64_ABS64:
@@ -225,6 +229,9 @@ int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
   case R_AARCH64_IRELATIVE:
   case R_AARCH64_TLS_TPREL64:
     return read64(buf);
+  case R_AARCH64_JUMP26:
+  case R_AARCH64_CALL26:
+    return read32(buf) & 0x0FFFFFFC >> 2;
   default:
     internalLinkerError(getErrorLocation(buf),
                         "cannot read addend for relocation " + toString(type));
