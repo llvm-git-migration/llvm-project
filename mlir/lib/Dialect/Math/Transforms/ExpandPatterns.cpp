@@ -202,6 +202,48 @@ static LogicalResult convertCeilOp(math::CeilOp op, PatternRewriter &rewriter) {
   rewriter.replaceOp(op, ret);
   return success();
 }
+
+// Convert `math.fpowi` to a series of `arith.mulf` operations.
+// If the power is negative, we divide the result by 1.
+static LogicalResult convertFPowIOp(math::FPowIOp op,
+                                    PatternRewriter &rewriter) {
+  ImplicitLocOpBuilder b(op->getLoc(), rewriter);
+  Value operandA = op.getOperand(0);
+  Value operandB = op.getOperand(1);
+  Type opType = operandA.getType();
+  auto conOp =
+      mlir::dyn_cast<mlir::arith::ConstantOp>(operandB.getDefiningOp());
+
+  if (!conOp)
+    return failure();
+
+  auto iAttr = dyn_cast<mlir::SplatElementsAttr>(conOp.getValue());
+
+  if (!iAttr)
+    return failure();
+
+  int64_t power = iAttr.getSplatValue<int64_t>();
+  bool neg = power < 0;
+  int64_t absPower = std::abs(power);
+  Value one = createFloatConst(op->getLoc(), opType, 1.00, rewriter);
+  Value res = createFloatConst(op->getLoc(), opType, 1.00, rewriter);
+
+  while (absPower > 0) {
+
+    if (absPower & 1)
+      res = b.create<arith::MulFOp>(opType, operandA, res);
+
+    absPower = absPower >> 1;
+    operandA = b.create<arith::MulFOp>(opType, operandA, operandA);
+  }
+
+  if (neg)
+    res = b.create<arith::DivFOp>(opType, one, res);
+
+  rewriter.replaceOp(op, res);
+  return success();
+}
+
 // Converts  Powf(float a, float b) (meaning a^b) to exp^(b * ln(a))
 static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   ImplicitLocOpBuilder b(op->getLoc(), rewriter);
@@ -515,6 +557,10 @@ void mlir::populateExpandExp2FPattern(RewritePatternSet &patterns) {
 
 void mlir::populateExpandPowFPattern(RewritePatternSet &patterns) {
   patterns.add(convertPowfOp);
+}
+
+void mlir::populateExpandFPowIPattern(RewritePatternSet &patterns) {
+  patterns.add(convertFPowIOp);
 }
 
 void mlir::populateExpandRoundFPattern(RewritePatternSet &patterns) {
