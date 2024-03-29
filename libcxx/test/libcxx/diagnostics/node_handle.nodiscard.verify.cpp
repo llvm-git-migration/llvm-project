@@ -6,16 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <new>
+// UNSUPPORTED: c++03
 
-// template <class T> constexpr T* launder(T* p) noexcept;
+// check that <__node_handle> functions are marked [[nodiscard]]
 
-// UNSUPPORTED: c++03, c++11, c++14
-// UNSUPPORTED: c++17 && !stdlib=libc++
+#include <set>
 
-#include <new>
-
-void f() {
-    int *p = nullptr;
-    std::launder(p); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+void func() {
+  std::set<int> set;
+  set.extract(0).empty(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 }

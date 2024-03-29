@@ -92,7 +92,7 @@ __mismatch(_Tp* __first1, _Tp* __last1, _Tp* __first2, _Pred& __pred, _Proj1& __
 #endif // _LIBCPP_VECTORIZE_ALGORITHMS
 
 template <class _InputIterator1, class _InputIterator2, class _BinaryPredicate>
-_LIBCPP_NODISCARD_EXT inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
+_LIBCPP_NODISCARD inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
 mismatch(_InputIterator1 __first1, _InputIterator1 __last1, _InputIterator2 __first2, _BinaryPredicate __pred) {
   __identity __proj;
   auto __res = std::__mismatch(
@@ -101,14 +101,14 @@ mismatch(_InputIterator1 __first1, _InputIterator1 __last1, _InputIterator2 __fi
 }
 
 template <class _InputIterator1, class _InputIterator2>
-_LIBCPP_NODISCARD_EXT inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
+_LIBCPP_NODISCARD inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
 mismatch(_InputIterator1 __first1, _InputIterator1 __last1, _InputIterator2 __first2) {
   return std::mismatch(__first1, __last1, __first2, __equal_to());
 }
 
 #if _LIBCPP_STD_VER >= 14
 template <class _InputIterator1, class _InputIterator2, class _BinaryPredicate>
-_LIBCPP_NODISCARD_EXT inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
+[[__nodiscard__]] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
 mismatch(_InputIterator1 __first1,
          _InputIterator1 __last1,
          _InputIterator2 __first2,
@@ -121,7 +121,7 @@ mismatch(_InputIterator1 __first1,
 }
 
 template <class _InputIterator1, class _InputIterator2>
-_LIBCPP_NODISCARD_EXT inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
+[[__nodiscard__]] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair<_InputIterator1, _InputIterator2>
 mismatch(_InputIterator1 __first1, _InputIterator1 __last1, _InputIterator2 __first2, _InputIterator2 __last2) {
   return std::mismatch(__first1, __last1, __first2, __last2, __equal_to());
 }

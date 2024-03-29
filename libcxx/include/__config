@@ -1427,20 +1427,6 @@ __sanitizer_verify_double_ended_contiguous_container(const void*, const void*, c
 #    define _LIBCPP_NODISCARD
 #  endif
 
-// _LIBCPP_NODISCARD_EXT may be used to apply [[nodiscard]] to entities not
-// specified as such as an extension.
-#  if !defined(_LIBCPP_DISABLE_NODISCARD_EXT)
-#    define _LIBCPP_NODISCARD_EXT _LIBCPP_NODISCARD
-#  else
-#    define _LIBCPP_NODISCARD_EXT
-#  endif
-
-#  if _LIBCPP_STD_VER >= 20 || !defined(_LIBCPP_DISABLE_NODISCARD_EXT)
-#    define _LIBCPP_NODISCARD_AFTER_CXX17 _LIBCPP_NODISCARD
-#  else
-#    define _LIBCPP_NODISCARD_AFTER_CXX17
-#  endif
-
 #  if __has_attribute(__no_destroy__)
 #    define _LIBCPP_NO_DESTROY __attribute__((__no_destroy__))
 #  else
