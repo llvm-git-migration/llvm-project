@@ -53,7 +53,7 @@ public:
   _LIBCPP_HIDE_FROM_ABI time_zone(time_zone&&)            = default;
   _LIBCPP_HIDE_FROM_ABI time_zone& operator=(time_zone&&) = default;
 
-  _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI string_view name() const noexcept { return __name(); }
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI string_view name() const noexcept { return __name(); }
 
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const __impl& __implementation() const noexcept { return *__impl_; }
 
@@ -62,12 +62,12 @@ private:
   unique_ptr<__impl> __impl_;
 };
 
-_LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline bool
+[[nodiscard]] _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline bool
 operator==(const time_zone& __x, const time_zone& __y) noexcept {
   return __x.name() == __y.name();
 }
 
-_LIBCPP_NODISCARD_EXT _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline strong_ordering
+[[nodiscard]] _LIBCPP_AVAILABILITY_TZDB _LIBCPP_HIDE_FROM_ABI inline strong_ordering
 operator<=>(const time_zone& __x, const time_zone& __y) noexcept {
   return __x.name() <=> __y.name();
 }
