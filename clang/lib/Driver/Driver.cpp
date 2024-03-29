@@ -4749,10 +4749,10 @@ Action *Driver::ConstructPhaseAction(
     if (Args.hasArg(options::OPT_extract_api))
       return C.MakeAction<ExtractAPIJobAction>(Input, types::TY_API_INFO);
 
-    // With '-fmodules-reduced-bmi', we don't want to run the precompile phase
-    // unless the user specified '--precompile'. In the case the '--precompile'
-    // flag is enabled, we will try to emit the reduced BMI as a by product
-    // in GenerateModuleInterfaceAction.
+    // With 'fexperimental-modules-reduced-bmi', we don't want to run the
+    // precompile phase unless the user specified '--precompile'. In the case
+    // the '--precompile' flag is enabled, we will try to emit the reduced BMI
+    // as a by product in GenerateModuleInterfaceAction.
     if (Args.hasArg(options::OPT_modules_reduced_bmi) &&
         !Args.getLastArg(options::OPT__precompile))
       return Input;
