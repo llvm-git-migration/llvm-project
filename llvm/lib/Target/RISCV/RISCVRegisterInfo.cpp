@@ -239,6 +239,33 @@ void RISCVRegisterInfo::adjustReg(MachineBasicBlock &MBB,
     return;
   }
 
+  // Use shNadd if doing so lets us materialize a 12 bit immediate with a single
+  // instruction.  This saves 1 instruction over the full lui/addi+add fallback
+  // path.  Note that the fallback path uses a minimum of 2 instructions even
+  // for "cheap" immediates so eagerly using the shNadd is no worse even if not
+  // better.  Note that the sh1add case is fully covered by the 2x addi case
+  // just above and is thus ommitted.
+  const RISCVSubtarget &STI = MF.getSubtarget<RISCVSubtarget>();
+  if (STI.hasStdExtZba()) {
+    unsigned Opc = 0;
+    if (isShiftedInt<12, 3>(Val)) {
+      Opc = RISCV::SH3ADD;
+      Val = Val >> 3;
+    } else if (isShiftedInt<12, 2>(Val)) {
+      Opc = RISCV::SH2ADD;
+      Val = Val >> 2;
+    }
+    if (Opc) {
+      Register ScratchReg = MRI.createVirtualRegister(&RISCV::GPRRegClass);
+      TII->movImm(MBB, II, DL, ScratchReg, Val, Flag);
+      BuildMI(MBB, II, DL, TII->get(Opc), DestReg)
+        .addReg(ScratchReg, RegState::Kill)
+        .addReg(SrcReg, getKillRegState(KillSrcReg))
+        .setMIFlag(Flag);
+      return;
+    }
+  }
+
   unsigned Opc = RISCV::ADD;
   if (Val < 0) {
     Val = -Val;
