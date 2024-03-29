@@ -22,4 +22,5 @@ void test() {
   std::all_of(std::execution::par, std::begin(a), std::end(a), pred); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   std::any_of(std::execution::par, std::begin(a), std::end(a), pred); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   std::none_of(std::execution::par, std::begin(a), std::end(a), pred); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+  std::is_partitioned(std::execution::par, std::begin(a), std::end(a), pred); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 }

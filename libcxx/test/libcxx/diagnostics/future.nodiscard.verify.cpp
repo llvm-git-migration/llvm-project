@@ -6,16 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Test that _LIBCPP_NODISCARD_AFTER_CXX17 works
-// #define _LIBCPP_NODISCARD_AFTER_CXX17 [[nodiscard]]
-
 // UNSUPPORTED: c++03
-// UNSUPPORTED: (c++11 || c++14 || c++17) && !stdlib=libc++
 
-#include <__config>
+// check that <future> functions are marked [[nodiscard]]
 
-_LIBCPP_NODISCARD_AFTER_CXX17 int foo() { return 6; }
+#include <future>
 
-void f() {
-    foo(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+void test() {
+  std::async([]() {}); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+  std::async(std::launch::any, []() {}); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 }
