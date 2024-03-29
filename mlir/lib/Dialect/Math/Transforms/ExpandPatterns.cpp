@@ -1,5 +1,3 @@
-//===- ExpandTanh.cpp - Code to perform expanding tanh op -----------------===//
-//
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -24,6 +22,16 @@ using namespace mlir;
 
 /// Create a float constant.
 static Value createFloatConst(Location loc, Type type, double value,
+                              OpBuilder &b) {
+  auto attr = b.getFloatAttr(getElementTypeOrSelf(type), value);
+  if (auto shapedTy = dyn_cast<ShapedType>(type)) {
+    return b.create<arith::ConstantOp>(loc,
+                                       DenseElementsAttr::get(shapedTy, attr));
+  }
+
+  return b.create<arith::ConstantOp>(loc, attr);
+}
+static Value createFloatConst(Location loc, Type type, APFloat value,
                               OpBuilder &b) {
   auto attr = b.getFloatAttr(getElementTypeOrSelf(type), value);
   if (auto shapedTy = dyn_cast<ShapedType>(type)) {
@@ -202,6 +210,68 @@ static LogicalResult convertCeilOp(math::CeilOp op, PatternRewriter &rewriter) {
   rewriter.replaceOp(op, ret);
   return success();
 }
+
+// Convert `math.fpowi` to a series of `arith.mulf` operations.
+// If the power is negative, we divide one by the result.
+static LogicalResult convertFPowICstOp(math::FPowIOp op,
+                                       PatternRewriter &rewriter) {
+  ImplicitLocOpBuilder b(op->getLoc(), rewriter);
+  Value base = op.getOperand(0);
+  Value power = op.getOperand(1);
+  Type baseType = base.getType();
+  Value tempBase = op.getOperand(0);
+
+  Attribute cstAttr;
+  if (!matchPattern(power, m_Constant(&cstAttr)))
+    return failure();
+
+  APInt value;
+  if (!matchPattern(cstAttr, m_ConstantInt(&value)))
+    return failure();
+
+  int64_t powerInt = value.getSExtValue();
+  bool isNegative = powerInt < 0;
+  int64_t absPower = std::abs(powerInt);
+  Value one = createFloatConst(op->getLoc(), baseType, 1.00, rewriter);
+  Value res = createFloatConst(op->getLoc(), baseType, 1.00, rewriter);
+
+  auto &sem = dyn_cast<mlir::FloatType>(getElementTypeOrSelf(baseType))
+                  .getFloatSemantics();
+  Value zero = createFloatConst(op->getLoc(), baseType,
+                                APFloat::getZero(sem, false), rewriter);
+  Value negZero = createFloatConst(op->getLoc(), baseType,
+                                   APFloat::getZero(sem, true), rewriter);
+  APFloat posInf = APFloat::getInf(sem, /*Negative=*/false);
+  APFloat negInf = APFloat::getInf(sem, /*Negative=*/true);
+  Value posInfinity =
+      createFloatConst(op->getLoc(), baseType, posInf, rewriter);
+  Value negInfinity =
+      createFloatConst(op->getLoc(), baseType, negInf, rewriter);
+
+  while (absPower > 0) {
+    if (absPower & 1)
+      res = b.create<arith::MulFOp>(baseType, tempBase, res);
+    absPower >>= 1;
+    tempBase = b.create<arith::MulFOp>(baseType, tempBase, tempBase);
+  }
+
+  // Take care of UB in case of negative power.
+  if (isNegative) {
+    res = b.create<arith::DivFOp>(baseType, one, res);
+    Value zeroEqCheck =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, base, zero);
+    Value negZeroEqCheck =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, base, negZero);
+    res =
+        b.create<arith::SelectOp>(op->getLoc(), zeroEqCheck, posInfinity, res);
+    res = b.create<arith::SelectOp>(op->getLoc(), negZeroEqCheck, negInfinity,
+                                    res);
+  }
+
+  rewriter.replaceOp(op, res);
+  return success();
+}
+
 // Converts  Powf(float a, float b) (meaning a^b) to exp^(b * ln(a))
 static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   ImplicitLocOpBuilder b(op->getLoc(), rewriter);
@@ -515,6 +585,10 @@ void mlir::populateExpandExp2FPattern(RewritePatternSet &patterns) {
 
 void mlir::populateExpandPowFPattern(RewritePatternSet &patterns) {
   patterns.add(convertPowfOp);
+}
+
+void mlir::populateExpandFPowIPattern(RewritePatternSet &patterns) {
+  patterns.add(convertFPowICstOp);
 }
 
 void mlir::populateExpandRoundFPattern(RewritePatternSet &patterns) {
