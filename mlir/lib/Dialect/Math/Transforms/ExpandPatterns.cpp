@@ -202,6 +202,70 @@ static LogicalResult convertCeilOp(math::CeilOp op, PatternRewriter &rewriter) {
   rewriter.replaceOp(op, ret);
   return success();
 }
+
+// Convert `math.fpowi` to a series of `arith.mulf` operations.
+// If the power is negative, we divide one by the result.
+static LogicalResult convertFPowICstOp(math::FPowIOp op,
+                                       PatternRewriter &rewriter) {
+  ImplicitLocOpBuilder b(op->getLoc(), rewriter);
+  Value base = op.getOperand(0);
+  Value power = op.getOperand(1);
+  Type baseType = base.getType();
+  Value tempBase = op.getOperand(0);
+
+  Attribute cstAttr;
+  if (!matchPattern(power, m_Constant(&cstAttr)))
+    return failure();
+
+  int64_t powerInt;
+
+  // Check for Splat or Integer Attrs.
+  if (auto splatAttr = dyn_cast<SplatElementsAttr>(cstAttr)) {
+    powerInt = splatAttr.getSplatValue<int64_t>();
+  } else if (auto iAttr = dyn_cast<IntegerAttr>(cstAttr)) {
+    powerInt = iAttr.getInt();
+  } else {
+    return failure();
+  }
+
+  bool isNegative = powerInt < 0;
+  int64_t absPower = std::abs(powerInt);
+  Value one = createFloatConst(op->getLoc(), baseType, 1.00, rewriter);
+  Value res = createFloatConst(op->getLoc(), baseType, 1.00, rewriter);
+
+  Value zero = createFloatConst(op->getLoc(), baseType, 0.00, rewriter);
+  Value negZero = createFloatConst(op->getLoc(), baseType, -0.00, rewriter);
+  Value posInfinity =
+      createFloatConst(op->getLoc(), baseType,
+                       std::numeric_limits<double_t>::infinity(), rewriter);
+  Value negInfinity =
+      createFloatConst(op->getLoc(), baseType,
+                       -std::numeric_limits<double_t>::infinity(), rewriter);
+
+  while (absPower > 0) {
+    if (absPower & 1)
+      res = b.create<arith::MulFOp>(baseType, tempBase, res);
+    absPower >>= 1;
+    tempBase = b.create<arith::MulFOp>(baseType, tempBase, tempBase);
+  }
+
+  // Take care of UB in case of negative power.
+  if (isNegative) {
+    res = b.create<arith::DivFOp>(baseType, one, res);
+    Value zeroEqCheck =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, base, zero);
+    Value negZeroEqCheck =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, base, negZero);
+    res =
+        b.create<arith::SelectOp>(op->getLoc(), zeroEqCheck, posInfinity, res);
+    res = b.create<arith::SelectOp>(op->getLoc(), negZeroEqCheck, negInfinity,
+                                    res);
+  }
+
+  rewriter.replaceOp(op, res);
+  return success();
+}
+
 // Converts  Powf(float a, float b) (meaning a^b) to exp^(b * ln(a))
 static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   ImplicitLocOpBuilder b(op->getLoc(), rewriter);
@@ -515,6 +579,10 @@ void mlir::populateExpandExp2FPattern(RewritePatternSet &patterns) {
 
 void mlir::populateExpandPowFPattern(RewritePatternSet &patterns) {
   patterns.add(convertPowfOp);
+}
+
+void mlir::populateExpandFPowIPattern(RewritePatternSet &patterns) {
+  patterns.add(convertFPowICstOp);
 }
 
 void mlir::populateExpandRoundFPattern(RewritePatternSet &patterns) {
