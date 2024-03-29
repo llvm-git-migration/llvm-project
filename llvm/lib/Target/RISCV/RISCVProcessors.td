@@ -60,7 +60,7 @@ def GENERIC_RV32 : RISCVProcessorModel<"generic-rv32",
                    GenericTuneInfo;
 def GENERIC_RV64 : RISCVProcessorModel<"generic-rv64",
                                        NoSchedModel,
-                                       [Feature64Bit]>,
+                                       [Feature64Bit, FeatureEncodingTmp]>,
                    GenericTuneInfo;
 // Support generic for compatibility with other targets. The triple will be used
 // to change to the appropriate rv32/rv64 version.

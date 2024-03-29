@@ -1150,15 +1150,21 @@ def Feature32Bit
     : SubtargetFeature<"32bit", "IsRV32", "true", "Implements RV32">;
 def Feature64Bit
     : SubtargetFeature<"64bit", "IsRV64", "true", "Implements RV64">;
+def FeatureEncodingTmp
+    : SubtargetFeature<"TmpE", "IsTmpE", "true", "Implements encoding tmp">;
 def IsRV64 : Predicate<"Subtarget->is64Bit()">,
              AssemblerPredicate<(all_of Feature64Bit),
                                 "RV64I Base Instruction Set">;
 def IsRV32 : Predicate<"!Subtarget->is64Bit()">,
              AssemblerPredicate<(all_of (not Feature64Bit)),
                                 "RV32I Base Instruction Set">;
+def IsTmpE : Predicate<"Subtarget->isETmp()">,
+             AssemblerPredicate<(all_of FeatureEncodingTmp),
+                                "RV32I Encoding tmp">;
 
 defvar RV32 = DefaultMode;
 def RV64           : HwMode<"+64bit", [IsRV64]>;
+def EncodingTmp    : HwMode<"+TmpE", [IsRV64]>;
 
 def FeatureRVE
     : SubtargetFeature<"e", "IsRVE", "true",
