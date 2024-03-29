@@ -11,9 +11,7 @@ declare i8 @llvm.smax.i8(i8, i8)
 
 define i32 @t1(i16 zeroext %x, i32 %y) {
 ; CHECK-LABEL: @t1(
-; CHECK-NEXT:    [[CONV:%.*]] = zext i16 [[X:%.*]] to i32
-; CHECK-NEXT:    [[TMP1:%.*]] = add i32 [[Y:%.*]], 1
-; CHECK-NEXT:    [[D1:%.*]] = lshr i32 [[CONV]], [[TMP1]]
+; CHECK-NEXT:    [[D1:%.*]] = lshr i32 1, [[Y:%.*]]
 ; CHECK-NEXT:    ret i32 [[D1]]
 ;
   %conv = zext i16 %x to i32
@@ -24,9 +22,7 @@ define i32 @t1(i16 zeroext %x, i32 %y) {
 
 define <2 x i32> @t1vec(<2 x i16> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @t1vec(
-; CHECK-NEXT:    [[CONV:%.*]] = zext <2 x i16> [[X:%.*]] to <2 x i32>
-; CHECK-NEXT:    [[TMP1:%.*]] = add <2 x i32> [[Y:%.*]], <i32 1, i32 1>
-; CHECK-NEXT:    [[D1:%.*]] = lshr <2 x i32> [[CONV]], [[TMP1]]
+; CHECK-NEXT:    [[D1:%.*]] = lshr <2 x i32> <i32 1, i32 1>, [[Y:%.*]]
 ; CHECK-NEXT:    ret <2 x i32> [[D1]]
 ;
   %conv = zext <2 x i16> %x to <2 x i32>
@@ -466,8 +462,7 @@ define i5 @udiv_mul_shl_nuw_exact_commute1(i5 %x, i5 %y, i5 %z) {
 
 define i5 @udiv_mul_shl_nuw_commute2(i5 %x, i5 %y, i5 %z) {
 ; CHECK-LABEL: @udiv_mul_shl_nuw_commute2(
-; CHECK-NEXT:    [[M1:%.*]] = mul nuw i5 [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    [[M2:%.*]] = shl nuw i5 [[Z:%.*]], [[X]]
+; CHECK-NEXT:    [[M1:%.*]] = lshr i5 [[M2:%.*]], [[X:%.*]]
 ; CHECK-NEXT:    [[D:%.*]] = udiv i5 [[M1]], [[M2]]
 ; CHECK-NEXT:    ret i5 [[D]]
 ;
@@ -646,8 +641,7 @@ define i5 @sdiv_shl_mul_nuw(i5 %x, i5 %y, i5 %z) {
 
 define i5 @udiv_mul_shl_missing_nsw1(i5 %x, i5 %y, i5 %z) {
 ; CHECK-LABEL: @udiv_mul_shl_missing_nsw1(
-; CHECK-NEXT:    [[M1:%.*]] = mul nsw i5 [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    [[M2:%.*]] = shl nuw i5 [[Y]], [[Z:%.*]]
+; CHECK-NEXT:    [[M1:%.*]] = lshr i5 [[M2:%.*]], [[Z:%.*]]
 ; CHECK-NEXT:    [[D:%.*]] = udiv i5 [[M1]], [[M2]]
 ; CHECK-NEXT:    ret i5 [[D]]
 ;
@@ -674,8 +668,8 @@ define i5 @udiv_mul_shl_missing_nsw2(i5 %x, i5 %y, i5 %z) {
 
 define i8 @udiv_shl_nuw(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @udiv_shl_nuw(
-; CHECK-NEXT:    [[S:%.*]] = shl nuw i8 [[Y:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[X:%.*]], [[S]]
+; CHECK-NEXT:    [[X:%.*]] = lshr i8 [[S:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[X]], [[S]]
 ; CHECK-NEXT:    ret i8 [[D]]
 ;
   %s = shl nuw i8 %y, %z
@@ -685,8 +679,8 @@ define i8 @udiv_shl_nuw(i8 %x, i8 %y, i8 %z) {
 
 define <2 x i4> @udiv_shl_nuw_exact(<2 x i4> %x, <2 x i4> %y, <2 x i4> %z) {
 ; CHECK-LABEL: @udiv_shl_nuw_exact(
-; CHECK-NEXT:    [[S:%.*]] = shl nuw <2 x i4> [[Y:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[D:%.*]] = udiv exact <2 x i4> [[X:%.*]], [[S]]
+; CHECK-NEXT:    [[X:%.*]] = lshr <2 x i4> [[S:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[D:%.*]] = udiv exact <2 x i4> [[X]], [[S]]
 ; CHECK-NEXT:    ret <2 x i4> [[D]]
 ;
   %s = shl nuw <2 x i4> %y, %z
@@ -966,9 +960,8 @@ define i8 @udiv_shl_shl_nuw_nsw(i8 %x, i8 %y, i8 %z) {
 
 define i8 @udiv_shl_shl_nsw_nuw(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @udiv_shl_shl_nsw_nuw(
-; CHECK-NEXT:    [[XZ:%.*]] = shl nsw i8 [[X:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[YZ:%.*]] = shl nuw i8 [[Y:%.*]], [[Z]]
-; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[XZ]], [[YZ]]
+; CHECK-NEXT:    [[XZ:%.*]] = lshr i8 [[X:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[XZ]], [[YZ:%.*]]
 ; CHECK-NEXT:    ret i8 [[D]]
 ;
   %xz = shl nsw i8 %x, %z
@@ -988,13 +981,12 @@ define i8 @udiv_shl_shl_nuw_nsw2(i8 %x, i8 %y, i8 %z) {
   ret i8 %d
 }
 
-; TODO: X / (Y << Z) --> (X >> Z) / Y
-; https://alive2.llvm.org/ce/z/FjoN_A
+; X / (Y << Z) --> (X >> Z) / Y
 
 define i8 @udiv_shl_nuw_divisor(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @udiv_shl_nuw_divisor(
-; CHECK-NEXT:    [[S:%.*]] = shl nuw i8 [[Y:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[X:%.*]], [[S]]
+; CHECK-NEXT:    [[X:%.*]] = lshr i8 [[S:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[D:%.*]] = udiv i8 [[X]], [[S]]
 ; CHECK-NEXT:    ret i8 [[D]]
 ;
   %s = shl nuw i8 %y, %z
@@ -1017,8 +1009,7 @@ define i8 @udiv_fail_shl_overflow(i8 %x, i8 %y) {
 
 define i8 @udiv_shl_no_overflow(i8 %x, i8 %y) {
 ; CHECK-LABEL: @udiv_shl_no_overflow(
-; CHECK-NEXT:    [[TMP1:%.*]] = add i8 [[Y:%.*]], 1
-; CHECK-NEXT:    [[MUL1:%.*]] = lshr i8 [[X:%.*]], [[TMP1]]
+; CHECK-NEXT:    [[MUL1:%.*]] = lshr i8 1, [[Y:%.*]]
 ; CHECK-NEXT:    ret i8 [[MUL1]]
 ;
   %shl = shl nuw i8 2, %y
@@ -1185,8 +1176,7 @@ entry:
 define i32 @udiv_shl_pair_overflow_fail1(i32 %a, i32 %x, i32 %y) {
 ; CHECK-LABEL: @udiv_shl_pair_overflow_fail1(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[LHS:%.*]] = shl nsw i32 [[A:%.*]], [[X:%.*]]
-; CHECK-NEXT:    [[RHS:%.*]] = shl nuw i32 [[A]], [[Y:%.*]]
+; CHECK-NEXT:    [[LHS:%.*]] = lshr i32 [[RHS:%.*]], [[Y:%.*]]
 ; CHECK-NEXT:    [[DIV:%.*]] = udiv i32 [[LHS]], [[RHS]]
 ; CHECK-NEXT:    ret i32 [[DIV]]
 ;

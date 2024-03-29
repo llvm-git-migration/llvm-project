@@ -1080,6 +1080,15 @@ static Value *foldIDivShl(BinaryOperator &I, InstCombiner::BuilderTy &Builder) {
     }
   }
 
+  // X / (Y << Z) --> (X >> Z) / Y
+  if (!IsSigned && match(Op1, m_OneUse(m_Shl(m_Value(Y), m_Value(Z))))) {
+    auto *Shl0 = cast<OverflowingBinaryOperator>(Op1);
+    if (Shl0->hasNoUnsignedWrap()) {
+      Value *NewShift = Builder.CreateLShr(X, Z);
+      return Builder.CreateUDiv(NewShift, Y, "", I.isExact());
+    }
+  }
+
   return nullptr;
 }
 
