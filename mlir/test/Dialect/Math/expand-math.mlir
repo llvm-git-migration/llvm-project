@@ -511,3 +511,60 @@ func.func @roundeven16(%arg: f16) -> f16 {
 // CHECK:     %[[COPYSIGN:.*]] = math.copysign %[[RESULT]], %[[VAL_0]] : f16
 
 // CHECK: return %[[COPYSIGN]] : f16
+
+// -----
+
+// CHECK-LABEL:   func.func @math_fpowi_neg_odd_power
+func.func @math_fpowi_neg_odd_power(%0 : tensor<8xf32>) -> tensor<8xf32> {
+  %1 = arith.constant dense<-3> : tensor<8xi64> 
+  %2 = math.fpowi %0, %1 : tensor<8xf32>, tensor<8xi64>
+  return %2 : tensor<8xf32>
+}
+//  CHECK-SAME: (%[[ARG0:.*]]: tensor<8xf32>) -> tensor<8xf32> {
+//  CHECK:        %[[CST1:.*]] = arith.constant dense<1.000000e+00> : tensor<8xf32>
+//  CHECK:        %[[SQ:.*]] = arith.mulf %[[ARG0]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:        %[[CUBE:.*]] = arith.mulf %[[SQ]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:        %[[INV:.*]] = arith.divf %[[CST1]], %[[CUBE]] : tensor<8xf32>
+//  CHECK:      return %[[INV]] : tensor<8xf32>
+
+// -----
+
+// CHECK-LABEL:   func.func @math_fpowi_neg_even_power
+func.func @math_fpowi_neg_even_power(%0 : tensor<8xf32>) -> tensor<8xf32> {
+  %1 = arith.constant dense<-4> : tensor<8xi64> 
+  %2 = math.fpowi %0, %1 : tensor<8xf32>, tensor<8xi64>
+  return %2 : tensor<8xf32>
+}
+//  CHECK-SAME: (%[[ARG0:.*]]: tensor<8xf32>) -> tensor<8xf32> {
+//  CHECK:        %[[CST1:.*]] = arith.constant dense<1.000000e+00> : tensor<8xf32>
+//  CHECK:        %[[SQ:.*]] = arith.mulf %[[ARG0]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:        %[[PW4:.*]] = arith.mulf %[[SQ]], %[[SQ]] : tensor<8xf32>
+//  CHECK:        %[[INV:.*]] = arith.divf %[[CST1]], %[[PW4]] : tensor<8xf32>
+//  CHECK:      return %[[INV]] : tensor<8xf32>
+
+// -----
+
+// CHECK-LABEL:   func.func @math_fpowi_pos_odd_power
+func.func @math_fpowi_pos_odd_power(%0 : tensor<8xf32>) -> tensor<8xf32> {
+  %1 = arith.constant dense<5> : tensor<8xi64> 
+  %2 = math.fpowi %0, %1 : tensor<8xf32>, tensor<8xi64>
+  return %2 : tensor<8xf32>
+}
+//  CHECK-SAME: (%[[ARG0:.*]]: tensor<8xf32>) -> tensor<8xf32> {
+//  CHECK:        %[[SQ:.*]] = arith.mulf %[[ARG0]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:        %[[PW4:.*]] = arith.mulf %[[SQ]], %[[SQ]] : tensor<8xf32>
+//  CHECK:        %[[PW5:.*]] = arith.mulf %[[PW4]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:      return %[[PW5]] : tensor<8xf32>
+
+// -----
+
+// CHECK-LABEL:   func.func @math_fpowi_pos_even_power
+func.func @math_fpowi_pos_even_power(%0 : tensor<8xf32>) -> tensor<8xf32> {
+  %1 = arith.constant dense<4> : tensor<8xi64> 
+  %2 = math.fpowi %0, %1 : tensor<8xf32>, tensor<8xi64>
+  return %2 : tensor<8xf32>
+}
+//  CHECK-SAME: (%[[ARG0:.*]]: tensor<8xf32>) -> tensor<8xf32> {
+//  CHECK:        %[[SQ:.*]] = arith.mulf %[[ARG0]], %[[ARG0]] : tensor<8xf32>
+//  CHECK:        %[[PW4:.*]] = arith.mulf %[[SQ]], %[[SQ]] : tensor<8xf32>
+//  CHECK:      return %[[PW4]] : tensor<8xf32>
