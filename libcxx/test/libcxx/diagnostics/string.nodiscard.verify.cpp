@@ -6,16 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Test that _LIBCPP_NODISCARD_AFTER_CXX17 works
-// #define _LIBCPP_NODISCARD_AFTER_CXX17 [[nodiscard]]
-
 // UNSUPPORTED: c++03
-// UNSUPPORTED: (c++11 || c++14 || c++17) && !stdlib=libc++
 
-#include <__config>
+// check that <string> functions are marked [[nodiscard]]
 
-_LIBCPP_NODISCARD_AFTER_CXX17 int foo() { return 6; }
+#include <string>
 
-void f() {
-    foo(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+void test() {
+  std::string string;
+  string.empty(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 }

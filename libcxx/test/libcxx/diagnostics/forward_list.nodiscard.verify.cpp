@@ -6,17 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Test that _LIBCPP_NODISCARD_EXT is not defined to [[nodiscard]] when
-// _LIBCPP_DISABLE_NODISCARD_EXT is defined
+// UNSUPPORTED: c++03
 
-// ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_DISABLE_NODISCARD_EXT
+// check that <forward_list> functions are marked [[nodiscard]]
 
-#include <__config>
+#include <forward_list>
 
-_LIBCPP_NODISCARD_EXT int foo() { return 42; }
-
-int main(int, char**) {
-  foo(); // OK.
-
-  return 0;
+void test() {
+  std::forward_list<int> forward_list;
+  forward_list.empty(); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 }
