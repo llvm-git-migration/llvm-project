@@ -165,6 +165,7 @@ public:
   }
 
   bool is64Bit() const { return IsRV64; }
+  bool isETmp() const { return IsTmpE; }
   MVT getXLenVT() const {
     return is64Bit() ? MVT::i64 : MVT::i32;
   }
