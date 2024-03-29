@@ -933,19 +933,16 @@ void CGRecordLowering::calculateZeroInit() {
 // Verify accumulateBitfields computed the correct storage representations.
 void CGRecordLowering::checkTailPadding() {
 #ifndef NDEBUG
-  std::vector<MemberInfo>::iterator Prior = Members.begin();
-  CharUnits Tail = getSize(Prior->Data);
-  for (std::vector<MemberInfo>::iterator Member = Prior + 1,
-                                         MemberEnd = Members.end();
-       Member != MemberEnd; ++Member) {
+  auto Tail = CharUnits::Zero();
+  for (auto M : Members) {
     // Only members with data and the scissor can cut into tail padding.
-    if (!Member->Data && Member->Kind != MemberInfo::Scissor)
+    if (!M.Data && M.Kind != MemberInfo::Scissor)
       continue;
 
-    assert(Member->Offset >= Tail && "bitfield not already clipped");
-    if (Member->Data)
-      Prior = Member;
-    Tail = Prior->Offset + getSize(Prior->Data);
+    assert(M.Offset >= Tail && "bitfield access unit not already clipped");
+    Tail = M.Offset;
+    if (M.Data)
+      Tail += getSize(M.Data);
   }
 #endif
 }
