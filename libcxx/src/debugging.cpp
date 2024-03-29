@@ -146,6 +146,15 @@ _LIBCPP_EXPORTED_FROM_ABI bool __is_debugger_present() noexcept {
 
 #  endif // defined(_LIBCPP_WIN32API)
 
+_LIBCPP_EXPORTED_FROM_ABI void breakpoint() noexcept { __breakpoint(); }
+
+_LIBCPP_EXPORTED_FROM_ABI void breakpoint_if_debugging() noexcept {
+  if (__is_debugger_present())
+    __breakpoint();
+}
+
+_LIBCPP_EXPORTED_FROM_ABI _LIBCPP_WEAK bool is_debugger_present() noexcept { return __is_debugger_present(); }
+
 #endif // defined(_LIBCPP_HAS_DEBUGGING)
 
 _LIBCPP_END_NAMESPACE_STD
