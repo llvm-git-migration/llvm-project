@@ -2770,25 +2770,22 @@ template <class ELFT> void DebugNamesSection<ELFT>::writeTo(uint8_t *buf) {
   // Write out bytes for merged section.
 
   // Write the header.
-  endian::write32<ELFT::TargetEndianness>(buf + 0, mergedHdr.UnitLength);
-  endian::write16<ELFT::TargetEndianness>(buf + 4, mergedHdr.Version);
-  endian::write32<ELFT::TargetEndianness>(buf + 8, mergedHdr.CompUnitCount);
-  endian::write32<ELFT::TargetEndianness>(buf + 12,
-                                          mergedHdr.LocalTypeUnitCount);
-  endian::write32<ELFT::TargetEndianness>(buf + 16,
-                                          mergedHdr.ForeignTypeUnitCount);
-  endian::write32<ELFT::TargetEndianness>(buf + 20, mergedHdr.BucketCount);
-  endian::write32<ELFT::TargetEndianness>(buf + 24, mergedHdr.NameCount);
-  endian::write32<ELFT::TargetEndianness>(buf + 28, mergedHdr.AbbrevTableSize);
-  endian::write32<ELFT::TargetEndianness>(buf + 32,
-                                          mergedHdr.AugmentationStringSize);
+  endian::write32<ELFT::Endianness>(buf + 0, mergedHdr.UnitLength);
+  endian::write16<ELFT::Endianness>(buf + 4, mergedHdr.Version);
+  endian::write32<ELFT::Endianness>(buf + 8, mergedHdr.CompUnitCount);
+  endian::write32<ELFT::Endianness>(buf + 12, mergedHdr.LocalTypeUnitCount);
+  endian::write32<ELFT::Endianness>(buf + 16, mergedHdr.ForeignTypeUnitCount);
+  endian::write32<ELFT::Endianness>(buf + 20, mergedHdr.BucketCount);
+  endian::write32<ELFT::Endianness>(buf + 24, mergedHdr.NameCount);
+  endian::write32<ELFT::Endianness>(buf + 28, mergedHdr.AbbrevTableSize);
+  endian::write32<ELFT::Endianness>(buf + 32, mergedHdr.AugmentationStringSize);
   buf += 36;
   memcpy(buf, mergedHdr.AugmentationString.c_str(), 8);
   buf += 8;
 
   // Write the CU list.
   for (uint32_t offset : mergedCuOffsets) {
-    endian::write32<ELFT::TargetEndianness>(buf + 0, offset);
+    endian::write32<ELFT::Endianness>(buf + 0, offset);
     buf += 4;
   }
 
@@ -2807,7 +2804,7 @@ template <class ELFT> void DebugNamesSection<ELFT>::writeTo(uint8_t *buf) {
   uint32_t idx = 1;
   for (const auto &bucket : bucketList) {
     if (!bucket.empty())
-      endian::write32<ELFT::TargetEndianness>(buf + 0, idx);
+      endian::write32<ELFT::Endianness>(buf + 0, idx);
     idx += bucket.size();
     buf += 4;
   }
@@ -2816,21 +2813,20 @@ template <class ELFT> void DebugNamesSection<ELFT>::writeTo(uint8_t *buf) {
   for (const auto &bucket : bucketList) {
     for (const auto &entry : bucket) {
       uint32_t hashValue = entry->hashValue;
-      endian::write32<ELFT::TargetEndianness>(buf + 0, hashValue);
+      endian::write32<ELFT::Endianness>(buf + 0, hashValue);
       buf += 4;
     }
   }
 
   // Write the string offsets.
   for (const auto &entry : mergedEntries) {
-    endian::write32<ELFT::TargetEndianness>(buf + 0,
-                                            entry.relocatedEntryOffset);
+    endian::write32<ELFT::Endianness>(buf + 0, entry.relocatedEntryOffset);
     buf += 4;
   }
 
   // Write the entry offsets.
   for (const auto &entry : mergedEntries) {
-    endian::write32<ELFT::TargetEndianness>(buf + 0, entry.entryOffset);
+    endian::write32<ELFT::Endianness>(buf + 0, entry.entryOffset);
     buf += 4;
   }
 
@@ -2842,7 +2838,7 @@ template <class ELFT> void DebugNamesSection<ELFT>::writeTo(uint8_t *buf) {
       buf += encodeULEB128(attr.Index, buf);
       buf += encodeULEB128(attr.Form, buf);
     }
-    endian::write16<ELFT::TargetEndianness>(buf + 0, 0); // attribute sentinels.
+    endian::write16<ELFT::Endianness>(buf + 0, 0); // attribute sentinels.
     buf += 2;
   }
   *buf++ = 0; // abbrev table sentinel
@@ -2853,7 +2849,7 @@ template <class ELFT> void DebugNamesSection<ELFT>::writeTo(uint8_t *buf) {
     for (const auto &entry : stringEntry.indexEntries) {
       buf += encodeULEB128(entry->abbrevCode, buf);
       for (const auto &value : entry->attrValues) {
-        endian::write32<ELFT::TargetEndianness>(buf + 0, value.attrValue);
+        endian::write32<ELFT::Endianness>(buf + 0, value.attrValue);
         buf += value.attrSize;
       }
     }
