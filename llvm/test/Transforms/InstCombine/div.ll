@@ -255,7 +255,7 @@ define i32 @test14(i8 %x) {
 define i32 @test15(i32 %a, i32 %b) {
 ; CHECK-LABEL: @test15(
 ; CHECK-NEXT:    [[TMP1:%.*]] = add i32 [[B:%.*]], -2
-; CHECK-NEXT:    [[DIV21:%.*]] = lshr i32 [[A:%.*]], [[TMP1]]
+; CHECK-NEXT:    [[DIV21:%.*]] = lshr i32 1, [[TMP1]]
 ; CHECK-NEXT:    ret i32 [[DIV21]]
 ;
   %shl = shl i32 1, %b

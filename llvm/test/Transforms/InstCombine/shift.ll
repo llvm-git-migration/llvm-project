@@ -699,8 +699,7 @@ define <2 x i32> @test42vec(<2 x i32> %a, <2 x i32> %b) {
 
 define i32 @test43(i32 %a, i32 %b) nounwind {
 ; CHECK-LABEL: @test43(
-; CHECK-NEXT:    [[TMP1:%.*]] = add i32 [[B:%.*]], 12
-; CHECK-NEXT:    [[DIV21:%.*]] = lshr i32 [[A:%.*]], [[TMP1]]
+; CHECK-NEXT:    [[DIV21:%.*]] = lshr i32 1, [[B:%.*]]
 ; CHECK-NEXT:    ret i32 [[DIV21]]
 ;
   %div = shl i32 4096, %b    ; must be exact otherwise we'd divide by zero
