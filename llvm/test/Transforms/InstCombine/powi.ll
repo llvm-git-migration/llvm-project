@@ -401,6 +401,18 @@ define double @fdiv_pow_powi_negative_variable(double %x, i32 %y) {
   ret double %div
 }
 
+; powi(X,C1)/ (X * Z) --> powi(X,C1 - 1)/ Z
+define double @fdiv_fmul_powi(double %a) {
+; CHECK-LABEL: @fdiv_fmul_powi(
+; CHECK-NEXT:    [[DIV:%.*]] = call reassoc nnan double @llvm.powi.f64.i32(double [[A:%.*]], i32 3)
+; CHECK-NEXT:    ret double [[DIV]]
+;
+  %pow = call reassoc double @llvm.powi.f64.i32(double %a, i32 5)
+  %square = fmul reassoc double %a, %a
+  %div = fdiv reassoc nnan double %pow, %square
+  ret double %div
+}
+
 ; powi(X, Y) * X --> powi(X, Y+1)
 define double @powi_fmul_powi_x(double noundef %x) {
 ; CHECK-LABEL: @powi_fmul_powi_x(
