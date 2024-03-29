@@ -17,6 +17,7 @@
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/Parser/Parser.h"
+#include "llvm/ADT/TypeSwitch.h"
 
 #include <gtest/gtest.h>
 
@@ -102,4 +103,31 @@ TEST_F(ValueShapeRangeTest, SettingShapes) {
   EXPECT_EQ(range.getShape(1).getRank(), 1);
   EXPECT_EQ(range.getShape(1).getDimSize(0), 1);
   EXPECT_FALSE(range.getShape(2));
+}
+
+TEST(OperationInterfaceTest, CastOpToInterface) {
+  DialectRegistry registry;
+  MLIRContext ctx;
+
+  const char *ir = R"MLIR(
+      func.func @map(%arg : tensor<1xi64>) {
+        %0 = arith.constant dense<[10]> : tensor<1xi64>
+        %1 = arith.addi %arg, %0 : tensor<1xi64>
+        return
+      }
+    )MLIR";
+
+  registry.insert<func::FuncDialect, arith::ArithDialect>();
+  ctx.appendDialectRegistry(registry);
+  OwningOpRef<ModuleOp> module = parseSourceString<ModuleOp>(ir, &ctx);
+  Operation &op = cast<func::FuncOp>(module->front()).getBody().front().front();
+
+  ::mlir::OpAsmOpInterface interface = llvm::cast<::mlir::OpAsmOpInterface>(op);
+
+  std::string funcName;
+  llvm::TypeSwitch<::mlir::OpAsmOpInterface, void>(interface)
+      .Case<::mlir::VectorUnrollOpInterface, arith::ConstantOp>(
+          [&](auto op) { funcName = __PRETTY_FUNCTION__; });
+
+  EXPECT_TRUE(funcName.find("ConstantOp") != std::string::npos);
 }
