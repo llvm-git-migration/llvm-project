@@ -5087,7 +5087,7 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
     // TODO: Use undef values for divisor of 1.
     if (!Divisor.isOne()) {
       UnsignedDivisionByConstantInfo magics =
-          UnsignedDivisionByConstantInfo::get(Divisor);
+          UnsignedDivisionByConstantInfo::get(Divisor, Divisor.countl_zero(), true);
 
       Magic = std::move(magics.Magic);
 
@@ -5197,12 +5197,8 @@ bool CombinerHelper::matchUDivByConst(MachineInstr &MI) {
       return false;
   }
 
-  auto CheckEltValue = [&](const Constant *C) {
-    if (auto *CI = dyn_cast_or_null<ConstantInt>(C))
-      return !CI->isZero();
-    return false;
-  };
-  return matchUnaryPredicate(MRI, RHS, CheckEltValue);
+  return matchUnaryPredicate(
+      MRI, RHS, [](const Constant *C) { return C && !C->isZeroValue(); });
 }
 
 void CombinerHelper::applyUDivByConst(MachineInstr &MI) {
