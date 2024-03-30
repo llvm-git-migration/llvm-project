@@ -5197,12 +5197,7 @@ bool CombinerHelper::matchUDivByConst(MachineInstr &MI) {
       return false;
   }
 
-  auto CheckEltValue = [&](const Constant *C) {
-    if (auto *CI = dyn_cast_or_null<ConstantInt>(C))
-      return !CI->isZero();
-    return false;
-  };
-  return matchUnaryPredicate(MRI, RHS, CheckEltValue);
+  return matchUnaryPredicate(MRI, RHS, [](const Constant *C) { return C && !C->isZeroValue(); });
 }
 
 void CombinerHelper::applyUDivByConst(MachineInstr &MI) {
