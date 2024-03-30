@@ -291,3 +291,156 @@ define <2 x double> @test_fabd_v2f64(<2 x double> %lhs, <2 x double> %rhs) {
   %abd = call <2 x double> @llvm.aarch64.neon.fabd.v2f64(<2 x double> %lhs, <2 x double> %rhs)
   ret <2 x double> %abd
 }
+
+define <8 x i16> @test_uabd_knownbits_vec8i16(<8 x i16> %lhs, <8 x i16> %rhs) {
+; CHECK-LABEL: test_uabd_knownbits_vec8i16:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v2.8h, #15
+; CHECK-NEXT:    and v0.16b, v0.16b, v2.16b
+; CHECK-NEXT:    and v1.16b, v1.16b, v2.16b
+; CHECK-NEXT:    uabd v0.8h, v0.8h, v1.8h
+; CHECK-NEXT:    rev64 v0.8h, v0.8h
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
+  %and1 = and <8 x i16> %lhs, <i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15>
+  %and2 = and <8 x i16> %rhs, <i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15>
+  %uabd = call <8 x i16> @llvm.aarch64.neon.uabd.v8i16(<8 x i16> %and1, <8 x i16> %and2)
+  %suff = shufflevector <8 x i16> %uabd, <8 x i16> undef, <8 x i32> <i32 7, i32 6, i32 5, i32 4, i32 3, i32 2, i32 1, i32 0>
+  %res = and <8 x i16> %suff, <i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15, i16 15>
+  ret <8 x i16> %res
+}
+
+define <4 x i32> @knownbits_uabd_mask_and_shuffle_lshr(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: knownbits_uabd_mask_and_shuffle_lshr:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v0.2d, #0000000000000000
+; CHECK-NEXT:    ushr v0.4s, v0.4s, #17
+; CHECK-NEXT:    ret
+  %1 = and <4 x i32> %a0, <i32 65535, i32 65535, i32 65535, i32 65535>
+  %2 = and <4 x i32> %a1, <i32 65535, i32 65535, i32 65535, i32 65535>
+  %3 = call <4 x i32> @llvm.aarch64.neon.uabd.v4i32(<4 x i32> %1, <4 x i32> %2)
+  %4 = shufflevector <4 x i32> %3, <4 x i32> undef, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
+  %5 = lshr <4 x i32> %4, <i32 17, i32 17, i32 17, i32 17>
+  ret <4 x i32> %5
+}
+
+define <4 x i32> @knownbits_mask_and_shuffle_lshr(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: knownbits_mask_and_shuffle_lshr:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v0.2d, #0000000000000000
+; CHECK-NEXT:    ret
+  %1 = and <4 x i32> %a0, <i32 32767, i32 32767, i32 32767, i32 32767>
+  %2 = and <4 x i32> %a1, <i32 32767, i32 32767, i32 32767, i32 32767>
+  %3 = call <4 x i32> @llvm.aarch64.neon.uabd.v4i32(<4 x i32> %1, <4 x i32> %2)
+  %4 = shufflevector <4 x i32> %3, <4 x i32> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %5 = lshr <4 x i32> %4, <i32 17, i32 17, i32 17, i32 17>
+  ret <4 x i32> %5
+}
+
+define <4 x i32> @test_sabd_knownbits_vec4i32(<4 x i32> %lhs, <4 x i32> %rhs) {
+; CHECK-LABEL: test_sabd_knownbits_vec4i32:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    adrp x8, .LCPI31_0
+; CHECK-NEXT:    adrp x9, .LCPI31_1
+; CHECK-NEXT:    movi v4.2d, #0x0000ff000000ff
+; CHECK-NEXT:    ldr q2, [x8, :lo12:.LCPI31_0]
+; CHECK-NEXT:    ldr q3, [x9, :lo12:.LCPI31_1]
+; CHECK-NEXT:    and v0.16b, v0.16b, v2.16b
+; CHECK-NEXT:    and v1.16b, v1.16b, v3.16b
+; CHECK-NEXT:    sub v0.4s, v4.4s, v0.4s
+; CHECK-NEXT:    sub v1.4s, v4.4s, v1.4s
+; CHECK-NEXT:    sabd v0.4s, v0.4s, v1.4s
+; CHECK-NEXT:    mov v0.s[1], v0.s[0]
+; CHECK-NEXT:    trn2 v0.4s, v0.4s, v0.4s
+; CHECK-NEXT:    and v0.16b, v0.16b, v4.16b
+; CHECK-NEXT:    ret
+  %and1 = and <4 x i32> %lhs, <i32 255, i32 -1, i32 -1, i32 255>
+  %and2 = and <4 x i32> %rhs, <i32 255, i32 255, i32 -1, i32 -1>
+  %sub1 = sub <4 x i32> <i32 255, i32 255, i32 255, i32 255>, %and1
+  %sub2 = sub <4 x i32> <i32 255, i32 255, i32 255, i32 255>, %and2
+  %abd = call <4 x i32> @llvm.aarch64.neon.sabd.v4i32(<4 x i32> %sub1, <4 x i32> %sub2)
+  %s = shufflevector <4 x i32> %abd, <4 x i32> undef, <4 x i32> <i32 0, i32 0, i32 3, i32 3>
+  %4 = and <4 x i32> %s, <i32 255, i32 255, i32 255, i32 255>
+  ret <4 x i32> %4
+}
+
+define <4 x i32> @knownbits_sabd_and_mask_sub(<4 x i16> %a0) {
+; CHECK-LABEL: knownbits_sabd_and_mask_sub:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    neg v1.4h, v0.4h
+; CHECK-NEXT:    sabd v0.4h, v0.4h, v1.4h
+; CHECK-NEXT:    sshll v0.4s, v0.4h, #0
+; CHECK-NEXT:    ret
+  %1 = and <4 x i16> %a0, <i16 255, i16 255, i16 255, i16 255>
+  %2 = sub <4 x i16> zeroinitializer, %a0
+  %3 = call <4 x i16> @llvm.aarch64.neon.sabd.v4i16(<4 x i16> %a0, <4 x i16> %2)
+  %4 = sext <4 x i16> %3 to <4 x i32>
+  ret <4 x i32> %4
+}
+
+define <4 x i32> @knownbits_uabd_and_mask_sub(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: knownbits_uabd_and_mask_sub:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v2.2d, #0xffffffffffffffff
+; CHECK-NEXT:    movi v3.2d, #0x0000ff000000ff
+; CHECK-NEXT:    sub v0.4s, v0.4s, v2.4s
+; CHECK-NEXT:    sub v1.4s, v1.4s, v2.4s
+; CHECK-NEXT:    and v0.16b, v0.16b, v3.16b
+; CHECK-NEXT:    and v1.16b, v1.16b, v3.16b
+; CHECK-NEXT:    uabd v0.4s, v0.4s, v1.4s
+; CHECK-NEXT:    rev64 v0.4s, v0.4s
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
+  %1 = sub <4 x i32> %a0, <i32 255, i32 255, i32 255, i32 255>
+  %2 = sub <4 x i32> %a1, <i32 255, i32 255, i32 255, i32 255>
+  %3 = and <4 x i32> %1, <i32 255, i32 255, i32 255, i32 255>
+  %4 = and <4 x i32> %2, <i32 255, i32 255, i32 255, i32 255>
+  %5 = call <4 x i32> @llvm.aarch64.neon.uabd.v4i32(<4 x i32> %3, <4 x i32> %4)
+  %6 = shufflevector <4 x i32> %5, <4 x i32> undef, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
+  ret <4 x i32> %6
+}
+
+define <4 x i32> @knownbits_uabd_and_lshr_mask(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: knownbits_uabd_and_lshr_mask:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v2.4s, #3, msl #8
+; CHECK-NEXT:    and v0.16b, v0.16b, v2.16b
+; CHECK-NEXT:    and v1.16b, v1.16b, v2.16b
+; CHECK-NEXT:    ushr v0.4s, v0.4s, #4
+; CHECK-NEXT:    ushr v1.4s, v1.4s, #4
+; CHECK-NEXT:    uabd v0.4s, v0.4s, v1.4s
+; CHECK-NEXT:    rev64 v0.4s, v0.4s
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
+  %1 = and <4 x i32> %a0, <i32 1023, i32 1023, i32 1023, i32 1023>
+  %2 = and <4 x i32> %a1, <i32 1023, i32 1023, i32 1023, i32 1023>
+  %3 = lshr <4 x i32> %1, <i32 4, i32 4, i32 4, i32 4>
+  %4 = lshr <4 x i32> %2, <i32 4, i32 4, i32 4, i32 4>
+  %5 = call <4 x i32> @llvm.aarch64.neon.uabd.v4i32(<4 x i32> %3, <4 x i32> %4)
+  %6 = shufflevector <4 x i32> %5, <4 x i32> undef, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
+  ret <4 x i32> %6
+}
+
+define <4 x i32> @knownbits_sabd_and_mask(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: knownbits_sabd_and_mask:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    adrp x8, .LCPI35_0
+; CHECK-NEXT:    adrp x9, .LCPI35_1
+; CHECK-NEXT:    ldr q2, [x8, :lo12:.LCPI35_0]
+; CHECK-NEXT:    ldr q3, [x9, :lo12:.LCPI35_1]
+; CHECK-NEXT:    and v0.16b, v0.16b, v2.16b
+; CHECK-NEXT:    and v1.16b, v1.16b, v3.16b
+; CHECK-NEXT:    shl v0.4s, v0.4s, #4
+; CHECK-NEXT:    shl v1.4s, v1.4s, #4
+; CHECK-NEXT:    uabd v0.4s, v0.4s, v1.4s
+; CHECK-NEXT:    mov v0.s[1], v0.s[0]
+; CHECK-NEXT:    trn2 v0.4s, v0.4s, v0.4s
+; CHECK-NEXT:    ret
+  %1 = and <4 x i32> %a0, <i32 1023, i32 -1, i32 1023, i32 1023>
+  %2 = and <4 x i32> %a1, <i32 1023, i32 1023, i32 -1, i32 1023>
+  %3 = shl <4 x i32> %1, <i32 4, i32 4, i32 4, i32 4>
+  %4 = shl <4 x i32> %2, <i32 4, i32 4, i32 4, i32 4>
+  %5 = call <4 x i32> @llvm.aarch64.neon.uabd.v4i32(<4 x i32> %3, <4 x i32> %4)
+  %6 = shufflevector <4 x i32> %5, <4 x i32> undef, <4 x i32> <i32 0, i32 0, i32 3, i32 3>
+  ret <4 x i32> %6
+}
