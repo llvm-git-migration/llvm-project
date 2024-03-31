@@ -465,6 +465,8 @@ Bug Fixes to C++ Support
   following the first `::` were ignored).
 - Fix an out-of-bounds crash when checking the validity of template partial specializations. (part of #GH86757).
 - Fix an issue caused by not handling invalid cases when substituting into the parameter mapping of a constraint. Fixes (#GH86757).
+- Fix a crash caused by defined struct in a type alias template when the structure
+  has fields with dependent type. Fixes (#GH75221).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -3899,6 +3899,9 @@ static QualType GetDeclSpecTypeForDeclarator(TypeProcessingState &state,
       SemaRef.Diag(OwnedTagDecl->getLocation(), DiagID)
           << SemaRef.Context.getTypeDeclType(OwnedTagDecl);
       D.setInvalidType(true);
+      OwnedTagDecl->setCompleteDefinition(false);
+      OwnedTagDecl->setInvalidDecl();
+      OwnedTagDecl->setCompleteDefinition();
     }
   }
 
