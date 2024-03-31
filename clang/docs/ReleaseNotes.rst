@@ -529,6 +529,8 @@ Bug Fixes to C++ Support
 - Clang now correctly tracks type dependence of by-value captures in lambdas with an explicit
   object parameter.
   Fixes (#GH70604), (#GH79754), (#GH84163), (#GH84425), (#GH86054), (#GH86398), and (#GH86399).
+- Fix a crash caused by defined struct in a type alias template when the structure
+  has fields with dependent type. Fixes (#GH75221).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
