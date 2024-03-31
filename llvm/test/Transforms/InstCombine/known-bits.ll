@@ -124,7 +124,6 @@ exit:
   ret i8 %or2
 }
 
-
 define i8 @test_cond_and_bothways(i8 %x) {
 ; CHECK-LABEL: @test_cond_and_bothways(
 ; CHECK-NEXT:    [[AND:%.*]] = and i8 [[X:%.*]], 91
@@ -180,8 +179,6 @@ exit:
   %or2 = or i8 %x, -4
   ret i8 %or2
 }
-
-
 
 define i8 @test_cond_and_commuted(i8 %x, i1 %c1, i1 %c2) {
 ; CHECK-LABEL: @test_cond_and_commuted(
@@ -343,7 +340,7 @@ exit:
   ret i8 %or2
 }
 
-define i32 @test_icmp_trunc1(i32 %x){
+define i32 @test_icmp_trunc1(i32 %x) {
 ; CHECK-LABEL: @test_icmp_trunc1(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[Y:%.*]] = trunc i32 [[X:%.*]] to i16
@@ -365,7 +362,7 @@ else:
   ret i32 0
 }
 
-define i32 @test_icmp_trunc_assume(i32 %x){
+define i32 @test_icmp_trunc_assume(i32 %x) {
 ; CHECK-LABEL: @test_icmp_trunc_assume(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[Y:%.*]] = trunc i32 [[X:%.*]] to i16
@@ -532,7 +529,105 @@ if.else:
   ret i1 %other
 }
 
+define i8 @test_icmp_add(i8 %n, i8 %n2, i8 %other) {
+; CHECK-LABEL: @test_icmp_add(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[N_ADD:%.*]] = add nuw i8 [[N:%.*]], [[N2:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[N_ADD]], 32
+; CHECK-NEXT:    br i1 [[CMP]], label [[IF_THEN:%.*]], label [[IF_ELSE:%.*]]
+; CHECK:       if.then:
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[N]], 32
+; CHECK-NEXT:    ret i8 [[R]]
+; CHECK:       if.else:
+; CHECK-NEXT:    ret i8 [[OTHER:%.*]]
+;
+entry:
+  %n_add = add nuw i8 %n, %n2
+  %cmp = icmp ult i8 %n_add, 32
+  br i1 %cmp, label %if.then, label %if.else
 
+if.then:
+  %r = and i8 %n, 32
+  ret i8 %r
+
+if.else:
+  ret i8 %other
+}
+
+define i8 @test_icmp_add2(i8 %n, i8 %n2, i8 %other) {
+; CHECK-LABEL: @test_icmp_add2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[N_ADD:%.*]] = add nuw i8 [[N:%.*]], [[N2:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[N_ADD]], 14
+; CHECK-NEXT:    br i1 [[CMP]], label [[IF_THEN:%.*]], label [[IF_ELSE:%.*]]
+; CHECK:       if.then:
+; CHECK-NEXT:    ret i8 [[OTHER:%.*]]
+; CHECK:       if.else:
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[N]], 32
+; CHECK-NEXT:    ret i8 [[R]]
+;
+entry:
+  %n_add = add nuw i8 %n, %n2
+  %cmp = icmp uge i8 %n_add, 15
+  br i1 %cmp, label %if.then, label %if.else
+
+if.then:
+  ret i8 %other
+if.else:
+  %r = and i8 %n, 32
+  ret i8 %r
+
+}
+
+define i8 @test_icmp_add_fail_bad_range(i8 %n, i8 %n2, i8 %other) {
+; CHECK-LABEL: @test_icmp_add_fail_bad_range(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[N_ADD:%.*]] = add nuw i8 [[N:%.*]], [[N2:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i8 [[N_ADD]], 33
+; CHECK-NEXT:    br i1 [[CMP]], label [[IF_THEN:%.*]], label [[IF_ELSE:%.*]]
+; CHECK:       if.then:
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[N]], 32
+; CHECK-NEXT:    ret i8 [[R]]
+; CHECK:       if.else:
+; CHECK-NEXT:    ret i8 [[OTHER:%.*]]
+;
+entry:
+  %n_add = add nuw i8 %n, %n2
+  %cmp = icmp ule i8 %n_add, 32
+  br i1 %cmp, label %if.then, label %if.else
+
+if.then:
+  %r = and i8 %n, 32
+  ret i8 %r
+
+if.else:
+  ret i8 %other
+}
+
+define i8 @test_icmp_add_fail_bad_pred(i8 %n, i8 %n2, i8 %other) {
+; CHECK-LABEL: @test_icmp_add_fail_bad_pred(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[N_ADD:%.*]] = add nuw i8 [[N:%.*]], [[N2:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i8 [[N_ADD]], 32
+; CHECK-NEXT:    br i1 [[CMP]], label [[IF_THEN:%.*]], label [[IF_ELSE:%.*]]
+; CHECK:       if.then:
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[N]], 32
+; CHECK-NEXT:    ret i8 [[R]]
+; CHECK:       if.else:
+; CHECK-NEXT:    ret i8 [[OTHER:%.*]]
+;
+entry:
+  %n_add = add nuw i8 %n, %n2
+  %cmp = icmp ugt i8 %n_add, 32
+  br i1 %cmp, label %if.then, label %if.else
+
+if.then:
+  %r = and i8 %n, 32
+  ret i8 %r
+
+if.else:
+  ret i8 %other
+}
 
 declare void @use(i1)
 declare void @sink(i8)
