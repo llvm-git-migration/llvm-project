@@ -81,6 +81,10 @@ Objective-C
 Miscellaneous
 ^^^^^^^^^^^^^
 
+- Added config option `Includes.AnalyzeSystemHeaders` to enable unused includes
+  detection for all system headers. At this moment umbrella headers are not supported,
+  so enabling this option may result in false-positives.
+
 Improvements to clang-doc
 -------------------------
 
