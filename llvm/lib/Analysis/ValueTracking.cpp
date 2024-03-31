@@ -698,13 +698,19 @@ static void computeKnownBitsFromCmp(const Value *V, CmpInst::Predicate Pred,
     break;
   }
   default:
-    const APInt *Offset = nullptr;
-    if (match(LHS, m_CombineOr(m_V, m_AddLike(m_V, m_APInt(Offset)))) &&
-        match(RHS, m_APInt(C))) {
-      ConstantRange LHSRange = ConstantRange::makeAllowedICmpRegion(Pred, *C);
-      if (Offset)
-        LHSRange = LHSRange.sub(*Offset);
-      Known = Known.unionWith(LHSRange.toKnownBits());
+    if (match(RHS, m_APInt(C))) {
+      const APInt *Offset = nullptr;
+      if (match(LHS, m_CombineOr(m_V, m_AddLike(m_V, m_APInt(Offset))))) {
+        ConstantRange LHSRange = ConstantRange::makeAllowedICmpRegion(Pred, *C);
+        if (Offset)
+          LHSRange = LHSRange.sub(*Offset);
+        Known = Known.unionWith(LHSRange.toKnownBits());
+      }
+      if ((Pred == ICmpInst::ICMP_ULE || Pred == ICmpInst::ICMP_ULT) &&
+          match(LHS, m_c_NUWAdd(m_V, m_Value()))) {
+        Known.Zero.setHighBits(
+            (*C - (Pred == ICmpInst::ICMP_ULT)).countLeadingZeros());
+      }
     }
     break;
   }
@@ -9283,11 +9289,21 @@ void llvm::findValuesAffectedByCondition(
             AddAffected(X);
         }
       } else {
-        // Handle (A + C1) u< C2, which is the canonical form of
-        // A > C3 && A < C4.
-        if (match(A, m_AddLike(m_Value(X), m_ConstantInt())) &&
-            match(B, m_ConstantInt()))
-          AddAffected(X);
+        if (match(B, m_ConstantInt())) {
+          // Handle (A + C1) u< C2, which is the canonical form of
+          // A > C3 && A < C4.
+          if (match(A, m_AddLike(m_Value(X), m_ConstantInt())))
+            AddAffected(X);
+
+          Value *Y;
+          // X & Y u> C -> X >u C && Y >u C
+          // X | Y u< C -> X u< C && Y u< C
+          if (ICmpInst::isUnsigned(Pred) &&
+              match(A, m_NUWAdd(m_Value(X), m_Value(Y)))) {
+            AddAffected(X);
+            AddAffected(Y);
+          }
+        }
 
         // Handle icmp slt/sgt (bitcast X to int), 0/-1, which is supported
         // by computeKnownFPClass().
