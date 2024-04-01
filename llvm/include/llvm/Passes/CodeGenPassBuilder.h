@@ -114,7 +114,8 @@ public:
   explicit CodeGenPassBuilder(LLVMTargetMachine &TM,
                               const CGPassBuilderOption &Opts,
                               PassInstrumentationCallbacks *PIC)
-      : TM(TM), Opt(Opts), PIC(PIC) {
+      : TM(TM), Opt(Opts), PIC(PIC), MMI(new MachineModuleInfo(&TM)),
+        MMIRefPtr(MMI.get()) {
     // Target could set CGPassBuilderOption::MISchedPostRA to true to achieve
     //     substitutePass(&PostRASchedulerID, &PostMachineSchedulerID)
 
@@ -205,8 +206,16 @@ protected:
     AddMachinePass(ModulePassManager &MPM, const DerivedT &PB)
         : MPM(MPM), PB(PB) {}
     ~AddMachinePass() {
-      if (!MFPM.isEmpty())
-        MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+      if (!MFPM.isEmpty()) {
+        if (PB.MMI) {
+          MPM.addPass(createModuleToMachineFunctionPassAdaptor(
+              std::move(MFPM), std::move(PB.MMI)));
+          PB.MMI = nullptr;
+        } else {
+          MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM),
+                                                               *PB.MMIRefPtr));
+        }
+      }
     }
 
     template <typename PassT>
@@ -228,8 +237,14 @@ protected:
       } else {
         // Add Module Pass
         if (!MFPM.isEmpty()) {
-          MPM.addPass(
-              createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+          if (PB.MMI) {
+            MPM.addPass(createModuleToMachineFunctionPassAdaptor(
+                std::move(MFPM), std::move(PB.MMI)));
+            PB.MMI = nullptr;
+          } else {
+            MPM.addPass(createModuleToMachineFunctionPassAdaptor(
+                std::move(MFPM), *PB.MMIRefPtr));
+          }
           MFPM = MachineFunctionPassManager();
         }
 
@@ -249,6 +264,8 @@ protected:
   LLVMTargetMachine &TM;
   CGPassBuilderOption Opt;
   PassInstrumentationCallbacks *PIC;
+  mutable std::unique_ptr<MachineModuleInfo> MMI;
+  mutable MachineModuleInfo *MMIRefPtr;
 
   template <typename TMC> TMC &getTM() const { return static_cast<TMC &>(TM); }
   CodeGenOptLevel getOptLevel() const { return TM.getOptLevel(); }

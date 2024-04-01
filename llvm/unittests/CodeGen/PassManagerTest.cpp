@@ -189,7 +189,6 @@ TEST_F(PassManagerTest, Basic) {
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM, &MFAM);
 
   FAM.registerPass([&] { return TestFunctionAnalysis(); });
-  MAM.registerPass([&] { return MachineModuleAnalysis(MMI); });
   MFAM.registerPass([&] { return TestMachineFunctionAnalysis(); });
 
   int Count = 0;
@@ -197,12 +196,13 @@ TEST_F(PassManagerTest, Basic) {
 
   ModulePassManager MPM;
   MachineFunctionPassManager MFPM;
+  auto &MMI = PB.getMachineModuleInfo();
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MPM.addPass(createModuleToMachineFunctionPassAdaptor(
-      TestMachineFunctionPass(Count, Counts)));
+      TestMachineFunctionPass(Count, Counts), MMI));
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MFPM.addPass(TestMachineFunctionPass(Count, Counts));
-  MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+  MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM), MMI));
 
   MPM.run(*M, MAM);
 

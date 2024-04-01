@@ -92,6 +92,7 @@
 #include "llvm/CodeGen/JMCInstrumenter.h"
 #include "llvm/CodeGen/LowerEmuTLS.h"
 #include "llvm/CodeGen/MIRPrinter.h"
+#include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/CodeGen/SafeStack.h"
 #include "llvm/CodeGen/SelectOptimize.h"
@@ -397,7 +398,9 @@ public:
 PassBuilder::PassBuilder(TargetMachine *TM, PipelineTuningOptions PTO,
                          std::optional<PGOOptions> PGOOpt,
                          PassInstrumentationCallbacks *PIC)
-    : TM(TM), PTO(PTO), PGOOpt(PGOOpt), PIC(PIC) {
+    : TM(TM), PTO(PTO), PGOOpt(PGOOpt), PIC(PIC),
+      MMI(new MachineModuleInfo(static_cast<LLVMTargetMachine *>(TM))),
+      MMIRefPtr(MMI.get()) {
   bool ShouldPopulateClassToPassNames = PIC && shouldPopulateClassToPassNames();
   if (TM)
     TM->registerPassBuilderCallbacks(*this, ShouldPopulateClassToPassNames);
@@ -1412,7 +1415,16 @@ Error PassBuilder::parseModulePass(ModulePassManager &MPM,
       MachineFunctionPassManager MFPM;
       if (auto Err = parseMachinePassPipeline(MFPM, InnerPipeline))
         return Err;
-      MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+
+      if (MMI) {
+        MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM),
+                                                             std::move(MMI)));
+        MMI = nullptr;
+      } else {
+        MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM),
+                                                             *MMIRefPtr));
+      }
+
       return Error::success();
     }
     if (auto Params = parseFunctionPipelineName(Name)) {
