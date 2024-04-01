@@ -21,6 +21,7 @@
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Module.h"
+#include "clang/Basic/SourceManager.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace clang;
 
@@ -117,7 +118,10 @@ namespace {
                                 const TemplateParameterList *Params);
     void printTemplateArguments(llvm::ArrayRef<TemplateArgumentLoc> Args,
                                 const TemplateParameterList *Params);
-    void prettyPrintAttributes(Decl *D);
+    enum class AttrPosAsWritten { Default = 0, Left, Right };
+    void
+    prettyPrintAttributes(const Decl *D,
+                          AttrPosAsWritten Pos = AttrPosAsWritten::Default);
     void prettyPrintPragmas(Decl *D);
     void printDeclType(QualType T, StringRef DeclName, bool Pack = false);
   };
@@ -234,12 +238,27 @@ raw_ostream& DeclPrinter::Indent(unsigned Indentation) {
   return Out;
 }
 
-void DeclPrinter::prettyPrintAttributes(Decl *D) {
+static DeclPrinter::AttrPosAsWritten getPosAsWritten(const Attr *A,
+                                                     const Decl *D) {
+  SourceLocation ALoc = A->getLoc();
+  SourceLocation DLoc = D->getLocation();
+  const ASTContext &C = D->getASTContext();
+  if (ALoc.isInvalid() || DLoc.isInvalid())
+    return DeclPrinter::AttrPosAsWritten::Default;
+
+  if (C.getSourceManager().isBeforeInTranslationUnit(ALoc, DLoc))
+    return DeclPrinter::AttrPosAsWritten::Left;
+
+  return DeclPrinter::AttrPosAsWritten::Right;
+}
+
+void DeclPrinter::prettyPrintAttributes(const Decl *D,
+                                        AttrPosAsWritten Pos /*=Default*/) {
   if (Policy.PolishForDeclaration)
     return;
 
   if (D->hasAttrs()) {
-    AttrVec &Attrs = D->getAttrs();
+    const AttrVec &Attrs = D->getAttrs();
     for (auto *A : Attrs) {
       if (A->isInherited() || A->isImplicit())
         continue;
@@ -249,7 +268,13 @@ void DeclPrinter::prettyPrintAttributes(Decl *D) {
 #include "clang/Basic/AttrList.inc"
         break;
       default:
-        A->printPretty(Out, Policy);
+        if (Pos == AttrPosAsWritten::Default || Pos == getPosAsWritten(A, D)) {
+          if (Pos != AttrPosAsWritten::Left)
+            Out << " ";
+          A->printPretty(Out, Policy);
+          if (Pos == AttrPosAsWritten::Left)
+            Out << " ";
+        }
         break;
       }
     }
@@ -612,8 +637,10 @@ static void MaybePrintTagKeywordIfSupressingScopes(PrintingPolicy &Policy,
 
 void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
   if (!D->getDescribedFunctionTemplate() &&
-      !D->isFunctionTemplateSpecialization())
+      !D->isFunctionTemplateSpecialization()) {
     prettyPrintPragmas(D);
+    prettyPrintAttributes(D, AttrPosAsWritten::Left);
+  }
 
   if (D->isFunctionTemplateSpecialization())
     Out << "template<> ";
@@ -788,7 +815,7 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
     Ty.print(Out, Policy, Proto);
   }
 
-  prettyPrintAttributes(D);
+  prettyPrintAttributes(D, AttrPosAsWritten::Right);
 
   if (D->isPureVirtual())
     Out << " = 0";
@@ -881,6 +908,8 @@ void DeclPrinter::VisitLabelDecl(LabelDecl *D) {
 void DeclPrinter::VisitVarDecl(VarDecl *D) {
   prettyPrintPragmas(D);
 
+  prettyPrintAttributes(D, AttrPosAsWritten::Left);
+
   if (const auto *Param = dyn_cast<ParmVarDecl>(D);
       Param && Param->isExplicitObjectParameter())
     Out << "this ";
@@ -926,6 +955,8 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
                        ? D->getIdentifier()->deuglifiedName()
                        : D->getName());
 
+  prettyPrintAttributes(D, AttrPosAsWritten::Right);
+
   Expr *Init = D->getInit();
   if (!Policy.SuppressInitializers && Init) {
     bool ImplicitInit = false;
@@ -954,7 +985,6 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
         Out << ")";
     }
   }
-  prettyPrintAttributes(D);
 }
 
 void DeclPrinter::VisitParmVarDecl(ParmVarDecl *D) {
