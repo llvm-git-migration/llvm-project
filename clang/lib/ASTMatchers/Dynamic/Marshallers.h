@@ -936,7 +936,7 @@ class MapAnyOfMatcherDescriptor : public MatcherDescriptor {
 
 public:
   MapAnyOfMatcherDescriptor(ASTNodeKind CladeNodeKind,
-                            std::vector<ASTNodeKind> NodeKinds)
+                            const std::vector<ASTNodeKind>& NodeKinds)
       : CladeNodeKind(CladeNodeKind), NodeKinds(NodeKinds) {}
 
   VariantMatcher create(SourceRange NameRange, ArrayRef<ParserValue> Args,
