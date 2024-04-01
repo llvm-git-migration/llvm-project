@@ -13589,6 +13589,8 @@ struct NodeExtensionHelper {
     case RISCVISD::VZEXT_VL:
     case RISCVISD::FP_EXTEND_VL:
       return OrigOperand.getOperand(0);
+    case ISD::SPLAT_VECTOR:
+      return OrigOperand.getOperand(0).getOperand(0);
     default:
       return OrigOperand;
     }
@@ -13640,6 +13642,8 @@ struct NodeExtensionHelper {
     case RISCVISD::VZEXT_VL:
     case RISCVISD::FP_EXTEND_VL:
       return DAG.getNode(ExtOpc, DL, NarrowVT, Source, Mask, VL);
+    case ISD::SPLAT_VECTOR:
+      return DAG.getNode(ISD::SPLAT_VECTOR, DL, NarrowVT, Source, Mask, VL);
     case RISCVISD::VMV_V_X_VL:
       return DAG.getNode(RISCVISD::VMV_V_X_VL, DL, NarrowVT,
                          DAG.getUNDEF(NarrowVT), Source.getOperand(1), VL);
@@ -13817,6 +13821,35 @@ struct NodeExtensionHelper {
       Mask = OrigOperand.getOperand(1);
       VL = OrigOperand.getOperand(2);
       break;
+    case ISD::SPLAT_VECTOR: {
+      SDValue ScalarOp = OrigOperand.getOperand(0);
+      unsigned ScalarOpc = ScalarOp.getOpcode();
+
+      MVT ScalarVT = ScalarOp.getSimpleValueType();
+      unsigned ScalarSize = ScalarVT.getScalarSizeInBits();
+      unsigned NarrowSize = ScalarSize / 2;
+
+      // Ensuring the scalar element is legal.
+      if (NarrowSize < 8)
+        break;
+
+      SupportsSExt = ScalarOpc == ISD::SIGN_EXTEND_INREG;
+
+      if (ScalarOpc == ISD::AND) {
+        if (ConstantSDNode *MaskNode =
+                dyn_cast<ConstantSDNode>(ScalarOp.getOperand(1)))
+          SupportsZExt = MaskNode->getAPIntValue() ==
+                         APInt::getBitsSet(ScalarSize, 0, NarrowSize);
+      }
+
+      EnforceOneUse = false;
+      CheckMask = false;
+
+      MVT VT = OrigOperand.getSimpleValueType();
+      SDLoc DL(Root);
+      std::tie(Mask, VL) = getDefaultScalableVLOps(VT, DL, DAG, Subtarget);
+      break;
+    }
     case RISCVISD::VMV_V_X_VL: {
       // Historically, we didn't care about splat values not disappearing during
       // combines.
