@@ -1592,7 +1592,8 @@ static LogicalResult verifyNumBlockArgs(T *op, Region &region,
   if (!yield)
     return op->emitError() << regionName
                            << " region must end with sparse_tensor.yield";
-  if (!yield.getResult() || yield.getResult().getType() != outputType)
+  if (!yield.getResult().empty() ||
+      yield.getResult().getType().front() != outputType)
     return op->emitError() << regionName << " region yield type mismatch";
 
   return success();
@@ -1655,7 +1656,8 @@ LogicalResult UnaryOp::verify() {
     // Absent branch can only yield invariant values.
     Block *absentBlock = &absent.front();
     Block *parent = getOperation()->getBlock();
-    Value absentVal = cast<YieldOp>(absentBlock->getTerminator()).getResult();
+    Value absentVal =
+        cast<YieldOp>(absentBlock->getTerminator()).getResult().front();
     if (auto arg = dyn_cast<BlockArgument>(absentVal)) {
       if (arg.getOwner() == parent)
         return emitError("absent region cannot yield linalg argument");

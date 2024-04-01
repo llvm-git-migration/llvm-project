@@ -1282,7 +1282,7 @@ def SparseTensor_SelectOp : SparseTensor_Op<"select", [Pure, SameOperandsAndResu
 def SparseTensor_YieldOp : SparseTensor_Op<"yield", [Pure, Terminator,
     ParentOneOf<["BinaryOp", "UnaryOp", "ReduceOp", "SelectOp", "ForeachOp",
                  "IterateOp"]>]>,
-    Arguments<(ins Optional<AnyType>:$result)> {
+    Arguments<(ins Variadic<AnyType>:$result)> {
   let summary = "Yield from sparse_tensor set-like operations";
   let description = [{
       Yields a value from within a `binary`, `unary`, `reduce`,

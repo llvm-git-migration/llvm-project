@@ -764,10 +764,11 @@ struct ForeachOpDemapper
     if (numInitArgs != 0) {
       rewriter.setInsertionPointToEnd(body);
       auto yield = llvm::cast<YieldOp>(body->getTerminator());
-      if (auto stt = tryGetSparseTensorType(yield.getResult());
+      if (auto stt = tryGetSparseTensorType(yield.getResult().front());
           stt && !stt->isIdentity()) {
-        Value y = genDemap(rewriter, stt->getEncoding(), yield.getResult());
-        rewriter.create<YieldOp>(loc, y);
+        Value y =
+            genDemap(rewriter, stt->getEncoding(), yield.getResult().front());
+        rewriter.create<YieldOp>(loc, ValueRange{y});
         rewriter.eraseOp(yield);
       }
     }

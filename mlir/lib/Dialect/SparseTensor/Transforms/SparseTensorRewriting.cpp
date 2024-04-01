@@ -579,7 +579,7 @@ public:
     rewriter.setInsertionPointToStart(&semiring.getAbsentRegion().front());
     auto zero =
         rewriter.create<arith::ConstantOp>(loc, rewriter.getZeroAttr(rtp));
-    rewriter.create<sparse_tensor::YieldOp>(loc, zero);
+    rewriter.create<sparse_tensor::YieldOp>(loc, zero->getResults());
     rewriter.setInsertionPointAfter(semiring);
     // CustomReduce {
     //    x = x REDUC y, identity
@@ -819,7 +819,7 @@ public:
 
           auto t =
               builder.create<tensor::InsertOp>(loc, v, reduc.front(), dstDcvs);
-          builder.create<sparse_tensor::YieldOp>(loc, t);
+          builder.create<sparse_tensor::YieldOp>(loc, t->getResults());
         });
 
     Value t = rewriter.create<LoadOp>(loc, foreachOp.getResult(0), true);
@@ -904,7 +904,7 @@ public:
                      srcDcvs, dstSizes, dstDcvs);
           auto t =
               builder.create<tensor::InsertOp>(loc, v, reduc.front(), dstDcvs);
-          builder.create<sparse_tensor::YieldOp>(loc, t);
+          builder.create<sparse_tensor::YieldOp>(loc, t->getResults());
         });
 
     Value t = rewriter.create<LoadOp>(loc, foreachOp.getResult(0), true);
