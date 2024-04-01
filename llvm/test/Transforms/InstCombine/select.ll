@@ -3698,7 +3698,8 @@ exit:
 define i32 @src_select_xxory_eq0_xorxy_y(i32 %x, i32 %y) {
 ; CHECK-LABEL: @src_select_xxory_eq0_xorxy_y(
 ; CHECK-NEXT:    [[XOR0:%.*]] = icmp eq i32 [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[XOR0]], i32 0, i32 [[Y]]
+; CHECK-NEXT:    [[XOR:%.*]] = select i1 [[XOR0]], i32 [[X]], i32 0
+; CHECK-NEXT:    [[COND:%.*]] = xor i32 [[XOR]], [[Y]]
 ; CHECK-NEXT:    ret i32 [[COND]]
 ;
   %xor = xor i32 %x, %y
