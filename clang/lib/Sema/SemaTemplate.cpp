@@ -10875,7 +10875,7 @@ DeclResult Sema::ActOnExplicitInstantiation(
   Specialization->setTemplateArgsAsWritten(TemplateArgs);
 
   // Set source locations for keywords.
-  Specialization->setExternLoc(ExternLoc);
+  Specialization->setExternKeywordLoc(ExternLoc);
   Specialization->setTemplateKeywordLoc(TemplateLoc);
   Specialization->setBraceRange(SourceRange());
 
@@ -11288,7 +11288,7 @@ DeclResult Sema::ActOnExplicitInstantiation(Scope *S,
       // Instantiate static data member or variable template.
       Prev->setTemplateSpecializationKind(TSK, D.getIdentifierLoc());
       if (auto *VTSD = dyn_cast<VarTemplatePartialSpecializationDecl>(Prev)) {
-        VTSD->setExternLoc(ExternLoc);
+        VTSD->setExternKeywordLoc(ExternLoc);
         VTSD->setTemplateKeywordLoc(TemplateLoc);
       }
 
