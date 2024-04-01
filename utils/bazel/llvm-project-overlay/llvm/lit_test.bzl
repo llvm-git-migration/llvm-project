@@ -10,7 +10,7 @@ def lit_test(
         srcs,
         args = None,
         data = None,
-        deps,
+        deps = None,
         **kwargs):
     """Runs a single test file with LLVM's lit tool.
 
