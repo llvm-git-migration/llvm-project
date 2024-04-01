@@ -4,6 +4,9 @@
 @a = internal unnamed_addr global i32 0, align 4
 @b = internal unnamed_addr global [3 x ptr] zeroinitializer, align 16
 
+;; This test is extracted from the issue reported in #64680, with an
+;; additional memcpy and a memset. Ensure all stores and memintrinsics with
+;; destination @b are removed as @b is dead.
 define i32 @main() local_unnamed_addr {
 ; CHECK-LABEL: define i32 @main() local_unnamed_addr {
 ; CHECK-NEXT:  entry:
@@ -52,11 +55,15 @@ if.end:                                           ; preds = %if.then, %for.body
   %inc = add nsw i32 %1, 1
   store i32 %inc, ptr @a, align 4
   %cmp = icmp slt i32 %1, 2
+  call void @llvm.memset.p0i8.i64(ptr getelementptr inbounds ([3 x ptr], ptr @b, i64 0, i64 0), i8 0, i64 8, i1 false)
   br i1 %cmp, label %for.body, label %for.end
 
 for.end:                                          ; preds = %if.end, %entry
+  call void @llvm.memcpy.p0i8.p0i8.i64(ptr getelementptr inbounds ([3 x ptr], ptr @b, i64 0, i64 0), ptr null, i64 8, i1 false)
   ret i32 0
 }
 
 declare void @bar20_() local_unnamed_addr
 declare void @foo() local_unnamed_addr
+declare void @llvm.memcpy.p0i8.p0i8.i64(ptr nocapture, ptr nocapture readonly, i64, i1) local_unnamed_addr
+declare void @llvm.memset.p0i8.i64(ptr nocapture, i8, i64, i1) local_unnamed_addr

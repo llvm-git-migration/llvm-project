@@ -211,6 +211,9 @@ CleanupPointerRootUsers(GlobalVariable *GV,
     } else if (auto *CE = dyn_cast<ConstantExpr>(U)) {
       if (isa<GEPOperator>(CE))
         append_range(Worklist, CE->users());
+    } else if (auto *MI = dyn_cast<MemIntrinsic>(U)) {
+      if (MI->getRawDest() == GV)
+        Writes.push_back(MI);
     }
   }
 
