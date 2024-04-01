@@ -71,7 +71,7 @@ bool MachineFunctionAnalysisManagerModuleProxy::Result::invalidate(
 
 PreservedAnalyses
 ModuleToMachineFunctionPassAdaptor::run(Module &M, ModuleAnalysisManager &AM) {
-  auto &MMI = AM.getResult<MachineModuleAnalysis>(M).getMMI();
+  auto &MMI = getMachineModuleInfo();
   MachineFunctionAnalysisManager &MFAM =
       AM.getResult<MachineFunctionAnalysisManagerModuleProxy>(M).getManager();
   PassInstrumentation PI = AM.getResult<PassInstrumentationAnalysis>(M);
