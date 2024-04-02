@@ -1230,11 +1230,23 @@ CodeGenFunction::EmitCXXForRangeStmt(const CXXForRangeStmt &S,
   JumpDest LoopExit = getJumpDestInCurrentScope("for.end");
 
   LexicalScope ForScope(*this, S.getSourceRange());
+  ForScope.setForRangeVar(S.getLoopVariable());
 
   // Evaluate the first pieces before the loop.
   if (S.getInit())
     EmitStmt(S.getInit());
   EmitStmt(S.getRangeStmt());
+
+  // Emit cleanup for tempories in for-range-init expression.
+  {
+    RunCleanupsScope Scope(*this);
+    auto LifetimeExtendTemps = ForScope.getForRangeInitTemps();
+    for (const auto &Temp : LifetimeExtendTemps) {
+      auto [M, Object] = Temp;
+      pushTemporaryCleanup(M, M->getSubExpr(), Object);
+    }
+  }
+
   EmitStmt(S.getBeginStmt());
   EmitStmt(S.getEndStmt());
 

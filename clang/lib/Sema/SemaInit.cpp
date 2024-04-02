@@ -8208,9 +8208,10 @@ void Sema::checkInitializerLifetime(const InitializedEntity &Entity,
         // FIXME: Properly handle this situation. Perhaps the easiest approach
         // would be to clone the initializer expression on each use that would
         // lifetime extend its temporaries.
-        Diag(DiagLoc, diag::warn_unsupported_lifetime_extension)
-            << RK << DiagRange;
-        break;
+        // Diag(DiagLoc, diag::warn_unsupported_lifetime_extension)
+        //     << RK << DiagRange;
+        // break;
+        return true;
 
       case PathLifetimeKind::NoExtend:
         // If the path goes through the initialization of a variable or field,
