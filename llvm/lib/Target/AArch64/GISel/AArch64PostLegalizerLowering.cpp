@@ -486,24 +486,24 @@ bool matchNonConstInsert(MachineInstr &MI, MachineRegisterInfo &MRI) {
 
 void applyNonConstInsert(MachineInstr &MI, MachineRegisterInfo &MRI,
                          MachineIRBuilder &Builder) {
-  assert(MI.getOpcode() == TargetOpcode::G_INSERT_VECTOR_ELT);
-  bool InsertVal = true;
-  Builder.setInstrAndDebugLoc(MI);
+  auto &Insert = cast<GInsertVectorElement>(MI);
+  Builder.setInstrAndDebugLoc(Insert);
 
-  Register Offset = MI.getOperand(3).getReg();
-  LLT VecTy = MRI.getType(MI.getOperand(0).getReg());
-  LLT EltTy = MRI.getType(MI.getOperand(2).getReg());
-  LLT IdxTy = MRI.getType(MI.getOperand(3).getReg());
+  Register Offset = Insert.getIndexReg();
+  LLT VecTy = MRI.getType(Insert.getReg(0));
+  LLT EltTy = MRI.getType(Insert.getElementReg());
+  LLT IdxTy = MRI.getType(Insert.getIndexReg());
 
   // Create a stack slot and store the vector into it
   MachineFunction &MF = Builder.getMF();
+  Align Alignment(std::min<uint64_t>(VecTy.getSizeInBytes().getKnownMinValue(), 16));
   int FrameIdx = MF.getFrameInfo().CreateStackObject(VecTy.getSizeInBytes(),
-                                                     Align(8), false);
+                                                     Alignment, false);
   LLT FramePtrTy = LLT::pointer(0, 64);
   MachinePointerInfo PtrInfo = MachinePointerInfo::getFixedStack(MF, FrameIdx);
   auto StackTemp = Builder.buildFrameIndex(FramePtrTy, FrameIdx);
 
-  Builder.buildStore(MI.getOperand(1), StackTemp, PtrInfo, Align(8));
+  Builder.buildStore(Insert.getOperand(1), StackTemp, PtrInfo, Align(8));
 
   // Get the pointer to the element, and be sure not to hit undefined behavior
   // if the index is out of bounds.
@@ -518,10 +518,10 @@ void applyNonConstInsert(MachineInstr &MI, MachineRegisterInfo &MRI,
           .getReg(0);
 
   // Write the inserted element
-  Builder.buildStore(MI.getOperand(2).getReg(), EltPtr, PtrInfo, Align(1));
+  Builder.buildStore(Insert.getElementReg(), EltPtr, PtrInfo, Align(1));
   // Reload the whole vector.
-  Builder.buildLoad(MI.getOperand(0).getReg(), StackTemp, PtrInfo, Align(8));
-  MI.eraseFromParent();
+  Builder.buildLoad(Insert.getReg(0), StackTemp, PtrInfo, Align(8));
+  Insert.eraseFromParent();
 }
 
 /// Match a G_SHUFFLE_VECTOR with a mask which corresponds to a
