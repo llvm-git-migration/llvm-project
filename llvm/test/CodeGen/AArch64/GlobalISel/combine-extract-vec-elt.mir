@@ -23,9 +23,9 @@ body:             |
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %zero:_(s32) = G_CONSTANT i32 0
+    %zero:_(s64) = G_CONSTANT i64 0
     %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s32)
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s64)
     $x0 = COPY %extract(s64)
     RET_ReallyLR implicit $x0
 
@@ -55,10 +55,10 @@ body:             |
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %zero:_(s32) = G_CONSTANT i32 0
+    %zero:_(s64) = G_CONSTANT i64 0
     %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
     %truncbv:_(<2 x s32>) = G_TRUNC %bv
-    %extract:_(s32) = G_EXTRACT_VECTOR_ELT %truncbv(<2 x s32>), %zero(s32)
+    %extract:_(s32) = G_EXTRACT_VECTOR_ELT %truncbv(<2 x s32>), %zero(s64)
     %zext:_(s64) = G_ZEXT %extract
     $x0 = COPY %zext(s64)
     RET_ReallyLR implicit $x0
@@ -87,9 +87,9 @@ body:             |
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %one:_(s32) = G_CONSTANT i32 1
+    %one:_(s64) = G_CONSTANT i64 1
     %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %one(s32)
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %one(s64)
     $x0 = COPY %extract(s64)
     RET_ReallyLR implicit $x0
 
@@ -117,9 +117,9 @@ body:             |
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %idx:_(s32) = G_CONSTANT i32 4
+    %idx:_(s64) = G_CONSTANT i64 4
     %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %idx(s32)
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %idx(s64)
     $x0 = COPY %extract(s64)
     RET_ReallyLR implicit $x0
 
@@ -148,9 +148,9 @@ body:             |
     ; CHECK-NEXT: RET_ReallyLR implicit $w0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %zero:_(s32) = G_CONSTANT i32 0
+    %zero:_(s64) = G_CONSTANT i64 0
     %bv:_(<2 x s32>) = G_BUILD_VECTOR_TRUNC %arg1(s64), %arg2(s64)
-    %extract:_(s32) = G_EXTRACT_VECTOR_ELT %bv(<2 x s32>), %zero(s32)
+    %extract:_(s32) = G_EXTRACT_VECTOR_ELT %bv(<2 x s32>), %zero(s64)
     $w0 = COPY %extract(s32)
     RET_ReallyLR implicit $w0
 
@@ -175,17 +175,17 @@ body:             |
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: %arg1:_(s64) = COPY $x0
     ; CHECK-NEXT: %arg2:_(s64) = COPY $x1
-    ; CHECK-NEXT: %zero:_(s32) = G_CONSTANT i32 0
+    ; CHECK-NEXT: %zero:_(s64) = G_CONSTANT i64 0
     ; CHECK-NEXT: %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
-    ; CHECK-NEXT: %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s32)
+    ; CHECK-NEXT: %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s64)
     ; CHECK-NEXT: $x0 = COPY %extract(s64)
     ; CHECK-NEXT: $q0 = COPY %bv(<2 x s64>)
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
-    %zero:_(s32) = G_CONSTANT i32 0
+    %zero:_(s64) = G_CONSTANT i64 0
     %bv:_(<2 x s64>) = G_BUILD_VECTOR %arg1(s64), %arg2(s64)
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s32)
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %bv(<2 x s64>), %zero(s64)
     $x0 = COPY %extract(s64)
     $q0 = COPY %bv(<2 x s64>)
     RET_ReallyLR implicit $x0
@@ -214,11 +214,11 @@ body:             |
     %arg1:_(s64) = COPY $x0
     %arg2:_(s64) = COPY $x1
     %undef:_(<2 x s64>) = G_IMPLICIT_DEF
-    %zero:_(s32) = G_CONSTANT i32 0
-    %one:_(s32) = G_CONSTANT i32 1
-    %ins1:_(<2 x s64>) = G_INSERT_VECTOR_ELT %undef, %arg1(s64), %zero(s32)
-    %ins2:_(<2 x s64>) = G_INSERT_VECTOR_ELT %ins1, %arg2(s64), %one(s32)
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %ins2(<2 x s64>), %zero(s32)
+    %zero:_(s64) = G_CONSTANT i64 0
+    %one:_(s64) = G_CONSTANT i64 1
+    %ins1:_(<2 x s64>) = G_INSERT_VECTOR_ELT %undef, %arg1(s64), %zero(s64)
+    %ins2:_(<2 x s64>) = G_INSERT_VECTOR_ELT %ins1, %arg2(s64), %one(s64)
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %ins2(<2 x s64>), %zero(s64)
     $x0 = COPY %extract(s64)
     RET_ReallyLR implicit $x0
 
@@ -241,8 +241,8 @@ body:             |
     ; CHECK-NEXT: $x0 = COPY %extract(s64)
     ; CHECK-NEXT: RET_ReallyLR implicit $x0
     %vec:_(<2 x s64>) = COPY $q0
-    %idx:_(s32) = G_CONSTANT i32 -2
-    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %vec(<2 x s64>), %idx(s32)
+    %idx:_(s64) = G_CONSTANT i64 -2
+    %extract:_(s64) = G_EXTRACT_VECTOR_ELT %vec(<2 x s64>), %idx(s64)
     $x0 = COPY %extract(s64)
     RET_ReallyLR implicit $x0
 
