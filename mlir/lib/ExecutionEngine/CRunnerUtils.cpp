@@ -49,6 +49,7 @@ void stdSort(uint64_t n, V *p) {
 // By providing elementary printing methods only, this
 // library can remain fully unaware of low-level implementation
 // details of our vectors. Also useful for direct LLVM IR output.
+extern "C" void printI1(bool i) { fprintf(stdout, i ? "true" : "false"); }
 extern "C" void printI64(int64_t i) { fprintf(stdout, "%" PRId64, i); }
 extern "C" void printU64(uint64_t u) { fprintf(stdout, "%" PRIu64, u); }
 extern "C" void printF32(float f) {
