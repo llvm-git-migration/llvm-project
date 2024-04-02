@@ -4579,7 +4579,12 @@ ExpectedDecl ASTNodeImporter::VisitVarDecl(VarDecl *D) {
     if (!RedeclOrErr)
       return RedeclOrErr.takeError();
   }
-
+  if (D->isInlineSpecified()) {
+    ToVar->setInlineSpecified();
+  }
+  if (D->isInline()) {
+    ToVar->setImplicitlyInline();
+  }
   return ToVar;
 }
 
