@@ -2188,8 +2188,12 @@ void Sema::DiagnoseUnusedButSetDecl(const VarDecl *VD,
 
   assert(iter->getSecond() >= 0 &&
          "Found a negative number of references to a VarDecl");
-  if (iter->getSecond() != 0)
-    return;
+  if (iter->getSecond() != 0) {
+    bool UnusedCXXCondDecl = VD->isCXXCondDecl() && (iter->getSecond() == 1);
+    if (!UnusedCXXCondDecl)
+      return;
+  }
+
   unsigned DiagID = isa<ParmVarDecl>(VD) ? diag::warn_unused_but_set_parameter
                                          : diag::warn_unused_but_set_variable;
   DiagReceiver(VD->getLocation(), PDiag(DiagID) << VD);
