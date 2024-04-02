@@ -46,7 +46,8 @@ public:
       eBroadcastBitProgress = (1 << 0),
       eBroadcastBitWarning = (1 << 1),
       eBroadcastBitError = (1 << 2),
-      eBroadcastBitProgressCategory = (1 << 3),
+      // This needs to match the corresponding bit in Debugger.h
+      eBroadcastBitProgressCategory = (1 << 4),
   };
 
   SBDebugger();
