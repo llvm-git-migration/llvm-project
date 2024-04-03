@@ -1,4 +1,4 @@
-//===- RISCVOptWInstrs.cpp - MI W instruction optimizations ---------------===//
+//===- RISCVOptZba.cpp - MI Zba instruction optimizations -----------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -16,6 +16,8 @@
 // shift amounts.
 //
 // TODO: We can also support slli.uw by using shXadd.uw or the inner shXadd.
+//
+//===---------------------------------------------------------------------===//
 
 #include "RISCV.h"
 #include "RISCVSubtarget.h"
