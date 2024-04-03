@@ -662,3 +662,150 @@ define <3 x i32> @shufflevector_v3i32_zeroes(<3 x i32> %a, <3 x i32> %b) {
     %c = shufflevector <3 x i32> %a, <3 x i32> %b, <3 x i32> <i32 0, i32 0, i32 0>
     ret <3 x i32> %c
 }
+
+define <16 x i8> @shuffle_concat_1(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
+; CHECK-SD-LABEL: shuffle_concat_1:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    ldr s0, [x0]
+; CHECK-SD-NEXT:    ld1 { v0.s }[1], [x1]
+; CHECK-SD-NEXT:    ld1 { v0.s }[2], [x2]
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: shuffle_concat_1:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    ldr s0, [x0]
+; CHECK-GI-NEXT:    ldr s2, [x1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI40_0
+; CHECK-GI-NEXT:    ldr s1, [x2]
+; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
+; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI40_0]
+; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    ret
+    %a = load <4 x i8>, ptr %ptr1
+    %b = load <4 x i8>, ptr %ptr2
+    %c = load <4 x i8>, ptr %ptr3
+    %d = load <4 x i8>, ptr %ptr4
+    %e = shufflevector <4 x i8> %a, <4 x i8> %b, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 , i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %f = shufflevector <4 x i8> %c, <4 x i8> %d, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %g = shufflevector <16 x i8> %e, <16 x i8> %f, <16  x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 16, i32 17, i32 18, i32 19, i32 undef, i32 undef, i32 undef, i32 undef>
+    ret <16 x i8> %g
+}
+
+define <16 x i8> @shuffle_concat_2(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
+; CHECK-SD-LABEL: shuffle_concat_2:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    ldr s0, [x0]
+; CHECK-SD-NEXT:    ld1 { v0.s }[1], [x1]
+; CHECK-SD-NEXT:    ld1 { v0.s }[2], [x2]
+; CHECK-SD-NEXT:    ld1 { v0.s }[3], [x3]
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: shuffle_concat_2:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    ldr s0, [x0]
+; CHECK-GI-NEXT:    ldr s2, [x1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI41_1
+; CHECK-GI-NEXT:    ldr s1, [x2]
+; CHECK-GI-NEXT:    ldr s4, [x3]
+; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
+; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI41_1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI41_0
+; CHECK-GI-NEXT:    tbl v3.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    ldr q0, [x8, :lo12:.LCPI41_0]
+; CHECK-GI-NEXT:    tbl v0.16b, { v3.16b, v4.16b }, v0.16b
+; CHECK-GI-NEXT:    ret
+    %a = load <4 x i8>, ptr %ptr1
+    %b = load <4 x i8>, ptr %ptr2
+    %c = load <4 x i8>, ptr %ptr3
+    %d = load <4 x i8>, ptr %ptr4
+    %v = shufflevector <4 x i8> %a, <4 x i8> %b, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison>
+    %w = shufflevector <4 x i8> %c, <4 x i8> poison, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison>
+    %x = shufflevector <16 x i8> %v, <16 x i8> %w, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 16, i32 17, i32 18, i32 19, i32 poison, i32 poison, i32 poison, i32 poison>
+    %y = shufflevector <4 x i8> %d, <4 x i8> poison, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison>
+    %z = shufflevector <16 x i8> %x, <16 x i8> %y, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 16, i32 17, i32 18, i32 19>
+
+    ret <16 x i8> %z
+}
+
+define <16 x i8> @shuffle_concat_3(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
+; CHECK-SD-LABEL: shuffle_concat_3:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    ldr s0, [x0]
+; CHECK-SD-NEXT:    ld1 { v0.s }[1], [x1]
+; CHECK-SD-NEXT:    ld1 { v0.s }[2], [x2]
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: shuffle_concat_3:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    ldr s0, [x0]
+; CHECK-GI-NEXT:    ldr s2, [x1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI42_0
+; CHECK-GI-NEXT:    ldr s1, [x2]
+; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
+; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI42_0]
+; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    ret
+    %a = load <4 x i8>, ptr %ptr1
+    %b = load <4 x i8>, ptr %ptr2
+    %c = load <4 x i8>, ptr %ptr3
+    %d = load <4 x i8>, ptr %ptr4
+    %e = shufflevector <4 x i8> %a, <4 x i8> %b, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 , i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %f = shufflevector <4 x i8> %c, <4 x i8> %d, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %g = shufflevector <16 x i8> %e, <16 x i8> %f, <16  x i32> <i32 0, i32 undef, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 16, i32 17, i32 18, i32 19, i32 undef, i32 undef, i32 undef, i32 undef>
+    ret <16 x i8> %g
+}
+
+define <16 x i8> @shuffle_concat_4(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
+; CHECK-SD-LABEL: shuffle_concat_4:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    ldr s0, [x0]
+; CHECK-SD-NEXT:    ld1 { v0.s }[2], [x2]
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: shuffle_concat_4:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    ldr s0, [x0]
+; CHECK-GI-NEXT:    ldr s2, [x1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI43_0
+; CHECK-GI-NEXT:    ldr s1, [x2]
+; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
+; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI43_0]
+; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    ret
+    %a = load <4 x i8>, ptr %ptr1
+    %b = load <4 x i8>, ptr %ptr2
+    %c = load <4 x i8>, ptr %ptr3
+    %d = load <4 x i8>, ptr %ptr4
+    %e = shufflevector <4 x i8> %a, <4 x i8> %b, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 , i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %f = shufflevector <4 x i8> %c, <4 x i8> %d, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %g = shufflevector <16 x i8> %e, <16 x i8> %f, <16  x i32> <i32 0, i32 1, i32 2, i32 3, i32 undef, i32 undef, i32 undef, i32 undef, i32 16, i32 17, i32 18, i32 19, i32 undef, i32 undef, i32 undef, i32 undef>
+    ret <16 x i8> %g
+}
+
+define <16 x i8> @shuffle_concat_5(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
+; CHECK-SD-LABEL: shuffle_concat_5:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    ldr s0, [x0]
+; CHECK-SD-NEXT:    ld1 { v0.s }[1], [x1]
+; CHECK-SD-NEXT:    ld1 { v0.s }[2], [x2]
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: shuffle_concat_5:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    ldr s0, [x0]
+; CHECK-GI-NEXT:    ldr s2, [x1]
+; CHECK-GI-NEXT:    adrp x8, .LCPI44_0
+; CHECK-GI-NEXT:    ldr s1, [x2]
+; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
+; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI44_0]
+; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    ret
+    %a = load <4 x i8>, ptr %ptr1
+    %b = load <4 x i8>, ptr %ptr2
+    %c = load <4 x i8>, ptr %ptr3
+    %d = load <4 x i8>, ptr %ptr4
+    %e = shufflevector <4 x i8> %a, <4 x i8> %b, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 , i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %f = shufflevector <4 x i8> %c, <4 x i8> %d, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
+    %g = shufflevector <16 x i8> %e, <16 x i8> %f, <16  x i32> <i32 undef, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 16, i32 17, i32 18, i32 19, i32 undef, i32 undef, i32 undef, i32 undef>
+    ret <16 x i8> %g
+}
