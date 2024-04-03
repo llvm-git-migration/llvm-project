@@ -177,11 +177,9 @@ define i1 @extract_value_uadd(i8 %xx, i8 %yy) {
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[X_LEMMA]])
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[Y_LEMMA]])
 ; CHECK-NEXT:    [[ADD_UOV:%.*]] = call { i8, i1 } @llvm.uadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
-; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 0
 ; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw i8 %xx, 1
   %y = add nuw i8 %yy, 1
@@ -237,11 +235,9 @@ define i1 @extract_value_sadd(i8 %xx, i8 %yy) {
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[X_LEMMA]])
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[Y_LEMMA]])
 ; CHECK-NEXT:    [[ADD_SOV:%.*]] = call { i8, i1 } @llvm.sadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
-; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 0
 ; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw i8 %xx, 1
   %y = add nuw i8 %yy, 1
@@ -289,8 +285,7 @@ define i1 @extract_value_usub(i8 %x, i8 %zz) {
 ; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[SUB_UOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %z = add nuw i8 %zz, 1
   %y = add i8 %x, %z
@@ -334,8 +329,7 @@ define i1 @extract_value_ssub(i8 %x, i8 %zz) {
 ; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[SUB_SOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %z = add nuw i8 %zz, 1
   %y = add i8 %x, %z
@@ -377,8 +371,7 @@ define i1 @extract_value_umul(i8 %xx, i8 %yy) {
 ; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[MUL_UOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = or i8 %xx, 1
   %y = add nuw i8 %yy, 1
@@ -425,8 +418,7 @@ define i1 @extract_value_smul(i8 %xx, i8 %yy) {
 ; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[MUL_SOV]], 1
 ; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = or i8 %xx, 1
   %y = add nuw i8 %yy, 1

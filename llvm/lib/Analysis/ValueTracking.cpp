@@ -2791,6 +2791,35 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
     // handled in isKnownNonZero.
     return false;
   }
+  case Instruction::ExtractValue:
+    if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(I->getOperand(0))) {
+      const ExtractValueInst *EVI = cast<ExtractValueInst>(I);
+      if (EVI->getNumIndices() != 1 || EVI->getIndices()[0] != 0)
+        break;
+      switch (II->getIntrinsicID()) {
+      default:
+        break;
+      case Intrinsic::uadd_with_overflow:
+      case Intrinsic::sadd_with_overflow:
+        return isNonZeroAdd(APInt::getAllOnes(DemandedElts.getBitWidth()),
+                            Depth, Q, BitWidth, II->getArgOperand(0),
+                            II->getArgOperand(1),
+                            /*NSW=*/false,
+                            /*NUW=*/false);
+      case Intrinsic::usub_with_overflow:
+      case Intrinsic::ssub_with_overflow:
+        return isNonZeroSub(APInt::getAllOnes(DemandedElts.getBitWidth()),
+                            Depth, Q, BitWidth, II->getArgOperand(0),
+                            II->getArgOperand(1));
+      case Intrinsic::umul_with_overflow:
+      case Intrinsic::smul_with_overflow:
+        return isNonZeroMul(APInt::getAllOnes(DemandedElts.getBitWidth()),
+                            Depth, Q, BitWidth, II->getArgOperand(0),
+                            II->getArgOperand(1), /*NSW=*/false, /*NUW=*/false);
+        break;
+      }
+    }
+    break;
   case Instruction::Call:
   case Instruction::Invoke: {
     const auto *Call = cast<CallBase>(I);
