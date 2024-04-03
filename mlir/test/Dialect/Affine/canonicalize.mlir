@@ -1452,3 +1452,19 @@ func.func @mod_of_mod(%lb: index, %ub: index, %step: index) -> (index, index) {
   %1 = affine.apply affine_map<()[s0, s1, s2] -> ((s0 - ((s0 - s2) mod s1) - s2) mod s1)> ()[%ub, %step, %lb]
   return %0, %1 : index, index
 }
+
+// -----
+
+func.func @outer_unit_delinearize(%arg0 : index, %arg1 : index, %arg2 : index) -> (index, index, index, index, index) {
+  %c1 = arith.constant 1 : index
+  %0:5 = affine.delinearize_index %arg0 into (%c1, %c1, %arg1, %c1, %arg2) : index, index, index, index, index
+  return %0#0, %0#1, %0#2, %0#3, %0#4 : index, index, index, index, index
+}
+//     CHECK: func @outer_unit_delinearize
+// CHECK-SAME:     %[[ARG0:[a-zA-Z0-9]+]]: index
+// CHECK-SAME:     %[[ARG1:[a-zA-Z0-9]+]]: index
+// CHECK-SAME:     %[[ARG2:[a-zA-Z0-9]+]]: index
+//  CHECK-DAG:   %[[C1:.+]] = arith.constant 1 : index
+//  CHECK-DAG:   %[[C0:.+]] = arith.constant 0 : index
+//      CHECK:   %[[RESULT:.+]]:3 = affine.delinearize_index %[[ARG0]] into (%[[ARG1]], %[[C1]], %[[ARG2]])
+//      CHECK:   return %[[C0]], %[[C0]], %[[RESULT]]#0, %[[RESULT]]#1, %[[RESULT]]#2
