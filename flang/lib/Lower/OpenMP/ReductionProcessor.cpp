@@ -13,6 +13,8 @@
 #include "ReductionProcessor.h"
 
 #include "flang/Lower/AbstractConverter.h"
+#include "flang/Lower/ConvertType.h"
+#include "flang/Optimizer/Builder/Complex.h"
 #include "flang/Optimizer/Builder/Todo.h"
 #include "flang/Optimizer/HLFIR/HLFIROps.h"
 #include "flang/Parser/tools.h"
@@ -75,17 +77,30 @@ bool ReductionProcessor::supportedIntrinsicProcReduction(
   return redType;
 }
 
-std::string ReductionProcessor::getReductionName(llvm::StringRef name,
-                                                 mlir::Type ty) {
-  return (llvm::Twine(name) +
-          (ty.isIntOrIndex() ? llvm::Twine("_i_") : llvm::Twine("_f_")) +
-          llvm::Twine(ty.getIntOrFloatBitWidth()))
-      .str();
+std::string
+ReductionProcessor::getReductionName(llvm::StringRef name, mlir::Type ty,
+                                     const fir::KindMapping &kindMap) {
+  unsigned bits = 0;
+  const char *letters;
+  if (auto cplxTy = mlir::dyn_cast<fir::ComplexType>(ty)) {
+    bits = kindMap.getRealBitsize(cplxTy.getFKind());
+    letters = "_c_";
+  } else if (auto cplxTy = mlir::dyn_cast<mlir::ComplexType>(ty)) {
+    // FIXME: Do we need this?
+    auto floatTy = cplxTy.getElementType().cast<mlir::FloatType>();
+    bits = floatTy.getWidth();
+    letters = "_c_";
+  } else {
+    bits = ty.getIntOrFloatBitWidth();
+    letters = ty.isIntOrIndex() ? "_i_" : "_f_";
+  }
+
+  return (llvm::Twine(name) + llvm::Twine(letters) + llvm::Twine(bits)).str();
 }
 
 std::string ReductionProcessor::getReductionName(
     Fortran::parser::DefinedOperator::IntrinsicOperator intrinsicOp,
-    mlir::Type ty) {
+    mlir::Type ty, const fir::KindMapping &kindMap) {
   std::string reductionName;
 
   switch (intrinsicOp) {
@@ -108,16 +123,17 @@ std::string ReductionProcessor::getReductionName(
     break;
   }
 
-  return getReductionName(reductionName, ty);
+  return getReductionName(reductionName, ty, kindMap);
 }
 
 mlir::Value
 ReductionProcessor::getReductionInitValue(mlir::Location loc, mlir::Type type,
                                           ReductionIdentifier redId,
                                           fir::FirOpBuilder &builder) {
-  assert((fir::isa_integer(type) || fir::isa_real(type) ||
-          type.isa<fir::LogicalType>()) &&
-         "only integer, logical and real types are currently supported");
+  assert(
+      (fir::isa_integer(type) || fir::isa_real(type) ||
+       fir::isa_complex(type) || type.isa<fir::LogicalType>()) &&
+      "only integer, logical, complex and real types are currently supported");
   switch (redId) {
   case ReductionIdentifier::MAX: {
     if (auto ty = type.dyn_cast<mlir::FloatType>()) {
@@ -160,6 +176,17 @@ ReductionProcessor::getReductionInitValue(mlir::Location loc, mlir::Type type,
   case ReductionIdentifier::OR:
   case ReductionIdentifier::EQV:
   case ReductionIdentifier::NEQV:
+    if (auto cplxTy = mlir::dyn_cast<fir::ComplexType>(type)) {
+      mlir::Type realTy =
+          Fortran::lower::convertReal(builder.getContext(), cplxTy.getFKind());
+      //      mlir::FloatType realTy =
+      //      mlir::dyn_cast<mlir::FloatType>(cplxTy.getElementType());
+      //      const llvm::fltSemantics &sem = (realTy).getFloatSemantics();
+      mlir::Value init = builder.createRealConstant(
+          loc, realTy, getOperationIdentity(redId, loc));
+      return fir::factory::Complex{builder, loc}.createComplex(type, init,
+                                                               init);
+    }
     if (type.isa<mlir::FloatType>())
       return builder.create<mlir::arith::ConstantOp>(
           loc, type,
@@ -213,13 +240,13 @@ mlir::Value ReductionProcessor::createScalarCombiner(
     break;
   case ReductionIdentifier::ADD:
     reductionOp =
-        getReductionOperation<mlir::arith::AddFOp, mlir::arith::AddIOp>(
-            builder, type, loc, op1, op2);
+        getReductionOperation<mlir::arith::AddFOp, mlir::arith::AddIOp,
+                              fir::AddcOp>(builder, type, loc, op1, op2);
     break;
   case ReductionIdentifier::MULTIPLY:
     reductionOp =
-        getReductionOperation<mlir::arith::MulFOp, mlir::arith::MulIOp>(
-            builder, type, loc, op1, op2);
+        getReductionOperation<mlir::arith::MulFOp, mlir::arith::MulIOp,
+                              fir::MulcOp>(builder, type, loc, op1, op2);
     break;
   case ReductionIdentifier::AND: {
     mlir::Value op1I1 = builder.createConvert(loc, builder.getI1Type(), op1);
@@ -349,12 +376,15 @@ void ReductionProcessor::addReductionDecl(
           if (redType.isa<fir::LogicalType>())
             decl = createReductionDecl(
                 firOpBuilder,
-                getReductionName(intrinsicOp, firOpBuilder.getI1Type()), redId,
-                redType, currentLocation);
-          else if (redType.isIntOrIndexOrFloat()) {
-            decl = createReductionDecl(firOpBuilder,
-                                       getReductionName(intrinsicOp, redType),
-                                       redId, redType, currentLocation);
+                getReductionName(intrinsicOp, firOpBuilder.getI1Type(),
+                                 firOpBuilder.getKindMap()),
+                redId, redType, currentLocation);
+          else if (redType.isIntOrIndexOrFloat() || fir::isa_complex(redType)) {
+            decl =
+                createReductionDecl(firOpBuilder,
+                                    getReductionName(intrinsicOp, redType,
+                                                     firOpBuilder.getKindMap()),
+                                    redId, redType, currentLocation);
           } else {
             TODO(currentLocation, "Reduction of some types is not supported");
           }
@@ -387,7 +417,7 @@ void ReductionProcessor::addReductionDecl(
             decl = createReductionDecl(
                 firOpBuilder,
                 getReductionName(getRealName(*reductionIntrinsic).ToString(),
-                                 redType),
+                                 redType, firOpBuilder.getKindMap()),
                 redId, redType, currentLocation);
             reductionDeclSymbols.push_back(mlir::SymbolRefAttr::get(
                 firOpBuilder.getContext(), decl.getSymName()));

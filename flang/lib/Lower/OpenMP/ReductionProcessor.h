@@ -71,11 +71,12 @@ public:
   static const Fortran::semantics::SourceName
   getRealName(const Fortran::parser::ProcedureDesignator &pd);
 
-  static std::string getReductionName(llvm::StringRef name, mlir::Type ty);
+  static std::string getReductionName(llvm::StringRef name, mlir::Type ty,
+                                      const fir::KindMapping &kindMap);
 
   static std::string getReductionName(
       Fortran::parser::DefinedOperator::IntrinsicOperator intrinsicOp,
-      mlir::Type ty);
+      mlir::Type ty, const fir::KindMapping &kindMap);
 
   /// This function returns the identity value of the operator \p
   /// reductionOpName. For example:
@@ -89,6 +90,10 @@ public:
                                            fir::FirOpBuilder &builder);
 
   template <typename FloatOp, typename IntegerOp>
+  static mlir::Value getReductionOperation(fir::FirOpBuilder &builder,
+                                           mlir::Type type, mlir::Location loc,
+                                           mlir::Value op1, mlir::Value op2);
+  template <typename FloatOp, typename IntegerOp, typename ComplexOp>
   static mlir::Value getReductionOperation(fir::FirOpBuilder &builder,
                                            mlir::Type type, mlir::Location loc,
                                            mlir::Value op1, mlir::Value op2);
@@ -125,10 +130,25 @@ ReductionProcessor::getReductionOperation(fir::FirOpBuilder &builder,
                                           mlir::Type type, mlir::Location loc,
                                           mlir::Value op1, mlir::Value op2) {
   assert(type.isIntOrIndexOrFloat() &&
-         "only integer and float types are currently supported");
+         "only integer, float and complex types are currently supported");
   if (type.isIntOrIndex())
     return builder.create<IntegerOp>(loc, op1, op2);
   return builder.create<FloatOp>(loc, op1, op2);
+}
+
+template <typename FloatOp, typename IntegerOp, typename ComplexOp>
+mlir::Value
+ReductionProcessor::getReductionOperation(fir::FirOpBuilder &builder,
+                                          mlir::Type type, mlir::Location loc,
+                                          mlir::Value op1, mlir::Value op2) {
+  assert(type.isIntOrIndexOrFloat() ||
+         fir::isa_complex(type) &&
+             "only integer, float and complex types are currently supported");
+  if (type.isIntOrIndex())
+    return builder.create<IntegerOp>(loc, op1, op2);
+  if (fir::isa_real(type))
+    return builder.create<FloatOp>(loc, op1, op2);
+  return builder.create<ComplexOp>(loc, op1, op2);
 }
 
 } // namespace omp
