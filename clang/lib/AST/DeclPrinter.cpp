@@ -118,7 +118,7 @@ namespace {
                                 const TemplateParameterList *Params);
     void printTemplateArguments(llvm::ArrayRef<TemplateArgumentLoc> Args,
                                 const TemplateParameterList *Params);
-    enum class AttrPosAsWritten { Default = 0, Left, Right };
+    enum class AttrPosAsWritten { Unknown = 0, Default, Left, Right };
     void
     prettyPrintAttributes(const Decl *D,
                           AttrPosAsWritten Pos = AttrPosAsWritten::Default);
@@ -244,7 +244,7 @@ static DeclPrinter::AttrPosAsWritten getPosAsWritten(const Attr *A,
   SourceLocation DLoc = D->getLocation();
   const ASTContext &C = D->getASTContext();
   if (ALoc.isInvalid() || DLoc.isInvalid())
-    return DeclPrinter::AttrPosAsWritten::Default;
+    return DeclPrinter::AttrPosAsWritten::Unknown;
 
   if (C.getSourceManager().isBeforeInTranslationUnit(ALoc, DLoc))
     return DeclPrinter::AttrPosAsWritten::Left;
@@ -268,7 +268,9 @@ void DeclPrinter::prettyPrintAttributes(const Decl *D,
 #include "clang/Basic/AttrList.inc"
         break;
       default:
-        if (Pos == AttrPosAsWritten::Default || Pos == getPosAsWritten(A, D)) {
+        AttrPosAsWritten APos = getPosAsWritten(A, D);
+        assert(APos != AttrPosAsWritten::Unknown && "Implicit attribute!");
+        if (Pos == AttrPosAsWritten::Default || Pos == APos) {
           if (Pos != AttrPosAsWritten::Left)
             Out << " ";
           A->printPretty(Out, Policy);
