@@ -2791,6 +2791,32 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
     // handled in isKnownNonZero.
     return false;
   }
+  case Instruction::ExtractValue: {
+    const WithOverflowInst *WO;
+    if (match(I, m_ExtractValue<0>(m_WithOverflowInst(WO)))) {
+      switch (WO->getIntrinsicID()) {
+      default:
+        break;
+      case Intrinsic::uadd_with_overflow:
+      case Intrinsic::sadd_with_overflow:
+        return isNonZeroAdd(DemandedElts, Depth, Q, BitWidth,
+                            WO->getArgOperand(0), WO->getArgOperand(1),
+                            /*NSW=*/false,
+                            /*NUW=*/false);
+      case Intrinsic::usub_with_overflow:
+      case Intrinsic::ssub_with_overflow:
+        return isNonZeroSub(DemandedElts, Depth, Q, BitWidth,
+                            WO->getArgOperand(0), WO->getArgOperand(1));
+      case Intrinsic::umul_with_overflow:
+      case Intrinsic::smul_with_overflow:
+        return isNonZeroMul(DemandedElts, Depth, Q, BitWidth,
+                            WO->getArgOperand(0), WO->getArgOperand(1),
+                            /*NSW=*/false, /*NUW=*/false);
+        break;
+      }
+    }
+    break;
+  }
   case Instruction::Call:
   case Instruction::Invoke: {
     const auto *Call = cast<CallBase>(I);
