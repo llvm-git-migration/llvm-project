@@ -674,12 +674,10 @@ define <16 x i8> @shuffle_concat_1(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
 ; CHECK-GI-LABEL: shuffle_concat_1:
 ; CHECK-GI:       // %bb.0:
 ; CHECK-GI-NEXT:    ldr s0, [x0]
-; CHECK-GI-NEXT:    ldr s2, [x1]
-; CHECK-GI-NEXT:    adrp x8, .LCPI40_0
+; CHECK-GI-NEXT:    ldr s1, [x1]
+; CHECK-GI-NEXT:    mov v0.s[1], v1.s[0]
 ; CHECK-GI-NEXT:    ldr s1, [x2]
-; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI40_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    mov v0.s[2], v1.s[0]
 ; CHECK-GI-NEXT:    ret
     %a = load <4 x i8>, ptr %ptr1
     %b = load <4 x i8>, ptr %ptr2
@@ -703,16 +701,12 @@ define <16 x i8> @shuffle_concat_2(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
 ; CHECK-GI-LABEL: shuffle_concat_2:
 ; CHECK-GI:       // %bb.0:
 ; CHECK-GI-NEXT:    ldr s0, [x0]
-; CHECK-GI-NEXT:    ldr s2, [x1]
-; CHECK-GI-NEXT:    adrp x8, .LCPI41_1
+; CHECK-GI-NEXT:    ldr s1, [x1]
+; CHECK-GI-NEXT:    mov v0.s[1], v1.s[0]
 ; CHECK-GI-NEXT:    ldr s1, [x2]
-; CHECK-GI-NEXT:    ldr s4, [x3]
-; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI41_1]
-; CHECK-GI-NEXT:    adrp x8, .LCPI41_0
-; CHECK-GI-NEXT:    tbl v3.16b, { v0.16b, v1.16b }, v2.16b
-; CHECK-GI-NEXT:    ldr q0, [x8, :lo12:.LCPI41_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v3.16b, v4.16b }, v0.16b
+; CHECK-GI-NEXT:    mov v0.s[2], v1.s[0]
+; CHECK-GI-NEXT:    ldr s1, [x3]
+; CHECK-GI-NEXT:    mov v0.s[3], v1.s[0]
 ; CHECK-GI-NEXT:    ret
     %a = load <4 x i8>, ptr %ptr1
     %b = load <4 x i8>, ptr %ptr2
@@ -765,12 +759,8 @@ define <16 x i8> @shuffle_concat_4(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %ptr4) {
 ; CHECK-GI-LABEL: shuffle_concat_4:
 ; CHECK-GI:       // %bb.0:
 ; CHECK-GI-NEXT:    ldr s0, [x0]
-; CHECK-GI-NEXT:    ldr s2, [x1]
-; CHECK-GI-NEXT:    adrp x8, .LCPI43_0
 ; CHECK-GI-NEXT:    ldr s1, [x2]
-; CHECK-GI-NEXT:    mov v0.s[1], v2.s[0]
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI43_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
+; CHECK-GI-NEXT:    mov v0.s[2], v1.s[0]
 ; CHECK-GI-NEXT:    ret
     %a = load <4 x i8>, ptr %ptr1
     %b = load <4 x i8>, ptr %ptr2
