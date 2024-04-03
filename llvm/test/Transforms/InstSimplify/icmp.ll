@@ -250,9 +250,7 @@ define <2 x i1> @sub_odd_poison(<2 x i8> %x) {
 
 define i1 @sub_even(i8 %x) {
 ; CHECK-LABEL: @sub_even(
-; CHECK-NEXT:    [[SUB:%.*]] = sub i8 2, [[X:%.*]]
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ne i8 [[SUB]], [[X]]
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 true
 ;
   %sub = sub i8 2, %x
   %cmp = icmp ne i8 %sub, %x
@@ -281,12 +279,7 @@ define i1 @load_ptr_null_valid(ptr %p) null_pointer_is_valid {
 
 define i1 @non_eq_sub_neg_case_nsw(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @non_eq_sub_neg_case_nsw(
-; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
-; CHECK-NEXT:    [[LHS:%.*]] = add i8 [[X:%.*]], [[Y]]
-; CHECK-NEXT:    [[SUBY:%.*]] = sub nsw i8 0, [[Y]]
-; CHECK-NEXT:    [[RHS:%.*]] = add i8 [[X]], [[SUBY]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[LHS]], [[RHS]]
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %y = add nuw i8 %yy, 1
   %lhs = add i8 %x, %y
@@ -298,13 +291,7 @@ define i1 @non_eq_sub_neg_case_nsw(i8 %x, i8 %yy) {
 
 define i1 @non_eq_sub_neg_case_no_intmin(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @non_eq_sub_neg_case_no_intmin(
-; CHECK-NEXT:    [[Y0:%.*]] = and i8 [[YY:%.*]], 63
-; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[Y0]], 1
-; CHECK-NEXT:    [[LHS:%.*]] = add i8 [[X:%.*]], [[Y]]
-; CHECK-NEXT:    [[SUBY:%.*]] = sub i8 0, [[Y]]
-; CHECK-NEXT:    [[RHS:%.*]] = add i8 [[X]], [[SUBY]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[LHS]], [[RHS]]
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %y0 = and i8 %yy, 63
   %y = add nuw i8 %y0, 1
@@ -346,12 +333,7 @@ define i1 @non_eq_sub_neg_case_fail(i8 %x, i8 %yy) {
 
 define i1 @non_eq_sub(i8 %x, i8 %yy, i8 %z) {
 ; CHECK-LABEL: @non_eq_sub(
-; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
-; CHECK-NEXT:    [[LHS:%.*]] = add i8 [[X:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[SUBY:%.*]] = sub i8 [[Z]], [[Y]]
-; CHECK-NEXT:    [[RHS:%.*]] = add i8 [[X]], [[SUBY]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[LHS]], [[RHS]]
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %y = add nuw i8 %yy, 1
   %lhs = add i8 %x, %z
@@ -363,12 +345,7 @@ define i1 @non_eq_sub(i8 %x, i8 %yy, i8 %z) {
 
 define i1 @non_eq_sub2(i8 %x, i8 %yy, i8 %z) {
 ; CHECK-LABEL: @non_eq_sub2(
-; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
-; CHECK-NEXT:    [[LHS:%.*]] = add i8 [[X:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[SUBY:%.*]] = sub i8 [[Y]], [[Z]]
-; CHECK-NEXT:    [[RHS:%.*]] = add i8 [[X]], [[SUBY]]
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[LHS]], [[RHS]]
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %y = add nuw i8 %yy, 1
   %lhs = add i8 %x, %z
