@@ -18187,7 +18187,7 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
     Value *Op0 = EmitScalarExpr(E->getArg(0));
     return Builder.CreateIntrinsic(
         /*ReturnType=*/llvm::Type::getInt1Ty(getLLVMContext()),
-        CGHLSLUtils::get_hlsl_all_intrinsic(
+        HLSLUtils::get_hlsl_all_intrinsic(
             CGM.getTarget().getTriple().getArch()),
         ArrayRef<Value *>{Op0}, nullptr, "hlsl.all");
   }
