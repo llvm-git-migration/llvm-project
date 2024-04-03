@@ -158,12 +158,12 @@ static bool isLeakCheckerRoot(GlobalVariable *GV) {
 /// Given a value that is stored to a global but never read, determine whether
 /// it's safe to remove the store and the chain of computation that feeds the
 /// store.
-static bool IsSafeComputationToRemove(
+static bool isSafeComputationToRemove(
     Value *V, function_ref<TargetLibraryInfo &(Function &)> GetTLI) {
   do {
     if (isa<Constant>(V))
       return true;
-    if (!V->hasOneUse())
+    if (V->getNumUses() > 0)
       return false;
     if (isa<LoadInst>(V) || isa<InvokeInst>(V) || isa<Argument>(V) ||
         isa<GlobalValue>(V))
@@ -185,11 +185,21 @@ static bool IsSafeComputationToRemove(
   } while (true);
 }
 
-/// This GV is a pointer root.  Loop over all users of the global and clean up
-/// any that obviously don't assign the global a value that isn't dynamically
-/// allocated.
+/**
+ * Cleans up pointer root users of a global variable.
+ *
+ * This function iterates over all users of the global variable and collects
+ * all stores and memtransfer instructions. It then erases all writes and
+ * removes computation chains if they are safe to remove. Finally, it removes
+ * dead constant users of the global variable.
+ *
+ * @param GV The global variable to clean up.
+ * @param GetTLI A function reference to obtain the TargetLibraryInfo for a
+ * given function.
+ * @return True if any changes were made, false otherwise.
+ */
 static bool
-CleanupPointerRootUsers(GlobalVariable *GV,
+cleanupPointerRootUsers(GlobalVariable *GV,
                         function_ref<TargetLibraryInfo &(Function &)> GetTLI) {
   // A brief explanation of leak checkers.  The goal is to find bugs where
   // pointers are forgotten, causing an accumulating growth in memory
@@ -202,60 +212,51 @@ CleanupPointerRootUsers(GlobalVariable *GV,
 
   bool Changed = false;
 
-  // If Dead[n].first is the only use of a malloc result, we can delete its
-  // chain of computation and the store to the global in Dead[n].second.
-  SmallVector<std::pair<Instruction *, Instruction *>, 32> Dead;
+  auto RemoveComputationChain = [&GetTLI](Instruction *I) {
+    do {
+      if (isAllocationFn(I, GetTLI))
+        break;
+      Instruction *J = dyn_cast<Instruction>(I->getOperand(0));
+      I->eraseFromParent();
+      if (!J)
+        return;
+      I = J;
+    } while (true);
+    I->eraseFromParent();
+  };
 
+  // Iterate over all users of the global and collect all
+  // stores, memtransfer and memset instructions.
+  SmallVector<std::pair<Instruction *, Value *>> Writes;
   SmallVector<User *> Worklist(GV->users());
-  // Constants can't be pointers to dynamically allocated memory.
   while (!Worklist.empty()) {
     User *U = Worklist.pop_back_val();
-    if (StoreInst *SI = dyn_cast<StoreInst>(U)) {
-      Value *V = SI->getValueOperand();
-      if (isa<Constant>(V)) {
-        Changed = true;
-        SI->eraseFromParent();
-      } else if (Instruction *I = dyn_cast<Instruction>(V)) {
-        if (I->hasOneUse())
-          Dead.push_back(std::make_pair(I, SI));
-      }
-    } else if (MemSetInst *MSI = dyn_cast<MemSetInst>(U)) {
-      if (isa<Constant>(MSI->getValue())) {
-        Changed = true;
-        MSI->eraseFromParent();
-      } else if (Instruction *I = dyn_cast<Instruction>(MSI->getValue())) {
-        if (I->hasOneUse())
-          Dead.push_back(std::make_pair(I, MSI));
-      }
-    } else if (MemTransferInst *MTI = dyn_cast<MemTransferInst>(U)) {
-      GlobalVariable *MemSrc = dyn_cast<GlobalVariable>(MTI->getSource());
-      if (MemSrc && MemSrc->isConstant()) {
-        Changed = true;
-        MTI->eraseFromParent();
-      } else if (Instruction *I = dyn_cast<Instruction>(MTI->getSource())) {
-        if (I->hasOneUse())
-          Dead.push_back(std::make_pair(I, MTI));
-      }
-    } else if (ConstantExpr *CE = dyn_cast<ConstantExpr>(U)) {
-      if (isa<GEPOperator>(CE))
+    if (auto *SI = dyn_cast<StoreInst>(U)) {
+      Writes.push_back({SI, SI->getValueOperand()});
+    } else if (auto *CE = dyn_cast<ConstantExpr>(U)) {
+      if (isa<GEPOperator>(CE)) {
         append_range(Worklist, CE->users());
+      }
+    } else if (auto *MTI = dyn_cast<MemTransferInst>(U)) {
+      if (MTI->getRawDest() == GV) {
+        Writes.push_back({MTI, MTI->getSource()});
+      }
+    } else if (auto *MSI = dyn_cast<MemSetInst>(U)) {
+      if (MSI->getRawDest() == GV) {
+        Writes.push_back({MSI, MSI->getValue()});
+      }
     }
   }
 
-  for (int i = 0, e = Dead.size(); i != e; ++i) {
-    if (IsSafeComputationToRemove(Dead[i].first, GetTLI)) {
-      Dead[i].second->eraseFromParent();
-      Instruction *I = Dead[i].first;
-      do {
-        if (isAllocationFn(I, GetTLI))
-          break;
-        Instruction *J = dyn_cast<Instruction>(I->getOperand(0));
-        if (!J)
-          break;
-        I->eraseFromParent();
-        I = J;
-      } while (true);
-      I->eraseFromParent();
+  // Finally, erase all writes and remove computation chains if they are safe
+  // to remove.
+  for (auto [WriteInst, V] : Writes) {
+    if (isa<Constant>(V) || isa<Instruction>(V))
+      WriteInst->eraseFromParent();
+
+    if (auto *Inst = dyn_cast<Instruction>(V)) {
+      if (isSafeComputationToRemove(V, GetTLI))
+        RemoveComputationChain(Inst);
       Changed = true;
     }
   }
@@ -870,7 +871,7 @@ static bool OptimizeAwayTrappingUsesOfLoads(
   // nor is the global.
   if (AllNonStoreUsesGone) {
     if (isLeakCheckerRoot(GV)) {
-      Changed |= CleanupPointerRootUsers(GV, GetTLI);
+      Changed |= cleanupPointerRootUsers(GV, GetTLI);
     } else {
       Changed = true;
       CleanupConstantGlobalUsers(GV, DL);
@@ -1496,7 +1497,7 @@ processInternalGlobal(GlobalVariable *GV, const GlobalStatus &GS,
 
     if (isLeakCheckerRoot(GV)) {
       // Delete any constant stores to the global.
-      Changed = CleanupPointerRootUsers(GV, GetTLI);
+      Changed = cleanupPointerRootUsers(GV, GetTLI);
     } else {
       // Delete any stores we can find to the global.  We may not be able to
       // make it completely dead though.
