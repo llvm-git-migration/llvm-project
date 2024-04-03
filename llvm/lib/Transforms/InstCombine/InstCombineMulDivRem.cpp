@@ -626,6 +626,150 @@ Instruction *InstCombinerImpl::foldPowiReassoc(BinaryOperator &I) {
   return nullptr;
 }
 
+bool isFSqrtDivToFMulLegal(Instruction *X, SmallSetVector<Instruction *, 2> &R1,
+                           SmallSetVector<Instruction *, 2> &R2) {
+
+  BasicBlock *BBx = X->getParent();
+  BasicBlock *BBr1 = R1[0]->getParent();
+  BasicBlock *BBr2 = R2[0]->getParent();
+
+  auto IsStrictFP = [](Instruction *I) {
+    IntrinsicInst *II = dyn_cast<IntrinsicInst>(I);
+    if (II && II->isStrictFP())
+      return true;
+    return false;
+  };
+
+  // check if X and instructions in R1/R2 satisfy basic block constraints
+  auto BBConstraintsSatisfied = [BBx, BBr1, BBr2]() {
+    // div instruction and one of the multiplications must reside in the same
+    // block. If not, the optimized code may execute more ops than before and
+    // this may hamper the performance
+    if (!(BBx == BBr1 || BBx == BBr2))
+      return false;
+    return true;
+  };
+
+  // Check the constaints on instruction X
+  auto XConstraintsSatisfied = [X, &IsStrictFP]() {
+    // X must have 3 uses in R1/R2 inclusive and 1 more use if the replacement
+    // for X should not get dead code eliminated. If X has less than 4 uses, the
+    // changes to R1 and R2 are anyway done as part of other transforms.R1 and
+    // R2 must either be global or must have single local use.
+    if (!X->hasNUsesOrMore(4))
+      return false;
+    // check if reciprocalFP is enabled
+    bool RecipFPMath = dyn_cast<FPMathOperator>(X)->hasAllowReciprocal();
+    if (!RecipFPMath)
+      return false;
+    if (IsStrictFP(X))
+      return false;
+    return true;
+  };
+  if (!XConstraintsSatisfied())
+    return false;
+
+  // check the constraints on instructions in R1
+  auto R1ConstraintsSatisfied = [BBr1, &IsStrictFP](Instruction *I) {
+    // when you have multiple instructions residing in R1 and R2 respectively,
+    // its difficult to generate combination of (R1,R2) and then check if we
+    // have the required pattern. So, for now, just be conservative.
+    if (I->getParent() != BBr1)
+      return false;
+    if (!I->hasNUsesOrMore(1))
+      return false;
+    if (IsStrictFP(I))
+      return false;
+    // The optimization tries to convert
+    // R1 = div * div    where, div = 1/sqrt(a)
+    // to
+    // R1 = 1/a
+    // Now, this simplication does not work because sqrt(a)=NaN when a<0
+    if (!I->hasNoNaNs())
+      return false;
+    // sqrt(-0.0) = -0.0, and doing this simplication would change the sign of
+    // the result.
+    if (!I->hasNoSignedZeros())
+      return false;
+    return true;
+  };
+  if (!std::all_of(R1.begin(), R1.end(), R1ConstraintsSatisfied))
+    return false;
+
+  // check the constraints on instructions in R2
+  auto R2ConstraintsSatisfied = [BBr2, &IsStrictFP](Instruction *I) {
+    // when you have multiple instructions residing in R1 and R2 respectively,
+    // its
+    // difficult to generate combination of (R1,R2) and then check if we have
+    // the required pattern. So, for now, just be conservative.
+    if (I->getParent() != BBr2)
+      return false;
+    if (!I->hasNUsesOrMore(1))
+      return false;
+    if (IsStrictFP(I))
+      return false;
+    // This simplication changes
+    // R2 = a * 1/sqrt(a)
+    // to
+    // R2 = sqrt(a)
+    // Now, sqrt(-0.0) = -0.0 and doing this simplication would produce -0.0
+    // instead of NaN.
+    if (!I->hasNoSignedZeros())
+      return false;
+    return true;
+  };
+  if (!std::all_of(R2.begin(), R2.end(), R2ConstraintsSatisfied))
+    return false;
+
+  auto XR1R2ConstraintsSatisfied = [=]() {
+    const Function *F = X->getFunction();
+    bool UnsafeFPMath = F->getFnAttribute("unsafe-fp-math").getValueAsBool();
+    if (!UnsafeFPMath)
+      return false;
+    if (!BBConstraintsSatisfied())
+      return false;
+    return true;
+  };
+  if (!XR1R2ConstraintsSatisfied())
+    return false;
+
+  return true;
+}
+
+void getFSqrtDivOptPattern(Value *Div, SmallSetVector<Instruction *, 2> &R1,
+                           SmallSetVector<Instruction *, 2> &R2) {
+  Value *A;
+  if (match(Div, m_FDiv(m_FPOne(), m_Sqrt(m_Value(A))))) {
+    for (auto U : Div->users()) {
+
+      if (match(U, m_FMul(m_Specific(Div), m_Specific(Div)))) {
+        R1.insert(static_cast<Instruction *>(U));
+        continue;
+      }
+
+      Value *X;
+      if (match(U, m_FMul(m_Specific(Div), m_Value(X))) && X == A) {
+        R2.insert(static_cast<Instruction *>(U));
+        continue;
+      }
+
+      if (match(U, m_FMul(m_Value(X), m_Specific(Div))) && X == A) {
+        R2.insert(static_cast<Instruction *>(U));
+        continue;
+      }
+    }
+  }
+}
+
+bool delayFMulSqrtTransform(Value *Div) {
+  SmallSetVector<Instruction *, 2> R1, R2;
+  getFSqrtDivOptPattern(Div, R1, R2);
+  if (R1.size() && R2.size() &&
+      isFSqrtDivToFMulLegal(static_cast<Instruction *>(Div), R1, R2))
+    return true;
+  return false;
+}
+
 Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
   Value *Op0 = I.getOperand(0);
   Value *Op1 = I.getOperand(1);
@@ -705,11 +849,11 @@ Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
   // has the necessary (reassoc) fast-math-flags.
   if (I.hasNoSignedZeros() &&
       match(Op0, (m_FDiv(m_SpecificFP(1.0), m_Value(Y)))) &&
-      match(Y, m_Sqrt(m_Value(X))) && Op1 == X)
+      match(Y, m_Sqrt(m_Value(X))) && Op1 == X && !delayFMulSqrtTransform(Op0))
     return BinaryOperator::CreateFDivFMF(X, Y, &I);
   if (I.hasNoSignedZeros() &&
       match(Op1, (m_FDiv(m_SpecificFP(1.0), m_Value(Y)))) &&
-      match(Y, m_Sqrt(m_Value(X))) && Op0 == X)
+      match(Y, m_Sqrt(m_Value(X))) && Op0 == X && !delayFMulSqrtTransform(Op1))
     return BinaryOperator::CreateFDivFMF(X, Y, &I);
 
   // Like the similar transform in instsimplify, this requires 'nsz' because
@@ -717,7 +861,8 @@ Instruction *InstCombinerImpl::foldFMulReassoc(BinaryOperator &I) {
   if (I.hasNoNaNs() && I.hasNoSignedZeros() && Op0 == Op1 && Op0->hasNUses(2)) {
     // Peek through fdiv to find squaring of square root:
     // (X / sqrt(Y)) * (X / sqrt(Y)) --> (X * X) / Y
-    if (match(Op0, m_FDiv(m_Value(X), m_Sqrt(m_Value(Y))))) {
+    if (match(Op0, m_FDiv(m_Value(X), m_Sqrt(m_Value(Y)))) &&
+        !delayFMulSqrtTransform(Op0)) {
       Value *XX = Builder.CreateFMulFMF(X, X, &I);
       return BinaryOperator::CreateFDivFMF(XX, Y, &I);
     }
@@ -1796,6 +1941,30 @@ static Instruction *foldFDivSqrtDivisor(BinaryOperator &I,
   return BinaryOperator::CreateFMulFMF(Op0, NewSqrt, &I);
 }
 
+Value *convertFSqrtDivIntoFMul(CallInst *CI, Instruction *X,
+                               SmallSetVector<Instruction *, 2> &R1,
+                               SmallSetVector<Instruction *, 2> &R2,
+                               Value *SqrtOp, InstCombiner::BuilderTy &B) {
+
+  // 1. synthesize tmp1 = 1/a and replace uses of r1
+  B.SetInsertPoint(X);
+  Value *Tmp1 =
+      B.CreateFDivFMF(ConstantFP::get(R1[0]->getType(), 1.0), SqrtOp, R1[0]);
+  for (auto *I : R1)
+    I->replaceAllUsesWith(Tmp1);
+
+  // 2. No need of synthesizing Tmp2 again. In this scenario, tmp2 = CI. Replace
+  // uses of r2 with tmp2
+  for (auto *I : R2)
+    I->replaceAllUsesWith(CI);
+
+  // 3. synthesize tmp3  = tmp1 * tmp2 . Replace uses of 'x' with tmp3
+  B.SetInsertPoint(X->getNextNode());
+  Value *Tmp3 = B.CreateFMulFMF(Tmp1, CI, X);
+
+  return Tmp3;
+}
+
 Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
   Module *M = I.getModule();
 
@@ -1820,6 +1989,30 @@ Instruction *InstCombinerImpl::visitFDiv(BinaryOperator &I) {
     return R;
 
   Value *Op0 = I.getOperand(0), *Op1 = I.getOperand(1);
+
+  // Convert
+  // x = 1.0/sqrt(a)
+  // r1 = x * x;
+  // r2 = a * x;
+  //
+  // TO
+  //
+  // tmp1 = 1.0 / a
+  // tmp2 = sqrt (a)
+  // tmp3 = tmp1 * tmp2
+  // x = tmp3
+  // r1 = tmp1
+  // r2 = tmp2
+  SmallSetVector<Instruction *, 2> R1, R2;
+  getFSqrtDivOptPattern(&I, R1, R2);
+  if (R1.size() && R2.size() &&
+      isFSqrtDivToFMulLegal(static_cast<Instruction *>(&I), R1, R2)) {
+    CallInst *CI = static_cast<CallInst *>((&I)->getOperand(1));
+    Value *SqrtOp = CI->getArgOperand(0);
+    if (Value *D = convertFSqrtDivIntoFMul(CI, &I, R1, R2, SqrtOp, Builder))
+      return replaceInstUsesWith(I, D);
+  }
+
   if (isa<Constant>(Op0))
     if (SelectInst *SI = dyn_cast<SelectInst>(Op1))
       if (Instruction *R = FoldOpIntoSelect(I, SI))
