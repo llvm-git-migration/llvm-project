@@ -893,6 +893,7 @@ constexpr chrono::year                                  operator ""y(unsigned lo
 #include <__chrono/month_weekday.h>
 #include <__chrono/monthday.h>
 #include <__chrono/steady_clock.h>
+#include <__chrono/sys_info.h>
 #include <__chrono/system_clock.h>
 #include <__chrono/time_point.h>
 #include <__chrono/weekday.h>
@@ -918,7 +919,6 @@ constexpr chrono::year                                  operator ""y(unsigned lo
 #if !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM) &&                              \
     !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 #  include <__chrono/leap_second.h>
-#  include <__chrono/sys_info.h>
 #  include <__chrono/time_zone.h>
 #  include <__chrono/time_zone_link.h>
 #  include <__chrono/tzdb.h>

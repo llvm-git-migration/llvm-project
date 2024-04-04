@@ -17,7 +17,7 @@
 // It would be possible to cache lookups. If a time for a zone is calculated its
 // sys_info could be kept and the next lookup could test whether the time is in
 // a "known" sys_info. The wording in the Standard hints at this slowness by
-// "suggesting" this could be implemented at the user's side.
+// "suggesting" this could be implemented on the user's side.
 
 // TODO TZDB look at removing quirks
 //
@@ -30,6 +30,7 @@
 // which implies there are no sys_info objects with a duration of less than 12h.
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <expected>
 #include <map>
@@ -111,20 +112,8 @@ __binary_find(_Range&& __r, const _Type& __value, _Comp __comp = {}, _Proj __pro
 //    text in the appropriate Rule's LETTER column, and the resulting string
 //    should be a time zone abbreviation
 //
-// Accepting invalid formats that can be processed in a sensible way would better
-// serve the user than throwing an exception. So some of these rules are not
-// strictly validated.
-// 1  This is not validated. Some examples that will be accepted are, "+04:30",
-//    "Q", "42".
-// 2  How this format is formatted is not specified. In the current tzdata.zi
-//    this value is not used. This value is accepted in a part of the format. So
-//    "a%s%zb" will be considered valid.
-// 3  This is not validated, the output might be incorrect.
-//    Proper validation would make the algorithm more complex. Then the first
-//    element of the pair is used the parsing of FORMAT can stop. To do proper
-//    validation the tail should be validated.
-// 4  This value is accepted in a part of the format. So "a%s%zb" will be
-//    considered valid.
+// Rule 1 is not strictly validated since America/Barbados uses a two letter
+// abbreviation AT.
 [[nodiscard]] static string
 __format(const __tz::__continuation& __continuation, const string& __letters, seconds __save) {
   bool __shift = false;
@@ -137,6 +126,11 @@ __format(const __tz::__continuation& __continuation, const string& __letters, se
         break;
 
       case 'z': {
+        if (__continuation.__format.size() != 2)
+          std::__throw_runtime_error(
+              std::format("corrupt tzdb FORMAT field: %z should be the entire contents, instead contains '{}'",
+                          __continuation.__format)
+                  .c_str());
         chrono::hh_mm_ss __offset{__continuation.__stdoff + __save};
         if (__offset.is_negative()) {
           __result += '-';
@@ -164,13 +158,21 @@ __format(const __tz::__continuation& __continuation, const string& __letters, se
 
     } else if (__c == '%') {
       __shift = true;
-    } else {
+    } else if (__c == '+' || __c == '-' || std::isalnum(__c)) {
       __result.push_back(__c);
+    } else {
+      std::__throw_runtime_error(
+          std::format(
+              "corrupt tzdb FORMAT field: invalid character '{}' found, expected +, -, or an alphanumeric value", __c)
+              .c_str());
     }
   }
 
   if (__shift)
     std::__throw_runtime_error("corrupt tzdb FORMAT field: input ended with the start of the escape sequence '%'");
+
+  if (__result.empty())
+    std::__throw_runtime_error("corrupt tzdb FORMAT field: result is empty");
 
   return __result;
 }
@@ -348,7 +350,7 @@ private:
 //   R HK 1946 o - Ap 21 0 1 S  // (3)
 // There (1) is active until Novemer 18th 1945 at 02:00, after this time
 // (2) becomes active. The first rule entry for HK (3) becomes active
-// from pril 21st 1945 at 01:00. In the period between (2) is active.
+// from April 21st 1945 at 01:00. In the period between (2) is active.
 // This entry has an offset.
 // This entry has no save, letters, or dst flag. So in the period
 // after (1) and until (3) no rule entry is associated with the time.
@@ -439,11 +441,11 @@ __next_rule(sys_seconds __time,
       if (__y == __year && __it == __current)
         continue;
 
-      sys_seconds __t = __rule_to_sys_seconds(__stdoff, __save, *__it, __y);
+      sys_seconds __t = chrono::__rule_to_sys_seconds(__stdoff, __save, *__it, __y);
       if (__t <= __time)
         continue;
 
-      _LIBCPP_ASSERT(!__candidates.contains(__t), "duplicated rule");
+      _LIBCPP_ASSERT_INTERNAL(!__candidates.contains(__t), "duplicated rule");
       __candidates[__t] = __it;
       break;
     }
@@ -495,7 +497,7 @@ __first_rule(seconds __stdoff, const vector<__tz::__rule>& __rules) {
   const vector<__tz::__rule>& __rules = __get_rules(__rule_name);
 
   auto __rule = chrono::__first_rule(__continuation.__stdoff, __rules);
-  _LIBCPP_ASSERT(__rule != __rules.end(), "the set of rules has no first rule");
+  _LIBCPP_ASSERT_INTERNAL(__rule != __rules.end(), "the set of rules has no first rule");
 
   // Avoid selecting a time before the start of the continuation
   __time = std::max(__time, __continuation_begin);
@@ -726,7 +728,7 @@ _LIBCPP_EXPORTED_FROM_ABI time_zone::~time_zone() = default;
 time_zone::__get_info(sys_seconds __time) const {
   optional<sys_info> __result;
   bool __valid_result = false; // true iff __result.has_value() is true and
-                               // result.begin <= __time < __result.end is true.
+                               // __result.begin <= __time < __result.end is true.
   bool __can_merge                 = false;
   sys_seconds __continuation_begin = sys_seconds::min();
   // Iterates over the Zone entry and its continuations. Internally the Zone
@@ -746,9 +748,9 @@ time_zone::__get_info(sys_seconds __time) const {
   // no continuation is applicable it will return the end time as "error". When
   // two continuations are contiguous and contain the "same" information these
   // ranges are merged as one range.
-  // The merging requires to keep results occur before __time, likewise when a
-  // valid result is found the algorithm needs test the next continuation to see
-  // when it can be merged. For example, Africa/Ceuta
+  // The merging requires keeping any result that occurs before __time,
+  // likewise when a valid result is found the algorithm needs to test the next
+  // continuation to see whether it can be merged. For example, Africa/Ceuta
   // Continuations
   //  0 s WE%sT 1929                   (C1)
   //  0 - WET 1967                     (C2)
@@ -779,7 +781,7 @@ time_zone::__get_info(sys_seconds __time) const {
     __sys_info_result __sys_info = chrono::__get_sys_info(__time, __continuation_begin, __continuation);
 
     if (__sys_info) {
-      _LIBCPP_ASSERT(__sys_info->__info.begin < __sys_info->__info.end, "invalid sys_info range");
+      _LIBCPP_ASSERT_INTERNAL(__sys_info->__info.begin < __sys_info->__info.end, "invalid sys_info range");
 
       // Filters out dummy entries
       // Z America/Argentina/Buenos_Aires -3:53:48 - LMT 1894 O 31
@@ -813,7 +815,8 @@ time_zone::__get_info(sys_seconds __time) const {
         __can_merge    = __sys_info->__can_merge;
       } else if (__can_merge && chrono::__merge_continuation(*__result, __sys_info->__info)) {
         // The results are merged, update the result state. This may
-        // "overwrite" valid with valid.
+        // "overwrite" a valid sys_info object with another valid sys_info
+        // object.
         __valid_result = __time >= __result->begin && __time < __result->end;
         __can_merge    = __sys_info->__can_merge;
       } else {
@@ -843,7 +846,7 @@ time_zone::__get_info(sys_seconds __time) const {
         if (__valid_result) {
           return *__result;
         } else {
-          _LIBCPP_ASSERT(__it != __continuations.begin(), "the first rule should always seed the result");
+          _LIBCPP_ASSERT_INTERNAL(__it != __continuations.begin(), "the first rule should always seed the result");
           const auto& __last = *(__it - 1);
           if (std::holds_alternative<string>(__last.__rules)) {
             // Europe/Berlin
