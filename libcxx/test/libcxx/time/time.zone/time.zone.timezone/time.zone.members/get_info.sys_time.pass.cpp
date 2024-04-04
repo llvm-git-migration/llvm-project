@@ -12,8 +12,6 @@
 // XFAIL: libcpp-has-no-incomplete-tzdb
 // XFAIL: availability-tzdb-missing
 
-// ADDITIONAL_COMPILE_FLAGS: -O0 -g
-
 // <chrono>
 
 // class time_zone;
@@ -22,6 +20,9 @@
 //   sys_info get_info(const sys_time<_Duration>& time) const;
 
 // tests the parts not validated in the public test
+// - Validates a zone with an UNTIL in its last continuation is corrupt
+// - The formatting of the FORMAT field's constrains
+// - Formatting of "%z", this is valid but not present in the actual database
 
 #include <algorithm>
 #include <cassert>
@@ -66,7 +67,7 @@ static const std::chrono::tzdb& parse(std::string_view input) {
 }
 
 static void test_exception([[maybe_unused]] std::string_view input, [[maybe_unused]] std::string_view what) {
-#ifndef TEST_NOEXCEPT
+#ifndef TEST_HAS_NO_EXCEPTIONS
   const std::chrono::tzdb& tzdb    = parse(input);
   const std::chrono::time_zone* tz = tzdb.locate_zone("Format");
   TEST_VALIDATE_EXCEPTION(
@@ -77,10 +78,41 @@ static void test_exception([[maybe_unused]] std::string_view input, [[maybe_unus
             TEST_WRITE_CONCATENATED("\nExpected exception ", what, "\nActual exception   ", e.what(), '\n'));
       },
       TEST_IGNORE_NODISCARD tz->get_info(to_sys_seconds(2000)));
-#endif
+#endif // TEST_HAS_NO_EXCEPTIONS
+}
+
+static void zone_without_until_entry() {
+#ifndef TEST_HAS_NO_EXCEPTIONS
+  const std::chrono::tzdb& tzdb = parse(
+      R"(
+Z America/Paramaribo -3:40:40 - LMT 1911
+-3:40:52 - PMT 1935
+-3:40:36 - PMT 1945 O
+-3:30 - -0330 1984 O
+# -3 - -03 Commented out so the last entry has an UNTIL field.
+)");
+  const std::chrono::time_zone* tz = tzdb.locate_zone("America/Paramaribo");
+
+  TEST_IGNORE_NODISCARD tz->get_info(to_sys_seconds(1984));
+  TEST_VALIDATE_EXCEPTION(
+      std::runtime_error,
+      [&]([[maybe_unused]] const std::runtime_error& e) {
+        std::string what = "tzdb: corrupt db";
+        TEST_LIBCPP_REQUIRE(
+            e.what() == what,
+            TEST_WRITE_CONCATENATED("\nExpected exception ", what, "\nActual exception   ", e.what(), '\n'));
+      },
+      TEST_IGNORE_NODISCARD tz->get_info(to_sys_seconds(1985)));
+#endif // TEST_HAS_NO_EXCEPTIONS
 }
 
 static void invalid_format() {
+  test_exception(
+      R"(
+R F 2000 max - Jan 5 0 0 foo
+Z Format 0 F %zandfoo)",
+      "corrupt tzdb FORMAT field: %z should be the entire contents, instead contains '%zandfoo'");
+
   test_exception(
       R"(
 R F 2000 max - Jan 5 0 0 foo
@@ -89,9 +121,33 @@ Z Format 0 F %q)",
 
   test_exception(
       R"(
+R F 2000 max - Jan 5 0 0 foo
+Z Format 0 F !)",
+      "corrupt tzdb FORMAT field: invalid character '!' found, expected +, -, or an alphanumeric value");
+
+  test_exception(
+      R"(
+R F 2000 max - Jan 5 0 0 foo
+Z Format 0 F @)",
+      "corrupt tzdb FORMAT field: invalid character '@' found, expected +, -, or an alphanumeric value");
+
+  test_exception(
+      R"(
+R F 2000 max - Jan 5 0 0 foo
+Z Format 0 F $)",
+      "corrupt tzdb FORMAT field: invalid character '$' found, expected +, -, or an alphanumeric value");
+
+  test_exception(
+      R"(
 R F 1970 max - Jan 5 0 0 foo
 Z Format 0 F %)",
       "corrupt tzdb FORMAT field: input ended with the start of the escape sequence '%'");
+
+  test_exception(
+      R"(
+R F 2000 max - Jan 5 0 0 -
+Z Format 0 F %s)",
+      "corrupt tzdb FORMAT field: result is empty");
 }
 
 static void test_abbrev(std::string_view input, std::string_view expected) {
@@ -135,6 +191,7 @@ Z Format 0:45 F %z)",
 }
 
 int main(int, const char**) {
+  zone_without_until_entry();
   invalid_format();
   percentage_z_format();
 
