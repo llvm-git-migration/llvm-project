@@ -296,7 +296,7 @@ void StmtPrinter::VisitAttributedStmt(AttributedStmt *Node) {
   for (const auto *Attr : Attrs) {
     Attr->printPretty(OS, Policy);
     if (Attr != Attrs.back())
-      OS << " ";
+      OS << ' ';
   }
 
   PrintStmt(Node->getSubStmt(), 0);

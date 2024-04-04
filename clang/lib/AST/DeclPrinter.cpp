@@ -258,6 +258,7 @@ void DeclPrinter::prettyPrintAttributes(const Decl *D,
     return;
 
   if (D->hasAttrs()) {
+    assert(Pos != AttrPosAsWritten::Unknown && "Use Default");
     const AttrVec &Attrs = D->getAttrs();
     for (auto *A : Attrs) {
       if (A->isInherited() || A->isImplicit())
@@ -272,10 +273,10 @@ void DeclPrinter::prettyPrintAttributes(const Decl *D,
         assert(APos != AttrPosAsWritten::Unknown && "Implicit attribute!");
         if (Pos == AttrPosAsWritten::Default || Pos == APos) {
           if (Pos != AttrPosAsWritten::Left)
-            Out << " ";
+            Out << ' ';
           A->printPretty(Out, Policy);
           if (Pos == AttrPosAsWritten::Left)
-            Out << " ";
+            Out << ' ';
         }
         break;
       }
