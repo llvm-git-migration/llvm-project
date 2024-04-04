@@ -1835,6 +1835,40 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
   if (Instruction *NewSel = foldSelectICmpEq(SI, ICI, *this))
     return NewSel;
 
+  // Very simple "GVN" on select arms if we have X == Y ? (binop X, Y) : ...
+  if (CmpRHS != CmpLHS && ICmpInst::isEquality(Pred)) {
+    auto IsFreeWithSelf = [](Instruction *I) {
+      // If we have I with all the same operand, does it completely simplify?
+      switch (I->getOpcode()) {
+      default:
+        return false;
+      case Instruction::And:
+      case Instruction::Xor:
+      case Instruction::Or:
+      case Instruction::Sub:
+      case Instruction::URem:
+      case Instruction::SRem:
+      case Instruction::UDiv:
+      case Instruction::SDiv:
+        return true;
+      }
+    };
+
+    Value *ReplaceIn = Pred == ICmpInst::ICMP_EQ ? TrueVal : FalseVal;
+    auto *BO = dyn_cast<BinaryOperator>(ReplaceIn);
+    if (BO != nullptr && (BO->hasOneUse() || IsFreeWithSelf(BO)) &&
+        match(BO, m_c_BinOp(m_Specific(CmpLHS), m_Specific(CmpRHS)))) {
+      // Replace with constant if we can (RHS). If RHS is not constant, use LHS
+      // if this will make it one use.
+      if (!match(CmpRHS, m_ImmConstant()) && CmpLHS->hasNUses(2))
+        CmpRHS = CmpLHS;
+
+      Value *NewArm = Builder.CreateBinOp(BO->getOpcode(), CmpRHS, CmpRHS);
+      replaceOperand(SI, Pred == ICmpInst::ICMP_EQ ? 1 : 2, NewArm);
+      return &SI;
+    }
+  }
+
   // Canonicalize a signbit condition to use zero constant by swapping:
   // (CmpLHS > -1) ? TV : FV --> (CmpLHS < 0) ? FV : TV
   // To avoid conflicts (infinite loops) with other canonicalizations, this is
