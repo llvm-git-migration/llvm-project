@@ -112,7 +112,10 @@ struct UpdateIndexCallbacks : public ParsingCallbacks {
                  // Index outlives TUScheduler (declared first)
                  FIndex(FIndex),
                  // shared_ptr extends lifetime
-                 Stdlib(Stdlib)]() mutable {
+                 Stdlib(Stdlib),
+                 // We have some FS implementations that rely on infomration in
+                 // the context.
+                 Ctx(Context::current().clone())]() mutable {
       clang::noteBottomOfStack();
       IndexFileIn IF;
       IF.Symbols = indexStandardLibrary(std::move(CI), Loc, *TFS);
