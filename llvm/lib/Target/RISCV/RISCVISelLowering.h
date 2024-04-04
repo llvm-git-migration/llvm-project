@@ -1041,12 +1041,15 @@ public:
     bool FirstVMask = false;
   };
 
+  template <typename Arg>
   RVVArgDispatcher(const MachineFunction *MF, const RISCVTargetLowering *TLI,
-                   ArrayRef<Type *> TypeList)
+                   ArrayRef<Arg> ArgList)
       : MF(MF), TLI(TLI) {
-    constructArgInfos(TypeList);
+    constructArgInfos(ArgList);
     compute();
   }
+
+  RVVArgDispatcher() = default;
 
   MCPhysReg getNextPhysReg();
 
@@ -1059,7 +1062,7 @@ private:
 
   unsigned CurIdx = 0;
 
-  void constructArgInfos(ArrayRef<Type *> TypeList);
+  template <typename Arg> void constructArgInfos(ArrayRef<Arg> Ret);
   void compute();
   void allocatePhysReg(unsigned NF = 1, unsigned LMul = 1,
                        unsigned StartReg = 0);
