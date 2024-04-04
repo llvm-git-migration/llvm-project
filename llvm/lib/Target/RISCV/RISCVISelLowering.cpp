@@ -18339,13 +18339,15 @@ void RISCVTargetLowering::analyzeInputArgs(
   unsigned NumArgs = Ins.size();
   FunctionType *FType = MF.getFunction().getFunctionType();
 
-  SmallVector<Type *, 4> TypeList;
-  if (IsRet)
-    TypeList.push_back(MF.getFunction().getReturnType());
-  else
+  RVVArgDispatcher Dispatcher;
+  if (IsRet) {
+    Dispatcher = RVVArgDispatcher{&MF, this, ArrayRef(Ins)};
+  } else {
+    SmallVector<Type *, 4> TypeList;
     for (const Argument &Arg : MF.getFunction().args())
       TypeList.push_back(Arg.getType());
-  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
+    Dispatcher = RVVArgDispatcher{&MF, this, ArrayRef(TypeList)};
+  }
 
   for (unsigned i = 0; i != NumArgs; ++i) {
     MVT ArgVT = Ins[i].VT;
@@ -18380,7 +18382,7 @@ void RISCVTargetLowering::analyzeOutputArgs(
   else if (CLI)
     for (const TargetLowering::ArgListEntry &Arg : CLI->getArgs())
       TypeList.push_back(Arg.Ty);
-  RVVArgDispatcher Dispatcher{&MF, this, TypeList};
+  RVVArgDispatcher Dispatcher{&MF, this, ArrayRef(TypeList)};
 
   for (unsigned i = 0; i != NumArgs; i++) {
     MVT ArgVT = Outs[i].VT;
@@ -19284,7 +19286,7 @@ bool RISCVTargetLowering::CanLowerReturn(
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, Context);
 
-  RVVArgDispatcher Dispatcher{&MF, this, MF.getFunction().getReturnType()};
+  RVVArgDispatcher Dispatcher{&MF, this, ArrayRef(Outs)};
 
   for (unsigned i = 0, e = Outs.size(); i != e; ++i) {
     MVT VT = Outs[i].VT;
@@ -21089,7 +21091,91 @@ unsigned RISCVTargetLowering::getMinimumJumpTableEntries() const {
   return Subtarget.getMinimumJumpTableEntries();
 }
 
-void RVVArgDispatcher::constructArgInfos(ArrayRef<Type *> TypeList) {
+// Handle single arg such as return value.
+template <typename Arg>
+void RVVArgDispatcher::constructArgInfos(ArrayRef<Arg> ArgList) {
+  // This lambda determines whether an array of types are constructed by
+  // homogeneous vector types.
+  auto isHomogeneousScalableVectorType = [](ArrayRef<Arg> ArgList) {
+    // First, extract the first element in the argument type.
+    MVT FirstArgRegType;
+    unsigned FirstArgElements = 0;
+    auto It = ArgList.begin();
+    bool IsPart = false;
+
+    if (It == ArgList.end())
+      return false;
+
+    for (; It != ArgList.end(); ++It) {
+      FirstArgRegType = It->VT;
+      ++FirstArgElements;
+      if ((!It->Flags.isSplit() && !IsPart) || It->Flags.isSplitEnd())
+        break;
+
+      IsPart = true;
+    }
+
+    assert(It != ArgList.end() && "It shouldn't reach the end of ArgList.");
+    ++It;
+
+    // Return if this argument type contains only 1 element, or it's not a
+    // vector type.
+    if (It == ArgList.end() || !FirstArgRegType.isScalableVector())
+      return false;
+
+    // Second, check if the following elements in this argument type are all the
+    // same.
+    MVT ArgRegType;
+    unsigned ArgElements = 0;
+    IsPart = false;
+    for (; It != ArgList.end(); ++It) {
+      ArgRegType = It->VT;
+      ++ArgElements;
+      if ((!It->Flags.isSplit() && !IsPart) || It->Flags.isSplitEnd()) {
+        if (ArgRegType != FirstArgRegType || ArgElements != FirstArgElements)
+          return false;
+
+        IsPart = false;
+        ArgElements = 0;
+        continue;
+      }
+
+      IsPart = true;
+    }
+
+    return true;
+  };
+
+  if (isHomogeneousScalableVectorType(ArgList)) {
+    // Handle as tuple type
+    RVVArgInfos.push_back({(unsigned)ArgList.size(), ArgList[0].VT, false});
+  } else {
+    // Handle as normal vector type
+    bool FirstVMaskAssigned = false;
+    for (const auto &OutArg : ArgList) {
+      MVT RegisterVT = OutArg.VT;
+
+      // Skip non-RVV register type
+      if (!RegisterVT.isVector())
+        continue;
+
+      if (RegisterVT.isFixedLengthVector())
+        RegisterVT = TLI->getContainerForFixedLengthVector(RegisterVT);
+
+      if (!FirstVMaskAssigned && RegisterVT.getVectorElementType() == MVT::i1) {
+        RVVArgInfos.push_back({1, RegisterVT, true});
+        FirstVMaskAssigned = true;
+        continue;
+      }
+
+      RVVArgInfos.push_back({1, RegisterVT, false});
+    }
+  }
+}
+
+// Handle multiple args.
+template <>
+void RVVArgDispatcher::constructArgInfos<Type *>(ArrayRef<Type *> TypeList) {
   const DataLayout &DL = MF->getDataLayout();
   const Function &F = MF->getFunction();
   LLVMContext &Context = F.getContext();
@@ -21102,8 +21188,11 @@ void RVVArgDispatcher::constructArgInfos(ArrayRef<Type *> TypeList) {
       EVT VT = TLI->getValueType(DL, ElemTy);
       MVT RegisterVT =
           TLI->getRegisterTypeForCallingConv(Context, F.getCallingConv(), VT);
+      unsigned NumRegs =
+          TLI->getNumRegistersForCallingConv(Context, F.getCallingConv(), VT);
 
-      RVVArgInfos.push_back({STy->getNumElements(), RegisterVT, false});
+      RVVArgInfos.push_back(
+          {NumRegs * STy->getNumElements(), RegisterVT, false});
     } else {
       SmallVector<EVT, 4> ValueVTs;
       ComputeValueVTs(*TLI, DL, Ty, ValueVTs);
