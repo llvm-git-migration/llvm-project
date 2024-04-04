@@ -102,8 +102,8 @@ add_object_library(
   HDRS
     math_utils.h
   DEPENDS
+    libc.hdr.math_macros
     libc.include.errno
-    libc.include.math
     libc.src.errno.errno
 )
 
@@ -139,7 +139,6 @@ add_entrypoint_object(
     ../cosf.h
   DEPENDS
     .sincosf_utils
-    libc.include.math
     libc.src.errno.errno
     libc.src.__support.FPUtil.basic_operations
     libc.src.__support.FPUtil.fenv_impl
@@ -162,7 +161,6 @@ add_entrypoint_object(
   DEPENDS
     .range_reduction
     .sincosf_utils
-    libc.include.math
     libc.src.errno.errno
     libc.src.__support.FPUtil.basic_operations
     libc.src.__support.FPUtil.fenv_impl
@@ -185,7 +183,6 @@ add_entrypoint_object(
   DEPENDS
     .range_reduction
     .sincosf_utils
-    libc.include.math
     libc.src.errno.errno
     libc.src.__support.FPUtil.fenv_impl
     libc.src.__support.FPUtil.fp_bits
@@ -207,7 +204,6 @@ add_entrypoint_object(
   DEPENDS
     .range_reduction
     .sincosf_utils
-    libc.include.math
     libc.src.errno.errno
     libc.src.__support.FPUtil.fenv_impl
     libc.src.__support.FPUtil.fenv_impl
@@ -721,7 +717,6 @@ add_entrypoint_object(
     libc.src.__support.FPUtil.multiply_add
     libc.src.__support.FPUtil.polyeval
     libc.src.__support.macros.optimization
-    libc.include.math
   COMPILE_OPTIONS
     -O3
 )
@@ -736,7 +731,6 @@ add_entrypoint_object(
     .common_constants
     .explogxf
     libc.include.errno
-    libc.include.math
     libc.src.__support.CPP.bit
     libc.src.__support.CPP.optional
     libc.src.__support.FPUtil.dyadic_float
@@ -772,7 +766,6 @@ add_entrypoint_object(
     libc.src.__support.macros.optimization
     libc.include.errno
     libc.src.errno.errno
-    libc.include.math
   COMPILE_OPTIONS
     -O3
 )
@@ -787,7 +780,6 @@ add_entrypoint_object(
     .common_constants
     .explogxf
     libc.include.errno
-    libc.include.math
     libc.src.__support.CPP.bit
     libc.src.__support.CPP.optional
     libc.src.__support.FPUtil.dyadic_float
@@ -822,7 +814,6 @@ add_header_library(
     libc.src.__support.common
     libc.include.errno
     libc.src.errno.errno
-    libc.include.math
 )
 
 add_entrypoint_object(
@@ -868,7 +859,6 @@ add_entrypoint_object(
     .common_constants
     .explogxf
     libc.include.errno
-    libc.include.math
     libc.src.__support.CPP.bit
     libc.src.__support.CPP.optional
     libc.src.__support.FPUtil.dyadic_float
@@ -902,7 +892,6 @@ add_header_library(
     libc.src.__support.common
     libc.include.errno
     libc.src.errno.errno
-    libc.include.math
   COMPILE_OPTIONS
     -O3
 )
@@ -929,7 +918,6 @@ add_entrypoint_object(
     .common_constants
     .explogxf
     libc.include.errno
-    libc.include.math
     libc.src.__support.CPP.bit
     libc.src.__support.CPP.optional
     libc.src.__support.FPUtil.dyadic_float
@@ -965,7 +953,6 @@ add_entrypoint_object(
     libc.src.__support.macros.optimization
     libc.include.errno
     libc.src.errno.errno
-    libc.include.math
   COMPILE_OPTIONS
     -O3
 )
@@ -982,7 +969,6 @@ add_entrypoint_object(
     .exp2f_impl
     .explogxf
     libc.include.errno
-    libc.include.math
     libc.src.__support.CPP.bit
     libc.src.__support.CPP.optional
     libc.src.__support.FPUtil.fenv_impl
@@ -2706,7 +2692,6 @@ add_object_library(
     libc.src.__support.common
     libc.include.errno
     libc.src.errno.errno
-    libc.include.math
   COMPILE_OPTIONS
     -O3
 )
