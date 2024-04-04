@@ -8547,12 +8547,22 @@ static const RecordDecl *GetEnclosingNamedOrTopAnonRecord(const FieldDecl *FD) {
   return RD;
 }
 
-static bool
-CheckCountExpr(Sema &S, FieldDecl *FD, Expr *E,
-               llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls) {
+static bool CheckCountedByAttrOnField(
+    Sema &S, FieldDecl *FD, Expr *E,
+    llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls) {
   if (FD->getParent()->isUnion()) {
     S.Diag(FD->getBeginLoc(), diag::err_counted_by_attr_in_union)
         << FD->getSourceRange();
+    return true;
+  }
+
+  const auto FieldTy = FD->getType();
+  if (FieldTy->isPointerType() &&
+      FieldTy->getPointeeType()->isIncompleteType()) {
+    // FIXME: The BeginLoc should point at the attribute and the source range
+    // should cover the FieldDecl and the attribute.
+    S.Diag(FD->getBeginLoc(), diag::err_counted_by_attr_incomplete_pointee_type)
+        << FieldTy->getPointeeType() << FD->getSourceRange();
     return true;
   }
 
@@ -8565,7 +8575,8 @@ CheckCountExpr(Sema &S, FieldDecl *FD, Expr *E,
   LangOptions::StrictFlexArraysLevelKind StrictFlexArraysLevel =
       LangOptions::StrictFlexArraysLevelKind::IncompleteOnly;
 
-  if (!Decl::isFlexibleArrayMemberLike(S.getASTContext(), FD, FD->getType(),
+  if (FD->getType()->isArrayType() &&
+      !Decl::isFlexibleArrayMemberLike(S.getASTContext(), FD, FD->getType(),
                                        StrictFlexArraysLevel, true)) {
     // The "counted_by" attribute must be on a flexible array member.
     SourceRange SR = FD->getLocation();
@@ -8634,10 +8645,10 @@ static void handleCountedByAttrField(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
 
   llvm::SmallVector<TypeCoupledDeclRefInfo, 1> Decls;
-  if (CheckCountExpr(S, FD, CountExpr, Decls))
+  if (CheckCountedByAttrOnField(S, FD, CountExpr, Decls))
     return;
 
-  QualType CAT = S.BuildCountAttributedArrayType(FD->getType(), CountExpr);
+  QualType CAT = S.BuildCountAttributedArrayOrPointerType(FD->getType(), CountExpr);
   FD->setType(CAT);
 }
 

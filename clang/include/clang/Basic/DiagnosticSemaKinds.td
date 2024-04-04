@@ -6534,6 +6534,8 @@ def err_counted_by_attr_refer_to_union : Error<
   "'counted_by' argument cannot refer to a union member">;
 def note_flexible_array_counted_by_attr_field : Note<
   "field %0 declared here">;
+def err_counted_by_attr_incomplete_pointee_type : Error<
+  "'counted_by' cannot be used on a pointer with incomplete pointee type %0">;
 
 let CategoryName = "ARC Semantic Issue" in {
 
