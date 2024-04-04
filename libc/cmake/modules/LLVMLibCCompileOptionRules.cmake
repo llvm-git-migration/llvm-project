@@ -43,6 +43,7 @@ function(_get_common_compile_options output_var flags)
     list(APPEND compile_options "-fpie")
 
     if(LLVM_LIBC_FULL_BUILD)
+      list(APPEND compile_options "-DLIBC_FULL_BUILD")
       # Only add -ffreestanding flag in full build mode.
       list(APPEND compile_options "-ffreestanding")
     endif()
@@ -126,6 +127,7 @@ function(_get_common_test_compile_options output_var c_test flags)
     list(APPEND compile_options "-fpie")
 
     if(LLVM_LIBC_FULL_BUILD)
+      list(APPEND compile_options "-DLIBC_FULL_BUILD")
       # Only add -ffreestanding flag in full build mode.
       list(APPEND compile_options "-ffreestanding")
       list(APPEND compile_options "-fno-exceptions")
