@@ -3872,6 +3872,7 @@ void CodeGenDAGPatterns::parseInstructionPattern(CodeGenInstruction &CGI,
       }
       I.error("Operand $" + OpName +
               " does not appear in the instruction pattern");
+      return;
     }
     TreePatternNodePtr InVal = InstInputs[OpName];
     InstInputs.erase(OpName); // It occurred, remove from map.
