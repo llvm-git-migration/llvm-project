@@ -253,6 +253,10 @@ Changes in existing checks
   mode by resolving symbolic links to header files. Fixed handling of Hungarian
   Prefix when configured to `LowerCase`.
 
+- Improved :doc:`readability-duplicate-include
+  <clang-tidy/checks/readability/duplicate-include>` check by resolving crash
+  at include directives that form the filename using macro.
+
 Removed checks
 ^^^^^^^^^^^^^^
 
