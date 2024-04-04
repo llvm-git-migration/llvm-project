@@ -693,13 +693,10 @@ static bool LookupMemberExprInRecord(Sema &SemaRef, LookupResult &R,
   // LookupTemplateName/LookupParsedName don't expect these both to exist
   // simultaneously.
   QualType ObjectType = SS.isSet() ? QualType() : RTy;
-  if (HasTemplateArgs || TemplateKWLoc.isValid()) {
-    bool MOUS;
+  if (HasTemplateArgs || TemplateKWLoc.isValid())
     return SemaRef.LookupTemplateName(R,
                                       /*S=*/nullptr, SS, ObjectType,
-                                      /*EnteringContext=*/false, MOUS,
-                                      TemplateKWLoc);
-  }
+                                      /*EnteringContext=*/false, TemplateKWLoc);
 
   SemaRef.LookupParsedName(R, /*S=*/nullptr, &SS, ObjectType);
 
@@ -1287,10 +1284,6 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
     return ExprError();
 
   QualType BaseType = BaseExpr.get()->getType();
-
-#if 0
-  assert(!BaseType->isDependentType());
-#endif
 
   DeclarationName MemberName = R.getLookupName();
   SourceLocation MemberLoc = R.getNameLoc();
