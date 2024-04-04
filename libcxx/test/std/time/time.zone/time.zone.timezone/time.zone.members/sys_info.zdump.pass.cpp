@@ -25,6 +25,7 @@
 #include <fstream>
 #include <cassert>
 
+#include "filesystem_test_helper.h"
 #include "assert_macros.h"
 #include "concat_macros.h"
 
@@ -106,8 +107,10 @@ void process(std::ostream& stream, const std::chrono::time_zone& zone) {
 }
 
 int main(int, const char**) {
+  scoped_test_env env;
+  const std::string file = env.create_file("zdump.txt");
+
   const std::chrono::tzdb& tzdb = std::chrono::get_tzdb();
-  std::string file              = std::tmpnam(nullptr);
   for (const auto& zone : tzdb.zones) {
     std::stringstream libcxx;
     process(libcxx, zone);

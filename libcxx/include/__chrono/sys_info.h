@@ -28,9 +28,6 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#  if _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM) &&   \
-      !defined(_LIBCPP_HAS_NO_LOCALIZATION)
-
 namespace chrono {
 
 struct sys_info {
@@ -42,9 +39,6 @@ struct sys_info {
 };
 
 } // namespace chrono
-
-#  endif // _LIBCPP_STD_VER >= 20 && !defined(_LIBCPP_HAS_NO_TIME_ZONE_DATABASE) && !defined(_LIBCPP_HAS_NO_FILESYSTEM)
-         // && !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 
 _LIBCPP_END_NAMESPACE_STD
 
