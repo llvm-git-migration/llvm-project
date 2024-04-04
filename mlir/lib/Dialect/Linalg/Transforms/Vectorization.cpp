@@ -582,6 +582,12 @@ static SmallVector<bool> getDimsToReduce(LinalgOp linalgOp) {
       llvm::map_range(linalgOp.getIteratorTypesArray(), isReductionIterator));
 }
 
+static bool isLinalgReduction(LinalgOp &op) {
+  return isa<linalg::ReduceOp>(op) ||
+         (isa<linalg::GenericOp>(op) &&
+          llvm::any_of(op.getIteratorTypesArray(), isReductionIterator));
+}
+
 /// Build a vector.transfer_write of `value` into `outputOperand` at indices set
 /// to all `0`; where `outputOperand` is an output operand of the LinalgOp
 /// currently being vectorized. If `dest` has null rank, build an memref.store.
@@ -1773,6 +1779,9 @@ vectorizeDynamicLinalgOpPrecondition(linalg::LinalgOp op,
   if (isa<ConvolutionOpInterface>(op.getOperation()))
     return vectorizeDynamicConvOpPrecondition(op, flatten1DDepthwiseConv);
 
+  if (isLinalgReduction(op))
+    return reductionPreconditions(op);
+
   // TODO: Masking only supports dynamic element-wise ops, linalg.generic ops,
   // linalg.copy ops and ops that implement ContractionOpInterface for now.
   if (!isElementwise(op) &&
@@ -1942,13 +1951,30 @@ vectorizeScalableVectorPrecondition(Operation *op,
   if (inputVectorSizes.empty())
     return success();
 
+  auto linalgOp = dyn_cast<LinalgOp>(op);
+  if (linalgOp && isLinalgReduction(linalgOp)) {
+    LDBG("Checking reduce op dims for scalable vectorization\n");
+    auto iteratorTypes = linalgOp.getIteratorTypesArray();
+    assert(iteratorTypes.size() == inputScalableVecDims.size() &&
+           "Number of iterator types and input scalable dims mismatch");
+    // For now, only support scalable vectorization of a reduction on the
+    // trailing dim.
+    for (size_t i = 0; i < inputScalableVecDims.size() - 1; ++i) {
+      if (inputScalableVecDims[i] && isReductionIterator(iteratorTypes[i])) {
+        LDBG("Non-trailing reduction dim requested for scalable "
+             "vectorization\n");
+        return failure();
+      }
+    }
+    return success();
+  }
+
   bool isScalable = inputScalableVecDims.back();
   if (!isScalable)
     return success();
 
   // Only element-wise and 1d depthwise conv ops supported in the presence of
   // scalable dims.
-  auto linalgOp = dyn_cast<LinalgOp>(op);
   return success(linalgOp && (isElementwise(linalgOp) ||
                               isa<linalg::DepthwiseConv1DNwcWcOp>(op)));
 }
