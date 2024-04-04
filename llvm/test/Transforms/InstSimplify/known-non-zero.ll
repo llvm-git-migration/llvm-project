@@ -99,11 +99,10 @@ exit:
   ret i1 %res
 }
 
-
 ; The code below exposed a bug similar to the one exposed by D60846, see the commit 6ea477590085.
 ; In a nutshell, we should not replace %result.0 with 0 here.
 
-define zeroext i8 @update_phi_query_loc_in_recursive_call(ptr nocapture readonly %p){
+define zeroext i8 @update_phi_query_loc_in_recursive_call(ptr nocapture readonly %p) {
 ; CHECK-LABEL: @update_phi_query_loc_in_recursive_call(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    br label [[FOR_COND:%.*]]
@@ -126,16 +125,16 @@ define zeroext i8 @update_phi_query_loc_in_recursive_call(ptr nocapture readonly
 entry:
   br label %for.cond
 
-for.cond:                                         ; preds = %for.body, %entry
+for.cond:  ; preds = %for.body, %entry
   %result.0 = phi i8 [ 0, %entry ], [ %conv2, %for.body ]
   %shift.0 = phi i32 [ 0, %entry ], [ 1, %for.body ]
   %cmp = icmp eq i32 %shift.0, 0
   br i1 %cmp, label %for.body, label %for.cond.cleanup
 
-for.cond.cleanup:                                 ; preds = %for.cond
+for.cond.cleanup:  ; preds = %for.cond
   ret i8 %result.0
 
-for.body:                                         ; preds = %for.cond
+for.body:  ; preds = %for.cond
   %0 = load i8, ptr %p, align 1
   %conv = zext i8 %0 to i32
   %mul = shl nuw nsw i32 %shift.0, 3
@@ -165,4 +164,302 @@ A:
   ret i1 %c2
 B:
   ret i1 0
+}
+
+declare void @use.i1(i1)
+declare void @use.i8(i1)
+define i1 @extract_value_uadd(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_uadd(
+; CHECK-NEXT:    [[X:%.*]] = add nuw i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[X_LEMMA:%.*]] = icmp ult i8 [[X]], -128
+; CHECK-NEXT:    [[Y_LEMMA:%.*]] = icmp ult i8 [[Y]], -128
+; CHECK-NEXT:    call void @llvm.assume(i1 [[X_LEMMA]])
+; CHECK-NEXT:    call void @llvm.assume(i1 [[Y_LEMMA]])
+; CHECK-NEXT:    [[ADD_UOV:%.*]] = call { i8, i1 } @llvm.uadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = add nuw i8 %xx, 1
+  %y = add nuw i8 %yy, 1
+  %x_lemma = icmp ult i8 %x, 128
+  %y_lemma = icmp ult i8 %y, 128
+  call void @llvm.assume(i1 %x_lemma)
+  call void @llvm.assume(i1 %y_lemma)
+
+  %add_uov = call { i8, i1} @llvm.uadd.with.overflow(i8 %x, i8 %y)
+  %add = extractvalue { i8, i1} %add_uov, 0
+  %uov = extractvalue { i8, i1} %add_uov, 1
+  call void @use.i1(i1 %uov)
+  %r = icmp eq i8 %add, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_uadd_fail(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_uadd_fail(
+; CHECK-NEXT:    [[X:%.*]] = add i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[X_LEMMA:%.*]] = icmp ult i8 [[X]], -128
+; CHECK-NEXT:    [[Y_LEMMA:%.*]] = icmp ult i8 [[Y]], -128
+; CHECK-NEXT:    call void @llvm.assume(i1 [[X_LEMMA]])
+; CHECK-NEXT:    call void @llvm.assume(i1 [[Y_LEMMA]])
+; CHECK-NEXT:    [[ADD_UOV:%.*]] = call { i8, i1 } @llvm.uadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[ADD_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = add i8 %xx, 1
+  %y = add i8 %yy, 1
+  %x_lemma = icmp ult i8 %x, 128
+  %y_lemma = icmp ult i8 %y, 128
+  call void @llvm.assume(i1 %x_lemma)
+  call void @llvm.assume(i1 %y_lemma)
+
+  %add_uov = call { i8, i1} @llvm.uadd.with.overflow(i8 %x, i8 %y)
+  %add = extractvalue { i8, i1} %add_uov, 0
+  %uov = extractvalue { i8, i1} %add_uov, 1
+  call void @use.i1(i1 %uov)
+  %r = icmp eq i8 %add, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_sadd(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_sadd(
+; CHECK-NEXT:    [[X:%.*]] = add nuw i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[X_LEMMA:%.*]] = icmp ult i8 [[X]], -128
+; CHECK-NEXT:    [[Y_LEMMA:%.*]] = icmp ult i8 [[Y]], -128
+; CHECK-NEXT:    call void @llvm.assume(i1 [[X_LEMMA]])
+; CHECK-NEXT:    call void @llvm.assume(i1 [[Y_LEMMA]])
+; CHECK-NEXT:    [[ADD_SOV:%.*]] = call { i8, i1 } @llvm.sadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = add nuw i8 %xx, 1
+  %y = add nuw i8 %yy, 1
+  %x_lemma = icmp ult i8 %x, 128
+  %y_lemma = icmp ult i8 %y, 128
+  call void @llvm.assume(i1 %x_lemma)
+  call void @llvm.assume(i1 %y_lemma)
+
+  %add_sov = call { i8, i1} @llvm.sadd.with.overflow(i8 %x, i8 %y)
+  %add = extractvalue { i8, i1} %add_sov, 0
+  %sov = extractvalue { i8, i1} %add_sov, 1
+  call void @use.i1(i1 %sov)
+  %r = icmp eq i8 %add, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_sadd_fail(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_sadd_fail(
+; CHECK-NEXT:    [[X:%.*]] = add i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[ADD_SOV:%.*]] = call { i8, i1 } @llvm.sadd.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[ADD:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[ADD_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[ADD]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = add i8 %xx, 1
+  %y = add i8 %yy, 1
+
+  %add_sov = call { i8, i1} @llvm.sadd.with.overflow(i8 %x, i8 %y)
+  %add = extractvalue { i8, i1} %add_sov, 0
+  %sov = extractvalue { i8, i1} %add_sov, 1
+  call void @use.i1(i1 %sov)
+  %r = icmp eq i8 %add, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_usub(i8 %x, i8 %zz) {
+; CHECK-LABEL: @extract_value_usub(
+; CHECK-NEXT:    [[Z:%.*]] = add nuw i8 [[ZZ:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[X:%.*]], [[Z]]
+; CHECK-NEXT:    [[SUB_UOV:%.*]] = call { i8, i1 } @llvm.usub.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[SUB:%.*]] = extractvalue { i8, i1 } [[SUB_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[SUB_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %z = add nuw i8 %zz, 1
+  %y = add i8 %x, %z
+
+  %sub_uov = call { i8, i1} @llvm.usub.with.overflow(i8 %x, i8 %y)
+  %sub = extractvalue { i8, i1} %sub_uov, 0
+  %uov = extractvalue { i8, i1} %sub_uov, 1
+  call void @use.i1(i1 %uov)
+  call void @use.i8(i8 %sub)
+  %r = icmp eq i8 %sub, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_usub_fail(i8 %x, i8 %z) {
+; CHECK-LABEL: @extract_value_usub_fail(
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[X:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[SUB_UOV:%.*]] = call { i8, i1 } @llvm.usub.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[SUB:%.*]] = extractvalue { i8, i1 } [[SUB_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[SUB_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %y = add i8 %x, %z
+  %sub_uov = call { i8, i1} @llvm.usub.with.overflow(i8 %x, i8 %y)
+  %sub = extractvalue { i8, i1} %sub_uov, 0
+  %uov = extractvalue { i8, i1} %sub_uov, 1
+  call void @use.i1(i1 %uov)
+  call void @use.i8(i8 %sub)
+  %r = icmp eq i8 %sub, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_ssub(i8 %x, i8 %zz) {
+; CHECK-LABEL: @extract_value_ssub(
+; CHECK-NEXT:    [[Z:%.*]] = add nuw i8 [[ZZ:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[X:%.*]], [[Z]]
+; CHECK-NEXT:    [[SUB_SOV:%.*]] = call { i8, i1 } @llvm.ssub.with.overflow.i8(i8 [[Y]], i8 [[X]])
+; CHECK-NEXT:    [[SUB:%.*]] = extractvalue { i8, i1 } [[SUB_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[SUB_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %z = add nuw i8 %zz, 1
+  %y = add i8 %x, %z
+
+  %sub_sov = call { i8, i1} @llvm.ssub.with.overflow(i8 %y, i8 %x)
+  %sub = extractvalue { i8, i1} %sub_sov, 0
+  %sov = extractvalue { i8, i1} %sub_sov, 1
+  call void @use.i1(i1 %sov)
+  call void @use.i8(i8 %sub)
+  %r = icmp eq i8 %sub, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_ssub_fail(i8 %x) {
+; CHECK-LABEL: @extract_value_ssub_fail(
+; CHECK-NEXT:    [[SUB_SOV:%.*]] = call { i8, i1 } @llvm.ssub.with.overflow.i8(i8 10, i8 [[X:%.*]])
+; CHECK-NEXT:    [[SUB:%.*]] = extractvalue { i8, i1 } [[SUB_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[SUB_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[SUB]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[SUB]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %sub_sov = call { i8, i1} @llvm.ssub.with.overflow(i8 10, i8 %x)
+  %sub = extractvalue { i8, i1} %sub_sov, 0
+  %sov = extractvalue { i8, i1} %sub_sov, 1
+  call void @use.i1(i1 %sov)
+  call void @use.i8(i8 %sub)
+  %r = icmp eq i8 %sub, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_umul(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_umul(
+; CHECK-NEXT:    [[X:%.*]] = or i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[MUL_UOV:%.*]] = call { i8, i1 } @llvm.umul.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[MUL:%.*]] = extractvalue { i8, i1 } [[MUL_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[MUL_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = or i8 %xx, 1
+  %y = add nuw i8 %yy, 1
+
+  %mul_uov = call { i8, i1} @llvm.umul.with.overflow(i8 %x, i8 %y)
+  %mul = extractvalue { i8, i1} %mul_uov, 0
+  %uov = extractvalue { i8, i1} %mul_uov, 1
+  call void @use.i1(i1 %uov)
+  call void @use.i8(i8 %mul)
+  %r = icmp eq i8 %mul, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_umul_fail(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_umul_fail(
+; CHECK-NEXT:    [[X:%.*]] = or i8 [[XX:%.*]], 2
+; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[MUL_UOV:%.*]] = call { i8, i1 } @llvm.umul.with.overflow.i8(i8 [[X]], i8 [[Y]])
+; CHECK-NEXT:    [[MUL:%.*]] = extractvalue { i8, i1 } [[MUL_UOV]], 0
+; CHECK-NEXT:    [[UOV:%.*]] = extractvalue { i8, i1 } [[MUL_UOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[UOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = or i8 %xx, 2
+  %y = add nuw i8 %yy, 1
+
+  %mul_uov = call { i8, i1} @llvm.umul.with.overflow(i8 %x, i8 %y)
+  %mul = extractvalue { i8, i1} %mul_uov, 0
+  %uov = extractvalue { i8, i1} %mul_uov, 1
+  call void @use.i1(i1 %uov)
+  call void @use.i8(i8 %mul)
+  %r = icmp eq i8 %mul, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_smul(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_smul(
+; CHECK-NEXT:    [[X:%.*]] = or i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add nuw i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[MUL_SOV:%.*]] = call { i8, i1 } @llvm.smul.with.overflow.i8(i8 [[Y]], i8 [[X]])
+; CHECK-NEXT:    [[MUL:%.*]] = extractvalue { i8, i1 } [[MUL_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[MUL_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = or i8 %xx, 1
+  %y = add nuw i8 %yy, 1
+
+  %mul_sov = call { i8, i1} @llvm.smul.with.overflow(i8 %y, i8 %x)
+  %mul = extractvalue { i8, i1} %mul_sov, 0
+  %sov = extractvalue { i8, i1} %mul_sov, 1
+  call void @use.i1(i1 %sov)
+  call void @use.i8(i8 %mul)
+  %r = icmp eq i8 %mul, 0
+  ret i1 %r
+}
+
+define i1 @extract_value_smul_fail(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @extract_value_smul_fail(
+; CHECK-NEXT:    [[X:%.*]] = or i8 [[XX:%.*]], 1
+; CHECK-NEXT:    [[Y:%.*]] = add i8 [[YY:%.*]], 1
+; CHECK-NEXT:    [[MUL_SOV:%.*]] = call { i8, i1 } @llvm.smul.with.overflow.i8(i8 [[Y]], i8 [[X]])
+; CHECK-NEXT:    [[MUL:%.*]] = extractvalue { i8, i1 } [[MUL_SOV]], 0
+; CHECK-NEXT:    [[SOV:%.*]] = extractvalue { i8, i1 } [[MUL_SOV]], 1
+; CHECK-NEXT:    call void @use.i1(i1 [[SOV]])
+; CHECK-NEXT:    call void @use.i8(i8 [[MUL]])
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[MUL]], 0
+; CHECK-NEXT:    ret i1 [[R]]
+;
+  %x = or i8 %xx, 1
+  %y = add i8 %yy, 1
+
+  %mul_sov = call { i8, i1} @llvm.smul.with.overflow(i8 %y, i8 %x)
+  %mul = extractvalue { i8, i1} %mul_sov, 0
+  %sov = extractvalue { i8, i1} %mul_sov, 1
+  call void @use.i1(i1 %sov)
+  call void @use.i8(i8 %mul)
+  %r = icmp eq i8 %mul, 0
+  ret i1 %r
 }
