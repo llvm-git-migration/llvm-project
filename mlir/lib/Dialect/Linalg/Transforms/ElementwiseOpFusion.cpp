@@ -1497,9 +1497,12 @@ LinalgOp cloneToCollapsedOp<LinalgOp>(RewriterBase &rewriter, LinalgOp origOp,
   SmallVector<Type> resultTypes;
   collapseOperandsAndResults(origOp, collapsingInfo, rewriter, inputOperands,
                              outputOperands, resultTypes);
-  return cast<LinalgOp>(clone(
-      rewriter, origOp, resultTypes,
-      llvm::to_vector(llvm::concat<Value>(inputOperands, outputOperands))));
+  IRMapping mapper;
+  for (auto [orig, input] : llvm::zip(origOp.getDpsInputs(), inputOperands))
+    mapper.map(orig, input);
+  for (auto [orig, output] : llvm::zip(origOp.getDpsInits(), outputOperands))
+    mapper.map(orig, output);
+  return cast<LinalgOp>(rewriter.clone(*origOp.getOperation(), mapper));
 }
 
 /// Collapse a `GenericOp`
