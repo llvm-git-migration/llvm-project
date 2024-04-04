@@ -68,7 +68,6 @@ libc_support_library(
     name = "llvm_libc_macros_math_macros",
     hdrs = ["include/llvm-libc-macros/math-macros.h"],
     deps = [":llvm_libc_macros_limits_macros"],
-    defines = ["__FP_LOGBNAN_MIN"],
 )
 
 libc_support_library(
@@ -102,6 +101,14 @@ libc_support_library(
     name = "llvm_libc_macros_fcntl_macros",
     hdrs = ["include/llvm-libc-macros/linux/fcntl-macros.h"],
 )
+
+############################ Proxy Header Files ################################
+
+libc_support_library(
+    name = "hdr_math_macros",
+    hdrs = ["hdr/math_macros.h"],
+)
+
 
 ############################### Support libraries ##############################
 
@@ -733,7 +740,7 @@ libc_support_library(
         ":__support_macros_properties_architectures",
         ":__support_macros_sanitizer",
         ":errno",
-        ":llvm_libc_macros_math_macros",
+        ":hdr_math_macros",
     ],
 )
 
@@ -807,7 +814,7 @@ libc_support_library(
         ":__support_fputil_normal_float",
         ":__support_macros_optimization",
         ":__support_uint128",
-        ":llvm_libc_macros_math_macros",
+        ":hdr_math_macros",
     ],
 )
 
@@ -821,7 +828,7 @@ libc_support_library(
         ":__support_fputil_fp_bits",
         ":__support_fputil_rounding_mode",
         ":__support_macros_attributes",
-        ":llvm_libc_macros_math_macros",
+        ":hdr_math_macros",
     ],
 )
 
@@ -1213,7 +1220,7 @@ libc_support_library(
         "__support_cpp_type_traits",
         ":__support_common",
         ":errno",
-        ":llvm_libc_macros_math_macros",
+        ":hdr_math_macros",
     ],
 )
 
