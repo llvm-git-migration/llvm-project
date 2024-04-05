@@ -451,6 +451,8 @@ Improvements to Clang's diagnostics
 
 - Clang now diagnoses ``[[deprecated]]`` attribute usage on local variables (#GH90073).
 
+- Clang now diagnoses missing format attributes for non-template functions and class/struct/union members. (#GH60718)
+
 Improvements to Clang's time-trace
 ----------------------------------
 
