@@ -108,10 +108,12 @@ USER_NS::object g_s2;
 // NO warnings or fixes expected as USER_NS and object are declared in a header file
 
 SYSTEM_MACRO(var1);
-// NO warnings or fixes expected as var1 is from macro expansion
+// CHECK-MESSAGES: :[[@LINE-1]]:14: warning: invalid case style for global variable 'var1' [readability-identifier-naming]
+// CHECK-FIXES: {{^}}SYSTEM_MACRO(g_var1);
 
 USER_MACRO(var2);
-// NO warnings or fixes expected as var2 is declared in a macro expansion
+// CHECK-MESSAGES: :[[@LINE-1]]:12: warning: invalid case style for global variable 'var2' [readability-identifier-naming]
+// CHECK-FIXES: {{^}}USER_MACRO(g_var2);
 
 #define BLA int FOO_bar
 BLA;
@@ -602,9 +604,11 @@ static void static_Function() {
 // CHECK-FIXES: {{^}}#define MY_TEST_MACRO(X) X()
 
 void MY_TEST_Macro(function) {}
-// CHECK-FIXES: {{^}}void MY_TEST_MACRO(function) {}
-}
-}
+// CHECK-MESSAGES: :[[@LINE-1]]:20: warning: invalid case style for global function 'function' [readability-identifier-naming]
+// CHECK-FIXES: {{^}}void MY_TEST_MACRO(Function) {}
+
+} // namespace InlineNamespace
+} // namespace FOO_NS
 
 template <typename t_t> struct a {
 // CHECK-MESSAGES: :[[@LINE-1]]:32: warning: invalid case style for struct 'a'
