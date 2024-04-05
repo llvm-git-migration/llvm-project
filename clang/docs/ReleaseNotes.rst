@@ -268,6 +268,9 @@ Improvements to Clang's diagnostics
 
 - Improved diagnostic when trying to overload a function in an ``extern "C"`` context. (#GH80235)
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
