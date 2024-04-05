@@ -47,6 +47,7 @@ add_libc_unittest(
   DEPENDS
     libc.src.fenv.fegetexceptflag
     libc.src.fenv.fesetexceptflag
+    libc.src.fenv.fetestexceptflag
     libc.src.__support.FPUtil.fenv_impl
 )
 

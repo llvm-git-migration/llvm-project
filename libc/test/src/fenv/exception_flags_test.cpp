@@ -1,4 +1,5 @@
-//===-- Unittests for fegetexceptflag and fesetexceptflag -----------------===//
+//===-- Unittests for fegetexceptflag, fesetexceptflag and ----------------===//
+//===-- fetestexceptflag --------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -8,6 +9,7 @@
 
 #include "src/fenv/fegetexceptflag.h"
 #include "src/fenv/fesetexceptflag.h"
+#include "src/fenv/fetestexceptflag.h"
 
 #include "src/__support/FPUtil/FEnvImpl.h"
 #include "test/UnitTest/Test.h"

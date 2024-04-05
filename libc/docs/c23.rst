@@ -21,7 +21,7 @@ Additions:
 * fenv.h
 
   * fesetexcept
-  * fetestexceptflag
+  * fetestexceptflag |check|
   * fegetmode
   * fesetmode
 * math.h
