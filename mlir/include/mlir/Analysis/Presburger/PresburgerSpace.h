@@ -250,11 +250,12 @@ public:
   /// locals).
   bool isEqual(const PresburgerSpace &other) const;
 
-  /// Get the identifier of the specified variable.
+  /// Get a mutable reference to the identifier of the specified variable.
   Identifier &getId(VarKind kind, unsigned pos) {
     assert(kind != VarKind::Local && "Local variables have no identifiers");
     return identifiers[getVarKindOffset(kind) + pos];
   }
+
   Identifier getId(VarKind kind, unsigned pos) const {
     assert(kind != VarKind::Local && "Local variables have no identifiers");
     return identifiers[getVarKindOffset(kind) + pos];
@@ -264,6 +265,8 @@ public:
     assert(kind != VarKind::Local && "Local variables have no identifiers");
     return {identifiers.data() + getVarKindOffset(kind), getNumVarKind(kind)};
   }
+
+  ArrayRef<Identifier> getIds() const { return identifiers; }
 
   /// Returns if identifiers are being used.
   bool isUsingIds() const { return usingIds; }
