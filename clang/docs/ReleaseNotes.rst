@@ -378,6 +378,9 @@ Improvements to Clang's diagnostics
 
 - Clang now emits a diagnostic note at the class declaration when the method definition does not match any declaration (#GH110638).
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
