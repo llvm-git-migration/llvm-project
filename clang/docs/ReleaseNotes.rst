@@ -254,6 +254,9 @@ Improvements to Clang's diagnostics
   compilation speed with modules. This warning is disabled by default and it needs
   to be explicitly enabled or by ``-Weverything``.
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
