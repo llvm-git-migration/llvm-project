@@ -270,6 +270,9 @@ Improvements to Clang's diagnostics
 
 - Clang now respects lifetimebound attribute for the assignment operator parameter. (#GH106372).
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
