@@ -357,6 +357,8 @@ public:
     VPWidenGEPSC,
     VPWidenLoadSC,
     VPWidenStoreSC,
+    VPWidenVPLoadSC,
+    VPWidenVPStoreSC,
     VPWidenSC,
     VPWidenSelectSC,
     // START: Phi-like recipes. Need to be kept together.

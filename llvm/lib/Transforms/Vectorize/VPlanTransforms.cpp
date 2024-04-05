@@ -1306,17 +1306,7 @@ void VPlanTransforms::addExplicitVectorLength(VPlan &Plan) {
   auto *CanonicalIVPHI = Plan.getCanonicalIV();
   VPValue *StartV = CanonicalIVPHI->getStartValue();
 
-  // TODO: revisit this and try to remove the mask operand.
-  // Walk VPWidenMemoryInstructionRecipe users of WideCanonicalIV and replace
-  // all compares of the form (ICMP_ULE, WideCanonicalIV, backedge-taken-count),
-  // used as mask in VPWidenMemoryInstructionRecipe, with an all-true-mask.
-  Value *TrueMask =
-      ConstantInt::getTrue(CanonicalIVPHI->getScalarType()->getContext());
-  VPValue *VPTrueMask = Plan.getOrAddLiveIn(TrueMask);
-  replaceHeaderPredicateWith(Plan, *VPTrueMask, [](VPUser &U, unsigned) {
-    return isa<VPWidenMemoryRecipe>(U);
-  });
-  // Now create the ExplicitVectorLengthPhi recipe in the main loop.
+  // Create the ExplicitVectorLengthPhi recipe in the main loop.
   auto *EVLPhi = new VPEVLBasedIVPHIRecipe(StartV, DebugLoc());
   EVLPhi->insertAfter(CanonicalIVPHI);
   auto *VPEVL = new VPInstruction(VPInstruction::ExplicitVectorLength,
@@ -1347,6 +1337,48 @@ void VPlanTransforms::addExplicitVectorLength(VPlan &Plan) {
   CanonicalIVIncrement->setOperand(0, CanonicalIVPHI);
   // TODO: support unroll factor > 1.
   Plan.setUF(1);
+
+  VPValue *BTC = Plan.getOrCreateBackedgeTakenCount();
+  auto IsHeaderMask = [BTC](VPValue *V) {
+    auto *CompareToReplace = dyn_cast<VPInstruction>(V);
+    return CompareToReplace &&
+           CompareToReplace->getOpcode() == Instruction::ICmp &&
+           CompareToReplace->getPredicate() == CmpInst::ICMP_ULE &&
+           CompareToReplace->getOperand(1) == BTC;
+  };
+
+  // Replace regular widened memory operations with vector-predicated versions.
+  auto Iter = vp_depth_first_deep(Header);
+  for (VPBasicBlock *VPBB : VPBlockUtils::blocksOnly<VPBasicBlock>(Iter)) {
+    for (VPRecipeBase &R : make_early_inc_range(*VPBB)) {
+      auto *MemR = dyn_cast<VPWidenMemoryRecipe>(&R);
+      if (!MemR)
+        continue;
+      VPValue *OrigMask = MemR->getMask();
+      if (!OrigMask)
+        continue;
+      assert(!MemR->isReverse() &&
+             "Reversed memory operations not supported yet.");
+      VPValue *Mask = IsHeaderMask(OrigMask) ? nullptr : OrigMask;
+      if (auto *L = dyn_cast<VPWidenLoadRecipe>(&R)) {
+        auto *N = new VPWidenVPLoadRecipe(cast<LoadInst>(L->getIngredient()),
+                                          L->getAddr(), VPEVL, Mask,
+                                          L->isConsecutive(), L->getDebugLoc());
+        N->insertBefore(L);
+        L->replaceAllUsesWith(N);
+        L->eraseFromParent();
+      } else if (auto *S = dyn_cast<VPWidenStoreRecipe>(&R)) {
+        auto *N = new VPWidenVPStoreRecipe(
+            cast<StoreInst>(S->getIngredient()), S->getStoredValue(),
+            S->getAddr(), VPEVL, Mask, S->isConsecutive(), S->getDebugLoc());
+        N->insertBefore(S);
+        S->eraseFromParent();
+      } else {
+        llvm_unreachable("unsupported recipe");
+      }
+      recursivelyDeleteDeadRecipes(OrigMask);
+    }
+  }
 }
 
 void VPlanTransforms::dropPoisonGeneratingRecipes(

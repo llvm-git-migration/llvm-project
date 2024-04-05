@@ -242,15 +242,6 @@ struct VPTransformState {
   ElementCount VF;
   unsigned UF;
 
-  /// If EVL (Explicit Vector Length) is not nullptr, then EVL must be a valid
-  /// value set during plan transformation, possibly a default value = whole
-  /// vector register length. EVL is created only if TTI prefers predicated
-  /// vectorization, thus if EVL is not nullptr it also implies preference for
-  /// predicated vectorization.
-  /// TODO: this is a temporarily solution, the EVL must be explicitly used by
-  /// the recipes and must be removed here.
-  VPValue *EVL = nullptr;
-
   /// Hold the indices to generate specific scalar instructions. Null indicates
   /// that all instances are to be generated, using either scalar or vector
   /// instructions.
@@ -2304,8 +2295,10 @@ public:
   VPRecipeBase *clone() override = 0;
 
   static inline bool classof(const VPRecipeBase *R) {
-    return R->getVPDefID() == VPDef::VPWidenLoadSC ||
-           R->getVPDefID() == VPDef::VPWidenStoreSC;
+    return R->getVPDefID() == VPRecipeBase::VPWidenLoadSC ||
+           R->getVPDefID() == VPRecipeBase::VPWidenStoreSC ||
+           R->getVPDefID() == VPRecipeBase::VPWidenVPLoadSC ||
+           R->getVPDefID() == VPRecipeBase::VPWidenVPStoreSC;
   }
 
   static inline bool classof(const VPUser *U) {
@@ -2320,6 +2313,10 @@ public:
       return getNumOperands() == 2;
     case VPDef::VPWidenStoreSC:
       return getNumOperands() == 3;
+    case VPDef::VPWidenVPLoadSC:
+      return getNumOperands() == 3;
+    case VPDef::VPWidenVPStoreSC:
+      return getNumOperands() == 4;
     default:
       llvm_unreachable("unhandled recipe");
     }
@@ -2329,8 +2326,10 @@ public:
   VPValue *getAddr() const {
     switch (getVPDefID()) {
     case VPDef::VPWidenLoadSC:
+    case VPDef::VPWidenVPLoadSC:
       return getOperand(0);
     case VPDef::VPWidenStoreSC:
+    case VPDef::VPWidenVPStoreSC:
       return getOperand(1);
     default:
       llvm_unreachable("unhandled recipe");
@@ -2392,7 +2391,51 @@ struct VPWidenLoadRecipe final : public VPWidenMemoryRecipe, public VPValue {
   bool onlyFirstLaneUsed(const VPValue *Op) const override {
     assert(is_contained(operands(), Op) &&
            "Op must be an operand of the recipe");
+    // Widened, consecutive memory operations only demand the first lane of
+    // their address, unless the same operand is also stored. That latter can
+    // happen with opaque pointers.
+    return Op == getAddr() && isConsecutive();
+  }
+};
 
+/// A recipe for widening load operations with vector-predication intrinsics,
+/// using the address to load from, the explicit vector length and an optional
+/// mask.
+struct VPWidenVPLoadRecipe final : public VPWidenMemoryRecipe, public VPValue {
+  VPWidenVPLoadRecipe(LoadInst &Load, VPValue *Addr, VPValue *EVL,
+                      VPValue *Mask, bool IsConsecutive, DebugLoc DL)
+      : VPWidenMemoryRecipe(VPDef::VPWidenVPLoadSC, Load, {Addr, EVL},
+                            IsConsecutive, false, DL),
+        VPValue(this, &Load) {
+    setMask(Mask);
+  }
+
+  VPRecipeBase *clone() override {
+    return new VPWidenVPLoadRecipe(cast<LoadInst>(Ingredient), getAddr(),
+                                   getEVL(), getMask(), isConsecutive(),
+                                   getDebugLoc());
+  }
+
+  VP_CLASSOF_IMPL(VPDef::VPWidenVPLoadSC)
+
+  /// Return the EVL operand.
+  VPValue *getEVL() const { return getOperand(1); }
+
+  /// Generate the wide load/store.
+  void execute(VPTransformState &State) override;
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Print the recipe.
+  void print(raw_ostream &O, const Twine &Indent,
+             VPSlotTracker &SlotTracker) const override;
+#endif
+
+  /// Returns true if the recipe only uses the first lane of operand \p Op.
+  bool onlyFirstLaneUsed(const VPValue *Op) const override {
+    assert(is_contained(operands(), Op) &&
+           "Op must be an operand of the recipe");
+    if (Op == getEVL())
+      return true;
     // Widened, consecutive loads operations only demand the first lane of
     // their address.
     return Op == getAddr() && isConsecutive();
@@ -2439,6 +2482,55 @@ struct VPWidenStoreRecipe final : public VPWidenMemoryRecipe {
     return Op == getAddr() && isConsecutive() && Op != getStoredValue();
   }
 };
+
+/// A recipe for widening store operations with vector-predication intrinsics,
+/// using the value to store, the address to store to , the explicit vector
+/// length and an optional mask.
+struct VPWidenVPStoreRecipe final : public VPWidenMemoryRecipe {
+  VPWidenVPStoreRecipe(StoreInst &Store, VPValue *StoredVal, VPValue *Addr,
+                       VPValue *EVL, VPValue *Mask, bool IsConsecutive,
+                       DebugLoc DL)
+      : VPWidenMemoryRecipe(VPDef::VPWidenVPStoreSC, Store,
+                            {StoredVal, Addr, EVL}, IsConsecutive, false, DL) {
+    setMask(Mask);
+  }
+
+  VPRecipeBase *clone() override {
+    return new VPWidenVPStoreRecipe(cast<StoreInst>(Ingredient),
+                                    getStoredValue(), getAddr(), getEVL(),
+                                    getMask(), isConsecutive(), getDebugLoc());
+  }
+
+  VP_CLASSOF_IMPL(VPDef::VPWidenVPStoreSC)
+
+  /// Return the address accessed by this recipe.
+  VPValue *getStoredValue() const { return getOperand(0); }
+
+  /// Return the EVL operand.
+  VPValue *getEVL() const { return getOperand(2); }
+
+  /// Generate the wide load/store.
+  void execute(VPTransformState &State) override;
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Print the recipe.
+  void print(raw_ostream &O, const Twine &Indent,
+             VPSlotTracker &SlotTracker) const override;
+#endif
+
+  /// Returns true if the recipe only uses the first lane of operand \p Op.
+  bool onlyFirstLaneUsed(const VPValue *Op) const override {
+    assert(is_contained(operands(), Op) &&
+           "Op must be an operand of the recipe");
+    if (Op == getEVL())
+      return true;
+    // Widened, consecutive memory operations only demand the first lane of
+    // their address, unless the same operand is also stored. That latter can
+    // happen with opaque pointers.
+    return Op == getAddr() && isConsecutive() && Op != getStoredValue();
+  }
+};
+
 /// Recipe to expand a SCEV expression.
 class VPExpandSCEVRecipe : public VPSingleDefRecipe {
   const SCEV *Expr;

@@ -411,8 +411,6 @@ Value *VPInstruction::generatePerPart(VPTransformState &State, unsigned Part) {
     Value *TripCount = State.get(getOperand(1), VPIteration(0, 0));
     Value *AVL = State.Builder.CreateSub(TripCount, Index);
     Value *EVL = GetEVL(State, AVL);
-    assert(!State.EVL && "multiple EVL recipes");
-    State.EVL = this;
     return EVL;
   }
   case VPInstruction::CanonicalIVIncrementForPart: {
@@ -1724,9 +1722,23 @@ void VPWidenLoadRecipe::print(raw_ostream &O, const Twine &Indent,
   printOperands(O, SlotTracker);
 }
 
+void VPWidenVPLoadRecipe::print(raw_ostream &O, const Twine &Indent,
+                                VPSlotTracker &SlotTracker) const {
+  O << Indent << "WIDEN ";
+  printAsOperand(O, SlotTracker);
+  O << " = vp.load ";
+  printOperands(O, SlotTracker);
+}
+
 void VPWidenStoreRecipe::print(raw_ostream &O, const Twine &Indent,
                                VPSlotTracker &SlotTracker) const {
   O << Indent << "WIDEN store ";
+  printOperands(O, SlotTracker);
+}
+
+void VPWidenVPStoreRecipe::print(raw_ostream &O, const Twine &Indent,
+                                 VPSlotTracker &SlotTracker) const {
+  O << Indent << "WIDEN vp.store ";
   printOperands(O, SlotTracker);
 }
 #endif
