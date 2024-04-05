@@ -40,9 +40,9 @@ define void @inlined_set_doesnt_call_external_function(ptr %a, i8 %value) nounwi
 define void @pr87819(ptr align 8 %a) nounwind {
 ; CHECK-LABEL: pr87819:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movl $256, %ecx # imm = 0x100
-; CHECK-NEXT:    movl $707406378, %eax # imm = 0x2A2A2A2A
-; CHECK-NEXT:    rep;stosl %eax, %es:(%rdi)
+; CHECK-NEXT:    movabsq $3038287259199220266, %rax # imm = 0x2A2A2A2A2A2A2A2A
+; CHECK-NEXT:    movl $128, %ecx
+; CHECK-NEXT:    rep;stosq %rax, %es:(%rdi)
 ; CHECK-NEXT:    retq
   tail call void @llvm.memset.inline.p0.i64(ptr align 8 %a, i8 42, i64 1024, i1 0)
   ret void
