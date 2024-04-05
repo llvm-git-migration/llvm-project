@@ -2528,6 +2528,18 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
       return optimizeGatherScatterInst(II, II->getArgOperand(0));
     case Intrinsic::masked_scatter:
       return optimizeGatherScatterInst(II, II->getArgOperand(1));
+    case Intrinsic::threadlocal_address:
+      // SelectionDAGBuilder currently skips this intrinsic anyway; but removing
+      // it earlier means the addresses will not be kept in registers accross
+      // basic blocks but recomputed. This is preferable on architectures where
+      // TLS is part of normal addressing modes.
+      GlobalVariable &GV = cast<GlobalVariable>(*II->getArgOperand(0));
+      if (TLI->cheapToRecomputeTLSAddress(GV)) {
+        replaceAllUsesWith(II, &GV, FreshBBs, IsHugeFunc);
+        II->eraseFromParent();
+        return true;
+      }
+      break;
     }
 
     SmallVector<Value *, 2> PtrOps;
