@@ -66,8 +66,10 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
   // If not DWORD aligned or size is more than the threshold, call the library.
   // The libc version is likely to be faster for these cases. It can use the
   // address value and run time information about the CPU.
-  if (Alignment < Align(4) || !ConstantSize ||
-      ConstantSize->getZExtValue() > Subtarget.getMaxInlineSizeThreshold()) 
+  if (!ConstantSize ||
+      (!AlwaysInline &&
+       (Alignment < Align(4) ||
+        ConstantSize->getZExtValue() > Subtarget.getMaxInlineSizeThreshold())))
     return SDValue();
 
   uint64_t SizeVal = ConstantSize->getZExtValue();
