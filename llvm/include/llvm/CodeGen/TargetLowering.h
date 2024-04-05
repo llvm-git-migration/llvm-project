@@ -3393,6 +3393,13 @@ public:
     return nullptr;
   }
 
+  /// Returns true if thread local storage (TLS) addresses are so cheap to
+  /// re-compute that it is not worth keeping them in a register between basic
+  /// blocks.
+  virtual bool cheapToRecomputeTLSAddress(const GlobalVariable &) const {
+    return false;
+  }
+
   //===--------------------------------------------------------------------===//
   // Runtime Library hooks
   //

@@ -1661,6 +1661,8 @@ namespace llvm {
     SDValue LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
 
+    bool cheapToRecomputeTLSAddress(const GlobalVariable &GV) const override;
+
     /// Creates target global address or external symbol nodes for calls or
     /// other uses.
     SDValue LowerGlobalOrExternal(SDValue Op, SelectionDAG &DAG,

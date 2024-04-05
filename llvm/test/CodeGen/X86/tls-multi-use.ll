@@ -12,31 +12,20 @@ declare nonnull ptr @llvm.threadlocal.address.p0(ptr nonnull)
 define i32 @tls_multi_use(i32 %arg) {
 ; CHECK-LABEL: tls_multi_use:
 ; CHECK:       # %bb.0: # %entry
-; CHECK-NEXT:    pushq %r14
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    pushq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 24
-; CHECK-NEXT:    pushq %rax
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    .cfi_offset %rbx, -24
-; CHECK-NEXT:    .cfi_offset %r14, -16
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
+; CHECK-NEXT:    .cfi_offset %rbx, -16
 ; CHECK-NEXT:    movl %fs:foo@TPOFF, %ebx
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    movl %ebx, %eax
 ; CHECK-NEXT:    jne .LBB0_2
 ; CHECK-NEXT:  # %bb.1: # %if.then
-; CHECK-NEXT:    movq %fs:0, %rax
-; CHECK-NEXT:    leaq foo@TPOFF(%rax), %r14
 ; CHECK-NEXT:    callq rand@PLT
-; CHECK-NEXT:    movl (%r14), %eax
+; CHECK-NEXT:    movl %fs:foo@TPOFF, %eax
 ; CHECK-NEXT:  .LBB0_2: # %if.end
 ; CHECK-NEXT:    addl %eax, %ebx
 ; CHECK-NEXT:    movl %ebx, %eax
-; CHECK-NEXT:    addq $8, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 24
 ; CHECK-NEXT:    popq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    popq %r14
 ; CHECK-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-NEXT:    retq
 ;
@@ -93,31 +82,20 @@ if.end:
 define i32 @tls_multi_use_nonlocal(i32 %arg) {
 ; CHECK-LABEL: tls_multi_use_nonlocal:
 ; CHECK:       # %bb.0: # %entry
-; CHECK-NEXT:    pushq %r14
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    pushq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 24
-; CHECK-NEXT:    pushq %rax
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    .cfi_offset %rbx, -24
-; CHECK-NEXT:    .cfi_offset %r14, -16
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
+; CHECK-NEXT:    .cfi_offset %rbx, -16
 ; CHECK-NEXT:    movl %fs:foo@TPOFF, %ebx
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    movl %ebx, %eax
 ; CHECK-NEXT:    jne .LBB1_2
 ; CHECK-NEXT:  # %bb.1: # %if.then
-; CHECK-NEXT:    movq %fs:0, %rax
-; CHECK-NEXT:    leaq foo@TPOFF(%rax), %r14
 ; CHECK-NEXT:    callq rand@PLT
-; CHECK-NEXT:    movl (%r14), %eax
+; CHECK-NEXT:    movl %fs:foo@TPOFF, %eax
 ; CHECK-NEXT:  .LBB1_2: # %if.end
 ; CHECK-NEXT:    addl %eax, %ebx
 ; CHECK-NEXT:    movl %ebx, %eax
-; CHECK-NEXT:    addq $8, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 24
 ; CHECK-NEXT:    popq %rbx
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    popq %r14
 ; CHECK-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-NEXT:    retq
 ;
