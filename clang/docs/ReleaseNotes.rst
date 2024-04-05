@@ -336,6 +336,9 @@ Improvements to Clang's diagnostics
   local variables passed to function calls using the ``[[clang::musttail]]``
   attribute.
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
