@@ -41,8 +41,8 @@ template <class _ExecutionPolicy,
           class _Tp,
           class _RawPolicy                                    = __remove_cvref_t<_ExecutionPolicy>,
           enable_if_t<is_execution_policy_v<_RawPolicy>, int> = 0>
-_LIBCPP_HIDE_FROM_ABI optional<__empty>
-__fill(_ExecutionPolicy&& __policy, _ForwardIterator __first, _ForwardIterator __last, const _Tp& __value) noexcept {
+_LIBCPP_HIDE_FROM_ABI optional<__empty> __fill(
+    _ExecutionPolicy&& __policy, _ForwardIterator&& __first, _ForwardIterator&& __last, const _Tp& __value) noexcept {
   _LIBCPP_REQUIRE_CPP17_FORWARD_ITERATOR(_ForwardIterator);
   return std::__pstl_frontend_dispatch(
       _LIBCPP_PSTL_CUSTOMIZATION_POINT(__pstl_fill, _RawPolicy),
@@ -51,8 +51,8 @@ __fill(_ExecutionPolicy&& __policy, _ForwardIterator __first, _ForwardIterator _
           __element = __g_value;
         });
       },
-      std::move(__first),
-      std::move(__last),
+      std::forward<_ForwardIterator>(__first),
+      std::forward<_ForwardIterator>(__last),
       __value);
 }
 

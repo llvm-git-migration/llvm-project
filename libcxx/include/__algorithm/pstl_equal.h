@@ -86,7 +86,10 @@ template <class _ExecutionPolicy,
           enable_if_t<is_execution_policy_v<__remove_cvref_t<_ExecutionPolicy>>, int> = 0>
 _LIBCPP_HIDE_FROM_ABI bool
 equal(_ExecutionPolicy&& __policy, _ForwardIterator1 __first1, _ForwardIterator1 __last1, _ForwardIterator2 __first2) {
-  return std::equal(__policy, std::move(__first1), std::move(__last1), std::move(__first2), std::equal_to{});
+  auto __res = std::__equal(__policy, std::move(__first1), std::move(__last1), std::move(__first2), std::equal_to{});
+  if (!__res)
+    std::__throw_bad_alloc();
+  return *__res;
 }
 
 template <class _ExecutionPolicy,
@@ -162,8 +165,11 @@ equal(_ExecutionPolicy&& __policy,
       _ForwardIterator1 __last1,
       _ForwardIterator2 __first2,
       _ForwardIterator2 __last2) {
-  return std::equal(
+  auto __res = std::__equal(
       __policy, std::move(__first1), std::move(__last1), std::move(__first2), std::move(__last2), std::equal_to{});
+  if (!__res)
+    std::__throw_bad_alloc();
+  return *__res;
 }
 
 _LIBCPP_END_NAMESPACE_STD
