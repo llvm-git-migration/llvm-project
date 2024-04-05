@@ -85,18 +85,18 @@ add_object_library(
     .writer
     .core_structs
     .printf_config
+    libc.src.__support.big_int
+    libc.src.__support.common
     libc.src.__support.CPP.limits
     libc.src.__support.CPP.span
     libc.src.__support.CPP.string_view
-    libc.src.__support.FPUtil.fp_bits
-    libc.src.__support.FPUtil.fenv_impl
-    libc.src.__support.FPUtil.rounding_mode
-    libc.src.__support.common
-    libc.src.__support.libc_assert
-    libc.src.__support.uint
-    libc.src.__support.uint128
-    libc.src.__support.integer_to_string
     libc.src.__support.float_to_string
+    libc.src.__support.FPUtil.fenv_impl
+    libc.src.__support.FPUtil.fp_bits
+    libc.src.__support.FPUtil.rounding_mode
+    libc.src.__support.integer_to_string
+    libc.src.__support.libc_assert
+    libc.src.__support.uint128
 )
 
 

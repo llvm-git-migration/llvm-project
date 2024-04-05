@@ -472,12 +472,12 @@ libc_support_library(
         "src/__support/ryu_long_double_constants.h",
     ],
     deps = [
+        ":__support_big_int",
         ":__support_common",
         ":__support_cpp_type_traits",
         ":__support_fputil_dyadic_float",
         ":__support_fputil_fp_bits",
         ":__support_libc_assert",
-        ":__support_uint",
     ],
 )
 
@@ -490,8 +490,8 @@ libc_support_library(
 )
 
 libc_support_library(
-    name = "__support_uint",
-    hdrs = ["src/__support/UInt.h"],
+    name = "__support_big_int",
+    hdrs = ["src/__support/big_int.h"],
     deps = [
         ":__support_cpp_array",
         ":__support_cpp_bit",
@@ -516,11 +516,11 @@ libc_support_library(
 
 libc_support_library(
     name = "__support_uint128",
-    hdrs = ["src/__support/UInt128.h"],
+    hdrs = ["src/__support/uint128.h"],
     deps = [
+        ":__support_big_int",
         ":__support_macros_attributes",
         ":__support_macros_properties_types",
-        ":__support_uint",
     ],
 )
 
@@ -549,6 +549,7 @@ libc_support_library(
     name = "__support_integer_to_string",
     hdrs = ["src/__support/integer_to_string.h"],
     deps = [
+        ":__support_big_int",
         ":__support_common",
         ":__support_cpp_algorithm",
         ":__support_cpp_bit",
@@ -557,7 +558,6 @@ libc_support_library(
         ":__support_cpp_span",
         ":__support_cpp_string_view",
         ":__support_cpp_type_traits",
-        ":__support_uint",
     ],
 )
 
@@ -961,11 +961,11 @@ libc_support_library(
     name = "__support_fputil_dyadic_float",
     hdrs = ["src/__support/FPUtil/dyadic_float.h"],
     deps = [
+        ":__support_big_int",
         ":__support_common",
         ":__support_fputil_fp_bits",
         ":__support_fputil_multiply_add",
         ":__support_macros_optimization",
-        ":__support_uint",
     ],
 )
 
@@ -1695,13 +1695,19 @@ libc_math_function(
 )
 
 libc_math_function(name = "fabs")
+
 libc_math_function(name = "fabsf")
+
 libc_math_function(name = "fabsl")
+
 libc_math_function(name = "fabsf128")
 
 libc_math_function(name = "fdim")
+
 libc_math_function(name = "fdimf")
+
 libc_math_function(name = "fdiml")
+
 libc_math_function(name = "fdimf128")
 
 libc_math_function(
@@ -1729,7 +1735,6 @@ libc_math_function(
 
 libc_math_function(name = "ceilf128")
 
-
 libc_math_function(
     name = "floor",
     specializations = [
@@ -1747,11 +1752,15 @@ libc_math_function(
 )
 
 libc_math_function(name = "floorl")
+
 libc_math_function(name = "floorf128")
 
 libc_math_function(name = "ldexp")
+
 libc_math_function(name = "ldexpf")
+
 libc_math_function(name = "ldexpl")
+
 libc_math_function(name = "ldexpf128")
 
 libc_math_function(
@@ -1771,6 +1780,7 @@ libc_math_function(
 )
 
 libc_math_function(name = "truncl")
+
 libc_math_function(name = "truncf128")
 
 libc_math_function(
@@ -1790,6 +1800,7 @@ libc_math_function(
 )
 
 libc_math_function(name = "roundl")
+
 libc_math_function(name = "roundf128")
 
 libc_math_function(
@@ -1807,8 +1818,11 @@ libc_math_function(
 )
 
 libc_math_function(name = "frexp")
+
 libc_math_function(name = "frexpf")
+
 libc_math_function(name = "frexpl")
+
 libc_math_function(name = "frexpf128")
 
 libc_math_function(name = "hypot")
@@ -1821,31 +1835,47 @@ libc_math_function(
 )
 
 libc_math_function(name = "logb")
+
 libc_math_function(name = "logbf")
+
 libc_math_function(name = "logbl")
+
 libc_math_function(name = "logbf128")
 
 libc_math_function(name = "modf")
+
 libc_math_function(name = "modff")
+
 libc_math_function(name = "modfl")
+
 libc_math_function(name = "modff128")
 
 libc_math_function(name = "remquo")
+
 libc_math_function(name = "remquof")
+
 libc_math_function(name = "remquol")
 
 libc_math_function(name = "remainder")
+
 libc_math_function(name = "remainderf")
+
 libc_math_function(name = "remainderl")
 
 libc_math_function(name = "fmin")
+
 libc_math_function(name = "fminf")
+
 libc_math_function(name = "fminl")
+
 libc_math_function(name = "fminf128")
 
 libc_math_function(name = "fmax")
+
 libc_math_function(name = "fmaxf")
+
 libc_math_function(name = "fmaxl")
+
 libc_math_function(name = "fmaxf128")
 
 libc_math_function(
@@ -1928,38 +1958,59 @@ libc_math_function(
 )
 
 libc_math_function(name = "copysign")
+
 libc_math_function(name = "copysignf")
+
 libc_math_function(name = "copysignl")
+
 libc_math_function(name = "copysignf128")
 
 libc_math_function(name = "ilogb")
+
 libc_math_function(name = "ilogbf")
+
 libc_math_function(name = "ilogbl")
+
 libc_math_function(name = "ilogbf128")
 
 libc_math_function(name = "rint")
+
 libc_math_function(name = "rintf")
+
 libc_math_function(name = "rintl")
+
 libc_math_function(name = "rintf128")
 
 libc_math_function(name = "lrint")
+
 libc_math_function(name = "lrintf")
+
 libc_math_function(name = "lrintl")
+
 libc_math_function(name = "lrintf128")
 
 libc_math_function(name = "llrint")
+
 libc_math_function(name = "llrintf")
+
 libc_math_function(name = "llrintl")
+
 libc_math_function(name = "llrintf128")
 
 libc_math_function(name = "lround")
+
 libc_math_function(name = "lroundf")
+
 libc_math_function(name = "lroundl")
+
 libc_math_function(name = "lroundf128")
 
 libc_math_function(name = "llround")
+
 libc_math_function(name = "llroundf")
+
 libc_math_function(name = "llroundl")
+
 libc_math_function(name = "llroundf128")
 
 libc_math_function(
@@ -1995,20 +2046,29 @@ libc_math_function(
 )
 
 libc_math_function(name = "nearbyint")
+
 libc_math_function(name = "nearbyintf")
+
 libc_math_function(name = "nearbyintl")
 
 libc_math_function(name = "nextafter")
+
 libc_math_function(name = "nextafterf")
+
 libc_math_function(name = "nextafterl")
+
 libc_math_function(name = "nextafterf128")
 
 libc_math_function(name = "nexttoward")
+
 libc_math_function(name = "nexttowardf")
+
 libc_math_function(name = "nexttowardl")
 
 libc_math_function(name = "scalbn")
+
 libc_math_function(name = "scalbnf")
+
 libc_math_function(name = "scalbnl")
 
 ############################## inttypes targets ##############################
@@ -3097,6 +3157,7 @@ libc_support_library(
     ],
     defines = PRINTF_COPTS,
     deps = [
+        ":__support_big_int",
         ":__support_common",
         ":__support_cpp_limits",
         ":__support_cpp_span",
@@ -3107,7 +3168,6 @@ libc_support_library(
         ":__support_fputil_rounding_mode",
         ":__support_integer_to_string",
         ":__support_libc_assert",
-        ":__support_uint",
         ":__support_uint128",
         ":printf_config",
         ":printf_core_structs",
