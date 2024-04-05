@@ -1243,7 +1243,10 @@ std::optional<unsigned> Sema::getFullyPackExpandedSize(TemplateArgument Arg) {
     // expanded this pack expansion into the enclosing pack if we could.
     if (Elem.isPackExpansion())
       return std::nullopt;
+    if (Elem.containsUnexpandedParameterPack())
+      return std::nullopt;
   }
+  // llvm::errs() << "Optimization takes effect: " << Pack.pack_size() << "\n";
   return Pack.pack_size();
 }
 
