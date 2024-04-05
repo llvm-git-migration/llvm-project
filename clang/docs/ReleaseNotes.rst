@@ -380,6 +380,9 @@ Improvements to Clang's diagnostics
 
 - Clang now omits warnings for extra parentheses in fold expressions with single expansion (#GH101863).
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
