@@ -235,6 +235,9 @@ Improvements to Clang's diagnostics
 
 - Improved diagnostic when trying to befriend a concept. (#GH45182).
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH60718
+
 Improvements to Clang's time-trace
 ----------------------------------
 
