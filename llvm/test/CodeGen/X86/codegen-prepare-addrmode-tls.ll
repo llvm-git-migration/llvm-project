@@ -13,88 +13,55 @@ declare nonnull ptr @llvm.threadlocal.address.p0(ptr nonnull)
 define i32 @func_local_tls(i32 %arg0, i32 %arg1) {
 ; NOPIC-LABEL: func_local_tls:
 ; NOPIC:       # %bb.0: # %entry
-; NOPIC-NEXT:    pushq %r14
-; NOPIC-NEXT:    .cfi_def_cfa_offset 16
 ; NOPIC-NEXT:    pushq %rbx
-; NOPIC-NEXT:    .cfi_def_cfa_offset 24
-; NOPIC-NEXT:    pushq %rax
-; NOPIC-NEXT:    .cfi_def_cfa_offset 32
-; NOPIC-NEXT:    .cfi_offset %rbx, -24
-; NOPIC-NEXT:    .cfi_offset %r14, -16
+; NOPIC-NEXT:    .cfi_def_cfa_offset 16
+; NOPIC-NEXT:    .cfi_offset %rbx, -16
 ; NOPIC-NEXT:    movl %fs:foo_local@TPOFF, %ebx
 ; NOPIC-NEXT:    testl %edi, %edi
 ; NOPIC-NEXT:    movl %ebx, %eax
 ; NOPIC-NEXT:    jne .LBB0_2
 ; NOPIC-NEXT:  # %bb.1: # %if.then
-; NOPIC-NEXT:    movq %fs:0, %rax
-; NOPIC-NEXT:    leaq foo_local@TPOFF(%rax), %r14
 ; NOPIC-NEXT:    callq effect@PLT
-; NOPIC-NEXT:    movl (%r14), %eax
+; NOPIC-NEXT:    movl %fs:foo_local@TPOFF, %eax
 ; NOPIC-NEXT:  .LBB0_2: # %if.end
 ; NOPIC-NEXT:    addl %ebx, %eax
-; NOPIC-NEXT:    addq $8, %rsp
-; NOPIC-NEXT:    .cfi_def_cfa_offset 24
 ; NOPIC-NEXT:    popq %rbx
-; NOPIC-NEXT:    .cfi_def_cfa_offset 16
-; NOPIC-NEXT:    popq %r14
 ; NOPIC-NEXT:    .cfi_def_cfa_offset 8
 ; NOPIC-NEXT:    retq
 ;
 ; PIC-LABEL: func_local_tls:
 ; PIC:       # %bb.0: # %entry
-; PIC-NEXT:    pushq %r14
-; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    pushq %rbx
-; PIC-NEXT:    .cfi_def_cfa_offset 24
-; PIC-NEXT:    pushq %rax
-; PIC-NEXT:    .cfi_def_cfa_offset 32
-; PIC-NEXT:    .cfi_offset %rbx, -24
-; PIC-NEXT:    .cfi_offset %r14, -16
+; PIC-NEXT:    .cfi_def_cfa_offset 16
+; PIC-NEXT:    .cfi_offset %rbx, -16
 ; PIC-NEXT:    movl %fs:.Lfoo_local$local@TPOFF, %ebx
 ; PIC-NEXT:    testl %edi, %edi
 ; PIC-NEXT:    movl %ebx, %eax
 ; PIC-NEXT:    jne .LBB0_2
 ; PIC-NEXT:  # %bb.1: # %if.then
-; PIC-NEXT:    movq %fs:0, %rax
-; PIC-NEXT:    leaq .Lfoo_local$local@TPOFF(%rax), %r14
 ; PIC-NEXT:    callq effect@PLT
-; PIC-NEXT:    movl (%r14), %eax
+; PIC-NEXT:    movl %fs:.Lfoo_local$local@TPOFF, %eax
 ; PIC-NEXT:  .LBB0_2: # %if.end
 ; PIC-NEXT:    addl %ebx, %eax
-; PIC-NEXT:    addq $8, %rsp
-; PIC-NEXT:    .cfi_def_cfa_offset 24
 ; PIC-NEXT:    popq %rbx
-; PIC-NEXT:    .cfi_def_cfa_offset 16
-; PIC-NEXT:    popq %r14
 ; PIC-NEXT:    .cfi_def_cfa_offset 8
 ; PIC-NEXT:    retq
 ;
 ; TLSDESC-LABEL: func_local_tls:
 ; TLSDESC:       # %bb.0: # %entry
-; TLSDESC-NEXT:    pushq %r14
-; TLSDESC-NEXT:    .cfi_def_cfa_offset 16
 ; TLSDESC-NEXT:    pushq %rbx
-; TLSDESC-NEXT:    .cfi_def_cfa_offset 24
-; TLSDESC-NEXT:    pushq %rax
-; TLSDESC-NEXT:    .cfi_def_cfa_offset 32
-; TLSDESC-NEXT:    .cfi_offset %rbx, -24
-; TLSDESC-NEXT:    .cfi_offset %r14, -16
+; TLSDESC-NEXT:    .cfi_def_cfa_offset 16
+; TLSDESC-NEXT:    .cfi_offset %rbx, -16
 ; TLSDESC-NEXT:    movl %fs:.Lfoo_local$local@TPOFF, %ebx
 ; TLSDESC-NEXT:    testl %edi, %edi
 ; TLSDESC-NEXT:    movl %ebx, %eax
 ; TLSDESC-NEXT:    jne .LBB0_2
 ; TLSDESC-NEXT:  # %bb.1: # %if.then
-; TLSDESC-NEXT:    movq %fs:0, %rax
-; TLSDESC-NEXT:    leaq .Lfoo_local$local@TPOFF(%rax), %r14
 ; TLSDESC-NEXT:    callq effect@PLT
-; TLSDESC-NEXT:    movl (%r14), %eax
+; TLSDESC-NEXT:    movl %fs:.Lfoo_local$local@TPOFF, %eax
 ; TLSDESC-NEXT:  .LBB0_2: # %if.end
 ; TLSDESC-NEXT:    addl %ebx, %eax
-; TLSDESC-NEXT:    addq $8, %rsp
-; TLSDESC-NEXT:    .cfi_def_cfa_offset 24
 ; TLSDESC-NEXT:    popq %rbx
-; TLSDESC-NEXT:    .cfi_def_cfa_offset 16
-; TLSDESC-NEXT:    popq %r14
 ; TLSDESC-NEXT:    .cfi_def_cfa_offset 8
 ; TLSDESC-NEXT:    retq
 entry:
@@ -135,9 +102,8 @@ define i32 @func_nonlocal_tls(i32 %arg0, i32 %arg1) {
 ; NOPIC-NEXT:    movl %ebx, %eax
 ; NOPIC-NEXT:    jne .LBB1_2
 ; NOPIC-NEXT:  # %bb.1: # %if.then
-; NOPIC-NEXT:    addq %fs:0, %r14
 ; NOPIC-NEXT:    callq effect@PLT
-; NOPIC-NEXT:    movl (%r14), %eax
+; NOPIC-NEXT:    movl %fs:(%r14), %eax
 ; NOPIC-NEXT:  .LBB1_2: # %if.end
 ; NOPIC-NEXT:    addl %ebx, %eax
 ; NOPIC-NEXT:    addq $8, %rsp
