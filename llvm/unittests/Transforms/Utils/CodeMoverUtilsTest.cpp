@@ -615,6 +615,7 @@ TEST(CodeMoverUtils, IsSafeToMoveTest3) {
         Instruction *CmpInst = getInstructionByName(F, "cmp");
         BasicBlock *BB0 = getBasicBlockByName(F, "for.body");
         BasicBlock *BB1 = getBasicBlockByName(F, "for.latch");
+        BasicBlock *BB2 = getBasicBlockByName(F, "for.end");
 
         // Can move as the incoming block of %inc for %i (%for.latch) dominated
         // by %cmp.
@@ -625,6 +626,13 @@ TEST(CodeMoverUtils, IsSafeToMoveTest3) {
         // before %add2 although %add does not dominate InsertPoint.
         EXPECT_TRUE(
             isSafeToMoveBefore(*BB1, *BB0->getTerminator(), DT, &PDT, &DI));
+
+        // Can move as the operands of instructions in BB1 either dominate
+        // InsertPoint or appear before that instruction, e.g., %add appears
+        // before %add2 although %add does not dominate InsertPoint.
+        EXPECT_TRUE(
+            isSafeToMoveBefore(*BB1, *BB2->getTerminator(), DT, &PDT, &DI));
+
       });
 }
 
