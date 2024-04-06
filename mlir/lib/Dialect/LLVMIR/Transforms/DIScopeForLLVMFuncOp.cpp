@@ -117,7 +117,8 @@ struct DIScopeForLLVMFuncOp
       compileUnitAttr = LLVM::DICompileUnitAttr::get(
           context, DistinctAttr::create(UnitAttr::get(context)),
           llvm::dwarf::DW_LANG_C, fileAttr, StringAttr::get(context, "MLIR"),
-          /*isOptimized=*/true, LLVM::DIEmissionKind::LineTablesOnly);
+          /*isOptimized=*/true, LLVM::DIEmissionKind::LineTablesOnly,
+          LLVM::DINameTableKind::Default);
     }
 
     // Create subprograms for each function with the same distinct compile unit.

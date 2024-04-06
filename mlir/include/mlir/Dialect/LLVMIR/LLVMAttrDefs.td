@@ -350,7 +350,9 @@ def LLVM_DICompileUnitAttr : LLVM_Attr<"DICompileUnit", "di_compile_unit",
     "DIFileAttr":$file,
     OptionalParameter<"StringAttr">:$producer,
     "bool":$isOptimized,
-    "DIEmissionKind":$emissionKind
+    "DIEmissionKind":$emissionKind,
+    DefaultValuedParameter<
+      "DINameTableKind", "DINameTableKind::Default">:$nameTableKind
   );
   let assemblyFormat = "`<` struct(params) `>`";
 }
