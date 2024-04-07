@@ -41,7 +41,7 @@
 
 inline constexpr std::chrono::leap_second
 test_leap_second_create(const std::chrono::sys_seconds& date, const std::chrono::seconds& value) {
-  return std::chrono::leap_second{std::chrono::leap_second::__constructor_tag{}, date, value};
+  return std::chrono::leap_second{std::__private_constructor_tag{}, date, value};
 }
 
 #else // _LIBCPP_VERSION
