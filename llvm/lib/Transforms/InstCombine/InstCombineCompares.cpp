@@ -1409,6 +1409,21 @@ Instruction *InstCombinerImpl::foldICmpTruncConstant(ICmpInst &Cmp,
                                                      const APInt &C) {
   ICmpInst::Predicate Pred = Cmp.getPredicate();
   Value *X = Trunc->getOperand(0);
+  Type *SrcTy = X->getType();
+  unsigned DstBits = Trunc->getType()->getScalarSizeInBits(),
+           SrcBits = SrcTy->getScalarSizeInBits();
+
+  // Match (icmp pred (trunc nuw/nsw X), C)
+  // Which we can convert to (icmp pred X, (sext/zext C))
+  if (shouldChangeType(DstBits, SrcBits)) {
+    // Potential TODO: Swap the two cases so we try the `sext` case first which
+    // might produce easier to materialize constants.
+    if (!Cmp.isSigned() && Trunc->hasNoUnsignedWrap())
+      return new ICmpInst(Pred, X, ConstantInt::get(SrcTy, C.zext(SrcBits)));
+    if (Trunc->hasNoSignedWrap())
+      return new ICmpInst(Pred, X, ConstantInt::get(SrcTy, C.sext(SrcBits)));
+  }
+
   if (C.isOne() && C.getBitWidth() > 1) {
     // icmp slt trunc(signum(V)) 1 --> icmp slt V, 1
     Value *V = nullptr;
@@ -1416,10 +1431,6 @@ Instruction *InstCombinerImpl::foldICmpTruncConstant(ICmpInst &Cmp,
       return new ICmpInst(ICmpInst::ICMP_SLT, V,
                           ConstantInt::get(V->getType(), 1));
   }
-
-  Type *SrcTy = X->getType();
-  unsigned DstBits = Trunc->getType()->getScalarSizeInBits(),
-           SrcBits = SrcTy->getScalarSizeInBits();
 
   // TODO: Handle any shifted constant by subtracting trailing zeros.
   // TODO: Handle non-equality predicates.
