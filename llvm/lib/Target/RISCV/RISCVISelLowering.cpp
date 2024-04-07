@@ -13597,8 +13597,18 @@ struct NodeExtensionHelper {
     case RISCVISD::VSEXT_VL:
     case RISCVISD::VZEXT_VL:
     case RISCVISD::FP_EXTEND_VL:
-    case ISD::SPLAT_VECTOR:
       return OrigOperand.getOperand(0);
+    case ISD::SPLAT_VECTOR: {
+      SDValue Op = OrigOperand.getOperand(0);
+      unsigned Opc = Op.getOpcode();
+      if (SupportsSExt && Opc == ISD::SIGN_EXTEND_INREG)
+        return Op.getOperand(0);
+
+      if (SupportsZExt && Opc == ISD::AND)
+        return Op.getOperand(0);
+
+      return Op;
+    }
     default:
       return OrigOperand;
     }
@@ -13606,8 +13616,8 @@ struct NodeExtensionHelper {
 
   /// Check if this instance represents a splat.
   bool isSplat() const {
-    return (OrigOperand.getOpcode() == RISCVISD::VMV_V_X_VL) ||
-           (OrigOperand.getOpcode() == ISD::SPLAT_VECTOR);
+    return (OrigOperand.getOpcode() == RISCVISD::VMV_V_X_VL ||
+            OrigOperand.getOpcode() == ISD::SPLAT_VECTOR);
   }
 
   /// Get the extended opcode.
@@ -13652,7 +13662,7 @@ struct NodeExtensionHelper {
     case RISCVISD::FP_EXTEND_VL:
       return DAG.getNode(ExtOpc, DL, NarrowVT, Source, Mask, VL);
     case ISD::SPLAT_VECTOR:
-      return DAG.getSplat(NarrowVT, DL, Source.getOperand(0));
+      return DAG.getSplat(NarrowVT, DL, Source);
     case RISCVISD::VMV_V_X_VL:
       return DAG.getNode(RISCVISD::VMV_V_X_VL, DL, NarrowVT,
                          DAG.getUNDEF(NarrowVT), Source.getOperand(1), VL);
