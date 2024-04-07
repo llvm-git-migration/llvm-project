@@ -941,6 +941,12 @@ public:
 
   bool hasArmWideBranch(bool) const { return false; }
 
+  bool hasFMV() const { return false; }
+
+  uint64_t getFMVPriority(Function &F) const { return 0; }
+
+  GlobalVariable *getCPUFeatures(Module &M) const { return nullptr; }
+
   unsigned getMaxNumArgs() const { return UINT_MAX; }
 
 protected:

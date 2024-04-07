@@ -89,7 +89,7 @@ STATISTIC(NumAliasesRemoved, "Number of global aliases eliminated");
 STATISTIC(NumCXXDtorsRemoved, "Number of global C++ destructors removed");
 STATISTIC(NumInternalFunc, "Number of internal functions");
 STATISTIC(NumColdCC, "Number of functions marked coldcc");
-STATISTIC(NumIFuncsResolved, "Number of statically resolved IFuncs");
+STATISTIC(NumIFuncsResolved, "Number of resolved IFuncs");
 STATISTIC(NumIFuncsDeleted, "Number of IFuncs removed");
 
 static cl::opt<bool>
@@ -2462,6 +2462,228 @@ DeleteDeadIFuncs(Module &M,
   return Changed;
 }
 
+static Function *foldResolverForCallSite(CallBase *CS, uint64_t Priority,
+                                         TargetTransformInfo &TTI) {
+  // Look for the instruction which feeds the feature mask to the users.
+  auto findRoot = [&TTI](Function *F) -> Instruction * {
+    for (Instruction &I : F->getEntryBlock())
+      if (auto *Load = dyn_cast<LoadInst>(&I))
+        if (Load->getPointerOperand() == TTI.getCPUFeatures(*F->getParent()))
+          return Load;
+    return nullptr;
+  };
+
+  auto *IF = cast<GlobalIFunc>(CS->getCalledOperand());
+  Instruction *Root = findRoot(IF->getResolverFunction());
+  // There is no such instruction. Bail.
+  if (!Root)
+    return nullptr;
+
+  // Create a constant mask to use as seed for the constant propagation.
+  Constant *Seed = Constant::getIntegerValue(
+      Root->getType(), APInt(Root->getType()->getIntegerBitWidth(), Priority));
+
+  auto DL = CS->getModule()->getDataLayout();
+
+  // Recursively propagate on single use chains.
+  std::function<Constant *(Instruction *, Instruction *, Constant *,
+                           BasicBlock *)>
+      constFoldInst = [&](Instruction *I, Instruction *Use, Constant *C,
+                          BasicBlock *Pred) -> Constant * {
+    // Base case.
+    if (auto *Ret = dyn_cast<ReturnInst>(I))
+      if (Ret->getReturnValue() == Use)
+        return C;
+
+    // Minimal set of instruction types to handle.
+    if (auto *BinOp = dyn_cast<BinaryOperator>(I)) {
+      bool Swap = BinOp->getOperand(1) == Use;
+      if (auto *Other = dyn_cast<Constant>(BinOp->getOperand(Swap ? 0 : 1)))
+        C = Swap ? ConstantFoldBinaryInstruction(BinOp->getOpcode(), Other, C)
+                 : ConstantFoldBinaryInstruction(BinOp->getOpcode(), C, Other);
+    } else if (auto *Cmp = dyn_cast<CmpInst>(I)) {
+      bool Swap = Cmp->getOperand(1) == Use;
+      if (auto *Other = dyn_cast<Constant>(Cmp->getOperand(Swap ? 0 : 1)))
+        C = Swap ? ConstantFoldCompareInstOperands(Cmp->getPredicate(), Other,
+                                                   C, DL)
+                 : ConstantFoldCompareInstOperands(Cmp->getPredicate(), C,
+                                                   Other, DL);
+    } else if (auto *Sel = dyn_cast<SelectInst>(I)) {
+      if (Sel->getCondition() == Use)
+        C = dyn_cast<Constant>(C->isZeroValue() ? Sel->getFalseValue()
+                                                : Sel->getTrueValue());
+    } else if (auto *Phi = dyn_cast<PHINode>(I)) {
+      if (Pred)
+        C = dyn_cast<Constant>(Phi->getIncomingValueForBlock(Pred));
+    } else if (auto *Br = dyn_cast<BranchInst>(I)) {
+      if (Br->getCondition() == Use) {
+        BasicBlock *BB = Br->getSuccessor(C->isZeroValue());
+        return constFoldInst(&BB->front(), Root, Seed, Br->getParent());
+      }
+    } else {
+      // Don't know how to handle. Bail.
+      return nullptr;
+    }
+
+    // Folding succeeded. Continue.
+    if (C && I->hasOneUse())
+      if (auto *UI = dyn_cast<Instruction>(I->user_back()))
+        return constFoldInst(UI, I, C, nullptr);
+
+    return nullptr;
+  };
+
+  // Collect all users in the entry block ordered by proximity. The rest of
+  // them can be discovered later. Unfortunately we cannot simply traverse
+  // the Root's 'users()' as their order is not the same as execution order.
+  unsigned NUsersLeft = std::distance(Root->user_begin(), Root->user_end());
+  SmallVector<Instruction *> Users;
+  for (Instruction &I : *Root->getParent()) {
+    if (any_of(I.operands(), [Root](auto &Op) { return Op == Root; })) {
+      Users.push_back(&I);
+      if (--NUsersLeft == 0)
+        break;
+    }
+  }
+
+  // Return as soon as we find a foldable user. It has the highest priority.
+  for (Instruction *I : Users) {
+    Constant *C = constFoldInst(I, Root, Seed, nullptr);
+    if (C)
+      return cast<Function>(C);
+  }
+
+  return nullptr;
+}
+
+// Bypass the IFunc Resolver of MultiVersioned functions when possible. To
+// deduce whether the optimization is legal we need to compare the target
+// features between caller and callee versions. The criteria for bypassing
+// the resolver are the following:
+//
+// * If the callee's feature set is a subset of the caller's feature set,
+//   then the callee is a candidate for direct call.
+//
+// * Among such candidates the one of highest priority is the best match
+//   and it shall be picked, unless there is a version of the callee with
+//   higher priority than the best match which cannot be picked because
+//   there is no corresponding caller for whom it would have been the best
+//   match.
+//
+static bool OptimizeNonTrivialIFuncs(
+    Module &M, function_ref<TargetTransformInfo &(Function &)> GetTTI) {
+  bool Changed = false;
+
+  std::function<void(Value *, SmallVectorImpl<Function *> &)> visitValue =
+      [&](Value *V, SmallVectorImpl<Function *> &FuncVersions) {
+        if (auto *Func = dyn_cast<Function>(V)) {
+          FuncVersions.push_back(Func);
+        } else if (auto *Sel = dyn_cast<SelectInst>(V)) {
+          visitValue(Sel->getTrueValue(), FuncVersions);
+          visitValue(Sel->getFalseValue(), FuncVersions);
+        } else if (auto *Phi = dyn_cast<PHINode>(V))
+          for (unsigned I = 0, E = Phi->getNumIncomingValues(); I != E; ++I)
+            visitValue(Phi->getIncomingValue(I), FuncVersions);
+      };
+
+  // Cache containing the mask constructed from a function's target features.
+  DenseMap<Function *, uint64_t> FeaturePriorityMap;
+
+  for (GlobalIFunc &IF : M.ifuncs()) {
+    if (IF.isInterposable())
+      continue;
+
+    Function *Resolver = IF.getResolverFunction();
+    if (!Resolver)
+      continue;
+
+    if (Resolver->isInterposable())
+      continue;
+
+    TargetTransformInfo &TTI = GetTTI(*Resolver);
+    if (!TTI.hasFMV())
+      return false;
+
+    // Discover the callee versions.
+    SmallVector<Function *> Callees;
+    for (BasicBlock &BB : *Resolver)
+      if (auto *Ret = dyn_cast_or_null<ReturnInst>(BB.getTerminator()))
+        visitValue(Ret->getReturnValue(), Callees);
+
+    if (Callees.empty())
+      continue;
+
+    // Cache the feature mask for each callee.
+    for (Function *Callee : Callees) {
+      auto [It, Inserted] = FeaturePriorityMap.try_emplace(Callee);
+      if (Inserted)
+        It->second = TTI.getFMVPriority(*Callee);
+    }
+
+    // Sort the callee versions in increasing feature priority order.
+    // Every time we find a caller that matches the highest priority
+    // callee we pop_back() one from this ordered list.
+    llvm::stable_sort(Callees, [&](auto *LHS, auto *RHS) {
+      return FeaturePriorityMap[LHS] < FeaturePriorityMap[RHS];
+    });
+
+    // Find the callsites and cache the feature mask for each caller.
+    SmallVector<CallBase *> CallSites;
+    for (User *U : IF.users()) {
+      if (auto *CB = dyn_cast<CallBase>(U)) {
+        if (CB->getCalledOperand() == &IF) {
+          Function *Caller = CB->getFunction();
+          auto [It, Inserted] = FeaturePriorityMap.try_emplace(Caller);
+          if (Inserted)
+            It->second = TTI.getFMVPriority(*Caller);
+          CallSites.push_back(CB);
+        }
+      }
+    }
+
+    // Sort the callsites in decreasing feature priority order.
+    llvm::stable_sort(CallSites, [&](auto *LHS, auto *RHS) {
+      return FeaturePriorityMap[LHS->getFunction()] >
+             FeaturePriorityMap[RHS->getFunction()];
+    });
+
+    // Now try to constant fold the resolver for every callsite starting
+    // from higher priority callers. This guarantees that as soon as we
+    // find a callee whose priority is lower than the expected best match
+    // then there is no point in continuing further.
+    DenseMap<uint64_t, Function *> foldedResolverCache;
+    for (CallBase *CS : CallSites) {
+      uint64_t CallerPriority = FeaturePriorityMap[CS->getFunction()];
+      auto [It, Inserted] = foldedResolverCache.try_emplace(CallerPriority);
+      Function *&Callee = It->second;
+      if (Inserted)
+        Callee = foldResolverForCallSite(CS, CallerPriority, TTI);
+      if (Callee) {
+        if (!Callees.empty()) {
+          // If the priority of the candidate is greater or equal to
+          // the expected best match then it shall be picked. Otherwise
+          // there is a higher priority callee without a corresponding
+          // caller, in which case abort.
+          uint64_t CalleePriority = FeaturePriorityMap[Callee];
+          if (CalleePriority == FeaturePriorityMap[Callees.back()])
+            Callees.pop_back();
+          else if (CalleePriority < FeaturePriorityMap[Callees.back()])
+            break;
+        }
+        CS->setCalledOperand(Callee);
+        Changed = true;
+      } else {
+        // Oops, something went wrong. We couldn't fold. Abort.
+        break;
+      }
+    }
+    if (IF.use_empty() ||
+        all_of(IF.users(), [](User *U) { return isa<GlobalAlias>(U); }))
+      NumIFuncsResolved++;
+  }
+  return Changed;
+}
+
 static bool
 optimizeGlobalsInModule(Module &M, const DataLayout &DL,
                         function_ref<TargetLibraryInfo &(Function &)> GetTLI,
@@ -2524,6 +2746,9 @@ optimizeGlobalsInModule(Module &M, const DataLayout &DL,
 
     // Optimize IFuncs whose callee's are statically known.
     LocalChange |= OptimizeStaticIFuncs(M);
+
+    // Optimize IFuncs based on the target features of the caller.
+    LocalChange |= OptimizeNonTrivialIFuncs(M, GetTTI);
 
     // Remove any IFuncs that are now dead.
     LocalChange |= DeleteDeadIFuncs(M, NotDiscardableComdats);

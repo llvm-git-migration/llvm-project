@@ -1762,6 +1762,16 @@ public:
   /// false, but it shouldn't matter what it returns anyway.
   bool hasArmWideBranch(bool Thumb) const;
 
+  /// Returns true if the target supports Function MultiVersioning.
+  bool hasFMV() const;
+
+  /// Returns the MultiVersion priority of a given function.
+  uint64_t getFMVPriority(Function &F) const;
+
+  /// Returns the symbol which contains the cpu feature mask used by
+  /// the Function MultiVersioning resolver.
+  GlobalVariable *getCPUFeatures(Module &M) const;
+
   /// \return The maximum number of function arguments the target supports.
   unsigned getMaxNumArgs() const;
 
@@ -2152,6 +2162,9 @@ public:
   virtual VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const = 0;
   virtual bool hasArmWideBranch(bool Thumb) const = 0;
+  virtual bool hasFMV() const = 0;
+  virtual uint64_t getFMVPriority(Function &F) const = 0;
+  virtual GlobalVariable *getCPUFeatures(Module &M) const = 0;
   virtual unsigned getMaxNumArgs() const = 0;
 };
 
@@ -2902,6 +2915,16 @@ public:
 
   bool hasArmWideBranch(bool Thumb) const override {
     return Impl.hasArmWideBranch(Thumb);
+  }
+
+  bool hasFMV() const override { return Impl.hasFMV(); }
+
+  uint64_t getFMVPriority(Function &F) const override {
+    return Impl.getFMVPriority(F);
+  }
+
+  GlobalVariable *getCPUFeatures(Module &M) const override {
+    return Impl.getCPUFeatures(M);
   }
 
   unsigned getMaxNumArgs() const override {
