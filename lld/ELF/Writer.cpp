@@ -565,13 +565,14 @@ template <class ELFT> void elf::createSyntheticSections() {
   if (config->andFeatures || !ctx.aarch64PauthAbiCoreInfo.empty())
     add(*make<GnuPropertySection>());
 
+  if (config->debugNames) {
+    in.debugNames = std::make_unique<DebugNamesSection<ELFT>>();
+    add(*in.debugNames);
+  }
   if (config->gdbIndex) {
     in.gdbIndex = GdbIndexSection::create<ELFT>();
     add(*in.gdbIndex);
   }
-
-  if (config->debugNames)
-    add(*DebugNamesSection<ELFT>::create());
 
   // .note.GNU-stack is always added when we are creating a re-linkable
   // object file. Other linkers are using the presence of this marker
@@ -2247,6 +2248,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     // finalizeAddressDependentContent may have added local symbols to the
     // static symbol table.
     finalizeSynthetic(in.symTab.get());
+    finalizeSynthetic(in.debugNames.get());
     finalizeSynthetic(in.ppc64LongBranchTarget.get());
     finalizeSynthetic(in.armCmseSGSection.get());
   }
