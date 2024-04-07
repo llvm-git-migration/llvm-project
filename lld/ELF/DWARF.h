@@ -69,7 +69,7 @@ public:
   }
 
   const LLDDWARFSection &getNamesSection() const override {
-    return debugNamesSection;
+    return namesSection;
   }
 
   StringRef getFileName() const override { return ""; }
@@ -94,12 +94,12 @@ private:
   LLDDWARFSection gnuPubtypesSection;
   LLDDWARFSection infoSection;
   LLDDWARFSection loclistsSection;
+  LLDDWARFSection namesSection;
   LLDDWARFSection rangesSection;
   LLDDWARFSection rnglistsSection;
   LLDDWARFSection strOffsetsSection;
   LLDDWARFSection lineSection;
   LLDDWARFSection addrSection;
-  LLDDWARFSection debugNamesSection;
   StringRef abbrevSection;
   StringRef strSection;
   StringRef lineStrSection;
