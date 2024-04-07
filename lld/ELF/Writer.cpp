@@ -544,8 +544,10 @@ template <class ELFT> void elf::createSyntheticSections() {
   if (config->gdbIndex)
     add(*GdbIndexSection::create<ELFT>());
 
-  if (config->debugNames)
-    add(*DebugNamesSection<ELFT>::create());
+  if (config->debugNames) {
+    in.debugNames = std::make_unique<DebugNamesSection<ELFT>>();
+    add(*in.debugNames);
+  }
 
   // We always need to add rel[a].plt to output if it has entries.
   // Even for static linking it can contain R_[*]_IRELATIVE relocations.
@@ -2245,6 +2247,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     // finalizeAddressDependentContent may have added local symbols to the
     // static symbol table.
     finalizeSynthetic(in.symTab.get());
+    finalizeSynthetic(in.debugNames.get());
     finalizeSynthetic(in.ppc64LongBranchTarget.get());
     finalizeSynthetic(in.armCmseSGSection.get());
   }
