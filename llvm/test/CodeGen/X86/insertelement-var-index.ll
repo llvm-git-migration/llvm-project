@@ -2336,14 +2336,12 @@ define i32 @PR44139(ptr %p) {
 ;
 ; AVX512-LABEL: PR44139:
 ; AVX512:       # %bb.0:
-; AVX512-NEXT:    vmovdqa64 (%rdi), %zmm0
-; AVX512-NEXT:    vpbroadcastq (%rdi), %zmm1
-; AVX512-NEXT:    vpmovqd %zmm0, %ymm0
-; AVX512-NEXT:    vpinsrq $1, (%rdi), %xmm1, %xmm2
-; AVX512-NEXT:    vinserti32x4 $0, %xmm2, %zmm1, %zmm2
-; AVX512-NEXT:    vmovdqa64 %zmm1, 64(%rdi)
-; AVX512-NEXT:    vmovdqa64 %zmm2, (%rdi)
-; AVX512-NEXT:    vmovd %xmm0, %eax
+; AVX512-NEXT:    vpbroadcastq (%rdi), %zmm0
+; AVX512-NEXT:    vpinsrq $1, (%rdi), %xmm0, %xmm1
+; AVX512-NEXT:    vinserti32x4 $0, %xmm1, %zmm0, %zmm1
+; AVX512-NEXT:    vmovdqa64 %zmm0, 64(%rdi)
+; AVX512-NEXT:    movl (%rdi), %eax
+; AVX512-NEXT:    vmovdqa64 %zmm1, (%rdi)
 ; AVX512-NEXT:    leal 2147483647(%rax), %ecx
 ; AVX512-NEXT:    testl %eax, %eax
 ; AVX512-NEXT:    cmovnsl %eax, %ecx
