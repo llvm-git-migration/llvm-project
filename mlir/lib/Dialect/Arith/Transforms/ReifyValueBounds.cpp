@@ -70,7 +70,9 @@ reifyValueBound(OpBuilder &b, Location loc, presburger::BoundType type,
   AffineMap boundMap;
   ValueDimList mapOperands;
   if (failed(ValueBoundsConstraintSet::computeBound(
-          boundMap, mapOperands, type, value, dim, stopCondition, closedUB)))
+          boundMap, mapOperands, type,
+          ValueBoundsConstraintSet::Variable(value, dim), stopCondition,
+          closedUB)))
     return failure();
 
   // Materialize tensor.dim/memref.dim ops.
