@@ -38,6 +38,45 @@ unsigned Thumb1InstrInfo::getUnindexedOpcode(unsigned Opc) const {
   return 0;
 }
 
+static bool tryToSinkCSPRDef(MachineBasicBlock &MBB,
+                             MachineBasicBlock::iterator &I,
+                             const BitVector &RegUnits, const DebugLoc &DL,
+                             MCRegister DestReg, MCRegister SrcReg,
+                             bool KillSrc, const TargetRegisterInfo *RegInfo) {
+
+  // Try to find the cspr instruction
+  LiveRegUnits UsedRegs(*RegInfo);
+
+  // Pick up where we left off with last RegUnits.
+  UsedRegs.addUnits(RegUnits);
+
+  // We are assuming at this point SrcReg and DestReg are both available
+  // Because we want to change where it is inserted.
+
+  auto InstUpToI = I;
+
+  auto begin = MBB.begin();
+  // Okay, so let's do this:
+  while (InstUpToI != begin && !UsedRegs.available(ARM::CPSR) &&
+         UsedRegs.available(DestReg) && !UsedRegs.available(SrcReg)) {
+
+    // Do not move any instruction across function call.
+    if (InstUpToI->isCall())
+      return false;
+
+    UsedRegs.stepBackward(*--InstUpToI);
+  }
+
+  // If we reached the beginning, then there is nothing we can do.
+  // FIXME: Can we keep going back if there is only one predecessor?
+  if (!UsedRegs.available(ARM::CPSR) || !UsedRegs.available(DestReg) ||
+      UsedRegs.available(SrcReg))
+    return false;
+
+  I = InstUpToI;
+  return true;
+}
+
 void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                   MachineBasicBlock::iterator I,
                                   const DebugLoc &DL, MCRegister DestReg,
@@ -67,6 +106,34 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
     if (UsedRegs.available(ARM::CPSR)) {
       BuildMI(MBB, I, DL, get(ARM::tMOVSr), DestReg)
+          .addReg(SrcReg, getKillRegState(KillSrc))
+          ->addRegisterDead(ARM::CPSR, RegInfo);
+      return;
+    }
+
+    // Not ideal, but since the solution involves 2 instructions instead of 1,
+    // Which the scheduler did not account for, codegen is not ideal anyway, so
+    // lets see if we can manually sink this copy
+    // FIXME: Shouldn't this be done by the MachineSink pass?
+    // Though the sink pass won't see the two instructions as one copy but two.
+    // Here is the only change we could remedy that.
+
+    // TODO: What if the definition of the last is outside the basic block?
+    // FIXME: For now, we sink only to a successor which has a single
+    // predecessor
+    // so that we can directly sink COPY instructions to the successor without
+    // adding any new block or branch instruction.
+
+    // See if we can find the instruction where CSPR is defined.
+    // Bail if any reg dependencies will be violated
+
+    // InstUpToI is equal to I
+
+    if (tryToSinkCSPRDef(MBB, InstUpToI, UsedRegs.getBitVector(), DL, DestReg,
+                         SrcReg, KillSrc, RegInfo)) {
+
+      // We found the place to insert the MOVS
+      BuildMI(MBB, InstUpToI, DL, get(ARM::tMOVSr), DestReg)
           .addReg(SrcReg, getKillRegState(KillSrc))
           ->addRegisterDead(ARM::CPSR, RegInfo);
       return;
