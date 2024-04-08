@@ -768,7 +768,7 @@ ExprResult Sema::BuildMemberReferenceExpr(
   LookupResult R(*this, NameInfo, LookupMemberName);
 
   if (SS.isInvalid())
-    SS.clear();
+    return ExprError();
 
   // Implicit member accesses.
   if (!Base) {
