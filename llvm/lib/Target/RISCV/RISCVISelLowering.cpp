@@ -13792,9 +13792,6 @@ struct NodeExtensionHelper {
     assert((Opc == ISD::SPLAT_VECTOR || Opc == RISCVISD::VMV_V_X_VL) &&
            "Unexpected Opcode");
 
-    if (Opc == ISD::SPLAT_VECTOR && !VT.isVector())
-      return;
-
     // The pasthru must be undef for tail agnostic.
     if (Opc == RISCVISD::VMV_V_X_VL && !OrigOperand.getOperand(0).isUndef())
       return;
