@@ -1,0 +1,21 @@
+{
+  "macros": [
+    "__STDC_VERSION_FENV_H__"
+  ],
+  "functions": {
+    "kill": null,
+    "sigaction": null,
+    "sigaddset": null,
+    "sigaltstack": null,
+    "sigdelset": null,
+    "sigemptyset": null,
+    "sigfillset": null,
+    "sigprocmask": null,
+    "signal": {
+      "defined": "7.14.1.1"
+    },
+    "raise": {
+      "defined": "7.14.2.1"
+    }
+  }
+}
