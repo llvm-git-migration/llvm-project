@@ -46,7 +46,8 @@ public:
     if (offset < 0 || offset + bytes > data_.size()) {
       return OutOfRange;
     } else {
-      auto elementBytes{ToInt64(x.GetType().MeasureSizeInBytes(context, true))};
+      auto elementBytes{
+          ToInt64(x.GetType().MeasureSizeInBytes(context, /*aligned=*/false))};
       if (!elementBytes ||
           bytes !=
               x.values().size() * static_cast<std::size_t>(*elementBytes)) {
@@ -115,7 +116,8 @@ public:
   std::optional<Expr<SomeType>> AsConstant(FoldingContext &,
       const DynamicType &, std::optional<std::int64_t> charLength,
       const ConstantSubscripts &, bool padWithZero = false,
-      ConstantSubscript offset = 0) const;
+      ConstantSubscript offset = 0,
+      std::optional<std::size_t> elementBytes = std::nullopt) const;
   std::optional<Expr<SomeType>> AsConstantPointer(
       ConstantSubscript offset = 0) const;
 
