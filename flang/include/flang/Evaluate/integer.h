@@ -50,7 +50,10 @@ namespace Fortran::evaluate::value {
 // named accordingly in ALL CAPS so that they can be referenced easily in
 // the language standard.
 template <int BITS, bool IS_LITTLE_ENDIAN = isHostLittleEndian,
-    int PARTBITS = BITS <= 32 ? BITS : 32,
+    int PARTBITS = BITS <= 32 ? BITS
+        : BITS % 32 == 0      ? 32
+        : BITS % 16 == 0      ? 16
+                              : 8,
     typename PART = HostUnsignedInt<PARTBITS>,
     typename BIGPART = HostUnsignedInt<PARTBITS * 2>>
 class Integer {
