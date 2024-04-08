@@ -77,9 +77,11 @@ public:
   AsConstantHelper(FoldingContext &context, const DynamicType &type,
       std::optional<std::int64_t> charLength, const ConstantSubscripts &extents,
       const InitialImage &image, bool padWithZero = false,
-      ConstantSubscript offset = 0)
+      ConstantSubscript offset = 0,
+      std::optional<std::size_t> elementBytes = std::nullopt)
       : context_{context}, type_{type}, charLength_{charLength}, image_{image},
-        extents_{extents}, padWithZero_{padWithZero}, offset_{offset} {
+        extents_{extents}, padWithZero_{padWithZero}, offset_{offset},
+        elementBytes_{elementBytes} {
     CHECK(!type.IsPolymorphic());
   }
   template <typename T> Result Test() {
@@ -97,10 +99,15 @@ public:
     CHECK(optElements);
     uint64_t elements{*optElements};
     std::vector<Scalar> typedValue(elements);
-    auto elemBytes{ToInt64(type_.MeasureSizeInBytes(
-        context_, GetRank(extents_) > 0, charLength_))};
-    CHECK(elemBytes && *elemBytes >= 0);
-    std::size_t stride{static_cast<std::size_t>(*elemBytes)};
+    std::size_t stride;
+    if (elementBytes_) {
+      stride = *elementBytes_;
+    } else {
+      auto elemBytes{ToInt64(type_.MeasureSizeInBytes(
+          context_, GetRank(extents_) > 0, charLength_))};
+      CHECK(elemBytes && *elemBytes >= 0);
+      stride = static_cast<std::size_t>(*elemBytes);
+    }
     CHECK(offset_ + elements * stride <= image_.data_.size() || padWithZero_);
     if constexpr (T::category == TypeCategory::Derived) {
       const semantics::DerivedTypeSpec &derived{type_.GetDerivedTypeSpec()};
@@ -145,7 +152,8 @@ public:
       return AsGenericExpr(
           Const{derived, std::move(typedValue), std::move(extents_)});
     } else if constexpr (T::category == TypeCategory::Character) {
-      auto length{static_cast<ConstantSubscript>(stride) / T::kind};
+      auto length{charLength_.value_or(
+          static_cast<ConstantSubscript>(stride) / T::kind)};
       for (std::size_t j{0}; j < elements; ++j) {
         using Char = typename Scalar::value_type;
         auto at{static_cast<std::size_t>(offset_ + j * stride)};
@@ -170,21 +178,25 @@ public:
           Const{length, std::move(typedValue), std::move(extents_)});
     } else {
       // Lengthless intrinsic type
-      CHECK(sizeof(Scalar) <= stride);
+      std::size_t chunk{sizeof(Scalar)};
+      if (elementBytes_ && *elementBytes_ < chunk) {
+        chunk = *elementBytes_;
+      }
+      CHECK(chunk <= stride);
       for (std::size_t j{0}; j < elements; ++j) {
         auto at{static_cast<std::size_t>(offset_ + j * stride)};
-        std::size_t chunk{sizeof(Scalar)};
-        if (at + chunk > image_.data_.size()) {
+        std::size_t remaining{chunk};
+        if (at + remaining > image_.data_.size()) {
           CHECK(padWithZero_);
           if (at >= image_.data_.size()) {
-            chunk = 0;
+            remaining = 0;
           } else {
-            chunk = image_.data_.size() - at;
+            remaining = image_.data_.size() - at;
           }
         }
-        // TODO endianness
-        if (chunk > 0) {
-          std::memcpy(&typedValue[j], &image_.data_[at], chunk);
+        if (remaining > 0) {
+          // TODO: endianness conversion?
+          std::memcpy(&typedValue[j], &image_.data_[at], remaining);
         }
       }
       return AsGenericExpr(Const{std::move(typedValue), std::move(extents_)});
@@ -199,14 +211,15 @@ private:
   ConstantSubscripts extents_; // a copy
   bool padWithZero_;
   ConstantSubscript offset_;
+  std::optional<std::size_t> elementBytes_;
 };
 
 std::optional<Expr<SomeType>> InitialImage::AsConstant(FoldingContext &context,
     const DynamicType &type, std::optional<std::int64_t> charLength,
     const ConstantSubscripts &extents, bool padWithZero,
-    ConstantSubscript offset) const {
-  return common::SearchTypes(AsConstantHelper{
-      context, type, charLength, extents, *this, padWithZero, offset});
+    ConstantSubscript offset, std::optional<std::size_t> elementBytes) const {
+  return common::SearchTypes(AsConstantHelper{context, type, charLength,
+      extents, *this, padWithZero, offset, elementBytes});
 }
 
 std::optional<Expr<SomeType>> InitialImage::AsConstantPointer(

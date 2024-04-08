@@ -615,12 +615,7 @@ RT_API_ATTRS bool RealOutputEditing<KIND>::EditListDirectedOutput(
     return EditEorDOutput(copy);
   }
   int expo{converted.decimalExponent};
-  // The decimal precision of 16-bit floating-point types is very low,
-  // so use a reasonable cap of 6 to allow more values to be emitted
-  // with Fw.d editing.
-  static constexpr int maxExpo{
-      std::max(6, BinaryFloatingPoint::decimalPrecision)};
-  if (expo < 0 || expo > maxExpo) {
+  if (expo < 0 || expo > BinaryFloatingPoint::decimalPrecision) {
     DataEdit copy{edit};
     copy.variation = DataEdit::ListDirected;
     copy.modes.scale = 1; // 1P

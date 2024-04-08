@@ -184,8 +184,14 @@ std::optional<Expr<SubscriptInteger>> DynamicType::MeasureSizeInBytes(
   case TypeCategory::Real:
   case TypeCategory::Complex:
   case TypeCategory::Logical:
-    return Expr<SubscriptInteger>{
-        context.targetCharacteristics().GetByteSize(category_, kind())};
+    if (!aligned && category_ == TypeCategory::Real && kind() == 10) {
+      // x87 real(10) is packed without padding in Constant<>
+      return Expr<SubscriptInteger>{
+          sizeof(Scalar<Type<TypeCategory::Real, 10>>)};
+    } else {
+      return Expr<SubscriptInteger>{
+          context.targetCharacteristics().GetByteSize(category_, kind())};
+    }
   case TypeCategory::Character:
     if (auto len{charLength ? Expr<SubscriptInteger>{Constant<SubscriptInteger>{
                                   *charLength}}
