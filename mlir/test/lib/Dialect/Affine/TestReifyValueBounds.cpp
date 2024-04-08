@@ -169,7 +169,7 @@ static LogicalResult testReifyValueBounds(func::FuncOp funcOp,
       FailureOr<OpFoldResult> reified = failure();
       if (constant) {
         auto reifiedConst = ValueBoundsConstraintSet::computeConstantBound(
-            *boundType, value, dim, /*stopCondition=*/nullptr);
+            *boundType, {value, dim}, /*stopCondition=*/nullptr);
         if (succeeded(reifiedConst))
           reified =
               FailureOr<OpFoldResult>(rewriter.getIndexAttr(*reifiedConst));
@@ -285,8 +285,8 @@ static LogicalResult testEquality(func::FuncOp funcOp) {
 
       auto compare = [&](ValueBoundsConstraintSet::ComparisonOperator cmp) {
         return ValueBoundsConstraintSet::compare(
-            /*lhs=*/op->getOperand(0), /*lhsDim=*/std::nullopt, cmp,
-            /*rhs=*/op->getOperand(1), /*rhsDim=*/std::nullopt);
+            /*lhs=*/op->getOperand(0), cmp,
+            /*rhs=*/op->getOperand(1));
       };
       if (compare(*cmpType)) {
         op->emitRemark("true");
