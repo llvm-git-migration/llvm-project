@@ -229,13 +229,40 @@ std::optional<Expr<SomeType>> FoldTransfer(
     FoldingContext &context, const ActualArguments &arguments) {
   CHECK(arguments.size() == 2 || arguments.size() == 3);
   const auto *source{UnwrapExpr<Expr<SomeType>>(arguments[0])};
-  std::optional<std::size_t> sourceBytes;
+  // There's a distinction between bytes in memory and bytes
+  // in the Constant<> representation for REAL(10).
+  std::optional<std::size_t> sourceConstantElementBytes;
+  std::optional<std::size_t> sourceMemoryTotalBytes;
+  std::optional<std::size_t> sourceConstantTotalBytes;
   if (source) {
     if (auto sourceTypeAndShape{
             characteristics::TypeAndShape::Characterize(*source, context)}) {
-      if (auto sourceBytesExpr{
-              sourceTypeAndShape->MeasureSizeInBytes(context)}) {
-        sourceBytes = ToInt64(*sourceBytesExpr);
+      std::optional<std::size_t> sourceMemoryElementBytes;
+      if (auto sourceMemoryElementBytesExpr{
+              sourceTypeAndShape->type().MeasureSizeInBytes(
+                  context, /*aligned=*/true)}) {
+        sourceMemoryElementBytes =
+            ToInt64(Fold(context, std::move(*sourceMemoryElementBytesExpr)));
+      }
+      if (auto sourceConstantElementBytesExpr{
+              sourceTypeAndShape->type().MeasureSizeInBytes(
+                  context, /*aligned=*/false)}) {
+        sourceConstantElementBytes =
+            ToInt64(Fold(context, std::move(*sourceConstantElementBytesExpr)));
+      }
+      if (auto sourceElements{ToInt64(
+              Fold(context, GetSize(Shape{sourceTypeAndShape->shape()})))}) {
+        if (sourceMemoryElementBytes) {
+          sourceMemoryTotalBytes = *sourceElements * *sourceMemoryElementBytes;
+        }
+        if (sourceConstantElementBytes) {
+          sourceConstantTotalBytes =
+              *sourceElements * *sourceConstantElementBytes;
+          if (*sourceConstantTotalBytes / *sourceConstantElementBytes !=
+              static_cast<std::size_t>(*sourceElements)) {
+            sourceConstantTotalBytes.reset();
+          }
+        }
       }
     }
   }
@@ -250,40 +277,39 @@ std::optional<Expr<SomeType>> FoldTransfer(
     }
   }
   std::optional<ConstantSubscripts> extents;
-  if (arguments.size() == 2) { // no SIZE=
-    if (moldType && sourceBytes) {
-      if (arguments[1]->Rank() == 0) { // scalar MOLD=
-        extents = ConstantSubscripts{}; // empty extents (scalar result)
-      } else if (auto moldBytesExpr{
-                     moldType->MeasureSizeInBytes(context, true)}) {
-        if (auto moldBytes{ToInt64(Fold(context, std::move(*moldBytesExpr)))};
-            *moldBytes > 0) {
-          extents = ConstantSubscripts{
-              static_cast<ConstantSubscript>((*sourceBytes) + *moldBytes - 1) /
-              *moldBytes};
-        }
-      }
-    }
-  } else if (arguments[2]) { // SIZE= is present
-    if (const auto *sizeExpr{arguments[2]->UnwrapExpr()}) {
-      if (auto sizeValue{ToInt64(*sizeExpr)}) {
-        extents = ConstantSubscripts{*sizeValue};
-      }
+  std::optional<std::int64_t> moldBytes;
+  if (moldType) {
+    if (auto moldBytesExpr{
+            moldType->MeasureSizeInBytes(context, /*align=*/true)}) {
+      moldBytes = ToInt64(Fold(context, std::move(*moldBytesExpr)));
     }
   }
-  if (sourceBytes && IsActuallyConstant(*source) && moldType && extents &&
+  if (arguments.size() == 2 && arguments[1]) { // no SIZE=
+    if (arguments[1]->Rank() == 0) { // scalar MOLD=
+      extents = ConstantSubscripts{}; // empty extents (scalar result)
+    } else if (moldBytes.value_or(0) > 0 && sourceMemoryTotalBytes) {
+      extents = ConstantSubscripts{static_cast<ConstantSubscript>(
+          (*sourceMemoryTotalBytes + *moldBytes - 1) / *moldBytes)};
+    }
+  } else if (arguments.size() > 2) { // SIZE= is present
+    if (auto sizeValue{ToInt64(arguments[2])}) {
+      extents = ConstantSubscripts{*sizeValue};
+    }
+  }
+  if (sourceConstantElementBytes && sourceConstantTotalBytes &&
+      IsActuallyConstant(*source) && moldType && moldBytes && extents &&
       (moldLength || moldType->category() != TypeCategory::Character)) {
-    std::size_t elements{
-        extents->empty() ? 1 : static_cast<std::size_t>((*extents)[0])};
-    std::size_t totalBytes{*sourceBytes * elements};
+    auto resultElements{GetSize(*extents)};
+    auto resultTotalBytes{*moldBytes * resultElements};
     // Don't fold intentional overflow cases from sneaky tests
-    if (totalBytes < std::size_t{1000000} &&
-        (elements == 0 || totalBytes / elements == *sourceBytes)) {
-      InitialImage image{*sourceBytes};
-      auto status{image.Add(0, *sourceBytes, *source, context)};
+    if (resultTotalBytes < 1000000 && resultElements < 1000000 &&
+        (*moldBytes == 0 || resultTotalBytes / *moldBytes == resultElements)) {
+      InitialImage image{*sourceConstantTotalBytes};
+      auto status{image.Add(0, *sourceConstantTotalBytes, *source, context)};
       if (status == InitialImage::Ok) {
-        return image.AsConstant(
-            context, *moldType, moldLength, *extents, true /*pad with 0*/);
+        return image.AsConstant(context, *moldType, moldLength, *extents,
+            /*padWithZero=*/true,
+            /*offset=*/0, /*elementBytes=*/*sourceConstantElementBytes);
       } else {
         // Can fail due to an allocatable or automatic component;
         // a warning will also have been produced.
