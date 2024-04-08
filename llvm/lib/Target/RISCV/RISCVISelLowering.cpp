@@ -13616,8 +13616,8 @@ struct NodeExtensionHelper {
 
   /// Check if this instance represents a splat.
   bool isSplat() const {
-    return (OrigOperand.getOpcode() == RISCVISD::VMV_V_X_VL ||
-            OrigOperand.getOpcode() == ISD::SPLAT_VECTOR);
+    return OrigOperand.getOpcode() == RISCVISD::VMV_V_X_VL ||
+           OrigOperand.getOpcode() == ISD::SPLAT_VECTOR;
   }
 
   /// Get the extended opcode.
