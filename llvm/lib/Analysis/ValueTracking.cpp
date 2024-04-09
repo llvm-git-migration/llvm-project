@@ -2828,23 +2828,47 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
       case Intrinsic::uadd_sat:
         return isKnownNonZero(II->getArgOperand(1), DemandedElts, Depth, Q) ||
                isKnownNonZero(II->getArgOperand(0), DemandedElts, Depth, Q);
-      case Intrinsic::smin:
       case Intrinsic::smax: {
-        auto KnownOpImpliesNonZero = [&](const KnownBits &K) {
-          return II->getIntrinsicID() == Intrinsic::smin
-                     ? K.isNegative()
-                     : K.isStrictlyPositive();
-        };
-        KnownBits XKnown =
-            computeKnownBits(II->getArgOperand(0), DemandedElts, Depth, Q);
-        if (KnownOpImpliesNonZero(XKnown))
-          return true;
-        KnownBits YKnown =
+        // if either arg is strictly positive the result is non-zero. Otherwise
+        // the result is non-zero if both ops are non-zero.
+        KnownBits Op1Known =
             computeKnownBits(II->getArgOperand(1), DemandedElts, Depth, Q);
-        if (KnownOpImpliesNonZero(YKnown))
+        // Avoid re-computing isKnownNonZero if we already failed once.
+        bool OpsMaybeZero = false;
+        if (Op1Known.isNonNegative()) {
+          if (Op1Known.isNonZero() ||
+              isKnownNonZero(II->getArgOperand(1), DemandedElts, Depth, Q))
+            return true;
+          OpsMaybeZero = true;
+        }
+        KnownBits Op0Known =
+            computeKnownBits(II->getArgOperand(0), DemandedElts, Depth, Q);
+        if (Op0Known.isNonNegative()) {
+          if (Op0Known.isNonZero() ||
+              isKnownNonZero(II->getArgOperand(0), DemandedElts, Depth, Q))
+            return true;
+          OpsMaybeZero = true;
+        }
+        // We already failed at least one call to isKnownNonZero
+        if (OpsMaybeZero)
+          break;
+        return isKnownNonZero(II->getArgOperand(0), DemandedElts, Depth, Q) &&
+               isKnownNonZero(II->getArgOperand(1), DemandedElts, Depth, Q);
+      }
+
+      case Intrinsic::smin: {
+        // if either arg is negative the result is non-zero. Otherwise
+        // the result is non-zero if both ops are non-zero.
+        KnownBits Op1Known =
+            computeKnownBits(II->getArgOperand(1), DemandedElts, Depth, Q);
+        if (Op1Known.isNegative())
+          return true;
+        KnownBits Op0Known =
+            computeKnownBits(II->getArgOperand(0), DemandedElts, Depth, Q);
+        if (Op0Known.isNegative())
           return true;
 
-        if (XKnown.isNonZero() && YKnown.isNonZero())
+        if (Op1Known.isNonZero() && Op0Known.isNonZero())
           return true;
       }
         [[fallthrough]];
