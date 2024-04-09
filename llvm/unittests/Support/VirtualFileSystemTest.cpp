@@ -211,7 +211,7 @@ public:
   }
 
   bool exists(const Twine &Path) override {
-    auto Status = DummyFileSystem::status(Path);
+    llvm::ErrorOr<llvm::vfs::Status> Status = status(Path);
     return Status && Status->exists();
   }
 };
