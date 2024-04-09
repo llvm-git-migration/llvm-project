@@ -1652,6 +1652,40 @@ static void computeKnownBitsFromOperator(const Operator *I,
         computeKnownBits(I->getOperand(1), Known2, Depth + 1, Q);
         Known = KnownBits::ssub_sat(Known, Known2);
         break;
+      case Intrinsic::vector_reduce_umax:
+      case Intrinsic::vector_reduce_umin:
+      case Intrinsic::vector_reduce_smax:
+      case Intrinsic::vector_reduce_smin:
+        if (auto *VecTy =
+                dyn_cast<FixedVectorType>(II->getArgOperand(0)->getType())) {
+          unsigned NumEle = VecTy->getNumElements();
+          computeKnownBits(II->getArgOperand(0), APInt::getOneBitSet(NumEle, 0),
+                           Known, Depth + 1, Q);
+          for (unsigned Idx = 1; Idx < NumEle; ++Idx) {
+            computeKnownBits(II->getArgOperand(0),
+                             APInt::getOneBitSet(NumEle, Idx), Known2,
+                             Depth + 1, Q);
+            switch (II->getIntrinsicID()) {
+            case Intrinsic::vector_reduce_umax:
+              Known = KnownBits::umax(Known, Known2);
+              break;
+            case Intrinsic::vector_reduce_umin:
+              Known = KnownBits::umin(Known, Known2);
+              break;
+            case Intrinsic::vector_reduce_smax:
+              Known = KnownBits::smax(Known, Known2);
+              break;
+            case Intrinsic::vector_reduce_smin:
+              Known = KnownBits::smin(Known, Known2);
+              break;
+            default:
+              llvm_unreachable("Invalid Intrinsinc in vec reduce min/max case");
+            }
+          }
+        } else {
+          computeKnownBits(I->getOperand(0), Known, Depth + 1, Q);
+        }
+        break;
       case Intrinsic::umin:
         computeKnownBits(I->getOperand(0), Known, Depth + 1, Q);
         computeKnownBits(I->getOperand(1), Known2, Depth + 1, Q);
