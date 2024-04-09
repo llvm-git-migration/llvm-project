@@ -99,7 +99,9 @@ Improvements to clang-tidy
 
 - Improved :program:`run-clang-tidy.py` script. Added argument `-source-filter`
   to filter source files from the compilation database, via a RegEx. In a
-  similar fashion to what `-header-filter` does for header files.
+  similar fashion to what `-header-filter` does for header files. Improved
+  :program:`check_clang_tidy.py` script. Added argument `-export` to aid in
+  clang-tidy and test development.
 
 New checks
 ^^^^^^^^^^
