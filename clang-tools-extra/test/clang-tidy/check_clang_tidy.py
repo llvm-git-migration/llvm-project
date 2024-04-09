@@ -8,25 +8,35 @@
 #
 # ===------------------------------------------------------------------------===#
 
-r"""
+"""
 ClangTidy Test Helper
 =====================
 
-This script runs clang-tidy in fix mode and verify fixes, messages or both.
+This script is used to simplify writing, running, and debugging tests compatible
+with llvm-lit. By default it runs clang-tidy in fix mode and uses FileCheck to
+verify messages and/or fixes.
 
-Usage:
-  check_clang_tidy.py [-resource-dir=<resource-dir>] \
-    [-assume-filename=<file-with-source-extension>] \
-    [-check-suffix=<comma-separated-file-check-suffixes>] \
-    [-check-suffixes=<comma-separated-file-check-suffixes>] \
-    [-std=c++(98|11|14|17|20)[-or-later]] \
-    <source-file> <check-name> <temp-file> \
-    -- [optional clang-tidy arguments]
+For debugging, with --export, the tool simply exports fixes to a provided file
+and does not run FileCheck.
 
-Example:
+Extra arguments, those after the first -- if any, are passed to either
+clang-tidy or clang:
+* Arguments between the first -- and second -- are clang-tidy arguments.
+  * May be only whitespace if there are no clang-tidy arguments.
+  * clang-tidy's --config would go here.
+* Arguments after the second -- are clang arguments
+
+Examples
+--------
+
   // RUN: %check_clang_tidy %s llvm-include-order %t -- -- -isystem %S/Inputs
 
-Notes:
+or
+
+  // RUN: %check_clang_tidy %s llvm-include-order --export=fixes.yaml %t -std=c++20
+
+Notes
+-----
   -std=c++(98|11|14|17|20)-or-later:
     This flag will cause multiple runs within the same check_clang_tidy
     execution. Make sure you don't have shared state across these runs.
@@ -34,6 +44,7 @@ Notes:
 
 import argparse
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -88,6 +99,7 @@ class CheckRunner:
         self.has_check_fixes = False
         self.has_check_messages = False
         self.has_check_notes = False
+        self.export = args.export
         self.fixes = MessagePrefix("CHECK-FIXES")
         self.messages = MessagePrefix("CHECK-MESSAGES")
         self.notes = MessagePrefix("CHECK-NOTES")
@@ -102,14 +114,15 @@ class CheckRunner:
         self.clang_tidy_extra_args = extra_args
         if "--" in extra_args:
             i = self.clang_tidy_extra_args.index("--")
-            self.clang_extra_args = self.clang_tidy_extra_args[i + 1 :]
+            self.clang_extra_args = self.clang_tidy_extra_args[i + 1:]
             self.clang_tidy_extra_args = self.clang_tidy_extra_args[:i]
 
         # If the test does not specify a config style, force an empty one; otherwise
         # auto-detection logic can discover a ".clang-tidy" file that is not related to
         # the test.
         if not any(
-            [re.match("^-?-config(-file)?=", arg) for arg in self.clang_tidy_extra_args]
+            [re.match("^-?-config(-file)?=", arg)
+             for arg in self.clang_tidy_extra_args]
         ):
             self.clang_tidy_extra_args.append("--config={}")
 
@@ -128,7 +141,8 @@ class CheckRunner:
         self.clang_extra_args.append("-nostdinc++")
 
         if self.resource_dir is not None:
-            self.clang_extra_args.append("-resource-dir=%s" % self.resource_dir)
+            self.clang_extra_args.append(
+                "-resource-dir=%s" % self.resource_dir)
 
     def read_input(self):
         with open(self.input_file_name, "r", encoding="utf-8") as input_file:
@@ -144,13 +158,16 @@ class CheckRunner:
 
             file_check_suffix = ("-" + suffix) if suffix else ""
 
-            has_check_fix = self.fixes.check(file_check_suffix, self.input_text)
+            has_check_fix = self.fixes.check(
+                file_check_suffix, self.input_text)
             self.has_check_fixes = self.has_check_fixes or has_check_fix
 
-            has_check_message = self.messages.check(file_check_suffix, self.input_text)
+            has_check_message = self.messages.check(
+                file_check_suffix, self.input_text)
             self.has_check_messages = self.has_check_messages or has_check_message
 
-            has_check_note = self.notes.check(file_check_suffix, self.input_text)
+            has_check_note = self.notes.check(
+                file_check_suffix, self.input_text)
             self.has_check_notes = self.has_check_notes or has_check_note
 
             if has_check_note and has_check_message:
@@ -172,7 +189,8 @@ class CheckRunner:
         # themselves.  We need to keep the comments to preserve line numbers while
         # avoiding empty lines which could potentially trigger formatting-related
         # checks.
-        cleaned_test = re.sub("// *CHECK-[A-Z0-9\\-]*:[^\r\n]*", "//", self.input_text)
+        cleaned_test = re.sub(
+            "// *CHECK-[A-Z0-9\\-]*:[^\r\n]*", "//", self.input_text)
         write_file(self.temp_file_name, cleaned_test)
         write_file(self.original_file_name, cleaned_test)
 
@@ -181,7 +199,8 @@ class CheckRunner:
             [
                 "clang-tidy",
                 self.temp_file_name,
-                "-fix",
+            ] + ["-fix" if self.export is None else "--export-fixes=" + self.export] +
+            [
                 "--checks=-*," + self.check_name,
             ]
             + self.clang_tidy_extra_args
@@ -255,12 +274,14 @@ class CheckRunner:
 
     def run(self):
         self.read_input()
-        self.get_prefixes()
+        if self.export is None:
+            self.get_prefixes()
         self.prepare_test_inputs()
         clang_tidy_output = self.run_clang_tidy()
-        self.check_fixes()
-        self.check_messages(clang_tidy_output)
-        self.check_notes(clang_tidy_output)
+        if self.export is None:
+            self.check_fixes()
+            self.check_messages(clang_tidy_output)
+            self.check_notes(clang_tidy_output)
 
 
 def expand_std(std):
@@ -284,7 +305,11 @@ def csv(string):
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog=pathlib.Path(__file__).stem,
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("-expect-clang-tidy-error", action="store_true")
     parser.add_argument("-resource-dir")
     parser.add_argument("-assume-filename")
@@ -298,7 +323,15 @@ def parse_arguments():
         type=csv,
         help="comma-separated list of FileCheck suffixes",
     )
-    parser.add_argument("-std", type=csv, default=["c++11-or-later"])
+    parser.add_argument(
+        "-export",
+        default=None,
+        type=str,
+        metavar="file",
+        help="A file to export fixes into instead of fixing.",
+    )
+    parser.add_argument("-std", type=csv, default=["c++11-or-later"],
+                        help="Passed to clang. Special -or-later values are expanded.")
     return parser.parse_known_args()
 
 
