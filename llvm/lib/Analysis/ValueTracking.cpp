@@ -289,21 +289,52 @@ bool llvm::isKnownNonNegative(const Value *V, const SimplifyQuery &SQ,
   return computeKnownBits(V, Depth, SQ).isNonNegative();
 }
 
-bool llvm::isKnownPositive(const Value *V, const SimplifyQuery &SQ,
-                           unsigned Depth) {
+static bool isKnownPositive(const Value *V, const APInt &DemandedElts,
+                            KnownBits &Known, const SimplifyQuery &SQ,
+                            unsigned Depth) {
   if (auto *CI = dyn_cast<ConstantInt>(V))
     return CI->getValue().isStrictlyPositive();
 
   // If `isKnownNonNegative` ever becomes more sophisticated, make sure to keep
   // this updated.
-  KnownBits Known = computeKnownBits(V, Depth, SQ);
+  Known = computeKnownBits(V, DemandedElts, Depth, SQ);
   return Known.isNonNegative() &&
-         (Known.isNonZero() || ::isKnownNonZero(V, Depth, SQ));
+         (Known.isNonZero() || ::isKnownNonZero(V, DemandedElts, Depth, SQ));
+}
+
+bool llvm::isKnownPositive(const Value *V, const APInt &DemandedElts,
+                           const SimplifyQuery &SQ, unsigned Depth) {
+  KnownBits Known(getBitWidth(V->getType(), SQ.DL));
+  return ::isKnownPositive(V, DemandedElts, Known, SQ, Depth);
+}
+
+bool llvm::isKnownPositive(const Value *V, const SimplifyQuery &SQ,
+                           unsigned Depth) {
+  auto *FVTy = dyn_cast<FixedVectorType>(V->getType());
+  APInt DemandedElts =
+      FVTy ? APInt::getAllOnes(FVTy->getNumElements()) : APInt(1, 1);
+  return isKnownPositive(V, DemandedElts, SQ, Depth);
+}
+
+static bool isKnownNegative(const Value *V, const APInt &DemandedElts,
+                            KnownBits &Known, const SimplifyQuery &SQ,
+                            unsigned Depth) {
+  Known = computeKnownBits(V, DemandedElts, Depth, SQ);
+  return Known.isNegative();
+}
+
+bool llvm::isKnownNegative(const Value *V, const APInt &DemandedElts,
+                           const SimplifyQuery &SQ, unsigned Depth) {
+  KnownBits Known(getBitWidth(V->getType(), SQ.DL));
+  return ::isKnownNegative(V, DemandedElts, Known, SQ, Depth);
 }
 
 bool llvm::isKnownNegative(const Value *V, const SimplifyQuery &SQ,
                            unsigned Depth) {
-  return computeKnownBits(V, Depth, SQ).isNegative();
+  auto *FVTy = dyn_cast<FixedVectorType>(V->getType());
+  APInt DemandedElts =
+      FVTy ? APInt::getAllOnes(FVTy->getNumElements()) : APInt(1, 1);
+  return isKnownNegative(V, DemandedElts, SQ, Depth);
 }
 
 static bool isKnownNonEqual(const Value *V1, const Value *V2, unsigned Depth,
