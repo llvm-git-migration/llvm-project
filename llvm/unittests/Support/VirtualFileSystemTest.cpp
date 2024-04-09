@@ -211,7 +211,7 @@ public:
   }
 
   bool exists(const Twine &Path) override {
-    auto Status = DummyFileSystem::status(Path);
+    llvm::ErrorOr<llvm::vfs::Status> Status = status(Path);
     return Status && Status->exists();
   }
 };
@@ -3559,4 +3559,28 @@ TEST(RedirectingFileSystemTest, ExistsRedirectOnly) {
   EXPECT_FALSE(Redirecting->exists("/a"));
   EXPECT_FALSE(Redirecting->exists("/b"));
   EXPECT_TRUE(Redirecting->exists("/vfile"));
+}
+
+TEST(DependencyScanningWorkerFilesystemTest, ExistsUsesStatCache) {
+  struct StatCountingProxyFS : llvm::vfs::ProxyFileSystem {
+    int StatCount;
+
+    StatCountingProxyFS(IntrusiveRefCntPtr<FileSystem> UnderlyingFS)
+    : ProxyFileSystem(UnderlyingFS), StatCount(0) {}
+
+    llvm::ErrorOr<llvm::vfs::Status> status(const Twine &Path) override {
+      StatCount++;
+      return ProxyFileSystem::status(Path);
+    }
+  };
+  auto BaseFS = IntrusiveRefCntPtr<DummyFileSystem>(new DummyFileSystem());
+  auto ScanFS = makeIntrusiveRefCnt<StatCountingProxyFS>(BaseFS);
+  BaseFS->addRegularFile("/a");
+  BaseFS->addRegularFile("/b");
+  ScanFS->status("/a");
+  ScanFS->status("/b");
+  EXPECT_TRUE(ScanFS->StatCount == 2);
+  ScanFS->exists("/a");
+  ScanFS->exists("/b");
+  EXPECT_TRUE(ScanFS->StatCount == 2);
 }
