@@ -2855,6 +2855,49 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
         return isNonZeroAdd(DemandedElts, Depth, Q, BitWidth,
                             II->getArgOperand(0), II->getArgOperand(1),
                             /*NSW=*/true, /* NUW=*/false);
+      case Intrinsic::vector_reduce_umax:
+        if (auto *VecTy =
+                dyn_cast<FixedVectorType>(II->getArgOperand(0)->getType())) {
+          unsigned NumEle = VecTy->getNumElements();
+          // If any element is non-zero the reduce is non-zero.
+          for (unsigned Idx = 0; Idx < NumEle; ++Idx) {
+            if (isKnownNonZero(II->getArgOperand(0),
+                               APInt::getOneBitSet(NumEle, Idx), Depth, Q))
+              return true;
+          }
+          return false;
+        }
+        [[fallthrough]];
+      case Intrinsic::vector_reduce_umin:
+        return isKnownNonZero(II->getArgOperand(0), Depth, Q);
+      case Intrinsic::vector_reduce_smax:
+      case Intrinsic::vector_reduce_smin:
+        if (auto *VecTy =
+                dyn_cast<FixedVectorType>(II->getArgOperand(0)->getType())) {
+          bool AllNonZero = true;
+          auto EleImpliesNonZero = [&](const APInt &DemandedEle) {
+            KnownBits TmpKnown(
+                getBitWidth(II->getArgOperand(0)->getType(), Q.DL));
+            bool Ret = II->getIntrinsicID() == Intrinsic::vector_reduce_smin
+                           ? ::isKnownNegative(II->getArgOperand(0),
+                                               DemandedEle, TmpKnown, Q, Depth)
+                           : ::isKnownPositive(II->getArgOperand(0),
+                                               DemandedEle, TmpKnown, Q, Depth);
+            AllNonZero &= TmpKnown.isNonZero();
+            return Ret;
+          };
+          unsigned NumEle = VecTy->getNumElements();
+          // If any element is negative/strictly-positive (for smin/smax
+          // respectively) the reduce is non-zero.
+          for (unsigned Idx = 0; Idx < NumEle; ++Idx) {
+            if (EleImpliesNonZero(APInt::getOneBitSet(NumEle, Idx)))
+              return true;
+          }
+          if (AllNonZero)
+            return true;
+        }
+        // Otherwise, if all elements are non-zero, result is non-zero
+        return isKnownNonZero(II->getArgOperand(0), Depth, Q);
       case Intrinsic::umax:
       case Intrinsic::uadd_sat:
         return isKnownNonZero(II->getArgOperand(1), DemandedElts, Depth, Q) ||

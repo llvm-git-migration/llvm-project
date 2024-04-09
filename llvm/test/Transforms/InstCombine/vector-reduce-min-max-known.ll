@@ -3,10 +3,7 @@
 
 define i1 @vec_reduce_umax_non_zero(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_umax_non_zero(
-; CHECK-NEXT:    [[X:%.*]] = add nuw <4 x i8> [[XX:%.*]], <i8 0, i8 1, i8 0, i8 0>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.umax.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw <4 x i8> %xx, <i8 0, i8 1, i8 0, i8 0>
   %v = call i8 @llvm.vector.reduce.umax(<4 x i8> %x)
@@ -29,10 +26,7 @@ define i1 @vec_reduce_umax_non_zero_fail(<4 x i8> %xx) {
 
 define i1 @vec_reduce_umin_non_zero(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_umin_non_zero(
-; CHECK-NEXT:    [[X:%.*]] = add nuw <4 x i8> [[XX:%.*]], <i8 1, i8 1, i8 1, i8 1>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.umin.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw <4 x i8> %xx, <i8 1, i8 1, i8 1, i8 1>
   %v = call i8 @llvm.vector.reduce.umin(<4 x i8> %x)
@@ -55,10 +49,7 @@ define i1 @vec_reduce_umin_non_zero_fail(<4 x i8> %xx) {
 
 define i1 @vec_reduce_smax_non_zero0(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_smax_non_zero0(
-; CHECK-NEXT:    [[X:%.*]] = add nuw <4 x i8> [[XX:%.*]], <i8 1, i8 1, i8 1, i8 1>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.smax.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw <4 x i8> %xx, <i8 1, i8 1, i8 1, i8 1>
   %v = call i8 @llvm.vector.reduce.smax(<4 x i8> %x)
@@ -68,11 +59,7 @@ define i1 @vec_reduce_smax_non_zero0(<4 x i8> %xx) {
 
 define i1 @vec_reduce_smax_non_zero1(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_smax_non_zero1(
-; CHECK-NEXT:    [[X0:%.*]] = and <4 x i8> [[XX:%.*]], <i8 127, i8 -1, i8 -1, i8 -1>
-; CHECK-NEXT:    [[X:%.*]] = or <4 x i8> [[X0]], <i8 1, i8 0, i8 0, i8 0>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.smax.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x0 = and <4 x i8> %xx, <i8 127, i8 255, i8 255, i8 255>
   %x = or <4 x i8> %x0, <i8 1, i8 0, i8 0, i8 0>
@@ -98,10 +85,7 @@ define i1 @vec_reduce_smax_non_zero_fail(<4 x i8> %xx) {
 
 define i1 @vec_reduce_smin_non_zero0(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_smin_non_zero0(
-; CHECK-NEXT:    [[X:%.*]] = add nuw <4 x i8> [[XX:%.*]], <i8 1, i8 1, i8 1, i8 1>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.smin.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = add nuw <4 x i8> %xx, <i8 1, i8 1, i8 1, i8 1>
   %v = call i8 @llvm.vector.reduce.smin(<4 x i8> %x)
@@ -111,10 +95,7 @@ define i1 @vec_reduce_smin_non_zero0(<4 x i8> %xx) {
 
 define i1 @vec_reduce_smin_non_zero1(<4 x i8> %xx) {
 ; CHECK-LABEL: @vec_reduce_smin_non_zero1(
-; CHECK-NEXT:    [[X:%.*]] = or <4 x i8> [[XX:%.*]], <i8 0, i8 0, i8 0, i8 -128>
-; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.smin.v4i8(<4 x i8> [[X]])
-; CHECK-NEXT:    [[R:%.*]] = icmp eq i8 [[V]], 0
-; CHECK-NEXT:    ret i1 [[R]]
+; CHECK-NEXT:    ret i1 false
 ;
   %x = or <4 x i8> %xx, <i8 0, i8 0, i8 0, i8 128>
   %v = call i8 @llvm.vector.reduce.smin(<4 x i8> %x)
