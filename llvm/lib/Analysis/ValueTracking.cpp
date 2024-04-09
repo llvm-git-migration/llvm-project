@@ -2861,21 +2861,18 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
                isKnownNonZero(II->getArgOperand(0), DemandedElts, Depth, Q);
       case Intrinsic::smin:
       case Intrinsic::smax: {
-        auto KnownOpImpliesNonZero = [&](const KnownBits &K) {
-          return II->getIntrinsicID() == Intrinsic::smin
-                     ? K.isNegative()
-                     : K.isStrictlyPositive();
+        bool AllNonZero = true;
+        auto KnownOpImpliesNonZero = [&](const Value *Op) {
+          KnownBits TmpKnown(getBitWidth(Op->getType(), Q.DL));
+          bool Ret =
+              II->getIntrinsicID() == Intrinsic::smin
+                  ? ::isKnownNegative(Op, DemandedElts, TmpKnown, Q, Depth)
+                  : ::isKnownPositive(Op, DemandedElts, TmpKnown, Q, Depth);
+          AllNonZero &= TmpKnown.isNonZero();
+          return Ret;
         };
-        KnownBits XKnown =
-            computeKnownBits(II->getArgOperand(0), DemandedElts, Depth, Q);
-        if (KnownOpImpliesNonZero(XKnown))
-          return true;
-        KnownBits YKnown =
-            computeKnownBits(II->getArgOperand(1), DemandedElts, Depth, Q);
-        if (KnownOpImpliesNonZero(YKnown))
-          return true;
-
-        if (XKnown.isNonZero() && YKnown.isNonZero())
+        if (KnownOpImpliesNonZero(II->getArgOperand(0)) ||
+            KnownOpImpliesNonZero(II->getArgOperand(1)) || AllNonZero)
           return true;
       }
         [[fallthrough]];
