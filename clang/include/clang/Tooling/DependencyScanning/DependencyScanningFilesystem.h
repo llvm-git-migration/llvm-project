@@ -365,6 +365,10 @@ private:
     return LocalCache.insertEntryForFilename(Filename, Entry);
   }
 
+  /// Check whether \p Path exists. By default checks cached result of \c status(),
+  /// and falls back on FS if unable to do so.
+  bool exists(const Twine &Path) override;
+
   /// Returns entry associated with the filename in the shared cache if there is
   /// some. Otherwise, constructs new one with the given error code, associates
   /// it with the filename and returns the result.

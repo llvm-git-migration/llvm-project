@@ -270,6 +270,12 @@ DependencyScanningWorkerFilesystem::status(const Twine &Path) {
   return Result->getStatus();
 }
 
+bool
+DependencyScanningWorkerFilesystem::exists(const Twine &Path) {
+  auto Status = status(Path);
+  return Status && Status->exists();
+}
+
 namespace {
 
 /// The VFS that is used by clang consumes the \c CachedFileSystemEntry using
