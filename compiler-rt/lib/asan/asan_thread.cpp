@@ -44,10 +44,11 @@ static ThreadRegistry *asan_thread_registry;
 static ThreadArgRetval *thread_data;
 
 static Mutex mu_for_thread_context;
+static LowLevelAllocator allocator_for_thread_context;
 
 static ThreadContextBase *GetAsanThreadContext(u32 tid) {
   Lock lock(&mu_for_thread_context);
-  return new (GetGlobalLowLevelAllocator()) AsanThreadContext(tid);
+  return new (allocator_for_thread_context) AsanThreadContext(tid);
 }
 
 static void InitThreads() {
