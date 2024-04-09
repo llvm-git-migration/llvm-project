@@ -3359,11 +3359,8 @@ defm application_extension : BoolFOption<"application-extension",
   PosFlag<SetTrue, [], [ClangOption, CC1Option],
           "Restrict code to those available for App Extensions">,
   NegFlag<SetFalse>>;
-defm relaxed_template_template_args : BoolFOption<"relaxed-template-template-args",
-  LangOpts<"RelaxedTemplateTemplateArgs">, DefaultFalse,
-  PosFlag<SetTrue, [], [ClangOption, CC1Option],
-          "Enable C++17 relaxed template template argument matching">,
-  NegFlag<SetFalse>>;
+def frelaxed_template_template_args : Flag<["-"], "frelaxed-template-template-args">, Flags<[]>;
+def fno_relaxed_template_template_args : Flag<["-"], "fno-relaxed-template-template-args">, Flags<[]>;
 defm sized_deallocation : BoolFOption<"sized-deallocation",
   LangOpts<"SizedDeallocation">, DefaultFalse,
   PosFlag<SetTrue, [], [ClangOption, CC1Option],
