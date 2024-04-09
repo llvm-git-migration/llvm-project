@@ -671,14 +671,10 @@ static mlir::omp::SectionOp
 genSectionOp(Fortran::lower::AbstractConverter &converter,
              Fortran::semantics::SemanticsContext &semaCtx,
              Fortran::lower::pft::Evaluation &eval, bool genNested,
-             mlir::Location currentLocation,
-             const Fortran::parser::OmpClauseList &sectionsClauseList) {
-  // Currently only private/firstprivate clause is handled, and
-  // all privatization is done within `omp.section` operations.
+             mlir::Location currentLocation) {
   return genOpWithBody<mlir::omp::SectionOp>(
       OpWithBodyGenInfo(converter, semaCtx, currentLocation, eval)
-          .setGenNested(genNested)
-          .setClauses(&sectionsClauseList));
+          .setGenNested(genNested));
 }
 
 static mlir::omp::SingleOp
@@ -1974,6 +1970,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
           .v;
 
   // Parallel wrapper of PARALLEL SECTIONS construct
+  bool hasNowait = false;
   if (dir == llvm::omp::Directive::OMPD_parallel_sections) {
     genParallelOp(converter, symTable, semaCtx, eval,
                   /*genNested=*/false, currentLocation, sectionsClauseList,
@@ -1983,30 +1980,68 @@ genOMP(Fortran::lower::AbstractConverter &converter,
         std::get<Fortran::parser::OmpEndSectionsDirective>(sectionsConstruct.t);
     const auto &endSectionsClauseList =
         std::get<Fortran::parser::OmpClauseList>(endSectionsDirective.t);
-    ClauseProcessor(converter, semaCtx, endSectionsClauseList)
-        .processNowait(nowaitClauseOperand);
+    hasNowait = ClauseProcessor(converter, semaCtx, endSectionsClauseList)
+                    .processNowait(nowaitClauseOperand);
   }
 
+  // Insert privatizations before SECTIONS
+  symTable.pushScope();
+  DataSharingProcessor dsp(converter, semaCtx, sectionsClauseList, eval);
+  dsp.processStep1();
+
   // SECTIONS construct
-  genOpWithBody<mlir::omp::SectionsOp>(
+  auto sectionsOp = genOpWithBody<mlir::omp::SectionsOp>(
       OpWithBodyGenInfo(converter, semaCtx, currentLocation, eval)
           .setGenNested(false),
       /*reduction_vars=*/mlir::ValueRange(),
       /*reductions=*/nullptr, allocateOperands, allocatorOperands,
       nowaitClauseOperand);
 
+  std::optional<Clause> lastPrivateClause;
+  for (const Fortran::parser::OmpClause &clause : sectionsClauseList.v) {
+    if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
+            clause.u)) {
+      lastPrivateClause = makeClause(clause, semaCtx);
+    }
+  }
+
   const auto &sectionBlocks =
       std::get<Fortran::parser::OmpSectionBlocks>(sectionsConstruct.t);
   auto &firOpBuilder = converter.getFirOpBuilder();
   auto ip = firOpBuilder.saveInsertionPoint();
-  for (const auto &[nblock, neval] :
-       llvm::zip(sectionBlocks.v, eval.getNestedEvaluations())) {
-    symTable.pushScope();
-    genSectionOp(converter, semaCtx, neval, /*genNested=*/true, currentLocation,
-                 sectionsClauseList);
-    symTable.popScope();
+  auto zippy = llvm::zip(sectionBlocks.v, eval.getNestedEvaluations());
+  auto it = zippy.begin(), next = it, end = zippy.end();
+  ++next;
+  for (; it != end; it = next, ++next) {
+    const auto &[nblock, neval] = *it;
+    mlir::omp::SectionOp sectionOp = genSectionOp(
+        converter, semaCtx, neval, /*genNested=*/true, currentLocation);
+    // For `omp.sections`, lastprivatized variables occur in
+    // lexically final `omp.section` operation.
+    if (next == end && lastPrivateClause) {
+      clause::Lastprivate &lastPrivate =
+          std::get<clause::Lastprivate>(lastPrivateClause.value().u);
+      firOpBuilder.setInsertionPoint(
+          sectionOp.getRegion().back().getTerminator());
+      mlir::OpBuilder::InsertPoint lastPrivIP =
+          converter.getFirOpBuilder().saveInsertionPoint();
+      for (const Object &obj : lastPrivate.v) {
+        Fortran::semantics::Symbol *sym = obj.id();
+        converter.copyHostAssociateVar(*sym, &lastPrivIP);
+      }
+    }
     firOpBuilder.restoreInsertionPoint(ip);
   }
+
+  // Perform DataSharingProcessor's step2 out of SECTIONS
+  firOpBuilder.setInsertionPointAfter(sectionsOp.getOperation());
+  dsp.processStep2(sectionsOp, false);
+  // Emit implicit barrier to synchronize threads and avoid data
+  // races on post-update of lastprivate variables when `nowait`
+  // clause is present.
+  if (hasNowait && lastPrivateClause)
+    firOpBuilder.create<mlir::omp::BarrierOp>(converter.getCurrentLocation());
+  symTable.popScope();
 }
 
 static void
