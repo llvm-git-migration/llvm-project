@@ -8,6 +8,7 @@
 
 #include "clang/Tooling/DependencyScanning/DependencyScanningFilesystem.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/VirtualFileSystem.h"
 #include "gtest/gtest.h"
 
@@ -33,6 +34,28 @@ struct InstrumentingFilesystem
     return ProxyFileSystem::getRealPath(Path, Output);
   }
 };
+
+
+struct InstrumentingInMemoryFilesystem
+    : llvm::RTTIExtends<InstrumentingInMemoryFilesystem,
+                        llvm::vfs::InMemoryFileSystem> {
+  unsigned NumStatCalls = 0;
+  unsigned NumExistsCalls = 0;
+
+  using llvm::RTTIExtends<InstrumentingInMemoryFilesystem,
+                          llvm::vfs::InMemoryFileSystem>::RTTIExtends;
+
+  llvm::ErrorOr<llvm::vfs::Status> status(const llvm::Twine &Path) override {
+    ++NumStatCalls;
+    return InMemoryFileSystem::status(Path);
+  }
+
+  bool exists(const llvm::Twine &Path) override {
+    ++NumExistsCalls;
+    return InMemoryFileSystem::exists(Path);
+  }
+};
+
 } // namespace
 
 TEST(DependencyScanningWorkerFilesystem, CacheStatusFailures) {
@@ -146,4 +169,27 @@ TEST(DependencyScanningFilesystem, RealPathAndStatusInvariants) {
 
     DepFS.status("/bar");
   }
+}
+
+TEST(DependencyScanningFilesystem, CacheStatOnExists) {
+  auto InMemoryInstrumentingFS =
+      llvm::makeIntrusiveRefCnt<InstrumentingInMemoryFilesystem>();
+  InMemoryInstrumentingFS->setCurrentWorkingDirectory("/");
+  InMemoryInstrumentingFS->addFile("/foo", 0,
+                                   llvm::MemoryBuffer::getMemBuffer(""));
+  InMemoryInstrumentingFS->addFile("/bar", 0,
+                                   llvm::MemoryBuffer::getMemBuffer(""));
+  DependencyScanningFilesystemSharedCache SharedCache;
+  DependencyScanningWorkerFilesystem DepFS(SharedCache,
+                                           InMemoryInstrumentingFS);
+
+  DepFS.status("/foo");
+  DepFS.status("/foo");
+  DepFS.status("/bar");
+  EXPECT_EQ(InMemoryInstrumentingFS->NumStatCalls, 2u);
+
+  DepFS.exists("/foo");
+  DepFS.exists("/bar");
+  EXPECT_EQ(InMemoryInstrumentingFS->NumStatCalls, 2u);
+  EXPECT_EQ(InMemoryInstrumentingFS->NumExistsCalls, 0u);
 }
