@@ -145,10 +145,20 @@ bool isKnownNonNegative(const Value *V, const SimplifyQuery &SQ,
 bool isKnownPositive(const Value *V, const SimplifyQuery &SQ,
                      unsigned Depth = 0);
 
+/// Returns true if the given value is known be positive (i.e. non-negative
+/// and non-zero) for DemandedElts.
+bool isKnownPositive(const Value *V, const APInt &DemandedElts,
+                     const SimplifyQuery &SQ, unsigned Depth = 0);
+
 /// Returns true if the given value is known be negative (i.e. non-positive
 /// and non-zero).
 bool isKnownNegative(const Value *V, const SimplifyQuery &DL,
                      unsigned Depth = 0);
+
+/// Returns true if the given value is known be negative (i.e. non-positive
+/// and non-zero) for DemandedElts.
+bool isKnownNegative(const Value *V, const APInt &DemandedElts,
+                     const SimplifyQuery &DL, unsigned Depth = 0);
 
 /// Return true if the given values are known to be non-equal when defined.
 /// Supports scalar integer types only.
