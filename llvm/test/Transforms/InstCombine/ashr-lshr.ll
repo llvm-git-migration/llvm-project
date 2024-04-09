@@ -607,8 +607,8 @@ define <2 x i8> @ashr_known_pos_exact_vec(<2 x i8> %x, <2 x i8> %y) {
 
 define i32 @ashr_mul_times_3_div_2(i32 %0) {
 ; CHECK-LABEL: @ashr_mul_times_3_div_2(
-; CHECK-NEXT:    [[MUL:%.*]] = mul nuw nsw i32 [[TMP0:%.*]], 3
-; CHECK-NEXT:    [[ASHR:%.*]] = ashr i32 [[MUL]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0:%.*]], 1
+; CHECK-NEXT:    [[ASHR:%.*]] = add nuw nsw i32 [[TMP2]], [[TMP0]]
 ; CHECK-NEXT:    ret i32 [[ASHR]]
 ;
   %mul = mul nsw nuw i32 %0, 3
@@ -618,8 +618,8 @@ define i32 @ashr_mul_times_3_div_2(i32 %0) {
 
 define i32 @ashr_mul_times_3_div_2_exact(i32 %x) {
 ; CHECK-LABEL: @ashr_mul_times_3_div_2_exact(
-; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i32 [[X:%.*]], 3
-; CHECK-NEXT:    [[ASHR:%.*]] = ashr exact i32 [[MUL]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = ashr exact i32 [[X:%.*]], 1
+; CHECK-NEXT:    [[ASHR:%.*]] = add nsw i32 [[TMP1]], [[X]]
 ; CHECK-NEXT:    ret i32 [[ASHR]]
 ;
   %mul = mul nsw i32 %x, 3
