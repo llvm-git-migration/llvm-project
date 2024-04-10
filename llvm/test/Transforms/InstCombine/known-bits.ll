@@ -1045,5 +1045,96 @@ define i8 @known_reduce_and_fail(<2 x i8> %xx) {
   ret i8 %r
 }
 
+define i8 @known_reduce_xor_even(<2 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_even(
+; CHECK-NEXT:    [[X:%.*]] = or <2 x i8> [[XX:%.*]], <i8 5, i8 3>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v2i8(<2 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 1
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = or <2 x i8> %xx, <i8 5, i8 3>
+  %v = call i8 @llvm.vector.reduce.xor(<2 x i8> %x)
+  %r = and i8 %v, 1
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_even2(<2 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_even2(
+; CHECK-NEXT:    [[X:%.*]] = and <2 x i8> [[XX:%.*]], <i8 15, i8 15>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v2i8(<2 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 16
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = and <2 x i8> %xx, <i8 15, i8 15>
+  %v = call i8 @llvm.vector.reduce.xor(<2 x i8> %x)
+  %r = and i8 %v, 16
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_even_fail(<2 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_even_fail(
+; CHECK-NEXT:    [[X:%.*]] = or <2 x i8> [[XX:%.*]], <i8 5, i8 3>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v2i8(<2 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 2
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = or <2 x i8> %xx, <i8 5, i8 3>
+  %v = call i8 @llvm.vector.reduce.xor(<2 x i8> %x)
+  %r = and i8 %v, 2
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_odd(<3 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_odd(
+; CHECK-NEXT:    [[X:%.*]] = or <3 x i8> [[XX:%.*]], <i8 5, i8 3, i8 9>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 1
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = or <3 x i8> %xx, <i8 5, i8 3, i8 9>
+  %v = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> %x)
+  %r = and i8 %v, 1
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_odd2(<3 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_odd2(
+; CHECK-NEXT:    [[X:%.*]] = and <3 x i8> [[XX:%.*]], <i8 15, i8 15, i8 31>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 32
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = and <3 x i8> %xx, <i8 15, i8 15, i8 31>
+  %v = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> %x)
+  %r = and i8 %v, 32
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_odd2_fail(<3 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_odd2_fail(
+; CHECK-NEXT:    [[X:%.*]] = and <3 x i8> [[XX:%.*]], <i8 15, i8 15, i8 31>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 16
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = and <3 x i8> %xx, <i8 15, i8 15, i8 31>
+  %v = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> %x)
+  %r = and i8 %v, 16
+  ret i8 %r
+}
+
+define i8 @known_reduce_xor_odd_fail(<3 x i8> %xx) {
+; CHECK-LABEL: @known_reduce_xor_odd_fail(
+; CHECK-NEXT:    [[X:%.*]] = or <3 x i8> [[XX:%.*]], <i8 5, i8 3, i8 9>
+; CHECK-NEXT:    [[V:%.*]] = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> [[X]])
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[V]], 2
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = or <3 x i8> %xx, <i8 5, i8 3, i8 9>
+  %v = call i8 @llvm.vector.reduce.xor.v3i8(<3 x i8> %x)
+  %r = and i8 %v, 2
+  ret i8 %r
+}
+
 declare void @use(i1)
 declare void @sink(i8)
