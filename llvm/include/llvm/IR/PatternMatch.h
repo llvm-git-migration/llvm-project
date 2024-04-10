@@ -345,7 +345,7 @@ template <int64_t Val> inline constantint_match<Val> m_ConstantInt() {
 
 /// This helper class is used to match constant scalars, vector splats,
 /// and fixed width vectors that satisfy a specified predicate.
-/// For fixed width vector constants, undefined elements are ignored.
+/// For fixed width vector constants, poison elements are ignored.
 template <typename Predicate, typename ConstantVal>
 struct cstval_pred_ty : public Predicate {
   template <typename ITy> bool match(ITy *V) {
@@ -364,19 +364,19 @@ struct cstval_pred_ty : public Predicate {
         // Non-splat vector constant: check each element for a match.
         unsigned NumElts = FVTy->getNumElements();
         assert(NumElts != 0 && "Constant vector with no elements?");
-        bool HasNonUndefElements = false;
+        bool HasNonPoisonElements = false;
         for (unsigned i = 0; i != NumElts; ++i) {
           Constant *Elt = C->getAggregateElement(i);
           if (!Elt)
             return false;
-          if (isa<UndefValue>(Elt))
+          if (isa<PoisonValue>(Elt))
             continue;
           auto *CV = dyn_cast<ConstantVal>(Elt);
           if (!CV || !this->isValue(CV->getValue()))
             return false;
-          HasNonUndefElements = true;
+          HasNonPoisonElements = true;
         }
-        return HasNonUndefElements;
+        return HasNonPoisonElements;
       }
     }
     return false;
