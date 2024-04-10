@@ -35,6 +35,9 @@ namespace llvm {
 class raw_fd_ostream;
 class Timer;
 class TimerGroup;
+namespace vfs {
+struct InstrumentingFileSystem;
+}
 }
 
 namespace clang {
@@ -88,6 +91,11 @@ class CompilerInstance : public ModuleLoader {
 
   /// Auxiliary Target info.
   IntrusiveRefCntPtr<TargetInfo> AuxTarget;
+
+public:
+  /// The instrumenting file system.
+  IntrusiveRefCntPtr<llvm::vfs::InstrumentingFileSystem> IVFS;
+private:
 
   /// The file manager.
   IntrusiveRefCntPtr<FileManager> FileMgr;

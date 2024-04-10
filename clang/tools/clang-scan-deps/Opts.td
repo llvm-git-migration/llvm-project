@@ -31,6 +31,7 @@ def deprecated_driver_command : F<"deprecated-driver-command", "use a single dri
 
 defm resource_dir_recipe : Eq<"resource-dir-recipe", "How to produce missing '-resource-dir' argument">;
 
+def vfs_trace: F<"fvfs-trace", "Profile virtual file system calls">;
 def print_timing : F<"print-timing", "Print timing information">;
 
 def verbose : F<"v", "Use verbose output">;

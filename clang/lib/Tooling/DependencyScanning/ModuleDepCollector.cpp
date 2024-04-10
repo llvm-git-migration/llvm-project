@@ -152,6 +152,11 @@ void ModuleDepCollector::addOutputPaths(CowCompilerInvocation &CI,
       CI.getMutDependencyOutputOpts().Targets.push_back(std::string(Target));
     }
   }
+  if (!CI.getMutFrontendOpts().VFSTracePath.empty()) {
+    SmallString<128> VFSTracePath{CI.getMutFrontendOpts().OutputFile};
+    llvm::sys::path::replace_extension(VFSTracePath, "vfs.txt");
+    CI.getMutFrontendOpts().VFSTracePath = VFSTracePath.str();
+  }
 }
 
 static CowCompilerInvocation
@@ -186,6 +191,8 @@ makeCommonInvocationForModuleBuild(CompilerInvocation CI) {
     CI.getDiagnosticOpts().DiagnosticSerializationFile = "-";
   if (!CI.getDependencyOutputOpts().OutputFile.empty())
     CI.getDependencyOutputOpts().OutputFile = "-";
+  if (!CI.getFrontendOpts().VFSTracePath.empty())
+    CI.getFrontendOpts().VFSTracePath = "-";
   CI.getDependencyOutputOpts().Targets.clear();
 
   CI.getFrontendOpts().ProgramAction = frontend::GenerateModule;

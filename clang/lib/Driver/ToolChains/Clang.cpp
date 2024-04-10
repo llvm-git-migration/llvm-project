@@ -6759,6 +6759,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     Args.AddLastArg(CmdArgs, options::OPT_ftime_trace_granularity_EQ);
   }
 
+  if (const char *Name = C.getVFSTraceFile(&JA))
+    CmdArgs.push_back(Args.MakeArgString("-fvfs-trace=" + Twine(Name)));
+
   if (Arg *A = Args.getLastArg(options::OPT_ftrapv_handler_EQ)) {
     CmdArgs.push_back("-ftrapv-handler");
     CmdArgs.push_back(A->getValue());

@@ -21,7 +21,7 @@ inferred a = 0;
 [{
   "directory": "DIR",
   "file": "DIR/tu.m",
-  "command": "clang -fmodules -fimplicit-module-maps -fmodules-cache-path=DIR/cache -F DIR/frameworks -c DIR/tu.m -o DIR/tu.o"
+  "command": "clang -fmodules -fimplicit-module-maps -fmodules-cache-path=DIR/cache -F DIR/frameworks -c DIR/tu.m -o DIR/tu.o -fvfs-trace"
 }]
 
 // RUN: sed "s|DIR|%/t|g" %t/cdb.json.template > %t/cdb.json

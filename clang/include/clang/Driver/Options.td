@@ -3904,6 +3904,13 @@ def ftime_trace_EQ : Joined<["-"], "ftime-trace=">, Group<f_Group>,
   HelpText<"Similar to -ftime-trace. Specify the JSON file or a directory which will contain the JSON file">,
   Visibility<[ClangOption, CC1Option, CLOption, DXCOption]>,
   MarshallingInfoString<FrontendOpts<"TimeTracePath">>;
+def fvfs_trace : Flag<["-"], "fvfs-trace">, Group<f_Group>,
+  HelpText<"Turn of virtual file system profiler. Generates text file based on output filename.">,
+  Visibility<[ClangOption, CLOption, DXCOption]>;
+def fvfs_trace_EQ : Joined<["-"], "fvfs-trace=">, Group<f_Group>,
+  HelpText<"Similar to -fvfs-trace. Specify the text file or a directory that will contain the text file">,
+  Visibility<[ClangOption, CC1Option, CLOption, DXCOption]>,
+  MarshallingInfoString<FrontendOpts<"VFSTracePath">>;
 def fproc_stat_report : Joined<["-"], "fproc-stat-report">, Group<f_Group>,
   HelpText<"Print subprocess statistics">;
 def fproc_stat_report_EQ : Joined<["-"], "fproc-stat-report=">, Group<f_Group>,

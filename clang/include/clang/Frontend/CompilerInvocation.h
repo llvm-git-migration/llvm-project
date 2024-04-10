@@ -39,6 +39,7 @@ class ArgList;
 namespace vfs {
 
 class FileSystem;
+struct InstrumentingFileSystem;
 
 } // namespace vfs
 
@@ -390,13 +391,14 @@ public:
   /// @}
 };
 
-IntrusiveRefCntPtr<llvm::vfs::FileSystem>
-createVFSFromCompilerInvocation(const CompilerInvocation &CI,
-                                DiagnosticsEngine &Diags);
+IntrusiveRefCntPtr<llvm::vfs::FileSystem> createVFSFromCompilerInvocation(
+    const CompilerInvocation &CI, DiagnosticsEngine &Diags,
+    IntrusiveRefCntPtr<llvm::vfs::InstrumentingFileSystem> *TracingFS = {});
 
 IntrusiveRefCntPtr<llvm::vfs::FileSystem> createVFSFromCompilerInvocation(
     const CompilerInvocation &CI, DiagnosticsEngine &Diags,
-    IntrusiveRefCntPtr<llvm::vfs::FileSystem> BaseFS);
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> BaseFS,
+    IntrusiveRefCntPtr<llvm::vfs::InstrumentingFileSystem> *TracingFS = {});
 
 IntrusiveRefCntPtr<llvm::vfs::FileSystem>
 createVFSFromOverlayFiles(ArrayRef<std::string> VFSOverlayFiles,

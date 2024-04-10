@@ -261,6 +261,19 @@ int cc1_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
     }
   }
 
+  if (!Clang->getFrontendOpts().VFSTracePath.empty()) {
+    assert(Clang->IVFS);
+    if (auto VFSOutput = Clang->createOutputFile(
+            Clang->getFrontendOpts().VFSTracePath, /*Binary=*/false,
+            /*RemoveFileOnSignal=*/false,
+            /*useTemporary=*/false)) {
+      *VFSOutput << "status\t" << Clang->IVFS->NumStatusCalls << "\n"
+                 << "openFileForRead\t" << Clang->IVFS->NumOpenCalls << "\n"
+                 << "dir_begin\t" << Clang->IVFS->NumDirBeginCalls << "\n"
+                 << "getRealPath\t" << Clang->IVFS->NumRealPathCalls << "\n";
+    }
+  }
+
   // Our error handler depends on the Diagnostics object, which we're
   // potentially about to delete. Uninstall the handler now so that any
   // later errors use the default handling behavior instead.

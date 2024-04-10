@@ -26,6 +26,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SourceMgr.h"
+#include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <ctime>
@@ -1123,6 +1124,34 @@ public:
   const std::vector<YAMLVFSEntry> &getMappings() const { return Mappings; }
 
   void write(llvm::raw_ostream &OS);
+};
+
+/// File system that tracks the number of calls to the underlying file system.
+/// This is particularly useful when wrapped around \c RealFileSystem to add
+/// lightweight tracking of expensive syscalls.
+struct InstrumentingFileSystem
+    : llvm::RTTIExtends<InstrumentingFileSystem, OverlayFileSystem> {
+  static const char ID;
+
+  std::atomic<std::size_t> NumStatusCalls = 0;
+  std::atomic<std::size_t> NumOpenCalls = 0;
+  std::atomic<std::size_t> NumDirBeginCalls = 0;
+  mutable std::atomic<std::size_t> NumRealPathCalls = 0;
+
+  InstrumentingFileSystem(llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS);
+
+  ErrorOr<Status> status(const Twine &Path) override;
+
+  ErrorOr<std::unique_ptr<File>> openFileForRead(const Twine &Path) override;
+
+  directory_iterator dir_begin(const Twine &Dir, std::error_code &EC) override;
+
+  std::error_code getRealPath(const Twine &Path,
+                              SmallVectorImpl<char> &Output) const override;
+
+protected:
+  void printImpl(raw_ostream &OS, PrintType Type,
+                 unsigned IndentLevel) const override;
 };
 
 } // namespace vfs

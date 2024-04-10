@@ -115,6 +115,9 @@ class Compilation {
   /// -ftime-trace result files.
   ArgStringMap TimeTraceFiles;
 
+  /// -fvfs-trace result files.
+  ArgStringMap VFSTraceFiles;
+
   /// Optional redirection for stdin, stdout, stderr.
   std::vector<std::optional<StringRef>> Redirects;
 
@@ -278,6 +281,14 @@ public:
   void addTimeTraceFile(const char *Name, const JobAction *JA) {
     assert(!TimeTraceFiles.contains(JA));
     TimeTraceFiles[JA] = Name;
+  }
+
+  const char *getVFSTraceFile(const JobAction *JA) const {
+    return VFSTraceFiles.lookup(JA);
+  }
+  void addVFSTraceFile(const char *Name, const JobAction *JA) {
+    assert(!VFSTraceFiles.contains(JA));
+    VFSTraceFiles[JA] = Name;
   }
 
   /// CleanupFile - Delete a given file.

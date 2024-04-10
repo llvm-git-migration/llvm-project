@@ -568,6 +568,9 @@ public:
   /// Path which stores the output files for -ftime-trace
   std::string TimeTracePath;
 
+  /// Path which stores the output files for -fvfs-trace
+  std::string VFSTracePath;
+
 public:
   FrontendOptions()
       : DisableFree(false), RelocatablePCH(false), ShowHelp(false),

@@ -2880,8 +2880,50 @@ recursive_directory_iterator::increment(std::error_code &EC) {
   return *this;
 }
 
+InstrumentingFileSystem::InstrumentingFileSystem(
+    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS)
+    : RTTIExtends(std::move(FS)) {}
+
+ErrorOr<Status> InstrumentingFileSystem::status(const Twine &Path) {
+  ++NumStatusCalls;
+  return OverlayFileSystem::status(Path);
+}
+
+ErrorOr<std::unique_ptr<File>>
+InstrumentingFileSystem::openFileForRead(const Twine &Path) {
+  ++NumOpenCalls;
+  return OverlayFileSystem::openFileForRead(Path);
+}
+
+directory_iterator InstrumentingFileSystem::dir_begin(const Twine &Dir,
+                                                      std::error_code &EC) {
+  ++NumDirBeginCalls;
+  return OverlayFileSystem::dir_begin(Dir, EC);
+}
+
+std::error_code
+InstrumentingFileSystem::getRealPath(const Twine &Path,
+                                     SmallVectorImpl<char> &Output) const {
+  ++NumRealPathCalls;
+  return OverlayFileSystem::getRealPath(Path, Output);
+}
+
+void InstrumentingFileSystem::printImpl(raw_ostream &OS, PrintType Type,
+                                        unsigned IndentLevel) const {
+  printIndent(OS, IndentLevel);
+  OS << "InstrumentingFileSystem\n";
+  if (Type == PrintType::Summary)
+    return;
+
+  if (Type == PrintType::Contents)
+    Type = PrintType::Summary;
+  for (const auto &FS : overlays_range())
+    FS->print(OS, Type, IndentLevel + 1);
+}
+
 const char FileSystem::ID = 0;
 const char OverlayFileSystem::ID = 0;
 const char ProxyFileSystem::ID = 0;
 const char InMemoryFileSystem::ID = 0;
 const char RedirectingFileSystem::ID = 0;
+const char InstrumentingFileSystem::ID = 0;

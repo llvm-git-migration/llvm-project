@@ -3395,3 +3395,40 @@ TEST(RedirectingFileSystemTest, ExternalPaths) {
 
   EXPECT_EQ(CheckFS->SeenPaths, Expected);
 }
+
+TEST(InstrumentingFileSystemTest, Instrumentation) {
+  auto InMemoryFS = makeIntrusiveRefCnt<vfs::InMemoryFileSystem>();
+  auto InstrumentingFS =
+      makeIntrusiveRefCnt<vfs::InstrumentingFileSystem>(std::move(InMemoryFS));
+
+  EXPECT_EQ(InstrumentingFS->NumStatusCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumOpenCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumDirBeginCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumRealPathCalls, 0u);
+
+  (void)InstrumentingFS->status("/foo");
+  EXPECT_EQ(InstrumentingFS->NumStatusCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumOpenCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumDirBeginCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumRealPathCalls, 0u);
+
+  (void)InstrumentingFS->openFileForRead("/foo");
+  EXPECT_EQ(InstrumentingFS->NumStatusCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumOpenCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumDirBeginCalls, 0u);
+  EXPECT_EQ(InstrumentingFS->NumRealPathCalls, 0u);
+
+  std::error_code EC;
+  (void)InstrumentingFS->dir_begin("/foo", EC);
+  EXPECT_EQ(InstrumentingFS->NumStatusCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumOpenCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumDirBeginCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumRealPathCalls, 0u);
+
+  SmallString<128> RealPath;
+  (void)InstrumentingFS->getRealPath("/foo", RealPath);
+  EXPECT_EQ(InstrumentingFS->NumStatusCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumOpenCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumDirBeginCalls, 1u);
+  EXPECT_EQ(InstrumentingFS->NumRealPathCalls, 1u);
+}

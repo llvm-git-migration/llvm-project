@@ -4935,16 +4935,25 @@ void CompilerInvocation::clearImplicitModuleBuildOptions() {
 }
 
 IntrusiveRefCntPtr<llvm::vfs::FileSystem>
-clang::createVFSFromCompilerInvocation(const CompilerInvocation &CI,
-                                       DiagnosticsEngine &Diags) {
-  return createVFSFromCompilerInvocation(CI, Diags,
-                                         llvm::vfs::getRealFileSystem());
+clang::createVFSFromCompilerInvocation(
+    const CompilerInvocation &CI, DiagnosticsEngine &Diags,
+    IntrusiveRefCntPtr<llvm::vfs::InstrumentingFileSystem> *TracingFS) {
+  return createVFSFromCompilerInvocation(
+      CI, Diags, llvm::vfs::getRealFileSystem(), TracingFS);
 }
 
 IntrusiveRefCntPtr<llvm::vfs::FileSystem>
 clang::createVFSFromCompilerInvocation(
     const CompilerInvocation &CI, DiagnosticsEngine &Diags,
-    IntrusiveRefCntPtr<llvm::vfs::FileSystem> BaseFS) {
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> BaseFS,
+    IntrusiveRefCntPtr<llvm::vfs::InstrumentingFileSystem> *TracingFS) {
+  if (!CI.getFrontendOpts().VFSTracePath.empty()) {
+    auto TFS = llvm::makeIntrusiveRefCnt<llvm::vfs::InstrumentingFileSystem>(
+        std::move(BaseFS));
+    if (TracingFS)
+      *TracingFS = TFS;
+    BaseFS = std::move(TFS);
+  }
   return createVFSFromOverlayFiles(CI.getHeaderSearchOpts().VFSOverlayFiles,
                                    Diags, std::move(BaseFS));
 }

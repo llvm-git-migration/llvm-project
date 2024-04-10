@@ -84,6 +84,7 @@ static std::vector<std::string> ModuleDepTargets;
 static bool DeprecatedDriverCommand;
 static ResourceDirRecipeKind ResourceDirRecipe;
 static bool Verbose;
+static bool PrintVFSTrace;
 static bool PrintTiming;
 static std::vector<const char *> CommandLine;
 
@@ -218,6 +219,8 @@ static void ParseArgs(int argc, char **argv) {
     }
     ResourceDirRecipe = *Kind;
   }
+
+  PrintVFSTrace = Args.hasArg(OPT_vfs_trace);
 
   PrintTiming = Args.hasArg(OPT_print_timing);
 
@@ -886,8 +889,16 @@ int clang_scan_deps_main(int argc, char **argv, const llvm::ToolContext &) {
   if (Format == ScanningOutputFormat::Full)
     FD.emplace(ModuleName.empty() ? Inputs.size() : 0);
 
+  std::atomic<std::size_t> NumStatusCalls = 0;
+  std::atomic<std::size_t> NumOpenCalls = 0;
+  std::atomic<std::size_t> NumDirBeginCalls = 0;
+  std::atomic<std::size_t> NumRealPathCalls = 0;
+
   auto ScanningTask = [&](DependencyScanningService &Service) {
-    DependencyScanningTool WorkerTool(Service);
+    auto TracingFS =
+        llvm::makeIntrusiveRefCnt<llvm::vfs::InstrumentingFileSystem>(
+            llvm::vfs::createPhysicalFileSystem());
+    DependencyScanningTool WorkerTool(Service, TracingFS);
 
     llvm::DenseSet<ModuleID> AlreadySeenModules;
     while (auto MaybeInputIndex = GetNextInputIndex()) {
@@ -970,6 +981,11 @@ int clang_scan_deps_main(int argc, char **argv, const llvm::ToolContext &) {
           HadErrors = true;
       }
     }
+
+    NumStatusCalls += TracingFS->NumStatusCalls;
+    NumOpenCalls += TracingFS->NumOpenCalls;
+    NumDirBeginCalls += TracingFS->NumDirBeginCalls;
+    NumRealPathCalls += TracingFS->NumRealPathCalls;
   };
 
   DependencyScanningService Service(ScanMode, Format, OptimizeArgs,
@@ -1000,6 +1016,13 @@ int clang_scan_deps_main(int argc, char **argv, const llvm::ToolContext &) {
     llvm::errs() << llvm::format(
         "clang-scan-deps timing: %0.2fs wall, %0.2fs process\n",
         T.getTotalTime().getWallTime(), T.getTotalTime().getProcessTime());
+
+  if (PrintVFSTrace)
+    llvm::errs() << llvm::format(
+        "clang-scan-deps VFS trace: %d status, %d openFileForRead, %d "
+        "dir_begin, %d getRealPath\n",
+        NumStatusCalls.load(), NumOpenCalls.load(), NumDirBeginCalls.load(),
+        NumRealPathCalls.load());
 
   if (RoundTripArgs)
     if (FD && FD->roundTripCommands(llvm::errs()))

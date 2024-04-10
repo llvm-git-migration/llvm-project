@@ -338,6 +338,7 @@ public:
     ScanInstance.getFrontendOpts().GenerateGlobalModuleIndex = false;
     ScanInstance.getFrontendOpts().UseGlobalModuleIndex = false;
     ScanInstance.getFrontendOpts().ModulesShareFileManager = false;
+    ScanInstance.getFrontendOpts().VFSTracePath.clear();
     ScanInstance.getHeaderSearchOpts().ModuleFormat = "raw";
     ScanInstance.getHeaderSearchOpts().ModulesIncludeVFSUsage =
         any(OptimizeArgs & ScanningOptimizations::VFS);

@@ -379,7 +379,7 @@ FileManager *CompilerInstance::createFileManager(
   if (!VFS)
     VFS = FileMgr ? &FileMgr->getVirtualFileSystem()
                   : createVFSFromCompilerInvocation(getInvocation(),
-                                                    getDiagnostics());
+                                                    getDiagnostics(), &IVFS);
   assert(VFS && "FileManager has no VFS?");
   FileMgr = new FileManager(getFileSystemOpts(), std::move(VFS));
   return FileMgr.get();
