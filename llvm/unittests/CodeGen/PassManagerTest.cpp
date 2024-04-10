@@ -125,6 +125,15 @@ struct TestMachineModulePass : public PassInfoMixin<TestMachineModulePass> {
   std::vector<int> &Counts;
 };
 
+struct ReportWarningPass : public PassInfoMixin<ReportWarningPass> {
+  PreservedAnalyses run(MachineFunction &MF,
+                        MachineFunctionAnalysisManager &MFAM) {
+    auto &Ctx = MF.getContext();
+    Ctx.reportWarning(SMLoc(), "Test warning message.");
+    return PreservedAnalyses::all();
+  }
+};
+
 std::unique_ptr<Module> parseIR(LLVMContext &Context, const char *IR) {
   SMDiagnostic Err;
   return parseAssemblyString(IR, Err, Context);
@@ -202,12 +211,17 @@ TEST_F(PassManagerTest, Basic) {
       TestMachineFunctionPass(Count, Counts)));
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MFPM.addPass(TestMachineFunctionPass(Count, Counts));
+  MFPM.addPass(ReportWarningPass());
   MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
 
+  testing::internal::CaptureStderr();
   MPM.run(*M, MAM);
+  std::string Output = testing::internal::GetCapturedStderr();
 
   EXPECT_EQ((std::vector<int>{10, 16, 18, 20, 30, 36, 38, 40}), Counts);
   EXPECT_EQ(40, Count);
+  EXPECT_TRUE(Output.find("warning: <unknown>:0: Test warning message.") !=
+              std::string::npos);
 }
 
 } // namespace
