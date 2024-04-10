@@ -8285,9 +8285,11 @@ SDValue RISCVTargetLowering::lowerINSERT_VECTOR_ELT(SDValue Op,
                              Vec, Vec, ValLo, I32Mask, InsertI64VL);
       // If the source vector is undef don't pass along the tail elements from
       // the previous slide1down.
-      SDValue Tail = Vec.isUndef() ? Vec : ValInVec;
-      ValInVec = DAG.getNode(RISCVISD::VSLIDE1DOWN_VL, DL, I32ContainerVT,
-                             Tail, ValInVec, ValHi, I32Mask, InsertI64VL);
+      if (!ValHi.isUndef()) {
+        SDValue Tail = Vec.isUndef() ? Vec : ValInVec;
+        ValInVec = DAG.getNode(RISCVISD::VSLIDE1DOWN_VL, DL, I32ContainerVT,
+                               Tail, ValInVec, ValHi, I32Mask, InsertI64VL);
+      }
       // Bitcast back to the right container type.
       ValInVec = DAG.getBitcast(ContainerVT, ValInVec);
 
