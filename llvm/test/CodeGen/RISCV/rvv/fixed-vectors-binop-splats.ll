@@ -459,19 +459,13 @@ define <16 x i32> @v16i32(i32 %x, i32 %y) {
 define <1 x i64> @v1i64(i64 %x, i64 %y) {
 ; RV32-LABEL: v1i64:
 ; RV32:       # %bb.0:
-; RV32-NEXT:    addi sp, sp, -16
-; RV32-NEXT:    .cfi_def_cfa_offset 16
-; RV32-NEXT:    sw a1, 12(sp)
-; RV32-NEXT:    sw a0, 8(sp)
-; RV32-NEXT:    addi a0, sp, 8
+; RV32-NEXT:    vsetivli zero, 2, e32, m1, ta, ma
+; RV32-NEXT:    vslide1down.vx v8, v8, a2
+; RV32-NEXT:    vslide1down.vx v8, v8, a3
+; RV32-NEXT:    vslide1down.vx v9, v8, a0
+; RV32-NEXT:    vslide1down.vx v9, v9, a1
 ; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vlse64.v v8, (a0), zero
-; RV32-NEXT:    sw a3, 4(sp)
-; RV32-NEXT:    sw a2, 0(sp)
-; RV32-NEXT:    mv a0, sp
-; RV32-NEXT:    vlse64.v v9, (a0), zero
-; RV32-NEXT:    vadd.vv v8, v8, v9
-; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    vadd.vv v8, v9, v8
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: v1i64:
