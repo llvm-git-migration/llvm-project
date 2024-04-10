@@ -1525,6 +1525,17 @@ vectorizeAsTensorPackOp(RewriterBase &rewriter, tensor::PackOp packOp,
   (void)status; // prevent unused variable warning on non-assert builds.
   assert(succeeded(status) && "failed to reify result shapes");
 
+  ArrayRef<int64_t> resultTensorShape = packOp.getDestType().getShape();
+
+  // If the input vector sizes are not provided, then the vector sizes are
+  // determined by the result tensor shape.
+  if (inputVectorSizes.empty()) {
+    // Make sure that the result tensor shape is static.
+    if (ShapedType::isDynamicShape(resultTensorShape))
+      return failure();
+    inputVectorSizes = resultTensorShape.take_front(packOp.getSourceRank());
+  }
+
   // Create masked TransferReadOp.
   SmallVector<int64_t> inputShape(inputVectorSizes);
   auto innerTiles = packOp.getStaticInnerTiles();
@@ -1763,7 +1774,7 @@ vectorizeDynamicLinalgOpPrecondition(linalg::LinalgOp op,
 /// Returns success if `inputVectorSizes` is a valid masking configuraion for
 /// given `shape`, i.e., it meets:
 ///   1. The numbers of elements in both array are equal.
-///   2. `inputVectorSizes` does nos have dynamic dimensions.
+///   2. `inputVectorSizes` does not have dynamic dimensions.
 ///   3. All the values in `inputVectorSizes` are greater than or equal to
 ///      static sizes in `shape`.
 static LogicalResult
@@ -1881,18 +1892,19 @@ static LogicalResult vectorizeLinalgOpPrecondition(
   return success();
 }
 
-/// TODO: Use a matcher to check for a constant padding value.
 static LogicalResult
 vectorizePackOpPrecondition(tensor::PackOp packOp,
                             ArrayRef<int64_t> inputVectorSizes) {
   auto padValue = packOp.getPaddingValue();
-  if (padValue && !padValue.getDefiningOp<arith::ConstantOp>()) {
+  Attribute cstAttr;
+  if (padValue && !matchPattern(padValue, m_Constant(&cstAttr))) {
     LDBG("pad value is not constant: " << packOp << "\n");
     return failure();
   }
 
   ArrayRef<int64_t> resultTensorShape = packOp.getDestType().getShape();
-  if (failed(isValidMaskedInputVector(
+  if (!inputVectorSizes.empty() &&
+      failed(isValidMaskedInputVector(
           resultTensorShape.take_front(packOp.getSourceRank()),
           inputVectorSizes)))
     return failure();
