@@ -2896,10 +2896,13 @@ public:
         linearize(completePositions, computeStrides(destTy.getShape()));
 
     SmallVector<Attribute> insertedValues;
-    if (auto denseSource = llvm::dyn_cast<DenseElementsAttr>(sourceCst))
-      llvm::append_range(insertedValues, denseSource.getValues<Attribute>());
-    else
-      insertedValues.push_back(sourceCst);
+    Type destEltType = destTy.getElementType();
+    if (auto denseSource = llvm::dyn_cast<DenseElementsAttr>(sourceCst)) {
+      for (auto value : denseSource.getValues<Attribute>())
+        insertedValues.push_back(castOrConvertAttr(value, destEltType));
+    } else {
+      insertedValues.push_back(castOrConvertAttr(sourceCst, destEltType));
+    }
 
     auto allValues = llvm::to_vector(denseDest.getValues<Attribute>());
     copy(insertedValues, allValues.begin() + insertBeginPosition);
@@ -2907,6 +2910,16 @@ public:
 
     rewriter.replaceOpWithNewOp<arith::ConstantOp>(op, newAttr);
     return success();
+  }
+
+private:
+  /// Helper function to cast or convert attribute to the expected type.
+  Attribute castOrConvertAttr(Attribute attr, Type expectedType) const {
+    if (auto intAttr = attr.dyn_cast<IntegerAttr>()) {
+      if (intAttr.getType() != expectedType)
+        return IntegerAttr::get(expectedType, intAttr.getInt());
+    }
+    return attr;
   }
 };
 
