@@ -2260,40 +2260,39 @@ genOMP(Fortran::lower::AbstractConverter &converter,
           .setGenNested(false),
       clauseOps);
 
+  const auto &sectionBlocks =
+      std::get<Fortran::parser::OmpSectionBlocks>(sectionsConstruct.t);
+  auto &firOpBuilder = converter.getFirOpBuilder();
+  auto ip = firOpBuilder.saveInsertionPoint();
+  mlir::omp::SectionOp lastSectionOp;
+  for (const auto &[nblock, neval] :
+       llvm::zip(sectionBlocks.v, eval.getNestedEvaluations())) {
+    lastSectionOp = genSectionOp(converter, semaCtx, neval, /*genNested=*/true,
+                                 currentLocation);
+    firOpBuilder.restoreInsertionPoint(ip);
+  }
+
+  // For `omp.sections`, lastprivatized variables occur in
+  // lexically final `omp.section` operation.
   std::optional<Clause> lastPrivateClause;
   for (const Fortran::parser::OmpClause &clause : sectionsClauseList.v) {
     if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
             clause.u)) {
       lastPrivateClause = makeClause(clause, semaCtx);
+      break;
     }
   }
-
-  const auto &sectionBlocks =
-      std::get<Fortran::parser::OmpSectionBlocks>(sectionsConstruct.t);
-  auto &firOpBuilder = converter.getFirOpBuilder();
-  auto ip = firOpBuilder.saveInsertionPoint();
-  auto zippy = llvm::zip(sectionBlocks.v, eval.getNestedEvaluations());
-  auto it = zippy.begin(), next = it, end = zippy.end();
-  ++next;
-  for (; it != end; it = next, ++next) {
-    const auto &[nblock, neval] = *it;
-    mlir::omp::SectionOp sectionOp = genSectionOp(
-        converter, semaCtx, neval, /*genNested=*/true, currentLocation);
-    // For `omp.sections`, lastprivatized variables occur in
-    // lexically final `omp.section` operation.
-    if (next == end && lastPrivateClause) {
-      clause::Lastprivate &lastPrivate =
-          std::get<clause::Lastprivate>(lastPrivateClause.value().u);
-      firOpBuilder.setInsertionPoint(
-          sectionOp.getRegion().back().getTerminator());
-      mlir::OpBuilder::InsertPoint lastPrivIP =
-          converter.getFirOpBuilder().saveInsertionPoint();
-      for (const Object &obj : lastPrivate.v) {
-        Fortran::semantics::Symbol *sym = obj.id();
-        converter.copyHostAssociateVar(*sym, &lastPrivIP);
-      }
+  if (lastSectionOp && lastPrivateClause) {
+    clause::Lastprivate &lastPrivate =
+        std::get<clause::Lastprivate>(lastPrivateClause.value().u);
+    firOpBuilder.setInsertionPoint(
+        lastSectionOp.getRegion().back().getTerminator());
+    mlir::OpBuilder::InsertPoint lastPrivIP =
+        converter.getFirOpBuilder().saveInsertionPoint();
+    for (const Object &obj : lastPrivate.v) {
+      Fortran::semantics::Symbol *sym = obj.id();
+      converter.copyHostAssociateVar(*sym, &lastPrivIP);
     }
-    firOpBuilder.restoreInsertionPoint(ip);
   }
 
   // Perform DataSharingProcessor's step2 out of SECTIONS
