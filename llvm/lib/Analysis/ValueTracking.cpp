@@ -1631,6 +1631,22 @@ static void computeKnownBitsFromOperator(const Operator *I,
       case Intrinsic::vector_reduce_smin:
         computeKnownBits(I->getOperand(0), Known, Depth + 1, Q);
         break;
+      case Intrinsic::vector_reduce_xor:
+        computeKnownBits(I->getOperand(0), Known, Depth + 1, Q);
+        // The zeros common to all vecs are zero in the output.
+        // If the number of elements is odd, then the common ones remain. If the
+        // number of elements is even, then the common ones becomes zeros.
+        if (auto *VecTy =
+                dyn_cast<FixedVectorType>(I->getOperand(0)->getType())) {
+          // Even, so the ones become zeros.
+          if ((VecTy->getNumElements() % 2) == 0) {
+            Known.Zero |= Known.One;
+            Known.One.clearAllBits();
+          }
+
+        } else
+          Known.One.clearAllBits();
+        break;
       case Intrinsic::umin:
         computeKnownBits(I->getOperand(0), Known, Depth + 1, Q);
         computeKnownBits(I->getOperand(1), Known2, Depth + 1, Q);
