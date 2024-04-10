@@ -15,6 +15,9 @@
 namespace mlir {
 namespace sparse_tensor {
 
+// Forward declaration.
+class SparseIterator;
+
 /// The base class for all types of sparse tensor levels. It provides interfaces
 /// to query the loop range (see `peekRangeAt`) and look up the coordinates (see
 /// `peekCrdAt`).
@@ -78,6 +81,43 @@ enum class IterKind : uint8_t {
   kSubSect,
   kNonEmptySubSect,
   kFilter,
+};
+
+class SparseIterationSpace {
+public:
+  SparseIterationSpace() = default;
+
+  // Constructs a N-D iteration space.
+  SparseIterationSpace(Location loc, OpBuilder &b, Value t, unsigned tid,
+                       std::pair<Level, Level> lvlRange,
+                       const SparseIterator *parentIt);
+
+  // Constructs a 1-D iteration space.
+  SparseIterationSpace(Location loc, OpBuilder &b, Value t, unsigned tid,
+                       Level lvl, const SparseIterator *parentIt)
+      : SparseIterationSpace(loc, b, t, tid, {lvl, lvl + 1}, parentIt){};
+
+  // Reconstructs a iteration space directly from the provided ValueRange.
+  static SparseIterationSpace fromValues(IterSpaceType dstTp, ValueRange values,
+                                         unsigned tid);
+
+  // The inverse operation of `fromValues`.
+  SmallVector<Value> toValues() const {
+    SmallVector<Value> vals;
+    for (auto [stl, bound] : llvm::zip_equal(lvls, bounds)) {
+      llvm::append_range(vals, stl->getLvlBuffers());
+      vals.push_back(stl->getSize());
+      vals.append({bound.first, bound.second});
+    }
+    return vals;
+  }
+
+  // Extract an iterator to iterate over the sparse iteration space.
+  std::unique_ptr<SparseIterator> extractIterator() const;
+
+private:
+  SmallVector<std::unique_ptr<SparseTensorLevel>> lvls;
+  SmallVector<std::pair<Value, Value>> bounds;
 };
 
 /// Helper class that generates loop conditions, etc, to traverse a
@@ -208,7 +248,7 @@ public:
   // Not every type of iterator supports the operation, e.g., non-empty
   // subsection iterator does not because it represent a range of coordinates
   // instead of just one.
-  virtual std::pair<Value, Value> getCurPosition() const {
+  virtual ValueRange getCurPosition() const {
     llvm_unreachable("unsupported");
   };
 

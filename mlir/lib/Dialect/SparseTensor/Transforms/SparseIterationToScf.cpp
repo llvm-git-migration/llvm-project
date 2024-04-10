@@ -16,16 +16,15 @@ convertIterSpaceType(IterSpaceType itSp, SmallVectorImpl<Type> &fields) {
     llvm_unreachable("Not implemented.");
 
   auto idxTp = IndexType::get(itSp.getContext());
-  // FIXME: this assumes that the Pos/CrdBitWidth in sparse tensor encoding is
-  // overriden to non-default values.
-  auto sparseMemRef = MemRefType::get({ShapedType::kDynamic}, idxTp);
   for (LevelType lt : itSp.getLvlTypes()) {
     // Position and coordinate buffer in the sparse structure.
     if (lt.isWithPosLT())
-      fields.push_back(sparseMemRef);
+      fields.push_back(itSp.getEncoding().getPosMemRefType());
     if (lt.isWithCrdLT())
-      fields.push_back(sparseMemRef);
+      fields.push_back(itSp.getEncoding().getCrdMemRefType());
   }
+  // One index for shape bound (result from lvlOp)
+  fields.push_back(idxTp);
   // Two indices for lower and upper bound.
   fields.append({idxTp, idxTp});
   return success();
@@ -56,24 +55,17 @@ public:
   LogicalResult
   matchAndRewrite(ExtractIterSpaceOp op, OpAdaptor adaptor,
                   OneToNPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
     if (op.getSpaceDim() > 1)
       llvm_unreachable("Not implemented.");
-    Location loc = op.getLoc();
 
     const OneToNTypeMapping &resultMapping = adaptor.getResultMapping();
-    std::unique_ptr<SparseTensorLevel> lvl =
-        makeSparseTensorLevel(rewriter, loc, op.getTensor(), 0, op.getLoLvl());
 
-    SmallVector<Value> result = llvm::to_vector(lvl->getLvlBuffers());
-    if (!op.getParentIter()) {
-      // TODO: handle batch.
-      std::pair<Value, Value> bounds = lvl->peekRangeAt(
-          rewriter, loc, /*batchPrefix*/ {}, constantIndex(rewriter, loc, 0));
-      result.append({bounds.first, bounds.second});
-    } else {
-      llvm_unreachable("Not implemented.");
-    }
+    // Construct the iteration space.
+    SparseIterationSpace space(loc, rewriter, op.getTensor(), 0,
+                               op.getLvlRange(), nullptr);
 
+    SmallVector<Value> result = space.toValues();
     rewriter.replaceOp(op, result, resultMapping);
     return success();
   }
@@ -90,18 +82,17 @@ public:
 
     Location loc = op.getLoc();
 
-    LevelType lt = op.getIterSpace().getType().getLvlTypes().front();
+    auto iterSpace = SparseIterationSpace::fromValues(
+        op.getIterSpace().getType(), adaptor.getIterSpace(), 0);
 
-    ValueRange buffers = adaptor.getIterSpace().take_front(2);
     // TODO: Introduce a class to represent a sparse iter_space, which is a
     // combination of sparse levels and posRange.
     // ValueRange posRange = adaptor.getIterSpace().take_front(2);
 
-    std::unique_ptr<SparseTensorLevel> stl = makeSparseTensorLevel(
-        lt, /*sz=*/nullptr, buffers, /*tid=*/0, /*lvl=*/0);
-
     // TODO: decouple sparse iterator with sparse levels.
-    std::unique_ptr<SparseIterator> it = makeSimpleIterator(*stl);
+    // std::unique_ptr<SparseIterator> it =
+    //     makeSimpleIterator(iterSpace.getSparseTensorLevel(0));
+    std::unique_ptr<SparseIterator> it = iterSpace.extractIterator();
 
     // FIXME: only works for the first level.
     it->genInit(rewriter, loc, /*parent*/ nullptr);

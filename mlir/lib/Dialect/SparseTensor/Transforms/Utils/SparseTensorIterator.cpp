@@ -316,7 +316,7 @@ public:
       posHi = vs.back();
   };
 
-  ValuePair getCurPosition() const override { return {getItPos(), nullptr}; }
+  ValueRange getCurPosition() const override { return getItPos(); }
 
   void genInitImpl(OpBuilder &b, Location l,
                    const SparseIterator *parent) override {
@@ -328,8 +328,13 @@ public:
     Value hi = nullptr;
     // If the parent iterator is a batch iterator, we also start from 0 (but
     // on a different batch).
-    if (parent && !parent->isBatchIterator())
-      std::tie(pos, hi) = parent->getCurPosition();
+    if (parent && !parent->isBatchIterator()) {
+      ValueRange pItVals = parent->getCurPosition();
+      assert(pItVals.size() == 1 || pItVals.size() == 2);
+      pos = pItVals.front();
+      if (pItVals.size() == 2)
+        hi = pItVals.back();
+    }
 
     ValueRange batchPrefix = parent ? parent->getBatchCrds() : ValueRange{};
     std::tie(posLo, posHi) = stl.peekRangeAt(b, l, batchPrefix, pos, hi);
@@ -394,6 +399,7 @@ public:
       : ConcreteIterator(stl, IterKind::kDedup, /*itValCnt=*/2) {
     assert(!stl.isUnique());
   }
+
   // For LLVM-style RTTI.
   static bool classof(const SparseIterator *from) {
     return from->kind == IterKind::kDedup;
@@ -406,7 +412,7 @@ public:
     return {b.getIndexType(), b.getIndexType()};
   }
 
-  ValuePair getCurPosition() const override { return {getPos(), getSegHi()}; }
+  ValueRange getCurPosition() const override { return {getPos(), getSegHi()}; }
 
   void genInitImpl(OpBuilder &b, Location l,
                    const SparseIterator *parent) override {
@@ -415,8 +421,13 @@ public:
     Value hi = nullptr;
     // If the parent iterator is a batch iterator, we also start from 0 (but
     // on a different batch).
-    if (parent && !parent->isBatchIterator())
-      std::tie(pos, hi) = parent->getCurPosition();
+    if (parent && !parent->isBatchIterator()) {
+      ValueRange pItVals = parent->getCurPosition();
+      assert(pItVals.size() == 1 || pItVals.size() == 2);
+      pos = pItVals.front();
+      if (pItVals.size() == 2)
+        hi = pItVals.back();
+    }
 
     Value posLo;
     ValueRange batchPrefix = parent ? parent->getBatchCrds() : ValueRange{};
@@ -505,7 +516,7 @@ public:
 
   SmallVector<Value> serialize() const override { return wrap->serialize(); };
   void deserialize(ValueRange vs) override { wrap->deserialize(vs); };
-  ValuePair getCurPosition() const override { return wrap->getCurPosition(); }
+  ValueRange getCurPosition() const override { return wrap->getCurPosition(); }
 
   void genInitImpl(OpBuilder &b, Location l,
                    const SparseIterator *parent) override {
@@ -756,9 +767,7 @@ public:
   Value upperBound(OpBuilder &b, Location l) const override {
     return subSect.subSectSz;
   }
-  std::pair<Value, Value> getCurPosition() const override {
-    return wrap->getCurPosition();
-  };
+  ValueRange getCurPosition() const override { return wrap->getCurPosition(); };
 
   Value getNxLvlTupleId(OpBuilder &b, Location l) const {
     if (randomAccessible()) {
@@ -1327,6 +1336,61 @@ ValueRange NonEmptySubSectIterator::forwardImpl(OpBuilder &b, Location l) {
   seek(ValueRange{nxMinCrd, nxAbsOff, nxNotEnd});
   return getCursor();
 }
+
+//===----------------------------------------------------------------------===//
+// SparseIterationSpace Implementation
+//===----------------------------------------------------------------------===//
+
+mlir::sparse_tensor::SparseIterationSpace::SparseIterationSpace(
+    Location l, OpBuilder &b, Value t, unsigned tid,
+    std::pair<Level, Level> lvlRange, const SparseIterator *parentIt)
+    : lvls(), bounds() {
+  auto [lvlLo, lvlHi] = lvlRange;
+  assert(lvlHi - lvlLo == 1 && "Not implemented.");
+
+  // SparseTensorType stt = getSparseTensorType(t);
+  for (Level lvl = lvlLo; lvl < lvlHi; lvl++) {
+    lvls.emplace_back(makeSparseTensorLevel(b, l, t, tid, lvl));
+    if (parentIt) {
+      llvm_unreachable("Not implemented.");
+    } else {
+      // TODO: handle batch.
+      bounds.emplace_back(
+          lvls.back()->peekRangeAt(b, l, /*batchPrefix=*/{}, C_IDX(0)));
+    }
+  }
+}
+
+SparseIterationSpace mlir::sparse_tensor::SparseIterationSpace::fromValues(
+    IterSpaceType dstTp, ValueRange values, unsigned int tid) {
+  // Reconstruct every sparse tensor level.
+  SparseIterationSpace space;
+  for (auto [i, lt] : llvm::enumerate(dstTp.getLvlTypes())) {
+    unsigned bufferCnt = 0;
+    if (lt.isWithPosLT())
+      bufferCnt++;
+    if (lt.isWithCrdLT())
+      bufferCnt++;
+    // Sparse tensor buffers.
+    ValueRange buffers = values.take_front(bufferCnt);
+    values = values.drop_front(bufferCnt);
+
+    // Level size.
+    Value sz = values.front();
+    values = values.drop_front();
+    space.lvls.push_back(
+        makeSparseTensorLevel(lt, sz, buffers, tid, i + dstTp.getLoLvl()));
+
+    // Two bounds.
+    space.bounds.push_back({values[0], values[1]});
+    values = values.drop_front(2);
+  }
+  // Must have consumed all values.
+  assert(values.empty());
+  return space;
+}
+
+std::unique_ptr<SparseIterator> SparseIterationSpace::extractIterator() const {}
 
 //===----------------------------------------------------------------------===//
 // SparseIterator factory functions.
