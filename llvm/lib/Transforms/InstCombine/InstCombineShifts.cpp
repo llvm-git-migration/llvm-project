@@ -1332,7 +1332,7 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
     if (match(Op0,
               m_OneUse(m_c_Add(m_OneUse(m_Shl(m_Value(X), m_Specific(Op1))),
                                m_Value(Y))))) {
-      Value *NewLshr = Builder.CreateLShr(Y, Op1);
+      Value *NewLshr = Builder.CreateLShr(Y, Op1, "", I.isExact());
       Value *NewAdd = Builder.CreateAdd(NewLshr, X);
       unsigned Op1Val = C->getLimitedValue(BitWidth);
       APInt Bits = APInt::getLowBitsSet(BitWidth, BitWidth - Op1Val);
@@ -1395,11 +1395,17 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
     }
 
     // (X >>u C1) >>u C --> X >>u (C1 + C)
-    if (match(Op0, m_LShr(m_Value(X), m_APInt(C1)))) {
+    Instruction *Inst;
+    if (match(Op0, m_Instruction(Inst)) &&
+        match(Inst, m_LShr(m_Value(X), m_APInt(C1)))) {
       // Oversized shifts are simplified to zero in InstSimplify.
       unsigned AmtSum = ShAmtC + C1->getZExtValue();
-      if (AmtSum < BitWidth)
-        return BinaryOperator::CreateLShr(X, ConstantInt::get(Ty, AmtSum));
+      if (AmtSum < BitWidth) {
+        auto *NewLShr =
+            BinaryOperator::CreateLShr(X, ConstantInt::get(Ty, AmtSum));
+        NewLShr->setIsExact(I.isExact() && Inst->isExact());
+        return NewLShr;
+      }
     }
 
     Instruction *TruncSrc;
@@ -1415,7 +1421,8 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       // mask instruction is eliminated (and so the use check is relaxed).
       if (AmtSum < SrcWidth &&
           (TruncSrc->hasOneUse() || C1->uge(SrcWidth - BitWidth))) {
-        Value *SumShift = Builder.CreateLShr(X, AmtSum, "sum.shift");
+        Value *SumShift = Builder.CreateLShr(
+            X, AmtSum, "sum.shift", TruncSrc->isExact() && I.isExact());
         Value *Trunc = Builder.CreateTrunc(SumShift, Ty, I.getName());
 
         // If the first shift does not cover the number of bits truncated, then
