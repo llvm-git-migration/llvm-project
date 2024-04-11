@@ -1986,7 +1986,9 @@ TEST(Hover, All) {
   { return 0; }
 
 // Expands to
-{ return 0; })cpp";
+  {                                                                            \
+    return 0;                                                                  \
+  })cpp";
           }},
       {
           R"cpp(// Forward class declaration
