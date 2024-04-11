@@ -4,10 +4,9 @@
 define void @add_shl_or_disjoint(i32 %x, ptr addrspace(1) %o) {
 ; CHECK-LABEL: add_shl_or_disjoint:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    shll $2, %edi
-; CHECK-NEXT:    orl $-1069531068, %edi # imm = 0xC0404044
-; CHECK-NEXT:    addl $1234567890, %edi # imm = 0x499602D2
-; CHECK-NEXT:    movl %edi, (%rsi)
+; CHECK-NEXT:    # kill: def $edi killed $edi def $rdi
+; CHECK-NEXT:    leal 165036822(,%rdi,4), %eax
+; CHECK-NEXT:    movl %eax, (%rsi)
 ; CHECK-NEXT:    retq
   %or = or disjoint i32 %x, 4027584529
   %shl = shl i32 %or, 2
