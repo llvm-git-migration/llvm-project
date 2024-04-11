@@ -1542,9 +1542,9 @@ define i4 @udiv_mul_nuw_mul_negative(i4 %a) {
 
 define i4 @sdiv_mul_nsw_mul_nsw_allones(i4 %a) {
 ; CHECK-LABEL: @sdiv_mul_nsw_mul_nsw_allones(
-; CHECK-NEXT:    [[ADD4:%.*]] = sub nsw i4 0, [[A:%.*]]
-; CHECK-NEXT:    [[ADD5:%.*]] = shl i4 [[A]], 3
-; CHECK-NEXT:    [[DIV:%.*]] = sdiv i4 [[ADD5]], [[ADD4]]
+; CHECK-NEXT:    [[ADD5:%.*]] = shl i4 [[A:%.*]], 3
+; CHECK-NEXT:    [[DIV1:%.*]] = sdiv i4 [[ADD5]], [[A]]
+; CHECK-NEXT:    [[DIV:%.*]] = sub nsw i4 0, [[DIV1]]
 ; CHECK-NEXT:    ret i4 [[DIV]]
 ;
   %add4 = mul nsw i4 %a, -1
@@ -1651,9 +1651,9 @@ define i32 @sdiv_mul_nsw_sub_nsw(i32 %x, i32 %y) {
 define i32 @sdiv_neg_divisor_known_non_min(i32 %x, i32 %z) {
 ; CHECK-LABEL: @sdiv_neg_divisor_known_non_min(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR:%.*]] = or i32 [[Z:%.*]], 1
-; CHECK-NEXT:    [[SUB:%.*]] = sub nsw i32 0, [[Z1:%.*]]
-; CHECK-NEXT:    [[DIV:%.*]] = sdiv i32 [[OR]], [[SUB]]
+; CHECK-NEXT:    [[OR:%.*]] = or i32 [[X:%.*]], 1
+; CHECK-NEXT:    [[DIV1:%.*]] = sdiv i32 [[OR]], [[Z:%.*]]
+; CHECK-NEXT:    [[DIV:%.*]] = sub nsw i32 0, [[DIV1]]
 ; CHECK-NEXT:    ret i32 [[DIV]]
 ;
 entry:
@@ -1666,10 +1666,8 @@ entry:
 define i32 @double_negative_division(i32 %x, i32 %z) {
 ; CHECK-LABEL: @double_negative_division(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SUB1:%.*]] = sub nsw i32 0, [[Z:%.*]]
-; CHECK-NEXT:    [[DIV21:%.*]] = sdiv i32 [[X:%.*]], [[SUB1]]
-; CHECK-NEXT:    [[DIV2:%.*]] = sub nsw i32 0, [[DIV21]]
-; CHECK-NEXT:    ret i32 [[DIV2]]
+; CHECK-NEXT:    [[DIV21:%.*]] = sdiv i32 [[X:%.*]], [[SUB1:%.*]]
+; CHECK-NEXT:    ret i32 [[DIV21]]
 ;
 entry:
   %sub2 = sub nsw i32 0, %x
@@ -1683,8 +1681,8 @@ entry:
 define i32 @negative_divisior_only(i32 %x, i32 %z) {
 ; CHECK-LABEL: @negative_divisior_only(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SUB1:%.*]] = sub nsw i32 0, [[Z:%.*]]
-; CHECK-NEXT:    [[DIV2:%.*]] = sdiv i32 [[X:%.*]], [[SUB1]]
+; CHECK-NEXT:    [[DIV21:%.*]] = sdiv i32 [[X:%.*]], [[Z:%.*]]
+; CHECK-NEXT:    [[DIV2:%.*]] = sub nsw i32 0, [[DIV21]]
 ; CHECK-NEXT:    ret i32 [[DIV2]]
 ;
 entry:
