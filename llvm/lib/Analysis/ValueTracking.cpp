@@ -6282,6 +6282,12 @@ const Value *llvm::getUnderlyingObject(const Value *V, unsigned MaxLookup) {
           continue;
         }
       } else if (auto *Call = dyn_cast<CallBase>(V)) {
+        if (const IntrinsicInst *II = dyn_cast<IntrinsicInst>(V)) {
+          if (II->getIntrinsicID() == Intrinsic::threadlocal_address) {
+            V = II->getArgOperand(0);
+            continue;
+          }
+        }
         // CaptureTracking can know about special capturing properties of some
         // intrinsics like launder.invariant.group, that can't be expressed with
         // the attributes, but have properties like returning aliasing pointer.

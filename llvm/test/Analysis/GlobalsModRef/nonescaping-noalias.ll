@@ -22,6 +22,25 @@ entry:
   ret i32 %v
 }
 
+@g1_tls = internal thread_local global i32 0
+
+define i32 @test1_tls(ptr %param) {
+; Ensure that we can fold a store to a load of a global across a store to
+; a parameter when the global is non-escaping.
+;
+; CHECK-LABEL: @test1_tls(
+; CHECK: %p = call ptr @llvm.threadlocal.address.p0(ptr @g1_tls)
+; CHECK: store i32 42, ptr %p
+; CHECK-NOT: load i32
+; CHECK: ret i32 42
+entry:
+  %p = call ptr @llvm.threadlocal.address(ptr @g1_tls)
+  store i32 42, ptr %p
+  store i32 7, ptr %param
+  %v = load i32, ptr %p
+  ret i32 %v
+}
+
 declare ptr @f()
 
 define i32 @test2() {
