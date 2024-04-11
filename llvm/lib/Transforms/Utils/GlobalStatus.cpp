@@ -172,6 +172,12 @@ static bool analyzeGlobalAux(const Value *V, GlobalStatus &GS,
           return true;
         GS.StoredType = GlobalStatus::Stored;
       } else if (const auto *CB = dyn_cast<CallBase>(I)) {
+        if (const IntrinsicInst *II = dyn_cast<IntrinsicInst>(I)) {
+          if (II->getIntrinsicID() == Intrinsic::threadlocal_address &&
+              II->getArgOperand(0) == V) {
+            return analyzeGlobalAux(I, GS, VisitedUsers);
+          }
+        }
         if (!CB->isCallee(&U))
           return true;
         GS.IsLoaded = true;
