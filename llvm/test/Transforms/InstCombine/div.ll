@@ -1666,10 +1666,8 @@ entry:
 define i32 @double_negative_division(i32 %x, i32 %z) {
 ; CHECK-LABEL: @double_negative_division(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SUB1:%.*]] = sub nsw i32 0, [[Z:%.*]]
-; CHECK-NEXT:    [[DIV21:%.*]] = sdiv i32 [[X:%.*]], [[SUB1]]
-; CHECK-NEXT:    [[DIV2:%.*]] = sub nsw i32 0, [[DIV21]]
-; CHECK-NEXT:    ret i32 [[DIV2]]
+; CHECK-NEXT:    [[DIV21:%.*]] = sdiv i32 [[X:%.*]], [[SUB1:%.*]]
+; CHECK-NEXT:    ret i32 [[DIV21]]
 ;
 entry:
   %sub2 = sub nsw i32 0, %x

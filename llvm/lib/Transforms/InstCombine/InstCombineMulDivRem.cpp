@@ -1581,11 +1581,29 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
     }
   }
 
-  // -X / Y --> -(X / Y)
   Value *Y;
+  // -X / -Y --> (X / Y)
+  if (match(&I, m_SDiv(m_NSWSub(m_Zero(), m_Value(X)),
+                       m_NSWSub(m_Zero(), m_Value(Y))))) {
+    auto *NewDiv = BinaryOperator::CreateSDiv(X, Y);
+    NewDiv->setIsExact(I.isExact());
+    return NewDiv;
+  }
+
+  // -X / Y --> -(X / Y)
   if (match(&I, m_SDiv(m_OneUse(m_NSWSub(m_Zero(), m_Value(X))), m_Value(Y))))
     return BinaryOperator::CreateNSWNeg(
         Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+
+  // X / -Y --> -(X / Y), if X is known to not be INT_MIN
+  if (match(&I, m_SDiv(m_Value(X), m_OneUse(m_NUWSub(m_Zero(), m_Value(Y)))))) {
+    KnownBits KnownDivisor = computeKnownBits(X, 0, &I);
+    auto *NewNeg = BinaryOperator::CreateNSWNeg(
+        Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+    NewNeg->setHasNoUnsignedWrap(true);
+    NewNeg->setHasNoSignedWrap(true);
+    return NewNeg;
+  }
 
   // abs(X) / X --> X > -1 ? 1 : -1
   // X / abs(X) --> X > -1 ? 1 : -1
