@@ -6252,6 +6252,9 @@ bool llvm::isIntrinsicReturningPointerAliasingArgumentWithoutCapturing(
   // MustPreserveNullness (and, at time of writing, they are not), but we
   // document this fact out of an abundance of caution.
   case Intrinsic::amdgcn_make_buffer_rsrc:
+  // For alias analysis it is best to return the `GlobalValue` representing the
+  // TLS variable.
+  case Intrinsic::threadlocal_address:
     return true;
   case Intrinsic::ptrmask:
     return !MustPreserveNullness;
