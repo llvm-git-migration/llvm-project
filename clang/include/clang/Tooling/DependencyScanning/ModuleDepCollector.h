@@ -308,6 +308,9 @@ private:
                                 ModuleDeps &Deps);
 };
 
+/// Resets some options that introduce dependencies unnecessarily.
+void removeUnnecessaryDependencies(CompilerInvocation &CI, bool ForModuleBuild);
+
 } // end namespace dependencies
 } // end namespace tooling
 } // end namespace clang

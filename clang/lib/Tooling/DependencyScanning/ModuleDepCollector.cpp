@@ -154,6 +154,20 @@ void ModuleDepCollector::addOutputPaths(CowCompilerInvocation &CI,
   }
 }
 
+void dependencies::removeUnnecessaryDependencies(CompilerInvocation &CI,
+                                                 bool ForModuleBuild) {
+  if (CI.getFrontendOpts().ProgramAction == frontend::GeneratePCH ||
+      (ForModuleBuild && !CI.getLangOpts().ModulesCodegen)) {
+    CI.getCodeGenOpts().DebugCompilationDir.clear();
+    CI.getCodeGenOpts().CoverageCompilationDir.clear();
+    CI.getCodeGenOpts().CoverageDataFile.clear();
+    CI.getCodeGenOpts().CoverageNotesFile.clear();
+    CI.getCodeGenOpts().ProfileInstrumentUsePath.clear();
+    CI.getCodeGenOpts().SampleProfileFile.clear();
+    CI.getCodeGenOpts().ProfileRemappingFile.clear();
+  }
+}
+
 static CowCompilerInvocation
 makeCommonInvocationForModuleBuild(CompilerInvocation CI) {
   CI.resetNonModularOptions();
@@ -170,15 +184,8 @@ makeCommonInvocationForModuleBuild(CompilerInvocation CI) {
   // TODO: Figure out better way to set options to their default value.
   CI.getCodeGenOpts().MainFileName.clear();
   CI.getCodeGenOpts().DwarfDebugFlags.clear();
-  if (!CI.getLangOpts().ModulesCodegen) {
-    CI.getCodeGenOpts().DebugCompilationDir.clear();
-    CI.getCodeGenOpts().CoverageCompilationDir.clear();
-    CI.getCodeGenOpts().CoverageDataFile.clear();
-    CI.getCodeGenOpts().CoverageNotesFile.clear();
-    CI.getCodeGenOpts().ProfileInstrumentUsePath.clear();
-    CI.getCodeGenOpts().SampleProfileFile.clear();
-    CI.getCodeGenOpts().ProfileRemappingFile.clear();
-  }
+
+  removeUnnecessaryDependencies(CI, /*ForModuleBuild=*/true);
 
   // Map output paths that affect behaviour to "-" so their existence is in the
   // context hash. The final path will be computed in addOutputPaths.
