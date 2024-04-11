@@ -336,7 +336,12 @@ def parseOptionsAndInitTestdirs():
         )
 
     if args.E:
-        os.environ["CFLAGS_EXTRAS"] = args.E
+        args_list = args.E.split(":")
+        # Remove first 'start' argument, as we need it was needed to pass as argument to '-E'
+        if (args_list[0] == "start"):
+          args_list = args_list[1:]
+
+        os.environ["CFLAGS_EXTRAS"] = " ".join(args_list)
 
     if args.dwarf_version:
         configuration.dwarf_version = args.dwarf_version
