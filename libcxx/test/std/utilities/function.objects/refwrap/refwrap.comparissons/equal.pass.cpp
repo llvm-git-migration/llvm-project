@@ -23,17 +23,37 @@
 #include "test_macros.h"
 
 constexpr bool test() {
+  int i = 92;
+  int j = 84;
+
+  // ==
   {
-    int i = 92;
     std::reference_wrapper<int> lhs{i};
     std::reference_wrapper<int> rhs = lhs;
     assert(lhs == rhs);
   }
   {
-    int i = 92;
     std::reference_wrapper<int> lhs{i};
-    int j = 84;
+    assert(lhs == i);
+  }
+  {
+    std::reference_wrapper<int> lhs{i};
+    std::reference_wrapper<const int> rhs = lhs;
+    assert(lhs == rhs);
+  }
+  // !=
+  {
+    std::reference_wrapper<int> lhs{i};
     std::reference_wrapper<int> rhs{j};
+    assert(lhs != rhs);
+  }
+  {
+    std::reference_wrapper<int> lhs{i};
+    assert(lhs != j);
+  }
+  {
+    std::reference_wrapper<int> lhs{i};
+    std::reference_wrapper<const int> rhs{j};
     assert(lhs != rhs);
   }
 
