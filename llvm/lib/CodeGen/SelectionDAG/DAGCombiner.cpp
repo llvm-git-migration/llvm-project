@@ -9530,6 +9530,7 @@ static SDValue combineShiftOfShiftedLogic(SDNode *Shift, SelectionDAG &DAG) {
   SDValue ShiftSumC = DAG.getConstant(*C0Val + C1Val, DL, ShiftAmtVT);
   SDValue NewShift1 = DAG.getNode(ShiftOpcode, DL, VT, X, ShiftSumC);
   SDValue NewShift2 = DAG.getNode(ShiftOpcode, DL, VT, Y, C1);
+  SelectionDAG::FlagInserter FlagsInserter(DAG, LogicOp->getFlags());
   return DAG.getNode(LogicOpcode, DL, VT, NewShift1, NewShift2);
 }
 
