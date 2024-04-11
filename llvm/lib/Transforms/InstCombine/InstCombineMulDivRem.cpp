@@ -1572,8 +1572,7 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
     // -X / C --> X / -C (if the negation doesn't overflow).
     // TODO: This could be enhanced to handle arbitrary vector constants by
     //       checking if all elements are not the min-signed-val.
-    if (!Op1C->isMinSignedValue() &&
-        match(Op0, m_NSWSub(m_Zero(), m_Value(X)))) {
+    if (!Op1C->isMinSignedValue() && match(Op0, m_NSWNeg(m_Value(X)))) {
       Constant *NegC = ConstantInt::get(Ty, -(*Op1C));
       Instruction *BO = BinaryOperator::CreateSDiv(X, NegC);
       BO->setIsExact(I.isExact());
@@ -1581,11 +1580,29 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
     }
   }
 
-  // -X / Y --> -(X / Y)
+  KnownBits KnownDividend = computeKnownBits(Op0, 0, &I);
+  KnownBits KnownDivisor = computeKnownBits(Op1, 0, &I);
   Value *Y;
-  if (match(&I, m_SDiv(m_OneUse(m_NSWSub(m_Zero(), m_Value(X))), m_Value(Y))))
+  // -X / -Y --> (X / Y)
+  if (!KnownDividend.getSignedMinValue().isMinSignedValue() &&
+      !KnownDivisor.getSignedMinValue().isMinSignedValue() &&
+      match(&I, m_SDiv(m_NSWNeg(m_Value(X)), m_NSWNeg(m_Value(Y))))) {
+    auto *NewDiv = BinaryOperator::CreateSDiv(X, Y);
+    NewDiv->setIsExact(I.isExact());
+    return NewDiv;
+  }
+
+  // -X / Y --> -(X / Y)
+  if (match(&I, m_SDiv(m_OneUse(m_NSWNeg(m_Value(X))), m_Value(Y))))
     return BinaryOperator::CreateNSWNeg(
         Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+
+  // X / -Y --> -(X / Y), if X is known to not be INT_MIN
+  if (!KnownDivisor.getSignedMinValue().isMinSignedValue() &&
+      match(&I, m_SDiv(m_Value(X), m_OneUse(m_NSWNeg(m_Value(Y)))))) {
+    return BinaryOperator::CreateNSWNeg(
+        Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+  }
 
   // abs(X) / X --> X > -1 ? 1 : -1
   // X / abs(X) --> X > -1 ? 1 : -1
@@ -1597,7 +1614,6 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
                               ConstantInt::getAllOnesValue(Ty));
   }
 
-  KnownBits KnownDividend = computeKnownBits(Op0, 0, &I);
   if (!I.isExact() &&
       (match(Op1, m_Power2(Op1C)) || match(Op1, m_NegatedPower2(Op1C))) &&
       KnownDividend.countMinTrailingZeros() >= Op1C->countr_zero()) {
