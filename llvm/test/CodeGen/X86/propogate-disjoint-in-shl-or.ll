@@ -8,10 +8,10 @@ define void @add_shl_or_disjoint(i32 %x, ptr addrspace(1) %o) {
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT:   [[COPY:%[0-9]+]]:gr64 = COPY $rsi
   ; CHECK-NEXT:   [[COPY1:%[0-9]+]]:gr32 = COPY $edi
-  ; CHECK-NEXT:   [[SHL32ri:%[0-9]+]]:gr32 = SHL32ri [[COPY1]], 2, implicit-def dead $eflags
-  ; CHECK-NEXT:   [[OR32ri:%[0-9]+]]:gr32 = OR32ri [[SHL32ri]], -1069531068, implicit-def dead $eflags
-  ; CHECK-NEXT:   [[ADD32ri:%[0-9]+]]:gr32 = ADD32ri [[OR32ri]], 1234567890, implicit-def dead $eflags
-  ; CHECK-NEXT:   MOV32mr [[COPY]], 1, $noreg, 0, $noreg, killed [[ADD32ri]] :: (store (s32) into %ir.o, addrspace 1)
+  ; CHECK-NEXT:   [[DEF:%[0-9]+]]:gr64 = IMPLICIT_DEF
+  ; CHECK-NEXT:   [[INSERT_SUBREG:%[0-9]+]]:gr64_nosp = INSERT_SUBREG [[DEF]], [[COPY1]], %subreg.sub_32bit
+  ; CHECK-NEXT:   [[LEA64_32r:%[0-9]+]]:gr32 = LEA64_32r $noreg, 4, killed [[INSERT_SUBREG]], 165036822, $noreg
+  ; CHECK-NEXT:   MOV32mr [[COPY]], 1, $noreg, 0, $noreg, killed [[LEA64_32r]] :: (store (s32) into %ir.o, addrspace 1)
   ; CHECK-NEXT:   RET 0
   %or = or disjoint i32 %x, 4027584529
   %shl = shl i32 %or, 2
