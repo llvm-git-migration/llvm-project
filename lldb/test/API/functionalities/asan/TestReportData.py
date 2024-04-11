@@ -16,8 +16,13 @@ class AsanTestReportDataCase(TestBase):
     @skipUnlessAddressSanitizer
     @skipIf(archs=["i386"], bugnumber="llvm.org/PR36710")
     def test(self):
-        self.build()
+        self.build(make_targets=["asan"])
         self.asan_tests()
+
+    @skipIf(oslist=no_match(["macosx"]))
+    def test_libsanitizers_asan(self):
+        self.build(make_targets=["libsanitizers"])
+        self.asan_tests(libsanitizers=True)
 
     def setUp(self):
         # Call super's setUp().
@@ -29,10 +34,15 @@ class AsanTestReportDataCase(TestBase):
         self.line_crash = line_number("main.c", "// BOOM line")
         self.col_crash = 16
 
-    def asan_tests(self):
+    def asan_tests(self, libsanitizers=False):
         target = self.createTestTarget()
 
-        self.registerSanitizerLibrariesWithTarget(target)
+        if libsanitizers:
+            self.runCmd(
+                "env SanitizersAddress=1 MallocSanitizerZone=1 MallocSecureAllocator=0"
+            )
+        else:
+            self.registerSanitizerLibrariesWithTarget(target)
 
         self.runCmd("run")
 
