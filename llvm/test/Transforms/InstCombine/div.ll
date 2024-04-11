@@ -1651,10 +1651,10 @@ define i32 @sdiv_mul_nsw_sub_nsw(i32 %x, i32 %y) {
 define i32 @sdiv_neg_divisor_known_non_min(i32 %x, i32 %z) {
 ; CHECK-LABEL: @sdiv_neg_divisor_known_non_min(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR:%.*]] = or i32 [[Z:%.*]], 1
-; CHECK-NEXT:    [[SUB:%.*]] = sub nsw i32 0, [[Z1:%.*]]
-; CHECK-NEXT:    [[DIV:%.*]] = sdiv i32 [[OR]], [[SUB]]
-; CHECK-NEXT:    ret i32 [[DIV]]
+; CHECK-NEXT:    [[OR:%.*]] = or i32 [[X:%.*]], 1
+; CHECK-NEXT:    [[DIV:%.*]] = sub nsw i32 0, [[DIV1:%.*]]
+; CHECK-NEXT:    [[DIV2:%.*]] = sdiv i32 [[OR]], [[DIV]]
+; CHECK-NEXT:    ret i32 [[DIV2]]
 ;
 entry:
   %or = or i32 %x, 1
@@ -1683,9 +1683,9 @@ entry:
 define i32 @negative_divisior_only(i32 %x, i32 %z) {
 ; CHECK-LABEL: @negative_divisior_only(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SUB1:%.*]] = sub nsw i32 0, [[Z:%.*]]
-; CHECK-NEXT:    [[DIV2:%.*]] = sdiv i32 [[X:%.*]], [[SUB1]]
-; CHECK-NEXT:    ret i32 [[DIV2]]
+; CHECK-NEXT:    [[DIV2:%.*]] = sub nsw i32 0, [[DIV21:%.*]]
+; CHECK-NEXT:    [[DIV3:%.*]] = sdiv i32 [[X:%.*]], [[DIV2]]
+; CHECK-NEXT:    ret i32 [[DIV3]]
 ;
 entry:
   %sub1 = sub nsw i32 0, %z

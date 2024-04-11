@@ -1580,11 +1580,20 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
     }
   }
 
-  // -X / Y --> -(X / Y)
   Value *Y;
+
+  // -X / Y --> -(X / Y)
   if (match(&I, m_SDiv(m_OneUse(m_NSWNeg(m_Value(X))), m_Value(Y))))
     return BinaryOperator::CreateNSWNeg(
         Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+
+  // X / -Y --> -(X / Y), if X is known to not be INT_MIN
+  KnownBits KnownDivisor = computeKnownBits(Op1, 0, &I);
+  if (!KnownDivisor.getSignedMinValue().isMinSignedValue() &&
+      match(&I, m_SDiv(m_Value(X), m_OneUse(m_NSWNeg(m_Value(Y)))))) {
+    return BinaryOperator::CreateNSWNeg(
+        Builder.CreateSDiv(X, Y, I.getName(), I.isExact()));
+  }
 
   // abs(X) / X --> X > -1 ? 1 : -1
   // X / abs(X) --> X > -1 ? 1 : -1
@@ -1596,7 +1605,6 @@ Instruction *InstCombinerImpl::visitSDiv(BinaryOperator &I) {
                               ConstantInt::getAllOnesValue(Ty));
   }
 
-  KnownBits KnownDividend = computeKnownBits(Op0, 0, &I);
   if (!I.isExact() &&
       (match(Op1, m_Power2(Op1C)) || match(Op1, m_NegatedPower2(Op1C))) &&
       KnownDividend.countMinTrailingZeros() >= Op1C->countr_zero()) {
