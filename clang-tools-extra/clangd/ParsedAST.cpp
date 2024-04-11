@@ -451,6 +451,7 @@ ParsedAST::build(llvm::StringRef Filename, const ParseInputs &Inputs,
   DiagnosticConsumer *DiagConsumer = &ASTDiags;
   IgnoreDiagnostics DropDiags;
   if (Preamble) {
+    CI->TargetOpts = Preamble->TargetOpts;
     Patch = PreamblePatch::createFullPatch(Filename, Inputs, *Preamble);
     Patch->apply(*CI);
   }

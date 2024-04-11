@@ -700,6 +700,7 @@ buildPreamble(PathRef FileName, CompilerInvocation CI,
     Result->Marks = CapturedInfo.takeMarks();
     Result->StatCache = StatCache;
     Result->MainIsIncludeGuarded = CapturedInfo.isMainFileIncludeGuarded();
+    Result->TargetOpts = CI.TargetOpts;
     if (PreambleCallback) {
       trace::Span Tracer("Running PreambleCallback");
       auto Ctx = CapturedInfo.takeLife();
