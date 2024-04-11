@@ -472,6 +472,8 @@ static RTLIB::Libcall getRTLibDesc(unsigned Opcode, unsigned Size) {
     RTLIBCASE(NEARBYINT_F);
   case TargetOpcode::G_INTRINSIC_ROUNDEVEN:
     RTLIBCASE(ROUNDEVEN_F);
+  case TargetOpcode::G_INTRINSIC_LRINT:
+    RTLIBCASE(LRINT_F);
   }
   llvm_unreachable("Unknown libcall function");
 }
@@ -1055,6 +1057,26 @@ LegalizerHelper::libcall(MachineInstr &MI, LostDebugLocObserver &LocObserver) {
       return UnableToLegalize;
     }
     auto Status = simpleLibcall(MI, MIRBuilder, Size, HLTy, LocObserver);
+    if (Status != Legalized)
+      return Status;
+    break;
+  }
+  case TargetOpcode::G_INTRINSIC_LRINT: {
+    LLT LLTy = MRI.getType(MI.getOperand(1).getReg());
+    unsigned Size = LLTy.getSizeInBits();
+    Type *HLTy = getFloatTypeForLLT(Ctx, LLTy);
+    Type *ITy = IntegerType::get(
+        Ctx, MRI.getType(MI.getOperand(0).getReg()).getSizeInBits());
+    if (!HLTy || (Size != 32 && Size != 64 && Size != 80 && Size != 128)) {
+      LLVM_DEBUG(dbgs() << "No libcall available for type " << LLTy << ".\n");
+      return UnableToLegalize;
+    }
+    auto Libcall = getRTLibDesc(MI.getOpcode(), Size);
+    SmallVector<CallLowering::ArgInfo, 2> Args;
+    Args.push_back({MI.getOperand(1).getReg(), HLTy, 0});
+    LegalizeResult Status =
+        createLibcall(MIRBuilder, Libcall, {MI.getOperand(0).getReg(), ITy, 0},
+                      Args, LocObserver, &MI);
     if (Status != Legalized)
       return Status;
     break;
@@ -2639,6 +2661,7 @@ LegalizerHelper::widenScalar(MachineInstr &MI, unsigned TypeIdx, LLT WideTy) {
 
   case TargetOpcode::G_FPTOSI:
   case TargetOpcode::G_FPTOUI:
+  case TargetOpcode::G_INTRINSIC_LRINT:
   case TargetOpcode::G_IS_FPCLASS:
     Observer.changingInstr(MI);
 
