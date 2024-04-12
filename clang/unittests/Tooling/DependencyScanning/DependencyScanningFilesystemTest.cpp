@@ -13,33 +13,11 @@
 
 using namespace clang::tooling::dependencies;
 
-namespace {
-struct InstrumentingFilesystem
-    : llvm::RTTIExtends<InstrumentingFilesystem, llvm::vfs::ProxyFileSystem> {
-  unsigned NumStatusCalls = 0;
-  unsigned NumGetRealPathCalls = 0;
-
-  using llvm::RTTIExtends<InstrumentingFilesystem,
-                          llvm::vfs::ProxyFileSystem>::RTTIExtends;
-
-  llvm::ErrorOr<llvm::vfs::Status> status(const llvm::Twine &Path) override {
-    ++NumStatusCalls;
-    return ProxyFileSystem::status(Path);
-  }
-
-  std::error_code getRealPath(const llvm::Twine &Path,
-                              llvm::SmallVectorImpl<char> &Output) override {
-    ++NumGetRealPathCalls;
-    return ProxyFileSystem::getRealPath(Path, Output);
-  }
-};
-} // namespace
-
 TEST(DependencyScanningWorkerFilesystem, CacheStatusFailures) {
   auto InMemoryFS = llvm::makeIntrusiveRefCnt<llvm::vfs::InMemoryFileSystem>();
 
   auto InstrumentingFS =
-      llvm::makeIntrusiveRefCnt<InstrumentingFilesystem>(InMemoryFS);
+      llvm::makeIntrusiveRefCnt<llvm::vfs::TracingFileSystem>(InMemoryFS);
 
   DependencyScanningFilesystemSharedCache SharedCache;
   DependencyScanningWorkerFilesystem DepFS(SharedCache, InstrumentingFS);
@@ -65,7 +43,7 @@ TEST(DependencyScanningFilesystem, CacheGetRealPath) {
   InMemoryFS->addFile("/bar", 0, llvm::MemoryBuffer::getMemBuffer(""));
 
   auto InstrumentingFS =
-      llvm::makeIntrusiveRefCnt<InstrumentingFilesystem>(InMemoryFS);
+      llvm::makeIntrusiveRefCnt<llvm::vfs::TracingFileSystem>(InMemoryFS);
 
   DependencyScanningFilesystemSharedCache SharedCache;
   DependencyScanningWorkerFilesystem DepFS(SharedCache, InstrumentingFS);
