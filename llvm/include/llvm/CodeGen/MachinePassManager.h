@@ -76,6 +76,10 @@ struct MachinePassModel
 #endif
 
     auto PA = this->Pass.run(IR, AM);
+    // Machine function passes are not allowed to modify the LLVM
+    // representation, therefore we should preserve all IR analyses.
+    PA.template preserveSet<AllAnalysesOn<Module>>();
+    PA.template preserveSet<AllAnalysesOn<Function>>();
 
     if constexpr (is_detected<has_get_set_properties_t, PassT>::value)
       IR.getProperties().set(PassT::getSetProperties());
@@ -127,16 +131,6 @@ public:
       // because we are taking ownership of the responsibilty to clear the
       // analysis state.
       Arg.FAM = nullptr;
-    }
-
-    ~Result() {
-      // FAM is cleared in a moved from state where there is nothing to do.
-      if (!FAM)
-        return;
-
-      // Clear out the analysis manager if we're being destroyed -- it means we
-      // didn't even see an invalidate call when we got invalidated.
-      FAM->clear();
     }
 
     Result &operator=(Result &&RHS) {
@@ -211,12 +205,43 @@ private:
 template <typename MachineFunctionPassT>
 ModuleToMachineFunctionPassAdaptor
 createModuleToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
-  using PassModelT = detail::PassModel<MachineFunction, MachineFunctionPassT,
-                                       MachineFunctionAnalysisManager>;
+  using PassModelT = detail::MachinePassModel<MachineFunctionPassT>;
   // Do not use make_unique, it causes too many template instantiations,
   // causing terrible compile times.
   return ModuleToMachineFunctionPassAdaptor(
       std::unique_ptr<ModuleToMachineFunctionPassAdaptor::PassConceptT>(
+          new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
+}
+
+class FunctionToMachineFunctionPassAdaptor
+    : public PassInfoMixin<FunctionToMachineFunctionPassAdaptor> {
+public:
+  using PassConceptT =
+      detail::PassConcept<MachineFunction, MachineFunctionAnalysisManager>;
+
+  explicit FunctionToMachineFunctionPassAdaptor(
+      std::unique_ptr<PassConceptT> Pass)
+      : Pass(std::move(Pass)) {}
+
+  /// Runs the machine function pass across every function.
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
+  void printPipeline(raw_ostream &OS,
+                     function_ref<StringRef(StringRef)> MapClassName2PassName);
+
+  static bool isRequired() { return true; }
+
+private:
+  std::unique_ptr<PassConceptT> Pass;
+};
+
+template <typename MachineFunctionPassT>
+FunctionToMachineFunctionPassAdaptor
+createFunctionToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
+  using PassModelT = detail::MachinePassModel<MachineFunctionPassT>;
+  // Do not use make_unique, it causes too many template instantiations,
+  // causing terrible compile times.
+  return FunctionToMachineFunctionPassAdaptor(
+      std::unique_ptr<FunctionToMachineFunctionPassAdaptor::PassConceptT>(
           new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
 }
 

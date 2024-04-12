@@ -176,10 +176,10 @@ TEST_F(PassManagerTest, Basic) {
   MachineModuleInfo MMI(LLVMTM);
 
   LoopAnalysisManager LAM;
+  MachineFunctionAnalysisManager MFAM;
   FunctionAnalysisManager FAM;
   CGSCCAnalysisManager CGAM;
   ModuleAnalysisManager MAM;
-  MachineFunctionAnalysisManager MFAM;
   PassBuilder PB(TM.get());
   PB.registerModuleAnalyses(MAM);
   PB.registerCGSCCAnalyses(CGAM);
@@ -196,6 +196,7 @@ TEST_F(PassManagerTest, Basic) {
   std::vector<int> Counts;
 
   ModulePassManager MPM;
+  FunctionPassManager FPM;
   MachineFunctionPassManager MFPM;
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MPM.addPass(createModuleToMachineFunctionPassAdaptor(
@@ -203,11 +204,15 @@ TEST_F(PassManagerTest, Basic) {
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MFPM.addPass(TestMachineFunctionPass(Count, Counts));
   MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+  FPM.addPass(createFunctionToMachineFunctionPassAdaptor(
+      TestMachineFunctionPass(Count, Counts)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
 
   MPM.run(*M, MAM);
 
-  EXPECT_EQ((std::vector<int>{10, 16, 18, 20, 30, 36, 38, 40}), Counts);
-  EXPECT_EQ(40, Count);
+  EXPECT_EQ((std::vector<int>{10, 16, 18, 20, 30, 36, 38, 40, 46, 48, 50}),
+            Counts);
+  EXPECT_EQ(50, Count);
 }
 
 } // namespace
