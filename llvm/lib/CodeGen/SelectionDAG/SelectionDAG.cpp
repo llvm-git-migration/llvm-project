@@ -5191,6 +5191,9 @@ bool SelectionDAG::isADDLike(SDValue Op) const {
 }
 
 bool SelectionDAG::isBaseWithConstantOffset(SDValue Op) const {
+  if (isADDLike(Op) && isa<ConstantSDNode>(Op.getOperand(1)))
+    return true;
+
   if ((Op.getOpcode() != ISD::ADD && Op.getOpcode() != ISD::OR) ||
       !isa<ConstantSDNode>(Op.getOperand(1)))
     return false;

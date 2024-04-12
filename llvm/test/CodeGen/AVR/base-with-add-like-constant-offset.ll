@@ -6,11 +6,10 @@ define void @test(i16 %x, ptr addrspace(1) %o) {
   ; CHECK: bb.0 (%ir-block.0):
   ; CHECK-NEXT:   liveins: $r25r24, $r23r22
   ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   [[COPY:%[0-9]+]]:dldregs = COPY $r23r22
+  ; CHECK-NEXT:   [[COPY:%[0-9]+]]:dregs = COPY $r23r22
   ; CHECK-NEXT:   [[COPY1:%[0-9]+]]:dregs = COPY $r25r24
-  ; CHECK-NEXT:   [[ORIWRdK:%[0-9]+]]:dldregs = ORIWRdK [[COPY]], 10, implicit-def dead $sreg
-  ; CHECK-NEXT:   [[COPY2:%[0-9]+]]:ptrdispregs = COPY [[ORIWRdK]]
-  ; CHECK-NEXT:   STWPtrRr killed [[COPY2]], [[COPY1]] :: (store (s16) into %ir.addr, align 1, addrspace 1)
+  ; CHECK-NEXT:   [[COPY2:%[0-9]+]]:ptrdispregs = COPY [[COPY]]
+  ; CHECK-NEXT:   STDWPtrQRr [[COPY2]], 10, [[COPY1]] :: (store (s16) into %ir.addr, align 1, addrspace 1)
   ; CHECK-NEXT:   RET implicit $r1
   %int = ptrtoint ptr addrspace(1) %o to i16
   %or = or disjoint i16 %int, 10
