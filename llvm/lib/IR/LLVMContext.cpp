@@ -120,6 +120,12 @@ void LLVMContext::removeModule(Module *M) {
   pImpl->OwnedModules.erase(M);
 }
 
+unsigned LLVMContext::generateMachineFunctionNum(Function &F) {
+  Module *M = F.getParent();
+  assert(pImpl->OwnedModules.contains(M) && "Unexpected module!");
+  return pImpl->MachineFunctionNums[M]++;
+}
+
 //===----------------------------------------------------------------------===//
 // Recoverable Backend Errors
 //===----------------------------------------------------------------------===//

@@ -327,12 +327,20 @@ private:
   // Module needs access to the add/removeModule methods.
   friend class Module;
 
+  // Each MachineFunction need a unique number.
+  // See FunctionNumber in MachineFunction.
+  friend class FunctionToMachineFunctionAnalysis;
+
   /// addModule - Register a module as being instantiated in this context.  If
   /// the context is deleted, the module will be deleted as well.
   void addModule(Module*);
 
   /// removeModule - Unregister a module from this context.
   void removeModule(Module*);
+
+  /// generateMachineFunctionNum - Get a unique number for MachineFunction
+  /// that associated with the given Function.
+  unsigned generateMachineFunctionNum(Function &);
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
