@@ -54,7 +54,7 @@ private:
   size_t MemorySize = 0;
   size_t TotalSize = 0;
   GenericDeviceTy *Device = nullptr;
-  std::mutex AllocationLock;
+  std::mutex AllocationLock{};
 
   RRStatusTy Status = RRDeactivated;
   bool ReplaySaveOutput = false;
@@ -362,7 +362,10 @@ public:
   }
 };
 
-static RecordReplayTy RecordReplay;
+RecordReplayTy &getRecordReplay() {
+  static RecordReplayTy RecordReplay;
+  return RecordReplay;
+}
 
 // Extract the mapping of host function pointers to device function pointers
 // from the entry table. Functions marked as 'indirect' in OpenMP will have
@@ -473,7 +476,7 @@ GenericKernelTy::getKernelLaunchEnvironment(
   // Ctor/Dtor have no arguments, replaying uses the original kernel launch
   // environment. Older versions of the compiler do not generate a kernel
   // launch environment.
-  if (isCtorOrDtor() || RecordReplay.isReplaying() ||
+  if (isCtorOrDtor() || getRecordReplay().isReplaying() ||
       Version < OMP_KERNEL_ARG_MIN_VERSION_WITH_DYN_PTR)
     return nullptr;
 
@@ -562,11 +565,12 @@ Error GenericKernelTy::launch(GenericDeviceTy &GenericDevice, void **ArgPtrs,
 
   // Record the kernel description after we modified the argument count and num
   // blocks/threads.
-  if (RecordReplay.isRecording()) {
-    RecordReplay.saveImage(getName(), getImage());
-    RecordReplay.saveKernelInput(getName(), getImage());
-    RecordReplay.saveKernelDescr(getName(), Ptrs.data(), KernelArgs.NumArgs,
-                                 NumBlocks, NumThreads, KernelArgs.Tripcount);
+  if (getRecordReplay().isRecording()) {
+    getRecordReplay().saveImage(getName(), getImage());
+    getRecordReplay().saveKernelInput(getName(), getImage());
+    getRecordReplay().saveKernelDescr(getName(), Ptrs.data(),
+                                      KernelArgs.NumArgs, NumBlocks, NumThreads,
+                                      KernelArgs.Tripcount);
   }
 
   if (auto Err =
@@ -839,8 +843,8 @@ Error GenericDeviceTy::deinit(GenericPluginTy &Plugin) {
     delete MemoryManager;
   MemoryManager = nullptr;
 
-  if (RecordReplay.isRecordingOrReplaying())
-    RecordReplay.deinit();
+  if (getRecordReplay().isRecordingOrReplaying())
+    getRecordReplay().deinit();
 
   if (RPCServer)
     if (auto Err = RPCServer->deinitDevice(*this))
@@ -892,7 +896,7 @@ GenericDeviceTy::loadBinary(GenericPluginTy &Plugin,
     return std::move(Err);
 
   // Setup the global device memory pool if needed.
-  if (!RecordReplay.isReplaying() && shouldSetupDeviceMemoryPool()) {
+  if (!getRecordReplay().isReplaying() && shouldSetupDeviceMemoryPool()) {
     uint64_t HeapSize;
     auto SizeOrErr = getDeviceHeapSize(HeapSize);
     if (SizeOrErr) {
@@ -1307,8 +1311,8 @@ Expected<void *> GenericDeviceTy::dataAlloc(int64_t Size, void *HostPtr,
                                             TargetAllocTy Kind) {
   void *Alloc = nullptr;
 
-  if (RecordReplay.isRecordingOrReplaying())
-    return RecordReplay.alloc(Size);
+  if (getRecordReplay().isRecordingOrReplaying())
+    return getRecordReplay().alloc(Size);
 
   switch (Kind) {
   case TARGET_ALLOC_DEFAULT:
@@ -1344,7 +1348,7 @@ Expected<void *> GenericDeviceTy::dataAlloc(int64_t Size, void *HostPtr,
 
 Error GenericDeviceTy::dataDelete(void *TgtPtr, TargetAllocTy Kind) {
   // Free is a noop when recording or replaying.
-  if (RecordReplay.isRecordingOrReplaying())
+  if (getRecordReplay().isRecordingOrReplaying())
     return Plugin::success();
 
   int Res;
@@ -1397,7 +1401,7 @@ Error GenericDeviceTy::launchKernel(void *EntryPtr, void **ArgPtrs,
                                     KernelArgsTy &KernelArgs,
                                     __tgt_async_info *AsyncInfo) {
   AsyncInfoWrapperTy AsyncInfoWrapper(
-      *this, RecordReplay.isRecordingOrReplaying() ? nullptr : AsyncInfo);
+      *this, getRecordReplay().isRecordingOrReplaying() ? nullptr : AsyncInfo);
 
   GenericKernelTy &GenericKernel =
       *reinterpret_cast<GenericKernelTy *>(EntryPtr);
@@ -1408,9 +1412,9 @@ Error GenericDeviceTy::launchKernel(void *EntryPtr, void **ArgPtrs,
   // 'finalize' here to guarantee next record-replay actions are in-sync
   AsyncInfoWrapper.finalize(Err);
 
-  if (RecordReplay.isRecordingOrReplaying() &&
-      RecordReplay.isSaveOutputEnabled())
-    RecordReplay.saveKernelOutputInfo(GenericKernel.getName());
+  if (getRecordReplay().isRecordingOrReplaying() &&
+      getRecordReplay().isSaveOutputEnabled())
+    getRecordReplay().saveKernelOutputInfo(GenericKernel.getName());
 
   return Err;
 }
@@ -1630,12 +1634,12 @@ int32_t GenericPluginTy::initialize_record_replay(int32_t DeviceId,
       isRecord ? RecordReplayTy::RRStatusTy::RRRecording
                : RecordReplayTy::RRStatusTy::RRReplaying;
 
-  if (auto Err = RecordReplay.init(&Device, MemorySize, VAddr, Status,
-                                   SaveOutput, ReqPtrArgOffset)) {
+  if (auto Err = getRecordReplay().init(&Device, MemorySize, VAddr, Status,
+                                        SaveOutput, ReqPtrArgOffset)) {
     REPORT("WARNING RR did not intialize RR-properly with %lu bytes"
            "(Error: %s)\n",
            MemorySize, toString(std::move(Err)).data());
-    RecordReplay.setStatus(RecordReplayTy::RRStatusTy::RRDeactivated);
+    getRecordReplay().setStatus(RecordReplayTy::RRStatusTy::RRDeactivated);
 
     if (!isRecord) {
       return OFFLOAD_FAIL;
@@ -1984,8 +1988,8 @@ int32_t GenericPluginTy::get_global(__tgt_device_binary Binary, uint64_t Size,
   assert(DevicePtr && "Invalid device global's address");
 
   // Save the loaded globals if we are recording.
-  if (RecordReplay.isRecording())
-    RecordReplay.addEntry(Name, Size, *DevicePtr);
+  if (getRecordReplay().isRecording())
+    getRecordReplay().addEntry(Name, Size, *DevicePtr);
 
   return OFFLOAD_SUCCESS;
 }

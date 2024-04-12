@@ -33,6 +33,8 @@
 #include <string>
 #include <thread>
 
+[[gnu::constructor(101)]] void ctor() { printf("asdfasdf\n"); }
+
 #ifdef OMPT_SUPPORT
 using namespace llvm::omp::target::ompt;
 #endif
