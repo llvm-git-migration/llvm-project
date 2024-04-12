@@ -3857,8 +3857,8 @@ thread_result_t Process::RunPrivateStateThread(bool is_secondary_thread) {
         // case we should tell it to stop doing that.  Normally, we don't NEED
         // to do that because we will next close the communication to the stub
         // and that will get it to shut down.  But there are remote debugging
-        // cases where relying on that side-effect causes the shutdown to be 
-        // flakey, so we should send a positive signal to interrupt the wait. 
+        // cases where relying on that side-effect causes the shutdown to be
+        // flakey, so we should send a positive signal to interrupt the wait.
         Status error = HaltPrivate();
         BroadcastEvent(eBroadcastBitInterrupt, nullptr);
       } else if (StateIsRunningState(m_last_broadcast_state)) {
@@ -6325,8 +6325,11 @@ static bool AddDirtyPages(const MemoryRegionInfo &region,
 // ranges.
 static void AddRegion(const MemoryRegionInfo &region, bool try_dirty_pages,
                       Process::CoreFileMemoryRanges &ranges) {
-  // Don't add empty ranges or ranges with no permissions.
-  if (region.GetRange().GetByteSize() == 0 || region.GetLLDBPermissions() == 0)
+  // Don't add empty ranges.
+  if (region.GetRange().GetByteSize() == 0)
+    return;
+  // Don't add ranges with no read permissions.
+  if ((region.GetLLDBPermissions() & lldb::ePermissionsReadable) == 0)
     return;
   if (try_dirty_pages && AddDirtyPages(region, ranges))
     return;
