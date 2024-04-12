@@ -155,7 +155,7 @@ int llvm::compileModuleWithNewPM(
     MFPM.addPass(FreeMachineFunctionPass());
     MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
 
-    if (MIR->parseMachineFunctions(*M, MMI))
+    if (MIR->parseMachineFunctions(*M, MAM))
       return 1;
   } else {
     ExitOnErr(LLVMTM.buildCodeGenPipeline(
