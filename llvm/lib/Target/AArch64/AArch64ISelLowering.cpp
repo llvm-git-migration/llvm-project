@@ -16433,7 +16433,9 @@ bool AArch64TargetLowering::lowerDeinterleaveIntrinsicToLoad(
   if (UseScalable && !VTy->isScalableTy())
     return false;
 
-  unsigned NumLoads = getNumInterleavedAccesses(VTy, DL, UseScalable);
+  // Get around for the missing of split large size scalarize vectors.
+  // TODO: Support the custom split of large size scalarize vectors
+  unsigned NumLoads = getNumInterleavedAccesses(VTy, DL, false);
 
   VectorType *LdTy =
       VectorType::get(VTy->getElementType(),
