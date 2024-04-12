@@ -38,6 +38,7 @@
 #include "llvm/CodeGen/JMCInstrumenter.h"
 #include "llvm/CodeGen/LowerEmuTLS.h"
 #include "llvm/CodeGen/MIRPrinter.h"
+#include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/CodeGen/PreISelIntrinsicLowering.h"
 #include "llvm/CodeGen/ReplaceWithVeclib.h"
@@ -512,6 +513,7 @@ Error CodeGenPassBuilder<Derived>::buildPipeline(
 
   {
     AddIRPass addIRPass(MPM, derived());
+    addIRPass(RequireAnalysisPass<MachineModuleAnalysis, Module>());
     addIRPass(RequireAnalysisPass<ProfileSummaryAnalysis, Module>());
     addIRPass(RequireAnalysisPass<CollectorMetadataAnalysis, Module>());
     addISelPasses(addIRPass);
