@@ -5191,15 +5191,8 @@ bool SelectionDAG::isADDLike(SDValue Op) const {
 }
 
 bool SelectionDAG::isBaseWithConstantOffset(SDValue Op) const {
-  if ((Op.getOpcode() != ISD::ADD && Op.getOpcode() != ISD::OR) ||
-      !isa<ConstantSDNode>(Op.getOperand(1)))
-    return false;
-
-  if (Op.getOpcode() == ISD::OR &&
-      !MaskedValueIsZero(Op.getOperand(0), Op.getConstantOperandAPInt(1)))
-    return false;
-
-  return true;
+  return (Op.getOpcode() == ISD::ADD || isADDLike(Op)) &&
+         isa<ConstantSDNode>(Op.getOperand(1));
 }
 
 bool SelectionDAG::isKnownNeverNaN(SDValue Op, bool SNaN, unsigned Depth) const {
