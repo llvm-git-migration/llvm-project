@@ -139,6 +139,12 @@ static cl::opt<bool>
 cl::desc("This appends the content hash to the globally outlined function name. It's beneficial for enhancing the precision of the stable hash and for ordering the outlined functions."),
                            cl::init(false));
 
+static cl::opt<bool> OutlinerLeafDescendants(
+    "outliner-leaf-descendants", cl::init(true), cl::Hidden,
+    cl::desc("Consider all leaf descendants of internal nodes of the suffix "
+             "tree as candidates for outlining (if false, only leaf children "
+             "are considered)"));
+
 namespace {
 
 /// Maps \p MachineInstrs to unsigned integers and stores the mappings.
@@ -743,7 +749,7 @@ void MachineOutliner::findCandidates(
     InstructionMapper &Mapper,
     std::vector<std::unique_ptr<OutlinedFunction>> &FunctionList) {
   FunctionList.clear();
-  SuffixTree ST(Mapper.UnsignedVec);
+  SuffixTree ST(Mapper.UnsignedVec, OutlinerLeafDescendants);
 
   // First, find all of the repeated substrings in the tree of minimum length
   // 2.
