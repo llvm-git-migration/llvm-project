@@ -1159,8 +1159,12 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
   }
 
   SDValue Unrolled = DAG.UnrollVectorOp(Node);
-  for (unsigned I = 0, E = Unrolled->getNumValues(); I != E; ++I)
-    Results.push_back(Unrolled.getValue(I));
+  const LoadSDNode *Ld = dyn_cast<LoadSDNode>(Unrolled.getNode());
+  if (Ld)
+    Results.push_back(Unrolled);
+  else
+    for (unsigned I = 0, E = Unrolled->getNumValues(); I != E; ++I)
+      Results.push_back(Unrolled.getValue(I));
 }
 
 SDValue VectorLegalizer::ExpandSELECT(SDNode *Node) {
