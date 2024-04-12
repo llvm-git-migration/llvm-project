@@ -89,7 +89,8 @@ StringRef getEntryPointABIAttrName();
 /// Gets the EntryPointABIAttr given its fields.
 EntryPointABIAttr getEntryPointABIAttr(MLIRContext *context,
                                        ArrayRef<int32_t> workgroupSize = {},
-                                       std::optional<int> subgroupSize = {});
+                                       std::optional<int> subgroupSize = {},
+                                       std::optional<int> targetWidth = {});
 
 /// Queries the entry point ABI on the nearest function-like op containing the
 /// given `op`. Returns null attribute if not found.

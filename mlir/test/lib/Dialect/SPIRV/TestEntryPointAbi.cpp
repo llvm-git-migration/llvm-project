@@ -45,6 +45,11 @@ private:
           "Workgroup size to use for all gpu.func kernels in the module, "
           "specified with x-dimension first, y-dimension next and z-dimension "
           "last. Unspecified dimensions will be set to 1")};
+  Pass::Option<int> targetWidth{
+      *this, "target-width",
+      llvm::cl::desc(
+          "Specify the component width of floating-point instructions"),
+      llvm::cl::init(0)};
 };
 } // namespace
 
@@ -60,7 +65,10 @@ void TestSpirvEntryPointABIPass::runOnOperation() {
                                              workgroupSize.end());
     workgroupSizeVec.resize(3, 1);
     gpuFunc->setAttr(attrName,
-                     spirv::getEntryPointABIAttr(context, workgroupSizeVec));
+                     spirv::getEntryPointABIAttr(
+                         context, workgroupSizeVec, {},
+                         (targetWidth == 0) ? std::nullopt
+                                            : std::optional<int>(targetWidth)));
   }
 }
 

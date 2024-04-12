@@ -35,7 +35,8 @@ class SPIRV_Attr<string attrName, string attrMnemonic>
 def SPIRV_EntryPointABIAttr : SPIRV_Attr<"EntryPointABI", "entry_point_abi"> {
   let parameters = (ins
     OptionalParameter<"DenseI32ArrayAttr">:$workgroup_size,
-    OptionalParameter<"std::optional<int>">:$subgroup_size
+    OptionalParameter<"std::optional<int>">:$subgroup_size,
+    OptionalParameter<"std::optional<int>">:$target_width
   );
   let assemblyFormat = "`<` struct(params) `>`";
 }
