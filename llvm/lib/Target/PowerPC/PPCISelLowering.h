@@ -603,7 +603,6 @@ namespace llvm {
     /// Loads the entry for GA from the TOC, where the TOC base is given by
     /// the last operand.
     TOC_ENTRY
-
   };
 
   } // end namespace PPCISD
