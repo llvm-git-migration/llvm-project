@@ -1847,10 +1847,14 @@ const char *PPCTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case PPCISD::LXVRZX:          return "PPCISD::LXVRZX";
   case PPCISD::STORE_COND:
     return "PPCISD::STORE_COND";
-  case PPCISD::ADDC: return "PPCISD::ADDC";
-  case PPCISD::ADDE: return "PPCISD::ADDE";
-  case PPCISD::SUBC: return "PPCISD::SUBC";
-  case PPCISD::SUBE: return "PPCISD::SUBE";
+  case PPCISD::ADDC:
+    return "PPCISD::ADDC";
+  case PPCISD::ADDE:
+    return "PPCISD::ADDE";
+  case PPCISD::SUBC:
+    return "PPCISD::SUBC";
+  case PPCISD::SUBE:
+    return "PPCISD::SUBE";
   }
   return nullptr;
 }
