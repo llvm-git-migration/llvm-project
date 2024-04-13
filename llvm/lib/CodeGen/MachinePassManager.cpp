@@ -25,6 +25,8 @@ template class AnalysisManager<MachineFunction>;
 template class PassManager<MachineFunction>;
 template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
                                          Module>;
+template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
+                                         Function>;
 template class OuterAnalysisManagerProxy<ModuleAnalysisManager,
                                          MachineFunction>;
 
@@ -69,6 +71,29 @@ bool MachineFunctionAnalysisManagerModuleProxy::Result::invalidate(
   return false;
 }
 
+template <>
+bool MachineFunctionAnalysisManagerFunctionProxy::Result::invalidate(
+    Function &F, const PreservedAnalyses &PA,
+    FunctionAnalysisManager::Invalidator &Inv) {
+  // If literally everything is preserved, we're done.
+  if (PA.areAllPreserved())
+    return false; // This is still a valid proxy.
+
+  // If this proxy isn't marked as preserved, then even if the result remains
+  // valid, the key itself may no longer be valid, so we clear everything.
+  //
+  // Once function changed by a non-trivial pass, we need to do instruction
+  // selection again.
+  auto PAC = PA.getChecker<FunctionAnalysisManagerModuleProxy>();
+  if (!PAC.preserved() && !PAC.preservedSet<AllAnalysesOn<Function>>()) {
+    InnerAM->clear();
+    return true;
+  }
+
+  // Return false to indicate that this result is still a valid proxy.
+  return false;
+}
+
 PreservedAnalyses
 ModuleToMachineFunctionPassAdaptor::run(Module &M, ModuleAnalysisManager &AM) {
   auto &MMI = AM.getResult<MachineModuleAnalysis>(M).getMMI();
@@ -100,7 +125,44 @@ ModuleToMachineFunctionPassAdaptor::run(Module &M, ModuleAnalysisManager &AM) {
   return PA;
 }
 
+PreservedAnalyses
+FunctionToMachineFunctionPassAdaptor::run(Function &F,
+                                          FunctionAnalysisManager &FAM) {
+  // Do not codegen any 'available_externally' functions at all, they have
+  // definitions outside the translation unit.
+  if (F.isDeclaration() || F.hasAvailableExternallyLinkage())
+    return PreservedAnalyses::all();
+
+  auto &MF = FAM.getResult<MachineFunctionAnalysis>(F).getMF();
+  auto &MFAM = FAM.getResult<MachineFunctionAnalysisManagerFunctionProxy>(F)
+                   .getManager();
+  auto PI = FAM.getResult<PassInstrumentationAnalysis>(F);
+  PreservedAnalyses PA = PreservedAnalyses::all();
+
+  if (!PI.runBeforePass<MachineFunction>(*Pass, MF))
+    return PreservedAnalyses::all();
+  PreservedAnalyses PassPA = Pass->run(MF, MFAM);
+  MFAM.invalidate(MF, PassPA);
+  if (Pass->name() != FreeMachineFunctionPass::name()) {
+    PI.runAfterPass(*Pass, MF, PassPA);
+    PA.intersect(std::move(PassPA));
+  } else {
+    PA.intersect(std::move(PassPA));
+    FAM.invalidate(F, PA);
+    PI.runAfterPassInvalidated<MachineFunction>(*Pass, PA);
+  }
+
+  return PA;
+}
+
 void ModuleToMachineFunctionPassAdaptor::printPipeline(
+    raw_ostream &OS, function_ref<StringRef(StringRef)> MapClassName2PassName) {
+  OS << "machine-function(";
+  Pass->printPipeline(OS, MapClassName2PassName);
+  OS << ')';
+}
+
+void FunctionToMachineFunctionPassAdaptor::printPipeline(
     raw_ostream &OS, function_ref<StringRef(StringRef)> MapClassName2PassName) {
   OS << "machine-function(";
   Pass->printPipeline(OS, MapClassName2PassName);

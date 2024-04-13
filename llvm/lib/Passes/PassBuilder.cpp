@@ -1725,6 +1725,13 @@ Error PassBuilder::parseFunctionPass(FunctionPassManager &FPM,
                                                   UseBFI, UseBPI));
       return Error::success();
     }
+    if (Name == "machine-function") {
+      MachineFunctionPassManager MFPM;
+      if (auto Err = parseMachinePassPipeline(MFPM, InnerPipeline))
+        return Err;
+      FPM.addPass(createFunctionToMachineFunctionPassAdaptor(std::move(MFPM)));
+      return Error::success();
+    }
     if (auto Count = parseRepeatPassName(Name)) {
       FunctionPassManager NestedFPM;
       if (auto Err = parseFunctionPassPipeline(NestedFPM, InnerPipeline))
@@ -1975,6 +1982,8 @@ void PassBuilder::crossRegisterProxies(LoopAnalysisManager &LAM,
   if (MFAM) {
     MAM.registerPass(
         [&] { return MachineFunctionAnalysisManagerModuleProxy(*MFAM); });
+    FAM.registerPass(
+        [&] { return MachineFunctionAnalysisManagerFunctionProxy(*MFAM); });
     MFAM->registerPass(
         [&] { return ModuleAnalysisManagerMachineFunctionProxy(MAM); });
     MFAM->registerPass(

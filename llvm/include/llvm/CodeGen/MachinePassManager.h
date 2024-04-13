@@ -109,6 +109,16 @@ bool MachineFunctionAnalysisManagerModuleProxy::Result::invalidate(
 extern template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
                                                 Module>;
 
+using MachineFunctionAnalysisManagerFunctionProxy =
+    InnerAnalysisManagerProxy<MachineFunctionAnalysisManager, Function>;
+
+template <>
+bool MachineFunctionAnalysisManagerFunctionProxy::Result::invalidate(
+    Function &F, const PreservedAnalyses &PA,
+    FunctionAnalysisManager::Invalidator &Inv);
+extern template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
+                                                Function>;
+
 extern template class OuterAnalysisManagerProxy<ModuleAnalysisManager,
                                                 MachineFunction>;
 /// Provide the \c ModuleAnalysisManager to \c Function proxy.
@@ -217,6 +227,39 @@ createModuleToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
   // causing terrible compile times.
   return ModuleToMachineFunctionPassAdaptor(
       std::unique_ptr<ModuleToMachineFunctionPassAdaptor::PassConceptT>(
+          new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
+}
+
+class FunctionToMachineFunctionPassAdaptor
+    : public PassInfoMixin<FunctionToMachineFunctionPassAdaptor> {
+public:
+  using PassConceptT =
+      detail::PassConcept<MachineFunction, MachineFunctionAnalysisManager>;
+
+  explicit FunctionToMachineFunctionPassAdaptor(
+      std::unique_ptr<PassConceptT> Pass)
+      : Pass(std::move(Pass)) {}
+
+  /// Runs the machine function pass across every function.
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
+  void printPipeline(raw_ostream &OS,
+                     function_ref<StringRef(StringRef)> MapClassName2PassName);
+
+  static bool isRequired() { return true; }
+
+private:
+  std::unique_ptr<PassConceptT> Pass;
+};
+
+template <typename MachineFunctionPassT>
+FunctionToMachineFunctionPassAdaptor
+createFunctionToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
+  using PassModelT = detail::PassModel<MachineFunction, MachineFunctionPassT,
+                                       MachineFunctionAnalysisManager>;
+  // Do not use make_unique, it causes too many template instantiations,
+  // causing terrible compile times.
+  return FunctionToMachineFunctionPassAdaptor(
+      std::unique_ptr<FunctionToMachineFunctionPassAdaptor::PassConceptT>(
           new PassModelT(std::forward<MachineFunctionPassT>(Pass))));
 }
 
