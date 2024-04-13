@@ -1556,3 +1556,11 @@ TEST(DeclPrinter, VarDeclWithInitializer) {
       PrintedDeclCXX17Matches("void foo() {int arr[42]; for(int a : arr);}",
                               namedDecl(hasName("a")).bind("id"), "int a"));
 }
+
+TEST(DeclPrinter, TestTemplateFinal) {
+  ASSERT_TRUE(PrintedDeclCXX11Matches(
+      "template<typename T>"
+      "class FinalTemplate final {};",
+      classTemplateDecl(hasName("FinalTemplate")).bind("id"),
+      "template <typename T> class FinalTemplate final {}"));
+}
