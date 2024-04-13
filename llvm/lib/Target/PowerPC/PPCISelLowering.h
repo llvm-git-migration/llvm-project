@@ -163,7 +163,12 @@ namespace llvm {
     SRL,
     SRA,
     SHL,
-    ADDC, ADDE, SUBC, SUBE,
+
+    /// These nodes represent PPC arithmetic operations with carry.
+    ADDC,
+    ADDE,
+    SUBC,
+    SUBE,
 
     /// FNMSUB - Negated multiply-subtract instruction.
     FNMSUB,
