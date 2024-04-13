@@ -89,13 +89,23 @@ static StringRef normalizeAttrName(StringRef Name) {
   return Name;
 }
 
-/// isAttributeLateParsed - Return true if the attribute has arguments that
-/// require late parsing.
-static bool isAttributeLateParsed(const IdentifierInfo &II) {
-#define CLANG_ATTR_LATE_PARSED_LIST
-    return llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
+/// returns true iff attribute is annotated with `LateAttrParseExperimentalExt`
+/// in `Attr.td`.
+static bool IsAttributeLateParsedExperimentalExt(const IdentifierInfo &II) {
+#define CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST
+  return llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
 #include "clang/Parse/AttrParserStringSwitches.inc"
-        .Default(false);
+      .Default(false);
+#undef CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST
+}
+
+/// returns true iff attribute is annotated with `LateAttrParseStandard` in
+/// `Attr.td`.
+static bool isAttributeLateParsedStandard(const IdentifierInfo &II) {
+#define CLANG_ATTR_LATE_PARSED_LIST
+  return llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
+#include "clang/Parse/AttrParserStringSwitches.inc"
+      .Default(false);
 #undef CLANG_ATTR_LATE_PARSED_LIST
 }
 
@@ -220,8 +230,28 @@ void Parser::ParseGNUAttributes(ParsedAttributes &Attrs,
         continue;
       }
 
+      bool LateParse = false;
+      if (!LateAttrs)
+        LateParse = false;
+      else {
+        if (LateAttrs->lateAttrParseExperimentalExtOnly()) {
+          // The caller requested that this attribute **only** be late
+          // parsed for `LateAttrParseExperimentalExt` attributes. This will
+          // only be late parsed if the experimental language option is enabled.
+          LateParse = IsAttributeLateParsedExperimentalExt(*AttrName) &&
+                      getLangOpts().ExperimentalLateParseAttributes;
+        } else {
+          // The caller did not restrict late parsing to only
+          // `LateAttrParseExperimentalExt` attributes so late parse
+          // both `LateAttrParseStandard` and `LateAttrParseExperimentalExt`
+          // attributes.
+          LateParse = IsAttributeLateParsedExperimentalExt(*AttrName) ||
+                      isAttributeLateParsedStandard(*AttrName);
+        }
+      }
+
       // Handle "parameterized" attributes
-      if (!LateAttrs || !isAttributeLateParsed(*AttrName)) {
+      if (!LateParse) {
         ParseGNUAttributeArgs(AttrName, AttrNameLoc, Attrs, &EndLoc, nullptr,
                               SourceLocation(), ParsedAttr::Form::GNU(), D);
         continue;
