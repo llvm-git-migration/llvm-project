@@ -119,7 +119,7 @@ namespace {
     void printTemplateArguments(llvm::ArrayRef<TemplateArgumentLoc> Args,
                                 const TemplateParameterList *Params);
     enum class AttrPosAsWritten { Default = 0, Left, Right };
-    void
+    bool
     prettyPrintAttributes(const Decl *D,
                           AttrPosAsWritten Pos = AttrPosAsWritten::Default);
     void prettyPrintPragmas(Decl *D);
@@ -252,10 +252,12 @@ static DeclPrinter::AttrPosAsWritten getPosAsWritten(const Attr *A,
   return DeclPrinter::AttrPosAsWritten::Right;
 }
 
-void DeclPrinter::prettyPrintAttributes(const Decl *D,
+// returns true if an attribute was printed.
+bool DeclPrinter::prettyPrintAttributes(const Decl *D,
                                         AttrPosAsWritten Pos /*=Default*/) {
+  bool hasPrinted = false;
   if (Policy.PolishForDeclaration)
-    return;
+    return hasPrinted;
 
   if (D->hasAttrs()) {
     const AttrVec &Attrs = D->getAttrs();
@@ -275,6 +277,7 @@ void DeclPrinter::prettyPrintAttributes(const Decl *D,
           if (Pos != AttrPosAsWritten::Left)
             Out << ' ';
           A->printPretty(Out, Policy);
+          hasPrinted = true;
           if (Pos == AttrPosAsWritten::Left)
             Out << ' ';
         }
@@ -282,6 +285,7 @@ void DeclPrinter::prettyPrintAttributes(const Decl *D,
       }
     }
   }
+  return hasPrinted;
 }
 
 void DeclPrinter::prettyPrintPragmas(Decl *D) {
@@ -1060,12 +1064,14 @@ void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
   // FIXME: add printing of pragma attributes if required.
   if (!Policy.SuppressSpecifiers && D->isModulePrivate())
     Out << "__module_private__ ";
-  Out << D->getKindName();
 
-  prettyPrintAttributes(D);
+  Out << D->getKindName() << ' ';
+
+  // FIXME: Move before printing the decl kind to match the behavior of the
+  // attribute printing for variables and function where they are printed first.
+  prettyPrintAttributes(D, AttrPosAsWritten::Left);
 
   if (D->getIdentifier()) {
-    Out << ' ';
     if (auto *NNS = D->getQualifier())
       NNS->print(Out, Policy);
     Out << *D;
@@ -1082,11 +1088,8 @@ void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
     }
   }
 
-  if (D->hasDefinition()) {
-    if (D->hasAttr<FinalAttr>()) {
-      Out << " final";
-    }
-  }
+  if (prettyPrintAttributes(D, AttrPosAsWritten::Right))
+    Out << ' ';
 
   if (D->isCompleteDefinition()) {
     // Print the base classes
@@ -1114,10 +1117,11 @@ void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
 
     // Print the class definition
     // FIXME: Doesn't print access specifiers, e.g., "public:"
+    Out << ' ';
     if (Policy.TerseOutput) {
-      Out << " {}";
+      Out << "{}";
     } else {
-      Out << " {\n";
+      Out << "{\n";
       VisitDeclContext(D);
       Indent() << "}";
     }
