@@ -1568,7 +1568,8 @@ bool Parser::HandlePragmaLoopHint(LoopHint &Hint) {
       ConsumeToken(); // Consume the constant expression eof terminator.
 
       if (Arg2Error || R.isInvalid() ||
-          Actions.CheckLoopHintExpr(R.get(), Toks[0].getLocation()))
+          Actions.CheckLoopHintExpr(R.get(), Toks[0].getLocation(),
+                                    PragmaNameInfo))
         return false;
 
       // Argument is a constant expression with an integer type.
@@ -1592,8 +1593,8 @@ bool Parser::HandlePragmaLoopHint(LoopHint &Hint) {
 
     ConsumeToken(); // Consume the constant expression eof terminator.
 
-    if (R.isInvalid() ||
-        Actions.CheckLoopHintExpr(R.get(), Toks[0].getLocation()))
+    if (R.isInvalid() || Actions.CheckLoopHintExpr(
+                             R.get(), Toks[0].getLocation(), PragmaNameInfo))
       return false;
 
     // Argument is a constant expression with an integer type.
