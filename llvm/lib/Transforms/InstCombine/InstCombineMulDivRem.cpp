@@ -320,8 +320,22 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
 
   // abs(X) * abs(X) -> X * X
   Value *X;
-  if (Op0 == Op1 && match(Op0, m_Intrinsic<Intrinsic::abs>(m_Value(X))))
-    return BinaryOperator::CreateMul(X, X);
+  if (Op0 == Op1) {
+    // nabs(X) * nabs(X) -> X * X
+    if (match(Op0, m_Neg(m_Intrinsic<Intrinsic::abs>(m_Value(X))))) {
+      if (I.hasNoUnsignedWrap()) {
+        Instruction *NewMul = BinaryOperator::CreateNUWMul(X, X);
+        NewMul->setHasNoSignedWrap(true);
+        return NewMul;
+      }
+      return I.hasNoSignedWrap() ? BinaryOperator::CreateNSWMul(X, X)
+                                 : BinaryOperator::CreateMul(X, X);
+    }
+
+    if (match(Op0, m_Intrinsic<Intrinsic::abs>(m_Value(X))))
+      return I.hasNoSignedWrap() ? BinaryOperator::CreateNSWMul(X, X)
+                                 : BinaryOperator::CreateMul(X, X);
+  }
 
   {
     Value *Y;
