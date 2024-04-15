@@ -97,6 +97,7 @@ struct OffloadTargetInfo {
 //
 // The format is as follows:
 // - Magic Number (4 bytes) - A constant "CCOB".
+// - Total file size (4 bytes).
 // - Version (2 bytes)
 // - Compression Method (2 bytes) - Uses the values from
 // llvm::compression::Format.
@@ -107,13 +108,14 @@ struct OffloadTargetInfo {
 class CompressedOffloadBundle {
 private:
   static inline const size_t MagicSize = 4;
+  static inline const size_t FileSizeFieldSize = sizeof(uint32_t);
   static inline const size_t VersionFieldSize = sizeof(uint16_t);
   static inline const size_t MethodFieldSize = sizeof(uint16_t);
-  static inline const size_t SizeFieldSize = sizeof(uint32_t);
-  static inline const size_t HashFieldSize = 8;
-  static inline const size_t HeaderSize = MagicSize + VersionFieldSize +
-                                          MethodFieldSize + SizeFieldSize +
-                                          HashFieldSize;
+  static inline const size_t UncompressedSizeFieldSize = sizeof(uint32_t);
+  static inline const size_t HashFieldSize = sizeof(uint64_t);
+  static inline const size_t HeaderSize =
+      MagicSize + FileSizeFieldSize + VersionFieldSize + MethodFieldSize +
+      UncompressedSizeFieldSize + HashFieldSize;
   static inline const llvm::StringRef MagicNumber = "CCOB";
   static inline const uint16_t Version = 1;
 

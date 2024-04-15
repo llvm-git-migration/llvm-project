@@ -517,6 +517,9 @@ The compressed offload bundle begins with a header followed by the compressed bi
 - **Magic Number (4 bytes)**:
     This is a unique identifier to distinguish compressed offload bundles. The value is the string 'CCOB' (Compressed Clang Offload Bundle).
 
+- **Total File Size (32-bit unsigned int)**:
+    This is the total size (in bytes) of the file, including the header.
+
 - **Version Number (16-bit unsigned int)**:
     This denotes the version of the compressed offload bundle format. The current version is `1`.
 
