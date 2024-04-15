@@ -12,7 +12,6 @@
 #include <__config>
 #include <__fwd/array.h>
 #include <__fwd/tuple.h>
-#include <__tuple/tuple_element.h>
 #include <__tuple/tuple_indices.h>
 #include <__tuple/tuple_size.h>
 #include <__tuple/tuple_types.h>
