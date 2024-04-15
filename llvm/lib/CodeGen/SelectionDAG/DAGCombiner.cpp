@@ -12451,6 +12451,24 @@ SDValue DAGCombiner::visitSETCC(SDNode *N) {
   }
 
   // Optimize
+  //    (icmp eq/ne (shift N00, N01C), 0) -> (icmp eq/ne N00, 0)
+  // If shift is logical and all shifted out bits are known to be zero.
+  if ((Cond == ISD::SETNE || Cond == ISD::SETEQ) && isNullOrNullSplat(N1) &&
+      N0->hasOneUse() &&
+      (N0.getOpcode() == ISD::SHL || N0.getOpcode() == ISD::SRL)) {
+    SDValue N00 = N0.getOperand(0);
+    SDValue N01 = N0.getOperand(1);
+    if (ConstantSDNode *N01C = isConstOrConstSplat(N01)) {
+      KnownBits KnownN00 = DAG.computeKnownBits(N00);
+      if ((N0.getOpcode() == ISD::SHL &&
+           N01C->getAPIntValue().ule(KnownN00.countMinLeadingZeros())) ||
+          (N0.getOpcode() == ISD::SRL &&
+           N01C->getAPIntValue().ule(KnownN00.countMinTrailingZeros())))
+        return DAG.getSetCC(SDLoc(N), VT, N00, N1, Cond);
+    }
+  }
+
+  // Optimize
   //    1) (icmp eq/ne (and X, C0), (shift X, C1))
   // or
   //    2) (icmp eq/ne X, (rotate X, C1))
