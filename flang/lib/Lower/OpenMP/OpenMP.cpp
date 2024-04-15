@@ -2246,7 +2246,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
     const auto &endSectionsClauseList =
         std::get<Fortran::parser::OmpClauseList>(endSectionsDirective.t);
     hasNowait = ClauseProcessor(converter, semaCtx, endSectionsClauseList)
-        .processNowait(clauseOps);
+                    .processNowait(clauseOps);
   }
 
   // Insert privatizations before SECTIONS
@@ -2283,11 +2283,12 @@ genOMP(Fortran::lower::AbstractConverter &converter,
         Clause lastPrivateClause = makeClause(clause, semaCtx);
         clause::Lastprivate &lastPrivate =
             std::get<clause::Lastprivate>(lastPrivateClause.u);
+        const auto &objList = std::get<1>(lastPrivate.t);
         firOpBuilder.setInsertionPoint(
             lastSectionOp.getRegion().back().getTerminator());
         mlir::OpBuilder::InsertPoint lastPrivIP =
             converter.getFirOpBuilder().saveInsertionPoint();
-        for (const Object &obj : lastPrivate.v) {
+        for (const Object &obj : objList) {
           Fortran::semantics::Symbol *sym = obj.id();
           converter.copyHostAssociateVar(*sym, &lastPrivIP);
         }
