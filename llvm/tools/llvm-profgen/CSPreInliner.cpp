@@ -152,6 +152,9 @@ uint32_t CSPreInliner::getFuncSize(const ContextTrieNode *ContextNode) {
 }
 
 bool CSPreInliner::shouldInline(ProfiledInlineCandidate &Candidate) {
+  if (Candidate.SizeCost == 0)
+    return true;
+
   bool WasInlined =
       Candidate.CalleeSamples->getContext().hasAttribute(ContextWasInlined);
   // If replay inline is requested, simply follow the inline decision of the
