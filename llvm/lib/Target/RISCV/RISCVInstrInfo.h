@@ -359,6 +359,20 @@ struct PseudoInfo {
 
 } // end namespace RISCVVPseudosTable
 
+namespace RISCVVInversePseudosTable {
+
+struct PseudoInfo {
+  uint16_t Pseudo;
+  uint16_t BaseInstr;
+  uint8_t VLMul;
+  uint8_t SEW;
+};
+
+#define GET_RISCVVInversePseudosTable_DECL
+#include "RISCVGenSearchableTables.inc"
+
+} // end namespace RISCVVInversePseudosTable
+
 namespace RISCV {
 
 struct RISCVMaskedPseudoInfo {
