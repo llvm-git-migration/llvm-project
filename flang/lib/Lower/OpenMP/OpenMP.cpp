@@ -2274,24 +2274,24 @@ genOMP(Fortran::lower::AbstractConverter &converter,
 
   // For `omp.sections`, lastprivatized variables occur in
   // lexically final `omp.section` operation.
-  std::optional<Clause> lastPrivateClause;
-  for (const Fortran::parser::OmpClause &clause : sectionsClauseList.v) {
-    if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
-            clause.u)) {
-      lastPrivateClause = makeClause(clause, semaCtx);
-      break;
-    }
-  }
-  if (lastSectionOp && lastPrivateClause) {
-    clause::Lastprivate &lastPrivate =
-        std::get<clause::Lastprivate>(lastPrivateClause.value().u);
-    firOpBuilder.setInsertionPoint(
-        lastSectionOp.getRegion().back().getTerminator());
-    mlir::OpBuilder::InsertPoint lastPrivIP =
-        converter.getFirOpBuilder().saveInsertionPoint();
-    for (const Object &obj : lastPrivate.v) {
-      Fortran::semantics::Symbol *sym = obj.id();
-      converter.copyHostAssociateVar(*sym, &lastPrivIP);
+  bool hasLastPrivate = false;
+  if (lastSectionOp) {
+    for (const Fortran::parser::OmpClause &clause : sectionsClauseList.v) {
+      if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
+              clause.u)) {
+        hasLastPrivate = true;
+        Clause lastPrivateClause = makeClause(clause, semaCtx);
+        clause::Lastprivate &lastPrivate =
+            std::get<clause::Lastprivate>(lastPrivateClause.u);
+        firOpBuilder.setInsertionPoint(
+            lastSectionOp.getRegion().back().getTerminator());
+        mlir::OpBuilder::InsertPoint lastPrivIP =
+            converter.getFirOpBuilder().saveInsertionPoint();
+        for (const Object &obj : lastPrivate.v) {
+          Fortran::semantics::Symbol *sym = obj.id();
+          converter.copyHostAssociateVar(*sym, &lastPrivIP);
+        }
+      }
     }
   }
 
@@ -2301,7 +2301,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
   // Emit implicit barrier to synchronize threads and avoid data
   // races on post-update of lastprivate variables when `nowait`
   // clause is present.
-  if (hasNowait && lastPrivateClause)
+  if (hasNowait && hasLastPrivate)
     firOpBuilder.create<mlir::omp::BarrierOp>(converter.getCurrentLocation());
   symTable.popScope();
 }
