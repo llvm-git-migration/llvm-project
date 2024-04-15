@@ -1140,7 +1140,8 @@ tryToUnrollLoop(Loop *L, DominatorTree &DT, LoopInfo *LI, ScalarEvolution &SE,
                 std::optional<bool> ProvidedUpperBound,
                 std::optional<bool> ProvidedAllowPeeling,
                 std::optional<bool> ProvidedAllowProfileBasedPeeling,
-                std::optional<unsigned> ProvidedFullUnrollMaxCount) {
+                std::optional<unsigned> ProvidedFullUnrollMaxCount,
+                bool PrepareForLTO) {
 
   LLVM_DEBUG(dbgs() << "Loop Unroll: F["
                     << L->getHeader()->getParent()->getName() << "] Loop %"
@@ -1384,6 +1385,7 @@ public:
   std::optional<bool> ProvidedAllowPeeling;
   std::optional<bool> ProvidedAllowProfileBasedPeeling;
   std::optional<unsigned> ProvidedFullUnrollMaxCount;
+  bool PrepareForLTO;
 
   LoopUnroll(int OptLevel = 2, bool OnlyWhenForced = false,
              bool ForgetAllSCEV = false,
@@ -1394,14 +1396,16 @@ public:
              std::optional<bool> UpperBound = std::nullopt,
              std::optional<bool> AllowPeeling = std::nullopt,
              std::optional<bool> AllowProfileBasedPeeling = std::nullopt,
-             std::optional<unsigned> ProvidedFullUnrollMaxCount = std::nullopt)
+             std::optional<unsigned> ProvidedFullUnrollMaxCount = std::nullopt,
+             bool PrepareForLTO = false)
       : LoopPass(ID), OptLevel(OptLevel), OnlyWhenForced(OnlyWhenForced),
         ForgetAllSCEV(ForgetAllSCEV), ProvidedCount(std::move(Count)),
         ProvidedThreshold(Threshold), ProvidedAllowPartial(AllowPartial),
         ProvidedRuntime(Runtime), ProvidedUpperBound(UpperBound),
         ProvidedAllowPeeling(AllowPeeling),
         ProvidedAllowProfileBasedPeeling(AllowProfileBasedPeeling),
-        ProvidedFullUnrollMaxCount(ProvidedFullUnrollMaxCount) {
+        ProvidedFullUnrollMaxCount(ProvidedFullUnrollMaxCount),
+        PrepareForLTO(PrepareForLTO) {
     initializeLoopUnrollPass(*PassRegistry::getPassRegistry());
   }
 
@@ -1428,7 +1432,8 @@ public:
         /*OnlyFullUnroll*/ false, OnlyWhenForced, ForgetAllSCEV, ProvidedCount,
         ProvidedThreshold, ProvidedAllowPartial, ProvidedRuntime,
         ProvidedUpperBound, ProvidedAllowPeeling,
-        ProvidedAllowProfileBasedPeeling, ProvidedFullUnrollMaxCount);
+        ProvidedAllowProfileBasedPeeling, ProvidedFullUnrollMaxCount,
+        PrepareForLTO);
 
     if (Result == LoopUnrollResult::FullyUnrolled)
       LPM.markLoopAsDeleted(*L);
@@ -1502,7 +1507,8 @@ PreservedAnalyses LoopFullUnrollPass::run(Loop &L, LoopAnalysisManager &AM,
                       /*Runtime*/ false, /*UpperBound*/ false,
                       /*AllowPeeling*/ true,
                       /*AllowProfileBasedPeeling*/ false,
-                      /*FullUnrollMaxCount*/ std::nullopt) !=
+                      /*FullUnrollMaxCount*/ std::nullopt,
+                      /*PrepareForLTO*/ PrepareForLTO) !=
       LoopUnrollResult::Unmodified;
   if (!Changed)
     return PreservedAnalyses::all();
@@ -1627,7 +1633,8 @@ PreservedAnalyses LoopUnrollPass::run(Function &F,
         /*Count*/ std::nullopt,
         /*Threshold*/ std::nullopt, UnrollOpts.AllowPartial,
         UnrollOpts.AllowRuntime, UnrollOpts.AllowUpperBound, LocalAllowPeeling,
-        UnrollOpts.AllowProfileBasedPeeling, UnrollOpts.FullUnrollMaxCount);
+        UnrollOpts.AllowProfileBasedPeeling, UnrollOpts.FullUnrollMaxCount,
+        UnrollOpts.PrepareForLTO);
     Changed |= Result != LoopUnrollResult::Unmodified;
 
     // The parent must not be damaged by unrolling!

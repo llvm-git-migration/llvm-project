@@ -481,9 +481,10 @@ PassBuilder::buildO1FunctionSimplificationPipeline(OptimizationLevel Level,
   // attention to it.
   if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink || !PGOOpt ||
       PGOOpt->Action != PGOOptions::SampleUse)
-    LPM2.addPass(LoopFullUnrollPass(Level.getSpeedupLevel(),
-                                    /* OnlyWhenForced= */ !PTO.LoopUnrolling,
-                                    PTO.ForgetAllSCEVInLoopUnroll));
+    LPM2.addPass(LoopFullUnrollPass(
+        Level.getSpeedupLevel(),
+        /* OnlyWhenForced= */ !PTO.LoopUnrolling, PTO.ForgetAllSCEVInLoopUnroll,
+        /* PrepareForLTO= */ isLTOPreLink(ThinOrFullLTOPhase::ThinLTOPreLink)));
 
   invokeLoopOptimizerEndEPCallbacks(LPM2, Level);
 
@@ -672,9 +673,10 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
   // attention to it.
   if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink || !PGOOpt ||
       PGOOpt->Action != PGOOptions::SampleUse)
-    LPM2.addPass(LoopFullUnrollPass(Level.getSpeedupLevel(),
-                                    /* OnlyWhenForced= */ !PTO.LoopUnrolling,
-                                    PTO.ForgetAllSCEVInLoopUnroll));
+    LPM2.addPass(LoopFullUnrollPass(
+        Level.getSpeedupLevel(),
+        /* OnlyWhenForced= */ !PTO.LoopUnrolling, PTO.ForgetAllSCEVInLoopUnroll,
+        /* PrepareForLTO= */ isLTOPreLink(ThinOrFullLTOPhase::ThinLTOPreLink)));
 
   invokeLoopOptimizerEndEPCallbacks(LPM2, Level);
 
@@ -1951,7 +1953,8 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
   // Unroll small loops and perform peeling.
   LPM.addPass(LoopFullUnrollPass(Level.getSpeedupLevel(),
                                  /* OnlyWhenForced= */ !PTO.LoopUnrolling,
-                                 PTO.ForgetAllSCEVInLoopUnroll));
+                                 PTO.ForgetAllSCEVInLoopUnroll,
+                                 /* PrepareForLTO= */ false));
   // The loop passes in LPM (LoopFullUnrollPass) do not preserve MemorySSA.
   // *All* loop passes must preserve it, in order to be able to use it.
   MainFPM.addPass(createFunctionToLoopPassAdaptor(
