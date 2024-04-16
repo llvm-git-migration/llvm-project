@@ -500,72 +500,86 @@ public:
 
     ResultObjectMap[E] = Loc;
 
-    // The following AST node kinds are "original initializers": They are the
-    // lowest-level AST node that initializes a given object, and nothing
-    // below them can initialize the same object (or part of it).
-    if (isa<CXXConstructExpr>(E) || isa<CallExpr>(E) || isa<LambdaExpr>(E) ||
-        isa<CXXDefaultArgExpr>(E) || isa<CXXDefaultInitExpr>(E) ||
-        isa<CXXStdInitializerListExpr>(E)) {
-      return;
-    }
-    if (auto *Op = dyn_cast<BinaryOperator>(E);
-        Op && Op->getOpcode() == BO_Cmp) {
-      // Builtin `<=>` returns a `std::strong_ordering` object.
-      return;
-    }
-
-    if (auto *InitList = dyn_cast<InitListExpr>(E)) {
-      if (!InitList->isSemanticForm())
+    switch(E->getStmtClass()) {
+      // The following AST node kinds are "original initializers": They are the
+      // lowest-level AST node that initializes a given object, and nothing
+      // below them can initialize the same object (or part of it).
+      case Stmt::CXXConstructExprClass:
+      case Stmt::CallExprClass:
+      case Stmt::LambdaExprClass:
+      case Stmt::CXXDefaultArgExprClass:
+      case Stmt::CXXDefaultInitExprClass:
+      case Stmt::CXXStdInitializerListExprClass:
         return;
-      if (InitList->isTransparent()) {
-        PropagateResultObject(InitList->getInit(0), Loc);
+      case Stmt::BinaryOperatorClass: {
+        auto *Op = cast<BinaryOperator>(E);
+        if (Op->getOpcode() == BO_Cmp) {
+          // Builtin `<=>` returns a `std::strong_ordering` object. We
+          // consider this to be an "original" initializer too (see above).
+          return;
+        }
+        if (Op->isCommaOp()) {
+          PropagateResultObject(Op->getRHS(), Loc);
+          return;
+        }
+        // We don't expect any other binary operators to produce a record
+        // prvalue, so if we get here, we've hit some case we don't know
+        // about.
+        assert(false);
         return;
       }
-
-      RecordInitListHelper InitListHelper(InitList);
-
-      for (auto [Base, Init] : InitListHelper.base_inits()) {
-        assert(Base->getType().getCanonicalType() ==
-               Init->getType().getCanonicalType());
-
-        // Storage location for the base class is the same as that of the
-        // derived class because we "flatten" the object hierarchy and put all
-        // fields in `RecordStorageLocation` of the derived class.
-        PropagateResultObject(Init, Loc);
+      case Stmt::BinaryConditionalOperatorClass:
+      case Stmt::ConditionalOperatorClass: {
+        auto *Cond = cast<AbstractConditionalOperator>(E);
+        PropagateResultObject(Cond->getTrueExpr(), Loc);
+        PropagateResultObject(Cond->getFalseExpr(), Loc);
+        return;
       }
+      case Stmt::InitListExprClass: {
+        auto *InitList = cast<InitListExpr>(E);
+        if (!InitList->isSemanticForm())
+          return;
+        if (InitList->isTransparent()) {
+          PropagateResultObject(InitList->getInit(0), Loc);
+          return;
+        }
 
-      for (auto [Field, Init] : InitListHelper.field_inits()) {
-        // Fields of non-record type are handled in
-        // `TransferVisitor::VisitInitListExpr()`.
-        if (!Field->getType()->isRecordType())
-          continue;
-        PropagateResultObject(
-            Init, cast<RecordStorageLocation>(Loc->getChild(*Field)));
+        RecordInitListHelper InitListHelper(InitList);
+
+        for (auto [Base, Init] : InitListHelper.base_inits()) {
+          assert(Base->getType().getCanonicalType() ==
+                 Init->getType().getCanonicalType());
+
+          // Storage location for the base class is the same as that of the
+          // derived class because we "flatten" the object hierarchy and put all
+          // fields in `RecordStorageLocation` of the derived class.
+          PropagateResultObject(Init, Loc);
+        }
+
+        for (auto [Field, Init] : InitListHelper.field_inits()) {
+          // Fields of non-record type are handled in
+          // `TransferVisitor::VisitInitListExpr()`.
+          if (!Field->getType()->isRecordType())
+            continue;
+          PropagateResultObject(
+              Init, cast<RecordStorageLocation>(Loc->getChild(*Field)));
+        }
+        return;
       }
-      return;
+      default: {
+        // All other expression nodes that propagate a record prvalue should
+        // have exactly one child.
+        SmallVector<Stmt *, 1> Children(E->child_begin(), E->child_end());
+        LLVM_DEBUG({
+          if (Children.size() != 1)
+            E->dump();
+        });
+        assert(Children.size() == 1);
+        for (Stmt *S : Children)
+          PropagateResultObject(cast<Expr>(S), Loc);
+        return;
+      }
     }
-
-    if (auto *Op = dyn_cast<BinaryOperator>(E); Op && Op->isCommaOp()) {
-      PropagateResultObject(Op->getRHS(), Loc);
-      return;
-    }
-
-    if (auto *Cond = dyn_cast<AbstractConditionalOperator>(E)) {
-      PropagateResultObject(Cond->getTrueExpr(), Loc);
-      PropagateResultObject(Cond->getFalseExpr(), Loc);
-      return;
-    }
-
-    // All other expression nodes that propagate a record prvalue should have
-    // exactly one child.
-    SmallVector<Stmt *, 1> Children(E->child_begin(), E->child_end());
-    LLVM_DEBUG({
-      if (Children.size() != 1)
-        E->dump();
-    });
-    assert(Children.size() == 1);
-    for (Stmt *S : Children)
-      PropagateResultObject(cast<Expr>(S), Loc);
   }
 
 private:
