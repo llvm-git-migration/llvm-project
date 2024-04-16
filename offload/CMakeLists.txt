@@ -10,6 +10,13 @@
 #
 ##===----------------------------------------------------------------------===##
 
+cmake_minimum_required(VERSION 3.20.0)
+
+if (OPENMP_STANDALONE_BUILD OR "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(OPENMP_STANDALONE_BUILD TRUE)
+  project(omptarget C CXX ASM)
+endif()
+
 set(ENABLE_LIBOMPTARGET ON)
 # Currently libomptarget cannot be compiled on Windows or MacOS X.
 # Since the device plugins are only supported on Linux anyway,
@@ -40,6 +47,8 @@ set(LLVM_COMMON_CMAKE_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # Add path for custom modules
 list(INSERT CMAKE_MODULE_PATH 0
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Modules"
   "${LLVM_COMMON_CMAKE_UTILS}/Modules"
   )
 
@@ -159,11 +168,18 @@ set (LIBOMPTARGET_TESTED_PLUGINS "")
 string( TOLOWER "${CMAKE_BUILD_TYPE}" LIBOMPTARGET_CMAKE_BUILD_TYPE)
 if(LIBOMPTARGET_CMAKE_BUILD_TYPE MATCHES debug)
   option(LIBOMPTARGET_ENABLE_DEBUG "Allow debug output with the environment variable LIBOMPTARGET_DEBUG=1" ON)
+  add_definitions(-DDEBUG)
 else()
   option(LIBOMPTARGET_ENABLE_DEBUG "Allow debug output with the environment variable LIBOMPTARGET_DEBUG=1" OFF)
 endif()
 if(LIBOMPTARGET_ENABLE_DEBUG)
   add_definitions(-DOMPTARGET_DEBUG)
+endif()
+
+# OMPD support for libomptarget (currently only with cuda)
+set(LIBOMPTARGET_OMPD_SUPPORT FALSE CACHE BOOL "OMPD-support?")
+if (LIBOMPTARGET_OMPD_SUPPORT)
+  add_definitions(-DOMPD_SUPPORT=1)
 endif()
 
 # No exceptions and no RTTI, except if requested.
@@ -190,23 +206,37 @@ if (LIBOMPTARGET_USE_LTO)
   list(APPEND offload_link_flags ${CMAKE_CXX_COMPILE_OPTIONS_IPO})
 endif()
 
+# Set LIBOMP_HAVE_OMPT_SUPPORT and LIBOMP_HAVE_VERSION_SCRIPT_FLAG using common offload/openmp cmake module.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../openmp/runtime/cmake")
+include(OffloadOpenmpCommon)
+
 # OMPT support for libomptarget
 # Follow host OMPT support and check if host support has been requested.
 # LIBOMP_HAVE_OMPT_SUPPORT indicates whether host OMPT support has been implemented.
 # LIBOMP_OMPT_SUPPORT indicates whether host OMPT support has been requested (default is ON).
 # LIBOMPTARGET_OMPT_SUPPORT indicates whether target OMPT support has been requested (default is ON).
 set(OMPT_TARGET_DEFAULT FALSE)
-if ((LIBOMP_HAVE_OMPT_SUPPORT) AND (LIBOMP_OMPT_SUPPORT) AND (NOT WIN32))
+if ((LIBOMP_HAVE_OMPT_SUPPORT) AND (NOT WIN32))
   set (OMPT_TARGET_DEFAULT TRUE)
 endif()
 set(LIBOMPTARGET_OMPT_SUPPORT ${OMPT_TARGET_DEFAULT} CACHE BOOL "OMPT-target-support?")
-if ((OMPT_TARGET_DEFAULT) AND (LIBOMPTARGET_OMPT_SUPPORT))
+if (LIBOMPTARGET_OMPT_SUPPORT)
   add_definitions(-DOMPT_SUPPORT=1)
   message(STATUS "OMPT target enabled")
 else()
   set(LIBOMPTARGET_OMPT_SUPPORT FALSE)
   message(STATUS "OMPT target disabled")
 endif()
+
+include_directories(include)
+
+macro(pythonize_bool var)
+  if (${var})
+    set(${var} True)
+  else()
+    set(${var} False)
+  endif()
+endmacro()
 
 pythonize_bool(LIBOMPTARGET_OMPT_SUPPORT)
 
@@ -215,8 +245,56 @@ set(LIBOMPTARGET_GPU_LIBC_SUPPORT ${LLVM_LIBC_GPU_BUILD} CACHE BOOL
 pythonize_bool(LIBOMPTARGET_GPU_LIBC_SUPPORT)
 
 set(LIBOMPTARGET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-message(STATUS "OpenMP tools dir in libomptarget: ${LIBOMP_OMP_TOOLS_INCLUDE_DIR}")
-include_directories(${LIBOMP_OMP_TOOLS_INCLUDE_DIR})
+
+find_path (
+  LIBOMP_OMP_TOOLS_INCLUDE_DIR
+  NAMES
+    omp-tools.h
+  PATHS
+    ${CMAKE_BINARY_DIR}/openmp/runtime/src
+    ${CMAKE_BINARY_DIR}/runtime/src
+  )
+
+if(OPENMP_STANDALONE_BUILD)
+  find_library (
+    LIBOMP_STANDALONE
+    NAMES
+      omp
+    HINTS
+      ${CMAKE_BINARY_DIR}/../openmp/runtime/src
+      ${CMAKE_BINARY_DIR}/../../openmp/runtime/src
+      ${LLVM_SRC}/../openmp/runtime/src
+    REQUIRED
+  )
+endif()
+include_directories(${LIBOMPTARGET_INCLUDE_DIR} ${LIBOMP_OMP_TOOLS_INCLUDE_DIR})
+
+# Various LLVM_TOOLS are needed to build libomptarget
+find_package(LLVM QUIET CONFIG PATHS
+   ${LLVM_INSTALL_PREFIX}
+   ${LIBOMPTARGET_NVPTX_CUDA_COMPILER_DIR}
+   ${LIBOMPTARGET_NVPTX_CUDA_LINKER_DIR}
+   ${CMAKE_CXX_COMPILER_DIR}
+   NO_DEFAULT_PATH)
+
+if(LLVM_DIR)
+  message(" -- LLVM found at ${LLVM_DIR}")
+  find_program(CLANG_TOOL clang PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+  find_program(CLANG_OFFLOAD_BUNDLER_TOOL clang-offload-bundler PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+  find_program(AR_TOOL llvm-ar PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+  find_program(LINK_TOOL llvm-link PATHS ${LLVM_TOOLS_BINARY_DIR}
+    NO_DEFAULT_PATH)
+  find_program(OPT_TOOL opt PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+elseif (LLVM_TOOL_CLANG_BUILD AND NOT CMAKE_CROSSCOMPILING AND NOT OPENMP_STANDALONE_BUILD)
+  # LLVM in-tree builds may use CMake target names to discover the tools.
+  set(CLANG_TOOL $<TARGET_FILE:clang>)
+  set(CLANG_OFFLOAD_BUNDLER_TOOL $<TARGET_FILE:clang-offload-bundler>)
+  set(AR_TOOL $<TARGET_FILE:llvm-ar>)
+  set(LINK_TOOL $<TARGET_FILE:llvm-link>)
+  set(OPT_TOOL $<TARGET_FILE:opt>)
+else()
+  message(" ====== WARNING! no LLVM found! some libomptarget components may be skipped")
+endif()
 
 set(LIBOMPTARGET_LLVM_LIBRARY_DIR "${LLVM_LIBRARY_DIR}" CACHE STRING
   "Path to folder containing llvm library libomptarget.so")
@@ -225,11 +303,13 @@ set(LIBOMPTARGET_LLVM_LIBRARY_INTDIR "${LIBOMPTARGET_INTDIR}" CACHE STRING
 
 # Build offloading plugins and device RTLs if they are available.
 add_subdirectory(plugins-nextgen)
-add_subdirectory(DeviceRTL)
+
 add_subdirectory(tools)
+add_subdirectory(DeviceRTL)
 
 # Build target agnostic offloading library.
-add_subdirectory(src)
+set(LIBOMPTARGET_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_subdirectory(${LIBOMPTARGET_SRC_DIR})
 
 # Add tests.
 add_subdirectory(test)
@@ -241,3 +321,5 @@ if (EXISTS ${LLVM_THIRD_PARTY_DIR}/unittest)
   endif()
   add_subdirectory(unittests)
 endif()
+
+construct_check_offload_target()

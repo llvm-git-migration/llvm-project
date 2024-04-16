@@ -236,3 +236,11 @@ function(add_offload_testsuite target comment)
     endif()
   endif()
 endfunction()
+
+function(construct_check_offload_target)
+  get_property(OPENMP_LIT_TESTSUITES GLOBAL PROPERTY OPENMP_LIT_TESTSUITES)
+  get_property(OPENMP_LIT_DEPENDS GLOBAL PROPERTY OPENMP_LIT_DEPENDS)
+
+  # We already added the testsuites themselves, no need to do that again.
+  add_offload_testsuite(check-offload "Running Offload tests" ${OPENMP_LIT_TESTSUITES} EXCLUDE_FROM_CHECK_ALL DEPENDS ${OPENMP_LIT_DEPENDS})
+endfunction()

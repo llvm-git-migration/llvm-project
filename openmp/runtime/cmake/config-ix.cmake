@@ -18,6 +18,7 @@ include(CheckIncludeFiles)
 include(CheckSymbolExists)
 include(LibompCheckFortranFlag)
 include(LLVMCheckCompilerLinkerFlag)
+include(OffloadOpenmpCommon)
 
 # Check for versioned symbols
 function(libomp_check_version_symbols retval)
@@ -132,7 +133,6 @@ if(WIN32)
 elseif(NOT APPLE)
   llvm_check_compiler_linker_flag(C -Wl,-x LIBOMP_HAVE_X_FLAG)
   llvm_check_compiler_linker_flag(C -Wl,--as-needed LIBOMP_HAVE_AS_NEEDED_FLAG)
-  llvm_check_compiler_linker_flag(C "-Wl,--version-script=${LIBOMP_SRC_DIR}/exports_test_so.txt" LIBOMP_HAVE_VERSION_SCRIPT_FLAG)
   llvm_check_compiler_linker_flag(C -static-libgcc LIBOMP_HAVE_STATIC_LIBGCC_FLAG)
   llvm_check_compiler_linker_flag(C -Wl,-z,noexecstack LIBOMP_HAVE_Z_NOEXECSTACK_FLAG)
 endif()
@@ -301,48 +301,6 @@ if(${LIBOMP_STATS})
     set(LIBOMP_HAVE_STATS FALSE)
   endif()
 endif()
-
-# Check if OMPT support is available
-# Currently, __builtin_frame_address() is required for OMPT
-# Weak attribute is required for Unices (except Darwin), LIBPSAPI is used for Windows
-check_c_source_compiles("int main(int argc, char** argv) {
-  void* p = __builtin_frame_address(0);
-  return 0;}" LIBOMP_HAVE___BUILTIN_FRAME_ADDRESS)
-check_c_source_compiles("__attribute__ ((weak)) int foo(int a) { return a*a; }
-  int main(int argc, char** argv) {
-  return foo(argc);}" LIBOMP_HAVE_WEAK_ATTRIBUTE)
-set(CMAKE_REQUIRED_LIBRARIES psapi)
-check_c_source_compiles("#include <windows.h>
-  #include <psapi.h>
-  int main(int artc, char** argv) {
-    return EnumProcessModules(NULL, NULL, 0, NULL);
-  }" LIBOMP_HAVE_PSAPI)
-set(CMAKE_REQUIRED_LIBRARIES)
-if(NOT LIBOMP_HAVE___BUILTIN_FRAME_ADDRESS)
-  set(LIBOMP_HAVE_OMPT_SUPPORT FALSE)
-else()
-  if( # hardware architecture supported?
-     ((LIBOMP_ARCH STREQUAL x86_64) OR
-      (LIBOMP_ARCH STREQUAL i386) OR
-#      (LIBOMP_ARCH STREQUAL arm) OR
-      (LIBOMP_ARCH STREQUAL aarch64) OR
-      (LIBOMP_ARCH STREQUAL aarch64_32) OR
-      (LIBOMP_ARCH STREQUAL aarch64_a64fx) OR
-      (LIBOMP_ARCH STREQUAL ppc64le) OR
-      (LIBOMP_ARCH STREQUAL ppc64) OR
-      (LIBOMP_ARCH STREQUAL riscv64) OR
-      (LIBOMP_ARCH STREQUAL loongarch64) OR
-      (LIBOMP_ARCH STREQUAL s390x))
-     AND # OS supported?
-     ((WIN32 AND LIBOMP_HAVE_PSAPI) OR APPLE OR
-      (NOT (WIN32 OR ${CMAKE_SYSTEM_NAME} MATCHES "AIX") AND LIBOMP_HAVE_WEAK_ATTRIBUTE)))
-    set(LIBOMP_HAVE_OMPT_SUPPORT TRUE)
-  else()
-    set(LIBOMP_HAVE_OMPT_SUPPORT FALSE)
-  endif()
-endif()
-
-set(LIBOMP_HAVE_OMPT_SUPPORT ${LIBOMP_HAVE_OMPT_SUPPORT} PARENT_SCOPE)
 
 # Check if HWLOC support is available
 if(${LIBOMP_USE_HWLOC})

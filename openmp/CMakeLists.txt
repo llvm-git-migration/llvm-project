@@ -123,6 +123,9 @@ endif()
 # to enable time profiling support in the OpenMP runtime.
 add_subdirectory(runtime)
 
+# PARENT_SCOPE is needed to propagate the value to llvm-project/offload/CMakeLists.txt
+set(LIBOMP_HAVE_OMPT_SUPPORT ${LIBOMP_HAVE_OMPT_SUPPORT} PARENT_SCOPE)
+
 set(ENABLE_OMPT_TOOLS ON)
 # Currently tools are not tested well on Windows or MacOS X.
 if (APPLE OR WIN32)

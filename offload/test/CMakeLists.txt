@@ -40,10 +40,3 @@ add_offload_testsuite(check-libomptarget
   EXCLUDE_FROM_CHECK_ALL
   DEPENDS omptarget omp ${LIBOMPTARGET_TESTED_PLUGINS}
   ARGS ${LIBOMPTARGET_LIT_ARG_LIST})
-
-add_offload_testsuite(check-offload
-  "Running libomptarget tests"
-  ${LIBOMPTARGET_LIT_TESTSUITES}
-  EXCLUDE_FROM_CHECK_ALL
-  DEPENDS omptarget omp ${LIBOMPTARGET_TESTED_PLUGINS}
-  ARGS ${LIBOMPTARGET_LIT_ARG_LIST})
