@@ -296,7 +296,7 @@ inline Tp const& DoNotOptimize(Tp const& value) {
 }
 
 template <class Tp>
-inline Tp& DoNotOptimize(Tp& value) {
+inline Tp& DoNotOptimize(Tp&& value) {
 #if defined(__clang__)
   asm volatile("" : "+r,m"(value) : : "memory");
 #else
