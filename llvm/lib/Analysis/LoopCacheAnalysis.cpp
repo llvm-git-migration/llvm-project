@@ -299,8 +299,15 @@ CacheCostTy IndexedReference::computeRefCost(const Loop &L,
     Stride = SE.getNoopOrAnyExtend(Stride, WiderType);
     TripCount = SE.getNoopOrZeroExtend(TripCount, WiderType);
     const SCEV *Numerator = SE.getMulExpr(Stride, TripCount);
-    RefCost = SE.getUDivExpr(Numerator, CacheLineSize);
-
+    ConstantInt *One =
+        ConstantInt::get(TripCount->getType()->getContext(), APInt(32, 1));
+    bool IsZero =
+        SE.isKnownPredicate(ICmpInst::ICMP_ULT, Numerator, CacheLineSize);
+    // When result is zero, round it to one because at least one cache line must
+    // be used. It does not make sense to output the result that zero cache line
+    // is used
+    RefCost =
+        IsZero ? SE.getSCEV(One) : SE.getUDivExpr(Numerator, CacheLineSize);
     LLVM_DEBUG(dbgs().indent(4)
                << "Access is consecutive: RefCost=(TripCount*Stride)/CLS="
                << *RefCost << "\n");
