@@ -56,7 +56,7 @@ target_compile_definitions(PluginCommon PRIVATE
   DEBUG_PREFIX="PluginInterface"
 )
 
-target_compile_options(PluginCommon PUBLIC ${offload_compile_flags})
+target_compile_options(PluginCommon PUBLIC ${offload_compile_flags} -g -O0)
 target_link_options(PluginCommon PUBLIC ${offload_link_flags})
 
 target_include_directories(PluginCommon PUBLIC 
