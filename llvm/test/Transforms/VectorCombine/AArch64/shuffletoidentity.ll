@@ -553,9 +553,8 @@ define void @v8f64interleave(i64 %0, ptr %1, ptr %x, double %z) {
 ; CHECK-NEXT:    [[STRIDED_VEC31:%.*]] = shufflevector <16 x double> [[WIDE_VEC]], <16 x double> poison, <2 x i32> <i32 5, i32 13>
 ; CHECK-NEXT:    [[STRIDED_VEC32:%.*]] = shufflevector <16 x double> [[WIDE_VEC]], <16 x double> poison, <2 x i32> <i32 6, i32 14>
 ; CHECK-NEXT:    [[STRIDED_VEC33:%.*]] = shufflevector <16 x double> [[WIDE_VEC]], <16 x double> poison, <2 x i32> <i32 7, i32 15>
-; CHECK-NEXT:    [[TMP2:%.*]] = fmul fast <2 x double> [[STRIDED_VEC]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds double, ptr [[X:%.*]], i64 [[TMP0:%.*]]
-; CHECK-NEXT:    [[WIDE_VEC34:%.*]] = load <16 x double>, ptr [[TMP3]], align 8
+; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr inbounds double, ptr [[X:%.*]], i64 [[TMP0:%.*]]
+; CHECK-NEXT:    [[WIDE_VEC34:%.*]] = load <16 x double>, ptr [[TMP2]], align 8
 ; CHECK-NEXT:    [[STRIDED_VEC35:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 0, i32 8>
 ; CHECK-NEXT:    [[STRIDED_VEC36:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 1, i32 9>
 ; CHECK-NEXT:    [[STRIDED_VEC37:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 2, i32 10>
@@ -564,32 +563,33 @@ define void @v8f64interleave(i64 %0, ptr %1, ptr %x, double %z) {
 ; CHECK-NEXT:    [[STRIDED_VEC40:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 5, i32 13>
 ; CHECK-NEXT:    [[STRIDED_VEC41:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 6, i32 14>
 ; CHECK-NEXT:    [[STRIDED_VEC42:%.*]] = shufflevector <16 x double> [[WIDE_VEC34]], <16 x double> poison, <2 x i32> <i32 7, i32 15>
-; CHECK-NEXT:    [[TMP4:%.*]] = fadd fast <2 x double> [[STRIDED_VEC35]], [[TMP2]]
-; CHECK-NEXT:    [[TMP5:%.*]] = fmul fast <2 x double> [[STRIDED_VEC27]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP6:%.*]] = fadd fast <2 x double> [[STRIDED_VEC36]], [[TMP5]]
-; CHECK-NEXT:    [[TMP7:%.*]] = fmul fast <2 x double> [[STRIDED_VEC28]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP8:%.*]] = fadd fast <2 x double> [[STRIDED_VEC37]], [[TMP7]]
-; CHECK-NEXT:    [[TMP9:%.*]] = fmul fast <2 x double> [[STRIDED_VEC29]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP10:%.*]] = fadd fast <2 x double> [[STRIDED_VEC38]], [[TMP9]]
-; CHECK-NEXT:    [[TMP11:%.*]] = fmul fast <2 x double> [[STRIDED_VEC30]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP12:%.*]] = fadd fast <2 x double> [[STRIDED_VEC39]], [[TMP11]]
-; CHECK-NEXT:    [[TMP13:%.*]] = fmul fast <2 x double> [[STRIDED_VEC31]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP14:%.*]] = fadd fast <2 x double> [[STRIDED_VEC40]], [[TMP13]]
-; CHECK-NEXT:    [[TMP15:%.*]] = fmul fast <2 x double> [[STRIDED_VEC32]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP16:%.*]] = fadd fast <2 x double> [[STRIDED_VEC41]], [[TMP15]]
-; CHECK-NEXT:    [[TMP17:%.*]] = or disjoint i64 [[TMP0]], 7
-; CHECK-NEXT:    [[TMP18:%.*]] = fmul fast <2 x double> [[STRIDED_VEC33]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP19:%.*]] = getelementptr inbounds double, ptr [[X]], i64 [[TMP17]]
-; CHECK-NEXT:    [[TMP20:%.*]] = fadd fast <2 x double> [[STRIDED_VEC42]], [[TMP18]]
-; CHECK-NEXT:    [[TMP21:%.*]] = getelementptr inbounds i8, ptr [[TMP19]], i64 -56
-; CHECK-NEXT:    [[TMP22:%.*]] = shufflevector <2 x double> [[TMP4]], <2 x double> [[TMP6]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; CHECK-NEXT:    [[TMP23:%.*]] = shufflevector <2 x double> [[TMP8]], <2 x double> [[TMP10]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; CHECK-NEXT:    [[TMP24:%.*]] = shufflevector <2 x double> [[TMP12]], <2 x double> [[TMP14]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; CHECK-NEXT:    [[TMP25:%.*]] = shufflevector <2 x double> [[TMP16]], <2 x double> [[TMP20]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; CHECK-NEXT:    [[TMP26:%.*]] = shufflevector <4 x double> [[TMP22]], <4 x double> [[TMP23]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-; CHECK-NEXT:    [[TMP27:%.*]] = shufflevector <4 x double> [[TMP24]], <4 x double> [[TMP25]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = shufflevector <8 x double> [[TMP26]], <8 x double> [[TMP27]], <16 x i32> <i32 0, i32 2, i32 4, i32 6, i32 8, i32 10, i32 12, i32 14, i32 1, i32 3, i32 5, i32 7, i32 9, i32 11, i32 13, i32 15>
-; CHECK-NEXT:    store <16 x double> [[INTERLEAVED_VEC]], ptr [[TMP21]], align 8
+; CHECK-NEXT:    [[TMP3:%.*]] = or disjoint i64 [[TMP0]], 7
+; CHECK-NEXT:    [[TMP4:%.*]] = getelementptr inbounds double, ptr [[X]], i64 [[TMP3]]
+; CHECK-NEXT:    [[TMP5:%.*]] = getelementptr inbounds i8, ptr [[TMP4]], i64 -56
+; CHECK-NEXT:    [[TMP6:%.*]] = shufflevector <2 x double> [[STRIDED_VEC35]], <2 x double> [[STRIDED_VEC36]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP7:%.*]] = shufflevector <2 x double> [[STRIDED_VEC]], <2 x double> [[STRIDED_VEC27]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP8:%.*]] = shufflevector <2 x double> [[BROADCAST_SPLAT]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+; CHECK-NEXT:    [[TMP9:%.*]] = shufflevector <2 x double> [[STRIDED_VEC37]], <2 x double> [[STRIDED_VEC38]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP10:%.*]] = shufflevector <2 x double> [[STRIDED_VEC28]], <2 x double> [[STRIDED_VEC29]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP11:%.*]] = shufflevector <2 x double> [[BROADCAST_SPLAT]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+; CHECK-NEXT:    [[TMP12:%.*]] = shufflevector <2 x double> [[STRIDED_VEC39]], <2 x double> [[STRIDED_VEC40]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP13:%.*]] = shufflevector <2 x double> [[STRIDED_VEC30]], <2 x double> [[STRIDED_VEC31]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP14:%.*]] = shufflevector <2 x double> [[BROADCAST_SPLAT]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+; CHECK-NEXT:    [[TMP15:%.*]] = shufflevector <2 x double> [[STRIDED_VEC41]], <2 x double> [[STRIDED_VEC42]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP16:%.*]] = shufflevector <2 x double> [[STRIDED_VEC32]], <2 x double> [[STRIDED_VEC33]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+; CHECK-NEXT:    [[TMP17:%.*]] = shufflevector <2 x double> [[BROADCAST_SPLAT]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+; CHECK-NEXT:    [[TMP18:%.*]] = shufflevector <4 x double> [[TMP6]], <4 x double> [[TMP9]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP19:%.*]] = shufflevector <4 x double> [[TMP7]], <4 x double> [[TMP10]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP20:%.*]] = shufflevector <4 x double> [[TMP8]], <4 x double> [[TMP11]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP21:%.*]] = fmul fast <8 x double> [[TMP19]], [[TMP20]]
+; CHECK-NEXT:    [[TMP22:%.*]] = fadd fast <8 x double> [[TMP18]], [[TMP21]]
+; CHECK-NEXT:    [[TMP23:%.*]] = shufflevector <4 x double> [[TMP12]], <4 x double> [[TMP15]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP24:%.*]] = shufflevector <4 x double> [[TMP13]], <4 x double> [[TMP16]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP25:%.*]] = shufflevector <4 x double> [[TMP14]], <4 x double> [[TMP17]], <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+; CHECK-NEXT:    [[TMP26:%.*]] = fmul fast <8 x double> [[TMP24]], [[TMP25]]
+; CHECK-NEXT:    [[TMP27:%.*]] = fadd fast <8 x double> [[TMP23]], [[TMP26]]
+; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = shufflevector <8 x double> [[TMP22]], <8 x double> [[TMP27]], <16 x i32> <i32 0, i32 2, i32 4, i32 6, i32 8, i32 10, i32 12, i32 14, i32 1, i32 3, i32 5, i32 7, i32 9, i32 11, i32 13, i32 15>
+; CHECK-NEXT:    store <16 x double> [[INTERLEAVED_VEC]], ptr [[TMP5]], align 8
 ; CHECK-NEXT:    ret void
 ;
 entry:
