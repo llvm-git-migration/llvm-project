@@ -68,8 +68,10 @@ static void getRISCFeaturesFromMcpu(const Driver &D, const Arg *A,
           << A->getSpelling() << Mcpu;
   }
 
-  if (llvm::RISCV::hasFastUnalignedAccess(Mcpu))
-    Features.push_back("+fast-unaligned-access");
+  if (llvm::RISCV::hasFastUnalignedAccess(Mcpu)) {
+    Features.push_back("+unaligned-scalar-mem");
+    Features.push_back("+unaligned-vector-mem");
+  }
 }
 
 void riscv::getRISCVTargetFeatures(const Driver &D, const llvm::Triple &Triple,
@@ -169,7 +171,9 @@ void riscv::getRISCVTargetFeatures(const Driver &D, const llvm::Triple &Triple,
 
   // -mno-unaligned-access is default, unless -munaligned-access is specified.
   AddTargetFeature(Args, Features, options::OPT_munaligned_access,
-                   options::OPT_mno_unaligned_access, "fast-unaligned-access");
+                   options::OPT_mno_unaligned_access, "unaligned-scalar-mem");
+  AddTargetFeature(Args, Features, options::OPT_munaligned_access,
+                   options::OPT_mno_unaligned_access, "unaligned-vector-mem");
 
   // Now add any that the user explicitly requested on the command line,
   // which may override the defaults.

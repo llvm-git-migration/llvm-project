@@ -32,8 +32,8 @@
 // RUN: %clang --target=riscv32-unknown-elf -### %s -mno-strict-align 2>&1 | FileCheck %s -check-prefix=FAST-UNALIGNED-ACCESS
 // RUN: %clang --target=riscv32-unknown-elf -### %s -mstrict-align 2>&1 | FileCheck %s -check-prefix=NO-FAST-UNALIGNED-ACCESS
 
-// FAST-UNALIGNED-ACCESS: "-target-feature" "+fast-unaligned-access"
-// NO-FAST-UNALIGNED-ACCESS: "-target-feature" "-fast-unaligned-access"
+// FAST-UNALIGNED-ACCESS: "-target-feature" "+unaligned-scalar-mem" "-target-feature" "+unaligned-vector-mem"
+// NO-FAST-UNALIGNED-ACCESS: "-target-feature" "-unaligned-scalar-mem" "-target-feature" "-unaligned-vector-mem"
 
 // RUN: %clang --target=riscv32-linux -### %s -fsyntax-only 2>&1 \
 // RUN:   | FileCheck %s -check-prefix=DEFAULT-LINUX
