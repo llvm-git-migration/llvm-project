@@ -63,6 +63,10 @@ ABI Changes in This Version
   MSVC uses a different mangling for these objects, compatibility is not affected.
   (#GH85423).
 
+- The attribute ``trivial_abi`` now works when targetting the Microsoft ABI. Marking
+  a struct with this attribute will now cause clang to emit ABI similar to the Itanium
+  ABI. This is not compatible with the Microsoft ABI. (#GH87993).
+
 AST Dumping Potentially Breaking Changes
 ----------------------------------------
 
