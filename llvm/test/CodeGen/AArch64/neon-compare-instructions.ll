@@ -73,77 +73,133 @@ define <2 x i64> @cmeq2xi64(<2 x i64> %A, <2 x i64> %B) {
 }
 
 define <8 x i8> @cmne8xi8(<8 x i8> %A, <8 x i8> %B) {
-; CHECK-LABEL: cmne8xi8:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.8b, v0.8b, v1.8b
-; CHECK-NEXT:    mvn v0.8b, v0.8b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne8xi8:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.8b, v0.8b, v1.8b
+; CHECK-SD-NEXT:    mvn v0.8b, v0.8b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne8xi8:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v1.8b
+; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <8 x i8> %A, %B
   %tmp4 = sext <8 x i1> %tmp3 to <8 x i8>
   ret <8 x i8> %tmp4
 }
 
 define <16 x i8> @cmne16xi8(<16 x i8> %A, <16 x i8> %B) {
-; CHECK-LABEL: cmne16xi8:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.16b, v0.16b, v1.16b
-; CHECK-NEXT:    mvn v0.16b, v0.16b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne16xi8:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.16b, v0.16b, v1.16b
+; CHECK-SD-NEXT:    mvn v0.16b, v0.16b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne16xi8:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.16b, v0.16b, v1.16b
+; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.16b, v0.16b, #7
+; CHECK-GI-NEXT:    sshr v0.16b, v0.16b, #7
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <16 x i8> %A, %B
   %tmp4 = sext <16 x i1> %tmp3 to <16 x i8>
   ret <16 x i8> %tmp4
 }
 
 define <4 x i16> @cmne4xi16(<4 x i16> %A, <4 x i16> %B) {
-; CHECK-LABEL: cmne4xi16:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.4h, v0.4h, v1.4h
-; CHECK-NEXT:    mvn v0.8b, v0.8b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne4xi16:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.4h, v0.4h, v1.4h
+; CHECK-SD-NEXT:    mvn v0.8b, v0.8b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne4xi16:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.4h, v0.4h, v1.4h
+; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.4h, v0.4h, #15
+; CHECK-GI-NEXT:    sshr v0.4h, v0.4h, #15
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <4 x i16> %A, %B
   %tmp4 = sext <4 x i1> %tmp3 to <4 x i16>
   ret <4 x i16> %tmp4
 }
 
 define <8 x i16> @cmne8xi16(<8 x i16> %A, <8 x i16> %B) {
-; CHECK-LABEL: cmne8xi16:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.8h, v0.8h, v1.8h
-; CHECK-NEXT:    mvn v0.16b, v0.16b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne8xi16:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.8h, v0.8h, v1.8h
+; CHECK-SD-NEXT:    mvn v0.16b, v0.16b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne8xi16:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.8h, v0.8h, v1.8h
+; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.8h, v0.8h, #15
+; CHECK-GI-NEXT:    sshr v0.8h, v0.8h, #15
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <8 x i16> %A, %B
   %tmp4 = sext <8 x i1> %tmp3 to <8 x i16>
   ret <8 x i16> %tmp4
 }
 
 define <2 x i32> @cmne2xi32(<2 x i32> %A, <2 x i32> %B) {
-; CHECK-LABEL: cmne2xi32:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.2s, v0.2s, v1.2s
-; CHECK-NEXT:    mvn v0.8b, v0.8b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne2xi32:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.2s, v0.2s, v1.2s
+; CHECK-SD-NEXT:    mvn v0.8b, v0.8b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne2xi32:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.2s, v0.2s, v1.2s
+; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.2s, v0.2s, #31
+; CHECK-GI-NEXT:    sshr v0.2s, v0.2s, #31
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <2 x i32> %A, %B
   %tmp4 = sext <2 x i1> %tmp3 to <2 x i32>
   ret <2 x i32> %tmp4
 }
 
 define <4 x i32> @cmne4xi32(<4 x i32> %A, <4 x i32> %B) {
-; CHECK-LABEL: cmne4xi32:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.4s, v0.4s, v1.4s
-; CHECK-NEXT:    mvn v0.16b, v0.16b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne4xi32:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.4s, v0.4s, v1.4s
+; CHECK-SD-NEXT:    mvn v0.16b, v0.16b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne4xi32:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.4s, v0.4s, v1.4s
+; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.4s, v0.4s, #31
+; CHECK-GI-NEXT:    sshr v0.4s, v0.4s, #31
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <4 x i32> %A, %B
   %tmp4 = sext <4 x i1> %tmp3 to <4 x i32>
   ret <4 x i32> %tmp4
 }
 
 define <2 x i64> @cmne2xi64(<2 x i64> %A, <2 x i64> %B) {
-; CHECK-LABEL: cmne2xi64:
-; CHECK:       // %bb.0:
-; CHECK-NEXT:    cmeq v0.2d, v0.2d, v1.2d
-; CHECK-NEXT:    mvn v0.16b, v0.16b
-; CHECK-NEXT:    ret
+; CHECK-SD-LABEL: cmne2xi64:
+; CHECK-SD:       // %bb.0:
+; CHECK-SD-NEXT:    cmeq v0.2d, v0.2d, v1.2d
+; CHECK-SD-NEXT:    mvn v0.16b, v0.16b
+; CHECK-SD-NEXT:    ret
+;
+; CHECK-GI-LABEL: cmne2xi64:
+; CHECK-GI:       // %bb.0:
+; CHECK-GI-NEXT:    cmeq v0.2d, v0.2d, v1.2d
+; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.2d, v0.2d, #63
+; CHECK-GI-NEXT:    sshr v0.2d, v0.2d, #63
+; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <2 x i64> %A, %B
   %tmp4 = sext <2 x i1> %tmp3 to <2 x i64>
   ret <2 x i64> %tmp4
@@ -749,6 +805,8 @@ define <8 x i8> @cmtst8xi8(<8 x i8> %A, <8 x i8> %B) {
 ; CHECK-GI-NEXT:    and v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v2.8b
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <8 x i8> %A, %B
   %tmp4 = icmp ne <8 x i8> %tmp3, zeroinitializer
@@ -768,6 +826,8 @@ define <16 x i8> @cmtst16xi8(<16 x i8> %A, <16 x i8> %B) {
 ; CHECK-GI-NEXT:    and v0.16b, v0.16b, v1.16b
 ; CHECK-GI-NEXT:    cmeq v0.16b, v0.16b, v2.16b
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.16b, v0.16b, #7
+; CHECK-GI-NEXT:    sshr v0.16b, v0.16b, #7
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <16 x i8> %A, %B
   %tmp4 = icmp ne <16 x i8> %tmp3, zeroinitializer
@@ -787,6 +847,8 @@ define <4 x i16> @cmtst4xi16(<4 x i16> %A, <4 x i16> %B) {
 ; CHECK-GI-NEXT:    and v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    cmeq v0.4h, v0.4h, v2.4h
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.4h, v0.4h, #15
+; CHECK-GI-NEXT:    sshr v0.4h, v0.4h, #15
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <4 x i16> %A, %B
   %tmp4 = icmp ne <4 x i16> %tmp3, zeroinitializer
@@ -806,6 +868,8 @@ define <8 x i16> @cmtst8xi16(<8 x i16> %A, <8 x i16> %B) {
 ; CHECK-GI-NEXT:    and v0.16b, v0.16b, v1.16b
 ; CHECK-GI-NEXT:    cmeq v0.8h, v0.8h, v2.8h
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.8h, v0.8h, #15
+; CHECK-GI-NEXT:    sshr v0.8h, v0.8h, #15
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <8 x i16> %A, %B
   %tmp4 = icmp ne <8 x i16> %tmp3, zeroinitializer
@@ -825,6 +889,8 @@ define <2 x i32> @cmtst2xi32(<2 x i32> %A, <2 x i32> %B) {
 ; CHECK-GI-NEXT:    and v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    cmeq v0.2s, v0.2s, v2.2s
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.2s, v0.2s, #31
+; CHECK-GI-NEXT:    sshr v0.2s, v0.2s, #31
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <2 x i32> %A, %B
   %tmp4 = icmp ne <2 x i32> %tmp3, zeroinitializer
@@ -844,6 +910,8 @@ define <4 x i32> @cmtst4xi32(<4 x i32> %A, <4 x i32> %B) {
 ; CHECK-GI-NEXT:    and v0.16b, v0.16b, v1.16b
 ; CHECK-GI-NEXT:    cmeq v0.4s, v0.4s, v2.4s
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.4s, v0.4s, #31
+; CHECK-GI-NEXT:    sshr v0.4s, v0.4s, #31
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <4 x i32> %A, %B
   %tmp4 = icmp ne <4 x i32> %tmp3, zeroinitializer
@@ -863,6 +931,8 @@ define <2 x i64> @cmtst2xi64(<2 x i64> %A, <2 x i64> %B) {
 ; CHECK-GI-NEXT:    and v0.16b, v0.16b, v1.16b
 ; CHECK-GI-NEXT:    cmeq v0.2d, v0.2d, v2.2d
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.2d, v0.2d, #63
+; CHECK-GI-NEXT:    sshr v0.2d, v0.2d, #63
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <2 x i64> %A, %B
   %tmp4 = icmp ne <2 x i64> %tmp3, zeroinitializer
@@ -1919,6 +1989,8 @@ define <8 x i8> @cmneqz8xi8(<8 x i8> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <8 x i8> %A, zeroinitializer
   %tmp4 = sext <8 x i1> %tmp3 to <8 x i8>
@@ -1936,6 +2008,8 @@ define <16 x i8> @cmneqz16xi8(<16 x i8> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.16b, v0.16b, v1.16b
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.16b, v0.16b, #7
+; CHECK-GI-NEXT:    sshr v0.16b, v0.16b, #7
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <16 x i8> %A, zeroinitializer
   %tmp4 = sext <16 x i1> %tmp3 to <16 x i8>
@@ -1953,6 +2027,8 @@ define <4 x i16> @cmneqz4xi16(<4 x i16> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.4h, v0.4h, v1.4h
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.4h, v0.4h, #15
+; CHECK-GI-NEXT:    sshr v0.4h, v0.4h, #15
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <4 x i16> %A, zeroinitializer
   %tmp4 = sext <4 x i1> %tmp3 to <4 x i16>
@@ -1970,6 +2046,8 @@ define <8 x i16> @cmneqz8xi16(<8 x i16> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.8h, v0.8h, v1.8h
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.8h, v0.8h, #15
+; CHECK-GI-NEXT:    sshr v0.8h, v0.8h, #15
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <8 x i16> %A, zeroinitializer
   %tmp4 = sext <8 x i1> %tmp3 to <8 x i16>
@@ -1987,6 +2065,8 @@ define <2 x i32> @cmneqz2xi32(<2 x i32> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.2s, v0.2s, v1.2s
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.2s, v0.2s, #31
+; CHECK-GI-NEXT:    sshr v0.2s, v0.2s, #31
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <2 x i32> %A, zeroinitializer
   %tmp4 = sext <2 x i1> %tmp3 to <2 x i32>
@@ -2004,6 +2084,8 @@ define <4 x i32> @cmneqz4xi32(<4 x i32> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.4s, v0.4s, v1.4s
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.4s, v0.4s, #31
+; CHECK-GI-NEXT:    sshr v0.4s, v0.4s, #31
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <4 x i32> %A, zeroinitializer
   %tmp4 = sext <4 x i1> %tmp3 to <4 x i32>
@@ -2021,6 +2103,8 @@ define <2 x i64> @cmneqz2xi64(<2 x i64> %A) {
 ; CHECK-GI-NEXT:    movi v1.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.2d, v0.2d, v1.2d
 ; CHECK-GI-NEXT:    mvn v0.16b, v0.16b
+; CHECK-GI-NEXT:    shl v0.2d, v0.2d, #63
+; CHECK-GI-NEXT:    sshr v0.2d, v0.2d, #63
 ; CHECK-GI-NEXT:    ret
   %tmp3 = icmp ne <2 x i64> %A, zeroinitializer
   %tmp4 = sext <2 x i1> %tmp3 to <2 x i64>
