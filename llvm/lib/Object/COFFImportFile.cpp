@@ -690,9 +690,10 @@ Error writeImportLibrary(StringRef ImportName, StringRef Path,
         Name.swap(*ReplacedName);
       }
 
-      if (!E.AliasTarget.empty() && Name != E.AliasTarget) {
-        Members.push_back(OF.createWeakExternal(E.AliasTarget, Name, false, M));
-        Members.push_back(OF.createWeakExternal(E.AliasTarget, Name, true, M));
+      if (!E.ImportTarget.empty() && Name != E.ImportTarget) {
+        Members.push_back(
+            OF.createWeakExternal(E.ImportTarget, Name, false, M));
+        Members.push_back(OF.createWeakExternal(E.ImportTarget, Name, true, M));
         continue;
       }
 
