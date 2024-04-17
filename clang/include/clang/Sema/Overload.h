@@ -972,7 +972,8 @@ class Sema;
   private:
     friend class OverloadCandidateSet;
     OverloadCandidate()
-        : IsSurrogate(false), IsADLCandidate(CallExpr::NotADL), RewriteKind(CRK_None) {}
+        : IsSurrogate(false), IsADLCandidate(CallExpr::NotADL),
+          RewriteKind(CRK_None) {}
   };
 
   /// OverloadCandidateSet - A set of overload candidates, used in C++
@@ -1095,8 +1096,7 @@ class Sema;
     /// instead.
     /// FIXME: Now that this only allocates ImplicitConversionSequences, do we
     /// want to un-generalize this?
-    template <typename T>
-    T *slabAllocate(unsigned N) {
+    template <typename T> T *slabAllocate(unsigned N) {
       // It's simpler if this doesn't need to consider alignment.
       static_assert(alignof(T) == alignof(void *),
                     "Only works for pointer-aligned types.");

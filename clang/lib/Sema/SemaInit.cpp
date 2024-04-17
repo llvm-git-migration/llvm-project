@@ -9749,7 +9749,8 @@ bool InitializationSequence::Diagnose(Sema &S,
       break;
 
     case OR_No_Viable_Function: {
-      auto Cands = FailedCandidateSet.CompleteCandidates(S, OCD_AllCandidates, Args);
+      auto Cands =
+          FailedCandidateSet.CompleteCandidates(S, OCD_AllCandidates, Args);
       if (!S.RequireCompleteType(Kind.getLocation(),
                                  DestType.getNonReferenceType(),
                           diag::err_typecheck_nonviable_condition_incomplete,
@@ -9764,8 +9765,8 @@ bool InitializationSequence::Diagnose(Sema &S,
     }
     case OR_Deleted: {
       OverloadCandidateSet::iterator Best;
-      OverloadingResult Ovl
-        = FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
+      OverloadingResult Ovl =
+          FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
 
       StringLiteral *Msg = Best->Function->getDeletedMessage();
       S.Diag(Kind.getLocation(), diag::err_typecheck_deleted_function)
@@ -10013,8 +10014,8 @@ bool InitializationSequence::Diagnose(Sema &S,
 
       case OR_Deleted: {
         OverloadCandidateSet::iterator Best;
-        OverloadingResult Ovl
-          = FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
+        OverloadingResult Ovl =
+            FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
         if (Ovl != OR_Deleted) {
           S.Diag(Kind.getLocation(), diag::err_ovl_deleted_init)
               << DestType << ArgsRange;
@@ -10093,8 +10094,8 @@ bool InitializationSequence::Diagnose(Sema &S,
     S.Diag(Kind.getLocation(), diag::err_selected_explicit_constructor)
       << Args[0]->getSourceRange();
     OverloadCandidateSet::iterator Best;
-    OverloadingResult Ovl
-      = FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
+    OverloadingResult Ovl =
+        FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
     (void)Ovl;
     assert(Ovl == OR_Success && "Inconsistent overload resolution");
     CXXConstructorDecl *CtorDecl = cast<CXXConstructorDecl>(Best->Function);

@@ -1402,9 +1402,7 @@ public:
 
   /// Retrieve a reference to the candidate set when overload
   /// resolution fails.
-  OverloadCandidateSet &getFailedCandidateSet() {
-    return FailedCandidateSet;
-  }
+  OverloadCandidateSet &getFailedCandidateSet() { return FailedCandidateSet; }
 
   /// Get the overloading result, for when the initialization
   /// sequence failed due to a bad overload.
