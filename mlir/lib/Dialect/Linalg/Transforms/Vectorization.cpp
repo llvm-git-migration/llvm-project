@@ -1414,27 +1414,39 @@ static SmallVector<int64_t> getTiledPackShape(tensor::PackOp packOp,
 /// create an empty destination tensor and create a TransferWriteOp from the
 /// input to the empty tensor. If the destination shape is not the same as the
 /// inputVectorSizes for the first rank(inputVectorSizes) dims, then create a
-/// mask for the write.
+/// mask for the write. If `useInBoundsInsteadOfMasking` is set, then update the
+/// inBounds attribute of the transfer write op instead of masking.
 static Operation *createWriteOrMaskedWrite(OpBuilder &builder, Location loc,
                                            Value input,
                                            SmallVector<OpFoldResult> destSizes,
-                                           ArrayRef<int64_t> inputVectorSizes) {
+                                           ArrayRef<int64_t> inputVectorSizes,
+                                           bool useInBoundsInsteadOfMasking) {
+
   auto inputType = cast<VectorType>(input.getType());
   Value dest = builder.create<tensor::EmptyOp>(loc, destSizes,
                                                inputType.getElementType());
   int64_t rank = cast<ShapedType>(dest.getType()).getRank();
   auto zero = builder.create<arith::ConstantIndexOp>(loc, 0);
+  auto destShape = cast<ShapedType>(dest.getType()).getShape();
+  SmallVector<bool> inBoundsVal(rank, true);
+  if (useInBoundsInsteadOfMasking) {
+    // Update the inBounds attribute.
+    for (unsigned i = 0; i < rank; i++)
+      inBoundsVal[i] = (destShape[i] == inputVectorSizes[i]) &&
+                       !ShapedType::isDynamic(destShape[i]);
+  }
   Operation *write = builder.create<vector::TransferWriteOp>(
       loc,
       /*vector=*/input,
       /*source=*/dest,
       /*indices=*/SmallVector<Value>(rank, zero),
-      /*inBounds=*/SmallVector<bool>(rank, true));
-  auto destShape = cast<ShapedType>(dest.getType()).getShape();
+      /*inBounds=*/inBoundsVal);
   assert(llvm::none_of(
              destShape.drop_front(inputVectorSizes.size()),
              [](int64_t size) { return size == ShapedType::kDynamic; }) &&
          "Only dims aligned with inputVectorSizes may be dynamic");
+  if (useInBoundsInsteadOfMasking)
+    return write;
   bool needMaskForWrite = !llvm::equal(
       inputVectorSizes, destShape.take_front(inputVectorSizes.size()));
   if (needMaskForWrite) {
@@ -1535,9 +1547,9 @@ vectorizeAsTensorPackOp(RewriterBase &rewriter, tensor::PackOp packOp,
       loc, shapeCastOp.getResult(), destPermutation);
 
   // Create TransferWriteOp.
-  Operation *write =
-      createWriteOrMaskedWrite(rewriter, loc, transposeOp.getResult(),
-                               reifiedReturnShapes[0], inputVectorSizes);
+  Operation *write = createWriteOrMaskedWrite(
+      rewriter, loc, transposeOp.getResult(), reifiedReturnShapes[0],
+      inputVectorSizes, /*useInBoundsInsteadOfMasking=*/false);
   newResults.push_back(write->getResult(0));
   return success();
 }
@@ -1547,7 +1559,9 @@ vectorizeAsTensorPackOp(RewriterBase &rewriter, tensor::PackOp packOp,
 ///   vector::TransposeOp - Transpose the Source tensor
 ///   ShapeCastOp - Reshape the data based on the target.
 ///   vector::TransferWriteOp. - Write the result vector back to the destination
-///   tensor
+///   tensor. If the vector sizes are not provided:
+///   * the vector sizes are determined by the input operand and attributes,
+///   * update the inBounds attribute instead of masking.
 static LogicalResult
 vectorizeAsTensorUnpackOp(RewriterBase &rewriter, tensor::UnPackOp unpackOp,
                           ArrayRef<int64_t> inputVectorSizes,
@@ -1560,11 +1574,33 @@ vectorizeAsTensorUnpackOp(RewriterBase &rewriter, tensor::UnPackOp unpackOp,
 
   ArrayRef<int64_t> innerDimPos = unpackOp.getInnerDimsPos();
   ArrayRef<int64_t> innerTiles = unpackOp.getStaticInnerTiles();
+  ArrayRef<int64_t> sourceShape = unpackTensorType.getShape();
+  bool useInBoundsInsteadOfMasking = false;
+  ArrayRef<int64_t> outerDimsPerm = unpackOp.getOuterDimsPerm();
+
+  auto destSize = unpackOp.getDestRank();
+
+  // initVectorShape is the shape of the vector that will be used to do final
+  // write on the destination tensor. It is set like this: Let's say the
+  // sourceShape is 'M' and the vectorSize (VS) array is size 'N' where N <= M.
+  // Thus:
+  // - initVectorShape = sourceShape.take_front(N)
+  // - if outer_dims_perms is present: do that permutation on initVectorShape.
+  // - Multiply all the locations pointed by innerDimPos by the innerTileSize
+  //  attribute value.
+  SmallVector<int64_t> initVectorShape(sourceShape.take_front(destSize));
+  if (inputVectorSizes.empty()) {
+    if (!outerDimsPerm.empty())
+      applyPermutationToVector(initVectorShape, outerDimsPerm);
+    for (auto [i, pos] : llvm::enumerate(innerDimPos))
+      initVectorShape[pos] *= innerTiles[i];
+
+    inputVectorSizes = initVectorShape;
+    useInBoundsInsteadOfMasking = true;
+  }
 
   SmallVector<int64_t> readMaskShape(inputVectorSizes.begin(),
                                      inputVectorSizes.end());
-  ArrayRef<int64_t> outerDimsPerm = unpackOp.getOuterDimsPerm();
-  ArrayRef<int64_t> sourceShape = unpackTensorType.getShape();
 
   // ReadMask is the size of tensor used to read and apply mask. It is
   // set like this: Let's say the vectorSize (VS) array is size 'N' and
@@ -1642,9 +1678,9 @@ vectorizeAsTensorUnpackOp(RewriterBase &rewriter, tensor::UnPackOp unpackOp,
       unpackOp.getDestType().hasStaticShape()
           ? inputVectorSizes
           : shapeCastOp.getResultVectorType().getShape());
-  Operation *write =
-      createWriteOrMaskedWrite(rewriter, loc, shapeCastOp.getResult(),
-                               reifiedRetShapes[0], writeMaskShape);
+  Operation *write = createWriteOrMaskedWrite(
+      rewriter, loc, shapeCastOp.getResult(), reifiedRetShapes[0],
+      writeMaskShape, useInBoundsInsteadOfMasking);
   newResults.push_back(write->getResult(0));
   return success();
 }
@@ -1673,7 +1709,8 @@ vectorizeAsTensorPadOp(RewriterBase &rewriter, tensor::PadOp padOp,
       rewriter, loc, padOp.getSource(), inputVectorSizes, padValue,
       /*useInBoundsInsteadOfMasking=*/false);
   Operation *write = createWriteOrMaskedWrite(
-      rewriter, loc, maskedRead, reifiedReturnShapes[0], inputVectorSizes);
+      rewriter, loc, maskedRead, reifiedReturnShapes[0], inputVectorSizes,
+      /*useInBoundsInsteadOfMasking=*/false);
   newResults.push_back(write->getResult(0));
   return success();
 }
@@ -1755,8 +1792,11 @@ vectorizeUnPackOpPrecondition(tensor::UnPackOp unpackOp,
     LDBG("Inner-tiles must be constant: " << unpackOp << "\n");
     return failure();
   }
-  llvm::ArrayRef<int64_t> resultShape = unpackOp.getDestType().getShape();
-  if (!inputVectorSizes.empty() &&
+  ArrayRef<int64_t> resultShape = unpackOp.getDestType().getShape();
+  bool satisfyEmptyCond = inputVectorSizes.empty() &&
+                          unpackOp.getDestType().hasStaticShape() &&
+                          unpackOp.getSourceType().hasStaticShape();
+  if (!satisfyEmptyCond &&
       failed(vector::isValidMaskedInputVector(resultShape, inputVectorSizes)))
     return failure();
 
