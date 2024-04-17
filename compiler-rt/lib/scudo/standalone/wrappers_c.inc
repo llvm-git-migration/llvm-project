@@ -251,14 +251,6 @@ INTERFACE WEAK int SCUDO_PREFIX(mallopt)(int param, int value) {
       // M_PURGE call so that we can minimize the impact of any unreleased pages
       // introduced by interval transition.
       SCUDO_ALLOCATOR.releaseToOS(scudo::ReleaseToOS::Force);
-
-      if (value == 0) {
-        // Will set the release values to their minimum values.
-        value = INT32_MIN;
-      } else {
-        // Will set the release values to their maximum values.
-        value = INT32_MAX;
-      }
     }
 
     SCUDO_ALLOCATOR.setOption(scudo::Option::ReleaseInterval,
