@@ -48,7 +48,7 @@ int main(int, char**) {
     // Test with an overaligned type
     {
         new_called = delete_called = 0;
-        OverAligned* x = new OverAligned;
+        OverAligned* x = DoNotOptimize(new OverAligned);
         assert(static_cast<void*>(x) == DummyData);
         assert(new_called == 1);
 

@@ -47,7 +47,7 @@ int main(int, char**) {
     // Test with an overaligned type
     {
         new_nothrow_called = delete_called = 0;
-        OverAligned* x = new (std::nothrow) OverAligned;
+        OverAligned* x = DoNotOptimize(new (std::nothrow) OverAligned);
         assert(static_cast<void*>(x) == DummyData);
         ASSERT_WITH_OPERATOR_NEW_FALLBACKS(new_nothrow_called == 1);
 
