@@ -1,0 +1,55 @@
+diff --git a/clang-tools-extra/test/clang-tidy/infrastructure/expand-modular-headers-ppcallbacks.cpp b/clang-tools-extra/test/clang-tidy/infrastructure/expand-modular-headers-ppcallbacks.cpp
+index c9b05517d210..4d1ca669b8d0 100644
+--- a/clang-tools-extra/test/clang-tidy/infrastructure/expand-modular-headers-ppcallbacks.cpp
++++ b/clang-tools-extra/test/clang-tidy/infrastructure/expand-modular-headers-ppcallbacks.cpp
+@@ -3,18 +3,18 @@
+ // RUN: mkdir %t
+ // RUN: cp %S/Inputs/expand-modular-headers-ppcallbacks/* %t/
+ // RUN: %check_clang_tidy -std=c++11 %s readability-identifier-naming %t/without-modules -- \
+-// RUN:   -config="CheckOptions: [{ \
+-// RUN:      key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }]" \
+-// RUN:   -header-filter=.* \
++// RUN:   -config="CheckOptions: { \
++// RUN:      readability-identifier-naming.MacroDefinitionCase: UPPER_CASE }" \
++// RUN:   -header-filter=.* --enable-module-headers-parsing \
+ // RUN:   -- -I %t/
+ //
+ // RUN: rm -rf %t
+ // RUN: mkdir %t
+ // RUN: cp %S/Inputs/expand-modular-headers-ppcallbacks/* %t/
+ // RUN: %check_clang_tidy -std=c++17 %s readability-identifier-naming %t/without-modules -- \
+-// RUN:   -config="CheckOptions: [{ \
+-// RUN:      key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }]" \
+-// RUN:   -header-filter=.* \
++// RUN:   -config="CheckOptions: { \
++// RUN:      readability-identifier-naming.MacroDefinitionCase: UPPER_CASE }" \
++// RUN:   -header-filter=.* --enable-module-headers-parsing \
+ // RUN:   -- -I %t/
+ //
+ // Run clang-tidy on a file with modular includes:
+@@ -23,9 +23,9 @@
+ // RUN: mkdir %t
+ // RUN: cp %S/Inputs/expand-modular-headers-ppcallbacks/* %t/
+ // RUN: %check_clang_tidy -std=c++11 %s readability-identifier-naming %t/with-modules -- \
+-// RUN:   -config="CheckOptions: [{ \
+-// RUN:      key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }]" \
+-// RUN:   -header-filter=.* \
++// RUN:   -config="CheckOptions: { \
++// RUN:      readability-identifier-naming.MacroDefinitionCase: UPPER_CASE }" \
++// RUN:   -header-filter=.* --enable-module-headers-parsing \
+ // RUN:   -- -I %t/ \
+ // RUN:   -fmodules -fimplicit-modules -fno-implicit-module-maps \
+ // RUN:   -fmodule-map-file=%t/module.modulemap \
+@@ -35,9 +35,9 @@
+ // RUN: mkdir %t
+ // RUN: cp %S/Inputs/expand-modular-headers-ppcallbacks/* %t/
+ // RUN: %check_clang_tidy -std=c++17 %s readability-identifier-naming %t/with-modules -- \
+-// RUN:   -config="CheckOptions: [{ \
+-// RUN:      key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }]" \
+-// RUN:   -header-filter=.* \
++// RUN:   -config="CheckOptions: { \
++// RUN:      readability-identifier-naming.MacroDefinitionCase: UPPER_CASE }" \
++// RUN:   -header-filter=.* --enable-module-headers-parsing \
+ // RUN:   -- -I %t/ \
+ // RUN:   -fmodules -fimplicit-modules -fno-implicit-module-maps \
+ // RUN:   -fmodule-map-file=%t/module.modulemap \
