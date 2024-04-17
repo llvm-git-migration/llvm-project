@@ -1313,6 +1313,14 @@ OptionalFileEntryRef HeaderSearch::LookupSubframeworkHeader(
 // File Info Management.
 //===----------------------------------------------------------------------===//
 
+static bool
+headerFileInfoModuleBitsMatchRole(const HeaderFileInfo *HFI,
+                                  ModuleMap::ModuleHeaderRole Role) {
+  return (HFI->isModuleHeader == ModuleMap::isModular(Role)) &&
+         (HFI->isTextualModuleHeader ==
+          ((Role & ModuleMap::TextualHeader) != 0));
+}
+
 static void mergeHeaderFileInfoModuleBits(HeaderFileInfo &HFI,
                                           bool isModuleHeader,
                                           bool isTextualModuleHeader) {
@@ -1432,7 +1440,7 @@ void HeaderSearch::MarkFileModuleHeader(FileEntryRef FE,
     if ((Role & ModuleMap::ExcludedHeader))
       return;
     auto *HFI = getExistingFileInfo(FE);
-    if (HFI && HFI->isModuleHeader)
+    if (HFI && headerFileInfoModuleBitsMatchRole(HFI, Role))
       return;
   }
 
