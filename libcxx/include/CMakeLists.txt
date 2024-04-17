@@ -570,6 +570,8 @@ set(files
   __numeric/transform_reduce.h
   __ostream/basic_ostream.h
   __ostream/print.h
+  __pstl/backend_fwd.h
+  __pstl/backends/default.h
   __pstl/backends/libdispatch.h
   __pstl/backends/serial.h
   __pstl/backends/std_thread.h
@@ -584,6 +586,8 @@ set(files
   __pstl/cpu_algos/stable_sort.h
   __pstl/cpu_algos/transform.h
   __pstl/cpu_algos/transform_reduce.h
+  __pstl/dispatch.h
+  __pstl/run_backend.h
   __random/bernoulli_distribution.h
   __random/binomial_distribution.h
   __random/cauchy_distribution.h
