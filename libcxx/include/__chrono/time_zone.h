@@ -18,6 +18,7 @@
 
 #  include <__chrono/calendar.h>
 #  include <__chrono/duration.h>
+#  include <__chrono/exception.h>
 #  include <__chrono/local_info.h>
 #  include <__chrono/sys_info.h>
 #  include <__chrono/system_clock.h>
@@ -68,6 +69,30 @@ public:
   template <class _Duration>
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI local_info get_info(const local_time<_Duration>& __time) const {
     return __get_info(chrono::time_point_cast<seconds>(__time));
+  }
+
+  // Since the interface promisses throwing, don't add nodiscard.
+  template <class _Duration>
+  _LIBCPP_HIDE_FROM_ABI sys_time<common_type_t<_Duration, seconds>> to_sys(const local_time<_Duration>& __time) const {
+    local_info __info = get_info(__time);
+    switch (__info.result) {
+    case local_info::unique:
+      return sys_time<common_type_t<_Duration, seconds>>{__time.time_since_epoch() - __info.first.offset};
+
+    case local_info::nonexistent:
+      chrono::__throw_nonexistent_local_time(__time, __info);
+
+    case local_info::ambiguous:
+      chrono::__throw_ambiguous_local_time(__time, __info);
+    }
+
+    // TODO TZDB The Standard does not specify anything in these cases.
+    _LIBCPP_ASSERT_ARGUMENT_WITHIN_DOMAIN(
+        __info.result != -1, "cannot convert the local time; it would be before the minimum system clock value");
+    _LIBCPP_ASSERT_ARGUMENT_WITHIN_DOMAIN(
+        __info.result != -2, "cannot convert the local time; it would be after the maximum system clock value");
+
+    return {};
   }
 
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const __impl& __implementation() const noexcept { return *__impl_; }

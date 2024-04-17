@@ -1112,6 +1112,7 @@ module std_private_chrono_duration               [system] {
   header "__chrono/duration.h"
   export std_private_type_traits_is_convertible
 }
+module std_private_chrono_exception              [system] { header "__chrono/exception.h" }
 module std_private_chrono_file_clock             [system] { header "__chrono/file_clock.h" }
 module std_private_chrono_formatter              [system] {
   header "__chrono/formatter.h"
