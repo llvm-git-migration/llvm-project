@@ -72,7 +72,6 @@ set(files
   __algorithm/partition_point.h
   __algorithm/pop_heap.h
   __algorithm/prev_permutation.h
-  __algorithm/pstl_frontend_dispatch.h
   __algorithm/pstl.h
   __algorithm/push_heap.h
   __algorithm/ranges_adjacent_find.h
@@ -564,6 +563,8 @@ set(files
   __numeric/transform_exclusive_scan.h
   __numeric/transform_inclusive_scan.h
   __numeric/transform_reduce.h
+  __pstl/backend_fwd.h
+  __pstl/backends/default.h
   __pstl/backends/libdispatch.h
   __pstl/backends/serial.h
   __pstl/backends/std_thread.h
@@ -578,6 +579,8 @@ set(files
   __pstl/cpu_algos/stable_sort.h
   __pstl/cpu_algos/transform.h
   __pstl/cpu_algos/transform_reduce.h
+  __pstl/dispatch.h
+  __pstl/run_backend.h
   __random/bernoulli_distribution.h
   __random/binomial_distribution.h
   __random/cauchy_distribution.h
