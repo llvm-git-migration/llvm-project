@@ -26,34 +26,34 @@ body: |
   ; RegAlloc-NEXT:   renamable $vgpr1 = COPY renamable $sgpr14
   ; RegAlloc-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; RegAlloc-NEXT:   renamable $vgpr5 = V_MBCNT_LO_U32_B32_e64 -1, 0, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr16 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr18 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_OR_B32 killed renamable $sgpr14, 16, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $vgpr5 = V_LSHLREV_B32_e64 5, $vgpr16, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr5 = V_LSHLREV_B32_e64 5, $vgpr18, implicit $exec
   ; RegAlloc-NEXT:   renamable $vgpr6 = COPY killed renamable $sgpr14
   ; RegAlloc-NEXT:   renamable $vgpr7 = V_OR_B32_e64 16, $vgpr5, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   renamable $vgpr14_vgpr15_vgpr16_vgpr17 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; RegAlloc-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   renamable $vgpr9_vgpr10_vgpr11_vgpr12 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; RegAlloc-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr4_vgpr5_vgpr6_vgpr7 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr7, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; RegAlloc-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr1 = COPY renamable $vgpr7
-  ; RegAlloc-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr28 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr5_vgpr6_vgpr7_vgpr8 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr7, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr13 = COPY renamable $vgpr8
+  ; RegAlloc-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr15, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr28 = V_READFIRSTLANE_B32 $vgpr16, implicit $exec
   ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr14_sgpr15, killed renamable $sgpr18_sgpr19, implicit-def $scc
-  ; RegAlloc-NEXT:   renamable $sgpr29 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr29 = V_READFIRSTLANE_B32 killed $vgpr17, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr16_sgpr17, killed renamable $sgpr20_sgpr21, implicit-def $scc
-  ; RegAlloc-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr15 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr26_sgpr27, killed renamable $sgpr22_sgpr23, implicit-def $scc
   ; RegAlloc-NEXT:   renamable $sgpr16 = S_CSELECT_B32 1, 0, implicit $scc
@@ -62,12 +62,12 @@ body: |
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, killed renamable $sgpr15, implicit-def dead $scc
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr16, killed renamable $sgpr14, implicit-def dead $scc
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr17, killed renamable $sgpr14, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $sgpr16_sgpr17 = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr16, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr16_sgpr17 = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr18, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
   ; RegAlloc-NEXT:   $scc = COPY killed renamable $sgpr14
   ; RegAlloc-NEXT:   renamable $sgpr14 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 killed renamable $sgpr16_sgpr17, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $vgpr3 = IMPLICIT_DEF
+  ; RegAlloc-NEXT:   renamable $vgpr15 = IMPLICIT_DEF
   ; RegAlloc-NEXT:   renamable $sgpr16_sgpr17 = COPY $exec, implicit-def $exec
   ; RegAlloc-NEXT:   renamable $sgpr18_sgpr19 = S_AND_B64 renamable $sgpr16_sgpr17, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
   ; RegAlloc-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 renamable $sgpr18_sgpr19, killed renamable $sgpr16_sgpr17, implicit-def dead $scc
@@ -77,7 +77,7 @@ body: |
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT: bb.1:
   ; RegAlloc-NEXT:   successors: %bb.3(0x40000000), %bb.5(0x40000000)
-  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT:   renamable $sgpr12_sgpr13 = S_OR_SAVEEXEC_B64 killed renamable $sgpr12_sgpr13, implicit-def $exec, implicit-def $scc, implicit $exec
   ; RegAlloc-NEXT:   $exec = S_XOR_B64_term $exec, renamable $sgpr12_sgpr13, implicit-def $scc
@@ -89,41 +89,41 @@ body: |
   ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT:   renamable $sgpr15 = S_OR_B32 renamable $sgpr14, 2, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr15
-  ; RegAlloc-NEXT:   renamable $vgpr8_vgpr9 = IMPLICIT_DEF
-  ; RegAlloc-NEXT:   renamable $vgpr1_vgpr2 = IMPLICIT_DEF
-  ; RegAlloc-NEXT:   renamable $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7 = IMPLICIT_DEF
+  ; RegAlloc-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr15
+  ; RegAlloc-NEXT:   renamable $vgpr9_vgpr10 = IMPLICIT_DEF
+  ; RegAlloc-NEXT:   renamable $vgpr13_vgpr14 = IMPLICIT_DEF
+  ; RegAlloc-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8 = IMPLICIT_DEF
   ; RegAlloc-NEXT:   S_BRANCH %bb.1
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT: bb.3:
   ; RegAlloc-NEXT:   successors: %bb.5(0x80000000)
-  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT:   renamable $sgpr7 = S_LSHL_B32 killed renamable $sgpr7, 5, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $vgpr2 = COPY renamable $sgpr7
+  ; RegAlloc-NEXT:   renamable $vgpr1 = COPY renamable $sgpr7
   ; RegAlloc-NEXT:   renamable $sgpr7 = S_OR_B32 killed renamable $sgpr7, 16, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr7
-  ; RegAlloc-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr2, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; RegAlloc-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
-  ; RegAlloc-NEXT:   renamable $vgpr7_vgpr8_vgpr9_vgpr10 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr3, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; RegAlloc-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr6, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr1, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
-  ; RegAlloc-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr20_sgpr21, killed renamable $sgpr16_sgpr17, implicit-def $scc
   ; RegAlloc-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr8 = COPY killed renamable $sgpr7
+  ; RegAlloc-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 killed $vgpr12, implicit $exec
+  ; RegAlloc-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr8, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr7, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr13, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr20_sgpr21, killed renamable $sgpr16_sgpr17, implicit-def $scc
+  ; RegAlloc-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr7 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr22_sgpr23, killed renamable $sgpr18_sgpr19, implicit-def $scc
-  ; RegAlloc-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr10, implicit $exec
+  ; RegAlloc-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
   ; RegAlloc-NEXT:   renamable $sgpr15 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr24_sgpr25, killed renamable $sgpr0_sgpr1, implicit-def $scc
   ; RegAlloc-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
@@ -137,11 +137,11 @@ body: |
   ; RegAlloc-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
   ; RegAlloc-NEXT:   renamable $sgpr0 = S_LSHL_B32 killed renamable $sgpr0, 1, implicit-def dead $scc
   ; RegAlloc-NEXT:   renamable $sgpr0 = S_OR_B32 killed renamable $sgpr0, killed renamable $sgpr14, implicit-def dead $scc
-  ; RegAlloc-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr0
+  ; RegAlloc-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr0
   ; RegAlloc-NEXT:   S_BRANCH %bb.5
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT: bb.4:
-  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
+  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT:   renamable $sgpr8_sgpr9 = S_LOAD_DWORDX2_IMM killed renamable $sgpr8_sgpr9, 0, 0 :: (invariant load (<2 x s32>), align 16, addrspace 4)
   ; RegAlloc-NEXT:   renamable $vgpr1 = COPY killed renamable $sgpr5
@@ -152,12 +152,12 @@ body: |
   ; RegAlloc-NEXT:   renamable $sgpr4 = S_LSHL_B32 killed renamable $sgpr4, 6, implicit-def dead $scc
   ; RegAlloc-NEXT:   renamable $vgpr0 = V_ADD_U32_e64 killed $sgpr4, killed $vgpr0, 0, implicit $exec
   ; RegAlloc-NEXT:   renamable $vgpr0 = V_ADD_LSHL_U32_e64 killed $vgpr1, killed $vgpr0, 2, implicit $exec
-  ; RegAlloc-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr3, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
+  ; RegAlloc-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr15, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
   ; RegAlloc-NEXT:   S_ENDPGM 0
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT: bb.5:
   ; RegAlloc-NEXT:   successors: %bb.4(0x80000000)
-  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
+  ; RegAlloc-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
   ; RegAlloc-NEXT: {{  $}}
   ; RegAlloc-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr12_sgpr13, implicit-def $scc
   ; RegAlloc-NEXT:   S_BRANCH %bb.4
@@ -182,34 +182,34 @@ body: |
   ; DeadInstDelete-NEXT:   renamable $vgpr1 = COPY renamable $sgpr14
   ; DeadInstDelete-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; DeadInstDelete-NEXT:   renamable $vgpr5 = V_MBCNT_LO_U32_B32_e64 -1, 0, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr16 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr18 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_OR_B32 killed renamable $sgpr14, 16, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $vgpr5 = V_LSHLREV_B32_e64 5, $vgpr16, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr5 = V_LSHLREV_B32_e64 5, $vgpr18, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $vgpr6 = COPY killed renamable $sgpr14
   ; DeadInstDelete-NEXT:   renamable $vgpr7 = V_OR_B32_e64 16, $vgpr5, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   renamable $vgpr14_vgpr15_vgpr16_vgpr17 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   renamable $vgpr9_vgpr10_vgpr11_vgpr12 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; DeadInstDelete-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr4_vgpr5_vgpr6_vgpr7 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr7, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; DeadInstDelete-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr1 = COPY renamable $vgpr7
-  ; DeadInstDelete-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr28 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr5_vgpr6_vgpr7_vgpr8 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr7, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr13 = COPY renamable $vgpr8
+  ; DeadInstDelete-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr15, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr28 = V_READFIRSTLANE_B32 $vgpr16, implicit $exec
   ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr14_sgpr15, killed renamable $sgpr18_sgpr19, implicit-def $scc
-  ; DeadInstDelete-NEXT:   renamable $sgpr29 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr29 = V_READFIRSTLANE_B32 killed $vgpr17, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr16_sgpr17, killed renamable $sgpr20_sgpr21, implicit-def $scc
-  ; DeadInstDelete-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr15 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr26_sgpr27, killed renamable $sgpr22_sgpr23, implicit-def $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr16 = S_CSELECT_B32 1, 0, implicit $scc
@@ -218,12 +218,12 @@ body: |
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, killed renamable $sgpr15, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr16, killed renamable $sgpr14, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr17, killed renamable $sgpr14, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $sgpr16_sgpr17 = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr16, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr16_sgpr17 = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr18, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   $scc = COPY killed renamable $sgpr14
   ; DeadInstDelete-NEXT:   renamable $sgpr14 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 killed renamable $sgpr16_sgpr17, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $vgpr3 = IMPLICIT_DEF
+  ; DeadInstDelete-NEXT:   renamable $vgpr15 = IMPLICIT_DEF
   ; DeadInstDelete-NEXT:   renamable $sgpr16_sgpr17 = COPY $exec, implicit-def $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr18_sgpr19 = S_AND_B64 renamable $sgpr16_sgpr17, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 renamable $sgpr18_sgpr19, killed renamable $sgpr16_sgpr17, implicit-def dead $scc
@@ -233,7 +233,7 @@ body: |
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT: bb.1:
   ; DeadInstDelete-NEXT:   successors: %bb.3(0x40000000), %bb.5(0x40000000)
-  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT:   renamable $sgpr12_sgpr13 = S_OR_SAVEEXEC_B64 killed renamable $sgpr12_sgpr13, implicit-def $exec, implicit-def $scc, implicit $exec
   ; DeadInstDelete-NEXT:   $exec = S_XOR_B64_term $exec, renamable $sgpr12_sgpr13, implicit-def $scc
@@ -245,40 +245,41 @@ body: |
   ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT:   renamable $sgpr15 = S_OR_B32 renamable $sgpr14, 2, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $vgpr8_vgpr9 = IMPLICIT_DEF
-  ; DeadInstDelete-NEXT:   renamable $vgpr1_vgpr2 = IMPLICIT_DEF
-  ; DeadInstDelete-NEXT:   renamable $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7 = IMPLICIT_DEF
+  ; DeadInstDelete-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr15
+  ; DeadInstDelete-NEXT:   renamable $vgpr9_vgpr10 = IMPLICIT_DEF
+  ; DeadInstDelete-NEXT:   renamable $vgpr13_vgpr14 = IMPLICIT_DEF
+  ; DeadInstDelete-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8 = IMPLICIT_DEF
   ; DeadInstDelete-NEXT:   S_BRANCH %bb.1
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT: bb.3:
   ; DeadInstDelete-NEXT:   successors: %bb.5(0x80000000)
-  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr14, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT:   renamable $sgpr7 = S_LSHL_B32 killed renamable $sgpr7, 5, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $vgpr2 = COPY renamable $sgpr7
+  ; DeadInstDelete-NEXT:   renamable $vgpr1 = COPY renamable $sgpr7
   ; DeadInstDelete-NEXT:   renamable $sgpr7 = S_OR_B32 killed renamable $sgpr7, 16, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr7
-  ; DeadInstDelete-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr2, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; DeadInstDelete-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $vgpr7_vgpr8_vgpr9_vgpr10 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr3, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; DeadInstDelete-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr6, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr1, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
-  ; DeadInstDelete-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr20_sgpr21, killed renamable $sgpr16_sgpr17, implicit-def $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr8 = COPY killed renamable $sgpr7
+  ; DeadInstDelete-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 killed $vgpr12, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr8, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr7, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr13, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr20_sgpr21, killed renamable $sgpr16_sgpr17, implicit-def $scc
+  ; DeadInstDelete-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr7 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr22_sgpr23, killed renamable $sgpr18_sgpr19, implicit-def $scc
-  ; DeadInstDelete-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr10, implicit $exec
+  ; DeadInstDelete-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $sgpr15 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr24_sgpr25, killed renamable $sgpr0_sgpr1, implicit-def $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
@@ -292,11 +293,11 @@ body: |
   ; DeadInstDelete-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr0 = S_LSHL_B32 killed renamable $sgpr0, 1, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   renamable $sgpr0 = S_OR_B32 killed renamable $sgpr0, killed renamable $sgpr14, implicit-def dead $scc
-  ; DeadInstDelete-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr0
+  ; DeadInstDelete-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr0
   ; DeadInstDelete-NEXT:   S_BRANCH %bb.5
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT: bb.4:
-  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
+  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT:   renamable $sgpr8_sgpr9 = S_LOAD_DWORDX2_IMM killed renamable $sgpr8_sgpr9, 0, 0 :: (invariant load (<2 x s32>), align 16, addrspace 4)
   ; DeadInstDelete-NEXT:   renamable $vgpr1 = COPY killed renamable $sgpr5
@@ -307,12 +308,12 @@ body: |
   ; DeadInstDelete-NEXT:   renamable $sgpr4 = S_LSHL_B32 killed renamable $sgpr4, 6, implicit-def dead $scc
   ; DeadInstDelete-NEXT:   renamable $vgpr0 = V_ADD_U32_e64 killed $sgpr4, killed $vgpr0, 0, implicit $exec
   ; DeadInstDelete-NEXT:   renamable $vgpr0 = V_ADD_LSHL_U32_e64 killed $vgpr1, killed $vgpr0, 2, implicit $exec
-  ; DeadInstDelete-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr3, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
+  ; DeadInstDelete-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr15, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
   ; DeadInstDelete-NEXT:   S_ENDPGM 0
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT: bb.5:
   ; DeadInstDelete-NEXT:   successors: %bb.4(0x80000000)
-  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
+  ; DeadInstDelete-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
   ; DeadInstDelete-NEXT: {{  $}}
   ; DeadInstDelete-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr12_sgpr13, implicit-def $scc
   ; DeadInstDelete-NEXT:   S_BRANCH %bb.4
