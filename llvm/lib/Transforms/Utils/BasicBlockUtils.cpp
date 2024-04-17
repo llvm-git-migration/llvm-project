@@ -333,6 +333,9 @@ bool llvm::MergeBlockIntoPredecessor(BasicBlock *BB, DomTreeUpdater *DTU,
   // Finally, erase the old block and update dominator info.
   DeleteDeadBlock(BB, DTU);
 
+  // Remove redundant "llvm.dbg" instrunctions after blocks merged.
+  RemoveRedundantDbgInstrs(PredBB);
+
   return true;
 }
 
