@@ -1486,6 +1486,8 @@ define <8 x i8> @vselect_cmp_ne(<8 x i8> %a, <8 x i8> %b, <8 x i8> %c) {
 ; CHECK-GI:       // %bb.0:
 ; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
 ; CHECK-GI-NEXT:    bsl v0.8b, v1.8b, v2.8b
 ; CHECK-GI-NEXT:    ret
   %cmp = icmp ne <8 x i8> %a, %b
@@ -1516,6 +1518,8 @@ define <8 x i8> @vselect_cmpz_ne(<8 x i8> %a, <8 x i8> %b, <8 x i8> %c) {
 ; CHECK-GI-NEXT:    movi v3.2d, #0000000000000000
 ; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v3.8b
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
 ; CHECK-GI-NEXT:    bsl v0.8b, v1.8b, v2.8b
 ; CHECK-GI-NEXT:    ret
   %cmp = icmp ne <8 x i8> %a, zeroinitializer
@@ -1574,6 +1578,8 @@ define <8 x i8> @sext_tst(<8 x i8> %a, <8 x i8> %b, <8 x i8> %c) {
 ; CHECK-GI-NEXT:    and v0.8b, v0.8b, v1.8b
 ; CHECK-GI-NEXT:    cmeq v0.8b, v0.8b, v2.8b
 ; CHECK-GI-NEXT:    mvn v0.8b, v0.8b
+; CHECK-GI-NEXT:    shl v0.8b, v0.8b, #7
+; CHECK-GI-NEXT:    sshr v0.8b, v0.8b, #7
 ; CHECK-GI-NEXT:    ret
   %tmp3 = and <8 x i8> %a, %b
   %tmp4 = icmp ne <8 x i8> %tmp3, zeroinitializer
