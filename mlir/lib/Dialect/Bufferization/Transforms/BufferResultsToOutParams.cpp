@@ -107,7 +107,8 @@ updateFuncOp(func::FuncOp func,
 // the given out-params.
 static LogicalResult updateReturnOps(func::FuncOp func,
                                      ArrayRef<BlockArgument> appendedEntryArgs,
-                                     MemCpyFn memCpyFn) {
+                                     MemCpyFn memCpyFn,
+                                     bool eliminateAllocCopy) {
   auto res = func.walk([&](func::ReturnOp op) {
     SmallVector<Value, 6> copyIntoOutParams;
     SmallVector<Value, 6> keepAsReturnOperands;
@@ -118,10 +119,14 @@ static LogicalResult updateReturnOps(func::FuncOp func,
         keepAsReturnOperands.push_back(operand);
     }
     OpBuilder builder(op);
-    for (auto t : llvm::zip(copyIntoOutParams, appendedEntryArgs)) {
-      if (failed(
-              memCpyFn(builder, op.getLoc(), std::get<0>(t), std::get<1>(t))))
-        return WalkResult::interrupt();
+    for (auto [orig, arg] : llvm::zip(copyIntoOutParams, appendedEntryArgs)) {
+      if (eliminateAllocCopy && isa<memref::AllocOp>(orig.getDefiningOp())) {
+        orig.replaceAllUsesWith(arg);
+        orig.getDefiningOp()->erase();
+      } else {
+        if (failed(memCpyFn(builder, op.getLoc(), orig, arg)))
+          return WalkResult::interrupt();
+      }
     }
     builder.create<func::ReturnOp>(op.getLoc(), keepAsReturnOperands);
     op.erase();
@@ -212,7 +217,8 @@ LogicalResult mlir::bufferization::promoteBufferResultsToOutParams(
       return success();
     };
     if (failed(updateReturnOps(func, appendedEntryArgs,
-                               options.memCpyFn.value_or(defaultMemCpyFn)))) {
+                               options.memCpyFn.value_or(defaultMemCpyFn),
+                               options.eliminateAllocCopy))) {
       return failure();
     }
   }
@@ -233,6 +239,8 @@ struct BufferResultsToOutParamsPass
     // Convert from pass options in tablegen to BufferResultsToOutParamsOpts.
     if (addResultAttribute)
       options.addResultAttribute = true;
+    if (eliminateAllocCopy)
+      options.eliminateAllocCopy = true;
 
     if (failed(bufferization::promoteBufferResultsToOutParams(getOperation(),
                                                               options)))
