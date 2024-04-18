@@ -71,8 +71,9 @@ TEST_F(HostTest, GetProcessInfo) {
   // Test timings
   ASSERT_TRUE(Host::GetProcessInfo(getpid(), Info));
   ProcessInstanceInfo::timespec user_time = Info.GetUserTime();
+  static volatile unsigned u = 0;
   for (unsigned i = 0; i < 10'000'000; i++) {
-    __asm__ __volatile__("" : "+g"(i) : :);
+    u = i;
   }
   ASSERT_TRUE(Host::GetProcessInfo(getpid(), Info));
   ProcessInstanceInfo::timespec next_user_time = Info.GetUserTime();
