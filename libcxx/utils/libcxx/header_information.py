@@ -192,10 +192,10 @@ test = pathlib.Path(os.path.join(libcxx_root, "test"))
 assert libcxx_root.exists()
 
 all_headers = sorted(
-    p.relative_to(include).as_posix() for p in include.rglob("[a-z]*") if is_header(p)
+    p.relative_to(include).as_posix() for p in include.rglob("[_a-z]*") if is_header(p)
 )
 toplevel_headers = sorted(
-    p.relative_to(include).as_posix() for p in include.glob("[a-z]*") if is_header(p)
+    p.relative_to(include).as_posix() for p in include.glob("[_a-z]*") if is_header(p)
 )
 experimental_headers = sorted(
     p.relative_to(include).as_posix()
