@@ -21550,8 +21550,8 @@ bool RISCVTargetLowering::lowerInterleavedStore(StoreInst *SI,
   return true;
 }
 
-bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
-                                                           LoadInst *LI) const {
+bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(
+    IntrinsicInst *DI, SmallVector<Value *> &LeafNodes, LoadInst *LI) const {
   assert(LI->isSimple());
   IRBuilder<> Builder(LI);
 
@@ -21559,10 +21559,13 @@ bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
   if (DI->getIntrinsicID() != Intrinsic::vector_deinterleave2)
     return false;
 
-  unsigned Factor = 2;
+  unsigned Factor = std::max(2, (int)LeafNodes.size());
 
   VectorType *VTy = cast<VectorType>(DI->getOperand(0)->getType());
-  VectorType *ResVTy = cast<VectorType>(DI->getType()->getContainedType(0));
+  VectorType *ResVTy =
+      (LeafNodes.size() > 0)
+          ? cast<VectorType>(LeafNodes.front()->getType())
+          : cast<VectorType>(DI->getType()->getContainedType(0));
 
   if (!isLegalInterleavedAccessType(ResVTy, Factor, LI->getAlign(),
                                     LI->getPointerAddressSpace(),
@@ -21590,6 +21593,19 @@ bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
                                            {ResVTy, XLenTy});
     VL = Constant::getAllOnesValue(XLenTy);
     Ops.append(Factor, PoisonValue::get(ResVTy));
+    Ops.append({LI->getPointerOperand(), VL});
+    Value *Vlseg = Builder.CreateCall(VlsegNFunc, Ops);
+    //-----------
+    if (Factor == 2) {
+      DI->replaceAllUsesWith(Vlseg);
+      return true;
+    }
+    for (unsigned I = 0; I < LeafNodes.size(); I++) {
+      auto CurrentExtract = LeafNodes[I];
+      Value *NewExtract = Builder.CreateExtractValue(Vlseg, I);
+      CurrentExtract->replaceAllUsesWith(NewExtract);
+    }
+    return true;
   }
 
   Ops.append({LI->getPointerOperand(), VL});
@@ -21600,8 +21616,8 @@ bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
   return true;
 }
 
-bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
-                                                          StoreInst *SI) const {
+bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(
+    IntrinsicInst *II, SmallVector<Value *> &LeafNodes, StoreInst *SI) const {
   assert(SI->isSimple());
   IRBuilder<> Builder(SI);
 
@@ -21609,10 +21625,10 @@ bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
   if (II->getIntrinsicID() != Intrinsic::vector_interleave2)
     return false;
 
-  unsigned Factor = 2;
+  unsigned Factor = LeafNodes.size();
 
   VectorType *VTy = cast<VectorType>(II->getType());
-  VectorType *InVTy = cast<VectorType>(II->getOperand(0)->getType());
+  VectorType *InVTy = cast<VectorType>(LeafNodes.front()->getType());
 
   if (!isLegalInterleavedAccessType(InVTy, Factor, SI->getAlign(),
                                     SI->getPointerAddressSpace(),
@@ -21638,6 +21654,11 @@ bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
     VssegNFunc = Intrinsic::getDeclaration(SI->getModule(), IntrIds[Factor - 2],
                                            {InVTy, XLenTy});
     VL = Constant::getAllOnesValue(XLenTy);
+    SmallVector<Value *> Args(LeafNodes);
+    Args.push_back(SI->getPointerOperand());
+    Args.push_back(VL);
+    Builder.CreateCall(VssegNFunc, Args);
+    return true;
   }
 
   Builder.CreateCall(VssegNFunc, {II->getOperand(0), II->getOperand(1),
