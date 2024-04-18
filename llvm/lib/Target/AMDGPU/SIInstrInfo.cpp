@@ -217,10 +217,20 @@ bool SIInstrInfo::isSafeToSink(MachineInstr &MI,
         SmallVector<MachineBasicBlock *, 1> ExitBlocks;
         FromCycle->getExitBlocks(ExitBlocks);
         assert(ExitBlocks.size() == 1);
-        assert(ExitBlocks[0]->getSinglePredecessor());
-
+        // After structurize-cfg, cycle exit block should have exactly one
+        // predecessor (the cycle exit). Early-tailduplication can removed that
+        // block so we have to search for predecessor that is in cycle.
+        // most of the times there is only one predecessor.
+        const MachineBasicBlock *CycleExitMBB = nullptr;
+        for (MachineBasicBlock *MBB : ExitBlocks[0]->predecessors()) {
+          if (FromCycle->contains(MBB)) {
+            assert(CycleExitMBB == nullptr);
+            CycleExitMBB = MBB;
+          }
+        }
+        assert(CycleExitMBB);
         // FromCycle has divergent exit condition.
-        if (hasDivergentBranch(ExitBlocks[0]->getSinglePredecessor())) {
+        if (hasDivergentBranch(CycleExitMBB)) {
           return false;
         }
 
