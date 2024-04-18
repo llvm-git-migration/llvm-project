@@ -16,8 +16,7 @@ configure_compiler_rt_lit_site_cfg(
   ${CMAKE_CURRENT_SOURCE_DIR}/lit.common.configured.in
   ${CMAKE_CURRENT_BINARY_DIR}/lit.common.configured)
 
-# BlocksRuntime (and most of builtins) testsuites are not yet ported to lit.
-# add_subdirectory(BlocksRuntime)
+add_subdirectory(BlocksRuntime)
 
 set(SANITIZER_COMMON_LIT_TEST_DEPS)
 
