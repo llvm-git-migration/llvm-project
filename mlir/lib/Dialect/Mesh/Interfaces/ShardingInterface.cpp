@@ -97,7 +97,7 @@ checkOperandAffineExpr(AffineExpr expr, unsigned numDims) {
 
 FailureOr<std::pair<bool, MeshShardingAttr>>
 mesh::getMeshShardingAttr(OpResult result) {
-  Value val = result.cast<Value>();
+  Value val = cast<Value>(result);
   bool anyShardedForDef = llvm::any_of(val.getUsers(), [](Operation *user) {
     auto shardOp = llvm::dyn_cast<mesh::ShardOp>(user);
     if (!shardOp)

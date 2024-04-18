@@ -202,10 +202,9 @@ createCollectiveProcessGroupSize(MeshOp mesh, ArrayRef<MeshAxis> axes,
                                  ImplicitLocOpBuilder &builder) {
   Operation::result_range meshShape =
       builder.create<mesh::MeshShapeOp>(mesh, axes).getResults();
-  return arith::createProduct(builder, builder.getLoc(),
-                              llvm::to_vector_of<Value>(meshShape),
-                              builder.getIndexType())
-      .cast<TypedValue<IndexType>>();
+  return cast<TypedValue<IndexType>>(arith::createProduct(
+      builder, builder.getLoc(), llvm::to_vector_of<Value>(meshShape),
+      builder.getIndexType()));
 }
 
 TypedValue<IndexType> createProcessLinearIndex(StringRef mesh,

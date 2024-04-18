@@ -64,8 +64,7 @@ protected:
   /// Trait to check whether `ValueT` provides a 'dyn_cast' method with type
   /// `CastT`.
   template <typename ValueT, typename CastT>
-  using has_dyn_cast_t =
-      decltype(std::declval<ValueT &>().template dyn_cast<CastT>());
+  using has_dyn_cast_t = decltype(dyn_cast<CastT>(std::declval<ValueT &>()));
 
   /// Attempt to dyn_cast the given `value` to `CastT`. This overload is
   /// selected if `value` already has a suitable dyn_cast method.
