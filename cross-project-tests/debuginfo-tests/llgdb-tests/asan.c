@@ -3,7 +3,7 @@
 // REQUIRES: !asan, compiler-rt
 //           Zorg configures the ASAN stage2 bots to not build the asan
 //           compiler-rt. Only run this test on non-asanified configurations.
-// XFAIL: !system-darwin && gdb-clang-incompatibility
+// XFAIL: gdb-clang-incompatibility
 
 struct S {
   int a[8];
