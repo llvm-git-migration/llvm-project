@@ -50,14 +50,19 @@ public:
   /// Casting utility functions. These are deprecated and will be removed,
   /// please prefer using the `llvm` namespace variants instead.
   template <typename... Tys>
+  [[deprecated("Use isa<U>() instead")]]
   bool isa() const;
   template <typename... Tys>
+  [[deprecated("Use isa_and_nonnull<U>() instead")]]
   bool isa_and_nonnull() const;
   template <typename U>
+  [[deprecated("Use dyn_cast<U>() instead")]]
   U dyn_cast() const;
   template <typename U>
+  [[deprecated("Use dyn_cast_or_null<U>() instead")]]
   U dyn_cast_or_null() const;
   template <typename U>
+  [[deprecated("Use cast<U>() instead")]]
   U cast() const;
 
   /// Return a unique identifier for the concrete attribute type. This is used
@@ -172,7 +177,7 @@ bool Attribute::isa() const {
 
 template <typename... Tys>
 bool Attribute::isa_and_nonnull() const {
-  return llvm::isa_and_present<Tys...>(*this);
+  return llvm::isa_and_nonnull<Tys...>(*this);
 }
 
 template <typename U>
@@ -182,7 +187,7 @@ U Attribute::dyn_cast() const {
 
 template <typename U>
 U Attribute::dyn_cast_or_null() const {
-  return llvm::dyn_cast_if_present<U>(*this);
+  return llvm::dyn_cast_or_null<U>(*this);
 }
 
 template <typename U>
