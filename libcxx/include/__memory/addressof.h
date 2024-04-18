@@ -23,7 +23,7 @@ inline _LIBCPP_CONSTEXPR_SINCE_CXX17 _LIBCPP_NO_CFI _LIBCPP_HIDE_FROM_ABI _Tp* a
   return __builtin_addressof(__x);
 }
 
-#if defined(_LIBCPP_HAS_OBJC_ARC) && !defined(_LIBCPP_PREDEFINED_OBJC_ARC_ADDRESSOF)
+#if _LIBCPP_HAS_OBJC_ARC && !defined(_LIBCPP_PREDEFINED_OBJC_ARC_ADDRESSOF)
 // Objective-C++ Automatic Reference Counting uses qualified pointers
 // that require special addressof() signatures. When
 // _LIBCPP_PREDEFINED_OBJC_ARC_ADDRESSOF is defined, the compiler
