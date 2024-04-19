@@ -271,11 +271,11 @@
 // RUN:   2>&1 | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 
 // RUN: %clang -### -funsafe-math-optimizations -fno-reciprocal-math -c %s \
-// RUN:   2>&1 | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
+// RUN:   2>&1 | FileCheck --check-prefix=CHECK-REASSOC-NO-UNSAFE-MATH %s
 // RUN: %clang -### -funsafe-math-optimizations -fsigned-zeros -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 // RUN: %clang -### -funsafe-math-optimizations -ftrapping-math -c %s 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
+// RUN:   | FileCheck --check-prefix=CHECK-TRAPPING-NO-UNSAFE-MATH %s
 // RUN: %clang -### -funsafe-math-optimizations -fno-unsafe-math-optimizations \
 // RUN:     -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
@@ -283,18 +283,20 @@
 // RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 
 // RUN: %clang -### -ffast-math -fno-reciprocal-math -c %s 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
+// RUN:   | FileCheck --check-prefix=CHECK-REASSOC-NO-UNSAFE-MATH %s
 // RUN: %clang -### -ffast-math -fsigned-zeros -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 // RUN: %clang -### -ffast-math -ftrapping-math -c %s 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
+// RUN:   | FileCheck --check-prefix=CHECK-TRAPPING-NO-UNSAFE-MATH %s
 // RUN: %clang -### -ffast-math -fno-unsafe-math-optimizations -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 
 // CHECK-NO-UNSAFE-MATH: "-cc1"
 // CHECK-NO-UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
-// CHECK-NO_UNSAFE-MATH-NOT: "-mreassociate"
+// CHECK-NO-UNSAFE-MATH-NOT: "-mreassociate"
 // CHECK-NO-UNSAFE-MATH: "-o"
+// CHECK-NO-UNSAFE-MATH-NOT: "-ffp-exception-behavior=strict"
+// CHECK-TRAPPING-NO-UNSAFE-MATH: "-ffp-exception-behavior=strict"
 
 
 // Reassociate is allowed because it does not require reciprocal-math.
@@ -304,8 +306,8 @@
 // RUN:   | FileCheck --check-prefix=CHECK-REASSOC-NO-UNSAFE-MATH %s
 
 // CHECK-REASSOC-NO-UNSAFE-MATH: "-cc1"
-// CHECK-REASSOC-NO_UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
-// CHECK-REASSOC-NO_UNSAFE-MATH: "-mreassociate"
+// CHECK-REASSOC-NO-UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
+// CHECK-REASSOC-NO-UNSAFE-MATH: "-mreassociate"
 // CHECK-REASSOC-NO-UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
 // CHECK-REASSOC-NO-UNSAFE-MATH: "-o"
 
@@ -318,12 +320,12 @@
 
 // RUN: %clang -### -fassociative-math -freciprocal-math -fno-signed-zeros \
 // RUN:     -fno-trapping-math -ftrapping-math -c %s 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-NO-REASSOC-NO-UNSAFE-MATH %s
+// RUN:   | FileCheck --check-prefix=CHECK-NO-UNSAFE-MATH %s
 
 // CHECK-NO-REASSOC-NO-UNSAFE-MATH: "-cc1"
-// CHECK-NO-REASSOC-NO_UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
-// CHECK-NO-REASSOC-NO_UNSAFE-MATH-NOT: "-mreassociate"
-// CHECK-NO-REASSOC-NO_UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
+// CHECK-NO-REASSOC-NO-UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
+// CHECK-NO-REASSOC-NO-UNSAFE-MATH-NOT: "-mreassociate"
+// CHECK-NO-REASSOC-NO-UNSAFE-MATH-NOT: "-funsafe-math-optimizations"
 // CHECK-NO-REASSOC-NO-UNSAFE-MATH: "-o"
 
 
