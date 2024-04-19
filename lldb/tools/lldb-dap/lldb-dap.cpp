@@ -503,6 +503,13 @@ void EventThreadFunction() {
             SendContinuedEvent();
             break;
           case lldb::eStateExited:
+            const int exit_status = process.GetExitStatus();
+            const char * const exit_description = process.GetExitDescription();
+            g_dap.SendFormattedOutput(OutputType::Console,
+              "Process %" PRIu64 " exited with status = %i (0x%8.8x) %s\n",
+              process.GetProcessID(), exit_status, exit_status,
+              exit_description ? exit_description : "");
+
             // When restarting, we can get an "exited" event for the process we
             // just killed with the old PID, or even with no PID. In that case
             // we don't have to terminate the session.
