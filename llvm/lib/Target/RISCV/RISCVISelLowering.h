@@ -41,6 +41,7 @@ enum NodeType : unsigned {
   /// The lhs and rhs are XLenVT integers. The true and false values can be
   /// integer or floating point.
   SELECT_CC,
+  SELECTIMM_CC,
   BR_CC,
   BuildPairF64,
   SplitF64,

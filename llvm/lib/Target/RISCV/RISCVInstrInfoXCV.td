@@ -10,6 +10,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+def SDT_RISCVSelectImmCC : SDTypeProfile<1, 5, [SDTCisSameAs<0, 1>,
+                                             SDTCisVT<2, i32>,
+                                             SDTCisVT<3, OtherVT>,
+                                             SDTCisSameAs<0, 4>,
+                                             SDTCisSameAs<4, 5>]>;
+
+def riscv_selectimmcc  : SDNode<"RISCVISD::SELECTIMM_CC", SDT_RISCVSelectImmCC>;
+
 let DecoderNamespace = "XCVbitmanip" in {
   class CVInstBitManipRII<bits<2> funct2, bits<3> funct3, dag outs, dag ins,
                       string opcodestr, string argstr>
@@ -703,4 +711,41 @@ let Predicates = [HasVendorXCVbitmanip, IsRV32] in {
              cv_tuimm2:$radix),
             (CV_BITREV GPR:$rs1, cv_tuimm2:$radix, cv_tuimm5:$pts)>;
   def : Pat<(bitreverse (XLenVT GPR:$rs)), (CV_BITREV GPR:$rs, 0, 0)>;
+}
+
+//===----------------------------------------------------------------------===//
+// Patterns for immediate branching operations 
+//===----------------------------------------------------------------------===//
+
+def IMMCCtoRISCVCC : SDNodeXForm<riscv_selectimmcc, [{
+    ISD::CondCode CC = cast<CondCodeSDNode>(N->getOperand(2))->get();
+    RISCVCC::CondCode BrCC = getRISCVCCForIntCC(CC);
+    return CurDAG->getTargetConstant(BrCC, SDLoc(N), Subtarget->getXLenVT());
+}]>;
+
+def riscv_selectimmcc_frag : PatFrag<(ops node:$lhs, node:$rhs, node:$cc,
+                                       node:$truev, node:$falsev),
+                                  (riscv_selectimmcc node:$lhs, node:$rhs,
+                                                  node:$cc, node:$truev,
+                                                  node:$falsev), [{}],
+                                  IMMCCtoRISCVCC>;
+
+let Predicates = [HasVendorXCVbi, IsRV32] in {
+  def : Pat<(riscv_brcc GPR:$rs1, simm5:$imm5, SETEQ, bb:$imm12),
+            (CV_BEQIMM GPR:$rs1, simm5:$imm5, simm13_lsb0:$imm12)>;
+  def : Pat<(riscv_brcc GPR:$rs1, simm5:$imm5, SETNE, bb:$imm12),
+            (CV_BNEIMM GPR:$rs1, simm5:$imm5, simm13_lsb0:$imm12)>;
+
+  let usesCustomInserter = 1 in
+  def Select_IMM_Using_CC_GPR : Pseudo<(outs GPR:$dst),
+                             (ins GPR:$lhs, simm5:$imm5, ixlenimm:$cc,
+                              GPR:$truev, GPR:$falsev),
+                             [(set GPR:$dst,
+                               (riscv_selectimmcc_frag:$cc (i32 GPR:$lhs), simm5:$imm5, cond,
+                                                        (i32 GPR:$truev), GPR:$falsev))]>;
+
+  def : Pat<(riscv_selectimmcc_frag:$cc (i32 GPR:$lhs), simm5:$Constant, SETEQ, (i32 GPR:$truev),
+                                     GPR:$falsev),
+            (Select_IMM_Using_CC_GPR GPR:$lhs, simm5:$Constant,
+             (IMMCCtoRISCVCC $cc), GPR:$truev, GPR:$falsev)>;
 }
