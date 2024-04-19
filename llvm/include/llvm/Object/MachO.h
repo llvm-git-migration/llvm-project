@@ -136,7 +136,7 @@ public:
   // Used to check a Mach-O Bind or Rebase entry for errors when iterating.
   const char* checkSegAndOffsets(int32_t SegIndex, uint64_t SegOffset,
                                  uint8_t PointerSize, uint32_t Count=1,
-                                 uint32_t Skip=0);
+                                 uint64_t Skip=0);
   // Used with valid SegIndex/SegOffset values from checked entries.
   StringRef segmentName(int32_t SegIndex);
   StringRef sectionName(int32_t SegIndex, uint64_t SegOffset);
@@ -577,7 +577,7 @@ public:
   // This is used by MachOBindEntry::moveNext() to validate a MachOBindEntry.
   const char *BindEntryCheckSegAndOffsets(int32_t SegIndex, uint64_t SegOffset,
                                          uint8_t PointerSize, uint32_t Count=1,
-                                          uint32_t Skip=0) const {
+                                          uint64_t Skip=0) const {
     return BindRebaseSectionTable->checkSegAndOffsets(SegIndex, SegOffset,
                                                      PointerSize, Count, Skip);
   }
@@ -592,7 +592,7 @@ public:
                                             uint64_t SegOffset,
                                             uint8_t PointerSize,
                                             uint32_t Count=1,
-                                            uint32_t Skip=0) const {
+                                            uint64_t Skip=0) const {
     return BindRebaseSectionTable->checkSegAndOffsets(SegIndex, SegOffset,
                                                       PointerSize, Count, Skip);
   }
