@@ -535,6 +535,7 @@ Bug Fixes to C++ Support
 - Fix a crash when deducing ``auto`` from an invalid dereference (#GH88329).
 - Fix a crash in requires expression with templated base class member function. Fixes (#GH84020).
 - Placement new initializes typedef array with correct size (#GH41441)
+- Fixed a use-after-free bug in parsing of type constraints with default arguments that involve lambdas. (#GH67235)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
