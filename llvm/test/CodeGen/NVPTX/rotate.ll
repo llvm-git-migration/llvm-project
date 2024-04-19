@@ -58,3 +58,46 @@ define i32 @rotl0(i32 %x) {
   %t2 = or i32 %t0, %t1
   ret i32 %t2
 }
+
+declare i64 @llvm.fshl.i64(i64, i64, i64)
+declare i64 @llvm.fshr.i64(i64, i64, i64)
+
+; SM35: rotl64
+define i64 @rotl64(i64 %a, i64 %n) {
+; SM35: and.b32 {{.*}}, 63;
+; SM35: shl.b64
+; SM35: sub.u32
+; SM35: shr.b64
+; SM35: add.u64
+  %val = tail call i64 @llvm.fshl.i64(i64 %a, i64 %a, i64 %n)
+  ret i64 %val
+}
+
+; SM35: rotl64_imm
+define i64 @rotl64_imm(i64 %a) {
+; SM35: shl.b64 {{.*}}, 2;
+; SM35: shr.b64 {{.*}}, 62;
+; SM35: add.u64
+  %val = tail call i64 @llvm.fshl.i64(i64 %a, i64 %a, i64 66)
+  ret i64 %val
+}
+
+; SM35: rotr64
+define i64 @rotr64(i64 %a, i64 %n) {
+; SM35: and.b32 {{.*}}, 63;
+; SM35: shr.b64
+; SM35: sub.u32
+; SM35: shl.b64
+; SM35: add.u64
+  %val = tail call i64 @llvm.fshr.i64(i64 %a, i64 %a, i64 %n)
+  ret i64 %val
+}
+
+; SM35: rotr64_imm
+define i64 @rotr64_imm(i64 %a) {
+; SM35: shl.b64 {{.*}}, 62;
+; SM35: shr.b64 {{.*}}, 2;
+; SM35: add.u64
+  %val = tail call i64 @llvm.fshr.i64(i64 %a, i64 %a, i64 66)
+  ret i64 %val
+}
