@@ -100,7 +100,7 @@ void XRayInstrumentation::replaceRetWithPatchableRet(
         //   PATCHABLE_RET <Opcode>, <Operand>...
         Opc = TargetOpcode::PATCHABLE_RET;
       }
-      if (TII->isTailCall(T) && op.HandleTailcall) {
+      if (TII->isTailCall(T) && T.isBarrier() && op.HandleTailcall) {
         // Treat the tail call as a return instruction, which has a
         // different-looking sled than the normal return case.
         Opc = TargetOpcode::PATCHABLE_TAIL_CALL;
@@ -131,7 +131,7 @@ void XRayInstrumentation::prependRetWithPatchableExit(
           (op.HandleAllReturns || T.getOpcode() == TII->getReturnOpcode())) {
         Opc = TargetOpcode::PATCHABLE_FUNCTION_EXIT;
       }
-      if (TII->isTailCall(T) && op.HandleTailcall) {
+      if (TII->isTailCall(T) && T.isBarrier() && op.HandleTailcall) {
         Opc = TargetOpcode::PATCHABLE_TAIL_CALL;
       }
       if (Opc != 0) {
