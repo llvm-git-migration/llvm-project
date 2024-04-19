@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14, c++26
+// UNSUPPORTED: standard-le-c++14, standard-ge-c++26
 // UNSUPPORTED: no-wide-characters
 
 // <codecvt>

@@ -6,7 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14, c++26
+// REQUIRES: standard-ge-c++17
+// UNSUPPORTED: standard-ge-c++26
 
 // XFAIL: no-wide-characters
 
