@@ -3815,27 +3815,6 @@ InstructionCost AArch64TTIImpl::getSpliceCost(VectorType *Tp, int Index) {
   return LegalizationCost * LT.first;
 }
 
-/// Check if the mask is a DE-interleave mask of the given factor
-/// \p Factor like:
-///     <Index, Index+Factor, ..., Index+(NumElts-1)*Factor>
-static bool isDeInterleaveMaskOfFactor(ArrayRef<int> Mask, unsigned Factor) {
-  // Check all potential start indices from 0 to (Factor - 1).
-  for (unsigned Index = 0; Index < Factor; Index++) {
-    unsigned i = 0;
-
-    // Check that elements are in ascending order by Factor. Ignore undef
-    // elements.
-    for (; i < Mask.size(); i++)
-      if (Mask[i] >= 0 && static_cast<unsigned>(Mask[i]) != Index + i * Factor)
-        break;
-
-    if (i == Mask.size())
-      return true;
-  }
-
-  return false;
-}
-
 InstructionCost AArch64TTIImpl::getShuffleCost(
     TTI::ShuffleKind Kind, VectorType *Tp, ArrayRef<int> Mask,
     TTI::TargetCostKind CostKind, int Index, VectorType *SubTp,
@@ -3853,8 +3832,8 @@ InstructionCost AArch64TTIImpl::getShuffleCost(
     // but we model it with a cost of LT.first so that LD3/LD4 have a higher
     // cost than just the load.
     if (Args.size() >= 1 && isa<LoadInst>(Args[0]) &&
-        (isDeInterleaveMaskOfFactor(Mask, 3) ||
-         isDeInterleaveMaskOfFactor(Mask, 4)))
+        (ShuffleVectorInst::isDeInterleaveMaskOfFactor(Mask, 3) ||
+         ShuffleVectorInst::isDeInterleaveMaskOfFactor(Mask, 4)))
       return std::max<InstructionCost>(1, LT.first / 4);
 
     // Check for ST3/ST4 instructions, which are represented in llvm IR as
