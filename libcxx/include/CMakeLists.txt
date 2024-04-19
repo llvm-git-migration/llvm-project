@@ -1068,12 +1068,6 @@ if (LIBCXX_INSTALL_HEADERS)
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     COMPONENT cxx-headers)
 
-  # Install the generated modulemap file to the generic include dir.
-  install(FILES "${LIBCXX_GENERATED_INCLUDE_DIR}/module.modulemap"
-    DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}"
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    COMPONENT cxx-headers)
-
   if (NOT CMAKE_CONFIGURATION_TYPES)
     add_custom_target(install-cxx-headers
                       DEPENDS cxx-headers
