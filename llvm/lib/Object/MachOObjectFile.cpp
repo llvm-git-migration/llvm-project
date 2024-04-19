@@ -4394,11 +4394,11 @@ BindRebaseSegInfo::BindRebaseSegInfo(const object::MachOObjectFile *Obj) {
 // that fully contains a pointer at that location. Multiple fixups in a bind
 // (such as with the BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB opcode) can
 // be tested via the Count and Skip parameters.
-const char * BindRebaseSegInfo::checkSegAndOffsets(int32_t SegIndex,
-                                                   uint64_t SegOffset,
-                                                   uint8_t PointerSize,
-                                                   uint32_t Count,
-                                                   uint64_t Skip) {
+const char *BindRebaseSegInfo::checkSegAndOffsets(int32_t SegIndex,
+                                                  uint64_t SegOffset,
+                                                  uint8_t PointerSize,
+                                                  uint32_t Count,
+                                                  uint64_t Skip) {
   if (SegIndex == -1)
     return "missing preceding *_OPCODE_SET_SEGMENT_AND_OFFSET_ULEB";
   if (SegIndex >= MaxSegIndex)
