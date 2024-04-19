@@ -12,6 +12,7 @@
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/AutoUpgrade.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfoMetadata.h"
@@ -399,6 +400,9 @@ class IRLinker {
   /// A metadata map that's shared between IRLinker instances.
   MDMapT &SharedMDs;
 
+  /// A list of libcalls that the current target may call.
+  IRMover::LibcallHandler &Libcalls;
+
   /// Mapping of values from what they used to be in Src, to what they are now
   /// in DstM.  ValueToValueMapTy is a ValueMap, which involves some overhead
   /// due to the use of Value handles which the Linker doesn't actually need,
@@ -540,10 +544,12 @@ public:
   IRLinker(Module &DstM, MDMapT &SharedMDs,
            IRMover::IdentifiedStructTypeSet &Set, std::unique_ptr<Module> SrcM,
            ArrayRef<GlobalValue *> ValuesToLink,
-           IRMover::LazyCallback AddLazyFor, bool IsPerformingImport)
+           IRMover::LibcallHandler &Libcalls, IRMover::LazyCallback AddLazyFor,
+           bool IsPerformingImport)
       : DstM(DstM), SrcM(std::move(SrcM)), AddLazyFor(std::move(AddLazyFor)),
         TypeMap(Set), GValMaterializer(*this), LValMaterializer(*this),
-        SharedMDs(SharedMDs), IsPerformingImport(IsPerformingImport),
+        SharedMDs(SharedMDs), Libcalls(Libcalls),
+        IsPerformingImport(IsPerformingImport),
         Mapper(ValueMap, RF_ReuseAndMutateDistinctMDs | RF_IgnoreMissingLocals,
                &TypeMap, &GValMaterializer),
         IndirectSymbolMCID(Mapper.registerAlternateMappingContext(
@@ -1605,13 +1611,26 @@ Error IRLinker::run() {
 
   DstM.setTargetTriple(SrcTriple.merge(DstTriple));
 
+  // Update the target triple's libcall information if it was changed.
+  Libcalls.updateLibcalls(Triple(DstM.getTargetTriple()));
+
   // Loop over all of the linked values to compute type mappings.
   computeTypeMapping();
 
+  bool AddsLibcalls;
   std::reverse(Worklist.begin(), Worklist.end());
   while (!Worklist.empty()) {
     GlobalValue *GV = Worklist.back();
     Worklist.pop_back();
+
+    // If the module already contains libcall functions we need every function
+    // linked in to have `nobuiltin` attributes. Otherwise check if this is a
+    // libcall definition.
+    if (Function *F = dyn_cast<Function>(GV); F && Libcalls.hasLibcalls())
+      F->setAttributes(F->getAttributes().addFnAttribute(F->getContext(),
+                                                         Attribute::NoBuiltin));
+    else
+      AddsLibcalls = Libcalls.checkLibcalls(*GV);
 
     // Already mapped.
     if (ValueMap.find(GV) != ValueMap.end() ||
@@ -1674,6 +1693,14 @@ Error IRLinker::run() {
       }
     }
   }
+
+  // If we have imported a recognized libcall function we can no longer make any
+  // reasonable optimizations based off of its semantics. Add the 'nobuiltin'
+  // attribute to every function to suppress libcall detection.
+  if (AddsLibcalls)
+    for (Function &F : DstM.functions())
+      F.setAttributes(F.getAttributes().addFnAttribute(DstM.getContext(),
+                                                       Attribute::NoBuiltin));
 
   // Merge the module flags into the DstM module.
   return linkModuleFlagsMetadata();
@@ -1757,6 +1784,22 @@ bool IRMover::IdentifiedStructTypeSet::hasType(StructType *Ty) {
   return I == NonOpaqueStructTypes.end() ? false : *I == Ty;
 }
 
+void IRMover::LibcallHandler::updateLibcalls(const Triple &TheTriple) {
+  if (Triples.count(TheTriple.getTriple()))
+    return;
+  Triples.insert(Saver.save(TheTriple.getTriple()));
+
+  // Collect the names of runtime functions that the target may want to call.
+  TargetLibraryInfoImpl TLII(TheTriple);
+  TargetLibraryInfo TLI(TLII);
+  for (unsigned I = 0, E = static_cast<unsigned>(LibFunc::NumLibFuncs); I != E;
+       ++I) {
+    LibFunc F = static_cast<LibFunc>(I);
+    if (TLI.has(F))
+      Libcalls.insert(TLI.getName(F));
+  }
+}
+
 IRMover::IRMover(Module &M) : Composite(M) {
   TypeFinder StructTypes;
   StructTypes.run(M, /* OnlyNamed */ false);
@@ -1778,8 +1821,8 @@ Error IRMover::move(std::unique_ptr<Module> Src,
                     ArrayRef<GlobalValue *> ValuesToLink,
                     LazyCallback AddLazyFor, bool IsPerformingImport) {
   IRLinker TheIRLinker(Composite, SharedMDs, IdentifiedStructTypes,
-                       std::move(Src), ValuesToLink, std::move(AddLazyFor),
-                       IsPerformingImport);
+                       std::move(Src), ValuesToLink, Libcalls,
+                       std::move(AddLazyFor), IsPerformingImport);
   Error E = TheIRLinker.run();
   Composite.dropTriviallyDeadConstantArrays();
   return E;
