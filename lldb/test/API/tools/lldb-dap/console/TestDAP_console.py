@@ -4,10 +4,33 @@ Test lldb-dap setBreakpoints request
 
 import dap_server
 import lldbdap_testcase
+import psutil
 from lldbsuite.test import lldbutil
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 
+def get_latest_pid(process_name):
+    processes = []
+    for proc in psutil.process_iter():
+        try:
+            if proc.name() == process_name:
+                processes += [proc]
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    if len(processes) == 0:
+        print("No lldb-server process found", flush=True, file=sys.stderr)
+        return None
+
+    processes = sorted(processes, key=lambda x:x.create_time())
+    return processes[-1].pid
+
+def killProcess(pid, process_name):
+    process = psutil.Process(pid)
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except psutil.TimeoutExpired:
+        self.assertTrue(False, process_name + " process should have exited by now")
 
 class TestDAP_console(lldbdap_testcase.DAPTestCaseBase):
     def check_lldb_command(
@@ -103,4 +126,28 @@ class TestDAP_console(lldbdap_testcase.DAPTestCaseBase):
             "For more information on any command",
             "Help can be invoked",
             command_escape_prefix="",
+        )
+
+    @skipIfWindows
+    @skipIfRemote
+    def test_exit_status_message(self):
+        source = "main.cpp"
+        program = self.getBuildArtifact("a.out")
+        self.build_and_launch(program, commandEscapePrefix="")
+        breakpoint1_line = line_number(source, "// breakpoint 1")
+        breakpoint_ids = self.set_source_breakpoints(source, [breakpoint1_line])
+        self.continue_to_breakpoints(breakpoint_ids)
+
+        # Kill lldb-server process.
+        process_name = "lldb-server"
+        pid = get_latest_pid(process_name)
+        killProcess(pid, process_name)
+        # Get the console output
+        console_output = self.collect_console(1.0)
+
+        # Verify the exit status message is printed.
+        self.assertIn(
+            "exited with status = -1 (0xffffffff) debugserver died with signal SIGTERM",
+            console_output,
+            "Exit status does not contain message 'exited with status'"
         )
