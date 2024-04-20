@@ -1314,11 +1314,17 @@ bool ToolChain::isFastMathRuntimeAvailable(const ArgList &Args,
     Arg *A =
       Args.getLastArg(options::OPT_ffast_math, options::OPT_fno_fast_math,
                       options::OPT_funsafe_math_optimizations,
-                      options::OPT_fno_unsafe_math_optimizations);
+                      options::OPT_fno_unsafe_math_optimizations,
+                      options::OPT_ffp_model_EQ);
 
     if (!A || A->getOption().getID() == options::OPT_fno_fast_math ||
         A->getOption().getID() == options::OPT_fno_unsafe_math_optimizations)
       return false;
+    if (A && A->getOption().getID() == options::OPT_ffp_model_EQ) {
+      StringRef Model = A->getValue();
+      if (!Model.equals("fast"))
+        return false;
+    }
   }
   // If crtfastmath.o exists add it to the arguments.
   Path = GetFilePath("crtfastmath.o");
