@@ -969,6 +969,9 @@ KnownBits KnownBits::sdiv(const KnownBits &LHS, const KnownBits &RHS,
     Res = (Num.isMinSignedValue() && Denom.isAllOnes())
               ? APInt::getSignedMaxValue(BitWidth)
               : Num.sdiv(Denom);
+    std::optional<bool> sle = KnownBits::sle(LHS, RHS);
+    if (sle && *sle)
+      Known.makeGE(APInt(BitWidth, 1));
   } else if (LHS.isNegative() && RHS.isNonNegative()) {
     // Result is negative if Exact OR -LHS u>= RHS.
     if (Exact || (-LHS.getSignedMaxValue()).uge(RHS.getSignedMaxValue())) {
@@ -1022,6 +1025,9 @@ KnownBits KnownBits::udiv(const KnownBits &LHS, const KnownBits &RHS,
 
   Known.Zero.setHighBits(LeadZ);
   Known = divComputeLowBit(Known, LHS, RHS, Exact);
+  std::optional<bool> uge = KnownBits::uge(LHS, RHS);
+  if (uge && *uge)
+    Known.makeGE(APInt(BitWidth, 1));
 
   return Known;
 }
