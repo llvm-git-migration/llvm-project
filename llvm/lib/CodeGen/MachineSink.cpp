@@ -1969,8 +1969,7 @@ static bool hasRegisterDependency(MachineInstr *MI,
              ++RootReg) {
           if (MO.clobbersPhysReg(*RootReg) &&
               !UsedRegUnits.available(*RootReg)) {
-            HasRegDependency = true;
-            break;
+            return true;
           }
           DefedRegsInCopy.push_back(*RootReg);
         }
