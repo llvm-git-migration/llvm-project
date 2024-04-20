@@ -56,6 +56,7 @@
 #include "llvm/IRPrinter/IRPrintingPasses.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCTargetOptions.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/CodeGen.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
@@ -73,6 +74,7 @@
 #include "llvm/Transforms/Utils/EntryExitInstrumenter.h"
 #include "llvm/Transforms/Utils/LowerInvoke.h"
 #include <cassert>
+#include <stack>
 #include <type_traits>
 #include <utility>
 
@@ -113,12 +115,8 @@ namespace llvm {
 template <typename DerivedT, typename TargetMachineT> class CodeGenPassBuilder {
 public:
   explicit CodeGenPassBuilder(TargetMachineT &TM,
-                              const CGPassBuilderOption &Opts,
-                              PassInstrumentationCallbacks *PIC)
-      : TM(TM), Opt(Opts), PIC(PIC) {
-    // Target could set CGPassBuilderOption::MISchedPostRA to true to achieve
-    //     substitutePass(&PostRASchedulerID, &PostMachineSchedulerID)
-
+                              const CGPassBuilderOption &Opts, PassBuilder &PB)
+      : TM(TM), Opt(Opts), PB(PB), PIC(PB.getPassInstrumentationCallbacks()) {
     // Target should override TM.Options.EnableIPRA in their target-specific
     // LLVMTM ctor. See TargetMachine::setGlobalISel for example.
     if (Opt.EnableIPRA)
@@ -132,12 +130,47 @@ public:
   }
 
   Error buildPipeline(ModulePassManager &MPM, raw_pwrite_stream &Out,
-                      raw_pwrite_stream *DwoOut,
-                      CodeGenFileType FileType) const;
+                      raw_pwrite_stream *DwoOut, CodeGenFileType FileType);
 
-  PassInstrumentationCallbacks *getPassInstrumentationCallbacks() const {
-    return PIC;
+  PassInstrumentationCallbacks *getPassInstrumentationCallbacks() {
+    return PB.getPassInstrumentationCallbacks();
   }
+
+  /// Add one pass to pass manager, it can handle pass nesting automatically.
+  template <typename PassT> void addPass(PassT &&Pass) {
+    using ResultT = decltype(derived().template substitutePass<PassT>());
+    constexpr bool IsVoid = std::is_void_v<ResultT>;
+    StringRef PassName = std::conditional_t<IsVoid, PassT, ResultT>::name();
+
+    if (!runBeforeAdding(PassName))
+      return;
+
+    if constexpr (IsVoid)
+      addPassImpl(std::forward<PassT>(Pass));
+    else
+      addPassImpl(derived().template substitutePass<PassT>());
+
+    runAfterAdding(PassName);
+  }
+
+  /// Add multiple passes.
+  template <typename PassT, typename... PassTs>
+  void addPass(PassT &&Pass, PassTs &&...Passes) {
+    addPass(std::forward<PassT>(Pass));
+    addPass(std::forward<PassTs>(Passes)...);
+  }
+
+  /// Add multiple passes with default constructor.
+  template <typename... PassTs> void addPass() { addPass(PassTs()...); }
+
+  /// @brief Substitute PassT with given pass, target can specialize this
+  /// function template or override it in subclass, if it is overriden by
+  /// subclass, it must return CodeGenPassBuilder::substitutePass() to get
+  /// default return value. See also
+  /// unittests/CodeGen/CodeGenPassBuilderTest.cpp.
+  /// @tparam PassT The pass type that needs to be replaced.
+  /// @return The replaced pass if substitution occurs, otherwise return void.
+  template <typename PassT> auto substitutePass() {}
 
 protected:
   template <typename PassT>
@@ -145,134 +178,56 @@ protected:
       std::declval<Module &>(), std::declval<ModuleAnalysisManager &>()));
 
   template <typename PassT>
+  static constexpr bool is_module_pass_v =
+      is_detected<is_module_pass_t, PassT>::value;
+
+  template <typename PassT>
   using is_function_pass_t = decltype(std::declval<PassT &>().run(
       std::declval<Function &>(), std::declval<FunctionAnalysisManager &>()));
+
+  template <typename PassT>
+  static constexpr bool is_function_pass_v =
+      is_detected<is_function_pass_t, PassT>::value;
 
   template <typename PassT>
   using is_machine_function_pass_t = decltype(std::declval<PassT &>().run(
       std::declval<MachineFunction &>(),
       std::declval<MachineFunctionAnalysisManager &>()));
 
-  // Function object to maintain state while adding codegen IR passes.
-  // TODO: add a Function -> MachineFunction adaptor and merge
-  // AddIRPass/AddMachinePass so we can have a function pipeline that runs both
-  // function passes and machine function passes.
-  class AddIRPass {
-  public:
-    AddIRPass(ModulePassManager &MPM, const DerivedT &PB) : MPM(MPM), PB(PB) {}
-    ~AddIRPass() {
-      if (!FPM.isEmpty())
-        MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-    }
-
-    template <typename PassT>
-    void operator()(PassT &&Pass, StringRef Name = PassT::name()) {
-      static_assert((is_detected<is_function_pass_t, PassT>::value ||
-                     is_detected<is_module_pass_t, PassT>::value) &&
-                    "Only module pass and function pass are supported.");
-
-      if (!PB.runBeforeAdding(Name))
-        return;
-
-      // Add Function Pass
-      if constexpr (is_detected<is_function_pass_t, PassT>::value) {
-        FPM.addPass(std::forward<PassT>(Pass));
-      } else {
-        // Add Module Pass
-        if (!FPM.isEmpty()) {
-          MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-          FPM = FunctionPassManager();
-        }
-
-        MPM.addPass(std::forward<PassT>(Pass));
-      }
-    }
-
-  private:
-    ModulePassManager &MPM;
-    FunctionPassManager FPM;
-    const DerivedT &PB;
-  };
-
-  // Function object to maintain state while adding codegen machine passes.
-  class AddMachinePass {
-  public:
-    AddMachinePass(ModulePassManager &MPM, const DerivedT &PB)
-        : MPM(MPM), PB(PB) {}
-    ~AddMachinePass() {
-      if (!MFPM.isEmpty()) {
-        FunctionPassManager FPM;
-        FPM.addPass(
-            createFunctionToMachineFunctionPassAdaptor(std::move(MFPM)));
-        FPM.addPass(InvalidateAnalysisPass<MachineFunctionAnalysis>());
-        MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-      }
-    }
-
-    template <typename PassT>
-    void operator()(PassT &&Pass, bool Force = false,
-                    StringRef Name = PassT::name()) {
-      static_assert((is_detected<is_machine_function_pass_t, PassT>::value ||
-                     is_detected<is_module_pass_t, PassT>::value) &&
-                    "Only module pass and function pass are supported.");
-
-      if (!Force && !PB.runBeforeAdding(Name))
-        return;
-
-      // Add Function Pass
-      if constexpr (is_detected<is_machine_function_pass_t, PassT>::value) {
-        MFPM.addPass(std::forward<PassT>(Pass));
-      } else {
-        // Add Module Pass
-        if (!MFPM.isEmpty()) {
-          MPM.addPass(createModuleToFunctionPassAdaptor(
-              createFunctionToMachineFunctionPassAdaptor(std::move(MFPM))));
-          MFPM = MachineFunctionPassManager();
-        }
-
-        MPM.addPass(std::forward<PassT>(Pass));
-      }
-
-      for (auto &C : PB.AfterCallbacks)
-        C(Name, MFPM);
-    }
-
-  private:
-    ModulePassManager &MPM;
-    MachineFunctionPassManager MFPM;
-    const DerivedT &PB;
-  };
+  template <typename PassT>
+  static constexpr bool is_machine_function_pass_v =
+      is_detected<is_machine_function_pass_t, PassT>::value;
 
   TargetMachineT &TM;
   CGPassBuilderOption Opt;
+  PassBuilder &PB;
   PassInstrumentationCallbacks *PIC;
 
-  template <typename TMC> TMC &getTM() const { return static_cast<TMC &>(TM); }
-  CodeGenOptLevel getOptLevel() const { return TM.getOptLevel(); }
+  CodeGenOptLevel getOptLevel() { return TM.getOptLevel(); }
 
   /// Check whether or not GlobalISel should abort on error.
   /// When this is disabled, GlobalISel will fall back on SDISel instead of
   /// erroring out.
-  bool isGlobalISelAbortEnabled() const {
+  bool isGlobalISelAbortEnabled() {
     return TM.Options.GlobalISelAbort == GlobalISelAbortMode::Enable;
   }
 
   /// Check whether or not a diagnostic should be emitted when GlobalISel
   /// uses the fallback path. In other words, it will emit a diagnostic
   /// when GlobalISel failed and isGlobalISelAbortEnabled is false.
-  bool reportDiagnosticWhenGlobalISelFallback() const {
+  bool reportDiagnosticWhenGlobalISelFallback() {
     return TM.Options.GlobalISelAbort == GlobalISelAbortMode::DisableWithDiag;
   }
 
   /// addInstSelector - This method should install an instruction selector pass,
   /// which converts from LLVM code to machine instructions.
-  Error addInstSelector(AddMachinePass &) const {
+  Error addInstSelector() {
     return make_error<StringError>("addInstSelector is not overridden",
                                    inconvertibleErrorCode());
   }
 
   /// Target can override this to add GlobalMergePass before all IR passes.
-  void addGlobalMergePass(AddIRPass &) const {}
+  void addGlobalMergePass() {}
 
   /// Add passes that optimize instruction level parallelism for out-of-order
   /// targets. These passes are run while the machine code is still in SSA
@@ -280,11 +235,11 @@ protected:
   ///
   /// All passes added here should preserve the MachineDominatorTree,
   /// MachineLoopInfo, and MachineTraceMetrics analyses.
-  void addILPOpts(AddMachinePass &) const {}
+  void addILPOpts() {}
 
   /// This method may be implemented by targets that want to run passes
   /// immediately before register allocation.
-  void addPreRegAlloc(AddMachinePass &) const {}
+  void addPreRegAlloc() {}
 
   /// addPreRewrite - Add passes to the optimized register allocation pipeline
   /// after register allocation is complete, but before virtual registers are
@@ -298,79 +253,77 @@ protected:
   /// Note if the target overloads addRegAssignAndRewriteOptimized, this may not
   /// be honored. This is also not generally used for the fast variant,
   /// where the allocation and rewriting are done in one pass.
-  void addPreRewrite(AddMachinePass &) const {}
+  void addPreRewrite() {}
 
   /// Add passes to be run immediately after virtual registers are rewritten
   /// to physical registers.
-  void addPostRewrite(AddMachinePass &) const {}
+  void addPostRewrite() {}
 
   /// This method may be implemented by targets that want to run passes after
   /// register allocation pass pipeline but before prolog-epilog insertion.
-  void addPostRegAlloc(AddMachinePass &) const {}
+  void addPostRegAlloc() {}
 
   /// This method may be implemented by targets that want to run passes after
   /// prolog-epilog insertion and before the second instruction scheduling pass.
-  void addPreSched2(AddMachinePass &) const {}
+  void addPreSched2() {}
 
   /// This pass may be implemented by targets that want to run passes
   /// immediately before machine code is emitted.
-  void addPreEmitPass(AddMachinePass &) const {}
+  void addPreEmitPass() {}
 
   /// Targets may add passes immediately before machine code is emitted in this
   /// callback. This is called even later than `addPreEmitPass`.
   // FIXME: Rename `addPreEmitPass` to something more sensible given its actual
   // position and remove the `2` suffix here as this callback is what
   // `addPreEmitPass` *should* be but in reality isn't.
-  void addPreEmitPass2(AddMachinePass &) const {}
+  void addPreEmitPass2() {}
 
   /// {{@ For GlobalISel
   ///
 
   /// addPreISel - This method should add any "last minute" LLVM->LLVM
   /// passes (which are run just before instruction selector).
-  void addPreISel(AddIRPass &) const {
-    llvm_unreachable("addPreISel is not overridden");
-  }
+  void addPreISel() { llvm_unreachable("addPreISel is not overridden"); }
 
   /// This method should install an IR translator pass, which converts from
   /// LLVM code to machine instructions with possibly generic opcodes.
-  Error addIRTranslator(AddMachinePass &) const {
+  Error addIRTranslator() {
     return make_error<StringError>("addIRTranslator is not overridden",
                                    inconvertibleErrorCode());
   }
 
   /// This method may be implemented by targets that want to run passes
   /// immediately before legalization.
-  void addPreLegalizeMachineIR(AddMachinePass &) const {}
+  void addPreLegalizeMachineIR() {}
 
   /// This method should install a legalize pass, which converts the instruction
   /// sequence into one that can be selected by the target.
-  Error addLegalizeMachineIR(AddMachinePass &) const {
+  Error addLegalizeMachineIR() {
     return make_error<StringError>("addLegalizeMachineIR is not overridden",
                                    inconvertibleErrorCode());
   }
 
   /// This method may be implemented by targets that want to run passes
   /// immediately before the register bank selection.
-  void addPreRegBankSelect(AddMachinePass &) const {}
+  void addPreRegBankSelect() {}
 
   /// This method should install a register bank selector pass, which
   /// assigns register banks to virtual registers without a register
   /// class or register banks.
-  Error addRegBankSelect(AddMachinePass &) const {
+  Error addRegBankSelect() {
     return make_error<StringError>("addRegBankSelect is not overridden",
                                    inconvertibleErrorCode());
   }
 
   /// This method may be implemented by targets that want to run passes
   /// immediately before the (global) instruction selection.
-  void addPreGlobalInstructionSelect(AddMachinePass &) const {}
+  void addPreGlobalInstructionSelect() {}
 
   /// This method should install a (global) instruction selector pass, which
   /// converts possibly generic instructions to fully target-specific
   /// instructions, thereby constraining all generic virtual registers to
   /// register classes.
-  Error addGlobalInstructionSelect(AddMachinePass &) const {
+  Error addGlobalInstructionSelect() {
     return make_error<StringError>(
         "addGlobalInstructionSelect is not overridden",
         inconvertibleErrorCode());
@@ -381,30 +334,30 @@ protected:
   /// representation to the MI representation.
   /// Adds IR based lowering and target specific optimization passes and finally
   /// the core instruction selection passes.
-  void addISelPasses(AddIRPass &) const;
+  Error addISelPasses(bool PrintMIR, raw_pwrite_stream &Out);
 
   /// Add the actual instruction selection passes. This does not include
   /// preparation passes on IR.
-  Error addCoreISelPasses(AddMachinePass &) const;
+  Error addCoreISelPasses();
 
   /// Add the complete, standard set of LLVM CodeGen passes.
   /// Fully developed targets will not generally override this.
-  Error addMachinePasses(AddMachinePass &) const;
+  Error addMachinePasses();
 
   /// Add passes to lower exception handling for the code generator.
-  void addPassesToHandleExceptions(AddIRPass &) const;
+  void addPassesToHandleExceptions();
 
   /// Add common target configurable passes that perform LLVM IR to IR
   /// transforms following machine independent optimization.
-  void addIRPasses(AddIRPass &) const;
+  void addIRPasses();
 
   /// Add pass to prepare the LLVM IR for code generation. This should be done
   /// before exception handling preparation passes.
-  void addCodeGenPrepare(AddIRPass &) const;
+  void addCodeGenPrepare();
 
   /// Add common passes that perform LLVM IR to IR transforms in preparation for
   /// instruction selection.
-  void addISelPrepare(AddIRPass &) const;
+  void addISelPrepare();
 
   /// Methods with trivial inline returns are convenient points in the common
   /// codegen pass pipeline where targets may insert passes. Methods with
@@ -415,30 +368,30 @@ protected:
 
   /// addMachineSSAOptimization - Add standard passes that optimize machine
   /// instructions in SSA form.
-  void addMachineSSAOptimization(AddMachinePass &) const;
+  void addMachineSSAOptimization();
 
   /// addFastRegAlloc - Add the minimum set of target-independent passes that
   /// are required for fast register allocation.
-  Error addFastRegAlloc(AddMachinePass &) const;
+  Error addFastRegAlloc();
 
   /// addOptimizedRegAlloc - Add passes related to register allocation.
   /// LLVMTargetMachine provides standard regalloc passes for most targets.
-  void addOptimizedRegAlloc(AddMachinePass &) const;
+  void addOptimizedRegAlloc();
 
   /// Add passes that optimize machine instructions after register allocation.
-  void addMachineLateOptimization(AddMachinePass &) const;
+  void addMachineLateOptimization();
 
   /// addGCPasses - Add late codegen passes that analyze code for garbage
   /// collection. This should return true if GC info should be printed after
   /// these passes.
-  void addGCPasses(AddMachinePass &) const {}
+  void addGCPasses() {}
 
   /// Add standard basic block placement passes.
-  void addBlockPlacement(AddMachinePass &) const;
+  void addBlockPlacement();
 
   using CreateMCStreamer =
       std::function<Expected<std::unique_ptr<MCStreamer>>(MCContext &)>;
-  void addAsmPrinter(AddMachinePass &, CreateMCStreamer) const {
+  void addAsmPrinter(CreateMCStreamer) {
     llvm_unreachable("addAsmPrinter is not overridden");
   }
 
@@ -447,67 +400,175 @@ protected:
 
   /// createTargetRegisterAllocator - Create the register allocator pass for
   /// this target at the current optimization level.
-  void addTargetRegisterAllocator(AddMachinePass &, bool Optimized) const;
+  void addTargetRegisterAllocator(bool Optimized);
 
   /// addMachinePasses helper to create the target-selected or overriden
   /// regalloc pass.
-  void addRegAllocPass(AddMachinePass &, bool Optimized) const;
+  void addRegAllocPass(bool Optimized);
 
   /// Add core register alloator passes which do the actual register assignment
   /// and rewriting. \returns true if any passes were added.
-  Error addRegAssignmentFast(AddMachinePass &) const;
-  Error addRegAssignmentOptimized(AddMachinePass &) const;
+  Error addRegAssignmentFast();
+  Error addRegAssignmentOptimized();
+
+  /// Merge all pass manager into one ModulePassManager
+  void mergePassManager();
 
   /// Allow the target to disable a specific pass by default.
   /// Backend can declare unwanted passes in constructor.
-  template <typename... PassTs> void disablePass() {
+  /// \param InstanceNum - If 0, disable all PassT, else disable only
+  /// the InstanceNum'th PassT.
+  template <typename PassT> void disablePass(unsigned InstanceNum = 0) {
     BeforeCallbacks.emplace_back(
-        [](StringRef Name) { return ((Name != PassTs::name()) && ...); });
-  }
-
-  /// Insert InsertedPass pass after TargetPass pass.
-  /// Only machine function passes are supported.
-  template <typename TargetPassT, typename InsertedPassT>
-  void insertPass(InsertedPassT &&Pass) {
-    AfterCallbacks.emplace_back(
-        [&](StringRef Name, MachineFunctionPassManager &MFPM) mutable {
-          if (Name == TargetPassT::name())
-            MFPM.addPass(std::forward<InsertedPassT>(Pass));
+        [Cnt = 0u, InstanceNum](StringRef Name) mutable {
+          if (!InstanceNum)
+            return PassT::name() != Name;
+          if (PassT::name() == Name)
+            return ++Cnt != InstanceNum;
+          return true;
         });
   }
 
-private:
-  DerivedT &derived() { return static_cast<DerivedT &>(*this); }
-  const DerivedT &derived() const {
-    return static_cast<const DerivedT &>(*this);
+  /// Disable all PassT1, PassT2, PassTs...
+  template <typename PassT1, typename PassT2, typename... PassTs>
+  void disablePass() {
+    BeforeCallbacks.emplace_back([](StringRef Name) {
+      return Name != PassT1::name() && Name != PassT2::name() &&
+             ((Name != PassTs::name()) && ...);
+    });
   }
 
-  bool runBeforeAdding(StringRef Name) const {
+  /// Insert InsertedPass pass after TargetPass pass.
+  /// If \param InstanceNum - If not 0, insert after each TargetPassT,
+  /// else only insert after the InstanceNum'th TargetPassT.
+  template <typename TargetPassT, typename InsertedPassT>
+  void insertPass(InsertedPassT &&Pass, unsigned InstanceNum = 0) {
+    AfterCallbacks.emplace_back(
+        [Cnt = 0u, InstanceNum, &Pass, this](StringRef Name) mutable {
+          if (Name == TargetPassT::name()) {
+            if (!InstanceNum) {
+              addPass(std::forward<InsertedPassT>(Pass));
+              return;
+            }
+            if (++Cnt == InstanceNum)
+              addPass(std::forward<InsertedPassT>(Pass));
+          }
+        });
+  }
+
+  /// Get internal ModulePassManager, only for test!
+  ModulePassManager &getMPM() { return MPM; }
+
+private:
+  DerivedT &derived() { return static_cast<DerivedT &>(*this); }
+
+  /// A monotonic stack based method to add pass.
+  // TODO: Add CGSCC order support.
+  template <typename PassT> void addPassImpl(PassT &&Pass);
+
+  bool runBeforeAdding(StringRef Name) {
     bool ShouldAdd = true;
     for (auto &C : BeforeCallbacks)
       ShouldAdd &= C(Name);
     return ShouldAdd;
   }
 
-  void setStartStopPasses(const TargetPassConfig::StartStopInfo &Info) const;
+  void runAfterAdding(StringRef Name) {
+    for (auto &C : AfterCallbacks)
+      C(Name);
+  }
+
+  void setStartStopPasses(const TargetPassConfig::StartStopInfo &Info);
 
   Error verifyStartStop(const TargetPassConfig::StartStopInfo &Info) const;
 
-  mutable SmallVector<llvm::unique_function<bool(StringRef)>, 4>
-      BeforeCallbacks;
-  mutable SmallVector<
-      llvm::unique_function<void(StringRef, MachineFunctionPassManager &)>, 4>
-      AfterCallbacks;
+  SmallVector<llvm::unique_function<bool(StringRef)>, 4> BeforeCallbacks;
+  SmallVector<llvm::unique_function<void(StringRef)>, 4> AfterCallbacks;
 
   /// Helper variable for `-start-before/-start-after/-stop-before/-stop-after`
-  mutable bool Started = true;
-  mutable bool Stopped = true;
+  bool Started = true;
+  bool Stopped = true;
+
+  enum class PassType {
+    ModulePass,
+    FunctionPass,
+    MachineFunctionPass,
+  };
+
+  std::stack<PassType> MonoStack;
+  ModulePassManager MPM;
+  FunctionPassManager FPM;
+  MachineFunctionPassManager MFPM;
 };
+
+template <typename Derived, typename TargetMachineT>
+template <typename PassT>
+void CodeGenPassBuilder<Derived, TargetMachineT>::addPassImpl(PassT &&Pass) {
+  static_assert((is_module_pass_v<PassT> || is_function_pass_v<PassT> ||
+                 is_machine_function_pass_v<PassT>) &&
+                "Unexpected pass type!");
+
+  constexpr PassType PT = []() {
+    if constexpr (std::is_same_v<
+                      InvalidateAnalysisPass<MachineFunctionAnalysis>, PassT>)
+      return PassType::FunctionPass;
+    if constexpr (is_module_pass_v<PassT>)
+      return PassType::ModulePass;
+    if constexpr (is_function_pass_v<PassT>)
+      return PassType::FunctionPass;
+    return PassType::MachineFunctionPass;
+  }();
+
+  while (!MonoStack.empty() && MonoStack.top() > PT) {
+    switch (MonoStack.top()) {
+    case PassType::MachineFunctionPass:
+      FPM.addPass(createFunctionToMachineFunctionPassAdaptor(std::move(MFPM)));
+      MFPM = MachineFunctionPassManager();
+      break;
+    case PassType::FunctionPass:
+      MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+      FPM = FunctionPassManager();
+      break;
+    case PassType::ModulePass:
+      llvm_unreachable("Unexpected pass type!");
+    }
+    MonoStack.pop();
+  }
+  if (MonoStack.empty() || MonoStack.top() < PT)
+    MonoStack.push(PT);
+
+  if constexpr (PT == PassType::ModulePass)
+    MPM.addPass(std::forward<PassT>(Pass));
+  else if constexpr (PT == PassType::FunctionPass)
+    FPM.addPass(std::forward<PassT>(Pass));
+  else
+    MFPM.addPass(std::forward<PassT>(Pass));
+}
+
+template <typename Derived, typename TargetMachineT>
+void CodeGenPassBuilder<Derived, TargetMachineT>::mergePassManager() {
+  if (MonoStack.empty())
+    return;
+
+  switch (MonoStack.top()) {
+  case PassType::MachineFunctionPass:
+    FPM.addPass(createFunctionToMachineFunctionPassAdaptor(std::move(MFPM)));
+    [[fallthrough]];
+  case PassType::FunctionPass:
+    MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+    [[fallthrough]];
+  case PassType::ModulePass:
+    break;
+  }
+  MFPM = MachineFunctionPassManager();
+  FPM = FunctionPassManager();
+  MonoStack = {};
+}
 
 template <typename Derived, typename TargetMachineT>
 Error CodeGenPassBuilder<Derived, TargetMachineT>::buildPipeline(
     ModulePassManager &MPM, raw_pwrite_stream &Out, raw_pwrite_stream *DwoOut,
-    CodeGenFileType FileType) const {
+    CodeGenFileType FileType) {
   auto StartStopInfo = TargetPassConfig::getStartStopInfo(*PIC);
   if (!StartStopInfo)
     return StartStopInfo.takeError();
@@ -516,41 +577,36 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::buildPipeline(
   bool PrintAsm = TargetPassConfig::willCompleteCodeGenPipeline();
   bool PrintMIR = !PrintAsm && FileType != CodeGenFileType::Null;
 
-  {
-    AddIRPass addIRPass(MPM, derived());
-    addIRPass(RequireAnalysisPass<MachineModuleAnalysis, Module>());
-    addIRPass(RequireAnalysisPass<ProfileSummaryAnalysis, Module>());
-    addIRPass(RequireAnalysisPass<CollectorMetadataAnalysis, Module>());
-    addISelPasses(addIRPass);
-  }
+  addPass<RequireAnalysisPass<MachineModuleAnalysis, Module>,
+          RequireAnalysisPass<ProfileSummaryAnalysis, Module>,
+          RequireAnalysisPass<CollectorMetadataAnalysis, Module>>();
 
-  AddMachinePass addPass(MPM, derived());
+  if (auto Err = addISelPasses(PrintMIR, Out))
+    return Err;
 
-  if (PrintMIR)
-    addPass(PrintMIRPreparePass(Out), /*Force=*/true);
-
-  if (auto Err = addCoreISelPasses(addPass))
-    return std::move(Err);
-
-  if (auto Err = derived().addMachinePasses(addPass))
-    return std::move(Err);
+  if (auto Err = derived().addMachinePasses())
+    return Err;
 
   if (PrintAsm) {
-    derived().addAsmPrinter(
-        addPass, [this, &Out, DwoOut, FileType](MCContext &Ctx) {
-          return this->TM.createMCStreamer(Out, DwoOut, FileType, Ctx);
-        });
+    derived().addAsmPrinter([this, &Out, DwoOut, FileType](MCContext &Ctx) {
+      return this->TM.createMCStreamer(Out, DwoOut, FileType, Ctx);
+    });
   }
 
   if (PrintMIR)
-    addPass(PrintMIRPass(Out), /*Force=*/true);
+    addPassImpl(PrintMIRPass(Out));
 
-  return verifyStartStop(*StartStopInfo);
+  if (auto Err = verifyStartStop(*StartStopInfo))
+    return Err;
+  addPassImpl(InvalidateAnalysisPass<MachineFunctionAnalysis>());
+  mergePassManager();
+  MPM.addPass(std::move(this->MPM));
+  return Error::success();
 }
 
 template <typename Derived, typename TargetMachineT>
 void CodeGenPassBuilder<Derived, TargetMachineT>::setStartStopPasses(
-    const TargetPassConfig::StartStopInfo &Info) const {
+    const TargetPassConfig::StartStopInfo &Info) {
   if (!Info.StartPass.empty()) {
     Started = false;
     BeforeCallbacks.emplace_back([this, &Info, AfterFlag = Info.StartAfter,
@@ -611,25 +667,27 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::verifyStartStop(
 }
 
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addISelPasses(
-    AddIRPass &addPass) const {
-  derived().addGlobalMergePass(addPass);
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addISelPasses(
+    bool PrintMIR, raw_pwrite_stream &Out) {
+  derived().addGlobalMergePass();
   if (TM.useEmulatedTLS())
     addPass(LowerEmuTLSPass());
 
   addPass(PreISelIntrinsicLoweringPass(TM));
 
-  derived().addIRPasses(addPass);
-  derived().addCodeGenPrepare(addPass);
-  addPassesToHandleExceptions(addPass);
-  derived().addISelPrepare(addPass);
+  derived().addIRPasses();
+  derived().addCodeGenPrepare();
+  addPassesToHandleExceptions();
+  derived().addISelPrepare();
+  if (PrintMIR)
+    addPassImpl(PrintMIRPreparePass(Out));
+  return addCoreISelPasses();
 }
 
 /// Add common target configurable passes that perform LLVM IR to IR transforms
 /// following machine independent optimization.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addIRPasses(
-    AddIRPass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addIRPasses() {
   // Before running any passes, run the verifier to determine if the input
   // coming from the front-end and/or optimizer is valid.
   if (!Opt.DisableVerify)
@@ -656,9 +714,8 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addIRPasses(
 
   // Run GC lowering passes for builtin collectors
   // TODO: add a pass insertion point here
-  addPass(GCLoweringPass());
-  addPass(ShadowStackGCLoweringPass());
-  addPass(LowerConstantIntrinsicsPass());
+  addPass(GCLoweringPass(), ShadowStackGCLoweringPass(),
+          LowerConstantIntrinsicsPass());
 
   // Make sure that no unreachable blocks are instruction selected.
   addPass(UnreachableBlockElimPass());
@@ -695,8 +752,8 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addIRPasses(
 /// Turn exception handling constructs into something the code generators can
 /// handle.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addPassesToHandleExceptions(
-    AddIRPass &addPass) const {
+void CodeGenPassBuilder<Derived,
+                        TargetMachineT>::addPassesToHandleExceptions() {
   const MCAsmInfo *MCAI = TM.getMCAsmInfo();
   assert(MCAI && "No MCAsmInfo");
   switch (MCAI->getExceptionHandlingType()) {
@@ -719,16 +776,15 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addPassesToHandleExceptions(
     // We support using both GCC-style and MSVC-style exceptions on Windows, so
     // add both preparation passes. Each pass will only actually run if it
     // recognizes the personality function.
-    addPass(WinEHPreparePass());
-    addPass(DwarfEHPreparePass(&TM));
+    addPass(WinEHPreparePass(), DwarfEHPreparePass(&TM));
     break;
   case ExceptionHandling::Wasm:
     // Wasm EH uses Windows EH instructions, but it does not need to demote PHIs
     // on catchpads and cleanuppads because it does not outline them into
     // funclets. Catchswitch blocks are not lowered in SelectionDAG, so we
     // should remove PHIs there.
-    addPass(WinEHPreparePass(/*DemoteCatchSwitchPHIOnly=*/false));
-    addPass(WasmEHPreparePass());
+    addPass(WinEHPreparePass(/*DemoteCatchSwitchPHIOnly=*/false),
+            WasmEHPreparePass());
     break;
   case ExceptionHandling::None:
     addPass(LowerInvokePass());
@@ -742,8 +798,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addPassesToHandleExceptions(
 /// Add pass to prepare the LLVM IR for code generation. This should be done
 /// before exception handling preparation passes.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addCodeGenPrepare(
-    AddIRPass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addCodeGenPrepare() {
   if (getOptLevel() != CodeGenOptLevel::None && !Opt.DisableCGP)
     addPass(CodeGenPreparePass(&TM));
   // TODO: Default ctor'd RewriteSymbolPass is no-op.
@@ -753,15 +808,13 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addCodeGenPrepare(
 /// Add common passes that perform LLVM IR to IR transforms in preparation for
 /// instruction selection.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addISelPrepare(
-    AddIRPass &addPass) const {
-  derived().addPreISel(addPass);
+void CodeGenPassBuilder<Derived, TargetMachineT>::addISelPrepare() {
+  derived().addPreISel();
 
   addPass(CallBrPreparePass());
   // Add both the safe stack and the stack protection passes: each of them will
   // only protect functions that have corresponding attributes.
-  addPass(SafeStackPass(&TM));
-  addPass(StackProtectorPass(&TM));
+  addPass(SafeStackPass(&TM), StackProtectorPass(&TM));
 
   if (Opt.PrintISelInput)
     addPass(PrintFunctionPass(dbgs(),
@@ -774,8 +827,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addISelPrepare(
 }
 
 template <typename Derived, typename TargetMachineT>
-Error CodeGenPassBuilder<Derived, TargetMachineT>::addCoreISelPasses(
-    AddMachinePass &addPass) const {
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addCoreISelPasses() {
   // Enable FastISel with -fast-isel, but allow that to be overridden.
   TM.setO0WantsFastISel(Opt.EnableFastISelOption.value_or(true));
 
@@ -807,25 +859,25 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addCoreISelPasses(
 
   // Add instruction selector passes.
   if (Selector == SelectorType::GlobalISel) {
-    if (auto Err = derived().addIRTranslator(addPass))
-      return std::move(Err);
+    if (auto Err = derived().addIRTranslator())
+      return Err;
 
-    derived().addPreLegalizeMachineIR(addPass);
+    derived().addPreLegalizeMachineIR();
 
-    if (auto Err = derived().addLegalizeMachineIR(addPass))
-      return std::move(Err);
+    if (auto Err = derived().addLegalizeMachineIR())
+      return Err;
 
     // Before running the register bank selector, ask the target if it
     // wants to run some passes.
-    derived().addPreRegBankSelect(addPass);
+    derived().addPreRegBankSelect();
 
-    if (auto Err = derived().addRegBankSelect(addPass))
-      return std::move(Err);
+    if (auto Err = derived().addRegBankSelect())
+      return Err;
 
-    derived().addPreGlobalInstructionSelect(addPass);
+    derived().addPreGlobalInstructionSelect();
 
-    if (auto Err = derived().addGlobalInstructionSelect(addPass))
-      return std::move(Err);
+    if (auto Err = derived().addGlobalInstructionSelect())
+      return Err;
 
     // Pass to reset the MachineFunction if the ISel failed.
     addPass(ResetMachineFunctionPass(reportDiagnosticWhenGlobalISelFallback(),
@@ -834,11 +886,11 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addCoreISelPasses(
     // Provide a fallback path when we do not want to abort on
     // not-yet-supported input.
     if (!isGlobalISelAbortEnabled())
-      if (auto Err = derived().addInstSelector(addPass))
-        return std::move(Err);
+      if (auto Err = derived().addInstSelector())
+        return Err;
 
-  } else if (auto Err = derived().addInstSelector(addPass))
-    return std::move(Err);
+  } else if (auto Err = derived().addInstSelector())
+    return Err;
 
   // Expand pseudo-instructions emitted by ISel. Don't run the verifier before
   // FinalizeISel.
@@ -867,11 +919,10 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addCoreISelPasses(
 /// dependencies on multiple passes, the target should override the stage
 /// instead.
 template <typename Derived, typename TargetMachineT>
-Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
-    AddMachinePass &addPass) const {
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses() {
   // Add passes that optimize machine instructions in SSA form.
   if (getOptLevel() != CodeGenOptLevel::None) {
-    derived().addMachineSSAOptimization(addPass);
+    derived().addMachineSSAOptimization();
   } else {
     // If the target requests it, assign local variables to stack slots relative
     // to one another and simplify frame index references where possible.
@@ -882,39 +933,37 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
     addPass(RegUsageInfoPropagationPass());
 
   // Run pre-ra passes.
-  derived().addPreRegAlloc(addPass);
+  derived().addPreRegAlloc();
 
   // Run register allocation and passes that are tightly coupled with it,
   // including phi elimination and scheduling.
   if (*Opt.OptimizeRegAlloc) {
-    derived().addOptimizedRegAlloc(addPass);
+    derived().addOptimizedRegAlloc();
   } else {
-    if (auto Err = derived().addFastRegAlloc(addPass))
+    if (auto Err = derived().addFastRegAlloc())
       return Err;
   }
 
   // Run post-ra passes.
-  derived().addPostRegAlloc(addPass);
+  derived().addPostRegAlloc();
 
   addPass(RemoveRedundantDebugValuesPass());
 
   // Insert prolog/epilog code.  Eliminate abstract frame index references...
-  if (getOptLevel() != CodeGenOptLevel::None) {
-    addPass(PostRAMachineSinkingPass());
-    addPass(ShrinkWrapPass());
-  }
+  if (getOptLevel() != CodeGenOptLevel::None)
+    addPass<PostRAMachineSinkingPass, ShrinkWrapPass>();
 
   addPass(PrologEpilogInserterPass());
 
   /// Add passes that optimize machine instructions after register allocation.
   if (getOptLevel() != CodeGenOptLevel::None)
-    derived().addMachineLateOptimization(addPass);
+    derived().addMachineLateOptimization();
 
   // Expand pseudo instructions before second scheduling pass.
   addPass(ExpandPostRAPseudosPass());
 
   // Run pre-sched2 passes.
-  derived().addPreSched2(addPass);
+  derived().addPreSched2();
 
   if (Opt.EnableImplicitNullChecks)
     addPass(ImplicitNullChecksPass());
@@ -922,6 +971,7 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   // Second pass scheduler.
   // Let Target optionally insert this pass by itself at some other
   // point.
+  // TODO: Migrate to PostMachineSchedulerPass.
   if (getOptLevel() != CodeGenOptLevel::None &&
       !TM.targetSchedulesPostRAScheduling()) {
     if (Opt.MISchedPostRA)
@@ -931,30 +981,24 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   }
 
   // GC
-  derived().addGCPasses(addPass);
+  derived().addGCPasses();
 
   // Basic block placement.
   if (getOptLevel() != CodeGenOptLevel::None)
-    derived().addBlockPlacement(addPass);
+    derived().addBlockPlacement();
 
   // Insert before XRay Instrumentation.
-  addPass(FEntryInserterPass());
+  addPass<FEntryInserterPass, XRayInstrumentationPass, PatchableFunctionPass>();
 
-  addPass(XRayInstrumentationPass());
-  addPass(PatchableFunctionPass());
-
-  derived().addPreEmitPass(addPass);
+  derived().addPreEmitPass();
 
   if (TM.Options.EnableIPRA)
     // Collect register usage information and produce a register mask of
     // clobbered registers, to be used to optimize call sites.
     addPass(RegUsageInfoCollectorPass());
 
-  addPass(FuncletLayoutPass());
-
-  addPass(StackMapLivenessPass());
-  addPass(LiveDebugValuesPass());
-  addPass(MachineSanitizerBinaryMetadata());
+  addPass<FuncletLayoutPass, StackMapLivenessPass, LiveDebugValuesPass,
+          MachineSanitizerBinaryMetadata>();
 
   if (TM.Options.EnableMachineOutliner &&
       getOptLevel() != CodeGenOptLevel::None &&
@@ -967,15 +1011,14 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   }
 
   // Add passes that directly emit MI after all other MI passes.
-  derived().addPreEmitPass2(addPass);
+  derived().addPreEmitPass2();
 
   return Error::success();
 }
 
 /// Add passes that optimize machine instructions in SSA form.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineSSAOptimization(
-    AddMachinePass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineSSAOptimization() {
   // Pre-ra tail duplication.
   addPass(EarlyTailDuplicatePass());
 
@@ -1000,7 +1043,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineSSAOptimization(
   // Allow targets to insert passes that improve instruction level parallelism,
   // like if-conversion. Such passes will typically need dominator trees and
   // loop info, just like LICM and CSE below.
-  derived().addILPOpts(addPass);
+  derived().addILPOpts();
 
   addPass(EarlyMachineLICMPass());
   addPass(MachineCSEPass());
@@ -1027,7 +1070,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineSSAOptimization(
 /// selection. But -regalloc=... always takes precedence.
 template <typename Derived, typename TargetMachineT>
 void CodeGenPassBuilder<Derived, TargetMachineT>::addTargetRegisterAllocator(
-    AddMachinePass &addPass, bool Optimized) const {
+    bool Optimized) {
   if (Optimized)
     addPass(RAGreedyPass());
   else
@@ -1039,26 +1082,24 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addTargetRegisterAllocator(
 /// defined as separate passes because they may require different analysis.
 template <typename Derived, typename TargetMachineT>
 void CodeGenPassBuilder<Derived, TargetMachineT>::addRegAllocPass(
-    AddMachinePass &addPass, bool Optimized) const {
+    bool Optimized) {
   // TODO: Parse Opt.RegAlloc to add register allocator.
 }
 
 template <typename Derived, typename TargetMachineT>
-Error CodeGenPassBuilder<Derived, TargetMachineT>::addRegAssignmentFast(
-    AddMachinePass &addPass) const {
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addRegAssignmentFast() {
   // TODO: Ensure allocator is default or fast.
-  addRegAllocPass(addPass, false);
+  addRegAllocPass(false);
   return Error::success();
 }
 
 template <typename Derived, typename TargetMachineT>
-Error CodeGenPassBuilder<Derived, TargetMachineT>::addRegAssignmentOptimized(
-    AddMachinePass &addPass) const {
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addRegAssignmentOptimized() {
   // Add the selected register allocation pass.
-  addRegAllocPass(addPass, true);
+  addRegAllocPass(true);
 
   // Allow targets to change the register assignments before rewriting.
-  derived().addPreRewrite(addPass);
+  derived().addPreRewrite();
 
   // Finally rewrite virtual registers.
   addPass(VirtRegRewriterPass());
@@ -1074,19 +1115,17 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addRegAssignmentOptimized(
 /// Add the minimum set of target-independent passes that are required for
 /// register allocation. No coalescing or scheduling.
 template <typename Derived, typename TargetMachineT>
-Error CodeGenPassBuilder<Derived, TargetMachineT>::addFastRegAlloc(
-    AddMachinePass &addPass) const {
+Error CodeGenPassBuilder<Derived, TargetMachineT>::addFastRegAlloc() {
   addPass(PHIEliminationPass());
   addPass(TwoAddressInstructionPass());
-  return derived().addRegAssignmentFast(addPass);
+  return derived().addRegAssignmentFast();
 }
 
 /// Add standard target-independent passes that are tightly coupled with
 /// optimized register allocation, including coalescing, machine instruction
 /// scheduling, and register allocation itself.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addOptimizedRegAlloc(
-    AddMachinePass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addOptimizedRegAlloc() {
   addPass(DetectDeadLanesPass());
 
   addPass(InitUndefPass());
@@ -1111,10 +1150,10 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addOptimizedRegAlloc(
   // PreRA instruction scheduling.
   addPass(MachineSchedulerPass());
 
-  if (derived().addRegAssignmentOptimized(addPass)) {
+  if (derived().addRegAssignmentOptimized()) {
     // Allow targets to expand pseudo instructions depending on the choice of
     // registers before MachineCopyPropagation.
-    derived().addPostRewrite(addPass);
+    derived().addPostRewrite();
 
     // Copy propagate to forward register uses and try to eliminate COPYs that
     // were not coalesced.
@@ -1133,8 +1172,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addOptimizedRegAlloc(
 
 /// Add passes that optimize machine instructions after register allocation.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineLateOptimization(
-    AddMachinePass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineLateOptimization() {
   // Branch folding must be run after regalloc and prolog/epilog insertion.
   addPass(BranchFolderPass());
 
@@ -1154,8 +1192,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addMachineLateOptimization(
 
 /// Add standard basic block placement passes.
 template <typename Derived, typename TargetMachineT>
-void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockPlacement(
-    AddMachinePass &addPass) const {
+void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockPlacement() {
   addPass(MachineBlockPlacementPass());
   // Run a separate pass to collect block placement statistics.
   if (Opt.EnableBlockPlacementStats)
