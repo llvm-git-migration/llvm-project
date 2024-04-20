@@ -5443,19 +5443,52 @@ bool SelectionDAG::isKnownNeverZero(SDValue Op, unsigned Depth) const {
     if (ValKnown.isNegative())
       return true;
     // If max shift cnt of known ones is non-zero, result is non-zero.
-    APInt MaxCnt = computeKnownBits(Op.getOperand(1), Depth + 1).getMaxValue();
+    const KnownBits Shift = computeKnownBits(Op.getOperand(1), Depth + 1);
+    APInt MaxCnt = Shift.getMaxValue();
     if (MaxCnt.ult(ValKnown.getBitWidth()) &&
         !ValKnown.One.lshr(MaxCnt).isZero())
       return true;
+    // Similar to udiv but we try to see if we can turn it into a division
+    const KnownBits One =
+        KnownBits::makeConstant(APInt(ValKnown.getBitWidth(), 1));
+    if (KnownBits::uge(ValKnown,
+                       KnownBits::lshr(One, Shift, Shift.isNonZero())))
+      return true;
     break;
   }
-  case ISD::UDIV:
-  case ISD::SDIV:
-    // div exact can only produce a zero if the dividend is zero.
-    // TODO: For udiv this is also true if Op1 u<= Op0
+  case ISD::UDIV: {
     if (Op->getFlags().hasExact())
       return isKnownNeverZero(Op.getOperand(0), Depth + 1);
+    KnownBits Op0 = computeKnownBits(Op.getOperand(0), Depth + 1);
+    KnownBits Op1 = computeKnownBits(Op.getOperand(1), Depth + 1);
+    // True if Op0 u>= Op1
+    if (KnownBits::uge(Op0, Op1))
+      return true;
+    if (!Op0.getMinValue().udiv(Op1.getMaxValue()).isZero())
+      return true;
     break;
+  }
+  case ISD::SDIV: {
+    // div exact can only produce a zero if the dividend is zero.
+    if (Op->getFlags().hasExact())
+      return isKnownNeverZero(Op.getOperand(0), Depth + 1);
+    KnownBits Op0 = computeKnownBits(Op.getOperand(0), Depth + 1);
+    KnownBits Op1 = computeKnownBits(Op.getOperand(1), Depth + 1);
+    if (Op0.isNegative() && Op1.isStrictlyPositive())
+      return true;
+
+    if (Op0.isStrictlyPositive() && Op1.isNegative())
+      return true;
+
+    if (Op0.isNegative() && Op1.isNegative() && KnownBits::sge(Op0, Op1))
+      return true;
+
+    if (Op0.isStrictlyPositive() && Op1.isStrictlyPositive() &&
+        (KnownBits::uge(Op0, Op1) ||
+         !Op0.getMinValue().udiv(Op1.getMaxValue()).isZero()))
+      return true;
+    break;
+  }
 
   case ISD::ADD:
     if (Op->getFlags().hasNoUnsignedWrap())
