@@ -10995,6 +10995,9 @@ static bool handleVectorElementCast(EvalInfo &Info, const FPOptions FPO,
                                   DestTy, Result.getInt());
     }
   }
+
+  Info.FFDiag(E, diag::err_convertvector_constexpr_unsupported_vector_cast)
+      << SourceTy << DestTy;
   return false;
 }
 
@@ -11027,12 +11030,15 @@ static bool handleVectorShuffle(EvalInfo &Info, const ShuffleVectorExpr *E,
                                 QualType ElemType, APValue const &VecVal1,
                                 APValue const &VecVal2, unsigned EltNum,
                                 APValue &Result) {
-  unsigned const TotalElementsInInputVector = VecVal1.getVectorLength();
+  unsigned const TotalElementsInInputVector1 = VecVal1.getVectorLength();
+  unsigned const TotalElementsInInputVector2 = VecVal2.getVectorLength();
 
   APSInt IndexVal = E->getShuffleMaskIdx(Info.Ctx, EltNum);
   int64_t index = IndexVal.getExtValue();
   // The spec says that -1 should be treated as undef for optimizations,
-  // but in constexpr we need to choose a value. We'll choose 0.
+  // but in constexpr we'd have to produce an APValue::Indeterminate,
+  // which is prohibited from being a top-level constant value. Emit a
+  // diagnostic instead.
   if (index == -1) {
     Info.FFDiag(
         E, diag::err_shufflevector_minus_one_is_undefined_behavior_constexpr)
@@ -11040,11 +11046,12 @@ static bool handleVectorShuffle(EvalInfo &Info, const ShuffleVectorExpr *E,
     return false;
   }
 
-  if (index < 0 || index >= TotalElementsInInputVector * 2)
+  if (index < 0 ||
+      index >= TotalElementsInInputVector1 + TotalElementsInInputVector2)
     llvm_unreachable("Out of bounds shuffle index");
 
-  if (index >= TotalElementsInInputVector)
-    Result = VecVal2.getVectorElt(index - TotalElementsInInputVector);
+  if (index >= TotalElementsInInputVector1)
+    Result = VecVal2.getVectorElt(index - TotalElementsInInputVector1);
   else
     Result = VecVal1.getVectorElt(index);
   return true;
@@ -11061,9 +11068,6 @@ bool VectorExprEvaluator::VisitShuffleVectorExpr(const ShuffleVectorExpr *E) {
     return false;
 
   VectorType const *DestVecTy = E->getType()->castAs<VectorType>();
-  if (!DestVecTy)
-    return false;
-
   QualType DestElTy = DestVecTy->getElementType();
 
   auto TotalElementsInOutputVector = DestVecTy->getNumElements();

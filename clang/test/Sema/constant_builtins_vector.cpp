@@ -74,8 +74,611 @@ typedef BitInt128 vector8BitInt128 __attribute__((__vector_size__(128)));
   CHECK_TO_ALL_TYPES(__size, BitInt32, __VA_ARGS__)                            \
   CHECK_TO_ALL_TYPES(__size, BitInt128, __VA_ARGS__)
 
-CHECK_ALL_COMBINATIONS(4, 0, 1, 2, 3);
-CHECK_ALL_COMBINATIONS(8, 0, 1, 2, 3, 4, 5, 6, 7);
+// The result below is expanded from these macros. Use them to autogenerate the
+// test cases below.
+// CHECK_ALL_COMBINATIONS(4, 0, 1, 2, 3);
+// CHECK_ALL_COMBINATIONS(8, 0, 1, 2, 3, 4, 5, 6, 7);
+
+constexpr vector4double from_vector4double_to_vector4double_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4double_to_vector4float_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4double_to_vector4long_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4double_to_vector4int_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4double_to_vector4short_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4double_to_vector4char_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4double_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4double_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4double_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4double){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(
+                  unsigned,
+                  __builtin_shufflevector(from_vector4double_to_vector4char_var,
+                                          from_vector4double_to_vector4char_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector4double_to_vector4short_var,
+                                     from_vector4double_to_vector4short_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4float_to_vector4double_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4float_to_vector4float_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4float_to_vector4long_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4float_to_vector4int_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4float_to_vector4short_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4float_to_vector4char_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4float_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4float_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4float_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4float){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4float_to_vector4char_var,
+                                     from_vector4float_to_vector4char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector4float_to_vector4short_var,
+                                          from_vector4float_to_vector4short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4long_to_vector4double_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4long_to_vector4float_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4long_to_vector4long_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4long_to_vector4int_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4long_to_vector4short_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4long_to_vector4char_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4long_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4long_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4long_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4long){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4long_to_vector4char_var,
+                                     from_vector4long_to_vector4char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector4long_to_vector4short_var,
+                                          from_vector4long_to_vector4short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4int_to_vector4double_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4int_to_vector4float_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4int_to_vector4long_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4int_to_vector4int_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4int_to_vector4short_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4int_to_vector4char_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4int_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4int_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4int_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4int){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4int_to_vector4char_var,
+                                     from_vector4int_to_vector4char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector4int_to_vector4short_var,
+                                          from_vector4int_to_vector4short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4short_to_vector4double_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4short_to_vector4float_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4short_to_vector4long_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4short_to_vector4int_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4short_to_vector4short_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4short_to_vector4char_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4short_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4short_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4short_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4short){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4short_to_vector4char_var,
+                                     from_vector4short_to_vector4char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector4short_to_vector4short_var,
+                                          from_vector4short_to_vector4short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4char_to_vector4double_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4char_to_vector4float_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4char_to_vector4long_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4char_to_vector4int_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4char_to_vector4short_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4char_to_vector4char_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4char_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4char_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4char_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4char){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4char_to_vector4char_var,
+                                     from_vector4char_to_vector4char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector4char_to_vector4short_var,
+                                          from_vector4char_to_vector4short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4BitInt8_to_vector4double_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4BitInt8_to_vector4float_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4BitInt8_to_vector4long_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4BitInt8_to_vector4int_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4BitInt8_to_vector4short_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4BitInt8_to_vector4char_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4BitInt8_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4BitInt8_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4BitInt8_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4BitInt8){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt8_to_vector4char_var,
+                                     from_vector4BitInt8_to_vector4char_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt8_to_vector4short_var,
+                                     from_vector4BitInt8_to_vector4short_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4BitInt32_to_vector4double_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4BitInt32_to_vector4float_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4BitInt32_to_vector4long_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4BitInt32_to_vector4int_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4BitInt32_to_vector4short_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4BitInt32_to_vector4char_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4BitInt32_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4BitInt32_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4BitInt32_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4BitInt32){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt32_to_vector4char_var,
+                                     from_vector4BitInt32_to_vector4char_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt32_to_vector4short_var,
+                                     from_vector4BitInt32_to_vector4short_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector4double from_vector4BitInt128_to_vector4double_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4double);
+constexpr vector4float from_vector4BitInt128_to_vector4float_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4float);
+constexpr vector4long from_vector4BitInt128_to_vector4long_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4long);
+constexpr vector4int from_vector4BitInt128_to_vector4int_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4int);
+constexpr vector4short from_vector4BitInt128_to_vector4short_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4short);
+constexpr vector4char from_vector4BitInt128_to_vector4char_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4char);
+constexpr vector4BitInt8 from_vector4BitInt128_to_vector4BitInt8_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4BitInt8);
+constexpr vector4BitInt32 from_vector4BitInt128_to_vector4BitInt32_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4BitInt32);
+constexpr vector4BitInt128 from_vector4BitInt128_to_vector4BitInt128_var =
+    __builtin_convertvector((vector4BitInt128){0, 1, 2, 3}, vector4BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt128_to_vector4char_var,
+                                     from_vector4BitInt128_to_vector4char_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector4BitInt128_to_vector4short_var,
+                                     from_vector4BitInt128_to_vector4short_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+;
+constexpr vector8double from_vector8double_to_vector8double_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8double_to_vector8float_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8double_to_vector8long_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8double_to_vector8int_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8int);
+constexpr vector8short from_vector8double_to_vector8short_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8double_to_vector8char_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8double_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8double_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8double_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8double){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(
+                  unsigned,
+                  __builtin_shufflevector(from_vector8double_to_vector8char_var,
+                                          from_vector8double_to_vector8char_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector8double_to_vector8short_var,
+                                     from_vector8double_to_vector8short_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8float_to_vector8double_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8float_to_vector8float_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8float_to_vector8long_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8float_to_vector8int_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7}, vector8int);
+constexpr vector8short from_vector8float_to_vector8short_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8float_to_vector8char_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8float_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8float_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8float_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8float){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8float_to_vector8char_var,
+                                     from_vector8float_to_vector8char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector8float_to_vector8short_var,
+                                          from_vector8float_to_vector8short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8long_to_vector8double_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8long_to_vector8float_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8long_to_vector8long_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7}, vector8long);
+constexpr vector8int from_vector8long_to_vector8int_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7}, vector8int);
+constexpr vector8short from_vector8long_to_vector8short_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8long_to_vector8char_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7}, vector8char);
+constexpr vector8BitInt8 from_vector8long_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8long_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8long_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8long){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8long_to_vector8char_var,
+                                     from_vector8long_to_vector8char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector8long_to_vector8short_var,
+                                          from_vector8long_to_vector8short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8int_to_vector8double_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8int_to_vector8float_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7}, vector8float);
+constexpr vector8long from_vector8int_to_vector8long_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7}, vector8long);
+constexpr vector8int from_vector8int_to_vector8int_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7}, vector8int);
+constexpr vector8short from_vector8int_to_vector8short_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7}, vector8short);
+constexpr vector8char from_vector8int_to_vector8char_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7}, vector8char);
+constexpr vector8BitInt8 from_vector8int_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8int_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8int_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8int){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8int_to_vector8char_var,
+                                     from_vector8int_to_vector8char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector8int_to_vector8short_var,
+                                          from_vector8int_to_vector8short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8short_to_vector8double_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8short_to_vector8float_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8short_to_vector8long_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8short_to_vector8int_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7}, vector8int);
+constexpr vector8short from_vector8short_to_vector8short_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8short_to_vector8char_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8short_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8short_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8short_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8short){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8short_to_vector8char_var,
+                                     from_vector8short_to_vector8char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector8short_to_vector8short_var,
+                                          from_vector8short_to_vector8short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8char_to_vector8double_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8char_to_vector8float_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8char_to_vector8long_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7}, vector8long);
+constexpr vector8int from_vector8char_to_vector8int_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7}, vector8int);
+constexpr vector8short from_vector8char_to_vector8short_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8char_to_vector8char_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7}, vector8char);
+constexpr vector8BitInt8 from_vector8char_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8char_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8char_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8char){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8char_to_vector8char_var,
+                                     from_vector8char_to_vector8char_var, 0, 1,
+                                     2, 3)) == (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(
+                  unsigned long long,
+                  __builtin_shufflevector(from_vector8char_to_vector8short_var,
+                                          from_vector8char_to_vector8short_var,
+                                          0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8BitInt8_to_vector8double_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8BitInt8_to_vector8float_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8BitInt8_to_vector8long_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8BitInt8_to_vector8int_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8int);
+constexpr vector8short from_vector8BitInt8_to_vector8short_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8BitInt8_to_vector8char_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8BitInt8_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8BitInt8_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8BitInt8_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8BitInt8){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt8_to_vector8char_var,
+                                     from_vector8BitInt8_to_vector8char_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt8_to_vector8short_var,
+                                     from_vector8BitInt8_to_vector8short_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8BitInt32_to_vector8double_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8BitInt32_to_vector8float_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8BitInt32_to_vector8long_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8BitInt32_to_vector8int_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8int);
+constexpr vector8short from_vector8BitInt32_to_vector8short_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8BitInt32_to_vector8char_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8BitInt32_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8BitInt32_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8BitInt32_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8BitInt32){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt32_to_vector8char_var,
+                                     from_vector8BitInt32_to_vector8char_var, 0,
+                                     1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt32_to_vector8short_var,
+                                     from_vector8BitInt32_to_vector8short_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+constexpr vector8double from_vector8BitInt128_to_vector8double_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8double);
+constexpr vector8float from_vector8BitInt128_to_vector8float_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8float);
+constexpr vector8long from_vector8BitInt128_to_vector8long_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8long);
+constexpr vector8int from_vector8BitInt128_to_vector8int_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8int);
+constexpr vector8short from_vector8BitInt128_to_vector8short_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8short);
+constexpr vector8char from_vector8BitInt128_to_vector8char_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8char);
+constexpr vector8BitInt8 from_vector8BitInt128_to_vector8BitInt8_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt8);
+constexpr vector8BitInt32 from_vector8BitInt128_to_vector8BitInt32_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt32);
+constexpr vector8BitInt128 from_vector8BitInt128_to_vector8BitInt128_var =
+    __builtin_convertvector((vector8BitInt128){0, 1, 2, 3, 4, 5, 6, 7},
+                            vector8BitInt128);
+static_assert(__builtin_bit_cast(unsigned,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt128_to_vector8char_var,
+                                     from_vector8BitInt128_to_vector8char_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x03020100 : 0x00010203));
+static_assert(__builtin_bit_cast(unsigned long long,
+                                 __builtin_shufflevector(
+                                     from_vector8BitInt128_to_vector8short_var,
+                                     from_vector8BitInt128_to_vector8short_var,
+                                     0, 1, 2, 3)) ==
+              (1 ? 0x0003000200010000 : 0x0000000100020003));
+;
 #undef CHECK_ALL_COMBINATIONS
 #undef CHECK_TO_ALL_TYPES
 #undef CHECK_NUM
@@ -113,8 +716,8 @@ static_assert(__builtin_bit_cast(unsigned long long, vectorShuffle6) ==
 constexpr vector4char
     vectorShuffleFail1 = // expected-error {{constexpr variable 'vectorShuffleFail1'\
  must be initialized by a constant expression}}
-    __builtin_shufflevector( // expected-error {{index for __builtin_shufflevector must be within\
- the bounds of the input vectors in a constexpr context. An index of\
- -1 at position 0 was found. -1 is only allowed at runtime.}}
+    __builtin_shufflevector( // expected-error {{index for __builtin_shufflevector \
+not within the bounds of the input vectors; index of -1 found at position 0 not \
+permitted in a constexpr context.}}
         vector4charConst1,
         vector4charConst2, -1, -1, -1, -1);
