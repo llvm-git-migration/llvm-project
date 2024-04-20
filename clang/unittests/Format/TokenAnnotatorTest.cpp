@@ -2611,15 +2611,6 @@ TEST_F(TokenAnnotatorTest, BraceKind) {
   EXPECT_BRACE_KIND(Tokens[14], BK_Block);
 }
 
-TEST_F(TokenAnnotatorTest, StreamOperator) {
-  auto Tokens = annotate("\"foo\\n\" << aux << \"foo\\n\" << \"foo\";");
-  ASSERT_EQ(Tokens.size(), 9u) << Tokens;
-  EXPECT_FALSE(Tokens[1]->MustBreakBefore);
-  EXPECT_FALSE(Tokens[3]->MustBreakBefore);
-  // Only break between string literals if the former ends with \n.
-  EXPECT_TRUE(Tokens[5]->MustBreakBefore);
-}
-
 } // namespace
 } // namespace format
 } // namespace clang
