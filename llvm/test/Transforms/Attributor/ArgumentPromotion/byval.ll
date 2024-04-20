@@ -13,9 +13,9 @@ define internal i32 @f(ptr byval(%struct.ss)  %b) nounwind  {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[B_PRIV:%.*]] = alloca [[STRUCT_SS:%.*]], align 4
 ; CHECK-NEXT:    store i32 [[TMP0]], ptr [[B_PRIV]], align 4
-; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[B_PRIV]], i64 0, i32 1
-; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_0_1]], align 4
-; CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[B_PRIV]], align 8
+; CHECK-NEXT:    [[B_PRIV_B4:%.*]] = getelementptr i8, ptr [[B_PRIV]], i64 4
+; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_B4]], align 4
+; CHECK-NEXT:    [[TMP1]] = load i32, ptr [[B_PRIV]], align 8
 ; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
 ; CHECK-NEXT:    store i32 [[TMP2]], ptr [[B_PRIV]], align 8
 ; CHECK-NEXT:    ret i32 [[TMP1]]
@@ -35,9 +35,9 @@ define internal i32 @g(ptr byval(%struct.ss) align 32 %b) nounwind {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[B_PRIV:%.*]] = alloca [[STRUCT_SS:%.*]], align 4
 ; CHECK-NEXT:    store i32 [[TMP0]], ptr [[B_PRIV]], align 4
-; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[B_PRIV]], i64 0, i32 1
-; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_0_1]], align 4
-; CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[B_PRIV]], align 32
+; CHECK-NEXT:    [[B_PRIV_B4:%.*]] = getelementptr i8, ptr [[B_PRIV]], i64 4
+; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_B4]], align 4
+; CHECK-NEXT:    [[TMP1]] = load i32, ptr [[B_PRIV]], align 32
 ; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
 ; CHECK-NEXT:    store i32 [[TMP2]], ptr [[B_PRIV]], align 32
 ; CHECK-NEXT:    ret i32 [[TMP2]]
@@ -59,12 +59,12 @@ define i32 @main() nounwind  {
 ; TUNIT-NEXT:    store i32 1, ptr [[S1]], align 32
 ; TUNIT-NEXT:    [[TMP4:%.*]] = getelementptr [[STRUCT_SS:%.*]], ptr [[S1]], i32 0, i32 1
 ; TUNIT-NEXT:    [[TMP0:%.*]] = load i32, ptr [[S1]], align 8
-; TUNIT-NEXT:    [[S1_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S1]], i64 0, i32 1
-; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S1_0_1]], align 8
+; TUNIT-NEXT:    [[S1_B42:%.*]] = getelementptr i8, ptr [[S1]], i64 4
+; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S1_B42]], align 8
 ; TUNIT-NEXT:    [[C0:%.*]] = call i32 @f(i32 [[TMP0]], i64 [[TMP1]]) #[[ATTR1:[0-9]+]]
 ; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[S1]], align 32
-; TUNIT-NEXT:    [[S1_0_12:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S1]], i64 0, i32 1
-; TUNIT-NEXT:    [[TMP3:%.*]] = load i64, ptr [[S1_0_12]], align 32
+; TUNIT-NEXT:    [[S1_B4:%.*]] = getelementptr i8, ptr [[S1]], i64 4
+; TUNIT-NEXT:    [[TMP3:%.*]] = load i64, ptr [[S1_B4]], align 32
 ; TUNIT-NEXT:    [[C1:%.*]] = call i32 @g(i32 [[TMP2]], i64 [[TMP3]]) #[[ATTR1]]
 ; TUNIT-NEXT:    [[A:%.*]] = add i32 [[C0]], [[C1]]
 ; TUNIT-NEXT:    ret i32 [[A]]

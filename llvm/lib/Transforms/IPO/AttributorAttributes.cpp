@@ -12851,25 +12851,19 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
           LoadInst *OldLoadInst = cast<LoadInst>(LocalInst);
           Value *PointerOperand = OldLoadInst->getPointerOperand();
 
-          // We need to shift the old start offset by the difference between the
-          // Old offset and the New offset.
-          Value *ShiftValueForPointerOperand = ConstantInt::get(
-              OldLoadInst->getContext(),
-              APInt(32, (OldOffsetRange.Offset - NewOffsetRange.Offset)));
-          // Cast ptr to 32 bit integer
-          CastInst *PtrOperandToInt = PtrToIntInst::CreatePointerCast(
-              PointerOperand, Type::getInt32Ty(OldLoadInst->getContext()), "",
-              OldLoadInst);
-          // Subtract shift amount from old offset
-          BinaryOperator *NewPointerOperandInt = BinaryOperator::Create(
-              Instruction::Sub, PtrOperandToInt, ShiftValueForPointerOperand,
-              "", OldLoadInst);
-          // Convert Int to ptr.
-          CastInst *IntToPtr = new IntToPtrInst(
-              NewPointerOperandInt, OldLoadInst->getPointerOperandType(), "",
-              OldLoadInst);
+          IntegerType *Int8TyInteger =
+              IntegerType::get(LocalInst->getContext(), 8);
+          IntegerType *Int64TyInteger =
+              IntegerType::get(LocalInst->getContext(), 64);
+          Value *indexList[2] = {
+              ConstantInt::get(Int64TyInteger, 0),
+              ConstantInt::get(Int64TyInteger,
+                               NewOffsetRange.Offset - OldOffsetRange.Offset)};
+          Value *GepToNewAddress = GetElementPtrInst::Create(
+              Int8TyInteger, PointerOperand, indexList, "NewGep", OldLoadInst);
+
           LoadInst *NewLoadInst =
-              new LoadInst(OldLoadInst->getType(), IntToPtr,
+              new LoadInst(OldLoadInst->getType(), GepToNewAddress,
                            OldLoadInst->getName(), OldLoadInst);
           Changed |= A.changeAfterManifest(IRPosition::inst(*OldLoadInst),
                                            *NewLoadInst);
@@ -12879,24 +12873,19 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
           StoreInst *OldStoreInst = cast<StoreInst>(LocalInst);
           Value *PointerOperand = OldStoreInst->getPointerOperand();
 
-          Value *ShiftValueForPointerOperand = ConstantInt::get(
-              OldStoreInst->getContext(),
-              APInt(32, (OldOffsetRange.Offset - NewOffsetRange.Offset)));
+          IntegerType *Int8TyInteger =
+              IntegerType::get(LocalInst->getContext(), 8);
+          IntegerType *Int64TyInteger =
+              IntegerType::get(LocalInst->getContext(), 64);
+          Value *indexList[2] = {
+              ConstantInt::get(Int64TyInteger, 0),
+              ConstantInt::get(Int64TyInteger,
+                               NewOffsetRange.Offset - OldOffsetRange.Offset)};
+          Value *GepToNewAddress = GetElementPtrInst::Create(
+              Int8TyInteger, PointerOperand, indexList, "NewGep", OldStoreInst);
 
-          // Cast ptr to 32 bit integer
-          CastInst *PtrOperandToInt = PtrToIntInst::CreatePointerCast(
-              PointerOperand, Type::getInt32Ty(OldStoreInst->getContext()), "",
-              OldStoreInst);
-          // Subtract shift amount from old offset
-          BinaryOperator *NewPointerOperandInt = BinaryOperator::Create(
-              Instruction::Sub, PtrOperandToInt, ShiftValueForPointerOperand,
-              "", OldStoreInst);
-          // Convert Int to ptr.
-          CastInst *IntToPtr = new IntToPtrInst(
-              NewPointerOperandInt, OldStoreInst->getPointerOperandType(), "",
-              OldStoreInst);
           StoreInst *NewStoreInst = new StoreInst(
-              OldStoreInst->getValueOperand(), IntToPtr, OldStoreInst);
+              OldStoreInst->getValueOperand(), GepToNewAddress, OldStoreInst);
           Changed |= A.changeAfterManifest(IRPosition::inst(*OldStoreInst),
                                            *NewStoreInst);
           break;
