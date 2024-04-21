@@ -16,6 +16,75 @@
 using namespace clang::ast_matchers;
 
 namespace clang::tidy::modernize {
+namespace {
+// Given two argument indices X and Y, matches when a call expression has a
+// string at index X with an expression representing that string's length at
+// index Y. The string can be a string literal or a variable. The length can be
+// matched via an integer literal or a call to strlen() in the case of a string
+// literal, and by a call to size() or length() in the string variable case.
+AST_POLYMORPHIC_MATCHER_P2(hasStringAndLengthArguments,
+                           AST_POLYMORPHIC_SUPPORTED_TYPES(
+                               CallExpr, CXXConstructExpr,
+                               CXXUnresolvedConstructExpr, ObjCMessageExpr),
+                           unsigned, StringArgIndex, unsigned, LengthArgIndex) {
+  if (StringArgIndex >= Node.getNumArgs() ||
+      LengthArgIndex >= Node.getNumArgs()) {
+    return false;
+  }
+
+  const Expr *StringArgExpr =
+      Node.getArg(StringArgIndex)->IgnoreParenImpCasts();
+  const Expr *LengthArgExpr =
+      Node.getArg(LengthArgIndex)->IgnoreParenImpCasts();
+
+  if (const auto *StringArg = dyn_cast<StringLiteral>(StringArgExpr)) {
+    // Match an integer literal equal to the string length or a call to strlen.
+
+    static const auto Matcher = expr(anyOf(
+        integerLiteral().bind("integer_literal_size"),
+        callExpr(callee(functionDecl(hasName("strlen"))), argumentCountIs(1),
+                 hasArgument(0, stringLiteral().bind("strlen_arg")))));
+
+    if (!Matcher.matches(*LengthArgExpr, Finder, Builder)) {
+      return false;
+    }
+
+    return Builder->removeBindings(
+        [&](const ast_matchers::internal::BoundNodesMap &Nodes) {
+          const auto *IntegerLiteralSize =
+              Nodes.getNodeAs<IntegerLiteral>("integer_literal_size");
+          const auto *StrlenArg = Nodes.getNodeAs<StringLiteral>("strlen_arg");
+          if (IntegerLiteralSize) {
+            return IntegerLiteralSize->getValue().getZExtValue() !=
+                   StringArg->getLength();
+          }
+          return StrlenArg->getLength() != StringArg->getLength();
+        });
+  }
+
+  if (const auto *StringArg = dyn_cast<DeclRefExpr>(StringArgExpr)) {
+    // Match a call to size() or length() on the same variable.
+
+    static const auto Matcher = cxxMemberCallExpr(
+        on(declRefExpr(to(varDecl().bind("string_var_decl")))),
+        callee(cxxMethodDecl(hasAnyName("size", "length"), isConst(),
+                             parameterCountIs(0))));
+
+    if (!Matcher.matches(*LengthArgExpr, Finder, Builder)) {
+      return false;
+    }
+
+    return Builder->removeBindings(
+        [&](const ast_matchers::internal::BoundNodesMap &Nodes) {
+          const auto *StringVarDecl =
+              Nodes.getNodeAs<VarDecl>("string_var_decl");
+          return StringVarDecl != StringArg->getDecl();
+        });
+  }
+
+  return false;
+}
+} // namespace
 
 UseStartsEndsWithCheck::UseStartsEndsWithCheck(StringRef Name,
                                                ClangTidyContext *Context)
@@ -43,7 +112,9 @@ void UseStartsEndsWithCheck::registerMatchers(MatchFinder *Finder) {
       callee(cxxMethodDecl(hasName("find")).bind("find_fun")),
       // ... on a class with a starts_with function.
       on(hasType(
-          hasCanonicalType(hasDeclaration(ClassWithStartsWithFunction)))));
+          hasCanonicalType(hasDeclaration(ClassWithStartsWithFunction)))),
+      // Bind search expression.
+      hasArgument(0, expr().bind("search_expr")));
 
   const auto RFindExpr = cxxMemberCallExpr(
       // A method call with a second argument of zero...
@@ -52,15 +123,30 @@ void UseStartsEndsWithCheck::registerMatchers(MatchFinder *Finder) {
       callee(cxxMethodDecl(hasName("rfind")).bind("find_fun")),
       // ... on a class with a starts_with function.
       on(hasType(
-          hasCanonicalType(hasDeclaration(ClassWithStartsWithFunction)))));
+          hasCanonicalType(hasDeclaration(ClassWithStartsWithFunction)))),
+      // Bind search expression.
+      hasArgument(0, expr().bind("search_expr")));
 
-  const auto FindOrRFindExpr =
-      cxxMemberCallExpr(anyOf(FindExpr, RFindExpr)).bind("find_expr");
+  const auto CompareExpr = cxxMemberCallExpr(
+      // A method call with a first argument of zero...
+      hasArgument(0, ZeroLiteral),
+      // ... named compare...
+      callee(cxxMethodDecl(hasName("compare")).bind("find_fun")),
+      // ... on a class with a starts_with function...
+      on(hasType(
+          hasCanonicalType(hasDeclaration(ClassWithStartsWithFunction)))),
+      // ... where the third argument is some string and the second its length.
+      hasStringAndLengthArguments(2, 1),
+      // Bind search expression.
+      hasArgument(2, expr().bind("search_expr")));
 
   Finder->addMatcher(
-      // Match [=!]= with a zero on one side and a string.(r?)find on the other.
-      binaryOperator(hasAnyOperatorName("==", "!="),
-                     hasOperands(FindOrRFindExpr, ZeroLiteral))
+      // Match [=!]= with a zero on one side and (r?)find|compare on the other.
+      binaryOperator(
+          hasAnyOperatorName("==", "!="),
+          hasOperands(cxxMemberCallExpr(anyOf(FindExpr, RFindExpr, CompareExpr))
+                          .bind("find_expr"),
+                      ZeroLiteral))
           .bind("expr"),
       this);
 }
@@ -69,6 +155,7 @@ void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
   const auto *ComparisonExpr = Result.Nodes.getNodeAs<BinaryOperator>("expr");
   const auto *FindExpr = Result.Nodes.getNodeAs<CXXMemberCallExpr>("find_expr");
   const auto *FindFun = Result.Nodes.getNodeAs<CXXMethodDecl>("find_fun");
+  const auto *SearchExpr = Result.Nodes.getNodeAs<Expr>("search_expr");
   const auto *StartsWithFunction =
       Result.Nodes.getNodeAs<CXXMethodDecl>("starts_with_fun");
 
@@ -79,13 +166,13 @@ void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
   const bool Neg = ComparisonExpr->getOpcode() == BO_NE;
 
   auto Diagnostic =
-      diag(FindExpr->getBeginLoc(), "use %0 instead of %1() %select{==|!=}2 0")
+      diag(FindExpr->getExprLoc(), "use %0 instead of %1() %select{==|!=}2 0")
       << StartsWithFunction->getName() << FindFun->getName() << Neg;
 
-  // Remove possible zero second argument and ' [!=]= 0' suffix.
+  // Remove possible arguments after search expression and ' [!=]= 0' suffix.
   Diagnostic << FixItHint::CreateReplacement(
       CharSourceRange::getTokenRange(
-          Lexer::getLocForEndOfToken(FindExpr->getArg(0)->getEndLoc(), 0,
+          Lexer::getLocForEndOfToken(SearchExpr->getEndLoc(), 0,
                                      *Result.SourceManager, getLangOpts()),
           ComparisonExpr->getEndLoc()),
       ")");
@@ -94,11 +181,12 @@ void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
   Diagnostic << FixItHint::CreateRemoval(CharSourceRange::getCharRange(
       ComparisonExpr->getBeginLoc(), FindExpr->getBeginLoc()));
 
-  // Replace '(r?)find' with 'starts_with'.
+  // Replace method name by 'starts_with'.
+  // Remove possible arguments before search expression.
   Diagnostic << FixItHint::CreateReplacement(
-      CharSourceRange::getTokenRange(FindExpr->getExprLoc(),
-                                     FindExpr->getExprLoc()),
-      StartsWithFunction->getName());
+      CharSourceRange::getCharRange(FindExpr->getExprLoc(),
+                                    SearchExpr->getBeginLoc()),
+      (StartsWithFunction->getName() + "(").str());
 
   // Add possible negation '!'.
   if (Neg) {
