@@ -298,6 +298,10 @@ Changes in existing checks
   check by resolving fix-it overlaps in template code by disregarding implicit
   instances.
 
+- Improved :doc:`modernize-use-starts-ends-with
+  <clang-tidy/checks/modernize/use-starts-ends-with>` check to also handle
+  cases using `compare()`.
+
 Removed checks
 ^^^^^^^^^^^^^^
 
