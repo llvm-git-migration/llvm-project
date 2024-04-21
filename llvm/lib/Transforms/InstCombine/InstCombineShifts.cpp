@@ -1270,8 +1270,8 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
   // If both the add and the shift are nuw, then:
   // ((X << Y) + Z) nuw >>u Z --> X + (Y nuw >>u Z) nuw
   Value *Y;
-  if (match(Op0, m_OneUse(m_c_NUWAdd((m_NUWShl(m_Value(X), m_Specific(Op1))),
-                                     m_Value(Y))))) {
+  if (match(Op0, m_OneUse(m_c_NUWAdd(m_NUWShl(m_Value(X), m_Value(Y)),
+                                     m_Specific(Op1))))) {
     Value *NewLshr = Builder.CreateLShr(Y, Op1, "", I.isExact());
     auto *newAdd = BinaryOperator::CreateNUWAdd(NewLshr, X);
     if (auto *Op0Bin = cast<OverflowingBinaryOperator>(Op0))
