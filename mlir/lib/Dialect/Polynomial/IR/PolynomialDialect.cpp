@@ -8,10 +8,19 @@
 
 #include "mlir/Dialect/Polynomial/IR/Polynomial.h"
 
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/ADT/APInt.h"
 #include "mlir/Dialect/Polynomial/IR/PolynomialAttributes.h"
 #include "mlir/Dialect/Polynomial/IR/PolynomialOps.h"
 #include "mlir/Dialect/Polynomial/IR/PolynomialTypes.h"
-#include "llvm/ADT/TypeSwitch.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/Interfaces/InferTypeOpInterface.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/Support/LogicalResult.h"
 
 using namespace mlir;
 using namespace mlir::polynomial;
