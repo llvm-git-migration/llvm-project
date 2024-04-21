@@ -360,7 +360,79 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
   ret <3 x i14> %t
 }
 
-; Negative test
+; Negative tests
+
+define i32 @mul_times_3_div_2(i32 %x) {
+; CHECK-LABEL: @mul_times_3_div_2(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nuw nsw i32 [[X:%.*]], 3
+; CHECK-NEXT:    [[RES:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+  %mul = mul nsw nuw i32 %x, 3
+  %res = lshr i32 %mul, 1
+  ret i32 %res
+}
+
+define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
+; CHECK-LABEL: @shl_add_lshr(
+; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[ADD:%.*]] = add nuw nsw i32 [[SHL]], [[Y:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[ADD]], [[C]]
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %shl = shl nuw i32 %x, %c
+  %add = add nuw nsw i32 %shl, %y
+  %lshr = lshr exact i32 %add, %c
+  ret i32 %lshr
+}
+
+define i32 @lshr_mul_times_3_div_2_nuw(i32 %0) {
+; CHECK-LABEL: @lshr_mul_times_3_div_2_nuw(
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0:%.*]], 1
+; CHECK-NEXT:    [[LSHR:%.*]] = add nuw nsw i32 [[TMP2]], [[TMP0]]
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %mul = mul nuw i32 %0, 3
+  %lshr = lshr i32 %mul, 1
+  ret i32 %lshr
+}
+
+define i32 @lshr_mul_times_3_div_2_nsw(i32 %0) {
+; CHECK-LABEL: @lshr_mul_times_3_div_2_nsw(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i32 [[TMP0:%.*]], 3
+; CHECK-NEXT:    [[LSHR:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %mul = mul nsw i32 %0, 3
+  %lshr = lshr i32 %mul, 1
+  ret i32 %lshr
+}
+
+; Negative tests
+
+define i32 @mul_times_3_div_2_no_flag(i32 %x) {
+; CHECK-LABEL: @mul_times_3_div_2_no_flag(
+; CHECK-NEXT:    [[MUL:%.*]] = mul i32 [[X:%.*]], 3
+; CHECK-NEXT:    [[LSHR:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %mul = mul i32 %x, 3
+  %lshr = lshr i32 %mul, 1
+  ret i32 %lshr
+}
+
+define i32 @shl_add_lshr_neg(i32 %x, i32 %y, i32 %z) {
+; CHECK-LABEL: @shl_add_lshr_neg(
+; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    [[ADD:%.*]] = add nuw nsw i32 [[SHL]], [[Z:%.*]]
+; CHECK-NEXT:    [[RES:%.*]] = lshr exact i32 [[ADD]], [[Z]]
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+  %shl = shl nuw i32 %x, %y
+  %add = add nuw nsw i32 %shl, %z
+  %res = lshr exact i32 %add, %z
+  ret i32 %res
+}
 
 define i32 @mul_splat_fold_wrong_mul_const(i32 %x) {
 ; CHECK-LABEL: @mul_splat_fold_wrong_mul_const(
@@ -373,7 +445,33 @@ define i32 @mul_splat_fold_wrong_mul_const(i32 %x) {
   ret i32 %t
 }
 
-; Negative test
+define i32 @shl_add_lshr_multiuse(i32 %x, i32 %y, i32 %z) {
+; CHECK-LABEL: @shl_add_lshr_multiuse(
+; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    [[ADD:%.*]] = add nuw nsw i32 [[SHL]], [[Z:%.*]]
+; CHECK-NEXT:    call void @use(i32 [[ADD]])
+; CHECK-NEXT:    [[RES:%.*]] = lshr exact i32 [[ADD]], [[Z]]
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+  %shl = shl nuw i32 %x, %y
+  %add = add nuw nsw i32 %shl, %z
+  call void @use (i32 %add)
+  %res = lshr exact i32 %add, %z
+  ret i32 %res
+}
+
+define i32 @mul_times_3_div_2_multiuse(i32 %x) {
+; CHECK-LABEL: @mul_times_3_div_2_multiuse(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nuw i32 [[X:%.*]], 3
+; CHECK-NEXT:    [[RES:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    call void @use(i32 [[MUL]])
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+  %mul = mul nuw i32 %x, 3
+  %res = lshr i32 %mul, 1
+  call void @use (i32 %mul)
+  ret i32 %res
+}
 
 define i32 @mul_splat_fold_wrong_lshr_const(i32 %x) {
 ; CHECK-LABEL: @mul_splat_fold_wrong_lshr_const(
@@ -385,8 +483,6 @@ define i32 @mul_splat_fold_wrong_lshr_const(i32 %x) {
   %t = lshr i32 %m, 15
   ret i32 %t
 }
-
-; Negative test
 
 define i32 @mul_splat_fold_no_nuw(i32 %x) {
 ; CHECK-LABEL: @mul_splat_fold_no_nuw(
