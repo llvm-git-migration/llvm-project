@@ -41,10 +41,9 @@ body:             |
     ; CHECK-LABEL: name: test_fold_repeating_constant_load_store_twice
     ; CHECK: liveins: $x0, $x1
     ; CHECK-NEXT: {{  $}}
-    ; CHECK-NEXT: renamable $x8 = MOVZXi 49370, 0
-    ; CHECK-NEXT: renamable $x8 = MOVKXi $x8, 320, 16
-    ; CHECK-NEXT: renamable $x8 = ORRXrs $x8, $x8, 32
-    ; CHECK-NEXT: STRXui renamable $x8, killed renamable $x0, 0
+    ; CHECK-NEXT: $w8 = MOVZWi 49370, 0
+    ; CHECK-NEXT: $w8 = MOVKWi $w8, 320, 16
+    ; CHECK-NEXT: STPWi renamable $w8, renamable $w8, killed renamable $x0, 0
     ; CHECK-NEXT: STRXui killed renamable $x8, killed renamable $x1, 0
     ; CHECK-NEXT: RET undef $lr
     renamable $x8 = MOVi64imm 90284035103834330
