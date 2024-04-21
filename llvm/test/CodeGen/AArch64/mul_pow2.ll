@@ -410,6 +410,23 @@ define i32 @test11(i32 %x) {
   ret i32 %mul
 }
 
+define i32 @test11_fast_shift(i32 %x) "target-features"="+alu-lsl-fast" {
+; CHECK-LABEL: test11_fast_shift:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    add w8, w0, w0
+; CHECK-NEXT:    add w0, w0, w8, lsl #1
+; CHECK-NEXT:    ret
+;
+; GISEL-LABEL: test11_fast_shift:
+; GISEL:       // %bb.0:
+; GISEL-NEXT:    mov w8, #11 // =0xb
+; GISEL-NEXT:    mul w0, w0, w8
+; GISEL-NEXT:    ret
+
+  %mul = mul nsw i32 %x, 11
+  ret i32 %mul
+}
+
 define i32 @test12(i32 %x) {
 ; CHECK-LABEL: test12:
 ; CHECK:       // %bb.0:
@@ -858,9 +875,9 @@ define <4 x i32> @muladd_demand_commute(<4 x i32> %x, <4 x i32> %y) {
 ;
 ; GISEL-LABEL: muladd_demand_commute:
 ; GISEL:       // %bb.0:
-; GISEL-NEXT:    adrp x8, .LCPI49_0
+; GISEL-NEXT:    adrp x8, .LCPI50_0
 ; GISEL-NEXT:    movi v3.4s, #1, msl #16
-; GISEL-NEXT:    ldr q2, [x8, :lo12:.LCPI49_0]
+; GISEL-NEXT:    ldr q2, [x8, :lo12:.LCPI50_0]
 ; GISEL-NEXT:    mla v1.4s, v0.4s, v2.4s
 ; GISEL-NEXT:    and v0.16b, v1.16b, v3.16b
 ; GISEL-NEXT:    ret
