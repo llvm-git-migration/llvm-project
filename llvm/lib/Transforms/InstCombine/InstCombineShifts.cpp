@@ -1259,6 +1259,18 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       match(Op1, m_SpecificIntAllowPoison(BitWidth - 1)))
     return new ZExtInst(Builder.CreateIsNotNeg(X, "isnotneg"), Ty);
 
+  // If both the add and the shift are nuw, then:
+  // ((X << nuw Z) + nuw Y) >>u Z --> X + nuw (Y >>u Z)
+  Value *Y;
+  if (match(Op0, m_OneUse(m_c_NUWAdd(m_NUWShl(m_Value(X), m_Specific(Op1)),
+                                     m_Value(Y))))) {
+    Value *NewLshr = Builder.CreateLShr(Y, Op1, "", I.isExact());
+    auto *NewAdd = BinaryOperator::CreateNUWAdd(NewLshr, X);
+    NewAdd->setHasNoSignedWrap(
+        cast<OverflowingBinaryOperator>(Op0)->hasNoSignedWrap());
+    return NewAdd;
+  }
+
   if (match(Op1, m_APInt(C))) {
     unsigned ShAmtC = C->getZExtValue();
     auto *II = dyn_cast<IntrinsicInst>(Op0);
@@ -1275,7 +1287,6 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       return new ZExtInst(Cmp, Ty);
     }
 
-    Value *X;
     const APInt *C1;
     if (match(Op0, m_Shl(m_Value(X), m_APInt(C1))) && C1->ult(BitWidth)) {
       if (C1->ult(ShAmtC)) {
@@ -1320,7 +1331,6 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
     // ((X << C) + Y) >>u C --> (X + (Y >>u C)) & (-1 >>u C)
     // TODO: Consolidate with the more general transform that starts from shl
     //       (the shifts are in the opposite order).
-    Value *Y;
     if (match(Op0,
               m_OneUse(m_c_Add(m_OneUse(m_Shl(m_Value(X), m_Specific(Op1))),
                                m_Value(Y))))) {
