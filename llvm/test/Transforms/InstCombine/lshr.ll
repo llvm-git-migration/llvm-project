@@ -360,7 +360,7 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
   ret <3 x i14> %t
 }
 
-; Negative tests
+; Negative test
 
 define i32 @mul_times_3_div_2(i32 %x) {
 ; CHECK-LABEL: @mul_times_3_div_2(
