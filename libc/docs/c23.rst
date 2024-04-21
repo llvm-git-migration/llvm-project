@@ -18,6 +18,9 @@ Implementation Status
 
 Additions:
 
+* setjmp.h
+
+  * longjmp |check|
 * fenv.h
 
   * fesetexcept |check|
