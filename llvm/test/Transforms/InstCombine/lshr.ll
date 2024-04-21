@@ -444,6 +444,8 @@ define i32 @mul_splat_fold_wrong_mul_const(i32 %x) {
   ret i32 %t
 }
 
+; Negative test
+
 define i32 @shl_add_lshr_multiuse(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: @shl_add_lshr_multiuse(
 ; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[Y:%.*]]
@@ -482,6 +484,8 @@ define i32 @mul_splat_fold_wrong_lshr_const(i32 %x) {
   %t = lshr i32 %m, 15
   ret i32 %t
 }
+
+; Negative test
 
 define i32 @mul_splat_fold_no_nuw(i32 %x) {
 ; CHECK-LABEL: @mul_splat_fold_no_nuw(
