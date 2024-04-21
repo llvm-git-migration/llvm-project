@@ -364,8 +364,8 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
 
 define i32 @mul_times_3_div_2(i32 %x) {
 ; CHECK-LABEL: @mul_times_3_div_2(
-; CHECK-NEXT:    [[MUL:%.*]] = mul nuw nsw i32 [[X:%.*]], 3
-; CHECK-NEXT:    [[RES:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr i32 [[X:%.*]], 1
+; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw i32 [[TMP1]], [[X]]
 ; CHECK-NEXT:    ret i32 [[RES]]
 ;
   %mul = mul nsw nuw i32 %x, 3
@@ -375,9 +375,8 @@ define i32 @mul_times_3_div_2(i32 %x) {
 
 define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_add_lshr(
-; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[ADD:%.*]] = add nuw nsw i32 [[SHL]], [[Y:%.*]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[ADD]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = add nuw nsw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw i32 %x, %c
@@ -399,8 +398,8 @@ define i32 @lshr_mul_times_3_div_2_nuw(i32 %0) {
 
 define i32 @lshr_mul_times_3_div_2_nsw(i32 %0) {
 ; CHECK-LABEL: @lshr_mul_times_3_div_2_nsw(
-; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i32 [[TMP0:%.*]], 3
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr i32 [[MUL]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0:%.*]], 1
+; CHECK-NEXT:    [[LSHR:%.*]] = add nsw i32 [[TMP2]], [[TMP0]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %mul = mul nsw i32 %0, 3
