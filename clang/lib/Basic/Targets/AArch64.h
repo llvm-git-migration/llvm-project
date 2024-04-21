@@ -202,6 +202,18 @@ public:
   bool hasBitIntType() const override { return true; }
 
   bool validateTarget(DiagnosticsEngine &Diags) const override;
+
+  bool validateGlobalRegisterVariable(StringRef RegName, unsigned RegSize,
+                                      bool &HasSizeMismatch) const override {
+    if (RegName.equals("sp") || RegName.starts_with("x")) {
+      HasSizeMismatch = RegSize != 64;
+      return true;
+    } else if (RegName.starts_with("w")) {
+      HasSizeMismatch = RegSize != 32;
+      return true;
+    }
+    return false;
+  }
 };
 
 class LLVM_LIBRARY_VISIBILITY AArch64leTargetInfo : public AArch64TargetInfo {
