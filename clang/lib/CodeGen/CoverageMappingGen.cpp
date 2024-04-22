@@ -1370,7 +1370,9 @@ struct CounterCoverageMappingBuilder
         // If last statement contains terminate statements, add a gap area
         // between the two statements. Skipping attributed statements, because
         // they don't have valid start location.
-        if (LastStmt && HasTerminateStmt && !isa<AttributedStmt>(Child)) {
+        if (LastStmt && HasTerminateStmt && !isa<AttributedStmt>(Child) &&
+            !isa<ImplicitValueInitExpr>(Child) &&
+            !isa<ImplicitValueInitExpr>(LastStmt)) {
           auto Gap = findGapAreaBetween(getEnd(LastStmt), getStart(Child));
           if (Gap)
             fillGapAreaWithCount(Gap->getBegin(), Gap->getEnd(),
