@@ -8880,11 +8880,6 @@ public:
     /// functions (but no function templates).
     FoundFunctions,
   };
-  bool LookupTemplateName(
-      LookupResult &R, Scope *S, CXXScopeSpec &SS, QualType ObjectType,
-      bool EnteringContext, bool &MemberOfUnknownSpecialization,
-      RequiredTemplateKind RequiredTemplate = SourceLocation(),
-      AssumedTemplateKind *ATK = nullptr, bool AllowTypoCorrection = true);
 
   bool
   LookupTemplateName(LookupResult &R, Scope *S, CXXScopeSpec &SS,
