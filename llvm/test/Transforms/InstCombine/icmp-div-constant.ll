@@ -118,8 +118,8 @@ define i32 @icmp_div(i16 %a, i16 %c) {
 ; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp eq i16 [[A:%.*]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL]], label [[THEN:%.*]], label [[EXIT:%.*]]
 ; CHECK:       then:
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i16 [[C:%.*]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = sext i1 [[CMP]] to i32
+; CHECK-NEXT:    [[CMP_NOT:%.*]] = icmp eq i16 [[C:%.*]], 0
+; CHECK-NEXT:    [[TMP0:%.*]] = sext i1 [[CMP_NOT]] to i32
 ; CHECK-NEXT:    br label [[EXIT]]
 ; CHECK:       exit:
 ; CHECK-NEXT:    [[PHI:%.*]] = phi i32 [ -1, [[ENTRY:%.*]] ], [ [[TMP0]], [[THEN]] ]
@@ -173,8 +173,8 @@ define i32 @icmp_div3(i16 %a, i16 %c) {
 ; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp eq i16 [[A:%.*]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL]], label [[THEN:%.*]], label [[EXIT:%.*]]
 ; CHECK:       then:
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i16 [[C:%.*]], 0
-; CHECK-NEXT:    [[TMP0:%.*]] = sext i1 [[CMP]] to i32
+; CHECK-NEXT:    [[CMP_NOT:%.*]] = icmp eq i16 [[C:%.*]], 0
+; CHECK-NEXT:    [[TMP0:%.*]] = sext i1 [[CMP_NOT]] to i32
 ; CHECK-NEXT:    br label [[EXIT]]
 ; CHECK:       exit:
 ; CHECK-NEXT:    [[PHI:%.*]] = phi i32 [ -1, [[ENTRY:%.*]] ], [ [[TMP0]], [[THEN]] ]
@@ -381,8 +381,8 @@ define i1 @sdiv_eq_smin_use(i32 %x, i32 %y) {
 
 define i1 @sdiv_x_by_const_cmp_x(i32 %x) {
 ; CHECK-LABEL: @sdiv_x_by_const_cmp_x(
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
-; CHECK-NEXT:    ret i1 [[TMP1]]
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i32 [[X:%.*]], 0
+; CHECK-NEXT:    ret i1 [[R]]
 ;
   %v = sdiv i32 %x, 13
   %r = icmp eq i32 %v, %x
@@ -403,8 +403,8 @@ define i1 @udiv_x_by_const_cmp_x(i32 %x) {
 
 define i1 @lshr_x_by_const_cmp_x(i32 %x) {
 ; CHECK-LABEL: @lshr_x_by_const_cmp_x(
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp eq i32 [[X:%.*]], 0
-; CHECK-NEXT:    ret i1 [[TMP1]]
+; CHECK-NEXT:    [[R:%.*]] = icmp eq i32 [[X:%.*]], 0
+; CHECK-NEXT:    ret i1 [[R]]
 ;
   %v = lshr i32 %x, 1
   %r = icmp eq i32 %v, %x
@@ -417,6 +417,17 @@ define <4 x i1> @lshr_by_const_cmp_sle_value(<4 x i32> %x) {
 ; CHECK-NEXT:    ret <4 x i1> [[R]]
 ;
   %v = lshr <4 x i32> %x, <i32 3, i32 3, i32 3, i32 3>
+  %r = icmp sle <4 x i32> %v, %x
+  ret <4 x i1> %r
+}
+
+define <4 x i1> @lshr_by_const_cmp_sle_value_non_splat(<4 x i32> %x) {
+; CHECK-LABEL: @lshr_by_const_cmp_sle_value_non_splat(
+; CHECK-NEXT:    [[V:%.*]] = lshr <4 x i32> [[X:%.*]], <i32 3, i32 3, i32 3, i32 5>
+; CHECK-NEXT:    [[R:%.*]] = icmp sle <4 x i32> [[V]], [[X]]
+; CHECK-NEXT:    ret <4 x i1> [[R]]
+;
+  %v = lshr <4 x i32> %x, <i32 3, i32 3, i32 3, i32 5>
   %r = icmp sle <4 x i32> %v, %x
   ret <4 x i1> %r
 }
