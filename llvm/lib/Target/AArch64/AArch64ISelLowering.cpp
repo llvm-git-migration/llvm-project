@@ -16918,6 +16918,21 @@ bool AArch64TargetLowering::shouldFoldConstantShiftPairToMask(
     return (!C1 || !C2 || C1->getZExtValue() >= C2->getZExtValue());
   }
 
+  // We do not need to fold when this shifting used in specific load case:
+  // (ldr x, (add x, (shl (srl x, c1) 2)))
+  if (N->getOpcode() == ISD::SHL && N->hasOneUse()) {
+    auto C2 = dyn_cast<ConstantSDNode>(N->getOperand(1));
+    if (C2 && C2->getZExtValue() <= 2) {
+      auto ShouldADD = *N->use_begin();
+      if (ShouldADD && ShouldADD->getOpcode() == ISD::ADD) {
+        if (auto ShouldLOAD = dyn_cast<LoadSDNode>(*ShouldADD->use_begin())) {
+          if (isIndexedLoadLegal(ISD::PRE_INC, ShouldLOAD->getMemoryVT()))
+            return false;
+        }
+      }
+    }
+  }
+
   return true;
 }
 
