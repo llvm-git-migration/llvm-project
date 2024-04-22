@@ -2339,6 +2339,8 @@ static Value *upgradeAMDGCNIntrinsicCall(StringRef Name, CallBase *CI,
     SyncScope::ID SSID = F->getContext().getOrInsertSyncScopeID("agent");
     AtomicRMWInst *RMW =
         Builder.CreateAtomicRMW(RMWOp, Ptr, Val, std::nullopt, Order, SSID);
+    RMW->setMetadata("amdgpu.no.remote.memory",
+                     MDNode::get(F->getContext(), {}));
 
     if (!VolatileArg || !VolatileArg->isZero())
       RMW->setVolatile(true);
