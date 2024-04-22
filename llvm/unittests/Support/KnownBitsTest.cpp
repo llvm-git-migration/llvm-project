@@ -11,6 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/KnownBits.h"
 #include "KnownBitsTest.h"
 #include "gtest/gtest.h"
@@ -25,7 +27,8 @@ using BinaryBitsFn =
 using BinaryIntFn =
     llvm::function_ref<std::optional<APInt>(const APInt &, const APInt &)>;
 
-static testing::AssertionResult checkResult(const KnownBits &Exact,
+static testing::AssertionResult checkResult(Twine Name,
+                                            const KnownBits &Exact,
                                             const KnownBits &Computed,
                                             ArrayRef<KnownBits> Inputs,
                                             bool CheckOptimality) {
@@ -41,6 +44,7 @@ static testing::AssertionResult checkResult(const KnownBits &Exact,
   }
 
   testing::AssertionResult Result = testing::AssertionFailure();
+  Result << Name << ": ";
   Result << "Inputs = ";
   for (const KnownBits &Input : Inputs)
     Result << Input << ", ";
@@ -48,7 +52,7 @@ static testing::AssertionResult checkResult(const KnownBits &Exact,
   return Result;
 }
 
-static void testUnaryOpExhaustive(UnaryBitsFn BitsFn, UnaryIntFn IntFn,
+static void testUnaryOpExhaustive(StringRef Name, UnaryBitsFn BitsFn, UnaryIntFn IntFn,
                                   bool CheckOptimality = true) {
   for (unsigned Bits : {1, 4}) {
     ForeachKnownBits(Bits, [&](const KnownBits &Known) {
@@ -65,12 +69,12 @@ static void testUnaryOpExhaustive(UnaryBitsFn BitsFn, UnaryIntFn IntFn,
       });
 
       EXPECT_TRUE(!Computed.hasConflict());
-      EXPECT_TRUE(checkResult(Exact, Computed, Known, CheckOptimality));
+      EXPECT_TRUE(checkResult(Name, Exact, Computed, Known, CheckOptimality));
     });
   }
 }
 
-static void testBinaryOpExhaustive(BinaryBitsFn BitsFn, BinaryIntFn IntFn,
+static void testBinaryOpExhaustive(StringRef Name, BinaryBitsFn BitsFn, BinaryIntFn IntFn,
                                    bool CheckOptimality = true,
                                    bool RefinePoisonToZero = false) {
   for (unsigned Bits : {1, 4}) {
@@ -92,7 +96,7 @@ static void testBinaryOpExhaustive(BinaryBitsFn BitsFn, BinaryIntFn IntFn,
 
         EXPECT_TRUE(!Computed.hasConflict());
         EXPECT_TRUE(
-            checkResult(Exact, Computed, {Known1, Known2}, CheckOptimality));
+            checkResult(Name, Exact, Computed, {Known1, Known2}, CheckOptimality));
         // In some cases we choose to return zero if the result is always
         // poison.
         if (RefinePoisonToZero && Exact.hasConflict()) {
@@ -137,6 +141,7 @@ TEST(KnownBitsTest, AddCarryExhaustive) {
 }
 
 static void TestAddSubExhaustive(bool IsAdd) {
+  Twine Name = IsAdd ? "add" : "sub";
   unsigned Bits = 4;
   ForeachKnownBits(Bits, [&](const KnownBits &Known1) {
     ForeachKnownBits(Bits, [&](const KnownBits &Known2) {
@@ -186,22 +191,22 @@ static void TestAddSubExhaustive(bool IsAdd) {
 
       KnownBits KnownComputed = KnownBits::computeForAddSub(
           IsAdd, /*NSW=*/false, /*NUW=*/false, Known1, Known2);
-      EXPECT_TRUE(checkResult(Known, KnownComputed, {Known1, Known2},
+      EXPECT_TRUE(checkResult(Name, Known, KnownComputed, {Known1, Known2},
                               /*CheckOptimality=*/true));
 
       KnownBits KnownNSWComputed = KnownBits::computeForAddSub(
           IsAdd, /*NSW=*/true, /*NUW=*/false, Known1, Known2);
-      EXPECT_TRUE(checkResult(KnownNSW, KnownNSWComputed, {Known1, Known2},
+      EXPECT_TRUE(checkResult(Name + " nsw", KnownNSW, KnownNSWComputed, {Known1, Known2},
                               /*CheckOptimality=*/true));
 
       KnownBits KnownNUWComputed = KnownBits::computeForAddSub(
           IsAdd, /*NSW=*/false, /*NUW=*/true, Known1, Known2);
-      EXPECT_TRUE(checkResult(KnownNUW, KnownNUWComputed, {Known1, Known2},
+      EXPECT_TRUE(checkResult(Name + " nuw", KnownNUW, KnownNUWComputed, {Known1, Known2},
                               /*CheckOptimality=*/true));
 
       KnownBits KnownNSWAndNUWComputed = KnownBits::computeForAddSub(
           IsAdd, /*NSW=*/true, /*NUW=*/true, Known1, Known2);
-      EXPECT_TRUE(checkResult(KnownNSWAndNUW, KnownNSWAndNUWComputed,
+      EXPECT_TRUE(checkResult(Name + " nsw nuw", KnownNSWAndNUW, KnownNSWAndNUWComputed,
                               {Known1, Known2}, /*CheckOptimality=*/true));
     });
   });
@@ -266,28 +271,28 @@ TEST(KnownBitsTest, SignBitUnknown) {
 }
 
 TEST(KnownBitsTest, BinaryExhaustive) {
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("and",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return Known1 & Known2;
       },
       [](const APInt &N1, const APInt &N2) { return N1 & N2; });
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("or",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return Known1 | Known2;
       },
       [](const APInt &N1, const APInt &N2) { return N1 | N2; });
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("xor",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return Known1 ^ Known2;
       },
       [](const APInt &N1, const APInt &N2) { return N1 ^ N2; });
-  testBinaryOpExhaustive(KnownBits::umax, APIntOps::umax);
-  testBinaryOpExhaustive(KnownBits::umin, APIntOps::umin);
-  testBinaryOpExhaustive(KnownBits::smax, APIntOps::smax);
-  testBinaryOpExhaustive(KnownBits::smin, APIntOps::smin);
-  testBinaryOpExhaustive(KnownBits::abdu, APIntOps::abdu);
-  testBinaryOpExhaustive(KnownBits::abds, APIntOps::abds);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("umax", KnownBits::umax, APIntOps::umax);
+  testBinaryOpExhaustive("umin", KnownBits::umin, APIntOps::umin);
+  testBinaryOpExhaustive("smax", KnownBits::smax, APIntOps::smax);
+  testBinaryOpExhaustive("smin", KnownBits::smin, APIntOps::smin);
+  testBinaryOpExhaustive("abdu", KnownBits::abdu, APIntOps::abdu);
+  testBinaryOpExhaustive("abds", KnownBits::abds, APIntOps::abds);
+  testBinaryOpExhaustive("udiv",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::udiv(Known1, Known2);
       },
@@ -297,7 +302,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.udiv(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("udiv exact",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::udiv(Known1, Known2, /*Exact*/ true);
       },
@@ -307,7 +312,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.udiv(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("sdiv",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::sdiv(Known1, Known2);
       },
@@ -317,7 +322,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.sdiv(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("sdiv exact",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::sdiv(Known1, Known2, /*Exact*/ true);
       },
@@ -328,7 +333,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.sdiv(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("urem",
       KnownBits::urem,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         if (N2.isZero())
@@ -336,7 +341,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.urem(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("srem",
       KnownBits::srem,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         if (N2.isZero())
@@ -344,31 +349,31 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.srem(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("sadd_sat",
       KnownBits::sadd_sat,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         return N1.sadd_sat(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("uadd_sat",
       KnownBits::uadd_sat,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         return N1.uadd_sat(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("ssub_sat",
       KnownBits::ssub_sat,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         return N1.ssub_sat(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("usub_sat",
       KnownBits::usub_sat,
       [](const APInt &N1, const APInt &N2) -> std::optional<APInt> {
         return N1.usub_sat(N2);
       },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("shl",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::shl(Known1, Known2);
       },
@@ -378,7 +383,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.shl(N2);
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("ushl_ov",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::shl(Known1, Known2, /* NUW */ true);
       },
@@ -390,7 +395,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return Res;
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("shl nsw",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::shl(Known1, Known2, /* NUW */ false, /* NSW */ true);
       },
@@ -402,7 +407,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return Res;
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("shl nuw",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::shl(Known1, Known2, /* NUW */ true, /* NSW */ true);
       },
@@ -416,7 +421,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
 
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("lshr",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::lshr(Known1, Known2);
       },
@@ -426,7 +431,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.lshr(N2);
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("lshr exact",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::lshr(Known1, Known2, /*ShAmtNonZero=*/false,
                                /*Exact=*/true);
@@ -439,7 +444,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.lshr(N2);
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("ashr",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::ashr(Known1, Known2);
       },
@@ -449,7 +454,7 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.ashr(N2);
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("ashr exact",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::ashr(Known1, Known2, /*ShAmtNonZero=*/false,
                                /*Exact=*/true);
@@ -462,39 +467,39 @@ TEST(KnownBitsTest, BinaryExhaustive) {
         return N1.ashr(N2);
       },
       /*CheckOptimality=*/true, /* RefinePoisonToZero */ true);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("mul",
       [](const KnownBits &Known1, const KnownBits &Known2) {
         return KnownBits::mul(Known1, Known2);
       },
       [](const APInt &N1, const APInt &N2) { return N1 * N2; },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("mulhs",
       KnownBits::mulhs,
       [](const APInt &N1, const APInt &N2) { return APIntOps::mulhs(N1, N2); },
       /*CheckOptimality=*/false);
-  testBinaryOpExhaustive(
+  testBinaryOpExhaustive("mulhu",
       KnownBits::mulhu,
       [](const APInt &N1, const APInt &N2) { return APIntOps::mulhu(N1, N2); },
       /*CheckOptimality=*/false);
 }
 
 TEST(KnownBitsTest, UnaryExhaustive) {
-  testUnaryOpExhaustive([](const KnownBits &Known) { return Known.abs(); },
+  testUnaryOpExhaustive("abs", [](const KnownBits &Known) { return Known.abs(); },
                         [](const APInt &N) { return N.abs(); });
 
-  testUnaryOpExhaustive([](const KnownBits &Known) { return Known.abs(true); },
+  testUnaryOpExhaustive("abs(true)", [](const KnownBits &Known) { return Known.abs(true); },
                         [](const APInt &N) -> std::optional<APInt> {
                           if (N.isMinSignedValue())
                             return std::nullopt;
                           return N.abs();
                         });
 
-  testUnaryOpExhaustive([](const KnownBits &Known) { return Known.blsi(); },
+  testUnaryOpExhaustive("blsi", [](const KnownBits &Known) { return Known.blsi(); },
                         [](const APInt &N) { return N & -N; });
-  testUnaryOpExhaustive([](const KnownBits &Known) { return Known.blsmsk(); },
+  testUnaryOpExhaustive("blsmsk", [](const KnownBits &Known) { return Known.blsmsk(); },
                         [](const APInt &N) { return N ^ (N - 1); });
 
-  testUnaryOpExhaustive(
+  testUnaryOpExhaustive("mul self",
       [](const KnownBits &Known) {
         return KnownBits::mul(Known, Known, /*SelfMultiply*/ true);
       },
