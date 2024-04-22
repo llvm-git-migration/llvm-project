@@ -91,6 +91,8 @@
 #  define _LIBCPP_ABI_USE_WRAP_ITER_IN_STD_STRING_VIEW
 // Dont' add an inline namespace for `std::filesystem`
 #  define _LIBCPP_ABI_NO_FILESYSTEM_INLINE_NAMESPACE
+// Make a std::pair of trivially copyable types trivially copyable
+#  define _LIBCPP_ABI_TRIVIALLY_COPYABLE_PAIR
 #elif _LIBCPP_ABI_VERSION == 1
 #  if !(defined(_LIBCPP_OBJECT_FORMAT_COFF) || defined(_LIBCPP_OBJECT_FORMAT_XCOFF))
 // Enable compiling copies of now inline methods into the dylib to support
@@ -109,6 +111,8 @@
 #    define _LIBCPP_DEPRECATED_ABI_DISABLE_PAIR_TRIVIAL_COPY_CTOR
 #  endif
 #endif
+
+#  define _LIBCPP_ABI_TRIVIALLY_COPYABLE_PAIR
 
 // We had some bugs where we use [[no_unique_address]] together with construct_at,
 // which causes UB as the call on construct_at could write to overlapping subobjects
