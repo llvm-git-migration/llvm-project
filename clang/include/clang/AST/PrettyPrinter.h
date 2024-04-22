@@ -70,7 +70,7 @@ struct PrintingPolicy {
         Restrict(LO.C99), Alignof(LO.CPlusPlus11), UnderscoreAlignof(LO.C11),
         UseVoidForZeroParams(!LO.CPlusPlus),
         SplitTemplateClosers(!LO.CPlusPlus11), TerseOutput(false),
-        PolishForDeclaration(false), Half(LO.Half),
+        PrintTagTypeContents(false), PolishForDeclaration(false), Half(LO.Half),
         MSWChar(LO.MicrosoftExt && !LO.WChar), IncludeNewlines(true),
         MSVCFormatting(false), ConstantsAsWritten(false),
         SuppressImplicitBase(false), FullyQualifiedName(false),
@@ -251,6 +251,14 @@ struct PrintingPolicy {
   /// only the requested declaration.
   LLVM_PREFERRED_TYPE(bool)
   unsigned TerseOutput : 1;
+
+  /// Print the contents of tag (i.e. record and enum) types, even with
+  /// TerseOutput=true.
+  ///
+  /// For record types (structs/classes/unions), this only prints public
+  /// data members. For enum types, this prints enumerators.
+  /// Has no effect if TerseOutput=false (which prints all members).
+  unsigned PrintTagTypeContents : 1;
 
   /// When true, do certain refinement needed for producing proper declaration
   /// tag; such as, do not print attributes attached to the declaration.

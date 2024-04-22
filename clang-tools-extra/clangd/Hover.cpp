@@ -69,6 +69,8 @@ namespace {
 PrintingPolicy getPrintingPolicy(PrintingPolicy Base) {
   Base.AnonymousTagLocations = false;
   Base.TerseOutput = true;
+  // Show struct fields and enum members.
+  Base.PrintTagTypeContents = true;
   Base.PolishForDeclaration = true;
   Base.ConstantsAsWritten = true;
   Base.SuppressTemplateArgsInCXXConstructors = true;

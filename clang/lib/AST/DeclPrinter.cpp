@@ -21,6 +21,7 @@
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Module.h"
+#include "clang/Basic/Specifiers.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace clang;
 
@@ -464,8 +465,10 @@ void DeclPrinter::PrintConstructorInitializers(CXXConstructorDecl *CDecl,
 //----------------------------------------------------------------------------
 
 void DeclPrinter::VisitDeclContext(DeclContext *DC, bool Indent) {
-  if (Policy.TerseOutput)
-    return;
+  if (Policy.TerseOutput) {
+    if (!Policy.PrintTagTypeContents || !isa<TagDecl>(DC))
+      return;
+  }
 
   if (Indent)
     Indentation += Policy.Indentation;
@@ -473,6 +476,17 @@ void DeclPrinter::VisitDeclContext(DeclContext *DC, bool Indent) {
   SmallVector<Decl*, 2> Decls;
   for (DeclContext::decl_iterator D = DC->decls_begin(), DEnd = DC->decls_end();
        D != DEnd; ++D) {
+
+    // Print enum members and public struct fields when
+    // PrintTagTypeContents=true. Only applicable when TerseOutput=true since
+    // otherwise all members are printed.
+    if (Policy.TerseOutput) {
+      assert(Policy.PrintTagTypeContents);
+      if (!(isa<EnumConstantDecl>(*D) ||
+            (isa<FieldDecl>(*D) &&
+             dyn_cast<FieldDecl>(*D)->getAccess() == AS_public)))
+        continue;
+    }
 
     // Don't print ObjCIvarDecls, as they are printed when visiting the
     // containing ObjCInterfaceDecl.
@@ -1182,7 +1196,7 @@ void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
 
     // Print the class definition
     // FIXME: Doesn't print access specifiers, e.g., "public:"
-    if (Policy.TerseOutput) {
+    if (Policy.TerseOutput && !Policy.PrintTagTypeContents) {
       Out << " {}";
     } else {
       Out << " {\n";

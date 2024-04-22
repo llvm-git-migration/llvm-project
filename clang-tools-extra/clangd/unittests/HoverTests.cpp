@@ -1645,7 +1645,16 @@ TEST(Hover, All) {
       {
           R"cpp(// Struct
             namespace ns1 {
-              struct MyClass {};
+              struct MyClass {
+                // Public fields shown in hover
+                int field1;
+                int field2;
+
+                // Methods and private fields not shown
+                void method();
+              private:
+                bool private_field;
+              };
             } // namespace ns1
             int main() {
               ns1::[[My^Class]]* Params;
@@ -1655,7 +1664,7 @@ TEST(Hover, All) {
             HI.Name = "MyClass";
             HI.Kind = index::SymbolKind::Struct;
             HI.NamespaceScope = "ns1::";
-            HI.Definition = "struct MyClass {}";
+            HI.Definition = "struct MyClass {\n  int field1;\n  int field2;\n}";
           }},
       {
           R"cpp(// Class
@@ -1685,7 +1694,7 @@ TEST(Hover, All) {
             HI.Name = "MyUnion";
             HI.Kind = index::SymbolKind::Union;
             HI.NamespaceScope = "ns1::";
-            HI.Definition = "union MyUnion {}";
+            HI.Definition = "union MyUnion {\n  int x;\n  int y;\n}";
           }},
       {
           R"cpp(// Function definition via pointer
@@ -2030,7 +2039,7 @@ TEST(Hover, All) {
             HI.Name = "Hello";
             HI.Kind = index::SymbolKind::Enum;
             HI.NamespaceScope = "";
-            HI.Definition = "enum Hello {}";
+            HI.Definition = "enum Hello { ONE, TWO, THREE }";
             HI.Documentation = "Enum declaration";
           }},
       {
