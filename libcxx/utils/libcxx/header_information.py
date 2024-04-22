@@ -192,17 +192,17 @@ test = pathlib.Path(os.path.join(libcxx_root, "test"))
 assert libcxx_root.exists()
 
 all_headers = sorted(
-    p.relative_to(include).as_posix() for p in include.rglob("[a-z]*") if is_header(p)
+    p.relative_to(include).as_posix() for p in include.rglob("[_a-z]*") if is_header(p)
 )
 toplevel_headers = sorted(
-    p.relative_to(include).as_posix() for p in include.glob("[a-z]*") if is_header(p)
+    p.relative_to(include).as_posix() for p in include.glob("[_a-z]*") if is_header(p)
 )
 experimental_headers = sorted(
     p.relative_to(include).as_posix()
     for p in include.glob("experimental/[a-z]*")
     if is_header(p)
 )
-public_headers = toplevel_headers + experimental_headers
+public_headers = list(filter(lambda x: not x.startswith("__"), toplevel_headers + experimental_headers))
 
 # The headers used in the std and std.compat modules.
 #
@@ -211,6 +211,7 @@ module_headers = [
     header
     for header in toplevel_headers
     if not header.endswith(".h")
+    and not header.startswith("__")
     # These headers have been removed in C++20 so are never part of a module.
     and not header in ["ccomplex", "ciso646", "cstdbool", "ctgmath"]
 ]
