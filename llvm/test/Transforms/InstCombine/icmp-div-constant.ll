@@ -423,8 +423,7 @@ define <4 x i1> @lshr_by_const_cmp_sle_value(<4 x i32> %x) {
 
 define <4 x i1> @lshr_by_const_cmp_sle_value_non_splat(<4 x i32> %x) {
 ; CHECK-LABEL: @lshr_by_const_cmp_sle_value_non_splat(
-; CHECK-NEXT:    [[V:%.*]] = lshr <4 x i32> [[X:%.*]], <i32 3, i32 3, i32 3, i32 5>
-; CHECK-NEXT:    [[R:%.*]] = icmp sle <4 x i32> [[V]], [[X]]
+; CHECK-NEXT:    [[R:%.*]] = icmp sgt <4 x i32> [[X:%.*]], <i32 -1, i32 -1, i32 -1, i32 -1>
 ; CHECK-NEXT:    ret <4 x i1> [[R]]
 ;
   %v = lshr <4 x i32> %x, <i32 3, i32 3, i32 3, i32 5>
