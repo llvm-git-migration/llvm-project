@@ -1,10 +1,7 @@
-// RUN: mlir-opt %s -allocate-arm-sme-tiles -split-input-file -verify-diagnostics | FileCheck %s
+// RUN: mlir-opt %s -convert-scf-to-cf -test-arm-sme-tile-allocation -split-input-file -verify-diagnostics | FileCheck %s
+// RUN: mlir-opt %s -convert-scf-to-cf -test-arm-sme-tile-allocation=dump-tile-live-ranges -mlir-disable-threading -split-input-file -verify-diagnostics 2>&1 >/dev/null | FileCheck %s --check-prefix=CHECK-LIVE-RANGE
 
 // This file tests some simple aspects of using liveness in the SME tile allocator.
-
-// Note: This is an XFAIL the new allocator is not yet upstream, and the current
-// allocator gives incorrect results for these tests.
-// XFAIL: *
 
 //       CHECK-LIVE-RANGE: ========== Coalesced Live Ranges:
 //  CHECK-LIVE-RANGE-NEXT: @constant_with_multiple_users
