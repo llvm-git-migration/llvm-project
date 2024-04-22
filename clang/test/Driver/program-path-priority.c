@@ -36,7 +36,7 @@
 // RUN: touch %t/notreal-none-elf-gcc && chmod +x %t/notreal-none-elf-gcc
 // RUN: env "PATH=" %t/clang -### -target notreal-none-elf %s 2>&1 | \
 // RUN:   FileCheck --check-prefix=PROG_PATH_NOTREAL_GCC %s
-// PROG_PATH_NOTREAL_GCC: notreal-none-unknown-elf
+// PROG_PATH_NOTREAL_GCC: notreal-unknown-none-elf
 
 /// <triple>-gcc on the PATH is found
 // RUN: mkdir -p %t/env
@@ -57,7 +57,7 @@
 // RUN: touch %t/gcc && chmod +x %t/gcc
 // RUN: env "PATH=" %t/clang -### -target notreal-none-elf %s 2>&1 | \
 // RUN:   FileCheck --check-prefix=NOTREAL_GCC_PREFERRED %s
-// NOTREAL_GCC_PREFERRED: notreal-none-unknown-elf"
+// NOTREAL_GCC_PREFERRED: notreal-unknown-none-elf"
 // NOTREAL_GCC_PREFERRED-NOT: /gcc"
 
 /// <triple>-gcc on the PATH is preferred to gcc in program path
