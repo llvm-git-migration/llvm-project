@@ -237,6 +237,11 @@ static cl::opt<bool> DisableInstrumentManager(
              "ignores instruments.)."),
     cl::cat(ViewOptions), cl::init(false));
 
+static cl::opt<bool> SkipUnsupportedInstructions(
+    "skip-unsupported-instructions",
+    cl::desc("Make unsupported instruction errors into warnings."),
+    cl::cat(ViewOptions), cl::init(false));
+
 namespace {
 
 const Target *getTarget(const char *ProgName) {
@@ -571,14 +576,13 @@ int main(int argc, char **argv) {
 
     IPP->resetState();
 
-    DenseMap<const MCInst *, SmallVector<mca::Instrument *>>
-        InstToInstruments;
+    DenseMap<const MCInst *, SmallVector<mca::Instrument *>> InstToInstruments;
     SmallVector<std::unique_ptr<mca::Instruction>> LoweredSequence;
+    SmallPtrSet<const MCInst *, 16> DroppedInsts;
     for (const MCInst &MCI : Insts) {
       SMLoc Loc = MCI.getLoc();
       const SmallVector<mca::Instrument *> Instruments =
           InstrumentRegions.getActiveInstruments(Loc);
-      InstToInstruments.insert({&MCI, Instruments});
 
       Expected<std::unique_ptr<mca::Instruction>> Inst =
           IB.createInstruction(MCI, Instruments);
@@ -588,7 +592,15 @@ int main(int argc, char **argv) {
                 [&IP, &STI](const mca::InstructionError<MCInst> &IE) {
                   std::string InstructionStr;
                   raw_string_ostream SS(InstructionStr);
-                  WithColor::error() << IE.Message << '\n';
+                  if (SkipUnsupportedInstructions)
+                    WithColor::warning()
+                        << IE.Message
+                        << ", skipping with -skip-unsupported-instructions, "
+                           "note accuracy will be impacted:\n";
+                  else
+                    WithColor::error()
+                        << IE.Message
+                        << ", use -skip-unsupported-instructions to ignore.";
                   IP->printInst(&IE.Inst, 0, "", *STI, SS);
                   SS.flush();
                   WithColor::note()
@@ -597,13 +609,19 @@ int main(int argc, char **argv) {
           // Default case.
           WithColor::error() << toString(std::move(NewE));
         }
+        if (SkipUnsupportedInstructions) {
+          DroppedInsts.insert(&MCI);
+          continue;
+        }
         return 1;
       }
 
       IPP->postProcessInstruction(Inst.get(), MCI);
-
+      InstToInstruments.insert({&MCI, Instruments});
       LoweredSequence.emplace_back(std::move(Inst.get()));
     }
+
+    Insts = Region->dropInstructions(DroppedInsts);
 
     mca::CircularSourceMgr S(LoweredSequence,
                              PrintInstructionTables ? 1 : Iterations);
