@@ -1666,6 +1666,20 @@ TEST(Hover, All) {
             HI.NamespaceScope = "ns1::";
             HI.Definition = "struct MyClass {\n  int field1;\n  int field2;\n}";
           }},
+          {
+            R"cpp(// Typedef to struct
+              struct Point { int x; int y; };
+              typedef Point TPoint;
+              [[TP^oint]] tp;
+            )cpp",
+            [](HoverInfo &HI) {
+              HI.Name = "TPoint";
+              HI.Kind = index::SymbolKind::TypeAlias;
+              HI.NamespaceScope = "";
+              HI.Type = "struct Point";
+              HI.Definition = "typedef Point TPoint;\nstruct Point {\n  int x;\n  int y;\n}";
+            }
+          },
       {
           R"cpp(// Class
             namespace ns1 {
@@ -1889,7 +1903,7 @@ TEST(Hover, All) {
             HI.Name = "Foo";
             HI.Kind = index::SymbolKind::TypeAlias;
             HI.NamespaceScope = "";
-            HI.Definition = "typedef struct Bar Foo";
+            HI.Definition = "typedef struct Bar Foo;\nstruct Bar {}";
             HI.Type = "struct Bar";
             HI.Documentation = "Typedef with embedded definition";
           }},

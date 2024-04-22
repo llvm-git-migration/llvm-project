@@ -152,6 +152,16 @@ std::string printDefinition(const Decl *D, PrintingPolicy PP,
   std::string Definition;
   llvm::raw_string_ostream OS(Definition);
   D->print(OS, PP);
+  
+  // For a typedef to a TagDecl, also print the underlying TagDecl
+  if (const auto *TND = dyn_cast<TypedefNameDecl>(D)) {
+    if (const auto *TT = dyn_cast<TagType>(
+            TND->getUnderlyingType().getCanonicalType().getTypePtr())) {
+      OS << ";\n";
+      TT->getDecl()->print(OS, PP);
+    }
+  }
+
   OS.flush();
   return Definition;
 }
