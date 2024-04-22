@@ -12,79 +12,86 @@
 // RUN: %clang -### -fno-honor-infinites -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-INFS %s
 // CHECK-NO-INFS: "-cc1"
-// CHECK-NO-INFS: "-menable-no-infs"
+// CHECK-NO-INFS-SAME: "-menable-no-infs" "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-fast-math -fno-honor-infinities -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-FAST-MATH-NO-INFS %s
 // CHECK-NO-FAST-MATH-NO-INFS: "-cc1"
-// CHECK-NO-FAST-MATH-NO-INFS: "-menable-no-infs"
+// CHECK-NO-FAST-MATH-NO-INFS-SAME: "-menable-no-infs" "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-honor-infinities -fno-fast-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-INFS-NO-FAST-MATH %s
 // CHECK-NO-INFS-NO-FAST-MATH: "-cc1"
 // CHECK-NO-INFS-NO-FAST-MATH-NOT: "-menable-no-infs"
+// CHECK-NO-INFS-NO-FAST-MATH-SAME: "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
+// CHECK-NO-INFS-NO-FAST-MATH-NOT: "-menable-no-infs"
 //
 // RUN: %clang -### -fno-signed-zeros -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-SIGNED-ZEROS %s
 // CHECK-NO-SIGNED-ZEROS: "-cc1"
-// CHECK-NO-SIGNED-ZEROS: "-fno-signed-zeros"
+// CHECK-NO-SIGNED-ZEROS: "-fmath-errno" "-fno-signed-zeros" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-fast-math -fno-signed-zeros -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-FAST-MATH-NO-SIGNED-ZEROS %s
 // CHECK-NO-FAST-MATH-NO-SIGNED-ZEROS: "-cc1"
-// CHECK-NO-FAST-MATH-NO-SIGNED-ZEROS: "-fno-signed-zeros"
+// CHECK-NO-FAST-MATH-NO-SIGNED-ZEROS: "-fmath-errno" "-fno-signed-zeros" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-signed-zeros -fno-fast-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-SIGNED-ZEROS-NO-FAST-MATH %s
 // CHECK-NO-SIGNED-ZEROS-NO-FAST-MATH: "-cc1"
 // CHECK-NO-SIGNED-ZEROS-NO-FAST-MATH-NOT: "-fno-signed-zeros"
+// CHECK-NO-SIGNED-ZEROS-NO-FAST-MATH-SAME: "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
+// CHECK-NO-SIGNED-ZEROS-NO-FAST-MATH-NOT: "-fno-signed-zeros"
 //
 // RUN: %clang -### -freciprocal-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-RECIPROCAL-MATH %s
 // CHECK-RECIPROCAL-MATH: "-cc1"
-// CHECK-RECIPROCAL-MATH: "-freciprocal-math"
+// CHECK-RECIPROCAL-MATH: "-fmath-errno" "-freciprocal-math" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-fast-math -freciprocal-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-FAST-MATH-RECIPROCAL-MATH %s
 // CHECK-NO-FAST-MATH-RECIPROCAL-MATH: "-cc1"
-// CHECK-NO-FAST-MATH-RECIPROCAL-MATH: "-freciprocal-math"
+// CHECK-NO-FAST-MATH-RECIPROCAL-MATH: "-fmath-errno" "-freciprocal-math" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -freciprocal-math -fno-fast-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-RECIPROCAL-MATH-NO-FAST-MATH %s
 // CHECK-RECIPROCAL-MATH-NO-FAST-MATH: "-cc1"
 // CHECK-RECIPROCAL-MATH-NO-FAST-MATH-NOT: "-freciprocal-math"
+// CHECK-RECIPROCAL-MATH-NO-FAST-MATH-SAME: "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
+// CHECK-RECIPROCAL-MATH-NO-FAST-MATH-NOT: "-freciprocal-math"
 //
 // RUN: %clang -### -fno-honor-nans -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-NANS %s
 // CHECK-NO-NANS: "-cc1"
-// CHECK-NO-NANS: "-menable-no-nans"
+// CHECK-NO-NANS-NOT: "-menable-no-infinities"
+// CHECK-NO-NANS-SAME: "-menable-no-nans" "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
+// CHECK-NO-NANS-NOT: "-menable-no-infinities"
 //
 // RUN: %clang -### -fno-fast-math -fno-honor-nans -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-FAST-MATH-NO-NANS %s
 // CHECK-NO-FAST-MATH-NO-NANS: "-cc1"
-// CHECK-NO-FAST-MATH-NO-NANS: "-menable-no-nans"
+// CHECK-NO-FAST-MATH-NO-NANS-SAME: "-menable-no-nans" "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
 //
 // RUN: %clang -### -fno-honor-nans -fno-fast-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-NANS-NO-FAST-MATH %s
 // CHECK-NO-NANS-NO-FAST-MATH: "-cc1"
 // CHECK-NO-NANS-NO-FAST-MATH-NOT: "-menable-no-nans"
+// CHECK-NO-NANS-NO-FAST-MATH-SAME: "-fmath-errno" "-ffp-contract=on" "-fno-rounding-math"
+// CHECK-NO-NANS-NO-FAST-MATH-NOT: "-menable-no-nans"
 //
 // RUN: %clang -### -ffast-math -fno-approx-func -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-FAST-MATH-NO-APPROX-FUNC %s
 // CHECK-FAST-MATH-NO-APPROX-FUNC:     "-cc1"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-menable-no-infs"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-menable-no-nans"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-fno-signed-zeros"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-mreassociate"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-freciprocal-math"
-// CHECK-FAST-MATH-NO-APPROX-FUNC:     "-ffp-contract=fast"
+// CHECK-FAST-MATH-NO-APPROX-FUNC-NOT: "-ffast-math"
+// CHECK-FAST-MATH-NO-APPROX-FUNC-NOT: "-fapprox-func"
+// CHECK-FAST-MATH-NO-APPROX-FUNC-SAME: "-menable-no-infs" "-menable-no-nans" "-fno-signed-zeros" "-mreassociate" "-freciprocal-math" "-fdenormal-fp-math=preserve-sign,preserve-sign" "-ffp-contract=fast" "-fno-rounding-math" "-ffinite-math-only" "-complex-range=basic"
 // CHECK-FAST-MATH-NO-APPROX-FUNC-NOT: "-ffast-math"
 // CHECK-FAST-MATH-NO-APPROX-FUNC-NOT: "-fapprox-func"
 //
 // RUN: %clang -### -fno-approx-func -ffast-math -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-APPROX-FUNC-FAST-MATH %s
 // CHECK-NO-APPROX-FUNC-FAST-MATH: "-cc1"
-// CHECK-NO-APPROX-FUNC-FAST-MATH: "-ffast-math"
+// CHECK-NO-APPROX-FUNC-FAST-MATH-SAME: "-menable-no-infs" "-menable-no-nans" "-fapprox-func" "-funsafe-math-optimizations" "-fno-signed-zeros" "-mreassociate" "-freciprocal-math" "-fdenormal-fp-math=preserve-sign,preserve-sign" "-ffp-contract=fast" "-fno-rounding-math" "-ffast-math" "-ffinite-math-only" "-complex-range=basic"
 //
 // RUN: %clang -### -fapprox-func -c %s 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-APPROX-FUNC %s
