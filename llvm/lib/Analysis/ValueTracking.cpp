@@ -2632,6 +2632,13 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
             Q.DL.getTypeSizeInBits(I->getType()).getFixedValue())
       return isKnownNonZero(I->getOperand(0), Q, Depth);
     break;
+  case Instruction::Trunc: {
+    auto *TI = cast<TruncInst>(I);
+    // nuw/nsw trunc preserves zero/non-zero status of input.
+    if (TI->hasNoSignedWrap() || TI->hasNoUnsignedWrap())
+      return isKnownNonZero(TI->getOperand(0), Q, Depth + 1);
+    break;
+  }
   case Instruction::Sub:
     return isNonZeroSub(DemandedElts, Depth, Q, BitWidth, I->getOperand(0),
                         I->getOperand(1));
@@ -3785,7 +3792,8 @@ static unsigned ComputeNumSignBitsImpl(const Value *V,
       // truncation, then we can make use of that. Otherwise we don't know
       // anything.
       Tmp = ComputeNumSignBits(U->getOperand(0), Depth + 1, Q);
-      unsigned OperandTyBits = U->getOperand(0)->getType()->getScalarSizeInBits();
+      unsigned OperandTyBits =
+          U->getOperand(0)->getType()->getScalarSizeInBits();
       if (Tmp > (OperandTyBits - TyBits))
         return Tmp - (OperandTyBits - TyBits);
 
