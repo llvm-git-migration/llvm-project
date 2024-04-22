@@ -32,6 +32,7 @@
 #include <__type_traits/is_implicitly_default_constructible.h>
 #include <__type_traits/is_nothrow_assignable.h>
 #include <__type_traits/is_nothrow_constructible.h>
+#include <__type_traits/is_reference.h>
 #include <__type_traits/is_same.h>
 #include <__type_traits/is_swappable.h>
 #include <__type_traits/nat.h>
@@ -141,6 +142,31 @@ struct _LIBCPP_TEMPLATE_VIS pair
       _NOEXCEPT_(is_nothrow_copy_constructible<first_type>::value&& is_nothrow_copy_constructible<second_type>::value)
       : first(__t1), second(__t2) {}
 
+  // Make pair trivially copyable if we have a way to do it
+  static const bool __enable_defaulted_assignment_operators =
+      !is_reference<first_type>::value && !is_reference<second_type>::value;
+#  if _LIBCPP_STD_VER >= 20
+  static const bool __has_defaulted_members = __enable_defaulted_assignment_operators;
+
+  _LIBCPP_HIDE_FROM_ABI constexpr pair& operator=(const pair&)
+    requires __enable_defaulted_assignment_operators
+  = default;
+
+  _LIBCPP_HIDE_FROM_ABI constexpr pair& operator=(pair&&)
+    requires __enable_defaulted_assignment_operators
+  = default;
+#  elif __has_attribute(__enable_if__)
+  static const bool __has_defaulted_members = __enable_defaulted_assignment_operators;
+
+  _LIBCPP_HIDE_FROM_ABI pair& operator=(const pair&)
+      __attribute__((__enable_if__(__enable_defaulted_assignment_operators, ""))) = default;
+
+  _LIBCPP_HIDE_FROM_ABI pair& operator=(pair&&)
+      __attribute__((__enable_if__(__enable_defaulted_assignment_operators, ""))) = default;
+#  else
+  static const bool __has_defaulted_members = false;
+#  endif                    // __has_attribute(__enable_if__)
+
   template <
 #  if _LIBCPP_STD_VER >= 23 // http://wg21.link/P1951
       class _U1 = _T1,
@@ -221,18 +247,21 @@ struct _LIBCPP_TEMPLATE_VIS pair
              typename __make_tuple_indices<sizeof...(_Args2) >::type()) {}
 
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair&
-  operator=(__conditional_t< is_copy_assignable<first_type>::value && is_copy_assignable<second_type>::value,
-                             pair,
-                             __nat> const& __p)
+  operator=(__conditional_t<
+            !__has_defaulted_members && is_copy_assignable<first_type>::value && is_copy_assignable<second_type>::value,
+            pair,
+            __nat> const& __p)
       _NOEXCEPT_(is_nothrow_copy_assignable<first_type>::value&& is_nothrow_copy_assignable<second_type>::value) {
     first  = __p.first;
     second = __p.second;
     return *this;
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair& operator=(
-      __conditional_t< is_move_assignable<first_type>::value && is_move_assignable<second_type>::value, pair, __nat>&&
-          __p)
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 pair&
+  operator=(__conditional_t<
+            !__has_defaulted_members && is_move_assignable<first_type>::value && is_move_assignable<second_type>::value,
+            pair,
+            __nat>&& __p)
       _NOEXCEPT_(is_nothrow_move_assignable<first_type>::value&& is_nothrow_move_assignable<second_type>::value) {
     first  = std::forward<first_type>(__p.first);
     second = std::forward<second_type>(__p.second);
