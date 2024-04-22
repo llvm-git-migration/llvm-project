@@ -5069,6 +5069,8 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
   const unsigned EltBits = ScalarTy.getScalarSizeInBits();
   LLT ShiftAmtTy = getTargetLowering().getPreferredShiftAmountTy(Ty);
   LLT ScalarShiftAmtTy = ShiftAmtTy.getScalarType();
+  unsigned KnownLeadingZeros =
+      KB ? KB->getKnownBits(LHS).countMinLeadingZeros() : 0;
   auto &MIB = Builder;
 
   bool UseNPQ = false;
@@ -5087,7 +5089,7 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
     // TODO: Use undef values for divisor of 1.
     if (!Divisor.isOne()) {
       UnsignedDivisionByConstantInfo magics =
-          UnsignedDivisionByConstantInfo::get(Divisor);
+          UnsignedDivisionByConstantInfo::get(Divisor, KnownLeadingZeros);
 
       Magic = std::move(magics.Magic);
 
