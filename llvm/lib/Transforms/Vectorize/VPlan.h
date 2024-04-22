@@ -2972,7 +2972,7 @@ class VPRegionBlock : public VPBlockBase {
   /// VPRegionBlock.
   VPBlockBase *Exiting;
 
-  /// Hold the Early Exiting block of the SEME region, if one exists.
+  /// Hold the Early Exit block of the SEME region, if one exists.
   VPBlockBase *EarlyExit;
 
   /// We need to keep track of the early exit block from the original scalar
