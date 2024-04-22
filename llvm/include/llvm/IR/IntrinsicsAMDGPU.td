@@ -2485,6 +2485,9 @@ class AMDGPUGlobalLoadLDS : Intrinsic <
   "", [SDNPMemOperand]>;
 def int_amdgcn_global_load_lds : AMDGPUGlobalLoadLDS;
 
+def int_amdgcn_pops_exiting_wave_id :
+  DefaultAttrsIntrinsic<[llvm_i32_ty], [], [IntrNoMem, IntrSpeculatable]>;
+
 //===----------------------------------------------------------------------===//
 // GFX10 Intrinsics
 //===----------------------------------------------------------------------===//
