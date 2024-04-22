@@ -542,7 +542,7 @@ InstrBuilder::createInstrDescImpl(const MCInst &MCI,
   const MCSchedClassDesc &SCDesc = *SM.getSchedClassDesc(SchedClassID);
   if (SCDesc.NumMicroOps == MCSchedClassDesc::InvalidNumMicroOps) {
     return make_error<InstructionError<MCInst>>(
-        "found an unsupported instruction in the input assembly sequence.",
+        "found an unsupported instruction in the input assembly sequence",
         MCI);
   }
 
