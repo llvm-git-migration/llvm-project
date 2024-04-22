@@ -563,6 +563,7 @@ namespace {
     SDValue visitFMULForFMADistributiveCombine(SDNode *N);
 
     SDValue XformToShuffleWithZero(SDNode *N);
+    bool isCanBeLoadedWithLsl(SDNode *N);
     bool reassociationCanBreakAddressingModePattern(unsigned Opc,
                                                     const SDLoc &DL,
                                                     SDNode *N,
@@ -9893,7 +9894,8 @@ SDValue DAGCombiner::visitSHL(SDNode *N) {
     // folding this will increase the total number of instructions.
     if (N0.getOpcode() == ISD::SRL &&
         (N0.getOperand(1) == N1 || N0.hasOneUse()) &&
-        TLI.shouldFoldConstantShiftPairToMask(N, Level)) {
+        TLI.shouldFoldConstantShiftPairToMask(N, Level) &&
+        !isCanBeLoadedWithLsl(N)) {
       if (ISD::matchBinaryPredicate(N1, N0.getOperand(1), MatchShiftAmount,
                                     /*AllowUndefs*/ false,
                                     /*AllowTypeMismatch*/ true)) {
@@ -28335,6 +28337,50 @@ bool DAGCombiner::findBetterNeighborChains(StoreSDNode *St) {
     replaceStoreChain(St, BetterChain);
     return true;
   }
+  return false;
+}
+
+bool DAGCombiner::isCanBeLoadedWithLsl(SDNode *N) {
+  if (!N->hasOneUse())
+    return false;
+
+  APInt SrlAmt;
+  if (sd_match(N,
+               m_Shl(m_Srl(m_Value(), m_ConstInt(SrlAmt)), m_SpecificInt(2)))) {
+    // Srl knownbits
+    SDValue ShlV = SDValue(N, 0);
+    unsigned RegSize = ShlV.getValueType().getScalarSizeInBits();
+    KnownBits Known = DAG.computeKnownBits(ShlV);
+    if (Known.getBitWidth() != RegSize)
+      return false;
+
+    // check load (ldr x, (add x, (shl (srl x, c1) 2)))
+    SDNode *User = N->use_begin().getUse().getUser();
+    if (!User || User->getOpcode() != ISD::ADD)
+      return false;
+
+    SDNode *Load = User->use_begin().getUse().getUser();
+    if (!Load || Load->getOpcode() != ISD::LOAD)
+      return false;
+
+    auto LoadN = dyn_cast<LoadSDNode>(Load);
+    if (!LoadN)
+      return false;
+
+    TargetLoweringBase::AddrMode AM;
+    AM.HasBaseReg = true;
+    AM.BaseOffs = Known.getMaxValue().getZExtValue();
+    EVT VT = LoadN->getMemoryVT();
+    unsigned AS = LoadN->getAddressSpace();
+    Type *AccessTy = VT.getTypeForEVT(*DAG.getContext());
+    if (!TLI.isLegalAddressingMode(DAG.getDataLayout(), AM, AccessTy, AS))
+      return false;
+
+    if (!TLI.isIndexedLoadLegal(ISD::PRE_INC, VT))
+      return false;
+    return true;
+  }
+
   return false;
 }
 
