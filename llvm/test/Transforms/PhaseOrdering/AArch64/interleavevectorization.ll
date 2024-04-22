@@ -22,23 +22,13 @@ define void @add4(ptr noalias noundef %x, ptr noalias noundef %y, i32 noundef %n
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
 ; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
 ; CHECK-NEXT:    [[WIDE_VEC24:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
-; CHECK-NEXT:    [[TMP2:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP3:%.*]] = shufflevector <32 x i16> [[TMP2]], <32 x i16> poison, <8 x i32> <i32 0, i32 4, i32 8, i32 12, i32 16, i32 20, i32 24, i32 28>
-; CHECK-NEXT:    [[TMP4:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP5:%.*]] = shufflevector <32 x i16> [[TMP4]], <32 x i16> poison, <8 x i32> <i32 1, i32 5, i32 9, i32 13, i32 17, i32 21, i32 25, i32 29>
-; CHECK-NEXT:    [[TMP6:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP7:%.*]] = shufflevector <32 x i16> [[TMP6]], <32 x i16> poison, <8 x i32> <i32 2, i32 6, i32 10, i32 14, i32 18, i32 22, i32 26, i32 30>
-; CHECK-NEXT:    [[TMP8:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
-; CHECK-NEXT:    [[TMP9:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP10:%.*]] = shufflevector <32 x i16> [[TMP9]], <32 x i16> poison, <8 x i32> <i32 3, i32 7, i32 11, i32 15, i32 19, i32 23, i32 27, i32 31>
-; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i16, ptr [[INVARIANT_GEP]], i64 [[TMP8]]
-; CHECK-NEXT:    [[TMP11:%.*]] = shufflevector <8 x i16> [[TMP3]], <8 x i16> [[TMP5]], <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-; CHECK-NEXT:    [[TMP12:%.*]] = shufflevector <8 x i16> [[TMP7]], <8 x i16> [[TMP10]], <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = shufflevector <16 x i16> [[TMP11]], <16 x i16> [[TMP12]], <32 x i32> <i32 0, i32 8, i32 16, i32 24, i32 1, i32 9, i32 17, i32 25, i32 2, i32 10, i32 18, i32 26, i32 3, i32 11, i32 19, i32 27, i32 4, i32 12, i32 20, i32 28, i32 5, i32 13, i32 21, i32 29, i32 6, i32 14, i32 22, i32 30, i32 7, i32 15, i32 23, i32 31>
+; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
+; CHECK-NEXT:    [[TMP2:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i16, ptr [[INVARIANT_GEP]], i64 [[TMP2]]
 ; CHECK-NEXT:    store <32 x i16> [[INTERLEAVED_VEC]], ptr [[GEP]], align 2
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 8
-; CHECK-NEXT:    [[TMP13:%.*]] = icmp eq i64 [[INDEX_NEXT]], 256
-; CHECK-NEXT:    br i1 [[TMP13]], label [[FOR_END:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
+; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i64 [[INDEX_NEXT]], 256
+; CHECK-NEXT:    br i1 [[TMP3]], label [[FOR_END:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
 ; CHECK:       for.end:
 ; CHECK-NEXT:    ret void
 ;
@@ -424,26 +414,13 @@ define void @addmul(ptr noalias noundef %x, ptr noundef %y, ptr noundef %z, i32 
 ; CHECK-NEXT:    [[TMP2:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
 ; CHECK-NEXT:    [[WIDE_VEC36:%.*]] = load <32 x i16>, ptr [[TMP3]], align 2
-; CHECK-NEXT:    [[TMP4:%.*]] = add <32 x i16> [[TMP2]], [[WIDE_VEC36]]
-; CHECK-NEXT:    [[TMP5:%.*]] = shufflevector <32 x i16> [[TMP4]], <32 x i16> poison, <8 x i32> <i32 0, i32 4, i32 8, i32 12, i32 16, i32 20, i32 24, i32 28>
-; CHECK-NEXT:    [[TMP6:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP7:%.*]] = add <32 x i16> [[TMP6]], [[WIDE_VEC36]]
-; CHECK-NEXT:    [[TMP8:%.*]] = shufflevector <32 x i16> [[TMP7]], <32 x i16> poison, <8 x i32> <i32 1, i32 5, i32 9, i32 13, i32 17, i32 21, i32 25, i32 29>
-; CHECK-NEXT:    [[TMP9:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP10:%.*]] = add <32 x i16> [[TMP9]], [[WIDE_VEC36]]
-; CHECK-NEXT:    [[TMP11:%.*]] = shufflevector <32 x i16> [[TMP10]], <32 x i16> poison, <8 x i32> <i32 2, i32 6, i32 10, i32 14, i32 18, i32 22, i32 26, i32 30>
-; CHECK-NEXT:    [[TMP12:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
-; CHECK-NEXT:    [[TMP13:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP14:%.*]] = add <32 x i16> [[TMP13]], [[WIDE_VEC36]]
-; CHECK-NEXT:    [[TMP15:%.*]] = shufflevector <32 x i16> [[TMP14]], <32 x i16> poison, <8 x i32> <i32 3, i32 7, i32 11, i32 15, i32 19, i32 23, i32 27, i32 31>
-; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i16, ptr [[INVARIANT_GEP]], i64 [[TMP12]]
-; CHECK-NEXT:    [[TMP16:%.*]] = shufflevector <8 x i16> [[TMP5]], <8 x i16> [[TMP8]], <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-; CHECK-NEXT:    [[TMP17:%.*]] = shufflevector <8 x i16> [[TMP11]], <8 x i16> [[TMP15]], <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = shufflevector <16 x i16> [[TMP16]], <16 x i16> [[TMP17]], <32 x i32> <i32 0, i32 8, i32 16, i32 24, i32 1, i32 9, i32 17, i32 25, i32 2, i32 10, i32 18, i32 26, i32 3, i32 11, i32 19, i32 27, i32 4, i32 12, i32 20, i32 28, i32 5, i32 13, i32 21, i32 29, i32 6, i32 14, i32 22, i32 30, i32 7, i32 15, i32 23, i32 31>
+; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = add <32 x i16> [[TMP2]], [[WIDE_VEC36]]
+; CHECK-NEXT:    [[TMP4:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i16, ptr [[INVARIANT_GEP]], i64 [[TMP4]]
 ; CHECK-NEXT:    store <32 x i16> [[INTERLEAVED_VEC]], ptr [[GEP]], align 2
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 8
-; CHECK-NEXT:    [[TMP18:%.*]] = icmp eq i64 [[INDEX_NEXT]], 256
-; CHECK-NEXT:    br i1 [[TMP18]], label [[FOR_END:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
+; CHECK-NEXT:    [[TMP5:%.*]] = icmp eq i64 [[INDEX_NEXT]], 256
+; CHECK-NEXT:    br i1 [[TMP5]], label [[FOR_END:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
 ; CHECK:       for.end:
 ; CHECK-NEXT:    ret void
 ;
