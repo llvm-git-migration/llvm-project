@@ -5084,22 +5084,27 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
 
     // Magic algorithm doesn't work for division by 1. We need to emit a select
     // at the end.
-    // TODO: Use undef values for divisor of 1.
-    if (!Divisor.isOne()) {
-      UnsignedDivisionByConstantInfo magics =
-          UnsignedDivisionByConstantInfo::get(Divisor);
-
-      Magic = std::move(magics.Magic);
-
-      assert(magics.PreShift < Divisor.getBitWidth() &&
-             "We shouldn't generate an undefined shift!");
-      assert(magics.PostShift < Divisor.getBitWidth() &&
-             "We shouldn't generate an undefined shift!");
-      assert((!magics.IsAdd || magics.PreShift == 0) && "Unexpected pre-shift");
-      PreShift = magics.PreShift;
-      PostShift = magics.PostShift;
-      SelNPQ = magics.IsAdd;
+    if (Divisor.isOne()) {
+      PreShifts.push_back(MIB.buildUndef(ScalarShiftAmtTy).getReg(0));
+      MagicFactors.push_back(MIB.buildUndef(ScalarTy).getReg(0));
+      NPQFactors.push_back(MIB.buildUndef(ScalarTy).getReg(0));
+      PostShifts.push_back(MIB.buildUndef(ScalarShiftAmtTy).getReg(0));
+      return true;
     }
+
+    UnsignedDivisionByConstantInfo magics =
+        UnsignedDivisionByConstantInfo::get(Divisor);
+
+    Magic = std::move(magics.Magic);
+
+    assert(magics.PreShift < Divisor.getBitWidth() &&
+           "We shouldn't generate an undefined shift!");
+    assert(magics.PostShift < Divisor.getBitWidth() &&
+           "We shouldn't generate an undefined shift!");
+    assert((!magics.IsAdd || magics.PreShift == 0) && "Unexpected pre-shift");
+    PreShift = magics.PreShift;
+    PostShift = magics.PostShift;
+    SelNPQ = magics.IsAdd;
 
     PreShifts.push_back(
         MIB.buildConstant(ScalarShiftAmtTy, PreShift).getReg(0));
@@ -5136,7 +5141,9 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
   }
 
   Register Q = LHS;
-  Q = MIB.buildLShr(Ty, Q, PreShift).getReg(0);
+
+  if (PreShift)
+    Q = MIB.buildLShr(Ty, Q, PreShift).getReg(0);
 
   // Multiply the numerator (operand 0) by the magic value.
   Q = MIB.buildUMulH(Ty, Q, MagicFactor).getReg(0);
@@ -5154,7 +5161,8 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
     Q = MIB.buildAdd(Ty, NPQ, Q).getReg(0);
   }
 
-  Q = MIB.buildLShr(Ty, Q, PostShift).getReg(0);
+  if (PostShift)
+    Q = MIB.buildLShr(Ty, Q, PostShift).getReg(0);
   auto One = MIB.buildConstant(Ty, 1);
   auto IsOne = MIB.buildICmp(
       CmpInst::Predicate::ICMP_EQ,
