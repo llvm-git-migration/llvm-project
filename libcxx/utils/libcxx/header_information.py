@@ -161,6 +161,10 @@ def is_header(file):
     ]
 
 
+def is_public_header(header):
+    return not header.startswith("__")
+
+
 def is_modulemap_header(header):
     """Returns whether a header should be listed in the modulemap"""
     # TODO: Should `__config_site` be in the modulemap?
@@ -202,9 +206,8 @@ experimental_headers = sorted(
     for p in include.glob("experimental/[a-z]*")
     if is_header(p)
 )
-public_headers = list(
-    filter(lambda x: not x.startswith("__"), toplevel_headers + experimental_headers)
-)
+
+public_headers = [p for p in all_headers if is_public_header(p)]
 
 # The headers used in the std and std.compat modules.
 #
@@ -212,7 +215,7 @@ public_headers = list(
 module_headers = [
     header
     for header in toplevel_headers
-    if not header.endswith(".h") and not header.startswith("__")
+    if not header.endswith(".h") and is_public_header(header)
     # These headers have been removed in C++20 so are never part of a module.
     and not header in ["ccomplex", "ciso646", "cstdbool", "ctgmath"]
 ]
