@@ -748,6 +748,60 @@ foreach mx = SchedMxList in {
   }
 }
 
+// Vector Crypto
+foreach mx = SchedMxList in {
+  defvar LMulLat = SiFiveP600GetLMulCycles<mx>.c;
+  defvar IsWorstCase = SiFiveP600IsWorstCaseMX<mx, SchedMxList>.c;
+  // Zvbb
+  let Latency = 2, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVBREV",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVCLZ",    [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVCPOP",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVCTZ",    [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVWSLL",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  // Zvbc
+  let Latency = 2, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVCLMUL",  [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVCLMULH", [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  // Zvkb
+  let Latency = 1, ReleaseAtCycles = [LMulLat] in
+  defm "" : LMULWriteResMX<"WriteVANDN",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+  let Latency = 2, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVBREV8",  [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVREV8",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVROL",    [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVROR",    [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  // Zvkg
+  let Latency = 2, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVGHSH",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVGMUL",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  // ZvknhaOrZvknhb
+  let Latency = 3, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVSHA2CH", [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVSHA2CL", [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVSHA2MS", [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  // Zvkned
+  let Latency = 2, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVAESMV",  [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVAESKF1", [SiFiveP600VectorArith], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVAESKF2", [SiFiveP600VectorArith], mx, IsWorstCase>;
+  }
+  let Latency = 1, ReleaseAtCycles = [LMulLat] in
+  defm "" : LMULWriteResMX<"WriteVAESZ",   [SiFiveP600VectorArith], mx, IsWorstCase>;
+  // Zvksed
+  let Latency = 3, ReleaseAtCycles = [LMulLat] in {
+    defm "" : LMULWriteResMX<"WriteVSM4K",   [SiFiveP600VEXQ0], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVSM4R",   [SiFiveP600VEXQ0], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVSM3C",   [SiFiveP600VEXQ0], mx, IsWorstCase>;
+    defm "" : LMULWriteResMX<"WriteVSM3ME",  [SiFiveP600VEXQ0], mx, IsWorstCase>;
+  }
+}
+
 // Others
 def : WriteRes<WriteCSR, [SiFiveP600SYS]>;
 def : WriteRes<WriteNop, []>;
@@ -1031,6 +1085,33 @@ foreach mx = SchedMxList in {
   foreach sew = SchedSEWSet<mx>.val in
     def : ReadAdvance<!cast<SchedRead>("ReadVMergeOp_" # mx  # "_E" # sew), 0>;
 }
+
+// Vector Crypto Extensions
+defm "" : LMULReadAdvance<"ReadVBREV", 0>;
+defm "" : LMULReadAdvance<"ReadVCLZ", 0>;
+defm "" : LMULReadAdvance<"ReadVCPOP", 0>;
+defm "" : LMULReadAdvance<"ReadVCTZ", 0>;
+defm "" : LMULReadAdvance<"ReadVWSLL", 0>;
+defm "" : LMULReadAdvance<"ReadVCLMUL", 0>;
+defm "" : LMULReadAdvance<"ReadVCLMULH", 0>;
+defm "" : LMULReadAdvance<"ReadVANDN", 0>;
+defm "" : LMULReadAdvance<"ReadVBREV8", 0>;
+defm "" : LMULReadAdvance<"ReadVREV8", 0>;
+defm "" : LMULReadAdvance<"ReadVROL", 0>;
+defm "" : LMULReadAdvance<"ReadVROR", 0>;
+defm "" : LMULReadAdvance<"ReadVGHSH", 0>;
+defm "" : LMULReadAdvance<"ReadVGMUL", 0>;
+defm "" : LMULReadAdvance<"ReadVSHA2CH", 0>;
+defm "" : LMULReadAdvance<"ReadVSHA2CL", 0>;
+defm "" : LMULReadAdvance<"ReadVSHA2MS", 0>;
+defm "" : LMULReadAdvance<"ReadVAESMV", 0>;
+defm "" : LMULReadAdvance<"ReadVAESKF1", 0>;
+defm "" : LMULReadAdvance<"ReadVAESKF2", 0>;
+defm "" : LMULReadAdvance<"ReadVAESZ", 0>;
+defm "" : LMULReadAdvance<"ReadVSM4K", 0>;
+defm "" : LMULReadAdvance<"ReadVSM4R", 0>;
+defm "" : LMULReadAdvance<"ReadVSM3C", 0>;
+defm "" : LMULReadAdvance<"ReadVSM3ME", 0>;
 
 //===----------------------------------------------------------------------===//
 // Unsupported extensions

@@ -24,9 +24,9 @@ def tuimm5 : RISCVOp, TImmLeaf<XLenVT, [{return isUInt<5>(Imm);}]>;
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
 multiclass VCLMUL_MV_V_X<string opcodestr, bits<6> funct6> {
   def V  : VALUVV<funct6, OPMVV, opcodestr # "." # "vv">,
-           SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+           SchedBinaryMC<"WriteVCLMUL", "ReadVCLMUL", "ReadVCLMUL">;
   def X  : VALUVX<funct6, OPMVX, opcodestr # "." # "vx">,
-           SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+           SchedBinaryMC<"WriteVCLMULH", "ReadVCLMULH", "ReadVCLMULH">;
 }
 
 class RVInstIVI_VROR<bits<6> funct6, dag outs, dag ins, string opcodestr,
@@ -55,7 +55,7 @@ multiclass VROR_IV_V_X_I<string opcodestr, bits<6> funct6>
   def I : RVInstIVI_VROR<funct6, (outs VR:$vd),
               (ins VR:$vs2, uimm6:$imm, VMaskOp:$vm),
               opcodestr # ".vi", "$vd, $vs2, $imm$vm">,
-          SchedUnaryMC<"WriteVIALUI", "ReadVIALUV">;
+          SchedUnaryMC<"WriteVROR", "ReadVROR">;
 }
 
 // op vd, vs2, vs1
@@ -107,10 +107,10 @@ multiclass VAES_MV_V_S<bits<6> funct6_vv, bits<6> funct6_vs, bits<5> vs1,
                          RISCVVFormat opv, string opcodestr> {
   let RVVConstraint = NoConstraint in
   def NAME # _VV : PALUVs2NoVmBinary<funct6_vv, vs1, opv, opcodestr # ".vv">,
-                   SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                   SchedBinaryMC<"WriteVAESMV", "ReadVAESMV", "ReadVAESMV">;
   let RVVConstraint = VS2Constraint in
   def NAME # _VS : PALUVs2NoVmBinary<funct6_vs, vs1, opv, opcodestr # ".vs">,
-                   SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                   SchedBinaryMC<"WriteVAESMV", "ReadVAESMV", "ReadVAESMV">;
 }
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 0
 
@@ -142,22 +142,22 @@ let Predicates = [HasStdExtZvkb] in {
 
 let Predicates = [HasStdExtZvkg], RVVConstraint = NoConstraint in {
   def VGHSH_VV : PALUVVNoVmTernary<0b101100, OPMVV, "vghsh.vv">,
-                 SchedTernaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV",
-                                "ReadVIALUV">;
+                 SchedTernaryMC<"WriteVGHSH", "ReadVGHSH", "ReadVGHSH",
+                                "ReadVGHSH">;
   def VGMUL_VV : PALUVs2NoVmBinary<0b101000, 0b10001, OPMVV, "vgmul.vv">,
-                 SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                 SchedBinaryMC<"WriteVGMUL", "ReadVGMUL", "ReadVGMUL">;
 } // Predicates = [HasStdExtZvkg]
 
 let Predicates = [HasStdExtZvknhaOrZvknhb], RVVConstraint = Sha2Constraint in {
   def VSHA2CH_VV : PALUVVNoVmTernary<0b101110, OPMVV, "vsha2ch.vv">,
-                   SchedTernaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV",
-                                  "ReadVIALUV">;
+                   SchedTernaryMC<"WriteVSHA2CH", "ReadVSHA2CH", "ReadVSHA2CH",
+                                  "ReadVSHA2CH">;
   def VSHA2CL_VV : PALUVVNoVmTernary<0b101111, OPMVV, "vsha2cl.vv">,
-                   SchedTernaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV",
-                                  "ReadVIALUV">;
+                   SchedTernaryMC<"WriteVSHA2CL", "ReadVSHA2CL", "ReadVSHA2CL",
+                                  "ReadVSHA2CL">;
   def VSHA2MS_VV : PALUVVNoVmTernary<0b101101, OPMVV, "vsha2ms.vv">,
-                   SchedTernaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV",
-                                  "ReadVIALUV">;
+                   SchedTernaryMC<"WriteVSHA2MS", "ReadVSHA2MS", "ReadVSHA2MS",
+                                  "ReadVSHA2MS">;
 } // Predicates = [HasStdExtZvknhaOrZvknhb]
 
 let Predicates = [HasStdExtZvkned] in {
@@ -166,26 +166,26 @@ let Predicates = [HasStdExtZvkned] in {
   defm VAESEF     : VAES_MV_V_S<0b101000, 0b101001, 0b00011, OPMVV, "vaesef">;
   defm VAESEM     : VAES_MV_V_S<0b101000, 0b101001, 0b00010, OPMVV, "vaesem">;
   def  VAESKF1_VI : PALUVINoVm<0b100010, "vaeskf1.vi", uimm5>,
-                    SchedUnaryMC<"WriteVIALUV", "ReadVIALUV">;
+                    SchedUnaryMC<"WriteVAESKF1", "ReadVAESKF2">;
   def  VAESKF2_VI : PALUVINoVmBinary<0b101010, "vaeskf2.vi", uimm5>,
-                    SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                    SchedBinaryMC<"WriteVAESKF2", "ReadVAESKF2", "ReadVAESKF2">;
   let RVVConstraint = VS2Constraint in
   def  VAESZ_VS   : PALUVs2NoVmBinary<0b101001, 0b00111, OPMVV, "vaesz.vs">,
-                    SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                    SchedBinaryMC<"WriteVAESZ", "ReadVAESZ", "ReadVAESZ">;
 } // Predicates = [HasStdExtZvkned]
 
 let Predicates = [HasStdExtZvksed] in {
   let RVVConstraint = NoConstraint in
   def  VSM4K_VI : PALUVINoVm<0b100001, "vsm4k.vi", uimm5>,
-                  SchedUnaryMC<"WriteVIALUV", "ReadVIALUV">;
+                  SchedUnaryMC<"WriteVSM4K", "ReadVSM4K">;
   defm VSM4R    : VAES_MV_V_S<0b101000, 0b101001, 0b10000, OPMVV, "vsm4r">;
 } // Predicates = [HasStdExtZvksed]
 
 let Predicates = [HasStdExtZvksh], RVVConstraint = VS2Constraint in {
   def VSM3C_VI  : PALUVINoVmBinary<0b101011, "vsm3c.vi", uimm5>,
-                  SchedBinaryMC<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV">;
+                  SchedBinaryMC<"WriteVSM3C", "ReadVSM3C", "ReadVSM3C">;
   def VSM3ME_VV : PALUVVNoVm<0b100000, OPMVV, "vsm3me.vv">,
-                  SchedUnaryMC<"WriteVIALUI", "ReadVIALUV">;
+                  SchedUnaryMC<"WriteVSM3ME", "ReadVSM3ME">;
 } // Predicates = [HasStdExtZvksh]
 
 //===----------------------------------------------------------------------===//
@@ -337,10 +337,10 @@ multiclass VPseudoVCLMUL_VV_VX {
   foreach m = MxList in {
     defvar mx = m.MX;
     defm "" : VPseudoBinaryV_VV<m>,
-              SchedBinary<"WriteVIALUV", "ReadVIALUV", "ReadVIALUV", mx,
+              SchedBinary<"WriteVCLMUL", "ReadVCLMUL", "ReadVCLMUL", mx,
                           forceMergeOpRead=true>;
     defm "" : VPseudoBinaryV_VX<m>,
-              SchedBinary<"WriteVIALUX", "ReadVIALUV", "ReadVIALUX", mx,
+              SchedBinary<"WriteVCLMULH", "ReadVCLMULH", "ReadVCLMULH", mx,
                           forceMergeOpRead=true>;
   }
 }
@@ -354,28 +354,104 @@ multiclass VPseudoUnaryV_V<LMULInfo m> {
   }
 }
 
-multiclass VPseudoVALU_V {
+multiclass VPseudoVBREV {
   foreach m = MxList in {
     defvar mx = m.MX;
     defm "" : VPseudoUnaryV_V<m>,
-              SchedUnary<"WriteVIALUV", "ReadVIALUV", mx,
-                         forceMergeOpRead=true>;
+              SchedUnary<"WriteVBREV", "ReadVBREV", mx, forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVCLZ {
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoUnaryV_V<m>,
+              SchedUnary<"WriteVCLZ", "ReadVCLZ", mx, forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVCTZ {
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoUnaryV_V<m>,
+              SchedUnary<"WriteVCTZ", "ReadVCTZ", mx, forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVCPOP {
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoUnaryV_V<m>,
+              SchedUnary<"WriteVCPOP", "ReadVCPOP", mx, forceMergeOpRead=true>;
   }
 }
 
 multiclass VPseudoVWALU_VV_VX_VI<Operand ImmType> : VPseudoVWALU_VV_VX {
   foreach m = MxListW in {
     defm "" : VPseudoBinaryW_VI<ImmType, m>,
-              SchedUnary<"WriteVIWALUV", "ReadVIWALUV", m.MX,
+              SchedUnary<"WriteVWSLL", "ReadVWSLL", m.MX,
                          forceMergeOpRead=true>;
   }
 }
 
+multiclass VPseudoVANDN {
+ foreach m = MxList in {
+    defm "" : VPseudoBinaryV_VV<m>,
+            SchedBinary<"WriteVANDN", "ReadVANDN", "ReadVANDN", m.MX,
+                        forceMergeOpRead=true>;
+    defm "" : VPseudoBinaryV_VX<m>,
+            SchedBinary<"WriteVANDN", "ReadVANDN", "ReadVANDN", m.MX,
+                        forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVBREV8 {
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoUnaryV_V<m>,
+              SchedUnary<"WriteVBREV8", "ReadVBREV8", mx, forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVREV8 {
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoUnaryV_V<m>,
+              SchedUnary<"WriteVREV8", "ReadVREV8", mx, forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVROL {
+ foreach m = MxList in {
+    defm "" : VPseudoBinaryV_VV<m>,
+            SchedBinary<"WriteVROL", "ReadVROL", "ReadVROL", m.MX,
+                        forceMergeOpRead=true>;
+    defm "" : VPseudoBinaryV_VX<m>,
+            SchedBinary<"WriteVROL", "ReadVROL", "ReadVROL", m.MX,
+                        forceMergeOpRead=true>;
+  }
+}
+
+multiclass VPseudoVROR<Operand ImmType> {
+  defvar Constraint = "";
+  foreach m = MxList in {
+    defvar mx = m.MX;
+    defm "" : VPseudoBinaryV_VV<m>,
+            SchedBinary<"WriteVROR", "ReadVROR", "ReadVROR", mx,
+                        forceMergeOpRead=true>;
+    defm "" : VPseudoBinaryV_VX<m>,
+            SchedBinary<"WriteVROR", "ReadVROR", "ReadVROR", mx,
+                        forceMergeOpRead=true>;
+    defm "" : VPseudoBinaryV_VI<ImmType, m>,
+            SchedUnary<"WriteVROR", "ReadVROR", mx, forceMergeOpRead=true>;
+  }
+}
+
 let Predicates = [HasStdExtZvbb] in {
-  defm PseudoVBREV  : VPseudoVALU_V;
-  defm PseudoVCLZ   : VPseudoVALU_V;
-  defm PseudoVCTZ   : VPseudoVALU_V;
-  defm PseudoVCPOP  : VPseudoVALU_V;
+  defm PseudoVBREV  : VPseudoVBREV;
+  defm PseudoVCLZ   : VPseudoVCLZ;
+  defm PseudoVCTZ   : VPseudoVCTZ;
+  defm PseudoVCPOP  : VPseudoVCPOP;
   defm PseudoVWSLL : VPseudoVWALU_VV_VX_VI<uimm5>;
 } // Predicates = [HasStdExtZvbb]
 
@@ -385,10 +461,10 @@ let Predicates = [HasStdExtZvbc] in {
 } // Predicates = [HasStdExtZvbc]
 
 let Predicates = [HasStdExtZvkb] in {
-  defm PseudoVANDN  : VPseudoVALU_VV_VX;
-  defm PseudoVBREV8 : VPseudoVALU_V;
-  defm PseudoVREV8  : VPseudoVALU_V;
-  defm PseudoVROL   : VPseudoVALU_VV_VX;
+  defm PseudoVANDN  : VPseudoVANDN;
+  defm PseudoVBREV8 : VPseudoVBREV8;
+  defm PseudoVREV8  : VPseudoVREV8;
+  defm PseudoVROL   : VPseudoVROL;
   defm PseudoVROR   : VPseudoVALU_VV_VX_VI<uimm6>;
 } // Predicates = [HasStdExtZvkb]
 
