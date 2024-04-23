@@ -214,6 +214,10 @@ New Compiler Flags
   This diagnostic can be disabled to make ``-Wmissing-field-initializers`` behave
   like it did before Clang 18.x. Fixes (`#56628 <https://github.com/llvm/llvm-project/issues/68933>`_)
 
+- ``-fexperimental-late-parse-attributes`` enables an experimental feature to
+  allow late parsing certain attributes in specific contexts where they would
+  not normally be late parsed.
+
 Deprecated Compiler Flags
 -------------------------
 
