@@ -234,6 +234,13 @@ option specifies "``-``", then the output will also be sent to standard output.
   no extra information, and InstrumentManager never overrides the default
   schedule class for a given instruction.
 
+.. option:: -skip-unsupported-instructions
+
+  Force :program:`llvm-mca` to continue even in the presence of instructions
+  which do not parse or lack key scheduling formation. Note that the resulting
+  analysis is impacted since those unsupported instructions are ignored as-if
+  they are not supplied as a part of the input.
+
 EXIT STATUS
 -----------
 
