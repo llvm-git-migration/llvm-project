@@ -570,6 +570,10 @@ AArch64Subtarget::getAuthenticatedLRCheckMethod() const {
   return AArch64PAuth::AuthCheckMethod::None;
 }
 
+bool AArch64Subtarget::enableSubRegLiveness() const {
+  return hasSME() && isStreaming();
+}
+
 bool AArch64Subtarget::enableMachinePipeliner() const {
   return getSchedModel().hasInstrSchedModel();
 }
