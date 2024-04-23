@@ -5,6 +5,7 @@ static_library("MCA") {
     "//llvm/lib/MC",
     "//llvm/lib/Support",
   ]
+  cflags_cc = ["-ggdb3", "-ggnu-pubnames", "-gdwarf-4"]
   include_dirs = [ "../include" ]
   sources = [
     "CodeEmitter.cpp",

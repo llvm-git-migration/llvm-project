@@ -175,7 +175,7 @@ template("unix_toolchain") {
 unix_toolchain("unix") {
   if (current_os != "ios" && current_os != "mac") {
     if (clang_base_path != "") {
-      ar = rebase_path(clang_base_path, root_build_dir) + "/bin/llvm-ar"
+      ar = rebase_path(clang_base_path, root_build_dir) + "/bin/ar"
     } else {
       ar = "ar"
     }
