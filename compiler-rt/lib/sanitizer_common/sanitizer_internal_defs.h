@@ -142,13 +142,16 @@ namespace __sanitizer {
 // 64-bit Windows uses LLP64 data model.
 typedef unsigned long long uptr;
 typedef signed long long sptr;
+#    define SANITIZER_PTR_MOD "ll"
 #else
 #  if (SANITIZER_WORDSIZE == 64) || SANITIZER_APPLE || SANITIZER_WINDOWS
 typedef unsigned long uptr;
 typedef signed long sptr;
+#    define SANITIZER_PTR_MOD "l"
 #  else
 typedef unsigned int uptr;
 typedef signed int sptr;
+#    define SANITIZER_PTR_MOD ""
 #  endif
 #endif  // defined(_WIN64)
 #if defined(__x86_64__)

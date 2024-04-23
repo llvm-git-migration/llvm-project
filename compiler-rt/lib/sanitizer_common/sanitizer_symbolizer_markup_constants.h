@@ -26,20 +26,23 @@ constexpr const char *kFormatDemangle = "{{{symbol:%s}}}";
 constexpr uptr kFormatDemangleMax = 1024;  // Arbitrary.
 
 // Function name or equivalent from PC location.
-constexpr const char *kFormatFunction = "{{{pc:%p}}}";
+constexpr const char *kFormatFunction = "{{{pc:0x%" SANITIZER_PTR_MOD "x}}}";
 constexpr uptr kFormatFunctionMax = 64;  // More than big enough for 64-bit hex.
 
 // Global variable name or equivalent from data memory address.
-constexpr const char *kFormatData = "{{{data:%p}}}";
+constexpr const char *kFormatData = "{{{data:0x%" SANITIZER_PTR_MOD "x}}}";
 
 // One frame in a backtrace (printed on a line by itself).
-constexpr const char *kFormatFrame = "{{{bt:%u:%p}}}";
+constexpr const char *kFormatFrame = "{{{bt:%d:0x%" SANITIZER_PTR_MOD "x}}}";
 
 // Module contextual element.
-constexpr const char *kFormatModule = "{{{module:%d:%s:elf:%s}}}";
+constexpr const char *kFormatModule =
+    "{{{module:%" SANITIZER_PTR_MOD "d:%s:elf:%s}}}";
 
 // mmap for a module segment.
-constexpr const char *kFormatMmap = "{{{mmap:%p:0x%x:load:%d:%s:0x%x}}}";
+constexpr const char *kFormatMmap =
+    "{{{mmap:0x%" SANITIZER_PTR_MOD "x:0x%" SANITIZER_PTR_MOD
+    "x:load:%" SANITIZER_PTR_MOD "d:%s:0x%" SANITIZER_PTR_MOD "x}}}";
 
 // Dump trigger element.
 #define FORMAT_DUMPFILE "{{{dumpfile:%s:%s}}}"
