@@ -29,7 +29,8 @@ namespace mca {
 CodeRegionGenerator::~CodeRegionGenerator() {}
 
 Expected<const CodeRegions &> AsmCodeRegionGenerator::parseCodeRegions(
-    const std::unique_ptr<MCInstPrinter> &IP) {
+    const std::unique_ptr<MCInstPrinter> &IP,
+    bool SkipUnsupportedInstructions) {
   MCTargetOptions Opts;
   Opts.PreserveAsmComments = false;
   CodeRegions &Regions = getRegions();
@@ -61,7 +62,9 @@ Expected<const CodeRegions &> AsmCodeRegionGenerator::parseCodeRegions(
         "This target does not support assembly parsing.",
         inconvertibleErrorCode());
   Parser->setTargetParser(*TAP);
-  Parser->Run(false);
+  if (Parser->Run(false) && !SkipUnsupportedInstructions)
+    return make_error<StringError>("Assembly input parsing had errors.",
+                                   inconvertibleErrorCode());
 
   if (CCP->hadErr())
     return make_error<StringError>("There was an error parsing comments.",

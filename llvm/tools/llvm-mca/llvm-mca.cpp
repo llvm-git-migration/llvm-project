@@ -440,7 +440,7 @@ int main(int argc, char **argv) {
   mca::AsmAnalysisRegionGenerator CRG(*TheTarget, SrcMgr, ACtx, *MAI, *STI,
                                       *MCII);
   Expected<const mca::AnalysisRegions &> RegionsOrErr =
-      CRG.parseAnalysisRegions(std::move(IPtemp));
+      CRG.parseAnalysisRegions(std::move(IPtemp), SkipUnsupportedInstructions);
   if (!RegionsOrErr) {
     if (auto Err =
             handleErrors(RegionsOrErr.takeError(), [](const StringError &E) {
@@ -482,7 +482,8 @@ int main(int argc, char **argv) {
   mca::AsmInstrumentRegionGenerator IRG(*TheTarget, SrcMgr, ICtx, *MAI, *STI,
                                         *MCII, *IM);
   Expected<const mca::InstrumentRegions &> InstrumentRegionsOrErr =
-      IRG.parseInstrumentRegions(std::move(IPtemp));
+      IRG.parseInstrumentRegions(std::move(IPtemp),
+                                 SkipUnsupportedInstructions);
   if (!InstrumentRegionsOrErr) {
     if (auto Err = handleErrors(InstrumentRegionsOrErr.takeError(),
                                 [](const StringError &E) {

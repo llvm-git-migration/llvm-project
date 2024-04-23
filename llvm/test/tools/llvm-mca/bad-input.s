@@ -1,0 +1,11 @@
+# RUN: not llvm-mca %s -o /dev/null 2>&1 | FileCheck --check-prefixes=CHECK-ALL,CHECK %s
+# RUN: not llvm-mca -skip-unsupported-instructions %s -o /dev/null 2>&1 | FileCheck --check-prefixes=CHECK-ALL,CHECK-SKIP %s
+
+# Test checks that MCA does not produce a total cycles estimate if it encounters parse errors.
+
+# CHECK-ALL-NOT: Total Cycles:
+
+# CHECK: error: Assembly input parsing had errors.
+# CHECK-SKIP: error: no assembly instructions found.
+
+This is not a valid assembly file for any architecture (by virtue of this text.)
