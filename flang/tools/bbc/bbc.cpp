@@ -212,6 +212,11 @@ static llvm::cl::opt<std::string>
                          llvm::cl::desc("Override host target triple"),
                          llvm::cl::init(""));
 
+static llvm::cl::opt<bool>
+    setNSW("integer-overflow",
+           llvm::cl::desc("add nsw flag to internal operations"),
+           llvm::cl::init(false));
+
 #define FLANG_EXCLUDE_CODEGEN
 #include "flang/Tools/CLOptions.inc"
 
@@ -351,6 +356,7 @@ static mlir::LogicalResult convertFortranSourceToMLIR(
   Fortran::lower::LoweringOptions loweringOptions{};
   loweringOptions.setNoPPCNativeVecElemOrder(enableNoPPCNativeVecElemOrder);
   loweringOptions.setLowerToHighLevelFIR(useHLFIR || emitHLFIR);
+  loweringOptions.setNoSignedWrap(setNSW);
   std::vector<Fortran::lower::EnvironmentDefault> envDefaults = {};
   auto burnside = Fortran::lower::LoweringBridge::create(
       ctx, semanticsContext, defKinds, semanticsContext.intrinsics(),
@@ -428,6 +434,7 @@ static mlir::LogicalResult convertFortranSourceToMLIR(
 
     // Add O2 optimizer pass pipeline.
     MLIRToLLVMPassPipelineConfig config(llvm::OptimizationLevel::O2);
+    config.NoSignedWrap = setNSW;
     fir::registerDefaultInlinerPass(config);
     fir::createDefaultFIROptimizerPassPipeline(pm, config);
   }
