@@ -9,6 +9,7 @@
 #ifndef LLDB_LLDB_PRIVATE_TYPES_H
 #define LLDB_LLDB_PRIVATE_TYPES_H
 
+#include "API/SBExpressionOptions.h"
 #include "lldb/lldb-private.h"
 
 #include "llvm/ADT/ArrayRef.h"
@@ -94,6 +95,30 @@ struct RegisterSet {
   /// particular RegisterContext, eax would be included in this RegisterSet by
   /// adding the value 4.  Not by adding the value lldb_eax_i386.
   const uint32_t *registers;
+};
+
+/// A type-erased pair of llvm::dwarf::SourceLanguageName and version.
+struct SourceLanguage {
+  SourceLanguage() = default;
+  SourceLanguage(lldb::LanguageType language_type);
+  SourceLanguage(lldb::SBSourceLanguageName name, uint32_t version)
+      : name(name), version(version) {}
+  SourceLanguage(uint16_t name, uint32_t version)
+      : name(name), version(version) {}
+  SourceLanguage(std::optional<std::pair<uint32_t, uint16_t>> name_vers)
+      : name(name_vers ? name_vers->first : 0),
+        version(name_vers ? name_vers->second : 0) {}
+  operator bool() const { return name > 0; }
+  lldb::LanguageType AsLanguageType() const;
+  llvm::StringRef GetDescription() const;
+  lldb::SBSourceLanguageName GetSourceLanguageName() const {
+    return (lldb::SBSourceLanguageName)name;
+  }
+  bool IsC() const;
+  bool IsObjC() const;
+  bool IsCPlusPlus() const;
+  uint16_t name = 0;
+  uint32_t version = 0;
 };
 
 struct OptionEnumValueElement {

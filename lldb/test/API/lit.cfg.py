@@ -239,6 +239,9 @@ if is_configured("llvm_tools_dir"):
 if is_configured("server"):
     dotest_cmd += ["--server", config.server]
 
+if is_configured("lldb_built_include_dir"):
+    dotest_cmd += ["--lldb-built-include-dir", config.lldb_built_include_dir]
+
 if is_configured("lldb_libs_dir"):
     dotest_cmd += ["--lldb-libs-dir", config.lldb_libs_dir]
 
