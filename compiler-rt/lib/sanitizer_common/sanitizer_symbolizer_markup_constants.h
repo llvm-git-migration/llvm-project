@@ -39,7 +39,7 @@ constexpr const char *kFormatFrame = "{{{bt:%d:%p}}}";
 constexpr const char *kFormatModule = "{{{module:%d:%s:elf:%s}}}";
 
 // mmap for a module segment.
-constexpr const char *kFormatMmap = "{{{mmap:%p:0x%x:load:%d:%s:0x%x}}}";
+constexpr const char *kFormatMmap = "{{{mmap:%p:0x%zx:load:%d:%s:0x%zx}}}";
 
 // Dump trigger element.
 #define FORMAT_DUMPFILE "{{{dumpfile:%s:%s}}}"

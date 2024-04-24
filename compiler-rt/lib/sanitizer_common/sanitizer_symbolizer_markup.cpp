@@ -119,11 +119,10 @@ static void RenderMmaps(InternalScopedString *buffer,
     // module.base_address == dlpi_addr
     // range.beg == dlpi_addr + p_vaddr
     // relative address == p_vaddr == range.beg - module.base_address
-    buffer->AppendF(
-        kFormatMmap, reinterpret_cast<void *>(range.beg),
-        static_cast<unsigned int>(range.end - range.beg),
-        static_cast<int>(moduleId), accessBuffer.data(),
-        static_cast<unsigned int>(range.beg - module.base_address()));
+    buffer->AppendF(kFormatMmap, reinterpret_cast<void *>(range.beg),
+                    static_cast<size_t>(range.end - range.beg),
+                    static_cast<int>(moduleId), accessBuffer.data(),
+                    static_cast<size_t>(range.beg - module.base_address()));
 
     buffer->Append("\n");
     accessBuffer.clear();
