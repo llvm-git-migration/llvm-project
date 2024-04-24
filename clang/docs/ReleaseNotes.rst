@@ -561,6 +561,7 @@ Bug Fixes to C++ Support
 - Fixed a crash when trying to evaluate a user-defined ``static_assert`` message whose ``size()``
   function returns a large or negative value. Fixes (#GH89407).
 - Fixed a use-after-free bug in parsing of type constraints with default arguments that involve lambdas. (#GH67235)
+- Fix a bug on template partial specialization whose template parameter is `decltype(auto)`.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
