@@ -33,7 +33,7 @@ constexpr uptr kFormatFunctionMax = 64;  // More than big enough for 64-bit hex.
 constexpr const char *kFormatData = "{{{data:%p}}}";
 
 // One frame in a backtrace (printed on a line by itself).
-constexpr const char *kFormatFrame = "{{{bt:%u:%p}}}";
+constexpr const char *kFormatFrame = "{{{bt:%d:%p}}}";
 
 // Module contextual element.
 constexpr const char *kFormatModule = "{{{module:%d:%s:elf:%s}}}";
