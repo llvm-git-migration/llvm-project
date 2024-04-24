@@ -904,48 +904,18 @@ time_zone::__get_info(sys_seconds __time) const {
   std::__throw_runtime_error("tzdb: corrupt db");
 }
 
-enum class __position {
-  __beginning,
-  __middle,
-  __end,
-};
+// Is the "__local_time" present in "__first" and "__second". If so the
+// local_info has an ambiguous result.
+[[nodiscard]] static bool
+__is_ambiguous(local_seconds __local_time, const sys_info& __first, const sys_info& __second) {
+  std::chrono::local_seconds __end_first{__first.end.time_since_epoch() + __first.offset};
+  std::chrono::local_seconds __begin_second{__second.begin.time_since_epoch() + __second.offset};
 
-// Determines the position of "__time" inside "__info".
-//
-// The code picks an arbitrary value to determine the "middle"
-// - Every time that is more than the threshold from a boundary, or
-// - Every value that is at the boundary sys_seconds::min() or
-//   sys_seconds::max().
-//
-// If not in the middle, it returns __beginning or __end.
-[[nodiscard]] static __position __get_position(sys_seconds __time, const sys_info __info) {
-  _LIBCPP_ASSERT_ARGUMENT_WITHIN_DOMAIN(
-      __time >= __info.begin && __time < __info.end, "A value outside the range's position can't be determined.");
-
-  using _Tp = sys_seconds::rep;
-  // Africa/Freetown has a 4 day "zone"
-  // Africa/Freetown  Fri Sep  1 00:59:59 1939 UT = Thu Aug 31 23:59:59 1939 -01 isdst=0 gmtoff=-3600
-  // Africa/Freetown  Fri Sep  1 01:00:00 1939 UT = Fri Sep  1 00:20:00 1939 -0040 isdst=1 gmtoff=-2400
-  // Africa/Freetown  Tue Sep  5 00:39:59 1939 UT = Mon Sep  4 23:59:59 1939 -0040 isdst=1 gmtoff=-2400
-  // Africa/Freetown  Tue Sep  5 00:40:00 1939 UT = Mon Sep  4 23:40:00 1939 -01 isdst=0 gmtoff=-3600
-  //
-  // Originally used a one week threshold, but due to this switched to 1 day.
-  // This seems to work in practice.
-  //
-  // TODO TZDB Evaluate the proper threshold.
-  constexpr _Tp __threshold = 24 * 3600;
-
-  _Tp __upper = std::__add_sat(__info.begin.time_since_epoch().count(), __threshold);
-  if (__time >= __info.begin && __time.time_since_epoch().count() < __upper)
-    return __info.begin != sys_seconds::min() ? __position::__beginning : __position::__middle;
-
-  _Tp __lower = std::__sub_sat(__info.end.time_since_epoch().count(), __threshold);
-  if (__time < __info.end && __time.time_since_epoch().count() >= __lower)
-    return __info.end != sys_seconds::max() ? __position::__end : __position::__middle;
-
-  return __position::__middle;
+  return __local_time < __end_first && __local_time >= __begin_second;
 }
 
+// Determines the result of the "__local_time". This expects the object
+// "__first" to be earlier in time than "__second".
 [[nodiscard]] static local_info
 __get_info(local_seconds __local_time, const sys_info& __first, const sys_info& __second) {
   std::chrono::local_seconds __end_first{__first.end.time_since_epoch() + __first.offset};
@@ -993,8 +963,8 @@ time_zone::__get_info(local_seconds __local_time) const {
    * 2020.11.01                  2021.04.01              2021.11.01
    * offset +05                  offset +05              offset +05
    * save    0s                  save    1h              save    0s
-   * |-------------W----------|
-   *                             |----------W--------------|
+   * |------------//----------|
+   *                             |---------//--------------|
    *                                                    |-------------
    *                           ~~                        ^^
    *
@@ -1002,7 +972,7 @@ time_zone::__get_info(local_seconds __local_time) const {
    * location. For example, Indian/Kerguelen switched only once. In 1950 from an
    * offset of 0 hours to an offset of +05 hours.
    *
-   * During all these shifts the UTC time will have not gaps.
+   * During all these shifts the UTC time will not have gaps.
    */
 
   // The code needs to determine the system time for the local time. There is no
@@ -1012,8 +982,9 @@ time_zone::__get_info(local_seconds __local_time) const {
   sys_info __info = __get_info(__guess);
 
   // At this point the offset can be used to determine an estimate for the local
-  // time. Before doing the determine the offset validate whether the local time
-  // is the range [chrono::local_seconds::min(), chrono::local_seconds::max()).
+  // time. Before doing that, determine the offset and validate whether the
+  // local time is the range [chrono::local_seconds::min(),
+  // chrono::local_seconds::max()).
   if (__local_seconds < 0s && __info.offset > 0s)
     if (__local_seconds - chrono::local_seconds::min().time_since_epoch() < __info.offset)
       return {-1, __info, {}};
@@ -1022,22 +993,23 @@ time_zone::__get_info(local_seconds __local_time) const {
     if (chrono::local_seconds::max().time_since_epoch() - __local_seconds < -__info.offset)
       return {-2, __info, {}};
 
-  // Based on the information in the sys_info found the local time can be
+  // Based on the information found in the sys_info, the local time can be
   // converted to a system time. This resulting time can be in the following
-  // locations of the sys_info found:
+  // locations of the sys_info:
   //
-  //                             |----------W--------------|
-  //                           1   2        3             4  5
+  //                             |---------//--------------|
+  //                           1   2.1      2.2         2.3  5
   //
   // 1. The estimate is before the returned sys_info object.
   //    The result is either non-existent or unique in the previous sys_info.
-  // 2. The estimate is in the beginning of the returned sys_info object.
-  //    The result is either unique or ambiguous with the previous sys_info.
-  // 3. The estimate is in the "middle" of the returned sys_info.
-  //    The result is unique.
-  // 4. The result is at the end of the returned sys_info object.
-  //    The result is either unique or ambiguous with the next sys_info.
-  // 5. The estimate is after the returned sys_info object.
+  // 2. The estimate is in the sys_info object
+  //    - If the sys_info begin is not sys_seconds::min(), then it might be at
+  //      2.1 and could be ambiguous with the previous or unique.
+  //    - If sys_info end is not sys_seconds::max(), then it might be at 2.3
+  //      and could be ambiguous with the next or unique.
+  //    - Else it is at 2.2 and always unique. This case happens when a
+  //      time zone has not transitions. For example, UTC or GMT+1.
+  // 3. The estimate is after the returned sys_info object.
   //    The result is either non-existent or unique in the next sys_info.
   //
   // There is no specification where the "middle" starts. Similar issues can
@@ -1051,9 +1023,6 @@ time_zone::__get_info(local_seconds __local_time) const {
   //
   // However the local_info object only has 2 sys_info objects, so this option
   // is not tested.
-  //
-  // The positions 2, 3, or 4 are determined by __get_position. This function
-  // also contains the definition of "middle".
 
   sys_seconds __sys_time{__local_seconds - __info.offset};
   if (__sys_time < __info.begin)
@@ -1061,21 +1030,24 @@ time_zone::__get_info(local_seconds __local_time) const {
     return chrono::__get_info(__local_time, __get_info(__info.begin - 1s), __info);
 
   if (__sys_time >= __info.end)
-    // Case 5 after __info
+    // Case 3 after __info
     return chrono::__get_info(__local_time, __info, __get_info(__info.end));
 
-  switch (__get_position(__sys_time, __info)) {
-  case __position::__beginning: // Case 2
-    return chrono::__get_info(__local_time, __get_info(__info.begin - 1s), __info);
-
-  case __position::__middle: // Case 3
-    return {local_info::unique, __info, {}};
-
-  case __position::__end: // Case 4
-    return chrono::__get_info(__local_time, __info, __get_info(__info.end));
+  // Case 2 in __info
+  if (__info.begin != sys_seconds::min()) {
+    // Case 2.1 Not at the beginning, when not ambiguous the result should test
+    // case 2.3.
+    sys_info __prev = __get_info(__info.begin - 1s);
+    if (__is_ambiguous(__local_time, __prev, __info))
+      return {local_info::ambiguous, __prev, __info};
   }
 
-  std::__libcpp_unreachable();
+  if (__info.end == sys_seconds::max())
+    // At the end so it's case 2.2
+    return {local_info::unique, __info, sys_info{}};
+
+  // This tests case 2.2 or case 2.3.
+  return chrono::__get_info(__local_time, __info, __get_info(__info.end));
 }
 
 } // namespace chrono
