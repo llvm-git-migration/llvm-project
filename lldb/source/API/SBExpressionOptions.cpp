@@ -156,6 +156,13 @@ void SBExpressionOptions::SetLanguage(lldb::LanguageType language) {
   m_opaque_up->SetLanguage(language);
 }
 
+void SBExpressionOptions::SetLanguage(uint16_t dwarf_lname_code,
+                                      uint32_t dwarf_lversion) {
+  LLDB_INSTRUMENT_VA(this, dwarf_lname_code, dwarf_lversion);
+
+  m_opaque_up->SetLanguage(dwarf_lname_code, dwarf_lversion);
+}
+
 void SBExpressionOptions::SetCancelCallback(
     lldb::ExpressionCancelCallback callback, void *baton) {
   LLDB_INSTRUMENT_VA(this, callback, baton);

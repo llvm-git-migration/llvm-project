@@ -67,6 +67,10 @@ public:
   void SetTrapExceptions(bool trap_exceptions = true);
 
   void SetLanguage(lldb::LanguageType language);
+  /// Set the language using a pair of language code and version as
+  /// defined by the DWARF 6 specification.
+  /// WARNING: These codes may change until DWARF 6 is finalized.
+  void SetLanguage(uint16_t dwarf_lname_code, uint32_t dwarf_lversion);
 
 #ifndef SWIG
   void SetCancelCallback(lldb::ExpressionCancelCallback callback, void *baton);
