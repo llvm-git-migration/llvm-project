@@ -34,5 +34,9 @@ ENUM_LOWERINGOPT(NoPPCNativeVecElemOrder, unsigned, 1, 0)
 /// On by default.
 ENUM_LOWERINGOPT(Underscoring, unsigned, 1, 1)
 
+/// If true, add nsw flags to arithmetic operations for integer.
+/// Off by default.
+ENUM_LOWERINGOPT(NoSignedWrap, unsigned, 1, 0)
+
 #undef LOWERINGOPT
 #undef ENUM_LOWERINGOPT
