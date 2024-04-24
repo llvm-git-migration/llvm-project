@@ -1085,6 +1085,37 @@ bool DAGCombiner::reassociationCanBreakAddressingModePattern(unsigned Opc,
   if (Opc != ISD::ADD || N0.getOpcode() != ISD::ADD)
     return false;
 
+  // Check for vscale addressing modes.
+  // (load/store (add (add x, y), vscale))
+  // (load/store (add (add x, y), (lsl vscale, C)))
+  // (load/store (add (add x, y), (mul vscale, C)))
+  if ((N1.getOpcode() == ISD::VSCALE ||
+       ((N1.getOpcode() == ISD::SHL || N1.getOpcode() == ISD::MUL) &&
+        N1.getOperand(0).getOpcode() == ISD::VSCALE &&
+        isa<ConstantSDNode>(N1.getOperand(1)))) &&
+      N1.getValueSizeInBits() <= 64) {
+    unsigned ScalableOffset =
+        N1.getOpcode() == ISD::VSCALE
+            ? N1.getConstantOperandVal(0)
+            : (N1.getOperand(0).getConstantOperandVal(0) *
+               (N1.getOpcode() == ISD::SHL ? (1 << N1.getConstantOperandVal(1))
+                                           : N1.getConstantOperandVal(1)));
+    if (all_of(N->uses(), [&](SDNode *Node) {
+          if (auto *LoadStore = dyn_cast<MemSDNode>(Node)) {
+            TargetLoweringBase::AddrMode AM;
+            AM.HasBaseReg = true;
+            AM.ScalableOffset = ScalableOffset;
+            EVT VT = LoadStore->getMemoryVT();
+            unsigned AS = LoadStore->getAddressSpace();
+            Type *AccessTy = VT.getTypeForEVT(*DAG.getContext());
+            return TLI.isLegalAddressingMode(DAG.getDataLayout(), AM, AccessTy,
+                                             AS);
+          }
+          return false;
+        }))
+      return true;
+  }
+
   auto *C2 = dyn_cast<ConstantSDNode>(N1);
   if (!C2)
     return false;
