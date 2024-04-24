@@ -173,57 +173,53 @@ GetAffectingModuleMaps(const Preprocessor &PP, Module *RootModule) {
 
   const HeaderSearch &HS = PP.getHeaderSearchInfo();
   const ModuleMap &MM = HS.getModuleMap();
-  const SourceManager &SourceMgr = PP.getSourceManager();
 
   std::set<const FileEntry *> ModuleMaps;
-  auto CollectIncludingModuleMaps = [&](FileID FID, FileEntryRef F) {
-    if (!ModuleMaps.insert(F).second)
-      return;
-    SourceLocation Loc = SourceMgr.getIncludeLoc(FID);
-    // The include location of inferred module maps can point into the header
-    // file that triggered the inferring. Cut off the walk if that's the case.
-    while (Loc.isValid() && isModuleMap(SourceMgr.getFileCharacteristic(Loc))) {
-      FID = SourceMgr.getFileID(Loc);
-      F = *SourceMgr.getFileEntryRefForID(FID);
-      if (!ModuleMaps.insert(F).second)
-        break;
-      Loc = SourceMgr.getIncludeLoc(FID);
-    }
-  };
-
   std::set<const Module *> ProcessedModules;
-  auto CollectIncludingMapsFromAncestors = [&](const Module *M) {
-    for (const Module *Mod = M; Mod; Mod = Mod->Parent) {
-      if (!ProcessedModules.insert(Mod).second)
-        break;
+  auto CollectModuleMapsForHierarchy = [&](const Module *M) {
+    M = M->getTopLevelModule();
+
+    if (!ProcessedModules.insert(M).second)
+      return;
+
+    std::queue<const Module *> Q;
+    Q.push(M);
+    while (!Q.empty()) {
+      const Module *Mod = Q.front();
+      Q.pop();
+
       // The containing module map is affecting, because it's being pointed
       // into by Module::DefinitionLoc.
-      if (FileID FID = MM.getContainingModuleMapFileID(Mod); FID.isValid())
-        CollectIncludingModuleMaps(FID, *SourceMgr.getFileEntryRefForID(FID));
+      if (auto FE = MM.getContainingModuleMapFile(Mod); FE)
+        ModuleMaps.insert(*FE);
       // For inferred modules, the module map that allowed inferring is not in
       // the include chain of the virtual containing module map file. It did
       // affect the compilation, though.
-      if (FileID FID = MM.getModuleMapFileIDForUniquing(Mod); FID.isValid())
-        CollectIncludingModuleMaps(FID, *SourceMgr.getFileEntryRefForID(FID));
+      if (auto FE = MM.getModuleMapFileForUniquing(Mod); FE)
+        ModuleMaps.insert(*FE);
+
+      for (auto *SubM : Mod->submodules())
+        Q.push(SubM);
     }
   };
 
   // Handle all the affecting modules referenced from the root module.
 
+  CollectModuleMapsForHierarchy(RootModule);
+
   std::queue<const Module *> Q;
   Q.push(RootModule);
   while (!Q.empty()) {
-    const Module *CurrentModule = Q.front();
+    const Module *RootSubmodule = Q.front();
     Q.pop();
 
-    CollectIncludingMapsFromAncestors(CurrentModule);
-    for (const Module *ImportedModule : CurrentModule->Imports)
-      CollectIncludingMapsFromAncestors(ImportedModule);
-    for (const Module *UndeclaredModule : CurrentModule->UndeclaredUses)
-      CollectIncludingMapsFromAncestors(UndeclaredModule);
+    for (const Module *ImportedModule : RootSubmodule->Imports)
+      CollectModuleMapsForHierarchy(ImportedModule);
+    for (const Module *UndeclaredModule : RootSubmodule->UndeclaredUses)
+      CollectModuleMapsForHierarchy(UndeclaredModule);
 
-    for (auto *M : CurrentModule->submodules())
-      Q.push(M);
+    for (auto *SubM : RootSubmodule->submodules())
+      Q.push(SubM);
   }
 
   // Handle textually-included headers that belong to other modules.
@@ -249,8 +245,38 @@ GetAffectingModuleMaps(const Preprocessor &PP, Module *RootModule) {
 
     for (const auto &KH : HS.findResolvedModulesForHeader(*File))
       if (const Module *M = KH.getModule())
-        CollectIncludingMapsFromAncestors(M);
+        CollectModuleMapsForHierarchy(M);
   }
+
+  // Note: This algorithm doesn't handle all edge-cases. Let's say something
+  // from \c ModulesToProcess imports X. The algorithm doesn't pick up
+  // Y.modulemap as affecting in the following cases:
+
+  //--- X.modulemap
+  // module X { header "X.h" }
+  // extern module Y "Y.modulemap
+  //--- Y.modulemap
+  // module Y { header "Y.h" }
+  //
+  // Since SourceManager doesn't keep list of files included from X.modulemap,
+  // we would need to walk up the include chain from all leaf files to figure
+  // out if they are reachable from X.modulemap and if so mark all module map
+  // files in the chain as affecting.
+
+  //--- Y.modulemap
+  // module Y { header "Y.h" }
+  // extern module X "X.modulemap"
+  //--- X.modulemap
+  // module X { header "X.h" }
+  // module Y.Sub { header "Y_Sub.h" }
+  //
+  // Only considering X.modulemap affecting means that parsing it without having
+  // access to Y.modulemap fails. There is no way to find out this dependence
+  // since ModuleMap does not keep a mapping from a module map file to the
+  // modules it defines. We could always consider the including module map as
+  // affecting, but that is problematic on MacOS, where X might be something
+  // like Darwin whose parent module map includes lots of other module maps that
+  // describe unrelated top-level modules.
 
   return ModuleMaps;
 }
@@ -1631,6 +1657,7 @@ struct InputFileEntry {
   bool IsTransient;
   bool BufferOverridden;
   bool IsTopLevel;
+  bool IsTopLevelAmongAffecting;
   bool IsModuleMap;
   uint32_t ContentHash[2];
 
@@ -1638,6 +1665,18 @@ struct InputFileEntry {
 };
 
 } // namespace
+
+SourceLocation ASTWriter::getAffectingIncludeLoc(const SourceManager &SourceMgr,
+                                                 const SrcMgr::FileInfo &File) {
+  SourceLocation IncludeLoc = File.getIncludeLoc();
+  if (IncludeLoc.isValid()) {
+    FileID IncludeFID = SourceMgr.getFileID(IncludeLoc);
+    assert(IncludeFID.isValid() && "IncludeLoc in invalid file");
+    if (!IsSLocAffecting[IncludeFID.ID])
+      IncludeLoc = SourceLocation();
+  }
+  return IncludeLoc;
+}
 
 void ASTWriter::WriteInputFiles(SourceManager &SourceMgr,
                                 HeaderSearchOptions &HSOpts) {
@@ -1654,6 +1693,7 @@ void ASTWriter::WriteInputFiles(SourceManager &SourceMgr,
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1)); // Overridden
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1)); // Transient
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1)); // Top-level
+  IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1)); // Top-level affect
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1)); // Module map
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 16)); // Name as req. len
   IFAbbrev->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Blob)); // Name as req. + name
@@ -1693,6 +1733,8 @@ void ASTWriter::WriteInputFiles(SourceManager &SourceMgr,
     Entry.IsTransient = Cache->IsTransient;
     Entry.BufferOverridden = Cache->BufferOverridden;
     Entry.IsTopLevel = File.getIncludeLoc().isInvalid();
+    Entry.IsTopLevelAmongAffecting =
+        getAffectingIncludeLoc(SourceMgr, File).isInvalid();
     Entry.IsModuleMap = isModuleMap(File.getFileCharacteristic());
 
     auto ContentHash = hash_code(-1);
@@ -1758,6 +1800,7 @@ void ASTWriter::WriteInputFiles(SourceManager &SourceMgr,
           Entry.BufferOverridden,
           Entry.IsTransient,
           Entry.IsTopLevel,
+          Entry.IsTopLevelAmongAffecting,
           Entry.IsModuleMap,
           NameAsRequested.size()};
 
@@ -2219,7 +2262,7 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
       SLocEntryOffsets.push_back(Offset);
       // Starting offset of this entry within this module, so skip the dummy.
       Record.push_back(getAdjustedOffset(SLoc->getOffset()) - 2);
-      AddSourceLocation(File.getIncludeLoc(), Record);
+      AddSourceLocation(getAffectingIncludeLoc(SourceMgr, File), Record);
       Record.push_back(File.getFileCharacteristic()); // FIXME: stable encoding
       Record.push_back(File.hasLineDirectives());
 
