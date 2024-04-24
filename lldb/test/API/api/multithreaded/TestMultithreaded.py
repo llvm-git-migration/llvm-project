@@ -107,6 +107,7 @@ class SBBreakpointCallbackCase(TestBase):
         self.buildProgram("inferior.cpp", self.inferior)
         self.addTearDownHook(lambda: os.remove(self.getBuildArtifact(self.inferior)))
 
+        import pdb;pdb.set_trace()
         self.buildDriver(sources, test_name)
         self.addTearDownHook(lambda: os.remove(self.getBuildArtifact(test_name)))
 

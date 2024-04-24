@@ -15,6 +15,15 @@
 
 namespace lldb {
 
+/// Programming language type.
+///
+/// These enumerations use the same language enumerations as the DWARF
+/// specification for ease of use and consistency.
+enum SBSourceLanguageName : uint16_t {
+#define HANDLE_DW_LNAME(ID, NAME, DESC, LOWER_BOUND) eLanguageName##NAME = ID,
+#include "lldb/API/Languages.h"
+};
+  
 class LLDB_API SBExpressionOptions {
 public:
   SBExpressionOptions();
@@ -67,6 +76,10 @@ public:
   void SetTrapExceptions(bool trap_exceptions = true);
 
   void SetLanguage(lldb::LanguageType language);
+  /// Set the language using a pair of language code and version as
+  /// defined by the DWARF 6 specification.
+  /// WARNING: These codes may change until DWARF 6 is finalized.
+  void SetLanguage(uint16_t dwarf_lname_code, uint32_t dwarf_lversion);
 
 #ifndef SWIG
   void SetCancelCallback(lldb::ExpressionCancelCallback callback, void *baton);

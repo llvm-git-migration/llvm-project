@@ -1473,11 +1473,12 @@ class Base(unittest.TestCase):
             d = {
                 "CXX_SOURCES": sources,
                 "EXE": exe_name,
-                "CFLAGS_EXTRAS": "%s %s -I%s"
+                "CFLAGS_EXTRAS": "%s %s -I%s -I%s"
                 % (
                     stdflag,
                     stdlibflag,
                     os.path.join(os.environ["LLDB_SRC"], "include"),
+                    os.path.join(os.environ["LLDB_FRAMEWORK"], "../include"),
                 ),
                 "LD_EXTRAS": "-L%s -lliblldb" % lib_dir,
             }
@@ -1485,11 +1486,12 @@ class Base(unittest.TestCase):
             d = {
                 "CXX_SOURCES": sources,
                 "EXE": exe_name,
-                "CFLAGS_EXTRAS": "%s %s -I%s"
+                "CFLAGS_EXTRAS": "%s %s -I%s -I%s"
                 % (
                     stdflag,
                     stdlibflag,
                     os.path.join(os.environ["LLDB_SRC"], "include"),
+                    os.path.join(os.environ["LLDB_FRAMEWORK"], "../include"),
                 ),
                 "LD_EXTRAS": "-L%s -llldb -Wl,-rpath,%s" % (lib_dir, lib_dir),
             }

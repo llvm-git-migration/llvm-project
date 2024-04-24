@@ -10,6 +10,7 @@ config.llvm_build_mode = lit_config.substitute("@LLVM_BUILD_MODE@")
 config.lit_tools_dir = "@LLVM_LIT_TOOLS_DIR@"
 config.lldb_obj_root = "@LLDB_BINARY_DIR@"
 config.lldb_src_root = "@LLDB_SOURCE_DIR@"
+config.lldb_built_include_dir = lit_config.substitute("@LLDB_BINARY_DIR@/../include")
 config.lldb_libs_dir = lit_config.substitute("@LLDB_LIBS_DIR@")
 config.lldb_framework_dir = lit_config.substitute("@LLDB_FRAMEWORK_DIR@")
 config.cmake_cxx_compiler = "@CMAKE_CXX_COMPILER@"

@@ -237,6 +237,12 @@ def create_parser():
         help="The clang module cache directory used in the Make files by Clang while building tests. Defaults to <test build directory>/module-cache-clang.",
     )
     group.add_argument(
+        "--lldb-built-include-dir",
+        dest="lldb_built_include_dir",
+        metavar="path",
+        help="The path to LLDB built includes directory (containing languages.h)",
+    )
+    group.add_argument(
         "--lldb-libs-dir",
         dest="lldb_libs_dir",
         metavar="path",
