@@ -5363,8 +5363,9 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
       IsReplaceInstr) {
 
     const TargetRegisterClass *RC = MRI->getRegClass(Reg);
-    assert(RC != &PPC::G8RCRegClass && RC != &PPC::G8RC_and_G8RC_NOX0RegClass &&
-           "Must be 32-bit Register!");
+
+    if (RC == &PPC::G8RCRegClass || RC == &PPC::G8RC_and_G8RC_NOX0RegClass)
+      return;
 
     if (!IsReplaceInstr)
       NewOpcode = PPC::get64BitInstrFromSignedExt32BitInstr(Opcode);
