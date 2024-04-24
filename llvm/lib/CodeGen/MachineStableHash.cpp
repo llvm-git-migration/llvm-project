@@ -63,10 +63,10 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
   case MachineOperand::MO_Register:
     if (MO.getReg().isVirtual()) {
       const MachineRegisterInfo &MRI = MO.getParent()->getMF()->getRegInfo();
-      SmallVector<unsigned> DefOpcodes;
+      SmallVector<stable_hash> DefOpcodes;
       for (auto &Def : MRI.def_instructions(MO.getReg()))
         DefOpcodes.push_back(Def.getOpcode());
-      return hash_combine_range(DefOpcodes.begin(), DefOpcodes.end());
+      return stable_hash_combine_range(DefOpcodes.begin(), DefOpcodes.end());
     }
 
     // Register operands don't have target flags.
@@ -80,7 +80,7 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
                            : MO.getFPImm()->getValueAPF().bitcastToAPInt();
     auto ValHash =
         stable_hash_combine_array(Val.getRawData(), Val.getNumWords());
-    return hash_combine(MO.getType(), MO.getTargetFlags(), ValHash);
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags(), ValHash);
   }
 
   case MachineOperand::MO_MachineBasicBlock:
@@ -95,9 +95,22 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
   case MachineOperand::MO_Metadata:
     StableHashBailingMetadataUnsupported++;
     return 0;
-  case MachineOperand::MO_GlobalAddress:
-    StableHashBailingGlobalAddress++;
-    return 0;
+  case MachineOperand::MO_GlobalAddress: {
+    const GlobalValue *GV = MO.getGlobal();
+    if (GV->hasPrivateLinkage() || !GV->hasName()) {
+      StableHashBailingGlobalAddress++;
+      return 0;
+    }
+    auto Name = GV->getName();
+    // Use the content hash of the outlined function.
+    auto Pos = Name.find_last_of(".content.");
+    if (Pos != StringRef::npos) {
+      assert(Name.starts_with("OUTLINED_FUNCTION"));
+      Name = Name.substr(Pos);
+    }
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
+                               xxh3_64bits(Name), MO.getOffset());
+  }
   case MachineOperand::MO_TargetIndex: {
     if (const char *Name = MO.getTargetIndexName())
       return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
@@ -112,8 +125,8 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
                                MO.getIndex());
 
   case MachineOperand::MO_ExternalSymbol:
-    return hash_combine(MO.getType(), MO.getTargetFlags(), MO.getOffset(),
-                        xxh3_64bits(MO.getSymbolName()));
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
+                               MO.getOffset(), xxh3_64bits(MO.getSymbolName()));
 
   case MachineOperand::MO_RegisterMask:
   case MachineOperand::MO_RegisterLiveOut: {
@@ -126,15 +139,16 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
           const uint32_t *RegMask = MO.getRegMask();
           std::vector<llvm::stable_hash> RegMaskHashes(RegMask,
                                                        RegMask + RegMaskSize);
-          return hash_combine(MO.getType(), MO.getTargetFlags(),
-                              stable_hash_combine_array(RegMaskHashes.data(),
-                                                        RegMaskHashes.size()));
+          return stable_hash_combine(
+              MO.getType(), MO.getTargetFlags(),
+              stable_hash_combine_array(RegMaskHashes.data(),
+                                        RegMaskHashes.size()));
         }
       }
     }
 
     assert(0 && "MachineOperand not associated with any MachineFunction");
-    return hash_combine(MO.getType(), MO.getTargetFlags());
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags());
   }
 
   case MachineOperand::MO_ShuffleMask: {
@@ -144,14 +158,15 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
         MO.getShuffleMask(), std::back_inserter(ShuffleMaskHashes),
         [](int S) -> llvm::stable_hash { return llvm::stable_hash(S); });
 
-    return hash_combine(MO.getType(), MO.getTargetFlags(),
-                        stable_hash_combine_array(ShuffleMaskHashes.data(),
-                                                  ShuffleMaskHashes.size()));
+    return stable_hash_combine(
+        MO.getType(), MO.getTargetFlags(),
+        stable_hash_combine_array(ShuffleMaskHashes.data(),
+                                  ShuffleMaskHashes.size()));
   }
   case MachineOperand::MO_MCSymbol: {
     auto SymbolName = MO.getMCSymbol()->getName();
-    return hash_combine(MO.getType(), MO.getTargetFlags(),
-                        xxh3_64bits(SymbolName));
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
+                               xxh3_64bits(SymbolName));
   }
   case MachineOperand::MO_CFIIndex:
     return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
