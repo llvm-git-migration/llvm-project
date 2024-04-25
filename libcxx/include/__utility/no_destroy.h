@@ -10,7 +10,6 @@
 #define _LIBCPP___UTILITY_NO_DESTROY_H
 
 #include <__config>
-#include <__memory/construct_at.h>
 #include <__type_traits/is_constant_evaluated.h>
 #include <__utility/forward.h>
 #include <new>
@@ -31,12 +30,7 @@ struct __uninitialized_tag {};
 // initialization using __emplace.
 template <class _Tp>
 struct __no_destroy {
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR explicit __no_destroy(__uninitialized_tag) {
-    if (__libcpp_is_constant_evaluated()) {
-      for (size_t __i = 0; __i != sizeof(__obj_); ++__i)
-        std::__construct_at(__obj_ + __i);
-    }
-  }
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR explicit __no_destroy(__uninitialized_tag) : __obj_() { }
 
   template <class... _Args>
   _LIBCPP_HIDE_FROM_ABI explicit __no_destroy(_Args&&... __args) {
