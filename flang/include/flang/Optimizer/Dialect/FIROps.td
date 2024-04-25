@@ -2708,14 +2708,14 @@ def fir_ConvertOp : fir_OneResultOp<"convert", [NoMemoryEffect]> {
   let hasCanonicalizer = 1;
 }
 
-def FortranTypeAttr : Attr<And<[CPred<"$_self.isa<mlir::TypeAttr>()">,
-    Or<[CPred<"$_self.cast<mlir::TypeAttr>().getValue().isa<fir::CharacterType,"
+def FortranTypeAttr : Attr<And<[CPred<"$_mlir::isa<mlir::TypeAttr>(self)">,
+    Or<[CPred<"$_mlir::cast<mlir::TypeAttr>(self).getValue().isa<fir::CharacterType,"
               "fir::ComplexType, fir::IntegerType, fir::LogicalType,"
               "fir::RealType, fir::RecordType>()">]>]>,
     "Fortran surface type"> {
   let storageType = [{ ::mlir::TypeAttr }];
   let returnType = "mlir::Type";
-  let convertFromStorage = "$_self.getValue().cast<mlir::Type>()";
+  let convertFromStorage = "mlir::cast<mlir::Type>($_self.getValue())";
 }
 
 def fir_TypeDescOp : fir_OneResultOp<"type_desc", [NoMemoryEffect]> {

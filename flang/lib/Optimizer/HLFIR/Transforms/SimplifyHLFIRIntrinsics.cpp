@@ -103,7 +103,7 @@ public:
     // by hlfir.elemental)
     target.addDynamicallyLegalOp<hlfir::TransposeOp>(
         [](hlfir::TransposeOp transpose) {
-          return transpose.getType().cast<hlfir::ExprType>().isPolymorphic();
+          return mlir::cast<hlfir::ExprType>(transpose.getType()).isPolymorphic();
         });
     target.markUnknownOpDynamicallyLegal(
         [](mlir::Operation *) { return true; });

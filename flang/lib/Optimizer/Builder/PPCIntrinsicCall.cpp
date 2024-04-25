@@ -1119,7 +1119,7 @@ PPCIntrinsicLibrary::genVecAbs(mlir::Type resultType,
     funcOp = builder.createFunction(loc, fname, ftype);
     auto callOp{builder.create<fir::CallOp>(loc, funcOp, argBases[0])};
     return callOp.getResult(0);
-  } else if (auto eleTy = vTypeInfo.eleTy.dyn_cast<mlir::IntegerType>()) {
+  } else if (auto eleTy = vTypeInfo.mlir::dyn_cast<mlir::IntegerType>(eleTy)) {
     // vec_abs(arg1) = max(0 - arg1, arg1)
 
     auto newVecTy{mlir::VectorType::get(vTypeInfo.len, eleTy)};
@@ -1173,12 +1173,13 @@ fir::ExtendedValue PPCIntrinsicLibrary::genVecAddAndMulSubXor(
   assert(args.size() == 2);
   auto argBases{getBasesForArgs(args)};
   auto argsTy{getTypesForArgs(argBases)};
-  assert(argsTy[0].isa<fir::VectorType>() && argsTy[1].isa<fir::VectorType>());
+  assert(mlir::isa<fir::VectorType>(argsTy[0]) &&
+         mlir::isa<fir::VectorType>(argsTy[1]));
 
   auto vecTyInfo{getVecTypeFromFir(argBases[0])};
 
-  const auto isInteger{vecTyInfo.eleTy.isa<mlir::IntegerType>()};
-  const auto isFloat{vecTyInfo.eleTy.isa<mlir::FloatType>()};
+  const auto isInteger{vecTyInfo.mlir::isa<mlir::IntegerType>(eleTy)};
+  const auto isFloat{vecTyInfo.mlir::isa<mlir::FloatType>(eleTy)};
   assert((isInteger || isFloat) && "unknown vector type");
 
   auto vargs{convertVecArgs(builder, loc, vecTyInfo, argBases)};
@@ -1212,7 +1213,7 @@ fir::ExtendedValue PPCIntrinsicLibrary::genVecAddAndMulSubXor(
       arg2 = vargs[1];
     } else if (isFloat) {
       // bitcast the arguments to integer
-      auto wd{vecTyInfo.eleTy.dyn_cast<mlir::FloatType>().getWidth()};
+      auto wd{vecTyInfo.mlir::dyn_cast<mlir::FloatType>(eleTy).getWidth()};
       auto ftype{builder.getIntegerType(wd)};
       auto bcVecTy{mlir::VectorType::get(vecTyInfo.len, ftype)};
       arg1 = builder.create<mlir::vector::BitCastOp>(loc, bcVecTy, vargs[0]);
@@ -1450,7 +1451,7 @@ PPCIntrinsicLibrary::genVecCmp(mlir::Type resultType,
 
   mlir::Value res{nullptr};
 
-  if (auto eTy = vecTyInfo.eleTy.dyn_cast<mlir::IntegerType>()) {
+  if (auto eTy = vecTyInfo.mlir::dyn_cast<mlir::IntegerType>(eleTy)) {
     constexpr int firstArg{0};
     constexpr int secondArg{1};
     std::map<VecOp, std::array<int, 2>> argOrder{
@@ -1559,7 +1560,7 @@ PPCIntrinsicLibrary::genVecConvert(mlir::Type resultType,
   case VecOp::Ctf: {
     assert(args.size() == 2);
     auto convArg{builder.createConvert(loc, i32Ty, argBases[1])};
-    auto eTy{vecTyInfo.eleTy.dyn_cast<mlir::IntegerType>()};
+    auto eTy{vecTyInfo.mlir::dyn_cast<mlir::IntegerType>(eleTy)};
     assert(eTy && "Unsupported vector type");
     const auto isUnsigned{eTy.isUnsignedInteger()};
     const auto width{eTy.getWidth()};
@@ -1815,7 +1816,7 @@ static mlir::Value addOffsetToAddress(fir::FirOpBuilder &builder,
 static mlir::Value reverseVectorElements(fir::FirOpBuilder &builder,
                                          mlir::Location loc, mlir::Value v,
                                          int64_t len) {
-  assert(v.getType().isa<mlir::VectorType>());
+  assert(mlir::isa<mlir::VectorType>(v.getType()));
   assert(len > 0);
   llvm::SmallVector<int64_t, 16> mask;
   for (int64_t i = 0; i < len; ++i) {
@@ -2797,16 +2798,16 @@ void PPCIntrinsicLibrary::genMmaIntr(llvm::ArrayRef<fir::ExtendedValue> args) {
     auto vType{v.getType()};
     mlir::Type targetType{intrFuncType.getInput(j)};
     if (vType != targetType) {
-      if (targetType.isa<mlir::VectorType>()) {
+      if (mlir::isa<mlir::VectorType>(targetType)) {
         // Perform vector type conversion for arguments passed by value.
-        auto eleTy{vType.dyn_cast<fir::VectorType>().getEleTy()};
-        auto len{vType.dyn_cast<fir::VectorType>().getLen()};
+        auto eleTy{mlir::dyn_cast<fir::VectorType>(vType).getEleTy()};
+        auto len{mlir::dyn_cast<fir::VectorType>(vType).getLen()};
         mlir::VectorType mlirType = mlir::VectorType::get(len, eleTy);
         auto v0{builder.createConvert(loc, mlirType, v)};
         auto v1{builder.create<mlir::vector::BitCastOp>(loc, targetType, v0)};
         intrArgs.push_back(v1);
-      } else if (targetType.isa<mlir::IntegerType>() &&
-                 vType.isa<mlir::IntegerType>()) {
+      } else if (mlir::isa<mlir::IntegerType>(targetType) &&
+                 mlir::isa<mlir::IntegerType>(vType)) {
         auto v0{builder.createConvert(loc, targetType, v)};
         intrArgs.push_back(v0);
       } else {
@@ -2861,7 +2862,7 @@ void PPCIntrinsicLibrary::genVecStore(llvm::ArrayRef<fir::ExtendedValue> args) {
     if (arg1TyInfo.isFloat32()) {
       stTy = mlir::VectorType::get(len, i32ty);
       fname = "llvm.ppc.altivec.stvewx";
-    } else if (arg1TyInfo.eleTy.isa<mlir::IntegerType>()) {
+    } else if (arg1TyInfo.mlir::isa<mlir::IntegerType>(eleTy)) {
       stTy = mlir::VectorType::get(len, mlir::IntegerType::get(context, width));
 
       switch (width) {

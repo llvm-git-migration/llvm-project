@@ -239,7 +239,7 @@ lowerIshftc(fir::FirOpBuilder &builder, mlir::Location loc,
                      .genElse([&]() {
                        mlir::Value bitSize = builder.createIntegerConstant(
                            loc, resultType,
-                           resultType.cast<mlir::IntegerType>().getWidth());
+                           mlir::cast<mlir::IntegerType>(resultType).getWidth());
                        builder.create<fir::ResultOp>(loc, bitSize);
                      })
                      .getResults()[0]);
@@ -282,7 +282,7 @@ lowerAssociated(fir::FirOpBuilder &builder, mlir::Location loc,
       builder.create<fir::IsPresentOp>(loc, builder.getI1Type(), targetBase);
   mlir::Type targetType = fir::unwrapRefType(targetBase.getType());
   mlir::Type targetValueType = fir::unwrapPassByRefType(targetType);
-  mlir::Type boxType = targetType.isa<fir::BaseBoxType>()
+  mlir::Type boxType = mlir::isa<fir::BaseBoxType>(targetType)
                            ? targetType
                            : fir::BoxType::get(targetValueType);
   fir::BoxValue targetBox =
