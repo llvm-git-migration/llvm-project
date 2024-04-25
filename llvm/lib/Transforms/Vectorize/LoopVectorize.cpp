@@ -5317,6 +5317,11 @@ LoopVectorizationCostModel::selectInterleaveCount(ElementCount VF,
   if (!Legal->isSafeForAnyVectorWidth())
     return 1;
 
+  if (!Legal->getLAI()->getHistograms().empty()) {
+    LLVM_DEBUG(dbgs() << "LV: Not interleaving histogram operations.\n");
+    return 1;
+  }
+
   auto BestKnownTC = getSmallBestKnownTC(*PSE.getSE(), TheLoop);
   const bool HasReductions = !Legal->getReductionVars().empty();
 
@@ -6938,8 +6943,13 @@ LoopVectorizationCostModel::getInstructionCost(Instruction *I, ElementCount VF,
     // We've proven all lanes safe to speculate, fall through.
     [[fallthrough]];
   case Instruction::Add:
-  case Instruction::FAdd:
   case Instruction::Sub:
+    // FIXME: multiply cost too, if needed.
+    if (Legal->isHistogramLoadOrUpdate(I))
+      return TTI.getHistogramCost(VectorTy) +
+             TTI.getArithmeticInstrCost(I->getOpcode(), VectorTy);
+    [[fallthrough]];
+  case Instruction::FAdd:
   case Instruction::FSub:
   case Instruction::Mul:
   case Instruction::FMul:
@@ -8409,6 +8419,34 @@ VPWidenRecipe *VPRecipeBuilder::tryToWiden(Instruction *I,
   };
 }
 
+VPHistogramRecipe *
+VPRecipeBuilder::tryToWidenHistogram(const HistogramInfo *HI,
+                                     ArrayRef<VPValue *> Operands) {
+  // FIXME: Support other operations.
+  assert(HI->Update->getOpcode() == Instruction::Add &&
+         "Histogram update operation must be an Add");
+
+  SmallVector<VPValue *, 3> HGramOps;
+  // Bucket address.
+  HGramOps.push_back(Operands[1]);
+  // Increment value.
+  HGramOps.push_back(getVPValueOrAddLiveIn(HI->Update->getOperand(1), Plan));
+
+  // In case of predicated execution (due to tail-folding, or conditional
+  // execution, or both), pass the relevant mask. When there is no such mask,
+  // generate an all-true mask.
+  VPValue *Mask = nullptr;
+  if (Legal->isMaskRequired(HI->Store))
+    Mask = getBlockInMask(HI->Store->getParent());
+  else
+    Mask = Plan.getOrAddLiveIn(
+        ConstantInt::getTrue(IntegerType::getInt1Ty(HI->Load->getContext())));
+  HGramOps.push_back(Mask);
+
+  return new VPHistogramRecipe(make_range(HGramOps.begin(), HGramOps.end()),
+                               HI->Store->getDebugLoc());
+}
+
 void VPRecipeBuilder::fixHeaderPhis() {
   BasicBlock *OrigLatch = OrigLoop->getLoopLatch();
   for (VPHeaderPHIRecipe *R : PhisToFix) {
@@ -8525,6 +8563,12 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
 
   if (auto *CI = dyn_cast<CallInst>(Instr))
     return tryToWidenCall(CI, Operands, Range);
+
+  if (StoreInst *SI = dyn_cast<StoreInst>(Instr)) {
+    std::optional<const HistogramInfo *> HI = Legal->getHistogramForStore(SI);
+    if (HI)
+      return tryToWidenHistogram(*HI, Operands);
+  }
 
   if (isa<LoadInst>(Instr) || isa<StoreInst>(Instr))
     return tryToWidenMemory(Instr, Operands, Range);
@@ -8725,6 +8769,11 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
         auto OpRange = RecipeBuilder.mapToVPValues(Instr->operands());
         Operands = {OpRange.begin(), OpRange.end()};
       }
+
+      // If this is a load instruction or a binop associated with a histogram,
+      // leave it until the store instruction to emit a combined intrinsic.
+      if (Legal->isHistogramLoadOrUpdate(Instr))
+        continue;
 
       // Invariant stores inside loop will be deleted and a single store
       // with the final reduction value will be added to the exit block
