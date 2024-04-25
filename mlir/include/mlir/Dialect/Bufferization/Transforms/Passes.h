@@ -169,7 +169,7 @@ struct BufferResultsToOutParamsOpts {
   
   /// If true, the pass eliminates the memref.alloc and memcpy if the returned
   /// memref is allocated in the current function.
-  bool eliminateAllocCopy = false;
+  bool avoidBufferResultAllocAndCopy = false;
 };
 
 /// Creates a pass that converts memref function results to out-params.

@@ -1,4 +1,4 @@
-// RUN: mlir-opt -allow-unregistered-dialect -p 'builtin.module(buffer-results-to-out-params{elim-alloc-copy})'  %s | FileCheck %s
+// RUN: mlir-opt -allow-unregistered-dialect -p 'builtin.module(buffer-results-to-out-params{avoid-buffer-result-alloc-copy})'  %s | FileCheck %s
 
 // CHECK-LABEL:   func @basic(
 // CHECK-SAME:                %[[ARG:.*]]: memref<8x64xf32>) {

@@ -108,7 +108,7 @@ updateFuncOp(func::FuncOp func,
 static LogicalResult updateReturnOps(func::FuncOp func,
                                      ArrayRef<BlockArgument> appendedEntryArgs,
                                      MemCpyFn memCpyFn,
-                                     bool eliminateAllocCopy) {
+                                     bool avoidBufferResultAllocAndCopy) {
   auto res = func.walk([&](func::ReturnOp op) {
     SmallVector<Value, 6> copyIntoOutParams;
     SmallVector<Value, 6> keepAsReturnOperands;
@@ -120,7 +120,7 @@ static LogicalResult updateReturnOps(func::FuncOp func,
     }
     OpBuilder builder(op);
     for (auto [orig, arg] : llvm::zip(copyIntoOutParams, appendedEntryArgs)) {
-      if (eliminateAllocCopy && isa<memref::AllocOp>(orig.getDefiningOp())) {
+      if (avoidBufferResultAllocAndCopy && isa<memref::AllocOp>(orig.getDefiningOp())) {
         orig.replaceAllUsesWith(arg);
         orig.getDefiningOp()->erase();
       } else {
@@ -218,7 +218,7 @@ LogicalResult mlir::bufferization::promoteBufferResultsToOutParams(
     };
     if (failed(updateReturnOps(func, appendedEntryArgs,
                                options.memCpyFn.value_or(defaultMemCpyFn),
-                               options.eliminateAllocCopy))) {
+                               options.avoidBufferResultAllocAndCopy))) {
       return failure();
     }
   }
@@ -239,8 +239,8 @@ struct BufferResultsToOutParamsPass
     // Convert from pass options in tablegen to BufferResultsToOutParamsOpts.
     if (addResultAttribute)
       options.addResultAttribute = true;
-    if (eliminateAllocCopy)
-      options.eliminateAllocCopy = true;
+    if (avoidBufferResultAllocAndCopy)
+      options.avoidBufferResultAllocAndCopy = true;
 
     if (failed(bufferization::promoteBufferResultsToOutParams(getOperation(),
                                                               options)))

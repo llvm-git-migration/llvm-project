@@ -320,10 +320,11 @@ def BufferResultsToOutParams : Pass<"buffer-results-to-out-params", "ModuleOp"> 
     Option<"addResultAttribute", "add-result-attr", "bool",
        /*default=*/"false",
        "Add the attribute 'bufferize.result' to all output parameters.">,
-    Option<"eliminateAllocCopy", "elim-alloc-copy", "bool",
-       /*default=*/"false",
-       "When the returned memref is allocated by `memref.alloc`, eliminate the "
-       "allocation, and the memref.copy. And use the argument memref instead">,
+    Option<"avoidBufferResultAllocAndCopy", "avoid-buffer-result-alloc-copy",
+       "bool", /*default=*/"false",
+       "When the returned memref is allocated by `memref.alloc` in the function"
+       ", eliminate the allocation and the memref.copy. And use the memref"
+       " given in function argument instead">,
   ];
   let constructor = "mlir::bufferization::createBufferResultsToOutParamsPass()";
   let dependentDialects = ["memref::MemRefDialect"];
