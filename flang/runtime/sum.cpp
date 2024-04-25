@@ -188,7 +188,8 @@ void RTDEF(CppSumComplex16)(CppTypeFor<TypeCategory::Complex, 16> &result,
 void RTDEF(SumDim)(Descriptor &result, const Descriptor &x, int dim,
     const char *source, int line, const Descriptor *mask) {
   TypedPartialNumericReduction<IntegerSumAccumulator, RealSumAccumulator,
-      ComplexSumAccumulator>(result, x, dim, source, line, mask, "SUM");
+      ComplexSumAccumulator, /*MIN_REAL_KIND=*/4>(
+      result, x, dim, source, line, mask, "SUM");
 }
 
 RT_EXT_API_GROUP_END
