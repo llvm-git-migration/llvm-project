@@ -2111,6 +2111,20 @@ let TargetGuard = "sme2" in {
   defm MIN_MULTI_X4  : MinMaxIntr<"min", "",        "x4", "444">;
 }
 
+multiclass BFMinMaxIntr<string name> {
+  def SVBF # NAME # _SINGLE_X2 : SInst<"sv" # name # "[_single_{d}_x2]", "22d", "b", MergeNone, "aarch64_sve_bf" # name # "_single_x2", [IsStreaming], []>;
+  def SVBF # NAME # _SINGLE_X4 : SInst<"sv" # name # "[_single_{d}_x4]", "44d", "b", MergeNone, "aarch64_sve_bf" # name # "_single_x4", [IsStreaming], []>;
+
+  def SVBF # NAME # _MULTI_X2 : SInst<"sv" # name # "[_{d}_x2]", "222", "b", MergeNone, "aarch64_sve_bf" # name # "_x2", [IsStreaming], []>;
+  def SVBF # NAME # _MULTI_X4 : SInst<"sv" # name # "[_{d}_x4]", "444", "b", MergeNone, "aarch64_sve_bf" # name # "_x4", [IsStreaming], []>;
+}
+
+let TargetGuard = "sme2,b16b16" in {
+// == BFMIN / BFMAX ==
+  defm SVMIN : BFMinMaxIntr<"min">;
+  defm SVMAX : BFMinMaxIntr<"max">;
+}
+
 multiclass SInstMinMaxByVector<string name> {
   def NAME # _SINGLE_X2 : SInst<"sv" # name # "nm[_single_{d}_x2]", "22d", "hfd", MergeNone, "aarch64_sve_f" # name # "nm_single_x2", [IsStreaming], []>;
   def NAME # _SINGLE_X4 : SInst<"sv" # name # "nm[_single_{d}_x4]", "44d", "hfd", MergeNone, "aarch64_sve_f" # name # "nm_single_x4", [IsStreaming], []>;
@@ -2123,6 +2137,20 @@ let TargetGuard = "sme2" in {
 // == FMINNM / FMAXNM ==
   defm SVMINNM : SInstMinMaxByVector<"min">;
   defm SVMAXNM : SInstMinMaxByVector<"max">;
+}
+
+multiclass SInstBFMinMaxByVector<string name> {
+  def SVBF # NAME # _SINGLE_X2 : SInst<"sv" # name # "[_single_{d}_x2]", "22d", "b", MergeNone, "aarch64_sve_bf" # name # "_single_x2", [IsStreaming], []>;
+  def SVBF # NAME # _SINGLE_X4 : SInst<"sv" # name # "[_single_{d}_x4]", "44d", "b", MergeNone, "aarch64_sve_bf" # name # "_single_x4", [IsStreaming], []>;
+
+  def SVBF # NAME # _MULTI_X2 : SInst<"sv" # name # "[_{d}_x2]", "222", "b", MergeNone, "aarch64_sve_bf" # name # "_x2", [IsStreaming], []>;
+  def SVBF # NAME # _MULTI_X4 : SInst<"sv" # name # "[_{d}_x4]", "444", "b", MergeNone, "aarch64_sve_bf" # name # "_x4", [IsStreaming], []>;
+}
+
+let TargetGuard = "sme2,b16b16" in {
+// == BFMINNM / BFMAXNM ==
+  defm SVMINNM : SInstBFMinMaxByVector<"minnm">;
+  defm SVMAXNM : SInstBFMinMaxByVector<"maxnm">;
 }
 
 let TargetGuard = "sme2" in {

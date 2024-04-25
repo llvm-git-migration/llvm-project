@@ -3373,7 +3373,7 @@ let TargetPrefix = "aarch64" in {
   // Multi-vector min/max
   //
 
-  foreach ty = ["f", "s", "u"] in {
+  foreach ty = ["bf", "f", "s", "u"] in {
     foreach instr = ["max", "min"] in {
       def int_aarch64_sve_ # ty # instr # _single_x2 : SME2_VG2_Multi_Single_Intrinsic;
       def int_aarch64_sve_ # ty # instr # _single_x4 : SME2_VG4_Multi_Single_Intrinsic;
@@ -3387,7 +3387,7 @@ let TargetPrefix = "aarch64" in {
   // Multi-vector floating point min/max number
   //
 
-  foreach instr = ["fmaxnm", "fminnm"] in {
+  foreach instr = ["fmaxnm", "bfmaxnm", "fminnm", "bfminnm"] in {
     def int_aarch64_sve_ # instr # _single_x2 : SME2_VG2_Multi_Single_Intrinsic;
     def int_aarch64_sve_ # instr # _single_x4 : SME2_VG4_Multi_Single_Intrinsic;
 
