@@ -403,7 +403,7 @@ void AccStructureChecker::CheckMultipleOccurrenceInDeclare(
   if (GetContext().directive != llvm::acc::Directive::ACCD_declare)
     return;
   for (const auto &object : list.v) {
-    std::visit(
+    Fortran::common::visit(
         Fortran::common::visitors{
             [&](const Fortran::parser::Designator &designator) {
               if (const auto *name = getDesignatorNameIfDataRef(designator)) {
@@ -670,7 +670,7 @@ void AccStructureChecker::Enter(const parser::AccClause::Reduction &reduction) {
   const auto &objects{std::get<parser::AccObjectList>(list.t)};
 
   for (const auto &object : objects.v) {
-    std::visit(
+    Fortran::common::visit(
         Fortran::common::visitors{
             [&](const Fortran::parser::Designator &designator) {
               if (const auto *name = getDesignatorNameIfDataRef(designator)) {
