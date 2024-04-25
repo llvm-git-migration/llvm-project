@@ -747,7 +747,8 @@ void GVNPass::LeaderMap::insert(uint32_t N, Value *V, const BasicBlock *BB) {
 
 /// Scan the list of values corresponding to a given
 /// value number, and remove the given instruction if encountered.
-void GVNPass::LeaderMap::erase(uint32_t N, Instruction *I, BasicBlock *BB) {
+void GVNPass::LeaderMap::erase(uint32_t N, Instruction *I,
+                               const BasicBlock *BB) {
   LeaderListNode *Prev = nullptr;
   LeaderListNode *Curr = &NumToLeaders[N];
 
@@ -2267,9 +2268,8 @@ GVNPass::ValueTable::assignExpNewValueNum(Expression &Exp) {
 bool GVNPass::ValueTable::areAllValsInBB(uint32_t Num, const BasicBlock *BB,
                                          GVNPass &Gvn) {
   auto I = Gvn.LeaderTable.getLeaders(Num);
-  return std::all_of(
-      I.begin(), I.end(),
-      [=](const LeaderMap::LeaderTableEntry &L) { return L.BB == BB; });
+  return all_of(
+      I, [=](const LeaderMap::LeaderTableEntry &L) { return L.BB == BB; });
 }
 
 /// Wrap phiTranslateImpl to provide caching functionality.
@@ -2292,7 +2292,7 @@ bool GVNPass::ValueTable::areCallValsEqual(uint32_t Num, uint32_t NewNum,
                                            GVNPass &Gvn) {
   CallInst *Call = nullptr;
   auto Leaders = Gvn.LeaderTable.getLeaders(Num);
-  for (auto Entry : Leaders) {
+  for (const auto &Entry : Leaders) {
     Call = dyn_cast<CallInst>(Entry.Val);
     if (Call && Call->getParent() == PhiBlock)
       break;
@@ -2393,7 +2393,7 @@ Value *GVNPass::findLeader(const BasicBlock *BB, uint32_t num) {
     return nullptr;
 
   Value *Val = nullptr;
-  for (auto Entry : Leaders) {
+  for (const auto &Entry : Leaders) {
     if (DT->dominates(Entry.BB, BB)) {
       Val = Entry.Val;
       if (isa<Constant>(Val))

@@ -249,7 +249,7 @@ private:
 
   public:
     class leader_iterator {
-      const LeaderListNode *current;
+      const LeaderListNode *Current;
 
     public:
       using iterator_category = std::forward_iterator_tag;
@@ -258,19 +258,19 @@ private:
       using pointer = value_type *;
       using reference = value_type &;
 
-      leader_iterator(const LeaderListNode *ptr) : current(ptr) {}
+      leader_iterator(const LeaderListNode *C) : Current(C) {}
       leader_iterator &operator++() {
-        assert(current && "Dereferenced end of leader list!");
-        current = current->Next;
+        assert(Current && "Dereferenced end of leader list!");
+        Current = Current->Next;
         return *this;
       }
       bool operator==(const leader_iterator &other) const {
-        return current == other.current;
+        return Current == other.Current;
       }
       bool operator!=(const leader_iterator &other) const {
-        return current != other.current;
+        return Current != other.Current;
       }
-      reference operator*() const { return current->Entry; }
+      reference operator*() const { return Current->Entry; }
     };
 
     iterator_range<leader_iterator> getLeaders(uint32_t N) {
@@ -285,7 +285,7 @@ private:
     }
 
     void insert(uint32_t N, Value *V, const BasicBlock *BB);
-    void erase(uint32_t N, Instruction *I, BasicBlock *BB);
+    void erase(uint32_t N, Instruction *I, const BasicBlock *BB);
     void verifyRemoved(const Value *Inst) const;
     void clear() {
       NumToLeaders.clear();
