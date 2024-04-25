@@ -33,7 +33,7 @@ struct __no_destroy {
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR explicit __no_destroy(__uninitialized_tag) {
     if (__libcpp_is_constant_evaluated()) {
       for (size_t __i = 0; __i != sizeof(__obj_); ++__i)
-        std::construct_at(__obj_ + __i);
+        std::construct_at(__obj_ + __i, 0);
     }
   }
 
