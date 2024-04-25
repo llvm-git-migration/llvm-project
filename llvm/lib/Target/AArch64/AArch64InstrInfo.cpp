@@ -6924,14 +6924,20 @@ genSubAdd2SubSub(MachineFunction &MF, MachineRegisterInfo &MRI,
     assert((Opcode == AArch64::SUBWrr || Opcode == AArch64::SUBXrr) &&
            "Unexpected instruction opcode.");
 
+  uint32_t Flags = Root.mergeFlagsWith(*AddMI);
+  Root.clearFlag(MachineInstr::NoSWrap);
+  Root.clearFlag(MachineInstr::NoUWrap);
+
   MachineInstrBuilder MIB1 =
       BuildMI(MF, MIMetadata(Root), TII->get(Opcode), NewVR)
           .addReg(RegA, getKillRegState(RegAIsKill))
-          .addReg(RegB, getKillRegState(RegBIsKill));
+          .addReg(RegB, getKillRegState(RegBIsKill))
+          .setMIFlags(Flags);
   MachineInstrBuilder MIB2 =
       BuildMI(MF, MIMetadata(Root), TII->get(Opcode), ResultReg)
           .addReg(NewVR, getKillRegState(true))
-          .addReg(RegC, getKillRegState(RegCIsKill));
+          .addReg(RegC, getKillRegState(RegCIsKill))
+          .setMIFlags(Flags);
 
   InstrIdxForVirtReg.insert(std::make_pair(NewVR, 0));
   InsInstrs.push_back(MIB1);
