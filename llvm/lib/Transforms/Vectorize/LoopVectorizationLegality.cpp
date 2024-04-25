@@ -1506,6 +1506,15 @@ bool LoopVectorizationLegality::canVectorize(bool UseVPlanNativePath) {
       return false;
   }
 
+  for (const HistogramInfo &HGram : LAI->getHistograms()) {
+    Type *UpdateTy = HGram.Update->getType();
+    if (!TTI->getHistogramCost(UpdateTy).isValid()) {
+      LLVM_DEBUG(dbgs() << "Invalid TTI Histogram Cost for type: " << *UpdateTy
+                        << "\n");
+      return false;
+    }
+  }
+
   LLVM_DEBUG(dbgs() << "LV: We can vectorize this loop"
                     << (LAI->getRuntimePointerChecking()->Need
                             ? " (with a runtime bound check)"
