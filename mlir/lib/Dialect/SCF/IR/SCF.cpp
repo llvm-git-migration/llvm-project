@@ -20,6 +20,7 @@
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Interfaces/FunctionInterfaces.h"
+#include "mlir/Interfaces/SubsetOpInterface.h"
 #include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Support/MathExtras.h"
 #include "mlir/Transforms/InliningUtils.h"
@@ -1509,6 +1510,203 @@ public:
   }
 };
 
+/// The following canonicalization pattern folds the iter arguments of
+/// scf.forall op if :-
+/// 1. The corresponding result has zero uses.
+/// 2. The iter argument is NOT being modified within the loop body.
+/// uses.
+///
+/// Example of first case :-
+///  INPUT:
+///   %res:3 = scf.forall ... shared_outs(%arg0 = %a, %arg1 = %b, %arg2 = %c)
+///            {
+///                ...
+///                <SOME USE OF %arg0>
+///                <SOME USE OF %arg1>
+///                <SOME USE OF %arg2>
+///                ...
+///                scf.forall.in_parallel {
+///                    <STORE OP WITH DESTINATION %arg1>
+///                    <STORE OP WITH DESTINATION %arg0>
+///                    <STORE OP WITH DESTINATION %arg2>
+///                }
+///             }
+///   return %res#1
+///
+///  OUTPUT:
+///   %res:3 = scf.forall ... shared_outs(%new_arg0 = %b)
+///            {
+///                ...
+///                <SOME USE OF %a>
+///                <SOME USE OF %new_arg0>
+///                <SOME USE OF %c>
+///                ...
+///                scf.forall.in_parallel {
+///                    <STORE OP WITH DESTINATION %new_arg0>
+///                }
+///             }
+///   return %res
+///
+/// NOTE: 1. All uses of the folded shared_outs (iter argument) within the
+///          scf.forall is replaced by their corresponding operands.
+///       2. The canonicalization assumes that there are no <STORE OP WITH
+///          DESTINATION *> ops within the body of the scf.forall except within
+///          scf.forall.in_parallel terminator.
+///       3. The order of the <STORE OP WITH DESTINATION *> can be arbitrary
+///          within scf.forall.in_parallel - the code below takes care of this
+///          by traversing the uses of the corresponding iter arg.
+///
+/// Example of second case :-
+///  INPUT:
+///   %res:2 = scf.forall ... shared_outs(%arg0 = %a, %arg1 = %b)
+///            {
+///                ...
+///                <SOME USE OF %arg0>
+///                <SOME USE OF %arg1>
+///                ...
+///                scf.forall.in_parallel {
+///                    <STORE OP WITH DESTINATION %arg1>
+///                }
+///             }
+///   return %res#0, %res#1
+///
+///  OUTPUT:
+///   %res = scf.forall ... shared_outs(%new_arg0 = %b)
+///            {
+///                ...
+///                <SOME USE OF %a>
+///                <SOME USE OF %new_arg0>
+///                ...
+///                scf.forall.in_parallel {
+///                    <STORE OP WITH DESTINATION %new_arg0>
+///                }
+///             }
+///   return %a, %res
+struct ForallOpIterArgsFolder : public OpRewritePattern<ForallOp> {
+  using OpRewritePattern<ForallOp>::OpRewritePattern;
+
+  /// Utility function that checks if a candidate value satisifies any of the
+  /// conditions (see above doc comment) to make it viable for folding away.
+  static bool isCandidateValueToDelete(Value result, BlockArgument blockArg) {
+    if (result.use_empty()) {
+      return true;
+    }
+    Value::user_range users = blockArg.getUsers();
+    return llvm::all_of(users, [&](Operation *user) {
+      return !isa<SubsetInsertionOpInterface>(user);
+    });
+  }
+
+  LogicalResult matchAndRewrite(ForallOp forallOp,
+                                PatternRewriter &rewriter) const final {
+    scf::InParallelOp terminatorOp = forallOp.getTerminator();
+    SmallVector<Operation *> yieldingOps = llvm::map_to_vector(
+        terminatorOp.getYieldingOps(), [](Operation &op) { return &op; });
+
+    // The following check should indeed be part of SCF::ForallOp::verify.
+    SmallVector<SubsetInsertionOpInterface> subsetInsertionOpInterfaceOps;
+    for (Operation *op : yieldingOps) {
+      if (auto subsetInsertionOpInterfaceOp =
+              dyn_cast<SubsetInsertionOpInterface>(op)) {
+        subsetInsertionOpInterfaceOps.push_back(subsetInsertionOpInterfaceOp);
+        continue;
+      }
+      return failure();
+    }
+
+    // Step 1: For a given i-th result of scf.forall, check the following :-
+    //         a. If it has any use.
+    //         b. If the corresponding iter argument is being modified within
+    //            the loop.
+    //
+    //         Based on the check we maintain the following :-
+    //         a. `resultToDelete` - i-th result of scf.forall that'll be
+    //            deleted.
+    //         b. `resultToReplace` - i-th result of the old scf.forall
+    //            whose uses will be replaced by the new scf.forall.
+    //         c. `newOuts` - the shared_outs' operand of the new scf.forall
+    //            corresponding to the i-th result with at least one use.
+    //         d. `mapping` - mapping the old iter block argument of scf.forall
+    //            with the corresponding shared_outs' operand. This will be
+    //            used when creating a new scf.forall op.
+    SmallVector<OpResult> resultToDelete;
+    SmallVector<Value> resultToReplace;
+    SmallVector<Value> newOuts;
+    IRMapping mapping;
+    for (OpResult result : forallOp.getResults()) {
+      OpOperand *opOperand = forallOp.getTiedOpOperand(result);
+      BlockArgument blockArg = forallOp.getTiedBlockArgument(opOperand);
+      if (isCandidateValueToDelete(result, blockArg)) {
+        resultToDelete.push_back(result);
+        mapping.map(blockArg, opOperand->get());
+      } else {
+        resultToReplace.push_back(result);
+        newOuts.push_back(opOperand->get());
+      }
+    }
+
+    // Return early if all results of scf.forall has at least one use and being
+    // modified within the loop.
+    if (resultToDelete.empty()) {
+      return failure();
+    }
+
+    // Step 2: For the the i-th result, do the following :-
+    //         a. Fetch the corresponding BlockArgument.
+    //         b. Look for an op within scf.forall.in_parallel whose destination
+    //            operand is the BlockArgument fetched in step a.
+    //         c. Remove the operation fetched in b.
+    //         d. For any use of the BlockArgument in the body of the scf.forall
+    //            replace it with the corresponding Output value.
+    for (OpResult result : resultToDelete) {
+      OpOperand *opOperand = forallOp.getTiedOpOperand(result);
+      BlockArgument blockArg = forallOp.getTiedBlockArgument(opOperand);
+      Value::user_range users = blockArg.getUsers();
+      Operation *terminatorOperationToDelete = nullptr;
+      for (Operation *user : users) {
+        if (auto subsetInsertionOpInterfaceOp =
+                dyn_cast<SubsetInsertionOpInterface>(user)) {
+          if (subsetInsertionOpInterfaceOp.getDestinationOperand().get() ==
+              blockArg) {
+            terminatorOperationToDelete = subsetInsertionOpInterfaceOp;
+            break;
+          }
+        }
+      }
+      if (terminatorOperationToDelete)
+        rewriter.eraseOp(terminatorOperationToDelete);
+    }
+
+    // Step 3. Create a new scf.forall op with the new shared_outs' operands
+    //         fetched earlier
+    auto newforallOp = rewriter.create<scf::ForallOp>(
+        forallOp.getLoc(), forallOp.getMixedLowerBound(),
+        forallOp.getMixedUpperBound(), forallOp.getMixedStep(), newOuts,
+        forallOp.getMapping());
+
+    // Step 4. Clone the region of the old scf.forall into the newly created
+    //         scf.forall using the IRMapping formed in Step 1.
+    newforallOp.getBodyRegion().getBlocks().clear();
+    rewriter.cloneRegionBefore(forallOp.getRegion(), newforallOp.getRegion(),
+                               newforallOp.getRegion().begin(), mapping);
+
+    // Step 5. Replace the uses of result of old scf.forall with that of the new
+    //         scf.forall.
+    for (auto &&[oldResult, newResult] :
+         llvm::zip(resultToReplace, newforallOp->getResults())) {
+      rewriter.replaceAllUsesWith(oldResult, newResult);
+    }
+    // Step 6. Replace the uses of those values that either has no use or are
+    //         not being modified within the loop with the corresponding
+    //         OpOperand.
+    for (OpResult oldResult : resultToDelete) {
+      rewriter.replaceAllUsesWith(oldResult,
+                                  forallOp.getTiedOpOperand(oldResult)->get());
+    }
+    return success();
+  }
+};
+
 struct ForallOpSingleOrZeroIterationDimsFolder
     : public OpRewritePattern<ForallOp> {
   using OpRewritePattern<ForallOp>::OpRewritePattern;
@@ -1667,7 +1865,7 @@ struct FoldTensorCastOfOutputIntoForallOp
 void ForallOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                            MLIRContext *context) {
   results.add<DimOfForallOp, FoldTensorCastOfOutputIntoForallOp,
-              ForallOpControlOperandsFolder,
+              ForallOpControlOperandsFolder, ForallOpIterArgsFolder,
               ForallOpSingleOrZeroIterationDimsFolder>(context);
 }
 

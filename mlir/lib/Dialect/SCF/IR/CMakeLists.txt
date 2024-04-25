@@ -17,6 +17,7 @@ add_mlir_dialect_library(MLIRSCFDialect
   MLIRIR
   MLIRLoopLikeInterface
   MLIRSideEffectInterfaces
+  MLIRSubsetOpInterface
   MLIRTensorDialect
   MLIRValueBoundsOpInterface
   )
