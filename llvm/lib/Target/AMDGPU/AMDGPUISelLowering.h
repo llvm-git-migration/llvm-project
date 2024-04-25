@@ -230,6 +230,11 @@ public:
   bool isCheapToSpeculateCtlz(Type *Ty) const override;
 
   bool isSDNodeAlwaysUniform(const SDNode *N) const override;
+
+  AtomicExpansionKind shouldCastAtomicStoreInIR(StoreInst *SI) const override {
+    return AtomicExpansionKind::None;
+  }
+
   static CCAssignFn *CCAssignFnForCall(CallingConv::ID CC, bool IsVarArg);
   static CCAssignFn *CCAssignFnForReturn(CallingConv::ID CC, bool IsVarArg);
 
