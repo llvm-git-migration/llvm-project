@@ -117,22 +117,26 @@ bool MessageHandler::onCall(llvm::StringRef method, llvm::json::Value params,
 
 bool MessageHandler::onReply(llvm::json::Value id,
                              llvm::Expected<llvm::json::Value> result) {
-  // TODO: Add support for reply callbacks when support for outgoing messages is
-  // added. For now, we just log an error on any replies received.
-  Callback<llvm::json::Value> replyHandler =
-      [&id](llvm::Expected<llvm::json::Value> result) {
-        Logger::error(
-            "received a reply with ID {0}, but there was no such call", id);
-        if (!result)
-          llvm::consumeError(result.takeError());
-      };
-
-  // Log and run the reply handler.
-  if (result)
-    replyHandler(std::move(result));
-  else
-    replyHandler(result.takeError());
+  auto it = responseHandlers.find(getIDAsString(id));
+  if (it != responseHandlers.end()) {
+    Logger::info("--> reply:{0}({1})", it->second.first, id);
+    it->second.second(std::move(result));
+  } else {
+    Logger::error(
+        "received a reply with ID {0}, but there was no such outgoing request",
+        id);
+    if (!result)
+      llvm::consumeError(result.takeError());
+  }
   return true;
+}
+
+std::string MessageHandler::getIDAsString(llvm::json::Value id) {
+  std::string result;
+  llvm::raw_string_ostream os(result);
+  os << id;
+  os.flush();
+  return result;
 }
 
 //===----------------------------------------------------------------------===//

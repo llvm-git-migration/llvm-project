@@ -171,13 +171,43 @@ public:
     };
   }
 
+  /// Create an OutgoingMessage function that, when called, sends a request with
+  /// the given method and ID via the transport. Should the outgoing request be
+  /// met with a response, the response callback is invoked to handle that
+  /// response.
+  template <typename T>
+  OutgoingMessage<T> outgoingRequest(
+      llvm::StringLiteral method, llvm::json::Value id,
+      llvm::unique_function<void(llvm::Expected<llvm::json::Value>)> callback) {
+    responseHandlers.insert(
+        {getIDAsString(id), std::make_pair(method.str(), std::move(callback))});
+
+    return [&, method, id](const T &params) {
+      std::lock_guard<std::mutex> transportLock(transportOutputMutex);
+      Logger::info("--> {0}", method);
+      transport.call(method, llvm::json::Value(params), id);
+    };
+  }
+
 private:
+  /// Returns a string representation of a message ID, which is specified as
+  /// `integer | string | null`.
+  static std::string getIDAsString(llvm::json::Value id);
+
   template <typename HandlerT>
   using HandlerMap = llvm::StringMap<llvm::unique_function<HandlerT>>;
 
   HandlerMap<void(llvm::json::Value)> notificationHandlers;
   HandlerMap<void(llvm::json::Value, Callback<llvm::json::Value>)>
       methodHandlers;
+
+  /// A pair of (1) the original request's method name, and (2) the callback
+  /// function to be invoked for responses.
+  using ResponseHandlerTy =
+      std::pair<std::string,
+                llvm::unique_function<void(llvm::Expected<llvm::json::Value>)>>;
+  /// A mapping from request/response ID to response handler.
+  llvm::StringMap<ResponseHandlerTy> responseHandlers;
 
   JSONTransport &transport;
 
