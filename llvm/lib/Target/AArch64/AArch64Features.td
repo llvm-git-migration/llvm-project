@@ -429,7 +429,7 @@ def FeatureCacheDeepPersist : SubtargetFeature<"ccdp", "HasCCDP",
 def FeatureBranchTargetId : SubtargetFeature<"bti", "HasBTI",
     "true", "Enable Branch Target Identification (FEAT_BTI)" >;
 
-def FeatureRandGen : SubtargetFeature<"rand", "HasRandGen",
+def FeatureRNG : SubtargetFeature<"rng", "HasRNG",
     "true", "Enable Random Number generation instructions (FEAT_RNG)" >;
 
 def FeatureMTE : SubtargetFeature<"mte", "HasMTE",
