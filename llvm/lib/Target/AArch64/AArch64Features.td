@@ -318,8 +318,8 @@ def FeaturePAuth : SubtargetFeature<
     "pauth", "HasPAuth", "true",
     "Enable v8.3-A Pointer Authentication extension (FEAT_PAuth)">;
 
-def FeatureJS : SubtargetFeature<
-    "jsconv", "HasJS", "true",
+def FeatureJSCVT : SubtargetFeature<
+    "jscvt", "HasJSCVT", "true",
     "Enable v8.3-A JavaScript FP conversion instructions (FEAT_JSCVT)",
     [FeatureFPARMv8]>;
 
@@ -650,7 +650,7 @@ def HasV8_2aOps : SubtargetFeature<"v8.2a", "HasV8_2aOps", "true",
 
 def HasV8_3aOps : SubtargetFeature<"v8.3a", "HasV8_3aOps", "true",
   "Support ARM v8.3a instructions", [HasV8_2aOps, FeatureRCPC, FeaturePAuth,
-  FeatureJS, FeatureCCIDX, FeatureFCMA]>;
+  FeatureJSCVT, FeatureCCIDX, FeatureFCMA]>;
 
 def HasV8_4aOps : SubtargetFeature<"v8.4a", "HasV8_4aOps", "true",
   "Support ARM v8.4a instructions", [HasV8_3aOps, FeatureDotProd,
