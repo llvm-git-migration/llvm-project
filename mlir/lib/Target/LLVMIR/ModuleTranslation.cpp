@@ -1030,10 +1030,15 @@ LogicalResult ModuleTranslation::convertGlobals() {
       llvm::DIGlobalVariable *diGlobalVar = diGlobalExpr->getVariable();
       var->addDebugInfo(diGlobalExpr);
 
+      // For fortran, the scope hierarchy can be
+      // variable -> module -> compile unit
+      llvm::DIScope *scope = diGlobalVar->getScope();
+      if (llvm::DIModule *mod = dyn_cast_if_present<llvm::DIModule>(scope))
+        scope = mod->getScope();
+
       // Get the compile unit (scope) of the the global variable.
       if (llvm::DICompileUnit *compileUnit =
-              dyn_cast_if_present<llvm::DICompileUnit>(
-                  diGlobalVar->getScope())) {
+              dyn_cast_if_present<llvm::DICompileUnit>(scope)) {
         // Update the compile unit with this incoming global variable expression
         // during the finalizing step later.
         allGVars[compileUnit].push_back(diGlobalExpr);
