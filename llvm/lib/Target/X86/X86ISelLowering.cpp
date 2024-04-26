@@ -41753,6 +41753,61 @@ bool X86TargetLowering::SimplifyDemandedVectorEltsForTargetNode(
     KnownUndef = SrcUndef.zextOrTrunc(NumElts);
     break;
   }
+  case X86ISD::BLENDI: {
+    SDValue N0 = Op.getOperand(0);
+    SDValue N1 = Op.getOperand(1);
+    if (VT.getScalarSizeInBits() < 32 || !N0.hasOneUse() || !N1.hasOneUse())
+      break;
+
+    // Attempt to fold BLEND(PERMUTE(X),PERMUTE(Y)) -> PERMUTE(BLEND(X,Y))
+    // iff we don't demand the same element index for both X and Y.
+    SDValue BC0 = peekThroughOneUseBitcasts(N0);
+    SDValue BC1 = peekThroughOneUseBitcasts(N1);
+    SmallVector<SDValue, 2> Ops, Ops0, Ops1;
+    SmallVector<int, 32> Mask, Mask0, Mask1, ScaledMask0, ScaledMask1;
+    if (!getTargetShuffleMask(Op, false, Ops, Mask) ||
+        !getTargetShuffleMask(BC0, false, Ops0, Mask0) ||
+        !getTargetShuffleMask(BC1, false, Ops1, Mask1) ||
+        !scaleShuffleElements(Mask0, NumElts, ScaledMask0) ||
+        !scaleShuffleElements(Mask1, NumElts, ScaledMask1))
+      break;
+
+    // Determine the demanded elts from both permutes, confirm that we only use
+    // a single operand and that we don't demand the same index from both.
+    APInt Demanded0, DemandedLHS0, DemandedRHS0;
+    APInt Demanded1, DemandedLHS1, DemandedRHS1;
+    if (getShuffleDemandedElts(NumElts, Mask, DemandedElts, Demanded0,
+                               Demanded1, /*AllowUndefElts=*/true) &&
+        getShuffleDemandedElts(NumElts, ScaledMask0, Demanded0, DemandedLHS0,
+                               DemandedRHS0, /*AllowUndefElts=*/true) &&
+        getShuffleDemandedElts(NumElts, ScaledMask1, Demanded1, DemandedLHS1,
+                               DemandedRHS1, /*AllowUndefElts=*/true) &&
+        DemandedRHS0.isZero() && DemandedRHS1.isZero() &&
+        !DemandedLHS0.intersects(DemandedLHS1)) {
+      // Use the permute demanded elts masks as the new blend mask.
+      uint64_t NewBlendMask = DemandedLHS1.getZExtValue();
+
+      // Create the new permute mask as a blend of the 2 original permute masks.
+      SmallVector<int, 32> NewPermuteMask(NumElts, SM_SentinelUndef);
+      for (int I = 0; I != NumElts; ++I) {
+        if (Demanded0[I])
+          NewPermuteMask[I] = ScaledMask0[I];
+        else if (Demanded1[I])
+          NewPermuteMask[I] = ScaledMask1[I];
+      }
+      assert(isUndefOrInRange(NewPermuteMask, 0, NumElts) && "Bad permute");
+
+      SDLoc DL(Op);
+      SDValue NewBlend = TLO.DAG.getNode(
+          X86ISD::BLENDI, DL, VT, TLO.DAG.getBitcast(VT, Ops0[0]),
+          TLO.DAG.getBitcast(VT, Ops1[0]),
+          TLO.DAG.getTargetConstant(NewBlendMask, DL, MVT::i8));
+      return TLO.CombineTo(Op, TLO.DAG.getVectorShuffle(VT, DL, NewBlend,
+                                                        TLO.DAG.getUNDEF(VT),
+                                                        NewPermuteMask));
+    }
+    break;
+  }
   case X86ISD::BLENDV: {
     APInt SelUndef, SelZero;
     if (SimplifyDemandedVectorElts(Op.getOperand(0), DemandedElts, SelUndef,
