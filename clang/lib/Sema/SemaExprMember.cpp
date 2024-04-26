@@ -991,7 +991,9 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
                                bool SuppressQualifierCheck,
                                ActOnMemberAccessExtraArgs *ExtraArgs) {
   assert(!SS.isInvalid() && "nested-name-specifier cannot be invalid");
-  if (R.wasNotFoundInCurrentInstantiation())
+  if (R.wasNotFoundInCurrentInstantiation() ||
+      (IsArrow && !BaseExprType->isPointerType() &&
+       BaseExprType->isDependentType()))
     return ActOnDependentMemberExpr(BaseExpr, BaseExprType, IsArrow, OpLoc, SS,
                                     TemplateKWLoc, FirstQualifierInScope,
                                     R.getLookupNameInfo(), TemplateArgs);
