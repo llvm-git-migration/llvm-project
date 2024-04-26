@@ -1953,7 +1953,9 @@ bool isValidMsgOp(int64_t MsgId, int64_t OpId, const MCSubtargetInfo &STI,
     return 0 <= OpId && isUInt<OP_WIDTH_>(OpId);
 
   if (MsgId == ID_SYSMSG)
-    return OP_SYS_FIRST_ <= OpId && OpId < OP_SYS_LAST_;
+    return OP_SYS_FIRST_ <= OpId && OpId < OP_SYS_LAST_ &&
+           (!isGFX9Plus(STI) || OpId != OP_SYS_HOST_TRAP_ACK);
+
   if (!isGFX11Plus(STI)) {
     switch (MsgId) {
     case ID_GS_PreGFX11:
