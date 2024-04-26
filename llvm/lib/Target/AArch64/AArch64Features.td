@@ -453,7 +453,7 @@ def FeatureTaggedGlobals : SubtargetFeature<"tagged-globals",
 def FeatureMatMulInt8 : SubtargetFeature<"i8mm", "HasMatMulInt8",
     "true", "Enable Matrix Multiply Int8 Extension (FEAT_I8MM)">;
 
-def FeatureMatMulFP32 : SubtargetFeature<"f32mm", "HasMatMulFP32",
+def FeatureF32MM : SubtargetFeature<"f32mm", "HasF32MM",
     "true", "Enable Matrix Multiply FP32 Extension (FEAT_F32MM)", [FeatureSVE]>;
 
 def FeatureMatMulFP64 : SubtargetFeature<"f64mm", "HasMatMulFP64",
