@@ -232,7 +232,8 @@ public:
 struct FrontendOptions {
   FrontendOptions()
       : showHelp(false), showVersion(false), instrumentedParse(false),
-        showColors(false), needProvenanceRangeToCharBlockMappings(false) {}
+        showColors(false), needProvenanceRangeToCharBlockMappings(false),
+        disableWarnings(false) {}
 
   /// Show the -help text.
   unsigned showHelp : 1;
@@ -250,6 +251,9 @@ struct FrontendOptions {
   /// symbols based on source-code location. This is not needed in regular
   /// compilation.
   unsigned needProvenanceRangeToCharBlockMappings : 1;
+
+  /// Disable warnings emitted by the Frontend
+  unsigned disableWarnings : 1;
 
   /// Input values from `-fget-definition`
   struct GetDefinitionVals {

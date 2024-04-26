@@ -408,8 +408,10 @@ void PrintPreprocessedAction::executeAction() {
         outForPP, !ci.getInvocation().getPreprocessorOpts().noLineDirectives);
   }
 
+  bool disableWarnings = ci.getInvocation().getFrontendOpts().disableWarnings;
   // Print getDiagnostics from the prescanner
-  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources());
+  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources(), true,
+                                  disableWarnings);
 
   // If a pre-defined output stream exists, dump the preprocessed content there
   if (!ci.isOutputStreamNull()) {
@@ -544,6 +546,7 @@ void DebugDumpParseTreeAction::executeAction() {
 void DebugMeasureParseTreeAction::executeAction() {
   CompilerInstance &ci = this->getInstance();
 
+  bool disableWarnings = ci.getInvocation().getFrontendOpts().disableWarnings;
   // Parse. In case of failure, report and return.
   ci.getParsing().Parse(llvm::outs());
 
@@ -555,12 +558,14 @@ void DebugMeasureParseTreeAction::executeAction() {
     ci.getDiagnostics().Report(diagID) << getCurrentFileOrBufferName();
 
     ci.getParsing().messages().Emit(llvm::errs(),
-                                    this->getInstance().getAllCookedSources());
+                                    this->getInstance().getAllCookedSources(),
+                                    true, disableWarnings);
     return;
   }
 
   // Report the getDiagnostics from parsing
-  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources());
+  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources(), true,
+                                  disableWarnings);
 
   auto &parseTree{*ci.getParsing().parseTree()};
 

@@ -711,6 +711,9 @@ static bool parseFrontendArgs(FrontendOptions &opts, llvm::opt::ArgList &args,
     }
   }
 
+  if (const llvm::opt::Arg *A = args.getLastArg(clang::driver::options::OPT_w))
+    opts.disableWarnings = true;
+
   setUpFrontendBasedOnAction(opts);
   opts.dashX = dashX;
 

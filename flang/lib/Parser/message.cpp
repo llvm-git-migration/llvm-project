@@ -378,10 +378,14 @@ void Messages::ResolveProvenances(const AllCookedSources &allCooked) {
 }
 
 void Messages::Emit(llvm::raw_ostream &o, const AllCookedSources &allCooked,
-    bool echoSourceLines) const {
+    bool echoSourceLines, bool disableWarnings) const {
   std::vector<const Message *> sorted;
   for (const auto &msg : messages_) {
-    sorted.push_back(&msg);
+    if (disableWarnings && msg.severity() == Severity::Warning) {
+      // Do nothing
+    } else {
+      sorted.push_back(&msg);
+    }
   }
   std::stable_sort(sorted.begin(), sorted.end(),
       [](const Message *x, const Message *y) { return x->SortBefore(*y); });

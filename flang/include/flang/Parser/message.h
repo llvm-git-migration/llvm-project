@@ -284,7 +284,7 @@ public:
   void Copy(const Messages &);
   void ResolveProvenances(const AllCookedSources &);
   void Emit(llvm::raw_ostream &, const AllCookedSources &,
-      bool echoSourceLines = true) const;
+      bool echoSourceLines = true, bool disableWarnings = false) const;
   void AttachTo(Message &, std::optional<Severity> = std::nullopt);
   bool AnyFatalError() const;
 

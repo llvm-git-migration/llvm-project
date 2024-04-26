@@ -163,8 +163,10 @@ bool FrontendAction::runParse() {
     return false;
   }
 
+  bool disableWarnings = ci.getInvocation().getFrontendOpts().disableWarnings;
   // Report the diagnostics from getParsing
-  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources());
+  ci.getParsing().messages().Emit(llvm::errs(), ci.getAllCookedSources(), true,
+                                  disableWarnings);
 
   return true;
 }
@@ -187,8 +189,9 @@ bool FrontendAction::runSemanticChecks() {
     return false;
   }
 
+  bool disableWarnings = ci.getInvocation().getFrontendOpts().disableWarnings;
   // Report the diagnostics from the semantic checks
-  semantics.EmitMessages(ci.getSemaOutputStream());
+  semantics.EmitMessages(ci.getSemaOutputStream(), disableWarnings);
 
   return true;
 }

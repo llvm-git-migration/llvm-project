@@ -593,8 +593,10 @@ bool Semantics::Perform() {
       ModFileWriter{context_}.WriteAll();
 }
 
-void Semantics::EmitMessages(llvm::raw_ostream &os) const {
-  context_.messages().Emit(os, context_.allCookedSources());
+void Semantics::EmitMessages(
+    llvm::raw_ostream &os, bool disableWarnings) const {
+  context_.messages().Emit(
+      os, context_.allCookedSources(), true, disableWarnings);
 }
 
 void Semantics::DumpSymbols(llvm::raw_ostream &os) {
