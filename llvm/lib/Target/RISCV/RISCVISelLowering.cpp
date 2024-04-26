@@ -7503,6 +7503,17 @@ SDValue RISCVTargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
       return DAG.getNode(ISD::ADD, DL, VT, CMOV, RHSVal);
     }
 
+    // c = setcc f, 0, seteq
+    // (select c, t, f) -> (or f, (czero_nez t, f))
+    if (CondV.getOpcode() == ISD::SETCC &&
+        ISD::SETEQ == cast<CondCodeSDNode>(CondV.getOperand(2))->get()) {
+      SDValue LHS = CondV.getOperand(0);
+      SDValue RHS = CondV.getOperand(1);
+      if (isNullConstant(RHS) && LHS == FalseV)
+        return DAG.getNode(
+            ISD::OR, DL, VT, FalseV,
+            DAG.getNode(RISCVISD::CZERO_NEZ, DL, VT, TrueV, LHS));
+    }
     // (select c, t, f) -> (or (czero_eqz t, c), (czero_nez f, c))
     // Unless we have the short forward branch optimization.
     if (!Subtarget.hasConditionalMoveFusion())
