@@ -34,6 +34,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
+#include <map>
 
 namespace fir {
 #define GEN_PASS_DEF_ADDDEBUGINFO
@@ -48,9 +49,86 @@ class AddDebugInfoPass : public fir::impl::AddDebugInfoBase<AddDebugInfoPass> {
 public:
   AddDebugInfoPass(fir::AddDebugInfoOptions options) : Base(options) {}
   void runOnOperation() override;
+
+private:
+  std::map<std::string, mlir::LLVM::DIModuleAttr> moduleMap;
+
+  mlir::LLVM::DIModuleAttr getOrCreateModuleAttr(
+      const std::string &name, mlir::LLVM::DIFileAttr fileAttr,
+      mlir::LLVM::DIScopeAttr scope, unsigned line, bool decl);
+
+  void handleGlobalOp(fir::GlobalOp glocalOp, mlir::LLVM::DIFileAttr fileAttr,
+                      mlir::LLVM::DIScopeAttr scope);
 };
 
+static uint32_t getLineFromLoc(mlir::Location loc) {
+  uint32_t line = 1;
+  if (auto fileLoc = mlir::dyn_cast<mlir::FileLineColLoc>(loc))
+    line = fileLoc.getLine();
+  return line;
+}
+
 } // namespace
+
+// The `module` does not have a first class representation in the `FIR`. We
+// extract information about it from the name of the identifiers and keep a
+// map to avoid duplication.
+mlir::LLVM::DIModuleAttr AddDebugInfoPass::getOrCreateModuleAttr(
+    const std::string &name, mlir::LLVM::DIFileAttr fileAttr,
+    mlir::LLVM::DIScopeAttr scope, unsigned line, bool decl) {
+  mlir::MLIRContext *context = &getContext();
+  mlir::LLVM::DIModuleAttr modAttr;
+  if (auto iter{moduleMap.find(name)}; iter != moduleMap.end())
+    modAttr = iter->second;
+  else {
+    modAttr = mlir::LLVM::DIModuleAttr::get(
+        context, fileAttr, scope, mlir::StringAttr::get(context, name),
+        mlir::StringAttr(), mlir::StringAttr(), mlir::StringAttr(), line, decl);
+    moduleMap[name] = modAttr;
+  }
+  return modAttr;
+}
+
+void AddDebugInfoPass::handleGlobalOp(fir::GlobalOp globalOp,
+                                      mlir::LLVM::DIFileAttr fileAttr,
+                                      mlir::LLVM::DIScopeAttr scope) {
+  mlir::ModuleOp module = getOperation();
+  mlir::MLIRContext *context = &getContext();
+  fir::DebugTypeGenerator typeGen(module);
+  mlir::OpBuilder builder(context);
+
+  auto result = fir::NameUniquer::deconstruct(globalOp.getSymName());
+  if (result.first != fir::NameUniquer::NameKind::VARIABLE)
+    return;
+
+  unsigned line = getLineFromLoc(globalOp.getLoc());
+
+  // DWARF5 says following about the fortran modules:
+  // A Fortran 90 module may also be represented by a module entry
+  // (but no declaration attribute is warranted because Fortran has no concept
+  // of a corresponding module body).
+  // But in practice, compilers use declaration attribute with a module in cases
+  // where module was defined in another source file (only being used in this
+  // one). The hasInitializationBody() seems to provide the right information
+  // but inverted. It is true where module is actually defined but false where
+  // it is used.
+  // FIXME: Currently we don't have the line number on which a module was
+  // declared. We are using a best guess of line - 1 where line is the source
+  // line of the first member of the module that we encounter.
+
+  if (!result.second.modules.empty())
+    scope = getOrCreateModuleAttr(result.second.modules[0], fileAttr, scope,
+                                  line - 1, !globalOp.hasInitializationBody());
+
+  auto diType = typeGen.convertType(globalOp.getType(), fileAttr, scope,
+                                    globalOp.getLoc());
+  auto gvAttr = mlir::LLVM::DIGlobalVariableAttr::get(
+      context, scope, mlir::StringAttr::get(context, result.second.name),
+      mlir::StringAttr::get(context, globalOp.getName()), fileAttr, line,
+      diType, /*isLocalToUnit*/ false,
+      /*isDefinition*/ globalOp.hasInitializationBody(), /* alignInBits*/ 0);
+  globalOp->setLoc(builder.getFusedLoc({globalOp->getLoc()}, gvAttr));
+}
 
 void AddDebugInfoPass::runOnOperation() {
   mlir::ModuleOp module = getOperation();
@@ -90,6 +168,10 @@ void AddDebugInfoPass::runOnOperation() {
       mlir::DistinctAttr::create(mlir::UnitAttr::get(context)),
       llvm::dwarf::getLanguage("DW_LANG_Fortran95"), fileAttr, producer,
       isOptimized, debugLevel);
+
+  module.walk([&](fir::GlobalOp globalOp) {
+    handleGlobalOp(globalOp, fileAttr, cuAttr);
+  });
 
   module.walk([&](mlir::func::FuncOp funcOp) {
     mlir::Location l = funcOp->getLoc();
@@ -131,8 +213,12 @@ void AddDebugInfoPass::runOnOperation() {
     mlir::LLVM::DIFileAttr funcFileAttr =
         mlir::LLVM::DIFileAttr::get(context, fileName, filePath);
 
+    unsigned line = 1;
+    if (auto funcLoc = mlir::dyn_cast<mlir::FileLineColLoc>(l))
+      line = funcLoc.getLine();
     // Only definitions need a distinct identifier and a compilation unit.
     mlir::DistinctAttr id;
+    mlir::LLVM::DIScopeAttr Scope = fileAttr;
     mlir::LLVM::DICompileUnitAttr compilationUnit;
     mlir::LLVM::DISubprogramFlags subprogramFlags =
         mlir::LLVM::DISubprogramFlags{};
@@ -144,13 +230,13 @@ void AddDebugInfoPass::runOnOperation() {
       subprogramFlags =
           subprogramFlags | mlir::LLVM::DISubprogramFlags::Definition;
     }
-    unsigned line = 1;
-    if (auto funcLoc = mlir::dyn_cast<mlir::FileLineColLoc>(l))
-      line = funcLoc.getLine();
+    if (!result.second.modules.empty())
+      Scope = getOrCreateModuleAttr(result.second.modules[0], fileAttr, cuAttr,
+                                    line - 1, false);
 
     auto spAttr = mlir::LLVM::DISubprogramAttr::get(
-        context, id, compilationUnit, fileAttr, funcName, fullName,
-        funcFileAttr, line, line, subprogramFlags, subTypeAttr);
+        context, id, compilationUnit, Scope, funcName, fullName, funcFileAttr,
+        line, line, subprogramFlags, subTypeAttr);
     funcOp->setLoc(builder.getFusedLoc({funcOp->getLoc()}, spAttr));
   });
 }
