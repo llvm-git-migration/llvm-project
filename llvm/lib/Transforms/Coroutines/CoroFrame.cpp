@@ -19,6 +19,7 @@
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/PtrUseVisitor.h"
 #include "llvm/Analysis/StackLifetime.h"
 #include "llvm/Config/llvm-config.h"
@@ -1441,9 +1442,11 @@ struct AllocaUseVisitor : PtrUseVisitor<AllocaUseVisitor> {
   using Base = PtrUseVisitor<AllocaUseVisitor>;
   AllocaUseVisitor(const DataLayout &DL, const DominatorTree &DT,
                    const CoroBeginInst &CB, const SuspendCrossingInfo &Checker,
-                   bool ShouldUseLifetimeStartInfo)
+                   bool ShouldUseLifetimeStartInfo,
+                   const coro::Shape &CoroShape)
       : PtrUseVisitor(DL), DT(DT), CoroBegin(CB), Checker(Checker),
-        ShouldUseLifetimeStartInfo(ShouldUseLifetimeStartInfo) {}
+        ShouldUseLifetimeStartInfo(ShouldUseLifetimeStartInfo),
+        CoroShape(CoroShape) {}
 
   void visit(Instruction &I) {
     Users.insert(&I);
@@ -1550,6 +1553,8 @@ struct AllocaUseVisitor : PtrUseVisitor<AllocaUseVisitor> {
   }
 
   void visitIntrinsicInst(IntrinsicInst &II) {
+    if (II.getIntrinsicID() == Intrinsic::lifetime_end)
+      LifetimeEndBBs.insert(II.getParent());
     // When we found the lifetime markers refers to a
     // subrange of the original alloca, ignore the lifetime
     // markers to avoid misleading the analysis.
@@ -1594,8 +1599,10 @@ private:
   DenseMap<Instruction *, std::optional<APInt>> AliasOffetMap{};
   SmallPtrSet<Instruction *, 4> Users{};
   SmallPtrSet<IntrinsicInst *, 2> LifetimeStarts{};
+  SmallPtrSet<BasicBlock *, 2> LifetimeEndBBs;
   bool MayWriteBeforeCoroBegin{false};
   bool ShouldUseLifetimeStartInfo{true};
+  const coro::Shape &CoroShape;
 
   mutable std::optional<bool> ShouldLiveOnFrame{};
 
@@ -1614,6 +1621,24 @@ private:
       // suspend point between lifetime markers. This should also cover the
       // case of a single lifetime.start intrinsic in a loop with suspend point.
       if (PI.isEscaped()) {
+        // If there is no explicit lifetime.end, then assume the address can
+        // cross suspension points.
+        if (LifetimeEndBBs.empty())
+          return true;
+
+        // If there is a path from a lifetime.start to a suspend without a
+        // corresponding lifetime.end, then the alloca's lifetime persists
+        // beyond that suspension point and the alloca must go on the frame.
+        for (AnyCoroSuspendInst *SuspendInst : CoroShape.CoroSuspends) {
+          SmallVector<BasicBlock *> LifetimeStartsBB;
+          for (IntrinsicInst *II : LifetimeStarts)
+            LifetimeStartsBB.push_back(II->getParent());
+          if (isPotentiallyReachableFromMany(LifetimeStartsBB,
+                                             SuspendInst->getParent(),
+                                             &LifetimeEndBBs, &DT))
+            return true;
+        }
+
         for (auto *A : LifetimeStarts) {
           for (auto *B : LifetimeStarts) {
             if (Checker.hasPathOrLoopCrossingSuspendPoint(A->getParent(),
@@ -2830,9 +2855,9 @@ static void collectFrameAlloca(AllocaInst *AI, coro::Shape &Shape,
   bool ShouldUseLifetimeStartInfo =
       (Shape.ABI != coro::ABI::Async && Shape.ABI != coro::ABI::Retcon &&
        Shape.ABI != coro::ABI::RetconOnce);
-  AllocaUseVisitor Visitor{AI->getModule()->getDataLayout(), DT,
-                           *Shape.CoroBegin, Checker,
-                           ShouldUseLifetimeStartInfo};
+  AllocaUseVisitor Visitor{
+      AI->getModule()->getDataLayout(), DT,   *Shape.CoroBegin, Checker,
+      ShouldUseLifetimeStartInfo,       Shape};
   Visitor.visitPtr(*AI);
   if (!Visitor.getShouldLiveOnFrame())
     return;
