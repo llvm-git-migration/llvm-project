@@ -54,23 +54,31 @@ struct __ct_abs<_Result, _Source, false> {
 template <class _Tp>
 _LIBCPP_CONSTEXPR _LIBCPP_HIDDEN _Tp __gcd(_Tp __a, _Tp __b) {
   static_assert((!is_signed<_Tp>::value), "");
-  if (__a == 0)
-    return __b;
+  if (__a < __b)
+    std::swap(__a, __b);
   if (__b == 0)
     return __a;
+  __a %= __b; // Make both argument of the same size, and early result in the easy case.
+  if (__a == 0)
+    return __b;
 
   int __az    = std::__countr_zero(__a);
   int __bz    = std::__countr_zero(__b);
   int __shift = std::min(__az, __bz);
+  __a >>= __az;
   __b >>= __bz;
-  while (__a != 0) {
-    __a >>= __az;
-    _Tp __absdiff = __a > __b ? __a - __b : __b - __a;
-    __b           = std::min(__a, __b);
-    __a           = __absdiff;
-    __az          = std::__countr_zero(__absdiff);
-  }
-  return __b << __shift;
+  do {
+    _Tp __diff = __a - __b;
+    if (__a > __b) {
+      __a = __b;
+      __b = __diff;
+    } else {
+      __b = __b - __a;
+    }
+    if (__diff != 0)
+    __b >>= std::__countr_zero(__diff);
+  } while (__b != 0);
+  return __a << __shift;
 }
 
 template <class _Tp, class _Up>
