@@ -209,6 +209,9 @@ public:
               static_cast<sptr>(Config::getDefaultMaxEntriesCount()));
     setOption(Option::MaxCacheEntrySize,
               static_cast<sptr>(Config::getDefaultMaxEntrySize()));
+    // The default value in the cache config has the higher priority.
+    if (Config::getDefaultReleaseToOsIntervalMs() != 0)
+      ReleaseToOsInterval = Config::getDefaultReleaseToOsIntervalMs();
     setOption(Option::ReleaseInterval, static_cast<sptr>(ReleaseToOsInterval));
   }
 
