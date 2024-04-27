@@ -2466,6 +2466,18 @@ inline typename m_Intrinsic_Ty<Opnd0>::Ty m_BSwap(const Opnd0 &Op0) {
   return m_Intrinsic<Intrinsic::bswap>(Op0);
 }
 
+template <typename Opnd0, typename Opnd1>
+inline typename m_Intrinsic_Ty<Opnd0, Opnd1>::Ty m_Ctlz(const Opnd0 &Op0,
+                                                        const Opnd1 &Op1) {
+  return m_Intrinsic<Intrinsic::ctlz>(Op0, Op1);
+}
+
+template <typename Opnd0, typename Opnd1>
+inline typename m_Intrinsic_Ty<Opnd0, Opnd1>::Ty m_Cttz(const Opnd0 &Op0,
+                                                        const Opnd1 &Op1) {
+  return m_Intrinsic<Intrinsic::cttz>(Op0, Op1);
+}
+
 template <typename Opnd0>
 inline typename m_Intrinsic_Ty<Opnd0>::Ty m_FAbs(const Opnd0 &Op0) {
   return m_Intrinsic<Intrinsic::fabs>(Op0);

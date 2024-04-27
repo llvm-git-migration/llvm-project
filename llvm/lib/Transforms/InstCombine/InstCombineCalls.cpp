@@ -1428,6 +1428,40 @@ static Instruction *foldBitOrderCrossLogicOp(Value *V,
   return nullptr;
 }
 
+/// Fold an unsigned minimum of trailing or leading zero bits counts:
+///   umin(cttz(CtOp, ZeroUndef), ConstOp) --> cttz(CtOp | (1 << ConstOp))
+///   umin(ctlz(CtOp, ZeroUndef), ConstOp) --> ctlz(CtOp | ((1 << (bitwidth-1))
+///                                              >> ConstOp))
+template <Intrinsic::ID IntrID>
+static Instruction *foldMinimumOverTrailingOrLeadingZeroCount(
+    Instruction *OrigInst, Value *CtOp, Value *ZeroUndef, Constant *ConstOp,
+    const DataLayout &DL, InstCombiner::BuilderTy &Builder) {
+  static_assert(IntrID == Intrinsic::cttz || IntrID == Intrinsic::ctlz,
+                "This helper only supports cttz and ctlz intrinsics");
+
+  auto BitWidth = ConstOp->getType()->getScalarSizeInBits();
+  auto *Ty = ConstOp->getType();
+
+  Constant *NewConst = ConstantFoldSelectInstruction(
+      ConstantFoldCompareInstOperands(CmpInst::ICMP_ULT, ConstOp,
+                                      ConstantInt::get(Ty, BitWidth), DL),
+      ConstantFoldBinaryOpOperands(
+          IntrID == Intrinsic::cttz ? Instruction::Shl : Instruction::LShr,
+          IntrID == Intrinsic::cttz
+              ? ConstantInt::get(Ty, 1)
+              : ConstantInt::get(Ty, APInt::getSignedMinValue(BitWidth)),
+          ConstOp, DL),
+      Constant::getNullValue(Ty));
+
+  Value *NewCtOp =
+      NewConst->isZeroValue() ? CtOp : Builder.CreateOr(CtOp, NewConst);
+
+  return CallInst::Create(Intrinsic::getDeclaration(OrigInst->getModule(),
+                                                    IntrID,
+                                                    OrigInst->getType()),
+                          {NewCtOp, ZeroUndef});
+}
+
 /// CallInst simplification. This mostly only handles folding of intrinsic
 /// instructions. For normal calls, it allows visitCallBase to do the heavy
 /// lifting.
@@ -1632,6 +1666,21 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       Value *Zero = Constant::getNullValue(I0->getType());
       Value *Cmp = Builder.CreateICmpNE(I0, Zero);
       return CastInst::Create(Instruction::ZExt, Cmp, II->getType());
+    }
+    // umin(cttz(x), const) --> cttz(x | (1 << const))
+    Value *X;
+    Constant *Y;
+    Value *Z;
+    if (match(I0, m_OneUse(m_Cttz(m_Value(X), m_Value(Z)))) &&
+        match(I1, m_Constant(Y))) {
+      return foldMinimumOverTrailingOrLeadingZeroCount<Intrinsic::cttz>(
+          II, X, Z, Y, DL, Builder);
+    }
+    // umin(ctlz(x), const) --> ctlz(x | ((1 << (bitwidth - 1) >> const)))
+    if (match(I0, m_OneUse(m_Ctlz(m_Value(X), m_Value(Z)))) &&
+        match(I1, m_Constant(Y))) {
+      return foldMinimumOverTrailingOrLeadingZeroCount<Intrinsic::ctlz>(
+          II, X, Z, Y, DL, Builder);
     }
     [[fallthrough]];
   }
