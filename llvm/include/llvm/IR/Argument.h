@@ -71,8 +71,8 @@ public:
   FPClassTest getNoFPClass() const;
 
   /// If this argument has a range attribute, return the value range of the
-  /// argument. Otherwise, std::nullopt is returned.
-  std::optional<ConstantRange> getRange() const;
+  /// argument. Otherwise, nullptr is returned.
+  const ConstantRange *getRange() const;
 
   /// Return true if this argument has the byval attribute.
   bool hasByValAttr() const;

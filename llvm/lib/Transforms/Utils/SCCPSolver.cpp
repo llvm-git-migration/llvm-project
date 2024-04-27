@@ -818,7 +818,7 @@ public:
 
   void trackValueOfArgument(Argument *A) {
     if (A->getType()->isIntegerTy()) {
-      if (std::optional<ConstantRange> Range = A->getRange()) {
+      if (const ConstantRange *Range = A->getRange()) {
         markConstantRange(ValueState[A], A, *Range);
         return;
       }
@@ -1635,7 +1635,7 @@ static ValueLatticeElement getValueFromMetadata(const Instruction *I) {
           getConstantRangeFromMetadata(*Ranges));
 
     if (const auto *CB = dyn_cast<CallBase>(I))
-      if (std::optional<ConstantRange> Range = CB->getRange())
+      if (const ConstantRange *Range = CB->getRange())
         return ValueLatticeElement::getRange(*Range);
   }
   if (I->hasMetadata(LLVMContext::MD_nonnull))

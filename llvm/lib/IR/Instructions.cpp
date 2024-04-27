@@ -396,11 +396,11 @@ FPClassTest CallBase::getParamNoFPClass(unsigned i) const {
   return Mask;
 }
 
-std::optional<ConstantRange> CallBase::getRange() const {
+const ConstantRange *CallBase::getRange() const {
   const Attribute RangeAttr = getRetAttr(llvm::Attribute::Range);
   if (RangeAttr.isValid())
-    return RangeAttr.getRange();
-  return std::nullopt;
+    return &RangeAttr.getRange();
+  return nullptr;
 }
 
 bool CallBase::isReturnNonNull() const {

@@ -592,7 +592,7 @@ static ValueLatticeElement getFromRangeMetadata(Instruction *BBI) {
     break;
   case Instruction::Call:
   case Instruction::Invoke:
-    if (std::optional<ConstantRange> Range = cast<CallBase>(BBI)->getRange())
+    if (const ConstantRange *Range = cast<CallBase>(BBI)->getRange())
       return ValueLatticeElement::getRange(*Range);
     [[fallthrough]];
   case Instruction::Load:
@@ -713,7 +713,7 @@ LazyValueInfoImpl::solveBlockValueNonLocal(Value *Val, BasicBlock *BB) {
   // If this is the entry block, we must be asking about an argument.
   if (BB->isEntryBlock()) {
     assert(isa<Argument>(Val) && "Unknown live-in to the entry block");
-    if (std::optional<ConstantRange> Range = cast<Argument>(Val)->getRange())
+    if (const ConstantRange *Range = cast<Argument>(Val)->getRange())
       return ValueLatticeElement::getRange(*Range);
     return ValueLatticeElement::getOverdefined();
   }

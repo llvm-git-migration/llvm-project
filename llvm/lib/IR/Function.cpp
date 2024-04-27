@@ -263,11 +263,11 @@ FPClassTest Argument::getNoFPClass() const {
   return getParent()->getParamNoFPClass(getArgNo());
 }
 
-std::optional<ConstantRange> Argument::getRange() const {
+const ConstantRange *Argument::getRange() const {
   const Attribute RangeAttr = getAttribute(llvm::Attribute::Range);
   if (RangeAttr.isValid())
-    return RangeAttr.getRange();
-  return std::nullopt;
+    return &RangeAttr.getRange();
+  return nullptr;
 }
 
 bool Argument::hasNestAttr() const {

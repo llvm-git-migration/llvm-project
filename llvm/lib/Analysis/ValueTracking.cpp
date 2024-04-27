@@ -1516,7 +1516,7 @@ static void computeKnownBitsFromOperator(const Operator *I,
 
     const auto *CB = cast<CallBase>(I);
 
-    if (std::optional<ConstantRange> Range = CB->getRange())
+    if (const ConstantRange *Range = CB->getRange())
       Known = Known.unionWith(Range->toKnownBits());
 
     if (const Value *RV = CB->getReturnedArgOperand()) {
@@ -1971,7 +1971,7 @@ void computeKnownBits(const Value *V, const APInt &DemandedElts,
   assert(!isa<ConstantData>(V) && "Unhandled constant data!");
 
   if (const auto *A = dyn_cast<Argument>(V))
-    if (std::optional<ConstantRange> Range = A->getRange())
+    if (const ConstantRange *Range = A->getRange())
       Known = Range->toKnownBits();
 
   // All recursive calls that increase depth must come after this.
@@ -2896,7 +2896,7 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
     } else {
       if (MDNode *Ranges = Q.IIQ.getMetadata(Call, LLVMContext::MD_range))
         return rangeMetadataExcludesValue(Ranges, APInt::getZero(BitWidth));
-      if (std::optional<ConstantRange> Range = Call->getRange()) {
+      if (const ConstantRange *Range = Call->getRange()) {
         const APInt ZeroValue(Range->getBitWidth(), 0);
         if (!Range->contains(ZeroValue))
           return true;
@@ -3070,7 +3070,7 @@ bool isKnownNonZero(const Value *V, const APInt &DemandedElts,
   }
 
   if (const auto *A = dyn_cast<Argument>(V))
-    if (std::optional<ConstantRange> Range = A->getRange()) {
+    if (const ConstantRange *Range = A->getRange()) {
       const APInt ZeroValue(Range->getBitWidth(), 0);
       if (!Range->contains(ZeroValue))
         return true;
@@ -9390,7 +9390,7 @@ ConstantRange llvm::computeConstantRange(const Value *V, bool ForSigned,
     setLimitForFPToI(cast<Instruction>(V), Lower, Upper);
     CR = ConstantRange::getNonEmpty(Lower, Upper);
   } else if (const auto *A = dyn_cast<Argument>(V))
-    if (std::optional<ConstantRange> Range = A->getRange())
+    if (const ConstantRange *Range = A->getRange())
       CR = *Range;
 
   if (auto *I = dyn_cast<Instruction>(V)) {
@@ -9398,7 +9398,7 @@ ConstantRange llvm::computeConstantRange(const Value *V, bool ForSigned,
       CR = CR.intersectWith(getConstantRangeFromMetadata(*Range));
 
     if (const auto *CB = dyn_cast<CallBase>(V))
-      if (std::optional<ConstantRange> Range = CB->getRange())
+      if (const ConstantRange *Range = CB->getRange())
         CR = CR.intersectWith(*Range);
   }
 

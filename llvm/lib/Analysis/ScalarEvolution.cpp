@@ -6386,12 +6386,12 @@ static std::optional<ConstantRange> GetRangeFromMetadata(Value *V) {
     if (MDNode *MD = I->getMetadata(LLVMContext::MD_range))
       return getConstantRangeFromMetadata(*MD);
     if (const auto *CB = dyn_cast<CallBase>(V))
-      if (std::optional<ConstantRange> Range = CB->getRange())
-        return Range;
+      if (const ConstantRange *Range = CB->getRange())
+        return *Range;
   }
   if (auto *A = dyn_cast<Argument>(V))
-    if (std::optional<ConstantRange> Range = A->getRange())
-      return Range;
+    if (const ConstantRange *Range = A->getRange())
+      return *Range;
 
   return std::nullopt;
 }

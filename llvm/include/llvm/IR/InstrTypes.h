@@ -2199,8 +2199,8 @@ public:
   FPClassTest getParamNoFPClass(unsigned i) const;
 
   /// If this return value has a range attribute, return the value range of the
-  /// argument. Otherwise, std::nullopt is returned.
-  std::optional<ConstantRange> getRange() const;
+  /// argument. Otherwise, nullptr is returned.
+  const ConstantRange *getRange() const;
 
   /// Return true if the return value is known to be not null.
   /// This may be because it has the nonnull attribute, or because at least
