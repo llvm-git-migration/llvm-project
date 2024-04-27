@@ -54,8 +54,6 @@ func.func @launch() {
 // CHECK-NEXT: %[[BDIM:.*]] = gpu.block_dim x
 // CHECK-NEXT: = gpu.block_dim y
 // CHECK-NEXT: = gpu.block_dim z
-// CHECK-NEXT: cf.br ^[[BLOCK:.*]]
-// CHECK-NEXT: ^[[BLOCK]]:
 // CHECK-NEXT: "use"(%[[KERNEL_ARG0]]) : (f32) -> ()
 // CHECK-NEXT: "some_op"(%[[BID]], %[[BDIM]]) : (index, index) -> ()
 // CHECK-NEXT: = memref.load %[[KERNEL_ARG1]][%[[TID]]] : memref<?xf32, 1>
@@ -475,8 +473,6 @@ func.func @launch_cluster() {
 // CHECK-NEXT: %[[CDIM:.*]] = gpu.cluster_dim x
 // CHECK-NEXT: = gpu.cluster_dim y
 // CHECK-NEXT: = gpu.cluster_dim z
-// CHECK-NEXT: cf.br ^[[BLOCK:.*]]
-// CHECK-NEXT: ^[[BLOCK]]:
 // CHECK-NEXT: "use"(%[[KERNEL_ARG0]]) : (f32) -> ()
 // CHECK-NEXT: "some_op"(%[[CID]], %[[BID]], %[[BDIM]]) : (index, index, index) -> ()
 // CHECK-NEXT: = memref.load %[[KERNEL_ARG1]][%[[TID]]] : memref<?xf32, 1>
