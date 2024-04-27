@@ -1418,7 +1418,7 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
         if (BitWidth > 2 && ShAmtC * 2 == BitWidth)
           return BinaryOperator::CreateAnd(X, ConstantInt::get(Ty, *MulC - 2));
 
-        // lshr (mul (X, 2^N + 1)), N -> add (X, lshr(X, N))
+        // lshr (mul nuw (X, 2^N + 1)), N -> add nuw (X, lshr(X, N))
         if (Op0->hasOneUse()) {
           auto *NewAdd = BinaryOperator::CreateNUWAdd(
               X, Builder.CreateLShr(X, ConstantInt::get(Ty, ShAmtC), "",
