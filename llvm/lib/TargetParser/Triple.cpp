@@ -1151,6 +1151,13 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
+  // If "none" is in the middle component in a three-component triple, treat it as
+  // the OS (Components[2]) instead of the vendor (Components[1]).
+  // This is for some baremetal cases, such as "arm-none-elf".
+  if (Found[0] && !Found[1] && !Found[2] && Found[3] &&
+      Components[1] == "none" && Components[2].empty())
+    std::swap(Components[1], Components[2]);
+
   // Replace empty components with "unknown" value.
   for (StringRef &C : Components)
     if (C.empty())
