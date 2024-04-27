@@ -54,8 +54,11 @@ struct __ct_abs<_Result, _Source, false> {
 template <class _Tp>
 _LIBCPP_CONSTEXPR _LIBCPP_HIDDEN _Tp __gcd(_Tp __a, _Tp __b) {
   static_assert((!is_signed<_Tp>::value), "");
-  if (__a < __b)
-    std::swap(__a, __b);
+  if (__a < __b) {
+    _Tp __tmp = __b;
+    __b = __a;
+    __a = __tmp;
+  }
   if (__b == 0)
     return __a;
   __a %= __b; // Make both argument of the same size, and early result in the easy case.
