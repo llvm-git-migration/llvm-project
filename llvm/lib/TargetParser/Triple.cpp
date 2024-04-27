@@ -1151,6 +1151,13 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
+  // For 3-component triples, the middle component is used to set Vendor;
+  // while if it is "none", we'd prefer to set OS.
+  // This is for some baremetal cases, such as "arm-none-elf".
+  if (Found[0] && !Found[1] && !Found[2] && Found[3] &&
+      Components[1].equals("none") && Components[2].empty())
+    std::swap(Components[1], Components[2]);
+
   // Replace empty components with "unknown" value.
   for (StringRef &C : Components)
     if (C.empty())
