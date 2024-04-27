@@ -19,6 +19,7 @@
 #include <__type_traits/is_same.h>
 #include <__type_traits/is_signed.h>
 #include <__type_traits/make_unsigned.h>
+#include <__utility/swap.h>
 #include <limits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -55,7 +56,7 @@ template <class _Tp>
 _LIBCPP_CONSTEXPR _LIBCPP_HIDDEN _Tp __gcd(_Tp __a, _Tp __b) {
   static_assert((!is_signed<_Tp>::value), "");
   if (__a < __b)
-    std::swap(__a, __b);
+    swap(__a, __b);
   if (__b == 0)
     return __a;
   __a %= __b; // Make both argument of the same size, and early result in the easy case.
