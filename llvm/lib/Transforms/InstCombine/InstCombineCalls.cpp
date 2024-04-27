@@ -1633,6 +1633,39 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       Value *Cmp = Builder.CreateICmpNE(I0, Zero);
       return CastInst::Create(Instruction::ZExt, Cmp, II->getType());
     }
+    // umin(cttz(x), const) --> cttz(x | (1 << const))
+    Value *X;
+    const APInt *Y;
+    Value *Z;
+    if (match(I0, m_OneUse(m_Cttz(m_Value(X), m_Value(Z)))) &&
+        match(I1, m_APInt(Y))) {
+      Value *CttzOp = X;
+      if (Y->ult(I1->getType()->getScalarType()->getIntegerBitWidth())) {
+        auto One = APInt::getOneBitSet(
+            I1->getType()->getScalarType()->getIntegerBitWidth(), 0);
+        Value *NewConst = ConstantInt::get(I1->getType(), One << *Y);
+        CttzOp = Builder.CreateOr(X, NewConst);
+      }
+      return CallInst::Create(Intrinsic::getDeclaration(II->getModule(),
+                                                        Intrinsic::cttz,
+                                                        II->getType()),
+                              {CttzOp, Z});
+    }
+    // umin(ctlz(x), const) --> ctlz(x | ((1 << (bitwidth - 1) >> const)))
+    if (match(I0, m_OneUse(m_Ctlz(m_Value(X), m_Value(Z)))) &&
+        match(I1, m_APInt(Y))) {
+      Value *CtlzOp = X;
+      if (Y->ult(I1->getType()->getScalarType()->getIntegerBitWidth())) {
+        auto Min = APInt::getSignedMinValue(
+            I1->getType()->getScalarType()->getIntegerBitWidth());
+        Value *NewConst = ConstantInt::get(I1->getType(), Min.lshr(*Y));
+        CtlzOp = Builder.CreateOr(X, NewConst);
+      }
+      return CallInst::Create(Intrinsic::getDeclaration(II->getModule(),
+                                                        Intrinsic::ctlz,
+                                                        II->getType()),
+                              {CtlzOp, Z});
+    }
     [[fallthrough]];
   }
   case Intrinsic::umax: {
