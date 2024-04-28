@@ -59,6 +59,41 @@ void B<int>::g() requires true;
 
 } // namespace cwg2847
 
+namespace cwg2851 { // cwg2851: 19
+
+#if __cplusplus >= 202002L
+template<typename T, T v> struct Val { static constexpr T value = v; };
+
+// Floating-point promotions
+static_assert(Val<long double, 0.0>::value == 0.0L);
+static_assert(Val<long double, 0.0f>::value == 0.0L);
+static_assert(Val<double, 0.0f>::value == 0.0);
+static_assert(Val<long double, -0.0>::value == -0.0L);
+static_assert(!__is_same(Val<long double, -0.0>, Val<long double, 0.0L>));
+static_assert(__is_same(Val<long double, 0.5>, Val<long double, 0.5L>));
+static_assert(__is_same(Val<long double, __builtin_nan("")>, Val<long double, __builtin_nanl("")>));
+static_assert(__is_same(Val<long double, __builtin_inf()>, Val<long double, __builtin_infl()>));
+
+// Floating-point conversions where the source value can be represented exactly in the destination type
+static_assert(Val<float, 0.0L>::value == 0.0L);
+static_assert(__is_same(Val<float, 0.0>, Val<float, 0.0L>));
+static_assert(__is_same(Val<float, 0.0>, Val<float, 0.0f>));
+static_assert(!__is_same(Val<float, -0.0L>, Val<float, 0.0f>));
+static_assert(__is_same(Val<float, 0.5L>, Val<float, 0.5f>));
+static_assert(__is_same(Val<float, 0.5L>, Val<float, 0.5f>));
+static_assert(__is_same(Val<float, double{__FLT_DENORM_MIN__}>, Val<float, __FLT_DENORM_MIN__>));
+Val<float, double{__FLT_DENORM_MIN__} / 2.0> _1;
+// since-cxx20-error-re@-1 {{non-type template argument evaluates to {{.+}} which can not be represented in type 'float'}}
+Val<float, static_cast<long double>(__FLT_DENORM_MIN__) / 2.0L> _2;
+// since-cxx20-error-re@-1 {{non-type template argument evaluates to {{.+}} which can not be represented in type 'float'}}
+Val<float, __DBL_MAX__> _3;
+// since-cxx20-error-re@-1 {{non-type template argument evaluates to {{.+}} which can not be represented in type 'float'}}
+static_assert(__is_same(Val<float, __builtin_nan("")>, Val<float, __builtin_nanf("")>));
+static_assert(__is_same(Val<float, __builtin_inf()>, Val<float, __builtin_inff()>));
+#endif
+
+}
+
 namespace cwg2858 { // cwg2858: 19
 
 #if __cplusplus > 202302L
