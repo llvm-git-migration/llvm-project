@@ -1411,11 +1411,11 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
 
     const APInt *MulC;
     if (match(Op0, m_NUWMul(m_Value(X), m_APInt(MulC)))) {
-      if ((*MulC - 1).isPowerOf2() && MulC->logBase2() == ShAmtC) {
+      if ((*MulC - 1).isPowerOf2() && MulC->logBase2() == ShAmtC && BitWidth > 2) {
         // Look for a "splat" mul pattern - it replicates bits across each half
         // of a value, so a right shift is just a mask of the low bits:
         // lshr i[2N] (mul nuw X, (2^N)+1), N --> and iN X, (2^N)-1
-        if (BitWidth > 2 && ShAmtC * 2 == BitWidth)
+        if (ShAmtC * 2 == BitWidth)
           return BinaryOperator::CreateAnd(X, ConstantInt::get(Ty, *MulC - 2));
 
         // lshr (mul nuw (X, 2^N + 1)), N -> add nuw (X, lshr(X, N))
