@@ -8268,8 +8268,10 @@ static bool optimizeBranch(BranchInst *Branch, const TargetLowering &TLI,
     if (CmpC.isPowerOf2() && Cmp->getPredicate() == ICmpInst::ICMP_ULT &&
         match(UI, m_Shr(m_Specific(X), m_SpecificInt(CmpC.logBase2())))) {
       IRBuilder<> Builder(Branch);
-      if (UI->getParent() != Branch->getParent())
+      if (UI->getParent() != Branch->getParent()) {
         UI->moveBefore(Branch);
+        UI->dropPoisonGeneratingFlags();
+      }
       Value *NewCmp = Builder.CreateCmp(ICmpInst::ICMP_EQ, UI,
                                         ConstantInt::get(UI->getType(), 0));
       LLVM_DEBUG(dbgs() << "Converting " << *Cmp << "\n");
@@ -8281,8 +8283,10 @@ static bool optimizeBranch(BranchInst *Branch, const TargetLowering &TLI,
         (match(UI, m_Add(m_Specific(X), m_SpecificInt(-CmpC))) ||
          match(UI, m_Sub(m_Specific(X), m_SpecificInt(CmpC))))) {
       IRBuilder<> Builder(Branch);
-      if (UI->getParent() != Branch->getParent())
+      if (UI->getParent() != Branch->getParent()) {
         UI->moveBefore(Branch);
+        UI->dropPoisonGeneratingFlags();
+      }
       Value *NewCmp = Builder.CreateCmp(Cmp->getPredicate(), UI,
                                         ConstantInt::get(UI->getType(), 0));
       LLVM_DEBUG(dbgs() << "Converting " << *Cmp << "\n");
