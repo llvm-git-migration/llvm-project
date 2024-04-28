@@ -1411,7 +1411,7 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
 
     const APInt *MulC;
     if (match(Op0, m_NUWMul(m_Value(X), m_APInt(MulC)))) {
-      if ((*MulC - 1).isPowerOf2() && MulC->logBase2() == ShAmtC && BitWidth > 2) {
+      if (BitWidth > 2 && (*MulC - 1).isPowerOf2() && MulC->logBase2() == ShAmtC) {
         // Look for a "splat" mul pattern - it replicates bits across each half
         // of a value, so a right shift is just a mask of the low bits:
         // lshr i[2N] (mul nuw X, (2^N)+1), N --> and iN X, (2^N)-1
