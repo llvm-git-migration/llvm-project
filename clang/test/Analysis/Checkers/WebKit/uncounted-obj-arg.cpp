@@ -201,6 +201,12 @@ public:
   unsigned trivial25() const { return __c11_atomic_load((volatile _Atomic(unsigned) *)&v, __ATOMIC_RELAXED); }
   bool trivial26() { bool hasValue = v; return !hasValue; }
   bool trivial27(int v) { bool value; value = v ? 1 : 0; return value; }
+  bool trivial28() { return true; }
+  bool trivial29() { return false; }
+  unsigned trivial30() { return ~0xff; }
+  template <unsigned v> unsigned trivial31() { return v; }
+  unsigned trivial32(unsigned v) { unsigned r = 0xff; r |= v; return r; }
+  unsigned trivial33() { return sizeof(int); }
 
   static RefCounted& singleton() {
     static RefCounted s_RefCounted;
@@ -273,6 +279,9 @@ public:
     return val;
   }
 
+  int nonTrivial13() { return ~otherFunction(); }
+  int nonTrivial14() { int r = 0xff; r |= otherFunction(); return r; }
+
   unsigned v { 0 };
   Number* number { nullptr };
   Enum enumValue { Enum::Value1 };
@@ -322,6 +331,13 @@ public:
     getFieldTrivial().trivial25(); // no-warning
     getFieldTrivial().trivial26(); // no-warning
     getFieldTrivial().trivial27(5); // no-warning
+    getFieldTrivial().trivial28(); // no-warning
+    getFieldTrivial().trivial29(); // no-warning
+    getFieldTrivial().trivial30(); // no-warning
+    getFieldTrivial().trivial31<7>(); // no-warning
+    getFieldTrivial().trivial32(9); // no-warning
+    getFieldTrivial().trivial33(); // no-warning
+
     RefCounted::singleton().trivial18(); // no-warning
     RefCounted::singleton().someFunction(); // no-warning
 
@@ -350,6 +366,10 @@ public:
     getFieldTrivial().nonTrivial11();
     // expected-warning@-1{{Call argument for 'this' parameter is uncounted and unsafe}}
     getFieldTrivial().nonTrivial12();
+    // expected-warning@-1{{Call argument for 'this' parameter is uncounted and unsafe}}
+    getFieldTrivial().nonTrivial13();
+    // expected-warning@-1{{Call argument for 'this' parameter is uncounted and unsafe}}
+    getFieldTrivial().nonTrivial14();
     // expected-warning@-1{{Call argument for 'this' parameter is uncounted and unsafe}}
   }
 };
