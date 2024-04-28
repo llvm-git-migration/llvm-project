@@ -588,6 +588,8 @@ Bug Fixes to C++ Support
 - Fixed a use-after-free bug in parsing of type constraints with default arguments that involve lambdas. (#GH67235)
 - Fixed bug in which the body of a consteval lambda within a template was not parsed as within an
   immediate function context.
+- Fix a bug on template partial specialization with issue on deduction of nontype tempalte parameter
+  whose type is `decltype(auto)`. Fixes (#GH68885).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
