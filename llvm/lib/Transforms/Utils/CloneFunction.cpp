@@ -18,6 +18,7 @@
 #include "llvm/Analysis/DomTreeUpdater.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/IR/AttributeMask.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfo.h"
@@ -696,6 +697,16 @@ void llvm::CloneAndPruneIntoFromInst(Function *NewFunc, const Function *OldFunc,
     }
   }
 
+  // Drop all incompatible return attributes that cannot be applied to NewFunc
+  // during cloning, so as to allow instruction simplification later to reason
+  // on the old state of the function. The original attributes are restored
+  // before returning.
+  AttributeMask IncompatibleAttrs =
+      AttributeFuncs::typeIncompatible(OldFunc->getReturnType());
+  AttrBuilder RetAttrs(NewFunc->getContext(),
+                       NewFunc->getAttributes().getRetAttrs());
+  NewFunc->removeRetAttrs(IncompatibleAttrs);
+
   // Clone the entry block, and anything recursively reachable from it.
   std::vector<const BasicBlock *> CloneWorklist;
   PFC.CloneBlock(StartingBB, StartingInst->getIterator(), CloneWorklist);
@@ -848,6 +859,9 @@ void llvm::CloneAndPruneIntoFromInst(Function *NewFunc, const Function *OldFunc,
       }
     }
   }
+
+  // Restore attributes.
+  NewFunc->addRetAttrs(RetAttrs);
 
   // Remap debug intrinsic operands now that all values have been mapped.
   // Doing this now (late) preserves use-before-defs in debug intrinsics. If
