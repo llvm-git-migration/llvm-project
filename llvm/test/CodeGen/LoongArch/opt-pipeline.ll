@@ -103,6 +103,7 @@
 ; CHECK-NEXT:       Machine code sinking
 ; CHECK-NEXT:       Peephole Optimizations
 ; CHECK-NEXT:       Remove dead machine instructions
+; CHECK-NEXT:       LoongArch Optimize W Instructions
 ; CHECK-NEXT:       LoongArch Pre-RA pseudo instruction expansion pass
 ; CHECK-NEXT:       Detect Dead Lanes
 ; CHECK-NEXT:       Init Undef Pass
