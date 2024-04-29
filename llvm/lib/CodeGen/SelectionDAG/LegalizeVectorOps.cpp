@@ -510,6 +510,13 @@ SDValue VectorLegalizer::LegalizeOp(SDValue Op) {
       if (Action != TargetLowering::Legal)                                     \
         break;                                                                 \
     }                                                                          \
+    /* Defer non-vector results to LegalizeDAG. */                             \
+    /* Remove this after #90522 is landed */                                   \
+    if (ISD::VPID == ISD::VP_CTTZ_ELTS ||                                      \
+        ISD::VPID == ISD::VP_CTTZ_ELTS_ZERO_UNDEF) {                           \
+      Action = TargetLowering::Legal;                                          \
+      break;                                                                   \
+    }                                                                          \
     Action = TLI.getOperationAction(Node->getOpcode(), LegalizeVT);            \
   } break;
 #include "llvm/IR/VPIntrinsics.def"
@@ -1022,13 +1029,6 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
   case ISD::VP_CTTZ:
   case ISD::VP_CTTZ_ZERO_UNDEF:
     if (SDValue Expanded = TLI.expandVPCTTZ(Node, DAG)) {
-      Results.push_back(Expanded);
-      return;
-    }
-    break;
-  case ISD::VP_CTTZ_ELTS:
-  case ISD::VP_CTTZ_ELTS_ZERO_UNDEF:
-    if (SDValue Expanded = TLI.expandVPCTTZElements(Node, DAG)) {
       Results.push_back(Expanded);
       return;
     }
