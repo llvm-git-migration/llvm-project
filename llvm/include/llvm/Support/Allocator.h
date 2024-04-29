@@ -176,8 +176,8 @@ public:
     return AllocateSlow(SizeToAllocate, Alignment);
   }
 
-  LLVM_ATTRIBUTE_RETURNS_NONNULL void *AllocateSlow(size_t SizeToAllocate,
-                                                    Align Alignment) {
+  LLVM_ATTRIBUTE_RETURNS_NONNULL LLVM_ATTRIBUTE_NOINLINE void *
+  AllocateSlow(size_t SizeToAllocate, Align Alignment) {
     // If Size is really big, allocate a separate slab for it.
     size_t PaddedSize = SizeToAllocate + Alignment.value() - 1;
     if (PaddedSize > SizeThreshold) {
