@@ -45,6 +45,7 @@ def fooTypeEncB : InstructionEncoding {
 
 let OutOperandList = (outs) in {
   def foo : Instruction {
+    bits<32> Inst;
     let InOperandList = (ins i32imm:$factor);
     let EncodingInfos = EncodingByHwMode<
       [ModeA, ModeB], [fooTypeEncA, fooTypeEncB]
