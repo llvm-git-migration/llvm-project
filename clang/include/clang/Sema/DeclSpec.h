@@ -1814,6 +1814,9 @@ public:
   ~DecompositionDeclarator() {
     if (DeleteBindings)
       delete[] Bindings;
+    else
+      llvm::for_each(llvm::MutableArrayRef(Bindings, NumBindings),
+                     [](Binding &B) { B.Attrs.reset(); });
   }
 
   void clear() {
