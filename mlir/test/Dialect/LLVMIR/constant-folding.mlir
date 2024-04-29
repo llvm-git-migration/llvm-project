@@ -51,3 +51,20 @@ llvm.func @or_basic() -> i32 {
   // CHECK: llvm.return %[[RES]] : i32
   llvm.return %2 : i32
 }
+
+// -----
+
+// CHECK-LABEL: llvm.func @addressof
+llvm.func @addressof() {
+  // CHECK-NEXT: %[[ADDRESSOF:.+]] = llvm.mlir.addressof @foo
+  %0 = llvm.mlir.addressof @foo : !llvm.ptr
+  %1 = llvm.mlir.addressof @foo : !llvm.ptr
+  // CHECK-NEXT: llvm.call @bar(%[[ADDRESSOF]], %[[ADDRESSOF]])
+  llvm.call @bar(%0, %1) : (!llvm.ptr, !llvm.ptr) -> ()
+  // CHECK-NEXT: llvm.return
+  llvm.return
+}
+
+llvm.mlir.global constant @foo() : i32
+
+llvm.func @bar(!llvm.ptr, !llvm.ptr)
