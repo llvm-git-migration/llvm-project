@@ -159,9 +159,9 @@ public:
 #endif
 
     // Check if we have enough space.
-    if (Adjustment + SizeToAllocate <= size_t(End - CurPtr)
-        // We can't return nullptr even for a zero-sized allocation!
-        && CurPtr != nullptr) {
+    if (LLVM_LIKELY(Adjustment + SizeToAllocate <= size_t(End - CurPtr)
+                    // We can't return nullptr even for a zero-sized allocation!
+                    && CurPtr != nullptr)) {
       char *AlignedPtr = CurPtr + Adjustment;
       CurPtr = AlignedPtr + SizeToAllocate;
       // Update the allocation point of this memory block in MemorySanitizer.
