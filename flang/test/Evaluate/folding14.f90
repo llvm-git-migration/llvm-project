@@ -1,4 +1,4 @@
-! RUN: %python %S/test_folding.py %s %flang_fc1
+! RUN: %python %S/test_folding.py %s %flang_fc1 -pedantic
 ! Test folding of isnan() extension
 module m1
   logical, parameter :: results(*) = isnan([ &

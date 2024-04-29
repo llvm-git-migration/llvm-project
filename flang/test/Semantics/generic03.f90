@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! Exercise function vs subroutine distinction in generics
 module m1
   type t1

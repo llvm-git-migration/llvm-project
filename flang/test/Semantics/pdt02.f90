@@ -1,4 +1,4 @@
-! RUN: %flang_fc1 -fdebug-unparse %s 2>&1 | FileCheck %s
+! RUN: %flang_fc1 -fdebug-unparse -pedantic %s 2>&1 | FileCheck %s
 program p
   type t(k,n)
     integer, kind :: k

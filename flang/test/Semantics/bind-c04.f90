@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! Check for C1520
 ! If proc-language-binding-spec (bind(c)) with NAME= is specified, then
 ! proc-decl-list shall contain exactly one proc-decl, which shall neither have

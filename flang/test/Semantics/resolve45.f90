@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 !ERROR: The function result variable 'f1' may not have an explicit SAVE attribute
 function f1(x, y)
   !ERROR: The dummy argument 'x' may not have an explicit SAVE attribute

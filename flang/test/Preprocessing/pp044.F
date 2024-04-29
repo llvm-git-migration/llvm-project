@@ -1,4 +1,4 @@
-! RUN: %flang -E %s 2>&1 | FileCheck %s
+! RUN: %flang -E -pedantic %s 2>&1 | FileCheck %s
 ! CHECK-NOT:z = 111
 ! CHECK:warning: Statement should not begin with a continuation line
 ! CHECK:j=111+444

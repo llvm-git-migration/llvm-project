@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1 -Werror
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic -Werror
 ! Catch discrepancies between a local interface and a global definition
 
 subroutine global1(x)

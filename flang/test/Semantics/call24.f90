@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! 15.4.2.2. Test that errors are reported when an explicit interface
 ! is not provided for an external procedure that requires an explicit
 ! interface (the definition needs to be visible so that the compiler

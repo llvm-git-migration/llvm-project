@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 module m
  contains
   attributes(device) subroutine devsub
@@ -11,9 +11,9 @@ module m
     real, device :: x(10)
     print*,'from device'
     print '(f10.5)', (x(ivar), ivar = 1, 10)
-    write(*,*), "Hello world from device!"
+    write(*,*) "Hello world from device!"
     !WARNING: I/O statement might not be supported on device
-    write(12,'(10F4.1)'), x
+    write(12,'(10F4.1)') x
   end
 end
 

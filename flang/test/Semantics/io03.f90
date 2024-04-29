@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
   character(kind=1,len=50) internal_file
   character(kind=2,len=50) internal_file2
   character(kind=4,len=50) internal_file4
@@ -8,9 +8,9 @@
   character(20) :: cvar;
   character, parameter :: const_internal_file = "(I6)"
   character, parameter :: const_cvar*(*) = "Ceci n'est pas une pipe."
-  integer*1 stat1
-  integer*2 stat2, id2
-  integer*8 stat8
+  integer(1) stat1
+  integer(2) stat2, id2
+  integer(8) stat8
   integer :: iunit = 10
   integer, parameter :: junit = 11, const_size = 13, const_int = 15
   integer :: vv(10) = 7

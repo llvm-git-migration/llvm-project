@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! C701 The type-param-value for a kind type parameter shall be a constant
 ! expression.  This constraint looks like a mistake in the standard.
 integer, parameter :: k = 8

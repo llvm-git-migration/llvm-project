@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1 -Werror
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic -Werror
 subroutine s1
   call ext(1, 2)
   call myerror('abc')

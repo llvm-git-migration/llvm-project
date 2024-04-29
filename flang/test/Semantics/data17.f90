@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 character(4) a, b, c, d, e, f
 !WARNING: DATA statement value '"abcde"' for 'a' has the wrong length
 data a(1:4)/'abcde'/

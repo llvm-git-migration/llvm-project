@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1 -Werror
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic -Werror
 program main
   if (.true.) then
     do j = 1, 2

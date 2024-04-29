@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1 -Werror
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic -Werror
 ! A nasty case of a weird order of declarations - a symbol may appear
 ! as an actual argument to a specification function before its rank
 ! has been declared.

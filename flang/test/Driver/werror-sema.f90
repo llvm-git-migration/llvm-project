@@ -2,11 +2,11 @@
 ! actions that extend the PrescanAndSemaAction, particularly for Semantic warnings/errors.
 ! Multiple RUN lines are added to make sure that the behavior is consistent across multiple actions.
 
-! RUN: not %flang_fc1 -fsyntax-only -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -Werror -fdebug-dump-parse-tree %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -Werror -fdebug-unparse-with-symbols %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -Werror -fdebug-unparse %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -Werror -fdebug-dump-symbols %s  2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -fsyntax-only -pedantic -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -pedantic -Werror -fdebug-dump-parse-tree %s  2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -pedantic -Werror -fdebug-unparse-with-symbols %s  2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -pedantic -Werror -fdebug-unparse %s  2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -pedantic -Werror -fdebug-dump-symbols %s  2>&1 | FileCheck %s --check-prefix=WITH
 
 
 ! RUN: %flang_fc1 -fsyntax-only %s  2>&1 | FileCheck %s --allow-empty --check-prefix=WITHOUT

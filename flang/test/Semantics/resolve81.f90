@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! C801 The same attr-spec shall not appear more than once in a given
 ! type-declaration-stmt.
 !

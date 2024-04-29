@@ -1,4 +1,4 @@
-! RUN: not %flang_fc1 -fdebug-unparse-with-symbols %s 2>&1 | FileCheck %s
+! RUN: not %flang_fc1 -pedantic %s 2>&1 | FileCheck %s
 ! CHECK: warning: Label '10' is in a construct that should not be used as a branch target here
 ! CHECK: Label '20' was not found
 ! CHECK: Label '30' is not a branch target

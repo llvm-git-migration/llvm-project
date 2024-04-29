@@ -1,4 +1,4 @@
-! RUN: %python %S/test_folding.py %s %flang_fc1
+! RUN: %python %S/test_folding.py %s %flang_fc1 -pedantic
 ! Tests folding of DIM()
 module m
   logical, parameter :: test_i1 = dim(0, 0) == 0

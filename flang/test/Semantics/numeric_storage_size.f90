@@ -1,7 +1,7 @@
-! RUN: %flang_fc1 -fdebug-unparse %s 2>&1 | FileCheck %s --check-prefix=CHECK
-! RUN: %flang_fc1 -fdebug-unparse -fdefault-integer-8 %s 2>&1 | FileCheck %s --check-prefix=CHECK-I8
-! RUN: %flang_fc1 -fdebug-unparse %s -fdefault-real-8 2>&1 | FileCheck %s --check-prefix=CHECK-R8
-! RUN: %flang_fc1 -fdebug-unparse %s -fdefault-integer-8 -fdefault-real-8  2>&1 | FileCheck %s --check-prefix=CHECK-I8-R8
+! RUN: %flang_fc1 -fdebug-unparse -pedantic %s 2>&1 | FileCheck %s --check-prefix=CHECK
+! RUN: %flang_fc1 -fdebug-unparse -pedantic -fdefault-integer-8 %s 2>&1 | FileCheck %s --check-prefix=CHECK-I8
+! RUN: %flang_fc1 -fdebug-unparse -pedantic -fdefault-real-8 %s 2>&1 | FileCheck %s --check-prefix=CHECK-R8
+! RUN: %flang_fc1 -fdebug-unparse -pedantic -fdefault-integer-8 -fdefault-real-8 %s 2>&1 | FileCheck %s --check-prefix=CHECK-I8-R8
 
 use iso_fortran_env
 

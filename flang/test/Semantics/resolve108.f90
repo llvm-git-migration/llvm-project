@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! Tests attempts at forward references to local names in a FUNCTION prefix
 
 ! This case is not an error, but will elicit bogus errors if the

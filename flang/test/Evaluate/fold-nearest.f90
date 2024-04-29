@@ -1,4 +1,4 @@
-! RUN: %python %S/test_folding.py %s %flang_fc1
+! RUN: %python %S/test_folding.py %s %flang_fc1 -pedantic
 ! Tests folding of NEAREST() and its relatives
 module m1
   real, parameter :: minSubnormal = 1.e-45

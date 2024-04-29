@@ -1,4 +1,4 @@
-!RUN: %flang_fc1 -fdebug-unparse  %s  2>&1 | FileCheck %s
+!RUN: %flang_fc1 -fdebug-unparse -pedantic  %s 2>&1 | FileCheck %s
 !Ensure that argument conversion does not take place when the procedure
 !interface is implicit at the point of call, even when the interface
 !is known due because the procedure's definition is in the same source file.

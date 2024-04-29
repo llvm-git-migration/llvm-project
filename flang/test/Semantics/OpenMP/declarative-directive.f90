@@ -1,4 +1,4 @@
-! RUN: %python %S/../test_errors.py %s %flang -fopenmp
+! RUN: %python %S/../test_errors.py %s %flang -fopenmp -pedantic
 
 ! Check OpenMP declarative directives
 

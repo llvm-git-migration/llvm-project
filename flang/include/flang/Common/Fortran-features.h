@@ -41,20 +41,32 @@ ENUM_CLASS(LanguageFeature, BackslashEscapes, OldDebugLines,
     ActualIntegerConvertedToSmallerKind, HollerithOrCharacterAsBOZ,
     BindingAsProcedure, StatementFunctionExtensions,
     UseGenericIntrinsicWhenSpecificDoesntMatch, DataStmtExtensions,
-    RedundantContiguous, InitBlankCommon, EmptyBindCDerivedType,
-    MiscSourceExtensions, AllocateToOtherLength, LongNames, IntrinsicAsSpecific,
-    BenignNameClash, BenignRedundancy, NullMoldAllocatableComponentValue,
-    NopassScalarBase, MiscUseExtensions, ImpliedDoIndexScope,
-    DistinctCommonSizes, OddIndexVariableRestrictions,
-    IndistinguishableSpecifics)
+    RedundantContiguous, RedundantAttribute, InitBlankCommon,
+    EmptyBindCDerivedType, MiscSourceExtensions, AllocateToOtherLength,
+    LongNames, IntrinsicAsSpecific, BenignNameClash, BenignRedundancy,
+    NullMoldAllocatableComponentValue, NopassScalarBase, MiscUseExtensions,
+    ImpliedDoIndexScope, DistinctCommonSizes, OddIndexVariableRestrictions,
+    IndistinguishableSpecifics, SubroutineAndFunctionSpecifics,
+    EmptySequenceType, NonSequenceCrayPointee, BranchIntoConstruct,
+    BadBranchTarget, ConvertedArgument, HollerithPolymorphic, ListDirectedSize)
 
-// Portability and suspicious usage warnings for conforming code
+// Portability and suspicious usage warnings
 ENUM_CLASS(UsageWarning, Portability, PointerToUndefinable,
     NonTargetPassedToTarget, PointerToPossibleNoncontiguous,
-    ShortCharacterActual, ExprPassedToVolatile, ImplicitInterfaceActual,
-    PolymorphicTransferArg, PointerComponentTransferArg, TransferSizePresence,
-    F202XAllocatableBreakingChange, DimMustBePresent, CommonBlockPadding,
-    LogicalVsCBool, BindCCharLength, ProcDummyArgShapes, ExternalNameConflict)
+    ShortCharacterActual, ShortArrayActual, ExprPassedToVolatile,
+    ImplicitInterfaceActual, PolymorphicTransferArg,
+    PointerComponentTransferArg, TransferSizePresence,
+    F202XAllocatableBreakingChange, OptionalMustBePresent, CommonBlockPadding,
+    LogicalVsCBool, BindCCharLength, ProcDummyArgShapes, ExternalNameConflict,
+    FoldingException, FoldingValueChecks, FoldingFailure, Interoperability,
+    Bounds, Preprocessing, Scanning, OpenAccUsage, ProcPointerCompatibility,
+    VoidMold, KnownBadImplicitInterface, EmptyCase, CaseOverflow, CUDAUsage,
+    IgnoreTKRUsage, ExternalInterfaceMismatch, DefinedOperatorArgs, Final,
+    ZeroDoStep, UnusedForallIndex, OpenMPUsage, ModuleFile, DataLength,
+    IgnoredDirective, HomonymousSpecific, HomonymousResult,
+    IgnoredIntrinsicFunctionType, PreviousScalarUse,
+    RedeclaredInaccessibleComponent, ImplicitShared, IndexVarRedefinition,
+    IncompatibleImplicitInterfaces, BadTypeForTarget, FoldingLimit)
 
 using LanguageFeatures = EnumSet<LanguageFeature, LanguageFeature_enumSize>;
 using UsageWarnings = EnumSet<UsageWarning, UsageWarning_enumSize>;
@@ -77,8 +89,12 @@ public:
     disable_.set(LanguageFeature::LogicalAbbreviations);
     disable_.set(LanguageFeature::XOROperator);
     disable_.set(LanguageFeature::OldStyleParameter);
+    // These warnings are serious enough to be enabled by default.
+    warnUsage_.set(UsageWarning::ModuleFile);
+    warnUsage_.set(UsageWarning::BadTypeForTarget);
   }
   LanguageFeatureControl(const LanguageFeatureControl &) = default;
+
   void Enable(LanguageFeature f, bool yes = true) { disable_.set(f, !yes); }
   void EnableWarning(LanguageFeature f, bool yes = true) {
     warnLanguage_.set(f, yes);
@@ -88,6 +104,15 @@ public:
   }
   void WarnOnAllNonstandard(bool yes = true) { warnAllLanguage_ = yes; }
   void WarnOnAllUsage(bool yes = true) { warnAllUsage_ = yes; }
+  void DisableAllNonstandardWarnings() {
+    warnAllLanguage_ = false;
+    warnLanguage_.clear();
+  }
+  void DisableAllUsageWarnings() {
+    warnAllUsage_ = false;
+    warnUsage_.clear();
+  }
+
   bool IsEnabled(LanguageFeature f) const { return !disable_.test(f); }
   bool ShouldWarn(LanguageFeature f) const {
     return (warnAllLanguage_ && f != LanguageFeature::OpenMP &&

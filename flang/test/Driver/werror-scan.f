@@ -2,14 +2,14 @@
 ! actions that extend the PrescanAction
 ! Multiple RUN lines are added to make sure that the behavior is consistent across multiple actions.
 
-! RUN: not %flang_fc1 -E -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -fdebug-dump-parsing-log -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -fdebug-dump-provenance -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: not %flang_fc1 -fdebug-measure-parse-tree -Werror %s  2>&1 | FileCheck %s --check-prefix=WITH
-! RUN: %flang_fc1 -E %s  2>&1 | FileCheck %s --allow-empty --check-prefix=WITHOUT
-! RUN: %flang_fc1 -fdebug-dump-parsing-log %s  2>&1 | FileCheck %s --check-prefix=WITHOUT
-! RUN: %flang_fc1 -fdebug-dump-provenance %s  2>&1 | FileCheck %s --check-prefix=WITHOUT
-! RUN: %flang_fc1 -fdebug-measure-parse-tree %s  2>&1 | FileCheck %s --check-prefix=WITHOUT
+! RUN: not %flang_fc1 -E -Werror -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -fdebug-dump-parsing-log -Werror -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -fdebug-dump-provenance -Werror -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: not %flang_fc1 -fdebug-measure-parse-tree -Werror -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITH
+! RUN: %flang_fc1 -E -pedantic %s 2>&1 | FileCheck %s --allow-empty --check-prefix=WITHOUT
+! RUN: %flang_fc1 -fdebug-dump-parsing-log -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITHOUT
+! RUN: %flang_fc1 -fdebug-dump-provenance -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITHOUT
+! RUN: %flang_fc1 -fdebug-measure-parse-tree -pedantic %s 2>&1 | FileCheck %s --check-prefix=WITHOUT
 
 ! WITH: Could not scan
 
