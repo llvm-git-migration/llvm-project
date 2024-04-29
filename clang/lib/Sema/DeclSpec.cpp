@@ -1191,6 +1191,10 @@ void DeclSpec::Finish(Sema &S, const PrintingPolicy &Policy) {
 
   // Validate and finalize AltiVec vector declspec.
   if (TypeAltiVecVector) {
+    // Complex vector types are not supported.
+    if (TypeSpecComplex != TSC_unspecified)
+      S.Diag(TSCLoc, diag::err_invalid_vector_complex_decl_spec);
+
     // No vector long long without VSX (or ZVector).
     if ((getTypeSpecWidth() == TypeSpecifierWidth::LongLong) &&
         !S.Context.getTargetInfo().hasFeature("vsx") &&

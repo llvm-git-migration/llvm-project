@@ -110,6 +110,20 @@ vector __bool long long v_bll4;      // expected-error {{use of 'long long' with
 #endif
 __vector long double  vv_ld3;        // expected-error {{cannot use 'long double' with '__vector'}}
 vector long double  v_ld4;           // expected-error {{cannot use 'long double' with '__vector'}}
+vector float _Complex v_cf;          // expected-error {{cannot use '_Complex' with '__vector'}}
+vector double _Complex v_cd;         // expected-error {{cannot use '_Complex' with '__vector'}}
+#ifndef __VSX__
+                                     // expected-error@-2 {{use of 'double' with '__vector' requires VSX support to be enabled (available on POWER7 or later)}}
+#endif
+vector long double _Complex v_cld;   // expected-error {{cannot use '_Complex' with '__vector'}}
+                                     // expected-error@-1 {{cannot use 'long double' with '__vector'}}
+__vector float _Complex v_cf2;       // expected-error {{cannot use '_Complex' with '__vector'}}
+__vector double _Complex v_cd2;      // expected-error {{cannot use '_Complex' with '__vector'}}
+#ifndef __VSX__
+                                     // expected-error@-2 {{use of 'double' with '__vector' requires VSX support to be enabled (available on POWER7 or later)}}
+#endif
+__vector long double _Complex v_cld2;// expected-error {{cannot use '_Complex' with '__vector'}}
+                                     // expected-error@-1 {{cannot use 'long double' with '__vector'}}
 vector bool float v_bf;              // expected-error {{cannot use 'float' with '__vector bool'}}
 vector bool double v_bd;             // expected-error {{cannot use 'double' with '__vector bool'}}
 vector bool pixel v_bp;              // expected-error {{cannot use '__pixel' with '__vector bool'}}
