@@ -3331,6 +3331,23 @@ TEST(TransferTest, ResultObjectLocationDontVisitNestedRecordDecl) {
          ASTContext &ASTCtx) {});
 }
 
+TEST(TransferTest, ResultObjectLocationDontVisitDeclTypeArg) {
+  // This is a crash repro.
+  // We used to crash because when propagating result objects, we would visit
+  // the argument of `decltype()`, but we don't model fields used only in these.
+  std::string Code = R"cc(
+    struct S1 {};
+    struct S2 { S1 s1; };
+    void target() {
+        decltype(S2{ S1() }) Dummy;
+    }
+  )cc";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {});
+}
+
 TEST(TransferTest, StaticCast) {
   std::string Code = R"(
     void target(int Foo) {

@@ -350,6 +350,13 @@ public:
     return RecursiveASTVisitor<ResultObjectVisitor>::TraverseDecl(D);
   }
 
+  bool TraverseDecltypeTypeLoc(DecltypeTypeLoc Node) {
+    // Don't traverse `decltype` because we don't analyze its argument (as it
+    // isn't executed) and hence don't model fields that are only used in the
+    // argument of a `decltype`.
+    return true;
+  }
+
   bool TraverseBindingDecl(BindingDecl *BD) {
     // `RecursiveASTVisitor` doesn't traverse holding variables for
     // `BindingDecl`s by itself, so we need to tell it to.
