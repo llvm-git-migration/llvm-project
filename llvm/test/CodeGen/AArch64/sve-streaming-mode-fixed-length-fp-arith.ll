@@ -219,7 +219,12 @@ define <2 x float> @fdiv_v2f32(<2 x float> %op1, <2 x float> %op2) {
 define <2 x float> @fdiv_v232_pow2(<2 x i32> %in) {
 ; CHECK-LABEL: fdiv_v232_pow2:
 ; CHECK:       // %bb.0: // %entry
-; CHECK-NEXT:    scvtf v0.2s, v0.2s, #4
+; CHECK-NEXT:    ptrue p0.s, vl2
+; CHECK-NEXT:    // kill: def $d0 killed $d0 def $z0
+; CHECK-NEXT:    fmov z1.s, #16.00000000
+; CHECK-NEXT:    scvtf z0.s, p0/m, z0.s
+; CHECK-NEXT:    fdiv z0.s, p0/m, z0.s, z1.s
+; CHECK-NEXT:    // kill: def $d0 killed $d0 killed $z0
 ; CHECK-NEXT:    ret
 entry:
   %vcvt.i = sitofp <2 x i32> %in to <2 x float>
