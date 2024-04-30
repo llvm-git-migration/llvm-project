@@ -785,9 +785,20 @@ std::error_code status(const Twine &path, file_status &result, bool Follow) {
 
   DWORD Flags = FILE_FLAG_BACKUP_SEMANTICS;
   if (!Follow) {
-    DWORD attr = ::GetFileAttributesW(path_utf16.begin());
-    if (attr == INVALID_FILE_ATTRIBUTES)
-      return getStatus(INVALID_HANDLE_VALUE, result);
+    DWORD attr;
+
+    // If getting file attributes fails due to a pending deletion, try
+    // again in a loop to avoid returning a misleading permission denied
+    // error.
+    for (int Retry = 200; Retry >= 0; --Retry) {
+      attr = ::GetFileAttributesW(path_utf16.begin());
+      if (attr != INVALID_FILE_ATTRIBUTES)
+        break;
+      std::error_code code = getStatus(INVALID_HANDLE_VALUE, result);
+      if (code != llvm::errc::delete_pending || !Retry)
+        return code;
+      ::Sleep(10);
+    }
 
     // Handle reparse points.
     if (attr & FILE_ATTRIBUTE_REPARSE_POINT)
