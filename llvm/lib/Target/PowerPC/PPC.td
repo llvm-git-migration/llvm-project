@@ -540,7 +540,7 @@ def get64BitInstrFromSignedExt32BitInstr : InstrMapping {
   let RowFields = ["Inst"];
   // Instructions with the same Interpretation64Bit value form a column.
   let ColFields = ["Interpretation64Bit"];
-    // The key column are not the Interpretation64Bit-form instructions.
+  // The key column are not the Interpretation64Bit-form instructions.
   let KeyCol = ["0"];
   // Value columns are the Interpretation64Bit-form instructions.
   let ValueCols = [["1"]];
