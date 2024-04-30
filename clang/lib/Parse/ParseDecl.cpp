@@ -4921,8 +4921,7 @@ void Parser::ParseStructDeclaration(
 /// for each LateParsedAttribute. We consume the saved tokens and
 /// create an attribute with the arguments filled in. We add this
 /// to the Attribute list for the decl.
-void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
-                                  ParsedAttributes *OutAttrs) {
+void Parser::ParseLexedCAttribute(LateParsedAttribute &LA) {
   // Create a fake EOF so that attribute parsing won't go off the end of the
   // attribute.
   Token AttrEnd;
@@ -4941,29 +4940,8 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
 
   ParsedAttributes Attrs(AttrFactory);
 
-  assert(LA.Decls.size() < 2 &&
-         "late field attribute expects to have at most a single declaration.");
-
-  Decl *D = LA.Decls.empty() ? nullptr : LA.Decls[0];
-
-  // If the Decl is on a function, add function parameters to the scope.
-  {
-    std::unique_ptr<ParseScope> Scope;
-    EnterScope &= D && D->isFunctionOrFunctionTemplate();
-    if (EnterScope) {
-      Scope.reset(new ParseScope(this, Scope::FnScope | Scope::DeclScope));
-      Actions.ActOnReenterFunctionContext(Actions.CurScope, D);
-    }
-    ParseBoundsAttribute(LA.AttrName, LA.AttrNameLoc, Attrs,
-                         /*ScopeName*/ nullptr, SourceLocation(),
-                         ParsedAttr::Form::GNU());
-    if (EnterScope) {
-      Actions.ActOnExitFunctionContext();
-    }
-  }
-
-  for (unsigned i = 0, ni = LA.Decls.size(); i < ni; ++i)
-    Actions.ActOnFinishDelayedAttribute(getCurScope(), LA.Decls[i], Attrs);
+  for (auto *D : LA.Decls)
+    Actions.ActOnFinishDelayedAttribute(getCurScope(), D, Attrs);
 
   // Due to a parsing error, we either went over the cached tokens or
   // there are still cached tokens left, so we skip the leftover tokens.
@@ -4972,10 +4950,6 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
 
   if (Tok.is(tok::eof) && Tok.getEofData() == AttrEnd.getEofData())
     ConsumeAnyToken();
-
-  if (OutAttrs) {
-    OutAttrs->takeAllFrom(Attrs);
-  }
 }
 
 /// ParseStructUnionBody
@@ -5111,9 +5085,10 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
   // If attributes exist after struct contents, parse them.
   MaybeParseGNUAttributes(attrs, &LateFieldAttrs);
 
+  // Late parse field attributes that require late parsing
   assert(!getLangOpts().CPlusPlus);
   for (auto *LateAttr : LateFieldAttrs)
-    ParseLexedCAttribute(*LateAttr, true);
+    ParseLexedCAttribute(*LateAttr);
 
   SmallVector<Decl *, 32> FieldDecls(TagDecl->fields());
 
