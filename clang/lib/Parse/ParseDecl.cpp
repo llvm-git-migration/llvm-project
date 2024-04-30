@@ -4916,18 +4916,6 @@ void Parser::ParseStructDeclaration(
   }
 }
 
-// Parse all attributes in LA, and attach them to Decl D.
-void Parser::ParseLexedCAttributeList(LateParsedAttrList &LA, bool EnterScope,
-                                      ParsedAttributes *OutAttrs) {
-  assert(LA.parseSoon() &&
-         "Attribute list should be marked for immediate parsing.");
-  for (unsigned i = 0, ni = LA.size(); i < ni; ++i) {
-    ParseLexedCAttribute(*LA[i], EnterScope, OutAttrs);
-    delete LA[i];
-  }
-  LA.clear();
-}
-
 /// Finish parsing an attribute for which parsing was delayed.
 /// This will be called at the end of parsing a class declaration
 /// for each LateParsedAttribute. We consume the saved tokens and
