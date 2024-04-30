@@ -577,6 +577,12 @@ private:
   static void SignalHandler(void *);
 };
 
+class InstrCountChangedReporter {
+public:
+  void registerCallbacks(PassInstrumentationCallbacks &PIC,
+                         ModuleAnalysisManager &MAM);
+};
+
 /// This class provides an interface to register all the standard pass
 /// instrumentations and manages their state (if any).
 class StandardInstrumentations {
@@ -594,6 +600,7 @@ class StandardInstrumentations {
   PrintCrashIRInstrumentation PrintCrashIR;
   IRChangedTester ChangeTester;
   VerifyInstrumentation Verify;
+  InstrCountChangedReporter EmitMFSizeRemarks;
 
   bool VerifyEach;
 
