@@ -404,6 +404,7 @@ bool llvm::runPassPipeline(
   if (TM)
     TM->setPGOOption(P);
 
+  MachineFunctionAnalysisManager MFAM;
   LoopAnalysisManager LAM;
   FunctionAnalysisManager FAM;
   CGSCCAnalysisManager CGAM;
@@ -470,7 +471,7 @@ bool llvm::runPassPipeline(
   PB.registerCGSCCAnalyses(CGAM);
   PB.registerFunctionAnalyses(FAM);
   PB.registerLoopAnalyses(LAM);
-  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM, &MFAM);
 
   ModulePassManager MPM;
   if (EnableDebugify)
