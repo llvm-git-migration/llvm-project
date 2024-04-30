@@ -317,7 +317,7 @@ public:
 
   /// Return true if size-info optimization remark is enabled, false
   /// otherwise.
-  bool shouldEmitInstrCountChangedRemark() {
+  bool shouldEmitInstrCountChangedRemark() const {
     return getContext().getDiagHandlerPtr()->isAnalysisRemarkEnabled(
         "size-info");
   }
