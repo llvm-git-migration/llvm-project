@@ -276,6 +276,10 @@ struct GenericKernelTy {
     return StringRef(Name).ends_with("tor");
   }
 
+  /// Indicate if the target needs to use the kernel environment. This is only
+  /// necessary for GPU targets currently.
+  virtual bool shouldSetupKernelEnvironment() const { return true; }
+
   /// Get the kernel image.
   DeviceImageTy &getImage() const {
     assert(ImagePtr && "Kernel is not initialized!");
