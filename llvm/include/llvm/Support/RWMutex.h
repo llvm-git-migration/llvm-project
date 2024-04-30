@@ -75,6 +75,10 @@ public:
   /// Unconditionally release the lock in write mode.
   bool unlock();
 
+  /// Attempts to acquire the lock. Returns immediately.
+  /// @returns true on successful lock acquisition, false otherwise.
+  bool try_lock();
+
   //@}
   /// @name Platform Dependent Data
   /// @{
@@ -148,6 +152,8 @@ public:
     --writers;
     return true;
   }
+
+  bool try_lock() { return impl.try_lock(); }
 };
 
 typedef SmartRWMutex<false> RWMutex;

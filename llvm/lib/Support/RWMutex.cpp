@@ -28,6 +28,7 @@ bool RWMutexImpl::lock_shared() { return true; }
 bool RWMutexImpl::unlock_shared() { return true; }
 bool RWMutexImpl::lock() { return true; }
 bool RWMutexImpl::unlock() { return true; }
+bool RWMutexImpl::try_lock() { return true; }
 
 #else
 
@@ -107,6 +108,14 @@ RWMutexImpl::unlock()
   return errorcode == 0;
 }
 
+bool RWMutexImpl::try_lock() {
+  pthread_rwlock_t *rwlock = static_cast<pthread_rwlock_t *>(data_);
+  assert(rwlock != nullptr);
+
+  int errorcode = pthread_rwlock_tryrdlock(rwlock);
+  return errorcode == 0;
+}
+
 #else
 
 RWMutexImpl::RWMutexImpl() : data_(new MutexImpl(false)) { }
@@ -129,6 +138,10 @@ bool RWMutexImpl::lock() {
 
 bool RWMutexImpl::unlock() {
   return static_cast<MutexImpl *>(data_)->release();
+}
+
+bool RWMutexImpl::try_lock() {
+  return static_cast<MutexImpl *>(data_)->tryacquire();
 }
 
 #endif
