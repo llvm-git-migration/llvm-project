@@ -2408,7 +2408,7 @@ defm SRW  : XForm_6r<31, 536, (outs gprc:$RA), (ins gprc:$RST, gprc:$RB),
                      [(set i32:$RA, (PPCsrl i32:$RST, i32:$RB))]>, ZExt32To64;
 defm SRAW : XForm_6rc<31, 792, (outs gprc:$RA), (ins gprc:$RST, gprc:$RB),
                       "sraw", "$RA, $RST, $RB", IIC_IntShift,
-                      [(set i32:$RA, (PPCsra i32:$RST, i32:$RB))]>;
+                      [(set i32:$RA, (PPCsra i32:$RST, i32:$RB))]>, SExt32To64;
 }
 
 def : InstAlias<"mr $rA, $rB", (OR gprc:$rA, gprc:$rB, gprc:$rB)>;
