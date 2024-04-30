@@ -8,6 +8,12 @@ set(LLDB_INCLUDE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(LLDB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LLDB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+if (LLDB_BUILT_STANDALONE)
+  set(LLDB_OBJ_DIR ${CMAKE_CURRENT_BINARY_DIR})
+else()
+  set(LLDB_OBJ_DIR ${CMAKE_CURRENT_BINARY_DIR}/tools/lldb)
+endif()
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR
     "In-source builds are not allowed. CMake would overwrite the makefiles "

@@ -88,7 +88,6 @@ class BuilderDarwin(Builder):
                 args["FRAMEWORK_INCLUDES"] = "-F{}".format(private_frameworks)
 
         operating_system, env = get_os_and_env()
-
         builder_dir = os.path.dirname(os.path.abspath(__file__))
         test_dir = os.path.dirname(builder_dir)
         if not operating_system:
