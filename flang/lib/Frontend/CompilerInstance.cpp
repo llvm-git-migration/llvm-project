@@ -176,6 +176,7 @@ bool CompilerInstance::executeAction(FrontendAction &act) {
       act.endSourceFile();
     }
   }
+
   return !getDiagnostics().getClient()->getNumErrors();
 }
 
