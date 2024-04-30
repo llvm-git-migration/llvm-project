@@ -3111,8 +3111,7 @@ private:
                                  SourceLocation ScopeLoc,
                                  ParsedAttr::Form Form);
 
-  void DistributeCLateParsedAttrs(Declarator &D, Decl *Dcl,
-                                  LateParsedAttrList *LateAttrs);
+  void DistributeCLateParsedAttrs(Decl *Dcl, LateParsedAttrList *LateAttrs);
 
   void ParseBoundsAttribute(IdentifierInfo &AttrName,
                             SourceLocation AttrNameLoc, ParsedAttributes &Attrs,

@@ -3282,7 +3282,7 @@ void Parser::ParseAlignmentSpecifier(ParsedAttributes &Attrs,
   }
 }
 
-void Parser::DistributeCLateParsedAttrs(Declarator &D, Decl *Dcl,
+void Parser::DistributeCLateParsedAttrs(Decl *Dcl,
                                         LateParsedAttrList *LateAttrs) {
   if (!LateAttrs)
     return;
@@ -4903,7 +4903,7 @@ void Parser::ParseStructDeclaration(
     // We're done with this declarator;  invoke the callback.
     Decl *Field = nullptr;
     FieldsCallback(DeclaratorInfo, Field);
-    DistributeCLateParsedAttrs(DeclaratorInfo.D, Field, LateFieldAttrs);
+    DistributeCLateParsedAttrs(Field, LateFieldAttrs);
 
     // If we don't have a comma, it is either the end of the list (a ';')
     // or an error, bail out.
