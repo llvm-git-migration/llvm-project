@@ -63,6 +63,9 @@ ABI Changes in This Version
   MSVC uses a different mangling for these objects, compatibility is not affected.
   (#GH85423).
 
+- Fixed Microsoft calling convention when returning classes that have a reference type
+  as a field. Such a class should be returned indirectly.
+
 AST Dumping Potentially Breaking Changes
 ----------------------------------------
 
