@@ -1643,7 +1643,7 @@ private:
                                bool EnterScope, bool OnDefinition);
   void ParseLexedAttribute(LateParsedAttribute &LA,
                            bool EnterScope, bool OnDefinition);
-  void ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
+  void ParseLexedCAttribute(LateParsedAttribute &LA,
                             ParsedAttributes *OutAttrs = nullptr);
   void ParseLexedMethodDeclarations(ParsingClass &Class);
   void ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM);
@@ -3117,6 +3117,7 @@ private:
                             SourceLocation AttrNameLoc, ParsedAttributes &Attrs,
                             IdentifierInfo *ScopeName, SourceLocation ScopeLoc,
                             ParsedAttr::Form Form);
+  bool IsBoundsAttribute(IdentifierInfo &AttrName);
 
   void ParseTypeofSpecifier(DeclSpec &DS);
   SourceLocation ParseDecltypeSpecifier(DeclSpec &DS);

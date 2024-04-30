@@ -3302,6 +3302,7 @@ void Parser::ParseBoundsAttribute(IdentifierInfo &AttrName,
                                   SourceLocation ScopeLoc,
                                   ParsedAttr::Form Form) {
   assert(Tok.is(tok::l_paren) && "Attribute arg list not starting with '('");
+  assert(IsBoundsAttribute(AttrName));
 
   BalancedDelimiterTracker Parens(*this, tok::l_paren);
   Parens.consumeOpen();
@@ -3339,6 +3340,16 @@ void Parser::ParseBoundsAttribute(IdentifierInfo &AttrName,
 
   Attrs.addNew(&AttrName, SourceRange(AttrNameLoc, Parens.getCloseLocation()),
                ScopeName, ScopeLoc, ArgExprs.data(), ArgExprs.size(), Form);
+}
+
+bool Parser::IsBoundsAttribute(IdentifierInfo &AttrName) {
+  return llvm::StringSwitch<bool>(normalizeAttrName(AttrName.getName()))
+      .Case("counted_by", true)
+      .Case("counted_by_or_null", true)
+      .Case("sized_by", true)
+      .Case("sized_by_or_null", true)
+      .Case("ended_by", true)
+      .Default(false);
 }
 
 ExprResult Parser::ParseExtIntegerArgument() {
@@ -4919,7 +4930,7 @@ void Parser::ParseStructDeclaration(
 /// for each LateParsedAttribute. We consume the saved tokens and
 /// create an attribute with the arguments filled in. We add this
 /// to the Attribute list for the decl.
-void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
+void Parser::ParseLexedCAttribute(LateParsedAttribute &LA,
                                   ParsedAttributes *OutAttrs) {
   // Create a fake EOF so that attribute parsing won't go off the end of the
   // attribute.
@@ -4933,41 +4944,42 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
   // Append the current token at the end of the new token stream so that it
   // doesn't get lost.
   LA.Toks.push_back(Tok);
-  PP.EnterTokenStream(LA.Toks, true, /*IsReinject=*/true);
-  // Consume the previously pushed token.
+  PP.EnterTokenStream(LA.Toks, /*DisableMacroExpansion=*/true,
+                      /*IsReinject=*/true);
+  // Drop the current token and bring the first cached one. It's the same token
+  // as when we entered this function.
   ConsumeAnyToken(/*ConsumeCodeCompletionTok=*/true);
 
   ParsedAttributes Attrs(AttrFactory);
 
-  assert(LA.Decls.size() < 2 &&
+  assert(LA.Decls.size() <= 1 &&
          "late field attribute expects to have at most a single declaration.");
 
-  Decl *D = LA.Decls.empty() ? nullptr : LA.Decls[0];
-
-  // If the Decl is on a function, add function parameters to the scope.
-  {
-    std::unique_ptr<ParseScope> Scope;
-    EnterScope &= D && D->isFunctionOrFunctionTemplate();
-    if (EnterScope) {
-      Scope.reset(new ParseScope(this, Scope::FnScope | Scope::DeclScope));
-      Actions.ActOnReenterFunctionContext(Actions.CurScope, D);
-    }
+  // Dispatch based on the attribute and parse it
+  const AttributeCommonInfo::Form ParsedForm = ParsedAttr::Form::GNU();
+  IdentifierInfo *ScopeName = nullptr;
+  ParsedAttr::Kind AttrKind =
+      ParsedAttr::getParsedKind(&LA.AttrName, /*ScopeName=*/ScopeName,
+                                /*SyntaxUsed=*/ParsedForm.getSyntax());
+  switch (AttrKind) {
+  case ParsedAttr::Kind::AT_CountedBy:
     ParseBoundsAttribute(LA.AttrName, LA.AttrNameLoc, Attrs,
-                         /*ScopeName*/ nullptr, SourceLocation(),
-                         ParsedAttr::Form::GNU());
-    if (EnterScope) {
-      Actions.ActOnExitFunctionContext();
-    }
+                         /*ScopeName=*/ScopeName, SourceLocation(),
+                         /*Form=*/ParsedForm);
+    break;
+  default:
+    llvm_unreachable("Unhandled late parsed attribute");
   }
 
-  for (unsigned i = 0, ni = LA.Decls.size(); i < ni; ++i)
-    Actions.ActOnFinishDelayedAttribute(getCurScope(), LA.Decls[i], Attrs);
+  for (auto *D : LA.Decls)
+    Actions.ActOnFinishDelayedAttribute(getCurScope(), D, Attrs);
 
   // Due to a parsing error, we either went over the cached tokens or
   // there are still cached tokens left, so we skip the leftover tokens.
   while (Tok.isNot(tok::eof))
     ConsumeAnyToken();
 
+  // Consume the fake EOF token if it's there
   if (Tok.is(tok::eof) && Tok.getEofData() == AttrEnd.getEofData())
     ConsumeAnyToken();
 
@@ -5109,9 +5121,10 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
   // If attributes exist after struct contents, parse them.
   MaybeParseGNUAttributes(attrs, &LateFieldAttrs);
 
+  // Late parse field attributes if necessary.
   assert(!getLangOpts().CPlusPlus);
   for (auto *LateAttr : LateFieldAttrs)
-    ParseLexedCAttribute(*LateAttr, true);
+    ParseLexedCAttribute(*LateAttr);
 
   SmallVector<Decl *, 32> FieldDecls(TagDecl->fields());
 
