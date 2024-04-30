@@ -717,7 +717,7 @@ void VPWidenCallRecipe::execute(VPTransformState &State) {
     if (UseIntrinsic &&
         isVectorIntrinsicWithOverloadTypeAtArg(VectorIntrinsicID, -1))
       TysForDecl.push_back(
-          VectorType::get(CI.getType()->getScalarType(), State.VF));
+          VectorType::get(getResultType()->getScalarType(), State.VF));
     SmallVector<Value *, 4> Args;
     for (const auto &I : enumerate(operands())) {
       // Some intrinsics have a scalar argument - don't replace it with a
@@ -770,14 +770,14 @@ void VPWidenCallRecipe::print(raw_ostream &O, const Twine &Indent,
                               VPSlotTracker &SlotTracker) const {
   O << Indent << "WIDEN-CALL ";
 
-  auto *CI = cast<CallInst>(getUnderlyingInstr());
-  if (CI->getType()->isVoidTy())
+  if (getResultType()->isVoidTy())
     O << "void ";
   else {
     printAsOperand(O, SlotTracker);
     O << " = ";
   }
 
+  auto *CI = cast<CallInst>(getUnderlyingInstr());
   O << "call @" << CI->getCalledFunction()->getName() << "(";
   printOperands(O, SlotTracker);
   O << ")";
