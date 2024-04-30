@@ -760,14 +760,14 @@ static std::error_code getStatus(HANDLE FileHandle, file_status &Result) {
   return std::error_code();
 
 handle_status_error:
-  DWORD LastError = ::GetLastError();
-  if (LastError == ERROR_FILE_NOT_FOUND || LastError == ERROR_PATH_NOT_FOUND)
+  std::error_code Err = mapLastWindowsError();
+  if (Err == std::errc::no_such_file_or_directory)
     Result = file_status(file_type::file_not_found);
-  else if (LastError == ERROR_SHARING_VIOLATION)
+  else if (Err == std::errc::permission_denied)
     Result = file_status(file_type::type_unknown);
   else
     Result = file_status(file_type::status_error);
-  return mapWindowsError(LastError);
+  return Err;
 }
 
 std::error_code status(const Twine &path, file_status &result, bool Follow) {
@@ -784,24 +784,37 @@ std::error_code status(const Twine &path, file_status &result, bool Follow) {
     return ec;
 
   DWORD Flags = FILE_FLAG_BACKUP_SEMANTICS;
-  if (!Follow) {
-    DWORD attr = ::GetFileAttributesW(path_utf16.begin());
-    if (attr == INVALID_FILE_ATTRIBUTES)
-      return getStatus(INVALID_HANDLE_VALUE, result);
+  // In case the destination file is pending deletion, try again in a
+  // loop to avoid returning a misleading permission denied error.
+  for (int Retry = 200; Retry >= 0; --Retry) {
+    if (!Follow) {
+      DWORD attr = ::GetFileAttributesW(path_utf16.begin());
+      if (attr != INVALID_FILE_ATTRIBUTES)
+        break;
+      std::error_code code = getStatus(INVALID_HANDLE_VALUE, result);
+      if (code != llvm::errc::delete_pending || !Retry)
+        return code;
 
-    // Handle reparse points.
-    if (attr & FILE_ATTRIBUTE_REPARSE_POINT)
-      Flags |= FILE_FLAG_OPEN_REPARSE_POINT;
+      // Handle reparse points.
+      if (attr & FILE_ATTRIBUTE_REPARSE_POINT)
+        Flags |= FILE_FLAG_OPEN_REPARSE_POINT;
+    }
+
+    ScopedFileHandle h(
+        ::CreateFileW(path_utf16.begin(), 0, // Attributes only.
+                      FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                      NULL, OPEN_EXISTING, Flags, 0));
+
+    if (!h) {
+      std::error_code code = getStatus(INVALID_HANDLE_VALUE, result);
+      if (code != llvm::errc::delete_pending || !Retry)
+        return code;
+    } else {
+      return getStatus(h, result);
+    }
+
+    ::Sleep(15);
   }
-
-  ScopedFileHandle h(
-      ::CreateFileW(path_utf16.begin(), 0, // Attributes only.
-                    FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    NULL, OPEN_EXISTING, Flags, 0));
-  if (!h)
-    return getStatus(INVALID_HANDLE_VALUE, result);
-
-  return getStatus(h, result);
 }
 
 std::error_code status(int FD, file_status &Result) {
