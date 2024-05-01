@@ -6113,8 +6113,6 @@ static SDValue BuildExactSDIV(const TargetLowering &TLI, SDNode *N,
   }
 
   SDValue Res = Op0;
-
-  // Shift the value upfront if it is even, so the LSB is one.
   if (UseSRA) {
     SDNodeFlags Flags;
     Flags.setExact(true);
@@ -6177,8 +6175,6 @@ static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
   }
 
   SDValue Res = Op0;
-
-  // Shift the value upfront if it is even, so the LSB is one.
   if (UseSRL) {
     SDNodeFlags Flags;
     Flags.setExact(true);
