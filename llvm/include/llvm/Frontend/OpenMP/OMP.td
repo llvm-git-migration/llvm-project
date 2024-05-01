@@ -32,6 +32,9 @@ def OpenMP : DirectiveLanguage {
 // Sorted alphabetically wrt clause spelling.
 //===----------------------------------------------------------------------===//
 
+def OMPC_Absent : Clause<"absent"> {
+  let clangClass = "OMPAbsentClause";
+}
 def OMPC_Acquire : Clause<"acquire"> {
   let clangClass = "OMPAcquireClause";
 }
@@ -87,6 +90,9 @@ def OMPC_CancellationConstructType : Clause<"cancellation_construct_type"> {
     OMP_CANCELLATION_CONSTRUCT_None
   ];
 }
+def OMPC_Contains : Clause<"contains"> {
+  let clangClass = "OMPContainsClause";
+}
 def OMPC_Capture : Clause<"capture"> {
   let clangClass = "OMPCaptureClause";
 }
@@ -134,6 +140,9 @@ def OMPC_Device : Clause<"device"> {
 def OMPC_DeviceType : Clause<"device_type"> {
   let flangClass = "OmpDeviceTypeClause";
 }
+//def OMPC_DirectiveKind : Clause<"__directive_kind__"> {
+//  let clangClass = "OMPDirectiveKindClause";
+//}
 def OMPC_DistSchedule : Clause<"dist_schedule"> {
   let clangClass = "OMPDistScheduleClause";
   let flangClass = "ScalarIntExpr";
@@ -195,6 +204,9 @@ def OMPC_HasDeviceAddr : Clause<"has_device_addr"> {
 def OMPC_Hint : Clause<"hint"> {
   let clangClass = "OMPHintClause";
   let flangClass = "ConstantExpr";
+}
+def OMPC_Holds : Clause<"holds"> {
+  let clangClass = "OMPHoldsClause";
 }
 def OMPC_If : Clause<"if"> {
   let clangClass = "OMPIfClause";
@@ -259,6 +271,15 @@ def OMPC_Mergeable : Clause<"mergeable"> {
 }
 def OMPC_Message : Clause<"message"> {
   let clangClass = "OMPMessageClause";
+}
+def OMPC_NoOpenMP : Clause<"no_openmp"> {
+  let clangClass = "OMPNoOpenMPClause";
+}
+def OMPC_NoOpenMPRoutines : Clause<"no_openmp_routines"> {
+  let clangClass = "OMPNoOpenMPRoutinesClause";
+}
+def OMPC_NoParallelism : Clause<"no_parallelism"> {
+  let clangClass = "OMPNoParallelismClause";
 }
 def OMPC_Nocontext : Clause<"nocontext"> {
   let clangClass = "OMPNocontextClause";
@@ -509,6 +530,18 @@ def OMP_Assumes : Directive<"assumes"> {
 def OMP_EndAssumes : Directive<"end assumes"> {
   let association = AS_Delimited;
   let category = OMP_Assumes.category;
+}
+def OMP_Assume : Directive<"assume"> {
+  let association = AS_Block;
+  let category = CA_Informational;
+  let allowedOnceClauses = [
+    VersionedClause<OMPC_Absent, 51>,
+    VersionedClause<OMPC_Contains, 51>,
+    VersionedClause<OMPC_Holds, 51>,
+    VersionedClause<OMPC_NoOpenMP, 51>,
+    VersionedClause<OMPC_NoOpenMPRoutines, 51>,
+    VersionedClause<OMPC_NoParallelism, 51>
+  ];
 }
 def OMP_Atomic : Directive<"atomic"> {
   let allowedClauses = [
