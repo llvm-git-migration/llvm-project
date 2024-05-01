@@ -1260,7 +1260,7 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
     return new ZExtInst(Builder.CreateIsNotNeg(X, "isnotneg"), Ty);
 
   // If both the add and the shift are nuw, then:
-  // ((X <<nuw Z) +nuw Y) >>u Z --> X +nuw (Y >>u Z)
+  // ((X << nuw Z) + nuw Y) >>u Z --> X + nuw (Y >>u Z)
   Value *Y;
   if (match(Op0, m_OneUse(m_c_NUWAdd(m_NUWShl(m_Value(X), m_Specific(Op1)),
                                      m_Value(Y))))) {
