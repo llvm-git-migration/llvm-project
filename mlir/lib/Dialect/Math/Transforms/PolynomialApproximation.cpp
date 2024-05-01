@@ -615,10 +615,47 @@ TanhApproximation::matchAndRewrite(math::TanhOp op,
   return success();
 }
 
-#define LN2_VALUE                                                              \
-  0.693147180559945309417232121458176568075500134360255254120680009493393621L
-#define LOG2E_VALUE                                                            \
-  1.442695040888963407359924681001892137426645954152985934135449406931109219L
+//----------------------------------------------------------------------------//
+// AtanhOp approximation.
+//----------------------------------------------------------------------------//
+
+namespace {
+struct AtanhApproximation : public OpRewritePattern<math::AtanhOp> {
+public:
+  using OpRewritePattern::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(math::AtanhOp op,
+                                PatternRewriter &rewriter) const final;
+};
+} // namespace
+
+LogicalResult
+AtanhApproximation::matchAndRewrite(math::AtanhOp op,
+                                    PatternRewriter &rewriter) const {
+  if (!getElementTypeOrSelf(op.getOperand()).isF32())
+    return rewriter.notifyMatchFailure(op, "unsupported operand type");
+
+  auto operand = op.getOperand();
+  VectorShape shape = vectorShape(operand);
+
+  ImplicitLocOpBuilder builder(op->getLoc(), rewriter);
+  auto bcast = [&](Value value) -> Value {
+    return broadcast(builder, value, shape);
+  };
+
+  // 1/2 * log((1 + x) / (1 - x))
+  Value cstOne = bcast(f32Cst(builder, 1.0));
+  Value add = builder.create<arith::AddFOp>(operand, cstOne);
+  Value neg = builder.create<arith::NegFOp>(operand);
+  Value sub = builder.create<arith::AddFOp>(neg, cstOne);
+  Value div = builder.create<arith::DivFOp>(add, sub);
+  Value log = builder.create<math::LogOp>(div);
+  Value cstHalf = bcast(f32Cst(builder, 0.5));
+  Value res = builder.create<arith::MulFOp>(log, cstHalf);
+  rewriter.replaceOp(op, res);
+
+  return success();
+}
 
 //----------------------------------------------------------------------------//
 // LogOp and Log2Op approximation.
@@ -634,6 +671,11 @@ struct LogApproximationBase : public OpRewritePattern<Op> {
                                    bool base2) const;
 };
 } // namespace
+
+#define LN2_VALUE                                                              \
+  0.693147180559945309417232121458176568075500134360255254120680009493393621L
+#define LOG2E_VALUE                                                            \
+  1.442695040888963407359924681001892137426645954152985934135449406931109219L
 
 // This approximation comes from Julien Pommier's SSE math library.
 // Link: http://gruntthepeon.free.fr/ssemath
@@ -1317,6 +1359,105 @@ LogicalResult SinAndCosApproximation<isSine, OpTy>::matchAndRewrite(
 }
 
 //----------------------------------------------------------------------------//
+// SinhOp and CoshOp approximation.
+//----------------------------------------------------------------------------//
+
+namespace {
+
+template <bool isSine, typename OpTy>
+struct SinhAndCoshApproximation : public OpRewritePattern<OpTy> {
+public:
+  using OpRewritePattern<OpTy>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(OpTy op, PatternRewriter &rewriter) const final;
+};
+} // namespace
+
+template <bool isSine, typename OpTy>
+LogicalResult SinhAndCoshApproximation<isSine, OpTy>::matchAndRewrite(
+    OpTy op, PatternRewriter &rewriter) const {
+  static_assert(
+      llvm::is_one_of<OpTy, math::SinhOp, math::CoshOp>::value,
+      "SinhAndCoshApproximation pattern expects math::SinhOp or math::CoshOp");
+
+  if (!getElementTypeOrSelf(op.getOperand()).isF32())
+    return rewriter.notifyMatchFailure(op, "unsupported operand type");
+
+  auto operand = op.getOperand();
+  VectorShape shape = vectorShape(operand);
+
+  ImplicitLocOpBuilder builder(op->getLoc(), rewriter);
+  auto bcast = [&](Value value) -> Value {
+    return broadcast(builder, value, shape);
+  };
+
+  // sinh: 1/2 * (exp(x) – exp(-x))
+  // cosh: 1/2 * (exp(x) + exp(-x))
+  Value exp = builder.create<math::ExpOp>(operand);
+  Value neg = builder.create<arith::NegFOp>(operand);
+  Value negExp = builder.create<math::ExpOp>(neg);
+  Value addOrSub;
+  if (isSine)
+    addOrSub = builder.create<arith::SubFOp>(exp, negExp);
+  else
+    addOrSub = builder.create<arith::AddFOp>(exp, negExp);
+  Value cstHalf = bcast(f32Cst(builder, 0.5));
+  Value res = builder.create<arith::MulFOp>(addOrSub, cstHalf);
+  rewriter.replaceOp(op, res);
+
+  return success();
+}
+
+//----------------------------------------------------------------------------//
+// AsinhOp and AcoshOp approximation.
+//----------------------------------------------------------------------------//
+
+namespace {
+
+template <bool isSine, typename OpTy>
+struct AsinhAndAcoshApproximation : public OpRewritePattern<OpTy> {
+public:
+  using OpRewritePattern<OpTy>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(OpTy op, PatternRewriter &rewriter) const final;
+};
+} // namespace
+
+template <bool isSine, typename OpTy>
+LogicalResult AsinhAndAcoshApproximation<isSine, OpTy>::matchAndRewrite(
+    OpTy op, PatternRewriter &rewriter) const {
+  static_assert(
+      llvm::is_one_of<OpTy, math::AsinhOp, math::AcoshOp>::value,
+      "SinAndCosApproximation pattern expects math::AsinhOp or math::AcoshOp");
+
+  if (!getElementTypeOrSelf(op.getOperand()).isF32())
+    return rewriter.notifyMatchFailure(op, "unsupported operand type");
+
+  auto operand = op.getOperand();
+  VectorShape shape = vectorShape(operand);
+
+  ImplicitLocOpBuilder builder(op->getLoc(), rewriter);
+  auto bcast = [&](Value value) -> Value {
+    return broadcast(builder, value, shape);
+  };
+
+  // asinh: log(x + sqrt(x**2 + 1))
+  // acosh: log(x + sqrt(x**2 - 1))
+  Value cst;
+  if (isSine)
+    cst = bcast(f32Cst(builder, 1.0));
+  else
+    cst = bcast(f32Cst(builder, -1.0));
+  Value fma = builder.create<math::FmaOp>(operand, operand, cst);
+  Value sqrt = builder.create<math::SqrtOp>(fma);
+  Value b = builder.create<arith::AddFOp>(operand, sqrt);
+  Value res = builder.create<math::LogOp>(b);
+  rewriter.replaceOp(op, res);
+
+  return success();
+}
+
+//----------------------------------------------------------------------------//
 // Cbrt approximation.
 //----------------------------------------------------------------------------//
 
@@ -1505,11 +1646,16 @@ void mlir::populateMathPolynomialApproximationPatterns(
            ReuseF32Expansion<math::SinOp>, ReuseF32Expansion<math::CosOp>>(
           patterns.getContext());
 
-  patterns.add<AtanApproximation, Atan2Approximation, TanhApproximation,
-               LogApproximation, Log2Approximation, Log1pApproximation,
-               ErfPolynomialApproximation, ExpApproximation, ExpM1Approximation,
-               CbrtApproximation, SinAndCosApproximation<true, math::SinOp>,
-               SinAndCosApproximation<false, math::CosOp>>(
+  patterns.add<AtanApproximation, Atan2Approximation, AtanhApproximation,
+               TanhApproximation, LogApproximation, Log2Approximation,
+               Log1pApproximation, ErfPolynomialApproximation, ExpApproximation,
+               ExpM1Approximation, CbrtApproximation,
+               SinAndCosApproximation<true, math::SinOp>,
+               SinAndCosApproximation<false, math::CosOp>,
+               SinhAndCoshApproximation<true, math::SinhOp>,
+               SinhAndCoshApproximation<false, math::CoshOp>,
+               AsinhAndAcoshApproximation<true, math::AsinhOp>,
+               AsinhAndAcoshApproximation<false, math::AcoshOp>>(
       patterns.getContext());
   if (options.enableAvx2) {
     patterns.add<RsqrtApproximation, ReuseF32Expansion<math::RsqrtOp>>(
