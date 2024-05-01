@@ -1265,7 +1265,7 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
   if (match(Op0, m_OneUse(m_c_NUWAdd(m_NUWShl(m_Value(X), m_Specific(Op1)),
                                      m_Value(Y))))) {
     Value *NewLshr = Builder.CreateLShr(Y, Op1, "", I.isExact());
-    auto *newAdd = BinaryOperator::CreateNUWAdd(NewLshr, X);
+    auto *NewAdd = BinaryOperator::CreateNUWAdd(NewLshr, X);
     if (auto *Op0Bin = cast<OverflowingBinaryOperator>(Op0))
       newAdd->setHasNoSignedWrap(Op0Bin->hasNoSignedWrap());
     return newAdd;
