@@ -1,38 +1,5 @@
 // RUN: mlir-opt %s --split-input-file -test-expand-math | FileCheck %s
 
-// CHECK-LABEL: func @tanh
-func.func @tanh(%arg: f32) -> f32 {
-  %res = math.tanh %arg : f32
-  return %res : f32
-}
-// CHECK-DAG: %[[ZERO:.+]] = arith.constant 0.000000e+00 : f32
-// CHECK-DAG: %[[ONE:.+]] = arith.constant 1.000000e+00 : f32
-// CHECK-DAG: %[[TWO:.+]] = arith.constant -2.000000e+00 : f32
-// CHECK: %[[VAL0:.+]] = arith.cmpf olt, %arg0, %[[ZERO]] : f32
-// CHECK: %[[VAL1:.+]] = arith.uitofp %[[VAL0]] : i1 to f32
-// CHECK: %[[VAL2:.+]] = arith.mulf %[[VAL1]], %[[TWO]] : f32
-// CHECK: %[[SIGN:.+]] = arith.addf %[[VAL2]], %[[ONE]] : f32
-// CHECK: %[[POSX:.+]] = arith.mulf %[[SIGN]], %arg0 : f32
-// CHECK: %[[NEGDOUBLEDX:.+]] = arith.mulf %[[POSX]], %[[TWO]] : f32
-// CHECK: %[[EXP1:.+]] = math.exp %[[NEGDOUBLEDX]] : f32
-// CHECK: %[[DIVIDEND1:.+]] = arith.subf %[[ONE]], %[[EXP1]] : f32
-// CHECK: %[[DIVISOR1:.+]] = arith.addf %[[EXP1]], %[[ONE]] : f32
-// CHECK: %[[POSRES:.+]] = arith.divf %[[DIVIDEND1]], %[[DIVISOR1]] : f32
-// CHECK: %[[RESULT:.+]] = arith.mulf %[[SIGN]], %[[POSRES]] : f32
-// CHECK: return %[[RESULT]]
-
-// -----
-
-
-// CHECK-LABEL: func @vector_tanh
-func.func @vector_tanh(%arg: vector<4xf32>) -> vector<4xf32> {
-  // CHECK-NOT: math.tanh
-  %res = math.tanh %arg : vector<4xf32>
-  return %res : vector<4xf32>
-}
-
-// -----
-
 // CHECK-LABEL: func @tan
 func.func @tan(%arg: f32) -> f32 {
   %res = math.tan %arg : f32
