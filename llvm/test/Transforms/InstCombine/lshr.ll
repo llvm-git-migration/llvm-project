@@ -360,8 +360,8 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
   ret <3 x i14> %t
 }
 
-define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
-; CHECK-LABEL: @shl_add_lshr(
+define i32 @shl_add_lshr_flag_preservation(i32 %x, i32 %c, i32 %y) {
+; CHECK-LABEL: @shl_add_lshr_flag_preservation(
 ; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
 ; CHECK-NEXT:    [[LSHR:%.*]] = add nuw nsw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
@@ -371,6 +371,32 @@ define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
   %lshr = lshr exact i32 %add, %c
   ret i32 %lshr
 }
+
+
+define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
+; CHECK-LABEL: @shl_add_lshr(
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = add nuw i32 [[TMP1]], [[X:%.*]]
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %shl = shl nuw i32 %x, %c
+  %add = add nuw i32 %shl, %y
+  %lshr = lshr i32 %add, %c
+  ret i32 %lshr
+}
+
+define i32 @shl_add_lshr_comm(i32 %x, i32 %c, i32 %y) {
+; CHECK-LABEL: @shl_add_lshr_comm(
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = add nuw i32 [[TMP1]], [[X:%.*]]
+; CHECK-NEXT:    ret i32 [[LSHR]]
+;
+  %shl = shl nuw i32 %x, %c
+  %add = add nuw i32 %y, %shl
+  %lshr = lshr i32 %add, %c
+  ret i32 %lshr
+}
+
 
 ; Negative test
 
