@@ -1937,6 +1937,49 @@ void OMPClausePrinter::VisitOMPFailClause(OMPFailClause *Node) {
   }
 }
 
+void OMPClausePrinter::VisitOMPAbsentClause(OMPAbsentClause *Node) {
+  OS << "absent(";
+  bool First = true;
+  for (auto &D : Node->getDirectiveKinds()) {
+    if (!First)
+      OS << ", ";
+    OS << getOpenMPDirectiveName(D);
+    First = false;
+  }
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPHoldsClause(OMPHoldsClause *Node) {
+  OS << "holds(";
+  Node->getExpr()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPContainsClause(OMPContainsClause *Node) {
+  OS << "contains";
+  bool First = true;
+  for (auto &D : Node->getDirectiveKinds()) {
+    if (!First)
+      OS << ", ";
+    OS << getOpenMPDirectiveName(D);
+    First = false;
+  }
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPNoOpenMPClause(OMPNoOpenMPClause *) {
+  OS << "no_openmp";
+}
+
+void OMPClausePrinter::VisitOMPNoOpenMPRoutinesClause(
+    OMPNoOpenMPRoutinesClause *) {
+  OS << "no_openmp_routines";
+}
+
+void OMPClausePrinter::VisitOMPNoParallelismClause(OMPNoParallelismClause *) {
+  OS << "no_parallelism";
+}
+
 void OMPClausePrinter::VisitOMPSeqCstClause(OMPSeqCstClause *) {
   OS << "seq_cst";
 }

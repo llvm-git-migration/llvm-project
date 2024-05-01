@@ -8202,7 +8202,8 @@ void CodeGenFunction::EmitSimpleOMPExecutableDirective(
       D.getDirectiveKind() == OMPD_section ||
       D.getDirectiveKind() == OMPD_master ||
       D.getDirectiveKind() == OMPD_masked ||
-      D.getDirectiveKind() == OMPD_unroll) {
+      D.getDirectiveKind() == OMPD_unroll ||
+      D.getDirectiveKind() == OMPD_assume) {
     EmitStmt(D.getAssociatedStmt());
   } else {
     auto LPCRegion =
@@ -8216,4 +8217,8 @@ void CodeGenFunction::EmitSimpleOMPExecutableDirective(
   }
   // Check for outer lastprivate conditional update.
   checkForLastprivateConditionalUpdate(*this, D);
+}
+
+void CodeGenFunction::EmitOMPAssumeDirective(const OMPAssumeDirective &S) {
+  EmitStmt(S.getAssociatedStmt());
 }
