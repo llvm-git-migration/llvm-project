@@ -17,9 +17,9 @@
 ; SimpleLoopUnswitch not marking the Loop as removed, so we missed clearing
 ; the analysis caches.
 ;
-; CHECK: Running pass: SimpleLoopUnswitchPass on loop_begin
+; CHECK: Running pass: SimpleLoopUnswitchPass on Loop: [ loop_begin ] In Function: [ test6 ]
 ; CHECK-NEXT: Running analysis: OuterAnalysisManagerProxy
-; CHECK-NEXT: Clearing all analysis results for: loop_a_inner
+; CHECK-NEXT: Clearing all analysis results for: Loop [ loop_a_inner ] In Function: [ test6 ]
 
 
 ; When running loop-distribute the second time we can see that loop_a_inner
