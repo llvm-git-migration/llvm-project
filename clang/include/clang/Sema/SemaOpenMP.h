@@ -400,6 +400,13 @@ public:
       OpenMPDirectiveKind CancelRegion, ArrayRef<OMPClause *> Clauses,
       Stmt *AStmt, SourceLocation StartLoc, SourceLocation EndLoc,
       OpenMPDirectiveKind PrevMappedDirective = llvm::omp::OMPD_unknown);
+  StmtResult ActOnOpenMPInformationalDirective(
+      OpenMPDirectiveKind Kind, const DeclarationNameInfo &DirName,
+      ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+      SourceLocation EndLoc);
+  StmtResult ActOnOpenMPAssumeDirective(ArrayRef<OMPClause *> Clauses,
+      Stmt *AStmt, SourceLocation StartLoc, SourceLocation EndLoc);
+
   /// Called on well-formed '\#pragma omp parallel' after parsing
   /// of the  associated statement.
   StmtResult ActOnOpenMPParallelDirective(ArrayRef<OMPClause *> Clauses,
@@ -941,6 +948,17 @@ public:
                                      SourceLocation StartLoc,
                                      SourceLocation LParenLoc,
                                      SourceLocation EndLoc);
+  /// Called on well-formed 'holds' clause.
+  OMPClause *ActOnOpenMPHoldsClause(Expr *E,
+                                    SourceLocation StartLoc,
+                                    SourceLocation LParenLoc,
+                                    SourceLocation EndLoc);
+  /// Called on well-formed 'absent' or 'contains' clauses.
+  OMPClause *ActOnOpenMPDirectivePresenceClause(
+      OpenMPClauseKind CK, llvm::SmallSet<OpenMPDirectiveKind, 4> &DKSet,
+      SourceLocation Loc, SourceLocation LLoc, SourceLocation RLoc);
+  OMPClause *ActOnOpenMPNullaryAssumptionClause(
+      OpenMPClauseKind CK, SourceLocation Loc, SourceLocation RLoc);
 
   OMPClause *ActOnOpenMPSingleExprWithArgClause(
       OpenMPClauseKind Kind, ArrayRef<unsigned> Arguments, Expr *Expr,
