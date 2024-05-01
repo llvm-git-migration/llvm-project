@@ -360,8 +360,6 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
   ret <3 x i14> %t
 }
 
-; Negative test
-
 define i32 @shl_add_lshr(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_add_lshr(
 ; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
