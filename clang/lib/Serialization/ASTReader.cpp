@@ -10456,6 +10456,24 @@ OMPClause *OMPClauseReader::readClause() {
   case llvm::omp::OMPC_acq_rel:
     C = new (Context) OMPAcqRelClause();
     break;
+  case llvm::omp::OMPC_absent:
+    C = new (Context) OMPAbsentClause();
+    break;
+  case llvm::omp::OMPC_holds:
+    C = new (Context) OMPHoldsClause();
+    break;
+  case llvm::omp::OMPC_contains:
+    C = new (Context) OMPContainsClause();
+    break;
+  case llvm::omp::OMPC_no_openmp:
+    C = new (Context) OMPNoOpenMPClause();
+    break;
+  case llvm::omp::OMPC_no_openmp_routines:
+    C = new (Context) OMPNoOpenMPRoutinesClause();
+    break;
+  case llvm::omp::OMPC_no_parallelism:
+    C = new (Context) OMPNoParallelismClause();
+    break;
   case llvm::omp::OMPC_acquire:
     C = new (Context) OMPAcquireClause();
     break;
@@ -10855,6 +10873,38 @@ void OMPClauseReader::VisitOMPFailClause(OMPFailClause *C) {
   OpenMPClauseKind CKind = Record.readEnum<OpenMPClauseKind>();
   C->setFailParameter(CKind);
 }
+
+void OMPClauseReader::VisitOMPAbsentClause(OMPAbsentClause *C) {
+  C->setLParenLoc(Record.readSourceLocation());
+  unsigned Count = Record.readInt();
+  llvm::SmallSet<OpenMPDirectiveKind, 4> DKSet;
+  for (unsigned I = 0; I < Count; I++) {
+    DKSet.insert(Record.readEnum<OpenMPDirectiveKind>());
+  }
+  C->setDirectiveKinds(DKSet);
+}
+
+void OMPClauseReader::VisitOMPHoldsClause(OMPHoldsClause *C) {
+  C->setExpr(Record.readExpr());
+  C->setLParenLoc(Record.readSourceLocation());
+}
+
+void OMPClauseReader::VisitOMPContainsClause(OMPContainsClause *C) {
+  C->setLParenLoc(Record.readSourceLocation());
+  unsigned Count = Record.readInt();
+  llvm::SmallSet<OpenMPDirectiveKind, 4> DKSet;
+  for (unsigned I = 0; I < Count; I++) {
+    DKSet.insert(Record.readEnum<OpenMPDirectiveKind>());
+  }
+  C->setDirectiveKinds(DKSet);
+}
+
+void OMPClauseReader::VisitOMPNoOpenMPClause(OMPNoOpenMPClause *) {}
+
+void OMPClauseReader::VisitOMPNoOpenMPRoutinesClause(
+    OMPNoOpenMPRoutinesClause *) {}
+
+void OMPClauseReader::VisitOMPNoParallelismClause(OMPNoParallelismClause *) {}
 
 void OMPClauseReader::VisitOMPSeqCstClause(OMPSeqCstClause *) {}
 

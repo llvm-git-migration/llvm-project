@@ -3531,6 +3531,10 @@ private:
                                  OpenMPDirectiveKind DKind, SourceLocation Loc,
                                  bool ReadDirectiveWithinMetadirective);
 
+  StmtResult ParseOpenMPInformationalDirective(
+      ParsedStmtContext StmtCtx, OpenMPDirectiveKind DKind, SourceLocation Loc,
+      bool ReadDirectiveWithinMetadirective);
+
   /// Parses clause of kind \a CKind for directive of a kind \a Kind.
   ///
   /// \param DKind Kind of current directive.
