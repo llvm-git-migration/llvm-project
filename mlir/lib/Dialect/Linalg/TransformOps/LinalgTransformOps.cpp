@@ -2269,8 +2269,20 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
   // Collect the dynamic split points if provided.
   SmallVector<Operation *> payload =
       llvm::to_vector(state.getPayloadOps(getTarget()));
+
+  bool isMultiwaySplit = getMultiway() ? true : false;
+
+  if (isMultiwaySplit && !llvm::hasSingleElement(payload)) {
+    return emitDefiniteFailure() << "requires exactly one target when "
+                                    "multiway split is enabled (got "
+                                 << llvm::range_size(payload) << ")";
+  }
+
   SmallVector<OpFoldResult> splitPoints;
-  splitPoints.reserve(payload.size());
+
+  if (!isMultiwaySplit)
+    splitPoints.reserve(payload.size());
+
   if (getDynamicSplitPoint()) {
     auto diag = DiagnosedSilenceableFailure::success();
     if (isa<TransformHandleTypeInterface>(getDynamicSplitPoint().getType())) {
@@ -2293,7 +2305,9 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
     if (diag.isSilenceableFailure())
       return diag;
 
-    if (splitPoints.size() != payload.size()) {
+    // For multiway split, a single payload is expected to have multiple
+    // split points.
+    if (!isMultiwaySplit && splitPoints.size() != payload.size()) {
       return emitDefiniteFailure()
              << "expected the dynamic split point handle to point to as "
                 "many operations ("
@@ -2305,57 +2319,105 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
                        rewriter.getIndexAttr(getStaticSplitPoint()));
   }
 
-  // Split each target operation.
-  SmallVector<Operation *> first, second;
-  Operation *noSecondPart = nullptr;
-  for (const auto &pair : llvm::zip(payload, splitPoints)) {
-    Operation *target = std::get<0>(pair);
-    auto linalgOp = dyn_cast<LinalgOp>(target);
-    if (!linalgOp) {
-      auto diag = emitSilenceableError() << "only applies to structured ops";
-      diag.attachNote(target->getLoc()) << "target op";
+  if (isMultiwaySplit) {
+
+    // Split a single target operation at multiple points.
+    SmallVector<Operation *> opList;
+    Operation *head, *tail;
+    for (const auto [idx, splitPoint] : llvm::enumerate(splitPoints)) {
+
+      Operation *target;
+      if (idx == 0)
+        target = payload.front();
+      else
+        target = tail;
+
+      if (!target)
+        break;
+
+      auto linalgOp = dyn_cast<LinalgOp>(target);
+
+      if (!linalgOp) {
+        auto diag = emitSilenceableError() << "only applies to structured ops";
+        diag.attachNote(target->getLoc()) << "target op";
+        return diag;
+      }
+
+      if (getDimension() >= linalgOp.getNumLoops()) {
+        auto diag = emitSilenceableError() << "dimension " << getDimension()
+                                           << " does not exist in target op";
+        diag.attachNote(target->getLoc()) << "target op";
+        return diag;
+      }
+
+      rewriter.setInsertionPoint(linalgOp);
+      std::tie(head, tail) = linalg::splitOp(
+          rewriter, cast<TilingInterface>(linalgOp.getOperation()),
+          getDimension(), splitPoint);
+
+      opList.push_back(head);
+    }
+
+    // Append any leftover parts to the end of the result list.
+    if (tail)
+      opList.push_back(tail);
+    results.set(cast<OpResult>(getFirst()), opList);
+    results.set(cast<OpResult>(getSecond()), {});
+
+  } else {
+    // Split each target operation.
+    SmallVector<Operation *> first, second;
+    Operation *noSecondPart = nullptr;
+    for (const auto &pair : llvm::zip(payload, splitPoints)) {
+      Operation *target = std::get<0>(pair);
+      auto linalgOp = dyn_cast<LinalgOp>(target);
+      if (!linalgOp) {
+        auto diag = emitSilenceableError() << "only applies to structured ops";
+        diag.attachNote(target->getLoc()) << "target op";
+        return diag;
+      }
+
+      if (getDimension() >= linalgOp.getNumLoops()) {
+        auto diag = emitSilenceableError() << "dimension " << getDimension()
+                                           << " does not exist in target op";
+        diag.attachNote(target->getLoc()) << "target op";
+        return diag;
+      }
+
+      rewriter.setInsertionPoint(linalgOp);
+      std::tie(first.emplace_back(), second.emplace_back()) = linalg::splitOp(
+          rewriter, cast<TilingInterface>(linalgOp.getOperation()),
+          getDimension(), std::get<1>(pair));
+
+      // Propagate errors.
+      if (!first.back() && !second.back()) {
+        auto diag = emitDefiniteFailure() << "internal failure in splitting";
+        diag.attachNote(target->getLoc()) << "target op";
+        return diag;
+      }
+
+      // Do not add null second parts.
+      if (!second.back()) {
+        noSecondPart = target;
+        second.pop_back();
+      }
+    }
+
+    if (second.size() != first.size() && !second.empty()) {
+      auto diag = emitSilenceableError()
+                  << "splitting does not produce the second part for a subset "
+                     "of targets";
+      diag.attachNote()
+          << "expected splitting to produce the second part of all "
+             "or none of the targets";
+      diag.attachNote(noSecondPart->getLoc())
+          << "first target with no second part";
       return diag;
     }
 
-    if (getDimension() >= linalgOp.getNumLoops()) {
-      auto diag = emitSilenceableError() << "dimension " << getDimension()
-                                         << " does not exist in target op";
-      diag.attachNote(target->getLoc()) << "target op";
-      return diag;
-    }
-
-    rewriter.setInsertionPoint(linalgOp);
-    std::tie(first.emplace_back(), second.emplace_back()) = linalg::splitOp(
-        rewriter, cast<TilingInterface>(linalgOp.getOperation()),
-        getDimension(), std::get<1>(pair));
-
-    // Propagate errors.
-    if (!first.back() && !second.back()) {
-      auto diag = emitDefiniteFailure() << "internal failure in splitting";
-      diag.attachNote(target->getLoc()) << "target op";
-      return diag;
-    }
-
-    // Do not add null second parts.
-    if (!second.back()) {
-      noSecondPart = target;
-      second.pop_back();
-    }
+    results.set(cast<OpResult>(getFirst()), first);
+    results.set(cast<OpResult>(getSecond()), second);
   }
-
-  if (second.size() != first.size() && !second.empty()) {
-    auto diag = emitSilenceableError()
-                << "splitting does not produce the second part for a subset "
-                   "of targets";
-    diag.attachNote() << "expected splitting to produce the second part of all "
-                         "or none of the targets";
-    diag.attachNote(noSecondPart->getLoc())
-        << "first target with no second part";
-    return diag;
-  }
-
-  results.set(cast<OpResult>(getFirst()), first);
-  results.set(cast<OpResult>(getSecond()), second);
   return DiagnosedSilenceableFailure::success();
 }
 
