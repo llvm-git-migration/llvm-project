@@ -243,6 +243,10 @@ protected:
   }
 
 public:
+  /// This is the merged location of an instruction which is a result of a fold
+  /// in the legalizer.
+  DILocation *Location = nullptr;
+
   /// Some constructors for easy use.
   MachineIRBuilder() = default;
   MachineIRBuilder(MachineFunction &MF) { setMF(MF); }
@@ -857,7 +861,8 @@ public:
   ///
   /// \return The newly created instruction.
   virtual MachineInstrBuilder buildConstant(const DstOp &Res,
-                                            const ConstantInt &Val);
+                                            const ConstantInt &Val,
+                                            DILocation *Location = nullptr);
 
   /// Build and insert \p Res = G_CONSTANT \p Val
   ///
@@ -868,7 +873,8 @@ public:
   ///
   /// \return The newly created instruction.
   MachineInstrBuilder buildConstant(const DstOp &Res, int64_t Val);
-  MachineInstrBuilder buildConstant(const DstOp &Res, const APInt &Val);
+  MachineInstrBuilder buildConstant(const DstOp &Res, const APInt &Val,
+                                    DILocation *Location = nullptr);
 
   /// Build and insert \p Res = G_FCONSTANT \p Val
   ///

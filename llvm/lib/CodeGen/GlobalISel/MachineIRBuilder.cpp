@@ -315,7 +315,8 @@ MachineInstrBuilder MachineIRBuilder::buildCopy(const DstOp &Res,
 }
 
 MachineInstrBuilder MachineIRBuilder::buildConstant(const DstOp &Res,
-                                                    const ConstantInt &Val) {
+                                                    const ConstantInt &Val,
+                                                    DILocation *Location) {
   LLT Ty = Res.getLLTTy(*getMRI());
   LLT EltTy = Ty.getScalarType();
   assert(EltTy.getScalarSizeInBits() == Val.getBitWidth() &&
@@ -376,9 +377,10 @@ MachineInstrBuilder MachineIRBuilder::buildFConstant(const DstOp &Res,
 }
 
 MachineInstrBuilder MachineIRBuilder::buildConstant(const DstOp &Res,
-                                                    const APInt &Val) {
+                                                    const APInt &Val,
+                                                    DILocation *Location) {
   ConstantInt *CI = ConstantInt::get(getMF().getFunction().getContext(), Val);
-  return buildConstant(Res, *CI);
+  return buildConstant(Res, *CI, Location);
 }
 
 MachineInstrBuilder MachineIRBuilder::buildFConstant(const DstOp &Res,
