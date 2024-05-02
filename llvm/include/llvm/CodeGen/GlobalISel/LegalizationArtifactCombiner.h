@@ -99,8 +99,12 @@ public:
       const LLT DstTy = MRI.getType(DstReg);
       if (isInstLegal({TargetOpcode::G_CONSTANT, {DstTy}})) {
         auto &CstVal = SrcMI->getOperand(1);
+        SmallVector<DILocation *> Locs;
+        Locs.push_back(MI.getDebugLoc().get());
+        Locs.push_back(SrcMI->getDebugLoc().get());
         Builder.buildConstant(
-            DstReg, CstVal.getCImm()->getValue().sext(DstTy.getSizeInBits()));
+            DstReg, CstVal.getCImm()->getValue().sext(DstTy.getSizeInBits()),
+            &Locs);
         UpdatedDefs.push_back(DstReg);
         markInstAndDefDead(MI, *SrcMI, DeadInsts);
         return true;

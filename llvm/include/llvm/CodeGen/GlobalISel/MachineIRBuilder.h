@@ -856,8 +856,9 @@ public:
   ///      type.
   ///
   /// \return The newly created instruction.
-  virtual MachineInstrBuilder buildConstant(const DstOp &Res,
-                                            const ConstantInt &Val);
+  virtual MachineInstrBuilder
+  buildConstant(const DstOp &Res, const ConstantInt &Val,
+                SmallVectorImpl<DILocation *> *Locs = nullptr);
 
   /// Build and insert \p Res = G_CONSTANT \p Val
   ///
@@ -868,7 +869,9 @@ public:
   ///
   /// \return The newly created instruction.
   MachineInstrBuilder buildConstant(const DstOp &Res, int64_t Val);
-  MachineInstrBuilder buildConstant(const DstOp &Res, const APInt &Val);
+  MachineInstrBuilder
+  buildConstant(const DstOp &Res, const APInt &Val,
+                SmallVectorImpl<DILocation *> *Locs = nullptr);
 
   /// Build and insert \p Res = G_FCONSTANT \p Val
   ///

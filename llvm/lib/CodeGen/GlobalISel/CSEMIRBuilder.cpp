@@ -36,7 +36,8 @@ bool CSEMIRBuilder::dominates(MachineBasicBlock::const_iterator A,
 
 MachineInstrBuilder
 CSEMIRBuilder::getDominatingInstrForID(FoldingSetNodeID &ID,
-                                       void *&NodeInsertPos) {
+                                       void *&NodeInsertPos,
+                                       SmallVectorImpl<DILocation *> *Locs) {
   GISelCSEInfo *CSEInfo = getCSEInfo();
   assert(CSEInfo && "Can't get here without setting CSEInfo");
   MachineBasicBlock *CurMBB = &getMBB();
@@ -51,6 +52,11 @@ CSEMIRBuilder::getDominatingInstrForID(FoldingSetNodeID &ID,
       // this builder will have the def ready.
       setInsertPt(*CurMBB, std::next(MII));
     } else if (!dominates(MI, CurrPos)) {
+      if (Locs) {
+        Locs->push_back(MI->getDebugLoc().get());
+        auto *Loc = DILocation::getMergedLocations(*Locs);
+        MI->setDebugLoc(Loc);
+      }
       CurMBB->splice(CurrPos, CurMBB, MI);
     }
     return MachineInstrBuilder(getMF(), MI);
@@ -320,8 +326,9 @@ MachineInstrBuilder CSEMIRBuilder::buildInstr(unsigned Opc,
   return memoizeMI(NewMIB, InsertPos);
 }
 
-MachineInstrBuilder CSEMIRBuilder::buildConstant(const DstOp &Res,
-                                                 const ConstantInt &Val) {
+MachineInstrBuilder
+CSEMIRBuilder::buildConstant(const DstOp &Res, const ConstantInt &Val,
+                             SmallVectorImpl<DILocation *> *Locs) {
   constexpr unsigned Opc = TargetOpcode::G_CONSTANT;
   if (!canPerformCSEForOpc(Opc))
     return MachineIRBuilder::buildConstant(Res, Val);
@@ -337,7 +344,7 @@ MachineInstrBuilder CSEMIRBuilder::buildConstant(const DstOp &Res,
   profileMBBOpcode(ProfBuilder, Opc);
   profileDstOp(Res, ProfBuilder);
   ProfBuilder.addNodeIDMachineOperand(MachineOperand::CreateCImm(&Val));
-  MachineInstrBuilder MIB = getDominatingInstrForID(ID, InsertPos);
+  MachineInstrBuilder MIB = getDominatingInstrForID(ID, InsertPos, Locs);
   if (MIB) {
     // Handle generating copies here.
     return generateCopiesIfRequired({Res}, MIB);
