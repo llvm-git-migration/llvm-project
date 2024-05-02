@@ -3865,8 +3865,9 @@ SDValue SITargetLowering::LowerCall(CallLoweringInfo &CLI,
     if (InGlue.getNode())
       GlueOps.push_back(InGlue);
 
-    InGlue = SDValue(DAG.getMachineNode(TargetOpcode::CONVERGENCECTRL_GLUE,
-                                       DL, MVT::Glue, GlueOps), 0);
+    InGlue = SDValue(DAG.getMachineNode(TargetOpcode::CONVERGENCECTRL_GLUE, DL,
+                                        MVT::Glue, GlueOps),
+                     0);
   }
 
   if (InGlue.getNode())
