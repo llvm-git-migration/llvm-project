@@ -397,7 +397,6 @@ define i32 @shl_add_lshr_comm(i32 %x, i32 %c, i32 %y) {
   ret i32 %lshr
 }
 
-
 ; Negative test
 
 define i32 @shl_add_lshr_neg(i32 %x, i32 %y, i32 %z) {
