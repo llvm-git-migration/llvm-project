@@ -905,7 +905,6 @@ private:
   virtual void emitModuleCommandLines(Module &M);
 
   GCMetadataPrinter *getOrCreateGCPrinter(GCStrategy &S);
-  virtual void emitGlobalAlias(const Module &M, const GlobalAlias &GA);
   void emitGlobalIFunc(Module &M, const GlobalIFunc &GI);
 
 private:
@@ -913,6 +912,7 @@ private:
   bool shouldEmitLabelForBasicBlock(const MachineBasicBlock &MBB) const;
 
 protected:
+  virtual void emitGlobalAlias(const Module &M, const GlobalAlias &GA);
   virtual bool shouldEmitWeakSwiftAsyncExtendedFramePointerFlags() const {
     return false;
   }
