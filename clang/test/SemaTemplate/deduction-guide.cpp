@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -std=c++2a -verify -ast-dump -ast-dump-decl-types -ast-dump-filter "deduction guide" %s | FileCheck %s --strict-whitespace
+// RUN: %clang_cc1 -std=c++2a -verify -ast-dump -ast-dump-decl-types -Wno-c++11-narrowing -ast-dump-filter "deduction guide" %s | FileCheck %s --strict-whitespace
 
 template<auto ...> struct X {};
 template<template<typename X, X> typename> struct Y {};
@@ -260,6 +260,13 @@ AG ag = {1};
 // CHECK:   |-TemplateArgument type 'int'
 // CHECK:   | `-BuiltinType {{.*}} 'int'
 // CHECK:   `-ParmVarDecl {{.*}} 'int'
+
+template <typename X = int>
+using BG = G<int>;
+BG bg = {1.0};
+// CHECK-LABEL: Dumping <deduction guide for BG>
+// CHECK: FunctionTemplateDecl
+// CHECK: |-CXXDeductionGuideDecl {{.*}} 'auto (int) -> G<int>' aggregate
 
 template <typename D>
 requires (sizeof(D) == 4)
