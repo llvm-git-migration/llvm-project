@@ -2979,7 +2979,7 @@ BuildDeductionGuideForTypeAlias(Sema &SemaRef,
     auto *GG = cast<CXXDeductionGuideDecl>(FPrime);
 
     Expr *RequiresClause =
-          transformRequireClause(SemaRef, F, TemplateArgsForBuildingFPrime);
+        transformRequireClause(SemaRef, F, TemplateArgsForBuildingFPrime);
 
     // FIXME: implement the is_deducible constraint per C++
     // [over.match.class.deduct]p3.3:
