@@ -65,6 +65,11 @@ static cl::opt<unsigned> RISCVMinimumJumpTableEntries(
     "riscv-min-jump-table-entries", cl::Hidden,
     cl::desc("Set minimum number of entries to use a jump table on RISCV"));
 
+static cl::opt<bool> RISCVEnableSaveCSRByRA(
+    "riscv-enable-save-csr-in-ra",
+    cl::desc("Let register alloctor do csr saves/restores"),
+    cl::init(false), cl::Hidden);
+
 void RISCVSubtarget::anchor() {}
 
 RISCVSubtarget &
@@ -128,6 +133,10 @@ const RegisterBankInfo *RISCVSubtarget::getRegBankInfo() const {
 
 bool RISCVSubtarget::useConstantPoolForLargeInts() const {
   return !RISCVDisableUsingConstantPoolForLargeInts;
+}
+
+bool RISCVSubtarget::doCSRSavesInRA() const {
+  return RISCVEnableSaveCSRByRA;
 }
 
 unsigned RISCVSubtarget::getMaxBuildIntsCost() const {
