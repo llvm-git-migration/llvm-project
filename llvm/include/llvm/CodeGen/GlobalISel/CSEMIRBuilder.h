@@ -47,8 +47,9 @@ class CSEMIRBuilder : public MachineIRBuilder {
   /// dominates the current insertion point and if not, move it just before the
   /// current insertion point and return it. If not found, return Null
   /// MachineInstrBuilder.
-  MachineInstrBuilder getDominatingInstrForID(FoldingSetNodeID &ID,
-                                              void *&NodeInsertPos);
+  MachineInstrBuilder
+  getDominatingInstrForID(FoldingSetNodeID &ID, void *&NodeInsertPos,
+                          SmallVectorImpl<DILocation *> *Locs = nullptr);
   /// Simple check if we can CSE (we have the CSEInfo) or if this Opcode is
   /// safe to CSE.
   bool canPerformCSEForOpc(unsigned Opc) const;
@@ -97,8 +98,9 @@ public:
   // Bring in the other overload from the base class.
   using MachineIRBuilder::buildConstant;
 
-  MachineInstrBuilder buildConstant(const DstOp &Res,
-                                    const ConstantInt &Val) override;
+  MachineInstrBuilder
+  buildConstant(const DstOp &Res, const ConstantInt &Val,
+                SmallVectorImpl<DILocation *> *Locs = nullptr) override;
 
   // Bring in the other overload from the base class.
   using MachineIRBuilder::buildFConstant;
