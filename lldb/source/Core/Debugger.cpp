@@ -1512,7 +1512,22 @@ void Debugger::ReportDiagnosticImpl(DiagnosticEventData::Type type,
                                     std::string message,
                                     std::optional<lldb::user_id_t> debugger_id,
                                     std::once_flag *once) {
+  auto GetSystemLogLevel = [](DiagnosticEventData::Type type) {
+    switch (type) {
+    case DiagnosticEventData::Type::Info:
+      return Host::eSystemLogInfo;
+    case DiagnosticEventData::Type::Warning:
+      return Host::eSystemLogWarning;
+    case DiagnosticEventData::Type::Error:
+      return Host::eSystemLogError;
+    }
+    llvm_unreachable("All cases handled above!");
+  };
+
   auto ReportDiagnosticLambda = [&]() {
+    // Always log diagnostics to the system log.
+    Host::SystemLog(GetSystemLogLevel(type), message);
+
     // The diagnostic subsystem is optional but we still want to broadcast
     // events when it's disabled.
     if (Diagnostics::Enabled())
