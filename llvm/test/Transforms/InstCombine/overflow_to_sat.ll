@@ -13,6 +13,21 @@ define i32 @uadd(i32 %x, i32 %y) {
   ret i32 %s
 }
 
+define i32 @uadd_cumm(i32 %x, i32 %y) {
+; CHECK-LABEL: @uadd_cumm(
+; CHECK-NEXT:    [[AO:%.*]] = tail call { i32, i1 } @llvm.uadd.with.overflow.i32(i32 [[X:%.*]], i32 [[Y:%.*]])
+; CHECK-NEXT:    [[O:%.*]] = extractvalue { i32, i1 } [[AO]], 1
+; CHECK-NEXT:    [[A:%.*]] = add i32 [[Y]], [[X]]
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[O]], i32 -1, i32 [[A]]
+; CHECK-NEXT:    ret i32 [[S]]
+;
+  %ao = tail call { i32, i1 } @llvm.uadd.with.overflow.i32(i32 %x, i32 %y)
+  %o = extractvalue { i32, i1 } %ao, 1
+  %a = add i32 %y, %x
+  %s = select i1 %o, i32 -1, i32 %a
+  ret i32 %s
+}
+
 define i32 @usub(i32 %x, i32 %y) {
 ; CHECK-LABEL: @usub(
 ; CHECK-NEXT:    [[S:%.*]] = call i32 @llvm.usub.sat.i32(i32 [[X:%.*]], i32 [[Y:%.*]])
