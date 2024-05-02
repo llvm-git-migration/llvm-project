@@ -5,7 +5,6 @@
 
 declare void @bar1(ptr %p)
 declare void @bar2(ptr %p, ptr %p2)
-
 define dso_local void @foo1_rdonly(ptr readonly %p) {
 ; CHECK-LABEL: define {{[^@]+}}@foo1_rdonly
 ; CHECK-SAME: (ptr readonly [[P:%.*]]) {
@@ -494,5 +493,15 @@ define void @prop_cb_def_mustprogress(ptr %p) {
 ; CHECK-NEXT:    ret void
 ;
   call void @foo1(ptr %p) mustprogress
+  ret void
+}
+
+define void @prop_no_conflict_writable(ptr writable %p) {
+; CHECK-LABEL: define {{[^@]+}}@prop_no_conflict_writable
+; CHECK-SAME: (ptr writable [[P:%.*]]) {
+; CHECK-NEXT:    call void @bar1(ptr [[P]])
+; CHECK-NEXT:    ret void
+;
+  call void @foo1_rdonly(ptr readonly %p)
   ret void
 }
