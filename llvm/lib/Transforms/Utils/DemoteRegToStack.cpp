@@ -102,9 +102,12 @@ AllocaInst *llvm::DemoteRegToStack(Instruction &I, bool VolatileLoads,
         new StoreInst(&I, Slot, Handler->getFirstInsertionPt());
       return Slot;
     }
+  } else if (InvokeInst *II = dyn_cast<InvokeInst>(&I)) {
+    InsertPt = II->getNormalDest()->getFirstInsertionPt();
+  } else if (CallBrInst *CBI = dyn_cast<CallBrInst>(&I)) {
+    InsertPt = CBI->getDefaultDest()->getFirstInsertionPt();
   } else {
-    InvokeInst &II = cast<InvokeInst>(I);
-    InsertPt = II.getNormalDest()->getFirstInsertionPt();
+    llvm_unreachable("Unsupported terminator for Reg2Mem");
   }
 
   new StoreInst(&I, Slot, InsertPt);
