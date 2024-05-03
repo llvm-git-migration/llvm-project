@@ -4,7 +4,9 @@
 define void @f(i16 %0, ptr %1) {
 ; CHECK-LABEL: f:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    strh w0, [x1]
+; CHECK-NEXT:    ubfx w8, w0, #8, #6
+; CHECK-NEXT:    strb w0, [x1]
+; CHECK-NEXT:    strb w8, [x1, #1]
 ; CHECK-NEXT:    ret
   %3 = trunc i16 %0 to i8
   %4 = trunc i16 %0 to i14
