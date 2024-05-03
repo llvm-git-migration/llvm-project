@@ -10,12 +10,14 @@
 
 # RUN: %{python} %s %{libcxx-dir}/utils
 
+# block Lit from interpreting a RUN/XFAIL/etc inside the generation script
+# END.
+
 import sys
 sys.path.append(sys.argv[1])
 from libcxx.header_information import lit_header_restrictions, public_headers
 
 for header in public_headers:
-  BLOCKLIT = '' # block Lit from interpreting a RUN/XFAIL/etc inside the generation script
   print(f"""\
 //--- {header}.sh.cpp
 
