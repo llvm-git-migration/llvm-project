@@ -10,6 +10,7 @@
 
 # RUN: %{python} %s %{libcxx-dir}/utils
 
+# Block Lit from interpreting a RUN/XFAIL/etc inside the generation script.
 # END.
 
 import sys
