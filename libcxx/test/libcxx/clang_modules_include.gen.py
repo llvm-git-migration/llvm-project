@@ -20,7 +20,7 @@ sys.path.append(sys.argv[1])
 from libcxx.header_information import lit_header_restrictions, public_headers
 
 for header in public_headers:
-  print(f"""\
+    print(f"""\
 //--- {header}.compile.pass.cpp
 // RUN: %{{cxx}} %s %{{flags}} %{{compile_flags}} -fmodules -fcxx-modules -fmodules-cache-path=%t -fsyntax-only
 

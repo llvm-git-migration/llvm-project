@@ -33,7 +33,7 @@ import re
 regenerate_expected_results = False
 
 if regenerate_expected_results:
-  print(f"""\
+    print(f"""\
 //--- generate-transitive-includes.sh.cpp
 // RUN: mkdir %t
 """)
