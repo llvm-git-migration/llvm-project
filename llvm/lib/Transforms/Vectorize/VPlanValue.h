@@ -348,6 +348,7 @@ public:
     VPInstructionSC,
     VPInterleaveSC,
     VPReductionSC,
+    VPPartialReductionSC,
     VPReplicateSC,
     VPScalarCastSC,
     VPScalarIVStepsSC,
