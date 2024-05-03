@@ -67,10 +67,13 @@ public:
   // }
 
   void buildTestPipeline(ModulePassManager &MPM) {
-    addPass(NoOpModulePass());
-    addPass<NoOpModulePass, NoOpFunctionPass, NoOpModulePass,
-            DisabledMachineFunctionPass, NoOpFunctionPass,
-            NoOpMachineFunctionPass, ReplacedMachineFunctionPass>();
+    addModulePass<NoOpModulePass, NoOpModulePass>();
+    addFunctionPass<NoOpFunctionPass>();
+    addModulePass<NoOpModulePass>();
+    addMachineFunctionPass<DisabledMachineFunctionPass>();
+    addFunctionPass(NoOpFunctionPass());
+    addMachineFunctionPass<NoOpMachineFunctionPass,
+                           ReplacedMachineFunctionPass>();
     mergePassManager();
     MPM.addPass(std::move(getMPM()));
     getMPM() = ModulePassManager();
