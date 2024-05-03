@@ -12,6 +12,7 @@
 
 #include <__config_site>
 #include <__configuration/abi.h>
+#include <__configuration/availability.h>
 #include <__configuration/compiler.h>
 #include <__configuration/platform.h>
 
