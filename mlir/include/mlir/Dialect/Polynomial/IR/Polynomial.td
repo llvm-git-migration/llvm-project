@@ -60,12 +60,12 @@ class Polynomial_Attr<string name, string attrMnemonic, list<Trait> traits = []>
   let mnemonic = attrMnemonic;
 }
 
-def Polynomial_PolynomialAttr : Polynomial_Attr<"Polynomial", "polynomial"> {
-  let summary = "An attribute containing a single-variable polynomial.";
+def Polynomial_IntPolynomialAttr : Polynomial_Attr<"IntPolynomial", "int_polynomial"> {
+  let summary = "An attribute containing a single-variable polynomial with integer coefficients.";
   let description = [{
-    A polynomial attribute represents a single-variable polynomial, which
-    is used to define the modulus of a `RingAttr`, as well as to define constants
-    and perform constant folding for `polynomial` ops.
+    A polynomial attribute represents a single-variable polynomial with integer
+    coefficients, which is used to define the modulus of a `RingAttr`, as well
+    as to define constants and perform constant folding for `polynomial` ops.
 
     The polynomial must be expressed as a list of monomial terms, with addition
     or subtraction between them. The choice of variable name is arbitrary, but
@@ -76,10 +76,32 @@ def Polynomial_PolynomialAttr : Polynomial_Attr<"Polynomial", "polynomial"> {
     Example:
 
     ```mlir
-    #poly = #polynomial.polynomial<x**1024 + 1>
+    #poly = #polynomial.int_polynomial<x**1024 + 1>
     ```
   }];
-  let parameters = (ins "::mlir::polynomial::Polynomial":$polynomial);
+  let parameters = (ins "::mlir::polynomial::IntPolynomial":$polynomial);
+  let hasCustomAssemblyFormat = 1;
+}
+
+def Polynomial_FloatPolynomialAttr : Polynomial_Attr<"FloatPolynomial", "float_polynomial"> {
+  let summary = "An attribute containing a single-variable polynomial with double precision floating point coefficients.";
+  let description = [{
+    A polynomial attribute represents a single-variable polynomial with double
+    precision floating point coefficients.
+
+    The polynomial must be expressed as a list of monomial terms, with addition
+    or subtraction between them. The choice of variable name is arbitrary, but
+    must be consistent across all the monomials used to define a single
+    attribute. The order of monomial terms is arbitrary, each monomial degree
+    must occur at most once.
+
+    Example:
+
+    ```mlir
+    #poly = #polynomial.float_polynomial<0.5 x**7 + 1.5>
+    ```
+  }];
+  let parameters = (ins "FloatPolynomial":$polynomial);
   let hasCustomAssemblyFormat = 1;
 }
 
@@ -123,7 +145,7 @@ def Polynomial_RingAttr : Polynomial_Attr<"Ring", "ring"> {
   let parameters = (ins
     "Type": $coefficientType,
     OptionalParameter<"::mlir::IntegerAttr">: $coefficientModulus,
-    OptionalParameter<"::mlir::polynomial::PolynomialAttr">: $polynomialModulus,
+    OptionalParameter<"::mlir::polynomial::IntPolynomialAttr">: $polynomialModulus,
     OptionalParameter<"::mlir::IntegerAttr">: $primitiveRoot
   );
 
@@ -131,7 +153,7 @@ def Polynomial_RingAttr : Polynomial_Attr<"Ring", "ring"> {
     AttrBuilder<
         (ins "::mlir::Type":$coefficientTy,
              "::mlir::IntegerAttr":$coefficientModulusAttr,
-             "::mlir::polynomial::PolynomialAttr":$polynomialModulusAttr), [{
+             "::mlir::polynomial::IntPolynomialAttr":$polynomialModulusAttr), [{
       return $_get($_ctxt, coefficientTy, coefficientModulusAttr, polynomialModulusAttr, nullptr);
     }]>
   ];
@@ -405,9 +427,13 @@ def Polynomial_ToTensorOp : Polynomial_Op<"to_tensor", [Pure]> {
   let arguments = (ins Polynomial_PolynomialType:$input);
   let results = (outs RankedTensorOf<[AnyInteger]>:$output);
   let assemblyFormat = "$input attr-dict `:` type($input) `->` type($output)";
-
   let hasVerifier = 1;
 }
+
+def Polynomial_AnyPolynomialAttr : AnyAttrOf<[
+  Polynomial_FloatPolynomialAttr,
+  Polynomial_IntPolynomialAttr
+]>;
 
 def Polynomial_ConstantOp : Polynomial_Op<"constant", [Pure]> {
   let summary = "Define a constant polynomial via an attribute.";
@@ -420,9 +446,9 @@ def Polynomial_ConstantOp : Polynomial_Op<"constant", [Pure]> {
     %0 = polynomial.constant #polynomial.polynomial<1 + x**2> : !polynomial.polynomial<#ring>
     ```
   }];
-  let arguments = (ins Polynomial_PolynomialAttr:$input);
+  let arguments = (ins Polynomial_AnyPolynomialAttr:$input);
   let results = (outs Polynomial_PolynomialType:$output);
-  let assemblyFormat = "$input attr-dict `:` type($output)";
+  let assemblyFormat = "operands attr-dict `:` type($output)";
 }
 
 def Polynomial_NTTOp : Polynomial_Op<"ntt", [Pure]> {
