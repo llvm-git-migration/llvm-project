@@ -15,12 +15,14 @@
 #define LLVM_TRANSFORMS_IPO_SAMPLEPROFILEMATCHER_H
 
 #include "llvm/ADT/StringSet.h"
+#include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Transforms/Utils/SampleProfileLoaderBaseImpl.h"
 
 namespace llvm {
 
 using AnchorList = std::vector<std::pair<LineLocation, FunctionId>>;
 using AnchorMap = std::map<LineLocation, FunctionId>;
+using FunctionMap = HashKeyMap<std::unordered_map, FunctionId, Function *>;
 
 // Sample profile matching - fuzzy match.
 class SampleProfileMatcher {
@@ -58,6 +60,20 @@ class SampleProfileMatcher {
   StringMap<std::unordered_map<LineLocation, MatchState, LineLocationHash>>
       FuncCallsiteMatchStates;
 
+  struct RenameDecisionCacheHash {
+    uint64_t
+    operator()(const std::pair<const Function *, FunctionId> &P) const {
+      return hash_combine(P.first, P.second);
+    }
+  };
+  std::unordered_map<std::pair<const Function *, FunctionId>, float,
+                     RenameDecisionCacheHash>
+      RenameDecisionCache;
+
+  FunctionMap *SymbolMap;
+
+  std::shared_ptr<ProfileSymbolList> PSL;
+
   // Profile mismatch statstics:
   uint64_t TotalProfiledFunc = 0;
   // Num of checksum-mismatched function.
@@ -80,9 +96,11 @@ class SampleProfileMatcher {
 public:
   SampleProfileMatcher(Module &M, SampleProfileReader &Reader,
                        const PseudoProbeManager *ProbeManager,
-                       ThinOrFullLTOPhase LTOPhase)
-      : M(M), Reader(Reader), ProbeManager(ProbeManager), LTOPhase(LTOPhase){};
-  void runOnModule();
+                       ThinOrFullLTOPhase LTOPhase,
+                       std::shared_ptr<ProfileSymbolList> PSL)
+      : M(M), Reader(Reader), ProbeManager(ProbeManager), LTOPhase(LTOPhase),
+        PSL(PSL) {};
+  void runOnModule(FunctionMap &SymbolMap);
   void clearMatchingData() {
     // Do not clear FuncMappings, it stores IRLoc to ProfLoc remappings which
     // will be used for sample loader.
@@ -90,12 +108,15 @@ public:
   }
 
 private:
-  FunctionSamples *getFlattenedSamplesFor(const Function &F) {
-    StringRef CanonFName = FunctionSamples::getCanonicalFnName(F);
-    auto It = FlattenedProfiles.find(FunctionId(CanonFName));
+  FunctionSamples *getFlattenedSamplesFor(FunctionId Fname) {
+    auto It = FlattenedProfiles.find(Fname);
     if (It != FlattenedProfiles.end())
       return &It->second;
     return nullptr;
+  }
+  FunctionSamples *getFlattenedSamplesFor(const Function &F) {
+    StringRef CanonFName = FunctionSamples::getCanonicalFnName(F);
+    return getFlattenedSamplesFor(FunctionId(CanonFName));
   }
   void runOnFunction(Function &F);
   void findIRAnchors(const Function &F, AnchorMap &IRAnchors);
@@ -160,6 +181,18 @@ private:
   void runStaleProfileMatching(const Function &F, const AnchorMap &IRAnchors,
                                const AnchorMap &ProfileAnchors,
                                LocToLocMap &IRToProfileLocationMap);
+  void
+  findCalleeRenameCandidates(Function &Caller,
+                             const StringMap<Function *> &IRRenameCandidates,
+                             std::vector<Function *> &CalleeRenameCandidates);
+  float checkFunctionSimilarity(const Function &F, FunctionId ProfFName);
+  bool functionIsRenamedImpl(const Function &F, FunctionId FName);
+  bool functionIsRenamed(const Function &F, FunctionId FName);
+  void runFuncRenamingMatchingOnProfile(
+      const StringMap<Function *> &IRRenameCandidates, FunctionSamples &FS,
+      FunctionMap &OldProfToNewSymbolMap);
+  void findIRRenameCandidates(StringMap<Function *> &IRRenameCandidates);
+  void runFuncRenamingMatching();
   void reportOrPersistProfileStats();
 };
 } // end namespace llvm
