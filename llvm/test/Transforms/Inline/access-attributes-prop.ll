@@ -592,7 +592,7 @@ define dso_local void @foo4(i32 %v) {
 define void @prop_range_empty_intersect(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_empty_intersect
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 10) [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 0) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_range_0_10(i32 range(i32 11, 50) %v)
@@ -602,7 +602,7 @@ define void @prop_range_empty_intersect(i32 %v) {
 define void @prop_range_empty(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_empty
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 1, 0) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4(i32 range(i32 1, 0) %v)
@@ -612,7 +612,7 @@ define void @prop_range_empty(i32 %v) {
 define void @prop_range_empty_with_intersect(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_empty_with_intersect
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 10) [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 1, 10) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_range_0_10(i32 range(i32 1, 0) %v)
@@ -622,7 +622,7 @@ define void @prop_range_empty_with_intersect(i32 %v) {
 define void @prop_range_intersect1(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_intersect1
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 10) [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 9) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_range_0_10(i32 range(i32 0, 9) %v)
@@ -632,7 +632,7 @@ define void @prop_range_intersect1(i32 %v) {
 define void @prop_range_intersect2(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_intersect2
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 10) [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 1, 9) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_range_0_10(i32 range(i32 1, 9) %v)
@@ -642,7 +642,7 @@ define void @prop_range_intersect2(i32 %v) {
 define void @prop_range_intersect3(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_intersect3
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 11) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_2_range_0_10(i32 range(i32 0, 11) %v)
@@ -652,7 +652,7 @@ define void @prop_range_intersect3(i32 %v) {
 define void @prop_range_intersect4(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_intersect4
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 10) [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 0, 5) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4_range_0_10(i32 range(i32 40, 5) %v)
@@ -682,7 +682,7 @@ define void @prop_range_keep(i32 %v) {
 define void @prop_range_direct(i32 %v) {
 ; CHECK-LABEL: define {{[^@]+}}@prop_range_direct
 ; CHECK-SAME: (i32 [[V:%.*]]) {
-; CHECK-NEXT:    call void @bar4(i32 [[V]])
+; CHECK-NEXT:    call void @bar4(i32 range(i32 1, 11) [[V]])
 ; CHECK-NEXT:    ret void
 ;
   call void @foo4(i32 range(i32 1, 11) %v)
