@@ -1383,6 +1383,8 @@ static void AddParamAndFnBasicAttributes(const CallBase &CB,
       ValidExactParamAttrs.back().addAttribute(Attribute::NonNull);
     if (auto Align = CB.getParamAlign(I))
       ValidExactParamAttrs.back().addAlignmentAttr(Align);
+    if (auto Range = CB.getParamRange(I))
+      ValidExactParamAttrs.back().addRangeAttr(*Range);
 
     HasAttrToPropagate |= ValidObjParamAttrs.back().hasAttributes();
     HasAttrToPropagate |= ValidExactParamAttrs.back().hasAttributes();
@@ -1426,8 +1428,17 @@ static void AddParamAndFnBasicAttributes(const CallBase &CB,
               ValidExactParamAttrs[ArgNo].getAlignment().valueOrOne())
             AL = AL.removeParamAttribute(Context, I, Attribute::Alignment);
 
+          auto ExistingRange = AL.getParamRange(I);
           AL = AL.addParamAttributes(Context, I, ValidExactParamAttrs[ArgNo]);
 
+          // For range we use the intersection.
+          if (ExistingRange.has_value()) {
+            if (auto NewRange = ValidExactParamAttrs[ArgNo].getRange()) {
+              auto CombinedRange = ExistingRange->intersectWith(*NewRange);
+              AL = AL.removeParamAttribute(Context, I, Attribute::Range);
+              AL = AL.addRangeParamAttr(Context, I, CombinedRange);
+            }
+          }
         } else {
           // Check if the underlying value for the parameter is an argument.
           const Value *UnderlyingV =
