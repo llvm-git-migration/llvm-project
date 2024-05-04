@@ -320,6 +320,10 @@ public:
 
   LogicalResult matchAndRewrite(vector::TransposeOp op,
                                 PatternRewriter &rewriter) const override {
+    if (op.getSourceVectorType().isScalable())
+      return rewriter.notifyMatchFailure(
+          op, "scalable vectors are not supported by this pattern");
+
     auto loc = op.getLoc();
 
     Value input = op.getVector();
@@ -351,9 +355,6 @@ public:
       rewriter.replaceOpWithNewOp<vector::ShapeCastOp>(op, resType, input);
       return success();
     }
-
-    if (inputType.isScalable())
-      return failure();
 
     // Handle a true 2-D matrix transpose differently when requested.
     if (vectorTransformOptions.vectorTransposeLowering ==
