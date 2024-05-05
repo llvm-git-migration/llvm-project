@@ -1,4 +1,13 @@
 add_header(
+  error_number_macros
+  HDR
+    error-number-macros.h
+  DEPENDS
+    .mips.error_number_macros
+    .sparc.error_number_macros
+)
+
+add_header(
   fcntl_macros
   HDR
     fcntl-macros.h
