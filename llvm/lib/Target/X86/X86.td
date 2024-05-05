@@ -873,6 +873,8 @@ def ProcessorFeatures {
   // Nehalem
   list<SubtargetFeature> NHMFeatures = X86_64V2Features;
   list<SubtargetFeature> NHMTuning = [TuningMacroFusion,
+                                      TuningSlow3OpsLEA,
+                                      TuningSlowDivide64,
                                       TuningInsertVZEROUPPER,
                                       TuningNoDomainDelayMov];
 

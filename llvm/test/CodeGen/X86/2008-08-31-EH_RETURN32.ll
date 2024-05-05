@@ -20,7 +20,8 @@ define ptr @test1(i32 %a, ptr %b) nounwind {
 ; CHECK-NEXT:    movl 12(%ebp), %ecx
 ; CHECK-NEXT:    movl 8(%ebp), %eax
 ; CHECK-NEXT:    movl %ecx, 4(%ebp,%eax)
-; CHECK-NEXT:    leal 4(%ebp,%eax), %ecx
+; CHECK-NEXT:    leal (%eax,%ebp), %ecx
+; CHECK-NEXT:    addl $4, %ecx
 ; CHECK-NEXT:    addl $4, %esp
 ; CHECK-NEXT:    popl %eax
 ; CHECK-NEXT:    popl %edx
