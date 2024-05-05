@@ -711,23 +711,7 @@ template <class _CharT, class _Traits, class _Allocator>
 class basic_string {
 private:
   using __default_allocator_type = allocator<_CharT>;
-#ifndef _LIBCPP_HAS_NO_ASAN
-  pointer __asan_volatile_wrapper(pointer __ptr) const {
-    volatile pointer __copy_ptr = __ptr;
 
-    return __copy_ptr;
-  }
-
-  const_pointer const __asan_volatile_wrapper(const_pointer __ptr) const {
-    volatile const_pointer __copy_ptr = __ptr;
-
-    return __copy_ptr;
-  }
-
-#define _LIBCPP_ASAN_VOLATILE_WRAPPER(ptr) __asan_volatile_wrapper(ptr)
-#else
-#define _LIBCPP_ASAN_VOLATILE_WRAPPER(ptr) ptr
-#endif
 public:
   typedef basic_string __self;
   typedef basic_string_view<_CharT, _Traits> __self_view;
@@ -751,7 +735,7 @@ public:
   //
   // This string implementation doesn't contain any references into itself. It only contains a bit that says whether
   // it is in small or large string mode, so the entire structure is trivially relocatable if its members are.
-#ifndef _LIBCPP_HAS_NO_ASAN
+#if !defined(_LIBCPP_HAS_NO_ASAN) && defined(_LIBCPP_INSTRUMENTED_WITH_ASAN)
   // When compiling with AddressSanitizer (ASan), basic_string cannot be trivially
   // relocatable. Because the object's memory might be poisoned when its content
   // is kept inside objects memory (short string optimization), instead of in allocated
@@ -765,7 +749,23 @@ public:
       basic_string,
       void>;
 #endif
+#if !defined(_LIBCPP_HAS_NO_ASAN) && defined(_LIBCPP_INSTRUMENTED_WITH_ASAN)
+  pointer __asan_volatile_wrapper(pointer __ptr) const {
+    volatile pointer __copy_ptr = __ptr;
 
+    return __copy_ptr;
+  }
+
+  const_pointer const __asan_volatile_wrapper(const_pointer __ptr) const {
+    volatile const_pointer __copy_ptr = __ptr;
+
+    return __copy_ptr;
+  }
+
+#define _LIBCPP_ASAN_VOLATILE_WRAPPER(ptr) __asan_volatile_wrapper(ptr)
+#else
+#define _LIBCPP_ASAN_VOLATILE_WRAPPER(ptr) ptr
+#endif
   static_assert((!is_array<value_type>::value), "Character type of basic_string must not be an array");
   static_assert((is_standard_layout<value_type>::value), "Character type of basic_string must be standard-layout");
   static_assert((is_trivial<value_type>::value), "Character type of basic_string must be trivial");
