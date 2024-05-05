@@ -17,6 +17,7 @@
 
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
+#include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/IntervalMap.h"
@@ -17260,6 +17261,25 @@ SDValue DAGCombiner::visitFREM(SDNode *N) {
 
   if (SDValue NewSel = foldBinOpIntoSelect(N))
     return NewSel;
+
+  if (ConstantFPSDNode *C1 = isConstOrConstSplatFP(N1, true)) {
+    bool IsExact;
+    APSInt C1I(64, 0);
+    if (C1->getValueAPF().isInteger() && !C1->getValueAPF().isNegative() &&
+        C1->getValueAPF().convertToInteger(C1I, APFloat::rmTowardZero,
+                                           &IsExact) == APFloat::opOK &&
+        IsExact && isPowerOf2_64(C1I.getSExtValue()) &&
+        (Flags.hasNoSignedZeros() || N0.getOpcode() == ISD::FABS) &&
+        !TLI.isOperationLegal(ISD::FREM, VT) &&
+        TLI.isOperationLegalOrCustom(ISD::FMUL, VT) &&
+        TLI.isOperationLegalOrCustom(ISD::FDIV, VT) &&
+        TLI.isOperationLegalOrCustom(ISD::FTRUNC, VT)) {
+      SDValue Div = DAG.getNode(ISD::FDIV, SDLoc(N), VT, N0, N1);
+      SDValue Rnd = DAG.getNode(ISD::FTRUNC, SDLoc(N), VT, Div);
+      SDValue Mul = DAG.getNode(ISD::FMUL, SDLoc(N), VT, Rnd, N1);
+      return DAG.getNode(ISD::FSUB, SDLoc(N), VT, N0, Mul);
+    }
+  }
 
   return SDValue();
 }
