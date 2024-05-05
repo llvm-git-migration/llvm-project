@@ -399,6 +399,12 @@ class Image:
         if not self.path and self.uuid == uuid.UUID(int=0):
             return "error: invalid image"
 
+        if not self.resolve:
+            # Since this method get called concurrently on every crashlog image,
+            # we should only add the images marked to be resolved and skip the
+            # others.
+            return None
+
         if target:
             # Try and find using UUID only first so that paths need not match
             # up
