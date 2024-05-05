@@ -39,6 +39,7 @@ namespace format {
   TYPE(BlockLBrace)                                                            \
   TYPE(BracedListLBrace)                                                       \
   /* The colon at the end of a case label. */                                  \
+  TYPE(CaseLabelArrow)                                                         \
   TYPE(CaseLabelColon)                                                         \
   TYPE(CastRParen)                                                             \
   TYPE(ClassLBrace)                                                            \
@@ -148,6 +149,8 @@ namespace format {
   TYPE(StructLBrace)                                                           \
   TYPE(StructRBrace)                                                           \
   TYPE(StructuredBindingLSquare)                                               \
+  TYPE(SwitchExpressionLabel)                                                  \
+  TYPE(SwitchExpressionLBrace)                                                 \
   TYPE(TableGenBangOperator)                                                   \
   TYPE(TableGenCondOperator)                                                   \
   TYPE(TableGenCondOperatorColon)                                              \
