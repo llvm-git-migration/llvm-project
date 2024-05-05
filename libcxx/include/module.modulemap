@@ -778,6 +778,7 @@ module std_private_algorithm_pstl                                        [system
   export *
 }
 module std_private_algorithm_push_heap                                   [system] { header "__algorithm/push_heap.h" }
+module std_private_algorithm_radix_sort                                  [system] { header "__algorithm/radix_sort.h" }
 module std_private_algorithm_ranges_adjacent_find                        [system] { header "__algorithm/ranges_adjacent_find.h" }
 module std_private_algorithm_ranges_all_of                               [system] { header "__algorithm/ranges_all_of.h" }
 module std_private_algorithm_ranges_any_of                               [system] { header "__algorithm/ranges_any_of.h" }
