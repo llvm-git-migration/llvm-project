@@ -1436,6 +1436,13 @@ InstructionCost RISCVTTIImpl::getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
     }
   }
 
+  // The cmp + select instructions will lower to SELECT_CC and lower to
+  // PseudoCCMOVGPR which will generate a conditional branch + mv. The
+  // cost of (cmp + select) will be (0 + select inst cost).
+  if (I && isa<CmpInst>(I) && I->hasOneUser() &&
+      isa<SelectInst>(I->user_back()) && I->user_back()->getOperand(0) == I)
+    return 0;
+
   // TODO: Add cost for scalar type.
 
   return BaseT::getCmpSelInstrCost(Opcode, ValTy, CondTy, VecPred, CostKind, I);
