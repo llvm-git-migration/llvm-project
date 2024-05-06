@@ -45,9 +45,12 @@
 ; CHECK-NEXT:       RISC-V Insert VSETVLI pass
 ; CHECK-NEXT:       Init Undef Pass
 ; CHECK-NEXT:       Eliminate PHI nodes for register allocation
+; CHECK-NEXT:       MachineDominator Tree Construction
+; CHECK-NEXT:       Slot index numbering
+; CHECK-NEXT:       Live Interval Analysis
+; CHECK-NEXT:       RISC-V Insert VSETVLI pass
 ; CHECK-NEXT:       Two-Address instruction pass
 ; CHECK-NEXT:       Fast Register Allocator
-; CHECK-NEXT:       MachineDominator Tree Construction
 ; CHECK-NEXT:       Slot index numbering
 ; CHECK-NEXT:       Live Interval Analysis
 ; CHECK-NEXT:       RISC-V Coalesce VSETVLI pass
