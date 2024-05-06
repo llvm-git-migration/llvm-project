@@ -1341,6 +1341,7 @@ def ProcessorFeatures {
                                               FeatureCMOV,
                                               FeatureX86_64];
   list<SubtargetFeature> BarcelonaTuning = [TuningFastScalarShiftMasks,
+                                            TuningSlowDivide64,
                                             TuningSlowSHLD,
                                             TuningSBBDepBreaking,
                                             TuningInsertVZEROUPPER];
@@ -1363,6 +1364,7 @@ def ProcessorFeatures {
   list<SubtargetFeature> BtVer1Tuning = [TuningFast15ByteNOP,
                                          TuningFastScalarShiftMasks,
                                          TuningFastVectorShiftMasks,
+                                         TuningSlowDivide64,
                                          TuningSlowSHLD,
                                          TuningSBBDepBreaking,
                                          TuningInsertVZEROUPPER];
@@ -1385,6 +1387,7 @@ def ProcessorFeatures {
                                          TuningFastVectorShiftMasks,
                                          TuningFastMOVBE,
                                          TuningSBBDepBreaking,
+                                         TuningSlowDivide64,
                                          TuningSlowSHLD];
   list<SubtargetFeature> BtVer2Features =
     !listconcat(BtVer1Features, BtVer2AdditionalFeatures);
@@ -1409,6 +1412,7 @@ def ProcessorFeatures {
                                            FeatureLWP,
                                            FeatureLAHFSAHF64];
   list<SubtargetFeature> BdVer1Tuning = [TuningSlowSHLD,
+                                         TuningSlowDivide64,
                                          TuningFast11ByteNOP,
                                          TuningFastScalarShiftMasks,
                                          TuningBranchFusion,
@@ -1488,6 +1492,7 @@ def ProcessorFeatures {
                                      TuningFastScalarShiftMasks,
                                      TuningFastVariablePerLaneShuffle,
                                      TuningFastMOVBE,
+                                     TuningSlowDivide64,
                                      TuningSlowSHLD,
                                      TuningSBBDepBreaking,
                                      TuningInsertVZEROUPPER,
