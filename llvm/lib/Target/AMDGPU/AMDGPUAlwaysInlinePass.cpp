@@ -42,7 +42,7 @@ public:
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
- }
+  }
 };
 
 } // End anonymous namespace
@@ -54,7 +54,8 @@ char AMDGPUAlwaysInline::ID = 0;
 
 static void
 recursivelyVisitUsers(GlobalValue &GV,
-                      SmallPtrSetImpl<Function *> &FuncsToAlwaysInline) {
+                      SmallPtrSetImpl<Function *> &FuncsToAlwaysInline,
+                      bool &Preserved) {
   SmallVector<User *, 16> Stack(GV.users());
 
   SmallPtrSet<const Value *, 8> Visited;
@@ -73,6 +74,7 @@ recursivelyVisitUsers(GlobalValue &GV,
         // Unfortunately, clang adds noinline to all functions at -O0. We have
         // to override this here until that's fixed.
         F->removeFnAttr(Attribute::NoInline);
+        Preserved = false;
 
         FuncsToAlwaysInline.insert(F);
         Stack.push_back(F);
@@ -89,6 +91,7 @@ recursivelyVisitUsers(GlobalValue &GV,
 static bool alwaysInlineImpl(Module &M, bool GlobalOpt) {
   std::vector<GlobalAlias*> AliasesToRemove;
 
+  bool Preserved = true;
   SmallPtrSet<Function *, 8> FuncsToAlwaysInline;
   SmallPtrSet<Function *, 8> FuncsToNoInline;
   Triple TT(M.getTargetTriple());
@@ -98,6 +101,7 @@ static bool alwaysInlineImpl(Module &M, bool GlobalOpt) {
       if (TT.getArch() == Triple::amdgcn &&
           A.getLinkage() != GlobalValue::InternalLinkage)
         continue;
+      Preserved = false;
       A.replaceAllUsesWith(F);
       AliasesToRemove.push_back(&A);
     }
@@ -128,7 +132,7 @@ static bool alwaysInlineImpl(Module &M, bool GlobalOpt) {
     if ((AS == AMDGPUAS::REGION_ADDRESS) ||
         (AS == AMDGPUAS::LOCAL_ADDRESS &&
          (!AMDGPUTargetMachine::EnableLowerModuleLDS)))
-      recursivelyVisitUsers(GV, FuncsToAlwaysInline);
+      recursivelyVisitUsers(GV, FuncsToAlwaysInline, Preserved);
   }
 
   if (!AMDGPUTargetMachine::EnableFunctionCalls || StressCalls) {
@@ -153,7 +157,7 @@ static bool alwaysInlineImpl(Module &M, bool GlobalOpt) {
   for (Function *F : FuncsToNoInline)
     F->addFnAttr(Attribute::NoInline);
 
-  return !FuncsToAlwaysInline.empty() || !FuncsToNoInline.empty();
+  return !Preserved || !FuncsToAlwaysInline.empty() || !FuncsToNoInline.empty();
 }
 
 bool AMDGPUAlwaysInline::runOnModule(Module &M) {
@@ -166,6 +170,6 @@ ModulePass *llvm::createAMDGPUAlwaysInlinePass(bool GlobalOpt) {
 
 PreservedAnalyses AMDGPUAlwaysInlinePass::run(Module &M,
                                               ModuleAnalysisManager &AM) {
-  alwaysInlineImpl(M, GlobalOpt);
-  return PreservedAnalyses::all();
+  const bool Changed = alwaysInlineImpl(M, GlobalOpt);
+  return Changed ? PreservedAnalyses::none() : PreservedAnalyses::all();
 }
