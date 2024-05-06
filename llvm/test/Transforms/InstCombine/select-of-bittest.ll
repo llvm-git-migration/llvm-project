@@ -590,13 +590,13 @@ define i32 @n5(i32 %arg) {
 ; CHECK-LABEL: @n5(
 ; CHECK-NEXT:    [[T:%.*]] = and i32 [[ARG:%.*]], 2
 ; CHECK-NEXT:    [[T1:%.*]] = icmp eq i32 [[T]], 0
-; CHECK-NEXT:    [[T2:%.*]] = and i32 [[ARG]], 2
+; CHECK-NEXT:    [[T2:%.*]] = and i32 [[ARG]], 3
 ; CHECK-NEXT:    [[T3:%.*]] = select i1 [[T1]], i32 [[T2]], i32 1
 ; CHECK-NEXT:    ret i32 [[T3]]
 ;
   %t = and i32 %arg, 2
   %t1 = icmp eq i32 %t, 0
-  %t2 = and i32 %arg, 2 ; 2 instead of 1
+  %t2 = and i32 %arg, 3 ; 3 instead of 2
   %t3 = select i1 %t1, i32 %t2, i32 1
   ret i32 %t3
 }
