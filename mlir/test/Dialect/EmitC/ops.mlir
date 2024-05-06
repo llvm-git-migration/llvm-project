@@ -170,8 +170,8 @@ func.func @test_if_else(%arg0: i1, %arg1: f32) {
 }
 
 func.func @test_assign(%arg1: f32) {
-  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> f32
-  emitc.assign %arg1 : f32 to %v : f32
+  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<f32>
+  emitc.assign %arg1 : f32 to %v : !emitc.lvalue<f32>
   return
 }
 

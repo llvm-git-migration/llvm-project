@@ -378,6 +378,13 @@ static LogicalResult printOperation(CppEmitter &emitter,
 }
 
 static LogicalResult printOperation(CppEmitter &emitter,
+                                    emitc::LValueToRValueOp lValueToRValueOp) {
+  // Add name to cache so that `hasValueInScope` works.
+  emitter.getOrCreateName(lValueToRValueOp.getResult());
+  return success();
+}
+
+static LogicalResult printOperation(CppEmitter &emitter,
                                     emitc::SubscriptOp subscriptOp) {
   // Add name to cache so that `hasValueInScope` works.
   emitter.getOrCreateName(subscriptOp.getResult());
@@ -661,10 +668,16 @@ static LogicalResult printOperation(CppEmitter &emitter,
   raw_ostream &os = emitter.ostream();
   Operation &op = *applyOp.getOperation();
 
-  if (failed(emitter.emitAssignPrefix(op)))
-    return failure();
-  os << applyOp.getApplicableOperator();
-  os << emitter.getOrCreateName(applyOp.getOperand());
+  if (applyOp.getApplicableOperator() == "&") {
+
+    if (failed(emitter.emitAssignPrefix(op)))
+      return failure();
+    os << applyOp.getApplicableOperator();
+    os << emitter.getOrCreateName(applyOp.getOperand());
+  } else {
+    // Add name to cache so that `hasValueInScope` works.
+    emitter.getOrCreateName(applyOp.getResult());
+  }
 
   return success();
 }
@@ -948,7 +961,9 @@ static LogicalResult printFunctionBody(CppEmitter &emitter,
     // regions.
     WalkResult result =
         functionOp->walk<WalkOrder::PreOrder>([&](Operation *op) -> WalkResult {
-          if (isa<emitc::LiteralOp>(op) ||
+          if (isa<emitc::LiteralOp, emitc::LValueToRValueOp>(op) ||
+              (isa<emitc::ApplyOp>(op) &&
+               cast<emitc::ApplyOp>(op).getApplicableOperator() == "*") ||
               isa<emitc::ExpressionOp>(op->getParentOp()) ||
               (isa<emitc::ExpressionOp>(op) &&
                shouldBeInlined(cast<emitc::ExpressionOp>(op))))
@@ -1138,6 +1153,15 @@ std::string CppEmitter::getSubscriptName(emitc::SubscriptOp op) {
 StringRef CppEmitter::getOrCreateName(Value val) {
   if (auto literal = dyn_cast_if_present<emitc::LiteralOp>(val.getDefiningOp()))
     return literal.getValue();
+  if (auto lValueToRValue =
+          dyn_cast_if_present<emitc::LValueToRValueOp>(val.getDefiningOp())) {
+    Value operand = lValueToRValue.getOperand();
+    valueMapper.insert(val, "***UNUSED***");
+
+    assert(hasValueInScope(operand));
+
+    return getOrCreateName(operand);
+  }
   if (!valueMapper.count(val)) {
     if (auto subscript =
             dyn_cast_if_present<emitc::SubscriptOp>(val.getDefiningOp())) {
@@ -1145,6 +1169,15 @@ StringRef CppEmitter::getOrCreateName(Value val) {
     } else if (auto getGlobal = dyn_cast_if_present<emitc::GetGlobalOp>(
                    val.getDefiningOp())) {
       valueMapper.insert(val, getGlobal.getName().str());
+    } else if (val.getDefiningOp() &&
+               isa<emitc::ApplyOp>(val.getDefiningOp()) &&
+               cast<emitc::ApplyOp>(val.getDefiningOp())
+                       .getApplicableOperator() == "*") {
+      auto apply = cast<emitc::ApplyOp>(val.getDefiningOp());
+
+      Value operand = apply.getOperand();
+      std::string variable = getOrCreateName(operand).str();
+      valueMapper.insert(val, std::string("*") + variable);
     } else {
       valueMapper.insert(val, formatv("v{0}", ++valueInScopeCount.top()));
     }
@@ -1401,8 +1434,12 @@ LogicalResult CppEmitter::emitVariableDeclaration(OpResult result,
     return result.getDefiningOp()->emitError(
         "result variable for the operation already declared");
   }
-  if (failed(emitVariableDeclaration(result.getOwner()->getLoc(),
-                                     result.getType(),
+
+  Type type = result.getType();
+  if (auto lType = dyn_cast<emitc::LValueType>(type)) {
+    type = lType.getValue();
+  }
+  if (failed(emitVariableDeclaration(result.getOwner()->getLoc(), type,
                                      getOrCreateName(result))))
     return failure();
   if (trailingSemicolon)
@@ -1495,8 +1532,9 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
                 emitc::ConditionalOp, emitc::ConstantOp, emitc::DeclareFuncOp,
                 emitc::DivOp, emitc::ExpressionOp, emitc::ForOp, emitc::FuncOp,
                 emitc::GlobalOp, emitc::GetGlobalOp, emitc::IfOp,
-                emitc::IncludeOp, emitc::LogicalAndOp, emitc::LogicalNotOp,
-                emitc::LogicalOrOp, emitc::MulOp, emitc::RemOp, emitc::ReturnOp,
+                emitc::IncludeOp, emitc::LogicalAndOp,
+                emitc::LValueToRValueOp, emitc::LogicalNotOp, emitc::RemOp,
+                emitc::LogicalOrOp, emitc::MulOp, emitc::ReturnOp,
                 emitc::SubOp, emitc::SubscriptOp, emitc::UnaryMinusOp,
                 emitc::UnaryPlusOp, emitc::VariableOp, emitc::VerbatimOp>(
               [&](auto op) { return printOperation(*this, op); })
@@ -1511,7 +1549,7 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
   if (failed(status))
     return failure();
 
-  if (isa<emitc::LiteralOp, emitc::SubscriptOp, emitc::GetGlobalOp>(op))
+  if (isa<emitc::LiteralOp, emitc::LValueToRValueOp, emitc::SubscriptOp, emitc::GetGlobalOp>(op))
     return success();
 
   if (getEmittedExpression() ||
@@ -1600,6 +1638,9 @@ LogicalResult CppEmitter::emitType(Location loc, Type type) {
     for (auto dim : aType.getShape())
       os << "[" << dim << "]";
     return success();
+  }
+  if (auto lType = dyn_cast<emitc::LValueType>(type)) {
+    return emitType(loc, lType.getValue());
   }
   if (auto pType = dyn_cast<emitc::PointerType>(type)) {
     if (isa<ArrayType>(pType.getPointee()))

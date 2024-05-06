@@ -835,6 +835,22 @@ def EmitC_LogicalOrOp : EmitC_BinaryOp<"logical_or", [CExpression]> {
   let assemblyFormat = "operands attr-dict `:` type(operands)";
 }
 
+def EmitC_LValueToRValueOp : EmitC_Op<"lvalue_to_rvalue", [
+  TypesMatchWith<"result type matches value type of 'operand'",
+                  "operand", "result",
+                  "::llvm::cast<LValueType>($_self).getValue()">
+]> {
+  let summary = "lvalue to rvalue conversion operation";
+  let description = [{}];
+
+  let arguments = (ins EmitC_LValueType:$operand);
+  let results = (outs AnyType:$result);
+
+  let assemblyFormat = "$operand attr-dict `:` type($operand)"; 
+
+  let hasVerifier = 1;
+}
+
 def EmitC_MulOp : EmitC_BinaryOp<"mul", [CExpression]> {
   let summary = "Multiplication operation";
   let description = [{
@@ -1009,7 +1025,7 @@ def EmitC_VariableOp : EmitC_Op<"variable", []> {
   }];
 
   let arguments = (ins EmitC_OpaqueOrTypedAttr:$value);
-  let results = (outs EmitCType);
+  let results = (outs EmitC_LValueType);
 
   let hasVerifier = 1;
 }
@@ -1137,7 +1153,7 @@ def EmitC_AssignOp : EmitC_Op<"assign", []> {
     ```
   }];
 
-  let arguments = (ins EmitCType:$var, EmitCType:$value);
+  let arguments = (ins EmitC_LValueType:$var, EmitCType:$value);
   let results = (outs);
 
   let hasVerifier = 1;
@@ -1243,7 +1259,7 @@ def EmitC_SubscriptOp : EmitC_Op<"subscript", []> {
       EmitC_PointerType]>,
     "the value to subscript">:$value,
     Variadic<EmitCType>:$indices);
-  let results = (outs EmitCType:$result);
+  let results = (outs EmitC_LValueType:$result);
 
   let builders = [
     OpBuilder<(ins "TypedValue<ArrayType>":$array, "ValueRange":$indices), [{
