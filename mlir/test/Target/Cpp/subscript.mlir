@@ -4,7 +4,8 @@
 func.func @load_store(%arg0: !emitc.array<4x8xf32>, %arg1: !emitc.array<3x5xf32>, %arg2: index, %arg3: index) {
   %0 = emitc.subscript %arg0[%arg2, %arg3] : <4x8xf32>, index, index
   %1 = emitc.subscript %arg1[%arg2, %arg3] : <3x5xf32>, index, index
-  emitc.assign %0 : f32 to %1 : f32
+  %2 = emitc.lvalue_to_rvalue %0 : !emitc.lvalue<f32>
+  emitc.assign %2 : f32 to %1 : !emitc.lvalue<f32>
   return
 }
 // CHECK: void load_store(float [[ARR1:[^ ]*]][4][8], float [[ARR2:[^ ]*]][3][5],
@@ -20,9 +21,13 @@ emitc.func @call_arg(%arg0: !emitc.array<4x8xf32>, %i: i32, %j: i16,
   %0 = emitc.subscript %arg0[%i, %j] : <4x8xf32>, i32, i16
   %1 = emitc.subscript %arg0[%j, %k] : <4x8xf32>, i16, i8
 
-  emitc.call @func1 (%0) : (f32) -> ()
-  emitc.call_opaque "func2" (%1) : (f32) -> ()
-  emitc.call_opaque "func3" (%0, %1) { args = [1 : index, 0 : index] } : (f32, f32) -> ()
+  %2 = emitc.lvalue_to_rvalue %0 : !emitc.lvalue<f32>
+  emitc.call @func1 (%2) : (f32) -> ()
+  %3 = emitc.lvalue_to_rvalue %1 : !emitc.lvalue<f32>
+  emitc.call_opaque "func2" (%3) : (f32) -> ()
+  %4 = emitc.lvalue_to_rvalue %0 : !emitc.lvalue<f32>
+  %5 = emitc.lvalue_to_rvalue %1 : !emitc.lvalue<f32>
+  emitc.call_opaque "func3" (%4, %5) { args = [1 : index, 0 : index] } : (f32, f32) -> ()
   emitc.return
 }
 // CHECK: void call_arg(float [[ARR1:[^ ]*]][4][8], int32_t [[I:[^ ]*]],

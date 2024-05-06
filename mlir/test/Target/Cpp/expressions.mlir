@@ -34,15 +34,16 @@ func.func @single_use(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> i32 {
     %d = emitc.cmp lt, %c, %arg1 :(i32, i32) -> i1
     emitc.yield %d : i1
   }
-  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> i32
+  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<i32>
   emitc.if %e {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   } else {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   }
-  return %v : i32
+  %v_rvalue = emitc.lvalue_to_rvalue %v : !emitc.lvalue<i32>
+  return %v_rvalue : i32
 }
 
 // CPP-DEFAULT: int32_t do_not_inline(int32_t [[VAL_1:v[0-9]+]], int32_t [[VAL_2:v[0-9]+]], int32_t [[VAL_3:v[0-9]+]]) {
@@ -120,17 +121,19 @@ func.func @multiple_uses(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> i32 
     %d = emitc.cmp lt, %c, %arg1 :(i32, i32) -> i1
     emitc.yield %d : i1
   }
-  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> i32
+  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<i32>
   emitc.if %e {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   } else {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   }
-  %q = "emitc.variable"(){value = #emitc.opaque<"">} : () -> i1
-  emitc.assign %e : i1 to %q : i1
-  return %v : i32
+  %q = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<i1>
+  emitc.assign %e : i1 to %q : !emitc.lvalue<i1>
+
+  %v_rvalue = emitc.lvalue_to_rvalue %v : !emitc.lvalue<i32>
+  return %v_rvalue : i32
 }
 
 // CPP-DEFAULT:      int32_t different_expressions(int32_t [[VAL_1:v[0-9]+]], int32_t [[VAL_2:v[0-9]+]], int32_t [[VAL_3:v[0-9]+]], int32_t [[VAL_4:v[0-9]+]]) {
@@ -175,15 +178,17 @@ func.func @different_expressions(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32)
     %d = emitc.cmp lt, %c, %arg1 :(i32, i32) -> i1
     emitc.yield %d : i1
   }
-  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> i32
+  %v = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<i32>
   emitc.if %e3 {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   } else {
-    emitc.assign %arg0 : i32 to %v : i32
+    emitc.assign %arg0 : i32 to %v : !emitc.lvalue<i32>
     emitc.yield
   }
-  return %v : i32
+
+  %v_rvalue = emitc.lvalue_to_rvalue %v : !emitc.lvalue<i32>
+  return %v_rvalue : i32
 }
 
 // CPP-DEFAULT:      bool expression_with_address_taken(int32_t [[VAL_1:v[0-9]+]], int32_t [[VAL_2:v[0-9]+]], int32_t* [[VAL_3]]) {

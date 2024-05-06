@@ -63,9 +63,10 @@ static SmallVector<Value> createVariablesForResults(T op,
 
   for (OpResult result : op.getResults()) {
     Type resultType = result.getType();
+    Type varType = emitc::LValueType::get(resultType);
     emitc::OpaqueAttr noInit = emitc::OpaqueAttr::get(context, "");
     emitc::VariableOp var =
-        rewriter.create<emitc::VariableOp>(loc, resultType, noInit);
+        rewriter.create<emitc::VariableOp>(loc, varType, noInit);
     resultVariables.push_back(var);
   }
 
@@ -76,57 +77,98 @@ static SmallVector<Value> createVariablesForResults(T op,
 // the current insertion point of given rewriter.
 static void assignValues(ValueRange values, SmallVector<Value> &variables,
                          PatternRewriter &rewriter, Location loc) {
-  for (auto [value, var] : llvm::zip(values, variables))
-    rewriter.create<emitc::AssignOp>(loc, var, value);
+  for (auto [value, var] : llvm::zip(values, variables)) {
+    assert(isa<emitc::LValueType>(var.getType()) &&
+           "expected var to be an lvalue type");
+    assert(!isa<emitc::LValueType>(value.getType()) &&
+           "expected value to not be an lvalue type");
+    auto assign = rewriter.create<emitc::AssignOp>(loc, var, value);
+
+    // TODO: Make sure this is safe, as this moves operations with memory
+    // effects.
+    if (auto op = dyn_cast_if_present<emitc::LValueToRValueOp>(
+            value.getDefiningOp())) {
+      rewriter.moveOpBefore(op, assign);
+    }
+  }
 }
 
-static void lowerYield(SmallVector<Value> &resultVariables,
-                       PatternRewriter &rewriter, scf::YieldOp yield) {
+static void lowerYield(SmallVector<Value> &variables, PatternRewriter &rewriter,
+                       scf::YieldOp yield) {
   Location loc = yield.getLoc();
   ValueRange operands = yield.getOperands();
 
   OpBuilder::InsertionGuard guard(rewriter);
   rewriter.setInsertionPoint(yield);
 
-  assignValues(operands, resultVariables, rewriter, loc);
+  assignValues(operands, variables, rewriter, loc);
 
   rewriter.create<emitc::YieldOp>(loc);
   rewriter.eraseOp(yield);
+}
+
+static void replaceUsers(PatternRewriter &rewriter,
+                         SmallVector<Value> fromValues,
+                         SmallVector<Value> toValues) {
+  OpBuilder::InsertionGuard guard(rewriter);
+  for (auto [from, to] : llvm::zip(fromValues, toValues)) {
+    assert(from.getType() == cast<emitc::LValueType>(to.getType()).getValue() &&
+           "expected types to match");
+
+    for (OpOperand &operand : llvm::make_early_inc_range(from.getUses())) {
+      Operation *op = operand.getOwner();
+      // Skip yield ops, as these get rewritten anyways.
+      if (isa<scf::YieldOp>(op)) {
+        continue;
+      }
+      Location loc = op->getLoc();
+
+      rewriter.setInsertionPoint(op);
+      Value rValue =
+          rewriter.create<emitc::LValueToRValueOp>(loc, from.getType(), to);
+      operand.set(rValue);
+    }
+  }
 }
 
 LogicalResult ForLowering::matchAndRewrite(ForOp forOp,
                                            PatternRewriter &rewriter) const {
   Location loc = forOp.getLoc();
 
-  // Create an emitc::variable op for each result. These variables will be
-  // assigned to by emitc::assign ops within the loop body.
-  SmallVector<Value> resultVariables =
-      createVariablesForResults(forOp, rewriter);
-  SmallVector<Value> iterArgsVariables =
-      createVariablesForResults(forOp, rewriter);
+  // Create an emitc::variable op for each result. These variables will be used
+  // for the results of the operations as well as the iter_args. They are
+  // assigned to by emitc::assign ops before the loop and at the end of the loop
+  // body.
+  SmallVector<Value> variables = createVariablesForResults(forOp, rewriter);
 
-  assignValues(forOp.getInits(), iterArgsVariables, rewriter, loc);
+  // Assign initial values to the iter arg variables.
+  assignValues(forOp.getInits(), variables, rewriter, loc);
+
+  // Replace users of the iter args with variables.
+  SmallVector<Value> iterArgs;
+  for (BlockArgument arg : forOp.getRegionIterArgs()) {
+    iterArgs.push_back(arg);
+  }
+
+  replaceUsers(rewriter, iterArgs, variables);
 
   emitc::ForOp loweredFor = rewriter.create<emitc::ForOp>(
       loc, forOp.getLowerBound(), forOp.getUpperBound(), forOp.getStep());
+  rewriter.eraseBlock(loweredFor.getBody());
 
-  Block *loweredBody = loweredFor.getBody();
+  rewriter.inlineRegionBefore(forOp.getRegion(), loweredFor.getRegion(),
+                              loweredFor.getRegion().end());
+  Operation *terminator = loweredFor.getRegion().back().getTerminator();
+  lowerYield(variables, rewriter, cast<scf::YieldOp>(terminator));
 
-  // Erase the auto-generated terminator for the lowered for op.
-  rewriter.eraseOp(loweredBody->getTerminator());
+  // Erase block arguments for iter_args.
+  loweredFor.getRegion().back().eraseArguments(1, variables.size());
 
-  SmallVector<Value> replacingValues;
-  replacingValues.push_back(loweredFor.getInductionVar());
-  replacingValues.append(iterArgsVariables.begin(), iterArgsVariables.end());
+  // Replace all users of the results with lazily created lvalue-to-rvalue
+  // ops.
+  replaceUsers(rewriter, forOp.getResults(), variables);
 
-  rewriter.mergeBlocks(forOp.getBody(), loweredBody, replacingValues);
-  lowerYield(iterArgsVariables, rewriter,
-             cast<scf::YieldOp>(loweredBody->getTerminator()));
-
-  // Copy iterArgs into results after the for loop.
-  assignValues(iterArgsVariables, resultVariables, rewriter, loc);
-
-  rewriter.replaceOp(forOp, resultVariables);
+  rewriter.eraseOp(forOp);
   return success();
 }
 
@@ -167,7 +209,7 @@ LogicalResult IfLowering::matchAndRewrite(IfOp ifOp,
 
   bool hasElseBlock = !elseRegion.empty();
 
-  auto loweredIf =
+  emitc::IfOp loweredIf =
       rewriter.create<emitc::IfOp>(loc, ifOp.getCondition(), false, false);
 
   Region &loweredThenRegion = loweredIf.getThenRegion();
@@ -178,7 +220,11 @@ LogicalResult IfLowering::matchAndRewrite(IfOp ifOp,
     lowerRegion(elseRegion, loweredElseRegion);
   }
 
-  rewriter.replaceOp(ifOp, resultVariables);
+  // Replace all users of the results with lazily created lvalue-to-rvalue
+  // ops.
+  replaceUsers(rewriter, ifOp.getResults(), resultVariables);
+
+  rewriter.eraseOp(ifOp);
   return success();
 }
 

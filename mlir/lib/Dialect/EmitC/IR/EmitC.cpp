@@ -68,6 +68,8 @@ static LogicalResult verifyInitializationAttribute(Operation *op,
            << "string attributes are not supported, use #emitc.opaque instead";
 
   Type resultType = op->getResult(0).getType();
+  if (auto lType = dyn_cast<LValueType>(resultType))
+    resultType = lType.getValue();
   Type attrType = cast<TypedAttr>(value).getType();
 
   if (resultType != attrType)
@@ -131,18 +133,21 @@ LogicalResult ApplyOp::verify() {
 /// assigned-to variable type.
 LogicalResult emitc::AssignOp::verify() {
   Value variable = getVar();
-  Operation *variableDef = variable.getDefiningOp();
-  if (!variableDef ||
-      !llvm::isa<emitc::VariableOp, emitc::SubscriptOp>(variableDef))
-    return emitOpError() << "requires first operand (" << variable
-                         << ") to be a Variable or subscript";
 
-  Value value = getValue();
-  if (variable.getType() != value.getType())
-    return emitOpError() << "requires value's type (" << value.getType()
-                         << ") to match variable's type (" << variable.getType()
-                         << ")";
-  if (isa<ArrayType>(variable.getType()))
+  if (!variable.getDefiningOp())
+    return emitOpError() << "cannot assign to block argument";
+  if (!llvm::isa<emitc::LValueType>(variable.getType()))
+    return emitOpError() << "requires first operand (" << variable
+                         << ") to be an lvalue";
+
+  Type valueType = getValue().getType();
+  Type variableType = variable.getType().cast<emitc::LValueType>().getValue();
+  if (variableType != valueType)
+    return emitOpError() << "requires value's type (" << valueType
+                         << ") to match variable's type (" << variableType
+                         << ")\n  variable: " << variable
+                         << "\n  value: " << getValue() << "\n";
+  if (isa<ArrayType>(variableType))
     return emitOpError() << "cannot assign to array type";
   return success();
 }
@@ -698,6 +703,47 @@ LogicalResult emitc::LiteralOp::verify() {
     return emitOpError() << "value must not be empty";
   return success();
 }
+
+//===----------------------------------------------------------------------===//
+// LValueToRValueOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult emitc::LValueToRValueOp::verify() {
+  Type operandType = getOperand().getType();
+  Type resultType = getResult().getType();
+  if (!llvm::isa<emitc::LValueType>(operandType))
+    return emitOpError("operand must be a lvalue");
+  if (llvm::cast<emitc::LValueType>(operandType).getValue() != resultType)
+    return emitOpError("types must match");
+
+  Value result = getResult();
+  if (!result.hasOneUse()) {
+    int numUses = std::distance(result.use_begin(), result.use_end());
+    return emitOpError("must have exactly one use, but got ") << numUses;
+  }
+
+  Block *block = result.getParentBlock();
+
+  Operation *user = *result.getUsers().begin();
+  Block *userBlock = user->getBlock();
+
+  if (block != userBlock) {
+    return emitOpError("user must be in the same block");
+  }
+
+  // for (auto it = block.begin(), e = std::prev(block.end()); it != e; it++) {
+  //   if (*it == this)
+  // }
+
+  // TODO: To model this op correctly as a memory read of the lvalue, we
+  // should additionally ensure that the single use of the op follows immediatly
+  // on this definition. Alternativly we could alter emitc ops to implicitly
+  // support lvalues. This would make it harder to do partial conversions and
+  // mix dialects though.
+
+  return success();
+}
+
 //===----------------------------------------------------------------------===//
 // SubOp
 //===----------------------------------------------------------------------===//
@@ -849,6 +895,20 @@ emitc::ArrayType::cloneWith(std::optional<ArrayRef<int64_t>> shape,
   if (!shape)
     return emitc::ArrayType::get(getShape(), elementType);
   return emitc::ArrayType::get(*shape, elementType);
+}
+
+//===----------------------------------------------------------------------===//
+// LValueType
+//===----------------------------------------------------------------------===//
+
+LogicalResult mlir::emitc::LValueType::verify(
+    llvm::function_ref<mlir::InFlightDiagnostic()> emitError,
+    mlir::Type value) {
+  if (llvm::isa<emitc::LValueType>(value)) {
+    return emitError()
+           << "!emitc.lvalue type cannot be nested inside another type";
+  }
+  return success();
 }
 
 //===----------------------------------------------------------------------===//

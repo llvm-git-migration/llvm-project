@@ -836,6 +836,22 @@ def EmitC_LogicalOrOp : EmitC_BinaryOp<"logical_or", [CExpression]> {
   let assemblyFormat = "operands attr-dict `:` type(operands)";
 }
 
+def EmitC_LValueToRValueOp : EmitC_Op<"lvalue_to_rvalue", [
+  TypesMatchWith<"result type matches value type of 'operand'",
+                  "operand", "result",
+                  "::llvm::cast<LValueType>($_self).getValue()">
+]> {
+  let summary = "lvalue to rvalue conversion operation";
+  let description = [{}];
+
+  let arguments = (ins EmitC_LValueType:$operand);
+  let results = (outs AnyType:$result);
+
+  let assemblyFormat = "$operand attr-dict `:` type($operand)"; 
+
+  let hasVerifier = 1;
+}
+
 def EmitC_MulOp : EmitC_BinaryOp<"mul", [CExpression]> {
   let summary = "Multiplication operation";
   let description = [{
@@ -1011,7 +1027,7 @@ def EmitC_VariableOp : EmitC_Op<"variable", []> {
   }];
 
   let arguments = (ins EmitC_OpaqueOrTypedAttr:$value);
-  let results = (outs AnyType);
+  let results = (outs EmitC_LValueType);
 
   let hasVerifier = 1;
 }
@@ -1070,7 +1086,7 @@ def EmitC_AssignOp : EmitC_Op<"assign", []> {
     ```
   }];
 
-  let arguments = (ins AnyType:$var, AnyType:$value);
+  let arguments = (ins EmitC_LValueType:$var, AnyType:$value);
   let results = (outs);
 
   let hasVerifier = 1;
@@ -1158,7 +1174,7 @@ def EmitC_IfOp : EmitC_Op<"if",
 def EmitC_SubscriptOp : EmitC_Op<"subscript",
   [TypesMatchWith<"result type matches element type of 'array'",
                   "array", "result",
-                  "::llvm::cast<ArrayType>($_self).getElementType()">]> {
+                  "LValueType::get(::llvm::cast<ArrayType>($_self).getElementType())">]> {
   let summary = "Array subscript operation";
   let description = [{
     With the `subscript` operation the subscript operator `[]` can be applied
@@ -1174,7 +1190,7 @@ def EmitC_SubscriptOp : EmitC_Op<"subscript",
   }];
   let arguments = (ins Arg<EmitC_ArrayType, "the reference to load from">:$array,
                        Variadic<IntegerIndexOrOpaqueType>:$indices);
-  let results = (outs AnyType:$result);
+  let results = (outs EmitC_LValueType:$result);
 
   let builders = [
     OpBuilder<(ins "Value":$array, "ValueRange":$indices), [{

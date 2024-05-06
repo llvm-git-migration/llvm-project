@@ -40,21 +40,25 @@ func.func @test_for_yield() {
   %s0 = "emitc.constant"() <{value = 0 : i32}> : () -> i32
   %p0 = "emitc.constant"() <{value = 1.0 : f32}> : () -> f32
 
-  %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
-  %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> f32
-  %2 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
-  %3 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> f32
-  emitc.assign %s0 : i32 to %2 : i32
-  emitc.assign %p0 : f32 to %3 : f32
+  %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+  %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<f32>
+  %2 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+  %3 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<f32>
+  emitc.assign %s0 : i32 to %2 : !emitc.lvalue<i32>
+  emitc.assign %p0 : f32 to %3 : !emitc.lvalue<f32>
   emitc.for %iter = %start to %stop step %step {
-    %sn = emitc.call_opaque "add"(%2, %iter) : (i32, index) -> i32
-    %pn = emitc.call_opaque "mul"(%3, %iter) : (f32, index) -> f32
-    emitc.assign %sn : i32 to %2 : i32
-    emitc.assign %pn : f32 to %3 : f32
+    %4 = emitc.lvalue_to_rvalue %2 : !emitc.lvalue<i32>
+    %sn = emitc.call_opaque "add"(%4, %iter) : (i32, index) -> i32
+    %5 = emitc.lvalue_to_rvalue %3 : !emitc.lvalue<f32>
+    %pn = emitc.call_opaque "mul"(%5, %iter) : (f32, index) -> f32
+    emitc.assign %sn : i32 to %2 : !emitc.lvalue<i32>
+    emitc.assign %pn : f32 to %3 : !emitc.lvalue<f32>
     emitc.yield
   }
-  emitc.assign %2 : i32 to %0 : i32
-  emitc.assign %3 : f32 to %1 : f32
+  %6 = emitc.lvalue_to_rvalue %2 : !emitc.lvalue<i32>
+  emitc.assign %6 : i32 to %0 : !emitc.lvalue<i32>
+  %7 = emitc.lvalue_to_rvalue %3 : !emitc.lvalue<f32>
+  emitc.assign %7 : f32 to %1 : !emitc.lvalue<f32>
 
   return
 }
@@ -121,21 +125,25 @@ func.func @test_for_yield_2() {
   %s0 = emitc.literal "0" : i32
   %p0 = emitc.literal "M_PI" : f32
 
-  %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
-  %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> f32
-  %2 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
-  %3 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> f32
-  emitc.assign %s0 : i32 to %2 : i32
-  emitc.assign %p0 : f32 to %3 : f32
+  %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+  %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<f32>
+  %2 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+  %3 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<f32>
+  emitc.assign %s0 : i32 to %2 : !emitc.lvalue<i32>
+  emitc.assign %p0 : f32 to %3 : !emitc.lvalue<f32>
   emitc.for %iter = %start to %stop step %step {
-    %sn = emitc.call_opaque "add"(%2, %iter) : (i32, index) -> i32
-    %pn = emitc.call_opaque "mul"(%3, %iter) : (f32, index) -> f32
-    emitc.assign %sn : i32 to %2 : i32
-    emitc.assign %pn : f32 to %3 : f32
+    %4 = emitc.lvalue_to_rvalue %2 : !emitc.lvalue<i32>
+    %sn = emitc.call_opaque "add"(%4, %iter) : (i32, index) -> i32
+    %5 = emitc.lvalue_to_rvalue %3 : !emitc.lvalue<f32>
+    %pn = emitc.call_opaque "mul"(%5, %iter) : (f32, index) -> f32
+    emitc.assign %sn : i32 to %2 : !emitc.lvalue<i32>
+    emitc.assign %pn : f32 to %3 : !emitc.lvalue<f32>
     emitc.yield
   }
-  emitc.assign %2 : i32 to %0 : i32
-  emitc.assign %3 : f32 to %1 : f32
+  %6 = emitc.lvalue_to_rvalue %2 : !emitc.lvalue<i32>
+  emitc.assign %6 : i32 to %0 : !emitc.lvalue<i32>
+  %7 = emitc.lvalue_to_rvalue %3 : !emitc.lvalue<f32>
+  emitc.assign %7 : f32 to %1 : !emitc.lvalue<f32>
 
   return
 }

@@ -115,7 +115,7 @@ func.func @illegal_operand() {
 
 func.func @var_attribute_return_type_1() {
     // expected-error @+1 {{'emitc.variable' op requires attribute to either be an #emitc.opaque attribute or it's type ('i64') to match the op's result type ('i32')}}
-    %c0 = "emitc.variable"(){value = 42: i64} : () -> i32
+    %c0 = "emitc.variable"(){value = 42: i64} : () -> !emitc.lvalue<i32>
     return
 }
 
@@ -123,7 +123,7 @@ func.func @var_attribute_return_type_1() {
 
 func.func @var_attribute_return_type_2() {
     // expected-error @+1 {{'emitc.variable' op attribute 'value' failed to satisfy constraint: An opaque attribute or TypedAttr instance}}
-    %c0 = "emitc.variable"(){value = unit} : () -> i32
+    %c0 = "emitc.variable"(){value = unit} : () -> !emitc.lvalue<i32>
     return
 }
 
@@ -234,27 +234,27 @@ func.func @test_misplaced_yield() {
 
 // -----
 
-func.func @test_assign_to_non_variable(%arg1: f32, %arg2: f32) {
-  // expected-error @+1 {{'emitc.assign' op requires first operand (<block argument> of type 'f32' at index: 1) to be a Variable or subscript}}
-  emitc.assign %arg1 : f32 to %arg2 : f32
+func.func @test_assign_to_non_variable(%arg1: f32, %arg2: !emitc.lvalue<f32>) {
+  // expected-error @+1 {{'emitc.assign' op cannot assign to block argument}}
+  emitc.assign %arg1 : f32 to %arg2 : !emitc.lvalue<f32>
   return
 }
 
 // -----
 
 func.func @test_assign_type_mismatch(%arg1: f32) {
-  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
+  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
   // expected-error @+1 {{'emitc.assign' op requires value's type ('f32') to match variable's type ('i32')}}
-  emitc.assign %arg1 : f32 to %v : i32
+  emitc.assign %arg1 : f32 to %v : !emitc.lvalue<i32>
   return
 }
 
 // -----
 
 func.func @test_assign_to_array(%arg1: !emitc.array<4xi32>) {
-  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.array<4xi32>
+  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<!emitc.array<4xi32>>
   // expected-error @+1 {{'emitc.assign' op cannot assign to array type}}
-  emitc.assign %arg1 : !emitc.array<4xi32> to %v : !emitc.array<4xi32>
+  emitc.assign %arg1 : !emitc.array<4xi32> to %v : !emitc.lvalue<!emitc.array<4xi32>>
   return
 }
 
