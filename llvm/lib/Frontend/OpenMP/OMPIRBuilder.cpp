@@ -931,8 +931,7 @@ Value *OpenMPIRBuilder::getOrCreateThreadID(Value *Ident) {
 
 OpenMPIRBuilder::InsertPointTy
 OpenMPIRBuilder::createBarrier(const LocationDescription &Loc, Directive Kind,
-                               bool ForceSimpleCall, bool CheckCancelFlag,
-                               Value *ThreadID) {
+                               bool ForceSimpleCall, bool CheckCancelFlag) {
   if (!updateToLocation(Loc))
     return Loc.IP;
 
@@ -960,9 +959,8 @@ OpenMPIRBuilder::createBarrier(const LocationDescription &Loc, Directive Kind,
 
   uint32_t SrcLocStrSize;
   Constant *SrcLocStr = getOrCreateSrcLocStr(Loc, SrcLocStrSize);
-  if (!ThreadID)
-    ThreadID = getOrCreateThreadID(getOrCreateIdent(SrcLocStr, SrcLocStrSize));
-
+  Value *ThreadID =
+      getOrCreateThreadID(getOrCreateIdent(SrcLocStr, SrcLocStrSize));
   Value *Args[] = {getOrCreateIdent(SrcLocStr, SrcLocStrSize, BarrierLocFlags),
                    ThreadID};
 
@@ -2441,8 +2439,8 @@ Function *OpenMPIRBuilder::emitInterWarpCopyFunction(
         /*AddressSpace=*/3);
   }
 
-  uint32_t SrcLocStrSize;
-  Constant *SrcLocStr = getOrCreateSrcLocStr(Loc, SrcLocStrSize);
+  // uint32_t SrcLocStrSize;
+  // Constant *SrcLocStr = getOrCreateSrcLocStr(Loc, SrcLocStrSize);
 
   // Get the CUDA thread id of the current OpenMP thread on the GPU.
   Value *GPUThreadID = getGPUThreadID();
@@ -2461,8 +2459,8 @@ Function *OpenMPIRBuilder::emitInterWarpCopyFunction(
       Arg0Type, nullptr, ReduceListArg->getName() + ".addr");
   AllocaInst *NumWarpsAlloca =
       Builder.CreateAlloca(Arg1Type, nullptr, NumWarpsArg->getName() + ".addr");
-  Value *ThreadID =
-      getOrCreateThreadID(getOrCreateIdent(SrcLocStr, SrcLocStrSize));
+  // Value *ThreadID =
+  //     getOrCreateThreadID(getOrCreateIdent(SrcLocStr, SrcLocStrSize));
   Value *ReduceListAddrCast = Builder.CreatePointerBitCastOrAddrSpaceCast(
       ReduceListAlloca, Arg0Type, ReduceListAlloca->getName() + ".ascast");
   Value *NumWarpsAddrCast = Builder.CreatePointerBitCastOrAddrSpaceCast(
@@ -2523,7 +2521,7 @@ Function *OpenMPIRBuilder::emitInterWarpCopyFunction(
       createBarrier(LocationDescription(Builder.saveIP(), Loc.DL),
                     omp::Directive::OMPD_unknown,
                     /* ForceSimpleCall */ false,
-                    /* CheckCancelFlag */ true, ThreadID);
+                    /* CheckCancelFlag */ true);
       BasicBlock *ThenBB = BasicBlock::Create(Ctx, "then");
       BasicBlock *ElseBB = BasicBlock::Create(Ctx, "else");
       BasicBlock *MergeBB = BasicBlock::Create(Ctx, "ifcont");
@@ -2568,7 +2566,7 @@ Function *OpenMPIRBuilder::emitInterWarpCopyFunction(
       createBarrier(LocationDescription(Builder.saveIP(), Loc.DL),
                     omp::Directive::OMPD_unknown,
                     /* ForceSimpleCall */ false,
-                    /* CheckCancelFlag */ true, ThreadID);
+                    /* CheckCancelFlag */ true);
 
       // Warp 0 copies reduce element from transfer medium
       BasicBlock *W0ThenBB = BasicBlock::Create(Ctx, "then");

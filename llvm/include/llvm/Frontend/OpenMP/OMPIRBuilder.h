@@ -630,8 +630,7 @@ public:
   /// \returns The insertion point after the barrier.
   InsertPointTy createBarrier(const LocationDescription &Loc,
                               omp::Directive Kind, bool ForceSimpleCall = false,
-                              bool CheckCancelFlag = true,
-                              Value *ThreadID = nullptr);
+                              bool CheckCancelFlag = true);
 
   /// Generator for '#omp cancel'
   ///
