@@ -466,9 +466,8 @@ define i32 @shl_sub_lshr(i32 %x, i32 %c, i32 %y) {
 
 define i32 @shl_sub_lshr_reverse(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse(
-; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[SUB:%.*]] = sub nuw nsw i32 [[Y:%.*]], [[SHL]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[SUB]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = sub nuw nsw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw i32 %x, %c
@@ -477,7 +476,7 @@ define i32 @shl_sub_lshr_reverse(i32 %x, i32 %c, i32 %y) {
   ret i32 %lshr
 }
 
-; Negative Test
+; Negative test
 
 define i32 @shl_sub_lshr_reverse_no_exact(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse_no_exact(
