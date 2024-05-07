@@ -534,7 +534,8 @@ void BreakpointOptions::GetDescription(Stream *s,
 
     if (m_ignore_count > 0)
       s->Printf("ignore: %d ", m_ignore_count);
-    s->Printf("%sabled ", m_enabled ? "en" : "dis");
+    s->PutCStringColorHighlighted(m_enabled ? "enabled " : "disabled ",
+                                  m_disbaled_breakpoint_highlight_settings);
 
     if (m_one_shot)
       s->Printf("one-shot ");

@@ -400,6 +400,12 @@ private:
   /// Which options are set at this level.
   /// Drawn from BreakpointOptions::SetOptionsFlags.
   Flags m_set_flags;
+  /// Settings that allow the 'disabled' keyword to be displayed in red.
+  Stream::HighlightSettings m_disbaled_breakpoint_highlight_settings{
+      "disabled",
+      "\x1b[31m",
+      "\x1b[37m",
+  };
 };
 
 } // namespace lldb_private
