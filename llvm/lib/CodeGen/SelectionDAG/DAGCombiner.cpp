@@ -2847,11 +2847,23 @@ SDValue DAGCombiner::visitADDLike(SDNode *N) {
                                       m_ConstInt(CM)))) &&
           TLI.isLegalAddImmediate(
               (CA * CM + CB->getAPIntValue()).getSExtValue())) {
+        SDNodeFlags Flags;
+        // If all the inputs are nuw, the outputs can be nuw. If all the input
+        // are _also_ nsw the outputs can be too.
+        if (N->getFlags().hasNoUnsignedWrap() &&
+            N0->getFlags().hasNoUnsignedWrap() &&
+            N0.getOperand(0)->getFlags().hasNoUnsignedWrap()) {
+          Flags.setNoUnsignedWrap(true);
+          if (N->getFlags().hasNoSignedWrap() &&
+              N0->getFlags().hasNoSignedWrap() &&
+              N0.getOperand(0)->getFlags().hasNoSignedWrap())
+            Flags.setNoSignedWrap(true);
+        }
         SDValue Mul = DAG.getNode(ISD::MUL, SDLoc(N1), VT, A,
-                                  DAG.getConstant(CM, DL, VT));
+                                  DAG.getConstant(CM, DL, VT), Flags);
         return DAG.getNode(
             ISD::ADD, DL, VT, Mul,
-            DAG.getConstant(CA * CM + CB->getAPIntValue(), DL, VT));
+            DAG.getConstant(CA * CM + CB->getAPIntValue(), DL, VT), Flags);
       }
       // Also look in case there is an intermediate add.
       if (sd_match(N0, m_OneUse(m_Add(
@@ -2860,12 +2872,28 @@ SDValue DAGCombiner::visitADDLike(SDNode *N) {
                            m_Value(B)))) &&
           TLI.isLegalAddImmediate(
               (CA * CM + CB->getAPIntValue()).getSExtValue())) {
+        SDNodeFlags Flags;
+        // If all the inputs are nuw, the outputs can be nuw. If all the input
+        // are _also_ nsw the outputs can be too.
+        SDValue OMul =
+            N0.getOperand(0) == B ? N0.getOperand(1) : N0.getOperand(0);
+        if (N->getFlags().hasNoUnsignedWrap() &&
+            N0->getFlags().hasNoUnsignedWrap() &&
+            OMul->getFlags().hasNoUnsignedWrap() &&
+            OMul.getOperand(0)->getFlags().hasNoUnsignedWrap()) {
+          Flags.setNoUnsignedWrap(true);
+          if (N->getFlags().hasNoSignedWrap() &&
+              N0->getFlags().hasNoSignedWrap() &&
+              OMul->getFlags().hasNoSignedWrap() &&
+              OMul.getOperand(0)->getFlags().hasNoSignedWrap())
+            Flags.setNoSignedWrap(true);
+        }
         SDValue Mul = DAG.getNode(ISD::MUL, SDLoc(N1), VT, A,
-                                  DAG.getConstant(CM, DL, VT));
-        SDValue Add = DAG.getNode(ISD::ADD, SDLoc(N1), VT, Mul, B);
+                                  DAG.getConstant(CM, DL, VT), Flags);
+        SDValue Add = DAG.getNode(ISD::ADD, SDLoc(N1), VT, Mul, B, Flags);
         return DAG.getNode(
             ISD::ADD, DL, VT, Add,
-            DAG.getConstant(CA * CM + CB->getAPIntValue(), DL, VT));
+            DAG.getConstant(CA * CM + CB->getAPIntValue(), DL, VT), Flags);
       }
     }
   }
