@@ -1452,6 +1452,35 @@ TEST(ConfigParseTest, GetStyleOfSpecificFile) {
   ASSERT_EQ(*Style, getGoogleStyle());
 }
 
+TEST(ConfigParseTest, GetStyleOutput) {
+    // With output
+    ::testing::internal::CaptureStderr();
+    llvm::vfs::InMemoryFileSystem FS;
+    auto Style = getStyle("{invalid_key=invalid_value}", "a.h", "LLVM", "", &FS, false);
+
+    const std::string output = ::testing::internal::GetCapturedStderr();
+
+    ASSERT_FALSE((bool)Style);
+    ASSERT_FALSE(output.empty());
+    llvm::consumeError(Style.takeError());
+
+    // Without output
+    ::testing::internal::CaptureStderr();
+    auto Style1 = getStyle("{invalid_key=invalid_value}",
+                           "a.h",
+                           "LLVM",
+                           "",
+                           &FS,
+                           false,
+                           [](const llvm::SMDiagnostic &, void *) {});
+
+    const std::string output1 = ::testing::internal::GetCapturedStderr();
+
+    ASSERT_FALSE((bool)Style1);
+    ASSERT_TRUE(output1.empty());
+    llvm::consumeError(Style1.takeError());
+}
+
 } // namespace
 } // namespace format
 } // namespace clang
