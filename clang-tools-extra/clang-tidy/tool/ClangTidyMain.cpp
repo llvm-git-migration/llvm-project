@@ -132,6 +132,19 @@ option in .clang-tidy file, if any.
                                          cl::init(""),
                                          cl::cat(ClangTidyCategory));
 
+static cl::opt<std::string> ExcludeHeaderFilter("exclude-header-filter",
+                                                cl::desc(R"(
+Regular expression matching the names of the
+headers to exclude diagnostics from. Diagnostics
+from the main file of each translation unit are
+always displayed.
+Can be used together with -line-filter.
+This option overrides the 'ExcludeHeaderFilterRegex'
+option in .clang-tidy file, if any.
+)"),
+                                                cl::init(""),
+                                                cl::cat(ClangTidyCategory));
+
 static cl::opt<bool> SystemHeaders("system-headers", desc(R"(
 Display the errors from system headers.
 This option overrides the 'SystemHeaders' option
@@ -353,6 +366,7 @@ static std::unique_ptr<ClangTidyOptionsProvider> createOptionsProvider(
   DefaultOptions.Checks = DefaultChecks;
   DefaultOptions.WarningsAsErrors = "";
   DefaultOptions.HeaderFilterRegex = HeaderFilter;
+  DefaultOptions.ExcludeHeaderFilterRegex = ExcludeHeaderFilter;
   DefaultOptions.SystemHeaders = SystemHeaders;
   DefaultOptions.FormatStyle = FormatStyle;
   DefaultOptions.User = llvm::sys::Process::GetEnv("USER");
@@ -367,6 +381,8 @@ static std::unique_ptr<ClangTidyOptionsProvider> createOptionsProvider(
     OverrideOptions.WarningsAsErrors = WarningsAsErrors;
   if (HeaderFilter.getNumOccurrences() > 0)
     OverrideOptions.HeaderFilterRegex = HeaderFilter;
+  if (ExcludeHeaderFilter.getNumOccurrences() > 0)
+    OverrideOptions.ExcludeHeaderFilterRegex = ExcludeHeaderFilter;
   if (SystemHeaders.getNumOccurrences() > 0)
     OverrideOptions.SystemHeaders = SystemHeaders;
   if (FormatStyle.getNumOccurrences() > 0)
