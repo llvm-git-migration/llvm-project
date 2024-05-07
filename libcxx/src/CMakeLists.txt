@@ -31,6 +31,7 @@ set(LIBCXX_SOURCES
   include/ryu/f2s.h
   include/ryu/ryu.h
   include/to_chars_floating_point.h
+  include/from_chars_floating_point.h
   legacy_pointer_safety.cpp
   memory.cpp
   memory_resource.cpp
@@ -176,12 +177,15 @@ endif()
 split_list(LIBCXX_COMPILE_FLAGS)
 split_list(LIBCXX_LINK_FLAGS)
 
+include(FindLibcCommonUtils)
+
 # Build the shared library.
 if (LIBCXX_ENABLE_SHARED)
   add_library(cxx_shared SHARED ${exclude_from_all} ${LIBCXX_SOURCES} ${LIBCXX_HEADERS})
   target_include_directories(cxx_shared PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(cxx_shared PUBLIC cxx-headers libcxx-libc-shared
-                                   PRIVATE ${LIBCXX_LIBRARIES})
+                                   PRIVATE ${LIBCXX_LIBRARIES}
+                                   PRIVATE llvm-libc-common-utilities)
   set_target_properties(cxx_shared
     PROPERTIES
       COMPILE_FLAGS "${LIBCXX_COMPILE_FLAGS}"
@@ -274,7 +278,8 @@ if (LIBCXX_ENABLE_STATIC)
   target_include_directories(cxx_static PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(cxx_static PUBLIC cxx-headers libcxx-libc-static
                                    PRIVATE ${LIBCXX_LIBRARIES}
-                                   PRIVATE libcxx-abi-static)
+                                   PRIVATE libcxx-abi-static
+                                   PRIVATE llvm-libc-common-utilities)
   set_target_properties(cxx_static
     PROPERTIES
       COMPILE_FLAGS "${LIBCXX_COMPILE_FLAGS}"
