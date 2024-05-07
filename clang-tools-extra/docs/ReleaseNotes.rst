@@ -115,6 +115,8 @@ Improvements to clang-tidy
 - Fixed `--verify-config` option not properly parsing checks when using the
   literal operator in the `.clang-tidy` config.
 
+- Added argument `--exclude-header-filter` to exclude headers from analysis via a RegEx.
+
 New checks
 ^^^^^^^^^^
 
