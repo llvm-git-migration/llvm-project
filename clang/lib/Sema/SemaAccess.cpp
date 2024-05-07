@@ -1476,7 +1476,13 @@ static Sema::AccessResult CheckAccess(Sema &S, SourceLocation Loc,
   // Or we might be parsing something that will turn out to be a friend:
   //   void foo(A::private_type);
   //   void B::foo(A::private_type);
-  if (S.DelayedDiagnostics.shouldDelayDiagnostics()) {
+  Scope *TS = S.getCurScope();
+  bool IsFriendDeclaration = false;
+  while (TS && !IsFriendDeclaration) {
+    IsFriendDeclaration = TS->isFriendScope();
+    TS = TS->getParent();
+  }
+  if (S.DelayedDiagnostics.shouldDelayDiagnostics() && !IsFriendDeclaration) {
     S.DelayedDiagnostics.add(DelayedDiagnostic::makeAccess(Loc, Entity));
     return Sema::AR_delayed;
   }
