@@ -8017,17 +8017,22 @@ void Sema::checkCall(NamedDecl *FDecl, const FunctionProtoType *Proto,
           ExtInfo.AArch64SMEAttributes &
           FunctionType::SME_PStateSMCompatibleMask;
       ArmStreamingType CallerFnType = getArmStreamingFnType(CallerFD);
+      bool NoThrow =
+          !getLangOpts().Exceptions ||
+          (Proto && !isUnresolvedExceptionSpec(Proto->getExceptionSpecType()) &&
+           Proto->isNothrow()) ||
+          (FD && FD->hasAttr<NoThrowAttr>());
 
       // SME functions may require SVE to be available for unwinding, as the
       // value of VG needs to be preserved across streaming-mode changes.
-      if (!Context.getTargetInfo().hasFeature("sve")) {
+      if (!NoThrow && !Context.getTargetInfo().hasFeature("sve")) {
         if (CallerFD->hasAttr<ArmLocallyStreamingAttr>())
-          Diag(Loc, diag::warn_sme_locally_streaming_no_sve);
+          Diag(Loc, diag::err_sme_locally_streaming_no_sve);
 
         if ((CallerFnType == ArmStreaming ||
              CallerFnType == ArmStreamingCompatible) &&
             (!IsCalleeStreaming && !IsCalleeStreamingCompatible))
-          Diag(Loc, diag::warn_sme_streaming_mode_change_no_sve);
+          Diag(Loc, diag::err_sme_streaming_mode_change_no_sve);
       }
 
       // If the call requires a streaming-mode change and has scalable vector
