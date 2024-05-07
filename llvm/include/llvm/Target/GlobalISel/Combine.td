@@ -323,6 +323,24 @@ def reduce_shl_of_extend : GICombineRule<
          [{ return Helper.matchCombineShlOfExtend(*${mi}, ${matchinfo}); }]),
   (apply [{ Helper.applyCombineShlOfExtend(*${mi}, ${matchinfo}); }])>;
 
+// Combine bitreverse(shl (bitreverse x), y)) -> (lshr x, y)
+def bitreverse_shl : GICombineRule<
+  (defs root:$d, build_fn_matchinfo:$matchinfo),
+  (match (G_BITREVERSE $rev, $val),
+         (G_SHL $src, $rev, $amt),
+         (G_BITREVERSE $d, $src):$mi,
+         [{ return Helper.matchBitreverseShift(*${mi}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${mi}, ${matchinfo}); }])>;
+
+// Combine bitreverse(lshr (bitreverse x), y)) -> (shl x, y)
+def bitreverse_lshr : GICombineRule<
+  (defs root:$d, build_fn_matchinfo:$matchinfo),
+  (match (G_BITREVERSE $rev, $val),
+         (G_LSHR $src, $rev, $amt),
+         (G_BITREVERSE $d, $src):$mi,
+         [{ return Helper.matchBitreverseShift(*${mi}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${mi}, ${matchinfo}); }])>;
+
 // Combine (shl (add x, c1), c2) -> (add (shl x, c2), c1 << c2)
 // Combine (shl (or x, c1), c2) -> (or (shl x, c2), c1 << c2)
 def commute_shift : GICombineRule<
@@ -1629,6 +1647,8 @@ def width_reduction_combines : GICombineGroup<[reduce_shl_of_extend,
 
 def phi_combines : GICombineGroup<[extend_through_phis]>;
 
+def bitreverse_shift : GICombineGroup<[bitreverse_shl, bitreverse_lshr]>;
+
 def select_combines : GICombineGroup<[select_undef_cmp, select_constant_cmp,
                                       match_selects]>;
 
@@ -1658,7 +1678,7 @@ def all_combines : GICombineGroup<[trivial_combines, vector_ops_combines,
     unmerge_zext_to_zext, merge_unmerge, trunc_ext_fold, trunc_shift,
     const_combines, xor_of_and_with_same_reg, ptr_add_with_zero,
     shift_immed_chain, shift_of_shifted_logic_chain, load_or_combine,
-    div_rem_to_divrem, funnel_shift_combines, commute_shift,
+    div_rem_to_divrem, funnel_shift_combines, bitreverse_shift, commute_shift,
     form_bitfield_extract, constant_fold_binops, constant_fold_fma,
     constant_fold_cast_op, fabs_fneg_fold,
     intdiv_combines, mulh_combines, redundant_neg_operands,

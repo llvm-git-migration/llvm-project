@@ -599,6 +599,12 @@ m_GBitcast(const SrcTy &Src) {
 }
 
 template <typename SrcTy>
+inline UnaryOp_match<SrcTy, TargetOpcode::G_BITREVERSE>
+m_GBitreverse(const SrcTy &Src) {
+  return UnaryOp_match<SrcTy, TargetOpcode::G_BITREVERSE>(Src);
+}
+
+template <typename SrcTy>
 inline UnaryOp_match<SrcTy, TargetOpcode::G_PTRTOINT>
 m_GPtrToInt(const SrcTy &Src) {
   return UnaryOp_match<SrcTy, TargetOpcode::G_PTRTOINT>(Src);
