@@ -2744,7 +2744,7 @@ bool hasDeclaredDeductionGuides(DeclarationName Name, DeclContext *DC) {
   return false;
 }
 
-unsigned getTemplateDepth(NamedDecl *TemplateParam) {
+unsigned getTemplateParameterDepth(NamedDecl *TemplateParam) {
   if (auto *TTP = dyn_cast<TemplateTypeParmDecl>(TemplateParam))
     return TTP->getDepth();
   if (auto *TTP = dyn_cast<TemplateTemplateParmDecl>(TemplateParam))
@@ -2804,7 +2804,7 @@ Expr *transformRequireClause(
   unsigned AdjustDepth = 0;
   if (auto *PrimaryTemplate = AliasTemplate->getInstantiatedFromMemberTemplate())
     AdjustDepth = PrimaryTemplate->getTemplateDepth();
-  
+
   // We rebuild all template parameters with the uninstantiated depth, and
   // build template arguments refer to them.
   SmallVector<TemplateArgument> AdjustedAliasTemplateArgs;
@@ -2818,7 +2818,7 @@ Expr *transformRequireClause(
     NamedDecl *NewParam = transformTemplateParameter(
         SemaRef, AliasTemplate->getDeclContext(), TP, Args,
         /*NewIndex=*/AdjustedAliasTemplateArgs.size(),
-        getTemplateDepth(TP) + AdjustDepth);
+        getTemplateParameterDepth(TP) + AdjustDepth);
 
     auto NewTemplateArgument = Context.getCanonicalTemplateArgument(
         Context.getInjectedTemplateArg(NewParam));
@@ -3026,7 +3026,7 @@ BuildDeductionGuideForTypeAlias(Sema &SemaRef,
     Args.addOuterTemplateArguments(TransformedDeducedAliasArgs);
     NamedDecl *NewParam = transformTemplateParameter(
         SemaRef, AliasTemplate->getDeclContext(), TP, Args,
-        /*NewIndex=*/FPrimeTemplateParams.size(), getTemplateDepth(TP));
+        /*NewIndex=*/FPrimeTemplateParams.size(), getTemplateParameterDepth(TP));
     FPrimeTemplateParams.push_back(NewParam);
 
     auto NewTemplateArgument = Context.getCanonicalTemplateArgument(
@@ -3044,7 +3044,7 @@ BuildDeductionGuideForTypeAlias(Sema &SemaRef,
     Args.addOuterTemplateArguments(TemplateArgsForBuildingFPrime);
     NamedDecl *NewParam = transformTemplateParameter(
         SemaRef, F->getDeclContext(), TP, Args, FPrimeTemplateParams.size(),
-        getTemplateDepth(TP));
+        getTemplateParameterDepth(TP));
     FPrimeTemplateParams.push_back(NewParam);
 
     assert(TemplateArgsForBuildingFPrime[FTemplateParamIdx].isNull() &&
