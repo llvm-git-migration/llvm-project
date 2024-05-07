@@ -2016,6 +2016,36 @@ void CombinerHelper::applyCombineShlOfExtend(MachineInstr &MI,
   MI.eraseFromParent();
 }
 
+bool CombinerHelper::matchBitreverseShift(MachineInstr &MI,
+                                          BuildFnTy &MatchInfo) {
+  assert(MI.getOpcode() == TargetOpcode::G_BITREVERSE && "Expected BITREVERSE");
+  Register Dst = MI.getOperand(0).getReg();
+  Register Src = MI.getOperand(1).getReg();
+  Register Val, Amt;
+
+  // fold (bitreverse (shl (bitreverse x), y)) -> (lshr x, y)
+  if (mi_match(Src, MRI, m_GShl(m_GBitreverse(m_Reg(Val)), m_Reg(Amt))) &&
+      isLegalOrBeforeLegalizer(
+          {TargetOpcode::G_LSHR, {MRI.getType(Val), MRI.getType(Amt)}})) {
+    MatchInfo = [=](MachineIRBuilder &B) {
+      B.buildInstr(TargetOpcode::G_LSHR, {Dst}, {Val, Amt});
+    };
+    return true;
+  }
+
+  // fold (bitreverse (lshr (bitreverse x), y)) -> (shl x, y)
+  if (mi_match(Src, MRI, m_GLShr(m_GBitreverse(m_Reg(Val)), m_Reg(Amt))) &&
+      isLegalOrBeforeLegalizer(
+          {TargetOpcode::G_SHL, {MRI.getType(Val), MRI.getType(Amt)}})) {
+    MatchInfo = [=](MachineIRBuilder &B) {
+      B.buildInstr(TargetOpcode::G_SHL, {Dst}, {Val, Amt});
+    };
+    return true;
+  }
+
+  return false;
+}
+
 bool CombinerHelper::matchCombineMergeUnmerge(MachineInstr &MI,
                                               Register &MatchInfo) {
   GMerge &Merge = cast<GMerge>(MI);

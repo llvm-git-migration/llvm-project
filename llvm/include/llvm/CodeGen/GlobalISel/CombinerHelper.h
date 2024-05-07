@@ -320,6 +320,9 @@ public:
   void applyCombineShlOfExtend(MachineInstr &MI,
                                const RegisterImmPair &MatchData);
 
+  /// Fold bitreverse(shift (bitreverse x), y)) -> (shift x, y)
+  bool matchBitreverseShift(MachineInstr &MI, BuildFnTy &MatchInfo);
+
   /// Fold away a merge of an unmerge of the corresponding values.
   bool matchCombineMergeUnmerge(MachineInstr &MI, Register &MatchInfo);
 
