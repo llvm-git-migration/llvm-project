@@ -468,9 +468,8 @@ define i32 @shl_sub_lshr(i32 %x, i32 %c, i32 %y) {
 
 define i32 @shl_sub_lshr_reverse(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse(
-; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[SUB:%.*]] = sub nuw nsw i32 [[Y:%.*]], [[SHL]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[SUB]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = sub nuw nsw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw i32 %x, %c
@@ -481,9 +480,8 @@ define i32 @shl_sub_lshr_reverse(i32 %x, i32 %c, i32 %y) {
 
 define i32 @shl_sub_lshr_reverse_no_nsw(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse_no_nsw(
-; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[SUB:%.*]] = sub nuw i32 [[Y:%.*]], [[SHL]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[SUB]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = sub nuw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw i32 %x, %c
@@ -494,9 +492,8 @@ define i32 @shl_sub_lshr_reverse_no_nsw(i32 %x, i32 %c, i32 %y) {
 
 define i32 @shl_sub_lshr_reverse_nsw_on_op1(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse_nsw_on_op1(
-; CHECK-NEXT:    [[SHL:%.*]] = shl nuw nsw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[SUB:%.*]] = sub nuw i32 [[Y:%.*]], [[SHL]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[SUB]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[LSHR:%.*]] = sub nuw i32 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw nsw i32 %x, %c
@@ -541,8 +538,8 @@ define i32 @shl_sub_lshr_reverse_multiuse2(i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_sub_lshr_reverse_multiuse2(
 ; CHECK-NEXT:    [[SHL:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
 ; CHECK-NEXT:    call void @use(i32 [[SHL]])
-; CHECK-NEXT:    [[SUB:%.*]] = sub nuw i32 [[Y:%.*]], [[SHL]]
-; CHECK-NEXT:    [[LSHR:%.*]] = lshr exact i32 [[SUB]], [[C]]
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i32 [[Y:%.*]], [[C]]
+; CHECK-NEXT:    [[LSHR:%.*]] = sub nuw i32 [[TMP1]], [[X]]
 ; CHECK-NEXT:    ret i32 [[LSHR]]
 ;
   %shl = shl nuw i32 %x, %c
@@ -757,7 +754,7 @@ define i32 @mul_splat_fold_no_nuw(i32 %x) {
   ret i32 %t
 }
 
-; Negative test 
+; Negative test
 
 define i32 @mul_splat_fold_no_flags(i32 %x) {
 ; CHECK-LABEL: @mul_splat_fold_no_flags(
