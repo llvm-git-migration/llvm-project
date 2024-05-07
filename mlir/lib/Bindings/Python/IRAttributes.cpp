@@ -72,6 +72,23 @@ Raises:
     type or if the buffer does not meet expectations.
 )";
 
+static const char kDenseElementsAttrGetFromListDocstring[] =
+    R"(Gets a DenseElementsAttr from a Python list of attributes.
+
+Args:
+  attrs: A list of attributes.
+  type: The desired shape and type of the resulting DenseElementsAttr.
+    If not provided, the element type is determined based on the types
+    of the attributes and the shape is `[len(attrs)]`.
+  context: Explicit context, if not from context manager.
+
+Returns:
+  DenseElementsAttr on success.
+
+Raises:
+  ValueError: If the type of the attributes does not match the type specified by `shaped_type`.
+)";
+
 static const char kDenseResourceElementsAttrGetFromBufferDocstring[] =
     R"(Gets a DenseResourceElementsAttr from a Python buffer or array.
 
@@ -648,6 +665,55 @@ public:
   using PyConcreteAttribute::PyConcreteAttribute;
 
   static PyDenseElementsAttribute
+  getFromList(py::list attributes, std::optional<PyType> explicitType,
+              DefaultingPyMlirContext contextWrapper) {
+
+    if (py::len(attributes) == 0) {
+      throw py::value_error("Attributes list must be non-empty");
+    }
+
+    MlirType shapedType;
+    if (explicitType) {
+      if ((!mlirTypeIsAShaped(*explicitType) ||
+           !mlirShapedTypeHasStaticShape(*explicitType))) {
+        std::string message =
+            "Expected a static ShapedType for the shaped_type parameter: ";
+        message.append(py::repr(py::cast(*explicitType)));
+        throw py::value_error(message);
+      }
+      shapedType = *explicitType;
+    } else {
+      SmallVector<int64_t> shape{static_cast<int64_t>(py::len(attributes))};
+      shapedType = mlirRankedTensorTypeGet(
+          shape.size(), shape.data(),
+          mlirAttributeGetType(pyTryCast<PyAttribute>(attributes[0])),
+          mlirAttributeGetNull());
+    }
+
+    SmallVector<MlirAttribute> mlirAttributes;
+    mlirAttributes.reserve(py::len(attributes));
+    for (auto attribute : attributes) {
+      MlirAttribute mlirAttribute = pyTryCast<PyAttribute>(attribute);
+      MlirType attrType = mlirAttributeGetType(mlirAttribute);
+      mlirAttributes.push_back(mlirAttribute);
+
+      if (!mlirTypeEqual(mlirShapedTypeGetElementType(shapedType), attrType)) {
+        std::string message = "All attributes must be of the same type and "
+                              "match the type parameter: expected=";
+        message.append(py::repr(py::cast(shapedType)));
+        message.append(", but got=");
+        message.append(py::repr(py::cast(attrType)));
+        throw py::value_error(message);
+      }
+    }
+
+    MlirAttribute elements = mlirDenseElementsAttrGet(
+        shapedType, mlirAttributes.size(), mlirAttributes.data());
+
+    return PyDenseElementsAttribute(contextWrapper->getRef(), elements);
+  }
+
+  static PyDenseElementsAttribute
   getFromBuffer(py::buffer array, bool signless,
                 std::optional<PyType> explicitType,
                 std::optional<std::vector<int64_t>> explicitShape,
@@ -883,6 +949,10 @@ public:
                     py::arg("type") = py::none(), py::arg("shape") = py::none(),
                     py::arg("context") = py::none(),
                     kDenseElementsAttrGetDocstring)
+        .def_static("get", PyDenseElementsAttribute::getFromList,
+                    py::arg("attrs"), py::arg("type") = py::none(),
+                    py::arg("context") = py::none(),
+                    kDenseElementsAttrGetFromListDocstring)
         .def_static("get_splat", PyDenseElementsAttribute::getSplat,
                     py::arg("shaped_type"), py::arg("element_attr"),
                     "Gets a DenseElementsAttr where all values are the same")
@@ -954,8 +1024,8 @@ private:
   }
 }; // namespace
 
-/// Refinement of the PyDenseElementsAttribute for attributes containing integer
-/// (and boolean) values. Supports element access.
+/// Refinement of the PyDenseElementsAttribute for attributes containing
+/// integer (and boolean) values. Supports element access.
 class PyDenseIntElementsAttribute
     : public PyConcreteAttribute<PyDenseIntElementsAttribute,
                                  PyDenseElementsAttribute> {
@@ -964,8 +1034,8 @@ public:
   static constexpr const char *pyClassName = "DenseIntElementsAttr";
   using PyConcreteAttribute::PyConcreteAttribute;
 
-  /// Returns the element at the given linear position. Asserts if the index is
-  /// out of range.
+  /// Returns the element at the given linear position. Asserts if the index
+  /// is out of range.
   py::int_ dunderGetItem(intptr_t pos) {
     if (pos < 0 || pos >= dunderLen()) {
       throw py::index_error("attempt to access out of bounds element");
@@ -1267,7 +1337,8 @@ public:
           return PyStridedLayoutAttribute(ctx->getRef(), attr);
         },
         py::arg("rank"), py::arg("context") = py::none(),
-        "Gets a strided layout attribute with dynamic offset and strides of a "
+        "Gets a strided layout attribute with dynamic offset and strides of "
+        "a "
         "given rank.");
     c.def_property_readonly(
         "offset",
