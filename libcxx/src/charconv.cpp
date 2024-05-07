@@ -9,6 +9,7 @@
 #include <charconv>
 #include <string.h>
 
+#include "include/from_chars_floating_point.h"
 #include "include/to_chars_floating_point.h"
 
 _LIBCPP_BEGIN_NAMESPACE_STD
@@ -72,6 +73,22 @@ to_chars_result to_chars(char* __first, char* __last, double __value, chars_form
 to_chars_result to_chars(char* __first, char* __last, long double __value, chars_format __fmt, int __precision) {
   return _Floating_to_chars<_Floating_to_chars_overload::_Format_precision>(
       __first, __last, static_cast<double>(__value), __fmt, __precision);
+}
+
+from_chars_result from_chars_floating_point(const char* __first, const char* __last, float& value, chars_format fmt) {
+  return from_chars_floating_point<float>(__first, __last, value, fmt);
+}
+
+from_chars_result from_chars_floating_point(const char* __first, const char* __last, double& value, chars_format fmt) {
+  return from_chars_floating_point<double>(__first, __last, value, fmt);
+}
+
+from_chars_result from_chars(const char* __first, const char* __last, float& __value, chars_format fmt) {
+  return std::from_chars_floating_point(__first, __last, __value, fmt);
+}
+
+from_chars_result from_chars(const char* __first, const char* __last, double& __value, chars_format fmt) {
+  return std::from_chars_floating_point(__first, __last, __value, fmt);
 }
 
 _LIBCPP_END_NAMESPACE_STD
