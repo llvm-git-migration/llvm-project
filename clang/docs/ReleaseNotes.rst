@@ -683,6 +683,9 @@ Bug Fixes to C++ Support
 - Fix an assertion failure when parsing an invalid members of an anonymous class. (#GH85447)
 - Fixed a misuse of ``UnresolvedLookupExpr`` for ill-formed templated expressions. Fixes (#GH48673), (#GH63243)
   and (#GH88832).
+- Fix a crash when an implicitly declared ``operator==`` function with a trailing requires-clause has its
+  constraints compared to that of another declaration.
+
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
