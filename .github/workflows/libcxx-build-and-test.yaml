@@ -207,6 +207,7 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
       - name: Build and test
         run: |
+          python3 -m pip install psutil
           bash libcxx/utils/ci/run-buildbot ${{ matrix.config }}
       - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
         if: always()  # Upload artifacts even if the build or test suite fails
