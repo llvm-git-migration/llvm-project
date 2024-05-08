@@ -452,7 +452,7 @@ RISCVISAInfo::parseNormalizedArchString(StringRef Arch) {
   // and separated by _. Split by _ and then extract the name and version
   // information for each extension.
   SmallVector<StringRef, 8> Split;
-  Arch.split(Split, '_');
+  Arch.split(Split, '_', /*MaxSplit=*/-1, /*KeepEmpty=*/false);
   for (StringRef Ext : Split) {
     StringRef Prefix, MinorVersionStr;
     std::tie(Prefix, MinorVersionStr) = Ext.rsplit('p');
@@ -498,24 +498,6 @@ RISCVISAInfo::parseNormalizedArchString(StringRef Arch) {
   }
   ISAInfo->updateImpliedLengths();
   return std::move(ISAInfo);
-}
-
-static Error splitExtsByUnderscore(StringRef Exts,
-                                   std::vector<std::string> &SplitExts) {
-  SmallVector<StringRef, 8> Split;
-  if (Exts.empty())
-    return Error::success();
-
-  Exts.split(Split, "_");
-
-  for (auto Ext : Split) {
-    if (Ext.empty())
-      return createStringError(errc::invalid_argument,
-                               "extension name missing after separator '_'");
-
-    SplitExts.push_back(Ext.str());
-  }
-  return Error::success();
 }
 
 static Error processMultiLetterExtension(
@@ -669,10 +651,6 @@ RISCVISAInfo::parseArchString(StringRef Arch, bool EnableExperimentalExtension,
     break;
   }
 
-  if (Arch.back() == '_')
-    return createStringError(errc::invalid_argument,
-                             "extension name missing after separator '_'");
-
   // Skip baseline.
   StringRef Exts = Arch.drop_front(1);
 
@@ -714,9 +692,8 @@ RISCVISAInfo::parseArchString(StringRef Arch, bool EnableExperimentalExtension,
   Exts = Exts.drop_front(ConsumeLength);
   Exts.consume_front("_");
 
-  std::vector<std::string> SplitExts;
-  if (auto E = splitExtsByUnderscore(Exts, SplitExts))
-    return std::move(E);
+  SmallVector<StringRef, 8> SplitExts;
+  Exts.split(SplitExts, '_', /*MaxSplit=*/-1, /*KeepEmpty=*/false);
 
   for (auto &Ext : SplitExts) {
     StringRef CurrExt = Ext;
