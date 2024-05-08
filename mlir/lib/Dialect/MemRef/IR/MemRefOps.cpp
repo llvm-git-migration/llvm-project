@@ -2358,7 +2358,7 @@ LogicalResult ExpandShapeOp::verify() {
   ArrayRef<int64_t> resShape = getResult().getType().getShape();
   for (auto [pos, shape] : llvm::enumerate(resShape)) {
     if (!ShapedType::isDynamic(shape) && shape != staticOutputShapes[pos]) {
-      emitOpError("invalid output shape provided at pos ") << pos;
+      return emitOpError("invalid output shape provided at pos ") << pos;
     }
   }
 
