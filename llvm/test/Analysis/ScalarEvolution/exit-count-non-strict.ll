@@ -92,6 +92,7 @@ define void @ule_from_zero_no_nuw(i32 %M, i32 %N) {
 ; CHECK-LABEL: 'ule_from_zero_no_nuw'
 ; CHECK-NEXT:  Determining loop execution counts for: @ule_from_zero_no_nuw
 ; CHECK-NEXT:  Loop %loop: <multiple exits> Unpredictable backedge-taken count.
+; CHECK-NEXT:  backedge-taken count for computable exits is %N
 ; CHECK-NEXT:    exit count for loop: ***COULDNOTCOMPUTE***
 ; CHECK-NEXT:    exit count for latch: %N
 ; CHECK-NEXT:  Loop %loop: constant max backedge-taken count is i32 -1
@@ -210,6 +211,7 @@ define void @sle_from_int_min_no_nsw(i32 %M, i32 %N) {
 ; CHECK-LABEL: 'sle_from_int_min_no_nsw'
 ; CHECK-NEXT:  Determining loop execution counts for: @sle_from_int_min_no_nsw
 ; CHECK-NEXT:  Loop %loop: <multiple exits> Unpredictable backedge-taken count.
+; CHECK-NEXT:  backedge-taken count for computable exits is (-2147483648 + %N)
 ; CHECK-NEXT:    exit count for loop: ***COULDNOTCOMPUTE***
 ; CHECK-NEXT:    exit count for latch: (-2147483648 + %N)
 ; CHECK-NEXT:  Loop %loop: constant max backedge-taken count is i32 -1

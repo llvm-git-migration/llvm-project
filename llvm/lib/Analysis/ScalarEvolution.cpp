@@ -8279,7 +8279,17 @@ const SCEV *ScalarEvolution::getExitCount(const Loop *L,
 const SCEV *
 ScalarEvolution::getPredicatedBackedgeTakenCount(const Loop *L,
                                                  SmallVector<const SCEVPredicate *, 4> &Preds) {
-  return getPredicatedBackedgeTakenInfo(L).getExact(L, this, &Preds);
+  return getPredicatedBackedgeTakenInfo(L).getExact(L, this, false, &Preds);
+}
+
+const SCEV *
+ScalarEvolution::getBackedgeTakenCountForCountableExits(const Loop *L) {
+  return getBackedgeTakenInfo(L).getExact(L, this, true);
+}
+
+const SCEV *ScalarEvolution::getPredicatedBackedgeTakenCountForCountableExits(
+    const Loop *L, SmallVector<const SCEVPredicate *, 4> &Preds) {
+  return getPredicatedBackedgeTakenInfo(L).getExact(L, this, true, &Preds);
 }
 
 const SCEV *ScalarEvolution::getBackedgeTakenCount(const Loop *L,
@@ -8561,11 +8571,11 @@ void ScalarEvolution::forgetBlockAndLoopDispositions(Value *V) {
 /// is never skipped. This is a valid assumption as long as the loop exits via
 /// that test. For precise results, it is the caller's responsibility to specify
 /// the relevant loop exiting block using getExact(ExitingBlock, SE).
-const SCEV *
-ScalarEvolution::BackedgeTakenInfo::getExact(const Loop *L, ScalarEvolution *SE,
-                                             SmallVector<const SCEVPredicate *, 4> *Preds) const {
+const SCEV *ScalarEvolution::BackedgeTakenInfo::getExact(
+    const Loop *L, ScalarEvolution *SE, bool SkipUncountable,
+    SmallVector<const SCEVPredicate *, 4> *Preds) const {
   // If any exits were not computable, the loop is not computable.
-  if (!isComplete() || ExitNotTaken.empty())
+  if ((!SkipUncountable && !isComplete()) || ExitNotTaken.empty())
     return SE->getCouldNotCompute();
 
   const BasicBlock *Latch = L->getLoopLatch();
@@ -8573,11 +8583,22 @@ ScalarEvolution::BackedgeTakenInfo::getExact(const Loop *L, ScalarEvolution *SE,
   if (!Latch)
     return SE->getCouldNotCompute();
 
+  if (SkipUncountable) {
+    SmallVector<BasicBlock *, 8> ExitingBlocks;
+    L->getExitingBlocks(ExitingBlocks);
+    if (any_of(ExitingBlocks, [SE, Latch](BasicBlock *Exiting) {
+          return !SE->DT.dominates(Exiting, Latch);
+        }))
+      return SE->getCouldNotCompute();
+  }
+
   // All exiting blocks we have gathered dominate loop's latch, so exact trip
   // count is simply a minimum out of all these calculated exit counts.
   SmallVector<const SCEV *, 2> Ops;
   for (const auto &ENT : ExitNotTaken) {
     const SCEV *BECount = ENT.ExactNotTaken;
+    if (SkipUncountable && BECount == SE->getCouldNotCompute())
+      return SE->getCouldNotCompute();
     assert(BECount != SE->getCouldNotCompute() && "Bad exit SCEV!");
     assert(SE->DT.dominates(ENT.ExitingBlock, Latch) &&
            "We should only have known counts for exiting blocks that dominate "
@@ -13522,8 +13543,15 @@ static void PrintLoopInfo(raw_ostream &OS, ScalarEvolution *SE,
   if (!isa<SCEVCouldNotCompute>(BTC)) {
     OS << "backedge-taken count is ";
     PrintSCEVWithTypeHint(OS, BTC);
-  } else
+  } else {
     OS << "Unpredictable backedge-taken count.";
+    SmallVector<const SCEVPredicate *, 4> Predicates;
+    auto *BTC = SE->getBackedgeTakenCountForCountableExits(L);
+    if (!isa<SCEVCouldNotCompute>(BTC)) {
+      OS << "\nbackedge-taken count for computable exits is ";
+      PrintSCEVWithTypeHint(OS, BTC);
+    }
+  }
   OS << "\n";
 
   if (ExitingBlocks.size() > 1)
@@ -14799,6 +14827,16 @@ const SCEV *PredicatedScalarEvolution::getBackedgeTakenCount() {
     for (const auto *P : Preds)
       addPredicate(*P);
   }
+  return BackedgeCount;
+}
+
+const SCEV *
+PredicatedScalarEvolution::getBackedgeTakenCountForCountableExits() {
+  SmallVector<const SCEVPredicate *, 4> Preds;
+  auto *BackedgeCount =
+      SE.getPredicatedBackedgeTakenCountForCountableExits(&L, Preds);
+  for (const auto *P : Preds)
+    addPredicate(*P);
   return BackedgeCount;
 }
 

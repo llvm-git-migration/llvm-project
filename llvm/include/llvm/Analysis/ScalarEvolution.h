@@ -912,6 +912,16 @@ public:
     return getBackedgeTakenCount(L, SymbolicMaximum);
   }
 
+  /// When successful, return the minimum of the exit counts for all countable exits, ignoring uncountable exits. This is an upper bound on the  number of iterations of the loop.
+  const SCEV *getBackedgeTakenCountForCountableExits(const Loop *L);
+
+  /// Similar to getBackedgeTakenCountForCountableExits, except it will add a set of
+  /// SCEV predicates to Predicates that are required to be true in order for
+  /// the answer to be correct. Predicates can be checked with run-time
+  /// checks and can be used to perform loop versioning.
+  const SCEV *getPredicatedBackedgeTakenCountForCountableExits(
+      const Loop *L, SmallVector<const SCEVPredicate *, 4> &Predicates);
+
   /// Return true if the backedge taken count is either the value returned by
   /// getConstantMaxBackedgeTakenCount or zero.
   bool isBackedgeTakenCountMaxOrZero(const Loop *L);
@@ -1531,8 +1541,9 @@ private:
     /// If we allowed SCEV predicates to be generated when populating this
     /// vector, this information can contain them and therefore a
     /// SCEVPredicate argument should be added to getExact.
-    const SCEV *getExact(const Loop *L, ScalarEvolution *SE,
-                         SmallVector<const SCEVPredicate *, 4> *Predicates = nullptr) const;
+    const SCEV *
+    getExact(const Loop *L, ScalarEvolution *SE, bool SkipUncountable = false,
+             SmallVector<const SCEVPredicate *, 4> *Predicates = nullptr) const;
 
     /// Return the number of times this loop exit may fall through to the back
     /// edge, or SCEVCouldNotCompute. The loop is guaranteed not to exit via
@@ -2315,6 +2326,9 @@ public:
 
   /// Get the (predicated) backedge count for the analyzed loop.
   const SCEV *getBackedgeTakenCount();
+
+  // Get the (predicated) minimum of the exit counts for all countable exits, ignoring uncountable exits.
+  const SCEV *getBackedgeTakenCountForCountableExits();
 
   /// Adds a new predicate.
   void addPredicate(const SCEVPredicate &Pred);
