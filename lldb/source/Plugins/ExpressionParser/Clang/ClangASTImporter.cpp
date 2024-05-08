@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "lldb/Core/Module.h"
+#include "lldb/Core/Progress.h"
 #include "lldb/Utility/LLDBAssert.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
@@ -17,6 +18,7 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include "Plugins/ExpressionParser/Clang/ClangASTImporter.h"
@@ -1131,6 +1133,7 @@ ClangASTImporter::ASTImporterDelegate::ImportImpl(Decl *From) {
     LLDB_LOG(log, "[ClangASTImporter] Complete definition not found");
   }
 
+  UpdateImportProgress(From);
   return ASTImporter::ImportImpl(From);
 }
 
@@ -1410,4 +1413,36 @@ void ClangASTImporter::ASTImporterDelegate::Imported(clang::Decl *from,
 clang::Decl *
 ClangASTImporter::ASTImporterDelegate::GetOriginalDecl(clang::Decl *To) {
   return m_main.GetDeclOrigin(To).decl;
+}
+
+void ClangASTImporter::ASTImporterDelegate::UpdateImportProgress(
+    clang::Decl const *From) {
+  assert(From &&
+         "Trying to report import progress using an invalid clang::Decl.");
+
+  // If we can't determine the decl's name, we don't know what to
+  // update the progress bar with. So bail out.
+  auto const *ND = dyn_cast<NamedDecl>(From);
+  if (!ND)
+    return;
+
+  if (!m_import_progress_up) {
+    auto const *from_ast =
+        TypeSystemClang::GetASTContext(&From->getASTContext());
+    auto const *to_ast = TypeSystemClang::GetASTContext(&getToContext());
+
+    assert(from_ast && to_ast);
+
+    llvm::SmallVector<llvm::StringRef> from_name_parts;
+    llvm::SplitString(from_ast->getDisplayName(), from_name_parts, "/");
+    auto from_name = from_name_parts.back();
+
+    llvm::SmallVector<llvm::StringRef> to_name_parts;
+    llvm::SplitString(to_ast->getDisplayName(), to_name_parts, "/");
+    auto to_name = to_name_parts.back();
+    m_import_progress_up = std::make_unique<Progress>(
+        llvm::formatv("Importing '{0}' to '{1}'", from_name, to_name));
+  }
+
+  m_import_progress_up->Increment(1, ND->getNameAsString());
 }

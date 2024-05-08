@@ -22,6 +22,7 @@
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/FileSystemOptions.h"
 
+#include "lldb/Core/Progress.h"
 #include "lldb/Host/FileSystem.h"
 #include "lldb/Symbol/CompilerDeclContext.h"
 #include "lldb/Utility/LLDBAssert.h"
@@ -346,6 +347,8 @@ public:
     llvm::Expected<clang::Decl *> ImportImpl(clang::Decl *From) override;
 
   private:
+    void UpdateImportProgress(clang::Decl const *From);
+
     /// Decls we should ignore when mapping decls back to their original
     /// ASTContext. Used by the CxxModuleHandler to mark declarations that
     /// were created from the 'std' C++ module to prevent that the Importer
@@ -356,6 +359,7 @@ public:
     CxxModuleHandler *m_std_handler = nullptr;
     /// The currently attached listener.
     NewDeclListener *m_new_decl_listener = nullptr;
+    std::unique_ptr<lldb_private::Progress> m_import_progress_up = nullptr;
   };
 
   typedef std::shared_ptr<ASTImporterDelegate> ImporterDelegateSP;
