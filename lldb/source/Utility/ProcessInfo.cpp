@@ -17,6 +17,7 @@
 
 #include <climits>
 #include <optional>
+#include <sys/resource.h>
 
 using namespace lldb;
 using namespace lldb_private;
@@ -115,6 +116,10 @@ void ProcessInfo::SetArguments(const Args &args, bool first_arg_is_executable) {
 
 bool ProcessInfo::IsScriptedProcess() const {
   return m_scripted_metadata_sp && *m_scripted_metadata_sp;
+}
+
+bool ProcessInstanceInfo::NiceValueIsValid() const {
+  return m_nice_value >= PRIO_MIN && m_nice_value <= PRIO_MAX;
 }
 
 void ProcessInstanceInfo::Dump(Stream &s, UserIDResolver &resolver) const {

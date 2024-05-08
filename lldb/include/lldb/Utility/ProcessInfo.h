@@ -144,6 +144,19 @@ public:
     long int tv_usec = 0;
   };
 
+  enum class ProcessState {
+    Unknown,
+    Dead,
+    DiskSleep,
+    Idle,
+    Paging,
+    Parked,
+    Running,
+    Sleeping,
+    TracedOrStopped,
+    Zombie,
+  };
+
   ProcessInstanceInfo() = default;
 
   ProcessInstanceInfo(const char *name, const ArchSpec &arch, lldb::pid_t pid)
@@ -237,6 +250,16 @@ public:
            m_cumulative_system_time.tv_usec > 0;
   }
 
+  int8_t GetNiceValue() const { return m_nice_value; }
+
+  void SetNiceValue(int8_t nice_value) { m_nice_value = nice_value; }
+
+  bool NiceValueIsValid() const;
+
+  void SetIsZombie() { m_zombie = true; }
+
+  bool IsZombie() const { return m_zombie; }
+
   void Dump(Stream &s, UserIDResolver &resolver) const;
 
   static void DumpTableHeader(Stream &s, bool show_args, bool verbose);
@@ -254,6 +277,8 @@ protected:
   struct timespec m_system_time {};
   struct timespec m_cumulative_user_time {};
   struct timespec m_cumulative_system_time {};
+  int8_t m_nice_value = INT8_MAX;
+  bool m_zombie = false;
 };
 
 typedef std::vector<ProcessInstanceInfo> ProcessInstanceInfoList;
