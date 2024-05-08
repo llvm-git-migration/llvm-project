@@ -479,6 +479,8 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
     return nullptr;
   }
 
+  UpdateParsingProgress(attrs.name.AsCString("(anonymous)"));
+
   if (type_is_new_ptr)
     *type_is_new_ptr = true;
 
@@ -3951,4 +3953,21 @@ void DWARFASTParserClang::ParseRustVariantPart(
   m_ast.CompleteTagDeclarationDefinition(inner_holder);
 
   layout_info.field_offsets.insert({inner_field, 0});
+}
+
+void DWARFASTParserClang::UpdateParsingProgress(std::string message) {
+  if (!m_parsing_progress_up) {
+    SymbolFile *dwarf = m_ast.GetSymbolFile();
+    if (!dwarf)
+      return;
+
+    auto *obj = dwarf->GetObjectFile();
+    if (!obj)
+      return;
+
+    m_parsing_progress_up = std::make_unique<Progress>(
+        "Parsing DWARF in " + obj->GetFileSpec().GetFilename().GetString());
+  }
+
+  m_parsing_progress_up->Increment(1, std::move(message));
 }

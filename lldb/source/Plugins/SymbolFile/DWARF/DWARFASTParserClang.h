@@ -24,6 +24,7 @@
 
 #include "Plugins/ExpressionParser/Clang/ClangASTImporter.h"
 #include "Plugins/TypeSystem/Clang/TypeSystemClang.h"
+#include "lldb/Core/Progress.h"
 
 #include <optional>
 #include <vector>
@@ -135,6 +136,7 @@ protected:
   DeclContextToDIEMap m_decl_ctx_to_die;
   DIEToModuleMap m_die_to_module;
   std::unique_ptr<lldb_private::ClangASTImporter> m_clang_ast_importer_up;
+  std::unique_ptr<lldb_private::Progress> m_parsing_progress_up;
   /// @}
 
   clang::DeclContext *
@@ -414,6 +416,8 @@ private:
                        lldb_private::CompilerType &class_clang_type,
                        const lldb::AccessType default_accesibility,
                        lldb_private::ClangASTImporter::LayoutInfo &layout_info);
+
+  void UpdateParsingProgress(std::string message);
 };
 
 /// Parsed form of all attributes that are relevant for type reconstruction.
