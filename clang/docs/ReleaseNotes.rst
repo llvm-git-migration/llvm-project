@@ -699,6 +699,7 @@ Bug Fixes to C++ Support
   performed incorrectly when checking constraints. Fixes (#GH90349).
 - Clang now allows constrained member functions to be explicitly specialized for an implicit instantiation
   of a class template.
+- Fix a bug in access control checking due to dealyed checking of friend declaration. Fixes (#GH12361).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
