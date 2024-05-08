@@ -15,6 +15,7 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/NameMatches.h"
 #include "lldb/Utility/StructuredData.h"
+#include <optional>
 #include <vector>
 
 namespace lldb_private {
@@ -147,8 +148,7 @@ public:
   ProcessInstanceInfo() = default;
 
   ProcessInstanceInfo(const char *name, const ArchSpec &arch, lldb::pid_t pid)
-      : ProcessInfo(name, arch, pid), m_euid(UINT32_MAX), m_egid(UINT32_MAX),
-        m_parent_pid(LLDB_INVALID_PROCESS_ID) {}
+      : ProcessInfo(name, arch, pid) {}
 
   void Clear() {
     ProcessInfo::Clear();
@@ -195,24 +195,26 @@ public:
     return m_process_session_id != LLDB_INVALID_PROCESS_ID;
   }
 
-  struct timespec GetUserTime() const { return m_user_time; }
+  struct timespec GetUserTime() const { return m_user_time.value(); }
 
   void SetUserTime(struct timespec utime) { m_user_time = utime; }
 
   bool UserTimeIsValid() const {
-    return m_user_time.tv_sec > 0 || m_user_time.tv_usec > 0;
+    return m_user_time.has_value() &&
+           (m_user_time->tv_sec > 0 || m_user_time->tv_usec > 0);
   }
 
-  struct timespec GetSystemTime() const { return m_system_time; }
+  struct timespec GetSystemTime() const { return m_system_time.value(); }
 
   void SetSystemTime(struct timespec stime) { m_system_time = stime; }
 
   bool SystemTimeIsValid() const {
-    return m_system_time.tv_sec > 0 || m_system_time.tv_usec > 0;
+    return m_system_time.has_value() &&
+           (m_system_time->tv_sec > 0 || m_system_time->tv_usec > 0);
   }
 
   struct timespec GetCumulativeUserTime() const {
-    return m_cumulative_user_time;
+    return m_cumulative_user_time.value();
   }
 
   void SetCumulativeUserTime(struct timespec cutime) {
@@ -220,12 +222,13 @@ public:
   }
 
   bool CumulativeUserTimeIsValid() const {
-    return m_cumulative_user_time.tv_sec > 0 ||
-           m_cumulative_user_time.tv_usec > 0;
+    return m_cumulative_user_time.has_value() &&
+           (m_cumulative_user_time->tv_sec > 0 ||
+            m_cumulative_user_time->tv_usec > 0);
   }
 
   struct timespec GetCumulativeSystemTime() const {
-    return m_cumulative_system_time;
+    return m_cumulative_system_time.value();
   }
 
   void SetCumulativeSystemTime(struct timespec cstime) {
@@ -233,9 +236,24 @@ public:
   }
 
   bool CumulativeSystemTimeIsValid() const {
-    return m_cumulative_system_time.tv_sec > 0 ||
-           m_cumulative_system_time.tv_usec > 0;
+    return m_cumulative_system_time.has_value() &&
+           (m_cumulative_system_time->tv_sec > 0 ||
+            m_cumulative_system_time->tv_usec > 0);
   }
+
+  int8_t GetPriorityValue() const { return m_priority_value.value(); }
+
+  void SetPriorityValue(int8_t priority_value) {
+    m_priority_value = priority_value;
+  }
+
+  bool PriorityValueIsValid() const;
+
+  void SetIsZombie(bool is_zombie) { m_zombie = is_zombie; }
+
+  bool IsZombieValid() const { return m_zombie.has_value(); }
+
+  bool IsZombie() const { return m_zombie.value(); }
 
   void Dump(Stream &s, UserIDResolver &resolver) const;
 
@@ -250,10 +268,12 @@ protected:
   lldb::pid_t m_parent_pid = LLDB_INVALID_PROCESS_ID;
   lldb::pid_t m_process_group_id = LLDB_INVALID_PROCESS_ID;
   lldb::pid_t m_process_session_id = LLDB_INVALID_PROCESS_ID;
-  struct timespec m_user_time {};
-  struct timespec m_system_time {};
-  struct timespec m_cumulative_user_time {};
-  struct timespec m_cumulative_system_time {};
+  std::optional<struct timespec> m_user_time = std::nullopt;
+  std::optional<struct timespec> m_system_time = std::nullopt;
+  std::optional<struct timespec> m_cumulative_user_time = std::nullopt;
+  std::optional<struct timespec> m_cumulative_system_time = std::nullopt;
+  std::optional<int8_t> m_priority_value = std::nullopt;
+  std::optional<bool> m_zombie = std::nullopt;
 };
 
 typedef std::vector<ProcessInstanceInfo> ProcessInstanceInfoList;
