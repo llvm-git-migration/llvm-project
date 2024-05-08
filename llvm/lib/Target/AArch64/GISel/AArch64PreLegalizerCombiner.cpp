@@ -564,34 +564,33 @@ bool matchPushAddSubExt(
   assert(MI.getOpcode() == TargetOpcode::G_ADD ||
          MI.getOpcode() == TargetOpcode::G_SUB &&
              "Expected a G_ADD or G_SUB instruction\n");
-  MachineInstr *ExtMI1 = MRI.getVRegDef(MI.getOperand(1).getReg());
-  MachineInstr *ExtMI2 = MRI.getVRegDef(MI.getOperand(2).getReg());
 
-  LLT DstTy = MRI.getType(MI.getOperand(0).getReg());
+  // Deal with vector types only
+  get<1>(matchinfo) = MI.getOperand(0).getReg();
+  LLT DstTy = MRI.getType(get<1>(matchinfo));
   if (!DstTy.isVector())
     return false;
 
-  // Check the source came from G_{S/Z}EXT instructions
-  if (ExtMI1->getOpcode() != ExtMI2->getOpcode() ||
-      (ExtMI1->getOpcode() != TargetOpcode::G_SEXT &&
-       ExtMI1->getOpcode() != TargetOpcode::G_ZEXT))
+  // Matching instruction pattern
+  Register Src1Reg = MI.getOperand(1).getReg();
+  Register Src2Reg = MI.getOperand(2).getReg();
+  bool ZExt =
+      mi_match(Src1Reg, MRI,
+               m_OneNonDBGUse(m_GZExt(m_Reg(get<2>(matchinfo))))) &&
+      mi_match(Src2Reg, MRI, m_OneNonDBGUse(m_GZExt(m_Reg(get<3>(matchinfo)))));
+  bool SExt =
+      mi_match(Src1Reg, MRI,
+               m_OneNonDBGUse(m_GSExt(m_Reg(get<2>(matchinfo))))) &&
+      mi_match(Src2Reg, MRI, m_OneNonDBGUse(m_GSExt(m_Reg(get<3>(matchinfo)))));
+  if (!ZExt && !SExt)
     return false;
-
-  if (!MRI.hasOneUse(ExtMI1->getOperand(0).getReg()) ||
-      !MRI.hasOneUse(ExtMI2->getOperand(0).getReg()))
-    return false;
+  get<0>(matchinfo) = SExt;
 
   // Return true if G_{S|Z}EXT instruction is more than 2* source
   Register ExtDstReg = MI.getOperand(1).getReg();
-  get<0>(matchinfo) = ExtMI1->getOpcode() == TargetOpcode::G_SEXT;
-  get<1>(matchinfo) = MI.getOperand(0).getReg();
-  get<2>(matchinfo) = ExtMI1->getOperand(1).getReg();
-  get<3>(matchinfo) = ExtMI2->getOperand(1).getReg();
-
   LLT ExtDstTy = MRI.getType(ExtDstReg);
   LLT Ext1SrcTy = MRI.getType(get<2>(matchinfo));
   LLT Ext2SrcTy = MRI.getType(get<3>(matchinfo));
-
   if (((Ext1SrcTy.getScalarSizeInBits() == 8 &&
         ExtDstTy.getScalarSizeInBits() == 32) ||
        ((Ext1SrcTy.getScalarSizeInBits() == 8 ||
