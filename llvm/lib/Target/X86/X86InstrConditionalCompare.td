@@ -78,6 +78,24 @@ let mayLoad = 1 in {
   }
 }
 
+def : Pat<(X86ccmp GR8:$src1, GR8:$src2, timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP8rr GR8:$src1, GR8:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR16:$src1, GR16:$src2, timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP16rr GR16:$src1, GR16:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR32:$src1, GR32:$src2, timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP32rr GR32:$src1, GR32:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR64:$src1, GR64:$src2, timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP64rr GR64:$src1, GR64:$src2, timm:$dcf, timm:$cond)>;
+
+def : Pat<(X86ccmp GR8:$src1, (i8 imm:$src2), timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP8ri GR8:$src1, imm:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR16:$src1, (i16 imm:$src2), timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP16ri GR16:$src1, imm:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR32:$src1, (i32 imm:$src2), timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP32ri GR32:$src1, imm:$src2, timm:$dcf, timm:$cond)>;
+def : Pat<(X86ccmp GR64:$src1, (i64 imm:$src2), timm:$dcf, timm:$cond, EFLAGS),
+          (CCMP64ri32 GR64:$src1, imm:$src2, timm:$dcf, timm:$cond)>;
+
 //===----------------------------------------------------------------------===//
 // CTEST Instructions
 //
@@ -108,3 +126,6 @@ let mayLoad = 1 in {
     def CTEST64mr: Ctest<0x85, MRMDestMem, Xi64, i64mem, GR64>;
   }
 }
+
+def : Pat<(X86ctest GR32:$src1, GR32:$src2, timm:$dcf, timm:$cond, EFLAGS),
+          (CTEST32rr GR32:$src1, GR32:$src2, timm:$dcf, timm:$cond)>;
