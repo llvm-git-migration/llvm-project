@@ -117,6 +117,10 @@ bool ProcessInfo::IsScriptedProcess() const {
   return m_scripted_metadata_sp && *m_scripted_metadata_sp;
 }
 
+bool ProcessInstanceInfo::PriorityValueIsValid() const {
+  return m_priority_value.has_value();
+}
+
 void ProcessInstanceInfo::Dump(Stream &s, UserIDResolver &resolver) const {
   if (m_pid != LLDB_INVALID_PROCESS_ID)
     s.Printf("    pid = %" PRIu64 "\n", m_pid);

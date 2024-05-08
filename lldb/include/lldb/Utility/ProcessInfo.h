@@ -15,6 +15,7 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/NameMatches.h"
 #include "lldb/Utility/StructuredData.h"
+#include <optional>
 #include <vector>
 
 namespace lldb_private {
@@ -144,6 +145,19 @@ public:
     long int tv_usec = 0;
   };
 
+  enum class ProcessState {
+    Unknown,
+    Dead,
+    DiskSleep,
+    Idle,
+    Paging,
+    Parked,
+    Running,
+    Sleeping,
+    TracedOrStopped,
+    Zombie,
+  };
+
   ProcessInstanceInfo() = default;
 
   ProcessInstanceInfo(const char *name, const ArchSpec &arch, lldb::pid_t pid)
@@ -237,6 +251,18 @@ public:
            m_cumulative_system_time.tv_usec > 0;
   }
 
+  int8_t GetPriorityValue() const { return m_priority_value.value(); }
+
+  void SetPriorityValue(int8_t priority_value) {
+    m_priority_value = priority_value;
+  }
+
+  bool PriorityValueIsValid() const;
+
+  void SetIsZombie(bool is_zombie = true) { m_zombie = is_zombie; }
+
+  bool IsZombie() const { return m_zombie; }
+
   void Dump(Stream &s, UserIDResolver &resolver) const;
 
   static void DumpTableHeader(Stream &s, bool show_args, bool verbose);
@@ -254,6 +280,8 @@ protected:
   struct timespec m_system_time {};
   struct timespec m_cumulative_user_time {};
   struct timespec m_cumulative_system_time {};
+  std::optional<int8_t> m_priority_value = std::nullopt;
+  bool m_zombie = false;
 };
 
 typedef std::vector<ProcessInstanceInfo> ProcessInstanceInfoList;
