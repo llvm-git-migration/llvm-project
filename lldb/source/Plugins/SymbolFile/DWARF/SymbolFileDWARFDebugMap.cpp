@@ -14,6 +14,7 @@
 #include "lldb/Core/Module.h"
 #include "lldb/Core/ModuleList.h"
 #include "lldb/Core/PluginManager.h"
+#include "lldb/Core/Progress.h"
 #include "lldb/Core/Section.h"
 #include "lldb/Host/FileSystem.h"
 #include "lldb/Utility/RangeMap.h"
@@ -1240,7 +1241,13 @@ TypeSP SymbolFileDWARFDebugMap::FindCompleteObjCDefinitionTypeForDIE(
 void SymbolFileDWARFDebugMap::FindTypes(const TypeQuery &query,
                                         TypeResults &results) {
   std::lock_guard<std::recursive_mutex> guard(GetModuleMutex());
+  Progress progress(
+      llvm::formatv("Searching for type '{0}'",
+                    query.GetTypeBasename().AsCString("<<UNKNOWN>>")));
   ForEachSymbolFile([&](SymbolFileDWARF *oso_dwarf) {
+    if (auto *obj = oso_dwarf->GetObjectFile())
+      progress.Increment(1, obj->GetFileSpec().GetPath());
+
     oso_dwarf->FindTypes(query, results);
     return results.Done(query) ? IterationAction::Stop
                                : IterationAction::Continue;
