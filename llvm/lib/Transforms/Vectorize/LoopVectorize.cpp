@@ -9677,7 +9677,6 @@ static bool processLoopInVPlanNativePath(
 
   // Mark the loop as already vectorized to avoid vectorizing again.
   Hints.setAlreadyVectorized();
-  assert(!verifyFunction(*L->getHeader()->getParent(), &dbgs()));
   return true;
 }
 
@@ -10286,7 +10285,6 @@ bool LoopVectorizePass::processLoop(Loop *L) {
     Hints.setAlreadyVectorized();
   }
 
-  assert(!verifyFunction(*L->getHeader()->getParent(), &dbgs()));
   return true;
 }
 
@@ -10358,6 +10356,8 @@ LoopVectorizeResult LoopVectorizePass::runImpl(
 #endif
     }
   }
+
+  assert(!Changed || !verifyFunction(F, &dbgs()));
 
   // Process each loop nest in the function.
   return LoopVectorizeResult(Changed, CFGChanged);
