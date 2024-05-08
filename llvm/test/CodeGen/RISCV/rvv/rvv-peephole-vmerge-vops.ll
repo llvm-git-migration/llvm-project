@@ -893,8 +893,8 @@ define void @test_dag_loop() {
 ; CHECK-LABEL: test_dag_loop:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
-; CHECK-NEXT:    vmv.v.i v8, 0
 ; CHECK-NEXT:    vmclr.m v0
+; CHECK-NEXT:    vmv.v.i v8, 0
 ; CHECK-NEXT:    vmv.v.i v12, 0
 ; CHECK-NEXT:    vsetivli zero, 0, e8, m4, tu, mu
 ; CHECK-NEXT:    vssubu.vx v12, v8, zero, v0.t
@@ -967,7 +967,6 @@ define <vscale x 2 x float> @vfredusum(<vscale x 2 x float> %passthru, <vscale x
 ; CHECK-LABEL: vfredusum:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    fsrmi a1, 0
-; CHECK-NEXT:    vsetvli zero, a0, e32, m1, ta, ma
 ; CHECK-NEXT:    vmv1r.v v11, v8
 ; CHECK-NEXT:    vsetvli zero, a0, e32, m1, ta, ma
 ; CHECK-NEXT:    vfredusum.vs v11, v9, v10
