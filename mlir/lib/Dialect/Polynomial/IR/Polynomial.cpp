@@ -14,8 +14,8 @@
 namespace mlir {
 namespace polynomial {
 
-template <typename T>
-MonomialBase<T>::~MonomialBase() {}
+template <class D, typename T>
+MonomialBase<D, T>::~MonomialBase() = default;
 
 template <typename PolyT, typename MonomialT>
 FailureOr<PolyT> fromMonomialsImpl(ArrayRef<MonomialT> monomials) {
