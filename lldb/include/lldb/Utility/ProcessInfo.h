@@ -15,6 +15,7 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/NameMatches.h"
 #include "lldb/Utility/StructuredData.h"
+#include <optional>
 #include <vector>
 
 namespace lldb_private {
@@ -147,72 +148,71 @@ public:
   ProcessInstanceInfo() = default;
 
   ProcessInstanceInfo(const char *name, const ArchSpec &arch, lldb::pid_t pid)
-      : ProcessInfo(name, arch, pid), m_euid(UINT32_MAX), m_egid(UINT32_MAX),
-        m_parent_pid(LLDB_INVALID_PROCESS_ID) {}
+      : ProcessInfo(name, arch, pid) {}
 
   void Clear() {
     ProcessInfo::Clear();
-    m_euid = UINT32_MAX;
-    m_egid = UINT32_MAX;
-    m_parent_pid = LLDB_INVALID_PROCESS_ID;
+    m_euid = std::nullopt;
+    m_egid = std::nullopt;
+    m_parent_pid = std::nullopt;
   }
 
-  uint32_t GetEffectiveUserID() const { return m_euid; }
+  uint32_t GetEffectiveUserID() const { return m_euid.value(); }
 
-  uint32_t GetEffectiveGroupID() const { return m_egid; }
+  uint32_t GetEffectiveGroupID() const { return m_egid.value(); }
 
-  bool EffectiveUserIDIsValid() const { return m_euid != UINT32_MAX; }
+  bool EffectiveUserIDIsValid() const { return m_euid.has_value(); }
 
-  bool EffectiveGroupIDIsValid() const { return m_egid != UINT32_MAX; }
+  bool EffectiveGroupIDIsValid() const { return m_egid.has_value(); }
 
   void SetEffectiveUserID(uint32_t uid) { m_euid = uid; }
 
   void SetEffectiveGroupID(uint32_t gid) { m_egid = gid; }
 
-  lldb::pid_t GetParentProcessID() const { return m_parent_pid; }
+  lldb::pid_t GetParentProcessID() const { return m_parent_pid.value(); }
 
   void SetParentProcessID(lldb::pid_t pid) { m_parent_pid = pid; }
 
-  bool ParentProcessIDIsValid() const {
-    return m_parent_pid != LLDB_INVALID_PROCESS_ID;
-  }
+  bool ParentProcessIDIsValid() const { return m_parent_pid.has_value(); }
 
-  lldb::pid_t GetProcessGroupID() const { return m_process_group_id; }
+  lldb::pid_t GetProcessGroupID() const { return m_process_group_id.value(); }
 
   void SetProcessGroupID(lldb::pid_t pgrp) { m_process_group_id = pgrp; }
 
-  bool ProcessGroupIDIsValid() const {
-    return m_process_group_id != LLDB_INVALID_PROCESS_ID;
-  }
+  bool ProcessGroupIDIsValid() const { return m_process_group_id.has_value(); }
 
-  lldb::pid_t GetProcessSessionID() const { return m_process_session_id; }
+  lldb::pid_t GetProcessSessionID() const {
+    return m_process_session_id.value();
+  }
 
   void SetProcessSessionID(lldb::pid_t session) {
     m_process_session_id = session;
   }
 
   bool ProcessSessionIDIsValid() const {
-    return m_process_session_id != LLDB_INVALID_PROCESS_ID;
+    return m_process_session_id.has_value();
   }
 
-  struct timespec GetUserTime() const { return m_user_time; }
+  struct timespec GetUserTime() const { return m_user_time.value(); }
 
   void SetUserTime(struct timespec utime) { m_user_time = utime; }
 
   bool UserTimeIsValid() const {
-    return m_user_time.tv_sec > 0 || m_user_time.tv_usec > 0;
+    return m_user_time.has_value() &&
+           (m_user_time->tv_sec > 0 || m_user_time->tv_usec > 0);
   }
 
-  struct timespec GetSystemTime() const { return m_system_time; }
+  struct timespec GetSystemTime() const { return m_system_time.value(); }
 
   void SetSystemTime(struct timespec stime) { m_system_time = stime; }
 
   bool SystemTimeIsValid() const {
-    return m_system_time.tv_sec > 0 || m_system_time.tv_usec > 0;
+    return m_system_time.has_value() &&
+           (m_system_time->tv_sec > 0 || m_system_time->tv_usec > 0);
   }
 
   struct timespec GetCumulativeUserTime() const {
-    return m_cumulative_user_time;
+    return m_cumulative_user_time.value();
   }
 
   void SetCumulativeUserTime(struct timespec cutime) {
@@ -220,12 +220,13 @@ public:
   }
 
   bool CumulativeUserTimeIsValid() const {
-    return m_cumulative_user_time.tv_sec > 0 ||
-           m_cumulative_user_time.tv_usec > 0;
+    return m_cumulative_user_time.has_value() &&
+           (m_cumulative_user_time->tv_sec > 0 ||
+            m_cumulative_user_time->tv_usec > 0);
   }
 
   struct timespec GetCumulativeSystemTime() const {
-    return m_cumulative_system_time;
+    return m_cumulative_system_time.value();
   }
 
   void SetCumulativeSystemTime(struct timespec cstime) {
@@ -233,9 +234,24 @@ public:
   }
 
   bool CumulativeSystemTimeIsValid() const {
-    return m_cumulative_system_time.tv_sec > 0 ||
-           m_cumulative_system_time.tv_usec > 0;
+    return m_cumulative_system_time.has_value() &&
+           (m_cumulative_system_time->tv_sec > 0 ||
+            m_cumulative_system_time->tv_usec > 0);
   }
+
+  int8_t GetPriorityValue() const { return m_priority_value.value(); }
+
+  void SetPriorityValue(int8_t priority_value) {
+    m_priority_value = priority_value;
+  }
+
+  bool PriorityValueIsValid() const;
+
+  void SetIsZombie(bool is_zombie) { m_zombie = is_zombie; }
+
+  bool IsZombieValid() const { return m_zombie.has_value(); }
+
+  bool IsZombie() const { return m_zombie.value(); }
 
   void Dump(Stream &s, UserIDResolver &resolver) const;
 
@@ -245,15 +261,17 @@ public:
                       bool verbose) const;
 
 protected:
-  uint32_t m_euid = UINT32_MAX;
-  uint32_t m_egid = UINT32_MAX;
-  lldb::pid_t m_parent_pid = LLDB_INVALID_PROCESS_ID;
-  lldb::pid_t m_process_group_id = LLDB_INVALID_PROCESS_ID;
-  lldb::pid_t m_process_session_id = LLDB_INVALID_PROCESS_ID;
-  struct timespec m_user_time {};
-  struct timespec m_system_time {};
-  struct timespec m_cumulative_user_time {};
-  struct timespec m_cumulative_system_time {};
+  std::optional<uint32_t> m_euid = std::nullopt;
+  std::optional<uint32_t> m_egid = std::nullopt;
+  std::optional<lldb::pid_t> m_parent_pid = std::nullopt;
+  std::optional<lldb::pid_t> m_process_group_id = std::nullopt;
+  std::optional<lldb::pid_t> m_process_session_id = std::nullopt;
+  std::optional<struct timespec> m_user_time = std::nullopt;
+  std::optional<struct timespec> m_system_time = std::nullopt;
+  std::optional<struct timespec> m_cumulative_user_time = std::nullopt;
+  std::optional<struct timespec> m_cumulative_system_time = std::nullopt;
+  std::optional<int8_t> m_priority_value = std::nullopt;
+  std::optional<bool> m_zombie = std::nullopt;
 };
 
 typedef std::vector<ProcessInstanceInfo> ProcessInstanceInfoList;
