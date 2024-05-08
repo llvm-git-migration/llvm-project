@@ -84,6 +84,7 @@ TensorType inferReshapeExpandedType(TensorType inputType,
     return totalSize / totalSizeNoPlaceholder;
   });
 
+
   // A syntactic restriction in 'tensor.expand_shape' forbids a dynamically
   // shaped input from being reshaped into a statically shaped result. We may
   // simply turn the first result dimension dynamic to address this.
