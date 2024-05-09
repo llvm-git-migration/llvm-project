@@ -465,7 +465,7 @@ static void removeRedundantCanonicalIVs(VPlan &Plan) {
                }) ||
         vputils::onlyFirstLaneUsed(WidenNewIV)) {
       WidenNewIV->replaceAllUsesWith(WidenOriginalIV);
-      WidenNewIV->eraseFromParent();
+      // WidenNewIV->eraseFromParent();
       return;
     }
   }
@@ -632,7 +632,7 @@ static void removeRedundantExpandSCEVRecipes(VPlan &Plan) {
     if (I.second)
       continue;
     ExpR->replaceAllUsesWith(I.first->second);
-    ExpR->eraseFromParent();
+    // ExpR->eraseFromParent();
   }
 }
 
@@ -888,7 +888,7 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
           !match(Blend->getMask(I), m_False()))
         return;
     Blend->replaceAllUsesWith(Inc0);
-    Blend->eraseFromParent();
+    // Blend->eraseFromParent();
     return;
   }
 
@@ -1090,11 +1090,12 @@ void VPlanTransforms::optimize(VPlan &Plan, ScalarEvolution &SE) {
 
   simplifyRecipes(Plan, SE.getContext());
   legalizeAndOptimizeInductions(Plan, SE);
-  removeDeadRecipes(Plan);
+  // removeDeadRecipes(Plan);
 
   createAndOptimizeReplicateRegions(Plan);
 
   removeRedundantExpandSCEVRecipes(Plan);
+  removeDeadRecipes(Plan);
   mergeBlocksIntoPredecessors(Plan);
 }
 
