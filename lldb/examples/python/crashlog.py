@@ -418,9 +418,22 @@ class CrashLog(symbolication.Symbolicator):
                         with print_lock:
                             print('falling back to binary inside "%s"' % dsym)
                         self.symfile = dsym
-                        for filename in os.listdir(dwarf_dir):
-                            self.path = os.path.join(dwarf_dir, filename)
-                            if self.find_matching_slice():
+                        # Look for the executable next to the dSYM bundle.
+                        parent_dir = os.path.dirname(dsym)
+                        find_results = (
+                            subprocess.check_output(
+                                '/usr/bin/find "%s" -type f \( -perm -u=x -o -perm -g=x -o -perm -o=x \)'
+                                % parent_dir,
+                                shell=True,
+                            )
+                            .decode("utf-8")
+                            .splitlines()
+                        )
+                        for binary in find_results:
+                            abs_path = os.path.abspath(binary)
+                            basename = os.path.basename(binary)
+                            if os.path.exists(abs_path) and basename == self.identifier:
+                                self.path = abs_path
                                 found_matching_slice = True
                                 break
                         if found_matching_slice:
