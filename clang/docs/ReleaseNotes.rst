@@ -699,6 +699,9 @@ Bug Fixes to C++ Support
   performed incorrectly when checking constraints. Fixes (#GH90349).
 - Clang now allows constrained member functions to be explicitly specialized for an implicit instantiation
   of a class template.
+- Clang now ignores template parameters only used within the exception specification of candidate function
+  templates during partial ordering when deducing template arguments from a function declaration or when
+  taking the address of a function template.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
