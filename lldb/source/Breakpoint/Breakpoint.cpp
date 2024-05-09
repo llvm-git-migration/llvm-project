@@ -15,6 +15,7 @@
 #include "lldb/Breakpoint/BreakpointResolver.h"
 #include "lldb/Breakpoint/BreakpointResolverFileLine.h"
 #include "lldb/Core/Address.h"
+#include "lldb/Core/Debugger.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/ModuleList.h"
 #include "lldb/Core/SearchFilter.h"
@@ -26,6 +27,7 @@
 #include "lldb/Target/SectionLoadList.h"
 #include "lldb/Target/Target.h"
 #include "lldb/Target/ThreadSpec.h"
+#include "lldb/Utility/AnsiTerminal.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/Stream.h"
@@ -847,6 +849,13 @@ void Breakpoint::GetDescription(Stream *s, lldb::DescriptionLevel level,
 
   const size_t num_locations = GetNumLocations();
   const size_t num_resolved_locations = GetNumResolvedLocations();
+
+  // Grey out any disabled breakpoints in the list of breakpoints.
+  if (GetTarget().GetDebugger().GetUseColor())
+    s->Printf("%s",
+              IsEnabled()
+                  ? ansi::FormatAnsiTerminalCodes("${ansi.normal}").c_str()
+                  : ansi::FormatAnsiTerminalCodes("${ansi.faint}").c_str());
 
   // They just made the breakpoint, they don't need to be told HOW they made
   // it... Also, we'll print the breakpoint number differently depending on
