@@ -214,13 +214,12 @@ bool SIInstrInfo::isSafeToSink(MachineInstr &MI,
       // does not contain SuccToSinkTo and also has divergent exit condition.
       while (FromCycle && !FromCycle->contains(ToCycle)) {
         // After structurize-cfg, there should be exactly one cycle exit.
-        SmallVector<MachineBasicBlock *, 1> ExitBlocks;
-        FromCycle->getExitBlocks(ExitBlocks);
-        assert(ExitBlocks.size() == 1);
-        assert(ExitBlocks[0]->getSinglePredecessor());
+        SmallVector<MachineBasicBlock *, 1> ExitingBlocks;
+        FromCycle->getExitingBlocks(ExitingBlocks);
+        assert(ExitingBlocks.size() == 1);
 
         // FromCycle has divergent exit condition.
-        if (hasDivergentBranch(ExitBlocks[0]->getSinglePredecessor())) {
+        if (hasDivergentBranch(ExitingBlocks[0])) {
           return false;
         }
 
