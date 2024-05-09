@@ -967,7 +967,7 @@ class VIMAGE_Atomic_gfx12_Renamed<mimgopc op, string opcode, string renamed,
                                   RegisterClass DataRC, int num_addrs,
                                   bit enableDisasm = 0>
    : VIMAGE_Atomic_gfx12<op, renamed, DataRC, num_addrs, enableDisasm>,
-     MnemonicAlias<opcode, renamed>, Requires<[isGFX12Plus, HasImageInsts]>;
+     MnemonicAlias<opcode, renamed>, Requires<[isGFX12Plus]>;
 
 multiclass MIMG_Atomic_Addr_Helper_m <mimgopc op, string asm,
                                       RegisterClass data_rc,
