@@ -15,7 +15,7 @@ define void @quux() #1 {
 ; CHECK-NEXT:    stp x22, x21, [sp, #64] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp x20, x19, [sp, #80] // 16-byte Folded Spill
 ; CHECK-NEXT:    mov x29, sp
-; CHECK-NEXT:    sub sp, sp, #384
+; CHECK-NEXT:    sub sp, sp, #464
 ; CHECK-NEXT:    .cfi_def_cfa w29, 96
 ; CHECK-NEXT:    .cfi_offset w19, -8
 ; CHECK-NEXT:    .cfi_offset w20, -16
@@ -46,18 +46,19 @@ define void @quux() #1 {
 ; CHECK-NEXT:  .LBB0_2: // %bb
 ; CHECK-NEXT:    smstart za
 ; CHECK-NEXT:    zero {za}
-; CHECK-NEXT:    mov w23, #15 // =0xf
+; CHECK-NEXT:    mov w24, #15 // =0xf
 ; CHECK-NEXT:    mov w8, #15 // =0xf
 ; CHECK-NEXT:    incd x8
 ; CHECK-NEXT:    // kill: def $w8 killed $w8 killed $x8 def $x8
-; CHECK-NEXT:    and x28, x8, #0x70
+; CHECK-NEXT:    and x10, x8, #0x70
 ; CHECK-NEXT:    mov x8, sp
-; CHECK-NEXT:    subs x8, x8, x28
+; CHECK-NEXT:    subs x8, x8, x10
 ; CHECK-NEXT:    mov sp, x8
 ; CHECK-NEXT:    mov x9, sp
-; CHECK-NEXT:    subs x9, x9, x28
+; CHECK-NEXT:    subs x9, x9, x10
+; CHECK-NEXT:    mov x3, x10
 ; CHECK-NEXT:    mov sp, x9
-; CHECK-NEXT:    addvl x10, x23, #1
+; CHECK-NEXT:    addvl x10, x24, #1
 ; CHECK-NEXT:    // kill: def $w10 killed $w10 killed $x10 def $x10
 ; CHECK-NEXT:    and x4, x10, #0x3f0
 ; CHECK-NEXT:    mov x10, sp
@@ -67,10 +68,10 @@ define void @quux() #1 {
 ; CHECK-NEXT:    subs x11, x11, x4
 ; CHECK-NEXT:    mov sp, x11
 ; CHECK-NEXT:    mov x12, sp
-; CHECK-NEXT:    subs x12, x12, x28
+; CHECK-NEXT:    subs x12, x12, x3
 ; CHECK-NEXT:    mov sp, x12
 ; CHECK-NEXT:    mov x13, sp
-; CHECK-NEXT:    subs x13, x13, x28
+; CHECK-NEXT:    subs x13, x13, x3
 ; CHECK-NEXT:    mov sp, x13
 ; CHECK-NEXT:    mov x14, sp
 ; CHECK-NEXT:    subs x14, x14, x4
@@ -79,10 +80,10 @@ define void @quux() #1 {
 ; CHECK-NEXT:    subs x15, x15, x4
 ; CHECK-NEXT:    mov sp, x15
 ; CHECK-NEXT:    mov x16, sp
-; CHECK-NEXT:    subs x16, x16, x28
+; CHECK-NEXT:    subs x16, x16, x3
 ; CHECK-NEXT:    mov sp, x16
 ; CHECK-NEXT:    mov x17, sp
-; CHECK-NEXT:    subs x17, x17, x28
+; CHECK-NEXT:    subs x17, x17, x3
 ; CHECK-NEXT:    mov sp, x17
 ; CHECK-NEXT:    mov x18, sp
 ; CHECK-NEXT:    subs x18, x18, x4
@@ -91,10 +92,12 @@ define void @quux() #1 {
 ; CHECK-NEXT:    subs x0, x0, x4
 ; CHECK-NEXT:    mov sp, x0
 ; CHECK-NEXT:    mov x1, sp
-; CHECK-NEXT:    subs x1, x1, x28
+; CHECK-NEXT:    subs x1, x1, x3
 ; CHECK-NEXT:    mov sp, x1
 ; CHECK-NEXT:    mov x2, sp
-; CHECK-NEXT:    subs x2, x2, x28
+; CHECK-NEXT:    subs x2, x2, x3
+; CHECK-NEXT:    mov x22, x3
+; CHECK-NEXT:    stur x22, [x29, #-184] // 8-byte Folded Spill
 ; CHECK-NEXT:    mov sp, x2
 ; CHECK-NEXT:    mov x3, sp
 ; CHECK-NEXT:    subs x3, x3, x4
@@ -113,510 +116,563 @@ define void @quux() #1 {
 ; CHECK-NEXT:    subs x5, sp, #16
 ; CHECK-NEXT:    mov sp, x5
 ; CHECK-NEXT:    mov x5, sp
-; CHECK-NEXT:    subs x5, x5, x28
+; CHECK-NEXT:    subs x5, x5, x22
 ; CHECK-NEXT:    mov sp, x5
 ; CHECK-NEXT:    subs x5, sp, #16
 ; CHECK-NEXT:    mov sp, x5
-; CHECK-NEXT:    addvl x5, x23, #2
+; CHECK-NEXT:    addvl x5, x24, #2
 ; CHECK-NEXT:    // kill: def $w5 killed $w5 killed $x5 def $x5
-; CHECK-NEXT:    and x26, x5, #0x7f0
+; CHECK-NEXT:    and x27, x5, #0x7f0
 ; CHECK-NEXT:    mov x5, sp
-; CHECK-NEXT:    subs x5, x5, x26
+; CHECK-NEXT:    subs x5, x5, x27
 ; CHECK-NEXT:    and sp, x5, #0xffffffffffffffe0
 ; CHECK-NEXT:    mov x5, sp
 ; CHECK-NEXT:    stur x5, [x29, #-40] // 8-byte Folded Spill
 ; CHECK-NEXT:    subs x5, x5, #16
 ; CHECK-NEXT:    mov sp, x5
 ; CHECK-NEXT:    mov x6, sp
-; CHECK-NEXT:    subs x6, x6, x28
+; CHECK-NEXT:    subs x6, x6, x22
 ; CHECK-NEXT:    mov sp, x6
 ; CHECK-NEXT:    mov x7, sp
 ; CHECK-NEXT:    stur x7, [x29, #-48] // 8-byte Folded Spill
 ; CHECK-NEXT:    subs x7, x7, #16
 ; CHECK-NEXT:    mov sp, x7
-; CHECK-NEXT:    mov x19, sp
-; CHECK-NEXT:    stur x19, [x29, #-56] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x19, x19, #16
-; CHECK-NEXT:    mov sp, x19
 ; CHECK-NEXT:    mov x20, sp
-; CHECK-NEXT:    subs x20, x20, x28
+; CHECK-NEXT:    stur x20, [x29, #-56] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x20, x20, #16
 ; CHECK-NEXT:    mov sp, x20
 ; CHECK-NEXT:    mov x21, sp
-; CHECK-NEXT:    stur x21, [x29, #-64] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x21, x21, #16
+; CHECK-NEXT:    subs x21, x21, x22
 ; CHECK-NEXT:    mov sp, x21
 ; CHECK-NEXT:    mov x22, sp
-; CHECK-NEXT:    stur x22, [x29, #-72] // 8-byte Folded Spill
+; CHECK-NEXT:    stur x22, [x29, #-64] // 8-byte Folded Spill
 ; CHECK-NEXT:    subs x22, x22, #16
 ; CHECK-NEXT:    mov sp, x22
-; CHECK-NEXT:    incw x23
-; CHECK-NEXT:    // kill: def $w23 killed $w23 killed $x23 def $x23
-; CHECK-NEXT:    and x24, x23, #0xf0
 ; CHECK-NEXT:    mov x23, sp
-; CHECK-NEXT:    subs x23, x23, x24
+; CHECK-NEXT:    stur x23, [x29, #-72] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x23, x23, #16
 ; CHECK-NEXT:    mov sp, x23
-; CHECK-NEXT:    mov x25, sp
-; CHECK-NEXT:    subs x24, x25, x24
+; CHECK-NEXT:    incw x24
+; CHECK-NEXT:    // kill: def $w24 killed $w24 killed $x24 def $x24
+; CHECK-NEXT:    and x25, x24, #0xf0
+; CHECK-NEXT:    mov x24, sp
+; CHECK-NEXT:    subs x24, x24, x25
 ; CHECK-NEXT:    mov sp, x24
-; CHECK-NEXT:    mov x25, sp
-; CHECK-NEXT:    subs x25, x25, x26
-; CHECK-NEXT:    and x25, x25, #0xffffffffffffffe0
+; CHECK-NEXT:    mov x26, sp
+; CHECK-NEXT:    subs x25, x26, x25
 ; CHECK-NEXT:    mov sp, x25
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    subs x26, x27, x26
+; CHECK-NEXT:    mov x26, sp
+; CHECK-NEXT:    subs x26, x26, x27
 ; CHECK-NEXT:    and x26, x26, #0xffffffffffffffe0
 ; CHECK-NEXT:    mov sp, x26
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-96] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    subs x27, x28, x27
+; CHECK-NEXT:    and x27, x27, #0xffffffffffffffe0
 ; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-112] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-104] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-120] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-160] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-152] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-80] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-224] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-128] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-88] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-248] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-144] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-136] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-168] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-176] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #80
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-208] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-184] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #32
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #40
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #56
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #64
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #72
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #48
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    sub x30, x29, #8
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x27, x27, #16
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-96] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-112] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-104] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-120] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-128] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-136] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-80] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-232] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-144] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-88] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
 ; CHECK-NEXT:    sub x30, x29, #16
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-160] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-152] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-168] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-176] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #88
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-216] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-192] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #48
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #56
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #80
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-240] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #72
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #64
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #32
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x28, x28, #16
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #40
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
 ; CHECK-NEXT:    mov sp, x30
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
-; CHECK-NEXT:    mov sp, x30
-; CHECK-NEXT:    mov x27, sp
+; CHECK-NEXT:    mov x28, sp
 ; CHECK-NEXT:    sub x30, x29, #24
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
+; CHECK-NEXT:    mov sp, x30
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    sub x30, x29, #8
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
 ; CHECK-NEXT:    mov sp, x30
 ; CHECK-NEXT:    mov x30, sp
-; CHECK-NEXT:    subs x27, x30, x28
-; CHECK-NEXT:    stur x27, [x29, #-192] // 8-byte Folded Spill
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x30, sp
-; CHECK-NEXT:    subs x27, x30, x28
-; CHECK-NEXT:    stur x27, [x29, #-200] // 8-byte Folded Spill
-; CHECK-NEXT:    mov sp, x27
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-240] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
-; CHECK-NEXT:    mov sp, x30
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-216] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
-; CHECK-NEXT:    mov sp, x30
-; CHECK-NEXT:    mov x27, sp
-; CHECK-NEXT:    stur x27, [x29, #-232] // 8-byte Folded Spill
-; CHECK-NEXT:    subs x30, x27, #16
-; CHECK-NEXT:    mov sp, x30
-; CHECK-NEXT:    ldur x27, [x29, #-224] // 8-byte Folded Reload
-; CHECK-NEXT:    sturb wzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-248] // 8-byte Folded Reload
-; CHECK-NEXT:    sturb wzr, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #80
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    sturb wzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-208] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-128] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-160] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x27, #-16]
-; CHECK-NEXT:    add x28, x30, x28, lsl #2
-; CHECK-NEXT:    ldur x27, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x27, #-16]
-; CHECK-NEXT:    subs x30, x30, #1
-; CHECK-NEXT:    ldur x27, [x29, #-88] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    mul x27, x30, x27
-; CHECK-NEXT:    add x27, x28, x27, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-208] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-184] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-144] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    ldur x28, [x29, #-152] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    subs x28, x28, #1
-; CHECK-NEXT:    ldur x30, [x29, #-136] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x30, #-16]
-; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
 ; CHECK-NEXT:    ldur x28, [x29, #-184] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    sub x27, x29, #32
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-168] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
+; CHECK-NEXT:    subs x30, x30, x28
+; CHECK-NEXT:    stur x30, [x29, #-200] // 8-byte Folded Spill
+; CHECK-NEXT:    mov sp, x30
+; CHECK-NEXT:    mov x30, sp
+; CHECK-NEXT:    subs x28, x30, x28
+; CHECK-NEXT:    stur x28, [x29, #-208] // 8-byte Folded Spill
+; CHECK-NEXT:    mov sp, x28
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-248] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
+; CHECK-NEXT:    mov sp, x30
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-224] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
+; CHECK-NEXT:    mov sp, x30
+; CHECK-NEXT:    mov x28, sp
+; CHECK-NEXT:    stur x28, [x29, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    subs x30, x28, #16
+; CHECK-NEXT:    mov sp, x30
+; CHECK-NEXT:    ldur x28, [x29, #-232] // 8-byte Folded Reload
+; CHECK-NEXT:    sturb wzr, [x28, #-16]
+; CHECK-NEXT:    stur x8, [x29, #-8]
+; CHECK-NEXT:    sub x8, x29, #16
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    sturb wzr, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #88
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    sturb wzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-216] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-144] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-128] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    sub x8, x29, #136
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    subs x30, x30, #1
+; CHECK-NEXT:    ldur x28, [x29, #-88] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #136
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-216] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-192] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
 ; CHECK-NEXT:    ldur x28, [x29, #-160] // 8-byte Folded Reload
 ; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-136] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    add x28, x28, x30, lsl #2
+; CHECK-NEXT:    sub x8, x29, #144
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    subs x30, x30, #1
 ; CHECK-NEXT:    ldur x28, [x29, #-152] // 8-byte Folded Reload
 ; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    subs x28, x28, #1
-; CHECK-NEXT:    ldur x30, [x29, #-176] // 8-byte Folded Reload
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #144
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-192] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    sub x8, x29, #48
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-168] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-128] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    add x28, x28, x30, lsl #2
+; CHECK-NEXT:    sub x8, x29, #152
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-136] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    subs x30, x30, #1
+; CHECK-NEXT:    ldur x28, [x29, #-176] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #152
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    sub x8, x29, #48
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    mov w30, #32 // =0x20
+; CHECK-NEXT:    sub x8, x29, #56
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #80
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-240] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    lsl x30, x30, #5
+; CHECK-NEXT:    ldur x28, [x29, #-240] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-88] // 8-byte Folded Reload
+; CHECK-NEXT:    mov w30, #32 // =0x20
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #72
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-128] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    subs x30, x30, #1
+; CHECK-NEXT:    lsr x30, x30, #5
+; CHECK-NEXT:    add x30, x30, #1
+; CHECK-NEXT:    sub x8, x29, #72
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-144] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #160
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    sub x8, x29, #72
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-240] // 8-byte Folded Reload
 ; CHECK-NEXT:    ldur x30, [x30, #-16]
 ; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    sub x28, x29, #32
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    mov w28, #32 // =0x20
-; CHECK-NEXT:    sub x27, x29, #40
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x28, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #56
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x28, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #64
-; CHECK-NEXT:    ldur x30, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x30, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x27, #-16]
-; CHECK-NEXT:    lsl x28, x28, #5
+; CHECK-NEXT:    sub x8, x29, #160
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-216] // 8-byte Folded Reload
 ; CHECK-NEXT:    stur x28, [x30, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-88] // 8-byte Folded Reload
-; CHECK-NEXT:    mov w28, #32 // =0x20
-; CHECK-NEXT:    stur x28, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #72
-; CHECK-NEXT:    ldur x30, [x27, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x29, #-152] // 8-byte Folded Reload
+; CHECK-NEXT:    mov w30, #32 // =0x20
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #64
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
 ; CHECK-NEXT:    stur xzr, [x30, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-160] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x27, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-136] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
 ; CHECK-NEXT:    subs x28, x28, #1
 ; CHECK-NEXT:    lsr x28, x28, #5
 ; CHECK-NEXT:    add x28, x28, #1
 ; CHECK-NEXT:    stur x28, [x30, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-128] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x28, x29, #120
-; CHECK-NEXT:    stur x27, [x28, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    ldur x28, [x30, #-16]
-; CHECK-NEXT:    sub x27, x29, #64
-; CHECK-NEXT:    ldur x30, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x30, #-16]
-; CHECK-NEXT:    mul x27, x28, x27
-; CHECK-NEXT:    sub x28, x29, #120
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    add x27, x28, x27, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-208] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-136] // 8-byte Folded Reload
-; CHECK-NEXT:    mov w28, #32 // =0x20
-; CHECK-NEXT:    stur x28, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #48
-; CHECK-NEXT:    ldur x28, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-152] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    subs x27, x27, #1
-; CHECK-NEXT:    lsr x27, x27, #5
-; CHECK-NEXT:    add x27, x27, #1
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-144] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    ldur x30, [x30, #-16]
-; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-184] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    sub x27, x29, #8
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    sub x27, x29, #16
-; CHECK-NEXT:    ldur x28, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x28, #-16]
-; CHECK-NEXT:    stur xzr, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-160] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    subs x27, x27, x28
-; CHECK-NEXT:    ldur x28, [x29, #-96] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-112] // 8-byte Folded Reload
-; CHECK-NEXT:    mov w30, #32 // =0x20
-; CHECK-NEXT:    stur x30, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x28, [x29, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    sub x27, x29, #24
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-152] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x28, x29, #8
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    subs x27, x27, x28
-; CHECK-NEXT:    ldur x28, [x29, #-104] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-120] // 8-byte Folded Reload
-; CHECK-NEXT:    mov w30, #32 // =0x20
-; CHECK-NEXT:    stur x30, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x28, #-16]
-; CHECK-NEXT:    sub x28, x29, #24
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    sub x27, x29, #16
-; CHECK-NEXT:    ldur x27, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
 ; CHECK-NEXT:    ldur x28, [x29, #-160] // 8-byte Folded Reload
 ; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    whilelt pn8.s, x27, x28, vlx2
-; CHECK-NEXT:    ldur x27, [x29, #-192] // 8-byte Folded Reload
-; CHECK-NEXT:    str pn8, [x27]
-; CHECK-NEXT:    sub x27, x29, #8
-; CHECK-NEXT:    ldur x30, [x27, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x30, #-16]
+; CHECK-NEXT:    sub x8, x29, #168
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-240] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #168
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-192] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    sub x8, x29, #32
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #40
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #24
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-128] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #40
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    subs x28, x28, x30
+; CHECK-NEXT:    ldur x30, [x29, #-96] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-112] // 8-byte Folded Reload
+; CHECK-NEXT:    mov w30, #32 // =0x20
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-96] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #24
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    sub x8, x29, #8
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-136] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #32
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    subs x28, x28, x30
+; CHECK-NEXT:    ldur x30, [x29, #-104] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-120] // 8-byte Folded Reload
+; CHECK-NEXT:    mov w30, #32 // =0x20
+; CHECK-NEXT:    stur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-104] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #8
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    sub x8, x29, #40
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-128] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    whilelt pn8.s, x28, x30, vlx2
+; CHECK-NEXT:    ldur x28, [x29, #-200] // 8-byte Folded Reload
+; CHECK-NEXT:    str pn8, [x28]
+; CHECK-NEXT:    sub x8, x29, #32
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-136] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    whilelt pn8.s, x28, x30, vlx2
+; CHECK-NEXT:    ldur x28, [x29, #-208] // 8-byte Folded Reload
+; CHECK-NEXT:    str pn8, [x28]
+; CHECK-NEXT:    ldur x28, [x29, #-248] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-168] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #40
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x30, #-16]
+; CHECK-NEXT:    add x28, x28, x30, lsl #2
+; CHECK-NEXT:    sub x8, x29, #176
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    sub x8, x29, #32
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-176] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #176
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-248] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    zero {za}
+; CHECK-NEXT:    ldur x28, [x29, #-224] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-144] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #200
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    sub x8, x29, #40
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #192
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #192
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #200
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-224] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur xzr, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-160] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #184
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    sub x8, x29, #32
+; CHECK-NEXT:    ldur x28, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x30, [x28, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    mul x28, x30, x28
+; CHECK-NEXT:    sub x8, x29, #184
+; CHECK-NEXT:    ldur x30, [x8, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    ldur x30, [x29, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x28, [x29, #-80] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #96
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-200] // 8-byte Folded Reload
+; CHECK-NEXT:    ldr p0, [x28]
+; CHECK-NEXT:    ldur x28, [x29, #-224] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    sub x8, x29, #104
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x28, [x29, #-88] // 8-byte Folded Reload
+; CHECK-NEXT:    ldur x28, [x28, #-16]
+; CHECK-NEXT:    lsr x28, x28, #2
+; CHECK-NEXT:    sub x8, x29, #112
+; CHECK-NEXT:    stur x28, [x8, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x8, [x29, #-8]
+; CHECK-NEXT:    ldur x28, [x29, #-208] // 8-byte Folded Reload
+; CHECK-NEXT:    ldr p1, [x28]
+; CHECK-NEXT:    ldur x28, [x30, #-16]
+; CHECK-NEXT:    sub x30, x29, #120
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
 ; CHECK-NEXT:    ldur x28, [x29, #-152] // 8-byte Folded Reload
 ; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    whilelt pn8.s, x27, x28, vlx2
-; CHECK-NEXT:    ldur x27, [x29, #-200] // 8-byte Folded Reload
-; CHECK-NEXT:    str pn8, [x27]
-; CHECK-NEXT:    ldur x27, [x29, #-240] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-168] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x28, x29, #16
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x30, #-16]
-; CHECK-NEXT:    ldur x30, [x29, #-176] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x30, #-16]
-; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-240] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    zero {za}
-; CHECK-NEXT:    ldur x27, [x29, #-216] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-128] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x28, x29, #16
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    ldur x30, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x30, #-16]
-; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-216] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-232] // 8-byte Folded Reload
-; CHECK-NEXT:    stur xzr, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-144] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x28, x29, #8
-; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x28, #-16]
-; CHECK-NEXT:    ldur x30, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x30, #-16]
-; CHECK-NEXT:    mul x28, x28, x30
-; CHECK-NEXT:    add x27, x27, x28, lsl #2
-; CHECK-NEXT:    ldur x28, [x29, #-232] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x27, [x28, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-80] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x30, x29, #88
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    ldur x27, [x29, #-192] // 8-byte Folded Reload
-; CHECK-NEXT:    ldr p0, [x27]
-; CHECK-NEXT:    ldur x27, [x29, #-216] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x27, [x27, #-16]
-; CHECK-NEXT:    sub x30, x29, #96
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    ldur x27, [x29, #-88] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x30, [x27, #-16]
-; CHECK-NEXT:    lsr x27, x30, #2
-; CHECK-NEXT:    sub x30, x29, #104
-; CHECK-NEXT:    stur x27, [x30, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    ldur x27, [x29, #-200] // 8-byte Folded Reload
-; CHECK-NEXT:    ldr p1, [x27]
-; CHECK-NEXT:    ldur x27, [x28, #-16]
-; CHECK-NEXT:    sub x28, x29, #112
-; CHECK-NEXT:    stur x27, [x28, #-256] // 8-byte Folded Spill
-; CHECK-NEXT:    ldur x27, [x29, #-136] // 8-byte Folded Reload
-; CHECK-NEXT:    ldur x28, [x27, #-16]
 ; CHECK-NEXT:    lsr x28, x28, #2
-; CHECK-NEXT:    ldur x27, [x29, #-40] // 8-byte Folded Reload
-; CHECK-NEXT:    sub x30, x29, #88
-; CHECK-NEXT:    ldur x30, [x30, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x30, [x27, #-16]
+; CHECK-NEXT:    sub x30, x29, #128
+; CHECK-NEXT:    stur x28, [x30, #-256] // 8-byte Folded Spill
+; CHECK-NEXT:    ldur x30, [x29, #-40] // 8-byte Folded Reload
+; CHECK-NEXT:    sub x28, x29, #96
+; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
 ; CHECK-NEXT:    str p0, [x6]
-; CHECK-NEXT:    ldur x27, [x29, #-48] // 8-byte Folded Reload
-; CHECK-NEXT:    sub x30, x29, #96
-; CHECK-NEXT:    ldur x30, [x30, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x30, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-56] // 8-byte Folded Reload
-; CHECK-NEXT:    sub x30, x29, #104
-; CHECK-NEXT:    ldur x30, [x30, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x30, [x27, #-16]
-; CHECK-NEXT:    str p1, [x20]
-; CHECK-NEXT:    ldur x27, [x29, #-64] // 8-byte Folded Reload
-; CHECK-NEXT:    sub x30, x29, #112
-; CHECK-NEXT:    ldur x30, [x30, #-256] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x30, [x27, #-16]
-; CHECK-NEXT:    ldur x27, [x29, #-72] // 8-byte Folded Reload
-; CHECK-NEXT:    stur x28, [x27, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-48] // 8-byte Folded Reload
+; CHECK-NEXT:    sub x28, x29, #104
+; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-56] // 8-byte Folded Reload
+; CHECK-NEXT:    sub x28, x29, #112
+; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    str p1, [x21]
+; CHECK-NEXT:    ldur x30, [x29, #-64] // 8-byte Folded Reload
+; CHECK-NEXT:    sub x28, x29, #120
+; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
+; CHECK-NEXT:    ldur x30, [x29, #-72] // 8-byte Folded Reload
+; CHECK-NEXT:    sub x28, x29, #128
+; CHECK-NEXT:    ldur x28, [x28, #-256] // 8-byte Folded Reload
+; CHECK-NEXT:    stur x28, [x30, #-16]
 ; CHECK-NEXT:    ldr p0, [x6]
 ; CHECK-NEXT:    mov p8.b, p0.b
 ; CHECK-NEXT:    pext { p0.s, p1.s }, pn8[0]
 ; CHECK-NEXT:    ptrue p2.s
 ; CHECK-NEXT:    and p3.b, p0/z, p0.b, p2.b
 ; CHECK-NEXT:    and p0.b, p1/z, p1.b, p2.b
-; CHECK-NEXT:    mov x27, x23
-; CHECK-NEXT:    incd x27
-; CHECK-NEXT:    str p0, [x27]
-; CHECK-NEXT:    str p3, [x23]
-; CHECK-NEXT:    ldr p0, [x20]
+; CHECK-NEXT:    mov x28, x24
+; CHECK-NEXT:    incd x28
+; CHECK-NEXT:    str p0, [x28]
+; CHECK-NEXT:    str p3, [x24]
+; CHECK-NEXT:    ldr p0, [x21]
 ; CHECK-NEXT:    mov p8.b, p0.b
 ; CHECK-NEXT:    pext { p0.s, p1.s }, pn8[0]
 ; CHECK-NEXT:    and p3.b, p0/z, p0.b, p2.b
 ; CHECK-NEXT:    and p0.b, p1/z, p1.b, p2.b
-; CHECK-NEXT:    mov x27, x24
-; CHECK-NEXT:    incd x27
-; CHECK-NEXT:    str p0, [x27]
-; CHECK-NEXT:    str p3, [x24]
+; CHECK-NEXT:    mov x28, x25
+; CHECK-NEXT:    incd x28
+; CHECK-NEXT:    str p0, [x28]
+; CHECK-NEXT:    str p3, [x25]
 ; CHECK-NEXT:    b .LBB0_3
 ; CHECK-NEXT:  .LBB0_3: // %bb178
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldr p0, [x6]
-; CHECK-NEXT:    ldr x27, [x7]
-; CHECK-NEXT:    mov p8.b, p0.b
-; CHECK-NEXT:    ld1w { z16.s, z24.s }, pn8/z, [x27]
-; CHECK-NEXT:    ptrue p0.s
-; CHECK-NEXT:    st1w { z24.s }, p0, [x25, #1, mul vl]
-; CHECK-NEXT:    st1w { z16.s }, p0, [x25]
-; CHECK-NEXT:    ldr x27, [x19]
 ; CHECK-NEXT:    ldr x28, [x7]
-; CHECK-NEXT:    add x27, x28, x27, lsl #2
-; CHECK-NEXT:    str x27, [x7]
-; CHECK-NEXT:    ldr p1, [x20]
-; CHECK-NEXT:    ldr x27, [x21]
-; CHECK-NEXT:    mov p8.b, p1.b
-; CHECK-NEXT:    ld1w { z16.s, z24.s }, pn8/z, [x27]
+; CHECK-NEXT:    mov p8.b, p0.b
+; CHECK-NEXT:    ld1w { z16.s, z24.s }, pn8/z, [x28]
+; CHECK-NEXT:    ptrue p0.s
 ; CHECK-NEXT:    st1w { z24.s }, p0, [x26, #1, mul vl]
 ; CHECK-NEXT:    st1w { z16.s }, p0, [x26]
-; CHECK-NEXT:    ldr x27, [x22]
-; CHECK-NEXT:    ldr x28, [x21]
-; CHECK-NEXT:    add x27, x28, x27, lsl #2
-; CHECK-NEXT:    str x27, [x21]
-; CHECK-NEXT:    mov x27, x23
-; CHECK-NEXT:    incd x27
-; CHECK-NEXT:    ldr p1, [x23]
+; CHECK-NEXT:    ldr x28, [x20]
+; CHECK-NEXT:    ldr x30, [x7]
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    str x28, [x7]
+; CHECK-NEXT:    ldr p1, [x21]
+; CHECK-NEXT:    ldr x28, [x22]
+; CHECK-NEXT:    mov p8.b, p1.b
+; CHECK-NEXT:    ld1w { z16.s, z24.s }, pn8/z, [x28]
+; CHECK-NEXT:    st1w { z24.s }, p0, [x27, #1, mul vl]
+; CHECK-NEXT:    st1w { z16.s }, p0, [x27]
+; CHECK-NEXT:    ldr x28, [x23]
+; CHECK-NEXT:    ldr x30, [x22]
+; CHECK-NEXT:    add x28, x30, x28, lsl #2
+; CHECK-NEXT:    str x28, [x22]
 ; CHECK-NEXT:    mov x28, x24
 ; CHECK-NEXT:    incd x28
-; CHECK-NEXT:    ldr p2, [x24]
-; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x25]
-; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x26]
+; CHECK-NEXT:    ldr p1, [x24]
+; CHECK-NEXT:    mov x30, x25
+; CHECK-NEXT:    incd x30
+; CHECK-NEXT:    ldr p2, [x25]
+; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x26]
+; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x27]
 ; CHECK-NEXT:    str p1, [x1]
 ; CHECK-NEXT:    str p2, [x2]
 ; CHECK-NEXT:    st1w { z0.s }, p0, [x3]
@@ -626,10 +682,10 @@ define void @quux() #1 {
 ; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x3]
 ; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x4]
 ; CHECK-NEXT:    fmopa za0.s, p1/m, p2/m, z0.s, z1.s
-; CHECK-NEXT:    ldr p1, [x27]
-; CHECK-NEXT:    ldr p2, [x24]
-; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x25, #1, mul vl]
-; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x26]
+; CHECK-NEXT:    ldr p1, [x28]
+; CHECK-NEXT:    ldr p2, [x25]
+; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x26, #1, mul vl]
+; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x27]
 ; CHECK-NEXT:    str p1, [x16]
 ; CHECK-NEXT:    str p2, [x17]
 ; CHECK-NEXT:    st1w { z0.s }, p0, [x18]
@@ -639,10 +695,10 @@ define void @quux() #1 {
 ; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x18]
 ; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x0]
 ; CHECK-NEXT:    fmopa za1.s, p1/m, p2/m, z0.s, z1.s
-; CHECK-NEXT:    ldr p1, [x23]
-; CHECK-NEXT:    ldr p2, [x28]
-; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x25]
-; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x26, #1, mul vl]
+; CHECK-NEXT:    ldr p1, [x24]
+; CHECK-NEXT:    ldr p2, [x30]
+; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x26]
+; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x27, #1, mul vl]
 ; CHECK-NEXT:    str p1, [x12]
 ; CHECK-NEXT:    str p2, [x13]
 ; CHECK-NEXT:    st1w { z0.s }, p0, [x14]
@@ -652,10 +708,10 @@ define void @quux() #1 {
 ; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x14]
 ; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x15]
 ; CHECK-NEXT:    fmopa za2.s, p1/m, p2/m, z0.s, z1.s
-; CHECK-NEXT:    ldr p1, [x27]
-; CHECK-NEXT:    ldr p2, [x28]
-; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x25, #1, mul vl]
-; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x26, #1, mul vl]
+; CHECK-NEXT:    ldr p1, [x28]
+; CHECK-NEXT:    ldr p2, [x30]
+; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x26, #1, mul vl]
+; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x27, #1, mul vl]
 ; CHECK-NEXT:    str p1, [x8]
 ; CHECK-NEXT:    str p2, [x9]
 ; CHECK-NEXT:    st1w { z0.s }, p0, [x10]
@@ -665,9 +721,9 @@ define void @quux() #1 {
 ; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x10]
 ; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x11]
 ; CHECK-NEXT:    fmopa za3.s, p1/m, p2/m, z0.s, z1.s
-; CHECK-NEXT:    ldr x27, [x5]
-; CHECK-NEXT:    subs x27, x27, #1
-; CHECK-NEXT:    str x27, [x5]
+; CHECK-NEXT:    ldr x28, [x5]
+; CHECK-NEXT:    subs x28, x28, #1
+; CHECK-NEXT:    str x28, [x5]
 ; CHECK-NEXT:    b .LBB0_3
 bb:
   %alloca = alloca <vscale x 16 x i1>, align 2
