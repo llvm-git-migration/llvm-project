@@ -15,6 +15,7 @@
 #include "lldb/Breakpoint/BreakpointResolver.h"
 #include "lldb/Breakpoint/BreakpointResolverFileLine.h"
 #include "lldb/Core/Address.h"
+#include "lldb/Core/Debugger.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/ModuleList.h"
 #include "lldb/Core/SearchFilter.h"
@@ -26,6 +27,7 @@
 #include "lldb/Target/SectionLoadList.h"
 #include "lldb/Target/Target.h"
 #include "lldb/Target/ThreadSpec.h"
+#include "lldb/Utility/AnsiTerminal.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/Stream.h"
@@ -837,6 +839,12 @@ void Breakpoint::GetDescription(Stream *s, lldb::DescriptionLevel level,
                                 bool show_locations) {
   assert(s != nullptr);
 
+  // Grey out any disabled breakpoints in the list of breakpoints.
+  const bool print_faint =
+      (!IsEnabled() && GetTarget().GetDebugger().GetUseColor());
+  if (print_faint)
+    s->Printf("%s", ansi::FormatAnsiTerminalCodes("${ansi.faint}").c_str());
+
   if (!m_kind_description.empty()) {
     if (level == eDescriptionLevelBrief) {
       s->PutCString(GetBreakpointKind());
@@ -933,6 +941,10 @@ void Breakpoint::GetDescription(Stream *s, lldb::DescriptionLevel level,
     }
     s->IndentLess();
   }
+
+  // Reset the colors back to normal if they were previously greyed out.
+  if (print_faint)
+    s->Printf("%s", ansi::FormatAnsiTerminalCodes("${ansi.normal}").c_str());
 }
 
 void Breakpoint::GetResolverDescription(Stream *s) {
