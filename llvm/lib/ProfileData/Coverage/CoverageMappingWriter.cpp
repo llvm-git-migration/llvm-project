@@ -165,7 +165,15 @@ void CoverageMappingWriter::write(raw_ostream &OS) {
                                        const CounterMappingRegion &RHS) {
     if (LHS.FileID != RHS.FileID)
       return LHS.FileID < RHS.FileID;
-    if (LHS.startLoc() != RHS.startLoc())
+
+    auto ignoreLocationComparison = [](const CounterMappingRegion &LHS,
+                                       const CounterMappingRegion &RHS) {
+      return (LHS.Kind == CounterMappingRegion::MCDCBranchRegion ||
+              LHS.Kind == CounterMappingRegion::MCDCDecisionRegion) &&
+             LHS.Kind == RHS.Kind;
+    };
+
+    if (!ignoreLocationComparison(LHS, RHS) && LHS.startLoc() != RHS.startLoc())
       return LHS.startLoc() < RHS.startLoc();
 
     // Put `Decision` before `Expansion`.
