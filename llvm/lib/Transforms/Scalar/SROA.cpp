@@ -627,11 +627,8 @@ public:
   /// everything so that the usual ordering properties of the alloca's slices
   /// hold.
   void insert(ArrayRef<Slice> NewSlices) {
-    int OldSize = Slices.size();
     Slices.append(NewSlices.begin(), NewSlices.end());
-    auto SliceI = Slices.begin() + OldSize;
-    llvm::sort(SliceI, Slices.end());
-    std::inplace_merge(Slices.begin(), SliceI, Slices.end());
+    llvm::stable_sort(Slices);
   }
 
   // Forward declare the iterator and range accessor for walking the
@@ -5122,7 +5119,7 @@ bool SROA::splitAlloca(AllocaInst &AI, AllocaSlices &AS) {
   }
 
   if (!IsSorted)
-    llvm::sort(AS);
+    llvm::stable_sort(AS);
 
   /// Describes the allocas introduced by rewritePartition in order to migrate
   /// the debug info.
