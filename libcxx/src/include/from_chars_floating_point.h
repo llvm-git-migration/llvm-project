@@ -51,7 +51,7 @@ from_chars_result from_chars_floating_point(const char* __first, const char* __l
 
   // The loop fills the mantissa with as many digits as it can hold
   const _Uint_type bitstype_max_div_by_base = numeric_limits<_Uint_type>::max() / BASE;
-  while (index < length) {
+  while (index < static_cast<size_t>(length)) {
     if (LIBC_NAMESPACE::internal::isdigit(src[index])) {
       uint32_t digit = src[index] - '0';
       seen_digit     = true;
@@ -86,12 +86,12 @@ from_chars_result from_chars_floating_point(const char* __first, const char* __l
   if (!seen_digit)
     return {src + index, {}};
 
-  if (index < length && LIBC_NAMESPACE::internal::tolower(src[index]) == EXPONENT_MARKER) {
+  if (index < static_cast<size_t>(length) && LIBC_NAMESPACE::internal::tolower(src[index]) == EXPONENT_MARKER) {
     bool has_sign = false;
-    if (index + 1 < length && (src[index + 1] == '+' || src[index + 1] == '-')) {
+    if (index + 1 < static_cast<size_t>(length) && (src[index + 1] == '+' || src[index + 1] == '-')) {
       has_sign = true;
     }
-    if (index + 1 + static_cast<size_t>(has_sign) < length &&
+    if (index + 1 + static_cast<size_t>(has_sign) < static_cast<size_t>(length) &&
         LIBC_NAMESPACE::internal::isdigit(src[index + 1 + static_cast<size_t>(has_sign)])) {
       ++index;
       auto result = LIBC_NAMESPACE::internal::strtointeger<int32_t>(src + index, 10);
