@@ -82,7 +82,8 @@ Attribute constFoldBinaryOpConditional(ArrayRef<Attribute> operands,
     if (!elementResult)
       return {};
 
-    return DenseElementsAttr::get(cast<ShapedType>(resultType), *elementResult);
+    return DenseElementsAttr::get(cast<ShapedType>(resultType),
+                                  llvm::ArrayRef(*elementResult));
   }
 
   if (isa<ElementsAttr>(operands[0]) && isa<ElementsAttr>(operands[1])) {
