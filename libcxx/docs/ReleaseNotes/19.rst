@@ -130,6 +130,8 @@ Deprecations and Removals
   `std-allocator-const <https://clang.llvm.org/extra/clang-tidy/checks/portability/std-allocator-const.html>`
   enabled.
 
+- The operators in the ``rel_ops`` namespace have been deprecated. The deprecation is part of the paper
+  P0768R1 "Library Support for the Spaceship (Comparison) Operator".
 
 Upcoming Deprecations and Removals
 ----------------------------------
