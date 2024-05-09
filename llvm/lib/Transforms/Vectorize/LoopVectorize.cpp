@@ -4345,9 +4345,11 @@ void LoopVectorizationCostModel::collectLoopUniforms(ElementCount VF) {
   SmallVector<BasicBlock *> Exiting;
   TheLoop->getExitingBlocks(Exiting);
   for (BasicBlock *E : Exiting) {
-    auto *Cmp = dyn_cast<Instruction>(E->getTerminator()->getOperand(0));
-    if (Cmp && TheLoop->contains(Cmp) && Cmp->hasOneUse())
-      addToWorklistIfAllowed(Cmp);
+    if (E != Legal->getSpeculativeEarlyExitingBlock()) {
+      auto *Cmp = dyn_cast<Instruction>(E->getTerminator()->getOperand(0));
+      if (Cmp && TheLoop->contains(Cmp) && Cmp->hasOneUse())
+        addToWorklistIfAllowed(Cmp);
+    }
   }
 
   auto PrevVF = VF.divideCoefficientBy(2);
