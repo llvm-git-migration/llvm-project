@@ -341,6 +341,7 @@ tryToUnrollAndJamLoop(Loop *L, DominatorTree &DT, LoopInfo *LI,
     LLVM_DEBUG(dbgs() << "  Not unrolling loop with inlinable calls.\n");
     return LoopUnrollResult::Unmodified;
   }
+  // FIXME: Allow unrolling for convergent operations anchored inside the loop.
   if (InnerUCE.Convergent || OuterUCE.Convergent) {
     LLVM_DEBUG(
         dbgs() << "  Not unrolling loop with convergent instructions.\n");

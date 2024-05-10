@@ -20,6 +20,7 @@
 namespace llvm {
 class AssumptionCache;
 class BasicBlock;
+class Instruction;
 class Loop;
 class Function;
 template <class T> class SmallPtrSetImpl;
@@ -44,6 +45,9 @@ struct CodeMetrics {
 
   /// True if this function contains a call to a convergent function.
   bool convergent = false;
+
+  /// True if the code contains an uncontrolled convergent operation.
+  bool convergentUncontrolled = false;
 
   /// True if this function calls alloca (in the C sense).
   bool usesDynamicAlloca = false;
@@ -77,7 +81,7 @@ struct CodeMetrics {
   /// Add information about a block to the current state.
   void analyzeBasicBlock(const BasicBlock *BB, const TargetTransformInfo &TTI,
                          const SmallPtrSetImpl<const Value *> &EphValues,
-                         bool PrepareForLTO = false);
+                         bool PrepareForLTO = false, const Loop *L = nullptr);
 
   /// Collect a loop's ephemeral values (those used only by an assume
   /// or similar intrinsics in the loop).

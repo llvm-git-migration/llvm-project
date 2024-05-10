@@ -73,6 +73,7 @@ struct UnrollLoopOptions {
   bool AllowExpensiveTripCount;
   bool UnrollRemainder;
   bool ForgetAllSCEV;
+  const Instruction *Heart = nullptr;
 };
 
 LoopUnrollResult UnrollLoop(Loop *L, UnrollLoopOptions ULO, LoopInfo *LI,
@@ -129,6 +130,7 @@ class UnrollCostEstimator {
 public:
   unsigned NumInlineCandidates;
   bool Convergent;
+  bool ConvergentAllowsRuntime;
 
   UnrollCostEstimator(const Loop *L, const TargetTransformInfo &TTI,
                       const SmallPtrSetImpl<const Value *> &EphValues,

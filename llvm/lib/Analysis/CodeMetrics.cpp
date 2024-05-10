@@ -16,6 +16,7 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/InstructionCost.h"
 
@@ -111,11 +112,22 @@ void CodeMetrics::collectEphemeralValues(
   completeEphemeralValues(Visited, Worklist, EphValues);
 }
 
+static bool isUsedOutsideOfLoop(const Instruction &I, const Loop &L) {
+  for (const auto *U : I.users()) {
+    if (auto *I = dyn_cast<Instruction>(U)) {
+      if (!L.contains(I->getParent()))
+        return true;
+    }
+  }
+  return false;
+}
+
 /// Fill in the current structure with information gleaned from the specified
 /// block.
 void CodeMetrics::analyzeBasicBlock(
     const BasicBlock *BB, const TargetTransformInfo &TTI,
-    const SmallPtrSetImpl<const Value *> &EphValues, bool PrepareForLTO) {
+    const SmallPtrSetImpl<const Value *> &EphValues, bool PrepareForLTO,
+    const Loop *L) {
   ++NumBlocks;
   InstructionCost NumInstsBeforeThisBB = NumInsts;
   for (const Instruction &I : *BB) {
@@ -163,19 +175,33 @@ void CodeMetrics::analyzeBasicBlock(
     if (isa<ExtractElementInst>(I) || I.getType()->isVectorTy())
       ++NumVectorInsts;
 
-    if (I.getType()->isTokenTy() && I.isUsedOutsideOfBlock(BB))
-      notDuplicatable = true;
-
-    if (const CallInst *CI = dyn_cast<CallInst>(&I)) {
-      if (CI->cannotDuplicate())
+    if (L && isa<ConvergenceControlInst>(I)) {
+      if (isUsedOutsideOfLoop(I, *L)) {
+        LLVM_DEBUG(dbgs() << I
+                          << "\n  Cannot duplicate a convergence control token "
+                             "used outside the loop.\n");
         notDuplicatable = true;
-      if (CI->isConvergent())
-        convergent = true;
+      }
+    } else if (I.getType()->isTokenTy() && I.isUsedOutsideOfBlock(BB)) {
+      LLVM_DEBUG(dbgs() << I
+                        << "\n  Cannot duplicate a token value used outside "
+                           "the current block.\n");
+      notDuplicatable = true;
     }
 
-    if (const InvokeInst *InvI = dyn_cast<InvokeInst>(&I))
-      if (InvI->cannotDuplicate())
+    if (const CallBase *CB = dyn_cast<CallBase>(&I)) {
+      if (CB->cannotDuplicate())
         notDuplicatable = true;
+      if (CB->isConvergent()) {
+        LLVM_DEBUG(dbgs() << "Found a convergent operation.\n");
+        convergent = true;
+        if (!isa<ConvergenceControlInst>(CB) &&
+            !CB->getConvergenceControlToken()) {
+          LLVM_DEBUG(dbgs() << "  uncontrolled.\n");
+          convergentUncontrolled = true;
+        }
+      }
+    }
 
     NumInsts += TTI.getInstructionCost(&I, TargetTransformInfo::TCK_CodeSize);
   }
