@@ -14,6 +14,7 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/Stream.h"
 #include "lldb/lldb-defines.h"
+#include "lldb/lldb-types.h"
 
 #include "llvm/Support/Compiler.h"
 
@@ -145,6 +146,10 @@ void AddressRange::Clear() {
   m_byte_size = 0;
 }
 
+bool AddressRange::IsValid() const {
+  return m_base_addr.IsValid() && (m_byte_size > 0);
+}
+
 bool AddressRange::Dump(Stream *s, Target *target, Address::DumpStyle style,
                         Address::DumpStyle fallback_style) const {
   addr_t vmaddr = LLDB_INVALID_ADDRESS;
@@ -202,4 +207,39 @@ void AddressRange::DumpDebug(Stream *s) const {
             static_cast<const void *>(this),
             static_cast<void *>(m_base_addr.GetSection().get()),
             m_base_addr.GetOffset(), GetByteSize());
+}
+
+bool AddressRange::GetDescription(Stream *s, Target *target) const {
+  const char *file_name = nullptr;
+  addr_t start_addr = LLDB_INVALID_ADDRESS;
+
+  if (target == nullptr) {
+    const auto section_sp = m_base_addr.GetSection();
+    if (section_sp) {
+      const auto object_file = section_sp->GetObjectFile();
+      if (object_file != nullptr)
+        file_name = object_file->GetFileSpec().GetFilename().AsCString();
+    }
+    start_addr = m_base_addr.GetFileAddress();
+  } else {
+    start_addr = m_base_addr.GetLoadAddress(target);
+    file_name = "";
+  }
+
+  const addr_t end_addr = (start_addr == LLDB_INVALID_ADDRESS)
+                              ? LLDB_INVALID_ADDRESS
+                              : start_addr + GetByteSize();
+  s->Printf("%s[0x%" PRIx64 "-0x%" PRIx64 "]", file_name, start_addr, end_addr);
+  return true;
+}
+
+bool AddressRange::operator==(const AddressRange &rhs) {
+  if (!IsValid() || !rhs.IsValid())
+    return false;
+  return m_base_addr == rhs.GetBaseAddress() &&
+         m_byte_size == rhs.GetByteSize();
+}
+
+bool AddressRange::operator!=(const AddressRange &rhs) {
+  return !(*this == rhs);
 }
