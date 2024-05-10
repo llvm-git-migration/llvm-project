@@ -1,0 +1,89 @@
+; RUN: rm -rf %t
+; RUN: split-file %s %t
+; RUN: mkdir -p %t/Frameworks 
+; RUN: cp -r %S/Inputs/Simple/Simple.framework %t/Frameworks/
+; RUN: cp -r %S/Inputs/Foundation/Foundation.framework %t/Frameworks/
+
+; RUN: clang-installapi -target x86_64-apple-macosx10.12 \
+; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+; RUN: -current_version 1.2.3 -compatibility_version 1 -o %t/Simple.tbd \
+; RUN: -exclude-public-header **/Simple.h \
+; RUN: -F %t/Frameworks --verify-mode=ErrorsOnly \
+; RUN: %t/Frameworks/Simple.framework 2>&1 | FileCheck -allow-empty %s \
+; RUN: --implicit-check-not=error --implicit-check-not=warning 
+; RUN: llvm-readtapi -compare %t/expected.tbd %t/Simple.tbd
+
+# Test expected error by collecting too many frameworks.
+; RUN: mkdir -p %t/FakeSDKRoot/System/Library/
+; RUN: ln -s %t/Frameworks %t/FakeSDKRoot/System/Library/Frameworks
+; RUN: not clang-installapi -target x86_64-apple-macosx10.12 \
+; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+; RUN: -current_version 1.2.3 -compatibility_version 1 -o %t/Simple.tbd \
+; RUN: -F %t/Frameworks --verify-mode=ErrorsOnly \
+; RUN: %t/FakeSDKRoot  2>&1 | FileCheck %s --check-prefix=TOO_MANY
+
+; TOO_MANY: error: more than one framework/dynamic library found
+
+;--- expected.tbd
+{
+  "main_library": {
+    "current_versions": [
+      {
+        "version": "1.2.3"
+      }
+    ],
+    "exported_symbols": [
+      {
+        "data": {
+          "global": [
+            "_otherFrameworkAPI",
+            "_otherFrameworkSPI",
+            "_privateGlobalVariable"
+          ],
+          "objc_class": [
+            "Basic6",
+            "Basic1",
+            "Basic3",
+            "Basic4_2",
+            "Basic5",
+            "Basic9",
+            "Basic8",
+            "Basic2",
+            "Basic4",
+            "A",
+            "ExternalManagedObject"
+          ],
+          "objc_ivar": [
+            "Basic4.ivar2",
+            "Basic4_2.ivar1",
+            "Basic6.ivar1",
+            "Basic4.ivar1",
+            "Basic4_2.ivar2"
+          ],
+          "weak": [
+            "_weakPrivateGlobalVariable"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "/System/Library/Frameworks/Simple.framework/Versions/A/Simple"
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "10.12",
+        "target": "x86_64-macos"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}

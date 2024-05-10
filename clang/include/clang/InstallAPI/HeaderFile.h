@@ -97,6 +97,14 @@ public:
                                           Other.Excluded, Other.Extra,
                                           Other.Umbrella);
   }
+
+  bool operator<(const HeaderFile &Other) const {
+    if (isExtra() && Other.isExtra())
+      return std::tie(Type, Umbrella) < std::tie(Other.Type, Other.Umbrella);
+
+    return std::tie(Type, Umbrella, Extra, FullPath) <
+           std::tie(Other.Type, Other.Umbrella, Other.Extra, Other.FullPath);
+  }
 };
 
 /// Glob that represents a pattern of header files to retreive.
