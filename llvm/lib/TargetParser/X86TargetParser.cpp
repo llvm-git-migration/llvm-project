@@ -66,15 +66,15 @@ constexpr X86FeatureBitset FeaturesNocona =
 
 // Basic 64-bit capable CPU.
 constexpr X86FeatureBitset FeaturesX86_64 = FeaturesPentium4 | Feature64BIT;
-constexpr X86FeatureBitset FeaturesX86_64_V2 = FeaturesX86_64 | FeatureSAHF |
-                                            FeaturePOPCNT | FeatureCRC32 |
-                                            FeatureSSE4_2 | FeatureCMPXCHG16B;
+constexpr X86FeatureBitset FeaturesX86_64_V2 =
+    FeaturesX86_64 | FeatureSAHF | FeaturePOPCNT | FeatureCRC32 |
+    FeatureSSE4_2 | FeatureCMPXCHG16B;
 constexpr X86FeatureBitset FeaturesX86_64_V3 =
     FeaturesX86_64_V2 | FeatureAVX2 | FeatureBMI | FeatureBMI2 | FeatureF16C |
     FeatureFMA | FeatureLZCNT | FeatureMOVBE | FeatureXSAVE;
-constexpr X86FeatureBitset FeaturesX86_64_V4 = FeaturesX86_64_V3 | FeatureEVEX512 |
-                                            FeatureAVX512BW | FeatureAVX512CD |
-                                            FeatureAVX512DQ | FeatureAVX512VL;
+constexpr X86FeatureBitset FeaturesX86_64_V4 =
+    FeaturesX86_64_V3 | FeatureEVEX512 | FeatureAVX512BW | FeatureAVX512CD |
+    FeatureAVX512DQ | FeatureAVX512VL;
 
 // Intel Core CPUs
 constexpr X86FeatureBitset FeaturesCore2 =
@@ -162,8 +162,9 @@ constexpr X86FeatureBitset FeaturesAlderlake =
 constexpr X86FeatureBitset FeaturesSierraforest =
     FeaturesAlderlake | FeatureCMPCCXADD | FeatureAVXIFMA | FeatureUINTR |
     FeatureENQCMD | FeatureAVXNECONVERT | FeatureAVXVNNIINT8;
-constexpr X86FeatureBitset FeaturesArrowlakeS = FeaturesSierraforest |
-    FeatureAVXVNNIINT16 | FeatureSHA512 | FeatureSM3 | FeatureSM4;
+constexpr X86FeatureBitset FeaturesArrowlakeS =
+    FeaturesSierraforest | FeatureAVXVNNIINT16 | FeatureSHA512 | FeatureSM3 |
+    FeatureSM4;
 constexpr X86FeatureBitset FeaturesPantherlake =
     FeaturesArrowlakeS | FeaturePREFETCHI;
 constexpr X86FeatureBitset FeaturesClearwaterforest =
@@ -174,7 +175,8 @@ constexpr X86FeatureBitset FeaturesGeode =
     FeatureX87 | FeatureCMPXCHG8B | FeatureMMX | Feature3DNOW | Feature3DNOWA;
 
 // K6 processor.
-constexpr X86FeatureBitset FeaturesK6 = FeatureX87 | FeatureCMPXCHG8B | FeatureMMX;
+constexpr X86FeatureBitset FeaturesK6 =
+    FeatureX87 | FeatureCMPXCHG8B | FeatureMMX;
 
 // K7 and K8 architecture processors.
 constexpr X86FeatureBitset FeaturesAthlon =
@@ -211,8 +213,8 @@ constexpr X86FeatureBitset FeaturesBDVER2 =
 constexpr X86FeatureBitset FeaturesBDVER3 =
     FeaturesBDVER2 | FeatureFSGSBASE | FeatureXSAVEOPT;
 constexpr X86FeatureBitset FeaturesBDVER4 = FeaturesBDVER3 | FeatureAVX2 |
-                                         FeatureBMI2 | FeatureMOVBE |
-                                         FeatureMWAITX | FeatureRDRND;
+                                            FeatureBMI2 | FeatureMOVBE |
+                                            FeatureMWAITX | FeatureRDRND;
 
 // AMD Zen architecture processors.
 constexpr X86FeatureBitset FeaturesZNVER1 =
@@ -226,11 +228,11 @@ constexpr X86FeatureBitset FeaturesZNVER1 =
     FeatureSSE4_2 | FeatureSSE4_A | FeatureXSAVE | FeatureXSAVEC |
     FeatureXSAVEOPT | FeatureXSAVES;
 constexpr X86FeatureBitset FeaturesZNVER2 = FeaturesZNVER1 | FeatureCLWB |
-                                         FeatureRDPID | FeatureRDPRU |
-                                         FeatureWBNOINVD;
-static constexpr X86FeatureBitset FeaturesZNVER3 = FeaturesZNVER2 |
-                                                FeatureINVPCID | FeaturePKU |
-                                                FeatureVAES | FeatureVPCLMULQDQ;
+                                            FeatureRDPID | FeatureRDPRU |
+                                            FeatureWBNOINVD;
+static constexpr X86FeatureBitset FeaturesZNVER3 =
+    FeaturesZNVER2 | FeatureINVPCID | FeaturePKU | FeatureVAES |
+    FeatureVPCLMULQDQ;
 static constexpr X86FeatureBitset FeaturesZNVER4 =
     FeaturesZNVER3 | FeatureAVX512F | FeatureEVEX512 | FeatureAVX512CD |
     FeatureAVX512DQ | FeatureAVX512BW | FeatureAVX512VL | FeatureAVX512IFMA |
@@ -561,7 +563,8 @@ constexpr X86FeatureBitset ImpliedFeaturesGFNI = FeatureSSE2;
 constexpr X86FeatureBitset ImpliedFeaturesPCLMUL = FeatureSSE2;
 constexpr X86FeatureBitset ImpliedFeaturesSHA = FeatureSSE2;
 constexpr X86FeatureBitset ImpliedFeaturesVAES = FeatureAES | FeatureAVX2;
-constexpr X86FeatureBitset ImpliedFeaturesVPCLMULQDQ = FeatureAVX | FeaturePCLMUL;
+constexpr X86FeatureBitset ImpliedFeaturesVPCLMULQDQ =
+    FeatureAVX | FeaturePCLMUL;
 constexpr X86FeatureBitset ImpliedFeaturesSM3 = FeatureAVX;
 constexpr X86FeatureBitset ImpliedFeaturesSM4 = FeatureAVX2;
 
