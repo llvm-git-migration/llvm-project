@@ -2352,7 +2352,7 @@ std::error_code DataAggregator::writeBATYAML(BinaryContext &BC,
         YamlBB.Index = Idx;
 
       for (auto BI = BlockMap.begin(), BE = BlockMap.end(); BI != BE; ++BI)
-        YamlBF.Blocks[BI->second.getBBIndex()].Hash = BI->second.getBBHash();
+        YamlBF.Blocks[BI->second.Index].Hash = BI->second.Hash;
 
       auto getSuccessorInfo = [&](uint32_t SuccOffset, unsigned SuccDataIdx) {
         const llvm::bolt::BranchInfo &BI = Branches.Data.at(SuccDataIdx);
@@ -2392,7 +2392,7 @@ std::error_code DataAggregator::writeBATYAML(BinaryContext &BC,
         auto BlockIt = BlockMap.upper_bound(FromOffset);
         --BlockIt;
         const unsigned BlockOffset = BlockIt->first;
-        const unsigned BlockIndex = BlockIt->second.getBBIndex();
+        const unsigned BlockIndex = BlockIt->second.Index;
         yaml::bolt::BinaryBasicBlockProfile &YamlBB = YamlBF.Blocks[BlockIndex];
         const uint32_t Offset = FromOffset - BlockOffset;
         for (const auto &[CallToLoc, CallToIdx] : CallTo)
