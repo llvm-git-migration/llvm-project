@@ -95,6 +95,7 @@
 #include <algorithm>
 
 #define DEBUG_TYPE "amdgpu-sw-lower-lds"
+#define COV5_HIDDEN_DYN_LDS_SIZE_ARG 15
 
 using namespace llvm;
 using namespace AMDGPU;
@@ -153,6 +154,10 @@ public:
   void lowerNonKernelLDSAccesses(Function *Func,
                                  SetVector<GlobalVariable *> &LDSGlobals,
                                  NonKernelLDSParameters &NKLDSParams);
+  void
+  updateMallocSizeForDynamicLDS(Function *Func, Value *CurrMallocSize,
+                                Value *HiddenDynLDSSize,
+                                SetVector<GlobalVariable *> &DynamicLDSGlobals);
 
 private:
   Module &M;
@@ -195,7 +200,6 @@ SetVector<Function *> AMDGPUSwLowerLDS::getOrderedIndirectLDSAccessingKernels(
     Function *Func = OrderedKernels[i];
     Func->setMetadata("llvm.amdgcn.lds.kernel.id",
                       MDNode::get(Ctx, AttrMDArgs));
-    auto &LDSParams = KernelToLDSParametersMap[Func];
   }
   return std::move(OrderedKernels);
 }
@@ -232,6 +236,9 @@ void AMDGPUSwLowerLDS::populateSwLDSGlobal(Function *Func) {
       M, IRB.getPtrTy(), false, GlobalValue::InternalLinkage,
       PoisonValue::get(IRB.getPtrTy()), "llvm.amdgcn.sw.lds." + Func->getName(),
       nullptr, GlobalValue::NotThreadLocal, AMDGPUAS::LOCAL_ADDRESS, false);
+  GlobalValue::SanitizerMetadata MD;
+  MD.NoAddress = true;
+  LDSParams.SwLDS->setSanitizerMetadata(MD);
   return;
 }
 
@@ -265,7 +272,7 @@ void AMDGPUSwLowerLDS::populateSwMetadataGlobal(Function *Func) {
   //{StartOffset, AlignedSizeInBytes}
   SmallString<128> MDItemStr;
   raw_svector_ostream MDItemOS(MDItemStr);
-  MDItemOS << "llvm.amdgcn.sw.lds." << Func->getName().str() << ".md.item";
+  MDItemOS << "llvm.amdgcn.sw.lds." << Func->getName() << ".md.item";
 
   StructType *LDSItemTy =
       StructType::create(Ctx, {Int32Ty, Int32Ty, Int32Ty}, MDItemOS.str());
@@ -296,13 +303,13 @@ void AMDGPUSwLowerLDS::populateSwMetadataGlobal(Function *Func) {
 
   SmallString<128> MDTypeStr;
   raw_svector_ostream MDTypeOS(MDTypeStr);
-  MDTypeOS << "llvm.amdgcn.sw.lds." << Func->getName().str() << ".md.type";
+  MDTypeOS << "llvm.amdgcn.sw.lds." << Func->getName() << ".md.type";
 
   StructType *MetadataStructType =
       StructType::create(Ctx, Items, MDTypeOS.str());
   SmallString<128> MDStr;
   raw_svector_ostream MDOS(MDStr);
-  MDOS << "llvm.amdgcn.sw.lds." << Func->getName().str() << ".md";
+  MDOS << "llvm.amdgcn.sw.lds." << Func->getName() << ".md";
   LDSParams.SwLDSMetadata = new GlobalVariable(
       M, MetadataStructType, false, GlobalValue::InternalLinkage,
       PoisonValue::get(MetadataStructType), MDOS.str(), nullptr,
@@ -387,8 +394,7 @@ void AMDGPUSwLowerLDS::replaceKernelLDSAccesses(Function *Func) {
       Value *Load = IRB.CreateLoad(Int32Ty, GEP);
       Value *BasePlusOffset =
           IRB.CreateInBoundsGEP(IRB.getInt8Ty(), SwLDS, {Load});
-      LLVM_DEBUG(dbgs() << "Sw LDS Lowering, Replacing LDS "
-                        << GV->getName().str());
+      LLVM_DEBUG(dbgs() << "Sw LDS Lowering, Replacing LDS " << GV->getName());
       replacesUsesOfGlobalInFunction(Func, GV, BasePlusOffset);
     }
   };
@@ -398,10 +404,57 @@ void AMDGPUSwLowerLDS::replaceKernelLDSAccesses(Function *Func) {
   ReplaceLDSGlobalUses(IndirectAccess.DynamicLDSGlobals);
 }
 
+void AMDGPUSwLowerLDS::updateMallocSizeForDynamicLDS(
+    Function *Func, Value *CurrMallocSize, Value *HiddenDynLDSSize,
+    SetVector<GlobalVariable *> &DynamicLDSGlobals) {
+  auto &LDSParams = KernelToLDSParametersMap[Func];
+  Type *Int32Ty = IRB.getInt32Ty();
+
+  GlobalVariable *SwLDS = LDSParams.SwLDS;
+  GlobalVariable *SwLDSMetadata = LDSParams.SwLDSMetadata;
+  assert(SwLDS && SwLDSMetadata);
+  StructType *MetadataStructType =
+      cast<StructType>(SwLDSMetadata->getValueType());
+  unsigned MaxAlignment = SwLDS->getAlignment();
+  Value *MaxAlignValue = IRB.getInt32(MaxAlignment);
+  Value *MaxAlignValueMinusOne = IRB.getInt32(MaxAlignment - 1);
+
+  for (GlobalVariable *DynGV : DynamicLDSGlobals) {
+    auto &Indices = LDSParams.LDSToReplacementIndicesMap[DynGV];
+    // Update the Offset metadata.
+    Constant *Index0 = ConstantInt::get(Int32Ty, 0);
+    Constant *Index1 = ConstantInt::get(Int32Ty, Indices[1]);
+
+    Constant *Index2Offset = ConstantInt::get(Int32Ty, 0);
+    auto *GEPForOffset = IRB.CreateInBoundsGEP(
+        MetadataStructType, SwLDSMetadata, {Index0, Index1, Index2Offset});
+
+    IRB.CreateStore(CurrMallocSize, GEPForOffset);
+    // Update the size and Aligned Size metadata.
+    Constant *Index2Size = ConstantInt::get(Int32Ty, 1);
+    auto *GEPForSize = IRB.CreateInBoundsGEP(MetadataStructType, SwLDSMetadata,
+                                             {Index0, Index1, Index2Size});
+
+    Value *CurrDynLDSSize = IRB.CreateLoad(Int32Ty, HiddenDynLDSSize);
+    IRB.CreateStore(CurrDynLDSSize, GEPForSize);
+    Constant *Index2AlignedSize = ConstantInt::get(Int32Ty, 1);
+    auto *GEPForAlignedSize = IRB.CreateInBoundsGEP(
+        MetadataStructType, SwLDSMetadata, {Index0, Index1, Index2AlignedSize});
+
+    Value *AlignedDynLDSSize =
+        IRB.CreateAdd(CurrDynLDSSize, MaxAlignValueMinusOne);
+    AlignedDynLDSSize = IRB.CreateUDiv(AlignedDynLDSSize, MaxAlignValue);
+    AlignedDynLDSSize = IRB.CreateMul(AlignedDynLDSSize, MaxAlignValue);
+    IRB.CreateStore(AlignedDynLDSSize, GEPForAlignedSize);
+
+    // Update the Current Malloc Size
+    CurrMallocSize = IRB.CreateAdd(CurrMallocSize, AlignedDynLDSSize);
+  }
+}
+
 void AMDGPUSwLowerLDS::lowerKernelLDSAccesses(Function *Func,
                                               DomTreeUpdater &DTU) {
-  LLVM_DEBUG(dbgs() << "Sw Lowering Kernel LDS for : "
-                    << Func->getName().str());
+  LLVM_DEBUG(dbgs() << "Sw Lowering Kernel LDS for : " << Func->getName());
   auto &LDSParams = KernelToLDSParametersMap[Func];
   auto &Ctx = M.getContext();
   auto *PrevEntryBlock = &Func->getEntryBlock();
@@ -423,12 +476,6 @@ void AMDGPUSwLowerLDS::lowerKernelLDSAccesses(Function *Func,
   auto *const XYZOr = IRB.CreateOr(XYOr, WIdz);
   auto *const WIdzCond = IRB.CreateICmpEQ(XYZOr, IRB.getInt32(0));
 
-  GlobalVariable *SwLDS = LDSParams.SwLDS;
-  GlobalVariable *SwLDSMetadata = LDSParams.SwLDSMetadata;
-  assert(SwLDS && SwLDSMetadata);
-  StructType *MetadataStructType =
-      cast<StructType>(SwLDSMetadata->getValueType());
-
   // All work items will branch to PrevEntryBlock except {0,0,0} index
   // work item which will branch to malloc block.
   IRB.CreateCondBr(WIdzCond, MallocBlock, PrevEntryBlock);
@@ -439,8 +486,15 @@ void AMDGPUSwLowerLDS::lowerKernelLDSAccesses(Function *Func,
   // If Dynamic LDS globals are accessed by the kernel,
   // Get the size of dyn lds from hidden dyn_lds_size kernel arg.
   // Update the corresponding metadata global entries for this dyn lds global.
+  GlobalVariable *SwLDS = LDSParams.SwLDS;
+  GlobalVariable *SwLDSMetadata = LDSParams.SwLDSMetadata;
+  assert(SwLDS && SwLDSMetadata);
+  StructType *MetadataStructType =
+      cast<StructType>(SwLDSMetadata->getValueType());
   uint32_t MallocSize = 0;
   Value *CurrMallocSize;
+  Type *Int32Ty = IRB.getInt32Ty();
+  Type *Int64Ty = IRB.getInt64Ty();
 
   unsigned NumStaticLDS = LDSParams.DirectAccess.StaticLDSGlobals.size() +
                           LDSParams.IndirectAccess.StaticLDSGlobals.size();
@@ -448,69 +502,39 @@ void AMDGPUSwLowerLDS::lowerKernelLDSAccesses(Function *Func,
                        LDSParams.IndirectAccess.DynamicLDSGlobals.size();
 
   if (NumStaticLDS) {
-    auto *GEPForEndStaticLDSOffset = IRB.CreateInBoundsGEP(
-        MetadataStructType, SwLDSMetadata,
-        {IRB.getInt32(0), IRB.getInt32(NumStaticLDS - 1), IRB.getInt32(0)});
+    auto *GEPForEndStaticLDSOffset =
+        IRB.CreateInBoundsGEP(MetadataStructType, SwLDSMetadata,
+                              {ConstantInt::get(Int32Ty, 0),
+                               ConstantInt::get(Int32Ty, NumStaticLDS - 1),
+                               ConstantInt::get(Int32Ty, 0)});
 
-    auto *GEPForEndStaticLDSSize = IRB.CreateInBoundsGEP(
-        MetadataStructType, SwLDSMetadata,
-        {IRB.getInt32(0), IRB.getInt32(NumStaticLDS - 1), IRB.getInt32(2)});
+    auto *GEPForEndStaticLDSSize =
+        IRB.CreateInBoundsGEP(MetadataStructType, SwLDSMetadata,
+                              {ConstantInt::get(Int32Ty, 0),
+                               ConstantInt::get(Int32Ty, NumStaticLDS - 1),
+                               ConstantInt::get(Int32Ty, 2)});
 
     Value *EndStaticLDSOffset =
-        IRB.CreateLoad(IRB.getInt64Ty(), GEPForEndStaticLDSOffset);
-    Value *EndStaticLDSSize =
-        IRB.CreateLoad(IRB.getInt64Ty(), GEPForEndStaticLDSSize);
+        IRB.CreateLoad(Int32Ty, GEPForEndStaticLDSOffset);
+    Value *EndStaticLDSSize = IRB.CreateLoad(Int32Ty, GEPForEndStaticLDSSize);
     CurrMallocSize = IRB.CreateAdd(EndStaticLDSOffset, EndStaticLDSSize);
   } else
-    CurrMallocSize = IRB.getInt64(MallocSize);
+    CurrMallocSize = IRB.getInt32(MallocSize);
 
   if (NumDynLDS) {
-    unsigned MaxAlignment = SwLDS->getAlignment();
-    Value *MaxAlignValue = IRB.getInt64(MaxAlignment);
-    Value *MaxAlignValueMinusOne = IRB.getInt64(MaxAlignment - 1);
-
+    // Get size from hidden dyn_lds_size argument of kernel
     Value *ImplicitArg =
         IRB.CreateIntrinsic(Intrinsic::amdgcn_implicitarg_ptr, {}, {});
     Value *HiddenDynLDSSize = IRB.CreateInBoundsGEP(
-        ImplicitArg->getType(), ImplicitArg, {IRB.getInt32(15)});
-
-    auto MallocSizeCalcLambda =
-        [&](SetVector<GlobalVariable *> &DynamicLDSGlobals) {
-          for (GlobalVariable *DynGV : DynamicLDSGlobals) {
-            auto &Indices = LDSParams.LDSToReplacementIndicesMap[DynGV];
-
-            // Update the Offset metadata.
-            auto *GEPForOffset = IRB.CreateInBoundsGEP(
-                MetadataStructType, SwLDSMetadata,
-                {IRB.getInt32(0), IRB.getInt32(Indices[1]), IRB.getInt32(0)});
-            IRB.CreateStore(CurrMallocSize, GEPForOffset);
-
-            // Get size from hidden dyn_lds_size argument of kernel
-            // Update the size and Aligned Size metadata.
-            auto *GEPForSize = IRB.CreateInBoundsGEP(
-                MetadataStructType, SwLDSMetadata,
-                {IRB.getInt32(0), IRB.getInt32(Indices[1]), IRB.getInt32(1)});
-            Value *CurrDynLDSSize =
-                IRB.CreateLoad(IRB.getInt64Ty(), HiddenDynLDSSize);
-            IRB.CreateStore(CurrDynLDSSize, GEPForSize);
-
-            auto *GEPForAlignedSize = IRB.CreateInBoundsGEP(
-                MetadataStructType, SwLDSMetadata,
-                {IRB.getInt32(0), IRB.getInt32(Indices[1]), IRB.getInt32(2)});
-            Value *AlignedDynLDSSize =
-                IRB.CreateAdd(CurrDynLDSSize, MaxAlignValueMinusOne);
-            AlignedDynLDSSize =
-                IRB.CreateUDiv(AlignedDynLDSSize, MaxAlignValue);
-            AlignedDynLDSSize = IRB.CreateMul(AlignedDynLDSSize, MaxAlignValue);
-            IRB.CreateStore(AlignedDynLDSSize, GEPForAlignedSize);
-
-            // Update the Current Malloc Size
-            CurrMallocSize = IRB.CreateAdd(CurrMallocSize, AlignedDynLDSSize);
-          }
-        };
-    MallocSizeCalcLambda(LDSParams.DirectAccess.DynamicLDSGlobals);
-    MallocSizeCalcLambda(LDSParams.IndirectAccess.DynamicLDSGlobals);
+        ImplicitArg->getType(), ImplicitArg,
+        {ConstantInt::get(Int64Ty, COV5_HIDDEN_DYN_LDS_SIZE_ARG)});
+    updateMallocSizeForDynamicLDS(Func, CurrMallocSize, HiddenDynLDSSize,
+                                  LDSParams.DirectAccess.DynamicLDSGlobals);
+    updateMallocSizeForDynamicLDS(Func, CurrMallocSize, HiddenDynLDSSize,
+                                  LDSParams.IndirectAccess.DynamicLDSGlobals);
   }
+
+  CurrMallocSize = IRB.CreateZExt(CurrMallocSize, Int64Ty);
 
   // Create a call to malloc function which does device global memory allocation
   // with size equals to all LDS global accesses size  in this kernel.
@@ -679,7 +703,7 @@ void AMDGPUSwLowerLDS::lowerNonKernelLDSAccesses(
   // Replace LDS access in non-kernel with replacement queried from
   // Base table and offset from offset table.
   LLVM_DEBUG(dbgs() << "Sw LDS lowering, lower non-kernel access for : "
-                    << Func->getName().str());
+                    << Func->getName());
   auto *EntryBlock = &Func->getEntryBlock();
   IRB.SetInsertPoint(EntryBlock, EntryBlock->begin());
   Function *Decl =
@@ -752,6 +776,8 @@ bool AMDGPUSwLowerLDS::run() {
     for (auto &K : LDSAccesses) {
       Function *F = K.first;
       assert(isKernelLDS(F));
+      if (!F->hasFnAttribute(Attribute::SanitizeAddress))
+        continue;
 
       if (!KernelToLDSParametersMap.contains(F)) {
         KernelLDSParameters KernelLDSParams;
@@ -816,6 +842,8 @@ bool AMDGPUSwLowerLDS::run() {
     buildNonKernelLDSOffsetTable(NKLDSParams);
     for (auto &K : NonKernelToLDSAccessMap) {
       Function *Func = K.first;
+      if (!Func->hasFnAttribute(Attribute::SanitizeAddress))
+        continue;
       DenseSet<GlobalVariable *> &LDSGlobals = K.second;
       SetVector<GlobalVariable *> OrderedLDSGlobals = sortByName(
           std::vector<GlobalVariable *>(LDSGlobals.begin(), LDSGlobals.end()));
