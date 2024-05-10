@@ -7,9 +7,8 @@
 define i8 @src_and_bit(i8 %x, i8 %y) {
 ; CHECK-LABEL: @src_and_bit(
 ; CHECK-NEXT:    [[AND:%.*]] = and i8 [[X:%.*]], 3
-; CHECK-NEXT:    [[AND1:%.*]] = and i8 [[X]], 2
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[AND]], 2
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 [[AND1]], i8 1
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 2, i8 1
 ; CHECK-NEXT:    ret i8 [[COND]]
 ;
   %and = and i8 %x, 3
@@ -22,9 +21,8 @@ define i8 @src_and_bit(i8 %x, i8 %y) {
 define <2 x i8> @src_and_bit_vec(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-LABEL: @src_and_bit_vec(
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[X:%.*]], <i8 3, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 2, i8 2>
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[AND]], <i8 2, i8 2>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 2, i8 2>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %x, <i8 3, i8 3>
@@ -37,9 +35,8 @@ define <2 x i8> @src_and_bit_vec(<2 x i8> %x, <2 x i8> %y) {
 define <2 x i8> @src_and_bit_vec_poison(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-LABEL: @src_and_bit_vec_poison(
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[X:%.*]], <i8 poison, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 poison, i8 2>
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[AND]], <i8 2, i8 2>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 2, i8 2>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %x, <i8 poison, i8 3>
@@ -52,9 +49,8 @@ define <2 x i8> @src_and_bit_vec_poison(<2 x i8> %x, <2 x i8> %y) {
 define <2 x i8> @src_and_bit_vec_poison2(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-LABEL: @src_and_bit_vec_poison2(
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[X:%.*]], <i8 poison, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 poison, i8 2>
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[AND]], <i8 2, i8 2>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 2, i8 2>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %x, <i8 poison, i8 3>
@@ -68,13 +64,11 @@ define <2 x i8> @src_and_bit_vec_poison2(<2 x i8> %x, <2 x i8> %y) {
 ; ====================== OR =======================
 define i8 @src_or_bit(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @src_or_bit(
-; CHECK-NEXT:    [[AND:%.*]] = and i8 [[Z:%.*]], 3
 ; CHECK-NEXT:    [[AND1:%.*]] = shl i8 [[Y:%.*]], 2
 ; CHECK-NEXT:    [[SHL:%.*]] = and i8 [[AND1]], 12
 ; CHECK-NEXT:    [[OR:%.*]] = or i8 [[SHL]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[OR]], 3
-; CHECK-NEXT:    [[OR2:%.*]] = or i8 [[AND]], [[X]]
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 [[OR2]], i8 1
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 3, i8 1
 ; CHECK-NEXT:    ret i8 [[COND]]
 ;
   %and = and i8 %z, 3
@@ -88,13 +82,11 @@ define i8 @src_or_bit(i8 %x, i8 %y, i8 %z) {
 }
 define <2 x i8> @src_or_bit_vec(<2 x i8> %x, <2 x i8> %y, <2 x i8> %z) {
 ; CHECK-LABEL: @src_or_bit_vec(
-; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Z:%.*]], <i8 3, i8 3>
 ; CHECK-NEXT:    [[AND1:%.*]] = shl <2 x i8> [[Y:%.*]], <i8 2, i8 2>
 ; CHECK-NEXT:    [[SHL:%.*]] = and <2 x i8> [[AND1]], <i8 12, i8 12>
 ; CHECK-NEXT:    [[OR:%.*]] = or <2 x i8> [[SHL]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[OR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[OR2:%.*]] = or <2 x i8> [[AND]], [[X]]
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[OR2]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %z, <i8 3, i8 3>
@@ -108,13 +100,11 @@ define <2 x i8> @src_or_bit_vec(<2 x i8> %x, <2 x i8> %y, <2 x i8> %z) {
 }
 define <2 x i8> @src_or_bit_vec_poison(<2 x i8> %x, <2 x i8> %y, <2 x i8> %z) {
 ; CHECK-LABEL: @src_or_bit_vec_poison(
-; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Z:%.*]], <i8 3, i8 poison>
 ; CHECK-NEXT:    [[AND1:%.*]] = shl <2 x i8> [[Y:%.*]], <i8 2, i8 poison>
 ; CHECK-NEXT:    [[SHL:%.*]] = and <2 x i8> [[AND1]], <i8 12, i8 poison>
 ; CHECK-NEXT:    [[OR:%.*]] = or <2 x i8> [[SHL]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[OR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[OR2:%.*]] = or <2 x i8> [[AND]], [[X]]
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[OR2]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %z, <i8 3, i8 poison>
@@ -128,13 +118,11 @@ define <2 x i8> @src_or_bit_vec_poison(<2 x i8> %x, <2 x i8> %y, <2 x i8> %z) {
 }
 define <2 x i8> @src_or_bit_vec_poison2(<2 x i8> %x, <2 x i8> %y, <2 x i8> %z) {
 ; CHECK-LABEL: @src_or_bit_vec_poison2(
-; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Z:%.*]], <i8 poison, i8 3>
 ; CHECK-NEXT:    [[AND1:%.*]] = shl <2 x i8> [[Y:%.*]], <i8 poison, i8 2>
 ; CHECK-NEXT:    [[SHL:%.*]] = and <2 x i8> [[AND1]], <i8 poison, i8 12>
 ; CHECK-NEXT:    [[OR:%.*]] = or <2 x i8> [[SHL]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[OR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[OR2:%.*]] = or <2 x i8> [[AND]], [[X]]
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[OR2]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %z, <i8 poison, i8 3>
@@ -152,8 +140,7 @@ define i8 @src_xor_bit(i8 %x, i8 %y) {
 ; CHECK-NEXT:    [[AND:%.*]] = and i8 [[Y:%.*]], 12
 ; CHECK-NEXT:    [[XOR:%.*]] = xor i8 [[AND]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[XOR]], 3
-; CHECK-NEXT:    [[AND1:%.*]] = and i8 [[X]], 3
-; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 [[AND1]], i8 1
+; CHECK-NEXT:    [[COND:%.*]] = select i1 [[CMP]], i8 3, i8 1
 ; CHECK-NEXT:    ret i8 [[COND]]
 ;
   %and = and i8 %y, 12
@@ -168,8 +155,7 @@ define <2 x i8> @src_xor_bit_vec(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Y:%.*]], <i8 12, i8 12>
 ; CHECK-NEXT:    [[XOR:%.*]] = xor <2 x i8> [[AND]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[XOR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 3, i8 3>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %y, <i8 12, i8 12>
@@ -184,8 +170,7 @@ define <2 x i8> @src_xor_bit_vec_poison(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Y:%.*]], <i8 poison, i8 12>
 ; CHECK-NEXT:    [[XOR:%.*]] = xor <2 x i8> [[AND]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[XOR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 poison, i8 3>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %y, <i8 poison, i8 12>
@@ -200,8 +185,7 @@ define <2 x i8> @src_xor_bit_vec_poison2(<2 x i8> %x, <2 x i8> %y) {
 ; CHECK-NEXT:    [[AND:%.*]] = and <2 x i8> [[Y:%.*]], <i8 poison, i8 12>
 ; CHECK-NEXT:    [[XOR:%.*]] = xor <2 x i8> [[AND]], [[X:%.*]]
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[XOR]], <i8 3, i8 3>
-; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i8> [[X]], <i8 3, i8 3>
-; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> [[AND1]], <2 x i8> <i8 1, i8 1>
+; CHECK-NEXT:    [[COND:%.*]] = select <2 x i1> [[CMP]], <2 x i8> <i8 3, i8 3>, <2 x i8> <i8 1, i8 1>
 ; CHECK-NEXT:    ret <2 x i8> [[COND]]
 ;
   %and = and <2 x i8> %y, <i8 poison, i8 12>
