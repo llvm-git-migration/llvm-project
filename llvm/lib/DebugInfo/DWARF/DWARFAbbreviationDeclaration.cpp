@@ -30,9 +30,7 @@ void DWARFAbbreviationDeclaration::clear() {
   FixedAttributeSize.reset();
 }
 
-DWARFAbbreviationDeclaration::DWARFAbbreviationDeclaration() {
-  clear();
-}
+DWARFAbbreviationDeclaration::DWARFAbbreviationDeclaration() { clear(); }
 
 llvm::Expected<DWARFAbbreviationDeclaration::ExtractState>
 DWARFAbbreviationDeclaration::extract(DataExtractor Data, uint64_t *OffsetPtr) {
@@ -68,7 +66,7 @@ DWARFAbbreviationDeclaration::extract(DataExtractor Data, uint64_t *OffsetPtr) {
 
   // Read all of the abbreviation attributes and forms.
   while (Data.isValidOffset(*OffsetPtr)) {
-    auto A = static_cast<Attribute>(Data.getULEB128(OffsetPtr, &Err));
+    auto A = static_cast<dwarf::Attribute>(Data.getULEB128(OffsetPtr, &Err));
     if (Err)
       return std::move(Err);
 

@@ -586,11 +586,11 @@ public:
 
 class ObjCProtoName : public Node {
   const Node *Ty;
-  std::string_view Protocol;
-
   friend class PointerType;
 
 public:
+  std::string_view Protocol;
+
   ObjCProtoName(const Node *Ty_, std::string_view Protocol_)
       : Node(KObjCProtoName), Ty(Ty_), Protocol(Protocol_) {}
 

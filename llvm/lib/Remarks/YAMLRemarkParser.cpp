@@ -157,9 +157,8 @@ Expected<std::unique_ptr<YAMLRemarkParser>> remarks::createYAMLParserFromMeta(
   }
 
   std::unique_ptr<YAMLRemarkParser> Result =
-      StrTab
-          ? std::make_unique<YAMLStrTabRemarkParser>(Buf, std::move(*StrTab))
-          : std::make_unique<YAMLRemarkParser>(Buf);
+      StrTab ? std::make_unique<YAMLStrTabRemarkParser>(Buf, std::move(*StrTab))
+             : std::make_unique<YAMLRemarkParser>(Buf);
   if (SeparateBuf)
     Result->SeparateBuf = std::move(SeparateBuf);
   return std::move(Result);
@@ -260,15 +259,16 @@ YAMLRemarkParser::parseRemark(yaml::Document &RemarkEntry) {
   }
 
   // Check if any of the mandatory fields are missing.
-  if (TheRemark.RemarkType == Type::Unknown || TheRemark.PassName.empty() ||
-      TheRemark.RemarkName.empty() || TheRemark.FunctionName.empty())
+  if (TheRemark.RemarkType == remarks::Type::Unknown ||
+      TheRemark.PassName.empty() || TheRemark.RemarkName.empty() ||
+      TheRemark.FunctionName.empty())
     return error("Type, Pass, Name or Function missing.",
                  *RemarkEntry.getRoot());
 
   return std::move(Result);
 }
 
-Expected<Type> YAMLRemarkParser::parseType(yaml::MappingNode &Node) {
+Expected<remarks::Type> YAMLRemarkParser::parseType(yaml::MappingNode &Node) {
   auto Type = StringSwitch<remarks::Type>(Node.getRawTag())
                   .Case("!Passed", remarks::Type::Passed)
                   .Case("!Missed", remarks::Type::Missed)
@@ -362,7 +362,7 @@ YAMLRemarkParser::parseDebugLoc(yaml::KeyValueNode &Node) {
   return RemarkLocation{*File, *Line, *Column};
 }
 
-Expected<Argument> YAMLRemarkParser::parseArg(yaml::Node &Node) {
+Expected<remarks::Argument> YAMLRemarkParser::parseArg(yaml::Node &Node) {
   auto *ArgMap = dyn_cast<yaml::MappingNode>(&Node);
   if (!ArgMap)
     return error("expected a value of mapping type.", Node);
