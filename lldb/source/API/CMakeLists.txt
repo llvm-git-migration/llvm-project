@@ -38,6 +38,8 @@ add_custom_target(lldb-sbapi-dwarf-enums
 
 add_lldb_library(liblldb SHARED ${option_framework}
   SBAddress.cpp
+  SBAddressRange.cpp
+  SBAddressRangeList.cpp
   SBAttachInfo.cpp
   SBBlock.cpp
   SBBreakpoint.cpp

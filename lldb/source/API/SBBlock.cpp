@@ -219,6 +219,16 @@ lldb::SBAddress SBBlock::GetRangeEndAddress(uint32_t idx) {
   return sb_addr;
 }
 
+lldb::SBAddressRange SBBlock::GetRangeAtIndex(uint32_t idx) {
+  LLDB_INSTRUMENT_VA(this, idx);
+
+  lldb::SBAddressRange sb_range;
+  if (m_opaque_ptr) {
+    m_opaque_ptr->GetRangeAtIndex(idx, sb_range.ref());
+  }
+  return sb_range;
+}
+
 uint32_t SBBlock::GetRangeIndexForBlockAddress(lldb::SBAddress block_addr) {
   LLDB_INSTRUMENT_VA(this, block_addr);
 

@@ -86,6 +86,8 @@ public:
   /// (LLDB_INVALID_ADDRESS) and a zero byte size.
   void Clear();
 
+  bool IsValid() const;
+
   /// Check if a section offset address is contained in this range.
   ///
   /// \param[in] so_addr
@@ -240,6 +242,12 @@ protected:
   // Member variables
   Address m_base_addr;      ///< The section offset base address of this range.
   lldb::addr_t m_byte_size = 0; ///< The size in bytes of this address range.
+};
+
+// Forward-declarable wrapper.
+class AddressRanges : public std::vector<lldb_private::AddressRange> {
+public:
+  using std::vector<lldb_private::AddressRange>::vector;
 };
 
 } // namespace lldb_private
