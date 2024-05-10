@@ -77,3 +77,38 @@ namespace use_self {
 
   int fib(int n) { return FibTree{n}.v; }
 }
+
+namespace nested_union {
+  union Test1 {
+    union {
+      int inner { 42 };
+    };
+    int outer;
+  };
+  static_assert(Test1{}.inner == 42, "");
+  struct Test2 {
+    union {
+      struct {
+        int inner : 32 { 42 }; // expected-warning {{C++20 extension}}
+      };
+      int outer;
+    };
+  };
+  static_assert(Test2{}.inner == 42, "");
+  struct Int { int x; };
+  struct Test3 {
+    int x;
+    union {
+      struct {
+        const int& y;
+        int inner : 32 { 42 }; // expected-warning {{C++20 extension}}
+      };
+      int outer;
+    };
+  };
+  constexpr char f(Test3) { return 1; } // expected-note {{candidate function}}
+  constexpr char f(Int) { return 2; } // expected-note {{candidate function}}
+  // FIXME: This shouldn't be ambiguous; either we should reject the declaration
+  // of Test3, or we should exclude f(Test3) as a candidate.
+  static_assert(f({1}) == 2, ""); // expected-error {{call to 'f' is ambiguous}}
+}
