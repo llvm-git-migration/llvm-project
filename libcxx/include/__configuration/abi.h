@@ -150,6 +150,9 @@
 // ABI impact: changes the iterator type of `vector` (except `vector<bool>`).
 // #define _LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR
 
+// Tracks the bounds of the array owned by std::unique_ptr<T[]>, allowing it to trap when accessed out-of-bounds.
+// #define _LIBCPP_ABI_BOUNDED_UNIQUE_PTR
+
 #if defined(_LIBCPP_COMPILER_CLANG_BASED)
 #  if defined(__APPLE__)
 #    if defined(__i386__) || defined(__x86_64__)
