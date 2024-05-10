@@ -160,6 +160,17 @@ SBAddress SBFunction::GetEndAddress() {
   return addr;
 }
 
+lldb::SBAddressRange SBFunction::GetRange() {
+  LLDB_INSTRUMENT_VA(this);
+
+  lldb::SBAddressRange range;
+  if (m_opaque_ptr) {
+    range.ref() = m_opaque_ptr->GetAddressRange();
+  }
+
+  return range;
+}
+
 const char *SBFunction::GetArgumentName(uint32_t arg_idx) {
   LLDB_INSTRUMENT_VA(this, arg_idx);
 
