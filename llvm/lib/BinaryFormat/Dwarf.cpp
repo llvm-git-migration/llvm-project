@@ -579,15 +579,17 @@ StringRef llvm::dwarf::LocListEncodingString(unsigned Encoding) {
 }
 
 StringRef llvm::dwarf::CallFrameString(unsigned Encoding,
-    Triple::ArchType Arch) {
+                                       Triple::ArchType Arch) {
   assert(Arch != llvm::Triple::ArchType::UnknownArch);
-#define SELECT_AARCH64 (Arch == llvm::Triple::aarch64_be || Arch == llvm::Triple::aarch64)
+#define SELECT_AARCH64                                                         \
+  (Arch == llvm::Triple::aarch64_be || Arch == llvm::Triple::aarch64)
 #define SELECT_MIPS64 Arch == llvm::Triple::mips64
-#define SELECT_SPARC (Arch == llvm::Triple::sparc || Arch == llvm::Triple::sparcv9)
+#define SELECT_SPARC                                                           \
+  (Arch == llvm::Triple::sparc || Arch == llvm::Triple::sparcv9)
 #define SELECT_X86 (Arch == llvm::Triple::x86 || Arch == llvm::Triple::x86_64)
 #define HANDLE_DW_CFA(ID, NAME)
-#define HANDLE_DW_CFA_PRED(ID, NAME, PRED) \
-  if (ID == Encoding && PRED) \
+#define HANDLE_DW_CFA_PRED(ID, NAME, PRED)                                     \
+  if (ID == Encoding && PRED)                                                  \
     return "DW_CFA_" #NAME;
 #include "llvm/BinaryFormat/Dwarf.def"
 
@@ -858,9 +860,9 @@ StringRef llvm::dwarf::RLEString(unsigned RLE) {
   }
 }
 
-constexpr char llvm::dwarf::EnumTraits<Attribute>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Form>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Index>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Tag>::Type[];
-constexpr char llvm::dwarf::EnumTraits<LineNumberOps>::Type[];
-constexpr char llvm::dwarf::EnumTraits<LocationAtom>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Attribute>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Form>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Index>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Tag>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::LineNumberOps>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::LocationAtom>::Type[];

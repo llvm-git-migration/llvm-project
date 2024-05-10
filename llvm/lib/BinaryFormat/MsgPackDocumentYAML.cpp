@@ -184,18 +184,18 @@ template <> struct TaggedScalarTraits<ScalarDocNode> {
 
   static QuotingType mustQuote(const ScalarDocNode &S, StringRef ScalarStr) {
     switch (S.getKind()) {
-    case Type::Int:
+    case msgpack::Type::Int:
       return ScalarTraits<int64_t>::mustQuote(ScalarStr);
-    case Type::UInt:
+    case msgpack::Type::UInt:
       return ScalarTraits<uint64_t>::mustQuote(ScalarStr);
-    case Type::Nil:
+    case msgpack::Type::Nil:
       return ScalarTraits<StringRef>::mustQuote(ScalarStr);
-    case Type::Boolean:
+    case msgpack::Type::Boolean:
       return ScalarTraits<bool>::mustQuote(ScalarStr);
-    case Type::Float:
+    case msgpack::Type::Float:
       return ScalarTraits<double>::mustQuote(ScalarStr);
-    case Type::Binary:
-    case Type::String:
+    case msgpack::Type::Binary:
+    case msgpack::Type::String:
       return ScalarTraits<std::string>::mustQuote(ScalarStr);
     default:
       llvm_unreachable("unrecognized ScalarKind");

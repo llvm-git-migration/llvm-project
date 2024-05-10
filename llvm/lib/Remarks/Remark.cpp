@@ -27,14 +27,16 @@ std::string Remark::getArgsAsMsg() const {
 }
 
 /// Returns the value of a specified key parsed from StringRef.
-std::optional<int> Argument::getValAsInt() const {
+std::optional<int> llvm::remarks::Argument::getValAsInt() const {
   APInt KeyVal;
   if (Val.getAsInteger(10, KeyVal))
     return std::nullopt;
   return KeyVal.getSExtValue();
 }
 
-bool Argument::isValInt() const { return getValAsInt().has_value(); }
+bool llvm::remarks::Argument::isValInt() const {
+  return getValAsInt().has_value();
+}
 
 void RemarkLocation::print(raw_ostream &OS) const {
   OS << "{ "
@@ -42,7 +44,7 @@ void RemarkLocation::print(raw_ostream &OS) const {
      << " Column:" << SourceColumn << " }\n";
 }
 
-void Argument::print(raw_ostream &OS) const {
+void llvm::remarks::Argument::print(raw_ostream &OS) const {
   OS << Key << ": " << Val << "\n";
 }
 
@@ -146,12 +148,12 @@ extern "C" uint32_t LLVMRemarkEntryGetNumArgs(LLVMRemarkEntryRef Remark) {
 
 extern "C" LLVMRemarkArgRef
 LLVMRemarkEntryGetFirstArg(LLVMRemarkEntryRef Remark) {
-  ArrayRef<Argument> Args = unwrap(Remark)->Args;
+  ArrayRef<remarks::Argument> Args = unwrap(Remark)->Args;
   // No arguments to iterate on.
   if (Args.empty())
     return nullptr;
   return reinterpret_cast<LLVMRemarkArgRef>(
-      const_cast<Argument *>(Args.begin()));
+      const_cast<remarks::Argument *>(Args.begin()));
 }
 
 extern "C" LLVMRemarkArgRef
@@ -160,10 +162,11 @@ LLVMRemarkEntryGetNextArg(LLVMRemarkArgRef ArgIt, LLVMRemarkEntryRef Remark) {
   if (ArgIt == nullptr)
     return nullptr;
 
-  auto It = (ArrayRef<Argument>::const_iterator)ArgIt;
+  auto It = (ArrayRef<remarks::Argument>::const_iterator)ArgIt;
   auto Next = std::next(It);
   if (Next == unwrap(Remark)->Args.end())
     return nullptr;
 
-  return reinterpret_cast<LLVMRemarkArgRef>(const_cast<Argument *>(Next));
+  return reinterpret_cast<LLVMRemarkArgRef>(
+      const_cast<remarks::Argument *>(Next));
 }
