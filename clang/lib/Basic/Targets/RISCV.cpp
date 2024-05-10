@@ -224,6 +224,26 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
     else
       Builder.defineMacro("__riscv_32e");
   }
+
+  if (ISAInfo->hasExtension("zicfilp") && Opts.CFProtectionBranch) {
+    auto Scheme = Opts.getCFBranchLabelScheme();
+    if (Scheme == CFBranchLabelSchemeKind::Default)
+      Scheme = getDefaultCFBranchLabelScheme();
+
+    switch (Scheme) {
+    case CFBranchLabelSchemeKind::Unlabeled:
+      Builder.defineMacro("__riscv_landing_pad", "1");
+      Builder.defineMacro("__riscv_landing_pad_unlabeled", "1");
+      break;
+    case CFBranchLabelSchemeKind::Default:
+      llvm_unreachable("default cf-branch-label scheme should already be "
+                       "transformed to other scheme");
+    case CFBranchLabelSchemeKind::FuncSig:
+      Builder.defineMacro("__riscv_landing_pad", "1");
+      Builder.defineMacro("__riscv_landing_pad_func_sig", "1");
+      break;
+    }
+  }
 }
 
 static constexpr Builtin::Info BuiltinInfo[] = {

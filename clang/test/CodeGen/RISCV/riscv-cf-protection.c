@@ -1,3 +1,21 @@
+// Default cf-branch-label-scheme is func-sig
+// RUN: %clang --target=riscv32 -menable-experimental-extensions \
+// RUN:   -march=rv32i_zicfilp1p0 -fcf-protection=branch -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-FUNC-SIG %s
+// RUN: %clang --target=riscv64 -menable-experimental-extensions \
+// RUN:   -march=rv64i_zicfilp1p0 -fcf-protection=branch -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-FUNC-SIG %s
+
+// RUN: %clang --target=riscv32 -menable-experimental-extensions \
+// RUN:   -march=rv32i_zicfilp1p0 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=unlabeled -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-UNLABELED %s
+
+// RUN: %clang --target=riscv32 -menable-experimental-extensions \
+// RUN:   -march=rv32i_zicfilp1p0 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=func-sig -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-FUNC-SIG %s
+
 // RUN: %clang --target=riscv32 -menable-experimental-extensions \
 // RUN:   -march=rv32i_zicfilp1p0 -mcf-branch-label-scheme=unlabeled -c %s \
 // RUN:   -o /dev/null 2>&1 \
@@ -25,6 +43,16 @@
 // RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
 
 // RUN: %clang --target=riscv64 -menable-experimental-extensions \
+// RUN:   -march=rv64i_zicfilp1p0 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=unlabeled -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-UNLABELED %s
+
+// RUN: %clang --target=riscv64 -menable-experimental-extensions \
+// RUN:   -march=rv64i_zicfilp1p0 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=func-sig -E -dM %s -o - \
+// RUN:   | FileCheck --check-prefix=CHECK-ZICFILP-FUNC-SIG %s
+
+// RUN: %clang --target=riscv64 -menable-experimental-extensions \
 // RUN:   -march=rv64i_zicfilp1p0 -mcf-branch-label-scheme=unlabeled -c %s \
 // RUN:   -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-UNLABELED-SCHEME-UNUSED %s
@@ -50,6 +78,10 @@
 // RUN:   -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
 
+// CHECK-ZICFILP-UNLABELED-DAG: __riscv_landing_pad 1{{$}}
+// CHECK-ZICFILP-UNLABELED-DAG: __riscv_landing_pad_unlabeled 1{{$}}
+// CHECK-ZICFILP-FUNC-SIG-DAG: __riscv_landing_pad 1{{$}}
+// CHECK-ZICFILP-FUNC-SIG-DAG: __riscv_landing_pad_func_sig 1{{$}}
 // CHECK-BRANCH-PROT-INVALID: error: option 'cf-protection=branch' cannot be
 // CHECK-BRANCH-PROT-INVALID-SAME: specified on this target
 // CHECK-UNLABELED-SCHEME-UNUSED: warning: argument unused during compilation:
