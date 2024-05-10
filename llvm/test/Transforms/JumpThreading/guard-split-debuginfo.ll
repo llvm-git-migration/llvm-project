@@ -20,13 +20,13 @@ define i32 @branch_implies_guard(i32 %a) !dbg !7 {
 ; CHECK-NEXT:    br i1 [[COND]], label [[T1_SPLIT:%.*]], label [[F1_SPLIT:%.*]], !dbg [[DBG12:![0-9]+]]
 ; CHECK:       T1.split:
 ; CHECK-NEXT:    [[V1:%.*]] = call i32 @f1(), !dbg [[DBG12]]
-; CHECK-NEXT:    call void @llvm.dbg.value(metadata i32 0, metadata [[META13:![0-9]+]], metadata !DIExpression()), !dbg [[DBG14:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i32 0, [[META13:![0-9]+]], !DIExpression(), [[META14:![0-9]+]])
 ; CHECK-NEXT:    [[RETVAL3:%.*]] = add i32 [[V1]], 10, !dbg [[DBG12]]
 ; CHECK-NEXT:    [[CONDGUARD4:%.*]] = icmp slt i32 [[A]], 20, !dbg [[DBG12]]
 ; CHECK-NEXT:    br label [[MERGE:%.*]]
 ; CHECK:       F1.split:
 ; CHECK-NEXT:    [[V2:%.*]] = call i32 @f2(), !dbg [[DBG12]]
-; CHECK-NEXT:    call void @llvm.dbg.value(metadata i32 0, metadata [[META13]], metadata !DIExpression()), !dbg [[DBG14]]
+; CHECK-NEXT:      #dbg_value(i32 0, [[META13]], !DIExpression(), [[META14]])
 ; CHECK-NEXT:    [[RETVAL1:%.*]] = add i32 [[V2]], 10, !dbg [[DBG12]]
 ; CHECK-NEXT:    [[CONDGUARD2:%.*]] = icmp slt i32 [[A]], 20, !dbg [[DBG12]]
 ; CHECK-NEXT:    call void (i1, ...) @llvm.experimental.guard(i1 [[CONDGUARD2]]) [ "deopt"() ]
