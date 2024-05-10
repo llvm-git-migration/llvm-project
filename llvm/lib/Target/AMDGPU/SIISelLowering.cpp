@@ -12071,12 +12071,8 @@ calculateByteProvider(const SDValue &Op, unsigned Index, unsigned Depth,
       return std::nullopt;
     auto VecIdx = IdxOp->getZExtValue();
     auto ScalarSize = Op.getScalarValueSizeInBits();
-    if (ScalarSize != 32) {
-      Index = ScalarSize == 8 ? VecIdx : VecIdx * 2 + Index;
-    }
-
-    return calculateSrcByte(ScalarSize == 32 ? Op : Op.getOperand(0),
-                            StartingIndex, Index);
+    return calculateSrcByte(Op.getOperand(0), StartingIndex,
+                            ScalarSize / 8 * VecIdx + Index);
   }
 
   case AMDGPUISD::PERM: {
