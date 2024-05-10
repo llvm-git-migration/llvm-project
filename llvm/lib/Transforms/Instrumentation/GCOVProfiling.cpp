@@ -803,6 +803,8 @@ bool GCOVProfiler::emitProfileNotes(
         continue;
       if (F.hasFnAttribute(llvm::Attribute::SkipProfile))
         continue;
+      if (F.hasFnAttribute(llvm::Attribute::DisableSanitizerInstrumentation))
+        continue;
 
       // Add the function line number to the lines of the entry block
       // to have a counter for the function definition.

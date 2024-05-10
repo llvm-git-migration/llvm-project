@@ -560,6 +560,8 @@ bool MemProfiler::instrumentFunction(Function &F) {
     return false;
   if (F.getName().starts_with("__memprof_"))
     return false;
+  if (F.hasFnAttribute(Attribute::DisableSanitizerInstrumentation))
+    return false;
 
   bool FunctionModified = false;
 
