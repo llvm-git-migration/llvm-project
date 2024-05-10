@@ -1,6 +1,7 @@
 """
 Test the session save feature
 """
+
 import os
 import tempfile
 
@@ -19,7 +20,6 @@ class SessionSaveTestCase(TestBase):
             raw += res.GetError()
         return raw
 
-    @skipIfWindows
     @no_debug_info_test
     def test_session_save(self):
         raw = ""
@@ -61,8 +61,14 @@ class SessionSaveTestCase(TestBase):
         self.assertFalse(res.Succeeded())
         raw += self.raw_transcript_builder(cmd, res)
 
-        tf = tempfile.NamedTemporaryFile()
-        output_file = tf.name
+        fd, output_file = tempfile.mkstemp()
+        os.close(fd)
+
+        def cleanup():
+            if os.path.exists(output_file):
+                os.unlink(output_file)
+
+        self.addTearDownHook(cleanup)
 
         res = lldb.SBCommandReturnObject()
         interpreter.HandleCommand("session save " + output_file, res)
@@ -95,7 +101,6 @@ class SessionSaveTestCase(TestBase):
             for line in lines:
                 self.assertIn(line, content)
 
-    @skipIfWindows
     @no_debug_info_test
     def test_session_save_on_quit(self):
         raw = ""
