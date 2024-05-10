@@ -274,7 +274,7 @@ void populateVectorInterleaveLoweringPatterns(RewritePatternSet &patterns,
                                               PatternBenefit benefit = 1);
 
 void populateVectorInterleaveToShufflePatterns(RewritePatternSet &patterns,
-                                              PatternBenefit benefit = 1);
+                                               PatternBenefit benefit = 1);
 
 } // namespace vector
 } // namespace mlir
