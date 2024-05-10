@@ -145,6 +145,10 @@ void AddressRange::Clear() {
   m_byte_size = 0;
 }
 
+bool AddressRange::IsValid() const {
+  return m_base_addr.IsValid() && (m_byte_size > 0);
+}
+
 bool AddressRange::Dump(Stream *s, Target *target, Address::DumpStyle style,
                         Address::DumpStyle fallback_style) const {
   addr_t vmaddr = LLDB_INVALID_ADDRESS;
@@ -202,4 +206,15 @@ void AddressRange::DumpDebug(Stream *s) const {
             static_cast<const void *>(this),
             static_cast<void *>(m_base_addr.GetSection().get()),
             m_base_addr.GetOffset(), GetByteSize());
+}
+
+bool AddressRange::operator==(const AddressRange &rhs) {
+  if (!IsValid() || !rhs.IsValid())
+    return false;
+  return m_base_addr == rhs.GetBaseAddress() &&
+         m_byte_size == rhs.GetByteSize();
+}
+
+bool AddressRange::operator!=(const AddressRange &rhs) {
+  return !(*this == rhs);
 }
