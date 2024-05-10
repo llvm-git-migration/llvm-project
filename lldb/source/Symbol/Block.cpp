@@ -301,17 +301,30 @@ uint32_t Block::GetRangeIndexContainingAddress(const Address &addr) {
 }
 
 bool Block::GetRangeAtIndex(uint32_t range_idx, AddressRange &range) {
+  Function *function = CalculateSymbolContextFunction();
+  if (!function)
+    return false;
   if (range_idx < m_ranges.GetSize()) {
-    Function *function = CalculateSymbolContextFunction();
-    if (function) {
-      const Range &vm_range = m_ranges.GetEntryRef(range_idx);
-      range.GetBaseAddress() = function->GetAddressRange().GetBaseAddress();
-      range.GetBaseAddress().Slide(vm_range.GetRangeBase());
-      range.SetByteSize(vm_range.GetByteSize());
-      return true;
+    const Range &vm_range = m_ranges.GetEntryRef(range_idx);
+    range.GetBaseAddress() = function->GetAddressRange().GetBaseAddress();
+    range.GetBaseAddress().Slide(vm_range.GetRangeBase());
+    range.SetByteSize(vm_range.GetByteSize());
+  }
+  return true;
+}
+
+AddressRanges Block::GetRanges() {
+  AddressRanges ranges;
+  Function *function = CalculateSymbolContextFunction();
+  if (!function)
+    return ranges;
+  for (size_t i = 0, e = m_ranges.GetSize(); i < e; ++i) {
+    AddressRange addr_range;
+    if (GetRangeAtIndex(i, addr_range)) {
+      ranges.emplace_back(std::move(addr_range));
     }
   }
-  return false;
+  return ranges;
 }
 
 bool Block::GetStartAddress(Address &addr) {
