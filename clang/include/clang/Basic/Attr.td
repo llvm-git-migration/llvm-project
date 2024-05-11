@@ -3122,6 +3122,13 @@ def Target : InheritableAttr {
       }
     }
 
+    bool hasFeature(StringRef Feature) const {
+      StringRef Features = getFeaturesStr();
+      SmallVector<StringRef, 1> AttrFeatures;
+      Features.split(AttrFeatures, ",");
+      return Features.contains(Feature);
+    }
+
     bool isDefaultVersion() const { return getFeaturesStr() == "default"; }
   }];
 }
