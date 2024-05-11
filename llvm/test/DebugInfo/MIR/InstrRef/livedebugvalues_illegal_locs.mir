@@ -70,7 +70,7 @@ body:  |
     ;DBG_INSTR_REF !16, !DIExpression(DW_OP_LLVM_arg, 0), dbg-instr-ref(4, 0), debug-location !17
     ;;; Test non-def operand
     ;; check:      DBG_INSTR_REF {{.+}}, dbg-instr-ref(4, 0)
-    ;; check-next: DBG_VALUE_LIST {{.+}}, $noreg
+    ;; check-NEXT: DBG_VALUE_LIST {{.+}}, $noreg
 
     $noreg = MOV32ri 1, debug-instr-number 5, debug-location !17
     DBG_INSTR_REF !16, !DIExpression(DW_OP_LLVM_arg, 0), dbg-instr-ref(5, 0), debug-location !17
