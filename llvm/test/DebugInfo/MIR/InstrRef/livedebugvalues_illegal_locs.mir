@@ -43,7 +43,7 @@ debugValueSubstitutions:
 body:  |
   bb.0.entry:
     successors: %bb.1, %bb.2
-    ; CHECK-LABE: bb.0.entry:
+    ; CHECK-LABEL: bb.0.entry:
 
     $rax = MOV64ri 1, debug-instr-number 1, debug-location !17
     DBG_INSTR_REF !16, !DIExpression(DW_OP_LLVM_arg, 0), dbg-instr-ref(1, 0), debug-location !17
