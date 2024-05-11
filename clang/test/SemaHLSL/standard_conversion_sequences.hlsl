@@ -4,9 +4,9 @@
 void test() {
   
   // CHECK: VarDecl {{.*}} used f3 'vector<float, 3>':'float __attribute__((ext_vector_type(3)))' cinit
-  // CHECK-NEXt: ImplicitCastExpr {{.*}} 'vector<float, 3>':'float __attribute__((ext_vector_type(3)))' <VectorSplat>
-  // CHECK-NEXt: ImplicitCastExpr {{.*}} 'float' <FloatingCast>
-  // CHECK-NEXt: FloatingLiteral {{.*}} 'double' 1.000000e+00
+  // CHECK-NEXT: ImplicitCastExpr {{.*}} 'vector<float, 3>':'float __attribute__((ext_vector_type(3)))' <VectorSplat>
+  // CHECK-NEXT: ImplicitCastExpr {{.*}} 'float' <FloatingCast>
+  // CHECK-NEXT: FloatingLiteral {{.*}} 'double' 1.000000e+00
   vector<float,3> f3 = 1.0; // No warning for splatting to a vector from a literal.
 
 
