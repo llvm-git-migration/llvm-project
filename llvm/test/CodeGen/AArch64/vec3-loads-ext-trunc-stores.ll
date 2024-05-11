@@ -217,42 +217,42 @@ define <4 x i32> @load_v3i8_to_4xi32_const_offset_3(ptr %src) {
 }
 
 define <4 x i32> @volatile_load_v3i8_to_4xi32(ptr %src) {
-; check-label: volatile_load_v3i8_to_4xi32:
-; check:       ; %bb.0:
-; check-next:    sub sp, sp, #16
-; check-next:    .cfi_def_cfa_offset 16
-; check-next:    ldrh w8, [x0]
-; check-next:    movi.2d v1, #0x0000ff000000ff
-; check-next:    strh w8, [sp, #12]
-; check-next:    ldr s0, [sp, #12]
-; check-next:    ldrsb w8, [x0, #2]
-; check-next:    ushll.8h v0, v0, #0
-; check-next:    mov.h v0[1], v0[1]
-; check-next:    mov.h v0[2], w8
-; check-next:    ushll.4s v0, v0, #0
-; check-next:    and.16b v0, v0, v1
-; check-next:    add sp, sp, #16
-; check-next:    ret
+; CHECK-LABEL: volatile_load_v3i8_to_4xi32:
+; CHECK:       ; %bb.0:
+; CHECK-NEXT:    sub sp, sp, #16
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
+; CHECK-NEXT:    ldrh w8, [x0]
+; CHECK-NEXT:    movi.2d v1, #0x0000ff000000ff
+; CHECK-NEXT:    strh w8, [sp, #12]
+; CHECK-NEXT:    ldr s0, [sp, #12]
+; CHECK-NEXT:    ldrsb w8, [x0, #2]
+; CHECK-NEXT:    ushll.8h v0, v0, #0
+; CHECK-NEXT:    mov.h v0[1], v0[1]
+; CHECK-NEXT:    mov.h v0[2], w8
+; CHECK-NEXT:    ushll.4s v0, v0, #0
+; CHECK-NEXT:    and.16b v0, v0, v1
+; CHECK-NEXT:    add sp, sp, #16
+; CHECK-NEXT:    ret
 ;
-; be-label: volatile_load_v3i8_to_4xi32:
-; be:       // %bb.0:
-; be-next:    sub sp, sp, #16
-; be-next:    .cfi_def_cfa_offset 16
-; be-next:    ldrh w8, [x0]
-; be-next:    movi v1.2d, #0x0000ff000000ff
-; be-next:    strh w8, [sp, #12]
-; be-next:    ldr s0, [sp, #12]
-; be-next:    ldrsb w8, [x0, #2]
-; be-next:    rev32 v0.8b, v0.8b
-; be-next:    ushll v0.8h, v0.8b, #0
-; be-next:    mov v0.h[1], v0.h[1]
-; be-next:    mov v0.h[2], w8
-; be-next:    ushll v0.4s, v0.4h, #0
-; be-next:    and v0.16b, v0.16b, v1.16b
-; be-next:    rev64 v0.4s, v0.4s
-; be-next:    ext v0.16b, v0.16b, v0.16b, #8
-; be-next:    add sp, sp, #16
-; be-next:    ret
+; BE-LABEL: volatile_load_v3i8_to_4xi32:
+; BE:       // %bb.0:
+; BE-NEXT:    sub sp, sp, #16
+; BE-NEXT:    .cfi_def_cfa_offset 16
+; BE-NEXT:    ldrh w8, [x0]
+; BE-NEXT:    movi v1.2d, #0x0000ff000000ff
+; BE-NEXT:    strh w8, [sp, #12]
+; BE-NEXT:    ldr s0, [sp, #12]
+; BE-NEXT:    ldrsb w8, [x0, #2]
+; BE-NEXT:    rev32 v0.8b, v0.8b
+; BE-NEXT:    ushll v0.8h, v0.8b, #0
+; BE-NEXT:    mov v0.h[1], v0.h[1]
+; BE-NEXT:    mov v0.h[2], w8
+; BE-NEXT:    ushll v0.4s, v0.4h, #0
+; BE-NEXT:    and v0.16b, v0.16b, v1.16b
+; BE-NEXT:    rev64 v0.4s, v0.4s
+; BE-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; BE-NEXT:    add sp, sp, #16
+; BE-NEXT:    ret
 ; CHECK-LABEL: volatile_load_v3i8_to_4xi32:
 ; CHECK:       ; %bb.0:
 ; CHECK-NEXT:    sub sp, sp, #16
