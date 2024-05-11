@@ -499,7 +499,7 @@ Stream::create(const Directory &StreamDesc, const object::MinidumpFile &File) {
     if (!ExpectedList)
       return ExpectedList.takeError();
     std::vector<ModuleListStream::entry_type> Modules;
-    for (const Module &M : *ExpectedList) {
+    for (const minidump::Module &M : *ExpectedList) {
       auto ExpectedName = File.getString(M.ModuleNameRVA);
       if (!ExpectedName)
         return ExpectedName.takeError();

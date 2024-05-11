@@ -25,7 +25,7 @@ template <typename T>
 static void mapRemarkHeader(yaml::IO &io, T PassName, T RemarkName,
                             std::optional<RemarkLocation> RL, T FunctionName,
                             std::optional<uint64_t> Hotness,
-                            ArrayRef<Argument> Args) {
+                            ArrayRef<remarks::Argument> Args) {
   io.mapRequired("Pass", PassName);
   io.mapRequired("Name", RemarkName);
   io.mapOptional("DebugLoc", RL);
@@ -41,19 +41,23 @@ template <> struct MappingTraits<remarks::Remark *> {
   static void mapping(IO &io, remarks::Remark *&Remark) {
     assert(io.outputting() && "input not yet implemented");
 
-    if (io.mapTag("!Passed", (Remark->RemarkType == Type::Passed)))
+    if (io.mapTag("!Passed", (Remark->RemarkType == remarks::Type::Passed)))
       ;
-    else if (io.mapTag("!Missed", (Remark->RemarkType == Type::Missed)))
+    else if (io.mapTag("!Missed",
+                       (Remark->RemarkType == remarks::Type::Missed)))
       ;
-    else if (io.mapTag("!Analysis", (Remark->RemarkType == Type::Analysis)))
+    else if (io.mapTag("!Analysis",
+                       (Remark->RemarkType == remarks::Type::Analysis)))
       ;
-    else if (io.mapTag("!AnalysisFPCommute",
-                       (Remark->RemarkType == Type::AnalysisFPCommute)))
+    else if (io.mapTag(
+                 "!AnalysisFPCommute",
+                 (Remark->RemarkType == remarks::Type::AnalysisFPCommute)))
       ;
     else if (io.mapTag("!AnalysisAliasing",
-                       (Remark->RemarkType == Type::AnalysisAliasing)))
+                       (Remark->RemarkType == remarks::Type::AnalysisAliasing)))
       ;
-    else if (io.mapTag("!Failure", (Remark->RemarkType == Type::Failure)))
+    else if (io.mapTag("!Failure",
+                       (Remark->RemarkType == remarks::Type::Failure)))
       ;
     else
       llvm_unreachable("Unknown remark type");
@@ -124,7 +128,7 @@ template <> struct BlockScalarTraits<StringBlockVal> {
 /// Keep this in this file so that it doesn't get misused from YAMLTraits.h.
 template <typename T> struct SequenceTraits<ArrayRef<T>> {
   static size_t size(IO &io, ArrayRef<T> &seq) { return seq.size(); }
-  static Argument &element(IO &io, ArrayRef<T> &seq, size_t index) {
+  static remarks::Argument &element(IO &io, ArrayRef<T> &seq, size_t index) {
     assert(io.outputting() && "input not yet implemented");
     // The assert above should make this "safer" to satisfy the YAMLTraits.
     return const_cast<T &>(seq[index]);
@@ -132,8 +136,8 @@ template <typename T> struct SequenceTraits<ArrayRef<T>> {
 };
 
 /// Implement this as a mapping for now to get proper quotation for the value.
-template <> struct MappingTraits<Argument> {
-  static void mapping(IO &io, Argument &A) {
+template <> struct MappingTraits<remarks::Argument> {
+  static void mapping(IO &io, remarks::Argument &A) {
     assert(io.outputting() && "input not yet implemented");
 
     if (auto *Serializer = dyn_cast<YAMLStrTabRemarkSerializer>(
@@ -155,7 +159,7 @@ template <> struct MappingTraits<Argument> {
 } // end namespace yaml
 } // end namespace llvm
 
-LLVM_YAML_IS_SEQUENCE_VECTOR(Argument)
+LLVM_YAML_IS_SEQUENCE_VECTOR(remarks::Argument)
 
 YAMLRemarkSerializer::YAMLRemarkSerializer(raw_ostream &OS, SerializerMode Mode,
                                            std::optional<StringTable> StrTabIn)

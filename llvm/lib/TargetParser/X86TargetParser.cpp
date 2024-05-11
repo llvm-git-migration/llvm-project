@@ -20,20 +20,20 @@ using namespace llvm::X86;
 
 namespace {
 
-using FeatureBitset = Bitset<X86::CPU_FEATURE_MAX>;
+using X86FeatureBitset = Bitset<X86::CPU_FEATURE_MAX>;
 
 struct ProcInfo {
   StringLiteral Name;
   X86::CPUKind Kind;
   unsigned KeyFeature;
-  FeatureBitset Features;
+  X86FeatureBitset Features;
   char Mangling;
   bool OnlyForCPUDispatchSpecific;
 };
 
 struct FeatureInfo {
   StringLiteral NameWithPlus;
-  FeatureBitset ImpliedFeatures;
+  X86FeatureBitset ImpliedFeatures;
 
   StringRef getName(bool WithPlus = false) const {
     assert(NameWithPlus[0] == '+' && "Expected string to start with '+'");
@@ -46,176 +46,178 @@ struct FeatureInfo {
 } // end anonymous namespace
 
 #define X86_FEATURE(ENUM, STRING)                                              \
-  constexpr FeatureBitset Feature##ENUM = {X86::FEATURE_##ENUM};
+  constexpr X86FeatureBitset Feature##ENUM = {X86::FEATURE_##ENUM};
 #include "llvm/TargetParser/X86TargetParser.def"
 
 // Pentium with MMX.
-constexpr FeatureBitset FeaturesPentiumMMX =
+constexpr X86FeatureBitset FeaturesPentiumMMX =
     FeatureX87 | FeatureCMPXCHG8B | FeatureMMX;
 
 // Pentium 2 and 3.
-constexpr FeatureBitset FeaturesPentium2 =
+constexpr X86FeatureBitset FeaturesPentium2 =
     FeatureX87 | FeatureCMPXCHG8B | FeatureMMX | FeatureFXSR | FeatureCMOV;
-constexpr FeatureBitset FeaturesPentium3 = FeaturesPentium2 | FeatureSSE;
+constexpr X86FeatureBitset FeaturesPentium3 = FeaturesPentium2 | FeatureSSE;
 
 // Pentium 4 CPUs
-constexpr FeatureBitset FeaturesPentium4 = FeaturesPentium3 | FeatureSSE2;
-constexpr FeatureBitset FeaturesPrescott = FeaturesPentium4 | FeatureSSE3;
-constexpr FeatureBitset FeaturesNocona =
+constexpr X86FeatureBitset FeaturesPentium4 = FeaturesPentium3 | FeatureSSE2;
+constexpr X86FeatureBitset FeaturesPrescott = FeaturesPentium4 | FeatureSSE3;
+constexpr X86FeatureBitset FeaturesNocona =
     FeaturesPrescott | Feature64BIT | FeatureCMPXCHG16B;
 
 // Basic 64-bit capable CPU.
-constexpr FeatureBitset FeaturesX86_64 = FeaturesPentium4 | Feature64BIT;
-constexpr FeatureBitset FeaturesX86_64_V2 = FeaturesX86_64 | FeatureSAHF |
-                                            FeaturePOPCNT | FeatureCRC32 |
-                                            FeatureSSE4_2 | FeatureCMPXCHG16B;
-constexpr FeatureBitset FeaturesX86_64_V3 =
+constexpr X86FeatureBitset FeaturesX86_64 = FeaturesPentium4 | Feature64BIT;
+constexpr X86FeatureBitset FeaturesX86_64_V2 =
+    FeaturesX86_64 | FeatureSAHF | FeaturePOPCNT | FeatureCRC32 |
+    FeatureSSE4_2 | FeatureCMPXCHG16B;
+constexpr X86FeatureBitset FeaturesX86_64_V3 =
     FeaturesX86_64_V2 | FeatureAVX2 | FeatureBMI | FeatureBMI2 | FeatureF16C |
     FeatureFMA | FeatureLZCNT | FeatureMOVBE | FeatureXSAVE;
-constexpr FeatureBitset FeaturesX86_64_V4 = FeaturesX86_64_V3 | FeatureEVEX512 |
-                                            FeatureAVX512BW | FeatureAVX512CD |
-                                            FeatureAVX512DQ | FeatureAVX512VL;
+constexpr X86FeatureBitset FeaturesX86_64_V4 =
+    FeaturesX86_64_V3 | FeatureEVEX512 | FeatureAVX512BW | FeatureAVX512CD |
+    FeatureAVX512DQ | FeatureAVX512VL;
 
 // Intel Core CPUs
-constexpr FeatureBitset FeaturesCore2 =
+constexpr X86FeatureBitset FeaturesCore2 =
     FeaturesNocona | FeatureSAHF | FeatureSSSE3;
-constexpr FeatureBitset FeaturesPenryn = FeaturesCore2 | FeatureSSE4_1;
-constexpr FeatureBitset FeaturesNehalem =
+constexpr X86FeatureBitset FeaturesPenryn = FeaturesCore2 | FeatureSSE4_1;
+constexpr X86FeatureBitset FeaturesNehalem =
     FeaturesPenryn | FeaturePOPCNT | FeatureCRC32 | FeatureSSE4_2;
-constexpr FeatureBitset FeaturesWestmere = FeaturesNehalem | FeaturePCLMUL;
-constexpr FeatureBitset FeaturesSandyBridge =
+constexpr X86FeatureBitset FeaturesWestmere = FeaturesNehalem | FeaturePCLMUL;
+constexpr X86FeatureBitset FeaturesSandyBridge =
     FeaturesWestmere | FeatureAVX | FeatureXSAVE | FeatureXSAVEOPT;
-constexpr FeatureBitset FeaturesIvyBridge =
+constexpr X86FeatureBitset FeaturesIvyBridge =
     FeaturesSandyBridge | FeatureF16C | FeatureFSGSBASE | FeatureRDRND;
-constexpr FeatureBitset FeaturesHaswell =
+constexpr X86FeatureBitset FeaturesHaswell =
     FeaturesIvyBridge | FeatureAVX2 | FeatureBMI | FeatureBMI2 | FeatureFMA |
     FeatureINVPCID | FeatureLZCNT | FeatureMOVBE;
-constexpr FeatureBitset FeaturesBroadwell =
+constexpr X86FeatureBitset FeaturesBroadwell =
     FeaturesHaswell | FeatureADX | FeaturePRFCHW | FeatureRDSEED;
 
 // Intel Knights Landing and Knights Mill
 // Knights Landing has feature parity with Broadwell.
-constexpr FeatureBitset FeaturesKNL =
+constexpr X86FeatureBitset FeaturesKNL =
     FeaturesBroadwell | FeatureAES | FeatureAVX512F | FeatureEVEX512 |
     FeatureAVX512CD | FeatureAVX512ER | FeatureAVX512PF | FeaturePREFETCHWT1;
-constexpr FeatureBitset FeaturesKNM = FeaturesKNL | FeatureAVX512VPOPCNTDQ;
+constexpr X86FeatureBitset FeaturesKNM = FeaturesKNL | FeatureAVX512VPOPCNTDQ;
 
 // Intel Skylake processors.
-constexpr FeatureBitset FeaturesSkylakeClient =
+constexpr X86FeatureBitset FeaturesSkylakeClient =
     FeaturesBroadwell | FeatureAES | FeatureCLFLUSHOPT | FeatureXSAVEC |
     FeatureXSAVES | FeatureSGX;
 // SkylakeServer inherits all SkylakeClient features except SGX.
 // FIXME: That doesn't match gcc.
-constexpr FeatureBitset FeaturesSkylakeServer =
+constexpr X86FeatureBitset FeaturesSkylakeServer =
     (FeaturesSkylakeClient & ~FeatureSGX) | FeatureAVX512F | FeatureEVEX512 |
     FeatureAVX512CD | FeatureAVX512DQ | FeatureAVX512BW | FeatureAVX512VL |
     FeatureCLWB | FeaturePKU;
-constexpr FeatureBitset FeaturesCascadeLake =
+constexpr X86FeatureBitset FeaturesCascadeLake =
     FeaturesSkylakeServer | FeatureAVX512VNNI;
-constexpr FeatureBitset FeaturesCooperLake =
+constexpr X86FeatureBitset FeaturesCooperLake =
     FeaturesCascadeLake | FeatureAVX512BF16;
 
 // Intel 10nm processors.
-constexpr FeatureBitset FeaturesCannonlake =
+constexpr X86FeatureBitset FeaturesCannonlake =
     FeaturesSkylakeClient | FeatureAVX512F | FeatureEVEX512 | FeatureAVX512CD |
     FeatureAVX512DQ | FeatureAVX512BW | FeatureAVX512VL | FeatureAVX512IFMA |
     FeatureAVX512VBMI | FeaturePKU | FeatureSHA;
-constexpr FeatureBitset FeaturesICLClient =
+constexpr X86FeatureBitset FeaturesICLClient =
     FeaturesCannonlake | FeatureAVX512BITALG | FeatureAVX512VBMI2 |
     FeatureAVX512VNNI | FeatureAVX512VPOPCNTDQ | FeatureGFNI | FeatureRDPID |
     FeatureVAES | FeatureVPCLMULQDQ;
-constexpr FeatureBitset FeaturesRocketlake = FeaturesICLClient & ~FeatureSGX;
-constexpr FeatureBitset FeaturesICLServer =
+constexpr X86FeatureBitset FeaturesRocketlake = FeaturesICLClient & ~FeatureSGX;
+constexpr X86FeatureBitset FeaturesICLServer =
     FeaturesICLClient | FeatureCLWB | FeaturePCONFIG | FeatureWBNOINVD;
-constexpr FeatureBitset FeaturesTigerlake =
+constexpr X86FeatureBitset FeaturesTigerlake =
     FeaturesICLClient | FeatureAVX512VP2INTERSECT | FeatureMOVDIR64B |
     FeatureCLWB | FeatureMOVDIRI | FeatureSHSTK | FeatureKL | FeatureWIDEKL;
-constexpr FeatureBitset FeaturesSapphireRapids =
+constexpr X86FeatureBitset FeaturesSapphireRapids =
     FeaturesICLServer | FeatureAMX_BF16 | FeatureAMX_INT8 | FeatureAMX_TILE |
     FeatureAVX512BF16 | FeatureAVX512FP16 | FeatureAVXVNNI | FeatureCLDEMOTE |
     FeatureENQCMD | FeatureMOVDIR64B | FeatureMOVDIRI | FeaturePTWRITE |
     FeatureSERIALIZE | FeatureSHSTK | FeatureTSXLDTRK | FeatureUINTR |
     FeatureWAITPKG;
-constexpr FeatureBitset FeaturesGraniteRapids =
+constexpr X86FeatureBitset FeaturesGraniteRapids =
     FeaturesSapphireRapids | FeatureAMX_FP16 | FeaturePREFETCHI;
 
 // Intel Atom processors.
 // Bonnell has feature parity with Core2 and adds MOVBE.
-constexpr FeatureBitset FeaturesBonnell = FeaturesCore2 | FeatureMOVBE;
+constexpr X86FeatureBitset FeaturesBonnell = FeaturesCore2 | FeatureMOVBE;
 // Silvermont has parity with Westmere and Bonnell plus PRFCHW and RDRND.
-constexpr FeatureBitset FeaturesSilvermont =
+constexpr X86FeatureBitset FeaturesSilvermont =
     FeaturesBonnell | FeaturesWestmere | FeaturePRFCHW | FeatureRDRND;
-constexpr FeatureBitset FeaturesGoldmont =
+constexpr X86FeatureBitset FeaturesGoldmont =
     FeaturesSilvermont | FeatureAES | FeatureCLFLUSHOPT | FeatureFSGSBASE |
     FeatureRDSEED | FeatureSHA | FeatureXSAVE | FeatureXSAVEC |
     FeatureXSAVEOPT | FeatureXSAVES;
-constexpr FeatureBitset FeaturesGoldmontPlus =
+constexpr X86FeatureBitset FeaturesGoldmontPlus =
     FeaturesGoldmont | FeaturePTWRITE | FeatureRDPID | FeatureSGX;
-constexpr FeatureBitset FeaturesTremont =
+constexpr X86FeatureBitset FeaturesTremont =
     FeaturesGoldmontPlus | FeatureCLWB | FeatureGFNI;
-constexpr FeatureBitset FeaturesAlderlake =
+constexpr X86FeatureBitset FeaturesAlderlake =
     FeaturesTremont | FeatureADX | FeatureBMI | FeatureBMI2 | FeatureF16C |
     FeatureFMA | FeatureINVPCID | FeatureLZCNT | FeaturePCONFIG | FeaturePKU |
     FeatureSERIALIZE | FeatureSHSTK | FeatureVAES | FeatureVPCLMULQDQ |
     FeatureCLDEMOTE | FeatureMOVDIR64B | FeatureMOVDIRI | FeatureWAITPKG |
     FeatureAVXVNNI | FeatureHRESET | FeatureWIDEKL;
-constexpr FeatureBitset FeaturesSierraforest =
+constexpr X86FeatureBitset FeaturesSierraforest =
     FeaturesAlderlake | FeatureCMPCCXADD | FeatureAVXIFMA | FeatureUINTR |
     FeatureENQCMD | FeatureAVXNECONVERT | FeatureAVXVNNIINT8;
-constexpr FeatureBitset FeaturesArrowlakeS = FeaturesSierraforest |
-    FeatureAVXVNNIINT16 | FeatureSHA512 | FeatureSM3 | FeatureSM4;
-constexpr FeatureBitset FeaturesPantherlake =
+constexpr X86FeatureBitset FeaturesArrowlakeS =
+    FeaturesSierraforest | FeatureAVXVNNIINT16 | FeatureSHA512 | FeatureSM3 |
+    FeatureSM4;
+constexpr X86FeatureBitset FeaturesPantherlake =
     FeaturesArrowlakeS | FeaturePREFETCHI;
-constexpr FeatureBitset FeaturesClearwaterforest =
+constexpr X86FeatureBitset FeaturesClearwaterforest =
     FeaturesArrowlakeS | FeatureUSERMSR | FeaturePREFETCHI;
 
 // Geode Processor.
-constexpr FeatureBitset FeaturesGeode =
+constexpr X86FeatureBitset FeaturesGeode =
     FeatureX87 | FeatureCMPXCHG8B | FeatureMMX | Feature3DNOW | Feature3DNOWA;
 
 // K6 processor.
-constexpr FeatureBitset FeaturesK6 = FeatureX87 | FeatureCMPXCHG8B | FeatureMMX;
+constexpr X86FeatureBitset FeaturesK6 =
+    FeatureX87 | FeatureCMPXCHG8B | FeatureMMX;
 
 // K7 and K8 architecture processors.
-constexpr FeatureBitset FeaturesAthlon =
+constexpr X86FeatureBitset FeaturesAthlon =
     FeatureX87 | FeatureCMPXCHG8B | FeatureMMX | Feature3DNOW | Feature3DNOWA;
-constexpr FeatureBitset FeaturesAthlonXP =
+constexpr X86FeatureBitset FeaturesAthlonXP =
     FeaturesAthlon | FeatureFXSR | FeatureSSE;
-constexpr FeatureBitset FeaturesK8 =
+constexpr X86FeatureBitset FeaturesK8 =
     FeaturesAthlonXP | FeatureSSE2 | Feature64BIT;
-constexpr FeatureBitset FeaturesK8SSE3 = FeaturesK8 | FeatureSSE3;
-constexpr FeatureBitset FeaturesAMDFAM10 =
+constexpr X86FeatureBitset FeaturesK8SSE3 = FeaturesK8 | FeatureSSE3;
+constexpr X86FeatureBitset FeaturesAMDFAM10 =
     FeaturesK8SSE3 | FeatureCMPXCHG16B | FeatureLZCNT | FeaturePOPCNT |
     FeaturePRFCHW | FeatureSAHF | FeatureSSE4_A;
 
 // Bobcat architecture processors.
-constexpr FeatureBitset FeaturesBTVER1 =
+constexpr X86FeatureBitset FeaturesBTVER1 =
     FeatureX87 | FeatureCMPXCHG8B | FeatureCMPXCHG16B | Feature64BIT |
     FeatureFXSR | FeatureLZCNT | FeatureMMX | FeaturePOPCNT | FeaturePRFCHW |
     FeatureSSE | FeatureSSE2 | FeatureSSE3 | FeatureSSSE3 | FeatureSSE4_A |
     FeatureSAHF;
-constexpr FeatureBitset FeaturesBTVER2 =
+constexpr X86FeatureBitset FeaturesBTVER2 =
     FeaturesBTVER1 | FeatureAES | FeatureAVX | FeatureBMI | FeatureCRC32 |
     FeatureF16C | FeatureMOVBE | FeaturePCLMUL | FeatureXSAVE | FeatureXSAVEOPT;
 
 // AMD Bulldozer architecture processors.
-constexpr FeatureBitset FeaturesBDVER1 =
+constexpr X86FeatureBitset FeaturesBDVER1 =
     FeatureX87 | FeatureAES | FeatureAVX | FeatureCMPXCHG8B |
     FeatureCMPXCHG16B | FeatureCRC32 | Feature64BIT | FeatureFMA4 |
     FeatureFXSR | FeatureLWP | FeatureLZCNT | FeatureMMX | FeaturePCLMUL |
     FeaturePOPCNT | FeaturePRFCHW | FeatureSAHF | FeatureSSE | FeatureSSE2 |
     FeatureSSE3 | FeatureSSSE3 | FeatureSSE4_1 | FeatureSSE4_2 | FeatureSSE4_A |
     FeatureXOP | FeatureXSAVE;
-constexpr FeatureBitset FeaturesBDVER2 =
+constexpr X86FeatureBitset FeaturesBDVER2 =
     FeaturesBDVER1 | FeatureBMI | FeatureFMA | FeatureF16C | FeatureTBM;
-constexpr FeatureBitset FeaturesBDVER3 =
+constexpr X86FeatureBitset FeaturesBDVER3 =
     FeaturesBDVER2 | FeatureFSGSBASE | FeatureXSAVEOPT;
-constexpr FeatureBitset FeaturesBDVER4 = FeaturesBDVER3 | FeatureAVX2 |
-                                         FeatureBMI2 | FeatureMOVBE |
-                                         FeatureMWAITX | FeatureRDRND;
+constexpr X86FeatureBitset FeaturesBDVER4 = FeaturesBDVER3 | FeatureAVX2 |
+                                            FeatureBMI2 | FeatureMOVBE |
+                                            FeatureMWAITX | FeatureRDRND;
 
 // AMD Zen architecture processors.
-constexpr FeatureBitset FeaturesZNVER1 =
+constexpr X86FeatureBitset FeaturesZNVER1 =
     FeatureX87 | FeatureADX | FeatureAES | FeatureAVX | FeatureAVX2 |
     FeatureBMI | FeatureBMI2 | FeatureCLFLUSHOPT | FeatureCLZERO |
     FeatureCMPXCHG8B | FeatureCMPXCHG16B | FeatureCRC32 | Feature64BIT |
@@ -225,13 +227,13 @@ constexpr FeatureBitset FeaturesZNVER1 =
     FeatureSSE | FeatureSSE2 | FeatureSSE3 | FeatureSSSE3 | FeatureSSE4_1 |
     FeatureSSE4_2 | FeatureSSE4_A | FeatureXSAVE | FeatureXSAVEC |
     FeatureXSAVEOPT | FeatureXSAVES;
-constexpr FeatureBitset FeaturesZNVER2 = FeaturesZNVER1 | FeatureCLWB |
-                                         FeatureRDPID | FeatureRDPRU |
-                                         FeatureWBNOINVD;
-static constexpr FeatureBitset FeaturesZNVER3 = FeaturesZNVER2 |
-                                                FeatureINVPCID | FeaturePKU |
-                                                FeatureVAES | FeatureVPCLMULQDQ;
-static constexpr FeatureBitset FeaturesZNVER4 =
+constexpr X86FeatureBitset FeaturesZNVER2 = FeaturesZNVER1 | FeatureCLWB |
+                                            FeatureRDPID | FeatureRDPRU |
+                                            FeatureWBNOINVD;
+static constexpr X86FeatureBitset FeaturesZNVER3 =
+    FeaturesZNVER2 | FeatureINVPCID | FeaturePKU | FeatureVAES |
+    FeatureVPCLMULQDQ;
+static constexpr X86FeatureBitset FeaturesZNVER4 =
     FeaturesZNVER3 | FeatureAVX512F | FeatureEVEX512 | FeatureAVX512CD |
     FeatureAVX512DQ | FeatureAVX512BW | FeatureAVX512VL | FeatureAVX512IFMA |
     FeatureAVX512VBMI | FeatureAVX512VBMI2 | FeatureAVX512VNNI |
@@ -475,164 +477,165 @@ ProcessorFeatures llvm::X86::getKeyFeature(X86::CPUKind Kind) {
 }
 
 // Features with no dependencies.
-constexpr FeatureBitset ImpliedFeatures64BIT = {};
-constexpr FeatureBitset ImpliedFeaturesADX = {};
-constexpr FeatureBitset ImpliedFeaturesBMI = {};
-constexpr FeatureBitset ImpliedFeaturesBMI2 = {};
-constexpr FeatureBitset ImpliedFeaturesCLDEMOTE = {};
-constexpr FeatureBitset ImpliedFeaturesCLFLUSHOPT = {};
-constexpr FeatureBitset ImpliedFeaturesCLWB = {};
-constexpr FeatureBitset ImpliedFeaturesCLZERO = {};
-constexpr FeatureBitset ImpliedFeaturesCMOV = {};
-constexpr FeatureBitset ImpliedFeaturesCMPXCHG16B = {};
-constexpr FeatureBitset ImpliedFeaturesCMPXCHG8B = {};
-constexpr FeatureBitset ImpliedFeaturesCRC32 = {};
-constexpr FeatureBitset ImpliedFeaturesENQCMD = {};
-constexpr FeatureBitset ImpliedFeaturesFSGSBASE = {};
-constexpr FeatureBitset ImpliedFeaturesFXSR = {};
-constexpr FeatureBitset ImpliedFeaturesINVPCID = {};
-constexpr FeatureBitset ImpliedFeaturesLWP = {};
-constexpr FeatureBitset ImpliedFeaturesLZCNT = {};
-constexpr FeatureBitset ImpliedFeaturesMWAITX = {};
-constexpr FeatureBitset ImpliedFeaturesMOVBE = {};
-constexpr FeatureBitset ImpliedFeaturesMOVDIR64B = {};
-constexpr FeatureBitset ImpliedFeaturesMOVDIRI = {};
-constexpr FeatureBitset ImpliedFeaturesPCONFIG = {};
-constexpr FeatureBitset ImpliedFeaturesPOPCNT = {};
-constexpr FeatureBitset ImpliedFeaturesPKU = {};
-constexpr FeatureBitset ImpliedFeaturesPREFETCHWT1 = {};
-constexpr FeatureBitset ImpliedFeaturesPRFCHW = {};
-constexpr FeatureBitset ImpliedFeaturesPTWRITE = {};
-constexpr FeatureBitset ImpliedFeaturesRDPID = {};
-constexpr FeatureBitset ImpliedFeaturesRDPRU = {};
-constexpr FeatureBitset ImpliedFeaturesRDRND = {};
-constexpr FeatureBitset ImpliedFeaturesRDSEED = {};
-constexpr FeatureBitset ImpliedFeaturesRTM = {};
-constexpr FeatureBitset ImpliedFeaturesSAHF = {};
-constexpr FeatureBitset ImpliedFeaturesSERIALIZE = {};
-constexpr FeatureBitset ImpliedFeaturesSGX = {};
-constexpr FeatureBitset ImpliedFeaturesSHSTK = {};
-constexpr FeatureBitset ImpliedFeaturesTBM = {};
-constexpr FeatureBitset ImpliedFeaturesTSXLDTRK = {};
-constexpr FeatureBitset ImpliedFeaturesUINTR = {};
-constexpr FeatureBitset ImpliedFeaturesUSERMSR = {};
-constexpr FeatureBitset ImpliedFeaturesWAITPKG = {};
-constexpr FeatureBitset ImpliedFeaturesWBNOINVD = {};
-constexpr FeatureBitset ImpliedFeaturesVZEROUPPER = {};
-constexpr FeatureBitset ImpliedFeaturesX87 = {};
-constexpr FeatureBitset ImpliedFeaturesXSAVE = {};
+constexpr X86FeatureBitset ImpliedFeatures64BIT = {};
+constexpr X86FeatureBitset ImpliedFeaturesADX = {};
+constexpr X86FeatureBitset ImpliedFeaturesBMI = {};
+constexpr X86FeatureBitset ImpliedFeaturesBMI2 = {};
+constexpr X86FeatureBitset ImpliedFeaturesCLDEMOTE = {};
+constexpr X86FeatureBitset ImpliedFeaturesCLFLUSHOPT = {};
+constexpr X86FeatureBitset ImpliedFeaturesCLWB = {};
+constexpr X86FeatureBitset ImpliedFeaturesCLZERO = {};
+constexpr X86FeatureBitset ImpliedFeaturesCMOV = {};
+constexpr X86FeatureBitset ImpliedFeaturesCMPXCHG16B = {};
+constexpr X86FeatureBitset ImpliedFeaturesCMPXCHG8B = {};
+constexpr X86FeatureBitset ImpliedFeaturesCRC32 = {};
+constexpr X86FeatureBitset ImpliedFeaturesENQCMD = {};
+constexpr X86FeatureBitset ImpliedFeaturesFSGSBASE = {};
+constexpr X86FeatureBitset ImpliedFeaturesFXSR = {};
+constexpr X86FeatureBitset ImpliedFeaturesINVPCID = {};
+constexpr X86FeatureBitset ImpliedFeaturesLWP = {};
+constexpr X86FeatureBitset ImpliedFeaturesLZCNT = {};
+constexpr X86FeatureBitset ImpliedFeaturesMWAITX = {};
+constexpr X86FeatureBitset ImpliedFeaturesMOVBE = {};
+constexpr X86FeatureBitset ImpliedFeaturesMOVDIR64B = {};
+constexpr X86FeatureBitset ImpliedFeaturesMOVDIRI = {};
+constexpr X86FeatureBitset ImpliedFeaturesPCONFIG = {};
+constexpr X86FeatureBitset ImpliedFeaturesPOPCNT = {};
+constexpr X86FeatureBitset ImpliedFeaturesPKU = {};
+constexpr X86FeatureBitset ImpliedFeaturesPREFETCHWT1 = {};
+constexpr X86FeatureBitset ImpliedFeaturesPRFCHW = {};
+constexpr X86FeatureBitset ImpliedFeaturesPTWRITE = {};
+constexpr X86FeatureBitset ImpliedFeaturesRDPID = {};
+constexpr X86FeatureBitset ImpliedFeaturesRDPRU = {};
+constexpr X86FeatureBitset ImpliedFeaturesRDRND = {};
+constexpr X86FeatureBitset ImpliedFeaturesRDSEED = {};
+constexpr X86FeatureBitset ImpliedFeaturesRTM = {};
+constexpr X86FeatureBitset ImpliedFeaturesSAHF = {};
+constexpr X86FeatureBitset ImpliedFeaturesSERIALIZE = {};
+constexpr X86FeatureBitset ImpliedFeaturesSGX = {};
+constexpr X86FeatureBitset ImpliedFeaturesSHSTK = {};
+constexpr X86FeatureBitset ImpliedFeaturesTBM = {};
+constexpr X86FeatureBitset ImpliedFeaturesTSXLDTRK = {};
+constexpr X86FeatureBitset ImpliedFeaturesUINTR = {};
+constexpr X86FeatureBitset ImpliedFeaturesUSERMSR = {};
+constexpr X86FeatureBitset ImpliedFeaturesWAITPKG = {};
+constexpr X86FeatureBitset ImpliedFeaturesWBNOINVD = {};
+constexpr X86FeatureBitset ImpliedFeaturesVZEROUPPER = {};
+constexpr X86FeatureBitset ImpliedFeaturesX87 = {};
+constexpr X86FeatureBitset ImpliedFeaturesXSAVE = {};
 
 // Not really CPU features, but need to be in the table because clang uses
 // target features to communicate them to the backend.
-constexpr FeatureBitset ImpliedFeaturesRETPOLINE_EXTERNAL_THUNK = {};
-constexpr FeatureBitset ImpliedFeaturesRETPOLINE_INDIRECT_BRANCHES = {};
-constexpr FeatureBitset ImpliedFeaturesRETPOLINE_INDIRECT_CALLS = {};
-constexpr FeatureBitset ImpliedFeaturesLVI_CFI = {};
-constexpr FeatureBitset ImpliedFeaturesLVI_LOAD_HARDENING = {};
+constexpr X86FeatureBitset ImpliedFeaturesRETPOLINE_EXTERNAL_THUNK = {};
+constexpr X86FeatureBitset ImpliedFeaturesRETPOLINE_INDIRECT_BRANCHES = {};
+constexpr X86FeatureBitset ImpliedFeaturesRETPOLINE_INDIRECT_CALLS = {};
+constexpr X86FeatureBitset ImpliedFeaturesLVI_CFI = {};
+constexpr X86FeatureBitset ImpliedFeaturesLVI_LOAD_HARDENING = {};
 
 // XSAVE features are dependent on basic XSAVE.
-constexpr FeatureBitset ImpliedFeaturesXSAVEC = FeatureXSAVE;
-constexpr FeatureBitset ImpliedFeaturesXSAVEOPT = FeatureXSAVE;
-constexpr FeatureBitset ImpliedFeaturesXSAVES = FeatureXSAVE;
+constexpr X86FeatureBitset ImpliedFeaturesXSAVEC = FeatureXSAVE;
+constexpr X86FeatureBitset ImpliedFeaturesXSAVEOPT = FeatureXSAVE;
+constexpr X86FeatureBitset ImpliedFeaturesXSAVES = FeatureXSAVE;
 
 // MMX->3DNOW->3DNOWA chain.
-constexpr FeatureBitset ImpliedFeaturesMMX = {};
-constexpr FeatureBitset ImpliedFeatures3DNOW = FeatureMMX;
-constexpr FeatureBitset ImpliedFeatures3DNOWA = Feature3DNOW;
+constexpr X86FeatureBitset ImpliedFeaturesMMX = {};
+constexpr X86FeatureBitset ImpliedFeatures3DNOW = FeatureMMX;
+constexpr X86FeatureBitset ImpliedFeatures3DNOWA = Feature3DNOW;
 
 // SSE/AVX/AVX512F chain.
-constexpr FeatureBitset ImpliedFeaturesSSE = {};
-constexpr FeatureBitset ImpliedFeaturesSSE2 = FeatureSSE;
-constexpr FeatureBitset ImpliedFeaturesSSE3 = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesSSSE3 = FeatureSSE3;
-constexpr FeatureBitset ImpliedFeaturesSSE4_1 = FeatureSSSE3;
-constexpr FeatureBitset ImpliedFeaturesSSE4_2 = FeatureSSE4_1;
-constexpr FeatureBitset ImpliedFeaturesAVX = FeatureSSE4_2;
-constexpr FeatureBitset ImpliedFeaturesAVX2 = FeatureAVX;
-constexpr FeatureBitset ImpliedFeaturesEVEX512 = {};
-constexpr FeatureBitset ImpliedFeaturesAVX512F =
+constexpr X86FeatureBitset ImpliedFeaturesSSE = {};
+constexpr X86FeatureBitset ImpliedFeaturesSSE2 = FeatureSSE;
+constexpr X86FeatureBitset ImpliedFeaturesSSE3 = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesSSSE3 = FeatureSSE3;
+constexpr X86FeatureBitset ImpliedFeaturesSSE4_1 = FeatureSSSE3;
+constexpr X86FeatureBitset ImpliedFeaturesSSE4_2 = FeatureSSE4_1;
+constexpr X86FeatureBitset ImpliedFeaturesAVX = FeatureSSE4_2;
+constexpr X86FeatureBitset ImpliedFeaturesAVX2 = FeatureAVX;
+constexpr X86FeatureBitset ImpliedFeaturesEVEX512 = {};
+constexpr X86FeatureBitset ImpliedFeaturesAVX512F =
     FeatureAVX2 | FeatureF16C | FeatureFMA;
 
 // Vector extensions that build on SSE or AVX.
-constexpr FeatureBitset ImpliedFeaturesAES = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesF16C = FeatureAVX;
-constexpr FeatureBitset ImpliedFeaturesFMA = FeatureAVX;
-constexpr FeatureBitset ImpliedFeaturesGFNI = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesPCLMUL = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesSHA = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesVAES = FeatureAES | FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesVPCLMULQDQ = FeatureAVX | FeaturePCLMUL;
-constexpr FeatureBitset ImpliedFeaturesSM3 = FeatureAVX;
-constexpr FeatureBitset ImpliedFeaturesSM4 = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAES = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesF16C = FeatureAVX;
+constexpr X86FeatureBitset ImpliedFeaturesFMA = FeatureAVX;
+constexpr X86FeatureBitset ImpliedFeaturesGFNI = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesPCLMUL = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesSHA = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesVAES = FeatureAES | FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesVPCLMULQDQ =
+    FeatureAVX | FeaturePCLMUL;
+constexpr X86FeatureBitset ImpliedFeaturesSM3 = FeatureAVX;
+constexpr X86FeatureBitset ImpliedFeaturesSM4 = FeatureAVX2;
 
 // AVX512 features.
-constexpr FeatureBitset ImpliedFeaturesAVX512CD = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512BW = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512DQ = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512ER = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512PF = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512VL = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512CD = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512BW = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512DQ = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512ER = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512PF = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VL = FeatureAVX512F;
 
-constexpr FeatureBitset ImpliedFeaturesAVX512BF16 = FeatureAVX512BW;
-constexpr FeatureBitset ImpliedFeaturesAVX512BITALG = FeatureAVX512BW;
-constexpr FeatureBitset ImpliedFeaturesAVX512IFMA = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512VNNI = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512VPOPCNTDQ = FeatureAVX512F;
-constexpr FeatureBitset ImpliedFeaturesAVX512VBMI = FeatureAVX512BW;
-constexpr FeatureBitset ImpliedFeaturesAVX512VBMI2 = FeatureAVX512BW;
-constexpr FeatureBitset ImpliedFeaturesAVX512VP2INTERSECT = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512BF16 = FeatureAVX512BW;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512BITALG = FeatureAVX512BW;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512IFMA = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VNNI = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VPOPCNTDQ = FeatureAVX512F;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VBMI = FeatureAVX512BW;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VBMI2 = FeatureAVX512BW;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512VP2INTERSECT = FeatureAVX512F;
 
 // FIXME: These two aren't really implemented and just exist in the feature
 // list for __builtin_cpu_supports. So omit their dependencies.
-constexpr FeatureBitset ImpliedFeaturesAVX5124FMAPS = {};
-constexpr FeatureBitset ImpliedFeaturesAVX5124VNNIW = {};
+constexpr X86FeatureBitset ImpliedFeaturesAVX5124FMAPS = {};
+constexpr X86FeatureBitset ImpliedFeaturesAVX5124VNNIW = {};
 
 // SSE4_A->FMA4->XOP chain.
-constexpr FeatureBitset ImpliedFeaturesSSE4_A = FeatureSSE3;
-constexpr FeatureBitset ImpliedFeaturesFMA4 = FeatureAVX | FeatureSSE4_A;
-constexpr FeatureBitset ImpliedFeaturesXOP = FeatureFMA4;
+constexpr X86FeatureBitset ImpliedFeaturesSSE4_A = FeatureSSE3;
+constexpr X86FeatureBitset ImpliedFeaturesFMA4 = FeatureAVX | FeatureSSE4_A;
+constexpr X86FeatureBitset ImpliedFeaturesXOP = FeatureFMA4;
 
 // AMX Features
-constexpr FeatureBitset ImpliedFeaturesAMX_TILE = {};
-constexpr FeatureBitset ImpliedFeaturesAMX_BF16 = FeatureAMX_TILE;
-constexpr FeatureBitset ImpliedFeaturesAMX_FP16 = FeatureAMX_TILE;
-constexpr FeatureBitset ImpliedFeaturesAMX_INT8 = FeatureAMX_TILE;
-constexpr FeatureBitset ImpliedFeaturesAMX_COMPLEX = FeatureAMX_TILE;
-constexpr FeatureBitset ImpliedFeaturesHRESET = {};
+constexpr X86FeatureBitset ImpliedFeaturesAMX_TILE = {};
+constexpr X86FeatureBitset ImpliedFeaturesAMX_BF16 = FeatureAMX_TILE;
+constexpr X86FeatureBitset ImpliedFeaturesAMX_FP16 = FeatureAMX_TILE;
+constexpr X86FeatureBitset ImpliedFeaturesAMX_INT8 = FeatureAMX_TILE;
+constexpr X86FeatureBitset ImpliedFeaturesAMX_COMPLEX = FeatureAMX_TILE;
+constexpr X86FeatureBitset ImpliedFeaturesHRESET = {};
 
-constexpr FeatureBitset ImpliedFeaturesPREFETCHI = {};
-constexpr FeatureBitset ImpliedFeaturesCMPCCXADD = {};
-constexpr FeatureBitset ImpliedFeaturesRAOINT = {};
-constexpr FeatureBitset ImpliedFeaturesAVXVNNIINT16 = FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesAVXVNNIINT8 = FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesAVXIFMA = FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesAVXNECONVERT = FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesSHA512 = FeatureAVX2;
-constexpr FeatureBitset ImpliedFeaturesAVX512FP16 =
+constexpr X86FeatureBitset ImpliedFeaturesPREFETCHI = {};
+constexpr X86FeatureBitset ImpliedFeaturesCMPCCXADD = {};
+constexpr X86FeatureBitset ImpliedFeaturesRAOINT = {};
+constexpr X86FeatureBitset ImpliedFeaturesAVXVNNIINT16 = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAVXVNNIINT8 = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAVXIFMA = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAVXNECONVERT = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesSHA512 = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAVX512FP16 =
     FeatureAVX512BW | FeatureAVX512DQ | FeatureAVX512VL;
 // Key Locker Features
-constexpr FeatureBitset ImpliedFeaturesKL = FeatureSSE2;
-constexpr FeatureBitset ImpliedFeaturesWIDEKL = FeatureKL;
+constexpr X86FeatureBitset ImpliedFeaturesKL = FeatureSSE2;
+constexpr X86FeatureBitset ImpliedFeaturesWIDEKL = FeatureKL;
 
 // AVXVNNI Features
-constexpr FeatureBitset ImpliedFeaturesAVXVNNI = FeatureAVX2;
+constexpr X86FeatureBitset ImpliedFeaturesAVXVNNI = FeatureAVX2;
 
 // AVX10 Features
-constexpr FeatureBitset ImpliedFeaturesAVX10_1 =
+constexpr X86FeatureBitset ImpliedFeaturesAVX10_1 =
     FeatureAVX512CD | FeatureAVX512VBMI | FeatureAVX512IFMA |
     FeatureAVX512VNNI | FeatureAVX512BF16 | FeatureAVX512VPOPCNTDQ |
     FeatureAVX512VBMI2 | FeatureAVX512BITALG | FeatureVAES | FeatureVPCLMULQDQ |
     FeatureAVX512FP16;
-constexpr FeatureBitset ImpliedFeaturesAVX10_1_512 =
+constexpr X86FeatureBitset ImpliedFeaturesAVX10_1_512 =
     FeatureAVX10_1 | FeatureEVEX512;
 
 // APX Features
-constexpr FeatureBitset ImpliedFeaturesEGPR = {};
-constexpr FeatureBitset ImpliedFeaturesPush2Pop2 = {};
-constexpr FeatureBitset ImpliedFeaturesPPX = {};
-constexpr FeatureBitset ImpliedFeaturesNDD = {};
-constexpr FeatureBitset ImpliedFeaturesCCMP = {};
-constexpr FeatureBitset ImpliedFeaturesCF = {};
+constexpr X86FeatureBitset ImpliedFeaturesEGPR = {};
+constexpr X86FeatureBitset ImpliedFeaturesPush2Pop2 = {};
+constexpr X86FeatureBitset ImpliedFeaturesPPX = {};
+constexpr X86FeatureBitset ImpliedFeaturesNDD = {};
+constexpr X86FeatureBitset ImpliedFeaturesCCMP = {};
+constexpr X86FeatureBitset ImpliedFeaturesCF = {};
 
 constexpr FeatureInfo FeatureInfos[X86::CPU_FEATURE_MAX] = {
 #define X86_FEATURE(ENUM, STR) {{"+" STR}, ImpliedFeatures##ENUM},
@@ -646,7 +649,7 @@ void llvm::X86::getFeaturesForCPU(StringRef CPU,
                          [&](const ProcInfo &P) { return P.Name == CPU; });
   assert(I != std::end(Processors) && "Processor not found!");
 
-  FeatureBitset Bits = I->Features;
+  X86FeatureBitset Bits = I->Features;
 
   // Remove the 64-bit feature which we only use to validate if a CPU can
   // be used with 64-bit mode.
@@ -659,12 +662,12 @@ void llvm::X86::getFeaturesForCPU(StringRef CPU,
 }
 
 // For each feature that is (transitively) implied by this feature, set it.
-static void getImpliedEnabledFeatures(FeatureBitset &Bits,
-                                      const FeatureBitset &Implies) {
+static void getImpliedEnabledFeatures(X86FeatureBitset &Bits,
+                                      const X86FeatureBitset &Implies) {
   // Fast path: Implies is often empty.
   if (!Implies.any())
     return;
-  FeatureBitset Prev;
+  X86FeatureBitset Prev;
   Bits |= Implies;
   do {
     Prev = Bits;
@@ -676,10 +679,10 @@ static void getImpliedEnabledFeatures(FeatureBitset &Bits,
 
 /// Create bit vector of features that are implied disabled if the feature
 /// passed in Value is disabled.
-static void getImpliedDisabledFeatures(FeatureBitset &Bits, unsigned Value) {
+static void getImpliedDisabledFeatures(X86FeatureBitset &Bits, unsigned Value) {
   // Check all features looking for any dependent on this feature. If we find
   // one, mark it and recursively find any feature that depend on it.
-  FeatureBitset Prev;
+  X86FeatureBitset Prev;
   Bits.set(Value);
   do {
     Prev = Bits;
@@ -701,7 +704,7 @@ void llvm::X86::updateImpliedFeatures(
     return;
   }
 
-  FeatureBitset ImpliedBits;
+  X86FeatureBitset ImpliedBits;
   if (Enabled)
     getImpliedEnabledFeatures(ImpliedBits, I->ImpliedFeatures);
   else

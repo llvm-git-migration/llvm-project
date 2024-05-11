@@ -858,9 +858,9 @@ StringRef llvm::dwarf::RLEString(unsigned RLE) {
   }
 }
 
-constexpr char llvm::dwarf::EnumTraits<Attribute>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Form>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Index>::Type[];
-constexpr char llvm::dwarf::EnumTraits<Tag>::Type[];
-constexpr char llvm::dwarf::EnumTraits<LineNumberOps>::Type[];
-constexpr char llvm::dwarf::EnumTraits<LocationAtom>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Attribute>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Form>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Index>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::Tag>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::LineNumberOps>::Type[];
+constexpr char llvm::dwarf::EnumTraits<llvm::dwarf::LocationAtom>::Type[];

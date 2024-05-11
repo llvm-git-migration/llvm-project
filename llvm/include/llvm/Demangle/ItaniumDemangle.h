@@ -586,6 +586,12 @@ public:
 
 class ObjCProtoName : public Node {
   const Node *Ty;
+#if LLVM_ENABLE_PRECOMPILED_HEADERS
+public:
+  // When PCH is enabled, Protocol is unable to be read by the PointerType
+  // friend class, make it public to avoid this issue.
+  // TODO: Fix friend class interaction when PCH is enabled.
+#endif
   std::string_view Protocol;
 
   friend class PointerType;

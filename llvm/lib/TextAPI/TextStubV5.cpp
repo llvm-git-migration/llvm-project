@@ -225,7 +225,7 @@ Error collectFromArray(TBDKey Key, const Object *Obj,
     return Error::success();
   }
 
-  for (const Value &Val : *Values) {
+  for (const json::Value &Val : *Values) {
     auto ValStr = Val.getAsString();
     if (!ValStr.has_value())
       return make_error<JSONStubError>(getParseErrorMsg(Key));
@@ -258,7 +258,7 @@ Expected<TargetList> getTargets(const Object *Section) {
     return make_error<JSONStubError>(getParseErrorMsg(TBDKey::Targets));
 
   TargetList IFTargets;
-  for (const Value &JSONTarget : *Targets) {
+  for (const json::Value &JSONTarget : *Targets) {
     auto TargetStr = JSONTarget.getAsString();
     if (!TargetStr.has_value())
       return make_error<JSONStubError>(getParseErrorMsg(TBDKey::Target));
@@ -276,7 +276,7 @@ Expected<TargetList> getTargetsSection(const Object *Section) {
     return make_error<JSONStubError>(getParseErrorMsg(TBDKey::Targets));
 
   TargetList IFTargets;
-  for (const Value &JSONTarget : *Targets) {
+  for (const json::Value &JSONTarget : *Targets) {
     const auto *Obj = JSONTarget.getAsObject();
     if (!Obj)
       return make_error<JSONStubError>(getParseErrorMsg(TBDKey::Target));
@@ -1024,8 +1024,8 @@ Error MachO::serializeInterfaceFileToJSON(raw_ostream &OS,
   if (!TextFile)
     return TextFile.takeError();
   if (Compact)
-    OS << formatv("{0}", Value(std::move(*TextFile))) << "\n";
+    OS << formatv("{0}", json::Value(std::move(*TextFile))) << "\n";
   else
-    OS << formatv("{0:2}", Value(std::move(*TextFile))) << "\n";
+    OS << formatv("{0:2}", json::Value(std::move(*TextFile))) << "\n";
   return Error::success();
 }
