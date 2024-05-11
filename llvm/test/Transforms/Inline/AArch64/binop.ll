@@ -189,14 +189,14 @@ define i32 @shr(i32 %a, i32 %b) {
 
 
 define i1 @outer_and1(i1 %a) {
-; check-label: @outer_and1(
+; check-LABEL: @outer_and1(
 ; check-NOT: call i1 @and1
   %c = call i1 @and1(i1 %a, i1 false)
   ret i1 %c
 }
 
 define i1 @outer_and2(i1 %a) {
-; check-label: @outer_and2(
+; check-LABEL: @outer_and2(
 ; check-NOT: call i1 @and1
   %c = call i1 @and1(i1 %a, i1 true)
   ret i1 %c
@@ -211,7 +211,7 @@ define i1 @and1(i1 %a, i1 %b) {
 
 
 define i1 @outer_and3(i1 %a) {
-; check-label: @outer_and3(
+; check-LABEL: @outer_and3(
 ; check-NOT: call i1 @and2
   %c = call i1 @and2(i1 %a)
   ret i1 %c
@@ -226,14 +226,14 @@ define i1 @and2(i1 %a) {
 
 
 define i1 @outer_or1(i1 %a) {
-; check-label: @outer_or1(
+; check-LABEL: @outer_or1(
 ; check-NOT: call i1 @or1
   %c = call i1 @or1(i1 %a, i1 false)
   ret i1 %c
 }
 
 define i1 @outer_or2(i1 %a) {
-; check-label: @outer_or2(
+; check-LABEL: @outer_or2(
 ; check-NOT: call i1 @or1
   %c = call i1 @or1(i1 %a, i1 true)
   ret i1 %c
@@ -248,7 +248,7 @@ define i1 @or1(i1 %a, i1 %b) {
 
 
 define i1 @outer_or3(i1 %a) {
-; check-label: @outer_or3(
+; check-LABEL: @outer_or3(
 ; check-NOT: call i1 @or2
   %c = call i1 @or2(i1 %a)
   ret i1 %c
@@ -263,7 +263,7 @@ define i1 @or2(i1 %a) {
 
 
 define i1 @outer_xor1(i1 %a) {
-; check-label: @outer_xor1(
+; check-LABEL: @outer_xor1(
 ; check-NOT: call i1 @xor
   %c = call i1 @xor1(i1 %a, i1 false)
   ret i1 %c
@@ -278,7 +278,7 @@ define i1 @xor1(i1 %a, i1 %b) {
 
 
 define i1 @outer_xor3(i1 %a) {
-; check-label: @outer_xor3(
+; check-LABEL: @outer_xor3(
 ; check-NOT: call i1 @xor
   %c = call i1 @xor2(i1 %a)
   ret i1 %c
