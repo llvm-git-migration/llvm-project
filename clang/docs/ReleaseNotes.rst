@@ -379,6 +379,10 @@ Modified Compiler Flags
   evaluating to ``true`` and an empty body such as ``while(1);``)
   are considered infinite, even when the ``-ffinite-loop`` flag is set.
 
+- Removed "arm interrupt calling convention" warning that was included in
+  ``-Wextra`` but did not have its own flag. Added
+  ``-Warm-interrupt-vfp-clobber`` that enables the modified warning.
+
 Removed Compiler Flags
 -------------------------
 
@@ -517,6 +521,13 @@ Improvements to Clang's diagnostics
 
 - Clang emits a ``-Wparentheses`` warning for expressions with consecutive comparisons like ``x < y < z``.
   Fixes #GH20456.
+
+- On ARM, Clang no longer suggests adding ``__attribute__((interrupt))`` to
+  normal functions that are called from interrupt handlers to prevent
+  clobbering VFP registers as part of ``-Wextra``. Following this suggestion
+  leads to unpredictable behavior. Instead, ``-Warm-interrupt-vfp-clobber`` can
+  now be used to detect calling functions that don't have VFP disabled with
+  ``__attribute__((target("soft-float")))`` from an interrupt handler.
 
 Improvements to Clang's time-trace
 ----------------------------------
