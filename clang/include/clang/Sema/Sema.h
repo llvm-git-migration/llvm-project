@@ -9216,6 +9216,12 @@ public:
   /// receive true if the cause for the error is the associated constraints of
   /// the template not being satisfied by the template arguments.
   ///
+  /// \param PartialOrderTTP If true, assume these template arguments are
+  /// the injected template arguments for a template template parameter.
+  /// This will relax the requirement that all it's possible uses are valid.
+  /// TTP checking is loose, and assumes that invalid uses will be diagnosed
+  /// during instantiation.
+  ///
   /// \returns true if an error occurred, false otherwise.
   bool CheckTemplateArgumentList(
       TemplateDecl *Template, SourceLocation TemplateLoc,
@@ -9223,7 +9229,7 @@ public:
       SmallVectorImpl<TemplateArgument> &SugaredConverted,
       SmallVectorImpl<TemplateArgument> &CanonicalConverted,
       bool UpdateArgsWithConversions = true,
-      bool *ConstraintsNotSatisfied = nullptr);
+      bool *ConstraintsNotSatisfied = nullptr, bool PartialOrderTTP = false);
 
   bool CheckTemplateTypeArgument(
       TemplateTypeParmDecl *Param, TemplateArgumentLoc &Arg,

@@ -707,6 +707,7 @@ Bug Fixes to C++ Support
   initialized, rather than evaluating them as a part of the larger manifestly constant evaluated
   expression.
 - Fix a bug in access control checking due to dealyed checking of friend declaration. Fixes (#GH12361).
+- When partial ordering alias templates against template template parameters, allow pack expansions when the alias has a fixed-size parameter list. Fixes (#GH62529).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
