@@ -24,7 +24,7 @@ struct remove_pointer {
 };
 
 template <class _Tp>
-using __remove_pointer_t = __remove_pointer(_Tp);
+using __remove_pointer_t = remove_pointer<_Tp>::type;
 #else
 // clang-format off
 template <class _Tp> struct _LIBCPP_TEMPLATE_VIS remove_pointer                      {typedef _LIBCPP_NODEBUG _Tp type;};
