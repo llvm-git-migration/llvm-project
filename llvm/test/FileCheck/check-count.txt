@@ -58,7 +58,7 @@ CHECK-CNT3-NOT:     {{^}}this is duplicate
 CHECK-CNT4-COUNT-5: this is duplicate
 CHECK-CNT4-EMPTY:
 
-Many-label:
+Many-LABEL:
 
 -many-
 -many-
@@ -79,7 +79,7 @@ Many-label:
 
 ; RUN: FileCheck %s --input-file %s --check-prefix=CHECK-CNTMANY
 CHECK-CNTMANY-COUNT-2: this is duplicate
-CHECK-CNTMANY-LABEL: Many-label:
+CHECK-CNTMANY-LABEL: Many-LABEL:
 CHECK-CNTMANY-EMPTY:
 CHECK-CNTMANY-COUNT-16: {{^}}-many-
 CHECK-CNTMANY-EMPTY:
@@ -107,7 +107,7 @@ MISCOUNT2: [[@LINE-2]]:22: error: CHECK-MIS2-COUNT: expected string not found in
 ; RUN: | FileCheck %s --check-prefix=MISCOUNT3
 CHECK-MIS3-COUNT-5: this is duplicate
 CHECK-MIS3-EMPTY:
-CHECK-MIS3-LABEL: Many-label:
+CHECK-MIS3-LABEL: Many-LABEL:
 CHECK-MIS3-EMPTY:
 CHECK-MIS3-COUNT-160: {{^}}-many-
 CHECK-MIS3-EMPTY:

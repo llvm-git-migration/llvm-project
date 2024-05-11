@@ -12,7 +12,7 @@ entry:
   ret void
 }
 
-; CHECK-label:test_twinword_error
+; CHECK-LABEL:test_twinword_error
 ; CHECK: error: Hi part of pair should point to an even-numbered register
 ; CHECK: error: (note that in some cases it might be necessary to manually bind the input/output registers instead of relying on automatic allocation)
 
