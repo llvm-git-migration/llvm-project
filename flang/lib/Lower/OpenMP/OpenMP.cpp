@@ -830,6 +830,33 @@ static void genBodyOfTargetDataOp(
     genNestedEvaluations(converter, eval);
 }
 
+// This generates intermediate common block member accesses within a region
+// and then rebinds the members symbol to the intermediate accessors we have
+// generated so that subsequent code generation will utilise these instead.
+//
+// When the scope changes, the bindings to the intermediate accessors should
+// be dropped in place of the original symbol bindings.
+//
+// This is for utilisation with TargetOp.
+static void genIntermediateCommonBlockAccessors(
+    Fortran::lower::AbstractConverter &converter,
+    const mlir::Location &currentLocation, mlir::Region &region,
+    llvm::ArrayRef<const Fortran::semantics::Symbol *> mapSyms) {
+  for (auto [argIndex, argSymbol] : llvm::enumerate(mapSyms)) {
+    if (auto *details =
+            argSymbol->detailsIf<Fortran::semantics::CommonBlockDetails>()) {
+      for (auto obj : details->objects()) {
+        auto targetCBMemberBind = Fortran::lower::genCommonBlockMember(
+            converter, currentLocation, *obj, region.getArgument(argIndex));
+        fir::ExtendedValue sexv = converter.getSymbolExtendedValue(*obj);
+        fir::ExtendedValue targetCBExv =
+            getExtendedValue(sexv, targetCBMemberBind);
+        converter.bindSymbol(*obj, targetCBExv);
+      }
+    }
+  }
+}
+
 // This functions creates a block for the body of the targetOp's region. It adds
 // all the symbols present in mapSymbols as block arguments to this block.
 static void
@@ -983,6 +1010,18 @@ genBodyOfTargetOp(Fortran::lower::AbstractConverter &converter,
 
   // Create the insertion point after the marker.
   firOpBuilder.setInsertionPointAfter(undefMarker.getDefiningOp());
+
+  // If we map a common block using it's symbol e.g. map(tofrom: /common_block/)
+  // and accessing it's members within the target region, there is a large
+  // chance we will end up with uses external to the region accessing the common
+  // block. As target regions are IsolatedFromAbove, we must make sure to
+  // resolve these, we do so by generating new common block member accesses
+  // within the region, binding them to the member symbol for the scope of the
+  // region so that subsequent code generation within the region will utilise
+  // our new member accesses we have created.
+  genIntermediateCommonBlockAccessors(converter, currentLocation, region,
+                                      mapSyms);
+
   if (genNested)
     genNestedEvaluations(converter, eval);
 }
@@ -1574,6 +1613,13 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
   // symbols used inside the region that have not been explicitly mapped using
   // the map clause.
   auto captureImplicitMap = [&](const Fortran::semantics::Symbol &sym) {
+    // if the symbol is part of an already mapped common block, do not make a
+    // map for it.
+    if (const Fortran::semantics::Symbol *common =
+            Fortran::semantics::FindCommonBlockContaining(sym.GetUltimate()))
+      if (llvm::find(mapSyms, common) != mapSyms.end())
+        return;
+
     if (llvm::find(mapSyms, &sym) == mapSyms.end()) {
       mlir::Value baseOp = converter.getSymbolAddress(sym);
       if (!baseOp)

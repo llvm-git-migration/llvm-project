@@ -5085,8 +5085,8 @@ static void replaceConstatExprUsesInFuncWithInstr(ConstantExpr *ConstExpr,
   }
 }
 
-static void replaceConstantValueUsesInFuncWithInstr(llvm::Value *Input,
-                                                    Function *Func) {
+void OpenMPIRBuilder::replaceConstantValueUsesInFuncWithInstr(
+    llvm::Value *Input, Function *Func) {
   for (User *User : make_early_inc_range(Input->users()))
     if (auto *Const = dyn_cast<Constant>(User))
       if (auto *ConstExpr = dyn_cast<ConstantExpr>(Const))
@@ -5160,6 +5160,31 @@ static Function *createOutlinedFunction(
           ? make_range(Func->arg_begin() + 1, Func->arg_end())
           : Func->args();
 
+  auto ReplaceValue = [&OMPBuilder](Value *Input, Value *InputCopy,
+                                    Function *Func) {
+    // Things like GEP's can come in the form of Constants. Constants and
+    // ConstantExpr's do not have access to the knowledge of what they're
+    // contained in, so we must dig a little to find an instruction so we
+    // can tell if they're used inside of the function we're outlining. We
+    // also replace the original constant expression with a new instruction
+    // equivalent; an instruction as it allows easy modification in the
+    // following loop, as we can now know the constant (instruction) is
+    // owned by our target function and replaceUsesOfWith can now be invoked
+    // on it (cannot do this with constants it seems). A brand new one also
+    // allows us to be cautious as it is perhaps possible the old expression
+    // was used inside of the function but exists and is used externally
+    // (unlikely by the nature of a Constant, but still).
+    OMPBuilder.replaceConstantValueUsesInFuncWithInstr(Input, Func);
+
+    // Collect all the instructions
+    for (User *User : make_early_inc_range(Input->users()))
+      if (auto *Instr = dyn_cast<Instruction>(User))
+        if (Instr->getFunction() == Func)
+          Instr->replaceUsesOfWith(Input, InputCopy);
+  };
+
+  SmallVector<std::pair<Value *, Value *>> DeferredReplacement;
+
   // Rewrite uses of input valus to parameters.
   for (auto InArg : zip(Inputs, ArgRange)) {
     Value *Input = std::get<0>(InArg);
@@ -5169,26 +5194,35 @@ static Function *createOutlinedFunction(
     Builder.restoreIP(
         ArgAccessorFuncCB(Arg, Input, InputCopy, AllocaIP, Builder.saveIP()));
 
-    // Things like GEP's can come in the form of Constants. Constants and
-    // ConstantExpr's do not have access to the knowledge of what they're
-    // contained in, so we must dig a little to find an instruction so we can
-    // tell if they're used inside of the function we're outlining. We also
-    // replace the original constant expression with a new instruction
-    // equivalent; an instruction as it allows easy modification in the
-    // following loop, as we can now know the constant (instruction) is owned by
-    // our target function and replaceUsesOfWith can now be invoked on it
-    // (cannot do this with constants it seems). A brand new one also allows us
-    // to be cautious as it is perhaps possible the old expression was used
-    // inside of the function but exists and is used externally (unlikely by the
-    // nature of a Constant, but still).
-    replaceConstantValueUsesInFuncWithInstr(Input, Func);
+    // In certain cases a Global may be set up for replacement, however, this
+    // Global may be used in multiple arguments to the kernel, just segmented
+    // apart, for example, if we have a global array, that is sectioned into
+    // multiple mappings (technically not legal in OpenMP, but there is a case
+    // in Fortran for Common Blocks where this is neccesary), we will end up
+    // with GEP's into this array inside the kernel, that refer to the Global
+    // but are technically seperate arguments to the kernel for all intents and
+    // purposes. If we have mapped a segment that requires a GEP into the 0-th
+    // index, it will fold into an referal to the Global, if we then encounter
+    // this folded GEP during replacement all of the references to the
+    // Global in the kernel will be replaced with the argument we have generated
+    // that corresponds to it, including any other GEP's that refer to the
+    // Global that may be other arguments. This will invalidate all of the other
+    // preceding mapped arguments that refer to the same global that may be
+    // seperate segments. To prevent this, we defer global processing until all
+    // other processing has been performed.
+    if (llvm::isa<llvm::GlobalValue>(std::get<0>(InArg)) ||
+        llvm::isa<llvm::GlobalObject>(std::get<0>(InArg)) ||
+        llvm::isa<llvm::GlobalVariable>(std::get<0>(InArg))) {
+      DeferredReplacement.push_back(std::make_pair(Input, InputCopy));
+      continue;
+    }
 
-    // Collect all the instructions
-    for (User *User : make_early_inc_range(Input->users()))
-      if (auto *Instr = dyn_cast<Instruction>(User))
-        if (Instr->getFunction() == Func)
-          Instr->replaceUsesOfWith(Input, InputCopy);
+    ReplaceValue(Input, InputCopy, Func);
   }
+
+  // Replace all of our deferred Input values, currently just Globals.
+  for (auto Deferred : DeferredReplacement)
+    ReplaceValue(std::get<0>(Deferred), std::get<1>(Deferred), Func);
 
   // Restore insert point.
   Builder.restoreIP(OldInsertPoint);
