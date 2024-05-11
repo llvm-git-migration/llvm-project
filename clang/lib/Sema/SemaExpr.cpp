@@ -6760,22 +6760,23 @@ ExprResult Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
     return ExprError();
   }
 
-  // Interrupt handlers don't save off the VFP regs automatically on ARM,
-  // so there's some risk when calling out to non-interrupt handler functions
-  // that the callee might not preserve them. This is easy to diagnose here,
-  // but can be very challenging to debug.
-  // Likewise, X86 interrupt handlers may only call routines with attribute
-  // no_caller_saved_registers since there is no efficient way to
-  // save and restore the non-GPR state.
   if (auto *Caller = getCurFunctionDecl()) {
+    // Interrupt handlers don't save volatile VFP registers automatically on
+    // ARM, so calling other functions that use VFP will likely cause the
+    // interruptee's VFP state to be clobbered. This is easy to diagnose here,
+    // but can be very challenging to debug.
     if (Caller->hasAttr<ARMInterruptAttr>()) {
       bool VFP = Context.getTargetInfo().hasFeature("vfp");
-      if (VFP && (!FDecl || !FDecl->hasAttr<ARMInterruptAttr>())) {
-        Diag(Fn->getExprLoc(), diag::warn_arm_interrupt_calling_convention);
+      if (VFP && (!FDecl || !FDecl->hasAttr<TargetAttr>() ||
+                  !FDecl->getAttr<TargetAttr>()->hasFeature("soft-float"))) {
+        Diag(Fn->getExprLoc(), diag::warn_arm_interrupt_vfp_clobber);
         if (FDecl)
           Diag(FDecl->getLocation(), diag::note_callee_decl) << FDecl;
       }
     }
+    // X86 interrupt handlers may only call routines with attribute
+    // no_caller_saved_registers since there is no efficient way to
+    // save and restore the non-GPR state.
     if (Caller->hasAttr<AnyX86InterruptAttr>() ||
         Caller->hasAttr<AnyX86NoCallerSavedRegistersAttr>()) {
       const TargetInfo &TI = Context.getTargetInfo();
