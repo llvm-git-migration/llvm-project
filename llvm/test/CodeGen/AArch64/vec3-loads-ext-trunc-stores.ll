@@ -217,7 +217,7 @@ define <4 x i32> @load_v3i8_to_4xi32_const_offset_3(ptr %src) {
 }
 
 define <4 x i32> @volatile_load_v3i8_to_4xi32(ptr %src) {
-; check-label: volatile_load_v3i8_to_4xi32:
+; check-LABEL: volatile_load_v3i8_to_4xi32:
 ; check:       ; %bb.0:
 ; check-NEXT:    sub sp, sp, #16
 ; check-NEXT:    .cfi_def_cfa_offset 16
@@ -234,7 +234,7 @@ define <4 x i32> @volatile_load_v3i8_to_4xi32(ptr %src) {
 ; check-NEXT:    add sp, sp, #16
 ; check-NEXT:    ret
 ;
-; be-label: volatile_load_v3i8_to_4xi32:
+; be-LABEL: volatile_load_v3i8_to_4xi32:
 ; be:       // %bb.0:
 ; be-NEXT:    sub sp, sp, #16
 ; be-NEXT:    .cfi_def_cfa_offset 16
