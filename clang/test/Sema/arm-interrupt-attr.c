@@ -23,7 +23,7 @@ __attribute__((interrupt(""))) void foo10(void) {}
 // expected-note@+2 {{'callee1' declared here}}
 #endif
 void callee1(void);
-__attribute__((interrupt("IRQ"))) void callee2(void);
+__attribute__((target("soft-float"))) void callee2(void);
 void caller1(void) {
   callee1();
   callee2();
@@ -31,13 +31,13 @@ void caller1(void) {
 
 #ifndef SOFT
 __attribute__((interrupt("IRQ"))) void caller2(void) {
-  callee1(); // expected-warning {{call to function without interrupt attribute could clobber interruptee's VFP registers}}
+  callee1(); // expected-warning {{calling a VFP-enabled function from an interrupt could clobber the interruptee's VFP registers}}
   callee2();
 }
 
 void (*callee3)(void);
 __attribute__((interrupt("IRQ"))) void caller3(void) {
-  callee3(); // expected-warning {{call to function without interrupt attribute could clobber interruptee's VFP registers}}
+  callee3(); // expected-warning {{calling a VFP-enabled function from an interrupt could clobber the interruptee's VFP registers}}
 }
 #else
 __attribute__((interrupt("IRQ"))) void caller2(void) {
