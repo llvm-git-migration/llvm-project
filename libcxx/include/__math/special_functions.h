@@ -39,7 +39,7 @@ _LIBCPP_HIDE_FROM_ABI _Real __legendre(unsigned __n, _Real __x) {
     return __x;
 
   if (__math::fabs(__x) > 1)
-    throw std::domain_error("Argument `x` of Legendre function is out of range: `|x| <= 1`.");
+    std::__throw_domain_error("Argument `x` of Legendre function is out of range: `|x| <= 1`.");
 
   _Real __P_0{1};
   if (__n == 0)
@@ -53,13 +53,6 @@ _LIBCPP_HIDE_FROM_ABI _Real __legendre(unsigned __n, _Real __x) {
     __P_n            = __P_n_next;
   }
 
-  if (!__math::isfinite(__P_n)) {
-    // Overflow occured. Two possible cases:
-    //    n is odd:  return infinity of the same sign as x.
-    //    n is even: return +Inf
-    _Real __inf = std::numeric_limits<_Real>::infinity();
-    return (__n & 1) ? __math::copysign(__inf, __x) : __inf;
-  }
   return __P_n;
   // NOLINTEND(readability-identifier-naming)
 }
