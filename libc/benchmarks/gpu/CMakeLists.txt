@@ -85,7 +85,7 @@ function (add_gpu_benchmark test_name)
   target_include_directories(${fq_build_target_name} SYSTEM PRIVATE ${LIBC_INCLUDE_DIR})
   target_include_directories(${fq_build_target_name} PRIVATE ${LIBC_SOURCE_DIR})
   _get_hermetic_test_compile_options(compile_options "${GPU_BENCHMARK_COMPILE_OPTIONS}")
-  target_compile_options(${fq_build_target_name} PRIVATE ${compile_options} -save-temps)
+  target_compile_options(${fq_build_target_name} PRIVATE ${compile_options}) 
 
   set(link_libraries "")
   foreach(lib in LISTS GPU_BENCHMARK_LINK_LIBRARIES)
@@ -178,19 +178,6 @@ add_unittest_framework_library(
     libc.src.__support.OSUtil.osutil
     libc.src.__support.uint128
     libc.benchmarks.gpu.timing.timing
-)
-
-add_custom_target(dummy-suite)
-
-add_gpu_benchmark(
-  dummy
-  SUITE
-    dummy-suite
-  SRCS
-    dummy.cpp
-  DEPENDS
-    libc.src.stdio.fputs
-    libc.src.stdio.stderr
 )
 
 add_subdirectory(src)

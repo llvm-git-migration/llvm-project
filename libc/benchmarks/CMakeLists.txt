@@ -91,10 +91,10 @@ if(NOT LIBC_TARGET_OS_IS_GPU)
 	)
 	target_link_libraries(libc-benchmark
 	    PUBLIC
-    benchmark::benchmark
-	    LLVMSupport
+	    benchmark::benchmark
+            LLVMSupport
 	    LLVMTargetParser
-    Threads::Threads
+	    Threads::Threads
 	)
 	add_dependencies(libc-benchmark google-benchmark-libc)
 	llvm_update_compile_flags(libc-benchmark)

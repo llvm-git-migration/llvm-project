@@ -6,4 +6,4 @@ uint64_t BM_IsAlpha() {
   char x = 'c';
   return LIBC_NAMESPACE::latency(LIBC_NAMESPACE::isalpha, x);
 }
-BENCHMARK_WRAPPER(LlvmLibcIsAlphaGpuBenchmark, IsAlpha, BM_IsAlpha);
+BENCHMARK(LlvmLibcIsAlphaGpuBenchmark, IsAlpha, BM_IsAlpha);

@@ -4,10 +4,8 @@
 #include "benchmarks/gpu/timing/timing.h"
 
 #include "benchmarks/gpu/BenchmarkLogger.h"
-#include "src/__support/CPP/string.h"
-#include "src/__support/CPP/string_view.h"
-#include "src/__support/OSUtil/io.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace LIBC_NAMESPACE {
@@ -61,53 +59,14 @@ public:
   }
 };
 
-template <typename F, typename... Args>
-uint64_t benchmark(const BenchmarkOptions &Options, F f, Args... args) {
-  RuntimeEstimationProgression REP;
-  size_t Iterations = Options.InitialIterations;
-  if (Iterations < (uint32_t)1) {
-    Iterations = 1;
-  }
+struct BenchmarkResult {
+  uint64_t Cycles = 0;
   size_t Samples = 0;
-  uint64_t BestGuess = 0;
-  uint64_t TotalCycles = 0;
-#if defined(LIBC_TARGET_ARCH_IS_NVPTX)
-  // Nvidia cannot perform LTO, so we need to perform
-  // 1 call to "warm up" the function before microbenchmarking
-  uint64_t result = latency(f, args...);
-  tlog << "Running warm-up iteration: " << result << '\n';
-#endif
-  for (;;) {
-    uint64_t SampleCycles = 0;
-    for (uint32_t i = 0; i < Iterations; i++) {
-      uint64_t result = latency(f, args...);
-      SampleCycles += result;
-      tlog << result << '\n';
-    }
-
-    Samples++;
-    TotalCycles += SampleCycles;
-    const double ChangeRatio =
-        REP.ComputeImprovement({Iterations, SampleCycles});
-    BestGuess = REP.CurrentEstimation;
-
-    if (Samples >= Options.MaxSamples || Iterations >= Options.MaxIterations) {
-      break;
-    } else if (Samples >= Options.MinSamples && ChangeRatio < Options.Epsilon) {
-      tlog << "Samples are stable!\n";
-      break;
-    }
-
-    Iterations *= Options.ScalingFactor;
-  }
-  tlog << "Best Guess: " << BestGuess << '\n';
-  tlog << "Samples: " << Samples << '\n';
-  tlog << "\n";
-  return BestGuess;
+  size_t TotalIterations = 0;
 };
 
-uint64_t benchmark_wrapper(const BenchmarkOptions &Options,
-                           uint64_t (*WrapperFunc)());
+BenchmarkResult benchmark(const BenchmarkOptions &Options,
+                          uint64_t (*WrapperFunc)());
 
 class Benchmark {
   Benchmark *Next = nullptr;
@@ -130,26 +89,6 @@ private:
   static Benchmark *End;
 };
 
-template <typename F> class FunctionBenchmark : public Benchmark {
-  F Func;
-  const char *Name;
-
-public:
-  FunctionBenchmark(F Func, char const *Name) : Func(Func), Name(Name) {
-    addBenchmark(this);
-  }
-
-private:
-  void Run() override {
-    BenchmarkOptions Options;
-    auto latency = benchmark(Options, Func);
-    tlog << "FnName: " << Name << '\n';
-    tlog << "FnBenchmark: " << latency << '\n';
-    tlog << "\n";
-  }
-  const char *getName() const override { return Name; }
-};
-
 class WrapperBenchmark : public Benchmark {
   using BenchmarkWrapperFunction = uint64_t (*)();
   BenchmarkWrapperFunction Func;
@@ -163,25 +102,20 @@ public:
 
 private:
   void Run() override {
-    tlog << "Running wrapper: " << Name << '\n';
     BenchmarkOptions Options;
-    auto latency = benchmark_wrapper(Options, Func);
-    tlog << "FnName: " << Name << '\n';
-    tlog << "FnBenchmark: " << latency << '\n';
-    tlog << "\n";
+    auto result = benchmark(Options, Func);
+    constexpr auto GREEN = "\033[32m";
+    constexpr auto RESET = "\033[0m";
+    blog << GREEN << "[ RUN      ] " << RESET << Name << '\n';
+    blog << GREEN << "[       OK ] " << RESET << Name << ": " << result.Cycles
+         << " cycles, " << result.TotalIterations << " iterations\n";
   }
   const char *getName() const override { return Name; }
 };
-
 } // namespace libc_gpu_benchmarks
-
 } // namespace LIBC_NAMESPACE
 
-#define BENCHMARK_FN(SuiteName, TestName, Func)                                \
-  LIBC_NAMESPACE::libc_gpu_benchmarks::FunctionBenchmark                       \
-      SuiteName##_##TestName##_Instance(Func, #SuiteName "." #TestName);
-
-#define BENCHMARK_WRAPPER(SuiteName, TestName, Func)                           \
+#define BENCHMARK(SuiteName, TestName, Func)                                   \
   LIBC_NAMESPACE::libc_gpu_benchmarks::WrapperBenchmark                        \
       SuiteName##_##TestName##_Instance(Func, #SuiteName "." #TestName);
 

@@ -1,10 +1,3 @@
-
-#include "benchmarks/gpu/timing/timing.h"
-
-#include "src/__support/CPP/string.h"
-#include "src/__support/CPP/string_view.h"
-#include "src/__support/OSUtil/io.h"
-
 #include "LibcGpuBenchmark.h"
 
 namespace LIBC_NAMESPACE {
@@ -26,16 +19,17 @@ void Benchmark::addBenchmark(Benchmark *B) {
 
 int Benchmark::runBenchmarks() {
   for (Benchmark *B = Start; B != nullptr; B = B->Next) {
-    tlog << B->getName() << "\n";
     B->Run();
   }
 
   return 0;
 }
 
-uint64_t benchmark_wrapper(const BenchmarkOptions &Options,
-                           uint64_t (*WrapperFunc)()) {
+BenchmarkResult benchmark(const BenchmarkOptions &Options,
+                          uint64_t (*WrapperFunc)()) {
+  BenchmarkResult Result;
   RuntimeEstimationProgression REP;
+  size_t TotalIterations = 0;
   size_t Iterations = Options.InitialIterations;
   if (Iterations < (uint32_t)1) {
     Iterations = 1;
@@ -53,6 +47,7 @@ uint64_t benchmark_wrapper(const BenchmarkOptions &Options,
 
     Samples++;
     TotalCycles += SampleCycles;
+    TotalIterations += Iterations;
     const double ChangeRatio =
         REP.ComputeImprovement({Iterations, SampleCycles});
     BestGuess = REP.CurrentEstimation;
@@ -60,15 +55,15 @@ uint64_t benchmark_wrapper(const BenchmarkOptions &Options,
     if (Samples >= Options.MaxSamples || Iterations >= Options.MaxIterations) {
       break;
     } else if (Samples >= Options.MinSamples && ChangeRatio < Options.Epsilon) {
-      tlog << "Samples are stable!\n";
       break;
     }
 
     Iterations *= Options.ScalingFactor;
   }
-  tlog << "Best Guess: " << BestGuess << '\n';
-  tlog << "Samples: " << Samples << '\n';
-  return BestGuess;
+  Result.Cycles = BestGuess;
+  Result.Samples = Samples;
+  Result.TotalIterations = TotalIterations;
+  return Result;
 };
 
 } // namespace libc_gpu_benchmarks

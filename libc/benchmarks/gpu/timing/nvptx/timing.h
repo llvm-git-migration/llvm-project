@@ -79,38 +79,6 @@ template <typename F, typename T>
   return stop - start;
 }
 
-[[gnu::noinline]] static uint64_t single_input_function(int x) {
-  asm volatile("" :: "r"(x)); // prevent the compiler from optimizing out x
-  return x;
-}
-
-template <typename F, typename T>
-static LIBC_INLINE uint64_t function_call_latency(F f, T t) {
-  auto function_call_overhead = latency(single_input_function, 0);
-  return latency(f, t) - function_call_overhead;
-}
-
-static LIBC_INLINE uint64_t latency(void (*f)()) {
-  // Get the current timestamp from the clock.
-  gpu::sync_threads();
-  uint64_t start = gpu::processor_clock();
-
-  // This forces the compiler to load the input argument and run the clock cycle
-  // counter before the profiling region.
-  asm volatile("" ::"llr"(start));
-
-  // Run the function under test and return its value.
-  f();
-
-  // Obtain the current timestamp after running the calculation and force
-  // ordering.
-  uint64_t stop = gpu::processor_clock();
-  gpu::sync_threads();
-
-  // Return the time elapsed.
-  return stop - start;
-}
-
 template <typename F, typename T1, typename T2>
 static LIBC_INLINE uint64_t latency(F f, T1 t1, T2 t2) {
   volatile T1 storage = t1;
@@ -135,41 +103,6 @@ static LIBC_INLINE uint64_t latency(F f, T1 t1, T2 t2) {
 
   return stop - start;
 }
-
 } // namespace LIBC_NAMESPACE
-
-/**
- * LatencyP must be a pointer to a uint64_t holding the result variable
- */
-#define SINGLE_INPUT_OUTPUT_LATENCY(Func, t, LatencyP)                         \
-  do {                                                                         \
-    tlog << "Latency: " << ((long)(*LatencyP)) << '\n';                        \
-    *LatencyP = 200;                                                           \
-    volatile auto storage = t;                                                 \
-    auto arg = storage;                                                        \
-    asm volatile("" ::"r"(arg), "r"(LatencyP));                                \
-                                                                               \
-    LIBC_NAMESPACE::gpu::sync_threads();                                       \
-    uint64_t start = LIBC_NAMESPACE::gpu::processor_clock();                   \
-                                                                               \
-    asm volatile("" ::"r"(arg), "llr"(start));                                 \
-    auto result = Func(arg);                                                   \
-    asm volatile("" ::"r"(LatencyP));                                          \
-    *LatencyP = 312;                                                           \
-    asm volatile("" ::"r"(LatencyP));                                          \
-    asm volatile("or.b32 %[v_reg], %[v_reg], 0;" ::[v_reg] "r"(result) :);     \
-    asm volatile("" ::"r"(LatencyP));                                          \
-    *LatencyP = 499;                                                           \
-                                                                               \
-    uint64_t stop = gpu::processor_clock();                                    \
-    gpu::sync_threads();                                                       \
-    volatile auto output = result;                                             \
-                                                                               \
-    tlog << "Start: " << start << '\n';                                        \
-    tlog << "Stop: " << stop << '\n';                                          \
-    tlog << "Diff: " << (stop - start) << '\n';                                \
-    asm volatile("or.b32 %[v_reg], %[v_reg], 0;" ::[v_reg] "r"(LatencyP) :);   \
-    *LatencyP = stop - start;                                                  \
-  } while (0)
 
 #endif // LLVM_LIBC_UTILS_GPU_TIMING_NVPTX
