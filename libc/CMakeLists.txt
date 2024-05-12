@@ -400,9 +400,7 @@ if(LLVM_INCLUDE_TESTS)
   add_subdirectory(fuzzing)
 endif()
 
-message(STATUS "Checking on variable: ${LIBC_INCLUDE_BENCHMARKS}")
 if(LIBC_INCLUDE_BENCHMARKS)
-	message(STATUS "including libc benchmarks")
   add_subdirectory(benchmarks)
 endif()
 

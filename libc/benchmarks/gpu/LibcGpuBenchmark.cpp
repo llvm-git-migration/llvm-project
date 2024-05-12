@@ -10,24 +10,24 @@
 namespace LIBC_NAMESPACE {
 namespace libc_gpu_benchmarks {
 
-Test *Test::Start = nullptr;
-Test *Test::End = nullptr;
+Benchmark *Benchmark::Start = nullptr;
+Benchmark *Benchmark::End = nullptr;
 
-void Test::addTest(Test *T) {
+void Benchmark::addBenchmark(Benchmark *B) {
   if (End == nullptr) {
-    Start = T;
-    End = T;
+    Start = B;
+    End = B;
     return;
   }
 
-  End->Next = T;
-  End = T;
+  End->Next = B;
+  End = B;
 }
 
-int Test::runTests() {
-  for (Test *T = Start; T != nullptr; T = T->Next) {
-    tlog << T->getName() << "\n";
-    T->Run();
+int Benchmark::runBenchmarks() {
+  for (Benchmark *B = Start; B != nullptr; B = B->Next) {
+    tlog << B->getName() << "\n";
+    B->Run();
   }
 
   return 0;

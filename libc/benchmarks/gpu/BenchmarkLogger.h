@@ -6,22 +6,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_LIBC_TEST_UNITTEST_TESTLOGGER_H
-#define LLVM_LIBC_TEST_UNITTEST_TESTLOGGER_H
+#ifndef LLVM_LIBC_BENCHMARKS_GPU_BENCHMARKLOGGER_H
+#define LLVM_LIBC_BENCHMARKS_GPU_BENCHMARKLOGGER_H
 
 namespace LIBC_NAMESPACE {
 namespace libc_gpu_benchmarks {
 
 // A class to log to standard output in the context of hermetic tests.
-struct TestLogger {
-  constexpr TestLogger() = default;
-  template <typename T> TestLogger &operator<<(T);
+struct BenchmarkLogger {
+  constexpr BenchmarkLogger() = default;
+  template <typename T> BenchmarkLogger &operator<<(T);
 };
 
 // A global TestLogger instance to be used in tests.
-extern TestLogger tlog;
+extern BenchmarkLogger blog;
 
 } // namespace libc_gpu_benchmarks
 } // namespace LIBC_NAMESPACE
 
-#endif /* LLVM_LIBC_TEST_UNITTEST_TESTLOGGER_H */
+#endif /* LLVM_LIBC_BENCHMARKS_GPU_BENCHMARKLOGGER_H */

@@ -3,7 +3,7 @@
 
 #include "benchmarks/gpu/timing/timing.h"
 
-#include "benchmarks/gpu/TestLogger.h"
+#include "benchmarks/gpu/BenchmarkLogger.h"
 #include "src/__support/CPP/string.h"
 #include "src/__support/CPP/string_view.h"
 #include "src/__support/OSUtil/io.h"
@@ -100,107 +100,57 @@ uint64_t benchmark(const BenchmarkOptions &Options, F f, Args... args) {
 
     Iterations *= Options.ScalingFactor;
   }
-  // for (int i = 0; i < 3; i++) {
-  //   uint64_t result = latency(f, args...);
-  //   BestGuess = result;
-  //   write_to_stderr(cpp::to_string(result));
-  //   write_to_stderr(cpp::string_view("\n"));
-  // }
   tlog << "Best Guess: " << BestGuess << '\n';
   tlog << "Samples: " << Samples << '\n';
+  tlog << "\n";
   return BestGuess;
 };
 
 uint64_t benchmark_wrapper(const BenchmarkOptions &Options,
                            uint64_t (*WrapperFunc)());
 
-template <typename F, typename Arg>
-uint64_t benchmark_macro(const BenchmarkOptions &Options, F f, Arg arg) {
-  RuntimeEstimationProgression REP;
-  size_t Iterations = Options.InitialIterations;
-  if (Iterations < (uint32_t)1) {
-    Iterations = 1;
-  }
-  size_t Samples = 0;
-  uint64_t BestGuess = 0;
-  uint64_t TotalCycles = 0;
-  for (;;) {
-    uint64_t SampleCycles = 0;
-    for (uint32_t i = 0; i < Iterations; i++) {
-      uint64_t result = 0;
-      SINGLE_INPUT_OUTPUT_LATENCY(f, arg, &result);
-      SampleCycles += result;
-      tlog << "Macro: " << result << '\n';
-    }
-
-    Samples++;
-    TotalCycles += SampleCycles;
-    const double ChangeRatio =
-        REP.ComputeImprovement({Iterations, SampleCycles});
-    BestGuess = REP.CurrentEstimation;
-
-    if (Samples >= Options.MaxSamples || Iterations >= Options.MaxIterations) {
-      break;
-    } else if (Samples >= Options.MinSamples && ChangeRatio < Options.Epsilon) {
-      tlog << "Samples are stable!\n";
-      break;
-    }
-
-    Iterations *= Options.ScalingFactor;
-  }
-  // for (int i = 0; i < 3; i++) {
-  //   uint64_t result = latency(f, args...);
-  //   BestGuess = result;
-  //   write_to_stderr(cpp::to_string(result));
-  //   write_to_stderr(cpp::string_view("\n"));
-  // }
-  tlog << "Macro Best Guess: " << BestGuess << '\n';
-  tlog << "Samples: " << Samples << '\n';
-  return BestGuess;
-};
-
-class Test {
-  Test *Next = nullptr;
+class Benchmark {
+  Benchmark *Next = nullptr;
 
 public:
-  virtual ~Test() {}
+  virtual ~Benchmark() {}
   virtual void SetUp() {}
   virtual void TearDown() {}
 
-  static int runTests();
+  static int runBenchmarks();
 
 protected:
-  static void addTest(Test *);
+  static void addBenchmark(Benchmark *);
 
 private:
   virtual void Run() = 0;
   virtual const char *getName() const = 0;
 
-  static Test *Start;
-  static Test *End;
+  static Benchmark *Start;
+  static Benchmark *End;
 };
 
-template <typename F> class FunctionBenchmark : public Test {
+template <typename F> class FunctionBenchmark : public Benchmark {
   F Func;
   const char *Name;
 
 public:
   FunctionBenchmark(F Func, char const *Name) : Func(Func), Name(Name) {
-    addTest(this);
+    addBenchmark(this);
   }
 
 private:
   void Run() override {
     BenchmarkOptions Options;
     auto latency = benchmark(Options, Func);
-    LIBC_NAMESPACE::libc_gpu_benchmarks::tlog << "FnName: " << Name << '\n';
-    LIBC_NAMESPACE::libc_gpu_benchmarks::tlog << "FnBenchmark: " << latency
-                                              << '\n';
+    tlog << "FnName: " << Name << '\n';
+    tlog << "FnBenchmark: " << latency << '\n';
+    tlog << "\n";
   }
   const char *getName() const override { return Name; }
 };
 
-class WrapperBenchmark : public Test {
+class WrapperBenchmark : public Benchmark {
   using BenchmarkWrapperFunction = uint64_t (*)();
   BenchmarkWrapperFunction Func;
   const char *Name;
@@ -208,22 +158,17 @@ class WrapperBenchmark : public Test {
 public:
   WrapperBenchmark(BenchmarkWrapperFunction Func, char const *Name)
       : Func(Func), Name(Name) {
-    addTest(this);
+    addBenchmark(this);
   }
 
 private:
   void Run() override {
     tlog << "Running wrapper: " << Name << '\n';
-    // for (int i = 0; i < 10; i++) {
-    //   auto overhead = LIBC_NAMESPACE::overhead();
-    //   auto result = Func() - overhead;
-    //   tlog << "Result: " << result << '\n';
-    //   tlog << "Overhead: " << overhead << '\n';
-    // }
     BenchmarkOptions Options;
     auto latency = benchmark_wrapper(Options, Func);
     tlog << "FnName: " << Name << '\n';
     tlog << "FnBenchmark: " << latency << '\n';
+    tlog << "\n";
   }
   const char *getName() const override { return Name; }
 };
@@ -232,31 +177,6 @@ private:
 
 } // namespace LIBC_NAMESPACE
 
-// #define BENCHMARK(SuiteName, TestName)                                         \
-//   class SuiteName##_##TestName                                                 \
-//       : public LIBC_NAMESPACE::libc_gpu_benchmarks::Test {                     \
-//   public:                                                                      \
-//     SuiteName##_##TestName() { addTest(this); }                                \
-//     void Run() override;                                                       \
-//     const char *getName() const override { return #SuiteName "." #TestName; }  \
-//   };                                                                           \
-//   SuiteName##_##TestName SuiteName##_##TestName##_Instance;                    \
-//   void SuiteName##_##TestName::Run()
-
-#define BENCHMARK_SINGLE_INPUT_OUTPUT(SuiteName, TestName, Func, Arg)          \
-  class SuiteName##_##TestName                                                 \
-      : public LIBC_NAMESPACE::libc_gpu_benchmarks::Test {                     \
-  public:                                                                      \
-    SuiteName##_##TestName() { addTest(this); }                                \
-    void Run() override;                                                       \
-    const char *getName() const override { return #SuiteName "." #TestName; }  \
-  };                                                                           \
-  SuiteName##_##TestName SuiteName##_##TestName##_Instance;                    \
-  void SuiteName##_##TestName::Run() {                                         \
-    LIBC_NAMESPACE::libc_gpu_benchmarks::BenchmarkOptions Options;             \
-    LIBC_NAMESPACE::libc_gpu_benchmarks::benchmark(Options, &Func, Arg);       \
-  }
-
 #define BENCHMARK_FN(SuiteName, TestName, Func)                                \
   LIBC_NAMESPACE::libc_gpu_benchmarks::FunctionBenchmark                       \
       SuiteName##_##TestName##_Instance(Func, #SuiteName "." #TestName);
@@ -264,19 +184,5 @@ private:
 #define BENCHMARK_WRAPPER(SuiteName, TestName, Func)                           \
   LIBC_NAMESPACE::libc_gpu_benchmarks::WrapperBenchmark                        \
       SuiteName##_##TestName##_Instance(Func, #SuiteName "." #TestName);
-
-#define BENCHMARK_S_I_O_V2(SuiteName, TestName, Func, Arg)                     \
-  class SuiteName##_##TestName                                                 \
-      : public LIBC_NAMESPACE::libc_gpu_benchmarks::Test {                     \
-  public:                                                                      \
-    SuiteName##_##TestName() { addTest(this); }                                \
-    void Run() override;                                                       \
-    const char *getName() const override { return #SuiteName "." #TestName; }  \
-  };                                                                           \
-  SuiteName##_##TestName SuiteName##_##TestName##_Instance;                    \
-  void SuiteName##_##TestName::Run() {                                         \
-    LIBC_NAMESPACE::libc_gpu_benchmarks::BenchmarkOptions Options;             \
-    LIBC_NAMESPACE::libc_gpu_benchmarks::benchmark_macro(Options, &Func, Arg); \
-  }
 
 #endif

@@ -26,7 +26,6 @@ function (add_gpu_benchmark test_name)
   get_fq_target_name(${test_name} fq_target_name)
   get_fq_target_name(${test_name}.libc fq_libc_target_name) # Stores the compiled libc + infrastructure archive to link in
   get_fq_deps_list(fq_deps_list ${GPU_BENCHMARK_DEPENDS})
-  message(STATUS "Depends: ${fq_deps_list}")
   list(APPEND fq_deps_list
       # Hermetic tests use the platform's startup object. So, their deps also
       # have to be collected.
@@ -52,12 +51,10 @@ function (add_gpu_benchmark test_name)
     if(LIBC_CMAKE_VERBOSE_LOGGING)
       set(msg "Skipping hermetic test ${fq_target_name} as it has missing deps: "
               "${skipped_entrypoints_list}.")
-      message(STATUS ${msg})
     endif()
     return()
   endif()
   list(REMOVE_DUPLICATES link_object_files)
-  message(STATUS ${link_object_files})
 
   # Make a library of all deps
   add_library(
@@ -88,7 +85,6 @@ function (add_gpu_benchmark test_name)
   target_include_directories(${fq_build_target_name} SYSTEM PRIVATE ${LIBC_INCLUDE_DIR})
   target_include_directories(${fq_build_target_name} PRIVATE ${LIBC_SOURCE_DIR})
   _get_hermetic_test_compile_options(compile_options "${GPU_BENCHMARK_COMPILE_OPTIONS}")
-  message(STATUS "adding compile: ${compile_options}")
   target_compile_options(${fq_build_target_name} PRIVATE ${compile_options} -save-temps)
 
   set(link_libraries "")
@@ -99,8 +95,6 @@ function (add_gpu_benchmark test_name)
       list(APPEND link_libraries ${lib})
     endif()
   endforeach()
-
-  message(STATUS "IS nvptx: ${LIBC_TARGET_ARCHITECTURE_IS_NVPTX}")
 
   if(LIBC_TARGET_ARCHITECTURE_IS_AMDGPU)
     target_link_options(${fq_build_target_name} PRIVATE
@@ -116,7 +110,6 @@ function (add_gpu_benchmark test_name)
       "-Wl,--suppress-stack-size-warning"
       -march=${LIBC_GPU_TARGET_ARCHITECTURE} -nostdlib -static
       "--cuda-path=${LIBC_CUDA_ROOT}")
-    message(STATUS "ARCH: ${LIBC_GPU_TARGET_ARCHITECTURE}")
   elseif(LIBC_CC_SUPPORTS_NOSTDLIBPP)
     target_link_options(${fq_build_target_name} PRIVATE -nolibc -nostartfiles -nostdlib++ -static)
   else()
@@ -170,10 +163,10 @@ add_unittest_framework_library(
   SRCS
     LibcGpuBenchmark.cpp
     LibcGpuBenchmarkMain.cpp
-    TestLogger.cpp
+    BenchmarkLogger.cpp
   HDRS
     LibcGpuBenchmark.h
-    TestLogger.h
+    BenchmarkLogger.h
   DEPENDS
     libc.src.__support.big_int
     libc.src.__support.c_string
