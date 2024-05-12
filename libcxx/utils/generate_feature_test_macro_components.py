@@ -768,6 +768,14 @@ feature_test_macros = [
             "headers": ["type_traits"],
         },
         {
+            "name": "__cpp_lib_is_within_lifetime",
+            "values": {
+                "c++26": 202306  # P2641R4 Checking if a union alternative is active
+            },
+            "headers": ["type_traits"],
+            "unimplemented": True,
+        },
+        {
             "name": "__cpp_lib_jthread",
             "values": {"c++20": 201911},
             "headers": ["stop_token", "thread"],
@@ -1341,14 +1349,6 @@ feature_test_macros = [
             "name": "__cpp_lib_void_t",
             "values": {"c++17": 201411},
             "headers": ["type_traits"],
-        },
-        {
-            "name": "__cpp_lib_within_lifetime",
-            "values": {
-                "c++26": 202306  # P2641R4 Checking if a union alternative is active
-            },
-            "headers": ["type_traits"],
-            "unimplemented": True,
         },
     ]
 ]
