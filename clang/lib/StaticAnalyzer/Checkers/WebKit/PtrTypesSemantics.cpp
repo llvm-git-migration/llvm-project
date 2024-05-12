@@ -507,7 +507,7 @@ bool TrivialFunctionAnalysis::isTrivialImpl(
   const Stmt *Body = D->getBody();
   if (!Body) {
     Cache[D] = false;
-    return false;    
+    return false;
   }
 
   TrivialFunctionAnalysisVisitor V(Cache);
