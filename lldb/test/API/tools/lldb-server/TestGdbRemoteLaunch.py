@@ -8,17 +8,32 @@ from lldbsuite.test.lldbtest import *
 
 
 class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
+    def get_exe_path(self):
+        exe_path = self.getBuildArtifact("a.out")
+        if lldb.remote_platform:
+            remote_path = lldbutil.append_to_process_working_directory(self, "a.out")
+            err = lldb.remote_platform.Install(
+                lldb.SBFileSpec(exe_path, True), lldb.SBFileSpec(remote_path, False)
+            )
+            if err.Fail():
+                raise Exception(
+                    "remote_platform.Install('%s', '%s') failed: %s"
+                    % (exe_path, remote_path, err)
+                )
+            exe_path = remote_path
+        return exe_path
+
     @skipIfWindows  # No pty support to test any inferior output
     @add_test_categories(["llgs"])
     def test_launch_via_A(self):
         self.build()
-        exe_path = self.getBuildArtifact("a.out")
-        args = [exe_path, "stderr:arg1", "stderr:arg2", "stderr:arg3"]
-        hex_args = [seven.hexlify(x) for x in args]
-
         server = self.connect_to_debug_monitor()
         self.assertIsNotNone(server)
         self.do_handshake()
+        exe_path = self.get_exe_path()
+        args = [exe_path, "stderr:arg1", "stderr:arg2", "stderr:arg3"]
+        hex_args = [seven.hexlify(x) for x in args]
+
         # NB: strictly speaking we should use %x here but this packet
         # is deprecated, so no point in changing lldb-server's expectations
         self.test_sequence.add_log_lines(
@@ -38,13 +53,13 @@ class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
     @add_test_categories(["llgs"])
     def test_launch_via_vRun(self):
         self.build()
-        exe_path = self.getBuildArtifact("a.out")
-        args = [exe_path, "stderr:arg1", "stderr:arg2", "stderr:arg3"]
-        hex_args = [seven.hexlify(x) for x in args]
-
         server = self.connect_to_debug_monitor()
         self.assertIsNotNone(server)
         self.do_handshake()
+        exe_path = self.get_exe_path()
+        args = [exe_path, "stderr:arg1", "stderr:arg2", "stderr:arg3"]
+        hex_args = [seven.hexlify(x) for x in args]
+
         self.test_sequence.add_log_lines(
             [
                 "read packet: $vRun;%s;%s;%s;%s#00" % tuple(hex_args),
@@ -60,12 +75,12 @@ class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
     @add_test_categories(["llgs"])
     def test_launch_via_vRun_no_args(self):
         self.build()
-        exe_path = self.getBuildArtifact("a.out")
-        hex_path = seven.hexlify(exe_path)
-
         server = self.connect_to_debug_monitor()
         self.assertIsNotNone(server)
         self.do_handshake()
+        exe_path = self.get_exe_path()
+        hex_path = seven.hexlify(exe_path)
+
         self.test_sequence.add_log_lines(
             [
                 "read packet: $vRun;%s#00" % (hex_path,),
@@ -78,6 +93,7 @@ class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
         self.expect_gdbremote_sequence()
 
     @add_test_categories(["llgs"])
+    @skipIfRemote
     def test_launch_failure_via_vRun(self):
         self.build()
         exe_path = self.getBuildArtifact("a.out")
@@ -110,14 +126,13 @@ class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
     @add_test_categories(["llgs"])
     def test_QEnvironment(self):
         self.build()
-        exe_path = self.getBuildArtifact("a.out")
-        env = {"FOO": "test", "BAR": "a=z"}
-        args = [exe_path, "print-env:FOO", "print-env:BAR"]
-        hex_args = [seven.hexlify(x) for x in args]
-
         server = self.connect_to_debug_monitor()
         self.assertIsNotNone(server)
         self.do_handshake()
+        exe_path = self.get_exe_path()
+        env = {"FOO": "test", "BAR": "a=z"}
+        args = [exe_path, "print-env:FOO", "print-env:BAR"]
+        hex_args = [seven.hexlify(x) for x in args]
 
         for key, value in env.items():
             self.test_sequence.add_log_lines(
@@ -143,14 +158,13 @@ class GdbRemoteLaunchTestCase(gdbremote_testcase.GdbRemoteTestCaseBase):
     @add_test_categories(["llgs"])
     def test_QEnvironmentHexEncoded(self):
         self.build()
-        exe_path = self.getBuildArtifact("a.out")
-        env = {"FOO": "test", "BAR": "a=z", "BAZ": "a*}#z"}
-        args = [exe_path, "print-env:FOO", "print-env:BAR", "print-env:BAZ"]
-        hex_args = [seven.hexlify(x) for x in args]
-
         server = self.connect_to_debug_monitor()
         self.assertIsNotNone(server)
         self.do_handshake()
+        exe_path = self.get_exe_path()
+        env = {"FOO": "test", "BAR": "a=z", "BAZ": "a*}#z"}
+        args = [exe_path, "print-env:FOO", "print-env:BAR", "print-env:BAZ"]
+        hex_args = [seven.hexlify(x) for x in args]
 
         for key, value in env.items():
             hex_enc = seven.hexlify("%s=%s" % (key, value))
