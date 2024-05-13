@@ -5227,7 +5227,9 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
   }
 
   // Perform default conversions.
-  if (!LHSExp->getType()->getAs<VectorType>()) {
+  if (!LHSExp->getType()->getAs<VectorType>() &&
+      !(LHSExp->getType()->isBuiltinType() &&
+        LHSExp->getType()->getAs<BuiltinType>()->isSveVLSBuiltinType())) {
     ExprResult Result = DefaultFunctionArrayLvalueConversion(LHSExp);
     if (Result.isInvalid())
       return ExprError();
