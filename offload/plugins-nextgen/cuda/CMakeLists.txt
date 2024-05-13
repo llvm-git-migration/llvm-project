@@ -24,7 +24,11 @@ endif()
 libomptarget_say("Building CUDA NextGen offloading plugin.")
 
 # Create the library and add the default arguments.
-add_target_library(omptarget.rtl.cuda CUDA)
+if("NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
+  add_target_library(omptarget.rtl.cuda CUDA NVPTX)
+else()
+  add_target_library(omptarget.rtl.cuda CUDA "")
+endif()
 
 target_sources(omptarget.rtl.cuda PRIVATE src/rtl.cpp)
 

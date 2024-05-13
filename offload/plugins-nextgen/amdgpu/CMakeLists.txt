@@ -28,7 +28,11 @@ if(NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(ppc64le)|(aarch64)$" AND CMAKE
 endif()
 
 # Create the library and add the default arguments.
-add_target_library(omptarget.rtl.amdgpu AMDGPU)
+if("AMDGPU" IN_LIST LLVM_TARGETS_TO_BUILD)
+  add_target_library(omptarget.rtl.amdgpu AMDGPU AMDGPU)
+else()
+  add_target_library(omptarget.rtl.amdgpu AMDGPU "")
+endif()
 
 target_sources(omptarget.rtl.amdgpu PRIVATE src/rtl.cpp)
 target_include_directories(omptarget.rtl.amdgpu PRIVATE

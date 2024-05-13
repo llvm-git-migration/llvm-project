@@ -13,10 +13,10 @@
 # Common interface to handle creating a plugin library.
 set(common_dir ${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(common)
-function(add_target_library target_name lib_name)
+function(add_target_library target_name lib_name llvm_components)
   add_llvm_library(${target_name} STATIC
     LINK_COMPONENTS
-      ${LLVM_TARGETS_TO_BUILD}
+      ${llvm_components}
       AggressiveInstCombine
       Analysis
       BinaryFormat
