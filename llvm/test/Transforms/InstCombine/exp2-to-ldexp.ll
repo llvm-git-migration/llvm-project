@@ -8,7 +8,7 @@ define float @exp2_f32_sitofp_i8(i8 %x) {
 ; CHECK-LABEL: define float @exp2_f32_sitofp_i8(
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
-; CHECK-NEXT:    [[LDEXPF:%.*]] = call float @ldexpf(float 1.000000e+00, i32 [[TMP1]])
+; CHECK-NEXT:    [[LDEXPF:%.*]] = call float @llvm.ldexp.f32.i32(float 1.000000e+00, i32 [[TMP1]])
 ; CHECK-NEXT:    ret float [[LDEXPF]]
 ;
   %itofp = sitofp i8 %x to float
@@ -20,7 +20,7 @@ define float @exp2_f32_sitofp_i8_flags(i8 %x) {
 ; CHECK-LABEL: define float @exp2_f32_sitofp_i8_flags(
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
-; CHECK-NEXT:    [[LDEXPF:%.*]] = call nnan ninf float @ldexpf(float 1.000000e+00, i32 [[TMP1]])
+; CHECK-NEXT:    [[LDEXPF:%.*]] = call nnan ninf float @llvm.ldexp.f32.i32(float 1.000000e+00, i32 [[TMP1]])
 ; CHECK-NEXT:    ret float [[LDEXPF]]
 ;
   %itofp = sitofp i8 %x to float
@@ -44,7 +44,7 @@ define float @exp2_f32_uitofp_i8(i8 %x) {
 ; CHECK-LABEL: define float @exp2_f32_uitofp_i8(
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = zext i8 [[X]] to i32
-; CHECK-NEXT:    [[LDEXPF:%.*]] = call float @ldexpf(float 1.000000e+00, i32 [[TMP1]])
+; CHECK-NEXT:    [[LDEXPF:%.*]] = call float @llvm.ldexp.f32.i32(float 1.000000e+00, i32 [[TMP1]])
 ; CHECK-NEXT:    ret float [[LDEXPF]]
 ;
   %itofp = uitofp i8 %x to float
@@ -68,7 +68,7 @@ define double @exp2_f64_sitofp_i8(i8 %x) {
 ; CHECK-LABEL: define double @exp2_f64_sitofp_i8(
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
-; CHECK-NEXT:    [[LDEXP:%.*]] = call double @ldexp(double 1.000000e+00, i32 [[TMP1]])
+; CHECK-NEXT:    [[LDEXP:%.*]] = call double @llvm.ldexp.f64.i32(double 1.000000e+00, i32 [[TMP1]])
 ; CHECK-NEXT:    ret double [[LDEXP]]
 ;
   %itofp = sitofp i8 %x to double
@@ -80,7 +80,7 @@ define fp128 @exp2_fp128_sitofp_i8(i8 %x) {
 ; CHECK-LABEL: define fp128 @exp2_fp128_sitofp_i8(
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
-; CHECK-NEXT:    [[LDEXPL:%.*]] = call fp128 @ldexpl(fp128 0xL00000000000000003FFF000000000000, i32 [[TMP1]])
+; CHECK-NEXT:    [[LDEXPL:%.*]] = call fp128 @llvm.ldexp.f128.i32(fp128 0xL00000000000000003FFF000000000000, i32 [[TMP1]])
 ; CHECK-NEXT:    ret fp128 [[LDEXPL]]
 ;
   %itofp = sitofp i8 %x to fp128
