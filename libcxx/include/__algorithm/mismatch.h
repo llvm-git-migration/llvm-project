@@ -92,7 +92,7 @@ __mismatch(_Tp* __first1, _Tp* __last1, _Tp* __first2, _Pred& __pred, _Proj1& __
     }
 
     // check the remaining 0-3 vectors
-    while (static_cast<size_t>(__last1 - __first1) >= __vec_size) {
+    while (static_cast<size_t>(__last1 - __first1) <= __vec_size) {
       if (auto __cmp_res = std::__load_vector<__vec>(__first1) == std::__load_vector<__vec>(__first2);
           !std::__all_of(__cmp_res)) {
         auto __offset = std::__find_first_not_set(__cmp_res);
