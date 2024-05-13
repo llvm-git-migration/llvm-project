@@ -22,9 +22,11 @@ add_library(PluginCommon OBJECT
 add_dependencies(PluginCommon intrinsics_gen)
 
 # Only enable JIT for those targets that LLVM can support.
-string(TOUPPER "${LLVM_TARGETS_TO_BUILD}" TargetsSupported)
-foreach(Target ${TargetsSupported})
-	target_compile_definitions(PluginCommon PRIVATE "LIBOMPTARGET_JIT_${Target}")
+set(supported_jit_targets AMDGPU NVPTX)
+foreach(Target IN LISTS ${supported_jit_targets})
+  if("${Target}" IN_LIST LLVM_TARGETS_TO_BUILD)
+	  target_compile_definitions(PluginCommon PRIVATE "LIBOMPTARGET_JIT_${Target}")
+  endif()
 endforeach()
 
 # Include the RPC server from the `libc` project if availible.

@@ -34,6 +34,12 @@ target_sources(omptarget.rtl.amdgpu PRIVATE src/rtl.cpp)
 target_include_directories(omptarget.rtl.amdgpu PRIVATE
                            ${CMAKE_CURRENT_SOURCE_DIR}/utils)
 
+# Link in the AMDGPU backend for JIT compilation if supported.
+if("AMDGPU" IN_LIST LLVM_TARGETS_TO_BUILD)
+  llvm_map_components_to_libnames(llvm_libs AMDGPU)
+  target_link_libraries(omptarget.rtl.amdgpu PRIVATE ${llvm_libs})
+endif()
+
 option(LIBOMPTARGET_FORCE_DLOPEN_LIBHSA "Build with dlopened libhsa" OFF)
 if(hsa-runtime64_FOUND AND NOT LIBOMPTARGET_FORCE_DLOPEN_LIBHSA)
   libomptarget_say("Building AMDGPU plugin linked against libhsa")

@@ -28,6 +28,12 @@ add_target_library(omptarget.rtl.cuda CUDA)
 
 target_sources(omptarget.rtl.cuda PRIVATE src/rtl.cpp)
 
+# Link in the NVPTX backend for JIT compilation if supported.
+if("NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
+  llvm_map_components_to_libnames(llvm_libs NVPTX)
+  target_link_libraries(omptarget.rtl.cuda PRIVATE ${llvm_libs})
+endif()
+
 option(LIBOMPTARGET_FORCE_DLOPEN_LIBCUDA "Build with dlopened libcuda" OFF)
 if(LIBOMPTARGET_DEP_CUDA_FOUND AND NOT LIBOMPTARGET_FORCE_DLOPEN_LIBCUDA)
   libomptarget_say("Building CUDA plugin linked against libcuda")
