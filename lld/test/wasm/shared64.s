@@ -154,6 +154,7 @@ get_local_func_address:
 # CHECK-NEXT:           Index:           0
 # CHECK-NEXT:           ElemType:        FUNCREF
 # CHECK-NEXT:           Limits:
+# CHECK-NEXT:             Flags:         [ IS_64 ]
 # CHECK-NEXT:             Minimum:         0x2
 # CHECK-NEXT:       - Module:          env
 # CHECK-NEXT:         Field:           __stack_pointer
@@ -209,7 +210,7 @@ get_local_func_address:
 # CHECK-NEXT:     Segments:
 # CHECK-NEXT:       - Offset:
 # CHECK-NEXT:           Opcode:          GLOBAL_GET
-# CHECK-NEXT:           Index:           3
+# CHECK-NEXT:           Index:           2
 # CHECK-NEXT:         Functions:       [ 3, 2 ]
 
 # check the generated code in __wasm_call_ctors and __wasm_apply_data_relocs functions
