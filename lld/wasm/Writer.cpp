@@ -939,6 +939,8 @@ static void finalizeIndirectFunctionTable() {
     limits.Flags |= WASM_LIMITS_FLAG_HAS_MAX;
     limits.Maximum = limits.Minimum;
   }
+  if (config->is64.value_or(false))
+    limits.Flags |= WASM_LIMITS_FLAG_IS_64;
   WasmSym::indirectFunctionTable->setLimits(limits);
 }
 
