@@ -1,6 +1,7 @@
 # lldb test suite imports
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import TestBase
+from lldbsuite.test import lldbutil
 
 # gdb-remote-specific imports
 import lldbgdbserverutils
@@ -108,6 +109,20 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         )
         self.expect_gdbremote_sequence()
 
+    def remote_install(self, path, filename="test"):
+        if lldb.remote_platform:
+            remote_path = lldbutil.append_to_process_working_directory(self, filename)
+            err = lldb.remote_platform.Install(
+                lldb.SBFileSpec(path, True), lldb.SBFileSpec(remote_path, False)
+            )
+            if err.Fail():
+                raise Exception(
+                    "remote_platform.Install('%s', '%s') failed: %s"
+                    % (path, remote_path, err)
+                )
+            path = remote_path
+        return path
+
     @skipIfWindows
     @add_test_categories(["llgs"])
     def test_platform_file_wronly_creat_excl_fail(self):
@@ -117,6 +132,7 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         temp_file = self.getBuildArtifact("test")
         with open(temp_file, "wb"):
             pass
+        temp_file = self.remote_install(temp_file)
 
         # attempt to open the file with O_CREAT|O_EXCL
         self.do_handshake()
@@ -140,6 +156,7 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         test_data = b"test data of some length"
         with open(temp_path, "wb") as temp_file:
             temp_file.write(test_data)
+        temp_path = self.remote_install(temp_path)
 
         self.do_handshake()
         self.test_sequence.add_log_lines(
@@ -167,7 +184,11 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         test_mode = 0o751
 
         with open(temp_path, "wb") as temp_file:
-            os.chmod(temp_file.fileno(), test_mode)
+            if lldbplatformutil.getHostPlatform() == "windows":
+                test_mode = 0o700
+            else:
+                os.chmod(temp_file.fileno(), test_mode)
+        temp_path = self.remote_install(temp_path)
 
         self.do_handshake()
         self.test_sequence.add_log_lines(
@@ -213,6 +234,7 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         temp_path = self.getBuildArtifact("test")
         with open(temp_path, "wb"):
             pass
+        temp_path = self.remote_install(temp_path)
 
         self.do_handshake()
         self.test_sequence.add_log_lines(
@@ -244,6 +266,10 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         self.expect_gdbremote_sequence()
 
     @skipIfWindows
+    # FIXME: lldb.remote_platform.Install() cannot copy opened temp file on Windows.
+    # It is possible to use tempfile.NamedTemporaryFile(..., delete=False) and
+    # delete the temp file manually at the end.
+    @skipIf(hostoslist=["windows"])
     @add_test_categories(["llgs"])
     def test_platform_file_fstat(self):
         server = self.connect_to_debug_monitor()
@@ -252,12 +278,13 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
         with tempfile.NamedTemporaryFile() as temp_file:
             temp_file.write(b"some test data for stat")
             temp_file.flush()
+            temp_path = self.remote_install(temp_file.name, "temp")
 
             self.do_handshake()
             self.test_sequence.add_log_lines(
                 [
                     "read packet: $vFile:open:%s,0,0#00"
-                    % (binascii.b2a_hex(temp_file.name.encode()).decode(),),
+                    % (binascii.b2a_hex(temp_path.encode()).decode(),),
                     {
                         "direction": "send",
                         "regex": r"^\$F([0-9a-fA-F]+)#[0-9a-fA-F]{2}$",
@@ -359,9 +386,12 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
 
         if creat:
             self.assertFalse(os.path.exists(temp_path))
+            if lldb.remote_platform:
+                temp_path = lldbutil.append_to_process_working_directory(self, "test")
         else:
             with open(temp_path, "wb") as temp_file:
                 temp_file.write(test_data.encode())
+            temp_path = self.remote_install(temp_path)
 
         # open the file for reading
         self.do_handshake()
@@ -448,8 +478,19 @@ class TestGdbRemotePlatformFile(GdbRemoteTestCaseBase):
 
         if write:
             # check if the data was actually written
+            if lldb.remote_platform:
+                local_path = self.getBuildArtifact("file_from_target")
+                error = lldb.remote_platform.Get(
+                    lldb.SBFileSpec(temp_path, False), lldb.SBFileSpec(local_path, True)
+                )
+                self.assertTrue(
+                    error.Success(),
+                    "Reading file {0} failed: {1}".format(temp_path, error),
+                )
+                temp_path = local_path
+
             with open(temp_path, "rb") as temp_file:
-                if creat:
+                if creat and lldbplatformutil.getHostPlatform() != "windows":
                     self.assertEqual(
                         os.fstat(temp_file.fileno()).st_mode & 0o7777, 0o640
                     )
