@@ -154,6 +154,7 @@ get_local_func_address:
 # CHECK-NEXT:           Index:           0
 # CHECK-NEXT:           ElemType:        FUNCREF
 # CHECK-NEXT:           Limits:
+# CHECK-NEXT:             Flags:         [ IS_64 ]
 # CHECK-NEXT:             Minimum:         0x2
 # CHECK-NEXT:       - Module:          env
 # CHECK-NEXT:         Field:           __stack_pointer
