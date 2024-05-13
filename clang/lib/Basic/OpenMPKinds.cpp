@@ -188,6 +188,7 @@ unsigned clang::getOpenMPSimpleClauseType(OpenMPClauseKind Kind, StringRef Str,
   case OMPC_safelen:
   case OMPC_simdlen:
   case OMPC_sizes:
+  case OMPC_permutation:
   case OMPC_allocator:
   case OMPC_allocate:
   case OMPC_collapse:
@@ -512,6 +513,7 @@ const char *clang::getOpenMPSimpleClauseTypeName(OpenMPClauseKind Kind,
   case OMPC_safelen:
   case OMPC_simdlen:
   case OMPC_sizes:
+  case OMPC_permutation:
   case OMPC_allocator:
   case OMPC_allocate:
   case OMPC_collapse:
@@ -684,7 +686,8 @@ bool clang::isOpenMPLoopBoundSharingDirective(OpenMPDirectiveKind Kind) {
 }
 
 bool clang::isOpenMPLoopTransformationDirective(OpenMPDirectiveKind DKind) {
-  return DKind == OMPD_tile || DKind == OMPD_unroll;
+  return DKind == OMPD_tile || DKind == OMPD_unroll || DKind == OMPD_reverse ||
+         DKind == OMPD_interchange;
 }
 
 bool clang::isOpenMPCombinedParallelADirective(OpenMPDirectiveKind DKind) {
@@ -808,6 +811,8 @@ void clang::getOpenMPCaptureRegions(
     break;
   case OMPD_tile:
   case OMPD_unroll:
+  case OMPD_reverse:
+  case OMPD_interchange:
     // loop transformations do not introduce captures.
     break;
   case OMPD_threadprivate:
