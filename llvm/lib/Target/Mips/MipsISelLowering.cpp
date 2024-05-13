@@ -3958,12 +3958,14 @@ MipsTargetLowering::getConstraintType(StringRef Constraint) const {
   //       jump. This will always be $25 for -mabicalls.
   // 'l' : The lo register. 1 word storage.
   // 'x' : The hilo register pair. Double word storage.
+  // 'w' : The MSA Registers.
   if (Constraint.size() == 1) {
     switch (Constraint[0]) {
       default : break;
       case 'd':
       case 'y':
       case 'f':
+      case 'w':
       case 'c':
       case 'l':
       case 'x':
@@ -4003,6 +4005,7 @@ MipsTargetLowering::getSingleConstraintMatchWeight(
       weight = CW_Register;
     break;
   case 'f': // FPU or MSA register
+  case 'w':
     if (Subtarget.hasMSA() && type->isVectorTy() &&
         type->getPrimitiveSizeInBits().getFixedValue() == 128)
       weight = CW_Register;
@@ -4165,6 +4168,7 @@ MipsTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
       // This will generate an error message
       return std::make_pair(0U, nullptr);
     case 'f': // FPU or MSA register
+    case 'w':
       if (VT == MVT::v16i8)
         return std::make_pair(0U, &Mips::MSA128BRegClass);
       else if (VT == MVT::v8i16 || VT == MVT::v8f16)

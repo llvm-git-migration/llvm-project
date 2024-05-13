@@ -565,11 +565,26 @@ bool MipsAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNum,
       }
       break;
     }
-    case 'w':
-      // Print MSA registers for the 'f' constraint
-      // In LLVM, the 'w' modifier doesn't need to do anything.
-      // We can just call printOperand as normal.
+    case 'w': {
+      // Support to use MSA instructions on FPR.
+      // double a, b, c;
+      // asm volatile ("fmadd.d %w0, %w1, %w2" : "+w"(a) : "w"(b), "w"(c))
+      const char *RegNameF =
+          MipsInstPrinter::getRegisterName(MI->getOperand(OpNum).getReg());
+      if (RegNameF[0] != 'f')
+        break;
+      // Now we have 'fXX', let's find 'wXX'.
+      for (const char *RegNameW = RegNameF; RegNameW < RegNameF + 32;
+           RegNameW++) {
+        if (RegNameW[0] != 'w')
+          continue;
+        if (StringRef(RegNameF + 1) == StringRef(RegNameW + 1)) {
+          O << '$' << RegNameW;
+          return false;
+        }
+      }
       break;
+    }
     }
   }
 
