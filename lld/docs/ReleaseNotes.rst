@@ -26,6 +26,14 @@ Non-comprehensive list of changes in this release
 ELF Improvements
 ----------------
 
+* Section ``CLASS`` syntax allows binding input section to named classes. This
+  allows the linker to automatically pack the input sections into memory
+  regions by automatically spilling to later class references if a region would
+  overflow. This reduces the toil of manually packing regions (typical for
+  embedded). It also makes full LTO feasible in such cases, since IR merging
+  currently prevents the linker script from referring to input files. (TODO: PR
+  Reference)
+
 Breaking changes
 ----------------
 
