@@ -911,3 +911,32 @@ func.func @arm_sme_usmops_4way_i16i16_to_i64(%vecA: vector<[8]xi16>, %vecB: vect
   "test.some_use"(%result) : (vector<[2]x[2]xi64>) -> ()
   return
 }
+
+//===----------------------------------------------------------------------===//
+// Operations on SME tile types allowed after conversion
+//===----------------------------------------------------------------------===//
+
+// -----
+
+// The following operations on SME tile types are permitted after conversion:
+//
+//   - arm_sme.materialize_ssa_tile
+//   - cf.br
+//   - scf.for
+//   - scf.yield
+//
+// this test verifies this. Conversion will fail for operations with SME tile
+// types not in this list, this is tested in 'unsupported.mlir'.
+
+func.func @ops_on_tiles_legal_post_conversion(%ub : index) {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %tile = arm_sme.materialize_ssa_tile : vector<[4]x[4]xf32>
+  %updated_tile = scf.for %i = %c0 to %ub step %c1 iter_args(%iter_tile = %tile) -> (vector<[4]x[4]xf32>) {
+    scf.yield %iter_tile : vector<[4]x[4]xf32>
+  }
+  cf.br ^bb1(%updated_tile : vector<[4]x[4]xf32>)
+^bb1(%x : vector<[4]x[4]xf32>):
+  "test.some_use"(%x) : (vector<[4]x[4]xf32>) -> ()
+  return
+}

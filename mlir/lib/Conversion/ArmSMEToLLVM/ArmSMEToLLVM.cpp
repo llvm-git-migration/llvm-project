@@ -17,6 +17,7 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ArmSME/IR/ArmSME.h"
 #include "mlir/Dialect/ArmSME/Utils/Utils.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -872,9 +873,33 @@ struct ConvertArmSMEToLLVMPass
     configureArmSMEToLLVMConversionLegality(target);
     populateArmSMEToLLVMConversionPatterns(converter, patterns);
 
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
+    Operation *moduleOp = getOperation();
+    if (failed(applyPartialConversion(moduleOp, target, std::move(patterns))))
       signalPassFailure();
+
+    // Walk the function(s) and fail if there are unexpected operations on SME
+    // tile types after conversion.
+    moduleOp->walk([&](func::FuncOp funcOp) {
+      funcOp->walk([&](Operation *op) {
+        // These ops are legal post conversion, skip these.
+        // Note: 'test.some_use' is a dummy op we use extensively in the tests
+        // to prevent tile ops being DCE'd.
+        if (isa<arm_sme::MaterializeSSATileOp, cf::BranchOp, scf::ForOp,
+                scf::YieldOp>(op) ||
+            op->getName().getStringRef() == "test.some_use")
+          return;
+        auto isSMETileType = [](Type type) -> bool {
+          auto vecType = dyn_cast<VectorType>(type);
+          return vecType && arm_sme::isValidSMETileVectorType(vecType);
+        };
+        if (llvm::any_of(op->getResultTypes(), isSMETileType) ||
+            llvm::any_of(op->getOperandTypes(), isSMETileType)) {
+          op->emitOpError("unexpected operation with SME tile type after "
+                          "conversion to LLVM");
+          signalPassFailure();
+        }
+      });
+    });
   }
 };
 
