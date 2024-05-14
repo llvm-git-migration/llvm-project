@@ -1103,20 +1103,28 @@ ParseResult GenericOp::parse(OpAsmParser &parser, OperationState &result) {
 static void getGenericEffectsImpl(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects,
-    ValueRange results, const ValueRange inputOperands,
+    LinalgOp linalgOp, ValueRange results, const ValueRange inputOperands,
     ValueRange outputOperands) {
   for (auto operand : inputOperands) {
     if (!llvm::isa<MemRefType>(operand.getType()))
       continue;
-    effects.emplace_back(MemoryEffects::Read::get(), operand,
+    effects.emplace_back(MemoryEffects::Read::get(), 0, true, operand,
                          SideEffects::DefaultResource::get());
   }
-  for (auto operand : outputOperands) {
+  unsigned inputOperandSize = inputOperands.size();
+  unsigned usedOutputSize =
+      linalgOp.getOpOperandsMatchingBBargs().size() - inputOperandSize;
+
+  for (auto [index, operand] : llvm::enumerate(outputOperands)) {
     if (!llvm::isa<MemRefType>(operand.getType()))
       continue;
-    effects.emplace_back(MemoryEffects::Read::get(), operand,
-                         SideEffects::DefaultResource::get());
-    effects.emplace_back(MemoryEffects::Write::get(), operand,
+    if (index < usedOutputSize &&
+        linalgOp.payloadUsesValueFromOperand(
+            &linalgOp->getOpOperand(index + inputOperandSize))) {
+      effects.emplace_back(MemoryEffects::Read::get(), 0, true, operand,
+                           SideEffects::DefaultResource::get());
+    }
+    effects.emplace_back(MemoryEffects::Write::get(), 0, true, operand,
                          SideEffects::DefaultResource::get());
   }
 }
@@ -1124,7 +1132,8 @@ static void getGenericEffectsImpl(
 void GenericOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
@@ -1473,7 +1482,8 @@ ArrayAttr MapOp::getIndexingMaps() {
 void MapOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
@@ -1542,7 +1552,8 @@ ArrayAttr ReduceOp::getIndexingMaps() {
 void ReduceOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
@@ -1827,7 +1838,8 @@ ArrayAttr TransposeOp::getIndexingMaps() {
 void TransposeOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
@@ -1965,7 +1977,8 @@ ArrayAttr BroadcastOp::getIndexingMaps() {
 void BroadcastOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
@@ -2494,7 +2507,8 @@ SoftmaxOp::reifyResultShapes(OpBuilder &b,
 void SoftmaxOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  getGenericEffectsImpl(effects, getOperation()->getResults(), getDpsInputs(),
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
+                        getOperation()->getResults(), getDpsInputs(),
                         getDpsInits());
 }
 
