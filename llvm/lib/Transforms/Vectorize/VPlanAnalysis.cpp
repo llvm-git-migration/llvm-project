@@ -185,6 +185,7 @@ Type *VPTypeAnalysis::inferScalarTypeForRecipe(const VPReplicateRecipe *R) {
   case Instruction::FPToUI:
   case Instruction::PtrToInt:
   case Instruction::IntToPtr:
+  case Instruction::AddrSpaceCast:
     return R->getUnderlyingInstr()->getType();
   case Instruction::Freeze:
   case Instruction::FNeg:
