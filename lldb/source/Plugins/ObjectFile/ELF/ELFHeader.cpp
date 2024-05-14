@@ -252,6 +252,19 @@ bool ELFSectionHeader::Parse(const lldb_private::DataExtractor &data,
   return true;
 }
 
+// SectionNote
+
+SectionNote::SectionNote() { memset(this, 0, sizeof(SectionNote)); }
+
+bool SectionNote::Parse(const lldb_private::DataExtractor &data,
+                        lldb::offset_t *offset) {
+  // Read sn_namesz and sn_descsz, sn_type.
+  if (data.GetU32(offset, &sn_namesz, 3) == nullptr)
+    return false;
+
+  return true;
+}
+
 // ELFSymbol
 
 ELFSymbol::ELFSymbol() { memset(this, 0, sizeof(ELFSymbol)); }

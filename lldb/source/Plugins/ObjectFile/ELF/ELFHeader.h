@@ -271,6 +271,31 @@ struct ELFSymbol {
             const lldb_private::SectionList *section_list);
 };
 
+/// \class SectionNote
+/// Represents an entry of PT_NOTE in program header
+struct SectionNote {
+  elf_word sn_namesz;
+  elf_word sn_descsz;
+  elf_word sn_type;
+
+  SectionNote();
+
+  /// Parse an SectionNote entry from the given DataExtractor starting at
+  /// position \p offset.
+  ///
+  /// \param[in] data
+  ///    The DataExtractor to read from.
+  ///
+  /// \param[in,out] offset
+  ///    Pointer to an offset in the data.  On return the offset will be
+  ///    advanced by the number of bytes read.
+  ///
+  /// \return
+  ///    True if the SectionNote was successfully read and false
+  ///    otherwise.
+  bool Parse(const lldb_private::DataExtractor &data, lldb::offset_t *offset);
+};
+
 /// \class ELFDynamic
 /// Represents an entry in an ELF dynamic table.
 struct ELFDynamic {
