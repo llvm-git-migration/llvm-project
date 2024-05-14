@@ -393,6 +393,8 @@ Attribute Changes in Clang
 - Clang now warns that the ``exclude_from_explicit_instantiation`` attribute
   is ignored when applied to a local class or a member thereof.
 
+- The ``clspv_libclc_builtin`` attribute has been added to allow clspv to identified functions coming from libclc.
+
 Improvements to Clang's diagnostics
 -----------------------------------
 - Clang now applies syntax highlighting to the code snippets it

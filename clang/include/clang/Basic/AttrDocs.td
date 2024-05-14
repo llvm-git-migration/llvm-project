@@ -8087,3 +8087,10 @@ requirement:
   }
   }];
 }
+
+def ClspvLibclcBuiltinDoc : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Attribute used by clspv to identified functions coming from libclc.
+}];
+}
