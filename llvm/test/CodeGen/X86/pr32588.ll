@@ -8,9 +8,21 @@
 define void @fn1() {
 ; CHECK-LABEL: fn1:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    xorl %eax, %eax
-; CHECK-NEXT:    cmpl $0, c(%rip)
-; CHECK-NEXT:    sete %al
+; CHECK-NEXT:    cmpl $0, b(%rip)
+; CHECK-NEXT:    setne %al
+; CHECK-NEXT:    cmpl $0, d(%rip)
+; CHECK-NEXT:    setne %cl
+; CHECK-NEXT:    andb %al, %cl
+; CHECK-NEXT:    movl %ecx, %eax
+; CHECK-NEXT:    negb %al
+; CHECK-NEXT:    movl %eax, %edx
+; CHECK-NEXT:    andb %cl, %dl
+; CHECK-NEXT:    xorb %cl, %al
+; CHECK-NEXT:    sarb %al
+; CHECK-NEXT:    addb %dl, %al
+; CHECK-NEXT:    cmpl $1, c(%rip)
+; CHECK-NEXT:    movsbl %al, %eax
+; CHECK-NEXT:    adcl $0, %eax
 ; CHECK-NEXT:    movl %eax, d(%rip)
 ; CHECK-NEXT:    retq
   %t0 = load i32, ptr @c, align 4

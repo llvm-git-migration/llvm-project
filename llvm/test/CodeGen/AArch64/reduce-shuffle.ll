@@ -130,8 +130,10 @@ define i32 @v1(ptr nocapture noundef readonly %p1, i32 noundef %i1, ptr nocaptur
 ; CHECK-NEXT:    addv s0, v0.4s
 ; CHECK-NEXT:    fmov w8, s0
 ; CHECK-NEXT:    lsr w9, w8, #16
-; CHECK-NEXT:    add w8, w9, w8, uxth
-; CHECK-NEXT:    lsr w0, w8, #1
+; CHECK-NEXT:    and w8, w8, #0xffff
+; CHECK-NEXT:    eor w10, w8, w9
+; CHECK-NEXT:    and w8, w8, w9
+; CHECK-NEXT:    add w0, w8, w10, lsr #1
 ; CHECK-NEXT:    ret
 entry:
   %idx.ext = sext i32 %i1 to i64
@@ -341,8 +343,10 @@ define i32 @v2(ptr nocapture noundef readonly %p1, i32 noundef %i1, ptr nocaptur
 ; CHECK-NEXT:    addv s0, v0.4s
 ; CHECK-NEXT:    fmov w8, s0
 ; CHECK-NEXT:    lsr w9, w8, #16
-; CHECK-NEXT:    add w8, w9, w8, uxth
-; CHECK-NEXT:    lsr w0, w8, #1
+; CHECK-NEXT:    and w8, w8, #0xffff
+; CHECK-NEXT:    eor w10, w8, w9
+; CHECK-NEXT:    and w8, w8, w9
+; CHECK-NEXT:    add w0, w8, w10, lsr #1
 ; CHECK-NEXT:    ret
 entry:
   %idx.ext = sext i32 %i1 to i64
@@ -551,8 +555,10 @@ define i32 @v3(ptr nocapture noundef readonly %p1, i32 noundef %i1, ptr nocaptur
 ; CHECK-NEXT:    addv s0, v0.4s
 ; CHECK-NEXT:    fmov w8, s0
 ; CHECK-NEXT:    lsr w9, w8, #16
-; CHECK-NEXT:    add w8, w9, w8, uxth
-; CHECK-NEXT:    lsr w0, w8, #1
+; CHECK-NEXT:    and w8, w8, #0xffff
+; CHECK-NEXT:    eor w10, w8, w9
+; CHECK-NEXT:    and w8, w8, w9
+; CHECK-NEXT:    add w0, w8, w10, lsr #1
 ; CHECK-NEXT:    ret
 entry:
   %idx.ext = sext i32 %i1 to i64

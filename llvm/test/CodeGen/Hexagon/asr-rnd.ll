@@ -10,13 +10,14 @@ define i32 @f0(i32 %a0) #0 {
 ; CHECK-LABEL: f0:
 ; CHECK:       // %bb.0: // %b0
 ; CHECK-NEXT:    {
-; CHECK-NEXT:     r0 = asr(r0,#10):rnd
+; CHECK-NEXT:     r0 = extractu(r0,#1,#10)
 ; CHECK-NEXT:     r1 = r0
 ; CHECK-NEXT:     r29 = add(r29,#-8)
 ; CHECK-NEXT:    }
 ; CHECK-NEXT:    {
-; CHECK-NEXT:     r29 = add(r29,#8)
+; CHECK-NEXT:     r0 += asr(r1,#11)
 ; CHECK-NEXT:     jumpr r31
+; CHECK-NEXT:     r29 = add(r29,#8)
 ; CHECK-NEXT:     memw(r29+#4) = r1
 ; CHECK-NEXT:    }
 b0:
@@ -34,13 +35,14 @@ define i64 @f1(i64 %a0) #0 {
 ; CHECK-LABEL: f1:
 ; CHECK:       // %bb.0: // %b0
 ; CHECK-NEXT:    {
-; CHECK-NEXT:     r1:0 = asr(r1:0,#17):rnd
+; CHECK-NEXT:     r1:0 = extractu(r1:0,#1,#17)
 ; CHECK-NEXT:     r3:2 = combine(r1,r0)
 ; CHECK-NEXT:     r29 = add(r29,#-8)
 ; CHECK-NEXT:    }
 ; CHECK-NEXT:    {
-; CHECK-NEXT:     r29 = add(r29,#8)
+; CHECK-NEXT:     r1:0 += asr(r3:2,#18)
 ; CHECK-NEXT:     jumpr r31
+; CHECK-NEXT:     r29 = add(r29,#8)
 ; CHECK-NEXT:     memd(r29+#0) = r3:2
 ; CHECK-NEXT:    }
 b0:
