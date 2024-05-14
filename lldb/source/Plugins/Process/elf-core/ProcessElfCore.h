@@ -117,6 +117,13 @@ private:
     lldb::addr_t end;
     lldb::addr_t file_ofs;
     std::string path;
+    lldb_private::UUID uuid; //.note.gnu.build-id
+  };
+
+  struct Section_Note {
+    uint32_t namesz;
+    uint32_t descsz;
+    uint32_t type;
   };
 
   // For ProcessElfCore only
@@ -157,6 +164,16 @@ private:
 
   // Returns number of thread contexts stored in the core file
   uint32_t GetNumThreadContexts();
+
+  // Populate gnu uuid for each NT_FILE entry
+  void UpdateBuildIdForNTFileEntries();
+
+  // Returns the value of certain type of note of a given start address
+  std::optional<lldb_private::UUID> FindNote(const lldb::addr_t address,
+                                             const uint32_t type);
+
+  // Returns true if the given address is a start of ELF file
+  bool IsElf(const lldb::addr_t address);
 
   // Parse a contiguous address range of the process from LOAD segment
   lldb::addr_t
