@@ -322,6 +322,9 @@ def LinalgStructuredInterface
       /*args=*/(ins "OpOperand *":$opOperand),
       /*methodBody=*/"",
       /*defaultImplementation=*/[{
+        if ($_op.getOperation()->getRegion(0).empty()) {
+          return true;
+        }
         unsigned bbArgNumber = opOperand->getOperandNumber();
         // Init tensors have uses.
         return !getBlock()->getArgument(bbArgNumber).use_empty();

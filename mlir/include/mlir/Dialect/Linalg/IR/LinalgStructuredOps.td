@@ -289,6 +289,9 @@ def MapOp : LinalgStructuredBase_Op<"map", [
 
     bool payloadUsesValueFromOperand(OpOperand * opOperand) {
       if (isDpsInit(opOperand)) return false;
+      if (getOperation()->getRegion(0).empty()) {
+        return true;
+      }
       return !getMatchingBlockArgument(opOperand).use_empty();
     }
 
