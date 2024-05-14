@@ -2578,13 +2578,13 @@ SDValue DAGCombiner::foldSubToAvg(SDNode *N, const SDLoc &DL) {
   EVT VT = N0.getValueType();
   SDValue A, B;
 
-  if (hasOperation(ISD::AVGCEILU, VT) &&
+  if ((!LegalOperations || hasOperation(ISD::AVGCEILU, VT)) &&
       sd_match(N, m_Sub(m_Or(m_Value(A), m_Value(B)),
                         m_Srl(m_Xor(m_Deferred(A), m_Deferred(B)),
                               m_SpecificInt(1))))) {
     return DAG.getNode(ISD::AVGCEILU, DL, VT, A, B);
   }
-  if (hasOperation(ISD::AVGCEILS, VT) &&
+  if ((!LegalOperations || hasOperation(ISD::AVGCEILS, VT)) &&
       sd_match(N, m_Sub(m_Or(m_Value(A), m_Value(B)),
                         m_Sra(m_Xor(m_Deferred(A), m_Deferred(B)),
                               m_SpecificInt(1))))) {
@@ -2950,13 +2950,13 @@ SDValue DAGCombiner::foldAddToAvg(SDNode *N, const SDLoc &DL) {
   EVT VT = N0.getValueType();
   SDValue A, B;
 
-  if (hasOperation(ISD::AVGFLOORU, VT) &&
+  if ((!LegalOperations || hasOperation(ISD::AVGFLOORU, VT)) &&
       sd_match(N, m_Add(m_And(m_Value(A), m_Value(B)),
                         m_Srl(m_Xor(m_Deferred(A), m_Deferred(B)),
                               m_SpecificInt(1))))) {
     return DAG.getNode(ISD::AVGFLOORU, DL, VT, A, B);
   }
-  if (hasOperation(ISD::AVGFLOORS, VT) &&
+  if ((!LegalOperations || hasOperation(ISD::AVGFLOORS, VT)) &&
       sd_match(N, m_Add(m_And(m_Value(A), m_Value(B)),
                         m_Sra(m_Xor(m_Deferred(A), m_Deferred(B)),
                               m_SpecificInt(1))))) {
@@ -5233,6 +5233,20 @@ SDValue DAGCombiner::visitAVG(SDNode *N) {
   // Fold (avg x, x) --> x
   if (N0 == N1 && Level >= AfterLegalizeTypes)
     return N0;
+
+  // Fold avgflooru(x,c) -> avgceilu(x,c-1)
+  // iff c > 0 and avgflooru isn't legal/custom but avgceilu is.
+  if (Opcode == ISD::AVGFLOORU && !hasOperation(ISD::AVGFLOORU, VT) &&
+      hasOperation(ISD::AVGCEILU, VT)) {
+    auto AvgCeilUBounds = [&](ConstantSDNode *C) {
+      return C->getAPIntValue().uge(1);
+    };
+    if (ISD::matchUnaryPredicate(N1, AvgCeilUBounds)) {
+      SDValue One = DAG.getConstant(1, DL, VT);
+      if (SDValue Dec = DAG.FoldConstantArithmetic(ISD::SUB, DL, VT, {N1, One}))
+        return DAG.getNode(ISD::AVGCEILU, DL, VT, N0, Dec);
+    }
+  }
 
   // TODO If we use avg for scalars anywhere, we can add (avgfl x, 0) -> x >> 1
 
