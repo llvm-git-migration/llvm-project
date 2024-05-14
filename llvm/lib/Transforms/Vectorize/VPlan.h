@@ -1576,6 +1576,7 @@ public:
 
   void execute(VPTransformState &State) override;
 
+  bool isReverse() { return IsReverse; }
   bool onlyFirstLaneUsed(const VPValue *Op) const override {
     assert(is_contained(operands(), Op) &&
            "Op must be an operand of the recipe");
