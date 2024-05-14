@@ -229,7 +229,10 @@ inline constexpr ExtensionDependency ExtensionDependencies[] = {
   {AEK_LSE, AEK_LSE128},
   {AEK_PREDRES, AEK_SPECRES2},
   {AEK_RAS, AEK_RASV2},
-  {AEK_RCPC, AEK_RCPC3},
+  {AEK_RCPC, AEK_RCPC2},
+  {AEK_RCPC2, AEK_RCPC3},
+  {AEK_FLAGM, AEK_FLAGM2},
+  {AEK_DPB, AEK_DPB2},
 };
 // clang-format on
 
