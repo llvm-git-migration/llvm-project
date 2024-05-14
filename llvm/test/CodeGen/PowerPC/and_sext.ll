@@ -18,8 +18,11 @@ define i32 @test1(i32 %mode.0.i.0) {
 define signext i16 @test2(i16 signext %X, i16 signext %x)  {
 ; CHECK-LABEL: test2:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    add 3, 3, 4
-; CHECK-NEXT:    srawi 3, 3, 1
+; CHECK-NEXT:    and 5, 3, 4
+; CHECK-NEXT:    xor 3, 3, 4
+; CHECK-NEXT:    srwi 3, 3, 1
+; CHECK-NEXT:    add 3, 5, 3
+; CHECK-NEXT:    extsh 3, 3
 ; CHECK-NEXT:    blr
   %tmp = sext i16 %X to i32
   %tmp1 = sext i16 %x to i32
