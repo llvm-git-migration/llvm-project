@@ -124,7 +124,7 @@ struct HeaderFileInfo {
   /// This ID number will be non-zero when there is a controlling
   /// macro whose IdentifierInfo may not yet have been loaded from
   /// external storage.
-  unsigned ControllingMacroID = 0;
+  uint64_t ControllingMacroID = 0;
 
   /// If this file has a \#ifndef XXX (or equivalent) guard that
   /// protects the entire contents of the file, this is the identifier
