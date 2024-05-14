@@ -4588,8 +4588,15 @@ unsigned SelectionDAG::ComputeNumSignBits(SDValue Op, const APInt &DemandedElts,
     Tmp = ComputeNumSignBits(Op.getOperand(0), DemandedElts, Depth + 1);
     // SRA X, C -> adds C sign bits.
     if (const APInt *ShAmt =
-            getValidMinimumShiftAmountConstant(Op, DemandedElts))
+            getValidMinimumShiftAmountConstant(Op, DemandedElts)) {
       Tmp = std::min<uint64_t>(Tmp + ShAmt->getZExtValue(), VTBits);
+    } else {
+      KnownBits KnownAmt =
+          computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+      if (KnownAmt.getMinValue().ult(VTBits))
+        Tmp = std::min<uint64_t>(Tmp + KnownAmt.getMinValue().getZExtValue(),
+                                 VTBits);
+    }
     return Tmp;
   case ISD::SHL:
     if (const APInt *ShAmt =
