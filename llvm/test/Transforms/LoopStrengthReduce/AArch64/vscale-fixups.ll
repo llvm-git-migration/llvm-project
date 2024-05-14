@@ -10,15 +10,16 @@ define void @mulvl123_addressing(ptr %src, ptr %dst, i64 %count) #0 {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[VSCALE:%.*]] = tail call i64 @llvm.vscale.i64()
 ; CHECK-NEXT:    [[TMP0:%.*]] = shl nuw nsw i64 [[VSCALE]], 4
-; CHECK-NEXT:    [[TMP2:%.*]] = mul nuw nsw i64 [[VSCALE]], 48
 ; CHECK-NEXT:    [[TMP1:%.*]] = mul nuw nsw i64 [[VSCALE]], 80
-; CHECK-NEXT:    [[TMP3:%.*]] = shl nuw nsw i64 [[VSCALE]], 5
+; CHECK-NEXT:    [[TMP2:%.*]] = mul i64 [[VSCALE]], 48
+; CHECK-NEXT:    [[TMP3:%.*]] = shl i64 [[VSCALE]], 5
+; CHECK-NEXT:    [[TMP4:%.*]] = shl i64 [[VSCALE]], 4
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK:       for.body:
 ; CHECK-NEXT:    [[LSR_IV:%.*]] = phi ptr [ [[SCEVGEP:%.*]], [[FOR_BODY]] ], [ [[SRC]], [[ENTRY:%.*]] ]
 ; CHECK-NEXT:    [[IDX:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ [[IDX_NEXT:%.*]], [[FOR_BODY]] ]
 ; CHECK-NEXT:    [[TMP5:%.*]] = load <vscale x 16 x i8>, ptr [[LSR_IV]], align 16
-; CHECK-NEXT:    [[SCEVGEP3:%.*]] = getelementptr i8, ptr [[LSR_IV]], i64 [[TMP0]]
+; CHECK-NEXT:    [[SCEVGEP3:%.*]] = getelementptr i8, ptr [[LSR_IV]], i64 [[TMP4]]
 ; CHECK-NEXT:    [[TMP6:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP3]], align 16
 ; CHECK-NEXT:    [[SCEVGEP2:%.*]] = getelementptr i8, ptr [[LSR_IV]], i64 [[TMP3]]
 ; CHECK-NEXT:    [[TMP7:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP2]], align 16
@@ -73,12 +74,9 @@ define void @many_mulvl1_addressing(ptr %src_rows, ptr %dst_rows, i64 %stride, i
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[VSCALE:%.*]] = tail call i64 @llvm.vscale.i64()
 ; CHECK-NEXT:    [[MUL:%.*]] = shl i64 [[VSCALE]], 5
-; CHECK-NEXT:    [[TMP0:%.*]] = shl nuw nsw i64 [[VSCALE]], 4
 ; CHECK-NEXT:    [[SCEVGEP:%.*]] = getelementptr i8, ptr [[SRC_ROWS]], i64 [[STRIDE]]
-; CHECK-NEXT:    [[SCEVGEP1:%.*]] = getelementptr i8, ptr [[SCEVGEP]], i64 [[TMP0]]
-; CHECK-NEXT:    [[SCEVGEP4:%.*]] = getelementptr i8, ptr [[SRC_ROWS]], i64 [[TMP0]]
-; CHECK-NEXT:    [[TMP1:%.*]] = shl nuw nsw i64 [[VSCALE]], 3
-; CHECK-NEXT:    [[SCEVGEP7:%.*]] = getelementptr i8, ptr [[DST_ROWS]], i64 [[TMP1]]
+; CHECK-NEXT:    [[TMP0:%.*]] = shl i64 [[VSCALE]], 4
+; CHECK-NEXT:    [[TMP1:%.*]] = shl i64 [[VSCALE]], 3
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK:       for.body:
 ; CHECK-NEXT:    [[LSR_IV10:%.*]] = phi i64 [ [[LSR_IV_NEXT11:%.*]], [[FOR_BODY]] ], [ [[COUNT]], [[ENTRY:%.*]] ]
@@ -86,11 +84,13 @@ define void @many_mulvl1_addressing(ptr %src_rows, ptr %dst_rows, i64 %stride, i
 ; CHECK-NEXT:    [[SCEVGEP6:%.*]] = getelementptr i8, ptr [[SRC_ROWS]], i64 [[LSR_IV]]
 ; CHECK-NEXT:    [[SCEVGEP9:%.*]] = getelementptr i8, ptr [[DST_ROWS]], i64 [[LSR_IV]]
 ; CHECK-NEXT:    [[TMP2:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP6]], align 16
-; CHECK-NEXT:    [[SCEVGEP5:%.*]] = getelementptr i8, ptr [[SCEVGEP4]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP4:%.*]] = getelementptr i8, ptr [[SRC_ROWS]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP5:%.*]] = getelementptr i8, ptr [[SCEVGEP4]], i64 [[TMP0]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP5]], align 16
 ; CHECK-NEXT:    [[SCEVGEP3:%.*]] = getelementptr i8, ptr [[SCEVGEP]], i64 [[LSR_IV]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP3]], align 16
-; CHECK-NEXT:    [[SCEVGEP2:%.*]] = getelementptr i8, ptr [[SCEVGEP1]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP1:%.*]] = getelementptr i8, ptr [[SCEVGEP]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP2:%.*]] = getelementptr i8, ptr [[SCEVGEP1]], i64 [[TMP0]]
 ; CHECK-NEXT:    [[TMP5:%.*]] = load <vscale x 16 x i8>, ptr [[SCEVGEP2]], align 16
 ; CHECK-NEXT:    [[TMP6:%.*]] = add <vscale x 16 x i8> [[TMP2]], [[TMP4]]
 ; CHECK-NEXT:    [[TMP7:%.*]] = add <vscale x 16 x i8> [[TMP3]], [[TMP5]]
@@ -98,7 +98,8 @@ define void @many_mulvl1_addressing(ptr %src_rows, ptr %dst_rows, i64 %stride, i
 ; CHECK-NEXT:    [[TMP9:%.*]] = trunc <vscale x 8 x i16> [[TMP8]] to <vscale x 8 x i8>
 ; CHECK-NEXT:    store <vscale x 8 x i8> [[TMP9]], ptr [[SCEVGEP9]], align 8
 ; CHECK-NEXT:    [[TMP10:%.*]] = bitcast <vscale x 16 x i8> [[TMP7]] to <vscale x 8 x i16>
-; CHECK-NEXT:    [[SCEVGEP8:%.*]] = getelementptr i8, ptr [[SCEVGEP7]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP7:%.*]] = getelementptr i8, ptr [[DST_ROWS]], i64 [[LSR_IV]]
+; CHECK-NEXT:    [[SCEVGEP8:%.*]] = getelementptr i8, ptr [[SCEVGEP7]], i64 [[TMP1]]
 ; CHECK-NEXT:    [[TMP11:%.*]] = trunc <vscale x 8 x i16> [[TMP10]] to <vscale x 8 x i8>
 ; CHECK-NEXT:    store <vscale x 8 x i8> [[TMP11]], ptr [[SCEVGEP8]], align 8
 ; CHECK-NEXT:    [[LSR_IV_NEXT]] = add i64 [[LSR_IV]], [[MUL]]
