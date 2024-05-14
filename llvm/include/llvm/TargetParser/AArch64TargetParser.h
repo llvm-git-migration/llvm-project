@@ -109,10 +109,10 @@ static_assert(FEAT_MAX < 62,
 
 using ExtensionBitset = Bitset<AEK_NUM_EXTENSIONS>;
 
-// Represents an extension that can be enabled with -march=<arch>+<extension>.
-// Typically these correspond to Arm Architecture extensions, unlike
-// SubtargetFeature which may represent either an actual extension or some
-// internal LLVM property.
+// Represents an extension that can be enabled with -march=<arch>+<extension>,
+// or via a Function Multiversion (FMV) attribute. Typically these correspond
+// to Arm Architecture extensions, unlike SubtargetFeature which may represent
+// either an actual extension or some internal LLVM property.
 struct ExtensionInfo {
   StringRef Name;                 // Human readable name, e.g. "profile".
   std::optional<StringRef> Alias; // An alias for this extension, if one exists.
@@ -120,11 +120,13 @@ struct ExtensionInfo {
                                   // extensions representation in the bitfield.
   StringRef Feature;              // -mattr enable string, e.g. "+spe"
   StringRef NegFeature;           // -mattr disable string, e.g. "-spe"
-  CPUFeatures CPUFeature;      // Function Multi Versioning (FMV) bitfield value
-                               // set in __aarch64_cpu_features
-  StringRef DependentFeatures; // FMV enabled features string,
-                               // e.g. "+dotprod,+fp-armv8,+neon"
-  unsigned FmvPriority;        // FMV feature priority
+  bool IsFMVOnly;                 // Flag indicating whether the extension is
+                                  // available on the command line or not.
+  CPUFeatures CPUFeature;         // FMV bitfield value set in
+                                  // __aarch64_cpu_features
+  StringRef DependentFeatures;    // FMV enabled features string,
+                                  // e.g. "+dotprod,+fp-armv8,+neon"
+  unsigned FmvPriority;           // FMV feature priority
   static constexpr unsigned MaxFMVPriority =
       1000; // Maximum priority for FMV feature
 };
@@ -690,6 +692,7 @@ const ArchInfo *getArchForCpu(StringRef CPU);
 // Parser
 const ArchInfo *parseArch(StringRef Arch);
 std::optional<ExtensionInfo> parseArchExtension(StringRef Extension);
+std::optional<ExtensionInfo> parseFMVExtension(StringRef Extension);
 // Given the name of a CPU or alias, return the correponding CpuInfo.
 std::optional<CpuInfo> parseCpu(StringRef Name);
 // Used by target parser tests

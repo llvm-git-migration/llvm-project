@@ -94,19 +94,21 @@ static void EmitARMTargetDef(RecordKeeper &RK, raw_ostream &OS) {
     else
       OS << ", \"" << Alias << "\"";
     OS << ", AArch64::" << AEK;
-    if (AEK == "AEK_NONE") {
+    auto Name = Rec->getValueAsString("Name");
+    if (Name.empty()) {
       // HACK: don't emit posfeat/negfeat strings for FMVOnlyExtensions.
       OS << ", {}, {}";
     } else {
-      OS << ", \"+" << Rec->getValueAsString("Name") << "\""; // posfeature
-      OS << ", \"-" << Rec->getValueAsString("Name") << "\""; // negfeature
+      OS << ", \"+" << Name << "\""; // posfeature
+      OS << ", \"-" << Name << "\""; // negfeature
     }
+    OS << ", " << Rec->getValueAsString("IsFMVOnly");
     OS << ", " << Rec->getValueAsString("FMVBit");
     OS << ", \"" << Rec->getValueAsString("FMVDependencies") << "\"";
     OS << ", " << (uint64_t)Rec->getValueAsInt("FMVPriority");
     OS << "},\n";
   };
-  OS << "  {\"none\", {}, AArch64::AEK_NONE, {}, {}, FEAT_INIT, \"\", "
+  OS << "  {\"none\", {}, AArch64::AEK_NONE, {}, {}, false, FEAT_INIT, \"\", "
         "ExtensionInfo::MaxFMVPriority},\n";
   OS << "};\n"
      << "#undef EMIT_EXTENSIONS\n"

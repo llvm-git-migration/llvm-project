@@ -9,17 +9,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-// A SubtargetFeature that can be toggled from the command line, and therefore
-// has an AEK_* entry in ArmExtKind.
+// A SubtargetFeature that can be toggled from the command line, or be part of
+// a Function Multiversioning (FMV) attribute string.
 //
-// If Function MultiVersioning (FMV) properties are left at their defaults
-// (FEAT_INIT, no dependencies, priority 0) it indiates that this extension is
-// not an FMV feature, but can be enabled via the command line (-march, -mcpu,
-// etc).
-//
-// Conversely if the ArchExtKindSpelling is set to AEK_NONE, this indicates
-// that a feature is FMV-only, and can not be selected on the command line.
-// Such extensions should be added via FMVOnlyExtension.
+// If FMV properties are left at their defaults (FEAT_INIT, no dependencies,
+// priority 0) it indiates that this extension is not an FMV feature, but can
+// be enabled via the command line (-march, -mcpu, etc).
 class Extension<
   string TargetFeatureName,            // String used for -target-feature and -march, unless overridden.
   string Spelling,                     // The XYZ in HasXYZ and AEK_XYZ.
@@ -28,7 +23,8 @@ class Extension<
   // FMV properties
   string _FMVBit = "FEAT_INIT",        // FEAT_INIT is repurposed to indicate "not an FMV feature"
   string _FMVDependencies = "",
-  int _FMVPriority = 0
+  int _FMVPriority = 0,
+  string _IsFMVOnly = "false"          // Indicates if the extension is available on the command line.
 > : SubtargetFeature<TargetFeatureName, "Has" # Spelling, "true", Desc, Implies>
 {
     string ArchExtKindSpelling = "AEK_" # Spelling; // ArchExtKind enum name.
@@ -43,7 +39,7 @@ class Extension<
     // Used for correcting historical names while remaining backwards compatible.
     string MArchAlias = "";
 
-    // Function MultiVersioning (FMV) properties
+    // Function Multiversioning (FMV) properties
 
     // A C++ expression giving the number of the bit in the FMV ABI.
     // Currently this is given as a value from the enum "CPUFeatures".
@@ -56,43 +52,64 @@ class Extension<
 
     // The FMV priority
     int FMVPriority = _FMVPriority;
+
+    // Indicates if the extension is available on the command line.
+    string IsFMVOnly = _IsFMVOnly;
 }
 
 // Some extensions are available for FMV but can not be controlled via the
-// command line. These entries:
-//  - are SubtargetFeatures, so they have (unused) FieldNames on the subtarget
-//    e.g. HasFMVOnlyFEAT_XYZ
-//  - have incorrect (empty) Implies fields, because the code that handles FMV
-//    ignores these dependencies and looks only at FMVDependencies.
-//  - have no description.
-// 
-// In the generated data structures for extensions (ExtensionInfo), AEK_NONE is
-// used to indicate that a feature is FMV only. Therefore ArchExtKindSpelling is
-// manually overridden here.
-class FMVOnlyExtension<string FMVBit, string Name, string Deps, int Priority>
-  : Extension<Name, "FMVOnly"#FMVBit, "", [], FMVBit, Deps, Priority> {
-    let ArchExtKindSpelling = "AEK_NONE"; // AEK_NONE indicates FMV-only feature
-}
+// command line, neither have a TargetFeatureName. Since they have no effect
+// on their own, their description is left empty. However they can have side
+// effects by implying other Subtarget Features. These extensions are used
+// in FMV for detection purposes.
 
-def : FMVOnlyExtension<"FEAT_DGH", "dgh", "", 260>;
-def : FMVOnlyExtension<"FEAT_DPB", "dpb", "+ccpp", 190>;
-def : FMVOnlyExtension<"FEAT_DPB2", "dpb2", "+ccpp,+ccdp", 200>;
-def : FMVOnlyExtension<"FEAT_EBF16", "ebf16", "+bf16", 290>;
-def : FMVOnlyExtension<"FEAT_FLAGM2", "flagm2", "+flagm,+altnzcv", 30>;
-def : FMVOnlyExtension<"FEAT_FRINTTS", "frintts", "+fptoint", 250>;
-def : FMVOnlyExtension<"FEAT_LS64_ACCDATA", "ls64_accdata", "+ls64", 540>;
-def : FMVOnlyExtension<"FEAT_LS64_V", "ls64_v", "", 530>;
-def : FMVOnlyExtension<"FEAT_MEMTAG2", "memtag2", "+mte", 450>;
-def : FMVOnlyExtension<"FEAT_MEMTAG3", "memtag3", "+mte", 460>;
-def : FMVOnlyExtension<"FEAT_PMULL", "pmull", "+aes,+fp-armv8,+neon", 160>;
-def : FMVOnlyExtension<"FEAT_RCPC2", "rcpc2", "+rcpc", 240>;
-def : FMVOnlyExtension<"FEAT_RPRES", "rpres", "", 300>;
-def : FMVOnlyExtension<"FEAT_SHA1", "sha1", "+fp-armv8,+neon", 120>;
-def : FMVOnlyExtension<"FEAT_SSBS2", "ssbs2", "+ssbs", 500>;
-def : FMVOnlyExtension<"FEAT_SVE_BF16", "sve-bf16", "+sve,+bf16,+fullfp16,+fp-armv8,+neon", 320>;
-def : FMVOnlyExtension<"FEAT_SVE_EBF16", "sve-ebf16", "+sve,+bf16,+fullfp16,+fp-armv8,+neon", 330>;
-def : FMVOnlyExtension<"FEAT_SVE_I8MM", "sve-i8mm", "+sve,+i8mm,+fullfp16,+fp-armv8,+neon", 340>;
-def : FMVOnlyExtension<"FEAT_SVE_PMULL128", "sve2-pmull128", "+sve2,+sve,+sve2-aes,+fullfp16,+fp-armv8,+neon", 390>;
+let MArchName = "dgh" in
+def : Extension<"", "DGH", "", [], "FEAT_DGH", "", 260, "true">;
+
+let MArchName = "ebf16" in
+def : Extension<"", "EBF16", "", [], "FEAT_EBF16", "+bf16", 290, "true">;
+
+let MArchName = "ls64_accdata" in
+def : Extension<"", "LS64_ACCDATA", "", [], "FEAT_LS64_ACCDATA",
+  "+ls64", 540, "true">;
+
+let MArchName = "ls64_v" in
+def : Extension<"", "LS64_V", "", [], "FEAT_LS64_V", "", 530, "true">;
+
+let MArchName = "memtag2" in
+def : Extension<"", "MEMTAG2", "", [], "FEAT_MEMTAG2", "+mte", 450, "true">;
+
+let MArchName = "memtag3" in
+def : Extension<"", "MEMTAG3", "", [], "FEAT_MEMTAG3", "+mte", 460, "true">;
+
+let MArchName = "pmull" in
+def : Extension<"", "PMULL", "", [], "FEAT_PMULL",
+  "+aes,+fp-armv8,+neon", 160, "true">;
+
+let MArchName = "rpres" in
+def : Extension<"", "RPRES", "", [], "FEAT_RPRES", "", 300, "true">;
+
+let MArchName = "sha1" in
+def : Extension<"", "SHA1", "", [], "FEAT_SHA1", "+fp-armv8,+neon", 120, "true">;
+
+let MArchName = "ssbs2" in
+def : Extension<"", "SSBS2", "", [], "FEAT_SSBS2", "+ssbs", 500, "true">;
+
+let MArchName = "sve-bf16" in
+def : Extension<"", "SVE_BF16", "", [], "FEAT_SVE_BF16",
+  "+sve,+bf16,+fullfp16,+fp-armv8,+neon", 320, "true">;
+
+let MArchName = "sve-ebf16" in
+def : Extension<"", "SVE_EBF16", "", [], "FEAT_SVE_EBF16",
+  "+sve,+bf16,+fullfp16,+fp-armv8,+neon", 330, "true">;
+
+let MArchName = "sve-i8mm" in
+def : Extension<"", "SVE_I8MM", "", [], "FEAT_SVE_I8MM",
+  "+sve,+i8mm,+fullfp16,+fp-armv8,+neon", 340, "true">;
+
+let MArchName = "sve2-pmull128" in
+def : Extension<"", "SVE_PMULL128", "", [], "FEAT_SVE_PMULL128",
+  "+sve2,+sve,+sve2-aes,+fullfp16,+fp-armv8,+neon", 390, "true">;
 
 
 // Each SubtargetFeature which corresponds to an Arm Architecture feature should
@@ -216,8 +233,10 @@ def FeaturePAN_RWV : SubtargetFeature<
 def FeaturePsUAO : SubtargetFeature< "uaops", "HasPsUAO", "true",
     "Enable v8.2 UAO PState (FEAT_UAO)">;
 
-def FeatureCCPP : SubtargetFeature<"ccpp", "HasCCPP",
-    "true", "Enable v8.2 data Cache Clean to Point of Persistence (FEAT_DPB)" >;
+let MArchName = "dpb" in
+def FeatureCCPP : Extension<"ccpp", "CCPP",
+    "Enable v8.2 data Cache Clean to Point of Persistence (FEAT_DPB)", [],
+    "FEAT_DPB", "+ccpp", 190, "true">;
 
 def FeatureSVE : Extension<"sve", "SVE",
   "Enable Scalable Vector Extension (SVE) instructions (FEAT_SVE)", [FeatureFullFP16],
@@ -491,9 +510,10 @@ def FeatureFlagM : Extension<
     "FEAT_FLAGM", "+flagm", 20>;
 
 // 8.4 RCPC enchancements: LDAPR & STLR instructions with Immediate Offset
-def FeatureRCPC_IMMO : SubtargetFeature<"rcpc-immo", "HasRCPC_IMMO", "true",
+let MArchName = "rcpc2" in
+def FeatureRCPC_IMMO : Extension<"rcpc-immo", "RCPC_IMMO",
     "Enable v8.4-A RCPC instructions with Immediate Offsets (FEAT_LRCPC2)",
-    [FeatureRCPC]>;
+    [FeatureRCPC], "FEAT_RCPC2", "+rcpc", 240, "true">;
 
 def FeatureNoNegativeImmediates : SubtargetFeature<"no-neg-immediates",
                                         "NegativeImmediates", "false",
@@ -525,12 +545,16 @@ def FeatureAggressiveFMA :
                    "true",
                    "Enable Aggressive FMA for floating-point.">;
 
-def FeatureAltFPCmp : SubtargetFeature<"altnzcv", "HasAlternativeNZCV", "true",
-  "Enable alternative NZCV format for floating point comparisons (FEAT_FlagM2)">;
+let MArchName = "flagm2" in
+def FeatureAltFPCmp : Extension<"altnzcv", "AlternativeNZCV",
+  "Enable alternative NZCV format for floating point comparisons (FEAT_FlagM2)",
+  [], "FEAT_FLAGM2", "+flagm,+altnzcv", 30, "true">;
 
-def FeatureFRInt3264 : SubtargetFeature<"fptoint", "HasFRInt3264", "true",
+let MArchName = "frintts" in
+def FeatureFRInt3264 : Extension<"fptoint", "FRInt3264",
   "Enable FRInt[32|64][Z|X] instructions that round a floating-point number to "
-  "an integer (in FP format) forcing it to fit into a 32- or 64-bit int (FEAT_FRINTTS)" >;
+  "an integer (in FP format) forcing it to fit into a 32- or 64-bit int (FEAT_FRINTTS)",
+  [], "FEAT_FRINTTS", "+fptoint", 250, "true">;
 
 def FeatureSpecRestrict : SubtargetFeature<"specrestrict", "HasSpecRestrict",
   "true", "Enable architectural speculation restriction (FEAT_CSV2_2)">;
@@ -547,13 +571,14 @@ def FeaturePredRes : Extension<"predres", "PredRes",
   "Enable v8.5a execution and data prediction invalidation instructions (FEAT_SPECRES)", [],
   "FEAT_PREDRES", "+predres", 480>;
 
-def FeatureCacheDeepPersist : SubtargetFeature<"ccdp", "CCDP", "true",
-    "Enable v8.5 Cache Clean to Point of Deep Persistence (FEAT_DPB2)" >;
+let MArchName = "dpb2" in
+def FeatureCacheDeepPersist : Extension<"ccdp", "CCDP",
+  "Enable v8.5 Cache Clean to Point of Deep Persistence (FEAT_DPB2)", [],
+  "FEAT_DPB2", "+ccpp,+ccdp", 200, "true">;
 
-let ArchExtKindSpelling = "AEK_NONE" in
 def FeatureBranchTargetId : Extension<"bti", "BTI",
     "Enable Branch Target Identification (FEAT_BTI)", [],
-    "FEAT_BTI", "+bti", 510>;
+    "FEAT_BTI", "+bti", 510, "true">;
 
 let ArchExtKindSpelling = "AEK_RAND", MArchName = "rng" in
 def FeatureRandGen : Extension<"rand", "RandGen",

@@ -50,7 +50,7 @@ std::optional<AArch64::ArchInfo> AArch64::ArchInfo::findBySubArch(StringRef SubA
 uint64_t AArch64::getCpuSupportsMask(ArrayRef<StringRef> FeatureStrs) {
   uint64_t FeaturesMask = 0;
   for (const StringRef &FeatureStr : FeatureStrs) {
-    if (auto Ext = parseArchExtension(FeatureStr))
+    if (auto Ext = parseFMVExtension(FeatureStr))
       FeaturesMask |= (1ULL << Ext->CPUFeature);
   }
   return FeaturesMask;
@@ -116,8 +116,19 @@ const AArch64::ArchInfo *AArch64::parseArch(StringRef Arch) {
 std::optional<AArch64::ExtensionInfo>
 AArch64::parseArchExtension(StringRef ArchExt) {
   for (const auto &A : Extensions) {
+    if (A.IsFMVOnly)
+      continue;
     if (ArchExt == A.Name || ArchExt == A.Alias)
       return A;
+  }
+  return {};
+}
+
+std::optional<AArch64::ExtensionInfo>
+AArch64::parseFMVExtension(StringRef FMVExt) {
+  for (const auto &E : Extensions) {
+    if (FMVExt == E.Name || FMVExt == E.Alias)
+      return E;
   }
   return {};
 }
