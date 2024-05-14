@@ -14,6 +14,7 @@
 #include "src/__support/CPP/optional.h"
 #include "src/__support/OSUtil/syscall.h" // For syscall functions.
 #include "src/__support/threads/linux/futex_utils.h"
+#include "src/__support/threads/linux/raw_mutex.h"
 #include "src/__support/threads/mutex.h"
 
 #include <linux/futex.h> // For futex operations.
@@ -23,7 +24,7 @@
 
 namespace LIBC_NAMESPACE {
 
-struct CndVar {
+struct CndVar final : private internal::RawMutex {
   enum CndWaiterStatus : uint32_t {
     WS_Waiting = 0xE,
     WS_Signalled = 0x5,
@@ -36,19 +37,18 @@ struct CndVar {
 
   CndWaiter *waitq_front;
   CndWaiter *waitq_back;
-  Mutex qmtx;
 
-  static int init(CndVar *cv) {
+  LIBC_INLINE static int init(CndVar *cv) {
     cv->waitq_front = cv->waitq_back = nullptr;
-    auto err = Mutex::init(&cv->qmtx, false, false, false);
-    return err == MutexError::NONE ? thrd_success : thrd_error;
+    internal::RawMutex::init(cv);
+    return thrd_success;
   }
 
-  static void destroy(CndVar *cv) {
+  LIBC_INLINE static void destroy(CndVar *cv) {
     cv->waitq_front = cv->waitq_back = nullptr;
   }
 
-  int wait(Mutex *m) {
+  LIBC_INLINE int wait(Mutex *m) {
     // The goal is to perform "unlock |m| and wait" in an
     // atomic operation. However, it is not possible to do it
     // in the true sense so we do it in spirit. Before unlocking
@@ -60,7 +60,7 @@ struct CndVar {
 
     CndWaiter waiter;
     {
-      cpp::lock_guard ml(qmtx);
+      cpp::lock_guard ml(static_cast<internal::RawMutex &>(*this));
       CndWaiter *old_back = nullptr;
       if (waitq_front == nullptr) {
         waitq_front = waitq_back = &waiter;
@@ -94,12 +94,12 @@ struct CndVar {
     return err == MutexError::NONE ? thrd_success : thrd_error;
   }
 
-  int notify_one() {
+  LIBC_INLINE int notify_one() {
     // We don't use an RAII locker in this method as we want to unlock
     // |qmtx| and signal the waiter using a single FUTEX_WAKE_OP signal.
-    qmtx.lock();
+    this->lock();
     if (waitq_front == nullptr) {
-      qmtx.unlock();
+      this->unlock();
       return thrd_success;
     }
 
@@ -108,18 +108,18 @@ struct CndVar {
     if (waitq_front == nullptr)
       waitq_back = nullptr;
 
-    qmtx.futex_word = FutexWordType(Mutex::LockState::Free);
+    this->futex = FutexWordType(Mutex::LockState::Free);
 
     // this is a special WAKE_OP, so we use syscall directly
     LIBC_NAMESPACE::syscall_impl<long>(
-        FUTEX_SYSCALL_ID, &qmtx.futex_word.val, FUTEX_WAKE_OP, 1, 1,
+        FUTEX_SYSCALL_ID, &this->futex.val, FUTEX_WAKE_OP, 1, 1,
         &first->futex_word.val,
         FUTEX_OP(FUTEX_OP_SET, WS_Signalled, FUTEX_OP_CMP_EQ, WS_Waiting));
     return thrd_success;
   }
 
-  int broadcast() {
-    cpp::lock_guard ml(qmtx);
+  LIBC_INLINE int broadcast() {
+    cpp::lock_guard ml(static_cast<internal::RawMutex &>(*this));
     uint32_t dummy_futex_word;
     CndWaiter *waiter = waitq_front;
     waitq_front = waitq_back = nullptr;
