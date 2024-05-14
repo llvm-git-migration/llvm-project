@@ -4561,3 +4561,9 @@ def CodeAlign: StmtAttr {
     static constexpr int MaximumAlignment = 4096;
   }];
 }
+
+def ClspvLibclcBuiltin: DeclOrStmtAttr {
+  let Spellings = [Clang<"clspv_libclc_builtin">];
+  let Documentation = [Undocumented];
+  let SimpleHandler = 1;
+}
