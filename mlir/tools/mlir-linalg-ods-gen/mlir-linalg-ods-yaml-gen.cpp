@@ -659,7 +659,7 @@ LogicalResult {0}::fold(FoldAdaptor,
 void {0}::getEffects(SmallVectorImpl<
     SideEffects::EffectInstance<MemoryEffects::Effect> >&effects) {{
       if (hasPureTensorSemantics()) return;
-      getGenericEffectsImpl(effects,
+      getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()),
         getOperation()->getResults(), getDpsInputs(), getDpsInits());
 }
 )FMT";
