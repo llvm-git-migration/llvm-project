@@ -531,6 +531,7 @@ void RISCVDisassembler::addSPOperands(MCInst &MI) const {
 #define TRY_TO_DECODE_FEATURE(FEATURE, DECODER_TABLE, DESC)                    \
   TRY_TO_DECODE(STI.hasFeature(FEATURE), DECODER_TABLE, DESC)
 
+
 DecodeStatus RISCVDisassembler::getInstruction32(MCInst &MI, uint64_t &Size,
                                                  ArrayRef<uint8_t> Bytes,
                                                  uint64_t Address,
@@ -553,6 +554,8 @@ DecodeStatus RISCVDisassembler::getInstruction32(MCInst &MI, uint64_t &Size,
                 "RV32Zacas table (Compare-And-Swap and rv32)");
   TRY_TO_DECODE_FEATURE(RISCV::FeatureStdExtZfinx, DecoderTableRVZfinx32,
                         "RVZfinx table (Float in Integer)");
+  TRY_TO_DECODE_FEATURE(RISCV::FeatureStdExtZvinsert, DecoderTableRVZvinsert32,
+                        "RVZvinsert table (Moves between Scalars and Vector Elements)");
   TRY_TO_DECODE_FEATURE(RISCV::FeatureVendorXVentanaCondOps,
                         DecoderTableXVentana32, "Ventana custom opcode table");
   TRY_TO_DECODE_FEATURE(RISCV::FeatureVendorXTHeadBa, DecoderTableXTHeadBa32,
