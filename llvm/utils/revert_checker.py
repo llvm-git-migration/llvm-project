@@ -284,16 +284,11 @@ def _main() -> None:
                 all_reverts.append(revert)
 
     for revert in all_reverts:
-        sha_fmt = (
-            f"https://reviews.llvm.org/rG{revert.sha}"
-            if opts.review_url
-            else revert.sha
+        sha_prefix = (
+            "https://github.com/llvm/llvm-project/commit/" if opts.review_url else ""
         )
-        reverted_sha_fmt = (
-            f"https://reviews.llvm.org/rG{revert.reverted_sha}"
-            if opts.review_url
-            else revert.reverted_sha
-        )
+        sha_fmt = f"{sha_prefix}{revert.sha}"
+        reverted_sha_fmt = f"{sha_prefix}{revert.reverted_sha}"
         print(f"{sha_fmt} claims to revert {reverted_sha_fmt}")
 
 
