@@ -161,6 +161,11 @@ SCEVExpander::findInsertPointAfter(Instruction *I,
   return IP;
 }
 
+bool SCEVExpander::expansionMayIntroduceUB(const SCEV *Expr) {
+  return SCEVExprContains(Expr,
+                          [](const SCEV *Op) { return isa<SCEVUDivExpr>(Op); });
+}
+
 BasicBlock::iterator
 SCEVExpander::GetOptimalInsertionPointForCastOf(Value *V) const {
   // Cast the argument at the beginning of the entry block, after

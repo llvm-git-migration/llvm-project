@@ -418,6 +418,10 @@ public:
   BasicBlock::iterator findInsertPointAfter(Instruction *I,
                                             Instruction *MustDominate) const;
 
+  /// Returns true if expanding \p Expr may introduce UB (e.g. because the
+  /// expression contains an UDiv expression).
+  static bool expansionMayIntroduceUB(const SCEV *Expr);
+
 private:
   LLVMContext &getContext() const { return SE.getContext(); }
 
