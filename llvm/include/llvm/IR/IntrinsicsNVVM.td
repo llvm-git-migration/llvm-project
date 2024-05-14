@@ -656,6 +656,35 @@ class CP_ASYNC_BULK_TENSOR_REDUCE_INTR<int dim, string mode, string op> {
         ImmArg<ArgIndex<FlagsStartIdx>>];
 }
 
+class NVVM_TCGEN05_LDST_NAME<string Op, string Shape, int Num> {
+  string intr =   "llvm.nvvm.tcgen05." # Op
+                  # "." # Shape
+                  # "." # "x" # !shl(1, Num);
+
+  string record = !subst(".", "_",
+                  !subst("llvm.", "int_", intr));
+}
+
+
+class NVVM_TCGEN05_LDST_ACCESS_SIZE<string Shape, int Num> {
+  int shift = !cond(!eq(Shape, "16x128b"): 1,
+                    !eq(Shape, "16x256b"): 2,
+                    true : 0);
+
+  int veclen = !shl(1, !add(Num, shift));
+
+  int valid = !le(veclen, 128);
+  LLVMType type = !cond(!eq(veclen,   1): llvm_i32_ty,
+                        !eq(veclen,   2): llvm_v2i32_ty,
+                        !eq(veclen,   4): llvm_v4i32_ty,
+                        !eq(veclen,   8): llvm_v8i32_ty,
+                        !eq(veclen,  16): llvm_v16i32_ty,
+                        !eq(veclen,  32): llvm_v32i32_ty,
+                        !eq(veclen,  64): llvm_v64i32_ty,
+                        !eq(veclen, 128): llvm_v128i32_ty,
+                        true : llvm_void_ty);
+}
+
 let TargetPrefix = "nvvm" in {
   def int_nvvm_prmt : ClangBuiltin<"__nvvm_prmt">,
       DefaultAttrsIntrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
@@ -5137,5 +5166,41 @@ def int_nvvm_tcgen05_fence_before_thread_sync : Intrinsic<[], [],
   [IntrNoMem, IntrHasSideEffects]>;
 def int_nvvm_tcgen05_fence_after_thread_sync : Intrinsic<[], [],
   [IntrNoMem, IntrHasSideEffects]>;
+
+// Tcgen05 ld
+class NVVM_TCGEN05_LD<string Shape, int Num> :
+        Intrinsic<[NVVM_TCGEN05_LDST_ACCESS_SIZE<Shape, Num>.type],
+                  !listconcat([llvm_tmem_ptr_ty],
+                              !if(!eq(Shape, "16x32bx2"), [llvm_i64_ty], []),
+                              [llvm_i1_ty]),
+                  !listconcat([IntrConvergent, IntrArgMemOnly, NoCapture<ArgIndex<0>>],
+                              !if(!eq(Shape, "16x32bx2"),
+                                [ImmArg<ArgIndex<1>>, ImmArg<ArgIndex<2>>],
+                                [ImmArg<ArgIndex<1>>])),
+                  NVVM_TCGEN05_LDST_NAME<"ld", Shape, Num>.intr>;
+
+// Tcgen05 st
+class NVVM_TCGEN05_ST<string Shape, int Num> :
+        Intrinsic<[],
+                  !listconcat([llvm_tmem_ptr_ty],
+                              !if(!eq(Shape, "16x32bx2"), [llvm_i64_ty], []),
+                              [NVVM_TCGEN05_LDST_ACCESS_SIZE<Shape, Num>.type],
+                              [llvm_i1_ty]),
+                  !listconcat([IntrConvergent, IntrArgMemOnly, NoCapture<ArgIndex<0>>],
+                              !if(!eq(Shape, "16x32bx2"),
+                                [ImmArg<ArgIndex<1>>, ImmArg<ArgIndex<3>>],
+                                [ImmArg<ArgIndex<2>>])),
+                  NVVM_TCGEN05_LDST_NAME<"st", Shape, Num>.intr>;
+
+foreach shape = ["16x64b", "16x128b", "16x256b", "32x32b", "16x32bx2"] in {
+  foreach num = !range(0, 8) in {
+    if NVVM_TCGEN05_LDST_ACCESS_SIZE<shape, num>.valid then {
+      def NVVM_TCGEN05_LDST_NAME<"ld", shape, num>.record:
+            NVVM_TCGEN05_LD<shape, num>;
+      def NVVM_TCGEN05_LDST_NAME<"st", shape, num>.record:
+            NVVM_TCGEN05_ST<shape, num>;
+      }
+  }
+}
 
 } // let TargetPrefix = "nvvm"
