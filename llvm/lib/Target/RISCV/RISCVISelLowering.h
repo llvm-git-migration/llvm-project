@@ -868,11 +868,9 @@ public:
                              unsigned Factor) const override;
 
   bool lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
-                                        SmallVector<Value *> &LeafNodes,
                                         LoadInst *LI) const override;
 
   bool lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
-                                       SmallVector<Value *> &LeafNodes,
                                        StoreInst *SI) const override;
 
   bool supportKCFIBundles() const override { return true; }
