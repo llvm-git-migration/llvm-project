@@ -191,8 +191,7 @@ define signext i32 @sdiv_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64:       # %bb.0: # %entry
 ; LA64-NEXT:    addi.w $a1, $a1, 0
 ; LA64-NEXT:    addi.w $a0, $a0, 0
-; LA64-NEXT:    div.d $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    div.w $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: sdiv_si32_ui32_ui32:
@@ -208,12 +207,11 @@ define signext i32 @sdiv_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64-TRAP:       # %bb.0: # %entry
 ; LA64-TRAP-NEXT:    addi.w $a1, $a1, 0
 ; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
-; LA64-TRAP-NEXT:    div.d $a0, $a0, $a1
+; LA64-TRAP-NEXT:    div.w $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB5_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB5_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = sdiv i32 %a, %b
@@ -228,8 +226,7 @@ define signext i32 @sdiv_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ;
 ; LA64-LABEL: sdiv_si32_si32_si32:
 ; LA64:       # %bb.0: # %entry
-; LA64-NEXT:    div.d $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    div.w $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: sdiv_si32_si32_si32:
@@ -243,12 +240,11 @@ define signext i32 @sdiv_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ;
 ; LA64-TRAP-LABEL: sdiv_si32_si32_si32:
 ; LA64-TRAP:       # %bb.0: # %entry
-; LA64-TRAP-NEXT:    div.d $a0, $a0, $a1
+; LA64-TRAP-NEXT:    div.w $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB6_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB6_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = sdiv i32 %a, %b
@@ -483,8 +479,7 @@ define signext i32 @udiv_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64:       # %bb.0: # %entry
 ; LA64-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-NEXT:    div.du $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    div.wu $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: udiv_si32_ui32_ui32:
@@ -500,12 +495,11 @@ define signext i32 @udiv_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64-TRAP:       # %bb.0: # %entry
 ; LA64-TRAP-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-TRAP-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-TRAP-NEXT:    div.du $a0, $a0, $a1
+; LA64-TRAP-NEXT:    div.wu $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB13_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB13_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = udiv i32 %a, %b
@@ -522,8 +516,7 @@ define signext i32 @udiv_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ; LA64:       # %bb.0: # %entry
 ; LA64-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-NEXT:    div.du $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    div.wu $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: udiv_si32_si32_si32:
@@ -539,12 +532,11 @@ define signext i32 @udiv_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ; LA64-TRAP:       # %bb.0: # %entry
 ; LA64-TRAP-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-TRAP-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-TRAP-NEXT:    div.du $a0, $a0, $a1
+; LA64-TRAP-NEXT:    div.wu $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB14_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB14_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = udiv i32 %a, %b
@@ -1071,8 +1063,7 @@ define signext i32 @urem_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64:       # %bb.0: # %entry
 ; LA64-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-NEXT:    mod.du $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    mod.wu $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: urem_si32_ui32_ui32:
@@ -1088,12 +1079,11 @@ define signext i32 @urem_si32_ui32_ui32(i32 %a, i32 %b) {
 ; LA64-TRAP:       # %bb.0: # %entry
 ; LA64-TRAP-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-TRAP-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-TRAP-NEXT:    mod.du $a0, $a0, $a1
+; LA64-TRAP-NEXT:    mod.wu $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB29_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB29_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = urem i32 %a, %b
@@ -1110,8 +1100,7 @@ define signext i32 @urem_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ; LA64:       # %bb.0: # %entry
 ; LA64-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-NEXT:    mod.du $a0, $a0, $a1
-; LA64-NEXT:    addi.w $a0, $a0, 0
+; LA64-NEXT:    mod.wu $a0, $a0, $a1
 ; LA64-NEXT:    ret
 ;
 ; LA32-TRAP-LABEL: urem_si32_si32_si32:
@@ -1127,12 +1116,11 @@ define signext i32 @urem_si32_si32_si32(i32 signext %a, i32 signext %b) {
 ; LA64-TRAP:       # %bb.0: # %entry
 ; LA64-TRAP-NEXT:    bstrpick.d $a1, $a1, 31, 0
 ; LA64-TRAP-NEXT:    bstrpick.d $a0, $a0, 31, 0
-; LA64-TRAP-NEXT:    mod.du $a0, $a0, $a1
+; LA64-TRAP-NEXT:    mod.wu $a0, $a0, $a1
 ; LA64-TRAP-NEXT:    bnez $a1, .LBB30_2
 ; LA64-TRAP-NEXT:  # %bb.1: # %entry
 ; LA64-TRAP-NEXT:    break 7
 ; LA64-TRAP-NEXT:  .LBB30_2: # %entry
-; LA64-TRAP-NEXT:    addi.w $a0, $a0, 0
 ; LA64-TRAP-NEXT:    ret
 entry:
   %r = urem i32 %a, %b
