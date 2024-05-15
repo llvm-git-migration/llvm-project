@@ -1174,8 +1174,8 @@ static LogicalResult commonOpVerifier(LinalgOp linalgOp) {
               // one input can have fixed shape but the others can have dynamic
               // shape for the same dimension
               affineExprToSize.try_emplace(affineDimExpr, dimShape);
-          } else if (affineExprToSize.contains(affineDimExpr)
-                          && affineExprToSize[affineDimExpr] != dimShape)
+          } else if (affineExprToSize.contains(affineDimExpr) &&
+                     affineExprToSize[affineDimExpr] != dimShape)
             // If shape for a affineDimExpr is already known from the input
             // operand's map ensure that the shapes match across the output
             // operands.
@@ -1188,9 +1188,7 @@ static LogicalResult commonOpVerifier(LinalgOp linalgOp) {
   return success();
 }
 
-LogicalResult GenericOp::verify() {
-  return commonOpVerifier(*this);
-}
+LogicalResult GenericOp::verify() { return commonOpVerifier(*this); }
 
 namespace {
 
