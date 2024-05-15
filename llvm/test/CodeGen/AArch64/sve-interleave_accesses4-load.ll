@@ -7,23 +7,14 @@ define void @interleave(ptr noalias nocapture noundef writeonly %dst, ptr nocapt
 ; CHECK-LABEL: interleave:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ptrue p0.s
-; CHECK-NEXT:    ld2w { z1.s, z2.s }, p0/z, [x1]
-; CHECK-NEXT:    ld2w { z3.s, z4.s }, p0/z, [x1, #2, mul vl]
-; CHECK-NEXT:    uzp2 z5.s, z1.s, z3.s
-; CHECK-NEXT:    uzp1 z6.s, z1.s, z3.s
-; CHECK-NEXT:    uzp2 z7.s, z2.s, z4.s
-; CHECK-NEXT:    uzp1 z1.s, z2.s, z4.s
-; CHECK-NEXT:    add z2.s, z0.s, z6.s
-; CHECK-NEXT:    movprfx z3, z5
-; CHECK-NEXT:    lsl z3.s, p0/m, z3.s, z0.s
-; CHECK-NEXT:    sub z1.s, z1.s, z0.s
-; CHECK-NEXT:    asrr z0.s, p0/m, z0.s, z7.s
-; CHECK-NEXT:    zip1 z4.s, z2.s, z3.s
-; CHECK-NEXT:    zip2 z2.s, z2.s, z3.s
-; CHECK-NEXT:    zip1 z5.s, z1.s, z0.s
-; CHECK-NEXT:    zip2 z3.s, z1.s, z0.s
-; CHECK-NEXT:    st2w { z4.s, z5.s }, p0, [x0]
-; CHECK-NEXT:    st2w { z2.s, z3.s }, p0, [x0, #2, mul vl]
+; CHECK-NEXT:    ld4w { z1.s - z4.s }, p0/z, [x1]
+; CHECK-NEXT:    add z24.s, z0.s, z1.s
+; CHECK-NEXT:    sub z26.s, z3.s, z0.s
+; CHECK-NEXT:    movprfx z25, z2
+; CHECK-NEXT:    lsl z25.s, p0/m, z25.s, z0.s
+; CHECK-NEXT:    movprfx z27, z4
+; CHECK-NEXT:    asr z27.s, p0/m, z27.s, z0.s
+; CHECK-NEXT:    st4w { z24.s - z27.s }, p0, [x0]
 ; CHECK-NEXT:    ret
   %wide.vec = load <vscale x 16 x i32>, ptr %a, align 4
   %root.strided.vec = tail call { <vscale x 8 x i32>, <vscale x 8 x i32> } @llvm.vector.deinterleave2.nxv16i32(<vscale x 16 x i32> %wide.vec)
@@ -50,39 +41,22 @@ define void @wide_interleave(ptr noalias nocapture noundef writeonly %dst, ptr n
 ; CHECK-LABEL: wide_interleave:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ptrue p0.s
-; CHECK-NEXT:    ld2w { z2.s, z3.s }, p0/z, [x1]
-; CHECK-NEXT:    ld2w { z4.s, z5.s }, p0/z, [x1, #2, mul vl]
-; CHECK-NEXT:    ld2w { z6.s, z7.s }, p0/z, [x1, #4, mul vl]
-; CHECK-NEXT:    ld2w { z24.s, z25.s }, p0/z, [x1, #6, mul vl]
-; CHECK-NEXT:    uzp2 z26.s, z2.s, z4.s
-; CHECK-NEXT:    uzp1 z27.s, z2.s, z4.s
-; CHECK-NEXT:    uzp2 z28.s, z3.s, z5.s
-; CHECK-NEXT:    uzp1 z2.s, z3.s, z5.s
-; CHECK-NEXT:    add z3.s, z0.s, z27.s
-; CHECK-NEXT:    movprfx z4, z26
-; CHECK-NEXT:    lsl z4.s, p0/m, z4.s, z0.s
-; CHECK-NEXT:    sub z2.s, z2.s, z0.s
-; CHECK-NEXT:    asrr z0.s, p0/m, z0.s, z28.s
-; CHECK-NEXT:    zip1 z26.s, z3.s, z4.s
-; CHECK-NEXT:    zip2 z3.s, z3.s, z4.s
-; CHECK-NEXT:    zip1 z27.s, z2.s, z0.s
-; CHECK-NEXT:    zip2 z4.s, z2.s, z0.s
-; CHECK-NEXT:    uzp2 z0.s, z6.s, z24.s
-; CHECK-NEXT:    uzp1 z2.s, z6.s, z24.s
-; CHECK-NEXT:    st2w { z26.s, z27.s }, p0, [x0]
-; CHECK-NEXT:    lsl z0.s, p0/m, z0.s, z1.s
-; CHECK-NEXT:    add z2.s, z1.s, z2.s
-; CHECK-NEXT:    st2w { z3.s, z4.s }, p0, [x0, #2, mul vl]
-; CHECK-NEXT:    uzp2 z3.s, z7.s, z25.s
-; CHECK-NEXT:    uzp1 z4.s, z7.s, z25.s
-; CHECK-NEXT:    zip1 z5.s, z2.s, z0.s
-; CHECK-NEXT:    sub z4.s, z4.s, z1.s
-; CHECK-NEXT:    asrr z1.s, p0/m, z1.s, z3.s
-; CHECK-NEXT:    zip2 z2.s, z2.s, z0.s
-; CHECK-NEXT:    zip1 z6.s, z4.s, z1.s
-; CHECK-NEXT:    zip2 z3.s, z4.s, z1.s
-; CHECK-NEXT:    st2w { z5.s, z6.s }, p0, [x0, #4, mul vl]
-; CHECK-NEXT:    st2w { z2.s, z3.s }, p0, [x0, #6, mul vl]
+; CHECK-NEXT:    ld4w { z2.s - z5.s }, p0/z, [x1]
+; CHECK-NEXT:    ld4w { z24.s - z27.s }, p0/z, [x1, #4, mul vl]
+; CHECK-NEXT:    add z28.s, z0.s, z2.s
+; CHECK-NEXT:    sub z30.s, z4.s, z0.s
+; CHECK-NEXT:    movprfx z29, z3
+; CHECK-NEXT:    lsl z29.s, p0/m, z29.s, z0.s
+; CHECK-NEXT:    movprfx z31, z5
+; CHECK-NEXT:    asr z31.s, p0/m, z31.s, z0.s
+; CHECK-NEXT:    add z2.s, z1.s, z24.s
+; CHECK-NEXT:    sub z4.s, z26.s, z1.s
+; CHECK-NEXT:    movprfx z3, z25
+; CHECK-NEXT:    lsl z3.s, p0/m, z3.s, z1.s
+; CHECK-NEXT:    movprfx z5, z27
+; CHECK-NEXT:    asr z5.s, p0/m, z5.s, z1.s
+; CHECK-NEXT:    st4w { z28.s - z31.s }, p0, [x0]
+; CHECK-NEXT:    st4w { z2.s - z5.s }, p0, [x0, #4, mul vl]
 ; CHECK-NEXT:    ret
   %wide.vec = load <vscale x 32 x i32>, ptr %a, align 4
   %root.strided.vec = tail call { <vscale x 16 x i32>, <vscale x 16 x i32> } @llvm.vector.deinterleave2.nxv32i32(<vscale x 32 x i32> %wide.vec)
