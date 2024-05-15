@@ -910,6 +910,7 @@ SubtargetEmitter::FindWriteResources(const CodeGenSchedRW &SchedWrite,
                                           ProcModel.ModelName);
       }
       ResDef = WR;
+      break;
     }
   }
   // TODO: If ProcModel has a base model (previous generation processor),
