@@ -2474,7 +2474,7 @@ static bool ValidatePrefixes(StringRef Kind, StringSet<> &UniquePrefixes,
              << "string\n";
       return false;
     }
-    static const Regex Validator("^[a-zA-Z0-9_-]*$");
+    static const Regex Validator("^[a-zA-Z][a-zA-Z0-9_-]*$");
     if (!Validator.match(Prefix)) {
       errs() << "error: supplied " << Kind << " prefix must start with a "
              << "letter and contain only alphanumeric characters, hyphens, and "
