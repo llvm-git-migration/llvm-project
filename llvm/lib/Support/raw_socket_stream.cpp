@@ -177,19 +177,20 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
 #endif // _WIN32
 }
 
-Expected<std::unique_ptr<raw_socket_stream>>
-ListeningSocket::accept(std::chrono::milliseconds Timeout) {
-
+static llvm::Error manageTimeout(const std::chrono::milliseconds Timeout,
+                                 const std::atomic<int> &ActiveFD,
+                                 const int PipeFD) {
+  // Populate array of file descriptors that ::poll will monitor
   struct pollfd FDs[2];
   FDs[0].events = POLLIN;
 #ifdef _WIN32
   SOCKET WinServerSock = _get_osfhandle(FD);
   FDs[0].fd = WinServerSock;
 #else
-  FDs[0].fd = FD;
+  FDs[0].fd = ActiveFD;
 #endif
   FDs[1].events = POLLIN;
-  FDs[1].fd = PipeFD[0];
+  FDs[1].fd = PipeFD;
 
   // Keep track of how much time has passed in case poll is interupted by a
   // signal and needs to be recalled
@@ -209,7 +210,7 @@ ListeningSocket::accept(std::chrono::milliseconds Timeout) {
 #endif
     // If FD equals -1 then ListeningSocket::shutdown has been called and it is
     // appropriate to return operation_canceled
-    if (FD.load() == -1)
+    if (ActiveFD.load() == -1)
       return llvm::make_error<StringError>(
           std::make_error_code(std::errc::operation_canceled),
           "Accept canceled");
@@ -237,6 +238,13 @@ ListeningSocket::accept(std::chrono::milliseconds Timeout) {
     ElapsedTime +=
         std::chrono::duration_cast<std::chrono::milliseconds>(Stop - Start);
   }
+  return llvm::Error::success();
+}
+
+Expected<std::unique_ptr<raw_socket_stream>>
+ListeningSocket::accept(std::chrono::milliseconds Timeout) {
+  if (llvm::Error TimeoutErr = manageTimeout(Timeout, FD, PipeFD[0]))
+    return std::move(TimeoutErr);
 
   int AcceptFD;
 #ifdef _WIN32
@@ -267,8 +275,7 @@ void ListeningSocket::shutdown() {
   ::unlink(SocketPath.c_str());
 
   // Ensure ::poll returns if shutdown is called by a seperate thread
-  char Byte = 'A';
-  ssize_t written = ::write(PipeFD[1], &Byte, 1);
+  ssize_t written = ::write(PipeFD[1], ".", 1);
 
   // Ignore any write() error
   (void)written;
@@ -304,6 +311,15 @@ raw_socket_stream::createConnectedUnix(StringRef SocketPath) {
   if (!FD)
     return FD.takeError();
   return std::make_unique<raw_socket_stream>(*FD);
+}
+
+llvm::Error
+raw_socket_stream::readWithTimeout(char *Ptr, size_t Size,
+                                   std::chrono::milliseconds Timeout) {
+  // FIXME: add pipe and remove test value of 10
+  if (llvm::Error TimeoutErr = manageTimeout(Timeout, get_fd(), 10))
+    return std::move(TimeoutErr);
+  ssize_t Ret = this->read(Ptr, Size);
 }
 
 raw_socket_stream::~raw_socket_stream() {}

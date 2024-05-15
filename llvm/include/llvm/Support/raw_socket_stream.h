@@ -128,6 +128,8 @@ public:
   /// SocketPath.
   static Expected<std::unique_ptr<raw_socket_stream>>
   createConnectedUnix(StringRef SocketPath);
+  llvm::Error readWithTimeout(char *Ptr, size_t Size,
+                              std::chrono::milliseconds Timeout);
   ~raw_socket_stream();
 };
 
