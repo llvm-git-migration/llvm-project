@@ -950,6 +950,39 @@ getKnownBitsFromAndXorOr(const Operator *I, const APInt &DemandedElts,
   return KnownOut;
 }
 
+static KnownBits computeKnownBitsForHorizontalOperation(
+    const Operator *I, const APInt &DemandedElts, unsigned Depth,
+    const SimplifyQuery &Q,
+    const function_ref<KnownBits(const KnownBits &, const KnownBits &)>
+        KnownBitsFunc) {
+  APInt DemandedEltsLHS, DemandedEltsRHS;
+  getHorizDemandedEltsForFirstOperand(Q.DL.getTypeSizeInBits(I->getType()),
+                                      DemandedElts, DemandedEltsLHS,
+                                      DemandedEltsRHS);
+
+  const auto ComputeForSingleOpFunc =
+      [Depth, &Q](const Value *Op, APInt &DemandedEltsOp,
+                  std::array<KnownBits, 2> &Known) {
+        for (unsigned Index = 0; Index < Known.size(); ++Index) {
+          if (!DemandedEltsOp.isZero()) {
+            Known[Index] = computeKnownBits(Op, DemandedEltsOp, Depth + 1, Q);
+          } else {
+            Known[Index] = KnownBits(getBitWidth(Op->getType(), Q.DL));
+            Known[Index].setAllZero();
+          }
+          DemandedEltsOp <<= 1;
+        }
+      };
+
+  std::array<KnownBits, 2> KnownLHS;
+  ComputeForSingleOpFunc(I->getOperand(0), DemandedEltsLHS, KnownLHS);
+  std::array<KnownBits, 2> KnownRHS;
+  ComputeForSingleOpFunc(I->getOperand(1), DemandedEltsRHS, KnownRHS);
+
+  return KnownBitsFunc(KnownLHS[0], KnownLHS[1])
+      .intersectWith(KnownBitsFunc(KnownRHS[0], KnownRHS[1]));
+}
+
 // Public so this can be used in `SimplifyDemandedUseBits`.
 KnownBits llvm::analyzeKnownBitsFromAndXorOr(const Operator *I,
                                              const KnownBits &KnownLHS,
@@ -1725,6 +1758,56 @@ static void computeKnownBitsFromOperator(const Operator *I,
       case Intrinsic::x86_sse42_crc32_64_64:
         Known.Zero.setBitsFrom(32);
         break;
+      case Intrinsic::x86_ssse3_phadd_d:
+      case Intrinsic::x86_ssse3_phadd_w:
+      case Intrinsic::x86_ssse3_phadd_d_128:
+      case Intrinsic::x86_ssse3_phadd_w_128:
+      case Intrinsic::x86_avx2_phadd_d:
+      case Intrinsic::x86_avx2_phadd_w: {
+        Known = computeKnownBitsForHorizontalOperation(
+            I, DemandedElts, Depth, Q,
+            [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+              return KnownBits::computeForAddSub(/*Add=*/true, /*NSW=*/false,
+                                                 /*NUW=*/false, KnownLHS,
+                                                 KnownRHS);
+            });
+        break;
+      }
+      case Intrinsic::x86_ssse3_phadd_sw:
+      case Intrinsic::x86_ssse3_phadd_sw_128:
+      case Intrinsic::x86_avx2_phadd_sw: {
+        Known = computeKnownBitsForHorizontalOperation(
+            I, DemandedElts, Depth, Q,
+            [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+              return KnownBits::sadd_sat(KnownLHS, KnownRHS);
+            });
+        break;
+      }
+      case Intrinsic::x86_ssse3_phsub_d:
+      case Intrinsic::x86_ssse3_phsub_w:
+      case Intrinsic::x86_ssse3_phsub_d_128:
+      case Intrinsic::x86_ssse3_phsub_w_128:
+      case Intrinsic::x86_avx2_phsub_d:
+      case Intrinsic::x86_avx2_phsub_w: {
+        Known = computeKnownBitsForHorizontalOperation(
+            I, DemandedElts, Depth, Q,
+            [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+              return KnownBits::computeForAddSub(/*Add=*/false, /*NSW=*/false,
+                                                 /*NUW=*/false, KnownLHS,
+                                                 KnownRHS);
+            });
+        break;
+      }
+      case Intrinsic::x86_ssse3_phsub_sw:
+      case Intrinsic::x86_ssse3_phsub_sw_128:
+      case Intrinsic::x86_avx2_phsub_sw: {
+        Known = computeKnownBitsForHorizontalOperation(
+            I, DemandedElts, Depth, Q,
+            [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+              return KnownBits::ssub_sat(KnownLHS, KnownRHS);
+            });
+        break;
+      }
       case Intrinsic::riscv_vsetvli:
       case Intrinsic::riscv_vsetvlimax: {
         bool HasAVL = II->getIntrinsicID() == Intrinsic::riscv_vsetvli;
