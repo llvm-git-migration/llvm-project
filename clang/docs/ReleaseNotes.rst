@@ -744,6 +744,8 @@ Bug Fixes to C++ Support
   explicit object argument member functions. Fixes (#GH92188).
 - Fix a C++11 crash when a non-const non-static member function is defined out-of-line with
   the ``constexpr`` specifier. Fixes (#GH61004).
+- Clang no longer treats ``constexpr`` class scope function template specializations of non-static data members
+  as implicitly ``const`` in language standards after C++11.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
