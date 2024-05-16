@@ -18,27 +18,11 @@ func.func @quad_dpp(%arg0: i32, %arg1: i32) -> i32 {
     return %0 : i32
 }
 
-func.func @quad_perm_dpp(%arg0: i32, %arg1: i32) -> i32 {
-  // CHECK-LABEL: func @quad_perm_dpp
-  // CHECK: rocdl.update.dpp %arg0, %arg1 with 88, 15, 15, false : i32
-  // CHECK: return %0 : i32
-  %0 = amdgpu.dpp %arg0 %arg1 quad_perm ( [0,2,1,1] ) : i32
-    return %0 : i32
-}
-
 func.func @wave_shr_dpp(%arg0: i32, %arg1: i32) -> i32 {
   // CHECK-LABEL: func @wave_shr_dpp
   // CHECK: rocdl.update.dpp %arg0, %arg1 with 312, 10, 1, true : i32
   // CHECK: return %0 : i32
   %0 = amdgpu.dpp %arg0 %arg1 wave_shr { row_mask = 0xa : i32, bank_mask = 0x1 : i32, bound_ctrl = true } : i32
-    return %0 : i32
-}
-
-func.func @row_bcast_dpp(%arg0: i32, %arg1: i32) -> i32 {
-  // CHECK-LABEL: func @row_bcast_dpp
-  // CHECK: rocdl.update.dpp %arg0, %arg1 with 323, 4, 1, false : i32
-  // CHECK: return %0 : i32
-  %0 = amdgpu.dpp %arg0 %arg1 row_bcast_31 { row_mask = 0x4 : i32, bank_mask = 0x1 : i32} : i32
     return %0 : i32
 }
 
@@ -145,4 +129,23 @@ func.func @row_bcast_update_dpp_f16(%arg0: f16, %arg1: f16) -> f16 {
   // CHECK: return %12 : f16
   %0 = amdgpu.dpp %arg0 %arg1 row_bcast_15 { bound_ctrl = true } : f16
     return %0 : f16
+}
+
+func.func @quad_perm_dpp(%arg0: i64, %arg1: i64) -> i64 {
+  // CHECK-LABEL: func @quad_perm_dpp
+  // CHECK: rocdl.update.dpp %arg0, %arg1 with 88, 15, 15, false : i64
+  // CHECK: return %0 : i64
+  %0 = amdgpu.dpp %arg0 %arg1 quad_perm ( [0,2,1,1] ) : i64
+    return %0 : i64
+}
+
+func.func @row_bcast_dpp(%arg0: f64, %arg1: f64) -> f64 {
+  // CHECK-LABEL: func @row_bcast_dpp
+  // CHECK: llvm.bitcast %arg1 : f64 to i64
+  // CHECK: llvm.bitcast %arg0 : f64 to i64
+  // CHECK: rocdl.update.dpp %1, %0 with 323, 4, 1, false : i64
+  // CHECK: llvm.bitcast %2 : i64 to f64
+  // CHECK: return %3 : f64
+  %0 = amdgpu.dpp %arg0 %arg1 row_bcast_31 { row_mask = 0x4 : i32, bank_mask = 0x1 : i32} : f64
+    return %0 : f64
 }

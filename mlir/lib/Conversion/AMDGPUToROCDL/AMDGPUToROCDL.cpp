@@ -845,7 +845,9 @@ struct AMDGPUDPPLowering : public ConvertOpToLLVMPattern<DPPOp> {
     Value old = adaptor.getOld();
     Type srcType = src.getType();
     Type oldType = old.getType();
-    auto llvmI32Type = typeConverter->convertType(rewriter.getI32Type());
+    auto llvmType =
+        (srcType.getIntOrFloatBitWidth() <= 32 ? rewriter.getI32Type()
+                                               : rewriter.getI64Type());
     auto llvmSrcIntType = typeConverter->convertType(
         rewriter.getIntegerType(srcType.getIntOrFloatBitWidth()));
 
@@ -863,7 +865,7 @@ struct AMDGPUDPPLowering : public ConvertOpToLLVMPattern<DPPOp> {
         Value undefVec = rewriter.create<LLVM::UndefOp>(loc, llvmVecType);
         operand = rewriter.create<LLVM::InsertElementOp>(
             loc, undefVec, operand, createI32Constant(rewriter, loc, 0));
-        operand = rewriter.create<LLVM::BitcastOp>(loc, llvmI32Type, operand);
+        operand = rewriter.create<LLVM::BitcastOp>(loc, llvmType, operand);
       }
       return operand;
     };
@@ -951,7 +953,7 @@ struct AMDGPUDPPLowering : public ConvertOpToLLVMPattern<DPPOp> {
 
     // create a ROCDL_DPPMovOp instruction with the appropriate attributes
     auto dppMovOp = rewriter.create<ROCDL::DPPUpdateOp>(
-        loc, llvmI32Type, old, src, DppCtrl, rowMask, bankMask, boundCtrl);
+        loc, llvmType, old, src, DppCtrl, rowMask, bankMask, boundCtrl);
 
     Value result = dppMovOp.getRes();
     if (srcType.getIntOrFloatBitWidth() < 32) {
