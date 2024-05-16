@@ -1594,6 +1594,7 @@ def FeatureISAVersion9_5_Common : FeatureSet<
    FeatureFP6BF6ConversionScaleInsts,
    FeatureDot12Insts,
    FeatureDot13Insts,
+   FeatureAtomicBufferPkAddBF16Inst,
    FeatureFP8Insts
    ])>;
 
