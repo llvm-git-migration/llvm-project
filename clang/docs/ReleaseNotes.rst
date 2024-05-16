@@ -724,6 +724,8 @@ Bug Fixes to C++ Support
   templates during partial ordering when deducing template arguments from a function declaration or when
   taking the address of a function template.
 - Fix a bug with checking constrained non-type template parameters for equivalence. Fixes (#GH77377).
+- Clang no longer transforms dependent qualified names into implicit class member access expressions
+  until it can be determined whether the name is that of a non-static member.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
