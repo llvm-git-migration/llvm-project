@@ -1469,17 +1469,32 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       // able to invert the transform and perf may suffer with an extra mul
       // instruction.
       if (Op0->hasOneUse()) {
-        APInt NewMulC = MulC->lshr(ShAmtC);
-        // if c is divisible by (1 << ShAmtC):
-        // lshr (mul nuw x, MulC), ShAmtC -> mul nuw nsw x, (MulC >> ShAmtC)
-        if (MulC->eq(NewMulC.shl(ShAmtC))) {
-          auto *NewMul =
-              BinaryOperator::CreateNUWMul(X, ConstantInt::get(Ty, NewMulC));
-          assert(ShAmtC != 0 &&
-                 "lshr X, 0 should be handled by simplifyLShrInst.");
-          NewMul->setHasNoSignedWrap(true);
-          return NewMul;
+        unsigned CommonZeros = std::min(MulC->countr_zero(), ShAmtC);
+        if (CommonZeros != 0) {
+          APInt NewMulC = MulC->lshr(CommonZeros);
+          unsigned NewShAmtC = ShAmtC - CommonZeros;
+          // if c is divisible by (1 << ShAmtC):
+          // lshr (mul nuw x, MulC), ShAmtC -> mul nuw nsw x, (MulC >> ShAmtC)
+          if (NewShAmtC == 0) {
+            auto *NewMul =
+                BinaryOperator::CreateNUWMul(X, ConstantInt::get(Ty, NewMulC));
+            NewMul->setHasNoSignedWrap(true);
+            return NewMul;
+          }
+
+          // We can reduce things like lshr (mul nuw x, 6), 2 to lshr (mul nuw
+          // nsw x, 3), 1
+          // TODO: What about if ALL uses can be simplified in this way? Is that
+          // likely enough to happen to justify even caring?
+          auto *NewMul = Builder.CreateMul(X, ConstantInt::get(Ty, NewMulC), "",
+                                           /*NUW*/ true, /*NSW*/ true);
+          auto *NewLshr = BinaryOperator::CreateLShr(
+              NewMul, ConstantInt::get(Ty, NewShAmtC));
+          NewLshr->copyIRFlags(&I); // We can preserve 'exact'-ness.
+          return NewLshr;
         }
+        assert(ShAmtC != 0 &&
+               "lshr X, 0 should be handled by simplifyLShrInst.");
       }
     }
 
