@@ -742,6 +742,8 @@ Bug Fixes to C++ Support
 - Fix a bug with checking constrained non-type template parameters for equivalence. Fixes (#GH77377).
 - Fix a bug where the last argument was not considered when considering the most viable function for
   explicit object argument member functions. Fixes (#GH92188).
+- Clang no longer transforms dependent qualified names into implicit class member access expressions
+  until it can be determined whether the name is that of a non-static member.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
