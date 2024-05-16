@@ -724,6 +724,8 @@ Bug Fixes to C++ Support
   templates during partial ordering when deducing template arguments from a function declaration or when
   taking the address of a function template.
 - Fix a bug with checking constrained non-type template parameters for equivalence. Fixes (#GH77377).
+- Clang no longer treats ``constexpr``class scope function template specializations of non-static data members
+  as implicitly ``const`` in language standards after C++11.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
