@@ -462,6 +462,61 @@ func.func @fold_unit_dims_entirely(%arg0 : vector<8xi32>,
 
 // -----
 
+func.func @drop_broadcast_unit_dim(%arg0 : vector<1x[1]x3x1xf128>) -> vector<4x1x[1]x3x1xf128> {
+  %bc = vector.broadcast %arg0 : vector<1x[1]x3x1xf128> to vector<4x1x[1]x3x1xf128>
+  return %bc : vector<4x1x[1]x3x1xf128>
+}
+
+// CHECK-LABEL:   func.func @drop_broadcast_unit_dim(
+// CHECK-SAME:      %[[VAL_0:.*]]: vector<1x[1]x3x1xf128>{{.*}}-> vector<4x1x[1]x3x1xf128> {
+// CHECK:           %[[VAL_1:.*]] = vector.shape_cast %[[VAL_0]] : vector<1x[1]x3x1xf128> to vector<[1]x3xf128>
+// CHECK:           %[[VAL_2:.*]] = vector.broadcast %[[VAL_1]] : vector<[1]x3xf128> to vector<4x[1]x3xf128>
+// CHECK:           %[[VAL_3:.*]] = vector.shape_cast %[[VAL_2]] : vector<4x[1]x3xf128> to vector<4x1x[1]x3x1xf128>
+// CHECK:           return %[[VAL_3]] : vector<4x1x[1]x3x1xf128>
+
+// -----
+
+func.func @drop_broadcasted_only_unit_dim(%arg0 : vector<1xf32>) -> vector<1x1xf32> {
+  %bc = vector.broadcast %arg0 : vector<1xf32> to vector<1x1xf32>
+  return %bc : vector<1x1xf32>
+}
+
+// CHECK-LABEL:   func.func @drop_broadcasted_only_unit_dim(
+// CHECK-SAME:      %[[VAL_0:.*]]: vector<1xf32>) -> vector<1x1xf32> {
+// CHECK:           %[[VAL_1:.*]] = vector.shape_cast %[[VAL_0]] : vector<1xf32> to vector<f32>
+// CHECK:           %[[VAL_2:.*]] = vector.broadcast %[[VAL_1]] : vector<f32> to vector<1xf32>
+// CHECK:           %[[VAL_3:.*]] = vector.shape_cast %[[VAL_2]] :  vector<1xf32> to vector<1x1xf32>
+// CHECK:           return %[[VAL_3]] : vector<1x1xf32>
+
+// -----
+
+// Generated unit dimensions through broadcasts are not dropped as we prefer to have a 
+// single broadcast rather than a broadcast and a shape_cast.
+func.func @drop_broadcast_generated_unit_dim(%arg0 : vector<4xf32>) -> vector<3x1x4xf32> {
+  %bc = vector.broadcast %arg0 : vector<4xf32> to vector<3x1x4xf32>
+  return %bc : vector<3x1x4xf32>
+}
+
+// CHECK-LABEL:   func.func @drop_broadcast_generated_unit_dim(
+// CHECK-SAME:      %[[VAL_0:.*]]: vector<4xf32>{{.*}}-> vector<3x1x4xf32> {
+// CHECK:           %[[VAL_1:.*]] = vector.broadcast %[[VAL_0]] : vector<4xf32> to vector<3x1x4xf32>
+// CHECK:           return %[[VAL_1]] : vector<3x1x4xf32>
+
+// -----
+
+// A broadcasted unit dimension cannot be dropped to prevent type mismatch.
+func.func @drop_broadcasted_unit_dim(%arg0 : vector<2x1x4xf32>) -> vector<2x3x4xf32> {
+  %bc = vector.broadcast %arg0 : vector<2x1x4xf32> to vector<2x3x4xf32>
+  return %bc : vector<2x3x4xf32>
+}
+// CHECK-LABEL:   func.func @drop_broadcasted_unit_dim(
+// CHECK-SAME:      %[[VAL_0:.*]]: vector<2x1x4xf32>{{.*}}-> vector<2x3x4xf32> {
+// CHECK:           %[[VAL_1:.*]] = vector.broadcast %[[VAL_0]] : vector<2x1x4xf32> to vector<2x3x4xf32>
+// CHECK:           return %[[VAL_1]] : vector<2x3x4xf32>
+
+
+// -----
+
 func.func @regression_non_contiguous_dim_read(%subview : memref<1x3x3x2xf32, strided<[40, 10, 2, 1], offset: ?>>,
                                               %idx0 : index, %idx1 : index) -> vector<2x2xf32> {
   %c0 = arith.constant 0 : index
