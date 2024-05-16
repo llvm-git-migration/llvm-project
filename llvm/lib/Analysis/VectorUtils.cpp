@@ -541,6 +541,26 @@ void llvm::processShuffleMasks(
   }
 }
 
+void llvm::getHorizontalDemandedElts(const APInt &DemandedEltsOp,
+                                     APInt &DemandedEltsLHS,
+                                     APInt &DemandedEltsRHS) {
+  DemandedEltsLHS = DemandedEltsRHS =
+      APInt::getZero(DemandedEltsOp.getBitWidth());
+
+  unsigned Index = 0;
+  const auto HalfBitWidth = DemandedEltsOp.getBitWidth() / 2;
+  for (; Index < HalfBitWidth; ++Index) {
+    if (DemandedEltsOp[Index]) {
+      DemandedEltsLHS.setBit(2 * Index);
+    }
+  }
+  for (; Index < DemandedEltsOp.getBitWidth(); ++Index) {
+    if (DemandedEltsOp[Index]) {
+      DemandedEltsRHS.setBit(2 * (Index - HalfBitWidth));
+    }
+  }
+}
+
 MapVector<Instruction *, uint64_t>
 llvm::computeMinimumValueSizes(ArrayRef<BasicBlock *> Blocks, DemandedBits &DB,
                                const TargetTransformInfo *TTI) {

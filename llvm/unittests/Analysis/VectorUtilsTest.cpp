@@ -242,6 +242,26 @@ TEST_F(BasicTest, getShuffleDemandedElts) {
   EXPECT_EQ(RHS.getZExtValue(), 0x9U);
 }
 
+TEST_F(BasicTest, getHorizontalDemandedElts) {
+  APInt LHS, RHS;
+
+  getHorizontalDemandedElts(APInt(4, 0b0000), LHS, RHS);
+  EXPECT_EQ(LHS.getZExtValue(), 0b0000U);
+  EXPECT_EQ(RHS.getZExtValue(), 0b0000U);
+
+  getHorizontalDemandedElts(APInt(4, 0b0001), LHS, RHS);
+  EXPECT_EQ(LHS.getZExtValue(), 0b0001U);
+  EXPECT_EQ(RHS.getZExtValue(), 0b0000U);
+
+  getHorizontalDemandedElts(APInt(4, 0b1000), LHS, RHS);
+  EXPECT_EQ(LHS.getZExtValue(), 0b0000U);
+  EXPECT_EQ(RHS.getZExtValue(), 0b0100U);
+
+  getHorizontalDemandedElts(APInt(4, 0b0110), LHS, RHS);
+  EXPECT_EQ(LHS.getZExtValue(), 0b0100U);
+  EXPECT_EQ(RHS.getZExtValue(), 0b0001U);
+}
+
 TEST_F(BasicTest, getSplatIndex) {
   EXPECT_EQ(getSplatIndex({0,0,0}), 0);
   EXPECT_EQ(getSplatIndex({1,0,0}), -1);     // no splat
