@@ -1725,6 +1725,54 @@ static void computeKnownBitsFromOperator(const Operator *I,
       case Intrinsic::x86_sse42_crc32_64_64:
         Known.Zero.setBitsFrom(32);
         break;
+      case Intrinsic::x86_ssse3_phadd_d:
+      case Intrinsic::x86_ssse3_phadd_w:
+      case Intrinsic::x86_ssse3_phadd_d_128:
+      case Intrinsic::x86_ssse3_phadd_w_128:
+      case Intrinsic::x86_avx2_phadd_d:
+      case Intrinsic::x86_avx2_phadd_w: {
+        computeKnownBits(I->getOperand(0), DemandedElts, Known, Depth + 1, Q);
+        computeKnownBits(I->getOperand(1), DemandedElts, Known2, Depth + 1, Q);
+
+        Known = KnownBits::computeForAddSub(true, false, false, Known, Known)
+                    .intersectWith(KnownBits::computeForAddSub(
+                        true, false, false, Known2, Known2));
+        break;
+      }
+      case Intrinsic::x86_ssse3_phadd_sw:
+      case Intrinsic::x86_ssse3_phadd_sw_128:
+      case Intrinsic::x86_avx2_phadd_sw: {
+        computeKnownBits(I->getOperand(0), DemandedElts, Known, Depth + 1, Q);
+        computeKnownBits(I->getOperand(1), DemandedElts, Known2, Depth + 1, Q);
+
+        Known = KnownBits::sadd_sat(Known, Known)
+                    .intersectWith(KnownBits::sadd_sat(Known2, Known2));
+        break;
+      }
+      case Intrinsic::x86_ssse3_phsub_d:
+      case Intrinsic::x86_ssse3_phsub_w:
+      case Intrinsic::x86_ssse3_phsub_d_128:
+      case Intrinsic::x86_ssse3_phsub_w_128:
+      case Intrinsic::x86_avx2_phsub_d:
+      case Intrinsic::x86_avx2_phsub_w: {
+        computeKnownBits(I->getOperand(0), DemandedElts, Known, Depth + 1, Q);
+        computeKnownBits(I->getOperand(1), DemandedElts, Known2, Depth + 1, Q);
+
+        Known = KnownBits::computeForAddSub(false, false, false, Known, Known)
+                    .intersectWith(KnownBits::computeForAddSub(
+                        false, false, false, Known2, Known2));
+        break;
+      }
+      case Intrinsic::x86_ssse3_phsub_sw:
+      case Intrinsic::x86_ssse3_phsub_sw_128:
+      case Intrinsic::x86_avx2_phsub_sw: {
+        computeKnownBits(I->getOperand(0), DemandedElts, Known, Depth + 1, Q);
+        computeKnownBits(I->getOperand(1), DemandedElts, Known2, Depth + 1, Q);
+
+        Known = KnownBits::ssub_sat(Known, Known)
+                    .intersectWith(KnownBits::ssub_sat(Known2, Known2));
+        break;
+      }
       case Intrinsic::riscv_vsetvli:
       case Intrinsic::riscv_vsetvlimax: {
         bool HasAVL = II->getIntrinsicID() == Intrinsic::riscv_vsetvli;

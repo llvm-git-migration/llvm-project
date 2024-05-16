@@ -37262,6 +37262,27 @@ void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
     }
     break;
   }
+  case X86ISD::HADD: {
+    Known = DAG.computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
+    KnownBits Known2 =
+        DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+
+    Known = KnownBits::computeForAddSub(true, false, false, Known, Known)
+                .intersectWith(KnownBits::computeForAddSub(true, false, false,
+                                                           Known2, Known2));
+    break;
+  }
+  case X86ISD::HSUB: {
+    Known =
+        DAG.computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
+    KnownBits Known2 =
+        DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+
+    Known = KnownBits::computeForAddSub(false, false, false, Known, Known)
+                .intersectWith(KnownBits::computeForAddSub(false, false, false,
+                                                           Known2, Known2));
+    break;
+  }
   case ISD::INTRINSIC_WO_CHAIN: {
     switch (Op->getConstantOperandVal(0)) {
     case Intrinsic::x86_sse2_psad_bw:
@@ -37274,6 +37295,58 @@ void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
              LHS.getValueType().getScalarType() == MVT::i8 &&
              "Unexpected PSADBW types");
       computeKnownBitsForPSADBW(LHS, RHS, Known, DemandedElts, DAG, Depth);
+      break;
+    }
+    case Intrinsic::x86_ssse3_phadd_d:
+    case Intrinsic::x86_ssse3_phadd_w:
+    case Intrinsic::x86_ssse3_phadd_d_128:
+    case Intrinsic::x86_ssse3_phadd_w_128:
+    case Intrinsic::x86_avx2_phadd_d:
+    case Intrinsic::x86_avx2_phadd_w: {
+      Known = DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+      KnownBits Known2 =
+          DAG.computeKnownBits(Op.getOperand(2), DemandedElts, Depth + 1);
+
+      Known = KnownBits::computeForAddSub(true, false, false, Known, Known)
+                  .intersectWith(KnownBits::computeForAddSub(true, false, false,
+                                                             Known2, Known2));
+      break;
+    }
+    case Intrinsic::x86_ssse3_phadd_sw:
+    case Intrinsic::x86_ssse3_phadd_sw_128:
+    case Intrinsic::x86_avx2_phadd_sw: {
+      Known = DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+      KnownBits Known2 =
+          DAG.computeKnownBits(Op.getOperand(2), DemandedElts, Depth + 1);
+
+      Known = KnownBits::sadd_sat(Known, Known)
+                  .intersectWith(KnownBits::sadd_sat(Known2, Known2));
+      break;
+    }
+    case Intrinsic::x86_ssse3_phsub_d:
+    case Intrinsic::x86_ssse3_phsub_w:
+    case Intrinsic::x86_ssse3_phsub_d_128:
+    case Intrinsic::x86_ssse3_phsub_w_128:
+    case Intrinsic::x86_avx2_phsub_d:
+    case Intrinsic::x86_avx2_phsub_w: {
+      Known = DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+      KnownBits Known2 =
+          DAG.computeKnownBits(Op.getOperand(2), DemandedElts, Depth + 1);
+
+      Known = KnownBits::computeForAddSub(false, false, false, Known, Known)
+                  .intersectWith(KnownBits::computeForAddSub(
+                      false, false, false, Known2, Known2));
+      break;
+    }
+    case Intrinsic::x86_ssse3_phsub_sw:
+    case Intrinsic::x86_ssse3_phsub_sw_128:
+    case Intrinsic::x86_avx2_phsub_sw: {
+      Known = DAG.computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
+      KnownBits Known2 =
+          DAG.computeKnownBits(Op.getOperand(2), DemandedElts, Depth + 1);
+
+      Known = KnownBits::ssub_sat(Known, Known)
+                  .intersectWith(KnownBits::ssub_sat(Known2, Known2));
       break;
     }
     }
