@@ -5180,29 +5180,10 @@ static void getPackDemandedElts(EVT VT, const APInt &DemandedElts,
 // Split the demanded elts of a HADD/HSUB node between its operands.
 static void getHorizDemandedElts(EVT VT, const APInt &DemandedElts,
                                  APInt &DemandedLHS, APInt &DemandedRHS) {
-  int NumLanes = VT.getSizeInBits() / 128;
-  int NumElts = DemandedElts.getBitWidth();
-  int NumEltsPerLane = NumElts / NumLanes;
-  int HalfEltsPerLane = NumEltsPerLane / 2;
-
-  DemandedLHS = APInt::getZero(NumElts);
-  DemandedRHS = APInt::getZero(NumElts);
-
-  // Map DemandedElts to the horizontal operands.
-  for (int Idx = 0; Idx != NumElts; ++Idx) {
-    if (!DemandedElts[Idx])
-      continue;
-    int LaneIdx = (Idx / NumEltsPerLane) * NumEltsPerLane;
-    int LocalIdx = Idx % NumEltsPerLane;
-    if (LocalIdx < HalfEltsPerLane) {
-      DemandedLHS.setBit(LaneIdx + 2 * LocalIdx + 0);
-      DemandedLHS.setBit(LaneIdx + 2 * LocalIdx + 1);
-    } else {
-      LocalIdx -= HalfEltsPerLane;
-      DemandedRHS.setBit(LaneIdx + 2 * LocalIdx + 0);
-      DemandedRHS.setBit(LaneIdx + 2 * LocalIdx + 1);
-    }
-  }
+  getHorizDemandedEltsForFirstOperand(VT.getSizeInBits(), DemandedElts,
+                                      DemandedLHS, DemandedRHS);
+  DemandedLHS |= DemandedLHS << 1;
+  DemandedRHS |= DemandedRHS << 1;
 }
 
 /// Calculates the shuffle mask corresponding to the target-specific opcode.
@@ -36953,6 +36934,43 @@ static void computeKnownBitsForPSADBW(SDValue LHS, SDValue RHS,
   Known = Known.zext(64);
 }
 
+static KnownBits computeKnownBitsForHorizontalOperation(
+    const SDValue Op, const APInt &DemandedElts, unsigned Depth,
+    unsigned OpIndexStart, const SelectionDAG &DAG,
+    const std::function<KnownBits(const KnownBits &, const KnownBits &)>
+        KnownBitsFunc) {
+  APInt DemandedEltsLHS, DemandedEltsRHS;
+  getHorizDemandedEltsForFirstOperand(Op.getValueType().getSizeInBits(),
+                                      DemandedElts, DemandedEltsLHS,
+                                      DemandedEltsRHS);
+
+  std::array<KnownBits, 2> KnownLHS;
+  for (unsigned Index = 0; Index < KnownLHS.size(); ++Index) {
+    if (!DemandedEltsLHS.isZero()) {
+      KnownLHS[Index] = DAG.computeKnownBits(Op.getOperand(OpIndexStart),
+                                             DemandedEltsLHS, Depth + 1);
+    } else {
+      KnownLHS[Index] = KnownBits(Op.getScalarValueSizeInBits());
+      KnownLHS[Index].setAllZero();
+    }
+    DemandedEltsLHS <<= 1;
+  }
+  std::array<KnownBits, 2> KnownRHS;
+  for (unsigned Index = 0; Index < KnownRHS.size(); ++Index) {
+    if (!DemandedEltsRHS.isZero()) {
+      KnownRHS[Index] = DAG.computeKnownBits(Op.getOperand(OpIndexStart + 1),
+                                             DemandedEltsRHS, Depth + 1);
+    } else {
+      KnownRHS[Index] = KnownBits(Op.getScalarValueSizeInBits());
+      KnownRHS[Index].setAllZero();
+    }
+    DemandedEltsRHS <<= 1;
+  }
+
+  return KnownBitsFunc(KnownLHS[0], KnownLHS[1])
+      .intersectWith(KnownBitsFunc(KnownRHS[0], KnownRHS[1]));
+}
+
 void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
                                                       KnownBits &Known,
                                                       const APInt &DemandedElts,
@@ -37262,6 +37280,17 @@ void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
     }
     break;
   }
+  case X86ISD::HADD:
+  case X86ISD::HSUB: {
+    Known = computeKnownBitsForHorizontalOperation(
+        Op, DemandedElts, Depth, /*OpIndexStart=*/0, DAG,
+        [Opc](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+          return KnownBits::computeForAddSub(
+              /*Add=*/Opc == X86ISD::HADD, /*NSW=*/false, /*NUW=*/false,
+              KnownLHS, KnownRHS);
+        });
+    break;
+  }
   case ISD::INTRINSIC_WO_CHAIN: {
     switch (Op->getConstantOperandVal(0)) {
     case Intrinsic::x86_sse2_psad_bw:
@@ -37274,6 +37303,55 @@ void X86TargetLowering::computeKnownBitsForTargetNode(const SDValue Op,
              LHS.getValueType().getScalarType() == MVT::i8 &&
              "Unexpected PSADBW types");
       computeKnownBitsForPSADBW(LHS, RHS, Known, DemandedElts, DAG, Depth);
+      break;
+    }
+    case Intrinsic::x86_ssse3_phadd_d:
+    case Intrinsic::x86_ssse3_phadd_w:
+    case Intrinsic::x86_ssse3_phadd_d_128:
+    case Intrinsic::x86_ssse3_phadd_w_128:
+    case Intrinsic::x86_avx2_phadd_d:
+    case Intrinsic::x86_avx2_phadd_w: {
+      Known = computeKnownBitsForHorizontalOperation(
+          Op, DemandedElts, Depth, /*OpIndexStart=*/1, DAG,
+          [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+            return KnownBits::computeForAddSub(
+                /*Add=*/true, /*NSW=*/false, /*NUW=*/false, KnownLHS, KnownRHS);
+          });
+      break;
+    }
+    case Intrinsic::x86_ssse3_phadd_sw:
+    case Intrinsic::x86_ssse3_phadd_sw_128:
+    case Intrinsic::x86_avx2_phadd_sw: {
+      Known = computeKnownBitsForHorizontalOperation(
+          Op, DemandedElts, Depth, /*OpIndexStart=*/1, DAG,
+          [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+            return KnownBits::sadd_sat(KnownLHS, KnownRHS);
+          });
+      break;
+    }
+    case Intrinsic::x86_ssse3_phsub_d:
+    case Intrinsic::x86_ssse3_phsub_w:
+    case Intrinsic::x86_ssse3_phsub_d_128:
+    case Intrinsic::x86_ssse3_phsub_w_128:
+    case Intrinsic::x86_avx2_phsub_d:
+    case Intrinsic::x86_avx2_phsub_w: {
+      Known = computeKnownBitsForHorizontalOperation(
+          Op, DemandedElts, Depth, /*OpIndexStart=*/1, DAG,
+          [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+            return KnownBits::computeForAddSub(/*Add=*/false, /*NSW=*/false,
+                                               /*NUW=*/false, KnownLHS,
+                                               KnownRHS);
+          });
+      break;
+    }
+    case Intrinsic::x86_ssse3_phsub_sw:
+    case Intrinsic::x86_ssse3_phsub_sw_128:
+    case Intrinsic::x86_avx2_phsub_sw: {
+      Known = computeKnownBitsForHorizontalOperation(
+          Op, DemandedElts, Depth, /*OpIndexStart=*/1, DAG,
+          [](const KnownBits &KnownLHS, const KnownBits &KnownRHS) {
+            return KnownBits::ssub_sat(KnownLHS, KnownRHS);
+          });
       break;
     }
     }
