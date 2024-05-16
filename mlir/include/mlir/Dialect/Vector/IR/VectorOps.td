@@ -575,14 +575,14 @@ def Vector_DeinterleaveOp :
       let summary = "constructs two vectors by deinterleaving an input vector";
       let description = [{
         The deinterleave operation constructs two vectors from a single input
-        vector. Each new vector is the collection of even and odd elements
-        from the input, respectively. This is essentially the inverse of an
-        interleave operation.
+        vector. The first result vector contains the elements from even lanes
+        of the input, and the second contains elements from odd lanes. This is
+        the inverse of a 'vector.interleave' operation.
 
-        Each output's size is half of the input vector's trailing dimension
-        for the n-D case and only dimension for 1-D cases. It is not possible
-        to conduct the operation on 0-D inputs or vectors where the size of
-        the (trailing) dimension is 1.
+        Each output's trailing dimension is half of the size of the input
+        vector's trailing dimension. This operation requires the input vector
+        to have a rank > 0 and an even number of elements in its trailing
+        dimension.
 
         The operation supports scalable vectors.
 

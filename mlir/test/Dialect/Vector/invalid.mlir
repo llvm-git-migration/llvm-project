@@ -1803,7 +1803,7 @@ func.func @invalid_outerproduct1(%src : memref<?xf32>) {
 
 func.func @deinterleave_zero_dim_fail(%vec : vector<f32>) {
   // expected-error @+1 {{'vector.deinterleave' 'input' must be vector of any type values, but got 'vector<f32>'}}
-  %0, %1 = vector.deinterleave %vec : vector<f32> 
+  %0, %1 = vector.deinterleave %vec : vector<f32>
   return
 }
 
