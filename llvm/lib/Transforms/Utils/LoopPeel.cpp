@@ -449,10 +449,59 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     DesiredPeelCount = std::max(DesiredPeelCount, NewPeelCount);
   };
 
+  auto ComputePeelCountMinMax = [&](IntrinsicInst *II) {
+    bool IsSigned;
+    switch (II->getIntrinsicID()) {
+    case Intrinsic::smax:
+    case Intrinsic::smin:
+      IsSigned = true;
+      break;
+    case Intrinsic::umax:
+    case Intrinsic::umin:
+      IsSigned = false;
+      break;
+    default:
+      return;
+    }
+    Value *LHS = II->getOperand(0), *RHS = II->getOperand(1);
+    const SCEV *BoundSCEV, *IterSCEV;
+    if (L.isLoopInvariant(LHS)) {
+      BoundSCEV = SE.getSCEV(LHS);
+      IterSCEV = SE.getSCEV(RHS);
+    } else if (L.isLoopInvariant(RHS)) {
+      BoundSCEV = SE.getSCEV(RHS);
+      IterSCEV = SE.getSCEV(LHS);
+    } else
+      return;
+    const auto *AddRec = dyn_cast<SCEVAddRecExpr>(IterSCEV);
+    // For simplicity, we support only affine recurrences.
+    if (!AddRec || !AddRec->isAffine() || AddRec->getLoop() != &L)
+      return;
+    const SCEV *Step = AddRec->getStepRecurrence(SE);
+    // To minimize number of peeled iterations, we use strict relational
+    // predicates here.
+    ICmpInst::Predicate Pred;
+    if (SE.isKnownPositive(Step))
+      Pred = IsSigned ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
+    else if (SE.isKnownNegative(Step))
+      Pred = IsSigned ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
+    else
+      return;
+    const SCEV *IterVal = AddRec->evaluateAtIteration(
+        SE.getConstant(AddRec->getType(), DesiredPeelCount), SE);
+    while (DesiredPeelCount < MaxPeelCount &&
+           SE.isKnownPredicate(Pred, IterVal, BoundSCEV)) {
+      IterVal = SE.getAddExpr(IterVal, Step);
+      ++DesiredPeelCount;
+    }
+  };
+
   for (BasicBlock *BB : L.blocks()) {
     for (Instruction &I : *BB) {
       if (SelectInst *SI = dyn_cast<SelectInst>(&I))
         ComputePeelCount(SI->getCondition(), 0);
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(&I))
+        ComputePeelCountMinMax(II);
     }
 
     auto *BI = dyn_cast<BranchInst>(BB->getTerminator());
