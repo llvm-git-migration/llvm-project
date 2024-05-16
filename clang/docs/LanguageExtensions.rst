@@ -4045,18 +4045,18 @@ A type trait is used to check whether a type can be safely copied by memcpy.
 
 **Description**:
 
-It is common for library owners to perform memcpy/memmove on types that aren't
-trivally copyable for performance reason. However, according to the C++ standard,
-it is undefined bheavior to mempcy non-trivially-copyable types, even though
-it may work in pratice. This builtin is designed to bridge that gap.
+This trait is similar to `std::is_trivially_copyable`, but additionally allows
+to have user-defined constructors, virtual functions and virtual bases. It is up
+to the user code to guarantee that a bitwise copy results in non-broken object
+and that the lifetime of an object is properly started.
 
 Objects of bitwise cloneable types can be bitwise copied by memcpy/memmove. The
 Clang compiler warrants that this behavior is well defined, and won't be
 broken by compiler optimizations.
 
 After the copy, the lifetime of the new object isn't started yet (unless the
-type is trivially copyable). Users must explicitly start its lifetime by the
-`__builtin_start_object_lifetime` mechanism to avoid undefined behavior.
+type is trivially copyable). Users must ensure its lifetime is started to avoid
+undefined behavior.
 
 This builtin can be used in constant expressions.
 

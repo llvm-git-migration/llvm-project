@@ -1126,6 +1126,8 @@ public:
   /// copyable types, their underlying bytes can be safely copied by memcpy or
   /// memmove. Clang guarantees that the destination has the same **object**
   /// representations after the copy.
+  ///
+  // FIXME: each call triggers a full computation, cache the result.
   bool isBitwiseCloneableType(const ASTContext &Context) const;
 
   /// Return true if this is a trivially copyable type

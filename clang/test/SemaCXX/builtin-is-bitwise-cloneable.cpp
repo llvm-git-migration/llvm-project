@@ -17,8 +17,10 @@ struct Foo { int a; };
 static_assert(__is_bitwise_cloneable(Foo));
 
 struct DynamicClass { virtual int Foo(); };
+static_assert(!__is_trivially_copyable(DynamicClass));
 static_assert(__is_bitwise_cloneable(DynamicClass));
 
+// Trivially copyable types are always bitwise cloneable.
 struct Bar { int& b; }; // trivially copyable
 static_assert(__is_trivially_copyable(Bar));
 static_assert(__is_bitwise_cloneable(Bar));

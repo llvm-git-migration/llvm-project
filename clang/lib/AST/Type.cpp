@@ -2752,8 +2752,7 @@ bool QualType::isBitwiseCloneableType(const ASTContext & Context) const {
         return false;
 
     for (auto *const Field : RD->fields()) {
-      QualType T = Context.getBaseElementType(Field->getType());
-      if (!T.isBitwiseCloneableType(Context))
+      if (!Field->getType().isBitwiseCloneableType(Context))
         return false;
     }
     return true;
