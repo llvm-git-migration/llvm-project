@@ -724,6 +724,8 @@ Bug Fixes to C++ Support
   templates during partial ordering when deducing template arguments from a function declaration or when
   taking the address of a function template.
 - Fix a bug with checking constrained non-type template parameters for equivalence. Fixes (#GH77377).
+- Fix a C++11 crash when a non-const non-static member function is defined out-of-line with
+  the ``constexpr`` specifier.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
