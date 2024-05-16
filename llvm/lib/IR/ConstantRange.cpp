@@ -930,6 +930,8 @@ ConstantRange ConstantRange::overflowingBinaryOp(Instruction::BinaryOps BinOp,
     return addWithNoWrap(Other, NoWrapKind);
   case Instruction::Sub:
     return subWithNoWrap(Other, NoWrapKind);
+  case Instruction::Mul:
+    return multiplyWithNoWrap(Other, NoWrapKind);
   default:
     // Don't know about this Overflowing Binary Operation.
     // Conservatively fallback to plain binop handling.
@@ -1165,6 +1167,28 @@ ConstantRange::multiply(const ConstantRange &Other) const {
   ConstantRange SR = Result_sext.truncate(getBitWidth());
 
   return UR.isSizeStrictlySmallerThan(SR) ? UR : SR;
+}
+
+ConstantRange
+ConstantRange::multiplyWithNoWrap(const ConstantRange &Other,
+                                  unsigned NoWrapKind,
+                                  PreferredRangeType RangeType) const {
+  if (isEmptySet() || Other.isEmptySet())
+    return getEmpty();
+
+  ConstantRange Result = multiply(Other);
+
+  // TODO: Bounds are not yet precise if the input sets are non-wrapped /
+  // non-sign-wrapped, as we may still conservatively return full-set in such
+  // cases. To be extended.
+
+  if (NoWrapKind & OverflowingBinaryOperator::NoSignedWrap)
+    Result = Result.intersectWith(smul_sat(Other), RangeType);
+
+  if (NoWrapKind & OverflowingBinaryOperator::NoUnsignedWrap)
+    Result = Result.intersectWith(umul_sat(Other), RangeType);
+
+  return Result;
 }
 
 ConstantRange ConstantRange::smul_fast(const ConstantRange &Other) const {
