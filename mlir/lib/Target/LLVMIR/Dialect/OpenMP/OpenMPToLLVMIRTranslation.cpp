@@ -1621,7 +1621,7 @@ convertOmpAtomicUpdate(omp::AtomicUpdateOp &opInst,
 
   // Convert values and types.
   auto &innerOpList = opInst.getRegion().front().getOperations();
-  bool isRegionArgUsed{false}, isXBinopExpr{false};
+  bool isRegionArgUsed{false}, isXBinopExpr{false}, shouldEmitLibCall{false};
   llvm::AtomicRMWInst::BinOp binop;
   mlir::Value mlirExpr;
   // Find the binary update operation that uses the region argument
@@ -1640,8 +1640,7 @@ convertOmpAtomicUpdate(omp::AtomicUpdateOp &opInst,
     }
   }
   if (!isRegionArgUsed)
-    return opInst.emitError("no atomic update operation with region argument"
-                            " as operand found inside atomic.update region");
+    shouldEmitLibCall = true;
 
   llvm::Value *llvmExpr = moduleTranslation.lookupValue(mlirExpr);
   llvm::Value *llvmX = moduleTranslation.lookupValue(opInst.getX());
@@ -1679,7 +1678,7 @@ convertOmpAtomicUpdate(omp::AtomicUpdateOp &opInst,
   llvm::OpenMPIRBuilder::LocationDescription ompLoc(builder);
   builder.restoreIP(ompBuilder->createAtomicUpdate(
       ompLoc, allocaIP, llvmAtomicX, llvmExpr, atomicOrdering, binop, updateFn,
-      isXBinopExpr));
+      isXBinopExpr, shouldEmitLibCall));
   return updateGenStatus;
 }
 

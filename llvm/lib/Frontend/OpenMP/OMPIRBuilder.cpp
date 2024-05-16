@@ -5936,7 +5936,8 @@ OpenMPIRBuilder::createAtomicWrite(const LocationDescription &Loc,
 OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createAtomicUpdate(
     const LocationDescription &Loc, InsertPointTy AllocaIP, AtomicOpValue &X,
     Value *Expr, AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
-    AtomicUpdateCallbackTy &UpdateOp, bool IsXBinopExpr) {
+    AtomicUpdateCallbackTy &UpdateOp, bool IsXBinopExpr,
+    bool shouldEmitLibCall) {
   assert(!isConflictIP(Loc.IP, AllocaIP) && "IPs must not be ambiguous");
   if (!updateToLocation(Loc))
     return Loc.IP;
@@ -5955,7 +5956,7 @@ OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createAtomicUpdate(
   });
 
   emitAtomicUpdate(AllocaIP, X.Var, X.ElemTy, Expr, AO, RMWOp, UpdateOp,
-                   X.IsVolatile, IsXBinopExpr);
+                   X.IsVolatile, IsXBinopExpr, shouldEmitLibCall);
   checkAndEmitFlushAfterAtomic(Loc, AO, AtomicKind::Update);
   return Builder.saveIP();
 }
@@ -5993,10 +5994,180 @@ Value *OpenMPIRBuilder::emitRMWOpAsInstruction(Value *Src1, Value *Src2,
   llvm_unreachable("Unsupported atomic update operation");
 }
 
+bool OpenMPIRBuilder::emitAtomicCompareExchangeLibCall(
+    Instruction *I, unsigned Size, Align Alignment, Value *PointerOperand,
+    Value *ValueOperand, Value *CASExpected, AtomicOrdering Ordering,
+    AtomicOrdering Ordering2, llvm::PHINode *PHI, llvm::BasicBlock *ContBB,
+    llvm::BasicBlock *ExitBB) {
+
+  LLVMContext &Ctx = I->getContext();
+  Module *M = I->getModule();
+  const DataLayout &DL = M->getDataLayout();
+  IRBuilder<> Builder(I);
+  IRBuilder<> AllocaBuilder(&I->getFunction()->getEntryBlock().front());
+
+  Type *SizedIntTy = Type::getIntNTy(Ctx, Size * 8);
+
+  const Align AllocaAlignment = DL.getPrefTypeAlign(SizedIntTy);
+
+  ConstantInt *SizeVal64 = ConstantInt::get(Type::getInt64Ty(Ctx), Size);
+  assert(Ordering != AtomicOrdering::NotAtomic && "expect atomic MO");
+  Constant *OrderingVal =
+      ConstantInt::get(Type::getInt32Ty(Ctx), (int)toCABI(Ordering));
+  Constant *Ordering2Val = nullptr;
+  if (CASExpected) {
+    assert(Ordering2 != AtomicOrdering::NotAtomic && "expect atomic MO");
+    Ordering2Val =
+        ConstantInt::get(Type::getInt32Ty(Ctx), (int)toCABI(Ordering2));
+  }
+
+  bool HasResult = I->getType() != Type::getVoidTy(Ctx);
+  AllocaInst *AllocaCASExpected = nullptr;
+  AllocaInst *AllocaValue = nullptr;
+  AllocaInst *AllocaResult = nullptr;
+
+  Type *ResultTy;
+  SmallVector<Value *, 6> Args;
+  AttributeList Attr;
+
+  Args.push_back(ConstantInt::get(DL.getIntPtrType(Ctx), Size));
+
+  Value *PtrVal = PointerOperand;
+  PtrVal = Builder.CreateAddrSpaceCast(PtrVal, PointerType::getUnqual(Ctx));
+  Args.push_back(PtrVal);
+
+  if (CASExpected) {
+    AllocaCASExpected = AllocaBuilder.CreateAlloca(CASExpected->getType());
+    AllocaCASExpected->setAlignment(AllocaAlignment);
+    Builder.CreateLifetimeStart(AllocaCASExpected, SizeVal64);
+    Builder.CreateAlignedStore(CASExpected, AllocaCASExpected, AllocaAlignment);
+    Args.push_back(AllocaCASExpected);
+  }
+
+  if (ValueOperand) {
+    AllocaValue = AllocaBuilder.CreateAlloca(ValueOperand->getType());
+    AllocaValue->setAlignment(AllocaAlignment);
+    Builder.CreateLifetimeStart(AllocaValue, SizeVal64);
+    Builder.CreateAlignedStore(ValueOperand, AllocaValue, AllocaAlignment);
+    Args.push_back(AllocaValue);
+  }
+
+  if (!CASExpected && HasResult) {
+    AllocaResult = AllocaBuilder.CreateAlloca(I->getType());
+    AllocaResult->setAlignment(AllocaAlignment);
+    Builder.CreateLifetimeStart(AllocaResult, SizeVal64);
+    Args.push_back(AllocaResult);
+  }
+
+  Args.push_back(OrderingVal);
+
+  if (Ordering2Val)
+    Args.push_back(Ordering2Val);
+
+  ResultTy = Type::getInt1Ty(Ctx);
+  Attr = Attr.addRetAttribute(Ctx, Attribute::ZExt);
+
+  SmallVector<Type *, 6> ArgTys;
+  for (Value *Arg : Args)
+    ArgTys.push_back(Arg->getType());
+
+  FunctionType *FnType = FunctionType::get(ResultTy, ArgTys, false);
+  FunctionCallee LibcallFn =
+      M->getOrInsertFunction("__atomic_compare_exchange", FnType, Attr);
+  CallInst *Call = Builder.CreateCall(LibcallFn, Args);
+  Call->setAttributes(Attr);
+  Value *Result = Call;
+
+  if (ValueOperand)
+    Builder.CreateLifetimeEnd(AllocaValue, SizeVal64);
+
+  Type *FinalResultTy = I->getType();
+  Value *V = PoisonValue::get(FinalResultTy);
+  Value *ExpectedOut = Builder.CreateAlignedLoad(
+      CASExpected->getType(), AllocaCASExpected, AllocaAlignment);
+  Builder.CreateLifetimeEnd(AllocaCASExpected, SizeVal64);
+  V = Builder.CreateInsertValue(V, ExpectedOut, 0);
+  V = Builder.CreateInsertValue(V, Result, 1);
+  I->replaceAllUsesWith(V);
+  Value *PreviousVal = Builder.CreateExtractValue(V, /*Idxs=*/0);
+  Value *SuccessFailureVal = Builder.CreateExtractValue(V, /*Idxs=*/1);
+  PHI->addIncoming(PreviousVal, Builder.GetInsertBlock());
+  Builder.CreateCondBr(SuccessFailureVal, ExitBB, ContBB);
+  return true;
+}
+
+bool OpenMPIRBuilder::emitAtomicLoadLibCall(
+    Instruction *I, unsigned Size, Align Alignment, Value *PointerOperand,
+    Value *ValueOperand, Value *CASExpected, AtomicOrdering Ordering,
+    AtomicOrdering Ordering2, Value *&LoadedVal) {
+
+  LLVMContext &Ctx = I->getContext();
+  Module *M = I->getModule();
+  const DataLayout &DL = M->getDataLayout();
+  IRBuilder<> Builder(I);
+  IRBuilder<> AllocaBuilder(&I->getFunction()->getEntryBlock().front());
+
+  Type *SizedIntTy = Type::getIntNTy(Ctx, Size * 8);
+
+  const Align AllocaAlignment = DL.getPrefTypeAlign(SizedIntTy);
+
+  ConstantInt *SizeVal64 = ConstantInt::get(Type::getInt64Ty(Ctx), Size);
+  assert(Ordering != AtomicOrdering::NotAtomic && "expect atomic MO");
+  Constant *OrderingVal =
+      ConstantInt::get(Type::getInt32Ty(Ctx), (int)toCABI(Ordering));
+  Constant *Ordering2Val = nullptr;
+
+  bool HasResult = I->getType() != Type::getVoidTy(Ctx);
+  AllocaInst *AllocaCASExpected = nullptr;
+  AllocaInst *AllocaValue = nullptr;
+  AllocaInst *AllocaResult = nullptr;
+
+  Type *ResultTy;
+  SmallVector<Value *, 6> Args;
+  AttributeList Attr;
+
+  Args.push_back(ConstantInt::get(DL.getIntPtrType(Ctx), Size));
+
+  Value *PtrVal = PointerOperand;
+  PtrVal = Builder.CreateAddrSpaceCast(PtrVal, PointerType::getUnqual(Ctx));
+  Args.push_back(PtrVal);
+
+  if (!CASExpected && HasResult) {
+    AllocaResult = AllocaBuilder.CreateAlloca(I->getType());
+    AllocaResult->setAlignment(AllocaAlignment);
+    Builder.CreateLifetimeStart(AllocaResult, SizeVal64);
+    Args.push_back(AllocaResult);
+  }
+
+  Args.push_back(OrderingVal);
+
+  if (Ordering2Val)
+    Args.push_back(Ordering2Val);
+
+  ResultTy = Type::getVoidTy(Ctx);
+
+  SmallVector<Type *, 6> ArgTys;
+  for (Value *Arg : Args)
+    ArgTys.push_back(Arg->getType());
+
+  FunctionType *FnType = FunctionType::get(ResultTy, ArgTys, false);
+  FunctionCallee LibcallFn =
+      M->getOrInsertFunction("__atomic_load", FnType, Attr);
+  CallInst *Call = Builder.CreateCall(LibcallFn, Args);
+  Call->setAttributes(Attr);
+
+  LoadedVal =
+      Builder.CreateAlignedLoad(I->getType(), AllocaResult, AllocaAlignment);
+  Builder.CreateLifetimeEnd(AllocaResult, SizeVal64);
+  I->replaceAllUsesWith(LoadedVal);
+  return true;
+}
+
 std::pair<Value *, Value *> OpenMPIRBuilder::emitAtomicUpdate(
     InsertPointTy AllocaIP, Value *X, Type *XElemTy, Value *Expr,
     AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
-    AtomicUpdateCallbackTy &UpdateOp, bool VolatileX, bool IsXBinopExpr) {
+    AtomicUpdateCallbackTy &UpdateOp, bool VolatileX, bool IsXBinopExpr,
+    bool shouldEmitLibCall) {
   // TODO: handle the case where XElemTy is not byte-sized or not a power of 2
   // or a complex datatype.
   bool emitRMWOp = false;
@@ -6018,7 +6189,7 @@ std::pair<Value *, Value *> OpenMPIRBuilder::emitAtomicUpdate(
   emitRMWOp &= XElemTy->isIntegerTy();
 
   std::pair<Value *, Value *> Res;
-  if (emitRMWOp) {
+  if (emitRMWOp && !shouldEmitLibCall) {
     Res.first = Builder.CreateAtomicRMW(RMWOp, X, Expr, llvm::MaybeAlign(), AO);
     // not needed except in case of postfix captures. Generate anyway for
     // consistency with the else part. Will be removed with any DCE pass.
@@ -6027,6 +6198,64 @@ std::pair<Value *, Value *> OpenMPIRBuilder::emitAtomicUpdate(
       Res.second = Res.first;
     else
       Res.second = emitRMWOpAsInstruction(Res.first, Expr, RMWOp);
+  } else if (shouldEmitLibCall) {
+    LoadInst *OldVal =
+        Builder.CreateLoad(XElemTy, X, X->getName() + ".atomic.load");
+    OldVal->setAtomic(AO);
+    const DataLayout &LoadDL = OldVal->getModule()->getDataLayout();
+    unsigned LoadSize =
+        LoadDL.getTypeStoreSize(OldVal->getPointerOperand()->getType());
+
+    Value *LoadedVal = nullptr;
+    emitAtomicLoadLibCall(OldVal, LoadSize, OldVal->getAlign(),
+                          OldVal->getPointerOperand(), nullptr, nullptr,
+                          OldVal->getOrdering(), AtomicOrdering::NotAtomic,
+                          LoadedVal);
+
+    BasicBlock *CurBB = Builder.GetInsertBlock();
+    Instruction *CurBBTI = CurBB->getTerminator();
+    CurBBTI = CurBBTI ? CurBBTI : Builder.CreateUnreachable();
+    BasicBlock *ExitBB =
+        CurBB->splitBasicBlock(CurBBTI, X->getName() + ".atomic.exit");
+    BasicBlock *ContBB = CurBB->splitBasicBlock(CurBB->getTerminator(),
+                                                X->getName() + ".atomic.cont");
+    ContBB->getTerminator()->eraseFromParent();
+    Builder.restoreIP(AllocaIP);
+    AllocaInst *NewAtomicAddr = Builder.CreateAlloca(XElemTy);
+    NewAtomicAddr->setName(X->getName() + "x.new.val");
+    Builder.SetInsertPoint(ContBB);
+    llvm::PHINode *PHI = Builder.CreatePHI(OldVal->getType(), 2);
+    PHI->addIncoming(LoadedVal, CurBB);
+    Value *OldExprVal = PHI;
+
+    Value *Upd = UpdateOp(OldExprVal, Builder);
+    Builder.CreateStore(Upd, NewAtomicAddr);
+    LoadInst *DesiredVal = Builder.CreateLoad(XElemTy, NewAtomicAddr);
+    AtomicOrdering Failure =
+        llvm::AtomicCmpXchgInst::getStrongestFailureOrdering(AO);
+    AtomicCmpXchgInst *Result = Builder.CreateAtomicCmpXchg(
+        X, PHI, DesiredVal, llvm::MaybeAlign(), AO, Failure);
+
+    const DataLayout &DL = Result->getModule()->getDataLayout();
+    unsigned Size = DL.getTypeStoreSize(Result->getCompareOperand()->getType());
+
+    emitAtomicCompareExchangeLibCall(
+        Result, Size, Result->getAlign(), Result->getPointerOperand(),
+        Result->getNewValOperand(), Result->getCompareOperand(),
+        Result->getSuccessOrdering(), Result->getFailureOrdering(), PHI, ContBB,
+        ExitBB);
+
+    Result->eraseFromParent();
+    OldVal->eraseFromParent();
+    Res.first = OldExprVal;
+    Res.second = Upd;
+    if (UnreachableInst *ExitTI =
+            dyn_cast<UnreachableInst>(ExitBB->getTerminator())) {
+      CurBBTI->eraseFromParent();
+      Builder.SetInsertPoint(ExitBB);
+    } else {
+      Builder.SetInsertPoint(ExitTI);
+    }
   } else {
     IntegerType *IntCastTy =
         IntegerType::get(M.getContext(), XElemTy->getScalarSizeInBits());

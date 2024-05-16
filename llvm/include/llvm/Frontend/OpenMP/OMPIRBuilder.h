@@ -2418,14 +2418,25 @@ private:
   /// \param IsXBinopExpr true if \a X is Left H.S. in Right H.S. part of the
   ///                     update expression, false otherwise.
   ///                     (e.g. true for X = X BinOp Expr)
-  ///
+  /// \param shouldEmitLibCall  true is atomicrmw cannot be emitted for \a X
   /// \returns A pair of the old value of X before the update, and the value
   ///          used for the update.
   std::pair<Value *, Value *>
   emitAtomicUpdate(InsertPointTy AllocaIP, Value *X, Type *XElemTy, Value *Expr,
                    AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
                    AtomicUpdateCallbackTy &UpdateOp, bool VolatileX,
-                   bool IsXBinopExpr);
+                   bool IsXBinopExpr, bool shouldEmitLibCall = false);
+
+  bool emitAtomicCompareExchangeLibCall(
+      Instruction *I, unsigned Size, Align Alignment, Value *PointerOperand,
+      Value *ValueOperand, Value *CASExpected, AtomicOrdering Ordering,
+      AtomicOrdering Ordering2, llvm::PHINode *PHI, llvm::BasicBlock *ContBB,
+      llvm::BasicBlock *ExitBB);
+
+  bool emitAtomicLoadLibCall(Instruction *I, unsigned Size, Align Alignment,
+                             Value *PointerOperand, Value *ValueOperand,
+                             Value *CASExpected, AtomicOrdering Ordering,
+                             AtomicOrdering Ordering2, Value *&LoadedVal);
 
   /// Emit the binary op. described by \p RMWOp, using \p Src1 and \p Src2 .
   ///
@@ -2487,14 +2498,15 @@ public:
   /// \param IsXBinopExpr true if \a X is Left H.S. in Right H.S. part of the
   ///                     update expression, false otherwise.
   ///	                    (e.g. true for X = X BinOp Expr)
-  ///
+  /// \param shouldEmitLibCall  true is atomicrmw cannot be emitted for \a X
   /// \return Insertion point after generated atomic update IR.
   InsertPointTy createAtomicUpdate(const LocationDescription &Loc,
                                    InsertPointTy AllocaIP, AtomicOpValue &X,
                                    Value *Expr, AtomicOrdering AO,
                                    AtomicRMWInst::BinOp RMWOp,
                                    AtomicUpdateCallbackTy &UpdateOp,
-                                   bool IsXBinopExpr);
+                                   bool IsXBinopExpr,
+                                   bool shouldEmitLibCall = false);
 
   /// Emit atomic update for constructs: --- Only Scalar data types
   /// V = X; X = X BinOp Expr ,
