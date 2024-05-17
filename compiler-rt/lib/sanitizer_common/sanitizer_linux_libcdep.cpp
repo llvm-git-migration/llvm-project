@@ -1071,6 +1071,16 @@ void InitializePlatformCommonFlags(CommonFlags *cf) {
 #  endif
 }
 
+#  if SANITIZER_LINUX
+bool ShouldTreatRuntimeSecurely() {
+  // So we can use the weak definition from sanitizer_getauxval.h
+  if (&getauxval)
+    return getauxval(/* AT_SECURE */ 23) != 0;
+  else
+    return getuid() == geteuid() && getgid() == getegid();
+}
+#  endif
+
 }  // namespace __sanitizer
 
 #endif

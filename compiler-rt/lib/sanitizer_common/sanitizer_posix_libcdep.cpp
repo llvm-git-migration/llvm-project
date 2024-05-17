@@ -518,6 +518,12 @@ bool IsStateDetached(int state) {
   return state == PTHREAD_CREATE_DETACHED;
 }
 
+#  if !SANITIZER_LINUX
+bool ShouldTreatRuntimeSecurely() {
+  return getuid() == geteuid() && getgid() == getegid();
+}
+#  endif
+
 } // namespace __sanitizer
 
 #endif // SANITIZER_POSIX
