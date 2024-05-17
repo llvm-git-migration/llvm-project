@@ -3477,6 +3477,16 @@ KnownBits SelectionDAG::computeKnownBits(SDValue Op, const APInt &DemandedElts,
     Known = computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
     Known2 = computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
     Known = KnownBits::abds(Known, Known2);
+    // If the difference has more than 1 sign bit, then its guaranteed to be
+    // positive.
+    unsigned SignBits =
+        ComputeNumSignBits(Op.getOperand(1), DemandedElts, Depth + 1);
+    if (SignBits == 1)
+      break;
+    SignBits = std::min(SignBits, ComputeNumSignBits(Op.getOperand(0),
+                                                     DemandedElts, Depth + 1));
+    if (SignBits > 1)
+      Known.Zero.setHighBits(SignBits - 1);
     break;
   }
   case ISD::UMUL_LOHI: {
@@ -6940,6 +6950,8 @@ SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
     assert(VT.isInteger() && "This operator does not apply to FP types!");
     assert(N1.getValueType() == N2.getValueType() &&
            N1.getValueType() == VT && "Binary operator types must match!");
+    if (VT.isVector() && VT.getVectorElementType() == MVT::i1)
+      return getNode(ISD::XOR, DL, VT, N1, N2);
     break;
   case ISD::SMIN:
   case ISD::UMAX:

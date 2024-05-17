@@ -27,7 +27,7 @@ define i32 @test2(i32 %a, i32 %b) nounwind readnone ssp {
 ; CHECK-LABEL: test2:
 ; CHECK:       @ %bb.0: @ %entry
 ; CHECK-NEXT:    subs r0, r0, r1
-; CHECK-NEXT:    rsbmi r0, r0, #0
+; CHECK-NEXT:    rsble r0, r0, #0
 ; CHECK-NEXT:    bx lr
 entry:
   %sub = sub nsw i32 %a, %b
