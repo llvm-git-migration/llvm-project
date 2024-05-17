@@ -4644,6 +4644,7 @@ struct FormatStyle {
   ///   # Should be declared this way:
   ///   SpacesInParens: Custom
   ///   SpacesInParensOptions:
+  ///     ExceptDoubleParentheses: false
   ///     InConditionalStatements: true
   ///     Other: true
   /// \endcode
@@ -4673,26 +4674,16 @@ struct FormatStyle {
     /// Put a space in parentheses only inside conditional statements
     /// (``for/if/while/switch...``).
     /// \code
-    ///    true:
-    ///    if ( ( a ) )  { ... }
-    ///    while ( i < 5 )  { ... }
-    /// \endcode
-    /// \code
-    ///   false:
-    ///   if ((a)) { ... }
-    ///   while (i < 5) { ... }
+    ///    true:                                  false:
+    ///    if ( ( a ) )  { ... }          vs.     if ((a)) { ... }
+    ///    while ( i < 5 )  { ... }               while (i < 5) { ... }
     /// \endcode
     bool InConditionalStatements;
     /// Put a space in C style casts.
     /// \code
-    ///   true:
-    ///   x = ( int32 )y
-    ///   y = (( int (*)(int) )foo)(x);
-    /// \endcode
-    /// \code
-    ///   false:
-    ///   x = (int32)y
-    ///   y = ((int (*)(int))foo)(x);
+    ///   true:                                  false:
+    ///   x = ( int32 )y                  vs.    x = (int32)y
+    ///   y = (( int (*)(int) )foo)(x);          y = ((int (*)(int))foo)(x);
     /// \endcode
     bool InCStyleCasts;
     /// Put a space in parentheses only if the parentheses are empty i.e. '()'
@@ -4708,18 +4699,11 @@ struct FormatStyle {
     bool InEmptyParentheses;
     /// Put a space in parentheses not covered by preceding options.
     /// \code
-    ///   true:
-    ///   t f( Deleted & ) & = delete;
-    ///   decltype( ( x ) )
-    ///   x = ( (int32)y )
-    ///   y = ( (int ( * )( int ))foo )( x );
-    /// \endcode
-    /// \code
-    ///   false:
-    ///   t f(Deleted &) & = delete;
-    ///   decltype((x))
-    ///   x = ((int32))y
-    ///   y = ((int (*)(int))foo)(x);
+    ///   true:                                 false:
+    ///   t f( Deleted & ) & = delete;    vs.   t f(Deleted &) & = delete;
+    ///   decltype( ( x ) )                     decltype((x))
+    ///   x = ( (int32)y )                      x = ((int32))y
+    ///   y = ( (int ( * )( int ))foo )( x );   y = ((int (*)(int))foo)(x);
     /// \endcode
     bool Other;
 
