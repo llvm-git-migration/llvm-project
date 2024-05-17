@@ -17,8 +17,9 @@
 
 #if !SANITIZER_FUCHSIA
 
-#include "sanitizer_common.h"
-#include "sanitizer_file.h"
+#  include "sanitizer_common.h"
+#  include "sanitizer_file.h"
+#  include "sanitizer_getauxval.h"
 #  include "sanitizer_interface_internal.h"
 
 namespace __sanitizer {
@@ -102,6 +103,17 @@ void ReportFile::SetReportPath(const char *path) {
              path[2], path[3], path[4], path[5], path[6], path[7]);
       Die();
     }
+  }
+
+  // This is so we can use the weak definition from sanitizer_getauxval.h
+  if (&getauxval && getauxval(/* AT_SECURE */ 23) != 0 && path &&
+      internal_strcmp(path, "stderr") != 0 &&
+      internal_strcmp(path, "stdout") != 0) {
+    Report(
+        "ERROR: log_path must be 'stderr' or 'stdout' for AT_SECURE "
+        "(e.g. setuid binaries), is '%s'\n",
+        path);
+    Die();
   }
 
   SpinMutexLock l(mu);
