@@ -149,7 +149,10 @@ define <4 x i32> @test11(<4 x i16> %a, <4 x i16> %b) nounwind {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vmov d16, r2, r3
 ; CHECK-NEXT:    vmov d17, r0, r1
-; CHECK-NEXT:    vabdl.u16 q8, d17, d16
+; CHECK-NEXT:    vmin.u16 d18, d17, d16
+; CHECK-NEXT:    vmax.u16 d16, d17, d16
+; CHECK-NEXT:    vsub.i16 d16, d16, d18
+; CHECK-NEXT:    vmovl.u16 q8, d16
 ; CHECK-NEXT:    vmov r0, r1, d16
 ; CHECK-NEXT:    vmov r2, r3, d17
 ; CHECK-NEXT:    mov pc, lr
@@ -166,7 +169,10 @@ define <8 x i16> @test12(<8 x i8> %a, <8 x i8> %b) nounwind {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vmov d16, r2, r3
 ; CHECK-NEXT:    vmov d17, r0, r1
-; CHECK-NEXT:    vabdl.u8 q8, d17, d16
+; CHECK-NEXT:    vmin.u8 d18, d17, d16
+; CHECK-NEXT:    vmax.u8 d16, d17, d16
+; CHECK-NEXT:    vsub.i8 d16, d16, d18
+; CHECK-NEXT:    vmovl.u8 q8, d16
 ; CHECK-NEXT:    vmov r0, r1, d16
 ; CHECK-NEXT:    vmov r2, r3, d17
 ; CHECK-NEXT:    mov pc, lr
