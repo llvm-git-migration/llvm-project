@@ -1799,29 +1799,16 @@ define <2 x i128> @uabd_i64(<2 x i64> %a, <2 x i64> %b) {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov.d x8, v0[1]
 ; CHECK-NEXT:    mov.d x9, v1[1]
+; CHECK-NEXT:    mov x1, xzr
 ; CHECK-NEXT:    fmov x10, d0
 ; CHECK-NEXT:    fmov x11, d1
-; CHECK-NEXT:    asr x12, x10, #63
-; CHECK-NEXT:    asr x13, x11, #63
+; CHECK-NEXT:    mov x3, xzr
+; CHECK-NEXT:    sub x12, x11, x10
 ; CHECK-NEXT:    subs x10, x10, x11
-; CHECK-NEXT:    asr x11, x8, #63
-; CHECK-NEXT:    asr x14, x9, #63
-; CHECK-NEXT:    sbc x12, x12, x13
+; CHECK-NEXT:    csel x0, x10, x12, gt
+; CHECK-NEXT:    sub x10, x9, x8
 ; CHECK-NEXT:    subs x8, x8, x9
-; CHECK-NEXT:    sbc x9, x11, x14
-; CHECK-NEXT:    asr x13, x12, #63
-; CHECK-NEXT:    asr x11, x9, #63
-; CHECK-NEXT:    eor x10, x10, x13
-; CHECK-NEXT:    eor x8, x8, x11
-; CHECK-NEXT:    eor x9, x9, x11
-; CHECK-NEXT:    subs x2, x8, x11
-; CHECK-NEXT:    eor x8, x12, x13
-; CHECK-NEXT:    sbc x3, x9, x11
-; CHECK-NEXT:    subs x9, x10, x13
-; CHECK-NEXT:    fmov d0, x9
-; CHECK-NEXT:    sbc x1, x8, x13
-; CHECK-NEXT:    mov.d v0[1], x1
-; CHECK-NEXT:    fmov x0, d0
+; CHECK-NEXT:    csel x2, x8, x10, gt
 ; CHECK-NEXT:    ret
   %aext = sext <2 x i64> %a to <2 x i128>
   %bext = sext <2 x i64> %b to <2 x i128>
