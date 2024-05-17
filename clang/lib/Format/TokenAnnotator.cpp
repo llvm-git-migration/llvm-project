@@ -4379,7 +4379,7 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
     const auto IsAttributeParen = [](const FormatToken *Paren) {
       return Paren && Paren->isOneOf(TT_AttributeLParen, TT_AttributeRParen);
     };
-    auto AddSpaceInDoubleParens = [&]() {
+    auto AddSpaceExceptInDoubleParens = [&]() {
       const auto *RPrev = RightParen ? RightParen->Previous : nullptr;
       const auto *LNext = LeftParen->Next;
       const auto *LPrev = LeftParen->Previous;
@@ -4404,7 +4404,7 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
     };
     const auto AddSpace = [&](bool Option) {
       if (Style.SpacesInParensOptions.ExceptDoubleParentheses && Option)
-        return AddSpaceInDoubleParens();
+        return AddSpaceExceptInDoubleParens();
       return Option;
     };
 

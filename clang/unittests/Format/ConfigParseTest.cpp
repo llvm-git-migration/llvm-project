@@ -640,21 +640,21 @@ TEST(ConfigParseTest, ParsesConfiguration) {
   Style.SpacesInParensOptions = {};
   CHECK_PARSE(
       "SpacesInParentheses: true", SpacesInParensOptions,
-      FormatStyle::SpacesInParensCustom(false, true, true, false, false, true));
+      FormatStyle::SpacesInParensCustom(false, true, false, false, true));
   Style.SpacesInParens = FormatStyle::SIPO_Never;
   Style.SpacesInParensOptions = {};
   CHECK_PARSE("SpacesInConditionalStatement: true", SpacesInParensOptions,
-              FormatStyle::SpacesInParensCustom(false, false, true, false,
+              FormatStyle::SpacesInParensCustom(false, true, false,
                                                 false, false));
   Style.SpacesInParens = FormatStyle::SIPO_Never;
   Style.SpacesInParensOptions = {};
   CHECK_PARSE("SpacesInCStyleCastParentheses: true", SpacesInParensOptions,
-              FormatStyle::SpacesInParensCustom(false, false, false, true,
+              FormatStyle::SpacesInParensCustom(false, false, true,
                                                 false, false));
   Style.SpacesInParens = FormatStyle::SIPO_Never;
   Style.SpacesInParensOptions = {};
   CHECK_PARSE("SpaceInEmptyParentheses: true", SpacesInParensOptions,
-              FormatStyle::SpacesInParensCustom(false, false, false, false,
+              FormatStyle::SpacesInParensCustom(false, false, false,
                                                 true, false));
   Style.SpacesInParens = FormatStyle::SIPO_Never;
   Style.SpacesInParensOptions = {};
