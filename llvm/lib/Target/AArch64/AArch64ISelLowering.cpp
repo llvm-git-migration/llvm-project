@@ -15738,6 +15738,24 @@ static Value *createTblShuffleForZExt(IRBuilderBase &Builder, Value *Op,
   return Result;
 }
 
+static Value *createTblShuffleForSExt(IRBuilderBase &Builder, Value *Op,
+                                      FixedVectorType *DstTy,
+                                      bool IsLittleEndian) {
+  auto *SrcTy = cast<FixedVectorType>(Op->getType());
+  auto SrcWidth = cast<IntegerType>(SrcTy->getElementType())->getBitWidth();
+  auto DstWidth = cast<IntegerType>(DstTy->getElementType())->getBitWidth();
+
+  SmallVector<int> Mask;
+  if (!createTblShuffleMask(SrcWidth, DstWidth, SrcTy->getNumElements(),
+                            !IsLittleEndian, Mask))
+    return nullptr;
+
+  auto *FirstEltZero = Builder.CreateInsertElement(
+      PoisonValue::get(SrcTy), Builder.getInt8(0), uint64_t(0));
+
+  return Builder.CreateShuffleVector(Op, FirstEltZero, Mask);
+}
+
 static void createTblForTrunc(TruncInst *TI, bool IsLittleEndian) {
   IRBuilder<> Builder(TI);
   SmallVector<Value *> Parts;
@@ -15922,6 +15940,23 @@ bool AArch64TargetLowering::optimizeExtendOrTruncateConversion(
       return false;
     auto *UI = Builder.CreateUIToFP(ZExt, DstTy);
     I->replaceAllUsesWith(UI);
+    I->eraseFromParent();
+    return true;
+  }
+
+  auto *SIToFP = dyn_cast<SIToFPInst>(I);
+  if (SIToFP && SrcTy->getElementType()->isIntegerTy(8) &&
+      DstTy->getElementType()->isFloatTy()) {
+    IRBuilder<> Builder(I);
+    auto *Shuffle = createTblShuffleForSExt(Builder, I->getOperand(0),
+                                            FixedVectorType::getInteger(DstTy),
+                                            Subtarget->isLittleEndian());
+    if (!Shuffle)
+      return false;
+    auto *Cast = Builder.CreateBitCast(Shuffle, VectorType::getInteger(DstTy));
+    auto *AShr = Builder.CreateAShr(Cast, 24);
+    auto *SI = Builder.CreateSIToFP(AShr, DstTy);
+    I->replaceAllUsesWith(SI);
     I->eraseFromParent();
     return true;
   }
@@ -17852,11 +17887,34 @@ static SDValue performVectorCompareAndMaskUnaryOpCombine(SDNode *N,
   return SDValue();
 }
 
+static SDValue performVectorIntToFpCombine(SDNode *N, SelectionDAG &DAG) {
+  if (N->getOpcode() != ISD::SINT_TO_FP || N->getValueType(0) != MVT::v4f32)
+    return SDValue();
+
+  SDNode *VASHR = N->getOperand(0).getNode();
+  if (VASHR->getOpcode() != AArch64ISD::VASHR ||
+      VASHR->getValueType(0) != MVT::v4i32)
+    return SDValue();
+
+  if (!isa<ConstantSDNode>(VASHR->getOperand(1).getNode()) ||
+      VASHR->getConstantOperandVal(1) != 24)
+    return SDValue();
+
+  return SDValue(DAG.getMachineNode(
+                     AArch64::SCVTFv4i32_shift, SDLoc(N), N->getValueType(0),
+                     {VASHR->getOperand(0),
+                      DAG.getTargetConstant(24, SDLoc(N), MVT::i32)}),
+                 0);
+}
+
 static SDValue performIntToFpCombine(SDNode *N, SelectionDAG &DAG,
                                      const AArch64Subtarget *Subtarget) {
   // First try to optimize away the conversion when it's conditionally from
   // a constant. Vectors only.
   if (SDValue Res = performVectorCompareAndMaskUnaryOpCombine(N, DAG))
+    return Res;
+
+  if (SDValue Res = performVectorIntToFpCombine(N, DAG))
     return Res;
 
   EVT VT = N->getValueType(0);
