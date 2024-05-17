@@ -19,6 +19,13 @@
 
 #include "sanitizer_common.h"
 #include "sanitizer_file.h"
+
+#if SANITIZER_LINUX || (SANITIZER_ANDROID && __ANDROID_API__ >= 18)
+// Android API as per https://developer.android.com/ndk/guides/cpu-features#features_using_libcs_getauxval3
+#  include <sys/auxv.h>
+#  define HAS_GETAUXVAL
+#endif
+
 #  include "sanitizer_interface_internal.h"
 
 namespace __sanitizer {
@@ -103,6 +110,18 @@ void ReportFile::SetReportPath(const char *path) {
       Die();
     }
   }
+
+#ifdef HAS_GETAUXVAL
+  if (getauxval(AT_SECURE) != 0 && path &&
+      internal_strcmp(path, "stderr") != 0 &&
+      internal_strcmp(path, "stdout") != 0) {
+    Report(
+        "ERROR: log_path must be 'stderr' or 'stdin' for AT_SECURE "
+        "(e.g. setuid binaries), is '%s'\n",
+        path);
+    Die();
+  }
+#endif
 
   SpinMutexLock l(mu);
   if (fd != kStdoutFd && fd != kStderrFd && fd != kInvalidFd)
