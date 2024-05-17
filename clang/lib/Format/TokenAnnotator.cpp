@@ -4416,10 +4416,10 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
     if (RightParen && RightParen->is(TT_CastRParen))
       return AddSpace(Style.SpacesInParensOptions.InCStyleCasts);
     if (IsAttributeParen(LeftParen) || IsAttributeParen(RightParen))
-      return AddSpace(Style.SpacesInParensOptions.InAttributeSpecifiers);
+      return AddSpace(Style.SpacesInParensOptions.Other);
     if ((LeftParen && IsAttributeParen(LeftParen->Previous)) ||
         (RightParen && IsAttributeParen(RightParen->Next))) {
-      return AddSpace(Style.SpacesInParensOptions.InAttributeSpecifiers);
+      return AddSpace(Style.SpacesInParensOptions.Other);
     }
     return AddSpace(Style.SpacesInParensOptions.Other);
   }

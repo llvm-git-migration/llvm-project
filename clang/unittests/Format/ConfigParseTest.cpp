@@ -236,7 +236,6 @@ TEST(ConfigParseTest, ParsesConfigurationBools) {
   CHECK_PARSE_NESTED_BOOL(SpaceBeforeParensOptions, AfterPlacementOperator);
   CHECK_PARSE_NESTED_BOOL(SpaceBeforeParensOptions, BeforeNonEmptyParentheses);
   CHECK_PARSE_NESTED_BOOL(SpacesInParensOptions, ExceptDoubleParentheses);
-  CHECK_PARSE_NESTED_BOOL(SpacesInParensOptions, InAttributeSpecifiers);
   CHECK_PARSE_NESTED_BOOL(SpacesInParensOptions, InCStyleCasts);
   CHECK_PARSE_NESTED_BOOL(SpacesInParensOptions, InConditionalStatements);
   CHECK_PARSE_NESTED_BOOL(SpacesInParensOptions, InEmptyParentheses);

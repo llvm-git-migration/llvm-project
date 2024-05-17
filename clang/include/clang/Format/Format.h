@@ -4661,16 +4661,6 @@ struct FormatStyle {
     ///  false:
     ///    Uses the applicable option.
     bool ExceptDoubleParentheses;
-    /// Put a space in parentheses of attribute specifiers.
-    /// \code
-    ///    true:
-    ///    __attribute__( ( noreturn ) )
-    /// \endcode
-    /// \code
-    ///    false:
-    ///    _attribute__((noreturn))
-    /// \endcode
-    bool InAttributeSpecifiers;
     /// Put a space in parentheses only inside conditional statements
     /// (``for/if/while/switch...``).
     /// \code
@@ -4704,27 +4694,25 @@ struct FormatStyle {
     ///   decltype( ( x ) )                     decltype((x))
     ///   x = ( (int32)y )                      x = ((int32))y
     ///   y = ( (int ( * )( int ))foo )( x );   y = ((int (*)(int))foo)(x);
+    ///    __attribute__( ( noreturn ) )        __attribute__((noreturn))
     /// \endcode
     bool Other;
 
     SpacesInParensCustom()
-        : ExceptDoubleParentheses(false), InAttributeSpecifiers(false),
-          InConditionalStatements(false), InCStyleCasts(false),
-          InEmptyParentheses(false), Other(false) {}
+        : ExceptDoubleParentheses(false),
+        InConditionalStatements(false), InCStyleCasts(false),
+        InEmptyParentheses(false), Other(false) {}
 
     SpacesInParensCustom(bool ExceptDoubleParentheses,
-                         bool InAttributeSpecifiers,
                          bool InConditionalStatements, bool InCStyleCasts,
                          bool InEmptyParentheses, bool Other)
         : ExceptDoubleParentheses(ExceptDoubleParentheses),
-          InAttributeSpecifiers(InAttributeSpecifiers),
           InConditionalStatements(InConditionalStatements),
           InCStyleCasts(InCStyleCasts), InEmptyParentheses(InEmptyParentheses),
           Other(Other) {}
 
     bool operator==(const SpacesInParensCustom &R) const {
       return ExceptDoubleParentheses == R.ExceptDoubleParentheses &&
-             InAttributeSpecifiers == R.InAttributeSpecifiers &&
              InConditionalStatements == R.InConditionalStatements &&
              InCStyleCasts == R.InCStyleCasts &&
              InEmptyParentheses == R.InEmptyParentheses && Other == R.Other;
@@ -4743,7 +4731,7 @@ struct FormatStyle {
   ///   # Example of usage:
   ///   SpacesInParens: Custom
   ///   SpacesInParensOptions:
-  ///     InAttributeSpecifiers: false
+  ///     ExceptDoubleParentheses: false
   ///     InConditionalStatements: true
   ///     InEmptyParentheses: true
   /// \endcode

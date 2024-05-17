@@ -17102,7 +17102,6 @@ TEST_F(FormatTest, ConfigurableSpacesInParens) {
   Spaces.SpacesInParensOptions = {};
   Spaces.SpacesInParensOptions.Other = true;
   Spaces.SpacesInParensOptions.InConditionalStatements = true;
-  Spaces.SpacesInParensOptions.InAttributeSpecifiers = true;
   verifyFormat("do_something( ::globalVar );", Spaces);
   verifyFormat("call( x, y, z );", Spaces);
   verifyFormat("call();", Spaces);
@@ -17323,7 +17322,7 @@ TEST_F(FormatTest, ConfigurableSpacesInParens) {
   Spaces.IndentWidth = 2;
   Spaces.SpacesInParens = FormatStyle::SIPO_Custom;
   Spaces.SpacesInParensOptions = {};
-  Spaces.SpacesInParensOptions.InAttributeSpecifiers = true;
+  Spaces.SpacesInParensOptions.Other = true;
   verifyFormat("SomeType *__attribute__( ( attr ) ) *a = NULL;", Spaces);
   verifyFormat("void __attribute__( ( naked ) ) foo(int bar)", Spaces);
   verifyFormat("void f() __attribute__( ( asdf ) );", Spaces);
@@ -17341,7 +17340,7 @@ TEST_F(FormatTest, ConfigurableSpacesInParens) {
   verifyFormat("class __declspec( dllimport ) X {};", Spaces);
   verifyFormat("class __declspec(( dllimport )) X {};", Spaces);
 
-  Spaces.SpacesInParensOptions.InAttributeSpecifiers = false;
+  Spaces.SpacesInParensOptions.Other = false;
   verifyFormat("SomeType *__attribute__((attr)) *a = NULL;", Spaces);
   verifyFormat("void __attribute__((naked)) foo(int bar)", Spaces);
   verifyFormat("void f() __attribute__((asdf));", Spaces);
