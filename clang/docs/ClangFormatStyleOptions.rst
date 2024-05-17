@@ -6206,7 +6206,7 @@ the configuration (without a prefix: ``Auto``).
     # Example of usage:
     SpacesInParens: Custom
     SpacesInParensOptions:
-      InAttributeSpecifiers: false
+      ExceptDoubleParentheses: false
       InConditionalStatements: true
       InEmptyParentheses: true
 
@@ -6219,6 +6219,7 @@ the configuration (without a prefix: ``Auto``).
     # Should be declared this way:
     SpacesInParens: Custom
     SpacesInParensOptions:
+      ExceptDoubleParentheses: false
       InConditionalStatements: true
       Other: true
 
@@ -6235,46 +6236,22 @@ the configuration (without a prefix: ``Auto``).
      false:
        Uses the applicable option.
 
-  * ``bool InAttributeSpecifiers`` Put a space in parentheses of attribute specifiers.
-
-    .. code-block:: c++
-
-       true:
-       __attribute__( ( noreturn ) )
-
-    .. code-block:: c++
-
-       false:
-       _attribute__((noreturn))
-
   * ``bool InConditionalStatements`` Put a space in parentheses only inside conditional statements
     (``for/if/while/switch...``).
 
     .. code-block:: c++
 
-       true:
-       if ( ( a ) )  { ... }
-       while ( i < 5 )  { ... }
-
-    .. code-block:: c++
-
-      false:
-      if ((a)) { ... }
-      while (i < 5) { ... }
+       true:                                  false:
+       if ( ( a ) )  { ... }          vs.     if ((a)) { ... }
+       while ( i < 5 )  { ... }               while (i < 5) { ... }
 
   * ``bool InCStyleCasts`` Put a space in C style casts.
 
     .. code-block:: c++
 
-      true:
-      x = ( int32 )y
-      y = (( int (*)(int) )foo)(x);
-
-    .. code-block:: c++
-
-      false:
-      x = (int32)y
-      y = ((int (*)(int))foo)(x);
+      true:                                  false:
+      x = ( int32 )y                  vs.    x = (int32)y
+      y = (( int (*)(int) )foo)(x);          y = ((int (*)(int))foo)(x);
 
   * ``bool InEmptyParentheses`` Put a space in parentheses only if the parentheses are empty i.e. '()'
 
@@ -6292,19 +6269,12 @@ the configuration (without a prefix: ``Auto``).
 
     .. code-block:: c++
 
-      true:
-      t f( Deleted & ) & = delete;
-      decltype( ( x ) )
-      x = ( (int32)y )
-      y = ( (int ( * )( int ))foo )( x );
-
-    .. code-block:: c++
-
-      false:
-      t f(Deleted &) & = delete;
-      decltype((x))
-      x = ((int32))y
-      y = ((int (*)(int))foo)(x);
+      true:                                 false:
+      t f( Deleted & ) & = delete;    vs.   t f(Deleted &) & = delete;
+      decltype( ( x ) )                     decltype((x))
+      x = ( (int32)y )                      x = ((int32))y
+      y = ( (int ( * )( int ))foo )( x );   y = ((int (*)(int))foo)(x);
+       __attribute__( ( noreturn ) )        __attribute__((noreturn))
 
 
 .. _SpacesInParentheses:
