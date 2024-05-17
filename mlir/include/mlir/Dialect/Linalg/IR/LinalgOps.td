@@ -154,4 +154,96 @@ def Linalg_SoftmaxOp : Linalg_Op<"softmax",
   let hasVerifier = 1;
 }
 
+def Linalg_WinogradFilterTransformOp : Linalg_Op<"winograd_filter_transform",
+    [DeclareOpInterfaceMethods<TilingInterface,
+     ["getIterationDomain",
+      "getLoopIteratorTypes",
+      "getResultTilePosition",
+      "getTiledImplementation"]>]> {
+  let summary = "Winograd filter transform operator";
+  let description = [{
+    linalg.winograd_filter_transform transforms the filter of conv2D.
+  }];
+
+  let arguments = (ins AnyRankedTensor:$filter,
+                       AnyRankedTensor:$output,
+                       I64Attr:$output_height,
+                       I64Attr:$output_width,
+                       I64Attr:$m,
+                       I64Attr:$r
+  );
+
+  let results = (outs AnyRankedTensor:$result);
+  let assemblyFormat = [{
+    attr-dict
+    `output_height` `(` $output_height `)`
+    `output_width` `(` $output_width `)`
+    `m` `(` $m `)`
+    `r` `(` $r `)`
+    `ins` `(` $filter `:` type($filter) `)`
+    `outs` `(` $output `:` type($output) `)`
+    `->` type($result)
+  }];
+}
+
+def Linalg_WinogradInputTransformOp : Linalg_Op<"winograd_input_transform",
+    [DeclareOpInterfaceMethods<TilingInterface,
+      ["getIterationDomain",
+       "getLoopIteratorTypes",
+       "getResultTilePosition",
+       "getTiledImplementation"]>]> {
+  let summary = "Winograd input transform operator";
+  let description = [{
+    linalg.winograd_input_transform transforms the input of conv2D.
+  }];
+
+  let arguments = (ins AnyRankedTensor:$input,
+                       AnyRankedTensor:$output,
+                       I64Attr:$output_height,
+                       I64Attr:$output_width,
+                       I64Attr:$m,
+                       I64Attr:$r
+  );
+
+  let results = (outs AnyRankedTensor:$result);
+  let assemblyFormat = [{
+    attr-dict
+    `output_height` `(` $output_height `)`
+    `output_width` `(` $output_width `)`
+    `m` `(` $m `)`
+    `r` `(` $r `)`
+    `ins` `(` $input `:` type($input) `)`
+    `outs` `(` $output `:` type($output) `)`
+    `->` type($result)
+  }];
+}
+
+def Linalg_WinogradOutputTransformOp : Linalg_Op<"winograd_output_transform",
+    [DeclareOpInterfaceMethods<TilingInterface,
+      ["getIterationDomain",
+       "getLoopIteratorTypes",
+       "getResultTilePosition",
+       "getTiledImplementation"]>]> {
+  let summary = "Winograd output transform operator";
+  let description = [{
+    linalg.winograd_output_transform transforms the output of conv2D.
+  }];
+
+  let arguments = (ins AnyRankedTensor:$value,
+                       AnyRankedTensor:$output,
+                       I64Attr:$m,
+                       I64Attr:$r
+  );
+
+  let results = (outs AnyRankedTensor:$result);
+  let assemblyFormat = [{
+    attr-dict
+    `m` `(` $m `)`
+    `r` `(` $r `)`
+    `ins` `(` $value `:` type($value) `)`
+    `outs` `(` $output `:` type($output) `)`
+    `->` type($result)
+  }];
+}
+
 #endif // LINALG_OPS

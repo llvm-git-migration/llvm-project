@@ -1312,6 +1312,20 @@ FailureOr<Operation *> transposeBatchMatmul(RewriterBase &rewriter,
                                             linalg::BatchMatmulOp op,
                                             bool transposeLHS = true);
 
+/// Convert linalg.conv_2d_nhwc_fhwc to Winograd Conv2D algorithm.
+FailureOr<Operation *> winogradConv2D(RewriterBase &rewriter,
+                                      linalg::Conv2DNhwcFhwcOp op, int64_t m,
+                                      int64_t r);
+FailureOr<Operation *>
+winogradConv2DRewriteFilterTransform(RewriterBase &rewriter,
+                                     linalg::WinogradFilterTransformOp op);
+FailureOr<Operation *>
+winogradConv2DRewriteInputTransform(RewriterBase &rewriter,
+                                    linalg::WinogradInputTransformOp op);
+FailureOr<Operation *>
+winogradConv2DRewriteOutputTransform(RewriterBase &rewriter,
+                                     linalg::WinogradOutputTransformOp op);
+
 //===----------------------------------------------------------------------===//
 // Rewrite patterns wrapping transformations.
 // TODO: every single such pattern should be a close to noop wrapper around a
@@ -1691,6 +1705,11 @@ void populateTransposeMatmulPatterns(RewritePatternSet &patterns,
 /// Patterns to block pack Linalg matmul ops.
 void populateBlockPackMatmulPatterns(RewritePatternSet &patterns,
                                      const ControlBlockPackMatmulFn &controlFn);
+
+/// Patterns to apply Winograd Conv2D algorithm.
+void populateWinogradConv2DPatterns(RewritePatternSet &patterns, int64_t m,
+                                    int64_t r);
+void populateWinogradConv2DRewritePatterns(RewritePatternSet &patterns);
 
 } // namespace linalg
 } // namespace mlir
