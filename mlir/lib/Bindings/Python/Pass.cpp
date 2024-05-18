@@ -117,11 +117,7 @@ void mlir::python::populatePassManagerSubmodule(py::module &m) {
           "ValueError if the pipeline can't be parsed.")
       .def(
           "run",
-          [](PyPassManager &passManager, PyOperationBase &op,
-             bool invalidateOps) {
-            if (invalidateOps) {
-              op.getOperation().getContext()->clearOperationsInside(op);
-            }
+          [](PyPassManager &passManager, PyOperationBase &op) {
             // Actually run the pass manager.
             PyMlirContext::ErrorCapture errors(op.getOperation().getContext());
             MlirLogicalResult status = mlirPassManagerRunOnOp(
@@ -130,7 +126,7 @@ void mlir::python::populatePassManagerSubmodule(py::module &m) {
               throw MLIRError("Failure while executing pass pipeline",
                               errors.take());
           },
-          "operation"_a, "invalidate_ops"_a = true,
+          "operation"_a,
           "Run the pass manager on the provided operation, raising an "
           "MLIRError on failure.")
       .def(
