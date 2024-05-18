@@ -476,9 +476,9 @@ namespace llvm {
       return getVectorVT(VT, EC.getKnownMinValue());
     }
 
-    /// Return the value type corresponding to the specified type.  This returns
-    /// all pointers as iPTR.  If HandleUnknown is true, unknown types are
-    /// returned as Other, otherwise they are invalid.
+    /// Return the value type corresponding to the specified type.
+    /// If HandleUnknown is true, unknown types are returned as Other,
+    /// otherwise they are invalid.
     static MVT getVT(Type *Ty, bool HandleUnknown = false);
 
   public:
