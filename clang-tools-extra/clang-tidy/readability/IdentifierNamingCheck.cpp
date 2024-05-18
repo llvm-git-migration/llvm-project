@@ -305,27 +305,20 @@ std::string IdentifierNamingCheck::HungarianNotation::getDeclTypeName(
   auto &SM = VD->getASTContext().getSourceManager();
   const char *Begin = SM.getCharacterData(VD->getBeginLoc());
   const char *End = SM.getCharacterData(VD->getEndLoc());
-  intptr_t StrLen = End - Begin;
+  if (End < Begin)
+    return {};
 
   // FIXME: Sometimes the value that returns from ValDecl->getEndLoc()
   // is wrong(out of location of Decl). This causes `StrLen` will be assigned
   // an unexpected large value. Current workaround to find the terminated
   // character instead of the `getEndLoc()` function.
-  const char *EOL = strchr(Begin, '\n');
-  if (!EOL)
-    EOL = Begin + strlen(Begin);
+  llvm::StringRef NameRef(Begin, End - Begin);
+  auto Pos = NameRef.find_first_of("\n\r=;,)");
+  if (Pos != llvm::StringRef::npos)
+    NameRef = NameRef.substr(0, Pos);
 
-  const char *PosList[] = {strchr(Begin, '='), strchr(Begin, ';'),
-                           strchr(Begin, ','), strchr(Begin, ')'), EOL};
-  for (const auto &Pos : PosList) {
-    if (Pos > Begin)
-      EOL = std::min(EOL, Pos);
-  }
-
-  StrLen = EOL - Begin;
-  std::string TypeName;
-  if (StrLen > 0) {
-    std::string Type(Begin, StrLen);
+  if (!NameRef.empty()) {
+    std::string Type(NameRef.begin(), NameRef.end());
 
     static constexpr StringRef Keywords[] = {
         // Constexpr specifiers
@@ -339,66 +332,67 @@ std::string IdentifierNamingCheck::HungarianNotation::getDeclTypeName(
 
     // Remove keywords
     for (StringRef Kw : Keywords) {
-      for (size_t Pos = 0;
-           (Pos = Type.find(Kw.data(), Pos)) != std::string::npos;) {
+      for (size_t Pos = 0; (Pos = Type.find(Kw, Pos)) != std::string::npos;) {
         Type.replace(Pos, Kw.size(), "");
       }
     }
-    TypeName = Type.erase(0, Type.find_first_not_of(' '));
 
     // Remove template parameters
     const size_t Pos = Type.find('<');
     if (Pos != std::string::npos) {
-      TypeName = Type.erase(Pos, Type.size() - Pos);
+      Type.erase(Pos);
     }
 
     // Replace spaces with single space.
     for (size_t Pos = 0; (Pos = Type.find("  ", Pos)) != std::string::npos;
-         Pos += strlen(" ")) {
-      Type.replace(Pos, strlen("  "), " ");
+         Pos += 2U) {
+      Type.replace(Pos, 2U, " ");
     }
 
     // Replace " &" with "&".
     for (size_t Pos = 0; (Pos = Type.find(" &", Pos)) != std::string::npos;
-         Pos += strlen("&")) {
-      Type.replace(Pos, strlen(" &"), "&");
+         Pos += 2U) {
+      Type.replace(Pos, 2U, "&");
     }
 
     // Replace " *" with "* ".
     for (size_t Pos = 0; (Pos = Type.find(" *", Pos)) != std::string::npos;
-         Pos += strlen("*")) {
-      Type.replace(Pos, strlen(" *"), "* ");
+         Pos += 1U) {
+      Type.replace(Pos, 2U, "* ");
     }
+
+    Type.erase(0, Type.find_first_not_of(' '));
 
     // Remove redundant tailing.
     static constexpr StringRef TailsOfMultiWordType[] = {
         " int", " char", " double", " long", " short"};
     bool RedundantRemoved = false;
     for (auto Kw : TailsOfMultiWordType) {
-      size_t Pos = Type.rfind(Kw.data());
+      size_t Pos = Type.rfind(Kw);
       if (Pos != std::string::npos) {
         const size_t PtrCount = getAsteriskCount(Type, ND);
-        Type = Type.substr(0, Pos + Kw.size() + PtrCount);
+        Type.erase(Pos + Kw.size() + PtrCount);
         RedundantRemoved = true;
         break;
       }
     }
 
-    TypeName = Type.erase(0, Type.find_first_not_of(' '));
+    Type.erase(0, Type.find_first_not_of(' '));
     if (!RedundantRemoved) {
       std::size_t FoundSpace = Type.find(' ');
       if (FoundSpace != std::string::npos)
         Type = Type.substr(0, FoundSpace);
     }
 
-    TypeName = Type.erase(0, Type.find_first_not_of(' '));
+    Type.erase(0, Type.find_first_not_of(' '));
 
     QualType QT = VD->getType();
     if (!QT.isNull() && QT->isArrayType())
-      TypeName.append("[]");
+      Type.append("[]");
+    return Type;
   }
 
-  return TypeName;
+  return {};
 }
 
 IdentifierNamingCheck::IdentifierNamingCheck(StringRef Name,
@@ -1414,13 +1408,21 @@ IdentifierNamingCheck::getDiagInfo(const NamingCheckId &ID,
                   }};
 }
 
+StringRef IdentifierNamingCheck::getRealFileName(StringRef FileName) const {
+  auto Iter = RealFileNameCache.try_emplace(FileName);
+  SmallString<256U> &RealFileName = Iter.first->getValue();
+  if (!Iter.second)
+    return RealFileName;
+  llvm::sys::fs::real_path(FileName, RealFileName);
+  return RealFileName;
+}
+
 const IdentifierNamingCheck::FileStyle &
 IdentifierNamingCheck::getStyleForFile(StringRef FileName) const {
   if (!GetConfigPerFile)
     return *MainFileStyle;
 
-  SmallString<128> RealFileName;
-  llvm::sys::fs::real_path(FileName, RealFileName);
+  StringRef RealFileName = getRealFileName(FileName);
   StringRef Parent = llvm::sys::path::parent_path(RealFileName);
   auto Iter = NamingStylesCache.find(Parent);
   if (Iter != NamingStylesCache.end())
