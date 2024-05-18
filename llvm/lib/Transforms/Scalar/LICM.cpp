@@ -194,7 +194,7 @@ static bool pointerInvalidatedByBlock(BasicBlock &BB, MemorySSA &MSSA,
 static bool hoistArithmetics(Instruction &I, Loop &L,
                              ICFLoopSafetyInfo &SafetyInfo,
                              MemorySSAUpdater &MSSAU, AssumptionCache *AC,
-                             DominatorTree *DT);
+                             DominatorTree *DT, ScalarEvolution *SE);
 static Instruction *cloneInstructionInExitBlock(
     Instruction &I, BasicBlock &ExitBlock, PHINode &PN, const LoopInfo *LI,
     const LoopSafetyInfo *SafetyInfo, MemorySSAUpdater &MSSAU);
@@ -987,7 +987,7 @@ bool llvm::hoistRegion(DomTreeNode *N, AAResults *AA, LoopInfo *LI,
 
       // Try to reassociate instructions so that part of computations can be
       // done out of loop.
-      if (hoistArithmetics(I, *CurLoop, *SafetyInfo, MSSAU, AC, DT)) {
+      if (hoistArithmetics(I, *CurLoop, *SafetyInfo, MSSAU, AC, DT, SE)) {
         Changed = true;
         continue;
       }
@@ -2690,7 +2690,7 @@ static bool isReassociableOp(Instruction *I, unsigned IntOpcode,
 static bool hoistMulAddAssociation(Instruction &I, Loop &L,
                                    ICFLoopSafetyInfo &SafetyInfo,
                                    MemorySSAUpdater &MSSAU, AssumptionCache *AC,
-                                   DominatorTree *DT) {
+                                   DominatorTree *DT, ScalarEvolution *SE) {
   if (!isReassociableOp(&I, Instruction::Mul, Instruction::FMul))
     return false;
   Value *VariantOp = I.getOperand(0);
@@ -2761,6 +2761,8 @@ static bool hoistMulAddAssociation(Instruction &I, Loop &L,
       Mul = Builder.CreateFMulFMF(U->get(), Factor, Ins, "factor.op.fmul");
     U->set(Mul);
   }
+  if (SE)
+    SE->forgetValue(&I);
   I.replaceAllUsesWith(VariantOp);
   eraseInstruction(I, SafetyInfo, MSSAU);
   return true;
@@ -2769,7 +2771,7 @@ static bool hoistMulAddAssociation(Instruction &I, Loop &L,
 static bool hoistArithmetics(Instruction &I, Loop &L,
                              ICFLoopSafetyInfo &SafetyInfo,
                              MemorySSAUpdater &MSSAU, AssumptionCache *AC,
-                             DominatorTree *DT) {
+                             DominatorTree *DT, ScalarEvolution *SE) {
   // Optimize complex patterns, such as (x < INV1 && x < INV2), turning them
   // into (x < min(INV1, INV2)), and hoisting the invariant part of this
   // expression out of the loop.
@@ -2794,7 +2796,7 @@ static bool hoistArithmetics(Instruction &I, Loop &L,
   }
 
   bool IsInt = I.getType()->isIntOrIntVectorTy();
-  if (hoistMulAddAssociation(I, L, SafetyInfo, MSSAU, AC, DT)) {
+  if (hoistMulAddAssociation(I, L, SafetyInfo, MSSAU, AC, DT, SE)) {
     ++NumHoisted;
     if (IsInt)
       ++NumIntAssociationsHoisted;
