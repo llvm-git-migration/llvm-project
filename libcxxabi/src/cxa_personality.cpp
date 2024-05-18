@@ -1165,6 +1165,10 @@ __gxx_personality_v0(_Unwind_State state,
 }
 #endif
 
+_LIBCXXABI_FUNC_VIS void
+__cxa_call_terminate(void*) throw() {
+    std::terminate();
+}
 
 __attribute__((noreturn))
 _LIBCXXABI_FUNC_VIS void
