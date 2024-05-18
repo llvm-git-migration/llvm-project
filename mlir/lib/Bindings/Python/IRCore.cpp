@@ -634,58 +634,6 @@ PyMlirContext::LiveContextMap &PyMlirContext::getLiveContexts() {
 
 size_t PyMlirContext::getLiveCount() { return getLiveContexts().size(); }
 
-size_t PyMlirContext::getLiveOperationCount() { return liveOperations.size(); }
-
-std::vector<PyOperation *> PyMlirContext::getLiveOperationObjects() {
-  std::vector<PyOperation *> liveObjects;
-  for (auto &entry : liveOperations)
-    liveObjects.push_back(entry.second.second);
-  return liveObjects;
-}
-
-size_t PyMlirContext::clearLiveOperations() {
-  for (auto &op : liveOperations)
-    op.second.second->setInvalid();
-  size_t numInvalidated = liveOperations.size();
-  liveOperations.clear();
-  return numInvalidated;
-}
-
-void PyMlirContext::clearOperation(MlirOperation op) {
-  auto it = liveOperations.find(op.ptr);
-  if (it != liveOperations.end()) {
-    it->second.second->setInvalid();
-    liveOperations.erase(it);
-  }
-}
-
-void PyMlirContext::clearOperationsInside(PyOperationBase &op) {
-  typedef struct {
-    PyOperation &rootOp;
-    bool rootSeen;
-  } callBackData;
-  callBackData data{op.getOperation(), false};
-  // Mark all ops below the op that the passmanager will be rooted
-  // at (but not op itself - note the preorder) as invalid.
-  MlirOperationWalkCallback invalidatingCallback = [](MlirOperation op,
-                                                      void *userData) {
-    callBackData *data = static_cast<callBackData *>(userData);
-    if (LLVM_LIKELY(data->rootSeen))
-      data->rootOp.getOperation().getContext()->clearOperation(op);
-    else
-      data->rootSeen = true;
-    return MlirWalkResult::MlirWalkResultAdvance;
-  };
-  mlirOperationWalk(op.getOperation(), invalidatingCallback,
-                    static_cast<void *>(&data), MlirWalkPreOrder);
-}
-void PyMlirContext::clearOperationsInside(MlirOperation op) {
-  PyOperationRef opRef = PyOperation::forOperation(getRef(), op);
-  clearOperationsInside(opRef->getOperation());
-}
-
-size_t PyMlirContext::getLiveModuleCount() { return liveModules.size(); }
-
 pybind11::object PyMlirContext::contextEnter() {
   return PyThreadContextEntry::pushContext(*this);
 }
@@ -1055,39 +1003,21 @@ PyLocation &DefaultingPyLocation::resolve() {
 PyModule::PyModule(PyMlirContextRef contextRef, MlirModule module)
     : BaseContextObject(std::move(contextRef)), module(module) {}
 
-PyModule::~PyModule() {
-  py::gil_scoped_acquire acquire;
-  auto &liveModules = getContext()->liveModules;
-  assert(liveModules.count(module.ptr) == 1 &&
-         "destroying module not in live map");
-  liveModules.erase(module.ptr);
-  mlirModuleDestroy(module);
-}
+PyModule::~PyModule() { mlirModuleDestroy(module); }
 
 PyModuleRef PyModule::forModule(MlirModule module) {
   MlirContext context = mlirModuleGetContext(module);
   PyMlirContextRef contextRef = PyMlirContext::forContext(context);
 
-  py::gil_scoped_acquire acquire;
-  auto &liveModules = contextRef->liveModules;
-  auto it = liveModules.find(module.ptr);
-  if (it == liveModules.end()) {
-    // Create.
-    PyModule *unownedModule = new PyModule(std::move(contextRef), module);
-    // Note that the default return value policy on cast is automatic_reference,
-    // which does not take ownership (delete will not be called).
-    // Just be explicit.
-    py::object pyRef =
-        py::cast(unownedModule, py::return_value_policy::take_ownership);
-    unownedModule->handle = pyRef;
-    liveModules[module.ptr] =
-        std::make_pair(unownedModule->handle, unownedModule);
-    return PyModuleRef(unownedModule, std::move(pyRef));
-  }
-  // Use existing.
-  PyModule *existing = it->second.second;
-  py::object pyRef = py::reinterpret_borrow<py::object>(it->second.first);
-  return PyModuleRef(existing, std::move(pyRef));
+  // Create.
+  PyModule *unownedModule = new PyModule(std::move(contextRef), module);
+  // Note that the default return value policy on cast is automatic_reference,
+  // which does not take ownership (delete will not be called).
+  // Just be explicit.
+  py::object pyRef =
+      py::cast(unownedModule, py::return_value_policy::take_ownership);
+  unownedModule->handle = pyRef;
+  return PyModuleRef(unownedModule, std::move(pyRef));
 }
 
 py::object PyModule::createFromCapsule(py::object capsule) {
@@ -1112,10 +1042,6 @@ PyOperation::~PyOperation() {
   // If the operation has already been invalidated there is nothing to do.
   if (!valid)
     return;
-  auto &liveOperations = getContext()->liveOperations;
-  assert(liveOperations.count(operation.ptr) == 1 &&
-         "destroying operation not in live map");
-  liveOperations.erase(operation.ptr);
   if (!isAttached()) {
     mlirOperationDestroy(operation);
   }
@@ -1124,7 +1050,6 @@ PyOperation::~PyOperation() {
 PyOperationRef PyOperation::createInstance(PyMlirContextRef contextRef,
                                            MlirOperation operation,
                                            py::object parentKeepAlive) {
-  auto &liveOperations = contextRef->liveOperations;
   // Create.
   PyOperation *unownedOperation =
       new PyOperation(std::move(contextRef), operation);
@@ -1137,34 +1062,20 @@ PyOperationRef PyOperation::createInstance(PyMlirContextRef contextRef,
   if (parentKeepAlive) {
     unownedOperation->parentKeepAlive = std::move(parentKeepAlive);
   }
-  liveOperations[operation.ptr] = std::make_pair(pyRef, unownedOperation);
   return PyOperationRef(unownedOperation, std::move(pyRef));
 }
 
 PyOperationRef PyOperation::forOperation(PyMlirContextRef contextRef,
                                          MlirOperation operation,
                                          py::object parentKeepAlive) {
-  auto &liveOperations = contextRef->liveOperations;
-  auto it = liveOperations.find(operation.ptr);
-  if (it == liveOperations.end()) {
-    // Create.
-    return createInstance(std::move(contextRef), operation,
-                          std::move(parentKeepAlive));
-  }
-  // Use existing.
-  PyOperation *existing = it->second.second;
-  py::object pyRef = py::reinterpret_borrow<py::object>(it->second.first);
-  return PyOperationRef(existing, std::move(pyRef));
+  // Create.
+  return createInstance(std::move(contextRef), operation,
+                        std::move(parentKeepAlive));
 }
 
 PyOperationRef PyOperation::createDetached(PyMlirContextRef contextRef,
                                            MlirOperation operation,
                                            py::object parentKeepAlive) {
-  auto &liveOperations = contextRef->liveOperations;
-  assert(liveOperations.count(operation.ptr) == 0 &&
-         "cannot create detached operation that already exists");
-  (void)liveOperations;
-
   PyOperationRef created = createInstance(std::move(contextRef), operation,
                                           std::move(parentKeepAlive));
   created->attached = false;
@@ -1530,9 +1441,6 @@ void PyOperation::erase() {
   // TODO: Fix memory hazards when erasing a tree of operations for which a deep
   // Python reference to a child operation is live. All children should also
   // have their `valid` bit set to false.
-  auto &liveOperations = getContext()->liveOperations;
-  if (liveOperations.count(operation.ptr))
-    liveOperations.erase(operation.ptr);
   mlirOperationDestroy(operation);
   valid = false;
 }
@@ -2274,7 +2182,6 @@ class PyBlockArgumentList
     : public Sliceable<PyBlockArgumentList, PyBlockArgument> {
 public:
   static constexpr const char *pyClassName = "BlockArgumentList";
-  using SliceableT = Sliceable<PyBlockArgumentList, PyBlockArgument>;
 
   PyBlockArgumentList(PyOperationRef operation, MlirBlock block,
                       intptr_t startIndex = 0, intptr_t length = -1,
@@ -2598,14 +2505,6 @@ void mlir::python::populateIRCore(py::module &m) {
              PyMlirContextRef ref = PyMlirContext::forContext(self.get());
              return ref.releaseObject();
            })
-      .def("_get_live_operation_count", &PyMlirContext::getLiveOperationCount)
-      .def("_get_live_operation_objects",
-           &PyMlirContext::getLiveOperationObjects)
-      .def("_clear_live_operations", &PyMlirContext::clearLiveOperations)
-      .def("_clear_live_operations_inside",
-           py::overload_cast<MlirOperation>(
-               &PyMlirContext::clearOperationsInside))
-      .def("_get_live_module_count", &PyMlirContext::getLiveModuleCount)
       .def_property_readonly(MLIR_PYTHON_CAPI_PTR_ATTR,
                              &PyMlirContext::getCapsule)
       .def(MLIR_PYTHON_CAPI_FACTORY_ATTR, &PyMlirContext::createFromCapsule)
@@ -2915,7 +2814,13 @@ void mlir::python::populateIRCore(py::module &m) {
             // Defer to the operation's __str__.
             return self.attr("operation").attr("__str__")();
           },
-          kOperationStrDunderDocstring);
+          kOperationStrDunderDocstring)
+      .def(
+          "__eq__",
+          [](PyModule &self, PyModule &other) {
+            return mlirModuleEqual(self.get(), other.get());
+          },
+          "other"_a);
 
   //----------------------------------------------------------------------------
   // Mapping of Operation.
@@ -2927,7 +2832,8 @@ void mlir::python::populateIRCore(py::module &m) {
                              })
       .def("__eq__",
            [](PyOperationBase &self, PyOperationBase &other) {
-             return &self.getOperation() == &other.getOperation();
+             return mlirOperationEqual(self.getOperation().get(),
+                                       other.getOperation().get());
            })
       .def("__eq__",
            [](PyOperationBase &self, py::object other) { return false; })
