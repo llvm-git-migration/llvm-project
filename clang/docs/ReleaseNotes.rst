@@ -573,6 +573,8 @@ Bug Fixes in This Version
 - Clang now correctly disallows VLA type compound literals, e.g. ``(int[size]){}``,
   as the C standard mandates. (#GH89835)
 
+- Fix an out-of-bounds crash when diagnosing bad conversion for a function with a parameter pack. 
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
