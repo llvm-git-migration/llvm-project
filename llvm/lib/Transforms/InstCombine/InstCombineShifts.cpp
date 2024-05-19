@@ -1707,6 +1707,22 @@ Instruction *InstCombinerImpl::visitAShr(BinaryOperator &I) {
       if (match(Op0, m_OneUse(m_NSWSub(m_Value(X), m_Value(Y)))))
         return new SExtInst(Builder.CreateICmpSLT(X, Y), Ty);
     }
+
+    const APInt *MulC;
+    if (match(Op0, m_OneUse(m_NSWMul(m_Value(X), m_APInt(MulC)))) &&
+        (BitWidth > 2 && (*MulC - 1).isPowerOf2() &&
+         MulC->logBase2() == ShAmt &&
+         (ShAmt < BitWidth - 1 ||
+          I.isExact()))) /* Minus 1 for the sign bit */ {
+
+      // ashr (mul nsw (X, 2^N + 1)), N -> add nsw (X, ashr(X, N))
+      auto *NewAdd = BinaryOperator::CreateNSWAdd(
+          X,
+          Builder.CreateAShr(X, ConstantInt::get(Ty, ShAmt), "", I.isExact()));
+      NewAdd->setHasNoUnsignedWrap(
+          cast<OverflowingBinaryOperator>(Op0)->hasNoUnsignedWrap());
+      return NewAdd;
+    }
   }
 
   const SimplifyQuery Q = SQ.getWithInstruction(&I);
