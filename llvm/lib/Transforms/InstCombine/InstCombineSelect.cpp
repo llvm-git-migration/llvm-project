@@ -1073,6 +1073,40 @@ static Value *foldAbsDiff(ICmpInst *Cmp, Value *TVal, Value *FVal,
   return nullptr;
 }
 
+// (A % 2 == 0) ? (A/2*2) : B --> (A % 2 == 0) ? A : B
+// (A % 2 == 0) ? (A/2*2) * (A/2*2) : B --> (A % 2 == 0) ? BinOp A, A : B
+static Value *foldSelectWithIcmpEqAndPattern(ICmpInst *Cmp, Value *TVal,
+                                             Value *FVal,
+                                             InstCombiner::BuilderTy &Builder) {
+  Value *A;
+  ConstantInt *MaskedConstant;
+  ICmpInst::Predicate Pred = Cmp->getPredicate();
+
+  // Checks if the comparison is (A % 2 == 0) and A is not undef.
+  if (!(Pred == ICmpInst::ICMP_EQ &&
+        match(Cmp->getOperand(0), m_And(m_Value(A), m_SpecificInt(1))) &&
+        match(Cmp->getOperand(1), m_SpecificInt(0)) &&
+        isGuaranteedNotToBeUndef(A)))
+    return nullptr;
+
+  // Checks if true branch matches (A % 2).
+  if (match(TVal,
+            m_OneUse(m_And(m_Specific(A), m_ConstantInt(MaskedConstant)))) &&
+      MaskedConstant->getValue().getSExtValue() == -2)
+    return Builder.CreateSelect(Cmp, A, FVal);
+
+  // Checks if true branch is (A/2*2) * (A/2*2).
+  Value *MulVal;
+  if (match(TVal, m_OneUse(m_Mul(m_Value(MulVal), m_Deferred(MulVal)))))
+    if (match(MulVal, m_And(m_Specific(A), m_ConstantInt(MaskedConstant))) &&
+        MaskedConstant->getValue().getSExtValue() == -2) {
+      Value *NewBinop = Builder.CreateMul(A, A);
+      return Builder.CreateSelect(Cmp, NewBinop, FVal);
+    }
+
+  return nullptr;
+}
+
 /// Fold the following code sequence:
 /// \code
 ///   int a = ctlz(x & -x);
@@ -1931,6 +1965,10 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
     return replaceInstUsesWith(SI, V);
 
   if (Value *V = foldAbsDiff(ICI, TrueVal, FalseVal, Builder))
+    return replaceInstUsesWith(SI, V);
+
+  if (Value *V =
+          foldSelectWithIcmpEqAndPattern(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
 
   return Changed ? &SI : nullptr;
