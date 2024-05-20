@@ -9210,6 +9210,9 @@ public:
   /// receive true if the cause for the error is the associated constraints of
   /// the template not being satisfied by the template arguments.
   ///
+  /// \param DefaultArgs any default arguments from template specialization
+  /// deduction.
+  ///
   /// \param PartialOrderingTTP If true, assume these template arguments are
   /// the injected template arguments for a template template parameter.
   /// This will relax the requirement that all its possible uses are valid:
@@ -9219,7 +9222,8 @@ public:
   /// \returns true if an error occurred, false otherwise.
   bool CheckTemplateArgumentList(
       TemplateDecl *Template, SourceLocation TemplateLoc,
-      TemplateArgumentListInfo &TemplateArgs, bool PartialTemplateArgs,
+      TemplateArgumentListInfo &TemplateArgs,
+      const DefaultArguments &DefaultArgs, bool PartialTemplateArgs,
       SmallVectorImpl<TemplateArgument> &SugaredConverted,
       SmallVectorImpl<TemplateArgument> &CanonicalConverted,
       bool UpdateArgsWithConversions = true,
@@ -9718,8 +9722,8 @@ public:
                                     sema::TemplateDeductionInfo &Info);
 
   bool isTemplateTemplateParameterAtLeastAsSpecializedAs(
-      TemplateParameterList *PParam, TemplateDecl *AArg, SourceLocation Loc,
-      bool IsDeduced);
+      TemplateParameterList *PParam, TemplateDecl *AArg,
+      const DefaultArguments &DefaultArgs, SourceLocation Loc, bool IsDeduced);
 
   void MarkUsedTemplateParameters(const Expr *E, bool OnlyDeduced,
                                   unsigned Depth, llvm::SmallBitVector &Used);
