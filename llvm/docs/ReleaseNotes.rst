@@ -238,6 +238,10 @@ Changes to the LLVM tools
   documented in `--help` output and the command guide. (`#90474
   <https://github.com/llvm/llvm-project/pull/90474>`)
 
+* llvm-readobj's LLVM output has changed format for ELF core files. The
+  NT_FILE note now has a map for the mapped files
+  (`https://github.com/llvm/llvm-project/pull/92835`_).
+
 Changes to LLDB
 ---------------------------------
 
