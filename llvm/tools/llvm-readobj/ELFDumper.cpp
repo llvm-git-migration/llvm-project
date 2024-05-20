@@ -180,6 +180,16 @@ struct GroupSection {
   std::vector<GroupMember> Members;
 };
 
+struct CoreFileMapping {
+  uint64_t Start, End, Offset;
+  StringRef Filename;
+};
+
+struct CoreNote {
+  uint64_t PageSize;
+  std::vector<CoreFileMapping> Mappings;
+};
+
 namespace {
 
 struct NoteType {
@@ -762,6 +772,7 @@ protected:
                                           const unsigned SecNdx);
   virtual void printSectionGroupMembers(StringRef Name, uint64_t Idx) const;
   virtual void printEmptyGroupMessage() const;
+  virtual void printCoreNote(const CoreNote &Note, ScopedPrinter &W) const;
 
   ScopedPrinter &W;
 };
@@ -792,6 +803,8 @@ public:
   void printSectionGroupMembers(StringRef Name, uint64_t Idx) const override;
 
   void printEmptyGroupMessage() const override;
+
+  void printCoreNote(const CoreNote &Note, ScopedPrinter &W) const override;
 
 private:
   std::unique_ptr<DictScope> FileScope;
@@ -5736,16 +5749,6 @@ static AMDGPUNote getAMDGPUNote(uint32_t NoteType, ArrayRef<uint8_t> Desc) {
   }
 }
 
-struct CoreFileMapping {
-  uint64_t Start, End, Offset;
-  StringRef Filename;
-};
-
-struct CoreNote {
-  uint64_t PageSize;
-  std::vector<CoreFileMapping> Mappings;
-};
-
 static Expected<CoreNote> readCoreNote(DataExtractor Desc) {
   // Expected format of the NT_FILE note description:
   // 1. # of file mappings (call it N)
@@ -7838,10 +7841,26 @@ static bool printLLVMOMPOFFLOADNoteLLVMStyle(uint32_t NoteType,
   return true;
 }
 
-static void printCoreNoteLLVMStyle(const CoreNote &Note, ScopedPrinter &W) {
+template <class ELFT>
+void LLVMELFDumper<ELFT>::printCoreNote(const CoreNote &Note,
+                                        ScopedPrinter &W) const {
   W.printNumber("Page Size", Note.PageSize);
   for (const CoreFileMapping &Mapping : Note.Mappings) {
     ListScope D(W, "Mapping");
+    W.printHex("Start", Mapping.Start);
+    W.printHex("End", Mapping.End);
+    W.printHex("Offset", Mapping.Offset);
+    W.printString("Filename", Mapping.Filename);
+  }
+}
+
+template <class ELFT>
+void JSONELFDumper<ELFT>::printCoreNote(const CoreNote &Note,
+                                        ScopedPrinter &W) const {
+  W.printNumber("Page Size", Note.PageSize);
+  ListScope D(W, "Mappings");
+  for (const CoreFileMapping &Mapping : Note.Mappings) {
+    auto MappingDict = std::make_unique<DictScope>(W);
     W.printHex("Start", Mapping.Start);
     W.printHex("End", Mapping.End);
     W.printHex("Offset", Mapping.Offset);
@@ -7916,7 +7935,7 @@ template <class ELFT> void LLVMELFDumper<ELFT>::printNotes() {
             Descriptor, ELFT::Endianness == llvm::endianness::little,
             sizeof(Elf_Addr));
         if (Expected<CoreNote> N = readCoreNote(DescExtractor)) {
-          printCoreNoteLLVMStyle(*N, W);
+          printCoreNote(*N, W);
           return Error::success();
         } else {
           return N.takeError();
