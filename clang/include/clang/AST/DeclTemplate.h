@@ -1365,7 +1365,8 @@ class NonTypeTemplateParmDecl final
 
   /// The default template argument, if any, and whether or not
   /// it was inherited.
-  using DefArgStorage = DefaultArgStorage<NonTypeTemplateParmDecl, Expr *>;
+  using DefArgStorage =
+      DefaultArgStorage<NonTypeTemplateParmDecl, TemplateArgumentLoc *>;
   DefArgStorage DefaultArgument;
 
   // FIXME: Collapse this into TemplateParamPosition; or, just move depth/index
@@ -1435,7 +1436,10 @@ public:
   bool hasDefaultArgument() const { return DefaultArgument.isSet(); }
 
   /// Retrieve the default argument, if any.
-  Expr *getDefaultArgument() const { return DefaultArgument.get(); }
+  const TemplateArgumentLoc &getDefaultArgument() const {
+    static const TemplateArgumentLoc NoneLoc;
+    return DefaultArgument.isSet() ? *DefaultArgument.get() : NoneLoc;
+  }
 
   /// Retrieve the location of the default argument, if any.
   SourceLocation getDefaultArgumentLoc() const;
@@ -1449,7 +1453,8 @@ public:
   /// Set the default argument for this template parameter, and
   /// whether that default argument was inherited from another
   /// declaration.
-  void setDefaultArgument(Expr *DefArg) { DefaultArgument.set(DefArg); }
+  void setDefaultArgument(const ASTContext &C,
+                          const TemplateArgumentLoc &DefArg);
   void setInheritedDefaultArgument(const ASTContext &C,
                                    NonTypeTemplateParmDecl *Parm) {
     DefaultArgument.setInherited(C, Parm);
