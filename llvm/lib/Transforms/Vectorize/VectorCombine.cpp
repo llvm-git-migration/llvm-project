@@ -1772,9 +1772,8 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
         !cast<BinaryOperator>(Item[0].first)->isIntDivRem()) {
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 0));
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 1));
-    } else if (isa<UnaryOperator>(Item[0].first) ||
-               isa<TruncInst>(Item[0].first) || isa<ZExtInst>(Item[0].first) ||
-               isa<SExtInst>(Item[0].first)) {
+    } else if (isa<UnaryOperator, TruncInst, SExtInst, ZExtInst>(
+                   Item[0].first)) {
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 0));
     } else if (auto *II = dyn_cast<IntrinsicInst>(Item[0].first);
                II && isTriviallyVectorizable(II->getIntrinsicID())) {
