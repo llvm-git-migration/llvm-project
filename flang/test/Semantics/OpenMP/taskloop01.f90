@@ -1,6 +1,7 @@
 ! RUN: %python %S/../test_errors.py %s %flang -fopenmp
 ! OpenMP Version 4.5
 ! 2.9.2 taskloop Construct
+! UNSUPPORTED: system-windows
 
 subroutine parallel_work
   integer i
