@@ -149,6 +149,9 @@ Resolutions to C++ Defect Reports
   of the target type, even if the type of the bit-field is larger.
   (`CWG2627: Bit-fields and narrowing conversions <https://cplusplus.github.io/CWG/issues/2627.html>`_)
 
+- Clang now has improved resolution to CWG2398, allowing class templates to have
+  default arguments deduced when partial ordering.
+
 C Language Changes
 ------------------
 
