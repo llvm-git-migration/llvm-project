@@ -2,6 +2,7 @@
 ! OpenMP Version 4.5
 ! 2.9.2 taskloop Construct
 ! Invalid entry to OpenMP structured block.
+! UNSUPPORTED: system-windows
 
 program omp_taskloop
   integer i , j
