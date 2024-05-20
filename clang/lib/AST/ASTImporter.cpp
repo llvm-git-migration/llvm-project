@@ -420,13 +420,8 @@ namespace clang {
     Error ImportDefinition(
         ObjCInterfaceDecl *From, ObjCInterfaceDecl *To,
         ImportDefinitionKind Kind = IDK_Default);
-    Error ImportDefinition(
-        ObjCProtocolDecl *From, ObjCProtocolDecl *To,
-        ImportDefinitionKind Kind = IDK_Default);
-    Error ImportTemplateArguments(ArrayRef<TemplateArgument> FromArgs,
-                                  SmallVectorImpl<TemplateArgument> &ToArgs);
-    Expected<TemplateArgument>
-    ImportTemplateArgument(const TemplateArgument &From);
+    Error ImportDefinition(ObjCProtocolDecl *From, ObjCProtocolDecl *To,
+                           ImportDefinitionKind Kind = IDK_Default);
 
     template <typename InContainerTy>
     Error ImportTemplateArgumentListInfo(
@@ -746,8 +741,8 @@ ASTNodeImporter::ImportFunctionTemplateWithTemplateArgsFromSpecialization(
     return std::move(Err);
 
   // Import template arguments.
-  if (Error Err = ImportTemplateArguments(FTSInfo->TemplateArguments->asArray(),
-                                          std::get<1>(Result)))
+  if (Error Err = Importer.ImportTemplateArguments(
+          FTSInfo->TemplateArguments->asArray(), std::get<1>(Result)))
     return std::move(Err);
 
   return Result;
@@ -783,15 +778,13 @@ ASTNodeImporter::import(TemplateParameterList *From) {
       *ToRequiresClause);
 }
 
-template <>
-Expected<TemplateArgument>
-ASTNodeImporter::import(const TemplateArgument &From) {
+Expected<TemplateArgument> ASTImporter::Import(const TemplateArgument &From) {
   switch (From.getKind()) {
   case TemplateArgument::Null:
     return TemplateArgument();
 
   case TemplateArgument::Type: {
-    ExpectedType ToTypeOrErr = import(From.getAsType());
+    ExpectedType ToTypeOrErr = Import(From.getAsType());
     if (!ToTypeOrErr)
       return ToTypeOrErr.takeError();
     return TemplateArgument(*ToTypeOrErr, /*isNullPtr*/ false,
@@ -799,17 +792,17 @@ ASTNodeImporter::import(const TemplateArgument &From) {
   }
 
   case TemplateArgument::Integral: {
-    ExpectedType ToTypeOrErr = import(From.getIntegralType());
+    ExpectedType ToTypeOrErr = Import(From.getIntegralType());
     if (!ToTypeOrErr)
       return ToTypeOrErr.takeError();
     return TemplateArgument(From, *ToTypeOrErr);
   }
 
   case TemplateArgument::Declaration: {
-    Expected<ValueDecl *> ToOrErr = import(From.getAsDecl());
+    Expected<Decl *> ToOrErr = Import(From.getAsDecl());
     if (!ToOrErr)
       return ToOrErr.takeError();
-    ExpectedType ToTypeOrErr = import(From.getParamTypeForDecl());
+    ExpectedType ToTypeOrErr = Import(From.getParamTypeForDecl());
     if (!ToTypeOrErr)
       return ToTypeOrErr.takeError();
     return TemplateArgument(dyn_cast<ValueDecl>((*ToOrErr)->getCanonicalDecl()),
@@ -817,7 +810,7 @@ ASTNodeImporter::import(const TemplateArgument &From) {
   }
 
   case TemplateArgument::NullPtr: {
-    ExpectedType ToTypeOrErr = import(From.getNullPtrType());
+    ExpectedType ToTypeOrErr = Import(From.getNullPtrType());
     if (!ToTypeOrErr)
       return ToTypeOrErr.takeError();
     return TemplateArgument(*ToTypeOrErr, /*isNullPtr*/ true,
@@ -825,18 +818,17 @@ ASTNodeImporter::import(const TemplateArgument &From) {
   }
 
   case TemplateArgument::StructuralValue: {
-    ExpectedType ToTypeOrErr = import(From.getStructuralValueType());
+    ExpectedType ToTypeOrErr = Import(From.getStructuralValueType());
     if (!ToTypeOrErr)
       return ToTypeOrErr.takeError();
-    Expected<APValue> ToValueOrErr = import(From.getAsStructuralValue());
+    Expected<APValue> ToValueOrErr = Import(From.getAsStructuralValue());
     if (!ToValueOrErr)
       return ToValueOrErr.takeError();
-    return TemplateArgument(Importer.getToContext(), *ToTypeOrErr,
-                            *ToValueOrErr);
+    return TemplateArgument(getToContext(), *ToTypeOrErr, *ToValueOrErr);
   }
 
   case TemplateArgument::Template: {
-    Expected<TemplateName> ToTemplateOrErr = import(From.getAsTemplate());
+    Expected<TemplateName> ToTemplateOrErr = Import(From.getAsTemplate());
     if (!ToTemplateOrErr)
       return ToTemplateOrErr.takeError();
 
@@ -845,7 +837,7 @@ ASTNodeImporter::import(const TemplateArgument &From) {
 
   case TemplateArgument::TemplateExpansion: {
     Expected<TemplateName> ToTemplateOrErr =
-        import(From.getAsTemplateOrTemplatePattern());
+        Import(From.getAsTemplateOrTemplatePattern());
     if (!ToTemplateOrErr)
       return ToTemplateOrErr.takeError();
 
@@ -854,7 +846,7 @@ ASTNodeImporter::import(const TemplateArgument &From) {
   }
 
   case TemplateArgument::Expression:
-    if (ExpectedExpr ToExpr = import(From.getAsExpr()))
+    if (ExpectedExpr ToExpr = Import(From.getAsExpr()))
       return TemplateArgument(*ToExpr, From.getIsDefaulted());
     else
       return ToExpr.takeError();
@@ -865,8 +857,7 @@ ASTNodeImporter::import(const TemplateArgument &From) {
     if (Error Err = ImportTemplateArguments(From.pack_elements(), ToPack))
       return std::move(Err);
 
-    return TemplateArgument(
-        llvm::ArrayRef(ToPack).copy(Importer.getToContext()));
+    return TemplateArgument(llvm::ArrayRef(ToPack).copy(getToContext()));
   }
   }
 
@@ -1472,8 +1463,8 @@ ExpectedType ASTNodeImporter::VisitAutoType(const AutoType *T) {
     return ToTypeConstraintConcept.takeError();
 
   SmallVector<TemplateArgument, 2> ToTemplateArgs;
-  if (Error Err = ImportTemplateArguments(T->getTypeConstraintArguments(),
-                                          ToTemplateArgs))
+  if (Error Err = Importer.ImportTemplateArguments(
+          T->getTypeConstraintArguments(), ToTemplateArgs))
     return std::move(Err);
 
   return Importer.getToContext().getAutoType(
@@ -1605,8 +1596,8 @@ ExpectedType ASTNodeImporter::VisitTemplateSpecializationType(
     return ToTemplateOrErr.takeError();
 
   SmallVector<TemplateArgument, 2> ToTemplateArgs;
-  if (Error Err =
-          ImportTemplateArguments(T->template_arguments(), ToTemplateArgs))
+  if (Error Err = Importer.ImportTemplateArguments(T->template_arguments(),
+                                                   ToTemplateArgs))
     return std::move(Err);
 
   QualType ToCanonType;
@@ -1664,7 +1655,8 @@ ExpectedType ASTNodeImporter::VisitDependentTemplateSpecializationType(
 
   SmallVector<TemplateArgument, 2> ToPack;
   ToPack.reserve(T->template_arguments().size());
-  if (Error Err = ImportTemplateArguments(T->template_arguments(), ToPack))
+  if (Error Err =
+          Importer.ImportTemplateArguments(T->template_arguments(), ToPack))
     return std::move(Err);
 
   return Importer.getToContext().getDependentTemplateSpecializationType(
@@ -2386,23 +2378,17 @@ Error ASTNodeImporter::ImportDefinition(
   return Error::success();
 }
 
-Error ASTNodeImporter::ImportTemplateArguments(
+Error ASTImporter::ImportTemplateArguments(
     ArrayRef<TemplateArgument> FromArgs,
     SmallVectorImpl<TemplateArgument> &ToArgs) {
   for (const auto &Arg : FromArgs) {
-    if (auto ToOrErr = import(Arg))
+    if (auto ToOrErr = Import(Arg))
       ToArgs.push_back(*ToOrErr);
     else
       return ToOrErr.takeError();
   }
 
   return Error::success();
-}
-
-// FIXME: Do not forget to remove this and use only 'import'.
-Expected<TemplateArgument>
-ASTNodeImporter::ImportTemplateArgument(const TemplateArgument &From) {
-  return import(From);
 }
 
 template <typename InContainerTy>
@@ -6147,8 +6133,8 @@ ExpectedDecl ASTNodeImporter::VisitClassTemplateSpecializationDecl(
 
   // Import template arguments.
   SmallVector<TemplateArgument, 2> TemplateArgs;
-  if (Error Err =
-          ImportTemplateArguments(D->getTemplateArgs().asArray(), TemplateArgs))
+  if (Error Err = Importer.ImportTemplateArguments(
+          D->getTemplateArgs().asArray(), TemplateArgs))
     return std::move(Err);
   // Try to find an existing specialization with these template arguments and
   // template parameter list.
@@ -6484,8 +6470,8 @@ ExpectedDecl ASTNodeImporter::VisitVarTemplateSpecializationDecl(
 
   // Import template arguments.
   SmallVector<TemplateArgument, 2> TemplateArgs;
-  if (Error Err =
-          ImportTemplateArguments(D->getTemplateArgs().asArray(), TemplateArgs))
+  if (Error Err = Importer.ImportTemplateArguments(
+          D->getTemplateArgs().asArray(), TemplateArgs))
     return std::move(Err);
 
   // Try to find an existing specialization with these template arguments.
@@ -8225,8 +8211,8 @@ ExpectedStmt ASTNodeImporter::VisitSizeOfPackExpr(SizeOfPackExpr *E) {
 
   SmallVector<TemplateArgument, 8> ToPartialArguments;
   if (E->isPartiallySubstituted()) {
-    if (Error Err = ImportTemplateArguments(E->getPartialArguments(),
-                                            ToPartialArguments))
+    if (Error Err = Importer.ImportTemplateArguments(E->getPartialArguments(),
+                                                     ToPartialArguments))
       return std::move(Err);
   }
 
@@ -9868,8 +9854,7 @@ Expected<TemplateName> ASTImporter::Import(TemplateName From) {
     SubstTemplateTemplateParmPackStorage *SubstPack =
         From.getAsSubstTemplateTemplateParmPack();
     ASTNodeImporter Importer(*this);
-    auto ArgPackOrErr =
-        Importer.ImportTemplateArgument(SubstPack->getArgumentPack());
+    auto ArgPackOrErr = Import(SubstPack->getArgumentPack());
     if (!ArgPackOrErr)
       return ArgPackOrErr.takeError();
 
@@ -9886,6 +9871,19 @@ Expected<TemplateName> ASTImporter::Import(TemplateName From) {
     if (!UsingOrError)
       return UsingOrError.takeError();
     return TemplateName(cast<UsingShadowDecl>(*UsingOrError));
+  }
+  case TemplateName::DeducedTemplate: {
+    DeducedTemplateStorage *S = From.getAsDeducedTemplateName();
+    auto UnderlyingOrError = Import(S->getUnderlying());
+    if (!UnderlyingOrError)
+      return UnderlyingOrError.takeError();
+
+    DefaultArguments FromDefArgs = S->getDefaultArguments();
+    SmallVector<TemplateArgument, 8> ToTemplateArgs;
+    if (Error Err = ImportTemplateArguments(FromDefArgs.Args, ToTemplateArgs))
+      return std::move(Err);
+    return ToContext.getDeducedTemplateName(
+        *UnderlyingOrError, {FromDefArgs.StartPos, ToTemplateArgs});
   }
   }
 

@@ -2385,6 +2385,16 @@ void CXXNameMangler::mangleType(TemplateName TN) {
     Out << "_SUBSTPACK_";
     break;
   }
+  case TemplateName::DeducedTemplate: {
+    DeducedTemplateStorage *S = TN.getAsDeducedTemplateName();
+    mangleType(S->getUnderlying());
+    auto [StartPos, Args] = S->getDefaultArguments();
+    mangleNumber(StartPos);
+    Out << 'I';
+    for (unsigned I = 0; I != Args.size(); ++I)
+      mangleTemplateArg(Args[I], /*NeedExactType=*/true);
+    Out << 'E';
+  }
   }
 
   addSubstitution(TN);
@@ -2502,6 +2512,7 @@ bool CXXNameMangler::mangleUnresolvedTypeOrSimpleId(QualType Ty,
     case TemplateName::OverloadedTemplate:
     case TemplateName::AssumedTemplate:
     case TemplateName::DependentTemplate:
+    case TemplateName::DeducedTemplate:
       llvm_unreachable("invalid base for a template specialization type");
 
     case TemplateName::SubstTemplateTemplateParm: {
