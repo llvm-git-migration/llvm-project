@@ -2270,24 +2270,25 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
   SmallVector<Operation *> payload =
       llvm::to_vector(state.getPayloadOps(getTarget()));
 
-  bool isMultiwaySplit = getMultiway() ? true : false;
+  bool isMultiwaySplit = getMultiway();
 
   if (isMultiwaySplit && !llvm::hasSingleElement(payload)) {
-    return emitDefiniteFailure() << "requires exactly one target when "
-                                    "multiway split is enabled (got "
-                                 << llvm::range_size(payload) << ")";
+    return mlir::emitSilenceableFailure(getLoc())
+           << "requires exactly one target when "
+              "multiway split is enabled (got "
+           << llvm::range_size(payload) << ")";
   }
 
-  SmallVector<OpFoldResult> splitPoints;
+  SmallVector<OpFoldResult> chunkSizes;
 
   if (!isMultiwaySplit)
-    splitPoints.reserve(payload.size());
+    chunkSizes.reserve(payload.size());
 
-  if (getDynamicSplitPoint()) {
+  if (getDynamicChunkSizes()) {
     auto diag = DiagnosedSilenceableFailure::success();
-    if (isa<TransformHandleTypeInterface>(getDynamicSplitPoint().getType())) {
-      splitPoints = llvm::to_vector(llvm::map_range(
-          state.getPayloadOps(getDynamicSplitPoint()), [&](Operation *op) {
+    if (isa<TransformHandleTypeInterface>(getDynamicChunkSizes().getType())) {
+      chunkSizes = llvm::to_vector(llvm::map_range(
+          state.getPayloadOps(getDynamicChunkSizes()), [&](Operation *op) {
             if (op->getNumResults() != 1 ||
                 !op->getResult(0).getType().isIndex()) {
               diag = emitSilenceableError()
@@ -2298,8 +2299,8 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
             return OpFoldResult(op->getResult(0));
           }));
     } else {
-      splitPoints = llvm::to_vector(
-          llvm::map_range(state.getParams(getDynamicSplitPoint()),
+      chunkSizes = llvm::to_vector(
+          llvm::map_range(state.getParams(getDynamicChunkSizes()),
                           [](Attribute attr) { return OpFoldResult(attr); }));
     }
     if (diag.isSilenceableFailure())
@@ -2307,53 +2308,75 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
 
     // For multiway split, a single payload is expected to have multiple
     // split points.
-    if (!isMultiwaySplit && splitPoints.size() != payload.size()) {
+    if (!isMultiwaySplit && chunkSizes.size() != payload.size()) {
       return emitDefiniteFailure()
              << "expected the dynamic split point handle to point to as "
                 "many operations ("
-             << splitPoints.size() << ") as the target handle ("
+             << chunkSizes.size() << ") as the target handle ("
              << payload.size() << ")";
     }
   } else {
-    splitPoints.resize(payload.size(),
-                       rewriter.getIndexAttr(getStaticSplitPoint()));
+    chunkSizes.resize(payload.size(),
+                       rewriter.getIndexAttr(getStaticChunkSizes()));
   }
+
+  auto checkStructuredOpAndDimensions = [&](LinalgOp linalgOp, Location loc) {
+    if (!linalgOp) {
+      auto diag = emitSilenceableError() << "only applies to structured ops";
+      diag.attachNote(loc) << "target op";
+      return diag;
+    }
+
+    if (getDimension() >= linalgOp.getNumLoops()) {
+      auto diag = emitSilenceableError() << "dimension " << getDimension()
+                                          << " does not exist in target op";
+      diag.attachNote(loc) << "target op";
+      return diag;
+    }
+    return DiagnosedSilenceableFailure::success();
+  };
+
+  auto checkFailureInSplitting = [&](bool hasFailed, Location loc) {
+    if (hasFailed) {
+      auto diag = emitDefiniteFailure() << "internal failure in splitting";
+      diag.attachNote(loc) << "target op";
+      return DiagnosedSilenceableFailure(diag);
+    }
+    return DiagnosedSilenceableFailure::success();
+  };
 
   if (isMultiwaySplit) {
 
     // Split a single target operation at multiple points.
     SmallVector<Operation *> opList;
     Operation *head, *tail;
-    for (const auto [idx, splitPoint] : llvm::enumerate(splitPoints)) {
+    Operation *target = payload.front();
 
-      Operation *target;
-      if (idx == 0)
-        target = payload.front();
-      else
+    auto linalgOp = dyn_cast<LinalgOp>(target);
+    auto diag = checkStructuredOpAndDimensions(linalgOp, target->getLoc());
+
+    if (diag.isSilenceableFailure())
+      return diag;
+
+    for (const auto &&[idx, chunkSize] : llvm::enumerate(chunkSizes)) {
+
+      if (idx > 0)
         target = tail;
 
       if (!target)
         break;
 
-      auto linalgOp = dyn_cast<LinalgOp>(target);
-
-      if (!linalgOp) {
-        auto diag = emitSilenceableError() << "only applies to structured ops";
-        diag.attachNote(target->getLoc()) << "target op";
-        return diag;
-      }
-
-      if (getDimension() >= linalgOp.getNumLoops()) {
-        auto diag = emitSilenceableError() << "dimension " << getDimension()
-                                           << " does not exist in target op";
-        diag.attachNote(target->getLoc()) << "target op";
-        return diag;
-      }
+      linalgOp = dyn_cast<LinalgOp>(target);
 
       rewriter.setInsertionPoint(linalgOp);
       std::tie(head, tail) = linalg::splitOp(
           rewriter, cast<TilingInterface>(linalgOp.getOperation()),
-          getDimension(), splitPoint);
+          getDimension(), chunkSize);
+
+      // Propagate errors.
+      auto diag = checkFailureInSplitting(!head && !tail, target->getLoc());
+      if (diag.isDefiniteFailure())
+        return diag;
 
       opList.push_back(head);
     }
@@ -2368,21 +2391,13 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
     // Split each target operation.
     SmallVector<Operation *> first, second;
     Operation *noSecondPart = nullptr;
-    for (const auto &pair : llvm::zip(payload, splitPoints)) {
+    for (const auto &pair : llvm::zip(payload, chunkSizes)) {
       Operation *target = std::get<0>(pair);
       auto linalgOp = dyn_cast<LinalgOp>(target);
-      if (!linalgOp) {
-        auto diag = emitSilenceableError() << "only applies to structured ops";
-        diag.attachNote(target->getLoc()) << "target op";
-        return diag;
-      }
+      auto diag = checkStructuredOpAndDimensions(linalgOp, target->getLoc());
 
-      if (getDimension() >= linalgOp.getNumLoops()) {
-        auto diag = emitSilenceableError() << "dimension " << getDimension()
-                                           << " does not exist in target op";
-        diag.attachNote(target->getLoc()) << "target op";
+      if (diag.isSilenceableFailure())
         return diag;
-      }
 
       rewriter.setInsertionPoint(linalgOp);
       std::tie(first.emplace_back(), second.emplace_back()) = linalg::splitOp(
@@ -2390,11 +2405,10 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
           getDimension(), std::get<1>(pair));
 
       // Propagate errors.
-      if (!first.back() && !second.back()) {
-        auto diag = emitDefiniteFailure() << "internal failure in splitting";
-        diag.attachNote(target->getLoc()) << "target op";
+      auto diagSplit = checkFailureInSplitting(!first.back() && !second.back(),
+                                     target->getLoc());
+      if (diagSplit.isDefiniteFailure())
         return diag;
-      }
 
       // Do not add null second parts.
       if (!second.back()) {
@@ -2424,27 +2438,27 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
 void SplitOp::getEffects(
     SmallVectorImpl<MemoryEffects::EffectInstance> &effects) {
   consumesHandle(getTarget(), effects);
-  if (getDynamicSplitPoint())
-    onlyReadsHandle(getDynamicSplitPoint(), effects);
+  if (getDynamicChunkSizes())
+    onlyReadsHandle(getDynamicChunkSizes(), effects);
   producesHandle(getResults(), effects);
   modifiesPayload(effects);
 }
 
 ParseResult SplitOp::parse(OpAsmParser &parser, OperationState &result) {
-  OpAsmParser::UnresolvedOperand target, dynamicSplitPoint;
-  IntegerAttr staticSplitPoint;
+  OpAsmParser::UnresolvedOperand target, dynamicChunkSizes;
+  IntegerAttr staticChunkSizes;
   if (parser.parseOperand(target) || parser.parseKeyword("after"))
     return failure();
 
   OptionalParseResult dynamicPointParseResult =
-      parser.parseOptionalOperand(dynamicSplitPoint);
+      parser.parseOptionalOperand(dynamicChunkSizes);
   if (!dynamicPointParseResult.has_value()) {
-    int64_t staticSplitPointValue;
-    if (failed(parser.parseInteger(staticSplitPointValue)))
+    int64_t staticChunkSizesValue;
+    if (failed(parser.parseInteger(staticChunkSizesValue)))
       return failure();
 
-    staticSplitPoint =
-        parser.getBuilder().getI64IntegerAttr(staticSplitPointValue);
+    staticChunkSizes =
+        parser.getBuilder().getI64IntegerAttr(staticChunkSizesValue);
   }
 
   Type targetType;
@@ -2454,43 +2468,43 @@ ParseResult SplitOp::parse(OpAsmParser &parser, OperationState &result) {
     return failure();
   }
   if (dynamicPointParseResult.has_value()) {
-    Type splitPointType;
+    Type ChunkSizesType;
     if (failed(*dynamicPointParseResult) || parser.parseComma() ||
-        parser.parseType(splitPointType) ||
-        parser.resolveOperand(dynamicSplitPoint, splitPointType,
+        parser.parseType(ChunkSizesType) ||
+        parser.resolveOperand(dynamicChunkSizes, ChunkSizesType,
                               result.operands)) {
       return failure();
     }
 
-    staticSplitPoint =
+    staticChunkSizes =
         parser.getBuilder().getI64IntegerAttr(ShapedType::kDynamic);
   }
 
   result.addAttribute(
-      SplitOp::getStaticSplitPointAttrName(result.name).getValue(),
-      staticSplitPoint);
+      SplitOp::getStaticChunkSizesAttrName(result.name).getValue(),
+      staticChunkSizes);
   result.addTypes({targetType, targetType});
   return success();
 }
 
 void SplitOp::print(OpAsmPrinter &printer) {
   printer << " " << getTarget() << " after ";
-  int64_t staticSplitSize = static_cast<int64_t>(getStaticSplitPoint());
-  if (staticSplitSize != ShapedType::kDynamic)
-    printer << staticSplitSize;
+  int64_t staticChunkSize = static_cast<int64_t>(getStaticChunkSizes());
+  if (staticChunkSize != ShapedType::kDynamic)
+    printer << staticChunkSize;
   else
-    printer << getDynamicSplitPoint();
+    printer << getDynamicChunkSizes();
   printer << " ";
   printer.printOptionalAttrDict(getOperation()->getAttrs(),
-                                {getStaticSplitPointAttrName()});
+                                {getStaticChunkSizesAttrName()});
   printer << " : " << getTarget().getType();
-  if (staticSplitSize == ShapedType::kDynamic)
-    printer << ", " << getDynamicSplitPoint().getType();
+  if (staticChunkSize == ShapedType::kDynamic)
+    printer << ", " << getDynamicChunkSizes().getType();
 }
 
 LogicalResult SplitOp::verify() {
-  if ((static_cast<int64_t>(getStaticSplitPoint()) != ShapedType::kDynamic) ^
-      (getDynamicSplitPoint() == nullptr)) {
+  if ((static_cast<int64_t>(getStaticChunkSizes()) != ShapedType::kDynamic) ^
+      (getDynamicChunkSizes() == nullptr)) {
     return emitOpError() << "expects either a dynamic or a static split "
                             "point to be provided";
   }
