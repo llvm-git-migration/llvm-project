@@ -1757,6 +1757,13 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
             return false;
           if (IL.first->getValueID() != Item[0].first->getValueID())
             return false;
+          if (auto *CI = dyn_cast<CmpInst>(IL.first))
+            if (CI->getPredicate() !=
+                cast<CmpInst>(Item[0].first)->getPredicate())
+              return false;
+          if (auto *SI = dyn_cast<SelectInst>(IL.first))
+            if (!isa<VectorType>(SI->getOperand(0)->getType()))
+              return false;
           if (isa<CallInst>(IL.first) && !isa<IntrinsicInst>(IL.first))
             return false;
           auto *II = dyn_cast<IntrinsicInst>(IL.first);
@@ -1769,12 +1776,17 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
 
     // Check the operator is one that we support. We exclude div/rem in case
     // they hit UB from poison lanes.
-    if (isa<BinaryOperator>(Item[0].first) &&
-        !cast<BinaryOperator>(Item[0].first)->isIntDivRem()) {
+    if ((isa<BinaryOperator>(Item[0].first) &&
+         !cast<BinaryOperator>(Item[0].first)->isIntDivRem()) ||
+        isa<CmpInst>(Item[0].first)) {
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 0));
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 1));
     } else if (isa<UnaryOperator>(Item[0].first)) {
       Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 0));
+    } else if (isa<SelectInst>(Item[0].first)) {
+      Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 0));
+      Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 1));
+      Worklist.push_back(GenerateInstLaneVectorFromOperand(Item, 2));
     } else if (auto *II = dyn_cast<IntrinsicInst>(Item[0].first);
                II && isTriviallyVectorizable(II->getIntrinsicID())) {
       for (unsigned Op = 0, E = II->getNumOperands() - 1; Op < E; Op++) {
@@ -1834,6 +1846,10 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
     if (auto BI = dyn_cast<BinaryOperator>(I))
       return Builder.CreateBinOp((Instruction::BinaryOps)BI->getOpcode(),
                                  Ops[0], Ops[1]);
+    if (auto CI = dyn_cast<CmpInst>(I))
+      return Builder.CreateCmp(CI->getPredicate(), Ops[0], Ops[1]);
+    if (auto SI = dyn_cast<SelectInst>(I))
+      return Builder.CreateSelect(Ops[0], Ops[1], Ops[2], "", SI);
     if (II)
       return Builder.CreateIntrinsic(DstTy, II->getIntrinsicID(), Ops);
     assert(isa<UnaryInstruction>(I) &&
