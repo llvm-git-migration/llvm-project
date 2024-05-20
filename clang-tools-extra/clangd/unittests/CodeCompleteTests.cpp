@@ -534,6 +534,7 @@ TEST(CompletionTest, HeuristicsForMemberFunctionCompletion) {
         int method(int) const;
         template <typename T, typename U, typename V = int>
         T generic(U, V);
+        int explicitObject(this Foo&, int);
         template <typename T, int U>
         static T staticGeneric();
         Foo() {
@@ -580,6 +581,7 @@ TEST(CompletionTest, HeuristicsForMemberFunctionCompletion) {
       }
       )cpp");
   auto TU = TestTU::withCode(Code.code());
+  TU.ExtraArgs.push_back("-std=c++23");
 
   for (const auto &P : Code.points("canNotBeCall")) {
     auto Results = completions(TU, P, /*IndexSymbols*/ {}, Opts);
@@ -604,6 +606,9 @@ TEST(CompletionTest, HeuristicsForMemberFunctionCompletion) {
         Results.Completions,
         Contains(AllOf(named("generic"), signature("<typename T>(U, V)"),
                        snippetSuffix("<${1:typename T}>(${2:U}, ${3:V})"))));
+    EXPECT_THAT(Results.Completions,
+                Contains(AllOf(named("explicitObject"), signature("(int)"),
+                               snippetSuffix("(${1:int})"))));
   }
 
   // static method will always keep the snippet
