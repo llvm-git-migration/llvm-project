@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -triple aarch64-none-linux-gnu  -target-feature +sme2p1 -fsyntax-only -verify %s
+// RUN: %clang_cc1 -triple aarch64-none-linux-gnu  -target-feature +sme2p1 -target-feature +sme2 -fsyntax-only -verify %s
 
 // REQUIRES: aarch64-registered-target
 #include "arm_sme.h"
