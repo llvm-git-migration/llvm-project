@@ -146,6 +146,7 @@ public:
 
 class GOFFState {
   void writeHeader(GOFFYAML::ModuleHeader &ModHdr);
+  void writeText(GOFFYAML::Text &Txt);
   void writeEnd(GOFFYAML::EndOfModule &EndMod);
 
   void reportError(const Twine &Msg) {
@@ -181,6 +182,23 @@ void GOFFState::writeHeader(GOFFYAML::ModuleHeader &ModHdr) {
     LR << *ModHdr.Properties; // Module properties.
 }
 
+void GOFFState::writeText(GOFFYAML::Text &Txt) {
+  GW.newRecord(GOFF::RT_TXT);
+  LogicalRecord LR(GW);
+  LR << binaryBe(uint8_t(Txt.Style)) // Text record style.
+     << binaryBe(
+            Txt.ESDID) // ESDID of the element/part to which this data belongs.
+     << zeros(4)       // Reserved.
+     << binaryBe(Txt.Offset)      // Starting offset from element/part.
+     << binaryBe(Txt.TrueLength)  // True length if encoded.
+     << binaryBe(Txt.Encoding)    // Encoding.
+     << binaryBe(Txt.DataLength); // Total length of data.
+  if (Txt.Data)
+    LR << *Txt.Data; // Data.
+  else
+    LR << zeros(Txt.DataLength);
+}
+
 void GOFFState::writeEnd(GOFFYAML::EndOfModule &EndMod) {
   SmallString<16> EntryName;
   if (std::error_code EC =
@@ -207,12 +225,14 @@ bool GOFFState::writeObject() {
     case GOFFYAML::RecordBase::RBK_ModuleHeader:
       writeHeader(*static_cast<GOFFYAML::ModuleHeader *>(Rec));
       break;
+    case GOFFYAML::RecordBase::RBK_Text:
+      writeText(*static_cast<GOFFYAML::Text *>(Rec));
+      break;
     case GOFFYAML::RecordBase::RBK_EndOfModule:
       writeEnd(*static_cast<GOFFYAML::EndOfModule *>(Rec));
       break;
     case GOFFYAML::RecordBase::RBK_RelocationDirectory:
     case GOFFYAML::RecordBase::RBK_Symbol:
-    case GOFFYAML::RecordBase::RBK_Text:
     case GOFFYAML::RecordBase::RBK_DeferredLength:
       llvm_unreachable(("Not yet implemented"));
     }
