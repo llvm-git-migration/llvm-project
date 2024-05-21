@@ -659,26 +659,22 @@ AArch64TargetInfo::getVScaleRange(const LangOptions &LangOpts) const {
 unsigned AArch64TargetInfo::multiVersionSortPriority(StringRef Name) const {
   if (Name == "default")
     return 0;
-  if (auto Ext = llvm::AArch64::parseArchExtension(Name))
-    return Ext->FmvPriority;
+  if (auto Ext = llvm::AArch64::parseFMVExtension(Name))
+    return Ext->Priority;
   return 0;
 }
 
 unsigned AArch64TargetInfo::multiVersionFeatureCost() const {
   // Take the maximum priority as per feature cost, so more features win.
-  return llvm::AArch64::ExtensionInfo::MaxFMVPriority;
+  constexpr unsigned MaxFMVPriority = 1000;
+  return MaxFMVPriority;
 }
 
 bool AArch64TargetInfo::doesFeatureAffectCodeGen(StringRef Name) const {
-  if (auto Ext = llvm::AArch64::parseArchExtension(Name))
-    return !Ext->DependentFeatures.empty();
+  // FMV extensions which imply no backend features do not affect codegen.
+  if (auto Ext = llvm::AArch64::parseFMVExtension(Name))
+    return !Ext->Features.empty();
   return false;
-}
-
-StringRef AArch64TargetInfo::getFeatureDependencies(StringRef Name) const {
-  if (auto Ext = llvm::AArch64::parseArchExtension(Name))
-    return Ext->DependentFeatures;
-  return StringRef();
 }
 
 bool AArch64TargetInfo::validateCpuSupports(StringRef FeatureStr) const {
@@ -686,7 +682,7 @@ bool AArch64TargetInfo::validateCpuSupports(StringRef FeatureStr) const {
   llvm::SmallVector<StringRef, 8> Features;
   FeatureStr.split(Features, "+");
   for (auto &Feature : Features)
-    if (!llvm::AArch64::parseArchExtension(Feature.trim()).has_value())
+    if (!llvm::AArch64::parseFMVExtension(Feature.trim()).has_value())
       return false;
   return true;
 }
@@ -1066,31 +1062,62 @@ bool AArch64TargetInfo::initFeatureMap(
     }
   }
 
-  // Process target and dependent features. This is done in two loops collecting
-  // them into UpdatedFeaturesVec: first to add dependent '+'features, second to
-  // add target '+/-'features that can later disable some of features added on
-  // the first loop. Function Multi Versioning features begin with '?'.
-  for (const auto &Feature : FeaturesVec)
-    if (((Feature[0] == '?' || Feature[0] == '+')) &&
-        AArch64TargetInfo::doesFeatureAffectCodeGen(Feature.substr(1))) {
-      StringRef DepFeatures =
-          AArch64TargetInfo::getFeatureDependencies(Feature.substr(1));
-      SmallVector<StringRef, 1> AttrFeatures;
-      DepFeatures.split(AttrFeatures, ",");
-      for (auto F : AttrFeatures)
-        UpdatedFeaturesVec.push_back(F.str());
+  // Special cases which rely on dependency expansion at this stage
+  for(auto F : FeaturesVec) {
+    // Crypto is the only one we don't want passed through
+    if(F == "+crypto") {
+      UpdatedFeaturesVec.emplace_back("+aes");
+      UpdatedFeaturesVec.emplace_back("+sha2");
+    } else {
+      UpdatedFeaturesVec.emplace_back(F);
     }
-  for (const auto &Feature : FeaturesVec)
-    if (Feature[0] != '?') {
-      std::string UpdatedFeature = Feature;
-      if (Feature[0] == '+') {
-        std::optional<llvm::AArch64::ExtensionInfo> Extension =
-          llvm::AArch64::parseArchExtension(Feature.substr(1));
-        if (Extension)
-          UpdatedFeature = Extension->Feature.str();
-      }
-      UpdatedFeaturesVec.push_back(UpdatedFeature);
+
+    if(F == "+sve") {
+      UpdatedFeaturesVec.emplace_back("+sve");
+      UpdatedFeaturesVec.emplace_back("+fullfp16");
+      UpdatedFeaturesVec.emplace_back("+neon");
+      UpdatedFeaturesVec.emplace_back("+fp-armv8");
     }
+    else if(F == "+sve2") {
+      UpdatedFeaturesVec.emplace_back("+sve");
+      UpdatedFeaturesVec.emplace_back("+fullfp16");
+    }
+    else if(F == "+sve2p1") {
+      UpdatedFeaturesVec.emplace_back("+sve2");
+      UpdatedFeaturesVec.emplace_back("+sve");
+    }
+    else if(F == "+sve2-aes") {
+      UpdatedFeaturesVec.emplace_back("+sve2");
+      UpdatedFeaturesVec.emplace_back("+sve");
+    }
+    else if(F == "+sve2-bitperm") {
+      UpdatedFeaturesVec.emplace_back("+sve2");
+      UpdatedFeaturesVec.emplace_back("+sve");
+    }
+    else if(F == "+sve2-sha3") {
+      UpdatedFeaturesVec.emplace_back("+sve2");
+      UpdatedFeaturesVec.emplace_back("+sve");
+    }
+    else if(F == "+sve2-sm4") {
+      UpdatedFeaturesVec.emplace_back("+sve2");
+      UpdatedFeaturesVec.emplace_back("+sve");
+    }
+    else if(F == "+sme") {
+      UpdatedFeaturesVec.emplace_back("+bf16");
+    }
+    else if(F == "+sme2") {
+      UpdatedFeaturesVec.emplace_back("+sme");
+      UpdatedFeaturesVec.emplace_back("+bf16");
+    }
+    else if(F == "+sme-i16i64") {
+      UpdatedFeaturesVec.emplace_back("+sme");
+      UpdatedFeaturesVec.emplace_back("+bf16");
+    }
+    else if(F == "+sme2p1") {
+      UpdatedFeaturesVec.emplace_back("+sme2");
+      UpdatedFeaturesVec.emplace_back("+sme");
+    }
+  }
 
   return TargetInfo::initFeatureMap(Features, Diags, CPU, UpdatedFeaturesVec);
 }

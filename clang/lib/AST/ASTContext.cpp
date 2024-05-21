@@ -87,6 +87,7 @@
 #include "llvm/Support/MD5.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/AArch64TargetParser.h"
 #include "llvm/TargetParser/Triple.h"
 #include <algorithm>
 #include <cassert>
@@ -13664,16 +13665,23 @@ QualType ASTContext::getCorrespondingSignedFixedPointType(QualType Ty) const {
   }
 }
 
+// Given a list of FMV features, add each of their backend features to the list.
+static void
+GetFMVBackendFeaturesFor(const llvm::SmallVector<StringRef, 8> FMVFeatStrings,
+                         std::vector<std::string>& BackendFeats) {
+  for (auto &F : FMVFeatStrings)
+    if (auto FMVExt = llvm::AArch64::parseFMVExtension(F))
+      for (auto F : FMVExt->getImpliedFeatures())
+        BackendFeats.push_back(F.str());
+}
+
 std::vector<std::string> ASTContext::filterFunctionTargetVersionAttrs(
     const TargetVersionAttr *TV) const {
   assert(TV != nullptr);
   llvm::SmallVector<StringRef, 8> Feats;
   std::vector<std::string> ResFeats;
   TV->getFeatures(Feats);
-  for (auto &Feature : Feats)
-    if (Target->validateCpuSupports(Feature.str()))
-      // Use '?' to mark features that came from TargetVersion.
-      ResFeats.push_back("?" + Feature.str());
+  GetFMVBackendFeaturesFor(Feats, ResFeats);
   return ResFeats;
 }
 
@@ -13735,13 +13743,11 @@ void ASTContext::getFunctionFeatureMap(llvm::StringMap<bool> &FeatureMap,
   } else if (const auto *TC = FD->getAttr<TargetClonesAttr>()) {
     std::vector<std::string> Features;
     if (Target->getTriple().isAArch64()) {
-      // TargetClones for AArch64
       llvm::SmallVector<StringRef, 8> Feats;
       TC->getFeatures(Feats, GD.getMultiVersionIndex());
-      for (StringRef Feat : Feats)
-        if (Target->validateCpuSupports(Feat.str()))
-          // Use '?' to mark features that came from AArch64 TargetClones.
-          Features.push_back("?" + Feat.str());
+      GetFMVBackendFeaturesFor(Feats, Features);
+
+      // Combine with the features from the Target, not expanded
       Features.insert(Features.begin(),
                       Target->getTargetOpts().FeaturesAsWritten.begin(),
                       Target->getTargetOpts().FeaturesAsWritten.end());
@@ -13754,11 +13760,14 @@ void ASTContext::getFunctionFeatureMap(llvm::StringMap<bool> &FeatureMap,
     }
     Target->initFeatureMap(FeatureMap, getDiagnostics(), TargetCPU, Features);
   } else if (const auto *TV = FD->getAttr<TargetVersionAttr>()) {
-    std::vector<std::string> Feats = filterFunctionTargetVersionAttrs(TV);
+    llvm::SmallVector<StringRef, 8> Feats;
+    TV->getFeatures(Feats);
+    std::vector<std::string> Features;
+    GetFMVBackendFeaturesFor(Feats, Features);
     Feats.insert(Feats.begin(),
                  Target->getTargetOpts().FeaturesAsWritten.begin(),
                  Target->getTargetOpts().FeaturesAsWritten.end());
-    Target->initFeatureMap(FeatureMap, getDiagnostics(), TargetCPU, Feats);
+    Target->initFeatureMap(FeatureMap, getDiagnostics(), TargetCPU, Features);
   } else {
     FeatureMap = Target->getTargetOpts().FeatureMap;
   }

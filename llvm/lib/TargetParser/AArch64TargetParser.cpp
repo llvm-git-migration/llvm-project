@@ -23,6 +23,9 @@
 
 using namespace llvm;
 
+#define EMIT_FMV_INFO
+#include "llvm/TargetParser/AArch64TargetParserDef.inc"
+
 static unsigned checkArchVersion(llvm::StringRef Arch) {
   if (Arch.size() >= 2 && Arch[0] == 'v' && std::isdigit(Arch[1]))
     return (Arch[1] - 48);
@@ -50,8 +53,8 @@ std::optional<AArch64::ArchInfo> AArch64::ArchInfo::findBySubArch(StringRef SubA
 uint64_t AArch64::getCpuSupportsMask(ArrayRef<StringRef> FeatureStrs) {
   uint64_t FeaturesMask = 0;
   for (const StringRef &FeatureStr : FeatureStrs) {
-    if (auto Ext = parseArchExtension(FeatureStr))
-      FeaturesMask |= (1ULL << Ext->CPUFeature);
+    if (auto Ext = parseFMVExtension(FeatureStr))
+      FeaturesMask |= (1ULL << Ext->Bit);
   }
   return FeaturesMask;
 }
@@ -79,7 +82,7 @@ StringRef AArch64::getArchExtFeature(StringRef ArchExt) {
   StringRef ArchExtBase = IsNegated ? ArchExt.drop_front(2) : ArchExt;
 
   if (auto AE = parseArchExtension(ArchExtBase)) {
-    // Note: the returned string can be empty.
+    assert(!(AE.has_value() && AE->NegFeature.empty()));
     return IsNegated ? AE->NegFeature : AE->Feature;
   }
 
@@ -114,10 +117,32 @@ const AArch64::ArchInfo *AArch64::parseArch(StringRef Arch) {
 }
 
 std::optional<AArch64::ExtensionInfo>
+AArch64::targetFeatureToExtension(StringRef TargetFeature) {
+  for (const auto &E : Extensions) {
+    if (TargetFeature == E.Feature.substr(1))
+      return E;
+  }
+  return {};
+}
+
+std::optional<AArch64::ExtensionInfo>
 AArch64::parseArchExtension(StringRef ArchExt) {
   for (const auto &A : Extensions) {
     if (ArchExt == A.Name || ArchExt == A.Alias)
       return A;
+  }
+  return {};
+}
+
+std::optional<AArch64::FMVInfo>
+AArch64::parseFMVExtension(StringRef FMVExt) {
+  // FIXME introduce general alias functionality, or remove this exception.
+  if (FMVExt == "rdma")
+    FMVExt = "rdm";
+
+  for (const auto &I : getFMVInfo()) {
+    if (FMVExt == I.Name)
+      return I;
   }
   return {};
 }
@@ -232,6 +257,14 @@ void AArch64::ExtensionSet::toLLVMFeatureList(
     else
       Features.push_back(E.NegFeature);
   }
+}
+
+void AArch64::ExtensionSet::dump() const {
+  std::vector<StringRef> Features;
+  toLLVMFeatureList(Features);
+  for (StringRef F : Features)
+    llvm::outs() << F << " ";
+  llvm::outs() << "\n";
 }
 
 void AArch64::ExtensionSet::addCPUDefaults(const CpuInfo &CPU) {
