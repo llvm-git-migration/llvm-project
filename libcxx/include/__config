@@ -166,6 +166,8 @@
 // requires code not to make these assumptions.
 #    define _LIBCPP_ABI_USE_WRAP_ITER_IN_STD_ARRAY
 #    define _LIBCPP_ABI_USE_WRAP_ITER_IN_STD_STRING_VIEW
+// Dont' add an inline namespace for `std::filesystem`
+#    define _LIBCPP_ABI_NO_FILESYSTEM_INLINE_NAMESPACE
 #  elif _LIBCPP_ABI_VERSION == 1
 #    if !(defined(_LIBCPP_OBJECT_FORMAT_COFF) || defined(_LIBCPP_OBJECT_FORMAT_XCOFF))
 // Enable compiling copies of now inline methods into the dylib to support
@@ -831,10 +833,16 @@ typedef __char32_t char32_t;
                                inline namespace _LIBCPP_ABI_NAMESPACE {
 #  define _LIBCPP_END_NAMESPACE_STD }} _LIBCPP_POP_EXTENSION_DIAGNOSTICS
 
+#ifdef _LIBCPP_ABI_NO_FILESYSTEM_INLINE_NAMESPACE
+#  define _LIBCPP_BEGIN_NAMESPACE_FILESYSTEM _LIBCPP_BEGIN_NAMESPACE_STD namespace filesystem {
+#  define _LIBCPP_END_NAMESPACE_FILESYSTEM } _LIBCPP_END_NAMESPACE_STD
+#else
 #  define _LIBCPP_BEGIN_NAMESPACE_FILESYSTEM _LIBCPP_BEGIN_NAMESPACE_STD                                               \
                                              inline namespace __fs { namespace filesystem {
 
 #  define _LIBCPP_END_NAMESPACE_FILESYSTEM }} _LIBCPP_END_NAMESPACE_STD
+#endif
+
 // clang-format on
 
 #  if __has_attribute(__enable_if__)
