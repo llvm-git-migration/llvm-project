@@ -1183,20 +1183,27 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
   if (match(LHS, m_And(m_Specific(Val), m_APInt(Mask))) &&
       match(RHS, m_APInt(C))) {
     // If (Val & Mask) == C then all the masked bits are known and we can
-    // compute a value range based on that.
-    if (EdgePred == ICmpInst::ICMP_EQ) {
+    // compute a value range based on that. If (Val & Mask) != C, we can return
+    // the inverse of such a range.
+    auto GetRangeFromKnownBits = [&]() -> ConstantRange {
       KnownBits Known;
       Known.Zero = ~*C & *Mask;
       Known.One = *C & *Mask;
-      return ValueLatticeElement::getRange(
-          ConstantRange::fromKnownBits(Known, /*IsSigned*/ false));
-    }
-    // If (Val & Mask) != 0 then the value must be larger than the lowest set
-    // bit of Mask.
-    if (EdgePred == ICmpInst::ICMP_NE && !Mask->isZero() && C->isZero()) {
-      return ValueLatticeElement::getRange(ConstantRange::getNonEmpty(
-          APInt::getOneBitSet(BitWidth, Mask->countr_zero()),
-          APInt::getZero(BitWidth)));
+      return ConstantRange::fromKnownBits(Known, /*IsSigned*/ false);
+    };
+
+    if (EdgePred == ICmpInst::ICMP_EQ)
+      return ValueLatticeElement::getRange(GetRangeFromKnownBits());
+
+    if (EdgePred == ICmpInst::ICMP_NE && !Mask->isZero()) {
+      // On the off-chance that (Val & Mask) != C, where C is 0, then the value
+      // must be larger than the lowest set bit of Mask.
+      if (C->isZero())
+        return ValueLatticeElement::getRange(ConstantRange::getNonEmpty(
+            APInt::getOneBitSet(BitWidth, Mask->countr_zero()),
+            APInt::getZero(BitWidth)));
+
+      return ValueLatticeElement::getRange(GetRangeFromKnownBits().inverse());
     }
   }
 
