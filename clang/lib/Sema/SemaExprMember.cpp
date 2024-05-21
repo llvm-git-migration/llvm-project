@@ -1041,7 +1041,7 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
       if (RetryExpr.isUsable() && !Trap.hasErrorOccurred()) {
         CXXScopeSpec TempSS(SS);
         RetryExpr = ActOnMemberAccessExpr(
-            ExtraArgs->S, RetryExpr.get(), OpLoc, tok::arrow, TempSS,
+            ExtraArgs->S, RetryExpr.get(), OpLoc, /*IsArrow=*/true, TempSS,
             TemplateKWLoc, ExtraArgs->Id, ExtraArgs->ObjCImpDecl);
       }
       if (Trap.hasErrorOccurred())
@@ -1744,12 +1744,10 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
 }
 
 ExprResult Sema::ActOnMemberAccessExpr(Scope *S, Expr *Base,
-                                       SourceLocation OpLoc,
-                                       tok::TokenKind OpKind,
+                                       SourceLocation OpLoc, bool IsArrow,
                                        CXXScopeSpec &SS,
                                        SourceLocation TemplateKWLoc,
-                                       UnqualifiedId &Id,
-                                       Decl *ObjCImpDecl) {
+                                       UnqualifiedId &Id, Decl *ObjCImpDecl) {
   if (SS.isSet() && SS.isInvalid())
     return ExprError();
 
@@ -1766,8 +1764,6 @@ ExprResult Sema::ActOnMemberAccessExpr(Scope *S, Expr *Base,
   const TemplateArgumentListInfo *TemplateArgs;
   DecomposeUnqualifiedId(Id, TemplateArgsBuffer,
                          NameInfo, TemplateArgs);
-
-  bool IsArrow = (OpKind == tok::arrow);
 
   if (getLangOpts().HLSL && IsArrow)
     return ExprError(Diag(OpLoc, diag::err_hlsl_operator_unsupported) << 2);
