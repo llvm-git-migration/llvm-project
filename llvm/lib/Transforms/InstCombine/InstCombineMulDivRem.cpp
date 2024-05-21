@@ -1057,7 +1057,8 @@ static Value *foldIDivShl(BinaryOperator &I, InstCombiner::BuilderTy &Builder) {
 
     // (X * Y) s/ (X << Z) --> Y s/ (1 << Z)
     if (IsSigned && HasNSW && (Op0->hasOneUse() || Op1->hasOneUse())) {
-      Value *Shl = Builder.CreateShl(ConstantInt::get(Ty, 1), Z);
+      Value *Shl =
+          Builder.CreateShl(ConstantInt::get(Ty, 1), Z, "", HasNUW, true);
       return Builder.CreateSDiv(Y, Shl, "", I.isExact());
     }
   }
@@ -1169,12 +1170,51 @@ Instruction *InstCombinerImpl::commonIDivTransforms(BinaryOperator &I) {
 
       // (X * C1) / C2 -> X * (C1 / C2) if C1 is a multiple of C2.
       if (isMultiple(*C1, *C2, Quotient, IsSigned)) {
+        assert(!C1.isOne() && !C2.isOne() && !C1.isZero() && !C2.isZero() &&
+               "InstSimplify should have removed constants of 1!");
         auto *Mul = BinaryOperator::Create(Instruction::Mul, X,
                                            ConstantInt::get(Ty, Quotient));
         auto *OBO = cast<OverflowingBinaryOperator>(Op0);
-        Mul->setHasNoUnsignedWrap(!IsSigned && OBO->hasNoUnsignedWrap());
-        Mul->setHasNoSignedWrap(OBO->hasNoSignedWrap());
+        Mul->setHasNoUnsignedWrap(OBO->hasNoUnsignedWrap());
+        Mul->setHasNoSignedWrap(true);
         return Mul;
+      }
+
+      // We can reduce expressions of things like * 150 / 100 to * 3 / 2
+      if (Op0->hasOneUse() && !C2->isZero() &&
+          !(IsSigned && C1->isMinSignedValue() && C2->isAllOnes())) {
+        APInt GCD = APIntOps::GreatestCommonDivisor(C1->abs(), C2->abs());
+        if (!GCD.isOne() && !GCD.isZero()) {
+          APInt NewC1;
+          APInt NewC2;
+          if (IsSigned && C1->isNegative() && C2->isNegative()) {
+            NewC1 = C1->abs().udiv(GCD);
+            NewC2 = C2->abs().udiv(GCD);
+          } else if (IsSigned) {
+            NewC1 = C1->sdiv(GCD);
+            NewC2 = C2->sdiv(GCD);
+          } else {
+            NewC1 = C1->udiv(GCD);
+            NewC2 = C2->udiv(GCD);
+          }
+
+          auto *NewMul = Builder.CreateMul(
+              X, ConstantInt::get(Ty, NewC1), "",
+              /*NUW*/ cast<OverflowingBinaryOperator>(Op0)->hasNoUnsignedWrap(),
+              /*NSW*/ true);
+
+          if (IsSigned) {
+            auto *NewDiv =
+                BinaryOperator::CreateSDiv(NewMul, ConstantInt::get(Ty, NewC2));
+            NewDiv->setIsExact(I.isExact());
+            return NewDiv;
+          }
+
+          auto *NewDiv =
+              BinaryOperator::CreateUDiv(NewMul, ConstantInt::get(Ty, NewC2));
+          NewDiv->setIsExact(I.isExact());
+          return NewDiv;
+        }
       }
     }
 
@@ -1198,7 +1238,7 @@ Instruction *InstCombinerImpl::commonIDivTransforms(BinaryOperator &I) {
         auto *Mul = BinaryOperator::Create(Instruction::Mul, X,
                                            ConstantInt::get(Ty, Quotient));
         auto *OBO = cast<OverflowingBinaryOperator>(Op0);
-        Mul->setHasNoUnsignedWrap(!IsSigned && OBO->hasNoUnsignedWrap());
+        Mul->setHasNoUnsignedWrap(OBO->hasNoUnsignedWrap());
         Mul->setHasNoSignedWrap(OBO->hasNoSignedWrap());
         return Mul;
       }
@@ -1273,13 +1313,23 @@ Instruction *InstCombinerImpl::commonIDivTransforms(BinaryOperator &I) {
   }
 
   // (X << Z) / (X * Y) -> (1 << Z) / Y
-  // TODO: Handle sdiv.
   if (!IsSigned && Op1->hasOneUse() &&
       match(Op0, m_NUWShl(m_Value(X), m_Value(Z))) &&
       match(Op1, m_c_Mul(m_Specific(X), m_Value(Y))))
     if (cast<OverflowingBinaryOperator>(Op1)->hasNoUnsignedWrap()) {
       Instruction *NewDiv = BinaryOperator::CreateUDiv(
           Builder.CreateShl(ConstantInt::get(Ty, 1), Z, "", /*NUW*/ true), Y);
+      NewDiv->setIsExact(I.isExact());
+      return NewDiv;
+    }
+
+  // (X << Z) / (X * Y) -> (1 << Z) / Y
+  if (IsSigned && Op1->hasOneUse() &&
+      match(Op0, m_NSWShl(m_Value(X), m_Value(Z))) &&
+      match(Op1, m_c_Mul(m_Specific(X), m_Value(Y))))
+    if (cast<OverflowingBinaryOperator>(Op1)->hasNoSignedWrap()) {
+      Instruction *NewDiv = BinaryOperator::CreateSDiv(
+          Builder.CreateShl(ConstantInt::get(Ty, 1), Z, "", /*NSW*/ true), Y);
       NewDiv->setIsExact(I.isExact());
       return NewDiv;
     }
