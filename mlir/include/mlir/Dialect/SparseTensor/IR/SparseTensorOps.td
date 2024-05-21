@@ -1489,6 +1489,7 @@ def ExtractIterSpaceOp : SparseTensor_Op<"extract_iteration_space",
       // Extracts a 1-D iteration space from a COO tensor at level 1.
       %space = sparse_tensor.iteration.extract_space %sp at %it1 lvls = 1
         : tensor<4x8xf32, #COO>, !sparse_tensor.iterator<#COO, lvls = 0>
+       ->!sparse_tensor.iter_space<#COO, lvls = 1>
       ```
   }];
 
@@ -1567,12 +1568,14 @@ def IterateOp : SparseTensor_Op<"iterate",
       ```mlir
       func.func @nested_iterate(%sp : tensor<4x8xf32, #COO>) {
         // Iterates over the first level of %sp
-        %l1 = sparse_tensor.extract_iteration_space %sp lvls = 0 : tensor<4x8xf32, #COO>
+        %l1 = sparse_tensor.extract_iteration_space %sp lvls = 0
+            : tensor<4x8xf32, #COO> -> !sparse_tensor.iter_space<#COO, lvls = 0 to 1>
         %r1 = sparse_tensor.iterate %it1 in %l1 at (%coord0)
             : !sparse_tensor.iter_space<#COO, lvls = 0 to 1>  {
           // Iterates over the second level of %sp
           %l2 = sparse_tensor.extract_iteration_space %sp at %it1 lvls = 1
               : tensor<4x8xf32, #COO>, !sparse_tensor.iterator<#COO, lvls = 0 to 1>
+             -> !sparse_tensor.iter_space<#COO, lvls = 1 to 2>
           %r2 = sparse_tensor.iterate %it2 in %l2 at (coord1)
               : !sparse_tensor.iter_space<#COO, lvls = 1 to 2>  {
              vector.print %coord0 : index
