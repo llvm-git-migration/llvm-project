@@ -380,7 +380,7 @@ define i32 @test26(i32 %a) {
 
 define i32 @test27(i32 %a) {
 ; CHECK-LABEL: @test27(
-; CHECK-NEXT:    [[DIV:%.*]] = shl nuw i32 [[A:%.*]], 1
+; CHECK-NEXT:    [[DIV:%.*]] = shl nuw nsw i32 [[A:%.*]], 1
 ; CHECK-NEXT:    ret i32 [[DIV]]
 ;
   %shl = shl nuw i32 %a, 2
@@ -390,7 +390,7 @@ define i32 @test27(i32 %a) {
 
 define i32 @test28(i32 %a) {
 ; CHECK-LABEL: @test28(
-; CHECK-NEXT:    [[DIV:%.*]] = mul nuw i32 [[A:%.*]], 12
+; CHECK-NEXT:    [[DIV:%.*]] = mul nuw nsw i32 [[A:%.*]], 12
 ; CHECK-NEXT:    ret i32 [[DIV]]
 ;
   %mul = mul nuw i32 %a, 36
@@ -1676,6 +1676,17 @@ define i32 @sdiv_sdiv_mul_nsw_exact_use(i32 %x, i32 %y, i32 %z) {
   call void @use(i32 %d)
   %r = sdiv exact i32 %d, %x
   ret i32 %r
+}
+
+define i32 @x_times_150_over_100(i32 %x) {
+; CHECK-LABEL: @x_times_150_over_100(
+; CHECK-NEXT:    [[TMP1:%.*]] = mul nuw nsw i32 [[X:%.*]], 3
+; CHECK-NEXT:    [[D1:%.*]] = lshr i32 [[TMP1]], 1
+; CHECK-NEXT:    ret i32 [[D1]]
+;
+  %m = mul nuw nsw i32 %x, 150
+  %d = udiv i32 %m, 100
+  ret i32 %d
 }
 
 ; negative test - must have nsw
