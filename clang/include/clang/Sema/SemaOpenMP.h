@@ -427,6 +427,12 @@ public:
   StmtResult ActOnOpenMPReverseDirective(ArrayRef<OMPClause *> Clauses,
                                          Stmt *AStmt, SourceLocation StartLoc,
                                          SourceLocation EndLoc);
+  /// Called on well-formed '#pragma omp interchange' after parsing of its
+  /// clauses and the associated statement.
+  StmtResult ActOnOpenMPInterchangeDirective(ArrayRef<OMPClause *> Clauses,
+                                             Stmt *AStmt,
+                                             SourceLocation StartLoc,
+                                             SourceLocation EndLoc);
   /// Called on well-formed '\#pragma omp for' after parsing
   /// of the associated statement.
   StmtResult
@@ -864,6 +870,11 @@ public:
                                     SourceLocation StartLoc,
                                     SourceLocation LParenLoc,
                                     SourceLocation EndLoc);
+  /// Called on well-form 'permutation' clause after parsing its arguments.
+  OMPClause *ActOnOpenMPPermutationClause(ArrayRef<Expr *> PermExprs,
+                                          SourceLocation StartLoc,
+                                          SourceLocation LParenLoc,
+                                          SourceLocation EndLoc);
   /// Called on well-form 'full' clauses.
   OMPClause *ActOnOpenMPFullClause(SourceLocation StartLoc,
                                    SourceLocation EndLoc);

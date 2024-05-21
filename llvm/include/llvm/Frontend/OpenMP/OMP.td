@@ -72,6 +72,11 @@ def OMPC_Sizes: Clause<"sizes"> {
   let flangClass = "ScalarIntExpr";
   let isValueList = true;
   }
+def OMPC_Permutation: Clause<"permutation"> {
+  let clangClass = "OMPPermutationClause";
+  let flangClass = "ScalarIntExpr";
+  let isValueList = true;
+  }
 def OMPC_Full: Clause<"full"> {
   let clangClass = "OMPFullClause";
 }
@@ -538,6 +543,12 @@ def OMP_Unroll : Directive<"unroll"> {
   let association = AS_Loop;
 }
 def OMP_Reverse : Directive<"reverse"> {
+  let association = AS_Loop;
+}
+def OMP_Interchange : Directive<"interchange"> {
+  let allowedOnceClauses = [
+    VersionedClause<OMPC_Permutation, 60>,
+  ];
   let association = AS_Loop;
 }
 def OMP_For : Directive<"for"> {
