@@ -78,6 +78,7 @@ class InstrBuilder {
 
   bool FirstCallInst;
   bool FirstReturnInst;
+  unsigned CallLatency;
 
   using InstRecycleCallback = std::function<Instruction *(const InstrDesc &)>;
   InstRecycleCallback InstRecycleCB;
@@ -110,6 +111,8 @@ public:
   /// Set a callback which is invoked to retrieve a recycled mca::Instruction
   /// or null if there isn't any.
   void setInstRecycleCallback(InstRecycleCallback CB) { InstRecycleCB = CB; }
+
+  void setCallLatency(unsigned CL) { CallLatency = CL; }
 
   Expected<std::unique_ptr<Instruction>>
   createInstruction(const MCInst &MCI, const SmallVector<Instrument *> &IVec);
