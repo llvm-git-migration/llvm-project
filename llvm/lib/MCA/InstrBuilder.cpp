@@ -225,13 +225,14 @@ static void computeMaxLatency(InstrDesc &ID, const MCInstrDesc &MCDesc,
                               unsigned CallLatency) {
   if (MCDesc.isCall()) {
     // We cannot estimate how long this call will take.
-    // Artificially set an arbitrarily high latency (default: 100cy).
+    // Artificially set an arbitrarily high latency.
     ID.MaxLatency = CallLatency;
     return;
   }
 
   int Latency = MCSchedModel::computeInstrLatency(STI, SCDesc);
-  // If latency is unknown, then conservatively assume a MaxLatency set for calls (default: 100cy).
+  // If latency is unknown, then conservatively assume the MaxLatency set for
+  // calls.
   ID.MaxLatency = Latency < 0 ? CallLatency : static_cast<unsigned>(Latency);
 }
 
