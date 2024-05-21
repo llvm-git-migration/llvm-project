@@ -2672,8 +2672,9 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
       llvm::to_vector(state.getPayloadOps(getTarget()));
 
   if (!llvm::hasSingleElement(targetOps)) {
-    return emitDefiniteFailure() << "requires exactly one target (got "
-                                 << llvm::range_size(targetOps) << ")";
+    return mlir::emitSilenceableFailure(getLoc())
+           << "requires exactly one target (got " << llvm::range_size(targetOps)
+           << ")";
   }
 
   auto target = dyn_cast<LinalgOp>(*targetOps.begin());
@@ -2683,7 +2684,7 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
   if (!target)
     return emitDefiniteFailure() << "expected Linalg Op";
 
-  if (isa<TransformParamTypeInterface>(getSplitPoints().getType())) {
+  if (isa<TransformParamTypeInterface>(getChunkSizes().getType())) {
     if (target.hasDynamicShape()) {
       auto diag = emitSilenceableError()
                   << "cannot compute parametric tile sizes for dynamically "
@@ -2700,24 +2701,20 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
              << "failed to compute multi-size tiling sizes";
     }
 
-    SmallVector<int64_t> splitPoints;
+    SmallVector<int64_t> chunkSizes;
 
-    auto tileSizeTripCountPairs =
-        llvm::zip_equal(spec->tileSizes, spec->tripCounts);
+    for (auto &&[tileSize, tripCount] : llvm::zip_equal(spec->tileSizes, spec->tripCounts))
+      chunkSizes.push_back(tileSize * tripCount);
 
-    for (auto [idx, pair] : llvm::enumerate(tileSizeTripCountPairs))
-      splitPoints.push_back(std::get<0>(pair) * std::get<1>(pair));
-
-    auto makeI64AttrsFromI64 = [&](ArrayRef<int64_t> values) {
-      return llvm::to_vector(
-          llvm::map_range(values, [&](int64_t value) -> Attribute {
+    auto getI64AttrsFromI64 = [&](ArrayRef<int64_t> values) {
+      return llvm::map_to_vector(values, [&](int64_t value) -> Attribute {
             return builder.getI64IntegerAttr(value);
-          }));
+          });
     };
     transformResults.setParams(cast<OpResult>(getTileSizes()),
-                               makeI64AttrsFromI64(spec->tileSizes));
-    transformResults.setParams(cast<OpResult>(getSplitPoints()),
-                               makeI64AttrsFromI64(splitPoints));
+                               getI64AttrsFromI64(spec->tileSizes));
+    transformResults.setParams(cast<OpResult>(getChunkSizes()),
+                               getI64AttrsFromI64(chunkSizes));
 
     return DiagnosedSilenceableFailure::success();
   }
@@ -2733,9 +2730,6 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
     return emitSilenceableError() << "could not generate tile size computation";
   }
 
-  auto tileSizeTripCountPairs =
-      llvm::zip_equal(spec->tileSizes, spec->tripCounts);
-
   AffineExpr s0 = builder.getAffineSymbolExpr(0);
   AffineExpr s1 = builder.getAffineSymbolExpr(1);
   auto apply = [&](AffineExpr expr, ArrayRef<OpFoldResult> ofrs) -> Value {
@@ -2743,31 +2737,30 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
                                            ofrs);
   };
 
-  SmallVector<Value> splitPoints;
+  SmallVector<Value> chunkSizes;
   Value splitPoint;
-  for (auto [idx, pair] : llvm::enumerate(tileSizeTripCountPairs)) {
-    splitPoint = apply(s0 * s1, {std::get<0>(pair), std::get<1>(pair)});
-    splitPoints.push_back(splitPoint);
+  for (auto &&[tileSize, tripCount] : llvm::zip_equal(spec->tileSizes, spec->tripCounts)) {
+    splitPoint = apply(s0 * s1, {tileSize, tripCount});
+    chunkSizes.push_back(splitPoint);
   }
 
-  auto makeOpFromValue = [&](ArrayRef<Value> values) {
-    return llvm::to_vector(
-        llvm::map_range(values, [&](Value value) -> Operation * {
+  auto getDefiningOps = [&](ArrayRef<Value> values) {
+        return llvm::map_to_vector(values, [&](Value value) -> Operation * {
           return value.getDefiningOp();
-        }));
+        });
   };
 
   transformResults.set(cast<OpResult>(getTileSizes()),
-                       makeOpFromValue(spec->tileSizes));
-  transformResults.set(cast<OpResult>(getSplitPoints()),
-                       makeOpFromValue(splitPoints));
+                       getDefiningOps(spec->tileSizes));
+  transformResults.set(cast<OpResult>(getChunkSizes()),
+                       getDefiningOps(chunkSizes));
 
   return DiagnosedSilenceableFailure::success();
 }
 
 LogicalResult transform::ContinuousTileSizesOp::verify() {
 
-  if (getTileSizes().getType() != getSplitPoints().getType()) {
+  if (getTileSizes().getType() != getChunkSizes().getType()) {
     return emitOpError() << "expects all results type to be the same";
   }
 
@@ -2782,7 +2775,7 @@ void transform::ContinuousTileSizesOp::getEffects(
     modifiesPayload(effects);
   onlyReadsHandle(getTarget(), effects);
   producesHandle(getTileSizes(), effects);
-  producesHandle(getSplitPoints(), effects);
+  producesHandle(getChunkSizes(), effects);
 }
 
 static void printContinuousTileSizeTypes(OpAsmPrinter &printer, Operation *op,
@@ -2794,7 +2787,7 @@ static void printContinuousTileSizeTypes(OpAsmPrinter &printer, Operation *op,
 static ParseResult parseContinuousTileSizeTypes(OpAsmParser &parser,
                                                 Type &targetType,
                                                 Type &tileSizesType,
-                                                Type &splitPointsType) {
+                                                Type &chunkSizesType) {
   FunctionType funcType;
   llvm::SMLoc typeLoc = parser.getCurrentLocation();
   if (failed(parser.parseType<FunctionType>(funcType)))
@@ -2805,7 +2798,7 @@ static ParseResult parseContinuousTileSizeTypes(OpAsmParser &parser,
                                  "argument and one result";
   }
   targetType = funcType.getInput(0);
-  tileSizesType = splitPointsType = funcType.getResult(0);
+  tileSizesType = chunkSizesType = funcType.getResult(0);
 
   return success();
 }

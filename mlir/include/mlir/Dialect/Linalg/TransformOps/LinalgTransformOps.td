@@ -1842,10 +1842,9 @@ def ContinuousTileSizesOp : Op<Transform_Dialect, "structured.continuous_tile_si
         DeclareOpInterfaceMethods<TransformOpInterface>,
         ReportTrackingListenerFailuresOpTrait]> {
   let description = [{
-    This transform takes a linalg as target and a dimension and target size
-    as attributes to generate a list of (1) exponentially diminishing
-    tile sizes that are powers of 2; and (2) the corresponding chunk-sizes
-    the linalg op should be split into along the given dimension.
+    This transform emits the IR computing the list of (1) exponentially
+    diminishing tile sizes that are powers of 2; and (2) the corresponding
+    chunk-sizes the target op should be split into along the given dimension.
 
     For example, for `target_size` 9, and `dimension` 0 for the following
     linalg op as target
@@ -1859,23 +1858,23 @@ def ContinuousTileSizesOp : Op<Transform_Dialect, "structured.continuous_tile_si
     9, 4, 2, 1; and the second result will be a list of chunk sizes
     18, 4, 2, 1 that the corresponding dimension should be split into.
 
-    After the linalg has been split along the given dimension (for example using
-    multiway split), each chunk can be tiled with the corresponding tile size in
-    the `tile_sizes` list generated as a result of this op.
+    After the target op has been split along the given dimension (for example
+    using multiway split), each chunk can be tiled with the corresponding tile
+    size in the `tile_sizes` list generated as a result of this op.
 
     Specifying the output type as !transform.param<i64> will cause `tile_sizes`
-    and `split_points` to be computed statically and not dynamically.
+    and `chunk_sizes` to be computed statically and not dynamically.
   }];
 
   let arguments = (ins TransformHandleTypeInterface:$target,
                        ConfinedAttr<I64Attr, [IntNonNegative]>:$dimension,
                        ConfinedAttr<I64Attr, [IntNonNegative]>:$target_size);
   let results = (outs TransformAnyParamTypeOrAnyHandle:$tile_sizes,
-                      TransformAnyParamTypeOrAnyHandle:$split_points);
+                      TransformAnyParamTypeOrAnyHandle:$chunk_sizes);
   let hasVerifier = 1;
   let assemblyFormat =
     "$target attr-dict `:` custom<ContinuousTileSizeTypes>("
-    "type($target), type($tile_sizes), type($split_points))";
+    "type($target), type($tile_sizes), type($chunk_sizes))";
 
 }
 
