@@ -495,11 +495,9 @@ define <2 x float> @fdiv_pow_shl_cnt_vec_with_expensive_cast(<2 x i64> %cnt) nou
 define float @fdiv_pow_shl_cnt_fail_maybe_z(i64 %cnt) nounwind {
 ; CHECK-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    mov w8, #8 // =0x8
-; CHECK-NEXT:    fmov s1, #-9.00000000
-; CHECK-NEXT:    lsl x8, x8, x0
-; CHECK-NEXT:    ucvtf s0, x8
-; CHECK-NEXT:    fdiv s0, s1, s0
+; CHECK-NEXT:    mov w8, #-1081081856 // =0xbf900000
+; CHECK-NEXT:    sub w8, w8, w0, lsl #23
+; CHECK-NEXT:    fmov s0, w8
 ; CHECK-NEXT:    ret
   %shl = shl i64 8, %cnt
   %conv = uitofp i64 %shl to float

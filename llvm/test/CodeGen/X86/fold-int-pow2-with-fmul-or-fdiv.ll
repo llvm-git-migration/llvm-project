@@ -1221,63 +1221,19 @@ define <2 x float> @fdiv_pow_shl_cnt_vec_with_expensive_cast(<2 x i64> %cnt) nou
 define float @fdiv_pow_shl_cnt_fail_maybe_z(i64 %cnt) nounwind {
 ; CHECK-SSE-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
 ; CHECK-SSE:       # %bb.0:
-; CHECK-SSE-NEXT:    movq %rdi, %rcx
-; CHECK-SSE-NEXT:    movl $8, %eax
-; CHECK-SSE-NEXT:    # kill: def $cl killed $cl killed $rcx
-; CHECK-SSE-NEXT:    shlq %cl, %rax
-; CHECK-SSE-NEXT:    testq %rax, %rax
-; CHECK-SSE-NEXT:    js .LBB22_1
-; CHECK-SSE-NEXT:  # %bb.2:
-; CHECK-SSE-NEXT:    cvtsi2ss %rax, %xmm1
-; CHECK-SSE-NEXT:    jmp .LBB22_3
-; CHECK-SSE-NEXT:  .LBB22_1:
-; CHECK-SSE-NEXT:    shrq %rax
-; CHECK-SSE-NEXT:    cvtsi2ss %rax, %xmm1
-; CHECK-SSE-NEXT:    addss %xmm1, %xmm1
-; CHECK-SSE-NEXT:  .LBB22_3:
-; CHECK-SSE-NEXT:    movss {{.*#+}} xmm0 = [-9.0E+0,0.0E+0,0.0E+0,0.0E+0]
-; CHECK-SSE-NEXT:    divss %xmm1, %xmm0
+; CHECK-SSE-NEXT:    shll $23, %edi
+; CHECK-SSE-NEXT:    movl $-1081081856, %eax # imm = 0xBF900000
+; CHECK-SSE-NEXT:    subl %edi, %eax
+; CHECK-SSE-NEXT:    movd %eax, %xmm0
 ; CHECK-SSE-NEXT:    retq
 ;
-; CHECK-AVX2-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
-; CHECK-AVX2:       # %bb.0:
-; CHECK-AVX2-NEXT:    movq %rdi, %rcx
-; CHECK-AVX2-NEXT:    movl $8, %eax
-; CHECK-AVX2-NEXT:    # kill: def $cl killed $cl killed $rcx
-; CHECK-AVX2-NEXT:    shlq %cl, %rax
-; CHECK-AVX2-NEXT:    testq %rax, %rax
-; CHECK-AVX2-NEXT:    js .LBB22_1
-; CHECK-AVX2-NEXT:  # %bb.2:
-; CHECK-AVX2-NEXT:    vcvtsi2ss %rax, %xmm0, %xmm0
-; CHECK-AVX2-NEXT:    jmp .LBB22_3
-; CHECK-AVX2-NEXT:  .LBB22_1:
-; CHECK-AVX2-NEXT:    shrq %rax
-; CHECK-AVX2-NEXT:    vcvtsi2ss %rax, %xmm0, %xmm0
-; CHECK-AVX2-NEXT:    vaddss %xmm0, %xmm0, %xmm0
-; CHECK-AVX2-NEXT:  .LBB22_3:
-; CHECK-AVX2-NEXT:    vmovss {{.*#+}} xmm1 = [-9.0E+0,0.0E+0,0.0E+0,0.0E+0]
-; CHECK-AVX2-NEXT:    vdivss %xmm0, %xmm1, %xmm0
-; CHECK-AVX2-NEXT:    retq
-;
-; CHECK-NO-FASTFMA-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
-; CHECK-NO-FASTFMA:       # %bb.0:
-; CHECK-NO-FASTFMA-NEXT:    movq %rdi, %rcx
-; CHECK-NO-FASTFMA-NEXT:    movl $8, %eax
-; CHECK-NO-FASTFMA-NEXT:    # kill: def $cl killed $cl killed $rcx
-; CHECK-NO-FASTFMA-NEXT:    shlq %cl, %rax
-; CHECK-NO-FASTFMA-NEXT:    vcvtusi2ss %rax, %xmm0, %xmm0
-; CHECK-NO-FASTFMA-NEXT:    vmovss {{.*#+}} xmm1 = [-9.0E+0,0.0E+0,0.0E+0,0.0E+0]
-; CHECK-NO-FASTFMA-NEXT:    vdivss %xmm0, %xmm1, %xmm0
-; CHECK-NO-FASTFMA-NEXT:    retq
-;
-; CHECK-FMA-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
-; CHECK-FMA:       # %bb.0:
-; CHECK-FMA-NEXT:    movl $8, %eax
-; CHECK-FMA-NEXT:    shlxq %rdi, %rax, %rax
-; CHECK-FMA-NEXT:    vcvtusi2ss %rax, %xmm0, %xmm0
-; CHECK-FMA-NEXT:    vmovss {{.*#+}} xmm1 = [-9.0E+0,0.0E+0,0.0E+0,0.0E+0]
-; CHECK-FMA-NEXT:    vdivss %xmm0, %xmm1, %xmm0
-; CHECK-FMA-NEXT:    retq
+; CHECK-AVX-LABEL: fdiv_pow_shl_cnt_fail_maybe_z:
+; CHECK-AVX:       # %bb.0:
+; CHECK-AVX-NEXT:    shll $23, %edi
+; CHECK-AVX-NEXT:    movl $-1081081856, %eax # imm = 0xBF900000
+; CHECK-AVX-NEXT:    subl %edi, %eax
+; CHECK-AVX-NEXT:    vmovd %eax, %xmm0
+; CHECK-AVX-NEXT:    retq
   %shl = shl i64 8, %cnt
   %conv = uitofp i64 %shl to float
   %mul = fdiv float -9.000000e+00, %conv

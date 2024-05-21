@@ -804,7 +804,6 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i32_with_select(ptr addrspace(1) no
 ; SI-NEXT:    v_lshlrev_b32_e32 v1, 16, v1
 ; SI-NEXT:    v_or_b32_e32 v0, v1, v0
 ; SI-NEXT:    v_ffbh_u32_e32 v0, v0
-; SI-NEXT:    v_min_u32_e32 v0, 32, v0
 ; SI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; SI-NEXT:    s_endpgm
 ;
@@ -839,8 +838,7 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i32_with_select(ptr addrspace(1) no
 ; VI-NEXT:    s_waitcnt vmcnt(0)
 ; VI-NEXT:    v_or_b32_e32 v0, v2, v0
 ; VI-NEXT:    v_or_b32_e32 v0, v1, v0
-; VI-NEXT:    v_ffbh_u32_e32 v0, v0
-; VI-NEXT:    v_min_u32_e32 v2, 32, v0
+; VI-NEXT:    v_ffbh_u32_e32 v2, v0
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
 ; VI-NEXT:    v_mov_b32_e32 v1, s1
 ; VI-NEXT:    flat_store_dword v[0:1], v2
@@ -850,7 +848,7 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i32_with_select(ptr addrspace(1) no
 ; EG:       ; %bb.0:
 ; EG-NEXT:    ALU 0, @10, KC0[CB0:0-32], KC1[]
 ; EG-NEXT:    TEX 1 @6
-; EG-NEXT:    ALU 6, @11, KC0[CB0:0-32], KC1[]
+; EG-NEXT:    ALU 5, @11, KC0[CB0:0-32], KC1[]
 ; EG-NEXT:    MEM_RAT_CACHELESS STORE_RAW T0.X, T1.X, 1
 ; EG-NEXT:    CF_END
 ; EG-NEXT:    PAD
@@ -863,10 +861,9 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i32_with_select(ptr addrspace(1) no
 ; EG-NEXT:     LSHL * T0.W, T1.X, literal.x,
 ; EG-NEXT:    16(2.242078e-44), 0(0.000000e+00)
 ; EG-NEXT:     OR_INT * T0.W, PV.W, T0.X,
-; EG-NEXT:     FFBH_UINT * T1.W, PV.W,
-; EG-NEXT:     CNDE_INT T0.X, T0.W, literal.x, PV.W,
-; EG-NEXT:     LSHR * T1.X, KC0[2].Y, literal.y,
-; EG-NEXT:    32(4.484155e-44), 2(2.802597e-45)
+; EG-NEXT:     FFBH_UINT T0.X, PV.W,
+; EG-NEXT:     LSHR * T1.X, KC0[2].Y, literal.x,
+; EG-NEXT:    2(2.802597e-45), 0(0.000000e+00)
 ;
 ; GFX9-GISEL-LABEL: v_ctlz_zero_undef_i32_with_select:
 ; GFX9-GISEL:       ; %bb.0:
@@ -940,7 +937,6 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i64_with_select(ptr addrspace(1) no
 ; SI-NEXT:    v_ffbh_u32_e32 v0, v0
 ; SI-NEXT:    v_add_i32_e32 v1, vcc, 32, v1
 ; SI-NEXT:    v_min_u32_e32 v0, v1, v0
-; SI-NEXT:    v_min_u32_e32 v0, 64, v0
 ; SI-NEXT:    v_mov_b32_e32 v1, 0
 ; SI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
@@ -1011,7 +1007,6 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i64_with_select(ptr addrspace(1) no
 ; VI-NEXT:    v_add_u32_e32 v0, vcc, 32, v0
 ; VI-NEXT:    v_min_u32_e32 v0, v0, v3
 ; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_min_u32_e32 v0, 64, v0
 ; VI-NEXT:    v_mov_b32_e32 v2, s0
 ; VI-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; VI-NEXT:    s_endpgm
@@ -1020,27 +1015,24 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i64_with_select(ptr addrspace(1) no
 ; EG:       ; %bb.0:
 ; EG-NEXT:    ALU 0, @14, KC0[CB0:0-32], KC1[]
 ; EG-NEXT:    TEX 3 @6
-; EG-NEXT:    ALU 15, @15, KC0[CB0:0-32], KC1[]
+; EG-NEXT:    ALU 12, @15, KC0[CB0:0-32], KC1[]
 ; EG-NEXT:    MEM_RAT_CACHELESS STORE_RAW T0.XY, T1.X, 1
 ; EG-NEXT:    CF_END
 ; EG-NEXT:    PAD
 ; EG-NEXT:    Fetch clause starting at 6:
 ; EG-NEXT:     VTX_READ_16 T1.X, T0.X, 2, #1
 ; EG-NEXT:     VTX_READ_16 T2.X, T0.X, 4, #1
-; EG-NEXT:     VTX_READ_16 T3.X, T0.X, 6, #1
-; EG-NEXT:     VTX_READ_16 T0.X, T0.X, 0, #1
+; EG-NEXT:     VTX_READ_16 T3.X, T0.X, 0, #1
+; EG-NEXT:     VTX_READ_16 T0.X, T0.X, 6, #1
 ; EG-NEXT:    ALU clause starting at 14:
 ; EG-NEXT:     MOV * T0.X, KC0[2].Z,
 ; EG-NEXT:    ALU clause starting at 15:
-; EG-NEXT:     LSHL * T0.W, T1.X, literal.x,
+; EG-NEXT:     LSHL T0.W, T1.X, literal.x,
+; EG-NEXT:     LSHL * T1.W, T0.X, literal.x,
 ; EG-NEXT:    16(2.242078e-44), 0(0.000000e+00)
-; EG-NEXT:     OR_INT * T0.W, PV.W, T0.X,
-; EG-NEXT:     FFBH_UINT T1.W, PV.W,
-; EG-NEXT:     LSHL * T2.W, T3.X, literal.x,
-; EG-NEXT:    16(2.242078e-44), 0(0.000000e+00)
-; EG-NEXT:     CNDE_INT T0.W, T0.W, literal.x, PV.W,
-; EG-NEXT:     OR_INT * T1.W, PS, T2.X,
-; EG-NEXT:    32(4.484155e-44), 0(0.000000e+00)
+; EG-NEXT:     OR_INT * T0.W, PV.W, T3.X,
+; EG-NEXT:     FFBH_UINT T0.W, PV.W,
+; EG-NEXT:     OR_INT * T1.W, T1.W, T2.X,
 ; EG-NEXT:     FFBH_UINT T2.W, PS,
 ; EG-NEXT:     ADD_INT * T0.W, PV.W, literal.x,
 ; EG-NEXT:    32(4.484155e-44), 0(0.000000e+00)

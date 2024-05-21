@@ -119,7 +119,6 @@ define amdgpu_kernel void @ctlz_i64(ptr addrspace(1) noalias %out, ptr addrspace
 ; GFX9-NEXT:    v_ffbh_u32_e32 v0, v0
 ; GFX9-NEXT:    v_add_u32_e64 v2, v2, 32 clamp
 ; GFX9-NEXT:    v_min_u32_e32 v0, v2, v0
-; GFX9-NEXT:    v_min_u32_e32 v0, 64, v0
 ; GFX9-NEXT:    global_store_dwordx2 v1, v[0:1], s[0:1]
 ; GFX9-NEXT:    s_endpgm
 ;
@@ -156,7 +155,6 @@ define amdgpu_kernel void @ctlz_i64(ptr addrspace(1) noalias %out, ptr addrspace
 ; GFX10-NEXT:    v_ffbh_u32_e32 v0, v0
 ; GFX10-NEXT:    v_add_nc_u32_e64 v2, v2, 32 clamp
 ; GFX10-NEXT:    v_min_u32_e32 v0, v2, v0
-; GFX10-NEXT:    v_min_u32_e32 v0, 64, v0
 ; GFX10-NEXT:    global_store_dwordx2 v1, v[0:1], s[0:1]
 ; GFX10-NEXT:    s_endpgm
   %val = load i64, ptr addrspace(1) %arrayidx, align 1
@@ -281,7 +279,6 @@ define amdgpu_kernel void @cttz_i64(ptr addrspace(1) noalias %out, ptr addrspace
 ; GFX9-NEXT:    v_ffbl_b32_e32 v2, v2
 ; GFX9-NEXT:    v_add_u32_e64 v0, v0, 32 clamp
 ; GFX9-NEXT:    v_min_u32_e32 v0, v0, v2
-; GFX9-NEXT:    v_min_u32_e32 v0, 64, v0
 ; GFX9-NEXT:    global_store_dwordx2 v1, v[0:1], s[0:1]
 ; GFX9-NEXT:    s_endpgm
 ;
@@ -320,7 +317,6 @@ define amdgpu_kernel void @cttz_i64(ptr addrspace(1) noalias %out, ptr addrspace
 ; GFX10-NEXT:    v_ffbl_b32_e32 v2, v2
 ; GFX10-NEXT:    v_add_nc_u32_e64 v0, v0, 32 clamp
 ; GFX10-NEXT:    v_min_u32_e32 v0, v0, v2
-; GFX10-NEXT:    v_min_u32_e32 v0, 64, v0
 ; GFX10-NEXT:    global_store_dwordx2 v1, v[0:1], s[0:1]
 ; GFX10-NEXT:    s_endpgm
   %val = load i64, ptr addrspace(1) %arrayidx, align 1
