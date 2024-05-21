@@ -99,7 +99,7 @@ class InstrBuilder {
 public:
   InstrBuilder(const MCSubtargetInfo &STI, const MCInstrInfo &MCII,
                const MCRegisterInfo &RI, const MCInstrAnalysis *IA,
-               const InstrumentManager &IM);
+               const InstrumentManager &IM, unsigned CallLatency);
 
   void clear() {
     Descriptors.clear();
@@ -111,8 +111,6 @@ public:
   /// Set a callback which is invoked to retrieve a recycled mca::Instruction
   /// or null if there isn't any.
   void setInstRecycleCallback(InstRecycleCallback CB) { InstRecycleCB = CB; }
-
-  void setCallLatency(unsigned CL) { CallLatency = CL; }
 
   Expected<std::unique_ptr<Instruction>>
   createInstruction(const MCInst &MCI, const SmallVector<Instrument *> &IVec);
