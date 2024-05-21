@@ -214,6 +214,7 @@ TemplateNameKind Sema::isTemplateName(Scope *S,
                          &AssumedTemplate,
                          /*AllowTypoCorrection=*/!Disambiguation))
     return TNK_Non_template;
+
   MemberOfUnknownSpecialization = R.wasNotFoundInCurrentInstantiation();
 
   if (AssumedTemplate != AssumedTemplateKind::None) {
@@ -430,7 +431,6 @@ bool Sema::LookupTemplateName(LookupResult &Found, Scope *S, CXXScopeSpec &SS,
   }
 
   bool ObjectTypeSearchedInScope = false;
-  bool AllowFunctionTemplatesInLookup = true;
   if (LookupCtx) {
     // Perform "qualified" name lookup into the declaration context we
     // computed, which is either the type of the base of a member access
@@ -449,7 +449,14 @@ bool Sema::LookupTemplateName(LookupResult &Found, Scope *S, CXXScopeSpec &SS,
     IsDependent |= Found.wasNotFoundInCurrentInstantiation();
   }
 
-  if (SS.isEmpty() && (ObjectType.isNull() || Found.empty())) {
+  bool LookupFirstQualifierInScope =
+      Found.getLookupKind() != LookupMemberName && Found.empty() &&
+      !ObjectType.isNull() && !IsDependent;
+
+  // FIXME: We should still do the lookup if the object expression is dependent,
+  // but instead of using them we should store them via
+  // setFirstQualifierFoundInScope and pretend we found nothing.
+  if (SS.isEmpty() && (ObjectType.isNull() || LookupFirstQualifierInScope)) {
     // C++ [basic.lookup.classref]p1:
     //   In a class member access expression (5.2.5), if the . or -> token is
     //   immediately followed by an identifier followed by a <, the
@@ -461,14 +468,11 @@ bool Sema::LookupTemplateName(LookupResult &Found, Scope *S, CXXScopeSpec &SS,
     //   template.
     if (S)
       LookupName(Found, S);
+    else if (LookupFirstQualifierInScope && SS.getFirstQualifierFoundInScope())
+      Found.addDecl(SS.getFirstQualifierFoundInScope());
 
-    if (!ObjectType.isNull()) {
-      //  FIXME: We should filter out all non-type templates here, particularly
-      //  variable templates and concepts. But the exclusion of alias templates
-      //  and template template parameters is a wording defect.
-      AllowFunctionTemplatesInLookup = false;
+    if (!ObjectType.isNull())
       ObjectTypeSearchedInScope = true;
-    }
 
     IsDependent |= Found.wasNotFoundInCurrentInstantiation();
   }
@@ -539,7 +543,7 @@ bool Sema::LookupTemplateName(LookupResult &Found, Scope *S, CXXScopeSpec &SS,
 
   NamedDecl *ExampleLookupResult =
       Found.empty() ? nullptr : Found.getRepresentativeDecl();
-  FilterAcceptableTemplateNames(Found, AllowFunctionTemplatesInLookup);
+  FilterAcceptableTemplateNames(Found);
   if (Found.empty()) {
     if (IsDependent) {
       Found.setNotFoundInCurrentInstantiation();
