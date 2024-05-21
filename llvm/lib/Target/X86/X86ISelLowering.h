@@ -1740,7 +1740,8 @@ namespace llvm {
                         LLVMContext &Context) const override;
 
     const MCPhysReg *getScratchRegisters(CallingConv::ID CC) const override;
-    ArrayRef<MCPhysReg> getRoundingControlRegisters() const override;
+    ArrayRef<MCPhysReg>
+    getRoundingControlRegisters(const char *AsmStr) const override;
 
     TargetLoweringBase::AtomicExpansionKind
     shouldExpandAtomicLoadInIR(LoadInst *LI) const override;
