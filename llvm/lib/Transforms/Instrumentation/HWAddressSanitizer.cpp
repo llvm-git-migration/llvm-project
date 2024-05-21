@@ -1589,6 +1589,11 @@ void HWAddressSanitizer::sanitizeFunction(Function &F,
 
   assert(!ShadowBase);
 
+  // Remove memory attributes that are about to become invalid.
+  F.removeFnAttr(llvm::Attribute::Memory);
+  for (auto &A : F.args())
+    A.removeAttr(llvm::Attribute::WriteOnly);
+
   BasicBlock::iterator InsertPt = F.getEntryBlock().begin();
   IRBuilder<> EntryIRB(&F.getEntryBlock(), InsertPt);
   emitPrologue(EntryIRB,
