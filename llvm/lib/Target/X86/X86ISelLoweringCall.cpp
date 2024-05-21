@@ -669,8 +669,14 @@ const MCPhysReg *X86TargetLowering::getScratchRegisters(CallingConv::ID) const {
   return ScratchRegs;
 }
 
-ArrayRef<MCPhysReg> X86TargetLowering::getRoundingControlRegisters() const {
+ArrayRef<MCPhysReg>
+X86TargetLowering::getRoundingControlRegisters(const char *AsmStr) const {
   static const MCPhysReg RCRegs[] = {X86::FPCW, X86::MXCSR};
+  if (AsmStr) {
+    StringRef S(AsmStr);
+    if (!S.contains("ldmxcsr") && !S.contains("fldcw"))
+      return ArrayRef<MCPhysReg>();
+  }
   return RCRegs;
 }
 

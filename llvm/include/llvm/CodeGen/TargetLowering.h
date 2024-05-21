@@ -4817,7 +4817,8 @@ public:
 
   /// Returns a 0 terminated array of rounding control registers that can be
   /// attached into strict FP call.
-  virtual ArrayRef<MCPhysReg> getRoundingControlRegisters() const {
+  virtual ArrayRef<MCPhysReg>
+  getRoundingControlRegisters(const char *AsmStr = nullptr) const {
     return ArrayRef<MCPhysReg>();
   }
 

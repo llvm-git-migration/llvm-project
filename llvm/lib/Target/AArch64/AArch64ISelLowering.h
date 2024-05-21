@@ -726,7 +726,8 @@ public:
                                      CodeGenOptLevel OptLevel) const override;
 
   const MCPhysReg *getScratchRegisters(CallingConv::ID CC) const override;
-  ArrayRef<MCPhysReg> getRoundingControlRegisters() const override;
+  ArrayRef<MCPhysReg>
+  getRoundingControlRegisters(const char *AsmStr) const override;
 
   /// Returns false if N is a bit extraction pattern of (X >> C) & Mask.
   bool isDesirableToCommuteWithShift(const SDNode *N,
