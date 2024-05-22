@@ -2466,20 +2466,18 @@ def int_amdgcn_perm :
 // GFX9 Intrinsics
 //===----------------------------------------------------------------------===//
 
-class AMDGPUGlobalLoadLDS :
-  ClangBuiltin<"__builtin_amdgcn_global_load_lds">,
-  Intrinsic <
-    [],
-    [LLVMQualPointerType<1>,            // Base global pointer to load from
-     LLVMQualPointerType<3>,            // LDS base pointer to store to
-     llvm_i32_ty,                       // Data byte size: 1/2/4 (/12/16 for gfx950)
-     llvm_i32_ty,                       // imm offset (applied to both global and LDS address)
-     llvm_i32_ty],                      // auxiliary data (imm, cachepolicy (bit 0 = sc0,
+class AMDGPUGlobalLoadLDS : Intrinsic <
+   [],
+   [LLVMQualPointerType<1>,             // Base global pointer to load from
+    LLVMQualPointerType<3>,             // LDS base pointer to store to
+    llvm_i32_ty,                        // Data byte size: 1/2/4
+    llvm_i32_ty,                        // imm offset (applied to both global and LDS address)
+    llvm_i32_ty],                       // auxiliary data (imm, cachepolicy (bit 0 = sc0,
                                         //                                   bit 1 = sc1,
                                         //                                   bit 4 = scc))
-    [IntrWillReturn, NoCapture<ArgIndex<0>>, NoCapture<ArgIndex<1>>,
-     ImmArg<ArgIndex<2>>, ImmArg<ArgIndex<3>>, ImmArg<ArgIndex<4>>, IntrNoCallback, IntrNoFree],
-     "", [SDNPMemOperand]>;
+   [IntrWillReturn, NoCapture<ArgIndex<0>>, NoCapture<ArgIndex<1>>,
+    ImmArg<ArgIndex<2>>, ImmArg<ArgIndex<3>>, ImmArg<ArgIndex<4>>, IntrNoCallback, IntrNoFree],
+   "", [SDNPMemOperand]>;
 def int_amdgcn_global_load_lds : AMDGPUGlobalLoadLDS;
 
 //===----------------------------------------------------------------------===//

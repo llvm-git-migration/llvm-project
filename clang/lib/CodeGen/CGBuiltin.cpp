@@ -2537,6 +2537,47 @@ static RValue EmitHipStdParUnsupportedBuiltin(CodeGenFunction *CGF,
   return RValue::get(CGF->Builder.CreateCall(UBF, Args));
 }
 
+static void buildInstrinsicCallArgs(CodeGenFunction &CGF, const CallExpr *E,
+                                    unsigned BuiltinID,
+                                    Function *Callee,
+                                    SmallVectorImpl<Value *> &Args) {
+  // Find out if any arguments are required to be integer constant
+  // expressions.
+  unsigned ICEArguments = 0;
+  ASTContext::GetBuiltinTypeError Error;
+  CGF.getContext().GetBuiltinType(BuiltinID, Error, &ICEArguments);
+  assert(Error == ASTContext::GE_None && "Should not codegen an error");
+
+  llvm::FunctionType *FTy = Callee->getFunctionType();
+
+  for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {
+    Value *ArgValue = CGF.EmitScalarOrConstFoldImmArg(ICEArguments, i, E);
+    // If the intrinsic arg type is different from the builtin arg type
+    // we need to do a bit cast.
+    llvm::Type *PTy = FTy->getParamType(i);
+    if (PTy != ArgValue->getType()) {
+      // XXX - vector of pointers?
+      if (auto *PtrTy = dyn_cast<llvm::PointerType>(PTy)) {
+        if (PtrTy->getAddressSpace() !=
+            ArgValue->getType()->getPointerAddressSpace()) {
+          ArgValue = CGF.Builder.CreateAddrSpaceCast(
+              ArgValue, llvm::PointerType::get(CGF.getLLVMContext(),
+                                               PtrTy->getAddressSpace()));
+        }
+      }
+      // Cast vector type (e.g., v256i32) to x86_amx, this only happen
+      // in amx intrinsics.
+      if (PTy->isX86_AMXTy())
+        ArgValue =
+            CGF.Builder.CreateIntrinsic(Intrinsic::x86_cast_vector_to_tile,
+                                        {ArgValue->getType()}, {ArgValue});
+      else
+        ArgValue = CGF.Builder.CreateBitCast(ArgValue, PTy);
+    }
+    Args.push_back(ArgValue);
+  }
+}
+
 RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
                                         const CallExpr *E,
                                         ReturnValueSlot ReturnValue) {
@@ -6024,44 +6065,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
 
   if (IntrinsicID != Intrinsic::not_intrinsic) {
     SmallVector<Value*, 16> Args;
-
-    // Find out if any arguments are required to be integer constant
-    // expressions.
-    unsigned ICEArguments = 0;
-    ASTContext::GetBuiltinTypeError Error;
-    getContext().GetBuiltinType(BuiltinID, Error, &ICEArguments);
-    assert(Error == ASTContext::GE_None && "Should not codegen an error");
-
     Function *F = CGM.getIntrinsic(IntrinsicID);
-    llvm::FunctionType *FTy = F->getFunctionType();
-
-    for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {
-      Value *ArgValue = EmitScalarOrConstFoldImmArg(ICEArguments, i, E);
-      // If the intrinsic arg type is different from the builtin arg type
-      // we need to do a bit cast.
-      llvm::Type *PTy = FTy->getParamType(i);
-      if (PTy != ArgValue->getType()) {
-        // XXX - vector of pointers?
-        if (auto *PtrTy = dyn_cast<llvm::PointerType>(PTy)) {
-          if (PtrTy->getAddressSpace() !=
-              ArgValue->getType()->getPointerAddressSpace()) {
-            ArgValue = Builder.CreateAddrSpaceCast(
-                ArgValue, llvm::PointerType::get(getLLVMContext(),
-                                                 PtrTy->getAddressSpace()));
-          }
-        }
-
-        // Cast vector type (e.g., v256i32) to x86_amx, this only happen
-        // in amx intrinsics.
-        if (PTy->isX86_AMXTy())
-          ArgValue = Builder.CreateIntrinsic(Intrinsic::x86_cast_vector_to_tile,
-                                             {ArgValue->getType()}, {ArgValue});
-        else
-          ArgValue = Builder.CreateBitCast(ArgValue, PTy);
-      }
-
-      Args.push_back(ArgValue);
-    }
+    buildInstrinsicCallArgs(*this, E, BuiltinID, F, Args);
 
     Value *V = Builder.CreateCall(F, Args);
     QualType BuiltinRetType = E->getType();
@@ -19039,6 +19044,28 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
     Function *F =
         CGM.getIntrinsic(Intrinsic::amdgcn_s_sendmsg_rtn, {ResultType});
     return Builder.CreateCall(F, {Arg});
+  }
+  case AMDGPU::BI__builtin_amdgcn_global_load_lds: {
+    SmallVector<Value *, 5> Args;
+    Function *F = CGM.getIntrinsic(Intrinsic::amdgcn_global_load_lds);
+    buildInstrinsicCallArgs(*this, E, BuiltinID, F, Args);
+    constexpr const int SizeIdx = 2;
+    ConstantInt *SizeVal = dyn_cast<ConstantInt>(Args[SizeIdx]);
+    if (!SizeVal) {
+      CGM.Error(E->getExprLoc(), "size must be a constant");
+      return nullptr;
+    }
+    uint64_t Size = SizeVal->getZExtValue();
+    switch (Size) {
+    default:
+      CGM.Error(E->getExprLoc(), "size must be a 1/2/4");
+      return nullptr;
+    case 1:
+    case 2:
+    case 4:
+      break;
+    }
+    return Builder.CreateCall(F, Args);
   }
   default:
     return nullptr;
