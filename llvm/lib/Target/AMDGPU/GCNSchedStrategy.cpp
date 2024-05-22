@@ -66,9 +66,8 @@ static cl::opt<bool> GCNTrackers(
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
-    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr),
-      TheTracker(*C->LIS), TheUpwardTracker(*C->LIS),
-      HasHighPressure(false) {}
+    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), TheTracker(*C->LIS),
+      TheUpwardTracker(*C->LIS), HasHighPressure(false) {}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   GenericScheduler::initialize(DAG);
@@ -748,16 +747,17 @@ void GCNScheduleDAGMILive::runSchedStages() {
       if (GCNTrackers) {
         GCNDownwardRPTracker *TheTracker = S.getTracker();
         GCNUpwardRPTracker *TheUpwardTracker = S.getUpwardTracker();
-        GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
-        GCNRPTracker::LiveRegSet *RegionLiveOuts = &LiveOuts[Stage->getRegionIdx()];
+        GCNRPTracker::LiveRegSet *RegionLiveIns =
+            &LiveIns[Stage->getRegionIdx()];
+        GCNRPTracker::LiveRegSet *RegionLiveOuts =
+            &LiveOuts[Stage->getRegionIdx()];
 
-        reinterpret_cast<GCNRPTracker *>(TheTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            *RegionLiveIns);
-        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            *RegionLiveOuts);
-
+        reinterpret_cast<GCNRPTracker *>(TheTracker)
+            ->reset(Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+                    *RegionLiveIns);
+        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)
+            ->reset(Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+                    *RegionLiveOuts);
       }
 
       ScheduleDAGMILive::schedule();
