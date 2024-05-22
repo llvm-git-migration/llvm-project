@@ -1,4 +1,3 @@
-// REQUIRES: host-supports-nvptx
 // RUN: mlir-opt %s --gpu-module-to-binary="format=llvm" | FileCheck %s
 // RUN: mlir-opt %s --gpu-module-to-binary="format=isa" | FileCheck %s -check-prefix=CHECK-ISA
 
