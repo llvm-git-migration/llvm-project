@@ -2363,9 +2363,9 @@ void MemoryDepChecker::Dependence::print(
 
 bool LoopAccessInfo::canAnalyzeLoop() {
   // We need to have a loop header.
-  LLVM_DEBUG(dbgs() << "LAA: Found a loop in "
-                    << TheLoop->getHeader()->getParent()->getName() << ": "
-                    << TheLoop->getHeader()->getName() << '\n');
+  LLVM_DEBUG(dbgs() << "\nLAA: Checking a loop in '"
+                    << TheLoop->getHeader()->getParent()->getName() << "' from "
+                    << TheLoop->getLocStr() << "\n");
 
   // We can only analyze innermost loops.
   if (!TheLoop->isInnermost()) {
@@ -2392,6 +2392,8 @@ bool LoopAccessInfo::canAnalyzeLoop() {
     return false;
   }
 
+  LLVM_DEBUG(dbgs() << "LAA: Found a loop: " << TheLoop->getHeader()->getName()
+                    << "\n");
   return true;
 }
 
