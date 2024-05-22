@@ -1761,6 +1761,66 @@ struct VectorInterleaveOpLowering
   }
 };
 
+/// Conversion pattern for a `vector.deinterleave`.
+/// Support available for fixed-sized vectors and scalable vectors.
+
+struct VectorDeinterleaveOpLowering
+    : public ConvertOpToLLVMPattern<vector::DeinterleaveOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(vector::DeinterleaveOp deinterleaveOp, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    VectorType resultType = deinterleaveOp.getResultVectorType();
+    VectorType sourceType = deinterleaveOp.getSourceVectorType();
+    auto loc = deinterleaveOp.getLoc();
+
+    if (resultType.getRank() != 1)
+      return rewriter.notifyMatchFailure(deinterleaveOp,
+                                         "deinterleaveOp not rank 1");
+
+    if (resultType.isScalable()) {
+      auto llvmTypeConverter = this->getTypeConverter();
+      auto deinterleaveResults = deinterleaveOp.getResultTypes();
+      auto packedOpResults =
+          llvmTypeConverter->packOperationResults(deinterleaveResults);
+      auto intrinsic = rewriter.create<LLVM::vector_deinterleave2>(
+          loc, packedOpResults, adaptor.getSource());
+
+      auto resultOne = rewriter.create<LLVM::ExtractValueOp>(
+          loc, intrinsic->getResult(0), 0);
+      auto resultTwo = rewriter.create<LLVM::ExtractValueOp>(
+          loc, intrinsic->getResult(0), 1);
+
+      rewriter.replaceOp(deinterleaveOp, ValueRange{resultOne, resultTwo});
+      return success();
+    }
+
+    int64_t resultVectorSize = resultType.getNumElements();
+    auto poison = rewriter.create<LLVM::PoisonOp>(loc, sourceType);
+    SmallVector<int32_t> shuffleMaskOne;
+    SmallVector<int32_t> shuffleMaskTwo;
+
+    shuffleMaskOne.reserve(resultVectorSize);
+    shuffleMaskTwo.reserve(resultVectorSize);
+
+    for (int i = 0; i < sourceType.getNumElements(); ++i) {
+      if (i % 2 == 0)
+        shuffleMaskOne.push_back(i);
+      else
+        shuffleMaskTwo.push_back(i);
+    }
+
+    auto evenShuffle = rewriter.create<LLVM::ShuffleVectorOp>(
+        loc, adaptor.getSource(), poison, shuffleMaskOne);
+    auto oddShuffle = rewriter.create<LLVM::ShuffleVectorOp>(
+        loc, adaptor.getSource(), poison, shuffleMaskTwo);
+
+    rewriter.replaceOp(deinterleaveOp, ValueRange{evenShuffle, oddShuffle});
+    return ::success();
+  }
+};
+
 } // namespace
 
 /// Populate the given list with patterns that convert from Vector to LLVM.
@@ -1785,8 +1845,8 @@ void mlir::populateVectorToLLVMConversionPatterns(
                VectorExpandLoadOpConversion, VectorCompressStoreOpConversion,
                VectorSplatOpLowering, VectorSplatNdOpLowering,
                VectorScalableInsertOpLowering, VectorScalableExtractOpLowering,
-               MaskedReductionOpConversion, VectorInterleaveOpLowering>(
-      converter);
+               MaskedReductionOpConversion, VectorInterleaveOpLowering,
+               VectorDeinterleaveOpLowering>(converter);
   // Transfer ops with rank > 1 are handled by VectorToSCF.
   populateVectorTransferLoweringPatterns(patterns, /*maxTransferRank=*/1);
 }
