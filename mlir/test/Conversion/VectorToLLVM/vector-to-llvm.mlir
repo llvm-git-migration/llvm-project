@@ -2546,3 +2546,25 @@ func.func @vector_interleave_2d_scalable(%a: vector<2x[8]xi16>, %b: vector<2x[8]
   %0 = vector.interleave %a, %b : vector<2x[8]xi16>
   return %0 : vector<2x[16]xi16>
 }
+
+// -----
+
+// CHECK-LABEL: @vector_deinterleave_1d
+// CHECK-SAME:  (%{{.*}}: vector<4xi32>) -> (vector<2xi32>, vector<2xi32>)
+func.func @vector_deinterleave_1d(%a: vector<4xi32>) -> (vector<2xi32>, vector<2xi32>) {
+  // CHECK: llvm.mlir.poison : vector<4xi32>
+  // CHECK: llvm.shufflevector %{{.*}}, %{{.*}} [0, 2] : vector<4xi32> 
+  // CHECK: llvm.shufflevector %{{.*}}, %{{.*}} [1, 3] : vector<4xi32> 
+  %0, %1 = vector.deinterleave %a : vector<4xi32> -> vector<2xi32>
+  return %0, %1 : vector<2xi32>, vector<2xi32>
+}
+
+// CHECK-LABEL: @vector_deinterleave_1d_scalable
+// CHECK-SAME:  %{{.*}}: vector<[4]xi32>) -> (vector<[2]xi32>, vector<[2]xi32>)
+func.func @vector_deinterleave_1d_scalable(%a: vector<[4]xi32>) -> (vector<[2]xi32>, vector<[2]xi32>) {
+    // CHECK: llvm.intr.vector.deinterleave2
+    // CHECK: llvm.extractvalue %{{.*}}[0] : !llvm.struct<(vector<[2]xi32>, vector<[2]xi32>)> 
+    // CHECK: llvm.extractvalue %{{.*}}[1] : !llvm.struct<(vector<[2]xi32>, vector<[2]xi32>)> 
+    %0, %1 = vector.deinterleave %a : vector<[4]xi32> -> vector<[2]xi32>
+    return %0, %1 : vector<[2]xi32>, vector<[2]xi32>
+}
