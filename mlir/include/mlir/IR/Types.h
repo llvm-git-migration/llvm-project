@@ -97,20 +97,17 @@ public:
   bool operator!() const { return impl == nullptr; }
 
   template <typename... Tys>
-  [[deprecated("Use mlir::isa<U>() instead")]]
-  bool isa() const;
+  [[deprecated("Use mlir::isa<U>() instead")]] bool isa() const;
   template <typename... Tys>
-  [[deprecated("Use mlir::isa_and_nonnull<U>() instead")]]
-  bool isa_and_nonnull() const;
+  [[deprecated("Use mlir::isa_and_nonnull<U>() instead")]] bool
+  isa_and_nonnull() const;
   template <typename U>
-  [[deprecated("Use mlir::dyn_cast<U>() instead")]]
-  U dyn_cast() const;
+  [[deprecated("Use mlir::dyn_cast<U>() instead")]] U dyn_cast() const;
   template <typename U>
-  [[deprecated("Use mlir::dyn_cast_or_null<U>() instead")]]
-  U dyn_cast_or_null() const;
+  [[deprecated("Use mlir::dyn_cast_or_null<U>() instead")]] U
+  dyn_cast_or_null() const;
   template <typename U>
-  [[deprecated("Use mlir::cast<U>() instead")]]
-  U cast() const;
+  [[deprecated("Use mlir::cast<U>() instead")]] U cast() const;
 
   /// Return a unique identifier for the concrete type. This is used to support
   /// dynamic type casting.
@@ -285,7 +282,7 @@ public:
 protected:
   /// Returns the impl interface instance for the given type.
   static typename InterfaceBase::Concept *getInterfaceFor(Type type) {
-#ifndef NDEBUG
+#ifdef EXPENSIVE_CHECKS
     // Check that the current interface isn't an unresolved promise for the
     // given type.
     dialect_extension_detail::handleUseOfUndefinedPromisedInterface(

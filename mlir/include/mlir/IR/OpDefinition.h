@@ -1689,7 +1689,7 @@ public:
   static bool classof(Operation *op) {
     if (auto info = op->getRegisteredInfo())
       return TypeID::get<ConcreteType>() == info->getTypeID();
-#ifndef NDEBUG
+#ifdef EXPENSIVE_CHECKS
     if (op->getName().getStringRef() == ConcreteType::getOperationName())
       llvm::report_fatal_error(
           "classof on '" + ConcreteType::getOperationName() +
@@ -2090,7 +2090,7 @@ protected:
   static typename InterfaceBase::Concept *getInterfaceFor(Operation *op) {
     OperationName name = op->getName();
 
-#ifndef NDEBUG
+#ifdef EXPENSIVE_CHECKS
     // Check that the current interface isn't an unresolved promise for the
     // given operation.
     if (Dialect *dialect = name.getDialect()) {

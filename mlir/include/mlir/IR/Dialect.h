@@ -159,7 +159,7 @@ public:
   /// Lookup an interface for the given ID if one is registered, otherwise
   /// nullptr.
   DialectInterface *getRegisteredInterface(TypeID interfaceID) {
-#ifndef NDEBUG
+#ifdef EXPENSIVE_CHECKS
     handleUseOfUndefinedPromisedInterface(getTypeID(), interfaceID);
 #endif
 
@@ -168,7 +168,7 @@ public:
   }
   template <typename InterfaceT>
   InterfaceT *getRegisteredInterface() {
-#ifndef NDEBUG
+#ifdef EXPENSIVE_CHECKS
     handleUseOfUndefinedPromisedInterface(getTypeID(),
                                           InterfaceT::getInterfaceID(),
                                           llvm::getTypeName<InterfaceT>());
