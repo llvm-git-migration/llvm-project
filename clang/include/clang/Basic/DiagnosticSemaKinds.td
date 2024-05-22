@@ -12391,4 +12391,8 @@ def err_acc_reduction_composite_type
 def err_acc_reduction_composite_member_type :Error<
     "OpenACC 'reduction' composite variable must not have non-scalar field">;
 def note_acc_reduction_composite_member_loc : Note<"invalid field is here">;
+
+// AMDGCN builtins diagnostics
+def err_amdgcn_global_load_lds_size_invalid_value : Error<"invalid size value">;
+def note_amdgcn_global_load_lds_size_valid_value : Note<"size must be 1/2/4">;
 } // end of sema component.
