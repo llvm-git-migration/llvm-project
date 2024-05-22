@@ -2675,24 +2675,26 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
            << ")";
   }
 
-  auto target = dyn_cast<LinalgOp>(*targetOps.begin());
+  Operation *target = *targetOps.begin();
+  auto linalgOp = dyn_cast<LinalgOp>(target);
+  auto tileableOp = dyn_cast<TilingInterface>(target);
 
-  OpBuilder builder(target.getContext());
-
-  if (!target)
+  if (!linalgOp)
     return emitDefiniteFailure() << "expected Linalg Op";
 
+  OpBuilder builder(linalgOp.getContext());
+
   if (isa<TransformParamTypeInterface>(getChunkSizes().getType())) {
-    if (target.hasDynamicShape()) {
+    if (linalgOp.hasDynamicShape()) {
       auto diag = emitSilenceableError()
                   << "cannot compute parametric tile sizes for dynamically "
                      "shaped payload op";
-      diag.attachNote(target->getLoc()) << "payload op";
+      diag.attachNote(linalgOp->getLoc()) << "payload op";
       return diag;
     }
 
     FailureOr<StaticContinuousTileSizeSpecification> spec =
-        computeStaticContinuousTileSizes(target, getDimension(),
+        computeStaticContinuousTileSizes(tileableOp, getDimension(),
                                          getTargetSize());
     if (failed(spec)) {
       return emitSilenceableError()
@@ -2717,13 +2719,13 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
     return DiagnosedSilenceableFailure::success();
   }
 
-  builder.setInsertionPoint(target);
+  builder.setInsertionPoint(linalgOp);
 
   OpFoldResult targetSize = builder.getIndexAttr(getTargetSize());
   unsigned dimension = getDimension();
 
-  FailureOr<ContinuousTileSizeSpecification> spec =
-      computeContinuousTileSizes(builder, target, dimension, targetSize, true);
+  FailureOr<ContinuousTileSizeSpecification> spec = computeContinuousTileSizes(
+      builder, tileableOp, dimension, targetSize, true);
   if (failed(spec)) {
     return emitSilenceableError() << "could not generate tile size computation";
   }
@@ -2731,7 +2733,7 @@ transform::ContinuousTileSizesOp::apply(transform::TransformRewriter &rewriter,
   AffineExpr s0 = builder.getAffineSymbolExpr(0);
   AffineExpr s1 = builder.getAffineSymbolExpr(1);
   auto apply = [&](AffineExpr expr, ArrayRef<OpFoldResult> ofrs) -> Value {
-    return affine::makeComposedAffineApply(builder, target->getLoc(), expr,
+    return affine::makeComposedAffineApply(builder, linalgOp->getLoc(), expr,
                                            ofrs);
   };
 
