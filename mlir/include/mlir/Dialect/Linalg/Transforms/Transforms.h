@@ -864,8 +864,9 @@ FailureOr<StaticContinuousTileSizeSpecification>
 computeStaticContinuousTileSizes(LinalgOp op, unsigned dimension,
                                  unsigned targetSize);
 FailureOr<ContinuousTileSizeSpecification>
-computeContinuousTileSizes(OpBuilder &builder, LinalgOp op, unsigned dimension,
-                           OpFoldResult targetSize, bool emitAssertions);
+computeContinuousTileSizes(OpBuilder &builder, TilingInterface op,
+                           unsigned dimension, OpFoldResult targetSize,
+                           bool emitAssertions);
 /// Rewrite a TilingInterface `op` to a tiled `scf.forall`, applying
 /// tiling by `numThreads`.
 /// If non-empty, the `mapping` is added as an attribute to the
