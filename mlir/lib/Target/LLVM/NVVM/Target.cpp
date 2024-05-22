@@ -158,7 +158,7 @@ SerializeGPUModuleBase::loadBitcodeFiles(llvm::Module &module) {
   return std::move(bcFiles);
 }
 
-#if MLIR_ENABLE_CUDA_CONVERSIONS
+#if LLVM_HAS_NVPTX_TARGET
 namespace {
 class NVPTXSerializer : public SerializeGPUModuleBase {
 public:
@@ -167,6 +167,15 @@ public:
 
   gpu::GPUModuleOp getOperation();
 
+  std::optional<SmallVector<char, 0>>
+  moduleToObject(llvm::Module &llvmModule) override;
+
+private:
+  // Target options.
+  gpu::TargetOptions targetOptions;
+
+#if MLIR_ENABLE_CUDA_CONVERSIONS
+public:
   // Compile PTX to cubin using `ptxas`.
   std::optional<SmallVector<char, 0>>
   compileToBinary(const std::string &ptxCode);
@@ -174,9 +183,6 @@ public:
   // Compile PTX to cubin using the `nvptxcompiler` library.
   std::optional<SmallVector<char, 0>>
   compileToBinaryNVPTX(const std::string &ptxCode);
-
-  std::optional<SmallVector<char, 0>>
-  moduleToObject(llvm::Module &llvmModule) override;
 
 private:
   using TmpFile = std::pair<llvm::SmallString<128>, llvm::FileRemover>;
@@ -190,9 +196,7 @@ private:
   // 2. In the system PATH.
   // 3. The path from `getCUDAToolkitPath()`.
   std::optional<std::string> findTool(StringRef tool);
-
-  // Target options.
-  gpu::TargetOptions targetOptions;
+#endif // MLIR_ENABLE_CUDA_CONVERSIONS
 };
 } // namespace
 
@@ -201,6 +205,11 @@ NVPTXSerializer::NVPTXSerializer(Operation &module, NVVMTargetAttr target,
     : SerializeGPUModuleBase(module, target, targetOptions),
       targetOptions(targetOptions) {}
 
+gpu::GPUModuleOp NVPTXSerializer::getOperation() {
+  return dyn_cast<gpu::GPUModuleOp>(&SerializeGPUModuleBase::getOperation());
+}
+
+#if MLIR_ENABLE_CUDA_CONVERSIONS
 std::optional<NVPTXSerializer::TmpFile>
 NVPTXSerializer::createTemp(StringRef name, StringRef suffix) {
   llvm::SmallString<128> filename;
@@ -212,10 +221,6 @@ NVPTXSerializer::createTemp(StringRef name, StringRef suffix) {
     return std::nullopt;
   }
   return TmpFile(filename, llvm::FileRemover(filename.c_str()));
-}
-
-gpu::GPUModuleOp NVPTXSerializer::getOperation() {
-  return dyn_cast<gpu::GPUModuleOp>(&SerializeGPUModuleBase::getOperation());
 }
 
 std::optional<std::string> NVPTXSerializer::findTool(StringRef tool) {
@@ -512,10 +517,11 @@ NVPTXSerializer::compileToBinaryNVPTX(const std::string &ptxCode) {
   return binary;
 }
 #endif // MLIR_ENABLE_NVPTXCOMPILER
+#endif // MLIR_ENABLE_CUDA_CONVERSIONS
 
 std::optional<SmallVector<char, 0>>
 NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
-  // Return LLVM IR if the compilation target is offload.
+  // Return LLVM IR if the compilation target is `offload`.
 #define DEBUG_TYPE "serialize-to-llvm"
   LLVM_DEBUG({
     llvm::dbgs() << "LLVM IR for module: " << getOperation().getNameAttr()
@@ -549,7 +555,7 @@ NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
   });
 #undef DEBUG_TYPE
 
-  // Return PTX if the compilation target is assembly.
+  // Return PTX if the compilation target is `assembly`.
   if (targetOptions.getCompilationTarget() ==
       gpu::CompilationTarget::Assembly) {
     // Make sure to include the null terminator.
@@ -557,6 +563,13 @@ NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
     return SmallVector<char, 0>(bin.begin(), bin.end());
   }
 
+  // At this point, compilation target is either `binary` or `fatbinary`, which
+  // requires CUDA toolkit.
+  if (!(MLIR_ENABLE_CUDA_CONVERSIONS)) {
+    getOperation().emitError(
+        "CUDA toolkit not provided when trying to serialize GPU module.");
+    return std::nullopt;
+  }
   // Compile to binary.
 #if MLIR_ENABLE_NVPTXCOMPILER
   return compileToBinaryNVPTX(*serializedISA);
@@ -564,7 +577,7 @@ NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
   return compileToBinary(*serializedISA);
 #endif // MLIR_ENABLE_NVPTXCOMPILER
 }
-#endif // MLIR_ENABLE_CUDA_CONVERSIONS
+#endif // LLVM_HAS_NVPTX_TARGET
 
 std::optional<SmallVector<char, 0>>
 NVVMTargetAttrImpl::serializeToObject(Attribute attribute, Operation *module,
@@ -576,7 +589,7 @@ NVVMTargetAttrImpl::serializeToObject(Attribute attribute, Operation *module,
     module->emitError("Module must be a GPU module.");
     return std::nullopt;
   }
-#if MLIR_ENABLE_CUDA_CONVERSIONS
+#if LLVM_HAS_NVPTX_TARGET
   NVPTXSerializer serializer(*module, cast<NVVMTargetAttr>(attribute), options);
   serializer.init();
   return serializer.run();
@@ -584,7 +597,7 @@ NVVMTargetAttrImpl::serializeToObject(Attribute attribute, Operation *module,
   module->emitError(
       "The `NVPTX` target was not built. Please enable it when building LLVM.");
   return std::nullopt;
-#endif // MLIR_ENABLE_CUDA_CONVERSIONS
+#endif // LLVM_HAS_NVPTX_TARGET
 }
 
 Attribute
