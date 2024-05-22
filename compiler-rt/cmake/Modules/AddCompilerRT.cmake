@@ -608,7 +608,7 @@ macro(add_custom_libcxx name prefix)
     COMMENT "Clobbering ${name} build directories"
     USES_TERMINAL
     )
-  set_target_properties(${name}-clear PROPERTIES FOLDER "Compiler-RT/Meta")
+  set_target_properties(${name}-clear PROPERTIES FOLDER "Compiler-RT/Metatargets")
 
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}-clobber-stamp
@@ -620,7 +620,7 @@ macro(add_custom_libcxx name prefix)
 
   add_custom_target(${name}-clobber
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${name}-clobber-stamp)
-  set_target_properties(${name}-clobber PROPERTIES FOLDER "Compiler-RT/Meta")
+  set_target_properties(${name}-clobber PROPERTIES FOLDER "Compiler-RT/Metatargets")
 
   set(PASSTHROUGH_VARIABLES
     ANDROID
