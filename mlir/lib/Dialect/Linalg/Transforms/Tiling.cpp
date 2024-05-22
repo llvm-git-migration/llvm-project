@@ -108,16 +108,19 @@ static void emitIsPositiveIndexAssertion(ImplicitLocOpBuilder &b,
 }
 
 FailureOr<StaticContinuousTileSizeSpecification>
-mlir::linalg::computeStaticContinuousTileSizes(LinalgOp op, unsigned dimension,
+mlir::linalg::computeStaticContinuousTileSizes(TilingInterface op,
+                                               unsigned dimension,
                                                unsigned targetSize) {
 
-  assert(!op.hasDynamicShape() &&
+  LinalgOp linalgOp = dyn_cast<LinalgOp>(op.getOperation());
+
+  assert(!linalgOp.hasDynamicShape() &&
          "cannot compute static multi-tile sizes for an op with dynamic shape");
   assert(targetSize > 0 && "target size must be non-negative");
-  assert(dimension < op.getNumLoops() && "dimension overflow");
+  assert(dimension < linalgOp.getNumLoops() && "dimension overflow");
 
   StaticContinuousTileSizeSpecification spec;
-  int64_t loopRange = op.getStaticLoopRanges()[dimension];
+  int64_t loopRange = linalgOp.getStaticLoopRanges()[dimension];
   int64_t tripCount = loopRange / targetSize;
 
   unsigned tileSize = targetSize;
@@ -158,17 +161,19 @@ mlir::linalg::computeStaticContinuousTileSizes(LinalgOp op, unsigned dimension,
 }
 
 FailureOr<ContinuousTileSizeSpecification>
-mlir::linalg::computeContinuousTileSizes(OpBuilder &builder, LinalgOp op,
+mlir::linalg::computeContinuousTileSizes(OpBuilder &builder, TilingInterface op,
                                          unsigned dimension,
                                          OpFoldResult targetSize,
                                          bool emitAssertions) {
 
+  unsigned numLoops = op.getIterationDomain(builder).size();
+
   // Bail out on dimension overflow.
-  if (dimension >= op.getNumLoops())
+  if (dimension >= numLoops)
     return failure();
 
   // The code below works only on values.
-  Location loc = op.getLoc();
+  Location loc = op->getLoc();
   ImplicitLocOpBuilder b(loc, builder);
   if (emitAssertions) {
     emitIsPositiveIndexAssertion(b, targetSize);
@@ -178,15 +183,9 @@ mlir::linalg::computeContinuousTileSizes(OpBuilder &builder, LinalgOp op,
 
   // Find the trip count of the iteration space dimension for which the tile
   // sizes are computed.
-  SmallVector<OpFoldResult> allShapes =
-      op.createFlatListOfOperandDims(b, b.getLoc());
-  AffineMap shapesToLoops = op.getShapesToLoopsMap();
-  SmallVector<OpFoldResult> loopRanges =
-      makeComposedFoldedMultiResultAffineApply(b, op.getLoc(), shapesToLoops,
-                                               allShapes);
-
-  Value loopRange =
-      getValueOrCreateConstantIndexOp(b, op.getLoc(), loopRanges[dimension]);
+  SmallVector<Range> loopRanges = op.getIterationDomain(builder);
+  Value loopRange = getValueOrCreateConstantIndexOp(b, op->getLoc(),
+                                                    loopRanges[dimension].size);
 
   ContinuousTileSizeSpecification spec;
 
