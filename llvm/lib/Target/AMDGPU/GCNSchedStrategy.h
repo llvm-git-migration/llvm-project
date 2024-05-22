@@ -128,7 +128,6 @@ public:
   GCNDownwardRPTracker *getTracker() { return &TheTracker; }
 
   GCNUpwardRPTracker *getUpwardTracker() { return &TheUpwardTracker; }
-
 };
 
 /// The goal of this scheduling strategy is to maximize kernel occupancy (i.e.
@@ -331,7 +330,7 @@ public:
   bool isRegionWithExcessRP() const {
     return DAG.RegionsWithExcessRP[RegionIdx];
   }
-  
+
   // The region number this stage is currently working on
   unsigned getRegionIdx() { return RegionIdx; }
 
