@@ -730,7 +730,6 @@ Bug Fixes to C++ Support
   from being explicitly specialized for a given implicit instantiation of the class template.
 - Fixed a crash when ``this`` is used in a dependent class scope function template specialization
   that instantiates to a static member function.
-
 - Fix crash when inheriting from a cv-qualified type. Fixes #GH35603
 - Fix a crash when the using enum declaration uses an anonymous enumeration. Fixes (#GH86790).
 - Handled an edge case in ``getFullyPackExpandedSize`` so that we now avoid a false-positive diagnostic. (#GH84220)
@@ -790,6 +789,8 @@ Bug Fixes to C++ Support
   Fixes (#GH87210), (GH89541).
 - Clang no longer tries to check if an expression is immediate-escalating in an unevaluated context.
   Fixes (#GH91308).
+- Fixed a crash when diagnosing failed conversions involving template parameter
+  packs. (#GH93076)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^

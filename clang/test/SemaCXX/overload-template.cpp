@@ -58,3 +58,6 @@ namespace overloadCheck{
   }
 }
 #endif
+
+template <typename ...a> int b(a...); // expected-note {{candidate function template not viable: no known conversion from 'int ()' to 'int' for 2nd argument}}
+int d() { return b<int, int>(0, d); } // expected-error {{no matching function for call to 'b'}}
