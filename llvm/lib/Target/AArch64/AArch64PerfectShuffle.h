@@ -6588,6 +6588,25 @@ static const unsigned PerfectShuffleTable[6561 + 1] = {
     835584U,     // <u,u,u,u>: Cost 0 copy LHS
     0};
 
+enum {
+  OP_COPY = 0, // Copy, used for things like <u,u,u,3> to say it is <0,1,2,3>
+  OP_VREV,
+  OP_VDUP0,
+  OP_VDUP1,
+  OP_VDUP2,
+  OP_VDUP3,
+  OP_VEXT1,
+  OP_VEXT2,
+  OP_VEXT3,
+  OP_VUZPL,  // VUZP, left result
+  OP_VUZPR,  // VUZP, right result
+  OP_VZIPL,  // VZIP, left result
+  OP_VZIPR,  // VZIP, right result
+  OP_VTRNL,  // VTRN, left result
+  OP_VTRNR,  // VTRN, right result
+  OP_MOVLANE // Move lane. RHSID is the lane to move into
+};
+
 inline unsigned getPerfectShuffleCost(llvm::ArrayRef<int> M) {
   assert(M.size() == 4 && "Expected a 4 entry perfect shuffle");
 

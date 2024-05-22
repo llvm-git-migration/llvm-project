@@ -12090,25 +12090,6 @@ static SDValue GeneratePerfectShuffle(unsigned ID, SDValue V1,
   unsigned LHSID = (PFEntry >> 13) & ((1 << 13) - 1);
   unsigned RHSID = (PFEntry >> 0) & ((1 << 13) - 1);
 
-  enum {
-    OP_COPY = 0, // Copy, used for things like <u,u,u,3> to say it is <0,1,2,3>
-    OP_VREV,
-    OP_VDUP0,
-    OP_VDUP1,
-    OP_VDUP2,
-    OP_VDUP3,
-    OP_VEXT1,
-    OP_VEXT2,
-    OP_VEXT3,
-    OP_VUZPL,  // VUZP, left result
-    OP_VUZPR,  // VUZP, right result
-    OP_VZIPL,  // VZIP, left result
-    OP_VZIPR,  // VZIP, right result
-    OP_VTRNL,  // VTRN, left result
-    OP_VTRNR,  // VTRN, right result
-    OP_MOVLANE // Move lane. RHSID is the lane to move into
-  };
-
   if (OpNum == OP_COPY) {
     if (LHSID == (1 * 9 + 2) * 9 + 3)
       return LHS;
