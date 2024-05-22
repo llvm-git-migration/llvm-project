@@ -1052,6 +1052,10 @@ private:
                                 void *Block, const uptr UserPtr,
                                 const uptr SizeOrUnusedBytes,
                                 const FillContentsMode FillContents) {
+    // Compute the default pointer before adding the header tag
+    const uptr DefaultAlignedPtr =
+        reinterpret_cast<uptr>(Block) + Chunk::getHeaderSize();
+
     Block = addHeaderTag(Block);
     // Only do content fill when it's from primary allocator because secondary
     // allocator has filled the content.
@@ -1064,8 +1068,6 @@ private:
 
     Chunk::UnpackedHeader Header = {};
 
-    const uptr DefaultAlignedPtr =
-        reinterpret_cast<uptr>(Block) + Chunk::getHeaderSize();
     if (UNLIKELY(DefaultAlignedPtr != UserPtr)) {
       const uptr Offset = UserPtr - DefaultAlignedPtr;
       DCHECK_GE(Offset, 2 * sizeof(u32));
