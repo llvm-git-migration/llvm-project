@@ -67,6 +67,7 @@ const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
     : GenericScheduler(C), TargetOccupancy(0), MF(nullptr),
+      TheTracker(*C->LIS), TheUpwardTracker(*C->LIS),
       HasHighPressure(false) {}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
@@ -133,23 +134,46 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
   if (!DAG->isTrackingPressure())
     return;
 
-  // getDownwardPressure() and getUpwardPressure() make temporary changes to
-  // the tracker, so we need to pass those function a non-const copy.
-  RegPressureTracker &TempTracker = const_cast<RegPressureTracker&>(RPTracker);
+  unsigned NewSGPRPressure, NewVGPRPressure;
+  if (!GCNTrackers) {
+    // getDownwardPressure() and getUpwardPressure() make temporary changes to
+    // the tracker, so we need to pass those function a non-const copy.
+    RegPressureTracker &TempTracker =
+        const_cast<RegPressureTracker &>(RPTracker);
 
-  Pressure.clear();
-  MaxPressure.clear();
+    Pressure.clear();
+    MaxPressure.clear();
 
-  if (AtTop)
-    TempTracker.getDownwardPressure(SU->getInstr(), Pressure, MaxPressure);
-  else {
-    // FIXME: I think for bottom up scheduling, the register pressure is cached
-    // and can be retrieved by DAG->getPressureDif(SU).
-    TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
+    if (AtTop)
+      TempTracker.getDownwardPressure(SU->getInstr(), Pressure, MaxPressure);
+    else {
+      // FIXME: I think for bottom up scheduling, the register pressure is
+      // cached and can be retrieved by DAG->getPressureDif(SU).
+      TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
+    }
+    NewSGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
+    NewVGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
   }
 
-  unsigned NewSGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
-  unsigned NewVGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
+  if (GCNTrackers) {
+    if (AtTop) {
+      GCNDownwardRPTracker TempTopTracker(TheTracker);
+      auto MI = SU->getInstr();
+      TempTopTracker.advance(MI, true, DAG->getLIS());
+
+      NewSGPRPressure = TempTopTracker.getPressure().getSGPRNum();
+      NewVGPRPressure = TempTopTracker.getPressure().getVGPRNum(false);
+    }
+
+    else {
+      GCNUpwardRPTracker TempBotTracker(TheUpwardTracker);
+      auto MI = SU->getInstr();
+      TempBotTracker.recede(*MI, true);
+
+      NewSGPRPressure = TempBotTracker.getPressure().getSGPRNum();
+      NewVGPRPressure = TempBotTracker.getPressure().getVGPRNum(false);
+    }
+  }
 
   // If two instructions increase the pressure of different register sets
   // by the same amount, the generic scheduler will prefer to schedule the
@@ -218,8 +242,16 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
   unsigned SGPRPressure = 0;
   unsigned VGPRPressure = 0;
   if (DAG->isTrackingPressure()) {
-    SGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
-    VGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
+    SGPRPressure =
+        GCNTrackers
+            ? (Zone.isTop() ? TheTracker.getPressure().getSGPRNum()
+                            : TheUpwardTracker.getPressure().getSGPRNum())
+            : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
+    VGPRPressure =
+        GCNTrackers
+            ? (Zone.isTop() ? TheTracker.getPressure().getVGPRNum(false)
+                            : TheUpwardTracker.getPressure().getVGPRNum(false))
+            : Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
   }
   ReadyQueue &Q = Zone.Available;
   for (SUnit *SU : Q) {
@@ -362,6 +394,16 @@ SUnit *GCNSchedStrategy::pickNode(bool &IsTopNode) {
   return SU;
 }
 
+void GCNSchedStrategy::schedNode(SUnit *SU, bool IsTopNode) {
+  if (GCNTrackers) {
+    MachineInstr *MI = SU->getInstr();
+    IsTopNode ? TheTracker.advance(MI, true, DAG->getLIS())
+              : TheUpwardTracker.recede(*MI, true);
+  }
+
+  return GenericScheduler::schedNode(SU, IsTopNode);
+}
+
 GCNSchedStageID GCNSchedStrategy::getCurrentStage() {
   assert(CurrentStage && CurrentStage != SchedStages.end());
   return *CurrentStage;
@@ -388,12 +430,13 @@ GCNSchedStageID GCNSchedStrategy::getNextStage() const {
 }
 
 GCNMaxOccupancySchedStrategy::GCNMaxOccupancySchedStrategy(
-    const MachineSchedContext *C)
+    const MachineSchedContext *C, bool IsLegacyScheduler)
     : GCNSchedStrategy(C) {
   SchedStages.push_back(GCNSchedStageID::OccInitialSchedule);
   SchedStages.push_back(GCNSchedStageID::UnclusteredHighRPReschedule);
   SchedStages.push_back(GCNSchedStageID::ClusteredLowOccupancyReschedule);
   SchedStages.push_back(GCNSchedStageID::PreRARematerialize);
+  GCNTrackers = GCNTrackers & !IsLegacyScheduler;
 }
 
 GCNMaxILPSchedStrategy::GCNMaxILPSchedStrategy(const MachineSchedContext *C)
@@ -705,6 +748,20 @@ void GCNScheduleDAGMILive::runSchedStages() {
         continue;
       }
 
+      if (GCNTrackers) {
+        GCNDownwardRPTracker *TheTracker = S.getTracker();
+        GCNUpwardRPTracker *TheUpwardTracker = S.getUpwardTracker();
+        GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
+
+        reinterpret_cast<GCNRPTracker *>(TheTracker)->reset(
+            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+            *RegionLiveIns);
+        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)->reset(
+            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+            RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
+
+      }
+
       ScheduleDAGMILive::schedule();
       Stage->finalizeGCNRegion();
     }
@@ -975,6 +1032,7 @@ void GCNSchedStage::finalizeGCNRegion() {
 void GCNSchedStage::checkScheduling() {
   // Check the results of scheduling.
   PressureAfter = DAG.getRealRegPressure(RegionIdx);
+
   LLVM_DEBUG(dbgs() << "Pressure after scheduling: " << print(PressureAfter));
   LLVM_DEBUG(dbgs() << "Region: " << RegionIdx << ".\n");
 
@@ -1526,9 +1584,6 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
     MachineInstr *MI = Entry.first;
     MachineInstr *OldMI = Entry.second;
 
-    // Remove OldMI from BBLiveInMap since we are sinking it from its MBB.
-    DAG.BBLiveInMap.erase(OldMI);
-
     // Remove OldMI and update LIS
     Register Reg = MI->getOperand(0).getReg();
     LIS->RemoveMachineInstrFromMaps(*OldMI);
@@ -1545,6 +1600,11 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
   }
   DAG.Regions = NewRegions;
   DAG.RescheduleRegions = NewRescheduleRegions;
+
+  DAG.BBLiveInMap = DAG.getBBLiveInMap();
+
+  if (GCNTrackers)
+    DAG.RegionLiveOuts.buildLiveRegMap();
 
   SIMachineFunctionInfo &MFI = *MF.getInfo<SIMachineFunctionInfo>();
   MFI.increaseOccupancy(MF, ++DAG.MinOccupancy);
