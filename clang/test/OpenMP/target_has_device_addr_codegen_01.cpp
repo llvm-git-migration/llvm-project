@@ -164,11 +164,11 @@ int main() {
 // CHECK-NEXT:    [[KERNEL_ARGS:%.*]] = alloca [[STRUCT___TGT_KERNEL_ARGUMENTS:%.*]], align 8
 // CHECK-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
-// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
+// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[REF]], align 8
-// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
-// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 3
+// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 3
 // CHECK-NEXT:    [[TMP1:%.*]] = getelementptr [4 x i32], ptr [[ARR]], i32 1
 // CHECK-NEXT:    [[TMP2:%.*]] = ptrtoint ptr [[TMP1]] to i64
 // CHECK-NEXT:    [[TMP3:%.*]] = ptrtoint ptr [[A]] to i64
@@ -296,13 +296,13 @@ int main() {
 // CHECK-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // CHECK-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK-NEXT:    store i32 0, ptr [[A]], align 8
-// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
-// CHECK-NEXT:    [[A2:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[A2:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
 // CHECK-NEXT:    store ptr [[A2]], ptr [[PTR]], align 8
-// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
-// CHECK-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
+// CHECK-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
 // CHECK-NEXT:    store ptr [[A3]], ptr [[REF]], align 8
 // CHECK-NEXT:    ret void
 //
@@ -313,21 +313,21 @@ int main() {
 // CHECK-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // CHECK-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[A]], align 8
 // CHECK-NEXT:    [[INC:%.*]] = add nsw i32 [[TMP1]], 1
 // CHECK-NEXT:    store i32 [[INC]], ptr [[A]], align 8
-// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 1
+// CHECK-NEXT:    [[PTR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR]], align 8
 // CHECK-NEXT:    [[TMP3:%.*]] = load i32, ptr [[TMP2]], align 4
 // CHECK-NEXT:    [[INC1:%.*]] = add nsw i32 [[TMP3]], 1
 // CHECK-NEXT:    store i32 [[INC1]], ptr [[TMP2]], align 4
-// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 2
+// CHECK-NEXT:    [[REF:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 2
 // CHECK-NEXT:    [[TMP4:%.*]] = load ptr, ptr [[REF]], align 8
 // CHECK-NEXT:    [[TMP5:%.*]] = load i32, ptr [[TMP4]], align 4
 // CHECK-NEXT:    [[INC2:%.*]] = add nsw i32 [[TMP5]], 1
 // CHECK-NEXT:    store i32 [[INC2]], ptr [[TMP4]], align 4
-// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 3
+// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[TMP0]], i32 0, i32 3
 // CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [4 x i32], ptr [[ARR]], i64 0, i64 0
 // CHECK-NEXT:    [[TMP6:%.*]] = load i32, ptr [[ARRAYIDX]], align 8
 // CHECK-NEXT:    [[INC3:%.*]] = add nsw i32 [[TMP6]], 1
@@ -407,21 +407,21 @@ int main() {
 // SIMD-ONLY0-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // SIMD-ONLY0-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // SIMD-ONLY0-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    [[TMP0:%.*]] = load i32, ptr [[A]], align 8
 // SIMD-ONLY0-NEXT:    [[INC:%.*]] = add nsw i32 [[TMP0]], 1
 // SIMD-ONLY0-NEXT:    store i32 [[INC]], ptr [[A]], align 8
-// SIMD-ONLY0-NEXT:    [[PTR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
+// SIMD-ONLY0-NEXT:    [[PTR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
 // SIMD-ONLY0-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[PTR]], align 8
 // SIMD-ONLY0-NEXT:    [[TMP2:%.*]] = load i32, ptr [[TMP1]], align 4
 // SIMD-ONLY0-NEXT:    [[INC2:%.*]] = add nsw i32 [[TMP2]], 1
 // SIMD-ONLY0-NEXT:    store i32 [[INC2]], ptr [[TMP1]], align 4
-// SIMD-ONLY0-NEXT:    [[REF:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
+// SIMD-ONLY0-NEXT:    [[REF:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
 // SIMD-ONLY0-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[REF]], align 8
 // SIMD-ONLY0-NEXT:    [[TMP4:%.*]] = load i32, ptr [[TMP3]], align 4
 // SIMD-ONLY0-NEXT:    [[INC3:%.*]] = add nsw i32 [[TMP4]], 1
 // SIMD-ONLY0-NEXT:    store i32 [[INC3]], ptr [[TMP3]], align 4
-// SIMD-ONLY0-NEXT:    [[ARR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 3
+// SIMD-ONLY0-NEXT:    [[ARR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 3
 // SIMD-ONLY0-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [4 x i32], ptr [[ARR]], i64 0, i64 0
 // SIMD-ONLY0-NEXT:    [[TMP5:%.*]] = load i32, ptr [[ARRAYIDX]], align 8
 // SIMD-ONLY0-NEXT:    [[INC4:%.*]] = add nsw i32 [[TMP5]], 1
@@ -435,13 +435,13 @@ int main() {
 // SIMD-ONLY0-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // SIMD-ONLY0-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // SIMD-ONLY0-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store i32 0, ptr [[A]], align 8
-// SIMD-ONLY0-NEXT:    [[PTR:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
-// SIMD-ONLY0-NEXT:    [[A2:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[PTR:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 1
+// SIMD-ONLY0-NEXT:    [[A2:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store ptr [[A2]], ptr [[PTR]], align 8
-// SIMD-ONLY0-NEXT:    [[REF:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
-// SIMD-ONLY0-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[REF:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 2
+// SIMD-ONLY0-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store ptr [[A3]], ptr [[REF]], align 8
 // SIMD-ONLY0-NEXT:    ret void
 //

@@ -235,52 +235,52 @@ int main()
 // CHECK-NEXT:    [[DOTCNT_ADDR:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    store ptr [[TMP0]], ptr [[DOTADDR]], align 8
 // CHECK-NEXT:    store i32 [[TMP1]], ptr [[DOTADDR1]], align 4
+// CHECK-NEXT:    [[TMP2:%.*]] = call i32 @__kmpc_get_hardware_thread_id_in_block()
 // CHECK-NEXT:    [[TMP3:%.*]] = call i32 @__kmpc_get_hardware_thread_id_in_block()
+// CHECK-NEXT:    [[NVPTX_LANE_ID:%.*]] = and i32 [[TMP3]], 31
 // CHECK-NEXT:    [[TMP4:%.*]] = call i32 @__kmpc_get_hardware_thread_id_in_block()
-// CHECK-NEXT:    [[NVPTX_LANE_ID:%.*]] = and i32 [[TMP4]], 31
-// CHECK-NEXT:    [[TMP5:%.*]] = call i32 @__kmpc_get_hardware_thread_id_in_block()
-// CHECK-NEXT:    [[NVPTX_WARP_ID:%.*]] = ashr i32 [[TMP5]], 5
-// CHECK-NEXT:    [[TMP6:%.*]] = load ptr, ptr [[DOTADDR]], align 8
+// CHECK-NEXT:    [[NVPTX_WARP_ID:%.*]] = ashr i32 [[TMP4]], 5
+// CHECK-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[DOTADDR]], align 8
 // CHECK-NEXT:    store i32 0, ptr [[DOTCNT_ADDR]], align 4
 // CHECK-NEXT:    br label [[PRECOND:%.*]]
 // CHECK:       precond:
-// CHECK-NEXT:    [[TMP7:%.*]] = load i32, ptr [[DOTCNT_ADDR]], align 4
-// CHECK-NEXT:    [[TMP8:%.*]] = icmp ult i32 [[TMP7]], 2
-// CHECK-NEXT:    br i1 [[TMP8]], label [[BODY:%.*]], label [[EXIT:%.*]]
+// CHECK-NEXT:    [[TMP6:%.*]] = load i32, ptr [[DOTCNT_ADDR]], align 4
+// CHECK-NEXT:    [[TMP7:%.*]] = icmp ult i32 [[TMP6]], 2
+// CHECK-NEXT:    br i1 [[TMP7]], label [[BODY:%.*]], label [[EXIT:%.*]]
 // CHECK:       body:
-// CHECK-NEXT:    [[TMP2:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1]])
-// CHECK-NEXT:    call void @__kmpc_barrier(ptr @[[GLOB2:[0-9]+]], i32 [[TMP2]])
+// CHECK-NEXT:    [[OMP_GLOBAL_THREAD_NUM:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1]])
+// CHECK-NEXT:    call void @__kmpc_barrier(ptr @[[GLOB2:[0-9]+]], i32 [[OMP_GLOBAL_THREAD_NUM]])
 // CHECK-NEXT:    [[WARP_MASTER:%.*]] = icmp eq i32 [[NVPTX_LANE_ID]], 0
 // CHECK-NEXT:    br i1 [[WARP_MASTER]], label [[THEN:%.*]], label [[ELSE:%.*]]
 // CHECK:       then:
-// CHECK-NEXT:    [[TMP9:%.*]] = getelementptr inbounds [1 x ptr], ptr [[TMP6]], i64 0, i64 0
-// CHECK-NEXT:    [[TMP10:%.*]] = load ptr, ptr [[TMP9]], align 8
-// CHECK-NEXT:    [[TMP11:%.*]] = getelementptr i32, ptr [[TMP10]], i32 [[TMP7]]
-// CHECK-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [32 x i32], ptr addrspace(3) @__openmp_nvptx_data_transfer_temporary_storage, i64 0, i32 [[NVPTX_WARP_ID]]
-// CHECK-NEXT:    [[TMP13:%.*]] = load i32, ptr [[TMP11]], align 4
-// CHECK-NEXT:    store volatile i32 [[TMP13]], ptr addrspace(3) [[TMP12]], align 4
+// CHECK-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [1 x ptr], ptr [[TMP5]], i64 0, i64 0
+// CHECK-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[TMP8]], align 8
+// CHECK-NEXT:    [[TMP10:%.*]] = getelementptr i32, ptr [[TMP9]], i32 [[TMP6]]
+// CHECK-NEXT:    [[TMP11:%.*]] = getelementptr inbounds [32 x i32], ptr addrspace(3) @__openmp_nvptx_data_transfer_temporary_storage, i64 0, i32 [[NVPTX_WARP_ID]]
+// CHECK-NEXT:    [[TMP12:%.*]] = load i32, ptr [[TMP10]], align 4
+// CHECK-NEXT:    store volatile i32 [[TMP12]], ptr addrspace(3) [[TMP11]], align 4
 // CHECK-NEXT:    br label [[IFCONT:%.*]]
 // CHECK:       else:
 // CHECK-NEXT:    br label [[IFCONT]]
 // CHECK:       ifcont:
-// CHECK-NEXT:    [[TMP2:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1]])
-// CHECK-NEXT:    call void @__kmpc_barrier(ptr @[[GLOB2]], i32 [[TMP2]])
-// CHECK-NEXT:    [[TMP14:%.*]] = load i32, ptr [[DOTADDR1]], align 4
-// CHECK-NEXT:    [[IS_ACTIVE_THREAD:%.*]] = icmp ult i32 [[TMP3]], [[TMP14]]
-// CHECK-NEXT:    br i1 [[IS_ACTIVE_THREAD]], label [[THEN2:%.*]], label [[ELSE3:%.*]]
+// CHECK-NEXT:    [[OMP_GLOBAL_THREAD_NUM2:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1]])
+// CHECK-NEXT:    call void @__kmpc_barrier(ptr @[[GLOB2]], i32 [[OMP_GLOBAL_THREAD_NUM2]])
+// CHECK-NEXT:    [[TMP13:%.*]] = load i32, ptr [[DOTADDR1]], align 4
+// CHECK-NEXT:    [[IS_ACTIVE_THREAD:%.*]] = icmp ult i32 [[TMP2]], [[TMP13]]
+// CHECK-NEXT:    br i1 [[IS_ACTIVE_THREAD]], label [[THEN3:%.*]], label [[ELSE4:%.*]]
 // CHECK:       then3:
-// CHECK-NEXT:    [[TMP15:%.*]] = getelementptr inbounds [32 x i32], ptr addrspace(3) @__openmp_nvptx_data_transfer_temporary_storage, i64 0, i32 [[TMP3]]
-// CHECK-NEXT:    [[TMP16:%.*]] = getelementptr inbounds [1 x ptr], ptr [[TMP6]], i64 0, i64 0
-// CHECK-NEXT:    [[TMP17:%.*]] = load ptr, ptr [[TMP16]], align 8
-// CHECK-NEXT:    [[TMP18:%.*]] = getelementptr i32, ptr [[TMP17]], i32 [[TMP7]]
-// CHECK-NEXT:    [[TMP19:%.*]] = load volatile i32, ptr addrspace(3) [[TMP15]], align 4
-// CHECK-NEXT:    store i32 [[TMP19]], ptr [[TMP18]], align 4
-// CHECK-NEXT:    br label [[IFCONT4:%.*]]
+// CHECK-NEXT:    [[TMP14:%.*]] = getelementptr inbounds [32 x i32], ptr addrspace(3) @__openmp_nvptx_data_transfer_temporary_storage, i64 0, i32 [[TMP2]]
+// CHECK-NEXT:    [[TMP15:%.*]] = getelementptr inbounds [1 x ptr], ptr [[TMP5]], i64 0, i64 0
+// CHECK-NEXT:    [[TMP16:%.*]] = load ptr, ptr [[TMP15]], align 8
+// CHECK-NEXT:    [[TMP17:%.*]] = getelementptr i32, ptr [[TMP16]], i32 [[TMP6]]
+// CHECK-NEXT:    [[TMP18:%.*]] = load volatile i32, ptr addrspace(3) [[TMP14]], align 4
+// CHECK-NEXT:    store i32 [[TMP18]], ptr [[TMP17]], align 4
+// CHECK-NEXT:    br label [[IFCONT5:%.*]]
 // CHECK:       else4:
-// CHECK-NEXT:    br label [[IFCONT4]]
+// CHECK-NEXT:    br label [[IFCONT5]]
 // CHECK:       ifcont5:
-// CHECK-NEXT:    [[TMP20:%.*]] = add nsw i32 [[TMP7]], 1
-// CHECK-NEXT:    store i32 [[TMP20]], ptr [[DOTCNT_ADDR]], align 4
+// CHECK-NEXT:    [[TMP19:%.*]] = add nsw i32 [[TMP6]], 1
+// CHECK-NEXT:    store i32 [[TMP19]], ptr [[DOTCNT_ADDR]], align 4
 // CHECK-NEXT:    br label [[PRECOND]]
 // CHECK:       exit:
 // CHECK-NEXT:    ret void
@@ -565,7 +565,7 @@ int main()
 // CHECK1-NEXT:    [[TMP12:%.*]] = sdiv exact i64 [[TMP11]], ptrtoint (ptr getelementptr (double, ptr null, i32 1) to i64)
 // CHECK1-NEXT:    [[TMP13:%.*]] = getelementptr double, ptr [[VLA]], i64 [[TMP12]]
 // CHECK1-NEXT:    [[DOTRD_INPUT_GEP_:%.*]] = getelementptr inbounds [1 x %struct.kmp_taskred_input_t], ptr [[DOTRD_INPUT_]], i64 0, i64 0
-// CHECK1-NEXT:    [[TMP14:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T:%.*]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP14:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T:%.*]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 0
 // CHECK1-NEXT:    [[ARRAYIDX9:%.*]] = getelementptr inbounds [10 x [10 x [10 x double]]], ptr [[TMP0]], i64 0, i64 0
 // CHECK1-NEXT:    [[ARRAYDECAY10:%.*]] = getelementptr inbounds [10 x [10 x double]], ptr [[ARRAYIDX9]], i64 0, i64 0
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds [10 x double], ptr [[ARRAYDECAY10]], i64 2
@@ -577,7 +577,7 @@ int main()
 // CHECK1-NEXT:    [[ARRAYDECAY17:%.*]] = getelementptr inbounds [10 x double], ptr [[ARRAYIDX16]], i64 0, i64 0
 // CHECK1-NEXT:    [[ARRAYIDX18:%.*]] = getelementptr inbounds double, ptr [[ARRAYDECAY17]], i64 1
 // CHECK1-NEXT:    store ptr [[VLA]], ptr [[TMP14]], align 8
-// CHECK1-NEXT:    [[TMP15:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP15:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[ARRAYIDX13]], ptr [[TMP15]], align 8
 // CHECK1-NEXT:    [[TMP16:%.*]] = ptrtoint ptr [[ARRAYIDX18]] to i64
 // CHECK1-NEXT:    [[TMP17:%.*]] = ptrtoint ptr [[ARRAYIDX13]] to i64
@@ -585,15 +585,15 @@ int main()
 // CHECK1-NEXT:    [[TMP19:%.*]] = sdiv exact i64 [[TMP18]], ptrtoint (ptr getelementptr (double, ptr null, i32 1) to i64)
 // CHECK1-NEXT:    [[TMP20:%.*]] = add nuw i64 [[TMP19]], 1
 // CHECK1-NEXT:    [[TMP21:%.*]] = mul nuw i64 [[TMP20]], ptrtoint (ptr getelementptr (double, ptr null, i32 1) to i64)
-// CHECK1-NEXT:    [[TMP22:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP22:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 2
 // CHECK1-NEXT:    store i64 [[TMP21]], ptr [[TMP22]], align 8
-// CHECK1-NEXT:    [[TMP23:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP23:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr @.red_init., ptr [[TMP23]], align 8
-// CHECK1-NEXT:    [[TMP24:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 4
+// CHECK1-NEXT:    [[TMP24:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 4
 // CHECK1-NEXT:    store ptr null, ptr [[TMP24]], align 8
-// CHECK1-NEXT:    [[TMP25:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 5
+// CHECK1-NEXT:    [[TMP25:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 5
 // CHECK1-NEXT:    store ptr @.red_comb., ptr [[TMP25]], align 8
-// CHECK1-NEXT:    [[TMP26:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 6
+// CHECK1-NEXT:    [[TMP26:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASKRED_INPUT_T]], ptr [[DOTRD_INPUT_GEP_]], i32 0, i32 6
 // CHECK1-NEXT:    store i32 1, ptr [[TMP26]], align 8
 // CHECK1-NEXT:    [[TMP27:%.*]] = load ptr, ptr [[DOTGLOBAL_TID__ADDR]], align 8
 // CHECK1-NEXT:    [[TMP28:%.*]] = load i32, ptr [[TMP27]], align 4
@@ -788,7 +788,7 @@ int main()
 // CHECK1-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // CHECK1-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK1-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[CLASS_S2:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[CLASS_S2:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK1-NEXT:    store i32 0, ptr [[A]], align 4
 // CHECK1-NEXT:    ret void
 //

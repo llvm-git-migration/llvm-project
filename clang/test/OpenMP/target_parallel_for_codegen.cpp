@@ -437,28 +437,28 @@ int bar(int n){
 // CHECK1-NEXT:    store ptr null, ptr [[TMP40]], align 8
 // CHECK1-NEXT:    [[TMP41:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP42:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK1-NEXT:    [[TMP43:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP43:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP44:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK1-NEXT:    store i16 [[TMP44]], ptr [[TMP43]], align 4
-// CHECK1-NEXT:    [[TMP45:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP45:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
 // CHECK1-NEXT:    [[TMP46:%.*]] = load i32, ptr [[LIN]], align 4
 // CHECK1-NEXT:    store i32 [[TMP46]], ptr [[TMP45]], align 4
-// CHECK1-NEXT:    [[TMP47:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP47:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
 // CHECK1-NEXT:    [[TMP48:%.*]] = load i32, ptr [[A]], align 4
 // CHECK1-NEXT:    store i32 [[TMP48]], ptr [[TMP47]], align 4
 // CHECK1-NEXT:    [[TMP49:%.*]] = call ptr @__kmpc_omp_target_task_alloc(ptr @[[GLOB2]], i32 [[TMP0]], i32 1, i64 120, i64 12, ptr @.omp_task_entry., i64 -1)
-// CHECK1-NEXT:    [[TMP50:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP49]], i32 0, i32 0
-// CHECK1-NEXT:    [[TMP51:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP50]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP50:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP49]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP51:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP50]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP52:%.*]] = load ptr, ptr [[TMP51]], align 8
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 4 [[TMP52]], ptr align 4 [[AGG_CAPTURED]], i64 12, i1 false)
-// CHECK1-NEXT:    [[TMP53:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP49]], i32 0, i32 1
-// CHECK1-NEXT:    [[TMP54:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP53]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP53:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP49]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP54:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP53]], i32 0, i32 0
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP54]], ptr align 8 [[TMP41]], i64 24, i1 false)
-// CHECK1-NEXT:    [[TMP55:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP55:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 1
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP55]], ptr align 8 [[TMP42]], i64 24, i1 false)
-// CHECK1-NEXT:    [[TMP56:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP56:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 2
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP56]], ptr align 8 @.offload_sizes, i64 24, i1 false)
-// CHECK1-NEXT:    [[TMP57:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP57:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 3
 // CHECK1-NEXT:    [[TMP58:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK1-NEXT:    store i16 [[TMP58]], ptr [[TMP57]], align 8
 // CHECK1-NEXT:    [[TMP59:%.*]] = call i32 @__kmpc_omp_task(ptr @[[GLOB2]], i32 [[TMP0]], ptr [[TMP49]])
@@ -985,16 +985,16 @@ int bar(int n){
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[DOTADDR3]], align 8
 // CHECK1-NEXT:    store ptr [[TMP4]], ptr [[DOTADDR4]], align 8
 // CHECK1-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[DOTADDR]], align 8
-// CHECK1-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[DOTADDR2]], align 8
 // CHECK1-NEXT:    store ptr [[TMP6]], ptr [[TMP7]], align 8
-// CHECK1-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
 // CHECK1-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[DOTADDR3]], align 8
 // CHECK1-NEXT:    store ptr [[TMP8]], ptr [[TMP9]], align 8
-// CHECK1-NEXT:    [[TMP10:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP10:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
 // CHECK1-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[DOTADDR4]], align 8
 // CHECK1-NEXT:    store ptr [[TMP10]], ptr [[TMP11]], align 8
-// CHECK1-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP12:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
 // CHECK1-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTADDR1]], align 8
 // CHECK1-NEXT:    store ptr [[TMP12]], ptr [[TMP13]], align 8
 // CHECK1-NEXT:    ret void
@@ -1023,11 +1023,11 @@ int bar(int n){
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[DOTADDR1]], align 8
 // CHECK1-NEXT:    [[TMP2:%.*]] = load i32, ptr [[DOTADDR]], align 4
 // CHECK1-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[DOTADDR1]], align 8
-// CHECK1-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
-// CHECK1-NEXT:    [[TMP5:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
-// CHECK1-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP5:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[TMP6]], align 8
-// CHECK1-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
 // CHECK1-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META15:![0-9]+]])
 // CHECK1-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META18:![0-9]+]])
 // CHECK1-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META20:![0-9]+]])
@@ -1046,8 +1046,8 @@ int bar(int n){
 // CHECK1-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR1_I]], align 8, !noalias [[META24]]
 // CHECK1-NEXT:    [[TMP14:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR2_I]], align 8, !noalias [[META24]]
 // CHECK1-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR3_I]], align 8, !noalias [[META24]]
-// CHECK1-NEXT:    [[TMP16:%.*]] = getelementptr inbounds [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
-// CHECK1-NEXT:    [[TMP17:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP16:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP17:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
 // CHECK1-NEXT:    store i32 3, ptr [[KERNEL_ARGS_I]], align 4, !noalias [[META24]]
 // CHECK1-NEXT:    [[TMP18:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS_I]], i32 0, i32 1
 // CHECK1-NEXT:    store i32 3, ptr [[TMP18]], align 4, !noalias [[META24]]
@@ -1335,11 +1335,11 @@ int bar(int n){
 // CHECK1-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK1-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK1-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 8
 // CHECK1-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK1-NEXT:    store i64 [[ADD20]], ptr [[X]], align 8
-// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK1-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 8
 // CHECK1-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK1-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -1436,7 +1436,7 @@ int bar(int n){
 // CHECK1-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[TMP7]], 60
 // CHECK1-NEXT:    br i1 [[CMP]], label [[OMP_IF_THEN:%.*]], label [[OMP_IF_ELSE:%.*]]
 // CHECK1:       omp_if.then:
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP8:%.*]] = mul nuw i64 2, [[TMP2]]
 // CHECK1-NEXT:    [[TMP9:%.*]] = mul nuw i64 [[TMP8]], 2
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[DOTOFFLOAD_SIZES]], ptr align 8 @.offload_sizes.5, i64 40, i1 false)
@@ -1800,9 +1800,9 @@ int bar(int n){
 // CHECK1-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK1-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK1-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// CHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 8
 // CHECK1-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK1-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -2101,28 +2101,28 @@ int bar(int n){
 // CHECK3-NEXT:    store ptr null, ptr [[TMP36]], align 4
 // CHECK3-NEXT:    [[TMP37:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP38:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK3-NEXT:    [[TMP39:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP39:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP40:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK3-NEXT:    store i16 [[TMP40]], ptr [[TMP39]], align 4
-// CHECK3-NEXT:    [[TMP41:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP41:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
 // CHECK3-NEXT:    [[TMP42:%.*]] = load i32, ptr [[LIN]], align 4
 // CHECK3-NEXT:    store i32 [[TMP42]], ptr [[TMP41]], align 4
-// CHECK3-NEXT:    [[TMP43:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP43:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
 // CHECK3-NEXT:    [[TMP44:%.*]] = load i32, ptr [[A]], align 4
 // CHECK3-NEXT:    store i32 [[TMP44]], ptr [[TMP43]], align 4
 // CHECK3-NEXT:    [[TMP45:%.*]] = call ptr @__kmpc_omp_target_task_alloc(ptr @[[GLOB2]], i32 [[TMP0]], i32 1, i32 72, i32 12, ptr @.omp_task_entry., i64 -1)
-// CHECK3-NEXT:    [[TMP46:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP45]], i32 0, i32 0
-// CHECK3-NEXT:    [[TMP47:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP46]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP46:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP45]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP47:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP46]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP48:%.*]] = load ptr, ptr [[TMP47]], align 4
 // CHECK3-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP48]], ptr align 4 [[AGG_CAPTURED]], i32 12, i1 false)
-// CHECK3-NEXT:    [[TMP49:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP45]], i32 0, i32 1
-// CHECK3-NEXT:    [[TMP50:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP49]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP49:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP45]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP50:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP49]], i32 0, i32 0
 // CHECK3-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP50]], ptr align 4 @.offload_sizes, i32 24, i1 false)
-// CHECK3-NEXT:    [[TMP51:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP51:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 1
 // CHECK3-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP51]], ptr align 4 [[TMP37]], i32 12, i1 false)
-// CHECK3-NEXT:    [[TMP52:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP52:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 2
 // CHECK3-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP52]], ptr align 4 [[TMP38]], i32 12, i1 false)
-// CHECK3-NEXT:    [[TMP53:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP53:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 3
 // CHECK3-NEXT:    [[TMP54:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK3-NEXT:    store i16 [[TMP54]], ptr [[TMP53]], align 4
 // CHECK3-NEXT:    [[TMP55:%.*]] = call i32 @__kmpc_omp_task(ptr @[[GLOB2]], i32 [[TMP0]], ptr [[TMP45]])
@@ -2649,16 +2649,16 @@ int bar(int n){
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[DOTADDR3]], align 4
 // CHECK3-NEXT:    store ptr [[TMP4]], ptr [[DOTADDR4]], align 4
 // CHECK3-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[DOTADDR]], align 4
-// CHECK3-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[DOTADDR4]], align 4
 // CHECK3-NEXT:    store ptr [[TMP6]], ptr [[TMP7]], align 4
-// CHECK3-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
 // CHECK3-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[DOTADDR2]], align 4
 // CHECK3-NEXT:    store ptr [[TMP8]], ptr [[TMP9]], align 4
-// CHECK3-NEXT:    [[TMP10:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP10:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
 // CHECK3-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[DOTADDR3]], align 4
 // CHECK3-NEXT:    store ptr [[TMP10]], ptr [[TMP11]], align 4
-// CHECK3-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP12:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
 // CHECK3-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTADDR1]], align 4
 // CHECK3-NEXT:    store ptr [[TMP12]], ptr [[TMP13]], align 4
 // CHECK3-NEXT:    ret void
@@ -2687,11 +2687,11 @@ int bar(int n){
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[DOTADDR1]], align 4
 // CHECK3-NEXT:    [[TMP2:%.*]] = load i32, ptr [[DOTADDR]], align 4
 // CHECK3-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[DOTADDR1]], align 4
-// CHECK3-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
-// CHECK3-NEXT:    [[TMP5:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
-// CHECK3-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP5:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[TMP6]], align 4
-// CHECK3-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
 // CHECK3-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META16:![0-9]+]])
 // CHECK3-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META19:![0-9]+]])
 // CHECK3-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META21:![0-9]+]])
@@ -2710,8 +2710,8 @@ int bar(int n){
 // CHECK3-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR1_I]], align 4, !noalias [[META25]]
 // CHECK3-NEXT:    [[TMP14:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR2_I]], align 4, !noalias [[META25]]
 // CHECK3-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR3_I]], align 4, !noalias [[META25]]
-// CHECK3-NEXT:    [[TMP16:%.*]] = getelementptr inbounds [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
-// CHECK3-NEXT:    [[TMP17:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP16:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP17:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
 // CHECK3-NEXT:    store i32 3, ptr [[KERNEL_ARGS_I]], align 4, !noalias [[META25]]
 // CHECK3-NEXT:    [[TMP18:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS_I]], i32 0, i32 1
 // CHECK3-NEXT:    store i32 3, ptr [[TMP18]], align 4, !noalias [[META25]]
@@ -2999,11 +2999,11 @@ int bar(int n){
 // CHECK3-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK3-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK3-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 4
 // CHECK3-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK3-NEXT:    store i64 [[ADD20]], ptr [[X]], align 4
-// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK3-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 4
 // CHECK3-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK3-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -3099,7 +3099,7 @@ int bar(int n){
 // CHECK3-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[TMP6]], 60
 // CHECK3-NEXT:    br i1 [[CMP]], label [[OMP_IF_THEN:%.*]], label [[OMP_IF_ELSE:%.*]]
 // CHECK3:       omp_if.then:
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP7:%.*]] = mul nuw i32 2, [[TMP1]]
 // CHECK3-NEXT:    [[TMP8:%.*]] = mul nuw i32 [[TMP7]], 2
 // CHECK3-NEXT:    [[TMP9:%.*]] = sext i32 [[TMP8]] to i64
@@ -3464,9 +3464,9 @@ int bar(int n){
 // CHECK3-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK3-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK3-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK3-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// CHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 4
 // CHECK3-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK3-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -4115,11 +4115,11 @@ int bar(int n){
 // CHECK9-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK9-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK9-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK9-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK9-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 8
 // CHECK9-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK9-NEXT:    store i64 [[ADD20]], ptr [[X]], align 8
-// CHECK9-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK9-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK9-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 8
 // CHECK9-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK9-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -4290,9 +4290,9 @@ int bar(int n){
 // CHECK9-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK9-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK9-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK9-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// CHECK9-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK9-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 8
 // CHECK9-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK9-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -4894,11 +4894,11 @@ int bar(int n){
 // CHECK11-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK11-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK11-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK11-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK11-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 4
 // CHECK11-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK11-NEXT:    store i64 [[ADD20]], ptr [[X]], align 4
-// CHECK11-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK11-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK11-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 4
 // CHECK11-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK11-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -5069,9 +5069,9 @@ int bar(int n){
 // CHECK11-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK11-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK11-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK11-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// CHECK11-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK11-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 4
 // CHECK11-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK11-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -5329,28 +5329,28 @@ int bar(int n){
 // CHECK17-NEXT:    store ptr null, ptr [[TMP40]], align 8
 // CHECK17-NEXT:    [[TMP41:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP42:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK17-NEXT:    [[TMP43:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP43:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP44:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK17-NEXT:    store i16 [[TMP44]], ptr [[TMP43]], align 4
-// CHECK17-NEXT:    [[TMP45:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP45:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP46:%.*]] = load i32, ptr [[LIN]], align 4
 // CHECK17-NEXT:    store i32 [[TMP46]], ptr [[TMP45]], align 4
-// CHECK17-NEXT:    [[TMP47:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
+// CHECK17-NEXT:    [[TMP47:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
 // CHECK17-NEXT:    [[TMP48:%.*]] = load i32, ptr [[A]], align 4
 // CHECK17-NEXT:    store i32 [[TMP48]], ptr [[TMP47]], align 4
 // CHECK17-NEXT:    [[TMP49:%.*]] = call ptr @__kmpc_omp_target_task_alloc(ptr @[[GLOB2]], i32 [[TMP0]], i32 1, i64 120, i64 12, ptr @.omp_task_entry., i64 -1)
-// CHECK17-NEXT:    [[TMP50:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP49]], i32 0, i32 0
-// CHECK17-NEXT:    [[TMP51:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP50]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP50:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP49]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP51:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP50]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP52:%.*]] = load ptr, ptr [[TMP51]], align 8
 // CHECK17-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 4 [[TMP52]], ptr align 4 [[AGG_CAPTURED]], i64 12, i1 false)
-// CHECK17-NEXT:    [[TMP53:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP49]], i32 0, i32 1
-// CHECK17-NEXT:    [[TMP54:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP53]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP53:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP49]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP54:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP53]], i32 0, i32 0
 // CHECK17-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP54]], ptr align 8 [[TMP41]], i64 24, i1 false)
-// CHECK17-NEXT:    [[TMP55:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP55:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 1
 // CHECK17-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP55]], ptr align 8 [[TMP42]], i64 24, i1 false)
-// CHECK17-NEXT:    [[TMP56:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 2
+// CHECK17-NEXT:    [[TMP56:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 2
 // CHECK17-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[TMP56]], ptr align 8 @.offload_sizes, i64 24, i1 false)
-// CHECK17-NEXT:    [[TMP57:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 3
+// CHECK17-NEXT:    [[TMP57:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP53]], i32 0, i32 3
 // CHECK17-NEXT:    [[TMP58:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK17-NEXT:    store i16 [[TMP58]], ptr [[TMP57]], align 8
 // CHECK17-NEXT:    [[TMP59:%.*]] = call i32 @__kmpc_omp_task(ptr @[[GLOB2]], i32 [[TMP0]], ptr [[TMP49]])
@@ -5877,16 +5877,16 @@ int bar(int n){
 // CHECK17-NEXT:    store ptr [[TMP3]], ptr [[DOTADDR3]], align 8
 // CHECK17-NEXT:    store ptr [[TMP4]], ptr [[DOTADDR4]], align 8
 // CHECK17-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[DOTADDR]], align 8
-// CHECK17-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[DOTADDR2]], align 8
 // CHECK17-NEXT:    store ptr [[TMP6]], ptr [[TMP7]], align 8
-// CHECK17-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[DOTADDR3]], align 8
 // CHECK17-NEXT:    store ptr [[TMP8]], ptr [[TMP9]], align 8
-// CHECK17-NEXT:    [[TMP10:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
+// CHECK17-NEXT:    [[TMP10:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
 // CHECK17-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[DOTADDR4]], align 8
 // CHECK17-NEXT:    store ptr [[TMP10]], ptr [[TMP11]], align 8
-// CHECK17-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
+// CHECK17-NEXT:    [[TMP12:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
 // CHECK17-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTADDR1]], align 8
 // CHECK17-NEXT:    store ptr [[TMP12]], ptr [[TMP13]], align 8
 // CHECK17-NEXT:    ret void
@@ -5915,11 +5915,11 @@ int bar(int n){
 // CHECK17-NEXT:    store ptr [[TMP1]], ptr [[DOTADDR1]], align 8
 // CHECK17-NEXT:    [[TMP2:%.*]] = load i32, ptr [[DOTADDR]], align 4
 // CHECK17-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[DOTADDR1]], align 8
-// CHECK17-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
-// CHECK17-NEXT:    [[TMP5:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
-// CHECK17-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
+// CHECK17-NEXT:    [[TMP5:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
+// CHECK17-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[TMP6]], align 8
-// CHECK17-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
 // CHECK17-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META15:![0-9]+]])
 // CHECK17-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META18:![0-9]+]])
 // CHECK17-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META20:![0-9]+]])
@@ -5938,8 +5938,8 @@ int bar(int n){
 // CHECK17-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR1_I]], align 8, !noalias [[META24]]
 // CHECK17-NEXT:    [[TMP14:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR2_I]], align 8, !noalias [[META24]]
 // CHECK17-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR3_I]], align 8, !noalias [[META24]]
-// CHECK17-NEXT:    [[TMP16:%.*]] = getelementptr inbounds [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
-// CHECK17-NEXT:    [[TMP17:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
+// CHECK17-NEXT:    [[TMP16:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
+// CHECK17-NEXT:    [[TMP17:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
 // CHECK17-NEXT:    store i32 3, ptr [[KERNEL_ARGS_I]], align 4, !noalias [[META24]]
 // CHECK17-NEXT:    [[TMP18:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS_I]], i32 0, i32 1
 // CHECK17-NEXT:    store i32 3, ptr [[TMP18]], align 4, !noalias [[META24]]
@@ -6227,11 +6227,11 @@ int bar(int n){
 // CHECK17-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK17-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK17-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK17-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK17-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 8
 // CHECK17-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK17-NEXT:    store i64 [[ADD20]], ptr [[X]], align 8
-// CHECK17-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK17-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 8
 // CHECK17-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK17-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -6328,7 +6328,7 @@ int bar(int n){
 // CHECK17-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[TMP7]], 60
 // CHECK17-NEXT:    br i1 [[CMP]], label [[OMP_IF_THEN:%.*]], label [[OMP_IF_ELSE:%.*]]
 // CHECK17:       omp_if.then:
-// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP8:%.*]] = mul nuw i64 2, [[TMP2]]
 // CHECK17-NEXT:    [[TMP9:%.*]] = mul nuw i64 [[TMP8]], 2
 // CHECK17-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[DOTOFFLOAD_SIZES]], ptr align 8 @.offload_sizes.5, i64 40, i1 false)
@@ -6692,9 +6692,9 @@ int bar(int n){
 // CHECK17-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK17-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK17-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK17-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// CHECK17-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK17-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 8
 // CHECK17-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK17-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -6993,28 +6993,28 @@ int bar(int n){
 // CHECK19-NEXT:    store ptr null, ptr [[TMP36]], align 4
 // CHECK19-NEXT:    [[TMP37:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP38:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK19-NEXT:    [[TMP39:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP39:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP40:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK19-NEXT:    store i16 [[TMP40]], ptr [[TMP39]], align 4
-// CHECK19-NEXT:    [[TMP41:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP41:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP42:%.*]] = load i32, ptr [[LIN]], align 4
 // CHECK19-NEXT:    store i32 [[TMP42]], ptr [[TMP41]], align 4
-// CHECK19-NEXT:    [[TMP43:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
+// CHECK19-NEXT:    [[TMP43:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[AGG_CAPTURED]], i32 0, i32 2
 // CHECK19-NEXT:    [[TMP44:%.*]] = load i32, ptr [[A]], align 4
 // CHECK19-NEXT:    store i32 [[TMP44]], ptr [[TMP43]], align 4
 // CHECK19-NEXT:    [[TMP45:%.*]] = call ptr @__kmpc_omp_target_task_alloc(ptr @[[GLOB2]], i32 [[TMP0]], i32 1, i32 72, i32 12, ptr @.omp_task_entry., i64 -1)
-// CHECK19-NEXT:    [[TMP46:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP45]], i32 0, i32 0
-// CHECK19-NEXT:    [[TMP47:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP46]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP46:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP45]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP47:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP46]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP48:%.*]] = load ptr, ptr [[TMP47]], align 4
 // CHECK19-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP48]], ptr align 4 [[AGG_CAPTURED]], i32 12, i1 false)
-// CHECK19-NEXT:    [[TMP49:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP45]], i32 0, i32 1
-// CHECK19-NEXT:    [[TMP50:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP49]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP49:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP45]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP50:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP49]], i32 0, i32 0
 // CHECK19-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP50]], ptr align 4 @.offload_sizes, i32 24, i1 false)
-// CHECK19-NEXT:    [[TMP51:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP51:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 1
 // CHECK19-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP51]], ptr align 4 [[TMP37]], i32 12, i1 false)
-// CHECK19-NEXT:    [[TMP52:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 2
+// CHECK19-NEXT:    [[TMP52:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 2
 // CHECK19-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[TMP52]], ptr align 4 [[TMP38]], i32 12, i1 false)
-// CHECK19-NEXT:    [[TMP53:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 3
+// CHECK19-NEXT:    [[TMP53:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP49]], i32 0, i32 3
 // CHECK19-NEXT:    [[TMP54:%.*]] = load i16, ptr [[AA]], align 2
 // CHECK19-NEXT:    store i16 [[TMP54]], ptr [[TMP53]], align 4
 // CHECK19-NEXT:    [[TMP55:%.*]] = call i32 @__kmpc_omp_task(ptr @[[GLOB2]], i32 [[TMP0]], ptr [[TMP45]])
@@ -7541,16 +7541,16 @@ int bar(int n){
 // CHECK19-NEXT:    store ptr [[TMP3]], ptr [[DOTADDR3]], align 4
 // CHECK19-NEXT:    store ptr [[TMP4]], ptr [[DOTADDR4]], align 4
 // CHECK19-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[DOTADDR]], align 4
-// CHECK19-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T:%.*]], ptr [[TMP5]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[DOTADDR4]], align 4
 // CHECK19-NEXT:    store ptr [[TMP6]], ptr [[TMP7]], align 4
-// CHECK19-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[DOTADDR2]], align 4
 // CHECK19-NEXT:    store ptr [[TMP8]], ptr [[TMP9]], align 4
-// CHECK19-NEXT:    [[TMP10:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
+// CHECK19-NEXT:    [[TMP10:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 2
 // CHECK19-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[DOTADDR3]], align 4
 // CHECK19-NEXT:    store ptr [[TMP10]], ptr [[TMP11]], align 4
-// CHECK19-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
+// CHECK19-NEXT:    [[TMP12:%.*]] = getelementptr inbounds nuw [[STRUCT__KMP_PRIVATES_T]], ptr [[TMP5]], i32 0, i32 3
 // CHECK19-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTADDR1]], align 4
 // CHECK19-NEXT:    store ptr [[TMP12]], ptr [[TMP13]], align 4
 // CHECK19-NEXT:    ret void
@@ -7579,11 +7579,11 @@ int bar(int n){
 // CHECK19-NEXT:    store ptr [[TMP1]], ptr [[DOTADDR1]], align 4
 // CHECK19-NEXT:    [[TMP2:%.*]] = load i32, ptr [[DOTADDR]], align 4
 // CHECK19-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[DOTADDR1]], align 4
-// CHECK19-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
-// CHECK19-NEXT:    [[TMP5:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
-// CHECK19-NEXT:    [[TMP6:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES:%.*]], ptr [[TMP3]], i32 0, i32 0
+// CHECK19-NEXT:    [[TMP5:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T:%.*]], ptr [[TMP4]], i32 0, i32 2
+// CHECK19-NEXT:    [[TMP6:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T]], ptr [[TMP4]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[TMP6]], align 4
-// CHECK19-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP8:%.*]] = getelementptr inbounds nuw [[STRUCT_KMP_TASK_T_WITH_PRIVATES]], ptr [[TMP3]], i32 0, i32 1
 // CHECK19-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META16:![0-9]+]])
 // CHECK19-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META19:![0-9]+]])
 // CHECK19-NEXT:    call void @llvm.experimental.noalias.scope.decl(metadata [[META21:![0-9]+]])
@@ -7602,8 +7602,8 @@ int bar(int n){
 // CHECK19-NEXT:    [[TMP13:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR1_I]], align 4, !noalias [[META25]]
 // CHECK19-NEXT:    [[TMP14:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR2_I]], align 4, !noalias [[META25]]
 // CHECK19-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[DOTFIRSTPRIV_PTR_ADDR3_I]], align 4, !noalias [[META25]]
-// CHECK19-NEXT:    [[TMP16:%.*]] = getelementptr inbounds [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
-// CHECK19-NEXT:    [[TMP17:%.*]] = getelementptr inbounds [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
+// CHECK19-NEXT:    [[TMP16:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON:%.*]], ptr [[TMP9]], i32 0, i32 1
+// CHECK19-NEXT:    [[TMP17:%.*]] = getelementptr inbounds nuw [[STRUCT_ANON]], ptr [[TMP9]], i32 0, i32 2
 // CHECK19-NEXT:    store i32 3, ptr [[KERNEL_ARGS_I]], align 4, !noalias [[META25]]
 // CHECK19-NEXT:    [[TMP18:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS_I]], i32 0, i32 1
 // CHECK19-NEXT:    store i32 3, ptr [[TMP18]], align 4, !noalias [[META25]]
@@ -7891,11 +7891,11 @@ int bar(int n){
 // CHECK19-NEXT:    [[TMP24:%.*]] = load double, ptr [[ARRAYIDX18]], align 8
 // CHECK19-NEXT:    [[ADD19:%.*]] = fadd double [[TMP24]], 1.000000e+00
 // CHECK19-NEXT:    store double [[ADD19]], ptr [[ARRAYIDX18]], align 8
-// CHECK19-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
+// CHECK19-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT:%.*]], ptr [[TMP7]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP25:%.*]] = load i64, ptr [[X]], align 4
 // CHECK19-NEXT:    [[ADD20:%.*]] = add nsw i64 [[TMP25]], 1
 // CHECK19-NEXT:    store i64 [[ADD20]], ptr [[X]], align 4
-// CHECK19-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
+// CHECK19-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[TMP7]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP26:%.*]] = load i8, ptr [[Y]], align 4
 // CHECK19-NEXT:    [[CONV21:%.*]] = sext i8 [[TMP26]] to i32
 // CHECK19-NEXT:    [[ADD22:%.*]] = add nsw i32 [[CONV21]], 1
@@ -7991,7 +7991,7 @@ int bar(int n){
 // CHECK19-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[TMP6]], 60
 // CHECK19-NEXT:    br i1 [[CMP]], label [[OMP_IF_THEN:%.*]], label [[OMP_IF_ELSE:%.*]]
 // CHECK19:       omp_if.then:
-// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP7:%.*]] = mul nuw i32 2, [[TMP1]]
 // CHECK19-NEXT:    [[TMP8:%.*]] = mul nuw i32 [[TMP7]], 2
 // CHECK19-NEXT:    [[TMP9:%.*]] = sext i32 [[TMP8]] to i64
@@ -8356,9 +8356,9 @@ int bar(int n){
 // CHECK19-NEXT:    [[TMP12:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK19-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP12]] to double
 // CHECK19-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK19-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// CHECK19-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK19-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP13:%.*]] = load double, ptr [[A4]], align 4
 // CHECK19-NEXT:    [[INC:%.*]] = fadd double [[TMP13]], 1.000000e+00
 // CHECK19-NEXT:    store double [[INC]], ptr [[A4]], align 4

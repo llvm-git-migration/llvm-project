@@ -118,7 +118,7 @@ int main (int argc, char **argv) {
 // CHECK1-NEXT:    [[KERNEL_ARGS:%.*]] = alloca [[STRUCT___TGT_KERNEL_ARGUMENTS:%.*]], align 8
 // CHECK1-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK1-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP0:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[THIS1]], ptr [[TMP0]], align 8
 // CHECK1-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
@@ -160,7 +160,7 @@ int main (int argc, char **argv) {
 // CHECK1-NEXT:    call void @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__ZN2SSIiLi123ELx456EE3fooEv_l28(ptr [[THIS1]]) #[[ATTR2:[0-9]+]]
 // CHECK1-NEXT:    br label [[OMP_OFFLOAD_CONT]]
 // CHECK1:       omp_offload.cont:
-// CHECK1-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK1-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK1-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A3]], i64 0, i64 0
 // CHECK1-NEXT:    [[ARRAYIDX4:%.*]] = getelementptr inbounds [456 x i32], ptr [[ARRAYIDX]], i64 0, i64 0
 // CHECK1-NEXT:    [[TMP20:%.*]] = load i32, ptr [[ARRAYIDX4]], align 4
@@ -236,7 +236,7 @@ int main (int argc, char **argv) {
 // CHECK1-NEXT:    [[MUL5:%.*]] = mul nsw i32 [[SUB]], 1
 // CHECK1-NEXT:    [[ADD6:%.*]] = add nsw i32 0, [[MUL5]]
 // CHECK1-NEXT:    store i32 [[ADD6]], ptr [[J]], align 4, !llvm.access.group [[ACC_GRP4]]
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP11:%.*]] = load i32, ptr [[I]], align 4, !llvm.access.group [[ACC_GRP4]]
 // CHECK1-NEXT:    [[IDXPROM:%.*]] = sext i32 [[TMP11]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A]], i64 0, i64 [[IDXPROM]]
@@ -287,7 +287,7 @@ int main (int argc, char **argv) {
 // CHECK3-NEXT:    [[KERNEL_ARGS:%.*]] = alloca [[STRUCT___TGT_KERNEL_ARGUMENTS:%.*]], align 8
 // CHECK3-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 4
 // CHECK3-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 4
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP0:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[THIS1]], ptr [[TMP0]], align 4
 // CHECK3-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
@@ -329,7 +329,7 @@ int main (int argc, char **argv) {
 // CHECK3-NEXT:    call void @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__ZN2SSIiLi123ELx456EE3fooEv_l28(ptr [[THIS1]]) #[[ATTR2:[0-9]+]]
 // CHECK3-NEXT:    br label [[OMP_OFFLOAD_CONT]]
 // CHECK3:       omp_offload.cont:
-// CHECK3-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK3-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK3-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A3]], i32 0, i32 0
 // CHECK3-NEXT:    [[ARRAYIDX4:%.*]] = getelementptr inbounds [456 x i32], ptr [[ARRAYIDX]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP20:%.*]] = load i32, ptr [[ARRAYIDX4]], align 4
@@ -405,7 +405,7 @@ int main (int argc, char **argv) {
 // CHECK3-NEXT:    [[MUL5:%.*]] = mul nsw i32 [[SUB]], 1
 // CHECK3-NEXT:    [[ADD6:%.*]] = add nsw i32 0, [[MUL5]]
 // CHECK3-NEXT:    store i32 [[ADD6]], ptr [[J]], align 4, !llvm.access.group [[ACC_GRP5]]
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP11:%.*]] = load i32, ptr [[I]], align 4, !llvm.access.group [[ACC_GRP5]]
 // CHECK3-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A]], i32 0, i32 [[TMP11]]
 // CHECK3-NEXT:    [[TMP12:%.*]] = load i32, ptr [[J]], align 4, !llvm.access.group [[ACC_GRP5]]
@@ -479,7 +479,7 @@ int main (int argc, char **argv) {
 // CHECK5-NEXT:    [[MUL5:%.*]] = mul nsw i32 [[SUB]], 1
 // CHECK5-NEXT:    [[ADD6:%.*]] = add nsw i32 0, [[MUL5]]
 // CHECK5-NEXT:    store i32 [[ADD6]], ptr [[J]], align 4, !llvm.access.group [[ACC_GRP2]]
-// CHECK5-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK5-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK5-NEXT:    [[TMP6:%.*]] = load i32, ptr [[I]], align 4, !llvm.access.group [[ACC_GRP2]]
 // CHECK5-NEXT:    [[IDXPROM:%.*]] = sext i32 [[TMP6]] to i64
 // CHECK5-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A]], i64 0, i64 [[IDXPROM]]
@@ -498,7 +498,7 @@ int main (int argc, char **argv) {
 // CHECK5:       omp.inner.for.end:
 // CHECK5-NEXT:    store i32 123, ptr [[I]], align 4
 // CHECK5-NEXT:    store i32 456, ptr [[J]], align 4
-// CHECK5-NEXT:    [[A10:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK5-NEXT:    [[A10:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK5-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A10]], i64 0, i64 0
 // CHECK5-NEXT:    [[ARRAYIDX12:%.*]] = getelementptr inbounds [456 x i32], ptr [[ARRAYIDX11]], i64 0, i64 0
 // CHECK5-NEXT:    [[TMP9:%.*]] = load i32, ptr [[ARRAYIDX12]], align 4
@@ -550,7 +550,7 @@ int main (int argc, char **argv) {
 // CHECK7-NEXT:    [[MUL5:%.*]] = mul nsw i32 [[SUB]], 1
 // CHECK7-NEXT:    [[ADD6:%.*]] = add nsw i32 0, [[MUL5]]
 // CHECK7-NEXT:    store i32 [[ADD6]], ptr [[J]], align 4, !llvm.access.group [[ACC_GRP3]]
-// CHECK7-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK7-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK7-NEXT:    [[TMP6:%.*]] = load i32, ptr [[I]], align 4, !llvm.access.group [[ACC_GRP3]]
 // CHECK7-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A]], i32 0, i32 [[TMP6]]
 // CHECK7-NEXT:    [[TMP7:%.*]] = load i32, ptr [[J]], align 4, !llvm.access.group [[ACC_GRP3]]
@@ -567,7 +567,7 @@ int main (int argc, char **argv) {
 // CHECK7:       omp.inner.for.end:
 // CHECK7-NEXT:    store i32 123, ptr [[I]], align 4
 // CHECK7-NEXT:    store i32 456, ptr [[J]], align 4
-// CHECK7-NEXT:    [[A9:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK7-NEXT:    [[A9:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK7-NEXT:    [[ARRAYIDX10:%.*]] = getelementptr inbounds [123 x [456 x i32]], ptr [[A9]], i32 0, i32 0
 // CHECK7-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds [456 x i32], ptr [[ARRAYIDX10]], i32 0, i32 0
 // CHECK7-NEXT:    [[TMP9:%.*]] = load i32, ptr [[ARRAYIDX11]], align 4

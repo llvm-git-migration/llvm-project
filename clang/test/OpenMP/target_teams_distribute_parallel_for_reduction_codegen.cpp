@@ -1411,7 +1411,7 @@ int main() {
 // CHECK5-NEXT:    [[TMP12:%.*]] = load i32, ptr [[SIVAR2]], align 4
 // CHECK5-NEXT:    [[ADD4:%.*]] = add nsw i32 [[TMP12]], [[TMP11]]
 // CHECK5-NEXT:    store i32 [[ADD4]], ptr [[SIVAR2]], align 4
-// CHECK5-NEXT:    [[TMP13:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK5-NEXT:    [[TMP13:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK5-NEXT:    store ptr [[SIVAR2]], ptr [[TMP13]], align 8
 // CHECK5-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE_clEv"(ptr noundef nonnull align 8 dereferenceable(8) [[REF_TMP]])
 // CHECK5-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]

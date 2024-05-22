@@ -6124,10 +6124,10 @@ int bar(int n, double *ptr) {
 // CHECK0-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // CHECK0-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // CHECK0-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // CHECK0-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK0-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// CHECK0-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// CHECK0-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // CHECK0-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK0-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // CHECK0-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -6426,9 +6426,9 @@ int bar(int n, double *ptr) {
 // CHECK0-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i64 [[TMP14]]
 // CHECK0-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i64 3
 // CHECK0-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // CHECK0-NEXT:    store i64 1, ptr [[X]], align 8
-// CHECK0-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// CHECK0-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // CHECK0-NEXT:    store i8 1, ptr [[Y]], align 8
 // CHECK0-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 8
 // CHECK0-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -6445,7 +6445,7 @@ int bar(int n, double *ptr) {
 // CHECK0-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 8
 // CHECK0-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 8
 // CHECK0-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 4 [[E1]], ptr align 4 [[TMP0]], i64 8, i1 false)
-// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
+// CHECK0-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
 // CHECK0-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // CHECK0-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // CHECK0-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -6524,7 +6524,7 @@ int bar(int n, double *ptr) {
 // CHECK0-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // CHECK0-NEXT:    store i32 [[TMP5]], ptr [[B_CASTED]], align 4
 // CHECK0-NEXT:    [[TMP6:%.*]] = load i64, ptr [[B_CASTED]], align 8
-// CHECK0-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK0-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK0-NEXT:    [[TMP7:%.*]] = mul nuw i64 2, [[TMP2]]
 // CHECK0-NEXT:    [[TMP8:%.*]] = mul nuw i64 [[TMP7]], 2
 // CHECK0-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[DOTOFFLOAD_SIZES]], ptr align 8 @.offload_sizes.5, i64 40, i1 false)
@@ -6786,9 +6786,9 @@ int bar(int n, double *ptr) {
 // CHECK0-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK0-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // CHECK0-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK0-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK0-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK0-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// CHECK0-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK0-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK0-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 8
 // CHECK0-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // CHECK0-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -6895,10 +6895,10 @@ int bar(int n, double *ptr) {
 // CHECK1-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // CHECK1-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // CHECK1-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK1-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // CHECK1-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK1-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // CHECK1-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -7197,9 +7197,9 @@ int bar(int n, double *ptr) {
 // CHECK1-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i64 [[TMP14]]
 // CHECK1-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i64 3
 // CHECK1-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // CHECK1-NEXT:    store i64 1, ptr [[X]], align 8
-// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// CHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // CHECK1-NEXT:    store i8 1, ptr [[Y]], align 8
 // CHECK1-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 8
 // CHECK1-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -7216,7 +7216,7 @@ int bar(int n, double *ptr) {
 // CHECK1-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 8
 // CHECK1-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 8
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 4 [[E1]], ptr align 4 [[TMP0]], i64 8, i1 false)
-// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
+// CHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // CHECK1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // CHECK1-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -7295,7 +7295,7 @@ int bar(int n, double *ptr) {
 // CHECK1-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // CHECK1-NEXT:    store i32 [[TMP5]], ptr [[B_CASTED]], align 4
 // CHECK1-NEXT:    [[TMP6:%.*]] = load i64, ptr [[B_CASTED]], align 8
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP7:%.*]] = mul nuw i64 2, [[TMP2]]
 // CHECK1-NEXT:    [[TMP8:%.*]] = mul nuw i64 [[TMP7]], 2
 // CHECK1-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 8 [[DOTOFFLOAD_SIZES]], ptr align 8 @.offload_sizes.5, i64 40, i1 false)
@@ -7557,9 +7557,9 @@ int bar(int n, double *ptr) {
 // CHECK1-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // CHECK1-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK1-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// CHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK1-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 8
 // CHECK1-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // CHECK1-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -7664,10 +7664,10 @@ int bar(int n, double *ptr) {
 // CHECK2-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // CHECK2-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // CHECK2-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // CHECK2-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK2-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// CHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// CHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // CHECK2-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK2-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // CHECK2-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -7968,9 +7968,9 @@ int bar(int n, double *ptr) {
 // CHECK2-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i32 [[TMP14]]
 // CHECK2-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i32 3
 // CHECK2-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // CHECK2-NEXT:    store i64 1, ptr [[X]], align 4
-// CHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// CHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // CHECK2-NEXT:    store i8 1, ptr [[Y]], align 4
 // CHECK2-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 4
 // CHECK2-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -7987,7 +7987,7 @@ int bar(int n, double *ptr) {
 // CHECK2-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 4
 // CHECK2-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 4
 // CHECK2-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[E1]], ptr align 4 [[TMP0]], i32 8, i1 false)
-// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
+// CHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
 // CHECK2-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // CHECK2-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // CHECK2-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -8065,7 +8065,7 @@ int bar(int n, double *ptr) {
 // CHECK2-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // CHECK2-NEXT:    store i32 [[TMP4]], ptr [[B_CASTED]], align 4
 // CHECK2-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B_CASTED]], align 4
-// CHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK2-NEXT:    [[TMP6:%.*]] = mul nuw i32 2, [[TMP1]]
 // CHECK2-NEXT:    [[TMP7:%.*]] = mul nuw i32 [[TMP6]], 2
 // CHECK2-NEXT:    [[TMP8:%.*]] = sext i32 [[TMP7]] to i64
@@ -8328,9 +8328,9 @@ int bar(int n, double *ptr) {
 // CHECK2-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK2-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // CHECK2-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK2-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// CHECK2-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK2-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK2-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 4
 // CHECK2-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // CHECK2-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -8435,10 +8435,10 @@ int bar(int n, double *ptr) {
 // CHECK3-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // CHECK3-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // CHECK3-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK3-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // CHECK3-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // CHECK3-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // CHECK3-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -8739,9 +8739,9 @@ int bar(int n, double *ptr) {
 // CHECK3-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i32 [[TMP14]]
 // CHECK3-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i32 3
 // CHECK3-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // CHECK3-NEXT:    store i64 1, ptr [[X]], align 4
-// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// CHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // CHECK3-NEXT:    store i8 1, ptr [[Y]], align 4
 // CHECK3-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 4
 // CHECK3-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -8758,7 +8758,7 @@ int bar(int n, double *ptr) {
 // CHECK3-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 4
 // CHECK3-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 4
 // CHECK3-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 4 [[E1]], ptr align 4 [[TMP0]], i32 8, i1 false)
-// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
+// CHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E1]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // CHECK3-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // CHECK3-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -8836,7 +8836,7 @@ int bar(int n, double *ptr) {
 // CHECK3-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // CHECK3-NEXT:    store i32 [[TMP4]], ptr [[B_CASTED]], align 4
 // CHECK3-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B_CASTED]], align 4
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP6:%.*]] = mul nuw i32 2, [[TMP1]]
 // CHECK3-NEXT:    [[TMP7:%.*]] = mul nuw i32 [[TMP6]], 2
 // CHECK3-NEXT:    [[TMP8:%.*]] = sext i32 [[TMP7]] to i64
@@ -9099,9 +9099,9 @@ int bar(int n, double *ptr) {
 // CHECK3-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // CHECK3-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // CHECK3-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK3-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// CHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// CHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // CHECK3-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 4
 // CHECK3-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // CHECK3-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -9192,10 +9192,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY0-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // SIMD-ONLY0-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // SIMD-ONLY0-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// SIMD-ONLY0-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY0-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// SIMD-ONLY0-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY0-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY0-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY0-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // SIMD-ONLY0-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -9215,11 +9215,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY0-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i64 [[TMP9]]
 // SIMD-ONLY0-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i64 3
 // SIMD-ONLY0-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY0-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store i64 1, ptr [[X8]], align 8
-// SIMD-ONLY0-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY0-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY0-NEXT:    store i8 1, ptr [[Y9]], align 8
-// SIMD-ONLY0-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    [[TMP10:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY0-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP10]] to double
 // SIMD-ONLY0-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -9295,9 +9295,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY0-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY0-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP5]] to double
 // SIMD-ONLY0-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store double [[ADD2]], ptr [[A]], align 8
-// SIMD-ONLY0-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    [[TMP6:%.*]] = load double, ptr [[A3]], align 8
 // SIMD-ONLY0-NEXT:    [[INC:%.*]] = fadd double [[TMP6]], 1.000000e+00
 // SIMD-ONLY0-NEXT:    store double [[INC]], ptr [[A3]], align 8
@@ -9393,10 +9393,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY01-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // SIMD-ONLY01-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // SIMD-ONLY01-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// SIMD-ONLY01-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY01-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY01-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY01-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// SIMD-ONLY01-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY01-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY01-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY01-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // SIMD-ONLY01-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -9416,11 +9416,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY01-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i64 [[TMP9]]
 // SIMD-ONLY01-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i64 3
 // SIMD-ONLY01-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY01-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY01-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY01-NEXT:    store i64 1, ptr [[X8]], align 8
-// SIMD-ONLY01-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY01-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY01-NEXT:    store i8 1, ptr [[Y9]], align 8
-// SIMD-ONLY01-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY01-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY01-NEXT:    [[TMP10:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY01-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP10]] to double
 // SIMD-ONLY01-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -9496,9 +9496,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY01-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY01-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP5]] to double
 // SIMD-ONLY01-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY01-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY01-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY01-NEXT:    store double [[ADD2]], ptr [[A]], align 8
-// SIMD-ONLY01-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY01-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY01-NEXT:    [[TMP6:%.*]] = load double, ptr [[A3]], align 8
 // SIMD-ONLY01-NEXT:    [[INC:%.*]] = fadd double [[TMP6]], 1.000000e+00
 // SIMD-ONLY01-NEXT:    store double [[INC]], ptr [[A3]], align 8
@@ -9592,10 +9592,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY02-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // SIMD-ONLY02-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // SIMD-ONLY02-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// SIMD-ONLY02-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY02-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY02-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY02-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// SIMD-ONLY02-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY02-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY02-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY02-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // SIMD-ONLY02-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -9615,11 +9615,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY02-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i32 [[TMP7]]
 // SIMD-ONLY02-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i32 3
 // SIMD-ONLY02-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY02-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY02-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY02-NEXT:    store i64 1, ptr [[X8]], align 4
-// SIMD-ONLY02-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY02-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY02-NEXT:    store i8 1, ptr [[Y9]], align 4
-// SIMD-ONLY02-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY02-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY02-NEXT:    [[TMP8:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY02-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP8]] to double
 // SIMD-ONLY02-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -9694,9 +9694,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY02-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY02-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP4]] to double
 // SIMD-ONLY02-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY02-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY02-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY02-NEXT:    store double [[ADD2]], ptr [[A]], align 4
-// SIMD-ONLY02-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY02-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY02-NEXT:    [[TMP5:%.*]] = load double, ptr [[A3]], align 4
 // SIMD-ONLY02-NEXT:    [[INC:%.*]] = fadd double [[TMP5]], 1.000000e+00
 // SIMD-ONLY02-NEXT:    store double [[INC]], ptr [[A3]], align 4
@@ -9790,10 +9790,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY03-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // SIMD-ONLY03-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // SIMD-ONLY03-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// SIMD-ONLY03-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY03-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY03-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY03-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// SIMD-ONLY03-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY03-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY03-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY03-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // SIMD-ONLY03-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -9813,11 +9813,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY03-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i32 [[TMP7]]
 // SIMD-ONLY03-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i32 3
 // SIMD-ONLY03-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY03-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY03-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY03-NEXT:    store i64 1, ptr [[X8]], align 4
-// SIMD-ONLY03-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY03-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY03-NEXT:    store i8 1, ptr [[Y9]], align 4
-// SIMD-ONLY03-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY03-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY03-NEXT:    [[TMP8:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY03-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP8]] to double
 // SIMD-ONLY03-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -9892,9 +9892,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY03-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY03-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP4]] to double
 // SIMD-ONLY03-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY03-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY03-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY03-NEXT:    store double [[ADD2]], ptr [[A]], align 4
-// SIMD-ONLY03-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY03-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY03-NEXT:    [[TMP5:%.*]] = load double, ptr [[A3]], align 4
 // SIMD-ONLY03-NEXT:    [[INC:%.*]] = fadd double [[TMP5]], 1.000000e+00
 // SIMD-ONLY03-NEXT:    store double [[INC]], ptr [[A3]], align 4
@@ -10044,9 +10044,9 @@ int bar(int n, double *ptr) {
 // TCHECK-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i64 [[TMP14]]
 // TCHECK-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i64 3
 // TCHECK-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// TCHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// TCHECK-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // TCHECK-NEXT:    store i64 1, ptr [[X]], align 8
-// TCHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// TCHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // TCHECK-NEXT:    store i8 1, ptr [[Y]], align 8
 // TCHECK-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 8
 // TCHECK-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -10063,7 +10063,7 @@ int bar(int n, double *ptr) {
 // TCHECK-NEXT:    store ptr [[PTR]], ptr [[PTR_ADDR]], align 8
 // TCHECK-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 8
 // TCHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 8
-// TCHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // TCHECK-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // TCHECK-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -10140,9 +10140,9 @@ int bar(int n, double *ptr) {
 // TCHECK-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // TCHECK-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // TCHECK-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// TCHECK-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// TCHECK-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 8
 // TCHECK-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // TCHECK-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -10262,9 +10262,9 @@ int bar(int n, double *ptr) {
 // TCHECK1-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i64 [[TMP14]]
 // TCHECK1-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i64 3
 // TCHECK1-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// TCHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// TCHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // TCHECK1-NEXT:    store i64 1, ptr [[X]], align 8
-// TCHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// TCHECK1-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // TCHECK1-NEXT:    store i8 1, ptr [[Y]], align 8
 // TCHECK1-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 8
 // TCHECK1-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -10281,7 +10281,7 @@ int bar(int n, double *ptr) {
 // TCHECK1-NEXT:    store ptr [[PTR]], ptr [[PTR_ADDR]], align 8
 // TCHECK1-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 8
 // TCHECK1-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 8
-// TCHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK1-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // TCHECK1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // TCHECK1-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -10358,9 +10358,9 @@ int bar(int n, double *ptr) {
 // TCHECK1-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // TCHECK1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // TCHECK1-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// TCHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK1-NEXT:    store double [[ADD]], ptr [[A]], align 8
-// TCHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK1-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK1-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 8
 // TCHECK1-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // TCHECK1-NEXT:    store double [[INC]], ptr [[A4]], align 8
@@ -10480,9 +10480,9 @@ int bar(int n, double *ptr) {
 // TCHECK2-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i32 [[TMP14]]
 // TCHECK2-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i32 3
 // TCHECK2-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// TCHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// TCHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // TCHECK2-NEXT:    store i64 1, ptr [[X]], align 4
-// TCHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// TCHECK2-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // TCHECK2-NEXT:    store i8 1, ptr [[Y]], align 4
 // TCHECK2-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 4
 // TCHECK2-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -10499,7 +10499,7 @@ int bar(int n, double *ptr) {
 // TCHECK2-NEXT:    store ptr [[PTR]], ptr [[PTR_ADDR]], align 4
 // TCHECK2-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 4
 // TCHECK2-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 4
-// TCHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK2-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK2-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // TCHECK2-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // TCHECK2-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -10576,9 +10576,9 @@ int bar(int n, double *ptr) {
 // TCHECK2-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // TCHECK2-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // TCHECK2-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// TCHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK2-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK2-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// TCHECK2-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK2-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK2-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 4
 // TCHECK2-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // TCHECK2-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -10698,9 +10698,9 @@ int bar(int n, double *ptr) {
 // TCHECK3-NEXT:    [[ARRAYIDX14:%.*]] = getelementptr inbounds double, ptr [[VLA8]], i32 [[TMP14]]
 // TCHECK3-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX14]], i32 3
 // TCHECK3-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX15]], align 8
-// TCHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
+// TCHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 0
 // TCHECK3-NEXT:    store i64 1, ptr [[X]], align 4
-// TCHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
+// TCHECK3-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D9]], i32 0, i32 1
 // TCHECK3-NEXT:    store i8 1, ptr [[Y]], align 4
 // TCHECK3-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[SAVED_STACK]], align 4
 // TCHECK3-NEXT:    call void @llvm.stackrestore.p0(ptr [[TMP15]])
@@ -10717,7 +10717,7 @@ int bar(int n, double *ptr) {
 // TCHECK3-NEXT:    store ptr [[PTR]], ptr [[PTR_ADDR]], align 4
 // TCHECK3-NEXT:    store ptr [[E]], ptr [[E_ADDR]], align 4
 // TCHECK3-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[E_ADDR]], align 4
-// TCHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK3-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK3-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
 // TCHECK3-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP1]] to double
 // TCHECK3-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -10794,9 +10794,9 @@ int bar(int n, double *ptr) {
 // TCHECK3-NEXT:    [[TMP8:%.*]] = load i32, ptr [[B_ADDR]], align 4
 // TCHECK3-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP8]] to double
 // TCHECK3-NEXT:    [[ADD:%.*]] = fadd double [[CONV]], 1.500000e+00
-// TCHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK3-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK3-NEXT:    store double [[ADD]], ptr [[A]], align 4
-// TCHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
+// TCHECK3-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[TMP0]], i32 0, i32 0
 // TCHECK3-NEXT:    [[TMP9:%.*]] = load double, ptr [[A4]], align 4
 // TCHECK3-NEXT:    [[INC:%.*]] = fadd double [[TMP9]], 1.000000e+00
 // TCHECK3-NEXT:    store double [[INC]], ptr [[A4]], align 4
@@ -10862,10 +10862,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY1-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // SIMD-ONLY1-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // SIMD-ONLY1-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// SIMD-ONLY1-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY1-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY1-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY1-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// SIMD-ONLY1-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY1-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY1-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY1-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // SIMD-ONLY1-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -10885,11 +10885,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY1-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i64 [[TMP9]]
 // SIMD-ONLY1-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i64 3
 // SIMD-ONLY1-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY1-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY1-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY1-NEXT:    store i64 1, ptr [[X8]], align 8
-// SIMD-ONLY1-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY1-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY1-NEXT:    store i8 1, ptr [[Y9]], align 8
-// SIMD-ONLY1-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY1-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY1-NEXT:    [[TMP10:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY1-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP10]] to double
 // SIMD-ONLY1-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -10965,9 +10965,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY1-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY1-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP5]] to double
 // SIMD-ONLY1-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY1-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY1-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY1-NEXT:    store double [[ADD2]], ptr [[A]], align 8
-// SIMD-ONLY1-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY1-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY1-NEXT:    [[TMP6:%.*]] = load double, ptr [[A3]], align 8
 // SIMD-ONLY1-NEXT:    [[INC:%.*]] = fadd double [[TMP6]], 1.000000e+00
 // SIMD-ONLY1-NEXT:    store double [[INC]], ptr [[A3]], align 8
@@ -11063,10 +11063,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY11-NEXT:    [[TMP5:%.*]] = mul nuw i64 5, [[TMP4]]
 // SIMD-ONLY11-NEXT:    [[VLA1:%.*]] = alloca double, i64 [[TMP5]], align 8
 // SIMD-ONLY11-NEXT:    store i64 [[TMP4]], ptr [[__VLA_EXPR1]], align 8
-// SIMD-ONLY11-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY11-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY11-NEXT:    [[TMP6:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY11-NEXT:    store i32 [[TMP6]], ptr [[X]], align 4
-// SIMD-ONLY11-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY11-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY11-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY11-NEXT:    store i32 [[TMP7]], ptr [[Y]], align 4
 // SIMD-ONLY11-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -11086,11 +11086,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY11-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i64 [[TMP9]]
 // SIMD-ONLY11-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i64 3
 // SIMD-ONLY11-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY11-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY11-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY11-NEXT:    store i64 1, ptr [[X8]], align 8
-// SIMD-ONLY11-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY11-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY11-NEXT:    store i8 1, ptr [[Y9]], align 8
-// SIMD-ONLY11-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY11-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY11-NEXT:    [[TMP10:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY11-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP10]] to double
 // SIMD-ONLY11-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[PTR_ADDR]], align 8
@@ -11166,9 +11166,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY11-NEXT:    [[TMP5:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY11-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP5]] to double
 // SIMD-ONLY11-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY11-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY11-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY11-NEXT:    store double [[ADD2]], ptr [[A]], align 8
-// SIMD-ONLY11-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY11-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY11-NEXT:    [[TMP6:%.*]] = load double, ptr [[A3]], align 8
 // SIMD-ONLY11-NEXT:    [[INC:%.*]] = fadd double [[TMP6]], 1.000000e+00
 // SIMD-ONLY11-NEXT:    store double [[INC]], ptr [[A3]], align 8
@@ -11262,10 +11262,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY12-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // SIMD-ONLY12-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // SIMD-ONLY12-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// SIMD-ONLY12-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY12-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY12-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY12-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// SIMD-ONLY12-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY12-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY12-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY12-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // SIMD-ONLY12-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -11285,11 +11285,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY12-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i32 [[TMP7]]
 // SIMD-ONLY12-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i32 3
 // SIMD-ONLY12-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY12-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY12-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY12-NEXT:    store i64 1, ptr [[X8]], align 4
-// SIMD-ONLY12-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY12-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY12-NEXT:    store i8 1, ptr [[Y9]], align 4
-// SIMD-ONLY12-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY12-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY12-NEXT:    [[TMP8:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY12-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP8]] to double
 // SIMD-ONLY12-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -11364,9 +11364,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY12-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY12-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP4]] to double
 // SIMD-ONLY12-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY12-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY12-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY12-NEXT:    store double [[ADD2]], ptr [[A]], align 4
-// SIMD-ONLY12-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY12-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY12-NEXT:    [[TMP5:%.*]] = load double, ptr [[A3]], align 4
 // SIMD-ONLY12-NEXT:    [[INC:%.*]] = fadd double [[TMP5]], 1.000000e+00
 // SIMD-ONLY12-NEXT:    store double [[INC]], ptr [[A3]], align 4
@@ -11460,10 +11460,10 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY13-NEXT:    [[TMP3:%.*]] = mul nuw i32 5, [[TMP2]]
 // SIMD-ONLY13-NEXT:    [[VLA1:%.*]] = alloca double, i32 [[TMP3]], align 8
 // SIMD-ONLY13-NEXT:    store i32 [[TMP2]], ptr [[__VLA_EXPR1]], align 4
-// SIMD-ONLY13-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY13-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY13-NEXT:    [[TMP4:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY13-NEXT:    store i32 [[TMP4]], ptr [[X]], align 4
-// SIMD-ONLY13-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
+// SIMD-ONLY13-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 1
 // SIMD-ONLY13-NEXT:    [[TMP5:%.*]] = load i32, ptr [[N_ADDR]], align 4
 // SIMD-ONLY13-NEXT:    store i32 [[TMP5]], ptr [[Y]], align 4
 // SIMD-ONLY13-NEXT:    store ptr [[A]], ptr [[P]], align 64
@@ -11483,11 +11483,11 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY13-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds double, ptr [[VLA1]], i32 [[TMP7]]
 // SIMD-ONLY13-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[ARRAYIDX6]], i32 3
 // SIMD-ONLY13-NEXT:    store double 1.000000e+00, ptr [[ARRAYIDX7]], align 8
-// SIMD-ONLY13-NEXT:    [[X8:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
+// SIMD-ONLY13-NEXT:    [[X8:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 0
 // SIMD-ONLY13-NEXT:    store i64 1, ptr [[X8]], align 4
-// SIMD-ONLY13-NEXT:    [[Y9:%.*]] = getelementptr inbounds [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
+// SIMD-ONLY13-NEXT:    [[Y9:%.*]] = getelementptr inbounds nuw [[STRUCT_TT]], ptr [[D]], i32 0, i32 1
 // SIMD-ONLY13-NEXT:    store i8 1, ptr [[Y9]], align 4
-// SIMD-ONLY13-NEXT:    [[X10:%.*]] = getelementptr inbounds [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
+// SIMD-ONLY13-NEXT:    [[X10:%.*]] = getelementptr inbounds nuw [[STRUCT_TT_0]], ptr [[E]], i32 0, i32 0
 // SIMD-ONLY13-NEXT:    [[TMP8:%.*]] = load i32, ptr [[X10]], align 4
 // SIMD-ONLY13-NEXT:    [[CONV11:%.*]] = sitofp i32 [[TMP8]] to double
 // SIMD-ONLY13-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[PTR_ADDR]], align 4
@@ -11562,9 +11562,9 @@ int bar(int n, double *ptr) {
 // SIMD-ONLY13-NEXT:    [[TMP4:%.*]] = load i32, ptr [[B]], align 4
 // SIMD-ONLY13-NEXT:    [[CONV:%.*]] = sitofp i32 [[TMP4]] to double
 // SIMD-ONLY13-NEXT:    [[ADD2:%.*]] = fadd double [[CONV]], 1.500000e+00
-// SIMD-ONLY13-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY13-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_S1:%.*]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY13-NEXT:    store double [[ADD2]], ptr [[A]], align 4
-// SIMD-ONLY13-NEXT:    [[A3:%.*]] = getelementptr inbounds [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
+// SIMD-ONLY13-NEXT:    [[A3:%.*]] = getelementptr inbounds nuw [[STRUCT_S1]], ptr [[THIS1]], i32 0, i32 0
 // SIMD-ONLY13-NEXT:    [[TMP5:%.*]] = load double, ptr [[A3]], align 4
 // SIMD-ONLY13-NEXT:    [[INC:%.*]] = fadd double [[TMP5]], 1.000000e+00
 // SIMD-ONLY13-NEXT:    store double [[INC]], ptr [[A3]], align 4

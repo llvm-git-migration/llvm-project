@@ -1545,7 +1545,7 @@ void foo() {
 // CHECK9-NEXT:    [[TMP11:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP13:%.*]] = load i32, ptr @Gbla, align 4
-// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[LA]], i32 0, i32 1
+// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[LA]], i32 0, i32 1
 // CHECK9-NEXT:    [[TMP14:%.*]] = load float, ptr [[B]], align 4
 // CHECK9-NEXT:    [[CONV:%.*]] = fptosi float [[TMP14]] to i64
 // CHECK9-NEXT:    [[TMP15:%.*]] = trunc i64 [[CONV]] to i32
@@ -1607,7 +1607,7 @@ void foo() {
 // CHECK9-NEXT:    store ptr null, ptr [[TMP43]], align 8
 // CHECK9-NEXT:    [[TMP44:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS2]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP45:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS3]], i32 0, i32 0
-// CHECK9-NEXT:    [[B5:%.*]] = getelementptr inbounds [[STRUCT_SS_0]], ptr [[LB]], i32 0, i32 1
+// CHECK9-NEXT:    [[B5:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0]], ptr [[LB]], i32 0, i32 1
 // CHECK9-NEXT:    [[TMP46:%.*]] = load float, ptr [[B5]], align 8
 // CHECK9-NEXT:    [[CONV6:%.*]] = fptosi float [[TMP46]] to i64
 // CHECK9-NEXT:    [[TMP47:%.*]] = trunc i64 [[CONV6]] to i32
@@ -1664,9 +1664,9 @@ void foo() {
 // CHECK9-NEXT:    store i64 [[COMP]], ptr [[COMP_ADDR]], align 8
 // CHECK9-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[GBLA_ADDR]], align 8
 // CHECK9-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[LA_ADDR]], align 8
-// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
+// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP3:%.*]] = load i32, ptr [[A]], align 4
-// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[TMP2]], i32 0, i32 1
+// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[TMP2]], i32 0, i32 1
 // CHECK9-NEXT:    [[TMP4:%.*]] = load float, ptr [[B]], align 4
 // CHECK9-NEXT:    [[CONV:%.*]] = fptosi float [[TMP4]] to i64
 // CHECK9-NEXT:    [[TMP5:%.*]] = trunc i64 [[CONV]] to i32
@@ -1703,11 +1703,11 @@ void foo() {
 // CHECK9-NEXT:    store i64 [[COMP]], ptr [[COMP_ADDR]], align 8
 // CHECK9-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[LB_ADDR]], align 8
 // CHECK9-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[GBLB_ADDR]], align 8
-// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS_0:%.*]], ptr [[TMP1]], i32 0, i32 1
+// CHECK9-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0:%.*]], ptr [[TMP1]], i32 0, i32 1
 // CHECK9-NEXT:    [[TMP3:%.*]] = load float, ptr [[B]], align 8
 // CHECK9-NEXT:    [[CONV:%.*]] = fptosi float [[TMP3]] to i64
 // CHECK9-NEXT:    [[TMP4:%.*]] = trunc i64 [[CONV]] to i32
-// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS_0]], ptr [[TMP2]], i32 0, i32 0
+// CHECK9-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0]], ptr [[TMP2]], i32 0, i32 0
 // CHECK9-NEXT:    [[TMP5:%.*]] = load i64, ptr [[A]], align 8
 // CHECK9-NEXT:    [[TMP6:%.*]] = trunc i64 [[TMP5]] to i32
 // CHECK9-NEXT:    call void @__kmpc_push_num_teams(ptr @[[GLOB1]], i32 [[TMP0]], i32 [[TMP4]], i32 [[TMP6]])
@@ -1772,7 +1772,7 @@ void foo() {
 // CHECK11-NEXT:    [[TMP11:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP13:%.*]] = load i32, ptr @Gbla, align 4
-// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[LA]], i32 0, i32 1
+// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[LA]], i32 0, i32 1
 // CHECK11-NEXT:    [[TMP14:%.*]] = load float, ptr [[B]], align 4
 // CHECK11-NEXT:    [[CONV:%.*]] = fptosi float [[TMP14]] to i64
 // CHECK11-NEXT:    [[TMP15:%.*]] = trunc i64 [[CONV]] to i32
@@ -1834,7 +1834,7 @@ void foo() {
 // CHECK11-NEXT:    store ptr null, ptr [[TMP43]], align 4
 // CHECK11-NEXT:    [[TMP44:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_BASEPTRS2]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP45:%.*]] = getelementptr inbounds [3 x ptr], ptr [[DOTOFFLOAD_PTRS3]], i32 0, i32 0
-// CHECK11-NEXT:    [[B5:%.*]] = getelementptr inbounds [[STRUCT_SS_0]], ptr [[LB]], i32 0, i32 1
+// CHECK11-NEXT:    [[B5:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0]], ptr [[LB]], i32 0, i32 1
 // CHECK11-NEXT:    [[TMP46:%.*]] = load float, ptr [[B5]], align 4
 // CHECK11-NEXT:    [[CONV6:%.*]] = fptosi float [[TMP46]] to i64
 // CHECK11-NEXT:    [[TMP47:%.*]] = trunc i64 [[CONV6]] to i32
@@ -1891,9 +1891,9 @@ void foo() {
 // CHECK11-NEXT:    store i32 [[COMP]], ptr [[COMP_ADDR]], align 4
 // CHECK11-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[GBLA_ADDR]], align 4
 // CHECK11-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[LA_ADDR]], align 4
-// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
+// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP3:%.*]] = load i32, ptr [[A]], align 4
-// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[TMP2]], i32 0, i32 1
+// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[TMP2]], i32 0, i32 1
 // CHECK11-NEXT:    [[TMP4:%.*]] = load float, ptr [[B]], align 4
 // CHECK11-NEXT:    [[CONV:%.*]] = fptosi float [[TMP4]] to i64
 // CHECK11-NEXT:    [[TMP5:%.*]] = trunc i64 [[CONV]] to i32
@@ -1930,11 +1930,11 @@ void foo() {
 // CHECK11-NEXT:    store i32 [[COMP]], ptr [[COMP_ADDR]], align 4
 // CHECK11-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[LB_ADDR]], align 4
 // CHECK11-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[GBLB_ADDR]], align 4
-// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS_0:%.*]], ptr [[TMP1]], i32 0, i32 1
+// CHECK11-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0:%.*]], ptr [[TMP1]], i32 0, i32 1
 // CHECK11-NEXT:    [[TMP3:%.*]] = load float, ptr [[B]], align 4
 // CHECK11-NEXT:    [[CONV:%.*]] = fptosi float [[TMP3]] to i64
 // CHECK11-NEXT:    [[TMP4:%.*]] = trunc i64 [[CONV]] to i32
-// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS_0]], ptr [[TMP2]], i32 0, i32 0
+// CHECK11-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS_0]], ptr [[TMP2]], i32 0, i32 0
 // CHECK11-NEXT:    [[TMP5:%.*]] = load i64, ptr [[A]], align 4
 // CHECK11-NEXT:    [[TMP6:%.*]] = trunc i64 [[TMP5]] to i32
 // CHECK11-NEXT:    call void @__kmpc_push_num_teams(ptr @[[GLOB1]], i32 [[TMP0]], i32 [[TMP4]], i32 [[TMP6]])
@@ -1987,7 +1987,7 @@ void foo() {
 // CHECK17-NEXT:    [[TMP0:%.*]] = load i32, ptr [[COMP]], align 4
 // CHECK17-NEXT:    store i32 [[TMP0]], ptr [[COMP_CASTED]], align 4
 // CHECK17-NEXT:    [[TMP1:%.*]] = load i64, ptr [[COMP_CASTED]], align 8
-// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK17-NEXT:    store ptr [[THIS1]], ptr [[TMP2]], align 8
 // CHECK17-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
@@ -2002,7 +2002,7 @@ void foo() {
 // CHECK17-NEXT:    store ptr null, ptr [[TMP7]], align 8
 // CHECK17-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP9:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK17-NEXT:    [[A2:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK17-NEXT:    [[A2:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP10:%.*]] = load i32, ptr [[A2]], align 4
 // CHECK17-NEXT:    [[TMP11:%.*]] = insertvalue [3 x i32] zeroinitializer, i32 [[TMP10]], 0
 // CHECK17-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS]], i32 0, i32 0
@@ -2041,7 +2041,7 @@ void foo() {
 // CHECK17-NEXT:    [[TMP27:%.*]] = load i32, ptr [[COMP]], align 4
 // CHECK17-NEXT:    store i32 [[TMP27]], ptr [[COMP_CASTED3]], align 4
 // CHECK17-NEXT:    [[TMP28:%.*]] = load i64, ptr [[COMP_CASTED3]], align 8
-// CHECK17-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
+// CHECK17-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS4]], i32 0, i32 0
 // CHECK17-NEXT:    store ptr [[THIS1]], ptr [[TMP29]], align 8
 // CHECK17-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS5]], i32 0, i32 0
@@ -2056,7 +2056,7 @@ void foo() {
 // CHECK17-NEXT:    store ptr null, ptr [[TMP34]], align 8
 // CHECK17-NEXT:    [[TMP35:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS4]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP36:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS5]], i32 0, i32 0
-// CHECK17-NEXT:    [[B7:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
+// CHECK17-NEXT:    [[B7:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP37:%.*]] = load float, ptr [[B7]], align 4
 // CHECK17-NEXT:    [[CONV:%.*]] = fptosi float [[TMP37]] to i32
 // CHECK17-NEXT:    [[ADD:%.*]] = add nsw i32 [[CONV]], 123
@@ -2107,7 +2107,7 @@ void foo() {
 // CHECK17-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK17-NEXT:    store i64 [[COMP]], ptr [[COMP_ADDR]], align 8
 // CHECK17-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
+// CHECK17-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
 // CHECK17-NEXT:    [[TMP2:%.*]] = load i32, ptr [[A]], align 4
 // CHECK17-NEXT:    call void @__kmpc_push_num_teams(ptr @[[GLOB1]], i32 [[TMP0]], i32 [[TMP2]], i32 123)
 // CHECK17-NEXT:    call void (ptr, i32, ptr, ...) @__kmpc_fork_teams(ptr @[[GLOB1]], i32 1, ptr @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__ZN2SSIiLi123ELx456EE3fooEv_l161.omp_outlined, ptr [[COMP_ADDR]])
@@ -2139,7 +2139,7 @@ void foo() {
 // CHECK17-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK17-NEXT:    store i64 [[COMP]], ptr [[COMP_ADDR]], align 8
 // CHECK17-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK17-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 1
+// CHECK17-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 1
 // CHECK17-NEXT:    [[TMP2:%.*]] = load float, ptr [[B]], align 4
 // CHECK17-NEXT:    [[CONV:%.*]] = fptosi float [[TMP2]] to i32
 // CHECK17-NEXT:    [[ADD:%.*]] = add nsw i32 [[CONV]], 123
@@ -2193,7 +2193,7 @@ void foo() {
 // CHECK19-NEXT:    [[TMP0:%.*]] = load i32, ptr [[COMP]], align 4
 // CHECK19-NEXT:    store i32 [[TMP0]], ptr [[COMP_CASTED]], align 4
 // CHECK19-NEXT:    [[TMP1:%.*]] = load i32, ptr [[COMP_CASTED]], align 4
-// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK19-NEXT:    store ptr [[THIS1]], ptr [[TMP2]], align 4
 // CHECK19-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
@@ -2208,7 +2208,7 @@ void foo() {
 // CHECK19-NEXT:    store ptr null, ptr [[TMP7]], align 4
 // CHECK19-NEXT:    [[TMP8:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP9:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
-// CHECK19-NEXT:    [[A2:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
+// CHECK19-NEXT:    [[A2:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP10:%.*]] = load i32, ptr [[A2]], align 4
 // CHECK19-NEXT:    [[TMP11:%.*]] = insertvalue [3 x i32] zeroinitializer, i32 [[TMP10]], 0
 // CHECK19-NEXT:    [[TMP12:%.*]] = getelementptr inbounds [[STRUCT___TGT_KERNEL_ARGUMENTS]], ptr [[KERNEL_ARGS]], i32 0, i32 0
@@ -2247,7 +2247,7 @@ void foo() {
 // CHECK19-NEXT:    [[TMP27:%.*]] = load i32, ptr [[COMP]], align 4
 // CHECK19-NEXT:    store i32 [[TMP27]], ptr [[COMP_CASTED3]], align 4
 // CHECK19-NEXT:    [[TMP28:%.*]] = load i32, ptr [[COMP_CASTED3]], align 4
-// CHECK19-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
+// CHECK19-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS4]], i32 0, i32 0
 // CHECK19-NEXT:    store ptr [[THIS1]], ptr [[TMP29]], align 4
 // CHECK19-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS5]], i32 0, i32 0
@@ -2262,7 +2262,7 @@ void foo() {
 // CHECK19-NEXT:    store ptr null, ptr [[TMP34]], align 4
 // CHECK19-NEXT:    [[TMP35:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_BASEPTRS4]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP36:%.*]] = getelementptr inbounds [2 x ptr], ptr [[DOTOFFLOAD_PTRS5]], i32 0, i32 0
-// CHECK19-NEXT:    [[B7:%.*]] = getelementptr inbounds [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
+// CHECK19-NEXT:    [[B7:%.*]] = getelementptr inbounds nuw [[STRUCT_SS]], ptr [[THIS1]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP37:%.*]] = load float, ptr [[B7]], align 4
 // CHECK19-NEXT:    [[CONV:%.*]] = fptosi float [[TMP37]] to i32
 // CHECK19-NEXT:    [[ADD:%.*]] = add nsw i32 [[CONV]], 123
@@ -2313,7 +2313,7 @@ void foo() {
 // CHECK19-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 4
 // CHECK19-NEXT:    store i32 [[COMP]], ptr [[COMP_ADDR]], align 4
 // CHECK19-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 4
-// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
+// CHECK19-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 0
 // CHECK19-NEXT:    [[TMP2:%.*]] = load i32, ptr [[A]], align 4
 // CHECK19-NEXT:    call void @__kmpc_push_num_teams(ptr @[[GLOB1]], i32 [[TMP0]], i32 [[TMP2]], i32 123)
 // CHECK19-NEXT:    call void (ptr, i32, ptr, ...) @__kmpc_fork_teams(ptr @[[GLOB1]], i32 1, ptr @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__ZN2SSIiLi123ELx456EE3fooEv_l161.omp_outlined, ptr [[COMP_ADDR]])
@@ -2345,7 +2345,7 @@ void foo() {
 // CHECK19-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 4
 // CHECK19-NEXT:    store i32 [[COMP]], ptr [[COMP_ADDR]], align 4
 // CHECK19-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 4
-// CHECK19-NEXT:    [[B:%.*]] = getelementptr inbounds [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 1
+// CHECK19-NEXT:    [[B:%.*]] = getelementptr inbounds nuw [[STRUCT_SS:%.*]], ptr [[TMP1]], i32 0, i32 1
 // CHECK19-NEXT:    [[TMP2:%.*]] = load float, ptr [[B]], align 4
 // CHECK19-NEXT:    [[CONV:%.*]] = fptosi float [[TMP2]] to i32
 // CHECK19-NEXT:    [[ADD:%.*]] = add nsw i32 [[CONV]], 123

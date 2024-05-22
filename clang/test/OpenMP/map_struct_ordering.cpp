@@ -48,14 +48,14 @@ int map_struct() {
 // CHECK-NEXT:    [[DOTOFFLOAD_PTRS8:%.*]] = alloca [1 x ptr], align 8
 // CHECK-NEXT:    [[DOTOFFLOAD_MAPPERS9:%.*]] = alloca [1 x ptr], align 8
 // CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 8 [[DAT]], i8 0, i64 264, i1 false)
-// CHECK-NEXT:    [[XI:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 2
+// CHECK-NEXT:    [[XI:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 2
 // CHECK-NEXT:    store i32 3, ptr [[XI]], align 8
-// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 3
+// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 3
 // CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [1 x [30 x i64]], ptr [[ARR]], i64 0, i64 0
 // CHECK-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds [30 x i64], ptr [[ARRAYIDX]], i64 0, i64 0
 // CHECK-NEXT:    store i64 1, ptr [[ARRAYIDX1]], align 8
-// CHECK-NEXT:    [[DATUM:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 0
-// CHECK-NEXT:    [[DATUM2:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 0
+// CHECK-NEXT:    [[DATUM:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 0
+// CHECK-NEXT:    [[DATUM2:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[DATUM2]], align 8
 // CHECK-NEXT:    [[ARRAYIDX3:%.*]] = getelementptr inbounds i32, ptr [[TMP0]], i64 0
 // CHECK-NEXT:    [[TMP1:%.*]] = getelementptr [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 1
@@ -138,7 +138,7 @@ int map_struct() {
 // CHECK-NEXT:    [[TMP42:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_BASEPTRS7]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP43:%.*]] = getelementptr inbounds [1 x ptr], ptr [[DOTOFFLOAD_PTRS8]], i32 0, i32 0
 // CHECK-NEXT:    call void @__tgt_target_data_end_mapper(ptr @[[GLOB1]], i64 -1, i32 1, ptr [[TMP42]], ptr [[TMP43]], ptr @.offload_sizes.3, ptr @.offload_maptypes.4, ptr null, ptr null)
-// CHECK-NEXT:    [[XI10:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 2
+// CHECK-NEXT:    [[XI10:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[DAT]], i32 0, i32 2
 // CHECK-NEXT:    [[TMP44:%.*]] = load i32, ptr [[XI10]], align 8
 // CHECK-NEXT:    ret i32 [[TMP44]]
 //
@@ -149,13 +149,13 @@ int map_struct() {
 // CHECK-NEXT:    [[DAT_ADDR:%.*]] = alloca ptr, align 8
 // CHECK-NEXT:    store ptr [[DAT]], ptr [[DAT_ADDR]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[DAT_ADDR]], align 8
-// CHECK-NEXT:    [[XI:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP0]], i32 0, i32 2
+// CHECK-NEXT:    [[XI:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP0]], i32 0, i32 2
 // CHECK-NEXT:    store i32 4, ptr [[XI]], align 8
-// CHECK-NEXT:    [[XI1:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 2
+// CHECK-NEXT:    [[XI1:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 2
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[XI1]], align 8
-// CHECK-NEXT:    [[DATUM:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 0
+// CHECK-NEXT:    [[DATUM:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[DATUM]], align 8
-// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 3
+// CHECK-NEXT:    [[ARR:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP0]], i32 0, i32 3
 // CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [1 x [30 x i64]], ptr [[ARR]], i64 0, i64 0
 // CHECK-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds [30 x i64], ptr [[ARRAYIDX]], i64 0, i64 0
 // CHECK-NEXT:    [[TMP3:%.*]] = load i64, ptr [[ARRAYIDX2]], align 8

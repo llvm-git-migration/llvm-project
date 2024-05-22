@@ -108,9 +108,9 @@ void foo() {
 // CHECK-NEXT:    [[KERNEL_ARGS:%.*]] = alloca [[STRUCT___TGT_KERNEL_ARGUMENTS:%.*]], align 8
 // CHECK-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds [[CLASS_B:%.*]], ptr [[THIS1]], i32 0, i32 1
-// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[CLASS_A:%.*]], ptr [[THIS1]], i32 0, i32 0
-// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[CLASS_A]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds nuw [[CLASS_B:%.*]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[CLASS_A:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[CLASS_A]], ptr [[THIS1]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds [4 x ptr], ptr [[DOTOFFLOAD_BASEPTRS]], i32 0, i32 0
 // CHECK-NEXT:    store ptr [[THIS1]], ptr [[TMP0]], align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [4 x ptr], ptr [[DOTOFFLOAD_PTRS]], i32 0, i32 0
@@ -202,26 +202,26 @@ void foo() {
 // CHECK-NEXT:    store ptr [[D]], ptr [[D_ADDR]], align 8
 // CHECK-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[M:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP0]], i32 0, i32 3
+// CHECK-NEXT:    [[M:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP0]], i32 0, i32 3
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[M]], align 8
 // CHECK-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[K:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP2]], i32 0, i32 4
+// CHECK-NEXT:    [[K:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP2]], i32 0, i32 4
 // CHECK-NEXT:    [[TMP3:%.*]] = load i32, ptr [[K]], align 4
 // CHECK-NEXT:    [[MUL:%.*]] = mul i32 [[TMP1]], [[TMP3]]
 // CHECK-NEXT:    store i32 [[MUL]], ptr [[ASIZE]], align 4
 // CHECK-NEXT:    [[TMP4:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[M2:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP4]], i32 0, i32 3
+// CHECK-NEXT:    [[M2:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP4]], i32 0, i32 3
 // CHECK-NEXT:    [[TMP5:%.*]] = load i32, ptr [[M2]], align 8
 // CHECK-NEXT:    [[TMP6:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[N:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP6]], i32 0, i32 5
+// CHECK-NEXT:    [[N:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP6]], i32 0, i32 5
 // CHECK-NEXT:    [[TMP7:%.*]] = load i32, ptr [[N]], align 8
 // CHECK-NEXT:    [[MUL3:%.*]] = mul i32 [[TMP5]], [[TMP7]]
 // CHECK-NEXT:    store i32 [[MUL3]], ptr [[CSIZE]], align 4
 // CHECK-NEXT:    [[TMP8:%.*]] = load ptr, ptr [[D_ADDR]], align 8
 // CHECK-NEXT:    [[TMP9:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP9]], i32 0, i32 0
+// CHECK-NEXT:    [[A:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP9]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP10:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[A4:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP10]], i32 0, i32 0
+// CHECK-NEXT:    [[A4:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP10]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP11:%.*]] = load ptr, ptr [[A4]], align 8
 // CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds float, ptr [[TMP11]], i64 0
 // CHECK-NEXT:    [[TMP12:%.*]] = load i32, ptr [[ASIZE]], align 4
@@ -229,9 +229,9 @@ void foo() {
 // CHECK-NEXT:    [[TMP13:%.*]] = mul nuw i64 [[CONV]], 4
 // CHECK-NEXT:    [[TMP14:%.*]] = load ptr, ptr [[D_ADDR]], align 8
 // CHECK-NEXT:    [[TMP15:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP15]], i32 0, i32 1
+// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP15]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP16:%.*]] = load ptr, ptr [[D_ADDR]], align 8
-// CHECK-NEXT:    [[C5:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP16]], i32 0, i32 1
+// CHECK-NEXT:    [[C5:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP16]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP17:%.*]] = load ptr, ptr [[C5]], align 8
 // CHECK-NEXT:    [[ARRAYIDX6:%.*]] = getelementptr inbounds float, ptr [[TMP17]], i64 0
 // CHECK-NEXT:    [[TMP18:%.*]] = load i32, ptr [[CSIZE]], align 4
@@ -339,9 +339,9 @@ void foo() {
 // CHECK-NEXT:    [[TMP76:%.*]] = load ptr, ptr [[_TMP12]], align 8
 // CHECK-NEXT:    [[TMP77:%.*]] = load ptr, ptr [[_TMP12]], align 8
 // CHECK-NEXT:    [[TMP78:%.*]] = load ptr, ptr [[_TMP12]], align 8
-// CHECK-NEXT:    [[C14:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP78]], i32 0, i32 1
+// CHECK-NEXT:    [[C14:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP78]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP79:%.*]] = load ptr, ptr [[_TMP12]], align 8
-// CHECK-NEXT:    [[C15:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR]], ptr [[TMP79]], i32 0, i32 1
+// CHECK-NEXT:    [[C15:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR]], ptr [[TMP79]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP80:%.*]] = load ptr, ptr [[C15]], align 8
 // CHECK-NEXT:    [[ARRAYIDX16:%.*]] = getelementptr inbounds float, ptr [[TMP80]], i64 0
 // CHECK-NEXT:    [[TMP81:%.*]] = load i32, ptr [[CSIZE]], align 4
@@ -427,7 +427,7 @@ void foo() {
 // CHECK-NEXT:    [[TMP0:%.*]] = load i32, ptr [[X_ADDR]], align 4
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[Y_ADDR]], align 4
 // CHECK-NEXT:    call void @_ZN1AC2Eii(ptr noundef nonnull align 4 dereferenceable(8) [[THIS1]], i32 noundef [[TMP0]], i32 noundef [[TMP1]])
-// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds [[CLASS_B:%.*]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds nuw [[CLASS_B:%.*]], ptr [[THIS1]], i32 0, i32 1
 // CHECK-NEXT:    store i32 0, ptr [[RES]], align 4
 // CHECK-NEXT:    ret void
 //
@@ -442,10 +442,10 @@ void foo() {
 // CHECK-NEXT:    store i32 [[X]], ptr [[X_ADDR]], align 4
 // CHECK-NEXT:    store i32 [[Y]], ptr [[Y_ADDR]], align 4
 // CHECK-NEXT:    [[THIS1:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[CLASS_A:%.*]], ptr [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[CLASS_A:%.*]], ptr [[THIS1]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP0:%.*]] = load i32, ptr [[X_ADDR]], align 4
 // CHECK-NEXT:    store i32 [[TMP0]], ptr [[X]], align 4
-// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[CLASS_A]], ptr [[THIS1]], i32 0, i32 1
+// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[CLASS_A]], ptr [[THIS1]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[Y_ADDR]], align 4
 // CHECK-NEXT:    store i32 [[TMP1]], ptr [[Y]], align 4
 // CHECK-NEXT:    ret void
@@ -457,12 +457,12 @@ void foo() {
 // CHECK-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr, align 8
 // CHECK-NEXT:    store ptr [[THIS]], ptr [[THIS_ADDR]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[THIS_ADDR]], align 8
-// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[CLASS_A:%.*]], ptr [[TMP0]], i32 0, i32 0
+// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds nuw [[CLASS_A:%.*]], ptr [[TMP0]], i32 0, i32 0
 // CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[X]], align 4
-// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[CLASS_A]], ptr [[TMP0]], i32 0, i32 1
+// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds nuw [[CLASS_A]], ptr [[TMP0]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP2:%.*]] = load i32, ptr [[Y]], align 4
 // CHECK-NEXT:    [[ADD:%.*]] = add nsw i32 [[TMP1]], [[TMP2]]
-// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds [[CLASS_B:%.*]], ptr [[TMP0]], i32 0, i32 1
+// CHECK-NEXT:    [[RES:%.*]] = getelementptr inbounds nuw [[CLASS_B:%.*]], ptr [[TMP0]], i32 0, i32 1
 // CHECK-NEXT:    store i32 [[ADD]], ptr [[RES]], align 4
 // CHECK-NEXT:    ret void
 //
@@ -510,7 +510,7 @@ void foo() {
 // CHECK-NEXT:    br i1 [[CMP]], label [[FOR_BODY:%.*]], label [[FOR_END:%.*]]
 // CHECK:       for.body:
 // CHECK-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[TMP]], align 8
-// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP3]], i32 0, i32 1
+// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP3]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP4:%.*]] = load ptr, ptr [[C]], align 8
 // CHECK-NEXT:    [[TMP5:%.*]] = load i32, ptr [[I]], align 4
 // CHECK-NEXT:    [[IDXPROM:%.*]] = sext i32 [[TMP5]] to i64
@@ -546,7 +546,7 @@ void foo() {
 // CHECK-NEXT:    br i1 [[CMP]], label [[FOR_BODY:%.*]], label [[FOR_END:%.*]]
 // CHECK:       for.body:
 // CHECK-NEXT:    [[TMP3:%.*]] = load ptr, ptr [[TMP]], align 8
-// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP3]], i32 0, i32 1
+// CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds nuw [[STRUCT_DESCRIPTOR:%.*]], ptr [[TMP3]], i32 0, i32 1
 // CHECK-NEXT:    [[TMP4:%.*]] = load ptr, ptr [[C]], align 8
 // CHECK-NEXT:    [[TMP5:%.*]] = load i32, ptr [[I]], align 4
 // CHECK-NEXT:    [[IDXPROM:%.*]] = sext i32 [[TMP5]] to i64

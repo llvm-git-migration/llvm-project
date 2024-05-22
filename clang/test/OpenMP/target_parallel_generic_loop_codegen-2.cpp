@@ -120,7 +120,7 @@ int nested(int a){
 // CHECK-NEXT:    call void @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__Z6nestedi_l42(i64 [[TMP1]]) #[[ATTR2:[0-9]+]]
 // CHECK-NEXT:    br label [[OMP_OFFLOAD_CONT]]
 // CHECK:       omp_offload.cont:
-// CHECK-NEXT:    [[TMP22:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// CHECK-NEXT:    [[TMP22:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // CHECK-NEXT:    store ptr [[A_ADDR]], ptr [[TMP22]], align 8
 // CHECK-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 8 dereferenceable(8) [[F]])
 // CHECK-NEXT:    [[TMP23:%.*]] = load i32, ptr [[A_ADDR]], align 4
@@ -338,7 +338,7 @@ int nested(int a){
 // CHECK-X86-NEXT:    call void @{{__omp_offloading_[0-9a-z]+_[0-9a-z]+}}__Z6nestedi_l42(i32 [[TMP1]]) #[[ATTR2:[0-9]+]]
 // CHECK-X86-NEXT:    br label [[OMP_OFFLOAD_CONT]]
 // CHECK-X86:       omp_offload.cont:
-// CHECK-X86-NEXT:    [[TMP22:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// CHECK-X86-NEXT:    [[TMP22:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // CHECK-X86-NEXT:    store ptr [[A_ADDR]], ptr [[TMP22]], align 4
 // CHECK-X86-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 4 dereferenceable(4) [[F]])
 // CHECK-X86-NEXT:    [[TMP23:%.*]] = load i32, ptr [[A_ADDR]], align 4
@@ -525,7 +525,7 @@ int nested(int a){
 // SIMD-ONLY0-NEXT:    store i32 [[INC1]], ptr [[I]], align 4
 // SIMD-ONLY0-NEXT:    br label [[FOR_COND]], !llvm.loop [[LOOP2:![0-9]+]]
 // SIMD-ONLY0:       for.end:
-// SIMD-ONLY0-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// SIMD-ONLY0-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // SIMD-ONLY0-NEXT:    store ptr [[A_ADDR]], ptr [[TMP3]], align 8
 // SIMD-ONLY0-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 8 dereferenceable(8) [[F]])
 // SIMD-ONLY0-NEXT:    [[TMP4:%.*]] = load i32, ptr [[A_ADDR]], align 4
@@ -556,7 +556,7 @@ int nested(int a){
 // SIMD-ONLY0-X86-NEXT:    store i32 [[INC1]], ptr [[I]], align 4
 // SIMD-ONLY0-X86-NEXT:    br label [[FOR_COND]], !llvm.loop [[LOOP3:![0-9]+]]
 // SIMD-ONLY0-X86:       for.end:
-// SIMD-ONLY0-X86-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// SIMD-ONLY0-X86-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // SIMD-ONLY0-X86-NEXT:    store ptr [[A_ADDR]], ptr [[TMP3]], align 4
 // SIMD-ONLY0-X86-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 4 dereferenceable(4) [[F]])
 // SIMD-ONLY0-X86-NEXT:    [[TMP4:%.*]] = load i32, ptr [[A_ADDR]], align 4
@@ -907,7 +907,7 @@ int nested(int a){
 // SIMD-ONLY1-TARGET-NEXT:    store i32 [[INC1]], ptr [[I]], align 4
 // SIMD-ONLY1-TARGET-NEXT:    br label [[FOR_COND]], !llvm.loop [[LOOP2:![0-9]+]]
 // SIMD-ONLY1-TARGET:       for.end:
-// SIMD-ONLY1-TARGET-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// SIMD-ONLY1-TARGET-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // SIMD-ONLY1-TARGET-NEXT:    store ptr [[A_ADDR]], ptr [[TMP3]], align 8
 // SIMD-ONLY1-TARGET-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 8 dereferenceable(8) [[F]])
 // SIMD-ONLY1-TARGET-NEXT:    [[TMP4:%.*]] = load i32, ptr [[A_ADDR]], align 4
@@ -938,7 +938,7 @@ int nested(int a){
 // SIMD-ONLY1-TARGET-X86-NEXT:    store i32 [[INC1]], ptr [[I]], align 4
 // SIMD-ONLY1-TARGET-X86-NEXT:    br label [[FOR_COND]], !llvm.loop [[LOOP3:![0-9]+]]
 // SIMD-ONLY1-TARGET-X86:       for.end:
-// SIMD-ONLY1-TARGET-X86-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
+// SIMD-ONLY1-TARGET-X86-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[F]], i32 0, i32 0
 // SIMD-ONLY1-TARGET-X86-NEXT:    store ptr [[A_ADDR]], ptr [[TMP3]], align 4
 // SIMD-ONLY1-TARGET-X86-NEXT:    call void @"_ZZ6nestediENK3$_0clEv"(ptr noundef nonnull align 4 dereferenceable(4) [[F]])
 // SIMD-ONLY1-TARGET-X86-NEXT:    [[TMP4:%.*]] = load i32, ptr [[A_ADDR]], align 4

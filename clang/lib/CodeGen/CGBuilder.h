@@ -210,10 +210,10 @@ public:
   /// Given
   ///   %addr = {T1, T2...}* ...
   /// produce
-  ///   %name = getelementptr inbounds %addr, i32 0, i32 index
+  ///   %name = getelementptr inbounds nuw %addr, i32 0, i32 index
   ///
   /// This API assumes that drilling into a struct like this is always an
-  /// inbounds operation.
+  /// inbounds and nuw operation.
   using CGBuilderBaseTy::CreateStructGEP;
   Address CreateStructGEP(Address Addr, unsigned Index,
                           const llvm::Twine &Name = "") {
@@ -222,8 +222,8 @@ public:
     const llvm::StructLayout *Layout = DL.getStructLayout(ElTy);
     auto Offset = CharUnits::fromQuantity(Layout->getElementOffset(Index));
 
-    return Address(CreateStructGEP(Addr.getElementType(), Addr.getBasePointer(),
-                                   Index, Name),
+    return Address(CreateNUWStructGEP(Addr.getElementType(),
+                                      Addr.getBasePointer(), Index, Name),
                    ElTy->getElementType(Index),
                    Addr.getAlignment().alignmentAtOffset(Offset),
                    Addr.isKnownNonNull());

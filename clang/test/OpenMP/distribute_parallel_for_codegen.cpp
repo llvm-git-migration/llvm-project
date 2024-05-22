@@ -780,15 +780,15 @@ int main() {
 // CHECK1-NEXT:    store i32 0, ptr [[RETVAL]], align 4
 // CHECK1-NEXT:    store i32 10000, ptr [[N]], align 4
 // CHECK1-NEXT:    store i32 100, ptr [[CH]], align 4
-// CHECK1-NEXT:    [[TMP0:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP0:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[N]], ptr [[TMP0]], align 8
-// CHECK1-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP1:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[A]], ptr [[TMP1]], align 8
-// CHECK1-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP2:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[B]], ptr [[TMP2]], align 8
-// CHECK1-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[C]], ptr [[TMP3]], align 8
-// CHECK1-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 4
+// CHECK1-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 4
 // CHECK1-NEXT:    store ptr [[CH]], ptr [[TMP4]], align 8
 // CHECK1-NEXT:    call void @"_ZZ4mainENK3$_0clEv"(ptr noundef nonnull align 8 dereferenceable(40) [[REF_TMP]])
 // CHECK1-NEXT:    ret i32 0
@@ -1005,13 +1005,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM10:%.*]] = sext i32 [[TMP27]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i64 [[IDXPROM10]]
 // CHECK1-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX11]], align 8
-// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 8
-// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I4]], ptr [[TMP29]], align 8
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 8
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 8
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]])
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -1244,13 +1244,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM10:%.*]] = sext i32 [[TMP27]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i64 [[IDXPROM10]]
 // CHECK1-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX11]], align 8
-// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 8
-// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I4]], ptr [[TMP29]], align 8
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 8
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 8
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE0_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]])
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -1513,13 +1513,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM10:%.*]] = sext i32 [[TMP27]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i64 [[IDXPROM10]]
 // CHECK1-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX11]], align 8
-// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 8
-// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I4]], ptr [[TMP29]], align 8
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 8
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 8
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE1_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]])
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -1752,13 +1752,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM10:%.*]] = sext i32 [[TMP27]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i64 [[IDXPROM10]]
 // CHECK1-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX11]], align 8
-// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 8
-// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I4]], ptr [[TMP29]], align 8
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 8
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 8
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE2_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]])
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -2015,13 +2015,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM14:%.*]] = sext i32 [[TMP30]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX15:%.*]] = getelementptr inbounds double, ptr [[TMP29]], i64 [[IDXPROM14]]
 // CHECK1-NEXT:    store double [[ADD13]], ptr [[ARRAYIDX15]], align 8
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP31]], align 8
-// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I5]], ptr [[TMP32]], align 8
-// CHECK1-NEXT:    [[TMP33:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP33:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP33]], align 8
-// CHECK1-NEXT:    [[TMP34:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP34:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP34]], align 8
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE3_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]])
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -2261,13 +2261,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM9:%.*]] = sext i32 [[TMP28]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX10:%.*]] = getelementptr inbounds double, ptr [[TMP27]], i64 [[IDXPROM9]]
 // CHECK1-NEXT:    store double [[ADD8]], ptr [[ARRAYIDX10]], align 8, !llvm.access.group [[ACC_GRP12]]
-// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP29]], align 8, !llvm.access.group [[ACC_GRP12]]
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I4]], ptr [[TMP30]], align 8, !llvm.access.group [[ACC_GRP12]]
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP31]], align 8, !llvm.access.group [[ACC_GRP12]]
-// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP32]], align 8, !llvm.access.group [[ACC_GRP12]]
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE4_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]]), !llvm.access.group [[ACC_GRP12]]
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -2514,13 +2514,13 @@ int main() {
 // CHECK1-NEXT:    [[IDXPROM10:%.*]] = sext i32 [[TMP29]] to i64
 // CHECK1-NEXT:    [[ARRAYIDX11:%.*]] = getelementptr inbounds double, ptr [[TMP28]], i64 [[IDXPROM10]]
 // CHECK1-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX11]], align 8, !llvm.access.group [[ACC_GRP15]]
-// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK1-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK1-NEXT:    store ptr [[TMP1]], ptr [[TMP30]], align 8, !llvm.access.group [[ACC_GRP15]]
-// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK1-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK1-NEXT:    store ptr [[I5]], ptr [[TMP31]], align 8, !llvm.access.group [[ACC_GRP15]]
-// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK1-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK1-NEXT:    store ptr [[TMP2]], ptr [[TMP32]], align 8, !llvm.access.group [[ACC_GRP15]]
-// CHECK1-NEXT:    [[TMP33:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK1-NEXT:    [[TMP33:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK1-NEXT:    store ptr [[TMP3]], ptr [[TMP33]], align 8, !llvm.access.group [[ACC_GRP15]]
 // CHECK1-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE5_clEv"(ptr noundef nonnull align 8 dereferenceable(32) [[REF_TMP]]), !llvm.access.group [[ACC_GRP15]]
 // CHECK1-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -2557,15 +2557,15 @@ int main() {
 // CHECK3-NEXT:    store i32 0, ptr [[RETVAL]], align 4
 // CHECK3-NEXT:    store i32 10000, ptr [[N]], align 4
 // CHECK3-NEXT:    store i32 100, ptr [[CH]], align 4
-// CHECK3-NEXT:    [[TMP0:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP0:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[N]], ptr [[TMP0]], align 4
-// CHECK3-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP1:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[A]], ptr [[TMP1]], align 4
-// CHECK3-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP2:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[B]], ptr [[TMP2]], align 4
-// CHECK3-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP3:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[C]], ptr [[TMP3]], align 4
-// CHECK3-NEXT:    [[TMP4:%.*]] = getelementptr inbounds [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 4
+// CHECK3-NEXT:    [[TMP4:%.*]] = getelementptr inbounds nuw [[CLASS_ANON]], ptr [[REF_TMP]], i32 0, i32 4
 // CHECK3-NEXT:    store ptr [[CH]], ptr [[TMP4]], align 4
 // CHECK3-NEXT:    call void @"_ZZ4mainENK3$_0clEv"(ptr noundef nonnull align 4 dereferenceable(20) [[REF_TMP]])
 // CHECK3-NEXT:    ret i32 0
@@ -2775,13 +2775,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP27:%.*]] = load i32, ptr [[I3]], align 4
 // CHECK3-NEXT:    [[ARRAYIDX8:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i32 [[TMP27]]
 // CHECK3-NEXT:    store double [[ADD7]], ptr [[ARRAYIDX8]], align 4
-// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 4
-// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I3]], ptr [[TMP29]], align 4
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 4
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_0]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 4
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]])
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -3007,13 +3007,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP27:%.*]] = load i32, ptr [[I3]], align 4
 // CHECK3-NEXT:    [[ARRAYIDX8:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i32 [[TMP27]]
 // CHECK3-NEXT:    store double [[ADD7]], ptr [[ARRAYIDX8]], align 4
-// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 4
-// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I3]], ptr [[TMP29]], align 4
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 4
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_1]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 4
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE0_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]])
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -3269,13 +3269,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP27:%.*]] = load i32, ptr [[I3]], align 4
 // CHECK3-NEXT:    [[ARRAYIDX8:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i32 [[TMP27]]
 // CHECK3-NEXT:    store double [[ADD7]], ptr [[ARRAYIDX8]], align 4
-// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 4
-// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I3]], ptr [[TMP29]], align 4
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 4
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_2]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 4
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE1_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]])
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -3501,13 +3501,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP27:%.*]] = load i32, ptr [[I3]], align 4
 // CHECK3-NEXT:    [[ARRAYIDX8:%.*]] = getelementptr inbounds double, ptr [[TMP26]], i32 [[TMP27]]
 // CHECK3-NEXT:    store double [[ADD7]], ptr [[ARRAYIDX8]], align 4
-// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP28:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP28]], align 4
-// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I3]], ptr [[TMP29]], align 4
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP30]], align 4
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_3]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP31]], align 4
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE2_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]])
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -3755,13 +3755,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP30:%.*]] = load i32, ptr [[I4]], align 4
 // CHECK3-NEXT:    [[ARRAYIDX10:%.*]] = getelementptr inbounds double, ptr [[TMP29]], i32 [[TMP30]]
 // CHECK3-NEXT:    store double [[ADD9]], ptr [[ARRAYIDX10]], align 4
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP31]], align 4
-// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I4]], ptr [[TMP32]], align 4
-// CHECK3-NEXT:    [[TMP33:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP33:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP33]], align 4
-// CHECK3-NEXT:    [[TMP34:%.*]] = getelementptr inbounds [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP34:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_4]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP34]], align 4
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE3_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]])
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -3994,13 +3994,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP28:%.*]] = load i32, ptr [[I3]], align 4, !llvm.access.group [[ACC_GRP13]]
 // CHECK3-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds double, ptr [[TMP27]], i32 [[TMP28]]
 // CHECK3-NEXT:    store double [[ADD6]], ptr [[ARRAYIDX7]], align 4, !llvm.access.group [[ACC_GRP13]]
-// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP29:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP29]], align 4, !llvm.access.group [[ACC_GRP13]]
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I3]], ptr [[TMP30]], align 4, !llvm.access.group [[ACC_GRP13]]
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP31]], align 4, !llvm.access.group [[ACC_GRP13]]
-// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_5]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP32]], align 4, !llvm.access.group [[ACC_GRP13]]
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE4_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]]), !llvm.access.group [[ACC_GRP13]]
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
@@ -4240,13 +4240,13 @@ int main() {
 // CHECK3-NEXT:    [[TMP29:%.*]] = load i32, ptr [[I4]], align 4, !llvm.access.group [[ACC_GRP16]]
 // CHECK3-NEXT:    [[ARRAYIDX8:%.*]] = getelementptr inbounds double, ptr [[TMP28]], i32 [[TMP29]]
 // CHECK3-NEXT:    store double [[ADD7]], ptr [[ARRAYIDX8]], align 4, !llvm.access.group [[ACC_GRP16]]
-// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 0
+// CHECK3-NEXT:    [[TMP30:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 0
 // CHECK3-NEXT:    store ptr [[TMP1]], ptr [[TMP30]], align 4, !llvm.access.group [[ACC_GRP16]]
-// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 1
+// CHECK3-NEXT:    [[TMP31:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 1
 // CHECK3-NEXT:    store ptr [[I4]], ptr [[TMP31]], align 4, !llvm.access.group [[ACC_GRP16]]
-// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 2
+// CHECK3-NEXT:    [[TMP32:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 2
 // CHECK3-NEXT:    store ptr [[TMP2]], ptr [[TMP32]], align 4, !llvm.access.group [[ACC_GRP16]]
-// CHECK3-NEXT:    [[TMP33:%.*]] = getelementptr inbounds [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 3
+// CHECK3-NEXT:    [[TMP33:%.*]] = getelementptr inbounds nuw [[CLASS_ANON_6]], ptr [[REF_TMP]], i32 0, i32 3
 // CHECK3-NEXT:    store ptr [[TMP3]], ptr [[TMP33]], align 4, !llvm.access.group [[ACC_GRP16]]
 // CHECK3-NEXT:    call void @"_ZZZ4mainENK3$_0clEvENKUlvE5_clEv"(ptr noundef nonnull align 4 dereferenceable(16) [[REF_TMP]]), !llvm.access.group [[ACC_GRP16]]
 // CHECK3-NEXT:    br label [[OMP_BODY_CONTINUE:%.*]]
