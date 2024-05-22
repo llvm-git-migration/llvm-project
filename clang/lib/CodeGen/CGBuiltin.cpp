@@ -19040,6 +19040,48 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
         CGM.getIntrinsic(Intrinsic::amdgcn_s_sendmsg_rtn, {ResultType});
     return Builder.CreateCall(F, {Arg});
   }
+  case AMDGPU::BI__builtin_amdgcn_global_load_lds: {
+    SmallVector<Value *, 5> Args;
+    unsigned ICEArguments = 0;
+    ASTContext::GetBuiltinTypeError Error;
+    getContext().GetBuiltinType(BuiltinID, Error, &ICEArguments);
+    assert(Error == ASTContext::GE_None && "Should not codegen an error");
+    Function *F = CGM.getIntrinsic(Intrinsic::amdgcn_global_load_lds);
+    llvm::FunctionType *FTy = F->getFunctionType();
+    for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {
+      Value *ArgValue = EmitScalarOrConstFoldImmArg(ICEArguments, i, E);
+      llvm::Type *PTy = FTy->getParamType(i);
+      if (PTy != ArgValue->getType()) {
+        if (auto *PtrTy = dyn_cast<llvm::PointerType>(PTy)) {
+          if (PtrTy->getAddressSpace() !=
+              ArgValue->getType()->getPointerAddressSpace()) {
+            ArgValue = Builder.CreateAddrSpaceCast(
+                ArgValue, llvm::PointerType::get(getLLVMContext(),
+                                                 PtrTy->getAddressSpace()));
+          }
+        }
+        ArgValue = Builder.CreateBitCast(ArgValue, PTy);
+      }
+      Args.push_back(ArgValue);
+    }
+    constexpr const int SizeIdx = 2;
+    ConstantInt *SizeVal = dyn_cast<ConstantInt>(Args[SizeIdx]);
+    if (!SizeVal) {
+      CGM.Error(E->getExprLoc(), "size must be a constant");
+      return nullptr;
+    }
+    uint64_t Size = SizeVal->getZExtValue();
+    switch (Size) {
+    default:
+      CGM.Error(E->getExprLoc(), "size must be a 1/2/4");
+      return nullptr;
+    case 1:
+    case 2:
+    case 4:
+      break;
+    }
+    return Builder.CreateCall(F, Args);
+  }
   default:
     return nullptr;
   }
