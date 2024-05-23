@@ -15,8 +15,10 @@
 #include "mlir/Conversion/VectorToSPIRV/VectorToSPIRV.h"
 #include "mlir/Dialect/SPIRV/IR/SPIRVDialect.h"
 #include "mlir/Dialect/SPIRV/Transforms/SPIRVConversion.h"
+#include "mlir/Dialect/Vector/Transforms/LoweringPatterns.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTVECTORTOSPIRV
@@ -35,6 +37,15 @@ struct ConvertVectorToSPIRVPass
 void ConvertVectorToSPIRVPass::runOnOperation() {
   MLIRContext *context = &getContext();
   Operation *op = getOperation();
+
+  // Rewrite patterns need to be matched separately from the dialect conversion
+  {
+    RewritePatternSet patterns(context);
+    vector::populateVectorInterleaveLoweringPatterns(patterns);
+    vector::populateVectorInterleaveToShufflePatterns(patterns);
+    if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+      return signalPassFailure();
+  }
 
   auto targetAttr = spirv::lookupTargetEnvOrDefault(op);
   std::unique_ptr<ConversionTarget> target =
