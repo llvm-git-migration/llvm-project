@@ -1032,10 +1032,12 @@ void Sema::ActOnLambdaExpressionAfterIntroducer(LambdaIntroducer &Intro,
 
   assert(LSI->NumExplicitTemplateParams == 0);
 
+
   // Determine if we're within a context where we know that the lambda will
   // be dependent, because there are template parameters in scope.
   CXXRecordDecl::LambdaDependencyKind LambdaDependencyKind =
       CXXRecordDecl::LDK_Unknown;
+
   if (LSI->NumExplicitTemplateParams > 0) {
     Scope *TemplateParamScope = CurScope->getTemplateParamParent();
     assert(TemplateParamScope &&
@@ -1046,6 +1048,15 @@ void Sema::ActOnLambdaExpressionAfterIntroducer(LambdaIntroducer &Intro,
       LambdaDependencyKind = CXXRecordDecl::LDK_AlwaysDependent;
   } else if (CurScope->getTemplateParamParent() != nullptr) {
     LambdaDependencyKind = CXXRecordDecl::LDK_AlwaysDependent;
+  } else if (Scope *P = CurScope->getParent()) {
+    while (P->getEntity() && P->getEntity()->isRequiresExprBody())
+      P = P->getParent();
+    if (P->isFunctionDeclarationScope() &&
+        llvm::any_of(P->decls(), [](Decl *D) {
+          return isa<ParmVarDecl>(D) &&
+                 cast<ParmVarDecl>(D)->getType()->isTemplateTypeParmType();
+        }))
+      LambdaDependencyKind = CXXRecordDecl::LDK_AlwaysDependent;
   }
 
   CXXRecordDecl *Class = createLambdaClosureType(
