@@ -1646,6 +1646,8 @@ private:
   void ParseLexedAttributes(ParsingClass &Class);
   void ParseLexedAttributeList(LateParsedAttrList &LAs, Decl *D,
                                bool EnterScope, bool OnDefinition);
+  void ParseLexedCAttributeList(LateParsedAttrList &LA, bool EnterScope,
+                                ParsedAttributes *OutAttrs = nullptr);
   void ParseLexedAttribute(LateParsedAttribute &LA,
                            bool EnterScope, bool OnDefinition);
   void ParseLexedCAttribute(LateParsedAttribute &LA,
