@@ -656,19 +656,19 @@ struct __declspec(dllexport) DefaultedCtorsDtors {
 // Export defaulted member function definitions declared inside class.
 struct __declspec(dllexport) ExportDefaultedInclassDefs {
   ExportDefaultedInclassDefs() = default;
-  // M32VS2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@XZ"(ptr returned %this)
+  // M32MSVC2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@XZ"(ptr returned %this)
   // M64VS2013-DAG: define weak_odr dso_local dllexport                ptr @"??0ExportDefaultedInclassDefs@@QEAA@XZ"(ptr returned %this)
   // M32VS2015-NOT: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@XZ"(ptr returned %this)
   // M64VS2015-NOT: define weak_odr dso_local dllexport                ptr @"??0ExportDefaultedInclassDefs@@QEAA@XZ"(ptr returned %this)
 
   ~ExportDefaultedInclassDefs() = default;
-  // M32VS2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc void @"??1ExportDefaultedInclassDefs@@QAE@XZ"(ptr %this)
+  // M32MSVC2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc void @"??1ExportDefaultedInclassDefs@@QAE@XZ"(ptr %this)
   // M64VS2013-DAG: define weak_odr dso_local dllexport                void @"??1ExportDefaultedInclassDefs@@QEAA@XZ"(ptr %this)
   // M32VS2015-NOT: define weak_odr dso_local dllexport x86_thiscallcc void @"??1ExportDefaultedInclassDefs@@QAE@XZ"(ptr %this)
   // M64VS2015-NOT: define weak_odr dso_local dllexport                void @"??1ExportDefaultedInclassDefs@@QEAA@XZ"(ptr %this)
 
   ExportDefaultedInclassDefs(const ExportDefaultedInclassDefs&) = default;
-  // M32VS2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@ABU0@@Z"(ptr {{[^,]*}} returned {{[^,]*}} %this, ptr nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}))
+  // M32MSVC2013-DAG: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@ABU0@@Z"(ptr {{[^,]*}} returned {{[^,]*}} %this, ptr nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}))
   // M64VS2013-DAG: define weak_odr dso_local dllexport                ptr @"??0ExportDefaultedInclassDefs@@QEAA@AEBU0@@Z"(ptr {{[^,]*}} returned {{[^,]*}} %this, ptr nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}))
   // M32VS2015-NOT: define weak_odr dso_local dllexport x86_thiscallcc ptr @"??0ExportDefaultedInclassDefs@@QAE@ABU0@@Z"(ptr {{[^,]*}} returned {{[^,]*}} %this, ptr nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}))
   // M64VS2015-NOT: define weak_odr dso_local dllexport                ptr @"??0ExportDefaultedInclassDefs@@QEAA@AEBU0@@Z"(ptr {{[^,]*}} returned {{[^,]*}} %this, ptr nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}))
@@ -977,7 +977,7 @@ template <typename T> struct ExplicitlyImportInstantiatedTemplate { void func();
 template struct __declspec(dllimport) ExplicitlyImportInstantiatedTemplate<int>;
 
 
-// MS: ClassTemplate<int> gets exported.
+// MSC: ClassTemplate<int> gets exported.
 struct __declspec(dllexport) DerivedFromTemplate : public ClassTemplate<int> {};
 USEMEMFUNC(DerivedFromTemplate, func)
 // M32-DAG: define weak_odr dso_local dllexport x86_thiscallcc void @"?func@?$ClassTemplate@H@@QAEXXZ"
@@ -1006,7 +1006,7 @@ USEMEMFUNC(DerivedFromTemplateD2, func)
 // G32-DAG: define linkonce_odr dso_local x86_thiscallcc void @_ZN13ClassTemplateIdE4funcEv
 // PS-DAG:  define weak_odr dllexport void @_ZN13ClassTemplateIdE4funcEv
 
-// MS: Base class already instantiated with different dll attribute.
+// MSC: Base class already instantiated with different dll attribute.
 struct __declspec(dllimport) DerivedFromTemplateB : public ClassTemplate<bool> {};
 struct __declspec(dllexport) DerivedFromTemplateB2 : public ClassTemplate<bool> {};
 USEMEMFUNC(DerivedFromTemplateB2, func)
@@ -1056,7 +1056,7 @@ USEMEMFUNC(DerivedFromExplicitlyImportInstantiatedTemplate, func)
 // G32-DAG: declare dllimport x86_thiscallcc void @_ZN36ExplicitlyImportInstantiatedTemplateIiE4funcEv
 // PS-DAG:  declare dllimport void @_ZN36ExplicitlyImportInstantiatedTemplateIiE4funcEv
 
-// MS: A dll attribute propagates through multiple levels of instantiation.
+// MSC: A dll attribute propagates through multiple levels of instantiation.
 template <typename T> struct TopClass { void func() {} };
 template <typename T> struct MiddleClass : public TopClass<T> { };
 struct __declspec(dllexport) BottomClass : public MiddleClass<int> { };

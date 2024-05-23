@@ -914,7 +914,7 @@ template <typename T> struct ExplicitlyImportInstantiatedTemplate { void func();
 template struct __declspec(dllimport) ExplicitlyImportInstantiatedTemplate<int>;
 
 
-// MS: ClassTemplate<int> gets imported.
+// MSC: ClassTemplate<int> gets imported.
 struct __declspec(dllimport) DerivedFromTemplate : public ClassTemplate<int> {};
 USEMEMFUNC(ClassTemplate<int>, func)
 // M32-DAG: {{declare|define available_externally}} dllimport x86_thiscallcc void @"?func@?$ClassTemplate@H@@QAEXXZ"
@@ -943,7 +943,7 @@ USEMEMFUNC(ClassTemplate<double>, func)
 // G32-DAG: define linkonce_odr dso_local x86_thiscallcc void @_ZN13ClassTemplateIdE4funcEv
 // PS-DAG:  declare dllimport void @_ZN13ClassTemplateIdE4funcEv
 
-// MS: Base class already instantiated with dfferent attribute.
+// MSC: Base class already instantiated with dfferent attribute.
 struct __declspec(dllexport) DerivedFromTemplateB : public ClassTemplate<bool> {};
 struct __declspec(dllimport) DerivedFromTemplateB2 : public ClassTemplate<bool> {};
 USEMEMFUNC(ClassTemplate<bool>, func)
@@ -993,7 +993,7 @@ USEMEMFUNC(ExplicitlyImportInstantiatedTemplate<int>, func)
 // G32-DAG: declare dllimport x86_thiscallcc void @_ZN36ExplicitlyImportInstantiatedTemplateIiE4funcEv
 // PS-DAG:  declare dllimport void @_ZN36ExplicitlyImportInstantiatedTemplateIiE4funcEv
 
-// MS: A dll attribute propagates through multiple levels of instantiation.
+// MSC: A dll attribute propagates through multiple levels of instantiation.
 template <typename T> struct TopClass { void func() {} };
 template <typename T> struct MiddleClass : public TopClass<T> { };
 struct __declspec(dllimport) BottomClass : public MiddleClass<int> { };
