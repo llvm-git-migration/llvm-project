@@ -8328,22 +8328,33 @@ enum class CountedByInvalidPointeeTypeKind {
   VALID,
 };
 
-static bool CheckCountedByAttrOnField(
-    Sema &S, FieldDecl *FD, Expr *E,
-    llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls) {
+static bool
+CheckCountedByAttrOnField(Sema &S, FieldDecl *FD, Expr *E,
+                          llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls,
+                          bool CountInBytes, bool OrNull) {
   // Check the context the attribute is used in
+
+  unsigned Kind = CountInBytes;
+  if (OrNull)
+    Kind += 2;
 
   if (FD->getParent()->isUnion()) {
     S.Diag(FD->getBeginLoc(), diag::err_counted_by_attr_in_union)
-        << FD->getSourceRange();
+        << Kind << FD->getSourceRange();
     return true;
   }
 
   const auto FieldTy = FD->getType();
+  if (FieldTy->isArrayType() && (CountInBytes || OrNull)) {
+    S.Diag(FD->getBeginLoc(),
+           diag::err_counted_by_attr_not_on_ptr_or_flexible_array_member)
+        << Kind << FD->getLocation();
+    return true;
+  }
   if (!FieldTy->isArrayType() && !FieldTy->isPointerType()) {
     S.Diag(FD->getBeginLoc(),
            diag::err_counted_by_attr_not_on_ptr_or_flexible_array_member)
-        << FD->getLocation();
+        << Kind << FD->getLocation();
     return true;
   }
 
@@ -8354,7 +8365,7 @@ static bool CheckCountedByAttrOnField(
                                        StrictFlexArraysLevel, true)) {
     S.Diag(FD->getBeginLoc(),
            diag::err_counted_by_attr_on_array_not_flexible_array_member)
-        << FD->getLocation();
+        << Kind << FD->getLocation();
     return true;
   }
 
@@ -8394,13 +8405,14 @@ static bool CheckCountedByAttrOnField(
     InvalidTypeKind = CountedByInvalidPointeeTypeKind::FLEXIBLE_ARRAY_MEMBER;
   }
 
-  if (InvalidTypeKind != CountedByInvalidPointeeTypeKind::VALID) {
+  if (InvalidTypeKind != CountedByInvalidPointeeTypeKind::VALID &&
+      !CountInBytes) {
     unsigned DiagID = ShouldWarn
                           ? diag::warn_counted_by_attr_elt_type_unknown_size
                           : diag::err_counted_by_attr_pointee_unknown_size;
     S.Diag(FD->getBeginLoc(), DiagID)
         << SelectPtrOrArr << PointeeTy << (int)InvalidTypeKind
-        << (ShouldWarn ? 1 : 0) << FD->getSourceRange();
+        << (ShouldWarn ? 1 : 0) << OrNull << FD->getSourceRange();
     return true;
   }
 
@@ -8408,7 +8420,7 @@ static bool CheckCountedByAttrOnField(
 
   if (!E->getType()->isIntegerType() || E->getType()->isBooleanType()) {
     S.Diag(E->getBeginLoc(), diag::err_counted_by_attr_argument_not_integer)
-        << E->getSourceRange();
+        << Kind << E->getSourceRange();
     return true;
   }
 
@@ -8416,7 +8428,7 @@ static bool CheckCountedByAttrOnField(
   if (!DRE) {
     S.Diag(E->getBeginLoc(),
            diag::err_counted_by_attr_only_support_simple_decl_reference)
-        << E->getSourceRange();
+        << Kind << E->getSourceRange();
     return true;
   }
 
@@ -8427,7 +8439,7 @@ static bool CheckCountedByAttrOnField(
   }
   if (!CountFD) {
     S.Diag(E->getBeginLoc(), diag::err_counted_by_must_be_in_structure)
-        << CountDecl << E->getSourceRange();
+        << CountDecl << Kind << E->getSourceRange();
 
     S.Diag(CountDecl->getBeginLoc(),
            diag::note_flexible_array_counted_by_attr_field)
@@ -8438,7 +8450,7 @@ static bool CheckCountedByAttrOnField(
   if (FD->getParent() != CountFD->getParent()) {
     if (CountFD->getParent()->isUnion()) {
       S.Diag(CountFD->getBeginLoc(), diag::err_counted_by_attr_refer_to_union)
-          << CountFD->getSourceRange();
+          << Kind << CountFD->getSourceRange();
       return true;
     }
     // Whether CountRD is an anonymous struct is not determined at this
@@ -8450,7 +8462,7 @@ static bool CheckCountedByAttrOnField(
     if (RD != CountRD) {
       S.Diag(E->getBeginLoc(),
              diag::err_flexible_array_count_not_in_same_struct)
-          << CountFD << E->getSourceRange();
+          << CountFD << Kind << E->getSourceRange();
       S.Diag(CountFD->getBeginLoc(),
              diag::note_flexible_array_counted_by_attr_field)
           << CountFD << CountFD->getSourceRange();
@@ -8470,12 +8482,35 @@ static void handleCountedByAttrField(Sema &S, Decl *D, const ParsedAttr &AL) {
   if (!CountExpr)
     return;
 
+  bool CountInBytes;
+  bool OrNull;
+  switch (AL.getKind()) {
+  case ParsedAttr::AT_CountedBy:
+    CountInBytes = false;
+    OrNull = false;
+    break;
+  case ParsedAttr::AT_CountedByOrNull:
+    CountInBytes = false;
+    OrNull = true;
+    break;
+  case ParsedAttr::AT_SizedBy:
+    CountInBytes = true;
+    OrNull = false;
+    break;
+  case ParsedAttr::AT_SizedByOrNull:
+    CountInBytes = true;
+    OrNull = true;
+    break;
+  default:
+    llvm_unreachable("unexpected counted_by family attribute");
+  }
+
   llvm::SmallVector<TypeCoupledDeclRefInfo, 1> Decls;
-  if (CheckCountedByAttrOnField(S, FD, CountExpr, Decls))
+  if (CheckCountedByAttrOnField(S, FD, CountExpr, Decls, CountInBytes, OrNull))
     return;
 
-  QualType CAT =
-      S.BuildCountAttributedArrayOrPointerType(FD->getType(), CountExpr);
+  QualType CAT = S.BuildCountAttributedArrayOrPointerType(
+      FD->getType(), CountExpr, CountInBytes, OrNull);
   FD->setType(CAT);
 }
 
@@ -9502,6 +9537,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     break;
 
   case ParsedAttr::AT_CountedBy:
+  case ParsedAttr::AT_CountedByOrNull:
+  case ParsedAttr::AT_SizedBy:
+  case ParsedAttr::AT_SizedByOrNull:
     handleCountedByAttrField(S, D, AL);
     break;
 

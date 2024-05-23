@@ -11432,7 +11432,9 @@ public:
                            SourceLocation AttrLoc);
 
   QualType BuildCountAttributedArrayOrPointerType(QualType WrappedTy,
-                                                  Expr *CountExpr);
+                                                  Expr *CountExpr,
+                                                  bool CountInBytes,
+                                                  bool OrNull);
 
   QualType BuildAddressSpaceAttr(QualType &T, LangAS ASIdx, Expr *AddrSpace,
                                  SourceLocation AttrLoc);
