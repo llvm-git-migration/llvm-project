@@ -1145,13 +1145,15 @@ void DeclPrinter::VisitLinkageSpecDecl(LinkageSpecDecl *D) {
     l = "C++";
   }
 
+  bool HasMoreThanOneDecl =
+      *D->decls_begin() && D->decls_begin()->getNextDeclInContext();
   Out << "extern \"" << l << "\" ";
-  if (D->hasBraces()) {
+  if (D->hasBraces() || HasMoreThanOneDecl) {
     Out << "{\n";
     VisitDeclContext(D);
     Indent() << "}";
   } else
-    Visit(*D->decls_begin());
+    VisitDeclContext(D);
 }
 
 void DeclPrinter::printTemplateParameters(const TemplateParameterList *Params,
