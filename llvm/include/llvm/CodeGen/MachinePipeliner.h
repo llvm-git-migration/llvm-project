@@ -294,6 +294,8 @@ public:
 
   static bool classof(const ScheduleDAGInstrs *DAG) { return true; }
 
+  bool mayOverlapInLaterIter(const MachineInstr *MIA, const MachineInstr *MIB);
+
 private:
   void addLoopCarriedDependences(AAResults *AA);
   void updatePhiDependences();
@@ -313,7 +315,7 @@ private:
   void computeNodeOrder(NodeSetType &NodeSets);
   void checkValidNodeOrder(const NodeSetType &Circuits) const;
   bool schedulePipeline(SMSchedule &Schedule);
-  bool computeDelta(MachineInstr &MI, unsigned &Delta) const;
+  bool computeDelta(const MachineInstr &MI, int &Delta) const;
   MachineInstr *findDefInLoop(Register Reg);
   bool canUseLastOffsetValue(MachineInstr *MI, unsigned &BasePos,
                              unsigned &OffsetPos, unsigned &NewBase,
