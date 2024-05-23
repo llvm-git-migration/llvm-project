@@ -633,7 +633,7 @@ static void printExplicitSpecifier(ExplicitSpecifier ES, llvm::raw_ostream &Out,
   Out << Proto;
 }
 
-static void MaybePrintTagKeywordIfSupressingScopes(PrintingPolicy &Policy,
+static void maybePrintTagKeywordIfSupressingScopes(PrintingPolicy &Policy,
                                                    QualType T,
                                                    llvm::raw_ostream &Out) {
   StringRef prefix = T->isClassType()       ? "class "
@@ -641,6 +641,22 @@ static void MaybePrintTagKeywordIfSupressingScopes(PrintingPolicy &Policy,
                      : T->isUnionType()     ? "union "
                                             : "";
   Out << prefix;
+}
+
+/// Return the language of the linkage spec of `D`, if applicable.
+///
+/// \Return - "C" if `D` has been declared with unbraced `extern "C"`
+///         - "C++" if `D` has been declared with unbraced `extern "C++"`
+///         - nullptr in any other case
+static const char *tryGetUnbracedLinkageLanguage(const Decl *D) {
+  const auto *SD = dyn_cast<LinkageSpecDecl>(D->getDeclContext());
+  if (!SD) return nullptr;
+  if (SD->hasBraces()) return nullptr;
+  if (SD->getLanguage() == LinkageSpecLanguageIDs::C)
+    return "C";
+  assert(SD->getLanguage() == LinkageSpecLanguageIDs::CXX &&
+         "unknown language in linkage specification");
+  return "C++";
 }
 
 void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
@@ -661,7 +677,12 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
   CXXConstructorDecl *CDecl = dyn_cast<CXXConstructorDecl>(D);
   CXXConversionDecl *ConversionDecl = dyn_cast<CXXConversionDecl>(D);
   CXXDeductionGuideDecl *GuideDecl = dyn_cast<CXXDeductionGuideDecl>(D);
+
   if (!Policy.SuppressSpecifiers) {
+    if (const char *lang = tryGetUnbracedLinkageLanguage(D)) {
+      assert(D->getStorageClass() == SC_None); // the "extern" specifier is implicit
+      Out << "extern \"" << lang << "\" ";
+    }
     switch (D->getStorageClass()) {
     case SC_None: break;
     case SC_Extern: Out << "extern "; break;
@@ -807,7 +828,7 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
       }
       if (!Policy.SuppressTagKeyword && Policy.SuppressScope &&
           !Policy.SuppressUnwrittenScope)
-        MaybePrintTagKeywordIfSupressingScopes(Policy, AFT->getReturnType(),
+        maybePrintTagKeywordIfSupressingScopes(Policy, AFT->getReturnType(),
                                                Out);
       AFT->getReturnType().print(Out, Policy, Proto);
       Proto.clear();
@@ -932,6 +953,10 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
     : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
 
   if (!Policy.SuppressSpecifiers) {
+    if (const char *lang = tryGetUnbracedLinkageLanguage(D)) {
+      assert(D->getStorageClass() == SC_None); // the "extern" specifier is implicit
+      Out << "extern \"" << lang << "\" ";
+    }
     StorageClass SC = D->getStorageClass();
     if (SC != SC_None)
       Out << VarDecl::getStorageClassSpecifierString(SC) << " ";
@@ -961,7 +986,7 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
 
   if (!Policy.SuppressTagKeyword && Policy.SuppressScope &&
       !Policy.SuppressUnwrittenScope)
-    MaybePrintTagKeywordIfSupressingScopes(Policy, T, Out);
+    maybePrintTagKeywordIfSupressingScopes(Policy, T, Out);
 
   printDeclType(T, (isa<ParmVarDecl>(D) && Policy.CleanUglifiedParameters &&
                     D->getIdentifier())
@@ -1064,6 +1089,8 @@ void DeclPrinter::VisitNamespaceAliasDecl(NamespaceAliasDecl *D) {
 
 void DeclPrinter::VisitEmptyDecl(EmptyDecl *D) {
   prettyPrintAttributes(D);
+  if (const char *lang = tryGetUnbracedLinkageLanguage(D))
+      Out << "extern \"" << lang << "\";";
 }
 
 void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
@@ -1145,13 +1172,12 @@ void DeclPrinter::VisitLinkageSpecDecl(LinkageSpecDecl *D) {
     l = "C++";
   }
 
-  Out << "extern \"" << l << "\" ";
   if (D->hasBraces()) {
-    Out << "{\n";
+    Out << "extern \"" << l << "\" {\n";
     VisitDeclContext(D);
     Indent() << "}";
   } else
-    Visit(*D->decls_begin());
+    VisitDeclContext(D);
 }
 
 void DeclPrinter::printTemplateParameters(const TemplateParameterList *Params,
