@@ -351,6 +351,16 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     MaxPeelCount =
         std::min((unsigned)SC->getAPInt().getLimitedValue() - 1, MaxPeelCount);
 
+  auto PeelWhilePredicateIsKnown =
+      [&](unsigned &PeelCount, const SCEV *&IterVal, const SCEV *BoundSCEV,
+          const SCEV *Step, ICmpInst::Predicate Pred) {
+        while (PeelCount < MaxPeelCount &&
+               SE.isKnownPredicate(Pred, IterVal, BoundSCEV)) {
+          IterVal = SE.getAddExpr(IterVal, Step);
+          ++PeelCount;
+        }
+      };
+
   const unsigned MaxDepth = 4;
   std::function<void(Value *, unsigned)> ComputePeelCount =
       [&](Value *Condition, unsigned Depth) -> void {
@@ -411,21 +421,7 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
       Pred = ICmpInst::getInversePredicate(Pred);
 
     const SCEV *Step = LeftAR->getStepRecurrence(SE);
-    const SCEV *NextIterVal = SE.getAddExpr(IterVal, Step);
-    auto PeelOneMoreIteration = [&IterVal, &NextIterVal, &SE, Step,
-                                 &NewPeelCount]() {
-      IterVal = NextIterVal;
-      NextIterVal = SE.getAddExpr(IterVal, Step);
-      NewPeelCount++;
-    };
-
-    auto CanPeelOneMoreIteration = [&NewPeelCount, &MaxPeelCount]() {
-      return NewPeelCount < MaxPeelCount;
-    };
-
-    while (CanPeelOneMoreIteration() &&
-           SE.isKnownPredicate(Pred, IterVal, RightSCEV))
-      PeelOneMoreIteration();
+    PeelWhilePredicateIsKnown(NewPeelCount, IterVal, RightSCEV, Step, Pred);
 
     // With *that* peel count, does the predicate !Pred become known in the
     // first iteration of the loop body after peeling?
@@ -436,14 +432,15 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     // However, for equality comparisons, that isn't always sufficient to
     // eliminate the comparsion in loop body, we may need to peel one more
     // iteration. See if that makes !Pred become unknown again.
+    const SCEV *NextIterVal = SE.getAddExpr(IterVal, Step);
     if (ICmpInst::isEquality(Pred) &&
         !SE.isKnownPredicate(ICmpInst::getInversePredicate(Pred), NextIterVal,
                              RightSCEV) &&
         !SE.isKnownPredicate(Pred, IterVal, RightSCEV) &&
         SE.isKnownPredicate(Pred, NextIterVal, RightSCEV)) {
-      if (!CanPeelOneMoreIteration())
+      if (NewPeelCount >= MaxPeelCount)
         return; // Need to peel one more iteration, but can't. Give up.
-      PeelOneMoreIteration(); // Great!
+      ++NewPeelCount; // Great!
     }
 
     DesiredPeelCount = std::max(DesiredPeelCount, NewPeelCount);
@@ -489,11 +486,7 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
       return;
     const SCEV *IterVal = AddRec->evaluateAtIteration(
         SE.getConstant(AddRec->getType(), DesiredPeelCount), SE);
-    while (DesiredPeelCount < MaxPeelCount &&
-           SE.isKnownPredicate(Pred, IterVal, BoundSCEV)) {
-      IterVal = SE.getAddExpr(IterVal, Step);
-      ++DesiredPeelCount;
-    }
+    PeelWhilePredicateIsKnown(DesiredPeelCount, IterVal, BoundSCEV, Step, Pred);
   };
 
   for (BasicBlock *BB : L.blocks()) {
