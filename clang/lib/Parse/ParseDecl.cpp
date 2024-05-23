@@ -662,7 +662,10 @@ void Parser::ParseGNUAttributeArgs(
     ParseAttributeWithTypeArg(*AttrName, AttrNameLoc, Attrs, ScopeName,
                               ScopeLoc, Form);
     return;
-  } else if (AttrKind == ParsedAttr::AT_CountedBy) {
+  } else if (AttrKind == ParsedAttr::AT_CountedBy ||
+             AttrKind == ParsedAttr::AT_CountedByOrNull ||
+             AttrKind == ParsedAttr::AT_SizedBy ||
+             AttrKind == ParsedAttr::AT_SizedByOrNull) {
     ParseBoundsAttribute(*AttrName, AttrNameLoc, Attrs, ScopeName, ScopeLoc,
                          Form);
     return;
@@ -4806,7 +4809,7 @@ static void DiagnoseCountAttributedTypeInUnnamedAnon(ParsingDeclSpec &DS,
       if (!RD->containsDecl(DD.getDecl())) {
         P.Diag(VD->getBeginLoc(),
                diag::err_flexible_array_count_not_in_same_struct)
-            << DD.getDecl();
+            << DD.getDecl() << CAT->getKind();
         P.Diag(DD.getDecl()->getBeginLoc(),
                diag::note_flexible_array_counted_by_attr_field)
             << DD.getDecl();
@@ -4964,6 +4967,9 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA,
                                 /*SyntaxUsed=*/ParsedForm.getSyntax());
   switch (AttrKind) {
   case ParsedAttr::Kind::AT_CountedBy:
+  case ParsedAttr::Kind::AT_CountedByOrNull:
+  case ParsedAttr::Kind::AT_SizedBy:
+  case ParsedAttr::Kind::AT_SizedByOrNull:
     ParseBoundsAttribute(LA.AttrName, LA.AttrNameLoc, Attrs,
                          /*ScopeName=*/ScopeName, SourceLocation(),
                          /*Form=*/ParsedForm);
