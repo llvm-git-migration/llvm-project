@@ -4956,7 +4956,7 @@ void Parser::ParseLexedCAttributeList(LateParsedAttrList &LAs, bool EnterScope,
   assert(Lang == Language::C || Lang == Language::OpenCL);
 #endif
   for (auto *LA : LAs) {
-    ParseLexedCAttribute(*LA, OutAttrs);
+    ParseLexedCAttribute(*LA, EnterScope, OutAttrs);
     delete LA;
   }
   LAs.clear();
@@ -4967,7 +4967,7 @@ void Parser::ParseLexedCAttributeList(LateParsedAttrList &LAs, bool EnterScope,
 /// for each LateParsedAttribute. We consume the saved tokens and
 /// create an attribute with the arguments filled in. We add this
 /// to the Attribute list for the decl.
-void Parser::ParseLexedCAttribute(LateParsedAttribute &LA,
+void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
                                   ParsedAttributes *OutAttrs) {
   // Create a fake EOF so that attribute parsing won't go off the end of the
   // attribute.
@@ -4986,6 +4986,9 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA,
   // Drop the current token and bring the first cached one. It's the same token
   // as when we entered this function.
   ConsumeAnyToken(/*ConsumeCodeCompletionTok=*/true);
+
+  // TODO: Use `EnterScope`
+  (void)EnterScope;
 
   ParsedAttributes Attrs(AttrFactory);
 
