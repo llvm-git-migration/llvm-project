@@ -220,6 +220,13 @@ def idempotent_prop : GICombineRule<
    (match (idempotent_prop_frags $dst, $src)),
    (apply (GIReplaceReg $dst, $src))>;
 
+// Convert freeze(Op(Op0, NonPoisonOps...)) to Op(freeze(Op0), NonPoisonOps...)
+// when Op0 is not guaranteed non-poison
+def push_freeze_to_prevent_poison_from_propagating : GICombineRule<
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (G_FREEZE $dst, $src):$root,
+         [{ return !isGuaranteedNotToBePoison(${src}.getReg(), MRI) && Helper.matchFreezeOfSingleMaybePoisonOperand(*${root}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${root}, ${matchinfo}); }])>;
 
 def extending_loads : GICombineRule<
   (defs root:$root, extending_load_matchdata:$matchinfo),
@@ -338,7 +345,7 @@ def bitreverse_shl : GICombineRule<
 
 // Combine bitreverse(lshr (bitreverse x), y)) -> (shl x, y)
 def bitreverse_lshr : GICombineRule<
-  (defs root:$d, build_fn_matchinfo:$matchinfo),
+  (defs root:$d),
   (match (G_BITREVERSE $rev, $val),
          (G_LSHR $src, $rev, $amt):$mi,
          (G_BITREVERSE $d, $src),
@@ -1307,6 +1314,13 @@ def select_to_minmax: GICombineRule<
          [{ return Helper.matchSimplifySelectToMinMax(*${root}, ${info}); }]),
   (apply [{ Helper.applyBuildFn(*${root}, ${info}); }])>;
 
+def select_to_iminmax: GICombineRule<
+  (defs root:$root, build_fn_matchinfo:$info),
+  (match (G_ICMP $tst, $tst1, $a, $b),
+         (G_SELECT $root, $tst, $x, $y),
+         [{ return Helper.matchSelectIMinMax(${root}, ${info}); }]),
+  (apply [{ Helper.applyBuildFnMO(${root}, ${info}); }])>;
+
 def match_selects : GICombineRule<
   (defs root:$root, build_fn_matchinfo:$matchinfo),
   (match (wip_match_opcode G_SELECT):$root,
@@ -1352,7 +1366,7 @@ def match_extract_of_element : GICombineRule<
   (apply [{ Helper.applyBuildFn(*${root}, ${matchinfo}); }])>;
 
 def extract_vector_element_not_const : GICombineRule<
-   (defs root:$root, build_fn_matchinfo:$matchinfo),
+   (defs root:$root),
    (match (G_INSERT_VECTOR_ELT $src, $x, $value, $idx),
           (G_EXTRACT_VECTOR_ELT $root, $src, $idx)),
    (apply (GIReplaceReg $root, $value))>;
@@ -1567,20 +1581,20 @@ def combine_shuffle_concat : GICombineRule<
   (apply [{ Helper.applyCombineShuffleConcat(*${root}, ${matchinfo}); }])>;
 
 def insert_vector_element_idx_undef : GICombineRule<
-   (defs root:$root, build_fn_matchinfo:$matchinfo),
+   (defs root:$root),
    (match (G_IMPLICIT_DEF $idx),
           (G_INSERT_VECTOR_ELT $root, $src, $elt, $idx)),
    (apply (G_IMPLICIT_DEF $root))>;
 
 def insert_vector_element_elt_undef : GICombineRule<
-   (defs root:$root, build_fn_matchinfo:$matchinfo),
+   (defs root:$root),
    (match (G_IMPLICIT_DEF $elt),
           (G_INSERT_VECTOR_ELT $root, $src, $elt, $idx),
           [{ return isGuaranteedNotToBePoison(${src}.getReg(), MRI); }]),
    (apply (GIReplaceReg $root, $src))>;
 
 def insert_vector_element_extract_vector_element : GICombineRule<
-   (defs root:$root, build_fn_matchinfo:$matchinfo),
+   (defs root:$root),
    (match (G_EXTRACT_VECTOR_ELT $elt, $src, $idx),
           (G_INSERT_VECTOR_ELT $root, $src, $elt, $idx)),
    (apply (GIReplaceReg $root, $src))>;
@@ -1670,7 +1684,7 @@ def phi_combines : GICombineGroup<[extend_through_phis]>;
 def bitreverse_shift : GICombineGroup<[bitreverse_shl, bitreverse_lshr]>;
 
 def select_combines : GICombineGroup<[select_undef_cmp, select_constant_cmp,
-                                      match_selects]>;
+                                      select_to_iminmax, match_selects]>;
 
 def trivial_combines : GICombineGroup<[copy_prop, mul_to_shl, add_p2i_to_ptradd,
                                        mul_by_neg_one, idempotent_prop]>;
@@ -1706,7 +1720,8 @@ def all_combines : GICombineGroup<[trivial_combines, vector_ops_combines,
     sub_add_reg, select_to_minmax, redundant_binop_in_equality,
     fsub_to_fneg, commute_constant_to_rhs, match_ands, match_ors,
     combine_concat_vector, double_icmp_zero_and_or_combine, match_addos,
-    sext_trunc, zext_trunc, combine_shuffle_concat]>;
+    sext_trunc, zext_trunc, combine_shuffle_concat,
+    push_freeze_to_prevent_poison_from_propagating]>;
 
 // A combine group used to for prelegalizer combiners at -O0. The combines in
 // this group have been selected based on experiments to balance code size and
