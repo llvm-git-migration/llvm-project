@@ -4995,20 +4995,8 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA,
          "late field attribute expects to have at most one declaration.");
 
   // Dispatch based on the attribute and parse it
-  const AttributeCommonInfo::Form ParsedForm = ParsedAttr::Form::GNU();
-  IdentifierInfo *ScopeName = nullptr;
-  const ParsedAttr::Kind AttrKind =
-      ParsedAttr::getParsedKind(&LA.AttrName, /*ScopeName=*/ScopeName,
-                                /*SyntaxUsed=*/ParsedForm.getSyntax());
-  switch (AttrKind) {
-  case ParsedAttr::Kind::AT_CountedBy:
-    ParseBoundsAttribute(LA.AttrName, LA.AttrNameLoc, Attrs,
-                         /*ScopeName=*/ScopeName, SourceLocation(),
-                         /*Form=*/ParsedForm);
-    break;
-  default:
-    llvm_unreachable("Unhandled late parsed attribute");
-  }
+  ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, nullptr, nullptr,
+                        SourceLocation(), ParsedAttr::Form::GNU(), nullptr);
 
   for (auto *D : LA.Decls)
     Actions.ActOnFinishDelayedAttribute(getCurScope(), D, Attrs);
