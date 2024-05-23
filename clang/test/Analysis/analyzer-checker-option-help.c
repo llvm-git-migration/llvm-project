@@ -35,26 +35,26 @@
 //
 // CHECK-STABLE:   cplusplus.Move:WarnOn
 // CHECK-STABLE-SAME:          (string) In non-aggressive mode, only warn
-// CHECK-STABLLE:              on use-after-move of local variables (or
-// CHECK-STABLLE:              local rvalue references) and of STL objects.
-// CHECK-STABLLE:              The former is possible because local variables
-// CHECK-STABLLE:              (or local rvalue references) are not tempting
-// CHECK-STABLLE:              their user to re-use the storage. The latter
-// CHECK-STABLLE:              is possible because STL objects are known
-// CHECK-STABLLE:              to end up in a valid but unspecified state
-// CHECK-STABLLE:              after the move and their state-reset methods
-// CHECK-STABLLE:              are also known, which allows us to predict
-// CHECK-STABLLE:              precisely when use-after-move is invalid.
-// CHECK-STABLLE:              Some STL objects are known to conform to
-// CHECK-STABLLE:              additional contracts after move, so they
-// CHECK-STABLLE:              are not tracked. However, smart pointers
-// CHECK-STABLLE:              specifically are tracked because we can
-// CHECK-STABLLE:              perform extra checking over them. In aggressive
-// CHECK-STABLLE:              mode, warn on any use-after-move because
-// CHECK-STABLLE:              the user has intentionally asked us to completely
-// CHECK-STABLLE:              eliminate use-after-move in his code. Values:
-// CHECK-STABLLE:              "KnownsOnly", "KnownsAndLocals", "All".
-// CHECK-STABLLE:              (default: KnownsAndLocals)
+// CHECK-STABLE:              on use-after-move of local variables (or
+// CHECK-STABLE:              local rvalue references) and of STL objects.
+// CHECK-STABLE:              The former is possible because local variables
+// CHECK-STABLE:              (or local rvalue references) are not tempting
+// CHECK-STABLE:              their user to re-use the storage. The latter
+// CHECK-STABLE:              is possible because STL objects are known
+// CHECK-STABLE:              to end up in a valid but unspecified state
+// CHECK-STABLE:              after the move and their state-reset methods
+// CHECK-STABLE:              are also known, which allows us to predict
+// CHECK-STABLE:              precisely when use-after-move is invalid.
+// CHECK-STABLE:              Some STL objects are known to conform to
+// CHECK-STABLE:              additional contracts after move, so they
+// CHECK-STABLE:              are not tracked. However, smart pointers
+// CHECK-STABLE:              specifically are tracked because we can
+// CHECK-STABLE:              perform extra checking over them. In aggressive
+// CHECK-STABLE:              mode, warn on any use-after-move because
+// CHECK-STABLE:              the user has intentionally asked us to completely
+// CHECK-STABLE:              eliminate use-after-move in his code. Values:
+// CHECK-STABLE:              "KnownsOnly", "KnownsAndLocals", "All".
+// CHECK-STABLE:              (default: KnownsAndLocals)
 
 // CHECK-STABLE-NOT: debug.AnalysisOrder:*
 // CHECK-DEVELOPER:  debug.AnalysisOrder:*

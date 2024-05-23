@@ -382,7 +382,7 @@ void foo18() {
 // CHECK-NEXT: [[A:%.*a.*]] = getelementptr inbounds [[STRUCT_G]], ptr [[G]], i32 0, i32 0
 // CHECK-NEXT: store i32 2, ptr [[A]], align 4
 // CHECK-NEXT: [[F:%.*f.*]] = getelementptr inbounds [[STRUCT_G]], ptr [[G]], i32 0, i32 1
-// CHECk-NEXT: call void @{{.*F.*}}(ptr noundef nonnull align 1 dereferenceable(1)) [[F]], ie32 noundef 1)
+// CHECK-NEXT: call void @_ZN1FC1Ei(ptr noundef nonnull align 1 dereferenceable(1) [[F]], i32 noundef 1)
 // CHECK: ret void
 void foo19() {
   G g(2);
