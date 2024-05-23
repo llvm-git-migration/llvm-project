@@ -135,6 +135,17 @@ public:
     EnsureDest(E->getType());
 
     if (llvm::Value *Result = ConstantEmitter(CGF).tryEmitConstantExpr(E)) {
+      // An empty record can overlap other data (if declared with
+      // no_unique_address); omit the store for such types - as there is no
+      // actual data to store.
+      if (CGF.getLangOpts().CPlusPlus) {
+        if (const RecordType *RT = E->getType()->getAs<RecordType>()) {
+          CXXRecordDecl *Record = cast<CXXRecordDecl>(RT->getDecl());
+          if (Record->isEmpty())
+            return;
+        }
+      }
+
       Address StoreDest = Dest.getAddress();
       // The emitted value is guaranteed to have the same size as the
       // destination but can have a different type. Just do a bitcast in this
