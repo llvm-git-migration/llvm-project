@@ -1742,6 +1742,9 @@ static Value *generateNewInstTree(ArrayRef<InstLane> Item, FixedVectorType *Ty,
   if (auto *BI = dyn_cast<BinaryOperator>(I))
     return Builder.CreateBinOp((Instruction::BinaryOps)BI->getOpcode(), Ops[0],
                                Ops[1]);
+  if (auto CI = dyn_cast<CastInst>(I))
+    return Builder.CreateCast((Instruction::CastOps)CI->getOpcode(), Ops[0],
+                              DstTy);
   if (II)
     return Builder.CreateIntrinsic(DstTy, II->getIntrinsicID(), Ops);
   assert(isa<UnaryInstruction>(I) && "Unexpected instruction type in Generate");
@@ -1753,8 +1756,7 @@ static Value *generateNewInstTree(ArrayRef<InstLane> Item, FixedVectorType *Ty,
 // do so.
 bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
   auto *Ty = dyn_cast<FixedVectorType>(I.getType());
-  if (!Ty || !isa<Instruction>(I.getOperand(0)) ||
-      !isa<Instruction>(I.getOperand(1)))
+  if (!Ty)
     return false;
 
   SmallVector<InstLane> Start(Ty->getNumElements());
@@ -1825,7 +1827,7 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
         !cast<BinaryOperator>(FrontV)->isIntDivRem()) {
       Worklist.push_back(generateInstLaneVectorFromOperand(Item, 0));
       Worklist.push_back(generateInstLaneVectorFromOperand(Item, 1));
-    } else if (isa<UnaryOperator>(FrontV)) {
+    } else if (isa<UnaryOperator, TruncInst, ZExtInst, SExtInst>(FrontV)) {
       Worklist.push_back(generateInstLaneVectorFromOperand(Item, 0));
     } else if (auto *II = dyn_cast<IntrinsicInst>(FrontV);
                II && isTriviallyVectorizable(II->getIntrinsicID())) {
