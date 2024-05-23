@@ -553,7 +553,7 @@
 // CHECK-LSAN-COV-LINUX: "{{(.*[^-.0-9A-Z_a-z])?}}ld{{(.exe)?}}"
 // CHECK-LSAN-COV-LINUX-NOT: "-lc"
 // CHECK-LSAN-COV-LINUX-NOT: libclang_rt.ubsan
-// CHECK-LSAV-COV-LINUX: libclang_rt.lsan-x86_64.a"
+// CHECK-LSAN-COV-LINUX: libclang_rt.lsan-x86_64.a"
 // CHECK-LSAN-COV-LINUX-NOT: libclang_rt.ubsan
 // CHECK-LSAN-COV-LINUX: "-lpthread"
 // CHECK-LSAN-COV-LINUX: "-ldl"
