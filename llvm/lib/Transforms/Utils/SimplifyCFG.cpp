@@ -6171,6 +6171,286 @@ static bool trySwitchToSelect(SwitchInst *SI, IRBuilder<> &Builder,
   return true;
 }
 
+// The first field contains the value that the switch produces when a certain
+// case group is selected, and the second field is a vector containing the
+// cases composing the case group.
+using SwitchCaseResultVectorTy2 = SmallVector<std::pair<Value *, SmallVector<Value *, 4>>, 2>;
+
+// The first field contains the phi node that generates a result of the switch
+// and the second field contains the value generated for a certain case in the
+// switch for that PHI.
+using SwitchCaseResultsTy2 = SmallVector<std::pair<PHINode *, Value *>, 4>;
+
+using PHINodeToCaseEntryValueMapTy = std::map<PHINode *, SmallVector<std::pair<ConstantInt *, Value *>, 4>>;
+
+// Helper function that will return true if there is Default Value for each PHI
+bool allPHINodesHaveDefaultValue(const SwitchCaseResultsTy2& Results) {  
+    for (const auto& Pair : Results)
+        if (Pair.second == nullptr)
+            return false;  
+    return true;  
+}
+
+//Helper function that will return true if there is no space for
+// optimization
+bool isUnableToOptimize(PHINodeToCaseEntryValueMapTy &Map) {
+  for (const auto &Entry : Map) {
+    for (const auto &ValuePair : Entry.second) {
+      if (isa<Constant>(ValuePair.second))
+        return false;
+    }
+  }
+  return true;
+}
+
+static bool getCaseResultsWithoutConstants(SwitchInst *SI, BasicBlock *CaseDest, BasicBlock **CommonDest, SmallVectorImpl<std::pair<PHINode *, Value *>> &Res, bool IsDefault = false) {
+
+  BasicBlock *Pred = SI->getParent();
+  // Pred ->dump();
+  int NumOfInsts = 0;
+
+  /// Check if there is only one instruction per block, except from default block
+  if (!IsDefault) {
+
+    for (Instruction &I : CaseDest->instructionsWithoutDebug(false)) {
+      
+      if (I.isTerminator()) {
+        // If the terminator is a simple branch, continue to the next block.
+        if (I.getNumSuccessors() != 1 || I.isSpecialTerminator())
+          return false;
+
+        Pred = CaseDest;
+        CaseDest = I.getSuccessor(0);
+      } else {
+        // if there is more then one instruction in the block, we can not process that case
+        if (++NumOfInsts > 1)
+          return false;
+        
+        for (auto &Use : I.uses()) {
+          User *User = Use.getUser();
+
+          if (Instruction *I = dyn_cast<Instruction>(User))
+            if (I->getParent() == CaseDest)
+              continue;
+
+          if (PHINode *Phi = dyn_cast<PHINode>(User))
+            if (Phi->getIncomingBlock(Use) == CaseDest)
+              continue;
+            
+          return false;
+        }
+      }
+    }
+  }
+
+  // If we did not have a CommonDest before, use the current one.
+  if (!*CommonDest)
+    *CommonDest = CaseDest;
+  // If the destination isn't the common one, abort.
+  if (CaseDest != *CommonDest)
+    return false;
+
+  // Get the values for this case from phi nodes in the destination block.
+  for (PHINode &PHI : (*CommonDest)->phis()) {
+    int Idx = PHI.getBasicBlockIndex(Pred);
+    if (Idx == -1)
+      continue;
+
+    Value *Val = PHI.getIncomingValue(Idx);
+
+    if (!Val)
+      return false;
+
+    Res.push_back(std::make_pair(&PHI, Val));
+  }
+  return !Res.empty();
+}
+
+// Helper function that fills in map, that for each PHI Node has pair CaseValue-ReturnValue
+static void mapCaseToResultWithMap(SwitchCaseResultsTy2 &Results, PHINodeToCaseEntryValueMapTy &Map, ConstantInt *CaseVal, SwitchCaseResultVectorTy2 &UniqueResults, Value *Result) {
+  // fill in PHINodeToCaseEntryValueMapTy &Map
+  for (const auto &Pair : Results) {
+    PHINode *PHI = Pair.first;
+    Value *ReturnValue = Pair.second;
+    Map[PHI].emplace_back(std::make_pair(CaseVal, ReturnValue));
+  }
+
+  // fill in SwitchCaseResultVectorTy2 &UniqueResults
+  for (auto &I : UniqueResults) {
+    if (I.first == Result) {
+      I.second.push_back(CaseVal);
+      return;
+    }
+  }
+  UniqueResults.push_back({Result, SmallVector<Value *, 4>{1, CaseVal}});  
+
+}
+
+static bool initializeUniqueCasesWithoutConstants(SwitchInst *SI, BasicBlock *&CommonDest, PHINodeToCaseEntryValueMapTy &Map, SwitchCaseResultVectorTy2 &UniqueResults, PHINode *&PHI, SwitchCaseResultsTy2 &DefaultResults) {
+
+  for (const auto &Case : SI->cases()) {
+    SwitchCaseResultsTy2 Results;
+    ConstantInt *CaseVal = Case.getCaseValue();
+    if(!getCaseResultsWithoutConstants(SI, Case.getCaseSuccessor(), &CommonDest, Results))
+      return false;
+    
+    mapCaseToResultWithMap(Results, Map, CaseVal, UniqueResults,Results.begin()->second);
+
+     // Check the PHI consistency.
+    if (!PHI)
+      PHI = Results[0].first;
+    else if (PHI != Results[0].first)
+      return false;
+  }
+    
+    BasicBlock *DefaultDest = SI->getDefaultDest();
+
+  if (!getCaseResultsWithoutConstants(SI, DefaultDest, &CommonDest, DefaultResults, true))
+    return false;
+
+  if (!allPHINodesHaveDefaultValue(DefaultResults) && !isa<UnreachableInst>(DefaultDest->getFirstNonPHIOrDbg()))
+    return false;
+ 
+  return true;
+}
+
+Value *createSelectChain(Value *Condition, Value *DefaultResult,
+                         const SwitchCaseResultVectorTy2 &ResultVector,
+                         unsigned StartIndex, PHINode *PHI, SwitchInst *SI,
+                         IRBuilder<> &Builder, DomTreeUpdater *DTU) {
+
+  if (StartIndex >= ResultVector.size() && DefaultResult)
+    return DefaultResult;
+
+  if (StartIndex >= ResultVector.size() && !DefaultResult)
+    return nullptr;
+
+  Value *CurrentCase = ResultVector[StartIndex].second[0];
+  // check if the ReturnValue is a constant
+  if (Constant *C = dyn_cast<Constant>(ResultVector[StartIndex].first)) {
+    Value *ValueCompare =
+        Builder.CreateICmpEQ(Condition, CurrentCase, "switch.selectcmp");
+    Value *NextSelect =
+        createSelectChain(Condition, DefaultResult, ResultVector,
+                          StartIndex + 1, PHI, SI, Builder, DTU);
+    Value *SelectedValue =
+        Builder.CreateSelect(ValueCompare, ResultVector[StartIndex].first,
+                             NextSelect, "switch.select");
+
+    if (DTU) {
+      DTU->applyUpdates(
+          {{DominatorTree::Delete, SI->getParent(), SI->getDefaultDest()}});
+    }
+
+    return SelectedValue;
+
+  }
+  // Move to the next case if CurrentCase is not a constant
+  return createSelectChain(Condition, DefaultResult, ResultVector,
+                          StartIndex + 1, PHI, SI, Builder, DTU);
+}
+
+static Value *foldSwitchToSelect2(const SwitchCaseResultVectorTy2 &ResultVector,
+                                  Value *DefaultResult, Value *Condition,
+                                  PHINode *&PHI, SwitchInst *SI,
+                                  IRBuilder<> &Builder, DomTreeUpdater *DTU) {
+  if (ResultVector.size() > 2) {
+    Value *FinalSelect = createSelectChain(
+        Condition, DefaultResult, ResultVector, 0, PHI, SI, Builder, DTU);
+
+    if (FinalSelect)
+      return FinalSelect;
+  }
+
+  return nullptr;
+}
+
+/// Helper function that will try to convert switch to cmp/select sequence
+static bool convertSwitchToCmpAndSelect(SwitchInst *SI, IRBuilder<> &Builder,
+                                        DomTreeUpdater *DTU,
+                                        const DataLayout &DL,
+                                        const TargetTransformInfo &TTI) {
+
+  BasicBlock *CommonDest = nullptr;
+  PHINodeToCaseEntryValueMapTy Map;
+  SwitchCaseResultVectorTy2 UniqueResults;
+  PHINode *PHI = nullptr;
+  SwitchCaseResultsTy2 DefaultResults;
+  
+  if (!initializeUniqueCasesWithoutConstants(SI, CommonDest, Map, UniqueResults, PHI, DefaultResults))
+    return false;
+
+  if (isUnableToOptimize(Map))
+    return false;
+
+  // for each PHI, call function foldSwitchToSelect
+  for (const auto &Entry : Map) {
+    PHI = Entry.first;
+    SwitchCaseResultVectorTy2 ResultVector;
+
+    // For each PHi fill in ResultVector
+    for (const auto &ValuePair : Entry.second) {
+      ConstantInt *CaseVal = ValuePair.first;
+      Value *ReturnValue = ValuePair.second;
+      ResultVector.push_back(
+          std::make_pair(ReturnValue, SmallVector<Value *, 4>(1, CaseVal)));
+    }
+
+    // For each PHI we need Default Result
+    Value *DefaultResult = nullptr;
+    for (const auto &ValuePair : DefaultResults) {
+      if (PHI == ValuePair.first)
+        DefaultResult = ValuePair.second;
+    }
+
+    assert(PHI != nullptr && "PHI for value select not found");
+    assert(DefaultResult != nullptr && "Default value for switch not found");
+
+    Value *SelectValue = foldSwitchToSelect2(ResultVector, DefaultResult, SI->getCondition(), PHI, SI, Builder,DTU);
+
+    if (!SelectValue)
+      return false;
+
+    int Index = PHI->getBasicBlockIndex(SI->getParent());
+    if (Index != -1) {
+      PHI->setIncomingValue(Index, SelectValue);
+    }
+
+    for (auto Case = SI->case_begin(); Case != SI->case_end(); ++Case) {
+      int Index = PHI->getBasicBlockIndex(Case->getCaseSuccessor());
+      if (Index != -1) {
+        Value *Val = PHI->getIncomingValue(Index);
+        if (isa<Constant>(Val)) {
+          PHI->setIncomingValue(Index, SelectValue);
+        }
+      }
+    }
+  }
+
+  for (auto Case = SI->case_begin(); Case != SI->case_end(); ++Case) {
+    ConstantInt *CaseVal = Case->getCaseValue();
+    bool IsSafeToRemove = true;
+    for (const auto &Entry : Map) {
+      for (const auto &ValuePair : Entry.second) {
+        ConstantInt *constantInt = ValuePair.first;
+        Value *value = ValuePair.second;
+        if (constantInt == CaseVal)
+          if (!isa<Constant>(value)) {
+            IsSafeToRemove = false;
+            break;
+          }
+      }
+    }
+
+    if (IsSafeToRemove) {
+      SI->removeCase(Case);
+      break;
+    }
+
+  }
+  return true;
+}
+
 namespace {
 
 /// This class represents a lookup table that can be used to replace a switch.
@@ -7122,6 +7402,9 @@ bool SimplifyCFGOpt::simplifySwitch(SwitchInst *SI, IRBuilder<> &Builder) {
   // optimisation pipeline.
   if (Options.ConvertSwitchToLookupTable &&
       SwitchToLookupTable(SI, Builder, DTU, DL, TTI))
+    return requestResimplify();
+
+  if (convertSwitchToCmpAndSelect(SI, Builder, DTU, DL, TTI))
     return requestResimplify();
 
   if (simplifySwitchOfPowersOfTwo(SI, Builder, DL, TTI))
