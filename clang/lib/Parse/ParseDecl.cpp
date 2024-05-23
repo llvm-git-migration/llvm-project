@@ -4944,6 +4944,26 @@ void Parser::ParseStructDeclaration(
   }
 }
 
+// TODO: All callers of this function should be moved to
+// `Parser::ParseLexedAttributeList`.
+void Parser::ParseLexedCAttributeList(LateParsedAttrList &LAs, bool EnterScope,
+                                      ParsedAttributes *OutAttrs) {
+  assert(LAs.parseSoon() &&
+         "Attribute list should be marked for immediate parsing.");
+#ifndef NDEBUG
+  auto LangStd = getLangOpts().LangStd;
+  if (LangStd != LangStandard::lang_unspecified) {
+    auto Lang = LangStandard::getLangStandardForKind(LangStd).getLanguage();
+    assert(Lang == Language::C || Lang == Language::OpenCL);
+  }
+#endif
+  for (auto *LA : LAs) {
+    ParseLexedCAttribute(*LA, OutAttrs);
+    delete LA;
+  }
+  LAs.clear();
+}
+
 /// Finish parsing an attribute for which parsing was delayed.
 /// This will be called at the end of parsing a class declaration
 /// for each LateParsedAttribute. We consume the saved tokens and
@@ -5032,7 +5052,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
 
   // `LateAttrParseExperimentalExtOnly=true` requests that only attributes
   // marked with `LateAttrParseExperimentalExt` are late parsed.
-  LateParsedAttrList LateFieldAttrs(/*PSoon=*/false,
+  LateParsedAttrList LateFieldAttrs(/*PSoon=*/true,
                                     /*LateAttrParseExperimentalExtOnly=*/true);
 
   // While we still have something to read, read the declarations in the struct.
@@ -5141,9 +5161,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
   MaybeParseGNUAttributes(attrs, &LateFieldAttrs);
 
   // Late parse field attributes if necessary.
-  assert(!getLangOpts().CPlusPlus);
-  for (auto *LateAttr : LateFieldAttrs)
-    ParseLexedCAttribute(*LateAttr);
+  ParseLexedCAttributeList(LateFieldAttrs, /*EnterScope=*/false);
 
   SmallVector<Decl *, 32> FieldDecls(TagDecl->fields());
 
