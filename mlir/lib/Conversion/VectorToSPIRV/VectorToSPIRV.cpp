@@ -832,7 +832,6 @@ void mlir::populateVectorToSPIRVPatterns(SPIRVTypeConverter &typeConverter,
 
   // Need this until vector.interleave is handled.
   vector::populateVectorInterleaveToShufflePatterns(patterns);
-
 }
 
 void mlir::populateVectorReductionToSPIRVDotProductPatterns(
