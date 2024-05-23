@@ -5032,7 +5032,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
 
   // `LateAttrParseExperimentalExtOnly=true` requests that only attributes
   // marked with `LateAttrParseExperimentalExt` are late parsed.
-  LateParsedAttrList LateFieldAttrs(/*PSoon=*/false,
+  LateParsedAttrList LateFieldAttrs(/*PSoon=*/true,
                                     /*LateAttrParseExperimentalExtOnly=*/true);
 
   // While we still have something to read, read the declarations in the struct.
@@ -5142,8 +5142,8 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
 
   // Late parse field attributes if necessary.
   assert(!getLangOpts().CPlusPlus);
-  for (auto *LateAttr : LateFieldAttrs)
-    ParseLexedCAttribute(*LateAttr);
+  ParseLexedAttributeList(LateFieldAttrs, /*Decl=*/nullptr,
+                          /*EnterScope=*/false, /*OnDefinition=*/false);
 
   SmallVector<Decl *, 32> FieldDecls(TagDecl->fields());
 

@@ -744,7 +744,13 @@ void Parser::ParseLexedAttributeList(LateParsedAttrList &LAs, Decl *D,
   for (unsigned i = 0, ni = LAs.size(); i < ni; ++i) {
     if (D)
       LAs[i]->addDecl(D);
-    ParseLexedAttribute(*LAs[i], EnterScope, OnDefinition);
+    // FIXME: There has to be a better way to ask "is this C?""
+    if (LangStandard::getLangStandardForKind(getLangOpts().LangStd)
+            .getLanguage() == Language::C) {
+      // TODO: Use `EnterScope`
+      ParseLexedCAttribute(*LAs[i]);
+    } else
+      ParseLexedAttribute(*LAs[i], EnterScope, OnDefinition);
     delete LAs[i];
   }
   LAs.clear();
