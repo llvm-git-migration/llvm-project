@@ -160,10 +160,11 @@ struct LinalgOpTilingInterface
     return success();
   }
 
-  FailureOr<TilingResult>
-  generateResultTileValue(Operation *op, OpBuilder &b, unsigned resultNumber,
-                          ArrayRef<OpFoldResult> offsets,
-                          ArrayRef<OpFoldResult> sizes) const {
+  LogicalResult getIterationDomainTileFromResultTile(
+      Operation *op, OpBuilder &b, unsigned resultNumber,
+      ArrayRef<OpFoldResult> resultOffsets, ArrayRef<OpFoldResult> resultSizes,
+      SmallVector<OpFoldResult> &iterDomainOffsets,
+      SmallVector<OpFoldResult> &iterDomainSizes) const {
     auto linalgOp = cast<LinalgOp>(op);
 
     // Check that the indexing map used for the output is a projected
@@ -193,8 +194,27 @@ struct LinalgOpTilingInterface
     for (const auto &resultExpr : llvm::enumerate(indexingMap.getResults())) {
       unsigned dimPosition =
           cast<AffineDimExpr>(resultExpr.value()).getPosition();
-      iterationTileOffsets[dimPosition] = offsets[resultExpr.index()];
-      iterationTileSizes[dimPosition] = sizes[resultExpr.index()];
+      iterationTileOffsets[dimPosition] = resultOffsets[resultExpr.index()];
+      iterationTileSizes[dimPosition] = resultSizes[resultExpr.index()];
+    }
+
+    iterDomainOffsets = iterationTileOffsets;
+    iterDomainSizes = iterationTileSizes;
+
+    return success();
+  }
+
+  FailureOr<TilingResult>
+  generateResultTileValue(Operation *op, OpBuilder &b, unsigned resultNumber,
+                          ArrayRef<OpFoldResult> offsets,
+                          ArrayRef<OpFoldResult> sizes) const {
+    auto tilingInterfaceOp = cast<TilingInterface>(op);
+
+    SmallVector<OpFoldResult> iterationTileOffsets, iterationTileSizes;
+    if (failed(tilingInterfaceOp.getIterationDomainTileFromResultTile(
+            b, resultNumber, offsets, sizes, iterationTileOffsets,
+            iterationTileSizes))) {
+      return failure();
     }
 
     FailureOr<TilingResult> tilingResult =

@@ -98,6 +98,25 @@ def TilingInterface : OpInterface<"TilingInterface"> {
       >,
       InterfaceMethod<
         /*desc=*/[{
+          Method to return tile offset and size of Iteration Domain 
+          based on the given tile info from the certain result.
+        }],
+        /*retType=*/"LogicalResult",
+        /*methodName=*/"getIterationDomainTileFromResultTile",
+        /*args=*/(ins
+          "OpBuilder &":$b,
+          "unsigned":$resultNumber,
+          "ArrayRef<OpFoldResult> ":$resultOffsets,
+          "ArrayRef<OpFoldResult> ":$resultSizes,
+          "SmallVector<OpFoldResult> &":$iterDomainOffsets,
+          "SmallVector<OpFoldResult> &":$iterDomainSizes),
+        /*methodBody=*/"",
+        /*defaultImplementation=*/[{
+          return failure();
+        }]
+      >,
+      InterfaceMethod<
+        /*desc=*/[{
           Method to generate the code that produces a tile of the result.
 
           Generates the IR that computes the tile of a result of the
