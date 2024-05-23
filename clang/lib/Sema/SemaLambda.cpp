@@ -1032,7 +1032,6 @@ void Sema::ActOnLambdaExpressionAfterIntroducer(LambdaIntroducer &Intro,
 
   assert(LSI->NumExplicitTemplateParams == 0);
 
-
   // Determine if we're within a context where we know that the lambda will
   // be dependent, because there are template parameters in scope.
   CXXRecordDecl::LambdaDependencyKind LambdaDependencyKind =
