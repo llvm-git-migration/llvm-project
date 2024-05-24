@@ -1,7 +1,7 @@
-# This reproduces an issue where two fragments of same function access same
-# jump table, which means at least one fragment visits the other, i.e., one
-# of them has split jump table. As a result, all of them will be marked as
-# non-simple function.
+## This reproduces an issue where two fragments of same function access same
+## jump table, which means at least one fragment visits the other, i.e., one
+## of them has split jump table. As a result, all of them will be marked as
+## non-simple function.
 
 # REQUIRES: system-linux
 
