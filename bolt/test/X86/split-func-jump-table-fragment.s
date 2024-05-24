@@ -1,5 +1,5 @@
-# This reproduces a bug with jump table identification where jump table has
-# entries pointing to code in function and its cold fragment.
+## This reproduces a bug with jump table identification where jump table has
+## entries pointing to code in function and its cold fragment.
 
 # REQUIRES: system-linux
 

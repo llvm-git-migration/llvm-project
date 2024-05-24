@@ -1,4 +1,4 @@
-# Check that fallthrough blocks are handled properly.
+## Check that fallthrough blocks are handled properly.
 
 RUN: %clang %cflags %S/Inputs/sctc_bug4.s -o %t
 RUN: llvm-bolt %t -o /dev/null \

@@ -1,5 +1,5 @@
-# This reproduces a bug with dynostats when trying to compute branch stats
-# at a block with two tails calls (one conditional and one unconditional).
+## This reproduces a bug with dynostats when trying to compute branch stats
+## at a block with two tails calls (one conditional and one unconditional).
 
 # REQUIRES: system-linux
 

@@ -1,4 +1,4 @@
-# Tests the optimization of functions that just do a tail call in the beginning.
+## Tests the optimization of functions that just do a tail call in the beginning.
 
 # This test has commands that rely on shell capabilities that won't execute
 # correctly on Windows e.g. unsupported parameter expansion

@@ -14,7 +14,7 @@
 # RUN: llvm-dwarfdump --show-form --verbose --debug-line %t.bolt | FileCheck --check-prefix=POSTCHECK-LINE %s
 
 
-# Check BOLT handles monolithic mix of DWARF4 and DWARF5.
+## Check BOLT handles monolithic mix of DWARF4 and DWARF5.
 
 # main.cpp
 # PRECHECK: version = 0x0005

@@ -1,4 +1,4 @@
-# Check that llvm-bolt detects bad profile data and aborts
+## Check that llvm-bolt detects bad profile data and aborts
 
 # This test uses the clang driver without target flags and will only succeed
 # on Linux systems where the host triple matches the target.
