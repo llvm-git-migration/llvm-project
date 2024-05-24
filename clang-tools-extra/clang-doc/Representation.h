@@ -492,7 +492,6 @@ struct ClangDocContext {
                             // to definition locations will only be generated if
                             // the file is in this dir.
 
-  std::string LineFragment;
   // URL of repository that hosts code used for links to definition locations.
   std::optional<std::string> RepositoryUrl;
   // Path of CSS stylesheets that will be copied to OutDirectory and used to
