@@ -578,6 +578,8 @@ ModuleDepCollectorPP::handleTopLevelModule(const Module *M) {
 
   MD.ID.ModuleName = M->getFullModuleName();
   MD.IsSystem = M->IsSystem;
+  MD.LinkLibraries = M->LinkLibraries;
+  MD.UseExportAsModuleLinkName = M->UseExportAsModuleLinkName;
 
   ModuleMap &ModMapInfo =
       MDC.ScanInstance.getPreprocessor().getHeaderSearchInfo().getModuleMap();
