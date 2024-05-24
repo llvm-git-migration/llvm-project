@@ -14,8 +14,8 @@
 # FDATA: 1 main 17 1 main 3c 0 10
 # FDATA: 1 main 39 1 main 3c 0 10
 
-# CHECK: tail duplication modified 1 ({{.*}}%) functions; duplicated 1 blocks ({{.*}} bytes) responsible for {{.*}} dynamic executions ({{.*}} of all block executions)
-# CHECK: BB Layout   : .LBB00, .Ltmp0, .Ltail-dup0, .Ltmp1, .Ltmp2
+## CHECK: tail duplication modified 1 ({{.*}}%) functions; duplicated 1 blocks ({{.*}} bytes) responsible for {{.*}} dynamic executions ({{.*}} of all block executions)
+## CHECK: BB Layout   : .LBB00, .Ltmp0, .Ltail-dup0, .Ltmp1, .Ltmp2
 
 # This is the C++ code fed to Clang
 # int fib(int term) {

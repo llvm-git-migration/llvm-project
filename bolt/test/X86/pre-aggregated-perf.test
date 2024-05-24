@@ -1,10 +1,10 @@
-# This script checks that perf2bolt is reading pre-aggregated perf information
-# correctly for a simple example. The perf.data of this example was generated
-# with the following command:
-#
-#  $ perf record -j any,u -e branch -o perf.data -- ./blarge
-#
-#  blarge is the binary for "basicmath large inputs" taken from Mibench.
+## This script checks that perf2bolt is reading pre-aggregated perf information
+## correctly for a simple example. The perf.data of this example was generated
+## with the following command:
+##
+##  $ perf record -j any,u -e branch -o perf.data -- ./blarge
+##
+##  blarge is the binary for "basicmath large inputs" taken from Mibench.
 
 # Currently failing in MacOS / generating different hash for usqrt
 REQUIRES: system-linux

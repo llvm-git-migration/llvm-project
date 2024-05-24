@@ -1,5 +1,5 @@
-# Verifies that llvm-bolt is able to remove dead basic blocks. Also check that
-# the BB reordering ignores dead BBs.
+## Verifies that llvm-bolt is able to remove dead basic blocks. Also check that
+## the BB reordering ignores dead BBs.
 
 RUN: llvm-mc -filetype=obj -triple x86_64-unknown-unknown %S/Inputs/entry.s -o %t.o
 RUN: link_fdata %S/Inputs/entry.s %t.o %t.fdata --nmtool llvm-nm

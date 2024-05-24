@@ -1,7 +1,7 @@
-# This reproduces an issue where two cold fragments are folded into one, so the
-# fragment has two parents.
-# The fragment is only reachable through a jump table, so all functions must be
-# ignored.
+## This reproduces an issue where two cold fragments are folded into one, so the
+## fragment has two parents.
+## The fragment is only reachable through a jump table, so all functions must be
+## ignored.
 
 # REQUIRES: system-linux
 
