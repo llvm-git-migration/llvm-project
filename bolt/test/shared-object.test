@@ -1,4 +1,4 @@
-# Test that llvm-bolt processes *.so without a failure
+## Test that llvm-bolt processes *.so without a failure
 
 # This test uses the clang driver without target flags and will only succeed
 # on Linux systems where the host triple matches the target.

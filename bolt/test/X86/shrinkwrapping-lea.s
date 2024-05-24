@@ -1,5 +1,5 @@
-# This checks that shrink wrapping correctly drops moving push/pops when
-# there is an LEA instruction.
+## This checks that shrink wrapping correctly drops moving push/pops when
+## there is an LEA instruction.
 
 
 # REQUIRES: system-linux

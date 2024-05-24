@@ -9,7 +9,7 @@
 # RUN: llvm-dwarfdump --show-form --verbose --debug-addr %t.bolt > %t.txt
 # RUN: llvm-dwarfdump --show-form --verbose --debug-info %t.bolt >> %t.txt
 
-# This test checks that we correctly handle DW_AT_low_pc [DW_FORM_addrx] that is part of DW_TAG_label.
+## This test checks that we correctly handle DW_AT_low_pc [DW_FORM_addrx] that is part of DW_TAG_label.
 
 # PRECHECK: version = 0x0005
 # PRECHECK: DW_TAG_label
