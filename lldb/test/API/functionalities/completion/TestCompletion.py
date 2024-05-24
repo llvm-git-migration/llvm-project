@@ -97,6 +97,9 @@ class CommandLineCompletionTestCase(TestBase):
         self.complete_from_to("process load Makef", "process load Makefile")
 
     @skipUnlessPlatform(["linux"])
+    @expectedFailureAll(
+        archs=["aarch64"], bugnumber="github.com/llvm/llvm-project/issues/93092"
+    )
     def test_process_unload(self):
         """Test the completion for "process unload <index>" """
         # This tab completion should not work without a running process.
