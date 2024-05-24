@@ -32,6 +32,7 @@ populateParentNamespaces(llvm::SmallVector<Reference, 4> &Namespaces,
 
 static void populateMemberTypeInfo(MemberTypeInfo &I, const FieldDecl *D);
 
+
 // A function to extract the appropriate relative path for a given info's
 // documentation. The path returned is a composite of the parent namespaces.
 //
