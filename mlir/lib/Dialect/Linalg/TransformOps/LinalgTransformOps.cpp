@@ -2320,7 +2320,8 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
                        rewriter.getIndexAttr(getStaticChunkSizes()));
   }
 
-  auto checkStructuredOpAndDimensions = [&](LinalgOp linalgOp, Location loc) {
+  auto checkStructuredOpAndDimensions =
+      [&](LinalgOp linalgOp, Location loc) -> DiagnosedSilenceableFailure {
     if (!linalgOp) {
       auto diag = emitSilenceableError() << "only applies to structured ops";
       diag.attachNote(loc) << "target op";
@@ -2336,11 +2337,12 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
     return DiagnosedSilenceableFailure::success();
   };
 
-  auto checkFailureInSplitting = [&](bool hasFailed, Location loc) {
+  auto checkFailureInSplitting =
+      [&](bool hasFailed, Location loc) -> DiagnosedSilenceableFailure {
     if (hasFailed) {
       auto diag = emitDefiniteFailure() << "internal failure in splitting";
       diag.attachNote(loc) << "target op";
-      return DiagnosedSilenceableFailure(diag);
+      return diag;
     }
     return DiagnosedSilenceableFailure::success();
   };
@@ -2349,24 +2351,25 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
 
     // Split a single target operation at multiple points.
     SmallVector<Operation *> opList;
-    Operation *head, *tail;
+    TilingInterface head, tail;
     Operation *target = payload.front();
 
-    auto linalgOp = dyn_cast<LinalgOp>(target);
-    auto diag = checkStructuredOpAndDimensions(linalgOp, target->getLoc());
+    LinalgOp linalgOp = dyn_cast<LinalgOp>(target);
+    DiagnosedSilenceableFailure diag =
+        checkStructuredOpAndDimensions(linalgOp, target->getLoc());
 
     if (diag.isSilenceableFailure())
       return diag;
 
-    for (const auto &&[idx, chunkSize] : llvm::enumerate(chunkSizes)) {
+    for (auto &&[idx, chunkSize] : llvm::enumerate(chunkSizes)) {
 
       if (idx > 0)
-        target = tail;
+        target = tail.getOperation();
 
       if (!target)
         break;
 
-      linalgOp = dyn_cast<LinalgOp>(target);
+      linalgOp = cast<LinalgOp>(target);
 
       rewriter.setInsertionPoint(linalgOp);
       std::tie(head, tail) = linalg::splitOp(
@@ -2374,11 +2377,12 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
           getDimension(), chunkSize);
 
       // Propagate errors.
-      auto diag = checkFailureInSplitting(!head && !tail, target->getLoc());
+      DiagnosedSilenceableFailure diag =
+          checkFailureInSplitting(!head && !tail, target->getLoc());
       if (diag.isDefiniteFailure())
         return diag;
 
-      opList.push_back(head);
+      opList.push_back(head.getOperation());
     }
 
     // Append any leftover parts to the end of the result list.
@@ -2393,8 +2397,9 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
     Operation *noSecondPart = nullptr;
     for (const auto &pair : llvm::zip(payload, chunkSizes)) {
       Operation *target = std::get<0>(pair);
-      auto linalgOp = dyn_cast<LinalgOp>(target);
-      auto diag = checkStructuredOpAndDimensions(linalgOp, target->getLoc());
+      LinalgOp linalgOp = dyn_cast<LinalgOp>(target);
+      DiagnosedSilenceableFailure diag =
+          checkStructuredOpAndDimensions(linalgOp, target->getLoc());
 
       if (diag.isSilenceableFailure())
         return diag;
@@ -2405,8 +2410,8 @@ SplitOp::apply(transform::TransformRewriter &rewriter,
           getDimension(), std::get<1>(pair));
 
       // Propagate errors.
-      auto diagSplit = checkFailureInSplitting(!first.back() && !second.back(),
-                                     target->getLoc());
+      DiagnosedSilenceableFailure diagSplit = checkFailureInSplitting(
+          !first.back() && !second.back(), target->getLoc());
       if (diagSplit.isDefiniteFailure())
         return diag;
 
