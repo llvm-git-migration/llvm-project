@@ -1,4 +1,4 @@
-# Check that we do not reject position-independent executables (PIEs).
+## Check that we do not reject position-independent executables (PIEs).
 
 # This test uses the clang driver without target flags and will only succeed
 # on Linux systems where the host triple matches the target.

@@ -1,4 +1,4 @@
-# Check that we detect re-optimization attempt.
+## Check that we detect re-optimization attempt.
 
 # This test uses the clang driver without target flags and will only succeed
 # on Linux systems where the host triple matches the target.

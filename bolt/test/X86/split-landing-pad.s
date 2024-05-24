@@ -1,12 +1,12 @@
-# This test reproduces the case where C++ exception handling is used and split
-# function optimization is enabled. In particular, function foo is splitted
-# to two fragments:
-#    foo: contains 2 try blocks, which invokes bar to throw exception
-#    foo.cold.1: contains 2 corresponding catch blocks (landing pad)
-#
-# Similar to split jump table, split landing pad target to different fragment.
-# This test is written to ensure BOLT safely handle these targets, e.g., by
-# marking them as non-simple.
+## This test reproduces the case where C++ exception handling is used and split
+## function optimization is enabled. In particular, function foo is splitted
+## to two fragments:
+##    foo: contains 2 try blocks, which invokes bar to throw exception
+##    foo.cold.1: contains 2 corresponding catch blocks (landing pad)
+##
+## Similar to split jump table, split landing pad target to different fragment.
+## This test is written to ensure BOLT safely handle these targets, e.g., by
+## marking them as non-simple.
 #
 # Steps to write this test:
 # - Create a copy of Inputs/src/unreachable.cpp

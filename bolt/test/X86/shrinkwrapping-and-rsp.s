@@ -1,5 +1,5 @@
-# This checks that shrink wrapping does attempt at accessing stack elements
-# using RSP when the function is aligning RSP and changing offsets.
+## This checks that shrink wrapping does attempt at accessing stack elements
+## using RSP when the function is aligning RSP and changing offsets.
 
 # REQUIRES: system-linux
 

@@ -1,4 +1,4 @@
-# Check that the .bolt_info section is generated properly.
+## Check that the .bolt_info section is generated properly.
 
 # This test uses the clang driver without target flags and will only succeed
 # on Linux systems where the host triple matches the target.
