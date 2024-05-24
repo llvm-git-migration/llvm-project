@@ -818,6 +818,11 @@ Miscellaneous Clang Crashes Fixed
   when ``-fdump-record-layouts-complete`` is passed. Fixes #GH83684.
 - Unhandled StructuralValues in the template differ (#GH93068).
 
+Miscellaneous Clang Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The text ast-dumper has improved printing of TemplateArguments.
+
 OpenACC Specific Changes
 ------------------------
 

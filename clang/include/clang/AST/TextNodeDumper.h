@@ -211,8 +211,11 @@ public:
   void dumpAccessSpecifier(AccessSpecifier AS);
   void dumpCleanupObject(const ExprWithCleanups::CleanupObject &C);
   void dumpTemplateSpecializationKind(TemplateSpecializationKind TSK);
+  void dumpBareNestedNameSpecifier(NestedNameSpecifier *NNS);
   void dumpNestedNameSpecifier(const NestedNameSpecifier *NNS);
   void dumpConceptReference(const ConceptReference *R);
+  void dumpTemplateArgument(const TemplateArgument &TA);
+  void dumpTemplateName(TemplateName TN);
 
   void dumpDeclRef(const Decl *D, StringRef Label = {});
 
