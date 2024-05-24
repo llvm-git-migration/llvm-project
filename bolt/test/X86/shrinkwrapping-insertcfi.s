@@ -1,5 +1,5 @@
-# This test reproduces the issue with inserting updated CFI in shrink wrapping
-# into the first basic block.
+## This test reproduces the issue with inserting updated CFI in shrink wrapping
+## into the first basic block.
 
 # REQUIRES: system-linux
 

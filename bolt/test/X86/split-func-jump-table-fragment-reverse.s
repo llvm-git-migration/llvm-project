@@ -1,6 +1,6 @@
-# This reproduces a bug with jump table identification where jump table has
-# entries pointing to code in function and its cold fragment.
-# The fragment is only reachable through jump table.
+## This reproduces a bug with jump table identification where jump table has
+## entries pointing to code in function and its cold fragment.
+## The fragment is only reachable through jump table.
 
 # REQUIRES: system-linux
 
