@@ -510,9 +510,11 @@ llvm.mlir.global @global_variable() {dbg_expr = #di_global_variable_expression} 
   compileUnit = #cu, scope = #cu, name = "fn_with_composite", file = #file,
   subprogramFlags = "Definition|Optimized", type = #spType0
 >
+
 llvm.func @fn_with_composite() {
   llvm.return
-}loc(fused<#sp0>["foo.mlir":1:1])
+} loc(fused<#sp0>["foo.mlir":1:1])
+
 // CHECK-LABEL: define void @fn_with_composite()
 // CHECK: !DICompositeType(
 // CHECK-SAME: dataLocation: !DIExpression(DW_OP_push_object_address, DW_OP_deref)
