@@ -432,6 +432,15 @@ namespace llvm {
       return EVT::getVectorVT(Context, EltVT, getVectorElementCount());
     }
 
+    /// Return a VT for an integer vector type with the size of the elements
+    /// extended to the store size. The typed returned may be an extended
+    /// type.
+    EVT getStoreSizedIntegerVectorElementType(LLVMContext &Context) const {
+      EVT EltVT = getVectorElementType();
+      EltVT = EVT::getIntegerVT(Context, EltVT.getStoreSizeInBits());
+      return EVT::getVectorVT(Context, EltVT, getVectorElementCount());
+    }
+
     // Return a VT for a vector type with the same element type but
     // half the number of elements. The type returned may be an
     // extended type.

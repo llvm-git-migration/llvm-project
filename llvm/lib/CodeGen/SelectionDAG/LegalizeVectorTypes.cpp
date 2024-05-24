@@ -1832,10 +1832,9 @@ void DAGTypeLegalizer::SplitVecRes_INSERT_VECTOR_ELT(SDNode *N, SDValue &Lo,
   // Make the vector elements byte-addressable if they aren't already.
   EVT VecVT = Vec.getValueType();
   EVT EltVT = VecVT.getVectorElementType();
-  if (VecVT.getScalarSizeInBits() < 8) {
-    EltVT = MVT::i8;
-    VecVT = EVT::getVectorVT(*DAG.getContext(), EltVT,
-                             VecVT.getVectorElementCount());
+  if (!EltVT.isByteSized()) {
+    VecVT = VecVT.getStoreSizedIntegerVectorElementType(*DAG.getContext());
+    EltVT = VecVT.getVectorElementType();
     Vec = DAG.getNode(ISD::ANY_EXTEND, dl, VecVT, Vec);
     // Extend the element type to match if needed.
     if (EltVT.bitsGT(Elt.getValueType()))
@@ -3443,10 +3442,9 @@ SDValue DAGTypeLegalizer::SplitVecOp_EXTRACT_VECTOR_ELT(SDNode *N) {
   // Make the vector elements byte-addressable if they aren't already.
   SDLoc dl(N);
   EVT EltVT = VecVT.getVectorElementType();
-  if (VecVT.getScalarSizeInBits() < 8) {
-    EltVT = MVT::i8;
-    VecVT = EVT::getVectorVT(*DAG.getContext(), EltVT,
-                             VecVT.getVectorElementCount());
+  if (!EltVT.isByteSized()) {
+    VecVT = VecVT.getStoreSizedIntegerVectorElementType(*DAG.getContext());
+    EltVT = VecVT.getVectorElementType();
     Vec = DAG.getNode(ISD::ANY_EXTEND, dl, VecVT, Vec);
   }
 
@@ -3465,8 +3463,6 @@ SDValue DAGTypeLegalizer::SplitVecOp_EXTRACT_VECTOR_ELT(SDNode *N) {
   // Load back the required element.
   StackPtr = TLI.getVectorElementPointer(DAG, StackPtr, VecVT, Idx);
 
-  // FIXME: This is to handle i1 vectors with elements promoted to i8.
-  // i1 vector handling needs general improvement.
   if (N->getValueType(0).bitsLT(EltVT)) {
     SDValue Load = DAG.getLoad(EltVT, dl, Store, StackPtr,
       MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()));
