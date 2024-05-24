@@ -29,9 +29,9 @@ using AT = A<int[3], int, int, short>;
 // CHECK:   | |-TemplateArgument type 'int'
 // CHECK:   | `-TemplateArgument type 'short'
 // CHECK:   |-TemplateArgument pack
-// CHECK:   | |-TemplateArgument integral 3
-// CHECK:   | |-TemplateArgument integral 3
-// CHECK:   | `-TemplateArgument integral 4
+// CHECK:   | |-TemplateArgument integral '3'
+// CHECK:   | |-TemplateArgument integral '3'
+// CHECK:   | `-TemplateArgument integral '(short)4'
 // CHECK:   |-TemplateArgument pack
 // CHECK:   | |-TemplateArgument decl
 // CHECK:   | | `-Var {{.*}} 'arr1' 'int[3]'
@@ -73,7 +73,7 @@ using BT = B<char, 'x'>;
 // CHECK: | `-ParmVarDecl {{.*}} 'X<W, V>'
 // CHECK: `-CXXDeductionGuideDecl {{.*}} 'auto (X<nullptr, 'x'>) -> B<char, 'x'>'
 // CHECK:   |-TemplateArgument type 'char'
-// CHECK:   |-TemplateArgument integral 120
+// CHECK:   |-TemplateArgument integral ''x''
 // CHECK:   |-TemplateArgument type 'std::nullptr_t'
 // CHECK:   |-TemplateArgument nullptr
 // CHECK:   `-ParmVarDecl {{.*}} 'X<nullptr, 'x'>'
@@ -108,9 +108,9 @@ using CT = C<int>;
 // CHECK: | `-ParmVarDecl {{.*}} 'type-parameter-0-2'
 // CHECK: `-CXXDeductionGuideDecl {{.*}} 'auto (int, Y<B>, int) -> C<int>'
 // CHECK:  |-TemplateArgument type 'int'
-// CHECK:  |-TemplateArgument template B
+// CHECK:  |-TemplateArgument template 'B'
 // CHECK:  |-TemplateArgument type 'int'
-// CHECK:  |-TemplateArgument integral 0
+// CHECK:  |-TemplateArgument integral '0'
 // CHECK:  |-ParmVarDecl {{.*}} 'int'
 // CHECK:  |-ParmVarDecl {{.*}} 'Y<B>'
 // CHECK:  `-ParmVarDecl {{.*}} 'int'
@@ -231,7 +231,7 @@ F s(0);
 // CHECK: |-CXXDeductionGuideDecl {{.*}} implicit <deduction guide for F> 'auto (type-parameter-0-1) -> F<>'
 // CHECK: | `-ParmVarDecl {{.*}} 'type-parameter-0-1'
 // CHECK: `-CXXDeductionGuideDecl {{.*}} implicit <deduction guide for F> 'auto (int) -> F<>'
-// CHECK:   |-TemplateArgument integral 120
+// CHECK:   |-TemplateArgument integral ''x''
 // CHECK:   |-TemplateArgument type 'int'
 // CHECK:   | `-BuiltinType {{.*}} 'int'
 // CHECK:   `-ParmVarDecl {{.*}} 'int'
