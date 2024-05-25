@@ -3348,8 +3348,7 @@ bool ByteCodeExprGen<Emitter>::VisitCallExpr(const CallExpr *E) {
         return false;
       if (!this->emitGetMemberPtrBase(E))
         return false;
-    } else {
-      if (!this->visit(MC->getImplicitObjectArgument()))
+    } else if (!this->visit(MC->getImplicitObjectArgument())) {
         return false;
     }
   }
