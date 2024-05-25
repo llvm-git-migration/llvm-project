@@ -32,9 +32,8 @@ public:
   MemberPointer() = default;
   MemberPointer(Pointer Base, const Decl *Dcl) : Base(Base), Dcl(Dcl) {}
   MemberPointer(uint32_t Address, const Descriptor *D) {
-    // This should be impossible to hit, at least I've been unable
-    // to write a test for it.
-    assert(false && "This constructor shouldn't be reachable for MemberPointers");
+    // We only reach this for Address == 0, when creating a null member pointer.
+    assert(Address == 0);
   }
 
   MemberPointer(const Decl *D) : Dcl(D) {
