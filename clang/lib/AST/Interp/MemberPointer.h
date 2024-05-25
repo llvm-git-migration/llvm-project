@@ -34,6 +34,7 @@ public:
   MemberPointer(uint32_t Address, const Descriptor *D) {
     // This should be impossible to hit, at least I've been unable
     // to write a test for it.
+    assert(false && "This constructor shouldn't be reachable for MemberPointers");
   }
 
   MemberPointer(const Decl *D) : Dcl(D) {
@@ -42,8 +43,7 @@ public:
   }
 
   uint64_t getIntegerRepresentation() const {
-    // This should be impossible to hit, at least I've been unable
-    // to write a test for it.
+    assert(false && "getIntegerRepresentation() shouldn't be reachable for MemberPointers");
     return 17;
   }
 
