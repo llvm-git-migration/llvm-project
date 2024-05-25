@@ -365,11 +365,9 @@ define i32 @smul(i32 %a, i32 %b) {
 
 define i32 @smul2(i32 %a, i32 %b) {
 ; CHECK-LABEL: @smul2(
-; CHECK-NEXT:    [[CONV:%.*]] = sext i32 [[A:%.*]] to i64
-; CHECK-NEXT:    [[CONV1:%.*]] = sext i32 [[B:%.*]] to i64
-; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i64 [[CONV1]], [[CONV]]
-; CHECK-NEXT:    [[TMP1:%.*]] = add i64 [[MUL]], 2147483647
-; CHECK-NEXT:    [[TMP2:%.*]] = icmp ult i64 [[TMP1]], 4294967295
+; CHECK-NEXT:    [[SMUL:%.*]] = call { i32, i1 } @llvm.smul.with.overflow.i32(i32 [[B:%.*]], i32 [[A:%.*]])
+; CHECK-NEXT:    [[TMP1:%.*]] = extractvalue { i32, i1 } [[SMUL]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = xor i1 [[TMP1]], true
 ; CHECK-NEXT:    [[CONV3:%.*]] = zext i1 [[TMP2]] to i32
 ; CHECK-NEXT:    ret i32 [[CONV3]]
 ;
