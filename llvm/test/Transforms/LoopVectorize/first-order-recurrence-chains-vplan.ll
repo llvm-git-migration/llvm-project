@@ -33,6 +33,8 @@ define void @test_chained_first_order_recurrences_1(ptr %ptr) {
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.1>
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.2>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ;
@@ -89,6 +91,9 @@ define void @test_chained_first_order_recurrences_3(ptr %ptr) {
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.1>
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.2>
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.3>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ;

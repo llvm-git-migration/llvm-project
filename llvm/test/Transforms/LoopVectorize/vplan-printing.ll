@@ -912,6 +912,7 @@ define i16 @print_first_order_recurrence_and_result(ptr %ptr) {
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<[[FOR_RESULT:%.+]]> = extract-recurrence-result ir<%for.1.next>
+; CHECK-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for.1>
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
 ; CHECK-NEXT:   Live-out i16 %for.1.lcssa = vp<[[FOR_RESULT]]>

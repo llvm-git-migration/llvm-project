@@ -302,6 +302,7 @@ bool VPInstruction::canGenerateScalarForFirstLane() const {
   case VPInstruction::CanonicalIVIncrementForPart:
   case VPInstruction::ComputeReductionResult:
   case VPInstruction::ExtractRecurrenceResult:
+  case VPInstruction::ExtractRecurrenceResume:
   case VPInstruction::PtrAdd:
   case VPInstruction::ExplicitVectorLength:
     return true;
@@ -581,6 +582,18 @@ Value *VPInstruction::generatePerPart(VPTransformState &State, unsigned Part) {
     Res->setName(Name);
     return Res;
   }
+  case VPInstruction::ExtractRecurrenceResume: {
+    if (Part != 0)
+      return State.get(this, 0, /*IsScalar*/ true);
+
+    auto *PhiR = cast<VPFirstOrderRecurrencePHIRecipe>(getOperand(0));
+    VPValue *PreviousDef = PhiR->getBackedgeValue();
+    Value *Res =
+        State.get(PreviousDef, VPIteration(State.UF - 1,
+                                           VPLane::getLastLaneForVF(State.VF)));
+    Res->setName(Name);
+    return Res;
+  }
   case VPInstruction::LogicalAnd: {
     Value *A = State.get(getOperand(0), Part);
     Value *B = State.get(getOperand(1), Part);
@@ -715,6 +728,9 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
     break;
   case VPInstruction::BranchOnCount:
     O << "branch-on-count";
+    break;
+  case VPInstruction::ExtractRecurrenceResume:
+    O << "extract-recurrence-resume";
     break;
   case VPInstruction::ExtractRecurrenceResult:
     O << "extract-recurrence-result";

@@ -202,6 +202,7 @@ exit:
 ; DBG-NEXT: Successor(s): middle.block
 ; DBG-EMPTY:
 ; DBG-NEXT: middle.block:
+; DBG-NEXT:   EMIT vp<{{.+}}> = extract-recurrence-resume ir<%for>
 ; DBG-NEXT: No successors
 ; DBG-NEXT: }
 

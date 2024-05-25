@@ -1180,6 +1180,7 @@ public:
     BranchOnCond,
     ComputeReductionResult,
     ExtractRecurrenceResult,
+    ExtractRecurrenceResume,
     LogicalAnd, // Non-poison propagating logical And.
     // Add an offset in bytes (second operand) to a base pointer (first
     // operand). Only generates scalar values (either for the first lane only or
@@ -3614,7 +3615,8 @@ inline bool isUniformAfterVectorization(VPValue *VPV) {
     return all_of(GEP->operands(), isUniformAfterVectorization);
   if (auto *VPI = dyn_cast<VPInstruction>(Def))
     return VPI->getOpcode() == VPInstruction::ComputeReductionResult ||
-           VPI->getOpcode() == VPInstruction::ExtractRecurrenceResult;
+           VPI->getOpcode() == VPInstruction::ExtractRecurrenceResult ||
+           VPI->getOpcode() == VPInstruction::ExtractRecurrenceResume;
   return false;
 }
 } // end namespace vputils
