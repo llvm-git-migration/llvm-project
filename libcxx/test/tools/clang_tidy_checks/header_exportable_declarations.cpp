@@ -9,7 +9,7 @@
 #include "clang-tidy/ClangTidyCheck.h"
 #include "clang-tidy/ClangTidyModuleRegistry.h"
 
-#include "clang/Basic/Module.h"
+#include "clang/Basic/Module/Module.h"
 
 #include "llvm/ADT/ArrayRef.h"
 

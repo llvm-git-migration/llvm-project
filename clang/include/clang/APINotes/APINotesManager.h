@@ -9,7 +9,7 @@
 #ifndef LLVM_CLANG_APINOTES_APINOTESMANAGER_H
 #define LLVM_CLANG_APINOTES_APINOTESMANAGER_H
 
-#include "clang/Basic/Module.h"
+#include "clang/Basic/Module/Module.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"

@@ -14,7 +14,7 @@
 
 #include "clang/ExtractAPI/API.h"
 #include "clang/AST/RawCommentList.h"
-#include "clang/Basic/Module.h"
+#include "clang/Basic/Module/Module.h"
 #include "clang/Index/USRGeneration.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ErrorHandling.h"
