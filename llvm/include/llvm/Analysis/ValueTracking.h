@@ -1065,6 +1065,10 @@ enum SelectPatternFlavor {
   SPF_UMAX,    /// Unsigned maximum
   SPF_FMINNUM, /// Floating point minnum
   SPF_FMAXNUM, /// Floating point maxnum
+  SPF_FMINIMUM,/// Floating point minnum
+  SPF_FMAXIMUM,/// Floating point maxnum
+  SPF_FMINIMUMNUM, /// Floating point minnum
+  SPF_FMAXIMUMNUM, /// Floating point maxnum
   SPF_ABS,     /// Absolute value
   SPF_NABS     /// Negated absolute value
 };

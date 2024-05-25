@@ -372,7 +372,7 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
   // FP Operations
 
   getActionDefinitionsBuilder({G_FADD, G_FSUB, G_FMUL, G_FDIV, G_FMA, G_FNEG,
-                               G_FABS, G_FSQRT, G_FMAXNUM, G_FMINNUM})
+                               G_FABS, G_FSQRT, G_FMAXNUM, G_FMINNUM, G_FMAXIMUMNUM, G_FMINIMUMNUM})
       .legalIf(typeIsScalarFPArith(0, ST));
 
   getActionDefinitionsBuilder(G_FCOPYSIGN)

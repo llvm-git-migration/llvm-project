@@ -1314,7 +1314,7 @@ TLI_DEFINE_ENUM_INTERNAL(flsll)
 TLI_DEFINE_STRING_INTERNAL("flsll")
 TLI_DEFINE_SIG_INTERNAL(Int, LLong)
 
-// Calls to fmax and fmin library functions expand to the llvm.maxnnum and
+// Calls to fmax and fmin library functions expand to the llvm.maxnum and
 // llvm.minnum intrinsics with the correct parameter types for the arguments
 // (all types must match).
 /// double fmax(double x, double y);
@@ -1345,6 +1345,72 @@ TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
 /// long double fminl(long double x, long double y);
 TLI_DEFINE_ENUM_INTERNAL(fminl)
 TLI_DEFINE_STRING_INTERNAL("fminl")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+// Calls to fmaximum and fminimum library functions expand to the llvm.maximum and
+// llvm.minimum intrinsics with the correct parameter types for the arguments
+// (all types must match).
+/// double fmaximum(double x, double y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximum)
+TLI_DEFINE_STRING_INTERNAL("fmaximum")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// float fmaximumf(float x, float y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximumf)
+TLI_DEFINE_STRING_INTERNAL("fmaximumf")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// long double fmaximuml(long double x, long double y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximuml)
+TLI_DEFINE_STRING_INTERNAL("fmaximuml")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// double fminimum(double x, double y);
+TLI_DEFINE_ENUM_INTERNAL(fminimum)
+TLI_DEFINE_STRING_INTERNAL("fminimum")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// float fminimumf(float x, float y);
+TLI_DEFINE_ENUM_INTERNAL(fminimumf)
+TLI_DEFINE_STRING_INTERNAL("fminimumf")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// long double fminimuml(long double x, long double y);
+TLI_DEFINE_ENUM_INTERNAL(fminimuml)
+TLI_DEFINE_STRING_INTERNAL("fminimuml")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+// Calls to fmaximum_num and fminimum_num library functions expand to the llvm.maximumnum and
+// llvm.minimumnum intrinsics with the correct parameter types for the arguments
+// (all types must match).
+/// double fmaximum_num(double x, double y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximum_num)
+TLI_DEFINE_STRING_INTERNAL("fmaximum_num")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// float fmaximum_numf(float x, float y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximum_numf)
+TLI_DEFINE_STRING_INTERNAL("fmaximum_numf")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// long double fmaximum_numl(long double x, long double y);
+TLI_DEFINE_ENUM_INTERNAL(fmaximum_numl)
+TLI_DEFINE_STRING_INTERNAL("fmaximum_numl")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// double fminimum_num(double x, double y);
+TLI_DEFINE_ENUM_INTERNAL(fminimum_num)
+TLI_DEFINE_STRING_INTERNAL("fminimum_num")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// float fminimum_numf(float x, float y);
+TLI_DEFINE_ENUM_INTERNAL(fminimum_numf)
+TLI_DEFINE_STRING_INTERNAL("fminimum_numf")
+TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
+
+/// long double fminimum_numl(long double x, long double y);
+TLI_DEFINE_ENUM_INTERNAL(fminimum_numl)
+TLI_DEFINE_STRING_INTERNAL("fminimum_numl")
 TLI_DEFINE_SIG_INTERNAL(Floating, Same, Same)
 
 /// double fmod(double x, double y);

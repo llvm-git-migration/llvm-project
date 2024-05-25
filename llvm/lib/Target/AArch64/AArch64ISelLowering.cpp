@@ -811,7 +811,7 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
   for (auto Op :
        {ISD::FFLOOR,          ISD::FNEARBYINT,      ISD::FCEIL,
         ISD::FRINT,           ISD::FTRUNC,          ISD::FROUND,
-        ISD::FROUNDEVEN,      ISD::FMINNUM,         ISD::FMAXNUM,
+        ISD::FROUNDEVEN,      ISD::FMINNUM,         ISD::FMAXNUM, ISD::FMINNUM_IEEE,         ISD::FMAXNUM_IEEE,
         ISD::FMINIMUM,        ISD::FMAXIMUM,        ISD::LROUND,
         ISD::LLROUND,         ISD::LRINT,           ISD::LLRINT,
         ISD::STRICT_FFLOOR,   ISD::STRICT_FCEIL,    ISD::STRICT_FNEARBYINT,

@@ -6159,6 +6159,8 @@ bool CombinerHelper::matchCombineFMinMaxNaN(MachineInstr &MI,
     return false;
   case TargetOpcode::G_FMINNUM:
   case TargetOpcode::G_FMAXNUM:
+  case TargetOpcode::G_FMINIMUMNUM:
+  case TargetOpcode::G_FMAXIMUMNUM:
     PropagateNaN = false;
     break;
   case TargetOpcode::G_FMINIMUM:

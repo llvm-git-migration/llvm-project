@@ -929,6 +929,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
   setOperationAction(ISD::FEXP10, MVT::f80, Expand);
   setOperationAction(ISD::FMINNUM, MVT::f80, Expand);
   setOperationAction(ISD::FMAXNUM, MVT::f80, Expand);
+  setOperationAction(ISD::FMINIMUMNUM, MVT::f80, Expand);
+  setOperationAction(ISD::FMAXIMUMNUM, MVT::f80, Expand);
 
   // Some FP actions are always expanded for vector types.
   for (auto VT : { MVT::v8f16, MVT::v16f16, MVT::v32f16,
@@ -2500,6 +2502,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
                        ISD::STRICT_FMA,
                        ISD::FMINNUM,
                        ISD::FMAXNUM,
+                       ISD::FMINIMUMNUM,
+                       ISD::FMAXIMUMNUM,
                        ISD::SUB,
                        ISD::LOAD,
                        ISD::LRINT,
@@ -44586,6 +44590,8 @@ static SDValue scalarizeExtEltFP(SDNode *ExtElt, SelectionDAG &DAG,
   case ISD::FMAXNUM_IEEE:
   case ISD::FMAXIMUM:
   case ISD::FMINIMUM:
+  case ISD::FMAXIMUMNUM:
+  case ISD::FMINIMUMNUM:
   case X86ISD::FMAX:
   case X86ISD::FMIN:
   case ISD::FABS: // Begin 1 operand
@@ -57082,7 +57088,9 @@ SDValue X86TargetLowering::PerformDAGCombine(SDNode *N,
   case X86ISD::FMIN:
   case X86ISD::FMAX:        return combineFMinFMax(N, DAG);
   case ISD::FMINNUM:
-  case ISD::FMAXNUM:        return combineFMinNumFMaxNum(N, DAG, Subtarget);
+  case ISD::FMAXNUM:
+  case ISD::FMINIMUMNUM:
+  case ISD::FMAXIMUMNUM:    return combineFMinNumFMaxNum(N, DAG, Subtarget);
   case X86ISD::CVTSI2P:
   case X86ISD::CVTUI2P:     return combineX86INT_TO_FP(N, DAG, DCI);
   case X86ISD::CVTP2SI:

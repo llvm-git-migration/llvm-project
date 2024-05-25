@@ -435,6 +435,8 @@ enum NodeType {
   STRICT_LLRINT,
   STRICT_FMAXIMUM,
   STRICT_FMINIMUM,
+  STRICT_FMAXIMUMNUM,
+  STRICT_FMINIMUMNUM,
 
   /// STRICT_FP_TO_[US]INT - Convert a floating point value to a signed or
   /// unsigned integer. These have the same semantics as fptosi and fptoui
@@ -991,6 +993,12 @@ enum NodeType {
   FMINIMUM,
   FMAXIMUM,
 
+  /// FMINIMUMNUM/FMAXIMUMNUM - minimum/maximum that also treat -0.0
+  /// as less than 0.0. While FMINNUM_IEEE/FMAXNUM_IEEE follow IEEE 754-2008
+  /// semantics, FMINIMUM/FMAXIMUM follow IEEE 754-2019 semantics.
+  FMINIMUMNUM,
+  FMAXIMUMNUM,
+
   /// FSINCOS - Compute both fsin and fcos as a single operation.
   FSINCOS,
 
@@ -1365,6 +1373,10 @@ enum NodeType {
   /// llvm.minimum and llvm.maximum semantics.
   VECREDUCE_FMAXIMUM,
   VECREDUCE_FMINIMUM,
+  /// FMINIMUMNUM/FMAXIMUMNUM nodes doesn't propatate NaNs and signed zeroes using the
+  /// llvm.minimumnum and llvm.maximumnum semantics.
+  VECREDUCE_FMAXIMUMNUM,
+  VECREDUCE_FMINIMUMNUM,
   /// Integer reductions may have a result type larger than the vector element
   /// type. However, the reduction is performed using the vector element type
   /// and the value in the top bits is unspecified.

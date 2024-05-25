@@ -1422,9 +1422,19 @@ inline APFloat maxnum(const APFloat &A, const APFloat &B) {
 LLVM_READONLY
 inline APFloat minimum(const APFloat &A, const APFloat &B) {
   if (A.isNaN())
-    return A;
+    return A.makeQuiet();
   if (B.isNaN())
-    return B;
+    return B.makeQuiet();
+  if (A.isZero() && B.isZero() && (A.isNegative() != B.isNegative()))
+    return A.isNegative() ? A : B;
+  return B < A ? B : A;
+}
+LLVM_READONLY
+inline APFloat minimumnum(const APFloat &A, const APFloat &B) {
+  if (A.isNaN())
+    return B.isNaN() ? B.makeQuiet() : B;
+  if (B.isNaN())
+    return A;
   if (A.isZero() && B.isZero() && (A.isNegative() != B.isNegative()))
     return A.isNegative() ? A : B;
   return B < A ? B : A;
@@ -1435,9 +1445,19 @@ inline APFloat minimum(const APFloat &A, const APFloat &B) {
 LLVM_READONLY
 inline APFloat maximum(const APFloat &A, const APFloat &B) {
   if (A.isNaN())
-    return A;
+    return A.makeQuiet();
   if (B.isNaN())
-    return B;
+    return B.makeQuiet();
+  if (A.isZero() && B.isZero() && (A.isNegative() != B.isNegative()))
+    return A.isNegative() ? B : A;
+  return A < B ? B : A;
+}
+LLVM_READONLY
+inline APFloat maximumnum(const APFloat &A, const APFloat &B) {
+  if (A.isNaN())
+    return B.isNaN() ? B.makeQuiet() : B;
+  if (B.isNaN())
+    return A;
   if (A.isZero() && B.isZero() && (A.isNegative() != B.isNegative()))
     return A.isNegative() ? B : A;
   return A < B ? B : A;

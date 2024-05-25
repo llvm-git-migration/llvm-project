@@ -475,6 +475,12 @@ ISD::NodeType ISD::getVecReduceBaseOpcode(unsigned VecReduceOpcode) {
   case ISD::VECREDUCE_FMINIMUM:
   case ISD::VP_REDUCE_FMINIMUM:
     return ISD::FMINIMUM;
+  case ISD::VECREDUCE_FMAXIMUMNUM:
+  case ISD::VP_REDUCE_FMAXIMUMNUM:
+    return ISD::FMAXIMUMNUM;
+  case ISD::VECREDUCE_FMINIMUMNUM:
+  case ISD::VP_REDUCE_FMINIMUMNUM:
+    return ISD::FMINIMUMNUM;
   }
 }
 
@@ -5422,9 +5428,13 @@ bool SelectionDAG::isKnownNeverNaN(SDValue Op, bool SNaN, unsigned Depth) const 
   }
   case ISD::FMINIMUM:
   case ISD::FMAXIMUM: {
-    // TODO: Does this quiet or return the origina NaN as-is?
-    return isKnownNeverNaN(Op.getOperand(0), SNaN, Depth + 1) &&
-           isKnownNeverNaN(Op.getOperand(1), SNaN, Depth + 1);
+    return isKnownNeverNaN(Op.getOperand(0), false, Depth + 1) &&
+           isKnownNeverNaN(Op.getOperand(1), false, Depth + 1);
+  }
+  case ISD::FMINIMUMNUM:
+  case ISD::FMAXIMUMNUM: {
+    return isKnownNeverNaN(Op.getOperand(0), false, Depth + 1) ||
+           isKnownNeverNaN(Op.getOperand(1), false, Depth + 1);
   }
   case ISD::EXTRACT_VECTOR_ELT: {
     return isKnownNeverNaN(Op.getOperand(0), SNaN, Depth + 1);
@@ -6726,6 +6736,10 @@ SDValue SelectionDAG::foldConstantFPMath(unsigned Opcode, const SDLoc &DL,
       return getConstantFP(minimum(C1, C2), DL, VT);
     case ISD::FMAXIMUM:
       return getConstantFP(maximum(C1, C2), DL, VT);
+    case ISD::FMINIMUMNUM:
+      return getConstantFP(minimumnum(C1, C2), DL, VT);
+    case ISD::FMAXIMUMNUM:
+      return getConstantFP(maximumnum(C1, C2), DL, VT);
     default: break;
     }
   }
