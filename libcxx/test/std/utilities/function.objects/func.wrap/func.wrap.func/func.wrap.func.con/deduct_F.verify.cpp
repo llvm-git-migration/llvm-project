@@ -24,7 +24,7 @@ struct f0 { R operator()() && { return {}; } };
 struct f1 { R operator()(int, ...) { return {}; } };
 
 void f() {
-    std::function f = f0{}; // expected-error{{no viable constructor or deduction guide for deduction of template arguments of 'function'}}
-    std::function g = f1{}; // expected-error{{no viable constructor or deduction guide for deduction of template arguments of 'function'}}
-    std::function h = nullptr; // expected-error{{no viable constructor or deduction guide for deduction of template arguments of 'function'}}
+    std::function f = f0{}; // expected-error-re{{no viable constructor or deduction guide for deduction of template arguments of '{{(std::)?}}function'}}
+    std::function g = f1{}; // expected-error-re{{no viable constructor or deduction guide for deduction of template arguments of '{{(std::)?}}function'}}
+    std::function h = nullptr; // expected-error-re{{no viable constructor or deduction guide for deduction of template arguments of '{{(std::)?}}function'}}
 }

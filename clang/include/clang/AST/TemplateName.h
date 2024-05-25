@@ -332,7 +332,7 @@ public:
   /// unexpanded parameter pack (for C++0x variadic templates).
   bool containsUnexpandedParameterPack() const;
 
-  enum class Qualified { None, AsWritten, Fully };
+  enum class Qualified { None, AsWritten };
   /// Print the template name.
   ///
   /// \param OS the output stream to which the template name will be
