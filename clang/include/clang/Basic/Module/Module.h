@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_BASIC_MODULE_H
-#define LLVM_CLANG_BASIC_MODULE_H
+#ifndef LLVM_CLANG_BASIC_MODULE_MODULE_H
+#define LLVM_CLANG_BASIC_MODULE_MODULE_H
 
 #include "clang/Basic/DirectoryEntry.h"
 #include "clang/Basic/FileEntry.h"
@@ -870,4 +870,4 @@ private:
 
 } // namespace clang
 
-#endif // LLVM_CLANG_BASIC_MODULE_H
+#endif // LLVM_CLANG_BASIC_MODULE_MODULE_H

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_BASIC_ASTSOURCEDESCRIPTOR_H
-#define LLVM_CLANG_BASIC_ASTSOURCEDESCRIPTOR_H
+#ifndef LLVM_CLANG_BASIC_MODULE_ASTSOURCEDESCRIPTOR_H
+#define LLVM_CLANG_BASIC_MODULE_ASTSOURCEDESCRIPTOR_H
 
 #include "clang/Basic/Module/Module.h"
 #include "llvm/ADT/StringRef.h"
@@ -49,4 +49,4 @@ public:
 
 } // namespace clang
 
-#endif // LLVM_CLANG_BASIC_ASTSOURCEDESCRIPTOR_H
+#endif // LLVM_CLANG_BASIC_MODULE_ASTSOURCEDESCRIPTOR_H
