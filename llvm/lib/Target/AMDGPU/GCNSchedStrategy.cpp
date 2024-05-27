@@ -172,7 +172,7 @@ static void getRegisterPressures(bool AtTop,
     if (AtTop) {
       GCNDownwardRPTracker TempTopTracker(TheTracker);
       auto MI = SU->getInstr();
-      TempTopTracker.advance(MI, true, DAG->getLIS());
+      TempTopTracker.advance(MI, false, DAG->getLIS());
 
       Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
           TempTopTracker.getPressure().getSGPRNum();
@@ -183,7 +183,7 @@ static void getRegisterPressures(bool AtTop,
     else {
       GCNUpwardRPTracker TempBotTracker(TheUpwardTracker);
       auto MI = SU->getInstr();
-      TempBotTracker.recede(*MI, true);
+      TempBotTracker.recede(*MI, false);
 
       Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
           TempBotTracker.getPressure().getSGPRNum();
@@ -489,8 +489,8 @@ SUnit *GCNSchedStrategy::pickNode(bool &IsTopNode) {
 void GCNSchedStrategy::schedNode(SUnit *SU, bool IsTopNode) {
   if (GCNTrackers) {
     MachineInstr *MI = SU->getInstr();
-    IsTopNode ? (void)TheTracker.advance(MI, true, DAG->getLIS())
-              : TheUpwardTracker.recede(*MI, true);
+    IsTopNode ? (void)TheTracker.advance(MI, false, DAG->getLIS())
+              : TheUpwardTracker.recede(*MI, false);
   }
 
   return GenericScheduler::schedNode(SU, IsTopNode);
