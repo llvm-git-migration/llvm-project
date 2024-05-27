@@ -158,7 +158,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
     if (AtTop) {
       GCNDownwardRPTracker TempTopTracker(TheTracker);
       auto MI = SU->getInstr();
-      TempTopTracker.advance(MI, true, DAG->getLIS());
+      TempTopTracker.advance(MI, false, DAG->getLIS());
 
       NewSGPRPressure = TempTopTracker.getPressure().getSGPRNum();
       NewVGPRPressure = TempTopTracker.getPressure().getVGPRNum(false);
@@ -167,7 +167,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
     else {
       GCNUpwardRPTracker TempBotTracker(TheUpwardTracker);
       auto MI = SU->getInstr();
-      TempBotTracker.recede(*MI, true);
+      TempBotTracker.recede(*MI, false);
 
       NewSGPRPressure = TempBotTracker.getPressure().getSGPRNum();
       NewVGPRPressure = TempBotTracker.getPressure().getVGPRNum(false);
@@ -396,8 +396,8 @@ SUnit *GCNSchedStrategy::pickNode(bool &IsTopNode) {
 void GCNSchedStrategy::schedNode(SUnit *SU, bool IsTopNode) {
   if (GCNTrackers) {
     MachineInstr *MI = SU->getInstr();
-    IsTopNode ? TheTracker.advance(MI, true, DAG->getLIS())
-              : TheUpwardTracker.recede(*MI, true);
+    IsTopNode ? (void)TheTracker.advance(MI, false, DAG->getLIS())
+              : TheUpwardTracker.recede(*MI, false);
   }
 
   return GenericScheduler::schedNode(SU, IsTopNode);
