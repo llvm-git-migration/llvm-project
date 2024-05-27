@@ -2109,8 +2109,13 @@ void OmpAttributeVisitor::Post(const parser::Name &name) {
           dirContext.defaultDSA == Symbol::Flag::OmpShared) {
         // 1) default
         // Allowed only with parallel, teams and task generating constructs.
-        assert(parallelDir || taskGenDir ||
-            llvm::omp::allTeamsSet.test(dirContext.directive));
+        if (!(parallelDir || taskGenDir ||
+                llvm::omp::allTeamsSet.test(dirContext.directive)))
+          context_.Say(dirContext.directiveSource,
+              "%s directive cannot have default clause"_err_en_US,
+              parser::ToUpperCaseLetters(
+                  llvm::omp::getOpenMPDirectiveName(dirContext.directive)
+                      .str()));
         if (dirContext.defaultDSA != Symbol::Flag::OmpShared)
           declNewSymbol(dirContext.defaultDSA);
         else
