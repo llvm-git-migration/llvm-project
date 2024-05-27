@@ -54,14 +54,14 @@
 
 // DISASM:      Disassembly of section .text:
 // DISASM-EMPTY:
-// DISASM-NEXT :_start:
-// DISASM-NEXT   11114:       1e ff 2f e1     bx      lr
+// DISASM-NEXT: _start:
+// DISASM-NEXT:   11114:       1e ff 2f e1     bx      lr
 // Offset 0 from .got = bar
-// DISASM        11118:       00 10 00 00
+// DISASM:        11118:       00 10 00 00
 // Offset 10 from .got = obj
-// DISASM-NEXT   1111c:       0a 10 00 00
+// DISASM-NEXT:   1111c:       0a 10 00 00
 // Offset 15 from .got = obj +5
-// DISASM-NEXT   11120:       0f 10 00 00
+// DISASM-NEXT:   11120:       0f 10 00 00
  .syntax unified
  .globl _start
 _start:
