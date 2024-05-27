@@ -7518,8 +7518,13 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
     return;
   case Intrinsic::clear_cache:
     /// FunctionName may be null.
-    if (const char *FunctionName = TLI.getClearCacheBuiltinName())
-      lowerCallToExternalSymbol(I, FunctionName);
+    if (!TLI.isClearCacheBuiltinTargetSpecific()) {
+      if (const char *FunctionName = TLI.getClearCacheBuiltinName())
+        lowerCallToExternalSymbol(I, FunctionName);
+    } else {
+      // Turn this into a target intrinsic node.
+      visitTargetIntrinsic(I, Intrinsic);
+    }
     return;
   case Intrinsic::donothing:
   case Intrinsic::seh_try_begin:

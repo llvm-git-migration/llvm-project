@@ -662,6 +662,12 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
+  if (Subtarget.getTargetTriple().isOSGlibc()) {
+    // Custom lowering of llvm.clear_cache
+    setOperationAction({ISD::INTRINSIC_VOID, ISD::INTRINSIC_VOID}, MVT::Other,
+                       Custom);
+  }
+
   if (Subtarget.hasVInstructions()) {
     setBooleanVectorContents(ZeroOrOneBooleanContent);
 
@@ -7120,6 +7126,39 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   }
 }
 
+SDValue RISCVTargetLowering::emitFlushICache(SelectionDAG &DAG, SDValue InChain,
+                                             SDValue Start, SDValue End,
+                                             SDValue Flags, SDLoc DL) const {
+  TargetLowering::ArgListTy Args;
+  TargetLowering::ArgListEntry Entry;
+
+  // start
+  Entry.Node = Start;
+  Entry.Ty = PointerType::getUnqual(*DAG.getContext());
+  Args.push_back(Entry);
+
+  // end
+  Entry.Node = End;
+  Entry.Ty = PointerType::getUnqual(*DAG.getContext());
+  Args.push_back(Entry);
+
+  // flags
+  Entry.Node = Flags;
+  Entry.Ty = Type::getIntNTy(*DAG.getContext(), Subtarget.getXLen());
+  Args.push_back(Entry);
+
+  TargetLowering::CallLoweringInfo CLI(DAG);
+  EVT Ty = getPointerTy(DAG.getDataLayout());
+  CLI.setDebugLoc(DL).setChain(InChain).setLibCallee(
+      CallingConv::C, Type::getVoidTy(*DAG.getContext()),
+      DAG.getExternalSymbol("__riscv_flush_icache", Ty), std::move(Args));
+
+  std::pair<SDValue, SDValue> CallResult = LowerCallTo(CLI);
+
+  // This function returns void so only the out chain matters.
+  return CallResult.second;
+}
+
 static SDValue getTargetNode(GlobalAddressSDNode *N, const SDLoc &DL, EVT Ty,
                              SelectionDAG &DAG, unsigned Flags) {
   return DAG.getTargetGlobalAddress(N->getGlobal(), DL, Ty, 0, Flags);
@@ -9497,6 +9536,15 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_VOID(SDValue Op,
     return getVCIXISDNodeVOID(Op, DAG, RISCVISD::SF_VC_VVW_SE);
   case Intrinsic::riscv_sf_vc_fvw_se:
     return getVCIXISDNodeVOID(Op, DAG, RISCVISD::SF_VC_FVW_SE);
+  case Intrinsic::clear_cache: {
+    if (Subtarget.getTargetTriple().isOSGlibc()) {
+      SDLoc DL(Op);
+      SDValue Flags = DAG.getConstant(0, DL, Subtarget.getXLenVT());
+      return emitFlushICache(DAG, Op.getOperand(0), Op.getOperand(2),
+                             Op.getOperand(3), Flags, DL);
+    }
+    break;
+  }
   }
 
   return lowerVectorIntrinsicScalars(Op, DAG, Subtarget);
@@ -21682,6 +21730,14 @@ SDValue RISCVTargetLowering::expandIndirectJTBranch(const SDLoc &dl,
                        Addr);
   }
   return TargetLowering::expandIndirectJTBranch(dl, Value, Addr, JTI, DAG);
+}
+
+bool RISCVTargetLowering::isClearCacheBuiltinTargetSpecific() const {
+  // We do a manual lowering for glibc-based targets to call
+  // __riscv_flush_icache instead.
+  if (Subtarget.getTargetTriple().isOSGlibc())
+    return true;
+  return TargetLowering::isClearCacheBuiltinTargetSpecific();
 }
 
 namespace llvm::RISCVVIntrinsicsTable {

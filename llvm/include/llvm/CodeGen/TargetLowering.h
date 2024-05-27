@@ -4764,8 +4764,15 @@ public:
     return false;
   }
 
+  /// Returns true if the target needs to lower __builtin___clear_cache in a
+  /// specific way that is incompatible with the clear_cache
+  /// signature. When returning false, the lowering will invoke
+  /// getClearCacheBuiltinName.
+  virtual bool isClearCacheBuiltinTargetSpecific() const { return false; }
+
   /// Return the builtin name for the __builtin___clear_cache intrinsic
-  /// Default is to invoke the clear cache library call
+  /// This is only used if isClearCacheBuiltinTargetSpecific returns false.
+  /// If nullptr is returned, the builtin is lowered to no code.
   virtual const char * getClearCacheBuiltinName() const {
     return "__clear_cache";
   }

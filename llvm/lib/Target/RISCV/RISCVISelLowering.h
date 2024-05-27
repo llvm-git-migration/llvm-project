@@ -897,6 +897,8 @@ public:
                                const RISCVTargetLowering &TLI,
                                RVVArgDispatcher &RVVDispatcher);
 
+  bool isClearCacheBuiltinTargetSpecific() const override;
+
 private:
   void analyzeInputArgs(MachineFunction &MF, CCState &CCInfo,
                         const SmallVectorImpl<ISD::InputArg> &Ins, bool IsRet,
@@ -1033,6 +1035,9 @@ private:
                                          const APInt &AndMask) const override;
 
   unsigned getMinimumJumpTableEntries() const override;
+
+  SDValue emitFlushICache(SelectionDAG &DAG, SDValue InChain, SDValue Start,
+                          SDValue End, SDValue Flags, SDLoc DL) const;
 };
 
 /// As per the spec, the rules for passing vector arguments are as follows:
