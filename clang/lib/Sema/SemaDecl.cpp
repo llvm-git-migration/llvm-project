@@ -7716,6 +7716,14 @@ NamedDecl *Sema::ActOnVariableDeclarator(
                    ? diag::warn_cxx11_compat_variable_template
                    : diag::ext_variable_template);
         }
+
+        if (CurContext->isRecord() && SC != SC_Static && (IsVariableTemplate || IsPartialSpecialization)) {
+          // There is no such thing as a member field template.
+          Diag(D.getIdentifierLoc(), diag::err_template_member)
+              << II << TemplateParams->getSourceRange();
+          // Recover by pretending this is a static data member template.
+          SC = SC_Static;
+        }
       }
     } else {
       // Check that we can declare a member specialization here.
