@@ -7654,7 +7654,7 @@ NamedDecl *Sema::ActOnVariableDeclarator(
              "should have a 'template<>' for this decl");
     }
 
-    if (SC != SC_None && ((IsVariableTemplateSpecialization && !IsPartialSpecialization) || IsMemberSpecialization)) {
+    if (SCSpec != DeclSpec::SCS_unspecified && ((IsVariableTemplateSpecialization && !IsPartialSpecialization) || IsMemberSpecialization)) {
       Diag(D.getDeclSpec().getStorageClassSpecLoc(),
              diag::ext_explicit_specialization_storage_class)
           << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
