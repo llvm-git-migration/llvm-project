@@ -15,9 +15,7 @@ define <8 x i8> @trivial(<8 x i8> %a) {
 
 define <4 x i32> @add_same_operands(<4 x i32> %x) {
 ; CHECK-LABEL: @add_same_operands(
-; CHECK-NEXT:    [[SHUF:%.*]] = shufflevector <4 x i32> [[X:%.*]], <4 x i32> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; CHECK-NEXT:    [[ADD:%.*]] = add <4 x i32> [[SHUF]], [[SHUF]]
-; CHECK-NEXT:    [[REVSHUF:%.*]] = shufflevector <4 x i32> [[ADD]], <4 x i32> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
+; CHECK-NEXT:    [[REVSHUF:%.*]] = add <4 x i32> [[X:%.*]], [[X]]
 ; CHECK-NEXT:    ret <4 x i32> [[REVSHUF]]
 ;
   %shuf = shufflevector <4 x i32> %x, <4 x i32> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
@@ -364,8 +362,7 @@ define <8 x i8> @inner_shuffle(<8 x i8> %a, <8 x i8> %b, <8 x i8> %c) {
 define <4 x i32> @extrause_add_same_operands(<4 x i32> %x) {
 ; CHECK-LABEL: @extrause_add_same_operands(
 ; CHECK-NEXT:    [[SHUF:%.*]] = shufflevector <4 x i32> [[X:%.*]], <4 x i32> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; CHECK-NEXT:    [[ADD:%.*]] = add <4 x i32> [[SHUF]], [[SHUF]]
-; CHECK-NEXT:    [[REVSHUF:%.*]] = shufflevector <4 x i32> [[ADD]], <4 x i32> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
+; CHECK-NEXT:    [[REVSHUF:%.*]] = add <4 x i32> [[X]], [[X]]
 ; CHECK-NEXT:    [[ADD2:%.*]] = add <4 x i32> [[SHUF]], [[REVSHUF]]
 ; CHECK-NEXT:    ret <4 x i32> [[ADD2]]
 ;
