@@ -66,8 +66,8 @@ static cl::opt<bool> GCNTrackers(
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
-    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), TheTracker(*C->LIS),
-      TheUpwardTracker(*C->LIS), HasHighPressure(false) {}
+    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), DownwardTracker(*C->LIS),
+      UpwardTracker(*C->LIS), HasHighPressure(false) {}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   GenericScheduler::initialize(DAG);
@@ -156,7 +156,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
 
   if (GCNTrackers) {
     if (AtTop) {
-      GCNDownwardRPTracker TempTopTracker(TheTracker);
+      GCNDownwardRPTracker TempTopTracker(DownwardTracker);
       auto MI = SU->getInstr();
       TempTopTracker.advance(MI, false, DAG->getLIS());
 
@@ -165,7 +165,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
     }
 
     else {
-      GCNUpwardRPTracker TempBotTracker(TheUpwardTracker);
+      GCNUpwardRPTracker TempBotTracker(UpwardTracker);
       auto MI = SU->getInstr();
       TempBotTracker.recede(*MI, false);
 
@@ -243,13 +243,13 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
   if (DAG->isTrackingPressure()) {
     SGPRPressure =
         GCNTrackers
-            ? (Zone.isTop() ? TheTracker.getPressure().getSGPRNum()
-                            : TheUpwardTracker.getPressure().getSGPRNum())
+            ? (Zone.isTop() ? DownwardTracker.getPressure().getSGPRNum()
+                            : UpwardTracker.getPressure().getSGPRNum())
             : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
     VGPRPressure =
         GCNTrackers
-            ? (Zone.isTop() ? TheTracker.getPressure().getVGPRNum(false)
-                            : TheUpwardTracker.getPressure().getVGPRNum(false))
+            ? (Zone.isTop() ? DownwardTracker.getPressure().getVGPRNum(false)
+                            : UpwardTracker.getPressure().getVGPRNum(false))
             : Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
   }
   ReadyQueue &Q = Zone.Available;
@@ -396,8 +396,8 @@ SUnit *GCNSchedStrategy::pickNode(bool &IsTopNode) {
 void GCNSchedStrategy::schedNode(SUnit *SU, bool IsTopNode) {
   if (GCNTrackers) {
     MachineInstr *MI = SU->getInstr();
-    IsTopNode ? (void)TheTracker.advance(MI, false, DAG->getLIS())
-              : TheUpwardTracker.recede(*MI, false);
+    IsTopNode ? (void)DownwardTracker.advance(MI, false, DAG->getLIS())
+              : UpwardTracker.recede(*MI, false);
   }
 
   return GenericScheduler::schedNode(SU, IsTopNode);
@@ -748,14 +748,14 @@ void GCNScheduleDAGMILive::runSchedStages() {
       }
 
       if (GCNTrackers) {
-        GCNDownwardRPTracker *TheTracker = S.getTracker();
-        GCNUpwardRPTracker *TheUpwardTracker = S.getUpwardTracker();
+        GCNDownwardRPTracker *DownwardTracker = S.getDownwardTracker();
+        GCNUpwardRPTracker *UpwardTracker = S.getUpwardTracker();
         GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
 
-        reinterpret_cast<GCNRPTracker *>(TheTracker)->reset(
+        reinterpret_cast<GCNRPTracker *>(DownwardTracker)->reset(
             Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
             *RegionLiveIns);
-        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)->reset(
+        reinterpret_cast<GCNRPTracker *>(UpwardTracker)->reset(
             Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
             RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
 
