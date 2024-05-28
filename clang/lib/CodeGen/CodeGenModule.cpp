@@ -5492,6 +5492,8 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
 
   // If it is safe to mark the global 'constant', do so now.
   GV->setConstant(!NeedsGlobalCtor && !NeedsGlobalDtor &&
+                  (!IsDefinitionAvailableExternally ||
+                   D->hasConstantInitialization()) &&
                   D->getType().isConstantStorage(getContext(), true, true));
 
   // If it is in a read-only section, mark it 'constant'.
