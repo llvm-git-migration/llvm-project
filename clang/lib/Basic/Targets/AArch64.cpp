@@ -221,6 +221,16 @@ bool AArch64TargetInfo::validateTarget(DiagnosticsEngine &Diags) const {
   return true;
 }
 
+unsigned AArch64TargetInfo::getBitIntLegalWidth(unsigned Width) const {
+  unsigned IntegralSizes[] = {32, 64, 128};
+  const unsigned ARR_SZ = sizeof(IntegralSizes) / sizeof(unsigned);
+  for (unsigned I = 0; I < ARR_SZ; I++) {
+    if (IntegralSizes[I] > Width)
+      return IntegralSizes[I];
+  }
+  return Width;
+}
+
 bool AArch64TargetInfo::validateBranchProtection(StringRef Spec, StringRef,
                                                  BranchProtectionInfo &BPI,
                                                  StringRef &Err) const {

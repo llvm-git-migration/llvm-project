@@ -1344,6 +1344,22 @@ int ARMTargetInfo::getEHDataRegisterNumber(unsigned RegNo) const {
 
 bool ARMTargetInfo::hasSjLjLowering() const { return true; }
 
+unsigned ARMTargetInfo::getBitIntLegalWidth(unsigned Width) const {
+  unsigned IntegralSizes[] = {32, 64};
+  const unsigned ARR_SZ = sizeof(IntegralSizes) / sizeof(unsigned);
+  for (unsigned I = 0; I < ARR_SZ; I++) {
+    if (IntegralSizes[I] > Width)
+      return IntegralSizes[I];
+  }
+  return Width;
+}
+
+bool ARMTargetInfo::isBitIntSignExtended(bool IsSigned) const {
+  if (IsSigned)
+    return true;
+  return false;
+}
+
 ARMleTargetInfo::ARMleTargetInfo(const llvm::Triple &Triple,
                                  const TargetOptions &Opts)
     : ARMTargetInfo(Triple, Opts) {}
