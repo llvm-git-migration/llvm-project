@@ -1,5 +1,35 @@
 // RUN: %clang_cc1 -fsyntax-only -verify -std=c++20 %s
 
+template<typename T>
+int x;
+
+template<typename T>
+static int x<T*>;
+
+template<>
+static int x<int>; // expected-warning {{explicit specialization cannot have a storage class}}
+
+template<typename T>
+extern int y;
+
+template<typename T>
+static int y<T*>;
+
+template<>
+static int y<int>; // expected-warning {{explicit specialization cannot have a storage class}}
+
+template<typename T>
+void f();
+
+template<>
+static void f<int>(); // expected-warning {{explicit specialization cannot have a storage class}}
+
+template<typename T>
+extern void g();
+
+template<>
+static void g<int>(); // expected-warning {{explicit specialization cannot have a storage class}}
+
 struct A {
   static int x;
 
