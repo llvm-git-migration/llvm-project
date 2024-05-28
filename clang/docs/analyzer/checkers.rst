@@ -1235,6 +1235,25 @@ Check calls to various UNIX/Posix functions: ``open, pthread_once, calloc, mallo
 .. literalinclude:: checkers/unix_api_example.c
     :language: c
 
+.. _unix-BlockInCriticalSection:
+
+unix.BlockInCriticalSection (C)
+"""""""""""""""""""""""""""""""""""""
+
+Check for calls to blocking functions inside a critical section.
+Applies to: ``lock, unlock, sleep, getc, fgets, read, recv, pthread_mutex_lock,``
+`` pthread_mutex_unlock, mtx_lock, mtx_timedlock, mtx_trylock, mtx_unlock, lock_guard, unique_lock``
+
+.. code-block:: c
+
+ void test() {
+   std::mutex m;
+   m.lock();
+   sleep(3); // warn: a blocking function sleep is called inside a critical
+             //       section
+   m.unlock();
+ }
+
 .. _unix-Errno:
 
 unix.Errno (C)
@@ -3129,24 +3148,6 @@ For a more detailed description of configuration options, please see the
 
 alpha.unix
 ^^^^^^^^^^
-
-.. _alpha-unix-BlockInCriticalSection:
-
-alpha.unix.BlockInCriticalSection (C)
-"""""""""""""""""""""""""""""""""""""
-Check for calls to blocking functions inside a critical section.
-Applies to: ``lock, unlock, sleep, getc, fgets, read, recv, pthread_mutex_lock,``
-`` pthread_mutex_unlock, mtx_lock, mtx_timedlock, mtx_trylock, mtx_unlock, lock_guard, unique_lock``
-
-.. code-block:: c
-
- void test() {
-   std::mutex m;
-   m.lock();
-   sleep(3); // warn: a blocking function sleep is called inside a critical
-             //       section
-   m.unlock();
- }
 
 .. _alpha-unix-Chroot:
 
