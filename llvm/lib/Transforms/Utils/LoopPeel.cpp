@@ -447,21 +447,8 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     DesiredPeelCount = std::max(DesiredPeelCount, NewPeelCount);
   };
 
-  auto ComputePeelCountMinMax = [&](IntrinsicInst *II) {
-    bool IsSigned;
-    switch (II->getIntrinsicID()) {
-    case Intrinsic::smax:
-    case Intrinsic::smin:
-      IsSigned = true;
-      break;
-    case Intrinsic::umax:
-    case Intrinsic::umin:
-      IsSigned = false;
-      break;
-    default:
-      return;
-    }
-    Value *LHS = II->getOperand(0), *RHS = II->getOperand(1);
+  auto ComputePeelCountMinMax = [&](MinMaxIntrinsic *MinMax) {
+    Value *LHS = MinMax->getLHS(), *RHS = MinMax->getRHS();
     const SCEV *BoundSCEV, *IterSCEV;
     if (L.isLoopInvariant(LHS)) {
       BoundSCEV = SE.getSCEV(LHS);
@@ -480,9 +467,9 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     // predicates here.
     ICmpInst::Predicate Pred;
     if (SE.isKnownPositive(Step))
-      Pred = IsSigned ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
+      Pred = MinMax->isSigned() ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
     else if (SE.isKnownNegative(Step))
-      Pred = IsSigned ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
+      Pred = MinMax->isSigned() ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
     else
       return;
     unsigned NewPeelCount = DesiredPeelCount;
@@ -498,8 +485,8 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     for (Instruction &I : *BB) {
       if (SelectInst *SI = dyn_cast<SelectInst>(&I))
         ComputePeelCount(SI->getCondition(), 0);
-      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(&I))
-        ComputePeelCountMinMax(II);
+      if (MinMaxIntrinsic *MinMax = dyn_cast<MinMaxIntrinsic>(&I))
+        ComputePeelCountMinMax(MinMax);
     }
 
     auto *BI = dyn_cast<BranchInst>(BB->getTerminator());
