@@ -835,12 +835,12 @@ def EmitC_LogicalOrOp : EmitC_BinaryOp<"logical_or", [CExpression]> {
   let assemblyFormat = "operands attr-dict `:` type(operands)";
 }
 
-def EmitC_LValueToRValueOp : EmitC_Op<"lvalue_to_rvalue", [
+def EmitC_LValueLoadOp : EmitC_Op<"lvalue_load", [
   TypesMatchWith<"result type matches value type of 'operand'",
                   "operand", "result",
                   "::llvm::cast<LValueType>($_self).getValue()">
 ]> {
-  let summary = "lvalue to rvalue conversion operation";
+  let summary = "load an lvalue by assigning it to a local variable";
   let description = [{}];
 
   let arguments = (ins EmitC_LValueType:$operand);
@@ -1025,7 +1025,7 @@ def EmitC_VariableOp : EmitC_Op<"variable", []> {
   }];
 
   let arguments = (ins EmitC_OpaqueOrTypedAttr:$value);
-  let results = (outs EmitC_LValueType);
+  let results = (outs AnyTypeOf<[EmitC_ArrayType, EmitC_LValueType]>);
 
   let hasVerifier = 1;
 }

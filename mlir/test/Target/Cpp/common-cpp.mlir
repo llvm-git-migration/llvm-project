@@ -86,10 +86,11 @@ func.func @apply(%arg0: i32) -> !emitc.ptr<i32> {
   // CHECK: int32_t* [[V2]] = &[[V1]];
   %0 = emitc.apply "&"(%arg0) : (i32) -> !emitc.ptr<i32>
   // CHECK: int32_t [[V3]];
-  // CHECK: [[V3]] = *[[V2]];
-  %1 = emitc.apply "*"(%0) : (!emitc.ptr<i32>) -> (!emitc.lvalue<i32>)
   %2 = "emitc.variable"() {value = #emitc.opaque<"">} : () -> !emitc.lvalue<i32>
-  %3 = emitc.lvalue_to_rvalue %1 : !emitc.lvalue<i32>
+  %1 = emitc.apply "*"(%0) : (!emitc.ptr<i32>) -> (!emitc.lvalue<i32>)
+  %3 = emitc.lvalue_load %1 : !emitc.lvalue<i32>
+  // CHECK: int32_t [[V4]] = *[[V2]];
+  // CHECK: [[V3]] = [[V4]];
   emitc.assign %3 : i32 to %2 : !emitc.lvalue<i32>
   return %0 : !emitc.ptr<i32>
 }

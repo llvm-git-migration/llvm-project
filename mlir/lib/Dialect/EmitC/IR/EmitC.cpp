@@ -61,6 +61,8 @@ void mlir::emitc::buildTerminatedBody(OpBuilder &builder, Location loc) {
 bool mlir::emitc::isSupportedEmitCType(Type type) {
   if (llvm::isa<emitc::OpaqueType>(type))
     return true;
+  if (auto lType = llvm::dyn_cast<emitc::LValueType>(type))
+    return isSupportedEmitCType(lType.getValue());
   if (auto ptrType = llvm::dyn_cast<emitc::PointerType>(type))
     return isSupportedEmitCType(ptrType.getPointee());
   if (auto arrayType = llvm::dyn_cast<emitc::ArrayType>(type)) {
@@ -779,7 +781,7 @@ LogicalResult emitc::LiteralOp::verify() {
 // LValueToRValueOp
 //===----------------------------------------------------------------------===//
 
-LogicalResult emitc::LValueToRValueOp::verify() {
+LogicalResult emitc::LValueLoadOp::verify() {
   Type operandType = getOperand().getType();
   Type resultType = getResult().getType();
   if (!llvm::isa<emitc::LValueType>(operandType))
@@ -888,9 +890,10 @@ LogicalResult emitc::SubscriptOp::verify() {
     }
     // Check element type.
     Type elementType = arrayType.getElementType();
-    if (elementType != getType()) {
+    Type resultType = getType().getValue();
+    if (elementType != resultType) {
       return emitOpError() << "on array operand requires element type ("
-                           << elementType << ") and result type (" << getType()
+                           << elementType << ") and result type (" << resultType
                            << ") to match";
     }
     return success();
@@ -914,9 +917,10 @@ LogicalResult emitc::SubscriptOp::verify() {
     }
     // Check pointee type.
     Type pointeeType = pointerType.getPointee();
-    if (pointeeType != getType()) {
+    Type resultType = getType().getValue();
+    if (pointeeType != resultType) {
       return emitOpError() << "on pointer operand requires pointee type ("
-                           << pointeeType << ") and result type (" << getType()
+                           << pointeeType << ") and result type (" << resultType
                            << ") to match";
     }
     return success();

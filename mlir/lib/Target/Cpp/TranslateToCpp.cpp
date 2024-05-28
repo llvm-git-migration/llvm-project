@@ -378,10 +378,11 @@ static LogicalResult printOperation(CppEmitter &emitter,
 }
 
 static LogicalResult printOperation(CppEmitter &emitter,
-                                    emitc::LValueToRValueOp lValueToRValueOp) {
-  // Add name to cache so that `hasValueInScope` works.
-  emitter.getOrCreateName(lValueToRValueOp.getResult());
-  return success();
+                                    emitc::LValueLoadOp lValueLoadOp) {
+  if (failed(emitter.emitAssignPrefix(*lValueLoadOp)))
+    return failure();
+
+  return emitter.emitOperand(lValueLoadOp.getOperand());
 }
 
 static LogicalResult printOperation(CppEmitter &emitter,
@@ -961,7 +962,7 @@ static LogicalResult printFunctionBody(CppEmitter &emitter,
     // regions.
     WalkResult result =
         functionOp->walk<WalkOrder::PreOrder>([&](Operation *op) -> WalkResult {
-          if (isa<emitc::LiteralOp, emitc::LValueToRValueOp>(op) ||
+          if (isa<emitc::LiteralOp>(op) ||
               (isa<emitc::ApplyOp>(op) &&
                cast<emitc::ApplyOp>(op).getApplicableOperator() == "*") ||
               isa<emitc::ExpressionOp>(op->getParentOp()) ||
@@ -1153,15 +1154,6 @@ std::string CppEmitter::getSubscriptName(emitc::SubscriptOp op) {
 StringRef CppEmitter::getOrCreateName(Value val) {
   if (auto literal = dyn_cast_if_present<emitc::LiteralOp>(val.getDefiningOp()))
     return literal.getValue();
-  if (auto lValueToRValue =
-          dyn_cast_if_present<emitc::LValueToRValueOp>(val.getDefiningOp())) {
-    Value operand = lValueToRValue.getOperand();
-    valueMapper.insert(val, "***UNUSED***");
-
-    assert(hasValueInScope(operand));
-
-    return getOrCreateName(operand);
-  }
   if (!valueMapper.count(val)) {
     if (auto subscript =
             dyn_cast_if_present<emitc::SubscriptOp>(val.getDefiningOp())) {
@@ -1428,7 +1420,7 @@ LogicalResult CppEmitter::emitVariableAssignment(OpResult result) {
 
 LogicalResult CppEmitter::emitVariableDeclaration(OpResult result,
                                                   bool trailingSemicolon) {
-  if (isa<emitc::SubscriptOp>(result.getDefiningOp()))
+  if (isa<emitc::SubscriptOp, emitc::GetGlobalOp>(result.getDefiningOp()))
     return success();
   if (hasValueInScope(result)) {
     return result.getDefiningOp()->emitError(
@@ -1532,11 +1524,11 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
                 emitc::ConditionalOp, emitc::ConstantOp, emitc::DeclareFuncOp,
                 emitc::DivOp, emitc::ExpressionOp, emitc::ForOp, emitc::FuncOp,
                 emitc::GlobalOp, emitc::GetGlobalOp, emitc::IfOp,
-                emitc::IncludeOp, emitc::LogicalAndOp,
-                emitc::LValueToRValueOp, emitc::LogicalNotOp, emitc::RemOp,
-                emitc::LogicalOrOp, emitc::MulOp, emitc::ReturnOp,
-                emitc::SubOp, emitc::SubscriptOp, emitc::UnaryMinusOp,
-                emitc::UnaryPlusOp, emitc::VariableOp, emitc::VerbatimOp>(
+                emitc::IncludeOp, emitc::LogicalAndOp, emitc::LogicalNotOp,
+                emitc::LValueLoadOp, emitc::RemOp, emitc::LogicalOrOp,
+                emitc::MulOp, emitc::ReturnOp, emitc::SubOp, emitc::SubscriptOp,
+                emitc::UnaryMinusOp, emitc::UnaryPlusOp, emitc::VariableOp,
+                emitc::VerbatimOp>(
               [&](auto op) { return printOperation(*this, op); })
           // Func ops.
           .Case<func::CallOp, func::FuncOp, func::ReturnOp>(
@@ -1549,7 +1541,8 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
   if (failed(status))
     return failure();
 
-  if (isa<emitc::LiteralOp, emitc::LValueToRValueOp, emitc::SubscriptOp, emitc::GetGlobalOp>(op))
+  if (isa<emitc::LiteralOp, emitc::SubscriptOp,
+          emitc::GetGlobalOp>(op))
     return success();
 
   if (getEmittedExpression() ||

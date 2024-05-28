@@ -86,7 +86,7 @@ static void assignValues(ValueRange values, SmallVector<Value> &variables,
 
     // TODO: Make sure this is safe, as this moves operations with memory
     // effects.
-    if (auto op = dyn_cast_if_present<emitc::LValueToRValueOp>(
+    if (auto op = dyn_cast_if_present<emitc::LValueLoadOp>(
             value.getDefiningOp())) {
       rewriter.moveOpBefore(op, assign);
     }
@@ -125,7 +125,7 @@ static void replaceUsers(PatternRewriter &rewriter,
 
       rewriter.setInsertionPoint(op);
       Value rValue =
-          rewriter.create<emitc::LValueToRValueOp>(loc, from.getType(), to);
+          rewriter.create<emitc::LValueLoadOp>(loc, from.getType(), to);
       operand.set(rValue);
     }
   }

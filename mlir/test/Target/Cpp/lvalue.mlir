@@ -7,7 +7,7 @@ emitc.func @lvalue_variables(%v1: i32, %v2: i32) -> i32 {
   emitc.assign %val : i32 to %variable : !emitc.lvalue<i32> // write effect
   %addr = emitc.apply "&"(%variable) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
   emitc.call @zero (%addr) : (!emitc.ptr<i32>) -> ()
-  %updated_val = emitc.lvalue_to_rvalue %variable : !emitc.lvalue<i32> // read effect, (noop in emitter?)
+  %updated_val = emitc.lvalue_load %variable : !emitc.lvalue<i32> // read effect, (noop in emitter?)
   %neg_one = "emitc.constant"() {value = -1 : i32} : () -> i32
   emitc.assign %neg_one : i32 to %variable : !emitc.lvalue<i32> // invalidates %updated_val
   emitc.return %updated_val : i32

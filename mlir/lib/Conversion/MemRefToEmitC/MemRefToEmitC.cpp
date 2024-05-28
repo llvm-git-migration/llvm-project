@@ -45,7 +45,9 @@ struct ConvertAlloca final : public OpConversionPattern<memref::AllocaOp> {
       return rewriter.notifyMatchFailure(op.getLoc(), "cannot convert type");
     }
     auto noInit = emitc::OpaqueAttr::get(getContext(), "");
+
     rewriter.replaceOpWithNewOp<emitc::VariableOp>(op, resultTy, noInit);
+
     return success();
   }
 };
@@ -137,12 +139,7 @@ struct ConvertLoad final : public OpConversionPattern<memref::LoadOp> {
     auto subscript = rewriter.create<emitc::SubscriptOp>(
         op.getLoc(), arrayValue, operands.getIndices());
 
-    auto noInit = emitc::OpaqueAttr::get(getContext(), "");
-    auto var =
-        rewriter.create<emitc::VariableOp>(op.getLoc(), resultTy, noInit);
-
-    rewriter.create<emitc::AssignOp>(op.getLoc(), var, subscript);
-    rewriter.replaceOp(op, var);
+    rewriter.replaceOpWithNewOp<emitc::LValueLoadOp>(op, resultTy, subscript);
     return success();
   }
 };
@@ -161,6 +158,7 @@ struct ConvertStore final : public OpConversionPattern<memref::StoreOp> {
 
     auto subscript = rewriter.create<emitc::SubscriptOp>(
         op.getLoc(), arrayValue, operands.getIndices());
+        
     rewriter.replaceOpWithNewOp<emitc::AssignOp>(op, subscript,
                                                  operands.getValue());
     return success();
