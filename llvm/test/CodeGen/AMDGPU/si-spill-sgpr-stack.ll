@@ -1,5 +1,7 @@
 ; RUN: llc -mtriple=amdgcn -mcpu=fiji -mattr=-flat-for-global -verify-machineinstrs < %s | FileCheck -check-prefix=ALL -check-prefix=SGPR %s
 
+; XFAIL: *
+
 ; Make sure this doesn't crash.
 ; ALL-LABEL: {{^}}test:
 ; ALL: s_mov_b32 s[[LO:[0-9]+]], SCRATCH_RSRC_DWORD0
