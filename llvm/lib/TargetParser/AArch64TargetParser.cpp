@@ -166,6 +166,12 @@ void AArch64::ExtensionSet::enable(ArchExtKind E) {
   Touched.set(E);
   Enabled.set(E);
 
+  // FIXME: Tablegen has the Subtarget Feature FeatureRCPC_IMMO which is implied
+  // by FeatureRCPC3 and in turn implies FeatureRCPC. The proper fix is to make
+  // FeatureRCPC_IMMO an Extension but that will expose it to the command line.
+  if (E == AEK_RCPC3)
+    enable(AEK_RCPC);
+
   // Recursively enable all features that this one depends on. This handles all
   // of the simple cases, where the behaviour doesn't depend on the base
   // architecture version.
@@ -180,12 +186,6 @@ void AArch64::ExtensionSet::enable(ArchExtKind E) {
     if (E == AEK_FP16 && BaseArch->is_superset(ARMV8_4A) &&
         !BaseArch->is_superset(ARMV9A))
       enable(AEK_FP16FML);
-
-    // For all architectures, +crypto enables +aes and +sha2.
-    if (E == AEK_CRYPTO) {
-      enable(AEK_AES);
-      enable(AEK_SHA2);
-    }
 
     // For v8.4A+ and v9.0A+, +crypto also enables +sha3 and +sm4.
     if (E == AEK_CRYPTO && BaseArch->is_superset(ARMV8_4A)) {
@@ -212,6 +212,12 @@ void AArch64::ExtensionSet::disable(ArchExtKind E) {
 
   Touched.set(E);
   Enabled.reset(E);
+
+  // FIXME: Tablegen has the Subtarget Feature FeatureRCPC_IMMO which is implied
+  // by FeatureRCPC3 and in turn implies FeatureRCPC. The proper fix is to make
+  // FeatureRCPC_IMMO an Extension but that will expose it to the command line.
+  if (E == AEK_RCPC)
+    disable(AEK_RCPC3);
 
   // Recursively disable all features that depends on this one.
   for (auto Dep : ExtensionDependencies)
