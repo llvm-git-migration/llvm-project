@@ -66,8 +66,9 @@ static cl::opt<bool> GCNTrackers(
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
-    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), DownwardTracker(*C->LIS),
-      UpwardTracker(*C->LIS), HasHighPressure(false) {}
+    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr),
+      DownwardTracker(*C->LIS), UpwardTracker(*C->LIS), HasHighPressure(false) {
+}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   GenericScheduler::initialize(DAG);
@@ -329,10 +330,9 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
   unsigned VGPRPressure = 0;
   if (DAG->isTrackingPressure()) {
     SGPRPressure =
-        GCNTrackers
-            ? (Zone.isTop() ? DownwardTracker.getPressure().getSGPRNum()
-                            : UpwardTracker.getPressure().getSGPRNum())
-            : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
+        GCNTrackers ? (Zone.isTop() ? DownwardTracker.getPressure().getSGPRNum()
+                                    : UpwardTracker.getPressure().getSGPRNum())
+                    : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
     VGPRPressure =
         GCNTrackers
             ? (Zone.isTop() ? DownwardTracker.getPressure().getVGPRNum(false)
@@ -838,7 +838,8 @@ void GCNScheduleDAGMILive::runSchedStages() {
       if (GCNTrackers) {
         GCNDownwardRPTracker *DownwardTracker = S.getDownwardTracker();
         GCNUpwardRPTracker *UpwardTracker = S.getUpwardTracker();
-        GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
+        GCNRPTracker::LiveRegSet *RegionLiveIns =
+            &LiveIns[Stage->getRegionIdx()];
 
         reinterpret_cast<GCNRPTracker *>(DownwardTracker)
             ->reset(MRI, *RegionLiveIns);
