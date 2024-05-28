@@ -66,8 +66,8 @@ static cl::opt<bool> GCNTrackers(
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
-    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), TheTracker(*C->LIS),
-      TheUpwardTracker(*C->LIS), HasHighPressure(false) {}
+    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), DownwardTracker(*C->LIS),
+      UpwardTracker(*C->LIS), HasHighPressure(false) {}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   GenericScheduler::initialize(DAG);
@@ -157,8 +157,8 @@ static void getRegisterPressures(bool AtTop,
                                  const RegPressureTracker &RPTracker, SUnit *SU,
                                  std::vector<unsigned> &Pressure,
                                  std::vector<unsigned> &MaxPressure,
-                                 GCNDownwardRPTracker &TheTracker,
-                                 GCNUpwardRPTracker &TheUpwardTracker,
+                                 GCNDownwardRPTracker &DownwardTracker,
+                                 GCNUpwardRPTracker &UpwardTracker,
                                  ScheduleDAGMI *DAG) {
   // getDownwardPressure() and getUpwardPressure() make temporary changes to
   // the tracker, so we need to pass those function a non-const copy.
@@ -170,7 +170,7 @@ static void getRegisterPressures(bool AtTop,
       TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
   } else {
     if (AtTop) {
-      GCNDownwardRPTracker TempTopTracker(TheTracker);
+      GCNDownwardRPTracker TempTopTracker(DownwardTracker);
       auto MI = SU->getInstr();
       TempTopTracker.advance(MI, false, DAG->getLIS());
 
@@ -181,7 +181,7 @@ static void getRegisterPressures(bool AtTop,
     }
 
     else {
-      GCNUpwardRPTracker TempBotTracker(TheUpwardTracker);
+      GCNUpwardRPTracker TempBotTracker(UpwardTracker);
       auto MI = SU->getInstr();
       TempBotTracker.recede(*MI, false);
 
@@ -221,7 +221,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
   // PressureDiffs.
   if (AtTop || !canUsePressureDiffs(*SU) || GCNTrackers) {
     getRegisterPressures(AtTop, RPTracker, SU, Pressure, MaxPressure,
-                         TheTracker, TheUpwardTracker, DAG);
+                         DownwardTracker, UpwardTracker, DAG);
   } else {
     // Reserve 4 slots.
     Pressure.resize(4, 0);
@@ -240,7 +240,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
 #ifdef EXPENSIVE_CHECKS
     std::vector<unsigned> CheckPressure, CheckMaxPressure;
     getRegisterPressures(AtTop, RPTracker, SU, CheckPressure, CheckMaxPressure,
-                         TheTracker, TheUpwardTracker, DAG);
+                         TheTracker, UpwardTracker, DAG);
     if (Pressure[AMDGPU::RegisterPressureSets::SReg_32] !=
             CheckPressure[AMDGPU::RegisterPressureSets::SReg_32] ||
         Pressure[AMDGPU::RegisterPressureSets::VGPR_32] !=
@@ -330,13 +330,13 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
   if (DAG->isTrackingPressure()) {
     SGPRPressure =
         GCNTrackers
-            ? (Zone.isTop() ? TheTracker.getPressure().getSGPRNum()
-                            : TheUpwardTracker.getPressure().getSGPRNum())
+            ? (Zone.isTop() ? DownwardTracker.getPressure().getSGPRNum()
+                            : UpwardTracker.getPressure().getSGPRNum())
             : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
     VGPRPressure =
         GCNTrackers
-            ? (Zone.isTop() ? TheTracker.getPressure().getVGPRNum(false)
-                            : TheUpwardTracker.getPressure().getVGPRNum(false))
+            ? (Zone.isTop() ? DownwardTracker.getPressure().getVGPRNum(false)
+                            : UpwardTracker.getPressure().getVGPRNum(false))
             : Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
   }
   ReadyQueue &Q = Zone.Available;
@@ -489,8 +489,8 @@ SUnit *GCNSchedStrategy::pickNode(bool &IsTopNode) {
 void GCNSchedStrategy::schedNode(SUnit *SU, bool IsTopNode) {
   if (GCNTrackers) {
     MachineInstr *MI = SU->getInstr();
-    IsTopNode ? (void)TheTracker.advance(MI, false, DAG->getLIS())
-              : TheUpwardTracker.recede(*MI, false);
+    IsTopNode ? (void)DownwardTracker.advance(MI, false, DAG->getLIS())
+              : UpwardTracker.recede(*MI, false);
   }
 
   return GenericScheduler::schedNode(SU, IsTopNode);
@@ -836,18 +836,17 @@ void GCNScheduleDAGMILive::runSchedStages() {
       }
 
       if (GCNTrackers) {
-        GCNDownwardRPTracker *TheTracker = S.getTracker();
-        GCNUpwardRPTracker *TheUpwardTracker = S.getUpwardTracker();
-        GCNRPTracker::LiveRegSet *RegionLiveIns =
-            &LiveIns[Stage->getRegionIdx()];
+        GCNDownwardRPTracker *DownwardTracker = S.getDownwardTracker();
+        GCNUpwardRPTracker *UpwardTracker = S.getUpwardTracker();
+        GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
 
-        reinterpret_cast<GCNRPTracker *>(TheTracker)
-            ->reset(Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-                    *RegionLiveIns);
-        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)
-            ->reset(
-                Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-                RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
+        reinterpret_cast<GCNRPTracker *>(DownwardTracker)->reset(
+            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+            *RegionLiveIns);
+        reinterpret_cast<GCNRPTracker *>(UpwardTracker)->reset(
+            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+            RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
+
       }
 
       ScheduleDAGMILive::schedule();

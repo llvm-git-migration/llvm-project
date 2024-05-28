@@ -71,10 +71,10 @@ protected:
   SmallVectorImpl<GCNSchedStageID>::iterator CurrentStage = nullptr;
 
   // GCN RP Tracker for top-down scheduling
-  mutable GCNDownwardRPTracker TheTracker;
+  mutable GCNDownwardRPTracker DownwardTracker;
 
   // GCN RP Tracker for botttom-up scheduling
-  mutable GCNUpwardRPTracker TheUpwardTracker;
+  mutable GCNUpwardRPTracker UpwardTracker;
 
 public:
   // schedule() have seen register pressure over the critical limits and had to
@@ -125,9 +125,9 @@ public:
 
   GCNSchedStageID getNextStage() const;
 
-  GCNDownwardRPTracker *getTracker() { return &TheTracker; }
+  GCNDownwardRPTracker *getDownwardTracker() { return &DownwardTracker; }
 
-  GCNUpwardRPTracker *getUpwardTracker() { return &TheUpwardTracker; }
+  GCNUpwardRPTracker *getUpwardTracker() { return &UpwardTracker; }
 };
 
 /// The goal of this scheduling strategy is to maximize kernel occupancy (i.e.
