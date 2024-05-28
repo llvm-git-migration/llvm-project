@@ -40,7 +40,8 @@ struct S {
   int j<int>; // expected-error  {{member 'j' cannot have template arguments}}
 
   static int k<12>; // expected-error {{template specialization requires 'template<>'}} \
-                       expected-error{{no variable template matches specialization}}
+                       expected-error {{no variable template matches specialization}} \
+                       expected-warning {{explicit specialization cannot have a storage class}}
   void f<12>();     // expected-error {{template specialization requires 'template<>'}} \
                     // expected-error {{no function template matches function template specialization 'f'}}
 };

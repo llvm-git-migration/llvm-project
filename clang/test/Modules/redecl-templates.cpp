@@ -1,7 +1,6 @@
 // RUN: rm -rf %t
 // RUN: %clang_cc1 -x c++ -I %S/Inputs/redecl-templates %s -verify -std=c++14
 // RUN: %clang_cc1 -x c++ -fmodules -fimplicit-module-maps -fmodules-cache-path=%t -I %S/Inputs/redecl-templates %s -verify -std=c++14
-// expected-no-diagnostics
 
 template<int N> struct A {};
 template<int N> using X = A<N>;
@@ -29,4 +28,4 @@ int &x = w<1>;
 // instantiation of this specialization.
 template<> struct A<1> {};
 template<> constexpr void f<1>() {}
-template<> int v<1>;
+template<> int v<1>; // expected-error{{redefinition of 'v<1>'}}
