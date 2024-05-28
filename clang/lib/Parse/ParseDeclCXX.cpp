@@ -3162,7 +3162,8 @@ Parser::DeclGroupPtrTy Parser::ParseCXXClassMemberDeclaration(
                      DeclSpec::SCS_static &&
                  DeclaratorInfo.getDeclSpec().getStorageClassSpec() !=
                      DeclSpec::SCS_typedef &&
-                 !DS.isFriendSpecified()) {
+                 !DS.isFriendSpecified() &&
+                 TemplateInfo.Kind == ParsedTemplateInfo::NonTemplate) {
         // It's a default member initializer.
         if (BitfieldSize.get())
           Diag(Tok, getLangOpts().CPlusPlus20
