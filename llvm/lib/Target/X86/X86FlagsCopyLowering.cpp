@@ -236,11 +236,7 @@ static MachineBasicBlock &splitBlock(MachineBasicBlock &MBB,
   return NewMBB;
 }
 
-enum EFLAGSClobber {
-  NoClobber,
-  EvitableClobber,
-  InevitableClobber
-};
+enum EFLAGSClobber { NoClobber, EvitableClobber, InevitableClobber };
 
 // TODO: Generate the full mapping with tablgen
 unsigned getNFVariant(unsigned Opc) {
