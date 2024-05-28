@@ -1760,7 +1760,8 @@ static Value *generateNewInstTree(ArrayRef<InstLane> Item, FixedVectorType *Ty,
 // do so.
 bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
   auto *Ty = dyn_cast<FixedVectorType>(I.getType());
-  if (!Ty)
+  if (!Ty || !isa<Instruction>(I.getOperand(0)) ||
+      !isa<Instruction>(I.getOperand(1)))
     return false;
 
   SmallVector<InstLane> Start(Ty->getNumElements());
