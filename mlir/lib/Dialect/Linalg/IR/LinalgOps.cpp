@@ -1866,6 +1866,35 @@ LogicalResult TransposeOp::fold(FoldAdaptor adaptor,
   return failure();
 }
 
+/// Fold transpose with transpose.
+struct FoldTransposeWithTranspose : OpRewritePattern<linalg::TransposeOp> {
+  using OpRewritePattern<linalg::TransposeOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(linalg::TransposeOp transposeOp,
+                                PatternRewriter &rewriter) const override {
+    if (auto defTransposeOp =
+            transposeOp.getInput().getDefiningOp<TransposeOp>()) {
+      ArrayRef<int64_t> defPerms = defTransposeOp.getPermutation();
+      ArrayRef<int64_t> perms = transposeOp.getPermutation();
+      SmallVector<int64_t> foldedPerms;
+      foldedPerms.reserve(perms.size());
+      for (int64_t perm : perms)
+        foldedPerms.push_back(defPerms[perm]);
+
+      rewriter.replaceOpWithNewOp<TransposeOp>(
+          transposeOp, defTransposeOp.getInput(), transposeOp.getInit(),
+          foldedPerms);
+      return success();
+    }
+    return failure();
+  }
+};
+
+void TransposeOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                              MLIRContext *context) {
+  results.add<FoldTransposeWithTranspose>(context);
+}
+
 //===----------------------------------------------------------------------===//
 // BroadcastOp
 //===----------------------------------------------------------------------===//
