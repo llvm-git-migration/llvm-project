@@ -14,6 +14,7 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Lex/Lexer.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
 
 #include "../utils/ExprSequence.h"
 #include "../utils/Matchers.h"
@@ -35,6 +36,9 @@ struct UseAfterMove {
 
   // Is the order in which the move and the use are evaluated undefined?
   bool EvaluationOrderUndefined;
+
+  // Does the use happen in a later loop iteration than the move?
+  bool UseHappensInLaterLoopIteration;
 };
 
 /// Finds uses of a variable after a move (and maintains state required by the
@@ -48,7 +52,7 @@ public:
   // use-after-move is found, writes information about it to 'TheUseAfterMove'.
   // Returns whether a use-after-move was found.
   bool find(Stmt *CodeBlock, const Expr *MovingCall,
-            const ValueDecl *MovedVariable, UseAfterMove *TheUseAfterMove);
+            const DeclRefExpr *MovedVariable, UseAfterMove *TheUseAfterMove);
 
 private:
   bool findInternal(const CFGBlock *Block, const Expr *MovingCall,
@@ -68,6 +72,30 @@ private:
   std::unique_ptr<StmtToBlockMap> BlockMap;
   llvm::SmallPtrSet<const CFGBlock *, 8> Visited;
 };
+
+/// Returns whether the `Before` block can reach the `After` block.
+bool reaches(const CFGBlock *Before, const CFGBlock *After) {
+  llvm::SmallVector<const CFGBlock *> Stack;
+  llvm::SmallPtrSet<const CFGBlock *, 1> Visited;
+
+  Stack.push_back(Before);
+  while (!Stack.empty()) {
+    const CFGBlock *Current = Stack.back();
+    Stack.pop_back();
+
+    if (Current == After)
+      return true;
+
+    Visited.insert(Current);
+
+    for (const auto &Succ : Current->succs()) {
+      if (!Visited.count(Succ))
+        Stack.push_back(Succ);
+    }
+  }
+
+  return false;
+}
 
 } // namespace
 
@@ -89,7 +117,7 @@ UseAfterMoveFinder::UseAfterMoveFinder(ASTContext *TheContext)
     : Context(TheContext) {}
 
 bool UseAfterMoveFinder::find(Stmt *CodeBlock, const Expr *MovingCall,
-                              const ValueDecl *MovedVariable,
+                              const DeclRefExpr *MovedVariable,
                               UseAfterMove *TheUseAfterMove) {
   // Generate the CFG manually instead of through an AnalysisDeclContext because
   // it seems the latter can't be used to generate a CFG for the body of a
@@ -110,15 +138,31 @@ bool UseAfterMoveFinder::find(Stmt *CodeBlock, const Expr *MovingCall,
   BlockMap = std::make_unique<StmtToBlockMap>(TheCFG.get(), Context);
   Visited.clear();
 
-  const CFGBlock *Block = BlockMap->blockContainingStmt(MovingCall);
-  if (!Block) {
+  const CFGBlock *MoveBlock = BlockMap->blockContainingStmt(MovingCall);
+  if (!MoveBlock) {
     // This can happen if MovingCall is in a constructor initializer, which is
     // not included in the CFG because the CFG is built only from the function
     // body.
-    Block = &TheCFG->getEntry();
+    MoveBlock = &TheCFG->getEntry();
   }
 
-  return findInternal(Block, MovingCall, MovedVariable, TheUseAfterMove);
+  bool found = findInternal(MoveBlock, MovingCall, MovedVariable->getDecl(),
+                            TheUseAfterMove);
+
+  if (found) {
+    if (const CFGBlock *UseBlock =
+            BlockMap->blockContainingStmt(TheUseAfterMove->DeclRef))
+      // Does the use happen in a later loop iteration than the move?
+      // - If they are in the same CFG block, we know the use happened in a
+      //   later iteration if we visited that block a second time.
+      // - Otherwise, we know the use happened in a later iteration if the
+      //   move is reachable from the use.
+      TheUseAfterMove->UseHappensInLaterLoopIteration =
+          UseBlock == MoveBlock ? Visited.count(UseBlock) != 0
+                                : reaches(UseBlock, MoveBlock);
+  }
+
+  return found;
 }
 
 bool UseAfterMoveFinder::findInternal(const CFGBlock *Block,
@@ -174,6 +218,10 @@ bool UseAfterMoveFinder::findInternal(const CFGBlock *Block,
         TheUseAfterMove->EvaluationOrderUndefined =
             MovingCall != nullptr &&
             Sequence->potentiallyAfter(MovingCall, Use);
+
+        // We default to false here and change this to true if required in
+        // find().
+        TheUseAfterMove->UseHappensInLaterLoopIteration = false;
 
         return true;
       }
@@ -394,7 +442,7 @@ static void emitDiagnostic(const Expr *MovingCall, const DeclRefExpr *MoveArg,
         "there is no guarantee about the order in which they are evaluated",
         DiagnosticIDs::Note)
         << IsMove;
-  } else if (UseLoc < MoveLoc || Use.DeclRef == MoveArg) {
+  } else if (Use.UseHappensInLaterLoopIteration) {
     Check->diag(UseLoc,
                 "the use happens in a later loop iteration than the "
                 "%select{forward|move}0",
@@ -495,7 +543,7 @@ void UseAfterMoveCheck::check(const MatchFinder::MatchResult &Result) {
   for (Stmt *CodeBlock : CodeBlocks) {
     UseAfterMoveFinder Finder(Result.Context);
     UseAfterMove Use;
-    if (Finder.find(CodeBlock, MovingCall, Arg->getDecl(), &Use))
+    if (Finder.find(CodeBlock, MovingCall, Arg, &Use))
       emitDiagnostic(MovingCall, Arg, Use, this, Result.Context,
                      determineMoveType(MoveDecl));
   }

@@ -242,6 +242,12 @@ Changes in existing checks
   and ``std::unique``, avoiding false positive for assignment operator overloading.
 
 - Improved :doc:`bugprone-use-after-move
+  <clang-tidy/checks/bugprone/use-after-move>`: fixed sequencing of designated
+  initializers. Fixed sequencing of callees: In C++17 and later, the callee of
+  a function is guaranteed to be sequenced before the arguments, so don't warn
+  if the use happens in the callee and the move happens in one of the arguments.
+
+- Improved :doc:`bugprone-use-after-move
   <clang-tidy/checks/bugprone/use-after-move>` check to also handle
   calls to ``std::forward``.
 
