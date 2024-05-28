@@ -88,8 +88,8 @@ bool reaches(const CFGBlock *Before, const CFGBlock *After) {
 
     Visited.insert(Current);
 
-    for (const auto &Succ : Current->succs()) {
-      if (!Visited.count(Succ))
+    for (const CFGBlock *Succ : Current->succs()) {
+      if (Succ && !Visited.contains(Succ))
         Stack.push_back(Succ);
     }
   }
@@ -146,10 +146,10 @@ bool UseAfterMoveFinder::find(Stmt *CodeBlock, const Expr *MovingCall,
     MoveBlock = &TheCFG->getEntry();
   }
 
-  bool found = findInternal(MoveBlock, MovingCall, MovedVariable->getDecl(),
+  bool Found = findInternal(MoveBlock, MovingCall, MovedVariable->getDecl(),
                             TheUseAfterMove);
 
-  if (found) {
+  if (Found) {
     if (const CFGBlock *UseBlock =
             BlockMap->blockContainingStmt(TheUseAfterMove->DeclRef))
       // Does the use happen in a later loop iteration than the move?
@@ -158,11 +158,10 @@ bool UseAfterMoveFinder::find(Stmt *CodeBlock, const Expr *MovingCall,
       // - Otherwise, we know the use happened in a later iteration if the
       //   move is reachable from the use.
       TheUseAfterMove->UseHappensInLaterLoopIteration =
-          UseBlock == MoveBlock ? Visited.count(UseBlock) != 0
+          UseBlock == MoveBlock ? Visited.contains(UseBlock)
                                 : reaches(UseBlock, MoveBlock);
   }
-
-  return found;
+  return Found;
 }
 
 bool UseAfterMoveFinder::findInternal(const CFGBlock *Block,
