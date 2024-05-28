@@ -2232,6 +2232,35 @@ def OMP_teams_loop : Directive<"teams loop"> {
   ];
   let leafConstructs = [OMP_Teams, OMP_loop];
 }
+def OMP_target_loop : Directive<"target loop"> {
+  let allowedClauses = [
+    VersionedClause<OMPC_Allocate>,
+    VersionedClause<OMPC_Depend>,
+    VersionedClause<OMPC_FirstPrivate>,
+    VersionedClause<OMPC_IsDevicePtr>,
+    VersionedClause<OMPC_HasDeviceAddr, 51>,
+    VersionedClause<OMPC_LastPrivate>,
+    VersionedClause<OMPC_Map>,
+    VersionedClause<OMPC_Private>,
+    VersionedClause<OMPC_Reduction>,
+    VersionedClause<OMPC_UsesAllocators, 50>,
+    VersionedClause<OMPC_OMPX_Attribute>,
+    VersionedClause<OMPC_InReduction, 50>,
+
+  ];
+  let allowedOnceClauses = [
+    VersionedClause<OMPC_Bind, 50>,
+    VersionedClause<OMPC_Collapse>,
+    VersionedClause<OMPC_Order>,
+    VersionedClause<OMPC_ThreadLimit>,
+    VersionedClause<OMPC_OMPX_DynCGroupMem>,
+    VersionedClause<OMPC_If>,
+    VersionedClause<OMPC_Device>,
+    VersionedClause<OMPC_DefaultMap>,
+    VersionedClause<OMPC_NoWait>,
+  ];
+  let leafConstructs = [OMP_Target, OMP_loop];
+}
 def OMP_target_teams_loop : Directive<"target teams loop"> {
   let allowedClauses = [
     VersionedClause<OMPC_If>,
