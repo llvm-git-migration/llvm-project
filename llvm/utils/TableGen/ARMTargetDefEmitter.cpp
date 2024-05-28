@@ -116,6 +116,20 @@ static void EmitARMTargetDef(RecordKeeper &RK, raw_ostream &OS) {
      << "#endif // EMIT_EXTENSIONS\n"
      << "\n";
 
+  // Emit extension dependencies
+  OS << "#ifdef EMIT_EXTENSION_DEPENDENCIES\n"
+     << "inline constexpr ExtensionDependency ExtensionDependencies[] = {\n";
+  for (const Record *Rec : SortedExtensions) {
+    auto LaterAEK = Rec->getValueAsString("ArchExtKindSpelling").upper();
+    for (auto *I : Rec->getValueAsListOfDefs("Implies"))
+      if (auto EarlierAEK = I->getValueAsOptionalString("ArchExtKindSpelling"))
+        OS << "  {" << EarlierAEK->upper() << ", " << LaterAEK << "},\n";
+  }
+  OS << "};\n"
+     << "#undef EMIT_EXTENSION_DEPENDENCIES\n"
+     << "#endif // EMIT_EXTENSION_DEPENDENCIES\n"
+     << "\n";
+
   // Emit architecture information
   OS << "#ifdef EMIT_ARCHITECTURES\n";
 
