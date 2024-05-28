@@ -1022,9 +1022,8 @@ bool AMDGPUSwLowerLDSLegacy::runOnModule(Module &M) {
   auto DTCallback = [&DTW](Function &F) -> DominatorTree * {
     return DTW ? &DTW->getDomTree() : nullptr;
   };
-  bool IsChanged = false;
   AMDGPUSwLowerLDS SwLowerLDSImpl(M, DTCallback);
-  IsChanged |= SwLowerLDSImpl.run();
+  bool IsChanged = SwLowerLDSImpl.run();
   return IsChanged;
 }
 
@@ -1038,9 +1037,8 @@ PreservedAnalyses AMDGPUSwLowerLDSPass::run(Module &M,
   auto DTCallback = [&FAM](Function &F) -> DominatorTree * {
     return &FAM.getResult<DominatorTreeAnalysis>(F);
   };
-  bool IsChanged = false;
   AMDGPUSwLowerLDS SwLowerLDSImpl(M, DTCallback);
-  IsChanged |= SwLowerLDSImpl.run();
+  bool IsChanged = SwLowerLDSImpl.run();
   if (!IsChanged)
     return PreservedAnalyses::all();
 
