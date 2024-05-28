@@ -1051,3 +1051,40 @@ func.func @transpose_identity_perm(%input: tensor<16x32x64xf32>,
 //   CHECK-NOT:   linalg.transpose
 //       CHECK:   return %[[INPUT]] : tensor<16x32x64xf32>
 
+// -----
+
+func.func @transpose_transpose_cancel(%input: tensor<5x4x3xf32>,
+                                      %init1: tensor<4x3x5xf32>,
+                                      %init2: tensor<5x4x3xf32>) -> tensor<5x4x3xf32> {
+  // CHECK-LABEL: @transpose_transpose_cancel
+  //   CHECK-NOT:   linalg.transpose
+  %transpose1 = linalg.transpose
+      ins(%input:tensor<5x4x3xf32>)
+      outs(%init1:tensor<4x3x5xf32>)
+      permutation = [1, 2, 0]
+  %transpose2 = linalg.transpose
+      ins(%transpose1:tensor<4x3x5xf32>)
+      outs(%init2:tensor<5x4x3xf32>)
+      permutation = [2, 0, 1]
+  func.return %transpose2 : tensor<5x4x3xf32>
+}
+
+// -----
+
+func.func @transpose_transpose_fold(%input: tensor<5x4x3xf32>,
+                                    %init1: tensor<4x3x5xf32>,
+                                    %init2: tensor<3x4x5xf32>) -> tensor<3x4x5xf32> {
+// CHECK-LABEL: @transpose_transpose_fold
+//       CHECK:   linalg.transpose ins(%{{.+}} : tensor<5x4x3xf32>) outs(%{{.+}} : tensor<3x4x5xf32>) permutation = [2, 1, 0]
+//   CHECK-NOT:   linalg.transpose
+  %transpose1 = linalg.transpose
+      ins(%input:tensor<5x4x3xf32>)
+      outs(%init1:tensor<4x3x5xf32>)
+      permutation = [1, 2, 0]
+  %transpose2 = linalg.transpose
+      ins(%transpose1:tensor<4x3x5xf32>)
+      outs(%init2:tensor<3x4x5xf32>)
+      permutation = [1, 0, 2]
+  func.return %transpose2 : tensor<3x4x5xf32>
+}
+
