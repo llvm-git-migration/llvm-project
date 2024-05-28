@@ -840,13 +840,11 @@ void GCNScheduleDAGMILive::runSchedStages() {
         GCNUpwardRPTracker *UpwardTracker = S.getUpwardTracker();
         GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
 
-        reinterpret_cast<GCNRPTracker *>(DownwardTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            *RegionLiveIns);
-        reinterpret_cast<GCNRPTracker *>(UpwardTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
-
+        reinterpret_cast<GCNRPTracker *>(DownwardTracker)
+            ->reset(MRI, *RegionLiveIns);
+        reinterpret_cast<GCNRPTracker *>(UpwardTracker)
+            ->reset(MRI, RegionLiveOuts.getLiveRegsForRegionIdx(
+                             Stage->getRegionIdx()));
       }
 
       ScheduleDAGMILive::schedule();
