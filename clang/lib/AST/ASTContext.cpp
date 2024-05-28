@@ -13675,16 +13675,6 @@ GetFMVBackendFeaturesFor(const llvm::SmallVector<StringRef, 8> FMVFeatStrings,
         BackendFeats.push_back(F.str());
 }
 
-std::vector<std::string> ASTContext::filterFunctionTargetVersionAttrs(
-    const TargetVersionAttr *TV) const {
-  assert(TV != nullptr);
-  llvm::SmallVector<StringRef, 8> Feats;
-  std::vector<std::string> ResFeats;
-  TV->getFeatures(Feats);
-  GetFMVBackendFeaturesFor(Feats, ResFeats);
-  return ResFeats;
-}
-
 ParsedTargetAttr
 ASTContext::filterFunctionTargetAttrs(const TargetAttr *TD) const {
   assert(TD != nullptr);
