@@ -14027,6 +14027,11 @@ TEST_F(FormatTest, LayoutCxx11BraceInitializers) {
   SpaceBetweenBraces.SpacesInParens = FormatStyle::SIPO_Custom;
   SpaceBetweenBraces.SpacesInParensOptions.InEmptyParentheses = true;
   verifyFormat("vector< int > x{ };", SpaceBetweenBraces);
+  SpaceBetweenBraces.SpacesInParens = FormatStyle::SIPO_Custom;
+  SpaceBetweenBraces.SpacesInParensOptions.InEmptyParentheses = false;
+  SpaceBetweenBraces.SpacesInParensOptions.Other = false;
+  SpaceBetweenBraces.SpacesInParensOptions.InEmptyBraces = true;
+  verifyFormat("T x = { };\nf(x, { });\ng();", SpaceBetweenBraces);
 }
 
 TEST_F(FormatTest, FormatsBracedListsInColumnLayout) {

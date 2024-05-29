@@ -723,6 +723,7 @@ template <> struct MappingTraits<FormatStyle::SpacesInParensCustom> {
     IO.mapOptional("InCStyleCasts", Spaces.InCStyleCasts);
     IO.mapOptional("InConditionalStatements", Spaces.InConditionalStatements);
     IO.mapOptional("InEmptyParentheses", Spaces.InEmptyParentheses);
+    IO.mapOptional("InEmptyBraces", Spaces.InEmptyBraces);
     IO.mapOptional("Other", Spaces.Other);
   }
 };

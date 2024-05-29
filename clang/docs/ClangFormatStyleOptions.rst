@@ -6237,17 +6237,29 @@ the configuration (without a prefix: ``Auto``).
        true:                                  false:
        x = ( int32 )y                 vs.     x = (int32)y
 
-  * ``bool InEmptyParentheses`` Put a space in parentheses only if the parentheses are empty i.e. '()'
+  * ``bool InEmptyParentheses`` Put a space in parentheses and braces only if they are empty i.e. '()' or '{}'
 
     .. code-block:: c++
 
        true:                                false:
        void f( ) {                    vs.   void f() {
          int x[] = {foo( ), bar( )};          int x[] = {foo(), bar()};
+         T a = { };                           T a = {};
          if (true) {                          if (true) {
            f( );                                f();
          }                                    }
        }                                    }
+
+  * ``bool InEmptyBraces`` Put a space in *only* braces, not for parentheses, only if the braces are empty i.e. '{}'
+
+    .. code-block:: c++
+
+       true:                                false:
+       void f() {                     vs.   void f() {
+         T x = {};                            T x = { };
+         g(x, {});                            g(x, { });
+       }                                    }
+
 
   * ``bool Other`` Put a space in parentheses not covered by preceding options.
 
