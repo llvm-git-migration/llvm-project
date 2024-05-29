@@ -1,4 +1,4 @@
-! RUN: %python %S/test_errors.py %s %flang_fc1
+! RUN: %python %S/test_errors.py %s %flang_fc1 -pedantic
 ! Tests ELEMENTAL subprogram constraints C15100-15102
 
 !ERROR: An ELEMENTAL subroutine may not have an alternate return dummy argument
@@ -26,7 +26,7 @@ elemental subroutine ptrarg(a)
 end subroutine
 
 impure elemental subroutine barearg(a)
-  !ERROR: A dummy argument of an ELEMENTAL procedure must have an INTENT() or VALUE attribute
+  !WARNING: A dummy argument of an ELEMENTAL procedure should have an INTENT() or VALUE attribute
   real :: a
 end subroutine
 
