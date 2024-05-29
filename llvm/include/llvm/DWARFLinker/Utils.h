@@ -37,17 +37,30 @@ inline Error finiteLoop(function_ref<Expected<bool>()> Iteration,
 }
 
 /// Make a best effort to guess the
-/// Xcode.app/Contents/Developer/Toolchains/ path from an SDK path.
-inline SmallString<128> guessToolchainBaseDir(StringRef SysRoot) {
+/// Xcode.app/Contents/Developer path from an SDK path.
+inline StringRef guessDeveloperDir(StringRef SysRoot) {
   SmallString<128> Result;
   // Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+  if (!SysRoot.ends_with(".sdk"))
+    return {};
   StringRef Base = sys::path::parent_path(SysRoot);
   if (sys::path::filename(Base) != "SDKs")
-    return Result;
+    return {};
   Base = sys::path::parent_path(Base);
-  Result = Base;
-  Result += "/Toolchains";
-  return Result;
+  if (sys::path::filename(Base) != "Developer")
+    return {};
+  if (sys::path::filename(sys::path::parent_path(Base)) == "Contents")
+    return Base;
+  Base = sys::path::parent_path(Base);
+  if (!Base.ends_with(".platform"))
+    return {};
+  Base = sys::path::parent_path(Base);
+  if (sys::path::filename(Base) != "Platforms")
+    return {};
+  Base = sys::path::parent_path(Base);
+  if (sys::path::filename(Base) != "Developer")
+    return {};
+  return Base;
 }
 
 inline bool isPathAbsoluteOnWindowsOrPosix(const Twine &Path) {
