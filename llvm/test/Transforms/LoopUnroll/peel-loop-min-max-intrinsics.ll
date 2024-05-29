@@ -320,37 +320,13 @@ define void @test_wrap(i8 %N) {
 ; CHECK-NEXT:    br i1 [[CMP5_NOT]], label [[FOR_COND_CLEANUP:%.*]], label [[FOR_BODY_PREHEADER:%.*]]
 ; CHECK:       for.body.preheader:
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
-; CHECK:       for.body.peel.begin:
-; CHECK-NEXT:    br label [[FOR_BODY_PEEL:%.*]]
-; CHECK:       for.body.peel:
-; CHECK-NEXT:    [[COND_PEEL:%.*]] = tail call i8 @llvm.umin.i8(i8 0, i8 -2)
-; CHECK-NEXT:    tail call void @bar(i8 [[COND_PEEL]])
-; CHECK-NEXT:    [[I_6:%.*]] = add i8 0, 127
-; CHECK-NEXT:    [[EXITCOND_NOT_PEEL:%.*]] = icmp eq i8 [[I_6]], [[N]]
-; CHECK-NEXT:    br i1 [[EXITCOND_NOT_PEEL]], label [[FOR_COND_CLEANUP_LOOPEXIT:%.*]], label [[FOR_BODY_PEEL_NEXT:%.*]]
-; CHECK:       for.body.peel.next:
-; CHECK-NEXT:    br label [[FOR_BODY_PEEL2:%.*]]
-; CHECK:       for.body.peel2:
-; CHECK-NEXT:    [[COND:%.*]] = tail call i8 @llvm.umin.i8(i8 [[I_6]], i8 -2)
-; CHECK-NEXT:    tail call void @bar(i8 [[COND]])
-; CHECK-NEXT:    [[INC:%.*]] = add i8 [[I_6]], 127
-; CHECK-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i8 [[INC]], [[N]]
-; CHECK-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY_PEEL_NEXT1:%.*]]
-; CHECK:       for.body.peel.next1:
-; CHECK-NEXT:    br label [[FOR_BODY_PEEL_NEXT6:%.*]]
-; CHECK:       for.body.peel.next6:
-; CHECK-NEXT:    br label [[FOR_BODY_PREHEADER_PEEL_NEWPH:%.*]]
-; CHECK:       for.body.preheader.peel.newph:
-; CHECK-NEXT:    br label [[FOR_BODY1:%.*]]
 ; CHECK:       for.body:
-; CHECK-NEXT:    [[I_06:%.*]] = phi i8 [ [[INC1:%.*]], [[FOR_BODY1]] ], [ [[INC]], [[FOR_BODY_PREHEADER_PEEL_NEWPH]] ]
-; CHECK-NEXT:    [[COND1:%.*]] = tail call i8 @llvm.umin.i8(i8 [[I_06]], i8 -2)
-; CHECK-NEXT:    tail call void @bar(i8 [[COND1]])
-; CHECK-NEXT:    [[INC1]] = add i8 [[I_06]], 127
-; CHECK-NEXT:    [[EXITCOND_NOT1:%.*]] = icmp eq i8 [[INC1]], [[N]]
-; CHECK-NEXT:    br i1 [[EXITCOND_NOT1]], label [[FOR_COND_CLEANUP_LOOPEXIT_LOOPEXIT:%.*]], label [[FOR_BODY1]], !llvm.loop [[LOOP5:![0-9]+]]
-; CHECK:       for.cond.cleanup.loopexit.loopexit:
-; CHECK-NEXT:    br label [[FOR_COND_CLEANUP_LOOPEXIT]]
+; CHECK-NEXT:    [[I_06:%.*]] = phi i8 [ [[INC:%.*]], [[FOR_BODY]] ], [ 0, [[FOR_BODY_PREHEADER]] ]
+; CHECK-NEXT:    [[COND:%.*]] = tail call i8 @llvm.umin.i8(i8 [[I_06]], i8 -2)
+; CHECK-NEXT:    tail call void @bar(i8 [[COND]])
+; CHECK-NEXT:    [[INC]] = add i8 [[I_06]], 127
+; CHECK-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i8 [[INC]], [[N]]
+; CHECK-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT:%.*]], label [[FOR_BODY]]
 ; CHECK:       for.cond.cleanup.loopexit:
 ; CHECK-NEXT:    br label [[FOR_COND_CLEANUP]]
 ; CHECK:       for.cond.cleanup:
@@ -377,5 +353,4 @@ for.cond.cleanup:
 ; CHECK: [[LOOP2]] = distinct !{[[LOOP2]], [[META1]]}
 ; CHECK: [[LOOP3]] = distinct !{[[LOOP3]], [[META1]]}
 ; CHECK: [[LOOP4]] = distinct !{[[LOOP4]], [[META1]]}
-; CHECK: [[LOOP5]] = distinct !{[[LOOP5]], [[META1]]}
 ;.
