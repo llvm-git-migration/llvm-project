@@ -462,14 +462,18 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
     if (!AddRec || !AddRec->isAffine() || AddRec->getLoop() != &L)
       return;
     const SCEV *Step = AddRec->getStepRecurrence(SE);
+    bool IsSigned = MinMax->isSigned();
     // To minimize number of peeled iterations, we use strict relational
     // predicates here.
     ICmpInst::Predicate Pred;
     if (SE.isKnownPositive(Step))
-      Pred = MinMax->isSigned() ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
+      Pred = IsSigned ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
     else if (SE.isKnownNegative(Step))
-      Pred = MinMax->isSigned() ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
+      Pred = IsSigned ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
     else
+      return;
+    // Check that AddRec is not wrapping.
+    if (!(IsSigned ? AddRec->hasNoSignedWrap() : AddRec->hasNoUnsignedWrap()))
       return;
     const SCEV *IterVal = AddRec->evaluateAtIteration(
         SE.getConstant(AddRec->getType(), DesiredPeelCount), SE);
