@@ -109,6 +109,12 @@ AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
         "only supported to improve calls to SME ACLE save/restore/disable-za "
         "functions, and is not intended to be used beyond that scope.");
   if (MF->getFunction().getCallingConv() ==
+          CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1)
+    report_fatal_error(
+        "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1 is "
+        "only supported to improve calls to SME ACLE __arm_get_current_vg function, "
+        "and is not intended to be used beyond that scope.");
+  if (MF->getFunction().getCallingConv() ==
           CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2)
     report_fatal_error(
         "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2 is "
@@ -154,6 +160,12 @@ AArch64RegisterInfo::getDarwinCalleeSavedRegs(const MachineFunction *MF) const {
         "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0 is "
         "only supported to improve calls to SME ACLE save/restore/disable-za "
         "functions, and is not intended to be used beyond that scope.");
+  if (MF->getFunction().getCallingConv() ==
+          CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1)
+    report_fatal_error(
+        "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1 is "
+        "only supported to improve calls to SME ACLE __arm_get_current_vg function, "
+        "and is not intended to be used beyond that scope.");
   if (MF->getFunction().getCallingConv() ==
           CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2)
     report_fatal_error(
@@ -236,6 +248,10 @@ AArch64RegisterInfo::getDarwinCallPreservedMask(const MachineFunction &MF,
     report_fatal_error(
         "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0 is "
         "unsupported on Darwin.");
+  if (CC == CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1)
+    report_fatal_error(
+        "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1 is "
+        "unsupported on Darwin.");
   if (CC == CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2)
     report_fatal_error(
         "Calling convention AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2 is "
@@ -281,6 +297,8 @@ AArch64RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
                : CSR_AArch64_SVE_AAPCS_RegMask;
   if (CC == CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0)
     return CSR_AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0_RegMask;
+  if (CC == CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1)
+    return CSR_AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1_RegMask;
   if (CC == CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2)
     return CSR_AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2_RegMask;
   if (CC == CallingConv::CFGuard_Check)
@@ -640,6 +658,7 @@ bool AArch64RegisterInfo::isArgumentRegister(const MachineFunction &MF,
   case CallingConv::AArch64_VectorCall:
   case CallingConv::AArch64_SVE_VectorCall:
   case CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0:
+  case CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X1:
   case CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X2:
     if (STI.isTargetWindows())
       return HasReg(CC_AArch64_Win64PCS_ArgRegs, Reg);
