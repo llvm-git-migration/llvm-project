@@ -372,9 +372,7 @@ bool DbgVariableRecord::isKillLocation() const {
 }
 
 std::optional<uint64_t> DbgVariableRecord::getFragmentSizeInBits() const {
-  if (auto Fragment = getExpression()->getFragmentInfo())
-    return Fragment->SizeInBits;
-  return getVariable()->getSizeInBits();
+  return getExpression()->getActiveBits(getVariable());
 }
 
 DbgRecord *DbgRecord::clone() const {

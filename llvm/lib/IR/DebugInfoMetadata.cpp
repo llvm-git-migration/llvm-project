@@ -1679,6 +1679,26 @@ DIExpression::getFragmentInfo(expr_op_iterator Start, expr_op_iterator End) {
   return std::nullopt;
 }
 
+std::optional<uint64_t> DIExpression::getActiveBits(DIVariable *Var) {
+  std::optional<uint64_t> BitWidth = Var->getSizeInBits();
+  for (auto Op : expr_ops()) {
+    if ((Op.getOp() == dwarf::DW_OP_LLVM_extract_bits_zext && Var->getSignedness() != DIBasicType::Signedness::Unsigned) ||
+        (Op.getOp() == dwarf::DW_OP_LLVM_extract_bits_sext && Var->getSignedness() != DIBasicType::Signedness::Signed)) {
+      BitWidth = Var->getSizeInBits();
+      continue;
+    }
+    if (Op.getOp() == dwarf::DW_OP_LLVM_extract_bits_zext ||
+        Op.getOp() == dwarf::DW_OP_LLVM_extract_bits_sext ||
+        Op.getOp() == dwarf::DW_OP_LLVM_fragment) {
+      if (BitWidth)
+        BitWidth = std::min(*BitWidth, Op.getArg(1));
+      else
+        BitWidth = Op.getArg(1);
+    }
+  }
+  return BitWidth;
+}
+
 void DIExpression::appendOffset(SmallVectorImpl<uint64_t> &Ops,
                                 int64_t Offset) {
   if (Offset > 0) {
@@ -1931,6 +1951,8 @@ std::optional<DIExpression *> DIExpression::createFragmentExpression(
   // Track whether it's safe to split the value at the top of the DWARF stack,
   // assuming that it'll be used as an implicit location value.
   bool CanSplitValue = true;
+  // Track whether we need to add a fragment expression to the end of Expr.
+  bool EmitFragment = true;
   // Copy over the expression, but leave off any trailing DW_OP_LLVM_fragment.
   if (Expr) {
     for (auto Op : Expr->expr_ops()) {
@@ -1966,6 +1988,11 @@ std::optional<DIExpression *> DIExpression::createFragmentExpression(
           return std::nullopt;
         break;
       case dwarf::DW_OP_LLVM_fragment: {
+        // If we've decided we don't need a fragment then give up if we see that
+        // there's already a fragment expression.
+        // FIXME: We could probably do better here
+        if (!EmitFragment)
+          return std::nullopt;
         // Make the new offset point into the existing fragment.
         uint64_t FragmentOffsetInBits = Op.getArg(0);
         uint64_t FragmentSizeInBits = Op.getArg(1);
@@ -1975,15 +2002,37 @@ std::optional<DIExpression *> DIExpression::createFragmentExpression(
         OffsetInBits += FragmentOffsetInBits;
         continue;
       }
+      case dwarf::DW_OP_LLVM_extract_bits_zext:
+      case dwarf::DW_OP_LLVM_extract_bits_sext: {
+        // If we're extracting bits from inside of the fragment that we're
+        // creating then we don't have a fragment after all, and just need to
+        // adjust the offset that we're extracting from.
+        uint64_t ExtractOffsetInBits = Op.getArg(0);
+        uint64_t ExtractSizeInBits = Op.getArg(1);
+        if (ExtractOffsetInBits >= OffsetInBits &&
+            ExtractOffsetInBits + ExtractSizeInBits <= OffsetInBits + SizeInBits) {
+          Ops.push_back(Op.getOp());
+          Ops.push_back(ExtractOffsetInBits - OffsetInBits);
+          Ops.push_back(ExtractSizeInBits);
+          EmitFragment = false;
+          continue;
+        }
+        // If the extracted bits aren't fully contained within the fragment then
+        // give up.
+        // FIXME: We could probably do better here
+        return std::nullopt;
+      }
       }
       Op.appendToVector(Ops);
     }
   }
   assert((!Expr->isImplicit() || CanSplitValue) && "Expr can't be split");
   assert(Expr && "Unknown DIExpression");
-  Ops.push_back(dwarf::DW_OP_LLVM_fragment);
-  Ops.push_back(OffsetInBits);
-  Ops.push_back(SizeInBits);
+  if (EmitFragment) {
+    Ops.push_back(dwarf::DW_OP_LLVM_fragment);
+    Ops.push_back(OffsetInBits);
+    Ops.push_back(SizeInBits);
+  }
   return DIExpression::get(Expr->getContext(), Ops);
 }
 

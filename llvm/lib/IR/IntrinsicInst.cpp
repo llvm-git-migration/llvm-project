@@ -196,9 +196,7 @@ void DbgVariableIntrinsic::addVariableLocationOps(ArrayRef<Value *> NewValues,
 }
 
 std::optional<uint64_t> DbgVariableIntrinsic::getFragmentSizeInBits() const {
-  if (auto Fragment = getExpression()->getFragmentInfo())
-    return Fragment->SizeInBits;
-  return getVariable()->getSizeInBits();
+  return getExpression()->getActiveBits(getVariable());
 }
 
 Value *DbgAssignIntrinsic::getAddress() const {
