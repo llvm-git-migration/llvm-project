@@ -591,6 +591,7 @@ ForOp::replaceWithAdditionalYields(RewriterBase &rewriter,
   // Replace the old loop.
   rewriter.replaceOp(getOperation(),
                      newLoop->getResults().take_front(getNumResults()));
+  newLoop->setAttrs(getOperation()->getAttrs());
   return cast<LoopLikeOpInterface>(newLoop.getOperation());
 }
 
