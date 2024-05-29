@@ -305,6 +305,28 @@ transform::LoopUnrollOp::applyToOne(transform::TransformRewriter &rewriter,
 }
 
 //===----------------------------------------------------------------------===//
+// LoopUnrollAndJamOp
+//===----------------------------------------------------------------------===//
+
+DiagnosedSilenceableFailure transform::LoopUnrollAndJamOp::applyToOne(
+    transform::TransformRewriter &rewriter, Operation *op,
+    transform::ApplyToEachResultList &results,
+    transform::TransformState &state) {
+  LogicalResult result(failure());
+  if (scf::ForOp scfFor = dyn_cast<scf::ForOp>(op))
+    result = loopUnrollJamByFactor(scfFor, getFactor());
+  else if (AffineForOp affineFor = dyn_cast<AffineForOp>(op))
+    result = loopUnrollJamByFactor(affineFor, getFactor());
+
+  if (failed(result)) {
+    DiagnosedSilenceableFailure diag = emitSilenceableError()
+                                       << "failed to unroll and jam";
+    return diag;
+  }
+  return DiagnosedSilenceableFailure::success();
+}
+
+//===----------------------------------------------------------------------===//
 // LoopCoalesceOp
 //===----------------------------------------------------------------------===//
 
