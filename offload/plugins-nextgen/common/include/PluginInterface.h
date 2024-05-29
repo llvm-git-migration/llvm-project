@@ -1059,7 +1059,8 @@ struct GenericPluginTy {
   /// Indicate if an image is compatible with the plugin devices. Notice that
   /// this function may be called before actually initializing the devices. So
   /// we could not move this function into GenericDeviceTy.
-  virtual Expected<bool> isELFCompatible(StringRef Image) const = 0;
+  virtual Expected<bool> isELFCompatible(uint32_t DeviceID,
+                                         StringRef Image) const = 0;
 
 protected:
   /// Indicate whether a device id is valid.
@@ -1070,11 +1071,18 @@ protected:
 public:
   // TODO: This plugin interface needs to be cleaned up.
 
-  /// Returns true if the plugin has been initialized.
+  /// Returns non-zero if the plugin runtime has been initialized.
   int32_t is_initialized() const;
 
-  /// Returns non-zero if the provided \p Image can be executed by the runtime.
-  int32_t is_valid_binary(__tgt_device_image *Image, bool Initialized = true);
+  /// Returns non-zero if the \p Image is compatible with the plugin. This
+  /// function does not require the plugin to be initialized before use.
+  int32_t is_plugin_compatible(__tgt_device_image *Image);
+
+  /// Returns non-zero if the \p Image is compatible with the device.
+  int32_t is_device_compatible(int32_t DeviceId, __tgt_device_image *Image);
+
+  /// Returns non-zero if the plugin device has been initialized.
+  int32_t is_device_initialized(int32_t DeviceId) const;
 
   /// Initialize the device inside of the plugin.
   int32_t init_device(int32_t DeviceId);

@@ -1492,11 +1492,14 @@ Error GenericDeviceTy::syncEvent(void *EventPtr) {
 bool GenericDeviceTy::useAutoZeroCopy() { return useAutoZeroCopyImpl(); }
 
 Error GenericPluginTy::init() {
+  if (Initialized)
+    return Plugin::success();
+
   auto NumDevicesOrErr = initImpl();
   if (!NumDevicesOrErr)
     return NumDevicesOrErr.takeError();
-
   Initialized = true;
+
   NumDevices = *NumDevicesOrErr;
   if (NumDevices == 0)
     return Plugin::success();
@@ -1517,6 +1520,8 @@ Error GenericPluginTy::init() {
 }
 
 Error GenericPluginTy::deinit() {
+  assert(Initialized && "Plugin was not initialized!");
+
   // Deinitialize all active devices.
   for (int32_t DeviceId = 0; DeviceId < NumDevices; ++DeviceId) {
     if (Devices[DeviceId]) {
@@ -1537,7 +1542,11 @@ Error GenericPluginTy::deinit() {
     delete RecordReplay;
 
   // Perform last deinitializations on the plugin.
-  return deinitImpl();
+  if (Error Err = deinitImpl())
+    return Err;
+  Initialized = false;
+
+  return Plugin::success();
 }
 
 Error GenericPluginTy::initDevice(int32_t DeviceId) {
@@ -1599,8 +1608,7 @@ Expected<bool> GenericPluginTy::checkBitcodeImage(StringRef Image) const {
 
 int32_t GenericPluginTy::is_initialized() const { return Initialized; }
 
-int32_t GenericPluginTy::is_valid_binary(__tgt_device_image *Image,
-                                         bool Initialized) {
+int32_t GenericPluginTy::is_plugin_compatible(__tgt_device_image *Image) {
   StringRef Buffer(reinterpret_cast<const char *>(Image->ImageStart),
                    target::getPtrDiff(Image->ImageEnd, Image->ImageStart));
 
@@ -1618,11 +1626,43 @@ int32_t GenericPluginTy::is_valid_binary(__tgt_device_image *Image,
     auto MatchOrErr = checkELFImage(Buffer);
     if (Error Err = MatchOrErr.takeError())
       return HandleError(std::move(Err));
-    if (!Initialized || !*MatchOrErr)
-      return *MatchOrErr;
+    return *MatchOrErr;
+  }
+  case file_magic::bitcode: {
+    auto MatchOrErr = checkBitcodeImage(Buffer);
+    if (Error Err = MatchOrErr.takeError())
+      return HandleError(std::move(Err));
+    return *MatchOrErr;
+  }
+  default:
+    return false;
+  }
+}
+
+int32_t GenericPluginTy::is_device_compatible(int32_t DeviceId,
+                                              __tgt_device_image *Image) {
+  StringRef Buffer(reinterpret_cast<const char *>(Image->ImageStart),
+                   target::getPtrDiff(Image->ImageEnd, Image->ImageStart));
+
+  auto HandleError = [&](Error Err) -> bool {
+    [[maybe_unused]] std::string ErrStr = toString(std::move(Err));
+    DP("Failure to check validity of image %p: %s", Image, ErrStr.c_str());
+    return false;
+  };
+  switch (identify_magic(Buffer)) {
+  case file_magic::elf:
+  case file_magic::elf_relocatable:
+  case file_magic::elf_executable:
+  case file_magic::elf_shared_object:
+  case file_magic::elf_core: {
+    auto MatchOrErr = checkELFImage(Buffer);
+    if (Error Err = MatchOrErr.takeError())
+      return HandleError(std::move(Err));
+    if (!*MatchOrErr)
+      return false;
 
     // Perform plugin-dependent checks for the specific architecture if needed.
-    auto CompatibleOrErr = isELFCompatible(Buffer);
+    auto CompatibleOrErr = isELFCompatible(DeviceId, Buffer);
     if (Error Err = CompatibleOrErr.takeError())
       return HandleError(std::move(Err));
     return *CompatibleOrErr;
@@ -1636,6 +1676,10 @@ int32_t GenericPluginTy::is_valid_binary(__tgt_device_image *Image,
   default:
     return false;
   }
+}
+
+int32_t GenericPluginTy::is_device_initialized(int32_t DeviceId) const {
+  return isValidDeviceId(DeviceId) && Devices[DeviceId] != nullptr;
 }
 
 int32_t GenericPluginTy::init_device(int32_t DeviceId) {
