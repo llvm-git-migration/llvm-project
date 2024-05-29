@@ -448,6 +448,8 @@ static unsigned countToEliminateCompares(Loop &L, unsigned MaxPeelCount,
   };
 
   auto ComputePeelCountMinMax = [&](MinMaxIntrinsic *MinMax) {
+    if (!MinMax->getType()->isIntegerTy())
+      return;
     Value *LHS = MinMax->getLHS(), *RHS = MinMax->getRHS();
     const SCEV *BoundSCEV, *IterSCEV;
     if (L.isLoopInvariant(LHS)) {
