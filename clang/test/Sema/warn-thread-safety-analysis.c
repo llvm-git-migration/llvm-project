@@ -28,7 +28,12 @@
 struct LOCKABLE Mutex {};
 
 struct Foo {
-  struct Mutex *mu_;
+    struct Mutex *mu_;
+    struct Bar {
+        struct Mutex *other_mu;
+    } bar;
+  int  a_value GUARDED_BY(mu_);
+  int* a_ptr PT_GUARDED_BY(bar.other_mu);
 };
 
 // Declare mutex lock/unlock functions.
@@ -135,6 +140,9 @@ int main(void) {
     mutex_exclusive_lock(scope);  // Note that we have to lock through scope, because no alias analysis!
     // Cleanup happens automatically -> no warning.
   }
+
+  foo_.a_value = 0; // expected-warning {{writing variable 'a_value' requires holding mutex 'mu_' exclusively}}
+  *foo_.a_ptr = 1; // expected-warning {{writing the value pointed to by 'a_ptr' requires holding mutex 'bar.other_mu' exclusively}}
 
   return 0;
 }

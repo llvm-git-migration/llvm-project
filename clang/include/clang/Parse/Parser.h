@@ -3128,6 +3128,12 @@ private:
                             IdentifierInfo *ScopeName, SourceLocation ScopeLoc,
                             ParsedAttr::Form Form);
 
+  void ParseGuardedByAttribute(IdentifierInfo &AttrName,
+                               SourceLocation AttrNameLoc,
+                               ParsedAttributes &Attrs,
+                               IdentifierInfo *ScopeName,
+                               SourceLocation ScopeLoc, ParsedAttr::Form Form);
+
   void ParseTypeofSpecifier(DeclSpec &DS);
   SourceLocation ParseDecltypeSpecifier(DeclSpec &DS);
   void AnnotateExistingDecltypeSpecifier(const DeclSpec &DS,
