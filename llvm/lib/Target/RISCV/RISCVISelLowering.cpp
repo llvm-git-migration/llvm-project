@@ -16262,11 +16262,11 @@ static SDValue combineTruncToVnclip(SDNode *N, SelectionDAG &DAG,
 
   SDValue Val;
   unsigned ClipOpc;
-  if ((Val = DetectUSatPattern(N->getOperand(0)))) {
+  if ((Val = DetectUSatPattern(N->getOperand(0))))
     ClipOpc = RISCVISD::VNCLIPU_VL;
-  } else if ((Val = DetectSSatPattern(N->getOperand(0)))) {
+  else if ((Val = DetectSSatPattern(N->getOperand(0))))
     ClipOpc = RISCVISD::VNCLIP_VL;
-  } else
+  else
     return SDValue();
 
   SDLoc DL(N);
