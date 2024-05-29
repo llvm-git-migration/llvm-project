@@ -1506,6 +1506,8 @@ bool llvm::canConstantFoldCallTo(const CallBase *Call, const Function *F) {
   case Intrinsic::smin:
   case Intrinsic::umax:
   case Intrinsic::umin:
+  case Intrinsic::scmp:
+  case Intrinsic::ucmp:
   case Intrinsic::sadd_with_overflow:
   case Intrinsic::uadd_with_overflow:
   case Intrinsic::ssub_with_overflow:
@@ -2763,6 +2765,33 @@ static Constant *ConstantFoldIntrinsicCall2(Intrinsic::ID IntrinsicID, Type *Ty,
                                 MinMaxIntrinsic::getPredicate(IntrinsicID))
                   ? *C0
                   : *C1);
+
+    case Intrinsic::scmp:
+    case Intrinsic::ucmp:
+      if (isa<PoisonValue>(Operands[0]) || isa<PoisonValue>(Operands[1]))
+        return PoisonValue::get(Ty);
+
+      if (!C0 || !C1)
+        return UndefValue::get(Ty);
+
+      if (ICmpInst::compare(*C0, *C1,
+                            IntrinsicID == Intrinsic::scmp
+                                ? ICmpInst::ICMP_SLT
+                                : ICmpInst::ICMP_ULT)) {
+        return ConstantInt::get(Ty, -1, true);
+      }
+      if (ICmpInst::compare(*C0, *C1, ICmpInst::ICMP_EQ)) {
+        return ConstantInt::get(Ty, 0);
+      }
+      if (ICmpInst::compare(*C0, *C1,
+                            IntrinsicID == Intrinsic::scmp
+                                ? ICmpInst::ICMP_SGT
+                                : ICmpInst::ICMP_UGT)) {
+        return ConstantInt::get(Ty, 1);
+      }
+
+      assert(false && "Integer values must compare as equal, or one must be "
+                      "less than the other");
 
     case Intrinsic::usub_with_overflow:
     case Intrinsic::ssub_with_overflow:
