@@ -671,6 +671,11 @@ void Parser::ParseGNUAttributeArgs(
     ParseBoundsAttribute(*AttrName, AttrNameLoc, Attrs, ScopeName, ScopeLoc,
                          Form);
     return;
+  } else if (AttrKind == ParsedAttr::AT_GuardedBy ||
+             AttrKind == ParsedAttr::AT_PtGuardedBy) {
+    ParseGuardedByAttribute(*AttrName, AttrNameLoc, Attrs, ScopeName, ScopeLoc,
+                            EndLoc, Form);
+    return;
   } else if (AttrKind == ParsedAttr::AT_CXXAssume) {
     ParseCXXAssumeAttributeArg(Attrs, AttrName, AttrNameLoc, EndLoc, Form);
     return;
@@ -3330,6 +3335,59 @@ void Parser::DistributeCLateParsedAttrs(Decl *Dcl,
   }
 }
 
+/// GuardedBy attributes (e.g., guarded_by):
+///   AttrName '(' expression ')'
+void Parser::ParseGuardedByAttribute(
+    IdentifierInfo &AttrName, SourceLocation AttrNameLoc,
+    ParsedAttributes &Attrs, IdentifierInfo *ScopeName, SourceLocation ScopeLoc,
+    SourceLocation *EndLoc, ParsedAttr::Form Form) {
+  assert(Tok.is(tok::l_paren) && "Attribute arg list not starting with '('");
+
+  BalancedDelimiterTracker Parens(*this, tok::l_paren);
+  Parens.consumeOpen();
+
+  if (Tok.is(tok::r_paren)) {
+    Diag(Tok.getLocation(), diag::err_argument_required_after_attribute);
+    Parens.consumeClose();
+    return;
+  }
+
+  ArgsVector ArgExprs;
+  // Don't evaluate argument when the attribute is ignored.
+  using ExpressionKind =
+      Sema::ExpressionEvaluationContextRecord::ExpressionKind;
+  EnterExpressionEvaluationContext EC(
+      Actions, Sema::ExpressionEvaluationContext::PotentiallyEvaluated, nullptr,
+      ExpressionKind::EK_AttrArgument);
+
+  ExprResult ArgExpr(
+      Actions.CorrectDelayedTyposInExpr(ParseAssignmentExpression()));
+
+  if (ArgExpr.isInvalid()) {
+    Parens.skipToEnd();
+    return;
+  }
+
+  ArgExprs.push_back(ArgExpr.get());
+
+  auto RParens = Tok.getLocation();
+  auto &AL =
+      *Attrs.addNew(&AttrName, SourceRange(AttrNameLoc, RParens), ScopeName,
+                    ScopeLoc, ArgExprs.data(), ArgExprs.size(), Form);
+
+  if (EndLoc)
+    *EndLoc = Tok.getLocation();
+
+  if (!Tok.is(tok::r_paren)) {
+    Diag(Tok.getLocation(), diag::err_attribute_wrong_number_arguments)
+        << AL << 1;
+    Parens.skipToEnd();
+    return;
+  }
+
+  Parens.consumeClose();
+}
+
 /// Bounds attributes (e.g., counted_by):
 ///   AttrName '(' expression ')'
 void Parser::ParseBoundsAttribute(IdentifierInfo &AttrName,
@@ -3355,7 +3413,7 @@ void Parser::ParseBoundsAttribute(IdentifierInfo &AttrName,
       Sema::ExpressionEvaluationContextRecord::ExpressionKind;
   EnterExpressionEvaluationContext EC(
       Actions, Sema::ExpressionEvaluationContext::PotentiallyEvaluated, nullptr,
-      ExpressionKind::EK_BoundsAttrArgument);
+      ExpressionKind::EK_AttrArgument);
 
   ExprResult ArgExpr(
       Actions.CorrectDelayedTyposInExpr(ParseAssignmentExpression()));
