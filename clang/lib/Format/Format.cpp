@@ -723,6 +723,7 @@ template <> struct MappingTraits<FormatStyle::SpacesInParensCustom> {
     IO.mapOptional("InCStyleCasts", Spaces.InCStyleCasts);
     IO.mapOptional("InConditionalStatements", Spaces.InConditionalStatements);
     IO.mapOptional("InEmptyParentheses", Spaces.InEmptyParentheses);
+    IO.mapOptional("InEmptyBraces", Spaces.InEmptyBraces);
     IO.mapOptional("Other", Spaces.Other);
   }
 };
@@ -1864,6 +1865,9 @@ FormatStyle getWebKitStyle() {
   Style.PointerAlignment = FormatStyle::PAS_Left;
   Style.SpaceBeforeCpp11BracedList = true;
   Style.SpaceInEmptyBlock = true;
+  Style.SpacesInParensOptions.InEmptyParentheses = false;
+  Style.SpacesInParensOptions.Other = false;
+  Style.SpacesInParensOptions.InEmptyBraces = true;
   return Style;
 }
 

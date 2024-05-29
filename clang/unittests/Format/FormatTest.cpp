@@ -14027,6 +14027,16 @@ TEST_F(FormatTest, LayoutCxx11BraceInitializers) {
   SpaceBetweenBraces.SpacesInParens = FormatStyle::SIPO_Custom;
   SpaceBetweenBraces.SpacesInParensOptions.InEmptyParentheses = true;
   verifyFormat("vector< int > x{ };", SpaceBetweenBraces);
+
+  SpaceBetweenBraces.SpacesInParensOptions.InEmptyParentheses = false;
+  SpaceBetweenBraces.SpacesInParensOptions.Other = false;
+  SpaceBetweenBraces.SpacesInParensOptions.InEmptyBraces = true;
+  // This achieves braces-only spacing required by WebKit style.
+  verifyFormat("T x = { };\n"
+               "toImpl(listenerRef)\n"
+               "    ->use({ });\n"
+               "g();",
+               SpaceBetweenBraces);
 }
 
 TEST_F(FormatTest, FormatsBracedListsInColumnLayout) {

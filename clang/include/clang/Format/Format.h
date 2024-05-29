@@ -4673,6 +4673,17 @@ struct FormatStyle {
     ///    }                                    }
     /// \endcode
     bool InEmptyParentheses;
+    /// Put a space in brackets only if the parentheses are empty i.e. '()'
+    /// \code
+    ///    true:                                false:
+    ///    void f( ) {                    vs.   void f() {
+    ///      int x[] = {foo( ), bar( )};          int x[] = {foo(), bar()};
+    ///      if (true) {                          if (true) {
+    ///        f( );                                f();
+    ///      }                                    }
+    ///    }                                    }
+    /// \endcode
+    bool InEmptyBraces;
     /// Put a space in parentheses not covered by preceding options.
     /// \code
     ///    true:                                  false:
@@ -4682,18 +4693,20 @@ struct FormatStyle {
 
     SpacesInParensCustom()
         : InConditionalStatements(false), InCStyleCasts(false),
-          InEmptyParentheses(false), Other(false) {}
+          InEmptyParentheses(false), InEmptyBraces(false), Other(false) {}
 
     SpacesInParensCustom(bool InConditionalStatements, bool InCStyleCasts,
-                         bool InEmptyParentheses, bool Other)
+                         bool InEmptyParentheses, bool InEmptyBraces,
+                         bool Other)
         : InConditionalStatements(InConditionalStatements),
           InCStyleCasts(InCStyleCasts), InEmptyParentheses(InEmptyParentheses),
-          Other(Other) {}
+          InEmptyBraces(InEmptyBraces), Other(Other) {}
 
     bool operator==(const SpacesInParensCustom &R) const {
       return InConditionalStatements == R.InConditionalStatements &&
              InCStyleCasts == R.InCStyleCasts &&
-             InEmptyParentheses == R.InEmptyParentheses && Other == R.Other;
+             InEmptyParentheses == R.InEmptyParentheses &&
+             InEmptyBraces == R.InEmptyBraces && Other == R.Other;
     }
     bool operator!=(const SpacesInParensCustom &R) const {
       return !(*this == R);
