@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -fsyntax-only -verify -Wthread-safety -Wthread-safety-beta %s
+// RUN: %clang_cc1 -fsyntax-only -verify -Wthread-safety -Wthread-safety-beta -fexperimental-late-parse-attributes %s
 
 #define LOCKABLE            __attribute__ ((lockable))
 #define SCOPED_LOCKABLE     __attribute__ ((scoped_lockable))
@@ -29,6 +29,13 @@ struct LOCKABLE Mutex {};
 
 struct Foo {
   struct Mutex *mu_;
+  int  a_value GUARDED_BY(mu_);
+  int* a_ptr PT_GUARDED_BY(bar.other_mu);
+
+  struct Bar {
+    struct Mutex *third_mu ACQUIRED_BEFORE(other_mu);
+    struct Mutex *other_mu ACQUIRED_AFTER(mu_);
+  } bar;
 };
 
 // Declare mutex lock/unlock functions.
@@ -135,6 +142,17 @@ int main(void) {
     mutex_exclusive_lock(scope);  // Note that we have to lock through scope, because no alias analysis!
     // Cleanup happens automatically -> no warning.
   }
+
+  foo_.a_value = 0; // expected-warning {{writing variable 'a_value' requires holding mutex 'mu_' exclusively}}
+  *foo_.a_ptr = 1; // expected-warning {{writing the value pointed to by 'a_ptr' requires holding mutex 'bar.other_mu' exclusively}}
+
+
+  mutex_exclusive_lock(foo_.bar.other_mu);
+  mutex_exclusive_lock(foo_.bar.third_mu); // expected-warning{{mutex 'third_mu' must be acquired before 'other_mu'}}
+  mutex_exclusive_lock(foo_.mu_); // expected-warning{{mutex 'mu_' must be acquired before 'other_mu'}}
+  mutex_exclusive_unlock(foo_.mu_);
+  mutex_exclusive_unlock(foo_.bar.other_mu);
+  mutex_exclusive_unlock(foo_.bar.third_mu);
 
   return 0;
 }
