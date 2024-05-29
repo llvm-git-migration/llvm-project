@@ -122,7 +122,7 @@ void B::f<unsigned>();
 
 template<>
 static void B::g<unsigned>(); // expected-warning {{explicit specialization cannot have a storage class}}
-
+                              // expected-error@-1 {{'static' can only be specified inside the class definition}}
 
 template<typename T>
 struct C {
@@ -159,7 +159,7 @@ void C<int>::f();
 
 template<>
 static void C<int>::g(); // expected-warning {{explicit specialization cannot have a storage class}}
-
+                         // expected-error@-1 {{'static' can only be specified inside the class definition}}
 template<typename T>
 struct D {
   template<typename U>
@@ -263,7 +263,7 @@ void D<int>::f();
 template<>
 template<typename U>
 static void D<int>::g(); // expected-warning {{explicit specialization cannot have a storage class}}
-
+                         // expected-error@-1 {{'static' can only be specified inside the class definition}}
 template<>
 template<>
 void D<int>::f<unsigned>();
@@ -271,3 +271,4 @@ void D<int>::f<unsigned>();
 template<>
 template<>
 static void D<int>::g<unsigned>(); // expected-warning {{explicit specialization cannot have a storage class}}
+                                   // expected-error@-1 {{'static' can only be specified inside the class definition}}

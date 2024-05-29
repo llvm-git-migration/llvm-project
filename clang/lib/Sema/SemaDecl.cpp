@@ -7654,9 +7654,20 @@ NamedDecl *Sema::ActOnVariableDeclarator(
              "should have a 'template<>' for this decl");
     }
 
-    if (SCSpec != DeclSpec::SCS_unspecified && ((IsVariableTemplateSpecialization && !IsPartialSpecialization) || IsMemberSpecialization)) {
+    bool IsExplicitSpecialization =
+        IsVariableTemplateSpecialization && !IsPartialSpecialization;
+
+    // C++ [temp.expl.spec]p2:
+    //   The declaration in an explicit-specialization shall not be an
+    //   export-declaration. An explicit specialization shall not use a
+    //   storage-class-specifier other than thread_local.
+    //
+    // We use the storage-class-specifier from DeclSpec because we may have
+    // added implicit 'extern' for declarations with __declspec(dllimport)!
+    if (SCSpec != DeclSpec::SCS_unspecified &&
+        (IsExplicitSpecialization || IsMemberSpecialization)) {
       Diag(D.getDeclSpec().getStorageClassSpecLoc(),
-             diag::ext_explicit_specialization_storage_class)
+           diag::ext_explicit_specialization_storage_class)
           << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
     }
 
@@ -7679,8 +7690,8 @@ NamedDecl *Sema::ActOnVariableDeclarator(
             }
           }
           if (FunctionOrMethod) {
-            // C++ [class.static.data]p5: A local class shall not have static data
-            // members.
+            // C++ [class.static.data]p5: A local class shall not have static
+            // data members.
             Diag(D.getIdentifierLoc(),
                  diag::err_static_data_member_not_allowed_in_local_class)
                 << Name << RD->getDeclName()
@@ -7698,8 +7709,9 @@ NamedDecl *Sema::ActOnVariableDeclarator(
             // the program is ill-formed. C++11 drops this restriction.
             Diag(D.getIdentifierLoc(),
                  getLangOpts().CPlusPlus11
-                   ? diag::warn_cxx98_compat_static_data_member_in_union
-                   : diag::ext_static_data_member_in_union) << Name;
+                     ? diag::warn_cxx98_compat_static_data_member_in_union
+                     : diag::ext_static_data_member_in_union)
+                << Name;
           }
         }
       } else if (IsVariableTemplate || IsPartialSpecialization) {
@@ -7717,7 +7729,8 @@ NamedDecl *Sema::ActOnVariableDeclarator(
       case SC_Static:
         Diag(D.getDeclSpec().getStorageClassSpecLoc(),
              diag::err_static_out_of_line)
-          << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
+            << FixItHint::CreateRemoval(
+                   D.getDeclSpec().getStorageClassSpecLoc());
         break;
       case SC_Auto:
       case SC_Register:
@@ -7729,7 +7742,8 @@ NamedDecl *Sema::ActOnVariableDeclarator(
 
         Diag(D.getDeclSpec().getStorageClassSpecLoc(),
              diag::err_storage_class_for_static_member)
-          << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
+            << FixItHint::CreateRemoval(
+                   D.getDeclSpec().getStorageClassSpecLoc());
         break;
       case SC_PrivateExtern:
         llvm_unreachable("C storage class in c++!");
@@ -7781,8 +7795,6 @@ NamedDecl *Sema::ActOnVariableDeclarator(
     // the variable (matching the scope specifier), store them.
     // An explicit variable template specialization does not own any template
     // parameter lists.
-    bool IsExplicitSpecialization =
-        IsVariableTemplateSpecialization && !IsPartialSpecialization;
     unsigned VDTemplateParamLists =
         (TemplateParams && !IsExplicitSpecialization) ? 1 : 0;
     if (TemplateParamLists.size() > VDTemplateParamLists)
@@ -10213,12 +10225,23 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     }
 
     if (!isFriend && SC != SC_None) {
+      // C++ [temp.expl.spec]p2:
+      //   The declaration in an explicit-specialization shall not be an
+      //   export-declaration. An explicit specialization shall not use a
+      //   storage-class-specifier other than thread_local.
+      //
+      // We diagnose friend declarations with storage-class-specifiers
+      // elsewhere.
       if (isFunctionTemplateSpecialization || isMemberSpecialization) {
         Diag(D.getDeclSpec().getStorageClassSpecLoc(),
-               diag::ext_explicit_specialization_storage_class)
-            << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
-      } else if (SC == SC_Static && !CurContext->isRecord() && DC->isRecord()) {
-        assert(isa<CXXMethodDecl>(NewFD) && "Out-of-line member function should be a CXXMethodDecl");
+             diag::ext_explicit_specialization_storage_class)
+            << FixItHint::CreateRemoval(
+                   D.getDeclSpec().getStorageClassSpecLoc());
+      }
+
+      if (SC == SC_Static && !CurContext->isRecord() && DC->isRecord()) {
+        assert(isa<CXXMethodDecl>(NewFD) &&
+               "Out-of-line member function should be a CXXMethodDecl");
         // C++ [class.static]p1:
         //   A data or function member of a class may be declared static
         //   in a class definition, in which case it is a static member of
@@ -10227,22 +10250,20 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
         // Complain about the 'static' specifier if it's on an out-of-line
         // member function definition.
 
-        // MSVC permits the use of a 'static' storage specifier on an out-of-line
-        // member function template declaration and class member template
-        // declaration (MSVC versions before 2015), warn about this.
+        // MSVC permits the use of a 'static' storage specifier on an
+        // out-of-line member function template declaration and class member
+        // template declaration (MSVC versions before 2015), warn about this.
         Diag(D.getDeclSpec().getStorageClassSpecLoc(),
              ((!getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015) &&
                cast<CXXRecordDecl>(DC)->getDescribedClassTemplate()) ||
-             (getLangOpts().MSVCCompat && NewFD->getDescribedFunctionTemplate()))
-             ? diag::ext_static_out_of_line : diag::err_static_out_of_line)
-          << FixItHint::CreateRemoval(D.getDeclSpec().getStorageClassSpecLoc());
+              (getLangOpts().MSVCCompat &&
+               NewFD->getDescribedFunctionTemplate()))
+                 ? diag::ext_static_out_of_line
+                 : diag::err_static_out_of_line)
+            << FixItHint::CreateRemoval(
+                   D.getDeclSpec().getStorageClassSpecLoc());
       }
     }
-    #if 0
-    if (SC != SC_None && !isFriend && ) {
-    } else if (SC == SC_Static && isa<CXXMethodDecl>(NewFD) && !CurContext->isRecord()) {
-    }
-    #endif
 
     // C++11 [except.spec]p15:
     //   A deallocation function with no exception-specification is treated
@@ -10609,29 +10630,6 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
                                                 Previous))
           NewFD->setInvalidDecl();
       }
-
-      #if 0
-      // C++ [dcl.stc]p1:
-      //   A storage-class-specifier shall not be specified in an explicit
-      //   specialization (14.7.3)
-      // FIXME: We should be checking this for dependent specializations.
-      FunctionTemplateSpecializationInfo *Info =
-          NewFD->getTemplateSpecializationInfo();
-      if (Info && SC != SC_None) {
-        if (SC != Info->getTemplate()->getTemplatedDecl()->getStorageClass())
-          Diag(NewFD->getLocation(),
-               diag::err_explicit_specialization_inconsistent_storage_class)
-            << SC
-            << FixItHint::CreateRemoval(
-                                      D.getDeclSpec().getStorageClassSpecLoc());
-
-        else
-          Diag(NewFD->getLocation(),
-               diag::ext_explicit_specialization_storage_class)
-            << FixItHint::CreateRemoval(
-                                      D.getDeclSpec().getStorageClassSpecLoc());
-      }
-      #endif
     } else if (isMemberSpecialization && isa<CXXMethodDecl>(NewFD)) {
       if (CheckMemberSpecialization(NewFD, Previous))
           NewFD->setInvalidDecl();

@@ -28,4 +28,7 @@ int &x = w<1>;
 // instantiation of this specialization.
 template<> struct A<1> {};
 template<> constexpr void f<1>() {}
-template<> int v<1>; // expected-error{{redefinition of 'v<1>'}}
+// Variable template explicit specializations are always definitions unless they
+// are static data members declared without an initializer.
+template<> int v<1>; // expected-error {{redefinition of 'v<1>'}}
+                     // expected-note@Inputs/redecl-templates/a.h:8 {{previous definition is here}}

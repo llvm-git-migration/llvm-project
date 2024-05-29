@@ -3490,8 +3490,8 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
   }
 
   bool isInstField = (DS.getStorageClassSpec() == DeclSpec::SCS_unspecified ||
-                       DS.getStorageClassSpec() == DeclSpec::SCS_mutable) &&
-                      !isFunc && TemplateParameterLists.empty();
+                      DS.getStorageClassSpec() == DeclSpec::SCS_mutable) &&
+                     !isFunc && TemplateParameterLists.empty();
 
   if (DS.hasConstexprSpecifier() && isInstField) {
     SemaDiagnosticBuilder B =
@@ -3541,7 +3541,7 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
 
     IdentifierInfo *II = Name.getAsIdentifierInfo();
 
-    #if 0
+#if 0
     // Member field could not be with "template" keyword.
     // So TemplateParameterLists should be empty in this case.
     if (TemplateParameterLists.size()) {
@@ -3562,7 +3562,7 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
       }
       return nullptr;
     }
-    #endif
+#endif
 
     if (D.getName().getKind() == UnqualifiedIdKind::IK_TemplateId) {
       Diag(D.getIdentifierLoc(), diag::err_member_with_template_arguments)
