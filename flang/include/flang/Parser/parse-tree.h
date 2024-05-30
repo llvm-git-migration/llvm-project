@@ -3316,6 +3316,7 @@ struct CompilerDirective {
     TUPLE_CLASS_BOILERPLATE(AssumeAligned);
     std::tuple<common::Indirection<Designator>, uint64_t> t;
   };
+  EMPTY_CLASS(VectorAlways);
   struct NameValue {
     TUPLE_CLASS_BOILERPLATE(NameValue);
     std::tuple<Name, std::optional<std::uint64_t>> t;
@@ -3323,7 +3324,7 @@ struct CompilerDirective {
   EMPTY_CLASS(Unrecognized);
   CharBlock source;
   std::variant<std::list<IgnoreTKR>, LoopCount, std::list<AssumeAligned>,
-      std::list<NameValue>, Unrecognized>
+      VectorAlways, std::list<NameValue>, Unrecognized>
       u;
 };
 

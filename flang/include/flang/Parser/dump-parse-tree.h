@@ -206,6 +206,7 @@ public:
   NODE(CompilerDirective, IgnoreTKR)
   NODE(CompilerDirective, LoopCount)
   NODE(CompilerDirective, AssumeAligned)
+  NODE(CompilerDirective, VectorAlways)
   NODE(CompilerDirective, NameValue)
   NODE(CompilerDirective, Unrecognized)
   NODE(parser, ComplexLiteralConstant)
