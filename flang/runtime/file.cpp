@@ -126,6 +126,7 @@ void OpenFile::Open(OpenStatus status, Fortran::common::optional<Action> action,
       fd_ = ::open(path_.get(), flags, 0600);
       if (fd_ < 0) {
         handler.SignalErrno();
+        return;
       }
     }
   }
