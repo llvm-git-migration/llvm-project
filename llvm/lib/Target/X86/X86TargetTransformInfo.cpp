@@ -4211,6 +4211,10 @@ X86TTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
     // FMINNUM has same costs so don't duplicate.
     ISD = ISD::FMAXNUM;
     break;
+  case Intrinsic::maximumnum:
+  case Intrinsic::minimumnum:
+    ISD = ISD::FMAXIMUMNUM;
+    break;
   case Intrinsic::sadd_sat:
     ISD = ISD::SADDSAT;
     break;
@@ -4283,7 +4287,8 @@ X86TTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
       // If there are no NANs to deal with, then these are reduced to a
       // single MIN** or MAX** instruction instead of the MIN/CMP/SELECT that we
       // assume is used in the non-fast case.
-      if (ISD == ISD::FMAXNUM || ISD == ISD::FMINNUM) {
+      if (ISD == ISD::FMAXNUM || ISD == ISD::FMINNUM || ISD == ISD::FMAXNUM ||
+          ISD == ISD::FMINNUM) {
         if (FMF.noNaNs())
           return LegalizationCost * 1;
       }
@@ -5421,9 +5426,12 @@ X86TTIImpl::getMinMaxReductionCost(Intrinsic::ID IID, VectorType *ValTy,
   } else {
     assert(ValTy->isFPOrFPVectorTy() &&
            "Expected float point or integer vector type.");
-    ISD = (IID == Intrinsic::minnum || IID == Intrinsic::maxnum)
-              ? ISD::FMINNUM
-              : ISD::FMINIMUM;
+    if (IID == Intrinsic::minimumnum || IID == Intrinsic::maximumnum)
+      ISD = ISD::FMINIMUMNUM;
+    else
+      ISD = (IID == Intrinsic::minnum || IID == Intrinsic::maxnum)
+                ? ISD::FMINNUM
+                : ISD::FMINIMUM;
   }
 
   // We use the Intel Architecture Code Analyzer(IACA) to measure the throughput
