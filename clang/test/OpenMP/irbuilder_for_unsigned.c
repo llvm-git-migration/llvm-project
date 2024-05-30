@@ -24,10 +24,6 @@ extern "C" void workshareloop_unsigned(float *a, float *b, float *c, float *d) {
 // CHECK-NEXT:    [[AGG_CAPTURED:%.*]] = alloca [[STRUCT_ANON:%.*]], align 8
 // CHECK-NEXT:    [[AGG_CAPTURED1:%.*]] = alloca [[STRUCT_ANON_0:%.*]], align 4
 // CHECK-NEXT:    [[DOTCOUNT_ADDR:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_LASTITER:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_LOWERBOUND:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_UPPERBOUND:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_STRIDE:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    store ptr [[A]], ptr [[A_ADDR]], align 8
 // CHECK-NEXT:    store ptr [[B]], ptr [[B_ADDR]], align 8
 // CHECK-NEXT:    store ptr [[C]], ptr [[C_ADDR]], align 8
@@ -40,6 +36,10 @@ extern "C" void workshareloop_unsigned(float *a, float *b, float *c, float *d) {
 // CHECK-NEXT:    store i32 [[TMP2]], ptr [[TMP1]], align 4
 // CHECK-NEXT:    call void @__captured_stmt(ptr [[DOTCOUNT_ADDR]], ptr [[AGG_CAPTURED]])
 // CHECK-NEXT:    [[DOTCOUNT:%.*]] = load i32, ptr [[DOTCOUNT_ADDR]], align 4
+// CHECK-NEXT:    [[P_LASTITER:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_LOWERBOUND:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_UPPERBOUND:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_STRIDE:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    br label [[OMP_LOOP_PREHEADER:%.*]]
 // CHECK:       omp_loop.preheader:
 // CHECK-NEXT:    store i32 0, ptr [[P_LOWERBOUND]], align 4

@@ -427,14 +427,14 @@ void parallel_for_2(float *r, int a, double b) {
 // CHECK-NEXT:    [[AGG_CAPTURED186:%.*]] = alloca [[STRUCT_ANON_17:%.*]], align 8
 // CHECK-NEXT:    [[AGG_CAPTURED187:%.*]] = alloca [[STRUCT_ANON_18:%.*]], align 4
 // CHECK-NEXT:    [[DOTCOUNT_ADDR188:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_LASTITER203:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_LOWERBOUND204:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_UPPERBOUND205:%.*]] = alloca i32, align 4
-// CHECK-NEXT:    [[P_STRIDE206:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    store ptr [[R]], ptr [[R_ADDR]], align 8
 // CHECK-NEXT:    store i32 [[A]], ptr [[A_ADDR]], align 4
 // CHECK-NEXT:    store double [[B]], ptr [[B_ADDR]], align 8
 // CHECK-NEXT:    [[OMP_GLOBAL_THREAD_NUM:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1]])
+// CHECK-NEXT:    [[P_LASTITER203:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_LOWERBOUND204:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_UPPERBOUND205:%.*]] = alloca i32, align 4
+// CHECK-NEXT:    [[P_STRIDE206:%.*]] = alloca i32, align 4
 // CHECK-NEXT:    br label [[OMP_PARALLEL:%.*]]
 // CHECK:       omp_parallel:
 // CHECK-NEXT:    [[GEP_A_ADDR:%.*]] = getelementptr { ptr, ptr, ptr }, ptr [[STRUCTARG]], i32 0, i32 0
@@ -1881,10 +1881,6 @@ void parallel_for_2(float *r, int a, double b) {
 // CHECK-DEBUG-NEXT:    [[AGG_CAPTURED186:%.*]] = alloca [[STRUCT_ANON_17:%.*]], align 8
 // CHECK-DEBUG-NEXT:    [[AGG_CAPTURED187:%.*]] = alloca [[STRUCT_ANON_18:%.*]], align 4
 // CHECK-DEBUG-NEXT:    [[DOTCOUNT_ADDR188:%.*]] = alloca i32, align 4
-// CHECK-DEBUG-NEXT:    [[P_LASTITER203:%.*]] = alloca i32, align 4
-// CHECK-DEBUG-NEXT:    [[P_LOWERBOUND204:%.*]] = alloca i32, align 4
-// CHECK-DEBUG-NEXT:    [[P_UPPERBOUND205:%.*]] = alloca i32, align 4
-// CHECK-DEBUG-NEXT:    [[P_STRIDE206:%.*]] = alloca i32, align 4
 // CHECK-DEBUG-NEXT:    store ptr [[R]], ptr [[R_ADDR]], align 8
 // CHECK-DEBUG-NEXT:    call void @llvm.dbg.declare(metadata ptr [[R_ADDR]], metadata [[META134:![0-9]+]], metadata !DIExpression()), !dbg [[DBG135:![0-9]+]]
 // CHECK-DEBUG-NEXT:    store i32 [[A]], ptr [[A_ADDR]], align 4
@@ -1892,6 +1888,10 @@ void parallel_for_2(float *r, int a, double b) {
 // CHECK-DEBUG-NEXT:    store double [[B]], ptr [[B_ADDR]], align 8
 // CHECK-DEBUG-NEXT:    call void @llvm.dbg.declare(metadata ptr [[B_ADDR]], metadata [[META138:![0-9]+]], metadata !DIExpression()), !dbg [[DBG139:![0-9]+]]
 // CHECK-DEBUG-NEXT:    [[OMP_GLOBAL_THREAD_NUM:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB13:[0-9]+]]), !dbg [[DBG140:![0-9]+]]
+// CHECK-DEBUG-NEXT:    [[P_LASTITER203:%.*]] = alloca i32, align 4
+// CHECK-DEBUG-NEXT:    [[P_LOWERBOUND204:%.*]] = alloca i32, align 4
+// CHECK-DEBUG-NEXT:    [[P_UPPERBOUND205:%.*]] = alloca i32, align 4
+// CHECK-DEBUG-NEXT:    [[P_STRIDE206:%.*]] = alloca i32, align 4
 // CHECK-DEBUG-NEXT:    br label [[OMP_PARALLEL:%.*]]
 // CHECK-DEBUG:       omp_parallel:
 // CHECK-DEBUG-NEXT:    [[GEP_A_ADDR:%.*]] = getelementptr { ptr, ptr, ptr }, ptr [[STRUCTARG]], i32 0, i32 0
