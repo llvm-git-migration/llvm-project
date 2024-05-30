@@ -1113,6 +1113,14 @@ NextIteration:
         for (unsigned i = 0; i != NumEdges; ++i)
           APN->addIncoming(IncomingVals[AllocaNo], Pred);
 
+        if (APN->isComplete() &&
+            APN->getFunction()
+                ->getFnAttribute("no-signed-zeros-fp-math")
+                .getValueAsBool() &&
+            isa<FPMathOperator>(APN)) {
+          APN->setHasNoSignedZeros(true);
+        }
+
         // The currently active variable for this block is now the PHI.
         IncomingVals[AllocaNo] = APN;
         AllocaATInfo[AllocaNo].updateForNewPhi(APN, DIB);
