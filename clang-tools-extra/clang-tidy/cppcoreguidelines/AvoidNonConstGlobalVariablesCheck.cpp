@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "AvoidNonConstGlobalVariablesCheck.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 
@@ -16,9 +15,12 @@ using namespace clang::ast_matchers;
 namespace clang::tidy::cppcoreguidelines {
 
 void AvoidNonConstGlobalVariablesCheck::registerMatchers(MatchFinder *Finder) {
+  auto NamespaceMatcher = Options.get("AllowAnonymousNamespace", false)
+                              ? namespaceDecl(unless(isAnonymous()))
+                              : namespaceDecl();
   auto GlobalContext =
       varDecl(hasGlobalStorage(),
-              hasDeclContext(anyOf(namespaceDecl(), translationUnitDecl())));
+              hasDeclContext(anyOf(NamespaceMatcher, translationUnitDecl())));
 
   auto GlobalVariable = varDecl(
       GlobalContext,

@@ -41,3 +41,25 @@ The variables ``a``, ``c``, ``c_ptr1``, ``c_const_ptr`` and ``c_reference``
 will all generate warnings since they are either a non-const globally accessible
 variable, a pointer or a reference providing global access to non-const data
 or both.
+
+Options
+-------
+
+.. option:: AllowAnonymousNamespace
+
+   When set to `true` (default is `false`), non-const variables in anonymous namespaces will not generate a warning.
+
+Example
+^^^^^^^
+
+.. code-block:: c++
+
+   namespace {
+     int counter = 0;
+   }
+
+   int Increment() {
+    return ++counter;
+   }
+
+will not generate a warning for `counter` if :option:`AllowAnonymousNamespace` is set to `true`.
