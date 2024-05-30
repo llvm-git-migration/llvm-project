@@ -696,14 +696,6 @@ for (int i = 0; i < argc; ++i) {
 // CHECK3-NEXT:    [[RETVAL:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    [[ARGC_ADDR:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    [[ARGV_ADDR:%.*]] = alloca ptr, align 8
-// CHECK3-NEXT:    [[P_LASTITER:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_LOWERBOUND:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_UPPERBOUND:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_STRIDE:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_LASTITER28:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_LOWERBOUND29:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_UPPERBOUND30:%.*]] = alloca i32, align 4
-// CHECK3-NEXT:    [[P_STRIDE31:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    [[DOTOMP_IV:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    [[TMP:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    [[DOTCAPTURE_EXPR_:%.*]] = alloca i32, align 4
@@ -720,6 +712,14 @@ for (int i = 0; i < argc; ++i) {
 // CHECK3-NEXT:    store i32 [[ARGC]], ptr [[ARGC_ADDR]], align 4
 // CHECK3-NEXT:    store ptr [[ARGV]], ptr [[ARGV_ADDR]], align 8
 // CHECK3-NEXT:    [[OMP_GLOBAL_THREAD_NUM:%.*]] = call i32 @__kmpc_global_thread_num(ptr @[[GLOB1:[0-9]+]])
+// CHECK3-NEXT:    [[P_LASTITER:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_LOWERBOUND:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_UPPERBOUND:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_STRIDE:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_LASTITER28:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_LOWERBOUND29:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_UPPERBOUND30:%.*]] = alloca i32, align 4
+// CHECK3-NEXT:    [[P_STRIDE31:%.*]] = alloca i32, align 4
 // CHECK3-NEXT:    br label [[OMP_PARALLEL:%.*]]
 // CHECK3:       omp_parallel:
 // CHECK3-NEXT:    [[GEP_ARGC_ADDR:%.*]] = getelementptr { ptr, ptr }, ptr [[STRUCTARG]], i32 0, i32 0
