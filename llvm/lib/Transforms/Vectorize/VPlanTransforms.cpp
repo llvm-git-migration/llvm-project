@@ -20,6 +20,7 @@
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Analysis/IVDescriptors.h"
 #include "llvm/Analysis/VectorUtils.h"
 #include "llvm/IR/Intrinsics.h"
@@ -1311,7 +1312,7 @@ static VPActiveLaneMaskPHIRecipe *addVPLaneMaskPhiAndUpdateExitBranch(
 /// WideCanonicalIV, backedge-taken-count) pattern.
 /// TODO: Introduce explicit recipe for header-mask instead of searching
 /// for the header-mask pattern manually.
-static SmallVector<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
+static DenseSet<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
   SmallVector<VPValue *> WideCanonicalIVs;
   auto *FoundWidenCanonicalIVUser =
       find_if(Plan.getCanonicalIV()->users(),
@@ -1337,7 +1338,8 @@ static SmallVector<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
 
   // Walk users of wide canonical IVs and collect to all compares of the form
   // (ICMP_ULE, WideCanonicalIV, backedge-taken-count).
-  SmallVector<VPValue *> HeaderMasks;
+  DenseSet<VPValue *> HeaderMasks;
+  VPValue *BTC = Plan.getOrCreateBackedgeTakenCount();
   for (auto *Wide : WideCanonicalIVs) {
     for (VPUser *U : SmallVector<VPUser *>(Wide->users())) {
       auto *HeaderMask = dyn_cast<VPInstruction>(U);
@@ -1346,7 +1348,7 @@ static SmallVector<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
 
       assert(HeaderMask->getOperand(0) == Wide &&
              "WidenCanonicalIV must be the first operand of the compare");
-      HeaderMasks.push_back(HeaderMask);
+      HeaderMasks.insert(HeaderMask);
     }
   }
   return HeaderMasks;
@@ -1384,6 +1386,56 @@ void VPlanTransforms::addActiveLaneMask(
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan))
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
+
+/// Replace recipes with their EVL variants.
+static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
+  DenseSet<VPRecipeBase *> ToRemove;
+
+  ReversePostOrderTraversal<VPBlockDeepTraversalWrapper<VPBlockBase *>> RPOT(
+      Plan.getEntry());
+  DenseSet<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
+  for (VPBasicBlock *VPBB :
+       reverse(VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT))) {
+    // The recipes in the block are processed in reverse order, to catch chains
+    // of dead recipes.
+    for (VPRecipeBase &R : make_early_inc_range(reverse(*VPBB))) {
+      TypeSwitch<VPRecipeBase *>(&R)
+          .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
+            VPValue *NewMask =
+                HeaderMasks.contains(L->getMask()) ? nullptr : L->getMask();
+            auto *N = new VPWidenLoadEVLRecipe(L, &EVL, NewMask);
+            N->insertBefore(L);
+            L->replaceAllUsesWith(N);
+            ToRemove.insert(L);
+          })
+          .Case<VPWidenStoreRecipe>([&](VPWidenStoreRecipe *S) {
+            VPValue *NewMask =
+                HeaderMasks.contains(S->getMask()) ? nullptr : S->getMask();
+            auto *N = new VPWidenStoreEVLRecipe(S, &EVL, NewMask);
+            N->insertBefore(S);
+            ToRemove.insert(S);
+          })
+          .Case<VPWidenRecipe>([&](VPWidenRecipe *W) {
+            unsigned Opcode = W->getOpcode();
+            if (!Instruction::isBinaryOp(Opcode) &&
+                !Instruction::isUnaryOp(Opcode))
+              return;
+            auto *N = VPWidenEVLRecipe::create(W, EVL);
+            N->insertBefore(W);
+            W->replaceAllUsesWith(N);
+            ToRemove.insert(W);
+          });
+    }
+  }
+
+  for (VPRecipeBase *R : ToRemove)
+    R->eraseFromParent();
+
+  for (VPValue *HeaderMask : HeaderMasks)
+    recursivelyDeleteDeadRecipes(HeaderMask);
+}
+
+
 
 /// Add a VPEVLBasedIVPHIRecipe and related recipes to \p Plan and
 /// replaces all uses except the canonical IV increment of
@@ -1445,29 +1497,8 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
   NextEVLIV->insertBefore(CanonicalIVIncrement);
   EVLPhi->addOperand(NextEVLIV);
 
-  for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
-    for (VPUser *U : collectUsersRecursively(HeaderMask)) {
-      auto *MemR = dyn_cast<VPWidenMemoryRecipe>(U);
-      if (!MemR)
-        continue;
-      VPValue *OrigMask = MemR->getMask();
-      assert(OrigMask && "Unmasked widen memory recipe when folding tail");
-      VPValue *NewMask = HeaderMask == OrigMask ? nullptr : OrigMask;
-      if (auto *L = dyn_cast<VPWidenLoadRecipe>(MemR)) {
-        auto *N = new VPWidenLoadEVLRecipe(L, VPEVL, NewMask);
-        N->insertBefore(L);
-        L->replaceAllUsesWith(N);
-        L->eraseFromParent();
-      } else if (auto *S = dyn_cast<VPWidenStoreRecipe>(MemR)) {
-        auto *N = new VPWidenStoreEVLRecipe(S, VPEVL, NewMask);
-        N->insertBefore(S);
-        S->eraseFromParent();
-      } else {
-        llvm_unreachable("unsupported recipe");
-      }
-    }
-    recursivelyDeleteDeadRecipes(HeaderMask);
-  }
+  transformRecipestoEVLRecipes(Plan, *VPEVL);
+
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.
   CanonicalIVPHI->replaceAllUsesWith(EVLPhi);
