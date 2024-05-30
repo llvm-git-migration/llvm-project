@@ -1694,6 +1694,26 @@ Instruction *InstCombinerImpl::visitAdd(BinaryOperator &I) {
     return BinaryOperator::CreateOr(LHS, Zext);
   }
 
+  {
+    Value *Cond, *Ext;
+    Constant *C;
+    // (add X, (sext/zext (icmp eq X, C)))
+    //    -> (select (icmp eq X, C), (add C, (sext/zext 1)), X)
+    auto CondMatcher = m_CombineAnd(
+        m_Value(Cond), m_ICmp(Pred, m_Deferred(A), m_ImmConstant(C)));
+
+    if (match(&I,
+              m_c_Add(m_Value(A),
+                      m_CombineAnd(m_Value(Ext), m_ZExtOrSExt(CondMatcher)))) &&
+        Pred == ICmpInst::ICMP_EQ && Ext->hasOneUse()) {
+      Constant *ExtC = match(Ext, m_ZExt(m_Value()))
+                           ? ConstantInt::get(C->getType(), 1)
+                           : ConstantInt::getAllOnesValue(C->getType());
+      return replaceInstUsesWith(
+          I, Builder.CreateSelect(Cond, Builder.CreateAdd(C, ExtC), A));
+    }
+  }
+
   if (Instruction *Ashr = foldAddToAshr(I))
     return Ashr;
 
