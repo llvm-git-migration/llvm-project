@@ -63,6 +63,91 @@ unsigned __int64 test__emulu(unsigned int a, unsigned int b) {
 // CHECK: [[RES:%[0-9]+]] = mul nuw i64 [[Y]], [[X]]
 // CHECK: ret i64 [[RES]]
 
+//
+// CHECK-I386-LABEL: define dso_local noundef i32 @test_outp(
+// CHECK-I386-SAME: i16 noundef zeroext [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR2:[0-9]+]] {
+// CHECK-I386-NEXT:  [[ENTRY:.*:]]
+// CHECK-I386-NEXT:    tail call void asm sideeffect "outb ${0:b}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR3:[0-9]+]], !srcloc [[META4:![0-9]+]]
+// CHECK-I386-NEXT:    ret i32 [[DATA]]
+//
+// CHECK-X64-LABEL: define dso_local noundef i32 @test_outp(
+// CHECK-X64-SAME: i16 noundef [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR1:[0-9]+]] {
+// CHECK-X64-NEXT:  [[ENTRY:.*:]]
+// CHECK-X64-NEXT:    tail call void asm sideeffect "outb ${0:b}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR5:[0-9]+]], !srcloc [[META3:![0-9]+]]
+// CHECK-X64-NEXT:    ret i32 [[DATA]]
+//
+int test_outp(unsigned short port, int data) {
+    return _outp(port, data);
+}
+
+//
+// CHECK-I386-LABEL: define dso_local noundef zeroext i16 @test_outpw(
+// CHECK-I386-SAME: i16 noundef zeroext [[PORT:%.*]], i16 noundef returned zeroext [[DATA:%.*]]) local_unnamed_addr #[[ATTR2]] {
+// CHECK-I386-NEXT:  [[ENTRY:.*:]]
+// CHECK-I386-NEXT:    tail call void asm sideeffect "outw ${0:w}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i16 [[DATA]], i16 [[PORT]]) #[[ATTR3]], !srcloc [[META5:![0-9]+]]
+// CHECK-I386-NEXT:    ret i16 [[DATA]]
+//
+// CHECK-X64-LABEL: define dso_local noundef i16 @test_outpw(
+// CHECK-X64-SAME: i16 noundef [[PORT:%.*]], i16 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR1]] {
+// CHECK-X64-NEXT:  [[ENTRY:.*:]]
+// CHECK-X64-NEXT:    tail call void asm sideeffect "outw ${0:w}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i16 [[DATA]], i16 [[PORT]]) #[[ATTR5]], !srcloc [[META4:![0-9]+]]
+// CHECK-X64-NEXT:    ret i16 [[DATA]]
+//
+unsigned short test_outpw(unsigned short port, unsigned short data) {
+    return _outpw(port, data);
+}
+
+//
+// CHECK-I386-LABEL: define dso_local noundef i32 @test_outpd(
+// CHECK-I386-SAME: i16 noundef zeroext [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR2]] {
+// CHECK-I386-NEXT:  [[ENTRY:.*:]]
+// CHECK-I386-NEXT:    tail call void asm sideeffect "outl ${0:k}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR3]], !srcloc [[META6:![0-9]+]]
+// CHECK-I386-NEXT:    ret i32 [[DATA]]
+//
+// CHECK-X64-LABEL: define dso_local noundef i32 @test_outpd(
+// CHECK-X64-SAME: i16 noundef [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR1]] {
+// CHECK-X64-NEXT:  [[ENTRY:.*:]]
+// CHECK-X64-NEXT:    tail call void asm sideeffect "outl ${0:k}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR5]], !srcloc [[META5:![0-9]+]]
+// CHECK-X64-NEXT:    ret i32 [[DATA]]
+//
+unsigned long test_outpd(unsigned short port, unsigned long data) {
+    return _outpd(port, data);
+}
+
+//
+// CHECK-I386-LABEL: define dso_local noundef i32 @test_outp2(
+// CHECK-I386-SAME: i16 noundef zeroext [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR2]] {
+// CHECK-I386-NEXT:  [[ENTRY:.*:]]
+// CHECK-I386-NEXT:    tail call void asm sideeffect "outb ${0:b}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR3]], !srcloc [[META4]]
+// CHECK-I386-NEXT:    ret i32 [[DATA]]
+//
+// CHECK-X64-LABEL: define dso_local noundef i32 @test_outp2(
+// CHECK-X64-SAME: i16 noundef [[PORT:%.*]], i32 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR1]] {
+// CHECK-X64-NEXT:  [[ENTRY:.*:]]
+// CHECK-X64-NEXT:    tail call void asm sideeffect "outb ${0:b}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i32 [[DATA]], i16 [[PORT]]) #[[ATTR5]], !srcloc [[META3]]
+// CHECK-X64-NEXT:    ret i32 [[DATA]]
+//
+int test_outp2(unsigned short port, int data) {
+    return outp(port, data);
+}
+
+//
+// CHECK-I386-LABEL: define dso_local noundef zeroext i16 @test_outpw2(
+// CHECK-I386-SAME: i16 noundef zeroext [[PORT:%.*]], i16 noundef returned zeroext [[DATA:%.*]]) local_unnamed_addr #[[ATTR2]] {
+// CHECK-I386-NEXT:  [[ENTRY:.*:]]
+// CHECK-I386-NEXT:    tail call void asm sideeffect "outw ${0:w}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i16 [[DATA]], i16 [[PORT]]) #[[ATTR3]], !srcloc [[META5]]
+// CHECK-I386-NEXT:    ret i16 [[DATA]]
+//
+// CHECK-X64-LABEL: define dso_local noundef i16 @test_outpw2(
+// CHECK-X64-SAME: i16 noundef [[PORT:%.*]], i16 noundef returned [[DATA:%.*]]) local_unnamed_addr #[[ATTR1]] {
+// CHECK-X64-NEXT:  [[ENTRY:.*:]]
+// CHECK-X64-NEXT:    tail call void asm sideeffect "outw ${0:w}, ${1:w}", "{ax},N{dx},~{memory},~{dirflag},~{fpsr},~{flags}"(i16 [[DATA]], i16 [[PORT]]) #[[ATTR5]], !srcloc [[META4]]
+// CHECK-X64-NEXT:    ret i16 [[DATA]]
+//
+unsigned short test_outpw2(unsigned short port, unsigned short data) {
+    return outpw(port, data);
+}
+
 #if defined(__x86_64__)
 
 char test__readgsbyte(unsigned long Offset) {

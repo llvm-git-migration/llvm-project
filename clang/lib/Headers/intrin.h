@@ -329,6 +329,26 @@ static __inline__ void __DEFAULT_FN_ATTRS __stosq(unsigned __int64 *__dst,
 static __inline__ void __DEFAULT_FN_ATTRS __halt(void) {
   __asm__ volatile("hlt");
 }
+
+static __inline__ int __DEFAULT_FN_ATTRS _outp(unsigned short port, int data) {
+  __asm__ volatile("outb %b0, %w1" : : "a"(data), "Nd"(port) : "memory");
+  return data;
+}
+
+static __inline__ unsigned short __DEFAULT_FN_ATTRS
+_outpw(unsigned short port, unsigned short data) {
+  __asm__ volatile("outw %w0, %w1" : : "a"(data), "Nd"(port) : "memory");
+  return data;
+}
+
+static __inline__ unsigned long __DEFAULT_FN_ATTRS _outpd(unsigned short port,
+                                                          unsigned long data) {
+  __asm__ volatile("outl %k0, %w1" : : "a"(data), "Nd"(port) : "memory");
+  return data;
+}
+
+#define outp(port, data) _outp(port, data)
+#define outpw(R, D) _outpw(port, data)
 #endif
 
 #if defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
