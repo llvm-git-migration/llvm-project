@@ -56,11 +56,25 @@ static cl::opt<bool> DisableAll("disable-loop-idiom-transform-all", cl::Hidden,
                                 cl::init(false),
                                 cl::desc("Disable Loop Idiom Transform Pass."));
 
+static cl::opt<LoopIdiomTransformStyle>
+    LITVecStyle("loop-idiom-transform-style", cl::Hidden,
+                cl::desc("The vectorization style for loop idiom transform."),
+                cl::values(clEnumValN(LoopIdiomTransformStyle::Masked, "masked",
+                                      "Use masked vector intrinsics"),
+                           clEnumValN(LoopIdiomTransformStyle::Predicated,
+                                      "predicated", "Use VP intrinsics")),
+                cl::init(LoopIdiomTransformStyle::Masked));
+
 static cl::opt<bool>
     DisableByteCmp("disable-loop-idiom-transform-bytecmp", cl::Hidden,
                    cl::init(false),
                    cl::desc("Proceed with Loop Idiom Transform Pass, but do "
                             "not convert byte-compare loop(s)."));
+
+static cl::opt<unsigned>
+    ByteCmpVF("loop-idiom-transform-bytecmp-vf", cl::Hidden,
+              cl::desc("The vectorization factor for byte-compare patterns."),
+              cl::init(16));
 
 static cl::opt<bool>
     VerifyLoops("verify-loop-idiom-transform", cl::Hidden, cl::init(false),
@@ -68,6 +82,8 @@ static cl::opt<bool>
 
 namespace {
 class LoopIdiomTransform {
+  LoopIdiomTransformStyle VectorizeStyle;
+  unsigned ByteCompareVF;
   Loop *CurLoop = nullptr;
   DominatorTree *DT;
   LoopInfo *LI;
@@ -82,10 +98,11 @@ class LoopIdiomTransform {
   BasicBlock *VectorLoopIncBlock = nullptr;
 
 public:
-  explicit LoopIdiomTransform(DominatorTree *DT, LoopInfo *LI,
-                              const TargetTransformInfo *TTI,
-                              const DataLayout *DL)
-      : DT(DT), LI(LI), TTI(TTI), DL(DL) {}
+  LoopIdiomTransform(LoopIdiomTransformStyle S, unsigned VF, DominatorTree *DT,
+                     LoopInfo *LI, const TargetTransformInfo *TTI,
+                     const DataLayout *DL)
+      : VectorizeStyle(S), ByteCompareVF(VF), DT(DT), LI(LI), TTI(TTI), DL(DL) {
+  }
 
   bool run(Loop *L);
 
@@ -106,6 +123,10 @@ private:
   Value *createMaskedFindMismatch(IRBuilder<> &Builder, GetElementPtrInst *GEPA,
                                   GetElementPtrInst *GEPB, Value *ExtStart,
                                   Value *ExtEnd);
+  Value *createPredicatedFindMismatch(IRBuilder<> &Builder,
+                                      GetElementPtrInst *GEPA,
+                                      GetElementPtrInst *GEPB, Value *ExtStart,
+                                      Value *ExtEnd);
 
   void transformByteCompare(GetElementPtrInst *GEPA, GetElementPtrInst *GEPB,
                             PHINode *IndPhi, Value *MaxLen, Instruction *Index,
@@ -123,7 +144,15 @@ PreservedAnalyses LoopIdiomTransformPass::run(Loop &L, LoopAnalysisManager &AM,
 
   const auto *DL = &L.getHeader()->getModule()->getDataLayout();
 
-  LoopIdiomTransform LIT(&AR.DT, &AR.LI, &AR.TTI, DL);
+  LoopIdiomTransformStyle VecStyle = VectorizeStyle;
+  if (LITVecStyle.getNumOccurrences())
+    VecStyle = LITVecStyle;
+
+  unsigned BCVF = ByteCompareVF;
+  if (ByteCmpVF.getNumOccurrences())
+    BCVF = ByteCmpVF;
+
+  LoopIdiomTransform LIT(VecStyle, BCVF, &AR.DT, &AR.LI, &AR.TTI, DL);
   if (!LIT.run(&L))
     return PreservedAnalyses::all();
 
@@ -357,14 +386,15 @@ Value *LoopIdiomTransform::createMaskedFindMismatch(IRBuilder<> &Builder,
   // Therefore, we know that we can use a 64-bit induction variable that
   // starts from 0 -> ExtMaxLen and it will not overflow.
   ScalableVectorType *PredVTy =
-      ScalableVectorType::get(Builder.getInt1Ty(), 16);
+      ScalableVectorType::get(Builder.getInt1Ty(), ByteCompareVF);
 
   Value *InitialPred = Builder.CreateIntrinsic(
       Intrinsic::get_active_lane_mask, {PredVTy, I64Type}, {ExtStart, ExtEnd});
 
   Value *VecLen = Builder.CreateIntrinsic(Intrinsic::vscale, {I64Type}, {});
-  VecLen = Builder.CreateMul(VecLen, ConstantInt::get(I64Type, 16), "",
-                             /*HasNUW=*/true, /*HasNSW=*/true);
+  VecLen =
+      Builder.CreateMul(VecLen, ConstantInt::get(I64Type, ByteCompareVF), "",
+                        /*HasNUW=*/true, /*HasNSW=*/true);
 
   Value *PFalse = Builder.CreateVectorSplat(PredVTy->getElementCount(),
                                             Builder.getInt1(false));
@@ -379,7 +409,8 @@ Value *LoopIdiomTransform::createMaskedFindMismatch(IRBuilder<> &Builder,
   LoopPred->addIncoming(InitialPred, VectorLoopPreheaderBlock);
   PHINode *VectorIndexPhi = Builder.CreatePHI(I64Type, 2, "mismatch_vec_index");
   VectorIndexPhi->addIncoming(ExtStart, VectorLoopPreheaderBlock);
-  Type *VectorLoadType = ScalableVectorType::get(Builder.getInt8Ty(), 16);
+  Type *VectorLoadType =
+      ScalableVectorType::get(Builder.getInt8Ty(), ByteCompareVF);
   Value *Passthru = ConstantInt::getNullValue(VectorLoadType);
 
   Value *VectorLhsGep = Builder.CreateGEP(LoadType, PtrA, VectorIndexPhi);
@@ -438,6 +469,112 @@ Value *LoopIdiomTransform::createMaskedFindMismatch(IRBuilder<> &Builder,
       {PredMatchCmp, /*ZeroIsPoison=*/Builder.getInt1(true)});
   Ctz = Builder.CreateZExt(Ctz, I64Type);
   Value *VectorLoopRes64 = Builder.CreateAdd(VectorFoundIndex, Ctz, "",
+                                             /*HasNUW=*/true, /*HasNSW=*/true);
+  return Builder.CreateTrunc(VectorLoopRes64, ResType);
+}
+
+Value *LoopIdiomTransform::createPredicatedFindMismatch(IRBuilder<> &Builder,
+                                                        GetElementPtrInst *GEPA,
+                                                        GetElementPtrInst *GEPB,
+                                                        Value *ExtStart,
+                                                        Value *ExtEnd) {
+  Type *I64Type = Builder.getInt64Ty();
+  Type *I32Type = Builder.getInt32Ty();
+  Type *ResType = I32Type;
+  Type *LoadType = Builder.getInt8Ty();
+  Value *PtrA = GEPA->getPointerOperand();
+  Value *PtrB = GEPB->getPointerOperand();
+
+  // At this point we know two things must be true:
+  //  1. Start <= End
+  //  2. ExtMaxLen <= 4096 due to the page checks.
+  // Therefore, we know that we can use a 64-bit induction variable that
+  // starts from 0 -> ExtMaxLen and it will not overflow.
+  auto *JumpToVectorLoop = BranchInst::Create(VectorLoopStartBlock);
+  Builder.Insert(JumpToVectorLoop);
+
+  // Set up the first Vector loop block by creating the PHIs, doing the vector
+  // loads and comparing the vectors.
+  Builder.SetInsertPoint(VectorLoopStartBlock);
+  auto *VectorIndexPhi = Builder.CreatePHI(I64Type, 2, "mismatch_vector_index");
+  VectorIndexPhi->addIncoming(ExtStart, VectorLoopPreheaderBlock);
+
+  // Calculate AVL by subtracting the vector loop index from the trip count
+  Value *AVL = Builder.CreateSub(ExtEnd, VectorIndexPhi, "avl", /*HasNUW=*/true,
+                                 /*HasNSW=*/true);
+
+  auto *VectorLoadType = ScalableVectorType::get(LoadType, ByteCompareVF);
+  auto *VF = ConstantInt::get(
+      I32Type, VectorLoadType->getElementCount().getKnownMinValue());
+  auto *IsScalable = ConstantInt::getBool(
+      Builder.getContext(), VectorLoadType->getElementCount().isScalable());
+
+  Value *VL = Builder.CreateIntrinsic(Intrinsic::experimental_get_vector_length,
+                                      {I64Type}, {AVL, VF, IsScalable});
+  Value *GepOffset = VectorIndexPhi;
+
+  Value *VectorLhsGep = Builder.CreateGEP(LoadType, PtrA, GepOffset);
+  if (GEPA->isInBounds())
+    cast<GetElementPtrInst>(VectorLhsGep)->setIsInBounds(true);
+  VectorType *TrueMaskTy =
+      VectorType::get(Builder.getInt1Ty(), VectorLoadType->getElementCount());
+  Value *AllTrueMask = Constant::getAllOnesValue(TrueMaskTy);
+  Value *VectorLhsLoad = Builder.CreateIntrinsic(
+      Intrinsic::vp_load, {VectorLoadType, VectorLhsGep->getType()},
+      {VectorLhsGep, AllTrueMask, VL}, nullptr, "lhs.load");
+
+  Value *VectorRhsGep = Builder.CreateGEP(LoadType, PtrB, GepOffset);
+  if (GEPB->isInBounds())
+    cast<GetElementPtrInst>(VectorRhsGep)->setIsInBounds(true);
+  Value *VectorRhsLoad = Builder.CreateIntrinsic(
+      Intrinsic::vp_load, {VectorLoadType, VectorLhsGep->getType()},
+      {VectorRhsGep, AllTrueMask, VL}, nullptr, "rhs.load");
+
+  StringRef PredicateStr = CmpInst::getPredicateName(CmpInst::ICMP_NE);
+  auto *PredicateMDS = MDString::get(VectorLhsLoad->getContext(), PredicateStr);
+  Value *Pred = MetadataAsValue::get(VectorLhsLoad->getContext(), PredicateMDS);
+  Value *VectorMatchCmp = Builder.CreateIntrinsic(
+      Intrinsic::vp_icmp, {VectorLhsLoad->getType()},
+      {VectorLhsLoad, VectorRhsLoad, Pred, AllTrueMask, VL}, nullptr,
+      "mismatch.cmp");
+  Value *CTZ = Builder.CreateIntrinsic(
+      Intrinsic::vp_cttz_elts, {ResType, VectorMatchCmp->getType()},
+      {VectorMatchCmp, /*ZeroIsPoison=*/Builder.getInt1(true), AllTrueMask,
+       VL});
+  // RISC-V refines/lowers the poison returned by vp.cttz.elts to -1.
+  Value *MismatchFound =
+      Builder.CreateICmpSGE(CTZ, ConstantInt::get(ResType, 0));
+  auto *VectorEarlyExit = BranchInst::Create(VectorLoopMismatchBlock,
+                                             VectorLoopIncBlock, MismatchFound);
+  Builder.Insert(VectorEarlyExit);
+
+  // Increment the index counter and calculate the predicate for the next
+  // iteration of the loop. We branch back to the start of the loop if there
+  // is at least one active lane.
+  Builder.SetInsertPoint(VectorLoopIncBlock);
+  Value *VL64 = Builder.CreateZExt(VL, I64Type);
+  Value *NewVectorIndexPhi =
+      Builder.CreateAdd(VectorIndexPhi, VL64, "",
+                        /*HasNUW=*/true, /*HasNSW=*/true);
+  VectorIndexPhi->addIncoming(NewVectorIndexPhi, VectorLoopIncBlock);
+  Value *ExitCond = Builder.CreateICmpNE(NewVectorIndexPhi, ExtEnd);
+  auto *VectorLoopBranchBack =
+      BranchInst::Create(VectorLoopStartBlock, EndBlock, ExitCond);
+  Builder.Insert(VectorLoopBranchBack);
+
+  // If we found a mismatch then we need to calculate which lane in the vector
+  // had a mismatch and add that on to the current loop index.
+  Builder.SetInsertPoint(VectorLoopMismatchBlock);
+
+  // Add LCSSA phis for CTZ and VectorIndexPhi.
+  auto *CTZLCSSAPhi = Builder.CreatePHI(CTZ->getType(), 1, "ctz");
+  CTZLCSSAPhi->addIncoming(CTZ, VectorLoopStartBlock);
+  auto *VectorIndexLCSSAPhi =
+      Builder.CreatePHI(VectorIndexPhi->getType(), 1, "mismatch_vector_index");
+  VectorIndexLCSSAPhi->addIncoming(VectorIndexPhi, VectorLoopStartBlock);
+
+  Value *CTZI64 = Builder.CreateZExt(CTZLCSSAPhi, I64Type);
+  Value *VectorLoopRes64 = Builder.CreateAdd(VectorIndexLCSSAPhi, CTZI64, "",
                                              /*HasNUW=*/true, /*HasNSW=*/true);
   return Builder.CreateTrunc(VectorLoopRes64, ResType);
 }
@@ -593,8 +730,17 @@ Value *LoopIdiomTransform::expandFindMismatch(
   // processed in each iteration, etc.
   Builder.SetInsertPoint(VectorLoopPreheaderBlock);
 
-  Value *VectorLoopRes =
-      createMaskedFindMismatch(Builder, GEPA, GEPB, ExtStart, ExtEnd);
+  Value *VectorLoopRes = nullptr;
+  switch (VectorizeStyle) {
+  case LoopIdiomTransformStyle::Masked:
+    VectorLoopRes =
+        createMaskedFindMismatch(Builder, GEPA, GEPB, ExtStart, ExtEnd);
+    break;
+  case LoopIdiomTransformStyle::Predicated:
+    VectorLoopRes =
+        createPredicatedFindMismatch(Builder, GEPA, GEPB, ExtStart, ExtEnd);
+    break;
+  }
 
   Builder.Insert(BranchInst::Create(EndBlock));
 
