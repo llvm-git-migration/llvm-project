@@ -28,7 +28,8 @@ static const char *ReductionIntOpcodes[] = {
     "add", "mul", "and", "or", "xor", "smin", "smax", "umin", "umax"};
 
 static const char *ReductionFPOpcodes[] = {"fadd", "fmul",     "fmin",
-                                           "fmax", "fminimum", "fmaximum"};
+                                           "fmax", "fminimum", "fmaximum",
+					   "fminimumnum", "fmaximumnum"};
 
 class VPIntrinsicTest : public testing::Test {
 protected:
@@ -51,7 +52,8 @@ protected:
 
     const char *BinaryFPOpcodes[] = {"fadd",    "fsub",    "fmul",   "fdiv",
                                      "frem",    "minnum",  "maxnum", "minimum",
-                                     "maximum", "copysign"};
+                                     "maximum", "minimumnum", "maximumnum",
+				     "copysign"};
     for (const char *BinaryFPOpcode : BinaryFPOpcodes)
       Str << " declare <8 x float> @llvm.vp." << BinaryFPOpcode
           << ".v8f32(<8 x float>, <8 x float>, <8 x i1>, i32) ";
