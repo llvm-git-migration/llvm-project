@@ -8433,7 +8433,6 @@ ExpectedStmt ASTNodeImporter::VisitCXXDependentScopeMemberExpr(
   auto ToQualifierLoc = importChecked(Err, E->getQualifierLoc());
   auto ToTemplateKeywordLoc = importChecked(Err, E->getTemplateKeywordLoc());
 
-
   UnresolvedSet<8> ToUnqualifiedLookups;
   for (auto D : E->unqualified_lookups())
     if (auto ToDOrErr = import(D.getDecl()))
