@@ -678,11 +678,8 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
   CXXConversionDecl *ConversionDecl = dyn_cast<CXXConversionDecl>(D);
   CXXDeductionGuideDecl *GuideDecl = dyn_cast<CXXDeductionGuideDecl>(D);
   if (!Policy.SuppressSpecifiers) {
-    if (const char *Lang = tryGetUnbracedLinkageLanguage(D)) {
-      // the "extern" specifier is implicit
-      assert(D->getStorageClass() == SC_None);
+    if (const char *Lang = tryGetUnbracedLinkageLanguage(D))
       Out << "extern \"" << Lang << "\" ";
-    }
     switch (D->getStorageClass()) {
     case SC_None: break;
     case SC_Extern: Out << "extern "; break;
@@ -953,11 +950,8 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
     : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
 
   if (!Policy.SuppressSpecifiers) {
-    if (const char *Lang = tryGetUnbracedLinkageLanguage(D)) {
-      // the "extern" specifier is implicit
-      assert(D->getStorageClass() == SC_None);
+    if (const char *Lang = tryGetUnbracedLinkageLanguage(D))
       Out << "extern \"" << Lang << "\" ";
-    }
     StorageClass SC = D->getStorageClass();
     if (SC != SC_None)
       Out << VarDecl::getStorageClassSpecifierString(SC) << " ";
