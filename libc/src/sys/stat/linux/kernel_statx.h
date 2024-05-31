@@ -73,7 +73,7 @@ LIBC_INLINE int statx(int dirfd, const char *__restrict path, int flags,
                       struct stat *__restrict statbuf) {
   // We make a statx syscall and copy out the result into the |statbuf|.
   ::statx_buf xbuf;
-  int ret = LIBC_NAMESPACE::syscall_impl<int>(SYS_statx, dirfd, path, flags,
+  int ret = LIBC_NAMESPACE::syscall_impl<int>(0, dirfd, path, flags,
                                               ::STATX_BASIC_STATS_MASK, &xbuf);
   if (ret < 0)
     return -ret;

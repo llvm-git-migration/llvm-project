@@ -25,6 +25,20 @@ template <class T> LIBC_INLINE constexpr const T &min(const T &a, const T &b) {
   return (a < b) ? a : b;
 }
 
+template <class InputIt, class UnaryPred>
+constexpr InputIt find_if_not(InputIt first, InputIt last, UnaryPred q) {
+  for (; first != last; ++first)
+    if (!q(*first))
+      return first;
+
+  return last;
+}
+
+template <class InputIt, class UnaryPred>
+constexpr bool all_of(InputIt first, InputIt last, UnaryPred p) {
+  return find_if_not(first, last, p) == last;
+}
+
 } // namespace cpp
 } // namespace LIBC_NAMESPACE
 
