@@ -25,17 +25,17 @@ public:
   constexpr FixedVector() = default;
 
   using iterator = typename cpp::array<T, CAPACITY>::iterator;
-  constexpr FixedVector(iterator begin, iterator end) {
+  constexpr FixedVector(iterator begin, iterator end) : store{} {
     for (; begin != end; ++begin)
       push_back(*begin);
   }
 
-  constexpr FixedVector(size_t count, const T &value) {
+  constexpr FixedVector(size_t count, const T &value) : store{} {
     for (size_t i = 0; i < count; ++i)
       push_back(value);
   }
 
-  bool push_back(const T &obj) {
+  constexpr bool push_back(const T &obj) {
     if (item_count == CAPACITY)
       return false;
     store[item_count] = obj;
@@ -54,13 +54,13 @@ public:
     return true;
   }
 
-  T &operator[](size_t idx) { return store[idx]; }
+  constexpr T &operator[](size_t idx) { return store[idx]; }
 
-  const T &operator[](size_t idx) const { return store[idx]; }
+  constexpr const T &operator[](size_t idx) const { return store[idx]; }
 
   bool empty() const { return item_count == 0; }
 
-  size_t size() const { return item_count; }
+  constexpr size_t size() const { return item_count; }
 
   // Empties the store for all practical purposes.
   void reset() { item_count = 0; }

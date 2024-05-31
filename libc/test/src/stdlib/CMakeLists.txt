@@ -424,19 +424,20 @@ if(LLVM_LIBC_FULL_BUILD)
       libc.src.stdlib.quick_exit
   )
 
-  # Only the GPU has an in-tree 'malloc' implementation.
-  if(LIBC_TARGET_OS_IS_GPU)
-    add_libc_test(
-      malloc_test
-      HERMETIC_TEST_ONLY
-      SUITE
-        libc-stdlib-tests
-      SRCS
-        malloc_test.cpp
-      DEPENDS
-        libc.include.stdlib
-        libc.src.stdlib.malloc
-        libc.src.stdlib.free
-    )
-  endif()
+  add_libc_test(
+    malloc_test
+    SUITE
+      libc-stdlib-tests
+    SRCS
+      block_test.cpp
+      malloc_test.cpp
+      freelist_malloc_test.cpp
+      freelist_heap_test.cpp
+      freelist_test.cpp
+    DEPENDS
+      libc.include.stdlib
+      libc.src.string.memcmp
+      libc.src.stdlib.malloc
+      libc.src.stdlib.free
+  )
 endif()

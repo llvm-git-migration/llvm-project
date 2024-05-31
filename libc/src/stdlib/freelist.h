@@ -68,23 +68,35 @@ public:
   /// Removes a chunk from this freelist.
   bool remove_chunk(cpp::span<cpp::byte> chunk);
 
-private:
-  // For a given size, find which index into chunks_ the node should be written
-  // to.
-  size_t find_chunk_ptr_for_size(size_t size, bool non_null) const;
+  /// For a given size, find which index into chunks_ the node should be written
+  /// to.
+  constexpr size_t find_chunk_ptr_for_size(size_t size, bool non_null) const;
 
   struct FreeListNode {
     FreeListNode *next;
     size_t size;
   };
 
-public:
-  explicit FreeList(cpp::array<size_t, NUM_BUCKETS> sizes)
+  constexpr void set_freelist_node(FreeListNode *node,
+                                   cpp::span<cpp::byte> chunk);
+
+  constexpr explicit FreeList(cpp::array<size_t, NUM_BUCKETS> sizes)
       : chunks_(NUM_BUCKETS + 1, 0), sizes_(sizes.begin(), sizes.end()) {}
 
+private:
   FixedVector<FreeList::FreeListNode *, NUM_BUCKETS + 1> chunks_;
   FixedVector<size_t, NUM_BUCKETS> sizes_;
 };
+
+template <size_t NUM_BUCKETS>
+constexpr void FreeList<NUM_BUCKETS>::set_freelist_node(FreeListNode *node,
+                                                        span<cpp::byte> chunk) {
+  // Add it to the correct list.
+  size_t chunk_ptr = find_chunk_ptr_for_size(chunk.size(), false);
+  node->size = chunk.size();
+  node->next = chunks_[chunk_ptr];
+  chunks_[chunk_ptr] = node;
+}
 
 template <size_t NUM_BUCKETS>
 bool FreeList<NUM_BUCKETS>::add_chunk(span<cpp::byte> chunk) {
@@ -92,19 +104,17 @@ bool FreeList<NUM_BUCKETS>::add_chunk(span<cpp::byte> chunk) {
   if (chunk.size() < sizeof(FreeListNode))
     return false;
 
+  // FIXME: This is UB since type punning is not allowed in C++. THe idea here
+  // is that we write the FreeListNode `size` and `next` onto the start of the
+  // buffer. Unless the original underlying bytes were a `FreeListNode`, the
+  // only safe way to do this is with `memcpy`.
   union {
     FreeListNode *node;
     cpp::byte *bytes;
   } aliased;
 
   aliased.bytes = chunk.data();
-
-  size_t chunk_ptr = find_chunk_ptr_for_size(chunk.size(), false);
-
-  // Add it to the correct list.
-  aliased.node->size = chunk.size();
-  aliased.node->next = chunks_[chunk_ptr];
-  chunks_[chunk_ptr] = aliased.node;
+  set_freelist_node(aliased.node, chunk);
 
   return true;
 }
@@ -180,8 +190,9 @@ bool FreeList<NUM_BUCKETS>::remove_chunk(span<cpp::byte> chunk) {
 }
 
 template <size_t NUM_BUCKETS>
-size_t FreeList<NUM_BUCKETS>::find_chunk_ptr_for_size(size_t size,
-                                                      bool non_null) const {
+constexpr size_t
+FreeList<NUM_BUCKETS>::find_chunk_ptr_for_size(size_t size,
+                                               bool non_null) const {
   size_t chunk_ptr = 0;
   for (chunk_ptr = 0u; chunk_ptr < sizes_.size(); chunk_ptr++) {
     if (sizes_[chunk_ptr] >= size &&
