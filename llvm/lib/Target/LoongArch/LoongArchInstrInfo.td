@@ -734,7 +734,7 @@ def ADD_W : ALU_3R<0x00100000>;
 def SUB_W : ALU_3R<0x00110000>;
 def ADDI_W : ALU_2RI12<0x02800000, simm12_addlike>;
 def ALSL_W : ALU_3RI2<0x00040000, uimm2_plus1>;
-let isReMaterializable = 1 in {
+let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 def LU12I_W : ALU_1RI20<0x14000000, simm20_lu12iw>;
 }
 def SLT  : ALU_3R<0x00120000>;
@@ -751,7 +751,7 @@ def XOR  : ALU_3R<0x00158000>;
 def ANDN : ALU_3R<0x00168000>;
 def ORN  : ALU_3R<0x00160000>;
 def ANDI : ALU_2RI12<0x03400000, uimm12>;
-let isReMaterializable = 1 in {
+let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 def ORI  : ALU_2RI12<0x03800000, uimm12_ori>;
 def XORI : ALU_2RI12<0x03c00000, uimm12>;
 }
@@ -858,7 +858,7 @@ def ADD_D : ALU_3R<0x00108000>;
 def SUB_D : ALU_3R<0x00118000>;
 // ADDI_D isn't always rematerializable, but isReMaterializable will be used as
 // a hint which is verified in isReallyTriviallyReMaterializable.
-let isReMaterializable = 1 in {
+let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 def ADDI_D : ALU_2RI12<0x02c00000, simm12_addlike>;
 }
 def ADDU16I_D : ALU_2RI16<0x10000000, simm16>;
@@ -866,12 +866,12 @@ def ALSL_WU : ALU_3RI2<0x00060000, uimm2_plus1>;
 def ALSL_D  : ALU_3RI2<0x002c0000, uimm2_plus1>;
 let Constraints = "$rd = $dst" in {
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
-    isReMaterializable = 1 in
+    isReMaterializable = 1, isAsCheapAsAMove = 1 in
 def LU32I_D : Fmt1RI20<0x16000000, (outs GPR:$dst),
                        (ins GPR:$rd, simm20_lu32id:$imm20),
                        "$rd, $imm20">;
 }
-let isReMaterializable = 1 in {
+let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 def LU52I_D : ALU_2RI12<0x03000000, simm12_lu52id>;
 }
 def PCADDU18I : ALU_1RI20<0x1e000000, simm20_pcaddu18i>;
