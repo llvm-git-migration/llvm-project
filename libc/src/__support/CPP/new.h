@@ -74,6 +74,9 @@ LIBC_INLINE void *operator new[](size_t size, std::align_val_t align,
   return LIBC_NAMESPACE::AllocChecker::aligned_alloc(size, align, ac);
 }
 
+LIBC_INLINE void *operator new(size_t, void *__p) { return __p; }
+LIBC_INLINE void *operator new[](size_t, void *__p) { return __p; }
+
 // The ideal situation would be to define the various flavors of operator delete
 // inlinelike we do with operator new above. However, since we need operator
 // delete prototypes to match those specified by the C++ standard, we cannot
