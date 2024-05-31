@@ -208,6 +208,7 @@ private:
                     Align ByteAlignment, SMLoc Loc) override {}
 
   unsigned findRegisterByName(const StringRef RegName) const {
+    // TODO make use of RegNameToRegNo map
     if (unsigned Reg = Target.findRegisterByName(RegName))
       return Reg;
     auto Iter = RegNameToRegNo.find(RegName);
