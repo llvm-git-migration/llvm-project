@@ -26,12 +26,14 @@
 // CHECK-NOT: __riscv_shvstvala {{.*$}}
 // CHECK-NOT: __riscv_shvstvecd {{.*$}}
 // CHECK-NOT: __riscv_smaia {{.*$}}
+// CHECK-NOT: __riscv_smcsrind {{.*$}}
 // CHECK-NOT: __riscv_smepmp {{.*$}}
 // CHECK-NOT: __riscv_smstateen {{.*$}}
 // CHECK-NOT: __riscv_ssaia {{.*$}}
 // CHECK-NOT: __riscv_ssccptr {{.*$}}
 // CHECK-NOT: __riscv_sscofpmf {{.*$}}
 // CHECK-NOT: __riscv_sscounterenw {{.*$}}
+// CHECK-NOT: __riscv_sscsrind {{.*$}}
 // CHECK-NOT: __riscv_ssstateen {{.*$}}
 // CHECK-NOT: __riscv_ssstrict {{.*$}}
 // CHECK-NOT: __riscv_sstc {{.*$}}
@@ -1372,6 +1374,22 @@
 // RUN:   -march=rv64issaia1p0 -E -dM %s \
 // RUN:   -o - | FileCheck --check-prefix=CHECK-SSAIA-EXT %s
 // CHECK-SSAIA-EXT: __riscv_ssaia  1000000{{$}}
+
+// RUN: %clang --target=riscv32 \
+// RUN:   -march=rv32ismcsrind1p0 -E -dM %s \
+// RUN:   -o - | FileCheck --check-prefix=CHECK-SMCSRIND-EXT %s
+// RUN: %clang --target=riscv64 \
+// RUN:   -march=rv64ismcsrind1p0 -E -dM %s \
+// RUN:   -o - | FileCheck --check-prefix=CHECK-SMCSRIND-EXT %s
+// CHECK-SMCSRIND-EXT: __riscv_smcsrind  1000000{{$}}
+
+// RUN: %clang --target=riscv32 \
+// RUN:   -march=rv32isscsrind1p0 -E -dM %s \
+// RUN:   -o - | FileCheck --check-prefix=CHECK-SSCSRIND-EXT %s
+// RUN: %clang --target=riscv64 \
+// RUN:   -march=rv64isscsrind1p0 -E -dM %s \
+// RUN:   -o - | FileCheck --check-prefix=CHECK-SSCSRIND-EXT %s
+// CHECK-SSCSRIND-EXT: __riscv_sscsrind  1000000{{$}}
 
 // RUN: %clang --target=riscv32 \
 // RUN:   -march=rv32ismepmp1p0 -E -dM %s \
