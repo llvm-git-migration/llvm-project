@@ -1731,11 +1731,20 @@ void llvm::ConvertDebugDeclareToDebugValue(DbgVariableIntrinsic *DII,
                                     SI->getIterator());
 }
 
+static DIExpression *dropInitialDeref(const DIExpression *DIExpr) {
+  assert(DIExpr->startsWithDeref() &&
+         "DIExpression doesn't start with DW_OP_deref!");
+  SmallVector<uint64_t> Ops(DIExpr->getElements().begin() + 1,
+                            DIExpr->getElements().end());
+  return DIExpression::get(DIExpr->getContext(), Ops);
+}
+
 void llvm::InsertDebugValueAtStoreLoc(DbgVariableIntrinsic *DII, StoreInst *SI,
                                       DIBuilder &Builder) {
   auto *DIVar = DII->getVariable();
   assert(DIVar && "Missing variable");
   auto *DIExpr = DII->getExpression();
+  DIExpr = dropInitialDeref(DIExpr);
   Value *DV = SI->getValueOperand();
 
   DebugLoc NewLoc = getDebugValueLoc(DII);
@@ -1823,6 +1832,7 @@ void llvm::InsertDebugValueAtStoreLoc(DbgVariableRecord *DVR, StoreInst *SI,
   auto *DIVar = DVR->getVariable();
   assert(DIVar && "Missing variable");
   auto *DIExpr = DVR->getExpression();
+  DIExpr = dropInitialDeref(DIExpr);
   Value *DV = SI->getValueOperand();
 
   DebugLoc NewLoc = getDebugValueLoc(DVR);
