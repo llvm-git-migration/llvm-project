@@ -265,6 +265,19 @@ DEFAULT_PARAMETERS = [
         ),
     ),
     Parameter(
+        name="using-system-stdlib",
+        choices=[True, False],
+        type=bool,
+        default=False,
+        help="""Whether the Standard Library being tested is the one that shipped with the system by default.
+
+                This is different from the 'stdlib' parameter, which describes the flavor of libc++ being
+                tested. 'using-system-stdlib' describes whether the target system passed with 'target_triple'
+                also corresponds to the version of the library being tested.
+             """,
+        actions=lambda is_system: [AddFeature("stdlib=system")] if is_system else [],
+    ),
+    Parameter(
         name="enable_warnings",
         choices=[True, False],
         type=bool,
