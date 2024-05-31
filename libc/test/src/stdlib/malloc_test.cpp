@@ -7,10 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/stdlib/free.h"
+#include "src/stdlib/freelist_heap.h"
 #include "src/stdlib/malloc.h"
 #include "test/UnitTest/Test.h"
 
 TEST(LlvmLibcMallocTest, Allocate) {
+  uint8_t kBuff[1024];
+  LIBC_NAMESPACE::MallocInit(kBuff, kBuff + sizeof(kBuff));
+
   int *ptr = reinterpret_cast<int *>(LIBC_NAMESPACE::malloc(sizeof(int)));
   EXPECT_NE(reinterpret_cast<void *>(ptr), static_cast<void *>(nullptr));
   *ptr = 1;
