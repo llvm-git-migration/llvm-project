@@ -4561,10 +4561,19 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
     }
 
     // Handle dropped DLL attributes.
-    if (D && !D->hasAttr<DLLImportAttr>() && !D->hasAttr<DLLExportAttr>() &&
-        !shouldMapVisibilityToDLLExport(cast_or_null<NamedDecl>(D))) {
-      Entry->setDLLStorageClass(llvm::GlobalValue::DefaultStorageClass);
-      setDSOLocal(Entry);
+    if (D) {
+      auto SC = Entry->getDLLStorageClass();
+      if (SC != llvm::GlobalValue::DefaultStorageClass) {
+        const Decl *MRD = D->getMostRecentDecl();
+        if (((SC == llvm::GlobalValue::DLLImportStorageClass &&
+              !MRD->hasAttr<DLLImportAttr>()) ||
+             (SC == llvm::GlobalValue::DLLExportStorageClass &&
+              !MRD->hasAttr<DLLExportAttr>())) &&
+            !shouldMapVisibilityToDLLExport(cast<NamedDecl>(MRD))) {
+          Entry->setDLLStorageClass(llvm::GlobalValue::DefaultStorageClass);
+          setDSOLocal(Entry);
+        }
+      }
     }
 
     // If there are two attempts to define the same mangled name, issue an
