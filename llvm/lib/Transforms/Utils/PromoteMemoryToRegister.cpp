@@ -582,6 +582,9 @@ rewriteSingleStoreAlloca(AllocaInst *AI, AllocaInfo &Info, LargeBlockInfo &LBI,
         DbgItem->eraseFromParent();
       } else if (DbgItem->getExpression()->startsWithDeref()) {
         DbgItem->eraseFromParent();
+      } else if (DbgItem->isValueOfVariable()) {
+        InsertDebugValueAtStoreLoc(DbgItem, Info.OnlyStore, DIB);
+        DbgItem->eraseFromParent();
       }
     }
   };
