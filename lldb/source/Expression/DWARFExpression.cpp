@@ -2153,21 +2153,41 @@ bool DWARFExpression::Evaluate(
             }
             break;
 
-          case Value::ValueType::FileAddress:
-          case Value::ValueType::HostAddress:
-            if (error_ptr) {
-              lldb::addr_t addr = curr_piece_source_value.GetScalar().ULongLong(
-                  LLDB_INVALID_ADDRESS);
+          case Value::ValueType::FileAddress: {
+            lldb::addr_t addr = curr_piece_source_value.GetScalar().ULongLong(
+                LLDB_INVALID_ADDRESS);
+            if (target) {
+              if (curr_piece.ResizeData(piece_byte_size) == piece_byte_size) {
+                if (target->ReadMemory(addr, curr_piece.GetBuffer().GetBytes(),
+                                       piece_byte_size, error,
+                                       /*force_live_memory=*/false) !=
+                    piece_byte_size) {
+                  if (error_ptr)
+                    error_ptr->SetErrorStringWithFormat(
+                        "failed to read memory DW_OP_piece(%" PRIu64
+                        ") from load address 0x%" PRIx64,
+                        piece_byte_size, addr);
+                  return false;
+                }
+              } else {
+                if (error_ptr)
+                  error_ptr->SetErrorStringWithFormat(
+                      "failed to read memory DW_OP_piece(%" PRIu64
+                      ") from load address 0x%" PRIx64,
+                      piece_byte_size, addr);
+                return false;
+              }
+            }
+          } break;
+          case Value::ValueType::HostAddress: {
+            lldb::addr_t addr = curr_piece_source_value.GetScalar().ULongLong(
+                LLDB_INVALID_ADDRESS);
+            if (error_ptr)
               error_ptr->SetErrorStringWithFormat(
                   "failed to read memory DW_OP_piece(%" PRIu64
-                  ") from %s address 0x%" PRIx64,
-                  piece_byte_size, curr_piece_source_value.GetValueType() ==
-                                           Value::ValueType::FileAddress
-                                       ? "file"
-                                       : "host",
-                  addr);
-            }
-            return false;
+                  ") from host address 0x%" PRIx64,
+                  piece_byte_size, addr);
+          } break;
 
           case Value::ValueType::Scalar: {
             uint32_t bit_size = piece_byte_size * 8;
