@@ -401,9 +401,24 @@ else()
       libc.src.__support.CPP.cstddef
       libc.src.__support.CPP.array
       libc.src.__support.CPP.span
+      libc.src.stdio.printf
   )
-  add_entrypoint_external(
+  add_entrypoint_object(
     malloc
+    SRCS
+      freelist_malloc.cpp
+    HDRS
+      malloc.h
+    DEPENDS
+      .block
+      .freelist
+      libc.src.__support.CPP.new
+      libc.src.__support.CPP.optional
+      libc.src.__support.CPP.span
+      libc.src.__support.CPP.type_traits
+      libc.src.__support.fixedvector
+      libc.src.string.memcpy
+      libc.src.string.memset
   )
   add_entrypoint_external(
     free
