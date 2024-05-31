@@ -46,7 +46,7 @@ using namespace llvm::dwarf;
 
 TinyPtrVector<DbgDeclareInst *> llvm::findDbgDeclares(Value *V) {
   // This function is hot. Check whether the value has any metadata to avoid a
-  // DenseMap lookup.
+  // DenseMap lookup. This check is a bitfield datamember looker.
   if (!V->isUsedByMetadata())
     return {};
   auto *L = LocalAsMetadata::getIfExists(V);
@@ -65,7 +65,7 @@ TinyPtrVector<DbgDeclareInst *> llvm::findDbgDeclares(Value *V) {
 }
 TinyPtrVector<DbgVariableRecord *> llvm::findDVRDeclares(Value *V) {
   // This function is hot. Check whether the value has any metadata to avoid a
-  // DenseMap lookup.
+  // DenseMap lookup. This check is a bitfield datamember looker.
   if (!V->isUsedByMetadata())
     return {};
   auto *L = LocalAsMetadata::getIfExists(V);
@@ -82,7 +82,7 @@ TinyPtrVector<DbgVariableRecord *> llvm::findDVRDeclares(Value *V) {
 
 TinyPtrVector<DbgVariableRecord *> llvm::findDVRValues(Value *V) {
   // This function is hot. Check whether the value has any metadata to avoid a
-  // DenseMap lookup.
+  // DenseMap lookup. This check is a bitfield datamember looker.
   if (!V->isUsedByMetadata())
     return {};
   auto *L = LocalAsMetadata::getIfExists(V);
