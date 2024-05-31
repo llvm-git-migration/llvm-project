@@ -893,8 +893,8 @@ void VPlanTransforms::clearReductionWrapFlags(VPlan &Plan) {
 }
 
 /// Try to simplify recipe \p R. Returns candidates for further simplification.
-static SmallVector<VPRecipeBase *> simplifyRecipe(VPRecipeBase &R,
-                                                  VPTypeAnalysis &TypeInfo) {
+static SmallVector<VPRecipeBase *>
+simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo, VPlan &Plan) {
   using namespace llvm::VPlanPatternMatch;
 
   if (auto *Blend = dyn_cast<VPBlendRecipe>(&R)) {
@@ -991,21 +991,66 @@ static SmallVector<VPRecipeBase *> simplifyRecipe(VPRecipeBase &R,
     return {};
   }
 
-  // Simplify (X && Y) || (X && !Y) -> X.
-  // TODO: Split up into simpler, modular combines: (X && Y) || (X && Z) into X
-  // && (Y || Z) and (X || !X) into true. This requires queuing newly created
-  // recipes to be visited during simplification.
-  VPValue *X, *Y, *X1, *Y1;
-  if (match(&R,
-            m_c_BinaryOr(m_LogicalAnd(m_VPValue(X), m_VPValue(Y)),
-                         m_LogicalAnd(m_VPValue(X1), m_Not(m_VPValue(Y1))))) &&
-      X == X1 && Y == Y1) {
+  VPValue *X, *X1, *Y, *Z;
+  LLVMContext &Ctx = TypeInfo.getContext();
+
+  // (X || !X) -> true.
+  if (match(&R, m_c_BinaryOr(m_VPValue(X), m_Not(m_VPValue(X1)))) && X == X1) {
+    VPValue *VPV = Plan.getOrAddLiveIn(ConstantInt::getTrue(Ctx));
+    R.getVPSingleValue()->replaceAllUsesWith(VPV);
+    return {};
+  }
+
+  // (X || true) -> true.
+  if (match(&R, m_c_BinaryOr(m_VPValue(X), m_True()))) {
+    VPValue *VPV = Plan.getOrAddLiveIn(ConstantInt::getTrue(Ctx));
+    R.getVPSingleValue()->replaceAllUsesWith(VPV);
+    return {};
+  }
+
+  // (X || false) -> X.
+  if (match(&R, m_c_BinaryOr(m_VPValue(X), m_False()))) {
     R.getVPSingleValue()->replaceAllUsesWith(X);
     return {};
   }
 
-  if (match(&R, m_c_Mul(m_VPValue(A), m_SpecificInt(1))))
-    R.getVPSingleValue()->replaceAllUsesWith(A);
+  // (X && !X) -> false.
+  if (match(&R, m_LogicalAnd(m_VPValue(X), m_Not(m_VPValue(X1)))) && X == X1) {
+    VPValue *VPV = Plan.getOrAddLiveIn(ConstantInt::getFalse(Ctx));
+    R.getVPSingleValue()->replaceAllUsesWith(VPV);
+    return {};
+  }
+
+  // (X && true) -> X.
+  if (match(&R, m_LogicalAnd(m_VPValue(X), m_True()))) {
+    R.getVPSingleValue()->replaceAllUsesWith(X);
+    return {};
+  }
+
+  // (X && false) -> false.
+  if (match(&R, m_LogicalAnd(m_VPValue(X), m_False()))) {
+    VPValue *VPV = Plan.getOrAddLiveIn(ConstantInt::getFalse(Ctx));
+    R.getVPSingleValue()->replaceAllUsesWith(VPV);
+    return {};
+  }
+
+  // (X * 1) -> X.
+  if (match(&R, m_c_Mul(m_VPValue(X), m_SpecificInt(1)))) {
+    R.getVPSingleValue()->replaceAllUsesWith(X);
+    return {};
+  }
+
+  // (X && Y) || (X && Z) -> X && (Y || Z).
+  if (match(&R, m_BinaryOr(m_LogicalAnd(m_VPValue(X), m_VPValue(Y)),
+                           m_LogicalAnd(m_VPValue(X1), m_VPValue(Z)))) &&
+      X == X1) {
+    VPBuilder Builder(&R);
+    VPInstruction *YorZ = Builder.createOr(Y, Z, R.getDebugLoc());
+    VPInstruction *VPI = Builder.createLogicalAnd(X, YorZ, R.getDebugLoc());
+    R.getVPSingleValue()->replaceAllUsesWith(VPI);
+    return {VPI, YorZ};
+  }
+
   return {};
 }
 
@@ -1023,7 +1068,7 @@ static void simplifyRecipes(VPlan &Plan, LLVMContext &Ctx) {
 
     while (!Worklist.empty()) {
       VPRecipeBase *R = Worklist.pop_back_val();
-      for (VPRecipeBase *Cand : simplifyRecipe(*R, TypeInfo))
+      for (VPRecipeBase *Cand : simplifyRecipe(*R, TypeInfo, Plan))
         Worklist.push_back(Cand);
     }
   }
