@@ -2390,7 +2390,8 @@ public:
 
   bool isAcceptableNestedNameSpecifier(const NamedDecl *SD,
                                        bool *CanCorrect = nullptr);
-  bool LookupFirstQualifierInScope(Scope *S, NestedNameSpecifier *NNS, UnresolvedSetImpl &R);
+  bool LookupFirstQualifierInScope(Scope *S, NestedNameSpecifier *NNS,
+                                   UnresolvedSetImpl &R);
 
   /// Keeps information about an identifier in a nested-name-spec.
   ///
@@ -6934,11 +6935,12 @@ public:
                           const TemplateArgumentListInfo *TemplateArgs,
                           bool IsDefiniteInstance, const Scope *S);
 
-  ExprResult ActOnDependentMemberExpr(
-      Expr *Base, QualType BaseType, bool IsArrow, SourceLocation OpLoc,
-      const CXXScopeSpec &SS, SourceLocation TemplateKWLoc,
-      const DeclarationNameInfo &NameInfo,
-      const TemplateArgumentListInfo *TemplateArgs);
+  ExprResult
+  ActOnDependentMemberExpr(Expr *Base, QualType BaseType, bool IsArrow,
+                           SourceLocation OpLoc, const CXXScopeSpec &SS,
+                           SourceLocation TemplateKWLoc,
+                           const DeclarationNameInfo &NameInfo,
+                           const TemplateArgumentListInfo *TemplateArgs);
 
   ExprResult ActOnMemberAccessExpr(Scope *S, Expr *Base, SourceLocation OpLoc,
                                    bool IsArrow, CXXScopeSpec &SS,

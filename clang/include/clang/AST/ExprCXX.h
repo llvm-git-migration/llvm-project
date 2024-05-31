@@ -3671,11 +3671,9 @@ public:
 /// an implicit access if a qualifier is provided.
 class CXXDependentScopeMemberExpr final
     : public Expr,
-      private llvm::TrailingObjects<CXXDependentScopeMemberExpr,
-                                    NestedNameSpecifierLoc,
-                                    DeclAccessPair,
-                                    ASTTemplateKWAndArgsInfo,
-                                    TemplateArgumentLoc> {
+      private llvm::TrailingObjects<
+          CXXDependentScopeMemberExpr, NestedNameSpecifierLoc, DeclAccessPair,
+          ASTTemplateKWAndArgsInfo, TemplateArgumentLoc> {
   friend class ASTStmtReader;
   friend class ASTStmtWriter;
   friend TrailingObjects;
@@ -3751,10 +3749,8 @@ class CXXDependentScopeMemberExpr final
 
 public:
   static CXXDependentScopeMemberExpr *
-  Create(const ASTContext &Ctx, Expr *Base,
-         QualType BaseType, bool IsArrow,
-         SourceLocation OperatorLoc,
-         NestedNameSpecifierLoc QualifierLoc,
+  Create(const ASTContext &Ctx, Expr *Base, QualType BaseType, bool IsArrow,
+         SourceLocation OperatorLoc, NestedNameSpecifierLoc QualifierLoc,
          SourceLocation TemplateKWLoc,
          ArrayRef<DeclAccessPair> UnqualifiedLookups,
          DeclarationNameInfo MemberNameInfo,
@@ -3762,8 +3758,7 @@ public:
 
   static CXXDependentScopeMemberExpr *
   CreateEmpty(const ASTContext &Ctx, bool HasQualifier,
-              unsigned NumUnqualifiedLookups,
-              bool HasTemplateKWAndArgsInfo,
+              unsigned NumUnqualifiedLookups, bool HasTemplateKWAndArgsInfo,
               unsigned NumTemplateArgs);
 
   /// True if this is an implicit access, i.e. one in which the
@@ -3789,9 +3784,7 @@ public:
   bool isArrow() const { return CXXDependentScopeMemberExprBits.IsArrow; }
 
   /// Retrieve the location of the '->' or '.' operator.
-  SourceLocation getOperatorLoc() const {
-    return OperatorLoc;
-  }
+  SourceLocation getOperatorLoc() const { return OperatorLoc; }
 
   /// Determines whether this member expression had a nested-name-specifier
   /// prior to the name of the member, e.g., x->Base::foo.
@@ -3814,8 +3807,7 @@ public:
     return getQualifierLoc().getNestedNameSpecifier();
   }
 
-
-  #if 0
+#if 0
   /// Retrieve the first part of the nested-name-specifier that was
   /// found in the scope of the member access expression when the member access
   /// was initially parsed.
@@ -3832,7 +3824,7 @@ public:
       return nullptr;
     return *getTrailingObjects<NamedDecl *>();
   }
-  #endif
+#endif
 
   ArrayRef<DeclAccessPair> unqualified_lookups() const {
     if (!getNumUnqualifiedLookups())

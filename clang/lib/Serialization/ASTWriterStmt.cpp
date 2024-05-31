@@ -2012,7 +2012,7 @@ void ASTStmtWriter::VisitCXXDependentScopeMemberExpr(
     AddTemplateKWAndArgsInfo(*E->getTrailingObjects<ASTTemplateKWAndArgsInfo>(),
                              E->getTrailingObjects<TemplateArgumentLoc>());
 
-  #if 0
+#if 0
   // Don't emit anything here (or if you do you will have to update
   // the corresponding deserialization function).
   Record.push_back(E->getNumTemplateArgs());
@@ -2041,7 +2041,7 @@ void ASTStmtWriter::VisitCXXDependentScopeMemberExpr(
     Record.AddDeclRef(E->getFirstQualifierFoundInScope());
 
   Record.AddDeclarationNameInfo(E->MemberNameInfo);
-  #endif
+#endif
 
   Code = serialization::EXPR_CXX_DEPENDENT_SCOPE_MEMBER;
 }
