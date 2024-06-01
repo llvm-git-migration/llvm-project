@@ -20,10 +20,6 @@
 
 #include "cstdlib"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if defined(__MVS__)
 #  include <wctype.h>
 // POSIX routines
@@ -118,7 +114,4 @@ inline _LIBCPP_HIDE_FROM_ABI int vasprintf(char** strp, const char* fmt, va_list
   return str_size;
 }
 
-#ifdef __cplusplus
-}
-#endif
 #endif // _LIBCPP___LOCALE_LOCALE_BASE_API_IBM_H
