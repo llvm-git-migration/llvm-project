@@ -403,6 +403,9 @@ AST Matchers
 - Fixed an ordering issue with the `hasOperands` matcher occuring when setting a
   binding in the first matcher and using it in the second matcher.
 
+- The examples in the AST matcher reference are now tested and additional
+  examples and descriptions were added.
+
 clang-format
 ------------
 
