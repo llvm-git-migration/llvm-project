@@ -170,3 +170,44 @@ func.func @test(%A: memref<?xindex>, %B: memref<?xindex>, %C: memref<?xindex>) {
   return
 }
 }
+
+// -----
+
+// CHECK-LABEL: @test
+//  CHECK-SAME:  (%[[A:.*]]: memref<?xf32>) -> f32 {
+//       CHECK:  %[[C0:.*]] = arith.constant 0 : index
+//       CHECK:  %[[INIT:.*]] = arith.constant 0.0{{.*}} : f32
+//       CHECK:  %[[DIM:.*]] = memref.dim %[[A]], %[[C0]] : memref<?xf32>
+//       CHECK:  %[[C4:.*]] = arith.constant 4 : index
+//       CHECK:  %[[COUNT:.*]] = arith.ceildivsi %[[DIM]], %[[C4]] : index
+//       CHECK:  %[[RES:.*]] = scf.parallel (%[[I:.*]]) = (%{{.*}}) to (%[[COUNT]]) step (%{{.*}}) init (%[[INIT]]) -> f32 {
+//       CHECK:  %[[MULT:.*]] = arith.muli %[[I]], %[[C4]] : index
+//       CHECK:  %[[M:.*]] = arith.subi %[[DIM]], %[[MULT]] : index
+//       CHECK:  %[[MASK:.*]] = vector.create_mask %[[M]] : vector<4xi1>
+//       CHECK:  %[[P:.*]] = ub.poison : vector<4xf32>
+//       CHECK:  %[[A_VAL:.*]] = vector.maskedload %[[A]][%[[MULT]]], %[[MASK]], %[[P]] : memref<?xf32>, vector<4xi1>, vector<4xf32> into vector<4xf32>
+//       CHECK:  %[[N:.*]] = arith.constant 0.0{{.*}} : f32
+//       CHECK:  %[[N_SPLAT:.*]] = vector.splat %[[N]] : vector<4xf32>
+//       CHECK:  %[[RED1:.*]] = arith.select %[[MASK]], %[[A_VAL]], %[[N_SPLAT]] : vector<4xi1>, vector<4xf32>
+//       CHECK:  %[[RED2:.*]] = vector.reduction <add>, %[[RED1]] : vector<4xf32> into f32
+//       CHECK:  scf.reduce(%[[RED2]] : f32) {
+//       CHECK:  ^bb0(%[[R_ARG1:.*]]: f32, %[[R_ARG2:.*]]: f32):
+//       CHECK:    %[[R:.*]] = arith.addf %[[R_ARG1]], %[[R_ARG2]] : f32
+//       CHECK:    scf.reduce.return %[[R]] : f32
+//       CHECK:  }
+//       CHECK:  return %[[RES]] : f32
+func.func @test(%A: memref<?xf32>) -> f32 {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %init = arith.constant 0.0 : f32
+  %count = memref.dim %A, %c0 : memref<?xf32>
+  %res = scf.parallel (%i) = (%c0) to (%count) step (%c1) init (%init) -> f32 {
+    %1 = memref.load %A[%i] : memref<?xf32>
+    scf.reduce(%1 : f32) {
+    ^bb0(%lhs: f32, %rhs: f32):
+      %2 = arith.addf %lhs, %rhs : f32
+      scf.reduce.return %2 : f32
+    }
+  }
+  return %res : f32
+}
