@@ -237,17 +237,14 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
 
   auto origLower = lower[dim];
   auto origUpper = upper[dim];
-  Value count = builder.create<arith::SubIOp>(loc, origUpper, origLower);
+  Value count = builder.createOrFold<arith::SubIOp>(loc, origUpper, origLower);
   Value newCount;
 
   // Compute new loop count, ceildiv if masked, floordiv otherwise.
   if (masked) {
-    Value incCount = builder.create<arith::AddIOp>(loc, count, factorVal);
-    Value one = builder.create<arith::ConstantIndexOp>(loc, 1);
-    incCount = builder.create<arith::SubIOp>(loc, incCount, one);
-    newCount = builder.create<arith::DivSIOp>(loc, incCount, factorVal);
+    newCount = builder.createOrFold<arith::CeilDivSIOp>(loc, count, factorVal);
   } else {
-    newCount = builder.create<arith::DivSIOp>(loc, count, factorVal);
+    newCount = builder.createOrFold<arith::DivSIOp>(loc, count, factorVal);
   }
 
   Value zero = builder.create<arith::ConstantIndexOp>(loc, 0);
@@ -271,6 +268,16 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
     return builder.create<ub::PoisonOp>(loc, vecType, nullptr);
   };
 
+  Value indexVarMult;
+  auto getrIndexVarMult = [&]() -> Value {
+    if (indexVarMult)
+      return indexVarMult;
+
+    indexVarMult =
+        builder.createOrFold<arith::MulIOp>(loc, newIndexVar, factorVal);
+    return indexVarMult;
+  };
+
   // Get vector value in new loop for provided `orig` value in source loop.
   auto getVecVal = [&](Value orig) -> Value {
     // Use cached value if present.
@@ -287,10 +294,10 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
       auto attr = DenseElementsAttr::get(vecType, elems);
       Value vec = builder.create<arith::ConstantOp>(loc, vecType, attr);
 
-      Value idx = builder.create<arith::MulIOp>(loc, newIndexVar, factorVal);
-      idx = builder.create<arith::AddIOp>(loc, idx, origLower);
+      Value idx = getrIndexVarMult();
+      idx = builder.createOrFold<arith::AddIOp>(loc, idx, origLower);
       idx = builder.create<vector::SplatOp>(loc, idx, vecType);
-      vec = builder.create<arith::AddIOp>(loc, idx, vec);
+      vec = builder.createOrFold<arith::AddIOp>(loc, idx, vec);
       mapping.map(orig, vec);
       return vec;
     }
@@ -380,8 +387,8 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
 
     OpFoldResult maskSize;
     if (masked) {
-      Value size = builder.create<arith::MulIOp>(loc, factorVal, newIndexVar);
-      maskSize = builder.create<arith::SubIOp>(loc, count, size).getResult();
+      Value size = getrIndexVarMult();
+      maskSize = builder.createOrFold<arith::SubIOp>(loc, count, size);
     } else {
       maskSize = builder.getIndexAttr(factor);
     }
@@ -405,8 +412,8 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
     llvm::SmallVector<Value> ret(indices.size());
     for (auto &&[i, val] : llvm::enumerate(indices)) {
       if (val == origIndexVar) {
-        Value idx = builder.create<arith::MulIOp>(loc, newIndexVar, factorVal);
-        idx = builder.create<arith::AddIOp>(loc, idx, origLower);
+        Value idx = getrIndexVarMult();
+        idx = builder.createOrFold<arith::AddIOp>(loc, idx, origLower);
         ret[i] = idx;
         continue;
       }
@@ -615,8 +622,9 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
     loop->erase();
   } else {
     builder.setInsertionPoint(loop);
-    Value newLower = builder.create<arith::MulIOp>(loc, newCount, factorVal);
-    newLower = builder.create<arith::AddIOp>(loc, origLower, newLower);
+    Value newLower =
+        builder.createOrFold<arith::MulIOp>(loc, newCount, factorVal);
+    newLower = builder.createOrFold<arith::AddIOp>(loc, origLower, newLower);
 
     auto lowerCopy = llvm::to_vector(loop.getLowerBound());
     lowerCopy[dim] = newLower;

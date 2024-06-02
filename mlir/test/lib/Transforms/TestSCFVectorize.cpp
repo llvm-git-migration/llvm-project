@@ -28,7 +28,8 @@ struct TestSCFVectorizePass
   TestSCFVectorizePass(const TestSCFVectorizePass &pass) : PassWrapper(pass) {}
 
   Option<unsigned> vectorBitwidth{*this, "vector-bitwidth",
-                                  llvm::cl::desc("Target vector bitwidth ")};
+                                  llvm::cl::desc("Target vector bitwidth "),
+                                  llvm::cl::init(128)};
 
   StringRef getArgument() const final { return "test-scf-vectorize"; }
   StringRef getDescription() const final { return "Test SCF vectorization"; }
@@ -38,6 +39,19 @@ struct TestSCFVectorizePass
     registry.insert<scf::SCFDialect>();
     registry.insert<ub::UBDialect>();
     registry.insert<vector::VectorDialect>();
+  }
+
+  LogicalResult initializeOptions(
+      StringRef options,
+      function_ref<LogicalResult(const Twine &)> errorHandler) override {
+    if (failed(PassWrapper::initializeOptions(options, errorHandler)))
+      return failure();
+
+    if (vectorBitwidth <= 0)
+      return errorHandler("Invalid vector bitwidth: " +
+                          llvm::Twine(vectorBitwidth));
+
+    return success();
   }
 
   void runOnOperation() override {
