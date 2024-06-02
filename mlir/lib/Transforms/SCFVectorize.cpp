@@ -550,6 +550,7 @@ LogicalResult mlir::vectorizeLoop(scf::ParallelOp loop,
 
         builder.create<vector::ScatterOp>(loc, memref, zero, indexVec, mask,
                                           value);
+        continue;
       }
     }
 

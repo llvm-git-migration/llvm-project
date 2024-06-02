@@ -154,7 +154,7 @@ func.func @test(%A: memref<?xi32>, %B: memref<?xi32>, %C: memref<?xi32>) {
 //       CHECK:  %[[P:.*]] = ub.poison : vector<4xindex>
 //       CHECK:  %[[B_VAL:.*]] = vector.maskedload %[[B]][%[[MULT]]], %[[MASK]], %[[P]] : memref<?xindex>, vector<4xi1>, vector<4xindex> into vector<4xindex>
 //       CHECK:  %[[RES:.*]] = arith.addi %[[A_VAL]], %[[B_VAL]] : vector<4xindex>
-//       CHECK:  vector.maskedstore %[[C]][%1], %[[MASK]], %[[RES]] : memref<?xindex>, vector<4xi1>, vector<4xindex>
+//       CHECK:  vector.scatter %[[C]][%{{.*}}] [%[[O4]]], %[[MASK]], %[[RES]] : memref<?xindex>, vector<4xindex>, vector<4xi1>, vector<4xindex>
 //       CHECK:  scf.reduce
 
 module attributes { dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<index, 32>> } {
@@ -168,7 +168,7 @@ func.func @test(%A: memref<?xindex>, %B: memref<?xindex>, %C: memref<?xindex>) {
     %1 = memref.load %A[%0] : memref<?xindex>
     %2 = memref.load %B[%i] : memref<?xindex>
     %3 =  arith.addi %1, %2 : index
-    memref.store %3, %C[%i] : memref<?xindex>
+    memref.store %3, %C[%0] : memref<?xindex>
   }
   return
 }
