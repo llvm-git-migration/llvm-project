@@ -13367,6 +13367,21 @@ static void DiagnoseConstAssignment(Sema &S, const Expr *E,
         if (!DiagnosticEmitted) {
           S.Diag(Loc, diag::err_typecheck_assign_const)
               << ExprRange << ConstVariable << VD << VD->getType();
+          ExprResult Deref;
+          Expr *TE = const_cast<Expr *>(E);
+          {
+            Sema::TentativeAnalysisScope Trap(S);
+            Deref = S.ActOnUnaryOp(S.getCurScope(), Loc, tok::star, TE);
+          }
+          if (Deref.isUsable() &&
+              Deref.get()->isModifiableLvalue(S.Context, &Loc) ==
+                  Expr::MLV_Valid &&
+              !E->getType()->isObjCObjectPointerType()) {
+            S.Diag(Loc, diag::note_typecheck_expression_not_modifiable_lvalue)
+                << E->getSourceRange()
+                << FixItHint::CreateInsertion(E->getBeginLoc(),
+                                              "*" + VD->getNameAsString());
+          }
           DiagnosticEmitted = true;
         }
         S.Diag(VD->getLocation(), diag::note_typecheck_assign_const)
@@ -13587,10 +13602,47 @@ static bool CheckForModifiableLvalue(Expr *E, SourceLocation Loc, Sema &S) {
   SourceRange Assign;
   if (Loc != OrigLoc)
     Assign = SourceRange(OrigLoc, OrigLoc);
-  if (NeedType)
+  if (NeedType) {
     S.Diag(Loc, DiagID) << E->getType() << E->getSourceRange() << Assign;
-  else
+  } else {
+    ExprResult Deref;
+    {
+      Sema::TentativeAnalysisScope Trap(S);
+      Deref = S.ActOnUnaryOp(S.getCurScope(), Loc, tok::star, E);
+    }
     S.Diag(Loc, DiagID) << E->getSourceRange() << Assign;
+    if (Deref.isUsable() &&
+        Deref.get()->isModifiableLvalue(S.Context, &Loc) == Expr::MLV_Valid) {
+      std::string exprType;
+      switch (E->getStmtClass()) {
+      case Stmt::CStyleCastExprClass: {
+        const auto *CSC = cast<CStyleCastExpr>(E);
+        exprType = CSC->getType().getAsString();
+        break;
+      }
+      case Stmt::CXXConstCastExprClass: {
+        const auto *CXXCCE = cast<CXXConstCastExpr>(E);
+        exprType = CXXCCE->getTypeAsWritten().getAsString();
+        break;
+      }
+      case Stmt::CXXReinterpretCastExprClass: {
+        const auto *CXXRCE = cast<CXXReinterpretCastExpr>(E);
+        exprType = CXXRCE->getTypeAsWritten().getAsString();
+        break;
+      }
+      case Stmt::CXXThisExprClass: {
+        exprType = "this";
+        break;
+      }
+      default: {
+      }
+      }
+      S.Diag(Loc, diag::note_typecheck_expression_not_modifiable_lvalue)
+          << E->getSourceRange() << Assign
+          << FixItHint::CreateInsertion(E->getBeginLoc(),
+                                        "*(" + exprType + ")");
+    }
+  }
   return true;
 }
 
