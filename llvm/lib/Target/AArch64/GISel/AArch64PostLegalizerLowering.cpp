@@ -19,6 +19,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "AArch64ExpandImm.h"
 #include "AArch64GlobalISelUtils.h"
 #include "AArch64PerfectShuffle.h"
 #include "AArch64Subtarget.h"
@@ -636,9 +637,17 @@ tryAdjustICmpImmAndPred(Register RHS, CmpInst::Predicate P,
     C = static_cast<uint32_t>(C);
   if (isLegalArithImmed(C))
     return {{C, P}};
-  if (AArch64_AM::isLogicalImmediate(C, Size) &&
-      !AArch64_AM::isLogicalImmediate(OriginalC, Size))
+
+  auto IsMaterializableInSingleInstruction = [=](uint64_t Imm) {
+    SmallVector<AArch64_IMM::ImmInsnModel> Insn;
+    AArch64_IMM::expandMOVImm(Imm, 32, Insn);
+    return Insn.size() == 1;
+  };
+
+  if (!IsMaterializableInSingleInstruction(OriginalC) &&
+      IsMaterializableInSingleInstruction(C))
     return {{C, P}};
+
   return std::nullopt;
 }
 
