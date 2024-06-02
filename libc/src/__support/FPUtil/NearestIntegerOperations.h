@@ -181,7 +181,9 @@ round_using_specific_rounding_mode(T x, int rnd) {
 
   uint32_t trim_size = FPBits<T>::FRACTION_LEN - exponent;
   FPBits<T> new_bits = bits;
-  new_bits.set_mantissa((bits.get_mantissa() >> trim_size) << trim_size);
+  StorageType trunc_mantissa =
+      static_cast<StorageType>((bits.get_mantissa() >> trim_size) << trim_size);
+  new_bits.set_mantissa(trunc_mantissa);
   T trunc_value = new_bits.get_val();
 
   // If x is already an integer, return it.
@@ -190,7 +192,8 @@ round_using_specific_rounding_mode(T x, int rnd) {
 
   StorageType trim_value =
       bits.get_mantissa() & ((StorageType(1) << trim_size) - 1);
-  StorageType half_value = (StorageType(1) << (trim_size - 1));
+  StorageType half_value =
+      static_cast<StorageType>((StorageType(1) << (trim_size - 1)));
   // If exponent is 0, trimSize will be equal to the mantissa width, and
   // truncIsOdd` will not be correct. So, we handle it as a special case
   // below.
