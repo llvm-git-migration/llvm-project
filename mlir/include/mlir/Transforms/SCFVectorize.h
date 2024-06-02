@@ -67,8 +67,6 @@ struct SCFVectorizeParams {
 mlir::LogicalResult vectorizeLoop(mlir::OpBuilder &builder,
                                   mlir::scf::ParallelOp loop,
                                   const SCFVectorizeParams &params);
-
-std::unique_ptr<mlir::Pass> createSCFVectorizePass();
 } // namespace mlir
 
 #endif // MLIR_TRANSFORMS_SCFVECTORIZE_H_
