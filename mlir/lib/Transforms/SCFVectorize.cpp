@@ -9,6 +9,7 @@
 #include "mlir/Transforms/SCFVectorize.h"
 
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Linalg/Transforms/Transforms.h" // getCombinerOpKind
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/UB/IR/UBOps.h"
@@ -147,36 +148,14 @@ static std::optional<unsigned> cenVectorizeMemrefOp(scf::ParallelOp loop,
   return canGatherScatter(loop, op, DL);
 }
 
-template <typename T>
-static bool isOp(Operation &op) {
-  return isa<T>(op);
-}
-
 /// Returns `vector.reduce` kind for specified `scf.parallel` reduce op ot
 /// `std::nullopt` if reduction cannot be handled by `vector.reduce`.
 static std::optional<vector::CombiningKind> getReductionKind(Block &body) {
   if (!llvm::hasSingleElement(body.without_terminator()))
     return std::nullopt;
 
-  Operation &redOp = body.front();
-
-  using fptr_t = bool (*)(Operation &);
-  using CC = vector::CombiningKind;
-  const std::pair<fptr_t, CC> handlers[] = {
-      // clang-format off
-      {&isOp<arith::AddIOp>, CC::ADD},
-      {&isOp<arith::AddFOp>, CC::ADD},
-      {&isOp<arith::MulIOp>, CC::MUL},
-      {&isOp<arith::MulFOp>, CC::MUL},
-      // clang-format on
-  };
-
-  for (auto &&[handler, cc] : handlers) {
-    if (handler(redOp))
-      return cc;
-  }
-
-  return std::nullopt;
+  // TODO: Move getCombinerOpKind to vector dialect.
+  return linalg::getCombinerOpKind(&body.front());
 }
 
 std::optional<SCFVectorizeInfo>
