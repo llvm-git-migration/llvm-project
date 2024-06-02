@@ -30,3 +30,39 @@ func.func @test(%A: memref<?xi32>, %B: memref<?xi32>, %C: memref<?xi32>) {
   }
   return
 }
+
+// -----
+
+// CHECK-LABEL: @test
+//  CHECK-SAME:  (%[[A:.*]]: memref<?xindex>, %[[B:.*]]: memref<?xindex>, %[[C:.*]]: memref<?xindex>) {
+//       CHECK:  %[[C0:.*]] = arith.constant 0 : index
+//       CHECK:  %[[DIM:.*]] = memref.dim %[[A]], %[[C0]] : memref<?xindex>
+//       CHECK:  %[[C4:.*]] = arith.constant 4 : index
+//       CHECK:  %[[COUNT:.*]] = arith.ceildivsi %[[DIM]], %[[C4]] : index
+//       CHECK:  scf.parallel (%[[I:.*]]) = (%{{.*}}) to (%[[COUNT]]) step (%{{.*}}) {
+//       CHECK:  %[[MULT:.*]] = arith.muli %[[I]], %[[C4]] : index
+//       CHECK:  %[[M:.*]] = arith.subi %[[DIM]], %[[MULT]] : index
+//       CHECK:  %[[MASK:.*]] = vector.create_mask %[[M]] : vector<4xi1>
+//       CHECK:  %[[P:.*]] = ub.poison : vector<4xindex>
+//       CHECK:  %[[A_VAL:.*]] = vector.maskedload %[[A]][%[[MULT]]], %[[MASK]], %[[P]] : memref<?xindex>, vector<4xi1>, vector<4xindex> into vector<4xindex>
+//       CHECK:  %[[P:.*]] = ub.poison : vector<4xindex>
+//       CHECK:  %[[B_VAL:.*]] = vector.maskedload %[[B]][%[[MULT]]], %[[MASK]], %[[P]] : memref<?xindex>, vector<4xi1>, vector<4xindex> into vector<4xindex>
+//       CHECK:  %[[RES:.*]] = arith.addi %[[A_VAL]], %[[B_VAL]] : vector<4xindex>
+//       CHECK:  vector.maskedstore %[[C]][%1], %[[MASK]], %[[RES]] : memref<?xindex>, vector<4xi1>, vector<4xindex>
+//       CHECK:  scf.reduce
+
+module attributes { dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<index, 32>> } {
+func.func @test(%A: memref<?xindex>, %B: memref<?xindex>, %C: memref<?xindex>) {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %c2 = arith.constant 2 : index
+  %count = memref.dim %A, %c0 : memref<?xindex>
+  scf.parallel (%i) = (%c0) to (%count) step (%c1) {
+    %1 = memref.load %A[%i] : memref<?xindex>
+    %2 = memref.load %B[%i] : memref<?xindex>
+    %3 =  arith.addi %1, %2 : index
+    memref.store %3, %C[%i] : memref<?xindex>
+  }
+  return
+}
+}

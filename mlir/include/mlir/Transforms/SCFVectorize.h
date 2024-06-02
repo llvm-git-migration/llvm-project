@@ -13,6 +13,7 @@
 #include <optional>
 
 namespace mlir {
+class DataLayout;
 class OpBuilder;
 class Pass;
 struct LogicalResult;
@@ -43,9 +44,9 @@ struct SCFVectorizeInfo {
 /// specified dimension.
 ///
 /// `vectorBitwidth` - maximum vector size, in bits.
-std::optional<SCFVectorizeInfo> getLoopVectorizeInfo(mlir::scf::ParallelOp loop,
-                                                     unsigned dim,
-                                                     unsigned vectorBitwidth);
+std::optional<SCFVectorizeInfo>
+getLoopVectorizeInfo(mlir::scf::ParallelOp loop, unsigned dim,
+                     unsigned vectorBitwidth, const DataLayout *DL = nullptr);
 
 /// Vectorization params
 struct SCFVectorizeParams {
@@ -66,7 +67,8 @@ struct SCFVectorizeParams {
 /// and generate masked vector ops to handle out-of bounds memory accesses.
 mlir::LogicalResult vectorizeLoop(mlir::OpBuilder &builder,
                                   mlir::scf::ParallelOp loop,
-                                  const SCFVectorizeParams &params);
+                                  const SCFVectorizeParams &params,
+                                  const DataLayout *DL = nullptr);
 } // namespace mlir
 
 #endif // MLIR_TRANSFORMS_SCFVECTORIZE_H_

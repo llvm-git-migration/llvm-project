@@ -20,9 +20,12 @@ using namespace mlir;
 
 /// Return type bitwidth for vectorization purposes or 0 if type cannot be
 /// vectorized.
-static unsigned getTypeBitWidth(Type type) {
-  if (isa<IndexType>(type))
-    return 64; // TODO: unhardcode
+static unsigned getTypeBitWidth(Type type, const DataLayout *DL) {
+  if (!type.isIntOrIndexOrFloat())
+    return 0;
+
+  if (DL)
+    return DL->getTypeSizeInBits(type);
 
   if (type.isIntOrFloat())
     return type.getIntOrFloatBitWidth();
@@ -30,13 +33,13 @@ static unsigned getTypeBitWidth(Type type) {
   return 0;
 }
 
-static unsigned getArgsTypeWidth(Operation &op) {
+static unsigned getArgsTypeWidth(Operation &op, const DataLayout *DL) {
   unsigned ret = 0;
   for (auto arg : op.getOperands())
-    ret = std::max(ret, getTypeBitWidth(arg.getType()));
+    ret = std::max(ret, getTypeBitWidth(arg.getType(), DL));
 
   for (auto res : op.getResults())
-    ret = std::max(ret, getTypeBitWidth(res.getType()));
+    ret = std::max(ret, getTypeBitWidth(res.getType(), DL));
 
   return ret;
 }
@@ -63,12 +66,13 @@ static bool isRangePermutation(ValueRange val1, ValueRange val2) {
 
 template <typename Op>
 static std::optional<unsigned>
-cavTriviallyVectorizeMemOpImpl(scf::ParallelOp loop, unsigned dim, Op memOp) {
+cavTriviallyVectorizeMemOpImpl(scf::ParallelOp loop, unsigned dim, Op memOp,
+                               const DataLayout *DL) {
   auto loopIndexVars = loop.getInductionVars();
   assert(dim < loopIndexVars.size());
   auto memref = memOp.getMemRef();
   auto type = cast<MemRefType>(memref.getType());
-  auto width = getTypeBitWidth(type.getElementType());
+  auto width = getTypeBitWidth(type.getElementType(), DL);
   if (width == 0)
     return std::nullopt;
 
@@ -93,13 +97,14 @@ cavTriviallyVectorizeMemOpImpl(scf::ParallelOp loop, unsigned dim, Op memOp) {
 /// Returns memref element bitwidth or `std::nullopt` if access cannot be
 /// vectorized.
 static std::optional<unsigned>
-cavTriviallyVectorizeMemOp(scf::ParallelOp loop, unsigned dim, Operation &op) {
+cavTriviallyVectorizeMemOp(scf::ParallelOp loop, unsigned dim, Operation &op,
+                           const DataLayout *DL) {
   assert(dim < loop.getInductionVars().size());
   if (auto storeOp = dyn_cast<memref::StoreOp>(op))
-    return cavTriviallyVectorizeMemOpImpl(loop, dim, storeOp);
+    return cavTriviallyVectorizeMemOpImpl(loop, dim, storeOp, DL);
 
   if (auto loadOp = dyn_cast<memref::LoadOp>(op))
-    return cavTriviallyVectorizeMemOpImpl(loop, dim, loadOp);
+    return cavTriviallyVectorizeMemOpImpl(loop, dim, loadOp, DL);
 
   return std::nullopt;
 }
@@ -138,7 +143,7 @@ static std::optional<vector::CombiningKind> getReductionKind(Block &body) {
 
 std::optional<SCFVectorizeInfo>
 mlir::getLoopVectorizeInfo(scf::ParallelOp loop, unsigned dim,
-                           unsigned vectorBitwidth) {
+                           unsigned vectorBitwidth, const DataLayout *DL) {
   assert(dim < loop.getStep().size());
   assert(vectorBitwidth > 0);
   unsigned factor = vectorBitwidth / 8;
@@ -169,7 +174,7 @@ mlir::getLoopVectorizeInfo(scf::ParallelOp loop, unsigned dim,
       return std::nullopt;
 
     /// Check mem ops.
-    if (auto w = cavTriviallyVectorizeMemOp(loop, dim, op)) {
+    if (auto w = cavTriviallyVectorizeMemOp(loop, dim, op, DL)) {
       auto newFactor = vectorBitwidth / *w;
       if (newFactor > 1) {
         factor = std::min(factor, newFactor);
@@ -185,7 +190,7 @@ mlir::getLoopVectorizeInfo(scf::ParallelOp loop, unsigned dim,
       continue;
     }
 
-    auto width = getArgsTypeWidth(op);
+    auto width = getArgsTypeWidth(op, DL);
     if (width == 0)
       return std::nullopt;
 
@@ -214,7 +219,8 @@ static arith::FastMathFlags getFMF(Operation &op) {
 }
 
 LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
-                                  const SCFVectorizeParams &params) {
+                                  const SCFVectorizeParams &params,
+                                  const DataLayout *DL) {
   auto dim = params.dim;
   auto factor = params.factor;
   auto masked = params.masked;
@@ -401,7 +407,7 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
   DominanceInfo dom;
 
   auto canTriviallyVectorizeMemOp = [&](auto op) -> bool {
-    return !!::cavTriviallyVectorizeMemOpImpl(loop, dim, op);
+    return !!::cavTriviallyVectorizeMemOpImpl(loop, dim, op, DL);
   };
 
   // Get idices for vectorized memref load/store.

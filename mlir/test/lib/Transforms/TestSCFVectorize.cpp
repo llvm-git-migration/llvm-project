@@ -8,6 +8,7 @@
 
 #include "mlir/Transforms/SCFVectorize.h"
 
+#include "mlir/Analysis/DataLayoutAnalysis.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/UB/IR/UBOps.h"
@@ -55,6 +56,9 @@ struct TestSCFVectorizePass
   }
 
   void runOnOperation() override {
+    Operation *root = getOperation();
+    auto &DLAnalysis = getAnalysis<DataLayoutAnalysis>();
+
     llvm::SmallVector<std::pair<scf::ParallelOp, SCFVectorizeParams>>
         toVectorize;
 
@@ -64,10 +68,11 @@ struct TestSCFVectorizePass
       return info.factor * info.count * (int(info.masked) + 1);
     };
 
-    getOperation()->walk([&](scf::ParallelOp loop) {
+    root->walk([&](scf::ParallelOp loop) {
+      const DataLayout &DL = DLAnalysis.getAbove(loop);
       std::optional<SCFVectorizeInfo> best;
       for (auto dim : llvm::seq(0u, loop.getNumLoops())) {
-        auto info = getLoopVectorizeInfo(loop, dim, vectorBitwidth);
+        auto info = getLoopVectorizeInfo(loop, dim, vectorBitwidth, &DL);
         if (!info)
           continue;
 
@@ -92,8 +97,9 @@ struct TestSCFVectorizePass
 
     OpBuilder builder(&getContext());
     for (auto &&[loop, params] : toVectorize) {
+      const DataLayout &DL = DLAnalysis.getAbove(loop);
       builder.setInsertionPoint(loop);
-      if (failed(vectorizeLoop(builder, loop, params)))
+      if (failed(vectorizeLoop(builder, loop, params, &DL)))
         return signalPassFailure();
     }
   }
