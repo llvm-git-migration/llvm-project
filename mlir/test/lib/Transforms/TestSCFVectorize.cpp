@@ -95,11 +95,9 @@ struct TestSCFVectorizePass
     if (toVectorize.empty())
       return markAllAnalysesPreserved();
 
-    OpBuilder builder(&getContext());
     for (auto &&[loop, params] : toVectorize) {
       const DataLayout &DL = DLAnalysis.getAbove(loop);
-      builder.setInsertionPoint(loop);
-      if (failed(vectorizeLoop(builder, loop, params, &DL)))
+      if (failed(vectorizeLoop(loop, params, &DL)))
         return signalPassFailure();
     }
   }

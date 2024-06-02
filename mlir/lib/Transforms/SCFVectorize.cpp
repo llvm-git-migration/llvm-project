@@ -218,7 +218,7 @@ static arith::FastMathFlags getFMF(Operation &op) {
   return arith::FastMathFlags::none;
 }
 
-LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
+LogicalResult mlir::vectorizeLoop(scf::ParallelOp loop,
                                   const SCFVectorizeParams &params,
                                   const DataLayout *DL) {
   auto dim = params.dim;
@@ -228,9 +228,7 @@ LogicalResult mlir::vectorizeLoop(OpBuilder &builder, scf::ParallelOp loop,
   assert(factor > 1);
   assert(isConstantIntValue(loop.getStep()[dim], 1));
 
-  OpBuilder::InsertionGuard g(builder);
-  builder.setInsertionPoint(loop);
-
+  OpBuilder builder(loop);
   auto lower = llvm::to_vector(loop.getLowerBound());
   auto upper = llvm::to_vector(loop.getUpperBound());
   auto step = llvm::to_vector(loop.getStep());

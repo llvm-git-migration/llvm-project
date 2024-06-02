@@ -14,8 +14,6 @@
 
 namespace mlir {
 class DataLayout;
-class OpBuilder;
-class Pass;
 struct LogicalResult;
 namespace scf {
 class ParallelOp;
@@ -65,8 +63,7 @@ struct SCFVectorizeParams {
 /// If `masked` is `true` and loop bound is not divisible by `factor`, instead
 /// of generating second loop to process remainig iterations, extend loop count
 /// and generate masked vector ops to handle out-of bounds memory accesses.
-mlir::LogicalResult vectorizeLoop(mlir::OpBuilder &builder,
-                                  mlir::scf::ParallelOp loop,
+mlir::LogicalResult vectorizeLoop(mlir::scf::ParallelOp loop,
                                   const SCFVectorizeParams &params,
                                   const DataLayout *DL = nullptr);
 } // namespace mlir
