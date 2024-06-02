@@ -735,8 +735,8 @@ void ObjFile::initializeFlags() {
             (cs.Flags & CompileSym3Flags::HotPatch) != CompileSym3Flags::None;
       }
       if (sym->kind() == SymbolKind::S_OBJNAME) {
-        auto objName = cantFail(SymbolDeserializer::deserializeAs<ObjNameSym>(
-            sym.get()));
+        auto objName =
+            cantFail(SymbolDeserializer::deserializeAs<ObjNameSym>(sym.get()));
         if (objName.Signature)
           pchSignature = objName.Signature;
       }
@@ -818,17 +818,28 @@ void ObjFile::initializeDependencies() {
   debugTypesObj = makeTpiSource(ctx, this);
 }
 
-// Make a PDB path assuming the PDB is in the same folder as the OBJ
-static std::string getPdbBaseName(ObjFile *file, StringRef tSPath) {
-  StringRef localPath =
-      !file->parentName.empty() ? file->parentName : file->getName();
-  SmallString<128> path = sys::path::parent_path(localPath);
+static std::string appendPdbPath(StringRef filePath, StringRef tSPath) {
+  SmallString<128> path = sys::path::parent_path(filePath);
 
   // Currently, type server PDBs are only created by MSVC cl, which only runs
   // on Windows, so we can assume type server paths are Windows style.
   sys::path::append(path,
                     sys::path::filename(tSPath, sys::path::Style::windows));
   return std::string(path);
+}
+
+// Make a PDB path assuming the PDB is in the same folder as the OBJ
+static std::string getPdbBaseNameFromObj(ObjFile *file, StringRef tSPath) {
+  StringRef localPath =
+      !file->parentName.empty() ? file->parentName : file->getName();
+
+  return appendPdbPath(localPath, tSPath);
+}
+
+// Make a PDB path assuming the PDB is in the same folder as the OutputFilePath
+static std::string getPdbBaseNameFromOutput(StringRef outputFilePath,
+                                            StringRef tSPath) {
+  return appendPdbPath(outputFilePath, tSPath);
 }
 
 // The casing of the PDB path stamped in the OBJ can differ from the actual path
@@ -843,15 +854,18 @@ static std::string normalizePdbPath(StringRef path) {
 }
 
 // If existing, return the actual PDB path on disk.
-static std::optional<std::string> findPdbPath(StringRef pdbPath,
-                                              ObjFile *dependentFile) {
+static std::optional<std::string>
+findPdbPath(StringRef pdbPath, ObjFile *dependentFile, StringRef outputFile) {
   // Ensure the file exists before anything else. In some cases, if the path
   // points to a removable device, Driver::enqueuePath() would fail with an
   // error (EAGAIN, "resource unavailable try again") which we want to skip
   // silently.
   if (llvm::sys::fs::exists(pdbPath))
     return normalizePdbPath(pdbPath);
-  std::string ret = getPdbBaseName(dependentFile, pdbPath);
+  std::string ret = getPdbBaseNameFromObj(dependentFile, pdbPath);
+  if (llvm::sys::fs::exists(ret))
+    return normalizePdbPath(ret);
+  ret = getPdbBaseNameFromOutput(outputFile, pdbPath);
   if (llvm::sys::fs::exists(ret))
     return normalizePdbPath(ret);
   return std::nullopt;
@@ -865,7 +879,7 @@ PDBInputFile::~PDBInputFile() = default;
 PDBInputFile *PDBInputFile::findFromRecordPath(const COFFLinkerContext &ctx,
                                                StringRef path,
                                                ObjFile *fromFile) {
-  auto p = findPdbPath(path.str(), fromFile);
+  auto p = findPdbPath(path.str(), fromFile, ctx.config.outputFile);
   if (!p)
     return nullptr;
   auto it = ctx.pdbInputFileInstances.find(*p);
@@ -931,7 +945,7 @@ std::optional<DILineInfo> ObjFile::getDILineInfo(uint32_t offset,
 }
 
 void ObjFile::enqueuePdbFile(StringRef path, ObjFile *fromFile) {
-  auto p = findPdbPath(path.str(), fromFile);
+  auto p = findPdbPath(path.str(), fromFile, ctx.config.outputFile);
   if (!p)
     return;
   auto it = ctx.pdbInputFileInstances.emplace(*p, nullptr);
