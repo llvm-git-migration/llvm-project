@@ -211,3 +211,62 @@ func.func @test(%A: memref<?xf32>) -> f32 {
   }
   return %res : f32
 }
+
+
+// -----
+
+func.func private @combine(f32, f32) -> (f32)
+
+// CHECK-LABEL: @test
+//  CHECK-SAME:  (%[[A:.*]]: memref<?xf32>) -> f32 {
+//       CHECK:  %[[C00:.*]] = arith.constant 0 : index
+//       CHECK:  %[[INIT:.*]] = arith.constant 0.0{{.*}} : f32
+//       CHECK:  %[[DIM:.*]] = memref.dim %[[A]], %[[C00]] : memref<?xf32>
+//       CHECK:  %[[C4:.*]] = arith.constant 4 : index
+//       CHECK:  %[[COUNT:.*]] = arith.divsi %[[DIM]], %[[C4]] : index
+//       CHECK:  %[[RES:.*]] = scf.parallel (%[[I:.*]]) = (%{{.*}}) to (%[[COUNT]]) step (%{{.*}}) init (%[[INIT]]) -> f32 {
+//       CHECK:    %[[MULT:.*]] = arith.muli %arg1, %c4 : index
+//       CHECK:    %[[A_VAL:.*]] = vector.load %[[A]][%[[MULT]]] : memref<?xf32>, vector<4xf32>
+//       CHECK:    %[[C0:.*]] = arith.constant 0 : index
+//       CHECK:    %[[E0:.*]] = vector.extractelement %[[A_VAL]][%[[C0]] : index] : vector<4xf32>
+//       CHECK:    %[[C1:.*]] = arith.constant 1 : index
+//       CHECK:    %[[E1:.*]] = vector.extractelement %[[A_VAL]][%[[C1]] : index] : vector<4xf32>
+//       CHECK:    %[[C2:.*]] = arith.constant 2 : index
+//       CHECK:    %[[E2:.*]] = vector.extractelement %[[A_VAL]][%[[C2]] : index] : vector<4xf32>
+//       CHECK:    %[[C3:.*]] = arith.constant 3 : index
+//       CHECK:    %[[E3:.*]] = vector.extractelement %[[A_VAL]][%[[C3]] : index] : vector<4xf32>
+//       CHECK:    %[[R0:.*]] = func.call @combine(%[[E0]], %[[E1]]) : (f32, f32) -> f32
+//       CHECK:    %[[R1:.*]] = func.call @combine(%[[R0]], %[[E2]]) : (f32, f32) -> f32
+//       CHECK:    %[[R2:.*]] = func.call @combine(%[[R1]], %[[E3]]) : (f32, f32) -> f32
+//       CHECK:    scf.reduce(%[[R2]] : f32) {
+//       CHECK:    ^bb0(%[[LHS:.*]]: f32, %[[RHS:.*]]: f32):
+//       CHECK:      %[[R:.*]] = func.call @combine(%[[LHS]], %[[RHS]]) : (f32, f32) -> f32
+//       CHECK:      scf.reduce.return %[[R]] : f32
+//       CHECK:    }
+//       CHECK:  }
+//       CHECK:  %[[UB1:.*]] = arith.muli %[[COUNT]], %[[C4]] : index
+//       CHECK:  %[[UB2:.*]] = arith.addi %[[UB1]], %[[C00]] : index
+//       CHECK:  %[[RES1:.*]] = scf.parallel (%[[I:.*]]) = (%[[UB2]]) to (%[[DIM]]) step (%{{.*}}) init (%[[RES]]) -> f32 {
+//       CHECK:    %[[A_VAL:.*]] = memref.load %[[A]][%[[I]]] : memref<?xf32>
+//       CHECK:    scf.reduce(%[[A_VAL]] : f32) {
+//       CHECK:    ^bb0(%[[LHS:.*]]: f32, %[[RHS:.*]]: f32):
+//       CHECK:      %[[R:.*]] = func.call @combine(%[[LHS]], %[[RHS]]) : (f32, f32) -> f32
+//       CHECK:      scf.reduce.return %[[R]] : f32
+//       CHECK:    }
+//       CHECK:  }
+//       CHECK:  return %[[RES1]] : f32
+func.func @test(%A: memref<?xf32>) -> f32 {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %init = arith.constant 0.0 : f32
+  %count = memref.dim %A, %c0 : memref<?xf32>
+  %res = scf.parallel (%i) = (%c0) to (%count) step (%c1) init (%init) -> f32 {
+    %1 = memref.load %A[%i] : memref<?xf32>
+    scf.reduce(%1 : f32) {
+    ^bb0(%lhs: f32, %rhs: f32):
+      %2 = func.call @combine(%lhs, %rhs) : (f32, f32) -> (f32)
+      scf.reduce.return %2 : f32
+    }
+  }
+  return %res : f32
+}
