@@ -339,6 +339,10 @@ static cl::opt<bool, true> EnableLowerModuleLDS(
     cl::location(AMDGPUTargetMachine::EnableLowerModuleLDS), cl::init(true),
     cl::Hidden);
 
+static cl::opt<bool> EnableSwLowerLDS("amdgpu-enable-sw-lower-lds",
+                                      cl::desc("Enable sw lower lds pass"),
+                                      cl::init(true), cl::Hidden);
+
 static cl::opt<bool> EnablePreRAOptimizations(
     "amdgpu-enable-pre-ra-optimizations",
     cl::desc("Enable Pre-RA optimizations pass"), cl::init(true),
@@ -600,12 +604,7 @@ AMDGPUTargetMachine::AMDGPUTargetMachine(const Target &T, const Triple &TT,
 
 bool AMDGPUTargetMachine::EnableLateStructurizeCFG = false;
 bool AMDGPUTargetMachine::EnableFunctionCalls = false;
-#if __has_feature(address_sanitizer)
-bool AMDGPUTargetMachine::EnableLowerModuleLDS = false;
-EnableLowerModuleLDS = false;
-#else
 bool AMDGPUTargetMachine::EnableLowerModuleLDS = true;
-#endif
 bool AMDGPUTargetMachine::DisableStructurizer = false;
 
 AMDGPUTargetMachine::~AMDGPUTargetMachine() = default;
@@ -677,8 +676,8 @@ void AMDGPUTargetMachine::registerPassBuilderCallbacks(
   PB.registerPipelineEarlySimplificationEPCallback(
       [](ModulePassManager &PM, OptimizationLevel Level) {
         PM.addPass(AMDGPUPrintfRuntimeBindingPass());
-
-        PM.addPass(AMDGPUSwLowerLDSPass());
+        if (EnableSwLowerLDS)
+          PM.addPass(AMDGPUSwLowerLDSPass());
 
         if (Level == OptimizationLevel::O0)
           return;
