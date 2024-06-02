@@ -10,6 +10,7 @@ void h() {
   SEL* ps = &s;
 
   @selector(dealloc) = s;  // expected-error {{expression is not assignable}}
+  // expected-note@-1 {{add '*' to dereference it}}
 
   SEL* ps2 = &@selector(dealloc);
 
