@@ -20,7 +20,6 @@
 func.func @test(%A: memref<?xi32>, %B: memref<?xi32>, %C: memref<?xi32>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
-  %c2 = arith.constant 2 : index
   %count = memref.dim %A, %c0 : memref<?xi32>
   scf.parallel (%i) = (%c0) to (%count) step (%c1) {
     %1 = memref.load %A[%i] : memref<?xi32>
@@ -55,7 +54,6 @@ module attributes { dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<index, 32>> } {
 func.func @test(%A: memref<?xindex>, %B: memref<?xindex>, %C: memref<?xindex>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
-  %c2 = arith.constant 2 : index
   %count = memref.dim %A, %c0 : memref<?xindex>
   scf.parallel (%i) = (%c0) to (%count) step (%c1) {
     %1 = memref.load %A[%i] : memref<?xindex>
@@ -119,7 +117,6 @@ func.func private @non_vectorizable(i32) -> (i32)
 func.func @test(%A: memref<?xi32>, %B: memref<?xi32>, %C: memref<?xi32>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
-  %c2 = arith.constant 2 : index
   %count = memref.dim %A, %c0 : memref<?xi32>
   scf.parallel (%i) = (%c0) to (%count) step (%c1) {
     %1 = memref.load %A[%i] : memref<?xi32>
