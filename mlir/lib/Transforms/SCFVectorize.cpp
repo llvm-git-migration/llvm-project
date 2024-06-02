@@ -18,10 +18,12 @@
 
 using namespace mlir;
 
+static bool isSupportedVecElem(Type type) { return type.isIntOrIndexOrFloat(); }
+
 /// Return type bitwidth for vectorization purposes or 0 if type cannot be
 /// vectorized.
 static unsigned getTypeBitWidth(Type type, const DataLayout *DL) {
-  if (!type.isIntOrIndexOrFloat())
+  if (!isSupportedVecElem(type))
     return 0;
 
   if (DL)
@@ -47,8 +49,6 @@ static unsigned getArgsTypeWidth(Operation &op, const DataLayout *DL) {
 static bool isSupportedVectorOp(Operation &op) {
   return op.hasTrait<OpTrait::Vectorizable>();
 }
-
-static bool isSupportedVecElem(Type type) { return type.isIntOrIndexOrFloat(); }
 
 /// Check if one `ValueRange` is permutation of another, i.e. contains same
 /// values, potentially in different order.
@@ -107,6 +107,44 @@ cavTriviallyVectorizeMemOp(scf::ParallelOp loop, unsigned dim, Operation &op,
     return cavTriviallyVectorizeMemOpImpl(loop, dim, loadOp, DL);
 
   return std::nullopt;
+}
+
+template <typename Op>
+static std::optional<unsigned> canGatherScatterImpl(scf::ParallelOp loop, Op op,
+                                                    const DataLayout *DL) {
+  auto memref = op.getMemRef();
+  auto memrefType = cast<MemRefType>(memref.getType());
+  auto width = getTypeBitWidth(memrefType.getElementType(), DL);
+  if (width == 0)
+    return std::nullopt;
+
+  DominanceInfo dom;
+  return dom.properlyDominates(memref, loop) && op.getIndices().size() == 1 &&
+         memrefType.getLayout().isIdentity();
+}
+
+// Check if memref access can be converted into gather/scatter.
+///
+/// Returns memref element bitwidth or `std::nullopt` if access cannot be
+/// vectorized.
+static std::optional<unsigned>
+canGatherScatter(scf::ParallelOp loop, Operation &op, const DataLayout *DL) {
+  if (auto storeOp = dyn_cast<memref::StoreOp>(op))
+    return canGatherScatterImpl(loop, storeOp, DL);
+
+  if (auto loadOp = dyn_cast<memref::LoadOp>(op))
+    return canGatherScatterImpl(loop, loadOp, DL);
+
+  return std::nullopt;
+}
+
+static std::optional<unsigned> cenVectorizeMemrefOp(scf::ParallelOp loop,
+                                                    unsigned dim, Operation &op,
+                                                    const DataLayout *DL) {
+  if (auto w = cavTriviallyVectorizeMemOp(loop, dim, op, DL))
+    return w;
+
+  return canGatherScatter(loop, op, DL);
 }
 
 template <typename T>
@@ -174,7 +212,7 @@ mlir::getLoopVectorizeInfo(scf::ParallelOp loop, unsigned dim,
       return std::nullopt;
 
     /// Check mem ops.
-    if (auto w = cavTriviallyVectorizeMemOp(loop, dim, op, DL)) {
+    if (auto w = cenVectorizeMemrefOp(loop, dim, op, DL)) {
       auto newFactor = vectorBitwidth / *w;
       if (newFactor > 1) {
         factor = std::min(factor, newFactor);
@@ -402,10 +440,12 @@ LogicalResult mlir::vectorizeLoop(scf::ParallelOp loop,
     return mask;
   };
 
-  DominanceInfo dom;
-
   auto canTriviallyVectorizeMemOp = [&](auto op) -> bool {
     return !!::cavTriviallyVectorizeMemOpImpl(loop, dim, op, DL);
+  };
+
+  auto canGatherScatter = [&](auto op) {
+    return !!::canGatherScatterImpl(loop, op, DL);
   };
 
   // Get idices for vectorized memref load/store.
@@ -425,17 +465,6 @@ LogicalResult mlir::vectorizeLoop(scf::ParallelOp loop,
     }
 
     return ret;
-  };
-
-  // Check if memref access can be converted into gather/scatter.
-  auto canGatherScatter = [&](auto op) {
-    auto memref = op.getMemRef();
-    auto memrefType = cast<MemRefType>(memref.getType());
-    if (!isSupportedVecElem(memrefType.getElementType()))
-      return false;
-
-    return dom.properlyDominates(memref, loop) && op.getIndices().size() == 1 &&
-           memrefType.getLayout().isIdentity();
   };
 
   // Create vectorized memref load for specified non-vectorized load.
