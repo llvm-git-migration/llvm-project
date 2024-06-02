@@ -13587,10 +13587,22 @@ static bool CheckForModifiableLvalue(Expr *E, SourceLocation Loc, Sema &S) {
   SourceRange Assign;
   if (Loc != OrigLoc)
     Assign = SourceRange(OrigLoc, OrigLoc);
-  if (NeedType)
+  if (NeedType) {
     S.Diag(Loc, DiagID) << E->getType() << E->getSourceRange() << Assign;
-  else
+  } else {
+    ExprResult Deref;
+    unsigned FixitDiagID = 0;
+    {
+      Sema::TentativeAnalysisScope Trap(S);
+      Deref = S.ActOnUnaryOp(S.getCurScope(), Loc, tok::star, E);
+    }
     S.Diag(Loc, DiagID) << E->getSourceRange() << Assign;
+    if (Deref.isUsable() &&
+        Deref.get()->isModifiableLvalue(S.Context, &Loc) == Expr::MLV_Valid) {
+      FixitDiagID = diag::note_typecheck_expression_not_modifiable_lvalue;
+      S.Diag(Loc, FixitDiagID) << E->getSourceRange() << Assign;
+    }
+  }
   return true;
 }
 
