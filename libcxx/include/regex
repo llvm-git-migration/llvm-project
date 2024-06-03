@@ -4219,7 +4219,7 @@ public:
       _NOEXCEPT(__is_nothrow_swappable<_BidirectionalIterator>::value)
 #endif // _LIBCPP_CXX03_LANG
   {
-    this->pair<_BidirectionalIterator, _BidirectionalIterator>::swap(__s);
+    this->template pair<_BidirectionalIterator, _BidirectionalIterator>::swap(__s);
     std::swap(matched, __s.matched);
   }
 };
