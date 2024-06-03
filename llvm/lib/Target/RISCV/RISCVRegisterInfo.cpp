@@ -511,16 +511,27 @@ bool RISCVRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       // We can encode an add with 12 bit signed immediate in the immediate
       // operand of our user instruction.  As a result, the remaining
       // offset can by construction, at worst, a LUI and a ADD.
+
+      // Special case, try to split the offset across two ADDIs.
+      uint64_t ValSubLo12 = (uint64_t)Val - (uint64_t)Lo12;
+      if (ValSubLo12 == 4096 && (Lo12 > 0 && Lo12 < 2045))
+        Lo12 = Lo12 + 2;
+
+      if (Val > 2048 && Val < 4094)
+        Lo12 = Val - 2047;
       MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Lo12);
       Offset = StackOffset::get((uint64_t)Val - (uint64_t)Lo12,
                                 Offset.getScalable());
     }
   }
 
-  if (Offset.getScalable() || Offset.getFixed()) {
+  int64_t Val = Offset.getFixed();
+  if (Offset.getScalable() || Val) {
     Register DestReg;
     if (MI.getOpcode() == RISCV::ADDI)
       DestReg = MI.getOperand(0).getReg();
+    else if (Val && !Offset.getScalable() && (Val > 2047 && Val <= 4094))
+      DestReg = FrameReg;
     else
       DestReg = MRI.createVirtualRegister(&RISCV::GPRRegClass);
     adjustReg(*II->getParent(), II, DL, DestReg, FrameReg, Offset,
