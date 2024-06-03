@@ -24,3 +24,17 @@ add_entrypoint_object(
     libc.src.__support.OSUtil.osutil
     libc.src.errno.errno
 )
+
+add_entrypoint_object(
+  fdopen
+  SRCS
+    fdopen.cpp
+  HDRS
+    ../fdopen.h
+  DEPENDS
+    libc.include.fcntl
+    libc.include.stdio
+    libc.src.errno.errno
+    libc.src.fcntl.fcntl
+    libc.src.stdio.fseek
+)
