@@ -6961,7 +6961,8 @@ TEST_F(FormatTest, PutEmptyBlocksIntoOneLine) {
   verifyFormat("enum E {};");
   verifyFormat("enum E {}");
   FormatStyle Style = getLLVMStyle();
-  Style.SpaceInEmptyBlock = true;
+  Style.SpaceInEmptyBraces = FormatStyle::SIEBO_Custom;
+  Style.SpaceInEmptyBracesOptions.Block = true;
   verifyFormat("void f() { }", "void f() {}", Style);
   Style.AllowShortBlocksOnASingleLine = FormatStyle::SBS_Empty;
   verifyFormat("{ }", Style);
@@ -6989,7 +6990,8 @@ TEST_F(FormatTest, PutEmptyBlocksIntoOneLine) {
                Style);
 
   Style = getLLVMStyle(FormatStyle::LK_CSharp);
-  Style.SpaceInEmptyBlock = true;
+  Style.SpaceInEmptyBraces = FormatStyle::SIEBO_Custom;
+  Style.SpaceInEmptyBracesOptions.Block = true;
   verifyFormat("Event += () => { };", Style);
 }
 
@@ -14027,6 +14029,42 @@ TEST_F(FormatTest, LayoutCxx11BraceInitializers) {
   SpaceBetweenBraces.SpacesInParens = FormatStyle::SIPO_Custom;
   SpaceBetweenBraces.SpacesInParensOptions.InEmptyParentheses = true;
   verifyFormat("vector< int > x{ };", SpaceBetweenBraces);
+}
+
+TEST_F(FormatTest, EmptyBracesTest) {
+  FormatStyle SpaceInEmptyBraces = getLLVMStyle();
+  SpaceInEmptyBraces.SpaceInEmptyBraces = FormatStyle::SIEBO_Never;
+  verifyFormat("void f() {}\n"
+               "struct Unit {};\n"
+               "int x{};\n",
+               SpaceInEmptyBraces);
+
+  SpaceInEmptyBraces.SpaceInEmptyBraces = FormatStyle::SIEBO_Custom;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.Block = true;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.InitList = false;
+  verifyFormat("void f() { }\n"
+               "struct Unit { };\n"
+               "int x{};\n",
+               SpaceInEmptyBraces);
+
+  SpaceInEmptyBraces.SpaceInEmptyBraces = FormatStyle::SIEBO_Custom;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.Block = false;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.InitList = true;
+  verifyFormat("void f() {}\n"
+               "struct Unit {};\n"
+               "int x{ };\n",
+               SpaceInEmptyBraces);
+
+  // SpacesInParensOptions.InEmptyParentheses can be overwritten.
+  SpaceInEmptyBraces.SpaceInEmptyBraces = FormatStyle::SIEBO_Custom;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.Block = false;
+  SpaceInEmptyBraces.SpaceInEmptyBracesOptions.InitList = false;
+  SpaceInEmptyBraces.SpacesInParens = FormatStyle::SIPO_Custom;
+  SpaceInEmptyBraces.SpacesInParensOptions.InEmptyParentheses = true;
+  verifyFormat("void f( ) {}\n"
+               "struct Unit {};\n"
+               "int x{};\n",
+               SpaceInEmptyBraces);
 }
 
 TEST_F(FormatTest, FormatsBracedListsInColumnLayout) {
