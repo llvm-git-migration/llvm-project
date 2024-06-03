@@ -79,6 +79,43 @@ private:
   int64_t targetRank = 1;
 };
 
+class UnrollDeinterleaveOp final
+    : public OpRewritePattern<vector::DeinterleaveOp> {
+public:
+  UnrollDeinterleaveOp(int64_t targetRank, MLIRContext *context,
+                       PatternBenefit benefit = 1)
+      : OpRewritePattern(context, benefit), targetRank(targetRank){};
+
+  LogicalResult matchAndRewrite(vector::DeinterleaveOp op,
+                                PatternRewriter &rewriter) const override {
+    VectorType resultType = op.getResultVectorType();
+    auto unrollIterator = vector::createUnrollIterator(resultType, targetRank);
+    if (!unrollIterator)
+      return failure();
+
+    auto loc = op.getLoc();
+    Value evenResult = rewriter.create<arith::ConstantOp>(
+        loc, resultType, rewriter.getZeroAttr(resultType));
+    Value oddResult = rewriter.create<arith::ConstantOp>(
+        loc, resultType, rewriter.getZeroAttr(resultType));
+
+    for (auto position : *unrollIterator) {
+      auto extractSrc =
+          rewriter.create<vector::ExtractOp>(loc, op.getSource(), position);
+      auto deinterleave =
+          rewriter.create<vector::DeinterleaveOp>(loc, extractSrc);
+      evenResult = rewriter.create<vector::InsertOp>(
+          loc, deinterleave.getRes1(), evenResult, position);
+      oddResult = rewriter.create<vector::InsertOp>(loc, deinterleave.getRes2(),
+                                                    oddResult, position);
+    }
+    rewriter.replaceOp(op, ValueRange{evenResult, oddResult});
+    return success();
+  }
+
+private:
+  int64_t targetRank = 1;
+};
 /// Rewrite vector.interleave op into an equivalent vector.shuffle op, when
 /// applicable: `sourceType` must be 1D and non-scalable.
 ///
@@ -117,6 +154,8 @@ struct InterleaveToShuffle final : OpRewritePattern<vector::InterleaveOp> {
 void mlir::vector::populateVectorInterleaveLoweringPatterns(
     RewritePatternSet &patterns, int64_t targetRank, PatternBenefit benefit) {
   patterns.add<UnrollInterleaveOp>(targetRank, patterns.getContext(), benefit);
+  patterns.add<UnrollDeinterleaveOp>(targetRank, patterns.getContext(),
+                                     benefit);
 }
 
 void mlir::vector::populateVectorInterleaveToShufflePatterns(
