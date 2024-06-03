@@ -149,10 +149,19 @@ public:
                  Resource *resource = DefaultResource::get())
       : effect(effect), resource(resource), value(value), stage(0),
         effectOnFullRegion(false) {}
+  EffectInstance(EffectT *effect, OpOperand *opd,
+                 Resource *resource = DefaultResource::get())
+      : effect(effect), resource(resource), value(opd), stage(0),
+        effectOnFullRegion(false) {}
   EffectInstance(EffectT *effect, Value value, int stage,
                  bool effectOnFullRegion,
                  Resource *resource = DefaultResource::get())
       : effect(effect), resource(resource), value(value), stage(stage),
+        effectOnFullRegion(effectOnFullRegion) {}
+  EffectInstance(EffectT *effect, OpOperand *opd, int stage,
+                 bool effectOnFullRegion,
+                 Resource *resource = DefaultResource::get())
+      : effect(effect), resource(resource), value(opd), stage(stage),
         effectOnFullRegion(effectOnFullRegion) {}
   EffectInstance(EffectT *effect, SymbolRefAttr symbol,
                  Resource *resource = DefaultResource::get())
@@ -176,12 +185,21 @@ public:
                  Resource *resource = DefaultResource::get())
       : effect(effect), resource(resource), value(value),
         parameters(parameters), stage(0), effectOnFullRegion(false) {}
+  EffectInstance(EffectT *effect, OpOperand *opd, Attribute parameters,
+                 Resource *resource = DefaultResource::get())
+      : effect(effect), resource(resource), value(opd), parameters(parameters),
+        stage(0), effectOnFullRegion(false) {}
   EffectInstance(EffectT *effect, Value value, Attribute parameters, int stage,
                  bool effectOnFullRegion,
                  Resource *resource = DefaultResource::get())
       : effect(effect), resource(resource), value(value),
         parameters(parameters), stage(stage),
         effectOnFullRegion(effectOnFullRegion) {}
+  EffectInstance(EffectT *effect, OpOperand *opd, Attribute parameters,
+                 int stage, bool effectOnFullRegion,
+                 Resource *resource = DefaultResource::get())
+      : effect(effect), resource(resource), value(opd), parameters(parameters),
+        stage(stage), effectOnFullRegion(effectOnFullRegion) {}
   EffectInstance(EffectT *effect, SymbolRefAttr symbol, Attribute parameters,
                  Resource *resource = DefaultResource::get())
       : effect(effect), resource(resource), value(symbol),
@@ -199,7 +217,17 @@ public:
   /// Return the value the effect is applied on, or nullptr if there isn't a
   /// known value being affected.
   Value getValue() const {
-    return value ? llvm::dyn_cast_if_present<Value>(value) : Value();
+    if (!value || llvm::isa_and_present<SymbolRefAttr>(value)) {
+      return Value();
+    }
+    if (Value v = llvm::dyn_cast_if_present<Value>(value)) {
+      return v;
+    }
+    return cast_if_present<OpOperand *>(value)->get();
+  }
+
+  OpOperand *getOpOperand() const {
+    return value ? dyn_cast_if_present<OpOperand *>(value) : nullptr;
   }
 
   /// Return the symbol reference the effect is applied on, or nullptr if there
@@ -229,7 +257,7 @@ private:
   Resource *resource;
 
   /// The Symbol or Value that the effect applies to. This is optionally null.
-  PointerUnion<SymbolRefAttr, Value> value;
+  PointerUnion<SymbolRefAttr, Value, OpOperand *> value;
 
   /// Additional parameters of the effect instance. An attribute is used for
   /// type-safe structured storage and context-based uniquing. Concrete effects
