@@ -6943,7 +6943,7 @@ public:
                            const TemplateArgumentListInfo *TemplateArgs);
 
   ExprResult ActOnMemberAccessExpr(Scope *S, Expr *Base, SourceLocation OpLoc,
-                                   bool IsArrow, CXXScopeSpec &SS,
+                                   tok::TokenKind OpKind, CXXScopeSpec &SS,
                                    SourceLocation TemplateKWLoc,
                                    UnqualifiedId &Member, Decl *ObjCImpDecl);
 
