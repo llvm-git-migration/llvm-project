@@ -140,12 +140,16 @@ static cl::opt<int> ClDebugMin("memprof-debug-min", cl::desc("Debug min inst"),
 static cl::opt<int> ClDebugMax("memprof-debug-max", cl::desc("Debug max inst"),
                                cl::Hidden, cl::init(-1));
 
+static cl::opt<bool> ClHistogram("memprof-histogram",
+                                 cl::desc("Collect access count histograms"),
+                                 cl::Hidden, cl::init(false));
+
 // By default disable matching of allocation profiles onto operator new that
 // already explicitly pass a hot/cold hint, since we don't currently
 // override these hints anyway.
 static cl::opt<bool> ClMemProfMatchHotColdNew(
     "memprof-match-hot-cold-new",
-    cl::desc(
+ cl::desc(
         "Match allocation profiles onto existing hot/cold operator new calls"),
     cl::Hidden, cl::init(false));
 
@@ -448,6 +452,10 @@ void MemProfiler::instrumentAddress(Instruction *OrigIns,
                                     bool IsWrite) {
   IRBuilder<> IRB(InsertBefore);
   Value *AddrLong = IRB.CreatePointerCast(Addr, IntptrTy);
+
+  assert(
+      (!ClHistogram || (ClHistogram && ClUseCalls)) &&
+      "Option memprof-histogram only works with -memprof-use-callbacks=true");
 
   if (ClUseCalls) {
     IRB.CreateCall(MemProfMemoryAccessCallback[IsWrite], AddrLong);

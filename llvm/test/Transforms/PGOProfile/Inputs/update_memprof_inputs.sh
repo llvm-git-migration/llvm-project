@@ -174,3 +174,195 @@ rm ${OUTDIR}/memprof_loop_unroll_a.cc
 rm ${OUTDIR}/memprof_loop_unroll_a.o
 rm ${OUTDIR}/memprof_loop_unroll_b.cc
 rm ${OUTDIR}/memprof_loop_unroll_b.o
+
+
+cat > ${OUTDIR}/memprof_histogram.cc << EOF
+
+struct A {
+  long int a;
+  long int b;
+  long int c;
+  long int d;
+  long int e;
+  long int f;
+  long int g;
+  long int h;
+  A() {};
+};
+
+void foo() {
+  long int acc = 0;
+  A *a = new A();
+  acc += a->a;
+  acc += a->b;
+  acc += a->c;
+  acc += a->d;
+  acc += a->e;
+  acc += a->f;
+  acc += a->g;
+  acc += a->h;
+  delete a;
+}
+void bar() {
+  long int acc = 0;
+  A *a = new A();
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->a;
+  acc += a->b;
+  acc += a->b;
+  acc += a->b;
+  acc += a->b;
+  acc += a->b;
+  acc += a->b;
+  acc += a->b;
+  acc += a->c;
+  acc += a->c;
+  acc += a->c;
+  acc += a->c;
+  acc += a->c;
+  acc += a->c;
+  acc += a->d;
+  acc += a->d;
+  acc += a->d;
+  acc += a->d;
+  acc += a->d;
+  acc += a->e;
+  acc += a->e;
+  acc += a->e;
+  acc += a->e;
+  acc += a->f;
+  acc += a->f;
+  acc += a->f;
+  acc += a->g;
+  acc += a->g;
+  acc += a->h;
+
+  delete a;
+}
+
+int main(int argc, char **argv) {
+  long int acc = 0;
+  A *a = new A();
+  acc += a->a;
+  acc += a->b;
+  acc += a->c;
+  acc += a->d;
+  acc += a->e;
+  acc += a->f;
+  acc += a->g;
+  acc += a->h;
+
+  delete a;
+
+  A *b = new A();
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->a;
+  acc += b->b;
+  acc += b->b;
+  acc += b->b;
+  acc += b->b;
+  acc += b->b;
+  acc += b->b;
+  acc += b->b;
+  acc += b->c;
+  acc += b->c;
+  acc += b->c;
+  acc += b->c;
+  acc += b->c;
+  acc += b->c;
+  acc += b->d;
+  acc += b->d;
+  acc += b->d;
+  acc += b->d;
+  acc += b->d;
+  acc += b->e;
+  acc += b->e;
+  acc += b->e;
+  acc += b->e;
+  acc += b->f;
+  acc += b->f;
+  acc += b->f;
+  acc += b->g;
+  acc += b->g;
+  acc += b->h;
+
+  delete b;
+
+  A *c = new A();
+  acc += c->a;
+
+  for (int i = 0; i < 21; ++i) {
+
+    foo();
+  }
+
+  for (int i = 0; i < 21; ++i) {
+
+    bar();
+  }
+
+  return 0;
+}
+EOF
+
+${CLANG} ${COMMON_FLAGS} -mllvm -memprof-use-callbacks=true -mllvm -memprof-histogram -fmemory-profile ${OUTDIR}/memprof_histogram.cc -o ${OUTDIR}/memprof_histogram.exe
+env MEMPROF_OPTIONS=log_path=stdout:histogram=true ${OUTDIR}/memprof_histogram.exe > ${OUTDIR}/memprof_histogram.memprofraw
+
+cat > ${OUTDIR}/memprof_histogram_padding.cc << EOF
+struct A {
+  char a;
+  char b;
+  long int c;
+  char d;
+  int e;
+  A() {};
+};
+
+struct B {
+  double x;
+  double y;
+  B() {};
+};
+
+struct C {
+  A a;
+  char z;
+  B b;
+  C() {};
+};
+
+int main(int argc, char **argv) {
+  long int acc = 0;
+
+  A *a = new A();
+  acc += a->a;
+  acc += a->b;
+  acc += a->c;
+  acc += a->d;
+  acc += a->e;
+
+  C *c = new C();
+  acc += c->a.a;
+  acc += c->a.a;
+  acc += c->b.x;
+  acc += c->b.y;
+
+  return 0;
+}
+EOF
+
+
+${CLANG} ${COMMON_FLAGS} -mllvm -memprof-use-callbacks=true -mllvm -memprof-histogram -fmemory-profile ${OUTDIR}/memprof_histogram_padding.cc -o ${OUTDIR}/memprof_histogram_padding.exe
+env MEMPROF_OPTIONS=log_path=stdout:histogram=true ${OUTDIR}/memprof_histogram_padding.exe > ${OUTDIR}/memprof_histogram_padding.memprofraw

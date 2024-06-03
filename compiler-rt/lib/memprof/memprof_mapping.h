@@ -23,6 +23,9 @@ static const u64 kDefaultShadowScale = 3;
 #define SHADOW_GRANULARITY (1ULL << SHADOW_SCALE)
 #define MEMPROF_ALIGNMENT 32
 
+#define HISTOGRAM_GRANULARITY 8
+#define HISTOGRAM_MAX_COUNTER 255U
+
 namespace __memprof {
 
 extern uptr kHighMemEnd; // Initialized in __memprof_init.
@@ -36,6 +39,11 @@ extern uptr kHighMemEnd; // Initialized in __memprof_init.
 
 #define MEM_TO_SHADOW(mem)                                                     \
   ((((mem) & SHADOW_MASK) >> SHADOW_SCALE) + (SHADOW_OFFSET))
+
+#define HISTOGRAM_SHADOW_MASK ~(HISTOGRAM_GRANULARITY - 1)
+
+#define HISTOGRAM_MEM_TO_SHADOW(mem)                                           \
+  ((((mem) & HISTOGRAM_SHADOW_MASK) >> SHADOW_SCALE) + (SHADOW_OFFSET))
 
 #define SHADOW_ENTRY_SIZE (MEM_GRANULARITY >> SHADOW_SCALE)
 
@@ -104,8 +112,15 @@ inline bool AddrIsAlignedByGranularity(uptr a) {
 inline void RecordAccess(uptr a) {
   // If we use a different shadow size then the type below needs adjustment.
   CHECK_EQ(SHADOW_ENTRY_SIZE, 8);
-  u64 *shadow_address = (u64 *)MEM_TO_SHADOW(a);
-  (*shadow_address)++;
+  if (flags()->histogram) {
+    u8 *shadow_address = (u8 *)HISTOGRAM_MEM_TO_SHADOW(a);
+    if (*shadow_address < HISTOGRAM_MAX_COUNTER) {
+      (*shadow_address)++;
+    }
+  } else {
+    u64 *shadow_address = (u64 *)MEM_TO_SHADOW(a);
+    (*shadow_address)++;
+  }
 }
 
 } // namespace __memprof

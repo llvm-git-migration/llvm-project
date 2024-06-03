@@ -39,3 +39,6 @@ MEMPROF_FLAG(bool, print_text, false,
   "If set, prints the heap profile in text format. Else use the raw binary serialization format.")
 MEMPROF_FLAG(bool, print_terse, false,
              "If set, prints memory profile in a terse format. Only applicable if print_text = true.")
+MEMPROF_FLAG(bool, histogram, false,
+             "If set, collects a histogram in memory info blocks alongside one "
+             "large counter.")
