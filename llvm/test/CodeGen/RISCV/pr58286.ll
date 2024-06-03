@@ -25,11 +25,9 @@ define void @func() {
 ; RV64I-NEXT:    lw t4, %lo(var)(a0)
 ; RV64I-NEXT:    lw t5, %lo(var)(a0)
 ; RV64I-NEXT:    lw t6, %lo(var)(a0)
-; RV64I-NEXT:    sd s0, 0(sp)
-; RV64I-NEXT:    lui s0, 1
-; RV64I-NEXT:    add s0, sp, s0
-; RV64I-NEXT:    sw a1, 12(s0)
-; RV64I-NEXT:    ld s0, 0(sp)
+; RV64I-NEXT:    addi sp, sp, 2047
+; RV64I-NEXT:    addi sp, sp, 2047
+; RV64I-NEXT:    sw a1, 14(sp)
 ; RV64I-NEXT:    sw a1, %lo(var)(a0)
 ; RV64I-NEXT:    sw a2, %lo(var)(a0)
 ; RV64I-NEXT:    sw a3, %lo(var)(a0)
@@ -70,11 +68,9 @@ define void @func() {
 ; RV32I-NEXT:    lw t4, %lo(var)(a0)
 ; RV32I-NEXT:    lw t5, %lo(var)(a0)
 ; RV32I-NEXT:    lw t6, %lo(var)(a0)
-; RV32I-NEXT:    sw s0, 0(sp)
-; RV32I-NEXT:    lui s0, 1
-; RV32I-NEXT:    add s0, sp, s0
-; RV32I-NEXT:    sw a1, 12(s0)
-; RV32I-NEXT:    lw s0, 0(sp)
+; RV32I-NEXT:    addi sp, sp, 2047
+; RV32I-NEXT:    addi sp, sp, 2047
+; RV32I-NEXT:    sw a1, 14(sp)
 ; RV32I-NEXT:    sw a1, %lo(var)(a0)
 ; RV32I-NEXT:    sw a2, %lo(var)(a0)
 ; RV32I-NEXT:    sw a3, %lo(var)(a0)
@@ -158,11 +154,9 @@ define void @shrink_wrap(i1 %c) {
 ; RV64I-NEXT:    lw t4, %lo(var)(a0)
 ; RV64I-NEXT:    lw t5, %lo(var)(a0)
 ; RV64I-NEXT:    lw t6, %lo(var)(a0)
-; RV64I-NEXT:    sd s0, 0(sp)
-; RV64I-NEXT:    lui s0, 1
-; RV64I-NEXT:    add s0, sp, s0
-; RV64I-NEXT:    sw a1, 12(s0)
-; RV64I-NEXT:    ld s0, 0(sp)
+; RV64I-NEXT:    addi sp, sp, 2047
+; RV64I-NEXT:    addi sp, sp, 2047
+; RV64I-NEXT:    sw a1, 14(sp)
 ; RV64I-NEXT:    sw a1, %lo(var)(a0)
 ; RV64I-NEXT:    sw a2, %lo(var)(a0)
 ; RV64I-NEXT:    sw a3, %lo(var)(a0)
@@ -207,11 +201,9 @@ define void @shrink_wrap(i1 %c) {
 ; RV32I-NEXT:    lw t4, %lo(var)(a0)
 ; RV32I-NEXT:    lw t5, %lo(var)(a0)
 ; RV32I-NEXT:    lw t6, %lo(var)(a0)
-; RV32I-NEXT:    sw s0, 0(sp)
-; RV32I-NEXT:    lui s0, 1
-; RV32I-NEXT:    add s0, sp, s0
-; RV32I-NEXT:    sw a1, 12(s0)
-; RV32I-NEXT:    lw s0, 0(sp)
+; RV32I-NEXT:    addi sp, sp, 2047
+; RV32I-NEXT:    addi sp, sp, 2047
+; RV32I-NEXT:    sw a1, 14(sp)
 ; RV32I-NEXT:    sw a1, %lo(var)(a0)
 ; RV32I-NEXT:    sw a2, %lo(var)(a0)
 ; RV32I-NEXT:    sw a3, %lo(var)(a0)

@@ -963,16 +963,14 @@ define void @relax_jal_spill_32_adjust_spill_slot() {
 ; CHECK-RV64-NEXT:    li t5, 30
 ; CHECK-RV64-NEXT:    #NO_APP
 ; CHECK-RV64-NEXT:    sd t0, 0(sp)
-; CHECK-RV64-NEXT:    lui t0, 1
-; CHECK-RV64-NEXT:    add t0, sp, t0
-; CHECK-RV64-NEXT:    sd t5, -8(t0) # 8-byte Folded Spill
+; CHECK-RV64-NEXT:    addi t0, sp, 2047
+; CHECK-RV64-NEXT:    sd t5, 2041(t0) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    sext.w t5, t5
 ; CHECK-RV64-NEXT:    #APP
 ; CHECK-RV64-NEXT:    li t6, 31
 ; CHECK-RV64-NEXT:    #NO_APP
-; CHECK-RV64-NEXT:    lui t0, 1
-; CHECK-RV64-NEXT:    add t0, sp, t0
-; CHECK-RV64-NEXT:    sd t6, -16(t0) # 8-byte Folded Spill
+; CHECK-RV64-NEXT:    addi t0, sp, 2047
+; CHECK-RV64-NEXT:    sd t6, 2033(t0) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    ld t0, 0(sp)
 ; CHECK-RV64-NEXT:    sext.w t6, t6
 ; CHECK-RV64-NEXT:    beq t5, t6, .LBB3_1
@@ -1061,15 +1059,13 @@ define void @relax_jal_spill_32_adjust_spill_slot() {
 ; CHECK-RV64-NEXT:    #APP
 ; CHECK-RV64-NEXT:    # reg use t4
 ; CHECK-RV64-NEXT:    #NO_APP
-; CHECK-RV64-NEXT:    lui a0, 1
-; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    ld t5, -8(a0) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    addi a0, sp, 2047
+; CHECK-RV64-NEXT:    ld t5, 2041(a0) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    #APP
 ; CHECK-RV64-NEXT:    # reg use t5
 ; CHECK-RV64-NEXT:    #NO_APP
-; CHECK-RV64-NEXT:    lui a0, 1
-; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    ld t6, -16(a0) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    addi a0, sp, 2047
+; CHECK-RV64-NEXT:    ld t6, 2033(a0) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    #APP
 ; CHECK-RV64-NEXT:    # reg use t6
 ; CHECK-RV64-NEXT:    #NO_APP
@@ -1837,222 +1833,174 @@ define void @relax_jal_spill_64_adjust_spill_slot() {
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t0, 5
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t0, -4(a0) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t1, -8(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t0, 2045(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t1, 2041(a0) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t1, 6
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t1, -12(a0) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t2, -16(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t1, 2037(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t2, 2033(a0) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t2, 7
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t2, -20(a0) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw t3, -24(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t2, 2029(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw t3, 2025(a0) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s0, 8
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw s0, -28(a0) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw s1, -32(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw s0, 2021(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw s1, 2017(a0) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s1, 9
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw s1, -36(a0) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    sw s2, -40(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw s1, 2013(a0) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    sw s2, 2009(a0) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a0, 10
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a2, 1
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    sw a1, -44(a2) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a2, sp, 2047
+; CHECK-RV32-NEXT:    sw a1, 2005(a2) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a1, 11
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a3, 1
-; CHECK-RV32-NEXT:    add a3, sp, a3
-; CHECK-RV32-NEXT:    sw a1, -48(a3) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a2, -52(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a3, sp, 2047
+; CHECK-RV32-NEXT:    sw a1, 2001(a3) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a2, 1997(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a2, 12
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a2, -56(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a3, -60(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a2, 1993(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a3, 1989(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a3, 13
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a3, -64(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a4, -68(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a3, 1985(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a4, 1981(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a4, 14
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a4, -72(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a5, -76(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a4, 1977(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a5, 1973(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a5, 15
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a5, -80(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a6, -84(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a5, 1969(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a6, 1965(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a6, 16
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a6, -88(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a7, -92(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a6, 1961(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a7, 1957(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li a7, 17
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw a7, -96(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw t0, -100(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw a7, 1953(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw t0, 1949(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s2, 18
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s2, -104(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s3, -108(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s2, 1945(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s3, 1941(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s3, 19
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s3, -112(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s4, -116(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s3, 1937(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s4, 1933(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s4, 20
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s4, -120(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s5, -124(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s4, 1929(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s5, 1925(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s5, 21
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s5, -128(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s6, -132(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s5, 1921(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s6, 1917(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s6, 22
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s6, -136(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s7, -140(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s6, 1913(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s7, 1909(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s7, 23
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s7, -144(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s8, -148(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s7, 1905(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s8, 1901(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s8, 24
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s8, -152(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s9, -156(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s8, 1897(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s9, 1893(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s9, 25
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s9, -160(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s10, -164(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s9, 1889(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s10, 1885(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s10, 26
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s10, -168(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s11, -172(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s10, 1881(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s11, 1877(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li s11, 27
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw s11, -176(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw s11, 1873(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t3, 28
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw t3, -180(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw t4, -184(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw t3, 1869(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw t4, 1865(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t4, 29
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw t4, -188(a1) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    sw t5, -192(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw t4, 1861(a1) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    sw t5, 1857(a1) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t5, 30
 ; CHECK-RV32-NEXT:    #NO_APP
@@ -2060,19 +2008,15 @@ define void @relax_jal_spill_64_adjust_spill_slot() {
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    li t6, 31
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a2, 1
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    sw s0, -208(a2) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a2, 1
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    sw a1, -196(a2) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a2, sp, 2047
+; CHECK-RV32-NEXT:    sw s0, 1841(a2) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a2, sp, 2047
+; CHECK-RV32-NEXT:    sw a1, 1853(a2) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    xor a1, a1, s0
-; CHECK-RV32-NEXT:    lui a2, 1
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    sw t6, -200(a2) # 4-byte Folded Spill
-; CHECK-RV32-NEXT:    lui a2, 1
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    sw t5, -204(a2) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a2, sp, 2047
+; CHECK-RV32-NEXT:    sw t6, 1849(a2) # 4-byte Folded Spill
+; CHECK-RV32-NEXT:    addi a2, sp, 2047
+; CHECK-RV32-NEXT:    sw t5, 1845(a2) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    xor a2, t5, t6
 ; CHECK-RV32-NEXT:    or a1, a2, a1
 ; CHECK-RV32-NEXT:    beqz a1, .LBB5_1
@@ -2086,240 +2030,188 @@ define void @relax_jal_spill_64_adjust_spill_slot() {
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use ra
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t0, -4(a1) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t1, -8(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t0, 2045(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t1, 2041(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t0
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t1, -12(a1) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t2, -16(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t1, 2037(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t2, 2033(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t1
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t2, -20(a1) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw t3, -24(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t2, 2029(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw t3, 2025(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t2
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw s0, -28(a1) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw s1, -32(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw s0, 2021(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw s1, 2017(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s0
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw s1, -36(a1) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw s2, -40(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw s1, 2013(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw s2, 2009(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s1
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a1, 1
-; CHECK-RV32-NEXT:    add a1, sp, a1
-; CHECK-RV32-NEXT:    lw a1, -44(a1) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a1, sp, 2047
+; CHECK-RV32-NEXT:    lw a1, 2005(a1) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a0
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a1, -48(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a2, -52(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a1, 2001(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a2, 1997(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a1
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a2, -56(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a3, -60(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a2, 1993(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a3, 1989(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a2
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a3, -64(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a4, -68(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a3, 1985(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a4, 1981(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a3
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a4, -72(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a5, -76(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a4, 1977(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a5, 1973(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a4
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a5, -80(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a6, -84(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a5, 1969(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a6, 1965(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a5
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a6, -88(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a7, -92(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a6, 1961(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a7, 1957(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a6
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw a7, -96(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t0, -100(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw a7, 1953(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t0, 1949(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use a7
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s2, -104(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s3, -108(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s2, 1945(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s3, 1941(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s2
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s3, -112(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s4, -116(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s3, 1937(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s4, 1933(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s3
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s4, -120(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s5, -124(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s4, 1929(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s5, 1925(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s4
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s5, -128(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s6, -132(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s5, 1921(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s6, 1917(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s5
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s6, -136(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s7, -140(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s6, 1913(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s7, 1909(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s6
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s7, -144(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s8, -148(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s7, 1905(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s8, 1901(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s7
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s8, -152(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s9, -156(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s8, 1897(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s9, 1893(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s8
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s9, -160(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s10, -164(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s9, 1889(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s10, 1885(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s9
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s10, -168(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s11, -172(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s10, 1881(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s11, 1877(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s10
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s11, -176(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s11, 1873(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use s11
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t3, -180(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t4, -184(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t3, 1869(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t4, 1865(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t3
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t4, -188(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t5, -192(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t4, 1861(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t5, 1857(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t4
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t5, -204(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t6, -196(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t5, 1845(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t6, 1853(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t5
 ; CHECK-RV32-NEXT:    #NO_APP
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw s0, -208(a0) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lui a0, 1
-; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    lw t6, -200(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw s0, 1841(a0) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    addi a0, sp, 2047
+; CHECK-RV32-NEXT:    lw t6, 1849(a0) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    #APP
 ; CHECK-RV32-NEXT:    # reg use t6
 ; CHECK-RV32-NEXT:    #NO_APP

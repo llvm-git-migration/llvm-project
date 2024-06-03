@@ -27,11 +27,9 @@
   ; CHECK-NEXT:    sub sp, sp, a0
   ; CHECK-NEXT:    ld a0, 8(sp)
   ; CHECK-NEXT:    andi sp, sp, -128
-  ; CHECK-NEXT:    sd a0, 8(sp)
-  ; CHECK-NEXT:    addi a0, sp, 2047
-  ; CHECK-NEXT:    addi a0, a0, 241
-  ; CHECK-NEXT:    vs1r.v v25, (a0) # Unknown-size Folded Spill
-  ; CHECK-NEXT:    ld a0, 8(sp)
+  ; CHECK-NEXT:    addi sp, sp, 2047
+  ; CHECK-NEXT:    addi sp, sp, 241
+  ; CHECK-NEXT:    vs1r.v v25, (sp) # Unknown-size Folded Spill
   ; CHECK-NEXT:    call spillslot
   ; CHECK-NEXT:    addi sp, s0, -2048
   ; CHECK-NEXT:    addi sp, sp, -256

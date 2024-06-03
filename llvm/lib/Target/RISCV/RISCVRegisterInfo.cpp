@@ -511,23 +511,49 @@ bool RISCVRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       // We can encode an add with 12 bit signed immediate in the immediate
       // operand of our user instruction.  As a result, the remaining
       // offset can by construction, at worst, a LUI and a ADD.
+
+      // Special case, try to split the offset across two ADDIs.
+      uint64_t ValSubLo12 = (uint64_t)Val - (uint64_t)Lo12;
+      if (ValSubLo12 == 4096 && (Lo12 > 0 && Lo12 < 2045))
+        Lo12 = Lo12 + 2;
+
+      if (Val > 2048 && Val < 4094)
+        Lo12 = Val - 2047;
       MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Lo12);
       Offset = StackOffset::get((uint64_t)Val - (uint64_t)Lo12,
                                 Offset.getScalable());
     }
   }
 
-  if (Offset.getScalable() || Offset.getFixed()) {
+  int64_t Val = Offset.getFixed();
+  if (Offset.getScalable() || Val) {
     Register DestReg;
-    if (MI.getOpcode() == RISCV::ADDI)
+    if (MI.getOpcode() == RISCV::ADDI) {
       DestReg = MI.getOperand(0).getReg();
-    else
+      adjustReg(*II->getParent(), II, DL, DestReg, FrameReg, Offset,
+                MachineInstr::NoFlags, std::nullopt);
+    } else if (Val && !Offset.getScalable() && (Val > 2047 && Val <= 4094)) {
+      DestReg = FrameReg;
+      int64_t FirstAdj = 2047;
+      Val -= FirstAdj;
+      const RISCVInstrInfo *TII = ST.getInstrInfo();
+      MachineBasicBlock &MBB = *MI.getParent();
+      BuildMI(MBB, II, DL, TII->get(RISCV::ADDI), DestReg)
+          .addReg(DestReg, getKillRegState(false))
+          .addImm(FirstAdj);
+      BuildMI(MBB, II, DL, TII->get(RISCV::ADDI), DestReg)
+          .addReg(DestReg, RegState::Kill)
+          .addImm(Val);
+    } else {
       DestReg = MRI.createVirtualRegister(&RISCV::GPRRegClass);
-    adjustReg(*II->getParent(), II, DL, DestReg, FrameReg, Offset,
-              MachineInstr::NoFlags, std::nullopt);
-    MI.getOperand(FIOperandNum).ChangeToRegister(DestReg, /*IsDef*/false,
-                                                 /*IsImp*/false,
-                                                 /*IsKill*/true);
+      adjustReg(*II->getParent(), II, DL, DestReg, FrameReg, Offset,
+                MachineInstr::NoFlags, std::nullopt);
+    }
+
+    MI.getOperand(FIOperandNum)
+        .ChangeToRegister(DestReg, /*IsDef*/ false,
+                          /*IsImp*/ false,
+                          /*IsKill*/ true);
   } else {
     MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, /*IsDef*/false,
                                                  /*IsImp*/false,
