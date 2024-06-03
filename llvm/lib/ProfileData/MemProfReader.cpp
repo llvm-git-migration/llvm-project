@@ -100,15 +100,30 @@ readMemInfoBlocks(const char *Ptr) {
   using namespace support;
 
   const uint64_t NumItemsToRead =
-      endian::readNext<uint64_t, llvm::endianness::little>(Ptr);
+      endian::readNext<uint64_t, llvm::endianness::little, unaligned>(Ptr);
+
   llvm::SmallVector<std::pair<uint64_t, MemInfoBlock>> Items;
   for (uint64_t I = 0; I < NumItemsToRead; I++) {
     const uint64_t Id =
-        endian::readNext<uint64_t, llvm::endianness::little>(Ptr);
-    const MemInfoBlock MIB = *reinterpret_cast<const MemInfoBlock *>(Ptr);
-    Items.push_back({Id, MIB});
+        endian::readNext<uint64_t, llvm::endianness::little, unaligned>(Ptr);
+    // We cheat a bit here and remove the const from cast to set the
+    // Histogram Pointer to newly allocated buffer.
+    MemInfoBlock MIB = *reinterpret_cast<const MemInfoBlock *>(Ptr);
     // Only increment by size of MIB since readNext implicitly increments.
     Ptr += sizeof(MemInfoBlock);
+    const uint64_t NumHistogreamEntriesToRead =
+        endian::readNext<uint64_t, llvm::endianness::little, unaligned>(Ptr);
+
+    if (NumHistogreamEntriesToRead > 0) {
+      MIB.AccessHistogram =
+          (uintptr_t)malloc(NumHistogreamEntriesToRead * sizeof(uint64_t));
+    }
+
+    for (uint64_t J = 0; J < NumHistogreamEntriesToRead; J++) {
+      ((uint64_t *)MIB.AccessHistogram)[J] =
+          endian::readNext<uint64_t, llvm::endianness::little, unaligned>(Ptr);
+    }
+    Items.push_back({Id, MIB});
   }
   return Items;
 }
@@ -249,6 +264,16 @@ RawMemProfReader::create(std::unique_ptr<MemoryBuffer> Buffer,
     return std::move(E);
   }
   return std::move(Reader);
+}
+
+// We need to make sure that all leftover MIB histograms that have not been
+// freed by merge are freed here.
+RawMemProfReader::~RawMemProfReader() {
+  for (auto &[_, MIB] : CallstackProfileData) {
+    if (MIB.AccessHistogramSize > 0) {
+      free((void *)MIB.AccessHistogram);
+    }
+  }
 }
 
 bool RawMemProfReader::hasFormat(const StringRef Path) {
@@ -636,6 +661,16 @@ Error RawMemProfReader::readRawProfile(
     // stackdepot ids are the same.
     for (const auto &[Id, MIB] : readMemInfoBlocks(Next + Header->MIBOffset)) {
       if (CallstackProfileData.count(Id)) {
+        uintptr_t ShorterHistogram;
+        if (CallstackProfileData[Id].AccessHistogramSize >
+            MIB.AccessHistogramSize)
+          ShorterHistogram = MIB.AccessHistogram;
+        else
+          ShorterHistogram = CallstackProfileData[Id].AccessHistogram;
+        if (CallstackProfileData[Id].AccessHistogramSize > 0 ||
+            MIB.AccessHistogramSize > 0)
+          free((void *)ShorterHistogram);
+
         CallstackProfileData[Id].Merge(MIB);
       } else {
         CallstackProfileData[Id] = MIB;

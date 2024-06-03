@@ -1,0 +1,270 @@
+MemprofProfile:
+  Summary:
+    Version: 4
+    NumSegments: 8
+    NumMibInfo: 5
+    NumAllocFunctions: 3
+    NumStackOffsets: 5
+  Segments:
+  -
+    BuildId: 6485a4d58b11b7b2
+    Start: 0x200000
+    End: 0x2C1360
+    Offset: 0x0
+  -
+    BuildId: 0674131c0aac95074e461ccc3bbde6fbf09519e4
+    Start: 0x7FFE4177D000
+    End: 0x7FFE4177DFEF
+    Offset: 0x7FFE4177D000
+  -
+    BuildId: c4dbaf641b80598d60611f51ff346db22d7b3a08
+    Start: 0x7F5199E9C000
+    End: 0x7F5199FB6729
+    Offset: 0x7F5199E00000
+  -
+    BuildId: a0e34155cd6020abce27d563f5349f6ff5d177f7
+    Start: 0x7F519A16D000
+    End: 0x7F519A1DF901
+    Offset: 0x7F519A15D000
+  -
+    BuildId: 1bc19375144215dc678457634fbe8cfa4c094354
+    Start: 0x7F519A14F000
+    End: 0x7F519A156F31
+    Offset: 0x7F519A14C000
+  -
+    BuildId: e4dc3e4dee7906542ac16da57150ac27f2eb97cb
+    Start: 0x7F519A12B000
+    End: 0x7F519A145B91
+    Offset: 0x7F519A128000
+  -
+    BuildId: b830dcb9c6f0ee1f8679364e0f99ce35db953847
+    Start: 0x7F5199C44000
+    End: 0x7F5199D9835C
+    Offset: 0x7F5199C1E000
+  -
+    BuildId: 5929e480f2858b4b86aa13b1af8840472a3362f4
+    Start: 0x7F519A254000
+    End: 0x7F519A278991
+    Offset: 0x7F519A253000
+  Records:
+  -
+    FunctionGUID: 15822663052811949562
+    AllocSites:
+    -
+      Callstack:
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 2
+        Column: 10
+        Inline: 0
+      MemInfoBlock:
+        AllocCount: 1
+        TotalAccessCount: 5
+        MinAccessCount: 5
+        MaxAccessCount: 5
+        TotalSize: 64
+        MinSize: 64
+        MaxSize: 64
+        AllocTimestamp: 433
+        DeallocTimestamp: 433
+        TotalLifetime: 0
+        MinLifetime: 0
+        MaxLifetime: 0
+        AllocCpuId: 89
+        DeallocCpuId: 89
+        NumMigratedCpu: 0
+        NumLifetimeOverlaps: 0
+        NumSameAllocCpu: 0
+        NumSameDeallocCpu: 0
+        DataTypeId: 0
+        TotalAccessDensity: 7
+        MinAccessDensity: 7
+        MaxAccessDensity: 7
+        TotalLifetimeAccessDensity: 7000
+        MinLifetimeAccessDensity: 7000
+        MaxLifetimeAccessDensity: 7000
+        AccessHistogramSize: 8
+        AccessHistogram: 94292382859984
+        AccessHistogramValues: -1 -1 -1 -1 -1 -1 -1 -1
+    -
+      Callstack:
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 14
+        Column: 10
+        Inline: 0
+      MemInfoBlock:
+        AllocCount: 1
+        TotalAccessCount: 30
+        MinAccessCount: 30
+        MaxAccessCount: 30
+        TotalSize: 64
+        MinSize: 64
+        MaxSize: 64
+        AllocTimestamp: 433
+        DeallocTimestamp: 433
+        TotalLifetime: 0
+        MinLifetime: 0
+        MaxLifetime: 0
+        AllocCpuId: 89
+        DeallocCpuId: 89
+        NumMigratedCpu: 0
+        NumLifetimeOverlaps: 0
+        NumSameAllocCpu: 0
+        NumSameDeallocCpu: 0
+        DataTypeId: 0
+        TotalAccessDensity: 46
+        MinAccessDensity: 46
+        MaxAccessDensity: 46
+        TotalLifetimeAccessDensity: 46000
+        MinLifetimeAccessDensity: 46000
+        MaxLifetimeAccessDensity: 46000
+        AccessHistogramSize: 8
+        AccessHistogram: 94292382860064
+        AccessHistogramValues: -8 -7 -6 -5 -4 -3 -2 -1
+    -
+      Callstack:
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 54
+        Column: 10
+        Inline: 0
+      MemInfoBlock:
+        AllocCount: 1
+        TotalAccessCount: 1
+        MinAccessCount: 1
+        MaxAccessCount: 1
+        TotalSize: 64
+        MinSize: 64
+        MaxSize: 64
+        AllocTimestamp: 434
+        DeallocTimestamp: 434
+        TotalLifetime: 0
+        MinLifetime: 0
+        MaxLifetime: 0
+        AllocCpuId: 89
+        DeallocCpuId: 89
+        NumMigratedCpu: 0
+        NumLifetimeOverlaps: 0
+        NumSameAllocCpu: 0
+        NumSameDeallocCpu: 0
+        DataTypeId: 0
+        TotalAccessDensity: 1
+        MinAccessDensity: 1
+        MaxAccessDensity: 1
+        TotalLifetimeAccessDensity: 1000
+        MinLifetimeAccessDensity: 1000
+        MaxLifetimeAccessDensity: 1000
+        AccessHistogramSize: 8
+        AccessHistogram: 94292382860144
+        AccessHistogramValues: -1 -0 -0 -0 -0 -0 -0 -0
+    CallSites:
+    -
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 59
+        Column: 5
+        Inline: 0
+    -
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 64
+        Column: 5
+        Inline: 0
+  -
+    FunctionGUID: 9191153033785521275
+    AllocSites:
+    -
+      Callstack:
+      -
+        Function: 9191153033785521275
+        SymbolName: _Z3foov
+        LineOffset: 2
+        Column: 10
+        Inline: 0
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 59
+        Column: 5
+        Inline: 0
+      MemInfoBlock:
+        AllocCount: 21
+        TotalAccessCount: 168
+        MinAccessCount: 8
+        MaxAccessCount: 8
+        TotalSize: 1344
+        MinSize: 64
+        MaxSize: 64
+        AllocTimestamp: 434
+        DeallocTimestamp: 434
+        TotalLifetime: 0
+        MinLifetime: 0
+        MaxLifetime: 0
+        AllocCpuId: 89
+        DeallocCpuId: 89
+        NumMigratedCpu: 0
+        NumLifetimeOverlaps: 0
+        NumSameAllocCpu: 20
+        NumSameDeallocCpu: 20
+        DataTypeId: 0
+        TotalAccessDensity: 252
+        MinAccessDensity: 12
+        MaxAccessDensity: 12
+        TotalLifetimeAccessDensity: 252000
+        MinLifetimeAccessDensity: 12000
+        MaxLifetimeAccessDensity: 12000
+        AccessHistogramSize: 8
+        AccessHistogram: 94292382861296
+        AccessHistogramValues: -21 -21 -21 -21 -21 -21 -21 -21
+  -
+    FunctionGUID: 17377440600225628772
+    AllocSites:
+    -
+      Callstack:
+      -
+        Function: 17377440600225628772
+        SymbolName: _Z3barv
+        LineOffset: 2
+        Column: 10
+        Inline: 0
+      -
+        Function: 15822663052811949562
+        SymbolName: main
+        LineOffset: 64
+        Column: 5
+        Inline: 0
+      MemInfoBlock:
+        AllocCount: 21
+        TotalAccessCount: 756
+        MinAccessCount: 36
+        MaxAccessCount: 36
+        TotalSize: 1344
+        MinSize: 64
+        MaxSize: 64
+        AllocTimestamp: 434
+        DeallocTimestamp: 434
+        TotalLifetime: 0
+        MinLifetime: 0
+        MaxLifetime: 0
+        AllocCpuId: 89
+        DeallocCpuId: 89
+        NumMigratedCpu: 0
+        NumLifetimeOverlaps: 0
+        NumSameAllocCpu: 20
+        NumSameDeallocCpu: 20
+        DataTypeId: 0
+        TotalAccessDensity: 1176
+        MinAccessDensity: 56
+        MaxAccessDensity: 56
+        TotalLifetimeAccessDensity: 1176000
+        MinLifetimeAccessDensity: 56000
+        MaxLifetimeAccessDensity: 56000
+        AccessHistogramSize: 8
+        AccessHistogram: 94292382861376
+        AccessHistogramValues: -168 -147 -126 -105 -84 -63 -42 -21
