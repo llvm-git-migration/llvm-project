@@ -1263,11 +1263,22 @@ def EmitC_SubscriptOp : EmitC_Op<"subscript", []> {
 
   let builders = [
     OpBuilder<(ins "TypedValue<ArrayType>":$array, "ValueRange":$indices), [{
-      build($_builder, $_state, array.getType().getElementType(), array, indices);
+      build(
+        $_builder,
+        $_state,
+        emitc::LValueType::get(array.getType().getElementType()),
+        array,
+        indices
+      );
     }]>,
     OpBuilder<(ins "TypedValue<PointerType>":$pointer, "Value":$index), [{
-      build($_builder, $_state, pointer.getType().getPointee(), pointer,
-            ValueRange{index});
+      build(
+        $_builder,
+        $_state,
+        emitc::LValueType::get(pointer.getType().getPointee()),
+        pointer,
+        ValueRange{index}
+      );
     }]>
   ];
 

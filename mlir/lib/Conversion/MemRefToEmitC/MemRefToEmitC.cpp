@@ -158,8 +158,12 @@ struct ConvertStore final : public OpConversionPattern<memref::StoreOp> {
 
     auto subscript = rewriter.create<emitc::SubscriptOp>(
         op.getLoc(), arrayValue, operands.getIndices());
-        
-    rewriter.replaceOpWithNewOp<emitc::AssignOp>(op, subscript,
+
+    subscript.dump();
+    subscript.getResult().dump();
+    operands.getValue().dump();
+
+    rewriter.replaceOpWithNewOp<emitc::AssignOp>(op, subscript.getResult(),
                                                  operands.getValue());
     return success();
   }

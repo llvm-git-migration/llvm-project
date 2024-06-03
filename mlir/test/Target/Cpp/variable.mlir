@@ -9,8 +9,8 @@ func.func @emitc_variable() {
   %c4 = "emitc.variable"(){value = 255 : ui8} : () -> !emitc.lvalue<ui8>
   %c5 = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<!emitc.ptr<i32>>
   %c6 = "emitc.variable"(){value = #emitc.opaque<"NULL">} : () -> !emitc.lvalue<!emitc.ptr<i32>>
-  %c7 = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<!emitc.array<3x7xi32>>
-  %c8 = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.lvalue<!emitc.array<5x!emitc.ptr<i8>>>
+  %c7 = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.array<3x7xi32>
+  %c8 = "emitc.variable"(){value = #emitc.opaque<"">} : () -> !emitc.array<5x!emitc.ptr<i8>>
   return
 }
 // CPP-DEFAULT: void emitc_variable() {

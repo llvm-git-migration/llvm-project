@@ -206,23 +206,18 @@ LogicalResult ApplyOp::verify() {
 /// The assign op requires that the assigned value's type matches the
 /// assigned-to variable type.
 LogicalResult emitc::AssignOp::verify() {
-  Value variable = getVar();
+  TypedValue<emitc::LValueType> variable = getVar();
 
   if (!variable.getDefiningOp())
     return emitOpError() << "cannot assign to block argument";
-  if (!llvm::isa<emitc::LValueType>(variable.getType()))
-    return emitOpError() << "requires first operand (" << variable
-                         << ") to be an lvalue";
 
   Type valueType = getValue().getType();
-  Type variableType = variable.getType().cast<emitc::LValueType>().getValue();
+  Type variableType = variable.getType().getValue();
   if (variableType != valueType)
     return emitOpError() << "requires value's type (" << valueType
                          << ") to match variable's type (" << variableType
                          << ")\n  variable: " << variable
                          << "\n  value: " << getValue() << "\n";
-  if (isa<ArrayType>(variableType))
-    return emitOpError() << "cannot assign to array type";
   return success();
 }
 
@@ -1021,9 +1016,13 @@ emitc::ArrayType::cloneWith(std::optional<ArrayRef<int64_t>> shape,
 LogicalResult mlir::emitc::LValueType::verify(
     llvm::function_ref<mlir::InFlightDiagnostic()> emitError,
     mlir::Type value) {
+  if (llvm::isa<emitc::ArrayType>(value)) {
+    return emitError()
+           << "!emitc.lvalue cannot wrap !emitc.array type";
+  }
   if (llvm::isa<emitc::LValueType>(value)) {
     return emitError()
-           << "!emitc.lvalue type cannot be nested inside another type";
+           << "!emitc.lvalue types cannot be nested";
   }
   return success();
 }
