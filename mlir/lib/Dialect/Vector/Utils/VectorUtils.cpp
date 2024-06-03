@@ -285,9 +285,17 @@ bool vector::isContiguousSlice(MemRefType memrefType, VectorType vectorType) {
 }
 
 std::optional<StaticTileOffsetRange>
-vector::createUnrollIterator(VectorType vType, int64_t targetRank) {
-  if (vType.getRank() <= targetRank)
+vector::createUnrollIterator(VectorType vType, int64_t targetRank,
+                             int64_t *actualRank) {
+  auto reportActualRank = [&](int64_t rank) {
+    if (actualRank)
+      *actualRank = rank;
+  };
+  auto vectorRank = vType.getRank();
+  if (vectorRank <= targetRank) {
+    reportActualRank(vectorRank);
     return {};
+  }
   // Attempt to unroll until targetRank or the first scalable dimension (which
   // cannot be unrolled).
   auto shapeToUnroll = vType.getShape().drop_back(targetRank);
@@ -295,14 +303,17 @@ vector::createUnrollIterator(VectorType vType, int64_t targetRank) {
   auto it =
       std::find(scalableDimsToUnroll.begin(), scalableDimsToUnroll.end(), true);
   auto firstScalableDim = it - scalableDimsToUnroll.begin();
-  if (firstScalableDim == 0)
+  if (firstScalableDim == 0) {
+    reportActualRank(vectorRank);
     return {};
+  }
   // All scalable dimensions should be removed now.
   scalableDimsToUnroll = scalableDimsToUnroll.slice(0, firstScalableDim);
   assert(!llvm::is_contained(scalableDimsToUnroll, true) &&
          "unexpected leading scalable dimension");
   // Create an unroll iterator for leading dimensions.
   shapeToUnroll = shapeToUnroll.slice(0, firstScalableDim);
+  reportActualRank(vectorRank - shapeToUnroll.size());
   return StaticTileOffsetRange(shapeToUnroll, /*unrollStep=*/1);
 }
 

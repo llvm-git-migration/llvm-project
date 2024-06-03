@@ -86,20 +86,24 @@ bool isContiguousSlice(MemRefType memrefType, VectorType vectorType);
 ///
 /// If no leading dimensions can be unrolled an empty optional will be returned.
 ///
+/// The actual rank the vector type can be unrolled to can be discovered by
+/// passing a pointer (to an int64_t) to the optional `actualRank` parameter.
+///
 /// Examples:
 ///
 ///   For vType = vector<2x3x4> and targetRank = 1
 ///
 ///   The resulting iterator will yield:
-///     [0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]
+///     [0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2] (actualRank = 1)
 ///
 ///   For vType = vector<3x[4]x5> and targetRank = 0
 ///
 ///   The scalable dimension blocks unrolling so the iterator yields only:
-///     [0], [1], [2]
+///     [0], [1], [2] (actualRank = 2)
 ///
 std::optional<StaticTileOffsetRange>
-createUnrollIterator(VectorType vType, int64_t targetRank = 1);
+createUnrollIterator(VectorType vType, int64_t targetRank = 1,
+                     int64_t *actualRank = nullptr);
 
 /// A wrapper for getMixedSizes for vector.transfer_read and
 /// vector.transfer_write Ops (for source and destination, respectively).
