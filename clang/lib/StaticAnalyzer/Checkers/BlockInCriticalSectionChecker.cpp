@@ -28,6 +28,8 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 
+#include "MutexModeling.h"
+
 #include <iterator>
 #include <utility>
 #include <variant>
