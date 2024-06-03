@@ -11,7 +11,6 @@
 
 include "mlir/Pass/PassBase.td"
 
-
 //===----------------------------------------------------------------------===//
 // ToLLVM
 //===----------------------------------------------------------------------===//
@@ -29,6 +28,20 @@ def ConvertToLLVMPass : Pass<"convert-to-llvm"> {
     ListOption<"filterDialects", "filter-dialects", "std::string",
                "Test conversion patterns of only the specified dialects">,
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// ToSPIRV
+//===----------------------------------------------------------------------===//
+
+def ConvertToSPIRVPass : Pass<"convert-to-spirv"> {
+  let summary = "Convert to SPIR-V";
+  let description = [{
+    This is a generic pass to convert to SPIR-V.
+  }];
+
+  let constructor = "mlir::createConvertToSPIRVPass()";
+  let options = [];
 }
 
 //===----------------------------------------------------------------------===//
