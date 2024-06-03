@@ -536,6 +536,7 @@ if(LIBC_TYPES_HAS_FLOAT16)
     libc.src.math.fromfpf16
     libc.src.math.fromfpxf16
     libc.src.math.ufromfpf16
+    libc.src.math.ufromfpxf16
   )
 endif()
 
