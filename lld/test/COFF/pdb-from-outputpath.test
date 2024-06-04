@@ -1,0 +1,34 @@
+Replicate this scenario:
+
+$ cat a.c
+struct Foo { int x; };
+int g(struct Foo *p);
+int main() {
+  struct Foo f = {42};
+  return g(&f);
+}
+
+$ cat b.c
+struct Foo { int x; };
+int g(struct Foo *p) { return p->x; }
+
+$ cl -c a.c b.c -Zi -Fdts.pdb
+
+$ lld-link a.obj b.obj -debug -entry:main -nodefaultlib -out:t.exe
+
+RUN: rm -rf %t && mkdir -p %t && mkdir -p %t/lib && cd %t
+
+RUN: yaml2obj %S/Inputs/pdb-type-server-simple-a.yaml -o lib/a.obj
+RUN: yaml2obj %S/Inputs/pdb-type-server-simple-b.yaml -o lib/b.obj
+RUN: llvm-pdbutil yaml2pdb %S/Inputs/pdb-type-server-simple-ts.yaml -pdb ts.pdb
+
+RUN: lld-link lib/a.obj lib/b.obj -debug -entry:main -nodefaultlib -out:t.exe
+RUN: llvm-pdbutil dump -l t.pdb | FileCheck %s
+
+CHECK:                            Lines
+CHECK: ============================================================
+CHECK-LABEL:   Mod 0000 | `{{.*}}a.obj`:
+CHECK:       {{.*}} (MD5: BF69E7E933074E1B7ED1FE8FB395965B)
+CHECK-LABEL:   Mod 0001 | `{{.*}}b.obj`:
+CHECK:       {{.*}} (MD5: DDF8FD35CD67990C5D4147516BE10D0C)
+CHECK-LABEL:   Mod 0002 | `* Linker *`:
