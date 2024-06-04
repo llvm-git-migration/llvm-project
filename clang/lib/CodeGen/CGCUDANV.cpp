@@ -15,10 +15,12 @@
 #include "CGCXXABI.h"
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
+#include "clang/AST/CharUnits.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/Cuda.h"
 #include "clang/CodeGen/CodeGenABITypes.h"
 #include "clang/CodeGen/ConstantInitBuilder.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Frontend/Offloading/Utility.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -35,6 +37,11 @@ constexpr unsigned CudaFatMagic = 0x466243b1;
 constexpr unsigned HIPFatMagic = 0x48495046; // "HIPF"
 
 class CGNVCUDARuntime : public CGCUDARuntime {
+
+  /// The prefix used for function calls and section names (CUDA, HIP, LLVM)
+  StringRef Prefix;
+  /// TODO: We should transition the OpenMP section to LLVM/Offload
+  StringRef SectionPrefix;
 
 private:
   llvm::IntegerType *IntTy, *SizeTy;
@@ -132,6 +139,9 @@ private:
     return DummyFunc;
   }
 
+  Address prepareKernelArgs(CodeGenFunction &CGF, FunctionArgList &Args);
+  Address prepareKernelArgsLLVMOffload(CodeGenFunction &CGF,
+                                       FunctionArgList &Args);
   void emitDeviceStubBodyLegacy(CodeGenFunction &CGF, FunctionArgList &Args);
   void emitDeviceStubBodyNew(CodeGenFunction &CGF, FunctionArgList &Args);
   std::string getDeviceSideName(const NamedDecl *ND) override;
@@ -191,15 +201,11 @@ public:
 } // end anonymous namespace
 
 std::string CGNVCUDARuntime::addPrefixToName(StringRef FuncName) const {
-  if (CGM.getLangOpts().HIP)
-    return ((Twine("hip") + Twine(FuncName)).str());
-  return ((Twine("cuda") + Twine(FuncName)).str());
+  return (Prefix + FuncName).str();
 }
 std::string
 CGNVCUDARuntime::addUnderscoredPrefixToName(StringRef FuncName) const {
-  if (CGM.getLangOpts().HIP)
-    return ((Twine("__hip") + Twine(FuncName)).str());
-  return ((Twine("__cuda") + Twine(FuncName)).str());
+  return ("__" + Prefix + FuncName).str();
 }
 
 static std::unique_ptr<MangleContext> InitDeviceMC(CodeGenModule &CGM) {
@@ -227,6 +233,14 @@ CGNVCUDARuntime::CGNVCUDARuntime(CodeGenModule &CGM)
   SizeTy = CGM.SizeTy;
   VoidTy = CGM.VoidTy;
   PtrTy = CGM.UnqualPtrTy;
+
+  if (CGM.getLangOpts().OffloadViaLLVM) {
+    Prefix = "llvm";
+    SectionPrefix = "omp";
+  } else if (CGM.getLangOpts().HIP)
+    SectionPrefix = Prefix = "hip";
+  else
+    SectionPrefix = Prefix = "cuda";
 }
 
 llvm::FunctionCallee CGNVCUDARuntime::getSetupArgumentFn() const {
@@ -305,18 +319,37 @@ void CGNVCUDARuntime::emitDeviceStub(CodeGenFunction &CGF,
   }
   if (CudaFeatureEnabled(CGM.getTarget().getSDKVersion(),
                          CudaFeature::CUDA_USES_NEW_LAUNCH) ||
-      (CGF.getLangOpts().HIP && CGF.getLangOpts().HIPUseNewLaunchAPI))
+      (CGF.getLangOpts().HIP && CGF.getLangOpts().HIPUseNewLaunchAPI) ||
+      (CGF.getLangOpts().OffloadViaLLVM))
     emitDeviceStubBodyNew(CGF, Args);
   else
     emitDeviceStubBodyLegacy(CGF, Args);
 }
 
-// CUDA 9.0+ uses new way to launch kernels. Parameters are packed in a local
-// array and kernels are launched using cudaLaunchKernel().
-void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
-                                            FunctionArgList &Args) {
-  // Build the shadow stack entry at the very start of the function.
+/// CUDA passes the arguments with a level of indirection. For example, a
+/// (void*, short, void*) is passed as {void **, short *, void **} to the launch
+/// function. For the LLVM/offload launch we flatten the arguments into the
+/// struct directly, thus pass {void *, short, void *}
+Address CGNVCUDARuntime::prepareKernelArgsLLVMOffload(CodeGenFunction &CGF,
+                                                      FunctionArgList &Args) {
+  SmallVector<llvm::Type *> ArgTypes;
+  for (auto &Arg : Args)
+    ArgTypes.push_back(CGF.ConvertTypeForMem(Arg->getType()));
 
+  llvm::StructType *ST = llvm::StructType::create(ArgTypes);
+  Address KernelArgs = CGF.CreateTempAllocaWithoutCast(
+      ST, CharUnits::fromQuantity(16), "kernel_args");
+
+  for (unsigned i = 0; i < Args.size(); ++i) {
+    auto *ArgVal = CGF.Builder.CreateLoad(CGF.GetAddrOfLocalVar(Args[i]));
+    CGF.Builder.CreateStore(ArgVal, CGF.Builder.CreateStructGEP(KernelArgs, i));
+  }
+
+  return KernelArgs;
+}
+
+Address CGNVCUDARuntime::prepareKernelArgs(CodeGenFunction &CGF,
+                                           FunctionArgList &Args) {
   // Calculate amount of space we will need for all arguments.  If we have no
   // args, allocate a single pointer so we still have a valid pointer to the
   // argument array that we can pass to runtime, even if it will be unused.
@@ -331,6 +364,17 @@ void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
         VoidVarPtr, CGF.Builder.CreateConstGEP1_32(
                         PtrTy, KernelArgs.emitRawPointer(CGF), i));
   }
+  return KernelArgs;
+}
+
+// CUDA 9.0+ uses new way to launch kernels. Parameters are packed in a local
+// array and kernels are launched using cudaLaunchKernel().
+void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
+                                            FunctionArgList &Args) {
+  // Build the shadow stack entry at the very start of the function.
+  Address KernelArgs = CGF.getLangOpts().OffloadViaLLVM
+                           ? prepareKernelArgsLLVMOffload(CGF, Args)
+                           : prepareKernelArgs(CGF, Args);
 
   llvm::BasicBlock *EndBlock = CGF.createBasicBlock("setup.end");
 
@@ -1129,8 +1173,9 @@ void CGNVCUDARuntime::transformManagedVars() {
 // registered. The linker will provide a pointer to this section so we can
 // register the symbols with the linked device image.
 void CGNVCUDARuntime::createOffloadingEntries() {
-  StringRef Section = CGM.getLangOpts().HIP ? "hip_offloading_entries"
-                                            : "cuda_offloading_entries";
+  SmallVector<char, 32> Out;
+  StringRef Section = (SectionPrefix + "_offloading_entries").toStringRef(Out);
+
   llvm::Module &M = CGM.getModule();
   for (KernelInfo &I : EmittedKernels)
     llvm::offloading::emitOffloadingEntry(
@@ -1199,7 +1244,9 @@ llvm::Function *CGNVCUDARuntime::finalizeModule() {
     }
     return nullptr;
   }
-  if (CGM.getLangOpts().OffloadingNewDriver && RelocatableDeviceCode)
+  if (CGM.getLangOpts().OffloadViaLLVM)
+    createOffloadingEntries();
+  else if (CGM.getLangOpts().OffloadingNewDriver && RelocatableDeviceCode)
     createOffloadingEntries();
   else
     return makeModuleCtorFunction();
