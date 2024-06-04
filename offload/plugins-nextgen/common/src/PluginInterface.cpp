@@ -549,9 +549,17 @@ Error GenericKernelTy::launch(GenericDeviceTy &GenericDevice, void **ArgPtrs,
   if (!KernelLaunchEnvOrErr)
     return KernelLaunchEnvOrErr.takeError();
 
-  void *KernelArgsPtr =
-      prepareArgs(GenericDevice, ArgPtrs, ArgOffsets, KernelArgs.NumArgs, Args,
-                  Ptrs, *KernelLaunchEnvOrErr);
+  void *KernelArgsPtr;
+
+  // Kernel languages don't use indirection.
+  // TODO: In the new API we should have the "source language" encoded.
+  if (KernelArgs.Flags.IsCUDA) {
+    KernelArgsPtr = KernelArgs.ArgPtrs;
+  } else {
+    KernelArgsPtr =
+        prepareArgs(GenericDevice, ArgPtrs, ArgOffsets, KernelArgs.NumArgs,
+                    Args, Ptrs, *KernelLaunchEnvOrErr);
+  }
 
   uint32_t NumThreads = getNumThreads(GenericDevice, KernelArgs.ThreadLimit);
   uint64_t NumBlocks =

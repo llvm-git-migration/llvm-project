@@ -3268,6 +3268,11 @@ Error AMDGPUKernelTy::launchImpl(GenericDeviceTy &GenericDevice,
                                  uint32_t NumThreads, uint64_t NumBlocks,
                                  KernelArgsTy &KernelArgs, void *Args,
                                  AsyncInfoWrapperTy &AsyncInfoWrapper) const {
+  if (KernelArgs.Flags.IsCUDA) {
+    // For CUDA kernels we compute the number of arguments here.
+    KernelArgs.NumArgs = (ArgsSize - ImplicitArgsSize) / sizeof(void *);
+  }
+
   const uint32_t KernelArgsSize = KernelArgs.NumArgs * sizeof(void *);
 
   if (ArgsSize < KernelArgsSize)
@@ -3310,9 +3315,14 @@ Error AMDGPUKernelTy::launchImpl(GenericDeviceTy &GenericDevice,
   // Copy the explicit arguments.
   // TODO: We should expose the args memory manager alloc to the common part as
   // 	   alternative to copying them twice.
-  if (KernelArgs.NumArgs)
+  if (KernelArgs.NumArgs && !KernelArgs.Flags.IsCUDA) {
     std::memcpy(AllArgs, *static_cast<void **>(Args),
                 sizeof(void *) * KernelArgs.NumArgs);
+  } else {
+    for (uint32_t I = 0; I < KernelArgs.NumArgs; ++I)
+      std::memcpy(advanceVoidPtr(AllArgs, sizeof(void *) * I),
+                  static_cast<void **>(Args)[I], sizeof(void *));
+  }
 
   AMDGPUDeviceTy &AMDGPUDevice = static_cast<AMDGPUDeviceTy &>(GenericDevice);
 
