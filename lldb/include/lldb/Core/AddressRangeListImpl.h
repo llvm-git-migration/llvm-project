@@ -14,6 +14,7 @@
 
 namespace lldb {
 class SBBlock;
+class SBProcess;
 }
 
 namespace lldb_private {
@@ -40,6 +41,7 @@ public:
 
 private:
   friend class lldb::SBBlock;
+  friend class lldb::SBProcess;
 
   AddressRanges &ref();
 
