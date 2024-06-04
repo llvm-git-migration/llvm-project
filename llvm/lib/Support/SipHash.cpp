@@ -6,33 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "siphash.h"
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "llvm/Support/Compiler.h"
+#include <cstdint>
+#include <cstring>
 
 // Lightly adapted from the SipHash reference C implementation by
 // Jean-Philippe Aumasson and Daniel J. Bernstein.
 
-/* default: SipHash-2-4 */
-#ifndef cROUNDS
-#define cROUNDS 2
-#endif
-#ifndef dROUNDS
-#define dROUNDS 4
-#endif
-
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
-
-#define U32TO8_LE(p, v)                                                        \
-  (p)[0] = (uint8_t)((v));                                                     \
-  (p)[1] = (uint8_t)((v) >> 8);                                                \
-  (p)[2] = (uint8_t)((v) >> 16);                                               \
-  (p)[3] = (uint8_t)((v) >> 24);
-
-#define U64TO8_LE(p, v)                                                        \
-  U32TO8_LE((p), (uint32_t)((v)));                                             \
-  U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
 
 #define U8TO64_LE(p)                                                           \
   (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |                          \
@@ -58,21 +39,15 @@
     v2 = ROTL(v2, 32);                                                         \
   } while (0)
 
-/*
-    Computes a SipHash value
-    *in: pointer to input data (read-only)
-    inlen: input data length in bytes (any size_t value)
-    *k: pointer to the key data (read-only), must be 16 bytes
-    *out: pointer to output data (write-only), outlen bytes must be allocated
-    outlen: length of the output in bytes, must be 8 or 16
-*/
-int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
-            const size_t outlen) {
+template <int cROUNDS, int dROUNDS, class ResultTy>
+static inline ResultTy siphash(const unsigned char *in, uint64_t inlen,
+                               const unsigned char (&k)[16]) {
 
   const unsigned char *ni = (const unsigned char *)in;
   const unsigned char *kk = (const unsigned char *)k;
 
-  assert((outlen == 8) || (outlen == 16));
+  static_assert(sizeof(ResultTy) == 8 || sizeof(ResultTy) == 16,
+                "result type should be uint64_t or uint128_t");
   uint64_t v0 = UINT64_C(0x736f6d6570736575);
   uint64_t v1 = UINT64_C(0x646f72616e646f6d);
   uint64_t v2 = UINT64_C(0x6c7967656e657261);
@@ -89,7 +64,7 @@ int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
   v1 ^= k1;
   v0 ^= k0;
 
-  if (outlen == 16)
+  if (sizeof(ResultTy) == 16)
     v1 ^= 0xee;
 
   for (; ni != end; ni += 8) {
@@ -105,22 +80,22 @@ int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
   switch (left) {
   case 7:
     b |= ((uint64_t)ni[6]) << 48;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 6:
     b |= ((uint64_t)ni[5]) << 40;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 5:
     b |= ((uint64_t)ni[4]) << 32;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 4:
     b |= ((uint64_t)ni[3]) << 24;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 3:
     b |= ((uint64_t)ni[2]) << 16;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 2:
     b |= ((uint64_t)ni[1]) << 8;
-    /* FALLTHRU */
+    LLVM_FALLTHROUGH;
   case 1:
     b |= ((uint64_t)ni[0]);
     break;
@@ -135,7 +110,7 @@ int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
 
   v0 ^= b;
 
-  if (outlen == 16)
+  if (sizeof(ResultTy) == 16)
     v2 ^= 0xee;
   else
     v2 ^= 0xff;
@@ -144,10 +119,10 @@ int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
     SIPROUND;
 
   b = v0 ^ v1 ^ v2 ^ v3;
-  U64TO8_LE(out, b);
 
-  if (outlen == 8)
-    return 0;
+  uint64_t firstHalf = b;
+  if (sizeof(ResultTy) == 8)
+    return firstHalf;
 
   v1 ^= 0xdd;
 
@@ -155,7 +130,7 @@ int siphash(const void *in, const size_t inlen, const void *k, uint8_t *out,
     SIPROUND;
 
   b = v0 ^ v1 ^ v2 ^ v3;
-  U64TO8_LE(out + 8, b);
+  uint64_t secondHalf = b;
 
-  return 0;
+  return firstHalf | (ResultTy(secondHalf) << (sizeof(ResultTy) == 8 ? 0 : 64));
 }
