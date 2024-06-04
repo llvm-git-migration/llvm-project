@@ -5,9 +5,22 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+//  This file implements an ABI-stable string hash based on SipHash, used to
+//  compute ptrauth discriminators.
+//
+//===----------------------------------------------------------------------===//
 
+#include "llvm/Support/SipHash.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/Support/Debug.h"
 #include <cstdint>
+
+using namespace llvm;
+
+#define DEBUG_TYPE "llvm-siphash"
 
 // Lightly adapted from the SipHash reference C implementation by
 // Jean-Philippe Aumasson and Daniel J. Bernstein.
@@ -132,4 +145,26 @@ static inline ResultTy siphash(const unsigned char *in, uint64_t inlen,
   uint64_t secondHalf = b;
 
   return firstHalf | (ResultTy(secondHalf) << (sizeof(ResultTy) == 8 ? 0 : 64));
+}
+
+//===--- LLVM-specific wrapper around siphash.
+
+/// Compute an ABI-stable 16-bit hash of the given string.
+uint16_t llvm::getPointerAuthStableSipHash(StringRef Str) {
+  static const uint8_t K[16] = {0xb5, 0xd4, 0xc9, 0xeb, 0x79, 0x10, 0x4a, 0x79,
+                                0x6f, 0xec, 0x8b, 0x1b, 0x42, 0x87, 0x81, 0xd4};
+
+  // The aliasing is fine here because of omnipotent char.
+  const auto *Data = reinterpret_cast<const uint8_t *>(Str.data());
+  uint64_t RawHash = siphash<2, 4, uint64_t>(Data, Str.size(), K);
+
+  // Produce a non-zero 16-bit discriminator.
+  uint16_t Discriminator = (RawHash % 0xFFFF) + 1;
+  LLVM_DEBUG(
+      dbgs() << "ptrauth stable hash discriminator: " << utostr(Discriminator)
+             << " (0x"
+             << utohexstr(Discriminator, /*Lowercase=*/false, /*Width=*/4)
+             << ")"
+             << " of: " << Str << "\n");
+  return Discriminator;
 }
