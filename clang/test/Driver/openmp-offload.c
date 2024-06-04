@@ -38,7 +38,7 @@
 // RUN:   %clang -### -fopenmp=libomp -fopenmp-targets=powerpc64le-ibm-linux-gnu -Xopenmp-target=powerpc64le-ibm-linux-gnu -mcpu=pwr7 %s 2>&1 \
 // RUN:   | FileCheck -check-prefix=CHK-FOPENMP-EQ-TARGET %s
 
-// CHK-FOPENMP-EQ-TARGET: clang{{.*}} "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
+// CHK-FOPENMP-EQ-TARGET: "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
 
 /// ###########################################################################
 
@@ -46,7 +46,7 @@
 // RUN:   %clang -### -fopenmp=libomp -fopenmp-targets=powerpc64le-ibm-linux-gnu -Xopenmp-target -mcpu=pwr7 %s 2>&1 \
 // RUN:   | FileCheck -check-prefix=CHK-FOPENMP-TARGET %s
 
-// CHK-FOPENMP-TARGET: clang{{.*}} "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
+// CHK-FOPENMP-TARGET: "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
 
 /// ##########################################################################
 
@@ -54,7 +54,7 @@
 // RUN:    %clang -### -fopenmp=libomp -fopenmp-targets=powerpc64le-ibm-linux-gnu --target=powerpc64le-ibm-linux-gnu -mcpu=pwr7 %s 2>&1 \
 // RUN:    | FileCheck -check-prefix=CHK-FOPENMP-MCPU-TO-SAME-TRIPLE %s
 
-// CHK-FOPENMP-MCPU-TO-SAME-TRIPLE: clang{{.*}} "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
+// CHK-FOPENMP-MCPU-TO-SAME-TRIPLE: "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
 
 /// ##########################################################################
 
@@ -62,7 +62,7 @@
 // RUN:    not %clang -### -fopenmp=libomp -fopenmp-targets=nvptx64-nvidia-cuda --target=powerpc64le-ibm-linux-gnu -march=pwr7 %s 2>&1 \
 // RUN:    | FileCheck -check-prefix=CHK-FOPENMP-MARCH-TO-GPU %s
 
-// CHK-FOPENMP-MARCH-TO-GPU-NOT: clang{{.*}} "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
+// CHK-FOPENMP-MARCH-TO-GPU-NOT: "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
 
 /// ###########################################################################
 
@@ -70,7 +70,7 @@
 // RUN:    not %clang -### -fopenmp=libomp -fopenmp-targets=x86_64-unknown-linux-gnu --target=powerpc64le-ibm-linux-gnu -march=pwr7 %s 2>&1 \
 // RUN:    | FileCheck -check-prefix=CHK-FOPENMP-MARCH-TO-X86 %s
 
-// CHK-FOPENMP-MARCH-TO-X86-NOT: clang{{.*}} "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
+// CHK-FOPENMP-MARCH-TO-X86-NOT: "-target-cpu" "pwr7" {{.*}}"-fopenmp-is-target-device"
 
 /// ###########################################################################
 
