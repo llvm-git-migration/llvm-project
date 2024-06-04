@@ -614,3 +614,4 @@ TEST_F(GDBRemoteCommunicationClientTest, CalculateMD5) {
   EXPECT_EQ(expected_low, result->low());
   EXPECT_EQ(expected_high, result->high());
 }
+
