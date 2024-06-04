@@ -209,6 +209,14 @@ public:
 
   lldb::addr_t ReadPointerFromMemory(addr_t addr, lldb::SBError &error);
 
+  lldb::SBAddressRangeList FindRangesInMemory(const void *buf, uint64_t size,
+                                              SBAddressRangeList &ranges,
+                                              uint32_t alignment,
+                                              uint32_t max_matches);
+
+  lldb::addr_t FindInMemory(const void *buf, uint64_t size,
+                            SBAddressRange &range, uint32_t alignment);
+
   // Events
   static lldb::StateType GetStateFromEvent(const lldb::SBEvent &event);
 

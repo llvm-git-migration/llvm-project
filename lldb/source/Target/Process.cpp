@@ -2007,6 +2007,123 @@ size_t Process::ReadMemory(addr_t addr, void *buf, size_t size, Status &error) {
   }
 }
 
+void Process::DoFindInMemory(lldb::addr_t start_addr, lldb::addr_t end_addr,
+                             const uint8_t *buf, size_t size,
+                             AddressRanges &matches, size_t alignment,
+                             size_t max_count) {
+  // Inputs are already validated in FindInMemory() functions.
+  assert(buf != nullptr);
+  assert(size > 0);
+  assert(alignment > 0);
+  assert(max_count > 0);
+  assert(start_addr != LLDB_INVALID_ADDRESS);
+  assert(end_addr != LLDB_INVALID_ADDRESS);
+  assert(start_addr < end_addr);
+
+  lldb::addr_t start = start_addr;
+  while (matches.size() < max_count && (start + size) < end_addr) {
+    const lldb::addr_t found_addr = FindInMemory(start, end_addr, buf, size);
+    if (found_addr == LLDB_INVALID_ADDRESS)
+      break;
+    matches.emplace_back(found_addr, size);
+    start = found_addr + alignment;
+  }
+}
+
+Status Process::FindInMemory(AddressRanges &matches, const uint8_t *buf,
+                             size_t size, const AddressRanges &ranges,
+                             size_t alignment, size_t max_count) {
+  Status error;
+  if (alignment == 0) {
+    error.SetErrorStringWithFormat(
+        "invalid alignment %zu, must be greater than 0", alignment);
+    return error;
+  }
+  if (buf == nullptr) {
+    error.SetErrorStringWithFormat("buffer is null");
+    return error;
+  }
+  if (size == 0) {
+    error.SetErrorStringWithFormat("size is zero");
+    return error;
+  }
+  if (ranges.empty()) {
+    error.SetErrorStringWithFormat("ranges in empty");
+    return error;
+  }
+  if (max_count == 0) {
+    error.SetErrorStringWithFormat(
+        "invalid max_count %zu, must be greater than 0", max_count);
+    return error;
+  }
+
+  Target &target = GetTarget();
+  Log *log = GetLog(LLDBLog::Process);
+  for (size_t i = 0; i < ranges.size(); ++i) {
+    if (matches.size() >= max_count) {
+      break;
+    }
+    const AddressRange &range = ranges[i];
+    if (range.IsValid() == false) {
+      LLDB_LOGF(log, "Process::%s range is invalid", __FUNCTION__);
+      continue;
+    }
+
+    const lldb::addr_t start_addr =
+        range.GetBaseAddress().GetLoadAddress(&target);
+    if (start_addr == LLDB_INVALID_ADDRESS) {
+      LLDB_LOGF(log,
+                "Process::%s range load start address is invalid, skipping",
+                __FUNCTION__);
+      continue;
+    }
+    const lldb::addr_t end_addr = start_addr + range.GetByteSize();
+    DoFindInMemory(start_addr, end_addr, buf, size, matches, alignment,
+                   max_count);
+  }
+
+  return Status();
+}
+
+lldb::addr_t Process::FindInMemory(const AddressRange &range,
+                                   const uint8_t *buf, size_t size,
+                                   size_t alignment) {
+  Log *log = GetLog(LLDBLog::Process);
+  if (buf == nullptr) {
+    LLDB_LOGF(log, "Process::%s buffer is null", __FUNCTION__);
+    return LLDB_INVALID_ADDRESS;
+  }
+  if (size == 0) {
+    LLDB_LOGF(log, "Process::%s size is zero", __FUNCTION__);
+    return LLDB_INVALID_ADDRESS;
+  }
+  if (alignment == 0) {
+    LLDB_LOGF(log, "Process::%s alignment is zero, returning", __FUNCTION__);
+    return LLDB_INVALID_ADDRESS;
+  }
+  if (range.IsValid() == false) {
+    LLDB_LOGF(log, "Process::%s range is invalid", __FUNCTION__);
+    return LLDB_INVALID_ADDRESS;
+  }
+
+  Target &target = GetTarget();
+  const lldb::addr_t start_addr =
+      range.GetBaseAddress().GetLoadAddress(&target);
+  if (start_addr == LLDB_INVALID_ADDRESS) {
+    LLDB_LOGF(log, "Process::%s range load start address is invalid, returning",
+              __FUNCTION__);
+    return LLDB_INVALID_ADDRESS;
+  }
+  const lldb::addr_t end_addr = start_addr + range.GetByteSize();
+
+  AddressRanges matches;
+  DoFindInMemory(start_addr, end_addr, buf, size, matches, alignment, 1);
+  if (matches.empty())
+    return LLDB_INVALID_ADDRESS;
+
+  return matches[0].GetBaseAddress().GetLoadAddress(&target);
+}
+
 size_t Process::ReadCStringFromMemory(addr_t addr, std::string &out_str,
                                       Status &error) {
   char buf[256];
