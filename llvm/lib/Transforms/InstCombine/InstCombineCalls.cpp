@@ -1041,10 +1041,9 @@ Instruction *InstCombinerImpl::foldIntrinsicIsFPClass(IntrinsicInst &II) {
   return nullptr;
 }
 
-static std::optional<bool> getKnownSign(Value *Op, Instruction *CxtI,
-                                   const DataLayout &DL, AssumptionCache *AC,
-                                   DominatorTree *DT) {
-  KnownBits Known = computeKnownBits(Op, DL, 0, AC, CxtI, DT);
+std::optional<bool> InstCombinerImpl::getKnownSign(Value *Op,
+                                                   Instruction *CxtI) const {
+  KnownBits Known = llvm::computeKnownBits(Op, DL, /*Depth*/ 0, &AC, CxtI, &DT);
   if (Known.isNonNegative())
     return false;
   if (Known.isNegative())
@@ -1058,13 +1057,10 @@ static std::optional<bool> getKnownSign(Value *Op, Instruction *CxtI,
       ICmpInst::ICMP_SLT, Op, Constant::getNullValue(Op->getType()), CxtI, DL);
 }
 
-static std::optional<bool> getKnownSignOrZero(Value *Op, Instruction *CxtI,
-                                              const DataLayout &DL,
-                                              AssumptionCache *AC,
-                                              DominatorTree *DT) {
-  if (std::optional<bool> Sign = getKnownSign(Op, CxtI, DL, AC, DT))
+std::optional<bool>
+InstCombinerImpl::getKnownSignOrZero(Value *Op, Instruction *CxtI) const {
+  if (std::optional<bool> Sign = getKnownSign(Op, CxtI))
     return Sign;
-
   Value *X, *Y;
   if (match(Op, m_NSWSub(m_Value(X), m_Value(Y))))
     return isImpliedByDomCondition(ICmpInst::ICMP_SLE, X, Y, CxtI, DL);
@@ -1074,12 +1070,11 @@ static std::optional<bool> getKnownSignOrZero(Value *Op, Instruction *CxtI,
 
 /// Return true if two values \p Op0 and \p Op1 are known to have the same sign.
 static bool signBitMustBeTheSame(Value *Op0, Value *Op1, Instruction *CxtI,
-                                 const DataLayout &DL, AssumptionCache *AC,
-                                 DominatorTree *DT) {
-  std::optional<bool> Known1 = getKnownSign(Op1, CxtI, DL, AC, DT);
+                                 InstCombinerImpl &IC) {
+  std::optional<bool> Known1 = IC.getKnownSign(Op1, CxtI);
   if (!Known1)
     return false;
-  std::optional<bool> Known0 = getKnownSign(Op0, CxtI, DL, AC, DT);
+  std::optional<bool> Known0 = IC.getKnownSign(Op0, CxtI);
   if (!Known0)
     return false;
   return *Known0 == *Known1;
@@ -1627,8 +1622,7 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       return replaceOperand(*II, 0, XY);
     }
 
-    if (std::optional<bool> Known =
-            getKnownSignOrZero(IIOperand, II, DL, &AC, &DT)) {
+    if (std::optional<bool> Known = getKnownSignOrZero(IIOperand, II)) {
       // abs(x) -> x if x >= 0 (include abs(x-y) --> x - y where x >= y)
       // abs(x) -> x if x > 0 (include abs(x-y) --> x - y where x > y)
       if (!*Known)
@@ -1753,7 +1747,7 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       bool UseAndN = IID == Intrinsic::smin || IID == Intrinsic::umin;
 
       if (IID == Intrinsic::smax || IID == Intrinsic::smin) {
-        auto KnownSign = getKnownSign(X, II, DL, &AC, &DT);
+        auto KnownSign = getKnownSign(X, II);
         if (KnownSign == std::nullopt) {
           UseOr = false;
           UseAndN = false;
@@ -2614,7 +2608,7 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       FastMathFlags InnerFlags = cast<FPMathOperator>(Src)->getFastMathFlags();
 
       if ((FMF.allowReassoc() && InnerFlags.allowReassoc()) ||
-          signBitMustBeTheSame(Exp, InnerExp, II, DL, &AC, &DT)) {
+          signBitMustBeTheSame(Exp, InnerExp, II, *this)) {
         // TODO: Add nsw/nuw probably safe if integer type exceeds exponent
         // width.
         Value *NewExp = Builder.CreateAdd(InnerExp, Exp);
