@@ -1622,6 +1622,7 @@ bool SelectionDAGBuilder::handleDebugValue(ArrayRef<const Value *> Values,
     SDValue N = NodeMap[V];
     if (!N.getNode() && isa<Argument>(V)) // Check unused arguments map.
       N = UnusedArgNodeMap[V];
+
     if (N.getNode()) {
       // Only emit func arg dbg value for non-variadic dbg.values for now.
       if (!IsVariadic &&
@@ -7706,13 +7707,27 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
   case Intrinsic::fake_use: {
     Value *V = I.getArgOperand(0);
     SDValue Ops[2];
-    // If this fake use uses an argument that has an empty SDValue, it is a
-    // zero-length array or some other type that does not produce a register,
-    // so do not translate a fake use for it.
-    if (isa<Argument>(V) && !NodeMap[V])
+    // For Values not declared or previously used in this basic block, the
+    // NodeMap will not have an entry, and `getValue` will assert if V has no
+    // valid register value.
+    auto FakeUseValue = [&]() -> SDValue {
+      SDValue &N = NodeMap[V];
+      if (N.getNode())
+        return N;
+
+      // If there's a virtual register allocated and initialized for this
+      // value, use it.
+      if (SDValue copyFromReg = getCopyFromRegs(V, V->getType()))
+        return copyFromReg;
+      // FIXME: Do we want to preserve constants? It seems pointless.
+      if (isa<Constant>(V))
+        return getValue(V);
+      return SDValue();
+    }();
+    if (!FakeUseValue || FakeUseValue.isUndef())
       return;
     Ops[0] = getRoot();
-    Ops[1] = getValue(V);
+    Ops[1] = FakeUseValue;
     // Also, do not translate a fake use with an undef operand, or any other
     // empty SDValues.
     if (!Ops[1] || Ops[1].isUndef())

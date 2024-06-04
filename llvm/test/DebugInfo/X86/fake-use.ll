@@ -2,9 +2,20 @@
 
 ; Make sure the fake use of 'b' at the end of 'foo' causes location information for 'b'
 ; to extend all the way to the end of the function.
+; FIXME: We need to use `-debugger-tune=sce` to disable entry values, since otherwise
+; %b will be preserved as one; there doesn't seem to be another way to disable entry
+; values (--debug-entry-values is only used to force-enable them, not disable them).
 
-; RUN: %llc_dwarf -O2 -filetype=obj -dwarf-linkage-names=Abstract < %s | llvm-dwarfdump -v - -o %t
+; RUN: %llc_dwarf -O2 -debugger-tune=sce -filetype=obj -dwarf-linkage-names=Abstract < %s | llvm-dwarfdump --debug-info --debug-line -v - -o %t
 ; RUN: %python %p/Inputs/check-fake-use.py %t
+; RUN: %llc_dwarf -O2 -debugger-tune=sce --global-isel=1 -mtriple=aarch64--linux-gnu -filetype=obj -dwarf-linkage-names=Abstract < %s | llvm-dwarfdump --debug-info --debug-line -v - -o %t
+; RUN: %python %p/Inputs/check-fake-use.py %t
+; RUN: sed -e 's,call void (...) @llvm.fake.use,;,' %s | %llc_dwarf - -O2 -debugger-tune=sce -filetype=obj -dwarf-linkage-names=Abstract | llvm-dwarfdump --debug-info --debug-line -v - -o %t
+; RUN: not %python %p/Inputs/check-fake-use.py %t
+; RUN: sed -e 's,call void (...) @llvm.fake.use,;,' %s \
+; RUN:   | %llc_dwarf - -O2 -debugger-tune=sce --global-isel=1 -mtriple=aarch64--linux-gnu -filetype=obj -dwarf-linkage-names=Abstract \
+; RUN:   | llvm-dwarfdump --debug-info --debug-line -v - -o %t
+; RUN: not %python %p/Inputs/check-fake-use.py %t
 
 ; Generated with:
 ; clang -O2 -g -S -emit-llvm -fextend-this-ptr fake-use.c
@@ -31,11 +42,14 @@ source_filename = "t2.c"
 define i32 @foo(i32 %b, i32 %i) local_unnamed_addr !dbg !13 {
 entry:
   tail call void @llvm.dbg.value(metadata i32 %b, i64 0, metadata !17, metadata !20), !dbg !21
+  %c = add i32 %b, 42
+  %tobool = icmp sgt i32 %c, 2, !dbg !27
+  tail call void asm sideeffect "", "~{rax},~{rbx},~{rcx},~{rdx},~{rsi},~{rdi},~{rbp},~{r8},~{r9},~{r10},~{r11},~{r12},~{r13},~{r14},~{r15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void (...) @bar() #2, !dbg !32
   %idxprom = sext i32 %i to i64, !dbg !22
   %arrayidx = getelementptr inbounds [10 x i32], [10 x i32]* @glob, i64 0, i64 %idxprom, !dbg !22
   %0 = load i32, i32* %arrayidx, align 4, !dbg !22, !tbaa !23
   %mul = shl nsw i32 %0, 1, !dbg !22
-  %tobool = icmp eq i32 %b, 0, !dbg !27
   br i1 %tobool, label %if.end, label %if.then, !dbg !29
 
 if.then:                                          ; preds = %entry
@@ -44,7 +58,7 @@ if.then:                                          ; preds = %entry
   br label %if.end, !dbg !33
 
 if.end:                                           ; preds = %entry, %if.then
-  tail call void (...) @llvm.fake.use(i32 %b), !dbg !34
+  call void (...) @llvm.fake.use(i32 %b), !dbg !34
   ret i32 %mul, !dbg !35
 }
 
