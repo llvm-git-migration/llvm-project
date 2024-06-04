@@ -10,7 +10,8 @@ import sys
 
 DebugInfoPattern = r"\.debug_info contents:"
 SubprogramPattern = r"^0x[0-9a-f]+:\s+DW_TAG_subprogram"
-HighPCPattern = r"DW_AT_high_pc.*0x([0-9a-f]+)"
+ProloguePattern = r"^\s*0x([0-9a-f]+)\s.+prologue_end"
+EpiloguePattern = r"^\s*0x([0-9a-f]+)\s.+epilogue_begin"
 FormalPattern = r"^0x[0-9a-f]+:\s+DW_TAG_formal_parameter"
 LocationPattern = r"DW_AT_location\s+\[DW_FORM_sec_offset\].*0x([a-f0-9]+)"
 DebugLocPattern = r'\[0x([a-f0-9]+),\s+0x([a-f0-9]+)\) ".text":'
@@ -18,11 +19,12 @@ DebugLocPattern = r'\[0x([a-f0-9]+),\s+0x([a-f0-9]+)\) ".text":'
 # States
 LookingForDebugInfo = 0
 LookingForSubProgram = LookingForDebugInfo + 1  # 1
-LookingForHighPC = LookingForSubProgram + 1  # 2
-LookingForFormal = LookingForHighPC + 1  # 3
-LookingForLocation = LookingForFormal + 1  # 4
-DebugLocations = LookingForLocation + 1  # 5
-AllDone = DebugLocations + 1  # 6
+LookingForFormal = LookingForSubProgram + 1  # 2
+LookingForLocation = LookingForFormal + 1  # 3
+DebugLocations = LookingForLocation + 1  # 4
+LookingForPrologue = DebugLocations + 1  # 5
+LookingForEpilogue = LookingForPrologue + 1  # 6
+AllDone = LookingForEpilogue + 1  # 7
 
 # For each state, the state table contains 3-item sublists with the following
 # entries:
@@ -34,15 +36,17 @@ StateTable = [
     # LookingForDebugInfo
     [DebugInfoPattern, LookingForSubProgram, LookingForDebugInfo],
     # LookingForSubProgram
-    [SubprogramPattern, LookingForHighPC, LookingForSubProgram],
-    # LookingForHighPC
-    [HighPCPattern, LookingForFormal, LookingForHighPC],
+    [SubprogramPattern, LookingForFormal, LookingForSubProgram],
     # LookingForFormal
     [FormalPattern, LookingForLocation, LookingForFormal],
     # LookingForLocation
     [LocationPattern, DebugLocations, LookingForFormal],
     # DebugLocations
-    [DebugLocPattern, DebugLocations, AllDone],
+    [DebugLocPattern, DebugLocations, LookingForPrologue],
+    # LookingForPrologue
+    [ProloguePattern, LookingForEpilogue, LookingForPrologue],
+    # LookingForEpilogue
+    [EpiloguePattern, AllDone, LookingForEpilogue],
     # AllDone
     [None, AllDone, AllDone],
 ]
@@ -61,19 +65,18 @@ with open(sys.argv[1], "r") as dwarf_dump_file:
         if State == AllDone:
             break
         Pattern = StateTable[State][StatePattern]
-        # print "State: %d - Searching '%s' for '%s'" % (State, line, Pattern)
         m = re.search(Pattern, line)
         if m:
             # Match. Depending on the state, we extract various values.
-            if State == LookingForHighPC:
-                HighPC = int(m.group(1), 16)
+            if State == LookingForPrologue:
+                PrologueEnd = int(m.group(1), 16)
+            elif State == LookingForEpilogue:
+                EpilogueBegin = int(m.group(1), 16)
             elif State == DebugLocations:
                 # Extract the range values
                 if FirstBeginOffset == -1:
                     FirstBeginOffset = int(m.group(1), 16)
-                    # print "FirstBeginOffset set to %d" % FirstBeginOffset
                 EndOffset = int(m.group(2), 16)
-                # print "EndOffset set to %d" % EndOffset
             State = StateTable[State][NextState]
         else:
             State = StateTable[State][FailState]
@@ -89,11 +92,11 @@ if State != AllDone:
 elif FirstBeginOffset == -1:
     print("Location list for 'b' not found, did the debug info format change?")
     Success = False
-elif FirstBeginOffset != 0 or abs(EndOffset - HighPC) > 16:
+elif FirstBeginOffset > PrologueEnd or EndOffset < EpilogueBegin:
     print("Location list for 'b' does not cover the whole function:")
     print(
-        "Location starts at 0x%x, ends at 0x%x, HighPC = 0x%x"
-        % (FirstBeginOffset, EndOffset, HighPC)
+        "Prologue to Epilogue = [0x%x, 0x%x), Location range = [0x%x, 0x%x)"
+        % (PrologueEnd, EpilogueBegin, FirstBeginOffset, EndOffset)
     )
     Success = False
 
