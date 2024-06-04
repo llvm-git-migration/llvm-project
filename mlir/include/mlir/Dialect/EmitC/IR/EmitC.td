@@ -97,9 +97,9 @@ def EmitC_ApplyOp : EmitC_Op<"apply", [CExpression]> {
   }];
   let arguments = (ins
     Arg<StrAttr, "the operator to apply">:$applicableOperator,
-    EmitCType:$operand
+    AnyTypeOf<[EmitCType, EmitC_LValueType]>:$operand
   );
-  let results = (outs EmitCType:$result);
+  let results = (outs AnyTypeOf<[EmitCType, EmitC_LValueType]>:$result);
   let assemblyFormat = [{
     $applicableOperator `(` $operand `)` attr-dict `:` functional-type($operand, results)
   }];
@@ -835,6 +835,20 @@ def EmitC_LogicalOrOp : EmitC_BinaryOp<"logical_or", [CExpression]> {
   let assemblyFormat = "operands attr-dict `:` type(operands)";
 }
 
+def EmitC_LValueLoadOp : EmitC_Op<"lvalue_load", [
+  TypesMatchWith<"result type matches value type of 'operand'",
+                  "operand", "result",
+                  "::llvm::cast<LValueType>($_self).getValue()">
+]> {
+  let summary = "load an lvalue by assigning it to a local variable";
+  let description = [{}];
+
+  let arguments = (ins EmitC_LValueType:$operand);
+  let results = (outs AnyType:$result);
+
+  let assemblyFormat = "$operand attr-dict `:` type($operand)"; 
+}
+
 def EmitC_MulOp : EmitC_BinaryOp<"mul", [CExpression]> {
   let summary = "Multiplication operation";
   let description = [{
@@ -1009,7 +1023,7 @@ def EmitC_VariableOp : EmitC_Op<"variable", []> {
   }];
 
   let arguments = (ins EmitC_OpaqueOrTypedAttr:$value);
-  let results = (outs EmitCType);
+  let results = (outs AnyTypeOf<[EmitC_ArrayType, EmitC_LValueType]>);
 
   let hasVerifier = 1;
 }
@@ -1079,7 +1093,7 @@ def EmitC_GetGlobalOp : EmitC_Op<"get_global",
   }];
 
   let arguments = (ins FlatSymbolRefAttr:$name);
-  let results = (outs EmitCType:$result);
+  let results = (outs AnyTypeOf<[EmitC_ArrayType, EmitC_LValueType]>:$result);
   let assemblyFormat = "$name `:` type($result) attr-dict";
 }
 
@@ -1137,7 +1151,7 @@ def EmitC_AssignOp : EmitC_Op<"assign", []> {
     ```
   }];
 
-  let arguments = (ins EmitCType:$var, EmitCType:$value);
+  let arguments = (ins EmitC_LValueType:$var, EmitCType:$value);
   let results = (outs);
 
   let hasVerifier = 1;
@@ -1243,15 +1257,26 @@ def EmitC_SubscriptOp : EmitC_Op<"subscript", []> {
       EmitC_PointerType]>,
     "the value to subscript">:$value,
     Variadic<EmitCType>:$indices);
-  let results = (outs EmitCType:$result);
+  let results = (outs EmitC_LValueType:$result);
 
   let builders = [
     OpBuilder<(ins "TypedValue<ArrayType>":$array, "ValueRange":$indices), [{
-      build($_builder, $_state, array.getType().getElementType(), array, indices);
+      build(
+        $_builder,
+        $_state,
+        emitc::LValueType::get(array.getType().getElementType()),
+        array,
+        indices
+      );
     }]>,
     OpBuilder<(ins "TypedValue<PointerType>":$pointer, "Value":$index), [{
-      build($_builder, $_state, pointer.getType().getPointee(), pointer,
-            ValueRange{index});
+      build(
+        $_builder,
+        $_state,
+        emitc::LValueType::get(pointer.getType().getPointee()),
+        pointer,
+        ValueRange{index}
+      );
     }]>
   ];
 

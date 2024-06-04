@@ -298,7 +298,7 @@ static bool shouldBeInlined(ExpressionOp expressionOp) {
   // Do not inline expressions used by subscript operations, since the
   // way the subscript operation translation is implemented requires that
   // variables be materialized.
-  if (isa<emitc::SubscriptOp>(user))
+  if (isa<emitc::SubscriptOp, emitc::GetGlobalOp>(user))
     return false;
 
   // Do not inline expressions used by ops with the CExpression trait. If this
@@ -375,6 +375,14 @@ static LogicalResult printOperation(CppEmitter &emitter,
   // Add name to cache so that `hasValueInScope` works.
   emitter.getOrCreateName(op.getResult());
   return success();
+}
+
+static LogicalResult printOperation(CppEmitter &emitter,
+                                    emitc::LValueLoadOp lValueLoadOp) {
+  if (failed(emitter.emitAssignPrefix(*lValueLoadOp)))
+    return failure();
+
+  return emitter.emitOperand(lValueLoadOp.getOperand());
 }
 
 static LogicalResult printOperation(CppEmitter &emitter,
@@ -1399,7 +1407,7 @@ LogicalResult CppEmitter::emitVariableAssignment(OpResult result) {
 
 LogicalResult CppEmitter::emitVariableDeclaration(OpResult result,
                                                   bool trailingSemicolon) {
-  if (isa<emitc::SubscriptOp>(result.getDefiningOp()))
+  if (isa<emitc::SubscriptOp, emitc::GetGlobalOp>(result.getDefiningOp()))
     return success();
   if (hasValueInScope(result)) {
     return result.getDefiningOp()->emitError(
@@ -1500,9 +1508,10 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
                 emitc::DivOp, emitc::ExpressionOp, emitc::ForOp, emitc::FuncOp,
                 emitc::GlobalOp, emitc::GetGlobalOp, emitc::IfOp,
                 emitc::IncludeOp, emitc::LogicalAndOp, emitc::LogicalNotOp,
-                emitc::LogicalOrOp, emitc::MulOp, emitc::RemOp, emitc::ReturnOp,
-                emitc::SubOp, emitc::SubscriptOp, emitc::UnaryMinusOp,
-                emitc::UnaryPlusOp, emitc::VariableOp, emitc::VerbatimOp>(
+                emitc::LogicalOrOp, emitc::LValueLoadOp, emitc::MulOp,
+                emitc::RemOp, emitc::ReturnOp, emitc::SubOp, emitc::SubscriptOp,
+                emitc::UnaryMinusOp, emitc::UnaryPlusOp, emitc::VariableOp,
+                emitc::VerbatimOp>(
               [&](auto op) { return printOperation(*this, op); })
           // Func ops.
           .Case<func::CallOp, func::FuncOp, func::ReturnOp>(
@@ -1605,6 +1614,8 @@ LogicalResult CppEmitter::emitType(Location loc, Type type) {
       os << "[" << dim << "]";
     return success();
   }
+  if (auto lType = dyn_cast<emitc::LValueType>(type))
+    return emitType(loc, lType.getValue());
   if (auto pType = dyn_cast<emitc::PointerType>(type)) {
     if (isa<ArrayType>(pType.getPointee()))
       return emitError(loc, "cannot emit pointer to array type ") << type;

@@ -63,9 +63,10 @@ static SmallVector<Value> createVariablesForResults(T op,
 
   for (OpResult result : op.getResults()) {
     Type resultType = result.getType();
+    Type varType = emitc::LValueType::get(resultType);
     emitc::OpaqueAttr noInit = emitc::OpaqueAttr::get(context, "");
     emitc::VariableOp var =
-        rewriter.create<emitc::VariableOp>(loc, resultType, noInit);
+        rewriter.create<emitc::VariableOp>(loc, varType, noInit);
     resultVariables.push_back(var);
   }
 
@@ -100,8 +101,6 @@ LogicalResult ForLowering::matchAndRewrite(ForOp forOp,
 
   // Create an emitc::variable op for each result. These variables will be
   // assigned to by emitc::assign ops within the loop body.
-  SmallVector<Value> resultVariables =
-      createVariablesForResults(forOp, rewriter);
   SmallVector<Value> iterArgsVariables =
       createVariablesForResults(forOp, rewriter);
 
@@ -115,18 +114,36 @@ LogicalResult ForLowering::matchAndRewrite(ForOp forOp,
   // Erase the auto-generated terminator for the lowered for op.
   rewriter.eraseOp(loweredBody->getTerminator());
 
+  SmallVector<Value> iterArgsValues;
+  {
+    PatternRewriter::InsertionGuard guard(rewriter);
+    rewriter.setInsertionPointToEnd(loweredBody);
+
+    for (auto &arg : iterArgsVariables) {
+      Type type = cast<emitc::LValueType>(arg.getType()).getValue();
+      iterArgsValues.push_back(
+          rewriter.create<emitc::LValueLoadOp>(loc, type, arg));
+    }
+  }
+
   SmallVector<Value> replacingValues;
   replacingValues.push_back(loweredFor.getInductionVar());
-  replacingValues.append(iterArgsVariables.begin(), iterArgsVariables.end());
+  replacingValues.append(iterArgsValues.begin(), iterArgsValues.end());
 
   rewriter.mergeBlocks(forOp.getBody(), loweredBody, replacingValues);
   lowerYield(iterArgsVariables, rewriter,
              cast<scf::YieldOp>(loweredBody->getTerminator()));
 
   // Copy iterArgs into results after the for loop.
-  assignValues(iterArgsVariables, resultVariables, rewriter, loc);
+  SmallVector<Value> resultValues;
 
-  rewriter.replaceOp(forOp, resultVariables);
+  for (auto &arg : iterArgsVariables) {
+    Type type = cast<emitc::LValueType>(arg.getType()).getValue();
+    resultValues.push_back(
+        rewriter.create<emitc::LValueLoadOp>(loc, type, arg));
+  }
+
+  rewriter.replaceOp(forOp, resultValues);
   return success();
 }
 
@@ -178,7 +195,14 @@ LogicalResult IfLowering::matchAndRewrite(IfOp ifOp,
     lowerRegion(elseRegion, loweredElseRegion);
   }
 
-  rewriter.replaceOp(ifOp, resultVariables);
+  rewriter.setInsertionPointAfter(ifOp);
+  SmallVector<Value> results;
+  for (auto &resVar : resultVariables) {
+    Type type = cast<emitc::LValueType>(resVar.getType()).getValue();
+    results.push_back(rewriter.create<emitc::LValueLoadOp>(loc, type, resVar));
+  }
+
+  rewriter.replaceOp(ifOp, results);
   return success();
 }
 
