@@ -64,7 +64,7 @@ bool SBAddressRange::operator!=(const SBAddressRange &rhs) {
 void SBAddressRange::Clear() {
   LLDB_INSTRUMENT_VA(this);
 
-  m_opaque_up.reset();
+  m_opaque_up->Clear();
 }
 
 bool SBAddressRange::IsValid() const {
@@ -101,3 +101,5 @@ bool SBAddressRange::GetDescription(SBStream &description,
   m_opaque_up->GetDescription(&stream, target.GetSP().get());
   return true;
 }
+
+lldb_private::AddressRange &SBAddressRange::ref() const { return *m_opaque_up; }

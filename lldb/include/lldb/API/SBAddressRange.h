@@ -58,6 +58,8 @@ private:
   friend class SBFunction;
   friend class SBProcess;
 
+  lldb_private::AddressRange &ref() const;
+
   AddressRangeUP m_opaque_up;
 };
 
