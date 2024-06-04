@@ -4745,6 +4745,39 @@ static Instruction *foldICmpAndXX(ICmpInst &I, const SimplifyQuery &Q,
                           Constant::getNullValue(Op1->getType()));
   }
 
+  if (!ICmpInst::isSigned(Pred))
+    return nullptr;
+
+  // (X & NegY) spred X --> (X & NegY) upred X
+  if (IC.getKnownSign(A, &I).value_or(false))
+    return new ICmpInst(ICmpInst::getUnsignedPredicate(Pred), Op0, Op1);
+
+  if (Pred != ICmpInst::ICMP_SLE && Pred != ICmpInst::ICMP_SGT)
+    return nullptr;
+
+  if (!IC.getKnownSignOrZero(A, &I).value_or(true)) {
+    // (X & PosY) s<= X --> X s>= 0
+    if (Pred == ICmpInst::ICMP_SLE)
+      return new ICmpInst(ICmpInst::ICMP_SGE, Op1,
+                          Constant::getNullValue(Op1->getType()));
+    // (X & PosY) s> X --> X s< 0
+    if (Pred == ICmpInst::ICMP_SGT)
+      return new ICmpInst(ICmpInst::ICMP_SLT, Op1,
+                          Constant::getNullValue(Op1->getType()));
+  }
+
+  if (IC.getKnownSign(Op1, &I).value_or(false)) {
+    // (NegX & Y) s> NegX --> Y s>= 0
+    if (Pred == ICmpInst::ICMP_SGT)
+      return new ICmpInst(ICmpInst::ICMP_SGE, A,
+                          Constant::getNullValue(A->getType()));
+
+    // (NegX & Y) s<= NegX --> Y s< 0
+    if (Pred == ICmpInst::ICMP_SLE)
+      return new ICmpInst(ICmpInst::ICMP_SLT, A,
+                          Constant::getNullValue(A->getType()));
+  }
+
   return nullptr;
 }
 
