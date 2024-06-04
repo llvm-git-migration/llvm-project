@@ -92,3 +92,7 @@ bool SBAddressRangeList::GetDescription(SBStream &description,
   stream << "]";
   return true;
 }
+
+lldb_private::AddressRanges &SBAddressRangeList::ref() const {
+  return m_opaque_up->ref();
+}
