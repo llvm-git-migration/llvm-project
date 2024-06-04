@@ -3386,6 +3386,41 @@ LegalizerHelper::bitcastInsertVectorElt(MachineInstr &MI, unsigned TypeIdx,
   return UnableToLegalize;
 }
 
+LegalizerHelper::LegalizeResult
+LegalizerHelper::bitcastConcatVector(MachineInstr &MI, unsigned TypeIdx,
+                                     LLT CastTy) {
+  // Convert it to CONCAT instruction
+  auto ConcatMI = dyn_cast<GConcatVectors>(&MI);
+  if (!ConcatMI) {
+    return UnableToLegalize;
+  }
+
+  // Check if bitcast is Legal
+  auto [DstReg, DstTy, SrcReg, SrcTy] = MI.getFirst2RegLLTs();
+  LLT SrcScalTy = LLT::scalar(SrcTy.getSizeInBits());
+
+  // Check if the build vector is Legal
+  if (!LI.isLegal({TargetOpcode::G_BUILD_VECTOR, {CastTy, SrcScalTy}})) {
+    return UnableToLegalize;
+  }
+
+  // Bitcast the sources
+  SmallVector<Register> BitcastRegs;
+  for (unsigned i = 0; i < ConcatMI->getNumSources(); i++) {
+    BitcastRegs.push_back(
+        MIRBuilder.buildBitcast(SrcScalTy, ConcatMI->getSourceReg(i))
+            .getReg(0));
+  }
+
+  // Build the scalar values into a vector
+  Register BuildReg =
+      MIRBuilder.buildBuildVector(CastTy, BitcastRegs).getReg(0);
+  MIRBuilder.buildBitcast(DstReg, BuildReg);
+
+  MI.eraseFromParent();
+  return Legalized;
+}
+
 LegalizerHelper::LegalizeResult LegalizerHelper::lowerLoad(GAnyLoad &LoadMI) {
   // Lower to a memory-width G_LOAD and a G_SEXT/G_ZEXT/G_ANYEXT
   Register DstReg = LoadMI.getDstReg();
@@ -3687,6 +3722,8 @@ LegalizerHelper::bitcast(MachineInstr &MI, unsigned TypeIdx, LLT CastTy) {
     return bitcastExtractVectorElt(MI, TypeIdx, CastTy);
   case TargetOpcode::G_INSERT_VECTOR_ELT:
     return bitcastInsertVectorElt(MI, TypeIdx, CastTy);
+  case TargetOpcode::G_CONCAT_VECTORS:
+    return bitcastConcatVector(MI, TypeIdx, CastTy);
   default:
     return UnableToLegalize;
   }
