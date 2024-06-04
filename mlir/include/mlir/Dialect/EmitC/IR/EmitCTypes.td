@@ -83,6 +83,23 @@ def EmitC_ArrayType : EmitC_Type<"Array", "array", [ShapedTypeInterface]> {
   let hasCustomAssemblyFormat = 1;
 }
 
+def EmitC_LValueType : EmitC_Type<"LValue", "lvalue"> {
+  let summary = "EmitC lvalue type";
+
+  let description = [{
+    Values of this type can be assigned to and their address can be taken.
+  }];
+
+  let parameters = (ins "Type":$value);
+  let builders = [
+    TypeBuilderWithInferredContext<(ins "Type":$value), [{
+      return $_get(value.getContext(), value);
+    }]>
+  ];
+  let assemblyFormat = "`<` qualified($value) `>`";
+  let genVerifyDecl = 1;
+}
+
 def EmitC_OpaqueType : EmitC_Type<"Opaque", "opaque"> {
   let summary = "EmitC opaque type";
 
@@ -128,6 +145,7 @@ def EmitC_PointerType : EmitC_Type<"Pointer", "ptr"> {
     }]>
   ];
   let assemblyFormat = "`<` qualified($pointee) `>`";
+  let genVerifyDecl = 1;
 }
 
 #endif // MLIR_DIALECT_EMITC_IR_EMITCTYPES

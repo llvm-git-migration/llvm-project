@@ -88,26 +88,17 @@ func.func @array_result() {
 
 // -----
 
-func.func @empty_operator(%arg : i32) {
+func.func @empty_operator(%arg : !emitc.lvalue<i32>) {
     // expected-error @+1 {{'emitc.apply' op applicable operator must not be empty}}
-    %2 = emitc.apply ""(%arg) : (i32) -> !emitc.ptr<i32>
+    %2 = emitc.apply ""(%arg) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
     return
 }
 
 // -----
 
-func.func @illegal_operator(%arg : i32) {
+func.func @illegal_operator(%arg : !emitc.lvalue<i32>) {
     // expected-error @+1 {{'emitc.apply' op applicable operator is illegal}}
-    %2 = emitc.apply "+"(%arg) : (i32) -> !emitc.ptr<i32>
-    return
-}
-
-// -----
-
-func.func @illegal_operand() {
-    %1 = "emitc.constant"(){value = 42: i32} : () -> i32
-    // expected-error @+1 {{'emitc.apply' op cannot apply to constant}}
-    %2 = emitc.apply "&"(%1) : (i32) -> !emitc.ptr<i32>
+    %2 = emitc.apply "+"(%arg) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
     return
 }
 
@@ -115,7 +106,7 @@ func.func @illegal_operand() {
 
 func.func @var_attribute_return_type_1() {
     // expected-error @+1 {{'emitc.variable' op requires attribute to either be an #emitc.opaque attribute or it's type ('i64') to match the op's result type ('i32')}}
-    %c0 = "emitc.variable"(){value = 42: i64} : () -> i32
+    %c0 = "emitc.variable"(){value = 42: i64} : () -> !emitc.lvalue<i32>
     return
 }
 
@@ -123,7 +114,7 @@ func.func @var_attribute_return_type_1() {
 
 func.func @var_attribute_return_type_2() {
     // expected-error @+1 {{'emitc.variable' op attribute 'value' failed to satisfy constraint: An opaque attribute or TypedAttr instance}}
-    %c0 = "emitc.variable"(){value = unit} : () -> i32
+    %c0 = "emitc.variable"(){value = unit} : () -> !emitc.lvalue<i32>
     return
 }
 
@@ -234,18 +225,18 @@ func.func @test_misplaced_yield() {
 
 // -----
 
-func.func @test_assign_to_non_variable(%arg1: f32, %arg2: f32) {
-  // expected-error @+1 {{'emitc.assign' op requires first operand (<block argument> of type 'f32' at index: 1) to be a Variable or subscript}}
-  emitc.assign %arg1 : f32 to %arg2 : f32
+func.func @test_assign_to_non_variable(%arg1: f32, %arg2: !emitc.lvalue<f32>) {
+  // expected-error @+1 {{'emitc.assign' op cannot assign to block argument}}
+  emitc.assign %arg1 : f32 to %arg2 : !emitc.lvalue<f32>
   return
 }
 
 // -----
 
 func.func @test_assign_type_mismatch(%arg1: f32) {
-  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> i32
+  %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
   // expected-error @+1 {{'emitc.assign' op requires value's type ('f32') to match variable's type ('i32')}}
-  emitc.assign %arg1 : f32 to %v : i32
+  emitc.assign %arg1 : f32 to %v : !emitc.lvalue<i32>
   return
 }
 
@@ -253,7 +244,7 @@ func.func @test_assign_type_mismatch(%arg1: f32) {
 
 func.func @test_assign_to_array(%arg1: !emitc.array<4xi32>) {
   %v = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.array<4xi32>
-  // expected-error @+1 {{'emitc.assign' op cannot assign to array type}}
+  // expected-error @+1 {{invalid kind of Type specified}}
   emitc.assign %arg1 : !emitc.array<4xi32> to %v : !emitc.array<4xi32>
   return
 }
@@ -392,7 +383,7 @@ func.func @logical_or_resulterror(%arg0: i32, %arg1: i32) {
 
 func.func @test_subscript_array_indices_mismatch(%arg0: !emitc.array<4x8xf32>, %arg1: index) {
   // expected-error @+1 {{'emitc.subscript' op on array operand requires number of indices (1) to match the rank of the array type (2)}}
-  %0 = emitc.subscript %arg0[%arg1] : (!emitc.array<4x8xf32>, index) -> f32
+  %0 = emitc.subscript %arg0[%arg1] : (!emitc.array<4x8xf32>, index) -> !emitc.lvalue<f32>
   return
 }
 
@@ -400,7 +391,7 @@ func.func @test_subscript_array_indices_mismatch(%arg0: !emitc.array<4x8xf32>, %
 
 func.func @test_subscript_array_index_type_mismatch(%arg0: !emitc.array<4x8xf32>, %arg1: index, %arg2: f32) {
   // expected-error @+1 {{'emitc.subscript' op on array operand requires index operand 1 to be integer-like, but got 'f32'}}
-  %0 = emitc.subscript %arg0[%arg1, %arg2] : (!emitc.array<4x8xf32>, index, f32) -> f32
+  %0 = emitc.subscript %arg0[%arg1, %arg2] : (!emitc.array<4x8xf32>, index, f32) -> !emitc.lvalue<f32>
   return
 }
 
@@ -408,7 +399,7 @@ func.func @test_subscript_array_index_type_mismatch(%arg0: !emitc.array<4x8xf32>
 
 func.func @test_subscript_array_type_mismatch(%arg0: !emitc.array<4x8xf32>, %arg1: index, %arg2: index) {
   // expected-error @+1 {{'emitc.subscript' op on array operand requires element type ('f32') and result type ('i32') to match}}
-  %0 = emitc.subscript %arg0[%arg1, %arg2] : (!emitc.array<4x8xf32>, index, index) -> i32
+  %0 = emitc.subscript %arg0[%arg1, %arg2] : (!emitc.array<4x8xf32>, index, index) -> !emitc.lvalue<i32>
   return
 }
 
@@ -416,7 +407,7 @@ func.func @test_subscript_array_type_mismatch(%arg0: !emitc.array<4x8xf32>, %arg
 
 func.func @test_subscript_ptr_indices_mismatch(%arg0: !emitc.ptr<f32>, %arg1: index) {
   // expected-error @+1 {{'emitc.subscript' op on pointer operand requires one index operand, but got 2}}
-  %0 = emitc.subscript %arg0[%arg1, %arg1] : (!emitc.ptr<f32>, index, index) -> f32
+  %0 = emitc.subscript %arg0[%arg1, %arg1] : (!emitc.ptr<f32>, index, index) -> !emitc.lvalue<f32>
   return
 }
 
@@ -424,7 +415,7 @@ func.func @test_subscript_ptr_indices_mismatch(%arg0: !emitc.ptr<f32>, %arg1: in
 
 func.func @test_subscript_ptr_index_type_mismatch(%arg0: !emitc.ptr<f32>, %arg1: f64) {
   // expected-error @+1 {{'emitc.subscript' op on pointer operand requires index operand to be integer-like, but got 'f64'}}
-  %0 = emitc.subscript %arg0[%arg1] : (!emitc.ptr<f32>, f64) -> f32
+  %0 = emitc.subscript %arg0[%arg1] : (!emitc.ptr<f32>, f64) -> !emitc.lvalue<f32>
   return
 }
 
@@ -432,7 +423,7 @@ func.func @test_subscript_ptr_index_type_mismatch(%arg0: !emitc.ptr<f32>, %arg1:
 
 func.func @test_subscript_ptr_type_mismatch(%arg0: !emitc.ptr<f32>, %arg1: index) {
   // expected-error @+1 {{'emitc.subscript' op on pointer operand requires pointee type ('f32') and result type ('f64') to match}}
-  %0 = emitc.subscript %arg0[%arg1] : (!emitc.ptr<f32>, index) -> f64
+  %0 = emitc.subscript %arg0[%arg1] : (!emitc.ptr<f32>, index) -> !emitc.lvalue<f64>
   return
 }
 
@@ -443,10 +434,20 @@ emitc.global extern static @uninit : i32
 
 // -----
 
-emitc.global @myglobal : !emitc.array<2xf32>
+emitc.global @myglobal_array : !emitc.array<2xf32>
 
 func.func @use_global() {
-  // expected-error @+1 {{'emitc.get_global' op result type 'f32' does not match type '!emitc.array<2xf32>' of the global @myglobal}}
-  %0 = emitc.get_global @myglobal : f32
+  // expected-error @+1 {{'emitc.get_global' op on array type expects result type '!emitc.array<3xf32>' to match type '!emitc.array<2xf32>' of the global @myglobal_array}}
+  %0 = emitc.get_global @myglobal_array : !emitc.array<3xf32>
+  return
+}
+
+// -----
+
+emitc.global @myglobal_scalar : f32
+
+func.func @use_global() {
+  // expected-error @+1 {{'emitc.get_global' op on non-array type expects result inner type 'i32' to match type 'f32' of the global @myglobal_scalar}}
+  %0 = emitc.get_global @myglobal_scalar : !emitc.lvalue<i32>
   return
 }
