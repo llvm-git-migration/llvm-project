@@ -1075,9 +1075,8 @@ void AsmPrinter::emitFunctionEntryLabel() {
 
 // Recognize cases where a spilled register is reloaded solely to feed into a
 // FAKE_USE.
-static bool isLoadFeedingIntoFakeUse(const MachineInstr &MI) {
+static bool isLoadFeedingIntoFakeUse(const MachineInstr &MI, const TargetInstrInfo *TII) {
   const MachineFunction *MF = MI.getMF();
-  const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
   // If the restore size is std::nullopt then we are not dealing with a reload
   // of a spilled register.
@@ -1110,7 +1109,7 @@ static void emitComments(const MachineInstr &MI, raw_ostream &CommentOS) {
   // instruction, meaning the load value has no effect on the program and has
   // only been kept alive for debugging; since it is still available on the
   // stack, we can skip the load itself.
-  if (isLoadFeedingIntoFakeUse(MI))
+  if (isLoadFeedingIntoFakeUse(MI, TII))
     return;
 
   // Check for spills and reloads
@@ -1748,6 +1747,7 @@ void AsmPrinter::emitFunctionBody() {
   bool HasAnyRealCode = false;
   int NumInstsInFunction = 0;
   bool IsEHa = MMI->getModule()->getModuleFlag("eh-asynch");
+  const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
   bool CanDoExtraAnalysis = ORE->allowExtraAnalysis(DEBUG_TYPE);
   for (auto &MBB : *MF) {
@@ -1855,7 +1855,7 @@ void AsmPrinter::emitFunctionBody() {
         // FAKE_USE instruction, meaning the load value has no effect on the
         // program and has only been kept alive for debugging; since it is
         // still available on the stack, we can skip the load itself.
-        if (isLoadFeedingIntoFakeUse(MI))
+        if (isLoadFeedingIntoFakeUse(MI, TII))
           break;
         emitInstruction(&MI);
         if (CanDoExtraAnalysis) {
