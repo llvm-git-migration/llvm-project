@@ -5751,8 +5751,10 @@ struct AANonConvergent : public StateWrapper<BooleanState, AbstractAttribute> {
 
 /// An abstract interface for struct information.
 struct AAPointerInfo : public AbstractAttribute {
+protected:
   AAPointerInfo(const IRPosition &IRP) : AbstractAttribute(IRP) {}
 
+public:
   /// See AbstractAttribute::isValidIRPositionForInit
   static bool isValidIRPositionForInit(Attributor &A, const IRPosition &IRP) {
     if (!IRP.getAssociatedType()->isPtrOrPtrVectorTy())
@@ -6106,6 +6108,56 @@ struct AAPointerInfo : public AbstractAttribute {
     Type *Ty;
   };
 
+  /// A helper containing a list of offsets computed for a Use. Ideally this
+  /// list should be strictly ascending, but we ensure that only when we
+  /// actually translate the list of offsets to a RangeList.
+  struct OffsetInfo {
+    using VecTy = SmallVector<int64_t>;
+    using const_iterator = VecTy::const_iterator;
+    VecTy Offsets;
+
+    const_iterator begin() const { return Offsets.begin(); }
+    const_iterator end() const { return Offsets.end(); }
+
+    bool operator==(const OffsetInfo &RHS) const {
+      return Offsets == RHS.Offsets;
+    }
+
+    bool operator!=(const OffsetInfo &RHS) const { return !(*this == RHS); }
+
+    void insert(int64_t Offset) { Offsets.push_back(Offset); }
+    bool isUnassigned() const { return Offsets.empty(); }
+
+    bool isUnknown() const {
+      if (isUnassigned())
+        return false;
+      if (Offsets.size() == 1)
+        return Offsets.front() == AA::RangeTy::Unknown;
+      return false;
+    }
+
+    void setUnknown() {
+      Offsets.clear();
+      Offsets.push_back(AA::RangeTy::Unknown);
+    }
+
+    void addToAll(int64_t Inc) {
+      for (auto &Offset : Offsets)
+        Offset += Inc;
+    }
+
+    /// Copy offsets from \p R into the current list.
+    ///
+    /// Ideally all lists should be strictly ascending, but we defer that to the
+    /// actual use of the list. So we just blindly append here.
+    void merge(const OffsetInfo &R) {
+      Offsets.append(R.Offsets);
+      // ensure elements are unique.
+      sort(Offsets.begin(), Offsets.end());
+      Offsets.erase(std::unique(Offsets.begin(), Offsets.end()), Offsets.end());
+    }
+  };
+
   /// Create an abstract attribute view for the position \p IRP.
   static AAPointerInfo &createForPosition(const IRPosition &IRP, Attributor &A);
 
@@ -6120,6 +6172,9 @@ struct AAPointerInfo : public AbstractAttribute {
   virtual const_bin_iterator begin() const = 0;
   virtual const_bin_iterator end() const = 0;
   virtual int64_t numOffsetBins() const = 0;
+  virtual void dumpState(raw_ostream &O) const = 0;
+  virtual const Access &getBinAccess(unsigned Index) const = 0;
+  virtual const DenseMap<Value *, OffsetInfo> &getOffsetInfoMap() const = 0;
 
   /// Call \p CB on all accesses that might interfere with \p Range and return
   /// true if all such accesses were known and the callback returned true for
@@ -6148,6 +6203,9 @@ struct AAPointerInfo : public AbstractAttribute {
   static bool classof(const AbstractAttribute *AA) {
     return (AA->getIdAddr() == &ID);
   }
+
+  /// Offsets Info Map
+  DenseMap<Value *, OffsetInfo> OffsetInfoMap;
 
   /// Unique ID (due to the unique address)
   static const char ID;
@@ -6285,11 +6343,105 @@ struct AAAllocationInfo : public StateWrapper<BooleanState, AbstractAttribute> {
     return AbstractAttribute::isValidIRPositionForInit(A, IRP);
   }
 
+  // A helper function to check if simplified values exists for the current
+  // instruction.
+  // TODO: handle case for a similified value
+  // Right now we don't change the value and give up
+  // on modifying the size and offsets of the allocation
+  // this may be sub-optimal
+  bool checkIfSimplifiedValuesExists(Attributor &A, Instruction *LocalInst) {
+
+    // If there are potential values that replace the accessed instruction, we
+    // should use those instead
+    bool UsedAssumedInformation = false;
+    SmallVector<AA::ValueAndContext> Values;
+    if (A.getAssumedSimplifiedValues(IRPosition::inst(*LocalInst), *this,
+                                     Values, AA::AnyScope,
+                                     UsedAssumedInformation))
+
+      for (auto &ValAndContext : Values)
+        // don't modify instruction if any simplified value exists
+        if (ValAndContext.getValue() && ValAndContext.getValue() != LocalInst)
+          return true;
+
+    return false;
+  }
+
+  // A helper function to back track the pointer operand to
+  // a GEP that calculates the pointer operand from the original allocation.
+  // So that we can correct the type of the GEP.
+  // If such a GEP is not found, we return nullptr.
+  Instruction *
+  backTrackPointerOperandToGepFromAllocation(Instruction *PointerOperand,
+                                             Instruction *Allocation) {
+
+    SmallVector<Instruction *> ReadyList;
+    ReadyList.push_back(PointerOperand);
+    while (!ReadyList.empty()) {
+      Instruction *Back = ReadyList.back();
+      ReadyList.pop_back();
+
+      if (Back == Allocation)
+        continue;
+
+      for (auto *It = Back->op_begin(); It != Back->op_end(); It++) {
+        Instruction *OperandInstruction = dyn_cast<Instruction>(It);
+
+        if (!OperandInstruction)
+          continue;
+
+        // This is the GEP instruction whose type and offsets we can change
+        // without any illegal memory access or poison result.
+        if (Back->getOpcode() == Instruction::GetElementPtr &&
+            OperandInstruction == Allocation)
+          return Back;
+
+        ReadyList.push_back(OperandInstruction);
+      }
+    }
+    return nullptr;
+  }
+
+  bool checkIfAccessChainUsesMultipleBins(
+      Attributor &A, Instruction *LocalInst,
+      const DenseMap<Value *, AAPointerInfo::OffsetInfo> &OffsetInfoMap) {
+
+    // BackTrack and check if there are multiple bins for instructions in
+    // the
+    // chain
+    std::vector<Instruction *> ReadyList;
+    DenseMap<Instruction *, bool> Visited;
+    ReadyList.push_back(LocalInst);
+    while (!ReadyList.empty()) {
+      Instruction *GetBack = ReadyList.back();
+      ReadyList.pop_back();
+      // check if the Instruction has multiple bins, if so give up
+      // for calls it is okay to have multiple bins
+      // TODO: handle when one instruction has multiple bins
+      auto OffsetsVecArg = OffsetInfoMap.lookup(GetBack).Offsets;
+      if (GetBack->getOpcode() != Instruction::Call && OffsetsVecArg.size() > 1)
+        return true;
+
+      for (auto *It = GetBack->op_begin(); It != GetBack->op_end(); It++) {
+        if (Instruction *Ins = dyn_cast<Instruction>(*It)) {
+          if (!Visited[Ins])
+            ReadyList.push_back(Ins);
+        }
+      }
+      Visited[GetBack] = true;
+    }
+
+    return false;
+  }
+
   /// Create an abstract attribute view for the position \p IRP.
   static AAAllocationInfo &createForPosition(const IRPosition &IRP,
                                              Attributor &A);
 
   virtual std::optional<TypeSize> getAllocatedSize() const = 0;
+
+  using NewOffsetsTy = DenseMap<AA::RangeTy, AA::RangeTy>;
+  virtual const NewOffsetsTy &getNewOffsets() const = 0;
 
   /// See AbstractAttribute::getName()
   const std::string getName() const override { return "AAAllocationInfo"; }
