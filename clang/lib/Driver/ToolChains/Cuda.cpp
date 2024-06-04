@@ -858,17 +858,15 @@ void CudaToolChain::addClangTargetOptions(
           DeviceOffloadingKind == Action::OFK_Cuda) &&
          "Only OpenMP or CUDA offloading kinds are supported for NVIDIA GPUs.");
 
-  if (DeviceOffloadingKind == Action::OFK_Cuda) {
-    CC1Args.append(
-        {"-fcuda-is-device", "-mllvm", "-enable-memcpyopt-without-libcalls"});
+  CC1Args.append(
+      {"-fcuda-is-device", "-mllvm", "-enable-memcpyopt-without-libcalls"});
 
-    // Unsized function arguments used for variadics were introduced in CUDA-9.0
-    // We still do not support generating code that actually uses variadic
-    // arguments yet, but we do need to allow parsing them as recent CUDA
-    // headers rely on that. https://github.com/llvm/llvm-project/issues/58410
-    if (CudaInstallation.version() >= CudaVersion::CUDA_90)
-      CC1Args.push_back("-fcuda-allow-variadic-functions");
-  }
+  // Unsized function arguments used for variadics were introduced in CUDA-9.0
+  // We still do not support generating code that actually uses variadic
+  // arguments yet, but we do need to allow parsing them as recent CUDA
+  // headers rely on that. https://github.com/llvm/llvm-project/issues/58410
+  if (CudaInstallation.version() >= CudaVersion::CUDA_90)
+    CC1Args.push_back("-fcuda-allow-variadic-functions");
 
   if (DriverArgs.hasArg(options::OPT_nogpulib))
     return;
