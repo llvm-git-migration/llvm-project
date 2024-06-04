@@ -1,0 +1,37 @@
+Replicate this scenario:
+
+$ rm -rf %t && mkdir -p %t/a && mkdir -p %t/a && cd %t
+
+$ cat a.c
+struct Foo { int x; };
+int g(struct Foo *p);
+int main() {
+  struct Foo f = {42};
+  return g(&f);
+}
+
+$ cat b.c
+struct Foo { int x; };
+int g(struct Foo *p) { return p->x; }
+
+$ cl -c a.c -Zi -Fda/pdb-from-outputpath-a.pdb -Foa/pdb-from-outputpath-a.obj
+
+$ cl -c b.c -Zi -Fdb/pdb-from-outputpath-b.pdb -Fob/pdb-from-outputpath-b.obj
+
+RUN: rm -rf %t && mkdir -p %t && mkdir -p %t/a && mkdir -p %t/b
+
+RUN: cp %p/Inputs/pdb-from-outputpath-a.obj %t/a/pdb-from-outputpath-a.obj
+RUN: mv %p/Inputs/pdb-from-outputpath-a.pdb %t/pdb-from-outputpath-a.pdb
+RUN: cp %p/Inputs/pdb-from-outputpath-b.obj %t/b/pdb-from-outputpath-b.obj
+RUN: mv %p/Inputs/pdb-from-outputpath-b.pdb %t/pdb-from-outputpath-b.pdb
+
+RUN: lld-link %t/a/pdb-from-outputpath-a.obj %t/b/pdb-from-outputpath-b.obj -debug -entry:main -nodefaultlib -out:%t/t.exe
+RUN: llvm-pdbutil dump -l %t/t.pdb | FileCheck %s
+
+CHECK:                            Lines
+CHECK: ============================================================
+CHECK-LABEL:   Mod 0000 | `{{.*}}pdb-from-outputpath-a.obj`:
+CHECK:       {{.*}} (SHA-256: 1112FA2413C56E03F4B5505E57C69AB45D701CFDAB923D4844A7D521FDACD940)
+CHECK-LABEL:   Mod 0001 | `{{.*}}pdb-from-outputpath-b.obj`:
+CHECK:       {{.*}} (SHA-256: D2547E2F2970ED80738146BB5A4D2B7C45C7BB71B73B541A4162F74A8EDDAF2C)
+CHECK-LABEL:   Mod 0002 | `* Linker *`:
