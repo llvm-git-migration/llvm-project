@@ -86,7 +86,7 @@
 // RUN:     -fuse-ld=ld \
 // RUN:     %s 2>&1 | FileCheck -check-prefix=DEF %s
 
-// DEF:      clang{{.*}}" "-cc1"
+// DEF:      "-cc1"
 // DEF-SAME: "-resource-dir" "[[RESOURCE_DIR:[^"]+]]"
 // DEF-SAME: "-isysroot" "[[SYSROOT:[^"]+]]"
 // DEF-SAME: "-exception-model=sjlj"
