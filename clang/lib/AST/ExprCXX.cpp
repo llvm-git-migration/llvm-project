@@ -1447,8 +1447,8 @@ CXXDependentScopeMemberExpr::CXXDependentScopeMemberExpr(
     const TemplateArgumentListInfo *TemplateArgs)
     : Expr(CXXDependentScopeMemberExprClass, Ctx.DependentTy, VK_LValue,
            OK_Ordinary),
-      Base(Base), BaseType(BaseType), OperatorLoc(OperatorLoc),
-      MemberNameInfo(MemberNameInfo) {
+      Base(Base), BaseType(BaseType), MemberNameInfo(MemberNameInfo),
+      OperatorLoc(OperatorLoc) {
   CXXDependentScopeMemberExprBits.IsArrow = IsArrow;
   CXXDependentScopeMemberExprBits.HasQualifier = QualifierLoc.hasQualifier();
   CXXDependentScopeMemberExprBits.NumUnqualifiedLookups =
