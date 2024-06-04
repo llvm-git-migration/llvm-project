@@ -11123,7 +11123,8 @@ public:
                      QualType ObjectType, bool EnteringContext,
                      RequiredTemplateKind RequiredTemplate = SourceLocation(),
                      AssumedTemplateKind *ATK = nullptr,
-                     bool AllowTypoCorrection = true);
+                     bool AllowTypoCorrection = true,
+                     bool MayBeNNS = false);
 
   TemplateNameKind isTemplateName(Scope *S, CXXScopeSpec &SS,
                                   bool hasTemplateKeyword,
@@ -11131,7 +11132,8 @@ public:
                                   ParsedType ObjectType, bool EnteringContext,
                                   TemplateTy &Template,
                                   bool &MemberOfUnknownSpecialization,
-                                  bool Disambiguation = false);
+                                  bool Disambiguation = false,
+                                  bool MayBeNNS = false);
 
   /// Try to resolve an undeclared template name as a type template.
   ///
@@ -11465,7 +11467,8 @@ public:
                                      const UnqualifiedId &Name,
                                      ParsedType ObjectType,
                                      bool EnteringContext, TemplateTy &Template,
-                                     bool AllowInjectedClassName = false);
+                                     bool AllowInjectedClassName = false,
+                                     bool MayBeNNS = false);
 
   DeclResult ActOnClassTemplateSpecialization(
       Scope *S, unsigned TagSpec, TagUseKind TUK, SourceLocation KWLoc,
