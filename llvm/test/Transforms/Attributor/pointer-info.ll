@@ -14,7 +14,7 @@ define void @foo(ptr %ptr) {
 ; TUNIT-NEXT:    br label [[CALL_BR:%.*]]
 ; TUNIT:       call.br:
 ; TUNIT-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [[STRUCT_TEST_A]], ptr [[TMP0]], i64 0, i32 2
-; TUNIT-NEXT:    tail call void @bar(ptr noalias nocapture nofree noundef nonnull readonly byval([[STRUCT_TEST_A]]) align 8 dereferenceable(24) [[TMP0]]) #[[ATTR2:[0-9]+]]
+; TUNIT-NEXT:    tail call void @bar(ptr noalias nocapture nofree noundef nonnull readonly byval([[STRUCT_TEST_A]]) align 8 dereferenceable(24) [[TMP0]]) #[[ATTR3:[0-9]+]]
 ; TUNIT-NEXT:    ret void
 ;
 ; CGSCC: Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none)
@@ -26,7 +26,7 @@ define void @foo(ptr %ptr) {
 ; CGSCC:       call.br:
 ; CGSCC-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [[STRUCT_TEST_A]], ptr [[TMP0]], i64 0, i32 2
 ; CGSCC-NEXT:    store ptr [[PTR]], ptr [[TMP1]], align 8
-; CGSCC-NEXT:    tail call void @bar(ptr noalias nocapture nofree noundef nonnull readnone byval([[STRUCT_TEST_A]]) align 8 dereferenceable(24) [[TMP0]]) #[[ATTR2:[0-9]+]]
+; CGSCC-NEXT:    tail call void @bar(ptr noalias nocapture nofree noundef nonnull readnone byval([[STRUCT_TEST_A]]) align 8 dereferenceable(24) [[TMP0]]) #[[ATTR3:[0-9]+]]
 ; CGSCC-NEXT:    ret void
 ;
 entry:
@@ -52,12 +52,34 @@ define void @bar(ptr noundef byval(%struct.test.a) align 8 %dev) {
   store i32 1, ptr %1
   ret void
 }
+
+
+define void @multiple_access_bins_for_select_when_pass_through_instruction(i1 %cond) {
+; CHECK: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write)
+; CHECK-LABEL: define {{[^@]+}}@multiple_access_bins_for_select_when_pass_through_instruction
+; CHECK-SAME: (i1 [[COND:%.*]]) #[[ATTR2:[0-9]+]] {
+; CHECK-NEXT:    [[TMP1:%.*]] = alloca [10 x i8], align 4
+; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [10 x i8], ptr [[TMP1]], i64 0, i64 5
+; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds [10 x i8], ptr [[TMP1]], i64 0, i64 2
+; CHECK-NEXT:    [[TMP4:%.*]] = select i1 [[COND]], ptr [[TMP2]], ptr [[TMP3]]
+; CHECK-NEXT:    store i8 100, ptr [[TMP4]], align 1
+; CHECK-NEXT:    ret void
+;
+%2 = alloca [10 x i8], align 4
+%3 = getelementptr inbounds [10 x i8], ptr %2, i64 0, i64 5
+%4 = getelementptr inbounds [10 x i8], ptr %2, i64 0, i64 2
+%5 = select i1 %cond, ptr %3, ptr %4
+store i8 100, ptr %5
+ret void
+}
 ;.
 ; TUNIT: attributes #[[ATTR0]] = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
 ; TUNIT: attributes #[[ATTR1]] = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }
-; TUNIT: attributes #[[ATTR2]] = { nofree nosync nounwind willreturn memory(write) }
+; TUNIT: attributes #[[ATTR2]] = { mustprogress nofree norecurse nosync nounwind willreturn memory(write) }
+; TUNIT: attributes #[[ATTR3]] = { nofree nosync nounwind willreturn memory(write) }
 ;.
 ; CGSCC: attributes #[[ATTR0]] = { mustprogress nofree nosync nounwind willreturn memory(none) }
 ; CGSCC: attributes #[[ATTR1]] = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }
-; CGSCC: attributes #[[ATTR2]] = { nofree nounwind willreturn memory(write) }
+; CGSCC: attributes #[[ATTR2]] = { mustprogress nofree norecurse nosync nounwind willreturn memory(write) }
+; CGSCC: attributes #[[ATTR3]] = { nofree nounwind willreturn memory(write) }
 ;.
