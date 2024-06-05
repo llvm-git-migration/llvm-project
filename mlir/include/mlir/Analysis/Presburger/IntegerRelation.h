@@ -20,10 +20,13 @@
 #include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/Presburger/Utils.h"
 #include "mlir/Support/LogicalResult.h"
+#include "llvm/ADT/MPInt.h"
 #include <optional>
 
 namespace mlir {
 namespace presburger {
+using llvm::int64FromMPInt;
+using llvm::MPInt;
 
 class IntegerRelation;
 class IntegerPolyhedron;

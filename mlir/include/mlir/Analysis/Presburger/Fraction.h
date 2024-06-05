@@ -14,11 +14,11 @@
 #ifndef MLIR_ANALYSIS_PRESBURGER_FRACTION_H
 #define MLIR_ANALYSIS_PRESBURGER_FRACTION_H
 
-#include "mlir/Analysis/Presburger/MPInt.h"
-#include "mlir/Support/MathExtras.h"
+#include "llvm/ADT/MPInt.h"
 
 namespace mlir {
 namespace presburger {
+using llvm::MPInt;
 
 /// A class to represent fractions. The sign of the fraction is represented
 /// in the sign of the numerator; the denominator is always positive.

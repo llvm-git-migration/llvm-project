@@ -204,6 +204,7 @@ add_llvm_component_library(LLVMSupport
   MemoryBuffer.cpp
   MemoryBufferRef.cpp
   MD5.cpp
+  MPInt.cpp
   MSP430Attributes.cpp
   MSP430AttributeParser.cpp
   NativeFormatting.cpp
@@ -223,6 +224,7 @@ add_llvm_component_library(LLVMSupport
   SHA1.cpp
   SHA256.cpp
   Signposts.cpp
+  SlowMPInt.cpp
   SmallPtrSet.cpp
   SmallVector.cpp
   SourceMgr.cpp

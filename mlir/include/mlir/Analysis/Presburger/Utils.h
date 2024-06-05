@@ -13,8 +13,8 @@
 #ifndef MLIR_ANALYSIS_PRESBURGER_UTILS_H
 #define MLIR_ANALYSIS_PRESBURGER_UTILS_H
 
-#include "mlir/Analysis/Presburger/MPInt.h"
 #include "mlir/Support/LLVM.h"
+#include "llvm/ADT/MPInt.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallBitVector.h"
 
@@ -23,7 +23,6 @@
 
 namespace mlir {
 namespace presburger {
-
 class IntegerRelation;
 
 /// This class represents the result of operations optimizing something subject

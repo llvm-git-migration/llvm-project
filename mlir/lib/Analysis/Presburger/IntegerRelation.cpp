@@ -15,7 +15,6 @@
 #include "mlir/Analysis/Presburger/IntegerRelation.h"
 #include "mlir/Analysis/Presburger/Fraction.h"
 #include "mlir/Analysis/Presburger/LinearTransform.h"
-#include "mlir/Analysis/Presburger/MPInt.h"
 #include "mlir/Analysis/Presburger/PWMAFunction.h"
 #include "mlir/Analysis/Presburger/PresburgerRelation.h"
 #include "mlir/Analysis/Presburger/PresburgerSpace.h"
@@ -25,6 +24,7 @@
 #include "mlir/Support/LogicalResult.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/MPInt.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Sequence.h"
 #include "llvm/ADT/SmallBitVector.h"
@@ -635,7 +635,7 @@ static void eliminateFromConstraint(IntegerRelation *constraints,
     return;
   MPInt pivotCoeff = constraints->atEq(pivotRow, pivotCol);
   int sign = (leadCoeff * pivotCoeff > 0) ? -1 : 1;
-  MPInt lcm = presburger::lcm(pivotCoeff, leadCoeff);
+  MPInt lcm = llvm::lcm(pivotCoeff, leadCoeff);
   MPInt pivotMultiplier = sign * (lcm / abs(pivotCoeff));
   MPInt rowMultiplier = lcm / abs(leadCoeff);
 
@@ -759,7 +759,7 @@ bool IntegerRelation::isEmptyByGCDTest() const {
   for (unsigned i = 0, e = getNumEqualities(); i < e; ++i) {
     MPInt gcd = abs(atEq(i, 0));
     for (unsigned j = 1; j < numCols - 1; ++j) {
-      gcd = presburger::gcd(gcd, abs(atEq(i, j)));
+      gcd = llvm::gcd(gcd, abs(atEq(i, j)));
     }
     MPInt v = abs(atEq(i, numCols - 1));
     if (gcd > 0 && (v % gcd != 0)) {
@@ -2022,7 +2022,7 @@ void IntegerRelation::fourierMotzkinEliminate(unsigned pos, bool darkShadow,
         if (l == pos)
           continue;
         assert(lbCoeff >= 1 && ubCoeff >= 1 && "bounds wrongly identified");
-        MPInt lcm = presburger::lcm(lbCoeff, ubCoeff);
+        MPInt lcm = llvm::lcm(lbCoeff, ubCoeff);
         ineq.push_back(atIneq(ubPos, l) * (lcm / ubCoeff) +
                        atIneq(lbPos, l) * (lcm / lbCoeff));
         assert(lcm > 0 && "lcm should be positive!");

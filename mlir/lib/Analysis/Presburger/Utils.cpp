@@ -12,10 +12,10 @@
 
 #include "mlir/Analysis/Presburger/Utils.h"
 #include "mlir/Analysis/Presburger/IntegerRelation.h"
-#include "mlir/Analysis/Presburger/MPInt.h"
 #include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Support/LogicalResult.h"
+#include "llvm/ADT/MPInt.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/Support/raw_ostream.h"
@@ -31,6 +31,7 @@
 
 using namespace mlir;
 using namespace presburger;
+using llvm::mpintFromInt64;
 
 /// Normalize a division's `dividend` and the `divisor` by their GCD. For
 /// example: if the dividend and divisor are [2,0,4] and 4 respectively,
@@ -43,7 +44,7 @@ static void normalizeDivisionByGCD(MutableArrayRef<MPInt> dividend,
     return;
   // We take the absolute value of dividend's coefficients to make sure that
   // `gcd` is positive.
-  MPInt gcd = presburger::gcd(abs(dividend.front()), divisor);
+  MPInt gcd = llvm::gcd(abs(dividend.front()), divisor);
 
   // The reason for ignoring the constant term is as follows.
   // For a division:
@@ -53,7 +54,7 @@ static void normalizeDivisionByGCD(MutableArrayRef<MPInt> dividend,
   // Since `{a/m}/d` in the dividend satisfies 0 <= {a/m}/d < 1/d, it will not
   // influence the result of the floor division and thus, can be ignored.
   for (size_t i = 1, m = dividend.size() - 1; i < m; i++) {
-    gcd = presburger::gcd(abs(dividend[i]), gcd);
+    gcd = llvm::gcd(abs(dividend[i]), gcd);
     if (gcd == 1)
       return;
   }
@@ -346,7 +347,7 @@ SmallVector<MPInt, 8> presburger::getDivLowerBound(ArrayRef<MPInt> dividend,
 MPInt presburger::gcdRange(ArrayRef<MPInt> range) {
   MPInt gcd(0);
   for (const MPInt &elem : range) {
-    gcd = presburger::gcd(gcd, abs(elem));
+    gcd = llvm::gcd(gcd, abs(elem));
     if (gcd == 1)
       return gcd;
   }
@@ -364,7 +365,7 @@ MPInt presburger::normalizeRange(MutableArrayRef<MPInt> range) {
 
 void presburger::normalizeDiv(MutableArrayRef<MPInt> num, MPInt &denom) {
   assert(denom > 0 && "denom must be positive!");
-  MPInt gcd = presburger::gcd(gcdRange(num), denom);
+  MPInt gcd = llvm::gcd(gcdRange(num), denom);
   for (MPInt &coeff : num)
     coeff /= gcd;
   denom /= gcd;

@@ -22,12 +22,14 @@
 #include "mlir/Analysis/Presburger/Simplex.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Support/LLVM.h"
+#include "llvm/ADT/MPInt.h"
 
 #include <gtest/gtest.h>
 #include <optional>
 
 namespace mlir {
 namespace presburger {
+using llvm::mpintFromInt64;
 
 inline IntMatrix makeIntMatrix(unsigned numRow, unsigned numColumns,
                                ArrayRef<SmallVector<int, 8>> matrix) {

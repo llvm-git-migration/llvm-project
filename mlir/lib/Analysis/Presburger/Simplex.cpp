@@ -9,12 +9,12 @@
 #include "mlir/Analysis/Presburger/Simplex.h"
 #include "mlir/Analysis/Presburger/Fraction.h"
 #include "mlir/Analysis/Presburger/IntegerRelation.h"
-#include "mlir/Analysis/Presburger/MPInt.h"
 #include "mlir/Analysis/Presburger/Matrix.h"
 #include "mlir/Analysis/Presburger/PresburgerSpace.h"
 #include "mlir/Analysis/Presburger/Utils.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Support/LogicalResult.h"
+#include "llvm/ADT/MPInt.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/ADT/SmallVector.h"
@@ -165,7 +165,7 @@ unsigned SimplexBase::addRow(ArrayRef<MPInt> coeffs, bool makeRestricted) {
     // row, scaled by the coefficient for the variable, accounting for the two
     // rows potentially having different denominators. The new denominator is
     // the lcm of the two.
-    MPInt lcm = presburger::lcm(tableau(newRow, 0), tableau(pos, 0));
+    MPInt lcm = llvm::lcm(tableau(newRow, 0), tableau(pos, 0));
     MPInt nRowCoeff = lcm / tableau(newRow, 0);
     MPInt idxRowCoeff = coeffs[i] * (lcm / tableau(pos, 0));
     tableau(newRow, 0) = lcm;

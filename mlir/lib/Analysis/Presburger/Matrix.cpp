@@ -8,9 +8,9 @@
 
 #include "mlir/Analysis/Presburger/Matrix.h"
 #include "mlir/Analysis/Presburger/Fraction.h"
-#include "mlir/Analysis/Presburger/MPInt.h"
 #include "mlir/Analysis/Presburger/Utils.h"
 #include "mlir/Support/LLVM.h"
+#include "llvm/ADT/MPInt.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
