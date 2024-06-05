@@ -1,7 +1,7 @@
 ; Tests that coro-split pass splits the coroutine into f, f.resume and f.destroy
 ; RUN: opt < %s -passes='cgscc(coro-split),simplifycfg,early-cse' -S | FileCheck %s
 
-define ptr @f() presplitcoroutine !func_sanitize !0 {
+define ptr @f() presplitcoroutine coro_gen_noalloc_ramp !func_sanitize !0 {
 entry:
   %id = call token @llvm.coro.id(i32 0, ptr null, ptr null, ptr null)
   %need.alloc = call i1 @llvm.coro.alloc(token %id)
@@ -62,6 +62,13 @@ suspend:
 ; CHECK-NOT: call void @print(
 ; CHECK-NOT: call void @free(
 ; CHECK: ret void
+
+; CHECK-LABEL: @f.noalloc(ptr noundef nonnull align 8 dereferenceable(24) %{{.*}})
+; CHECK-NOT: call ptr @malloc
+; CHECK: call void @print(i32 0)
+; CHECK-NOT: call void @print(i32 1)
+; CHECK-NOT: call void @free(
+; CHECK: ret ptr %{{.*}}
 
 declare ptr @llvm.coro.free(token, ptr)
 declare i32 @llvm.coro.size.i32()
