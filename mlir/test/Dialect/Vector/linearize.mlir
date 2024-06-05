@@ -129,8 +129,8 @@ func.func @test_scalable_linearize(%arg0: vector<2x[2]xf32>) -> vector<2x[2]xf32
 // -----
 
 // ALL-LABEL:   func.func @test_scalable_no_linearize(
-// ALL-SAME:     %[[VAL_0:.*]]: vector<[2]x[2]xf32>) -> vector<[2]x[2]xf32> {
-func.func @test_scalable_no_linearize(%arg0: vector<[2]x[2]xf32>) -> vector<[2]x[2]xf32> {
+// ALL-SAME:     %[[VAL_0:.*]]: vector<[2]x[2]xf32>,  %[[VAL_1:.*]]: vector<2x[2]xf32>) -> vector<[2]x[2]xf32> {
+func.func @test_scalable_no_linearize(%arg0: vector<[2]x[2]xf32>, %arg1: vector<2x[2]xf32>) -> vector<[2]x[2]xf32> {
   // ALL: %[[CST:.*]] = arith.constant dense<2.000000e+00> : vector<[2]x[2]xf32>
   %0 = arith.constant dense<[[2., 2.], [2., 2.]]> : vector<[2]x[2]xf32>
 
@@ -139,6 +139,15 @@ func.func @test_scalable_no_linearize(%arg0: vector<[2]x[2]xf32>) -> vector<[2]x
 
   // ALL: %[[RES:.*]] = arith.addf %[[CST]], %[[SIN]] : vector<[2]x[2]xf32>
   %2 = arith.addf %0, %1 : vector<[2]x[2]xf32>
+
+  // ALL: %[[EXTRACTSLICE:.*]] = vector.extract_strided_slice %[[VAL_1]] {offsets = [1, 0], sizes = [1, 2], strides = [1, 1]} : vector<2x[2]xf32> to vector<1x[2]xf32> 
+  %3 = vector.extract_strided_slice %arg1 { sizes = [1, 2], strides = [1, 1], offsets = [1, 0] } : vector<2x[2]xf32> to vector<1x[2]xf32>
+
+  // ALL: %[[EXTRACT:.*]] = vector.extract %[[VAL_1]][0, 0] : f32 from vector<2x[2]xf32>
+  %4 = vector.extract %arg1[0, 0]: f32 from vector<2x[2]xf32>
+
+  // ALL: %[[INSERT:.*]] = vector.insert %[[EXTRACT]], %[[VAL_1]] [0, 0] : f32 into vector<2x[2]xf32>
+  %5 = vector.insert %4, %arg1[0, 0]: f32 into vector<2x[2]xf32>
 
   // ALL: return %[[RES]] : vector<[2]x[2]xf32>
   return %2 : vector<[2]x[2]xf32>
@@ -274,3 +283,4 @@ func.func @test_vector_insert(%arg0: vector<2x8x4xf32>, %arg1: vector<8x4xf32>) 
   %0 = vector.insert %arg1, %arg0[0]: vector<8x4xf32> into vector<2x8x4xf32>
   return %0 : vector<2x8x4xf32>
 }
+
