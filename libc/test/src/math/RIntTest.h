@@ -66,11 +66,11 @@ public:
   void testSpecialNumbers(RIntFunc func) {
     for (int mode : ROUNDING_MODES) {
       LIBC_NAMESPACE::fputil::set_round(mode);
-      ASSERT_FP_EQ(inf, func(inf));
-      ASSERT_FP_EQ(neg_inf, func(neg_inf));
-      ASSERT_FP_EQ(nan, func(nan));
-      ASSERT_FP_EQ(zero, func(zero));
-      ASSERT_FP_EQ(neg_zero, func(neg_zero));
+      EXPECT_FP_EQ(inf, func(inf));
+      EXPECT_FP_EQ(neg_inf, func(neg_inf));
+      EXPECT_FP_EQ(nan, func(nan));
+      EXPECT_FP_EQ(zero, func(zero));
+      EXPECT_FP_EQ(neg_zero, func(neg_zero));
     }
   }
 
@@ -78,12 +78,12 @@ public:
     for (int mode : ROUNDING_MODES) {
       LIBC_NAMESPACE::fputil::set_round(mode);
       mpfr::RoundingMode mpfr_mode = to_mpfr_rounding_mode(mode);
-      ASSERT_FP_EQ(func(T(1.0)), mpfr::round(T(1.0), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-1.0)), mpfr::round(T(-1.0), mpfr_mode));
-      ASSERT_FP_EQ(func(T(10.0)), mpfr::round(T(10.0), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-10.0)), mpfr::round(T(-10.0), mpfr_mode));
-      ASSERT_FP_EQ(func(T(1234.0)), mpfr::round(T(1234.0), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-1234.0)), mpfr::round(T(-1234.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(1.0)), mpfr::round(T(1.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(-1.0)), mpfr::round(T(-1.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(10.0)), mpfr::round(T(10.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(-10.0)), mpfr::round(T(-10.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(1234.0)), mpfr::round(T(1234.0), mpfr_mode));
+      EXPECT_FP_EQ(func(T(-1234.0)), mpfr::round(T(-1234.0), mpfr_mode));
     }
   }
 
@@ -91,12 +91,18 @@ public:
     for (int mode : ROUNDING_MODES) {
       LIBC_NAMESPACE::fputil::set_round(mode);
       mpfr::RoundingMode mpfr_mode = to_mpfr_rounding_mode(mode);
-      ASSERT_FP_EQ(func(T(0.5)), mpfr::round(T(0.5), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-0.5)), mpfr::round(T(-0.5), mpfr_mode));
-      ASSERT_FP_EQ(func(T(0.115)), mpfr::round(T(0.115), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-0.115)), mpfr::round(T(-0.115), mpfr_mode));
-      ASSERT_FP_EQ(func(T(0.715)), mpfr::round(T(0.715), mpfr_mode));
-      ASSERT_FP_EQ(func(T(-0.715)), mpfr::round(T(-0.715), mpfr_mode));
+      EXPECT_FP_EQ_WITH_EXCEPTION(func(T(0.5)), mpfr::round(T(0.5), mpfr_mode),
+                                  FE_INEXACT);
+      EXPECT_FP_EQ_WITH_EXCEPTION(func(T(-0.5)),
+                                  mpfr::round(T(-0.5), mpfr_mode), FE_INEXACT);
+      EXPECT_FP_EQ_WITH_EXCEPTION(func(T(0.115)),
+                                  mpfr::round(T(0.115), mpfr_mode), FE_INEXACT);
+      EXPECT_FP_EQ_WITH_EXCEPTION(
+          func(T(-0.115)), mpfr::round(T(-0.115), mpfr_mode), FE_INEXACT);
+      EXPECT_FP_EQ_WITH_EXCEPTION(func(T(0.715)),
+                                  mpfr::round(T(0.715), mpfr_mode), FE_INEXACT);
+      EXPECT_FP_EQ_WITH_EXCEPTION(
+          func(T(-0.715)), mpfr::round(T(-0.715), mpfr_mode), FE_INEXACT);
     }
   }
 
@@ -110,7 +116,8 @@ public:
       for (int mode : ROUNDING_MODES) {
         LIBC_NAMESPACE::fputil::set_round(mode);
         mpfr::RoundingMode mpfr_mode = to_mpfr_rounding_mode(mode);
-        ASSERT_FP_EQ(func(x), mpfr::round(x, mpfr_mode));
+        EXPECT_FP_EQ_WITH_EXCEPTION(func(x), mpfr::round(x, mpfr_mode),
+                                    FE_INEXACT);
       }
     }
   }
@@ -131,7 +138,7 @@ public:
       for (int mode : ROUNDING_MODES) {
         LIBC_NAMESPACE::fputil::set_round(mode);
         mpfr::RoundingMode mpfr_mode = to_mpfr_rounding_mode(mode);
-        ASSERT_FP_EQ(func(x), mpfr::round(x, mpfr_mode));
+        EXPECT_FP_EQ(func(x), mpfr::round(x, mpfr_mode));
       }
     }
   }
