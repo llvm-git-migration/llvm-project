@@ -1405,9 +1405,9 @@ public:
 /// ingredient. This recipe covers most of the traditional vectorization cases
 /// where each ingredient transforms into a vectorized version of itself.
 class VPWidenRecipe : public VPRecipeWithIRFlags {
-protected:
   unsigned Opcode;
 
+protected:
   template <typename IterT>
   VPWidenRecipe(unsigned VPDefOpcode, Instruction &I,
                 iterator_range<IterT> Operands)
@@ -1441,7 +1441,6 @@ public:
 };
 
 class VPWidenEVLRecipe : public VPWidenRecipe {
-private:
   using VPRecipeWithIRFlags::transferFlags;
 
 public:
@@ -1449,6 +1448,10 @@ public:
   VPWidenEVLRecipe(Instruction &I, iterator_range<IterT> Operands, VPValue &EVL)
       : VPWidenRecipe(VPDef::VPWidenEVLSC, I, Operands) {
     addOperand(&EVL);
+  }
+  VPWidenEVLRecipe(VPWidenRecipe *W, VPValue &EVL)
+      : VPWidenEVLRecipe(*W->getUnderlyingInstr(), W->operands(), EVL) {
+    this->transferFlags(*W);
   }
 
   ~VPWidenEVLRecipe() override = default;
@@ -1466,9 +1469,6 @@ public:
 
   VPValue *getEVL() { return getOperand(getNumOperands() - 1); }
   const VPValue *getEVL() const { return getOperand(getNumOperands() - 1); }
-
-  /// A helper function to create widen EVL recipe from regular widen recipe.
-  static VPWidenEVLRecipe *create(VPWidenRecipe *W, VPValue &EVL);
 
   /// Produce widened copies of all Ingredients.
   void execute(VPTransformState &State) override final;
