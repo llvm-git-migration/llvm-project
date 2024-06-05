@@ -2161,6 +2161,12 @@ public:
     return false;
   }
 
+  /// Translate a masked load intrinsic to its target-specific instrinsic.
+  virtual bool scalarizeMaskedLoad(CallInst *CI) const { return false; }
+
+  /// Translate a masked store intrinsic to its target-specific instrinsic.
+  virtual bool scalarizeMaskedStore(CallInst *CI) const { return false; }
+
   /// Perform a load-linked operation on Addr, returning a "Value *" with the
   /// corresponding pointee type. This may entail some non-trivial operations to
   /// truncate or reconstruct types that will be illegal in the backend. See
