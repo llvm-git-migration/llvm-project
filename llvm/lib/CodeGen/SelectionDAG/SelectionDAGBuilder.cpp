@@ -4958,9 +4958,15 @@ void SelectionDAGBuilder::visitMaskedLoad(const CallInst &I, bool IsExpanding) {
       MachinePointerInfo(PtrOperand), MMOFlags,
       LocationSize::beforeOrAfterPointer(), Alignment, AAInfo, Ranges);
 
-  SDValue Load =
-      DAG.getMaskedLoad(VT, sdl, InChain, Ptr, Offset, Mask, Src0, VT, MMO,
-                        ISD::UNINDEXED, ISD::NON_EXTLOAD, IsExpanding);
+  const auto &TLI = DAG.getTargetLoweringInfo();
+  const auto &TTI =
+      TLI.getTargetMachine().getTargetTransformInfo(*I.getFunction());
+  SDValue Load = (!IsExpanding && TTI.hasConditionalFaultingLoadStoreForType(
+                                      Src0Operand->getType()->getScalarType()))
+                     ? TLI.visitMaskedLoadForCondFaulting(DAG, Ptr, Src0, Mask)
+                     : DAG.getMaskedLoad(VT, sdl, InChain, Ptr, Offset, Mask,
+                                         Src0, VT, MMO, ISD::UNINDEXED,
+                                         ISD::NON_EXTLOAD, IsExpanding);
   if (AddToChain)
     PendingLoads.push_back(Load.getValue(1));
   setValue(&I, Load);

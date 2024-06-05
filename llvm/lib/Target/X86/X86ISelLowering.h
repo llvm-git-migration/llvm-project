@@ -903,6 +903,10 @@ namespace llvm {
     // is needed so that this can be expanded with control flow.
     VASTART_SAVE_XMM_REGS,
 
+    // Conditional load/store instructions
+    CLOAD,
+    CSTORE,
+
     // WARNING: Do not add anything in the end unless you want the node to
     // have memop! In fact, starting from FIRST_TARGET_MEMORY_OPCODE all
     // opcodes will be thought as target memory ops!

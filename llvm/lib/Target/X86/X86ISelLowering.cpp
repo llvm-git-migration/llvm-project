@@ -34024,6 +34024,8 @@ const char *X86TargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(STRICT_FP80_ADD)
   NODE_NAME_CASE(CCMP)
   NODE_NAME_CASE(CTEST)
+  NODE_NAME_CASE(CLOAD)
+  NODE_NAME_CASE(CSTORE)
   }
   return nullptr;
 #undef NODE_NAME_CASE
