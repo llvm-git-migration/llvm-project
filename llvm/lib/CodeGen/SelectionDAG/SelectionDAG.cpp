@@ -3477,6 +3477,11 @@ KnownBits SelectionDAG::computeKnownBits(SDValue Op, const APInt &DemandedElts,
     Known = computeKnownBits(Op.getOperand(1), DemandedElts, Depth + 1);
     Known2 = computeKnownBits(Op.getOperand(0), DemandedElts, Depth + 1);
     Known = KnownBits::abds(Known, Known2);
+    Known.Zero.setHighBits(
+        std::min(
+            ComputeNumSignBits(Op.getOperand(0), DemandedElts, Depth + 1),
+            ComputeNumSignBits(Op.getOperand(1), DemandedElts, Depth + 1)) -
+        1);
     break;
   }
   case ISD::UMUL_LOHI: {
