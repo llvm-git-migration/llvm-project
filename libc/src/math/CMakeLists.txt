@@ -133,6 +133,7 @@ add_math_entrypoint_object(fminf128)
 add_math_entrypoint_object(fmaximum)
 add_math_entrypoint_object(fmaximumf)
 add_math_entrypoint_object(fmaximuml)
+add_math_entrypoint_object(fmaximumf16)
 add_math_entrypoint_object(fmaximumf128)
 
 add_math_entrypoint_object(fmaximum_num)
