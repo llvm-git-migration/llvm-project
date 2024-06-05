@@ -29,16 +29,6 @@
 
 using namespace mlir;
 
-namespace {
-// This structure is to pass and return sets of loop parameters without
-// confusing the order.
-struct LoopParams {
-  Value lowerBound;
-  Value upperBound;
-  Value step;
-};
-} // namespace
-
 SmallVector<scf::ForOp> mlir::replaceLoopNestWithNewYields(
     RewriterBase &rewriter, MutableArrayRef<scf::ForOp> loopNest,
     ValueRange newIterOperands, const NewYieldValuesFn &newYieldValuesFn,
@@ -473,17 +463,8 @@ LogicalResult mlir::loopUnrollByFactor(
   return success();
 }
 
-/// Transform a loop with a strictly positive step
-///   for %i = %lb to %ub step %s
-/// into a 0-based loop with step 1
-///   for %ii = 0 to ceildiv(%ub - %lb, %s) step 1 {
-///     %i = %ii * %s + %lb
-/// Insert the induction variable remapping in the body of `inner`, which is
-/// expected to be either `loop` or another loop perfectly nested under `loop`.
-/// Insert the definition of new bounds immediate before `outer`, which is
-/// expected to be either `loop` or its parent in the loop nest.
-static LoopParams emitNormalizedLoopBounds(RewriterBase &rewriter, Location loc,
-                                           Value lb, Value ub, Value step) {
+LoopParams mlir::emitNormalizedLoopBounds(RewriterBase &rewriter, Location loc,
+                                          Value lb, Value ub, Value step) {
   // For non-index types, generate `arith` instructions
   // Check if the loop is already known to have a constant zero lower bound or
   // a constant one step.
@@ -517,10 +498,9 @@ static LoopParams emitNormalizedLoopBounds(RewriterBase &rewriter, Location loc,
   return {newLowerBound, newUpperBound, newStep};
 }
 
-/// Get back the original induction variable values after loop normalization
-static void denormalizeInductionVariable(RewriterBase &rewriter, Location loc,
-                                         Value normalizedIv, Value origLb,
-                                         Value origStep) {
+void mlir::denormalizeInductionVariable(RewriterBase &rewriter, Location loc,
+                                        Value normalizedIv, Value origLb,
+                                        Value origStep) {
   Value denormalizedIv;
   SmallPtrSet<Operation *, 2> preserve;
   bool isStepOne = isConstantIntValue(origStep, 1);
