@@ -730,15 +730,26 @@ void CheckHelper::CheckObjectEntity(
           }
         }
       } else if (!IsIntentInOut(symbol)) { // C1586
-        messages_.Say(
-            "non-POINTER dummy argument of pure %s must have INTENT() or VALUE attribute"_warn_en_US,
-            what);
+        if (!InModuleFile()) {
+          if (context_.IsEnabled(common::LanguageFeature::RelaxedPureDummy)) {
+            if (context_.ShouldWarn(
+                    common::LanguageFeature::RelaxedPureDummy)) {
+              messages_.Say(
+                  "non-POINTER dummy argument of pure %s should have INTENT() or VALUE attribute"_warn_en_US,
+                  what);
+            }
+          } else {
+            messages_.Say(
+                "non-POINTER dummy argument of pure %s must have INTENT() or VALUE attribute"_err_en_US,
+                what);
+          }
+        }
         ok = false;
       }
-      if (ok && InFunction()) {
+      if (ok && InFunction() && !InModuleFile()) {
         if (context_.IsEnabled(common::LanguageFeature::RelaxedPureDummy)) {
           if (context_.ShouldWarn(common::LanguageFeature::RelaxedPureDummy) &&
-              !InModuleFile() && !InElemental()) {
+              !InElemental()) {
             messages_.Say(
                 "non-POINTER dummy argument of pure function should be INTENT(IN) or VALUE"_warn_en_US);
           }
