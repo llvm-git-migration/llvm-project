@@ -2022,6 +2022,12 @@ The pass CoroSplit builds coroutine frame and outlines resume and destroy parts
 into separate functions. This pass also lowers `coro.await.suspend.void`_,
 `coro.await.suspend.bool`_ and `coro.await.suspend.handle`_ intrinsics.
 
+CoroAnnotationElide
+-------------------
+This pass finds all usages of coroutines that are "must elide" and replaces
+`coro.begin` intrinsic with an address of a coroutine frame placed on its caller
+and replaces `coro.alloc` and `coro.free` intrinsics with `false` and `null`
+respectively to remove the deallocation code.
 
 CoroElide
 ---------
@@ -2048,6 +2054,22 @@ When the coroutine are marked with coro_only_destroy_when_complete, it indicates
 the coroutine must reach the final suspend point when it get destroyed.
 
 This attribute only works for switched-resume coroutines now.
+
+coro_must_elide
+---------------
+
+When a Call or Invoke instruction is marked with `coro_must_elide`,
+CoroAnnotationElidePass performs heap elision when possible. Note that for
+recursive or mutually recursive functions this elision is usually not possible.
+
+
+coro_gen_noalloc_ramp
+---------------------
+
+This attribute hints CoroSplitPass to generate a `f.noalloc` ramp function for
+a given coroutine `f`. For any call or invoke instruction that calls `f` and
+attributed as `coro_must_elide`, CoroAnnotationElidePass is able to redirect
+the call to use the `.noalloc` variant.
 
 Metadata
 ========
