@@ -243,6 +243,31 @@ void CheckHelper::Check(
   }
 }
 
+// Checks an elemental function result type parameter specification
+// expression for an unacceptable use of a dummy argument.
+class BadDummyChecker : public evaluate::AnyTraverse<BadDummyChecker, bool> {
+public:
+  using Base = evaluate::AnyTraverse<BadDummyChecker, bool>;
+  BadDummyChecker(parser::ContextualMessages &messages, const Scope &scope)
+      : Base{*this}, messages_{messages}, scope_{scope} {}
+  using Base::operator();
+  bool operator()(const evaluate::DescriptorInquiry &) {
+    return false; // shield base() of inquiry from further checking
+  }
+  bool operator()(const Symbol &symbol) {
+    if (&symbol.owner() == &scope_ && IsDummy(symbol)) {
+      messages_.Say(
+          "Specification expression for elemental function result may not depend on dummy argument '%s''s value"_err_en_US,
+          symbol.name());
+    }
+    return false;
+  }
+
+private:
+  parser::ContextualMessages &messages_;
+  const Scope &scope_;
+};
+
 void CheckHelper::Check(const Symbol &symbol) {
   if (symbol.name().size() > common::maxNameLen &&
       &symbol == &symbol.GetUltimate()) {
@@ -378,23 +403,30 @@ void CheckHelper::Check(const Symbol &symbol) {
     } else {
       Check(*type, canHaveAssumedParameter);
     }
-    if (InPure() && InFunction() && IsFunctionResult(symbol)) {
-      if (type->IsPolymorphic() && IsAllocatable(symbol)) { // C1585
-        messages_.Say(
-            "Result of pure function may not be both polymorphic and ALLOCATABLE"_err_en_US);
-      }
-      if (derived) {
-        // These cases would be caught be the general validation of local
-        // variables in a pure context, but these messages are more specific.
-        if (HasImpureFinal(symbol)) { // C1584
+    if (InFunction() && IsFunctionResult(symbol)) {
+      if (InPure()) {
+        if (type->IsPolymorphic() && IsAllocatable(symbol)) { // C1585
           messages_.Say(
-              "Result of pure function may not have an impure FINAL subroutine"_err_en_US);
+              "Result of pure function may not be both polymorphic and ALLOCATABLE"_err_en_US);
         }
-        if (auto bad{FindPolymorphicAllocatableUltimateComponent(*derived)}) {
-          SayWithDeclaration(*bad,
-              "Result of pure function may not have polymorphic ALLOCATABLE ultimate component '%s'"_err_en_US,
-              bad.BuildResultDesignatorName());
+        if (derived) {
+          // These cases would be caught be the general validation of local
+          // variables in a pure context, but these messages are more specific.
+          if (HasImpureFinal(symbol)) { // C1584
+            messages_.Say(
+                "Result of pure function may not have an impure FINAL subroutine"_err_en_US);
+          }
+          if (auto bad{FindPolymorphicAllocatableUltimateComponent(*derived)}) {
+            SayWithDeclaration(*bad,
+                "Result of pure function may not have polymorphic ALLOCATABLE ultimate component '%s'"_err_en_US,
+                bad.BuildResultDesignatorName());
+          }
         }
+      }
+      if (InElemental() && isChar) { // F'2023 C15121
+        BadDummyChecker{messages_, symbol.owner()}(
+            type->characterTypeSpec().length().GetExplicit());
+        // TODO: check PDT LEN parameters
       }
     }
   }

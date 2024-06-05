@@ -47,3 +47,28 @@ elemental function ptrf(n)
   !ERROR: The result of an ELEMENTAL function may not be a POINTER
   real, pointer :: ptrf
 end function
+
+module m
+  integer modvar
+  type t
+    character(:), allocatable :: c
+  end type
+ contains
+  !ERROR: Specification expression for elemental function result may not depend on dummy argument 'n''s value
+  elemental character(n) function bad1(n)
+    integer, intent(in) :: n
+  end
+  !ERROR: Specification expression for elemental function result may not depend on dummy argument 'x''s value
+  elemental character(x%c%len) function bad2(x)
+    type(t), intent(in) :: x
+  end
+  elemental character(len(x)) function ok1(x) ! ok
+    character(*), intent(in) :: x
+  end
+  elemental character(modvar) function ok2(x) ! ok
+    character(*), intent(in) :: x
+  end
+  elemental character(len(x)) function ok3(x) ! ok
+    character(modvar), intent(in) :: x
+  end
+end
