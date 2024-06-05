@@ -957,11 +957,6 @@ public:
   inline const APInt &getAsAPIntVal() const;
 
   const SDValue &getOperand(unsigned Num) const {
-    if(Num >= NumOperands) {
-      dbgs() << Num << ">=" << NumOperands << "\n";
-      printr(dbgs());
-      dbgs() << "\n";
-    }
     assert(Num < NumOperands && "Invalid child # of SDNode!");
     return OperandList[Num];
   }
