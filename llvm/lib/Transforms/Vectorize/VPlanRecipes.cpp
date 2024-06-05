@@ -1224,8 +1224,8 @@ void VPWidenEVLRecipe::execute(VPTransformState &State) {
   VPValue *Op0 = getOperand(0);
 
   // If it's scalar operation, hand translation over to VPWidenRecipe
-  if (!State.get(Op0, 0)->getType()->isVectorTy())
-    return VPWidenRecipe::execute(State);
+  assert(State.get(Op0, 0)->getType()->isVectorTy() &&
+         "VPWidenEVLRecipe should not be used for scalars");
 
   VPValue *EVL = getEVL();
   Value *EVLArg = State.get(EVL, 0, /*NeedsScalar=*/true);
@@ -1264,10 +1264,7 @@ bool VPWidenEVLRecipe::onlyFirstLaneUsed(const VPValue *Op) const {
   assert(is_contained(operands(), Op) && "Op must be an operand of the recipe");
   // EVL in that recipe is always the last operand, thus any use before means
   // the VPValue should be vectorized.
-  for (unsigned I = 0, E = getNumOperands() - 1; I != E; ++I)
-    if (getOperand(I) == Op)
-      return false;
-  return true;
+  return getEVL() == Op;
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -1284,7 +1281,7 @@ void VPWidenEVLRecipe::print(raw_ostream &O, const Twine &Indent,
                              VPSlotTracker &SlotTracker) const {
   O << Indent << "WIDEN vp ";
   printAsOperand(O, SlotTracker);
-  O << " = " << Instruction::getOpcodeName(Opcode);
+  O << " = " << Instruction::getOpcodeName(getOpcode());
   printFlags(O);
   printOperands(O, SlotTracker);
 }
