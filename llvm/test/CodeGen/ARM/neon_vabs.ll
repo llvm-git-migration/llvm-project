@@ -184,7 +184,10 @@ define <2 x i64> @test13(<2 x i32> %a, <2 x i32> %b) nounwind {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vmov d16, r2, r3
 ; CHECK-NEXT:    vmov d17, r0, r1
-; CHECK-NEXT:    vabdl.u32 q8, d17, d16
+; CHECK-NEXT:    vsubl.u32 q8, d17, d16
+; CHECK-NEXT:    vshr.s64 q9, q8, #63
+; CHECK-NEXT:    vsra.s64 q8, q8, #63
+; CHECK-NEXT:    veor q8, q9, q8
 ; CHECK-NEXT:    vmov r0, r1, d16
 ; CHECK-NEXT:    vmov r2, r3, d17
 ; CHECK-NEXT:    mov pc, lr
