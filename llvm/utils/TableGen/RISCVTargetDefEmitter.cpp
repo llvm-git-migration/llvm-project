@@ -240,9 +240,11 @@ static void emitRISCVExtensionBitmask(RecordKeeper &RK, raw_ostream &OS) {
     assert(GroupIDBits);
     assert(BitmaskBits);
 
-    OS << "    {" << "\"" << Rec->getValueAsString("Name") << "\"" << ", "
-       << getValueFromBitsInit(GroupIDBits, *Rec) << ", "
-       << getValueFromBitsInit(BitmaskBits, *Rec) << "ULL" << "},\n";
+    OS << "    {"
+       << "\"" << Rec->getValueAsString("Name") << "\""
+       << ", " << getValueFromBitsInit(GroupIDBits, *Rec) << ", "
+       << getValueFromBitsInit(BitmaskBits, *Rec) << "ULL"
+       << "},\n";
   }
   OS << "};\n";
   OS << "#endif\n";
