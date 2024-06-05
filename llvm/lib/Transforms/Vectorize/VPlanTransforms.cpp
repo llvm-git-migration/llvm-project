@@ -1299,6 +1299,8 @@ void VPlanTransforms::addActiveLaneMask(
 
 /// Replace recipes with their EVL variants.
 static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
+  VPDominatorTree VPDT;
+  VPDT.recalculate(Plan);
   DenseSet<VPRecipeBase *> ToRemove;
 
   ReversePostOrderTraversal<VPBlockDeepTraversalWrapper<VPBlockBase *>> RPOT(
@@ -1306,9 +1308,10 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   DenseSet<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
   for (VPBasicBlock *VPBB :
        reverse(VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT))) {
-    // The recipes in the block are processed in reverse order, to catch chains
-    // of dead recipes.
     for (VPRecipeBase &R : make_early_inc_range(reverse(*VPBB))) {
+      if (!properlyDominates(EVL.getDefiningRecipe(), &R, VPDT))
+        continue;
+
       TypeSwitch<VPRecipeBase *>(&R)
           .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
             VPValue *NewMask =
@@ -1330,7 +1333,7 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
             if (!Instruction::isBinaryOp(Opcode) &&
                 !Instruction::isUnaryOp(Opcode))
               return;
-            auto *N = VPWidenEVLRecipe::create(W, EVL);
+            auto *N = new VPWidenEVLRecipe(W, EVL);
             N->insertBefore(W);
             W->replaceAllUsesWith(N);
             ToRemove.insert(W);
@@ -1344,8 +1347,6 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   for (VPValue *HeaderMask : HeaderMasks)
     recursivelyDeleteDeadRecipes(HeaderMask);
 }
-
-
 
 /// Add a VPEVLBasedIVPHIRecipe and related recipes to \p Plan and
 /// replaces all uses except the canonical IV increment of
