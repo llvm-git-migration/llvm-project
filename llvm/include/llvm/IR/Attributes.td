@@ -348,6 +348,15 @@ def PresplitCoroutine : EnumAttr<"presplitcoroutine", [FnAttr]>;
 /// The coroutine would only be destroyed when it is complete.
 def CoroDestroyOnlyWhenComplete : EnumAttr<"coro_only_destroy_when_complete", [FnAttr]>;
 
+/// The coroutine call meets the elide requirement. Hint the optimization
+/// pipeline to perform elide on the call or invoke instruction.
+def CoroElideSafe : EnumAttr<"coro_elide_safe", [FnAttr]>;
+
+/// Generate a .noalloc ramp function for coroutine. The frontend emits this
+/// attribute only on coroutines that return a "coro_await_elidable" type.
+/// CoroSplit reads this attribute and conditionally build the noalloc ramp.
+def CoroGenNoallocRamp : EnumAttr<"coro_gen_noalloc_ramp", [FnAttr]>;
+
 /// Target-independent string attributes.
 def LessPreciseFPMAD : StrBoolAttr<"less-precise-fpmad">;
 def NoInfsFPMath : StrBoolAttr<"no-infs-fp-math">;

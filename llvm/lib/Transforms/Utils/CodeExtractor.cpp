@@ -916,6 +916,8 @@ Function *CodeExtractor::constructFunction(const ValueSet &inputs,
       case Attribute::Memory:
       case Attribute::NoFPClass:
       case Attribute::CoroDestroyOnlyWhenComplete:
+      case Attribute::CoroElideSafe:
+      case Attribute::CoroGenNoallocRamp:
         continue;
       // Those attributes should be safe to propagate to the extracted function.
       case Attribute::AlwaysInline:

@@ -523,6 +523,12 @@ void CodeGenFunction::FinishFunction(SourceLocation EndLoc) {
     NormalCleanupDest = Address::invalid();
   }
 
+  if (getLangOpts().Coroutines && isCoroutine()) {
+    auto *Record = FnRetTy->getAsCXXRecordDecl();
+    if (Record && Record->hasAttr<CoroAwaitElidableAttr>())
+      CurFn->addFnAttr(llvm::Attribute::CoroGenNoallocRamp);
+  }
+
   // Scan function arguments for vector width.
   for (llvm::Argument &A : CurFn->args())
     if (auto *VT = dyn_cast<llvm::VectorType>(A.getType()))
