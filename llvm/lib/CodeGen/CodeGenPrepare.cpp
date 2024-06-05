@@ -2526,6 +2526,10 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
       return optimizeGatherScatterInst(II, II->getArgOperand(0));
     case Intrinsic::masked_scatter:
       return optimizeGatherScatterInst(II, II->getArgOperand(1));
+    case Intrinsic::masked_load:
+      return TLI->scalarizeMaskedLoad(II);
+    case Intrinsic::masked_store:
+      return TLI->scalarizeMaskedStore(II);
     }
 
     SmallVector<Value *, 2> PtrOps;

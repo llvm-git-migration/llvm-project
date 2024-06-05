@@ -30672,6 +30672,24 @@ X86TargetLowering::shouldExpandLogicAtomicRMWInIR(AtomicRMWInst *AI) const {
              : AtomicExpansionKind::CmpXChg;
 }
 
+bool X86TargetLowering::scalarizeMaskedLoad(CallInst *CI) const {
+  // Transform <1 x ty> masked load to x86-specific ty masked load
+  // b/c the former only accepts vector op, otherwsie
+  // DAGTypeLegalizer::ScalarizeVectorResult would crash.
+  //
+  // FIXME: Extend masked load for scalar op and remove this.
+  return false;
+}
+
+bool X86TargetLowering::scalarizeMaskedStore(CallInst *CI) const {
+  // Transform <1 x ty> masked store to x86-specific ty masked store
+  // b/c the former only accepts vector op, otherwsie
+  // DAGTypeLegalizer::ScalarizeVectorResult would crash.
+  //
+  // FIXME: Extend masked store for scalar op and remove this.
+  return false;
+}
+
 void X86TargetLowering::emitBitTestAtomicRMWIntrinsic(AtomicRMWInst *AI) const {
   IRBuilder<> Builder(AI);
   Builder.CollectMetadataToCopy(AI, {LLVMContext::MD_pcsections});
