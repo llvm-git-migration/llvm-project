@@ -1879,6 +1879,7 @@ add_fp_unittest(
     FMaximumNumTest.h
   DEPENDS
     libc.src.math.fmaximum_numf
+    libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fp_bits
 )
 
@@ -1892,6 +1893,7 @@ add_fp_unittest(
     FMaximumNumTest.h
   DEPENDS
     libc.src.math.fmaximum_num
+    libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fp_bits
 )
 
@@ -1905,6 +1907,21 @@ add_fp_unittest(
     FMaximumNumTest.h
   DEPENDS
     libc.src.math.fmaximum_numl
+    libc.src.__support.CPP.algorithm
+    libc.src.__support.FPUtil.fp_bits
+)
+
+add_fp_unittest(
+  fmaximum_numf16_test
+  SUITE
+    libc-math-smoke-tests
+  SRCS
+    fmaximum_numf16_test.cpp
+  HDRS
+    FMaximumNumTest.h
+  DEPENDS
+    libc.src.math.fmaximum_numf16
+    libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fp_bits
 )
 
@@ -1918,6 +1935,7 @@ add_fp_unittest(
     FMaximumNumTest.h
   DEPENDS
     libc.src.math.fmaximum_numf128
+    libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fp_bits
 )
 
