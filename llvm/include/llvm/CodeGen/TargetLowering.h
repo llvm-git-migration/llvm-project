@@ -3895,6 +3895,18 @@ public:
                            const SDValue OldRHS, SDValue &Chain,
                            bool IsSignaling = false) const;
 
+  virtual SDValue visitMaskedLoadForCondFaulting(SelectionDAG &DAG, SDValue Ptr,
+                                                 SDValue PassThru,
+                                                 SDValue Mask) const {
+    llvm_unreachable("Not Implemented");
+  }
+
+  virtual SDValue visitMaskedStoreForCondFaulting(SelectionDAG &DAG,
+                                                  SDValue Ptr, SDValue Val,
+                                                  SDValue Mask) const {
+    llvm_unreachable("Not Implemented");
+  }
+
   /// Returns a pair of (return value, chain).
   /// It is an error to pass RTLIB::UNKNOWN_LIBCALL as \p LC.
   std::pair<SDValue, SDValue> makeLibCall(SelectionDAG &DAG, RTLIB::Libcall LC,

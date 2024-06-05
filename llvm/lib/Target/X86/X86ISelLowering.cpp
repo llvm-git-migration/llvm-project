@@ -32308,6 +32308,19 @@ bool X86TargetLowering::isInlineAsmTargetBranch(
   return Inst.equals_insensitive("call") || Inst.equals_insensitive("jmp");
 }
 
+SDValue X86TargetLowering::visitMaskedLoadForCondFaulting(SelectionDAG &DAG,
+                                                          SDValue Ptr,
+                                                          SDValue PassThru,
+                                                          SDValue Mask) const {
+  return SDValue();
+}
+SDValue X86TargetLowering::visitMaskedStoreForCondFaulting(SelectionDAG &DAG,
+                                                           SDValue Ptr,
+                                                           SDValue Val,
+                                                           SDValue Mask) const {
+  return SDValue();
+}
+
 /// Provide custom lowering hooks for some operations.
 SDValue X86TargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
   switch (Op.getOpcode()) {
@@ -34024,6 +34037,8 @@ const char *X86TargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(STRICT_FP80_ADD)
   NODE_NAME_CASE(CCMP)
   NODE_NAME_CASE(CTEST)
+  NODE_NAME_CASE(CLOAD)
+  NODE_NAME_CASE(CSTORE)
   }
   return nullptr;
 #undef NODE_NAME_CASE
