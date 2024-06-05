@@ -5213,6 +5213,11 @@ public:
   bool isImplicit() const { return CoawaitBits.IsImplicit; }
   void setIsImplicit(bool value = true) { CoawaitBits.IsImplicit = value; }
 
+  bool isInplaceCall() const { return CoawaitBits.IsInplaceCall; }
+  void setIsInplaceCall(bool value = true) {
+    CoawaitBits.IsInplaceCall = value;
+  }
+
   static bool classof(const Stmt *T) {
     return T->getStmtClass() == CoawaitExprClass;
   }

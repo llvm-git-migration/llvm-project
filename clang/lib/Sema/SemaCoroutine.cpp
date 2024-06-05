@@ -825,6 +825,19 @@ ExprResult Sema::BuildOperatorCoawaitLookupExpr(Scope *S, SourceLocation Loc) {
   return CoawaitOp;
 }
 
+static bool isAttributedCoroInplaceTask(const QualType &QT) {
+  auto *Record = QT->getAsCXXRecordDecl();
+  return Record && Record->hasAttr<CoroInplaceTaskAttr>();
+}
+
+static bool isCoroInplaceCall(Expr *Operand) {
+  if (!Operand->isPRValue()) {
+    return false;
+  }
+
+  return isAttributedCoroInplaceTask(Operand->getType());
+}
+
 // Attempts to resolve and build a CoawaitExpr from "raw" inputs, bailing out to
 // DependentCoawaitExpr if needed.
 ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
@@ -864,7 +877,14 @@ ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
   if (Awaiter.isInvalid())
     return ExprError();
 
-  return BuildResolvedCoawaitExpr(Loc, Operand, Awaiter.get());
+  auto Res = BuildResolvedCoawaitExpr(Loc, Operand, Awaiter.get());
+  if (!Res.isInvalid() && isCoroInplaceCall(Operand) &&
+      isAttributedCoroInplaceTask(
+          getCurFunctionDecl(/*AllowLambda=*/true)->getReturnType())) {
+    // BuildResolvedCoawaitExpr must return a CoawaitExpr, if valid.
+    Res.getAs<CoawaitExpr>()->setIsInplaceCall();
+  }
+  return Res;
 }
 
 ExprResult Sema::BuildResolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,

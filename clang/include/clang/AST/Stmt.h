@@ -1163,6 +1163,7 @@ protected:
 
     LLVM_PREFERRED_TYPE(bool)
     unsigned IsImplicit : 1;
+    unsigned IsInplaceCall : 1;
   };
 
   //===--- Obj-C Expression bitfields classes ---===//

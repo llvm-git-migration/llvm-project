@@ -1212,6 +1212,14 @@ def CoroDisableLifetimeBound : InheritableAttr {
   let SimpleHandler = 1;
 }
 
+def CoroInplaceTask : InheritableAttr {
+  let Spellings = [Clang<"coro_inplace_task">];
+  let Subjects = SubjectList<[CXXRecord]>;
+  let LangOpts = [CPlusPlus];
+  let Documentation = [CoroInplaceTaskDoc];
+  let SimpleHandler = 1;
+}
+
 // OSObject-based attributes.
 def OSConsumed : InheritableParamAttr {
   let Spellings = [Clang<"os_consumed">];
