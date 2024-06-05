@@ -8015,6 +8015,26 @@ but do not pass them to the underlying coroutine or pass them by value.
 }];
 }
 
+def CoroStructuredConcurrencyDoc : Documentation {
+  let Category = DocCatDecl;
+  let Content = [{
+The ``[[clang::coro_structured_concurrency]]`` is a class attribute which can be applied
+to a coroutine return type.
+
+When a coroutine function that returns such a type calls another coroutine function,
+the compiler performs heap allocation elision when the following conditions are all met:
+- callee coroutine function returns a type that is annotated with
+  ``[[clang::coro_structured_concurrency]]``.
+- The callee coroutine function is inlined.
+- In caller coroutine, the return value of the callee is a prvalue or an xvalue, and
+- The temporary expression containing the callee coroutine object is immediately co_awaited.
+
+The behavior is undefined if any of the following condition was met:
+- the caller coroutine is destroyed earlier than the callee coroutine.
+
+  }];
+}
+
 def CountedByDocs : Documentation {
   let Category = DocCatField;
   let Content = [{
