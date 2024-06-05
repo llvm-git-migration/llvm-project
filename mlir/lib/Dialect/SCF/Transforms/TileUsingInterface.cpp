@@ -1548,6 +1548,9 @@ mlir::scf::tileAndFuseConsumerOfSlice(RewriterBase &rewriter,
         newInitAppend = llvm::map_to_vector(
             newExtractOps,
             [](tensor::ExtractSliceOp op) -> Value { return op.getResult(); });
+        for (auto init : newInitAppend) {
+          llvm::dbgs() << "init: " << init << "\n";
+        }
       }
     }
     LoopLikeOpInterface newLoopOp;
@@ -1555,6 +1558,9 @@ mlir::scf::tileAndFuseConsumerOfSlice(RewriterBase &rewriter,
     if (auto forOp = dyn_cast<scf::ForOp>(loop.getOperation())) {
       newOuts = llvm::to_vector(forOp.getInits());
       newOuts.append(newInitAppend.begin(), newInitAppend.end());
+      for (auto out : newOuts) {
+        llvm::dbgs() << "newOut: " << out << "\n";
+      }
       auto newLoop = rewriter.create<scf::ForOp>(
           forOp.getLoc(), forOp.getLowerBound(), forOp.getUpperBound(),
           forOp.getStep(), newOuts);
@@ -1580,6 +1586,8 @@ mlir::scf::tileAndFuseConsumerOfSlice(RewriterBase &rewriter,
     rewriter.replaceOp(
         loop, newLoopOp->getResults().take_front(loop->getNumResults()));
     newOuterLoops.push_back(newLoopOp);
+    llvm::dbgs() << "newLoop: " << *newLoopOp << "\n";
+    llvm::dbgs() << "outerLoop: " << newOuterLoops.front() << "\n";
   }
 
   // 5.a. Reconstruct inner-most loop.
