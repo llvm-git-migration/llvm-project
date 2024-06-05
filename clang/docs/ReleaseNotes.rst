@@ -209,6 +209,9 @@ Attribute Changes in Clang
 - ``[[clang::lifetimebound]]`` is now explicitly disallowed on explicit object member functions
   where they were previously silently ignored.
 
+- Introduced a new attribute ``[[clang::coro_await_elidable]]`` on coroutine return types
+  to express elideability at call sites where the coroutine is co_awaited as a prvalue.
+
 Improvements to Clang's diagnostics
 -----------------------------------
 

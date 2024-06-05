@@ -2187,6 +2187,8 @@ static Attribute::AttrKind getAttrFromCode(uint64_t Code) {
     return Attribute::Range;
   case bitc::ATTR_KIND_INITIALIZES:
     return Attribute::Initializes;
+  case bitc::ATTR_KIND_CORO_ELIDE_SAFE:
+    return Attribute::CoroElideSafe;
   }
 }
 
