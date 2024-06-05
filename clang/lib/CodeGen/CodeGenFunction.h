@@ -371,6 +371,9 @@ public:
   };
   CGCoroInfo CurCoro;
 
+  llvm::SmallDenseMap<const MaterializeTemporaryExpr *, llvm::Value *>
+      TemporaryValues;
+
   bool isCoroutine() const {
     return CurCoro.Data != nullptr;
   }

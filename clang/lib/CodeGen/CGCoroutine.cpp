@@ -12,9 +12,12 @@
 
 #include "CGCleanup.h"
 #include "CodeGenFunction.h"
-#include "llvm/ADT/ScopeExit.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/StmtCXX.h"
 #include "clang/AST/StmtVisitor.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/ScopeExit.h"
+#include "llvm/IR/Intrinsics.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -219,16 +222,80 @@ namespace {
     RValue RV;
   };
 }
+
+static MaterializeTemporaryExpr *
+getStructuredConcurrencyOperand(ASTContext &Ctx,
+                                CoroutineSuspendExpr const &S) {
+  auto *E = S.getCommonExpr();
+  auto *Temporary = dyn_cast_or_null<MaterializeTemporaryExpr>(E);
+  if (!Temporary)
+    return nullptr;
+
+  auto *Operator =
+      dyn_cast_or_null<CXXOperatorCallExpr>(Temporary->getSubExpr());
+
+  if (!Operator ||
+      Operator->getOperator() != OverloadedOperatorKind::OO_Coawait ||
+      Operator->getNumArgs() != 1)
+    return nullptr;
+
+  Expr *Arg = Operator->getArg(0);
+  assert(Arg && "Arg to operator co_await should not be null");
+  auto *CalleeRetClass = Arg->getType()->getAsCXXRecordDecl();
+
+  if (!CalleeRetClass ||
+      !CalleeRetClass->hasAttr<CoroStructuredConcurrencyTypeAttr>())
+    return nullptr;
+
+  if (!Arg->isTemporaryObject(Ctx, CalleeRetClass)) {
+    return nullptr;
+  }
+
+  return dyn_cast<MaterializeTemporaryExpr>(Arg);
+}
+
 static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Coro,
                                     CoroutineSuspendExpr const &S,
                                     AwaitKind Kind, AggValueSlot aggSlot,
                                     bool ignoreResult, bool forLValue) {
   auto *E = S.getCommonExpr();
 
+  auto &Builder = CGF.Builder;
+  bool MarkOperandSafeIntrinsic = false;
+
+  auto *TemporaryOperand = [&]() -> MaterializeTemporaryExpr * {
+    bool CurFnRetTyHasAttr = false;
+    if (auto *RetTyPtr = CGF.FnRetTy.getTypePtrOrNull()) {
+      if (auto *CxxRecord = RetTyPtr->getAsCXXRecordDecl()) {
+        CurFnRetTyHasAttr =
+            CxxRecord->hasAttr<CoroStructuredConcurrencyTypeAttr>();
+      }
+    }
+
+    if (CurFnRetTyHasAttr) {
+      return getStructuredConcurrencyOperand(CGF.getContext(), S);
+    }
+    return nullptr;
+  }();
+
+  if (TemporaryOperand) {
+    CGF.TemporaryValues[TemporaryOperand] = nullptr;
+    MarkOperandSafeIntrinsic = true;
+  }
+
   auto CommonBinder =
       CodeGenFunction::OpaqueValueMappingData::bind(CGF, S.getOpaqueValue(), E);
   auto UnbindCommonOnExit =
       llvm::make_scope_exit([&] { CommonBinder.unbind(CGF); });
+
+  if (MarkOperandSafeIntrinsic) {
+    auto It = CGF.TemporaryValues.find(TemporaryOperand);
+    assert(It != CGF.TemporaryValues.end());
+    if (auto Value = It->second)
+      Builder.CreateCall(CGF.CGM.getIntrinsic(llvm::Intrinsic::coro_safe_elide),
+                         {Value});
+    CGF.TemporaryValues.erase(TemporaryOperand);
+  }
 
   auto Prefix = buildSuspendPrefixStr(Coro, Kind);
   BasicBlock *ReadyBlock = CGF.createBasicBlock(Prefix + Twine(".ready"));
@@ -241,7 +308,6 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
   // Otherwise, emit suspend logic.
   CGF.EmitBlock(SuspendBlock);
 
-  auto &Builder = CGF.Builder;
   llvm::Function *CoroSave = CGF.CGM.getIntrinsic(llvm::Intrinsic::coro_save);
   auto *NullPtr = llvm::ConstantPointerNull::get(CGF.CGM.Int8PtrTy);
   auto *SaveCall = Builder.CreateCall(CoroSave, {NullPtr});
@@ -255,9 +321,9 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
          "expected to be called in coroutine context");
 
   SmallVector<llvm::Value *, 3> SuspendIntrinsicCallArgs;
-  SuspendIntrinsicCallArgs.push_back(
-      CGF.getOrCreateOpaqueLValueMapping(S.getOpaqueValue()).getPointer(CGF));
-
+  auto *BoundAwaiterValue =
+      CGF.getOrCreateOpaqueLValueMapping(S.getOpaqueValue()).getPointer(CGF);
+  SuspendIntrinsicCallArgs.push_back(BoundAwaiterValue);
   SuspendIntrinsicCallArgs.push_back(CGF.CurCoro.Data->CoroBegin);
   SuspendIntrinsicCallArgs.push_back(SuspendWrapper);
 
