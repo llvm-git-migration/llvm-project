@@ -54,7 +54,13 @@ llvm::SmallBitVector getPositionsOfShapeOne(unsigned rank,
                                             ArrayRef<int64_t> shape);
 
 /// Converts an OpFoldResult to a Value. Returns the fold result if it casts to
-/// a Value or creates a ConstantIndexOp if it casts to an IntegerAttribute.
+/// a Value or creates a ConstantOp if it casts to an Integer Attribute.
+/// Other attribute types are not supported.
+Value getValueOrCreateConstantOp(OpBuilder &b, Location loc, Type targetType,
+                                 OpFoldResult ofr);
+
+/// Converts an OpFoldResult to a Value. Returns the fold result if it casts to
+/// a Value or creates a ConstantIndexOp if it casts to an Integer Attribute.
 /// Other attribute types are not supported.
 Value getValueOrCreateConstantIndexOp(OpBuilder &b, Location loc,
                                       OpFoldResult ofr);

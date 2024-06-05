@@ -100,6 +100,16 @@ llvm::SmallBitVector mlir::getPositionsOfShapeOne(unsigned rank,
   return dimsToProject;
 }
 
+Value mlir::getValueOrCreateConstantOp(OpBuilder &b, Location loc,
+                                       Type targetType, OpFoldResult ofr) {
+  if (auto value = llvm::dyn_cast_if_present<Value>(ofr))
+    return value;
+  auto attr = dyn_cast<IntegerAttr>(llvm::dyn_cast_if_present<Attribute>(ofr));
+  assert(attr && "expect the op fold result casts to an integer attribute");
+  return b.create<arith::ConstantOp>(
+      loc, b.getIntegerAttr(targetType, attr.getValue().getSExtValue()));
+}
+
 Value mlir::getValueOrCreateConstantIndexOp(OpBuilder &b, Location loc,
                                             OpFoldResult ofr) {
   if (auto value = llvm::dyn_cast_if_present<Value>(ofr))
