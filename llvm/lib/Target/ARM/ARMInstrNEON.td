@@ -5655,6 +5655,34 @@ def  VABDhq   : N3VQInt<1, 0, 0b11, 0b1101, 0, N3RegFrm, IIC_VBINQ,
                         "vabd", "f16", v8f16, v8f16, int_arm_neon_vabds, 1>,
                 Requires<[HasNEON, HasFullFP16]>;
 
+let Predicates = [HasNEON] in {
+def : Pat<(v2i32 (abds (v2i32 DPR:$opA), (v2i32 DPR:$opB))),
+          (VABDsv2i32 DPR:$opA, DPR:$opB)>;
+def : Pat<(v4i16 (abds (v4i16 DPR:$opA), (v4i16 DPR:$opB))),
+          (VABDsv4i16 DPR:$opA, DPR:$opB)>;
+def : Pat<(v8i8 (abds (v8i8 DPR:$opA), (v8i8 DPR:$opB))),
+          (VABDsv8i8 DPR:$opA, DPR:$opB)>;
+def : Pat<(v4i32 (abds (v4i32 QPR:$opA), (v4i32 QPR:$opB))),
+          (VABDsv4i32 QPR:$opA, QPR:$opB)>;
+def : Pat<(v8i16 (abds (v8i16 QPR:$opA), (v8i16 QPR:$opB))),
+          (VABDsv8i16 QPR:$opA, QPR:$opB)>;
+def : Pat<(v16i8 (abds (v16i8 QPR:$opA), (v16i8 QPR:$opB))),
+          (VABDsv16i8 QPR:$opA, QPR:$opB)>;
+
+def : Pat<(v2i32 (abdu (v2i32 DPR:$opA), (v2i32 DPR:$opB))),
+          (VABDuv2i32 DPR:$opA, DPR:$opB)>;
+def : Pat<(v4i16 (abdu (v4i16 DPR:$opA), (v4i16 DPR:$opB))),
+          (VABDuv4i16 DPR:$opA, DPR:$opB)>;
+def : Pat<(v8i8 (abdu (v8i8 DPR:$opA), (v8i8 DPR:$opB))),
+          (VABDuv8i8 DPR:$opA, DPR:$opB)>;
+def : Pat<(v4i32 (abdu (v4i32 QPR:$opA), (v4i32 QPR:$opB))),
+          (VABDuv4i32 QPR:$opA, QPR:$opB)>;
+def : Pat<(v8i16 (abdu (v8i16 QPR:$opA), (v8i16 QPR:$opB))),
+          (VABDuv8i16 QPR:$opA, QPR:$opB)>;
+def : Pat<(v16i8 (abdu (v16i8 QPR:$opA), (v16i8 QPR:$opB))),
+          (VABDuv16i8 QPR:$opA, QPR:$opB)>;
+}
+
 //   VABDL    : Vector Absolute Difference Long (Q = | D - D |)
 defm VABDLs   : N3VLIntExt_QHS<0,1,0b0111,0, IIC_VSUBi4Q,
                                "vabdl", "s", int_arm_neon_vabds, zext, 1>;
@@ -5662,9 +5690,9 @@ defm VABDLu   : N3VLIntExt_QHS<1,1,0b0111,0, IIC_VSUBi4Q,
                                "vabdl", "u", int_arm_neon_vabdu, zext, 1>;
 
 let Predicates = [HasNEON] in {
-def : Pat<(v8i16 (abs (sub (zext (v8i8 DPR:$opA)), (zext (v8i8 DPR:$opB))))),
+def : Pat<(v8i16 (zext (abdu (v8i8 DPR:$opA), (v8i8 DPR:$opB)))),
           (VABDLuv8i16 DPR:$opA, DPR:$opB)>;
-def : Pat<(v4i32 (abs (sub (zext (v4i16 DPR:$opA)), (zext (v4i16 DPR:$opB))))),
+def : Pat<(v4i32 (zext (abdu (v4i16 DPR:$opA), (v4i16 DPR:$opB)))),
           (VABDLuv4i32 DPR:$opA, DPR:$opB)>;
 }
 
