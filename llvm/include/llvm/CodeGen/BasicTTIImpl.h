@@ -2609,6 +2609,13 @@ public:
     return RedCost + ExtCost;
   }
 
+  InstructionCost getPartialReductionCost(unsigned Opcode, bool IsUnsigned,
+                                          VectorType *ResTy, VectorType *Ty,
+                                          FastMathFlags FMD,
+                                          TTI::TargetCostKind CostKind) {
+    return InstructionCost::getMax();
+  }
+
   InstructionCost getMulAccReductionCost(bool IsUnsigned, Type *ResTy,
                                          VectorType *Ty,
                                          TTI::TargetCostKind CostKind) {
