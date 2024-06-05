@@ -1300,6 +1300,8 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
     if (TrueVal == OldOp)
       return nullptr;
 
+    bool NewOpNeverUndef = false;
+
     if (Value *V = simplifyWithOpReplaced(TrueVal, OldOp, NewOp, SQ,
                                           /* AllowRefinement=*/true)) {
       // Need some guarantees about the new simplified op to ensure we don't inf
@@ -1312,11 +1314,52 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
         return nullptr;
       }
 
-      // If NewOp is a constant and OldOp is not replace iff NewOp doesn't
-      // contain and undef elements.
-      if (match(NewOp, m_ImmConstant()) &&
-          isGuaranteedNotToBeUndef(NewOp, SQ.AC, &Sel, &DT))
+      // We can't do any further replacement if NewOp may be undef/poison.
+      if (!isGuaranteedNotToBeUndefOrPoison(NewOp, SQ.AC, &Sel, &DT))
+        return nullptr;
+
+      // If NewOp is a constant, replace.
+      if (match(NewOp, m_ImmConstant()))
         return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+      // If we simplified the TrueArm -> NewOp then replace.
+      // This handles things like `select`/`min`/`max`/`or`/`and`/etc...
+      if (NewOp == V)
+        return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+      NewOpNeverUndef = true;
+    }
+
+    // If we can't simplify, but we will either:
+    //  1) Create a new binop where both ops are NewOp i.e (add x, y) is "worse"
+    //     than (add y, y) in this case, wait until the second call so we don't
+    //     miss a one-use simplification.
+    //  2) Create a new one-use instruction.
+    // proceed.
+    if (TrueVal->hasOneUse() && isa<Instruction>(TrueVal)) {
+      bool BinOpMatch =
+          match(TrueVal, m_c_BinOp(m_Specific(OldOp), m_Specific(NewOp)));
+      bool NewOneUse = isa<Instruction>(OldOp) && OldOp->hasNUses(2) &&
+                       (!isa<Instruction>(NewOp) || !NewOp->hasOneUse());
+      if (BinOpMatch || NewOneUse) {
+        bool Replaced = false;
+        auto *TrueIns = cast<Instruction>(TrueVal);
+        for (unsigned OpIdx = 0; OpIdx < TrueIns->getNumOperands(); ++OpIdx) {
+          if (TrueIns->getOperand(OpIdx) != OldOp)
+            continue;
+          // Need to ensure NewOp is noundef (same reason as above). Wait
+          // until the last moment to do this check as it can be relatively
+          // expensive.
+          if (!NewOpNeverUndef &&
+              !isGuaranteedNotToBeUndefOrPoison(NewOp, SQ.AC, &Sel, &DT))
+            break;
+          NewOpNeverUndef = true;
+          TrueIns->setOperand(OpIdx, NewOp);
+          Replaced = true;
+        }
+        if (Replaced)
+          return replaceOperand(Sel, Swapped ? 2 : 1, TrueIns);
+      }
     }
 
     // Even if TrueVal does not simplify, we can directly replace a use of
