@@ -1099,6 +1099,19 @@ static void LLDBSwigPythonCallPythonSBDebuggerTerminateCallback(lldb::user_id_t 
   }
 }
 
+static bool LLDBSwigPythonCallPythonSBCommandInterpreterSetCommandOverrideCallback(void *baton, const char **argv) {
+  bool b = false;
+  if (baton != Py_None) {
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+    PyObject *result = PyObject_CallFunction(
+      reinterpret_cast<PyObject *>(baton), const_cast<char *>("s"), argv); // WRONG!!!!!
+    b = result ? PyObject_IsTrue(result) : false;
+    Py_XDECREF(result);
+    SWIG_PYTHON_THREAD_END_BLOCK;
+  }
+  return b;
+}
+
 static SBError LLDBSwigPythonCallLocateModuleCallback(
     void *callback_baton, const SBModuleSpec &module_spec_sb,
     SBFileSpec &module_file_spec_sb, SBFileSpec &symbol_file_spec_sb) {
