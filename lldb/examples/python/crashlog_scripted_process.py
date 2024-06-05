@@ -84,6 +84,13 @@ class CrashLogScriptedProcess(ScriptedProcess):
             if crashed_only.GetType() == lldb.eStructuredDataTypeBoolean:
                 self.options.crashed_only = crashed_only.GetBooleanValue()
 
+        parallel_image_loading = args.GetValueForKey("parallel_image_loading")
+        if parallel_image_loading and parallel_image_loading.IsValid():
+            if parallel_image_loading.GetType() == lldb.eStructuredDataTypeBoolean:
+                self.options.parallel_image_loading = (
+                    parallel_image_loading.GetBooleanValue()
+                )
+
         self.pid = super().get_process_id()
         self.crashed_thread_idx = 0
         self.exception = None

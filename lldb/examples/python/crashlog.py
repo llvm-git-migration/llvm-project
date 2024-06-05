@@ -555,30 +555,44 @@ class CrashLog(symbolication.Symbolicator):
 
         futures = []
         with tempfile.TemporaryDirectory() as obj_dir:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
 
-                def add_module(image, target, obj_dir):
-                    return image, image.add_module(target, obj_dir)
+            def add_module(image, target, obj_dir):
+                return image, image.add_module(target, obj_dir)
 
+            if options.parallel_image_loading:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    for image in images_to_load:
+                        if image not in loaded_images:
+                            if image.uuid == uuid.UUID(int=0):
+                                continue
+                            futures.append(
+                                executor.submit(
+                                    add_module,
+                                    image=image,
+                                    target=self.target,
+                                    obj_dir=obj_dir,
+                                )
+                            )
+
+                    for future in concurrent.futures.as_completed(futures):
+                        image, err = future.result()
+                        if err:
+                            print(err)
+                        else:
+                            loaded_images.append(image)
+            else:
                 for image in images_to_load:
                     if image not in loaded_images:
                         if image.uuid == uuid.UUID(int=0):
                             continue
-                        futures.append(
-                            executor.submit(
-                                add_module,
-                                image=image,
-                                target=self.target,
-                                obj_dir=obj_dir,
-                            )
+                        image, err = add_module(
+                            image=image, target=self.target, obj_dir=obj_dir
                         )
 
-                for future in concurrent.futures.as_completed(futures):
-                    image, err = future.result()
-                    if err:
-                        print(err)
-                    else:
-                        loaded_images.append(image)
+                        if err:
+                            print(err)
+                        else:
+                            loaded_images.append(image)
 
 
 class CrashLogFormatException(Exception):
@@ -1528,6 +1542,7 @@ def load_crashlog_in_scripted_process(debugger, crashlog_path, options, result):
                 "file_path": crashlog_path,
                 "load_all_images": options.load_all_images,
                 "crashed_only": options.crashed_only,
+                "parallel_image_loading": options.parallel_image_loading,
             }
         )
     )
@@ -1719,6 +1734,13 @@ def CreateSymbolicateCrashLogOptions(
         dest="source_all",
         help="show source for all threads, not just the crashed thread",
         default=False,
+    )
+    arg_parser.add_argument(
+        "--no-parallel-image-loading",
+        dest="parallel_image_loading",
+        action="store_false",
+        help=argparse.SUPPRESS,
+        default=True,
     )
     if add_interactive_options:
         arg_parser.add_argument(
