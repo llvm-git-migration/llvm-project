@@ -494,6 +494,7 @@ add_fp_unittest(
   HDRS
     RIntTest.h
   DEPENDS
+    libc.hdr.fenv_macros
     libc.src.math.rint
     libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fenv_impl
@@ -510,6 +511,7 @@ add_fp_unittest(
   HDRS
     RIntTest.h
   DEPENDS
+    libc.hdr.fenv_macros
     libc.src.math.rintf
     libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fenv_impl
@@ -526,6 +528,7 @@ add_fp_unittest(
   HDRS
     RIntTest.h
   DEPENDS
+    libc.hdr.fenv_macros
     libc.src.math.rintl
     libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fenv_impl
@@ -542,6 +545,7 @@ add_fp_unittest(
   HDRS
     RIntTest.h
   DEPENDS
+    libc.hdr.fenv_macros
     libc.src.math.rintf16
     libc.src.__support.CPP.algorithm
     libc.src.__support.FPUtil.fenv_impl
