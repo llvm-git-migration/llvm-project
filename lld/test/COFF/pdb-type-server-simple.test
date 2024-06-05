@@ -16,15 +16,17 @@ $ cl -c a.c b.c -Zi -Fdts.pdb
 
 $ lld-link a.obj b.obj -debug -entry:main -nodefaultlib -out:t.exe
 
-RUN: rm -rf %t && mkdir -p %t && cd %t
+RUN: rm -rf %t && mkdir -p %t && mkdir -p %t/lib && cd %t
 RUN: yaml2obj %S/Inputs/pdb-type-server-simple-a.yaml -o a.obj
 RUN: yaml2obj %S/Inputs/pdb-type-server-simple-b.yaml -o b.obj
+RUN: yaml2obj %S/Inputs/pdb-type-server-simple-a.yaml -o lib/a.obj
+RUN: yaml2obj %S/Inputs/pdb-type-server-simple-b.yaml -o lib/b.obj
 RUN: llvm-pdbutil yaml2pdb %S/Inputs/pdb-type-server-simple-ts.yaml -pdb ts.pdb
 RUN: lld-link a.obj b.obj -entry:main -debug:noghash -out:t.exe -pdb:t.pdb -nodefaultlib -summary | FileCheck %s -check-prefix SUMMARY
 RUN: llvm-pdbutil dump -symbols -types -ids -globals %t/t.pdb | FileCheck %s
 
 Re-run with /DEBUG:GHASH
-RUN: lld-link a.obj b.obj -entry:main -debug:ghash -out:t.exe -pdb:t.pdb -nodefaultlib -summary -verbose
+RUN: lld-link lib/a.obj lib/b.obj -entry:main -debug:ghash -out:t.exe -pdb:t.pdb -nodefaultlib -summary -verbose
 RUN: llvm-pdbutil dump -symbols -types -ids -globals %t/t.pdb | FileCheck %s
 
 
