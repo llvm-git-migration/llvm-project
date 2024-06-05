@@ -141,6 +141,10 @@ class TestDAP_console(lldbdap_testcase.DAPTestCaseBase):
 
         # Get the console output
         console_output = self.collect_console(1.0)
+        n_reads = 0
+        while n_reads < 10 and "exited with status" not in console_output:
+            console_output += self.collect_console(1.0)
+            n_reads += 1
 
         # Verify the exit status message is printed.
         self.assertIn(
