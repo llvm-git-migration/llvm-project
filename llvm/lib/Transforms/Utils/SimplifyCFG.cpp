@@ -131,6 +131,12 @@ static cl::opt<bool> HoistCondStores(
     "simplifycfg-hoist-cond-stores", cl::Hidden, cl::init(true),
     cl::desc("Hoist conditional stores if an unconditional store precedes"));
 
+static cl::opt<bool> HoistLoadsStoresWithCondFaulting(
+    "simplifycfg-hoist-loads-stores-with-cond-faulting", cl::Hidden,
+    cl::init(true),
+    cl::desc("Hoist loads/stores if the target supports "
+             "conditional faulting"));
+
 static cl::opt<bool> MergeCondStores(
     "simplifycfg-merge-cond-stores", cl::Hidden, cl::init(true),
     cl::desc("Hoist conditional stores even if an unconditional store does not "
@@ -275,6 +281,7 @@ class SimplifyCFGOpt {
   bool hoistSuccIdenticalTerminatorToSwitchOrIf(
       Instruction *TI, Instruction *I1,
       SmallVectorImpl<Instruction *> &OtherSuccTIs);
+  bool hoistLoadStoreWithCondFaultingFromSuccessors(BasicBlock *BB);
   bool SpeculativelyExecuteBB(BranchInst *BI, BasicBlock *ThenBB);
   bool SimplifyTerminatorOnSelect(Instruction *OldTerm, Value *Cond,
                                   BasicBlock *TrueBB, BasicBlock *FalseBB,
@@ -2975,6 +2982,79 @@ static bool validateAndCostRequiredSelects(BasicBlock *BB, BasicBlock *ThenBB,
   }
 
   return HaveRewritablePHIs;
+}
+
+/// Hoist load/store instructions from the conditional successor blocks up into
+/// the block.
+///
+/// We are looking for code like the following:
+/// \code
+///   BB:
+///     ...
+///     %cond = icmp ult %x, %y
+///     br i1 %cond, label %TrueBB, label %FalseBB
+///   FalseBB:
+///     store i32 1, ptr %q, align 4
+///     ...
+///   TrueBB:
+///     %0 = load i32, ptr %b, align 4
+///     store i32 %0, ptr %p, align 4
+///     ...
+/// \endcode
+//
+/// We are going to transform this into:
+///
+/// \code
+///   BB:
+///     ...
+///     %cond = icmp ult %x, %y
+///     %0 = cload i32, ptr %b, %cond
+///     cstore i32 %0, ptr %p, %cond
+///     cstore i32 1, ptr %q, ~%cond
+///     br i1 %cond, label %TrueBB, label %FalseBB
+///   FalseBB:
+///     ...
+///   TrueBB:
+///     ...
+/// \endcode
+///
+/// where cload/cstore is represented by llvm.masked.load/store, e.g.
+///
+/// \code
+///   %vcond = insertelement <1 x i1> undef, i1 %cond, i32 0
+///   %v0 = call <1 x i32> @llvm.masked.load.v1i32.p0
+///                         (ptr %b, i32 4, <1 x i1> %vcond, <1 x i32> undef)
+///   %0 = bitcast <1 x i32> %v0 to i32 call void
+///   @llvm.masked.store.v1i32.p0(<1 x i32> %v0, ptr %p, i32 4, <1 x i1> %vcond)
+///   %cond.not = xor i1 %cond, true
+///   %vcond.not = insertelement <1 x i1> undef, i1 %cond, i32 0
+///   call void @llvm.masked.store.v1i32.p0
+///              (<1 x i32> <i32 1>, ptr %q, i32 4, <1x i1> %vcond.not)
+/// \endcode
+///
+/// \returns true if any load/store is hosited.
+///
+/// Note that this tranform should be run
+/// * before SpeculativelyExecuteBB so that the latter can have more chance.
+/// * after hoistCommonCodeFromSuccessors to ensure unconditional loads/stores
+///   are handled first.
+bool SimplifyCFGOpt::hoistLoadStoreWithCondFaultingFromSuccessors(
+    BasicBlock *BB) {
+  auto *BI = dyn_cast<BranchInst>(BB->getTerminator());
+  if (!BI || !BI->isConditional())
+    return false;
+
+  BasicBlock *IfTrueBB = BI->getSuccessor(0);
+  BasicBlock *IfFalseBB = BI->getSuccessor(1);
+
+  // If either of the blocks has it's address taken, then we can't do this fold,
+  // because the code we'd hoist would no longer run when we jump into the block
+  // by it's address.
+  for (auto *Succ : {IfTrueBB, IfFalseBB})
+    if (Succ->hasAddressTaken() || !Succ->getSinglePredecessor())
+      return false;
+
+  return false;
 }
 
 /// Speculate a conditional basic block flattening the CFG.
@@ -7436,13 +7516,19 @@ bool SimplifyCFGOpt::simplifyCondBranch(BranchInst *BI, IRBuilder<> &Builder) {
     return requestResimplify();
 
   // We have a conditional branch to two blocks that are only reachable
-  // from BI.  We know that the condbr dominates the two blocks, so see if
-  // there is any identical code in the "then" and "else" blocks.  If so, we
-  // can hoist it up to the branching block.
+  // from BI.  We know that the condbr dominates the two blocks, so see
+  //
+  // * if there is any identical code in the "then" and "else" blocks.
+  // * if there is any different load/store in the "then" and "else" blocks.
+  //
+  // If so, we can hoist it up to the branching block.
   if (BI->getSuccessor(0)->getSinglePredecessor()) {
     if (BI->getSuccessor(1)->getSinglePredecessor()) {
       if (HoistCommon && hoistCommonCodeFromSuccessors(
                              BI->getParent(), !Options.HoistCommonInsts))
+        return requestResimplify();
+      if (HoistLoadsStoresWithCondFaulting &&
+          hoistLoadStoreWithCondFaultingFromSuccessors(BI->getParent()))
         return requestResimplify();
     } else {
       // If Successor #1 has multiple preds, we may be able to conditionally
