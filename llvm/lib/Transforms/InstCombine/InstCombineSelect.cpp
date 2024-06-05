@@ -1299,6 +1299,8 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
     if (TrueVal == OldOp)
       return nullptr;
 
+    bool NewOpNeverUndef = false;
+
     if (Value *V = simplifyWithOpReplaced(TrueVal, OldOp, NewOp, SQ,
                                           /* AllowRefinement=*/true)) {
       // Need some guarantees about the new simplified op to ensure we don't inf
@@ -1308,13 +1310,20 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
           isGuaranteedNotToBeUndef(V, SQ.AC, &Sel, &DT))
         return replaceOperand(Sel, Swapped ? 2 : 1, V);
 
-      // If NewOp is a constant and OldOp is not replace iff NewOp doesn't
-      // contain and undef elements.
-      if (match(NewOp, m_ImmConstant())) {
-        if (isGuaranteedNotToBeUndef(NewOp, SQ.AC, &Sel, &DT))
-          return replaceOperand(Sel, Swapped ? 2 : 1, V);
+      // We can't do any further replacement if NewOp may be undef.
+      if (!isGuaranteedNotToBeUndef(NewOp, SQ.AC, &Sel, &DT))
         return nullptr;
-      }
+
+      // If NewOp is a constant, replace.
+      if (match(NewOp, m_ImmConstant()))
+        return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+      // If we simplified the TrueArm -> NewOp then replace.
+      // This handles things like `select`/`min`/`max`/`or`/`and`/etc...
+      if (NewOp == V)
+        return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+      NewOpNeverUndef = true;
     }
 
     // Even if TrueVal does not simplify, we can directly replace a use of
@@ -1326,7 +1335,7 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
     // FIXME: Support vectors.
     if (OldOp == CmpLHS && match(NewOp, m_ImmConstant()) &&
         !match(OldOp, m_ImmConstant()) && !Cmp.getType()->isVectorTy() &&
-        isGuaranteedNotToBeUndef(NewOp, SQ.AC, &Sel, &DT))
+        (NewOpNeverUndef || isGuaranteedNotToBeUndef(NewOp, SQ.AC, &Sel, &DT)))
       if (replaceInInstruction(TrueVal, OldOp, NewOp))
         return &Sel;
     return nullptr;
