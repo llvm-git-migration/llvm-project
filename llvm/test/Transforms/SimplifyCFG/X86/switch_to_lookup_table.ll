@@ -308,10 +308,10 @@ define i32 @overflow(i32 %type) {
 ; CHECK-LABEL: @overflow(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    switch i32 [[TYPE:%.*]], label [[IF_END:%.*]] [
-; CHECK-NEXT:    i32 3, label [[SW_BB3:%.*]]
-; CHECK-NEXT:    i32 -2147483645, label [[SW_BB3]]
-; CHECK-NEXT:    i32 1, label [[SW_BB1:%.*]]
-; CHECK-NEXT:    i32 2, label [[SW_BB2:%.*]]
+; CHECK-NEXT:      i32 3, label [[SW_BB3:%.*]]
+; CHECK-NEXT:      i32 -2147483645, label [[SW_BB3]]
+; CHECK-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 2, label [[SW_BB2:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[IF_END]]
@@ -931,11 +931,11 @@ define i96 @illegaltype(i32 %c) {
 ; CHECK-LABEL: @illegaltype(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    switch i32 [[C:%.*]], label [[SW_DEFAULT:%.*]] [
-; CHECK-NEXT:    i32 42, label [[RETURN:%.*]]
-; CHECK-NEXT:    i32 43, label [[SW_BB1:%.*]]
-; CHECK-NEXT:    i32 44, label [[SW_BB2:%.*]]
-; CHECK-NEXT:    i32 45, label [[SW_BB3:%.*]]
-; CHECK-NEXT:    i32 46, label [[SW_BB4:%.*]]
+; CHECK-NEXT:      i32 42, label [[RETURN:%.*]]
+; CHECK-NEXT:      i32 43, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 44, label [[SW_BB2:%.*]]
+; CHECK-NEXT:      i32 45, label [[SW_BB3:%.*]]
+; CHECK-NEXT:      i32 46, label [[SW_BB4:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[RETURN]]
@@ -1050,9 +1050,9 @@ define i32 @threecasesholes(i32 %c) {
 ; CHECK-LABEL: @threecasesholes(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    switch i32 [[C:%.*]], label [[SW_DEFAULT:%.*]] [
-; CHECK-NEXT:    i32 0, label [[RETURN:%.*]]
-; CHECK-NEXT:    i32 1, label [[SW_BB1:%.*]]
-; CHECK-NEXT:    i32 3, label [[SW_BB2:%.*]]
+; CHECK-NEXT:      i32 0, label [[RETURN:%.*]]
+; CHECK-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 3, label [[SW_BB2:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[RETURN]]
@@ -1142,9 +1142,9 @@ define ptr @tls(i32 %x) {
 ; CHECK-LABEL: @tls(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    switch i32 [[X:%.*]], label [[SW_DEFAULT:%.*]] [
-; CHECK-NEXT:    i32 0, label [[RETURN:%.*]]
-; CHECK-NEXT:    i32 1, label [[SW_BB1:%.*]]
-; CHECK-NEXT:    i32 2, label [[SW_BB2:%.*]]
+; CHECK-NEXT:      i32 0, label [[RETURN:%.*]]
+; CHECK-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 2, label [[SW_BB2:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[RETURN]]
@@ -1182,9 +1182,9 @@ define ptr @dllimport(i32 %x) {
 ; CHECK-LABEL: @dllimport(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    switch i32 [[X:%.*]], label [[SW_DEFAULT:%.*]] [
-; CHECK-NEXT:    i32 0, label [[RETURN:%.*]]
-; CHECK-NEXT:    i32 1, label [[SW_BB1:%.*]]
-; CHECK-NEXT:    i32 2, label [[SW_BB2:%.*]]
+; CHECK-NEXT:      i32 0, label [[RETURN:%.*]]
+; CHECK-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 2, label [[SW_BB2:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[RETURN]]
@@ -1476,11 +1476,11 @@ define void @pr20210(i8 %x, i1 %y) {
 ; CHECK-NEXT:    br i1 [[Y:%.*]], label [[SW:%.*]], label [[INTERMEDIATE:%.*]]
 ; CHECK:       sw:
 ; CHECK-NEXT:    switch i8 [[X:%.*]], label [[END:%.*]] [
-; CHECK-NEXT:    i8 7, label [[INTERMEDIATE]]
-; CHECK-NEXT:    i8 3, label [[INTERMEDIATE]]
-; CHECK-NEXT:    i8 2, label [[INTERMEDIATE]]
-; CHECK-NEXT:    i8 1, label [[INTERMEDIATE]]
-; CHECK-NEXT:    i8 0, label [[INTERMEDIATE]]
+; CHECK-NEXT:      i8 7, label [[INTERMEDIATE]]
+; CHECK-NEXT:      i8 3, label [[INTERMEDIATE]]
+; CHECK-NEXT:      i8 2, label [[INTERMEDIATE]]
+; CHECK-NEXT:      i8 1, label [[INTERMEDIATE]]
+; CHECK-NEXT:      i8 0, label [[INTERMEDIATE]]
 ; CHECK-NEXT:    ]
 ; CHECK:       intermediate:
 ; CHECK-NEXT:    [[Z:%.*]] = zext i8 [[X]] to i32
@@ -1612,15 +1612,15 @@ define void @wineh_test(i64 %val) personality ptr @__CxxFrameHandler3 {
 ; CHECK-LABEL: @wineh_test(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    invoke void @throw(i1 false)
-; CHECK-NEXT:    to label [[UNREACHABLE:%.*]] unwind label [[CLEANUP1:%.*]]
+; CHECK-NEXT:            to label [[UNREACHABLE:%.*]] unwind label [[CLEANUP1:%.*]]
 ; CHECK:       unreachable:
 ; CHECK-NEXT:    unreachable
 ; CHECK:       cleanup1:
 ; CHECK-NEXT:    [[CLEANUPPAD1:%.*]] = cleanuppad within none []
 ; CHECK-NEXT:    switch i64 [[VAL:%.*]], label [[CLEANUPDONE2:%.*]] [
-; CHECK-NEXT:    i64 0, label [[CLEANUPDONE1:%.*]]
-; CHECK-NEXT:    i64 1, label [[CLEANUPDONE1]]
-; CHECK-NEXT:    i64 6, label [[CLEANUPDONE1]]
+; CHECK-NEXT:      i64 0, label [[CLEANUPDONE1:%.*]]
+; CHECK-NEXT:      i64 1, label [[CLEANUPDONE1]]
+; CHECK-NEXT:      i64 6, label [[CLEANUPDONE1]]
 ; CHECK-NEXT:    ]
 ; CHECK:       cleanupdone1:
 ; CHECK-NEXT:    cleanupret from [[CLEANUPPAD1]] unwind label [[CLEANUP2:%.*]]
@@ -1733,9 +1733,9 @@ define i32 @signed_overflow2(i8 %n) {
 ; CHECK-NEXT:  start:
 ; CHECK-NEXT:    [[TRUNC:%.*]] = trunc i8 [[N:%.*]] to i2
 ; CHECK-NEXT:    switch i2 [[TRUNC]], label [[BB1:%.*]] [
-; CHECK-NEXT:    i2 1, label [[BB6:%.*]]
-; CHECK-NEXT:    i2 -2, label [[BB4:%.*]]
-; CHECK-NEXT:    i2 -1, label [[BB5:%.*]]
+; CHECK-NEXT:      i2 1, label [[BB6:%.*]]
+; CHECK-NEXT:      i2 -2, label [[BB4:%.*]]
+; CHECK-NEXT:      i2 -1, label [[BB5:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       bb1:
 ; CHECK-NEXT:    unreachable
@@ -1756,6 +1756,57 @@ start:
   ]
 
 bb1:                                              ; preds = %start
+  unreachable
+
+bb3:                                              ; preds = %start
+  br label %bb6
+
+bb4:                                              ; preds = %start
+  br label %bb6
+
+bb5:                                              ; preds = %start
+  br label %bb6
+
+bb6:                                              ; preds = %start, %bb3, %bb4, %bb5
+  %.sroa.0.0 = phi i32 [ 4444, %bb5 ], [ 3333, %bb4 ], [ 2222, %bb3 ]
+  ret i32 %.sroa.0.0
+}
+
+; This is the same as @signed_overflow2 except that the default case calls @exit(), so it
+; isn't treated as unreachable
+define i32 @signed_overflow3(i8 %n) {
+; CHECK-LABEL: @signed_overflow3(
+; CHECK-NEXT:  start:
+; CHECK-NEXT:    [[TRUNC:%.*]] = trunc i8 [[N:%.*]] to i2
+; CHECK-NEXT:    switch i2 [[TRUNC]], label [[START_UNREACHABLEDEFAULT:%.*]] [
+; CHECK-NEXT:      i2 1, label [[BB6:%.*]]
+; CHECK-NEXT:      i2 -2, label [[BB4:%.*]]
+; CHECK-NEXT:      i2 -1, label [[BB5:%.*]]
+; CHECK-NEXT:      i2 0, label [[BB1:%.*]]
+; CHECK-NEXT:    ]
+; CHECK:       start.unreachabledefault:
+; CHECK-NEXT:    unreachable
+; CHECK:       bb1:
+; CHECK-NEXT:    call void @exit(i32 1)
+; CHECK-NEXT:    unreachable
+; CHECK:       bb4:
+; CHECK-NEXT:    br label [[BB6]]
+; CHECK:       bb5:
+; CHECK-NEXT:    br label [[BB6]]
+; CHECK:       bb6:
+; CHECK-NEXT:    [[DOTSROA_0_0:%.*]] = phi i32 [ 4444, [[BB5]] ], [ 3333, [[BB4]] ], [ 2222, [[START:%.*]] ]
+; CHECK-NEXT:    ret i32 [[DOTSROA_0_0]]
+;
+start:
+  %trunc = trunc i8 %n to i2
+  switch i2 %trunc, label %bb1 [
+  i2 1, label %bb3
+  i2 -2, label %bb4
+  i2 -1, label %bb5
+  ]
+
+bb1:                                              ; preds = %start
+  call void @exit(i32 1)
   unreachable
 
 bb3:                                              ; preds = %start
