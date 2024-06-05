@@ -31,9 +31,11 @@ namespace mpfr {
 // precision compared to the floating point precision.
 template <typename T> struct ExtraPrecision;
 
+#ifdef LIBC_TYPES_HAS_FLOAT16
 template <> struct ExtraPrecision<float16> {
   static constexpr unsigned int VALUE = 128;
 };
+#endif
 
 template <> struct ExtraPrecision<float> {
   static constexpr unsigned int VALUE = 128;
@@ -93,9 +95,13 @@ public:
   // precision. We exceptionally allow implicit conversions from float16
   // to float, as the MPFR API does not support float16, thus requiring
   // conversion to a higher-precision format.
-  template <typename XType, cpp::enable_if_t<cpp::is_same_v<float, XType> ||
-                                                 cpp::is_same_v<float16, XType>,
-                                             int> = 0>
+  template <typename XType,
+            cpp::enable_if_t<cpp::is_same_v<float, XType>
+#ifdef LIBC_TYPES_HAS_FLOAT16
+                                 || cpp::is_same_v<float16, XType>
+#endif
+                             ,
+                             int> = 0>
   explicit MPFRNumber(XType x,
                       unsigned int precision = ExtraPrecision<XType>::VALUE,
                       RoundingMode rounding = RoundingMode::Nearest)
@@ -537,7 +543,12 @@ public:
     // If the control reaches here, it means that this number and input are
     // of the same sign but different exponent. In such a case, ULP error is
     // calculated as sum of two parts.
+#ifdef LIBC_TYPES_HAS_FLOAT16
+    // TODO: This will no longer be needed once std::abs supports float16.
     using U = cpp::conditional_t<cpp::is_same_v<T, float16>, float, T>;
+#else
+    using U = T;
+#endif
     thisAsT = std::abs(static_cast<U>(thisAsT));
     input = std::abs(static_cast<U>(input));
     T min = thisAsT > input ? input : thisAsT;
@@ -594,9 +605,13 @@ template <> long double MPFRNumber::as<long double>() const {
   return mpfr_get_ld(value, mpfr_rounding);
 }
 
+#ifdef LIBC_TYPES_HAS_FLOAT16
 template <> float16 MPFRNumber::as<float16>() const {
-  return static_cast<float16>(mpfr_get_flt(value, mpfr_rounding));
+  // TODO: Either prove that this cast won't cause double-rounding errors, or
+  // find a better way to get a float16.
+  return static_cast<float16>(mpfr_get_d(value, mpfr_rounding));
 }
+#endif
 
 namespace internal {
 
@@ -776,8 +791,10 @@ template void explain_unary_operation_single_output_error<double>(
     Operation op, double, double, double, RoundingMode);
 template void explain_unary_operation_single_output_error<long double>(
     Operation op, long double, long double, double, RoundingMode);
+#ifdef LIBC_TYPES_HAS_FLOAT16
 template void explain_unary_operation_single_output_error<float16>(
     Operation op, float16, float16, double, RoundingMode);
+#endif
 
 template <typename T>
 void explain_unary_operation_two_outputs_error(
@@ -957,9 +974,11 @@ template bool compare_unary_operation_single_output<double>(Operation, double,
                                                             RoundingMode);
 template bool compare_unary_operation_single_output<long double>(
     Operation, long double, long double, double, RoundingMode);
+#ifdef LIBC_TYPES_HAS_FLOAT16
 template bool compare_unary_operation_single_output<float16>(Operation, float16,
                                                              float16, double,
                                                              RoundingMode);
+#endif
 
 template <typename T>
 bool compare_unary_operation_two_outputs(Operation op, T input,
@@ -1091,7 +1110,6 @@ template <typename T> T round(T x, RoundingMode mode) {
 template float round<float>(float, RoundingMode);
 template double round<double>(double, RoundingMode);
 template long double round<long double>(long double, RoundingMode);
-template float16 round<float16>(float16, RoundingMode);
 
 } // namespace mpfr
 } // namespace testing
