@@ -5,6 +5,7 @@
 #define FIRST(x) DIR_START x
 #define NEXT(x) DIR_CONT x
 #define AMPER &
+#define COMMENT !
 
 subroutine s(x1, x2, x3, x4, x5, x6, x7)
 
@@ -28,6 +29,14 @@ FIRST(ignore_tkr &)
 NEXT(x7 &)
 NEXT(x8)
 
+COMMENT blah &
+COMMENT & more
+stop 1
+
+DIR_START blah &
+DIR_START & more
+stop 2
+
 end
 
 !CHECK: subroutine s(x1, x2, x3, x4, x5, x6, x7)
@@ -38,4 +47,6 @@ end
 !CHECK: !dir$ ignore_tkr  x5
 !CHECK: !dir$ ignore_tkr  x6
 !CHECK: !dir$ ignore_tkr  x7  x8
+!CHECK: stop 1
+!CHECK: stop 2
 !CHECK: end

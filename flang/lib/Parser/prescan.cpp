@@ -180,6 +180,24 @@ void Prescanner::Statement() {
       }
     } else {
       SkipSpaces();
+      // Check for a leading identifier that might be a keyword macro
+      // that will expand to anything indicating a non-source line, like
+      // a comment marker or directive sentinel.  If so, disable line
+      // continuation, so that NextToken() won't consume anything from
+      // following lines.
+      if (IsLegalIdentifierStart(*at_)) {
+        CHECK(NextToken(tokens));
+        CHECK(tokens.SizeInTokens() == 1);
+        CharBlock id{tokens.TokenAt(0)};
+        if (preprocessor_.IsNameDefined(id) &&
+            !preprocessor_.IsFunctionLikeDefinition(id)) {
+          if (auto replaced{preprocessor_.MacroReplacement(tokens, *this)}) {
+            disableSourceContinuation_ =
+                ClassifyLine(*replaced, GetCurrentProvenance()).kind !=
+                LineClassification::Kind::Source;
+          }
+        }
+      }
     }
     break;
   }
@@ -197,17 +215,13 @@ void Prescanner::Statement() {
   Provenance newlineProvenance{GetCurrentProvenance()};
   if (std::optional<TokenSequence> preprocessed{
           preprocessor_.MacroReplacement(tokens, *this)}) {
-    // Reprocess the preprocessed line.  Append a newline temporarily.
-    preprocessed->PutNextTokenChar('\n', newlineProvenance);
-    preprocessed->CloseToken();
-    const char *ppd{preprocessed->ToCharBlock().begin()};
-    LineClassification ppl{ClassifyLine(ppd)};
-    preprocessed->pop_back(); // remove the newline
+    // Reprocess the preprocessed line.
+    LineClassification ppl{ClassifyLine(*preprocessed, newlineProvenance)};
     switch (ppl.kind) {
     case LineClassification::Kind::Comment:
       break;
     case LineClassification::Kind::IncludeLine:
-      FortranInclude(ppd + ppl.payloadOffset);
+      FortranInclude(preprocessed->TokenAt(0).begin() + ppl.payloadOffset);
       break;
     case LineClassification::Kind::ConditionalCompilationDirective:
     case LineClassification::Kind::IncludeDirective:
@@ -270,7 +284,8 @@ void Prescanner::Statement() {
 
 void Prescanner::CheckAndEmitLine(
     TokenSequence &tokens, Provenance newlineProvenance) {
-  tokens.CheckBadFortranCharacters(messages_, *this);
+  tokens.CheckBadFortranCharacters(
+      messages_, *this, disableSourceContinuation_);
   // Parenthesis nesting check does not apply while any #include is
   // active, nor on the lines before and after a top-level #include.
   // Applications play shenanigans with line continuation before and
@@ -1243,7 +1258,9 @@ bool Prescanner::IsImplicitContinuation() const {
 }
 
 bool Prescanner::Continuation(bool mightNeedFixedFormSpace) {
-  if (*at_ == '\n' || *at_ == '&') {
+  if (disableSourceContinuation_) {
+    return false;
+  } else if (*at_ == '\n' || *at_ == '&') {
     if (inFixedForm_) {
       return FixedFormContinuation(mightNeedFixedFormSpace);
     } else {
@@ -1255,8 +1272,9 @@ bool Prescanner::Continuation(bool mightNeedFixedFormSpace) {
     BeginSourceLine(nextLine_);
     NextLine();
     return true;
+  } else {
+    return false;
   }
-  return false;
 }
 
 std::optional<Prescanner::LineClassification>
@@ -1416,6 +1434,17 @@ Prescanner::LineClassification Prescanner::ClassifyLine(
     }
   }
   return {LineClassification::Kind::Source};
+}
+
+Prescanner::LineClassification Prescanner::ClassifyLine(
+    TokenSequence &tokens, Provenance newlineProvenance) const {
+  // Append a newline temporarily.
+  tokens.PutNextTokenChar('\n', newlineProvenance);
+  tokens.CloseToken();
+  const char *ppd{tokens.ToCharBlock().begin()};
+  LineClassification classification{ClassifyLine(ppd)};
+  tokens.pop_back(); // remove the newline
+  return classification;
 }
 
 void Prescanner::SourceFormChange(std::string &&dir) {
