@@ -1105,10 +1105,9 @@ static void emitComments(const MachineInstr &MI, raw_ostream &CommentOS) {
   const MachineFunction *MF = MI.getMF();
   const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
-  // If this is a reload of a spilled register that only feeds into a FAKE_USE
-  // instruction, meaning the load value has no effect on the program and has
-  // only been kept alive for debugging; since it is still available on the
-  // stack, we can skip the load itself.
+  // When we're loading a value that is only going to be used by a FAKE_USE, we
+  // will skip emitting it in AsmPrinter::emitFunctionBody, so we also skip
+  // emitting a comment for it here.
   if (isLoadFeedingIntoFakeUse(MI, TII))
     return;
 
