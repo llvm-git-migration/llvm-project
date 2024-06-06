@@ -19,7 +19,7 @@
 # APPROX-VERBOSE-NEXT:  Function start address: 0x500110
 # APPROX-VERBOSE-NEXT:  Line: 3
 # APPROX-VERBOSE-NEXT:  Column: 39
-# APPROX-VERBOSE-NEXT:  Approximate: 1
+# APPROX-VERBOSE-NEXT:  Approximate: true
 
 # APPROX-JSON:[{"Address":"0x500110","ModuleName":"{{.*}}{{[/|\]+}}test{{[/|\]+}}tools{{[/|\]+}}llvm-symbolizer{{[/|\]+}}Output{{[/|\]+}}approximate-line-handcrafted.yaml.tmp.o","Symbol":[{"Approximate":true,"Column":39,"Discriminator":0,"FileName":"{{[/|\]+}}tmp{{[/|\]+}}test{{[/|\]+}}.{{[/|\]+}}definitions.h","FunctionName":"main","Line":3,"StartAddress":"0x500110","StartFileName":"","StartLine":0}]}]
 
