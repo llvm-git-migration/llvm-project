@@ -135,8 +135,8 @@ public:
                    VirtRegMap &vrm)
       : MF(mf), LIS(pass.getAnalysis<LiveIntervals>()),
         LSS(pass.getAnalysis<LiveStacks>()),
-        MDT(pass.getAnalysis<MachineDominatorTree>()), VRM(vrm),
-        MRI(mf.getRegInfo()), TII(*mf.getSubtarget().getInstrInfo()),
+        MDT(pass.getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree()),
+        VRM(vrm), MRI(mf.getRegInfo()), TII(*mf.getSubtarget().getInstrInfo()),
         TRI(*mf.getSubtarget().getRegisterInfo()),
         MBFI(pass.getAnalysis<MachineBlockFrequencyInfo>()),
         IPA(LIS, mf.getNumBlockIDs()) {}
@@ -192,8 +192,8 @@ public:
                 VirtRegAuxInfo &VRAI)
       : MF(MF), LIS(Pass.getAnalysis<LiveIntervals>()),
         LSS(Pass.getAnalysis<LiveStacks>()),
-        MDT(Pass.getAnalysis<MachineDominatorTree>()), VRM(VRM),
-        MRI(MF.getRegInfo()), TII(*MF.getSubtarget().getInstrInfo()),
+        MDT(Pass.getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree()),
+        VRM(VRM), MRI(MF.getRegInfo()), TII(*MF.getSubtarget().getInstrInfo()),
         TRI(*MF.getSubtarget().getRegisterInfo()),
         MBFI(Pass.getAnalysis<MachineBlockFrequencyInfo>()),
         HSpiller(Pass, MF, VRM), VRAI(VRAI) {}
