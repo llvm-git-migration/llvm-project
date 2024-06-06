@@ -1191,12 +1191,25 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
       return ValueLatticeElement::getRange(
           ConstantRange::fromKnownBits(Known, /*IsSigned*/ false));
     }
-    // If (Val & Mask) != 0 then the value must be larger than the lowest set
-    // bit of Mask.
-    if (EdgePred == ICmpInst::ICMP_NE && !Mask->isZero() && C->isZero()) {
-      return ValueLatticeElement::getRange(ConstantRange::getNonEmpty(
-          APInt::getOneBitSet(BitWidth, Mask->countr_zero()),
-          APInt::getZero(BitWidth)));
+
+    if (EdgePred == ICmpInst::ICMP_NE && !Mask->isZero()) {
+      // If (Val & Mask) != 0 then the value must be larger than the lowest set
+      // bit of Mask.
+      unsigned TrailingZeroesMask = Mask->countr_zero();
+      if (C->isZero())
+        return ValueLatticeElement::getRange(ConstantRange::getNonEmpty(
+            APInt::getOneBitSet(BitWidth, TrailingZeroesMask),
+            APInt::getZero(BitWidth)));
+
+      unsigned TrailingZeroesC = C->countr_zero();
+      // If (Val & Mask) != C, where Mask >=u C and the number of trailing
+      // zeroes of Mask is at most equal to the number of trailing zeroes of C,
+      // then the value must be larger than the lowest set bit of Mask, offset
+      // by constant C.
+      if (Mask->uge(*C) && TrailingZeroesMask <= TrailingZeroesC) {
+        return ValueLatticeElement::getRange(ConstantRange::getNonEmpty(
+            APInt::getOneBitSet(BitWidth, TrailingZeroesMask) + *C, *C));
+      }
     }
   }
 

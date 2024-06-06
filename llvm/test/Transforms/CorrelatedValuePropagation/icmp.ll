@@ -1484,11 +1484,7 @@ define void @test_icmp_ne_from_implied_range(i32 noundef %arg) {
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i32 [[AND_MASK]], -16
 ; CHECK-NEXT:    br i1 [[CMP]], label [[END:%.*]], label [[ELSE:%.*]]
 ; CHECK:       else:
-; CHECK-NEXT:    switch i32 [[ARG]], label [[END]] [
-; CHECK-NEXT:      i32 -16, label [[SW_CASE:%.*]]
-; CHECK-NEXT:      i32 -12, label [[SW_CASE]]
-; CHECK-NEXT:      i32 -9, label [[SW_CASE]]
-; CHECK-NEXT:    ]
+; CHECK-NEXT:    br label [[END]]
 ; CHECK:       sw.case:
 ; CHECK-NEXT:    call void @opaque()
 ; CHECK-NEXT:    br label [[END]]
