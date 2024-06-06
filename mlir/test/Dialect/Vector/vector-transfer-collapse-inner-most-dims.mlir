@@ -61,7 +61,7 @@ func.func @negative_scalable_unit_dim(%in: memref<1x1x8x1xf32, strided<[3072, 8,
   %0 = vector.transfer_read %in[%c0, %c0, %c0, %c0], %cst {in_bounds = [true, true, true]} : memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, vector<1x8x[1]xf32>
   return %0 : vector<1x8x[1]xf32>
 }
-//  CHECK-LABEL: func @scalable_unit_dim
+//  CHECK-LABEL: func @negative_scalable_unit_dim
 //    CHECK-NOT: memref.subview
 //    CHECK-NOT: vector.shape_cast
 
