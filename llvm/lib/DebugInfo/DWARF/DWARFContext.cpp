@@ -1736,14 +1736,13 @@ DILineInfo DWARFContext::getLineInfoForAddress(object::SectionedAddress Address,
   if (!CU)
     return Result;
 
-  DWARFDebugLine::Approximate Approximation(Spec.ApproximateLine);
   getFunctionNameAndStartLineForAddress(
       CU, Address.Address, Spec.FNKind, Spec.FLIKind, Result.FunctionName,
       Result.StartFileName, Result.StartLine, Result.StartAddress);
   if (Spec.FLIKind != FileLineInfoKind::None) {
     if (const DWARFLineTable *LineTable = getLineTableForUnit(CU)) {
       LineTable->getFileLineInfoForAddress(
-          {Address.Address, Address.SectionIndex}, Approximation,
+          {Address.Address, Address.SectionIndex}, Spec.ApproximateLine,
           CU->getCompilationDir(), Spec.FLIKind, Result);
     }
   }
@@ -1831,7 +1830,6 @@ DWARFContext::getInliningInfoForAddress(object::SectionedAddress Address,
 
   const DWARFLineTable *LineTable = nullptr;
   SmallVector<DWARFDie, 4> InlinedChain;
-  DWARFDebugLine::Approximate Approximation(Spec.ApproximateLine);
   CU->getInlinedChainForAddress(Address.Address, InlinedChain);
   if (InlinedChain.size() == 0) {
     // If there is no DIE for address (e.g. it is in unavailable .dwo file),
@@ -1841,7 +1839,7 @@ DWARFContext::getInliningInfoForAddress(object::SectionedAddress Address,
       LineTable = getLineTableForUnit(CU);
       if (LineTable &&
           LineTable->getFileLineInfoForAddress(
-              {Address.Address, Address.SectionIndex}, Approximation,
+              {Address.Address, Address.SectionIndex}, Spec.ApproximateLine,
               CU->getCompilationDir(), Spec.FLIKind, Frame))
         InliningInfo.addFrame(Frame);
     }
@@ -1868,7 +1866,7 @@ DWARFContext::getInliningInfoForAddress(object::SectionedAddress Address,
         // For the topmost routine, get file/line info from line table.
         if (LineTable)
           LineTable->getFileLineInfoForAddress(
-              {Address.Address, Address.SectionIndex}, Approximation,
+              {Address.Address, Address.SectionIndex}, Spec.ApproximateLine,
               CU->getCompilationDir(), Spec.FLIKind, Frame);
       } else {
         // Otherwise, use call file, call line and call column from
