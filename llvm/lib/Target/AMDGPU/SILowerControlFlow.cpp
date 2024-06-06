@@ -151,7 +151,7 @@ public:
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.addUsedIfAvailable<LiveIntervals>();
     // Should preserve the same set that TwoAddressInstructions does.
-    AU.addPreserved<MachineDominatorTree>();
+    AU.addPreserved<MachineDominatorTreeWrapperPass>();
     AU.addPreserved<SlotIndexes>();
     AU.addPreserved<LiveIntervals>();
     AU.addPreservedID(LiveVariablesID);
