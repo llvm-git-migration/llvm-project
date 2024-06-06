@@ -16,6 +16,7 @@
 
 #include "clang/AST/ASTVector.h"
 #include "clang/AST/DeclAccessPair.h"
+#include "clang/AST/DeclID.h"
 #include "clang/AST/UnresolvedSet.h"
 #include "clang/Basic/Specifiers.h"
 #include <cassert>
@@ -97,6 +98,7 @@ public:
 /// external AST source yet.
 class LazyASTUnresolvedSet {
   mutable ASTUnresolvedSet Impl;
+  llvm::SmallVector<GlobalDeclID> IDs;
 
   void getFromExternalSource(ASTContext &C) const;
 
@@ -109,10 +111,12 @@ public:
 
   void reserve(ASTContext &C, unsigned N) { Impl.reserve(C, N); }
 
-  void addLazyDecl(ASTContext &C, uintptr_t ID, AccessSpecifier AS) {
+  void addLazyDecl(ASTContext &C, GlobalDeclID ID, AccessSpecifier AS) {
     assert(Impl.empty() || Impl.Decls.isLazy());
     Impl.Decls.setLazy(true);
-    Impl.addDecl(C, reinterpret_cast<NamedDecl *>(ID << 2), AS);
+
+    IDs.push_back(ID);
+    Impl.addDecl(C, reinterpret_cast<NamedDecl *>(ID.get() << 2), AS);
   }
 };
 
