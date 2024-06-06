@@ -907,6 +907,10 @@ template void explain_binary_operation_one_output_error<double>(
 template void explain_binary_operation_one_output_error<long double>(
     Operation, const BinaryInput<long double> &, long double, double,
     RoundingMode);
+#ifdef LIBC_TYPES_HAS_FLOAT16
+template void explain_binary_operation_one_output_error<float16>(
+    Operation, const BinaryInput<float16> &, float16, double, RoundingMode);
+#endif
 
 template <typename T>
 void explain_ternary_operation_one_output_error(Operation op,
@@ -1053,6 +1057,10 @@ template bool compare_binary_operation_one_output<double>(
 template bool compare_binary_operation_one_output<long double>(
     Operation, const BinaryInput<long double> &, long double, double,
     RoundingMode);
+#ifdef LIBC_TYPES_HAS_FLOAT16
+template bool compare_binary_operation_one_output<float16>(
+    Operation, const BinaryInput<float16> &, float16, double, RoundingMode);
+#endif
 
 template <typename T>
 bool compare_ternary_operation_one_output(Operation op,
