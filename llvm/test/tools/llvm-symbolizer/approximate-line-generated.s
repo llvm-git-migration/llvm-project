@@ -1,6 +1,6 @@
 # REQUIRES: x86-registered-target
 
-# RUN: llvm-mc -g -filetype=obj -triple=x86_64-pc-linux %s -o %t.o
+# RUN: llvm-mc -g -filetype=obj -triple=x86_64-pc-linux --fdebug-prefix-map=/tmp/test="" %s -o %t.o
 # RUN: llvm-symbolizer --obj=%t.o 0xa | FileCheck --strict-whitespace --match-full-lines --check-prefix=APPROX-DISABLE %s
 # RUN: llvm-symbolizer --obj=%t.o --skip-line-zero 0xa | FileCheck --strict-whitespace --match-full-lines --check-prefix=APPROX-ENABLE %s
 # RUN: llvm-symbolizer --obj=%t.o --skip-line-zero 0xa 0x10 | FileCheck --strict-whitespace --match-full-lines --check-prefixes=APPROX-ENABLE,NO-APPROX %s
@@ -8,20 +8,20 @@
 # RUN: llvm-symbolizer --obj=%t.o --skip-line-zero --output-style=JSON 0xa | FileCheck --strict-whitespace --match-full-lines --check-prefix=APPROX-JSON %s
 
 # APPROX-DISABLE:main
-# APPROX-DISABLE-NEXT:{{[/|\]+}}tmp{{[/|\]+}}test{{[/|\]+}}main.c:0:6
+# APPROX-DISABLE-NEXT:main.c:0:6
 # APPROX-ENABLE:main
-# APPROX-ENABLE-NEXT:{{[/|\]+}}tmp{{[/|\]+}}test{{[/|\]+}}main.c:4:6 (approximate)
+# APPROX-ENABLE-NEXT:main.c:4:6 (approximate)
 # NO-APPROX:main
-# NO-APPROX-NEXT:{{[/|\]+}}tmp{{[/|\]+}}test{{[/|\]+}}main.c:8:2
+# NO-APPROX-NEXT:main.c:8:2
 
 # APPROX-VERBOSE:main
-# APPROX-VERBOSE-NEXT:  Filename: /tmp/test{{[/|\]}}main.c
+# APPROX-VERBOSE-NEXT:  Filename: main.c
 # APPROX-VERBOSE-NEXT:  Function start address: 0x0
 # APPROX-VERBOSE-NEXT:  Line: 4
 # APPROX-VERBOSE-NEXT:  Column: 6
-# APPROX-VERBOSE-NEXT:  Approximate: 1
+# APPROX-VERBOSE-NEXT:  Approximate: true
 
-# APPROX-JSON:[{"Address":"0xa","ModuleName":"{{.*}}{{[/|\]+}}test{{[/|\]+}}tools{{[/|\]+}}llvm-symbolizer{{[/|\]+}}Output{{[/|\]+}}approximate-line-generated.s.tmp.o","Symbol":[{"Approximate":true,"Column":6,"Discriminator":0,"FileName":"{{[/|\]+}}tmp{{[/|\]+}}test{{[/|\]+}}main.c","FunctionName":"main","Line":4,"StartAddress":"0x0","StartFileName":"","StartLine":0}]}]
+# APPROX-JSON:[{"Address":"0xa","ModuleName":"{{.*}}{{[/|\]+}}test{{[/|\]+}}tools{{[/|\]+}}llvm-symbolizer{{[/|\]+}}Output{{[/|\]+}}approximate-line-generated.s.tmp.o","Symbol":[{"Approximate":true,"Column":6,"Discriminator":0,"FileName":"main.c","FunctionName":"main","Line":4,"StartAddress":"0x0","StartFileName":"","StartLine":0}]}]
 
 ## Generated from C Code
 ##
@@ -34,7 +34,7 @@
 ##  return x;
 ## }
 ##
-## clang -S -O3 -gline-tables-only --target=x86_64-pc-linux
+## clang -S -O3 -gline-tables-only --target=x86_64-pc-linux -fdebug-prefix-map=/tmp/test=""
 
 	.text
 	.file	"main.c"
