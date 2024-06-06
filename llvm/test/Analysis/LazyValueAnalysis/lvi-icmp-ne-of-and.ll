@@ -8,7 +8,7 @@ entry:
   br i1 %cmp, label %l_true, label %l_false
 
 ; CHECK-LABEL: l_true:
-; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: overdefined
+; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: constantrange<-8, 4>
 l_true:
   ret i1 1
 l_false:
@@ -23,7 +23,7 @@ entry:
   br i1 %cmp, label %l_true, label %l_false
 
 ; CHECK-LABEL: l_true:
-; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: overdefined
+; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: constantrange<5, 4>
 l_true:
   ret i1 1
 l_false:
@@ -38,7 +38,7 @@ entry:
   br i1 %cmp, label %l_true, label %l_false
 
 ; CHECK-LABEL: l_true:
-; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: overdefined
+; CHECK-NEXT:  ; LatticeVal for: 'i4 %arg' is: constantrange<6, 4>
 l_true:
   ret i1 1
 l_false:
