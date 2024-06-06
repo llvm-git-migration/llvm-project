@@ -91,9 +91,8 @@ func.func @apply(%arg0: !emitc.lvalue<i32>) -> !emitc.ptr<i32> {
   %2 = "emitc.variable"() {value = #emitc.opaque<"">} : () -> !emitc.lvalue<i32>
   // CHECK-NEXT: int32_t [[V4:[^ ]*]] = *[[V2]];
   %1 = emitc.apply "*"(%0) : (!emitc.ptr<i32>) -> !emitc.lvalue<i32>
-  // CHECK-NEXT: int32_t [[V5:[^ ]*]] = [[V4]];
   %3 = emitc.lvalue_load %1 : !emitc.lvalue<i32>
-  // CHECK-NEXT: [[V3]] = [[V5]];
+  // CHECK-NEXT: [[V3]] = [[V4]];
   emitc.assign %3 : i32 to %2 : !emitc.lvalue<i32>
   // CHECK-NEXT: return [[V2]];
   return %0 : !emitc.ptr<i32>
