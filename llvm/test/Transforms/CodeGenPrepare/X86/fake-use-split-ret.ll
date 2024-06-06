@@ -15,17 +15,10 @@
 ;  return bar(i);
 ;}
 
-; ModuleID = 'test.cpp'
-source_filename = "test.cpp"
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-unknown-unknown"
-
 declare i32 @_Z3bari(i32) local_unnamed_addr
 
-; Function Attrs: nounwind
 declare void @llvm.fake.use(...)
 
-; Function Attrs: nounwind sspstrong uwtable
 define i32 @_Z4foo2i(i32 %i) local_unnamed_addr {
 entry:
   %dec = add nsw i32 %i, -1
@@ -44,10 +37,3 @@ cleanup:                                          ; preds = %entry, %if.end
 ; CHECK: ret i32 -1
   ret i32 %retval.0
 }
-
-!llvm.module.flags = !{!0, !1}
-!llvm.ident = !{!2}
-
-!0 = !{i32 1, !"wchar_size", i32 2}
-!1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 7.0.0"}

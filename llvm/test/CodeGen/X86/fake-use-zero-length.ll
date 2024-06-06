@@ -31,10 +31,3 @@ declare void @baz([1 x i32] %a)
 
 ; Function Attrs: nounwind
 declare void @llvm.fake.use(...)
-
-!llvm.module.flags = !{!0, !1}
-!llvm.ident = !{!2}
-
-!0 = !{i32 1, !"wchar_size", i32 2}
-!1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 10.0.0"}
