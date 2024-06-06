@@ -364,6 +364,29 @@ ConstantRange ConstantRange::makeExactNoWrapRegion(Instruction::BinaryOps BinOp,
   return makeGuaranteedNoWrapRegion(BinOp, ConstantRange(Other), NoWrapKind);
 }
 
+ConstantRange ConstantRange::makeMaskNotEqualRange(const APInt &Mask,
+                                                   const APInt &C) {
+  assert(!Mask.isZero() && "Mask cannot be zero.");
+  unsigned BitWidth = Mask.getBitWidth();
+  unsigned TrailingZeroesOfMask = Mask.countr_zero();
+
+  // If (Val & Mask) != 0 then the value must be larger than the lowest set
+  // bit of Mask.
+  if (C.isZero())
+    return ConstantRange::getNonEmpty(
+        APInt::getOneBitSet(BitWidth, TrailingZeroesOfMask),
+        APInt::getZero(BitWidth));
+
+  // If (Val & Mask) != C, constrained to the non-equality being
+  // satisfiable, then the value must be larger than the lowest set bit of
+  // Mask, offset by constant C.
+  if ((Mask & C) == C)
+    return ConstantRange::getNonEmpty(
+        APInt::getOneBitSet(BitWidth, TrailingZeroesOfMask) + C, C);
+
+  return getFull(BitWidth);
+}
+
 bool ConstantRange::isFullSet() const {
   return Lower == Upper && Lower.isMaxValue();
 }

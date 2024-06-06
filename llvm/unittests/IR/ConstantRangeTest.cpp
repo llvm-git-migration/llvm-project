@@ -2788,4 +2788,31 @@ TEST_F(ConstantRangeTest, isSizeLargerThan) {
   EXPECT_FALSE(One.isSizeLargerThan(1));
 }
 
+TEST_F(ConstantRangeTest, MakeMaskNotEqualRangeExhaustive) {
+  unsigned Bits = 4;
+  unsigned Max = 1 << Bits;
+
+  for (unsigned MaskVal = 1; MaskVal < Max; ++MaskVal) {
+    APInt Mask(Bits, MaskVal);
+    for (unsigned CVal = 0; CVal < Max; ++CVal) {
+      APInt C(Bits, CVal);
+
+      SmallBitVector Elems(Max);
+      for (unsigned N = 0; N < Max; ++N) {
+        APInt Num(Bits, N);
+        if ((Num & Mask) == C)
+          continue;
+        Elems.set(Num.getZExtValue());
+      }
+
+      // Do not check for optimality, as levelling off for efficiency. E.g.,
+      // given Mask = 0b0011, C = 0b0000, the optimal range would be FullSet ∖
+      // {0, 4, 8, 12}, however we conservatively return [1, 0).
+      auto CR = ConstantRange::makeMaskNotEqualRange(Mask, C);
+      TestRange(CR, Elems, PreferSmallestUnsigned, {}, false);
+      TestRange(CR, Elems, PreferSmallestSigned, {}, false);
+    }
+  }
+}
+
 } // anonymous namespace
