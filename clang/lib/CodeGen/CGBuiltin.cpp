@@ -19063,6 +19063,29 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
         CGM.getIntrinsic(Intrinsic::amdgcn_s_sendmsg_rtn, {ResultType});
     return Builder.CreateCall(F, {Arg});
   }
+
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_i8:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_i16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_i32:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_f32:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_f16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v2i16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v2i32:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v2f16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v2f32:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v4i16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v4i32:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v4f16:
+  case AMDGPU::BI__builtin_amdgcn_raw_buffer_store_v4f32: {
+    llvm::Value *VData = EmitScalarExpr(E->getArg(0));
+    llvm::Value *Rsrc = EmitScalarExpr(E->getArg(1));
+    llvm::Value *Offset = EmitScalarExpr(E->getArg(2));
+    llvm::Value *SOffset = EmitScalarExpr(E->getArg(3));
+    llvm::Value *Aux = EmitScalarExpr(E->getArg(4));
+    Function *F =
+        CGM.getIntrinsic(Intrinsic::amdgcn_raw_buffer_store, VData->getType());
+    return Builder.CreateCall(F, {VData, Rsrc, Offset, SOffset, Aux});
+  }
   default:
     return nullptr;
   }
