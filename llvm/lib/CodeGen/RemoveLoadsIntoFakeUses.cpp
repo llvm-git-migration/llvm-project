@@ -14,9 +14,11 @@
 /// the stack and hence available for debugging. Therefore, this pass removes
 /// loads that are only used by FAKE_USEs.
 ///
-/// This pass should run as late as possible, to ensure that we don't
-/// inadvertently shorten stack lifetimes by removing these loads, since the
-/// FAKE_USEs will also no longer be in effect.
+/// This pass should run very late, to ensure that we don't inadvertently
+/// shorten stack lifetimes by removing these loads, since the FAKE_USEs will
+/// also no longer be in effect. Running immediately before LiveDebugValues
+/// ensures that LDV will have accurate information of the machine location of
+/// debug values.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -69,12 +71,10 @@ INITIALIZE_PASS_END(RemoveLoadsIntoFakeUses, DEBUG_TYPE,
 bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
   // Only `optdebug` functions should contain FAKE_USEs, so don't try to run
   // this for other functions.
-  dbgs() << "We might run the pass!\n";
   if (!MF.getFunction().hasFnAttribute(Attribute::OptimizeForDebugging) ||
       skipFunction(MF.getFunction()))
     return false;
 
-  dbgs() << "We could run the pass!\n";
   // This implementation assumes we are post-RA.
   if (!MF.getProperties().hasProperty(
           MachineFunctionProperties::Property::NoVRegs))
@@ -90,21 +90,17 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
 
   SmallDenseMap<Register, SmallVector<MachineInstr *>> RegFakeUses;
   LivePhysRegs.init(*TRI);
-  dbgs() << "Running the pass!\n";
   SmallVector<MachineInstr *, 16> Statepoints;
   for (MachineBasicBlock *MBB : post_order(&MF)) {
     LivePhysRegs.addLiveOuts(*MBB);
 
     for (MachineInstr &MI : make_early_inc_range(reverse(*MBB))) {
       if (MI.isFakeUse()) {
-        dbgs() << "Seen fake use " << MI << "\n";
         for (const MachineOperand &MO : MI.operands()) {
           // Track the Fake Uses that use this register so that we can delete
           // them if we delete the corresponding load.
           if (MO.isReg()) {
-            dbgs() << " Uses Reg: ";
             TRI->dumpReg(MO.getReg());
-            dbgs() << "\n";
             RegFakeUses[MO.getReg()].push_back(&MI);
           }
         }
@@ -116,14 +112,11 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
       // If the restore size is not std::nullopt then we are dealing with a
       // reload of a spilled register.
       if (MI.getRestoreSize(TII)) {
-        dbgs() << "Seen restore of spill " << MI << "\n";
         Register Reg = MI.getOperand(0).getReg();
         assert(Reg.isPhysical() && "VReg seen in function with NoVRegs set?");
         // Don't delete live physreg defs, or any reserved register defs.
         if (!LivePhysRegs.available(Reg) || MRI->isReserved(Reg)) {
-          dbgs() << "Reg is live: ";
           TRI->dumpReg(Reg);
-          dbgs() << "\n";
           continue;
         }
         // There should be an exact match between the loaded register and the
@@ -140,8 +133,11 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
           // Each FAKE_USE now appears to be a fake use of the previous value
           // of the loaded register; delete them to avoid incorrectly
           // interpreting them as such.
-          for (MachineInstr *FakeUse : RegFakeUses[Reg])
+          for (MachineInstr *FakeUse : RegFakeUses[Reg]) {
+            LLVM_DEBUG(dbgs()
+                       << "RemoveLoadsIntoFakeUses: DELETING: " << *FakeUse);
             FakeUse->eraseFromParent();
+          }
           NumFakeUsesDeleted += RegFakeUses[Reg].size();
           RegFakeUses[Reg].clear();
         }

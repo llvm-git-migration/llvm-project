@@ -1204,6 +1204,7 @@ void TargetPassConfig::addMachinePasses() {
   // addPreEmitPass.  Maybe only pass "false" here for those targets?
   addPass(&FuncletLayoutID);
 
+  addPass(&RemoveLoadsIntoFakeUsesID);
   addPass(&StackMapLivenessID);
   addPass(&LiveDebugValuesID);
   addPass(&MachineSanitizerBinaryMetadataID);
@@ -1266,8 +1267,6 @@ void TargetPassConfig::addMachinePasses() {
     addPass(createCFIFixup());
 
   PM->add(createStackFrameLayoutAnalysisPass());
-
-  addPass(&RemoveLoadsIntoFakeUsesID);
 
   // Add passes that directly emit MI after all other MI passes.
   addPreEmitPass2();
