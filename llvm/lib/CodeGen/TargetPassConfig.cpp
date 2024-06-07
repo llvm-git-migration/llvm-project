@@ -1267,6 +1267,8 @@ void TargetPassConfig::addMachinePasses() {
 
   PM->add(createStackFrameLayoutAnalysisPass());
 
+  addPass(&RemoveLoadsIntoFakeUsesID);
+
   // Add passes that directly emit MI after all other MI passes.
   addPreEmitPass2();
 

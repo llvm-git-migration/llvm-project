@@ -1073,43 +1073,10 @@ void AsmPrinter::emitFunctionEntryLabel() {
   }
 }
 
-// Recognize cases where a spilled register is reloaded solely to feed into a
-// FAKE_USE.
-static bool isLoadFeedingIntoFakeUse(const MachineInstr &MI, const TargetInstrInfo *TII) {
-  const MachineFunction *MF = MI.getMF();
-
-  // If the restore size is std::nullopt then we are not dealing with a reload
-  // of a spilled register.
-  if (!MI.getRestoreSize(TII))
-    return false;
-
-  // Check if this register is the operand of a FAKE_USE and
-  // does it have the kill flag set there.
-  auto NextI = std::next(MI.getIterator());
-  if (NextI == MI.getParent()->end() || !NextI->isFakeUse())
-    return false;
-
-  unsigned Reg = MI.getOperand(0).getReg();
-  for (const MachineOperand &MO : NextI->operands()) {
-    // Return true if we came across the register from the
-    // previous spill instruction that is killed in NextI.
-    if (MO.isReg() && MO.isUse() && MO.isKill() && MO.getReg() == Reg)
-      return true;
-  }
-
-  return false;
-}
-
 /// emitComments - Pretty-print comments for instructions.
 static void emitComments(const MachineInstr &MI, raw_ostream &CommentOS) {
   const MachineFunction *MF = MI.getMF();
   const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
-
-  // When we're loading a value that is only going to be used by a FAKE_USE, we
-  // will skip emitting it in AsmPrinter::emitFunctionBody, so we also skip
-  // emitting a comment for it here.
-  if (isLoadFeedingIntoFakeUse(MI, TII))
-    return;
 
   // Check for spills and reloads
 
@@ -1161,6 +1128,21 @@ static void emitKill(const MachineInstr *MI, AsmPrinter &AP) {
        << printReg(Op.getReg(), AP.MF->getSubtarget().getRegisterInfo());
   }
   AP.OutStreamer->AddComment(Str);
+  AP.OutStreamer->addBlankLine();
+}
+
+static void emitFakeUse(const MachineInstr *MI, AsmPrinter &AP) {
+  std::string Str;
+  raw_string_ostream OS(Str);
+  OS << "fake_use:";
+  for (const MachineOperand &Op : MI->operands()) {
+    // In some circumstances we can end up with fake uses of constants; skip
+    // these.
+    if (!Op.isReg())
+      continue;
+    OS << ' ' << printReg(Op.getReg(), AP.MF->getSubtarget().getRegisterInfo());
+  }
+  AP.OutStreamer->AddComment(OS.str());
   AP.OutStreamer->addBlankLine();
 }
 
@@ -1834,6 +1816,8 @@ void AsmPrinter::emitFunctionBody() {
         if (isVerbose()) emitKill(&MI, *this);
         break;
       case TargetOpcode::FAKE_USE:
+        if (isVerbose())
+          emitFakeUse(&MI, *this);
         break;
       case TargetOpcode::PSEUDO_PROBE:
         emitPseudoProbe(MI);
@@ -1850,12 +1834,6 @@ void AsmPrinter::emitFunctionBody() {
         // purely meta information.
         break;
       default:
-        // If this is a reload of a spilled register that only feeds into a
-        // FAKE_USE instruction, meaning the load value has no effect on the
-        // program and has only been kept alive for debugging; since it is
-        // still available on the stack, we can skip the load itself.
-        if (isLoadFeedingIntoFakeUse(MI, TII))
-          break;
         emitInstruction(&MI);
         if (CanDoExtraAnalysis) {
           MCInst MCI;
