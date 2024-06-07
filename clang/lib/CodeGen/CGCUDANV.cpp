@@ -15,6 +15,7 @@
 #include "CGCXXABI.h"
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
+#include "clang/AST/CharUnits.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/Cuda.h"
 #include "clang/CodeGen/CodeGenABITypes.h"
@@ -138,6 +139,9 @@ private:
     return DummyFunc;
   }
 
+  Address prepareKernelArgs(CodeGenFunction &CGF, FunctionArgList &Args);
+  Address prepareKernelArgsLLVMOffload(CodeGenFunction &CGF,
+                                       FunctionArgList &Args);
   void emitDeviceStubBodyLegacy(CodeGenFunction &CGF, FunctionArgList &Args);
   void emitDeviceStubBodyNew(CodeGenFunction &CGF, FunctionArgList &Args);
   std::string getDeviceSideName(const NamedDecl *ND) override;
@@ -322,12 +326,30 @@ void CGNVCUDARuntime::emitDeviceStub(CodeGenFunction &CGF,
     emitDeviceStubBodyLegacy(CGF, Args);
 }
 
-// CUDA 9.0+ uses new way to launch kernels. Parameters are packed in a local
-// array and kernels are launched using cudaLaunchKernel().
-void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
-                                            FunctionArgList &Args) {
-  // Build the shadow stack entry at the very start of the function.
+/// CUDA passes the arguments with a level of indirection. For example, a
+/// (void*, short, void*) is passed as {void **, short *, void **} to the launch
+/// function. For the LLVM/offload launch we flatten the arguments into the
+/// struct directly, thus pass {void *, short, void *}
+Address CGNVCUDARuntime::prepareKernelArgsLLVMOffload(CodeGenFunction &CGF,
+                                                      FunctionArgList &Args) {
+  SmallVector<llvm::Type *> ArgTypes;
+  for (auto &Arg : Args)
+    ArgTypes.push_back(CGF.ConvertTypeForMem(Arg->getType()));
 
+  llvm::StructType *ST = llvm::StructType::create(ArgTypes);
+  Address KernelArgs = CGF.CreateTempAllocaWithoutCast(
+      ST, CharUnits::fromQuantity(16), "kernel_args");
+
+  for (unsigned i = 0; i < Args.size(); ++i) {
+    auto *ArgVal = CGF.Builder.CreateLoad(CGF.GetAddrOfLocalVar(Args[i]));
+    CGF.Builder.CreateStore(ArgVal, CGF.Builder.CreateStructGEP(KernelArgs, i));
+  }
+
+  return KernelArgs;
+}
+
+Address CGNVCUDARuntime::prepareKernelArgs(CodeGenFunction &CGF,
+                                           FunctionArgList &Args) {
   // Calculate amount of space we will need for all arguments.  If we have no
   // args, allocate a single pointer so we still have a valid pointer to the
   // argument array that we can pass to runtime, even if it will be unused.
@@ -342,6 +364,17 @@ void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
         VoidVarPtr, CGF.Builder.CreateConstGEP1_32(
                         PtrTy, KernelArgs.emitRawPointer(CGF), i));
   }
+  return KernelArgs;
+}
+
+// CUDA 9.0+ uses new way to launch kernels. Parameters are packed in a local
+// array and kernels are launched using cudaLaunchKernel().
+void CGNVCUDARuntime::emitDeviceStubBodyNew(CodeGenFunction &CGF,
+                                            FunctionArgList &Args) {
+  // Build the shadow stack entry at the very start of the function.
+  Address KernelArgs = CGF.getLangOpts().OffloadViaLLVM
+                           ? prepareKernelArgsLLVMOffload(CGF, Args)
+                           : prepareKernelArgs(CGF, Args);
 
   llvm::BasicBlock *EndBlock = CGF.createBasicBlock("setup.end");
 

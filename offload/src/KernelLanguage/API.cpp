@@ -58,7 +58,7 @@ int __tgt_target_kernel(void *Loc, int64_t DeviceId, int32_t NumTeams,
                         KernelArgsTy *Args);
 
 unsigned llvmLaunchKernel(const void *func, dim3 gridDim, dim3 blockDim,
-                          void **args, size_t sharedMem, void *stream) {
+                          void *args, size_t sharedMem, void *stream) {
   KernelArgsTy Args = {};
   Args.DynCGroupMem = sharedMem;
   Args.NumTeams[0] = gridDim.x;
@@ -67,7 +67,7 @@ unsigned llvmLaunchKernel(const void *func, dim3 gridDim, dim3 blockDim,
   Args.ThreadLimit[0] = blockDim.x;
   Args.ThreadLimit[1] = blockDim.y;
   Args.ThreadLimit[2] = blockDim.z;
-  Args.ArgPtrs = args;
+  Args.ArgPtrs = &args;
   Args.Flags.IsCUDA = true;
   int rv = __tgt_target_kernel(nullptr, 0, gridDim.x,
                                blockDim.x, func, &Args);

@@ -1126,15 +1126,19 @@ void Clang::AddPreprocessingOptions(Compilation &C, const JobAction &JA,
   }
 
   if (Args.hasArg(options::OPT_foffload_via_llvm)) {
-    CmdArgs.push_back("-include");
+    // Add llvm_wrappers/* to our system include path.  This lets us wrap
+    // standard library headers and other headers.
     SmallString<128> P(D.ResourceDir);
     llvm::sys::path::append(P, "include");
-    llvm::sys::path::append(P, "openmp_wrappers");
-    if (JA.isDeviceOffloading(Action::OFK_OpenMP))
-      llvm::sys::path::append(P, "__llvm_offload_device.h");
-    else
-      llvm::sys::path::append(P, "__llvm_offload_host.h");
+    llvm::sys::path::append(P, "llvm_offload_wrappers");
+    CmdArgs.push_back("-internal-isystem");
     CmdArgs.push_back(Args.MakeArgString(P));
+
+    CmdArgs.push_back("-include");
+    if (JA.isDeviceOffloading(Action::OFK_OpenMP))
+      CmdArgs.push_back("__llvm_offload_device.h");
+    else
+      CmdArgs.push_back("__llvm_offload_host.h");
   }
 
   // Add -i* options, and automatically translate to

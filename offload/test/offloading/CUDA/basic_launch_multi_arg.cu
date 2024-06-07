@@ -13,8 +13,10 @@ void *llvm_omp_target_alloc_shared(size_t Size, int DeviceNum);
 void llvm_omp_target_free_shared(void *DevicePtr, int DeviceNum);
 }
 
-__global__ void square(int *Dst, int *Src, short Q, short P) {
+__global__ void square(int *Dst, short Q, int *Src, short P) {
   *Dst = (Src[0] + Src[1]) * (Q + P);
+  Src[0] = Q;
+  Src[1] = P;
 }
 
 int main(int argc, char **argv) {
@@ -25,9 +27,11 @@ int main(int argc, char **argv) {
   Src[0] = -2;
   Src[1] = 8;
   printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
+  printf("%i : %i\n", Src[0], Src[1]);
   // CHECK: Ptr [[Ptr:0x.*]], *Ptr: 7
-  square<<<1, 1>>>(Ptr, Src, 3, 4);
+  square<<<1, 1>>>(Ptr, 3, Src, 4);
   printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
+  printf("%i : %i\n", Src[0], Src[1]);
   // CHECK: Ptr [[Ptr]], *Ptr: 42
   llvm_omp_target_free_shared(Ptr, DevNo);
 }

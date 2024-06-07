@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   int *Ptr = reinterpret_cast<int *>(llvm_omp_target_alloc_shared(4, DevNo));
   *Ptr = 0;
   printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
-  // CHECK: Ptr [[Ptr:0x.*]], *Ptr: 7
+  // CHECK: Ptr [[Ptr:0x.*]], *Ptr: 0
   square<<<7, 6>>>(Ptr);
   printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
   // CHECK: Ptr [[Ptr]], *Ptr: 42
