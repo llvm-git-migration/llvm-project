@@ -25,7 +25,7 @@
 ; CHECK:       %[[SLICE2:[^ ]+]] = trunc i64
 ; CHECK-DAG:   call{{.*}} @llvm.fake.use(i32 %[[SLICE1]])
 ; CHECK-DAG:   call{{.*}} @llvm.fake.use(i32 %[[SLICE2]])
-define dso_local void @foo(i64 %S.coerce) {
+define dso_local void @foo(i64 %S.coerce) optdebug {
 entry:
   %S = alloca %struct.s, align 4
   store i64 %S.coerce, ptr %S, align 4
@@ -34,15 +34,13 @@ entry:
   ret void
 }
 
-declare void @llvm.fake.use(...)
-
 ; A local variable with a small array type.
 ; CHECK-LABEL: define{{.*}}bar
 ; CHECK:       %[[ARRAYSLICE1:[^ ]+]] = load
 ; CHECK:       %[[ARRAYSLICE2:[^ ]+]] = load
 ; CHECK-DAG:   call{{.*}} @llvm.fake.use(i32 %[[ARRAYSLICE1]])
 ; CHECK-DAG:   call{{.*}} @llvm.fake.use(i32 %[[ARRAYSLICE2]])
-define dso_local void @bar() {
+define dso_local void @bar() optdebug {
 entry:
   %arr = alloca [2 x i32], align 4
   call void @llvm.memcpy.p0i8.p0i8.i64(ptr align 4 %arr, ptr align 4 bitcast (ptr @__const.bar.arr to ptr), i64 8, i1 false)

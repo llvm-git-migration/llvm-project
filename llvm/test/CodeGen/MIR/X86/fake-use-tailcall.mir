@@ -35,7 +35,7 @@
 # CHECK-NEXT: ret
 
 --- |
-  define hidden i32 @foo(i32 %i) local_unnamed_addr {
+  define hidden i32 @foo(i32 %i) local_unnamed_addr optdebug {
   entry:
     %cmp = icmp eq i32 %i, 0
     br i1 %cmp, label %if.then, label %if.else
@@ -56,13 +56,6 @@
   }
   declare i32 @f0(...) local_unnamed_addr
   declare i32 @f1(...) local_unnamed_addr
-  declare void @llvm.fake.use(...)
-
-  !llvm.module.flags = !{!0}
-  !llvm.ident = !{!1}
-
-  !0 = !{i32 1, !"wchar_size", i32 2}
-  !1 = !{!"clang version 10.0.0"}
 
 ...
 ---

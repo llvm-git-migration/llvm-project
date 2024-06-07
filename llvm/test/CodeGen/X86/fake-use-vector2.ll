@@ -24,10 +24,4 @@ entry:
 
 declare void @llvm.fake.use(...)
 
-attributes #0 = { "target-cpu"="btver2" }
-
-!llvm.module.flags = !{!0}
-!llvm.ident = !{!1}
-
-!0 = !{i32 1, !"PIC Level", i32 2}
-!1 = !{!"clang version 5.0.0"}
+attributes #0 = { "target-cpu"="btver2" optdebug }

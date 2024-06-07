@@ -10,7 +10,7 @@
 ; }
 ; /*******************************************************************/
 
-define x86_fp80 @actual(x86_fp80 %p1, x86_fp80 %p2, x86_fp80 %p3) {
+define x86_fp80 @actual(x86_fp80 %p1, x86_fp80 %p2, x86_fp80 %p3) optdebug {
 ;
 ; CHECK: actual
 ;
@@ -41,11 +41,3 @@ entry:
 }
 
 declare x86_fp80 @foo(x86_fp80, x86_fp80, x86_fp80)
-
-declare void @llvm.fake.use(...)
-
-!llvm.module.flags = !{!0}
-!llvm.ident = !{!1}
-
-!0 = !{i32 1, !"PIC Level", i32 2}
-!1 = !{!"clang version 3.9.0"}
