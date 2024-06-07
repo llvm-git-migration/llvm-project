@@ -37,7 +37,7 @@
 ; CHECK: call {{.+}} @bees(i8 0)
 ; CHECK: call {{.+}} @llvm.fake.use(i8 %[[CONV_VAR]])
 
-define i32 @foo(float %f) {
+define i32 @foo(float %f) optdebug {
   %conv = fptosi float %f to i8
   %tobool3 = icmp eq i8 %conv, 0
   br i1 %tobool3, label %if.end, label %lab
@@ -58,12 +58,3 @@ declare void @baz(i32)
 declare void @bees(i32)
 
 declare void @func1(...)
-
-; Function Attrs: nounwind
-declare void @llvm.fake.use(...)
-
-!llvm.module.flags = !{!0}
-!llvm.ident = !{!1}
-
-!0 = !{i32 1, !"PIC Level", i32 2}
-!1 = !{!"clang version 3.9.0"}

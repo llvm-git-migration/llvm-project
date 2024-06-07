@@ -17,7 +17,7 @@
 ; CHECK: FAKE_USE %0
 ; CHECK: TCRETURN
 
-define void @bar(i32 %v) {
+define void @bar(i32 %v) optdebug {
 entry:
   %call = tail call i32 @_Z3fooi(i32 %v)
   %mul = mul nsw i32 %call, 3
@@ -27,7 +27,7 @@ entry:
   ret void
 }
 
-define i32 @baz(i32 %v) {
+define i32 @baz(i32 %v) optdebug {
 entry:
   %call = tail call i32 @_Z3fooi(i32 %v)
   notail call void (...) @llvm.fake.use(i32 %v)
@@ -35,4 +35,3 @@ entry:
 }
 
 declare i32 @_Z3fooi(i32) local_unnamed_addr
-declare void @llvm.fake.use(...)

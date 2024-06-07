@@ -39,7 +39,7 @@ source_filename = "t2.c"
 @glob = common local_unnamed_addr global [10 x i32] zeroinitializer, align 16, !dbg !0
 
 ; Function Attrs: nounwind sspstrong uwtable
-define i32 @foo(i32 %b, i32 %i) local_unnamed_addr !dbg !13 {
+define i32 @foo(i32 %b, i32 %i) local_unnamed_addr optdebug !dbg !13 {
 entry:
   tail call void @llvm.dbg.value(metadata i32 %b, i64 0, metadata !17, metadata !20), !dbg !21
   %c = add i32 %b, 42
@@ -64,12 +64,6 @@ if.end:                                           ; preds = %entry, %if.then
 
 declare void @bar(...) local_unnamed_addr
 
-; Function Attrs: nounwind
-declare void @llvm.fake.use(...)
-
-; Function Attrs: nounwind readnone
-declare void @llvm.dbg.value(metadata, i64, metadata, metadata)
-
 !llvm.dbg.cu = !{!1}
 !llvm.module.flags = !{!9, !10, !11}
 !llvm.ident = !{!12}
@@ -90,9 +84,8 @@ declare void @llvm.dbg.value(metadata, i64, metadata, metadata)
 !13 = distinct !DISubprogram(name: "foo", scope: !2, file: !2, line: 4, type: !14, isLocal: false, isDefinition: true, scopeLine: 5, flags: DIFlagPrototyped, isOptimized: true, unit: !1, retainedNodes: !16)
 !14 = !DISubroutineType(types: !15)
 !15 = !{!6, !6, !6}
-!16 = !{!17, !18, !19}
+!16 = !{!17, !19}
 !17 = !DILocalVariable(name: "b", arg: 1, scope: !13, file: !2, line: 4, type: !6)
-!18 = !DILocalVariable(name: "i", arg: 2, scope: !13, file: !2, line: 4, type: !6)
 !19 = !DILocalVariable(name: "loc", scope: !13, file: !2, line: 6, type: !6)
 !20 = !DIExpression()
 !21 = !DILocation(line: 4, scope: !13)
