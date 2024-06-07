@@ -596,7 +596,7 @@ struct ForcedReduceComplex10Dim {
 /// Placeholder for complex(16) version of Reduce Intrinsic
 struct ForcedReduceComplex16 {
   static constexpr const char *name =
-      ExpandAndQuoteKey(RTNAME(CppReduceComplex16Dim));
+      ExpandAndQuoteKey(RTNAME(CppReduceComplex16));
   static constexpr fir::runtime::FuncTypeBuilderFunc getTypeModel() {
     return [](mlir::MLIRContext *ctx) {
       auto ty = mlir::ComplexType::get(mlir::FloatType::getF128(ctx));
