@@ -60,10 +60,9 @@ static bool SubstQualifier(Sema &SemaRef, const DeclT *OldDecl, DeclT *NewDecl,
           !OldDecl->getLexicalDeclContext()->isDependentContext()) &&
          "non-friend with qualified name defined in dependent context");
   Sema::ContextRAII SavedContext(
-      SemaRef,
-      const_cast<DeclContext *>(NewDecl->getFriendObjectKind()
-                                    ? NewDecl->getLexicalDeclContext()
-                                    : OldDecl->getLexicalDeclContext()));
+      SemaRef, const_cast<DeclContext *>(NewDecl->getFriendObjectKind()
+                                             ? NewDecl->getLexicalDeclContext()
+                                             : NewDecl->getDeclContext()));
 
   NestedNameSpecifierLoc NewQualifierLoc
       = SemaRef.SubstNestedNameSpecifierLoc(OldDecl->getQualifierLoc(),
