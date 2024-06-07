@@ -45,6 +45,7 @@
 ; ASM:         .cv_loc 1 1 5 3                 # t.cpp:5:3
 ; ASM:         callq   capture
 ; ASM:         leaq    40(%rsp), %rcx
+; ASM:         .cv_loc 0 1 11 5                # t.cpp:11:5
 ; ASM:         jmp     .LBB0_3
 ; ASM: [[else_start:\.Ltmp.*]]:
 ; ASM: .LBB0_2:                                # %if.else
