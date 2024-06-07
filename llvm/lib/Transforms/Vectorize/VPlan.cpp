@@ -446,9 +446,6 @@ void VPIRBasicBlock::execute(VPTransformState *State) {
   assert(getHierarchicalSuccessors().empty() &&
          "VPIRBasicBlock cannot have successors at the moment");
 
-  State->Builder.SetInsertPoint(getIRBasicBlock()->getTerminator());
-  executeRecipes(State, getIRBasicBlock());
-
   for (VPBlockBase *PredVPBlock : getHierarchicalPredecessors()) {
     VPBasicBlock *PredVPBB = PredVPBlock->getExitingBasicBlock();
     auto &PredVPSuccessors = PredVPBB->getHierarchicalSuccessors();
@@ -467,6 +464,9 @@ void VPIRBasicBlock::execute(VPTransformState *State) {
     TermBr->setSuccessor(idx, IRBB);
     State->CFG.DTU.applyUpdates({{DominatorTree::Insert, PredBB, IRBB}});
   }
+
+  State->Builder.SetInsertPoint(getIRBasicBlock()->getTerminator());
+  executeRecipes(State, getIRBasicBlock());
 }
 
 void VPBasicBlock::execute(VPTransformState *State) {
@@ -1087,9 +1087,9 @@ LLVM_DUMP_METHOD
 void VPlan::dump() const { print(dbgs()); }
 #endif
 
-void VPlan::addLiveOut(PHINode *PN, VPValue *V) {
+void VPlan::addLiveOut(PHINode *PN, VPValue *V, VPBasicBlock *Pred) {
   assert(LiveOuts.count(PN) == 0 && "an exit value for PN already exists");
-  LiveOuts.insert({PN, new VPLiveOut(PN, V)});
+  LiveOuts.insert({PN, new VPLiveOut(PN, V, Pred)});
 }
 
 static void remapOperands(VPBlockBase *Entry, VPBlockBase *NewEntry,
@@ -1158,9 +1158,18 @@ VPlan *VPlan::duplicate() {
   remapOperands(Preheader, NewPreheader, Old2NewVPValues);
   remapOperands(Entry, NewEntry, Old2NewVPValues);
 
+  DenseMap<VPBlockBase *, VPBlockBase *> Old2NewVPBlocks;
+  VPBlockBase *OldMiddle = getVectorLoopRegion()->getSingleSuccessor();
+  VPBlockBase *NewMiddle = NewPlan->getVectorLoopRegion()->getSingleSuccessor();
+  Old2NewVPBlocks[OldMiddle] = NewMiddle;
+  for (const auto &[Old, New] :
+       zip(OldMiddle->getSuccessors(), NewMiddle->getSuccessors()))
+    Old2NewVPBlocks[Old] = New;
+
   // Clone live-outs.
   for (const auto &[_, LO] : LiveOuts)
-    NewPlan->addLiveOut(LO->getPhi(), Old2NewVPValues[LO->getOperand(0)]);
+    NewPlan->addLiveOut(LO->getPhi(), Old2NewVPValues[LO->getOperand(0)],
+                        cast<VPBasicBlock>(Old2NewVPBlocks[LO->getPred()]));
 
   // Initialize remaining fields of cloned VPlan.
   NewPlan->VFs = VFs;
