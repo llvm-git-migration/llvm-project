@@ -1,3 +1,4 @@
+// REQUIRES: arm-emulator-executable
 // DEFINE: %{entry_point} = main
 // DEFINE: %{compile} = mlir-opt %s -test-lower-to-llvm
 // DEFINE: %{run} = %mcr_aarch64_cmd -march=aarch64 -mattr=+sve \
