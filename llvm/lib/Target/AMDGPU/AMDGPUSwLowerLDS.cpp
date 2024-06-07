@@ -951,9 +951,10 @@ bool AMDGPUSwLowerLDS::run() {
         LDSParams.IndirectAccess.DynamicLDSGlobals.empty()) {
       Changed = false;
     } else {
-      removeFnAttrFromReachable(CG, Func, "amdgpu-no-workitem-id-x");
-      removeFnAttrFromReachable(CG, Func, "amdgpu-no-workitem-id-y");
-      removeFnAttrFromReachable(CG, Func, "amdgpu-no-workitem-id-z");
+      removeFnAttrFromReachable(CG, Func,
+                                {"amdgpu-no-workitem-id-x",
+                                 "amdgpu-no-workitem-id-y",
+                                 "amdgpu-no-workitem-id-z"});
       reorderStaticDynamicIndirectLDSSet(LDSParams);
       buildSwLDSGlobal(Func);
       buildSwDynLDSGlobal(Func);
