@@ -28,7 +28,7 @@ struct A
 {
     typedef T value_type;
 
-    template <class U> struct rebind {typedef ReboundA<U> other;};
+    template <class U> struct rebind {typedef A<U> other;};
 };
 
 template <class T, class U>
@@ -39,7 +39,7 @@ struct B
 {
     typedef T value_type;
 
-    template <class V> struct rebind {typedef ReboundB<V, U> other;};
+    template <class V> struct rebind {typedef B<V, U> other;};
 };
 
 template <class T>
@@ -83,16 +83,16 @@ struct G {
 int main(int, char**)
 {
 #if TEST_STD_VER >= 11
-    static_assert((std::is_same<std::allocator_traits<A<char> >::rebind_alloc<double>, ReboundA<double> >::value), "");
-    static_assert((std::is_same<std::allocator_traits<B<int, char> >::rebind_alloc<double>, ReboundB<double, char> >::value), "");
+    static_assert((std::is_same<std::allocator_traits<A<char> >::rebind_alloc<double>, A<double> >::value), "");
+    static_assert((std::is_same<std::allocator_traits<B<int, char> >::rebind_alloc<double>, B<double, char> >::value), "");
     static_assert((std::is_same<std::allocator_traits<C<char> >::rebind_alloc<double>, C<double> >::value), "");
     static_assert((std::is_same<std::allocator_traits<D<int, char> >::rebind_alloc<double>, D<double, char> >::value), "");
     static_assert((std::is_same<std::allocator_traits<E<char> >::rebind_alloc<double>, E<double> >::value), "");
     static_assert((std::is_same<std::allocator_traits<F<char> >::rebind_alloc<double>, F<double> >::value), "");
     static_assert((std::is_same<std::allocator_traits<G<char> >::rebind_alloc<double>, G<double> >::value), "");
 #else
-    static_assert((std::is_same<std::allocator_traits<A<char> >::rebind_alloc<double>::other, ReboundA<double> >::value), "");
-    static_assert((std::is_same<std::allocator_traits<B<int, char> >::rebind_alloc<double>::other, ReboundB<double, char> >::value), "");
+    static_assert((std::is_same<std::allocator_traits<A<char> >::rebind_alloc<double>::other, A<double> >::value), "");
+    static_assert((std::is_same<std::allocator_traits<B<int, char> >::rebind_alloc<double>::other, B<double, char> >::value), "");
     static_assert((std::is_same<std::allocator_traits<C<char> >::rebind_alloc<double>::other, C<double> >::value), "");
     static_assert((std::is_same<std::allocator_traits<D<int, char> >::rebind_alloc<double>::other, D<double, char> >::value), "");
     static_assert((std::is_same<std::allocator_traits<E<char> >::rebind_alloc<double>::other, E<double> >::value), "");

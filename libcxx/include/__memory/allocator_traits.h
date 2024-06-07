@@ -362,6 +362,17 @@ struct _LIBCPP_TEMPLATE_VIS allocator_traits {
   select_on_container_copy_construction(const allocator_type& __a) {
     return __a;
   }
+
+private:
+#ifndef _LIBCPP_CXX03_LANG
+  using __rebind_self = rebind_alloc<value_type>;
+#else
+  using __rebind_self = typename rebind_alloc<value_type>::other;
+#endif
+
+  static_assert(is_same<allocator_type, __rebind_self>::value,
+                "[allocator.requirements] states that rebinding an allocator to the same type should result in the "
+                "original allocator");
 };
 
 #ifndef _LIBCPP_CXX03_LANG
