@@ -5548,8 +5548,8 @@ Instruction *InstCombinerImpl::foldICmpEquality(ICmpInst &I) {
   }
 
   // (X&Z) == (Y&Z) -> (X^Y) & Z == 0
-  if (match(Op0, m_OneUse(m_And(m_Value(A), m_Value(B)))) &&
-      match(Op1, m_OneUse(m_And(m_Value(C), m_Value(D))))) {
+  if (match(Op0, m_And(m_Value(A), m_Value(B))) &&
+      match(Op1, m_And(m_Value(C), m_Value(D)))) {
     Value *X = nullptr, *Y = nullptr, *Z = nullptr;
 
     if (A == C) {
@@ -5570,10 +5570,36 @@ Instruction *InstCombinerImpl::foldICmpEquality(ICmpInst &I) {
       Z = B;
     }
 
-    if (X) { // Build (X^Y) & Z
-      Op1 = Builder.CreateXor(X, Y);
-      Op1 = Builder.CreateAnd(Op1, Z);
-      return new ICmpInst(Pred, Op1, Constant::getNullValue(Op1->getType()));
+    if (X) {
+      // (X&P2) == (X&-P2)
+      //    -> X u< P2*2
+      // (X&P2) != (X&-P2)
+      //    -> X u>= P2*2
+      // iff P2 is not INT_MIN
+      const APInt *CP2;
+      ICmpInst::Predicate P2Pred =
+          Pred == ICmpInst::ICMP_EQ ? ICmpInst::ICMP_ULT : ICmpInst::ICMP_UGE;
+      if (match(X, m_APInt(CP2)) && match(Y, m_SpecificInt(-*CP2)) &&
+          (CP2->isPowerOf2() || CP2->isNegatedPowerOf2()) &&
+          !CP2->isMinSignedValue()) {
+        APInt CMask = CP2->isPowerOf2() ? *CP2 : -*CP2;
+        return new ICmpInst(P2Pred, Z,
+                            ConstantInt::get(Z->getType(), CMask + CMask));
+      }
+
+      if (Op0->hasOneUse() && Op1->hasOneUse()) {
+        // nsw neg precludes INT_MIN
+        if (match(X, m_NSWNeg(m_Specific(Y))))
+          std::swap(X, Y);
+        if (match(Y, m_NSWNeg(m_Specific(X))) &&
+            isKnownToBeAPowerOfTwo(X, /*OrZero=*/false, 0, &I))
+          return new ICmpInst(P2Pred, Z, Builder.CreateAdd(X, X));
+
+        // Build (X^Y) & Z
+        Op1 = Builder.CreateXor(X, Y);
+        Op1 = Builder.CreateAnd(Op1, Z);
+        return new ICmpInst(Pred, Op1, Constant::getNullValue(Op1->getType()));
+      }
     }
   }
 

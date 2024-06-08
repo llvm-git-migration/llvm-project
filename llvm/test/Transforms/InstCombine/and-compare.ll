@@ -79,10 +79,8 @@ define <2 x i1> @test3vec(<2 x i64> %A) {
 
 define i1 @test_eq_p2(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @test_eq_p2(
-; CHECK-NEXT:    [[Y:%.*]] = shl nuw nsw i8 1, [[YY:%.*]]
-; CHECK-NEXT:    [[TMP1:%.*]] = add nsw i8 [[Y]], -1
-; CHECK-NEXT:    [[TMP2:%.*]] = xor i8 [[Y]], [[TMP1]]
-; CHECK-NEXT:    [[R:%.*]] = icmp uge i8 [[TMP2]], [[X:%.*]]
+; CHECK-NEXT:    [[TMP1:%.*]] = shl i8 2, [[YY:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ugt i8 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %y = shl nsw i8 1, %yy
@@ -96,10 +94,8 @@ define i1 @test_eq_p2(i8 %x, i8 %yy) {
 
 define i1 @test_eq_p2_2(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @test_eq_p2_2(
-; CHECK-NEXT:    [[Y:%.*]] = shl nuw nsw i8 1, [[YY:%.*]]
-; CHECK-NEXT:    [[TMP1:%.*]] = add nsw i8 [[Y]], -1
-; CHECK-NEXT:    [[TMP2:%.*]] = xor i8 [[Y]], [[TMP1]]
-; CHECK-NEXT:    [[R:%.*]] = icmp uge i8 [[TMP2]], [[X:%.*]]
+; CHECK-NEXT:    [[TMP1:%.*]] = shl i8 2, [[YY:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ugt i8 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %y = shl nsw i8 1, %yy
@@ -171,7 +167,7 @@ define i1 @test_ne_cp2(i8 %x, i8 %yy) {
 ; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X]], 16
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_NEG_Y]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_Y]])
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND_X_NEG_Y]], [[AND_X_Y]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ugt i8 [[X]], 31
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %and_x_neg_y = and i8 %x, -16
@@ -188,7 +184,7 @@ define i1 @test_ne_cp2_2(i8 %x, i8 %yy) {
 ; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X]], 4
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_NEG_Y]])
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_Y]])
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND_X_Y]], [[AND_X_NEG_Y]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ugt i8 [[X]], 7
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %and_x_neg_y = and i8 %x, -4
