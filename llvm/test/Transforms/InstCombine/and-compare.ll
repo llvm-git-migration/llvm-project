@@ -147,10 +147,9 @@ define i1 @test_ne_cp2_other_fail2(i8 %x, i8 %yy) {
 
 define i1 @test_ne_cp2_other_okay(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @test_ne_cp2_other_okay(
-; CHECK-NEXT:    [[AND_X_NEG_Y:%.*]] = and i8 [[X:%.*]], -17
-; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X]], 16
+; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X:%.*]], 16
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_Y]])
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND_X_NEG_Y]], [[AND_X_Y]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[X]], 0
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %and_x_neg_y = and i8 %x, -17
@@ -162,10 +161,9 @@ define i1 @test_ne_cp2_other_okay(i8 %x, i8 %yy) {
 
 define i1 @test_ne_cp2_other_okay2(i8 %x, i8 %yy) {
 ; CHECK-LABEL: @test_ne_cp2_other_okay2(
-; CHECK-NEXT:    [[AND_X_NEG_Y:%.*]] = and i8 [[X:%.*]], -17
-; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X]], 16
+; CHECK-NEXT:    [[AND_X_Y:%.*]] = and i8 [[X:%.*]], 16
 ; CHECK-NEXT:    call void @use.i8(i8 [[AND_X_Y]])
-; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[AND_X_Y]], [[AND_X_NEG_Y]]
+; CHECK-NEXT:    [[R:%.*]] = icmp ne i8 [[X]], 0
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %and_x_neg_y = and i8 %x, -17

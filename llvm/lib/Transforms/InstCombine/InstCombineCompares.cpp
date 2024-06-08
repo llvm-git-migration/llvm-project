@@ -5587,7 +5587,13 @@ Instruction *InstCombinerImpl::foldICmpEquality(ICmpInst &I) {
                             ConstantInt::get(Z->getType(), CMask + CMask));
       }
 
-      if (Op0->hasOneUse() && Op1->hasOneUse()) {
+      // If either Op0/Op1 are both one use or X^Y will constant fold and one of
+      // Op0/Op1 are one use proceeed. In those cases we are instruction neutral
+      // but icmp eq/ne A, 0 is easier to analyze than icmp eq/ne A, B
+      int UseCnt =
+          int(Op0->hasOneUse()) + int(Op1->hasOneUse()) +
+          (int(match(X, m_ImmConstant()) && match(Y, m_ImmConstant())));
+      if (UseCnt >= 2) {
         // Build (X^Y) & Z
         Op1 = Builder.CreateXor(X, Y);
         Op1 = Builder.CreateAnd(Op1, Z);
