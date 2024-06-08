@@ -13,6 +13,7 @@ include "TestDialect.td"
 include "TestInterfaces.td"
 include "mlir/Dialect/DLTI/DLTIBase.td"
 include "mlir/Dialect/Linalg/IR/LinalgInterfaces.td"
+include "mlir/Dialect/Polynomial/IR/PolynomialAttributes.td"
 include "mlir/IR/EnumAttr.td"
 include "mlir/Interfaces/FunctionInterfaces.td"
 include "mlir/IR/OpBase.td"
@@ -230,6 +231,11 @@ def FloatElementsAttrOp : TEST_Op<"float_elements_attr"> {
       RankedF32ElementsAttr<[2]>:$scalar_f32_attr,
       RankedF64ElementsAttr<[4, 8]>:$tensor_f64_attr
   );
+}
+
+def ContainingIntPolynomialAttrOp : TEST_Op<"containing_int_polynomial_attr"> {
+  let arguments = (ins Polynomial_IntPolynomialAttr:$attr);
+  let assemblyFormat = "$attr attr-dict";
 }
 
 // A pattern that updates dense<[3.0, 4.0]> to dense<[5.0, 6.0]>.
@@ -2204,7 +2210,7 @@ def ForwardBufferOp : TEST_Op<"forward_buffer", [Pure]> {
 def ReifyBoundOp : TEST_Op<"reify_bound", [Pure]> {
   let description = [{
     Reify a bound for the given index-typed value or dimension size of a shaped
-    value. "LB", "EQ" and "UB" bounds are supported. If `scalable` is set, 
+    value. "LB", "EQ" and "UB" bounds are supported. If `scalable` is set,
     `vscale_min` and `vscale_max` must be provided, which allows computing
     a bound in terms of "vector.vscale" for a given range of vscale.
   }];
