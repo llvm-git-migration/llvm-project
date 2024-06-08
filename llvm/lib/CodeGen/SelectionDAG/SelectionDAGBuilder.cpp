@@ -10227,21 +10227,27 @@ void SelectionDAGBuilder::visitVACopy(const CallInst &I) {
 }
 
 SDValue SelectionDAGBuilder::lowerRangeToAssertZExt(SelectionDAG &DAG,
-                                                    const Instruction &I,
+                                                    const CallBase &I,
                                                     SDValue Op) {
+  std::optional<ConstantRange> CR = I.getRange();
   const MDNode *Range = getRangeMetadata(I);
-  if (!Range)
+  if (Range) {
+    ConstantRange R = getConstantRangeFromMetadata(*Range);
+    if (CR) {
+      CR = CR->intersectWith(R);
+    } else {
+      CR = R;
+    }
+  }
+
+  if (!CR || CR->isFullSet() || CR->isEmptySet() || CR->isUpperWrapped())
     return Op;
 
-  ConstantRange CR = getConstantRangeFromMetadata(*Range);
-  if (CR.isFullSet() || CR.isEmptySet() || CR.isUpperWrapped())
-    return Op;
-
-  APInt Lo = CR.getUnsignedMin();
+  APInt Lo = CR->getUnsignedMin();
   if (!Lo.isMinValue())
     return Op;
 
-  APInt Hi = CR.getUnsignedMax();
+  APInt Hi = CR->getUnsignedMax();
   unsigned Bits = std::max(Hi.getActiveBits(),
                            static_cast<unsigned>(IntegerType::MIN_INT_BITS));
 

@@ -411,7 +411,7 @@ public:
 
   // Lower range metadata from 0 to N to assert zext to an integer of nearest
   // floor power of two.
-  SDValue lowerRangeToAssertZExt(SelectionDAG &DAG, const Instruction &I,
+  SDValue lowerRangeToAssertZExt(SelectionDAG &DAG, const CallBase &I,
                                  SDValue Op);
 
   void populateCallLoweringInfo(TargetLowering::CallLoweringInfo &CLI,
