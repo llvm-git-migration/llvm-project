@@ -71,6 +71,9 @@ MicroBenchmarks/XRay microbenchmarks, you need to add `compiler-rt` to your
    PASS: test-suite :: MultiSource/Applications/ALAC/encode/alacconvert-encode.test (2 of 474)
    ...
    ```
+**NOTE!** even in the case you only want to get the compile-time results(code size, llvm stats etc),
+you need to run the test with the above `llvm-lit` command. In that case, the *results.json* file will
+contain compile-time metrics.
 
 6. Show and compare result files (optional):
 
@@ -266,7 +269,7 @@ Example usage:
 
   ```bash
   % test-suite/utils/compare.py -m compile_time baseline.json
-  % test-suite/utils/compare.py -m size.__text baseline.json
+  % test-suite/utils/compare.py -m size..text baseline.json
   ```
 
 - Compare two result files and filter short running tests:
