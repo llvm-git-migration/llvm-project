@@ -433,7 +433,7 @@ void UseAfterMoveCheck::check(const MatchFinder::MatchResult &Result) {
   const auto *MoveDecl = Result.Nodes.getNodeAs<FunctionDecl>("move-decl");
 
   if (!MovingCall || !MovingCall->getExprLoc().isValid())
-    MovingCall = ContainingCtorInit ? ContainingCtorInit : CallMove;
+    MovingCall = CallMove;
 
   // Ignore the std::move if the variable that was passed to it isn't a local
   // variable.
