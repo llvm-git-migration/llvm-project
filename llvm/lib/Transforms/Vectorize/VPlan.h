@@ -1183,6 +1183,7 @@ public:
     SLPStore,
     ActiveLaneMask,
     ExplicitVectorLength,
+    ExplicitVectorLengthMask,
     CalculateTripCountMinusVF,
     // Increment the canonical IV separately for each unrolled part.
     CanonicalIVIncrementForPart,
