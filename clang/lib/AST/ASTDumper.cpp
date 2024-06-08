@@ -360,3 +360,34 @@ LLVM_DUMP_METHOD void ConceptReference::dump(raw_ostream &OS) const {
   ASTDumper P(OS, Ctx, Ctx.getDiagnostics().getShowColors());
   P.Visit(this);
 }
+
+//===----------------------------------------------------------------------===//
+// TemplateName method implementations
+//===----------------------------------------------------------------------===//
+
+// FIXME: These are using the TemplateArgument dumper.
+LLVM_DUMP_METHOD void TemplateName::dump() const {
+  ASTDumper Dumper(llvm::errs(), /*ShowColors=*/false);
+  Dumper.Visit(*this);
+}
+
+LLVM_DUMP_METHOD void TemplateName::dump(llvm::raw_ostream &OS,
+                                         const ASTContext &Context) const {
+  ASTDumper Dumper(OS, Context, Context.getDiagnostics().getShowColors());
+  Dumper.Visit(*this);
+}
+
+//===----------------------------------------------------------------------===//
+// TemplateArgument method implementations
+//===----------------------------------------------------------------------===//
+
+LLVM_DUMP_METHOD void TemplateArgument::dump() const {
+  ASTDumper Dumper(llvm::errs(), /*ShowColors=*/false);
+  Dumper.Visit(*this);
+}
+
+LLVM_DUMP_METHOD void TemplateArgument::dump(llvm::raw_ostream &OS,
+                                             const ASTContext &Context) const {
+  ASTDumper Dumper(OS, Context, Context.getDiagnostics().getShowColors());
+  Dumper.Visit(*this);
+}
