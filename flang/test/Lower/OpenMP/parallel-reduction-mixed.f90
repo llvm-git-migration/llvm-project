@@ -1,6 +1,8 @@
 !! Make sure that mixture of by-ref and by-val reductions work all the way
 !! to LLVM-IR code.
-! RUN: %flang_fc1 -emit-llvm -fopenmp -o - %s 2>&1 | FileCheck %s
+! RUN: %flang_fc1 -emit-llvm \
+! RUN:   -mmlir --openmp-enable-delayed-privatization=false \
+! RUN:   -fopenmp -o - %s 2>&1 | FileCheck %s
 subroutine proc
   implicit none
   real(8),allocatable :: F(:)

@@ -1,6 +1,8 @@
 ! REQUIRES: openmp_runtime
 
-!RUN: %flang_fc1 -emit-hlfir %openmp_flags %s -o - | FileCheck %s
+!RUN: %flang_fc1 -emit-hlfir \
+!RUN:   -mmlir --openmp-enable-delayed-privatization=false \
+!RUN:   %openmp_flags %s -o - | FileCheck %s
 
 !CHECK: omp.critical.declare @help2
 !CHECK: omp.critical.declare @help1 hint(contended)
