@@ -870,6 +870,19 @@ bool ByteCodeExprGen<Emitter>::VisitComplexBinOp(const BinaryOperator *E) {
     return this->emitMulc(ElemT, E);
   }
 
+  if (Op == BO_Div && LHSType->isAnyComplexType() &&
+      RHSType->isAnyComplexType()) {
+    assert(classifyPrim(LHSType->getAs<ComplexType>()->getElementType()) ==
+           classifyPrim(RHSType->getAs<ComplexType>()->getElementType()));
+    PrimType ElemT =
+        classifyPrim(LHSType->getAs<ComplexType>()->getElementType());
+    if (!this->visit(LHS))
+      return false;
+    if (!this->visit(RHS))
+      return false;
+    return this->emitDivc(ElemT, E);
+  }
+
   // Evaluate LHS and save value to LHSOffset.
   bool LHSIsComplex;
   unsigned LHSOffset;
@@ -978,6 +991,21 @@ bool ByteCodeExprGen<Emitter>::VisitComplexBinOp(const BinaryOperator *E) {
           return false;
       } else {
         if (!this->emitMul(ResultElemT, E))
+          return false;
+      }
+      break;
+    case BO_Div:
+      if (!loadComplexValue(LHSIsComplex, false, ElemIndex, LHSOffset, LHS))
+        return false;
+
+      if (!loadComplexValue(RHSIsComplex, false, ElemIndex, RHSOffset, RHS))
+        return false;
+
+      if (ResultElemT == PT_Float) {
+        if (!this->emitDivf(getRoundingMode(E), E))
+          return false;
+      } else {
+        if (!this->emitDiv(ResultElemT, E))
           return false;
       }
       break;
