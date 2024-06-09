@@ -2146,7 +2146,7 @@ static void genOMPDispatch(lower::AbstractConverter &converter,
     symTable.pushScope();
     loopDsp.emplace(converter, semaCtx, item->clauses, eval,
                     /*shouldCollectPreDeterminedSymbols=*/true,
-                    enableDelayedPrivatization, &symTable);
+                    /*useDelayedPrivatization=*/false, &symTable);
     loopDsp->processStep1();
   }
 
