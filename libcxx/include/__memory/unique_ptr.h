@@ -24,6 +24,7 @@
 #include <__memory/auto_ptr.h>
 #include <__memory/compressed_pair.h>
 #include <__memory/pointer_traits.h>
+#include <__memory/tombstone_traits.h>
 #include <__type_traits/add_lvalue_reference.h>
 #include <__type_traits/common_type.h>
 #include <__type_traits/conditional.h>
@@ -404,6 +405,14 @@ struct __unique_ptr_array_bounds_stored {
 private:
   size_t __size_;
 };
+
+template <class _Tp>
+struct __tombstone_traits<__enable_specialization_if<__has_tombstone_v<_Tp*>, unique_ptr<_Tp>>>
+    : __tombstone_traits<_Tp*> {};
+
+template <class _Tp>
+struct __tombstone_traits<__enable_specialization_if<__has_tombstone_v<_Tp*>, unique_ptr<_Tp[]>>>
+    : __tombstone_traits<_Tp*> {};
 
 template <class _Tp, class _Dp>
 class _LIBCPP_UNIQUE_PTR_TRIVIAL_ABI _LIBCPP_TEMPLATE_VIS unique_ptr<_Tp[], _Dp> {
