@@ -17,6 +17,7 @@
 #include <__fwd/array.h>
 #include <__fwd/pair.h>
 #include <__fwd/tuple.h>
+#include <__memory/tombstone_traits.h>
 #include <__tuple/tuple_indices.h>
 #include <__tuple/tuple_like_no_subrange.h>
 #include <__tuple/tuple_size.h>
@@ -445,6 +446,18 @@ private:
 template <class _T1, class _T2>
 pair(_T1, _T2) -> pair<_T1, _T2>;
 #endif
+
+template <class _Tp, class _Up>
+  requires __has_tombstone_v<_Up>
+struct __tombstone_traits<pair<_Tp, _Up>> {
+  static constexpr auto __disengaged_value_ = __tombstone_traits<_Up>::__disengaged_value_;
+  static constexpr size_t __is_disengaged_offset_ =
+      sizeof(_Tp) + __tombstone_traits<_Up>::__is_disengaged_offset_;
+};
+
+template <class _Tp, class _Up>
+  requires(!__has_tombstone_v<_Up> && __has_tombstone_v<_Tp>)
+struct __tombstone_traits<pair<_Tp, _Up>> : __tombstone_traits<_Tp> {};
 
 // [pairs.spec], specialized algorithms
 
