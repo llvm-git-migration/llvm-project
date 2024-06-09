@@ -46,7 +46,8 @@ def GPUTargetAttrInterface : AttrInterface<"TargetAttrInterface"> {
         meant to be used for passing additional options that are not in the
         attribute.
       }], "Attribute", "createObject",
-        (ins "const SmallVector<char, 0>&":$object,
+        (ins "::mlir::Operation*":$module,
+             "const SmallVector<char, 0>&":$object,
              "const gpu::TargetOptions&":$options)>
   ];
 }
