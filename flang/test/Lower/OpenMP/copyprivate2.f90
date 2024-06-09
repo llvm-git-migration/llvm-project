@@ -1,5 +1,7 @@
 ! Test lowering of COPYPRIVATE with allocatable/pointer variables.
-! RUN: %flang_fc1 -emit-hlfir -fopenmp -o - %s 2>&1 | FileCheck %s
+! RUN: %flang_fc1 -emit-hlfir -fopenmp \
+! RUN:   -mmlir --openmp-enable-delayed-privatization=false \
+! RUN:   -o - %s 2>&1 | FileCheck %s
 
 !CHECK-LABEL: func private @_copy_box_ptr_i32(
 !CHECK-SAME:                  %[[ARG0:.*]]: !fir.ref<!fir.box<!fir.ptr<i32>>>,
