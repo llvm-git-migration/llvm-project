@@ -24,7 +24,7 @@
 #include <sys/syscall.h>
 
 namespace LIBC_NAMESPACE {
-#ifdef LIBC_VDSO_HAS_GETTIMEOFDAY
+
 TEST(LlvmLibcOSUtilVDSOTest, GetTimeOfDay) {
   using FuncTy = int (*)(timeval *, struct timezone *);
   auto func =
@@ -36,9 +36,7 @@ TEST(LlvmLibcOSUtilVDSOTest, GetTimeOfDay) {
   // hopefully people are not building time machines using our libc.
   EXPECT_GT(tv.tv_sec, static_cast<decltype(tv.tv_sec)>(0));
 }
-#endif
 
-#ifdef LIBC_VDSO_HAS_TIME
 TEST(LlvmLibcOSUtilVDSOTest, Time) {
   using FuncTy = time_t (*)(time_t *);
   auto func = reinterpret_cast<FuncTy>(vdso::get_symbol(vdso::VDSOSym::Time));
@@ -49,9 +47,7 @@ TEST(LlvmLibcOSUtilVDSOTest, Time) {
   EXPECT_GT(func(&b), static_cast<time_t>(0));
   EXPECT_GE(b, a);
 }
-#endif
 
-#ifdef LIBC_VDSO_HAS_CLOCK_GETTIME
 TEST(LlvmLibcOSUtilVDSOTest, ClockGetTime) {
   using FuncTy = int (*)(clockid_t, timespec *);
   auto func =
@@ -67,9 +63,7 @@ TEST(LlvmLibcOSUtilVDSOTest, ClockGetTime) {
     EXPECT_LT(a.tv_sec, b.tv_sec);
   }
 }
-#endif
 
-#ifdef LIBC_VDSO_HAS_CLOCK_GETTIME64
 TEST(LlvmLibcOSUtilVDSOTest, ClockGetTime64) {
   using FuncTy = int (*)(clockid_t, __kernel_timespec *);
   auto func =
@@ -87,9 +81,7 @@ TEST(LlvmLibcOSUtilVDSOTest, ClockGetTime64) {
     EXPECT_LT(a.tv_sec, b.tv_sec);
   }
 }
-#endif
 
-#ifdef LIBC_VDSO_HAS_CLOCK_GETRES
 TEST(LlvmLibcOSUtilVDSOTest, ClockGetRes) {
   using FuncTy = int (*)(clockid_t, timespec *);
   auto func =
@@ -100,9 +92,7 @@ TEST(LlvmLibcOSUtilVDSOTest, ClockGetRes) {
   EXPECT_EQ(func(CLOCK_MONOTONIC, &res), 0);
   EXPECT_TRUE(res.tv_sec > 0 || res.tv_nsec > 0);
 }
-#endif
 
-#ifdef LIBC_VDSO_HAS_GETCPU
 TEST(LlvmLibcOSUtilVDSOTest, GetCpu) {
   // The kernel system call has a third argument, which should be passed as
   // nullptr.
@@ -115,7 +105,6 @@ TEST(LlvmLibcOSUtilVDSOTest, GetCpu) {
   EXPECT_GE(cpu, 0);
   EXPECT_GE(node, 0);
 }
-#endif
 
 // TODO: apply this change to __restore_rt in
 // libc/src/signal/linux/sigaction.cpp
@@ -143,8 +132,8 @@ TEST(LlvmLibcOSUtilVDSOTest, RtSigReturn) {
   using namespace testing::ErrnoSetterMatcher;
   // must use struct since there is a function of the same name in the same
   // scope.
-  struct sigaction sa{};
-  struct sigaction old_sa{};
+  struct sigaction sa {};
+  struct sigaction old_sa {};
   sa.sa_handler = sigprof_handler;
   sa.sa_flags = SA_RESTORER;
   sa.sa_restorer = __restore_rt;
@@ -155,7 +144,6 @@ TEST(LlvmLibcOSUtilVDSOTest, RtSigReturn) {
   ASSERT_THAT(LIBC_NAMESPACE::sigaction(SIGPROF, &old_sa, nullptr), Succeeds());
 }
 
-#ifdef LIBC_VDSO_HAS_FLUSH_ICACHE
 TEST(LlvmLibcOSUtilVDSOTest, FlushICache) {
   using FuncTy = void (*)(void *, void *, unsigned long);
   auto func =
@@ -169,11 +157,8 @@ TEST(LlvmLibcOSUtilVDSOTest, FlushICache) {
   func(buf, buf + sizeof(buf), 0);
   func(buf, buf + sizeof(buf), 1);
 }
-#endif
 
 // https://docs.kernel.org/6.5/riscv/hwprobe.html
-
-#ifdef LIBC_VDSO_HAS_RISCV_HWPROBE
 TEST(LlvmLibcOSUtilVDSOTest, RiscvHwProbe) {
   using namespace testing::ErrnoSetterMatcher;
   struct riscv_hwprobe {
@@ -200,6 +185,5 @@ TEST(LlvmLibcOSUtilVDSOTest, RiscvHwProbe) {
     EXPECT_EQ(probe.value, static_cast<decltype(probe.value)>(0));
   }
 }
-#endif
 
 } // namespace LIBC_NAMESPACE
