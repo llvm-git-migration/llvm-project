@@ -598,13 +598,16 @@ NVVMTargetAttrImpl::createObject(Attribute attribute, Operation *module,
                                  const gpu::TargetOptions &options) const {
   auto target = cast<NVVMTargetAttr>(attribute);
   gpu::CompilationTarget format = options.getCompilationTarget();
-  DictionaryAttr objectProps;
+  DictionaryAttr objectProps = module->getDiscardableAttrDictionary();
   Builder builder(attribute.getContext());
-  if (format == gpu::CompilationTarget::Assembly)
-    objectProps = builder.getDictionaryAttr(
-        {builder.getNamedAttr("O", builder.getI32IntegerAttr(target.getO()))});
+  if (format == gpu::CompilationTarget::Assembly) {
+    SmallVector<NamedAttribute, 1> attrs(objectProps.getValue());
+    attrs.push_back(
+        builder.getNamedAttr("O", builder.getI32IntegerAttr(target.getO())));
+    objectProps = builder.getDictionaryAttr(attrs);
+  }
   return builder.getAttr<gpu::ObjectAttr>(
       attribute, format,
       builder.getStringAttr(StringRef(object.data(), object.size())),
-      objectProps);
+      objectProps.empty() ? nullptr : objectProps);
 }

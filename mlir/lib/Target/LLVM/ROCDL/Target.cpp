@@ -477,10 +477,12 @@ ROCDLTargetAttrImpl::createObject(Attribute attribute, Operation *module,
                                   const SmallVector<char, 0> &object,
                                   const gpu::TargetOptions &options) const {
   gpu::CompilationTarget format = options.getCompilationTarget();
+  DictionaryAttr objectProps = module->getDiscardableAttrDictionary();
   Builder builder(attribute.getContext());
   return builder.getAttr<gpu::ObjectAttr>(
       attribute,
       format > gpu::CompilationTarget::Binary ? gpu::CompilationTarget::Binary
                                               : format,
-      builder.getStringAttr(StringRef(object.data(), object.size())), nullptr);
+      builder.getStringAttr(StringRef(object.data(), object.size())),
+      objectProps.empty() ? nullptr : objectProps);
 }

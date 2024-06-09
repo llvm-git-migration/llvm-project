@@ -22,4 +22,14 @@ module attributes {gpu.container_module} {
       llvm.return
     }
   }
+
+  // CHECK-LABEL:gpu.binary @kernel_module3
+  // CHECK-ISA:[#gpu.object<#rocdl.target<flags = {fast}>, properties = {gpu.reg_count = 255 : i32}, assembly = "{{.*}}">]
+  gpu.module @kernel_module3 [#rocdl.target<flags = {fast}>] attributes {gpu.reg_count = 255 : i32} {
+    llvm.func @kernel(%arg0: i32, %arg1: !llvm.ptr,
+        %arg2: !llvm.ptr, %arg3: i64, %arg4: i64,
+        %arg5: i64) attributes {gpu.kernel} {
+      llvm.return
+    }
+  }
 }

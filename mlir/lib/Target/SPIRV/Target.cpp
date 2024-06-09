@@ -93,10 +93,10 @@ SPIRVTargetAttrImpl::createObject(Attribute attribute, Operation *module,
                                   const SmallVector<char, 0> &object,
                                   const gpu::TargetOptions &options) const {
   gpu::CompilationTarget format = options.getCompilationTarget();
-  DictionaryAttr objectProps;
+  DictionaryAttr objectProps = module->getDiscardableAttrDictionary();
   Builder builder(attribute.getContext());
   return builder.getAttr<gpu::ObjectAttr>(
       attribute, format,
       builder.getStringAttr(StringRef(object.data(), object.size())),
-      objectProps);
+      objectProps.empty() ? nullptr : objectProps);
 }

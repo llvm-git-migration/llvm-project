@@ -202,7 +202,6 @@ public:
 
   static constexpr StringLiteral name = "gpu.sparse.spgemmop_handle";
 };
-
 } // namespace gpu
 } // namespace mlir
 

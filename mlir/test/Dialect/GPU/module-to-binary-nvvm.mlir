@@ -34,4 +34,14 @@ module attributes {gpu.container_module} {
       llvm.return
     }
   }
+
+  // CHECK-LABEL:gpu.binary @kernel_module4
+  // CHECK-ISA:[#gpu.object<#nvvm.target<flags = {fast}>, properties = {O = 2 : i32, gpu.reg_count = 255 : i32}, assembly = "{{.*}}">]
+  gpu.module @kernel_module4 [#nvvm.target<flags = {fast}>] attributes {gpu.reg_count = 255 : i32} {
+    llvm.func @kernel(%arg0: i32, %arg1: !llvm.ptr,
+        %arg2: !llvm.ptr, %arg3: i64, %arg4: i64,
+        %arg5: i64) attributes {gpu.kernel} {
+      llvm.return
+    }
+  }
 }
