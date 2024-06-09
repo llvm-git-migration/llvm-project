@@ -38,6 +38,7 @@
 #include <__memory/pointer_traits.h>
 #include <__memory/swap_allocator.h>
 #include <__memory/temp_value.h>
+#include <__memory/tombstone_traits.h>
 #include <__memory/uninitialized_algorithms.h>
 #include <__ranges/access.h>
 #include <__ranges/concepts.h>
@@ -806,6 +807,13 @@ template <ranges::input_range _Range,
           class _Alloc = allocator<ranges::range_value_t<_Range>>,
           class        = enable_if_t<__is_allocator<_Alloc>::value> >
 vector(from_range_t, _Range&&, _Alloc = _Alloc()) -> vector<ranges::range_value_t<_Range>, _Alloc>;
+#endif
+
+#if _LIBCPP_STD_VER >= 17
+template <class _Tp, class _Allocator>
+struct __tombstone_traits<
+    __enable_specialization_if<__has_tombstone_v<typename vector<_Tp, _Allocator>::pointer>, vector<_Tp, _Allocator>>>
+    : __tombstone_traits<typename vector<_Tp>::pointer> {};
 #endif
 
 // __swap_out_circular_buffer relocates the objects in [__begin_, __end_) into the front of __v and swaps the buffers of
