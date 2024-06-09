@@ -30,6 +30,7 @@
 #include <__memory/compressed_pair.h>
 #include <__memory/construct_at.h>
 #include <__memory/pointer_traits.h>
+#include <__memory/tombstone_traits.h>
 #include <__memory/uninitialized_algorithms.h>
 #include <__memory/unique_ptr.h>
 #include <__type_traits/add_lvalue_reference.h>
@@ -833,6 +834,13 @@ template <class _Tp, class _Dp>
 shared_ptr(unique_ptr<_Tp, _Dp>) -> shared_ptr<_Tp>;
 #endif
 
+template <class _Tp>
+struct __tombstone_traits<shared_ptr<_Tp>> {
+  static constexpr auto __disengaged_value_ = __tombstone_traits_assume_aligned_pointer::__disengaged_value_;
+  static constexpr size_t __is_disengaged_offset_ =
+      sizeof(void*) + __tombstone_traits_assume_aligned_pointer::__is_disengaged_offset_;
+};
+
 //
 // std::allocate_shared and std::make_shared
 //
@@ -1382,6 +1390,13 @@ public:
 template <class _Tp>
 weak_ptr(shared_ptr<_Tp>) -> weak_ptr<_Tp>;
 #endif
+
+template <class _Tp>
+struct __tombstone_traits<weak_ptr<_Tp>> {
+  static constexpr auto __disengaged_value_ = __tombstone_traits_assume_aligned_pointer::__disengaged_value_;
+  static constexpr size_t __is_disengaged_offset_ =
+      sizeof(void*) + __tombstone_traits_assume_aligned_pointer::__is_disengaged_offset_;
+};
 
 template <class _Tp>
 inline _LIBCPP_CONSTEXPR weak_ptr<_Tp>::weak_ptr() _NOEXCEPT : __ptr_(nullptr), __cntrl_(nullptr) {}
