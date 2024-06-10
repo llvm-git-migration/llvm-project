@@ -79,11 +79,18 @@ MCSymbol *MachineBasicBlock::getSymbol() const {
         Suffix = (Suffix + Twine(".__part.") + Twine(SectionID.Number)).str();
       }
       CachedMCSymbol = Ctx.getOrCreateSymbol(MF->getName() + Suffix);
-    } else {
+    } else if (hasLabelMustBeEmitted()) {
+      // If the block occurs as label in inline assembly, parsing the assembly
+      // needs an actual label name.
       const StringRef Prefix = Ctx.getAsmInfo()->getPrivateLabelPrefix();
       CachedMCSymbol = Ctx.getOrCreateSymbol(Twine(Prefix) + "BB" +
                                              Twine(MF->getFunctionNumber()) +
                                              "_" + Twine(getNumber()));
+    } else {
+      CachedMCSymbol = Ctx.createTempSymbol("BB" +
+                                            Twine(MF->getFunctionNumber()) +
+                                            "_" + Twine(getNumber()),
+                                            /*AlwaysAddSuffix=*/false);
     }
   }
   return CachedMCSymbol;
@@ -104,10 +111,10 @@ MCSymbol *MachineBasicBlock::getEndSymbol() const {
   if (!CachedEndMCSymbol) {
     const MachineFunction *MF = getParent();
     MCContext &Ctx = MF->getContext();
-    auto Prefix = Ctx.getAsmInfo()->getPrivateLabelPrefix();
-    CachedEndMCSymbol = Ctx.getOrCreateSymbol(Twine(Prefix) + "BB_END" +
-                                              Twine(MF->getFunctionNumber()) +
-                                              "_" + Twine(getNumber()));
+    CachedEndMCSymbol = Ctx.createTempSymbol("BB_END" +
+                                             Twine(MF->getFunctionNumber()) +
+                                             "_" + Twine(getNumber()),
+                                             /*AlwaysAddSuffix=*/false);
   }
   return CachedEndMCSymbol;
 }
