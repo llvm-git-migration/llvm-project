@@ -254,9 +254,9 @@ class IntMatrix : public Matrix<DynamicAPInt> {
 public:
   IntMatrix(unsigned rows, unsigned columns, unsigned reservedRows = 0,
             unsigned reservedColumns = 0)
-      : Matrix<DynamicAPInt>(rows, columns, reservedRows, reservedColumns){};
+      : Matrix<DynamicAPInt>(rows, columns, reservedRows, reservedColumns) {}
 
-  IntMatrix(Matrix<DynamicAPInt> m) : Matrix<DynamicAPInt>(std::move(m)){};
+  IntMatrix(Matrix<DynamicAPInt> m) : Matrix<DynamicAPInt>(std::move(m)) {}
 
   /// Return the identity matrix of the specified dimension.
   static IntMatrix identity(unsigned dimension);
