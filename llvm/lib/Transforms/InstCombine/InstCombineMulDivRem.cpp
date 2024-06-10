@@ -255,6 +255,40 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
     }
   }
 
+  {
+    // mul (lshr exact X, N), (2^N + 1) -> add (X , lshr (X, N))
+    Value *NewOp;
+    const APInt *ShiftC;
+    const APInt *MulAP;
+    if (match(&I, m_Mul(m_CombineOr(m_LShr(m_Value(NewOp), m_APInt(ShiftC)),
+                                    m_AShr(m_Value(NewOp), m_APInt(ShiftC))),
+                        m_APInt(MulAP)))) {
+      if (BitWidth > 2 && (*MulAP - 1).isPowerOf2() &&
+          MulAP->logBase2() == ShiftC->getZExtValue()) {
+        BinaryOperator *OpBO = cast<BinaryOperator>(Op0);
+        if (OpBO->isExact()) {
+          Value *AddOp;
+          if (!HasNUW && !HasNUW)
+            AddOp = Builder.CreateFreeze(NewOp);
+          else
+            AddOp = NewOp;
+
+          Value *BinOp;
+          if (OpBO->getOpcode() == Instruction::AShr && HasNUW &&
+              OpBO->hasOneUse())
+            BinOp = Builder.CreateLShr(
+                AddOp, ConstantInt::get(Ty, ShiftC->getZExtValue()), "", true);
+          else
+            BinOp = Op0;
+
+          auto *NewAdd = BinaryOperator::CreateAdd(AddOp, BinOp);
+          NewAdd->copyIRFlags(&I);
+          return NewAdd;
+        }
+      }
+    }
+  }
+
   if (Op0->hasOneUse() && match(Op1, m_NegatedPower2())) {
     // Interpret  X * (-1<<C)  as  (-X) * (1<<C)  and try to sink the negation.
     // The "* (1<<C)" thus becomes a potential shifting opportunity.
