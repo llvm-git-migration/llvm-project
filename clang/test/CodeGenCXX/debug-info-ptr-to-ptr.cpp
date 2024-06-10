@@ -27,7 +27,7 @@ public:
 // CHECK-NEXT:    [[A:%.*]] = load ptr, ptr [[A_ADDR]], align {{.*}}, !dbg [[DBG1]]
 // CHECK-NEXT:    [[PSEUDO1:%.*]] = alloca ptr, align {{.*}}, !dbg [[DBG1]]
 // CHECK-NEXT:    store ptr [[A]], ptr [[PSEUDO1]], align {{.*}}, !dbg [[DBG1]]
-// CHECK-NEXT:    call void @llvm.dbg.declare(metadata ptr [[PSEUDO1]], metadata [[META1:![0-9]+]], metadata !DIExpression()), !dbg [[DBG1]]
+// CHECK-NEXT:    #dbg_declare(ptr [[PSEUDO1]], [[META1:![0-9]+]], !DIExpression(), [[DBG1]]
 // CHECK-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[PSEUDO1]], align {{.*}}, !dbg [[DBG1]]
 // CHECK-NEXT:    {{%.*}} = getelementptr inbounds %class.A, ptr [[TMP1]], i32 0, i32 0,
 int func1(B *b) {
@@ -36,11 +36,11 @@ int func1(B *b) {
 
 // Should generate a pseudo variable when pointer is type-casted.
 // CHECK-LABEL: define dso_local noundef ptr @{{.*}}func2{{.*}}(
-// CHECK:         call void @llvm.dbg.declare(metadata ptr [[B_ADDR:%.*]], metadata [[META2:![0-9]+]], metadata !DIExpression())
+// CHECK:         #dbg_declare(ptr [[B_ADDR:%.*]], [[META2:![0-9]+]], !DIExpression(),
 // CHECK-NEXT:    [[B:%.*]] = load ptr, ptr [[B_ADDR]],
 // CHECK-NEXT:    [[PSEUDO1:%.*]] = alloca ptr,
 // CHECK-NEXT:    store ptr [[B]], ptr [[PSEUDO1]],
-// CHECK-NEXT:    call void @llvm.dbg.declare(metadata ptr [[PSEUDO1]], metadata [[META3:![0-9]+]], metadata !DIExpression())
+// CHECK-NEXT:    #dbg_declare(ptr [[PSEUDO1]], [[META3:![0-9]+]], !DIExpression(),
 // CHECK-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[PSEUDO1]],
 // CHECK-NEXT:    {{%.*}} = getelementptr inbounds %class.B, ptr [[TMP1]], i32 0,
 A* func2(void *b) {
@@ -49,9 +49,9 @@ A* func2(void *b) {
 
 // Should not generate pseudo variable in this case.
 // CHECK-LABEL: define dso_local noundef i32 @{{.*}}func3{{.*}}(
-// CHECK:    call void @llvm.dbg.declare(metadata ptr [[B_ADDR:%.*]], metadata [[META4:![0-9]+]], metadata !DIExpression())
-// CHECK:    call void @llvm.dbg.declare(metadata ptr [[LOCAL1:%.*]], metadata [[META5:![0-9]+]], metadata !DIExpression())
-// CHECK-NOT: call void @llvm.dbg.declare(metadata ptr
+// CHECK:    #dbg_declare(ptr [[B_ADDR:%.*]], [[META4:![0-9]+]], !DIExpression(),
+// CHECK:    #dbg_declare(ptr [[LOCAL1:%.*]], [[META5:![0-9]+]], !DIExpression(),
+// CHECK-NOT: #dbg_declare(ptr
 int func3(B *b) {
   A *local1 = b->a;
   return local1->i;
@@ -62,13 +62,13 @@ int func3(B *b) {
 // CHECK-NEXT:    [[A:%.*]] = load ptr, ptr [[A_ADDR]],
 // CHECK-NEXT:    [[PSEUDO1:%.*]] = alloca ptr,
 // CHECK-NEXT:    store ptr [[A]], ptr [[PSEUDO1]],
-// CHECK-NEXT:    call void @llvm.dbg.declare(metadata ptr [[PSEUDO1]], metadata [[META6:![0-9]+]], metadata !DIExpression())
+// CHECK-NEXT:    #dbg_declare(ptr [[PSEUDO1]], [[META6:![0-9]+]], !DIExpression(),
 // CHECK-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[PSEUDO1]],
 // CHECK-NEXT:    {{%.*}} = getelementptr inbounds %class.A, ptr [[TMP1]], i32 0, i32 0,
 // CHECK:         [[CALL:%.*]] = call noundef ptr @{{.*}}foo{{.*}}(
 // CHECK-NEXT:    [[PSEUDO2:%.*]] = alloca ptr,
 // CHECK-NEXT:    store ptr [[CALL]], ptr [[PSEUDO2]]
-// CHECK-NEXT:    call void @llvm.dbg.declare(metadata ptr [[PSEUDO2]], metadata [[META6]], metadata !DIExpression())
+// CHECK-NEXT:    #dbg_declare(ptr [[PSEUDO2]], [[META6]], !DIExpression(),
 // CHECK-NEXT:    [[TMP2:%.*]] = load ptr, ptr [[PSEUDO2]]
 // CHECK-NEXT:    [[I1:%.*]] = getelementptr inbounds %class.A, ptr [[TMP2]], i32 0, i32 1
 char func4(C *c) {
@@ -77,12 +77,12 @@ char func4(C *c) {
 }
 
 // CHECK-LABEL: define dso_local noundef signext i8 @{{.*}}func5{{.*}}(
-// CHECK:         call void @llvm.dbg.declare(metadata ptr {{%.*}}, metadata [[META7:![0-9]+]], metadata !DIExpression())
-// CHECK:         call void @llvm.dbg.declare(metadata ptr {{%.*}}, metadata [[META8:![0-9]+]], metadata !DIExpression())
+// CHECK:         #dbg_declare(ptr {{%.*}}, [[META7:![0-9]+]], !DIExpression(),
+// CHECK:         #dbg_declare(ptr {{%.*}}, [[META8:![0-9]+]], !DIExpression(),
 // CHECK:         [[A_ADDR:%.*]] = getelementptr inbounds %class.A, ptr {{%.*}}, i64 {{%.*}},
 // CHECK-NEXT:    [[PSEUDO1:%.*]] = alloca ptr,
 // CHECK-NEXT:    store ptr [[A_ADDR]], ptr [[PSEUDO1]],
-// CHECK-NEXT:    call void @llvm.dbg.declare(metadata ptr [[PSEUDO1]], metadata [[META9:![0-9]+]], metadata !DIExpression())
+// CHECK-NEXT:    #dbg_declare(ptr [[PSEUDO1]], [[META9:![0-9]+]], !DIExpression(),
 // CHECK-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[PSEUDO1]],
 // CHECK-NEXT:    {{%.*}} = getelementptr inbounds %class.A, ptr [[TMP1]], i32 0, i32 1,
 char func5(void *arr, int n) {
@@ -90,8 +90,8 @@ char func5(void *arr, int n) {
 }
 
 // CHECK-LABEL: define dso_local noundef i32 @{{.*}}func6{{.*}}(
-// CHECK:         call void @llvm.dbg.declare(metadata ptr {{%.*}}, metadata [[META10:![0-9]+]], metadata !DIExpression())
-// CHECK:         call void @llvm.dbg.declare(metadata ptr {{%.*}}, metadata [[META11:![0-9]+]], metadata !DIExpression())
+// CHECK:         #dbg_declare(ptr {{%.*}}, [[META10:![0-9]+]], !DIExpression(),
+// CHECK:         #dbg_declare(ptr {{%.*}}, [[META11:![0-9]+]], !DIExpression(),
 int func6(B &b) {
   return reinterpret_cast<A&>(b).i;
 }
