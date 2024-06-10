@@ -119,7 +119,7 @@ public:
 
     mlir::GreedyRewriteConfig config;
     // Prevent the pattern driver from merging blocks.
-    config.enableRegionSimplification = false;
+    config.enableRegionSimplification = mlir::GreedySimplifyRegionLevel::Disabled;
 
     mlir::RewritePatternSet patterns(context);
     patterns.insert<InlineElementalConversion>(context);
