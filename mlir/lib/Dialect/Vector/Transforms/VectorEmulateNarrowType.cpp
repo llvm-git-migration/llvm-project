@@ -922,39 +922,23 @@ static Value rewriteI8ToI4Trunc(PatternRewriter &rewriter, Location loc,
          "Expected i8 type");
 
   // 1. De-interleave low and high i8 elements.
-  int64_t vecDimSize = srcVecType.getShape().back();
-  SmallVector<int64_t> deinterleaveLowMaskValues;
-  SmallVector<int64_t> deinterleaveHighMaskValues;
-  assert((vecDimSize % 2) == 0 && "Odd number of i4 elements");
-  deinterleaveLowMaskValues.reserve(vecDimSize / 2);
-  deinterleaveHighMaskValues.reserve(vecDimSize / 2);
-  for (int i = 0, end = vecDimSize; i < end; i += 2) {
-    deinterleaveLowMaskValues.push_back(i);
-    deinterleaveHighMaskValues.push_back(i + 1);
-  }
-
-  auto lowShuffleOp = rewriter.create<vector::ShuffleOp>(
-      loc, srcValue, srcValue,
-      rewriter.getI64ArrayAttr(deinterleaveLowMaskValues));
-  auto highShuffleOp = rewriter.create<vector::ShuffleOp>(
-      loc, srcValue, srcValue,
-      rewriter.getI64ArrayAttr(deinterleaveHighMaskValues));
+  auto deinterleaveOp = rewriter.create<vector::DeinterleaveOp>(loc, srcValue);
 
   // 2. Zero out the upper side of each low i8 element.
   constexpr int8_t i8LowBitMask = 0x0F;
   Value zeroOutMask = rewriter.create<arith::ConstantOp>(
-      loc,
-      DenseElementsAttr::get(lowShuffleOp.getResultVectorType(), i8LowBitMask));
-  Value zeroOutLow =
-      rewriter.create<arith::AndIOp>(loc, lowShuffleOp, zeroOutMask);
+      loc, DenseElementsAttr::get(deinterleaveOp.getResultVectorType(),
+                                  i8LowBitMask));
+  Value zeroOutLow = rewriter.create<arith::AndIOp>(
+      loc, deinterleaveOp.getRes1(), zeroOutMask);
 
   // 3. Move high i4 values to upper side of the byte.
   constexpr int8_t bitsToShift = 4;
-  VectorType deinterI8VecType = highShuffleOp.getResultVectorType();
+  VectorType deinterI8VecType = deinterleaveOp.getResultVectorType();
   auto shiftValues = rewriter.create<arith::ConstantOp>(
       loc, DenseElementsAttr::get(deinterI8VecType, bitsToShift));
-  Value shlHigh =
-      rewriter.create<arith::ShLIOp>(loc, highShuffleOp, shiftValues);
+  Value shlHigh = rewriter.create<arith::ShLIOp>(loc, deinterleaveOp.getRes2(),
+                                                 shiftValues);
 
   // 4. Merge high and low i4 values.
   auto mergedHiLowOp = rewriter.create<arith::OrIOp>(loc, zeroOutLow, shlHigh);
@@ -1176,11 +1160,6 @@ struct RewriteAlignedSubByteIntTrunc : OpRewritePattern<arith::TruncIOp> {
     auto srcVecType = dyn_cast<VectorType>(srcValue.getType());
     auto dstVecType = dyn_cast<VectorType>(truncOp.getType());
     if (!srcVecType || !dstVecType)
-      return failure();
-
-    // Only single dim vectors are supported until we have
-    // `vector.deinterleave`.
-    if (srcVecType.getRank() != 1)
       return failure();
 
     if (failed(commonConversionPrecondition(rewriter, srcVecType, truncOp)))
