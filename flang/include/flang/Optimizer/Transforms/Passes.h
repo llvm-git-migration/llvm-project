@@ -54,6 +54,8 @@ namespace fir {
 #define GEN_PASS_DECL_OMPMAPINFOFINALIZATIONPASS
 #define GEN_PASS_DECL_OMPMARKDECLARETARGETPASS
 #define GEN_PASS_DECL_OMPFUNCTIONFILTERING
+#define GEN_PASS_DECL_CONSTANTARGUMENTGLOBALISATIONOPT
+
 #include "flang/Optimizer/Transforms/Passes.h.inc"
 
 std::unique_ptr<mlir::Pass> createAffineDemotionPass();
@@ -76,6 +78,8 @@ createAlgebraicSimplificationPass(const mlir::GreedyRewriteConfig &config);
 std::unique_ptr<mlir::Pass> createVScaleAttrPass();
 std::unique_ptr<mlir::Pass>
 createVScaleAttrPass(std::pair<unsigned, unsigned> vscaleAttr);
+
+std::unique_ptr<mlir::Pass> createConstantArgumentGlobalisationPass();
 
 struct FunctionAttrTypes {
   mlir::LLVM::framePointerKind::FramePointerKind framePointerKind =
