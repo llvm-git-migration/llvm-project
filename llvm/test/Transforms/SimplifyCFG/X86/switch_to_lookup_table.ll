@@ -34,18 +34,12 @@ target triple = "x86_64-unknown-linux-gnu"
 ; CHECK: @switch.table.unreachable_case = private unnamed_addr constant [9 x i32] [i32 0, i32 0, i32 0, i32 2, i32 -1, i32 1, i32 1, i32 1, i32 1], align 4
 ; CHECK: @switch.table.unreachable_default = private unnamed_addr constant [4 x i32] [i32 42, i32 52, i32 1, i32 2], align 4
 ; CHECK: @switch.table.nodefaultnoholes = private unnamed_addr constant [4 x i32] [i32 55, i32 123, i32 0, i32 -1], align 4
-; CHECK: @switch.table.nodefaultwithholes = private unnamed_addr constant [6 x i32] [i32 55, i32 123, i32 0, i32 -1, i32 55, i32 -1], align 4
+; CHECK: @switch.table.nodefaultwithholes = private unnamed_addr constant [6 x i32] [i32 55, i32 123, i32 0, i32 -1, i32 poison, i32 -1], align 4
 ; CHECK: @switch.table.threecases = private unnamed_addr constant [3 x i32] [i32 10, i32 7, i32 5], align 4
-; CHECK: @switch.table.covered_switch_with_bit_tests = private unnamed_addr constant [8 x i32] [i32 2, i32 2, i32 2, i32 2, i32 2, i32 2, i32 1, i32 1], align 4
+; CHECK: @switch.table.covered_switch_with_bit_tests = private unnamed_addr constant [8 x i32] [i32 2, i32 2, i32 poison, i32 poison, i32 poison, i32 poison, i32 1, i32 1], align 4
 ; CHECK: @switch.table.signed_overflow1 = private unnamed_addr constant [4 x i32] [i32 3333, i32 4444, i32 1111, i32 2222], align 4
-; CHECK: @switch.table.signed_overflow2 = private unnamed_addr constant [4 x i32] [i32 3333, i32 4444, i32 2222, i32 2222], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_firstundef = private unnamed_addr constant [5 x i32] [i32 undef, i32 undef, i32 1, i32 1, i32 1], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_lastundef = private unnamed_addr constant [5 x i32] [i32 1, i32 1, i32 1, i32 1, i32 undef], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_firstpoison = private unnamed_addr constant [5 x i32] [i32 poison, i32 poison, i32 1, i32 1, i32 1], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_lastpoison = private unnamed_addr constant [5 x i32] [i32 1, i32 1, i32 1, i32 1, i32 poison], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_undef_poison = private unnamed_addr constant [5 x i32] [i32 undef, i32 undef, i32 poison, i32 poison, i32 poison], align 4
-; CHECK: @switch.table.constant_hole_unreachable_default_poison_undef = private unnamed_addr constant [5 x i32] [i32 poison, i32 poison, i32 poison, i32 poison, i32 undef], align 4
-; CHECK: @switch.table.linearmap_hole_unreachable_default = private unnamed_addr constant [5 x i32] [i32 1, i32 1, i32 5, i32 7, i32 9], align 4
+; CHECK: @switch.table.signed_overflow2 = private unnamed_addr constant [4 x i32] [i32 3333, i32 4444, i32 poison, i32 2222], align 4
+; CHECK: @switch.table.linearmap_hole_unreachable_default = private unnamed_addr constant [5 x i32] [i32 1, i32 poison, i32 5, i32 7, i32 9], align 4
 ;.
 define i32 @f(i32 %c) {
 ; CHECK-LABEL: @f(
@@ -2187,9 +2181,7 @@ return:
 define i32 @constant_hole_unreachable_default_firstundef(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_firstundef(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_firstundef, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 1
 ;
 entry:
   switch i32 %x, label %sw.default [
@@ -2213,9 +2205,7 @@ return:
 define i32 @constant_hole_unreachable_default_lastundef(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_lastundef(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_lastundef, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 1
 ;
 entry:
   switch i32 %x, label %sw.default [
@@ -2239,9 +2229,7 @@ return:
 define i32 @constant_hole_unreachable_default_firstpoison(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_firstpoison(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_firstpoison, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 1
 ;
 entry:
   switch i32 %x, label %sw.default [
@@ -2265,9 +2253,7 @@ return:
 define i32 @constant_hole_unreachable_default_lastpoison(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_lastpoison(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_lastpoison, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 1
 ;
 entry:
   switch i32 %x, label %sw.default [
@@ -2289,9 +2275,7 @@ return:
 define i32 @constant_hole_unreachable_default_undef_poison(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_undef_poison(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_undef_poison, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 poison
 ;
 entry:
   switch i32 %x, label %sw.default [
@@ -2313,9 +2297,7 @@ return:
 define i32 @constant_hole_unreachable_default_poison_undef(i32 %x) {
 ; CHECK-LABEL: @constant_hole_unreachable_default_poison_undef(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[SWITCH_GEP:%.*]] = getelementptr inbounds [5 x i32], ptr @switch.table.constant_hole_unreachable_default_poison_undef, i32 0, i32 [[X:%.*]]
-; CHECK-NEXT:    [[SWITCH_LOAD:%.*]] = load i32, ptr [[SWITCH_GEP]], align 4
-; CHECK-NEXT:    ret i32 [[SWITCH_LOAD]]
+; CHECK-NEXT:    ret i32 poison
 ;
 entry:
   switch i32 %x, label %sw.default [
