@@ -480,7 +480,7 @@ def GpuToLLVMConversionPass : Pass<"gpu-to-llvm", "ModuleOp"> {
              "The kernel must use the same setting for this option."
            >,
     Option<"gpuBinaryAnnotation", "gpu-binary-annotation", "std::string",
-               /*default=*/"gpu::getDefaultGpuBinaryAnnotation()",
+               /*default=*/"",
                "Annotation attribute string for GPU binary"
                >
   ];
