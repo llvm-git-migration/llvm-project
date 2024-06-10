@@ -117,13 +117,44 @@ void test_update_dpp(global int* out, int arg1, int arg2)
 }
 
 // CHECK-LABEL: @test_ds_fadd
-// CHECK: {{.*}}call{{.*}} float @llvm.amdgcn.ds.fadd.f32(ptr addrspace(3) %out, float %src, i32 0, i32 0, i1 false)
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src monotonic, align 4{{$}}
+// CHECK: atomicrmw volatile fadd ptr addrspace(3) %out, float %src monotonic, align 4{{$}}
+
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src acquire, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src acquire, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src release, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src acq_rel, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src seq_cst, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src seq_cst, align 4{{$}}
+
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src syncscope("agent") monotonic, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src syncscope("workgroup") monotonic, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src syncscope("wavefront") monotonic, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src syncscope("singlethread") monotonic, align 4{{$}}
+// CHECK: atomicrmw fadd ptr addrspace(3) %out, float %src monotonic, align 4{{$}}
 #if !defined(__SPIRV__)
 void test_ds_faddf(local float *out, float src) {
 #else
-void test_ds_faddf(__attribute__((address_space(3))) float *out, float src) {
+  void test_ds_faddf(__attribute__((address_space(3))) float *out, float src) {
 #endif
+
   *out = __builtin_amdgcn_ds_faddf(out, src, 0, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 0, true);
+
+  // Test all orders.
+  *out = __builtin_amdgcn_ds_faddf(out, src, 1, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 2, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 3, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 4, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 5, 0, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 5, 0, false); // invalid
+
+  // Test all syncscopes.
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 1, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 2, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 3, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 4, false);
+  *out = __builtin_amdgcn_ds_faddf(out, src, 0, 5, false); // invalid
 }
 
 // CHECK-LABEL: @test_ds_fmin
