@@ -309,6 +309,18 @@ MCSymbol *MCContext::createNamedTempSymbol(const Twine &Name) {
   return createSymbol(NameSV, true, false);
 }
 
+MCSymbol *MCContext::createBlockSymbol(const Twine &Name, bool AlwaysEmit) {
+  if (AlwaysEmit)
+    return getOrCreateSymbol(MAI->getPrivateLabelPrefix() + Name);
+
+  if (!UseNamesOnTempLabels)
+    return createSymbolImpl(nullptr, /*IsTemporary=*/true);
+
+  SmallString<128> NameSV;
+  raw_svector_ostream(NameSV) << MAI->getPrivateLabelPrefix() << Name;
+  return createSymbol(NameSV, false, /*IsTemporary=*/true);
+}
+
 MCSymbol *MCContext::createLinkerPrivateTempSymbol() {
   return createLinkerPrivateSymbol("tmp");
 }
