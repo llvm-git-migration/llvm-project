@@ -303,8 +303,10 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
                                                {nxv2s64, p0, nxv2s64, 64},
                                                {nxv4s64, p0, nxv4s64, 64},
                                                {nxv8s64, p0, nxv8s64, 64}});
+
   LoadStoreActions.widenScalarToNextPow2(0, /* MinSize = */ 8)
-      .lowerIfMemSizeNotByteSizePow2();
+      .lowerIfMemSizeNotByteSizePow2()
+      .custom();
 
   LoadStoreActions.clampScalar(0, s32, sXLen).lower();
   ExtLoadActions.widenScalarToNextPow2(0).clampScalar(0, s32, sXLen).lower();
@@ -491,9 +493,14 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
 }
 
 static Type *getTypeForLLT(LLT Ty, LLVMContext &C) {
-  if (Ty.isVector())
+  if (Ty.isFixedVector())
     return FixedVectorType::get(IntegerType::get(C, Ty.getScalarSizeInBits()),
                                 Ty.getNumElements());
+  if (Ty.isScalableVector())
+    return ScalableVectorType::get(
+        IntegerType::get(C, Ty.getScalarSizeInBits()),
+        Ty.getElementCount().getKnownMinValue());
+
   return IntegerType::get(C, Ty.getSizeInBits());
 }
 
@@ -676,6 +683,51 @@ bool RISCVLegalizerInfo::legalizeExt(MachineInstr &MI,
   return true;
 }
 
+bool RISCVLegalizerInfo::legalizeLoadStore(MachineInstr &MI,
+                                           MachineIRBuilder &MIB) const {
+  MachineRegisterInfo &MRI = *MIB.getMRI();
+  MachineFunction *MF = MI.getParent()->getParent();
+  const DataLayout &DL = MIB.getDataLayout();
+  LLVMContext &Ctx = MF->getFunction().getContext();
+
+  Register DstReg = MI.getOperand(0).getReg();
+  Register PtrReg = MI.getOperand(1).getReg();
+  LLT LoadTy = MRI.getType(DstReg);
+
+  assert(MI.hasOneMemOperand() &&
+         "Load instructions only have one MemOperand.");
+  Align Alignment = (*MI.memoperands_begin())->getAlign();
+  MachineMemOperand *LoadMMO = MF->getMachineMemOperand(
+      MachinePointerInfo(), MachineMemOperand::MOLoad, LoadTy, Alignment);
+
+  const auto *TLI = STI.getTargetLowering();
+  EVT VT = EVT::getEVT(getTypeForLLT(LoadTy, Ctx));
+
+  if (TLI->allowsMemoryAccessForAlignment(Ctx, DL, VT, *LoadMMO))
+    return true;
+
+  unsigned EltSizeBits = LoadTy.getScalarSizeInBits();
+  assert((EltSizeBits == 16 || EltSizeBits == 32 || EltSizeBits == 64) &&
+         "Unexpected unaligned RVV load type");
+
+  // Calculate the new vector type with i8 elements
+  unsigned NumElements =
+      LoadTy.getElementCount().getKnownMinValue() * (EltSizeBits / 8);
+  LLT NewLoadTy = LLT::scalable_vector(NumElements, 8);
+
+  DstOp NewDstReg(NewLoadTy);
+  MachineMemOperand *NewLoadMMO = MF->getMachineMemOperand(
+      MachinePointerInfo(), MachineMemOperand::MOLoad, NewLoadTy, Alignment);
+
+  auto NewLoad = MIB.buildLoad(NewDstReg, PtrReg, *NewLoadMMO);
+
+  MIB.buildBitcast(DstReg, NewLoad.getReg(0));
+
+  MI.eraseFromParent();
+
+  return true;
+}
+
 /// Return the type of the mask type suitable for masking the provided
 /// vector type.  This is simply an i1 element type vector of the same
 /// (possibly scalable) length.
@@ -853,6 +905,9 @@ bool RISCVLegalizerInfo::legalizeCustom(
     return legalizeExt(MI, MIRBuilder);
   case TargetOpcode::G_SPLAT_VECTOR:
     return legalizeSplatVector(MI, MIRBuilder);
+  case TargetOpcode::G_LOAD:
+  case TargetOpcode::G_STORE:
+    return legalizeLoadStore(MI, MIRBuilder);
   }
 
   llvm_unreachable("expected switch to return");
