@@ -1,3 +1,8 @@
+/// One test uses the PATH environment variable; on Windows, we may need to retain
+/// the original path for the built Clang binary to be able to execute (as it is
+/// used for locating dependent DLLs).
+// UNSUPPORTED: system-windows
+
 // Check object emission.
 // RUN: %clang -### --target=spirv64 -x cl -c %s 2>&1 | FileCheck --check-prefix=SPV64 %s
 // RUN: %clang -### --target=spirv64 %s 2>&1 | FileCheck --check-prefix=SPV64 %s
