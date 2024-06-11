@@ -207,7 +207,7 @@ struct AArch64LoadStoreOpt : public MachineFunctionPass {
   MachineBasicBlock::iterator
   doFoldSymmetryConstantLoad(MachineInstr &MI,
                              SmallVectorImpl<MachineBasicBlock::iterator> &MIs,
-                             int SuccIndex, bool hasORR, int Accumulated);
+                             int UpperLoadIdx, int Accumulated);
 
   bool optimizeBlock(MachineBasicBlock &MBB, bool EnableNarrowZeroStOpt);
 
@@ -2260,7 +2260,7 @@ MachineBasicBlock::iterator AArch64LoadStoreOpt::findMatchingUpdateInsnBackward(
   return E;
 }
 
-static bool isSymmetric(MachineInstr &MI, Register BaseReg) {
+static bool isSymmetricLoadCandidate(MachineInstr &MI, Register BaseReg) {
   auto MatchBaseReg = [&](unsigned Count) {
     for (unsigned I = 0; I < Count; I++) {
       auto OpI = MI.getOperand(I);
@@ -2292,56 +2292,28 @@ static bool isSymmetric(MachineInstr &MI, Register BaseReg) {
 
 MachineBasicBlock::iterator AArch64LoadStoreOpt::doFoldSymmetryConstantLoad(
     MachineInstr &MI, SmallVectorImpl<MachineBasicBlock::iterator> &MIs,
-    int SuccIndex, bool hasORR, int Accumulated) {
+    int UpperLoadIdx, int Accumulated) {
   MachineBasicBlock::iterator I = MI.getIterator();
   MachineBasicBlock::iterator E = I->getParent()->end();
   MachineBasicBlock::iterator NextI = next_nodbg(I, E);
-  MachineBasicBlock::iterator FirstMovI;
   MachineBasicBlock *MBB = MI.getParent();
-  uint64_t Mask = 0xFFFFUL;
-  Register DstRegW;
 
-  if (hasORR) {
+  if (!UpperLoadIdx) {
+    // ORR ensures that previous instructions load lower 32-bit constants.
+    // Remove ORR only.
     (*MIs.begin())->eraseFromParent();
   } else {
+    // We need to remove MOV for upper of 32bit because We know these instrs
+    // is part of symmetric constant.
     int Index = 0;
-    for (auto MI = MIs.begin(), E = MIs.end(); MI != E; ++MI, Index++) {
-      if (Index == SuccIndex - 1) {
-        FirstMovI = *MI;
-        break;
-      }
+    for (auto MI = MIs.begin(); Index < UpperLoadIdx; ++MI, Index++) {
       (*MI)->eraseFromParent();
     }
-    DstRegW =
-        TRI->getSubReg(FirstMovI->getOperand(0).getReg(), AArch64::sub_32);
-
-    int Lower = Accumulated & Mask;
-    if (Lower) {
-      BuildMI(*MBB, FirstMovI, FirstMovI->getDebugLoc(),
-              TII->get(AArch64::MOVZWi), DstRegW)
-          .addImm(Lower)
-          .addImm(0);
-      Lower = (Accumulated >> 16) & Mask;
-      if (Lower) {
-        BuildMI(*MBB, FirstMovI, FirstMovI->getDebugLoc(),
-                TII->get(AArch64::MOVKWi), DstRegW)
-            .addUse(DstRegW)
-            .addImm(Lower)
-            .addImm(AArch64_AM::getShifterImm(AArch64_AM::LSL, 16));
-      }
-    } else {
-      Lower = Accumulated >> 16 & Mask;
-      BuildMI(*MBB, FirstMovI, FirstMovI->getDebugLoc(),
-              TII->get(AArch64::MOVZWi), DstRegW)
-          .addImm(Lower)
-          .addImm(AArch64_AM::getShifterImm(AArch64_AM::LSL, 16));
-    }
-    FirstMovI->eraseFromParent();
   }
 
   Register BaseReg = getLdStRegOp(MI).getReg();
   const MachineOperand MO = AArch64InstrInfo::getLdStBaseOp(MI);
-  DstRegW = TRI->getSubReg(BaseReg, AArch64::sub_32);
+  Register DstRegW = TRI->getSubReg(BaseReg, AArch64::sub_32);
   unsigned DstRegState = getRegState(MI.getOperand(0));
   BuildMI(*MBB, MI, MI.getDebugLoc(), TII->get(AArch64::STPWi))
       .addReg(DstRegW, DstRegState)
@@ -2351,7 +2323,6 @@ MachineBasicBlock::iterator AArch64LoadStoreOpt::doFoldSymmetryConstantLoad(
       .setMemRefs(MI.memoperands())
       .setMIFlags(MI.getFlags());
   I->eraseFromParent();
-
   return NextI;
 }
 
@@ -2367,19 +2338,18 @@ bool AArch64LoadStoreOpt::tryFoldSymmetryConstantLoad(
     return false;
 
   Register BaseReg = getLdStRegOp(MI).getReg();
-  unsigned Count = 0, SuccIndex = 0;
-  bool hasORR = false;
+  unsigned Count = 0, UpperLoadIdx = 0;
+  uint64_t Accumulated = 0, Mask = 0xFFFFUL;
+  bool hasORR = false, Found = false;
   SmallVector<MachineBasicBlock::iterator> MIs;
   ModifiedRegUnits.clear();
   UsedRegUnits.clear();
-
-  uint64_t Accumulated = 0, Mask = 0xFFFFUL;
   do {
     MBBI = prev_nodbg(MBBI, B);
     MachineInstr &MI = *MBBI;
     if (!MI.isTransient())
       ++Count;
-    if (!isSymmetric(MI, BaseReg)) {
+    if (!isSymmetricLoadCandidate(MI, BaseReg)) {
       LiveRegUnits::accumulateUsedDefed(MI, ModifiedRegUnits, UsedRegUnits,
                                         TRI);
       if (!ModifiedRegUnits.available(BaseReg) ||
@@ -2402,19 +2372,23 @@ bool AArch64LoadStoreOpt::tryFoldSymmetryConstantLoad(
 
     uint64_t IValue = Value.getImm();
     uint64_t IShift = Shift.getImm();
-    Accumulated -= (Accumulated & (Mask << IShift));
-    Accumulated += (IValue << IShift);
+    uint64_t Adder = IValue << IShift;
     MIs.push_back(MBBI);
+    if (Adder >> 32)
+      UpperLoadIdx = MIs.size();
+
+    Accumulated -= Accumulated & (Mask << IShift);
+    Accumulated += Adder;
     if (Accumulated != 0 &&
         (((Accumulated >> 32) == (Accumulated & 0xffffffffULL)) ||
-         (hasORR && Accumulated >> 32 == 0))) {
-      SuccIndex = MIs.size();
+         (hasORR && (Accumulated >> 32 == 0)))) {
+      Found = true;
       break;
     }
   } while (MBBI != B && Count < Limit);
 
-  if (SuccIndex) {
-    I = doFoldSymmetryConstantLoad(MI, MIs, SuccIndex, hasORR, Accumulated);
+  if (Found) {
+    I = doFoldSymmetryConstantLoad(MI, MIs, UpperLoadIdx, Accumulated);
     return true;
   }
 
