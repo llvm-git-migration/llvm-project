@@ -177,11 +177,11 @@ define dso_local void @positive_test_not_a_single_start_offset(i32 noundef %val)
 ; CHECK-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[TMP0]])
 ; CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_FOO:%.*]], ptr [[F1]], i32 0, i32 2
 ; CHECK-NEXT:    [[CONV1:%.*]] = trunc i32 [[TMP0]] to i8
-; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[C]], i64 -4
-; CHECK-NEXT:    store i8 [[CONV1]], ptr [[NEWGEP2]], align 4
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[C]], i64 -4
+; CHECK-NEXT:    store i8 [[CONV1]], ptr [[NEWGEP]], align 4
 ; CHECK-NEXT:    [[C2:%.*]] = getelementptr inbounds [[STRUCT_FOO]], ptr [[F1]], i32 0, i32 2
-; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[C2]], i64 -4
-; CHECK-NEXT:    [[TMP1:%.*]] = load i8, ptr [[NEWGEP]], align 4
+; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[C2]], i64 -4
+; CHECK-NEXT:    [[TMP1:%.*]] = load i8, ptr [[NEWGEP2]], align 4
 ; CHECK-NEXT:    [[CONV:%.*]] = sext i8 [[TMP1]] to i32
 ; CHECK-NEXT:    [[CALL3:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[CONV]])
 ; CHECK-NEXT:    ret void
@@ -237,6 +237,31 @@ entry:
   %5 = load i32, ptr %array
   %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %5)
   ret void
+}
+
+
+define dso_local i32 @simple_reordering_alloca(i32 %val) {
+; CHECK-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; CHECK-SAME: (i32 [[VAL:%.*]]) {
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[ARRAY:%.*]] = alloca [10 x i32], align 4
+; CHECK-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY]], i32 0, i32 9
+; CHECK-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY]], i32 0, i32 5
+; CHECK-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef 32)
+; CHECK-NEXT:    ret i32 32
+;
+entry:
+  %array = alloca [10 x i32]
+  %index1 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 9
+  store i32 100, ptr %index1
+  %index2 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 5
+  store i32 20, ptr %index2
+  %index3 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 3
+  store i32 22, ptr %index3
+  %retval = load i32, ptr %index3
+  %retval2 = add i32 10, %retval
+  %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %retval2)
+  ret i32 %retval2
 }
 
 
