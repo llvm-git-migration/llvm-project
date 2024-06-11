@@ -32,6 +32,8 @@ struct RISCVExtensionBitmask {
 };
 } // namespace RISCVExtensionBitmaskTable
 
+static constexpr unsigned RISCVFeatureBitSize = 1;
+
 // We use 64 bits as the known part in the scalable vector types.
 static constexpr unsigned RVVBitsPerBlock = 64;
 
@@ -44,6 +46,8 @@ StringRef getMArchFromMcpu(StringRef CPU);
 void fillValidCPUArchList(SmallVectorImpl<StringRef> &Values, bool IsRV64);
 void fillValidTuneCPUArchList(SmallVectorImpl<StringRef> &Values, bool IsRV64);
 bool hasFastUnalignedAccess(StringRef CPU);
+llvm::SmallVector<unsigned long long>
+    getRequireFeatureBitMask(ArrayRef<StringRef>);
 
 } // namespace RISCV
 

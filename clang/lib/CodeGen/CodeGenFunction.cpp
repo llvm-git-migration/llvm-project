@@ -2854,10 +2854,99 @@ void CodeGenFunction::EmitMultiVersionResolver(
   case llvm::Triple::aarch64:
     EmitAArch64MultiVersionResolver(Resolver, Options);
     return;
+  case llvm::Triple::riscv32:
+  case llvm::Triple::riscv64:
+    EmitRISCVMultiVersionResolver(Resolver, Options);
+    return;
 
   default:
-    assert(false && "Only implemented for x86 and AArch64 targets");
+    assert(false && "Only implemented for x86, AArch64 and RISC-V targets");
   }
+}
+
+void CodeGenFunction::EmitRISCVMultiVersionResolver(
+    llvm::Function *Resolver, ArrayRef<MultiVersionResolverOption> Options) {
+
+  if (getContext().getTargetInfo().getTriple().getOS() !=
+      llvm::Triple::OSType::Linux) {
+    CGM.getDiags().Report(diag::err_os_unsupport_riscv_target_clones);
+    return;
+  }
+
+  llvm::BasicBlock *CurBlock = createBasicBlock("resolver_entry", Resolver);
+  Builder.SetInsertPoint(CurBlock);
+  EmitRISCVCpuInit();
+
+  bool SupportsIFunc = getContext().getTargetInfo().supportsIFunc();
+  bool HasDefault = false;
+  int DefaultIndex = 0;
+  // Check the each candidate function.
+  for (unsigned Index = 0; Index < Options.size(); Index++) {
+
+    if (Options[Index].Conditions.Features[0].starts_with("default")) {
+      HasDefault = true;
+      DefaultIndex = Index;
+      continue;
+    }
+
+    Builder.SetInsertPoint(CurBlock);
+
+    std::vector<std::string> TargetAttrFeats =
+        getContext()
+            .getTargetInfo()
+            .parseTargetAttr(Options[Index].Conditions.Features[0])
+            .Features;
+
+    if (!TargetAttrFeats.empty()) {
+
+      llvm::BasicBlock *SecondCond =
+          createBasicBlock("resovler_cond", Resolver);
+
+      Builder.SetInsertPoint(SecondCond);
+      unsigned MaxGroupIDUsed = 0;
+      llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
+
+      for (auto Feat: TargetAttrFeats)
+        CurrTargetAttrFeats.push_back(StringRef(Feat).substr(1));
+      
+      llvm::Value *SecondCondition =
+          EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
+
+      Builder.SetInsertPoint(CurBlock);
+      llvm::Value *FirstCondition = EmitRISCVFeatureBitsLength(MaxGroupIDUsed);
+
+      llvm::BasicBlock *RetBlock =
+          createBasicBlock("resolver_return", Resolver);
+      CGBuilderTy RetBuilder(*this, RetBlock);
+      CreateMultiVersionResolverReturn(CGM, Resolver, RetBuilder,
+                                       Options[Index].Function, SupportsIFunc);
+      llvm::BasicBlock *ElseBlock = createBasicBlock("resolver_else", Resolver);
+
+      Builder.SetInsertPoint(CurBlock);
+      Builder.CreateCondBr(FirstCondition, SecondCond, ElseBlock);
+
+      Builder.SetInsertPoint(SecondCond);
+      Builder.CreateCondBr(SecondCondition, RetBlock, ElseBlock);
+
+      CurBlock = ElseBlock;
+    }
+  }
+
+  // Finally, emit the default one.
+  if (HasDefault) {
+    Builder.SetInsertPoint(CurBlock);
+    CreateMultiVersionResolverReturn(
+        CGM, Resolver, Builder, Options[DefaultIndex].Function, SupportsIFunc);
+    return;
+  }
+
+  // If no generic/default, emit an unreachable.
+  Builder.SetInsertPoint(CurBlock);
+  llvm::CallInst *TrapCall = EmitTrapCall(llvm::Intrinsic::trap);
+  TrapCall->setDoesNotReturn();
+  TrapCall->setDoesNotThrow();
+  Builder.CreateUnreachable();
+  Builder.ClearInsertionPoint();
 }
 
 void CodeGenFunction::EmitAArch64MultiVersionResolver(
