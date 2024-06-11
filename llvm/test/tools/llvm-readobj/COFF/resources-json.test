@@ -1,0 +1,388 @@
+RUN: llvm-readobj --coff-resources --coff-output-style=JSON --pretty-print %p/Inputs/zero-string-table.obj.coff-i386 \
+RUN:   | FileCheck %s -check-prefix ZERO
+RUN: llvm-readobj --coff-resources --coff-output-style=JSON --pretty-print %p/Inputs/resources/test_resource.obj.coff \
+RUN:   | FileCheck %s -check-prefix TEST_RES
+
+
+ZERO:         "Resource Sections": [
+ZERO-NEXT:      {
+ZERO-NEXT:        "Name": ".rsrc$01",
+ZERO-NEXT:        "Total Number of Resources": 1,
+ZERO-NEXT:        "Base Table Address": 392,
+ZERO-NEXT:        "Resource Type Table": {
+ZERO-NEXT:          "Number of String Entries": 0,
+ZERO-NEXT:          "Number of ID Entries": 1,
+ZERO-NEXT:          "Entries": [
+ZERO-NEXT:            {
+ZERO-NEXT:              "Table Offset": 24,
+ZERO-NEXT:              "Type": 6,
+ZERO-NEXT:              "Resource Name Table": {
+ZERO-NEXT:                "Number of String Entries": 0,
+ZERO-NEXT:                "Number of ID Entries": 1,
+ZERO-NEXT:                "Entries": [
+ZERO-NEXT:                  {
+ZERO-NEXT:                    "Table Offset": 48,
+ZERO-NEXT:                    "Name": "",
+ZERO-NEXT:                    "ID": 1,
+ZERO-NEXT:                    "Resource Language Table": {
+ZERO-NEXT:                      "Number of String Entries": 0,
+ZERO-NEXT:                      "Number of ID Entries": 1,
+ZERO-NEXT:                      "Entries": [
+ZERO-NEXT:                        {
+ZERO-NEXT:                          "Entry Offset": 72,
+ZERO-NEXT:                          "Time/Date Stamp": {
+ZERO-NEXT:                            "Name": "1970-01-01 00:00:00",
+ZERO-NEXT:                            "Value": 0
+ZERO-NEXT:                          },
+ZERO-NEXT:                          "Major Version": 0,
+ZERO-NEXT:                          "Minor Version": 0,
+ZERO-NEXT:                          "Characteristics": 0,
+ZERO-NEXT:                          "Data": {
+ZERO-NEXT:                            "DataRVA": 0,
+ZERO-NEXT:                            "DataSize": 42,
+ZERO-NEXT:                            "Codepage": 0,
+ZERO-NEXT:                            "Reserved": 0,
+ZERO-NEXT:                            "Data": {
+ZERO-NEXT:                              "Offset": 0,
+ZERO-NEXT:                              "Bytes": [
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                5,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                72,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                101,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                108,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                108,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                111,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0,
+ZERO-NEXT:                                0
+ZERO-NEXT:                              ]
+ZERO-NEXT:                            }
+ZERO-NEXT:                          }
+ZERO-NEXT:                        }
+ZERO-NEXT:                      ]
+ZERO-NEXT:                    }
+ZERO-NEXT:                  }
+ZERO-NEXT:                ]
+ZERO-NEXT:              }
+ZERO-NEXT:            }
+ZERO-NEXT:          ]
+ZERO-NEXT:        }
+ZERO-NEXT:      },
+ZERO-NEXT:      {
+ZERO-NEXT:        "Name": ".rsrc$02"
+ZERO-NEXT:      }
+ZERO-NEXT:    ]
+
+
+TEST_RES:    "Resource Sections": [
+TEST_RES-NEXT:      {
+TEST_RES-NEXT:        "Name": ".rsrc$01",
+TEST_RES-NEXT:        "Total Number of Resources": 7,
+TEST_RES-NEXT:        "Base Table Address": 448,
+TEST_RES-NEXT:        "Resource Type Table": {
+TEST_RES-NEXT:          "Number of String Entries": 0,
+TEST_RES-NEXT:          "Number of ID Entries": 4,
+TEST_RES-NEXT:          "Entries": [
+TEST_RES-NEXT:            {
+TEST_RES-NEXT:              "Table Offset": 48,
+TEST_RES-NEXT:              "Type": 2,
+TEST_RES-NEXT:              "Resource Name Table": {
+TEST_RES-NEXT:                "Number of String Entries": 2,
+TEST_RES-NEXT:                "Number of ID Entries": 0,
+TEST_RES-NEXT:                "Entries": [
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 168,
+TEST_RES-NEXT:                    "Name": "CURSOR",
+TEST_RES-NEXT:                    "ID": 0,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 336,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 808,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  },
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 192,
+TEST_RES-NEXT:                    "Name": "OKAY",
+TEST_RES-NEXT:                    "ID": 0,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 352,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 808,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  }
+TEST_RES-NEXT:                ]
+TEST_RES-NEXT:              }
+TEST_RES-NEXT:            },
+TEST_RES-NEXT:            {
+TEST_RES-NEXT:              "Table Offset": 80,
+TEST_RES-NEXT:              "Type": 4,
+TEST_RES-NEXT:              "Resource Name Table": {
+TEST_RES-NEXT:                "Number of String Entries": 1,
+TEST_RES-NEXT:                "Number of ID Entries": 1,
+TEST_RES-NEXT:                "Entries": [
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 216,
+TEST_RES-NEXT:                    "Name": "\"EAT\"",
+TEST_RES-NEXT:                    "ID": 0,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 368,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 48,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  },
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 240,
+TEST_RES-NEXT:                    "Name": "",
+TEST_RES-NEXT:                    "ID": 14432,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 384,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 46,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  }
+TEST_RES-NEXT:                ]
+TEST_RES-NEXT:              }
+TEST_RES-NEXT:            },
+TEST_RES-NEXT:            {
+TEST_RES-NEXT:              "Table Offset": 112,
+TEST_RES-NEXT:              "Type": 5,
+TEST_RES-NEXT:              "Resource Name Table": {
+TEST_RES-NEXT:                "Number of String Entries": 1,
+TEST_RES-NEXT:                "Number of ID Entries": 0,
+TEST_RES-NEXT:                "Entries": [
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 264,
+TEST_RES-NEXT:                    "Name": "TESTDIALOG",
+TEST_RES-NEXT:                    "ID": 0,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 400,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 108,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  }
+TEST_RES-NEXT:                ]
+TEST_RES-NEXT:              }
+TEST_RES-NEXT:            },
+TEST_RES-NEXT:            {
+TEST_RES-NEXT:              "Table Offset": 136,
+TEST_RES-NEXT:              "Type": 9,
+TEST_RES-NEXT:              "Resource Name Table": {
+TEST_RES-NEXT:                "Number of String Entries": 1,
+TEST_RES-NEXT:                "Number of ID Entries": 1,
+TEST_RES-NEXT:                "Entries": [
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 288,
+TEST_RES-NEXT:                    "Name": "MYACCELERATORS",
+TEST_RES-NEXT:                    "ID": 0,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 416,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 24,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  },
+TEST_RES-NEXT:                  {
+TEST_RES-NEXT:                    "Table Offset": 312,
+TEST_RES-NEXT:                    "Name": "",
+TEST_RES-NEXT:                    "ID": 12,
+TEST_RES-NEXT:                    "Resource Language Table": {
+TEST_RES-NEXT:                      "Number of String Entries": 0,
+TEST_RES-NEXT:                      "Number of ID Entries": 1,
+TEST_RES-NEXT:                      "Entries": [
+TEST_RES-NEXT:                        {
+TEST_RES-NEXT:                          "Entry Offset": 432,
+TEST_RES-NEXT:                          "Time/Date Stamp": {
+TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+TEST_RES-NEXT:                            "Value": 0
+TEST_RES-NEXT:                          },
+TEST_RES-NEXT:                          "Major Version": 0,
+TEST_RES-NEXT:                          "Minor Version": 0,
+TEST_RES-NEXT:                          "Characteristics": 0,
+TEST_RES-NEXT:                          "Data": {
+TEST_RES-NEXT:                            "DataRVA": 0,
+TEST_RES-NEXT:                            "DataSize": 24,
+TEST_RES-NEXT:                            "Codepage": 0,
+TEST_RES-NEXT:                            "Reserved": 0,
+TEST_RES-NEXT:                            "Data": {
+TEST_RES-NEXT:                              "Offset": 0,
+TEST_RES-NEXT:                              "Bytes": [
+TEST_RES:                                   ]
+TEST_RES-NEXT:                            }
+TEST_RES-NEXT:                          }
+TEST_RES-NEXT:                        }
+TEST_RES-NEXT:                      ]
+TEST_RES-NEXT:                    }
+TEST_RES-NEXT:                  }
+TEST_RES-NEXT:                ]
+TEST_RES-NEXT:              }
+TEST_RES-NEXT:            }
+TEST_RES-NEXT:          ]
+TEST_RES-NEXT:        }
+TEST_RES-NEXT:      },
+TEST_RES-NEXT:      {
+TEST_RES-NEXT:        "Name": ".rsrc$02"
+TEST_RES-NEXT:      }
+TEST_RES-NEXT:    ]

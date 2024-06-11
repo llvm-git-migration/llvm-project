@@ -5,7 +5,7 @@ RUN: llvm-readobj --coff-load-config %S/Inputs/coff-load-config-data-end.exe | F
 
 RUN: llvm-readobj --coff-load-config %S/Inputs/coff-no-load-config.exe | FileCheck %s --check-prefix=NOCONFIG
 
-X86: LoadConfig [
+X86: LoadConfig {
 X86:   Size: 0x5C
 X86:   TimeDateStamp: 1970-01-01 00:00:00 (0x0)
 X86:   MajorVersion: 0x0
@@ -37,7 +37,7 @@ X86:     CF_LONGJUMP_TABLE_PRESENT (0x10000)
 X86:     DELAYLOAD_IAT_IN_ITS_OWN_SECTION (0x2000)
 X86:     PROTECT_DELAYLOAD_IAT (0x1000)
 X86:   ]
-X86: ]
+X86: }
 X86: SEHTable [
 X86:   0x10001BE0
 X86:   0x10001E30
@@ -56,7 +56,7 @@ X86:   0x10001BE0
 X86:   0x10001DC0
 X86: ]
 
-X64: LoadConfig [
+X64: LoadConfig {
 X64:   Size: 0x94
 X64:   TimeDateStamp: 1970-01-01 00:00:00 (0x0)
 X64:   MajorVersion: 0x0
@@ -88,7 +88,7 @@ X64:    CF_LONGJUMP_TABLE_PRESENT (0x10000)
 X64:    DELAYLOAD_IAT_IN_ITS_OWN_SECTION (0x2000)
 X64:    PROTECT_DELAYLOAD_IAT (0x1000)
 X64:  ]
-X64: ]
+X64: }
 X64-NOT: SEHTable
 X64: GuardFidTable [
 X64:   0x180001000

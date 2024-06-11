@@ -1,0 +1,85 @@
+RUN: llvm-readobj --coff-load-config --coff-output-style=JSON --pretty-print %S/Inputs/coff-load-config-x64.dll | FileCheck %s --check-prefix=X64
+
+X64:    "LoadConfig": {
+X64-NEXT:      "Size": 148,
+X64-NEXT:      "TimeDateStamp": {
+X64-NEXT:        "Name": "1970-01-01 00:00:00",
+X64-NEXT:        "Value": 0
+X64-NEXT:      },
+X64-NEXT:      "MajorVersion": 0,
+X64-NEXT:      "MinorVersion": 0,
+X64-NEXT:      "GlobalFlagsClear": 0,
+X64-NEXT:      "GlobalFlagsSet": 0,
+X64-NEXT:      "CriticalSectionDefaultTimeout": 0,
+X64-NEXT:      "DeCommitFreeBlockThreshold": 0,
+X64-NEXT:      "DeCommitTotalFreeThreshold": 0,
+X64-NEXT:      "LockPrefixTable": 0,
+X64-NEXT:      "MaximumAllocationSize": 0,
+X64-NEXT:      "VirtualMemoryThreshold": 0,
+X64-NEXT:      "ProcessHeapFlags": 0,
+X64-NEXT:      "ProcessAffinityMask": 0,
+X64-NEXT:      "CSDVersion": 0,
+X64-NEXT:      "DependentLoadFlags": 0,
+X64-NEXT:      "EditList": 0,
+X64-NEXT:      "SecurityCookie": 6442463256,
+X64-NEXT:      "SEHandlerTable": 0,
+X64-NEXT:      "SEHandlerCount": 0,
+X64-NEXT:      "GuardCFCheckFunction": 6442459392,
+X64-NEXT:      "GuardCFCheckDispatch": 6442459400,
+X64-NEXT:      "GuardCFFunctionTable": 6442459480,
+X64-NEXT:      "GuardCFFunctionCount": 9,
+X64-NEXT:      "GuardFlags": {
+X64-NEXT:        "Value": 79104,
+X64-NEXT:        "Flags": [
+X64-NEXT:          {
+X64-NEXT:            "Name": "CF_FUNCTION_TABLE_PRESENT",
+X64-NEXT:            "Value": 1024
+X64-NEXT:          },
+X64-NEXT:          {
+X64-NEXT:            "Name": "CF_INSTRUMENTED",
+X64-NEXT:            "Value": 256
+X64-NEXT:          },
+X64-NEXT:          {
+X64-NEXT:            "Name": "CF_LONGJUMP_TABLE_PRESENT",
+X64-NEXT:            "Value": 65536
+X64-NEXT:          },
+X64-NEXT:          {
+X64-NEXT:            "Name": "DELAYLOAD_IAT_IN_ITS_OWN_SECTION",
+X64-NEXT:            "Value": 8192
+X64-NEXT:          },
+X64-NEXT:          {
+X64-NEXT:            "Name": "PROTECT_DELAYLOAD_IAT",
+X64-NEXT:            "Value": 4096
+X64-NEXT:          }
+X64-NEXT:        ]
+X64-NEXT:      }
+X64-NEXT:    },
+X64-NEXT:    "GuardFidTable": [
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442455040
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442455120
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442455152
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442455264
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442455312
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442456160
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442457456
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442457936
+X64-NEXT:      },
+X64-NEXT:      {
+X64-NEXT:        "Address": 6442458512
+X64-NEXT:      }
+X64-NEXT:    ]

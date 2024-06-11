@@ -1,0 +1,43 @@
+## Test the JSON pretty-print flag.
+#
+# RUN: yaml2obj %s -o %t.pretty
+
+## Test JSON with pretty-print off.
+# RUN: llvm-readobj --coff-output-style=JSON %t.pretty | \
+# RUN:   FileCheck %s --check-prefix=NO-PRETTY \
+# RUN:     --strict-whitespace
+
+#      NO-PRETTY:[
+# NO-PRETTY-SAME:{
+# NO-PRETTY-SAME:"FileSummary":{
+# NO-PRETTY-SAME:"File":"{{.*}}.pretty",
+# NO-PRETTY-SAME:"Format":"COFF-x86-64",
+# NO-PRETTY-SAME:"Arch":"x86_64",
+# NO-PRETTY-SAME:"AddressSize":"64bit"
+# NO-PRETTY-SAME:}
+# NO-PRETTY-SAME:}
+# NO-PRETTY-SAME:]
+
+## Test JSON with pretty-print on.
+# RUN: llvm-readobj --coff-output-style=JSON --pretty-print %t.pretty | \
+# RUN:   FileCheck %s --check-prefix=PRETTY \
+# RUN:     --match-full-lines --strict-whitespace
+
+#      PRETTY:[
+# PRETTY-NEXT:  {
+# PRETTY-NEXT:    "FileSummary": {
+# PRETTY-NEXT:      "File": "{{.*}}.pretty",
+# PRETTY-NEXT:      "Format": "COFF-x86-64",
+# PRETTY-NEXT:      "Arch": "x86_64",
+# PRETTY-NEXT:      "AddressSize": "64bit"
+# PRETTY-NEXT:    }
+# PRETTY-NEXT:  }
+# PRETTY-NEXT:]
+
+--- !COFF
+header:
+  Machine:         IMAGE_FILE_MACHINE_AMD64
+  Characteristics: [  ]
+sections:
+symbols:
+
