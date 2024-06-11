@@ -11,12 +11,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/IPO/Attributor.h"
-
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/DirectedGraph.h"
 #include "llvm/ADT/MapVector.h"
+#include "llvm/ADT/PriorityQueue.h"
 #include "llvm/ADT/SCCIterator.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetOperations.h"
@@ -28,6 +29,7 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AssumeBundleQueries.h"
 #include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/CycleAnalysis.h"
 #include "llvm/Analysis/InstructionSimplify.h"
@@ -57,9 +59,12 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/NoFolder.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/Alignment.h"
+#include "llvm/Support/BlockFrequency.h"
+#include "llvm/Support/BranchProbability.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -67,14 +72,17 @@
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/TypeSize.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/IPO/Attributor.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/CallPromotionUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 #include <cassert>
+#include <climits>
 #include <numeric>
 #include <optional>
 #include <string>
+#include <utility>
 
 using namespace llvm;
 
@@ -12623,6 +12631,28 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
   AAAllocationInfoImpl(const IRPosition &IRP, Attributor &A)
       : AAAllocationInfo(IRP, A) {}
 
+  /// See AbstractAttribute::initialize(...).
+  void initialize(Attributor &A) override {
+
+    // Map an instruction to its position in the module.
+    //  To get a relative sense of distance between instruction.
+    //  Useful when we need a measure of
+    //  a temporal access amongst instructions.
+    // This is valid as we are operating over a strict language.
+    auto &IRP = getIRPosition();
+    auto *M = IRP.getCtxI()->getModule();
+    int InstructionPosition = 0;
+    for (const auto &F : *M) {
+      for (const auto &BB : F) {
+        for (const auto &I : BB) {
+          InstructionPositionMap.insert(
+              std::make_pair(&I, InstructionPosition));
+          InstructionPosition++;
+        }
+      }
+    }
+  }
+
   std::optional<TypeSize> getAllocatedSize() const override {
     assert(isValidState() && "the AA is invalid");
     return AssumedAllocatedSize;
@@ -12631,6 +12661,11 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
   const NewOffsetsTy &getNewOffsets() const override {
     assert(isValidState() && "the AA is invalid");
     return NewComputedOffsets;
+  }
+
+  const FieldAccessGraph &getBinAccessGraph() const override {
+    assert(isValidState() && "the AA is invalid");
+    return BinAccessGraph;
   }
 
   std::optional<TypeSize> findInitialAllocationSize(Instruction *I,
@@ -12691,15 +12726,99 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
       return ChangeStatus::CHANGED;
     }
 
-    // For each access bin
-    // Compute its new start Offset and store the results in a new map
-    // (NewOffsetBins)
-    unsigned long PrevBinEndOffset = 0;
-    bool ChangedOffsets = false;
-
+    DenseMap<Instruction *, AA::RangeTy> MapAccessedInstToBins;
+    auto &OffsetInfoMap = PI->getOffsetInfoMap();
+    // map accessed instructions to bins
     for (AAPointerInfo::OffsetBinsTy::const_iterator It = PI->begin();
          It != PI->end(); It++) {
-      const AA::RangeTy &OldRange = It->getFirst();
+
+      const AA::RangeTy &Range = It->getFirst();
+      auto AccessedIndices = It->getSecond();
+      for (auto AccIndex : AccessedIndices) {
+        const auto &AccessInstruction = PI->getBinAccess(AccIndex);
+        // The local instruction should ideally be backtracked to
+        //  operands that cause the actual access.
+        //  It should be bactracked to the earliest load/store so as
+        // to optimize for the access patterns.
+        Instruction *LocalInst = AccessInstruction.getLocalInst();
+        SmallVector<Instruction *> ReadyList;
+        ReadyList.push_back(LocalInst);
+
+        Instruction *EarlisetLoadStore = LocalInst;
+        while (!ReadyList.empty()) {
+          Instruction *Back = ReadyList.back();
+          ReadyList.pop_back();
+
+          // make sure to populate the ready list before hand
+          for (auto *It = Back->op_begin(); It != Back->op_end(); It++) {
+            if (Instruction *ToInstruction = dyn_cast<Instruction>(It)) {
+              if (ToInstruction == I) {
+                ReadyList.clear();
+                break;
+              }
+              ReadyList.push_back(ToInstruction);
+            }
+          }
+
+          // Check if it is a load/store with an access to the same byte
+          // range.
+          if (Back->getOpcode() != Instruction::Load ||
+              Back->getOpcode() != Instruction::Store)
+            continue;
+
+          if (!OffsetInfoMap.contains(Back))
+            continue;
+
+          const auto &OffsetInfo = OffsetInfoMap.lookup(Back);
+          const auto &OffsetsVec = OffsetInfo.Offsets;
+
+          // TODO: implement for multiple offsets per instruction.
+          if (Back->getOpcode() != Instruction::Call && OffsetsVec.size() > 1)
+            return indicatePessimisticFixpoint();
+
+          // Load/store has the same offset as the Instruction we are
+          // bactracking.
+          if (Range.Offset == OffsetsVec.front())
+            EarlisetLoadStore = Back;
+        }
+
+        // Ensure that only one instruction, range pair exists.
+        // This should correspond to the earliest insturction that causes
+        //  an access in the bin.
+        //  As that's the one that matters for our analysis.
+        //  Subsequent access don't matter as much as data is assumed to
+        //  likely be in cache.
+        bool CorrectedKey = false;
+        for (auto &Val : MapAccessedInstToBins) {
+          auto *Instr = Val.getFirst();
+          auto &RB = Val.getSecond();
+
+          if (RB != Range)
+            continue;
+
+          CorrectedKey = true;
+          // Check which instuction causes an earlier access.
+          if (InstructionPositionMap.lookup(Instr) >
+              InstructionPositionMap.lookup(EarlisetLoadStore)) {
+            MapAccessedInstToBins.erase(Instr);
+            MapAccessedInstToBins.insert(
+                std::make_pair(EarlisetLoadStore, Range));
+            break;
+          }
+        }
+
+        if (!CorrectedKey)
+          MapAccessedInstToBins.insert(
+              std::make_pair(EarlisetLoadStore, Range));
+      }
+    }
+
+    const Module *M = I->getModule();
+    const Function *F = I->getFunction();
+
+    for (auto &Key : MapAccessedInstToBins) {
+
+      const AA::RangeTy &OldRange = Key.getSecond();
 
       // If any range has an unknown offset or size, we should leave the
       // allocation unmodified
@@ -12707,16 +12826,158 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
         return indicatePessimisticFixpoint();
       }
 
-      unsigned long NewStartOffset = PrevBinEndOffset;
-      unsigned long NewEndOffset = NewStartOffset + OldRange.Size;
-      PrevBinEndOffset = NewEndOffset;
+      // Node for the current range
+      BinAccessGraphNode *FromNode;
+      if (!BinAccessGraph.findNode(OldRange)) {
+        FromNode = new BinAccessGraphNode(OldRange);
+        BinAccessGraph.addNode(*FromNode);
 
-      ChangedOffsets |= setNewOffsets(OldRange, OldRange.Offset, NewStartOffset,
-                                      OldRange.Size);
+      } else
+        FromNode = BinAccessGraph.getNode(OldRange);
+
+      // Find the earliest instruction that caused the access from the set
+      Instruction *Earliest = Key.getFirst();
+      int EarlistInstructionPos = InstructionPositionMap.lookup(Earliest);
+
+      int ClosestNextPosition = INT_MAX;
+      Instruction *ClosestNextInstruction;
+      AA::RangeTy CorrespondingBin = OldRange;
+      for (auto &Val : MapAccessedInstToBins) {
+        auto *Ins = Val.getFirst();
+        auto &Bin = Val.getSecond();
+        if (Bin.offsetOrSizeAreUnknown()) {
+          return indicatePessimisticFixpoint();
+        }
+
+        // No self loops are allowed in the graph
+        if (Bin == OldRange)
+          continue;
+
+        int InsPosition = InstructionPositionMap.lookup(Ins);
+        if (InsPosition > EarlistInstructionPos &&
+            InsPosition < ClosestNextPosition) {
+          ClosestNextPosition = InsPosition;
+          ClosestNextInstruction = Ins;
+          CorrespondingBin = Bin;
+        }
+      }
+
+      if (CorrespondingBin == OldRange) {
+        continue;
+      }
+
+      // TODO: Fix when Profiling metadata is nullptr.
+      bool ProfilingEnabled =
+          M->getProfileSummary(false) == nullptr ? false : true;
+      int EdgeWeight = 0;
+      if (ProfilingEnabled) {
+        const BlockFrequencyInfo *BFI =
+            A.getInfoCache()
+                .getAnalysisResultForFunction<BlockFrequencyAnalysis>(*F);
+        const BranchProbabilityInfo *BPI = BFI->getBPI();
+        BlockFrequency BlockFrequency =
+            BFI->getBlockFreq(ClosestNextInstruction->getParent());
+        BranchProbability BP = BPI->getEdgeProbability(
+            Earliest->getParent(), ClosestNextInstruction->getParent());
+        // Assign edge weight as likelihood * frequency.
+        EdgeWeight = (BP.getNumerator() / BP.getDenominator()) *
+                     BlockFrequency.getFrequency();
+      }
+
+      // Nodes are already present
+      if (BinAccessGraph.findNode(OldRange) &&
+          BinAccessGraph.findNode(CorrespondingBin)) {
+
+        // Check if the edge does not exits.
+        BinAccessGraphNode *ToNode = BinAccessGraph.getNode(CorrespondingBin);
+        if (!FromNode->hasEdgeTo(*ToNode)) {
+          BinAccessGraphEdge *AccessedEdge =
+              new BinAccessGraphEdge(*ToNode, EdgeWeight);
+          AccessedEdge->setSrcNode(FromNode);
+          BinAccessGraph.connect(*FromNode, *ToNode, *AccessedEdge);
+        }
+
+        continue;
+      }
+
+      if (BinAccessGraph.findNode(CorrespondingBin)) {
+        BinAccessGraphNode *ToNode = BinAccessGraph.getNode(CorrespondingBin);
+        BinAccessGraphEdge *AccessedEdge =
+            new BinAccessGraphEdge(*ToNode, EdgeWeight);
+        AccessedEdge->setSrcNode(FromNode);
+        BinAccessGraph.addNode(*FromNode);
+        BinAccessGraph.connect(*FromNode, *ToNode, *AccessedEdge);
+        continue;
+      }
+
+      BinAccessGraphNode *ToNode = new BinAccessGraphNode(CorrespondingBin);
+      BinAccessGraphEdge *AccessedEdge =
+          new BinAccessGraphEdge(*ToNode, EdgeWeight);
+      FromNode->addEdge(*AccessedEdge);
+      AccessedEdge->setSrcNode(FromNode);
+      BinAccessGraph.addNode(*ToNode);
+      BinAccessGraph.connect(*FromNode, *ToNode, *AccessedEdge);
     }
 
-    // Set the new size of the allocation, the new size of the Allocation should
-    // be the size of PrevBinEndOffset * 8, in bits
+    // Traverse the graph in a greedy manner.
+    // Map old bins to new bins.
+    // Compute the size of the allocation as we traverse the graph.
+
+    // get all the root nodes
+    std::vector<BinAccessGraphNode *> RootsVector;
+    // A priority queue to establish greedy order
+    PriorityQueue<PriorityQueueGraphNode *> PriorityQueue;
+    // Map to mark which nodes have been visited so far
+    DenseMap<BinAccessGraphNode *, bool> VisitedMap;
+    BinAccessGraph.getAllRoots(RootsVector);
+
+    for (auto *Root : RootsVector) {
+      PriorityQueueGraphNode *Node = new PriorityQueueGraphNode(0, Root);
+      PriorityQueue.push(Node);
+    }
+
+    unsigned long PrevBinEndOffset = 0;
+    bool ChangedOffsets = false;
+
+    while (!PriorityQueue.empty()) {
+
+      // Pop an element from the priority queue
+      PriorityQueueGraphNode *Node = PriorityQueue.top();
+      PriorityQueue.pop();
+
+      // visit this current graph node
+      BinAccessGraphNode *GraphNode = Node->getNode();
+      VisitedMap[GraphNode] = true;
+
+      // For each access bin
+      // Compute its new start Offset and store the results in a new map
+      // (NewOffsetBins)
+
+      auto &NodeRange = GraphNode->getBinRange();
+      unsigned long NewStartOffset = PrevBinEndOffset;
+      unsigned long NewEndOffset = NewStartOffset + NodeRange.Size;
+      PrevBinEndOffset = NewEndOffset;
+
+      // set the new offsets in the map.
+      ChangedOffsets |= setNewOffsets(NodeRange, NodeRange.Offset,
+                                      NewStartOffset, NodeRange.Size);
+
+      auto &Edges = GraphNode->getEdges();
+
+      // push all successors onto the priority queue.
+      for (auto &Edge : Edges) {
+        int EdgeWeight = Edge->getEdgeWeight();
+        BinAccessGraphNode &TargetNode = Edge->getTargetNode();
+        if (!VisitedMap[&TargetNode]) {
+          PriorityQueueGraphNode *Node =
+              new PriorityQueueGraphNode(EdgeWeight, &TargetNode);
+          PriorityQueue.push(Node);
+        }
+      }
+    }
+
+    // Set the new size of the allocation, the new size of the Allocation
+    // should be the size of PrevBinEndOffset * 8, in bits
     auto NewAllocationSize =
         std::optional<TypeSize>(TypeSize(PrevBinEndOffset * 8, false));
 
@@ -12836,7 +13097,7 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
       const DataLayout &DL = A.getDataLayout();
       auto OriginalAllocationSize = OldAllocaInst->getAllocationSizeInBits(DL);
 
-      if (*OriginalAllocationSize <= FixedAllocatedSizeInBits) {
+      if (OriginalAllocationSize->getFixedValue() <= FixedAllocatedSizeInBits) {
         return ChangeStatus::UNCHANGED;
       }
 
@@ -12988,9 +13249,32 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
     }
   }
 
+  void dumpFieldAccessGraph(raw_ostream &O) {
+
+    for (const BinAccessGraphNode *Node : BinAccessGraph) {
+      O << "Node: " << Node->getBinRange() << "\n";
+      SmallVector<BinAccessGraphEdge *> EL;
+      bool EdgesFound = BinAccessGraph.findIncomingEdgesToNode(*Node, EL);
+
+      if (EdgesFound) {
+        O << "Print all incoming edges to node " << Node->getBinRange() << "\n";
+        for (auto &Edge : EL) {
+          O << Edge->getSourceNode()->getBinRange();
+          O << " ---> " << Edge->getTargetNode().getBinRange()
+            << " , Edge weight: " << Edge->getEdgeWeight() << "\n";
+        }
+      } else {
+        O << "No incoming edges found for node " << Node->getBinRange() << "\n";
+      }
+      O << "\n";
+    }
+  }
+
 private:
   std::optional<TypeSize> AssumedAllocatedSize = HasNoAllocationSize;
   NewOffsetsTy NewComputedOffsets;
+  FieldAccessGraph BinAccessGraph;
+  DenseMap<const Instruction *, int> InstructionPositionMap;
 
   // Maintain the computed allocation size of the object.
   // Returns (bool) weather the size of the allocation was modified or not.
