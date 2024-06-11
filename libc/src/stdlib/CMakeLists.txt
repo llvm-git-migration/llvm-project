@@ -402,6 +402,20 @@ else()
       libc.src.__support.CPP.array
       libc.src.__support.CPP.span
   )
+  add_header_library(
+    freelist_heap
+    HDRS
+      freelist_heap.h
+    DEPENDS
+      .block
+      .freelist
+      libc.src.__support.CPP.cstddef
+      libc.src.__support.CPP.array
+      libc.src.__support.CPP.optional
+      libc.src.__support.CPP.span
+      libc.src.string.memcpy
+      libc.src.string.memset
+  )
   add_entrypoint_external(
     malloc
   )
