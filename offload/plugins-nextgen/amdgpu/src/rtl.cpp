@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
+#include "Shared/APITypes.h"
 #include "Shared/Debug.h"
 #include "Shared/Environment.h"
 #include "Shared/Utils.h"
@@ -558,7 +559,8 @@ struct AMDGPUKernelTy : public GenericKernelTy {
 
   /// Launch the AMDGPU kernel function.
   Error launchImpl(GenericDeviceTy &GenericDevice, uint32_t NumThreads,
-                   uint64_t NumBlocks, KernelArgsTy &KernelArgs, void *Args,
+                   uint64_t NumBlocks, KernelArgsTy &KernelArgs,
+                   KernelLaunchParamsTy LaunchParams,
                    AsyncInfoWrapperTy &AsyncInfoWrapper) const override;
 
   /// Print more elaborate kernel launch info for AMDGPU
@@ -2802,9 +2804,10 @@ private:
     AsyncInfoWrapperTy AsyncInfoWrapper(*this, nullptr);
 
     KernelArgsTy KernelArgs = {};
-    if (auto Err = AMDGPUKernel.launchImpl(*this, /*NumThread=*/1u,
-                                           /*NumBlocks=*/1ul, KernelArgs,
-                                           /*Args=*/nullptr, AsyncInfoWrapper))
+    if (auto Err =
+            AMDGPUKernel.launchImpl(*this, /*NumThread=*/1u,
+                                    /*NumBlocks=*/1ul, KernelArgs,
+                                    KernelLaunchParamsTy{}, AsyncInfoWrapper))
       return Err;
 
     Error Err = Plugin::success();
@@ -3266,18 +3269,18 @@ private:
 
 Error AMDGPUKernelTy::launchImpl(GenericDeviceTy &GenericDevice,
                                  uint32_t NumThreads, uint64_t NumBlocks,
-                                 KernelArgsTy &KernelArgs, void *Args,
+                                 KernelArgsTy &KernelArgs,
+                                 KernelLaunchParamsTy LaunchParams,
                                  AsyncInfoWrapperTy &AsyncInfoWrapper) const {
-  const uint32_t KernelArgsSize = KernelArgs.NumArgs * sizeof(void *);
 
-  if (ArgsSize < KernelArgsSize)
+  if (ArgsSize < LaunchParams.Size)
     return Plugin::error("Mismatch of kernel arguments size");
 
   // The args size reported by HSA may or may not contain the implicit args.
   // For now, assume that HSA does not consider the implicit arguments when
   // reporting the arguments of a kernel. In the worst case, we can waste
   // 56 bytes per allocation.
-  uint32_t AllArgsSize = KernelArgsSize + ImplicitArgsSize;
+  uint32_t AllArgsSize = LaunchParams.Size + ImplicitArgsSize;
 
   AMDGPUPluginTy &AMDGPUPlugin =
       static_cast<AMDGPUPluginTy &>(GenericDevice.Plugin);
@@ -3302,7 +3305,7 @@ Error AMDGPUKernelTy::launchImpl(GenericDeviceTy &GenericDevice,
   // Initialize implicit arguments.
   utils::AMDGPUImplicitArgsTy *ImplArgs =
       reinterpret_cast<utils::AMDGPUImplicitArgsTy *>(
-          advanceVoidPtr(AllArgs, KernelArgsSize));
+          advanceVoidPtr(AllArgs, LaunchParams.Size));
 
   // Initialize the implicit arguments to zero.
   std::memset(ImplArgs, 0, ImplicitArgsSize);
@@ -3310,9 +3313,8 @@ Error AMDGPUKernelTy::launchImpl(GenericDeviceTy &GenericDevice,
   // Copy the explicit arguments.
   // TODO: We should expose the args memory manager alloc to the common part as
   // 	   alternative to copying them twice.
-  if (KernelArgs.NumArgs)
-    std::memcpy(AllArgs, *static_cast<void **>(Args),
-                sizeof(void *) * KernelArgs.NumArgs);
+  if (LaunchParams.Size)
+    std::memcpy(AllArgs, LaunchParams.Data, LaunchParams.Size);
 
   AMDGPUDeviceTy &AMDGPUDevice = static_cast<AMDGPUDeviceTy &>(GenericDevice);
 
