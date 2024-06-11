@@ -37,6 +37,7 @@ define void @f() {
 ; TUNIT-LABEL: define {{[^@]+}}@f
 ; TUNIT-SAME: () #[[ATTR1:[0-9]+]] {
 ; TUNIT-NEXT:    [[R:%.*]] = alloca i32, align 4
+; TUNIT-NEXT:    [[PAIR1:%.*]] = alloca [4 x i8], align 1
 ; TUNIT-NEXT:    call void @add(ptr noalias nocapture nofree nonnull readnone align 8 dereferenceable(8) undef, ptr noalias nocapture nofree noundef nonnull writeonly sret(i32) align 4 dereferenceable(4) [[R]]) #[[ATTR2:[0-9]+]]
 ; TUNIT-NEXT:    ret void
 ;
