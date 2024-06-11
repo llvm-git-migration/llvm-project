@@ -560,6 +560,8 @@ template <char goal> struct SkipPast {
     while (std::optional<const char *> p{state.GetNextChar()}) {
       if (**p == goal) {
         return {Success{}};
+      } else if (**p == '\n') {
+        break;
       }
     }
     return std::nullopt;
@@ -574,8 +576,11 @@ template <char goal> struct SkipTo {
     while (std::optional<const char *> p{state.PeekAtNextChar()}) {
       if (**p == goal) {
         return {Success{}};
+      } else if (**p == '\n') {
+        break;
+      } else {
+        state.UncheckedAdvance();
       }
-      state.UncheckedAdvance();
     }
     return std::nullopt;
   }
