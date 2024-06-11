@@ -177,11 +177,11 @@ define dso_local void @positive_test_not_a_single_start_offset(i32 noundef %val)
 ; CHECK-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[TMP0]])
 ; CHECK-NEXT:    [[C:%.*]] = getelementptr inbounds [[STRUCT_FOO:%.*]], ptr [[F1]], i32 0, i32 2
 ; CHECK-NEXT:    [[CONV1:%.*]] = trunc i32 [[TMP0]] to i8
-; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[C]], i64 -4
-; CHECK-NEXT:    store i8 [[CONV1]], ptr [[NEWGEP2]], align 4
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[C]], i64 -4
+; CHECK-NEXT:    store i8 [[CONV1]], ptr [[NEWGEP]], align 4
 ; CHECK-NEXT:    [[C2:%.*]] = getelementptr inbounds [[STRUCT_FOO]], ptr [[F1]], i32 0, i32 2
-; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[C2]], i64 -4
-; CHECK-NEXT:    [[TMP1:%.*]] = load i8, ptr [[NEWGEP]], align 4
+; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[C2]], i64 -4
+; CHECK-NEXT:    [[TMP1:%.*]] = load i8, ptr [[NEWGEP2]], align 4
 ; CHECK-NEXT:    [[CONV:%.*]] = sext i8 [[TMP1]] to i32
 ; CHECK-NEXT:    [[CALL3:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[CONV]])
 ; CHECK-NEXT:    ret void
@@ -237,6 +237,68 @@ entry:
   %5 = load i32, ptr %array
   %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %5)
   ret void
+}
+
+
+define dso_local i32 @simple_reordering_alloca(i32 %val) {
+; TUNIT-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; TUNIT-SAME: (i32 [[VAL:%.*]]) {
+; TUNIT-NEXT:  entry:
+; TUNIT-NEXT:    [[ARRAY1:%.*]] = alloca [12 x i8], align 1
+; TUNIT-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 9
+; TUNIT-NEXT:    [[NEWGEP6:%.*]] = getelementptr ptr, ptr [[INDEX1]], i64 -36
+; TUNIT-NEXT:    store i32 100, ptr [[NEWGEP6]], align 4
+; TUNIT-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 5
+; TUNIT-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[INDEX2]], i64 -16
+; TUNIT-NEXT:    store i32 [[VAL]], ptr [[NEWGEP2]], align 4
+; TUNIT-NEXT:    [[INDEX3:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 3
+; TUNIT-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; TUNIT-NEXT:    store i32 [[VAL]], ptr [[NEWGEP3]], align 4
+; TUNIT-NEXT:    [[NEWGEP4:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; TUNIT-NEXT:    [[RETVAL5:%.*]] = load i32, ptr [[NEWGEP4]], align 4
+; TUNIT-NEXT:    [[VAL2:%.*]] = mul i32 [[VAL]], [[VAL]]
+; TUNIT-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; TUNIT-NEXT:    store i32 [[VAL2]], ptr [[NEWGEP]], align 4
+; TUNIT-NEXT:    [[RETVAL2:%.*]] = add i32 [[VAL2]], [[RETVAL5]]
+; TUNIT-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[RETVAL2]])
+; TUNIT-NEXT:    ret i32 [[RETVAL2]]
+;
+; CGSCC-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; CGSCC-SAME: (i32 [[VAL:%.*]]) {
+; CGSCC-NEXT:  entry:
+; CGSCC-NEXT:    [[ARRAY1:%.*]] = alloca [12 x i8], align 1
+; CGSCC-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 9
+; CGSCC-NEXT:    [[NEWGEP4:%.*]] = getelementptr ptr, ptr [[INDEX1]], i64 -36
+; CGSCC-NEXT:    store i32 100, ptr [[NEWGEP4]], align 4
+; CGSCC-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 5
+; CGSCC-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[INDEX2]], i64 -16
+; CGSCC-NEXT:    store i32 [[VAL]], ptr [[NEWGEP]], align 4
+; CGSCC-NEXT:    [[INDEX3:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 3
+; CGSCC-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; CGSCC-NEXT:    store i32 [[VAL]], ptr [[NEWGEP3]], align 4
+; CGSCC-NEXT:    [[NEWGEP5:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; CGSCC-NEXT:    [[RETVAL6:%.*]] = load i32, ptr [[NEWGEP5]], align 4
+; CGSCC-NEXT:    [[VAL2:%.*]] = mul i32 [[VAL]], [[VAL]]
+; CGSCC-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; CGSCC-NEXT:    store i32 [[VAL2]], ptr [[NEWGEP2]], align 4
+; CGSCC-NEXT:    [[RETVAL2:%.*]] = add i32 [[VAL2]], [[RETVAL6]]
+; CGSCC-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef [[RETVAL2]])
+; CGSCC-NEXT:    ret i32 [[RETVAL2]]
+;
+entry:
+  %array = alloca [10 x i32]
+  %index1 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 9
+  store i32 100, ptr %index1
+  %index2 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 5
+  store i32 %val, ptr %index2
+  %index3 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 3
+  store i32 %val, ptr %index3
+  %retval = load i32, ptr %index3
+  %val2 = mul i32 %val, %val
+  store i32 %val2, ptr %index3
+  %retval2 = add i32 %val2, %retval
+  %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %retval2)
+  ret i32 %retval2
 }
 
 
