@@ -140,7 +140,7 @@ struct LessExtName {
 };
 } // namespace
 
-static RISCVExtensionBitmaskTable::RISCVExtensionBitmask
+static Expected<RISCVExtensionBitmaskTable::RISCVExtensionBitmask>
 getExtensionBitmask(StringRef ExtName) {
   ArrayRef<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmasks =
       RISCVExtensionBitmaskTable::ExtensionBitmask;
@@ -149,7 +149,21 @@ getExtensionBitmask(StringRef ExtName) {
   if (I != ExtBitmasks.end())
     return *I;
 
-  return RISCVExtensionBitmaskTable::RISCVExtensionBitmask();
+  return createStringError("Unsupport extension");
+}
+
+llvm::SmallVector<unsigned long long>
+getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
+  llvm::SmallVector<unsigned long long> BitMasks = {0, 0};
+
+  for (auto Ext : Exts) {
+    Expected<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmask =
+        getExtensionBitmask(Ext);
+    assert(ExtBitmask && "This extension doesn't has bitmask.");
+    BitMasks[ExtBitmask->GroupID] |= (1ULL << ExtBitmask->BitPosition);
+  }
+
+  return BitMasks;
 }
 } // namespace RISCV
 
