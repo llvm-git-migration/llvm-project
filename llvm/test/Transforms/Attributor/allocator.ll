@@ -240,6 +240,54 @@ entry:
 }
 
 
+define dso_local i32 @simple_reordering_alloca(i32 %val) {
+; TUNIT-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; TUNIT-SAME: (i32 [[VAL:%.*]]) {
+; TUNIT-NEXT:  entry:
+; TUNIT-NEXT:    [[ARRAY1:%.*]] = alloca [12 x i8], align 1
+; TUNIT-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 9
+; TUNIT-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[INDEX1]], i64 -36
+; TUNIT-NEXT:    store i32 100, ptr [[NEWGEP2]], align 4
+; TUNIT-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 5
+; TUNIT-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[INDEX2]], i64 -16
+; TUNIT-NEXT:    store i32 20, ptr [[NEWGEP3]], align 4
+; TUNIT-NEXT:    [[INDEX3:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 3
+; TUNIT-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; TUNIT-NEXT:    store i32 22, ptr [[NEWGEP]], align 4
+; TUNIT-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef 32)
+; TUNIT-NEXT:    ret i32 32
+;
+; CGSCC-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; CGSCC-SAME: (i32 [[VAL:%.*]]) {
+; CGSCC-NEXT:  entry:
+; CGSCC-NEXT:    [[ARRAY1:%.*]] = alloca [12 x i8], align 1
+; CGSCC-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 9
+; CGSCC-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[INDEX1]], i64 -36
+; CGSCC-NEXT:    store i32 100, ptr [[NEWGEP2]], align 4
+; CGSCC-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 5
+; CGSCC-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[INDEX2]], i64 -16
+; CGSCC-NEXT:    store i32 20, ptr [[NEWGEP]], align 4
+; CGSCC-NEXT:    [[INDEX3:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 3
+; CGSCC-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; CGSCC-NEXT:    store i32 22, ptr [[NEWGEP3]], align 4
+; CGSCC-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef 32)
+; CGSCC-NEXT:    ret i32 32
+;
+entry:
+  %array = alloca [10 x i32]
+  %index1 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 9
+  store i32 100, ptr %index1
+  %index2 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 5
+  store i32 20, ptr %index2
+  %index3 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 3
+  store i32 22, ptr %index3
+  %retval = load i32, ptr %index3
+  %retval2 = add i32 10, %retval
+  %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %retval2)
+  ret i32 %retval2
+}
+
+
 ; Function Attrs: noinline nounwind uwtable
 ; TODO: Here the array size is not known at compile time.
 ; However the array does not escape and is only partially used.
