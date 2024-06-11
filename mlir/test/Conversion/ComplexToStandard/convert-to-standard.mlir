@@ -1,5 +1,5 @@
 // RUN: mlir-opt %s --convert-complex-to-standard --split-input-file |\
-// RUN: FileCheck %s --dump-input=always
+// RUN: FileCheck %s
 
 // CHECK-LABEL: func @complex_abs
 // CHECK-SAME: %[[ARG:.*]]: complex<f32>
@@ -709,9 +709,10 @@ func.func @complex_sqrt_nnan_ninf(%arg: complex<f32>) -> complex<f32> {
 // CHECK: %[[QUARTER:.*]] = arith.constant 2.500000e-01 : f32
 // CHECK: %[[SQRT_MAX:.*]] = math.sqrt %[[MAX]] fastmath<nnan,ninf> : f32
 // CHECK: %[[POW:.*]] = math.powf %[[RATIO_SQ_PLUS_ONE]], %[[QUARTER]] fastmath<nnan,ninf> : f32
-// CHECK: %[[SQRT_ABS_OR_NAN:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,ninf> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[SQRT_ABS_OR_NAN]], %[[SQRT_ABS_OR_NAN]] fastmath<nnan,ninf> : f32
-// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[SQRT_ABS_OR_NAN]] : f32
+// CHECK: %[[SQRT_ABS_OR_POISON:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,ninf> : f32
+// CHECK: %[[ZERO_2:.*]] = arith.constant 0.000000e+00 : f32
+// CHECK: %[[IS_POISON:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO_2]] fastmath<nnan,ninf> : f32
+// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[IS_POISON]], %[[MIN]], %[[SQRT_ABS_OR_POISON]] : f32
 // CHECK: %[[ARGARG:.*]] = math.atan2 %[[IM]], %[[RE]] fastmath<nnan,ninf> : f32
 // CHECK: %[[SQRTARG:.*]] = arith.mulf %[[ARGARG]], %[[HALF]] fastmath<nnan,ninf> : f32
 // CHECK: %[[COS:.*]] = math.cos %[[SQRTARG]] fastmath<nnan,ninf> : f32
@@ -823,9 +824,15 @@ func.func @complex_abs_with_fmf(%arg: complex<f32>) -> f32 {
 // CHECK: %[[RATIO_SQ:.*]] = arith.mulf %[[RATIO]], %[[RATIO]] fastmath<nnan,contract> : f32
 // CHECK: %[[RATIO_SQ_PLUS_ONE:.*]] = arith.addf %[[RATIO_SQ]], %[[ONE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRT:.*]] = math.sqrt %[[RATIO_SQ_PLUS_ONE]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS_OR_NAN:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[ABS_OR_NAN]], %[[ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[ABS_OR_NAN]] : f32
+// CHECK: %[[ABS_OR_POISON:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO]] fastmath<nnan,contract> : f32
+// CHECK: %[[ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[ABS_OR_POISON]] : f32
+// CHECK: %[[ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO]], %[[ABS_OR_INF]] : f32
 // CHECK: return %[[ABS]] : f32
 
 // -----
@@ -922,9 +929,15 @@ func.func @complex_log_with_fmf(%arg: complex<f32>) -> complex<f32> {
 // CHECK: %[[RATIO_SQ:.*]] = arith.mulf %[[RATIO]], %[[RATIO]] fastmath<nnan,contract> : f32
 // CHECK: %[[RATIO_SQ_PLUS_ONE:.*]] = arith.addf %[[RATIO_SQ]], %[[ONE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRT:.*]] = math.sqrt %[[RATIO_SQ_PLUS_ONE]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS_OR_NAN:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[ABS_OR_NAN]], %[[ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[ABS_OR_NAN]] : f32
+// CHECK: %[[ABS_OR_POISON:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO]] fastmath<nnan,contract> : f32
+// CHECK: %[[ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[ABS_OR_POISON]] : f32
+// CHECK: %[[ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO]], %[[ABS_OR_INF]] : f32
 // CHECK: %[[RESULT_REAL:.*]] = math.log %[[ABS]] fastmath<nnan,contract> : f32
 // CHECK: %[[REAL2:.*]] = complex.re %[[ARG]] : complex<f32>
 // CHECK: %[[IMAG2:.*]] = complex.im %[[ARG]] : complex<f32>
@@ -1304,9 +1317,15 @@ func.func @complex_atan2_with_fmf(%lhs: complex<f32>,
 // CHECK: %[[QUARTER:.*]] = arith.constant 2.500000e-01 : f32
 // CHECK: %[[SQRT_MAX:.*]] = math.sqrt %[[MAX]] fastmath<nnan,contract> : f32
 // CHECK: %[[POW:.*]] = math.powf %[[RATIO_SQ_PLUS_ONE]], %[[QUARTER]] fastmath<nnan,contract> : f32
-// CHECK: %[[SQRT_ABS_OR_NAN:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[SQRT_ABS_OR_NAN]], %[[SQRT_ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[SQRT_ABS_OR_NAN]] : f32
+// CHECK: %[[SQRT_ABS_OR_POISON:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO_2:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO_2]] fastmath<nnan,contract> : f32
+// CHECK: %[[ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[SQRT_ABS_OR_POISON]] : f32
+// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO_2]], %[[ABS_OR_INF]] : f32
 // CHECK: %[[ARGARG:.*]] = math.atan2 %[[IM]], %[[RE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRTARG:.*]] = arith.mulf %[[ARGARG]], %[[HALF]] fastmath<nnan,contract> : f32
 // CHECK: %[[COS:.*]] = math.cos %[[SQRTARG]] fastmath<nnan,contract> : f32
@@ -1543,9 +1562,15 @@ func.func @complex_atan2_with_fmf(%lhs: complex<f32>,
 // CHECK: %[[RATIO_SQ:.*]] = arith.mulf %[[RATIO]], %[[RATIO]] fastmath<nnan,contract> : f32
 // CHECK: %[[RATIO_SQ_PLUS_ONE:.*]] = arith.addf %[[RATIO_SQ]], %[[ONE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRT:.*]] = math.sqrt %[[RATIO_SQ_PLUS_ONE]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS_OR_NAN:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[ABS_OR_NAN]], %[[ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[ABS_OR_NAN]] : f32
+// CHECK: %[[ABS_OR_POISON:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO_3:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO_3]] fastmath<nnan,contract> : f32
+// CHECK: %[[ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[ABS_OR_POISON]] : f32
+// CHECK: %[[ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO_3]], %[[ABS_OR_INF]] : f32
 // CHECK: %[[VAR436:.*]] = math.log %[[ABS]] fastmath<nnan,contract> : f32
 // CHECK: %[[VAR437:.*]] = complex.re %[[VAR415]] : complex<f32>
 // CHECK: %[[VAR438:.*]] = complex.im %[[VAR415]] : complex<f32>
@@ -1784,9 +1809,15 @@ func.func @complex_sqrt_with_fmf(%arg: complex<f32>) -> complex<f32> {
 // CHECK: %[[QUARTER:.*]] = arith.constant 2.500000e-01 : f32
 // CHECK: %[[SQRT_MAX:.*]] = math.sqrt %[[MAX]] fastmath<nnan,contract> : f32
 // CHECK: %[[POW:.*]] = math.powf %[[RATIO_SQ_PLUS_ONE]], %[[QUARTER]] fastmath<nnan,contract> : f32
-// CHECK: %[[SQRT_ABS_OR_NAN:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[SQRT_ABS_OR_NAN]], %[[SQRT_ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[SQRT_ABS_OR_NAN]] : f32
+// CHECK: %[[SQRT_ABS_OR_POISON:.*]] = arith.mulf %[[SQRT_MAX]], %[[POW]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO_2:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO_2]] fastmath<nnan,contract> : f32
+// CHECK: %[[SQRT_ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[SQRT_ABS_OR_POISON]] : f32
+// CHECK: %[[SQRT_ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO_2]], %[[SQRT_ABS_OR_INF]] : f32
 // CHECK: %[[ARGARG:.*]] = math.atan2 %[[IM]], %[[RE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRTARG:.*]] = arith.mulf %[[ARGARG]], %[[HALF]] fastmath<nnan,contract> : f32
 // CHECK: %[[COS:.*]] = math.cos %[[SQRTARG]] fastmath<nnan,contract> : f32
@@ -1890,9 +1921,15 @@ func.func @complex_sign_with_fmf(%arg: complex<f32>) -> complex<f32> {
 // CHECK: %[[RATIO_SQ:.*]] = arith.mulf %[[RATIO]], %[[RATIO]] fastmath<nnan,contract> : f32
 // CHECK: %[[RATIO_SQ_PLUS_ONE:.*]] = arith.addf %[[RATIO_SQ]], %[[ONE]] fastmath<nnan,contract> : f32
 // CHECK: %[[SQRT:.*]] = math.sqrt %[[RATIO_SQ_PLUS_ONE]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS_OR_NAN:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
-// CHECK: %[[IS_NAN:.*]] = arith.cmpf uno, %[[ABS_OR_NAN]], %[[ABS_OR_NAN]] fastmath<nnan,contract> : f32
-// CHECK: %[[ABS:.*]] = arith.select %[[IS_NAN]], %[[MIN]], %[[ABS_OR_NAN]] : f32
+// CHECK: %[[ABS_OR_POISON:.*]] = arith.mulf %[[MAX]], %[[SQRT]] fastmath<nnan,contract> : f32
+// CHECK: %[[ZERO_2:.*]] = arith.constant 0.000000e+00
+// CHECK: %[[INF:.*]] = arith.constant 0x7F800000
+// CHECK: %[[MAX_IS_INF:.*]] = arith.cmpf oeq, %[[MAX]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[MIN_IS_INF:.*]] = arith.cmpf oeq, %[[MIN]], %[[INF]] fastmath<nnan,contract> : f32
+// CHECK: %[[RESULT_IS_INF:.*]] = arith.andi %[[MAX_IS_INF]], %[[MIN_IS_INF]]
+// CHECK: %[[RESULT_IS_ZERO:.*]] = arith.cmpf oeq, %[[MAX]], %[[ZERO_2]] fastmath<nnan,contract> : f32
+// CHECK: %[[ABS_OR_INF:.*]] = arith.select %[[RESULT_IS_INF]], %[[INF]], %[[ABS_OR_POISON]] : f32
+// CHECK: %[[ABS:.*]] = arith.select %[[RESULT_IS_ZERO]], %[[ZERO_2]], %[[ABS_OR_INF]] : f32
 // CHECK: %[[REAL_SIGN:.*]] = arith.divf %[[REAL]], %[[ABS]] fastmath<nnan,contract> : f32
 // CHECK: %[[IMAG_SIGN:.*]] = arith.divf %[[IMAG]], %[[ABS]] fastmath<nnan,contract> : f32
 // CHECK: %[[SIGN:.*]] = complex.create %[[REAL_SIGN]], %[[IMAG_SIGN]] : complex<f32>

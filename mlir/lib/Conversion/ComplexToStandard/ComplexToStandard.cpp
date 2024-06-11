@@ -43,7 +43,6 @@ Value computeAbs(Value real, Value imag, arith::FastMathFlags fmf,
   Value ratio = b.create<arith::DivFOp>(min, max, fmf);
   Value ratioSq = b.create<arith::MulFOp>(ratio, ratio, fmf);
   Value ratioSqPlusOne = b.create<arith::AddFOp>(ratioSq, one, fmf);
-  Value result;
 
   if (fn == AbsFn::rsqrt) {
     ratioSqPlusOne = b.create<math::RsqrtOp>(ratioSqPlusOne, fmf);
@@ -51,6 +50,7 @@ Value computeAbs(Value real, Value imag, arith::FastMathFlags fmf,
     max = b.create<math::RsqrtOp>(max, fmf);
   }
 
+  Value result;
   if (fn == AbsFn::sqrt) {
     Value quarter = b.create<arith::ConstantOp>(
         real.getType(), b.getFloatAttr(real.getType(), 0.25));
@@ -63,6 +63,40 @@ Value computeAbs(Value real, Value imag, arith::FastMathFlags fmf,
     result = b.create<arith::MulFOp>(max, sqrt, fmf);
   }
 
+  if (arith::bitEnumContainsAll(fmf, arith::FastMathFlags::nnan |
+                                         arith::FastMathFlags::ninf)) {
+    // We only need to handle the 0/0 case here.
+    Value zero = b.create<arith::ConstantOp>(
+        real.getType(), b.getFloatAttr(real.getType(), 0.0));
+    Value maxIsZero =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, max, zero);
+    return b.create<arith::SelectOp>(maxIsZero, min, result);
+  }
+
+  if (arith::bitEnumContainsAll(fmf, arith::FastMathFlags::nnan)) {
+    Value zero = b.create<arith::ConstantOp>(
+        real.getType(), b.getFloatAttr(real.getType(), 0.0));
+    Value inf = b.create<arith::ConstantOp>(
+        real.getType(),
+        b.getFloatAttr(
+            real.getType(),
+            APFloat::getInf(
+                cast<FloatType>(real.getType()).getFloatSemantics())));
+    Value maxIsInf =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, max, inf, fmf);
+    Value minIsInf =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, min, inf, fmf);
+    // We need to handle inf/inf and 0/0 specially. The former is inf, the
+    // latter is 0. Both produce poison in the division.
+    Value resultIsInf = b.create<arith::AndIOp>(maxIsInf, minIsInf);
+    Value resultIsZero =
+        b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, max, zero);
+    result = b.create<arith::SelectOp>(resultIsInf, inf, result);
+    result = b.create<arith::SelectOp>(resultIsZero, zero, result);
+    return result;
+  }
+
+  // This handles both inf/inf and 0/0.
   Value isNaN =
       b.create<arith::CmpFOp>(arith::CmpFPredicate::UNO, result, result, fmf);
   return b.create<arith::SelectOp>(isNaN, min, result);
