@@ -3567,3 +3567,15 @@ add_fp_unittest(
   DEPENDS
     libc.src.math.setpayloadf16
 )
+
+add_fp_unittest(
+  setpayloadsigf16_test
+  SUITE
+    libc-math-smoke-tests
+  SRCS
+    setpayloadsigf16_test.cpp
+  HDRS
+    SetPayloadSigTest.h
+  DEPENDS
+    libc.src.math.setpayloadsigf16
+)

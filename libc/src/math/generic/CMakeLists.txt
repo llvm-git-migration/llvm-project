@@ -3625,3 +3625,15 @@ add_entrypoint_object(
   COMPILE_OPTIONS
     -O3
 )
+
+add_entrypoint_object(
+  setpayloadsigf16
+  SRCS
+    setpayloadsigf16.cpp
+  HDRS
+    ../setpayloadsigf16.h
+  DEPENDS
+    libc.src.__support.FPUtil.basic_operations
+  COMPILE_OPTIONS
+    -O3
+)
