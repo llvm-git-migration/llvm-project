@@ -3543,3 +3543,15 @@ add_fp_unittest(
   DEPENDS
     libc.src.math.totalordermagf16
 )
+
+add_fp_unittest(
+  getpayloadf16_test
+  SUITE
+    libc-math-smoke-tests
+  SRCS
+    getpayloadf16_test.cpp
+  HDRS
+    GetPayloadTest.h
+  DEPENDS
+    libc.src.math.getpayloadf16
+)
