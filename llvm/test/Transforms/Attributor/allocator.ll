@@ -240,6 +240,39 @@ entry:
 }
 
 
+define dso_local i32 @simple_reordering_alloca(i32 %val) {
+;The bins should be reordered, not the instructions, so the offset should be different.
+; CHECK-LABEL: define dso_local noundef i32 @simple_reordering_alloca
+; CHECK-SAME: (i32 [[VAL:%.*]]) {
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[ARRAY1:%.*]] = alloca [12 x i8], align 1
+; CHECK-NEXT:    [[INDEX1:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 9
+; CHECK-NEXT:    [[NEWGEP2:%.*]] = getelementptr ptr, ptr [[INDEX1]], i64 -36
+; CHECK-NEXT:    store i32 100, ptr [[NEWGEP2]], align 4
+; CHECK-NEXT:    [[INDEX2:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 5
+; CHECK-NEXT:    [[NEWGEP3:%.*]] = getelementptr ptr, ptr [[INDEX2]], i64 -16
+; CHECK-NEXT:    store i32 20, ptr [[NEWGEP3]], align 4
+; CHECK-NEXT:    [[INDEX3:%.*]] = getelementptr inbounds [10 x i32], ptr [[ARRAY1]], i32 0, i32 3
+; CHECK-NEXT:    [[NEWGEP:%.*]] = getelementptr ptr, ptr [[INDEX3]], i64 -4
+; CHECK-NEXT:    store i32 22, ptr [[NEWGEP]], align 4
+; CHECK-NEXT:    [[CALL:%.*]] = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(17) @.str, i32 noundef 32)
+; CHECK-NEXT:    ret i32 32
+;
+entry:
+  %array = alloca [10 x i32]
+  %index1 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 9
+  store i32 100, ptr %index1
+  %index2 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 5
+  store i32 20, ptr %index2
+  %index3 = getelementptr inbounds [10 x i32], ptr %array, i32 0, i32 3
+  store i32 22, ptr %index3
+  %retval = load i32, ptr %index3
+  %retval2 = add i32 10, %retval
+  %call = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %retval2)
+  ret i32 %retval2
+}
+
+
 ; Function Attrs: noinline nounwind uwtable
 ; TODO: Here the array size is not known at compile time.
 ; However the array does not escape and is only partially used.
