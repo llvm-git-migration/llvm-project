@@ -8326,7 +8326,11 @@ VPReplicateRecipe *VPRecipeBuilder::handleReplication(Instruction *I,
       [&](ElementCount VF) { return CM.isUniformAfterVectorization(I, VF); },
       Range);
 
-  bool IsPredicated = CM.isPredicatedInst(I);
+  bool IsPredicated = LoopVectorizationPlanner::getDecisionAndClampRange(
+      [&](ElementCount VF) {
+        return CM.isPredicatedInst(I) && !CM.isScalarAfterVectorization(I, VF);
+      },
+      Range);
 
   // Even if the instruction is not marked as uniform, there are certain
   // intrinsic calls that can be effectively treated as such, so we check for
