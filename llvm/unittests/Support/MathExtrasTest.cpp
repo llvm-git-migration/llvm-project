@@ -189,8 +189,10 @@ TEST(MathExtras, AlignTo) {
   EXPECT_EQ(8u, alignTo(5, 8));
   EXPECT_EQ(24u, alignTo(17, 8));
   EXPECT_EQ(0u, alignTo(~0LL, 8));
-  EXPECT_EQ((uint64_t)std::numeric_limits<uint32_t>::max() + 1,
-            alignTo(std::numeric_limits<uint32_t>::max(), 2));
+#ifndef NDEBUG
+  EXPECT_DEATH(alignTo(std::numeric_limits<uint32_t>::max(), 2),
+               "alignTo would overflow");
+#endif
 
   EXPECT_EQ(7u, alignTo(5, 8, 7));
   EXPECT_EQ(17u, alignTo(17, 8, 1));
@@ -204,8 +206,10 @@ TEST(MathExtras, AlignToPowerOf2) {
   EXPECT_EQ(8u, alignToPowerOf2(5, 8));
   EXPECT_EQ(24u, alignToPowerOf2(17, 8));
   EXPECT_EQ(0u, alignToPowerOf2(~0LL, 8));
-  EXPECT_EQ((uint64_t)std::numeric_limits<uint32_t>::max() + 1,
-            alignToPowerOf2(std::numeric_limits<uint32_t>::max(), 2));
+#ifndef NDEBUG
+  EXPECT_DEATH(alignToPowerOf2(std::numeric_limits<uint32_t>::max(), 2),
+               "alignToPowerOf2 would overflow");
+#endif
 }
 
 TEST(MathExtras, AlignDown) {
@@ -459,15 +463,20 @@ TEST(MathExtras, DivideNearest) {
   EXPECT_EQ(divideNearest(14, 3), 5u);
   EXPECT_EQ(divideNearest(15, 3), 5u);
   EXPECT_EQ(divideNearest(0, 3), 0u);
-  EXPECT_EQ(divideNearest(std::numeric_limits<uint32_t>::max(), 2),
-            2147483648u);
+#ifndef NDEBUG
+  EXPECT_DEATH(divideNearest(std::numeric_limits<uint32_t>::max(), 2),
+               "divideNearest would overflow");
+#endif
 }
 
 TEST(MathExtras, DivideCeil) {
   EXPECT_EQ(divideCeil(14, 3), 5u);
   EXPECT_EQ(divideCeil(15, 3), 5u);
   EXPECT_EQ(divideCeil(0, 3), 0u);
-  EXPECT_EQ(divideCeil(std::numeric_limits<uint32_t>::max(), 2), 2147483648u);
+#ifndef NDEBUG
+  EXPECT_DEATH(divideCeil(std::numeric_limits<uint32_t>::max(), 2),
+               "alignTo would overflow");
+#endif
 
   EXPECT_EQ(divideCeilSigned(14, 3), 5);
   EXPECT_EQ(divideCeilSigned(15, 3), 5);
