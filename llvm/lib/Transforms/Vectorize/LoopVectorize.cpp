@@ -4803,7 +4803,8 @@ bool LoopVectorizationPlanner::isMoreProfitable(
     // different VFs we can use this to compare the total loop-body cost
     // expected after vectorization.
     if (CM.foldTailByMasking())
-      return VectorCost * divideCeil(MaxTripCount, VF);
+      // TODO: divideCeil will overflow, unless MaxTripCount is cast.
+      return VectorCost * divideCeil((uint64_t)MaxTripCount, VF);
     return VectorCost * (MaxTripCount / VF) + ScalarCost * (MaxTripCount % VF);
   };
 
