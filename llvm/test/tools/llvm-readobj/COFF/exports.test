@@ -2,6 +2,10 @@ RUN: llvm-readobj --coff-exports %p/Inputs/export-x86.dll | FileCheck %s -check-
 RUN: llvm-readobj --coff-exports %p/Inputs/export-x64.dll | FileCheck %s -check-prefixes=CHECK,CHECK-X64
 RUN: llvm-readobj --coff-exports %p/Inputs/export-arm.dll | FileCheck %s -check-prefixes=CHECK,CHECK-ARM
 
+RUN: llvm-readobj --coff-exports --coff-output-style=JSON --pretty-print %p/Inputs/export-x86.dll | FileCheck %s -check-prefixes=JSON,JSON-X86
+RUN: llvm-readobj --coff-exports --coff-output-style=JSON --pretty-print %p/Inputs/export-x64.dll | FileCheck %s -check-prefixes=JSON,JSON-X64
+RUN: llvm-readobj --coff-exports --coff-output-style=JSON --pretty-print %p/Inputs/export-arm.dll | FileCheck %s -check-prefixes=JSON,JSON-ARM
+
 CHECK: Export {
 CHECK:   Ordinal: 1
 CHECK:   Name: function
@@ -9,3 +13,11 @@ CHECK-X86:   RVA: 0x1000
 CHECK-X64:   RVA: 0x1000
 CHECK-ARM:   RVA: 0x1001
 CHECK: }
+
+JSON:    "Export": {
+JSON:      "Ordinal": 1,
+JSON:      "Name": "function",
+JSON-X86:      "RVA": 4096
+JSON-X64:      "RVA": 4096
+JSON-ARM:      "RVA": 4097
+JSON:    }
