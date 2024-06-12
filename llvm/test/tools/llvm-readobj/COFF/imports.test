@@ -1,5 +1,7 @@
 RUN: llvm-readobj --coff-imports %p/Inputs/imports.exe.coff-i386 | FileCheck -check-prefix=X86 %s
 RUN: llvm-readobj --coff-imports %p/Inputs/imports.exe.coff-x86-64 | FileCheck -check-prefix=X64  %s
+RUN: llvm-readobj --coff-imports --coff-output-style=JSON --pretty-print %p/Inputs/imports.exe.coff-i386 | FileCheck -check-prefix=X86-JSON %s
+RUN: llvm-readobj --coff-imports --coff-output-style=JSON --pretty-print %p/Inputs/imports.exe.coff-x86-64 --coff-output-style=JSON --pretty-print | FileCheck -check-prefixes=X64-JSON  %s
 
 X86:      Import {
 X86-NEXT:   Name: KERNEL32.dll
@@ -44,6 +46,91 @@ X86-NEXT:     Address: 0x401052
 X86-NEXT:   }
 X86-NEXT: }
 
+     X86-JSON:    "Import": {
+X86-JSON-NEXT:      "Name": "KERNEL32.dll",
+X86-JSON-NEXT:      "ImportLookupTableRVA": 8456,
+X86-JSON-NEXT:      "ImportAddressTableRVA": 8192,
+X86-JSON-NEXT:      "Symbols": [
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "ExitProcess",
+X86-JSON-NEXT:          "Ordinal": 337
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "GetProcAddress",
+X86-JSON-NEXT:          "Ordinal": 669
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "FreeLibrary",
+X86-JSON-NEXT:          "Ordinal": 414
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "GetLastError",
+X86-JSON-NEXT:          "Ordinal": 592
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "RaiseException",
+X86-JSON-NEXT:          "Ordinal": 1087
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "LoadLibraryExA",
+X86-JSON-NEXT:          "Ordinal": 934
+X86-JSON-NEXT:        }
+X86-JSON-NEXT:      ]
+X86-JSON-NEXT:    },
+X86-JSON-NEXT:    "Import": {
+X86-JSON-NEXT:      "Name": "USER32.dll",
+X86-JSON-NEXT:      "ImportLookupTableRVA": 8484,
+X86-JSON-NEXT:      "ImportAddressTableRVA": 8220,
+X86-JSON-NEXT:      "Symbols": [
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "MessageBoxA",
+X86-JSON-NEXT:          "Ordinal": 582
+X86-JSON-NEXT:        }
+X86-JSON-NEXT:      ]
+X86-JSON-NEXT:    },
+X86-JSON-NEXT:    "Import": {
+X86-JSON-NEXT:      "Name": "mydll.dll",
+X86-JSON-NEXT:      "ImportLookupTableRVA": 8492,
+X86-JSON-NEXT:      "ImportAddressTableRVA": 8228,
+X86-JSON-NEXT:      "Symbols": [
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "Func1",
+X86-JSON-NEXT:          "Ordinal": 0
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "Func2",
+X86-JSON-NEXT:          "Ordinal": 1
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "",
+X86-JSON-NEXT:          "Ordinal": 3
+X86-JSON-NEXT:        }
+X86-JSON-NEXT:      ]
+X86-JSON-NEXT:    },
+X86-JSON-NEXT:    "DelayImport": {
+X86-JSON-NEXT:      "Name": "lazyload.dll",
+X86-JSON-NEXT:      "Attributes": 1,
+X86-JSON-NEXT:      "ModuleHandle": 12316,
+X86-JSON-NEXT:      "ImportAddressTable": 12304,
+X86-JSON-NEXT:      "ImportNameTable": 8336,
+X86-JSON-NEXT:      "BoundDelayImportTable": 8364,
+X86-JSON-NEXT:      "UnloadDelayImportTable": 0,
+X86-JSON-NEXT:      "Symbols": [
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "Func5",
+X86-JSON-NEXT:          "Ordinal": 0,
+X86-JSON-NEXT:          "Address": 4198515
+X86-JSON-NEXT:        },
+X86-JSON-NEXT:        {
+X86-JSON-NEXT:          "Name": "Func4",
+X86-JSON-NEXT:          "Ordinal": 0,
+X86-JSON-NEXT:          "Address": 4198482
+X86-JSON-NEXT:        }
+X86-JSON-NEXT:      ]
+X86-JSON-NEXT:    }
+X86-JSON-NEXT:  }
+
+
 X64:      Import {
 X64-NEXT:   Name: KERNEL32.dll
 X64-NEXT:   ImportLookupTableRVA: 0x2170
@@ -86,3 +173,87 @@ X64-NEXT:     Symbol: Func4 (0)
 X64-NEXT:     Address: 0x140001066
 X64-NEXT:   }
 X64-NEXT: }
+
+     X64-JSON:    "Import": {
+X64-JSON-NEXT:      "Name": "KERNEL32.dll",
+X64-JSON-NEXT:      "ImportLookupTableRVA": 8560,
+X64-JSON-NEXT:      "ImportAddressTableRVA": 8192,
+X64-JSON-NEXT:      "Symbols": [
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "ExitProcess",
+X64-JSON-NEXT:          "Ordinal": 343
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "GetProcAddress",
+X64-JSON-NEXT:          "Ordinal": 676
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "FreeLibrary",
+X64-JSON-NEXT:          "Ordinal": 420
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "GetLastError",
+X64-JSON-NEXT:          "Ordinal": 598
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "RaiseException",
+X64-JSON-NEXT:          "Ordinal": 1091
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "LoadLibraryExA",
+X64-JSON-NEXT:          "Ordinal": 937
+X64-JSON-NEXT:        }
+X64-JSON-NEXT:      ]
+X64-JSON-NEXT:    },
+X64-JSON-NEXT:    "Import": {
+X64-JSON-NEXT:      "Name": "USER32.dll",
+X64-JSON-NEXT:      "ImportLookupTableRVA": 8616,
+X64-JSON-NEXT:      "ImportAddressTableRVA": 8248,
+X64-JSON-NEXT:      "Symbols": [
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "MessageBoxA",
+X64-JSON-NEXT:          "Ordinal": 586
+X64-JSON-NEXT:        }
+X64-JSON-NEXT:      ]
+X64-JSON-NEXT:    },
+X64-JSON-NEXT:    "Import": {
+X64-JSON-NEXT:      "Name": "mydll.dll",
+X64-JSON-NEXT:      "ImportLookupTableRVA": 8632,
+X64-JSON-NEXT:      "ImportAddressTableRVA": 8264,
+X64-JSON-NEXT:      "Symbols": [
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "Func1",
+X64-JSON-NEXT:          "Ordinal": 0
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "Func2",
+X64-JSON-NEXT:          "Ordinal": 1
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "",
+X64-JSON-NEXT:          "Ordinal": 3
+X64-JSON-NEXT:        }
+X64-JSON-NEXT:      ]
+X64-JSON-NEXT:    },
+X64-JSON-NEXT:    "DelayImport": {
+X64-JSON-NEXT:      "Name": "lazyload.dll",
+X64-JSON-NEXT:      "Attributes": 1,
+X64-JSON-NEXT:      "ModuleHandle": 12328,
+X64-JSON-NEXT:      "ImportAddressTable": 12304,
+X64-JSON-NEXT:      "ImportNameTable": 8416,
+X64-JSON-NEXT:      "BoundDelayImportTable": 8456,
+X64-JSON-NEXT:      "UnloadDelayImportTable": 0,
+X64-JSON-NEXT:      "Symbols": [
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "Func5",
+X64-JSON-NEXT:          "Ordinal": 0,
+X64-JSON-NEXT:          "Address": 5368713457
+X64-JSON-NEXT:        },
+X64-JSON-NEXT:        {
+X64-JSON-NEXT:          "Name": "Func4",
+X64-JSON-NEXT:          "Ordinal": 0,
+X64-JSON-NEXT:          "Address": 5368713318
+X64-JSON-NEXT:        }
+X64-JSON-NEXT:      ]
+X64-JSON-NEXT:    }
+X64-JSON-NEXT:  }

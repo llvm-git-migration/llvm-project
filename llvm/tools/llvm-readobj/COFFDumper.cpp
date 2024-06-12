@@ -108,8 +108,13 @@ public:
   void printStackMap() const override;
   void printAddrsig() override;
   void printCGProfile() override;
+  virtual void
+  printImportedSymbols(iterator_range<imported_symbol_iterator> Range);
+  virtual void
+  printDelayImportedSymbols(const DelayImportDirectoryEntryRef &I,
+                            iterator_range<imported_symbol_iterator> Range);
 
-private:
+protected:
   StringRef getSymbolName(uint32_t Index);
   void printSymbols(bool ExtraSymInfo) override;
   void printDynamicSymbols() override;
@@ -174,10 +179,6 @@ private:
   std::error_code resolveSymbolName(const coff_section *Section,
                                     StringRef SectionContents,
                                     const void *RelocPtr, StringRef &Name);
-  void printImportedSymbols(iterator_range<imported_symbol_iterator> Range);
-  void printDelayImportedSymbols(
-      const DelayImportDirectoryEntryRef &I,
-      iterator_range<imported_symbol_iterator> Range);
 
   typedef DenseMap<const coff_section*, std::vector<RelocationRef> > RelocMapTy;
 
@@ -250,6 +251,11 @@ public:
   void printFileSummary(StringRef FileStr, ObjectFile &Obj,
                         ArrayRef<std::string> InputFilenames,
                         const Archive *A) override;
+  void
+  printImportedSymbols(iterator_range<imported_symbol_iterator> Range) override;
+  void printDelayImportedSymbols(
+      const DelayImportDirectoryEntryRef &I,
+      iterator_range<imported_symbol_iterator> Range) override;
 
 private:
   std::unique_ptr<DictScope> FileScope;
@@ -2263,5 +2269,50 @@ void JSONCOFFDumper::printFileSummary(StringRef FileStr, ObjectFile &Obj,
   this->W.printString("AddressSize",
                       std::string(formatv("{0}", 8 * Obj.getBytesInAddress())));
   this->printLoadName();
+}
+
+void JSONCOFFDumper::printImportedSymbols(
+    iterator_range<imported_symbol_iterator> Range) {
+
+  ListScope SymbolsScope(W, "Symbols");
+  for (const ImportedSymbolRef &I : Range) {
+    DictScope SymbolScope(W);
+    StringRef Sym;
+    if (Error E = I.getSymbolName(Sym))
+      reportError(std::move(E), Obj->getFileName());
+
+    uint16_t Ordinal;
+    if (Error E = I.getOrdinal(Ordinal))
+      reportError(std::move(E), Obj->getFileName());
+
+    W.printString("Name", Sym);
+    W.printNumber("Ordinal", Ordinal);
+  }
+}
+
+void JSONCOFFDumper::printDelayImportedSymbols(
+    const DelayImportDirectoryEntryRef &I,
+    iterator_range<imported_symbol_iterator> Range) {
+  int Index = 0;
+
+  ListScope SymbolsScope(W, "Symbols");
+  for (const ImportedSymbolRef &S : Range) {
+    DictScope SymbolScope(W);
+    StringRef Sym;
+    if (Error E = S.getSymbolName(Sym))
+      reportError(std::move(E), Obj->getFileName());
+
+    uint16_t Ordinal;
+    if (Error E = S.getOrdinal(Ordinal))
+      reportError(std::move(E), Obj->getFileName());
+
+    uint64_t Addr;
+    if (Error E = I.getImportAddress(Index++, Addr))
+      reportError(std::move(E), Obj->getFileName());
+
+    W.printString("Name", Sym);
+    W.printNumber("Ordinal", Ordinal);
+    W.printHex("Address", Addr);
+  }
 }
 }
