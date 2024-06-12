@@ -13,7 +13,7 @@ define void @vmp_test_vmp(ptr addrspace(3) noalias %in1, i32 %y.0, ptr addrspace
 ; CHECK:       one.iter.loop.exit:
 ; CHECK-NEXT:    [[MUL_LE:%.*]] = mul nsw i32 [[Y_0:%.*]], 48
 ; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr addrspace(3) [[IN1:%.*]], i32 [[MUL_LE]]
-; CHECK-NEXT:    [[WIDE_MASKED_LOAD_LE:%.*]] = tail call <4 x i16> @llvm.masked.load.v4i16.p3(ptr addrspace(3) [[TMP1]], i32 2, <4 x i1> <i1 true, i1 false, i1 true, i1 false>, <4 x i16> <i16 0, i16 poison, i16 0, i16 poison>)
+; CHECK-NEXT:    [[WIDE_MASKED_LOAD_LE:%.*]] = tail call <4 x i16> @llvm.masked.load.v4i16.p3(ptr addrspace(3) [[TMP1]], i32 2, <4 x i1> <i1 true, i1 false, i1 true, i1 false>, <4 x i16> <i16 0, i16 poison, i16 0, i16 poison>), !alias.scope [[META0:![0-9]+]], !noalias [[META0]]
 ; CHECK-NEXT:    [[TMP2:%.*]] = tail call i16 @llvm.vector.reduce.add.v4i16(<4 x i16> [[WIDE_MASKED_LOAD_LE]])
 ; CHECK-NEXT:    store i16 [[TMP2]], ptr [[SUM1_0_LCSSA_OUT:%.*]], align 4
 ; CHECK-NEXT:    ret void
