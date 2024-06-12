@@ -189,8 +189,27 @@ TEST(MathExtras, AlignTo) {
   EXPECT_EQ(8u, alignTo(5, 8));
   EXPECT_EQ(24u, alignTo(17, 8));
   EXPECT_EQ(0u, alignTo(~0LL, 8));
-  EXPECT_EQ(static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) + 1,
-            alignTo(std::numeric_limits<uint32_t>::max(), 2));
+  EXPECT_EQ(8u, alignTo(5ULL, 8ULL));
+  EXPECT_EQ(254u,
+            alignTo(static_cast<uint8_t>(200), static_cast<uint8_t>(127)));
+#ifndef NDEBUG
+  EXPECT_DEATH(alignTo(static_cast<uint8_t>(200), static_cast<uint8_t>(128)),
+               "alignTo would overflow");
+  EXPECT_DEATH(alignTo(std::numeric_limits<uint32_t>::max(), 2),
+               "alignTo would overflow");
+#endif
+
+  EXPECT_EQ(8u, alignTo<8>(5));
+  EXPECT_EQ(24u, alignTo<8>(17));
+  EXPECT_EQ(0u, alignTo<8>(~0LL));
+  EXPECT_EQ(254u,
+            alignTo<static_cast<uint8_t>(127)>(static_cast<uint8_t>(200)));
+#ifndef NDEBUG
+  EXPECT_DEATH(alignTo<static_cast<uint8_t>(128)>(static_cast<uint8_t>(200)),
+               "alignTo would overflow");
+  EXPECT_DEATH(alignTo<2>(std::numeric_limits<uint32_t>::max()),
+               "alignTo would overflow");
+#endif
 
   EXPECT_EQ(7u, alignTo(5, 8, 7));
   EXPECT_EQ(17u, alignTo(17, 8, 1));
@@ -198,14 +217,27 @@ TEST(MathExtras, AlignTo) {
   EXPECT_EQ(552u, alignTo(321, 255, 42));
   EXPECT_EQ(std::numeric_limits<uint32_t>::max(),
             alignTo(std::numeric_limits<uint32_t>::max(), 2, 1));
+
+#ifndef NDEBUG
+  EXPECT_DEATH(alignTo(std::numeric_limits<uint32_t>::max(), 4, 2),
+               "alignTo would overflow");
+#endif
 }
 
 TEST(MathExtras, AlignToPowerOf2) {
   EXPECT_EQ(8u, alignToPowerOf2(5, 8));
   EXPECT_EQ(24u, alignToPowerOf2(17, 8));
   EXPECT_EQ(0u, alignToPowerOf2(~0LL, 8));
-  EXPECT_EQ(static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) + 1,
-            alignToPowerOf2(std::numeric_limits<uint32_t>::max(), 2));
+  EXPECT_EQ(8u, alignToPowerOf2(5ULL, 8ULL));
+  EXPECT_EQ(240u, alignToPowerOf2(static_cast<uint8_t>(240),
+                                  static_cast<uint8_t>(16)));
+#ifndef NDEBUG
+  EXPECT_DEATH(
+      alignToPowerOf2(static_cast<uint8_t>(200), static_cast<uint8_t>(128)),
+      "alignToPowerOf2 would overflow");
+  EXPECT_DEATH(alignToPowerOf2(std::numeric_limits<uint32_t>::max(), 2),
+               "alignToPowerOf2 would overflow");
+#endif
 }
 
 TEST(MathExtras, AlignDown) {
@@ -484,6 +516,7 @@ TEST(MathExtras, DivideCeil) {
   EXPECT_EQ(divideCeil(3, 1), 3u);
   EXPECT_EQ(divideCeil(3, 6), 1u);
   EXPECT_EQ(divideCeil(3, 7), 1u);
+  EXPECT_EQ(divideCeil(3ULL, 7ULL), 1u);
   EXPECT_EQ(divideCeil(std::numeric_limits<uint32_t>::max(), 2),
             std::numeric_limits<uint32_t>::max() / 2 + 1);
   EXPECT_EQ(divideCeil(std::numeric_limits<uint64_t>::max(), 2),
