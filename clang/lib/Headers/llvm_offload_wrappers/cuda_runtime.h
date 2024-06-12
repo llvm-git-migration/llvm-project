@@ -11,6 +11,7 @@
 #define __CUDA_RUNTIME_API__
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 
 extern "C" {
@@ -21,6 +22,8 @@ int omp_target_memcpy(void *Dst, const void *Src, size_t Length,
                       size_t DstOffset, size_t SrcOffset, int DstDevice,
                       int SrcDevice);
 void *omp_target_memset(void *Ptr, int C, size_t N, int DeviceNum);
+int __tgt_target_synchronize_async_info_queue(void *Loc, int64_t DeviceNum,
+                                              void *AsyncInfoQueue);
 }
 
 // TODO: There are many fields missing in this enumeration.
@@ -55,7 +58,15 @@ inline cudaError_t cudaGetLastError() {
 // Returns the last error that has been produced without reseting it.
 inline cudaError_t cudaPeekAtLastError() { return __cudaomp_last_error; }
 
+inline cudaError_t cudaDeviceSynchronize() {
+  int DeviceNum = 0;
+  return __cudaomp_last_error =
+             (cudaError_t)__tgt_target_synchronize_async_info_queue(
+                 /*Loc=*/nullptr, DeviceNum, /*AsyncInfoQueue=*/nullptr);
+}
+
 inline cudaError_t __cudaMalloc(void **devPtr, size_t size) {
+  cudaDeviceSynchronize();
   int DeviceNum = 0;
   *devPtr = omp_target_alloc(size, DeviceNum);
   if (*devPtr == NULL)
@@ -69,6 +80,7 @@ template <class T> cudaError_t cudaMalloc(T **devPtr, size_t size) {
 }
 
 inline cudaError_t __cudaFree(void *devPtr) {
+  cudaDeviceSynchronize();
   int DeviceNum = 0;
   omp_target_free(devPtr, DeviceNum);
   return __cudaomp_last_error = cudaSuccess;
@@ -118,12 +130,8 @@ inline cudaError_t cudaMemset(T *devPtr, int value, size_t count) {
   return __cudaMemset((void *)devPtr, value, count);
 }
 
-inline cudaError_t cudaDeviceSynchronize() {
-  // TODO: not implemented, not async yet.
-  return __cudaomp_last_error = cudaSuccess;
-}
-
 inline cudaError_t cudaDeviceReset(void) {
+  cudaDeviceSynchronize();
   // TODO: not implemented.
   return __cudaomp_last_error = cudaSuccess;
 }

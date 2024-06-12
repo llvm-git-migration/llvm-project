@@ -32,9 +32,10 @@ int main(int argc, char **argv) {
   printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
   // CHECK: Ptr [[Ptr:0x.*]], *Ptr: 0
   kernel<<<1, 1>>>(Ptr, DevPtr, 42);
-  printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
   // CHECK: Ptr [[Ptr]], *Ptr: 42
+  // Implicit sync via cudaFree.
   Err = cudaFree(DevPtr);
+  printf("Ptr %p, *Ptr: %i\n", Ptr, *Ptr);
   if (Err != cudaSuccess)
     return -1;
   llvm_omp_target_free_shared(Ptr, DevNo);
