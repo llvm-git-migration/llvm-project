@@ -87,6 +87,23 @@ symbols:         []
 # X86-64-NEXT:   ]
 # X86-64-NEXT: }
 
+# RUN: llvm-readobj --coff-tls-directory --coff-output-style=JSON --pretty-print %t.64.exe | FileCheck %s --check-prefix JSON-X64 
+
+# JSON-X64:       "TLSDirectory": {
+# JSON-X64-NEXT:      "StartAddressOfRawData": 5368725504,
+# JSON-X64-NEXT:      "EndAddressOfRawData": 5368725512,
+# JSON-X64-NEXT:      "AddressOfIndex": 5368717312,
+# JSON-X64-NEXT:      "AddressOfCallBacks": 0,
+# JSON-X64-NEXT:      "SizeOfZeroFill": 0,
+# JSON-X64-NEXT:      "Characteristics": {
+# JSON-X64-NEXT:        "Value": 3145728,
+# JSON-X64-NEXT:        "Flags": [
+# JSON-X64-NEXT:          {
+# JSON-X64-NEXT:            "Name": "IMAGE_SCN_ALIGN_4BYTES",
+# JSON-X64-NEXT:            "Value": 3145728
+# JSON-X64-NEXT:          }
+# JSON-X64-NEXT:        ]
+# JSON-X64-NEXT:      }
 
 ## Test that the output of --coff-tls-directory errors on malformed input.
 
