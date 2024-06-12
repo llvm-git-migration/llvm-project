@@ -286,6 +286,9 @@ Changes to the LLVM tools
   now has a map for the mapped files. (`#92835
   <https://github.com/llvm/llvm-project/pull/92835>`).
 
+* llvm-readobj now supports ``--coff-output-style=<value>``. Valid options are ``LLVM``,
+  and ``JSON``. (`#95074 <https://github.com/llvm/llvm-project/pull/95074>`)
+
 Changes to LLDB
 ---------------------------------
 
