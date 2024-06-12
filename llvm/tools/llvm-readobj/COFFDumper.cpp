@@ -242,12 +242,22 @@ private:
   StringRef SectionContents;
 };
 
+class JSONCOFFDumper : public COFFDumper {
+public:
+  JSONCOFFDumper(const object::COFFObjectFile *ObjF, ScopedPrinter &Writer)
+      : COFFDumper(ObjF, Writer) {}
+};
+
 } // end namespace
 
 namespace llvm {
 
 std::unique_ptr<ObjDumper> createCOFFDumper(const object::COFFObjectFile &Obj,
                                             ScopedPrinter &Writer) {
+  if (opts::Output == opts::JSON) {
+    return std::make_unique<JSONCOFFDumper>(&Obj, Writer);
+  }
+
   return std::make_unique<COFFDumper>(&Obj, Writer);
 }
 
