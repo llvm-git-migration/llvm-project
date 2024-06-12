@@ -95,6 +95,9 @@ public:
                           unsigned Flags) const;
   bool legalizeFExp(MachineInstr &MI, MachineIRBuilder &B) const;
   bool legalizeFPow(MachineInstr &MI, MachineIRBuilder &B) const;
+  bool legalizeFPowI(LegalizerHelper &Helper, MachineInstr &MI,
+                     MachineIRBuilder &B,
+                     LostDebugLocObserver &LocObserver) const;
   bool legalizeFFloor(MachineInstr &MI, MachineRegisterInfo &MRI,
                       MachineIRBuilder &B) const;
 

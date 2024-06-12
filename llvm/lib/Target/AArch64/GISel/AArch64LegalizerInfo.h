@@ -56,6 +56,8 @@ private:
                            MachineIRBuilder &MIRBuilder,
                            GISelChangeObserver &Observer,
                            LegalizerHelper &Helper) const;
+  bool legalizeFPowI(MachineInstr &MI, LostDebugLocObserver &Observer,
+                     LegalizerHelper &Helper) const;
   bool legalizeCTPOP(MachineInstr &MI, MachineRegisterInfo &MRI,
                      LegalizerHelper &Helper) const;
   bool legalizeAtomicCmpxchg128(MachineInstr &MI, MachineRegisterInfo &MRI,

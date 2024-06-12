@@ -274,10 +274,8 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
       // Regardless of FP16 support, widen 16-bit elements to 32-bits.
       .minScalar(0, s32)
       .libcallFor({s32, s64});
-  getActionDefinitionsBuilder(G_FPOWI)
-      .scalarize(0)
-      .minScalar(0, s32)
-      .libcallFor({{s32, s32}, {s64, s32}});
+  getActionDefinitionsBuilder(G_FPOWI).scalarize(0).minScalar(0, s32).customFor(
+      {{s32, s32}, {s64, s32}});
 
   getActionDefinitionsBuilder(G_INSERT)
       .legalIf(all(typeInSet(0, {s32, s64, p0}),
@@ -1263,6 +1261,8 @@ bool AArch64LegalizerInfo::legalizeCustom(
   case TargetOpcode::G_FSHL:
   case TargetOpcode::G_FSHR:
     return legalizeFunnelShift(MI, MRI, MIRBuilder, Observer, Helper);
+  case TargetOpcode::G_FPOWI:
+    return legalizeFPowI(MI, LocObserver, Helper);
   case TargetOpcode::G_ROTR:
     return legalizeRotate(MI, MRI, Helper);
   case TargetOpcode::G_CTPOP:
@@ -1342,6 +1342,15 @@ bool AArch64LegalizerInfo::legalizeFunnelShift(MachineInstr &MI,
     MI.eraseFromParent();
   }
   return true;
+}
+
+bool AArch64LegalizerInfo::legalizeFPowI(MachineInstr &MI,
+                                         LostDebugLocObserver &Observer,
+                                         LegalizerHelper &Helper) const {
+  if (Helper.lowerFPOWI(MI) == LegalizerHelper::Legalized)
+    return true;
+
+  return Helper.libcall(MI, Observer) == LegalizerHelper::Legalized;
 }
 
 bool AArch64LegalizerInfo::legalizeICMP(MachineInstr &MI,

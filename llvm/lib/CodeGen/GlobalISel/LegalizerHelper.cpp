@@ -7142,14 +7142,37 @@ LegalizerHelper::lowerFPTRUNC(MachineInstr &MI) {
   return UnableToLegalize;
 }
 
-// TODO: If RHS is a constant SelectionDAGBuilder expands this into a
-// multiplication tree.
 LegalizerHelper::LegalizeResult LegalizerHelper::lowerFPOWI(MachineInstr &MI) {
-  auto [Dst, Src0, Src1] = MI.getFirst3Regs();
+  auto [Dst, Base, Exp] = MI.getFirst3Regs();
   LLT Ty = MRI.getType(Dst);
 
-  auto CvtSrc1 = MIRBuilder.buildSITOFP(Ty, Src1);
-  MIRBuilder.buildFPow(Dst, Src0, CvtSrc1, MI.getFlags());
+  MachineRegisterInfo &MRI = *MIRBuilder.getMRI();
+  std::optional<int64_t> ConstantExpValue = getIConstantVRegSExtVal(Exp, MRI);
+
+  if (!ConstantExpValue)
+    return UnableToLegalize;
+
+  int64_t OriginalExprVal = *ConstantExpValue;
+  int64_t ExpVal = OriginalExprVal;
+
+  if (ExpVal == 0) {
+    MIRBuilder.buildFConstant(Dst, 1.0);
+    MI.removeFromParent();
+    return Legalized;
+  }
+
+  if (ExpVal < 0)
+    ExpVal = -ExpVal;
+
+  auto Res = MIRBuilder.buildCopy(Ty, Base);
+  while (--ExpVal > 0)
+    Res = MIRBuilder.buildFMul(Ty, Res, Base);
+
+  // If the original was negative, invert the result, producing 1/(x*x*x).
+  if (OriginalExprVal < 0)
+    Res = MIRBuilder.buildFDiv(Ty, MIRBuilder.buildFConstant(Ty, 1.0), Res);
+
+  MIRBuilder.buildCopy(Dst, Res);
   MI.eraseFromParent();
   return Legalized;
 }
