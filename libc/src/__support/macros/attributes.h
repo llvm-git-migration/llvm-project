@@ -30,4 +30,10 @@
 #define LIBC_THREAD_LOCAL thread_local
 #endif
 
+#if __cplusplus >= 202002L
+#define LIBC_CONSTINIT constinit
+#else
+#define LIBC_CONSTINIT __attribute__((__require_constant_initialization__))
+#endif
+
 #endif // LLVM_LIBC_SRC___SUPPORT_MACROS_ATTRIBUTES_H
