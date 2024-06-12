@@ -747,6 +747,13 @@ class EtfFoo {
     // expected-warning {{'exclusive_trylock_function' attribute without capability arguments refers to 'this', but 'EtfFoo' isn't annotated with 'capability' or 'scoped_lockable' attribute}}
 };
 
+// It does not make sense to annotate a constructor as an exclusive trylock
+// function. See <https://github.com/llvm/llvm-project/issues/92408>.
+class EtfConstructor {
+  EtfConstructor() EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
+  // expected-warning {{'exclusive_trylock_function' attribute only applies to functions}}
+};
+
 class EXCLUSIVE_TRYLOCK_FUNCTION(1) EtfTestClass { // \
   // expected-warning {{'exclusive_trylock_function' attribute only applies to functions}}
 };
