@@ -13,6 +13,7 @@
 #include "src/__support/CPP/cstddef.h"
 #include "src/__support/CPP/span.h"
 #include "src/__support/fixedvector.h"
+#include "src/string/memcpy.h"
 
 namespace LIBC_NAMESPACE {
 
@@ -92,19 +93,14 @@ bool FreeList<NUM_BUCKETS>::add_chunk(span<cpp::byte> chunk) {
   if (chunk.size() < sizeof(FreeListNode))
     return false;
 
-  union {
-    FreeListNode *node;
-    cpp::byte *bytes;
-  } aliased;
-
-  aliased.bytes = chunk.data();
-
+  // Add it to the correct list.
   size_t chunk_ptr = find_chunk_ptr_for_size(chunk.size(), false);
 
-  // Add it to the correct list.
-  aliased.node->size = chunk.size();
-  aliased.node->next = chunks_[chunk_ptr];
-  chunks_[chunk_ptr] = aliased.node;
+  FreeListNode node;
+  node.next = chunks_[chunk_ptr];
+  node.size = chunk.size();
+  LIBC_NAMESPACE::memcpy(chunk.data(), &node, sizeof(node));
+  chunks_[chunk_ptr] = reinterpret_cast<FreeListNode *>(chunk.data());
 
   return true;
 }
@@ -123,17 +119,13 @@ span<cpp::byte> FreeList<NUM_BUCKETS>::find_chunk(size_t size) const {
 
   // Now iterate up the buckets, walking each list to find a good candidate
   for (size_t i = chunk_ptr; i < chunks_.size(); i++) {
-    union {
-      FreeListNode *node;
-      cpp::byte *data;
-    } aliased;
-    aliased.node = chunks_[static_cast<unsigned short>(i)];
+    FreeListNode *node = chunks_[static_cast<unsigned short>(i)];
 
-    while (aliased.node != nullptr) {
-      if (aliased.node->size >= size)
-        return span<cpp::byte>(aliased.data, aliased.node->size);
+    while (node != nullptr) {
+      if (node->size >= size)
+        return span<cpp::byte>(reinterpret_cast<cpp::byte *>(node), node->size);
 
-      aliased.node = aliased.node->next;
+      node = node->next;
     }
   }
 
@@ -150,30 +142,29 @@ bool FreeList<NUM_BUCKETS>::remove_chunk(span<cpp::byte> chunk) {
   union {
     FreeListNode *node;
     cpp::byte *data;
-  } aliased, aliased_next;
+  } aliased_next;
 
   // Check head first.
   if (chunks_[chunk_ptr] == nullptr)
     return false;
 
-  aliased.node = chunks_[chunk_ptr];
-  if (aliased.data == chunk.data()) {
-    chunks_[chunk_ptr] = aliased.node->next;
+  FreeListNode *node = chunks_[chunk_ptr];
+  if (reinterpret_cast<cpp::byte *>(node) == chunk.data()) {
+    chunks_[chunk_ptr] = node->next;
     return true;
   }
 
   // No? Walk the nodes.
-  aliased.node = chunks_[chunk_ptr];
+  node = chunks_[chunk_ptr];
 
-  while (aliased.node->next != nullptr) {
-    aliased_next.node = aliased.node->next;
-    if (aliased_next.data == chunk.data()) {
+  while (node->next != nullptr) {
+    if (reinterpret_cast<cpp::byte *>(node->next) == chunk.data()) {
       // Found it, remove this node out of the chain
-      aliased.node->next = aliased_next.node->next;
+      node->next = node->next->next;
       return true;
     }
 
-    aliased.node = aliased.node->next;
+    node = node->next;
   }
 
   return false;

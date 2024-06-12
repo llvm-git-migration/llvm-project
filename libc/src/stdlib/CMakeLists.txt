@@ -401,6 +401,7 @@ else()
       libc.src.__support.CPP.cstddef
       libc.src.__support.CPP.array
       libc.src.__support.CPP.span
+      libc.src.string.memcpy
   )
   add_entrypoint_external(
     malloc
