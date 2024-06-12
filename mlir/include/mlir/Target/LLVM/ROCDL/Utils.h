@@ -14,6 +14,7 @@
 #define MLIR_TARGET_LLVM_ROCDL_UTILS_H
 
 #include "mlir/Dialect/GPU/IR/CompilationInterfaces.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/LLVMIR/ROCDLDialect.h"
 #include "mlir/Target/LLVM/ModuleToObject.h"
 
@@ -85,6 +86,12 @@ protected:
   /// List of LLVM bitcode files to link to.
   SmallVector<std::string> fileList;
 };
+
+/// Returns a `#gpu.kernel_table` containing kernel metadata for each of the
+/// kernels in `gpuModule`. If `elfData` is valid, then the `amdhsa.kernels` ELF
+/// metadata will be added to the `#gpu.kernel_table`.
+gpu::KernelTableAttr getAMDHSAKernelsMetadata(Operation *gpuModule,
+                                              ArrayRef<char> elfData = {});
 } // namespace ROCDL
 } // namespace mlir
 
