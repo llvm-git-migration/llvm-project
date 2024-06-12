@@ -1,0 +1,94 @@
+# RUN: rm -rf %t.dir
+# RUN: mkdir -p %t.dir
+# RUN: yaml2obj %s -o %t.dir/obj
+
+## Test outputting file summary for a single file.
+# RUN: llvm-readobj --coff-output-style=JSON --pretty-print %t.dir/obj | \
+# RUN:   FileCheck %s --check-prefix=SINGLE-JSON \
+# RUN:     --match-full-lines --strict-whitespace  --implicit-check-not={{.}}
+
+#      SINGLE-JSON:[
+# SINGLE-JSON-NEXT:  {
+# SINGLE-JSON-NEXT:    "FileSummary": {
+# SINGLE-JSON-NEXT:      "File": "{{.*}}/obj",
+# SINGLE-JSON-NEXT:      "Format": "COFF-x86-64",
+# SINGLE-JSON-NEXT:      "Arch": "x86_64",
+# SINGLE-JSON-NEXT:      "AddressSize": "64"
+# SINGLE-JSON-NEXT:    }
+# SINGLE-JSON-NEXT:  }
+# SINGLE-JSON-NEXT:]
+
+## Test outputting file summary for multiple files.
+# RUN: llvm-readobj --coff-output-style=JSON --pretty-print %t.dir/obj %t.dir/obj | \
+# RUN:   FileCheck %s --check-prefix=MULTI-JSON \
+# RUN:     --match-full-lines --strict-whitespace --implicit-check-not={{.}}
+
+#      MULTI-JSON:[
+# MULTI-JSON-NEXT:  {
+# MULTI-JSON-NEXT:    "FileSummary": {
+# MULTI-JSON-NEXT:      "File": "{{.*}}/obj",
+# MULTI-JSON-NEXT:      "Format": "COFF-x86-64",
+# MULTI-JSON-NEXT:      "Arch": "x86_64",
+# MULTI-JSON-NEXT:      "AddressSize": "64"
+# MULTI-JSON-NEXT:    }
+# MULTI-JSON-NEXT:  },
+# MULTI-JSON-NEXT:  {
+# MULTI-JSON-NEXT:    "FileSummary": {
+# MULTI-JSON-NEXT:      "File": "{{.*}}/obj",
+# MULTI-JSON-NEXT:      "Format": "COFF-x86-64",
+# MULTI-JSON-NEXT:      "Arch": "x86_64",
+# MULTI-JSON-NEXT:      "AddressSize": "64"
+# MULTI-JSON-NEXT:    }
+# MULTI-JSON-NEXT:  }
+# MULTI-JSON-NEXT:]
+
+## Test outputting file summary for an archive with a single file.
+# RUN: rm -f %t.archive-single
+# RUN: llvm-ar rc %t.archive-single %t.dir/obj
+# RUN: llvm-readobj --coff-output-style=JSON --pretty-print %t.archive-single | \
+# RUN:   FileCheck %s --check-prefix=ARCH-SINGLE-JSON \
+# RUN:     --match-full-lines --strict-whitespace --implicit-check-not={{.}}
+
+#      ARCH-SINGLE-JSON:[
+# ARCH-SINGLE-JSON-NEXT:  {
+# ARCH-SINGLE-JSON-NEXT:    "FileSummary": {
+# ARCH-SINGLE-JSON-NEXT:      "File": "{{.*}}.archive-single(obj)",
+# ARCH-SINGLE-JSON-NEXT:      "Format": "COFF-x86-64",
+# ARCH-SINGLE-JSON-NEXT:      "Arch": "x86_64",
+# ARCH-SINGLE-JSON-NEXT:      "AddressSize": "64"
+# ARCH-SINGLE-JSON-NEXT:    }
+# ARCH-SINGLE-JSON-NEXT:  }
+# ARCH-SINGLE-JSON-NEXT:]
+
+## Test outputting file summary for an archive with multiple files.
+# RUN: rm -f %t.archive-multiple
+# RUN: llvm-ar rc %t.archive-multiple %t.dir/obj %t.dir/obj
+# RUN: llvm-readobj --coff-output-style=JSON --pretty-print %t.archive-multiple | \
+# RUN:   FileCheck %s --check-prefix=ARCH-MULTI-JSON \
+# RUN:     --match-full-lines --strict-whitespace --implicit-check-not={{.}}
+
+#      ARCH-MULTI-JSON:[
+# ARCH-MULTI-JSON-NEXT:  {
+# ARCH-MULTI-JSON-NEXT:    "FileSummary": {
+# ARCH-MULTI-JSON-NEXT:      "File": "{{.*}}.archive-multiple(obj)",
+# ARCH-MULTI-JSON-NEXT:      "Format": "COFF-x86-64",
+# ARCH-MULTI-JSON-NEXT:      "Arch": "x86_64",
+# ARCH-MULTI-JSON-NEXT:      "AddressSize": "64"
+# ARCH-MULTI-JSON-NEXT:    }
+# ARCH-MULTI-JSON-NEXT:  },
+# ARCH-MULTI-JSON-NEXT:  {
+# ARCH-MULTI-JSON-NEXT:    "FileSummary": {
+# ARCH-MULTI-JSON-NEXT:      "File": "{{.*}}.archive-multiple(obj)",
+# ARCH-MULTI-JSON-NEXT:      "Format": "COFF-x86-64",
+# ARCH-MULTI-JSON-NEXT:      "Arch": "x86_64",
+# ARCH-MULTI-JSON-NEXT:      "AddressSize": "64"
+# ARCH-MULTI-JSON-NEXT:    }
+# ARCH-MULTI-JSON-NEXT:  }
+# ARCH-MULTI-JSON-NEXT:]
+
+--- !COFF
+header:
+  Machine:         IMAGE_FILE_MACHINE_AMD64
+  Characteristics: [  ]
+sections:
+symbols:
