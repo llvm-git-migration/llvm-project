@@ -113,6 +113,10 @@ public:
   virtual void
   printDelayImportedSymbols(const DelayImportDirectoryEntryRef &I,
                             iterator_range<imported_symbol_iterator> Range);
+  typedef void (*PrintExtraCB)(raw_ostream &, const uint8_t *);
+  virtual void printRVATable(uint64_t TableVA, uint64_t Count,
+                             uint64_t EntrySize,
+                             PrintExtraCB PrintExtra = nullptr);
 
 protected:
   StringRef getSymbolName(uint32_t Index);
@@ -131,10 +135,6 @@ protected:
   void printCOFFLoadConfig(const T *Conf, LoadConfigTables &Tables);
   template <typename IntTy>
   void printCOFFTLSDirectory(const coff_tls_directory<IntTy> *TlsTable);
-  typedef void (*PrintExtraCB)(raw_ostream &, const uint8_t *);
-  void printRVATable(uint64_t TableVA, uint64_t Count, uint64_t EntrySize,
-                     PrintExtraCB PrintExtra = nullptr);
-
   void printCodeViewSymbolSection(StringRef SectionName, const SectionRef &Section);
   void printCodeViewTypeSection(StringRef SectionName, const SectionRef &Section);
   StringRef getFileNameForFileOffset(uint32_t FileOffset);
@@ -256,6 +256,8 @@ public:
   void printDelayImportedSymbols(
       const DelayImportDirectoryEntryRef &I,
       iterator_range<imported_symbol_iterator> Range) override;
+  void printRVATable(uint64_t TableVA, uint64_t Count, uint64_t EntrySize,
+                     PrintExtraCB PrintExtra = nullptr) override;
 
 private:
   std::unique_ptr<DictScope> FileScope;
@@ -1002,7 +1004,7 @@ void COFFDumper::printCOFFLoadConfig(const T *Conf, LoadConfigTables &Tables) {
   if (!Conf)
     return;
 
-  ListScope LS(W, "LoadConfig");
+  DictScope LS(W, "LoadConfig");
   char FormattedTime[20] = {};
   time_t TDS = Conf->TimeDateStamp;
   strftime(FormattedTime, 20, "%Y-%m-%d %H:%M:%S", gmtime(&TDS));
@@ -2313,6 +2315,22 @@ void JSONCOFFDumper::printDelayImportedSymbols(
     W.printString("Name", Sym);
     W.printNumber("Ordinal", Ordinal);
     W.printHex("Address", Addr);
+  }
+}
+
+void JSONCOFFDumper::printRVATable(uint64_t TableVA, uint64_t Count,
+                                   uint64_t EntrySize,
+                                   PrintExtraCB PrintExtra) {
+  uintptr_t TableStart, TableEnd;
+  if (Error E = Obj->getVaPtr(TableVA, TableStart))
+    reportError(std::move(E), Obj->getFileName());
+  if (Error E = Obj->getVaPtr(TableVA + Count * EntrySize - 1, TableEnd))
+    reportError(std::move(E), Obj->getFileName());
+  TableEnd++;
+  for (uintptr_t I = TableStart; I < TableEnd; I += EntrySize) {
+    DictScope D(W);
+    uint32_t RVA = *reinterpret_cast<const ulittle32_t *>(I);
+    W.printHex("Address", Obj->getImageBase() + RVA);
   }
 }
 }
