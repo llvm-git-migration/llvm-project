@@ -532,13 +532,6 @@ private:
   ScopedPrinterKind Kind;
 };
 
-template <>
-inline void
-ScopedPrinter::printHex<support::ulittle16_t>(StringRef Label,
-                                              support::ulittle16_t Value) {
-  startLine() << Label << ": " << hex(Value) << "\n";
-}
-
 struct DelimitedScope;
 
 class JSONScopedPrinter : public ScopedPrinter {
