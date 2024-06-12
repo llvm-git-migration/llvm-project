@@ -1,2 +1,4 @@
 RUN: llvm-readobj --coff-directives %p/Inputs/directives.obj.coff-x86_64 | FileCheck %s
+RUN: llvm-readobj --coff-directives --coff-output-style=JSON --pretty-print %p/Inputs/directives.obj.coff-x86_64 | FileCheck %s --check-prefix JSON
 CHECK: Directive(s): /DEFAULTLIB:"LIBCMT" /DEFAULTLIB:"OLDNAMES" 
+JSON: "Directive(s)": "   /DEFAULTLIB:\"LIBCMT\" /DEFAULTLIB:\"OLDNAMES\" "
