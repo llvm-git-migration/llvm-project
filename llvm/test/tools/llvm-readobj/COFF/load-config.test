@@ -1,11 +1,12 @@
 RUN: llvm-readobj --coff-load-config %S/Inputs/coff-load-config-x86.dll | FileCheck %s --check-prefix=X86
 RUN: llvm-readobj --coff-load-config %S/Inputs/coff-load-config-x64.dll | FileCheck %s --check-prefix=X64
+RUN: llvm-readobj --coff-load-config --coff-output-style=JSON --pretty-print %S/Inputs/coff-load-config-x64.dll | FileCheck %s --check-prefix=JSON-X64
 
 RUN: llvm-readobj --coff-load-config %S/Inputs/coff-load-config-data-end.exe | FileCheck %s --check-prefix=DATAEND
 
 RUN: llvm-readobj --coff-load-config %S/Inputs/coff-no-load-config.exe | FileCheck %s --check-prefix=NOCONFIG
 
-X86: LoadConfig [
+X86: LoadConfig {
 X86:   Size: 0x5C
 X86:   TimeDateStamp: 1970-01-01 00:00:00 (0x0)
 X86:   MajorVersion: 0x0
@@ -37,7 +38,7 @@ X86:     CF_LONGJUMP_TABLE_PRESENT (0x10000)
 X86:     DELAYLOAD_IAT_IN_ITS_OWN_SECTION (0x2000)
 X86:     PROTECT_DELAYLOAD_IAT (0x1000)
 X86:   ]
-X86: ]
+X86: }
 X86: SEHTable [
 X86:   0x10001BE0
 X86:   0x10001E30
@@ -56,7 +57,7 @@ X86:   0x10001BE0
 X86:   0x10001DC0
 X86: ]
 
-X64: LoadConfig [
+X64: LoadConfig {
 X64:   Size: 0x94
 X64:   TimeDateStamp: 1970-01-01 00:00:00 (0x0)
 X64:   MajorVersion: 0x0
@@ -88,7 +89,7 @@ X64:    CF_LONGJUMP_TABLE_PRESENT (0x10000)
 X64:    DELAYLOAD_IAT_IN_ITS_OWN_SECTION (0x2000)
 X64:    PROTECT_DELAYLOAD_IAT (0x1000)
 X64:  ]
-X64: ]
+X64: }
 X64-NOT: SEHTable
 X64: GuardFidTable [
 X64:   0x180001000
@@ -108,3 +109,87 @@ DATAEND-NEXT: ]
 
 NOCONFIG: Format: COFF-x86-64
 NOCONFIG-NOT: LoadConfig
+
+     JSON-X64:    "LoadConfig": {
+JSON-X64-NEXT:      "Size": 148,
+JSON-X64-NEXT:      "TimeDateStamp": {
+JSON-X64-NEXT:        "Name": "1970-01-01 00:00:00",
+JSON-X64-NEXT:        "Value": 0
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      "MajorVersion": 0,
+JSON-X64-NEXT:      "MinorVersion": 0,
+JSON-X64-NEXT:      "GlobalFlagsClear": 0,
+JSON-X64-NEXT:      "GlobalFlagsSet": 0,
+JSON-X64-NEXT:      "CriticalSectionDefaultTimeout": 0,
+JSON-X64-NEXT:      "DeCommitFreeBlockThreshold": 0,
+JSON-X64-NEXT:      "DeCommitTotalFreeThreshold": 0,
+JSON-X64-NEXT:      "LockPrefixTable": 0,
+JSON-X64-NEXT:      "MaximumAllocationSize": 0,
+JSON-X64-NEXT:      "VirtualMemoryThreshold": 0,
+JSON-X64-NEXT:      "ProcessHeapFlags": 0,
+JSON-X64-NEXT:      "ProcessAffinityMask": 0,
+JSON-X64-NEXT:      "CSDVersion": 0,
+JSON-X64-NEXT:      "DependentLoadFlags": 0,
+JSON-X64-NEXT:      "EditList": 0,
+JSON-X64-NEXT:      "SecurityCookie": 6442463256,
+JSON-X64-NEXT:      "SEHandlerTable": 0,
+JSON-X64-NEXT:      "SEHandlerCount": 0,
+JSON-X64-NEXT:      "GuardCFCheckFunction": 6442459392,
+JSON-X64-NEXT:      "GuardCFCheckDispatch": 6442459400,
+JSON-X64-NEXT:      "GuardCFFunctionTable": 6442459480,
+JSON-X64-NEXT:      "GuardCFFunctionCount": 9,
+JSON-X64-NEXT:      "GuardFlags": {
+JSON-X64-NEXT:        "Value": 79104,
+JSON-X64-NEXT:        "Flags": [
+JSON-X64-NEXT:          {
+JSON-X64-NEXT:            "Name": "CF_FUNCTION_TABLE_PRESENT",
+JSON-X64-NEXT:            "Value": 1024
+JSON-X64-NEXT:          },
+JSON-X64-NEXT:          {
+JSON-X64-NEXT:            "Name": "CF_INSTRUMENTED",
+JSON-X64-NEXT:            "Value": 256
+JSON-X64-NEXT:          },
+JSON-X64-NEXT:          {
+JSON-X64-NEXT:            "Name": "CF_LONGJUMP_TABLE_PRESENT",
+JSON-X64-NEXT:            "Value": 65536
+JSON-X64-NEXT:          },
+JSON-X64-NEXT:          {
+JSON-X64-NEXT:            "Name": "DELAYLOAD_IAT_IN_ITS_OWN_SECTION",
+JSON-X64-NEXT:            "Value": 8192
+JSON-X64-NEXT:          },
+JSON-X64-NEXT:          {
+JSON-X64-NEXT:            "Name": "PROTECT_DELAYLOAD_IAT",
+JSON-X64-NEXT:            "Value": 4096
+JSON-X64-NEXT:          }
+JSON-X64-NEXT:        ]
+JSON-X64-NEXT:      }
+JSON-X64-NEXT:    },
+JSON-X64-NEXT:    "GuardFidTable": [
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442455040
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442455120
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442455152
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442455264
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442455312
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442456160
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442457456
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442457936
+JSON-X64-NEXT:      },
+JSON-X64-NEXT:      {
+JSON-X64-NEXT:        "Address": 6442458512
+JSON-X64-NEXT:      }
+JSON-X64-NEXT:    ]

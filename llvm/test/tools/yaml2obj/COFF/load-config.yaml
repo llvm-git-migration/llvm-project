@@ -5,7 +5,7 @@
 # ALL:      Format: COFF-x86-64
 # ALL-NEXT: Arch: x86_64
 # ALL-NEXT: AddressSize: 64bit
-# ALL-NEXT: LoadConfig [
+# ALL-NEXT: LoadConfig {
 # ALL-NEXT:   Size: 0x150
 # ALL-NEXT:   TimeDateStamp: 1970-01-01 00:00:01 (0x1)
 # ALL-NEXT:   MajorVersion: 0x2
@@ -48,7 +48,7 @@
 # ALL-NEXT:   VolatileMetadataPointer: 0x2
 # ALL-NEXT:   GuardEHContinuationTable: 0x0
 # ALL-NEXT:   GuardEHContinuationCount: 0
-# ALL-NEXT: ]
+# ALL-NEXT: }
 
 --- !COFF
 OptionalHeader:
@@ -125,7 +125,7 @@ symbols: []
 # RUN: yaml2obj --docnum=2 %s -o %t
 # RUN: llvm-readobj --coff-load-config %t | FileCheck %s --check-prefix=LOADCFG32
 
-# LOADCFG32: LoadConfig [
+# LOADCFG32: LoadConfig {
 # LOADCFG32:   MaximumAllocationSize: 0x100000
 # LOADCFG32:   VirtualMemoryThreshold: 0x2000000
 # LOADCFG32:   CHPEMetadataPointer: 0
@@ -161,12 +161,12 @@ symbols: []
 # DEF: Format: COFF-x86-64
 # DEF: Arch: x86_64
 # DEF: AddressSize: 64bit
-# DEF: LoadConfig [
+# DEF: LoadConfig {
 # DEF:   Size: 0x138
 # DEF:   MajorVersion: 0x0
 # DEF:   MinorVersion: 0x0
 # DEF:   GuardEHContinuationCount: 0
-# DEF: ]
+# DEF: }
 
 --- !COFF
 OptionalHeader:
