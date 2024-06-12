@@ -384,12 +384,11 @@ static LogicalResult printOperation(CppEmitter &emitter,
   return emitter.emitOperand(assignOp.getValue());
 }
 
-static LogicalResult printOperation(CppEmitter &emitter,
-                                    emitc::LValueLoadOp lValueLoadOp) {
-  if (failed(emitter.emitAssignPrefix(*lValueLoadOp)))
+static LogicalResult printOperation(CppEmitter &emitter, emitc::LoadOp loadOp) {
+  if (failed(emitter.emitAssignPrefix(*loadOp)))
     return failure();
 
-  return emitter.emitOperand(lValueLoadOp.getOperand());
+  return emitter.emitOperand(loadOp.getOperand());
 }
 
 static LogicalResult printBinaryOperation(CppEmitter &emitter,
@@ -1514,11 +1513,11 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
                 emitc::CallOpaqueOp, emitc::CastOp, emitc::CmpOp,
                 emitc::ConditionalOp, emitc::ConstantOp, emitc::DeclareFuncOp,
                 emitc::DivOp, emitc::ExpressionOp, emitc::ForOp, emitc::FuncOp,
-                emitc::GlobalOp, emitc::IfOp, emitc::IncludeOp,
+                emitc::GlobalOp, emitc::IfOp, emitc::IncludeOp, emitc::LoadOp,
                 emitc::LogicalAndOp, emitc::LogicalNotOp, emitc::LogicalOrOp,
-                emitc::LValueLoadOp, emitc::MulOp, emitc::RemOp,
-                emitc::ReturnOp, emitc::SubOp, emitc::UnaryMinusOp,
-                emitc::UnaryPlusOp, emitc::VariableOp, emitc::VerbatimOp>(
+                emitc::MulOp, emitc::RemOp, emitc::ReturnOp, emitc::SubOp,
+                emitc::UnaryMinusOp, emitc::UnaryPlusOp, emitc::VariableOp,
+                emitc::VerbatimOp>(
               [&](auto op) { return printOperation(*this, op); })
           // Func ops.
           .Case<func::CallOp, func::FuncOp, func::ReturnOp>(
