@@ -54,6 +54,7 @@
 #include "llvm/Support/Win64EH.h"
 #include "llvm/Support/raw_ostream.h"
 #include <ctime>
+#include <functional>
 
 using namespace llvm;
 using namespace llvm::object;
@@ -256,10 +257,28 @@ public:
   void printDelayImportedSymbols(
       const DelayImportDirectoryEntryRef &I,
       iterator_range<imported_symbol_iterator> Range) override;
+  void printCOFFResources() override;
   void printRVATable(uint64_t TableVA, uint64_t Count, uint64_t EntrySize,
                      PrintExtraCB PrintExtra = nullptr) override;
 
 private:
+  using ResourceEntryTy =
+      std::pair<std::string,
+                std::reference_wrapper<const coff_resource_dir_entry>>;
+  std::vector<ResourceEntryTy>
+  getResourceTableEntries(ResourceSectionRef RSF,
+                          const coff_resource_dir_table &Table,
+                          bool SubDirEntriesOnly = true);
+  void printResourceDirectoryTable(const coff_resource_dir_table &Table);
+  void
+  printResourceDirectoryTypeTable(ResourceSectionRef RSF,
+                                  const coff_resource_dir_table &TypeTable);
+  void
+  printResourceDirectoryNameTable(ResourceSectionRef RSF,
+                                  const coff_resource_dir_table &NameTable);
+  void printResourceDirectoryLanguageTable(
+      ResourceSectionRef RSF, const coff_resource_dir_table &LanguageTable);
+
   std::unique_ptr<DictScope> FileScope;
 };
 
@@ -2333,4 +2352,163 @@ void JSONCOFFDumper::printRVATable(uint64_t TableVA, uint64_t Count,
     W.printHex("Address", Obj->getImageBase() + RVA);
   }
 }
+
+void JSONCOFFDumper::printCOFFResources() {
+  ListScope ResourcesD(W, "Resource Sections");
+  for (const SectionRef &S : Obj->sections()) {
+    StringRef Name = unwrapOrError(Obj->getFileName(), S.getName());
+    if (!Name.starts_with(".rsrc"))
+      continue;
+
+    DictScope D(W);
+    W.printString("Name", Name);
+    StringRef Ref = unwrapOrError(Obj->getFileName(), S.getContents());
+
+    if ((Name == ".rsrc") || (Name == ".rsrc$01")) {
+      ResourceSectionRef RSF;
+      Error E = RSF.load(Obj, S);
+      if (E)
+        reportError(std::move(E), Obj->getFileName());
+      auto &TypeTable = unwrapOrError(Obj->getFileName(), RSF.getBaseTable());
+      W.printNumber("Total Number of Resources",
+                    countTotalTableEntries(RSF, TypeTable, "Type"));
+      W.printHex("Base Table Address",
+                 Obj->getCOFFSection(S)->PointerToRawData);
+      printResourceDirectoryTypeTable(RSF, TypeTable);
+    }
+    if (opts::SectionData)
+      W.printBinaryBlock("Data", Ref);
+  }
+}
+
+std::vector<JSONCOFFDumper::ResourceEntryTy>
+JSONCOFFDumper::getResourceTableEntries(ResourceSectionRef RSF,
+                                        const coff_resource_dir_table &Table,
+                                        bool SubDirEntriesOnly) {
+  std::vector<ResourceEntryTy> TableEntries;
+  for (int i = 0; i < Table.NumberOfNameEntries + Table.NumberOfIDEntries;
+       ++i) {
+    auto &Entry =
+        unwrapOrError(Obj->getFileName(), RSF.getTableEntry(Table, i));
+
+    std::string Name;
+
+    if (i < Table.NumberOfNameEntries) {
+      ArrayRef<UTF16> RawEntryNameString =
+          unwrapOrError(Obj->getFileName(), RSF.getEntryNameString(Entry));
+      std::vector<UTF16> EndianCorrectedNameString;
+      if (llvm::sys::IsBigEndianHost) {
+        EndianCorrectedNameString.resize(RawEntryNameString.size() + 1);
+        std::copy(RawEntryNameString.begin(), RawEntryNameString.end(),
+                  EndianCorrectedNameString.begin() + 1);
+        EndianCorrectedNameString[0] = UNI_UTF16_BYTE_ORDER_MARK_SWAPPED;
+        RawEntryNameString = ArrayRef(EndianCorrectedNameString);
+      }
+      if (!llvm::convertUTF16ToUTF8String(RawEntryNameString, Name))
+        reportError(errorCodeToError(object_error::parse_failed),
+                    Obj->getFileName());
+    }
+
+    if (Entry.Offset.isSubDir()) {
+      TableEntries.push_back({Name, Entry});
+      if (SubDirEntriesOnly)
+        continue;
+    }
+
+    TableEntries.push_back({Name, Entry});
+  }
+
+  return TableEntries;
+}
+
+void JSONCOFFDumper::printResourceDirectoryTable(
+    const coff_resource_dir_table &Table) {
+  W.printNumber("Number of String Entries", Table.NumberOfNameEntries);
+  W.printNumber("Number of ID Entries", Table.NumberOfIDEntries);
+}
+
+void JSONCOFFDumper::printResourceDirectoryLanguageTable(
+    ResourceSectionRef RSF, const coff_resource_dir_table &LanguageTable) {
+  DictScope D(W, "Resource Language Table");
+  printResourceDirectoryTable(LanguageTable);
+
+  std::vector<ResourceEntryTy> LanguageTableEntries =
+      getResourceTableEntries(RSF, LanguageTable, false);
+
+  ListScope LLS(W, "Entries");
+  for (auto &LTP : LanguageTableEntries) {
+    const auto &LanguageTableEntry = LTP.second.get();
+
+    DictScope LD(W);
+    W.printHex("Entry Offset", LanguageTableEntry.Offset.value());
+    char FormattedTime[20] = {};
+    time_t TDS = time_t(LanguageTable.TimeDateStamp);
+    strftime(FormattedTime, 20, "%Y-%m-%d %H:%M:%S", gmtime(&TDS));
+    W.printHex("Time/Date Stamp", FormattedTime, LanguageTable.TimeDateStamp);
+    W.printNumber("Major Version", LanguageTable.MajorVersion);
+    W.printNumber("Minor Version", LanguageTable.MinorVersion);
+    W.printNumber("Characteristics", LanguageTable.Characteristics);
+    DictScope DataScope(W, "Data");
+    auto &DataEntry =
+        unwrapOrError(Obj->getFileName(), RSF.getEntryData(LanguageTableEntry));
+    W.printHex("DataRVA", DataEntry.DataRVA);
+    W.printNumber("DataSize", DataEntry.DataSize);
+    W.printNumber("Codepage", DataEntry.Codepage);
+    W.printNumber("Reserved", DataEntry.Reserved);
+    StringRef Contents =
+        unwrapOrError(Obj->getFileName(), RSF.getContents(DataEntry));
+    W.printBinaryBlock("Data", Contents);
+  }
+}
+
+void JSONCOFFDumper::printResourceDirectoryNameTable(
+    ResourceSectionRef RSF, const coff_resource_dir_table &NameTable) {
+  DictScope D(W, "Resource Name Table");
+  printResourceDirectoryTable(NameTable);
+
+  std::vector<ResourceEntryTy> NameTableEntries =
+      getResourceTableEntries(RSF, NameTable);
+
+  ListScope NLS(W, "Entries");
+  for (auto &NTP : NameTableEntries) {
+    auto &Name = NTP.first;
+    const auto &NameTableEntry = NTP.second.get();
+    DictScope ND(W);
+
+    W.printHex("Table Offset", NameTableEntry.Offset.value());
+    W.printString("Name", Name);
+
+    // The ID can be ignored if name is non-empty. We emit the "ID" so data is
+    // consistent.
+    auto ID = !Name.empty() ? 0 : NameTableEntry.Identifier.ID;
+    W.printNumber("ID", ID);
+
+    auto &LanguageTable =
+        unwrapOrError(Obj->getFileName(), RSF.getEntrySubDir(NameTableEntry));
+    printResourceDirectoryLanguageTable(RSF, LanguageTable);
+  }
+}
+
+void JSONCOFFDumper::printResourceDirectoryTypeTable(
+    ResourceSectionRef RSF, const coff_resource_dir_table &TypeTable) {
+  DictScope D(W, "Resource Type Table");
+
+  printResourceDirectoryTable(TypeTable);
+
+  ListScope LS(W, "Entries");
+  std::vector<ResourceEntryTy> TypeTableEntries =
+      getResourceTableEntries(RSF, TypeTable);
+
+  for (auto &TTP : TypeTableEntries) {
+    const auto &TypeTableEntry = TTP.second.get();
+
+    DictScope TD(W);
+    W.printHex("Table Offset", TypeTableEntry.Offset.value());
+    W.printNumber("Type", TypeTableEntry.Identifier.ID);
+
+    auto &NameTable =
+        unwrapOrError(Obj->getFileName(), RSF.getEntrySubDir(TypeTableEntry));
+
+    printResourceDirectoryNameTable(RSF, NameTable);
+  }
 }

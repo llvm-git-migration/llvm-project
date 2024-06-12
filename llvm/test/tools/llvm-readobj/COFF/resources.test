@@ -6,8 +6,12 @@
 
 RUN: llvm-readobj --coff-resources --section-data %p/Inputs/zero-string-table.obj.coff-i386 \
 RUN:   | FileCheck %s -check-prefix ZERO
+RUN: llvm-readobj --coff-resources --coff-output-style=JSON --pretty-print %p/Inputs/zero-string-table.obj.coff-i386 \
+RUN:   | FileCheck %s -check-prefix JSON-ZERO
 RUN: llvm-readobj --coff-resources %p/Inputs/resources/test_resource.obj.coff \
 RUN:   | FileCheck %s -check-prefix TEST_RES
+RUN: llvm-readobj --coff-resources --coff-output-style=JSON --pretty-print %p/Inputs/resources/test_resource.obj.coff \
+RUN:   | FileCheck %s -check-prefix JSON-TEST_RES
 
 ZERO:     Resources [
 ZERO-NEXT:  Total Number of Resources: 1
@@ -42,6 +46,107 @@ ZERO-NEXT:        ]
 ZERO-NEXT:      ]
 ZERO-NEXT:    ]
 ZERO-NEXT:  ]
+
+JSON-ZERO:         "Resource Sections": [
+JSON-ZERO-NEXT:      {
+JSON-ZERO-NEXT:        "Name": ".rsrc$01",
+JSON-ZERO-NEXT:        "Total Number of Resources": 1,
+JSON-ZERO-NEXT:        "Base Table Address": 392,
+JSON-ZERO-NEXT:        "Resource Type Table": {
+JSON-ZERO-NEXT:          "Number of String Entries": 0,
+JSON-ZERO-NEXT:          "Number of ID Entries": 1,
+JSON-ZERO-NEXT:          "Entries": [
+JSON-ZERO-NEXT:            {
+JSON-ZERO-NEXT:              "Table Offset": 24,
+JSON-ZERO-NEXT:              "Type": 6,
+JSON-ZERO-NEXT:              "Resource Name Table": {
+JSON-ZERO-NEXT:                "Number of String Entries": 0,
+JSON-ZERO-NEXT:                "Number of ID Entries": 1,
+JSON-ZERO-NEXT:                "Entries": [
+JSON-ZERO-NEXT:                  {
+JSON-ZERO-NEXT:                    "Table Offset": 48,
+JSON-ZERO-NEXT:                    "Name": "",
+JSON-ZERO-NEXT:                    "ID": 1,
+JSON-ZERO-NEXT:                    "Resource Language Table": {
+JSON-ZERO-NEXT:                      "Number of String Entries": 0,
+JSON-ZERO-NEXT:                      "Number of ID Entries": 1,
+JSON-ZERO-NEXT:                      "Entries": [
+JSON-ZERO-NEXT:                        {
+JSON-ZERO-NEXT:                          "Entry Offset": 72,
+JSON-ZERO-NEXT:                          "Time/Date Stamp": {
+JSON-ZERO-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-ZERO-NEXT:                            "Value": 0
+JSON-ZERO-NEXT:                          },
+JSON-ZERO-NEXT:                          "Major Version": 0,
+JSON-ZERO-NEXT:                          "Minor Version": 0,
+JSON-ZERO-NEXT:                          "Characteristics": 0,
+JSON-ZERO-NEXT:                          "Data": {
+JSON-ZERO-NEXT:                            "DataRVA": 0,
+JSON-ZERO-NEXT:                            "DataSize": 42,
+JSON-ZERO-NEXT:                            "Codepage": 0,
+JSON-ZERO-NEXT:                            "Reserved": 0,
+JSON-ZERO-NEXT:                            "Data": {
+JSON-ZERO-NEXT:                              "Offset": 0,
+JSON-ZERO-NEXT:                              "Bytes": [
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                5,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                72,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                101,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                108,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                108,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                111,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0,
+JSON-ZERO-NEXT:                                0
+JSON-ZERO-NEXT:                              ]
+JSON-ZERO-NEXT:                            }
+JSON-ZERO-NEXT:                          }
+JSON-ZERO-NEXT:                        }
+JSON-ZERO-NEXT:                      ]
+JSON-ZERO-NEXT:                    }
+JSON-ZERO-NEXT:                  }
+JSON-ZERO-NEXT:                ]
+JSON-ZERO-NEXT:              }
+JSON-ZERO-NEXT:            }
+JSON-ZERO-NEXT:          ]
+JSON-ZERO-NEXT:        }
+JSON-ZERO-NEXT:      },
+JSON-ZERO-NEXT:      {
+JSON-ZERO-NEXT:        "Name": ".rsrc$02"
+JSON-ZERO-NEXT:      }
+JSON-ZERO-NEXT:    ]
 
 TEST_RES:     Resources [
 TEST_RES-NEXT:  Total Number of Resources: 7
@@ -208,3 +313,284 @@ TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:  ]
+
+JSON-TEST_RES:    "Resource Sections": [
+JSON-TEST_RES-NEXT:      {
+JSON-TEST_RES-NEXT:        "Name": ".rsrc$01",
+JSON-TEST_RES-NEXT:        "Total Number of Resources": 7,
+JSON-TEST_RES-NEXT:        "Base Table Address": 448,
+JSON-TEST_RES-NEXT:        "Resource Type Table": {
+JSON-TEST_RES-NEXT:          "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:          "Number of ID Entries": 4,
+JSON-TEST_RES-NEXT:          "Entries": [
+JSON-TEST_RES-NEXT:            {
+JSON-TEST_RES-NEXT:              "Table Offset": 48,
+JSON-TEST_RES-NEXT:              "Type": 2,
+JSON-TEST_RES-NEXT:              "Resource Name Table": {
+JSON-TEST_RES-NEXT:                "Number of String Entries": 2,
+JSON-TEST_RES-NEXT:                "Number of ID Entries": 0,
+JSON-TEST_RES-NEXT:                "Entries": [
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 168,
+JSON-TEST_RES-NEXT:                    "Name": "CURSOR",
+JSON-TEST_RES-NEXT:                    "ID": 0,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 336,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 808,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  },
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 192,
+JSON-TEST_RES-NEXT:                    "Name": "OKAY",
+JSON-TEST_RES-NEXT:                    "ID": 0,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 352,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 808,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  }
+JSON-TEST_RES-NEXT:                ]
+JSON-TEST_RES-NEXT:              }
+JSON-TEST_RES-NEXT:            },
+JSON-TEST_RES-NEXT:            {
+JSON-TEST_RES-NEXT:              "Table Offset": 80,
+JSON-TEST_RES-NEXT:              "Type": 4,
+JSON-TEST_RES-NEXT:              "Resource Name Table": {
+JSON-TEST_RES-NEXT:                "Number of String Entries": 1,
+JSON-TEST_RES-NEXT:                "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                "Entries": [
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 216,
+JSON-TEST_RES-NEXT:                    "Name": "\"EAT\"",
+JSON-TEST_RES-NEXT:                    "ID": 0,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 368,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 48,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  },
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 240,
+JSON-TEST_RES-NEXT:                    "Name": "",
+JSON-TEST_RES-NEXT:                    "ID": 14432,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 384,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 46,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  }
+JSON-TEST_RES-NEXT:                ]
+JSON-TEST_RES-NEXT:              }
+JSON-TEST_RES-NEXT:            },
+JSON-TEST_RES-NEXT:            {
+JSON-TEST_RES-NEXT:              "Table Offset": 112,
+JSON-TEST_RES-NEXT:              "Type": 5,
+JSON-TEST_RES-NEXT:              "Resource Name Table": {
+JSON-TEST_RES-NEXT:                "Number of String Entries": 1,
+JSON-TEST_RES-NEXT:                "Number of ID Entries": 0,
+JSON-TEST_RES-NEXT:                "Entries": [
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 264,
+JSON-TEST_RES-NEXT:                    "Name": "TESTDIALOG",
+JSON-TEST_RES-NEXT:                    "ID": 0,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 400,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 108,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  }
+JSON-TEST_RES-NEXT:                ]
+JSON-TEST_RES-NEXT:              }
+JSON-TEST_RES-NEXT:            },
+JSON-TEST_RES-NEXT:            {
+JSON-TEST_RES-NEXT:              "Table Offset": 136,
+JSON-TEST_RES-NEXT:              "Type": 9,
+JSON-TEST_RES-NEXT:              "Resource Name Table": {
+JSON-TEST_RES-NEXT:                "Number of String Entries": 1,
+JSON-TEST_RES-NEXT:                "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                "Entries": [
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 288,
+JSON-TEST_RES-NEXT:                    "Name": "MYACCELERATORS",
+JSON-TEST_RES-NEXT:                    "ID": 0,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 416,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 24,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  },
+JSON-TEST_RES-NEXT:                  {
+JSON-TEST_RES-NEXT:                    "Table Offset": 312,
+JSON-TEST_RES-NEXT:                    "Name": "",
+JSON-TEST_RES-NEXT:                    "ID": 12,
+JSON-TEST_RES-NEXT:                    "Resource Language Table": {
+JSON-TEST_RES-NEXT:                      "Number of String Entries": 0,
+JSON-TEST_RES-NEXT:                      "Number of ID Entries": 1,
+JSON-TEST_RES-NEXT:                      "Entries": [
+JSON-TEST_RES-NEXT:                        {
+JSON-TEST_RES-NEXT:                          "Entry Offset": 432,
+JSON-TEST_RES-NEXT:                          "Time/Date Stamp": {
+JSON-TEST_RES-NEXT:                            "Name": "1970-01-01 00:00:00",
+JSON-TEST_RES-NEXT:                            "Value": 0
+JSON-TEST_RES-NEXT:                          },
+JSON-TEST_RES-NEXT:                          "Major Version": 0,
+JSON-TEST_RES-NEXT:                          "Minor Version": 0,
+JSON-TEST_RES-NEXT:                          "Characteristics": 0,
+JSON-TEST_RES-NEXT:                          "Data": {
+JSON-TEST_RES-NEXT:                            "DataRVA": 0,
+JSON-TEST_RES-NEXT:                            "DataSize": 24,
+JSON-TEST_RES-NEXT:                            "Codepage": 0,
+JSON-TEST_RES-NEXT:                            "Reserved": 0,
+JSON-TEST_RES-NEXT:                            "Data": {
+JSON-TEST_RES-NEXT:                              "Offset": 0,
+JSON-TEST_RES-NEXT:                              "Bytes": [
+JSON-TEST_RES:                                   ]
+JSON-TEST_RES-NEXT:                            }
+JSON-TEST_RES-NEXT:                          }
+JSON-TEST_RES-NEXT:                        }
+JSON-TEST_RES-NEXT:                      ]
+JSON-TEST_RES-NEXT:                    }
+JSON-TEST_RES-NEXT:                  }
+JSON-TEST_RES-NEXT:                ]
+JSON-TEST_RES-NEXT:              }
+JSON-TEST_RES-NEXT:            }
+JSON-TEST_RES-NEXT:          ]
+JSON-TEST_RES-NEXT:        }
+JSON-TEST_RES-NEXT:      },
+JSON-TEST_RES-NEXT:      {
+JSON-TEST_RES-NEXT:        "Name": ".rsrc$02"
+JSON-TEST_RES-NEXT:      }
+JSON-TEST_RES-NEXT:    ]
