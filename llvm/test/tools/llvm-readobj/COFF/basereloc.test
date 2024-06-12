@@ -22,3 +22,32 @@ CHECK-NEXT:     Address: 0x1000
 CHECK-NEXT:   }
 CHECK-NEXT: ]
 
+
+RUN: llvm-readobj --coff-basereloc --coff-output-style=JSON --pretty-print %p/Inputs/basereloc.obj.coff-i386 | FileCheck %s --check-prefix JSON
+
+     JSON:    "BaseReloc": [
+JSON-NEXT:      {
+JSON-NEXT:        "Entry": {
+JSON-NEXT:          "Type": "HIGHLOW",
+JSON-NEXT:          "Address": 4100
+JSON-NEXT:        }
+JSON-NEXT:      },
+JSON-NEXT:      {
+JSON-NEXT:        "Entry": {
+JSON-NEXT:          "Type": "HIGHLOW",
+JSON-NEXT:          "Address": 4106
+JSON-NEXT:        }
+JSON-NEXT:      },
+JSON-NEXT:      {
+JSON-NEXT:        "Entry": {
+JSON-NEXT:          "Type": "HIGHLOW",
+JSON-NEXT:          "Address": 4112
+JSON-NEXT:        }
+JSON-NEXT:      },
+JSON-NEXT:      {
+JSON-NEXT:        "Entry": {
+JSON-NEXT:          "Type": "ABSOLUTE",
+JSON-NEXT:          "Address": 4096
+JSON-NEXT:        }
+JSON-NEXT:      }
+JSON-NEXT:    ]
