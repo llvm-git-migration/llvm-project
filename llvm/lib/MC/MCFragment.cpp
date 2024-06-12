@@ -200,7 +200,7 @@ uint64_t llvm::computeBundlePadding(const MCAssembler &Assembler,
 MCFragment::MCFragment(FragmentType Kind, bool HasInstructions,
                        MCSection *Parent)
     : Parent(Parent), Atom(nullptr), Offset(~UINT64_C(0)), LayoutOrder(0),
-      Kind(Kind), HasInstructions(HasInstructions) {
+      Kind(Kind), HasInstructions(HasInstructions), LinkerRelaxable(false) {
   if (Parent && !isa<MCDummyFragment>(*this))
     Parent->addFragment(*this);
 }
