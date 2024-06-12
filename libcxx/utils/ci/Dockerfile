@@ -91,10 +91,10 @@ RUN sudo apt-get update \
         make \
         python3 \
         python3-dev \
-        python3-distutils \
+        python3-setuptools \
         python3-psutil \
         software-properties-common \
-        swig4.0 \
+        swig \
         unzip \
         uuid-dev \
         wget \
@@ -289,6 +289,3 @@ FROM builder-base AS actions-builder
 
 WORKDIR /home/runner
 USER runner
-
-
-
