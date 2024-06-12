@@ -246,6 +246,13 @@ class JSONCOFFDumper : public COFFDumper {
 public:
   JSONCOFFDumper(const object::COFFObjectFile *ObjF, ScopedPrinter &Writer)
       : COFFDumper(ObjF, Writer) {}
+
+  void printFileSummary(StringRef FileStr, ObjectFile &Obj,
+                        ArrayRef<std::string> InputFilenames,
+                        const Archive *A) override;
+
+private:
+  std::unique_ptr<DictScope> FileScope;
 };
 
 } // end namespace
@@ -2243,4 +2250,18 @@ void COFFDumper::printCOFFTLSDirectory(
   W.printFlags("Characteristics", TlsTable->Characteristics,
                ArrayRef(ImageSectionCharacteristics),
                COFF::SectionCharacteristics(COFF::IMAGE_SCN_ALIGN_MASK));
+}
+
+void JSONCOFFDumper::printFileSummary(StringRef FileStr, ObjectFile &Obj,
+                                      ArrayRef<std::string> InputFilenames,
+                                      const Archive *A) {
+  FileScope = std::make_unique<DictScope>(this->W);
+  DictScope D(this->W, "FileSummary");
+  this->W.printString("File", FileStr);
+  this->W.printString("Format", Obj.getFileFormatName());
+  this->W.printString("Arch", Triple::getArchTypeName(Obj.getArch()));
+  this->W.printString("AddressSize",
+                      std::string(formatv("{0}", 8 * Obj.getBytesInAddress())));
+  this->printLoadName();
+}
 }
