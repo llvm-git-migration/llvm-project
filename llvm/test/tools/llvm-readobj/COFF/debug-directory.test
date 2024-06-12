@@ -32,3 +32,75 @@ CHECK:       0010: C0000000                             |....|
 CHECK:     )
 CHECK:   }
 CHECK: ]
+
+RUN: llvm-readobj --coff-debug-directory --coff-output-style=JSON --pretty-print %p/Inputs/has_pdb.exe | FileCheck %s --check-prefix JSON
+
+     JSON:    "DebugDirectory": [
+JSON-NEXT:      {
+JSON-NEXT:        "DebugEntry": {
+JSON-NEXT:          "Characteristics": 0,
+JSON-NEXT:          "TimeDateStamp": {
+JSON-NEXT:            "Name": "2016-06-01 22:53:16",
+JSON-NEXT:            "Value": 1464821596
+JSON-NEXT:          },
+JSON-NEXT:          "MajorVersion": 0,
+JSON-NEXT:          "MinorVersion": 0,
+JSON-NEXT:          "Type": {
+JSON-NEXT:            "Name": "CodeView",
+JSON-NEXT:            "Value": 2
+JSON-NEXT:          },
+JSON-NEXT:          "SizeOfData": 54,
+JSON-NEXT:          "AddressOfRawData": 372840,
+JSON-NEXT:          "PointerToRawData": 369256,
+JSON-NEXT:          "PDBInfo": {
+JSON-NEXT:            "PDBSignature": 1396986706,
+JSON-NEXT:            "PDBGUID": "{42408396-0781-409D-901B-4A3C0D4F5632}",
+JSON-NEXT:            "PDBAge": 3,
+JSON-NEXT:            "PDBFileName": "D:\\src\\llvm\\build\\has_pdb.pdb"
+JSON-NEXT:          }
+JSON-NEXT:        }
+JSON-NEXT:      },
+JSON-NEXT:      {
+JSON-NEXT:        "DebugEntry": {
+JSON-NEXT:          "Characteristics": 0,
+JSON-NEXT:          "TimeDateStamp": {
+JSON-NEXT:            "Name": "2016-06-01 22:53:16",
+JSON-NEXT:            "Value": 1464821596
+JSON-NEXT:          },
+JSON-NEXT:          "MajorVersion": 0,
+JSON-NEXT:          "MinorVersion": 0,
+JSON-NEXT:          "Type": {
+JSON-NEXT:            "Name": "VCFeature",
+JSON-NEXT:            "Value": 12
+JSON-NEXT:          },
+JSON-NEXT:          "SizeOfData": 20,
+JSON-NEXT:          "AddressOfRawData": 372896,
+JSON-NEXT:          "PointerToRawData": 369312,
+JSON-NEXT:          "RawData": {
+JSON-NEXT:            "Offset": 0,
+JSON-NEXT:            "Bytes": [
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              193,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              193,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              192,
+JSON-NEXT:              0,
+JSON-NEXT:              0,
+JSON-NEXT:              0
+JSON-NEXT:            ]
+JSON-NEXT:          }
+JSON-NEXT:        }
+JSON-NEXT:      }
+JSON-NEXT:    ]
