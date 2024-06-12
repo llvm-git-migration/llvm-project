@@ -1216,8 +1216,8 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
         .scalarize(0);
 
   getActionDefinitionsBuilder(G_FPOWI)
-    .clampScalar(0, MinScalarFPTy, S32)
-    .lower();
+      .clampScalar(0, MinScalarFPTy, S32)
+      .custom();
 
   auto &Log2Ops = getActionDefinitionsBuilder({G_FLOG2, G_FEXP2});
   Log2Ops.customFor({S32});
@@ -2127,6 +2127,8 @@ bool AMDGPULegalizerInfo::legalizeCustom(
     return legalizeFExp(MI, B);
   case TargetOpcode::G_FPOW:
     return legalizeFPow(MI, B);
+  case TargetOpcode::G_FPOWI:
+    return legalizeFPowI(Helper, MI, B, LocObserver);
   case TargetOpcode::G_FFLOOR:
     return legalizeFFloor(MI, MRI, B);
   case TargetOpcode::G_BUILD_VECTOR:
@@ -3728,6 +3730,22 @@ bool AMDGPULegalizerInfo::legalizeFPow(MachineInstr &MI,
     return false;
 
   MI.eraseFromParent();
+  return true;
+}
+
+bool AMDGPULegalizerInfo::legalizeFPowI(
+    LegalizerHelper &Helper, MachineInstr &MI, MachineIRBuilder &B,
+    LostDebugLocObserver &LocObserver) const {
+  if (Helper.lowerFPOWI(MI) == LegalizerHelper::Legalized)
+    return true;
+
+  auto [Dst, Base, Exp] = MI.getFirst3Regs();
+  LLT Ty = B.getMRI()->getType(Dst);
+
+  auto CvtSrc1 = B.buildSITOFP(Ty, Exp);
+  B.buildFPow(Dst, Base, CvtSrc1, MI.getFlags());
+  MI.eraseFromParent();
+
   return true;
 }
 
