@@ -619,6 +619,8 @@ if (MINGW)
   )
 endif()
 
+set(amdgcn_SOURCES ${GENERIC_SOURCES})
+
 set(armv4t_SOURCES ${arm_min_SOURCES})
 set(armv5te_SOURCES ${arm_min_SOURCES})
 set(armv6_SOURCES ${arm_min_SOURCES})
@@ -697,6 +699,8 @@ set(mips64_SOURCES ${GENERIC_TF_SOURCES}
                    ${mips_SOURCES})
 set(mips64el_SOURCES ${GENERIC_TF_SOURCES}
                      ${mips_SOURCES})
+
+set(nvptx64_SOURCES ${GENERIC_SOURCES})
 
 set(powerpc_SOURCES ${GENERIC_SOURCES})
 
@@ -800,6 +804,19 @@ else ()
     endif()
     if(NOT COMPILER_RT_DEBUG)
       append_list_if(COMPILER_RT_HAS_OMIT_FRAME_POINTER_FLAG -fomit-frame-pointer BUILTIN_CFLAGS)
+    endif()
+  endif()
+
+  # Directly targeting the GPU requires a few extra flags.
+  if("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "amdgcn|nvptx")
+    append_list_if(COMPILER_RT_HAS_NOGPULIB -nogpulib BUILTIN_CFLAGS)
+    append_list_if(COMPILER_RT_HAS_EMIT_LLVM -emit-llvm BUILTIN_CFLAGS)
+    append_list_if(COMPILER_RT_HAS_FCONVERGENT_FUNCTIONS -fconvergent-functions BUILTIN_CFLAGS)
+
+    # AMDGPU targets want to use a generic ABI.
+    if("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "amdgcn")
+      append_list_if(COMPILER_RT_HAS_CODE_OBJECT_VERSION
+                     "SHELL:-Xclang -mcode-object-version=none" BUILTIN_CFLAGS)
     endif()
   endif()
 

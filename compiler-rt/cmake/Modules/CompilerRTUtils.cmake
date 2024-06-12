@@ -146,6 +146,7 @@ macro(test_target_arch arch def)
 endmacro()
 
 macro(detect_target_arch)
+  check_symbol_exists(__AMDGPU__ "" __AMDGPU)
   check_symbol_exists(__arm__ "" __ARM)
   check_symbol_exists(__AVR__ "" __AVR)
   check_symbol_exists(__aarch64__ "" __AARCH64)
@@ -154,6 +155,7 @@ macro(detect_target_arch)
   check_symbol_exists(__loongarch__ "" __LOONGARCH)
   check_symbol_exists(__mips__ "" __MIPS)
   check_symbol_exists(__mips64__ "" __MIPS64)
+  check_symbol_exists(__NVPTX__ "" __NVPTX)
   check_symbol_exists(__powerpc__ "" __PPC)
   check_symbol_exists(__powerpc64__ "" __PPC64)
   check_symbol_exists(__powerpc64le__ "" __PPC64LE)
@@ -164,7 +166,9 @@ macro(detect_target_arch)
   check_symbol_exists(__wasm32__ "" __WEBASSEMBLY32)
   check_symbol_exists(__wasm64__ "" __WEBASSEMBLY64)
   check_symbol_exists(__ve__ "" __VE)
-  if(__ARM)
+  if(__AMDGPU)
+    add_default_target_arch(amdgcn)
+  elseif(__ARM)
     add_default_target_arch(arm)
   elseif(__AVR)
     add_default_target_arch(avr)
@@ -192,6 +196,8 @@ macro(detect_target_arch)
     add_default_target_arch(mips64)
   elseif(__MIPS)
     add_default_target_arch(mips)
+  elseif(__NVPTX)
+    add_default_target_arch(nvptx64)
   elseif(__PPC64) # must be checked before __PPC
     add_default_target_arch(powerpc64)
   elseif(__PPC64LE)
@@ -386,6 +392,29 @@ macro(construct_compiler_rt_default_triple)
   if("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "^i.86$")
     # Android uses i686, but that's remapped at a later stage.
     set(COMPILER_RT_DEFAULT_TARGET_ARCH "i386")
+  endif()
+
+  # If we are directly targeting a GPU we need to check that the compiler is
+  # compatible and pass some default arguments.
+  if(COMPILER_RT_DEFAULT_TARGET_ONLY)
+    if("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "amdgcn|nvptx")
+      # Ensure the compiler is a valid clang when building the GPU target.
+      set(req_ver "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}")
+      if(LLVM_VERSION_MAJOR AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang" AND
+         ${CMAKE_CXX_COMPILER_VERSION} VERSION_EQUAL "${req_ver}"))
+        message(FATAL_ERROR "Cannot build compiler-rt for GPU. CMake compiler "
+                            "'${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}' "
+                            " is not 'Clang ${req_ver}'.")
+      endif()
+    endif()
+
+    # Pass the necessary flags to make flag detection work.
+    if("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "amdgcn")
+      set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -nogpulib")
+    elseif("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "nvptx")
+      set(CMAKE_REQUIRED_FLAGS
+          "${CMAKE_REQUIRED_FLAGS} -flto -c -Wno-unused-command-line-argument")
+    endif()
   endif()
 
   # Determine if test target triple is specified explicitly, and doesn't match the
