@@ -619,6 +619,8 @@ if (MINGW)
   )
 endif()
 
+set(amdgcn_SOURCES ${GENERIC_SOURCES})
+
 set(armv4t_SOURCES ${arm_min_SOURCES})
 set(armv5te_SOURCES ${arm_min_SOURCES})
 set(armv6_SOURCES ${arm_min_SOURCES})
@@ -697,6 +699,8 @@ set(mips64_SOURCES ${GENERIC_TF_SOURCES}
                    ${mips_SOURCES})
 set(mips64el_SOURCES ${GENERIC_TF_SOURCES}
                      ${mips_SOURCES})
+
+set(nvptx64_SOURCES ${GENERIC_SOURCES})
 
 set(powerpc_SOURCES ${GENERIC_SOURCES})
 
@@ -801,6 +805,12 @@ else ()
     if(NOT COMPILER_RT_DEBUG)
       append_list_if(COMPILER_RT_HAS_OMIT_FRAME_POINTER_FLAG -fomit-frame-pointer BUILTIN_CFLAGS)
     endif()
+  endif()
+
+  # Directly targeting the GPU requires a few extra flags.
+  if(COMPILER_RT_GPU_TARGET)
+    append_list_if(COMPILER_RT_HAS_NOGPULIB -nogpulib BUILTIN_CFLAGS)
+    append_list_if(COMPILER_RT_HAS_EMIT_LLVM -emit-llvm BUILTIN_CFLAGS)
   endif()
 
   set(BUILTIN_DEFS "")
