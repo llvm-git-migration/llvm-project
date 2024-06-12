@@ -986,7 +986,9 @@ unsigned getMaxFlatWorkGroupSize(const MCSubtargetInfo *STI) {
 
 unsigned getWavesPerWorkGroup(const MCSubtargetInfo *STI,
                               unsigned FlatWorkGroupSize) {
-  return divideCeil(FlatWorkGroupSize, getWavefrontSize(STI));
+  // divideCeil will overflow, unless FlatWorkGroupSize is cast.
+  return divideCeil(static_cast<uint64_t>(FlatWorkGroupSize),
+                    getWavefrontSize(STI));
 }
 
 unsigned getSGPRAllocGranule(const MCSubtargetInfo *STI) {
