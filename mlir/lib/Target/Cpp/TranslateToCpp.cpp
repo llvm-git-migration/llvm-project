@@ -377,12 +377,11 @@ static LogicalResult printOperation(CppEmitter &emitter,
   return success();
 }
 
-static LogicalResult printOperation(CppEmitter &emitter,
-                                    emitc::LValueLoadOp lValueLoadOp) {
-  if (failed(emitter.emitAssignPrefix(*lValueLoadOp)))
+static LogicalResult printOperation(CppEmitter &emitter, emitc::LoadOp loadOp) {
+  if (failed(emitter.emitAssignPrefix(*loadOp)))
     return failure();
 
-  return emitter.emitOperand(lValueLoadOp.getOperand());
+  return emitter.emitOperand(loadOp.getOperand());
 }
 
 static LogicalResult printOperation(CppEmitter &emitter,
@@ -1508,8 +1507,8 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
                 emitc::DivOp, emitc::ExpressionOp, emitc::ForOp, emitc::FuncOp,
                 emitc::GlobalOp, emitc::GetGlobalOp, emitc::IfOp,
                 emitc::IncludeOp, emitc::LogicalAndOp, emitc::LogicalNotOp,
-                emitc::LogicalOrOp, emitc::LValueLoadOp, emitc::MulOp,
-                emitc::RemOp, emitc::ReturnOp, emitc::SubOp, emitc::SubscriptOp,
+                emitc::LogicalOrOp, emitc::LoadOp, emitc::MulOp, emitc::RemOp,
+                emitc::ReturnOp, emitc::SubOp, emitc::SubscriptOp,
                 emitc::UnaryMinusOp, emitc::UnaryPlusOp, emitc::VariableOp,
                 emitc::VerbatimOp>(
               [&](auto op) { return printOperation(*this, op); })
