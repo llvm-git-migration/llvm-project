@@ -174,10 +174,6 @@ private:
   std::error_code resolveSymbolName(const coff_section *Section,
                                     StringRef SectionContents,
                                     const void *RelocPtr, StringRef &Name);
-  void printImportedSymbols(iterator_range<imported_symbol_iterator> Range);
-  void printDelayImportedSymbols(
-      const DelayImportDirectoryEntryRef &I,
-      iterator_range<imported_symbol_iterator> Range);
 
   typedef DenseMap<const coff_section*, std::vector<RelocationRef> > RelocMapTy;
 
@@ -242,12 +238,22 @@ private:
   StringRef SectionContents;
 };
 
+class JSONCOFFDumper : public COFFDumper {
+public:
+  JSONCOFFDumper(const object::COFFObjectFile *ObjF, ScopedPrinter &Writer)
+      : COFFDumper(ObjF, Writer) {}
+};
+
 } // end namespace
 
 namespace llvm {
 
 std::unique_ptr<ObjDumper> createCOFFDumper(const object::COFFObjectFile &Obj,
                                             ScopedPrinter &Writer) {
+  if (opts::Output == opts::JSON) {
+    return std::make_unique<JSONCOFFDumper>(&Obj, Writer);
+  }
+
   return std::make_unique<COFFDumper>(&Obj, Writer);
 }
 
