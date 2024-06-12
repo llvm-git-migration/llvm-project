@@ -158,3 +158,46 @@ TEST_F(MLIRTargetLLVMROCDL, SKIP_WITHOUT_AMDGPU(SerializeROCDLToBinary)) {
     ASSERT_FALSE(object->empty());
   }
 }
+
+// Test ROCDL serialization to Binary.
+TEST_F(MLIRTargetLLVMROCDL, SKIP_WITHOUT_AMDGPU(GetELFMetadata)) {
+  if (!hasROCMTools())
+    GTEST_SKIP() << "ROCm installation not found, skipping test.";
+
+  MLIRContext context(registry);
+
+  OwningOpRef<ModuleOp> module =
+      parseSourceString<ModuleOp>(moduleStr, &context);
+  ASSERT_TRUE(!!module);
+
+  // Create a ROCDL target.
+  ROCDL::ROCDLTargetAttr target = ROCDL::ROCDLTargetAttr::get(&context);
+
+  // Serialize the module.
+  auto serializer = dyn_cast<gpu::TargetAttrInterface>(target);
+  ASSERT_TRUE(!!serializer);
+  gpu::TargetOptions options("", {}, "", gpu::CompilationTarget::Binary);
+  for (auto gpuModule : (*module).getBody()->getOps<gpu::GPUModuleOp>()) {
+    std::optional<SmallVector<char, 0>> object =
+        serializer.serializeToObject(gpuModule, options);
+    // Check that the serializer was successful.
+    ASSERT_TRUE(object != std::nullopt);
+    ASSERT_FALSE(object->empty());
+    if (!object)
+      continue;
+    // Get the metadata.
+    ROCDL::ROCDLObjectMDAttr metadata =
+        ROCDL::getAMDHSAKernelsMetadata(gpuModule, *object);
+    ASSERT_TRUE(metadata != nullptr);
+    // There should be only a single kernel.
+    ASSERT_TRUE(metadata.size() == 1);
+    // Test the `ROCDLObjectMDAttr` iterators.
+    for (auto [name, kernel] : metadata) {
+      ASSERT_TRUE(name.getValue() == "rocdl_kernel");
+      // Check that the ELF metadata is present.
+      ASSERT_TRUE(kernel.getMetadata() != nullptr);
+      ASSERT_TRUE(kernel.getSGPR() != nullptr);
+      ASSERT_TRUE(kernel.getVGPR() != nullptr);
+    }
+  }
+}

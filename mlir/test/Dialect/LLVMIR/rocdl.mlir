@@ -365,3 +365,10 @@ gpu.module @module_1 [#rocdl.target<O = 1, chip = "gfx900", abi = "500", link = 
 
 gpu.module @module_2 [#rocdl.target<chip = "gfx900">, #rocdl.target<chip = "gfx90a">] {
 }
+
+gpu.binary @binary [#gpu.object<#rocdl.target<chip = "gfx900">, properties = {
+    "rocdl.object_metadata" = #rocdl.object_metadata<{
+      kernel0 = #rocdl.kernel<{sym_name = "kernel0"}, metadata = {sgpr_count = 255}>,
+      kernel1 = #rocdl.kernel<{sym_name = "kernel1"}>
+    }>
+  }, bin = "BLOB">]

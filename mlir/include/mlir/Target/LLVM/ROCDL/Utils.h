@@ -85,6 +85,12 @@ protected:
   /// List of LLVM bitcode files to link to.
   SmallVector<std::string> fileList;
 };
+
+/// Returns a dictionary containing kernel metadata for each of the kernels in
+/// `gpuModule`. If `elfData` is valid, then the `amdhsa.kernels` ELF metadata
+/// will be added to the dictionary.
+ROCDLObjectMDAttr getAMDHSAKernelsMetadata(Operation *gpuModule,
+                                           ArrayRef<char> elfData = {});
 } // namespace ROCDL
 } // namespace mlir
 

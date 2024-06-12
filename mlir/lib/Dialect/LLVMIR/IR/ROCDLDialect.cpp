@@ -217,6 +217,7 @@ LogicalResult ROCDLDialect::verifyOperationAttribute(Operation *op,
 //===----------------------------------------------------------------------===//
 // ROCDL target attribute.
 //===----------------------------------------------------------------------===//
+
 LogicalResult
 ROCDLTargetAttr::verify(function_ref<InFlightDiagnostic()> emitError,
                         int optLevel, StringRef triple, StringRef chip,
@@ -244,6 +245,37 @@ ROCDLTargetAttr::verify(function_ref<InFlightDiagnostic()> emitError,
     emitError() << "All the elements in the `link` array must be strings.";
     return failure();
   }
+  return success();
+}
+
+//===----------------------------------------------------------------------===//
+// ROCDL object metadata
+//===----------------------------------------------------------------------===//
+
+StringRef mlir::ROCDL::getROCDLObjectMetadataName() {
+  return "rocdl.object_metadata";
+}
+
+ROCDLKernelAttr
+ROCDLKernelAttr::appendMetadata(ArrayRef<NamedAttribute> attrs) const {
+  if (attrs.empty())
+    return *this;
+  NamedAttrList attrList(attrs);
+  attrList.append(getMetadata());
+  return ROCDLKernelAttr::get(getFuncAttrs(),
+                              attrList.getDictionary(getContext()));
+}
+
+LogicalResult
+ROCDLObjectMDAttr::verify(function_ref<InFlightDiagnostic()> emitError,
+                          DictionaryAttr dict) {
+  if (!dict)
+    return emitError() << "table cannot be null";
+  if (llvm::any_of(dict, [](NamedAttribute attr) {
+        return !llvm::isa<ROCDLKernelAttr>(attr.getValue());
+      }))
+    return emitError()
+           << "all the dictionary values must be `#rocdl.kernel` attributes";
   return success();
 }
 
