@@ -16091,7 +16091,8 @@ SITargetLowering::shouldExpandAtomicRMWInIR(AtomicRMWInst *RMW) const {
         return AtomicExpansionKind::None;
       if (Subtarget->hasAtomicFMinFMaxF64FlatInsts() && Ty->isDoubleTy())
         return AtomicExpansionKind::None;
-    } else if (AMDGPU::isExtendedGlobalAddrSpace(AS)) {
+    } else if (AMDGPU::isExtendedGlobalAddrSpace(AS) ||
+               AS == AMDGPUAS::BUFFER_FAT_POINTER) {
       if (Subtarget->hasAtomicFMinFMaxF32GlobalInsts() && Ty->isFloatTy())
         return AtomicExpansionKind::None;
       if (Subtarget->hasAtomicFMinFMaxF64GlobalInsts() && Ty->isDoubleTy())
