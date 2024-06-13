@@ -285,6 +285,9 @@ Changes to the LLVM tools
   now has a map for the mapped files. (`#92835
   <https://github.com/llvm/llvm-project/pull/92835>`).
 
+* llvm-objcopy now verifies format of ``.note`` sections for ELF input. This can
+  be disabled by ``--no-verify-note-sections``.
+
 Changes to LLDB
 ---------------------------------
 
