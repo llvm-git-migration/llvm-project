@@ -373,12 +373,6 @@ static constexpr IntrinsicHandler handlers[]{
     {"ieee_signaling_ne",
      &I::genIeeeSignalingCompare<mlir::arith::CmpFPredicate::UNE>},
     {"ieee_signbit", &I::genIeeeSignbit},
-    {"ieee_support_flag",
-     &I::genIeeeSupportFlagOrHalting,
-     {{{"flag", asValue}, {"x", asInquired, handleDynamicOptional}}},
-     /*isElemental=*/false},
-    {"ieee_support_halting", &I::genIeeeSupportFlagOrHalting},
-    {"ieee_support_rounding", &I::genIeeeSupportRounding},
     {"ieee_unordered", &I::genIeeeUnordered},
     {"ieee_value", &I::genIeeeValue},
     {"ieor", &I::genIeor},
@@ -4708,57 +4702,6 @@ mlir::Value IntrinsicLibrary::genIeeeSignbit(mlir::Type resultType,
   mlir::Value shift = builder.createIntegerConstant(loc, intType, bitWidth - 1);
   mlir::Value sign = builder.create<mlir::arith::ShRUIOp>(loc, intVal, shift);
   return builder.createConvert(loc, resultType, sign);
-}
-
-// IEEE_SUPPORT_FLAG, IEEE_SUPPORT_HALTING
-fir::ExtendedValue IntrinsicLibrary::genIeeeSupportFlagOrHalting(
-    mlir::Type resultType, llvm::ArrayRef<fir::ExtendedValue> args) {
-  // Check if a floating point exception or halting mode FLAG is supported.
-  // An IEEE_SUPPORT_FLAG flag is supported either for all type kinds or none.
-  // An optional kind argument X is therefore ignored.
-  // Standard flags are all supported.
-  // The nonstandard DENORM extension is not supported. (At least for now.)
-  assert(args.size() == 1 || args.size() == 2);
-  auto [fieldRef, fieldTy] = getFieldRef(builder, loc, fir::getBase(args[0]));
-  mlir::Value flag = builder.create<fir::LoadOp>(loc, fieldRef);
-  mlir::Value mask = builder.createIntegerConstant( // values are powers of 2
-      loc, fieldTy,
-      _FORTRAN_RUNTIME_IEEE_INVALID | _FORTRAN_RUNTIME_IEEE_DIVIDE_BY_ZERO |
-          _FORTRAN_RUNTIME_IEEE_OVERFLOW | _FORTRAN_RUNTIME_IEEE_UNDERFLOW |
-          _FORTRAN_RUNTIME_IEEE_INEXACT);
-  return builder.createConvert(
-      loc, resultType,
-      builder.create<mlir::arith::CmpIOp>(
-          loc, mlir::arith::CmpIPredicate::ne,
-          builder.create<mlir::arith::AndIOp>(loc, flag, mask),
-          builder.createIntegerConstant(loc, fieldTy, 0)));
-}
-
-// IEEE_SUPPORT_ROUNDING
-mlir::Value
-IntrinsicLibrary::genIeeeSupportRounding(mlir::Type resultType,
-                                         llvm::ArrayRef<mlir::Value> args) {
-  // Check if floating point rounding mode ROUND_VALUE is supported.
-  // Rounding is supported either for all type kinds or none.
-  // An optional X kind argument is therefore ignored.
-  // Values are chosen to match the llvm.get.rounding encoding:
-  //  0 - toward zero [supported]
-  //  1 - to nearest, ties to even [supported] - default
-  //  2 - toward positive infinity [supported]
-  //  3 - toward negative infinity [supported]
-  //  4 - to nearest, ties away from zero [not supported]
-  assert(args.size() == 1 || args.size() == 2);
-  auto [fieldRef, fieldTy] = getFieldRef(builder, loc, args[0]);
-  mlir::Value mode = builder.create<fir::LoadOp>(loc, fieldRef);
-  mlir::Value lbOk = builder.create<mlir::arith::CmpIOp>(
-      loc, mlir::arith::CmpIPredicate::sge, mode,
-      builder.createIntegerConstant(loc, fieldTy,
-                                    _FORTRAN_RUNTIME_IEEE_TO_ZERO));
-  mlir::Value ubOk = builder.create<mlir::arith::CmpIOp>(
-      loc, mlir::arith::CmpIPredicate::sle, mode,
-      builder.createIntegerConstant(loc, fieldTy, _FORTRAN_RUNTIME_IEEE_DOWN));
-  return builder.createConvert(
-      loc, resultType, builder.create<mlir::arith::AndIOp>(loc, lbOk, ubOk));
 }
 
 // IEEE_UNORDERED
