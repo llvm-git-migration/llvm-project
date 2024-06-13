@@ -238,6 +238,9 @@ Changes to the LLVM tools
   documented in `--help` output and the command guide. (`#90474
   <https://github.com/llvm/llvm-project/pull/90474>`)
 
+* llvm-objcopy now verifies format of ``.note`` sections for ELF input. This can
+  be disabled by ``--no-verify-note-sections``.
+
 Changes to LLDB
 ---------------------------------
 
