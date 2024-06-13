@@ -701,6 +701,8 @@ public:
 
   PHINode *getPhi() const { return Phi; }
 
+  bool onlyFirstPartUsed(const VPValue *Op) const override { return true; }
+
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Print the VPLiveOut to \p O.
   void print(raw_ostream &O, VPSlotTracker &SlotTracker) const;
@@ -1330,6 +1332,9 @@ public:
   /// Returns true if this VPInstruction produces a scalar value from a vector,
   /// e.g. by performing a reduction or extracting a lane.
   bool isVectorToScalar() const;
+
+  /// Return the interleave count from the VPInstruction's last argument.
+  unsigned getInterleaveCount() const;
 };
 
 /// VPWidenRecipe is a recipe for producing a copy of vector type its
@@ -1610,6 +1615,9 @@ public:
     return new VPVectorPointerRecipe(getOperand(0), IndexedTy, IsReverse,
                                      isInBounds(), getDebugLoc());
   }
+
+  /// Return the current part for this vector pointer.
+  unsigned getPartForRecipe() const;
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Print the recipe.
@@ -1951,6 +1959,9 @@ public:
 
   /// Returns true, if the phi is part of an in-loop reduction.
   bool isInLoop() const { return IsInLoop; }
+
+  /// Return the current part for this scalar step.
+  unsigned getPartForRecipe() const;
 };
 
 /// A recipe for vectorizing a phi-node as a sequence of mask-based select
@@ -2593,6 +2604,9 @@ public:
   /// Generate the canonical scalar induction phi of the vector loop.
   void execute(VPTransformState &State) override;
 
+  /// Return the current part for this scalar step.
+  unsigned getPartForRecipe() const;
+
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Print the recipe.
   void print(raw_ostream &O, const Twine &Indent,
@@ -2637,7 +2651,9 @@ public:
   ~VPActiveLaneMaskPHIRecipe() override = default;
 
   VPActiveLaneMaskPHIRecipe *clone() override {
-    return new VPActiveLaneMaskPHIRecipe(getOperand(0), getDebugLoc());
+    auto *R = new VPActiveLaneMaskPHIRecipe(getOperand(0), getDebugLoc());
+    R->addOperand(getOperand(1));
+    return R;
   }
 
   VP_CLASSOF_IMPL(VPDef::VPActiveLaneMaskPHISC)
@@ -2714,6 +2730,9 @@ public:
   /// start = {<Part*VF, Part*VF+1, ..., Part*VF+VF-1> for 0 <= Part < UF}, and
   /// step = <VF*UF, VF*UF, ..., VF*UF>.
   void execute(VPTransformState &State) override;
+
+  /// Return the current part for this scalar step.
+  unsigned getPartForRecipe() const;
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Print the recipe.
@@ -2827,6 +2846,9 @@ public:
            "Op must be an operand of the recipe");
     return true;
   }
+
+  /// Return the current part for this scalar step.
+  unsigned getPartForRecipe() const;
 };
 
 /// VPBasicBlock serves as the leaf of the Hierarchical Control-Flow Graph. It
@@ -3145,6 +3167,8 @@ class VPlan {
   /// Represents the loop-invariant VF * UF of the vector loop region.
   VPValue VFxUF;
 
+  VPValue VF;
+
   /// Holds a mapping between Values and their corresponding VPValue inside
   /// VPlan.
   Value2VPValueTy Value2VPValue;
@@ -3232,6 +3256,7 @@ public:
 
   /// Returns VF * UF of the vector loop region.
   VPValue &getVFxUF() { return VFxUF; }
+  VPValue &getVF() { return VF; }
 
   void addVF(ElementCount VF) { VFs.insert(VF); }
 
@@ -3665,6 +3690,29 @@ inline bool isUniformAfterVectorization(VPValue *VPV) {
     return VPI->isVectorToScalar();
   return false;
 }
+
+/// Checks if \p C is uniform across all VFs and UFs. It is considered as such
+/// if it is either defined outside the vector region or its operand is known to
+/// be uniform across all VFs and UFs (e.g. VPDerivedIV or VPCanonicalIVPHI).
+inline bool isUniformAcrossVFsAndUFs(VPValue *V) {
+  if (auto *VPI = dyn_cast_or_null<VPInstruction>(V->getDefiningRecipe())) {
+    return VPI ==
+           VPI->getParent()->getPlan()->getCanonicalIV()->getBackedgeValue();
+  }
+  if (isa<VPCanonicalIVPHIRecipe, VPDerivedIVRecipe, VPExpandSCEVRecipe>(V))
+    return true;
+  if (isa<VPReplicateRecipe>(V) && cast<VPReplicateRecipe>(V)->isUniform() &&
+      (isa<LoadInst, StoreInst>(V->getUnderlyingValue())) &&
+      all_of(V->getDefiningRecipe()->operands(),
+             [](VPValue *Op) { return Op->isDefinedOutsideVectorRegions(); }))
+    return true;
+
+  auto *C = dyn_cast_or_null<VPScalarCastRecipe>(V->getDefiningRecipe());
+  return C && (C->isDefinedOutsideVectorRegions() ||
+               isa<VPDerivedIVRecipe>(C->getOperand(0)) ||
+               isa<VPCanonicalIVPHIRecipe>(C->getOperand(0)));
+}
+
 } // end namespace vputils
 
 } // end namespace llvm
