@@ -133,7 +133,7 @@ if(MLIR_ENABLE_ROCM_CONVERSIONS)
   elseif(DEFINED ENV{ROCM_PATH})
     set(DEFAULT_ROCM_PATH "$ENV{ROCM_PATH}" CACHE PATH "Fallback path to search for ROCm installs")
   else()
-    set(DEFAULT_ROCM_PATH "/opt/rocm" CACHE PATH "Fallback path to search for ROCm installs")
+    set(DEFAULT_ROCM_PATH "" CACHE PATH "Fallback path to search for ROCm installs")
   endif()
   message(VERBOSE "MLIR Default ROCM toolkit path: ${DEFAULT_ROCM_PATH}")
 
