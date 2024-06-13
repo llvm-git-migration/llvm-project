@@ -7356,6 +7356,38 @@ void CombinerHelper::applyBuildFnMO(const MachineOperand &MO,
   Root->eraseFromParent();
 }
 
+void CombinerHelper::applyExpandFPowI(MachineInstr &MI) {
+  auto [Dst, Base, Exp] = MI.getFirst3Regs();
+  LLT Ty = MRI.getType(Dst);
+
+  std::optional<int64_t> ConstantExpValue = getIConstantVRegSExtVal(Exp, MRI);
+  assert(ConstantExpValue && "matched non-const FPOWI?");
+
+  int64_t OriginalExprVal = *ConstantExpValue;
+  int64_t ExpVal = OriginalExprVal;
+
+  if (ExpVal == 0) {
+    Builder.buildFConstant(Dst, 1.0);
+    MI.removeFromParent();
+    return;
+  }
+
+  if (ExpVal < 0)
+    ExpVal = -ExpVal;
+
+  SrcOp Res = Base;
+  while (--ExpVal > 0)
+    Res = Builder.buildFMul(Ty, Res, Base, MI.getFlags());
+
+  // If the original was negative, invert the result, producing 1/(x*x*x).
+  if (OriginalExprVal < 0)
+    Res = Builder.buildFDiv(Ty, Builder.buildFConstant(Ty, 1.0), Res,
+                            MI.getFlags());
+
+  Builder.buildCopy(Dst, Res);
+  MI.eraseFromParent();
+}
+
 bool CombinerHelper::matchSextOfTrunc(const MachineOperand &MO,
                                       BuildFnTy &MatchInfo) {
   GSext *Sext = cast<GSext>(getDefIgnoringCopies(MO.getReg(), MRI));
