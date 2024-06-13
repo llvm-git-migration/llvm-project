@@ -614,6 +614,12 @@ public:
       appendPredecessor(Pred);
   }
 
+  void setSuccessors(ArrayRef<VPBlockBase *> NewSuccs) {
+    assert(Successors.empty() && "Block predecessors already set.");
+    for (auto *Succ : NewSuccs)
+      appendSuccessor(Succ);
+  }
+
   /// Remove all the predecessor of this block.
   void clearPredecessors() { Predecessors.clear(); }
 
@@ -2997,6 +3003,8 @@ public:
   }
 
   BasicBlock *getIRBasicBlock() const { return IRBB; }
+
+  void resetBlock(BasicBlock *BB) { IRBB = BB; }
 };
 
 /// VPRegionBlock represents a collection of VPBasicBlocks and VPRegionBlocks
@@ -3194,7 +3202,9 @@ public:
   /// pre-header, followed by a region for the vector loop, followed by the
   /// middle VPBasicBlock.
   static VPlanPtr createInitialVPlan(const SCEV *TripCount,
-                                     ScalarEvolution &PSE, BasicBlock *PH);
+                                     ScalarEvolution &PSE,
+                                     bool RequiresScalarEpilogueCheck,
+                                     bool TailFolded, Loop *TheLoop);
 
   /// Prepare the plan for execution, setting up the required live-in values.
   void prepareToExecute(Value *TripCount, Value *VectorTripCount,
