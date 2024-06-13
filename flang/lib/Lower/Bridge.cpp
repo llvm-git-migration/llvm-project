@@ -5025,6 +5025,20 @@ private:
         new fir::FirOpBuilder(func, bridge.getKindMap(), &mlirSymbolTable);
     assert(builder && "FirOpBuilder did not instantiate");
     builder->setFastMathFlags(bridge.getLoweringOptions().getMathOptions());
+    // Set procedure attributes to the func op.
+    if (!funit.isMainProgram()) {
+      const Fortran::semantics::Symbol &funcSym = funit.getSubprogramSymbol();
+      if (IsPureProcedure(funcSym))
+        func.getOperation()->setAttr(fir::getFuncPureAttrName(),
+                                     builder->getUnitAttr());
+      if (IsElementalProcedure(funcSym))
+        func.getOperation()->setAttr(fir::getFuncElementAttrName(),
+                                     builder->getUnitAttr());
+      if (funcSym.attrs().test(Fortran::semantics::Attr::RECURSIVE))
+        func.getOperation()->setAttr(fir::getFuncRecursiveAttrName(),
+                                     builder->getUnitAttr());
+    }
+
     builder->setInsertionPointToStart(&func.front());
     if (funit.parent.isA<Fortran::lower::pft::FunctionLikeUnit>()) {
       // Give internal linkage to internal functions. There are no name clash
