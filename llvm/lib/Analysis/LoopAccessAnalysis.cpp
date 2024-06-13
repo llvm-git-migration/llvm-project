@@ -652,12 +652,13 @@ public:
   typedef PointerIntPair<Value *, 1, bool> MemAccessInfo;
   typedef SmallVector<MemAccessInfo, 8> MemAccessInfoList;
 
-  AccessAnalysis(Loop *TheLoop, AAResults *AA, LoopInfo *LI,
-                 MemoryDepChecker::DepCandidates &DA,
-                 PredicatedScalarEvolution &PSE,
-                 SmallPtrSetImpl<MDNode *> &LoopAliasScopes)
+  AccessAnalysis(
+      Loop *TheLoop, AAResults *AA, LoopInfo *LI,
+      MemoryDepChecker::DepCandidates &DA, PredicatedScalarEvolution &PSE,
+      SmallPtrSetImpl<MDNode *> &LoopAliasScopes,
+      DenseMap<Value *, SmallVector<const Value *, 16>> &UnderlyingObjects)
       : TheLoop(TheLoop), BAA(*AA), AST(BAA), LI(LI), DepCands(DA), PSE(PSE),
-        LoopAliasScopes(LoopAliasScopes) {
+        LoopAliasScopes(LoopAliasScopes), UnderlyingObjects(UnderlyingObjects) {
     // We're analyzing dependences across loop iterations.
     BAA.enableCrossIterationMode();
   }
@@ -721,11 +722,6 @@ public:
   }
 
   MemAccessInfoList &getDependenciesToCheck() { return CheckDeps; }
-
-  const DenseMap<Value *, SmallVector<const Value *, 16>> &
-  getUnderlyingObjects() {
-    return UnderlyingObjects;
-  }
 
 private:
   typedef MapVector<MemAccessInfo, SmallSetVector<Type *, 1>> PtrAccessMap;
@@ -799,11 +795,11 @@ private:
   /// The SCEV predicate containing all the SCEV-related assumptions.
   PredicatedScalarEvolution &PSE;
 
-  DenseMap<Value *, SmallVector<const Value *, 16>> UnderlyingObjects;
-
   /// Alias scopes that are declared inside the loop, and as such not valid
   /// across iterations.
   SmallPtrSetImpl<MDNode *> &LoopAliasScopes;
+
+  DenseMap<Value *, SmallVector<const Value *, 16>> &UnderlyingObjects;
 };
 
 } // end anonymous namespace
@@ -2353,6 +2349,36 @@ void MemoryDepChecker::Dependence::print(
   OS.indent(Depth + 2) << *Instrs[Destination] << "\n";
 }
 
+void LoopAccessInfo::recordExitingBlocks() {
+  SmallVector<BasicBlock *, 8> ExitingBlocks;
+  TheLoop->getExitingBlocks(ExitingBlocks);
+
+  SmallVector<BasicBlock *, 4> CountableExitingBBs;
+  PSE->getSE()->getCountableExitingBlocks(TheLoop, &CountableExitingBBs);
+
+  // There could be multiple exiting blocks with an exact exit-not-taken
+  // count. Find all of the uncountable early exit blocks, i.e. the ones with
+  // an unknown count.
+  SmallVector<BasicBlock *, 4> UncountableExitingBBs;
+  SmallVector<BasicBlock *, 4> UncountableExitBBs;
+  for (BasicBlock *BB1 : ExitingBlocks) {
+    if (!is_contained(CountableExitingBBs, BB1)) {
+      UncountableExitingBBs.push_back(BB1);
+
+      for (BasicBlock *BB2 : successors(BB1)) {
+        if (!TheLoop->contains(BB2)) {
+          UncountableExitBBs.push_back(BB2);
+          break;
+        }
+      }
+    }
+  }
+
+  CountableExitingBlocks = std::move(CountableExitingBBs);
+  UncountableExitingBlocks = std::move(UncountableExitingBBs);
+  UncountableExitBlocks = std::move(UncountableExitBBs);
+}
+
 bool LoopAccessInfo::canAnalyzeLoop() {
   // We need to have a loop header.
   LLVM_DEBUG(dbgs() << "LAA: Found a loop in "
@@ -2385,6 +2411,8 @@ bool LoopAccessInfo::canAnalyzeLoop() {
     LLVM_DEBUG(dbgs() << "LAA: SCEV could not compute the loop exit count.\n");
     return false;
   }
+
+  recordExitingBlocks();
 
   return true;
 }
@@ -2446,8 +2474,11 @@ bool LoopAccessInfo::analyzeLoop(AAResults *AA, LoopInfo *LI,
       // vectorize a loop if it contains known function calls that don't set
       // the flag. Therefore, it is safe to ignore this read from memory.
       auto *Call = dyn_cast<CallInst>(&I);
-      if (Call && getVectorIntrinsicIDForCall(Call, TLI))
-        continue;
+      if (Call) {
+        NumCalls++;
+        if (getVectorIntrinsicIDForCall(Call, TLI))
+          continue;
+      }
 
       // If this is a load, save it. If this instruction can read from memory
       // but is not a load, then we quit. Notice that we don't handle function

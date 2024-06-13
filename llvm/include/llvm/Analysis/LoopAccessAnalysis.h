@@ -634,6 +634,12 @@ public:
   /// not legal to insert them.
   bool hasConvergentOp() const { return HasConvergentOp; }
 
+  /// Return a map of accessed pointers to their underlying objects.
+  const DenseMap<Value *, SmallVector<const Value *, 16>> &
+  getUnderlyingObjects() const {
+    return UnderlyingObjects;
+  }
+
   const RuntimePointerChecking *getRuntimePointerChecking() const {
     return PtrRtChecking.get();
   }
@@ -653,7 +659,24 @@ public:
   bool isInvariant(Value *V) const;
 
   unsigned getNumStores() const { return NumStores; }
-  unsigned getNumLoads() const { return NumLoads;}
+  unsigned getNumLoads() const { return NumLoads; }
+  unsigned getNumCalls() const { return NumCalls; }
+
+  /// Returns all exiting blocks with a countable exit, i.e. the
+  /// exit-not-taken count is known exactly at compile time.
+  const SmallVector<BasicBlock *, 4> &getCountableExitingBlocks() const {
+    return CountableExitingBlocks;
+  }
+
+  /// Returns all the exiting blocks with an uncountable exit.
+  const SmallVector<BasicBlock *, 4> &getUncountableExitingBlocks() const {
+    return UncountableExitingBlocks;
+  }
+
+  /// Returns all the exit blocks from uncountable exiting blocks.
+  SmallVector<BasicBlock *, 4> getUncountableExitBlocks() const {
+    return UncountableExitBlocks;
+  }
 
   /// The diagnostics report generated for the analysis.  E.g. why we
   /// couldn't analyze the loop.
@@ -713,6 +736,10 @@ private:
   /// pass.
   bool canAnalyzeLoop();
 
+  /// Record information about the different exiting blocks, both countable and
+  /// uncountable.
+  void recordExitingBlocks();
+
   /// Save the analysis remark.
   ///
   /// LAA does not directly emits the remarks.  Instead it stores it which the
@@ -746,10 +773,21 @@ private:
 
   unsigned NumLoads = 0;
   unsigned NumStores = 0;
+  unsigned NumCalls = 0;
 
   /// Cache the result of analyzeLoop.
   bool CanVecMem = false;
   bool HasConvergentOp = false;
+
+  /// Keeps track of all the exits with known or countable exit-not-taken
+  /// counts.
+  SmallVector<BasicBlock *, 4> CountableExitingBlocks;
+  SmallVector<BasicBlock *, 4> UncountableExitingBlocks;
+  SmallVector<BasicBlock *, 4> UncountableExitBlocks;
+
+  /// Keep track of all the underlying objects associated with each pointer
+  /// used for memory accesses in the loop.
+  DenseMap<Value *, SmallVector<const Value *, 16>> UnderlyingObjects;
 
   /// Indicator that there are two non vectorizable stores to the same uniform
   /// address.

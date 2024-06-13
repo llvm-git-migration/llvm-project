@@ -374,6 +374,26 @@ public:
     return LAI->getDepChecker().getMaxSafeVectorWidthInBits();
   }
 
+  /// Returns true if the loop has a early exit with a exact backedge
+  /// count that is speculative.
+  bool hasSpeculativeEarlyExit() const { return HasSpeculativeEarlyExit; }
+
+  /// Returns the early exiting block in a loop with a speculative backedge
+  /// count.
+  BasicBlock *getSpeculativeEarlyExitingBlock() const {
+    assert(LAI->getUncountableExitingBlocks().size() == 1 &&
+           "Expected only a single uncountable exiting block");
+    return LAI->getUncountableExitingBlocks()[0];
+  }
+
+  /// Returns the destination of an early exiting block in a loop with a
+  /// speculative backedge count.
+  BasicBlock *getSpeculativeEarlyExitBlock() const {
+    assert(LAI->getUncountableExitBlocks().size() == 1 &&
+           "Expected only a single uncountable exit block");
+    return LAI->getUncountableExitBlocks()[0];
+  }
+
   /// Returns true if vector representation of the instruction \p I
   /// requires mask.
   bool isMaskRequired(const Instruction *I) const {
@@ -433,7 +453,7 @@ private:
   /// we read and write from memory. This method checks if it is
   /// legal to vectorize the code, considering only memory constrains.
   /// Returns true if the loop is vectorizable
-  bool canVectorizeMemory();
+  bool canVectorizeMemory(bool IsEarlyExitLoop);
 
   /// Return true if we can vectorize this loop using the IF-conversion
   /// transformation.
@@ -442,6 +462,10 @@ private:
   /// Return true if we can vectorize this outer loop. The method performs
   /// specific checks for outer loop vectorization.
   bool canVectorizeOuterLoop();
+
+  /// Returns true if this is a supported early exit loop that we can
+  /// vectorize.
+  bool isVectorizableEarlyExitLoop();
 
   /// Return true if all of the instructions in the block can be speculatively
   /// executed, and record the loads/stores that require masking.
@@ -548,6 +572,10 @@ private:
   /// (potentially) make a better decision on the maximum VF and enable
   /// the use of those function variants.
   bool VecCallVariantsFound = false;
+
+  /// Indicates whether this loop has a speculative early exit, i.e. an
+  /// uncountable exiting block that is not the latch.
+  bool HasSpeculativeEarlyExit = false;
 };
 
 } // namespace llvm

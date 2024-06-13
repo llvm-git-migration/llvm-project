@@ -919,6 +919,18 @@ public:
   const SCEV *getPredicatedSymbolicMaxBackedgeTakenCount(
       const Loop *L, SmallVector<const SCEVPredicate *, 4> &Predicates);
 
+  /// Return true if we know exactly the backedge taken count for loop \p L and
+  /// block \p BB.
+  bool hasExactPredicatedBackedgeTakenCount(const Loop *L, BasicBlock *BB) {
+    return getPredicatedBackedgeTakenInfo(L).hasExact(BB, this);
+  }
+
+  /// Return all the exiting blocks in loop \p L with exact exit counts.
+  void getCountableExitingBlocks(const Loop *L,
+                                 SmallVector<BasicBlock *, 4> *Blocks) {
+    getBackedgeTakenInfo(L).getCountableExitingBlocks(L, this, Blocks);
+  }
+
   /// Return true if the backedge taken count is either the value returned by
   /// getConstantMaxBackedgeTakenCount or zero.
   bool isBackedgeTakenCountMaxOrZero(const Loop *L);
@@ -1548,6 +1560,10 @@ private:
     const SCEV *getExact(const BasicBlock *ExitingBlock,
                          ScalarEvolution *SE) const;
 
+    /// Return all the exiting blocks in loop \p L with exact exit counts.
+    void getCountableExitingBlocks(const Loop *L, ScalarEvolution *SE,
+                                   SmallVector<BasicBlock *, 4> *Blocks) const;
+
     /// Get the constant max backedge taken count for the loop.
     const SCEV *getConstantMax(ScalarEvolution *SE) const;
 
@@ -1567,6 +1583,10 @@ private:
     /// Return true if the number of times this backedge is taken is either the
     /// value returned by getConstantMax or zero.
     bool isConstantMaxOrZero(ScalarEvolution *SE) const;
+
+    /// Return true if we have an exact exit-not-taken count for the exiting
+    /// block.
+    bool hasExact(const BasicBlock *ExitingBlock, ScalarEvolution *SE) const;
   };
 
   /// Cache the backedge-taken count of the loops for this function as they

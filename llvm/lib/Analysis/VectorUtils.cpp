@@ -1489,4 +1489,82 @@ void InterleaveGroup<Instruction>::addMetadata(Instruction *NewInst) const {
                  [](std::pair<int, Instruction *> p) { return p.second; });
   propagateMetadata(NewInst, VL);
 }
+
+bool loopMayFault(const Loop *L, ScalarEvolution *SE,
+                  const DenseMap<Value *, SmallVector<const Value *, 16>>
+                      &UnderlyingObjects) {
+  auto &DL = L->getHeader()->getModule()->getDataLayout();
+  for (auto &UO : UnderlyingObjects) {
+    // TODO: For now if we encounter more than one underlying object we just
+    // assume it could fault. However, with more analysis it's possible to look
+    // at all of them and calculate a common range of permitted GEP indices.
+    if (UO.second.size() != 1)
+      return true;
+
+    // For now only the simplest cases are permitted, but this could be
+    // extended further.
+    auto *GEP = dyn_cast<GetElementPtrInst>(UO.first);
+    if (!GEP || GEP->getPointerOperand() != UO.second[0])
+      return true;
+
+    // The only current supported case for 2 GEP indices is when accessing an
+    // array, i.e.
+    //   getelementptr [32 x i32], ptr %arr, i64 0, i64 %ind
+    Value *GEPInd;
+    Type *GEPElemType;
+    if (GEP->getNumIndices() == 2) {
+      auto *ArrayTy = dyn_cast<ArrayType>(GEP->getSourceElementType());
+      if (!ArrayTy || !isa<ConstantInt>(GEP->getOperand(1)) ||
+          !cast<ConstantInt>(GEP->getOperand(1))->isZero())
+        return true;
+      GEPInd = GEP->getOperand(2);
+      GEPElemType = ArrayTy->getElementType();
+    } else if (GEP->getNumIndices() == 1) {
+      GEPInd = GEP->getOperand(1);
+      GEPElemType = GEP->getSourceElementType();
+    } else
+      return true;
+
+    // We don't handle scalable GEP element types.
+    if (GEPElemType->getPrimitiveSizeInBits().isScalable())
+      return true;
+
+    // Verify pointer accessed within the loop always falls within the bounds
+    // of the underlying object, but first it's necessary to determine the
+    // object size.
+
+    auto GetKnownObjSize = [&](const Value *Obj) -> uint64_t {
+      // TODO: We should also be able to support global variables too.
+      if (auto *AllocaObj = dyn_cast<AllocaInst>(Obj)) {
+        if (L->isLoopInvariant(AllocaObj))
+          if (std::optional<TypeSize> AllocaSize =
+                  AllocaObj->getAllocationSize(DL))
+            return !AllocaSize->isScalable() ? AllocaSize->getFixedValue() : 0;
+      } else if (auto *ArgObj = dyn_cast<Argument>(Obj))
+        return ArgObj->getDereferenceableBytes();
+      return 0;
+    };
+
+    uint64_t ObjSize = GetKnownObjSize(UO.second[0]);
+    if (!ObjSize)
+      return true;
+
+    const SCEV *IndScev = SE->getSCEV(GEPInd);
+    if (!isa<SCEVAddRecExpr>(IndScev))
+      return true;
+
+    // Calculate the maximum number of addressable elements in the object.
+    uint64_t ElemSize = GEPElemType->getScalarSizeInBits() / 8;
+    uint64_t MaxNumElems = ObjSize / ElemSize;
+
+    const SCEV *MinScev = SE->getConstant(GEPInd->getType(), 0);
+    const SCEV *MaxScev = SE->getConstant(GEPInd->getType(), MaxNumElems);
+    if (!SE->isKnownOnEveryIteration(ICmpInst::ICMP_SGE,
+                                     cast<SCEVAddRecExpr>(IndScev), MinScev) ||
+        !SE->isKnownOnEveryIteration(ICmpInst::ICMP_SLT,
+                                     cast<SCEVAddRecExpr>(IndScev), MaxScev))
+      return true;
+  }
+  return false;
+}
 } // namespace llvm

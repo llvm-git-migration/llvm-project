@@ -8604,6 +8604,24 @@ ScalarEvolution::BackedgeTakenInfo::getExact(const Loop *L, ScalarEvolution *SE,
   return SE->getUMinFromMismatchedTypes(Ops, /* Sequential */ true);
 }
 
+void ScalarEvolution::BackedgeTakenInfo::getCountableExitingBlocks(
+    const Loop *L, ScalarEvolution *SE,
+    SmallVector<BasicBlock *, 4> *Blocks) const {
+  // All exiting blocks we have collected must dominate the only backedge.
+  const BasicBlock *Latch = L->getLoopLatch();
+  if (!Latch || !hasAnyInfo())
+    return;
+
+  for (const auto &ENT : ExitNotTaken) {
+    const SCEV *BECount = ENT.ExactNotTaken;
+    if (BECount == SE->getCouldNotCompute())
+      continue;
+    Blocks->push_back(ENT.ExitingBlock);
+  }
+
+  return;
+}
+
 /// Get the exact not taken count for this loop exit.
 const SCEV *
 ScalarEvolution::BackedgeTakenInfo::getExact(const BasicBlock *ExitingBlock,
@@ -8613,6 +8631,15 @@ ScalarEvolution::BackedgeTakenInfo::getExact(const BasicBlock *ExitingBlock,
       return ENT.ExactNotTaken;
 
   return SE->getCouldNotCompute();
+}
+
+bool ScalarEvolution::BackedgeTakenInfo::hasExact(
+    const BasicBlock *ExitingBlock, ScalarEvolution *SE) const {
+  for (const auto &ENT : ExitNotTaken)
+    if (ENT.ExitingBlock == ExitingBlock)
+      return ENT.ExactNotTaken != SE->getCouldNotCompute();
+
+  return false;
 }
 
 const SCEV *ScalarEvolution::BackedgeTakenInfo::getConstantMax(

@@ -502,7 +502,8 @@ void VPBasicBlock::execute(VPTransformState *State) {
     UnreachableInst *Terminator = State->Builder.CreateUnreachable();
     // Register NewBB in its loop. In innermost loops its the same for all
     // BB's.
-    if (State->CurrentVectorLoop)
+    if (State->CurrentVectorLoop &&
+        this != getPlan()->getVectorLoopRegion()->getEarlyExit())
       State->CurrentVectorLoop->addBasicBlockToLoop(NewBB, *State->LI);
     State->Builder.SetInsertPoint(Terminator);
     State->CFG.PrevBB = NewBB;
@@ -767,6 +768,10 @@ VPlan::~VPlan() {
     delete KV.second;
   LiveOuts.clear();
 
+  for (auto &KV : EarlyExitLiveOuts)
+    delete KV.second;
+  EarlyExitLiveOuts.clear();
+
   if (Entry) {
     VPValue DummyValue;
     for (VPBlockBase *Block : vp_depth_first_shallow(Entry))
@@ -914,6 +919,20 @@ void VPlan::execute(VPTransformState *State) {
     }
   }
 
+  // Patch up early exiting vector block to jump to the original scalar loop's
+  // early exit block.
+  if (getVectorLoopRegion()->getEarlyExit()) {
+    VPBasicBlock *EarlyExitVPBB =
+        cast<VPBasicBlock>(getVectorLoopRegion()->getEarlyExit());
+    BasicBlock *VectorEarlyExitBB = State->CFG.VPBB2IRBB[EarlyExitVPBB];
+    BasicBlock *OrigEarlyExitBB = getVectorLoopRegion()->getOrigEarlyExit();
+    BranchInst *BI = BranchInst::Create(OrigEarlyExitBB);
+    BI->insertBefore(VectorEarlyExitBB->getTerminator());
+    VectorEarlyExitBB->getTerminator()->eraseFromParent();
+    State->CFG.DTU.applyUpdates(
+        {{DominatorTree::Insert, VectorEarlyExitBB, OrigEarlyExitBB}});
+  }
+
   State->CFG.DTU.flush();
   assert(State->CFG.DTU.getDomTree().verify(
              DominatorTree::VerificationLevel::Fast) &&
@@ -974,6 +993,12 @@ void VPlan::print(raw_ostream &O) const {
     KV.second->print(O, SlotTracker);
   }
 
+  if (!EarlyExitLiveOuts.empty())
+    O << "\n";
+  for (const auto &KV : EarlyExitLiveOuts) {
+    KV.second->print(O, SlotTracker);
+  }
+
   O << "}\n";
 }
 
@@ -1013,6 +1038,12 @@ void VPlan::dump() const { print(dbgs()); }
 void VPlan::addLiveOut(PHINode *PN, VPValue *V) {
   assert(LiveOuts.count(PN) == 0 && "an exit value for PN already exists");
   LiveOuts.insert({PN, new VPLiveOut(PN, V)});
+}
+
+void VPlan::addEarlyExitLiveOut(PHINode *PN, VPValue *V) {
+  assert(EarlyExitLiveOuts.count(PN) == 0 &&
+         "an exit value for PN already exists");
+  EarlyExitLiveOuts.insert({PN, new VPLiveOut(PN, V, true)});
 }
 
 static void remapOperands(VPBlockBase *Entry, VPBlockBase *NewEntry,
@@ -1084,6 +1115,10 @@ VPlan *VPlan::duplicate() {
   // Clone live-outs.
   for (const auto &[_, LO] : LiveOuts)
     NewPlan->addLiveOut(LO->getPhi(), Old2NewVPValues[LO->getOperand(0)]);
+
+  for (const auto &[_, LO] : EarlyExitLiveOuts)
+    NewPlan->addEarlyExitLiveOut(LO->getPhi(),
+                                 Old2NewVPValues[LO->getOperand(0)]);
 
   // Initialize remaining fields of cloned VPlan.
   NewPlan->VFs = VFs;

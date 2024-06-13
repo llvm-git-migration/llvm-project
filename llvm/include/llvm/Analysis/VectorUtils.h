@@ -804,6 +804,13 @@ private:
   }
 };
 
+/// Return true if the loop \p L may fault due to memory accesses. The user
+/// must pass in a map of all accessed pointers to their corresponding
+/// underlying objects.
+bool loopMayFault(
+    const Loop *L, ScalarEvolution *SE,
+    const DenseMap<Value *, SmallVector<const Value *, 16>> &UnderlyingObjects);
+
 } // llvm namespace
 
 #endif
