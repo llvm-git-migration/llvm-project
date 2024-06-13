@@ -831,17 +831,44 @@ Expr<Type<TypeCategory::Logical, KIND>> FoldIntrinsicFunction(
         }
       }
     }
-  } else if (name == "__builtin_ieee_support_datatype" ||
-      name == "__builtin_ieee_support_denormal" ||
-      name == "__builtin_ieee_support_divide" ||
-      name == "__builtin_ieee_support_inf" ||
-      name == "__builtin_ieee_support_io" ||
-      name == "__builtin_ieee_support_nan" ||
-      name == "__builtin_ieee_support_sqrt" ||
-      name == "__builtin_ieee_support_standard" ||
-      name == "__builtin_ieee_support_subnormal" ||
-      name == "__builtin_ieee_support_underflow_control") {
+  } else if (name == "__builtin_ieee_support_datatype") {
     return Expr<T>{true};
+  } else if (name == "__builtin_ieee_support_denormal") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Denormal)};
+  } else if (name == "__builtin_ieee_support_divide") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Divide)};
+  } else if (name == "__builtin_ieee_support_flag") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Flags)};
+  } else if (name == "__builtin_ieee_support_halting") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Halting)};
+  } else if (name == "__builtin_ieee_support_inf") {
+    return Expr<T>{
+        context.targetCharacteristics().ieeeFeatures().test(IeeeFeature::Inf)};
+  } else if (name == "__builtin_ieee_support_io") {
+    return Expr<T>{
+        context.targetCharacteristics().ieeeFeatures().test(IeeeFeature::Io)};
+  } else if (name == "__builtin_ieee_support_nan") {
+    return Expr<T>{
+        context.targetCharacteristics().ieeeFeatures().test(IeeeFeature::NaN)};
+  } else if (name == "__builtin_ieee_support_rounding") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Rounding)};
+  } else if (name == "__builtin_ieee_support_sqrt") {
+    return Expr<T>{
+        context.targetCharacteristics().ieeeFeatures().test(IeeeFeature::Sqrt)};
+  } else if (name == "__builtin_ieee_support_standard") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Standard)};
+  } else if (name == "__builtin_ieee_support_subnormal") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::Subnormal)};
+  } else if (name == "__builtin_ieee_support_underflow_control") {
+    return Expr<T>{context.targetCharacteristics().ieeeFeatures().test(
+        IeeeFeature::UnderflowControl)};
   }
   return Expr<T>{std::move(funcRef)};
 }

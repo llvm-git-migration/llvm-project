@@ -1790,6 +1790,14 @@ bool IsNotifyType(const DerivedTypeSpec *derived) {
   return IsBuiltinDerivedType(derived, "notify_type");
 }
 
+bool IsIeeeFlagType(const DerivedTypeSpec *derived) {
+  return IsBuiltinDerivedType(derived, "ieee_flag_type");
+}
+
+bool IsIeeeRoundType(const DerivedTypeSpec *derived) {
+  return IsBuiltinDerivedType(derived, "ieee_round_type");
+}
+
 bool IsTeamType(const DerivedTypeSpec *derived) {
   return IsBuiltinDerivedType(derived, "team_type");
 }
