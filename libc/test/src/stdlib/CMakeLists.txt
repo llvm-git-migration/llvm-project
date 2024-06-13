@@ -88,6 +88,7 @@ add_libc_test(
   DEPENDS
     libc.src.__support.CPP.span
     libc.src.stdlib.freelist_heap
+    libc.src.stdlib.malloc
     libc.src.string.memcmp
     libc.src.string.memcpy
 )
