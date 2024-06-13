@@ -221,7 +221,17 @@ __tysan_check(void *addr, int size, tysan_type_descriptor *td, int flags) {
     OldTDPtr -= i;
     OldTD = *OldTDPtr;
 
-    if (!isAliasingLegal(td, OldTD))
+    tysan_type_descriptor *InternalMember = OldTD;
+    if (OldTD->Tag == TYSAN_STRUCT_TD) {
+      for (int j = 0; j < OldTD->Struct.MemberCount; j++) {
+        if (OldTD->Struct.Members[j].Offset == i) {
+          InternalMember = OldTD->Struct.Members[j].Type;
+          break;
+        }
+      }
+    }
+
+    if (!isAliasingLegal(td, InternalMember))
       reportError(addr, size, td, OldTD, AccessStr,
                   "accesses part of an existing object", -i, pc, bp, sp);
 
