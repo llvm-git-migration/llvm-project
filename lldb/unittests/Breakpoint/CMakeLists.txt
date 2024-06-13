@@ -5,6 +5,9 @@ add_lldb_unittest(LLDBBreakpointTests
   LINK_LIBS
     lldbBreakpoint
     lldbCore
+    LLVMTestingSupport
+    lldbUtilityHelpers
+    lldbPluginPlatformMacOSX
   LINK_COMPONENTS
     Support
   )
