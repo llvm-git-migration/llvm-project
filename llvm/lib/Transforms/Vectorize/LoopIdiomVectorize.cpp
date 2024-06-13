@@ -384,11 +384,6 @@ Value *LoopIdiomVectorize::createMaskedFindMismatch(IRBuilder<> &Builder,
   Value *PtrA = GEPA->getPointerOperand();
   Value *PtrB = GEPB->getPointerOperand();
 
-  // At this point we know two things must be true:
-  //  1. Start <= End
-  //  2. ExtMaxLen <= MinPageSize due to the page checks.
-  // Therefore, we know that we can use a 64-bit induction variable that
-  // starts from 0 -> ExtMaxLen and it will not overflow.
   ScalableVectorType *PredVTy =
       ScalableVectorType::get(Builder.getInt1Ty(), ByteCompareVF);
 
@@ -487,11 +482,6 @@ Value *LoopIdiomVectorize::createPredicatedFindMismatch(IRBuilder<> &Builder,
   Value *PtrA = GEPA->getPointerOperand();
   Value *PtrB = GEPB->getPointerOperand();
 
-  // At this point we know two things must be true:
-  //  1. Start <= End
-  //  2. ExtMaxLen <= 4096 due to the page checks.
-  // Therefore, we know that we can use a 64-bit induction variable that
-  // starts from 0 -> ExtMaxLen and it will not overflow.
   auto *JumpToVectorLoop = BranchInst::Create(VectorLoopStartBlock);
   Builder.Insert(JumpToVectorLoop);
 
@@ -740,6 +730,11 @@ Value *LoopIdiomVectorize::expandFindMismatch(
   // processed in each iteration, etc.
   Builder.SetInsertPoint(VectorLoopPreheaderBlock);
 
+  // At this point we know two things must be true:
+  //  1. Start <= End
+  //  2. ExtMaxLen <= MinPageSize due to the page checks.
+  // Therefore, we know that we can use a 64-bit induction variable that
+  // starts from 0 -> ExtMaxLen and it will not overflow.
   Value *VectorLoopRes = nullptr;
   switch (VectorizeStyle) {
   case LoopIdiomVectorizeStyle::Masked:
