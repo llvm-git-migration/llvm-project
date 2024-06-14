@@ -588,8 +588,10 @@ ForOp::replaceWithAdditionalYields(RewriterBase &rewriter,
   }
 
   // Replace the old loop.
+  auto attrs = SmallVector<NamedAttribute, 4>(getOperation()->getAttrs());
   rewriter.replaceOp(getOperation(),
                      newLoop->getResults().take_front(getNumResults()));
+  newLoop->setAttrs(attrs);
   return cast<LoopLikeOpInterface>(newLoop.getOperation());
 }
 
