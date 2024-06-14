@@ -1073,6 +1073,50 @@ static Value *foldAbsDiff(ICmpInst *Cmp, Value *TVal, Value *FVal,
   return nullptr;
 }
 
+// When the lsb of cond is 0:
+// cond ? A & -2 : B --> cond ? A : B
+// cond ? BinOp (A & -2), (A & -2) : B --> cond ? BinOp A, A : B
+static Value *foldSelectWithIcmpEqAndPattern(ICmpInst *Cmp, Value *TVal,
+                                             Value *FVal,
+                                             InstCombiner::BuilderTy &Builder,
+                                             SelectInst &SI,
+                                             InstCombinerImpl &IC) {
+
+  Value *A;
+  ConstantInt *MaskedConstant;
+
+  // Checks if true branche matches the pattern 'A % 2'.
+  if (match(TVal,
+            m_OneUse(m_c_And(m_Value(A), m_ConstantInt(MaskedConstant)))) &&
+      MaskedConstant->getValue().getSExtValue() == -2) {
+    KnownBits Known;
+    Known = IC.computeKnownBits(A, 0, &SI);
+    IC.computeKnownBitsFromCond(A, Cmp, Known, 0, &SI, false);
+    if (Known.Zero[0])
+      return Builder.CreateSelect(Cmp, A, FVal);
+    else
+      return nullptr;
+  }
+
+  // Checks if true branch matches nested 'A % 2' within a binary operation.
+  Value *MulVal;
+  if (match(TVal, m_OneUse(m_BinOp(m_Value(MulVal), m_Deferred(MulVal)))))
+    if (match(MulVal, m_c_And(m_Value(A), m_ConstantInt(MaskedConstant))) &&
+        MaskedConstant->getValue().getSExtValue() == -2) {
+      KnownBits Known;
+      Known = IC.computeKnownBits(A, 0, &SI);
+      IC.computeKnownBitsFromCond(A, Cmp, Known, 0, &SI, false);
+      if (Known.Zero[0]) {
+        Instruction::BinaryOps OpCode = cast<BinaryOperator>(TVal)->getOpcode();
+        Value *NewTValue = Builder.CreateBinOp(OpCode, A, A);
+        return Builder.CreateSelect(Cmp, NewTValue, FVal);
+      } else
+        return nullptr;
+    }
+
+  return nullptr;
+}
+
 /// Fold the following code sequence:
 /// \code
 ///   int a = ctlz(x & -x);
@@ -1812,6 +1856,7 @@ static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
 /// Visit a SelectInst that has an ICmpInst as its first operand.
 Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
                                                       ICmpInst *ICI) {
+
   if (Instruction *NewSel = foldSelectValueEquivalence(SI, *ICI))
     return NewSel;
 
@@ -1949,6 +1994,10 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
     return replaceInstUsesWith(SI, V);
 
   if (Value *V = foldAbsDiff(ICI, TrueVal, FalseVal, Builder))
+    return replaceInstUsesWith(SI, V);
+
+  if (Value *V = foldSelectWithIcmpEqAndPattern(ICI, TrueVal, FalseVal, Builder,
+                                                SI, *this))
     return replaceInstUsesWith(SI, V);
 
   return Changed ? &SI : nullptr;
@@ -2359,20 +2408,20 @@ static Instruction *foldSelectCmpBitcasts(SelectInst &Sel,
 /// operand, the result of the select will always be equal to its false value.
 /// For example:
 ///
-///   %cmpxchg = cmpxchg ptr %ptr, i64 %compare, i64 %new_value seq_cst seq_cst
-///   %val = extractvalue { i64, i1 } %cmpxchg, 0
-///   %success = extractvalue { i64, i1 } %cmpxchg, 1
-///   %sel = select i1 %success, i64 %compare, i64 %val
-///   ret i64 %sel
+///   %0 = cmpxchg i64* %ptr, i64 %compare, i64 %new_value seq_cst seq_cst
+///   %1 = extractvalue { i64, i1 } %0, 1
+///   %2 = extractvalue { i64, i1 } %0, 0
+///   %3 = select i1 %1, i64 %compare, i64 %2
+///   ret i64 %3
 ///
-/// The returned value of the cmpxchg instruction (%val) is the original value
-/// located at %ptr prior to any update. If the cmpxchg operation succeeds, %val
+/// The returned value of the cmpxchg instruction (%2) is the original value
+/// located at %ptr prior to any update. If the cmpxchg operation succeeds, %2
 /// must have been equal to %compare. Thus, the result of the select is always
-/// equal to %val, and the code can be simplified to:
+/// equal to %2, and the code can be simplified to:
 ///
-///   %cmpxchg = cmpxchg ptr %ptr, i64 %compare, i64 %new_value seq_cst seq_cst
-///   %val = extractvalue { i64, i1 } %cmpxchg, 0
-///   ret i64 %val
+///   %0 = cmpxchg i64* %ptr, i64 %compare, i64 %new_value seq_cst seq_cst
+///   %1 = extractvalue { i64, i1 } %0, 0
+///   ret i64 %1
 ///
 static Value *foldSelectCmpXchg(SelectInst &SI) {
   // A helper that determines if V is an extractvalue instruction whose

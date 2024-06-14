@@ -1460,9 +1460,8 @@ define i8 @select_icmp_eq_mul_and(i8 noundef %a, i8 %b)  {
 ; CHECK-LABEL: @select_icmp_eq_mul_and(
 ; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[A:%.*]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[TMP1]], 0
-; CHECK-NEXT:    [[DIV7:%.*]] = and i8 [[A]], -2
-; CHECK-NEXT:    [[MUL:%.*]] = mul i8 [[DIV7]], [[DIV7]]
-; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[MUL]], i8 [[B:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = mul i8 [[A]], [[A]]
+; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[TMP2]], i8 [[B:%.*]]
 ; CHECK-NEXT:    ret i8 [[RETVAL_0]]
 ;
   %1 = and i8 %a, 1
@@ -1477,9 +1476,8 @@ define i8 @select_icmp_eq_shl_and(i8 noundef %a, i8 %b)  {
 ; CHECK-LABEL: @select_icmp_eq_shl_and(
 ; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[A:%.*]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[TMP1]], 0
-; CHECK-NEXT:    [[DIV7:%.*]] = and i8 [[A]], -2
-; CHECK-NEXT:    [[SHL:%.*]] = shl i8 [[DIV7]], [[DIV7]]
-; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[SHL]], i8 [[B:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = shl i8 [[A]], [[A]]
+; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[TMP2]], i8 [[B:%.*]]
 ; CHECK-NEXT:    ret i8 [[RETVAL_0]]
 ;
   %1 = and i8 %a, 1
@@ -1494,8 +1492,7 @@ define i8 @select_icmp_eq_and(i8 noundef %a, i8 %b)  {
 ; CHECK-LABEL: @select_icmp_eq_and(
 ; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[A:%.*]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[TMP1]], 0
-; CHECK-NEXT:    [[DIV7:%.*]] = and i8 [[A]], -2
-; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[DIV7]], i8 [[B:%.*]]
+; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[A]], i8 [[B:%.*]]
 ; CHECK-NEXT:    ret i8 [[RETVAL_0]]
 ;
   %1 = and i8 %a, 1
@@ -1510,9 +1507,8 @@ define i8 @select_icmp_eq_mul_and_undef(i8 %a, i8 %b)  {
 ; CHECK-LABEL: @select_icmp_eq_mul_and_undef(
 ; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[A:%.*]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[TMP1]], 0
-; CHECK-NEXT:    [[DIV7:%.*]] = and i8 [[A]], -2
-; CHECK-NEXT:    [[MUL:%.*]] = mul i8 [[DIV7]], [[DIV7]]
-; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[MUL]], i8 [[B:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = mul i8 [[A]], [[A]]
+; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[TMP2]], i8 [[B:%.*]]
 ; CHECK-NEXT:    ret i8 [[RETVAL_0]]
 ;
   %1 = and i8 %a, 1
@@ -1528,8 +1524,7 @@ define i8 @select_icmp_eq_and_undef(i8 %a, i8 %b)  {
 ; CHECK-LABEL: @select_icmp_eq_and_undef(
 ; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[A:%.*]], 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i8 [[TMP1]], 0
-; CHECK-NEXT:    [[DIV7:%.*]] = and i8 [[A]], -2
-; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[DIV7]], i8 [[B:%.*]]
+; CHECK-NEXT:    [[RETVAL_0:%.*]] = select i1 [[CMP]], i8 [[A]], i8 [[B:%.*]]
 ; CHECK-NEXT:    ret i8 [[RETVAL_0]]
 ;
   %1 = and i8 %a, 1
