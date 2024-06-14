@@ -825,6 +825,13 @@ bool TargetTransformInfo::shouldPrefetchAddressSpace(unsigned AS) const {
   return TTIImpl->shouldPrefetchAddressSpace(AS);
 }
 
+bool TargetTransformInfo::isPartialReductionSupported(
+    const Instruction *ReductionInstr, Type *InputType, unsigned ScaleFactor,
+    bool IsInputASignExtended, bool IsInputBSignExtended,
+    const Instruction *BinOp) const {
+  return TTIImpl->isPartialReductionSupported(ReductionInstr, InputType, ScaleFactor, IsInputASignExtended, IsInputBSignExtended, BinOp);
+}
+
 unsigned TargetTransformInfo::getMaxInterleaveFactor(ElementCount VF) const {
   return TTIImpl->getMaxInterleaveFactor(VF);
 }
@@ -1165,12 +1172,6 @@ InstructionCost TargetTransformInfo::getExtendedReductionCost(
     FastMathFlags FMF, TTI::TargetCostKind CostKind) const {
   return TTIImpl->getExtendedReductionCost(Opcode, IsUnsigned, ResTy, Ty, FMF,
                                            CostKind);
-}
-
-InstructionCost TargetTransformInfo::getPartialReductionCost(
-  unsigned Opcode, bool IsUnsigned, VectorType *ResTy, VectorType *Ty,
-  FastMathFlags FMF, TargetCostKind CostKind) const {
-  return TTIImpl->getPartialReductionCost(Opcode, IsUnsigned, ResTy, Ty, FMF, CostKind);
 }
 
 InstructionCost TargetTransformInfo::getMulAccReductionCost(

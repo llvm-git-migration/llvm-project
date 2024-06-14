@@ -276,11 +276,10 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
       }
 
       assert(Phi && Mul && "Phi and Mul must be set");
-      assert(isa<ScalableVectorType>(Ops[0]->getType()) && "Type must be a scalable vector");
 
-      ScalableVectorType *FullTy = cast<ScalableVectorType>(Ops[0]->getType());
+      VectorType *FullTy = cast<VectorType>(Ops[0]->getType());
       auto EC = FullTy->getElementCount();
-      Type *RetTy = ScalableVectorType::get(FullTy->getScalarType(), EC.divideCoefficientBy(Scale).getKnownMinValue());
+      Type *RetTy = VectorType::get(FullTy->getScalarType(), EC.divideCoefficientBy(Scale));
 
       Intrinsic::ID PartialIntrinsic = Intrinsic::not_intrinsic;
       switch(Opcode) {
@@ -294,10 +293,7 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
 
       assert(PartialIntrinsic != Intrinsic::not_intrinsic);
 
-      Value *V = Builder.CreateIntrinsic(RetTy, PartialIntrinsic, Mul, nullptr, Twine("partial.reduce"));
-      V = Builder.CreateNAryOp(Opcode, {V, Phi});
-      if (auto *VecOp = dyn_cast<Instruction>(V))
-        setFlags(VecOp);
+      CallInst *V = Builder.CreateIntrinsic(RetTy, PartialIntrinsic, {Phi, Mul}, nullptr, Twine("partial.reduce"));
 
       // Use this vector value for all users of the original instruction.
       State.set(this, V, Part);

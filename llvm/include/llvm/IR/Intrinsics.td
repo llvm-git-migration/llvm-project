@@ -2646,12 +2646,6 @@ def int_experimental_vector_partial_reduce_add : DefaultAttrsIntrinsic<[LLVMMatc
                                                                        [llvm_anyvector_ty, llvm_anyvector_ty],
                                                                        [IntrNoMem]>;
 
-//===-------------- Intrinsics to perform partial reduction ---------------===//
-
-def int_experimental_vector_partial_reduce_add : DefaultAttrsIntrinsic<[llvm_anyvector_ty],
-                                                                       [llvm_anyvector_ty],
-                                                                       [IntrNoMem]>;
-
 //===----------------- Pointer Authentication Intrinsics ------------------===//
 //
 

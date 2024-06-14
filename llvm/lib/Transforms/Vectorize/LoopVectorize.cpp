@@ -1137,7 +1137,7 @@ public:
   calculateRegisterUsage(ArrayRef<ElementCount> VFs);
 
   /// Collect values we want to ignore in the cost model.
-  void collectValuesToIgnore();
+  void collectValuesToIgnore(LoopVectorizationPlanner *LVP);
 
   /// Collect all element types in the loop for which widening is needed.
   void collectElementTypesForWidening();
@@ -2191,73 +2191,59 @@ static bool useActiveLaneMaskForControlFlow(TailFoldingStyle Style) {
          Style == TailFoldingStyle::DataAndControlFlowWithoutRuntimeCheck;
 }
 
-static void getPartialReductionInstrChain(Instruction *Instr, SmallVector<Value*, 4> &Chain) {
-  Instruction *Mul = cast<Instruction>(Instr->getOperand(0));
-  Instruction *Ext0 = cast<ZExtInst>(Mul->getOperand(0));
-  Instruction *Ext1 = cast<ZExtInst>(Mul->getOperand(1));
+static PartialReductionChain getPartialReductionInstrChain(Instruction *Instr) {
+  Instruction *BinOp = cast<Instruction>(Instr->getOperand(0));
+  Instruction *Ext0 = cast<Instruction>(BinOp->getOperand(0));
+  Instruction *Ext1 = cast<Instruction>(BinOp->getOperand(1));
 
-  Chain.push_back(Mul);
-  Chain.push_back(Ext0);
-  Chain.push_back(Ext1);
-  Chain.push_back(Instr->getOperand(1));
+  PartialReductionChain Chain;
+  Chain.Reduction = Instr;
+  Chain.BinOp = BinOp;
+  Chain.ExtendA = Ext0;
+  Chain.ExtendB = Ext1;
+  Chain.InputA = Ext0->getOperand(0);
+  Chain.InputB = Ext1->getOperand(0);
+  Chain.Accumulator = Instr->getOperand(1);
+
+  unsigned InputSizeBits = Chain.InputA->getType()->getScalarSizeInBits();
+  unsigned ResultSizeBits = Chain.Reduction->getType()->getScalarSizeInBits();
+  Chain.ScaleFactor = ResultSizeBits / InputSizeBits; 
+  return Chain;
 }
 
 
 /// Checks if the given instruction the root of a partial reduction chain
 ///
-/// Note: This currently only supports udot/sdot chains
 /// @param Instr The root instruction to scan
 static bool isInstrPartialReduction(Instruction *Instr) {
   Value *ExpectedPhi;
   Value *A, *B;
-  Value *InductionA, *InductionB;
 
   using namespace llvm::PatternMatch;
-  auto Pattern = m_Add(
-    m_OneUse(m_Mul(
-      m_OneUse(m_ZExtOrSExt(
-        m_OneUse(m_Load(
-          m_GEP(
-              m_Value(A),
-              m_Value(InductionA)))))),
-      m_OneUse(m_ZExtOrSExt(
-        m_OneUse(m_Load(
-          m_GEP(
-              m_Value(B),
-              m_Value(InductionB))))))
-        )), m_Value(ExpectedPhi));
+  auto Pattern = m_BinOp(
+      m_OneUse(m_BinOp(
+        m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
+        m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
+      m_Value(ExpectedPhi));
 
   bool Matches = match(Instr, Pattern);
 
   if(!Matches)
     return false;
 
-  // Check that the two induction variable uses are to the same induction variable
-  if(InductionA != InductionB) {
-    LLVM_DEBUG(dbgs() << "Loop uses different induction variables for each input variable, cannot create a partial reduction.\n");
+  // Check that the extends extend from the same type
+  if(A->getType() != B->getType()) {
+    LLVM_DEBUG(dbgs() << "Extends don't extend from the same type, cannot create a partial reduction.\n");
     return false;
   }
 
-  Instruction *Mul = cast<Instruction>(Instr->getOperand(0));
-  Instruction *Ext0 = cast<CastInst>(Mul->getOperand(0));
-  Instruction *Ext1 = cast<CastInst>(Mul->getOperand(1));
+  // A and B are one-use, so the first user of each should be the respective extend 
+  Instruction *Ext0 = cast<CastInst>(*A->user_begin());
+  Instruction *Ext1 = cast<CastInst>(*B->user_begin());
 
-  if(Ext0->getOpcode() != Ext1->getOpcode()) {
-    LLVM_DEBUG(dbgs() << "Extends aren't of the same type, cannot create a partial reduction.\n");
-    return false;
-  }
-
-  // Check that the extends extend to i32
-  if(!Ext0->getType()->isIntegerTy(32) || !Ext1->getType()->isIntegerTy(32)) {
-    LLVM_DEBUG(dbgs() << "Extends don't extend to the correct width, cannot create a partial reduction.\n");
-    return false;
-  }
-
-  // Check that the loads are loading i8
-  LoadInst *Load0 = cast<LoadInst>(Ext0->getOperand(0));
-  LoadInst *Load1 = cast<LoadInst>(Ext1->getOperand(0));
-  if(!Load0->getType()->isIntegerTy(8) || !Load1->getType()->isIntegerTy(8)) {
-    LLVM_DEBUG(dbgs() << "Loads don't load the correct width, cannot create a partial reduction\n");
+  // Check that the extends extend to the same type
+  if(Ext0->getType() != Ext1->getType()) {
+    LLVM_DEBUG(dbgs() << "Extends don't extend to the same type, cannot create a partial reduction.\n");
     return false;
   }
 
@@ -2268,21 +2254,30 @@ static bool isInstrPartialReduction(Instruction *Instr) {
     return false;
   }
 
-  // Check that the first phi value is a zero initializer
-  ConstantInt *ZeroInit = dyn_cast<ConstantInt>(PhiNode->getIncomingValue(0));
-  if(!ZeroInit || !ZeroInit->isZero()) {
-    LLVM_DEBUG(dbgs() << "First PHI value is not a constant zero, cannot create a partial reduction.\n");
-    return false;
-  }
-
   // Check that the second phi value is the instruction we're looking at
   Instruction *MaybeAdd = dyn_cast<Instruction>(PhiNode->getIncomingValue(1));
   if(!MaybeAdd || MaybeAdd != Instr) {
-    LLVM_DEBUG(dbgs() << "Second PHI value is not the root add, cannot create a partial reduction.\n");
+    LLVM_DEBUG(dbgs() << "Second PHI value is not the root binop, cannot create a partial reduction.\n");
     return false;
   }
 
   return true;
+}
+
+static bool isPartialReductionChainValid(PartialReductionChain &Chain, const TargetTransformInfo &TTI) {
+  if(Chain.Reduction->getOpcode() != Instruction::Add)
+    return false;
+
+  unsigned InputSizeBits = Chain.InputA->getType()->getScalarSizeInBits();
+  unsigned ResultSizeBits = Chain.Reduction->getType()->getScalarSizeInBits();
+
+  if(ResultSizeBits < InputSizeBits || (ResultSizeBits % InputSizeBits) != 0)
+    return false;
+  
+  bool IsASignExtended = isa<SExtInst>(Chain.ExtendA);
+  bool IsBSignExtended = isa<SExtInst>(Chain.ExtendB);
+
+  return TTI.isPartialReductionSupported(Chain.Reduction, Chain.InputA->getType(), Chain.ScaleFactor, IsASignExtended, IsBSignExtended, Chain.BinOp);
 }
 
 // Return true if \p OuterLp is an outer loop annotated with hints for explicit
@@ -5091,6 +5086,16 @@ bool LoopVectorizationPlanner::isCandidateForEpilogueVectorization(
   return true;
 }
 
+bool LoopVectorizationPlanner::getInstructionsPartialReduction(Instruction *I, PartialReductionChain &Chain) const {
+  for(auto &C : PartialReductionChains) {
+    if(C.Reduction == I) {
+      Chain = C;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool LoopVectorizationCostModel::isEpilogueVectorizationProfitable(
     const ElementCount VF) const {
   // FIXME: We need a much better cost-model to take different parameters such
@@ -7152,7 +7157,7 @@ LoopVectorizationCostModel::getInstructionCost(Instruction *I, ElementCount VF,
   } // end of switch.
 }
 
-void LoopVectorizationCostModel::collectValuesToIgnore() {
+void LoopVectorizationCostModel::collectValuesToIgnore(LoopVectorizationPlanner* LVP) {
   // Ignore ephemeral values.
   CodeMetrics::collectEphemeralValues(TheLoop, AC, ValuesToIgnore);
 
@@ -7209,14 +7214,10 @@ void LoopVectorizationCostModel::collectValuesToIgnore() {
   }
 
   // Ignore any values that we know will be flattened
-  for(auto Reduction : this->Legal->getReductionVars()) {
-    auto &Recurrence = Reduction.second;
-    if(isInstrPartialReduction(Recurrence.getLoopExitInstr())) {
-      SmallVector<Value*, 4> PartialReductionValues;
-      getPartialReductionInstrChain(Recurrence.getLoopExitInstr(), PartialReductionValues);
-      ValuesToIgnore.insert(PartialReductionValues.begin(), PartialReductionValues.end());
-      VecValuesToIgnore.insert(PartialReductionValues.begin(), PartialReductionValues.end());
-    }
+  for(auto Chain : LVP->getPartialReductionChains()) {
+    SmallVector<Value*> PartialReductionValues{Chain.Reduction, Chain.BinOp, Chain.ExtendA, Chain.ExtendB, Chain.Accumulator};
+    ValuesToIgnore.insert(PartialReductionValues.begin(), PartialReductionValues.end());
+    VecValuesToIgnore.insert(PartialReductionValues.begin(), PartialReductionValues.end());
   }
 }
 
@@ -7343,7 +7344,17 @@ LoopVectorizationPlanner::planInVPlanNativePath(ElementCount UserVF) {
 std::optional<VectorizationFactor>
 LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC) {
   assert(OrigLoop->isInnermost() && "Inner loop expected.");
-  CM.collectValuesToIgnore();
+
+  for(auto ReductionVar : Legal->getReductionVars()) {
+    auto *ReductionExitInstr = ReductionVar.second.getLoopExitInstr();
+    if(isInstrPartialReduction(ReductionExitInstr)) {
+      auto Chain = getPartialReductionInstrChain(ReductionExitInstr);
+      if(isPartialReductionChainValid(Chain, TTI)) 
+        PartialReductionChains.push_back(Chain);
+    }
+  }
+  
+  CM.collectValuesToIgnore(this);
   CM.collectElementTypesForWidening();
 
   FixedScalableVFPair MaxFactors = CM.computeMaxVF(UserVF, UserIC);
@@ -8577,36 +8588,12 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
                                  *CI);
   }
 
-  if(auto *PartialReduce = tryToCreatePartialReduction(Range, Instr, Operands))
-    return PartialReduce;
-
   return tryToWiden(Instr, Operands, VPBB);
 }
 
 VPRecipeBase *VPRecipeBuilder::tryToCreatePartialReduction(
-    VFRange &Range, Instruction *Instr, ArrayRef<VPValue *> Operands) {
-
-  if(isInstrPartialReduction(Instr)) {
-    // Restricting this case to 16x means that, using a scale of 4, we avoid
-    // trying to generate illegal types such as <vscale x 2 x i32>
-    auto EC = ElementCount::getScalable(16);
-    if(std::find(Range.begin(), Range.end(), EC) == Range.end())
-      return nullptr;
-
-    // Scale factor of 4 for sdot/udot.
-    unsigned Scale = 4;
-    VectorType* ResTy = ScalableVectorType::get(Instr->getType(), Scale);
-    VectorType* ValTy = ScalableVectorType::get(Instr->getType(), EC.getKnownMinValue());
-    using namespace llvm::PatternMatch;
-    bool IsUnsigned = match(Instr, m_Add(m_Mul(m_ZExt(m_Value()), m_ZExt(m_Value())), m_Value()));
-    auto RecipeCost = this->CM.TTI.getPartialReductionCost(Instr->getOpcode(), IsUnsigned, ResTy, ValTy, FastMathFlags::getFast());
-    // TODO replace with more informed cost check
-    if(RecipeCost == InstructionCost::getMax())
-      return nullptr;
-
-    return new VPPartialReductionRecipe(*Instr, make_range(Operands.begin(), Operands.end()), Scale);
-  }
-  return nullptr;
+    VFRange &Range, PartialReductionChain &Chain, ArrayRef<VPValue *> Operands) {
+  return new VPPartialReductionRecipe(*Chain.Reduction, make_range(Operands.begin(), Operands.end()), Chain.ScaleFactor);
 }
 
 void LoopVectorizationPlanner::buildVPlansWithVPRecipes(ElementCount MinVF,
@@ -8795,8 +8782,14 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
           Legal->isInvariantAddressOfReduction(SI->getPointerOperand()))
         continue;
 
-      VPRecipeBase *Recipe =
-          RecipeBuilder.tryToCreateWidenRecipe(Instr, Operands, Range, VPBB);
+      VPRecipeBase *Recipe = nullptr;
+
+      PartialReductionChain Chain;
+      if(getInstructionsPartialReduction(Instr, Chain)) 
+        Recipe = RecipeBuilder.tryToCreatePartialReduction(Range, Chain, Operands);
+      
+      if (!Recipe)
+        Recipe = RecipeBuilder.tryToCreateWidenRecipe(Instr, Operands, Range, VPBB);
       if (!Recipe)
         Recipe = RecipeBuilder.handleReplication(Instr, Range);
 
