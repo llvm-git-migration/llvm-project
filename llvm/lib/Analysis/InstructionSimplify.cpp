@@ -6505,6 +6505,33 @@ Value *llvm::simplifyBinaryIntrinsic(Intrinsic::ID IID, Type *ReturnType,
 
     break;
   }
+  case Intrinsic::scmp:
+  case Intrinsic::ucmp: {
+    // Fold cmp x, x -> 0
+    if (Op0 == Op1)
+      return Constant::getNullValue(ReturnType);
+
+    // Fold to a constant if the relationship between operands can be
+    // established with certainty
+    if (isICmpTrue(CmpInst::ICMP_EQ, Op0, Op1, Q, RecursionLimit))
+      return Constant::getNullValue(ReturnType);
+
+    ICmpInst::Predicate PredGT =
+        IID == Intrinsic::scmp ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT;
+    if (isICmpTrue(PredGT, Op0, Op1, Q, RecursionLimit))
+      return Constant::getIntegerValue(
+          ReturnType,
+          APInt(ReturnType->getIntegerBitWidth(), 1, /*isSigned*/ false));
+
+    ICmpInst::Predicate PredLT =
+        IID == Intrinsic::scmp ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT;
+    if (isICmpTrue(PredLT, Op0, Op1, Q, RecursionLimit))
+      return Constant::getIntegerValue(
+          ReturnType,
+          APInt(ReturnType->getIntegerBitWidth(), -1, /*isSigned*/ true));
+
+    break;
+  }
   case Intrinsic::usub_with_overflow:
   case Intrinsic::ssub_with_overflow:
     // X - X -> { 0, false }
