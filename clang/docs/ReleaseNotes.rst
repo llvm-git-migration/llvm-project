@@ -672,6 +672,8 @@ Improvements to Clang's diagnostics
 
 - Clang now shows implicit deduction guides when diagnosing overload resolution failure. #GH92393.
 
+- For the ARM target, calling an interrupt handler from another function is now an error. #GH95359.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
