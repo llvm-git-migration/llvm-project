@@ -329,15 +329,16 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
   unsigned SGPRPressure = 0;
   unsigned VGPRPressure = 0;
   if (DAG->isTrackingPressure()) {
-    SGPRPressure =
-        GCNTrackers ? (Zone.isTop() ? DownwardTracker.getPressure().getSGPRNum()
-                                    : UpwardTracker.getPressure().getSGPRNum())
-                    : Pressure[AMDGPU::RegisterPressureSets::SReg_32];
-    VGPRPressure =
-        GCNTrackers
-            ? (Zone.isTop() ? DownwardTracker.getPressure().getVGPRNum(false)
-                            : UpwardTracker.getPressure().getVGPRNum(false))
-            : Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
+    if (!GCNTrackers) {
+      SGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
+      VGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
+    } else {
+      GCNRPTracker *T = &UpwardTracker;
+      if (Zone.isTop())
+        T = &DownwardTracker;
+      SGPRPressure = T->getPressure().getSGPRNum();
+      VGPRPressure = T->getPressure().getVGPRNum(false);
+    }
   }
   ReadyQueue &Q = Zone.Available;
   for (SUnit *SU : Q) {
