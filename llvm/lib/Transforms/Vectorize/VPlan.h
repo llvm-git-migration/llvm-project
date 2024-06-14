@@ -1017,7 +1017,9 @@ private:
     FastMathFlagsTy(const FastMathFlags &FMF);
   };
 
+public:
   OperationType OpType;
+private:
 
   union {
     CmpInst::Predicate CmpPredicate;
