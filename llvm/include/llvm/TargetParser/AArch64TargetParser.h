@@ -114,12 +114,12 @@ using ExtensionBitset = Bitset<AEK_NUM_EXTENSIONS>;
 // SubtargetFeature which may represent either an actual extension or some
 // internal LLVM property.
 struct ExtensionInfo {
-  StringRef Name;                 // Human readable name, e.g. "profile".
+  StringRef UserVisibleName;      // Human readable name used in -march/-cpu, e.g. "profile"
   std::optional<StringRef> Alias; // An alias for this extension, if one exists.
   ArchExtKind ID;                 // Corresponding to the ArchExtKind, this
                                   // extensions representation in the bitfield.
-  StringRef Feature;              // -mattr enable string, e.g. "+spe"
-  StringRef NegFeature;           // -mattr disable string, e.g. "-spe"
+  StringRef TargetFeature;        // -target-feature/-mattr enable string, e.g. "+spe"
+  StringRef NegTargetFeature;     // -target-feature/-mattr disable string, e.g. "-spe"
   CPUFeatures CPUFeature;      // Function Multi Versioning (FMV) bitfield value
                                // set in __aarch64_cpu_features
   StringRef DependentFeatures; // FMV enabled features string,

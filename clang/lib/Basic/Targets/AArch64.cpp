@@ -1101,7 +1101,7 @@ bool AArch64TargetInfo::initFeatureMap(
         std::optional<llvm::AArch64::ExtensionInfo> Extension =
             llvm::AArch64::parseArchExtension(Feature.substr(1));
         if (Extension)
-          UpdatedFeature = Extension->Feature.str();
+          UpdatedFeature = Extension->TargetFeature.str();
       }
       UpdatedFeaturesVec.push_back(UpdatedFeature);
     }
