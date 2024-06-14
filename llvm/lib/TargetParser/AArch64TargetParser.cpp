@@ -61,8 +61,8 @@ bool AArch64::getExtensionFeatures(
     std::vector<StringRef> &Features) {
   for (const auto &E : Extensions)
     /* INVALID and NONE have no feature name. */
-    if (InputExts.test(E.ID) && !E.Feature.empty())
-      Features.push_back(E.Feature);
+    if (InputExts.test(E.ID) && !E.TargetFeature.empty())
+      Features.push_back(E.TargetFeature);
 
   return true;
 }
@@ -80,7 +80,7 @@ StringRef AArch64::getArchExtFeature(StringRef ArchExt) {
 
   if (auto AE = parseArchExtension(ArchExtBase)) {
     // Note: the returned string can be empty.
-    return IsNegated ? AE->NegFeature : AE->Feature;
+    return IsNegated ? AE->NegTargetFeature : AE->TargetFeature;
   }
 
   return StringRef();
@@ -116,9 +116,9 @@ const AArch64::ArchInfo *AArch64::parseArch(StringRef Arch) {
 std::optional<AArch64::ExtensionInfo>
 AArch64::parseArchExtension(StringRef ArchExt) {
   for (const auto &A : Extensions) {
-    if (A.Name.empty() && !A.Alias)
+    if (A.UserVisibleName.empty() && !A.Alias)
       continue;
-    if (ArchExt == A.Name || ArchExt == A.Alias)
+    if (ArchExt == A.UserVisibleName || ArchExt == A.Alias)
       return A;
   }
   return {};
@@ -142,11 +142,11 @@ void AArch64::PrintSupportedExtensions(StringMap<StringRef> DescMap) {
          << (DescMap.empty() ? "\n" : "Description\n");
   for (const auto &Ext : Extensions) {
     // Extensions without a feature cannot be used with -march.
-    if (!Ext.Name.empty() && !Ext.Feature.empty()) {
-      std::string Description = DescMap[Ext.Name].str();
+    if (!Ext.UserVisibleName.empty() && !Ext.TargetFeature.empty()) {
+      std::string Description = DescMap[Ext.UserVisibleName].str();
       outs() << "    "
              << format(Description.empty() ? "%s\n" : "%-20s%s\n",
-                       Ext.Name.str().c_str(), Description.c_str());
+                       Ext.UserVisibleName.str().c_str(), Description.c_str());
     }
   }
 }
@@ -221,12 +221,12 @@ void AArch64::ExtensionSet::toLLVMFeatureList(
     Features.push_back(BaseArch->ArchFeature);
 
   for (const auto &E : Extensions) {
-    if (E.Feature.empty() || !Touched.test(E.ID))
+    if (E.TargetFeature.empty() || !Touched.test(E.ID))
       continue;
     if (Enabled.test(E.ID))
-      Features.push_back(E.Feature);
+      Features.push_back(E.TargetFeature);
     else
-      Features.push_back(E.NegFeature);
+      Features.push_back(E.NegTargetFeature);
   }
 }
 
@@ -256,7 +256,7 @@ bool AArch64::ExtensionSet::parseModifier(StringRef Modifier) {
   StringRef ArchExt = IsNegated ? Modifier.drop_front(2) : Modifier;
 
   if (auto AE = parseArchExtension(ArchExt)) {
-    if (AE->Feature.empty() || AE->NegFeature.empty())
+    if (AE->TargetFeature.empty() || AE->NegTargetFeature.empty())
       return false;
     if (IsNegated)
       disable(AE->ID);
