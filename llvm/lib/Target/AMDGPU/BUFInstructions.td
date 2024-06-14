@@ -1149,21 +1149,21 @@ let SubtargetPredicate = isGFX6GFX7GFX10Plus in {
 defm BUFFER_ATOMIC_FCMPSWAP : MUBUF_Pseudo_Atomics <
   "buffer_atomic_fcmpswap", VReg_64, v2f32, null_frag
 >;
+}
+
+let SubtargetPredicate = HasAtomicFMinFMaxF32GlobalInsts in {
 defm BUFFER_ATOMIC_FMIN : MUBUF_Pseudo_Atomics <
   "buffer_atomic_fmin", VGPR_32, f32, null_frag
 >;
 defm BUFFER_ATOMIC_FMAX : MUBUF_Pseudo_Atomics <
   "buffer_atomic_fmax", VGPR_32, f32, null_frag
 >;
-
 }
 
 let SubtargetPredicate = isGFX6GFX7GFX10 in {
-
 defm BUFFER_ATOMIC_FCMPSWAP_X2 : MUBUF_Pseudo_Atomics <
   "buffer_atomic_fcmpswap_x2", VReg_128, v2f64, null_frag
 >;
-
 }
 
 let SubtargetPredicate = HasD16LoadStore in {
@@ -1657,6 +1657,16 @@ defm : BufferAtomicPat<"atomic_load_udec_wrap_global", Ty, "BUFFER_ATOMIC_DEC" #
 
 } // end foreach Ty
 
+let SubtargetPredicate = HasAtomicFMinFMaxF32GlobalInsts in {
+defm : BufferAtomicPat<"atomic_load_fmin_global", f32, "BUFFER_ATOMIC_FMIN">;
+defm : BufferAtomicPat<"atomic_load_fmax_global", f32, "BUFFER_ATOMIC_FMAX">;
+}
+
+let SubtargetPredicate = HasAtomicFMinFMaxF64GlobalInsts in {
+defm : BufferAtomicPat<"atomic_load_fmin_global", f64, "BUFFER_ATOMIC_MIN_F64">;
+defm : BufferAtomicPat<"atomic_load_fmax_global", f64, "BUFFER_ATOMIC_MAX_F64">;
+}
+
 defm : BufferAtomicCmpSwapPat<i32, v2i32, "BUFFER_ATOMIC_CMPSWAP">;
 defm : BufferAtomicCmpSwapPat<i64, v2i64, "BUFFER_ATOMIC_CMPSWAP_X2">;
 
@@ -1711,7 +1721,7 @@ multiclass SIBufferAtomicPat_Common<string OpPrefix, ValueType vt, string Inst,
 
 multiclass SIBufferAtomicPat<string OpPrefix, ValueType vt, string Inst,
                              list<string> RtnModes = ["ret", "noret"]> {
-  let SubtargetPredicate = HasUnrestrictedSOffset in {
+  let OtherPredicates = [HasUnrestrictedSOffset] in {
     defm : SIBufferAtomicPat_Common<OpPrefix, vt, Inst, RtnModes>;
   }
   defm : SIBufferAtomicPat_Common<OpPrefix, vt, Inst # "_VBUFFER", RtnModes>;
@@ -1744,22 +1754,24 @@ defm : SIBufferAtomicPat<"SIbuffer_atomic_xor", i64, "BUFFER_ATOMIC_XOR_X2">;
 defm : SIBufferAtomicPat<"SIbuffer_atomic_inc", i64, "BUFFER_ATOMIC_INC_X2">;
 defm : SIBufferAtomicPat<"SIbuffer_atomic_dec", i64, "BUFFER_ATOMIC_DEC_X2">;
 
-let OtherPredicates = [HasAtomicCSubNoRtnInsts] in
+let SubtargetPredicate = HasAtomicCSubNoRtnInsts in
 defm : SIBufferAtomicPat<"SIbuffer_atomic_csub", i32, "BUFFER_ATOMIC_CSUB", ["noret"]>;
 
 let SubtargetPredicate = isGFX12Plus in {
   defm : SIBufferAtomicPat_Common<"SIbuffer_atomic_fadd_bf16", v2bf16, "BUFFER_ATOMIC_PK_ADD_BF16_VBUFFER">;
   defm : SIBufferAtomicPat_Common<"SIbuffer_atomic_cond_sub_u32", i32, "BUFFER_ATOMIC_COND_SUB_U32_VBUFFER", ["ret"]>;
+}
 
-  let OtherPredicates = [HasAtomicCSubNoRtnInsts] in
+let SubtargetPredicate = HasAtomicCSubNoRtnInsts in {
   defm : SIBufferAtomicPat_Common<"SIbuffer_atomic_cond_sub_u32", i32, "BUFFER_ATOMIC_COND_SUB_U32_VBUFFER", ["noret"]>;
 }
 
-let OtherPredicates = [isGFX6GFX7GFX10Plus] in {
+let SubtargetPredicate = HasAtomicFMinFMaxF32GlobalInsts in {
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmin", f32, "BUFFER_ATOMIC_FMIN">;
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmax", f32, "BUFFER_ATOMIC_FMAX">;
 }
-let SubtargetPredicate = isGFX6GFX7GFX10 in {
+
+let SubtargetPredicate = HasAtomicFMinFMaxF64GlobalInsts in {
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmin", f64, "BUFFER_ATOMIC_MIN_F64">;
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmax", f64, "BUFFER_ATOMIC_MAX_F64">;
 }
@@ -1815,7 +1827,7 @@ multiclass BufferAtomicPatterns_NO_RTN<SDPatternOperator name, ValueType vt,
   defm : BufferAtomicPatterns_NO_RTN_Common<name, vt, opcode # "_VBUFFER">;
 }
 
-let OtherPredicates = [HasAtomicFaddNoRtnInsts] in
+let SubtargetPredicate = HasAtomicFaddNoRtnInsts in
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fadd", f32, "BUFFER_ATOMIC_ADD_F32", ["noret"]>;
 
 let OtherPredicates = [HasAtomicBufferGlobalPkAddF16NoRtnInsts] in {
@@ -1826,7 +1838,7 @@ let OtherPredicates = [HasAtomicBufferGlobalPkAddF16NoRtnInsts] in {
   defm : SIBufferAtomicPat_Common<"SIbuffer_atomic_fadd", v2f16, "BUFFER_ATOMIC_PK_ADD_F16_VBUFFER", ["noret"]>;
 } // End OtherPredicates = [HasAtomicBufferGlobalPkAddF16NoRtnInsts]
 
-let OtherPredicates = [HasAtomicFaddRtnInsts] in
+let SubtargetPredicate = HasAtomicFaddRtnInsts in
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fadd", f32, "BUFFER_ATOMIC_ADD_F32", ["ret"]>;
 
 let OtherPredicates = [HasAtomicBufferGlobalPkAddF16Insts] in {
@@ -1837,11 +1849,14 @@ let OtherPredicates = [HasAtomicBufferGlobalPkAddF16Insts] in {
   defm : SIBufferAtomicPat_Common<"SIbuffer_atomic_fadd", v2f16, "BUFFER_ATOMIC_PK_ADD_F16_VBUFFER", ["ret"]>;
 } // End OtherPredicates = [HasAtomicBufferGlobalPkAddF16Insts]
 
-let OtherPredicates = [HasBufferFlatGlobalAtomicsF64] in {
+let SubtargetPredicate = HasBufferFlatGlobalAtomicsF64 in {
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fadd", f64, "BUFFER_ATOMIC_ADD_F64">;
+} // End SubtargetPredicate = HasBufferFlatGlobalAtomicsF64
+
+let SubtargetPredicate = HasAtomicFMinFMaxF64GlobalInsts in {
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmin", f64, "BUFFER_ATOMIC_MIN_F64">;
   defm : SIBufferAtomicPat<"SIbuffer_atomic_fmax", f64, "BUFFER_ATOMIC_MAX_F64">;
-} // End SubtargetPredicate = HasBufferFlatGlobalAtomicsF64
+} //End let SubtargetPredicate = HasAtomicFMinFMaxF64GlobalInsts
 
 multiclass SIBufferAtomicCmpSwapPat_Common<ValueType vt, ValueType data_vt, string Inst> {
   foreach RtnMode = ["ret", "noret"] in {
