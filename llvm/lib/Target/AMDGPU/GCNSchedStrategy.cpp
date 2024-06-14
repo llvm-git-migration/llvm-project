@@ -170,6 +170,7 @@ static void getRegisterPressures(bool AtTop,
     else
       TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
   } else {
+    Pressure.resize(4, 0);
     if (AtTop) {
       GCNDownwardRPTracker TempTopTracker(DownwardTracker);
       auto MI = SU->getInstr();
