@@ -66,9 +66,8 @@ static cl::opt<bool> GCNTrackers(
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
 GCNSchedStrategy::GCNSchedStrategy(const MachineSchedContext *C)
-    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr),
-      TheTracker(*C->LIS), TheUpwardTracker(*C->LIS),
-      HasHighPressure(false) {}
+    : GenericScheduler(C), TargetOccupancy(0), MF(nullptr), TheTracker(*C->LIS),
+      TheUpwardTracker(*C->LIS), HasHighPressure(false) {}
 
 void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   GenericScheduler::initialize(DAG);
@@ -175,8 +174,10 @@ static void getRegisterPressures(bool AtTop,
       auto MI = SU->getInstr();
       TempTopTracker.advance(MI, true, DAG->getLIS());
 
-      Pressure[AMDGPU::RegisterPressureSets::SReg_32] = TempTopTracker.getPressure().getSGPRNum();
-      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] = TempTopTracker.getPressure().getVGPRNum(false);
+      Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
+          TempTopTracker.getPressure().getSGPRNum();
+      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
+          TempTopTracker.getPressure().getVGPRNum(false);
     }
 
     else {
@@ -184,8 +185,10 @@ static void getRegisterPressures(bool AtTop,
       auto MI = SU->getInstr();
       TempBotTracker.recede(*MI, true);
 
-      Pressure[AMDGPU::RegisterPressureSets::SReg_32] = TempBotTracker.getPressure().getSGPRNum();
-      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] = TempBotTracker.getPressure().getVGPRNum(false);
+      Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
+          TempBotTracker.getPressure().getSGPRNum();
+      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
+          TempBotTracker.getPressure().getVGPRNum(false);
     }
   }
 }
@@ -217,7 +220,8 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
   // In EXPENSIVE_CHECKS, we always query RPTracker to verify the results of
   // PressureDiffs.
   if (AtTop || !canUsePressureDiffs(*SU) || GCNTrackers) {
-    getRegisterPressures(AtTop, RPTracker, SU, Pressure, MaxPressure, TheTracker, TheUpwardTracker, DAG);
+    getRegisterPressures(AtTop, RPTracker, SU, Pressure, MaxPressure,
+                         TheTracker, TheUpwardTracker, DAG);
   } else {
     // Reserve 4 slots.
     Pressure.resize(4, 0);
@@ -235,11 +239,8 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
 
 #ifdef EXPENSIVE_CHECKS
     std::vector<unsigned> CheckPressure, CheckMaxPressure;
-<<<<<<< HEAD
-    getRegisterPressures(AtTop, RPTracker, SU, CheckPressure, CheckMaxPressure);
-=======
-    getRegisterPressures(AtTop, RPTracker, SU, CheckPressure, CheckMaxPressure,TheTracker,TheUpwardTracker, DAG);
->>>>>>> 3fc6929b4a78... [AMDGPU] Optionally Use AMDGPU RPTrackers during scheduling
+    getRegisterPressures(AtTop, RPTracker, SU, CheckPressure, CheckMaxPressure,
+                         TheTracker, TheUpwardTracker, DAG);
     if (Pressure[AMDGPU::RegisterPressureSets::SReg_32] !=
             CheckPressure[AMDGPU::RegisterPressureSets::SReg_32] ||
         Pressure[AMDGPU::RegisterPressureSets::VGPR_32] !=
@@ -837,15 +838,16 @@ void GCNScheduleDAGMILive::runSchedStages() {
       if (GCNTrackers) {
         GCNDownwardRPTracker *TheTracker = S.getTracker();
         GCNUpwardRPTracker *TheUpwardTracker = S.getUpwardTracker();
-        GCNRPTracker::LiveRegSet *RegionLiveIns = &LiveIns[Stage->getRegionIdx()];
+        GCNRPTracker::LiveRegSet *RegionLiveIns =
+            &LiveIns[Stage->getRegionIdx()];
 
-        reinterpret_cast<GCNRPTracker *>(TheTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            *RegionLiveIns);
-        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)->reset(
-            Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
-            RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
-
+        reinterpret_cast<GCNRPTracker *>(TheTracker)
+            ->reset(Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+                    *RegionLiveIns);
+        reinterpret_cast<GCNRPTracker *>(TheUpwardTracker)
+            ->reset(
+                Regions[Stage->getRegionIdx()].first->getMF()->getRegInfo(),
+                RegionLiveOuts.getLiveRegsForRegionIdx(Stage->getRegionIdx()));
       }
 
       ScheduleDAGMILive::schedule();
