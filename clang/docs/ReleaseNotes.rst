@@ -578,7 +578,7 @@ Improvements to Clang's diagnostics
   functions that are called from interrupt handlers to prevent clobbering VFP registers
   as part of ``-Wextra`` (#GH34876). Following this suggestion leads to unpredictable
   behavior. Instead, a new warning, ``-Warm-interrupt-vfp-clobber`` will trigger for
-  interrupt handlers with VFP enabled.
+  interrupt handlers with VFP enabled. Calling an interrupt handler is now an error.
 
 Improvements to Clang's time-trace
 ----------------------------------
