@@ -108,6 +108,10 @@ def HasRCPC_IMMO      : Predicate<"Subtarget->hasRCPC_IMMO()">,
 def HasFPARMv8       : Predicate<"Subtarget->hasFPARMv8()">,
                                AssemblerPredicateWithAll<(all_of FeatureFPARMv8), "fp-armv8">;
 def HasNEON          : Predicate<"Subtarget->hasNEON()">,
+                                 AssemblerPredicateWithAll<(any_of FeatureNEON), "neon">;
+// Not all NEON instructions are available in Streaming SVE execution mode.
+// In contrast to HasNEON, IsNEONAvailable also checks the runtime mode.
+def IsNEONAvailable  : Predicate<"Subtarget->isNeonAvailable()">,
                                  AssemblerPredicateWithAll<(all_of FeatureNEON), "neon">;
 def HasSM4           : Predicate<"Subtarget->hasSM4()">,
                                  AssemblerPredicateWithAll<(all_of FeatureSM4), "sm4">;
@@ -234,12 +238,6 @@ def HasSMEF16F16orSMEF8F16
                 AssemblerPredicateWithAll<(any_of FeatureSMEF16F16, FeatureSMEF8F16),
                 "sme-f16f16 or sme-f8f16">;
 
-// A subset of NEON instructions are legal in Streaming SVE execution mode,
-// they should be enabled if either has been specified.
-def HasNEONorSME
-    : Predicate<"Subtarget->hasNEON() || Subtarget->hasSME()">,
-                AssemblerPredicateWithAll<(any_of FeatureNEON, FeatureSME),
-                "neon or sme">;
 def HasRCPC          : Predicate<"Subtarget->hasRCPC()">,
                                  AssemblerPredicateWithAll<(all_of FeatureRCPC), "rcpc">;
 def HasAltNZCV       : Predicate<"Subtarget->hasAlternativeNZCV()">,
@@ -1294,7 +1292,7 @@ defm UDOTlane : SIMDThreeSameVectorDotIndex<1, 0, 0b10, "udot", AArch64udot>;
 }
 
 // ARMv8.6-A BFloat
-let Predicates = [HasNEON, HasBF16] in {
+let Predicates = [IsNEONAvailable, HasBF16] in {
 defm BFDOT       : SIMDThreeSameVectorBFDot<1, "bfdot">;
 defm BF16DOTlane : SIMDThreeSameVectorBF16DotI<0, "bfdot">;
 def BFMMLA       : SIMDThreeSameVectorBF16MatrixMul<"bfmmla">;
@@ -1326,7 +1324,7 @@ def : Pat<(v2f32 (int_aarch64_neon_bfdot
                              VectorIndexS:$idx)>;
 }
 
-let Predicates = [HasNEONorSME, HasBF16] in {
+let Predicates = [HasNEON, HasBF16] in {
 def BFCVT : BF16ToSinglePrecision<"bfcvt">;
 // Round FP32 to BF16.
 def : Pat<(bf16 (any_fpround (f32 FPR32:$Rn))), (BFCVT $Rn)>;
@@ -1367,7 +1365,7 @@ defm SUDOTlane : SIMDSUDOTIndex;
 }
 
 // ARMv8.2-A FP16 Fused Multiply-Add Long
-let Predicates = [HasNEON, HasFP16FML] in {
+let Predicates = [IsNEONAvailable, HasFP16FML] in {
 defm FMLAL      : SIMDThreeSameVectorFML<0, 1, 0b001, "fmlal", int_aarch64_neon_fmlal>;
 defm FMLSL      : SIMDThreeSameVectorFML<0, 1, 0b101, "fmlsl", int_aarch64_neon_fmlsl>;
 defm FMLAL2     : SIMDThreeSameVectorFML<1, 0, 0b001, "fmlal2", int_aarch64_neon_fmlal2>;
@@ -1503,7 +1501,7 @@ defm FCADD : SIMDThreeSameVectorComplexHSD<1, 0b111, complexrotateopodd,
                                            "fcadd", null_frag>;
 defm FCMLA : SIMDIndexedTiedComplexHSD<0, 1, complexrotateop, "fcmla">;
 
-let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
+let Predicates = [HasComplxNum, IsNEONAvailable, HasFullFP16] in {
   def : Pat<(v4f16 (int_aarch64_neon_vcadd_rot90 (v4f16 V64:$Rn), (v4f16 V64:$Rm))),
             (FCADDv4f16 (v4f16 V64:$Rn), (v4f16 V64:$Rm), (i32 0))>;
   def : Pat<(v4f16 (int_aarch64_neon_vcadd_rot270 (v4f16 V64:$Rn), (v4f16 V64:$Rm))),
@@ -1514,7 +1512,7 @@ let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
             (FCADDv8f16 (v8f16 V128:$Rn), (v8f16 V128:$Rm), (i32 1))>;
 }
 
-let Predicates = [HasComplxNum, HasNEON] in {
+let Predicates = [HasComplxNum, IsNEONAvailable] in {
   def : Pat<(v2f32 (int_aarch64_neon_vcadd_rot90 (v2f32 V64:$Rn), (v2f32 V64:$Rm))),
             (FCADDv2f32 (v2f32 V64:$Rn), (v2f32 V64:$Rm), (i32 0))>;
   def : Pat<(v2f32 (int_aarch64_neon_vcadd_rot270 (v2f32 V64:$Rn), (v2f32 V64:$Rm))),
@@ -1550,7 +1548,7 @@ multiclass FCMLA_LANE_PATS<ValueType ty, DAGOperand Reg, dag RHSDup> {
 }
 
 
-let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
+let Predicates = [HasComplxNum, IsNEONAvailable, HasFullFP16] in {
   defm : FCMLA_PATS<v4f16, V64>;
   defm : FCMLA_PATS<v8f16, V128>;
 
@@ -1559,7 +1557,7 @@ let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
   defm : FCMLA_LANE_PATS<v8f16, V128,
                          (v8f16 (bitconvert (v4i32 (AArch64duplane32 (v4i32 V128:$Rm), VectorIndexS:$idx))))>;
 }
-let Predicates = [HasComplxNum, HasNEON] in {
+let Predicates = [HasComplxNum, IsNEONAvailable] in {
   defm : FCMLA_PATS<v2f32, V64>;
   defm : FCMLA_PATS<v4f32, V128>;
   defm : FCMLA_PATS<v2f64, V128>;
@@ -4858,7 +4856,7 @@ defm FNMSUB : ThreeOperandFPData<1, 1, "fnmsub",
 
 // Here we handle first -(a + b*c) for FNMADD:
 
-let Predicates = [HasNEON, HasFullFP16] in
+let Predicates = [IsNEONAvailable, HasFullFP16] in
 def : Pat<(f16 (fma (fneg FPR16:$Rn), FPR16:$Rm, FPR16:$Ra)),
           (FMSUBHrrr FPR16:$Rn, FPR16:$Rm, FPR16:$Ra)>;
 
@@ -4870,7 +4868,7 @@ def : Pat<(f64 (fma (fneg FPR64:$Rn), FPR64:$Rm, FPR64:$Ra)),
 
 // Now it's time for "(-a) + (-b)*c"
 
-let Predicates = [HasNEON, HasFullFP16] in
+let Predicates = [IsNEONAvailable, HasFullFP16] in
 def : Pat<(f16 (fma (fneg FPR16:$Rn), FPR16:$Rm, (fneg FPR16:$Ra))),
           (FNMADDHrrr FPR16:$Rn, FPR16:$Rm, FPR16:$Ra)>;
 
@@ -5127,7 +5125,7 @@ defm NEG    : SIMDTwoVectorBHSD<1, 0b01011, "neg",
                                UnOpFrag<(sub immAllZerosV, node:$LHS)> >;
 defm NOT    : SIMDTwoVectorB<1, 0b00, 0b00101, "not", vnot>;
 // Aliases for MVN -> NOT.
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"mvn{ $Vd.8b, $Vn.8b|.8b $Vd, $Vn}",
                 (NOTv8i8 V64:$Vd, V64:$Vn)>;
 def : InstAlias<"mvn{ $Vd.16b, $Vn.16b|.16b $Vd, $Vn}",
@@ -5283,11 +5281,11 @@ foreach VT = [ v8i8, v16i8, v4i16, v8i16, v2i32, v4i32, v2i64 ] in {
 def : Pat<(vnot (AArch64cmeqz VT:$Rn)), (!cast<Instruction>("CMTST"#VT) VT:$Rn, VT:$Rn)>;
 }
 defm FABD    : SIMDThreeSameVectorFP<1,1,0b010,"fabd", int_aarch64_neon_fabd>;
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 foreach VT = [ v2f32, v4f32, v2f64 ] in
 def : Pat<(fabs (fsub VT:$Rn, VT:$Rm)), (!cast<Instruction>("FABD"#VT) VT:$Rn, VT:$Rm)>;
 }
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 foreach VT = [ v4f16, v8f16 ] in
 def : Pat<(fabs (fsub VT:$Rn, VT:$Rm)), (!cast<Instruction>("FABD"#VT) VT:$Rn, VT:$Rm)>;
 }
@@ -5499,7 +5497,7 @@ defm : SelectSetCCZeroLHS<setge, "CMLE">;
 defm : SelectSetCCZeroLHS<setlt, "CMGT">;
 defm : SelectSetCCZeroLHS<setle, "CMGE">;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"mov{\t$dst.16b, $src.16b|.16b\t$dst, $src}",
                 (ORRv16i8 V128:$dst, V128:$src, V128:$src), 1>;
 def : InstAlias<"mov{\t$dst.8h, $src.8h|.8h\t$dst, $src}",
@@ -5606,7 +5604,7 @@ def : InstAlias<"{cmlt\t$dst.2d, $src1.2d, $src2.2d" #
                 "|cmlt.2d\t$dst, $src1, $src2}",
                 (CMGTv2i64 V128:$dst, V128:$src2, V128:$src1), 0>;
 
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : InstAlias<"{fcmle\t$dst.4h, $src1.4h, $src2.4h" #
                 "|fcmle.4h\t$dst, $src1, $src2}",
                 (FCMGEv4f16 V64:$dst, V64:$src2, V64:$src1), 0>;
@@ -5624,7 +5622,7 @@ def : InstAlias<"{fcmle\t$dst.2d, $src1.2d, $src2.2d" #
                 "|fcmle.2d\t$dst, $src1, $src2}",
                 (FCMGEv2f64 V128:$dst, V128:$src2, V128:$src1), 0>;
 
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : InstAlias<"{fcmlt\t$dst.4h, $src1.4h, $src2.4h" #
                 "|fcmlt.4h\t$dst, $src1, $src2}",
                 (FCMGTv4f16 V64:$dst, V64:$src2, V64:$src1), 0>;
@@ -5642,7 +5640,7 @@ def : InstAlias<"{fcmlt\t$dst.2d, $src1.2d, $src2.2d" #
                 "|fcmlt.2d\t$dst, $src1, $src2}",
                 (FCMGTv2f64 V128:$dst, V128:$src2, V128:$src1), 0>;
 
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : InstAlias<"{facle\t$dst.4h, $src1.4h, $src2.4h" #
                 "|facle.4h\t$dst, $src1, $src2}",
                 (FACGEv4f16 V64:$dst, V64:$src2, V64:$src1), 0>;
@@ -5660,7 +5658,7 @@ def : InstAlias<"{facle\t$dst.2d, $src1.2d, $src2.2d" #
                 "|facle.2d\t$dst, $src1, $src2}",
                 (FACGEv2f64 V128:$dst, V128:$src2, V128:$src1), 0>;
 
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : InstAlias<"{faclt\t$dst.4h, $src1.4h, $src2.4h" #
                 "|faclt.4h\t$dst, $src1, $src2}",
                 (FACGTv4f16 V64:$dst, V64:$src2, V64:$src1), 0>;
@@ -5693,10 +5691,10 @@ defm CMTST    : SIMDThreeScalarD<0, 0b10001, "cmtst", AArch64cmtst>;
 defm FABD     : SIMDFPThreeScalar<1, 1, 0b010, "fabd", int_aarch64_sisd_fabd>;
 def : Pat<(v1f64 (int_aarch64_neon_fabd (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
           (FABD64 FPR64:$Rn, FPR64:$Rm)>;
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : Pat<(fabs (fsub f16:$Rn, f16:$Rm)), (FABD16 f16:$Rn, f16:$Rm)>;
 }
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : Pat<(fabs (fsub f32:$Rn, f32:$Rm)), (FABD32 f32:$Rn, f32:$Rm)>;
 def : Pat<(fabs (fsub f64:$Rn, f64:$Rm)), (FABD64 f64:$Rn, f64:$Rm)>;
 }
@@ -5707,9 +5705,9 @@ defm FACGT    : SIMDThreeScalarFPCmp<1, 1, 0b101, "facgt",
 defm FCMEQ    : SIMDThreeScalarFPCmp<0, 0, 0b100, "fcmeq", AArch64fcmeq>;
 defm FCMGE    : SIMDThreeScalarFPCmp<1, 0, 0b100, "fcmge", AArch64fcmge>;
 defm FCMGT    : SIMDThreeScalarFPCmp<1, 1, 0b100, "fcmgt", AArch64fcmgt>;
-defm FMULX    : SIMDFPThreeScalar<0, 0, 0b011, "fmulx", int_aarch64_neon_fmulx, HasNEONorSME>;
-defm FRECPS   : SIMDFPThreeScalar<0, 0, 0b111, "frecps", int_aarch64_neon_frecps, HasNEONorSME>;
-defm FRSQRTS  : SIMDFPThreeScalar<0, 1, 0b111, "frsqrts", int_aarch64_neon_frsqrts, HasNEONorSME>;
+defm FMULX    : SIMDFPThreeScalar<0, 0, 0b011, "fmulx", int_aarch64_neon_fmulx, HasNEON>;
+defm FRECPS   : SIMDFPThreeScalar<0, 0, 0b111, "frecps", int_aarch64_neon_frecps, HasNEON>;
+defm FRSQRTS  : SIMDFPThreeScalar<0, 1, 0b111, "frsqrts", int_aarch64_neon_frsqrts, HasNEON>;
 defm SQADD    : SIMDThreeScalarBHSD<0, 0b00001, "sqadd", int_aarch64_neon_sqadd>;
 defm SQDMULH  : SIMDThreeScalarHS<  0, 0b10110, "sqdmulh", int_aarch64_neon_sqdmulh>;
 defm SQRDMULH : SIMDThreeScalarHS<  1, 0b10110, "sqrdmulh", int_aarch64_neon_sqrdmulh>;
@@ -5738,9 +5736,9 @@ let Predicates = [HasRDM] in {
 
 defm : FMULScalarFromIndexedLane0Patterns<"FMULX", "16", "32", "64",
                                           int_aarch64_neon_fmulx,
-                                          [HasNEONorSME]>;
+                                          [HasNEON]>;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"cmls $dst, $src1, $src2",
                 (CMHSv1i64 FPR64:$dst, FPR64:$src2, FPR64:$src1), 0>;
 def : InstAlias<"cmle $dst, $src1, $src2",
@@ -5812,9 +5810,9 @@ defm FCVTPU : SIMDFPTwoScalar<   1, 1, 0b11010, "fcvtpu">;
 def  FCVTXNv1i64 : SIMDInexactCvtTwoScalar<0b10110, "fcvtxn">;
 defm FCVTZS : SIMDFPTwoScalar<   0, 1, 0b11011, "fcvtzs">;
 defm FCVTZU : SIMDFPTwoScalar<   1, 1, 0b11011, "fcvtzu">;
-defm FRECPE : SIMDFPTwoScalar<   0, 1, 0b11101, "frecpe", HasNEONorSME>;
-defm FRECPX : SIMDFPTwoScalar<   0, 1, 0b11111, "frecpx", HasNEONorSME>;
-defm FRSQRTE : SIMDFPTwoScalar<  1, 1, 0b11101, "frsqrte", HasNEONorSME>;
+defm FRECPE : SIMDFPTwoScalar<   0, 1, 0b11101, "frecpe", HasNEON>;
+defm FRECPX : SIMDFPTwoScalar<   0, 1, 0b11111, "frecpx", HasNEON>;
+defm FRSQRTE : SIMDFPTwoScalar<  1, 1, 0b11101, "frsqrte", HasNEON>;
 defm NEG    : SIMDTwoScalarD<    1, 0b01011, "neg",
                                  UnOpFrag<(sub immAllZerosV, node:$LHS)> >;
 defm SCVTF  : SIMDFPTwoScalarCVT<   0, 0, 0b11101, "scvtf", AArch64sitof>;
@@ -5833,7 +5831,7 @@ def : Pat<(v1i64 (AArch64vashr (v1i64 V64:$Rn), (i32 63))),
           (CMLTv1i64rz V64:$Rn)>;
 
 // Round FP64 to BF16.
-let Predicates = [HasNEONorSME, HasBF16] in
+let Predicates = [HasNEON, HasBF16] in
 def : Pat<(bf16 (any_fpround (f64 FPR64:$Rn))),
           (BFCVT (FCVTXNv1i64 $Rn))>;
 
@@ -6036,7 +6034,7 @@ def : Pat <(f64 (uint_to_fp (i32
                           (LDURSi GPR64sp:$Rn, simm9:$offset), ssub))>;
 // 64-bits -> double are handled in target specific dag combine:
 // performIntToFpCombine.
-} // let Predicates = [HasNEON]
+} // let Predicates = [IsNEONAvailable]
 
 //===----------------------------------------------------------------------===//
 // Advanced SIMD three different-sized vector instructions.
@@ -7239,7 +7237,7 @@ defm BIC : SIMDModifiedImmVectorShiftTied<1, 0b11, 0b01, "bic", AArch64bici>;
 // AdvSIMD ORR
 defm ORR : SIMDModifiedImmVectorShiftTied<0, 0b11, 0b01, "orr", AArch64orri>;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"bic $Vd.4h, $imm", (BICv4i16 V64:$Vd,  imm0_255:$imm, 0)>;
 def : InstAlias<"bic $Vd.8h, $imm", (BICv8i16 V128:$Vd, imm0_255:$imm, 0)>;
 def : InstAlias<"bic $Vd.2s, $imm", (BICv2i32 V64:$Vd,  imm0_255:$imm, 0)>;
@@ -7271,14 +7269,14 @@ def FMOVv2f32_ns : SIMDModifiedImmVectorNoShift<0, 0, 0, 0b1111, V64,  fpimm8,
 def FMOVv4f32_ns : SIMDModifiedImmVectorNoShift<1, 0, 0, 0b1111, V128, fpimm8,
                                               "fmov", ".4s",
                        [(set (v4f32 V128:$Rd), (AArch64fmov imm0_255:$imm8))]>;
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def FMOVv4f16_ns : SIMDModifiedImmVectorNoShift<0, 0, 1, 0b1111, V64,  fpimm8,
                                               "fmov", ".4h",
                        [(set (v4f16 V64:$Rd), (AArch64fmov imm0_255:$imm8))]>;
 def FMOVv8f16_ns : SIMDModifiedImmVectorNoShift<1, 0, 1, 0b1111, V128, fpimm8,
                                               "fmov", ".8h",
                        [(set (v8f16 V128:$Rd), (AArch64fmov imm0_255:$imm8))]>;
-} // Predicates = [HasNEON, HasFullFP16]
+} // Predicates = [IsNEONAvailable, HasFullFP16]
 
 // AdvSIMD MOVI
 
@@ -7335,7 +7333,7 @@ def : Pat<(v8i8  immAllOnesV), (EXTRACT_SUBREG (MOVIv2d_ns (i32 255)), dsub)>;
 let isReMaterializable = 1, isAsCheapAsAMove = 1 in
 defm MOVI      : SIMDModifiedImmVectorShift<0, 0b10, 0b00, "movi">;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
   // Using the MOVI to materialize fp constants.
   def : Pat<(f32 fpimm32SIMDModImmType4:$in),
             (EXTRACT_SUBREG (MOVIv2i32 (fpimm32SIMDModImmType4XForm f32:$in),
@@ -7343,7 +7341,7 @@ let Predicates = [HasNEON] in {
                             ssub)>;
 }
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"movi $Vd.4h, $imm", (MOVIv4i16 V64:$Vd,  imm0_255:$imm, 0), 0>;
 def : InstAlias<"movi $Vd.8h, $imm", (MOVIv8i16 V128:$Vd, imm0_255:$imm, 0), 0>;
 def : InstAlias<"movi $Vd.2s, $imm", (MOVIv2i32 V64:$Vd,  imm0_255:$imm, 0), 0>;
@@ -7389,7 +7387,7 @@ def MOVIv16b_ns  : SIMDModifiedImmVectorNoShift<1, 0, 0, 0b1110, V128, imm0_255,
 let isReMaterializable = 1, isAsCheapAsAMove = 1 in
 defm MVNI      : SIMDModifiedImmVectorShift<1, 0b10, 0b00, "mvni">;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : InstAlias<"mvni $Vd.4h, $imm", (MVNIv4i16 V64:$Vd,  imm0_255:$imm, 0), 0>;
 def : InstAlias<"mvni $Vd.8h, $imm", (MVNIv8i16 V128:$Vd, imm0_255:$imm, 0), 0>;
 def : InstAlias<"mvni $Vd.2s, $imm", (MVNIv2i32 V64:$Vd,  imm0_255:$imm, 0), 0>;
@@ -7716,7 +7714,7 @@ defm SCVTF: SIMDVectorRShiftToFP<0, 0b11100, "scvtf",
 defm RSHRN   : SIMDVectorRShiftNarrowBHS<0, 0b10001, "rshrn", AArch64rshrn>;
 defm SHL     : SIMDVectorLShiftBHSD<0, 0b01010, "shl", AArch64vshl>;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : Pat<(v2f32 (sint_to_fp (v2i32 (AArch64vashr_exact v2i32:$Vn, i32:$shift)))),
           (SCVTFv2i32_shift $Vn, vecshiftR32:$shift)>;
 
@@ -7727,7 +7725,7 @@ def : Pat<(v2f64 (sint_to_fp (v2i64 (AArch64vashr_exact v2i64:$Vn, i32:$shift)))
           (SCVTFv2i64_shift $Vn, vecshiftR64:$shift)>;
 }
 
-let Predicates = [HasNEON, HasFullFP16] in {
+let Predicates = [IsNEONAvailable, HasFullFP16] in {
 def : Pat<(v4f16 (sint_to_fp (v4i16 (AArch64vashr_exact v4i16:$Vn, i32:$shift)))),
           (SCVTFv4i16_shift $Vn, vecshiftR16:$shift)>;
 
@@ -7912,7 +7910,7 @@ def : Pat<(v2i64 (zext   (v2i32 (extract_high_v4i32 (v4i32 V128:$Rn)) ))),
 def : Pat<(v2i64 (sext   (v2i32 (extract_high_v4i32 (v4i32 V128:$Rn)) ))),
           (SSHLLv4i32_shift V128:$Rn, (i32 0))>;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 // Vector shift sxtl aliases
 def : InstAlias<"sxtl.8h $dst, $src1",
                 (SSHLLv8i8_shift V128:$dst, V64:$src1, 0)>;
@@ -7994,7 +7992,7 @@ def neg_f16 :
 def : Pat<(f16 (fneg (f16 FPR16:$Rn))), (f16 (neg_f16 (f16 FPR16:$Rn)))>;
 def : Pat<(bf16 (fneg (bf16 FPR16:$Rn))), (bf16 (neg_f16 (bf16 FPR16:$Rn)))>;
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 def : Pat<(v4f16 (fabs (v4f16 V64:$Rn))), (v4f16 (BICv4i16 (v4f16 V64:$Rn), (i32 128), (i32 8)))>;
 def : Pat<(v4bf16 (fabs (v4bf16 V64:$Rn))), (v4bf16 (BICv4i16 (v4bf16 V64:$Rn), (i32 128), (i32 8)))>;
 def : Pat<(v8f16 (fabs (v8f16 V128:$Rn))), (v8f16 (BICv8i16 (v8f16 V128:$Rn), (i32 128), (i32 8)))>;
@@ -8033,7 +8031,7 @@ class SExtLoadi8CVTf32Pat<dag addrmode, dag INST>
                                   dsub)),
                                0),
                              ssub)))>,
-    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, HasNEON]>;
+    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, IsNEONAvailable]>;
 
 def : SExtLoadi8CVTf32Pat<(ro8.Wpat GPR64sp:$Rn, GPR32:$Rm, ro8.Wext:$ext),
                           (LDRBroW  GPR64sp:$Rn, GPR32:$Rm, ro8.Wext:$ext)>;
@@ -8054,7 +8052,7 @@ class SExtLoadi16CVTf32Pat<dag addrmode, dag INST>
                                   hsub),
                                 0),
                             ssub)))>,
-    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, HasNEON]>;
+    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, IsNEONAvailable]>;
 
 def : SExtLoadi16CVTf32Pat<(ro16.Wpat GPR64sp:$Rn, GPR32:$Rm, ro16.Wext:$ext),
                            (LDRHroW   GPR64sp:$Rn, GPR32:$Rm, ro16.Wext:$ext)>;
@@ -8088,7 +8086,7 @@ class SExtLoadi16CVTf64Pat<dag addrmode, dag INST>
                                    dsub)),
                                0),
                              dsub)))>,
-    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, HasNEON]>;
+    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, IsNEONAvailable]>;
 
 def : SExtLoadi16CVTf64Pat<(ro16.Wpat GPR64sp:$Rn, GPR32:$Rm, ro16.Wext:$ext),
                            (LDRHroW GPR64sp:$Rn, GPR32:$Rm, ro16.Wext:$ext)>;
@@ -8108,7 +8106,7 @@ class SExtLoadi32CVTf64Pat<dag addrmode, dag INST>
                                   ssub),
                                0),
                              dsub)))>,
-    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, HasNEON]>;
+    Requires<[NotForCodeSize, UseAlternateSExtLoadCVTF32, IsNEONAvailable]>;
 
 def : SExtLoadi32CVTf64Pat<(ro32.Wpat GPR64sp:$Rn, GPR32:$Rm, ro32.Wext:$ext),
                            (LDRSroW GPR64sp:$Rn, GPR32:$Rm, ro32.Wext:$ext)>;
@@ -9749,7 +9747,7 @@ let Predicates = [HasRCPC3] in {
   def LDAPRXpost: BaseLRCPC3IntegerLoadStore<0b11, 0b11, (outs GPR64sp:$wback, GPR64:$Rt), (ins GPR64sp:$Rn),            "ldapr", "\t$Rt, [$Rn], #8",   "$Rn = $wback">;
 }
 
-let Predicates = [HasRCPC3, HasNEON] in {
+let Predicates = [HasRCPC3, IsNEONAvailable] in {
   //                                              size   opc regtype
   defm STLURb:  LRCPC3NEONLoadStoreUnscaledOffset<0b00, 0b00, FPR8  , (outs), (ins FPR8  :$Rt, GPR64sp:$Rn, simm9:$simm), "stlur">;
   defm STLURh:  LRCPC3NEONLoadStoreUnscaledOffset<0b01, 0b00, FPR16 , (outs), (ins FPR16 :$Rt, GPR64sp:$Rn, simm9:$simm), "stlur">;

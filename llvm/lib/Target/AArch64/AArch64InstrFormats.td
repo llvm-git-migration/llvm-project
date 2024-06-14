@@ -5762,7 +5762,7 @@ multiclass FPMoveImmediate<string asm> {
 // AdvSIMD
 //----------------------------------------------------------------------------
 
-let Predicates = [HasNEON] in {
+let Predicates = [IsNEONAvailable] in {
 
 //----------------------------------------------------------------------------
 // AdvSIMD three register vector instructions
@@ -5966,14 +5966,14 @@ multiclass SIMDThreeSameVectorB<bit U, bits<5> opc, string asm,
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDThreeSameVectorFP<bit U, bit S, bits<3> opc,
                                  string asm, SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDThreeSameVector<0, U, {S,0b10}, {0b00,opc}, V64,
                                       asm, ".4h",
         [(set (v4f16 V64:$Rd), (OpNode (v4f16 V64:$Rn), (v4f16 V64:$Rm)))]>;
   def v8f16 : BaseSIMDThreeSameVector<1, U, {S,0b10}, {0b00,opc}, V128,
                                       asm, ".8h",
         [(set (v8f16 V128:$Rd), (OpNode (v8f16 V128:$Rn), (v8f16 V128:$Rm)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDThreeSameVector<0, U, {S,0b01}, {0b11,opc}, V64,
                                       asm, ".2s",
         [(set (v2f32 V64:$Rd), (OpNode (v2f32 V64:$Rn), (v2f32 V64:$Rm)))]>;
@@ -5989,14 +5989,14 @@ let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDThreeSameVectorFPCmp<bit U, bit S, bits<3> opc,
                                     string asm,
                                     SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDThreeSameVector<0, U, {S,0b10}, {0b00,opc}, V64,
                                       asm, ".4h",
         [(set (v4i16 V64:$Rd), (OpNode (v4f16 V64:$Rn), (v4f16 V64:$Rm)))]>;
   def v8f16 : BaseSIMDThreeSameVector<1, U, {S,0b10}, {0b00,opc}, V128,
                                       asm, ".8h",
         [(set (v8i16 V128:$Rd), (OpNode (v8f16 V128:$Rn), (v8f16 V128:$Rm)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDThreeSameVector<0, U, {S,0b01}, {0b11,opc}, V64,
                                       asm, ".2s",
         [(set (v2i32 V64:$Rd), (OpNode (v2f32 V64:$Rn), (v2f32 V64:$Rm)))]>;
@@ -6011,7 +6011,7 @@ multiclass SIMDThreeSameVectorFPCmp<bit U, bit S, bits<3> opc,
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDThreeSameVectorFPTied<bit U, bit S, bits<3> opc,
                                  string asm, SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDThreeSameVectorTied<0, U, {S,0b10}, {0b00,opc}, V64,
                                       asm, ".4h",
      [(set (v4f16 V64:$dst),
@@ -6020,7 +6020,7 @@ multiclass SIMDThreeSameVectorFPTied<bit U, bit S, bits<3> opc,
                                       asm, ".8h",
      [(set (v8f16 V128:$dst),
            (OpNode (v8f16 V128:$Rd), (v8f16 V128:$Rn), (v8f16 V128:$Rm)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDThreeSameVectorTied<0, U, {S,0b01}, {0b11,opc}, V64,
                                       asm, ".2s",
      [(set (v2f32 V64:$dst),
@@ -6480,14 +6480,14 @@ multiclass SIMDTwoVectorFP<bit U, bit S, bits<5> opc, string asm,
                            SDPatternOperator OpNode,
                            int fpexceptions = 1> {
   let mayRaiseFPException = fpexceptions, Uses = !if(fpexceptions,[FPCR],[]<Register>) in {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDTwoSameVector<0, U, {S,1}, opc, 0b11, V64,
                                 asm, ".4h", ".4h",
                           [(set (v4f16 V64:$Rd), (OpNode (v4f16 V64:$Rn)))]>;
   def v8f16 : BaseSIMDTwoSameVector<1, U, {S,1}, opc, 0b11, V128,
                                 asm, ".8h", ".8h",
                           [(set (v8f16 V128:$Rd), (OpNode (v8f16 V128:$Rn)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDTwoSameVector<0, U, {S,0}, opc, 0b00, V64,
                                 asm, ".2s", ".2s",
                           [(set (v2f32 V64:$Rd), (OpNode (v2f32 V64:$Rn)))]>;
@@ -6538,14 +6538,14 @@ multiclass SIMDTwoVectorS<bit U, bit S, bits<5> opc, string asm,
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDTwoVectorFPToInt<bit U, bit S, bits<5> opc, string asm,
                            SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDTwoSameVector<0, U, {S,1}, opc, 0b11, V64,
                                 asm, ".4h", ".4h",
                           [(set (v4i16 V64:$Rd), (OpNode (v4f16 V64:$Rn)))]>;
   def v8f16 : BaseSIMDTwoSameVector<1, U, {S,1}, opc, 0b11, V128,
                                 asm, ".8h", ".8h",
                           [(set (v8i16 V128:$Rd), (OpNode (v8f16 V128:$Rn)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDTwoSameVector<0, U, {S,0}, opc, 0b00, V64,
                                 asm, ".2s", ".2s",
                           [(set (v2i32 V64:$Rd), (OpNode (v2f32 V64:$Rn)))]>;
@@ -6560,14 +6560,14 @@ multiclass SIMDTwoVectorFPToInt<bit U, bit S, bits<5> opc, string asm,
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDTwoVectorIntToFP<bit U, bit S, bits<5> opc, string asm,
                            SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDTwoSameVector<0, U, {S,1}, opc, 0b11, V64,
                                 asm, ".4h", ".4h",
                           [(set (v4f16 V64:$Rd), (OpNode (v4i16 V64:$Rn)))]>;
   def v8f16 : BaseSIMDTwoSameVector<1, U, {S,1}, opc, 0b11, V128,
                                 asm, ".8h", ".8h",
                           [(set (v8f16 V128:$Rd), (OpNode (v8i16 V128:$Rn)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2f32 : BaseSIMDTwoSameVector<0, U, {S,0}, opc, 0b00, V64,
                                 asm, ".2s", ".2s",
                           [(set (v2f32 V64:$Rd), (OpNode (v2i32 V64:$Rn)))]>;
@@ -6720,14 +6720,14 @@ multiclass SIMDFPCmpTwoVector<bit U, bit S, bits<5> opc,
                               string asm, SDNode OpNode> {
 
   let mayRaiseFPException = 1, Uses = [FPCR] in {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16rz : BaseSIMDCmpTwoVector<0, U, {S,1}, 0b11, opc, V64,
                                      asm, ".4h", "0.0",
                                      v4i16, v4f16, OpNode>;
   def v8i16rz : BaseSIMDCmpTwoVector<1, U, {S,1}, 0b11, opc, V128,
                                      asm, ".8h", "0.0",
                                      v8i16, v8f16, OpNode>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2i32rz : BaseSIMDCmpTwoVector<0, U, {S,0}, 0b00, opc, V64,
                                      asm, ".2s", "0.0",
                                      v2i32, v2f32, OpNode>;
@@ -6739,7 +6739,7 @@ multiclass SIMDFPCmpTwoVector<bit U, bit S, bits<5> opc,
                                      v2i64, v2f64, OpNode>;
   }
 
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def : InstAlias<asm # "\t$Vd.4h, $Vn.4h, #0",
                   (!cast<Instruction>(NAME # v4i16rz) V64:$Vd, V64:$Vn), 0>;
   def : InstAlias<asm # "\t$Vd.8h, $Vn.8h, #0",
@@ -6751,7 +6751,7 @@ multiclass SIMDFPCmpTwoVector<bit U, bit S, bits<5> opc,
                   (!cast<Instruction>(NAME # v4i32rz) V128:$Vd, V128:$Vn), 0>;
   def : InstAlias<asm # "\t$Vd.2d, $Vn.2d, #0",
                   (!cast<Instruction>(NAME # v2i64rz) V128:$Vd, V128:$Vn), 0>;
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def : InstAlias<asm # ".4h\t$Vd, $Vn, #0",
                   (!cast<Instruction>(NAME # v4i16rz) V64:$Vd, V64:$Vn), 0>;
   def : InstAlias<asm # ".8h\t$Vd, $Vn, #0",
@@ -7394,7 +7394,7 @@ multiclass SIMDThreeScalarHSTied<bit U, bit R, bits<5> opc, string asm> {
 
 multiclass SIMDFPThreeScalar<bit U, bit S, bits<3> opc, string asm,
                              SDPatternOperator OpNode = null_frag,
-                             Predicate pred = HasNEON> {
+                             Predicate pred = IsNEONAvailable> {
   let mayLoad = 0, mayStore = 0, hasSideEffects = 0, mayRaiseFPException = 1, Uses = [FPCR] in {
     let Predicates = [pred] in {
     def NAME#64 : BaseSIMDThreeScalar<U, {S,0b11}, {0b11,opc}, FPR64, asm,
@@ -7419,10 +7419,10 @@ multiclass SIMDThreeScalarFPCmp<bit U, bit S, bits<3> opc, string asm,
       [(set (i64 FPR64:$Rd), (OpNode (f64 FPR64:$Rn), (f64 FPR64:$Rm)))]>;
     def NAME#32 : BaseSIMDThreeScalar<U, {S,0b01}, {0b11,opc}, FPR32, asm,
       [(set (i32 FPR32:$Rd), (OpNode (f32 FPR32:$Rn), (f32 FPR32:$Rm)))]>;
-    let Predicates = [HasNEON, HasFullFP16] in {
+    let Predicates = [IsNEONAvailable, HasFullFP16] in {
     def NAME#16 : BaseSIMDThreeScalar<U, {S,0b10}, {0b00,opc}, FPR16, asm,
       []>;
-    } // Predicates = [HasNEON, HasFullFP16]
+    } // Predicates = [IsNEONAvailable, HasFullFP16]
   }
 
   def : Pat<(v1i64 (OpNode (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
@@ -7571,7 +7571,7 @@ multiclass SIMDFPCmpTwoScalar<bit U, bit S, bits<5> opc, string asm,
   let mayRaiseFPException = 1, Uses = [FPCR] in {
   def v1i64rz  : BaseSIMDCmpTwoScalar<U, {S,1}, 0b00, opc, FPR64, asm, "0.0">;
   def v1i32rz  : BaseSIMDCmpTwoScalar<U, {S,0}, 0b00, opc, FPR32, asm, "0.0">;
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v1i16rz  : BaseSIMDCmpTwoScalar<U, {S,1}, 0b11, opc, FPR16, asm, "0.0">;
   }
   }
@@ -7580,7 +7580,7 @@ multiclass SIMDFPCmpTwoScalar<bit U, bit S, bits<5> opc, string asm,
                   (!cast<Instruction>(NAME # v1i64rz) FPR64:$Rd, FPR64:$Rn), 0>;
   def : InstAlias<asm # "\t$Rd, $Rn, #0",
                   (!cast<Instruction>(NAME # v1i32rz) FPR32:$Rd, FPR32:$Rn), 0>;
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def : InstAlias<asm # "\t$Rd, $Rn, #0",
                   (!cast<Instruction>(NAME # v1i16rz) FPR16:$Rd, FPR16:$Rn), 0>;
   }
@@ -7603,7 +7603,7 @@ multiclass SIMDTwoScalarD<bit U, bits<5> opc, string asm,
 
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDFPTwoScalar<bit U, bit S, bits<5> opc, string asm,
-                           Predicate pred = HasNEON> {
+                           Predicate pred = IsNEONAvailable> {
   let Predicates = [pred] in {
   def v1i64       : BaseSIMDTwoScalar<U, {S,1}, 0b00, opc, FPR64, FPR64, asm,[]>;
   def v1i32       : BaseSIMDTwoScalar<U, {S,0}, 0b00, opc, FPR32, FPR32, asm,[]>;
@@ -7620,7 +7620,7 @@ multiclass SIMDFPTwoScalarCVT<bit U, bit S, bits<5> opc, string asm,
                                 [(set FPR64:$Rd, (OpNode (f64 FPR64:$Rn)))]>;
   def v1i32 : BaseSIMDTwoScalar<U, {S,0}, 0b00, opc, FPR32, FPR32, asm,
                                 [(set FPR32:$Rd, (OpNode (f32 FPR32:$Rn)))]>;
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v1i16 : BaseSIMDTwoScalar<U, {S,1}, 0b11, opc, FPR16, FPR16, asm,
                                 [(set (f16 FPR16:$Rd), (OpNode (f16 FPR16:$Rn)))]>;
   }
@@ -7698,7 +7698,7 @@ multiclass SIMDPairwiseScalarD<bit U, bits<5> opc, string asm> {
 
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDFPPairwiseScalar<bit S, bits<5> opc, string asm> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v2i16p : BaseSIMDPairwiseScalar<0, {S,0}, opc, FPR16Op, V64,
                                       asm, ".2h">;
   }
@@ -7763,14 +7763,14 @@ multiclass SIMDAcrossLanesHSD<bit U, bits<5> opcode, string asm> {
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDFPAcrossLanes<bits<5> opcode, bit sz1, string asm,
                             SDPatternOperator intOp> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16v : BaseSIMDAcrossLanes<0, 0, {sz1, 0}, opcode, FPR16, V64,
                                    asm, ".4h",
         [(set (f16 FPR16:$Rd), (intOp (v4f16 V64:$Rn)))]>;
   def v8i16v : BaseSIMDAcrossLanes<1, 0, {sz1, 0}, opcode, FPR16, V128,
                                    asm, ".8h",
         [(set (f16 FPR16:$Rd), (intOp (v8f16 V128:$Rn)))]>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v4i32v : BaseSIMDAcrossLanes<1, 1, {sz1, 0}, opcode, FPR32, V128,
                                    asm, ".4s",
         [(set FPR32:$Rd, (intOp (v4f32 V128:$Rn)))]>;
@@ -7880,7 +7880,7 @@ class SIMDMovAlias<string asm, string size, Instruction inst,
 multiclass SMov {
   // SMOV with vector index of 0 are legal in Scalable Matrix Extension (SME)
   // streaming mode.
-  let Predicates = [HasNEONorSME] in {
+  let Predicates = [HasNEON] in {
     def vi8to32_idx0 : SIMDSMov<0, ".b", GPR32, VectorIndex0> {
       let Inst{20-16} = 0b00001;
     }
@@ -7927,7 +7927,7 @@ multiclass SMov {
 multiclass UMov {
   // UMOV with vector index of 0 are legal in Scalable Matrix Extension (SME)
   // streaming mode.
-  let Predicates = [HasNEONorSME] in {
+  let Predicates = [HasNEON] in {
     def vi8_idx0 : SIMDUMov<0, ".b", v16i8, GPR32, VectorIndex0> {
       let Inst{20-16} = 0b00001;
     }
@@ -8816,7 +8816,7 @@ multiclass SIMDThreeSameVectorFP8DOT2Index<string asm> {
 multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
                          SDPatternOperator OpNode> {
   let mayRaiseFPException = 1, Uses = [FPCR] in {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16_indexed : BaseSIMDIndexed<0, U, 0, 0b00, opc,
                                       V64, V64,
                                       V128_lo, VectorIndexH,
@@ -8842,7 +8842,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
     let Inst{21} = idx{1};
     let Inst{20} = idx{0};
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   def v2i32_indexed : BaseSIMDIndexed<0, U, 0, 0b10, opc,
                                       V64, V64,
@@ -8880,7 +8880,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
     let Inst{21} = 0;
   }
 
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v1i16_indexed : BaseSIMDIndexed<1, U, 1, 0b00, opc,
                                       FPR16Op, FPR16Op, V128_lo, VectorIndexH,
                                       asm, ".h", "", "", ".h",
@@ -8893,7 +8893,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
     let Inst{21} = idx{1};
     let Inst{20} = idx{0};
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   def v1i32_indexed : BaseSIMDIndexed<1, U, 1, 0b10, opc,
                                       FPR32Op, FPR32Op, V128, VectorIndexS,
@@ -8920,7 +8920,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
   }
   } // mayRaiseFPException = 1, Uses = [FPCR]
 
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def : Pat<(f16 (OpNode
                    (f16 (vector_extract (v8f16 V128:$Rn), (i64 0))),
                    (f16 (vector_extract (v8f16 V128:$Rm), VectorIndexH:$idx)))),
@@ -8928,7 +8928,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
               (f16 (EXTRACT_SUBREG V128:$Rn, hsub)), V128:$Rm, VectorIndexH:$idx)>;
   }
 
-  let Predicates = [HasNEON] in {
+  let Predicates = [IsNEONAvailable] in {
   def : Pat<(f32 (OpNode
                    (f32 (vector_extract (v4f32 V128:$Rn), (i64 0))),
                    (f32 (vector_extract (v4f32 V128:$Rm), VectorIndexS:$idx)))),
@@ -8944,7 +8944,7 @@ multiclass SIMDFPIndexed<bit U, bits<4> opc, string asm,
 }
 
 multiclass SIMDFPIndexedTiedPatterns<string INST, SDPatternOperator OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   // Patterns for f16: DUPLANE, DUP scalar and vector_extract.
   def : Pat<(v8f16 (OpNode (v8f16 V128:$Rd), (v8f16 V128:$Rn),
                            (AArch64duplane16 (v8f16 V128_lo:$Rm),
@@ -8970,7 +8970,7 @@ multiclass SIMDFPIndexedTiedPatterns<string INST, SDPatternOperator OpNode> {
                          (vector_extract (v8f16 V128_lo:$Rm), VectorIndexH:$idx))),
             (!cast<Instruction>(INST # "v1i16_indexed") FPR16:$Rd, FPR16:$Rn,
                 V128_lo:$Rm, VectorIndexH:$idx)>;
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   // 2 variants for the .2s version: DUPLANE from 128-bit and DUP scalar.
   def : Pat<(v2f32 (OpNode (v2f32 V64:$Rd), (v2f32 V64:$Rn),
@@ -9021,7 +9021,7 @@ multiclass SIMDFPIndexedTiedPatterns<string INST, SDPatternOperator OpNode> {
 
 let mayRaiseFPException = 1, Uses = [FPCR] in
 multiclass SIMDFPIndexedTied<bit U, bits<4> opc, string asm> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16_indexed : BaseSIMDIndexedTied<0, U, 0, 0b00, opc, V64, V64,
                                           V128_lo, VectorIndexH,
                                           asm, ".4h", ".4h", ".4h", ".h", []> {
@@ -9040,7 +9040,7 @@ multiclass SIMDFPIndexedTied<bit U, bits<4> opc, string asm> {
     let Inst{21} = idx{1};
     let Inst{20} = idx{0};
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   def v2i32_indexed : BaseSIMDIndexedTied<0, U, 0, 0b10, opc, V64, V64,
                                           V128, VectorIndexS,
@@ -9068,7 +9068,7 @@ multiclass SIMDFPIndexedTied<bit U, bits<4> opc, string asm> {
     let Inst{21} = 0;
   }
 
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v1i16_indexed : BaseSIMDIndexedTied<1, U, 1, 0b00, opc,
                                       FPR16Op, FPR16Op, V128_lo, VectorIndexH,
                                       asm, ".h", "", "", ".h", []> {
@@ -9077,7 +9077,7 @@ multiclass SIMDFPIndexedTied<bit U, bits<4> opc, string asm> {
     let Inst{21} = idx{1};
     let Inst{20} = idx{0};
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   def v1i32_indexed : BaseSIMDIndexedTied<1, U, 1, 0b10, opc,
                                       FPR32Op, FPR32Op, V128, VectorIndexS,
@@ -9673,12 +9673,12 @@ class BaseSIMDScalarShiftTied<bit U, bits<5> opc, bits<7> fixed_imm,
 
 
 multiclass SIMDFPScalarRShift<bit U, bits<5> opc, string asm> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def h : BaseSIMDScalarShift<U, opc, {0,0,1,?,?,?,?},
                               FPR16, FPR16, vecshiftR16, asm, []> {
     let Inst{19-16} = imm{3-0};
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def s : BaseSIMDScalarShift<U, opc, {0,1,?,?,?,?,?},
                               FPR32, FPR32, vecshiftR32, asm, []> {
     let Inst{20-16} = imm{4-0};
@@ -9860,7 +9860,7 @@ class BaseSIMDVectorShiftTied<bit Q, bit U, bits<5> opc, bits<7> fixed_imm,
 
 multiclass SIMDVectorRShiftSD<bit U, bits<5> opc, string asm,
                               Intrinsic OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16_shift : BaseSIMDVectorShift<0, U, opc, {0,0,1,?,?,?,?},
                                   V64, V64, vecshiftR16,
                                   asm, ".4h", ".4h",
@@ -9876,7 +9876,7 @@ multiclass SIMDVectorRShiftSD<bit U, bits<5> opc, string asm,
     bits<4> imm;
     let Inst{19-16} = imm;
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
   def v2i32_shift : BaseSIMDVectorShift<0, U, opc, {0,1,?,?,?,?,?},
                                   V64, V64, vecshiftR32,
                                   asm, ".2s", ".2s",
@@ -9904,7 +9904,7 @@ multiclass SIMDVectorRShiftSD<bit U, bits<5> opc, string asm,
 
 multiclass SIMDVectorRShiftToFP<bit U, bits<5> opc, string asm,
                                   Intrinsic OpNode> {
-  let Predicates = [HasNEON, HasFullFP16] in {
+  let Predicates = [IsNEONAvailable, HasFullFP16] in {
   def v4i16_shift : BaseSIMDVectorShift<0, U, opc, {0,0,1,?,?,?,?},
                                   V64, V64, vecshiftR16,
                                   asm, ".4h", ".4h",
@@ -9920,7 +9920,7 @@ multiclass SIMDVectorRShiftToFP<bit U, bits<5> opc, string asm,
     bits<4> imm;
     let Inst{19-16} = imm;
   }
-  } // Predicates = [HasNEON, HasFullFP16]
+  } // Predicates = [IsNEONAvailable, HasFullFP16]
 
   def v2i32_shift : BaseSIMDVectorShift<0, U, opc, {0,1,?,?,?,?,?},
                                   V64, V64, vecshiftR32,
@@ -11191,13 +11191,13 @@ multiclass SIMDLdSt4SingleAliases<string asm> {
   defm "" : SIMDLdStSingleAliases<asm, "s", "i32", "Four", 16, VectorIndexS>;
   defm "" : SIMDLdStSingleAliases<asm, "d", "i64", "Four", 32, VectorIndexD>;
 }
-} // end of 'let Predicates = [HasNEON]'
+} // end of 'let Predicates = [IsNEONAvailable]'
 
 //----------------------------------------------------------------------------
 // AdvSIMD v8.1 Rounding Double Multiply Add/Subtract
 //----------------------------------------------------------------------------
 
-let Predicates = [HasNEON, HasRDM] in {
+let Predicates = [IsNEONAvailable, HasRDM] in {
 
 class BaseSIMDThreeSameVectorTiedR0<bit Q, bit U, bits<2> size, bits<5> opcode,
                                     RegisterOperand regtype, string asm,
@@ -11351,7 +11351,7 @@ class BaseSIMDThreeSameVectorComplex<bit Q, bit U, bits<2> size, bits<3> opcode,
 //8.3 CompNum - Floating-point complex number support
 multiclass SIMDThreeSameVectorComplexHSD<bit U, bits<3> opcode, Operand rottype,
                                           string asm, SDPatternOperator OpNode>{
-  let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDThreeSameVectorComplex<0, U, 0b01, opcode, V64, rottype,
               asm, ".4h",
               [(set (v4f16 V64:$dst), (OpNode (v4f16 V64:$Rd),
@@ -11367,7 +11367,7 @@ multiclass SIMDThreeSameVectorComplexHSD<bit U, bits<3> opcode, Operand rottype,
                                                (i32 rottype:$rot)))]>;
   }
 
-  let Predicates = [HasComplxNum, HasNEON] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable] in {
   def v2f32 : BaseSIMDThreeSameVectorComplex<0, U, 0b10, opcode, V64, rottype,
               asm, ".2s",
               [(set (v2f32 V64:$dst), (OpNode (v2f32 V64:$Rd),
@@ -11423,7 +11423,7 @@ class BaseSIMDThreeSameVectorTiedComplex<bit Q, bit U, bits<2> size,
 multiclass SIMDThreeSameVectorTiedComplexHSD<bit U, bits<3> opcode,
                                              Operand rottype, string asm,
                                              SDPatternOperator OpNode> {
-  let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable, HasFullFP16] in {
   def v4f16 : BaseSIMDThreeSameVectorTiedComplex<0, U, 0b01, opcode, V64,
               rottype, asm, ".4h",
               [(set (v4f16 V64:$dst), (OpNode (v4f16 V64:$Rd),
@@ -11439,7 +11439,7 @@ multiclass SIMDThreeSameVectorTiedComplexHSD<bit U, bits<3> opcode,
                                                (i32 rottype:$rot)))]>;
   }
 
-  let Predicates = [HasComplxNum, HasNEON] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable] in {
   def v2f32 : BaseSIMDThreeSameVectorTiedComplex<0, U, 0b10, opcode, V64,
               rottype, asm, ".2s",
               [(set (v2f32 V64:$dst), (OpNode (v2f32 V64:$Rd),
@@ -11505,7 +11505,7 @@ class BaseSIMDIndexedTiedComplex<bit Q, bit U, bit Scalar, bits<2> size,
 // classes.
 multiclass SIMDIndexedTiedComplexHSD<bit opc1, bit opc2, Operand rottype,
                                      string asm> {
-  let Predicates = [HasComplxNum, HasNEON, HasFullFP16] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable, HasFullFP16] in {
   def v4f16_indexed : BaseSIMDIndexedTiedComplex<0, 1, 0, 0b01, opc1, opc2, V64,
                       V64, V128, VectorIndexD, rottype, asm, ".4h", ".4h",
                       ".4h", ".h", []> {
@@ -11521,9 +11521,9 @@ multiclass SIMDIndexedTiedComplexHSD<bit opc1, bit opc2, Operand rottype,
     let Inst{11} = idx{1};
     let Inst{21} = idx{0};
   }
-  } // Predicates = HasComplxNum, HasNEON, HasFullFP16]
+  } // Predicates = HasComplxNum, IsNEONAvailable, HasFullFP16]
 
-  let Predicates = [HasComplxNum, HasNEON] in {
+  let Predicates = [HasComplxNum, IsNEONAvailable] in {
   def v4f32_indexed : BaseSIMDIndexedTiedComplex<1, 1, 0, 0b10, opc1, opc2,
                       V128, V128, V128, VectorIndexD, rottype, asm, ".4s",
                       ".4s", ".4s", ".s", []> {
@@ -11531,7 +11531,7 @@ multiclass SIMDIndexedTiedComplexHSD<bit opc1, bit opc2, Operand rottype,
     let Inst{11} = idx{0};
     let Inst{21} = 0;
   }
-  } // Predicates = [HasComplxNum, HasNEON]
+  } // Predicates = [HasComplxNum, IsNEONAvailable]
 }
 
 //----------------------------------------------------------------------------
