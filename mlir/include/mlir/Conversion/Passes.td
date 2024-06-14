@@ -834,6 +834,24 @@ def ConvertMemRefToSPIRV : Pass<"convert-memref-to-spirv"> {
 }
 
 //===----------------------------------------------------------------------===//
+// MPItoLLVM
+//===----------------------------------------------------------------------===//
+
+def MPIToLLVMConversionPass : Pass<"convert-mpi-to-llvm"> {
+  let summary = "Convert MPI dialect operations to LLVM dialect function calls";
+  let description = [{
+    This pass converts MPI dialect operatoins to functions calls in the LLVM
+    dialect targeting the MPI stable ABI.
+  }];
+  let dependentDialects = ["LLVM::LLVMDialect"];
+  let options = [
+    Option<"indexBitwidth", "index-bitwidth", "unsigned",
+           /*default=kDeriveIndexBitwidthFromDataLayout*/"0",
+           "Bitwidth of the index type, 0 to use size of machine word">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // NVVMToLLVM
 //===----------------------------------------------------------------------===//
 
