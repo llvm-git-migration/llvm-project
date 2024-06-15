@@ -607,6 +607,8 @@ def note_using_decl_class_member_workaround : Note<
   "a const variable|a constexpr variable}0 instead">;
 def err_using_decl_can_not_refer_to_namespace : Error<
   "using declaration cannot refer to a namespace">;
+def note_namespace_using_decl : Note<
+  "did you mean 'using namespace'?">;
 def warn_cxx17_compat_using_decl_scoped_enumerator: Warning<
   "using declaration naming a scoped enumerator is incompatible with "
   "C++ standards before C++20">, InGroup<CXXPre20Compat>, DefaultIgnore;
@@ -855,7 +857,7 @@ def note_strncat_wrong_size : Note<
   "the terminating null byte">;
 
 def warn_assume_side_effects : Warning<
-  "the argument to %0 has side effects that will be discarded">,
+  "assumption is ignored because it contains (potential) side-effects">,
   InGroup<DiagGroup<"assume">>;
 def warn_omp_assume_attribute_string_unknown : Warning<
   "unknown assumption string '%0'; attribute is potentially ignored">,
@@ -6088,9 +6090,9 @@ def err_redefinition_different_concept : Error<
   "redefinition of concept %0 with different template parameters or requirements">;
 def err_tag_reference_non_tag : Error<
   "%select{non-struct type|non-class type|non-union type|non-enum "
-  "type|typedef|type alias|template|type alias template|template "
-  "template argument}1 %0 cannot be referenced with a "
-  "%select{struct|interface|union|class|enum}2 specifier">;
+  "type|typedef|type alias|template|alias template|template "
+  "template argument}1 %0 cannot be referenced with the '"
+  "%select{struct|interface|union|class|enum}2' specifier">;
 def err_tag_reference_conflict : Error<
   "implicit declaration introduced by elaborated type conflicts with a "
   "%select{non-struct type|non-class type|non-union type|non-enum "
@@ -6544,8 +6546,10 @@ def warn_superclass_variable_sized_type_not_at_end : Warning<
 
 def err_flexible_array_count_not_in_same_struct : Error<
   "'counted_by' field %0 isn't within the same struct as the flexible array">;
-def err_counted_by_attr_not_on_flexible_array_member : Error<
-  "'counted_by' only applies to C99 flexible array members">;
+def err_counted_by_attr_not_on_ptr_or_flexible_array_member : Error<
+  "'counted_by' only applies to pointers or C99 flexible array members">;
+def err_counted_by_attr_on_array_not_flexible_array_member : Error<
+  "'counted_by' on arrays only applies to C99 flexible array members">;
 def err_counted_by_attr_refer_to_itself : Error<
   "'counted_by' cannot refer to the flexible array member %0">;
 def err_counted_by_must_be_in_structure : Error<
@@ -6560,6 +6564,23 @@ def err_counted_by_attr_refer_to_union : Error<
   "'counted_by' argument cannot refer to a union member">;
 def note_flexible_array_counted_by_attr_field : Note<
   "field %0 declared here">;
+def err_counted_by_attr_pointee_unknown_size : Error<
+  "'counted_by' %select{cannot|should not}3 be applied to %select{"
+    "a pointer with pointee|" // pointer
+    "an array with element}0" // array
+  " of unknown size because %1 is %select{"
+    "an incomplete type|"  // CountedByInvalidPointeeTypeKind::INCOMPLETE
+    "a sizeless type|"     // CountedByInvalidPointeeTypeKind::SIZELESS
+    "a function type|"     // CountedByInvalidPointeeTypeKind::FUNCTION
+    // CountedByInvalidPointeeTypeKind::FLEXIBLE_ARRAY_MEMBER
+    "a struct type with a flexible array member"
+    "%select{|. This will be an error in a future compiler version}3"
+    ""
+  "}2">;
+
+def warn_counted_by_attr_elt_type_unknown_size :
+  Warning<err_counted_by_attr_pointee_unknown_size.Summary>,
+  InGroup<BoundsSafetyCountedByEltTyUnknownSize>;
 
 let CategoryName = "ARC Semantic Issue" in {
 
@@ -8758,6 +8779,9 @@ def err_typecheck_incomplete_type_not_modifiable_lvalue : Error<
 def err_typecheck_lvalue_casts_not_supported : Error<
   "assignment to cast is illegal, lvalue casts are not supported">;
 
+def note_typecheck_add_deref_star_not_modifiable_lvalue : Note<
+  "add '*' to dereference it">; 
+
 def err_typecheck_duplicate_vector_components_not_mlvalue : Error<
   "vector is not assignable (contains duplicate components)">;
 def err_block_decl_ref_not_modifiable_lvalue : Error<
@@ -8841,8 +8865,10 @@ def err_builtin_fn_use : Error<"builtin functions must be directly called">;
 
 def warn_call_wrong_number_of_arguments : Warning<
   "too %select{few|many}0 arguments in call to %1">;
+
 def err_atomic_builtin_must_be_pointer : Error<
-  "address argument to atomic builtin must be a pointer (%0 invalid)">;
+  "address argument to atomic builtin must be a pointer %select{|to a non-zero-sized object }1(%0 invalid)">;
+
 def err_atomic_builtin_must_be_pointer_intptr : Error<
   "address argument to atomic builtin must be a pointer to integer or pointer"
   " (%0 invalid)">;
@@ -8992,6 +9018,11 @@ def err_cuda_ovl_target : Error<
   "cannot overload %select{__device__|__global__|__host__|__host__ __device__}2 function %3">;
 def note_cuda_ovl_candidate_target_mismatch : Note<
     "candidate template ignored: target attributes do not match">;
+def warn_offload_incompatible_redeclare : Warning<
+  "target-attribute based function overloads are not supported by NVCC and will be treated as a function redeclaration:"
+  "new declaration is %select{__device__|__global__|__host__|__host__ __device__}0 function, "
+  "old declaration is %select{__device__|__global__|__host__|__host__ __device__}1 function">,
+  InGroup<DiagGroup<"nvcc-compat">>, DefaultIgnore;
 
 def err_cuda_device_builtin_surftex_cls_template : Error<
     "illegal device builtin %select{surface|texture}0 reference "
@@ -10061,6 +10092,12 @@ def warn_new_dangling_initializer_list : Warning<
   "the allocated initializer list}0 "
   "will be destroyed at the end of the full-expression">,
   InGroup<DanglingInitializerList>;
+def warn_unsupported_lifetime_extension : Warning<
+  "lifetime extension of "
+  "%select{temporary|backing array of initializer list}0 created "
+  "by aggregate initialization using a default member initializer "
+  "is not yet supported; lifetime of %select{temporary|backing array}0 "
+  "will end at the end of the full-expression">, InGroup<Dangling>;
 
 // For non-floating point, expressions of the form x == x or x != x
 // should result in a warning, since these always evaluate to a constant.
@@ -12218,6 +12255,13 @@ def err_hlsl_param_qualifier_mismatch :
 def warn_hlsl_impcast_vector_truncation : Warning<
   "implicit conversion truncates vector: %0 to %1">, InGroup<Conversion>;
 
+def warn_hlsl_availability : Warning<
+  "%0 is only available %select{|in %4 environment }3on %1 %2 or newer">,
+  InGroup<HLSLAvailability>, DefaultError;
+def warn_hlsl_availability_unavailable :
+  Warning<err_unavailable.Summary>,
+  InGroup<HLSLAvailability>, DefaultError;
+
 // Layout randomization diagnostics.
 def err_non_designated_init_used : Error<
   "a randomized struct can only be initialized with a designated initializer">;
@@ -12370,7 +12414,10 @@ def err_acc_var_not_pointer_type
 def note_acc_expected_pointer_var : Note<"expected variable of pointer type">;
 def err_acc_clause_after_device_type
     : Error<"OpenACC clause '%0' may not follow a '%1' clause in a "
-            "compute construct">;
+            "%select{'%3'|compute}2 construct">;
+def err_acc_clause_cannot_combine
+    : Error<"OpenACC clause '%0' may not appear on the same construct as a "
+            "'%1' clause on a 'loop' construct">;
 def err_acc_reduction_num_gangs_conflict
     : Error<
           "OpenACC 'reduction' clause may not appear on a 'parallel' construct "
@@ -12385,6 +12432,12 @@ def err_acc_reduction_composite_type
 def err_acc_reduction_composite_member_type :Error<
     "OpenACC 'reduction' composite variable must not have non-scalar field">;
 def note_acc_reduction_composite_member_loc : Note<"invalid field is here">;
+def err_acc_loop_not_for_loop
+    : Error<"OpenACC 'loop' construct can only be applied to a 'for' loop">;
+def note_acc_construct_here : Note<"'%0' construct is here">;
+def err_acc_loop_spec_conflict
+    : Error<"OpenACC clause '%0' on '%1' construct conflicts with previous "
+            "data dependence clause">;
 
 // AMDGCN builtins diagnostics
 def err_amdgcn_global_load_lds_size_invalid_value : Error<"invalid size value">;
