@@ -1897,9 +1897,6 @@ bool X86AsmParser::ParseIntelExpression(IntelExprStateMachine &SM, SMLoc &End) {
     case AsmToken::Error:
       return Error(getLexer().getErrLoc(), getLexer().getErr());
       break;
-    case AsmToken::EndOfStatement:
-      Done = true;
-      break;
     case AsmToken::Real:
       // DotOperator: [ebx].0
       UpdateLocLex = false;
