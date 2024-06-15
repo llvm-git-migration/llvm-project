@@ -3025,8 +3025,8 @@ define i1 @icmp_addnuw_nonzero_fail_multiuse(i32 %x, i32 %y) {
 
 define i1 @ult_add_C2_pow2_C_neg(i8 %x) {
 ; CHECK-LABEL: @ult_add_C2_pow2_C_neg(
-; CHECK-NEXT:    [[I:%.*]] = add i8 [[X:%.*]], 32
-; CHECK-NEXT:    [[C:%.*]] = icmp ult i8 [[I]], -32
+; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[X:%.*]], -32
+; CHECK-NEXT:    [[C:%.*]] = icmp ne i8 [[TMP1]], -64
 ; CHECK-NEXT:    ret i1 [[C]]
 ;
   %i = add i8 %x, 32
@@ -3036,8 +3036,8 @@ define i1 @ult_add_C2_pow2_C_neg(i8 %x) {
 
 define i1 @ult_add_nsw_C2_pow2_C_neg(i8 %x) {
 ; CHECK-LABEL: @ult_add_nsw_C2_pow2_C_neg(
-; CHECK-NEXT:    [[I:%.*]] = add nsw i8 [[X:%.*]], 32
-; CHECK-NEXT:    [[C:%.*]] = icmp ult i8 [[I]], -32
+; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[X:%.*]], -32
+; CHECK-NEXT:    [[C:%.*]] = icmp ne i8 [[TMP1]], -64
 ; CHECK-NEXT:    ret i1 [[C]]
 ;
   %i = add nsw i8 %x, 32
@@ -3068,8 +3068,8 @@ define i1 @ult_add_C2_neg_C_pow2(i8 %x) {
 
 define <2 x i1> @ult_add_C2_pow2_C_neg_vec(<2 x i8> %x) {
 ; CHECK-LABEL: @ult_add_C2_pow2_C_neg_vec(
-; CHECK-NEXT:    [[I:%.*]] = add <2 x i8> [[X:%.*]], <i8 32, i8 32>
-; CHECK-NEXT:    [[C:%.*]] = icmp ult <2 x i8> [[I]], <i8 -32, i8 -32>
+; CHECK-NEXT:    [[TMP1:%.*]] = and <2 x i8> [[X:%.*]], <i8 -32, i8 -32>
+; CHECK-NEXT:    [[C:%.*]] = icmp ne <2 x i8> [[TMP1]], <i8 -64, i8 -64>
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = add <2 x i8> %x, <i8 32, i8 32>
