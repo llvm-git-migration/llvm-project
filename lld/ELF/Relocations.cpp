@@ -2358,3 +2358,52 @@ template void elf::scanRelocations<ELF32LE>();
 template void elf::scanRelocations<ELF32BE>();
 template void elf::scanRelocations<ELF64LE>();
 template void elf::scanRelocations<ELF64BE>();
+
+static void forEachAllocInputSectionDescription(
+    ArrayRef<OutputSection *> outputSections,
+    llvm::function_ref<void(OutputSection *, InputSectionDescription *)> fn) {
+  for (OutputSection *os : outputSections) {
+    if (!(os->flags & SHF_ALLOC))
+      continue;
+    for (SectionCommand *bc : os->commands)
+      if (auto *isd = dyn_cast<InputSectionDescription>(bc))
+        fn(os, isd);
+  }
+}
+
+static void checkSectionNoCrossRefs(OutputSection *outSec,
+                                    InputSectionDescription *inSecDescr) {
+
+  std::string message = "";
+
+  for (const auto &list : script->noCrossRefLists) {
+    if (!list.matchesRefFromSection(outSec)) {
+      continue;
+    }
+
+    for (const auto &inSection : inSecDescr->sections) {
+      for (const auto &relocation : inSection->relocations) {
+        if (auto *destOutSec = relocation.sym->getOutputSection()) {
+
+          // Relocations from section to itself are allowed.
+          if (destOutSec->name != outSec->name &&
+              list.matchesRefToSection(destOutSec)) {
+
+            message +=
+                (inSection->getLocation(relocation.offset) +
+                 ": prohibited cross reference from " + inSection->name.str() +
+                 " to " + relocation.sym->getName().str() + " in " +
+                 destOutSec->name.str());
+            error(message);
+
+            message.clear();
+          }
+        }
+      }
+    }
+  }
+}
+
+void elf::checkNoCrossRefs() {
+  forEachAllocInputSectionDescription(outputSections, checkSectionNoCrossRefs);
+}
