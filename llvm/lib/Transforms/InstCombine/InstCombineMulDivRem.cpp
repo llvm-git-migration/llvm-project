@@ -268,7 +268,7 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
         BinaryOperator *OpBO = cast<BinaryOperator>(Op0);
         if (OpBO->isExact() && (HasNSW || HasNUW)) {
           Value *BinOp = Op0;
-          if (OpBO->getOpcode() == Instruction::AShr && HasNUW &&
+          if (HasNUW && OpBO->getOpcode() == Instruction::AShr &&
               OpBO->hasOneUse())
             BinOp = Builder.CreateLShr(
                 NewOp, ConstantInt::get(Ty, ShiftC->getZExtValue()), "",
