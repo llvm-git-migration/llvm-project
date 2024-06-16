@@ -281,7 +281,7 @@ struct TextDocumentEdit {
   /// The text document to change.
   VersionedTextDocumentIdentifier textDocument;
 
-	/// The edits to be applied.
+  /// The edits to be applied.
   /// FIXME: support the AnnotatedTextEdit variant.
   std::vector<TextEdit> edits;
 };
@@ -557,7 +557,7 @@ struct ClientCapabilities {
 
   /// The client supports versioned document changes for WorkspaceEdit.
   bool DocumentChanges = false;
-  
+
   /// The client supports change annotations on text edits,
   bool ChangeAnnotation = false;
 
@@ -1013,12 +1013,12 @@ struct WorkspaceEdit {
   /// Versioned document edits.
   ///
   /// If a client neither supports `documentChanges` nor
-	/// `workspace.workspaceEdit.resourceOperations` then only plain `TextEdit`s
-	/// using the `changes` property are supported.
+  /// `workspace.workspaceEdit.resourceOperations` then only plain `TextEdit`s
+  /// using the `changes` property are supported.
   std::optional<std::vector<TextDocumentEdit>> documentChanges;
-  
+
   /// A map of change annotations that can be referenced in
-	/// AnnotatedTextEdit.
+  /// AnnotatedTextEdit.
   std::map<std::string, ChangeAnnotation> changeAnnotations;
 };
 bool fromJSON(const llvm::json::Value &, WorkspaceEdit &, llvm::json::Path);
@@ -1274,13 +1274,13 @@ enum class InsertTextFormat {
 /// Additional details for a completion item label.
 struct CompletionItemLabelDetails {
   /// An optional string which is rendered less prominently directly after label
-	/// without any spacing. Should be used for function signatures or type
+  /// without any spacing. Should be used for function signatures or type
   /// annotations.
   std::string detail;
 
   /// An optional string which is rendered less prominently after
-	/// CompletionItemLabelDetails.detail. Should be used for fully qualified
-	/// names or file path.
+  /// CompletionItemLabelDetails.detail. Should be used for fully qualified
+  /// names or file path.
   std::string description;
 };
 llvm::json::Value toJSON(const CompletionItemLabelDetails &);
@@ -1680,6 +1680,21 @@ enum class InlayHintKind {
   /// Uses comment-like syntax like "// func".
   /// This is a clangd extension.
   BlockEnd = 4,
+
+  /// An inlay hint that is for a variable captured implicitly in a lambda.
+  ///
+  /// An example of parameter hint for implicit lambda captures:
+  ///    [&^] { return A; };
+  /// Adds an inlay hint ": A".
+  LambdaCapture = 5,
+
+  /// An inlay hint that is for a default argument.
+  ///
+  /// An example of a parameter hint for a default argument:
+  ///    void foo(bool A = true);
+  ///    foo(^);
+  /// Adds an inlay hint "A = true".
+  DefaultArgument = 6,
 
   /// Other ideas for hints that are not currently implemented:
   ///
