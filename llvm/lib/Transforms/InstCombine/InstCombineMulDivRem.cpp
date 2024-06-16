@@ -267,14 +267,12 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
           MulAP->logBase2() == ShiftC->getZExtValue()) {
         BinaryOperator *OpBO = cast<BinaryOperator>(Op0);
         if (OpBO->isExact() && (HasNSW || HasNUW)) {
-          Value *BinOp;
+          Value *BinOp = Op0;
           if (OpBO->getOpcode() == Instruction::AShr && HasNUW &&
               OpBO->hasOneUse())
             BinOp = Builder.CreateLShr(
                 NewOp, ConstantInt::get(Ty, ShiftC->getZExtValue()), "",
                 /*isExact=*/true);
-          else
-            BinOp = Op0;
 
           auto *NewAdd = BinaryOperator::CreateAdd(NewOp, BinOp);
           if (HasNSW && (OpBO->getOpcode() == Instruction::LShr ||
