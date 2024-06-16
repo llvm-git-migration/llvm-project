@@ -57,6 +57,11 @@ TEST(ParseFACTest, ParseAndCompareTest) {
   EXPECT_TRUE(parseAndCompare("(x)[] : (7 * x >= 0, -7 * x + 5 >= 0)",
                               makeFACFromConstraints(1, 0, {{7, 0}, {-7, 5}})));
 
+  // multiplication distribution
+  EXPECT_TRUE(
+      parseAndCompare("(x) : (2 * x >= 2, (-7 + x * 9) * 5 >= 0)",
+                      makeFACFromConstraints(1, 0, {{2, -2}, {45, -35}})));
+
   // multiple dimensions
   EXPECT_TRUE(parseAndCompare("(x,y,z)[] : (x + y - z >= 0)",
                               makeFACFromConstraints(3, 0, {{1, 1, -1, 0}})));
@@ -75,15 +80,32 @@ TEST(ParseFACTest, ParseAndCompareTest) {
       "(x, y) : (y - 3 * ((x + y - 13) floordiv 3) - 42 == 0)",
       makeFACFromConstraints(2, 0, {}, {{0, 1, -3, -42}}, {{{1, 1, -13}, 3}})));
 
+  // simple ceildiv
+  EXPECT_TRUE(parseAndCompare(
+      "(x, y) : (y - 3 * ((x + y - 13) ceildiv 3) - 42 == 0)",
+      makeFACFromConstraints(2, 0, {}, {{0, 1, -3, -42}}, {{{1, 1, -11}, 3}})));
+
   // multiple floordiv
   EXPECT_TRUE(parseAndCompare(
       "(x, y) : (y - x floordiv 3 - y floordiv 2 == 0)",
       makeFACFromConstraints(2, 0, {}, {{0, 1, -1, -1, 0}},
                              {{{1, 0, 0}, 3}, {{0, 1, 0, 0}, 2}})));
 
+  // multiple ceildiv
+  EXPECT_TRUE(parseAndCompare(
+      "(x, y) : (y - x ceildiv 3 - y ceildiv 2 == 0)",
+      makeFACFromConstraints(2, 0, {}, {{0, 1, -1, -1, 0}},
+                             {{{1, 0, 2}, 3}, {{0, 1, 0, 1}, 2}})));
+
   // nested floordiv
   EXPECT_TRUE(parseAndCompare(
       "(x, y) : (y - (x + y floordiv 2) floordiv 3 == 0)",
       makeFACFromConstraints(2, 0, {}, {{0, 1, 0, -1, 0}},
                              {{{0, 1, 0}, 2}, {{1, 0, 1, 0}, 3}})));
+  // deeply nested floordiv + ceildiv
+  EXPECT_TRUE(parseAndCompare(
+      "(x, y) : (y - (2 * x + y floordiv 2 + x ceildiv 7 + 1) ceildiv 3 == 42)",
+      makeFACFromConstraints(
+          2, 0, {}, {{0, 1, 0, 0, -1, -42}},
+          {{{0, 1, 0}, 2}, {{1, 0, 0, 6}, 7}, {{2, 0, 1, 1, 3}, 3}})));
 }
