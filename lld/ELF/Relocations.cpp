@@ -2358,3 +2358,62 @@ template void elf::scanRelocations<ELF32LE>();
 template void elf::scanRelocations<ELF32BE>();
 template void elf::scanRelocations<ELF64LE>();
 template void elf::scanRelocations<ELF64BE>();
+
+static bool isNoCrefFromSection(const CrossRefList &list,
+                                const OutputSection *section) {
+  const auto *begin =
+      list.firstOnly ? list.refs.begin() + 1 : list.refs.begin();
+
+  return std::find(begin, list.refs.end(), section->name) != list.refs.end();
+}
+
+static bool isNoCrefToSection(const CrossRefList &list,
+                              const OutputSection *section) {
+  if (list.firstOnly)
+    return list.refs[0] == section->name;
+
+  return std::find(list.refs.begin(), list.refs.end(), section->name) !=
+         list.refs.end();
+}
+
+void elf::checkNoCrossRefs() {
+  // Basic brute-force algorithm, since in reality NOCROSSRES lists are quite
+  // small.
+  //
+  // Idea is to traverse all relocations in all sections and report if
+  // prohibited reference was found. Note that NOCROSSREFS works with output section
+  // names.
+  for (ELFFileBase *file : ctx.objectFiles) {
+    auto sections = file->getSections();
+    std::string message = "";
+
+    for (size_t i = 0; i < sections.size(); ++i) {
+      if (sections[i]) {
+        StringRef sectionName = sections[i]->name;
+
+        if (const auto *outSec = dyn_cast_or_null<OutputSection>(sections[i]->parent)) {
+          for (const auto &refs : script->nocrossrefs) {
+            if (isNoCrefFromSection(refs, outSec)) {
+
+              for (const auto &j : sections[i]->relocations) {
+                if (auto *def = dyn_cast<Defined>(j.sym)) {
+                  const auto *outSecSym =
+                      cast<InputSection>(def->section)->getParent();
+
+                  if (isNoCrefToSection(refs, outSecSym)) {
+                    message +=
+                        (sections[i]->getLocation(j.offset) +
+                         ": prohibited cross reference from " +
+                         sectionName.str() + " to " + def->getName().str() +
+                         " in " + outSecSym->name.str());
+                    error(message);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

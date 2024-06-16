@@ -256,6 +256,11 @@ struct InsertCommand {
   StringRef where;
 };
 
+struct CrossRefList {
+  SmallVector<StringRef, 2> refs;
+  bool firstOnly;
+};
+
 struct PhdrsCommand {
   StringRef name;
   unsigned type = llvm::ELF::PT_NULL;
@@ -393,6 +398,9 @@ public:
 
   // OutputSections specified by OVERWRITE_SECTIONS.
   SmallVector<OutputDesc *, 0> overwriteSections;
+
+  // Nocrossrefs sections.
+  SmallVector<CrossRefList, 0> nocrossrefs;
 
   // Sections that will be warned/errored by --orphan-handling.
   SmallVector<const InputSectionBase *, 0> orphanSections;
