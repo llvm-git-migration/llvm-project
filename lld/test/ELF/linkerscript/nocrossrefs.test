@@ -1,0 +1,102 @@
+# REQUIRES: x86
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text .text1);" >> script.ld
+# RUN: not ld.lld main.o -o main --script script.ld 2>&1 | FileCheck -check-prefix=ERR %s
+# ERR: ld.lld: error: {{.*}}.o:(.text+{{.*}}): prohibited cross reference from .text to in .text1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS_TO(.text1 .text);" >> script.ld
+# RUN: not ld.lld main.o -o main --script script.ld 2>&1 | FileCheck -check-prefix=ERR1 %s
+# ERR1: ld.lld: error: {{.*}}.o:(.text+{{.*}}): prohibited cross reference from .text to in .text1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text1 .text .text2);" >> script.ld
+# RUN: not ld.lld main.o -o main --script script.ld 2>&1 | FileCheck -check-prefix=ERR2 %s
+# ERR2: ld.lld: error: {{.*}}.o:(.text+{{.*}}): prohibited cross reference from .text to in .text1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS_TO(.text .text1);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS_TO();" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS();" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS_TO(.text);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS_TO(.text2 .text);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text .text2);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text .text2);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text .text2);" >> script.ld
+# RUN: ld.lld main.o -o main --script script.ld 2>&1
+
+# RUN: rm -rf %t && split-file %s %t && cd %t
+# RUN: llvm-mc -filetype=obj -o main.o main.s
+# RUN: echo "NOCROSSREFS(.text .bss);" >> script.ld
+# RUN: not ld.lld main.o -o main --script script.ld 2>&1 | FileCheck -check-prefix=ERR3 %s
+# ERR3: ld.lld: error: {{.*}}.o:(.text+{{.*}}): prohibited cross reference from .text to unused in .bss
+
+#--- script.ld
+SECTIONS {
+	.text  : { *(.text) }
+	.text1 : { *(.text1) }
+	.text2 : { *(.text2) }
+}
+
+#--- main.s
+.global _start
+_start:
+	call test
+
+	.type	unused,@object
+	.comm	unused,4,4
+
+	.section	.noalloc,"",@progbits
+	.quad	unused
+
+.section .text
+test:
+	.reloc ., R_X86_64_32, unused
+	call test1
+
+.section .text2
+test2:
+	.reloc ., R_X86_64_32, foo
+	nop
+
+.section .text1
+test1:
+	nop
