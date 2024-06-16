@@ -1967,21 +1967,19 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
   }
 
 #if defined(__aarch64__)
-  // If we have all crypto bits we can add the feature
-  if (crypto == (CAP_AES | CAP_PMULL | CAP_SHA1 | CAP_SHA2))
-    Features["crypto"] = true;
+  // LLVM has decided some AArch64 CPUs have all the instructions they _may_ have, as opposed to
+  // all the instructions they _must_ have, so allow runtime information to correct us on that.
+  Features["crypto"] = (crypto == (CAP_AES | CAP_PMULL | CAP_SHA1 | CAP_SHA2));
 #endif
 
   return true;
 }
 #elif defined(_WIN32) && (defined(__aarch64__) || defined(_M_ARM64))
 bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
-  if (IsProcessorFeaturePresent(PF_ARM_NEON_INSTRUCTIONS_AVAILABLE))
-    Features["neon"] = true;
-  if (IsProcessorFeaturePresent(PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE))
-    Features["crc"] = true;
-  if (IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE))
-    Features["crypto"] = true;
+  // If we're asking the OS at runtime, believe what the OS says
+  Features["neon"] = IsProcessorFeaturePresent(PF_ARM_NEON_INSTRUCTIONS_AVAILABLE);
+  Features["crc"] = IsProcessorFeaturePresent(PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE);
+  Features["crypto"] = IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
 
   return true;
 }
