@@ -4760,8 +4760,42 @@ getVScaleForTuning(const Loop *L, const TargetTransformInfo &TTI) {
   return TTI.getVScaleForTuning();
 }
 
-bool LoopVectorizationPlanner::isMoreProfitable(
-    const VectorizationFactor &A, const VectorizationFactor &B) const {
+bool LoopVectorizationPlanner::preferFixedOverScalableIfEqualCost(
+    const Loop *L, ElementCount VF, unsigned IC) const {
+  // Check if the Subtarget has the feature enabled that it might prefer fixed
+  // over scalable vectorisation.
+  if (!TTI.preferFixedOverScalableIfEqualCost())
+    return false;
+
+  // With an interleaving count of 1, we don't expect the potential use of
+  // LDP/STP, which are instructions that SVE lacks, to make a difference for
+  // fixed with vectorisation.
+  if (IC == 1)
+    return false;
+
+  for (BasicBlock *BB : L->blocks()) {
+    for (Instruction &I : *BB) {
+      if (!(isa<LoadInst>(I) || isa<StoreInst>(I)))
+        continue;
+
+      // TODO: This could be more sophisiticated, but the initial idea here is
+      // that if the cost-model is a tie, and gathers/scatters or predication
+      // is required, then SVE is probably more efficient so favour SVE in
+      // these cases.
+      auto Decision = CM.getWideningDecision(&I, VF);
+      if (Decision == LoopVectorizationCostModel::CM_GatherScatter)
+        return false;
+      else if (Decision == LoopVectorizationCostModel::CM_Widen)
+        return !Legal->isMaskRequired(&I);
+    }
+  }
+
+  return false;
+}
+
+bool LoopVectorizationPlanner::isMoreProfitable(const VectorizationFactor &A,
+                                                const VectorizationFactor &B,
+                                                unsigned IC) const {
   InstructionCost CostA = A.Cost;
   InstructionCost CostB = B.Cost;
 
@@ -4780,7 +4814,10 @@ bool LoopVectorizationPlanner::isMoreProfitable(
   // Assume vscale may be larger than 1 (or the value being tuned for),
   // so that scalable vectorization is slightly favorable over fixed-width
   // vectorization.
-  bool PreferScalable = A.Width.isScalable() && !B.Width.isScalable();
+  bool PreferScalable = false;
+  if (!preferFixedOverScalableIfEqualCost(OrigLoop, A.Width, IC))
+    PreferScalable = A.Width.isScalable() && !B.Width.isScalable();
+
   auto CmpFn = [PreferScalable](const InstructionCost &LHS,
                                 const InstructionCost &RHS) {
     return PreferScalable ? LHS <= RHS : LHS < RHS;
@@ -5100,7 +5137,7 @@ VectorizationFactor LoopVectorizationPlanner::selectEpilogueVectorizationFactor(
         continue;
     }
 
-    if (Result.Width.isScalar() || isMoreProfitable(NextVF, Result))
+    if (Result.Width.isScalar() || isMoreProfitable(NextVF, Result, IC))
       Result = NextVF;
   }
 

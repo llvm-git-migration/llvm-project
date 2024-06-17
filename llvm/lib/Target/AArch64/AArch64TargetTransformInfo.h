@@ -371,6 +371,19 @@ public:
     return TailFoldingStyle::DataWithoutLaneMask;
   }
 
+  bool preferFixedOverScalableIfEqualCost() const {
+    // TODO: Ideally we only check getVScaleForTuning() == 1, but we do
+    // also check if the CPU has the useFixed feature enabled, which was
+    // introduced to reduce the impact of this for other targets.
+    //
+    // With the getVScaleForTuning() == 1 check, we ask if we're tuning based
+    // on the assumption the SVE registers are no bigger than the NEON ones.
+    // If this is the case, and the loop vectorisation cost-model is a tie,
+    // we prefer NEON as there should be no advantage of using SVE.
+    return ST->useFixedOverScalableIfEqualCost() &&
+           ST->getVScaleForTuning() == 1;
+  }
+
   bool preferPredicateOverEpilogue(TailFoldingInfo *TFI);
 
   bool supportsScalableVectors() const { return ST->hasSVE(); }
