@@ -66,20 +66,6 @@ static Error malformedError(const Twine &Msg) {
                                         object_error::parse_failed);
 }
 
-// FIXME: Replace all uses of this function with getStructOrErr.
-template <typename T>
-static T getStruct(const MachOObjectFile &O, const char *P) {
-  // Don't read before the beginning or past the end of the file
-  if (P < O.getData().begin() || P + sizeof(T) > O.getData().end())
-    report_fatal_error("Malformed MachO file.");
-
-  T Cmd;
-  memcpy(&Cmd, P, sizeof(T));
-  if (O.isLittleEndian() != sys::IsLittleEndianHost)
-    MachO::swapStruct(Cmd);
-  return Cmd;
-}
-
 template <typename T>
 static Expected<T> getStructOrErr(const MachOObjectFile &O, const char *P) {
   // Don't read before the beginning or past the end of the file
@@ -118,7 +104,10 @@ static const char *getPtr(const MachOObjectFile &O, size_t Offset,
 static MachO::nlist_base
 getSymbolTableEntryBase(const MachOObjectFile &O, DataRefImpl DRI) {
   const char *P = reinterpret_cast<const char *>(DRI.p);
-  return getStruct<MachO::nlist_base>(O, P);
+  auto NListOrErr = getStructOrErr<MachO::nlist_base>(O, P);
+  if (!NListOrErr)
+    report_fatal_error(NListOrErr.takeError());
+  return NListOrErr.get();
 }
 
 static StringRef parseSegmentOrSectionName(const char *P) {
@@ -1505,8 +1494,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                              " has incorrect cmdsize");
         return;
       }
-      MachO::encryption_info_command E =
-        getStruct<MachO::encryption_info_command>(*this, Load.Ptr);
+      auto EOrError =
+          getStructOrErr<MachO::encryption_info_command>(*this, Load.Ptr);
+      if (!EOrError) {
+        Err = EOrError.takeError();
+        return;
+      }
+      MachO::encryption_info_command E = EOrError.get();
       if ((Err = checkEncryptCommand(*this, Load, I, E.cryptoff, E.cryptsize,
                                      &EncryptLoadCmd, "LC_ENCRYPTION_INFO")))
         return;
@@ -1516,8 +1510,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                              " has incorrect cmdsize");
         return;
       }
-      MachO::encryption_info_command_64 E =
-        getStruct<MachO::encryption_info_command_64>(*this, Load.Ptr);
+      auto EOrError =
+          getStructOrErr<MachO::encryption_info_command_64>(*this, Load.Ptr);
+      if (!EOrError) {
+        Err = EOrError.takeError();
+        return;
+      }
+      MachO::encryption_info_command_64 E = EOrError.get();
       if ((Err = checkEncryptCommand(*this, Load, I, E.cryptoff, E.cryptsize,
                                      &EncryptLoadCmd, "LC_ENCRYPTION_INFO_64")))
         return;
@@ -1530,8 +1529,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                               " LC_SUB_FRAMEWORK cmdsize too small");
         return;
       }
-      MachO::sub_framework_command S =
-        getStruct<MachO::sub_framework_command>(*this, Load.Ptr);
+      auto SOrError =
+          getStructOrErr<MachO::sub_framework_command>(*this, Load.Ptr);
+      if (!SOrError) {
+        Err = SOrError.takeError();
+        return;
+      }
+      MachO::sub_framework_command S = SOrError.get();
       if ((Err = checkSubCommand(*this, Load, I, "LC_SUB_FRAMEWORK",
                                  sizeof(MachO::sub_framework_command),
                                  "sub_framework_command", S.umbrella,
@@ -1543,8 +1547,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                               " LC_SUB_UMBRELLA cmdsize too small");
         return;
       }
-      MachO::sub_umbrella_command S =
-        getStruct<MachO::sub_umbrella_command>(*this, Load.Ptr);
+      auto SOrError =
+          getStructOrErr<MachO::sub_umbrella_command>(*this, Load.Ptr);
+      if (!SOrError) {
+        Err = SOrError.takeError();
+        return;
+      }
+      MachO::sub_umbrella_command S = SOrError.get();
       if ((Err = checkSubCommand(*this, Load, I, "LC_SUB_UMBRELLA",
                                  sizeof(MachO::sub_umbrella_command),
                                  "sub_umbrella_command", S.sub_umbrella,
@@ -1556,8 +1565,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                               " LC_SUB_LIBRARY cmdsize too small");
         return;
       }
-      MachO::sub_library_command S =
-        getStruct<MachO::sub_library_command>(*this, Load.Ptr);
+      auto SOrError =
+          getStructOrErr<MachO::sub_library_command>(*this, Load.Ptr);
+      if (!SOrError) {
+        Err = SOrError.takeError();
+        return;
+      }
+      MachO::sub_library_command S = SOrError.get();
       if ((Err = checkSubCommand(*this, Load, I, "LC_SUB_LIBRARY",
                                  sizeof(MachO::sub_library_command),
                                  "sub_library_command", S.sub_library,
@@ -1569,8 +1583,13 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
                               " LC_SUB_CLIENT cmdsize too small");
         return;
       }
-      MachO::sub_client_command S =
-        getStruct<MachO::sub_client_command>(*this, Load.Ptr);
+      auto SOrError =
+          getStructOrErr<MachO::sub_client_command>(*this, Load.Ptr);
+      if (!SOrError) {
+        Err = SOrError.takeError();
+        return;
+      }
+      MachO::sub_client_command S = SOrError.get();
       if ((Err = checkSubCommand(*this, Load, I, "LC_SUB_CLIENT",
                                  sizeof(MachO::sub_client_command),
                                  "sub_client_command", S.client, "client")))
@@ -1643,10 +1662,19 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
       return;
     }
   } else if (DysymtabLoadCmd) {
-    MachO::symtab_command Symtab =
-      getStruct<MachO::symtab_command>(*this, SymtabLoadCmd);
-    MachO::dysymtab_command Dysymtab =
-      getStruct<MachO::dysymtab_command>(*this, DysymtabLoadCmd);
+    auto SymtabOrErr = getStructOrErr<MachO::symtab_command>(*this, Load.Ptr);
+    if (!SymtabOrErr) {
+      Err = SymtabOrErr.takeError();
+      return;
+    }
+    MachO::symtab_command Symtab = SymtabOrErr.get();
+    auto DSymtabOrErr =
+        getStructOrErr<MachO::dysymtab_command>(*this, Load.Ptr);
+    if (!DSymtabOrErr) {
+      Err = DSymtabOrErr.takeError();
+      return;
+    }
+    MachO::dysymtab_command Dysymtab = DSymtabOrErr.get();
     if (Dysymtab.nlocalsym != 0 && Dysymtab.ilocalsym > Symtab.nsyms) {
       Err = malformedError("ilocalsym in LC_DYSYMTAB load command "
                            "extends past the end of the symbol table");
@@ -4620,161 +4648,264 @@ MachOObjectFile::getAnyRelocationSection(
 
 MachO::section MachOObjectFile::getSection(DataRefImpl DRI) const {
   assert(DRI.d.a < Sections.size() && "Should have detected this earlier");
-  return getStruct<MachO::section>(*this, Sections[DRI.d.a]);
+  auto SectionOrErr = getStructOrErr<MachO::section>(*this, Sections[DRI.d.a]);
+  if (!SectionOrErr)
+    report_fatal_error(SectionOrErr.takeError());
+  return SectionOrErr.get();
 }
 
 MachO::section_64 MachOObjectFile::getSection64(DataRefImpl DRI) const {
   assert(DRI.d.a < Sections.size() && "Should have detected this earlier");
-  return getStruct<MachO::section_64>(*this, Sections[DRI.d.a]);
+  auto SectionOrErr =
+      getStructOrErr<MachO::section_64>(*this, Sections[DRI.d.a]);
+  if (!SectionOrErr)
+    report_fatal_error(SectionOrErr.takeError());
+  return SectionOrErr.get();
 }
 
 MachO::section MachOObjectFile::getSection(const LoadCommandInfo &L,
                                            unsigned Index) const {
   const char *Sec = getSectionPtr(*this, L, Index);
-  return getStruct<MachO::section>(*this, Sec);
+  auto SectionOrErr = getStructOrErr<MachO::section>(*this, Sec);
+  if (!SectionOrErr)
+    report_fatal_error(SectionOrErr.takeError());
+  return SectionOrErr.get();
 }
 
 MachO::section_64 MachOObjectFile::getSection64(const LoadCommandInfo &L,
                                                 unsigned Index) const {
   const char *Sec = getSectionPtr(*this, L, Index);
-  return getStruct<MachO::section_64>(*this, Sec);
+  auto SectionOrErr = getStructOrErr<MachO::section_64>(*this, Sec);
+  if (!SectionOrErr)
+    report_fatal_error(SectionOrErr.takeError());
+  return SectionOrErr.get();
 }
 
 MachO::nlist
 MachOObjectFile::getSymbolTableEntry(DataRefImpl DRI) const {
   const char *P = reinterpret_cast<const char *>(DRI.p);
-  return getStruct<MachO::nlist>(*this, P);
+  auto NListOrErr = getStructOrErr<MachO::nlist>(*this, P);
+  if (!NListOrErr)
+    report_fatal_error(NListOrErr.takeError());
+  return NListOrErr.get();
 }
 
 MachO::nlist_64
 MachOObjectFile::getSymbol64TableEntry(DataRefImpl DRI) const {
   const char *P = reinterpret_cast<const char *>(DRI.p);
-  return getStruct<MachO::nlist_64>(*this, P);
+  auto NListOrErr = getStructOrErr<MachO::nlist_64>(*this, P);
+  if (!NListOrErr)
+    report_fatal_error(NListOrErr.takeError());
+  return NListOrErr.get();
 }
 
 MachO::linkedit_data_command
 MachOObjectFile::getLinkeditDataLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::linkedit_data_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::linkedit_data_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::segment_command
 MachOObjectFile::getSegmentLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::segment_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::segment_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::segment_command_64
 MachOObjectFile::getSegment64LoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::segment_command_64>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::segment_command_64>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::linker_option_command
 MachOObjectFile::getLinkerOptionLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::linker_option_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::linker_option_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::version_min_command
 MachOObjectFile::getVersionMinLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::version_min_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::version_min_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::note_command
 MachOObjectFile::getNoteLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::note_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::note_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::build_version_command
 MachOObjectFile::getBuildVersionLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::build_version_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::build_version_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::build_tool_version
 MachOObjectFile::getBuildToolVersion(unsigned index) const {
-  return getStruct<MachO::build_tool_version>(*this, BuildTools[index]);
+  auto CommandOrErr =
+      getStructOrErr<MachO::build_tool_version>(*this, BuildTools[index]);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::dylib_command
 MachOObjectFile::getDylibIDLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::dylib_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::dylib_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::dyld_info_command
 MachOObjectFile::getDyldInfoLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::dyld_info_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::dyld_info_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::dylinker_command
 MachOObjectFile::getDylinkerCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::dylinker_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::dylinker_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::uuid_command
 MachOObjectFile::getUuidCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::uuid_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::uuid_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::rpath_command
 MachOObjectFile::getRpathCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::rpath_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::rpath_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::source_version_command
 MachOObjectFile::getSourceVersionCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::source_version_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::source_version_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::entry_point_command
 MachOObjectFile::getEntryPointCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::entry_point_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::entry_point_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::encryption_info_command
 MachOObjectFile::getEncryptionInfoCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::encryption_info_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::encryption_info_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::encryption_info_command_64
 MachOObjectFile::getEncryptionInfoCommand64(const LoadCommandInfo &L) const {
-  return getStruct<MachO::encryption_info_command_64>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::encryption_info_command_64>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::sub_framework_command
 MachOObjectFile::getSubFrameworkCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::sub_framework_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::sub_framework_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::sub_umbrella_command
 MachOObjectFile::getSubUmbrellaCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::sub_umbrella_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::sub_umbrella_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::sub_library_command
 MachOObjectFile::getSubLibraryCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::sub_library_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::sub_library_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::sub_client_command
 MachOObjectFile::getSubClientCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::sub_client_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::sub_client_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::routines_command
 MachOObjectFile::getRoutinesCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::routines_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::routines_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::routines_command_64
 MachOObjectFile::getRoutinesCommand64(const LoadCommandInfo &L) const {
-  return getStruct<MachO::routines_command_64>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::routines_command_64>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::thread_command
 MachOObjectFile::getThreadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::thread_command>(*this, L.Ptr);
+  auto CommandOrErr = getStructOrErr<MachO::thread_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::fileset_entry_command
 MachOObjectFile::getFilesetEntryLoadCommand(const LoadCommandInfo &L) const {
-  return getStruct<MachO::fileset_entry_command>(*this, L.Ptr);
+  auto CommandOrErr =
+      getStructOrErr<MachO::fileset_entry_command>(*this, L.Ptr);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 MachO::any_relocation_info
@@ -4800,14 +4931,20 @@ MachOObjectFile::getRelocation(DataRefImpl Rel) const {
 
   auto P = reinterpret_cast<const MachO::any_relocation_info *>(
       getPtr(*this, Offset)) + Rel.d.b;
-  return getStruct<MachO::any_relocation_info>(
+  auto InfoOrErr = getStructOrErr<MachO::any_relocation_info>(
       *this, reinterpret_cast<const char *>(P));
+  if (!InfoOrErr)
+    report_fatal_error(InfoOrErr.takeError());
+  return InfoOrErr.get();
 }
 
 MachO::data_in_code_entry
 MachOObjectFile::getDice(DataRefImpl Rel) const {
   const char *P = reinterpret_cast<const char *>(Rel.p);
-  return getStruct<MachO::data_in_code_entry>(*this, P);
+  auto CommandOrErr = getStructOrErr<MachO::data_in_code_entry>(*this, P);
+  if (!CommandOrErr)
+    report_fatal_error(CommandOrErr.takeError());
+  return CommandOrErr.get();
 }
 
 const MachO::mach_header &MachOObjectFile::getHeader() const {
@@ -4823,19 +4960,31 @@ uint32_t MachOObjectFile::getIndirectSymbolTableEntry(
                                              const MachO::dysymtab_command &DLC,
                                              unsigned Index) const {
   uint64_t Offset = DLC.indirectsymoff + Index * sizeof(uint32_t);
-  return getStruct<uint32_t>(*this, getPtr(*this, Offset));
+  auto EntryOrErr = getStructOrErr<uint32_t>(*this, getPtr(*this, Offset));
+  if (!EntryOrErr)
+    report_fatal_error(EntryOrErr.takeError());
+  return EntryOrErr.get();
 }
 
 MachO::data_in_code_entry
 MachOObjectFile::getDataInCodeTableEntry(uint32_t DataOffset,
                                          unsigned Index) const {
   uint64_t Offset = DataOffset + Index * sizeof(MachO::data_in_code_entry);
-  return getStruct<MachO::data_in_code_entry>(*this, getPtr(*this, Offset));
+  auto DataOrErr =
+      getStructOrErr<MachO::data_in_code_entry>(*this, getPtr(*this, Offset));
+  if (!DataOrErr)
+    report_fatal_error(DataOrErr.takeError());
+  return DataOrErr.get();
 }
 
 MachO::symtab_command MachOObjectFile::getSymtabLoadCommand() const {
-  if (SymtabLoadCmd)
-    return getStruct<MachO::symtab_command>(*this, SymtabLoadCmd);
+  if (SymtabLoadCmd) {
+    auto CommandOrErr =
+        getStructOrErr<MachO::symtab_command>(*this, SymtabLoadCmd);
+    if (!CommandOrErr)
+      report_fatal_error(CommandOrErr.takeError());
+    return CommandOrErr.get();
+  }
 
   // If there is no SymtabLoadCmd return a load command with zero'ed fields.
   MachO::symtab_command Cmd;
@@ -4849,8 +4998,13 @@ MachO::symtab_command MachOObjectFile::getSymtabLoadCommand() const {
 }
 
 MachO::dysymtab_command MachOObjectFile::getDysymtabLoadCommand() const {
-  if (DysymtabLoadCmd)
-    return getStruct<MachO::dysymtab_command>(*this, DysymtabLoadCmd);
+  if (DysymtabLoadCmd) {
+    auto CommandOrErr =
+        getStructOrErr<MachO::dysymtab_command>(*this, DysymtabLoadCmd);
+    if (!CommandOrErr)
+      report_fatal_error(CommandOrErr.takeError());
+    return CommandOrErr.get();
+  }
 
   // If there is no DysymtabLoadCmd return a load command with zero'ed fields.
   MachO::dysymtab_command Cmd;
@@ -4879,8 +5033,13 @@ MachO::dysymtab_command MachOObjectFile::getDysymtabLoadCommand() const {
 
 MachO::linkedit_data_command
 MachOObjectFile::getDataInCodeLoadCommand() const {
-  if (DataInCodeLoadCmd)
-    return getStruct<MachO::linkedit_data_command>(*this, DataInCodeLoadCmd);
+  if (DataInCodeLoadCmd) {
+    auto CommandOrErr =
+        getStructOrErr<MachO::linkedit_data_command>(*this, DataInCodeLoadCmd);
+    if (!CommandOrErr)
+      report_fatal_error(CommandOrErr.takeError());
+    return CommandOrErr.get();
+  }
 
   // If there is no DataInCodeLoadCmd return a load command with zero'ed fields.
   MachO::linkedit_data_command Cmd;
@@ -4893,8 +5052,13 @@ MachOObjectFile::getDataInCodeLoadCommand() const {
 
 MachO::linkedit_data_command
 MachOObjectFile::getLinkOptHintsLoadCommand() const {
-  if (LinkOptHintsLoadCmd)
-    return getStruct<MachO::linkedit_data_command>(*this, LinkOptHintsLoadCmd);
+  if (LinkOptHintsLoadCmd) {
+    auto CommandOrErr = getStructOrErr<MachO::linkedit_data_command>(
+        *this, LinkOptHintsLoadCmd);
+    if (!CommandOrErr)
+      report_fatal_error(CommandOrErr.takeError());
+    return CommandOrErr.get();
+  }
 
   // If there is no LinkOptHintsLoadCmd return a load command with zero'ed
   // fields.
