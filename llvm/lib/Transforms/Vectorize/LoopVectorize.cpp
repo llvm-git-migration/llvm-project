@@ -4780,7 +4780,12 @@ bool LoopVectorizationPlanner::isMoreProfitable(
   // Assume vscale may be larger than 1 (or the value being tuned for),
   // so that scalable vectorization is slightly favorable over fixed-width
   // vectorization.
-  bool PreferScalable = A.Width.isScalable() && !B.Width.isScalable();
+  bool PreferScalable;
+  if (!TTI.preferFixedOverScalableIfEqualCost())
+    PreferScalable = !A.Width.isScalable() && B.Width.isScalable();
+  else
+    PreferScalable = A.Width.isScalable() && !B.Width.isScalable();
+
   auto CmpFn = [PreferScalable](const InstructionCost &LHS,
                                 const InstructionCost &RHS) {
     return PreferScalable ? LHS <= RHS : LHS < RHS;
