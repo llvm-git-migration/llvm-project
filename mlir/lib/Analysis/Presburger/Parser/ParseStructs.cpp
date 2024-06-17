@@ -13,104 +13,151 @@
 
 #include "ParseStructs.h"
 #include "llvm/ADT/Twine.h"
-#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace mlir::presburger;
-using llvm::cast;
 using llvm::dbgs;
-using llvm::isa;
+using llvm::divideFloorSigned;
+using llvm::mod;
 
-bool AffineExprImpl::isPureAffine() const {
-  switch (getKind()) {
-  case AffineExprKind::SymbolId:
-  case AffineExprKind::DimId:
-  case AffineExprKind::Constant:
-    return true;
-  case AffineExprKind::Add: {
-    const auto &op = cast<AffineBinOpExpr>(*this);
-    return op.getLHS()->isPureAffine() && op.getRHS()->isPureAffine();
-  }
-  case AffineExprKind::Mul: {
-    const auto &op = cast<AffineBinOpExpr>(*this);
-    return op.getLHS()->isPureAffine() && op.getRHS()->isPureAffine() &&
-           (isa<AffineConstantExpr>(op.getLHS()) ||
-            isa<AffineConstantExpr>(op.getRHS()));
-  }
-  case AffineExprKind::FloorDiv:
-  case AffineExprKind::CeilDiv:
-  case AffineExprKind::Mod: {
-    const auto &op = cast<AffineBinOpExpr>(*this);
-    return op.getLHS()->isPureAffine() && isa<AffineConstantExpr>(op.getRHS());
-  }
-  }
-  llvm_unreachable("Unknown AffineExpr");
+CoefficientVector PureAffineExprImpl::collectLinearTerms() const {
+  CoefficientVector nestedLinear = std::accumulate(
+      nestedDivTerms.begin(), nestedDivTerms.end(), CoefficientVector(info),
+      [](const CoefficientVector &acc, const PureAffineExpr &div) {
+        return acc + div->getLinearDividend();
+      });
+  return nestedLinear += linearDividend;
 }
 
-bool AffineExprImpl::isSymbolicOrConstant() const {
-  switch (getKind()) {
-  case AffineExprKind::Constant:
-  case AffineExprKind::SymbolId:
-    return true;
-  case AffineExprKind::DimId:
-    return false;
-  case AffineExprKind::Add:
-  case AffineExprKind::Mul:
-  case AffineExprKind::FloorDiv:
-  case AffineExprKind::CeilDiv:
-  case AffineExprKind::Mod: {
-    const auto &expr = cast<AffineBinOpExpr>(*this);
-    return expr.getLHS()->isSymbolicOrConstant() &&
-           expr.getRHS()->isSymbolicOrConstant();
-  }
-  }
-  llvm_unreachable("Unknown AffineExpr");
+SmallVector<std::tuple<size_t, int64_t, CoefficientVector>, 8>
+PureAffineExprImpl::getNonLinearCoeffs() const {
+  SmallVector<std::tuple<size_t, int64_t, CoefficientVector>, 8> ret;
+  // dividend `floordiv` divisor <=> q; adjustedMulFactor = 1,
+  // adjustedLinearTerm is empty.
+  //
+  // dividend `mod` divisor <=> dividend - divisor*q; adjustedMulFactor =
+  // -divisor, adjustedLinearTerm is the linear part of the dividend.
+  //
+  // where q is a floordiv id added by the flattener.
+  auto adjustedMulFactor = [](const PureAffineExprImpl &div) {
+    return div.mulFactor * (div.kind == DivKind::Mod ? -div.divisor : 1);
+  };
+  auto adjustedLinearTerm = [](PureAffineExprImpl &div) {
+    return div.kind == DivKind::Mod ? div.linearDividend *= div.mulFactor
+                                    : CoefficientVector(div.info);
+  };
+  if (hasDivisor())
+    for (const auto &toplevel : nestedDivTerms)
+      for (const auto &div : toplevel->getNestedDivTerms())
+        ret.emplace_back(div->hash(), adjustedMulFactor(*div),
+                         adjustedLinearTerm(*div));
+  else
+    for (const auto &div : nestedDivTerms)
+      ret.emplace_back(div->hash(), adjustedMulFactor(*div),
+                       adjustedLinearTerm(*div));
+  return ret;
 }
 
-// Simplify the mul to the extent required by usage and the flattener.
-static AffineExpr simplifyMul(AffineExpr &&lhs, AffineExpr &&rhs) {
-  if (isa<AffineConstantExpr>(*lhs) && isa<AffineConstantExpr>(*rhs)) {
-    auto lhsConst = cast<AffineConstantExpr>(*lhs);
-    auto rhsConst = cast<AffineConstantExpr>(*rhs);
-    return std::make_unique<AffineConstantExpr>(lhsConst.getValue() *
-                                                rhsConst.getValue());
-  }
-
-  if (!lhs->isSymbolicOrConstant() && !rhs->isSymbolicOrConstant())
-    return nullptr;
-
-  // Canonicalize the mul expression so that the constant/symbolic term is the
-  // RHS. If both the lhs and rhs are symbolic, swap them if the lhs is a
-  // constant. (Note that a constant is trivially symbolic).
-  if (!rhs->isSymbolicOrConstant() || isa<AffineConstantExpr>(lhs)) {
-    // At least one of them has to be symbolic.
-    return std::move(rhs) * std::move(lhs);
-  }
-
-  // At this point, if there was a constant, it would be on the right.
-
-  // Multiplication with a one is a noop, return the other input.
-  if (isa<AffineConstantExpr>(*rhs)) {
-    auto rhsConst = cast<AffineConstantExpr>(*rhs);
-    if (rhsConst.getValue() == 1)
-      return lhs;
-    // Multiplication with zero.
-    if (rhsConst.getValue() == 0)
-      return std::make_unique<AffineConstantExpr>(rhsConst);
-  }
-
-  return nullptr;
+unsigned PureAffineExprImpl::countNestedDivs() const {
+  return hasDivisor() +
+         std::accumulate(getNestedDivTerms().begin(), getNestedDivTerms().end(),
+                         0, [](unsigned acc, const PureAffineExpr &div) {
+                           return acc + div->countNestedDivs();
+                         });
 }
 
-namespace mlir::presburger {
-AffineExpr operator*(AffineExpr &&s, AffineExpr &&o) {
-  if (AffineExpr simpl = simplifyMul(std::move(s), std::move(o)))
-    return simpl;
-  return std::make_unique<AffineBinOpExpr>(std::move(s), std::move(o),
-                                           AffineExprKind::Mul);
+PureAffineExpr mlir::presburger::operator+(PureAffineExpr &&lhs,
+                                           PureAffineExpr &&rhs) {
+  if (lhs->isLinear() && rhs->isLinear())
+    return std::make_unique<PureAffineExprImpl>(lhs->getLinearDividend() +
+                                                rhs->getLinearDividend());
+  if (lhs->isLinear())
+    return std::make_unique<PureAffineExprImpl>(
+        std::move(rhs->addLinearTerm(lhs->getLinearDividend())));
+  if (rhs->isLinear())
+    return std::make_unique<PureAffineExprImpl>(
+        std::move(lhs->addLinearTerm(rhs->getLinearDividend())));
+
+  if (!(lhs->hasDivisor() ^ rhs->hasDivisor())) {
+    auto ret = PureAffineExprImpl(lhs->info);
+    ret.addDivTerm(std::move(*lhs));
+    ret.addDivTerm(std::move(*rhs));
+    return std::make_unique<PureAffineExprImpl>(std::move(ret));
+  }
+  if (lhs->hasDivisor()) {
+    rhs->addDivTerm(std::move(*lhs));
+    return rhs;
+  }
+  if (rhs->hasDivisor()) {
+    lhs->addDivTerm(std::move(*rhs));
+    return lhs;
+  }
+  llvm_unreachable("Malformed AffineExpr");
 }
-} // namespace mlir::presburger
+
+PureAffineExpr mlir::presburger::operator*(PureAffineExpr &&expr, int64_t c) {
+  if (expr->isLinear())
+    return std::make_unique<PureAffineExprImpl>(expr->getLinearDividend() * c);
+  return std::make_unique<PureAffineExprImpl>(std::move(expr->mulConstant(c)));
+}
+
+PureAffineExpr mlir::presburger::operator+(PureAffineExpr &&expr, int64_t c) {
+  return std::move(expr) + std::make_unique<PureAffineExprImpl>(expr->info, c);
+}
+
+PureAffineExpr mlir::presburger::div(PureAffineExpr &&dividend, int64_t divisor,
+                                     DivKind kind) {
+  assert(divisor > 0 && "floorDiv or mod with a negative divisor");
+
+  // Constant fold.
+  if (dividend->isConstant()) {
+    int64_t c = kind == DivKind::FloorDiv
+                    ? divideFloorSigned(dividend->getConstant(), divisor)
+                    : mod(dividend->getConstant(), divisor);
+    return std::make_unique<PureAffineExprImpl>(dividend->info, c);
+  }
+
+  // Factor out mul, using gcd internally.
+  uint64_t exprMultiple;
+  if (dividend->isLinear()) {
+    exprMultiple = dividend->getLinearDividend().factorMulFromLinearTerm();
+  } else {
+    // Canonicalize the div.
+    uint64_t constMultiple =
+        dividend->getLinearDividend().factorMulFromLinearTerm();
+    dividend->divLinearDividend(static_cast<int64_t>(constMultiple));
+    dividend->mulFactor *= constMultiple;
+    exprMultiple = dividend->mulFactor;
+  }
+
+  // Perform gcd with divisor.
+  uint64_t gcd = std::gcd(std::abs(divisor), exprMultiple);
+
+  // Divide according to the type.
+  if (gcd > 1) {
+    if (dividend->isLinear())
+      dividend->linearDividend /= static_cast<int64_t>(gcd);
+    else
+      dividend->mulFactor /= (static_cast<int64_t>(gcd));
+
+    divisor /= static_cast<int64_t>(gcd);
+  }
+
+  if (dividend->isLinear())
+    return std::make_unique<PureAffineExprImpl>(dividend->getLinearDividend(),
+                                                divisor, kind);
+
+  // x floordiv 1 <=> x, x % 1 <=> 0
+  return divisor == 1
+             ? (dividend->isMod()
+                    ? std::make_unique<PureAffineExprImpl>(dividend->info)
+                    : std::move(dividend))
+             : std::make_unique<PureAffineExprImpl>(std::move(*dividend),
+                                                    divisor, kind);
+  ;
+}
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 enum class BindingStrength {
@@ -118,151 +165,104 @@ enum class BindingStrength {
   Strong, // All other binary operators.
 };
 
-static void printAffineExpr(const AffineExprImpl &expr,
-                            BindingStrength enclosingTightness) {
-  const char *binopSpelling = nullptr;
-  switch (expr.getKind()) {
-  case AffineExprKind::SymbolId: {
-    unsigned pos = cast<AffineSymbolExpr>(expr).getPosition();
-    dbgs() << 's' << pos;
+static void printCoefficient(int64_t c, bool &isExprBegin,
+                             const ParseInfo &info, int idx = -1) {
+  bool isConstant = idx != -1 && info.isConstantIdx(idx);
+  bool isDimOrSymbol = idx != -1 && !info.isConstantIdx(idx);
+  if (!c)
     return;
-  }
-  case AffineExprKind::DimId: {
-    unsigned pos = cast<AffineDimExpr>(expr).getPosition();
-    dbgs() << 'd' << pos;
-    return;
-  }
-  case AffineExprKind::Constant:
-    dbgs() << cast<AffineConstantExpr>(expr).getValue();
-    return;
-  case AffineExprKind::Add:
-    binopSpelling = " + ";
-    break;
-  case AffineExprKind::Mul:
-    binopSpelling = " * ";
-    break;
-  case AffineExprKind::FloorDiv:
-    binopSpelling = " floordiv ";
-    break;
-  case AffineExprKind::CeilDiv:
-    binopSpelling = " ceildiv ";
-    break;
-  case AffineExprKind::Mod:
-    binopSpelling = " mod ";
-    break;
-  }
-
-  const auto &binOp = cast<AffineBinOpExpr>(expr);
-  const AffineExprImpl &lhsExpr = *binOp.getLHS();
-  const AffineExprImpl &rhsExpr = *binOp.getRHS();
-
-  // Handle tightly binding binary operators.
-  if (binOp.getKind() != AffineExprKind::Add) {
-    if (enclosingTightness == BindingStrength::Strong)
-      dbgs() << '(';
-
-    // Pretty print multiplication with -1.
-    if (isa<AffineConstantExpr>(rhsExpr)) {
-      const auto &rhsConst = cast<AffineConstantExpr>(rhsExpr);
-      if (binOp.getKind() == AffineExprKind::Mul && rhsConst.getValue() == -1) {
-        dbgs() << "-";
-        printAffineExpr(lhsExpr, BindingStrength::Strong);
-        if (enclosingTightness == BindingStrength::Strong)
-          dbgs() << ')';
-        return;
-      }
-    }
-    printAffineExpr(lhsExpr, BindingStrength::Strong);
-
-    dbgs() << binopSpelling;
-    printAffineExpr(rhsExpr, BindingStrength::Strong);
-
-    if (enclosingTightness == BindingStrength::Strong)
-      dbgs() << ')';
-    return;
-  }
-
-  // Print out special "pretty" forms for add.
-  if (enclosingTightness == BindingStrength::Strong)
-    dbgs() << '(';
-
-  // Pretty print addition to a product that has a negative operand as a
-  // subtraction.
-  if (isa<AffineBinOpExpr>(rhsExpr)) {
-    const auto &rhs = cast<AffineBinOpExpr>(rhsExpr);
-    if (rhs.getKind() == AffineExprKind::Mul) {
-      const AffineExprImpl &rrhsExpr = *rhs.getRHS();
-      if (isa<AffineConstantExpr>(rrhsExpr)) {
-        const auto &rrhs = cast<AffineConstantExpr>(rrhsExpr);
-        if (rrhs.getValue() == -1) {
-          printAffineExpr(lhsExpr, BindingStrength::Weak);
-          dbgs() << " - ";
-          if (rhs.getLHS()->getKind() == AffineExprKind::Add) {
-            printAffineExpr(*rhs.getLHS(), BindingStrength::Strong);
-          } else {
-            printAffineExpr(*rhs.getLHS(), BindingStrength::Weak);
-          }
-
-          if (enclosingTightness == BindingStrength::Strong)
-            dbgs() << ')';
-          return;
-        }
-
-        if (rrhs.getValue() < -1) {
-          printAffineExpr(lhsExpr, BindingStrength::Weak);
-          dbgs() << " - ";
-          printAffineExpr(*rhs.getLHS(), BindingStrength::Strong);
-          dbgs() << " * " << -rrhs.getValue();
-          if (enclosingTightness == BindingStrength::Strong)
-            dbgs() << ')';
-          return;
-        }
-      }
+  if (!isExprBegin)
+    dbgs() << " ";
+  if (c < 0) {
+    dbgs() << "- ";
+    if (c != -1 || isConstant)
+      dbgs() << std::abs(c);
+  } else {
+    if (!isExprBegin)
+      dbgs() << "+ ";
+    if (c != 1 || isConstant) {
+      dbgs() << c;
+      isExprBegin = false;
     }
   }
-
-  // Pretty print addition to a negative number as a subtraction.
-  if (isa<AffineConstantExpr>(rhsExpr)) {
-    const auto &rhsConst = cast<AffineConstantExpr>(rhsExpr);
-    if (rhsConst.getValue() < 0) {
-      printAffineExpr(lhsExpr, BindingStrength::Weak);
-      dbgs() << " - " << -rhsConst.getValue();
-      if (enclosingTightness == BindingStrength::Strong)
-        dbgs() << ')';
-      return;
-    }
+  if (isDimOrSymbol) {
+    if (std::abs(c) != 1)
+      dbgs() << " * ";
+    dbgs() << (info.isDimIdx(idx) ? 'd' : 's') << idx;
+    isExprBegin = false;
   }
-
-  printAffineExpr(lhsExpr, BindingStrength::Weak);
-
-  dbgs() << " + ";
-  printAffineExpr(rhsExpr, BindingStrength::Weak);
-
-  if (enclosingTightness == BindingStrength::Strong)
-    dbgs() << ')';
 }
 
-LLVM_DUMP_METHOD void AffineExprImpl::dump() const {
-  printAffineExpr(*this, BindingStrength::Weak);
+static bool printCoefficientVec(
+    const CoefficientVector &linear, bool isExprBegin = true,
+    BindingStrength enclosingTightness = BindingStrength::Weak) {
+  if (enclosingTightness == BindingStrength::Strong &&
+      linear.hasMultipleCoefficients()) {
+    dbgs() << '(';
+    isExprBegin = true;
+  }
+  for (auto [idx, c] : enumerate(linear.getCoefficients()))
+    printCoefficient(c, isExprBegin, linear.info, idx);
+
+  if (enclosingTightness == BindingStrength::Strong &&
+      linear.hasMultipleCoefficients())
+    dbgs() << ')';
+  return isExprBegin;
+}
+
+static bool
+printAffineExpr(const PureAffineExprImpl &expr, bool isExprBegin = true,
+                BindingStrength enclosingTightness = BindingStrength::Weak) {
+  if (expr.isLinear())
+    return printCoefficientVec(expr.getLinearDividend(), isExprBegin,
+                               enclosingTightness);
+
+  const auto &div = expr;
+  const auto &linearDividend = div.getLinearDividend();
+  const auto &divisor = div.getDivisor();
+  const auto &mulFactor = div.getMulFactor();
+  const auto &nestedDivs = div.getNestedDivTerms();
+
+  printCoefficient(mulFactor, isExprBegin, expr.info);
+  if (std::abs(mulFactor) != 1)
+    dbgs() << " * ";
+
+  if (div.hasDivisor() || enclosingTightness == BindingStrength::Strong) {
+    dbgs() << '(';
+    isExprBegin = true;
+  }
+
+  isExprBegin = printCoefficientVec(linearDividend, isExprBegin);
+
+  for (const auto &div : nestedDivs)
+    isExprBegin = printAffineExpr(*div, isExprBegin, BindingStrength::Strong);
+
+  if (div.hasDivisor())
+    dbgs() << (expr.isMod() ? " % " : " floordiv ") << divisor;
+
+  if (div.hasDivisor() || enclosingTightness == BindingStrength::Strong)
+    dbgs() << ')';
+
+  return isExprBegin;
+}
+
+LLVM_DUMP_METHOD void CoefficientVector::dump() const {
+  printCoefficientVec(*this);
   dbgs() << '\n';
 }
 
-LLVM_DUMP_METHOD void AffineMap::dump() const {
-  dbgs() << "NumDims = " << numDims << '\n';
-  dbgs() << "NumSymbols = " << numSymbols << '\n';
-  dbgs() << "Expressions:\n";
-  for (const AffineExpr &e : getExprs())
-    e->dump();
+LLVM_DUMP_METHOD void PureAffineExprImpl::dump() const {
+  printAffineExpr(*this);
+  dbgs() << '\n';
 }
 
-LLVM_DUMP_METHOD void IntegerSet::dump() const {
-  dbgs() << "NumDims = " << numDims << '\n';
-  dbgs() << "NumSymbols = " << numSymbols << '\n';
-  dbgs() << "Constraints:\n";
-  for (const AffineExpr &c : getConstraints())
-    c->dump();
-  dbgs() << "EqFlags:\n";
-  for (bool e : getEqFlags())
-    dbgs() << e << '\n';
+LLVM_DUMP_METHOD void FinalParseResult::dump() const {
+  dbgs() << "Exprs:\n";
+  for (const auto &expr : exprs)
+    expr->dump();
+  dbgs() << "EqFlags: ";
+  for (bool eqF : eqFlags)
+    dbgs() << eqF << ' ';
+  dbgs() << '\n';
 }
 #endif

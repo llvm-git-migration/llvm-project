@@ -13,97 +13,82 @@
 #include "ParserImpl.h"
 #include "Flattener.h"
 #include "ParseStructs.h"
-#include "ParserState.h"
 #include "mlir/Analysis/Presburger/Parser.h"
 
 using namespace mlir;
 using namespace presburger;
 using llvm::MemoryBuffer;
-using llvm::SmallVector;
 using llvm::SourceMgr;
 
-//===----------------------------------------------------------------------===//
-// Parser core
-//===----------------------------------------------------------------------===//
-/// Consume the specified token if present and return success.  On failure,
-/// output a diagnostic and return failure.
-ParseResult ParserImpl::parseToken(Token::Kind expectedToken,
-                                   const Twine &message) {
-  if (consumeIf(expectedToken))
-    return success();
-  return emitWrongTokenError(message);
+static bool isIdentifier(const Token &token) {
+  return token.isAny(Token::bare_identifier, Token::inttype) ||
+         token.isKeyword();
 }
 
-/// Parse a list of comma-separated items with an optional delimiter.  If a
-/// delimiter is provided, then an empty list is allowed.  If not, then at
-/// least one element will be parsed.
-ParseResult
-ParserImpl::parseCommaSeparatedList(Delimiter delimiter,
-                                    function_ref<ParseResult()> parseElementFn,
-                                    StringRef contextMessage) {
+bool ParserImpl::parseToken(Token::Kind expectedToken, const Twine &message) {
+  if (consumeIf(expectedToken))
+    return true;
+  return emitError(message);
+}
+
+bool ParserImpl::parseCommaSepeatedList(Delimiter delimiter,
+                                        function_ref<bool()> parseElementFn,
+                                        StringRef contextMessage) {
   switch (delimiter) {
   case Delimiter::None:
     break;
   case Delimiter::OptionalParen:
     if (getToken().isNot(Token::l_paren))
-      return success();
+      return true;
     [[fallthrough]];
   case Delimiter::Paren:
-    if (parseToken(Token::l_paren, "expected '('" + contextMessage))
-      return failure();
-    // Check for empty list.
+    if (!parseToken(Token::l_paren, "expected '('" + contextMessage))
+      return false;
     if (consumeIf(Token::r_paren))
-      return success();
+      return true;
     break;
   case Delimiter::OptionalLessGreater:
-    // Check for absent list.
     if (getToken().isNot(Token::less))
-      return success();
+      return true;
     [[fallthrough]];
   case Delimiter::LessGreater:
-    if (parseToken(Token::less, "expected '<'" + contextMessage))
-      return success();
-    // Check for empty list.
+    if (!parseToken(Token::less, "expected '<'" + contextMessage))
+      return true;
     if (consumeIf(Token::greater))
-      return success();
+      return true;
     break;
   case Delimiter::OptionalSquare:
     if (getToken().isNot(Token::l_square))
-      return success();
+      return true;
     [[fallthrough]];
   case Delimiter::Square:
-    if (parseToken(Token::l_square, "expected '['" + contextMessage))
-      return failure();
-    // Check for empty list.
+    if (!parseToken(Token::l_square, "expected '['" + contextMessage))
+      return false;
     if (consumeIf(Token::r_square))
-      return success();
+      return true;
     break;
   case Delimiter::OptionalBraces:
     if (getToken().isNot(Token::l_brace))
-      return success();
+      return true;
     [[fallthrough]];
   case Delimiter::Braces:
-    if (parseToken(Token::l_brace, "expected '{'" + contextMessage))
-      return failure();
-    // Check for empty list.
+    if (!parseToken(Token::l_brace, "expected '{'" + contextMessage))
+      return false;
     if (consumeIf(Token::r_brace))
-      return success();
+      return true;
     break;
   }
 
-  // Non-empty case starts with an element.
-  if (parseElementFn())
-    return failure();
+  if (!parseElementFn())
+    return false;
 
-  // Otherwise we have a list of comma separated elements.
-  while (consumeIf(Token::comma)) {
-    if (parseElementFn())
-      return failure();
-  }
+  while (consumeIf(Token::comma))
+    if (!parseElementFn())
+      return false;
 
   switch (delimiter) {
   case Delimiter::None:
-    return success();
+    return true;
   case Delimiter::OptionalParen:
   case Delimiter::Paren:
     return parseToken(Token::r_paren, "expected ')'" + contextMessage);
@@ -120,18 +105,15 @@ ParserImpl::parseCommaSeparatedList(Delimiter delimiter,
   llvm_unreachable("Unknown delimiter");
 }
 
-//===----------------------------------------------------------------------===//
-// Parse error emitters
-//===----------------------------------------------------------------------===//
-ParseResult ParserImpl::emitError(SMLoc loc, const Twine &message) {
+bool ParserImpl::emitError(SMLoc loc, const Twine &message) {
   // If we hit a parse error in response to a lexer error, then the lexer
   // already reported the error.
-  if (!getToken().is(Token::error))
-    state.sourceMgr.PrintMessage(loc, SourceMgr::DK_Error, message);
-  return failure();
+  if (getToken().isNot(Token::error))
+    sourceMgr.PrintMessage(loc, SourceMgr::DK_Error, message);
+  return false;
 }
 
-ParseResult ParserImpl::emitError(const Twine &message) {
+bool ParserImpl::emitError(const Twine &message) {
   SMLoc loc = state.curToken.getLoc();
   if (state.curToken.isNot(Token::eof))
     return emitError(loc, message);
@@ -140,97 +122,36 @@ ParseResult ParserImpl::emitError(const Twine &message) {
   return emitError(SMLoc::getFromPointer(loc.getPointer() - 1), message);
 }
 
-/// Emit an error about a "wrong token".  If the current token is at the
-/// start of a source line, this will apply heuristics to back up and report
-/// the error at the end of the previous line, which is where the expected
-/// token is supposed to be.
-ParseResult ParserImpl::emitWrongTokenError(const Twine &message) {
-  SMLoc loc = state.curToken.getLoc();
-
-  // If the error is to be emitted at EOF, move it back one character.
-  if (state.curToken.is(Token::eof))
-    loc = SMLoc::getFromPointer(loc.getPointer() - 1);
-
-  // This is the location we were originally asked to report the error at.
-  SMLoc originalLoc = loc;
-
-  // Determine if the token is at the start of the current line.
-  const char *bufferStart = state.lex.getBufferBegin();
-  const char *curPtr = loc.getPointer();
-
-  // Use this StringRef to keep track of what we are going to back up through,
-  // it provides nicer string search functions etc.
-  StringRef startOfBuffer(bufferStart, curPtr - bufferStart);
-
-  // Back up over entirely blank lines.
-  while (true) {
-    // Back up until we see a \n, but don't look past the buffer start.
-    startOfBuffer = startOfBuffer.rtrim(" \t");
-
-    // For tokens with no preceding source line, just emit at the original
-    // location.
-    if (startOfBuffer.empty())
-      return emitError(originalLoc, message);
-
-    // If we found something that isn't the end of line, then we're done.
-    if (startOfBuffer.back() != '\n' && startOfBuffer.back() != '\r')
-      return emitError(SMLoc::getFromPointer(startOfBuffer.end()), message);
-
-    // Drop the \n so we emit the diagnostic at the end of the line.
-    startOfBuffer = startOfBuffer.drop_back();
-  }
-}
-
-//===----------------------------------------------------------------------===//
-// Affine Expression Parser
-//===----------------------------------------------------------------------===//
-static bool isIdentifier(const Token &token) {
-  // We include only `inttype` and `bare_identifier` here since they are the
-  // only non-keyword tokens that can be used to represent an identifier.
-  return token.isAny(Token::bare_identifier, Token::inttype) ||
-         token.isKeyword();
-}
-
 /// Parse a bare id that may appear in an affine expression.
 ///
 ///   affine-expr ::= bare-id
-AffineExpr ParserImpl::parseBareIdExpr() {
-  if (!isIdentifier(getToken())) {
-    std::ignore = emitWrongTokenError("expected bare identifier");
-    return nullptr;
-  }
+PureAffineExpr ParserImpl::parseBareIdExpr() {
+  if (!isIdentifier(getToken()))
+    return emitError("expected bare identifier"), nullptr;
 
   StringRef sRef = getTokenSpelling();
   for (const auto &entry : dimsAndSymbols) {
     if (entry.first == sRef) {
       consumeToken();
-      // Since every DimExpr or SymbolExpr is used more than once, construct a
-      // fresh unique_ptr every time we encounter it in the dimsAndSymbols list.
-      if (std::holds_alternative<AffineDimExpr>(entry.second))
-        return std::make_unique<AffineDimExpr>(
-            std::get<AffineDimExpr>(entry.second));
-      return std::make_unique<AffineSymbolExpr>(
-          std::get<AffineSymbolExpr>(entry.second));
+      return std::make_unique<PureAffineExprImpl>(info, entry.second);
     }
   }
 
-  std::ignore = emitWrongTokenError("use of undeclared identifier");
-  return nullptr;
+  return emitError("use of undeclared identifier"), nullptr;
 }
 
 /// Parse an affine expression inside parentheses.
 ///
 ///   affine-expr ::= `(` affine-expr `)`
-AffineExpr ParserImpl::parseParentheticalExpr() {
-  if (parseToken(Token::l_paren, "expected '('"))
+PureAffineExpr ParserImpl::parseParentheticalExpr() {
+  if (!parseToken(Token::l_paren, "expected '('"))
     return nullptr;
   if (getToken().is(Token::r_paren)) {
-    std::ignore = emitError("no expression inside parentheses");
-    return nullptr;
+    return emitError("no expression inside parentheses"), nullptr;
   }
 
-  AffineExpr expr = parseAffineExpr();
-  if (!expr || parseToken(Token::r_paren, "expected ')'"))
+  PureAffineExpr expr = parseAffineExpr();
+  if (!expr || !parseToken(Token::r_paren, "expected ')'"))
     return nullptr;
 
   return expr;
@@ -239,19 +160,18 @@ AffineExpr ParserImpl::parseParentheticalExpr() {
 /// Parse the negation expression.
 ///
 ///   affine-expr ::= `-` affine-expr
-AffineExpr ParserImpl::parseNegateExpression(const AffineExpr &lhs) {
-  if (parseToken(Token::minus, "expected '-'"))
+PureAffineExpr ParserImpl::parseNegateExpression(const PureAffineExpr &lhs) {
+  if (!parseToken(Token::minus, "expected '-'"))
     return nullptr;
 
-  AffineExpr operand = parseAffineOperandExpr(lhs);
+  PureAffineExpr operand = parseAffineOperandExpr(lhs);
   // Since negation has the highest precedence of all ops (including high
   // precedence ops) but lower than parentheses, we are only going to use
   // parseAffineOperandExpr instead of parseAffineExpr here.
   if (!operand) {
     // Extra error message although parseAffineOperandExpr would have
     // complained. Leads to a better diagnostic.
-    std::ignore = emitError("missing operand of negation");
-    return nullptr;
+    return emitError("missing operand of negation"), nullptr;
   }
   return -1 * std::move(operand);
 }
@@ -259,15 +179,16 @@ AffineExpr ParserImpl::parseNegateExpression(const AffineExpr &lhs) {
 /// Parse a positive integral constant appearing in an affine expression.
 ///
 ///   affine-expr ::= integer-literal
-AffineExpr ParserImpl::parseIntegerExpr() {
+PureAffineExpr ParserImpl::parseIntegerExpr() {
   std::optional<uint64_t> val = getToken().getUInt64IntegerValue();
-  if (!val.has_value() || (int64_t)*val < 0) {
-    std::ignore = emitError("constant too large for index");
-    return nullptr;
-  }
+  if (!val)
+    return emitError("failed to parse constant"), nullptr;
+  int64_t ret = static_cast<int64_t>(*val);
+  if (ret < 0)
+    return emitError("constant too large"), nullptr;
 
   consumeToken(Token::integer);
-  return std::make_unique<AffineConstantExpr>((int64_t)*val);
+  return std::make_unique<PureAffineExprImpl>(info, ret);
 }
 
 /// Parses an expression that can be a valid operand of an affine expression.
@@ -279,7 +200,7 @@ AffineExpr ParserImpl::parseIntegerExpr() {
 //  operand expression, it's an op expression and will be parsed via
 //  parseAffineHighPrecOpExpression(). However, for i + (j*k) + -l, (j*k) and
 //  -l are valid operands that will be parsed by this function.
-AffineExpr ParserImpl::parseAffineOperandExpr(const AffineExpr &lhs) {
+PureAffineExpr ParserImpl::parseAffineOperandExpr(const PureAffineExpr &lhs) {
   switch (getToken().getKind()) {
   case Token::integer:
     return parseIntegerExpr();
@@ -290,67 +211,63 @@ AffineExpr ParserImpl::parseAffineOperandExpr(const AffineExpr &lhs) {
   case Token::kw_ceildiv:
   case Token::kw_floordiv:
   case Token::kw_mod:
-    // Try to treat these tokens as identifiers.
     return parseBareIdExpr();
   case Token::plus:
   case Token::star:
     if (lhs)
-      std::ignore = emitError("missing right operand of binary operator");
+      emitError("missing right operand of binary operator");
     else
-      std::ignore = emitError("missing left operand of binary operator");
+      emitError("missing left operand of binary operator");
     return nullptr;
   default:
-    // If nothing matches, we try to treat this token as an identifier.
     if (isIdentifier(getToken()))
       return parseBareIdExpr();
 
     if (lhs)
-      std::ignore = emitError("missing right operand of binary operator");
+      emitError("missing right operand of binary operator");
     else
-      std::ignore = emitError("expected affine expression");
+      emitError("expected affine expression");
     return nullptr;
   }
 }
 
-/// Create an affine binary high precedence op expression (mul's, div's, mod).
-/// opLoc is the location of the op token to be used to report errors
-/// for non-conforming expressions.
-AffineExpr ParserImpl::getAffineBinaryOpExpr(AffineHighPrecOp op,
-                                             AffineExpr &&lhs, AffineExpr &&rhs,
-                                             SMLoc opLoc) {
+PureAffineExpr ParserImpl::getAffineBinaryOpExpr(AffineHighPrecOp op,
+                                                 PureAffineExpr &&lhs,
+                                                 PureAffineExpr &&rhs,
+                                                 SMLoc opLoc) {
   switch (op) {
   case Mul:
-    if (!lhs->isSymbolicOrConstant() && !rhs->isSymbolicOrConstant()) {
-      std::ignore = emitError(
-          opLoc, "non-affine expression: at least one of the multiply "
-                 "operands has to be either a constant or symbolic");
-      return nullptr;
+    if (!lhs->isConstant() && !rhs->isConstant()) {
+      return emitError(opLoc,
+                       "non-affine expression: at least one of the multiply "
+                       "operands has to be a constant"),
+             nullptr;
     }
-    return std::move(lhs) * std::move(rhs);
+    if (rhs->isConstant())
+      return std::move(lhs) * rhs->getConstant();
+    return std::move(rhs) * lhs->getConstant();
   case FloorDiv:
-    if (!rhs->isSymbolicOrConstant()) {
-      std::ignore =
-          emitError(opLoc, "non-affine expression: right operand of floordiv "
-                           "has to be either a constant or symbolic");
-      return nullptr;
+    if (!rhs->isConstant()) {
+      return emitError(opLoc,
+                       "non-affine expression: right operand of floordiv "
+                       "has to be a constant"),
+             nullptr;
     }
-    return floorDiv(std::move(lhs), std::move(rhs));
+    return floordiv(std::move(lhs), rhs->getConstant());
   case CeilDiv:
-    if (!rhs->isSymbolicOrConstant()) {
-      std::ignore =
-          emitError(opLoc, "non-affine expression: right operand of ceildiv "
-                           "has to be either a constant or symbolic");
-      return nullptr;
+    if (!rhs->isConstant()) {
+      return emitError(opLoc, "non-affine expression: right operand of ceildiv "
+                              "has to be a constant"),
+             nullptr;
     }
-    return ceilDiv(std::move(lhs), std::move(rhs));
+    return ceildiv(std::move(lhs), rhs->getConstant());
   case Mod:
-    if (!rhs->isSymbolicOrConstant()) {
-      std::ignore =
-          emitError(opLoc, "non-affine expression: right operand of mod "
-                           "has to be either a constant or symbolic");
-      return nullptr;
+    if (!rhs->isConstant()) {
+      return emitError(opLoc, "non-affine expression: right operand of mod "
+                              "has to be a constant"),
+             nullptr;
     }
-    return std::move(lhs) % std::move(rhs);
+    return std::move(lhs) % rhs->getConstant();
   case HNoOp:
     llvm_unreachable("can't create affine expression for null high prec op");
     return nullptr;
@@ -358,10 +275,9 @@ AffineExpr ParserImpl::getAffineBinaryOpExpr(AffineHighPrecOp op,
   llvm_unreachable("Unknown AffineHighPrecOp");
 }
 
-/// Create an affine binary low precedence op expression (add, sub).
-AffineExpr ParserImpl::getAffineBinaryOpExpr(AffineLowPrecOp op,
-                                             AffineExpr &&lhs,
-                                             AffineExpr &&rhs) {
+PureAffineExpr ParserImpl::getAffineBinaryOpExpr(AffineLowPrecOp op,
+                                                 PureAffineExpr &&lhs,
+                                                 PureAffineExpr &&rhs) {
   switch (op) {
   case AffineLowPrecOp::Add:
     return std::move(lhs) + std::move(rhs);
@@ -374,8 +290,6 @@ AffineExpr ParserImpl::getAffineBinaryOpExpr(AffineLowPrecOp op,
   llvm_unreachable("Unknown AffineLowPrecOp");
 }
 
-/// Consume this token if it is a lower precedence affine op (there are only
-/// two precedence levels).
 AffineLowPrecOp ParserImpl::consumeIfLowPrecOp() {
   switch (getToken().getKind()) {
   case Token::plus:
@@ -419,10 +333,10 @@ AffineHighPrecOp ParserImpl::consumeIfHighPrecOp() {
 /// null. If no rhs can be found, returns (llhs llhsOp lhs) or lhs if llhs is
 /// null. llhsOpLoc is the location of the llhsOp token that will be used to
 /// report an error for non-conforming expressions.
-AffineExpr ParserImpl::parseAffineHighPrecOpExpr(AffineExpr &&llhs,
-                                                 AffineHighPrecOp llhsOp,
-                                                 SMLoc llhsOpLoc) {
-  AffineExpr lhs = parseAffineOperandExpr(llhs);
+PureAffineExpr ParserImpl::parseAffineHighPrecOpExpr(PureAffineExpr &&llhs,
+                                                     AffineHighPrecOp llhsOp,
+                                                     SMLoc llhsOpLoc) {
+  PureAffineExpr lhs = parseAffineOperandExpr(llhs);
   if (!lhs)
     return nullptr;
 
@@ -430,7 +344,7 @@ AffineExpr ParserImpl::parseAffineHighPrecOpExpr(AffineExpr &&llhs,
   SMLoc opLoc = getToken().getLoc();
   if (AffineHighPrecOp op = consumeIfHighPrecOp()) {
     if (llhs) {
-      AffineExpr expr =
+      PureAffineExpr expr =
           getAffineBinaryOpExpr(llhsOp, std::move(llhs), std::move(lhs), opLoc);
       if (!expr)
         return nullptr;
@@ -445,7 +359,6 @@ AffineExpr ParserImpl::parseAffineHighPrecOpExpr(AffineExpr &&llhs,
     return getAffineBinaryOpExpr(llhsOp, std::move(llhs), std::move(lhs),
                                  llhsOpLoc);
 
-  // No llhs, 'lhs' itself is the expression.
   return lhs;
 }
 
@@ -470,35 +383,36 @@ AffineExpr ParserImpl::parseAffineHighPrecOpExpr(AffineExpr &&llhs,
 /// Eg: when the expression is e1 + e2*e3 + e4, with e1 as llhs, this function
 /// will return the affine expr equivalent of (e1 + (e2*e3)) + e4, where
 /// (e2*e3) will be parsed using parseAffineHighPrecOpExpr().
-AffineExpr ParserImpl::parseAffineLowPrecOpExpr(AffineExpr &&llhs,
-                                                AffineLowPrecOp llhsOp) {
-  AffineExpr lhs = parseAffineOperandExpr(llhs);
+PureAffineExpr ParserImpl::parseAffineLowPrecOpExpr(PureAffineExpr &&llhs,
+                                                    AffineLowPrecOp llhsOp) {
+  PureAffineExpr lhs = parseAffineOperandExpr(llhs);
   if (!lhs)
     return nullptr;
 
   // Found an LHS. Deal with the ops.
   if (AffineLowPrecOp lOp = consumeIfLowPrecOp()) {
     if (llhs) {
-      AffineExpr sum =
+      PureAffineExpr sum =
           getAffineBinaryOpExpr(llhsOp, std::move(llhs), std::move(lhs));
       return parseAffineLowPrecOpExpr(std::move(sum), lOp);
     }
-    // No LLHS, get RHS and form the expression.
+
     return parseAffineLowPrecOpExpr(std::move(lhs), lOp);
   }
   SMLoc opLoc = getToken().getLoc();
   if (AffineHighPrecOp hOp = consumeIfHighPrecOp()) {
     // We have a higher precedence op here. Get the rhs operand for the llhs
     // through parseAffineHighPrecOpExpr.
-    AffineExpr highRes = parseAffineHighPrecOpExpr(std::move(lhs), hOp, opLoc);
+    PureAffineExpr highRes =
+        parseAffineHighPrecOpExpr(std::move(lhs), hOp, opLoc);
     if (!highRes)
       return nullptr;
 
     // If llhs is null, the product forms the first operand of the yet to be
     // found expression. If non-null, the op to associate with llhs is llhsOp.
-    AffineExpr expr = llhs ? getAffineBinaryOpExpr(llhsOp, std::move(llhs),
-                                                   std::move(highRes))
-                           : std::move(highRes);
+    PureAffineExpr expr = llhs ? getAffineBinaryOpExpr(llhsOp, std::move(llhs),
+                                                       std::move(highRes))
+                               : std::move(highRes);
 
     // Recurse for subsequent low prec op's after the affine high prec op
     // expression.
@@ -509,7 +423,7 @@ AffineExpr ParserImpl::parseAffineLowPrecOpExpr(AffineExpr &&llhs,
   // Last operand in the expression list.
   if (llhs)
     return getAffineBinaryOpExpr(llhsOp, std::move(llhs), std::move(lhs));
-  // No llhs, 'lhs' itself is the expression.
+
   return lhs;
 }
 
@@ -528,17 +442,16 @@ AffineExpr ParserImpl::parseAffineLowPrecOpExpr(AffineExpr &&llhs,
 /// Additional conditions are checked depending on the production. For eg.,
 /// one of the operands for `*` has to be either constant/symbolic; the second
 /// operand for floordiv, ceildiv, and mod has to be a positive integer.
-AffineExpr ParserImpl::parseAffineExpr() {
+PureAffineExpr ParserImpl::parseAffineExpr() {
   return parseAffineLowPrecOpExpr(nullptr, AffineLowPrecOp::LNoOp);
 }
 
 /// Parse a dim or symbol from the lists appearing before the actual
 /// expressions of the affine map. Update our state to store the
 /// dimensional/symbolic identifier.
-ParseResult ParserImpl::parseIdentifierDefinition(
-    std::variant<AffineDimExpr, AffineSymbolExpr> idExpr) {
+bool ParserImpl::parseIdentifierDefinition(DimOrSymbolExpr idExpr) {
   if (!isIdentifier(getToken()))
-    return emitWrongTokenError("expected bare identifier");
+    return emitError("expected bare identifier");
 
   StringRef name = getTokenSpelling();
   for (const auto &entry : dimsAndSymbols) {
@@ -548,66 +461,36 @@ ParseResult ParserImpl::parseIdentifierDefinition(
   consumeToken();
 
   dimsAndSymbols.emplace_back(name, idExpr);
-  return success();
+  return true;
 }
 
 /// Parse the list of dimensional identifiers to an affine map.
-ParseResult ParserImpl::parseDimIdList(unsigned &numDims) {
-  auto parseElt = [&]() -> ParseResult {
-    return parseIdentifierDefinition(AffineDimExpr(numDims++));
+bool ParserImpl::parseDimIdList() {
+  auto parseElt = [&]() -> bool {
+    return parseIdentifierDefinition({DimOrSymbolKind::DimId, info.numDims++});
   };
-  return parseCommaSeparatedList(Delimiter::Paren, parseElt,
-                                 " in dimensional identifier list");
+  return parseCommaSepeatedList(Delimiter::Paren, parseElt,
+                                " in dimensional identifier list");
 }
 
 /// Parse the list of symbolic identifiers to an affine map.
-ParseResult ParserImpl::parseSymbolIdList(unsigned &numSymbols) {
-  auto parseElt = [&]() -> ParseResult {
-    return parseIdentifierDefinition(AffineSymbolExpr(numSymbols++));
+bool ParserImpl::parseSymbolIdList() {
+  auto parseElt = [&]() -> bool {
+    return parseIdentifierDefinition(
+        {DimOrSymbolKind::Symbol, info.numSymbols++});
   };
-  return parseCommaSeparatedList(Delimiter::Square, parseElt,
-                                 " in symbol list");
+  return parseCommaSepeatedList(Delimiter::Square, parseElt, " in symbol list");
 }
 
 /// Parse the list of symbolic identifiers to an affine map.
-ParseResult ParserImpl::parseDimAndOptionalSymbolIdList(unsigned &numDims,
-                                                        unsigned &numSymbols) {
-  if (parseDimIdList(numDims)) {
-    return failure();
+bool ParserImpl::parseDimAndOptionalSymbolIdList() {
+  if (!parseDimIdList())
+    return false;
+  if (getToken().isNot(Token::l_square)) {
+    info.numSymbols = 0;
+    return true;
   }
-  if (!getToken().is(Token::l_square)) {
-    numSymbols = 0;
-    return success();
-  }
-  return parseSymbolIdList(numSymbols);
-}
-
-/// Parse the range and sizes affine map definition inline.
-///
-///  affine-map ::= dim-and-symbol-id-lists `->` multi-dim-affine-expr
-///
-///  multi-dim-affine-expr ::= `(` `)`
-///  multi-dim-affine-expr ::= `(` affine-expr (`,` affine-expr)* `)`
-std::optional<AffineMap> ParserImpl::parseAffineMapRange(unsigned numDims,
-                                                         unsigned numSymbols) {
-  SmallVector<AffineExpr, 4> exprs;
-  auto parseElt = [&]() -> ParseResult {
-    AffineExpr elt = parseAffineExpr();
-    ParseResult res = elt ? success() : failure();
-    exprs.emplace_back(std::move(elt));
-    return res;
-  };
-
-  // Parse a multi-dimensional affine expression (a comma-separated list of
-  // 1-d affine expressions). Grammar:
-  // multi-dim-affine-expr ::= `(` `)`
-  //                         | `(` affine-expr (`,` affine-expr)* `)`
-  if (parseCommaSeparatedList(Delimiter::Paren, parseElt,
-                              " in affine map range"))
-    return std::nullopt;
-
-  // Parsed a valid affine map.
-  return AffineMap(numDims, numSymbols, std::move(exprs));
+  return parseSymbolIdList();
 }
 
 /// Parse an affine constraint.
@@ -622,201 +505,137 @@ std::optional<AffineMap> ParserImpl::parseAffineMapRange(unsigned numDims,
 ///
 /// isEq is set to true if the parsed constraint is an equality, false if it
 /// is an inequality (greater than or equal).
-///
-AffineExpr ParserImpl::parseAffineConstraint(bool *isEq) {
-  AffineExpr lhsExpr = parseAffineExpr();
+PureAffineExpr ParserImpl::parseAffineConstraint(bool *isEq) {
+  PureAffineExpr lhsExpr = parseAffineExpr();
   if (!lhsExpr)
     return nullptr;
 
-  // affine-constraint ::= `affine-expr` `>=` `affine-expr`
   if (consumeIf(Token::greater) && consumeIf(Token::equal)) {
-    AffineExpr rhsExpr = parseAffineExpr();
+    PureAffineExpr rhsExpr = parseAffineExpr();
     if (!rhsExpr)
       return nullptr;
     *isEq = false;
     return std::move(lhsExpr) - std::move(rhsExpr);
   }
 
-  // affine-constraint ::= `affine-expr` `<=` `affine-expr`
   if (consumeIf(Token::less) && consumeIf(Token::equal)) {
-    AffineExpr rhsExpr = parseAffineExpr();
+    PureAffineExpr rhsExpr = parseAffineExpr();
     if (!rhsExpr)
       return nullptr;
     *isEq = false;
     return std::move(rhsExpr) - std::move(lhsExpr);
   }
 
-  // affine-constraint ::= `affine-expr` `==` `affine-expr`
   if (consumeIf(Token::equal) && consumeIf(Token::equal)) {
-    AffineExpr rhsExpr = parseAffineExpr();
+    PureAffineExpr rhsExpr = parseAffineExpr();
     if (!rhsExpr)
       return nullptr;
     *isEq = true;
     return std::move(lhsExpr) - std::move(rhsExpr);
   }
 
-  std::ignore =
-      emitError("expected '== affine-expr' or '>= affine-expr' at end of "
-                "affine constraint");
-  return nullptr;
+  return emitError("expected '==', '<=' or '>='"), nullptr;
 }
 
-/// Parse the constraints that are part of an integer set definition.
-///  integer-set-inline
-///                ::= dim-and-symbol-id-lists `:`
-///                '(' affine-constraint-conjunction? ')'
-///  affine-constraint-conjunction ::= affine-constraint (`,`
-///                                       affine-constraint)*
-///
-std::optional<IntegerSet>
-ParserImpl::parseIntegerSetConstraints(unsigned numDims, unsigned numSymbols) {
-  SmallVector<AffineExpr, 4> constraints;
-  SmallVector<bool, 4> isEqs;
-  auto parseElt = [&]() -> ParseResult {
-    bool isEq;
-    AffineExpr elt = parseAffineConstraint(&isEq);
-    ParseResult res = elt ? success() : failure();
+FinalParseResult ParserImpl::parseAffineMapOrIntegerSet() {
+  SmallVector<PureAffineExpr, 8> exprs;
+  SmallVector<bool, 8> eqFlags;
+
+  if (!parseDimAndOptionalSymbolIdList())
+    llvm_unreachable("expected dim and symbol list");
+
+  auto parseExpr = [&]() -> bool {
+    PureAffineExpr elt = canonicalize(parseAffineExpr());
     if (elt) {
-      constraints.emplace_back(std::move(elt));
-      isEqs.push_back(isEq);
+      exprs.emplace_back(std::move(elt));
+      return true;
     }
-    return res;
+    return false;
   };
 
-  // Parse a list of affine constraints (comma-separated).
-  if (parseCommaSeparatedList(Delimiter::Paren, parseElt,
-                              " in integer set constraint list"))
-    return std::nullopt;
-
-  // If no constraints were parsed, then treat this as a degenerate 'true' case.
-  if (constraints.empty()) {
-    /* 0 == 0 */
-    return IntegerSet(numDims, numSymbols,
-                      std::make_unique<AffineConstantExpr>(0), true);
-  }
-
-  // Parsed a valid integer set.
-  return IntegerSet(numDims, numSymbols, std::move(constraints),
-                    std::move(isEqs));
-}
-
-std::variant<AffineMap, IntegerSet, std::nullopt_t>
-ParserImpl::parseAffineMapOrIntegerSet() {
-  unsigned numDims = 0, numSymbols = 0;
-
-  // List of dimensional and optional symbol identifiers.
-  if (parseDimAndOptionalSymbolIdList(numDims, numSymbols))
-    return std::nullopt;
+  auto parseConstraint = [&]() -> bool {
+    bool isEq;
+    PureAffineExpr elt = canonicalize(parseAffineConstraint(&isEq));
+    if (elt) {
+      exprs.emplace_back(std::move(elt));
+      eqFlags.push_back(isEq);
+      return true;
+    }
+    return false;
+  };
 
   if (consumeIf(Token::arrow)) {
-    if (std::optional<AffineMap> v = parseAffineMapRange(numDims, numSymbols))
-      return std::move(*v);
-    return std::nullopt;
+    /// Parse the range and sizes affine map definition inline.
+    ///
+    ///  affine-map ::= dim-and-symbol-id-lists `->` multi-dim-affine-expr
+    ///
+    ///  multi-dim-affine-expr ::= `(` `)`
+    ///  multi-dim-affine-expr ::= `(` affine-expr (`,` affine-expr)* `)`
+    if (!parseCommaSepeatedList(Delimiter::Paren, parseExpr,
+                                " in affine map range"))
+      llvm_unreachable("expected affine map range");
+
+    return {info, std::move(exprs), eqFlags};
   }
 
-  if (parseToken(Token::colon, "expected '->' or ':'"))
-    return std::nullopt;
+  if (!parseToken(Token::colon, "expected '->' or ':'"))
+    llvm_unreachable("Unexpected token");
 
-  if (std::optional<IntegerSet> v =
-          parseIntegerSetConstraints(numDims, numSymbols))
-    return std::move(*v);
-  return std::nullopt;
+  /// Parse the constraints that are part of an integer set definition.
+  ///  integer-set-inline
+  ///                ::= dim-and-symbol-id-lists `:`
+  ///                '(' affine-constraint-conjunction? ')'
+  ///  affine-constraint-conjunction ::= affine-constraint (`,`
+  ///                                       affine-constraint)*
+  ///
+  if (!parseCommaSepeatedList(Delimiter::Paren, parseConstraint,
+                              " in integer set constraint list"))
+    llvm_unreachable("expected integer set");
+
+  return {info, std::move(exprs), eqFlags};
 }
 
-static MultiAffineFunction getMultiAffineFunctionFromMap(const AffineMap &map) {
-  IntegerPolyhedron cst(presburger::PresburgerSpace::getSetSpace(0, 0, 0));
-  std::vector<SmallVector<int64_t, 8>> flattenedExprs;
-
-  // Flatten expressions and add them to the constraint system.
-  LogicalResult result = getFlattenedAffineExprs(map, flattenedExprs, cst);
-  assert(result.succeeded() && "Unable to get flattened affine exprs");
+static MultiAffineFunction getMAF(FinalParseResult &&parseResult) {
+  auto info = parseResult.info;
+  auto [flatMatrix, cst] = Flattener(std::move(parseResult)).flatten();
 
   DivisionRepr divs = cst.getLocalReprs();
   assert(divs.hasAllReprs() &&
          "AffineMap cannot produce divs without local representation");
 
-  // TODO: We shouldn't have to do this conversion.
-  Matrix<DynamicAPInt> mat(map.getNumExprs(),
-                    map.getNumInputs() + divs.getNumDivs() + 1);
-  for (unsigned i = 0; i < flattenedExprs.size(); ++i)
-    for (unsigned j = 0; j < flattenedExprs[i].size(); ++j)
-      mat(i, j) = flattenedExprs[i][j];
-
   return MultiAffineFunction(
-      PresburgerSpace::getRelationSpace(map.getNumDims(), map.getNumExprs(),
-                                        map.getNumSymbols(), divs.getNumDivs()),
-      mat, divs);
+      PresburgerSpace::getRelationSpace(info.numDims, info.numExprs,
+                                        info.numSymbols, divs.getNumDivs()),
+      flatMatrix, divs);
 }
 
-static IntegerPolyhedron getPolyhedronFromSet(const IntegerSet &set) {
-  IntegerPolyhedron cst(presburger::PresburgerSpace::getSetSpace(0, 0, 0));
-  std::vector<SmallVector<int64_t, 8>> flattenedExprs;
+static IntegerPolyhedron getPoly(FinalParseResult &&parseResult) {
+  auto eqFlags = parseResult.eqFlags;
+  auto [flatMatrix, cst] = Flattener(std::move(parseResult)).flatten();
 
-  // Flatten expressions and add them to the constraint system.
-  LogicalResult result = getFlattenedAffineExprs(set, flattenedExprs, cst);
-  assert(result.succeeded() && "Unable to get flattened affine exprs");
-  assert(flattenedExprs.size() == set.getNumConstraints());
-
-  unsigned numInequalities = set.getNumInequalities();
-  unsigned numEqualities = set.getNumEqualities();
-  unsigned numDims = set.getNumDims();
-  unsigned numSymbols = set.getNumSymbols();
-  unsigned numReservedCols = numDims + numSymbols + 1;
-  IntegerPolyhedron poly(
-      numInequalities, numEqualities, numReservedCols,
-      presburger::PresburgerSpace::getSetSpace(numDims, numSymbols, 0));
-  assert(numReservedCols >= poly.getSpace().getNumVars() + 1);
-
-  poly.insertVar(VarKind::Local, poly.getNumVarKind(VarKind::Local),
-                 /*num=*/cst.getNumLocalVars());
-
-  for (unsigned i = 0; i < flattenedExprs.size(); ++i) {
-    const auto &flatExpr = flattenedExprs[i];
-    assert(flatExpr.size() == poly.getSpace().getNumVars() + 1);
-    if (set.eqFlags[i])
-      poly.addEquality(flatExpr);
+  for (unsigned i = 0; i < flatMatrix.getNumRows(); ++i) {
+    if (eqFlags[i])
+      cst.addEquality(flatMatrix.getRow(i));
     else
-      poly.addInequality(flatExpr);
+      cst.addInequality(flatMatrix.getRow(i));
   }
-  // Add the other constraints involving local vars from flattening.
-  poly.append(cst);
 
-  return poly;
+  return cst;
 }
 
-static std::variant<AffineMap, IntegerSet, std::nullopt_t>
-parseAffineMapOrIntegerSet(StringRef str) {
+static FinalParseResult parseAffineMapOrIntegerSet(StringRef str) {
   SourceMgr sourceMgr;
-  auto memBuffer = MemoryBuffer::getMemBuffer(str, "<mlir_parser_buffer>",
-                                              /*RequiresNullTerminator=*/false);
+  auto memBuffer =
+      MemoryBuffer::getMemBuffer(str, "<mlir_parser_buffer>", false);
   sourceMgr.AddNewSourceBuffer(std::move(memBuffer), SMLoc());
-  ParserState state(sourceMgr);
-  ParserImpl parser(state);
+  ParserImpl parser(sourceMgr);
   return parser.parseAffineMapOrIntegerSet();
 }
 
-static AffineMap parseAffineMap(StringRef str) {
-  std::variant<AffineMap, IntegerSet, std::nullopt_t> v =
-      parseAffineMapOrIntegerSet(str);
-  if (std::holds_alternative<AffineMap>(v))
-    return std::move(std::get<AffineMap>(v));
-  llvm_unreachable("expected string to represent AffineMap");
+IntegerPolyhedron mlir::presburger::parseIntegerPolyhedron(StringRef str) {
+  return getPoly(parseAffineMapOrIntegerSet(str));
 }
 
-static IntegerSet parseIntegerSet(StringRef str) {
-  std::variant<AffineMap, IntegerSet, std::nullopt_t> v =
-      parseAffineMapOrIntegerSet(str);
-  if (std::holds_alternative<IntegerSet>(v))
-    return std::move(std::get<IntegerSet>(v));
-  llvm_unreachable("expected string to represent IntegerSet");
+MultiAffineFunction mlir::presburger::parseMultiAffineFunction(StringRef str) {
+  return getMAF(parseAffineMapOrIntegerSet(str));
 }
-
-namespace mlir::presburger {
-IntegerPolyhedron parseIntegerPolyhedron(StringRef str) {
-  return getPolyhedronFromSet(parseIntegerSet(str));
-}
-
-MultiAffineFunction parseMultiAffineFunction(StringRef str) {
-  return getMultiAffineFunctionFromMap(parseAffineMap(str));
-}
-} // namespace mlir::presburger
