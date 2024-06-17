@@ -303,7 +303,7 @@ public:
 
     Type opReturnType = this->getTypeConverter()->convertType(op.getType());
     if (!opReturnType || !(isa<IntegerType>(opReturnType) ||
-                          emitc::isPointerWideType(opReturnType)))
+                           emitc::isPointerWideType(opReturnType)))
       return rewriter.notifyMatchFailure(
           op, "expected integer or size_t/ssize_t/ptrdiff_t result type");
 
@@ -314,7 +314,7 @@ public:
 
     Type operandType = adaptor.getIn().getType();
     if (!operandType || !(isa<IntegerType>(operandType) ||
-                         emitc::isPointerWideType(operandType)))
+                          emitc::isPointerWideType(operandType)))
       return rewriter.notifyMatchFailure(
           op, "expected integer or size_t/ssize_t/ptrdiff_t operand type");
 
@@ -406,7 +406,7 @@ public:
 
     Type type = this->getTypeConverter()->convertType(op.getType());
     if (!type || !(isa_and_nonnull<IntegerType>(type) ||
-                  emitc::isPointerWideType(type))) {
+                   emitc::isPointerWideType(type))) {
       return rewriter.notifyMatchFailure(
           op, "expected integer or size_t/ssize_t/ptrdiff_t type");
     }
@@ -490,7 +490,7 @@ public:
 
     Type type = this->getTypeConverter()->convertType(op.getType());
     if (!type || !(isa_and_nonnull<IntegerType>(type) ||
-                  emitc::isPointerWideType(type))) {
+                   emitc::isPointerWideType(type))) {
       return rewriter.notifyMatchFailure(
           op, "expected integer or size_t/ssize_t/ptrdiff_t type");
     }
