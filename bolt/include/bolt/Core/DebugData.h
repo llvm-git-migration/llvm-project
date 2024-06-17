@@ -210,6 +210,8 @@ public:
   static bool classof(const DebugRangesSectionWriter *Writer) {
     return Writer->getKind() == RangesWriterKind::DebugRangesWriter;
   }
+  
+  void updateRangeBuffer(std::unique_ptr<DebugBufferVector> &CUBuffer);
 
   /// Writes out range lists for a current CU being processed.
   void virtual finalizeSection(){};

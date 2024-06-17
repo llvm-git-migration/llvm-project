@@ -89,6 +89,13 @@ private:
   /// Store Rangelists writer for each DWO CU.
   RangeListsDWOWriers RangeListsWritersByCU;
 
+  using LegacyRangesDWOWriers =
+      std::unordered_map<uint64_t, std::unique_ptr<DebugRangesSectionWriter>>;
+  /// Store Rangelists writer for each DWO CU.
+  LegacyRangesDWOWriers LegacyRangesWritersByCU;
+
+  std::unordered_map<uint64_t, DIE *> UpdatedDIEsByDWO;
+
   std::mutex LocListDebugInfoPatchesMutex;
 
   /// Dwo id specific its RangesBase.

@@ -177,6 +177,13 @@ uint64_t DebugRangesSectionWriter::getSectionOffset() {
   return SectionOffset;
 }
 
+void DebugRangesSectionWriter::updateRangeBuffer(std::unique_ptr<DebugBufferVector> &CUBuffer) {
+  for(auto DebugInfo : *CUBuffer){
+    RangesBuffer->push_back(DebugInfo);
+  }
+  SectionOffset = RangesBuffer->size();
+}
+
 DebugAddrWriter *DebugRangeListsSectionWriter::AddrWriter = nullptr;
 
 uint64_t DebugRangeListsSectionWriter::addRanges(
