@@ -1396,6 +1396,19 @@ transform::ForeachOp::apply(transform::TransformRewriter &rewriter,
   SmallVector<SmallVector<MappedValue>> payloads;
   detail::prepareValueMappings(payloads, getTargets(), state);
   size_t numIterations = payloads.empty() ? 0 : payloads.front().size();
+  bool isZipShortest = getZipShortest();
+
+  if (isZipShortest) {
+    size_t smallestNumIterations =
+        llvm::min_element(payloads, [&](const SmallVector<MappedValue> &A,
+                                        const SmallVector<MappedValue> &B) {
+          return A.size() < B.size();
+        })->size();
+
+    for (size_t argIdx = 0; argIdx < payloads.size(); argIdx++)
+      payloads[argIdx].resize(smallestNumIterations);
+    numIterations = smallestNumIterations;
+  }
 
   // As we will be "zipping" over them, check all payloads have the same size.
   for (size_t argIdx = 1; argIdx < payloads.size(); argIdx++) {
