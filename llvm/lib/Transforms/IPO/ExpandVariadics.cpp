@@ -456,8 +456,8 @@ bool ExpandVariadics::runOnFunction(Module &M, IRBuilder<> &Builder,
   // Replace known calls to the variadic with calls to the va_list equivalent
   for (User *U : make_early_inc_range(VariadicWrapper->users())) {
     if (CallBase *CB = dyn_cast<CallBase>(U)) {
-      Value *calledOperand = CB->getCalledOperand();
-      if (VariadicWrapper == calledOperand)
+      Value *CalledOperand = CB->getCalledOperand();
+      if (VariadicWrapper == CalledOperand)
         Changed |=
             expandCall(M, Builder, CB, VariadicWrapper->getFunctionType(),
                        FixedArityReplacement);
@@ -938,6 +938,37 @@ struct Amdgpu final : public VariadicABIInfo {
   }
 };
 
+struct NVPTX final : public VariadicABIInfo {
+
+  bool enableForTarget() override { return true; }
+
+  bool vaListPassedInSSARegister() override { return true; }
+
+  Type *vaListType(LLVMContext &Ctx) override {
+    return PointerType::getUnqual(Ctx);
+  }
+
+  Type *vaListParameterType(Module &M) override {
+    return PointerType::getUnqual(M.getContext());
+  }
+
+  Value *initializeVaList(Module &M, LLVMContext &Ctx, IRBuilder<> &Builder,
+                          AllocaInst *, Value *Buffer) override {
+    return Builder.CreateAddrSpaceCast(Buffer, vaListParameterType(M));
+  }
+
+  VAArgSlotInfo slotInfo(const DataLayout &DL, Type *Parameter) override {
+    // NVPTX doesn't apply minimum alignment to types present in structs. Types
+    // with alignment less than four should be promoted by the compiler and will
+    // get the proper minimum alignment in those cases.
+    const unsigned MinAlign = 1;
+    Align A = DL.getABITypeAlign(Parameter);
+    if (A < MinAlign)
+      A = Align(MinAlign);
+    return {A, false};
+  }
+};
+
 struct Wasm final : public VariadicABIInfo {
 
   bool enableForTarget() override {
@@ -967,8 +998,8 @@ struct Wasm final : public VariadicABIInfo {
     if (A < MinAlign)
       A = Align(MinAlign);
 
-    if (auto s = dyn_cast<StructType>(Parameter)) {
-      if (s->getNumElements() > 1) {
+    if (auto *S = dyn_cast<StructType>(Parameter)) {
+      if (S->getNumElements() > 1) {
         return {DL.getABITypeAlign(PointerType::getUnqual(Ctx)), true};
       }
     }
@@ -986,6 +1017,11 @@ std::unique_ptr<VariadicABIInfo> VariadicABIInfo::create(const Triple &T) {
 
   case Triple::wasm32: {
     return std::make_unique<Wasm>();
+  }
+
+  case Triple::nvptx:
+  case Triple::nvptx64: {
+    return std::make_unique<NVPTX>();
   }
 
   default:
