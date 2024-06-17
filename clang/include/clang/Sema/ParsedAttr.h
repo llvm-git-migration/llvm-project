@@ -1101,6 +1101,7 @@ enum AttributeDeclKind {
   ExpectedFunctionVariableOrClass,
   ExpectedKernelFunction,
   ExpectedFunctionWithProtoType,
+  ExpectedFunctionReturningBoolIntegerOrPointer,
 };
 
 inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,

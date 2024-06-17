@@ -32,6 +32,7 @@
 #include "clang/Analysis/Analyses/ThreadSafetyUtil.h"
 #include "clang/Analysis/AnalysisDeclContext.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -1366,6 +1367,8 @@ void ThreadSafetyAnalyzer::getMutexIDs(CapExprSet &Mtxs, AttrType *Attr,
     branch = BLE->getValue();
   else if (const auto *ILE = dyn_cast_or_null<IntegerLiteral>(BrE))
     branch = ILE->getValue().getBoolValue();
+  else
+    llvm_unreachable("Trylock success values must be bool or integer.");
 
   int branchnum = branch ? 0 : 1;
   if (Neg)

@@ -25,6 +25,7 @@
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Cuda.h"
 #include "clang/Basic/DarwinSDKInfo.h"
+#include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/HLSLRuntime.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LangOptions.h"
@@ -69,6 +70,7 @@
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TargetParser/Triple.h"
+#include <cassert>
 #include <optional>
 
 using namespace clang;
@@ -605,6 +607,9 @@ static void handleAllocSizeAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
 
 static bool checkTryLockFunAttrCommon(Sema &S, Decl *D, const ParsedAttr &AL,
                                       SmallVectorImpl<Expr *> &Args) {
+  // The attribute's first argument indicates which value the annotated function
+  // will return when it has successfully acquired the lock. Semantically, it's
+  // a boolean value, but we'll also accept integers.
   if (!AL.checkAtLeastNumArgs(S, 1))
     return false;
 
@@ -614,8 +619,22 @@ static bool checkTryLockFunAttrCommon(Sema &S, Decl *D, const ParsedAttr &AL,
     return false;
   }
 
-  // check that all arguments are lockable objects
+  // Check that all remaining arguments are lockable objects.
   checkAttrArgsAreCapabilityObjs(S, D, AL, Args, 1);
+
+  // Check that the attribute is applied to a function.
+  if (!D->isFunctionOrFunctionTemplate()) {
+    return false;
+  }
+  // Check that the function returns a boolean, integer, or pointer.
+  QualType ReturnType = D->getAsFunction()->getReturnType();
+  if (!ReturnType->isBooleanType() && !ReturnType->isIntegerType() &&
+      !ReturnType->isPointerType()) {
+    S.Diag(AL.getLoc(), diag::err_attribute_wrong_decl_type)
+        << AL << AL.isRegularKeywordAttribute()
+        << ExpectedFunctionReturningBoolIntegerOrPointer;
+    return false;
+  }
 
   return true;
 }

@@ -3657,8 +3657,8 @@ class Foo {
   int a GUARDED_BY(mu_);
   bool c;
 
-  int    tryLockMutexI() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu_);
-  Mutex* tryLockMutexP() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu_);
+  bool   tryLockMutexI() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu_);
+  Mutex *tryLockMutexP() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu_);
   void unlock() UNLOCK_FUNCTION(mu_);
 
   void test1();

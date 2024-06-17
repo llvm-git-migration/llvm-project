@@ -716,15 +716,17 @@ int slf_function_bad_7() SHARED_LOCK_FUNCTION(0); // \
 #error "Should support exclusive_trylock_function attribute"
 #endif
 
-// takes a mandatory boolean or integer argument specifying the retval
-// plus an optional list of locks (vars/fields)
+// The attribute takes a mandatory boolean or integer argument specifying the
+// retval plus an optional list of locks (vars/fields). The annotated function's
+// return type should be boolean or integer.
 
 void etf_function() __attribute__((exclusive_trylock_function)); // \
   // expected-error {{'exclusive_trylock_function' attribute takes at least 1 argument}}
 
-void etf_function_args() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu2);
+void etf_function_args() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu2); // \
+  // expected-error {{'exclusive_trylock_function' attribute only applies to functions that return bool, integer, or a pointer type}}
 
-void etf_function_arg() EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
+int etf_function_arg() EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
   // expected-warning {{'exclusive_trylock_function' attribute without capability arguments can only be applied to non-static methods of a class}}
 
 int etf_testfn(int y) EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
@@ -743,8 +745,21 @@ class EtfFoo {
  private:
   int test_field EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
     // expected-warning {{'exclusive_trylock_function' attribute only applies to functions}}
-  void test_method() EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
+  bool test_method() EXCLUSIVE_TRYLOCK_FUNCTION(1); // \
     // expected-warning {{'exclusive_trylock_function' attribute without capability arguments refers to 'this', but 'EtfFoo' isn't annotated with 'capability' or 'scoped_lockable' attribute}}
+};
+
+// It does not make sense to annotate constructors/destructors as exclusive
+// trylock functions because they cannot return a value. See
+// <https://github.com/llvm/llvm-project/issues/92408>.
+class EtfConstructorDestructor {
+  EtfConstructorDestructor() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu); // \
+  // expected-error {{'exclusive_trylock_function' attribute only applies to functions that return bool, integer, or a pointer type}}
+
+  ~EtfConstructorDestructor() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu); // \
+  // expected-error {{'exclusive_trylock_function' attribute only applies to functions that return bool, integer, or a pointer type}}
+
+  Mutex mu;
 };
 
 class EXCLUSIVE_TRYLOCK_FUNCTION(1) EtfTestClass { // \
@@ -756,7 +771,14 @@ void etf_fun_params(int lvar EXCLUSIVE_TRYLOCK_FUNCTION(1)); // \
 
 // Check argument parsing.
 
-// legal attribute arguments
+// legal permutations of the first argument and function return type
+int etf_func_args_succ_1_ret_int() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu2);
+bool etf_func_args_succ_1_ret_bool() EXCLUSIVE_TRYLOCK_FUNCTION(1, mu2);
+int etf_func_args_succ_true_ret_int() EXCLUSIVE_TRYLOCK_FUNCTION(true, mu2);
+bool etf_func_args_succ_true_ret_bool() EXCLUSIVE_TRYLOCK_FUNCTION(true, mu2);
+bool etf_func_args_succ_false() EXCLUSIVE_TRYLOCK_FUNCTION(false, mu2);
+
+// legal capability attribute arguments
 int etf_function_1() EXCLUSIVE_TRYLOCK_FUNCTION(1, muWrapper.mu);
 int etf_function_2() EXCLUSIVE_TRYLOCK_FUNCTION(1, muDoubleWrapper.muWrapper->mu);
 int etf_function_3() EXCLUSIVE_TRYLOCK_FUNCTION(1, muWrapper.getMu());
@@ -799,9 +821,9 @@ int etf_function_bad_6() EXCLUSIVE_TRYLOCK_FUNCTION(1, umu); // \
 void stf_function() __attribute__((shared_trylock_function));  // \
   // expected-error {{'shared_trylock_function' attribute takes at least 1 argument}}
 
-void stf_function_args() SHARED_TRYLOCK_FUNCTION(1, mu2);
+bool stf_function_args() SHARED_TRYLOCK_FUNCTION(1, mu2);
 
-void stf_function_arg() SHARED_TRYLOCK_FUNCTION(1); // \
+bool stf_function_arg() SHARED_TRYLOCK_FUNCTION(1); // \
   // expected-warning {{'shared_trylock_function' attribute without capability arguments can only be applied to non-static methods of a class}}
 
 int stf_testfn(int y) SHARED_TRYLOCK_FUNCTION(1); // \
@@ -824,7 +846,7 @@ class StfFoo {
  private:
   int test_field SHARED_TRYLOCK_FUNCTION(1); // \
     // expected-warning {{'shared_trylock_function' attribute only applies to functions}}
-  void test_method() SHARED_TRYLOCK_FUNCTION(1); // \
+  bool test_method() SHARED_TRYLOCK_FUNCTION(1); // \
     // expected-warning {{'shared_trylock_function' attribute without capability arguments refers to 'this', but 'StfFoo' isn't annotated with 'capability' or 'scoped_lockable' attribute}}
 };
 

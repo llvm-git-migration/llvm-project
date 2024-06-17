@@ -420,10 +420,14 @@ TRY_ACQUIRE(<bool>, ...), TRY_ACQUIRE_SHARED(<bool>, ...)
 *Previously:* ``EXCLUSIVE_TRYLOCK_FUNCTION``, ``SHARED_TRYLOCK_FUNCTION``
 
 These are attributes on a function or method that tries to acquire the given
-capability, and returns a boolean value indicating success or failure.
-The first argument must be ``true`` or ``false``, to specify which return value
-indicates success, and the remaining arguments are interpreted in the same way
-as ``ACQUIRE``.  See :ref:`mutexheader`, below, for example uses.
+capability, and returns a boolean, integer, or pointer value indicating success
+or failure.
+
+The attribute's first argument must be ``true`` or ``false``, to specify which
+return value indicates success. Integer literals are also accepted, but the
+analysis effectively converts them to boolean before use.  The remaining
+arguments are interpreted in the same way as ``ACQUIRE``.  See
+:ref:`mutexheader`, below, for example uses.
 
 Because the analysis doesn't support conditional locking, a capability is
 treated as acquired after the first branch on the return value of a try-acquire
