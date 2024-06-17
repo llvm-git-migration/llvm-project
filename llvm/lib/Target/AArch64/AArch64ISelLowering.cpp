@@ -3515,6 +3515,12 @@ static SDValue emitConditionalComparison(SDValue LHS, SDValue RHS,
       RHS = DAG.getNode(ISD::FP_EXTEND, DL, MVT::f32, RHS);
     }
     Opcode = AArch64ISD::FCCMP;
+  } else if (ConstantSDNode *Const = dyn_cast<ConstantSDNode>(RHS)) {
+    APInt imm = Const->getAPIntValue();
+    if (imm.isNegative() && imm.sgt(-32)) {
+      Opcode = AArch64ISD::CCMN;
+      RHS = DAG.getConstant(imm.abs(), DL, Const->getValueType(0));
+    }
   } else if (RHS.getOpcode() == ISD::SUB) {
     SDValue SubOp0 = RHS.getOperand(0);
     if (isNullConstant(SubOp0) && (CC == ISD::SETEQ || CC == ISD::SETNE)) {
