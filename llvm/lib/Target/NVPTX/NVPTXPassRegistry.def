@@ -17,6 +17,8 @@
 #define MODULE_PASS(NAME, CREATE_PASS)
 #endif
 MODULE_PASS("generic-to-nvvm", GenericToNVVMPass())
+MODULE_PASS("expand-variadics",
+            ExpandVariadicsPass(ExpandVariadicsMode::Lowering))
 MODULE_PASS("nvptx-lower-ctor-dtor", NVPTXCtorDtorLoweringPass())
 #undef MODULE_PASS
 
