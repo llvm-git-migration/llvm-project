@@ -255,9 +255,8 @@ define i32 @neg_range_int(i32 %a, i32 %b, i32 %c) {
 ;
 ; GISEL-LABEL: neg_range_int:
 ; GISEL:       // %bb.0:
-; GISEL-NEXT:    mov w8, #-3 // =0xfffffffd
 ; GISEL-NEXT:    cmp w0, w2
-; GISEL-NEXT:    ccmp w1, w8, #4, lt
+; GISEL-NEXT:    ccmn w1, #3, #4, lt
 ; GISEL-NEXT:    csel w0, w1, w0, gt
 ; GISEL-NEXT:    ret
   %cmp = icmp sgt i32 %b, -3
