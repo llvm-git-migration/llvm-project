@@ -1468,6 +1468,23 @@ cc_library(
 )
 
 cc_library(
+    name = "SandboxIR",
+    srcs = glob([
+        "lib/Transforms/SandboxIR/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/Transforms/SandboxIR/*.h",
+        "include/llvm/Transforms/SandboxIR/*.def",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":Core",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
     name = "Vectorize",
     srcs = glob([
         "lib/Transforms/Vectorize/*.cpp",
@@ -1826,6 +1843,7 @@ cc_library(
         ":InstCombine",
         ":Instrumentation",
         ":ObjCARC",
+        ":SandboxIR",
         ":Scalar",
         ":Vectorize",
     ],
@@ -2658,6 +2676,7 @@ cc_library(
         ":Instrumentation",
         ":MC",
         ":ObjCARC",
+        ":SandboxIR",
         ":Scalar",
         ":Support",
         ":Target",
