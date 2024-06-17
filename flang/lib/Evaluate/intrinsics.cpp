@@ -403,6 +403,7 @@ static const IntrinsicInterface genericIntrinsicFunction[]{
             {"shift", AnyInt, Rank::dimRemovedOrScalar}, OptionalDIM},
         SameType, Rank::conformable, IntrinsicClass::transformationalFunction},
     {"dble", {{"a", AnyNumeric, Rank::elementalOrBOZ}}, DoublePrecision},
+    {"derf", {{"x", SameReal}}, SameReal},
     {"digits",
         {{"x", AnyIntOrReal, Rank::anyOrAssumedRank, Optionality::required,
             common::Intent::In, {ArgFlag::canBeMoldNull}}},

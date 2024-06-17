@@ -153,6 +153,9 @@ Expr<Type<TypeCategory::Real, KIND>> FoldIntrinsicFunction(
   auto *intrinsic{std::get_if<SpecificIntrinsic>(&funcRef.proc().u)};
   CHECK(intrinsic);
   std::string name{intrinsic->name};
+  if (name == "derf") {
+    name = "erf";
+  }
   if (name == "acos" || name == "acosh" || name == "asin" || name == "asinh" ||
       (name == "atan" && args.size() == 1) || name == "atanh" ||
       name == "bessel_j0" || name == "bessel_j1" || name == "bessel_y0" ||
