@@ -3443,6 +3443,12 @@ static SDValue emitConditionalComparison(SDValue LHS, SDValue RHS,
       Opcode = AArch64ISD::CCMN;
       RHS = RHS.getOperand(1);
     }
+  } else if (ConstantSDNode *Const = dyn_cast<ConstantSDNode>(RHS)) {
+    APInt imm = Const->getAPIntValue();
+    if (imm.isNegative() && imm.sgt(-32)) {
+      Opcode = AArch64ISD::CCMN;
+      RHS = DAG.getConstant(imm.abs(), DL, Const->getValueType(0));
+    }
   }
   if (Opcode == 0)
     Opcode = AArch64ISD::CCMP;
