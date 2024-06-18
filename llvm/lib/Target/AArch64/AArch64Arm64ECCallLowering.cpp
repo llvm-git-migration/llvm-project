@@ -387,6 +387,7 @@ Function *AArch64Arm64ECCallLowering::buildExitThunk(FunctionType *FT,
   SmallVector<Value *> Args;
 
   // Pass the called function in x9.
+  auto X64TyOffset = 1;
   Args.push_back(F->arg_begin());
 
   Type *RetTy = Arm64Ty->getReturnType();
@@ -396,10 +397,11 @@ Function *AArch64Arm64ECCallLowering::buildExitThunk(FunctionType *FT,
     // pointer.
     if (DL.getTypeStoreSize(RetTy) > 8) {
       Args.push_back(IRB.CreateAlloca(RetTy));
+      X64TyOffset++;
     }
   }
 
-  for (auto &Arg : make_range(F->arg_begin() + 1, F->arg_end())) {
+  for (auto [Arg, X64ArgType] : llvm::zip_equal(make_range(F->arg_begin() + 1, F->arg_end()), make_range(X64Ty->param_begin() + X64TyOffset, X64Ty->param_end()))) {
     // Translate arguments from AArch64 calling convention to x86 calling
     // convention.
     //
@@ -414,8 +416,7 @@ Function *AArch64Arm64ECCallLowering::buildExitThunk(FunctionType *FT,
     // with an attribute.)
     //
     // The first argument is the called function, stored in x9.
-    if (Arg.getType()->isArrayTy() || Arg.getType()->isStructTy() ||
-        DL.getTypeStoreSize(Arg.getType()) > 8) {
+    if (Arg.getType() != X64ArgType) {
       Value *Mem = IRB.CreateAlloca(Arg.getType());
       IRB.CreateStore(&Arg, Mem);
       if (DL.getTypeStoreSize(Arg.getType()) <= 8) {
@@ -488,8 +489,7 @@ Function *AArch64Arm64ECCallLowering::buildEntryThunk(Function *F) {
   for (unsigned i = ThunkArgOffset, e = PassthroughArgSize; i != e; ++i) {
     Value *Arg = Thunk->getArg(i);
     Type *ArgTy = Arm64Ty->getParamType(i - ThunkArgOffset);
-    if (ArgTy->isArrayTy() || ArgTy->isStructTy() ||
-        DL.getTypeStoreSize(ArgTy) > 8) {
+    if (ArgTy != Arg->getType()) {
       // Translate array/struct arguments to the expected type.
       if (DL.getTypeStoreSize(ArgTy) <= 8) {
         Value *CastAlloca = IRB.CreateAlloca(ArgTy);
