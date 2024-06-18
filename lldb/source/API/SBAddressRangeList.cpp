@@ -36,6 +36,8 @@ const SBAddressRangeList &
 SBAddressRangeList::operator=(const SBAddressRangeList &rhs) {
   LLDB_INSTRUMENT_VA(this, rhs);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
+  assert(rhs.m_opaque_up && "opaque pointer must always be valid");
   if (this != &rhs)
     *m_opaque_up = *rhs.m_opaque_up;
   return *this;
@@ -44,12 +46,14 @@ SBAddressRangeList::operator=(const SBAddressRangeList &rhs) {
 uint32_t SBAddressRangeList::GetSize() const {
   LLDB_INSTRUMENT_VA(this);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   return m_opaque_up->GetSize();
 }
 
 SBAddressRange SBAddressRangeList::GetAddressRangeAtIndex(uint64_t idx) {
   LLDB_INSTRUMENT_VA(this, idx);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   SBAddressRange sb_addr_range;
   (*sb_addr_range.m_opaque_up) = m_opaque_up->GetAddressRangeAtIndex(idx);
   return sb_addr_range;
@@ -58,18 +62,21 @@ SBAddressRange SBAddressRangeList::GetAddressRangeAtIndex(uint64_t idx) {
 void SBAddressRangeList::Clear() {
   LLDB_INSTRUMENT_VA(this);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   m_opaque_up->Clear();
 }
 
 void SBAddressRangeList::Append(const SBAddressRange &sb_addr_range) {
   LLDB_INSTRUMENT_VA(this, sb_addr_range);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   m_opaque_up->Append(*sb_addr_range.m_opaque_up);
 }
 
 void SBAddressRangeList::Append(const SBAddressRangeList &sb_addr_range_list) {
   LLDB_INSTRUMENT_VA(this, sb_addr_range_list);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   m_opaque_up->Append(*sb_addr_range_list.m_opaque_up);
 }
 
@@ -77,6 +84,7 @@ bool SBAddressRangeList::GetDescription(SBStream &description,
                                         const SBTarget &target) {
   LLDB_INSTRUMENT_VA(this, description, target);
 
+  assert(m_opaque_up && "opaque pointer must always be valid");
   const uint32_t num_ranges = GetSize();
   bool is_first = true;
   Stream &stream = description.ref();

@@ -50,8 +50,8 @@ const SBAddressRange &SBAddressRange::operator=(const SBAddressRange &rhs) {
 bool SBAddressRange::operator==(const SBAddressRange &rhs) {
   LLDB_INSTRUMENT_VA(this, rhs);
 
-  if (!IsValid() || !rhs.IsValid())
-    return false;
+  assert(m_opaque_up && "opaque pointer must always be valid");
+  assert(rhs.m_opaque_up && "opaque pointer must always be valid");
   return m_opaque_up->operator==(*(rhs.m_opaque_up));
 }
 
@@ -64,28 +64,28 @@ bool SBAddressRange::operator!=(const SBAddressRange &rhs) {
 void SBAddressRange::Clear() {
   LLDB_INSTRUMENT_VA(this);
 
-  m_opaque_up.reset();
+  assert(m_opaque_up && "opaque pointer must always be valid");
+  m_opaque_up->Clear();
 }
 
 bool SBAddressRange::IsValid() const {
   LLDB_INSTRUMENT_VA(this);
 
-  return m_opaque_up && m_opaque_up->IsValid();
+  assert(m_opaque_up && "opaque pointer must always be valid");
+  return m_opaque_up->IsValid();
 }
 
 lldb::SBAddress SBAddressRange::GetBaseAddress() const {
   LLDB_INSTRUMENT_VA(this);
 
-  if (!IsValid())
-    return lldb::SBAddress();
+  assert(m_opaque_up && "opaque pointer must always be valid");
   return lldb::SBAddress(m_opaque_up->GetBaseAddress());
 }
 
 lldb::addr_t SBAddressRange::GetByteSize() const {
   LLDB_INSTRUMENT_VA(this);
 
-  if (!IsValid())
-    return 0;
+  assert(m_opaque_up && "opaque pointer must always be valid");
   return m_opaque_up->GetByteSize();
 }
 
@@ -93,11 +93,6 @@ bool SBAddressRange::GetDescription(SBStream &description,
                                     const SBTarget target) {
   LLDB_INSTRUMENT_VA(this, description, target);
 
-  Stream &stream = description.ref();
-  if (!IsValid()) {
-    stream << "<invalid>";
-    return true;
-  }
-  m_opaque_up->GetDescription(&stream, target.GetSP().get());
-  return true;
+  assert(m_opaque_up && "opaque pointer must always be valid");
+  return m_opaque_up->GetDescription(&description.ref(), target.GetSP().get());
 }
