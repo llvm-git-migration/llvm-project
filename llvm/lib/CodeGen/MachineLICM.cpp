@@ -426,28 +426,26 @@ static bool InstructionStoresToFI(const MachineInstr *MI, int FI) {
 static void applyBitsNotInRegMaskToRegUnitsMask(const TargetRegisterInfo &TRI,
                                                 BitVector &RUs,
                                                 const uint32_t *Mask) {
-  BitVector ClobberedRUs(TRI.getNumRegUnits(), true);
+  // FIXME: This is overly conservative when applying regmasks from, e.g. calls.
+  // See `test/CodeGen/AMDGPU/indirect-call.ll` regression.
+  BitVector RUsFromRegsNotInMask(TRI.getNumRegUnits());
   const unsigned NumRegs = TRI.getNumRegs();
   const unsigned MaskWords = (NumRegs + 31) / 32;
   for (unsigned K = 0; K < MaskWords; ++K) {
     const uint32_t Word = Mask[K];
-    if (!Word)
-      continue;
-
     for (unsigned Bit = 0; Bit < 32; ++Bit) {
       const unsigned PhysReg = (K * 32) + Bit;
       if (PhysReg == NumRegs)
         break;
 
-      // Check if we have a valid PhysReg that is set in the mask.
-      if ((Word >> Bit) & 1) {
+      if (PhysReg && !((Word >> Bit) & 1)) {
         for (MCRegUnitIterator RUI(PhysReg, &TRI); RUI.isValid(); ++RUI)
-          ClobberedRUs.reset(*RUI);
+          RUsFromRegsNotInMask.set(*RUI);
       }
     }
   }
 
-  RUs |= ClobberedRUs;
+  RUs |= RUsFromRegsNotInMask;
 }
 
 /// Examine the instruction for potentai LICM candidate. Also
