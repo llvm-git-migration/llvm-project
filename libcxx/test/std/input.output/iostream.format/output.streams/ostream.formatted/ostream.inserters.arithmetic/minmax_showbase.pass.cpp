@@ -24,8 +24,8 @@
 //  using std::showbase
 
 // This test exposes a regression that was not fixed yet in the libc++
-// shipped with macOS 10.12, 10.13 and 10.14. See D32670 for details.
-// XFAIL: stdlib=system && target={{.+}}-apple-macosx10.{{12|13|14}}
+// shipped before we landed D32670. See D32670 for details.
+// XFAIL: using-built-library-before-llvm-10
 
 #include <cassert>
 #include <cstdint>

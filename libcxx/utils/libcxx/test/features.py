@@ -585,6 +585,13 @@ DEFAULT_FEATURES += [
 # Those are used for backdeployment features below, do not use directly in tests.
 DEFAULT_FEATURES += [
     Feature(
+        name="_target-before-llvm-10",
+        when=lambda cfg: BooleanExpression.evaluate(
+            "target={{.+}}-apple-macosx{{(10.13|10.14)(.0)?}}",
+            cfg.available_features,
+        ),
+    ),
+    Feature(
         name="_target-before-llvm-11",
         when=lambda cfg: BooleanExpression.evaluate(
             "target={{.+}}-apple-macosx{{(10.13|10.14|10.15)(.0)?}}",
@@ -690,7 +697,7 @@ DEFAULT_FEATURES += [
 # a libc++ flavor that enables availability markup. Similarly, a test could fail when
 # run against the system library of an older version of FreeBSD, even though FreeBSD
 # doesn't provide availability markup at the time of writing this.
-for version in ("11", "12", "13", "14", "15", "16", "17", "18", "19"):
+for version in ("10", "11", "12", "13", "14", "15", "16", "17", "18", "19"):
     DEFAULT_FEATURES.append(
         Feature(
             name="using-built-library-before-llvm-{}".format(version),
