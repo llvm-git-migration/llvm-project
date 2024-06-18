@@ -1020,9 +1020,9 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   case FunctionDecl::TK_DependentFunctionTemplateSpecialization: {
     // Templates.
     UnresolvedSet<8> Candidates;
-    unsigned NumCandidates = Record.readInt();
-    while (NumCandidates--)
-      Candidates.addDecl(readDeclAs<NamedDecl>());
+    Record.readDeclArray<NamedDecl>([&Candidates](NamedDecl *ND) {
+      Candidates.addDecl(ND);
+    });
 
     // Templates args.
     TemplateArgumentListInfo TemplArgsWritten;
@@ -1152,11 +1152,10 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   FD->setIsPureVirtual(Pure);
 
   // Read in the parameters.
-  unsigned NumParams = Record.readInt();
   SmallVector<ParmVarDecl *, 16> Params;
-  Params.reserve(NumParams);
-  for (unsigned I = 0; I != NumParams; ++I)
-    Params.push_back(readDeclAs<ParmVarDecl>());
+  Record.readDeclArray<ParmVarDecl>([&Params](ParmVarDecl *ParmD) {
+    Params.push_back(ParmD);
+  });
   FD->setParams(Reader.getContext(), Params);
 }
 
@@ -2309,7 +2308,7 @@ void ASTDeclReader::VisitCXXMethodDecl(CXXMethodDecl *D) {
   } else {
     // We don't care about which declarations this used to override; we get
     // the relevant information from the canonical declaration.
-    Record.skipInts(NumOverridenMethods);
+    Record.skipInts(NumOverridenMethods * serialization::DeclIDRefSize);
   }
 }
 
@@ -3140,8 +3139,8 @@ public:
 
   OMPTraitInfo *readOMPTraitInfo() { return Reader.readOMPTraitInfo(); }
 
-  template <typename T> T *GetLocalDeclAs(LocalDeclID LocalID) {
-    return Reader.GetLocalDeclAs<T>(LocalID);
+  template <typename T> T *readDeclAs() {
+    return Reader.readDeclAs<T>();
   }
 };
 }
@@ -4356,8 +4355,10 @@ void ASTReader::loadPendingDeclChain(Decl *FirstLocal, uint64_t LocalOffset) {
   // FIXME: We have several different dispatches on decl kind here; maybe
   // we should instead generate one loop per kind and dispatch up-front?
   Decl *MostRecent = FirstLocal;
-  for (unsigned I = 0, N = Record.size(); I != N; ++I) {
-    auto *D = GetLocalDecl(*M, LocalDeclID(Record[N - I - 1]));
+  for (unsigned I = 0, N = Record.size(); I != N; I += serialization::DeclIDRefSize) {
+    unsigned ModuleFileIndex = Record[N - I - 2];
+    unsigned LocalDeclIndex = Record[N - I - 1];
+    auto *D = GetLocalDecl(*M, LocalDeclID(LocalDeclIndex, ModuleFileIndex));
     ASTDeclReader::attachPreviousDecl(*this, D, MostRecent, CanonDecl);
     MostRecent = D;
   }
@@ -4466,8 +4467,8 @@ namespace {
       unsigned N = M.ObjCCategories[Offset];
       M.ObjCCategories[Offset++] = 0; // Don't try to deserialize again
       for (unsigned I = 0; I != N; ++I)
-        add(cast_or_null<ObjCCategoryDecl>(
-            Reader.GetLocalDecl(M, LocalDeclID(M.ObjCCategories[Offset++]))));
+        add(Reader.ReadDeclAs<ObjCCategoryDecl>(M, M.ObjCCategories, Offset));
+
       return true;
     }
   };

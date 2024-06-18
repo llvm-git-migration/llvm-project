@@ -187,10 +187,25 @@ public:
   /// Reads a declaration from the given position in a record in the
   /// given module, advancing Idx.
   Decl *readDecl() {
+#ifndef NDEBUG
+    unsigned OldIdx = Idx;
+    Decl *D = Reader->ReadDecl(*F, Record, Idx);
+    assert(Idx - OldIdx == serialization::DeclIDRefSize);
+    return D;
+#endif
     return Reader->ReadDecl(*F, Record, Idx);
   }
   Decl *readDeclRef() {
     return readDecl();
+  }
+
+  template <class DeclKind, class Func>
+  void readDeclArray(Func &&ConsumeFunc) {
+    unsigned LengthOfArray = readInt();
+    unsigned End = Idx + LengthOfArray;
+
+    while (Idx < End)
+      ConsumeFunc(readDeclAs<DeclKind>());
   }
 
   /// Reads a declaration from the given position in the record,

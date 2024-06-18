@@ -3320,7 +3320,7 @@ uint64_t ASTWriter::WriteDeclContextLexicalBlock(ASTContext &Context,
     return 0;
 
   uint64_t Offset = Stream.GetCurrentBitNo();
-  SmallVector<DeclID, 128> KindDeclPairs;
+  SmallVector<uint32_t, 128> KindDeclPairs;
   for (const auto *D : DC->decls()) {
     if (DoneWritingDeclsAndTypes && !wasDeclEmitted(D))
       continue;
@@ -3335,7 +3335,9 @@ uint64_t ASTWriter::WriteDeclContextLexicalBlock(ASTContext &Context,
       continue;
 
     KindDeclPairs.push_back(D->getKind());
-    KindDeclPairs.push_back(GetDeclRef(D).get());
+    LocalDeclID ID = GetDeclRef(D);
+    KindDeclPairs.push_back(ID.getModuleFileIndex());
+    KindDeclPairs.push_back(ID.getLocalDeclIndex());
   }
 
   ++NumLexicalDeclContexts;
@@ -4443,8 +4445,10 @@ void ASTWriter::WriteDeclContextVisibleUpdate(const DeclContext *DC) {
     DC = cast<DeclContext>(Chain->getKeyDeclaration(cast<Decl>(DC)));
 
   // Write the lookup table
+  LocalDeclID ID = getDeclID(cast<Decl>(DC));
   RecordData::value_type Record[] = {UPDATE_VISIBLE,
-                                     getDeclID(cast<Decl>(DC)).get()};
+                                     ID.getModuleFileIndex(),
+                                     ID.getLocalDeclIndex()};
   Stream.EmitRecordWithBlob(UpdateVisibleAbbrev, Record, LookupTable);
 }
 
@@ -5227,9 +5231,10 @@ void ASTWriter::WriteSpecialDeclRecords(Sema &SemaRef) {
   RecordData SemaDeclRefs;
   if (SemaRef.StdNamespace || SemaRef.StdBadAlloc || SemaRef.StdAlignValT) {
     auto AddEmittedDeclRefOrZero = [this, &SemaDeclRefs](Decl *D) {
-      if (!D || !wasDeclEmitted(D))
+      if (!D || !wasDeclEmitted(D)) {
         SemaDeclRefs.push_back(0);
-      else
+        SemaDeclRefs.push_back(0);
+      } else
         AddDeclRef(D, SemaDeclRefs);
     };
 
@@ -5647,7 +5652,7 @@ void ASTWriter::WriteDeclAndTypes(ASTContext &Context) {
   const TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
   // Create a lexical update block containing all of the declarations in the
   // translation unit that do not come from other AST files.
-  SmallVector<DeclID, 128> NewGlobalKindDeclPairs;
+  SmallVector<uint32_t, 128> NewGlobalKindDeclPairs;
   for (const auto *D : TU->noload_decls()) {
     if (D->isFromASTFile())
       continue;
@@ -5657,7 +5662,9 @@ void ASTWriter::WriteDeclAndTypes(ASTContext &Context) {
       continue;
 
     NewGlobalKindDeclPairs.push_back(D->getKind());
-    NewGlobalKindDeclPairs.push_back(GetDeclRef(D).get());
+    LocalDeclID ID = GetDeclRef(D);
+    NewGlobalKindDeclPairs.push_back(ID.getModuleFileIndex());
+    NewGlobalKindDeclPairs.push_back(ID.getLocalDeclIndex());
   }
 
   auto Abv = std::make_shared<llvm::BitCodeAbbrev>();
@@ -5671,6 +5678,7 @@ void ASTWriter::WriteDeclAndTypes(ASTContext &Context) {
 
   Abv = std::make_shared<llvm::BitCodeAbbrev>();
   Abv->Add(llvm::BitCodeAbbrevOp(UPDATE_VISIBLE));
+  Abv->Add(llvm::BitCodeAbbrevOp(llvm::BitCodeAbbrevOp::VBR, 6));
   Abv->Add(llvm::BitCodeAbbrevOp(llvm::BitCodeAbbrevOp::VBR, 6));
   Abv->Add(llvm::BitCodeAbbrevOp(llvm::BitCodeAbbrevOp::Blob));
   UpdateVisibleAbbrev = Stream.EmitAbbrev(std::move(Abv));
@@ -6159,11 +6167,14 @@ void ASTWriter::AddEmittedDeclRef(const Decl *D, RecordDataImpl &Record) {
   if (!wasDeclEmitted(D))
     return;
 
-  Record.push_back(GetDeclRef(D).get());
+  AddDeclRef(D, Record);
 }
 
 void ASTWriter::AddDeclRef(const Decl *D, RecordDataImpl &Record) {
-  Record.push_back(GetDeclRef(D).get());
+  LocalDeclID ID = GetDeclRef(D);
+
+  Record.push_back(ID.getModuleFileIndex());
+  Record.push_back(ID.getLocalDeclIndex());
 }
 
 LocalDeclID ASTWriter::GetDeclRef(const Decl *D) {

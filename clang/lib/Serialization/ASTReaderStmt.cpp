@@ -351,12 +351,13 @@ void ASTStmtReader::VisitDeclStmt(DeclStmt *S) {
   S->setStartLoc(readSourceLocation());
   S->setEndLoc(readSourceLocation());
 
-  if (Record.size() - Record.getIdx() == 1) {
+  unsigned NumDecls = (Record.size() - Record.getIdx()) / serialization::DeclIDRefSize;
+  if (NumDecls == 1) {
     // Single declaration
     S->setDeclGroup(DeclGroupRef(readDecl()));
   } else {
     SmallVector<Decl *, 16> Decls;
-    int N = Record.size() - Record.getIdx();
+    int N = NumDecls;
     Decls.reserve(N);
     for (int I = 0; I < N; ++I)
       Decls.push_back(readDecl());
