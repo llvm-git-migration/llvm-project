@@ -5439,8 +5439,8 @@ regex_iterator<_BidirectionalIterator, _CharT, _Traits>::operator++() {
     // equal to the previous value of `match[0].second`... It is unspecified how the implementation makes these
     // adjustments." The adjustment is necessary if we incremented `__start` above (the branch that deals with
     // zero-length matches).
-    auto& __prefix = __match_.__prefix_;
-    __prefix.first = __prefix_start;
+    auto& __prefix   = __match_.__prefix_;
+    __prefix.first   = __prefix_start;
     __prefix.matched = __prefix.first != __prefix.second;
   }
 
