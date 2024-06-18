@@ -59,6 +59,75 @@ return:                                           ; preds = %entry, %sw.bb4, %sw
   ret i32 %retval.0
 }
 
+define i32 @forward_one(i32 %m) {
+; NO_FWD-LABEL: @forward_one(
+; NO_FWD-NEXT:  entry:
+; NO_FWD-NEXT:    switch i32 [[M:%.*]], label [[SW_BB4:%.*]] [
+; NO_FWD-NEXT:      i32 0, label [[RETURN:%.*]]
+; NO_FWD-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; NO_FWD-NEXT:      i32 2, label [[SW_BB2:%.*]]
+; NO_FWD-NEXT:      i32 3, label [[SW_BB3:%.*]]
+; NO_FWD-NEXT:    ]
+; NO_FWD:       sw.bb1:
+; NO_FWD-NEXT:    br label [[RETURN]]
+; NO_FWD:       sw.bb2:
+; NO_FWD-NEXT:    br label [[RETURN]]
+; NO_FWD:       sw.bb3:
+; NO_FWD-NEXT:    br label [[RETURN]]
+; NO_FWD:       sw.bb4:
+; NO_FWD-NEXT:    br label [[RETURN]]
+; NO_FWD:       return:
+; NO_FWD-NEXT:    [[RETVAL_0:%.*]] = phi i32 [ 4, [[SW_BB4]] ], [ 5, [[SW_BB3]] ], [ 6, [[SW_BB2]] ], [ 1, [[SW_BB1]] ], [ 8, [[ENTRY:%.*]] ]
+; NO_FWD-NEXT:    ret i32 [[RETVAL_0]]
+;
+; FWD-LABEL: @forward_one(
+; FWD-NEXT:  entry:
+; FWD-NEXT:    switch i32 [[M:%.*]], label [[SW_BB4:%.*]] [
+; FWD-NEXT:      i32 0, label [[RETURN:%.*]]
+; FWD-NEXT:      i32 1, label [[SW_BB1:%.*]]
+; FWD-NEXT:      i32 2, label [[SW_BB2:%.*]]
+; FWD-NEXT:      i32 3, label [[SW_BB3:%.*]]
+; FWD-NEXT:    ]
+; FWD:       sw.bb1:
+; FWD-NEXT:    br label [[RETURN]]
+; FWD:       sw.bb2:
+; FWD-NEXT:    br label [[RETURN]]
+; FWD:       sw.bb3:
+; FWD-NEXT:    br label [[RETURN]]
+; FWD:       sw.bb4:
+; FWD-NEXT:    br label [[RETURN]]
+; FWD:       return:
+; FWD-NEXT:    [[RETVAL_0:%.*]] = phi i32 [ 4, [[SW_BB4]] ], [ 5, [[SW_BB3]] ], [ 6, [[SW_BB2]] ], [ 1, [[SW_BB1]] ], [ 8, [[ENTRY:%.*]] ]
+; FWD-NEXT:    ret i32 [[RETVAL_0]]
+;
+entry:
+  switch i32 %m, label %sw.bb4 [
+  i32 0, label %sw.bb0
+  i32 1, label %sw.bb1
+  i32 2, label %sw.bb2
+  i32 3, label %sw.bb3
+  ]
+
+sw.bb0:                                           ; preds = %entry
+  br label %return
+
+sw.bb1:                                           ; preds = %entry
+  br label %return
+
+sw.bb2:                                           ; preds = %entry
+  br label %return
+
+sw.bb3:                                           ; preds = %entry
+  br label %return
+
+sw.bb4:                                           ; preds = %entry
+  br label %return
+
+return:                                           ; preds = %entry, %sw.bb4, %sw.bb3, %sw.bb2, %sw.bb1
+  %retval.0 = phi i32 [ 4, %sw.bb4 ], [ 5, %sw.bb3 ], [ 6, %sw.bb2 ], [ 1, %sw.bb1 ], [ 8, %sw.bb0 ]
+  ret i32 %retval.0
+}
+
 ; If 1 incoming phi value is a case constant of a switch, convert it to the switch condition:
 ; https://bugs.llvm.org/show_bug.cgi?id=34471
 ; This then subsequently should allow squashing of the other trivial case blocks.
