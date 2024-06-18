@@ -434,6 +434,374 @@ def CP_ASYNC_BULK_WAIT_GROUP_READ :
   Requires<[hasPTX<80>, hasSM<90>]>;
 
 //-----------------------------------
+// TMA Async Copy Functions
+//-----------------------------------
+
+// From Shared to Global memory
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0),
+          !strconcat(
+            "cp.async.bulk.tensor.1d.global.shared::cta.tile.bulk_group",
+            " [$tmap, \\{$d0\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int64Regs:$cache_hint),
+           !strconcat(
+             "cp.async.bulk.tensor.1d.global.shared::cta.tile.bulk_group",
+             ".L2::cache_hint",
+             " [$tmap, \\{$d0\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1),
+          !strconcat(
+            "cp.async.bulk.tensor.2d.global.shared::cta.tile.bulk_group",
+            " [$tmap, \\{$d0, $d1\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int64Regs:$cache_hint),
+           !strconcat(
+             "cp.async.bulk.tensor.2d.global.shared::cta.tile.bulk_group",
+             ".L2::cache_hint",
+             " [$tmap, \\{$d0, $d1\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2),
+          !strconcat(
+            "cp.async.bulk.tensor.3d.global.shared::cta", mode, ".bulk_group",
+            " [$tmap, \\{$d0, $d1, $d2\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int64Regs:$cache_hint),
+           !strconcat(
+             "cp.async.bulk.tensor.3d.global.shared::cta", mode, ".bulk_group",
+             ".L2::cache_hint",
+             " [$tmap, \\{$d0, $d1, $d2\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int64Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int32Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int64Regs, ".im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int32Regs, ".im2col_no_offs">;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3),
+          !strconcat(
+            "cp.async.bulk.tensor.4d.global.shared::cta", mode, ".bulk_group",
+            " [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int64Regs:$cache_hint),
+           !strconcat(
+             "cp.async.bulk.tensor.4d.global.shared::cta", mode, ".bulk_group",
+             ".L2::cache_hint",
+             " [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int64Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int32Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int64Regs, ".im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int32Regs, ".im2col_no_offs">;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4),
+          !strconcat(
+            "cp.async.bulk.tensor.5d.global.shared::cta", mode, ".bulk_group",
+            " [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int64Regs:$cache_hint),
+           !strconcat(
+             "cp.async.bulk.tensor.5d.global.shared::cta", mode, ".bulk_group",
+             ".L2::cache_hint",
+             " [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int64Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int32Regs, ".tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int64Regs, ".im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int32Regs, ".im2col_no_offs">;
+
+// From Global to Shared memory
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0),
+          !strconcat(
+            "cp.async.bulk.tensor.1d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.1d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.1d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.1d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1),
+          !strconcat(
+            "cp.async.bulk.tensor.2d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.2d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.2d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.2d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2),
+          !strconcat(
+            "cp.async.bulk.tensor.3d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.3d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.3d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.3d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0),
+          !strconcat(
+            "cp.async.bulk.tensor.3d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.3d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.3d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.3d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3),
+          !strconcat(
+            "cp.async.bulk.tensor.4d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.4d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.4d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.4d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+            Int16Regs:$im2col0, Int16Regs:$im2col1),
+          !strconcat(
+            "cp.async.bulk.tensor.4d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.4d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.4d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+                Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.4d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4),
+          !strconcat(
+            "cp.async.bulk.tensor.5d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.5d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.5d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.5d.shared::cluster.global.tile.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+            Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2),
+          !strconcat(
+            "cp.async.bulk.tensor.5d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int16Regs:$mc),
+           !strconcat(
+             "cp.async.bulk.tensor.5d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".multicast::cluster",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int64Regs:$ch),
+           !strconcat(
+             "cp.async.bulk.tensor.5d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+             ".L2::cache_hint",
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+                Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(
+                "cp.async.bulk.tensor.5d.shared::cluster.global.im2col.mbarrier::complete_tx::bytes",
+                ".multicast::cluster", ".L2::cache_hint",
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<Int32Regs>;
+
+//-----------------------------------
 // MBarrier Functions
 //-----------------------------------
 
