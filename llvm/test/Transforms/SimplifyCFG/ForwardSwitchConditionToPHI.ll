@@ -97,7 +97,7 @@ define i32 @forward_one(i32 %m) {
 ; FWD:       sw.bb4:
 ; FWD-NEXT:    br label [[RETURN]]
 ; FWD:       return:
-; FWD-NEXT:    [[RETVAL_0:%.*]] = phi i32 [ 4, [[SW_BB4]] ], [ 5, [[SW_BB3]] ], [ 6, [[SW_BB2]] ], [ 1, [[SW_BB1]] ], [ 8, [[ENTRY:%.*]] ]
+; FWD-NEXT:    [[RETVAL_0:%.*]] = phi i32 [ 4, [[SW_BB4]] ], [ 5, [[SW_BB3]] ], [ 6, [[SW_BB2]] ], [ [[M]], [[SW_BB1]] ], [ 8, [[ENTRY:%.*]] ]
 ; FWD-NEXT:    ret i32 [[RETVAL_0]]
 ;
 entry:
