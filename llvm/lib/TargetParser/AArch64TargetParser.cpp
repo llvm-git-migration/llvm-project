@@ -190,7 +190,7 @@ void AArch64::ExtensionSet::enable(ArchExtKind E) {
   if (Enabled.test(E))
     return;
 
-  LLVM_DEBUG(llvm::dbgs() << "Enable " << lookupExtensionByID(E).Name << "\n");
+  LLVM_DEBUG(llvm::dbgs() << "Enable " << lookupExtensionByID(E).UserVisibleName << "\n");
 
   Touched.set(E);
   Enabled.set(E);
@@ -231,7 +231,7 @@ void AArch64::ExtensionSet::disable(ArchExtKind E) {
   if (!Enabled.test(E))
     return;
 
-  LLVM_DEBUG(llvm::dbgs() << "Disable " << lookupExtensionByID(E).Name << "\n");
+  LLVM_DEBUG(llvm::dbgs() << "Disable " << lookupExtensionByID(E).UserVisibleName << "\n");
 
   Touched.set(E);
   Enabled.reset(E);
