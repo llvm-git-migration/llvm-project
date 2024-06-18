@@ -96,6 +96,7 @@ add_object_library(
     libc.include.sys_syscall
     libc.src.__support.threads.thread
     libc.src.__support.OSUtil.osutil
+    libc.src.__support.OSUtil.pid
     libc.src.stdlib.exit
     libc.src.stdlib.atexit
     libc.src.unistd.environ

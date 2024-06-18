@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "startup/linux/do_start.h"
+#include "src/__support/OSUtil/pid.h"
 #include "src/__support/OSUtil/syscall.h"
 #include "src/__support/threads/thread.h"
 #include "src/stdlib/atexit.h"
@@ -63,6 +64,7 @@ static ThreadAttributes main_thread_attrib;
   auto tid = syscall_impl<long>(SYS_gettid);
   if (tid <= 0)
     syscall_impl<long>(SYS_exit, 1);
+  ProcessIdentity::refresh_cache();
   main_thread_attrib.tid = static_cast<int>(tid);
 
   // After the argv array, is a 8-byte long NULL value before the array of env
