@@ -1836,6 +1836,34 @@ struct VectorDeinterleaveOpLowering
   }
 };
 
+/// Conversion pattern for a `vector.from_elements`.
+struct VectorFromElementsLowering
+    : public ConvertOpToLLVMPattern<vector::FromElementsOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(vector::FromElementsOp fromElementsOp, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = fromElementsOp.getLoc();
+    VectorType vectorType = fromElementsOp.getType();
+    // TODO: Multi-dimensional vectors lower to !llvm.array<... x vector<>>.
+    // Such ops should be handled in the same way as vector.insert.
+    if (vectorType.getRank() > 1)
+      return rewriter.notifyMatchFailure(fromElementsOp,
+                                         "rank > 1 vectors are not supported");
+    Type llvmType = typeConverter->convertType(vectorType);
+    Value result = rewriter.create<LLVM::UndefOp>(loc, llvmType);
+    for (auto it : llvm::enumerate(adaptor.getElements())) {
+      result = rewriter.create<LLVM::InsertElementOp>(
+          loc, result, it.value(),
+          rewriter.create<LLVM::ConstantOp>(
+              loc, rewriter.getI64IntegerAttr(it.index())));
+    }
+    rewriter.replaceOp(fromElementsOp, result);
+    return success();
+  }
+};
+
 } // namespace
 
 /// Populate the given list with patterns that convert from Vector to LLVM.
@@ -1861,7 +1889,8 @@ void mlir::populateVectorToLLVMConversionPatterns(
                VectorSplatOpLowering, VectorSplatNdOpLowering,
                VectorScalableInsertOpLowering, VectorScalableExtractOpLowering,
                MaskedReductionOpConversion, VectorInterleaveOpLowering,
-               VectorDeinterleaveOpLowering>(converter);
+               VectorDeinterleaveOpLowering, VectorFromElementsLowering>(
+      converter);
   // Transfer ops with rank > 1 are handled by VectorToSCF.
   populateVectorTransferLoweringPatterns(patterns, /*maxTransferRank=*/1);
 }
