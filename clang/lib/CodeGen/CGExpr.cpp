@@ -618,11 +618,7 @@ EmitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *M) {
     }
   }
 
-  auto Ret = MakeAddrLValue(Object, M->getType(), AlignmentSource::Decl);
-  if (TemporaryValues.contains(M)) {
-    TemporaryValues[M] = Ret.getPointer(*this);
-  }
-  return Ret;
+  return MakeAddrLValue(Object, M->getType(), AlignmentSource::Decl);
 }
 
 RValue

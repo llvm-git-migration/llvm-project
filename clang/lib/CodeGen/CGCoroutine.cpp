@@ -15,6 +15,7 @@
 #include "llvm/ADT/ScopeExit.h"
 #include "clang/AST/StmtCXX.h"
 #include "clang/AST/StmtVisitor.h"
+#include "llvm/IR/Intrinsics.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -224,9 +225,26 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
                                     AwaitKind Kind, AggValueSlot aggSlot,
                                     bool ignoreResult, bool forLValue) {
   auto *E = S.getCommonExpr();
+  auto &Builder = CGF.Builder;
 
-  auto CommonBinder =
-      CodeGenFunction::OpaqueValueMappingData::bind(CGF, S.getOpaqueValue(), E);
+  // S.getOperandOpaqueValue() may be null, in this case it maps to nothing.
+  std::optional<CodeGenFunction::OpaqueValueMapping> OperandMapping = std::nullopt;
+  auto CallOV = S.getOperandOpaqueValue();
+  if (CallOV) {
+    OperandMapping.emplace(CGF, CallOV);
+    LValue LV = CGF.getOrCreateOpaqueLValueMapping(CallOV);
+    llvm::Value *Value = LV.getPointer(CGF);
+    // for (auto *U : Value->users()) {
+    //   if (auto *Call = cast<llvm::CallBase>(U)) {
+    //     Call->dump();
+    //   }
+    // }
+    auto SafeElide = CGF.CGM.getIntrinsic(llvm::Intrinsic::coro_safe_elide);
+    if (cast<CallExpr>(CallOV->getSourceExpr())->isCoroutineInplaceTaskCall())
+      Builder.CreateCall(SafeElide, Value);
+  }
+  auto CommonBinder = CodeGenFunction::OpaqueValueMappingData::bind(
+      CGF, S.getCommonExprOpaqueValue(), E);
   auto UnbindCommonOnExit =
       llvm::make_scope_exit([&] { CommonBinder.unbind(CGF); });
 
@@ -241,7 +259,6 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
   // Otherwise, emit suspend logic.
   CGF.EmitBlock(SuspendBlock);
 
-  auto &Builder = CGF.Builder;
   llvm::Function *CoroSave = CGF.CGM.getIntrinsic(llvm::Intrinsic::coro_save);
   auto *NullPtr = llvm::ConstantPointerNull::get(CGF.CGM.Int8PtrTy);
   auto *SaveCall = Builder.CreateCall(CoroSave, {NullPtr});
@@ -256,7 +273,8 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
 
   SmallVector<llvm::Value *, 3> SuspendIntrinsicCallArgs;
   SuspendIntrinsicCallArgs.push_back(
-      CGF.getOrCreateOpaqueLValueMapping(S.getOpaqueValue()).getPointer(CGF));
+      CGF.getOrCreateOpaqueLValueMapping(S.getCommonExprOpaqueValue())
+          .getPointer(CGF));
 
   SuspendIntrinsicCallArgs.push_back(CGF.CurCoro.Data->CoroBegin);
   SuspendIntrinsicCallArgs.push_back(SuspendWrapper);
@@ -455,7 +473,7 @@ CodeGenFunction::generateAwaitSuspendWrapper(Twine const &CoroName,
       Builder.CreateLoad(GetAddrOfLocalVar(&FrameDecl));
 
   auto AwaiterBinder = CodeGenFunction::OpaqueValueMappingData::bind(
-      *this, S.getOpaqueValue(), AwaiterLValue);
+      *this, S.getCommonExprOpaqueValue(), AwaiterLValue);
 
   auto *SuspendRet = EmitScalarExpr(S.getSuspendExpr());
 
@@ -473,6 +491,9 @@ CodeGenFunction::generateAwaitSuspendWrapper(Twine const &CoroName,
 
 LValue
 CodeGenFunction::EmitCoawaitLValue(const CoawaitExpr *E) {
+  if (E->isInplaceCall()) {
+    llvm::dbgs() << "Inplace call!\n";
+  }
   assert(getCoroutineSuspendExprReturnType(getContext(), E)->isReferenceType() &&
          "Can't have a scalar return unless the return type is a "
          "reference type!");

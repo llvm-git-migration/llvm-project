@@ -561,8 +561,11 @@ protected:
     LLVM_PREFERRED_TYPE(bool)
     unsigned HasFPFeatures : 1;
 
+    LLVM_PREFERRED_TYPE(bool)
+    unsigned IsCoroutineInplaceTaskCall : 1;
+
     /// Padding used to align OffsetToTrailingObjects to a byte multiple.
-    unsigned : 24 - 3 - NumExprBits;
+    unsigned : 24 - 4 - NumExprBits;
 
     /// The offset in bytes from the this pointer to the start of the
     /// trailing objects belonging to CallExpr. Intentionally byte sized
@@ -1163,6 +1166,8 @@ protected:
 
     LLVM_PREFERRED_TYPE(bool)
     unsigned IsImplicit : 1;
+
+    LLVM_PREFERRED_TYPE(bool)
     unsigned IsInplaceCall : 1;
   };
 
