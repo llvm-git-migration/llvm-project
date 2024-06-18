@@ -109,6 +109,8 @@ C++ Language Changes
 
 C++17 Feature Support
 ^^^^^^^^^^^^^^^^^^^^^
+- The implementation of the relaxed template template argument matching rules is
+  more complete and reliable, and should provide more accurate diagnostics.
 
 C++14 Feature Support
 ^^^^^^^^^^^^^^^^^^^^^
@@ -228,6 +230,10 @@ Improvements to Clang's diagnostics
 
 - Clang now diagnoses when the result of a [[nodiscard]] function is discarded after being cast in C. Fixes #GH104391.
 
+- Clang now properly explains the reason a template template argument failed to
+  match a template template parameter, in terms of the C++17 relaxed matching rules
+  instead of the old ones.
+
 Improvements to Clang's time-trace
 ----------------------------------
 
@@ -281,6 +287,8 @@ Bug Fixes to C++ Support
 - Correctly check constraints of explicit instantiations of member functions. (#GH46029)
 - When performing partial ordering of function templates, clang now checks that
   the deduction was consistent. Fixes (#GH18291).
+- Fixes to several issues in partial ordering of template template parameters, which
+  were documented in the test suite.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
