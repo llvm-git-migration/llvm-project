@@ -106,12 +106,10 @@ namespace type_pack3 {
   template<class T3> struct B;
 
   template<template<class T4              > class TT1, class T5              > struct B<TT1<T5        >>;
-  // new-note@-1 {{template is declared here}}
-  template<template<class T6, class ...T7s> class TT2, class T8, class ...T9s> struct B<TT2<T8, T9s...>>;
-  // old-note@-1 {{template is declared here}}
+
+  template<template<class T6, class ...T7s> class TT2, class T8, class ...T9s> struct B<TT2<T8, T9s...>> {};
 
   template struct B<A<int>>;
-  // expected-error@-1 {{explicit instantiation of undefined template}}
 } // namespace type_pack3
 
 namespace gcc_issue {
@@ -363,6 +361,19 @@ namespace classes {
     // expected-error@-1 {{no matching function for call}}
   } // namespace defaulted
 } // namespace classes
+
+namespace packs {
+  namespace t1 {
+    template<template<class, int, int...> class> struct A {};
+    // old-note@-1 {{previous non-type template parameter with type 'int' is here}}
+
+    template<class, char> struct B;
+    // old-note@-1 {{template non-type parameter has a different type 'char' in template argument}}
+
+    template struct A<B>;
+    // old-error@-1 {{has different template parameters}}
+  } // namespace t1
+} // namespace packs
 
 namespace regression1 {
   template <typename T, typename Y> struct map {};
