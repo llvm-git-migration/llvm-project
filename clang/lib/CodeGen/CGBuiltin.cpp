@@ -707,7 +707,38 @@ static RValue emitLibraryCall(CodeGenFunction &CGF, const FunctionDecl *FD,
                               const CallExpr *E, llvm::Constant *calleeValue) {
   CodeGenFunction::CGFPOptionsRAII FPOptsRAII(CGF, E);
   CGCallee callee = CGCallee::forDirect(calleeValue, GlobalDecl(FD));
-  return CGF.EmitCall(E->getCallee()->getType(), callee, E, ReturnValueSlot());
+  RValue Call =
+      CGF.EmitCall(E->getCallee()->getType(), callee, E, ReturnValueSlot());
+
+  // Check the supported intrinsic.
+  if (unsigned BuiltinID = FD->getBuiltinID()) {
+    auto IntrinsicID = [&]() -> unsigned {
+      switch (BuiltinID) {
+      case Builtin::BIexpf:
+      case Builtin::BI__builtin_expf:
+      case Builtin::BI__builtin_expf128:
+        return true;
+      }
+      // TODO: support more FP math libcalls
+      return false;
+    }();
+
+    if (IntrinsicID) {
+      llvm::MDBuilder MDHelper(CGF.getLLVMContext());
+      MDNode *RootMD;
+      if (CGF.getLangOpts().CPlusPlus)
+        RootMD = MDHelper.createTBAARoot("Simple C++ TBAA");
+      else
+        RootMD = MDHelper.createTBAARoot("Simple C/C++ TBAA");
+      // Emit "int" TBAA metadata on FP math libcalls.
+      MDNode *AliasType = MDHelper.createTBAANode("int", RootMD);
+      MDNode *MDInt = MDHelper.createTBAAStructTagNode(AliasType, AliasType, 0);
+
+      Value *Val = Call.getScalarVal();
+      cast<llvm::Instruction>(Val)->setMetadata(LLVMContext::MD_tbaa, MDInt);
+    }
+  }
+  return Call;
 }
 
 /// Emit a call to llvm.{sadd,uadd,ssub,usub,smul,umul}.with.overflow.*
