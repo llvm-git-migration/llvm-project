@@ -225,8 +225,12 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
                                     bool ignoreResult, bool forLValue) {
   auto *E = S.getCommonExpr();
 
-  auto CommonBinder =
-      CodeGenFunction::OpaqueValueMappingData::bind(CGF, S.getOpaqueValue(), E);
+  // S.getOperandOpaqueValue() may be null, in this case it maps to nothing.
+  CodeGenFunction::OpaqueValueMapping OperandMapping(CGF,
+                                                     S.getOperandOpaqueValue());
+
+  auto CommonBinder = CodeGenFunction::OpaqueValueMappingData::bind(
+      CGF, S.getCommonExprOpaqueValue(), E);
   auto UnbindCommonOnExit =
       llvm::make_scope_exit([&] { CommonBinder.unbind(CGF); });
 
@@ -256,7 +260,8 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
 
   SmallVector<llvm::Value *, 3> SuspendIntrinsicCallArgs;
   SuspendIntrinsicCallArgs.push_back(
-      CGF.getOrCreateOpaqueLValueMapping(S.getOpaqueValue()).getPointer(CGF));
+      CGF.getOrCreateOpaqueLValueMapping(S.getCommonExprOpaqueValue())
+          .getPointer(CGF));
 
   SuspendIntrinsicCallArgs.push_back(CGF.CurCoro.Data->CoroBegin);
   SuspendIntrinsicCallArgs.push_back(SuspendWrapper);
@@ -455,7 +460,7 @@ CodeGenFunction::generateAwaitSuspendWrapper(Twine const &CoroName,
       Builder.CreateLoad(GetAddrOfLocalVar(&FrameDecl));
 
   auto AwaiterBinder = CodeGenFunction::OpaqueValueMappingData::bind(
-      *this, S.getOpaqueValue(), AwaiterLValue);
+      *this, S.getCommonExprOpaqueValue(), AwaiterLValue);
 
   auto *SuspendRet = EmitScalarExpr(S.getSuspendExpr());
 
@@ -473,6 +478,9 @@ CodeGenFunction::generateAwaitSuspendWrapper(Twine const &CoroName,
 
 LValue
 CodeGenFunction::EmitCoawaitLValue(const CoawaitExpr *E) {
+  if (E->isInplaceCall()) {
+    llvm::dbgs() << "Inplace call!\n";
+  }
   assert(getCoroutineSuspendExprReturnType(getContext(), E)->isReferenceType() &&
          "Can't have a scalar return unless the return type is a "
          "reference type!");

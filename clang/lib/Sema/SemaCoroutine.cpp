@@ -15,6 +15,7 @@
 
 #include "CoroutineStmtBuilder.h"
 #include "clang/AST/ASTLambda.h"
+#include "clang/AST/ComputeDependence.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -838,6 +839,19 @@ static bool isCoroInplaceCall(Expr *Operand) {
   return isAttributedCoroInplaceTask(Operand->getType());
 }
 
+template <typename DesiredExpr>
+DesiredExpr *getExprWrappedByTemporary(Expr *E) {
+  if (auto *BTE = dyn_cast<CXXBindTemporaryExpr>(E)) {
+    E = BTE->getSubExpr();
+  }
+
+  if (auto *S = dyn_cast<DesiredExpr>(E)) {
+    return S;
+  }
+
+  return nullptr;
+}
+
 // Attempts to resolve and build a CoawaitExpr from "raw" inputs, bailing out to
 // DependentCoawaitExpr if needed.
 ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
@@ -861,6 +875,26 @@ ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
   }
 
   auto *RD = Promise->getType()->getAsCXXRecordDecl();
+  bool InplaceCall =
+      isCoroInplaceCall(Operand) &&
+      isAttributedCoroInplaceTask(
+          getCurFunctionDecl(/*AllowLambda=*/true)->getReturnType());
+
+  OpaqueValueExpr *OpaqueCallExpr = nullptr;
+
+  if (InplaceCall) {
+    if (auto *Temporary = dyn_cast<CXXBindTemporaryExpr>(Operand)) {
+      auto *SubExpr = Temporary->getSubExpr();
+      if (CallExpr *Call = dyn_cast<CallExpr>(SubExpr)) {
+        Call->setIsCoroutineInplaceTaskCall();
+        OpaqueCallExpr = new (Context)
+            OpaqueValueExpr(Call->getRParenLoc(), Call->getType(),
+                            Call->getValueKind(), Call->getObjectKind(), Call);
+        Temporary->setSubExpr(OpaqueCallExpr);
+      }
+    }
+  }
+
   auto *Transformed = Operand;
   if (lookupMember(*this, "await_transform", RD, Loc)) {
     ExprResult R =
@@ -878,11 +912,11 @@ ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
     return ExprError();
 
   auto Res = BuildResolvedCoawaitExpr(Loc, Operand, Awaiter.get());
-  if (!Res.isInvalid() && isCoroInplaceCall(Operand) &&
-      isAttributedCoroInplaceTask(
-          getCurFunctionDecl(/*AllowLambda=*/true)->getReturnType())) {
+  if (!Res.isInvalid() && InplaceCall) {
     // BuildResolvedCoawaitExpr must return a CoawaitExpr, if valid.
-    Res.getAs<CoawaitExpr>()->setIsInplaceCall();
+    CoawaitExpr *CE = Res.getAs<CoawaitExpr>();
+    CE->setIsInplaceCall();
+    CE->setOperandOpaqueValue(OpaqueCallExpr);
   }
   return Res;
 }

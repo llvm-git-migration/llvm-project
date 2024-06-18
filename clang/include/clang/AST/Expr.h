@@ -3127,6 +3127,13 @@ public:
     return getUnusedResultAttr(Ctx) != nullptr;
   }
 
+  bool isCoroutineInplaceTaskCall() const {
+    return CallExprBits.IsCoroutineInplaceTaskCall;
+  }
+  void setIsCoroutineInplaceTaskCall(bool value = true) {
+    CallExprBits.IsCoroutineInplaceTaskCall = value;
+  }
+
   SourceLocation getRParenLoc() const { return RParenLoc; }
   void setRParenLoc(SourceLocation L) { RParenLoc = L; }
 
