@@ -2073,6 +2073,11 @@ class ThreadSafetyReporter : public clang::threadSafety::ThreadSafetyHandler {
     Warnings.emplace_back(std::move(Warning), getNotes());
   }
 
+  void handleAttributeMismatch() override {
+    llvm::errs() << __PRETTY_FUNCTION__ << "\n";
+
+  }
+
   void enterFunction(const FunctionDecl* FD) override {
     CurrentFunction = FD;
   }

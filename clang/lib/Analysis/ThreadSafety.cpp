@@ -2260,6 +2260,45 @@ static bool neverReturns(const CFGBlock *B) {
   return false;
 }
 
+template<typename AttrT>
+static SmallVector<const Expr *> collectAttrArgs(const FunctionDecl *FD) {
+    SmallVector<const Expr *>Args;
+    for (const AttrT *A : FD->specific_attrs<AttrT>()) {
+      for (const Expr *E : A->args())
+        Args.push_back(E);
+    }
+
+    return Args;
+}
+
+static void diagnoseMismatchedFunctionAttrs(const FunctionDecl *FD, ThreadSafetyHandler &Handler) {
+  llvm::errs() << __PRETTY_FUNCTION__ << "\n";
+  assert(FD);
+  FD = FD->getDefinition();
+  assert(FD);
+
+  FD->dump();
+
+  auto FDArgs = collectAttrArgs<RequiresCapabilityAttr>(FD);
+
+  for (const FunctionDecl *D = FD->getPreviousDecl(); D; D = D->getPreviousDecl()) {
+    D->dump();
+    auto DArgs = collectAttrArgs<RequiresCapabilityAttr>(D);
+
+    llvm::errs() << "FD Args: " << FDArgs.size() << "\n";
+    llvm::errs() << " D Args: " << DArgs.size() << "\n";
+
+    for (const Expr *E : FDArgs) {
+      if (!llvm::is_contained(DArgs, E)) {
+        // FD requires E, but D doesn't.
+        llvm::errs() << "OMG\n";
+        Handler.handleAttributeMismatch();
+      }
+    }
+    llvm::errs() << "---\n";
+  }
+}
+
 /// Check a function's CFG for thread-safety violations.
 ///
 /// We traverse the blocks in the CFG, compute the set of mutexes that are held
@@ -2278,6 +2317,9 @@ void ThreadSafetyAnalyzer::runAnalysis(AnalysisDeclContext &AC) {
   CFG *CFGraph = walker.getGraph();
   const NamedDecl *D = walker.getDecl();
   CurrentFunction = dyn_cast<FunctionDecl>(D);
+
+  if (CurrentFunction)
+    diagnoseMismatchedFunctionAttrs(CurrentFunction, Handler);
 
   if (D->hasAttr<NoThreadSafetyAnalysisAttr>())
     return;
