@@ -18,5 +18,5 @@
 #include <array>
 #include <utility>
 
-// expected-error@+1 {{template template argument has different template parameters than its corresponding template template parameter}}
+// expected-error-re@+1 {{{{different template parameters|could not match _Size against 'type-parameter-0-0'}}}}
 static_assert(!std::__is_specialization_v<std::pair<int, std::size_t>, std::array>);
