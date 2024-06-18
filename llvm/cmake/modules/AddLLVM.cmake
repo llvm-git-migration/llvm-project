@@ -220,11 +220,21 @@ if (NOT DEFINED LLVM_LINKER_DETECTED AND NOT WIN32)
     separate_arguments(flags UNIX_COMMAND "${CMAKE_EXE_LINKER_FLAGS}")
     set(command ${CMAKE_C_COMPILER} ${flags} ${version_flag} -o ${DEVNULL})
   endif()
+
+  # Save current LANG environment variable and set it to "C"
+  set(old_LANG $ENV{LANG})
+  unset(ENV{LANG})
+  set(ENV{LANG} "C")
+
   execute_process(
     COMMAND ${command}
     OUTPUT_VARIABLE stdout
     ERROR_VARIABLE stderr
     )
+
+  # Restore original value of LANG
+  unset(ENV{LANG})
+  set(ENV{LANG} ${old_LANG})
 
   if(APPLE)
     if("${stderr}" MATCHES "PROGRAM:ld")
