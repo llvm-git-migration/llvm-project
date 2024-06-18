@@ -434,6 +434,294 @@ def CP_ASYNC_BULK_WAIT_GROUP_READ :
   Requires<[hasPTX<80>, hasSM<90>]>;
 
 //-----------------------------------
+// TMA Async Copy Functions
+//-----------------------------------
+
+// From Shared to Global memory
+class S2G_STRINGS<int dim, string mode, bit ch> {
+  string prefix = "cp.async.bulk.tensor";
+  string dir = "global.shared::cta";
+  string completion = "bulk_group";
+  string name = prefix
+                # "." # dim # "d"
+                # "." # dir
+                # "." # mode
+                # "." # completion
+                # !if(ch, ".L2::cache_hint", "");
+}
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0),
+          !strconcat(S2G_STRINGS<1, "tile", 0>.name, " [$tmap, \\{$d0\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int64Regs:$cache_hint),
+           !strconcat(S2G_STRINGS<1, "tile", 1>.name, " [$tmap, \\{$d0\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_1D<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1),
+          !strconcat(S2G_STRINGS<2, "tile", 0>.name, " [$tmap, \\{$d0, $d1\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int64Regs:$cache_hint),
+           !strconcat(S2G_STRINGS<2, "tile", 1>.name, " [$tmap, \\{$d0, $d1\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_2D<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2),
+          !strconcat(S2G_STRINGS<3, mode, 0>.name, " [$tmap, \\{$d0, $d1, $d2\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int64Regs:$cache_hint),
+           !strconcat(S2G_STRINGS<3, mode, 1>.name, " [$tmap, \\{$d0, $d1, $d2\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int64Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int32Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int64Regs, "im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_3D<Int32Regs, "im2col_no_offs">;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3),
+          !strconcat(S2G_STRINGS<4, mode, 0>.name, " [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int64Regs:$cache_hint),
+           !strconcat(S2G_STRINGS<4, mode, 1>.name, " [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int64Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int32Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int64Regs, "im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_4D<Int32Regs, "im2col_no_offs">;
+
+multiclass CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<NVPTXRegClass rc, string mode> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4),
+          !strconcat(S2G_STRINGS<5, mode, 0>.name, " [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$src];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$src, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int64Regs:$cache_hint),
+           !strconcat(S2G_STRINGS<5, mode, 1>.name, " [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$src], $cache_hint;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int64Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int32Regs, "tile">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int64Regs, "im2col_no_offs">;
+defm CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_SMEM_TO_GMEM_5D<Int32Regs, "im2col_no_offs">;
+
+// From Global to Shared memory
+class G2S_STRINGS<int dim, string mode, bit mc, bit ch> {
+  string prefix = "cp.async.bulk.tensor";
+  string dir = "shared::cluster.global";
+  string completion = "mbarrier::complete_tx::bytes";
+  string name = prefix
+                # "." # dim # "d"
+                # "." # dir
+                # "." # mode
+                # "." # completion
+                # !if(mc, ".multicast::cluster", "")
+                # !if(ch, ".L2::cache_hint", "");
+}
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0),
+          !strconcat(G2S_STRINGS<1, "tile", 0, 0>.name, " [$dst], [$tmap, \\{$d0\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<1, "tile", 1, 0>.name, " [$dst], [$tmap, \\{$d0\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<1, "tile", 0, 1>.name, " [$dst], [$tmap, \\{$d0\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<1, "tile", 1, 1>.name, " [$dst], [$tmap, \\{$d0\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_1D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1),
+          !strconcat(G2S_STRINGS<2, "tile", 0, 0>.name, " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<2, "tile", 1, 0>.name, " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<2, "tile", 0, 1>.name, " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<2, "tile", 1, 1>.name, " [$dst], [$tmap, \\{$d0, $d1\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_2D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2),
+          !strconcat(G2S_STRINGS<3, "tile", 0, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<3, "tile", 1, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<3, "tile", 0, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<3, "tile", 1, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0),
+          !strconcat(G2S_STRINGS<3, "im2col", 0, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<3, "im2col", 1, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<3, "im2col", 0, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int16Regs:$im2col0, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<3, "im2col", 1, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2\\}], [$mbar], \\{$im2col0\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_3D_IM2COL<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3),
+          !strconcat(G2S_STRINGS<4, "tile", 0, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<4, "tile", 1, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<4, "tile", 0, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<4, "tile", 1, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+            Int16Regs:$im2col0, Int16Regs:$im2col1),
+          !strconcat(G2S_STRINGS<4, "im2col", 0, 0>.name,
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<4, "im2col", 1, 0>.name,
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<4, "im2col", 0, 1>.name,
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3,
+                Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<4, "im2col", 1, 1>.name,
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3\\}], [$mbar], \\{$im2col0, $im2col1\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_4D_IM2COL<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4),
+          !strconcat(G2S_STRINGS<5, "tile", 0, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar];"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<5, "tile", 1, 0>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<5, "tile", 0, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<5, "tile", 1, 1>.name, " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_SHARED32_TILE : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_TILE<Int32Regs>;
+
+multiclass CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<NVPTXRegClass rc> {
+  def "": NVPTXInst<(outs),
+          (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+            Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2),
+          !strconcat(G2S_STRINGS<5, "im2col", 0, 0>.name,
+            " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\};"), []>,
+          Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int16Regs:$mc),
+           !strconcat(G2S_STRINGS<5, "im2col", 1, 0>.name,
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $mc;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _CH: NVPTXInst<(outs),
+           (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+             Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int64Regs:$ch),
+           !strconcat(G2S_STRINGS<5, "im2col", 0, 1>.name,
+             " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $ch;"), []>,
+           Requires<[hasPTX<80>, hasSM<90>]>;
+  def _MC_CH: NVPTXInst<(outs),
+              (ins rc:$dst, rc:$mbar, Int64Regs:$tmap, Int32Regs:$d0, Int32Regs:$d1, Int32Regs:$d2, Int32Regs:$d3, Int32Regs:$d4,
+                Int16Regs:$im2col0, Int16Regs:$im2col1, Int16Regs:$im2col2, Int16Regs:$mc, Int64Regs:$ch),
+              !strconcat(G2S_STRINGS<5, "im2col", 1, 1>.name,
+                " [$dst], [$tmap, \\{$d0, $d1, $d2, $d3, $d4\\}], [$mbar], \\{$im2col0, $im2col1, $im2col2\\}, $mc, $ch;"), []>,
+              Requires<[hasPTX<80>, hasSM<90>]>;
+}
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<Int64Regs>;
+defm CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_SHARED32_IM2COL : CP_ASYNC_BULK_TENSOR_GMEM_TO_SMEM_5D_IM2COL<Int32Regs>;
+
+//-----------------------------------
 // MBarrier Functions
 //-----------------------------------
 
