@@ -104,14 +104,18 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
   auto &Subtarget = MF.getSubtarget<RISCVSubtarget>();
 
-  // Mark any registers requested to be reserved as such
-  for (size_t Reg = 0; Reg < getNumRegs(); Reg++) {
-    if (Subtarget.isRegisterReservedByUser(Reg))
+  for (Register Reg = RISCV::NoRegister; Reg < RISCV::NUM_TARGET_REGS; Reg++) {
+    // Mark any GPRs requested to be reserved as such
+    if (Reg >= RISCV::X0 && Reg <= RISCV::X31 &&
+        Subtarget.isRegisterReservedByUser(Reg))
+      markSuperRegs(Reserved, Reg);
+
+    // Mark all the registers defined as constant in TableGen as reserved.
+    if (isConstantPhysReg(Reg))
       markSuperRegs(Reserved, Reg);
   }
 
   // Use markSuperRegs to ensure any register aliases are also reserved
-  markSuperRegs(Reserved, RISCV::X0); // zero
   markSuperRegs(Reserved, RISCV::X2); // sp
   markSuperRegs(Reserved, RISCV::X3); // gp
   markSuperRegs(Reserved, RISCV::X4); // tp
@@ -136,7 +140,6 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   markSuperRegs(Reserved, RISCV::VTYPE);
   markSuperRegs(Reserved, RISCV::VXSAT);
   markSuperRegs(Reserved, RISCV::VXRM);
-  markSuperRegs(Reserved, RISCV::VLENB); // vlenb (constant)
 
   // Floating point environment registers.
   markSuperRegs(Reserved, RISCV::FRM);
