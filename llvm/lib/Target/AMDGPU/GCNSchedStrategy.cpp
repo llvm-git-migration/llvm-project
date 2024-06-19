@@ -165,33 +165,30 @@ static void getRegisterPressures(bool AtTop,
   // the tracker, so we need to pass those function a non-const copy.
   RegPressureTracker &TempTracker = const_cast<RegPressureTracker &>(RPTracker);
   if (!GCNTrackers) {
-    if (AtTop)
-      TempTracker.getDownwardPressure(SU->getInstr(), Pressure, MaxPressure);
-    else
-      TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
+    AtTop
+        ? TempTracker.getDownwardPressure(SU->getInstr(), Pressure, MaxPressure)
+        : TempTracker.getUpwardPressure(SU->getInstr(), Pressure, MaxPressure);
+
+    return;
+  }
+
+  // GCNTrackers
+  Pressure.resize(4, 0);
+  MachineInstr *MI = SU->getInstr();
+  if (AtTop) {
+    GCNDownwardRPTracker TempDownwardTracker(DownwardTracker);
+    TempDownwardTracker.advance(MI, false, DAG->getLIS());
+    Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
+        TempDownwardTracker.getPressure().getSGPRNum();
+    Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
+        TempDownwardTracker.getPressure().getVGPRNum(false);
   } else {
-    Pressure.resize(4, 0);
-    if (AtTop) {
-      GCNDownwardRPTracker TempTopTracker(DownwardTracker);
-      auto MI = SU->getInstr();
-      TempTopTracker.advance(MI, false, DAG->getLIS());
-
-      Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
-          TempTopTracker.getPressure().getSGPRNum();
-      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-          TempTopTracker.getPressure().getVGPRNum(false);
-    }
-
-    else {
-      GCNUpwardRPTracker TempBotTracker(UpwardTracker);
-      auto MI = SU->getInstr();
-      TempBotTracker.recede(*MI);
-
-      Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
-          TempBotTracker.getPressure().getSGPRNum();
-      Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-          TempBotTracker.getPressure().getVGPRNum(false);
-    }
+    GCNUpwardRPTracker TempUpwardTracker(UpwardTracker);
+    TempUpwardTracker.recede(*MI);
+    Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
+        TempUpwardTracker.getPressure().getSGPRNum();
+    Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
+        TempUpwardTracker.getPressure().getVGPRNum(false);
   }
 }
 
@@ -334,9 +331,9 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
       SGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
       VGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
     } else {
-      GCNRPTracker *T = &UpwardTracker;
-      if (Zone.isTop())
-        T = &DownwardTracker;
+      GCNRPTracker *T = Zone.isTop()
+                            ? static_cast<GCNRPTracker *>(&UpwardTracker)
+                            : static_cast<GCNRPTracker *>(&DownwardTracker);
       SGPRPressure = T->getPressure().getSGPRNum();
       VGPRPressure = T->getPressure().getVGPRNum(false);
     }
