@@ -2922,7 +2922,7 @@ public:
     return getSema().BuildMemberReferenceExpr(Base, BaseType, OpLoc, isArrow,
                                               SS, TemplateKWLoc, R,
                                               ExplicitTemplateArgs,
-                                              /*S*/ nullptr);
+                                              /*S=*/nullptr);
   }
 
   /// Build a new binary operator expression.
