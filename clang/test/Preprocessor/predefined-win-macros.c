@@ -163,3 +163,13 @@
 // CHECK-ARM64EC-MINGW: #define __arm64ec__ 1
 // CHECK-ARM64EC-MINGW: #define __x86_64 1
 // CHECK-ARM64EC-MINGW: #define __x86_64__ 1
+
+// RUN: %clang_cc1 -triple x86_64-windows-gnu %s -E -dM -o - \
+// RUN:   | FileCheck -match-full-lines %s --check-prefix=CHECK-MINGW-C
+
+// CHECK-MINGW-C-NOT: #define __GXX_TYPEINFO_EQUALITY_INLINE
+
+// RUN: %clang_cc1 -triple x86_64-windows-gnu -x c++ %s -E -dM -o - \
+// RUN:   | FileCheck -match-full-lines %s --check-prefix=CHECK-MINGW-CXX
+
+// CHECK-MINGW-CXX: #define __GXX_TYPEINFO_EQUALITY_INLINE 0
