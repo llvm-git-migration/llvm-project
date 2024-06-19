@@ -3859,9 +3859,6 @@ static void printTransferAttrs(OpAsmPrinter &p, VectorTransferOpInterface op) {
   elidedAttrs.push_back(TransferReadOp::getOperandSegmentSizeAttr());
   if (op.getPermutationMap().isMinorIdentity())
     elidedAttrs.push_back(op.getPermutationMapAttrName());
-  // Elide in_bounds attribute if all dims are out-of-bounds.
-  if (llvm::none_of(op.getInBoundsValues(), [](bool b) { return b; }))
-    elidedAttrs.push_back(op.getInBoundsAttrName());
   p.printOptionalAttrDict(op->getAttrs(), elidedAttrs);
 }
 
@@ -3970,7 +3967,7 @@ LogicalResult TransferReadOp::verify() {
   if (failed(verifyTransferOp(cast<VectorTransferOpInterface>(getOperation()),
                               shapedType, vectorType, maskType,
                               inferredMaskType, permutationMap,
-                              getInBounds() ? *getInBounds() : ArrayAttr())))
+                              getInBounds())))
     return failure();
 
   if (auto sourceVectorElementType =
@@ -4356,7 +4353,7 @@ LogicalResult TransferWriteOp::verify() {
   if (failed(verifyTransferOp(cast<VectorTransferOpInterface>(getOperation()),
                               shapedType, vectorType, maskType,
                               inferredMaskType, permutationMap,
-                              getInBounds() ? *getInBounds() : ArrayAttr())))
+                              getInBounds())))
     return failure();
 
   return verifyPermutationMap(permutationMap,
