@@ -238,6 +238,11 @@ template <>
 PreservedAnalyses
 PassManager<MachineFunction>::run(MachineFunction &,
                                   AnalysisManager<MachineFunction> &);
+
+template <>
+void PassManager<MachineFunction>::StackTraceEntry::print(
+    raw_ostream &OS) const;
+
 extern template class PassManager<MachineFunction>;
 
 /// Convenience typedef for a pass manager over functions.

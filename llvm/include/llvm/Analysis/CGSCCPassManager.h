@@ -131,6 +131,10 @@ PassManager<LazyCallGraph::SCC, CGSCCAnalysisManager, LazyCallGraph &,
             CGSCCUpdateResult &>::run(LazyCallGraph::SCC &InitialC,
                                       CGSCCAnalysisManager &AM,
                                       LazyCallGraph &G, CGSCCUpdateResult &UR);
+template <>
+void PassManager<LazyCallGraph::SCC, CGSCCAnalysisManager, LazyCallGraph &,
+                 CGSCCUpdateResult &>::StackTraceEntry::print(raw_ostream &OS)
+    const;
 extern template class PassManager<LazyCallGraph::SCC, CGSCCAnalysisManager,
                                   LazyCallGraph &, CGSCCUpdateResult &>;
 

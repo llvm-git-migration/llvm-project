@@ -1072,3 +1072,9 @@ TEST_F(PassManagerTest, ModulePassMissedModuleAnalysisInvalidation) {
 
 #endif
 }
+
+template <>
+void PassManager<Function, CustomizedAnalysisManager, int,
+                 int &>::StackTraceEntry::print(raw_ostream &OS) const {
+  // Dummy
+}

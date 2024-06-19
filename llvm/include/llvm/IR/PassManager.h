@@ -48,6 +48,7 @@
 #include "llvm/IR/PassInstrumentation.h"
 #include "llvm/IR/PassManagerInternal.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/TypeName.h"
 #include <cassert>
@@ -171,6 +172,20 @@ template <typename IRUnitT,
           typename... ExtraArgTs>
 class PassManager : public PassInfoMixin<
                         PassManager<IRUnitT, AnalysisManagerT, ExtraArgTs...>> {
+  using PassConceptT =
+      detail::PassConcept<IRUnitT, AnalysisManagerT, ExtraArgTs...>;
+
+  class StackTraceEntry : public PrettyStackTraceEntry {
+    PassConceptT &Pass;
+    IRUnitT &IR;
+
+  public:
+    explicit StackTraceEntry(PassConceptT &Pass, IRUnitT &IR)
+      : Pass(Pass), IR(IR) {}
+
+    void print(raw_ostream &OS) const override;
+  };
+
 public:
   /// Construct a pass manager.
   explicit PassManager() = default;
@@ -221,6 +236,7 @@ public:
       if (!PI.runBeforePass<IRUnitT>(*Pass, IR))
         continue;
 
+      StackTraceEntry Entry(*Pass, IR);
       PreservedAnalyses PassPA = Pass->run(IR, AM, ExtraArgs...);
 
       // Update the analysis manager as each pass runs and potentially
@@ -271,16 +287,19 @@ public:
   static bool isRequired() { return true; }
 
 protected:
-  using PassConceptT =
-      detail::PassConcept<IRUnitT, AnalysisManagerT, ExtraArgTs...>;
-
   std::vector<std::unique_ptr<PassConceptT>> Passes;
 };
+
+template <>
+void PassManager<Module>::StackTraceEntry::print(raw_ostream &OS) const;
 
 extern template class PassManager<Module>;
 
 /// Convenience typedef for a pass manager over modules.
 using ModulePassManager = PassManager<Module>;
+
+template <>
+void PassManager<Function>::StackTraceEntry::print(raw_ostream &OS) const;
 
 extern template class PassManager<Function>;
 

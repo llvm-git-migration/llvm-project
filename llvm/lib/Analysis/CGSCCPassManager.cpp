@@ -1193,3 +1193,8 @@ LazyCallGraph::SCC &llvm::updateCGAndAnalysisManagerForCGSCCPass(
   return updateCGAndAnalysisManagerForPass(G, InitialC, N, AM, UR, FAM,
                                            /* FunctionPass */ false);
 }
+
+template <>
+void CGSCCPassManager::StackTraceEntry::print(raw_ostream &OS) const {
+  OS << "Running pass \"" << Pass.name() << "\" on cgscc\n";
+}

@@ -163,3 +163,10 @@ PreservedAnalyses llvm::getMachineFunctionPassPreservedAnalyses() {
   PA.template preserveSet<AllAnalysesOn<Function>>();
   return PA;
 }
+
+template <>
+void PassManager<MachineFunction>::StackTraceEntry::print(
+    raw_ostream &OS) const {
+  OS << "Running pass \"" << Pass.name() << "\" on machine function \""
+     << IR.getName() << "\"\n";
+}

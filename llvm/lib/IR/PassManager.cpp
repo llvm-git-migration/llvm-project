@@ -13,6 +13,7 @@
 using namespace llvm;
 
 namespace llvm {
+
 // Explicit template instantiations and specialization defininitions for core
 // template typedefs.
 template class AllAnalysesOn<Module>;
@@ -142,6 +143,18 @@ PreservedAnalyses ModuleToFunctionPassAdaptor::run(Module &M,
   PA.preserveSet<AllAnalysesOn<Function>>();
   PA.preserve<FunctionAnalysisManagerModuleProxy>();
   return PA;
+}
+
+template <>
+void PassManager<Module>::StackTraceEntry::print(raw_ostream &OS) const {
+  OS << "Running pass \"" << Pass.name() << "\" on module \"" << IR.getName()
+     << "\"\n";
+}
+
+template <>
+void PassManager<Function>::StackTraceEntry::print(raw_ostream &OS) const {
+  OS << "Running pass \"" << Pass.name() << "\" on function \"" << IR.getName()
+     << "\"\n";
 }
 
 AnalysisSetKey CFGAnalyses::SetKey;
