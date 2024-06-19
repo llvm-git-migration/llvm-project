@@ -44,11 +44,12 @@ namespace {
 static std::pair<bool, bool> runImpl(MachineFunction &MF) {
   bool Changed = false;
   bool PreserveCFG = true;
+  bool InsertNewMBB = false;
   const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
   const TargetLowering *TLI = MF.getSubtarget().getTargetLowering();
 
   // Iterate through each instruction in the function, looking for pseudos.
-  for (MachineFunction::iterator I = MF.begin(), E = MF.end(); I != E; ++I) {
+  for (MachineFunction::iterator I = MF.begin(), E = MF.end(); I != E;) {
     MachineBasicBlock *MBB = &*I;
     for (MachineBasicBlock::iterator MBBI = MBB->begin(), MBBE = MBB->end();
          MBBI != MBBE; ) {
@@ -66,12 +67,18 @@ static std::pair<bool, bool> runImpl(MachineFunction &MF) {
         // The expansion may involve new basic blocks.
         if (NewMBB != MBB) {
           PreserveCFG = false;
-          MBB = NewMBB;
-          I = NewMBB->getIterator();
-          MBBI = NewMBB->begin();
-          MBBE = NewMBB->end();
+          InsertNewMBB = true;
+          break;
         }
       }
+    }
+
+    ++I;
+
+    // If we insert a new MBB, we should re-scan to avoid missing some MI.
+    if (InsertNewMBB) {
+      I = MF.begin();
+      InsertNewMBB = false;
     }
   }
 
