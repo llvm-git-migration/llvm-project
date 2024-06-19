@@ -56,6 +56,10 @@ def target_is_android():
     return configuration.lldb_platform_name == "remote-android"
 
 
+def target_is_remote_linux():
+    return configuration.lldb_platform_name == "remote-linux"
+
+
 def android_device_api():
     if not hasattr(android_device_api, "result"):
         assert configuration.lldb_platform_url is not None
@@ -92,11 +96,28 @@ def match_android_device(device_arch, valid_archs=None, valid_api_levels=None):
 
 
 def finalize_build_dictionary(dictionary):
+    # Provide uname-like platform name
+    platform_name_to_uname = { "linux": "Linux",
+            "netbsd": "NetBSD",
+            "freebsd": "FreeBSD",
+            "windows": "Windows_NT",
+            }
+
+    if dictionary is None:
+        dictionary = {}
     if target_is_android():
-        if dictionary is None:
-            dictionary = {}
         dictionary["OS"] = "Android"
         dictionary["PIE"] = 1
+    elif platformIsDarwin():
+        dictionary["OS"] = "Darwin"
+    else:
+        dictionary["OS"] = platform_name_to_uname[getPlatform()]
+
+    if platformIsDarwin():
+        dictionary["HOST_OS"] = "Darwin"
+    else:
+        dictionary["HOST_OS"] = platform_name_to_uname[getHostPlatform()]
+
     return dictionary
 
 
