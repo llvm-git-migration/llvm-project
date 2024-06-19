@@ -14,6 +14,7 @@
 
 // Test the libc++ lazy meta-programming helpers in <type_traits>
 
+#include <__type_traits/negation.h>
 #include <type_traits>
 
 #include "test_macros.h"
