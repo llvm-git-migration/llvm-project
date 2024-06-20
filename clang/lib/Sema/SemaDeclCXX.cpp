@@ -9127,6 +9127,11 @@ void Sema::DeclareImplicitEqualityComparison(CXXRecordDecl *RD,
   popCodeSynthesisContext();
 }
 
+static inline CXXRecordDecl *getRecordDeclFromFirstParameter(FunctionDecl *FD) {
+  auto PT = FD->getParamDecl(0)->getType();
+  return PT.getNonReferenceType()->getAsCXXRecordDecl();
+}
+
 void Sema::DefineDefaultedComparison(SourceLocation UseLoc, FunctionDecl *FD,
                                      DefaultedComparisonKind DCK) {
   assert(FD->isDefaulted() && !FD->isDeleted() &&
@@ -9141,10 +9146,7 @@ void Sema::DefineDefaultedComparison(SourceLocation UseLoc, FunctionDecl *FD,
 
   {
     // Build and set up the function body.
-    // The first parameter has type maybe-ref-to maybe-const T, use that to get
-    // the type of the class being compared.
-    auto PT = FD->getParamDecl(0)->getType();
-    CXXRecordDecl *RD = PT.getNonReferenceType()->getAsCXXRecordDecl();
+    auto RD = getRecordDeclFromFirstParameter(FD);
     SourceLocation BodyLoc =
         FD->getEndLoc().isValid() ? FD->getEndLoc() : FD->getLocation();
     StmtResult Body =
@@ -9192,7 +9194,7 @@ ComputeDefaultedComparisonExceptionSpec(Sema &S, SourceLocation Loc,
     EnterExpressionEvaluationContext Context(
         S, Sema::ExpressionEvaluationContext::Unevaluated);
 
-    CXXRecordDecl *RD = cast<CXXRecordDecl>(FD->getLexicalParent());
+    auto RD = getRecordDeclFromFirstParameter(FD);
     SourceLocation BodyLoc =
         FD->getEndLoc().isValid() ? FD->getEndLoc() : FD->getLocation();
     StmtResult Body =
