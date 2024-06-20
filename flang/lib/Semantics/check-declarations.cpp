@@ -463,12 +463,12 @@ void CheckHelper::Check(const Symbol &symbol) {
           symbol.name());
     }
   }
-  if (IsProcedure(symbol) && !symbol.HasExplicitInterface()) {
+  if (IsProcedure(symbol)) {
     if (IsAllocatable(symbol)) {
       messages_.Say(
-          "Procedure '%s' may not be ALLOCATABLE without an explicit interface"_err_en_US,
-          symbol.name());
-    } else if (symbol.Rank() > 0) {
+          "Procedure '%s' may not be ALLOCATABLE"_err_en_US, symbol.name());
+    }
+    if (!symbol.HasExplicitInterface() && symbol.Rank() > 0) {
       messages_.Say(
           "Procedure '%s' may not be an array without an explicit interface"_err_en_US,
           symbol.name());
