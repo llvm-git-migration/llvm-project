@@ -1459,12 +1459,8 @@ public:
   ~VPWidenEVLRecipe() override = default;
 
   VPWidenRecipe *clone() override final {
-    SmallVector<VPValue *> Ops(operands());
-    VPValue *EVL = Ops.pop_back_val();
-    auto *R = new VPWidenEVLRecipe(*getUnderlyingInstr(),
-                                   make_range(Ops.begin(), Ops.end()), *EVL);
-    R->transferFlags(*this);
-    return R;
+    llvm_unreachable("VPWidenStoreEVLRecipe cannot be cloned");
+    return nullptr;
   }
 
   VP_CLASSOF_IMPL(VPDef::VPWidenEVLSC);
@@ -2616,6 +2612,11 @@ struct VPWidenLoadEVLRecipe final : public VPWidenMemoryRecipe, public VPValue {
     setMask(Mask);
   }
 
+  VPWidenLoadEVLRecipe *clone() override {
+    llvm_unreachable("VPWidenLoadEVLRecipe recipe cannot be cloned");
+    return nullptr;
+  }
+
   VP_CLASSOF_IMPL(VPDef::VPWidenLoadEVLSC)
 
   /// Return the EVL operand.
@@ -2690,6 +2691,11 @@ struct VPWidenStoreEVLRecipe final : public VPWidenMemoryRecipe {
                             S->isConsecutive(), S->isReverse(),
                             S->getDebugLoc()) {
     setMask(Mask);
+  }
+
+  VPWidenStoreEVLRecipe *clone() override {
+    llvm_unreachable("VPWidenStoreEVLRecipe cannot be cloned");
+    return nullptr;
   }
 
   VP_CLASSOF_IMPL(VPDef::VPWidenStoreEVLSC)
