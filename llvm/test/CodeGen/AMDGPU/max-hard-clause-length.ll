@@ -397,82 +397,82 @@ define amdgpu_kernel void @long_store_chain(ptr addrspace(1) %p) {
 define amdgpu_kernel void @long_load_chain(ptr addrspace(1) %p) {
 ; GFX10-LABEL: long_load_chain:
 ; GFX10:       ; %bb.0:
-; GFX10-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GFX10-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX10-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX10-NEXT:    s_clause 0x3e
-; GFX10-NEXT:    s_load_dword s2, s[0:1], 0x0
-; GFX10-NEXT:    s_load_dword s3, s[0:1], 0x10
-; GFX10-NEXT:    s_load_dword s4, s[0:1], 0x20
-; GFX10-NEXT:    s_load_dword s5, s[0:1], 0x30
-; GFX10-NEXT:    s_load_dword s6, s[0:1], 0x40
-; GFX10-NEXT:    s_load_dword s7, s[0:1], 0x50
-; GFX10-NEXT:    s_load_dword s8, s[0:1], 0x60
-; GFX10-NEXT:    s_load_dword s9, s[0:1], 0x70
-; GFX10-NEXT:    s_load_dword s10, s[0:1], 0x80
-; GFX10-NEXT:    s_load_dword s11, s[0:1], 0x90
-; GFX10-NEXT:    s_load_dword s12, s[0:1], 0xa0
-; GFX10-NEXT:    s_load_dword s13, s[0:1], 0xb0
-; GFX10-NEXT:    s_load_dword s14, s[0:1], 0xc0
-; GFX10-NEXT:    s_load_dword s15, s[0:1], 0xd0
-; GFX10-NEXT:    s_load_dword s16, s[0:1], 0xe0
-; GFX10-NEXT:    s_load_dword s17, s[0:1], 0xf0
-; GFX10-NEXT:    s_load_dword s18, s[0:1], 0x100
-; GFX10-NEXT:    s_load_dword s19, s[0:1], 0x110
-; GFX10-NEXT:    s_load_dword s20, s[0:1], 0x120
-; GFX10-NEXT:    s_load_dword s21, s[0:1], 0x130
-; GFX10-NEXT:    s_load_dword s22, s[0:1], 0x140
-; GFX10-NEXT:    s_load_dword s23, s[0:1], 0x150
-; GFX10-NEXT:    s_load_dword s24, s[0:1], 0x160
-; GFX10-NEXT:    s_load_dword s25, s[0:1], 0x170
-; GFX10-NEXT:    s_load_dword s26, s[0:1], 0x180
-; GFX10-NEXT:    s_load_dword s27, s[0:1], 0x190
-; GFX10-NEXT:    s_load_dword s28, s[0:1], 0x1a0
-; GFX10-NEXT:    s_load_dword s29, s[0:1], 0x1b0
-; GFX10-NEXT:    s_load_dword s30, s[0:1], 0x1c0
-; GFX10-NEXT:    s_load_dword s31, s[0:1], 0x1d0
-; GFX10-NEXT:    s_load_dword s33, s[0:1], 0x1e0
-; GFX10-NEXT:    s_load_dword s34, s[0:1], 0x1f0
-; GFX10-NEXT:    s_load_dword s35, s[0:1], 0x200
-; GFX10-NEXT:    s_load_dword s36, s[0:1], 0x210
-; GFX10-NEXT:    s_load_dword s37, s[0:1], 0x220
-; GFX10-NEXT:    s_load_dword s38, s[0:1], 0x230
-; GFX10-NEXT:    s_load_dword s39, s[0:1], 0x240
-; GFX10-NEXT:    s_load_dword s40, s[0:1], 0x250
-; GFX10-NEXT:    s_load_dword s41, s[0:1], 0x260
-; GFX10-NEXT:    s_load_dword s42, s[0:1], 0x270
-; GFX10-NEXT:    s_load_dword s43, s[0:1], 0x280
-; GFX10-NEXT:    s_load_dword s44, s[0:1], 0x290
-; GFX10-NEXT:    s_load_dword s45, s[0:1], 0x2a0
-; GFX10-NEXT:    s_load_dword s46, s[0:1], 0x2b0
-; GFX10-NEXT:    s_load_dword s47, s[0:1], 0x2c0
-; GFX10-NEXT:    s_load_dword s48, s[0:1], 0x2d0
-; GFX10-NEXT:    s_load_dword s49, s[0:1], 0x2e0
-; GFX10-NEXT:    s_load_dword s50, s[0:1], 0x2f0
-; GFX10-NEXT:    s_load_dword s51, s[0:1], 0x300
-; GFX10-NEXT:    s_load_dword s52, s[0:1], 0x310
-; GFX10-NEXT:    s_load_dword s53, s[0:1], 0x320
-; GFX10-NEXT:    s_load_dword s54, s[0:1], 0x330
-; GFX10-NEXT:    s_load_dword s55, s[0:1], 0x340
-; GFX10-NEXT:    s_load_dword s56, s[0:1], 0x350
-; GFX10-NEXT:    s_load_dword s57, s[0:1], 0x360
-; GFX10-NEXT:    s_load_dword s58, s[0:1], 0x370
-; GFX10-NEXT:    s_load_dword s59, s[0:1], 0x380
-; GFX10-NEXT:    s_load_dword s60, s[0:1], 0x390
-; GFX10-NEXT:    s_load_dword s61, s[0:1], 0x3a0
-; GFX10-NEXT:    s_load_dword s62, s[0:1], 0x3b0
-; GFX10-NEXT:    s_load_dword s63, s[0:1], 0x3c0
-; GFX10-NEXT:    s_load_dword s64, s[0:1], 0x3d0
-; GFX10-NEXT:    s_load_dword s65, s[0:1], 0x3e0
+; GFX10-NEXT:    s_load_dword s0, s[2:3], 0x0
+; GFX10-NEXT:    s_load_dword s1, s[2:3], 0x10
+; GFX10-NEXT:    s_load_dword s4, s[2:3], 0x20
+; GFX10-NEXT:    s_load_dword s5, s[2:3], 0x30
+; GFX10-NEXT:    s_load_dword s6, s[2:3], 0x40
+; GFX10-NEXT:    s_load_dword s7, s[2:3], 0x50
+; GFX10-NEXT:    s_load_dword s8, s[2:3], 0x60
+; GFX10-NEXT:    s_load_dword s9, s[2:3], 0x70
+; GFX10-NEXT:    s_load_dword s10, s[2:3], 0x80
+; GFX10-NEXT:    s_load_dword s11, s[2:3], 0x90
+; GFX10-NEXT:    s_load_dword s12, s[2:3], 0xa0
+; GFX10-NEXT:    s_load_dword s13, s[2:3], 0xb0
+; GFX10-NEXT:    s_load_dword s14, s[2:3], 0xc0
+; GFX10-NEXT:    s_load_dword s15, s[2:3], 0xd0
+; GFX10-NEXT:    s_load_dword s16, s[2:3], 0xe0
+; GFX10-NEXT:    s_load_dword s17, s[2:3], 0xf0
+; GFX10-NEXT:    s_load_dword s18, s[2:3], 0x100
+; GFX10-NEXT:    s_load_dword s19, s[2:3], 0x110
+; GFX10-NEXT:    s_load_dword s20, s[2:3], 0x120
+; GFX10-NEXT:    s_load_dword s21, s[2:3], 0x130
+; GFX10-NEXT:    s_load_dword s22, s[2:3], 0x140
+; GFX10-NEXT:    s_load_dword s23, s[2:3], 0x150
+; GFX10-NEXT:    s_load_dword s24, s[2:3], 0x160
+; GFX10-NEXT:    s_load_dword s25, s[2:3], 0x170
+; GFX10-NEXT:    s_load_dword s26, s[2:3], 0x180
+; GFX10-NEXT:    s_load_dword s27, s[2:3], 0x190
+; GFX10-NEXT:    s_load_dword s28, s[2:3], 0x1a0
+; GFX10-NEXT:    s_load_dword s29, s[2:3], 0x1b0
+; GFX10-NEXT:    s_load_dword s30, s[2:3], 0x1c0
+; GFX10-NEXT:    s_load_dword s31, s[2:3], 0x1d0
+; GFX10-NEXT:    s_load_dword s33, s[2:3], 0x1e0
+; GFX10-NEXT:    s_load_dword s34, s[2:3], 0x1f0
+; GFX10-NEXT:    s_load_dword s35, s[2:3], 0x200
+; GFX10-NEXT:    s_load_dword s36, s[2:3], 0x210
+; GFX10-NEXT:    s_load_dword s37, s[2:3], 0x220
+; GFX10-NEXT:    s_load_dword s38, s[2:3], 0x230
+; GFX10-NEXT:    s_load_dword s39, s[2:3], 0x240
+; GFX10-NEXT:    s_load_dword s40, s[2:3], 0x250
+; GFX10-NEXT:    s_load_dword s41, s[2:3], 0x260
+; GFX10-NEXT:    s_load_dword s42, s[2:3], 0x270
+; GFX10-NEXT:    s_load_dword s43, s[2:3], 0x280
+; GFX10-NEXT:    s_load_dword s44, s[2:3], 0x290
+; GFX10-NEXT:    s_load_dword s45, s[2:3], 0x2a0
+; GFX10-NEXT:    s_load_dword s46, s[2:3], 0x2b0
+; GFX10-NEXT:    s_load_dword s47, s[2:3], 0x2c0
+; GFX10-NEXT:    s_load_dword s48, s[2:3], 0x2d0
+; GFX10-NEXT:    s_load_dword s49, s[2:3], 0x2e0
+; GFX10-NEXT:    s_load_dword s50, s[2:3], 0x2f0
+; GFX10-NEXT:    s_load_dword s51, s[2:3], 0x300
+; GFX10-NEXT:    s_load_dword s52, s[2:3], 0x310
+; GFX10-NEXT:    s_load_dword s53, s[2:3], 0x320
+; GFX10-NEXT:    s_load_dword s54, s[2:3], 0x330
+; GFX10-NEXT:    s_load_dword s55, s[2:3], 0x340
+; GFX10-NEXT:    s_load_dword s56, s[2:3], 0x350
+; GFX10-NEXT:    s_load_dword s57, s[2:3], 0x360
+; GFX10-NEXT:    s_load_dword s58, s[2:3], 0x370
+; GFX10-NEXT:    s_load_dword s59, s[2:3], 0x380
+; GFX10-NEXT:    s_load_dword s60, s[2:3], 0x390
+; GFX10-NEXT:    s_load_dword s61, s[2:3], 0x3a0
+; GFX10-NEXT:    s_load_dword s62, s[2:3], 0x3b0
+; GFX10-NEXT:    s_load_dword s63, s[2:3], 0x3c0
+; GFX10-NEXT:    s_load_dword s64, s[2:3], 0x3d0
+; GFX10-NEXT:    s_load_dword s65, s[2:3], 0x3e0
 ; GFX10-NEXT:    s_clause 0x2
-; GFX10-NEXT:    s_load_dword s66, s[0:1], 0x3f0
-; GFX10-NEXT:    s_load_dword s67, s[0:1], 0x400
-; GFX10-NEXT:    s_load_dword s0, s[0:1], 0x410
+; GFX10-NEXT:    s_load_dword s66, s[2:3], 0x3f0
+; GFX10-NEXT:    s_load_dword s67, s[2:3], 0x400
+; GFX10-NEXT:    s_load_dword s2, s[2:3], 0x410
 ; GFX10-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX10-NEXT:    ;;#ASMSTART
-; GFX10-NEXT:    ; use s2
+; GFX10-NEXT:    ; use s0
 ; GFX10-NEXT:    ;;#ASMEND
 ; GFX10-NEXT:    ;;#ASMSTART
-; GFX10-NEXT:    ; use s3
+; GFX10-NEXT:    ; use s1
 ; GFX10-NEXT:    ;;#ASMEND
 ; GFX10-NEXT:    ;;#ASMSTART
 ; GFX10-NEXT:    ; use s4
@@ -664,89 +664,89 @@ define amdgpu_kernel void @long_load_chain(ptr addrspace(1) %p) {
 ; GFX10-NEXT:    ; use s67
 ; GFX10-NEXT:    ;;#ASMEND
 ; GFX10-NEXT:    ;;#ASMSTART
-; GFX10-NEXT:    ; use s0
+; GFX10-NEXT:    ; use s2
 ; GFX10-NEXT:    ;;#ASMEND
 ; GFX10-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: long_load_chain:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    s_clause 0x1f
-; GFX11-NEXT:    s_load_b32 s2, s[0:1], 0x0
-; GFX11-NEXT:    s_load_b32 s3, s[0:1], 0x10
-; GFX11-NEXT:    s_load_b32 s4, s[0:1], 0x20
-; GFX11-NEXT:    s_load_b32 s5, s[0:1], 0x30
-; GFX11-NEXT:    s_load_b32 s6, s[0:1], 0x40
-; GFX11-NEXT:    s_load_b32 s7, s[0:1], 0x50
-; GFX11-NEXT:    s_load_b32 s8, s[0:1], 0x60
-; GFX11-NEXT:    s_load_b32 s9, s[0:1], 0x70
-; GFX11-NEXT:    s_load_b32 s10, s[0:1], 0x80
-; GFX11-NEXT:    s_load_b32 s11, s[0:1], 0x90
-; GFX11-NEXT:    s_load_b32 s12, s[0:1], 0xa0
-; GFX11-NEXT:    s_load_b32 s13, s[0:1], 0xb0
-; GFX11-NEXT:    s_load_b32 s14, s[0:1], 0xc0
-; GFX11-NEXT:    s_load_b32 s15, s[0:1], 0xd0
-; GFX11-NEXT:    s_load_b32 s16, s[0:1], 0xe0
-; GFX11-NEXT:    s_load_b32 s17, s[0:1], 0xf0
-; GFX11-NEXT:    s_load_b32 s18, s[0:1], 0x100
-; GFX11-NEXT:    s_load_b32 s19, s[0:1], 0x110
-; GFX11-NEXT:    s_load_b32 s20, s[0:1], 0x120
-; GFX11-NEXT:    s_load_b32 s21, s[0:1], 0x130
-; GFX11-NEXT:    s_load_b32 s22, s[0:1], 0x140
-; GFX11-NEXT:    s_load_b32 s23, s[0:1], 0x150
-; GFX11-NEXT:    s_load_b32 s24, s[0:1], 0x160
-; GFX11-NEXT:    s_load_b32 s25, s[0:1], 0x170
-; GFX11-NEXT:    s_load_b32 s26, s[0:1], 0x180
-; GFX11-NEXT:    s_load_b32 s27, s[0:1], 0x190
-; GFX11-NEXT:    s_load_b32 s28, s[0:1], 0x1a0
-; GFX11-NEXT:    s_load_b32 s29, s[0:1], 0x1b0
-; GFX11-NEXT:    s_load_b32 s30, s[0:1], 0x1c0
-; GFX11-NEXT:    s_load_b32 s31, s[0:1], 0x1d0
-; GFX11-NEXT:    s_load_b32 s33, s[0:1], 0x1e0
-; GFX11-NEXT:    s_load_b32 s34, s[0:1], 0x1f0
+; GFX11-NEXT:    s_load_b32 s0, s[2:3], 0x0
+; GFX11-NEXT:    s_load_b32 s1, s[2:3], 0x10
+; GFX11-NEXT:    s_load_b32 s4, s[2:3], 0x20
+; GFX11-NEXT:    s_load_b32 s5, s[2:3], 0x30
+; GFX11-NEXT:    s_load_b32 s6, s[2:3], 0x40
+; GFX11-NEXT:    s_load_b32 s7, s[2:3], 0x50
+; GFX11-NEXT:    s_load_b32 s8, s[2:3], 0x60
+; GFX11-NEXT:    s_load_b32 s9, s[2:3], 0x70
+; GFX11-NEXT:    s_load_b32 s10, s[2:3], 0x80
+; GFX11-NEXT:    s_load_b32 s11, s[2:3], 0x90
+; GFX11-NEXT:    s_load_b32 s12, s[2:3], 0xa0
+; GFX11-NEXT:    s_load_b32 s13, s[2:3], 0xb0
+; GFX11-NEXT:    s_load_b32 s14, s[2:3], 0xc0
+; GFX11-NEXT:    s_load_b32 s15, s[2:3], 0xd0
+; GFX11-NEXT:    s_load_b32 s16, s[2:3], 0xe0
+; GFX11-NEXT:    s_load_b32 s17, s[2:3], 0xf0
+; GFX11-NEXT:    s_load_b32 s18, s[2:3], 0x100
+; GFX11-NEXT:    s_load_b32 s19, s[2:3], 0x110
+; GFX11-NEXT:    s_load_b32 s20, s[2:3], 0x120
+; GFX11-NEXT:    s_load_b32 s21, s[2:3], 0x130
+; GFX11-NEXT:    s_load_b32 s22, s[2:3], 0x140
+; GFX11-NEXT:    s_load_b32 s23, s[2:3], 0x150
+; GFX11-NEXT:    s_load_b32 s24, s[2:3], 0x160
+; GFX11-NEXT:    s_load_b32 s25, s[2:3], 0x170
+; GFX11-NEXT:    s_load_b32 s26, s[2:3], 0x180
+; GFX11-NEXT:    s_load_b32 s27, s[2:3], 0x190
+; GFX11-NEXT:    s_load_b32 s28, s[2:3], 0x1a0
+; GFX11-NEXT:    s_load_b32 s29, s[2:3], 0x1b0
+; GFX11-NEXT:    s_load_b32 s30, s[2:3], 0x1c0
+; GFX11-NEXT:    s_load_b32 s31, s[2:3], 0x1d0
+; GFX11-NEXT:    s_load_b32 s33, s[2:3], 0x1e0
+; GFX11-NEXT:    s_load_b32 s34, s[2:3], 0x1f0
 ; GFX11-NEXT:    s_clause 0x1f
-; GFX11-NEXT:    s_load_b32 s35, s[0:1], 0x200
-; GFX11-NEXT:    s_load_b32 s36, s[0:1], 0x210
-; GFX11-NEXT:    s_load_b32 s37, s[0:1], 0x220
-; GFX11-NEXT:    s_load_b32 s38, s[0:1], 0x230
-; GFX11-NEXT:    s_load_b32 s39, s[0:1], 0x240
-; GFX11-NEXT:    s_load_b32 s40, s[0:1], 0x250
-; GFX11-NEXT:    s_load_b32 s41, s[0:1], 0x260
-; GFX11-NEXT:    s_load_b32 s42, s[0:1], 0x270
-; GFX11-NEXT:    s_load_b32 s43, s[0:1], 0x280
-; GFX11-NEXT:    s_load_b32 s44, s[0:1], 0x290
-; GFX11-NEXT:    s_load_b32 s45, s[0:1], 0x2a0
-; GFX11-NEXT:    s_load_b32 s46, s[0:1], 0x2b0
-; GFX11-NEXT:    s_load_b32 s47, s[0:1], 0x2c0
-; GFX11-NEXT:    s_load_b32 s48, s[0:1], 0x2d0
-; GFX11-NEXT:    s_load_b32 s49, s[0:1], 0x2e0
-; GFX11-NEXT:    s_load_b32 s50, s[0:1], 0x2f0
-; GFX11-NEXT:    s_load_b32 s51, s[0:1], 0x300
-; GFX11-NEXT:    s_load_b32 s52, s[0:1], 0x310
-; GFX11-NEXT:    s_load_b32 s53, s[0:1], 0x320
-; GFX11-NEXT:    s_load_b32 s54, s[0:1], 0x330
-; GFX11-NEXT:    s_load_b32 s55, s[0:1], 0x340
-; GFX11-NEXT:    s_load_b32 s56, s[0:1], 0x350
-; GFX11-NEXT:    s_load_b32 s57, s[0:1], 0x360
-; GFX11-NEXT:    s_load_b32 s58, s[0:1], 0x370
-; GFX11-NEXT:    s_load_b32 s59, s[0:1], 0x380
-; GFX11-NEXT:    s_load_b32 s60, s[0:1], 0x390
-; GFX11-NEXT:    s_load_b32 s61, s[0:1], 0x3a0
-; GFX11-NEXT:    s_load_b32 s62, s[0:1], 0x3b0
-; GFX11-NEXT:    s_load_b32 s63, s[0:1], 0x3c0
-; GFX11-NEXT:    s_load_b32 s64, s[0:1], 0x3d0
-; GFX11-NEXT:    s_load_b32 s65, s[0:1], 0x3e0
-; GFX11-NEXT:    s_load_b32 s66, s[0:1], 0x3f0
+; GFX11-NEXT:    s_load_b32 s35, s[2:3], 0x200
+; GFX11-NEXT:    s_load_b32 s36, s[2:3], 0x210
+; GFX11-NEXT:    s_load_b32 s37, s[2:3], 0x220
+; GFX11-NEXT:    s_load_b32 s38, s[2:3], 0x230
+; GFX11-NEXT:    s_load_b32 s39, s[2:3], 0x240
+; GFX11-NEXT:    s_load_b32 s40, s[2:3], 0x250
+; GFX11-NEXT:    s_load_b32 s41, s[2:3], 0x260
+; GFX11-NEXT:    s_load_b32 s42, s[2:3], 0x270
+; GFX11-NEXT:    s_load_b32 s43, s[2:3], 0x280
+; GFX11-NEXT:    s_load_b32 s44, s[2:3], 0x290
+; GFX11-NEXT:    s_load_b32 s45, s[2:3], 0x2a0
+; GFX11-NEXT:    s_load_b32 s46, s[2:3], 0x2b0
+; GFX11-NEXT:    s_load_b32 s47, s[2:3], 0x2c0
+; GFX11-NEXT:    s_load_b32 s48, s[2:3], 0x2d0
+; GFX11-NEXT:    s_load_b32 s49, s[2:3], 0x2e0
+; GFX11-NEXT:    s_load_b32 s50, s[2:3], 0x2f0
+; GFX11-NEXT:    s_load_b32 s51, s[2:3], 0x300
+; GFX11-NEXT:    s_load_b32 s52, s[2:3], 0x310
+; GFX11-NEXT:    s_load_b32 s53, s[2:3], 0x320
+; GFX11-NEXT:    s_load_b32 s54, s[2:3], 0x330
+; GFX11-NEXT:    s_load_b32 s55, s[2:3], 0x340
+; GFX11-NEXT:    s_load_b32 s56, s[2:3], 0x350
+; GFX11-NEXT:    s_load_b32 s57, s[2:3], 0x360
+; GFX11-NEXT:    s_load_b32 s58, s[2:3], 0x370
+; GFX11-NEXT:    s_load_b32 s59, s[2:3], 0x380
+; GFX11-NEXT:    s_load_b32 s60, s[2:3], 0x390
+; GFX11-NEXT:    s_load_b32 s61, s[2:3], 0x3a0
+; GFX11-NEXT:    s_load_b32 s62, s[2:3], 0x3b0
+; GFX11-NEXT:    s_load_b32 s63, s[2:3], 0x3c0
+; GFX11-NEXT:    s_load_b32 s64, s[2:3], 0x3d0
+; GFX11-NEXT:    s_load_b32 s65, s[2:3], 0x3e0
+; GFX11-NEXT:    s_load_b32 s66, s[2:3], 0x3f0
 ; GFX11-NEXT:    s_clause 0x1
-; GFX11-NEXT:    s_load_b32 s67, s[0:1], 0x400
-; GFX11-NEXT:    s_load_b32 s0, s[0:1], 0x410
+; GFX11-NEXT:    s_load_b32 s67, s[2:3], 0x400
+; GFX11-NEXT:    s_load_b32 s2, s[2:3], 0x410
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    ;;#ASMSTART
-; GFX11-NEXT:    ; use s2
+; GFX11-NEXT:    ; use s0
 ; GFX11-NEXT:    ;;#ASMEND
 ; GFX11-NEXT:    ;;#ASMSTART
-; GFX11-NEXT:    ; use s3
+; GFX11-NEXT:    ; use s1
 ; GFX11-NEXT:    ;;#ASMEND
 ; GFX11-NEXT:    ;;#ASMSTART
 ; GFX11-NEXT:    ; use s4
@@ -938,89 +938,89 @@ define amdgpu_kernel void @long_load_chain(ptr addrspace(1) %p) {
 ; GFX11-NEXT:    ; use s67
 ; GFX11-NEXT:    ;;#ASMEND
 ; GFX11-NEXT:    ;;#ASMSTART
-; GFX11-NEXT:    ; use s0
+; GFX11-NEXT:    ; use s2
 ; GFX11-NEXT:    ;;#ASMEND
 ; GFX11-NEXT:    s_endpgm
 ;
 ; GFX12-LABEL: long_load_chain:
 ; GFX12:       ; %bb.0:
-; GFX12-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX12-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    s_clause 0x1f
-; GFX12-NEXT:    s_load_b32 s2, s[0:1], 0x0
-; GFX12-NEXT:    s_load_b32 s3, s[0:1], 0x10
-; GFX12-NEXT:    s_load_b32 s4, s[0:1], 0x20
-; GFX12-NEXT:    s_load_b32 s5, s[0:1], 0x30
-; GFX12-NEXT:    s_load_b32 s6, s[0:1], 0x40
-; GFX12-NEXT:    s_load_b32 s7, s[0:1], 0x50
-; GFX12-NEXT:    s_load_b32 s8, s[0:1], 0x60
-; GFX12-NEXT:    s_load_b32 s9, s[0:1], 0x70
-; GFX12-NEXT:    s_load_b32 s10, s[0:1], 0x80
-; GFX12-NEXT:    s_load_b32 s11, s[0:1], 0x90
-; GFX12-NEXT:    s_load_b32 s12, s[0:1], 0xa0
-; GFX12-NEXT:    s_load_b32 s13, s[0:1], 0xb0
-; GFX12-NEXT:    s_load_b32 s14, s[0:1], 0xc0
-; GFX12-NEXT:    s_load_b32 s15, s[0:1], 0xd0
-; GFX12-NEXT:    s_load_b32 s16, s[0:1], 0xe0
-; GFX12-NEXT:    s_load_b32 s17, s[0:1], 0xf0
-; GFX12-NEXT:    s_load_b32 s18, s[0:1], 0x100
-; GFX12-NEXT:    s_load_b32 s19, s[0:1], 0x110
-; GFX12-NEXT:    s_load_b32 s20, s[0:1], 0x120
-; GFX12-NEXT:    s_load_b32 s21, s[0:1], 0x130
-; GFX12-NEXT:    s_load_b32 s22, s[0:1], 0x140
-; GFX12-NEXT:    s_load_b32 s23, s[0:1], 0x150
-; GFX12-NEXT:    s_load_b32 s24, s[0:1], 0x160
-; GFX12-NEXT:    s_load_b32 s25, s[0:1], 0x170
-; GFX12-NEXT:    s_load_b32 s26, s[0:1], 0x180
-; GFX12-NEXT:    s_load_b32 s27, s[0:1], 0x190
-; GFX12-NEXT:    s_load_b32 s28, s[0:1], 0x1a0
-; GFX12-NEXT:    s_load_b32 s29, s[0:1], 0x1b0
-; GFX12-NEXT:    s_load_b32 s30, s[0:1], 0x1c0
-; GFX12-NEXT:    s_load_b32 s31, s[0:1], 0x1d0
-; GFX12-NEXT:    s_load_b32 s33, s[0:1], 0x1e0
-; GFX12-NEXT:    s_load_b32 s34, s[0:1], 0x1f0
+; GFX12-NEXT:    s_load_b32 s0, s[2:3], 0x0
+; GFX12-NEXT:    s_load_b32 s1, s[2:3], 0x10
+; GFX12-NEXT:    s_load_b32 s4, s[2:3], 0x20
+; GFX12-NEXT:    s_load_b32 s5, s[2:3], 0x30
+; GFX12-NEXT:    s_load_b32 s6, s[2:3], 0x40
+; GFX12-NEXT:    s_load_b32 s7, s[2:3], 0x50
+; GFX12-NEXT:    s_load_b32 s8, s[2:3], 0x60
+; GFX12-NEXT:    s_load_b32 s9, s[2:3], 0x70
+; GFX12-NEXT:    s_load_b32 s10, s[2:3], 0x80
+; GFX12-NEXT:    s_load_b32 s11, s[2:3], 0x90
+; GFX12-NEXT:    s_load_b32 s12, s[2:3], 0xa0
+; GFX12-NEXT:    s_load_b32 s13, s[2:3], 0xb0
+; GFX12-NEXT:    s_load_b32 s14, s[2:3], 0xc0
+; GFX12-NEXT:    s_load_b32 s15, s[2:3], 0xd0
+; GFX12-NEXT:    s_load_b32 s16, s[2:3], 0xe0
+; GFX12-NEXT:    s_load_b32 s17, s[2:3], 0xf0
+; GFX12-NEXT:    s_load_b32 s18, s[2:3], 0x100
+; GFX12-NEXT:    s_load_b32 s19, s[2:3], 0x110
+; GFX12-NEXT:    s_load_b32 s20, s[2:3], 0x120
+; GFX12-NEXT:    s_load_b32 s21, s[2:3], 0x130
+; GFX12-NEXT:    s_load_b32 s22, s[2:3], 0x140
+; GFX12-NEXT:    s_load_b32 s23, s[2:3], 0x150
+; GFX12-NEXT:    s_load_b32 s24, s[2:3], 0x160
+; GFX12-NEXT:    s_load_b32 s25, s[2:3], 0x170
+; GFX12-NEXT:    s_load_b32 s26, s[2:3], 0x180
+; GFX12-NEXT:    s_load_b32 s27, s[2:3], 0x190
+; GFX12-NEXT:    s_load_b32 s28, s[2:3], 0x1a0
+; GFX12-NEXT:    s_load_b32 s29, s[2:3], 0x1b0
+; GFX12-NEXT:    s_load_b32 s30, s[2:3], 0x1c0
+; GFX12-NEXT:    s_load_b32 s31, s[2:3], 0x1d0
+; GFX12-NEXT:    s_load_b32 s33, s[2:3], 0x1e0
+; GFX12-NEXT:    s_load_b32 s34, s[2:3], 0x1f0
 ; GFX12-NEXT:    s_clause 0x1f
-; GFX12-NEXT:    s_load_b32 s35, s[0:1], 0x200
-; GFX12-NEXT:    s_load_b32 s36, s[0:1], 0x210
-; GFX12-NEXT:    s_load_b32 s37, s[0:1], 0x220
-; GFX12-NEXT:    s_load_b32 s38, s[0:1], 0x230
-; GFX12-NEXT:    s_load_b32 s39, s[0:1], 0x240
-; GFX12-NEXT:    s_load_b32 s40, s[0:1], 0x250
-; GFX12-NEXT:    s_load_b32 s41, s[0:1], 0x260
-; GFX12-NEXT:    s_load_b32 s42, s[0:1], 0x270
-; GFX12-NEXT:    s_load_b32 s43, s[0:1], 0x280
-; GFX12-NEXT:    s_load_b32 s44, s[0:1], 0x290
-; GFX12-NEXT:    s_load_b32 s45, s[0:1], 0x2a0
-; GFX12-NEXT:    s_load_b32 s46, s[0:1], 0x2b0
-; GFX12-NEXT:    s_load_b32 s47, s[0:1], 0x2c0
-; GFX12-NEXT:    s_load_b32 s48, s[0:1], 0x2d0
-; GFX12-NEXT:    s_load_b32 s49, s[0:1], 0x2e0
-; GFX12-NEXT:    s_load_b32 s50, s[0:1], 0x2f0
-; GFX12-NEXT:    s_load_b32 s51, s[0:1], 0x300
-; GFX12-NEXT:    s_load_b32 s52, s[0:1], 0x310
-; GFX12-NEXT:    s_load_b32 s53, s[0:1], 0x320
-; GFX12-NEXT:    s_load_b32 s54, s[0:1], 0x330
-; GFX12-NEXT:    s_load_b32 s55, s[0:1], 0x340
-; GFX12-NEXT:    s_load_b32 s56, s[0:1], 0x350
-; GFX12-NEXT:    s_load_b32 s57, s[0:1], 0x360
-; GFX12-NEXT:    s_load_b32 s58, s[0:1], 0x370
-; GFX12-NEXT:    s_load_b32 s59, s[0:1], 0x380
-; GFX12-NEXT:    s_load_b32 s60, s[0:1], 0x390
-; GFX12-NEXT:    s_load_b32 s61, s[0:1], 0x3a0
-; GFX12-NEXT:    s_load_b32 s62, s[0:1], 0x3b0
-; GFX12-NEXT:    s_load_b32 s63, s[0:1], 0x3c0
-; GFX12-NEXT:    s_load_b32 s64, s[0:1], 0x3d0
-; GFX12-NEXT:    s_load_b32 s65, s[0:1], 0x3e0
-; GFX12-NEXT:    s_load_b32 s66, s[0:1], 0x3f0
+; GFX12-NEXT:    s_load_b32 s35, s[2:3], 0x200
+; GFX12-NEXT:    s_load_b32 s36, s[2:3], 0x210
+; GFX12-NEXT:    s_load_b32 s37, s[2:3], 0x220
+; GFX12-NEXT:    s_load_b32 s38, s[2:3], 0x230
+; GFX12-NEXT:    s_load_b32 s39, s[2:3], 0x240
+; GFX12-NEXT:    s_load_b32 s40, s[2:3], 0x250
+; GFX12-NEXT:    s_load_b32 s41, s[2:3], 0x260
+; GFX12-NEXT:    s_load_b32 s42, s[2:3], 0x270
+; GFX12-NEXT:    s_load_b32 s43, s[2:3], 0x280
+; GFX12-NEXT:    s_load_b32 s44, s[2:3], 0x290
+; GFX12-NEXT:    s_load_b32 s45, s[2:3], 0x2a0
+; GFX12-NEXT:    s_load_b32 s46, s[2:3], 0x2b0
+; GFX12-NEXT:    s_load_b32 s47, s[2:3], 0x2c0
+; GFX12-NEXT:    s_load_b32 s48, s[2:3], 0x2d0
+; GFX12-NEXT:    s_load_b32 s49, s[2:3], 0x2e0
+; GFX12-NEXT:    s_load_b32 s50, s[2:3], 0x2f0
+; GFX12-NEXT:    s_load_b32 s51, s[2:3], 0x300
+; GFX12-NEXT:    s_load_b32 s52, s[2:3], 0x310
+; GFX12-NEXT:    s_load_b32 s53, s[2:3], 0x320
+; GFX12-NEXT:    s_load_b32 s54, s[2:3], 0x330
+; GFX12-NEXT:    s_load_b32 s55, s[2:3], 0x340
+; GFX12-NEXT:    s_load_b32 s56, s[2:3], 0x350
+; GFX12-NEXT:    s_load_b32 s57, s[2:3], 0x360
+; GFX12-NEXT:    s_load_b32 s58, s[2:3], 0x370
+; GFX12-NEXT:    s_load_b32 s59, s[2:3], 0x380
+; GFX12-NEXT:    s_load_b32 s60, s[2:3], 0x390
+; GFX12-NEXT:    s_load_b32 s61, s[2:3], 0x3a0
+; GFX12-NEXT:    s_load_b32 s62, s[2:3], 0x3b0
+; GFX12-NEXT:    s_load_b32 s63, s[2:3], 0x3c0
+; GFX12-NEXT:    s_load_b32 s64, s[2:3], 0x3d0
+; GFX12-NEXT:    s_load_b32 s65, s[2:3], 0x3e0
+; GFX12-NEXT:    s_load_b32 s66, s[2:3], 0x3f0
 ; GFX12-NEXT:    s_clause 0x1
-; GFX12-NEXT:    s_load_b32 s67, s[0:1], 0x400
-; GFX12-NEXT:    s_load_b32 s0, s[0:1], 0x410
+; GFX12-NEXT:    s_load_b32 s67, s[2:3], 0x400
+; GFX12-NEXT:    s_load_b32 s2, s[2:3], 0x410
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    ;;#ASMSTART
-; GFX12-NEXT:    ; use s2
+; GFX12-NEXT:    ; use s0
 ; GFX12-NEXT:    ;;#ASMEND
 ; GFX12-NEXT:    ;;#ASMSTART
-; GFX12-NEXT:    ; use s3
+; GFX12-NEXT:    ; use s1
 ; GFX12-NEXT:    ;;#ASMEND
 ; GFX12-NEXT:    ;;#ASMSTART
 ; GFX12-NEXT:    ; use s4
@@ -1212,7 +1212,7 @@ define amdgpu_kernel void @long_load_chain(ptr addrspace(1) %p) {
 ; GFX12-NEXT:    ; use s67
 ; GFX12-NEXT:    ;;#ASMEND
 ; GFX12-NEXT:    ;;#ASMSTART
-; GFX12-NEXT:    ; use s0
+; GFX12-NEXT:    ; use s2
 ; GFX12-NEXT:    ;;#ASMEND
 ; GFX12-NEXT:    s_endpgm
   %v0 = load i32, ptr addrspace(1) %p
