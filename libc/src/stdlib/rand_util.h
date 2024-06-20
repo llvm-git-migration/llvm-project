@@ -34,7 +34,7 @@ public:
 
 extern ThreadLocal<unsigned long> rand_next;
 #else
-extern LIBC_THREAD_LOCAL unsigned long rand_next;
+extern unsigned long rand_next;
 #endif
 
 } // namespace LIBC_NAMESPACE

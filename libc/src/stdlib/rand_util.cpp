@@ -18,7 +18,7 @@ ThreadLocal<unsigned long> rand_next;
 #else
 // C standard 7.10p2: If 'rand' is called before 'srand' it is to proceed as if
 // the 'srand' function was called with a value of '1'.
-LIBC_THREAD_LOCAL unsigned long rand_next = 1;
+unsigned long rand_next = 1;
 #endif
 
 } // namespace LIBC_NAMESPACE
