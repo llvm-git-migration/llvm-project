@@ -24,17 +24,17 @@ define amdgpu_kernel void @test_umul24_i32(ptr addrspace(1) %out, i32 %a, i32 %b
 ;
 ; VI-LABEL: test_umul24_i32:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_mov_b32 s0, s4
-; VI-NEXT:    s_mov_b32 s1, s5
-; VI-NEXT:    s_and_b32 s4, s6, 0xffffff
-; VI-NEXT:    s_and_b32 s5, s7, 0xffffff
-; VI-NEXT:    s_mul_i32 s4, s4, s5
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    s_mov_b32 s4, s0
+; VI-NEXT:    s_mov_b32 s5, s1
+; VI-NEXT:    s_and_b32 s0, s2, 0xffffff
+; VI-NEXT:    s_and_b32 s1, s3, 0xffffff
+; VI-NEXT:    s_mul_i32 s0, s0, s1
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; GFX9-LABEL: test_umul24_i32:
@@ -392,15 +392,15 @@ define amdgpu_kernel void @test_umulhi24_i32_i64(ptr addrspace(1) %out, i32 %a, 
 ;
 ; VI-LABEL: test_umulhi24_i32_i64:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v0, s7
-; VI-NEXT:    s_mov_b32 s0, s4
-; VI-NEXT:    s_mov_b32 s1, s5
-; VI-NEXT:    v_mul_hi_u32_u24_e32 v0, s6, v0
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    v_mov_b32_e32 v0, s3
+; VI-NEXT:    s_mov_b32 s4, s0
+; VI-NEXT:    s_mov_b32 s5, s1
+; VI-NEXT:    v_mul_hi_u32_u24_e32 v0, s2, v0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; GFX9-LABEL: test_umulhi24_i32_i64:
@@ -647,18 +647,18 @@ define amdgpu_kernel void @test_umulhi16_i32(ptr addrspace(1) %out, i32 %a, i32 
 ;
 ; VI-LABEL: test_umulhi16_i32:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_mov_b32 s0, s4
-; VI-NEXT:    s_mov_b32 s1, s5
-; VI-NEXT:    s_and_b32 s4, s6, 0xffff
-; VI-NEXT:    s_and_b32 s5, s7, 0xffff
-; VI-NEXT:    s_mul_i32 s4, s4, s5
-; VI-NEXT:    s_lshr_b32 s4, s4, 16
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_short v0, off, s[0:3], 0
+; VI-NEXT:    s_mov_b32 s4, s0
+; VI-NEXT:    s_mov_b32 s5, s1
+; VI-NEXT:    s_and_b32 s0, s2, 0xffff
+; VI-NEXT:    s_and_b32 s1, s3, 0xffff
+; VI-NEXT:    s_mul_i32 s0, s0, s1
+; VI-NEXT:    s_lshr_b32 s0, s0, 16
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_short v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; GFX9-LABEL: test_umulhi16_i32:

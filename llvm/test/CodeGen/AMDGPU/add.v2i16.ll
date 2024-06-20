@@ -226,18 +226,18 @@ define amdgpu_kernel void @s_test_add_self_v2i16(ptr addrspace(1) %out, ptr addr
 define amdgpu_kernel void @s_test_add_v2i16_kernarg(ptr addrspace(1) %out, <2 x i16> %a, <2 x i16> %b) #1 {
 ; VI-LABEL: s_test_add_v2i16_kernarg:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_lshr_b32 s0, s6, 16
-; VI-NEXT:    s_lshr_b32 s1, s7, 16
-; VI-NEXT:    s_add_i32 s2, s6, s7
-; VI-NEXT:    s_add_i32 s0, s0, s1
-; VI-NEXT:    s_and_b32 s1, s2, 0xffff
-; VI-NEXT:    s_lshl_b32 s0, s0, 16
-; VI-NEXT:    s_or_b32 s0, s1, s0
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    v_mov_b32_e32 v1, s5
-; VI-NEXT:    v_mov_b32_e32 v2, s0
+; VI-NEXT:    s_lshr_b32 s4, s2, 16
+; VI-NEXT:    s_lshr_b32 s5, s3, 16
+; VI-NEXT:    s_add_i32 s2, s2, s3
+; VI-NEXT:    s_add_i32 s4, s4, s5
+; VI-NEXT:    s_and_b32 s2, s2, 0xffff
+; VI-NEXT:    s_lshl_b32 s3, s4, 16
+; VI-NEXT:    s_or_b32 s2, s2, s3
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    v_mov_b32_e32 v1, s1
+; VI-NEXT:    v_mov_b32_e32 v2, s2
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm
 ;
@@ -262,11 +262,11 @@ define amdgpu_kernel void @s_test_add_v2i16_kernarg(ptr addrspace(1) %out, <2 x 
 ;
 ; GFX11-LABEL: s_test_add_v2i16_kernarg:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_pk_add_u16 v1, s6, s7
-; GFX11-NEXT:    global_store_b32 v0, v1, s[4:5]
+; GFX11-NEXT:    v_pk_add_u16 v1, s2, s3
+; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
