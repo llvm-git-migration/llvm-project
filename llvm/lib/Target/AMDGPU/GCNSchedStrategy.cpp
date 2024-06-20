@@ -1669,6 +1669,9 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
     MachineInstr *MI = Entry.first;
     MachineInstr *OldMI = Entry.second;
 
+    // Remove OldMI from BBLiveInMap since we are sinking it from its MBB.
+    DAG.BBLiveInMap.erase(OldMI);
+
     // Remove OldMI and update LIS
     Register Reg = MI->getOperand(0).getReg();
     LIS->RemoveMachineInstrFromMaps(*OldMI);
@@ -1685,8 +1688,6 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
   }
   DAG.Regions = NewRegions;
   DAG.RescheduleRegions = NewRescheduleRegions;
-
-  DAG.BBLiveInMap = DAG.getBBLiveInMap();
 
   if (GCNTrackers)
     DAG.RegionLiveOuts.buildLiveRegMap();
