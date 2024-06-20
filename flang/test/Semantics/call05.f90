@@ -123,9 +123,9 @@ end module
 
 module m2
 
-  !ERROR: Procedure 't3' may not be ALLOCATABLE without an explicit interface
-  character(len=10), allocatable :: t1, t2, t3, t4
-  !ERROR: Procedure 't6' may not be ALLOCATABLE without an explicit interface
+  external t9
+  !ERROR: Procedure 't9' may not be ALLOCATABLE
+  character(len=10), allocatable :: t1, t2, t3, t4, t9
   character(len=:), allocatable :: t5, t6, t7, t8(:)
 
   character(len=10), pointer :: p1
