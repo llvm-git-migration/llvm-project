@@ -211,6 +211,9 @@ struct Configuration {
   bool csProfileGenerate = false;
   llvm::StringRef csProfilePath;
   bool pgoWarnMismatch;
+  llvm::StringRef profileGuidedFunctionOrderPath;
+  bool functionOrderForCompression;
+  bool dataOrderForCompression;
 
   bool callGraphProfileSort = false;
   llvm::StringRef printSymbolOrder;
