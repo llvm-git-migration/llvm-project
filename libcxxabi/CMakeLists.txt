@@ -247,6 +247,10 @@ endif()
 add_compile_flags("${LIBCXXABI_ADDITIONAL_COMPILE_FLAGS}")
 add_library_flags("${LIBCXXABI_ADDITIONAL_LIBRARIES}")
 
+# Build with -fsized-deallocation, which is default in recent versions of Clang.
+# TODO(LLVM 21): This can be dropped once we only support Clang >= 19.
+add_compile_flags(-fsized-deallocation)
+
 # Configure compiler. Must happen after setting the target flags.
 include(config-ix)
 
