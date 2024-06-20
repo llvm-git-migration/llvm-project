@@ -277,53 +277,53 @@ define amdgpu_kernel void @build_v2i32_from_v4i16_shuffle(ptr addrspace(1) %out,
 ;
 ; GFX8-LABEL: build_v2i32_from_v4i16_shuffle:
 ; GFX8:       ; %bb.0: ; %entry
-; GFX8-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX8-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX8-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8-NEXT:    s_lshl_b32 s3, s3, 16
-; GFX8-NEXT:    s_lshl_b32 s2, s2, 16
-; GFX8-NEXT:    v_mov_b32_e32 v3, s1
-; GFX8-NEXT:    v_mov_b32_e32 v0, s2
-; GFX8-NEXT:    v_mov_b32_e32 v1, s3
-; GFX8-NEXT:    v_mov_b32_e32 v2, s0
+; GFX8-NEXT:    s_lshl_b32 s0, s7, 16
+; GFX8-NEXT:    s_lshl_b32 s1, s6, 16
+; GFX8-NEXT:    v_mov_b32_e32 v2, s4
+; GFX8-NEXT:    v_mov_b32_e32 v0, s1
+; GFX8-NEXT:    v_mov_b32_e32 v1, s0
+; GFX8-NEXT:    v_mov_b32_e32 v3, s5
 ; GFX8-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; GFX8-NEXT:    s_endpgm
 ;
 ; GFX10-LABEL: build_v2i32_from_v4i16_shuffle:
 ; GFX10:       ; %bb.0: ; %entry
-; GFX10-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX10-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX10-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-NEXT:    s_lshl_b32 s2, s2, 16
-; GFX10-NEXT:    s_lshl_b32 s3, s3, 16
-; GFX10-NEXT:    v_mov_b32_e32 v0, s2
-; GFX10-NEXT:    v_mov_b32_e32 v1, s3
-; GFX10-NEXT:    global_store_dwordx2 v2, v[0:1], s[0:1]
+; GFX10-NEXT:    s_lshl_b32 s0, s6, 16
+; GFX10-NEXT:    s_lshl_b32 s1, s7, 16
+; GFX10-NEXT:    v_mov_b32_e32 v0, s0
+; GFX10-NEXT:    v_mov_b32_e32 v1, s1
+; GFX10-NEXT:    global_store_dwordx2 v2, v[0:1], s[4:5]
 ; GFX10-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: build_v2i32_from_v4i16_shuffle:
 ; GFX11:       ; %bb.0: ; %entry
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x0
 ; GFX11-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    s_lshl_b32 s2, s2, 16
-; GFX11-NEXT:    s_lshl_b32 s3, s3, 16
-; GFX11-NEXT:    v_mov_b32_e32 v0, s2
-; GFX11-NEXT:    v_mov_b32_e32 v1, s3
-; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[0:1]
+; GFX11-NEXT:    s_lshl_b32 s0, s6, 16
+; GFX11-NEXT:    s_lshl_b32 s1, s7, 16
+; GFX11-NEXT:    v_mov_b32_e32 v0, s0
+; GFX11-NEXT:    v_mov_b32_e32 v1, s1
+; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
 ;
 ; GFX940-LABEL: build_v2i32_from_v4i16_shuffle:
 ; GFX940:       ; %bb.0: ; %entry
-; GFX940-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX940-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX940-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX940-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NEXT:    s_lshl_b32 s3, s3, 16
-; GFX940-NEXT:    s_lshl_b32 s2, s2, 16
-; GFX940-NEXT:    v_mov_b32_e32 v0, s2
-; GFX940-NEXT:    v_mov_b32_e32 v1, s3
-; GFX940-NEXT:    global_store_dwordx2 v2, v[0:1], s[0:1] sc0 sc1
+; GFX940-NEXT:    s_lshl_b32 s0, s7, 16
+; GFX940-NEXT:    s_lshl_b32 s1, s6, 16
+; GFX940-NEXT:    v_mov_b32_e32 v0, s1
+; GFX940-NEXT:    v_mov_b32_e32 v1, s0
+; GFX940-NEXT:    global_store_dwordx2 v2, v[0:1], s[4:5] sc0 sc1
 ; GFX940-NEXT:    s_endpgm
 entry:
   %shuf = shufflevector <4 x i16> %in, <4 x i16> zeroinitializer, <2 x i32> <i32 0, i32 2>

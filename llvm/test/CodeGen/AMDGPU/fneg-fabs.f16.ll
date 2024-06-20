@@ -447,14 +447,14 @@ define amdgpu_kernel void @fneg_fabs_v4f16(ptr addrspace(1) %out, <4 x half> %in
 ;
 ; GFX11-LABEL: fneg_fabs_v4f16:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    s_or_b32 s2, s2, 0x80008000
-; GFX11-NEXT:    s_or_b32 s3, s3, 0x80008000
+; GFX11-NEXT:    s_or_b32 s0, s6, 0x80008000
+; GFX11-NEXT:    s_or_b32 s1, s7, 0x80008000
 ; GFX11-NEXT:    s_delay_alu instid0(SALU_CYCLE_1)
-; GFX11-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s3
-; GFX11-NEXT:    v_mov_b32_e32 v0, s2
-; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[0:1]
+; GFX11-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s1
+; GFX11-NEXT:    v_mov_b32_e32 v0, s0
+; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

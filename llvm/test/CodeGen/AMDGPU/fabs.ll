@@ -113,14 +113,14 @@ define amdgpu_kernel void @fabs_v2f32(ptr addrspace(1) %out, <2 x float> %in) {
 ;
 ; VI-LABEL: fabs_v2f32:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_bitset0_b32 s3, 31
-; VI-NEXT:    s_bitset0_b32 s2, 31
-; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_mov_b32_e32 v0, s2
-; VI-NEXT:    v_mov_b32_e32 v1, s3
-; VI-NEXT:    v_mov_b32_e32 v2, s0
+; VI-NEXT:    s_and_b32 s0, s7, 0x7fffffff
+; VI-NEXT:    s_and_b32 s1, s6, 0x7fffffff
+; VI-NEXT:    v_mov_b32_e32 v2, s4
+; VI-NEXT:    v_mov_b32_e32 v0, s1
+; VI-NEXT:    v_mov_b32_e32 v1, s0
+; VI-NEXT:    v_mov_b32_e32 v3, s5
 ; VI-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; VI-NEXT:    s_endpgm
   %fabs = call <2 x float> @llvm.fabs.v2f32(<2 x float> %in)
@@ -185,12 +185,12 @@ define amdgpu_kernel void @fabsf_fn_fold(ptr addrspace(1) %out, float %in0, floa
 ;
 ; VI-LABEL: fabsf_fn_fold:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[2:3], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[2:3], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v0, s3
-; VI-NEXT:    v_mul_f32_e64 v2, |s2|, v0
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_mov_b32_e32 v1, s1
+; VI-NEXT:    v_mov_b32_e32 v0, s7
+; VI-NEXT:    v_mul_f32_e64 v2, |s6|, v0
+; VI-NEXT:    v_mov_b32_e32 v0, s4
+; VI-NEXT:    v_mov_b32_e32 v1, s5
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm
   %fabs = call float @fabsf(float %in0)
@@ -215,12 +215,12 @@ define amdgpu_kernel void @fabs_fold(ptr addrspace(1) %out, float %in0, float %i
 ;
 ; VI-LABEL: fabs_fold:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v0, s3
-; VI-NEXT:    v_mul_f32_e64 v2, |s2|, v0
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_mov_b32_e32 v1, s1
+; VI-NEXT:    v_mov_b32_e32 v0, s7
+; VI-NEXT:    v_mul_f32_e64 v2, |s6|, v0
+; VI-NEXT:    v_mov_b32_e32 v0, s4
+; VI-NEXT:    v_mov_b32_e32 v1, s5
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm
   %fabs = call float @llvm.fabs.f32(float %in0)

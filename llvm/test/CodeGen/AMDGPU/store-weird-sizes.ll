@@ -208,11 +208,11 @@ define amdgpu_kernel void @local_store_i48(ptr addrspace(3) %ptr, i48 %arg) #0 {
 ; GFX11-LABEL: local_store_i48:
 ; GFX11:       ; %bb.0:
 ; GFX11-NEXT:    s_clause 0x1
-; GFX11-NEXT:    s_load_b32 s2, s[0:1], 0x0
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x8
+; GFX11-NEXT:    s_load_b32 s4, s[0:1], 0x0
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x8
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s1
-; GFX11-NEXT:    v_mov_b32_e32 v2, s0
+; GFX11-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s3
+; GFX11-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX11-NEXT:    ds_store_b16 v0, v1 offset:4
 ; GFX11-NEXT:    ds_store_b32 v0, v2
 ; GFX11-NEXT:    s_endpgm

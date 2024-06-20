@@ -15,47 +15,47 @@ declare half @llvm.fabs.f16(half) #0
 define amdgpu_kernel void @v_fcmp_f32_oeq_with_fabs(ptr addrspace(1) %out, float %src, float %a) {
 ; SDAG-GFX11-LABEL: v_fcmp_f32_oeq_with_fabs:
 ; SDAG-GFX11:       ; %bb.0:
-; SDAG-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; SDAG-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; SDAG-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; SDAG-GFX11-NEXT:    v_cmp_eq_f32_e64 s2, s2, |s3|
+; SDAG-GFX11-NEXT:    v_cmp_eq_f32_e64 s0, s6, |s7|
 ; SDAG-GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; SDAG-GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; SDAG-GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
+; SDAG-GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s0
+; SDAG-GFX11-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; SDAG-GFX11-NEXT:    s_nop 0
 ; SDAG-GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; SDAG-GFX11-NEXT:    s_endpgm
 ;
 ; SDAG-GFX10-LABEL: v_fcmp_f32_oeq_with_fabs:
 ; SDAG-GFX10:       ; %bb.0:
-; SDAG-GFX10-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; SDAG-GFX10-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; SDAG-GFX10-NEXT:    v_mov_b32_e32 v0, 0
 ; SDAG-GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; SDAG-GFX10-NEXT:    v_cmp_eq_f32_e64 s2, s2, |s3|
-; SDAG-GFX10-NEXT:    v_mov_b32_e32 v1, s2
-; SDAG-GFX10-NEXT:    global_store_dword v0, v1, s[0:1]
+; SDAG-GFX10-NEXT:    v_cmp_eq_f32_e64 s0, s6, |s7|
+; SDAG-GFX10-NEXT:    v_mov_b32_e32 v1, s0
+; SDAG-GFX10-NEXT:    global_store_dword v0, v1, s[4:5]
 ; SDAG-GFX10-NEXT:    s_endpgm
 ;
 ; GISEL-GFX11-LABEL: v_fcmp_f32_oeq_with_fabs:
 ; GISEL-GFX11:       ; %bb.0:
-; GISEL-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GISEL-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GISEL-GFX11-NEXT:    v_mov_b32_e32 v1, 0
 ; GISEL-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GISEL-GFX11-NEXT:    v_cmp_eq_f32_e64 s2, s2, |s3|
+; GISEL-GFX11-NEXT:    v_cmp_eq_f32_e64 s0, s6, |s7|
 ; GISEL-GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; GISEL-GFX11-NEXT:    v_mov_b32_e32 v0, s2
-; GISEL-GFX11-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GISEL-GFX11-NEXT:    v_mov_b32_e32 v0, s0
+; GISEL-GFX11-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GISEL-GFX11-NEXT:    s_nop 0
 ; GISEL-GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GISEL-GFX11-NEXT:    s_endpgm
 ;
 ; GISEL-GFX10-LABEL: v_fcmp_f32_oeq_with_fabs:
 ; GISEL-GFX10:       ; %bb.0:
-; GISEL-GFX10-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GISEL-GFX10-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GISEL-GFX10-NEXT:    v_mov_b32_e32 v1, 0
 ; GISEL-GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; GISEL-GFX10-NEXT:    v_cmp_eq_f32_e64 s2, s2, |s3|
-; GISEL-GFX10-NEXT:    v_mov_b32_e32 v0, s2
-; GISEL-GFX10-NEXT:    global_store_dword v1, v0, s[0:1]
+; GISEL-GFX10-NEXT:    v_cmp_eq_f32_e64 s0, s6, |s7|
+; GISEL-GFX10-NEXT:    v_mov_b32_e32 v0, s0
+; GISEL-GFX10-NEXT:    global_store_dword v1, v0, s[4:5]
 ; GISEL-GFX10-NEXT:    s_endpgm
   %temp = call float @llvm.fabs.f32(float %a)
   %result = call i32 @llvm.amdgcn.fcmp.f32(float %src, float %temp, i32 1)
@@ -66,47 +66,47 @@ define amdgpu_kernel void @v_fcmp_f32_oeq_with_fabs(ptr addrspace(1) %out, float
 define amdgpu_kernel void @v_fcmp_f32_oeq_both_operands_with_fabs(ptr addrspace(1) %out, float %src, float %a) {
 ; SDAG-GFX11-LABEL: v_fcmp_f32_oeq_both_operands_with_fabs:
 ; SDAG-GFX11:       ; %bb.0:
-; SDAG-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; SDAG-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; SDAG-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; SDAG-GFX11-NEXT:    v_cmp_eq_f32_e64 s2, |s2|, |s3|
+; SDAG-GFX11-NEXT:    v_cmp_eq_f32_e64 s0, |s6|, |s7|
 ; SDAG-GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; SDAG-GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; SDAG-GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
+; SDAG-GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s0
+; SDAG-GFX11-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; SDAG-GFX11-NEXT:    s_nop 0
 ; SDAG-GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; SDAG-GFX11-NEXT:    s_endpgm
 ;
 ; SDAG-GFX10-LABEL: v_fcmp_f32_oeq_both_operands_with_fabs:
 ; SDAG-GFX10:       ; %bb.0:
-; SDAG-GFX10-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; SDAG-GFX10-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; SDAG-GFX10-NEXT:    v_mov_b32_e32 v0, 0
 ; SDAG-GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; SDAG-GFX10-NEXT:    v_cmp_eq_f32_e64 s2, |s2|, |s3|
-; SDAG-GFX10-NEXT:    v_mov_b32_e32 v1, s2
-; SDAG-GFX10-NEXT:    global_store_dword v0, v1, s[0:1]
+; SDAG-GFX10-NEXT:    v_cmp_eq_f32_e64 s0, |s6|, |s7|
+; SDAG-GFX10-NEXT:    v_mov_b32_e32 v1, s0
+; SDAG-GFX10-NEXT:    global_store_dword v0, v1, s[4:5]
 ; SDAG-GFX10-NEXT:    s_endpgm
 ;
 ; GISEL-GFX11-LABEL: v_fcmp_f32_oeq_both_operands_with_fabs:
 ; GISEL-GFX11:       ; %bb.0:
-; GISEL-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GISEL-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GISEL-GFX11-NEXT:    v_mov_b32_e32 v1, 0
 ; GISEL-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GISEL-GFX11-NEXT:    v_cmp_eq_f32_e64 s2, |s2|, |s3|
+; GISEL-GFX11-NEXT:    v_cmp_eq_f32_e64 s0, |s6|, |s7|
 ; GISEL-GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; GISEL-GFX11-NEXT:    v_mov_b32_e32 v0, s2
-; GISEL-GFX11-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GISEL-GFX11-NEXT:    v_mov_b32_e32 v0, s0
+; GISEL-GFX11-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GISEL-GFX11-NEXT:    s_nop 0
 ; GISEL-GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GISEL-GFX11-NEXT:    s_endpgm
 ;
 ; GISEL-GFX10-LABEL: v_fcmp_f32_oeq_both_operands_with_fabs:
 ; GISEL-GFX10:       ; %bb.0:
-; GISEL-GFX10-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GISEL-GFX10-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GISEL-GFX10-NEXT:    v_mov_b32_e32 v1, 0
 ; GISEL-GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; GISEL-GFX10-NEXT:    v_cmp_eq_f32_e64 s2, |s2|, |s3|
-; GISEL-GFX10-NEXT:    v_mov_b32_e32 v0, s2
-; GISEL-GFX10-NEXT:    global_store_dword v1, v0, s[0:1]
+; GISEL-GFX10-NEXT:    v_cmp_eq_f32_e64 s0, |s6|, |s7|
+; GISEL-GFX10-NEXT:    v_mov_b32_e32 v0, s0
+; GISEL-GFX10-NEXT:    global_store_dword v1, v0, s[4:5]
 ; GISEL-GFX10-NEXT:    s_endpgm
   %temp = call float @llvm.fabs.f32(float %a)
   %src_input = call float @llvm.fabs.f32(float %src)

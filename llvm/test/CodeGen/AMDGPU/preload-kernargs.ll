@@ -720,13 +720,13 @@ define amdgpu_kernel void @v8i32_kernel_preload_arg(ptr addrspace(1) nocapture %
 define amdgpu_kernel void @v3i16_kernel_preload_arg(ptr addrspace(1) nocapture %out, <3 x i16> %in) #0 {
 ; GFX940-NO-PRELOAD-LABEL: v3i16_kernel_preload_arg:
 ; GFX940-NO-PRELOAD:       ; %bb.0:
-; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX940-NO-PRELOAD-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s3
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s2
-; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[0:1] offset:4 sc0 sc1
-; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[0:1] sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s7
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s6
+; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[4:5] offset:4 sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[4:5] sc0 sc1
 ; GFX940-NO-PRELOAD-NEXT:    s_endpgm
 ;
 ; GFX940-PRELOAD-2-LABEL: v3i16_kernel_preload_arg:
@@ -934,13 +934,13 @@ define amdgpu_kernel void @v3f32_kernel_preload_arg(ptr addrspace(1) nocapture %
 define amdgpu_kernel void @v5i8_kernel_preload_arg(ptr addrspace(1) nocapture %out, <5 x i8> %in) #0 {
 ; GFX940-NO-PRELOAD-LABEL: v5i8_kernel_preload_arg:
 ; GFX940-NO-PRELOAD:       ; %bb.0:
-; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX940-NO-PRELOAD-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s3
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s2
-; GFX940-NO-PRELOAD-NEXT:    global_store_byte v0, v1, s[0:1] offset:4 sc0 sc1
-; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[0:1] sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s7
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s6
+; GFX940-NO-PRELOAD-NEXT:    global_store_byte v0, v1, s[4:5] offset:4 sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[4:5] sc0 sc1
 ; GFX940-NO-PRELOAD-NEXT:    s_endpgm
 ;
 ; GFX940-PRELOAD-2-LABEL: v5i8_kernel_preload_arg:
@@ -1172,11 +1172,11 @@ define amdgpu_kernel void @v5f64_kernel_preload_arg(ptr addrspace(1) nocapture %
 define amdgpu_kernel void @v8i8_kernel_preload_arg(ptr addrspace(1) %out, <8 x i8> %in) #0 {
 ; GFX940-NO-PRELOAD-LABEL: v8i8_kernel_preload_arg:
 ; GFX940-NO-PRELOAD:       ; %bb.0:
-; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX940-NO-PRELOAD-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b64_e32 v[0:1], s[2:3]
-; GFX940-NO-PRELOAD-NEXT:    global_store_dwordx2 v2, v[0:1], s[0:1] sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b64_e32 v[0:1], s[6:7]
+; GFX940-NO-PRELOAD-NEXT:    global_store_dwordx2 v2, v[0:1], s[4:5] sc0 sc1
 ; GFX940-NO-PRELOAD-NEXT:    s_endpgm
 ;
 ; GFX940-PRELOAD-2-LABEL: v8i8_kernel_preload_arg:
@@ -1592,13 +1592,13 @@ define amdgpu_kernel void @v2bfloat_kernel_preload_arg(ptr addrspace(1) %out, <2
 define amdgpu_kernel void @v3bfloat_kernel_preload_arg(ptr addrspace(1) %out, <3 x bfloat> %in) #0 {
 ; GFX940-NO-PRELOAD-LABEL: v3bfloat_kernel_preload_arg:
 ; GFX940-NO-PRELOAD:       ; %bb.0:
-; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX940-NO-PRELOAD-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s3
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s2
-; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[0:1] offset:4 sc0 sc1
-; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[0:1] sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s7
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s6
+; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[4:5] offset:4 sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[4:5] sc0 sc1
 ; GFX940-NO-PRELOAD-NEXT:    s_endpgm
 ;
 ; GFX940-PRELOAD-2-LABEL: v3bfloat_kernel_preload_arg:
@@ -1983,14 +1983,14 @@ define amdgpu_kernel void @fp128_kernel_preload_arg(ptr addrspace(1) %out, fp128
 define amdgpu_kernel void @v7i8_kernel_preload_arg(ptr addrspace(1) %out, <7 x i8> %in) #0 {
 ; GFX940-NO-PRELOAD-LABEL: v7i8_kernel_preload_arg:
 ; GFX940-NO-PRELOAD:       ; %bb.0:
-; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x0
+; GFX940-NO-PRELOAD-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x0
 ; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX940-NO-PRELOAD-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s3
-; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s2
-; GFX940-NO-PRELOAD-NEXT:    global_store_byte_d16_hi v0, v1, s[0:1] offset:6 sc0 sc1
-; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[0:1] offset:4 sc0 sc1
-; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[0:1] sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v1, s7
+; GFX940-NO-PRELOAD-NEXT:    v_mov_b32_e32 v2, s6
+; GFX940-NO-PRELOAD-NEXT:    global_store_byte_d16_hi v0, v1, s[4:5] offset:6 sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    global_store_short v0, v1, s[4:5] offset:4 sc0 sc1
+; GFX940-NO-PRELOAD-NEXT:    global_store_dword v0, v2, s[4:5] sc0 sc1
 ; GFX940-NO-PRELOAD-NEXT:    s_endpgm
 ;
 ; GFX940-PRELOAD-2-LABEL: v7i8_kernel_preload_arg:

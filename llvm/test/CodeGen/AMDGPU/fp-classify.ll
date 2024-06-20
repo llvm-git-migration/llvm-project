@@ -362,29 +362,29 @@ define amdgpu_kernel void @test_isfinite_not_pattern_2(ptr addrspace(1) nocaptur
 ;
 ; VI-LABEL: test_isfinite_not_pattern_2:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    v_mov_b32_e32 v0, 0x7f800000
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_cmp_o_f32_e64 s[4:5], s2, s2
-; VI-NEXT:    v_cmp_neq_f32_e64 s[2:3], |s3|, v0
-; VI-NEXT:    s_and_b64 s[2:3], s[4:5], s[2:3]
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_cndmask_b32_e64 v2, 0, 1, s[2:3]
-; VI-NEXT:    v_mov_b32_e32 v1, s1
+; VI-NEXT:    v_cmp_o_f32_e64 s[0:1], s6, s6
+; VI-NEXT:    v_cmp_neq_f32_e64 s[2:3], |s7|, v0
+; VI-NEXT:    s_and_b64 s[0:1], s[0:1], s[2:3]
+; VI-NEXT:    v_mov_b32_e32 v0, s4
+; VI-NEXT:    v_cndmask_b32_e64 v2, 0, 1, s[0:1]
+; VI-NEXT:    v_mov_b32_e32 v1, s5
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: test_isfinite_not_pattern_2:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_cmp_o_f32_e64 s2, s2, s2
-; GFX11-NEXT:    v_cmp_neq_f32_e64 s3, 0x7f800000, |s3|
+; GFX11-NEXT:    v_cmp_o_f32_e64 s0, s6, s6
+; GFX11-NEXT:    v_cmp_neq_f32_e64 s1, 0x7f800000, |s7|
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
-; GFX11-NEXT:    s_and_b32 s2, s2, s3
-; GFX11-NEXT:    v_cndmask_b32_e64 v1, 0, 1, s2
-; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11-NEXT:    s_and_b32 s0, s0, s1
+; GFX11-NEXT:    v_cndmask_b32_e64 v1, 0, 1, s0
+; GFX11-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

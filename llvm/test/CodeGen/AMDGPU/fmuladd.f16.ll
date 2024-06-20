@@ -1339,11 +1339,11 @@ define amdgpu_kernel void @fmuladd_2.0_a_neg_b_f16(ptr addrspace(1) %out, ptr ad
 define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: mad_sub_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1355,8 +1355,8 @@ define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, 
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mad_f16 v2, v7, v2, -v3
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v2
@@ -1364,11 +1364,11 @@ define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, 
 ;
 ; VI-DENORM-CONTRACT-LABEL: mad_sub_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1380,8 +1380,8 @@ define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, 
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, v7, v2, -v3
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -1389,102 +1389,102 @@ define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, 
 ;
 ; GFX10-FLUSH-LABEL: mad_sub_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-FLUSH-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: mad_sub_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: mad_sub_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, v2, -v3
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: mad_sub_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: mad_sub_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: mad_sub_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, v2, -v3
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm
@@ -1508,11 +1508,11 @@ define amdgpu_kernel void @mad_sub_f16(ptr addrspace(1) noalias nocapture %out, 
 define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: mad_sub_inv_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1524,8 +1524,8 @@ define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %o
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mad_f16 v2, -v7, v2, v3
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v2
@@ -1533,11 +1533,11 @@ define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %o
 ;
 ; VI-DENORM-CONTRACT-LABEL: mad_sub_inv_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1549,8 +1549,8 @@ define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %o
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, -v7, v2, v3
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -1558,102 +1558,102 @@ define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %o
 ;
 ; GFX10-FLUSH-LABEL: mad_sub_inv_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-FLUSH-NEXT:    v_sub_f16_e32 v1, v3, v1
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: mad_sub_inv_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v3, v1
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: mad_sub_inv_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, -v1, v2, v3
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: mad_sub_inv_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_sub_f16_e32 v1, v3, v1
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: mad_sub_inv_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v3, v1
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: mad_sub_inv_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, -v1, v2, v3
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm
@@ -1677,11 +1677,11 @@ define amdgpu_kernel void @mad_sub_inv_f16(ptr addrspace(1) noalias nocapture %o
 define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: mad_sub_fabs_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1693,8 +1693,8 @@ define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mad_f16 v2, v7, v2, -|v3|
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v2
@@ -1702,11 +1702,11 @@ define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %
 ;
 ; VI-DENORM-CONTRACT-LABEL: mad_sub_fabs_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1718,8 +1718,8 @@ define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, v7, v2, -|v3|
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -1727,102 +1727,102 @@ define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %
 ;
 ; GFX10-FLUSH-LABEL: mad_sub_fabs_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-FLUSH-NEXT:    v_sub_f16_e64 v1, v1, |v3|
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: mad_sub_fabs_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-DENORM-STRICT-NEXT:    v_sub_f16_e64 v1, v1, |v3|
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: mad_sub_fabs_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, v2, -|v3|
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: mad_sub_fabs_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_sub_f16_e64 v1, v1, |v3|
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: mad_sub_fabs_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_sub_f16_e64 v1, v1, |v3|
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: mad_sub_fabs_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, v2, -|v3|
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm
@@ -1847,11 +1847,11 @@ define amdgpu_kernel void @mad_sub_fabs_f16(ptr addrspace(1) noalias nocapture %
 define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: mad_sub_fabs_inv_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1863,8 +1863,8 @@ define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocaptu
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mad_f16 v2, -v7, v2, |v3|
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v2
@@ -1872,11 +1872,11 @@ define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocaptu
 ;
 ; VI-DENORM-CONTRACT-LABEL: mad_sub_fabs_inv_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -1888,8 +1888,8 @@ define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocaptu
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, -v7, v2, |v3|
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -1897,102 +1897,102 @@ define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocaptu
 ;
 ; GFX10-FLUSH-LABEL: mad_sub_fabs_inv_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-FLUSH-NEXT:    v_sub_f16_e64 v1, |v3|, v1
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: mad_sub_fabs_inv_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-DENORM-STRICT-NEXT:    v_sub_f16_e64 v1, |v3|, v1
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: mad_sub_fabs_inv_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, -v1, v2, |v3|
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: mad_sub_fabs_inv_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_sub_f16_e64 v1, |v3|, v1
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: mad_sub_fabs_inv_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_sub_f16_e64 v1, |v3|, v1
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: mad_sub_fabs_inv_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, -v1, v2, |v3|
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm
@@ -2017,11 +2017,11 @@ define amdgpu_kernel void @mad_sub_fabs_inv_f16(ptr addrspace(1) noalias nocaptu
 define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: neg_neg_mad_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -2033,8 +2033,8 @@ define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %o
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mac_f16_e32 v3, v7, v2
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v3
@@ -2042,11 +2042,11 @@ define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %o
 ;
 ; VI-DENORM-CONTRACT-LABEL: neg_neg_mad_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -2058,8 +2058,8 @@ define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %o
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, v7, v2, v3
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -2067,102 +2067,102 @@ define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %o
 ;
 ; GFX10-FLUSH-LABEL: neg_neg_mad_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-FLUSH-NEXT:    v_add_f16_e32 v1, v3, v1
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: neg_neg_mad_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX10-DENORM-STRICT-NEXT:    v_add_f16_e32 v1, v3, v1
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: neg_neg_mad_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fmac_f16_e32 v3, v1, v2
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v3, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v3, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: neg_neg_mad_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_add_f16_e32 v1, v3, v1
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: neg_neg_mad_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e32 v1, v1, v2
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_add_f16_e32 v1, v3, v1
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: neg_neg_mad_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fmac_f16_e32 v3, v1, v2
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v3, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v3, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm
@@ -2188,11 +2188,11 @@ define amdgpu_kernel void @neg_neg_mad_f16(ptr addrspace(1) noalias nocapture %o
 define amdgpu_kernel void @mad_fabs_sub_f16(ptr addrspace(1) noalias nocapture %out, ptr addrspace(1) noalias nocapture readonly %ptr) #1 {
 ; VI-FLUSH-LABEL: mad_fabs_sub_f16:
 ; VI-FLUSH:       ; %bb.0:
-; VI-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-FLUSH-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s3
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s7
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -2204,8 +2204,8 @@ define amdgpu_kernel void @mad_fabs_sub_f16(ptr addrspace(1) noalias nocapture %
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; VI-FLUSH-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s1
-; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-FLUSH-NEXT:    v_mov_b32_e32 v1, s5
+; VI-FLUSH-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-FLUSH-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-FLUSH-NEXT:    v_mad_f16 v2, v7, |v2|, -v3
 ; VI-FLUSH-NEXT:    flat_store_short v[0:1], v2
@@ -2213,11 +2213,11 @@ define amdgpu_kernel void @mad_fabs_sub_f16(ptr addrspace(1) noalias nocapture %
 ;
 ; VI-DENORM-CONTRACT-LABEL: mad_fabs_sub_f16:
 ; VI-DENORM-CONTRACT:       ; %bb.0:
-; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v6, 1, v0
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s3
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s2, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s7
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s6, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v2, vcc, 2, v0
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v3, vcc, 0, v1, vcc
@@ -2229,8 +2229,8 @@ define amdgpu_kernel void @mad_fabs_sub_f16(ptr addrspace(1) noalias nocapture %
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; VI-DENORM-CONTRACT-NEXT:    flat_load_ushort v3, v[4:5] glc
 ; VI-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s1
-; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s0, v6
+; VI-DENORM-CONTRACT-NEXT:    v_mov_b32_e32 v1, s5
+; VI-DENORM-CONTRACT-NEXT:    v_add_u32_e32 v0, vcc, s4, v6
 ; VI-DENORM-CONTRACT-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-DENORM-CONTRACT-NEXT:    v_fma_f16 v2, v7, |v2|, -v3
 ; VI-DENORM-CONTRACT-NEXT:    flat_store_short v[0:1], v2
@@ -2238,102 +2238,102 @@ define amdgpu_kernel void @mad_fabs_sub_f16(ptr addrspace(1) noalias nocapture %
 ;
 ; GFX10-FLUSH-LABEL: mad_fabs_sub_f16:
 ; GFX10-FLUSH:       ; %bb.0:
-; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-FLUSH-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-FLUSH-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-FLUSH-NEXT:    v_mul_f16_e64 v1, v1, |v2|
 ; GFX10-FLUSH-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-FLUSH-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-STRICT-LABEL: mad_fabs_sub_f16:
 ; GFX10-DENORM-STRICT:       ; %bb.0:
-; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-STRICT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-STRICT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-STRICT-NEXT:    v_mul_f16_e64 v1, v1, |v2|
 ; GFX10-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-STRICT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX10-DENORM-CONTRACT-LABEL: mad_fabs_sub_f16:
 ; GFX10-DENORM-CONTRACT:       ; %bb.0:
-; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10-DENORM-CONTRACT-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[2:3] glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v1, v0, s[6:7] glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[2:3] offset:2 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v2, v0, s[6:7] offset:2 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[2:3] offset:4 glc dlc
+; GFX10-DENORM-CONTRACT-NEXT:    global_load_ushort v3, v0, s[6:7] offset:4 glc dlc
 ; GFX10-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX10-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, |v2|, -v3
-; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[0:1]
+; GFX10-DENORM-CONTRACT-NEXT:    global_store_short v0, v1, s[4:5]
 ; GFX10-DENORM-CONTRACT-NEXT:    s_endpgm
 ;
 ; GFX11-FLUSH-LABEL: mad_fabs_sub_f16:
 ; GFX11-FLUSH:       ; %bb.0:
-; GFX11-FLUSH-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FLUSH-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FLUSH-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-FLUSH-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-FLUSH-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-FLUSH-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FLUSH-NEXT:    v_mul_f16_e64 v1, v1, |v2|
 ; GFX11-FLUSH-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FLUSH-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-FLUSH-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-FLUSH-NEXT:    s_nop 0
 ; GFX11-FLUSH-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FLUSH-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-STRICT-LABEL: mad_fabs_sub_f16:
 ; GFX11-DENORM-STRICT:       ; %bb.0:
-; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-STRICT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-STRICT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-STRICT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-STRICT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-STRICT-NEXT:    v_mul_f16_e64 v1, v1, |v2|
 ; GFX11-DENORM-STRICT-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-DENORM-STRICT-NEXT:    v_sub_f16_e32 v1, v1, v3
-; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-STRICT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-STRICT-NEXT:    s_nop 0
 ; GFX11-DENORM-STRICT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-STRICT-NEXT:    s_endpgm
 ;
 ; GFX11-DENORM-CONTRACT-LABEL: mad_fabs_sub_f16:
 ; GFX11-DENORM-CONTRACT:       ; %bb.0:
-; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-DENORM-CONTRACT-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-DENORM-CONTRACT-NEXT:    v_lshlrev_b32_e32 v0, 1, v0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[2:3] glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v1, v0, s[6:7] glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[2:3] offset:2 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v2, v0, s[6:7] offset:2 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[2:3] offset:4 glc dlc
+; GFX11-DENORM-CONTRACT-NEXT:    global_load_u16 v3, v0, s[6:7] offset:4 glc dlc
 ; GFX11-DENORM-CONTRACT-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-DENORM-CONTRACT-NEXT:    v_fma_f16 v1, v1, |v2|, -v3
-; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-DENORM-CONTRACT-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-DENORM-CONTRACT-NEXT:    s_nop 0
 ; GFX11-DENORM-CONTRACT-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-DENORM-CONTRACT-NEXT:    s_endpgm

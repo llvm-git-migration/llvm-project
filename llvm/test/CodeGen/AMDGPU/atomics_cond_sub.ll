@@ -9,19 +9,19 @@ declare i32 @llvm.amdgcn.atomic.cond.sub.u32.p0(ptr, i32)
 define amdgpu_kernel void @flat_atomic_cond_sub_no_rtn_u32(ptr %addr, i32 %in) {
 ; GFX12-SDAG-LABEL: flat_atomic_cond_sub_no_rtn_u32:
 ; GFX12-SDAG:       ; %bb.0: ; %entry
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-SDAG-NEXT:    flat_atomic_cond_sub_u32 v0, v[0:1], v2 offset:-16 th:TH_ATOMIC_RETURN
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: flat_atomic_cond_sub_no_rtn_u32:
 ; GFX12-GISEL:       ; %bb.0: ; %entry
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, s0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v2, s2 :: v_dual_mov_b32 v1, s1
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, s4
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v2, s6 :: v_dual_mov_b32 v1, s5
 ; GFX12-GISEL-NEXT:    flat_atomic_cond_sub_u32 v0, v[0:1], v2 offset:-16 th:TH_ATOMIC_RETURN
 ; GFX12-GISEL-NEXT:    s_endpgm
 entry:
@@ -33,19 +33,19 @@ entry:
 define amdgpu_kernel void @flat_atomic_cond_sub_no_rtn_u32_forced(ptr %addr, i32 %in) "target-features"="+atomic-csub-no-rtn-insts" {
 ; GFX12-SDAG-LABEL: flat_atomic_cond_sub_no_rtn_u32_forced:
 ; GFX12-SDAG:       ; %bb.0: ; %entry
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-SDAG-NEXT:    flat_atomic_cond_sub_u32 v[0:1], v2 offset:-16
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: flat_atomic_cond_sub_no_rtn_u32_forced:
 ; GFX12-GISEL:       ; %bb.0: ; %entry
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, s0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v2, s2 :: v_dual_mov_b32 v1, s1
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, s4
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v2, s6 :: v_dual_mov_b32 v1, s5
 ; GFX12-GISEL-NEXT:    flat_atomic_cond_sub_u32 v[0:1], v2 offset:-16
 ; GFX12-GISEL-NEXT:    s_endpgm
 entry:
@@ -92,18 +92,18 @@ entry:
 define amdgpu_kernel void @global_atomic_cond_sub_no_rtn_u32(ptr addrspace(1) %addr, i32 %in) {
 ; GFX12-SDAG-LABEL: global_atomic_cond_sub_no_rtn_u32:
 ; GFX12-SDAG:       ; %bb.0: ; %entry
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; GFX12-SDAG-NEXT:    global_atomic_cond_sub_u32 v0, v0, v1, s[0:1] offset:-16 th:TH_ATOMIC_RETURN
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s6
+; GFX12-SDAG-NEXT:    global_atomic_cond_sub_u32 v0, v0, v1, s[4:5] offset:-16 th:TH_ATOMIC_RETURN
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: global_atomic_cond_sub_no_rtn_u32:
 ; GFX12-GISEL:       ; %bb.0: ; %entry
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX12-GISEL-NEXT:    global_atomic_cond_sub_u32 v0, v1, v0, s[0:1] offset:-16 th:TH_ATOMIC_RETURN
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s6
+; GFX12-GISEL-NEXT:    global_atomic_cond_sub_u32 v0, v1, v0, s[4:5] offset:-16 th:TH_ATOMIC_RETURN
 ; GFX12-GISEL-NEXT:    s_endpgm
 entry:
   %gep = getelementptr i32, ptr addrspace(1) %addr, i32 -4
@@ -114,20 +114,20 @@ entry:
 define amdgpu_kernel void @global_atomic_cond_sub_no_rtn_u32_forced(ptr addrspace(1) %addr, i32 %in) "target-features"="+atomic-csub-no-rtn-insts" {
 ; GFX12-SDAG-LABEL: global_atomic_cond_sub_no_rtn_u32_forced:
 ; GFX12-SDAG:       ; %bb.0: ; %entry
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; GFX12-SDAG-NEXT:    global_atomic_cond_sub_u32 v0, v1, s[0:1] offset:-16
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s6
+; GFX12-SDAG-NEXT:    global_atomic_cond_sub_u32 v0, v1, s[4:5] offset:-16
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: global_atomic_cond_sub_no_rtn_u32_forced:
 ; GFX12-GISEL:       ; %bb.0: ; %entry
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX12-GISEL-NEXT:    global_atomic_cond_sub_u32 v1, v0, s[0:1] offset:-16
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s6
+; GFX12-GISEL-NEXT:    global_atomic_cond_sub_u32 v1, v0, s[4:5] offset:-16
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm

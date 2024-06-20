@@ -46,11 +46,11 @@ define amdgpu_kernel void @multiple_fadd_use_test_f32(ptr addrspace(1) %out, flo
 ;
 ; GFX11-LABEL: multiple_fadd_use_test_f32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x0
 ; GFX11-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_add_f32_e64 v0, s3, -1.0
-; GFX11-NEXT:    v_add_f32_e64 v1, s2, -1.0
+; GFX11-NEXT:    v_add_f32_e64 v0, s7, -1.0
+; GFX11-NEXT:    v_add_f32_e64 v1, s6, -1.0
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(SKIP_1) | instid1(VALU_DEP_1)
 ; GFX11-NEXT:    v_cmp_gt_f32_e64 vcc_lo, |v0|, |v1|
 ; GFX11-NEXT:    v_cndmask_b32_e32 v0, v1, v0, vcc_lo
@@ -58,7 +58,7 @@ define amdgpu_kernel void @multiple_fadd_use_test_f32(ptr addrspace(1) %out, flo
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(VALU_DEP_1)
 ; GFX11-NEXT:    v_mul_f32_e32 v1, v0, v0
 ; GFX11-NEXT:    v_fma_f32 v0, -v1, v0, 1.0
-; GFX11-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX11-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -174,14 +174,14 @@ define amdgpu_kernel void @multiple_use_fadd_fmad_f32(ptr addrspace(1) %out, flo
 ;
 ; GFX11-LABEL: multiple_use_fadd_fmad_f32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x0
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_add_f32_e64 v1, |s2|, |s2|
-; GFX11-NEXT:    v_fma_f32 v2, |s2|, 2.0, s3
-; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1] dlc
+; GFX11-NEXT:    v_add_f32_e64 v1, |s6|, |s6|
+; GFX11-NEXT:    v_fma_f32 v2, |s6|, 2.0, s7
+; GFX11-NEXT:    global_store_b32 v0, v1, s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b32 v0, v2, s[0:1] offset:4 dlc
+; GFX11-NEXT:    global_store_b32 v0, v2, s[4:5] offset:4 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)

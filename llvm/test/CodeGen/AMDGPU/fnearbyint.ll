@@ -124,23 +124,23 @@ define amdgpu_kernel void @fnearbyint_v2f32(ptr addrspace(1) %out, <2 x float> %
 ;
 ; VI-LABEL: fnearbyint_v2f32:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_rndne_f32_e32 v1, s3
-; VI-NEXT:    v_rndne_f32_e32 v0, s2
-; VI-NEXT:    v_mov_b32_e32 v2, s0
+; VI-NEXT:    v_mov_b32_e32 v2, s4
+; VI-NEXT:    v_rndne_f32_e32 v1, s7
+; VI-NEXT:    v_rndne_f32_e32 v0, s6
+; VI-NEXT:    v_mov_b32_e32 v3, s5
 ; VI-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; VI-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: fnearbyint_v2f32:
 ; GFX11:       ; %bb.0: ; %entry
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    v_rndne_f32_e32 v1, s3
-; GFX11-NEXT:    v_rndne_f32_e32 v0, s2
-; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[0:1]
+; GFX11-NEXT:    v_rndne_f32_e32 v1, s7
+; GFX11-NEXT:    v_rndne_f32_e32 v0, s6
+; GFX11-NEXT:    global_store_b64 v2, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

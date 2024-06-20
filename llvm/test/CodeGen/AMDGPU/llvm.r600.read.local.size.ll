@@ -224,11 +224,11 @@ define amdgpu_kernel void @local_size_yz(ptr addrspace(1) %out) {
 ;
 ; VI-LABEL: local_size_yz:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x1c
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x1c
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_mul_i32 s0, s0, s1
-; VI-NEXT:    v_mov_b32_e32 v0, s2
-; VI-NEXT:    v_mov_b32_e32 v1, s3
+; VI-NEXT:    s_mul_i32 s0, s4, s5
+; VI-NEXT:    v_mov_b32_e32 v0, s6
+; VI-NEXT:    v_mov_b32_e32 v1, s7
 ; VI-NEXT:    v_mov_b32_e32 v2, s0
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm

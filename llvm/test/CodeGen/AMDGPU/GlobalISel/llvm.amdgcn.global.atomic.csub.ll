@@ -160,10 +160,10 @@ define amdgpu_kernel void @global_atomic_csub_sgpr_base_offset(ptr addrspace(1) 
 ;
 ; GFX12-LABEL: global_atomic_csub_sgpr_base_offset:
 ; GFX12:       ; %bb.0:
-; GFX12-NEXT:    s_load_b96 s[0:2], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b96 s[4:6], s[0:1], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX12-NEXT:    global_atomic_sub_clamp_u32 v0, v1, v0, s[0:1] offset:4096 th:TH_ATOMIC_RETURN
+; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s6
+; GFX12-NEXT:    global_atomic_sub_clamp_u32 v0, v1, v0, s[4:5] offset:4096 th:TH_ATOMIC_RETURN
 ; GFX12-NEXT:    s_wait_loadcnt 0x0
 ; GFX12-NEXT:    global_store_b32 v[0:1], v0, off
 ; GFX12-NEXT:    s_nop 0
@@ -199,10 +199,10 @@ define amdgpu_kernel void @global_atomic_csub_sgpr_base_offset_nortn(ptr addrspa
 ;
 ; GFX12-LABEL: global_atomic_csub_sgpr_base_offset_nortn:
 ; GFX12:       ; %bb.0:
-; GFX12-NEXT:    s_load_b96 s[0:2], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b96 s[4:6], s[0:1], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX12-NEXT:    global_atomic_sub_clamp_u32 v0, v1, v0, s[0:1] offset:4096 th:TH_ATOMIC_RETURN
+; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s6
+; GFX12-NEXT:    global_atomic_sub_clamp_u32 v0, v1, v0, s[4:5] offset:4096 th:TH_ATOMIC_RETURN
 ; GFX12-NEXT:    s_endpgm
   %gep = getelementptr i32, ptr addrspace(1) %ptr, i64 1024
   %ret = call i32 @llvm.amdgcn.global.atomic.csub.p1(ptr addrspace(1) %gep, i32 %data)

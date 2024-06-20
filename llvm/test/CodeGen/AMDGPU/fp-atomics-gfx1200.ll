@@ -16,17 +16,17 @@ declare <2 x i16> @llvm.amdgcn.flat.atomic.fadd.v2bf16.p0(ptr %ptr, <2 x i16> %d
 define amdgpu_kernel void @local_atomic_fadd_v2f16_noret(ptr addrspace(3) %ptr, <2 x half> %data) {
 ; GFX12-SDAG-LABEL: local_atomic_fadd_v2f16_noret:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
 ; GFX12-SDAG-NEXT:    ds_pk_add_f16 v0, v1
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: local_atomic_fadd_v2f16_noret:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
 ; GFX12-GISEL-NEXT:    ds_pk_add_f16 v0, v1
 ; GFX12-GISEL-NEXT:    s_endpgm
   %ret = call <2 x half> @llvm.amdgcn.ds.fadd.v2f16(ptr addrspace(3) %ptr, <2 x half> %data, i32 0, i32 0, i1 0)
@@ -36,9 +36,9 @@ define amdgpu_kernel void @local_atomic_fadd_v2f16_noret(ptr addrspace(3) %ptr, 
 define amdgpu_kernel void @local_atomic_fadd_v2bf16_noret(ptr addrspace(3) %ptr, <2 x i16> %data) {
 ; GFX12-SDAG-LABEL: local_atomic_fadd_v2bf16_noret:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
 ; GFX12-SDAG-NEXT:    ds_pk_add_bf16 v0, v1
 ; GFX12-SDAG-NEXT:    s_wait_dscnt 0x0
 ; GFX12-SDAG-NEXT:    global_inv scope:SCOPE_SYS
@@ -46,9 +46,9 @@ define amdgpu_kernel void @local_atomic_fadd_v2bf16_noret(ptr addrspace(3) %ptr,
 ;
 ; GFX12-GISEL-LABEL: local_atomic_fadd_v2bf16_noret:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s1 :: v_dual_mov_b32 v1, s0
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s3 :: v_dual_mov_b32 v1, s2
 ; GFX12-GISEL-NEXT:    ds_pk_add_bf16 v1, v0
 ; GFX12-GISEL-NEXT:    s_wait_dscnt 0x0
 ; GFX12-GISEL-NEXT:    global_inv scope:SCOPE_SYS
@@ -116,19 +116,19 @@ define <2 x i16> @local_atomic_fadd_v2bf16_rtn(ptr addrspace(3) %ptr, <2 x i16> 
 define amdgpu_kernel void @flat_atomic_fadd_v2f16_noret(ptr %ptr, <2 x half> %data) {
 ; GFX12-SDAG-LABEL: flat_atomic_fadd_v2f16_noret:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-SDAG-NEXT:    flat_atomic_pk_add_f16 v[0:1], v2
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: flat_atomic_fadd_v2f16_noret:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-GISEL-NEXT:    flat_atomic_pk_add_f16 v[0:1], v2
 ; GFX12-GISEL-NEXT:    s_endpgm
   %ret = call <2 x half> @llvm.amdgcn.flat.atomic.fadd.v2f16.p0.v2f16(ptr %ptr, <2 x half> %data)
@@ -164,19 +164,19 @@ define <2 x half> @flat_atomic_fadd_v2f16_rtn(ptr %ptr, <2 x half> %data) {
 define amdgpu_kernel void @flat_atomic_fadd_v2bf16_noret(ptr %ptr, <2 x i16> %data) {
 ; GFX12-SDAG-LABEL: flat_atomic_fadd_v2bf16_noret:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-SDAG-NEXT:    flat_atomic_pk_add_bf16 v[0:1], v2
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: flat_atomic_fadd_v2bf16_noret:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v2, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v2, s6
 ; GFX12-GISEL-NEXT:    flat_atomic_pk_add_bf16 v[0:1], v2
 ; GFX12-GISEL-NEXT:    s_endpgm
   %ret = call <2 x i16> @llvm.amdgcn.flat.atomic.fadd.v2bf16.p0(ptr %ptr, <2 x i16> %data)
@@ -212,20 +212,20 @@ define <2 x i16> @flat_atomic_fadd_v2bf16_rtn(ptr %ptr, <2 x i16> %data) {
 define amdgpu_kernel void @global_atomic_fadd_v2bf16_noret(ptr addrspace(1) %ptr, <2 x i16> %data) {
 ; GFX12-SDAG-LABEL: global_atomic_fadd_v2bf16_noret:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; GFX12-SDAG-NEXT:    global_atomic_pk_add_bf16 v0, v1, s[0:1]
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s6
+; GFX12-SDAG-NEXT:    global_atomic_pk_add_bf16 v0, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: global_atomic_fadd_v2bf16_noret:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX12-GISEL-NEXT:    global_atomic_pk_add_bf16 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s6
+; GFX12-GISEL-NEXT:    global_atomic_pk_add_bf16 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm

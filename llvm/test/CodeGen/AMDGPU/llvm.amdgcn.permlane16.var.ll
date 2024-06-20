@@ -10,26 +10,26 @@ declare i32 @llvm.amdgcn.workitem.id.y()
 define amdgpu_kernel void @v_permlane16var_b32_vv(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vv:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v0, v0, v1
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vv:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v0, v0, v1
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -41,26 +41,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vv(ptr addrspace(1) %out, i32 %sr
 define amdgpu_kernel void @v_permlane16var_b32_vi(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vi:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v0, 1
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vi:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 1 :: v_dual_mov_b32 v1, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 1 :: v_dual_mov_b32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -72,26 +72,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vi(ptr addrspace(1) %out, i32 %sr
 define amdgpu_kernel void @v_permlane16var_b32_vl(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vl:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v0, 0xc1d1
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vl:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 0xc1d1 :: v_dual_mov_b32 v1, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 0xc1d1 :: v_dual_mov_b32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -103,25 +103,25 @@ define amdgpu_kernel void @v_permlane16var_b32_vl(ptr addrspace(1) %out, i32 %sr
 define amdgpu_kernel void @v_permlane16var_b32_vvv(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vvv:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vvv:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, s2
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -134,26 +134,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vvv(ptr addrspace(1) %out, i32 %s
 define amdgpu_kernel void @v_permlane16var_b32_vv_fi(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vv_fi:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[1,0]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vv_fi:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[1,0]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -165,26 +165,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vv_fi(ptr addrspace(1) %out, i32 
 define amdgpu_kernel void @v_permlane16var_b32_vv_bc(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vv_bc:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[0,1]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vv_bc:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[0,1]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -196,26 +196,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vv_bc(ptr addrspace(1) %out, i32 
 define amdgpu_kernel void @v_permlane16var_b32_vv_fi_bc(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlane16var_b32_vv_fi_bc:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[1,1]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlane16var_b32_vv_fi_bc:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlane16_var_b32 v0, v0, v1 op_sel:[1,1]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -227,26 +227,26 @@ define amdgpu_kernel void @v_permlane16var_b32_vv_fi_bc(ptr addrspace(1) %out, i
 define amdgpu_kernel void @v_permlanex16var_b32_vv(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vv:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v0, v0, v1
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vv:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v0, v0, v1
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -258,26 +258,26 @@ define amdgpu_kernel void @v_permlanex16var_b32_vv(ptr addrspace(1) %out, i32 %s
 define amdgpu_kernel void @v_permlanex16var_b32_vi(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vi:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v0, 1
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vi:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 1 :: v_dual_mov_b32 v1, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 1 :: v_dual_mov_b32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -289,26 +289,26 @@ define amdgpu_kernel void @v_permlanex16var_b32_vi(ptr addrspace(1) %out, i32 %s
 define amdgpu_kernel void @v_permlanex16var_b32_vl(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vl:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v0, 0xc1d1
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vl:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 0xc1d1 :: v_dual_mov_b32 v1, s2
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, 0xc1d1 :: v_dual_mov_b32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -320,25 +320,25 @@ define amdgpu_kernel void @v_permlanex16var_b32_vl(ptr addrspace(1) %out, i32 %s
 define amdgpu_kernel void @v_permlanex16var_b32_vvv(ptr addrspace(1) %out, i32 %src0) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vvv:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s2
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v2, 0 :: v_dual_mov_b32 v1, s6
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v1, v1, v0
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v1, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vvv:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, s2
+; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, s6
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v1, v1, v0
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v0, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -351,26 +351,26 @@ define amdgpu_kernel void @v_permlanex16var_b32_vvv(ptr addrspace(1) %out, i32 %
 define amdgpu_kernel void @v_permlanex16var_b32_vv_fi(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vv_fi:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[1,0]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vv_fi:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[1,0]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -382,26 +382,26 @@ define amdgpu_kernel void @v_permlanex16var_b32_vv_fi(ptr addrspace(1) %out, i32
 define amdgpu_kernel void @v_permlanex16var_b32_vv_bc(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vv_bc:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[0,1]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vv_bc:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[0,1]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm
@@ -413,26 +413,26 @@ define amdgpu_kernel void @v_permlanex16var_b32_vv_bc(ptr addrspace(1) %out, i32
 define amdgpu_kernel void @v_permlanex16var_b32_vv_fi_bc(ptr addrspace(1) %out, i32 %src0, i32 %src1) {
 ; GFX12-SDAG-LABEL: v_permlanex16var_b32_vv_fi_bc:
 ; GFX12-SDAG:       ; %bb.0:
-; GFX12-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-SDAG-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-SDAG-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-SDAG-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[1,1]
-; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[0:1]
+; GFX12-SDAG-NEXT:    global_store_b32 v2, v0, s[4:5]
 ; GFX12-SDAG-NEXT:    s_nop 0
 ; GFX12-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-SDAG-NEXT:    s_endpgm
 ;
 ; GFX12-GISEL-LABEL: v_permlanex16var_b32_vv_fi_bc:
 ; GFX12-GISEL:       ; %bb.0:
-; GFX12-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; GFX12-GISEL-NEXT:    v_dual_mov_b32 v0, s6 :: v_dual_mov_b32 v1, s7
 ; GFX12-GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-GISEL-NEXT:    v_permlanex16_var_b32 v0, v0, v1 op_sel:[1,1]
 ; GFX12-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[0:1]
+; GFX12-GISEL-NEXT:    global_store_b32 v1, v0, s[4:5]
 ; GFX12-GISEL-NEXT:    s_nop 0
 ; GFX12-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-GISEL-NEXT:    s_endpgm

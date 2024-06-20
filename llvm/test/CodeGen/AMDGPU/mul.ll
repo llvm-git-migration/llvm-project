@@ -676,14 +676,17 @@ define amdgpu_kernel void @mul64_sext_c(ptr addrspace(1) %out, i32 %in) {
 ;
 ; GFX12-LABEL: mul64_sext_c:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
-; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    s_ashr_i32 s3, s2, 31
-; GFX12-NEXT:    s_delay_alu instid0(SALU_CYCLE_1)
-; GFX12-NEXT:    s_mul_u64 s[4:5], s[2:3], 0x50
+; GFX12-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
 ; GFX12-NEXT:    s_mov_b32 s3, 0x31016000
-; GFX12-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
 ; GFX12-NEXT:    s_mov_b32 s2, -1
+; GFX12-NEXT:    s_wait_kmcnt 0x0
+; GFX12-NEXT:    s_ashr_i32 s1, s6, 31
+; GFX12-NEXT:    s_mov_b32 s0, s6
+; GFX12-NEXT:    s_delay_alu instid0(SALU_CYCLE_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
+; GFX12-NEXT:    s_mul_u64 s[0:1], s[0:1], 0x50
+; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-NEXT:    s_mov_b32 s0, s4
+; GFX12-NEXT:    s_mov_b32 s1, s5
 ; GFX12-NEXT:    buffer_store_b64 v[0:1], off, s[0:3], null
 ; GFX12-NEXT:    s_nop 0
 ; GFX12-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -784,13 +787,17 @@ define amdgpu_kernel void @mul64_zext_c(ptr addrspace(1) %out, i32 %in) {
 ;
 ; GFX12-LABEL: mul64_zext_c:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b96 s[0:2], s[0:1], 0x24
-; GFX12-NEXT:    s_mov_b32 s3, 0
-; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    s_mul_u64 s[4:5], s[2:3], 0x50
+; GFX12-NEXT:    s_load_b96 s[4:6], s[0:1], 0x24
+; GFX12-NEXT:    s_mov_b32 s1, 0
 ; GFX12-NEXT:    s_mov_b32 s3, 0x31016000
-; GFX12-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
 ; GFX12-NEXT:    s_mov_b32 s2, -1
+; GFX12-NEXT:    s_wait_kmcnt 0x0
+; GFX12-NEXT:    s_mov_b32 s0, s6
+; GFX12-NEXT:    s_delay_alu instid0(SALU_CYCLE_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
+; GFX12-NEXT:    s_mul_u64 s[0:1], s[0:1], 0x50
+; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-NEXT:    s_mov_b32 s0, s4
+; GFX12-NEXT:    s_mov_b32 s1, s5
 ; GFX12-NEXT:    buffer_store_b64 v[0:1], off, s[0:3], null
 ; GFX12-NEXT:    s_nop 0
 ; GFX12-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
