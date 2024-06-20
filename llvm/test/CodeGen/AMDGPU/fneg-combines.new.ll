@@ -3036,21 +3036,21 @@ define amdgpu_kernel void @s_fneg_select_infloop_regression_f64(double %arg, i1 
 ;
 ; VI-LABEL: s_fneg_select_infloop_regression_f64:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; VI-NEXT:    s_load_dword s6, s[0:1], 0x2c
 ; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
 ; VI-NEXT:    v_bfrev_b32_e32 v0, 1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_bitcmp1_b32 s4, 0
-; VI-NEXT:    s_cselect_b64 s[4:5], -1, 0
+; VI-NEXT:    s_bitcmp1_b32 s6, 0
+; VI-NEXT:    s_cselect_b64 s[0:1], -1, 0
 ; VI-NEXT:    v_mov_b32_e32 v1, s3
-; VI-NEXT:    s_and_b64 s[6:7], s[4:5], exec
-; VI-NEXT:    v_cndmask_b32_e64 v0, -v1, v0, s[4:5]
+; VI-NEXT:    s_and_b64 s[6:7], s[0:1], exec
+; VI-NEXT:    v_cndmask_b32_e64 v0, -v1, v0, s[0:1]
 ; VI-NEXT:    s_cselect_b32 s2, 0, s2
-; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_cndmask_b32_e64 v1, v0, 0, s[4:5]
+; VI-NEXT:    v_mov_b32_e32 v2, s4
+; VI-NEXT:    v_cndmask_b32_e64 v1, v0, 0, s[0:1]
 ; VI-NEXT:    v_mov_b32_e32 v0, s2
-; VI-NEXT:    v_mov_b32_e32 v2, s0
+; VI-NEXT:    v_mov_b32_e32 v3, s5
 ; VI-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; VI-NEXT:    s_endpgm
   %i = select i1 %arg1, double 0.0, double %arg
@@ -3096,17 +3096,17 @@ define amdgpu_kernel void @s_fneg_select_infloop_regression_f16(half %arg, i1 %a
 ;
 ; VI-LABEL: s_fneg_select_infloop_regression_f16:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s2, s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x2c
+; VI-NEXT:    s_load_dword s4, s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x2c
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_bitcmp1_b32 s2, 16
-; VI-NEXT:    v_mov_b32_e32 v0, s2
-; VI-NEXT:    s_cselect_b64 s[2:3], -1, 0
-; VI-NEXT:    v_cndmask_b32_e64 v0, v0, 0, s[2:3]
+; VI-NEXT:    s_bitcmp1_b32 s4, 16
+; VI-NEXT:    v_mov_b32_e32 v0, s4
+; VI-NEXT:    s_cselect_b64 s[0:1], -1, 0
+; VI-NEXT:    v_cndmask_b32_e64 v0, v0, 0, s[0:1]
 ; VI-NEXT:    v_xor_b32_e32 v0, 0x8000, v0
-; VI-NEXT:    v_cndmask_b32_e64 v2, v0, 0, s[2:3]
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_mov_b32_e32 v1, s1
+; VI-NEXT:    v_cndmask_b32_e64 v2, v0, 0, s[0:1]
+; VI-NEXT:    v_mov_b32_e32 v0, s2
+; VI-NEXT:    v_mov_b32_e32 v1, s3
 ; VI-NEXT:    flat_store_short v[0:1], v2
 ; VI-NEXT:    s_endpgm
   %i = select i1 %arg1, half 0.0, half %arg
@@ -3236,19 +3236,19 @@ define amdgpu_kernel void @s_fneg_select_infloop_regression_v2f32(<2 x float> %a
 ; VI-LABEL: s_fneg_select_infloop_regression_v2f32:
 ; VI:       ; %bb.0:
 ; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
 ; VI-NEXT:    v_bfrev_b32_e32 v0, 1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-NEXT:    s_bitcmp1_b32 s6, 0
 ; VI-NEXT:    v_mov_b32_e32 v1, s4
-; VI-NEXT:    s_cselect_b64 s[2:3], -1, 0
-; VI-NEXT:    v_cndmask_b32_e64 v2, -v1, v0, s[2:3]
+; VI-NEXT:    s_cselect_b64 s[0:1], -1, 0
+; VI-NEXT:    v_cndmask_b32_e64 v2, -v1, v0, s[0:1]
 ; VI-NEXT:    v_mov_b32_e32 v1, s5
-; VI-NEXT:    v_cndmask_b32_e64 v0, -v1, v0, s[2:3]
-; VI-NEXT:    v_cndmask_b32_e64 v1, v0, 0, s[2:3]
-; VI-NEXT:    v_cndmask_b32_e64 v0, v2, 0, s[2:3]
-; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_mov_b32_e32 v2, s0
+; VI-NEXT:    v_cndmask_b32_e64 v0, -v1, v0, s[0:1]
+; VI-NEXT:    v_cndmask_b32_e64 v1, v0, 0, s[0:1]
+; VI-NEXT:    v_cndmask_b32_e64 v0, v2, 0, s[0:1]
+; VI-NEXT:    v_mov_b32_e32 v2, s2
+; VI-NEXT:    v_mov_b32_e32 v3, s3
 ; VI-NEXT:    flat_store_dwordx2 v[2:3], v[0:1]
 ; VI-NEXT:    s_endpgm
   %i = select i1 %arg1, <2 x float> zeroinitializer, <2 x float> %arg

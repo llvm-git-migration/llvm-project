@@ -104,22 +104,22 @@ define amdgpu_kernel void @raw_ptr_buffer_atomic_min_noret_f32(ptr addrspace(8) 
 ; G_GFX1030-LABEL: raw_ptr_buffer_atomic_min_noret_f32:
 ; G_GFX1030:       ; %bb.0: ; %main_body
 ; G_GFX1030-NEXT:    s_clause 0x1
-; G_GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; G_GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; G_GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; G_GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; G_GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; G_GFX1030-NEXT:    buffer_atomic_fmin v0, v1, s[0:3], 0 offen
+; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; G_GFX1030-NEXT:    buffer_atomic_fmin v0, v1, s[4:7], 0 offen
 ; G_GFX1030-NEXT:    s_endpgm
 ;
 ; G_GFX1100-LABEL: raw_ptr_buffer_atomic_min_noret_f32:
 ; G_GFX1100:       ; %bb.0: ; %main_body
 ; G_GFX1100-NEXT:    s_clause 0x1
-; G_GFX1100-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; G_GFX1100-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; G_GFX1100-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; G_GFX1100-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; G_GFX1100-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1100-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
-; G_GFX1100-NEXT:    buffer_atomic_min_f32 v0, v1, s[0:3], 0 offen
+; G_GFX1100-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; G_GFX1100-NEXT:    buffer_atomic_min_f32 v0, v1, s[4:7], 0 offen
 ; G_GFX1100-NEXT:    s_nop 0
 ; G_GFX1100-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; G_GFX1100-NEXT:    s_endpgm
@@ -462,22 +462,22 @@ define amdgpu_kernel void @raw_ptr_buffer_atomic_max_noret_f32(ptr addrspace(8) 
 ; G_GFX1030-LABEL: raw_ptr_buffer_atomic_max_noret_f32:
 ; G_GFX1030:       ; %bb.0: ; %main_body
 ; G_GFX1030-NEXT:    s_clause 0x1
-; G_GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; G_GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; G_GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; G_GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; G_GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; G_GFX1030-NEXT:    buffer_atomic_fmax v0, v1, s[0:3], 0 offen
+; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; G_GFX1030-NEXT:    buffer_atomic_fmax v0, v1, s[4:7], 0 offen
 ; G_GFX1030-NEXT:    s_endpgm
 ;
 ; G_GFX1100-LABEL: raw_ptr_buffer_atomic_max_noret_f32:
 ; G_GFX1100:       ; %bb.0: ; %main_body
 ; G_GFX1100-NEXT:    s_clause 0x1
-; G_GFX1100-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; G_GFX1100-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; G_GFX1100-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; G_GFX1100-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; G_GFX1100-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1100-NEXT:    v_dual_mov_b32 v0, s4 :: v_dual_mov_b32 v1, s5
-; G_GFX1100-NEXT:    buffer_atomic_max_f32 v0, v1, s[0:3], 0 offen
+; G_GFX1100-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
+; G_GFX1100-NEXT:    buffer_atomic_max_f32 v0, v1, s[4:7], 0 offen
 ; G_GFX1100-NEXT:    s_nop 0
 ; G_GFX1100-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; G_GFX1100-NEXT:    s_endpgm
