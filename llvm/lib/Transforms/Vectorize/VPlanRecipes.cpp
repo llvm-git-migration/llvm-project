@@ -1668,6 +1668,7 @@ void VPReductionEVLRecipe::execute(VPTransformState &State) {
   auto &Builder = State.Builder;
   // Propagate the fast-math flags carried by the underlying instruction.
   IRBuilderBase::FastMathFlagGuard FMFGuard(Builder);
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   Builder.setFastMathFlags(RdxDesc.getFastMathFlags());
 
   RecurKind Kind = RdxDesc.getRecurrenceKind();
@@ -1686,7 +1687,7 @@ void VPReductionEVLRecipe::execute(VPTransformState &State) {
   VBuilder.setMask(Mask);
 
   Value *NewRed;
-  if (IsOrdered) {
+  if (isOrdered()) {
     NewRed = createOrderedReduction(VBuilder, RdxDesc, VecOp, Prev);
   } else {
     NewRed = createSimpleTargetReduction(VBuilder, VecOp, RdxDesc);
@@ -1723,6 +1724,7 @@ void VPReductionRecipe::print(raw_ostream &O, const Twine &Indent,
 
 void VPReductionEVLRecipe::print(raw_ostream &O, const Twine &Indent,
                                  VPSlotTracker &SlotTracker) const {
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   O << Indent << "REDUCE ";
   printAsOperand(O, SlotTracker);
   O << " = ";
