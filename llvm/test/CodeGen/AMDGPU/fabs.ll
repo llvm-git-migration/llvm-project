@@ -149,19 +149,19 @@ define amdgpu_kernel void @fabsf_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ;
 ; VI-LABEL: fabsf_v4f32:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v4, s4
-; VI-NEXT:    s_bitset0_b32 s3, 31
-; VI-NEXT:    s_bitset0_b32 s2, 31
-; VI-NEXT:    s_bitset0_b32 s1, 31
-; VI-NEXT:    s_bitset0_b32 s0, 31
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_mov_b32_e32 v1, s1
-; VI-NEXT:    v_mov_b32_e32 v2, s2
-; VI-NEXT:    v_mov_b32_e32 v3, s3
-; VI-NEXT:    v_mov_b32_e32 v5, s5
+; VI-NEXT:    v_mov_b32_e32 v5, s3
+; VI-NEXT:    s_and_b32 s0, s7, 0x7fffffff
+; VI-NEXT:    s_and_b32 s1, s6, 0x7fffffff
+; VI-NEXT:    s_bitset0_b32 s5, 31
+; VI-NEXT:    s_bitset0_b32 s4, 31
+; VI-NEXT:    v_mov_b32_e32 v0, s4
+; VI-NEXT:    v_mov_b32_e32 v1, s5
+; VI-NEXT:    v_mov_b32_e32 v2, s1
+; VI-NEXT:    v_mov_b32_e32 v3, s0
+; VI-NEXT:    v_mov_b32_e32 v4, s2
 ; VI-NEXT:    flat_store_dwordx4 v[4:5], v[0:3]
 ; VI-NEXT:    s_endpgm
   %fabs = call <4 x float> @llvm.fabs.v4f32(<4 x float> %in)

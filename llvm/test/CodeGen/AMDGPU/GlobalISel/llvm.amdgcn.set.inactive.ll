@@ -4,16 +4,16 @@
 define amdgpu_kernel void @set_inactive(ptr addrspace(1) %out, i32 %in) {
 ; GCN-LABEL: set_inactive:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 42
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call i32 @llvm.amdgcn.set.inactive.i32(i32 %in, i32 42) #0
   store i32 %tmp, ptr addrspace(1) %out
@@ -23,17 +23,17 @@ define amdgpu_kernel void @set_inactive(ptr addrspace(1) %out, i32 %in) {
 define amdgpu_kernel void @set_inactive_64(ptr addrspace(1) %out, i64 %in) {
 ; GCN-LABEL: set_inactive_64:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GCN-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s2
-; GCN-NEXT:    v_mov_b32_e32 v1, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s6
+; GCN-NEXT:    v_mov_b32_e32 v1, s7
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s2, -1
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s6, -1
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call i64 @llvm.amdgcn.set.inactive.i64(i64 %in, i64 0) #0
   store i64 %tmp, ptr addrspace(1) %out
@@ -47,32 +47,32 @@ define amdgpu_kernel void @set_inactive_scc(ptr addrspace(1) %out, i32 %in, <4 x
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
 ; GCN-NEXT:    s_buffer_load_dword s2, s[4:7], 0x0
 ; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
 ; GCN-NEXT:    s_cmp_lg_u32 s2, 56
-; GCN-NEXT:    s_cselect_b32 s4, 1, 0
+; GCN-NEXT:    s_cselect_b32 s1, 1, 0
 ; GCN-NEXT:    v_mov_b32_e32 v0, s3
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 42
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s2, 1
-; GCN-NEXT:    s_cmp_lg_u32 s4, 0
+; GCN-NEXT:    s_mov_b32 s0, 1
+; GCN-NEXT:    s_cmp_lg_u32 s1, 0
 ; GCN-NEXT:    s_cbranch_scc0 .LBB2_2
 ; GCN-NEXT:  ; %bb.1: ; %.one
 ; GCN-NEXT:    v_add_u32_e32 v1, vcc, 1, v0
-; GCN-NEXT:    s_mov_b32 s2, -1
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v1, off, s[0:3], 0
-; GCN-NEXT:    s_mov_b32 s2, 0
+; GCN-NEXT:    s_mov_b32 s6, -1
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v1, off, s[4:7], 0
+; GCN-NEXT:    s_mov_b32 s0, 0
 ; GCN-NEXT:  .LBB2_2: ; %Flow
-; GCN-NEXT:    s_xor_b32 s2, s2, 1
-; GCN-NEXT:    s_and_b32 s2, s2, 1
-; GCN-NEXT:    s_cmp_lg_u32 s2, 0
+; GCN-NEXT:    s_xor_b32 s0, s0, 1
+; GCN-NEXT:    s_and_b32 s0, s0, 1
+; GCN-NEXT:    s_cmp_lg_u32 s0, 0
 ; GCN-NEXT:    s_cbranch_scc1 .LBB2_4
 ; GCN-NEXT:  ; %bb.3: ; %.zero
-; GCN-NEXT:    s_mov_b32 s2, -1
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s6, -1
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:  .LBB2_4: ; %.exit
 ; GCN-NEXT:    s_endpgm
   %val = call i32 @llvm.amdgcn.s.buffer.load.i32(<4 x i32> %desc, i32 0, i32 0)
@@ -96,17 +96,17 @@ define amdgpu_kernel void @set_inactive_scc(ptr addrspace(1) %out, i32 %in, <4 x
 define amdgpu_kernel void @set_inactive_f32(ptr addrspace(1) %out, float %in) {
 ; GCN-LABEL: set_inactive_f32:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0x40400000
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, v1
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call float @llvm.amdgcn.set.inactive.f32(float %in, float 3.0) #0
   store float %tmp, ptr addrspace(1) %out
@@ -116,21 +116,21 @@ define amdgpu_kernel void @set_inactive_f32(ptr addrspace(1) %out, float %in) {
 define amdgpu_kernel void @set_inactive_f64(ptr addrspace(1) %out, double %in) {
 ; GCN-LABEL: set_inactive_f64:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s4, 0xcccccccd
-; GCN-NEXT:    s_mov_b32 s5, 0x4010cccc
-; GCN-NEXT:    v_mov_b32_e32 v2, s4
-; GCN-NEXT:    v_mov_b32_e32 v3, s5
+; GCN-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s0, 0xcccccccd
+; GCN-NEXT:    s_mov_b32 s1, 0x4010cccc
+; GCN-NEXT:    v_mov_b32_e32 v3, s1
+; GCN-NEXT:    v_mov_b32_e32 v2, s0
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s2
-; GCN-NEXT:    v_mov_b32_e32 v1, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s6
+; GCN-NEXT:    v_mov_b32_e32 v1, s7
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, v2
 ; GCN-NEXT:    v_mov_b32_e32 v1, v3
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s2, -1
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s6, -1
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call double @llvm.amdgcn.set.inactive.f64(double %in, double 4.2) #0
   store double %tmp, ptr addrspace(1) %out
@@ -140,17 +140,17 @@ define amdgpu_kernel void @set_inactive_f64(ptr addrspace(1) %out, double %in) {
 define amdgpu_kernel void @set_inactive_v2i16(ptr addrspace(1) %out, <2 x i16> %in) {
 ; GCN-LABEL: set_inactive_v2i16:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0x10001
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, v1
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call <2 x i16> @llvm.amdgcn.set.inactive.v2i16(<2 x i16> %in, <2 x i16> <i16 1, i16 1>) #0
   store <2 x i16> %tmp, ptr addrspace(1) %out
@@ -160,17 +160,17 @@ define amdgpu_kernel void @set_inactive_v2i16(ptr addrspace(1) %out, <2 x i16> %
 define amdgpu_kernel void @set_inactive_v2f16(ptr addrspace(1) %out, <2 x half> %in) {
 ; GCN-LABEL: set_inactive_v2f16:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0x3c003c00
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, v1
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call <2 x half> @llvm.amdgcn.set.inactive.v2f16(<2 x half> %in, <2 x half> <half 1.0, half 1.0>) #0
   store <2 x half> %tmp, ptr addrspace(1) %out
@@ -228,17 +228,17 @@ define amdgpu_kernel void @set_inactive_v2f32(ptr addrspace(1) %out, <2 x float>
 define amdgpu_kernel void @set_inactive_v2bf16(ptr addrspace(1) %out, <2 x bfloat> %in) {
 ; GCN-LABEL: set_inactive_v2bf16:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0x3f803f80
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, v1
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call <2 x bfloat> @llvm.amdgcn.set.inactive.v2bf16(<2 x bfloat> %in, <2 x bfloat> <bfloat 1.0, bfloat 1.0>) #0
   store <2 x bfloat> %tmp, ptr addrspace(1) %out
@@ -320,17 +320,17 @@ define amdgpu_kernel void @set_inactive_v4bf16(ptr addrspace(1) %out, <4 x bfloa
 define amdgpu_kernel void @set_inactive_p0(ptr addrspace(1) %out, ptr %in) {
 ; GCN-LABEL: set_inactive_p0:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GCN-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s2
-; GCN-NEXT:    v_mov_b32_e32 v1, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s6
+; GCN-NEXT:    v_mov_b32_e32 v1, s7
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    v_mov_b32_e32 v1, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s2, -1
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s6, -1
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call ptr @llvm.amdgcn.set.inactive.p0(ptr %in, ptr null) #0
   store ptr %tmp, ptr addrspace(1) %out
@@ -340,16 +340,16 @@ define amdgpu_kernel void @set_inactive_p0(ptr addrspace(1) %out, ptr %in) {
 define amdgpu_kernel void @set_inactive_p2(ptr addrspace(1) %out, ptr addrspace(2) %in) {
 ; GCN-LABEL: set_inactive_p2:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call ptr addrspace(2) @llvm.amdgcn.set.inactive.p2(ptr addrspace(2) %in, ptr addrspace(2) null) #0
   store ptr addrspace(2) %tmp, ptr addrspace(1) %out
@@ -359,16 +359,16 @@ define amdgpu_kernel void @set_inactive_p2(ptr addrspace(1) %out, ptr addrspace(
 define amdgpu_kernel void @set_inactive_p3(ptr addrspace(1) %out, ptr addrspace(3) %in) {
 ; GCN-LABEL: set_inactive_p3:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call ptr addrspace(3) @llvm.amdgcn.set.inactive.p3(ptr addrspace(3) %in, ptr addrspace(3) null) #0
   store ptr addrspace(3) %tmp, ptr addrspace(1) %out
@@ -378,16 +378,16 @@ define amdgpu_kernel void @set_inactive_p3(ptr addrspace(1) %out, ptr addrspace(
 define amdgpu_kernel void @set_inactive_p5(ptr addrspace(1) %out, ptr addrspace(5) %in) {
 ; GCN-LABEL: set_inactive_p5:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call ptr addrspace(5) @llvm.amdgcn.set.inactive.p5(ptr addrspace(5) %in, ptr addrspace(5) null) #0
   store ptr addrspace(5) %tmp, ptr addrspace(1) %out
@@ -397,16 +397,16 @@ define amdgpu_kernel void @set_inactive_p5(ptr addrspace(1) %out, ptr addrspace(
 define amdgpu_kernel void @set_inactive_p6(ptr addrspace(1) %out, ptr addrspace(6) %in) {
 ; GCN-LABEL: set_inactive_p6:
 ; GCN:       ; %bb.0:
-; GCN-NEXT:    s_load_dword s3, s[0:1], 0x2c
-; GCN-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GCN-NEXT:    s_mov_b32 s2, -1
+; GCN-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GCN-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; GCN-NEXT:    s_mov_b32 s6, -1
 ; GCN-NEXT:    s_waitcnt lgkmcnt(0)
-; GCN-NEXT:    v_mov_b32_e32 v0, s3
+; GCN-NEXT:    v_mov_b32_e32 v0, s2
 ; GCN-NEXT:    s_not_b64 exec, exec
 ; GCN-NEXT:    v_mov_b32_e32 v0, 0
 ; GCN-NEXT:    s_not_b64 exec, exec
-; GCN-NEXT:    s_mov_b32 s3, 0xf000
-; GCN-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; GCN-NEXT:    s_mov_b32 s7, 0xf000
+; GCN-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; GCN-NEXT:    s_endpgm
   %tmp = call ptr addrspace(6) @llvm.amdgcn.set.inactive.p6(ptr addrspace(6) %in, ptr addrspace(6) null) #0
   store ptr addrspace(6) %tmp, ptr addrspace(1) %out

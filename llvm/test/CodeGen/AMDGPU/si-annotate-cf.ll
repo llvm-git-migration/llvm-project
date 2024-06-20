@@ -45,12 +45,12 @@ define amdgpu_kernel void @break_inserted_outside_of_loop(ptr addrspace(1) %out,
 ; FLAT-NEXT:    s_cbranch_execnz .LBB0_1
 ; FLAT-NEXT:  ; %bb.2: ; %ENDLOOP
 ; FLAT-NEXT:    s_or_b64 exec, exec, s[2:3]
-; FLAT-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; FLAT-NEXT:    s_mov_b32 s3, 0xf000
-; FLAT-NEXT:    s_mov_b32 s2, -1
+; FLAT-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; FLAT-NEXT:    s_mov_b32 s7, 0xf000
+; FLAT-NEXT:    s_mov_b32 s6, -1
 ; FLAT-NEXT:    v_mov_b32_e32 v0, 0
 ; FLAT-NEXT:    s_waitcnt lgkmcnt(0)
-; FLAT-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; FLAT-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; FLAT-NEXT:    s_endpgm
 main_body:
   %tid = call i32 @llvm.amdgcn.mbcnt.lo(i32 -1, i32 0) #0

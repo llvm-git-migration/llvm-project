@@ -17,7 +17,7 @@ define amdgpu_kernel void @load_zeroinit_lds_global(ptr addrspace(1) %out, i1 %p
   ; GCN:   [[S_MOV_B32_1:%[0-9]+]]:sreg_32 = S_MOV_B32 target-flags(amdgpu-abs32-lo) @lds
   ; GFX6:  [[S_ADD_U32_:%[0-9]+]]:sreg_32 = S_ADD_U32 [[S_MOV_B32_1]], [[S_MOV_B32_]], implicit-def dead $scc
   ; GFX6:  [[S_LOAD_DWORDX2_IMM:%[0-9]+]]:sreg_64_xexec = S_LOAD_DWORDX2_IMM [[COPY]], 9, 0
-  ; GFX8:  [[S_LOAD_DWORDX2_IMM:%[0-9]+]]:sreg_64_xexec = S_LOAD_DWORDX2_IMM [[COPY]], 36, 0
+  ; GFX8:  [[S_LOAD_DWORDX2_IMM:%[0-9]+]]:sreg_64_xexec = S_LOAD_DWORDX2_IMM_ec [[COPY]], 36, 0
   ; GFX6:  [[COPY1:%[0-9]+]]:vgpr_32 = COPY [[S_ADD_U32_]]
   ; GCN:   $m0 = S_MOV_B32 -1
   ; GFX8:  [[COPY1:%[0-9]+]]:vgpr_32 = COPY [[S_MOV_B32_1]]

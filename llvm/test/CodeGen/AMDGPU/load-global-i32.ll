@@ -39,19 +39,19 @@ define amdgpu_kernel void @global_load_i32(ptr addrspace(1) %out, ptr addrspace(
 ;
 ; GCNX3-NOHSA-LABEL: global_load_i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v0, off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dword v0, off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dword v0, off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_i32:
@@ -118,19 +118,19 @@ define amdgpu_kernel void @global_load_v2i32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v2i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx2 v[0:1], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v2i32:
@@ -198,19 +198,19 @@ define amdgpu_kernel void @global_load_v3i32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v3i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx3 v[0:2], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx3 v[0:2], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx3 v[0:2], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v3i32:
@@ -282,19 +282,19 @@ define amdgpu_kernel void @global_load_v4i32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v4i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v4i32:
@@ -375,22 +375,22 @@ define amdgpu_kernel void @global_load_v8i32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v8i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(1)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(1)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v8i32:
@@ -492,25 +492,25 @@ define amdgpu_kernel void @global_load_v9i32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v9i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v8, off, s[8:11], 0 offset:32
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dword v8, off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dword v8, off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v9i32:
@@ -623,25 +623,25 @@ define amdgpu_kernel void @global_load_v10i32(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v10i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx2 v[8:9], off, s[8:11], 0 offset:32
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[8:9], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[8:9], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v10i32:
@@ -753,25 +753,25 @@ define amdgpu_kernel void @global_load_v11i32(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v11i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx3 v[8:10], off, s[8:11], 0 offset:32
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx3 v[8:10], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx3 v[8:10], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v11i32:
@@ -888,25 +888,25 @@ define amdgpu_kernel void @global_load_v12i32(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v12i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[8:11], off, s[8:11], 0 offset:32
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v12i32:
@@ -1032,28 +1032,28 @@ define amdgpu_kernel void @global_load_v16i32(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v16i32:
 ; GCNX3-NOHSA:       ; %bb.0: ; %entry
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:48
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[8:11], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[12:15], off, s[8:11], 0 offset:16
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(3)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(3)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:48
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:48
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(3)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(3)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[12:15], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[12:15], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v16i32:
@@ -1147,20 +1147,20 @@ define amdgpu_kernel void @global_zextload_i32_to_i64(ptr addrspace(1) %out, ptr
 ;
 ; GCNX3-NOHSA-LABEL: global_zextload_i32_to_i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v0, off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v1, 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_zextload_i32_to_i64:
@@ -1230,20 +1230,20 @@ define amdgpu_kernel void @global_sextload_i32_to_i64(ptr addrspace(1) %out, ptr
 ;
 ; GCNX3-NOHSA-LABEL: global_sextload_i32_to_i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v0, off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v1, 31, v0
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_sextload_i32_to_i64:
@@ -1314,20 +1314,20 @@ define amdgpu_kernel void @global_zextload_v1i32_to_v1i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_zextload_v1i32_to_v1i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v0, off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v1, 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_zextload_v1i32_to_v1i64:
@@ -1397,20 +1397,20 @@ define amdgpu_kernel void @global_sextload_v1i32_to_v1i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_sextload_v1i32_to_v1i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dword v0, off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v1, 31, v0
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_sextload_v1i32_to_v1i64:
@@ -1487,23 +1487,23 @@ define amdgpu_kernel void @global_zextload_v2i32_to_v2i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_zextload_v2i32_to_v2i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx2 v[2:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v1, 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v0, v2
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v2, v3
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v3, v1
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_zextload_v2i32_to_v2i64:
@@ -1583,22 +1583,22 @@ define amdgpu_kernel void @global_sextload_v2i32_to_v2i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_sextload_v2i32_to_v2i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx2 v[0:1], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v3, 31, v1
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v2, v1
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v1, 31, v0
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_sextload_v2i32_to_v2i64:
@@ -1694,27 +1694,27 @@ define amdgpu_kernel void @global_zextload_v4i32_to_v4i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_zextload_v4i32_to_v4i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v5, 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v7, v5
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v4, v2
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v6, v3
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_nop 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v4, v0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v6, v1
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_zextload_v4i32_to_v4i64:
@@ -1821,17 +1821,17 @@ define amdgpu_kernel void @global_sextload_v4i32_to_v4i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_sextload_v4i32_to_v4i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(0)
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v10, 31, v3
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v8, 31, v2
@@ -1841,8 +1841,8 @@ define amdgpu_kernel void @global_sextload_v4i32_to_v4i64(ptr addrspace(1) %out,
 ; GCNX3-NOHSA-NEXT:    v_ashrrev_i32_e32 v4, 31, v0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v3, v0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v5, v1
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[7:10], off, s[4:7], 0 offset:16
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[3:6], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[7:10], off, s[0:3], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[3:6], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_sextload_v4i32_to_v4i64:
@@ -1981,36 +1981,36 @@ define amdgpu_kernel void @global_zextload_v8i32_to_v8i64(ptr addrspace(1) %out,
 ;
 ; GCNX3-NOHSA-LABEL: global_zextload_v8i32_to_v8i64:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v9, 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v11, v9
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(1)
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v8, v2
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v10, v3
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0 offset:48
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0 offset:48
 ; GCNX3-NOHSA-NEXT:    s_nop 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v8, v0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v10, v1
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(2)
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v8, v6
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v10, v7
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_nop 0
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v8, v4
 ; GCNX3-NOHSA-NEXT:    v_mov_b32_e32 v10, v5
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_zextload_v8i32_to_v8i64:
@@ -4515,14 +4515,14 @@ define amdgpu_kernel void @global_load_v32i32(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GCNX3-NOHSA-LABEL: global_load_v32i32:
 ; GCNX3-NOHSA:       ; %bb.0:
-; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s7, 0xf000
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s6, -1
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s6
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s7
+; GCNX3-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s3, 0xf000
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s2, -1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s10, s2
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s11, s3
 ; GCNX3-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s2
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s3
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s8, s6
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s9, s7
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[0:3], off, s[8:11], 0 offset:112
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[4:7], off, s[8:11], 0 offset:96
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[8:11], off, s[8:11], 0 offset:80
@@ -4531,22 +4531,22 @@ define amdgpu_kernel void @global_load_v32i32(ptr addrspace(1) %out, ptr addrspa
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[20:23], off, s[8:11], 0 offset:48
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[24:27], off, s[8:11], 0
 ; GCNX3-NOHSA-NEXT:    buffer_load_dwordx4 v[28:31], off, s[8:11], 0 offset:16
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s4, s0
-; GCNX3-NOHSA-NEXT:    s_mov_b32 s5, s1
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s0, s4
+; GCNX3-NOHSA-NEXT:    s_mov_b32 s1, s5
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(6)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[4:7], 0 offset:96
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0 offset:112
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[4:7], off, s[0:3], 0 offset:96
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0 offset:112
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(6)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[12:15], off, s[4:7], 0 offset:64
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[4:7], 0 offset:80
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[12:15], off, s[0:3], 0 offset:64
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[8:11], off, s[0:3], 0 offset:80
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(7)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[16:19], off, s[4:7], 0 offset:32
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[16:19], off, s[0:3], 0 offset:32
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(7)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[20:23], off, s[4:7], 0 offset:48
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[20:23], off, s[0:3], 0 offset:48
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(7)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[24:27], off, s[4:7], 0
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[24:27], off, s[0:3], 0
 ; GCNX3-NOHSA-NEXT:    s_waitcnt vmcnt(7)
-; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[28:31], off, s[4:7], 0 offset:16
+; GCNX3-NOHSA-NEXT:    buffer_store_dwordx4 v[28:31], off, s[0:3], 0 offset:16
 ; GCNX3-NOHSA-NEXT:    s_endpgm
 ;
 ; EG-LABEL: global_load_v32i32:
