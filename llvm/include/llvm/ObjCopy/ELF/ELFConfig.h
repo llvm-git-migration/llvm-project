@@ -31,6 +31,7 @@ struct ELFConfig {
   bool KeepFileSymbols = false;
   bool LocalizeHidden = false;
   bool VerifyNoteSections = true;
+  bool DisableHugeSectionOffset = false;
 };
 
 } // namespace objcopy
