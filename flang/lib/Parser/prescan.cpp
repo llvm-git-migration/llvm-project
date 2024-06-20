@@ -105,13 +105,14 @@ void Prescanner::Statement() {
     NextLine();
     return;
   case LineClassification::Kind::ConditionalCompilationDirective:
-  case LineClassification::Kind::DefinitionDirective:
-  case LineClassification::Kind::PreprocessorDirective:
-    preprocessor_.Directive(TokenizePreprocessorDirective(), *this);
-    return;
   case LineClassification::Kind::IncludeDirective:
     preprocessor_.Directive(TokenizePreprocessorDirective(), *this);
-    afterIncludeDirective_ = true;
+    afterPreprocessingDirective_ = true;
+    return;
+  case LineClassification::Kind::PreprocessorDirective:
+  case LineClassification::Kind::DefinitionDirective:
+    preprocessor_.Directive(TokenizePreprocessorDirective(), *this);
+    // Don't set afterPreprocessingDirective_
     return;
   case LineClassification::Kind::CompilerDirective: {
     directiveSentinel_ = line.sentinel;
@@ -289,13 +290,14 @@ void Prescanner::CheckAndEmitLine(
   tokens.CheckBadFortranCharacters(
       messages_, *this, disableSourceContinuation_);
   // Parenthesis nesting check does not apply while any #include is
-  // active, nor on the lines before and after a top-level #include.
+  // active, nor on the lines before and after a top-level #include,
+  // nor before or after conditional source.
   // Applications play shenanigans with line continuation before and
-  // after #include'd subprogram argument lists.
+  // after #include'd subprogram argument lists and conditional source.
   if (!isNestedInIncludeDirective_ && !omitNewline_ &&
-      !afterIncludeDirective_ && tokens.BadlyNestedParentheses()) {
-    if (inFixedForm_ && nextLine_ < limit_ &&
-        IsPreprocessorDirectiveLine(nextLine_)) {
+      !afterPreprocessingDirective_ && tokens.BadlyNestedParentheses() &&
+      !preprocessor_.InConditional()) {
+    if (nextLine_ < limit_ && IsPreprocessorDirectiveLine(nextLine_)) {
       // don't complain
     } else {
       tokens.CheckBadParentheses(messages_);
@@ -306,7 +308,7 @@ void Prescanner::CheckAndEmitLine(
     omitNewline_ = false;
   } else {
     cooked_.Put('\n', newlineProvenance);
-    afterIncludeDirective_ = false;
+    afterPreprocessingDirective_ = false;
   }
 }
 
@@ -1069,6 +1071,17 @@ bool Prescanner::SkipCommentLine(bool afterAmpersand) {
     return true;
   } else if (inPreprocessorDirective_) {
     return false;
+  } else if (afterAmpersand &&
+      (lineClass.kind ==
+              LineClassification::Kind::ConditionalCompilationDirective ||
+          lineClass.kind == LineClassification::Kind::DefinitionDirective ||
+          lineClass.kind == LineClassification::Kind::PreprocessorDirective ||
+          lineClass.kind == LineClassification::Kind::IncludeDirective ||
+          lineClass.kind == LineClassification::Kind::IncludeLine)) {
+    SkipToEndOfLine();
+    omitNewline_ = true;
+    skipLeadingAmpersand_ = true;
+    return false;
   } else if (lineClass.kind ==
           LineClassification::Kind::ConditionalCompilationDirective ||
       lineClass.kind == LineClassification::Kind::PreprocessorDirective) {
@@ -1080,13 +1093,6 @@ bool Prescanner::SkipCommentLine(bool afterAmpersand) {
     // continued line).
     preprocessor_.Directive(TokenizePreprocessorDirective(), *this);
     return true;
-  } else if (afterAmpersand &&
-      (lineClass.kind == LineClassification::Kind::IncludeDirective ||
-          lineClass.kind == LineClassification::Kind::IncludeLine)) {
-    SkipToEndOfLine();
-    omitNewline_ = true;
-    skipLeadingAmpersand_ = true;
-    return false;
   } else {
     return false;
   }
