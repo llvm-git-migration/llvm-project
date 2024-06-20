@@ -35,15 +35,15 @@ define amdgpu_kernel void @s_cttz_i32(ptr addrspace(1) noalias %out, i32 %val) n
 ;
 ; VI-LABEL: s_cttz_i32:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_ff1_i32_b32 s4, s4
-; VI-NEXT:    s_min_u32 s4, s4, 32
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    s_ff1_i32_b32 s0, s2
+; VI-NEXT:    s_min_u32 s0, s0, 32
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: s_cttz_i32:
@@ -519,16 +519,16 @@ define amdgpu_kernel void @s_cttz_i64(ptr addrspace(1) noalias %out, [8 x i32], 
 ;
 ; VI-LABEL: s_cttz_i64:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x4c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x4c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v1, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_ff1_i32_b64 s4, s[4:5]
-; VI-NEXT:    s_min_u32 s4, s4, 64
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
+; VI-NEXT:    s_ff1_i32_b64 s0, s[2:3]
+; VI-NEXT:    s_min_u32 s0, s0, 64
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: s_cttz_i64:

@@ -10,11 +10,11 @@
 define amdgpu_kernel void @tbuffer_store_d16_x(<4 x i32> %rsrc, half %data) {
 ; PREGFX10-UNPACKED-LABEL: tbuffer_store_d16_x:
 ; PREGFX10-UNPACKED:       ; %bb.0: ; %main_body
-; PREGFX10-UNPACKED-NEXT:    s_load_dword s4, s[0:1], 0x34
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; PREGFX10-UNPACKED-NEXT:    s_load_dword s2, s[0:1], 0x34
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; PREGFX10-UNPACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s4
-; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_x v0, off, s[0:3], 0 format:[BUF_NUM_FORMAT_USCALED]
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s2
+; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_x v0, off, s[4:7], 0 format:[BUF_NUM_FORMAT_USCALED]
 ; PREGFX10-UNPACKED-NEXT:    s_endpgm
 ;
 ; PREGFX10-PACKED-LABEL: tbuffer_store_d16_x:
@@ -39,11 +39,11 @@ define amdgpu_kernel void @tbuffer_store_d16_x(<4 x i32> %rsrc, half %data) {
 ; GFX11-PACKED-LABEL: tbuffer_store_d16_x:
 ; GFX11-PACKED:       ; %bb.0: ; %main_body
 ; GFX11-PACKED-NEXT:    s_clause 0x1
-; GFX11-PACKED-NEXT:    s_load_b32 s4, s[0:1], 0x34
-; GFX11-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-PACKED-NEXT:    s_load_b32 s2, s[0:1], 0x34
+; GFX11-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-PACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_x v0, off, s[0:3], 0 format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_x v0, off, s[4:7], 0 format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX11-PACKED-NEXT:    s_nop 0
 ; GFX11-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-PACKED-NEXT:    s_endpgm
@@ -51,11 +51,11 @@ define amdgpu_kernel void @tbuffer_store_d16_x(<4 x i32> %rsrc, half %data) {
 ; GFX12-PACKED-LABEL: tbuffer_store_d16_x:
 ; GFX12-PACKED:       ; %bb.0: ; %main_body
 ; GFX12-PACKED-NEXT:    s_clause 0x1
-; GFX12-PACKED-NEXT:    s_load_b32 s4, s[0:1], 0x34
-; GFX12-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-PACKED-NEXT:    s_load_b32 s2, s[0:1], 0x34
+; GFX12-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-PACKED-NEXT:    s_wait_kmcnt 0x0
-; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_x v0, off, s[0:3], null format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_x v0, off, s[4:7], null format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX12-PACKED-NEXT:    s_nop 0
 ; GFX12-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-PACKED-NEXT:    s_endpgm
@@ -67,14 +67,14 @@ main_body:
 define amdgpu_kernel void @tbuffer_store_d16_xy(<4 x i32> %rsrc, <2 x half> %data) {
 ; PREGFX10-UNPACKED-LABEL: tbuffer_store_d16_xy:
 ; PREGFX10-UNPACKED:       ; %bb.0: ; %main_body
-; PREGFX10-UNPACKED-NEXT:    s_load_dword s4, s[0:1], 0x34
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; PREGFX10-UNPACKED-NEXT:    s_load_dword s2, s[0:1], 0x34
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; PREGFX10-UNPACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s5, s4, 16
-; PREGFX10-UNPACKED-NEXT:    s_and_b32 s4, s4, 0xffff
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s4
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s5
-; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xy v[0:1], off, s[0:3], 0 format:[BUF_NUM_FORMAT_USCALED]
+; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s0, s2, 16
+; PREGFX10-UNPACKED-NEXT:    s_and_b32 s1, s2, 0xffff
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s1
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s0
+; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xy v[0:1], off, s[4:7], 0 format:[BUF_NUM_FORMAT_USCALED]
 ; PREGFX10-UNPACKED-NEXT:    s_endpgm
 ;
 ; PREGFX10-PACKED-LABEL: tbuffer_store_d16_xy:
@@ -99,11 +99,11 @@ define amdgpu_kernel void @tbuffer_store_d16_xy(<4 x i32> %rsrc, <2 x half> %dat
 ; GFX11-PACKED-LABEL: tbuffer_store_d16_xy:
 ; GFX11-PACKED:       ; %bb.0: ; %main_body
 ; GFX11-PACKED-NEXT:    s_clause 0x1
-; GFX11-PACKED-NEXT:    s_load_b32 s4, s[0:1], 0x34
-; GFX11-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-PACKED-NEXT:    s_load_b32 s2, s[0:1], 0x34
+; GFX11-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-PACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xy v0, off, s[0:3], 0 format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xy v0, off, s[4:7], 0 format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX11-PACKED-NEXT:    s_nop 0
 ; GFX11-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-PACKED-NEXT:    s_endpgm
@@ -111,11 +111,11 @@ define amdgpu_kernel void @tbuffer_store_d16_xy(<4 x i32> %rsrc, <2 x half> %dat
 ; GFX12-PACKED-LABEL: tbuffer_store_d16_xy:
 ; GFX12-PACKED:       ; %bb.0: ; %main_body
 ; GFX12-PACKED-NEXT:    s_clause 0x1
-; GFX12-PACKED-NEXT:    s_load_b32 s4, s[0:1], 0x34
-; GFX12-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-PACKED-NEXT:    s_load_b32 s2, s[0:1], 0x34
+; GFX12-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-PACKED-NEXT:    s_wait_kmcnt 0x0
-; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_xy v0, off, s[0:3], null format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_xy v0, off, s[4:7], null format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX12-PACKED-NEXT:    s_nop 0
 ; GFX12-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-PACKED-NEXT:    s_endpgm
@@ -127,16 +127,16 @@ main_body:
 define amdgpu_kernel void @tbuffer_store_d16_xyz(<4 x i32> %rsrc, <4 x half> %data) {
 ; PREGFX10-UNPACKED-LABEL: tbuffer_store_d16_xyz:
 ; PREGFX10-UNPACKED:       ; %bb.0: ; %main_body
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; PREGFX10-UNPACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; PREGFX10-UNPACKED-NEXT:    s_and_b32 s5, s5, 0xffff
-; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s6, s4, 16
-; PREGFX10-UNPACKED-NEXT:    s_and_b32 s4, s4, 0xffff
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s4
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s6
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v2, s5
-; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xyz v[0:2], off, s[0:3], 0 format:[BUF_NUM_FORMAT_USCALED]
+; PREGFX10-UNPACKED-NEXT:    s_and_b32 s0, s3, 0xffff
+; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s1, s2, 16
+; PREGFX10-UNPACKED-NEXT:    s_and_b32 s2, s2, 0xffff
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s2
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s1
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v2, s0
+; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xyz v[0:2], off, s[4:7], 0 format:[BUF_NUM_FORMAT_USCALED]
 ; PREGFX10-UNPACKED-NEXT:    s_endpgm
 ;
 ; PREGFX10-PACKED-LABEL: tbuffer_store_d16_xyz:
@@ -165,13 +165,13 @@ define amdgpu_kernel void @tbuffer_store_d16_xyz(<4 x i32> %rsrc, <4 x half> %da
 ; GFX11-PACKED-LABEL: tbuffer_store_d16_xyz:
 ; GFX11-PACKED:       ; %bb.0: ; %main_body
 ; GFX11-PACKED-NEXT:    s_clause 0x1
-; GFX11-PACKED-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; GFX11-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-PACKED-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; GFX11-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-PACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-PACKED-NEXT:    s_and_b32 s5, s5, 0xffff
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v1, s5
-; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xyz v[0:1], off, s[0:3], 0 format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX11-PACKED-NEXT:    s_and_b32 s0, s3, 0xffff
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v1, s0
+; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xyz v[0:1], off, s[4:7], 0 format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX11-PACKED-NEXT:    s_nop 0
 ; GFX11-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-PACKED-NEXT:    s_endpgm
@@ -179,13 +179,13 @@ define amdgpu_kernel void @tbuffer_store_d16_xyz(<4 x i32> %rsrc, <4 x half> %da
 ; GFX12-PACKED-SDAG-LABEL: tbuffer_store_d16_xyz:
 ; GFX12-PACKED-SDAG:       ; %bb.0: ; %main_body
 ; GFX12-PACKED-SDAG-NEXT:    s_clause 0x1
-; GFX12-PACKED-SDAG-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; GFX12-PACKED-SDAG-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-PACKED-SDAG-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; GFX12-PACKED-SDAG-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-PACKED-SDAG-NEXT:    s_wait_kmcnt 0x0
-; GFX12-PACKED-SDAG-NEXT:    s_and_b32 s5, s5, 0xffff
-; GFX12-PACKED-SDAG-NEXT:    v_mov_b32_e32 v0, s4
-; GFX12-PACKED-SDAG-NEXT:    v_mov_b32_e32 v1, s5
-; GFX12-PACKED-SDAG-NEXT:    tbuffer_store_d16_format_xyz v[0:1], off, s[0:3], null format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX12-PACKED-SDAG-NEXT:    s_and_b32 s0, s3, 0xffff
+; GFX12-PACKED-SDAG-NEXT:    v_mov_b32_e32 v0, s2
+; GFX12-PACKED-SDAG-NEXT:    v_mov_b32_e32 v1, s0
+; GFX12-PACKED-SDAG-NEXT:    tbuffer_store_d16_format_xyz v[0:1], off, s[4:7], null format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX12-PACKED-SDAG-NEXT:    s_nop 0
 ; GFX12-PACKED-SDAG-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-PACKED-SDAG-NEXT:    s_endpgm
@@ -193,14 +193,14 @@ define amdgpu_kernel void @tbuffer_store_d16_xyz(<4 x i32> %rsrc, <4 x half> %da
 ; GFX12-PACKED-GISEL-LABEL: tbuffer_store_d16_xyz:
 ; GFX12-PACKED-GISEL:       ; %bb.0: ; %main_body
 ; GFX12-PACKED-GISEL-NEXT:    s_clause 0x1
-; GFX12-PACKED-GISEL-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; GFX12-PACKED-GISEL-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-PACKED-GISEL-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; GFX12-PACKED-GISEL-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-PACKED-GISEL-NEXT:    s_wait_kmcnt 0x0
-; GFX12-PACKED-GISEL-NEXT:    s_pack_lh_b32_b16 s4, s4, s4
+; GFX12-PACKED-GISEL-NEXT:    s_pack_lh_b32_b16 s2, s2, s2
 ; GFX12-PACKED-GISEL-NEXT:    s_delay_alu instid0(SALU_CYCLE_1)
-; GFX12-PACKED-GISEL-NEXT:    v_mov_b32_e32 v0, s4
-; GFX12-PACKED-GISEL-NEXT:    v_mov_b32_e32 v1, s5
-; GFX12-PACKED-GISEL-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[0:3], null format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX12-PACKED-GISEL-NEXT:    v_mov_b32_e32 v0, s2
+; GFX12-PACKED-GISEL-NEXT:    v_mov_b32_e32 v1, s3
+; GFX12-PACKED-GISEL-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[4:7], null format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX12-PACKED-GISEL-NEXT:    s_nop 0
 ; GFX12-PACKED-GISEL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-PACKED-GISEL-NEXT:    s_endpgm
@@ -213,18 +213,18 @@ main_body:
 define amdgpu_kernel void @tbuffer_store_d16_xyzw(<4 x i32> %rsrc, <4 x half> %data) {
 ; PREGFX10-UNPACKED-LABEL: tbuffer_store_d16_xyzw:
 ; PREGFX10-UNPACKED:       ; %bb.0: ; %main_body
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; PREGFX10-UNPACKED-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; PREGFX10-UNPACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s6, s5, 16
-; PREGFX10-UNPACKED-NEXT:    s_and_b32 s5, s5, 0xffff
-; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s7, s4, 16
-; PREGFX10-UNPACKED-NEXT:    s_and_b32 s4, s4, 0xffff
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s4
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s7
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v2, s5
-; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v3, s6
-; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xyzw v[0:3], off, s[0:3], 0 format:[BUF_NUM_FORMAT_USCALED]
+; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s0, s3, 16
+; PREGFX10-UNPACKED-NEXT:    s_and_b32 s1, s3, 0xffff
+; PREGFX10-UNPACKED-NEXT:    s_lshr_b32 s3, s2, 16
+; PREGFX10-UNPACKED-NEXT:    s_and_b32 s2, s2, 0xffff
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v0, s2
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v1, s3
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v2, s1
+; PREGFX10-UNPACKED-NEXT:    v_mov_b32_e32 v3, s0
+; PREGFX10-UNPACKED-NEXT:    tbuffer_store_format_d16_xyzw v[0:3], off, s[4:7], 0 format:[BUF_NUM_FORMAT_USCALED]
 ; PREGFX10-UNPACKED-NEXT:    s_endpgm
 ;
 ; PREGFX10-PACKED-LABEL: tbuffer_store_d16_xyzw:
@@ -251,12 +251,12 @@ define amdgpu_kernel void @tbuffer_store_d16_xyzw(<4 x i32> %rsrc, <4 x half> %d
 ; GFX11-PACKED-LABEL: tbuffer_store_d16_xyzw:
 ; GFX11-PACKED:       ; %bb.0: ; %main_body
 ; GFX11-PACKED-NEXT:    s_clause 0x1
-; GFX11-PACKED-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; GFX11-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-PACKED-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; GFX11-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-PACKED-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX11-PACKED-NEXT:    v_mov_b32_e32 v1, s5
-; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[0:3], 0 format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX11-PACKED-NEXT:    v_mov_b32_e32 v1, s3
+; GFX11-PACKED-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[4:7], 0 format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX11-PACKED-NEXT:    s_nop 0
 ; GFX11-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-PACKED-NEXT:    s_endpgm
@@ -264,12 +264,12 @@ define amdgpu_kernel void @tbuffer_store_d16_xyzw(<4 x i32> %rsrc, <4 x half> %d
 ; GFX12-PACKED-LABEL: tbuffer_store_d16_xyzw:
 ; GFX12-PACKED:       ; %bb.0: ; %main_body
 ; GFX12-PACKED-NEXT:    s_clause 0x1
-; GFX12-PACKED-NEXT:    s_load_b64 s[4:5], s[0:1], 0x34
-; GFX12-PACKED-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-PACKED-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
+; GFX12-PACKED-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-PACKED-NEXT:    s_wait_kmcnt 0x0
-; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s4
-; GFX12-PACKED-NEXT:    v_mov_b32_e32 v1, s5
-; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[0:3], null format:[BUF_FMT_10_10_10_2_SNORM]
+; GFX12-PACKED-NEXT:    v_mov_b32_e32 v0, s2
+; GFX12-PACKED-NEXT:    v_mov_b32_e32 v1, s3
+; GFX12-PACKED-NEXT:    tbuffer_store_d16_format_xyzw v[0:1], off, s[4:7], null format:[BUF_FMT_10_10_10_2_SNORM]
 ; GFX12-PACKED-NEXT:    s_nop 0
 ; GFX12-PACKED-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-PACKED-NEXT:    s_endpgm

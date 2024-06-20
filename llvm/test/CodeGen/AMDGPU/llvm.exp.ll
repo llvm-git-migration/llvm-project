@@ -12,84 +12,86 @@
 define amdgpu_kernel void @s_exp_f32(ptr addrspace(1) %out, float %in) {
 ; VI-SDAG-LABEL: s_exp_f32:
 ; VI-SDAG:       ; %bb.0:
-; VI-SDAG-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-SDAG-NEXT:    s_load_dword s4, s[0:1], 0x2c
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8a000
-; VI-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-SDAG-NEXT:    s_and_b32 s3, s2, 0xfffff000
-; VI-SDAG-NEXT:    v_mov_b32_e32 v1, s3
-; VI-SDAG-NEXT:    v_sub_f32_e32 v1, s2, v1
+; VI-SDAG-NEXT:    s_and_b32 s2, s4, 0xfffff000
+; VI-SDAG-NEXT:    v_mov_b32_e32 v1, s2
+; VI-SDAG-NEXT:    v_sub_f32_e32 v1, s4, v1
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v3, 0x39a3b295, v1
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v1, 0x3fb8a000, v1
-; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s3, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s2, v0
 ; VI-SDAG-NEXT:    v_add_f32_e32 v1, v1, v3
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v3, 0x39a3b295
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v2, v0
-; VI-SDAG-NEXT:    v_mul_f32_e32 v3, s3, v3
+; VI-SDAG-NEXT:    v_mul_f32_e32 v3, s2, v3
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v0, v0, v2
 ; VI-SDAG-NEXT:    v_add_f32_e32 v1, v3, v1
 ; VI-SDAG-NEXT:    v_add_f32_e32 v0, v0, v1
 ; VI-SDAG-NEXT:    v_exp_f32_e32 v0, v0
 ; VI-SDAG-NEXT:    v_cvt_i32_f32_e32 v1, v2
+; VI-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v2, 0x7f800000
 ; VI-SDAG-NEXT:    v_ldexp_f32 v0, v0, v1
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v1, 0xc2ce8ed0
-; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s2, v1
+; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s4, v1
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v1, 0x42b17218
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v0, 0, v0, vcc
-; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s2, v1
+; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v1
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v2, v2, v0, vcc
-; VI-SDAG-NEXT:    v_mov_b32_e32 v0, s0
-; VI-SDAG-NEXT:    v_mov_b32_e32 v1, s1
+; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-SDAG-NEXT:    v_mov_b32_e32 v0, s2
+; VI-SDAG-NEXT:    v_mov_b32_e32 v1, s3
 ; VI-SDAG-NEXT:    flat_store_dword v[0:1], v2
 ; VI-SDAG-NEXT:    s_endpgm
 ;
 ; VI-GISEL-LABEL: s_exp_f32:
 ; VI-GISEL:       ; %bb.0:
-; VI-GISEL-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-GISEL-NEXT:    s_load_dword s4, s[0:1], 0x2c
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v0, 0x3fb8a000
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v1, 0x39a3b295
-; VI-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-GISEL-NEXT:    s_and_b32 s3, s2, 0xfffff000
-; VI-GISEL-NEXT:    v_mov_b32_e32 v2, s3
-; VI-GISEL-NEXT:    v_sub_f32_e32 v2, s2, v2
+; VI-GISEL-NEXT:    s_and_b32 s2, s4, 0xfffff000
+; VI-GISEL-NEXT:    v_mov_b32_e32 v2, s2
+; VI-GISEL-NEXT:    v_sub_f32_e32 v2, s4, v2
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v3, 0x39a3b295, v2
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v2, 0x3fb8a000, v2
-; VI-GISEL-NEXT:    v_mul_f32_e32 v0, s3, v0
+; VI-GISEL-NEXT:    v_mul_f32_e32 v0, s2, v0
 ; VI-GISEL-NEXT:    v_add_f32_e32 v2, v2, v3
-; VI-GISEL-NEXT:    v_mul_f32_e32 v1, s3, v1
+; VI-GISEL-NEXT:    v_mul_f32_e32 v1, s2, v1
 ; VI-GISEL-NEXT:    v_add_f32_e32 v1, v1, v2
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v2, v0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v0, v0, v2
 ; VI-GISEL-NEXT:    v_add_f32_e32 v0, v0, v1
 ; VI-GISEL-NEXT:    v_cvt_i32_f32_e32 v1, v2
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v0, v0
+; VI-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v2, 0x7f800000
 ; VI-GISEL-NEXT:    v_ldexp_f32 v0, v0, v1
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v1, 0xc2ce8ed0
-; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s2, v1
+; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s4, v1
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v1, 0x42b17218
 ; VI-GISEL-NEXT:    v_cndmask_b32_e64 v0, v0, 0, vcc
-; VI-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s2, v1
+; VI-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s4, v1
 ; VI-GISEL-NEXT:    v_cndmask_b32_e32 v2, v0, v2, vcc
-; VI-GISEL-NEXT:    v_mov_b32_e32 v0, s0
-; VI-GISEL-NEXT:    v_mov_b32_e32 v1, s1
+; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-GISEL-NEXT:    v_mov_b32_e32 v0, s2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v1, s3
 ; VI-GISEL-NEXT:    flat_store_dword v[0:1], v2
 ; VI-GISEL-NEXT:    s_endpgm
 ;
 ; GFX900-SDAG-LABEL: s_exp_f32:
 ; GFX900-SDAG:       ; %bb.0:
-; GFX900-SDAG-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GFX900-SDAG-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; GFX900-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8aa3b
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v1, 0x32a5705f
-; GFX900-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX900-SDAG-NEXT:    v_mul_f32_e32 v2, s2, v0
+; GFX900-SDAG-NEXT:    v_mul_f32_e32 v2, s4, v0
 ; GFX900-SDAG-NEXT:    v_rndne_f32_e32 v3, v2
-; GFX900-SDAG-NEXT:    v_fma_f32 v0, s2, v0, -v2
+; GFX900-SDAG-NEXT:    v_fma_f32 v0, s4, v0, -v2
 ; GFX900-SDAG-NEXT:    v_sub_f32_e32 v2, v2, v3
-; GFX900-SDAG-NEXT:    v_fma_f32 v0, s2, v1, v0
+; GFX900-SDAG-NEXT:    v_fma_f32 v0, s4, v1, v0
 ; GFX900-SDAG-NEXT:    v_add_f32_e32 v0, v2, v0
 ; GFX900-SDAG-NEXT:    v_cvt_i32_f32_e32 v1, v3
 ; GFX900-SDAG-NEXT:    v_exp_f32_e32 v0, v0
@@ -97,39 +99,39 @@ define amdgpu_kernel void @s_exp_f32(ptr addrspace(1) %out, float %in) {
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX900-SDAG-NEXT:    v_ldexp_f32 v0, v0, v1
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v1, 0xc2ce8ed0
-; GFX900-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s2, v1
+; GFX900-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s4, v1
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v1, 0x42b17218
 ; GFX900-SDAG-NEXT:    v_cndmask_b32_e32 v0, 0, v0, vcc
-; GFX900-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s2, v1
+; GFX900-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v1
 ; GFX900-SDAG-NEXT:    v_cndmask_b32_e32 v0, v3, v0, vcc
-; GFX900-SDAG-NEXT:    global_store_dword v2, v0, s[0:1]
+; GFX900-SDAG-NEXT:    global_store_dword v2, v0, s[2:3]
 ; GFX900-SDAG-NEXT:    s_endpgm
 ;
 ; GFX900-GISEL-LABEL: s_exp_f32:
 ; GFX900-GISEL:       ; %bb.0:
-; GFX900-GISEL-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; GFX900-GISEL-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; GFX900-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v0, 0x3fb8aa3b
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v1, 0x32a5705f
-; GFX900-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX900-GISEL-NEXT:    v_mul_f32_e32 v2, s2, v0
-; GFX900-GISEL-NEXT:    v_fma_f32 v0, s2, v0, -v2
+; GFX900-GISEL-NEXT:    v_mul_f32_e32 v2, s4, v0
+; GFX900-GISEL-NEXT:    v_fma_f32 v0, s4, v0, -v2
 ; GFX900-GISEL-NEXT:    v_rndne_f32_e32 v3, v2
-; GFX900-GISEL-NEXT:    v_fma_f32 v0, s2, v1, v0
+; GFX900-GISEL-NEXT:    v_fma_f32 v0, s4, v1, v0
 ; GFX900-GISEL-NEXT:    v_sub_f32_e32 v1, v2, v3
 ; GFX900-GISEL-NEXT:    v_add_f32_e32 v0, v1, v0
 ; GFX900-GISEL-NEXT:    v_cvt_i32_f32_e32 v1, v3
 ; GFX900-GISEL-NEXT:    v_exp_f32_e32 v0, v0
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v2, 0xc2ce8ed0
-; GFX900-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s2, v2
+; GFX900-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s4, v2
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v2, 0x7f800000
 ; GFX900-GISEL-NEXT:    v_ldexp_f32 v0, v0, v1
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v1, 0x42b17218
 ; GFX900-GISEL-NEXT:    v_cndmask_b32_e64 v0, v0, 0, vcc
-; GFX900-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s2, v1
+; GFX900-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s4, v1
 ; GFX900-GISEL-NEXT:    v_cndmask_b32_e32 v0, v0, v2, vcc
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v1, 0
-; GFX900-GISEL-NEXT:    global_store_dword v1, v0, s[0:1]
+; GFX900-GISEL-NEXT:    global_store_dword v1, v0, s[2:3]
 ; GFX900-GISEL-NEXT:    s_endpgm
 ;
 ; SI-SDAG-LABEL: s_exp_f32:
@@ -853,7 +855,6 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-SDAG:       ; %bb.0:
 ; VI-SDAG-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8a000
-; VI-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-SDAG-NEXT:    s_and_b32 s2, s6, 0xfffff000
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v2, s2
@@ -870,16 +871,17 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-SDAG-NEXT:    v_add_f32_e32 v1, v1, v2
 ; VI-SDAG-NEXT:    v_exp_f32_e32 v1, v1
 ; VI-SDAG-NEXT:    v_cvt_i32_f32_e32 v2, v3
-; VI-SDAG-NEXT:    s_and_b32 s2, s5, 0xfffff000
-; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s2
+; VI-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; VI-SDAG-NEXT:    s_and_b32 s0, s5, 0xfffff000
+; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s0
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v7, s5, v7
 ; VI-SDAG-NEXT:    v_ldexp_f32 v1, v1, v2
-; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s2, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s0, v0
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v8, 0x39a3b295, v7
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v7, 0x3fb8a000, v7
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v6, v2
 ; VI-SDAG-NEXT:    v_add_f32_e32 v7, v7, v8
-; VI-SDAG-NEXT:    v_mul_f32_e32 v8, s2, v4
+; VI-SDAG-NEXT:    v_mul_f32_e32 v8, s0, v4
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v2, v2, v6
 ; VI-SDAG-NEXT:    v_add_f32_e32 v7, v8, v7
 ; VI-SDAG-NEXT:    v_add_f32_e32 v2, v2, v7
@@ -891,17 +893,17 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v1, 0, v1, vcc
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v8, 0x7f800000
 ; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s6, v5
-; VI-SDAG-NEXT:    s_and_b32 s2, s4, 0xfffff000
+; VI-SDAG-NEXT:    s_and_b32 s0, s4, 0xfffff000
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v2, v8, v1, vcc
 ; VI-SDAG-NEXT:    v_ldexp_f32 v1, v7, v6
-; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s2
+; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s0
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v7, s4, v7
-; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s2, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s0, v0
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v9, 0x39a3b295, v7
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v7, 0x3fb8a000, v7
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v6, v0
 ; VI-SDAG-NEXT:    v_add_f32_e32 v7, v7, v9
-; VI-SDAG-NEXT:    v_mul_f32_e32 v4, s2, v4
+; VI-SDAG-NEXT:    v_mul_f32_e32 v4, s0, v4
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v0, v0, v6
 ; VI-SDAG-NEXT:    v_add_f32_e32 v4, v4, v7
 ; VI-SDAG-NEXT:    v_add_f32_e32 v0, v0, v4
@@ -915,9 +917,10 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s4, v3
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v0, 0, v0, vcc
 ; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v5
-; VI-SDAG-NEXT:    v_mov_b32_e32 v4, s1
+; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-SDAG-NEXT:    v_mov_b32_e32 v4, s3
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v0, v8, v0, vcc
-; VI-SDAG-NEXT:    v_mov_b32_e32 v3, s0
+; VI-SDAG-NEXT:    v_mov_b32_e32 v3, s2
 ; VI-SDAG-NEXT:    flat_store_dwordx3 v[3:4], v[0:2]
 ; VI-SDAG-NEXT:    s_endpgm
 ;
@@ -926,7 +929,6 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-GISEL-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v1, 0x3fb8a000
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v2, 0x39a3b295
-; VI-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-GISEL-NEXT:    s_and_b32 s2, s4, 0xfffff000
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v0, s2
@@ -936,14 +938,15 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v3, s2, v1
 ; VI-GISEL-NEXT:    v_add_f32_e32 v0, v0, v4
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v4, s2, v2
-; VI-GISEL-NEXT:    s_and_b32 s2, s5, 0xfffff000
-; VI-GISEL-NEXT:    v_mov_b32_e32 v5, s2
+; VI-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; VI-GISEL-NEXT:    s_and_b32 s0, s5, 0xfffff000
+; VI-GISEL-NEXT:    v_mov_b32_e32 v5, s0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v5, s5, v5
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v7, 0x39a3b295, v5
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v5, 0x3fb8a000, v5
-; VI-GISEL-NEXT:    v_mul_f32_e32 v6, s2, v1
+; VI-GISEL-NEXT:    v_mul_f32_e32 v6, s0, v1
 ; VI-GISEL-NEXT:    v_add_f32_e32 v5, v5, v7
-; VI-GISEL-NEXT:    v_mul_f32_e32 v7, s2, v2
+; VI-GISEL-NEXT:    v_mul_f32_e32 v7, s0, v2
 ; VI-GISEL-NEXT:    v_add_f32_e32 v5, v7, v5
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v7, v6
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v6, v6, v7
@@ -952,19 +955,19 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v5, v5
 ; VI-GISEL-NEXT:    v_add_f32_e32 v0, v4, v0
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v4, v3
-; VI-GISEL-NEXT:    s_and_b32 s2, s6, 0xfffff000
+; VI-GISEL-NEXT:    s_and_b32 s0, s6, 0xfffff000
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v3, v3, v4
 ; VI-GISEL-NEXT:    v_ldexp_f32 v5, v5, v6
-; VI-GISEL-NEXT:    v_mov_b32_e32 v6, s2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v6, s0
 ; VI-GISEL-NEXT:    v_add_f32_e32 v0, v3, v0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v6, s6, v6
 ; VI-GISEL-NEXT:    v_cvt_i32_f32_e32 v3, v4
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v0, v0
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v8, 0x39a3b295, v6
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v6, 0x3fb8a000, v6
-; VI-GISEL-NEXT:    v_mul_f32_e32 v1, s2, v1
+; VI-GISEL-NEXT:    v_mul_f32_e32 v1, s0, v1
 ; VI-GISEL-NEXT:    v_add_f32_e32 v6, v6, v8
-; VI-GISEL-NEXT:    v_mul_f32_e32 v2, s2, v2
+; VI-GISEL-NEXT:    v_mul_f32_e32 v2, s0, v2
 ; VI-GISEL-NEXT:    v_add_f32_e32 v2, v2, v6
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v6, v1
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v1, v1, v6
@@ -987,19 +990,20 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s6, v3
 ; VI-GISEL-NEXT:    v_cndmask_b32_e64 v2, v2, 0, vcc
 ; VI-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s6, v4
-; VI-GISEL-NEXT:    v_mov_b32_e32 v4, s1
+; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-GISEL-NEXT:    v_mov_b32_e32 v4, s3
 ; VI-GISEL-NEXT:    v_cndmask_b32_e32 v2, v2, v7, vcc
-; VI-GISEL-NEXT:    v_mov_b32_e32 v3, s0
+; VI-GISEL-NEXT:    v_mov_b32_e32 v3, s2
 ; VI-GISEL-NEXT:    flat_store_dwordx3 v[3:4], v[0:2]
 ; VI-GISEL-NEXT:    s_endpgm
 ;
 ; GFX900-SDAG-LABEL: s_exp_v3f32:
 ; GFX900-SDAG:       ; %bb.0:
 ; GFX900-SDAG-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
+; GFX900-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8aa3b
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v1, 0x32a5705f
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v5, 0x42b17218
-; GFX900-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX900-SDAG-NEXT:    v_mul_f32_e32 v6, s5, v0
 ; GFX900-SDAG-NEXT:    v_rndne_f32_e32 v7, v6
@@ -1043,15 +1047,15 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; GFX900-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v5
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v4, 0
 ; GFX900-SDAG-NEXT:    v_cndmask_b32_e32 v0, v8, v0, vcc
-; GFX900-SDAG-NEXT:    global_store_dwordx3 v4, v[0:2], s[0:1]
+; GFX900-SDAG-NEXT:    global_store_dwordx3 v4, v[0:2], s[2:3]
 ; GFX900-SDAG-NEXT:    s_endpgm
 ;
 ; GFX900-GISEL-LABEL: s_exp_v3f32:
 ; GFX900-GISEL:       ; %bb.0:
 ; GFX900-GISEL-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
+; GFX900-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v1, 0x3fb8aa3b
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v2, 0x32a5705f
-; GFX900-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX900-GISEL-NEXT:    v_mul_f32_e32 v5, s5, v1
 ; GFX900-GISEL-NEXT:    v_fma_f32 v6, s5, v1, -v5
@@ -1096,7 +1100,7 @@ define amdgpu_kernel void @s_exp_v3f32(ptr addrspace(1) %out, <3 x float> %in) {
 ; GFX900-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s6, v3
 ; GFX900-GISEL-NEXT:    v_cndmask_b32_e32 v2, v2, v7, vcc
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v3, 0
-; GFX900-GISEL-NEXT:    global_store_dwordx3 v3, v[0:2], s[0:1]
+; GFX900-GISEL-NEXT:    global_store_dwordx3 v3, v[0:2], s[2:3]
 ; GFX900-GISEL-NEXT:    s_endpgm
 ;
 ; SI-SDAG-LABEL: s_exp_v3f32:
@@ -1593,7 +1597,6 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-SDAG-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8a000
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v6, 0x42b17218
-; VI-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-SDAG-NEXT:    s_and_b32 s2, s7, 0xfffff000
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v2, s2
@@ -1610,37 +1613,38 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-SDAG-NEXT:    v_add_f32_e32 v1, v1, v2
 ; VI-SDAG-NEXT:    v_exp_f32_e32 v1, v1
 ; VI-SDAG-NEXT:    v_cvt_i32_f32_e32 v2, v3
-; VI-SDAG-NEXT:    s_and_b32 s2, s6, 0xfffff000
-; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s2
+; VI-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; VI-SDAG-NEXT:    s_and_b32 s0, s6, 0xfffff000
+; VI-SDAG-NEXT:    v_mov_b32_e32 v7, s0
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v7, s6, v7
 ; VI-SDAG-NEXT:    v_ldexp_f32 v1, v1, v2
-; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s2, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s0, v0
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v8, 0x39a3b295, v7
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v7, 0x3fb8a000, v7
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v3, v2
 ; VI-SDAG-NEXT:    v_add_f32_e32 v7, v7, v8
-; VI-SDAG-NEXT:    v_mul_f32_e32 v8, s2, v4
+; VI-SDAG-NEXT:    v_mul_f32_e32 v8, s0, v4
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v2, v2, v3
 ; VI-SDAG-NEXT:    v_add_f32_e32 v7, v8, v7
 ; VI-SDAG-NEXT:    v_add_f32_e32 v2, v2, v7
 ; VI-SDAG-NEXT:    v_exp_f32_e32 v2, v2
 ; VI-SDAG-NEXT:    v_cvt_i32_f32_e32 v7, v3
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v5, 0xc2ce8ed0
-; VI-SDAG-NEXT:    s_and_b32 s2, s5, 0xfffff000
+; VI-SDAG-NEXT:    s_and_b32 s0, s5, 0xfffff000
 ; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s7, v5
-; VI-SDAG-NEXT:    v_mov_b32_e32 v9, s2
+; VI-SDAG-NEXT:    v_mov_b32_e32 v9, s0
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v1, 0, v1, vcc
 ; VI-SDAG-NEXT:    v_mov_b32_e32 v8, 0x7f800000
 ; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s7, v6
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v9, s5, v9
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v3, v8, v1, vcc
 ; VI-SDAG-NEXT:    v_ldexp_f32 v1, v2, v7
-; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s2, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v2, s0, v0
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v10, 0x39a3b295, v9
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v9, 0x3fb8a000, v9
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v7, v2
 ; VI-SDAG-NEXT:    v_add_f32_e32 v9, v9, v10
-; VI-SDAG-NEXT:    v_mul_f32_e32 v10, s2, v4
+; VI-SDAG-NEXT:    v_mul_f32_e32 v10, s0, v4
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v2, v2, v7
 ; VI-SDAG-NEXT:    v_add_f32_e32 v9, v10, v9
 ; VI-SDAG-NEXT:    v_add_f32_e32 v2, v2, v9
@@ -1649,17 +1653,17 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s6, v5
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v1, 0, v1, vcc
 ; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s6, v6
-; VI-SDAG-NEXT:    s_and_b32 s2, s4, 0xfffff000
+; VI-SDAG-NEXT:    s_and_b32 s0, s4, 0xfffff000
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v2, v8, v1, vcc
 ; VI-SDAG-NEXT:    v_ldexp_f32 v1, v9, v7
-; VI-SDAG-NEXT:    v_mov_b32_e32 v9, s2
+; VI-SDAG-NEXT:    v_mov_b32_e32 v9, s0
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v9, s4, v9
-; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s2, v0
+; VI-SDAG-NEXT:    v_mul_f32_e32 v0, s0, v0
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v10, 0x39a3b295, v9
 ; VI-SDAG-NEXT:    v_mul_f32_e32 v9, 0x3fb8a000, v9
 ; VI-SDAG-NEXT:    v_rndne_f32_e32 v7, v0
 ; VI-SDAG-NEXT:    v_add_f32_e32 v9, v9, v10
-; VI-SDAG-NEXT:    v_mul_f32_e32 v4, s2, v4
+; VI-SDAG-NEXT:    v_mul_f32_e32 v4, s0, v4
 ; VI-SDAG-NEXT:    v_sub_f32_e32 v0, v0, v7
 ; VI-SDAG-NEXT:    v_add_f32_e32 v4, v4, v9
 ; VI-SDAG-NEXT:    v_add_f32_e32 v0, v0, v4
@@ -1673,9 +1677,10 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s4, v5
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v0, 0, v0, vcc
 ; VI-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v6
-; VI-SDAG-NEXT:    v_mov_b32_e32 v5, s1
+; VI-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-SDAG-NEXT:    v_mov_b32_e32 v5, s3
 ; VI-SDAG-NEXT:    v_cndmask_b32_e32 v0, v8, v0, vcc
-; VI-SDAG-NEXT:    v_mov_b32_e32 v4, s0
+; VI-SDAG-NEXT:    v_mov_b32_e32 v4, s2
 ; VI-SDAG-NEXT:    flat_store_dwordx4 v[4:5], v[0:3]
 ; VI-SDAG-NEXT:    s_endpgm
 ;
@@ -1685,7 +1690,6 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v2, 0x3fb8a000
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v3, 0x39a3b295
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v5, 0x42b17218
-; VI-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-GISEL-NEXT:    s_and_b32 s2, s4, 0xfffff000
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v0, s2
@@ -1701,49 +1705,50 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-GISEL-NEXT:    v_add_f32_e32 v0, v1, v0
 ; VI-GISEL-NEXT:    v_cvt_i32_f32_e32 v1, v4
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v0, v0
-; VI-GISEL-NEXT:    s_and_b32 s2, s5, 0xfffff000
-; VI-GISEL-NEXT:    v_mul_f32_e32 v6, s2, v2
-; VI-GISEL-NEXT:    v_mov_b32_e32 v4, 0xc2ce8ed0
+; VI-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; VI-GISEL-NEXT:    s_and_b32 s0, s5, 0xfffff000
+; VI-GISEL-NEXT:    v_mul_f32_e32 v6, s0, v2
 ; VI-GISEL-NEXT:    v_ldexp_f32 v0, v0, v1
-; VI-GISEL-NEXT:    v_mov_b32_e32 v1, s2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v1, s0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v1, s5, v1
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v7, 0x39a3b295, v1
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v1, 0x3fb8a000, v1
 ; VI-GISEL-NEXT:    v_add_f32_e32 v1, v1, v7
-; VI-GISEL-NEXT:    v_mul_f32_e32 v7, s2, v3
+; VI-GISEL-NEXT:    v_mul_f32_e32 v7, s0, v3
 ; VI-GISEL-NEXT:    v_add_f32_e32 v1, v7, v1
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v7, v6
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v6, v6, v7
 ; VI-GISEL-NEXT:    v_add_f32_e32 v1, v6, v1
 ; VI-GISEL-NEXT:    v_cvt_i32_f32_e32 v6, v7
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v1, v1
-; VI-GISEL-NEXT:    s_and_b32 s2, s6, 0xfffff000
-; VI-GISEL-NEXT:    v_mul_f32_e32 v8, s2, v2
-; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s4, v4
+; VI-GISEL-NEXT:    s_and_b32 s0, s6, 0xfffff000
+; VI-GISEL-NEXT:    v_mul_f32_e32 v8, s0, v2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v4, 0xc2ce8ed0
 ; VI-GISEL-NEXT:    v_ldexp_f32 v1, v1, v6
-; VI-GISEL-NEXT:    v_mov_b32_e32 v6, s2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v6, s0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v6, s6, v6
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v9, 0x39a3b295, v6
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v6, 0x3fb8a000, v6
 ; VI-GISEL-NEXT:    v_add_f32_e32 v6, v6, v9
-; VI-GISEL-NEXT:    v_mul_f32_e32 v9, s2, v3
+; VI-GISEL-NEXT:    v_mul_f32_e32 v9, s0, v3
 ; VI-GISEL-NEXT:    v_add_f32_e32 v6, v9, v6
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v9, v8
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v8, v8, v9
 ; VI-GISEL-NEXT:    v_add_f32_e32 v6, v8, v6
 ; VI-GISEL-NEXT:    v_cvt_i32_f32_e32 v8, v9
 ; VI-GISEL-NEXT:    v_exp_f32_e32 v6, v6
-; VI-GISEL-NEXT:    s_and_b32 s2, s7, 0xfffff000
-; VI-GISEL-NEXT:    v_mul_f32_e32 v2, s2, v2
-; VI-GISEL-NEXT:    v_mul_f32_e32 v3, s2, v3
+; VI-GISEL-NEXT:    s_and_b32 s0, s7, 0xfffff000
+; VI-GISEL-NEXT:    v_mul_f32_e32 v2, s0, v2
+; VI-GISEL-NEXT:    v_mul_f32_e32 v3, s0, v3
 ; VI-GISEL-NEXT:    v_ldexp_f32 v6, v6, v8
-; VI-GISEL-NEXT:    v_mov_b32_e32 v8, s2
+; VI-GISEL-NEXT:    v_mov_b32_e32 v8, s0
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v8, s7, v8
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v9, 0x39a3b295, v8
 ; VI-GISEL-NEXT:    v_mul_f32_e32 v8, 0x3fb8a000, v8
 ; VI-GISEL-NEXT:    v_add_f32_e32 v8, v8, v9
 ; VI-GISEL-NEXT:    v_add_f32_e32 v3, v3, v8
 ; VI-GISEL-NEXT:    v_rndne_f32_e32 v8, v2
+; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s4, v4
 ; VI-GISEL-NEXT:    v_sub_f32_e32 v2, v2, v8
 ; VI-GISEL-NEXT:    v_cndmask_b32_e64 v0, v0, 0, vcc
 ; VI-GISEL-NEXT:    v_mov_b32_e32 v7, 0x7f800000
@@ -1764,19 +1769,20 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; VI-GISEL-NEXT:    v_cmp_lt_f32_e32 vcc, s7, v4
 ; VI-GISEL-NEXT:    v_cndmask_b32_e64 v3, v3, 0, vcc
 ; VI-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s7, v5
-; VI-GISEL-NEXT:    v_mov_b32_e32 v5, s1
+; VI-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-GISEL-NEXT:    v_mov_b32_e32 v5, s3
 ; VI-GISEL-NEXT:    v_cndmask_b32_e32 v3, v3, v7, vcc
-; VI-GISEL-NEXT:    v_mov_b32_e32 v4, s0
+; VI-GISEL-NEXT:    v_mov_b32_e32 v4, s2
 ; VI-GISEL-NEXT:    flat_store_dwordx4 v[4:5], v[0:3]
 ; VI-GISEL-NEXT:    s_endpgm
 ;
 ; GFX900-SDAG-LABEL: s_exp_v4f32:
 ; GFX900-SDAG:       ; %bb.0:
 ; GFX900-SDAG-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
+; GFX900-SDAG-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v0, 0x3fb8aa3b
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v1, 0x32a5705f
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v5, 0xc2ce8ed0
-; GFX900-SDAG-NEXT:    v_mov_b32_e32 v6, 0x42b17218
 ; GFX900-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX900-SDAG-NEXT:    v_mul_f32_e32 v2, s7, v0
 ; GFX900-SDAG-NEXT:    v_rndne_f32_e32 v3, v2
@@ -1787,8 +1793,8 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; GFX900-SDAG-NEXT:    v_cvt_i32_f32_e32 v3, v3
 ; GFX900-SDAG-NEXT:    v_exp_f32_e32 v2, v2
 ; GFX900-SDAG-NEXT:    v_cmp_nlt_f32_e32 vcc, s7, v5
+; GFX900-SDAG-NEXT:    v_mov_b32_e32 v6, 0x42b17218
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v9, 0x7f800000
-; GFX900-SDAG-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-SDAG-NEXT:    v_ldexp_f32 v2, v2, v3
 ; GFX900-SDAG-NEXT:    v_mul_f32_e32 v3, s6, v0
 ; GFX900-SDAG-NEXT:    v_rndne_f32_e32 v7, v3
@@ -1833,17 +1839,16 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; GFX900-SDAG-NEXT:    v_cmp_ngt_f32_e32 vcc, s4, v6
 ; GFX900-SDAG-NEXT:    v_mov_b32_e32 v4, 0
 ; GFX900-SDAG-NEXT:    v_cndmask_b32_e32 v0, v9, v0, vcc
-; GFX900-SDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX900-SDAG-NEXT:    global_store_dwordx4 v4, v[0:3], s[0:1]
+; GFX900-SDAG-NEXT:    global_store_dwordx4 v4, v[0:3], s[2:3]
 ; GFX900-SDAG-NEXT:    s_endpgm
 ;
 ; GFX900-GISEL-LABEL: s_exp_v4f32:
 ; GFX900-GISEL:       ; %bb.0:
 ; GFX900-GISEL-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x34
+; GFX900-GISEL-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v2, 0x3fb8aa3b
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v3, 0x32a5705f
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v5, 0x42b17218
-; GFX900-GISEL-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; GFX900-GISEL-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX900-GISEL-NEXT:    v_mul_f32_e32 v0, s4, v2
 ; GFX900-GISEL-NEXT:    v_fma_f32 v1, s4, v2, -v0
@@ -1900,7 +1905,7 @@ define amdgpu_kernel void @s_exp_v4f32(ptr addrspace(1) %out, <4 x float> %in) {
 ; GFX900-GISEL-NEXT:    v_cmp_gt_f32_e32 vcc, s7, v5
 ; GFX900-GISEL-NEXT:    v_cndmask_b32_e32 v3, v3, v7, vcc
 ; GFX900-GISEL-NEXT:    v_mov_b32_e32 v4, 0
-; GFX900-GISEL-NEXT:    global_store_dwordx4 v4, v[0:3], s[0:1]
+; GFX900-GISEL-NEXT:    global_store_dwordx4 v4, v[0:3], s[2:3]
 ; GFX900-GISEL-NEXT:    s_endpgm
 ;
 ; SI-SDAG-LABEL: s_exp_v4f32:

@@ -34,26 +34,26 @@ define amdgpu_kernel void @constant_load_f64(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GFX8-NOHSA-LABEL: constant_load_f64:
 ; GFX8-NOHSA:       ; %bb.0:
-; GFX8-NOHSA-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX8-NOHSA-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX8-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8-NOHSA-NEXT:    s_load_dwordx2 s[2:3], s[2:3], 0x0
-; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v0, s0
-; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v1, s1
+; GFX8-NOHSA-NEXT:    s_load_dwordx2 s[0:1], s[6:7], 0x0
+; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v0, s4
+; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v1, s5
 ; GFX8-NOHSA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v2, s2
-; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v3, s3
+; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v3, s1
+; GFX8-NOHSA-NEXT:    v_mov_b32_e32 v2, s0
 ; GFX8-NOHSA-NEXT:    flat_store_dwordx2 v[0:1], v[2:3]
 ; GFX8-NOHSA-NEXT:    s_endpgm
 ;
 ; GFX12-LABEL: constant_load_f64:
 ; GFX12:       ; %bb.0:
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX12-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    s_load_b64 s[2:3], s[2:3], 0x0
+; GFX12-NEXT:    s_load_b64 s[0:1], s[6:7], 0x0
 ; GFX12-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    v_dual_mov_b32 v0, s2 :: v_dual_mov_b32 v1, s3
-; GFX12-NEXT:    global_store_b64 v2, v[0:1], s[0:1]
+; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
+; GFX12-NEXT:    global_store_b64 v2, v[0:1], s[4:5]
 ; GFX12-NEXT:    s_nop 0
 ; GFX12-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX12-NEXT:    s_endpgm

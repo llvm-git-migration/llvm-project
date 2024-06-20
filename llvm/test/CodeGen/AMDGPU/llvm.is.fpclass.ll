@@ -37,13 +37,13 @@ define amdgpu_kernel void @sgpr_isnan_f32(ptr addrspace(1) %out, float %x) {
 ;
 ; GFX8CHECK-LABEL: sgpr_isnan_f32:
 ; GFX8CHECK:       ; %bb.0:
-; GFX8CHECK-NEXT:    s_load_dword s2, s[0:1], 0x2c
-; GFX8CHECK-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GFX8CHECK-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; GFX8CHECK-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX8CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8CHECK-NEXT:    v_cmp_class_f32_e64 s[2:3], s2, 3
-; GFX8CHECK-NEXT:    v_mov_b32_e32 v0, s0
-; GFX8CHECK-NEXT:    v_cndmask_b32_e64 v2, 0, -1, s[2:3]
-; GFX8CHECK-NEXT:    v_mov_b32_e32 v1, s1
+; GFX8CHECK-NEXT:    v_cmp_class_f32_e64 s[0:1], s4, 3
+; GFX8CHECK-NEXT:    v_mov_b32_e32 v0, s2
+; GFX8CHECK-NEXT:    v_cndmask_b32_e64 v2, 0, -1, s[0:1]
+; GFX8CHECK-NEXT:    v_mov_b32_e32 v1, s3
 ; GFX8CHECK-NEXT:    flat_store_dword v[0:1], v2
 ; GFX8CHECK-NEXT:    s_endpgm
 ;
@@ -61,26 +61,26 @@ define amdgpu_kernel void @sgpr_isnan_f32(ptr addrspace(1) %out, float %x) {
 ; GFX10CHECK-LABEL: sgpr_isnan_f32:
 ; GFX10CHECK:       ; %bb.0:
 ; GFX10CHECK-NEXT:    s_clause 0x1
-; GFX10CHECK-NEXT:    s_load_dword s2, s[0:1], 0x2c
-; GFX10CHECK-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; GFX10CHECK-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; GFX10CHECK-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; GFX10CHECK-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX10CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10CHECK-NEXT:    v_cmp_class_f32_e64 s2, s2, 3
-; GFX10CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s2
-; GFX10CHECK-NEXT:    global_store_dword v0, v1, s[0:1]
+; GFX10CHECK-NEXT:    v_cmp_class_f32_e64 s0, s4, 3
+; GFX10CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s0
+; GFX10CHECK-NEXT:    global_store_dword v0, v1, s[2:3]
 ; GFX10CHECK-NEXT:    s_endpgm
 ;
 ; GFX11CHECK-LABEL: sgpr_isnan_f32:
 ; GFX11CHECK:       ; %bb.0:
 ; GFX11CHECK-NEXT:    s_clause 0x1
-; GFX11CHECK-NEXT:    s_load_b32 s2, s[0:1], 0x2c
-; GFX11CHECK-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11CHECK-NEXT:    s_load_b32 s4, s[0:1], 0x2c
+; GFX11CHECK-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX11CHECK-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11CHECK-NEXT:    v_cmp_class_f32_e64 s2, s2, 3
+; GFX11CHECK-NEXT:    v_cmp_class_f32_e64 s0, s4, 3
 ; GFX11CHECK-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; GFX11CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s2
-; GFX11CHECK-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s0
+; GFX11CHECK-NEXT:    global_store_b32 v0, v1, s[2:3]
 ; GFX11CHECK-NEXT:    s_nop 0
 ; GFX11CHECK-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11CHECK-NEXT:    s_endpgm
@@ -115,57 +115,46 @@ define amdgpu_kernel void @sgpr_isnan_f64(ptr addrspace(1) %out, double %x) {
 ; GFX7GLISEL-NEXT:    buffer_store_dword v0, off, s[0:3], 0
 ; GFX7GLISEL-NEXT:    s_endpgm
 ;
-; GFX8SELDAG-LABEL: sgpr_isnan_f64:
-; GFX8SELDAG:       ; %bb.0:
-; GFX8SELDAG-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GFX8SELDAG-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8SELDAG-NEXT:    v_mov_b32_e32 v0, s0
-; GFX8SELDAG-NEXT:    v_mov_b32_e32 v1, s1
-; GFX8SELDAG-NEXT:    v_cmp_class_f64_e64 s[0:1], s[2:3], 3
-; GFX8SELDAG-NEXT:    v_cndmask_b32_e64 v2, 0, -1, s[0:1]
-; GFX8SELDAG-NEXT:    flat_store_dword v[0:1], v2
-; GFX8SELDAG-NEXT:    s_endpgm
-;
-; GFX8GLISEL-LABEL: sgpr_isnan_f64:
-; GFX8GLISEL:       ; %bb.0:
-; GFX8GLISEL-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; GFX8GLISEL-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8GLISEL-NEXT:    v_cmp_class_f64_e64 s[2:3], s[2:3], 3
-; GFX8GLISEL-NEXT:    v_mov_b32_e32 v0, s0
-; GFX8GLISEL-NEXT:    v_mov_b32_e32 v1, s1
-; GFX8GLISEL-NEXT:    v_cndmask_b32_e64 v2, 0, -1, s[2:3]
-; GFX8GLISEL-NEXT:    flat_store_dword v[0:1], v2
-; GFX8GLISEL-NEXT:    s_endpgm
+; GFX8CHECK-LABEL: sgpr_isnan_f64:
+; GFX8CHECK:       ; %bb.0:
+; GFX8CHECK-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; GFX8CHECK-NEXT:    s_waitcnt lgkmcnt(0)
+; GFX8CHECK-NEXT:    v_cmp_class_f64_e64 s[0:1], s[6:7], 3
+; GFX8CHECK-NEXT:    v_mov_b32_e32 v0, s4
+; GFX8CHECK-NEXT:    v_mov_b32_e32 v1, s5
+; GFX8CHECK-NEXT:    v_cndmask_b32_e64 v2, 0, -1, s[0:1]
+; GFX8CHECK-NEXT:    flat_store_dword v[0:1], v2
+; GFX8CHECK-NEXT:    s_endpgm
 ;
 ; GFX9CHECK-LABEL: sgpr_isnan_f64:
 ; GFX9CHECK:       ; %bb.0:
-; GFX9CHECK-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX9CHECK-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX9CHECK-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX9CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9CHECK-NEXT:    v_cmp_class_f64_e64 s[2:3], s[2:3], 3
-; GFX9CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s[2:3]
-; GFX9CHECK-NEXT:    global_store_dword v0, v1, s[0:1]
+; GFX9CHECK-NEXT:    v_cmp_class_f64_e64 s[0:1], s[6:7], 3
+; GFX9CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s[0:1]
+; GFX9CHECK-NEXT:    global_store_dword v0, v1, s[4:5]
 ; GFX9CHECK-NEXT:    s_endpgm
 ;
 ; GFX10CHECK-LABEL: sgpr_isnan_f64:
 ; GFX10CHECK:       ; %bb.0:
-; GFX10CHECK-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX10CHECK-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX10CHECK-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX10CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10CHECK-NEXT:    v_cmp_class_f64_e64 s2, s[2:3], 3
-; GFX10CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s2
-; GFX10CHECK-NEXT:    global_store_dword v0, v1, s[0:1]
+; GFX10CHECK-NEXT:    v_cmp_class_f64_e64 s0, s[6:7], 3
+; GFX10CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s0
+; GFX10CHECK-NEXT:    global_store_dword v0, v1, s[4:5]
 ; GFX10CHECK-NEXT:    s_endpgm
 ;
 ; GFX11CHECK-LABEL: sgpr_isnan_f64:
 ; GFX11CHECK:       ; %bb.0:
-; GFX11CHECK-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11CHECK-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11CHECK-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11CHECK-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11CHECK-NEXT:    v_cmp_class_f64_e64 s2, s[2:3], 3
+; GFX11CHECK-NEXT:    v_cmp_class_f64_e64 s0, s[6:7], 3
 ; GFX11CHECK-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; GFX11CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s2
-; GFX11CHECK-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11CHECK-NEXT:    v_cndmask_b32_e64 v1, 0, -1, s0
+; GFX11CHECK-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX11CHECK-NEXT:    s_nop 0
 ; GFX11CHECK-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11CHECK-NEXT:    s_endpgm
@@ -1469,3 +1458,6 @@ declare <7 x i1> @llvm.is.fpclass.v7f32(<7 x float>, i32)
 declare <8 x i1> @llvm.is.fpclass.v8f32(<8 x float>, i32)
 declare <16 x i1> @llvm.is.fpclass.v16f32(<16 x float>, i32)
 declare <2 x i1> @llvm.is.fpclass.v2f64(<2 x double>, i32)
+;; NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
+; GFX8GLISEL: {{.*}}
+; GFX8SELDAG: {{.*}}

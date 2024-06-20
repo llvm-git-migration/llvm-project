@@ -244,12 +244,12 @@ define amdgpu_kernel void @uniform_if_move_valu(ptr addrspace(1) %out, float %a)
 ; VI-NEXT:    v_cmp_ne_u32_e32 vcc, 5, v0
 ; VI-NEXT:    s_cbranch_vccnz .LBB4_2
 ; VI-NEXT:  ; %bb.1: ; %if
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v0, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:  .LBB4_2: ; %endif
 ; VI-NEXT:    s_endpgm
 entry:
@@ -296,12 +296,12 @@ define amdgpu_kernel void @uniform_if_move_valu_commute(ptr addrspace(1) %out, f
 ; VI-NEXT:    v_cmp_gt_u32_e32 vcc, 6, v0
 ; VI-NEXT:    s_cbranch_vccnz .LBB5_2
 ; VI-NEXT:  ; %bb.1: ; %if
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v0, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:  .LBB5_2: ; %endif
 ; VI-NEXT:    s_endpgm
 entry:
@@ -342,20 +342,19 @@ define amdgpu_kernel void @uniform_if_else_ret(ptr addrspace(1) nocapture %out, 
 ; VI-LABEL: uniform_if_else_ret:
 ; VI:       ; %bb.0: ; %entry
 ; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-NEXT:    s_cmp_lg_u32 s2, 0
 ; VI-NEXT:    s_cbranch_scc0 .LBB6_2
 ; VI-NEXT:  ; %bb.1: ; %if.else
-; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    v_mov_b32_e32 v0, 2
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ; VI-NEXT:  .LBB6_2: ; %if.then
-; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    v_mov_b32_e32 v0, 1
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %cmp = icmp eq i32 %a, 0
@@ -403,28 +402,29 @@ define amdgpu_kernel void @uniform_if_else(ptr addrspace(1) nocapture %out0, ptr
 ;
 ; VI-LABEL: uniform_if_else:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x34
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s3, 0xf000
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_cmp_lg_u32 s4, 0
+; VI-NEXT:    s_cmp_lg_u32 s2, 0
 ; VI-NEXT:    s_cbranch_scc0 .LBB7_2
 ; VI-NEXT:  ; %bb.1: ; %if.else
-; VI-NEXT:    s_mov_b32 s4, s0
-; VI-NEXT:    s_mov_b32 s5, s1
+; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_mov_b32 s0, s4
+; VI-NEXT:    s_mov_b32 s1, s5
 ; VI-NEXT:    v_mov_b32_e32 v0, 2
 ; VI-NEXT:    s_branch .LBB7_3
 ; VI-NEXT:  .LBB7_2: ; %if.then
-; VI-NEXT:    s_mov_b32 s4, s0
-; VI-NEXT:    s_mov_b32 s5, s1
+; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_mov_b32 s0, s4
+; VI-NEXT:    s_mov_b32 s1, s5
 ; VI-NEXT:    v_mov_b32_e32 v0, 1
 ; VI-NEXT:  .LBB7_3: ; %if.end
-; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
-; VI-NEXT:    s_mov_b32 s4, s2
-; VI-NEXT:    s_mov_b32 s5, s3
+; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    s_mov_b32 s0, s6
+; VI-NEXT:    s_mov_b32 s1, s7
 ; VI-NEXT:    v_mov_b32_e32 v0, 3
-; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %cmp = icmp eq i32 %a, 0
@@ -530,13 +530,13 @@ define amdgpu_kernel void @icmp_users_different_blocks(i32 %cond0, i32 %cond1, p
 ; VI-NEXT:  .LBB9_2: ; %bb9
 ; VI-NEXT:    s_endpgm
 ; VI-NEXT:  .LBB9_3: ; %bb7
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x2c
 ; VI-NEXT:    v_cndmask_b32_e64 v1, 0, 1, s[2:3]
 ; VI-NEXT:    v_sub_u32_e32 v0, vcc, v0, v1
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 bb:
   %tmp = tail call i32 @llvm.amdgcn.workitem.id.x() #0
@@ -626,20 +626,20 @@ define amdgpu_kernel void @uniform_inside_divergent(ptr addrspace(1) %out, i32 %
 ; VI-NEXT:    s_and_saveexec_b64 s[2:3], vcc
 ; VI-NEXT:    s_cbranch_execz .LBB11_2
 ; VI-NEXT:  ; %bb.1: ; %if
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v0, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_cmp_lg_u32 s4, 0
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    s_cmp_lg_u32 s2, 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_cbranch_scc0 .LBB11_3
 ; VI-NEXT:  .LBB11_2: ; %endif
 ; VI-NEXT:    s_endpgm
 ; VI-NEXT:  .LBB11_3: ; %if_uniform
 ; VI-NEXT:    v_mov_b32_e32 v0, 1
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %tid = call i32 @llvm.amdgcn.workitem.id.x() #0
@@ -692,18 +692,18 @@ define amdgpu_kernel void @divergent_inside_uniform(ptr addrspace(1) %out, i32 %
 ; VI-NEXT:  .LBB12_1: ; %endif
 ; VI-NEXT:    s_endpgm
 ; VI-NEXT:  .LBB12_2: ; %if
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v1, 0
 ; VI-NEXT:    v_cmp_gt_u32_e32 vcc, 16, v0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    buffer_store_dword v1, off, s[0:3], 0
-; VI-NEXT:    s_and_saveexec_b64 s[4:5], vcc
+; VI-NEXT:    buffer_store_dword v1, off, s[4:7], 0
+; VI-NEXT:    s_and_saveexec_b64 s[0:1], vcc
 ; VI-NEXT:    s_cbranch_execz .LBB12_1
 ; VI-NEXT:  ; %bb.3: ; %if_uniform
 ; VI-NEXT:    v_mov_b32_e32 v0, 1
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %u_cmp = icmp eq i32 %cond, 0
@@ -832,16 +832,16 @@ define amdgpu_kernel void @cse_uniform_condition_different_blocks(i32 %cond, ptr
 ; VI-NEXT:    s_cmp_lt_i32 s2, 1
 ; VI-NEXT:    s_cbranch_scc1 .LBB14_2
 ; VI-NEXT:  ; %bb.1: ; %bb2
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x2c
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x2c
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v1, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    buffer_load_dword v0, off, s[0:3], 0 glc
+; VI-NEXT:    buffer_load_dword v0, off, s[4:7], 0 glc
 ; VI-NEXT:    s_waitcnt vmcnt(0)
-; VI-NEXT:    buffer_store_dword v1, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v1, off, s[4:7], 0
 ; VI-NEXT:    s_waitcnt vmcnt(0)
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:  .LBB14_2: ; %bb9
 ; VI-NEXT:    s_endpgm
 bb:
@@ -886,20 +886,20 @@ define amdgpu_kernel void @uniform_if_scc_i64_eq(i64 %cond, ptr addrspace(1) %ou
 ;
 ; VI-LABEL: uniform_if_scc_i64_eq:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_cmp_eq_u64 s[0:1], 0
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_mov_b32 s0, 0
+; VI-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-NEXT:    s_cmp_eq_u64 s[4:5], 0
 ; VI-NEXT:    s_cbranch_scc1 .LBB15_2
 ; VI-NEXT:  ; %bb.1: ; %else
 ; VI-NEXT:    s_mov_b32 s0, 1
 ; VI-NEXT:  .LBB15_2: ; %done
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
-; VI-NEXT:    s_mov_b32 s4, s2
-; VI-NEXT:    s_mov_b32 s5, s3
+; VI-NEXT:    s_mov_b32 s11, 0xf000
+; VI-NEXT:    s_mov_b32 s10, -1
+; VI-NEXT:    s_mov_b32 s8, s6
+; VI-NEXT:    s_mov_b32 s9, s7
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[8:11], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %cmp0 = icmp eq i64 %cond, 0
@@ -940,20 +940,20 @@ define amdgpu_kernel void @uniform_if_scc_i64_ne(i64 %cond, ptr addrspace(1) %ou
 ;
 ; VI-LABEL: uniform_if_scc_i64_ne:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_cmp_lg_u64 s[0:1], 0
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_mov_b32 s0, 0
+; VI-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-NEXT:    s_cmp_lg_u64 s[4:5], 0
 ; VI-NEXT:    s_cbranch_scc1 .LBB16_2
 ; VI-NEXT:  ; %bb.1: ; %else
 ; VI-NEXT:    s_mov_b32 s0, 1
 ; VI-NEXT:  .LBB16_2: ; %done
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
-; VI-NEXT:    s_mov_b32 s4, s2
-; VI-NEXT:    s_mov_b32 s5, s3
+; VI-NEXT:    s_mov_b32 s11, 0xf000
+; VI-NEXT:    s_mov_b32 s10, -1
+; VI-NEXT:    s_mov_b32 s8, s6
+; VI-NEXT:    s_mov_b32 s9, s7
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[8:11], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %cmp0 = icmp ne i64 %cond, 0
@@ -994,21 +994,21 @@ define amdgpu_kernel void @uniform_if_scc_i64_sgt(i64 %cond, ptr addrspace(1) %o
 ;
 ; VI-LABEL: uniform_if_scc_i64_sgt:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_cmp_gt_i64_e64 s[4:5], s[0:1], 0
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_mov_b32 s0, 0
-; VI-NEXT:    s_and_b64 vcc, exec, s[4:5]
+; VI-NEXT:    s_waitcnt lgkmcnt(0)
+; VI-NEXT:    v_cmp_gt_i64_e64 s[2:3], s[4:5], 0
+; VI-NEXT:    s_and_b64 vcc, exec, s[2:3]
 ; VI-NEXT:    s_cbranch_vccnz .LBB17_2
 ; VI-NEXT:  ; %bb.1: ; %else
 ; VI-NEXT:    s_mov_b32 s0, 1
 ; VI-NEXT:  .LBB17_2: ; %done
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
-; VI-NEXT:    s_mov_b32 s4, s2
-; VI-NEXT:    s_mov_b32 s5, s3
+; VI-NEXT:    s_mov_b32 s11, 0xf000
+; VI-NEXT:    s_mov_b32 s10, -1
+; VI-NEXT:    s_mov_b32 s8, s6
+; VI-NEXT:    s_mov_b32 s9, s7
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
+; VI-NEXT:    buffer_store_dword v0, off, s[8:11], 0
 ; VI-NEXT:    s_endpgm
 entry:
   %cmp0 = icmp sgt i64 %cond, 0

@@ -107,46 +107,46 @@ define amdgpu_kernel void @kernel_fpmode_i32(ptr addrspace(1) %ptr) {
 ;
 ; GFX8-LABEL: kernel_fpmode_i32:
 ; GFX8:       ; %bb.0:
-; GFX8-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GFX8-NEXT:    s_getreg_b32 s2, hwreg(HW_REG_MODE, 0, 19)
-; GFX8-NEXT:    s_and_b32 s2, 0x7f3ff, s2
-; GFX8-NEXT:    v_mov_b32_e32 v2, s2
+; GFX8-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; GFX8-NEXT:    s_getreg_b32 s0, hwreg(HW_REG_MODE, 0, 19)
+; GFX8-NEXT:    s_and_b32 s0, 0x7f3ff, s0
+; GFX8-NEXT:    v_mov_b32_e32 v2, s0
 ; GFX8-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX8-NEXT:    v_mov_b32_e32 v0, s0
-; GFX8-NEXT:    v_mov_b32_e32 v1, s1
+; GFX8-NEXT:    v_mov_b32_e32 v0, s2
+; GFX8-NEXT:    v_mov_b32_e32 v1, s3
 ; GFX8-NEXT:    flat_store_dword v[0:1], v2
 ; GFX8-NEXT:    s_endpgm
 ;
 ; GFX9-LABEL: kernel_fpmode_i32:
 ; GFX9:       ; %bb.0:
-; GFX9-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GFX9-NEXT:    s_getreg_b32 s2, hwreg(HW_REG_MODE, 0, 24)
-; GFX9-NEXT:    s_and_b32 s2, 0x87f3ff, s2
+; GFX9-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; GFX9-NEXT:    s_getreg_b32 s0, hwreg(HW_REG_MODE, 0, 24)
+; GFX9-NEXT:    s_and_b32 s0, 0x87f3ff, s0
 ; GFX9-NEXT:    v_mov_b32_e32 v0, 0
-; GFX9-NEXT:    v_mov_b32_e32 v1, s2
+; GFX9-NEXT:    v_mov_b32_e32 v1, s0
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    global_store_dword v0, v1, s[0:1]
+; GFX9-NEXT:    global_store_dword v0, v1, s[2:3]
 ; GFX9-NEXT:    s_endpgm
 ;
 ; GFX10-LABEL: kernel_fpmode_i32:
 ; GFX10:       ; %bb.0:
-; GFX10-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; GFX10-NEXT:    s_getreg_b32 s2, hwreg(HW_REG_MODE, 0, 24)
+; GFX10-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
+; GFX10-NEXT:    s_getreg_b32 s0, hwreg(HW_REG_MODE, 0, 24)
 ; GFX10-NEXT:    v_mov_b32_e32 v0, 0
-; GFX10-NEXT:    s_and_b32 s2, 0x87f3ff, s2
-; GFX10-NEXT:    v_mov_b32_e32 v1, s2
+; GFX10-NEXT:    s_and_b32 s0, 0x87f3ff, s0
+; GFX10-NEXT:    v_mov_b32_e32 v1, s0
 ; GFX10-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX10-NEXT:    global_store_dword v0, v1, s[0:1]
+; GFX10-NEXT:    global_store_dword v0, v1, s[2:3]
 ; GFX10-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: kernel_fpmode_i32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
-; GFX11-NEXT:    s_getreg_b32 s2, hwreg(HW_REG_MODE, 0, 24)
-; GFX11-NEXT:    s_and_b32 s2, 0x87f3ff, s2
-; GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
+; GFX11-NEXT:    s_getreg_b32 s0, hwreg(HW_REG_MODE, 0, 24)
+; GFX11-NEXT:    s_and_b32 s0, 0x87f3ff, s0
+; GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11-NEXT:    global_store_b32 v0, v1, s[2:3]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

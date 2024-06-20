@@ -27,15 +27,15 @@ define amdgpu_kernel void @s_ctpop_i16(ptr addrspace(1) noalias %out, i16 %val) 
 ;
 ; VI-LABEL: s_ctpop_i16:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_and_b32 s4, s4, 0xffff
-; VI-NEXT:    s_bcnt1_i32_b32 s4, s4
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_short v0, off, s[0:3], 0
+; VI-NEXT:    s_and_b32 s0, s2, 0xffff
+; VI-NEXT:    s_bcnt1_i32_b32 s0, s0
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_short v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: s_ctpop_i16:
@@ -167,14 +167,14 @@ define amdgpu_kernel void @v_ctpop_add_chain_i16(ptr addrspace(1) noalias %out, 
 ; VI-LABEL: v_ctpop_add_chain_i16:
 ; VI:       ; %bb.0:
 ; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
 ; VI-NEXT:    v_lshlrev_b32_e32 v2, 1, v0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-NEXT:    v_mov_b32_e32 v1, s7
 ; VI-NEXT:    v_add_u32_e32 v0, vcc, s6, v2
 ; VI-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
-; VI-NEXT:    v_mov_b32_e32 v3, s1
-; VI-NEXT:    v_add_u32_e32 v2, vcc, s0, v2
+; VI-NEXT:    v_mov_b32_e32 v3, s3
+; VI-NEXT:    v_add_u32_e32 v2, vcc, s2, v2
 ; VI-NEXT:    v_addc_u32_e32 v3, vcc, 0, v3, vcc
 ; VI-NEXT:    flat_load_ushort v0, v[0:1] glc
 ; VI-NEXT:    s_waitcnt vmcnt(0)
@@ -1423,15 +1423,15 @@ define amdgpu_kernel void @v_ctpop_i16_add_vvar_inv(ptr addrspace(1) noalias %ou
 ; VI-LABEL: v_ctpop_i16_add_vvar_inv:
 ; VI:       ; %bb.0:
 ; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
 ; VI-NEXT:    v_lshlrev_b32_e32 v2, 1, v0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-NEXT:    v_mov_b32_e32 v1, s7
 ; VI-NEXT:    v_add_u32_e32 v0, vcc, s6, v2
 ; VI-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-NEXT:    flat_load_ushort v3, v[0:1]
-; VI-NEXT:    v_mov_b32_e32 v1, s1
-; VI-NEXT:    v_add_u32_e32 v0, vcc, s0, v2
+; VI-NEXT:    v_mov_b32_e32 v1, s3
+; VI-NEXT:    v_add_u32_e32 v0, vcc, s2, v2
 ; VI-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; VI-NEXT:    flat_load_ushort v0, v[0:1]
 ; VI-NEXT:    s_mov_b32 s7, 0xf000
@@ -1521,29 +1521,29 @@ define amdgpu_kernel void @ctpop_i16_in_br(ptr addrspace(1) %out, ptr addrspace(
 ;
 ; VI-LABEL: ctpop_i16_in_br:
 ; VI:       ; %bb.0: ; %entry
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x34
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x34
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_lshr_b32 s5, s4, 16
-; VI-NEXT:    s_cmp_lg_u32 s5, 0
+; VI-NEXT:    s_lshr_b32 s0, s2, 16
+; VI-NEXT:    s_cmp_lg_u32 s0, 0
 ; VI-NEXT:    s_cbranch_scc0 .LBB14_4
 ; VI-NEXT:  ; %bb.1: ; %else
 ; VI-NEXT:    s_mov_b32 s11, 0xf000
 ; VI-NEXT:    s_mov_b32 s10, -1
-; VI-NEXT:    s_mov_b32 s8, s2
-; VI-NEXT:    s_mov_b32 s9, s3
+; VI-NEXT:    s_mov_b32 s8, s6
+; VI-NEXT:    s_mov_b32 s9, s7
 ; VI-NEXT:    buffer_load_ushort v0, off, s[8:11], 0 offset:2
 ; VI-NEXT:    s_cbranch_execnz .LBB14_3
 ; VI-NEXT:  .LBB14_2: ; %if
-; VI-NEXT:    s_and_b32 s2, s4, 0xffff
-; VI-NEXT:    s_bcnt1_i32_b32 s2, s2
+; VI-NEXT:    s_and_b32 s0, s2, 0xffff
+; VI-NEXT:    s_bcnt1_i32_b32 s0, s0
 ; VI-NEXT:    s_waitcnt vmcnt(0)
-; VI-NEXT:    v_mov_b32_e32 v0, s2
+; VI-NEXT:    v_mov_b32_e32 v0, s0
 ; VI-NEXT:  .LBB14_3: ; %endif
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt vmcnt(0)
-; VI-NEXT:    buffer_store_short v0, off, s[0:3], 0
+; VI-NEXT:    buffer_store_short v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ; VI-NEXT:  .LBB14_4:
 ; VI-NEXT:    ; implicit-def: $vgpr0

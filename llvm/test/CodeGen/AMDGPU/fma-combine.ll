@@ -948,12 +948,12 @@ define amdgpu_kernel void @test_f32_mul_add_x_one_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1] glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
@@ -967,12 +967,12 @@ define amdgpu_kernel void @test_f32_mul_add_x_one_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1] glc dlc
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fmac_f32_e32 v2, v1, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v2, s[4:5]
@@ -1041,12 +1041,12 @@ define amdgpu_kernel void @test_f32_mul_y_add_x_one(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1] glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
@@ -1060,12 +1060,12 @@ define amdgpu_kernel void @test_f32_mul_y_add_x_one(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1] glc dlc
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fmac_f32_e32 v2, v1, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v2, s[4:5]
@@ -1133,12 +1133,12 @@ define amdgpu_kernel void @test_f32_mul_add_x_negone_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1153,12 +1153,12 @@ define amdgpu_kernel void @test_f32_mul_add_x_negone_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1226,12 +1226,12 @@ define amdgpu_kernel void @test_f32_mul_y_add_x_negone(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1246,12 +1246,12 @@ define amdgpu_kernel void @test_f32_mul_y_add_x_negone(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1319,12 +1319,12 @@ define amdgpu_kernel void @test_f32_mul_sub_one_x_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_sub_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1339,12 +1339,12 @@ define amdgpu_kernel void @test_f32_mul_sub_one_x_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, -v1, v2, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1412,12 +1412,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_one_x(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_sub_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1432,12 +1432,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_one_x(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, -v1, v2, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1505,12 +1505,12 @@ define amdgpu_kernel void @test_f32_mul_sub_negone_x_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_sub_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1525,12 +1525,12 @@ define amdgpu_kernel void @test_f32_mul_sub_negone_x_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, -v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1598,12 +1598,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_negone_x(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_sub_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1618,12 +1618,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_negone_x(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, -v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1691,12 +1691,12 @@ define amdgpu_kernel void @test_f32_mul_sub_x_one_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1711,12 +1711,12 @@ define amdgpu_kernel void @test_f32_mul_sub_x_one_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1784,12 +1784,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_x_one(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, -1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1804,12 +1804,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_x_one(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, v1, v2, -v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
@@ -1877,12 +1877,12 @@ define amdgpu_kernel void @test_f32_mul_sub_x_negone_y(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1897,12 +1897,12 @@ define amdgpu_kernel void @test_f32_mul_sub_x_negone_y(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fmac_f32_e32 v2, v1, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v2, s[4:5]
@@ -1970,12 +1970,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_x_negone(ptr addrspace(1) %out,
 ; GFX11-NOFMA:       ; %bb.0:
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-NOFMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-NOFMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x1
 ; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-NOFMA-NEXT:    v_add_f32_e32 v1, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
@@ -1990,12 +1990,12 @@ define amdgpu_kernel void @test_f32_mul_y_sub_x_negone(ptr addrspace(1) %out,
 ; GFX11-FMA:       ; %bb.0:
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
-; GFX11-FMA-NEXT:    s_load_b64 s[0:1], s[0:1], 0x34
+; GFX11-FMA-NEXT:    s_load_b64 s[2:3], s[0:1], 0x34
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x1
 ; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[0:1]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[2:3]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fmac_f32_e32 v2, v1, v2
 ; GFX11-FMA-NEXT:    global_store_b32 v0, v2, s[4:5]
@@ -2081,13 +2081,13 @@ define amdgpu_kernel void @test_f32_interp(ptr addrspace(1) %out,
 ;
 ; GFX11-NOFMA-LABEL: test_f32_interp:
 ; GFX11-NOFMA:       ; %bb.0:
-; GFX11-NOFMA-NEXT:    s_load_b256 s[0:7], s[0:1], 0x24
+; GFX11-NOFMA-NEXT:    s_load_b256 s[4:11], s[0:1], 0x24
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x2
-; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[4:5]
-; GFX11-NOFMA-NEXT:    global_load_b32 v3, v0, s[2:3]
+; GFX11-NOFMA-NEXT:    global_load_b32 v1, v0, s[10:11]
+; GFX11-NOFMA-NEXT:    global_load_b32 v2, v0, s[8:9]
+; GFX11-NOFMA-NEXT:    global_load_b32 v3, v0, s[6:7]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(2)
 ; GFX11-NOFMA-NEXT:    v_sub_f32_e32 v4, 1.0, v1
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
@@ -2095,26 +2095,26 @@ define amdgpu_kernel void @test_f32_interp(ptr addrspace(1) %out,
 ; GFX11-NOFMA-NEXT:    v_mul_f32_e32 v2, v2, v4
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_fmac_f32_e32 v2, v3, v1
-; GFX11-NOFMA-NEXT:    global_store_b32 v0, v2, s[0:1]
+; GFX11-NOFMA-NEXT:    global_store_b32 v0, v2, s[4:5]
 ; GFX11-NOFMA-NEXT:    s_nop 0
 ; GFX11-NOFMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NOFMA-NEXT:    s_endpgm
 ;
 ; GFX11-FMA-LABEL: test_f32_interp:
 ; GFX11-FMA:       ; %bb.0:
-; GFX11-FMA-NEXT:    s_load_b256 s[0:7], s[0:1], 0x24
+; GFX11-FMA-NEXT:    s_load_b256 s[4:11], s[0:1], 0x24
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x2
-; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[4:5]
-; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b32 v3, v0, s[2:3]
+; GFX11-FMA-NEXT:    global_load_b32 v1, v0, s[8:9]
+; GFX11-FMA-NEXT:    global_load_b32 v2, v0, s[10:11]
+; GFX11-FMA-NEXT:    global_load_b32 v3, v0, s[6:7]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-FMA-NEXT:    v_fma_f32 v1, -v2, v1, v1
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FMA-NEXT:    v_fmac_f32_e32 v1, v3, v2
-; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11-FMA-NEXT:    global_store_b32 v0, v1, s[4:5]
 ; GFX11-FMA-NEXT:    s_nop 0
 ; GFX11-FMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FMA-NEXT:    s_endpgm
@@ -2165,13 +2165,13 @@ define amdgpu_kernel void @test_f64_interp(ptr addrspace(1) %out,
 ;
 ; GFX11-NOFMA-LABEL: test_f64_interp:
 ; GFX11-NOFMA:       ; %bb.0:
-; GFX11-NOFMA-NEXT:    s_load_b256 s[0:7], s[0:1], 0x24
+; GFX11-NOFMA-NEXT:    s_load_b256 s[4:11], s[0:1], 0x24
 ; GFX11-NOFMA-NEXT:    v_mov_b32_e32 v8, 0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NOFMA-NEXT:    s_clause 0x2
-; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v8, s[6:7]
-; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v8, s[4:5]
-; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v8, s[2:3]
+; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v8, s[10:11]
+; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v8, s[8:9]
+; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v8, s[6:7]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(2)
 ; GFX11-NOFMA-NEXT:    v_add_f64 v[6:7], -v[0:1], 1.0
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(1)
@@ -2179,26 +2179,26 @@ define amdgpu_kernel void @test_f64_interp(ptr addrspace(1) %out,
 ; GFX11-NOFMA-NEXT:    v_mul_f64 v[2:3], v[2:3], v[6:7]
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_fma_f64 v[0:1], v[4:5], v[0:1], v[2:3]
-; GFX11-NOFMA-NEXT:    global_store_b64 v8, v[0:1], s[0:1]
+; GFX11-NOFMA-NEXT:    global_store_b64 v8, v[0:1], s[4:5]
 ; GFX11-NOFMA-NEXT:    s_nop 0
 ; GFX11-NOFMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NOFMA-NEXT:    s_endpgm
 ;
 ; GFX11-FMA-LABEL: test_f64_interp:
 ; GFX11-FMA:       ; %bb.0:
-; GFX11-FMA-NEXT:    s_load_b256 s[0:7], s[0:1], 0x24
+; GFX11-FMA-NEXT:    s_load_b256 s[4:11], s[0:1], 0x24
 ; GFX11-FMA-NEXT:    v_mov_b32_e32 v6, 0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-FMA-NEXT:    s_clause 0x2
-; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v6, s[4:5]
-; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v6, s[6:7]
-; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v6, s[2:3]
+; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v6, s[8:9]
+; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v6, s[10:11]
+; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v6, s[6:7]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(1)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[0:1], -v[2:3], v[0:1], v[0:1]
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[0:1], v[4:5], v[2:3], v[0:1]
-; GFX11-FMA-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-FMA-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-FMA-NEXT:    s_nop 0
 ; GFX11-FMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FMA-NEXT:    s_endpgm
@@ -2236,15 +2236,15 @@ define amdgpu_kernel void @fma_neg_2.0_neg_a_b_f32(ptr addrspace(1) %out, ptr ad
 ;
 ; GFX11-LABEL: fma_neg_2.0_neg_a_b_f32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v0, 2, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b32 v1, v0, s[0:1] glc dlc
+; GFX11-NEXT:    global_load_b32 v1, v0, s[2:3] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b32 v2, v0, s[0:1] offset:4 glc dlc
+; GFX11-NEXT:    global_load_b32 v2, v0, s[2:3] offset:4 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fmac_f32_e32 v2, 2.0, v1
-; GFX11-NEXT:    global_store_b32 v0, v2, s[0:1]
+; GFX11-NEXT:    global_store_b32 v0, v2, s[2:3]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -2282,15 +2282,15 @@ define amdgpu_kernel void @fma_2.0_neg_a_b_f32(ptr addrspace(1) %out, ptr addrsp
 ;
 ; GFX11-LABEL: fma_2.0_neg_a_b_f32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v0, 2, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b32 v1, v0, s[0:1] glc dlc
+; GFX11-NEXT:    global_load_b32 v1, v0, s[2:3] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b32 v2, v0, s[0:1] offset:4 glc dlc
+; GFX11-NEXT:    global_load_b32 v2, v0, s[2:3] offset:4 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fmac_f32_e32 v2, -2.0, v1
-; GFX11-NEXT:    global_store_b32 v0, v2, s[0:1]
+; GFX11-NEXT:    global_store_b32 v0, v2, s[2:3]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -2333,19 +2333,19 @@ define amdgpu_kernel void @fma_neg_b_c_v4f32(ptr addrspace(1) %out, ptr addrspac
 ;
 ; GFX11-LABEL: fma_neg_b_c_v4f32:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v12, 4, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    s_clause 0x2
-; GFX11-NEXT:    global_load_b128 v[0:3], v12, s[2:3] offset:16
-; GFX11-NEXT:    global_load_b128 v[4:7], v12, s[2:3]
-; GFX11-NEXT:    global_load_b128 v[8:11], v12, s[2:3] offset:48
+; GFX11-NEXT:    global_load_b128 v[0:3], v12, s[6:7] offset:16
+; GFX11-NEXT:    global_load_b128 v[4:7], v12, s[6:7]
+; GFX11-NEXT:    global_load_b128 v[8:11], v12, s[6:7] offset:48
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f32 v3, v11, -v7, -v3
 ; GFX11-NEXT:    v_fma_f32 v2, v10, -v6, -v2
 ; GFX11-NEXT:    v_fma_f32 v1, v9, -v5, -v1
 ; GFX11-NEXT:    v_fma_f32 v0, v8, -v4, -v0
-; GFX11-NEXT:    global_store_b128 v12, v[0:3], s[0:1]
+; GFX11-NEXT:    global_store_b128 v12, v[0:3], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

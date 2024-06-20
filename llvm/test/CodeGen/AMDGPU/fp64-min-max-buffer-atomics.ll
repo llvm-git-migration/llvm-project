@@ -54,14 +54,14 @@ define amdgpu_kernel void @raw_buffer_atomic_min_noret_f64(<4 x i32> inreg %rsrc
 ; GFX1030-LABEL: raw_buffer_atomic_min_noret_f64:
 ; GFX1030:       ; %bb.0: ; %main_body
 ; GFX1030-NEXT:    s_clause 0x2
-; GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; GFX1030-NEXT:    s_load_dword s6, s[0:1], 0x3c
-; GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; GFX1030-NEXT:    s_load_dword s8, s[0:1], 0x3c
+; GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; GFX1030-NEXT:    v_mov_b32_e32 v2, s6
-; GFX1030-NEXT:    buffer_atomic_fmin_x2 v[0:1], v2, s[0:3], 0 offen
+; GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; GFX1030-NEXT:    v_mov_b32_e32 v2, s8
+; GFX1030-NEXT:    buffer_atomic_fmin_x2 v[0:1], v2, s[4:7], 0 offen
 ; GFX1030-NEXT:    s_endpgm
 ;
 ; G_SI-LABEL: raw_buffer_atomic_min_noret_f64:
@@ -104,14 +104,14 @@ define amdgpu_kernel void @raw_buffer_atomic_min_noret_f64(<4 x i32> inreg %rsrc
 ; G_GFX1030-LABEL: raw_buffer_atomic_min_noret_f64:
 ; G_GFX1030:       ; %bb.0: ; %main_body
 ; G_GFX1030-NEXT:    s_clause 0x2
-; G_GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; G_GFX1030-NEXT:    s_load_dword s6, s[0:1], 0x3c
-; G_GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; G_GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; G_GFX1030-NEXT:    s_load_dword s8, s[0:1], 0x3c
+; G_GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; G_GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; G_GFX1030-NEXT:    v_mov_b32_e32 v2, s6
-; G_GFX1030-NEXT:    buffer_atomic_fmin_x2 v[0:1], v2, s[0:3], 0 offen
+; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; G_GFX1030-NEXT:    v_mov_b32_e32 v2, s8
+; G_GFX1030-NEXT:    buffer_atomic_fmin_x2 v[0:1], v2, s[4:7], 0 offen
 ; G_GFX1030-NEXT:    s_endpgm
 main_body:
   %ret = call double @llvm.amdgcn.raw.buffer.atomic.fmin.f64(double %data, <4 x i32> %rsrc, i32 %vindex, i32 0, i32 0)
@@ -291,14 +291,14 @@ define amdgpu_kernel void @raw_buffer_atomic_max_noret_f64(<4 x i32> inreg %rsrc
 ; GFX1030-LABEL: raw_buffer_atomic_max_noret_f64:
 ; GFX1030:       ; %bb.0: ; %main_body
 ; GFX1030-NEXT:    s_clause 0x2
-; GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; GFX1030-NEXT:    s_load_dword s6, s[0:1], 0x3c
-; GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; GFX1030-NEXT:    s_load_dword s8, s[0:1], 0x3c
+; GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; GFX1030-NEXT:    v_mov_b32_e32 v2, s6
-; GFX1030-NEXT:    buffer_atomic_fmax_x2 v[0:1], v2, s[0:3], 0 offen
+; GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; GFX1030-NEXT:    v_mov_b32_e32 v2, s8
+; GFX1030-NEXT:    buffer_atomic_fmax_x2 v[0:1], v2, s[4:7], 0 offen
 ; GFX1030-NEXT:    s_endpgm
 ;
 ; G_SI-LABEL: raw_buffer_atomic_max_noret_f64:
@@ -341,14 +341,14 @@ define amdgpu_kernel void @raw_buffer_atomic_max_noret_f64(<4 x i32> inreg %rsrc
 ; G_GFX1030-LABEL: raw_buffer_atomic_max_noret_f64:
 ; G_GFX1030:       ; %bb.0: ; %main_body
 ; G_GFX1030-NEXT:    s_clause 0x2
-; G_GFX1030-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x34
-; G_GFX1030-NEXT:    s_load_dword s6, s[0:1], 0x3c
-; G_GFX1030-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
+; G_GFX1030-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x34
+; G_GFX1030-NEXT:    s_load_dword s8, s[0:1], 0x3c
+; G_GFX1030-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
 ; G_GFX1030-NEXT:    s_waitcnt lgkmcnt(0)
-; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s4
-; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s5
-; G_GFX1030-NEXT:    v_mov_b32_e32 v2, s6
-; G_GFX1030-NEXT:    buffer_atomic_fmax_x2 v[0:1], v2, s[0:3], 0 offen
+; G_GFX1030-NEXT:    v_mov_b32_e32 v0, s2
+; G_GFX1030-NEXT:    v_mov_b32_e32 v1, s3
+; G_GFX1030-NEXT:    v_mov_b32_e32 v2, s8
+; G_GFX1030-NEXT:    buffer_atomic_fmax_x2 v[0:1], v2, s[4:7], 0 offen
 ; G_GFX1030-NEXT:    s_endpgm
 main_body:
   %ret = call double @llvm.amdgcn.raw.buffer.atomic.fmax.f64(double %data, <4 x i32> %rsrc, i32 %vindex, i32 0, i32 0)

@@ -48,13 +48,13 @@ define amdgpu_kernel void @s_bfm_pattern_simple(ptr addrspace(1) %out, i32 %x) #
 ;
 ; VI-LABEL: s_bfm_pattern_simple:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
+; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_bfm_b32 s2, s2, 0
-; VI-NEXT:    v_mov_b32_e32 v0, s0
-; VI-NEXT:    v_mov_b32_e32 v1, s1
-; VI-NEXT:    v_mov_b32_e32 v2, s2
+; VI-NEXT:    s_bfm_b32 s0, s4, 0
+; VI-NEXT:    v_mov_b32_e32 v0, s2
+; VI-NEXT:    v_mov_b32_e32 v1, s3
+; VI-NEXT:    v_mov_b32_e32 v2, s0
 ; VI-NEXT:    flat_store_dword v[0:1], v2
 ; VI-NEXT:    s_endpgm
   %a = shl i32 1, %x

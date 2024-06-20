@@ -36,15 +36,15 @@ define amdgpu_kernel void @s_ctlz_i32(ptr addrspace(1) noalias %out, i32 %val) n
 ;
 ; VI-LABEL: s_ctlz_i32:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dword s4, s[0:1], 0x2c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_flbit_i32_b32 s4, s4
-; VI-NEXT:    s_min_u32 s4, s4, 32
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_dword v0, off, s[0:3], 0
+; VI-NEXT:    s_flbit_i32_b32 s0, s2
+; VI-NEXT:    s_min_u32 s0, s0, 32
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_dword v0, off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: s_ctlz_i32:
@@ -88,14 +88,14 @@ define amdgpu_kernel void @s_ctlz_i32(ptr addrspace(1) noalias %out, i32 %val) n
 ; GFX11-LABEL: s_ctlz_i32:
 ; GFX11:       ; %bb.0:
 ; GFX11-NEXT:    s_clause 0x1
-; GFX11-NEXT:    s_load_b32 s2, s[0:1], 0x2c
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b32 s4, s[0:1], 0x2c
+; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x24
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    s_clz_i32_u32 s2, s2
+; GFX11-NEXT:    s_clz_i32_u32 s0, s4
 ; GFX11-NEXT:    s_delay_alu instid0(SALU_CYCLE_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
-; GFX11-NEXT:    s_min_u32 s2, s2, 32
-; GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s2
-; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
+; GFX11-NEXT:    s_min_u32 s0, s0, 32
+; GFX11-NEXT:    v_dual_mov_b32 v0, 0 :: v_dual_mov_b32 v1, s0
+; GFX11-NEXT:    global_store_b32 v0, v1, s[2:3]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -612,16 +612,16 @@ define amdgpu_kernel void @s_ctlz_i64(ptr addrspace(1) noalias %out, [8 x i32], 
 ;
 ; VI-LABEL: s_ctlz_i64:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x4c
-; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s3, 0xf000
-; VI-NEXT:    s_mov_b32 s2, -1
+; VI-NEXT:    s_load_dwordx2 s[2:3], s[0:1], 0x4c
+; VI-NEXT:    s_load_dwordx2 s[4:5], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s7, 0xf000
+; VI-NEXT:    s_mov_b32 s6, -1
 ; VI-NEXT:    v_mov_b32_e32 v1, 0
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_flbit_i32_b64 s4, s[4:5]
-; VI-NEXT:    s_min_u32 s4, s4, 64
-; VI-NEXT:    v_mov_b32_e32 v0, s4
-; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
+; VI-NEXT:    s_flbit_i32_b64 s0, s[2:3]
+; VI-NEXT:    s_min_u32 s0, s0, 64
+; VI-NEXT:    v_mov_b32_e32 v0, s0
+; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: s_ctlz_i64:
@@ -674,13 +674,13 @@ define amdgpu_kernel void @s_ctlz_i64(ptr addrspace(1) noalias %out, [8 x i32], 
 ; GFX11:       ; %bb.0:
 ; GFX11-NEXT:    s_clause 0x1
 ; GFX11-NEXT:    s_load_b64 s[2:3], s[0:1], 0x4c
-; GFX11-NEXT:    s_load_b64 s[0:1], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b64 s[4:5], s[0:1], 0x24
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    s_clz_i32_u64 s2, s[2:3]
+; GFX11-NEXT:    s_clz_i32_u64 s0, s[2:3]
 ; GFX11-NEXT:    s_delay_alu instid0(SALU_CYCLE_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
-; GFX11-NEXT:    s_min_u32 s2, s2, 64
-; GFX11-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s2
-; GFX11-NEXT:    global_store_b64 v1, v[0:1], s[0:1]
+; GFX11-NEXT:    s_min_u32 s0, s0, 64
+; GFX11-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_mov_b32 v0, s0
+; GFX11-NEXT:    global_store_b64 v1, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm

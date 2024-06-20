@@ -7,15 +7,15 @@ declare half @llvm.amdgcn.fdot2.f16.f16(<2 x half> %a, <2 x half> %b, half %c)
 define amdgpu_kernel void @test_llvm_amdgcn_fdot2_f16_f16(
 ; GFX11-LABEL: test_llvm_amdgcn_fdot2_f16_f16:
 ; GFX11:       ; %bb.0: ; %entry
-; GFX11-NEXT:    s_load_b256 s[0:7], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b256 s[4:11], s[0:1], 0x24
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_u16 v1, v0, s[6:7]
-; GFX11-NEXT:    s_load_b32 s2, s[2:3], 0x0
-; GFX11-NEXT:    s_load_b32 s3, s[4:5], 0x0
+; GFX11-NEXT:    global_load_u16 v1, v0, s[10:11]
+; GFX11-NEXT:    s_load_b32 s0, s[6:7], 0x0
+; GFX11-NEXT:    s_load_b32 s1, s[8:9], 0x0
 ; GFX11-NEXT:    s_waitcnt vmcnt(0) lgkmcnt(0)
-; GFX11-NEXT:    v_dot2_f16_f16 v1, s2, s3, v1
-; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
+; GFX11-NEXT:    v_dot2_f16_f16 v1, s0, s1, v1
+; GFX11-NEXT:    global_store_b16 v0, v1, s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -35,26 +35,26 @@ entry:
 define amdgpu_kernel void @test_llvm_amdgcn_fdot2_f16_f16_dpp(
 ; SDAG-GFX11-LABEL: test_llvm_amdgcn_fdot2_f16_f16_dpp:
 ; SDAG-GFX11:       ; %bb.0: ; %entry
-; SDAG-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; SDAG-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; SDAG-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; SDAG-GFX11-NEXT:    scratch_load_b32 v0, off, s2
-; SDAG-GFX11-NEXT:    scratch_load_u16 v1, off, s3
-; SDAG-GFX11-NEXT:    scratch_load_b32 v2, off, s1
+; SDAG-GFX11-NEXT:    scratch_load_b32 v0, off, s6
+; SDAG-GFX11-NEXT:    scratch_load_u16 v1, off, s7
+; SDAG-GFX11-NEXT:    scratch_load_b32 v2, off, s5
 ; SDAG-GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; SDAG-GFX11-NEXT:    v_dot2_f16_f16_e64_dpp v0, v2, v0, v1 quad_perm:[1,0,0,0] row_mask:0xf bank_mask:0xf bound_ctrl:1
-; SDAG-GFX11-NEXT:    scratch_store_b16 off, v0, s0
+; SDAG-GFX11-NEXT:    scratch_store_b16 off, v0, s4
 ; SDAG-GFX11-NEXT:    s_endpgm
 ;
 ; GISEL-GFX11-LABEL: test_llvm_amdgcn_fdot2_f16_f16_dpp:
 ; GISEL-GFX11:       ; %bb.0: ; %entry
-; GISEL-GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GISEL-GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GISEL-GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GISEL-GFX11-NEXT:    scratch_load_b32 v0, off, s1
-; GISEL-GFX11-NEXT:    scratch_load_b32 v1, off, s2
-; GISEL-GFX11-NEXT:    scratch_load_u16 v2, off, s3
+; GISEL-GFX11-NEXT:    scratch_load_b32 v0, off, s5
+; GISEL-GFX11-NEXT:    scratch_load_b32 v1, off, s6
+; GISEL-GFX11-NEXT:    scratch_load_u16 v2, off, s7
 ; GISEL-GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GISEL-GFX11-NEXT:    v_dot2_f16_f16_e64_dpp v0, v0, v1, v2 quad_perm:[1,0,0,0] row_mask:0xf bank_mask:0xf bound_ctrl:1
-; GISEL-GFX11-NEXT:    scratch_store_b16 off, v0, s0
+; GISEL-GFX11-NEXT:    scratch_store_b16 off, v0, s4
 ; GISEL-GFX11-NEXT:    s_endpgm
     ptr addrspace(5) %r,
     ptr addrspace(5) %a,
