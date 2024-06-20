@@ -60,15 +60,15 @@ define amdgpu_kernel void @fp_to_uint_v2f32_to_v2i32(ptr addrspace(1) %out, <2 x
 ;
 ; VI-LABEL: fp_to_uint_v2f32_to_v2i32:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s3, 0xf000
+; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_cvt_u32_f32_e32 v1, s3
-; VI-NEXT:    v_cvt_u32_f32_e32 v0, s2
-; VI-NEXT:    s_mov_b32 s4, s0
-; VI-NEXT:    s_mov_b32 s5, s1
-; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
+; VI-NEXT:    v_cvt_u32_f32_e32 v1, s7
+; VI-NEXT:    v_cvt_u32_f32_e32 v0, s6
+; VI-NEXT:    s_mov_b32 s0, s4
+; VI-NEXT:    s_mov_b32 s1, s5
+; VI-NEXT:    buffer_store_dwordx2 v[0:1], off, s[0:3], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: fp_to_uint_v2f32_to_v2i32:
@@ -264,26 +264,26 @@ define amdgpu_kernel void @fp_to_uint_v2f32_to_v2i64(ptr addrspace(1) %out, <2 x
 ;
 ; VI-LABEL: fp_to_uint_v2f32_to_v2i64:
 ; VI:       ; %bb.0:
-; VI-NEXT:    s_load_dwordx4 s[0:3], s[0:1], 0x24
-; VI-NEXT:    s_mov_b32 s7, 0xf000
-; VI-NEXT:    s_mov_b32 s6, -1
+; VI-NEXT:    s_load_dwordx4 s[4:7], s[0:1], 0x24
+; VI-NEXT:    s_mov_b32 s0, 0xcf800000
+; VI-NEXT:    s_mov_b32 s3, 0xf000
+; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_trunc_f32_e32 v0, s3
-; VI-NEXT:    v_trunc_f32_e32 v4, s2
+; VI-NEXT:    v_trunc_f32_e32 v0, s7
+; VI-NEXT:    v_trunc_f32_e32 v4, s6
 ; VI-NEXT:    v_mul_f32_e32 v1, 0x2f800000, v0
 ; VI-NEXT:    v_mul_f32_e32 v2, 0x2f800000, v4
 ; VI-NEXT:    v_floor_f32_e32 v5, v1
-; VI-NEXT:    s_mov_b32 s2, 0xcf800000
 ; VI-NEXT:    v_floor_f32_e32 v6, v2
-; VI-NEXT:    v_fma_f32 v0, v5, s2, v0
+; VI-NEXT:    v_fma_f32 v0, v5, s0, v0
 ; VI-NEXT:    v_cvt_u32_f32_e32 v2, v0
-; VI-NEXT:    v_fma_f32 v0, v6, s2, v4
+; VI-NEXT:    v_fma_f32 v0, v6, s0, v4
 ; VI-NEXT:    v_cvt_u32_f32_e32 v3, v5
 ; VI-NEXT:    v_cvt_u32_f32_e32 v1, v6
 ; VI-NEXT:    v_cvt_u32_f32_e32 v0, v0
-; VI-NEXT:    s_mov_b32 s4, s0
-; VI-NEXT:    s_mov_b32 s5, s1
-; VI-NEXT:    buffer_store_dwordx4 v[0:3], off, s[4:7], 0
+; VI-NEXT:    s_mov_b32 s0, s4
+; VI-NEXT:    s_mov_b32 s1, s5
+; VI-NEXT:    buffer_store_dwordx4 v[0:3], off, s[0:3], 0
 ; VI-NEXT:    s_endpgm
 ;
 ; EG-LABEL: fp_to_uint_v2f32_to_v2i64:

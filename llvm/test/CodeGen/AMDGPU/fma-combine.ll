@@ -41,17 +41,17 @@ define amdgpu_kernel void @combine_to_fma_f64_0(ptr addrspace(1) noalias %out, p
 ;
 ; GFX11-LABEL: combine_to_fma_f64_0:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v6, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], v[4:5]
-; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -101,22 +101,22 @@ define amdgpu_kernel void @combine_to_fma_f64_0_2use(ptr addrspace(1) noalias %o
 ;
 ; GFX11-LABEL: combine_to_fma_f64_0_2use:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v8, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[2:3] offset:24 glc dlc
+; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[6:7] offset:24 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[4:5], v[0:1], v[2:3], v[4:5]
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], v[6:7]
-; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[0:1] dlc
+; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[0:1] offset:8 dlc
+; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[4:5] offset:8 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -166,17 +166,17 @@ define amdgpu_kernel void @combine_to_fma_f64_1(ptr addrspace(1) noalias %out, p
 ;
 ; GFX11-LABEL: combine_to_fma_f64_1:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v6, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], v[4:5]
-; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -220,17 +220,17 @@ define amdgpu_kernel void @combine_to_fma_fsub_0_f64(ptr addrspace(1) noalias %o
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_0_f64:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v6, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], -v[4:5]
-; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -280,22 +280,22 @@ define amdgpu_kernel void @combine_to_fma_fsub_f64_0_2use(ptr addrspace(1) noali
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_f64_0_2use:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v8, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[2:3] offset:24 glc dlc
+; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[6:7] offset:24 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[4:5], v[0:1], v[2:3], -v[4:5]
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], -v[6:7]
-; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[0:1] dlc
+; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[0:1] offset:8 dlc
+; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[4:5] offset:8 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -345,17 +345,17 @@ define amdgpu_kernel void @combine_to_fma_fsub_1_f64(ptr addrspace(1) noalias %o
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_1_f64:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v6, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[0:1], -v[0:1], v[2:3], v[4:5]
-; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -405,22 +405,22 @@ define amdgpu_kernel void @combine_to_fma_fsub_1_f64_2use(ptr addrspace(1) noali
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_1_f64_2use:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v8, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[2:3] offset:24 glc dlc
+; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[6:7] offset:24 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[4:5], -v[0:1], v[2:3], v[4:5]
 ; GFX11-NEXT:    v_fma_f64 v[0:1], -v[0:1], v[2:3], v[6:7]
-; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[0:1] dlc
+; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[0:1] offset:8 dlc
+; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[4:5] offset:8 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -470,17 +470,17 @@ define amdgpu_kernel void @combine_to_fma_fsub_2_f64(ptr addrspace(1) noalias %o
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_2_f64:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v6, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v6, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v6, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v6, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[0:1], -v[0:1], v[2:3], -v[4:5]
-; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[0:1]
+; GFX11-NEXT:    global_store_b64 v6, v[0:1], s[4:5]
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NEXT:    s_endpgm
@@ -532,22 +532,22 @@ define amdgpu_kernel void @combine_to_fma_fsub_2_f64_2uses_neg(ptr addrspace(1) 
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_2_f64_2uses_neg:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v8, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[2:3] offset:24 glc dlc
+; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[6:7] offset:24 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[4:5], -v[0:1], v[2:3], -v[4:5]
 ; GFX11-NEXT:    v_fma_f64 v[0:1], -v[0:1], v[2:3], -v[6:7]
-; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[0:1] dlc
+; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[0:1] offset:8 dlc
+; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[4:5] offset:8 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -605,22 +605,22 @@ define amdgpu_kernel void @combine_to_fma_fsub_2_f64_2uses_mul(ptr addrspace(1) 
 ;
 ; GFX11-LABEL: combine_to_fma_fsub_2_f64_2uses_mul:
 ; GFX11:       ; %bb.0:
-; GFX11-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NEXT:    v_lshlrev_b32_e32 v8, 3, v0
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[2:3] glc dlc
+; GFX11-NEXT:    global_load_b64 v[0:1], v8, s[6:7] glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[2:3] offset:8 glc dlc
+; GFX11-NEXT:    global_load_b64 v[2:3], v8, s[6:7] offset:8 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[2:3] offset:16 glc dlc
+; GFX11-NEXT:    global_load_b64 v[4:5], v8, s[6:7] offset:16 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[2:3] offset:24 glc dlc
+; GFX11-NEXT:    global_load_b64 v[6:7], v8, s[6:7] offset:24 glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_fma_f64 v[4:5], -v[0:1], v[2:3], -v[4:5]
 ; GFX11-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], -v[6:7]
-; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[0:1] dlc
+; GFX11-NEXT:    global_store_b64 v8, v[4:5], s[4:5] dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
-; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[0:1] offset:8 dlc
+; GFX11-NEXT:    global_store_b64 v8, v[0:1], s[4:5] offset:8 dlc
 ; GFX11-NEXT:    s_waitcnt_vscnt null, 0x0
 ; GFX11-NEXT:    s_nop 0
 ; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
@@ -703,47 +703,47 @@ define amdgpu_kernel void @aggressive_combine_to_fma_fsub_0_f64(ptr addrspace(1)
 ;
 ; GFX11-NOFMA-LABEL: aggressive_combine_to_fma_fsub_0_f64:
 ; GFX11-NOFMA:       ; %bb.0:
-; GFX11-NOFMA-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NOFMA-NEXT:    v_lshlrev_b32_e32 v10, 3, v0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v10, s[2:3] glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v10, s[6:7] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v10, s[2:3] offset:8 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v10, s[6:7] offset:8 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v10, s[2:3] offset:16 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v10, s[6:7] offset:16 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[6:7], v10, s[2:3] offset:24 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[6:7], v10, s[6:7] offset:24 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[8:9], v10, s[2:3] offset:32 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[8:9], v10, s[6:7] offset:32 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_mul_f64 v[6:7], v[6:7], v[8:9]
 ; GFX11-NOFMA-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(VALU_DEP_1)
 ; GFX11-NOFMA-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], v[6:7]
 ; GFX11-NOFMA-NEXT:    v_add_f64 v[0:1], v[0:1], -v[4:5]
-; GFX11-NOFMA-NEXT:    global_store_b64 v10, v[0:1], s[0:1]
+; GFX11-NOFMA-NEXT:    global_store_b64 v10, v[0:1], s[4:5]
 ; GFX11-NOFMA-NEXT:    s_nop 0
 ; GFX11-NOFMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NOFMA-NEXT:    s_endpgm
 ;
 ; GFX11-FMA-LABEL: aggressive_combine_to_fma_fsub_0_f64:
 ; GFX11-FMA:       ; %bb.0:
-; GFX11-FMA-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FMA-NEXT:    v_lshlrev_b32_e32 v10, 3, v0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v10, s[2:3] glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v10, s[6:7] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v10, s[2:3] offset:8 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v10, s[6:7] offset:8 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v10, s[2:3] offset:16 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v10, s[6:7] offset:16 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[6:7], v10, s[2:3] offset:24 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[6:7], v10, s[6:7] offset:24 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[8:9], v10, s[2:3] offset:32 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[8:9], v10, s[6:7] offset:32 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[4:5], v[6:7], v[8:9], -v[4:5]
 ; GFX11-FMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[0:1], v[0:1], v[2:3], v[4:5]
-; GFX11-FMA-NEXT:    global_store_b64 v10, v[0:1], s[0:1]
+; GFX11-FMA-NEXT:    global_store_b64 v10, v[0:1], s[4:5]
 ; GFX11-FMA-NEXT:    s_nop 0
 ; GFX11-FMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FMA-NEXT:    s_endpgm
@@ -825,47 +825,47 @@ define amdgpu_kernel void @aggressive_combine_to_fma_fsub_1_f64(ptr addrspace(1)
 ;
 ; GFX11-NOFMA-LABEL: aggressive_combine_to_fma_fsub_1_f64:
 ; GFX11-NOFMA:       ; %bb.0:
-; GFX11-NOFMA-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-NOFMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-NOFMA-NEXT:    v_lshlrev_b32_e32 v10, 3, v0
 ; GFX11-NOFMA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v10, s[2:3] glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[0:1], v10, s[6:7] glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v10, s[2:3] offset:8 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[2:3], v10, s[6:7] offset:8 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v10, s[2:3] offset:16 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[4:5], v10, s[6:7] offset:16 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[6:7], v10, s[2:3] offset:24 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[6:7], v10, s[6:7] offset:24 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-NOFMA-NEXT:    global_load_b64 v[8:9], v10, s[2:3] offset:32 glc dlc
+; GFX11-NOFMA-NEXT:    global_load_b64 v[8:9], v10, s[6:7] offset:32 glc dlc
 ; GFX11-NOFMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NOFMA-NEXT:    v_mul_f64 v[6:7], v[6:7], v[8:9]
 ; GFX11-NOFMA-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(VALU_DEP_1)
 ; GFX11-NOFMA-NEXT:    v_fma_f64 v[2:3], v[2:3], v[4:5], v[6:7]
 ; GFX11-NOFMA-NEXT:    v_add_f64 v[0:1], v[0:1], -v[2:3]
-; GFX11-NOFMA-NEXT:    global_store_b64 v10, v[0:1], s[0:1]
+; GFX11-NOFMA-NEXT:    global_store_b64 v10, v[0:1], s[4:5]
 ; GFX11-NOFMA-NEXT:    s_nop 0
 ; GFX11-NOFMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-NOFMA-NEXT:    s_endpgm
 ;
 ; GFX11-FMA-LABEL: aggressive_combine_to_fma_fsub_1_f64:
 ; GFX11-FMA:       ; %bb.0:
-; GFX11-FMA-NEXT:    s_load_b128 s[0:3], s[0:1], 0x24
+; GFX11-FMA-NEXT:    s_load_b128 s[4:7], s[0:1], 0x24
 ; GFX11-FMA-NEXT:    v_lshlrev_b32_e32 v10, 3, v0
 ; GFX11-FMA-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v10, s[2:3] glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[0:1], v10, s[6:7] glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v10, s[2:3] offset:8 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[2:3], v10, s[6:7] offset:8 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v10, s[2:3] offset:16 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[4:5], v10, s[6:7] offset:16 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[6:7], v10, s[2:3] offset:24 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[6:7], v10, s[6:7] offset:24 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
-; GFX11-FMA-NEXT:    global_load_b64 v[8:9], v10, s[2:3] offset:32 glc dlc
+; GFX11-FMA-NEXT:    global_load_b64 v[8:9], v10, s[6:7] offset:32 glc dlc
 ; GFX11-FMA-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[0:1], -v[6:7], v[8:9], v[0:1]
 ; GFX11-FMA-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX11-FMA-NEXT:    v_fma_f64 v[0:1], -v[2:3], v[4:5], v[0:1]
-; GFX11-FMA-NEXT:    global_store_b64 v10, v[0:1], s[0:1]
+; GFX11-FMA-NEXT:    global_store_b64 v10, v[0:1], s[4:5]
 ; GFX11-FMA-NEXT:    s_nop 0
 ; GFX11-FMA-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
 ; GFX11-FMA-NEXT:    s_endpgm
