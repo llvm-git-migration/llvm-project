@@ -2744,6 +2744,13 @@ Error BinaryWriter::finalize() {
     if (Sec.Type != SHT_NOBITS && Sec.Size > 0) {
       Sec.Offset = Sec.Addr - MinAddr;
       TotalSize = std::max(TotalSize, Sec.Offset + Sec.Size);
+
+      if (MaxHugeSectionOffset) {
+        if (Sec.Offset > *MaxHugeSectionOffset)
+          return createStringError(errc::file_too_large,
+                                   "writing section " + Sec.Name +
+                                       " at huge file offset");
+      }
     }
 
   Buf = WritableMemoryBuffer::getNewMemBuffer(TotalSize);
