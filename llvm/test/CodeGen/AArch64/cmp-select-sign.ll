@@ -266,9 +266,8 @@ define i32 @or_neg(i32 %x, i32 %y) {
 ; CHECK-LABEL: or_neg:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    orr w8, w0, #0x1
-; CHECK-NEXT:    neg w8, w8
-; CHECK-NEXT:    cmp w8, w1
-; CHECK-NEXT:    cset w0, gt
+; CHECK-NEXT:    cmn w1, w8
+; CHECK-NEXT:    cset w0, lt
 ; CHECK-NEXT:    ret
   %3 = or i32 %x, 1
   %4 = sub i32 0, %3
