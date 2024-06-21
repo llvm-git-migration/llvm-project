@@ -1161,8 +1161,9 @@ public:
   ///    value-initialized [...] A program that calls for [...]
   ///    value-initialization of an entity of reference type is ill-formed.
   bool hasUninitializedReferenceMember() const {
-    return !isUnion() && !hasUserDeclaredConstructor() &&
-           data().HasUninitializedReferenceMember;
+    return (!isUnion() && !hasUserDeclaredConstructor() &&
+            data().HasUninitializedReferenceMember) ||
+           needsImplicitDefaultConstructor();
   }
 
   /// Whether this class is a POD-type (C++ [class]p4)
@@ -1396,7 +1397,8 @@ public:
   bool allowConstDefaultInit() const {
     return !data().HasUninitializedFields ||
            !(data().HasDefaultedDefaultConstructor ||
-             needsImplicitDefaultConstructor());
+             needsImplicitDefaultConstructor()) ||
+           (isUnion() && isEmpty());
   }
 
   /// Determine whether this class has a destructor which has no
