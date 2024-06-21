@@ -16,6 +16,10 @@ endif()
 # char into the lit command.
 string(REPLACE " " ";" LIBOMPTARGET_LIT_ARG_LIST "${LIBOMPTARGET_LIT_ARGS}")
 
+if(CUDAToolkit_FOUND)
+  get_filename_component(CUDA_ROOT "${CUDAToolkit_BIN_DIR}" DIRECTORY ABSOLUTE)
+endif()
+
 string(REGEX MATCHALL "([^\ ]+\ |[^\ ]+$)" SYSTEM_TARGETS "${LIBOMPTARGET_SYSTEM_TARGETS}")
 foreach(CURRENT_TARGET IN LISTS SYSTEM_TARGETS)
   string(STRIP "${CURRENT_TARGET}" CURRENT_TARGET)
