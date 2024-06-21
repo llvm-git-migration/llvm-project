@@ -263,8 +263,7 @@ define i32 @neg_range_int_cmn(i32 %a, i32 %b, i32 %c) {
 ; SDISEL-LABEL: neg_range_int_cmn:
 ; SDISEL:       // %bb.0:
 ; SDISEL-NEXT:    orr w8, w2, #0x1
-; SDISEL-NEXT:    neg w8, w8
-; SDISEL-NEXT:    cmp w8, w0
+; SDISEL-NEXT:    cmn w8, w0
 ; SDISEL-NEXT:    ccmn w1, #3, #0, le
 ; SDISEL-NEXT:    csel w0, w1, w0, gt
 ; SDISEL-NEXT:    ret
