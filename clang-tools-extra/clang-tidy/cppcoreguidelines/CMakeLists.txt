@@ -20,9 +20,9 @@ add_clang_library(clangTidyCppCoreGuidelinesModule
   NoMallocCheck.cpp
   NoSuspendWithLockCheck.cpp
   OwningMemoryCheck.cpp
-  PreferAtOverSubscriptOperatorCheck.cpp
   PreferMemberInitializerCheck.cpp
   ProBoundsArrayToPointerDecayCheck.cpp
+  ProBoundsAvoidUncheckedContainerAccesses.cpp
   ProBoundsConstantArrayIndexCheck.cpp
   ProBoundsPointerArithmeticCheck.cpp
   ProTypeConstCastCheck.cpp
