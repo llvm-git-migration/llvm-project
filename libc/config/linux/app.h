@@ -36,12 +36,11 @@ struct TLSImage {
 };
 
 #if defined(LIBC_TARGET_ARCH_IS_X86_64) ||                                     \
-    defined(LIBC_TARGET_ARCH_IS_AARCH64) ||                                    \
+    defined(LIBC_TARGET_ARCH_IS_ANY_ARM) ||                                    \
     defined(LIBC_TARGET_ARCH_IS_ANY_RISCV)
 // At the language level, argc is an int. But we use uint64_t as the x86_64
-// ABI specifies it as an 8 byte value. Likewise, in the ARM64 ABI, arguments
-// are usually passed in registers.  x0 is a doubleword register, so this is
-// 64 bit for aarch64 as well.
+// ABI specifies it as an 8 byte value (Figure 3.9 Initial Process Stack in
+// section 3.4.1 Initial Stack and Register State of the AMD64 ABI).
 typedef uintptr_t ArgcType;
 
 // At the language level, argv is a char** value. However, we use uint64_t as
