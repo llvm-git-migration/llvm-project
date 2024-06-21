@@ -1289,10 +1289,6 @@ void RegAllocFastImpl::addRegClassDefCounts(
 void RegAllocFastImpl::findAndSortDefOperandIndexes(const MachineInstr &MI) {
   DefOperandIndexes.clear();
 
-  // Track number of defs which may consume a register from the class.
-  std::vector<unsigned> RegClassDefCounts(TRI->getNumRegClasses(), 0);
-  assert(RegClassDefCounts[0] == 0);
-
   LLVM_DEBUG(dbgs() << "Need to assign livethroughs\n");
   for (unsigned I = 0, E = MI.getNumOperands(); I < E; ++I) {
     const MachineOperand &MO = MI.getOperand(I);
@@ -1306,13 +1302,26 @@ void RegAllocFastImpl::findAndSortDefOperandIndexes(const MachineInstr &MI) {
       }
     }
 
-    if (MO.isDef()) {
-      if (Reg.isVirtual() && shouldAllocateRegister(Reg))
-        DefOperandIndexes.push_back(I);
-
-      addRegClassDefCounts(RegClassDefCounts, Reg);
-    }
+    if (MO.isDef() && Reg.isVirtual() && shouldAllocateRegister(Reg))
+      DefOperandIndexes.push_back(I);
   }
+
+  // Most instructions only have one virtual def, so there's no point in
+  // computing the possible number of defs for every register class.
+  if (DefOperandIndexes.size() <= 1)
+    return;
+
+  // Track number of defs which may consume a register from the class. This is
+  // used to assign registers for possibly-too-small classes first. Example:
+  // defs are eax, 3 * gr32_abcd, 2 * gr32 => we want to assign the gr32_abcd
+  // registers first so that the gr32 don't use the gr32_abcd registers before
+  // we assign these.
+  std::vector<unsigned> RegClassDefCounts(TRI->getNumRegClasses(), 0);
+  assert(RegClassDefCounts[0] == 0);
+
+  for (const MachineOperand &MO : MI.operands())
+    if (MO.isReg() && MO.isDef())
+      addRegClassDefCounts(RegClassDefCounts, MO.getReg());
 
   llvm::sort(DefOperandIndexes, [&](uint16_t I0, uint16_t I1) {
     const MachineOperand &MO0 = MI.getOperand(I0);
