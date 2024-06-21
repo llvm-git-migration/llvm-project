@@ -128,6 +128,7 @@ struct AArch64MIPeepholeOpt : public MachineFunctionPass {
   bool visitINSviGPR(MachineInstr &MI, unsigned Opc);
   bool visitINSvi64lane(MachineInstr &MI);
   bool visitFMOVDr(MachineInstr &MI);
+  bool visitCopy(MachineInstr &MI);
   bool runOnMachineFunction(MachineFunction &MF) override;
 
   StringRef getPassName() const override {
@@ -690,6 +691,33 @@ bool AArch64MIPeepholeOpt::visitFMOVDr(MachineInstr &MI) {
   return true;
 }
 
+// Acrocss a basic-block we might have in i32 extract from a value that only
+// operates on upper bits (for example a sxtw). We can replace the COPY with a
+// new version skipping the sxtw.
+bool AArch64MIPeepholeOpt::visitCopy(MachineInstr &MI) {
+  if (MI.getOperand(1).getSubReg() != AArch64::sub_32 ||
+      !MRI->hasOneNonDBGUse(MI.getOperand(1).getReg()))
+    return false;
+
+  MachineInstr *SrcMI = MRI->getUniqueVRegDef(MI.getOperand(1).getReg());
+  MachineInstr *CopyMI = SrcMI;
+  if (SrcMI && SrcMI->isFullCopy() &&
+      MRI->hasOneNonDBGUse(SrcMI->getOperand(1).getReg()))
+    SrcMI = MRI->getUniqueVRegDef(SrcMI->getOperand(1).getReg());
+
+  if (!SrcMI || SrcMI->getOpcode() != AArch64::SBFMXri ||
+      SrcMI->getOperand(2).getImm() != 0 || SrcMI->getOperand(3).getImm() != 31)
+    return false;
+
+  Register SrcReg = SrcMI->getOperand(1).getReg();
+  MRI->constrainRegClass(SrcReg, MRI->getRegClass(MI.getOperand(1).getReg()));
+  MI.getOperand(1).setReg(SrcReg);
+  if (CopyMI != SrcMI)
+    CopyMI->eraseFromParent();
+  SrcMI->eraseFromParent();
+  return true;
+}
+
 bool AArch64MIPeepholeOpt::runOnMachineFunction(MachineFunction &MF) {
   if (skipFunction(MF.getFunction()))
     return false;
@@ -770,6 +798,9 @@ bool AArch64MIPeepholeOpt::runOnMachineFunction(MachineFunction &MF) {
         break;
       case AArch64::FMOVDr:
         Changed |= visitFMOVDr(MI);
+        break;
+      case AArch64::COPY:
+        Changed |= visitCopy(MI);
         break;
       }
     }
