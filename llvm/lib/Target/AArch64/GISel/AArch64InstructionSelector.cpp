@@ -2152,6 +2152,12 @@ bool AArch64InstructionSelector::preISelLower(MachineInstr &I) {
     }
     return false;
   }
+  case TargetOpcode::G_FPTOSI_SAT:
+    I.setDesc(TII.get(TargetOpcode::G_FPTOSI));
+    return true;
+  case TargetOpcode::G_FPTOUI_SAT:
+    I.setDesc(TII.get(TargetOpcode::G_FPTOUI));
+    return true;
   default:
     return false;
   }
