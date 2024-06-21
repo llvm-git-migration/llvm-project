@@ -219,6 +219,9 @@ Bug Fixes to C++ Support
 - Fixed a bug when diagnosing ambiguous explicit specializations of constrained member functions.
 - Fixed an assertion failure when selecting a function from an overload set that includes a 
   specialization of a conversion function template.
+- Clang incorrectly considers a class with an anonymous union member to not be
+  const-default-constructible even if a union member has a default member initializer.
+  (#GH95854).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
