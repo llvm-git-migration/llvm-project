@@ -227,3 +227,11 @@
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
 ! FORCE-USM-OFFLOAD-NEXT: "{{[^"]*}}flang-new" "-fc1" "-triple" "amdgcn-amd-amdhsa"
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
+
+! RUN:   %flang -### -v --target=x86_64-unknown-linux-gnu -fopenmp  \
+! RUN:      --offload-arch=gfx900 \
+! RUN:      --rocm-path=%S/Inputs/rocm %s 2>&1 \
+! RUN:   | FileCheck --check-prefix=MLINK-BUILTIN-BITCODE  %s
+! MLINK-BUILTIN-BITCODE:      "{{[^"]*}}flang-new" "-fc1" "-triple" "amdgcn-amd-amdhsa"
+! MLINK-BUILTIN-BITCODE-SAME: "-fcuda-is-device"
+! MLINK-BUILTIN-BITCODE-SAME: "-mlink-builtin-bitcode" {{.*Inputs.*rocm.*amdgcn.*bitcode.*}}oclc_isa_version_900.bc
