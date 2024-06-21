@@ -242,8 +242,7 @@ define i32 @test_urem_int_min(i32 %X) nounwind {
 define i32 @test_urem_allones(i32 %X) nounwind {
 ; CHECK-LABEL: test_urem_allones:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    neg w8, w0
-; CHECK-NEXT:    cmp w8, #2
+; CHECK-NEXT:    cmn w0, #2
 ; CHECK-NEXT:    cset w0, lo
 ; CHECK-NEXT:    ret
   %urem = urem i32 %X, 4294967295
