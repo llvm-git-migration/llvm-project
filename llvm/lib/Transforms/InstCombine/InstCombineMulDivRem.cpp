@@ -166,7 +166,9 @@ static Value *foldMulShl1(BinaryOperator &Mul, bool CommuteOperands,
   if (match(Y, m_OneUse(m_Add(m_BinOp(Shift), m_One()))) &&
       match(Shift, m_OneUse(m_Shl(m_One(), m_Value(Z))))) {
     bool PropagateNSW = HasNSW && Shift->hasNoSignedWrap();
-    Value *FrX = Builder.CreateFreeze(X, X->getName() + ".fr");
+    Value* FrX = X;
+    if (!HasNUW && !HasNSW)
+      FrX = Builder.CreateFreeze(X, X->getName() + ".fr");
     Value *Shl = Builder.CreateShl(FrX, Z, "mulshl", HasNUW, PropagateNSW);
     return Builder.CreateAdd(Shl, FrX, Mul.getName(), HasNUW, PropagateNSW);
   }
