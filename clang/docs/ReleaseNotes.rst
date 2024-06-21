@@ -192,6 +192,94 @@ Bug Fixes in This Version
 - Fixed a crash when diagnosing format strings and encountering an empty
   delimited escape sequence (e.g., ``"\o{}"``). #GH102218
 
+- Fixed missing warnings when comparing mismatched enumeration constants
+  in C (#GH29217)
+
+- Clang now accepts elaborated-type-specifiers that explicitly specialize
+  a member class template for an implicit instantiation of a class template.
+
+- Fixed missing warnings when doing bool-like conversions in C23 (#GH79435).
+- Clang's ``-Wshadow`` no longer warns when an init-capture is named the same as
+  a class field unless the lambda can capture this.
+  Fixes (#GH71976)
+
+- Clang now accepts qualified partial/explicit specializations of variable templates that
+  are not nominable in the lookup context of the specialization.
+
+- Clang now doesn't produce false-positive warning `-Wconstant-logical-operand`
+  for logical operators in C23.
+  Fixes (#GH64356).
+
+- ``__is_trivially_relocatable`` no longer returns ``false`` for volatile-qualified types.
+  Fixes (#GH77091).
+
+- Clang no longer produces a false-positive `-Wunused-variable` warning
+  for variables created through copy initialization having side-effects in C++17 and later.
+  Fixes (#GH64356) (#GH79518).
+
+- Fix value of predefined macro ``__FUNCTION__`` in MSVC compatibility mode.
+  Fixes (#GH66114).
+
+- Clang now emits errors for explicit specializations/instatiations of lambda call
+  operator.
+  Fixes (#GH83267).
+
+- Fix crash on ill-formed partial specialization with CRTP.
+  Fixes (#GH89374).
+
+- Clang now correctly generates overloads for bit-precise integer types for
+  builtin operators in C++. Fixes #GH82998.
+
+- Fix crash when destructor definition is preceded with an equals sign.
+  Fixes (#GH89544).
+
+- When performing mixed arithmetic between ``_Complex`` floating-point types and integers,
+  Clang now correctly promotes the integer to its corresponding real floating-point
+  type only rather than to the complex type (e.g. ``_Complex float / int`` is now evaluated
+  as ``_Complex float / float`` rather than ``_Complex float / _Complex float``), as mandated
+  by the C standard. This significantly improves codegen of `*` and `/` especially.
+  Fixes #GH31205.
+
+- Fixes an assertion failure on invalid code when trying to define member
+  functions in lambdas.
+
+- Fixed a regression in CTAD that a friend declaration that befriends itself may cause
+  incorrect constraint substitution. (#GH86769).
+
+- Fixed an assertion failure on invalid InitListExpr in C89 mode (#GH88008).
+
+- Fixed missing destructor calls when we branch from middle of an expression.
+  This could happen through a branch in stmt-expr or in an expression containing a coroutine
+  suspension. Fixes (#GH63818) (#GH88478).
+
+- Clang will no longer diagnose an erroneous non-dependent ``switch`` condition
+  during instantiation, and instead will only diagnose it once, during checking
+  of the function template.
+
+- Clang now allows the value of unroll count to be zero in ``#pragma GCC unroll`` and ``#pragma unroll``.
+  The values of 0 and 1 block any unrolling of the loop. This keeps the same behavior with GCC.
+  Fixes (`#88624 <https://github.com/llvm/llvm-project/issues/88624>`_).
+
+- Clang will no longer emit a duplicate -Wunused-value warning for an expression
+  `(A, B)` which evaluates to glvalue `B` that can be converted to non ODR-use. (#GH45783)
+
+- Clang now correctly disallows VLA type compound literals, e.g. ``(int[size]){}``,
+  as the C standard mandates. (#GH89835)
+
+- ``__is_array`` and ``__is_bounded_array`` no longer return ``true`` for
+  zero-sized arrays. Fixes (#GH54705).
+  
+- Clang incorrectly considers a class with an anonymous union member to not be 
+  const-default-constructible even if a union member has a default member initializer. 
+  This is valid as per ``8.3`` in `Draft C++ Standard <https://eel.is/c++draft/dcl.init#general-8.3>`_.
+  The ``allowConstDefaultInit`` member function in ``CXXRecordDecl`` needs 
+  special-case unions to handle the rule. (#GH95854).
+
+- Correctly reject declarations where a statement is required in C.
+  Fixes #GH92775
+
+- Fixed `static_cast` to array of unknown bound. Fixes (#GH62863).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
