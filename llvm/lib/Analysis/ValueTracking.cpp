@@ -7205,7 +7205,7 @@ static bool canCreateUndefOrPoison(const Operator *Op, UndefPoisonKind Kind,
 
 bool llvm::canCreateUndefOrPoison(const Operator *Op,
                                   bool ConsiderFlagsAndMetadata) {
-  return ::canCreateUndefOrPoison(Op, UndefPoisonKind::UndefOrPoison,
+  return ::canCreateUndefOrPoison(Op, UndefPoisonKind::PoisonOnly,
                                   ConsiderFlagsAndMetadata);
 }
 
@@ -7419,7 +7419,7 @@ bool llvm::isGuaranteedNotToBeUndefOrPoison(const Value *V, AssumptionCache *AC,
                                             const DominatorTree *DT,
                                             unsigned Depth) {
   return ::isGuaranteedNotToBeUndefOrPoison(V, AC, CtxI, DT, Depth,
-                                            UndefPoisonKind::UndefOrPoison);
+                                            UndefPoisonKind::PoisonOnly);
 }
 
 bool llvm::isGuaranteedNotToBePoison(const Value *V, AssumptionCache *AC,
@@ -7432,8 +7432,7 @@ bool llvm::isGuaranteedNotToBePoison(const Value *V, AssumptionCache *AC,
 bool llvm::isGuaranteedNotToBeUndef(const Value *V, AssumptionCache *AC,
                                     const Instruction *CtxI,
                                     const DominatorTree *DT, unsigned Depth) {
-  return ::isGuaranteedNotToBeUndefOrPoison(V, AC, CtxI, DT, Depth,
-                                            UndefPoisonKind::UndefOnly);
+  return true;
 }
 
 /// Return true if undefined behavior would provably be executed on the path to
@@ -7829,7 +7828,7 @@ static bool programUndefinedIfUndefOrPoison(const Value *V,
 }
 
 bool llvm::programUndefinedIfUndefOrPoison(const Instruction *Inst) {
-  return ::programUndefinedIfUndefOrPoison(Inst, false);
+  return ::programUndefinedIfUndefOrPoison(Inst, true);
 }
 
 bool llvm::programUndefinedIfPoison(const Instruction *Inst) {
