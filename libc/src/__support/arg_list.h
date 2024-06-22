@@ -54,7 +54,8 @@ public:
   }
 
   template <class T> LIBC_INLINE T next_var() {
-    ++arg_counter;
+    arg_counter =
+        ((arg_counter + alignof(T) - 1) / alignof(T)) * alignof(T) + sizeof(T);
     return T(arg_counter);
   }
 

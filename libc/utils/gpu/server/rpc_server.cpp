@@ -44,7 +44,7 @@ template <uint32_t lane_size> void handle_printf(rpc::Server::Port &port) {
   // Get the appropriate output stream to use.
   if (port.get_opcode() == RPC_PRINTF_TO_STREAM)
     port.recv([&](rpc::Buffer *buffer, uint32_t id) {
-      files[id] = reinterpret_cast<FILE *>(buffer->data[0]);
+      files[id] = file::to_stream(buffer->data[0]);
     });
   else if (port.get_opcode() == RPC_PRINTF_TO_STDOUT)
     std::fill(files, files + lane_size, stdout);
@@ -60,6 +60,28 @@ template <uint32_t lane_size> void handle_printf(rpc::Server::Port &port) {
   // Recieve the format string and arguments from the client.
   port.recv_n(format, format_sizes,
               [&](uint64_t size) { return new char[size]; });
+
+  // Parse the format string to get the expected size of the buffer.
+  for (uint32_t lane = 0; lane < lane_size; ++lane) {
+    if (!format[lane])
+      continue;
+
+    WriteBuffer wb(nullptr, 0);
+    Writer writer(&wb);
+
+    internal::MockArgList printf_args;
+    Parser<internal::MockArgList &> parser(
+        reinterpret_cast<const char *>(format[lane]), printf_args);
+
+    for (FormatSection cur_section = parser.get_next_section();
+         !cur_section.raw_string.empty();
+         cur_section = parser.get_next_section())
+      ;
+    args_sizes[lane] = printf_args.read_count();
+  }
+  port.send([&](rpc::Buffer *buffer, uint32_t id) {
+    buffer->data[0] = args_sizes[id];
+  });
   port.recv_n(args, args_sizes, [&](uint64_t size) { return new char[size]; });
 
   // Identify any arguments that are actually pointers to strings on the client.
