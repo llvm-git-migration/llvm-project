@@ -207,8 +207,7 @@ EXTERN void __tgt_target_data_update_mapper(ident_t *Loc, int64_t DeviceId,
 EXTERN void __tgt_target_data_update_nowait_mapper(
     ident_t *Loc, int64_t DeviceId, int32_t ArgNum, void **ArgsBase,
     void **Args, int64_t *ArgSizes, int64_t *ArgTypes, map_var_info_t *ArgNames,
-    void **ArgMappers, int32_t DepNum, void *DepList, int32_t NoAliasDepNum,
-    void *NoAliasDepList) {
+    void **ArgMappers) {
   OMPT_IF_BUILT(ReturnAddressSetterRAII RA(__builtin_return_address(0)));
   targetData<TaskAsyncInfoWrapperTy>(
       Loc, DeviceId, ArgNum, ArgsBase, Args, ArgSizes, ArgTypes, ArgNames,

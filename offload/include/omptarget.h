@@ -388,8 +388,7 @@ void __tgt_target_data_update_mapper(ident_t *Loc, int64_t DeviceId,
 void __tgt_target_data_update_nowait_mapper(
     ident_t *Loc, int64_t DeviceId, int32_t ArgNum, void **ArgsBase,
     void **Args, int64_t *ArgSizes, int64_t *ArgTypes, map_var_info_t *ArgNames,
-    void **ArgMappers, int32_t DepNum, void *DepList, int32_t NoAliasDepNum,
-    void *NoAliasDepList);
+    void **ArgMappers);
 
 // Performs the same actions as data_begin in case ArgNum is non-zero
 // and initiates run of offloaded region on target platform; if ArgNum
