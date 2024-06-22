@@ -70,6 +70,7 @@ enum class Operation : int {
   // input and produce a single floating point number of the same type as
   // output.
   BeginBinaryOperationsSingleOutput,
+  Add,
   Atan2,
   Div,
   Fmod,
@@ -303,7 +304,9 @@ constexpr bool is_valid_operation() {
       (op == Operation::Sqrt && cpp::is_floating_point_v<InputType> &&
        cpp::is_floating_point_v<OutputType> &&
        sizeof(OutputType) <= sizeof(InputType)) ||
-      (op == Operation::Div && internal::IsBinaryInput<InputType>::VALUE &&
+      (Operation::BeginBinaryOperationsSingleOutput < op &&
+       op < Operation::EndBinaryOperationsSingleOutput &&
+       internal::IsBinaryInput<InputType>::VALUE &&
        cpp::is_floating_point_v<
            typename internal::MakeScalarInput<InputType>::type> &&
        cpp::is_floating_point_v<OutputType>) ||
