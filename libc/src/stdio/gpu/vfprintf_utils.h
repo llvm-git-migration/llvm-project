@@ -1,4 +1,4 @@
-//===-- GPU implementation of fprintf -------------------------------------===//
+//===--- GPU helper functions for printf using RPC ------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,19 +6,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "rpc_fprintf.h"
-
-#include "src/__support/CPP/string_view.h"
-#include "src/__support/GPU/utils.h"
 #include "src/__support/RPC/rpc_client.h"
-#include "src/__support/common.h"
+#include "src/__support/arg_list.h"
 #include "src/stdio/gpu/file.h"
+#include "src/string/string_utils.h"
+
+#include <stdio.h>
 
 namespace LIBC_NAMESPACE {
+namespace file {
 
 template <uint16_t opcode>
-int fprintf_impl(::FILE *__restrict file, const char *__restrict format,
-                 size_t format_size, void *args, size_t args_size) {
+LIBC_INLINE int vfprintf_impl(::FILE *__restrict file,
+                              const char *__restrict format, size_t format_size,
+                              va_list vlist) {
   uint64_t mask = gpu::get_lane_mask();
   rpc::Client::Port port = rpc::client.open<opcode>();
 
@@ -28,11 +29,12 @@ int fprintf_impl(::FILE *__restrict file, const char *__restrict format,
     });
   }
 
+  size_t args_size = 0;
   port.send_n(format, format_size);
   port.recv([&](rpc::Buffer *buffer) {
     args_size = static_cast<size_t>(buffer->data[0]);
   });
-  port.send_n(args, args_size);
+  port.send_n(vlist, args_size);
 
   uint32_t ret = 0;
   for (;;) {
@@ -53,22 +55,19 @@ int fprintf_impl(::FILE *__restrict file, const char *__restrict format,
   return ret;
 }
 
-// TODO: Delete this and port OpenMP to use `printf`.
-// place of varargs. Once varargs support is added we will use that to
-// implement the real version.
-LLVM_LIBC_FUNCTION(int, rpc_fprintf,
-                   (::FILE *__restrict stream, const char *__restrict format,
-                    void *args, size_t size)) {
-  cpp::string_view str(format);
+LIBC_INLINE int vfprintf_internal(::FILE *__restrict stream,
+                                  const char *__restrict format,
+                                  size_t format_size, va_list vlist) {
   if (stream == stdout)
-    return fprintf_impl<RPC_PRINTF_TO_STDOUT>(stream, format, str.size() + 1,
-                                              args, size);
+    return vfprintf_impl<RPC_PRINTF_TO_STDOUT>(stream, format, format_size,
+                                               vlist);
   else if (stream == stderr)
-    return fprintf_impl<RPC_PRINTF_TO_STDERR>(stream, format, str.size() + 1,
-                                              args, size);
+    return vfprintf_impl<RPC_PRINTF_TO_STDERR>(stream, format, format_size,
+                                               vlist);
   else
-    return fprintf_impl<RPC_PRINTF_TO_STREAM>(stream, format, str.size() + 1,
-                                              args, size);
+    return vfprintf_impl<RPC_PRINTF_TO_STREAM>(stream, format, format_size,
+                                               vlist);
 }
 
+} // namespace file
 } // namespace LIBC_NAMESPACE

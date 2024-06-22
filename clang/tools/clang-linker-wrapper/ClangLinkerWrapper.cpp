@@ -1671,6 +1671,7 @@ int main(int Argc, char **Argv) {
     NewArgv.push_back(Arg->getValue());
   for (const opt::Arg *Arg : Args.filtered(OPT_offload_opt_eq_minus))
     NewArgv.push_back(Args.MakeArgString(StringRef("-") + Arg->getValue()));
+  llvm::errs() << "asdfasdf\n";
   cl::ParseCommandLineOptions(NewArgv.size(), &NewArgv[0]);
 
   Verbose = Args.hasArg(OPT_verbose);

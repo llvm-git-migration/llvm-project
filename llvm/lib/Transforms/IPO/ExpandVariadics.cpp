@@ -934,7 +934,13 @@ struct Amdgpu final : public VariadicABIInfo {
   }
 
   VAArgSlotInfo slotInfo(const DataLayout &DL, Type *Parameter) override {
-    return {Align(4), false};
+    // NVPTX expects natural alignment in all cases. The variadic call ABI will
+    // handle promoting types to their appropriate size and alignment.
+    const unsigned MinAlign = 1;
+    Align A = DL.getABITypeAlign(Parameter);
+    if (A < MinAlign)
+      A = Align(MinAlign);
+    return {A, false};
   }
 };
 
