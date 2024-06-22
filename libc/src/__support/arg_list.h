@@ -54,7 +54,34 @@ public:
   }
 
   template <class T> LIBC_INLINE T next_var() {
-    ++arg_counter;
+    arg_counter++;
+    return T(arg_counter);
+  }
+
+  size_t read_count() const { return arg_counter; }
+};
+
+// Used by the GPU implementation to parse how many bytes need to be read from
+// the variadic argument buffer.
+class DummyArgList {
+  size_t arg_counter = 0;
+
+public:
+  LIBC_INLINE DummyArgList() = default;
+  LIBC_INLINE DummyArgList(va_list) { ; }
+  LIBC_INLINE DummyArgList(DummyArgList &other) {
+    arg_counter = other.arg_counter;
+  }
+  LIBC_INLINE ~DummyArgList() = default;
+
+  LIBC_INLINE DummyArgList &operator=(DummyArgList &rhs) {
+    arg_counter = rhs.arg_counter;
+    return *this;
+  }
+
+  template <class T> LIBC_INLINE T next_var() {
+    arg_counter =
+        ((arg_counter + alignof(T) - 1) / alignof(T)) * alignof(T) + sizeof(T);
     return T(arg_counter);
   }
 
