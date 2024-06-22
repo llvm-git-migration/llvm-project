@@ -10343,6 +10343,23 @@ void CGOpenMPRuntime::emitTargetDataStandAloneCall(
         MapNamesArray,
         InputInfo.MappersArray.emitRawPointer(CGF)};
 
+    // Nowait calls have header declarations that take 13 arguments. Hence, the
+    // divergence from the OffloadingArgs definition.
+    llvm::Value *NowaitOffloadingArgs[] = {
+        RTLoc,
+        DeviceID,
+        PointerNum,
+        InputInfo.BasePointersArray.emitRawPointer(CGF),
+        InputInfo.PointersArray.emitRawPointer(CGF),
+        InputInfo.SizesArray.emitRawPointer(CGF),
+        MapTypesArray,
+        MapNamesArray,
+        InputInfo.MappersArray.emitRawPointer(CGF),
+        llvm::Constant::getNullValue(CGF.Int32Ty),
+        llvm::Constant::getNullValue(CGF.VoidPtrTy),
+        llvm::Constant::getNullValue(CGF.Int32Ty),
+        llvm::Constant::getNullValue(CGF.VoidPtrTy)};
+
     // Select the right runtime function call for each standalone
     // directive.
     const bool HasNowait = D.hasClausesOfKind<OMPNowaitClause>();
@@ -10430,9 +10447,14 @@ void CGOpenMPRuntime::emitTargetDataStandAloneCall(
       llvm_unreachable("Unexpected standalone target data directive.");
       break;
     }
-    CGF.EmitRuntimeCall(
-        OMPBuilder.getOrCreateRuntimeFunction(CGM.getModule(), RTLFn),
-        OffloadingArgs);
+    if (HasNowait)
+      CGF.EmitRuntimeCall(
+          OMPBuilder.getOrCreateRuntimeFunction(CGM.getModule(), RTLFn),
+          NowaitOffloadingArgs);
+    else
+      CGF.EmitRuntimeCall(
+          OMPBuilder.getOrCreateRuntimeFunction(CGM.getModule(), RTLFn),
+          OffloadingArgs);
   };
 
   auto &&TargetThenGen = [this, &ThenGen, &D, &InputInfo, &MapTypesArray,
