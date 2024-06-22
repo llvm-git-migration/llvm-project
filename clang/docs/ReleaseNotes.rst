@@ -486,6 +486,10 @@ New Compiler Flags
 - ``-fpointer-tbaa`` enables emission of distinct type-based alias
   analysis tags for incompatible pointers.
 
+- ``-fms-reference-binding`` and its clang-cl counterpart ``/Zc:referenceBinding``.
+  Implements the MSVC extension where expressions that bind a user-defined type temporary
+  to a non-const lvalue reference are allowed.
+
 Deprecated Compiler Flags
 -------------------------
 
