@@ -788,6 +788,13 @@ def FeatureFlatAtomicFaddF32Inst
   "Has flat_atomic_add_f32 instruction"
 >;
 
+def FeatureFlatBufferGlobalAtomicFaddF64Inst
+  : SubtargetFeature<"flat-buffer-global-fadd-f64-inst",
+  "HasFlatBufferGlobalAtomicFaddF64Inst",
+  "true",
+  "Has flat, buffer, and global instructions for f64 atomic fadd"
+>;
+
 def FeatureMemoryAtomicFaddF32DenormalSupport
   : SubtargetFeature<"memory-atomic-fadd-f32-denormal-support",
   "HasAtomicMemoryAtomicFaddF32DenormalSupport",
@@ -1388,7 +1395,8 @@ def FeatureISAVersion9_0_A : FeatureSet<
      FeatureBackOffBarrier,
      FeatureKernargPreload,
      FeatureAtomicFMinFMaxF64GlobalInsts,
-     FeatureAtomicFMinFMaxF64FlatInsts
+     FeatureAtomicFMinFMaxF64FlatInsts,
+     FeatureFlatBufferGlobalAtomicFaddF64Inst
      ])>;
 
 def FeatureISAVersion9_0_C : FeatureSet<
