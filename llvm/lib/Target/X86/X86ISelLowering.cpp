@@ -14123,7 +14123,25 @@ static SDValue lowerShuffleWithPERMV(const SDLoc &DL, MVT VT,
   MVT MaskVT = VT.changeTypeToInteger();
   SDValue MaskNode;
   MVT ShuffleVT = VT;
-  if (!VT.is512BitVector() && !Subtarget.hasVLX()) {
+  MVT ElementVT = VT.getVectorElementType();
+  // VPERM[I,T]2[B,W] are 3 uops on Skylake and Icelake so we try to use VPERMV.
+  if (Subtarget.hasVBMI() && !V2.isUndef() &&
+      (VT.is128BitVector() ||
+       (VT.is256BitVector() && Subtarget.hasEVEX512())) &&
+      (ElementVT == MVT::i8 || ElementVT == MVT::i16) &&
+      V1.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
+      V1.getConstantOperandVal(1) == 0 &&
+      V2.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
+      V2.getConstantOperandVal(1) == VT.getVectorNumElements() &&
+      V1.getOperand(0) == V2.getOperand(0)) {
+    SmallVector<int, 32> AdjustedMask(Mask);
+    AdjustedMask.resize(VT.getVectorNumElements() * 2, SM_SentinelUndef);
+    ShuffleVT = VT.getDoubleNumVectorElementsVT();
+    V1 = V1.getOperand(0);
+    V2 = DAG.getUNDEF(ShuffleVT);
+    MaskNode = getConstVector(
+        AdjustedMask, MaskVT.getDoubleNumVectorElementsVT(), DAG, DL, true);
+  } else if (!VT.is512BitVector() && !Subtarget.hasVLX()) {
     V1 = widenSubVector(V1, false, Subtarget, DAG, DL, 512);
     V2 = widenSubVector(V2, false, Subtarget, DAG, DL, 512);
     ShuffleVT = V1.getSimpleValueType();
