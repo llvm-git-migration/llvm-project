@@ -41273,6 +41273,33 @@ static SDValue combineTargetShuffle(SDValue N, const SDLoc &DL,
 
     return SDValue();
   }
+  case X86ISD::VPERMV3: {
+    // VPERM[I,T]2[B,W] are 3 uops on Skylake and Icelake so we try to use
+    // VPERMV.
+    if (VT.is512BitVector() || (VT.is256BitVector() && !Subtarget.hasEVEX512()))
+      return SDValue();
+    MVT ElementVT = VT.getVectorElementType();
+    if (ElementVT != MVT::i8 && ElementVT != MVT::i16)
+      return SDValue();
+    SDValue V1 = N.getOperand(0);
+    SDValue V2 = N.getOperand(2);
+    if (V1.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
+        V1.getConstantOperandVal(1) == 0 &&
+        V2.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
+        V2.getConstantOperandVal(1) == VT.getVectorNumElements() &&
+        V1.getOperand(0) == V2.getOperand(0)) {
+      MVT NVT = VT.getDoubleNumVectorElementsVT();
+      SDValue Mask =
+          DAG.getNode(ISD::INSERT_SUBVECTOR, DL, NVT, DAG.getUNDEF(NVT),
+                      N.getOperand(1), DAG.getIntPtrConstant(0, DL));
+      return DAG.getNode(
+          ISD::EXTRACT_SUBVECTOR, DL, VT,
+          DAG.getNode(X86ISD::VPERMV, DL, NVT, Mask, V1.getOperand(0)),
+          DAG.getIntPtrConstant(0, DL));
+    }
+
+    return SDValue();
+  }
   default:
     return SDValue();
   }
