@@ -89,55 +89,66 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-defaultlib:libcmt");
     CmdArgs.push_back("-defaultlib:oldnames");
   }
-
-  // If the VC environment hasn't been configured (perhaps because the user
-  // did not run vcvarsall), try to build a consistent link environment.  If
-  // the environment variable is set however, assume the user knows what
-  // they're doing. If the user passes /vctoolsdir or /winsdkdir, trust that
-  // over env vars.
-  if (const Arg *A = Args.getLastArg(options::OPT__SLASH_diasdkdir,
-                                     options::OPT__SLASH_winsysroot)) {
-    // cl.exe doesn't find the DIA SDK automatically, so this too requires
-    // explicit flags and doesn't automatically look in "DIA SDK" relative
-    // to the path we found for VCToolChainPath.
-    llvm::SmallString<128> DIAPath(A->getValue());
-    if (A->getOption().getID() == options::OPT__SLASH_winsysroot)
-      llvm::sys::path::append(DIAPath, "DIA SDK");
-
-    // The DIA SDK always uses the legacy vc arch, even in new MSVC versions.
-    llvm::sys::path::append(DIAPath, "lib",
-                            llvm::archToLegacyVCArch(TC.getArch()));
-    CmdArgs.push_back(Args.MakeArgString(Twine("-libpath:") + DIAPath));
+  auto SysRoot = TC.getDriver().SysRoot;
+  if (!SysRoot.empty()) {
+    // If we have --sysroot, then we ignore all other setings
+    // libpath is $SYSROOT/lib and $SYSROOT/lib/arch-unknown-windows-msvc
+    const std::string MultiarchTriple =
+        TC.getMultiarchTriple(TC.getDriver(), TC.getTriple(), SysRoot);
+    std::string SysRootLib = "-libpath:" + SysRoot + "/lib";
+    CmdArgs.push_back(Args.MakeArgString(SysRootLib + '/' + MultiarchTriple));
+    CmdArgs.push_back(Args.MakeArgString(SysRootLib));
   }
-  if (!llvm::sys::Process::GetEnv("LIB") ||
-      Args.getLastArg(options::OPT__SLASH_vctoolsdir,
-                      options::OPT__SLASH_winsysroot)) {
-    CmdArgs.push_back(Args.MakeArgString(
-        Twine("-libpath:") +
-        TC.getSubDirectoryPath(llvm::SubDirectoryType::Lib)));
-    CmdArgs.push_back(Args.MakeArgString(
-        Twine("-libpath:") +
-        TC.getSubDirectoryPath(llvm::SubDirectoryType::Lib, "atlmfc")));
-  }
-  if (!llvm::sys::Process::GetEnv("LIB") ||
-      Args.getLastArg(options::OPT__SLASH_winsdkdir,
-                      options::OPT__SLASH_winsysroot)) {
-    if (TC.useUniversalCRT()) {
-      std::string UniversalCRTLibPath;
-      if (TC.getUniversalCRTLibraryPath(Args, UniversalCRTLibPath))
-        CmdArgs.push_back(
-            Args.MakeArgString(Twine("-libpath:") + UniversalCRTLibPath));
+  else
+  {
+    // If the VC environment hasn't been configured (perhaps because the user
+    // did not run vcvarsall), try to build a consistent link environment.  If
+    // the environment variable is set however, assume the user knows what
+    // they're doing. If the user passes /vctoolsdir or /winsdkdir, trust that
+    // over env vars.
+    if (const Arg *A = Args.getLastArg(options::OPT__SLASH_diasdkdir,
+                                      options::OPT__SLASH_winsysroot)) {
+      // cl.exe doesn't find the DIA SDK automatically, so this too requires
+      // explicit flags and doesn't automatically look in "DIA SDK" relative
+      // to the path we found for VCToolChainPath.
+      llvm::SmallString<128> DIAPath(A->getValue());
+      if (A->getOption().getID() == options::OPT__SLASH_winsysroot)
+        llvm::sys::path::append(DIAPath, "DIA SDK");
+
+      // The DIA SDK always uses the legacy vc arch, even in new MSVC versions.
+      llvm::sys::path::append(DIAPath, "lib",
+                              llvm::archToLegacyVCArch(TC.getArch()));
+      CmdArgs.push_back(Args.MakeArgString(Twine("-libpath:") + DIAPath));
     }
-    std::string WindowsSdkLibPath;
-    if (TC.getWindowsSDKLibraryPath(Args, WindowsSdkLibPath))
-      CmdArgs.push_back(
-          Args.MakeArgString(std::string("-libpath:") + WindowsSdkLibPath));
+    if (!llvm::sys::Process::GetEnv("LIB") ||
+        Args.getLastArg(options::OPT__SLASH_vctoolsdir,
+                        options::OPT__SLASH_winsysroot)) {
+      CmdArgs.push_back(Args.MakeArgString(
+          Twine("-libpath:") +
+          TC.getSubDirectoryPath(llvm::SubDirectoryType::Lib)));
+      CmdArgs.push_back(Args.MakeArgString(
+          Twine("-libpath:") +
+          TC.getSubDirectoryPath(llvm::SubDirectoryType::Lib, "atlmfc")));
+    }
+    if (!llvm::sys::Process::GetEnv("LIB") ||
+        Args.getLastArg(options::OPT__SLASH_winsdkdir,
+                        options::OPT__SLASH_winsysroot)) {
+      if (TC.useUniversalCRT()) {
+        std::string UniversalCRTLibPath;
+        if (TC.getUniversalCRTLibraryPath(Args, UniversalCRTLibPath))
+          CmdArgs.push_back(
+              Args.MakeArgString(Twine("-libpath:") + UniversalCRTLibPath));
+      }
+      std::string WindowsSdkLibPath;
+      if (TC.getWindowsSDKLibraryPath(Args, WindowsSdkLibPath))
+        CmdArgs.push_back(
+            Args.MakeArgString(std::string("-libpath:") + WindowsSdkLibPath));
+    }
+
+    if (!C.getDriver().IsCLMode() && Args.hasArg(options::OPT_L))
+      for (const auto &LibPath : Args.getAllArgValues(options::OPT_L))
+        CmdArgs.push_back(Args.MakeArgString("-libpath:" + LibPath));
   }
-
-  if (!C.getDriver().IsCLMode() && Args.hasArg(options::OPT_L))
-    for (const auto &LibPath : Args.getAllArgValues(options::OPT_L))
-      CmdArgs.push_back(Args.MakeArgString("-libpath:" + LibPath));
-
   if (C.getDriver().IsFlangMode()) {
     addFortranRuntimeLibraryPath(TC, Args, CmdArgs);
     addFortranRuntimeLibs(TC, Args, CmdArgs);
@@ -430,6 +441,12 @@ MSVCToolChain::MSVCToolChain(const Driver &D, const llvm::Triple &Triple,
       RocmInstallation(D, Triple, Args) {
   getProgramPaths().push_back(getDriver().Dir);
 
+  auto SysRoot = getDriver().SysRoot;
+  if (!SysRoot.empty()) {
+    // We have sysroot so we ignore all VCTools settings
+    return;
+  }
+
   std::optional<llvm::StringRef> VCToolsDir, VCToolsVersion;
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_vctoolsdir))
     VCToolsDir = A->getValue();
@@ -647,6 +664,17 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
                                   "include");
   }
 
+  auto SysRoot = getDriver().SysRoot;
+  if (!SysRoot.empty()) {
+    const Driver &D = getDriver();
+    const std::string MultiarchTriple =
+        getMultiarchTriple(D, getTriple(), SysRoot);
+    addSystemInclude(DriverArgs, CC1Args,
+                     SysRoot + "/include/" + MultiarchTriple);
+    addSystemInclude(DriverArgs, CC1Args, SysRoot + "/include");
+    return;
+  }
+
   // Add %INCLUDE%-like directories from the -imsvc flag.
   for (const auto &Path : DriverArgs.getAllArgValues(options::OPT__SLASH_imsvc))
     addSystemInclude(DriverArgs, CC1Args, Path);
@@ -776,6 +804,22 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
 void MSVCToolChain::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
                                                  ArgStringList &CC1Args) const {
   // FIXME: There should probably be logic here to find libc++ on Windows.
+  if (DriverArgs.hasArg(options::OPT_nostdinc, options::OPT_nostdlibinc,
+                        options::OPT_nostdincxx))
+    return;
+  if (getDriver().SysRoot.empty())
+    return;
+  switch (GetCXXStdlibType(DriverArgs)) {
+  case ToolChain::CST_Stl:
+    addStlIncludePaths(DriverArgs, CC1Args);
+    break;
+  case ToolChain::CST_Libstdcxx:
+    addLibStdCXXIncludePaths(DriverArgs, CC1Args);
+    break;
+  case ToolChain::CST_Libcxx:
+    addLibCxxIncludePaths(DriverArgs, CC1Args);
+    break;
+  }
 }
 
 VersionTuple MSVCToolChain::computeMSVCVersion(const Driver *D,
@@ -1026,4 +1070,87 @@ void MSVCToolChain::addClangTargetOptions(
 
   if (Arg *A = DriverArgs.getLastArgNoClaim(options::OPT_marm64x))
     A->ignoreTargetSpecific();
+}
+
+void MSVCToolChain::addStlIncludePaths(
+    const llvm::opt::ArgList &DriverArgs,
+    llvm::opt::ArgStringList &CC1Args) const {
+  const Driver &D = getDriver();
+  std::string SysRoot = computeSysRoot();
+  std::string LibPath = SysRoot + "/include";
+  const std::string MultiarchTriple =
+      getMultiarchTriple(D, getTriple(), SysRoot);
+
+  std::string TargetDir = LibPath + "/" + MultiarchTriple + "/c++/stl";
+  addSystemInclude(DriverArgs, CC1Args, TargetDir);
+
+  // Second add the generic one.
+  addSystemInclude(DriverArgs, CC1Args, LibPath + "/c++/stl");
+}
+
+void MSVCToolChain::addLibCxxIncludePaths(
+    const llvm::opt::ArgList &DriverArgs,
+    llvm::opt::ArgStringList &CC1Args) const {
+  const Driver &D = getDriver();
+  std::string SysRoot = computeSysRoot();
+  std::string LibPath = SysRoot + "/include";
+  const std::string MultiarchTriple =
+      getMultiarchTriple(D, getTriple(), SysRoot);
+
+  std::string Version = detectLibcxxVersion(LibPath);
+  if (Version.empty())
+    return;
+
+  std::string TargetDir = LibPath + "/" + MultiarchTriple + "/c++/" + Version;
+  addSystemInclude(DriverArgs, CC1Args, TargetDir);
+
+  // Second add the generic one.
+  addSystemInclude(DriverArgs, CC1Args, LibPath + "/c++/" + Version);
+}
+
+void MSVCToolChain::addLibStdCXXIncludePaths(
+    const llvm::opt::ArgList &DriverArgs,
+    llvm::opt::ArgStringList &CC1Args) const {
+  // We cannot use GCCInstallationDetector here as the sysroot usually does
+  // not contain a full GCC installation.
+  // Instead, we search the given sysroot for /usr/include/xx, similar
+  // to how we do it for libc++.
+  const Driver &D = getDriver();
+  std::string SysRoot = computeSysRoot();
+  std::string LibPath = SysRoot + "/include";
+  const std::string MultiarchTriple =
+      getMultiarchTriple(D, getTriple(), SysRoot);
+
+  // This is similar to detectLibcxxVersion()
+  std::string Version;
+  {
+    std::error_code EC;
+    Generic_GCC::GCCVersion MaxVersion =
+        Generic_GCC::GCCVersion::Parse("0.0.0");
+    SmallString<128> Path(LibPath);
+    llvm::sys::path::append(Path, "c++");
+    for (llvm::vfs::directory_iterator LI = getVFS().dir_begin(Path, EC), LE;
+         !EC && LI != LE; LI = LI.increment(EC)) {
+      StringRef VersionText = llvm::sys::path::filename(LI->path());
+      if (VersionText[0] != 'v') {
+        auto Version = Generic_GCC::GCCVersion::Parse(VersionText);
+        if (Version > MaxVersion)
+          MaxVersion = Version;
+      }
+    }
+    if (MaxVersion.Major > 0)
+      Version = MaxVersion.Text;
+  }
+
+  if (Version.empty())
+    return;
+
+  std::string TargetDir = LibPath + "/c++/" + Version + "/" + MultiarchTriple;
+  addSystemInclude(DriverArgs, CC1Args, TargetDir);
+
+  // Second add the generic one.
+  addSystemInclude(DriverArgs, CC1Args, LibPath + "/c++/" + Version);
+  // Third the backward one.
+  addSystemInclude(DriverArgs, CC1Args,
+                   LibPath + "/c++/" + Version + "/backward");
 }
