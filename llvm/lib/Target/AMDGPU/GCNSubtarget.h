@@ -174,6 +174,7 @@ protected:
   bool HasAtomicGlobalPkAddBF16Inst = false;
   bool HasAtomicBufferPkAddBF16Inst = false;
   bool HasFlatAtomicFaddF32Inst = false;
+  bool HasFlatBufferGlobalAtomicFaddF64Inst = false;
   bool HasDefaultComponentZero = false;
   bool HasAgentScopeFineGrainedRemoteMemoryAtomics = false;
   bool HasDefaultComponentBroadcast = false;
@@ -872,6 +873,12 @@ public:
   }
 
   bool hasFlatAtomicFaddF32Inst() const { return HasFlatAtomicFaddF32Inst; }
+
+  /// \return true if the target has flat, global, and buffer atomic fadd for
+  /// double.
+  bool hasFlatBufferGlobalAtomicFaddF64Inst() const {
+    return HasFlatBufferGlobalAtomicFaddF64Inst;
+  }
 
   /// \return true if the target's flat, global, and buffer atomic fadd for
   /// float supports denormal handling.
