@@ -28,6 +28,12 @@ from lldbsuite.test import lldbutil
 
 
 class ZerothFrame(TestBase):
+    def _is_thread_executing_file(self, thread, file_basename):
+        frame = thread.GetSelectedFrame()
+        module = frame.GetModule()
+        filename = module.GetFileSpec().GetFilename()
+        return os.path.basename(filename) == file_basename
+
     def test(self):
         """
         Test that line information is recalculated properly for a frame when it moves
@@ -53,14 +59,23 @@ class ZerothFrame(TestBase):
         process = target.LaunchSimple(None, None, self.get_process_working_directory())
         self.assertTrue(process, VALID_PROCESS)
 
-        thread = process.GetThreadAtIndex(0)
+        # Find the thread that is running a.out.
+        thread = None
+        for i in range(len(process.thread)):
+            if self._is_thread_executing_file(process.thread[i], "a.out"):
+                thread = process.thread[i]
+                break
+
+        self.assertTrue(thread != None, "failed to find thread executing a.out")
+
         if self.TraceOn():
             print("Backtrace at the first breakpoint:")
             for f in thread.frames:
                 print(f)
+
         # Check that we have stopped at correct breakpoint.
         self.assertEqual(
-            process.GetThreadAtIndex(0).frame[0].GetLineEntry().GetLine(),
+            thread.frame[0].GetLineEntry().GetLine(),
             bp1_line,
             "LLDB reported incorrect line number.",
         )
@@ -70,7 +85,6 @@ class ZerothFrame(TestBase):
         # 'continue' command.
         process.Continue()
 
-        thread = process.GetThreadAtIndex(0)
         if self.TraceOn():
             print("Backtrace at the second breakpoint:")
             for f in thread.frames:
