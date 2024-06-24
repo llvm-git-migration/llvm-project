@@ -607,15 +607,40 @@ def GPRPair : RISCVRegisterClass<[XLenPairFVT], 64, (add
 // The register class is added for inline assembly for vector mask types.
 def VM : VReg<VMaskVTs, (add VR), 1>;
 
+defvar VTupM1N2VTs = [riscv_m1x2, riscv_mf2x2, riscv_mf4x2, riscv_mf8x2];
+defvar VTupM1N3VTs = [riscv_m1x3, riscv_mf2x3, riscv_mf4x3, riscv_mf8x3];
+defvar VTupM1N4VTs = [riscv_m1x4, riscv_mf2x4, riscv_mf4x4, riscv_mf8x4];
+defvar VTupM1N5VTs = [riscv_m1x5, riscv_mf2x5, riscv_mf4x5, riscv_mf8x5];
+defvar VTupM1N6VTs = [riscv_m1x6, riscv_mf2x6, riscv_mf4x6, riscv_mf8x6];
+defvar VTupM1N7VTs = [riscv_m1x7, riscv_mf2x7, riscv_mf4x7, riscv_mf8x7];
+defvar VTupM1N8VTs = [riscv_m1x8, riscv_mf2x8, riscv_mf4x8, riscv_mf8x8];
+defvar VTupM2N2VTs = [riscv_m2x2];
+defvar VTupM2N3VTs = [riscv_m2x3];
+defvar VTupM2N4VTs = [riscv_m2x4];
+defvar VTupM4N2VTs = [riscv_m4x2];
+class VTupRegList<int LMUL, int NF> {
+  list<ValueType> L = !cond(!and(!eq(LMUL, 1), !eq(NF, 2)): VTupM1N2VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 3)): VTupM1N3VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 4)): VTupM1N4VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 5)): VTupM1N5VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 6)): VTupM1N6VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 7)): VTupM1N7VTs,
+                            !and(!eq(LMUL, 1), !eq(NF, 8)): VTupM1N8VTs,
+                            !and(!eq(LMUL, 2), !eq(NF, 2)): VTupM2N2VTs,
+                            !and(!eq(LMUL, 2), !eq(NF, 3)): VTupM2N3VTs,
+                            !and(!eq(LMUL, 2), !eq(NF, 4)): VTupM2N4VTs,
+                            !and(!eq(LMUL, 4), !eq(NF, 2)): VTupM4N2VTs);
+}
+
 foreach m = LMULList in {
   foreach nf = NFList<m>.L in {
     let NF = nf in {
       def "VRN" # nf # "M" # m # "NoV0"
-        : VReg<[untyped],
+        : VReg<VTupRegList<m, nf>.L,
                (add !cast<RegisterTuples>("VN" # nf # "M" # m # "NoV0")),
                m>;
       def "VRN" # nf # "M" # m
-        : VReg<[untyped],
+        : VReg<VTupRegList<m, nf>.L,
                (add !cast<RegisterTuples>("VN" # nf # "M" # m # "NoV0"),
                     !cast<RegisterTuples>("VN" # nf # "M" # m # "V0")),
                m>;
