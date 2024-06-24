@@ -6717,6 +6717,20 @@ AArch64InstructionSelector::selectNegArithImmed(MachineOperand &Root) const {
   return select12BitValueWithLeftShift(Immed);
 }
 
+/// Returns true if the def of MI is only used by memory operations.
+/// If the def is G_SHL, we also check indirect usages through G_PTR_ADD.
+static bool onlyUsedInMemoryOps(MachineInstr &MI, const MachineRegisterInfo &MRI) {
+  const Register DefReg = MI.getOperand(0).getReg();
+  return all_of(MRI.use_nodbg_instructions(DefReg),
+                [&](MachineInstr &Use) {
+                  if (MI.getOpcode() == AArch64::G_SHL &&
+                    Use.getOpcode() == AArch64::G_PTR_ADD &&
+                    onlyUsedInMemoryOps(Use, MRI))
+                    return true;
+                  return Use.mayLoadOrStore();
+                });
+}
+
 /// Return true if it is worth folding MI into an extended register. That is,
 /// if it's safe to pull it into the addressing mode of a load or store as a
 /// shift.
@@ -6734,8 +6748,7 @@ bool AArch64InstructionSelector::isWorthFoldingIntoExtendedReg(
   // We have a fastpath, so folding a shift in and potentially computing it
   // many times may be beneficial. Check if this is only used in memory ops.
   // If it is, then we should fold.
-  return all_of(MRI.use_nodbg_instructions(DefReg),
-                [](MachineInstr &Use) { return Use.mayLoadOrStore(); });
+  return onlyUsedInMemoryOps(MI, MRI);
 }
 
 static bool isSignExtendShiftType(AArch64_AM::ShiftExtendType Type) {
