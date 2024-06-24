@@ -103,6 +103,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetOperations.h"
 #include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/Analysis/AssumeBundleQueries.h"
@@ -137,9 +138,11 @@
 #include "llvm/TargetParser/Triple.h"
 #include "llvm/Transforms/Utils/CallGraphUpdater.h"
 
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <optional>
+#include <utility>
 
 namespace llvm {
 
@@ -5784,6 +5787,58 @@ struct AAPointerInfo : public AbstractAttribute {
     AK_MUST_READ_WRITE = AK_MUST | AK_R | AK_W,
   };
 
+  /// A helper containing a list of offsets computed for a Use. Ideally this
+  /// list should be strictly ascending, but we ensure that only when we
+  /// actually translate the list of offsets to a RangeList.
+  struct OffsetInfo {
+    using VecTy = SmallVector<int64_t>;
+    using const_iterator = VecTy::const_iterator;
+    VecTy Offsets;
+
+    const_iterator begin() const { return Offsets.begin(); }
+    const_iterator end() const { return Offsets.end(); }
+
+    bool operator==(const OffsetInfo &RHS) const {
+      return Offsets == RHS.Offsets;
+    }
+
+    bool operator!=(const OffsetInfo &RHS) const { return !(*this == RHS); }
+
+    void insert(int64_t Offset) { Offsets.push_back(Offset); }
+    bool isUnassigned() const { return Offsets.empty(); }
+
+    bool isUnknown() const {
+      if (isUnassigned())
+        return false;
+      if (Offsets.size() == 1)
+        return Offsets.front() == AA::RangeTy::Unknown;
+      return false;
+    }
+
+    void setUnknown() {
+      Offsets.clear();
+      Offsets.push_back(AA::RangeTy::Unknown);
+    }
+
+    void addToAll(int64_t Inc) {
+      for (auto &Offset : Offsets)
+        Offset += Inc;
+    }
+
+    /// Copy offsets from \p R into the current list.
+    ///
+    /// Ideally all lists should be strictly ascending, but we defer that to the
+    /// actual use of the list. So we just blindly append here.
+    void merge(const OffsetInfo &R) {
+      Offsets.append(R.Offsets);
+      // ensure elements are unique.
+      sort(Offsets.begin(), Offsets.end());
+      Offsets.erase(std::unique(Offsets.begin(), Offsets.end()), Offsets.end());
+    }
+  };
+
+  using OffsetInfoMapTy = DenseMap<Value *, OffsetInfo>;
+
   /// A container for a list of ranges.
   struct RangeList {
     // The set of ranges rarely contains more than one element, and is unlikely
@@ -5938,13 +5993,16 @@ struct AAPointerInfo : public AbstractAttribute {
   /// An access description.
   struct Access {
     Access(Instruction *I, int64_t Offset, int64_t Size,
-           std::optional<Value *> Content, AccessKind Kind, Type *Ty)
+           std::optional<Value *> Content, AccessKind Kind, Type *Ty,
+           OffsetInfoMapTy &OffsetInfoMap)
         : LocalI(I), RemoteI(I), Content(Content), Ranges(Offset, Size),
           Kind(Kind), Ty(Ty) {
       verify();
+      storeCompleteInstructionChain(OffsetInfoMap);
     }
     Access(Instruction *LocalI, Instruction *RemoteI, const RangeList &Ranges,
-           std::optional<Value *> Content, AccessKind K, Type *Ty)
+           std::optional<Value *> Content, AccessKind K, Type *Ty,
+           OffsetInfoMapTy &OffsetInfoMap)
         : LocalI(LocalI), RemoteI(RemoteI), Content(Content), Ranges(Ranges),
           Kind(K), Ty(Ty) {
       if (Ranges.size() > 1) {
@@ -5952,13 +6010,15 @@ struct AAPointerInfo : public AbstractAttribute {
         Kind = AccessKind(Kind & ~AK_MUST);
       }
       verify();
+      storeCompleteInstructionChain(OffsetInfoMap);
     }
     Access(Instruction *LocalI, Instruction *RemoteI, int64_t Offset,
            int64_t Size, std::optional<Value *> Content, AccessKind Kind,
-           Type *Ty)
+           Type *Ty, OffsetInfoMapTy &OffsetInfoMap)
         : LocalI(LocalI), RemoteI(RemoteI), Content(Content),
           Ranges(Offset, Size), Kind(Kind), Ty(Ty) {
       verify();
+      storeCompleteInstructionChain(OffsetInfoMap);
     }
     Access(const Access &Other) = default;
 
@@ -6077,6 +6137,54 @@ struct AAPointerInfo : public AbstractAttribute {
       }
     }
 
+    // Generate the full chain of access cauing instruction to the
+    void storeCompleteInstructionChain(OffsetInfoMapTy &OffsetInfoMap) {
+
+      SmallVector<Instruction *> ReadyList;
+      DenseMap<Instruction *, bool> Visited;
+      ReadyList.push_back(LocalI);
+      CompleteAccessChain.push_back(LocalI);
+
+      while (!ReadyList.empty()) {
+
+        Instruction *Back = ReadyList.back();
+        ReadyList.pop_back();
+
+        if (!Visited.insert(std::make_pair(Back, true)).second)
+          continue;
+
+        // populate worklist with operands.
+        for (auto *It = Back->op_begin(); It != Back->op_end(); It++) {
+          if (Instruction *I = dyn_cast<Instruction>(It))
+            ReadyList.push_back(I);
+        }
+
+        if (!OffsetInfoMap.contains(Back))
+          continue;
+
+        const OffsetInfo &Info = OffsetInfoMap.lookup(Back);
+        const auto &OffsetVec = Info.Offsets;
+
+        // Check if the intermidiate instruction has at least one same Offset
+        // as the access causing local instruction.
+        // If so, we consider it part of the access causing chain of
+        // instructions.
+        bool HasAtLeastOneSameOffset = false;
+        for (auto *It = begin(); It != end(); It++) {
+          int64_t RangeOffset = It->Offset;
+          for (auto Offset : OffsetVec) {
+            if (RangeOffset == Offset) {
+              HasAtLeastOneSameOffset = true;
+              break;
+            }
+          }
+        }
+
+        if (HasAtLeastOneSameOffset)
+          CompleteAccessChain.push_back(Back);
+      }
+    }
+
     const RangeList &getRanges() const { return Ranges; }
 
     using const_iterator = RangeList::const_iterator;
@@ -6104,6 +6212,9 @@ struct AAPointerInfo : public AbstractAttribute {
     /// The type of the content, thus the type read/written, can be null if not
     /// available.
     Type *Ty;
+
+    /// The full chain of instructions that participate in the Access.
+    SmallVector<Instruction *> CompleteAccessChain;
   };
 
   /// Create an abstract attribute view for the position \p IRP.
