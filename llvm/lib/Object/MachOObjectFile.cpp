@@ -101,13 +101,10 @@ static const char *getPtr(const MachOObjectFile &O, size_t Offset,
   return O.getData().data() + Offset + MachOFilesetEntryOffset;
 }
 
-static MachO::nlist_base
+static llvm::Expected<llvm::MachO::nlist_base> 
 getSymbolTableEntryBase(const MachOObjectFile &O, DataRefImpl DRI) {
   const char *P = reinterpret_cast<const char *>(DRI.p);
-  auto NListOrErr = getStructOrErr<MachO::nlist_base>(O, P);
-  if (!NListOrErr)
-    report_fatal_error(NListOrErr.takeError());
-  return NListOrErr.get();
+  return getStructOrErr<MachO::nlist_base>(O, P);
 }
 
 static StringRef parseSegmentOrSectionName(const char *P) {
@@ -1801,7 +1798,10 @@ void MachOObjectFile::moveSymbolNext(DataRefImpl &Symb) const {
 
 Expected<StringRef> MachOObjectFile::getSymbolName(DataRefImpl Symb) const {
   StringRef StringTable = getStringTableData();
-  MachO::nlist_base Entry = getSymbolTableEntryBase(*this, Symb);
+  auto EntryOrErr = getSymbolTableEntryBase(*this, Symb);
+  if (!EntryOrErr)
+    return EntryOrErr.takeError();
+  MachO::nlist_base Entry = EntryOrErr.get();
   if (Entry.n_strx == 0)
     // A n_strx value of 0 indicates that no name is associated with a
     // particular symbol table entry.
@@ -1834,7 +1834,10 @@ uint64_t MachOObjectFile::getNValue(DataRefImpl Sym) const {
 std::error_code MachOObjectFile::getIndirectName(DataRefImpl Symb,
                                                  StringRef &Res) const {
   StringRef StringTable = getStringTableData();
-  MachO::nlist_base Entry = getSymbolTableEntryBase(*this, Symb);
+  auto EntryOrErr = getSymbolTableEntryBase(*this, Symb);
+  if (!EntryOrErr)
+    return errorToErrorCode(EntryOrErr.takeError());
+  MachO::nlist_base Entry = EntryOrErr.get();
   if ((Entry.n_type & MachO::N_TYPE) != MachO::N_INDR)
     return object_error::parse_failed;
   uint64_t NValue = getNValue(Symb);
@@ -1856,7 +1859,10 @@ Expected<uint64_t> MachOObjectFile::getSymbolAddress(DataRefImpl Sym) const {
 uint32_t MachOObjectFile::getSymbolAlignment(DataRefImpl DRI) const {
   uint32_t Flags = cantFail(getSymbolFlags(DRI));
   if (Flags & SymbolRef::SF_Common) {
-    MachO::nlist_base Entry = getSymbolTableEntryBase(*this, DRI);
+    auto EntryOrErr = getSymbolTableEntryBase(*this, DRI);
+    if (!EntryOrErr)
+      report_fatal_error(EntryOrErr.takeError());
+    MachO::nlist_base Entry = EntryOrErr.get();
     return 1 << MachO::GET_COMM_ALIGN(Entry.n_desc);
   }
   return 0;
@@ -1868,7 +1874,11 @@ uint64_t MachOObjectFile::getCommonSymbolSizeImpl(DataRefImpl DRI) const {
 
 Expected<SymbolRef::Type>
 MachOObjectFile::getSymbolType(DataRefImpl Symb) const {
-  MachO::nlist_base Entry = getSymbolTableEntryBase(*this, Symb);
+  auto EntryOrErr = getSymbolTableEntryBase(*this, Symb);
+  if (!EntryOrErr)
+    return EntryOrErr.takeError();
+  
+  MachO::nlist_base Entry = EntryOrErr.get();
   uint8_t n_type = Entry.n_type;
 
   // If this is a STAB debugging symbol, we can do nothing more.
@@ -1893,8 +1903,10 @@ MachOObjectFile::getSymbolType(DataRefImpl Symb) const {
 }
 
 Expected<uint32_t> MachOObjectFile::getSymbolFlags(DataRefImpl DRI) const {
-  MachO::nlist_base Entry = getSymbolTableEntryBase(*this, DRI);
-
+  auto EntryOrErr = getSymbolTableEntryBase(*this, DRI);
+  if (!EntryOrErr)
+    return EntryOrErr.takeError();
+  MachO::nlist_base Entry = EntryOrErr.get();
   uint8_t MachOType = Entry.n_type;
   uint16_t MachOFlags = Entry.n_desc;
 
@@ -1937,7 +1949,11 @@ Expected<uint32_t> MachOObjectFile::getSymbolFlags(DataRefImpl DRI) const {
 
 Expected<section_iterator>
 MachOObjectFile::getSymbolSection(DataRefImpl Symb) const {
-  MachO::nlist_base Entry = getSymbolTableEntryBase(*this, Symb);
+  auto EntryOrErr = getSymbolTableEntryBase(*this, Symb);
+  if (!EntryOrErr)
+    return EntryOrErr.takeError();
+  
+  MachO::nlist_base Entry = EntryOrErr.get();
   uint8_t index = Entry.n_sect;
 
   if (index == 0)
@@ -1952,8 +1968,11 @@ MachOObjectFile::getSymbolSection(DataRefImpl Symb) const {
 }
 
 unsigned MachOObjectFile::getSymbolSectionID(SymbolRef Sym) const {
-  MachO::nlist_base Entry =
-      getSymbolTableEntryBase(*this, Sym.getRawDataRefImpl());
+    auto EntryOrErr = getSymbolTableEntryBase(*this, Sym.getRawDataRefImpl());
+  if (!EntryOrErr)
+    report_fatal_error(EntryOrErr.takeError());
+  
+  MachO::nlist_base Entry = EntryOrErr.get();
   return Entry.n_sect - 1;
 }
 
@@ -1967,9 +1986,17 @@ Expected<StringRef> MachOObjectFile::getSectionName(DataRefImpl Sec) const {
 }
 
 uint64_t MachOObjectFile::getSectionAddress(DataRefImpl Sec) const {
-  if (is64Bit())
-    return getSection64(Sec).addr;
-  return getSection(Sec).addr;
+  if (is64Bit()) {
+    auto Sect = getSection64(Sec);
+    if (!Sect)
+      report_fatal_error(Sect.takeError());
+    return Sect.get().addr;
+  }
+
+  auto Sect = getSection(Sec);
+  if (!Sect)
+    report_fatal_error(Sect.takeError());
+  return Sect.get().addr;
 }
 
 uint64_t MachOObjectFile::getSectionIndex(DataRefImpl Sec) const {
@@ -2016,11 +2043,17 @@ MachOObjectFile::getSectionContents(DataRefImpl Sec) const {
   uint64_t Size;
 
   if (is64Bit()) {
-    MachO::section_64 Sect = getSection64(Sec);
+        auto SectOrErr = getSection64(Sec);
+    if (!SectOrErr)
+      return SectOrErr.takeError();
+    MachO::section_64 Sect = SectOrErr.get();
     Offset = Sect.offset;
     Size = Sect.size;
   } else {
-    MachO::section Sect = getSection(Sec);
+    auto SectOrErr = getSection(Sec);
+    if (!SectOrErr)
+      return SectOrErr.takeError();
+    MachO::section Sect = SectOrErr.get();
     Offset = Sect.offset;
     Size = Sect.size;
   }
@@ -4646,39 +4679,26 @@ MachOObjectFile::getAnyRelocationSection(
   return SectionRef(DRI, this);
 }
 
-MachO::section MachOObjectFile::getSection(DataRefImpl DRI) const {
+Expected<MachO::section> MachOObjectFile::getSection(DataRefImpl DRI) const {
   assert(DRI.d.a < Sections.size() && "Should have detected this earlier");
-  auto SectionOrErr = getStructOrErr<MachO::section>(*this, Sections[DRI.d.a]);
-  if (!SectionOrErr)
-    report_fatal_error(SectionOrErr.takeError());
-  return SectionOrErr.get();
+  return getStructOrErr<MachO::section>(*this, Sections[DRI.d.a]);
 }
 
-MachO::section_64 MachOObjectFile::getSection64(DataRefImpl DRI) const {
+Expected<MachO::section_64> MachOObjectFile::getSection64(DataRefImpl DRI) const {
   assert(DRI.d.a < Sections.size() && "Should have detected this earlier");
-  auto SectionOrErr =
-      getStructOrErr<MachO::section_64>(*this, Sections[DRI.d.a]);
-  if (!SectionOrErr)
-    report_fatal_error(SectionOrErr.takeError());
-  return SectionOrErr.get();
+  return getStructOrErr<MachO::section_64>(*this, Sections[DRI.d.a]);
 }
 
-MachO::section MachOObjectFile::getSection(const LoadCommandInfo &L,
+Expected<MachO::section> MachOObjectFile::getSection(const LoadCommandInfo &L,
                                            unsigned Index) const {
   const char *Sec = getSectionPtr(*this, L, Index);
-  auto SectionOrErr = getStructOrErr<MachO::section>(*this, Sec);
-  if (!SectionOrErr)
-    report_fatal_error(SectionOrErr.takeError());
-  return SectionOrErr.get();
+  return getStructOrErr<MachO::section>(*this, Sec);
 }
 
-MachO::section_64 MachOObjectFile::getSection64(const LoadCommandInfo &L,
+Expected<MachO::section_64> MachOObjectFile::getSection64(const LoadCommandInfo &L,
                                                 unsigned Index) const {
   const char *Sec = getSectionPtr(*this, L, Index);
-  auto SectionOrErr = getStructOrErr<MachO::section_64>(*this, Sec);
-  if (!SectionOrErr)
-    report_fatal_error(SectionOrErr.takeError());
-  return SectionOrErr.get();
+  return getStructOrErr<MachO::section_64>(*this, Sec);
 }
 
 MachO::nlist
