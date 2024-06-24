@@ -414,6 +414,10 @@ enum NodeType : unsigned {
   /// operand 1 is the target address.
   SW_GUARDED_BRIND,
 
+  // RISC-V vector tuple type version of INSERT_SUBVECTOR/EXTRACT_SUBVECTOR.
+  TUPLE_INSERT,
+  TUPLE_EXTRACT,
+
   // FP to 32 bit int conversions for RV64. These are used to keep track of the
   // result being sign extended to 64 bit. These saturate out of range inputs.
   STRICT_FCVT_W_RV64 = ISD::FIRST_TARGET_STRICTFP_OPCODE,
