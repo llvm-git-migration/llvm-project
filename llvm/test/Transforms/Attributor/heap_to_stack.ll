@@ -431,11 +431,11 @@ bb:
 
 ; TEST 12
 define i32 @irreducible_cfg(i32 %arg) {
+; CHECK: Function Attrs: noreturn
 ; CHECK-LABEL: define {{[^@]+}}@irreducible_cfg
-; CHECK-SAME: (i32 [[ARG:%.*]]) {
+; CHECK-SAME: (i32 [[ARG:%.*]]) #[[ATTR4]] {
 ; CHECK-NEXT:  bb:
 ; CHECK-NEXT:    [[I_H2S:%.*]] = alloca i8, i64 4, align 1
-; CHECK-NEXT:    store i32 10, ptr [[I_H2S]], align 4
 ; CHECK-NEXT:    [[I2:%.*]] = icmp eq i32 [[ARG]], 1
 ; CHECK-NEXT:    br i1 [[I2]], label [[BB3:%.*]], label [[BB5:%.*]]
 ; CHECK:       bb3:
@@ -445,11 +445,7 @@ define i32 @irreducible_cfg(i32 %arg) {
 ; CHECK-NEXT:    br label [[BB6:%.*]]
 ; CHECK:       bb6:
 ; CHECK-NEXT:    [[DOT0:%.*]] = phi i32 [ [[I12:%.*]], [[BB11]] ], [ 1, [[BB5]] ]
-; CHECK-NEXT:    [[I7:%.*]] = load i32, ptr [[I_H2S]], align 4
-; CHECK-NEXT:    [[I8:%.*]] = add nsw i32 [[I7]], -1
-; CHECK-NEXT:    store i32 [[I8]], ptr [[I_H2S]], align 4
-; CHECK-NEXT:    [[I9:%.*]] = icmp ne i32 [[I7]], 0
-; CHECK-NEXT:    br i1 [[I9]], label [[BB10:%.*]], label [[BB13:%.*]]
+; CHECK-NEXT:    br label [[BB10:%.*]]
 ; CHECK:       bb10:
 ; CHECK-NEXT:    br label [[BB11]]
 ; CHECK:       bb11:
@@ -457,8 +453,7 @@ define i32 @irreducible_cfg(i32 %arg) {
 ; CHECK-NEXT:    [[I12]] = add nsw i32 [[DOT1]], 1
 ; CHECK-NEXT:    br label [[BB6]]
 ; CHECK:       bb13:
-; CHECK-NEXT:    [[I16:%.*]] = load i32, ptr [[I_H2S]], align 4
-; CHECK-NEXT:    ret i32 [[I16]]
+; CHECK-NEXT:    unreachable
 ;
 bb:
   %i = call noalias ptr @malloc(i64 4)
