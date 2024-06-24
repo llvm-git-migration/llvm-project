@@ -2064,13 +2064,17 @@ MachOObjectFile::getSectionContents(DataRefImpl Sec) const {
 uint64_t MachOObjectFile::getSectionAlignment(DataRefImpl Sec) const {
   uint32_t Align;
   if (is64Bit()) {
-    MachO::section_64 Sect = getSection64(Sec);
-    Align = Sect.align;
+    auto Sect = getSection64(Sec);
+    if (!Sect)
+      report_fatal_error(Sect.takeError());
+    Align = Sect.get().align;
   } else {
-    MachO::section Sect = getSection(Sec);
-    Align = Sect.align;
-  }
 
+    auto Sect = getSection(Sec);
+    if (!Sect)
+      report_fatal_error(Sect.takeError());
+    Align = Sect.get().align;
+  }
   return uint64_t(1) << Align;
 }
 
@@ -2227,6 +2231,7 @@ bool MachOObjectFile::isSectionBitcode(DataRefImpl Sec) const {
 }
 
 bool MachOObjectFile::isSectionStripped(DataRefImpl Sec) const {
+  
   if (is64Bit())
     return getSection64(Sec).offset == 0;
   return getSection(Sec).offset == 0;
