@@ -1441,7 +1441,8 @@ def FeatureISAVersion9_4_Common : FeatureSet<
    FeatureAtomicFMinFMaxF64GlobalInsts,
    FeatureAtomicFMinFMaxF64FlatInsts,
    FeatureAgentScopeFineGrainedRemoteMemoryAtomics,
-   FeatureMemoryAtomicFaddF32DenormalSupport
+   FeatureMemoryAtomicFaddF32DenormalSupport,
+   FeatureFlatBufferGlobalAtomicFaddF64Inst
    ]>;
 
 def FeatureISAVersion9_4_0 : FeatureSet<
