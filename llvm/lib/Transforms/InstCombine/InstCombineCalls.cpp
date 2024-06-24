@@ -72,6 +72,7 @@
 #include <cassert>
 #include <cstdint>
 #include <optional>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -4020,10 +4021,23 @@ bool InstCombinerImpl::transformConstExprCastCall(CallBase &Call) {
       if (Callee->isDeclaration())
         return false;   // Cannot transform this return value.
 
-      if (!Caller->use_empty() &&
-          // void -> non-void is handled specially
-          !NewRetTy->isVoidTy())
+      if (!Caller->use_empty()) {
+        if (NewRetTy->isVoidTy()) {
+          DebugLoc DL = Caller->getDebugLoc();
+          const DILocation *DIL = DL;
+          std::ostringstream ErrMsg;
+          if (DIL)
+            ErrMsg << DIL->getFilename().str() << ":" << DIL->getLine();
+          else
+            ErrMsg << Caller->getFunction()->getName().str();
+          ErrMsg
+              << ": contains a call to " << Callee->getName().str()
+              << ", where a non-void return value is expected but the callee "
+                 "returns void\n";
+          report_fatal_error(StringRef(ErrMsg.str()));
+        }
         return false;   // Cannot transform this return value.
+      }
     }
 
     if (!CallerPAL.isEmpty() && !Caller->use_empty()) {
