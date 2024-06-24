@@ -53,14 +53,15 @@ class ZerothFrame(TestBase):
         process = target.LaunchSimple(None, None, self.get_process_working_directory())
         self.assertTrue(process, VALID_PROCESS)
 
-        thread = process.GetThreadAtIndex(0)
+        thread = process.GetThreadByIndexID(1)
         if self.TraceOn():
             print("Backtrace at the first breakpoint:")
             for f in thread.frames:
                 print(f)
+
         # Check that we have stopped at correct breakpoint.
         self.assertEqual(
-            process.GetThreadAtIndex(0).frame[0].GetLineEntry().GetLine(),
+            thread.frame[0].GetLineEntry().GetLine(),
             bp1_line,
             "LLDB reported incorrect line number.",
         )
@@ -70,7 +71,7 @@ class ZerothFrame(TestBase):
         # 'continue' command.
         process.Continue()
 
-        thread = process.GetThreadAtIndex(0)
+        thread = process.GetThreadByIndexID(1)
         if self.TraceOn():
             print("Backtrace at the second breakpoint:")
             for f in thread.frames:
