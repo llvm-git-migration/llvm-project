@@ -2012,12 +2012,18 @@ uint64_t MachOObjectFile::getSectionSize(DataRefImpl Sec) const {
   uint64_t SectSize;
 
   if (is64Bit()) {
-    MachO::section_64 Sect = getSection64(Sec);
+    auto SectOrError = getSection64(Sec);
+    if (!SectOrError)
+      return 0;
+    MachO::section_64 Sect = SectOrError.get();
     SectOffset = Sect.offset;
     SectSize = Sect.size;
     SectType = Sect.flags & MachO::SECTION_TYPE;
   } else {
-    MachO::section Sect = getSection(Sec);
+    auto SectOrError = getSection(Sec);
+    if (!SectOrError)
+      return 0;
+    MachO::section Sect = SectOrError.get();
     SectOffset = Sect.offset;
     SectSize = Sect.size;
     SectType = Sect.flags & MachO::SECTION_TYPE;
@@ -4940,11 +4946,15 @@ MachOObjectFile::getRelocation(DataRefImpl Rel) const {
     DataRefImpl Sec;
     Sec.d.a = Rel.d.a;
     if (is64Bit()) {
-      MachO::section_64 Sect = getSection64(Sec);
-      Offset = Sect.reloff;
+      auto Sect = getSection64(Sec);
+      if (!Sect)
+        report_fatal_error(Sect.takeError());
+      Offset = Sect.get().reloff;
     } else {
-      MachO::section Sect = getSection(Sec);
-      Offset = Sect.reloff;
+      auto Sect = getSection(Sec);
+      if (!Sect)
+        report_fatal_error(Sect.takeError());
+      Offset = Sect.get().reloff;
     }
   } else {
     MachO::dysymtab_command DysymtabLoadCmd = getDysymtabLoadCommand();
