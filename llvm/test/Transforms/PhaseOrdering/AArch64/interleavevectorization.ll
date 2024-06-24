@@ -18,9 +18,11 @@ define void @add4(ptr noalias noundef %x, ptr noalias noundef %y, i32 noundef %n
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX29:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX29]]
 ; CHECK-NEXT:    [[WIDE_VEC24:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
 ; CHECK-NEXT:    [[TMP2:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
@@ -141,9 +143,11 @@ define void @addsubs(ptr noalias noundef %x, ptr noundef %y, i32 noundef %n) {
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX29:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX29]]
 ; CHECK-NEXT:    [[WIDE_VEC24:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = sub <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
@@ -270,9 +274,11 @@ define void @add2sub2(ptr noalias noundef %x, ptr noundef %y, i32 noundef %n) {
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX29:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX29]]
 ; CHECK-NEXT:    [[WIDE_VEC24:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = add <32 x i16> [[WIDE_VEC24]], [[WIDE_VEC]]
@@ -399,12 +405,15 @@ define void @addmul(ptr noalias noundef %x, ptr noundef %y, ptr noundef %z, i32 
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[Z:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX41:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[Z:%.*]], i64 [[DOTIDX41]]
 ; CHECK-NEXT:    [[WIDE_VEC31:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX42:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX42]]
 ; CHECK-NEXT:    [[WIDE_VEC36:%.*]] = load <32 x i16>, ptr [[TMP3]], align 2
 ; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = add <32 x i16> [[TMP2]], [[WIDE_VEC36]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = or disjoint i64 [[OFFSET_IDX]], 3
@@ -558,12 +567,15 @@ define void @addsubsmul(ptr noalias noundef %x, ptr noundef %y, ptr noundef %z, 
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[Z:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX41:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[Z:%.*]], i64 [[DOTIDX41]]
 ; CHECK-NEXT:    [[WIDE_VEC31:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX42:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX42]]
 ; CHECK-NEXT:    [[WIDE_VEC36:%.*]] = load <32 x i16>, ptr [[TMP3]], align 2
 ; CHECK-NEXT:    [[TMP4:%.*]] = add <32 x i16> [[TMP2]], [[WIDE_VEC36]]
 ; CHECK-NEXT:    [[TMP5:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
@@ -726,12 +738,15 @@ define void @add2sub2mul(ptr noalias noundef %x, ptr noundef %y, ptr noundef %z,
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[OFFSET_IDX:%.*]] = shl i64 [[INDEX]], 2
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i16, ptr [[Y:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[Y:%.*]], i64 [[DOTIDX]]
 ; CHECK-NEXT:    [[WIDE_VEC:%.*]] = load <32 x i16>, ptr [[TMP0]], align 2
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i16, ptr [[Z:%.*]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX41:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[Z:%.*]], i64 [[DOTIDX41]]
 ; CHECK-NEXT:    [[WIDE_VEC31:%.*]] = load <32 x i16>, ptr [[TMP1]], align 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
-; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i16, ptr [[X]], i64 [[OFFSET_IDX]]
+; CHECK-NEXT:    [[DOTIDX42:%.*]] = shl i64 [[INDEX]], 3
+; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i8, ptr [[X]], i64 [[DOTIDX42]]
 ; CHECK-NEXT:    [[WIDE_VEC36:%.*]] = load <32 x i16>, ptr [[TMP3]], align 2
 ; CHECK-NEXT:    [[TMP4:%.*]] = add <32 x i16> [[TMP2]], [[WIDE_VEC36]]
 ; CHECK-NEXT:    [[TMP5:%.*]] = mul <32 x i16> [[WIDE_VEC31]], [[WIDE_VEC]]
