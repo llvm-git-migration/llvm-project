@@ -55,14 +55,14 @@ class TestDAP_stepInTargets(lldbdap_testcase.DAPTestCaseBase):
         self.assertEqual(len(step_in_targets), 3, "expect 3 step in targets")
 
         # Verify the target names are correct.
-        self.assertEqual(step_in_targets[0]["label"], "bar()", "expect bar()")
-        self.assertEqual(step_in_targets[1]["label"], "bar2()", "expect bar2()")
+        self.assertEqual(step_in_targets[0]["label"], "int bar2(void)", "expect bar2()")
+        self.assertEqual(step_in_targets[1]["label"], "int bar(void)", "expect bar()")
         self.assertEqual(
-            step_in_targets[2]["label"], "foo(int, int)", "expect foo(int, int)"
+            step_in_targets[2]["label"], "int foo(int, int)", "expect foo(int, int)"
         )
 
         # Choose to step into second target and verify that we are in bar2()
         self.stepIn(threadId=tid, targetId=step_in_targets[1]["id"], waitForStop=True)
         leaf_frame = self.dap_server.get_stackFrame()
         self.assertIsNotNone(leaf_frame, "expect a leaf frame")
-        self.assertEqual(leaf_frame["name"], "bar2()")
+        self.assertEqual(leaf_frame["name"], "int bar2(void)")
