@@ -1394,9 +1394,6 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   for (VPBasicBlock *VPBB :
        reverse(VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT))) {
     for (VPRecipeBase &R : make_early_inc_range(reverse(*VPBB))) {
-      if (!properlyDominates(EVL.getDefiningRecipe(), &R, VPDT))
-        continue;
-
       TypeSwitch<VPRecipeBase *>(&R)
           .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
             VPValue *NewMask =
