@@ -103,6 +103,7 @@ add_math_entrypoint_object(f16divf)
 
 add_math_entrypoint_object(f16fmaf)
 
+add_math_entrypoint_object(f16sqrt)
 add_math_entrypoint_object(f16sqrtf)
 
 add_math_entrypoint_object(fabs)
