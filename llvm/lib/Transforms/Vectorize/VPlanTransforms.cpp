@@ -1356,7 +1356,6 @@ static DenseSet<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
   // Walk users of wide canonical IVs and collect to all compares of the form
   // (ICMP_ULE, WideCanonicalIV, backedge-taken-count).
   DenseSet<VPValue *> HeaderMasks;
-  VPValue *BTC = Plan.getOrCreateBackedgeTakenCount();
   for (auto *Wide : WideCanonicalIVs) {
     for (VPUser *U : SmallVector<VPUser *>(Wide->users())) {
       auto *HeaderMask = dyn_cast<VPInstruction>(U);
@@ -1408,7 +1407,7 @@ void VPlanTransforms::addActiveLaneMask(
 static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   VPDominatorTree VPDT;
   VPDT.recalculate(Plan);
-  DenseSet<VPRecipeBase *> ToRemove;
+  SmallVector<VPRecipeBase *> ToRemove;
 
   ReversePostOrderTraversal<VPBlockDeepTraversalWrapper<VPBlockBase *>> RPOT(
       Plan.getEntry());
@@ -1426,14 +1425,14 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
             auto *N = new VPWidenLoadEVLRecipe(L, &EVL, NewMask);
             N->insertBefore(L);
             L->replaceAllUsesWith(N);
-            ToRemove.insert(L);
+            ToRemove.push_back(L);
           })
           .Case<VPWidenStoreRecipe>([&](VPWidenStoreRecipe *S) {
             VPValue *NewMask =
                 HeaderMasks.contains(S->getMask()) ? nullptr : S->getMask();
             auto *N = new VPWidenStoreEVLRecipe(S, &EVL, NewMask);
             N->insertBefore(S);
-            ToRemove.insert(S);
+            ToRemove.push_back(S);
           })
           .Case<VPWidenRecipe>([&](VPWidenRecipe *W) {
             unsigned Opcode = W->getOpcode();
@@ -1443,7 +1442,7 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
             auto *N = new VPWidenEVLRecipe(W, EVL);
             N->insertBefore(W);
             W->replaceAllUsesWith(N);
-            ToRemove.insert(W);
+            ToRemove.push_back(W);
           });
     }
   }
