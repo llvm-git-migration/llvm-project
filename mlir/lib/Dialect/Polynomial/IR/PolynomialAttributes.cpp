@@ -205,4 +205,19 @@ Attribute FloatPolynomialAttr::parse(AsmParser &parser, Type type) {
 }
 
 } // namespace polynomial
+
+/// Specialize FieldParser for parsing IntPolynomialAttr. This is required to
+/// support using IntPolynomialAttr in an OptionalParameter.
+template <>
+struct FieldParser<polynomial::IntPolynomialAttr> {
+  static FailureOr<polynomial::IntPolynomialAttr> parse(AsmParser &parser) {
+    parser.getContext()
+        ->getOrLoadDialect<mlir::polynomial::PolynomialDialect>();
+    Attribute polynomialAttr = polynomial::IntPolynomialAttr::parse(parser, {});
+    if (!polynomialAttr)
+      return failure();
+    return cast<polynomial::IntPolynomialAttr>(polynomialAttr);
+  }
+};
+
 } // namespace mlir
