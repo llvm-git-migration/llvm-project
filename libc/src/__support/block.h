@@ -16,6 +16,7 @@
 #include "src/__support/CPP/optional.h"
 #include "src/__support/CPP/span.h"
 #include "src/__support/CPP/type_traits.h"
+#include "src/__support/libc_assert.h"
 
 #include <stdint.h>
 
@@ -261,6 +262,40 @@ public:
 
   constexpr Block(size_t prev_outer_size, size_t outer_size);
 
+  bool usable_space_is_aligned(size_t alignment) const {
+    return reinterpret_cast<uintptr_t>(usable_space()) % alignment == 0;
+  }
+
+  size_t extra_space_for_adjustment(size_t alignment) const {
+    if (usable_space_is_aligned(alignment))
+      return 0;
+
+    // We need to ensure we can always split this block into a "padding" block
+    // and the aligned block. To do this, we need enough extra space for at
+    // least one block.
+    //
+    // |block   |usable_space                          |
+    // |........|......................................|
+    //                            ^
+    //                            Alignment requirement
+    //
+    //
+    // |block   |space   |block   |usable_space        |
+    // |........|........|........|....................|
+    //                            ^
+    //                            Alignment requirement
+    //
+    uintptr_t start = reinterpret_cast<uintptr_t>(usable_space());
+    alignment = cpp::max(alignment, ALIGNMENT);
+    size_t adjustment = align_up(start + BLOCK_OVERHEAD, alignment) - start;
+    return adjustment;
+  }
+
+  bool can_allocate(size_t alignment, size_t size) const;
+
+  static void allocate(Block *&block, size_t alignment, size_t size,
+                       Block *&new_prev, Block *&new_next);
+
 private:
   /// Consumes the block and returns as a span of bytes.
   static ByteSpan as_bytes(Block *&&block);
@@ -355,6 +390,58 @@ void Block<OffsetType, kAlign>::free(Block *&block) {
     block = prev;
 
   merge_next(block);
+}
+
+template <typename OffsetType, size_t kAlign>
+bool Block<OffsetType, kAlign>::can_allocate(size_t alignment,
+                                             size_t size) const {
+  if (usable_space_is_aligned(alignment) && inner_size() >= size)
+    return true; // Size and alignment constraints met.
+
+  // Either the alignment isn't met or we don't have enough size.
+  // If we don't meet alignment, we can always adjust such that we do meet the
+  // alignment. If we meet the alignment but just don't have enough size. This
+  // check will fail anyway.
+  size_t adjustment = extra_space_for_adjustment(alignment);
+  if (inner_size() >= size + adjustment)
+    return true;
+
+  return false;
+}
+
+template <typename OffsetType, size_t kAlign>
+void Block<OffsetType, kAlign>::allocate(Block *&block, size_t alignment,
+                                         size_t size, Block *&new_prev,
+                                         Block *&new_next) {
+  if (!block->usable_space_is_aligned(alignment)) {
+    size_t adjustment = block->extra_space_for_adjustment(alignment);
+    size_t new_inner_size = adjustment - BLOCK_OVERHEAD;
+    LIBC_ASSERT(new_inner_size % ALIGNMENT == 0 &&
+                "The adjustment calculation should always return a new size "
+                "that's a multiple of ALIGNMENT");
+
+    Block *aligned_block = *Block::split(block, adjustment - BLOCK_OVERHEAD);
+    LIBC_ASSERT(aligned_block->usable_space_is_aligned(alignment) &&
+                "The aligned block isn't aligned somehow.");
+
+    Block *prev = block->prev();
+    if (prev) {
+      // If there is a block before this, we can merge the current one with the
+      // newly created one.
+      merge_next(prev);
+    } else {
+      // Otherwise, this was the very first block in the chain. Now we can make
+      // it the new first block.
+      new_prev = block;
+    }
+
+    block = aligned_block;
+  }
+
+  // Now get a block for the requested size.
+  optional<Block *> next = Block::split(block, size);
+  if (next)
+    new_next = *next;
 }
 
 template <typename OffsetType, size_t kAlign>
