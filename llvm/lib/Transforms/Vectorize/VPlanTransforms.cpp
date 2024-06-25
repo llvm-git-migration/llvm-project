@@ -1355,7 +1355,6 @@ static SmallVector<VPValue *> collectAllHeaderMasks(VPlan &Plan) {
   // Walk users of wide canonical IVs and collect to all compares of the form
   // (ICMP_ULE, WideCanonicalIV, backedge-taken-count).
   SmallVector<VPValue *> HeaderMasks;
-  VPValue *BTC = Plan.getOrCreateBackedgeTakenCount();
   for (auto *Wide : WideCanonicalIVs) {
     for (VPUser *U : SmallVector<VPUser *>(Wide->users())) {
       auto *HeaderMask = dyn_cast<VPInstruction>(U);
@@ -1407,7 +1406,7 @@ void VPlanTransforms::addActiveLaneMask(
 static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   VPDominatorTree VPDT;
   VPDT.recalculate(Plan);
-  DenseSet<VPRecipeBase *> ToRemove;
+  SmallVector<VPRecipeBase *> ToRemove;
 
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
