@@ -1468,13 +1468,30 @@ SDValue SelectionDAG::getZExtOrTrunc(SDValue Op, const SDLoc &DL, EVT VT) {
 }
 
 SDValue SelectionDAG::getBitcastedAnyExtOrTrunc(SDValue Op, const SDLoc &DL,
-                                                 EVT VT) {
+                                                EVT VT) {
   assert(!VT.isVector());
   auto Type = Op.getValueType();
   SDValue DestOp;
   if (Type == VT)
     return Op;
   auto Size = Op.getValueSizeInBits();
+  auto IntTy = MVT::getIntegerVT(Size);
+
+  if (!IntTy.isValid()) {
+    // We assume integers of "weird" size have already been legalized here.
+    assert(Type.isVector());
+    unsigned NumElements = Type.getVectorNumElements();
+    unsigned ExtSize = VT.getScalarSizeInBits();
+    EVT ElementType = Type.getVectorElementType();
+    unsigned ExtNumElements = ExtSize / ElementType.getScalarSizeInBits();
+    assert(NumElements < ExtNumElements);
+    MVT ExtType = MVT::getVectorVT(ElementType.getSimpleVT(), ExtNumElements);
+    SDValue ExtVec = getUNDEF(ExtType);
+    DestOp = getNode(ISD::INSERT_SUBVECTOR, DL, ExtType, ExtVec, Op,
+                     getVectorIdxConstant(0, DL));
+    return getBitcast(VT, DestOp);
+  }
+
   DestOp = getBitcast(MVT::getIntegerVT(Size), Op);
   if (DestOp.getValueType() == VT)
     return DestOp;
