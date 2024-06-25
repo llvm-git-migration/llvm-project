@@ -3002,6 +3002,10 @@ emitProxyTaskFunction(CodeGenModule &CGM, SourceLocation Loc,
       CGM.getTypes().arrangeBuiltinFunctionDeclaration(KmpInt32Ty, Args);
   llvm::FunctionType *TaskEntryTy =
       CGM.getTypes().GetFunctionType(TaskEntryFnInfo);
+  LLVM_DEBUG(llvm::dbgs() << "TaskEntryTy=" << *TaskEntryTy << "\n");
+  LLVM_DEBUG(llvm::dbgs() << "KmpTaskTWithPrivatesPtrQTy = "
+                          << KmpTaskTWithPrivatesPtrQTy << "\n");
+  LLVM_DEBUG(llvm::dbgs() << "TaskTypeArg = " << TaskTypeArg << "\n");
   std::string Name = CGM.getOpenMPRuntime().getName({"omp_task_entry", ""});
   auto *TaskEntry = llvm::Function::Create(
       TaskEntryTy, llvm::GlobalValue::InternalLinkage, Name, &CGM.getModule());
@@ -3706,6 +3710,7 @@ CGOpenMPRuntime::emitTaskInit(CodeGenFunction &CGF, SourceLocation Loc,
       KmpTaskTWithPrivatesQTy, KmpTaskTQTy, SharedsPtrTy, TaskFunction,
       TaskPrivatesMap);
 
+  LLVM_DEBUG(llvm::dbgs() << "ProxyTaskFunction is " << *TaskEntry);
   // Build call kmp_task_t * __kmpc_omp_task_alloc(ident_t *, kmp_int32 gtid,
   // kmp_int32 flags, size_t sizeof_kmp_task_t, size_t sizeof_shareds,
   // kmp_routine_entry_t *task_entry);
@@ -9582,15 +9587,14 @@ static void emitTargetCallKernelLaunchNew(
   };
   // Fill up the arrays and create the arguments.
   LLVM_DEBUG(llvm::dbgs() << "emitTargetCallKernelLaunchNew:InsertBlock before emitting offload arrays: " << *CGF.Builder.GetInsertBlock() << "\n");
-  OMPBuilder.emitOffloadingArrays(llvm::OpenMPIRBuilder::InsertPointTy(CGF.AllocaInsertPt->getParent(),
-                                                                       CGF.AllocaInsertPt->getIterator()),
-                                  CGF.Builder.saveIP(), Info,
-                                  GenMapInfoCB, /*IsNonContiguous=*/true,
-                                  DeviceAddrCB, CustomMapperCB);
-  bool EmitDebug = !CombinedInfo.Names.empty();
-  OMPBuilder.emitOffloadingArraysArgument(CGF.Builder, Info.RTArgs, Info,
-                                          EmitDebug,
-                                          /*ForEndCall=*/false);
+
+  llvm::OpenMPIRBuilder::InsertPointTy OffloadingArraysAllocaIP(
+      CGF.AllocaInsertPt->getParent(), CGF.AllocaInsertPt->getIterator());
+
+  OMPBuilder.emitOffloadingArraysAndArgs(
+      OffloadingArraysAllocaIP, CGF.Builder.saveIP(), Info, Info.RTArgs,
+      GenMapInfoCB, /*IsNonContiguous=*/true, /*ForEndCall=*/false,
+      DeviceAddrCB, CustomMapperCB);
 
   LLVM_DEBUG(llvm::dbgs() << "emitTargetCallKernelLaunchNew:InsertBlock after emitting offload arrays: " << *CGF.Builder.GetInsertBlock() << "\n");
   InputInfo.NumberOfTargetItems = Info.NumberOfPtrs;
@@ -9664,13 +9668,9 @@ static void emitTargetCallKernelLaunchNew(
         DeviceID, RTLoc, AllocaIP));
   };
 
-  if (RequiresOuterTask) {
-    if (NewClangTargetTaskCodeGen) {
-      llvm::errs() << "Using OMPIRBuilder for target task codegen\n";
-    } else {
-      CGF.EmitOMPTargetTaskBasedDirective(D, ThenGen, InputInfo);
-    }
-  } else
+  if (RequiresOuterTask)
+    CGF.EmitOMPTargetTaskBasedDirective(D, ThenGen, InputInfo);
+  else
     OMPRuntime->emitInlinedDirective(CGF, D.getDirectiveKind(), ThenGen);
 }
 static void emitTargetCallKernelLaunch(
@@ -9768,10 +9768,9 @@ static void emitTargetCallKernelLaunch(
   // Fill up the arrays and create the arguments.
   LLVM_DEBUG(llvm::dbgs() << "InsertBlock before emitting offload arrays: " << *CGF.Builder.GetInsertBlock() << "\n");
   emitOffloadingArrays(CGF, CombinedInfo, Info, OMPBuilder);
-  bool EmitDebug = CGF.CGM.getCodeGenOpts().getDebugInfo() !=
+  Info.EmitDebug = CGF.CGM.getCodeGenOpts().getDebugInfo() !=
                    llvm::codegenoptions::NoDebugInfo;
   OMPBuilder.emitOffloadingArraysArgument(CGF.Builder, Info.RTArgs, Info,
-                                          EmitDebug,
                                           /*ForEndCall=*/false);
 
   LLVM_DEBUG(llvm::dbgs() << "InsertBlock after emitting offload arrays: " << *CGF.Builder.GetInsertBlock() << "\n");
@@ -9914,16 +9913,16 @@ void CGOpenMPRuntime::emitTargetCall(
                           OutlinedFnID, &InputInfo, &MapTypesArray,
                           &MapNamesArray, SizeEmitter](CodeGenFunction &CGF,
                                                        PrePostActionTy &) {
-    if (OpenMPClangTargetCodegen)
+    // if (OpenMPClangTargetCodegen)
       emitTargetCallKernelLaunchNew(this, OutlinedFn, D, CapturedVars,
                                RequiresOuterTask, CS, OffloadingMandatory,
                                Device, OutlinedFnID, InputInfo, MapTypesArray,
                                MapNamesArray, SizeEmitter, CGF, CGM);
-    else
-      emitTargetCallKernelLaunch(this, OutlinedFn, D, CapturedVars,
-                               RequiresOuterTask, CS, OffloadingMandatory,
-                               Device, OutlinedFnID, InputInfo, MapTypesArray,
-                               MapNamesArray, SizeEmitter, CGF, CGM);
+    // else
+    //   emitTargetCallKernelLaunch(this, OutlinedFn, D, CapturedVars,
+    //                            RequiresOuterTask, CS, OffloadingMandatory,
+    //                            Device, OutlinedFnID, InputInfo, MapTypesArray,
+    //                            MapNamesArray, SizeEmitter, CGF, CGM);
   };
 
   auto &&TargetElseGen =
@@ -10684,10 +10683,9 @@ void CGOpenMPRuntime::emitTargetDataStandAloneCall(
                          /*IsNonContiguous=*/true);
     bool RequiresOuterTask = D.hasClausesOfKind<OMPDependClause>() ||
                              D.hasClausesOfKind<OMPNowaitClause>();
-    bool EmitDebug = CGF.CGM.getCodeGenOpts().getDebugInfo() !=
+    Info.EmitDebug = CGF.CGM.getCodeGenOpts().getDebugInfo() !=
                      llvm::codegenoptions::NoDebugInfo;
     OMPBuilder.emitOffloadingArraysArgument(CGF.Builder, Info.RTArgs, Info,
-                                            EmitDebug,
                                             /*ForEndCall=*/false);
     InputInfo.NumberOfTargetItems = Info.NumberOfPtrs;
     InputInfo.BasePointersArray = Address(Info.RTArgs.BasePointersArray,
