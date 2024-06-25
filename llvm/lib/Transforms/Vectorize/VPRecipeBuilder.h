@@ -103,8 +103,9 @@ class VPRecipeBuilder {
                             VPBasicBlock *VPBB);
 
   /// Makes Histogram count operations safe for vectorization, by emitting a
-  /// Histogram LLVM Intrinsic before the BinOp (Add/Sub) that does the actual
-  /// counting.
+  /// llvm.experimental.vector.histogram.add intrinsic in place of the
+  /// Load + Add|Sub + Store operations that perform the histogram in the
+  /// original scalar loop.
   VPHistogramRecipe *tryToWidenHistogram(const HistogramInfo *HI,
                                          ArrayRef<VPValue *> Operands);
 

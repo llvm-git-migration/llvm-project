@@ -319,6 +319,7 @@ for.exit:
   ret void
 }
 
+;; We don't support histograms with a update value that's not loop-invariant.
 define void @histogram_varying_increment(ptr noalias %buckets, ptr readonly %indices, ptr readonly %incvals, i64 %N) #0 {
 ; CHECK-LABEL: define void @histogram_varying_increment(
 ; CHECK-SAME: ptr noalias [[BUCKETS:%.*]], ptr readonly [[INDICES:%.*]], ptr readonly [[INCVALS:%.*]], i64 [[N:%.*]]) #[[ATTR0]] {
