@@ -18655,22 +18655,15 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
     Src0 = Builder.CreatePointerBitCastOrAddrSpaceCast(Src0, PTy);
     return Builder.CreateCall(F, { Src0, Src1, Src2, Src3, Src4 });
   }
-  case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_v2f16:
   case AMDGPU::BI__builtin_amdgcn_global_atomic_fmin_f64:
   case AMDGPU::BI__builtin_amdgcn_global_atomic_fmax_f64:
   case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_f64:
   case AMDGPU::BI__builtin_amdgcn_flat_atomic_fmin_f64:
   case AMDGPU::BI__builtin_amdgcn_flat_atomic_fmax_f64:
-  case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_f32:
-  case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_v2f16: {
+  case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_f32: {
     Intrinsic::ID IID;
     llvm::Type *ArgTy = llvm::Type::getDoubleTy(getLLVMContext());
     switch (BuiltinID) {
-    case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_v2f16:
-      ArgTy = llvm::FixedVectorType::get(
-          llvm::Type::getHalfTy(getLLVMContext()), 2);
-      IID = Intrinsic::amdgcn_global_atomic_fadd;
-      break;
     case AMDGPU::BI__builtin_amdgcn_global_atomic_fmin_f64:
       IID = Intrinsic::amdgcn_global_atomic_fmin;
       break;
@@ -18688,11 +18681,6 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
       break;
     case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_f32:
       ArgTy = llvm::Type::getFloatTy(getLLVMContext());
-      IID = Intrinsic::amdgcn_flat_atomic_fadd;
-      break;
-    case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_v2f16:
-      ArgTy = llvm::FixedVectorType::get(
-          llvm::Type::getHalfTy(getLLVMContext()), 2);
       IID = Intrinsic::amdgcn_flat_atomic_fadd;
       break;
     }
@@ -19085,7 +19073,9 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
   case AMDGPU::BI__builtin_amdgcn_ds_atomic_fadd_v2f16:
   case AMDGPU::BI__builtin_amdgcn_ds_atomic_fadd_v2bf16:
   case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_f32:
-  case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_f64: {
+  case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_f64:
+  case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_v2f16:
+  case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_v2f16: {
     llvm::AtomicRMWInst::BinOp BinOp;
     switch (BuiltinID) {
     case AMDGPU::BI__builtin_amdgcn_atomic_inc32:
@@ -19103,6 +19093,8 @@ Value *CodeGenFunction::EmitAMDGPUBuiltinExpr(unsigned BuiltinID,
     case AMDGPU::BI__builtin_amdgcn_ds_atomic_fadd_v2bf16:
     case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_f32:
     case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_f64:
+    case AMDGPU::BI__builtin_amdgcn_global_atomic_fadd_v2f16:
+    case AMDGPU::BI__builtin_amdgcn_flat_atomic_fadd_v2f16:
       BinOp = llvm::AtomicRMWInst::FAdd;
       break;
     }
