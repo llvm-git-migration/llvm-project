@@ -1243,6 +1243,7 @@ public:
     SLPLoad,
     SLPStore,
     ActiveLaneMask,
+    AliasLaneMask,
     ExplicitVectorLength,
     /// Creates a scalar phi in a leaf VPBB with a single predecessor in VPlan.
     /// The first operand is the incoming value from the predecessor in VPlan,
@@ -1262,6 +1263,7 @@ public:
     // scalar.
     ExtractFromEnd,
     LogicalAnd, // Non-poison propagating logical And.
+    PopCount,
     // Add an offset in bytes (second operand) to a base pointer (first
     // operand). Only generates scalar values (either for the first lane only or
     // for all lanes, depending on its uses).
