@@ -33,6 +33,7 @@ add_mlir_dialect_library(MLIRLinalgTransforms
   SplitReduction.cpp
   SubsetInsertionOpInterfaceImpl.cpp
   SwapExtractSliceWithFillPatterns.cpp
+  SwapTransposeWithBroadcast.cpp
   Tiling.cpp
   TilingInterfaceImpl.cpp
   Transforms.cpp

@@ -115,6 +115,10 @@ struct TestLinalgTransforms
       llvm::cl::desc(
           "Test patterns to swap tensor.extract_slice(linalg.fill())"),
       llvm::cl::init(false)};
+  Option<bool> testSwapTransposeWithBroadcast{
+      *this, "test-swap-transpose-with-broadcast",
+      llvm::cl::desc("Test patterns to swap transpose(broadcast(input))"),
+      llvm::cl::init(false)};
   Option<bool> testEraseUnusedOperandsAndResults{
       *this, "test-erase-unused-operands-and-results",
       llvm::cl::desc("Test patterns to erase unused operands and results"),
@@ -195,6 +199,12 @@ static void applySwapExtractSliceWithFillPattern(func::FuncOp funcOp) {
   (void)applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
 }
 
+static void applySwapTransposeWithBroadcast(func::FuncOp funcOp) {
+  RewritePatternSet patterns(funcOp.getContext());
+  populateSwapTransposeWithBroadcastPatterns(patterns);
+  (void)applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
+}
+
 static void applyEraseUnusedOperandsAndResultsPatterns(func::FuncOp funcOp) {
   RewritePatternSet patterns(funcOp.getContext());
   populateEraseUnusedOperandsAndResultsPatterns(patterns);
@@ -227,6 +237,8 @@ void TestLinalgTransforms::runOnOperation() {
     return applyBubbleUpExtractSliceOpPattern(getOperation());
   if (testSwapExtractSliceWithFill)
     return applySwapExtractSliceWithFillPattern(getOperation());
+  if (testSwapTransposeWithBroadcast)
+    return applySwapTransposeWithBroadcast(getOperation());
   if (testEraseUnusedOperandsAndResults)
     return applyEraseUnusedOperandsAndResultsPatterns(getOperation());
   if (testEraseUnnecessaryInputs)
