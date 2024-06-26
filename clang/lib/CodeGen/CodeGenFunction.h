@@ -441,7 +441,6 @@ private:
   llvm::AssertingVH<llvm::Instruction> PostAllocaInsertPt = nullptr;
 
 public:
-  void printLocalDeclMap();
   /// Return PostAllocaInsertPt. If it is not yet created, then insert it
   /// immediately after AllocaInsertPt.
   llvm::Instruction *getPostAllocaInsertPoint() {
