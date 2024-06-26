@@ -76,6 +76,7 @@ enum class Operation : int {
   Fmod,
   Hypot,
   Pow,
+  Sub,
   EndBinaryOperationsSingleOutput,
 
   // Operations which take two floating point numbers of the same type as
