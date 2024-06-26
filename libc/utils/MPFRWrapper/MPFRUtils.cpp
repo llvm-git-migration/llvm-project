@@ -455,6 +455,12 @@ public:
     return result;
   }
 
+  MPFRNumber sub(const MPFRNumber &b) const {
+    MPFRNumber result(*this);
+    mpfr_sub(result.value, value, b.value, mpfr_rounding);
+    return result;
+  }
+
   MPFRNumber tan() const {
     MPFRNumber result(*this);
     mpfr_tan(result.value, value, mpfr_rounding);
@@ -730,6 +736,8 @@ binary_operation_one_output(Operation op, InputType x, InputType y,
     return inputX.hypot(inputY);
   case Operation::Pow:
     return inputX.pow(inputY);
+  case Operation::Sub:
+    return inputX.sub(inputY);
   default:
     __builtin_unreachable();
   }
