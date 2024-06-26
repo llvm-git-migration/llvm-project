@@ -480,12 +480,15 @@ mergeInfos(std::vector<std::unique_ptr<Info>> &Values);
 struct ClangDocContext {
   ClangDocContext() = default;
   ClangDocContext(tooling::ExecutionContext *ECtx, StringRef ProjectName,
-                  bool PublicOnly, StringRef OutDirectory, StringRef SourceRoot,
-                  StringRef RepositoryUrl,
+                  bool NoBitcode, bool PublicOnly, StringRef OutDirectory,
+                  StringRef SourceRoot, StringRef RepositoryUrl,
                   std::vector<std::string> UserStylesheets,
                   std::vector<std::string> JsScripts);
+
+  llvm::StringMap<std::vector<std::unique_ptr<Info>>> Infos;
   tooling::ExecutionContext *ECtx;
   std::string ProjectName; // Name of project clang-doc is documenting.
+  bool NoBitcode;  // Indicate if clang-doc will serialize Decl into Bitcode
   bool PublicOnly; // Indicates if only public declarations are documented.
   std::string OutDirectory; // Directory for outputting generated files.
   std::string SourceRoot;   // Directory where processed files are stored. Links
