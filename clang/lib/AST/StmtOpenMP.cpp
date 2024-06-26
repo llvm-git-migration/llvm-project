@@ -10,8 +10,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/StmtOpenMP.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 
 using namespace clang;
 using namespace llvm::omp;
