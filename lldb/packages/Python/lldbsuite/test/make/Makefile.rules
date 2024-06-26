@@ -364,7 +364,11 @@ ifneq "$(OS)" "Darwin"
 
 	OBJCOPY ?= $(call replace_cc_with,objcopy)
 	ARCHIVER ?= $(call replace_cc_with,ar)
-	DWP ?= $(call replace_cc_with,dwp)
+	DWP ?= $(call replace_cc_with,llvm-dwp)
+	# For devices that don't have llvm-dwp just use gnu dwp instead.
+	ifeq ($(wildcard $(DWP)),)
+		DWP = $(call replace_cc_with,dwp)
+	endif
 	override AR = $(ARCHIVER)
 endif
 
