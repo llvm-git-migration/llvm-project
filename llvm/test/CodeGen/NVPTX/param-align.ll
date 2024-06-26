@@ -69,3 +69,39 @@ define ptx_device void @t6() {
   call void %fp(ptr byval(i8) null);
   ret void
 }
+
+; CHECK: .func check_ptr_align1(
+; CHECK: 	ld.param.u64 	%rd1
+; CHECK: 	ret;
+define void @check_ptr_align1(ptr align 1 %_arg_ptr) {
+entry:
+  store i32 1, ptr %_arg_ptr, align 1
+  ret void
+}
+
+; CHECK: .func check_ptr_align2(
+; CHECK: 	ld.param.u64 	%rd1
+; CHECK: 	ret;
+define void @check_ptr_align2(ptr align 2 %_arg_ptr) {
+entry:
+  store i32 2, ptr %_arg_ptr, align 2
+  ret void
+}
+
+; CHECK: .func check_ptr_align4(
+; CHECK: 	ld.param.u64 	%rd1
+; CHECK: 	ret;
+define void @check_ptr_align4(ptr align 4 %_arg_ptr) {
+entry:
+  store i32 4, ptr %_arg_ptr, align 4
+  ret void
+}
+
+; CHECK: .func check_ptr_align8(
+; CHECK: 	ld.param.u64 	%rd1
+; CHECK: 	ret;
+define void @check_ptr_align8(ptr align 8 %_arg_ptr) {
+entry:
+  store i32 8, ptr %_arg_ptr, align 8
+  ret void
+}
