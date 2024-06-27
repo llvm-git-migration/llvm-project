@@ -1015,7 +1015,7 @@ void AArch64FrameLowering::emitZeroCallUsedRegs(BitVector RegsToZero,
 static void getLiveRegsForEntryMBB(LiveRegUnits &LiveRegs,
                                    const MachineBasicBlock &MBB) {
   const MachineFunction *MF = MBB.getParent();
-  LiveRegs.addLiveIns(MBB);
+  
   // Mark callee saved registers as used so we will not choose them.
   const MCPhysReg *CSRegs = MF->getRegInfo().getCalleeSavedRegs();
   for (unsigned i = 0; CSRegs[i]; ++i)
@@ -1046,7 +1046,7 @@ static Register findScratchNonCalleeSaveRegister(MachineBasicBlock *MBB) {
   const AArch64Subtarget &Subtarget = MF->getSubtarget<AArch64Subtarget>();
   const AArch64RegisterInfo &TRI = *Subtarget.getRegisterInfo();
   LiveRegUnits LiveRegs(TRI);
-  getLiveRegsForEntryMBB(LiveRegs, *MBB);
+  LiveRegs.addLiveIns(MBB);
 
   // Prefer X9 since it was historically used for the prologue scratch reg.
   if (LiveRegs.available(AArch64::X9))
@@ -1073,7 +1073,7 @@ bool AArch64FrameLowering::canUseAsPrologue(
 
   if (AFI->hasSwiftAsyncContext()) {
     LiveRegUnits LiveRegs(*RegInfo);
-    getLiveRegsForEntryMBB(LiveRegs, MBB);
+    LiveRegs.addLiveIns(MBB);
     // The StoreSwiftAsyncContext clobbers X16 and X17. Make sure they are
     // available.
     if (!LiveRegs.available(AArch64::X16) || !LiveRegs.available(AArch64::X17))
