@@ -108,20 +108,16 @@ define void @single_stride_castexpr(i32 %offset, ptr %src, ptr %dst, i1 %cond) {
 ; CHECK-NEXT:          %gep.src = getelementptr inbounds i32, ptr %src, i32 %iv.3
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-NEXT:        Group [[GRP1]]:
-; CHECK-NEXT:          (Low: ((4 * %iv.1) + %dst) High: (804 + (4 * %iv.1) + %dst))
-; CHECK-NEXT:            Member: {((4 * %iv.1) + %dst),+,4}<%inner.loop>
+; CHECK-NEXT:          (Low: (((4 * %iv.1) + %dst) umin ((4 * %iv.1) + (800 * (sext i32 %offset to i64))<nsw> + %dst)) High: (4 + (((4 * %iv.1) + %dst) umax ((4 * %iv.1) + (800 * (sext i32 %offset to i64))<nsw> + %dst))))
+; CHECK-NEXT:            Member: {((4 * %iv.1) + %dst),+,(4 * (sext i32 %offset to i64))<nsw>}<%inner.loop>
 ; CHECK-NEXT:        Group [[GRP2]]:
 ; CHECK-NEXT:          (Low: %src High: (804 + %src))
 ; CHECK-NEXT:            Member: {%src,+,4}<nuw><%inner.loop>
 ; CHECK-EMPTY:
 ; CHECK-NEXT:      Non vectorizable stores to invariant address were not found in loop.
 ; CHECK-NEXT:      SCEV assumptions:
-; CHECK-NEXT:      Equal predicate: %offset == 1
 ; CHECK-EMPTY:
 ; CHECK-NEXT:      Expressions re-written:
-; CHECK-NEXT:      [PSE] %gep.dst = getelementptr i32, ptr %dst, i64 %iv.2:
-; CHECK-NEXT:        {((4 * %iv.1) + %dst),+,(4 * (sext i32 %offset to i64))<nsw>}<%inner.loop>
-; CHECK-NEXT:        --> {((4 * %iv.1) + %dst),+,4}<%inner.loop>
 ; CHECK-NEXT:    outer.header:
 ; CHECK-NEXT:      Report: loop is not the innermost loop
 ; CHECK-NEXT:      Dependences:
