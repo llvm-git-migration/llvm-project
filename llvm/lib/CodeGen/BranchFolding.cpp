@@ -1354,20 +1354,14 @@ ReoptimizeBlock:
   // explicitly.  Landing pads should not do this since the landing-pad table
   // points to this block.  Blocks with their addresses taken shouldn't be
   // optimized away.
-  if (IsEmptyBlock(MBB) && !MBB->isEHPad() && !MBB->hasAddressTaken() &&
-      SameEHScope) {
+  if (IsEmptyBlock(MBB) && !MBB->hasAddressTaken() && SameEHScope) {
     salvageDebugInfoFromEmptyBlock(TII, *MBB);
     // Dead block?  Leave for cleanup later.
     if (MBB->pred_empty()) return MadeChange;
 
     if (FallThrough == MF.end()) {
       // TODO: Simplify preds to not branch here if possible!
-    } else if (FallThrough->isEHPad()) {
-      // Don't rewrite to a landing pad fallthough.  That could lead to the case
-      // where a BB jumps to more than one landing pad.
-      // TODO: Is it ever worth rewriting predecessors which don't already
-      // jump to a landing pad, and so can safely jump to the fallthrough?
-    } else if (MBB->isSuccessor(&*FallThrough)) {
+    } else if ((CurTBB == &*FallThrough) || (CurFBB == &*FallThrough)) {
       // Rewrite all predecessors of the old block to go to the fallthrough
       // instead.
       while (!MBB->pred_empty()) {
@@ -1422,8 +1416,8 @@ ReoptimizeBlock:
     // This has to check PrevBB->succ_size() because EH edges are ignored by
     // analyzeBranch.
     if (PriorCond.empty() && !PriorTBB && MBB->pred_size() == 1 &&
-        PrevBB.succ_size() == 1 && PrevBB.isSuccessor(MBB) &&
-        !MBB->hasAddressTaken() && !MBB->isEHPad()) {
+        PrevBB.succ_size() == 1 && ((PriorTBB == MBB) || (PriorFBB == MBB)) &&
+        !MBB->hasAddressTaken()) {
       LLVM_DEBUG(dbgs() << "\nMerging into block: " << PrevBB
                         << "From MBB: " << *MBB);
       // Remove redundant DBG_VALUEs first.
@@ -1612,7 +1606,7 @@ ReoptimizeBlock:
       if (MBB->empty()) {
         bool PredHasNoFallThrough = !PrevBB.canFallThrough();
         if (PredHasNoFallThrough || !PriorUnAnalyzable ||
-            !PrevBB.isSuccessor(MBB)) {
+            !((CurTBB == MBB) || (CurFBB == MBB))) {
           // If the prior block falls through into us, turn it into an
           // explicit branch to us to make updates simpler.
           if (!PredHasNoFallThrough && PrevBB.isSuccessor(MBB) &&
@@ -1756,21 +1750,11 @@ ReoptimizeBlock:
       // removed, move this block to the end of the function. There is no real
       // advantage in "falling through" to an EH block, so we don't want to
       // perform this transformation for that case.
-      //
-      // Also, Windows EH introduced the possibility of an arbitrary number of
-      // successors to a given block.  The analyzeBranch call does not consider
-      // exception handling and so we can get in a state where a block
-      // containing a call is followed by multiple EH blocks that would be
-      // rotated infinitely at the end of the function if the transformation
-      // below were performed for EH "FallThrough" blocks.  Therefore, even if
-      // that appears not to be happening anymore, we should assume that it is
-      // possible and not remove the "!FallThrough()->isEHPad" condition below.
       MachineBasicBlock *PrevTBB = nullptr, *PrevFBB = nullptr;
       SmallVector<MachineOperand, 4> PrevCond;
       if (FallThrough != MF.end() &&
-          !FallThrough->isEHPad() &&
           !TII->analyzeBranch(PrevBB, PrevTBB, PrevFBB, PrevCond, true) &&
-          PrevBB.isSuccessor(&*FallThrough)) {
+          ((PrevTBB == &*FallThrough) || (PrevFBB == &*FallThrough))) {
         MBB->moveAfter(&MF.back());
         MadeChange = true;
         return MadeChange;
