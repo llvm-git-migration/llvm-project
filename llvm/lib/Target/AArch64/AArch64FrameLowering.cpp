@@ -1036,7 +1036,6 @@ static Register findScratchNonCalleeSaveRegister(MachineBasicBlock *MBB) {
   const AArch64Subtarget &Subtarget = MF->getSubtarget<AArch64Subtarget>();
   const AArch64RegisterInfo &TRI = *Subtarget.getRegisterInfo();
   LiveRegUnits LiveRegs(TRI);
-
   LiveRegs.addLiveIns(MBB);
 
   // Prefer X9 since it was historically used for the prologue scratch reg.
