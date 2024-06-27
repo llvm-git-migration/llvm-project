@@ -13964,7 +13964,17 @@ Value *BoUpSLP::vectorizeTree(
               CloneGEP->takeName(GEP);
             Ex = CloneGEP;
           } else {
-            Ex = Builder.CreateExtractElement(Vec, Lane);
+            if (auto *VecTy = dyn_cast<FixedVectorType>(Scalar->getType())) {
+              unsigned VecTyNumElements = VecTy->getNumElements();
+              // When REVEC is enabled, we need to extract a vector.
+              // Note: The element size of Scalar may be different from the
+              // element size of Vec.
+              Ex = Builder.CreateExtractVector(
+                  FixedVectorType::get(Vec->getType()->getScalarType(),
+                                       VecTyNumElements),
+                  Vec, Builder.getInt64(ExternalUse.Lane * VecTyNumElements));
+            } else
+              Ex = Builder.CreateExtractElement(Vec, Lane);
           }
           // If necessary, sign-extend or zero-extend ScalarRoot
           // to the larger type.
