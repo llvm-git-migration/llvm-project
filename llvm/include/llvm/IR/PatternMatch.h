@@ -2343,7 +2343,7 @@ struct UAddWithOverflow_match {
         return L.match(AddLHS) && R.match(AddRHS) && S.match(ICmpRHS);
 
     Value *Op1;
-    auto XorExpr = m_OneUse(m_Xor(m_Value(Op1), m_AllOnes()));
+    auto XorExpr = m_OneUse(m_Not(m_Value(Op1)));
     // (a ^ -1) <u b
     if (Pred == ICmpInst::ICMP_ULT) {
       if (XorExpr.match(ICmpLHS))
