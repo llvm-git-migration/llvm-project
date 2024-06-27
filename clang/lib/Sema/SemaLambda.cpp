@@ -2390,6 +2390,8 @@ Sema::LambdaScopeForCallOperatorInstantiationRAII::
           dyn_cast<FunctionDecl>(getLambdaAwareParentOfDeclContext(ParentFD));
       Pattern =
           dyn_cast<FunctionDecl>(getLambdaAwareParentOfDeclContext(Pattern));
+      assert(((ParentFD && Pattern) || (!ParentFD && !Pattern)) &&
+             "Lambda decl should be paired");
 
       if (!ParentFD || !Pattern)
         break;
