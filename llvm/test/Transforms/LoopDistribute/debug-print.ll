@@ -6,15 +6,13 @@ define void @f(ptr noalias %a, ptr noalias %b, ptr noalias %c, ptr noalias %d, i
 ; CHECK-LABEL: 'f'
 ; CHECK:        LDist: Found a candidate loop: for.body
 ; CHECK:        Backward dependences:
+; CHECK-NEXT:     Unknown:
+; CHECK-NEXT:         store i32 %mul.a, ptr %gep.a.plus4, align 4 ->
+; CHECK-NEXT:         %load.strided.a = load i32, ptr %gep.strided.a, align 4
 ; CHECK-NEXT:     Backward:
 ; CHECK-NEXT:         %load.a = load i32, ptr %gep.a, align 4 ->
 ; CHECK-NEXT:         store i32 %mul.a, ptr %gep.a.plus4, align 4
-; CHECK:        Seeded partitions:
-; CHECK:        Partition 0
-; CHECK:        Partition 1
-; CHECK:        Partition 2
-; CHECK:        Partition 3
-; CHECK:        Distributing loop
+; CHECK:        Skipping; cannot isolate unsafe dependencies
 entry:
   br label %for.body
 

@@ -22,65 +22,27 @@ define void @f(ptr noalias %a,
 ;
 ; DEFAULT-LABEL: @f(
 ; DEFAULT-NEXT:  entry:
-; DEFAULT-NEXT:    br label [[FOR_BODY_LVER_CHECK:%.*]]
-; DEFAULT:       for.body.lver.check:
-; DEFAULT-NEXT:    [[IDENT_CHECK:%.*]] = icmp ne i64 [[STRIDE:%.*]], 1
-; DEFAULT-NEXT:    br i1 [[IDENT_CHECK]], label [[FOR_BODY_PH_LVER_ORIG:%.*]], label [[FOR_BODY_PH_LDIST1:%.*]]
-; DEFAULT:       for.body.ph.lver.orig:
-; DEFAULT-NEXT:    br label [[FOR_BODY_LVER_ORIG:%.*]]
-; DEFAULT:       for.body.lver.orig:
-; DEFAULT-NEXT:    [[IND_LVER_ORIG:%.*]] = phi i64 [ 0, [[FOR_BODY_PH_LVER_ORIG]] ], [ [[ADD_LVER_ORIG:%.*]], [[FOR_BODY_LVER_ORIG]] ]
-; DEFAULT-NEXT:    [[ARRAYIDXA_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[A:%.*]], i64 [[IND_LVER_ORIG]]
-; DEFAULT-NEXT:    [[LOADA_LVER_ORIG:%.*]] = load i32, ptr [[ARRAYIDXA_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[ARRAYIDXB_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[B:%.*]], i64 [[IND_LVER_ORIG]]
-; DEFAULT-NEXT:    [[LOADB_LVER_ORIG:%.*]] = load i32, ptr [[ARRAYIDXB_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[MULA_LVER_ORIG:%.*]] = mul i32 [[LOADB_LVER_ORIG]], [[LOADA_LVER_ORIG]]
-; DEFAULT-NEXT:    [[ADD_LVER_ORIG]] = add nuw nsw i64 [[IND_LVER_ORIG]], 1
-; DEFAULT-NEXT:    [[ARRAYIDXA_PLUS_4_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[ADD_LVER_ORIG]]
-; DEFAULT-NEXT:    store i32 [[MULA_LVER_ORIG]], ptr [[ARRAYIDXA_PLUS_4_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[ARRAYIDXD_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[D:%.*]], i64 [[IND_LVER_ORIG]]
-; DEFAULT-NEXT:    [[LOADD_LVER_ORIG:%.*]] = load i32, ptr [[ARRAYIDXD_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[MUL_LVER_ORIG:%.*]] = mul i64 [[IND_LVER_ORIG]], [[STRIDE]]
-; DEFAULT-NEXT:    [[ARRAYIDXSTRIDEDA_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[MUL_LVER_ORIG]]
-; DEFAULT-NEXT:    [[LOADSTRIDEDA_LVER_ORIG:%.*]] = load i32, ptr [[ARRAYIDXSTRIDEDA_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[MULC_LVER_ORIG:%.*]] = mul i32 [[LOADD_LVER_ORIG]], [[LOADSTRIDEDA_LVER_ORIG]]
-; DEFAULT-NEXT:    [[ARRAYIDXC_LVER_ORIG:%.*]] = getelementptr inbounds i32, ptr [[C:%.*]], i64 [[IND_LVER_ORIG]]
-; DEFAULT-NEXT:    store i32 [[MULC_LVER_ORIG]], ptr [[ARRAYIDXC_LVER_ORIG]], align 4
-; DEFAULT-NEXT:    [[EXITCOND_LVER_ORIG:%.*]] = icmp eq i64 [[ADD_LVER_ORIG]], 20
-; DEFAULT-NEXT:    br i1 [[EXITCOND_LVER_ORIG]], label [[FOR_END_LOOPEXIT:%.*]], label [[FOR_BODY_LVER_ORIG]]
-; DEFAULT:       for.body.ph.ldist1:
-; DEFAULT-NEXT:    br label [[FOR_BODY_LDIST1:%.*]]
-; DEFAULT:       for.body.ldist1:
-; DEFAULT-NEXT:    [[IND_LDIST1:%.*]] = phi i64 [ 0, [[FOR_BODY_PH_LDIST1]] ], [ [[ADD_LDIST1:%.*]], [[FOR_BODY_LDIST1]] ]
-; DEFAULT-NEXT:    [[ARRAYIDXA_LDIST1:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[IND_LDIST1]]
-; DEFAULT-NEXT:    [[LOADA_LDIST1:%.*]] = load i32, ptr [[ARRAYIDXA_LDIST1]], align 4
-; DEFAULT-NEXT:    [[ARRAYIDXB_LDIST1:%.*]] = getelementptr inbounds i32, ptr [[B]], i64 [[IND_LDIST1]]
-; DEFAULT-NEXT:    [[LOADB_LDIST1:%.*]] = load i32, ptr [[ARRAYIDXB_LDIST1]], align 4
-; DEFAULT-NEXT:    [[MULA_LDIST1:%.*]] = mul i32 [[LOADB_LDIST1]], [[LOADA_LDIST1]]
-; DEFAULT-NEXT:    [[ADD_LDIST1]] = add nuw nsw i64 [[IND_LDIST1]], 1
-; DEFAULT-NEXT:    [[ARRAYIDXA_PLUS_4_LDIST1:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[ADD_LDIST1]]
-; DEFAULT-NEXT:    store i32 [[MULA_LDIST1]], ptr [[ARRAYIDXA_PLUS_4_LDIST1]], align 4
-; DEFAULT-NEXT:    [[EXITCOND_LDIST1:%.*]] = icmp eq i64 [[ADD_LDIST1]], 20
-; DEFAULT-NEXT:    br i1 [[EXITCOND_LDIST1]], label [[FOR_BODY_PH:%.*]], label [[FOR_BODY_LDIST1]]
-; DEFAULT:       for.body.ph:
 ; DEFAULT-NEXT:    br label [[FOR_BODY:%.*]]
 ; DEFAULT:       for.body:
-; DEFAULT-NEXT:    [[IND:%.*]] = phi i64 [ 0, [[FOR_BODY_PH]] ], [ [[ADD:%.*]], [[FOR_BODY]] ]
+; DEFAULT-NEXT:    [[IND:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[ADD:%.*]], [[FOR_BODY]] ]
+; DEFAULT-NEXT:    [[ARRAYIDXA:%.*]] = getelementptr inbounds i32, ptr [[A:%.*]], i64 [[IND]]
+; DEFAULT-NEXT:    [[LOADA:%.*]] = load i32, ptr [[ARRAYIDXA]], align 4
+; DEFAULT-NEXT:    [[ARRAYIDXB:%.*]] = getelementptr inbounds i32, ptr [[B:%.*]], i64 [[IND]]
+; DEFAULT-NEXT:    [[LOADB:%.*]] = load i32, ptr [[ARRAYIDXB]], align 4
+; DEFAULT-NEXT:    [[MULA:%.*]] = mul i32 [[LOADB]], [[LOADA]]
 ; DEFAULT-NEXT:    [[ADD]] = add nuw nsw i64 [[IND]], 1
-; DEFAULT-NEXT:    [[ARRAYIDXD:%.*]] = getelementptr inbounds i32, ptr [[D]], i64 [[IND]]
+; DEFAULT-NEXT:    [[ARRAYIDXA_PLUS_4:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[ADD]]
+; DEFAULT-NEXT:    store i32 [[MULA]], ptr [[ARRAYIDXA_PLUS_4]], align 4
+; DEFAULT-NEXT:    [[ARRAYIDXD:%.*]] = getelementptr inbounds i32, ptr [[D:%.*]], i64 [[IND]]
 ; DEFAULT-NEXT:    [[LOADD:%.*]] = load i32, ptr [[ARRAYIDXD]], align 4
-; DEFAULT-NEXT:    [[MUL:%.*]] = mul i64 [[IND]], [[STRIDE]]
+; DEFAULT-NEXT:    [[MUL:%.*]] = mul i64 [[IND]], [[STRIDE:%.*]]
 ; DEFAULT-NEXT:    [[ARRAYIDXSTRIDEDA:%.*]] = getelementptr inbounds i32, ptr [[A]], i64 [[MUL]]
 ; DEFAULT-NEXT:    [[LOADSTRIDEDA:%.*]] = load i32, ptr [[ARRAYIDXSTRIDEDA]], align 4
 ; DEFAULT-NEXT:    [[MULC:%.*]] = mul i32 [[LOADD]], [[LOADSTRIDEDA]]
-; DEFAULT-NEXT:    [[ARRAYIDXC:%.*]] = getelementptr inbounds i32, ptr [[C]], i64 [[IND]]
+; DEFAULT-NEXT:    [[ARRAYIDXC:%.*]] = getelementptr inbounds i32, ptr [[C:%.*]], i64 [[IND]]
 ; DEFAULT-NEXT:    store i32 [[MULC]], ptr [[ARRAYIDXC]], align 4
 ; DEFAULT-NEXT:    [[EXITCOND:%.*]] = icmp eq i64 [[ADD]], 20
-; DEFAULT-NEXT:    br i1 [[EXITCOND]], label [[FOR_END_LOOPEXIT1:%.*]], label [[FOR_BODY]]
-; DEFAULT:       for.end.loopexit:
-; DEFAULT-NEXT:    br label [[FOR_END:%.*]]
-; DEFAULT:       for.end.loopexit1:
-; DEFAULT-NEXT:    br label [[FOR_END]]
+; DEFAULT-NEXT:    br i1 [[EXITCOND]], label [[FOR_END:%.*]], label [[FOR_BODY]]
 ; DEFAULT:       for.end:
 ; DEFAULT-NEXT:    ret void
 ;

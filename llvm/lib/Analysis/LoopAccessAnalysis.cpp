@@ -2930,7 +2930,8 @@ void LoopAccessInfo::collectStridedAccess(Value *MemAccess) {
   // computation of an interesting IV - but we chose not to as we
   // don't have a cost model here, and broadening the scope exposes
   // far too many unprofitable cases.
-  const SCEV *StrideExpr = getStrideFromPointer(Ptr, PSE->getSE(), TheLoop);
+  ScalarEvolution *SE = PSE->getSE();
+  const SCEV *StrideExpr = getStrideFromPointer(Ptr, SE, TheLoop);
   if (!StrideExpr)
     return;
 
@@ -2944,8 +2945,8 @@ void LoopAccessInfo::collectStridedAccess(Value *MemAccess) {
   }
 
   // Avoid adding the "Stride == 1" predicate when we know that
-  // Stride >= Trip-Count. Such a predicate will effectively optimize a single
-  // or zero iteration loop, as Trip-Count <= Stride == 1.
+  // Backedge-Taken-Count is non-negative, or when Stride >
+  // Backedge-Taken-Count. Trip-Count = Backedge-Taken-Count + 1.
   //
   // TODO: We are currently not making a very informed decision on when it is
   // beneficial to apply stride versioning. It might make more sense that the
@@ -2966,20 +2967,17 @@ void LoopAccessInfo::collectStridedAccess(Value *MemAccess) {
   uint64_t BETypeSizeBits = DL.getTypeSizeInBits(MaxBTC->getType());
   const SCEV *CastedStride = StrideExpr;
   const SCEV *CastedBECount = MaxBTC;
-  ScalarEvolution *SE = PSE->getSE();
   if (BETypeSizeBits >= StrideTypeSizeBits)
     CastedStride = SE->getNoopOrSignExtend(StrideExpr, MaxBTC->getType());
   else
     CastedBECount = SE->getZeroExtendExpr(MaxBTC, StrideExpr->getType());
   const SCEV *StrideMinusBETaken = SE->getMinusSCEV(CastedStride, CastedBECount);
-  // Since TripCount == BackEdgeTakenCount + 1, checking:
-  // "Stride >= TripCount" is equivalent to checking:
-  // Stride - MaxBTC> 0
-  if (SE->isKnownPositive(StrideMinusBETaken)) {
+  if (SE->isKnownPositive(StrideMinusBETaken) ||
+      SE->isKnownNonNegative(MaxBTC)) {
     LLVM_DEBUG(
-        dbgs() << "LAA: Stride>=TripCount; No point in versioning as the "
-                  "Stride==1 predicate will imply that the loop executes "
-                  "at most once.\n");
+        dbgs() << "LAA: Stride > Backedge-Taken-Count or Backedge-Taken-Count "
+                  ">= 0; No point in versioning as the Stride==1 predicate "
+                  "will imply that the loop executes at most once.\n");
     return;
   }
   LLVM_DEBUG(dbgs() << "LAA: Found a strided access that we can version.\n");
