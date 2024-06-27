@@ -22,6 +22,7 @@ module Clang_AST {
   requires cplusplus
   umbrella "clang/AST"
 
+  textual header "clang/Basic/OpenACCClauses.def"
   textual header "clang/AST/BuiltinTypes.def"
   textual header "clang/AST/CXXRecordDeclDefinitionBits.def"
   textual header "clang/AST/OperationKinds.def"
@@ -37,6 +38,7 @@ module Clang_Basic {
   umbrella "clang/Basic"
 
   textual header "clang/Basic/AArch64SVEACLETypes.def"
+  textual header "clang/Basic/AMDGPUTypes.def"
   textual header "clang/Basic/BuiltinsAArch64.def"
   textual header "clang/Basic/BuiltinsAMDGPU.def"
   textual header "clang/Basic/BuiltinsAArch64NeonSVEBridge.def"
