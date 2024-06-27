@@ -717,6 +717,12 @@ This class provides six fields.
 
 * ``bit PrimaryKeyEarlyOut``. See the third example below.
 
+* ``bit PrimaryKeyReturnRange``. when set to 1, modifies the lookup function’s
+  definition to return a range of results rather than a single pointer to the
+  object. This feature proves useful when multiple objects meet the criteria
+  specified by the lookup function. Currently, it is supported only for primary
+  lookup functions. Refer to the fourth example below for further details.
+
 TableGen attempts to deduce the type of each of the table fields so that it
 can format the C++ initializers in the emitted table. It can deduce ``bit``,
 ``bits<n>``, ``string``, ``Intrinsic``, and ``Instruction``.  These can be
@@ -972,6 +978,79 @@ The generated tables are:
     { 0x9 }, // 4
   };
 
+.. code-block:: text
+
+  class SysReg<string name, bits<12> op> {
+    string Name = name;
+    bits<12> Encoding = op;
+    code FeaturesRequired = [{ {} }];
+  }
+
+  def List1 : GenericTable {
+    let FilterClass = "SysReg";
+    let Fields = [
+      "Name", "Encoding", "FeaturesRequired",
+    ];
+
+    let PrimaryKey = [ "Encoding" ];
+    let PrimaryKeyName = "lookupSysRegByEncoding";
+    let PrimaryKeyReturnRange = true;
+  }
+
+  let FeaturesRequired = [{ {Feature1} }] in {
+  def : SysReg<"csr1", 0x7C0>;
+  }
+
+  let FeaturesRequired = [{ {Feature2} }] in {
+  def : SysReg<"csr2", 0x7C0>;
+  }
+
+The generated table is:
+
+.. code-block:: text
+
+  constexpr SysReg List1[] = {
+    { "csr1", 0x7C0,  {Feature1}  }, // 0
+    { "csr2", 0x7C0,  {Feature2}  }, // 1
+  };
+
+In the table above, both csr1 and csr2 share the same encoding. When
+``PrimaryKeyReturnRange`` is set to false, the lookupSysRegByEncoding function
+consistently returns the first CSR (in this case, csr1). However, this approach
+may not always be suitable. To address this, if scenarios exist where multiple
+objects match the criteria sought by the lookup function, we can
+return a range of results by setting ``PrimaryKeyReturnRange`` to true.
+Below, you’ll find the C++ code emitted for the above example when
+``PrimaryKeyReturnRange`` is enabled.
+
+.. code-block:: text
+
+  llvm::iterator_range<const SysReg *> lookupSysRegByEncoding(uint16_t Encoding) {
+    struct KeyType {
+      uint16_t Encoding;
+    };
+    KeyType Key = {Encoding};
+    struct Comp {
+      bool operator()(const SysReg &LHS, const KeyType &RHS) const {
+        if (LHS.Encoding < RHS.Encoding)
+          return true;
+        if (LHS.Encoding > RHS.Encoding)
+          return false;
+        return false;
+      }
+      bool operator()(const KeyType &LHS, const SysReg &RHS) const {
+        if (LHS.Encoding < RHS.Encoding)
+          return true;
+        if (LHS.Encoding > RHS.Encoding)
+          return false;
+        return false;
+      }
+    };
+    auto Table = ArrayRef(List1);
+    auto It = std::equal_range(Table.begin(), Table.end(), Key, Comp());
+    return llvm::make_range(It.first, It.second);
+  }
+
 Search Indexes
 ~~~~~~~~~~~~~~
 
@@ -986,6 +1065,8 @@ function. This class provides three fields.
 * ``list<string> Key``. The list of fields that make up the secondary key.
 
 * ``bit EarlyOut``. See the third example in `Generic Tables`_.
+
+* ``bit ReturnRange``. See the fourth example in `Generic Tables`_.
 
 Here is an example of a secondary key added to the ``CTable`` above. The
 generated function looks up entries based on the ``Name`` and ``Kind`` fields.
