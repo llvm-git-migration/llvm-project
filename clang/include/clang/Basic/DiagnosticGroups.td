@@ -1535,3 +1535,6 @@ def BitIntExtension : DiagGroup<"bit-int-extension">;
 
 // Warnings about misuse of ExtractAPI options.
 def ExtractAPIMisuse : DiagGroup<"extractapi-misuse">;
+
+// Warnings about non-portable include paths
+def NonportablePath : DiagGroup<"nonportable-include-path">;
