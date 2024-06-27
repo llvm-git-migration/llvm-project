@@ -68,6 +68,7 @@ struct SearchIndex {
   SMLoc Loc; // Source location of PrimaryKey or Key field definition.
   SmallVector<GenericField, 1> Fields;
   bool EarlyOut = false;
+  bool ReturnRange = false;
 };
 
 struct GenericTable {
@@ -198,7 +199,8 @@ private:
   bool parseFieldType(GenericField &Field, Init *II);
   std::unique_ptr<SearchIndex>
   parseSearchIndex(GenericTable &Table, const RecordVal *RecVal, StringRef Name,
-                   const std::vector<StringRef> &Key, bool EarlyOut);
+                   const std::vector<StringRef> &Key, bool EarlyOut,
+                   bool ReturnRange);
   void collectEnumEntries(GenericEnum &Enum, StringRef NameField,
                           StringRef ValueField,
                           const std::vector<Record *> &Items);
@@ -328,8 +330,9 @@ void SearchableTableEmitter::emitLookupFunction(const GenericTable &Table,
   ArrayRef<Record *> IndexRows;
   StringRef IndexTypeName;
   StringRef IndexName;
+  bool ShouldReturnRange = Index.ReturnRange;
 
-  if (IsPrimary) {
+  if (IsPrimary || ShouldReturnRange) {
     IndexTypeName = Table.CppTypeName;
     IndexName = Table.Name;
     IndexRows = Table.Entries;
@@ -426,31 +429,55 @@ void SearchableTableEmitter::emitLookupFunction(const GenericTable &Table,
     OS << "    return nullptr;\n\n";
   }
 
-  OS << "  struct KeyType {\n";
-  for (const auto &Field : Index.Fields) {
-    OS << "    " << searchableFieldType(Table, Index, Field, TypeInTempStruct)
-       << " " << Field.Name << ";\n";
+  if (ShouldReturnRange)
+    OS << "  " << IndexTypeName << " Key;\n";
+  else {
+    OS << "  struct KeyType {\n";
+    for (const auto &Field : Index.Fields) {
+      OS << "    " << searchableFieldType(Table, Index, Field, TypeInTempStruct)
+         << " " << Field.Name << ";\n";
+    }
+    OS << "  };\n";
+    OS << "  KeyType Key = {";
   }
-  OS << "  };\n";
-  OS << "  KeyType Key = {";
+
   ListSeparator LS;
   for (const auto &Field : Index.Fields) {
-    OS << LS << Field.Name;
-    if (isa<StringRecTy>(Field.RecType)) {
-      OS << ".upper()";
-      if (IsPrimary)
-        PrintFatalError(Index.Loc,
-                        Twine("In table '") + Table.Name +
-                            "', use a secondary lookup method for "
-                            "case-insensitive comparison of field '" +
-                            Field.Name + "'");
+    if (ShouldReturnRange) {
+      OS << "  Key." << Field.Name << " = " << Field.Name;
+      if (isa<StringRecTy>(Field.RecType))
+        OS << ".data()";
+      OS << ";\n";
+    } else {
+      OS << LS << Field.Name;
+      if (isa<StringRecTy>(Field.RecType)) {
+        OS << ".upper()";
+        if (IsPrimary)
+          PrintFatalError(Index.Loc,
+                          Twine("In table '") + Table.Name +
+                              "', use a secondary lookup method for "
+                              "case-insensitive comparison of field '" +
+                              Field.Name + "'");
+      }
     }
   }
-  OS << "};\n";
 
-  OS << "  auto Table = ArrayRef(" << IndexName << ");\n";
-  OS << "  auto Idx = std::lower_bound(Table.begin(), Table.end(), Key,\n";
-  OS << "    [](const " << IndexTypeName << " &LHS, const KeyType &RHS) {\n";
+  if (!ShouldReturnRange)
+    OS << "};\n";
+
+  OS << "  auto Table = ArrayRef(" << IndexName;
+  if (ShouldReturnRange) {
+    if (!IsPrimary)
+      OS << "for" << Index.Name;
+    OS << ");\n";
+    OS << "  auto It = std::equal_range(Table.begin(), Table.end(), Key,\n";
+    OS << "    [](const " << IndexTypeName << " &LHS, const " << IndexTypeName
+       << " &RHS) {\n";
+  } else {
+    OS << ");\n";
+    OS << "  auto Idx = std::lower_bound(Table.begin(), Table.end(), Key,\n";
+    OS << "    [](const " << IndexTypeName << " &LHS, const KeyType &RHS) {\n";
+  }
 
   for (const auto &Field : Index.Fields) {
     if (isa<StringRecTy>(Field.RecType)) {
@@ -478,16 +505,21 @@ void SearchableTableEmitter::emitLookupFunction(const GenericTable &Table,
   OS << "      return false;\n";
   OS << "    });\n\n";
 
-  OS << "  if (Idx == Table.end()";
+  if (!ShouldReturnRange) {
+    OS << "  if (Idx == Table.end()";
+    for (const auto &Field : Index.Fields)
+      OS << " ||\n      Key." << Field.Name << " != Idx->" << Field.Name;
+  }
 
-  for (const auto &Field : Index.Fields)
-    OS << " ||\n      Key." << Field.Name << " != Idx->" << Field.Name;
-  OS << ")\n    return nullptr;\n";
-
-  if (IsPrimary)
+  if (ShouldReturnRange)
+    OS << "  return llvm::make_range(It.first, It.second);\n";
+  else if (IsPrimary) {
+    OS << ")\n    return nullptr;\n\n";
     OS << "  return &*Idx;\n";
-  else
+  } else {
+    OS << ")\n    return nullptr;\n\n";
     OS << "  return &" << Table.Name << "[Idx->_index];\n";
+  }
 
   OS << "}\n";
 }
@@ -495,8 +527,11 @@ void SearchableTableEmitter::emitLookupFunction(const GenericTable &Table,
 void SearchableTableEmitter::emitLookupDeclaration(const GenericTable &Table,
                                                    const SearchIndex &Index,
                                                    raw_ostream &OS) {
-  OS << "const " << Table.CppTypeName << " *" << Index.Name << "(";
-
+  if (Index.ReturnRange)
+    OS << "llvm::iterator_range<const " << Table.CppTypeName << " *>\n";
+  else
+    OS << "const " << Table.CppTypeName << " *";
+  OS << Index.Name << "(";
   ListSeparator LS;
   for (const auto &Field : Index.Fields)
     OS << LS << searchableFieldType(Table, Index, Field, TypeInArgument) << " "
@@ -538,12 +573,41 @@ void SearchableTableEmitter::emitGenericTable(const GenericTable &Table,
   }
   OS << " };\n";
 
+  // Emit Table for all those indices which will return a range instead of a
+  // single record
+  for (const auto &Index : Table.Indices) {
+    if (Index->ReturnRange) {
+      std::vector<Record *> Entries;
+      Entries.reserve(Table.Entries.size());
+      for (unsigned i = 0; i < Table.Entries.size(); ++i)
+        Entries.emplace_back(Table.Entries[i]);
+
+      llvm::stable_sort(Entries, [&](Record *LHS, Record *RHS) {
+        return compareBy(LHS, RHS, *Index);
+      });
+
+      OS << "constexpr " << Table.CppTypeName << " " << Table.Name << "for"
+         << Index->Name << "[] = {\n";
+      for (const auto &Entry : Entries) {
+        OS << "  { ";
+        ListSeparator LS;
+        for (const auto &Field : Table.Fields)
+          OS << LS
+             << primaryRepresentation(Table.Locs[0], Field,
+                                      Entry->getValueInit(Field.Name));
+
+        OS << " },\n";
+      }
+      OS << " };\n";
+    }
+  }
+
   // Indexes are sorted "{ Thing, PrimaryIdx }" arrays, so that a binary
   // search can be performed by "Thing".
   if (Table.PrimaryKey)
-    emitLookupFunction(Table, *Table.PrimaryKey, true, OS);
+    emitLookupFunction(Table, *Table.PrimaryKey, /*IsPrimary=*/true, OS);
   for (const auto &Index : Table.Indices)
-    emitLookupFunction(Table, *Index, false, OS);
+    emitLookupFunction(Table, *Index, /*IsPrimary=*/false, OS);
 
   OS << "#endif\n\n";
 }
@@ -569,11 +633,12 @@ bool SearchableTableEmitter::parseFieldType(GenericField &Field, Init *TypeOf) {
 
 std::unique_ptr<SearchIndex> SearchableTableEmitter::parseSearchIndex(
     GenericTable &Table, const RecordVal *KeyRecVal, StringRef Name,
-    const std::vector<StringRef> &Key, bool EarlyOut) {
+    const std::vector<StringRef> &Key, bool EarlyOut, bool ReturnRange) {
   auto Index = std::make_unique<SearchIndex>();
   Index->Name = std::string(Name);
   Index->Loc = KeyRecVal->getLoc();
   Index->EarlyOut = EarlyOut;
+  Index->ReturnRange = ReturnRange;
 
   for (const auto &FieldName : Key) {
     const GenericField *Field = Table.getFieldByName(FieldName);
@@ -769,7 +834,8 @@ void SearchableTableEmitter::run(raw_ostream &OS) {
           parseSearchIndex(*Table, TableRec->getValue("PrimaryKey"),
                            TableRec->getValueAsString("PrimaryKeyName"),
                            TableRec->getValueAsListOfStrings("PrimaryKey"),
-                           TableRec->getValueAsBit("PrimaryKeyEarlyOut"));
+                           TableRec->getValueAsBit("PrimaryKeyEarlyOut"),
+                           TableRec->getValueAsBit("PrimaryKeyReturnRange"));
 
       llvm::stable_sort(Table->Entries, [&](Record *LHS, Record *RHS) {
         return compareBy(LHS, RHS, *Table->PrimaryKey);
@@ -793,7 +859,8 @@ void SearchableTableEmitter::run(raw_ostream &OS) {
     Table.Indices.push_back(
         parseSearchIndex(Table, IndexRec->getValue("Key"), IndexRec->getName(),
                          IndexRec->getValueAsListOfStrings("Key"),
-                         IndexRec->getValueAsBit("EarlyOut")));
+                         IndexRec->getValueAsBit("EarlyOut"),
+                         IndexRec->getValueAsBit("ReturnRange")));
   }
 
   // Translate legacy tables.
@@ -848,7 +915,7 @@ void SearchableTableEmitter::run(raw_ostream &OS) {
       std::string Name =
           (Twine("lookup") + Table->CppTypeName + "By" + Field).str();
       Table->Indices.push_back(parseSearchIndex(*Table, Class->getValue(Field),
-                                                Name, {Field}, false));
+                                                Name, {Field}, false, false));
     }
 
     Tables.emplace_back(std::move(Table));
