@@ -245,6 +245,12 @@ static FixedVectorType *getWidenedType(Type *ScalarTy, unsigned VF) {
   return FixedVectorType::get(ScalarTy, VF);
 }
 
+static unsigned getNumElements(Type *Ty) {
+  if (auto *VecTy = dyn_cast<FixedVectorType>(Ty))
+    return VecTy->getNumElements();
+  return 1;
+}
+
 /// \returns True if the value is a constant (but not globals/constant
 /// expressions).
 static bool isConstant(Value *V) {
