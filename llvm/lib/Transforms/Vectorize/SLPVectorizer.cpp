@@ -1032,10 +1032,13 @@ static void fixupOrderingIndices(MutableArrayRef<unsigned> Order) {
 /// Opcode1.
 SmallBitVector getAltInstrMask(ArrayRef<Value *> VL, unsigned Opcode0,
                                unsigned Opcode1) {
-  SmallBitVector OpcodeMask(VL.size(), false);
+  Type *ScalarTy = VL[0]->getType();
+  unsigned ScalarTyNumElements = getNumElements(ScalarTy);
+  SmallBitVector OpcodeMask(VL.size() * ScalarTyNumElements, false);
   for (unsigned Lane : seq<unsigned>(VL.size()))
     if (cast<Instruction>(VL[Lane])->getOpcode() == Opcode1)
-      OpcodeMask.set(Lane);
+      for (unsigned I = 0; I != ScalarTyNumElements; ++I)
+        OpcodeMask.set(Lane * ScalarTyNumElements + I);
   return OpcodeMask;
 }
 
