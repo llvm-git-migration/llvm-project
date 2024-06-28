@@ -5473,6 +5473,12 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
         Init = llvm::UndefValue::get(getTypes().ConvertType(T));
       }
     } else {
+      if (!getLangOpts().CPlusPlus) {
+        // In C, when an initializer is given, the Linux kernel relies on clang
+        // to zero-initialize all members not explicitly initialized, including
+        // padding bits.
+        Initializer = zeroInitGlobalVarInitializer(Initializer);
+      }
       Init = Initializer;
       // We don't need an initializer, so remove the entry for the delayed
       // initializer position (just in case this entry was delayed) if we
