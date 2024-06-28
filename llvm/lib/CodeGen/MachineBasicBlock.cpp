@@ -1336,10 +1336,6 @@ MachineBasicBlock *MachineBasicBlock::SplitCriticalEdge(
     LIS->repairIntervalsInRange(this, getFirstTerminator(), end(), UsedRegs);
   }
 
-  if (auto *MDTWrapper =
-          P.getAnalysisIfAvailable<MachineDominatorTreeWrapperPass>())
-    MDTWrapper->getDomTree().recordSplitCriticalEdge(this, Succ, NMBB);
-
   if (MachineLoopInfo *MLI = P.getAnalysisIfAvailable<MachineLoopInfo>())
     if (MachineLoop *TIL = MLI->getLoopFor(this)) {
       // If one or the other blocks were not in a loop, the new block is not
