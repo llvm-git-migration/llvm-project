@@ -16,7 +16,7 @@
 unsigned _BitInt(1) GlobSize1 = 0;
 // CHECK: @GlobSize1 = {{.*}}global i8 0
 
-// CHECK64: @__const.foo.A = private unnamed_addr constant { i32, [4 x i8], <{ i8, [23 x i8] }> } { i32 1, [4 x i8] undef, <{ i8, [23 x i8] }> <{ i8 -86, [23 x i8] zeroinitializer }> }, align 8
+// CHECK64: @__const.foo.A = private unnamed_addr constant { i32, [4 x i8], <{ i8, [23 x i8] }> } { i32 1, [4 x i8] zeroinitializer, <{ i8, [23 x i8] }> <{ i8 -86, [23 x i8] zeroinitializer }> }, align 8
 // @BigGlob = global [40 x i8] c"\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF\FF", align 8
 // CHECK64: @f.p = internal global <{ i8, i8, [22 x i8] }> <{ i8 16, i8 39, [22 x i8] zeroinitializer }>, align 8
 
