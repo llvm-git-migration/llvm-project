@@ -200,7 +200,7 @@ void MachineUniformityAnalysisPass::getAnalysisUsage(AnalysisUsage &AU) const {
 
 bool MachineUniformityAnalysisPass::runOnMachineFunction(MachineFunction &MF) {
   auto &DomTree =
-      getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree().getBase();
+      getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree();
   auto &CI = getAnalysis<MachineCycleInfoWrapperPass>().getCycleInfo();
   // FIXME: Query TTI::hasBranchDivergence. -run-pass seems to end up with a
   // default NoTTI
