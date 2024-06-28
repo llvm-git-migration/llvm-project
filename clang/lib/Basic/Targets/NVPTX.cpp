@@ -59,7 +59,7 @@ NVPTXTargetInfo::NVPTXTargetInfo(const llvm::Triple &Triple,
   // Define available target features
   // These must be defined in sorted order!
   NoAsmVariants = true;
-  GPU = CudaArch::UNUSED;
+  GPU = GpuArch::UNUSED;
 
   // PTX supports f16 as a fundamental type.
   HasLegalHalfType = true;
@@ -175,117 +175,117 @@ void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
   Builder.defineMacro("__NVPTX__");
 
   // Skip setting architecture dependent macros if undefined.
-  if (GPU == CudaArch::UNUSED && !HostTarget)
+  if (GPU == GpuArch::UNUSED && !HostTarget)
     return;
 
   if (Opts.CUDAIsDevice || Opts.OpenMPIsTargetDevice || !HostTarget) {
     // Set __CUDA_ARCH__ for the GPU specified.
     std::string CUDAArchCode = [this] {
       switch (GPU) {
-      case CudaArch::GFX600:
-      case CudaArch::GFX601:
-      case CudaArch::GFX602:
-      case CudaArch::GFX700:
-      case CudaArch::GFX701:
-      case CudaArch::GFX702:
-      case CudaArch::GFX703:
-      case CudaArch::GFX704:
-      case CudaArch::GFX705:
-      case CudaArch::GFX801:
-      case CudaArch::GFX802:
-      case CudaArch::GFX803:
-      case CudaArch::GFX805:
-      case CudaArch::GFX810:
-      case CudaArch::GFX9_GENERIC:
-      case CudaArch::GFX900:
-      case CudaArch::GFX902:
-      case CudaArch::GFX904:
-      case CudaArch::GFX906:
-      case CudaArch::GFX908:
-      case CudaArch::GFX909:
-      case CudaArch::GFX90a:
-      case CudaArch::GFX90c:
-      case CudaArch::GFX940:
-      case CudaArch::GFX941:
-      case CudaArch::GFX942:
-      case CudaArch::GFX10_1_GENERIC:
-      case CudaArch::GFX1010:
-      case CudaArch::GFX1011:
-      case CudaArch::GFX1012:
-      case CudaArch::GFX1013:
-      case CudaArch::GFX10_3_GENERIC:
-      case CudaArch::GFX1030:
-      case CudaArch::GFX1031:
-      case CudaArch::GFX1032:
-      case CudaArch::GFX1033:
-      case CudaArch::GFX1034:
-      case CudaArch::GFX1035:
-      case CudaArch::GFX1036:
-      case CudaArch::GFX11_GENERIC:
-      case CudaArch::GFX1100:
-      case CudaArch::GFX1101:
-      case CudaArch::GFX1102:
-      case CudaArch::GFX1103:
-      case CudaArch::GFX1150:
-      case CudaArch::GFX1151:
-      case CudaArch::GFX1152:
-      case CudaArch::GFX12_GENERIC:
-      case CudaArch::GFX1200:
-      case CudaArch::GFX1201:
-      case CudaArch::AMDGCNSPIRV:
-      case CudaArch::Generic:
-      case CudaArch::LAST:
+      case GpuArch::GFX600:
+      case GpuArch::GFX601:
+      case GpuArch::GFX602:
+      case GpuArch::GFX700:
+      case GpuArch::GFX701:
+      case GpuArch::GFX702:
+      case GpuArch::GFX703:
+      case GpuArch::GFX704:
+      case GpuArch::GFX705:
+      case GpuArch::GFX801:
+      case GpuArch::GFX802:
+      case GpuArch::GFX803:
+      case GpuArch::GFX805:
+      case GpuArch::GFX810:
+      case GpuArch::GFX9_GENERIC:
+      case GpuArch::GFX900:
+      case GpuArch::GFX902:
+      case GpuArch::GFX904:
+      case GpuArch::GFX906:
+      case GpuArch::GFX908:
+      case GpuArch::GFX909:
+      case GpuArch::GFX90a:
+      case GpuArch::GFX90c:
+      case GpuArch::GFX940:
+      case GpuArch::GFX941:
+      case GpuArch::GFX942:
+      case GpuArch::GFX10_1_GENERIC:
+      case GpuArch::GFX1010:
+      case GpuArch::GFX1011:
+      case GpuArch::GFX1012:
+      case GpuArch::GFX1013:
+      case GpuArch::GFX10_3_GENERIC:
+      case GpuArch::GFX1030:
+      case GpuArch::GFX1031:
+      case GpuArch::GFX1032:
+      case GpuArch::GFX1033:
+      case GpuArch::GFX1034:
+      case GpuArch::GFX1035:
+      case GpuArch::GFX1036:
+      case GpuArch::GFX11_GENERIC:
+      case GpuArch::GFX1100:
+      case GpuArch::GFX1101:
+      case GpuArch::GFX1102:
+      case GpuArch::GFX1103:
+      case GpuArch::GFX1150:
+      case GpuArch::GFX1151:
+      case GpuArch::GFX1152:
+      case GpuArch::GFX12_GENERIC:
+      case GpuArch::GFX1200:
+      case GpuArch::GFX1201:
+      case GpuArch::AMDGCNSPIRV:
+      case GpuArch::Generic:
+      case GpuArch::LAST:
         break;
-      case CudaArch::UNKNOWN:
+      case GpuArch::UNKNOWN:
         assert(false && "No GPU arch when compiling CUDA device code.");
         return "";
-      case CudaArch::UNUSED:
-      case CudaArch::SM_20:
+      case GpuArch::UNUSED:
+      case GpuArch::SM_20:
         return "200";
-      case CudaArch::SM_21:
+      case GpuArch::SM_21:
         return "210";
-      case CudaArch::SM_30:
+      case GpuArch::SM_30:
         return "300";
-      case CudaArch::SM_32_:
+      case GpuArch::SM_32_:
         return "320";
-      case CudaArch::SM_35:
+      case GpuArch::SM_35:
         return "350";
-      case CudaArch::SM_37:
+      case GpuArch::SM_37:
         return "370";
-      case CudaArch::SM_50:
+      case GpuArch::SM_50:
         return "500";
-      case CudaArch::SM_52:
+      case GpuArch::SM_52:
         return "520";
-      case CudaArch::SM_53:
+      case GpuArch::SM_53:
         return "530";
-      case CudaArch::SM_60:
+      case GpuArch::SM_60:
         return "600";
-      case CudaArch::SM_61:
+      case GpuArch::SM_61:
         return "610";
-      case CudaArch::SM_62:
+      case GpuArch::SM_62:
         return "620";
-      case CudaArch::SM_70:
+      case GpuArch::SM_70:
         return "700";
-      case CudaArch::SM_72:
+      case GpuArch::SM_72:
         return "720";
-      case CudaArch::SM_75:
+      case GpuArch::SM_75:
         return "750";
-      case CudaArch::SM_80:
+      case GpuArch::SM_80:
         return "800";
-      case CudaArch::SM_86:
+      case GpuArch::SM_86:
         return "860";
-      case CudaArch::SM_87:
+      case GpuArch::SM_87:
         return "870";
-      case CudaArch::SM_89:
+      case GpuArch::SM_89:
         return "890";
-      case CudaArch::SM_90:
-      case CudaArch::SM_90a:
+      case GpuArch::SM_90:
+      case GpuArch::SM_90a:
         return "900";
       }
-      llvm_unreachable("unhandled CudaArch");
+      llvm_unreachable("unhandled GpuArch");
     }();
     Builder.defineMacro("__CUDA_ARCH__", CUDAArchCode);
-    if (GPU == CudaArch::SM_90a)
+    if (GPU == GpuArch::SM_90a)
       Builder.defineMacro("__CUDA_ARCH_FEAT_SM90_ALL", "1");
   }
 }

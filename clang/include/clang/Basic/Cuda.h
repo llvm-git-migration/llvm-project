@@ -52,7 +52,7 @@ const char *CudaVersionToString(CudaVersion V);
 // Input is "Major.Minor"
 CudaVersion CudaStringToVersion(const llvm::Twine &S);
 
-enum class CudaArch {
+enum class GpuArch {
   UNUSED,
   UNKNOWN,
   // TODO: Deprecate and remove GPU architectures older than sm_52.
@@ -133,8 +133,8 @@ enum class CudaArch {
            // public one.
   LAST,
 
-  CudaDefault = CudaArch::SM_52,
-  HIPDefault = CudaArch::GFX906,
+  CudaDefault = GpuArch::SM_52,
+  HIPDefault = GpuArch::GFX906,
 };
 
 enum class CUDAFunctionTarget {
@@ -145,26 +145,26 @@ enum class CUDAFunctionTarget {
   InvalidTarget
 };
 
-static inline bool IsNVIDIAGpuArch(CudaArch A) {
-  return A >= CudaArch::SM_20 && A < CudaArch::GFX600;
+static inline bool IsNVIDIAGpuArch(GpuArch A) {
+  return A >= GpuArch::SM_20 && A < GpuArch::GFX600;
 }
 
-static inline bool IsAMDGpuArch(CudaArch A) {
+static inline bool IsAMDGpuArch(GpuArch A) {
   // Generic processor model is for testing only.
-  return A >= CudaArch::GFX600 && A < CudaArch::Generic;
+  return A >= GpuArch::GFX600 && A < GpuArch::Generic;
 }
 
-const char *CudaArchToString(CudaArch A);
-const char *CudaArchToVirtualArchString(CudaArch A);
+const char *GpuArchToString(GpuArch A);
+const char *GpuArchToVirtualArchString(GpuArch A);
 
 // The input should have the form "sm_20".
-CudaArch StringToCudaArch(llvm::StringRef S);
+GpuArch StringToGpuArch(llvm::StringRef S);
 
-/// Get the earliest CudaVersion that supports the given CudaArch.
-CudaVersion MinVersionForCudaArch(CudaArch A);
+/// Get the earliest CudaVersion that supports the given GpuArch.
+CudaVersion MinVersionForGpuArch(GpuArch A);
 
-/// Get the latest CudaVersion that supports the given CudaArch.
-CudaVersion MaxVersionForCudaArch(CudaArch A);
+/// Get the latest CudaVersion that supports the given GpuArch.
+CudaVersion MaxVersionForGpuArch(GpuArch A);
 
 //  Various SDK-dependent features that affect CUDA compilation
 enum class CudaFeature {

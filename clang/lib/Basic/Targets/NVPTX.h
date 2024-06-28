@@ -62,7 +62,7 @@ static const int NVPTXDWARFAddrSpaceMap[] = {
 
 class LLVM_LIBRARY_VISIBILITY NVPTXTargetInfo : public TargetInfo {
   static const char *const GCCRegNames[];
-  CudaArch GPU;
+  GpuArch GPU;
   uint32_t PTXVersion;
   std::unique_ptr<TargetInfo> HostTarget;
 
@@ -79,8 +79,8 @@ public:
   initFeatureMap(llvm::StringMap<bool> &Features, DiagnosticsEngine &Diags,
                  StringRef CPU,
                  const std::vector<std::string> &FeaturesVec) const override {
-    if (GPU != CudaArch::UNUSED)
-      Features[CudaArchToString(GPU)] = true;
+    if (GPU != GpuArch::UNUSED)
+      Features[GpuArchToString(GPU)] = true;
     Features["ptx" + std::to_string(PTXVersion)] = true;
     return TargetInfo::initFeatureMap(Features, Diags, CPU, FeaturesVec);
   }
@@ -121,18 +121,18 @@ public:
   }
 
   bool isValidCPUName(StringRef Name) const override {
-    return StringToCudaArch(Name) != CudaArch::UNKNOWN;
+    return StringToGpuArch(Name) != GpuArch::UNKNOWN;
   }
 
   void fillValidCPUList(SmallVectorImpl<StringRef> &Values) const override {
-    for (int i = static_cast<int>(CudaArch::SM_20);
-         i < static_cast<int>(CudaArch::Generic); ++i)
-      Values.emplace_back(CudaArchToString(static_cast<CudaArch>(i)));
+    for (int i = static_cast<int>(GpuArch::SM_20);
+         i < static_cast<int>(GpuArch::Generic); ++i)
+      Values.emplace_back(GpuArchToString(static_cast<GpuArch>(i)));
   }
 
   bool setCPU(const std::string &Name) override {
-    GPU = StringToCudaArch(Name);
-    return GPU != CudaArch::UNKNOWN;
+    GPU = StringToGpuArch(Name);
+    return GPU != GpuArch::UNKNOWN;
   }
 
   void setSupportedOpenCLOpts() override {
@@ -183,7 +183,7 @@ public:
   bool hasBitIntType() const override { return true; }
   bool hasBFloat16Type() const override { return true; }
 
-  CudaArch getGPU() const { return GPU; }
+  GpuArch getGPU() const { return GPU; }
 };
 } // namespace targets
 } // namespace clang

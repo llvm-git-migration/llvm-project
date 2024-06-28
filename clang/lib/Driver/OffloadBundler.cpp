@@ -79,7 +79,7 @@ OffloadTargetInfo::OffloadTargetInfo(const StringRef Target,
   auto TargetFeatures = Target.split(':');
   auto TripleOrGPU = TargetFeatures.first.rsplit('-');
 
-  if (clang::StringToCudaArch(TripleOrGPU.second) != clang::CudaArch::UNKNOWN) {
+  if (clang::StringToGpuArch(TripleOrGPU.second) != clang::GpuArch::UNKNOWN) {
     auto KindTriple = TripleOrGPU.first.split('-');
     this->OffloadKind = KindTriple.first;
 
