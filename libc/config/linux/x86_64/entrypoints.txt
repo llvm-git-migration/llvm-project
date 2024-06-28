@@ -604,6 +604,7 @@ if(LIBC_TYPES_HAS_FLOAT16)
       libc.src.math.f16addf128
       libc.src.math.f16divf128
       libc.src.math.f16fmaf128
+      libc.src.math.f16subf128
     )
   endif()
 endif()
