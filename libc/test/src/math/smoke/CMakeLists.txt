@@ -3661,6 +3661,21 @@ add_fp_unittest(
 )
 
 add_fp_unittest(
+  f16addl_test
+  SUITE
+    libc-math-smoke-tests
+  SRCS
+    f16addl_test.cpp
+  HDRS
+    AddTest.h
+  DEPENDS
+    libc.hdr.errno_macros
+    libc.hdr.fenv_macros
+    libc.src.__support.FPUtil.basic_operations
+    libc.src.math.f16addl
+)
+
+add_fp_unittest(
   f16addf128_test
   SUITE
     libc-math-smoke-tests
