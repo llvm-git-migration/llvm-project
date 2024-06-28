@@ -9125,18 +9125,27 @@ public:
       if (MaskVF != 0)
         VF = std::min(VF, MaskVF);
       for (Value *V : VL.take_front(VF)) {
-        if (isa<UndefValue>(V)) {
-          Vals.push_back(cast<Constant>(V));
-          continue;
+        Type *Ty = V->getType();
+        Type *ScalarTy = Ty->getScalarType();
+        unsigned VNumElements = getNumElements(Ty);
+        for (unsigned I = 0; I != VNumElements; ++I) {
+          if (isa<PoisonValue>(V)) {
+            Vals.push_back(PoisonValue::get(ScalarTy));
+            continue;
+          }
+          if (isa<UndefValue>(V)) {
+            Vals.push_back(UndefValue::get(ScalarTy));
+            continue;
+          }
+          Vals.push_back(Constant::getNullValue(ScalarTy));
         }
-        Vals.push_back(Constant::getNullValue(V->getType()));
       }
       return ConstantVector::get(Vals);
     }
     return ConstantVector::getSplat(
         ElementCount::getFixed(
             cast<FixedVectorType>(Root->getType())->getNumElements()),
-        getAllOnesValue(*R.DL, ScalarTy));
+        getAllOnesValue(*R.DL, ScalarTy->getScalarType()));
   }
   InstructionCost createFreeze(InstructionCost Cost) { return Cost; }
   /// Finalize emission of the shuffles.
