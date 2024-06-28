@@ -13,20 +13,16 @@
 
 #include "AArch64InstrInfo.h"
 #include "AArch64Subtarget.h"
-#include "Utils/AArch64BaseInfo.h"
 #include "llvm/CodeGen/IndirectThunks.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineOperand.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/CodeGen.h"
-#include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Target/TargetMachine.h"
 #include <cassert>
 
@@ -36,37 +32,42 @@ using namespace llvm;
 
 #define AARCH64_SLS_HARDENING_NAME "AArch64 sls hardening pass"
 
+static const char SLSBLRNamePrefix[] = "__llvm_slsblr_thunk_";
+
 namespace {
 
-class AArch64SLSHardening : public MachineFunctionPass {
+// Set of inserted thunks: bitmask with bits corresponding to
+// indexes in SLSBLRThunks array.
+typedef uint32_t ThunksSet;
+
+struct SLSBLRThunkInserter : ThunkInserter<SLSBLRThunkInserter, ThunksSet> {
 public:
-  const TargetInstrInfo *TII;
-  const TargetRegisterInfo *TRI;
-  const AArch64Subtarget *ST;
-
-  static char ID;
-
-  AArch64SLSHardening() : MachineFunctionPass(ID) {
-    initializeAArch64SLSHardeningPass(*PassRegistry::getPassRegistry());
+  const char *getThunkPrefix() { return SLSBLRNamePrefix; }
+  bool mayUseThunk(const MachineFunction &MF) {
+    // FIXME: ComdatThunks is only accumulated until the first thunk is created.
+    ComdatThunks &= !MF.getSubtarget<AArch64Subtarget>().hardenSlsNoComdat();
+    // We are inserting barriers aside from thunk calls, so
+    // check hardenSlsRetBr() as well.
+    return MF.getSubtarget<AArch64Subtarget>().hardenSlsBlr() ||
+           MF.getSubtarget<AArch64Subtarget>().hardenSlsRetBr();
   }
-
-  bool runOnMachineFunction(MachineFunction &Fn) override;
-
-  StringRef getPassName() const override { return AARCH64_SLS_HARDENING_NAME; }
+  ThunksSet insertThunks(MachineModuleInfo &MMI, MachineFunction &MF,
+                         ThunksSet ExistingThunks);
+  void populateThunk(MachineFunction &MF);
 
 private:
-  bool hardenReturnsAndBRs(MachineBasicBlock &MBB) const;
-  bool hardenBLRs(MachineBasicBlock &MBB) const;
-  MachineBasicBlock &ConvertBLRToBL(MachineBasicBlock &MBB,
-                                    MachineBasicBlock::instr_iterator) const;
+  bool ComdatThunks = true;
+
+  bool hardenReturnsAndBRs(MachineModuleInfo &MMI, MachineBasicBlock &MBB);
+  bool hardenBLRs(MachineModuleInfo &MMI, MachineBasicBlock &MBB,
+                  ThunksSet &Thunks);
+
+  void convertBLRToBL(MachineModuleInfo &MMI, MachineBasicBlock &MBB,
+                      MachineBasicBlock::instr_iterator MBBI,
+                      ThunksSet &Thunks);
 };
 
 } // end anonymous namespace
-
-char AArch64SLSHardening::ID = 0;
-
-INITIALIZE_PASS(AArch64SLSHardening, "aarch64-sls-hardening",
-                AARCH64_SLS_HARDENING_NAME, false, false)
 
 static void insertSpeculationBarrier(const AArch64Subtarget *ST,
                                      MachineBasicBlock &MBB,
@@ -90,18 +91,18 @@ static void insertSpeculationBarrier(const AArch64Subtarget *ST,
     BuildMI(MBB, MBBI, DL, TII->get(BarrierOpc));
 }
 
-bool AArch64SLSHardening::runOnMachineFunction(MachineFunction &MF) {
-  ST = &MF.getSubtarget<AArch64Subtarget>();
-  TII = MF.getSubtarget().getInstrInfo();
-  TRI = MF.getSubtarget().getRegisterInfo();
+ThunksSet SLSBLRThunkInserter::insertThunks(MachineModuleInfo &MMI,
+                                            MachineFunction &MF,
+                                            ThunksSet ExistingThunks) {
+  const AArch64Subtarget *ST = &MF.getSubtarget<AArch64Subtarget>();
 
-  bool Modified = false;
   for (auto &MBB : MF) {
-    Modified |= hardenReturnsAndBRs(MBB);
-    Modified |= hardenBLRs(MBB);
+    if (ST->hardenSlsRetBr())
+      hardenReturnsAndBRs(MMI, MBB);
+    if (ST->hardenSlsBlr())
+      hardenBLRs(MMI, MBB, ExistingThunks);
   }
-
-  return Modified;
+  return ExistingThunks;
 }
 
 static bool isBLR(const MachineInstr &MI) {
@@ -120,9 +121,10 @@ static bool isBLR(const MachineInstr &MI) {
   return false;
 }
 
-bool AArch64SLSHardening::hardenReturnsAndBRs(MachineBasicBlock &MBB) const {
-  if (!ST->hardenSlsRetBr())
-    return false;
+bool SLSBLRThunkInserter::hardenReturnsAndBRs(MachineModuleInfo &MMI,
+                                              MachineBasicBlock &MBB) {
+  const AArch64Subtarget *ST =
+      &MBB.getParent()->getSubtarget<AArch64Subtarget>();
   bool Modified = false;
   MachineBasicBlock::iterator MBBI = MBB.getFirstTerminator(), E = MBB.end();
   MachineBasicBlock::iterator NextMBBI;
@@ -138,12 +140,11 @@ bool AArch64SLSHardening::hardenReturnsAndBRs(MachineBasicBlock &MBB) const {
   return Modified;
 }
 
-static const char SLSBLRNamePrefix[] = "__llvm_slsblr_thunk_";
-
+static const unsigned NumPermittedRegs = 29;
 static const struct ThunkNameAndReg {
   const char* Name;
   Register Reg;
-} SLSBLRThunks[] = {
+} SLSBLRThunks[NumPermittedRegs] = {
   { "__llvm_slsblr_thunk_x0",  AArch64::X0},
   { "__llvm_slsblr_thunk_x1",  AArch64::X1},
   { "__llvm_slsblr_thunk_x2",  AArch64::X2},
@@ -180,34 +181,11 @@ static const struct ThunkNameAndReg {
   { "__llvm_slsblr_thunk_x31",  AArch64::XZR},
 };
 
-namespace {
-struct SLSBLRThunkInserter : ThunkInserter<SLSBLRThunkInserter> {
-  const char *getThunkPrefix() { return SLSBLRNamePrefix; }
-  bool mayUseThunk(const MachineFunction &MF) {
-    // FIXME: ComdatThunks is only accumulated until the first thunk is created.
-    ComdatThunks &= !MF.getSubtarget<AArch64Subtarget>().hardenSlsNoComdat();
-    return MF.getSubtarget<AArch64Subtarget>().hardenSlsBlr();
-  }
-  bool insertThunks(MachineModuleInfo &MMI, MachineFunction &MF,
-                    bool ExistingThunks);
-  void populateThunk(MachineFunction &MF);
-
-private:
-  bool ComdatThunks = true;
-};
-} // namespace
-
-bool SLSBLRThunkInserter::insertThunks(MachineModuleInfo &MMI,
-                                       MachineFunction &MF,
-                                       bool ExistingThunks) {
-  if (ExistingThunks)
-    return false;
-  // FIXME: It probably would be possible to filter which thunks to produce
-  // based on which registers are actually used in BLR instructions in this
-  // function. But would that be a worthwhile optimization?
-  for (auto T : SLSBLRThunks)
-    createThunkFunction(MMI, T.Name, ComdatThunks);
-  return true;
+unsigned getThunkIndex(Register Reg) {
+  for (unsigned I = 0; I < NumPermittedRegs; ++I)
+    if (SLSBLRThunks[I].Reg == Reg)
+      return I;
+  llvm_unreachable("Unexpected register");
 }
 
 void SLSBLRThunkInserter::populateThunk(MachineFunction &MF) {
@@ -257,8 +235,10 @@ void SLSBLRThunkInserter::populateThunk(MachineFunction &MF) {
                            Entry->end(), DebugLoc(), true /*AlwaysUseISBDSB*/);
 }
 
-MachineBasicBlock &AArch64SLSHardening::ConvertBLRToBL(
-    MachineBasicBlock &MBB, MachineBasicBlock::instr_iterator MBBI) const {
+void SLSBLRThunkInserter::convertBLRToBL(MachineModuleInfo &MMI,
+                                         MachineBasicBlock &MBB,
+                                         MachineBasicBlock::instr_iterator MBBI,
+                                         ThunksSet &Thunks) {
   // Transform a BLR to a BL as follows:
   // Before:
   //   |-----------------------------|
@@ -317,37 +297,16 @@ MachineBasicBlock &AArch64SLSHardening::ConvertBLRToBL(
   }
   DebugLoc DL = BLR.getDebugLoc();
 
-  // If we'd like to support also BLRAA and BLRAB instructions, we'd need
-  // a lot more different kind of thunks.
-  // For example, a
-  //
-  // BLRAA xN, xM
-  //
-  // instruction probably would need to be transformed to something like:
-  //
-  // BL __llvm_slsblraa_thunk_x<N>_x<M>
-  //
-  // __llvm_slsblraa_thunk_x<N>_x<M>:
-  //   BRAA x<N>, x<M>
-  //   barrierInsts
-  //
-  // Given that about 30 different values of N are possible and about 30
-  // different values of M are possible in the above, with the current way
-  // of producing indirect thunks, we'd be producing about 30 times 30, i.e.
-  // about 900 thunks (where most might not be actually called). This would
-  // multiply further by two to support both BLRAA and BLRAB variants of those
-  // instructions.
-  // If we'd want to support this, we'd probably need to look into a different
-  // way to produce thunk functions, based on which variants are actually
-  // needed, rather than producing all possible variants.
-  // So far, LLVM does never produce BLRA* instructions, so let's leave this
-  // for the future when LLVM can start producing BLRA* instructions.
   MachineFunction &MF = *MBBI->getMF();
   MCContext &Context = MBB.getParent()->getContext();
-  auto ThunkIt =
-      llvm::find_if(SLSBLRThunks, [Reg](auto T) { return T.Reg == Reg; });
-  assert (ThunkIt != std::end(SLSBLRThunks));
-  MCSymbol *Sym = Context.getOrCreateSymbol(ThunkIt->Name);
+  const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
+  unsigned ThunkIndex = getThunkIndex(Reg);
+  StringRef ThunkName = SLSBLRThunks[ThunkIndex].Name;
+  MCSymbol *Sym = Context.getOrCreateSymbol(ThunkName);
+  if (!(Thunks & (1u << ThunkIndex))) {
+    Thunks |= 1u << ThunkIndex;
+    createThunkFunction(MMI, ThunkName, ComdatThunks);
+  }
 
   MachineInstr *BL = BuildMI(MBB, MBBI, DL, TII->get(BLOpcode)).addSym(Sym);
 
@@ -385,13 +344,11 @@ MachineBasicBlock &AArch64SLSHardening::ConvertBLRToBL(
                                            RegIsKilled /*isKill*/));
   // Remove BLR instruction
   MBB.erase(MBBI);
-
-  return MBB;
 }
 
-bool AArch64SLSHardening::hardenBLRs(MachineBasicBlock &MBB) const {
-  if (!ST->hardenSlsBlr())
-    return false;
+bool SLSBLRThunkInserter::hardenBLRs(MachineModuleInfo &MMI,
+                                     MachineBasicBlock &MBB,
+                                     ThunksSet &Thunks) {
   bool Modified = false;
   MachineBasicBlock::instr_iterator MBBI = MBB.instr_begin(),
                                     E = MBB.instr_end();
@@ -400,31 +357,30 @@ bool AArch64SLSHardening::hardenBLRs(MachineBasicBlock &MBB) const {
     MachineInstr &MI = *MBBI;
     NextMBBI = std::next(MBBI);
     if (isBLR(MI)) {
-      ConvertBLRToBL(MBB, MBBI);
+      convertBLRToBL(MMI, MBB, MBBI, Thunks);
       Modified = true;
     }
   }
   return Modified;
 }
 
-FunctionPass *llvm::createAArch64SLSHardeningPass() {
-  return new AArch64SLSHardening();
-}
-
 namespace {
-class AArch64IndirectThunks : public ThunkInserterPass<SLSBLRThunkInserter> {
+class AArch64SLSHardening : public ThunkInserterPass<SLSBLRThunkInserter> {
 public:
   static char ID;
 
-  AArch64IndirectThunks() : ThunkInserterPass(ID) {}
+  AArch64SLSHardening() : ThunkInserterPass(ID) {}
 
-  StringRef getPassName() const override { return "AArch64 Indirect Thunks"; }
+  StringRef getPassName() const override { return AARCH64_SLS_HARDENING_NAME; }
 };
 
 } // end anonymous namespace
 
-char AArch64IndirectThunks::ID = 0;
+char AArch64SLSHardening::ID = 0;
 
-FunctionPass *llvm::createAArch64IndirectThunks() {
-  return new AArch64IndirectThunks();
+INITIALIZE_PASS(AArch64SLSHardening, "aarch64-sls-hardening",
+                AARCH64_SLS_HARDENING_NAME, false, false)
+
+FunctionPass *llvm::createAArch64SLSHardeningPass() {
+  return new AArch64SLSHardening();
 }
