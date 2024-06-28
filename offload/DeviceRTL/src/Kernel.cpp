@@ -34,6 +34,7 @@ inititializeRuntime(bool IsSPMD, KernelEnvironmentTy &KernelEnvironment,
   mapping::init(IsSPMD);
   state::init(IsSPMD, KernelEnvironment, KernelLaunchEnvironment);
   allocator::init(IsSPMD, KernelEnvironment);
+  __init_thread_dst();
 }
 
 /// Simple generic state machine for worker threads.
