@@ -11627,7 +11627,8 @@ Value *BoUpSLP::gather(ArrayRef<Value *> VL, Value *Root, Type *ScalarTy) {
                                       Type *Ty) {
     Value *Scalar = V;
     if (Scalar->getType() != Ty) {
-      assert(Scalar->getType()->isIntegerTy() && Ty->isIntegerTy() &&
+      assert(Scalar->getType()->getScalarType()->isIntegerTy() &&
+             Ty->getScalarType()->isIntegerTy() &&
              "Expected integer types only.");
       Value *V = Scalar;
       if (auto *CI = dyn_cast<CastInst>(Scalar);
@@ -11641,10 +11642,20 @@ Value *BoUpSLP::gather(ArrayRef<Value *> VL, Value *Root, Type *ScalarTy) {
           V, Ty, !isKnownNonNegative(Scalar, SimplifyQuery(*DL)));
     }
 
-    Vec = Builder.CreateInsertElement(Vec, Scalar, Builder.getInt32(Pos));
-    auto *InsElt = dyn_cast<InsertElementInst>(Vec);
-    if (!InsElt)
-      return Vec;
+    Instruction *InsElt;
+    if (auto *VecTy = dyn_cast<FixedVectorType>(Scalar->getType())) {
+      Vec = InsElt = Builder.CreateInsertVector(
+          Vec->getType(), Vec, V,
+          Builder.getInt64(Pos * VecTy->getNumElements()));
+      auto *II = dyn_cast<IntrinsicInst>(InsElt);
+      if (!(II && II->getIntrinsicID() == Intrinsic::vector_insert))
+        return Vec;
+    } else {
+      Vec = Builder.CreateInsertElement(Vec, Scalar, Builder.getInt32(Pos));
+      InsElt = dyn_cast<InsertElementInst>(Vec);
+      if (!InsElt)
+        return Vec;
+    }
     GatherShuffleExtractSeq.insert(InsElt);
     CSEBlocks.insert(InsElt->getParent());
     // Add to our 'need-to-extract' list.
