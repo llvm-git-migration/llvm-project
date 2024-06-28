@@ -253,6 +253,21 @@ static FixedVectorType *getWidenedType(Type *ScalarTy, unsigned VF) {
                               VF * getNumElements(ScalarTy));
 }
 
+static void transformScalarShuffleIndiciesToVector(unsigned VecTyNumElements,
+                                                   SmallVectorImpl<int> &Mask) {
+  // The ShuffleBuilder implementation use shufflevector to splat an "element".
+  // But the element have different meaning for SLP (scalar) and REVEC
+  // (vector). We need to expand Mask into masks which shufflevector can use
+  // directly.
+  SmallVector<int> NewMask(Mask.size() * VecTyNumElements);
+  for (size_t I = 0, E = Mask.size(); I != E; ++I)
+    for (unsigned J = 0; J != VecTyNumElements; ++J)
+      NewMask[I * VecTyNumElements + J] = Mask[I] == PoisonMaskElem
+                                              ? PoisonMaskElem
+                                              : Mask[I] * VecTyNumElements + J;
+  Mask.swap(NewMask);
+}
+
 /// \returns True if the value is a constant (but not globals/constant
 /// expressions).
 static bool isConstant(Value *V) {
