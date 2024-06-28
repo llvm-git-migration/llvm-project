@@ -9713,6 +9713,17 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
         }
         VecCost = std::min(VecCost, IntrinsicCost);
       }
+      if (auto *SI = dyn_cast<SelectInst>(VL0)) {
+        auto *CondType =
+            getWidenedType(SI->getCondition()->getType(), VL.size());
+        unsigned CondNumElements = CondType->getNumElements();
+        unsigned VecTyNumElements = getNumElements(VecTy);
+        if (CondNumElements != VecTyNumElements)
+          VecCost += TTI->getShuffleCost(
+              TTI::SK_PermuteSingleSrc, CondType,
+              createReplicatedMask(VecTyNumElements / CondNumElements,
+                                   CondNumElements));
+      }
       return VecCost + CommonCost;
     };
     return GetCostDiff(GetScalarCost, GetVectorCost);
@@ -13196,6 +13207,15 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E, bool PostponedPHIs) {
           False = Builder.CreateIntCast(False, VecTy, GetOperandSignedness(2));
       }
 
+      unsigned CondNumElements = getNumElements(Cond->getType());
+      unsigned TrueNumElements = getNumElements(True->getType());
+      if (CondNumElements != TrueNumElements) {
+        // When the return type is i1 but the source is fixed vector type, we
+        // need to duplicate the condition value.
+        Cond = Builder.CreateShuffleVector(
+            Cond, createReplicatedMask(TrueNumElements / CondNumElements,
+                                       CondNumElements));
+      }
       Value *V = Builder.CreateSelect(Cond, True, False);
       V = FinalShuffle(V, E, VecTy);
 
