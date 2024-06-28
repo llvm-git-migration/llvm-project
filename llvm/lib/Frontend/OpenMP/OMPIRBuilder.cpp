@@ -5235,23 +5235,13 @@ static void emitTargetOutlinedFunction(
 
 void OpenMPIRBuilder::emitOffloadingArraysAndArgs(
     InsertPointTy AllocaIP, InsertPointTy CodeGenIP, TargetDataInfo &Info,
-    TargetDataRTArgs &RTArgs, GenMapInfoCallbackTy GenMapInfoCB,
-    bool IsNonContiguous, bool ForEndCall,
-    function_ref<void(unsigned int, Value *)> DeviceAddrCB,
+    TargetDataRTArgs &RTArgs, MapInfosTy &CombinedInfo, bool IsNonContiguous,
+    bool ForEndCall, function_ref<void(unsigned int, Value *)> DeviceAddrCB,
     function_ref<Value *(unsigned int)> CustomMapperCB) {
-  emitOffloadingArrays(AllocaIP, CodeGenIP, GenMapInfoCB, Info, IsNonContiguous,
+  emitOffloadingArrays(AllocaIP, CodeGenIP, CombinedInfo, Info, IsNonContiguous,
                        DeviceAddrCB, CustomMapperCB);
   emitOffloadingArraysArgument(Builder, RTArgs, Info, ForEndCall);
- }
- void OpenMPIRBuilder::emitOffloadingArraysAndArgs(
-     InsertPointTy AllocaIP, InsertPointTy CodeGenIP, TargetDataInfo &Info,
-     TargetDataRTArgs &RTArgs, MapInfosTy &CombinedInfo, bool IsNonContiguous,
-     bool ForEndCall, function_ref<void(unsigned int, Value *)> DeviceAddrCB,
-     function_ref<Value *(unsigned int)> CustomMapperCB) {
-   emitOffloadingArrays(AllocaIP, CodeGenIP, CombinedInfo, Info,
-                        IsNonContiguous, DeviceAddrCB, CustomMapperCB);
-   emitOffloadingArraysArgument(Builder, RTArgs, Info, ForEndCall);
- }
+}
 
  static void emitTargetCall(OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder,
                            OpenMPIRBuilder::InsertPointTy AllocaIP,
@@ -5264,9 +5254,10 @@ void OpenMPIRBuilder::emitOffloadingArraysAndArgs(
       /*RequiresDevicePointerInfo=*/false,
       /*SeparateBeginEndCalls=*/true);
 
+  OpenMPIRBuilder::MapInfosTy &MapInfo = GenMapInfoCB(Builder.saveIP());
   OpenMPIRBuilder::TargetDataRTArgs RTArgs;
   OMPBuilder.emitOffloadingArraysAndArgs(AllocaIP, Builder.saveIP(), Info,
-                                         RTArgs, GenMapInfoCB,
+                                         RTArgs, MapInfo,
                                          /*IsNonContiguous=*/true,
                                          /*ForEndCall=*/false);
 
@@ -5578,17 +5569,6 @@ void OpenMPIRBuilder::emitNonContiguousDescriptor(InsertPointTy AllocaIP,
   }
 }
 
-void OpenMPIRBuilder::emitOffloadingArrays(
-    InsertPointTy AllocaIP, InsertPointTy CodeGenIP,
-    GenMapInfoCallbackTy GenMapInfoCB, TargetDataInfo &Info,
-    bool IsNonContiguous,
-    function_ref<void(unsigned int, Value *)> DeviceAddrCB,
-    function_ref<Value *(unsigned int)> CustomMapperCB) {
-
-  OpenMPIRBuilder::MapInfosTy &MapInfo = GenMapInfoCB(CodeGenIP);
-  emitOffloadingArrays(AllocaIP, CodeGenIP, MapInfo,
-                       Info, IsNonContiguous, DeviceAddrCB, CustomMapperCB);
-}
 void OpenMPIRBuilder::emitOffloadingArrays(
     InsertPointTy AllocaIP, InsertPointTy CodeGenIP, MapInfosTy &CombinedInfo,
     TargetDataInfo &Info, bool IsNonContiguous,
