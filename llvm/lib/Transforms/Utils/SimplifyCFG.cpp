@@ -7468,6 +7468,91 @@ bool SimplifyCFGOpt::simplifyCondBranch(BranchInst *BI, IRBuilder<> &Builder) {
           if (mergeConditionalStores(PBI, BI, DTU, DL, TTI))
             return requestResimplify();
 
+  {
+    // Fold the following pattern:
+    // bb0:
+    //   br i1 %cond1, label %bb1, label %bb2
+    // bb1:
+    //   br i1 %cond2, label %bb3, label %bb4
+    // bb2:
+    //   br i1 %cond2, label %bb4, label %bb3
+    // bb3:
+    //   ...
+    // bb4:
+    //   ...
+    // into
+    // bb0:
+    //   %cond = xor i1 %cond1, %cond2
+    //   br i1 %cond, label %bb4, label %bb3
+    // bb3:
+    //   ...
+    // bb4:
+    //   ...
+    // NOTE: %cond2 always dominates the terminator of bb0.
+
+    BasicBlock *BB1 = BI->getSuccessor(0);
+    BasicBlock *BB2 = BI->getSuccessor(1);
+    auto IsSimpleSuccessor = [BB](BasicBlock *Succ, BranchInst *&SuccBI) {
+      if (Succ == BB)
+        return false;
+      if (Succ->sizeWithoutDebug() > 1)
+        return false;
+      SuccBI = dyn_cast<BranchInst>(Succ->getTerminator());
+      if (!SuccBI || !SuccBI->isConditional())
+        return false;
+      BasicBlock *Succ1 = SuccBI->getSuccessor(0);
+      BasicBlock *Succ2 = SuccBI->getSuccessor(1);
+      return Succ1 != Succ && Succ2 != Succ && Succ1 != BB && Succ2 != BB &&
+             !isa<PHINode>(Succ1->front()) && !isa<PHINode>(Succ2->front());
+    };
+    BranchInst *BB1BI, *BB2BI;
+    if (IsSimpleSuccessor(BB1, BB1BI) && IsSimpleSuccessor(BB2, BB2BI) &&
+        BB1BI->getCondition() == BB2BI->getCondition() &&
+        BB1BI->getSuccessor(0) == BB2BI->getSuccessor(1) &&
+        BB1BI->getSuccessor(1) == BB2BI->getSuccessor(0)) {
+      BasicBlock *BB3 = BB1BI->getSuccessor(0);
+      BasicBlock *BB4 = BB1BI->getSuccessor(1);
+      IRBuilder<> Builder(BI);
+      BI->setCondition(
+          Builder.CreateXor(BI->getCondition(), BB1BI->getCondition()));
+      BB1->removePredecessor(BB);
+      BI->setSuccessor(0, BB4);
+      BB2->removePredecessor(BB);
+      BI->setSuccessor(1, BB3);
+      if (DTU) {
+        SmallVector<DominatorTree::UpdateType, 4> Updates;
+        Updates.push_back({DominatorTree::Delete, BB, BB1});
+        Updates.push_back({DominatorTree::Insert, BB, BB4});
+        Updates.push_back({DominatorTree::Delete, BB, BB2});
+        Updates.push_back({DominatorTree::Insert, BB, BB3});
+
+        DTU->applyUpdates(Updates);
+      }
+      bool HasWeight = false;
+      uint64_t BBTWeight, BBFWeight;
+      if (extractBranchWeights(*BI, BBTWeight, BBFWeight))
+        HasWeight = true;
+      else
+        BBTWeight = BBFWeight = 1;
+      uint64_t BB1TWeight, BB1FWeight;
+      if (extractBranchWeights(*BB1BI, BB1TWeight, BB1FWeight))
+        HasWeight = true;
+      else
+        BB1TWeight = BB1FWeight = 1;
+      uint64_t BB2TWeight, BB2FWeight;
+      if (extractBranchWeights(*BB2BI, BB2TWeight, BB2FWeight))
+        HasWeight = true;
+      else
+        BB2TWeight = BB2FWeight = 1;
+      uint64_t Weights[2] = {BBTWeight * BB1FWeight + BBFWeight * BB2TWeight,
+                             BBTWeight * BB1TWeight + BBFWeight * BB2FWeight};
+      if (HasWeight) {
+        FitWeights(Weights);
+        setBranchWeights(BI, Weights[0], Weights[1], /*IsExpected=*/false);
+      }
+    }
+  }
+
   return false;
 }
 
