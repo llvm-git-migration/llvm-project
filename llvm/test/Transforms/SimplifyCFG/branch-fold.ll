@@ -146,3 +146,298 @@ Succ:
 }
 
 declare void @dummy()
+
+define void @fold_nested_branch1(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[BB4:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB4]], label [[BB3]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond2, label %bb4, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+define void @fold_nested_branch2(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[COMMON_RET:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB4:%.*]], label [[BB3]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb5
+
+bb2:
+  br i1 %cond2, label %bb4, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+
+bb5:
+  ret void
+}
+
+define void @fold_nested_branch3(i1 %cond1, i1 %cond2, i1 %cond3) {
+; CHECK-LABEL: @fold_nested_branch3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[BB4:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND3:%.*]], label [[BB4]], label [[BB3]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond3, label %bb4, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+define void @fold_nested_branch4(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch4(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[BB4:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB4]], label [[BB3]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  call void @sideeffect1()
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond2, label %bb4, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+define i32 @fold_nested_branch5(i1 %cond1, i1 %cond2, i32 %x) {
+; CHECK-LABEL: @fold_nested_branch5(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[COMMON_RET:%.*]], label [[BB4:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB4]], label [[COMMON_RET]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi i32 [ 0, [[BB4]] ], [ 0, [[BB1]] ], [ [[X:%.*]], [[BB2]] ]
+; CHECK-NEXT:    ret i32 [[COMMON_RET_OP]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond2, label %bb4, label %bb3
+
+bb3:
+  %ret = phi i32 [ 0, %bb1 ], [ %x, %bb2 ]
+  ret i32 %ret
+
+bb4:
+  call void @sideeffect2()
+  ret i32 0
+}
+
+define void @fold_nested_branch6(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch6(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[COND1_NOT:%.*]] = xor i1 [[COND1:%.*]], true
+; CHECK-NEXT:    [[BRMERGE:%.*]] = select i1 [[COND1_NOT]], i1 true, i1 [[COND2:%.*]]
+; CHECK-NEXT:    br i1 [[BRMERGE]], label [[BB3:%.*]], label [[BB4:%.*]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond2, label %bb1, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+define void @fold_nested_branch7(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch7(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[BB0:%.*]]
+; CHECK:       bb0:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[BB4:%.*]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB0]], label [[BB3]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br label %bb0
+
+bb0:
+  br i1 %cond1, label %bb1, label %bb2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4
+
+bb2:
+  br i1 %cond2, label %bb0, label %bb3
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+; freq(bb4) = 1 * 4 + 2 * 5 = 14
+; freq(bb3) = 1 * 3 + 2 * 6 = 15
+define void @fold_nested_branch_prof(i1 %cond1, i1 %cond2) {
+; CHECK-LABEL: @fold_nested_branch_prof(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br i1 [[COND1:%.*]], label [[BB1:%.*]], label [[BB2:%.*]], !prof [[PROF0:![0-9]+]]
+; CHECK:       bb1:
+; CHECK-NEXT:    br i1 [[COND2:%.*]], label [[BB3:%.*]], label [[BB4:%.*]], !prof [[PROF1:![0-9]+]]
+; CHECK:       bb2:
+; CHECK-NEXT:    br i1 [[COND2]], label [[BB4]], label [[BB3]], !prof [[PROF2:![0-9]+]]
+; CHECK:       common.ret:
+; CHECK-NEXT:    ret void
+; CHECK:       bb3:
+; CHECK-NEXT:    call void @sideeffect1()
+; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK:       bb4:
+; CHECK-NEXT:    call void @sideeffect2()
+; CHECK-NEXT:    br label [[COMMON_RET]]
+;
+entry:
+  br i1 %cond1, label %bb1, label %bb2, !prof !0 ; 1:2
+
+bb1:
+  br i1 %cond2, label %bb3, label %bb4, !prof !1 ; 3:4
+
+bb2:
+  br i1 %cond2, label %bb4, label %bb3, !prof !2 ; 5:6
+
+bb3:
+  call void @sideeffect1()
+  ret void
+
+bb4:
+  call void @sideeffect2()
+  ret void
+}
+
+!0 = !{!"branch_weights", i32 1, i32 2}
+!1 = !{!"branch_weights", i32 3, i32 4}
+!2 = !{!"branch_weights", i32 5, i32 6}
+
+declare void @sideeffect1()
+declare void @sideeffect2()
