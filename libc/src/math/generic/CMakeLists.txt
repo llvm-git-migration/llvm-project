@@ -3829,6 +3829,19 @@ add_entrypoint_object(
 )
 
 add_entrypoint_object(
+  f16sub
+  SRCS
+    f16sub.cpp
+  HDRS
+    ../f16sub.h
+  DEPENDS
+    libc.src.__support.macros.properties.types
+    libc.src.__support.FPUtil.generic.add_sub
+  COMPILE_OPTIONS
+    -O3
+)
+
+add_entrypoint_object(
   f16subf
   SRCS
     f16subf.cpp
