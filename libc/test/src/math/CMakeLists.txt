@@ -1903,6 +1903,19 @@ add_fp_unittest(
 )
 
 add_fp_unittest(
+  f16add_test
+  NEED_MPFR
+  SUITE
+    libc-math-unittests
+  SRCS
+    f16add_test.cpp
+  HDRS
+    AddTest.h
+  DEPENDS
+    libc.src.math.f16add
+)
+
+add_fp_unittest(
   f16addf_test
   NEED_MPFR
   SUITE
