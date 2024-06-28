@@ -42,6 +42,66 @@ using namespace CodeGen;
 namespace {
 class ConstExprEmitter;
 
+llvm::Constant *getPadding(const CodeGenModule &CGM, CharUnits PadSize) {
+  if (!CGM.getLangOpts().CPlusPlus) {
+    // In C23 (N3096) $6.7.10:
+    // """
+    // If any object is initialized with an empty iniitializer, then it is
+    // subject to default initialization:
+    //  - if it is an aggregate, every member is initialized (recursively)
+    //  according to these rules, and any padding is initialized to zero bits;
+    //  - if it is a union, the first named member is initialized (recursively)
+    //  according to these rules, and any padding is initialized to zero bits.
+    //
+    // If the aggregate or union contains elements or members that are
+    // aggregates or unions, these rules apply recursively to the subaggregates
+    // or contained unions.
+    //
+    // If there are fewer initializers in a brace-enclosed list than there are
+    // elements or members of an aggregate, or fewer characters in a string
+    // literal used to initialize an array of known size than there are elements
+    // in the array, the remainder of the aggregate is subject to default
+    // initialization.
+    // """
+    //
+    // From my understanding, the standard is ambiguous in the following two
+    // areas:
+    // 1. For a union type with empty initializer, if the first named member is
+    // not the largest member, then the bytes comes after the first named member
+    // but before padding are left unspecified. An example is:
+    //    union U { int a; long long b;};
+    //    union U u = {};  // The first 4 bytes are 0, but 4-8 bytes are left
+    //    unspecified.
+    //
+    // 2. It only mentions padding for empty initializer, but doesn't mention
+    // padding for a non empty initialization list. And if the aggregation or
+    // union contains elements or members that are aggregates or unions, and
+    // some are non empty initializers, while others are empty initiailizers,
+    // the padding initialization is unclear. An example is:
+    //    struct S1 { int a; long long b; };
+    //    struct S2 { char c; struct S1 s1; };
+    //    // The values for paddings between s2.c and s2.s1.a, between s2.s1.a
+    //    and s2.s1.b are unclear.
+    //    struct S2 s2 = { 'c' };
+    //
+    // Here we choose to zero initiailize left bytes of a union type. Because
+    // projects like the Linux kernel are relying on this behavior. If we don't
+    // explicitly zero initialize them, the undef values can be optimized to
+    // return gabage data. We also choose to zero initialize paddings for
+    // aggregates and unions, no matter they are initialized by empty
+    // initializers or non empty initializers. This can provide a consistent
+    // behavior. So projects like the Linux kernel can rely on it.
+    if (PadSize == CharUnits::One())
+      return llvm::ConstantInt::get(CGM.CharTy, 0);
+    llvm::Type *Ty = llvm::ArrayType::get(CGM.CharTy, PadSize.getQuantity());
+    return llvm::ConstantAggregateZero::get(Ty);
+  }
+  llvm::Type *Ty = CGM.CharTy;
+  if (PadSize > CharUnits::One())
+    Ty = llvm::ArrayType::get(Ty, PadSize.getQuantity());
+  return llvm::UndefValue::get(Ty);
+}
+
 struct ConstantAggregateBuilderUtils {
   CodeGenModule &CGM;
 
@@ -61,10 +121,7 @@ struct ConstantAggregateBuilderUtils {
   }
 
   llvm::Constant *getPadding(CharUnits PadSize) const {
-    llvm::Type *Ty = CGM.CharTy;
-    if (PadSize > CharUnits::One())
-      Ty = llvm::ArrayType::get(Ty, PadSize.getQuantity());
-    return llvm::UndefValue::get(Ty);
+    return ::getPadding(CGM, PadSize);
   }
 
   llvm::Constant *getZeroes(CharUnits ZeroSize) const {
@@ -715,6 +772,11 @@ bool ConstStructBuilder::Build(const InitListExpr *ILE, bool AllowOverwrite) {
     if (CXXRD->getNumBases())
       return false;
 
+  // See comment in getPadding().
+  bool ZeroInitPadding = !CGM.getLangOpts().CPlusPlus;
+  CharUnits SizeSoFar = CharUnits::Zero();
+  bool IsFlexibleArray = false;
+
   for (FieldDecl *Field : RD->fields()) {
     ++FieldNo;
 
@@ -732,8 +794,16 @@ bool ConstStructBuilder::Build(const InitListExpr *ILE, bool AllowOverwrite) {
     const Expr *Init = nullptr;
     if (ElementNo < ILE->getNumInits())
       Init = ILE->getInit(ElementNo++);
-    if (isa_and_nonnull<NoInitExpr>(Init))
+    if (isa_and_nonnull<NoInitExpr>(Init)) {
+      if (ZeroInitPadding) {
+        CharUnits Offset = CGM.getContext().toCharUnitsFromBits(
+            Layout.getFieldOffset(FieldNo));
+        CharUnits FieldSize =
+            CGM.getContext().getTypeSizeInChars(Field->getType());
+        SizeSoFar = Offset + FieldSize;
+      }
       continue;
+    }
 
     // Zero-sized fields are not emitted, but their initializers may still
     // prevent emission of this struct as a constant.
@@ -741,6 +811,19 @@ bool ConstStructBuilder::Build(const InitListExpr *ILE, bool AllowOverwrite) {
       if (Init->HasSideEffects(CGM.getContext()))
         return false;
       continue;
+    }
+
+    if (ZeroInitPadding) {
+      CharUnits Offset =
+          CGM.getContext().toCharUnitsFromBits(Layout.getFieldOffset(FieldNo));
+      if (SizeSoFar < Offset)
+        if (!AppendBytes(SizeSoFar, getPadding(CGM, Offset - SizeSoFar),
+                         AllowOverwrite))
+          return false;
+      CharUnits FieldSize =
+          CGM.getContext().getTypeSizeInChars(Field->getType());
+      SizeSoFar = Offset + FieldSize;
+      IsFlexibleArray = FieldSize.isZero();
     }
 
     // When emitting a DesignatedInitUpdateExpr, a nested InitListExpr
@@ -768,6 +851,10 @@ bool ConstStructBuilder::Build(const InitListExpr *ILE, bool AllowOverwrite) {
     if (!EltInit)
       return false;
 
+    if (ZeroInitPadding && IsFlexibleArray)
+      SizeSoFar += CharUnits::fromQuantity(
+          CGM.getDataLayout().getTypeAllocSize(EltInit->getType()));
+
     if (!Field->isBitField()) {
       // Handle non-bitfield members.
       if (!AppendField(Field, Layout.getFieldOffset(FieldNo), EltInit,
@@ -783,6 +870,14 @@ bool ConstStructBuilder::Build(const InitListExpr *ILE, bool AllowOverwrite) {
                           AllowOverwrite))
         return false;
     }
+  }
+
+  if (ZeroInitPadding) {
+    CharUnits TotalSize = Layout.getSize();
+    if (SizeSoFar < TotalSize)
+      if (!AppendBytes(SizeSoFar, getPadding(CGM, TotalSize - SizeSoFar),
+                       AllowOverwrite))
+        return false;
   }
 
   return true;
@@ -849,6 +944,9 @@ bool ConstStructBuilder::Build(const APValue &Val, const RecordDecl *RD,
 
   unsigned FieldNo = 0;
   uint64_t OffsetBits = CGM.getContext().toBits(Offset);
+  // See comment in getPadding().
+  bool ZeroInitPadding = !CGM.getLangOpts().CPlusPlus;
+  CharUnits SizeSoFar = CharUnits::Zero();
 
   bool AllowOverwrite = false;
   for (RecordDecl::field_iterator Field = RD->field_begin(),
@@ -870,6 +968,21 @@ bool ConstStructBuilder::Build(const APValue &Val, const RecordDecl *RD,
     if (!EltInit)
       return false;
 
+    if (ZeroInitPadding) {
+      CharUnits Offset =
+          CGM.getContext().toCharUnitsFromBits(Layout.getFieldOffset(FieldNo));
+      if (SizeSoFar < Offset)
+        if (!AppendBytes(SizeSoFar, getPadding(CGM, Offset - SizeSoFar),
+                         AllowOverwrite))
+          return false;
+      CharUnits FieldSize =
+          CGM.getContext().getTypeSizeInChars(Field->getType());
+      if (FieldSize.isZero())
+        FieldSize = CharUnits::fromQuantity(
+            CGM.getDataLayout().getTypeAllocSize(EltInit->getType()));
+      SizeSoFar = Offset + FieldSize;
+    }
+
     if (!Field->isBitField()) {
       // Handle non-bitfield members.
       if (!AppendField(*Field, Layout.getFieldOffset(FieldNo) + OffsetBits,
@@ -885,6 +998,13 @@ bool ConstStructBuilder::Build(const APValue &Val, const RecordDecl *RD,
                           EltInit, AllowOverwrite))
         return false;
     }
+  }
+  if (ZeroInitPadding) {
+    CharUnits TotalSize = Layout.getSize();
+    if (SizeSoFar < TotalSize)
+      if (!AppendBytes(SizeSoFar, getPadding(CGM, TotalSize - SizeSoFar),
+                       AllowOverwrite))
+        return false;
   }
 
   return true;
@@ -1127,12 +1247,10 @@ public:
 
       assert(CurSize <= TotalSize && "Union size mismatch!");
       if (unsigned NumPadBytes = TotalSize - CurSize) {
-        llvm::Type *Ty = CGM.CharTy;
-        if (NumPadBytes > 1)
-          Ty = llvm::ArrayType::get(Ty, NumPadBytes);
-
-        Elts.push_back(llvm::UndefValue::get(Ty));
-        Types.push_back(Ty);
+        llvm::Constant *Padding =
+            getPadding(CGM, CharUnits::fromQuantity(NumPadBytes));
+        Elts.push_back(Padding);
+        Types.push_back(Padding->getType());
       }
 
       llvm::StructType *STy = llvm::StructType::get(VMContext, Types, false);

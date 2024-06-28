@@ -1717,6 +1717,9 @@ void AggExprEmitter::VisitCXXParenListOrInitListExpr(
   // Prepare a 'this' for CXXDefaultInitExprs.
   CodeGenFunction::FieldConstructionScope FCS(CGF, Dest.getAddress());
 
+  // See comment in getPadding() in CGExprConstant.cpp.
+  bool ZeroInitPadding = !CGF.getLangOpts().CPlusPlus && !Dest.isZeroed();
+
   if (record->isUnion()) {
     // Only initialize one field of a union. The field itself is
     // specified by the initializer list.
@@ -1745,13 +1748,48 @@ void AggExprEmitter::VisitCXXParenListOrInitListExpr(
       // Default-initialize to null.
       EmitNullInitializationToLValue(FieldLoc);
     }
+    if (ZeroInitPadding) {
+      CharUnits TotalSize =
+          Dest.getPreferredSize(CGF.getContext(), DestLV.getType());
+      CharUnits FieldSize =
+          CGF.getContext().getTypeSizeInChars(FieldLoc.getType());
+      if (FieldSize < TotalSize) {
+        CharUnits LeftSize = TotalSize - FieldSize;
+        llvm::Constant *LeftSizeVal =
+            CGF.Builder.getInt64(LeftSize.getQuantity());
+        Address BaseLoc = Dest.getAddress().withElementType(CGF.Int8Ty);
+        Address LeftLoc =
+            CGF.Builder.CreateConstGEP(BaseLoc, LeftSize.getQuantity());
+        CGF.Builder.CreateMemSet(LeftLoc, CGF.Builder.getInt8(0), LeftSizeVal,
+                                 false);
+      }
+    }
 
     return;
   }
 
   // Here we iterate over the fields; this makes it simpler to both
   // default-initialize fields and skip over unnamed fields.
+  const ASTRecordLayout &Layout = CGF.getContext().getASTRecordLayout(record);
+  Address BaseLoc = Dest.getAddress().withElementType(CGF.Int8Ty);
+  CharUnits SizeSoFar = CharUnits::Zero();
   for (const auto *field : record->fields()) {
+    if (ZeroInitPadding) {
+      unsigned FieldNo = field->getFieldIndex();
+      CharUnits Offset =
+          CGF.getContext().toCharUnitsFromBits(Layout.getFieldOffset(FieldNo));
+      if (SizeSoFar < Offset) {
+        llvm::Constant *PaddingSizeVal =
+            CGF.Builder.getInt64((Offset - SizeSoFar).getQuantity());
+        Address PaddingLoc =
+            CGF.Builder.CreateConstGEP(BaseLoc, SizeSoFar.getQuantity());
+        CGF.Builder.CreateMemSet(PaddingLoc, CGF.Builder.getInt8(0),
+                                 PaddingSizeVal, false);
+      }
+      CharUnits FieldSize =
+          CGF.getContext().getTypeSizeInChars(field->getType());
+      SizeSoFar = Offset + FieldSize;
+    }
     // We're done once we hit the flexible array member.
     if (field->getType()->isIncompleteArrayType())
       break;
@@ -1791,6 +1829,18 @@ void AggExprEmitter::VisitCXXParenListOrInitListExpr(
                                             field->getType(),
                                             CGF.getDestroyer(dtorKind), false);
       }
+    }
+  }
+  if (ZeroInitPadding) {
+    CharUnits TotalSize =
+        Dest.getPreferredSize(CGF.getContext(), DestLV.getType());
+    if (SizeSoFar < TotalSize) {
+      llvm::Constant *PaddingSizeVal =
+          CGF.Builder.getInt64((TotalSize - SizeSoFar).getQuantity());
+      Address PaddingLoc =
+          CGF.Builder.CreateConstGEP(BaseLoc, SizeSoFar.getQuantity());
+      CGF.Builder.CreateMemSet(PaddingLoc, CGF.Builder.getInt8(0),
+                               PaddingSizeVal, false);
     }
   }
 }
