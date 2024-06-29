@@ -737,6 +737,7 @@ Error RISCVISAInfo::checkDependency() {
   bool HasI = Exts.count("i") != 0;
   bool HasC = Exts.count("c") != 0;
   bool HasF = Exts.count("f") != 0;
+  bool HasD = Exts.count("d") != 0;
   bool HasZfinx = Exts.count("zfinx") != 0;
   bool HasVector = Exts.count("zve32x") != 0;
   bool HasZvl = MinVLen != 0;
@@ -798,6 +799,20 @@ Error RISCVISAInfo::checkDependency() {
     return createStringError(
         errc::invalid_argument,
         "'zabha' requires 'a' or 'zaamo' extension to also be specified");
+
+  if (Exts.count("xwchc") != 0) {
+    if (XLen != 32)
+      return createStringError(errc::invalid_argument,
+                               "'Xwchc' is only supported for 'rv32'");
+
+    if (HasD)
+      return createStringError(errc::invalid_argument,
+                               "'D' and 'Xwchc' extensions are incompatible");
+
+    if (Exts.count("zcb") != 0)
+      return createStringError(errc::invalid_argument,
+                               "'Xwchc' and 'Zcb' extensions are incompatible");
+  }
 
   return Error::success();
 }
