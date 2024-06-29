@@ -3902,8 +3902,12 @@ static SDValue getAArch64Cmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                                     !isLegalArithImmed(-RHS->getAsZExtVal()))) {
     SDValue TheLHS =
         isCMN(LHS, LHS.getOperand(1), CC, DAG) ? LHS.getOperand(1) : LHS;
-    SDValue TheRHS = !isa<ConstantSDNode>(RHS) && isCMN(RHS, RHS.getOperand(1), CC, DAG) ? RHS.getOperand(1) : RHS;
-    if (getCmpOperandFoldingProfit(TheLHS) > getCmpOperandFoldingProfit(TheRHS)) {
+    SDValue TheRHS =
+        !isa<ConstantSDNode>(RHS) && isCMN(RHS, RHS.getOperand(1), CC, DAG)
+            ? RHS.getOperand(1)
+            : RHS;
+    if (getCmpOperandFoldingProfit(TheLHS) >
+        getCmpOperandFoldingProfit(TheRHS)) {
       std::swap(LHS, RHS);
       CC = ISD::getSetCCSwappedOperands(CC);
     }
