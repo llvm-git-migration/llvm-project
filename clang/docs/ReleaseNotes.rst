@@ -936,6 +936,7 @@ Bug Fixes to C++ Support
   forward-declared class. (#GH93512).
 - Fixed a bug in access checking inside return-type-requirement of compound requirements. (#GH93788).
 - Fixed an assertion failure about invalid conversion when calling lambda. (#GH96205).
+- Fixed an assertion failure about constant expression did not evaluate to integer. (#GH96670).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
