@@ -1,0 +1,25 @@
+# RUN: yaml2obj %s -o %t
+# RUN: llvm-strip --strip-debug %t -o %t1
+# RUN: llvm-readelf --section-groups %t1 | FileCheck %s
+
+--- !ELF
+FileHeader:
+  Class:      ELFCLASS64
+  Data:       ELFDATA2LSB
+  Type:       ET_REL
+  Machine:    EM_X86_64
+Sections:
+  - Name:     .group
+    Type:     SHT_GROUP
+    Info:     foo_grp
+    Members:
+      - SectionOrType:  GRP_COMDAT
+      - SectionOrType:  .debug_macro
+  - Name:     .debug_macro
+    Type:     SHT_PROGBITS
+    Flags:    [ SHF_GROUP ]
+Symbols:
+  - Name:     foo_grp
+    Section:  .group
+
+# CHECK: There are no section groups in this file.
