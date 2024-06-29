@@ -188,6 +188,12 @@ public:
     return result;
   }
 
+  MPFRNumber add(const MPFRNumber &b) const {
+    MPFRNumber result(*this);
+    mpfr_add(result.value, value, b.value, mpfr_rounding);
+    return result;
+  }
+
   MPFRNumber asin() const {
     MPFRNumber result(*this);
     mpfr_asin(result.value, value, mpfr_rounding);
@@ -446,6 +452,12 @@ public:
   MPFRNumber sqrt() const {
     MPFRNumber result(*this);
     mpfr_sqrt(result.value, value, mpfr_rounding);
+    return result;
+  }
+
+  MPFRNumber sub(const MPFRNumber &b) const {
+    MPFRNumber result(*this);
+    mpfr_sub(result.value, value, b.value, mpfr_rounding);
     return result;
   }
 
@@ -712,6 +724,8 @@ binary_operation_one_output(Operation op, InputType x, InputType y,
   MPFRNumber inputX(x, precision, rounding);
   MPFRNumber inputY(y, precision, rounding);
   switch (op) {
+  case Operation::Add:
+    return inputX.add(inputY);
   case Operation::Atan2:
     return inputX.atan2(inputY);
   case Operation::Div:
@@ -722,6 +736,8 @@ binary_operation_one_output(Operation op, InputType x, InputType y,
     return inputX.hypot(inputY);
   case Operation::Pow:
     return inputX.pow(inputY);
+  case Operation::Sub:
+    return inputX.sub(inputY);
   default:
     __builtin_unreachable();
   }
