@@ -886,6 +886,16 @@ public:
 
   bool matchShlOfVScale(const MachineOperand &MO, BuildFnTy &MatchInfo);
 
+  bool matchFoldAPlusC1MinusC2(const MachineInstr &MI, BuildFnTy &MatchInfo);
+
+  bool matchFoldC2MinusAPlusC1(const MachineInstr &MI, BuildFnTy &MatchInfo);
+
+  bool matchFoldAMinusC1MinusC2(const MachineInstr &MI, BuildFnTy &MatchInfo);
+
+  bool matchFoldC1Minus2MinusC2(const MachineInstr &MI, BuildFnTy &MatchInfo);
+
+  bool matchFoldAMinusC2PlusC2(const MachineInstr &MI, BuildFnTy &MatchInfo);
+
 private:
   /// Checks for legality of an indexed variant of \p LdSt.
   bool isIndexedLoadStoreLegal(GLoadStore &LdSt) const;
