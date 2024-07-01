@@ -322,8 +322,8 @@ void Operation::setAttrs(DictionaryAttr newAttrs) {
 }
 void Operation::setAttrs(ArrayRef<NamedAttribute> newAttrs) {
   if (getPropertiesStorageSize()) {
-    // We're spliting the providing array of attributes by removing the inherentAttr
-    // which will be stored in the properties.
+    // We're spliting the providing array of attributes by removing the
+    // inherentAttr which will be stored in the properties.
     SmallVector<NamedAttribute> discardableAttrs;
     discardableAttrs.reserve(newAttrs.size());
     for (NamedAttribute attr : newAttrs) {
@@ -389,8 +389,8 @@ bool Operation::isBeforeInBlock(Operation *other) {
          "Expected other operation to have the same parent block.");
   // If the order of the block is already invalid, directly recompute the
   // parent.
-  if (!block->isOpOrderValid()) {
-    block->recomputeOpOrder();
+  if (!getBlock()->isOpOrderValid()) {
+    getBlock()->recomputeOpOrder();
   } else {
     // Update the order either operation if necessary.
     updateOrderIfNecessary();
@@ -408,8 +408,8 @@ void Operation::updateOrderIfNecessary() {
   // If the order is valid for this operation there is nothing to do.
   if (hasValidOrder())
     return;
-  Operation *blockFront = &block->front();
-  Operation *blockBack = &block->back();
+  Operation *blockFront = &getBlock()->front();
+  Operation *blockBack = &getBlock()->back();
 
   // This method is expected to only be invoked on blocks with more than one
   // operation.
@@ -419,7 +419,7 @@ void Operation::updateOrderIfNecessary() {
   if (this == blockBack) {
     Operation *prevNode = getPrevNode();
     if (!prevNode->hasValidOrder())
-      return block->recomputeOpOrder();
+      return getBlock()->recomputeOpOrder();
 
     // Add the stride to the previous operation.
     orderIndex = prevNode->orderIndex + kOrderStride;
@@ -431,10 +431,10 @@ void Operation::updateOrderIfNecessary() {
   if (this == blockFront) {
     Operation *nextNode = getNextNode();
     if (!nextNode->hasValidOrder())
-      return block->recomputeOpOrder();
+      return getBlock()->recomputeOpOrder();
     // There is no order to give this operation.
     if (nextNode->orderIndex == 0)
-      return block->recomputeOpOrder();
+      return getBlock()->recomputeOpOrder();
 
     // If we can't use the stride, just take the middle value left. This is safe
     // because we know there is at least one valid index to assign to.
@@ -449,12 +449,12 @@ void Operation::updateOrderIfNecessary() {
   // the middle of the previous and next if possible.
   Operation *prevNode = getPrevNode(), *nextNode = getNextNode();
   if (!prevNode->hasValidOrder() || !nextNode->hasValidOrder())
-    return block->recomputeOpOrder();
+    return getBlock()->recomputeOpOrder();
   unsigned prevOrder = prevNode->orderIndex, nextOrder = nextNode->orderIndex;
 
   // Check to see if there is a valid order between the two.
   if (prevOrder + 1 == nextOrder)
-    return block->recomputeOpOrder();
+    return getBlock()->recomputeOpOrder();
   orderIndex = prevOrder + ((nextOrder - prevOrder) / 2);
 }
 
@@ -502,7 +502,7 @@ Block *llvm::ilist_traits<::mlir::Operation>::getContainingBlock() {
 /// keep the block pointer up to date.
 void llvm::ilist_traits<::mlir::Operation>::addNodeToList(Operation *op) {
   assert(!op->getBlock() && "already in an operation block!");
-  op->block = getContainingBlock();
+  op->blockHasWeakRefPair.setPointer(getContainingBlock());
 
   // Invalidate the order on the operation.
   op->orderIndex = Operation::kInvalidOrderIdx;
@@ -512,7 +512,7 @@ void llvm::ilist_traits<::mlir::Operation>::addNodeToList(Operation *op) {
 /// We keep the block pointer up to date.
 void llvm::ilist_traits<::mlir::Operation>::removeNodeFromList(Operation *op) {
   assert(op->block && "not already in an operation block!");
-  op->block = nullptr;
+  op->blockHasWeakRefPair.setPointer(nullptr);
 }
 
 /// This is a trait method invoked when an operation is moved from one block
@@ -531,7 +531,7 @@ void llvm::ilist_traits<::mlir::Operation>::transferNodesFromList(
 
   // Update the 'block' member of each operation.
   for (; first != last; ++first)
-    first->block = curParent;
+    first->blockHasWeakRefPair.setPointer(curParent);
 }
 
 /// Remove this operation (and its descendants) from its Block and delete
