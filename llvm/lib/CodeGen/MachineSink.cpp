@@ -30,7 +30,6 @@
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
 #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
 #include "llvm/CodeGen/MachineCycleAnalysis.h"
-#include "llvm/CodeGen/MachineDomTreeUpdater.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -722,10 +721,6 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
   bool EverMadeChange = false;
 
   while (true) {
-    // Ensure that the dominant tree is up-to-date after splitting the critical
-    // edge.
-    MachineDomTreeUpdater MDTU(DT, PDT,
-                               MachineDomTreeUpdater::UpdateStrategy::Lazy);
     bool MadeChange = false;
 
     // Process all basic blocks.
@@ -748,11 +743,6 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
         MadeChange = true;
         ++NumSplit;
         CI->splitCriticalEdge(Pair.first, Pair.second, NewSucc);
-
-        MDTU.applyUpdates(
-            {{MachineDominatorTree::Insert, Pair.first, NewSucc},
-             {MachineDominatorTree::Insert, NewSucc, Pair.second},
-             {MachineDominatorTree::Delete, Pair.first, Pair.second}});
       } else
         LLVM_DEBUG(dbgs() << " *** Not legal to break critical edge\n");
     }
