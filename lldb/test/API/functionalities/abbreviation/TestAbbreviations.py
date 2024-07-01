@@ -80,7 +80,7 @@ class AbbreviationsTestCase(TestBase):
         # Check a command that wants the raw input.
         command_interpreter.ResolveCommand(r"""sc print("\n\n\tHello!\n")""", result)
         self.assertTrue(result.Succeeded())
-        self.assertEqual(r"""script print("\n\n\tHello!\n")""", result.GetOutput())
+        self.assertEqual(r"""scripting execute print("\n\n\tHello!\n")""", result.GetOutput())
 
         # Prompt changing stuff should be tested, but this doesn't seem like the
         # right test to do it in.  It has nothing to do with aliases or abbreviations.
