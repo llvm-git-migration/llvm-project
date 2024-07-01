@@ -12,17 +12,16 @@ declare void @foo()
 define i16 @halfword(ptr %ctx, i32 %xor72) nounwind {
 ; CHECK0-GISEL-LABEL: halfword:
 ; CHECK0-GISEL:       // %bb.0:
-; CHECK0-GISEL-NEXT:    stp x30, x21, [sp, #-32]! // 16-byte Folded Spill
+; CHECK0-GISEL-NEXT:    str x30, [sp, #-32]! // 8-byte Folded Spill
 ; CHECK0-GISEL-NEXT:    lsr w8, w1, #9
 ; CHECK0-GISEL-NEXT:    stp x20, x19, [sp, #16] // 16-byte Folded Spill
-; CHECK0-GISEL-NEXT:    mov x19, x0
-; CHECK0-GISEL-NEXT:    and x21, x8, #0xff
-; CHECK0-GISEL-NEXT:    ldrh w20, [x0, x21, lsl #1]
+; CHECK0-GISEL-NEXT:    add x20, x0, w8, uxtb #1
+; CHECK0-GISEL-NEXT:    ldrh w19, [x20]
 ; CHECK0-GISEL-NEXT:    bl foo
-; CHECK0-GISEL-NEXT:    mov w0, w20
-; CHECK0-GISEL-NEXT:    strh w20, [x19, x21, lsl #1]
+; CHECK0-GISEL-NEXT:    mov w0, w19
+; CHECK0-GISEL-NEXT:    strh w19, [x20]
 ; CHECK0-GISEL-NEXT:    ldp x20, x19, [sp, #16] // 16-byte Folded Reload
-; CHECK0-GISEL-NEXT:    ldp x30, x21, [sp], #32 // 16-byte Folded Reload
+; CHECK0-GISEL-NEXT:    ldr x30, [sp], #32 // 8-byte Folded Reload
 ; CHECK0-GISEL-NEXT:    ret
 ;
 ; CHECK0-SDAG-LABEL: halfword:
@@ -83,21 +82,18 @@ define i16 @halfword(ptr %ctx, i32 %xor72) nounwind {
 define i16 @halfword_multi_use(ptr %ctx, i32 %xor72) nounwind {
 ; CHECK0-GISEL-LABEL: halfword_multi_use:
 ; CHECK0-GISEL:       // %bb.0:
-; CHECK0-GISEL-NEXT:    str x30, [sp, #-48]! // 8-byte Folded Spill
-; CHECK0-GISEL-NEXT:    stp x22, x21, [sp, #16] // 16-byte Folded Spill
-; CHECK0-GISEL-NEXT:    lsr w21, w1, #9
-; CHECK0-GISEL-NEXT:    stp x20, x19, [sp, #32] // 16-byte Folded Spill
-; CHECK0-GISEL-NEXT:    mov x19, x0
-; CHECK0-GISEL-NEXT:    and x22, x21, #0xff
-; CHECK0-GISEL-NEXT:    ldrh w20, [x0, x22, lsl #1]
+; CHECK0-GISEL-NEXT:    stp x30, x21, [sp, #-32]! // 16-byte Folded Spill
+; CHECK0-GISEL-NEXT:    stp x20, x19, [sp, #16] // 16-byte Folded Spill
+; CHECK0-GISEL-NEXT:    lsr w20, w1, #9
+; CHECK0-GISEL-NEXT:    add x21, x0, w20, uxtb #1
+; CHECK0-GISEL-NEXT:    ldrh w19, [x21]
 ; CHECK0-GISEL-NEXT:    bl foo
-; CHECK0-GISEL-NEXT:    strh w20, [x19, x22, lsl #1]
-; CHECK0-GISEL-NEXT:    mov w0, w20
-; CHECK0-GISEL-NEXT:    add w8, w20, w21
-; CHECK0-GISEL-NEXT:    strh w8, [x19, x22, lsl #1]
-; CHECK0-GISEL-NEXT:    ldp x20, x19, [sp, #32] // 16-byte Folded Reload
-; CHECK0-GISEL-NEXT:    ldp x22, x21, [sp, #16] // 16-byte Folded Reload
-; CHECK0-GISEL-NEXT:    ldr x30, [sp], #48 // 8-byte Folded Reload
+; CHECK0-GISEL-NEXT:    strh w19, [x21]
+; CHECK0-GISEL-NEXT:    add w8, w19, w20
+; CHECK0-GISEL-NEXT:    mov w0, w19
+; CHECK0-GISEL-NEXT:    ldp x20, x19, [sp, #16] // 16-byte Folded Reload
+; CHECK0-GISEL-NEXT:    strh w8, [x21]
+; CHECK0-GISEL-NEXT:    ldp x30, x21, [sp], #32 // 16-byte Folded Reload
 ; CHECK0-GISEL-NEXT:    ret
 ;
 ; CHECK0-SDAG-LABEL: halfword_multi_use:
@@ -358,10 +354,9 @@ define i16 @gep1_multi_use(ptr %p, i16 %b) {
 ; CHECK0-GISEL-LABEL: gep1_multi_use:
 ; CHECK0-GISEL:       // %bb.0:
 ; CHECK0-GISEL-NEXT:    // kill: def $w1 killed $w1 def $x1
-; CHECK0-GISEL-NEXT:    sxth x9, w1
-; CHECK0-GISEL-NEXT:    mov x8, x0
-; CHECK0-GISEL-NEXT:    ldrh w0, [x0, x9, lsl #1]
-; CHECK0-GISEL-NEXT:    strh w1, [x8, x9, lsl #1]
+; CHECK0-GISEL-NEXT:    add x8, x0, w1, sxth #1
+; CHECK0-GISEL-NEXT:    ldrh w0, [x8]
+; CHECK0-GISEL-NEXT:    strh w1, [x8]
 ; CHECK0-GISEL-NEXT:    ret
 ;
 ; CHECK0-SDAG-LABEL: gep1_multi_use:
@@ -436,14 +431,14 @@ define i128 @gep4(ptr %p, i128 %a, i64 %b) {
 define i128 @gep4_multi_use(ptr %p, i128 %a, i64 %b) {
 ; CHECK0-GISEL-LABEL: gep4_multi_use:
 ; CHECK0-GISEL:       // %bb.0:
-; CHECK0-GISEL-NEXT:    ldr q1, [x0, x4, lsl #4]
+; CHECK0-GISEL-NEXT:    add x8, x0, x4, lsl #4
 ; CHECK0-GISEL-NEXT:    mov v0.d[0], x2
-; CHECK0-GISEL-NEXT:    mov x8, x0
+; CHECK0-GISEL-NEXT:    ldr q1, [x8]
 ; CHECK0-GISEL-NEXT:    mov d2, v1.d[1]
-; CHECK0-GISEL-NEXT:    fmov x0, d1
 ; CHECK0-GISEL-NEXT:    mov v0.d[1], x3
+; CHECK0-GISEL-NEXT:    fmov x0, d1
 ; CHECK0-GISEL-NEXT:    fmov x1, d2
-; CHECK0-GISEL-NEXT:    str q0, [x8, x4, lsl #4]
+; CHECK0-GISEL-NEXT:    str q0, [x8]
 ; CHECK0-GISEL-NEXT:    ret
 ;
 ; CHECK0-SDAG-LABEL: gep4_multi_use:
