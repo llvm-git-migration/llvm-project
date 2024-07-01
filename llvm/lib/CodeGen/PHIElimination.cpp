@@ -21,7 +21,6 @@
 #include "llvm/CodeGen/LiveIntervals.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/CodeGen/MachineDomTreeUpdater.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -96,8 +95,7 @@ namespace {
     /// Split critical edges where necessary for good coalescer performance.
     bool SplitPHIEdges(MachineFunction &MF, MachineBasicBlock &MBB,
                        MachineLoopInfo *MLI,
-                       std::vector<SparseBitVector<>> *LiveInSets,
-                       MachineDomTreeUpdater *MDTU);
+                       std::vector<SparseBitVector<>> *LiveInSets);
 
     // These functions are temporary abstractions around LiveVariables and
     // LiveIntervals, so they can go away when LiveVariables does.
@@ -185,13 +183,8 @@ bool PHIElimination::runOnMachineFunction(MachineFunction &MF) {
     }
 
     MachineLoopInfo *MLI = getAnalysisIfAvailable<MachineLoopInfo>();
-    auto *DTWrapper = getAnalysisIfAvailable<MachineDominatorTreeWrapperPass>();
-    MachineDominatorTree *MDT = DTWrapper ? &DTWrapper->getDomTree() : nullptr;
-    MachineDomTreeUpdater MDTU(MDT,
-                               MachineDomTreeUpdater::UpdateStrategy::Lazy);
     for (auto &MBB : MF)
-      Changed |= SplitPHIEdges(MF, MBB, MLI, (LV ? &LiveInSets : nullptr),
-                               DTWrapper ? &MDTU : nullptr);
+      Changed |= SplitPHIEdges(MF, MBB, MLI, (LV ? &LiveInSets : nullptr));
   }
 
   // This pass takes the function out of SSA form.
@@ -677,8 +670,7 @@ void PHIElimination::analyzePHINodes(const MachineFunction& MF) {
 
 bool PHIElimination::SplitPHIEdges(MachineFunction &MF, MachineBasicBlock &MBB,
                                    MachineLoopInfo *MLI,
-                                   std::vector<SparseBitVector<>> *LiveInSets,
-                                   MachineDomTreeUpdater *MDTU) {
+                                   std::vector<SparseBitVector<>> *LiveInSets) {
   if (MBB.empty() || !MBB.front().isPHI() || MBB.isEHPad())
     return false;   // Quick exit for basic blocks without PHIs.
 
@@ -745,12 +737,7 @@ bool PHIElimination::SplitPHIEdges(MachineFunction &MF, MachineBasicBlock &MBB,
       }
       if (!ShouldSplit && !SplitAllCriticalEdges)
         continue;
-      if (auto *NewMBB = PreMBB->SplitCriticalEdge(&MBB, *this, LiveInSets)) {
-        if (MDTU)
-          MDTU->applyUpdates({{MachineDominatorTree::Insert, PreMBB, NewMBB},
-                              {MachineDominatorTree::Insert, NewMBB, &MBB},
-                              {MachineDominatorTree::Delete, PreMBB, &MBB}});
-      } else {
+      if (!PreMBB->SplitCriticalEdge(&MBB, *this, LiveInSets)) {
         LLVM_DEBUG(dbgs() << "Failed to split critical edge.\n");
         continue;
       }
