@@ -8103,13 +8103,20 @@ Instruction *InstCombinerImpl::visitFCmpInst(FCmpInst &I) {
   // If we're just checking for a NaN (ORD/UNO) and have a non-NaN operand,
   // then canonicalize the operand to 0.0.
   if (Pred == CmpInst::FCMP_ORD || Pred == CmpInst::FCMP_UNO) {
-    if (!match(Op0, m_PosZeroFP()) &&
-        isKnownNeverNaN(Op0, 0, getSimplifyQuery().getWithInstruction(&I)))
-      return replaceOperand(I, 0, ConstantFP::getZero(OpType));
-
-    if (!match(Op1, m_PosZeroFP()) &&
-        isKnownNeverNaN(Op1, 0, getSimplifyQuery().getWithInstruction(&I)))
-      return replaceOperand(I, 1, ConstantFP::getZero(OpType));
+    if (!match(Op0, m_PosZeroFP())) {
+      KnownFPClass Known0 = computeKnownFPClass(Op0, fcAllFlags, &I);
+      if (Known0.isKnownNeverNaN())
+        return replaceOperand(I, 0, ConstantFP::getZero(OpType));
+      if (Known0.isKnownAlwaysNaN())
+        return replaceOperand(I, 0, ConstantFP::getNaN(OpType));
+    }
+    if (!match(Op1, m_PosZeroFP())) {
+      KnownFPClass Known1 = computeKnownFPClass(Op1, fcAllFlags, &I);
+      if (Known1.isKnownNeverNaN())
+        return replaceOperand(I, 1, ConstantFP::getZero(OpType));
+      if (Known1.isKnownAlwaysNaN())
+        return replaceOperand(I, 1, ConstantFP::getNaN(OpType));
+    }
   }
 
   // fcmp pred (fneg X), (fneg Y) -> fcmp swap(pred) X, Y
