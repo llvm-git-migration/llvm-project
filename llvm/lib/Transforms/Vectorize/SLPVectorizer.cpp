@@ -9113,6 +9113,8 @@ public:
     assert(!InVectors.empty() && !CommonMask.empty() &&
            "Expected only tree entries from extracts/reused buildvectors.");
     unsigned VF = cast<FixedVectorType>(V1->getType())->getNumElements();
+    if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+      VF /= VecTy->getNumElements();
     if (InVectors.size() == 2) {
       Cost += createShuffle(InVectors.front(), InVectors.back(), CommonMask);
       transformMaskAfterShuffle(CommonMask, CommonMask);
@@ -12158,6 +12160,8 @@ public:
     int VF = CommonMask.size();
     if (auto *FTy = dyn_cast<FixedVectorType>(V1->getType()))
       VF = FTy->getNumElements();
+    if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+      VF /= VecTy->getNumElements();
     for (unsigned Idx = 0, Sz = CommonMask.size(); Idx < Sz; ++Idx)
       if (Mask[Idx] != PoisonMaskElem && CommonMask[Idx] == PoisonMaskElem)
         CommonMask[Idx] = Mask[Idx] + (It == InVectors.begin() ? 0 : VF);
