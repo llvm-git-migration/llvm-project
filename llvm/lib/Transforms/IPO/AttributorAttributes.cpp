@@ -214,7 +214,7 @@ ChangeStatus clampStateAndIndicateChange<DerefState>(DerefState &S,
 static bool mayBeInCycle(const CycleInfo *CI, const Instruction *I,
                          bool HeaderOnly, Cycle **CPtr = nullptr) {
   if (!CI)
-    return true;
+    return false;
   auto *BB = I->getParent();
   auto *C = CI->getCycle(BB);
   if (!C)

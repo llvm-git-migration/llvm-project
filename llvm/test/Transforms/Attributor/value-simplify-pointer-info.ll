@@ -2092,47 +2092,35 @@ end:
 ; FIXME: This function returns 1.
 define i8 @phi_no_store_1() {
 ;
-; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
+; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write)
 ; TUNIT-LABEL: define {{[^@]+}}@phi_no_store_1
-; TUNIT-SAME: () #[[ATTR3]] {
+; TUNIT-SAME: () #[[ATTR5]] {
 ; TUNIT-NEXT:  entry:
 ; TUNIT-NEXT:    br label [[LOOP:%.*]]
 ; TUNIT:       loop:
 ; TUNIT-NEXT:    [[P:%.*]] = phi ptr [ @a1, [[ENTRY:%.*]] ], [ [[G:%.*]], [[LOOP]] ]
 ; TUNIT-NEXT:    [[I:%.*]] = phi i8 [ 0, [[ENTRY]] ], [ [[O:%.*]], [[LOOP]] ]
-; TUNIT-NEXT:    store i8 1, ptr [[P]], align 1
 ; TUNIT-NEXT:    [[G]] = getelementptr i8, ptr [[P]], i64 1
 ; TUNIT-NEXT:    [[O]] = add nsw i8 [[I]], 1
 ; TUNIT-NEXT:    [[C:%.*]] = icmp eq i8 [[O]], 3
 ; TUNIT-NEXT:    br i1 [[C]], label [[END:%.*]], label [[LOOP]]
 ; TUNIT:       end:
-; TUNIT-NEXT:    [[S11:%.*]] = getelementptr i8, ptr @a1, i64 2
-; TUNIT-NEXT:    [[L11:%.*]] = load i8, ptr [[S11]], align 2
-; TUNIT-NEXT:    [[S12:%.*]] = getelementptr i8, ptr @a1, i64 3
-; TUNIT-NEXT:    [[L12:%.*]] = load i8, ptr [[S12]], align 1
-; TUNIT-NEXT:    [[ADD:%.*]] = add i8 [[L11]], [[L12]]
-; TUNIT-NEXT:    ret i8 [[ADD]]
+; TUNIT-NEXT:    ret i8 0
 ;
-; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
+; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write)
 ; CGSCC-LABEL: define {{[^@]+}}@phi_no_store_1
-; CGSCC-SAME: () #[[ATTR5]] {
+; CGSCC-SAME: () #[[ATTR6]] {
 ; CGSCC-NEXT:  entry:
 ; CGSCC-NEXT:    br label [[LOOP:%.*]]
 ; CGSCC:       loop:
 ; CGSCC-NEXT:    [[P:%.*]] = phi ptr [ @a1, [[ENTRY:%.*]] ], [ [[G:%.*]], [[LOOP]] ]
 ; CGSCC-NEXT:    [[I:%.*]] = phi i8 [ 0, [[ENTRY]] ], [ [[O:%.*]], [[LOOP]] ]
-; CGSCC-NEXT:    store i8 1, ptr [[P]], align 1
 ; CGSCC-NEXT:    [[G]] = getelementptr i8, ptr [[P]], i64 1
 ; CGSCC-NEXT:    [[O]] = add nsw i8 [[I]], 1
 ; CGSCC-NEXT:    [[C:%.*]] = icmp eq i8 [[O]], 3
 ; CGSCC-NEXT:    br i1 [[C]], label [[END:%.*]], label [[LOOP]]
 ; CGSCC:       end:
-; CGSCC-NEXT:    [[S11:%.*]] = getelementptr i8, ptr @a1, i64 2
-; CGSCC-NEXT:    [[L11:%.*]] = load i8, ptr [[S11]], align 2
-; CGSCC-NEXT:    [[S12:%.*]] = getelementptr i8, ptr @a1, i64 3
-; CGSCC-NEXT:    [[L12:%.*]] = load i8, ptr [[S12]], align 1
-; CGSCC-NEXT:    [[ADD:%.*]] = add i8 [[L11]], [[L12]]
-; CGSCC-NEXT:    ret i8 [[ADD]]
+; CGSCC-NEXT:    ret i8 0
 ;
 entry:
   br label %loop
@@ -2172,9 +2160,7 @@ define i8 @phi_no_store_2() {
 ; TUNIT:       end:
 ; TUNIT-NEXT:    [[S21:%.*]] = getelementptr i8, ptr @a2, i64 2
 ; TUNIT-NEXT:    [[L21:%.*]] = load i8, ptr [[S21]], align 2
-; TUNIT-NEXT:    [[S22:%.*]] = getelementptr i8, ptr @a2, i64 3
-; TUNIT-NEXT:    [[L22:%.*]] = load i8, ptr [[S22]], align 1
-; TUNIT-NEXT:    [[ADD:%.*]] = add i8 [[L21]], [[L22]]
+; TUNIT-NEXT:    [[ADD:%.*]] = add i8 [[L21]], 0
 ; TUNIT-NEXT:    ret i8 [[ADD]]
 ;
 ; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
@@ -2193,9 +2179,7 @@ define i8 @phi_no_store_2() {
 ; CGSCC:       end:
 ; CGSCC-NEXT:    [[S21:%.*]] = getelementptr i8, ptr @a2, i64 2
 ; CGSCC-NEXT:    [[L21:%.*]] = load i8, ptr [[S21]], align 2
-; CGSCC-NEXT:    [[S22:%.*]] = getelementptr i8, ptr @a2, i64 3
-; CGSCC-NEXT:    [[L22:%.*]] = load i8, ptr [[S22]], align 1
-; CGSCC-NEXT:    [[ADD:%.*]] = add i8 [[L21]], [[L22]]
+; CGSCC-NEXT:    [[ADD:%.*]] = add i8 [[L21]], 0
 ; CGSCC-NEXT:    ret i8 [[ADD]]
 ;
 entry:
@@ -2218,57 +2202,37 @@ end:
 }
 
 define i8 @phi_no_store_3() {
-; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
+; TUNIT: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write)
 ; TUNIT-LABEL: define {{[^@]+}}@phi_no_store_3
-; TUNIT-SAME: () #[[ATTR3]] {
+; TUNIT-SAME: () #[[ATTR5]] {
 ; TUNIT-NEXT:  entry:
 ; TUNIT-NEXT:    [[S30:%.*]] = getelementptr i8, ptr @a3, i64 3
-; TUNIT-NEXT:    store i8 0, ptr [[S30]], align 1
 ; TUNIT-NEXT:    br label [[LOOP:%.*]]
 ; TUNIT:       loop:
 ; TUNIT-NEXT:    [[P:%.*]] = phi ptr [ @a3, [[ENTRY:%.*]] ], [ [[G:%.*]], [[LOOP]] ]
 ; TUNIT-NEXT:    [[I:%.*]] = phi i8 [ 0, [[ENTRY]] ], [ [[O:%.*]], [[LOOP]] ]
-; TUNIT-NEXT:    store i8 1, ptr [[P]], align 1
 ; TUNIT-NEXT:    [[G]] = getelementptr i8, ptr @a3, i64 2
 ; TUNIT-NEXT:    [[O]] = add nsw i8 [[I]], 1
 ; TUNIT-NEXT:    [[C:%.*]] = icmp eq i8 [[O]], 7
 ; TUNIT-NEXT:    br i1 [[C]], label [[END:%.*]], label [[LOOP]]
 ; TUNIT:       end:
-; TUNIT-NEXT:    [[S31:%.*]] = getelementptr i8, ptr @a3, i64 2
-; TUNIT-NEXT:    [[L31:%.*]] = load i8, ptr [[S31]], align 2
-; TUNIT-NEXT:    [[S32:%.*]] = getelementptr i8, ptr @a3, i64 3
-; TUNIT-NEXT:    [[L32:%.*]] = load i8, ptr [[S32]], align 1
-; TUNIT-NEXT:    [[ADD:%.*]] = add i8 [[L31]], [[L32]]
-; TUNIT-NEXT:    [[S34:%.*]] = getelementptr i8, ptr @a3, i64 4
-; TUNIT-NEXT:    [[L34:%.*]] = load i8, ptr [[S34]], align 4
-; TUNIT-NEXT:    [[ADD2:%.*]] = add i8 [[ADD]], [[L34]]
-; TUNIT-NEXT:    ret i8 [[ADD2]]
+; TUNIT-NEXT:    ret i8 poison
 ;
-; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn
+; CGSCC: Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write)
 ; CGSCC-LABEL: define {{[^@]+}}@phi_no_store_3
-; CGSCC-SAME: () #[[ATTR5]] {
+; CGSCC-SAME: () #[[ATTR6]] {
 ; CGSCC-NEXT:  entry:
 ; CGSCC-NEXT:    [[S30:%.*]] = getelementptr i8, ptr @a3, i64 3
-; CGSCC-NEXT:    store i8 0, ptr [[S30]], align 1
 ; CGSCC-NEXT:    br label [[LOOP:%.*]]
 ; CGSCC:       loop:
 ; CGSCC-NEXT:    [[P:%.*]] = phi ptr [ @a3, [[ENTRY:%.*]] ], [ [[G:%.*]], [[LOOP]] ]
 ; CGSCC-NEXT:    [[I:%.*]] = phi i8 [ 0, [[ENTRY]] ], [ [[O:%.*]], [[LOOP]] ]
-; CGSCC-NEXT:    store i8 1, ptr [[P]], align 1
 ; CGSCC-NEXT:    [[G]] = getelementptr i8, ptr @a3, i64 2
 ; CGSCC-NEXT:    [[O]] = add nsw i8 [[I]], 1
 ; CGSCC-NEXT:    [[C:%.*]] = icmp eq i8 [[O]], 7
 ; CGSCC-NEXT:    br i1 [[C]], label [[END:%.*]], label [[LOOP]]
 ; CGSCC:       end:
-; CGSCC-NEXT:    [[S31:%.*]] = getelementptr i8, ptr @a3, i64 2
-; CGSCC-NEXT:    [[L31:%.*]] = load i8, ptr [[S31]], align 2
-; CGSCC-NEXT:    [[S32:%.*]] = getelementptr i8, ptr @a3, i64 3
-; CGSCC-NEXT:    [[L32:%.*]] = load i8, ptr [[S32]], align 1
-; CGSCC-NEXT:    [[ADD:%.*]] = add i8 [[L31]], [[L32]]
-; CGSCC-NEXT:    [[S34:%.*]] = getelementptr i8, ptr @a3, i64 4
-; CGSCC-NEXT:    [[L34:%.*]] = load i8, ptr [[S34]], align 4
-; CGSCC-NEXT:    [[ADD2:%.*]] = add i8 [[ADD]], [[L34]]
-; CGSCC-NEXT:    ret i8 [[ADD2]]
+; CGSCC-NEXT:    ret i8 poison
 ;
 entry:
   %s30 = getelementptr i8, ptr @a3, i64 3
