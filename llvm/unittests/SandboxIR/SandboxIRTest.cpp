@@ -40,3 +40,22 @@ define void @foo(i32 %v1) {
   sandboxir::Context Ctx(C);
   [[maybe_unused]] sandboxir::User U(sandboxir::Value::ClassID::User, Ret, Ctx);
 }
+
+TEST_F(SandboxIRTest, FunctionArgumentConstantAndOpaqueInstInstantiation) {
+  parseIR(C, R"IR(
+define void @foo(i32 %v1) {
+  %add = add i32 %v1, 42
+  ret void
+}
+)IR");
+  llvm::Function *LLVMF = &*M->getFunction("foo");
+  llvm::BasicBlock *LLVMBB = &*LLVMF->begin();
+  llvm::Instruction *LLVMAdd = &*LLVMBB->begin();
+  auto *LLVMC = cast<llvm::Constant>(LLVMAdd->getOperand(1));
+  sandboxir::Context Ctx(C);
+  auto *LLVMArg0 = LLVMF->getArg(0);
+  [[maybe_unused]] sandboxir::Function F(LLVMF, Ctx);
+  [[maybe_unused]] sandboxir::Argument Arg0(LLVMArg0, Ctx);
+  [[maybe_unused]] sandboxir::Constant Const0(LLVMC, Ctx);
+  [[maybe_unused]] sandboxir::OpaqueInst Opaque(LLVMAdd, Ctx);
+}
