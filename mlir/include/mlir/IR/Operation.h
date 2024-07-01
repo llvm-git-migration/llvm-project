@@ -210,7 +210,7 @@ public:
   Operation *cloneWithoutRegions();
 
   /// Returns the operation block that contains this operation.
-  Block *getBlock() { return block; }
+  Block *getBlock() { return blockHasWeakRefPair.getPointer(); }
 
   /// Return the context this operation is associated with.
   MLIRContext *getContext() { return location->getContext(); }
@@ -227,11 +227,15 @@ public:
 
   /// Returns the region to which the instruction belongs. Returns nullptr if
   /// the instruction is unlinked.
-  Region *getParentRegion() { return block ? block->getParent() : nullptr; }
+  Region *getParentRegion() {
+    return getBlock() ? getBlock()->getParent() : nullptr;
+  }
 
   /// Returns the closest surrounding operation that contains this operation
   /// or nullptr if this is a top-level operation.
-  Operation *getParentOp() { return block ? block->getParentOp() : nullptr; }
+  Operation *getParentOp() {
+    return getBlock() ? getBlock()->getParentOp() : nullptr;
+  }
 
   /// Return the closest surrounding parent operation that is of type 'OpTy'.
   template <typename OpTy>
@@ -1016,7 +1020,7 @@ private:
   /// requires a 'getParent() const' method. Once ilist_node removes this
   /// constraint, we should drop the const to fit the rest of the MLIR const
   /// model.
-  Block *getParent() const { return block; }
+  Block *getParent() const { return blockHasWeakRefPair.getPointer(); }
 
   /// Expose a few methods explicitly for the debugger to call for
   /// visualization.
@@ -1031,8 +1035,11 @@ private:
   }
 #endif
 
-  /// The operation block that contains this operation.
-  Block *block = nullptr;
+  /// The operation block that contains this operation and a bit that signifies
+  /// if the operation has a weak reference.
+  llvm::PointerIntPair<Block *, /*IntBits=*/1, bool> blockHasWeakRefPair;
+
+  bool hasWeakReference() { return blockHasWeakRefPair.getInt(); }
 
   /// This holds information about the source location the operation was defined
   /// or derived from.
