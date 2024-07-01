@@ -78,6 +78,12 @@ static cl::opt<LoopVectorizeHints::ScalableForceKind>
                 "Scalable vectorization is available and favored when the "
                 "cost is inconclusive.")));
 
+static cl::opt<bool> AssumeNoMemFault(
+    "vectorizer-no-mem-fault", cl::init(false), cl::Hidden,
+    cl::desc("Assume vectorized loops will not have memory faults, which is "
+             "potentially unsafe but can be useful for testing vectorization "
+             "of early exit loops."));
+
 /// Maximum vectorization interleave count.
 static const unsigned MaxInterleaveFactor = 16;
 
@@ -1054,7 +1060,7 @@ bool LoopVectorizationLegality::canVectorizeInstrs() {
   return true;
 }
 
-bool LoopVectorizationLegality::canVectorizeMemory() {
+bool LoopVectorizationLegality::canVectorizeMemory(bool IsEarlyExitLoop) {
   LAI = &LAIs.getInfo(*TheLoop);
   const OptimizationRemarkAnalysis *LAR = LAI->getReport();
   if (LAR) {
@@ -1074,6 +1080,57 @@ bool LoopVectorizationLegality::canVectorizeMemory() {
                                "CantVectorizeStoreToLoopInvariantAddress", ORE,
                                TheLoop);
     return false;
+  }
+
+  // For loops with uncountable early exiting blocks that are not the latch
+  // it's necessary to perform extra checks, since the vectoriser is currently
+  // only capable of handling simple search loops.
+  if (IsEarlyExitLoop) {
+    // We don't support calls or any memory accesses that write to memory.
+    if (LAI->getNumStores()) {
+      reportVectorizationFailure(
+          "Writes to memory unsupported in early exit loops",
+          "Cannot vectorize early exit loop", "WritesInEarlyExitLoop", ORE,
+          TheLoop);
+      LLVM_DEBUG(
+          dbgs()
+          << "LV: Found at least one write to memory in early exit loop.\n");
+      return false;
+    }
+
+    if (LAI->getNumCalls()) {
+      reportVectorizationFailure("Calls unsupported in early exit loops",
+                                 "Cannot vectorize early exit loop",
+                                 "CallsInEarlyExitLoop", ORE, TheLoop);
+      LLVM_DEBUG(dbgs() << "LV: Found at least one call in early exit loop.\n");
+      return false;
+    }
+
+    // The vectoriser cannot handle loads that occur after the early exit block.
+    BasicBlock *LatchBB = TheLoop->getLoopLatch();
+    for (Instruction &I : *LatchBB) {
+      if (I.mayReadFromMemory()) {
+        reportVectorizationFailure("Loads not permitted after early exit",
+                                   "Cannot vectorize early exit loop",
+                                   "LoadsAfterEarlyExit", ORE, TheLoop);
+        LLVM_DEBUG(dbgs() << "LV: Found at least one load after early exit.\n");
+        return false;
+      }
+    }
+
+    // The vectoriser does not yet handle loops that may fault, but this will
+    // be improved in a follow-on patch.
+    if (!isDereferenceableReadOnlyLoop(TheLoop, PSE.getSE(), DT, AC)) {
+      // This flag is intended for testing purposes only - enabling it is
+      // potentially unsafe.
+      if (!AssumeNoMemFault) {
+        LLVM_DEBUG(dbgs() << "LV: Not vectorizing: Cannot vectorize faulting "
+                          << "loop with early exit.\n");
+        return false;
+      } else
+        LLVM_DEBUG(dbgs() << "LV: Assuming early exit vector loop will not "
+                          << "fault\n");
+    }
   }
 
   // We can vectorize stores to invariant address when final reduction value is
@@ -1439,6 +1496,103 @@ bool LoopVectorizationLegality::canVectorizeLoopNestCFG(
   return Result;
 }
 
+void LoopVectorizationLegality::recordExitingBlocks() {
+  SmallVector<BasicBlock *, 8> ExitingBlocks;
+  TheLoop->getExitingBlocks(ExitingBlocks);
+
+  SmallVector<BasicBlock *, 4> CountableExitingBBs;
+  PSE.getSE()->getCountableExitingBlocks(TheLoop, &CountableExitingBBs);
+
+  // There could be multiple exiting blocks with an exact exit-not-taken
+  // count. Find all of the uncountable early exit blocks, i.e. the ones with
+  // an unknown count.
+  SmallVector<BasicBlock *, 4> UncountableExitingBBs;
+  SmallVector<BasicBlock *, 4> UncountableExitBBs;
+  for (BasicBlock *BB1 : ExitingBlocks) {
+    if (!is_contained(CountableExitingBBs, BB1)) {
+      UncountableExitingBBs.push_back(BB1);
+
+      for (BasicBlock *BB2 : successors(BB1)) {
+        if (!TheLoop->contains(BB2)) {
+          UncountableExitBBs.push_back(BB2);
+          break;
+        }
+      }
+    }
+  }
+
+  CountableExitingBlocks = std::move(CountableExitingBBs);
+  UncountableExitingBlocks = std::move(UncountableExitingBBs);
+  UncountableExitBlocks = std::move(UncountableExitBBs);
+}
+
+bool LoopVectorizationLegality::isVectorizableEarlyExitLoop() {
+  // At least one of the exiting blocks must be the latch.
+  BasicBlock *LatchBB = TheLoop->getLoopLatch();
+  if (!LatchBB) {
+    reportVectorizationFailure("Loop does not have a latch",
+                               "Cannot vectorize early exit loop",
+                               "NoLatchEarlyExit", ORE, TheLoop);
+    LLVM_DEBUG(dbgs() << "LV: Loop does not have a latch.\n");
+    return false;
+  }
+
+  recordExitingBlocks();
+
+  // We only support one uncountable early exit.
+  if (getUncountableExitingBlocks().size() != 1) {
+    reportVectorizationFailure("Loop has too many uncountable exits",
+                               "Cannot vectorize early exit loop",
+                               "TooManyUncountableEarlyExits", ORE, TheLoop);
+    LLVM_DEBUG(
+        dbgs() << "LV: Loop does not have one uncountable exiting block.\n");
+    return false;
+  }
+
+  // The only supported early exit loops so far are ones where the early
+  // exiting block is a unique predecessor of the latch block.
+  BasicBlock *LatchPredBB = LatchBB->getUniquePredecessor();
+  if (!LatchPredBB || LatchPredBB != getUncountableExitingBlocks()[0]) {
+    reportVectorizationFailure("Early exit is not the latch predecessor",
+                               "Cannot vectorize early exit loop",
+                               "EarlyExitNotLatchPredecessor", ORE, TheLoop);
+    LLVM_DEBUG(
+        dbgs() << "LV: Early exit block is not unique predecessor of latch\n");
+    return false;
+  }
+
+  if (Reductions.size() || FixedOrderRecurrences.size()) {
+    reportVectorizationFailure(
+        "Found reductions or recurrences in early-exit loop",
+        "Cannot vectorize early exit loop", "RecurrencesInEarlyExitLoop", ORE,
+        TheLoop);
+    LLVM_DEBUG(
+        dbgs() << "LV: Found reductions/recurrences in early exit loop.\n");
+    return false;
+  }
+
+  LLVM_DEBUG(
+      dbgs()
+      << "LV: Found an early exit. Retrying with speculative exit count.\n");
+  if (!PSE.getSE()->hasExactPredicatedBackedgeTakenCount(TheLoop, LatchBB)) {
+    reportVectorizationFailure(
+        "Cannot determine exact exit count for latch block",
+        "Cannot vectorize early exit loop",
+        "UnknownLatchExitCountEarlyExitLoop", ORE, TheLoop);
+    LLVM_DEBUG(
+        dbgs() << "LV: Uncountable exit for latch in early exit loop.\n");
+    return false;
+  }
+
+  const SCEV *SpecExitCount = PSE.getSymbolicMaxBackedgeTakenCount();
+  assert(!isa<SCEVCouldNotCompute>(SpecExitCount) &&
+         "Failed to get symbolic expression for backedge taken count");
+
+  LLVM_DEBUG(dbgs() << "LV: Found speculative backedge taken count: "
+                    << *SpecExitCount << '\n');
+  return true;
+}
+
 bool LoopVectorizationLegality::canVectorize(bool UseVPlanNativePath) {
   // Store the result and return it at the end instead of exiting early, in case
   // allowExtraAnalysis is used to report multiple reasons for not vectorizing.
@@ -1497,19 +1651,24 @@ bool LoopVectorizationLegality::canVectorize(bool UseVPlanNativePath) {
       return false;
   }
 
-  // Go over each instruction and look at memory deps.
-  if (!canVectorizeMemory()) {
-    LLVM_DEBUG(dbgs() << "LV: Can't vectorize due to memory conflicts\n");
-    if (DoExtraAnalysis)
-      Result = false;
-    else
-      return false;
+  HasSpeculativeEarlyExit = false;
+  if (isa<SCEVCouldNotCompute>(PSE.getBackedgeTakenCount())) {
+    if (!isVectorizableEarlyExitLoop()) {
+      reportVectorizationFailure(
+          "could not determine number of loop iterations",
+          "could not determine number of loop iterations",
+          "CantComputeNumberOfIterations", ORE, TheLoop);
+      if (DoExtraAnalysis)
+        Result = false;
+      else
+        return false;
+    } else
+      HasSpeculativeEarlyExit = true;
   }
 
-  if (isa<SCEVCouldNotCompute>(PSE.getBackedgeTakenCount())) {
-    reportVectorizationFailure("could not determine number of loop iterations",
-                               "could not determine number of loop iterations",
-                               "CantComputeNumberOfIterations", ORE, TheLoop);
+  // Go over each instruction and look at memory deps.
+  if (!canVectorizeMemory(HasSpeculativeEarlyExit)) {
+    LLVM_DEBUG(dbgs() << "LV: Can't vectorize due to memory conflicts\n");
     if (DoExtraAnalysis)
       Result = false;
     else
