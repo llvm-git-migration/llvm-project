@@ -59,8 +59,95 @@ void sandboxir::Value::printAsOperandCommon(raw_ostream &OS) const {
     OS << "NULL ";
 }
 
+void sandboxir::Argument::printAsOperand(raw_ostream &OS) const {
+  printAsOperandCommon(OS);
+}
+void sandboxir::Argument::dump(raw_ostream &OS) const {
+  dumpCommonPrefix(OS);
+  dumpCommonSuffix(OS);
+}
+void sandboxir::Argument::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+
 void sandboxir::User::dumpCommonHeader(raw_ostream &OS) const {
   Value::dumpCommonHeader(OS);
   // TODO: This is incomplete
 }
 #endif // NDEBUG
+
+const char *sandboxir::Instruction::getOpcodeName(Opcode Opc) {
+  switch (Opc) {
+#define DEF_VALUE(ID, CLASS)
+#define DEF_USER(ID, CLASS)
+#define OP(OPC)                                                                \
+  case Opcode::OPC:                                                            \
+    return #OPC;
+#define OPCODES(...) __VA_ARGS__
+#define DEF_INSTR(ID, OPC, CLASS) OPC
+#include "llvm/SandboxIR/SandboxIRValues.def"
+  }
+}
+
+#ifndef NDEBUG
+void sandboxir::Instruction::dump(raw_ostream &OS) const {
+  OS << "Unimplemented! Please override dump().";
+}
+void sandboxir::Instruction::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+
+void sandboxir::OpaqueInst::dump(raw_ostream &OS) const {
+  dumpCommonPrefix(OS);
+  dumpCommonSuffix(OS);
+}
+
+void sandboxir::OpaqueInst::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+
+void sandboxir::Constant::dump(raw_ostream &OS) const {
+  dumpCommonPrefix(OS);
+  dumpCommonSuffix(OS);
+}
+
+void sandboxir::Constant::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+
+void sandboxir::Function::dumpNameAndArgs(raw_ostream &OS) const {
+  auto *F = cast<llvm::Function>(Val);
+  OS << *getType() << " @" << F->getName() << "(";
+  auto NumArgs = F->arg_size();
+  for (auto [Idx, Arg] : enumerate(F->args())) {
+    auto *SBArg = cast_or_null<sandboxir::Argument>(Ctx.getValue(&Arg));
+    if (SBArg == nullptr)
+      OS << "NULL";
+    else
+      SBArg->printAsOperand(OS);
+    if (Idx + 1 < NumArgs)
+      OS << ", ";
+  }
+  OS << ")";
+}
+void sandboxir::Function::dump(raw_ostream &OS) const {
+  dumpNameAndArgs(OS);
+  OS << " {\n";
+  OS << "}\n";
+}
+void sandboxir::Function::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+#endif // NDEBUG
+
+sandboxir::Value *sandboxir::Context::getValue(llvm::Value *V) const {
+  auto It = LLVMValueToSBValueMap.find(V);
+  if (It != LLVMValueToSBValueMap.end())
+    return It->second.get();
+  return nullptr;
+}
