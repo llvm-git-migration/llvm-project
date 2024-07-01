@@ -8815,6 +8815,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
       // Shuffle single vector.
       ExtraCost += GetValueMinBWAffectedCost(V1);
       CommonVF = cast<FixedVectorType>(V1->getType())->getNumElements();
+      if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+        CommonVF /= VecTy->getNumElements();
       assert(
           all_of(Mask,
                  [=](int Idx) { return Idx < static_cast<int>(CommonVF); }) &&
@@ -8822,6 +8824,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     } else if (V1 && !V2) {
       // Shuffle vector and tree node.
       unsigned VF = cast<FixedVectorType>(V1->getType())->getNumElements();
+      if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+        VF /= VecTy->getNumElements();
       const TreeEntry *E2 = P2.get<const TreeEntry *>();
       CommonVF = std::max(VF, E2->getVectorFactor());
       assert(all_of(Mask,
@@ -8848,6 +8852,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     } else if (!V1 && V2) {
       // Shuffle vector and tree node.
       unsigned VF = cast<FixedVectorType>(V2->getType())->getNumElements();
+      if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+        VF /= VecTy->getNumElements();
       const TreeEntry *E1 = P1.get<const TreeEntry *>();
       CommonVF = std::max(VF, E1->getVectorFactor());
       assert(all_of(Mask,
@@ -8878,6 +8884,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
       unsigned VF = cast<FixedVectorType>(V1->getType())->getNumElements();
       CommonVF =
           std::max(VF, cast<FixedVectorType>(V2->getType())->getNumElements());
+      if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+        CommonVF /= VecTy->getNumElements();
       assert(all_of(Mask,
                     [=](int Idx) {
                       return Idx < 2 * static_cast<int>(CommonVF);
@@ -8895,6 +8903,9 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
           V2 = getAllOnesValue(*R.DL, getWidenedType(ScalarTy, CommonVF));
       }
     }
+    if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy))
+      transformScalarShuffleIndiciesToVector(VecTy->getNumElements(),
+                                             CommonMask);
     InVectors.front() =
         Constant::getNullValue(getWidenedType(ScalarTy, CommonMask.size()));
     if (InVectors.size() == 2)
