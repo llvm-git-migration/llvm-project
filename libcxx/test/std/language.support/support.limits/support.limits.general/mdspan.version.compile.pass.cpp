@@ -17,7 +17,8 @@
 
 /*  Constant                         Value
     __cpp_lib_freestanding_mdspan    202311L [C++26]
-    __cpp_lib_mdspan                 202406L [C++26]
+    __cpp_lib_mdspan                 202207L [C++23]
+                                     202406L [C++26]
     __cpp_lib_submdspan              202306L [C++26]
 */
 
