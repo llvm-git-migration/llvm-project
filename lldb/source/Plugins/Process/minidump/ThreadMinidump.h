@@ -21,7 +21,8 @@ namespace minidump {
 class ThreadMinidump : public Thread {
 public:
   ThreadMinidump(Process &process, const minidump::Thread &td,
-                 llvm::ArrayRef<uint8_t> gpregset_data, std::optional<minidump::Exception> exception);
+                 llvm::ArrayRef<uint8_t> gpregset_data,
+                 std::optional<minidump::Exception> exception);
 
   ~ThreadMinidump() override;
 
