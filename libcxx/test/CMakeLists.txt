@@ -27,7 +27,7 @@ if (LIBCXX_CXX_ABI STREQUAL "libcxxabi")
   add_dependencies(cxx-test-depends install-cxxabi-test-suite-prefix)
 endif()
 
-if (LIBCXXABI_USE_LLVM_UNWINDER)
+if (LIBCXXABI_USE_LLVM_UNWINDER and TARGET unwind)
   add_custom_target(install-unwind-test-suite-prefix
   DEPENDS unwind-headers
           unwind
