@@ -408,7 +408,7 @@ std::vector<const minidump::Module *> MinidumpParser::GetFilteredModuleList() {
         continue;
       }
       // This module has been seen. Modules are sometimes mentioned multiple
-      // times when they are mapped discontiguously, so find the module with 
+      // times when they are mapped discontiguously, so find the module with
       // the lowest "base_of_image" and use that as the filtered module.
       if (module.BaseOfImage < dup_module->BaseOfImage)
         filtered_modules[iter->second] = &module;
@@ -417,7 +417,8 @@ std::vector<const minidump::Module *> MinidumpParser::GetFilteredModuleList() {
   return filtered_modules;
 }
 
-const std::vector<minidump::ExceptionStream> MinidumpParser::GetExceptionStreams() {
+const std::vector<minidump::ExceptionStream>
+MinidumpParser::GetExceptionStreams() {
   auto ExpectedStream = GetMinidumpFile().getExceptionStreams();
   if (ExpectedStream)
     return ExpectedStream.get();

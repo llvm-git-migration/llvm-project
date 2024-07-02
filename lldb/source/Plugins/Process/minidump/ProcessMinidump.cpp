@@ -39,7 +39,6 @@
 
 #include <memory>
 #include <optional>
-#include <iostream>
 
 using namespace lldb;
 using namespace lldb_private;
@@ -158,8 +157,7 @@ ProcessMinidump::ProcessMinidump(lldb::TargetSP target_sp,
                                  const FileSpec &core_file,
                                  DataBufferSP core_data)
     : PostMortemProcess(target_sp, listener_sp, core_file),
-      m_core_data(std::move(core_data)),
-      m_is_wow64(false) {}
+      m_core_data(std::move(core_data)), m_is_wow64(false) {}
 
 ProcessMinidump::~ProcessMinidump() {
   Clear();
@@ -210,18 +208,19 @@ Status ProcessMinidump::DoLoadCore() {
   GetTarget().SetArchitecture(arch, true /*set_platform*/);
 
   m_thread_list = m_minidump_parser->GetThreads();
-  std::vector<minidump::ExceptionStream> exception_streams = m_minidump_parser->GetExceptionStreams();
+  std::vector<minidump::ExceptionStream> exception_streams =
+      m_minidump_parser->GetExceptionStreams();
   for (const auto &exception_stream : exception_streams) {
-    if (m_exceptions_by_tid.count(exception_stream.ThreadId) > 0) {
-      // We only cast to avoid the warning around converting little endian in printf.
-      error.SetErrorStringWithFormat("duplicate exception stream for tid %" PRIu32, (uint32_t)exception_stream.ThreadId);
+    if (!m_exceptions_by_tid
+             .try_emplace(exception_stream.ThreadId, exception_stream)
+             .second) {
+      // We only cast to avoid the warning around converting little endian in
+      // printf.
+      error.SetErrorStringWithFormat(
+          "duplicate exception stream for tid %" PRIu32,
+          (uint32_t)exception_stream.ThreadId);
       return error;
-    } else 
-      m_exceptions_by_tid[exception_stream.ThreadId] = exception_stream;
-
-
-    std::cout << "Adding Exception Stream # " << (uint32_t)exception_stream.ThreadId << std::endl;
-    std::cout << "Added index " << (uint32_t)m_exceptions_by_tid[exception_stream.ThreadId].ExceptionRecord.ExceptionCode << std::endl;
+    }
   }
 
   SetUnixSignals(UnixSignals::Create(GetArchitecture()));
@@ -270,14 +269,12 @@ void ProcessMinidump::RefreshStateAfterStop() {
 
     if (arch.GetTriple().getOS() == llvm::Triple::Linux) {
       uint32_t signo = exception_stream.ExceptionRecord.ExceptionCode;
-      std::cout << "Thread Id : " << exception_stream.ThreadId << " has signal " << signo << std::endl;
       if (signo == 0) {
         // No stop.
         return;
       }
 
-      stop_info = StopInfo::CreateStopReasonWithSignal(
-          *stop_thread, signo);
+      stop_info = StopInfo::CreateStopReasonWithSignal(*stop_thread, signo);
     } else if (arch.GetTriple().getVendor() == llvm::Triple::Apple) {
       stop_info = StopInfoMachException::CreateStopReasonWithMachException(
           *stop_thread, exception_stream.ExceptionRecord.ExceptionCode, 2,
@@ -288,10 +285,10 @@ void ProcessMinidump::RefreshStateAfterStop() {
       llvm::raw_string_ostream desc_stream(desc);
       desc_stream << "Exception "
                   << llvm::format_hex(
-                        exception_stream.ExceptionRecord.ExceptionCode, 8)
+                         exception_stream.ExceptionRecord.ExceptionCode, 8)
                   << " encountered at address "
                   << llvm::format_hex(
-                        exception_stream.ExceptionRecord.ExceptionAddress, 8);
+                         exception_stream.ExceptionRecord.ExceptionAddress, 8);
       stop_info = StopInfo::CreateStopReasonWithException(
           *stop_thread, desc_stream.str().c_str());
     }
@@ -405,14 +402,14 @@ bool ProcessMinidump::DoUpdateThreadList(ThreadList &old_thread_list,
       exception = m_exceptions_by_tid[thread.ThreadId].ExceptionRecord;
     }
 
-
     llvm::ArrayRef<uint8_t> context;
     if (!m_is_wow64)
       context = m_minidump_parser->GetThreadContext(context_location);
     else
       context = m_minidump_parser->GetThreadContextWow64(thread);
 
-    lldb::ThreadSP thread_sp(new ThreadMinidump(*this, thread, context, exception));
+    lldb::ThreadSP thread_sp(
+        new ThreadMinidump(*this, thread, context, exception));
     new_thread_list.AddThread(thread_sp);
   }
   return new_thread_list.GetSize(false) > 0;
