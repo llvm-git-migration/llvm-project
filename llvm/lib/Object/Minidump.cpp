@@ -9,6 +9,7 @@
 #include "llvm/Object/Minidump.h"
 #include "llvm/Object/Error.h"
 #include "llvm/Support/ConvertUTF.h"
+#include <iostream>
 
 using namespace llvm;
 using namespace llvm::object;
@@ -51,6 +52,33 @@ Expected<std::string> MinidumpFile::getString(size_t Offset) const {
     return createError("String decoding failed");
 
   return Result;
+}
+
+Expected<std::vector<minidump::ExceptionStream>> MinidumpFile::getExceptionStreams() const {
+  // Scan the directories for exceptions first
+  std::vector<Directory> exceptionStreams;
+  for (const auto &directory : Streams) {
+    if (directory.Type == StreamType::Exception)
+      exceptionStreams.push_back(directory);
+  }
+
+  if (exceptionStreams.empty())
+    return createError("No exception streams found");
+
+  std::vector<minidump::ExceptionStream> exceptionStreamList;
+  for (const auto &exceptionStream : exceptionStreams) {
+    llvm::Expected<minidump::ExceptionStream> ExpectedStream = getStreamFromDirectory<minidump::ExceptionStream>(exceptionStream);
+    if (!ExpectedStream)
+      return ExpectedStream.takeError();
+
+    std::cout << "Adding Exception Stream # " << exceptionStreamList.size() << std::endl;
+    std::cout << "Thread Id : " << ExpectedStream->ThreadId << std::endl;
+    std::cout << "Exception Code : " << ExpectedStream.get().ExceptionRecord.ExceptionCode << std::endl;
+    exceptionStreamList.push_back(ExpectedStream.get());
+    assert(exceptionStreamList.back().ThreadId == ExpectedStream->ThreadId);
+  }
+
+  return exceptionStreamList;
 }
 
 Expected<iterator_range<MinidumpFile::MemoryInfoIterator>>
@@ -127,6 +155,7 @@ MinidumpFile::create(MemoryBufferRef Source) {
     return ExpectedStreams.takeError();
 
   DenseMap<StreamType, std::size_t> StreamMap;
+  std::vector<std::size_t> ExceptionStreams;
   for (const auto &StreamDescriptor : llvm::enumerate(*ExpectedStreams)) {
     StreamType Type = StreamDescriptor.value().Type;
     const LocationDescriptor &Loc = StreamDescriptor.value().Location;
@@ -139,6 +168,14 @@ MinidumpFile::create(MemoryBufferRef Source) {
     if (Type == StreamType::Unused && Loc.DataSize == 0) {
       // Ignore dummy streams. This is technically ill-formed, but a number of
       // existing minidumps seem to contain such streams.
+      continue;
+    }
+
+    // We treat exceptions differently here because the LLDB minidump
+    // makes some assumptions about uniqueness, all the streams other than exceptions
+    // are lists. But exceptions are not a list, they are single streams that point back to their thread
+    // So we will omit them here, and will find them when needed in the MinidumpFile.
+    if (Type == StreamType::Exception) {
       continue;
     }
 
