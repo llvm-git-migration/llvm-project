@@ -7162,7 +7162,7 @@
 #   error "__cpp_lib_mdspan should be defined in c++26"
 # endif
 # if __cpp_lib_mdspan != 202406L
-#   error "__cpp_lib_mdspan should have the value 202207L in c++26"
+#   error "__cpp_lib_mdspan should have the value 202406L in c++26"
 # endif
 
 # if !defined(_LIBCPP_VERSION) || _LIBCPP_AVAILABILITY_HAS_PMR
