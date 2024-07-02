@@ -82,7 +82,7 @@ public:
   // have the same name, it keeps the copy with the lowest load address.
   std::vector<const minidump::Module *> GetFilteredModuleList();
 
-  const llvm::minidump::ExceptionStream *GetExceptionStream();
+  const std::vector<llvm::minidump::ExceptionStream> GetExceptionStreams();
 
   std::optional<Range> FindMemoryRange(lldb::addr_t addr);
 
