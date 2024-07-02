@@ -26,6 +26,7 @@ add_clang_library(clangTidyUtils
   TransformerClangTidyCheck.cpp
   TypeTraits.cpp
   UsingInserter.cpp
+  UseRangesCheck.cpp
 
   LINK_LIBS
   clangTidy
