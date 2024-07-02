@@ -1142,6 +1142,13 @@ def adde_to_addo: GICombineRule<
          [{ return Helper.matchAddEToAddO(*${root}, ${matchinfo}); }]),
   (apply [{ Helper.applyBuildFnNoErase(*${root}, ${matchinfo}); }])>;
 
+def narrow_add_to_half: GICombineRule<
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (wip_match_opcode G_ADD):$root,
+    [{ return Helper.matchAddWithKnownZeroLowerHalfBits(*${root}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${root}, ${matchinfo}); }])
+>;
+
 def mulh_to_lshr : GICombineRule<
   (defs root:$root),
   (match (wip_match_opcode G_UMULH):$root,
@@ -1829,7 +1836,8 @@ def known_bits_simplifications : GICombineGroup<[
   sext_inreg_to_zext_inreg]>;
 
 def width_reduction_combines : GICombineGroup<[reduce_shl_of_extend,
-                                               narrow_binop_feeding_and]>;
+                                               narrow_binop_feeding_and,
+                                               narrow_add_to_half]>;
 
 def phi_combines : GICombineGroup<[extend_through_phis]>;
 
