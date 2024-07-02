@@ -494,9 +494,9 @@ class MiniDumpNewTestCase(TestBase):
 
     def test_multiple_exceptions_or_signals(self):
         """Test that lldb can read the exception information from the Minidump."""
-        print ("Starting to read multiple-sigsev.yaml")
+        print("Starting to read multiple-sigsev.yaml")
         self.process_from_yaml("multiple-sigsev.yaml")
-        print ("Done reading multiple-sigsev.yaml")
+        print("Done reading multiple-sigsev.yaml")
         self.check_state()
         # This process crashed due to a segmentation fault in both it's threads.
         self.assertEqual(self.process.GetNumThreads(), 2)
