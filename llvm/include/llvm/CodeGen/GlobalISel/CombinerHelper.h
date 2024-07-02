@@ -714,6 +714,9 @@ public:
   /// (G_*SUBE x, y, 0) -> (G_*SUBO x, y)
   bool matchAddEToAddO(MachineInstr &MI, BuildFnTy &MatchInfo);
 
+  bool matchAddWithKnownZeroLowerHalfBits(MachineInstr &MI,
+                                          BuildFnTy &MatchInfo);
+
   /// Transform (fadd x, fneg(y)) -> (fsub x, y)
   ///           (fadd fneg(x), y) -> (fsub y, x)
   ///           (fsub x, fneg(y)) -> (fadd x, y)
