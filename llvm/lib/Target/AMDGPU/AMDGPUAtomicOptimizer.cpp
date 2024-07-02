@@ -178,7 +178,7 @@ bool AMDGPUAtomicOptimizerImpl::run(Function &F) {
   return Changed;
 }
 
-static bool isOptimizableAtomic(Type *Ty) {
+static bool isLegalCrossLaneType(Type *Ty) {
   switch (Ty->getTypeID()) {
   case Type::FloatTyID:
   case Type::DoubleTyID:
@@ -248,7 +248,7 @@ void AMDGPUAtomicOptimizerImpl::visitAtomicRMWInst(AtomicRMWInst &I) {
     if (ScanImpl == ScanOptions::DPP && !ST->hasDPP())
       return;
 
-    if (!isOptimizableAtomic(I.getType()))
+    if (!isLegalCrossLaneType(I.getType()))
       return;
   }
 
@@ -334,7 +334,7 @@ void AMDGPUAtomicOptimizerImpl::visitIntrinsicInst(IntrinsicInst &I) {
     if (ScanImpl == ScanOptions::DPP && !ST->hasDPP())
       return;
 
-    if (!isOptimizableAtomic(I.getType()))
+    if (!isLegalCrossLaneType(I.getType()))
       return;
   }
 
