@@ -12,8 +12,6 @@
 #include "test/src/math/sdcomp26094.h"
 #include "utils/MPFRWrapper/MPFRUtils.h"
 
-#include <stdint.h>
-
 using LlvmLibcCospifTest = LIBC_NAMESPACE::testing::FPTest<float>;
 
 using LIBC_NAMESPACE::testing::SDCOMP26094_VALUES;

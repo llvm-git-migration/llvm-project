@@ -10,8 +10,6 @@ add_fp_unittest(
   DEPENDS
     libc.src.errno.errno
     libc.src.math.cosf
-    libc.src.__support.CPP.array
-    libc.src.__support.FPUtil.fp_bits
 )
 
 add_fp_unittest(

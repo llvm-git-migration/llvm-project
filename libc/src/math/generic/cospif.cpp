@@ -39,7 +39,7 @@ LLVM_LIBC_FUNCTION(float, cospif, (float x)) {
   //
   // Once k and y are computed, we then deduce the answer by the cosine of sum
   // formula:
-  //   cos(x) = cos((k + y)*pi/32)
+  //   cospi(x) = cos((k + y)*pi/32)
   //          = cos(y*pi/32) * cos(k*pi/32) - sin(y*pi/32) * sin(k*pi/32)
   // The values of sin(k*pi/32) and cos(k*pi/32) for k = 0..63 are precomputed
   // and stored using a vector of 32 doubles. Sin(y*pi/32) and cos(y*pi/32) are
