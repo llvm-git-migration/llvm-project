@@ -5099,6 +5099,69 @@ bool CombinerHelper::matchAddEToAddO(MachineInstr &MI, BuildFnTy &MatchInfo) {
   return true;
 }
 
+bool CombinerHelper::matchAddWithKnownZeroLowerHalfBits(MachineInstr &MI,
+                                                        BuildFnTy &MatchInfo) {
+  assert(MI.getOpcode() == TargetOpcode::G_ADD);
+
+  const Register DstReg = MI.getOperand(0).getReg();
+  const LLT DstTy = MRI.getType(DstReg);
+
+  if (!DstTy.isScalar()) {
+    return false;
+  }
+
+  const std::uint64_t FullSize = DstTy.getSizeInBits();
+  const std::uint64_t HalfSize = (FullSize + 1) / 2;
+
+  MachineFunction &MF = *MI.getMF();
+  const DataLayout &DL = MF.getDataLayout();
+
+  if (DL.isLegalInteger(FullSize) || !DL.isLegalInteger(HalfSize)) {
+    return false;
+  }
+
+  const Register LhsReg = MI.getOperand(1).getReg();
+  const Register RhsReg = MI.getOperand(2).getReg();
+
+  const KnownBits LhsKnownBits = KB->getKnownBits(LhsReg);
+  const KnownBits LhsLoBits = LhsKnownBits.extractBits(HalfSize, 0);
+
+  const KnownBits RhsKnownBits = KB->getKnownBits(RhsReg);
+  const KnownBits RhsLoBits = RhsKnownBits.extractBits(HalfSize, 0);
+
+  const bool LhsHasLoZeros =
+      LhsLoBits.isConstant() && LhsLoBits.getConstant().isZero();
+  const bool RhsHasLoZeros =
+      RhsLoBits.isConstant() && RhsLoBits.getConstant().isZero();
+
+  if (!LhsHasLoZeros && !RhsHasLoZeros) {
+    return false;
+  }
+
+  const auto Flags = MI.getFlags();
+
+  MatchInfo = [=](MachineIRBuilder &MIRBuilder) {
+    const LLT HalfTy = LLT::scalar(HalfSize);
+
+    const auto LhsSubRegs = MIRBuilder.buildUnmerge(HalfTy, LhsReg);
+    const auto RhsSubRegs = MIRBuilder.buildUnmerge(HalfTy, RhsReg);
+
+    const Register ResHiReg = MRI.createGenericVirtualRegister(HalfTy);
+
+    MIRBuilder.buildAdd(ResHiReg, LhsSubRegs.getReg(1), RhsSubRegs.getReg(1),
+                        Flags);
+
+    if (LhsHasLoZeros) {
+      MIRBuilder.buildMergeLikeInstr(DstReg, {RhsSubRegs.getReg(0), ResHiReg});
+    } else {
+      assert(RhsHasLoZeros);
+      MIRBuilder.buildMergeLikeInstr(DstReg, {LhsSubRegs.getReg(0), ResHiReg});
+    }
+  };
+
+  return true;
+}
+
 bool CombinerHelper::matchSubAddSameReg(MachineInstr &MI,
                                         BuildFnTy &MatchInfo) {
   assert(MI.getOpcode() == TargetOpcode::G_SUB);
