@@ -34,9 +34,9 @@ using namespace lldb_private;
 using namespace minidump;
 
 ThreadMinidump::ThreadMinidump(Process &process, const minidump::Thread &td,
-                               llvm::ArrayRef<uint8_t> gpregset_data)
+                               llvm::ArrayRef<uint8_t> gpregset_data, std::optional<minidump::Exception> exception)
     : Thread(process, td.ThreadId), m_thread_reg_ctx_sp(),
-      m_gpregset_data(gpregset_data) {}
+      m_gpregset_data(gpregset_data), m_exception(exception) {}
 
 ThreadMinidump::~ThreadMinidump() = default;
 
@@ -115,4 +115,12 @@ ThreadMinidump::CreateRegisterContextForFrame(StackFrame *frame) {
   return reg_ctx_sp;
 }
 
-bool ThreadMinidump::CalculateStopInfo() { return false; }
+bool ThreadMinidump::CalculateStopInfo() {
+  if (!m_exception)
+    return false;
+
+  minidump::Exception thread_exception = m_exception.value();
+  SetStopInfo(StopInfo::CreateStopReasonWithSignal(
+      *this, thread_exception.ExceptionCode, /*description=*/nullptr, thread_exception.ExceptionCode));
+  return true;
+}
