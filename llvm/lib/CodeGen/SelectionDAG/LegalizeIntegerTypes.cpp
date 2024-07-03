@@ -4535,26 +4535,12 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
     LoadStoreVT = TLI.getTypeToTransformTo(*DAG.getContext(), LoadStoreVT);
   } while (!TLI.isTypeLegal(LoadStoreVT));
 
-  const unsigned KnownTrailingZeros =
-      DAG.computeKnownBits(ShAmt).countMinTrailingZeros();
-
-  const Align LoadStoreAlign = [&]() -> Align {
-    unsigned IsFast = 0;
-    const bool AllowsFastMisalignedMemoryAccesses =
-        TLI.allowsMisalignedMemoryAccesses(
-            LoadStoreVT, /*AddrSpace=*/DAG.getDataLayout().getAllocaAddrSpace(),
-            /*Alignment=*/Align(LoadStoreVT.getStoreSize()),
-            /*Flags=*/MachineMemOperand::MOLoad | MachineMemOperand::MOStore,
-            &IsFast) &&
-        IsFast;
-    if (AllowsFastMisalignedMemoryAccesses && KnownTrailingZeros >= 3)
-      return Align(1);
-
-    return DAG.getReducedAlign(LoadStoreVT, /*UseABI=*/false);
-  }();
-
-  const unsigned ShiftUnitInBits = LoadStoreAlign.value() * 8;
-  const bool IsOneStepShift = KnownTrailingZeros >= Log2_32(ShiftUnitInBits);
+  const unsigned ShiftUnitInBits = LoadStoreVT.getStoreSize() * 8;
+  assert(isPowerOf2_32(ShiftUnitInBits) &&
+         "Shifting unit is not a a power of two!");
+  const bool IsOneStepShift =
+      DAG.computeKnownBits(ShAmt).countMinTrailingZeros() >=
+      Log2_32(ShiftUnitInBits);
 
   // If we can't do it as one step, we'll have two uses of shift amount,
   // and thus must freeze it.
@@ -4572,9 +4558,7 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
 
   // Get a temporary stack slot 2x the width of our VT.
   // FIXME: reuse stack slots?
-  Align StackSlotAlignment(LoadStoreAlign);
-  SDValue StackPtr = DAG.CreateStackTemporary(
-      TypeSize::getFixed(StackSlotByteWidth), StackSlotAlignment);
+  SDValue StackPtr = DAG.CreateStackTemporary(StackSlotVT);
   EVT PtrTy = StackPtr.getValueType();
   SDValue Ch = DAG.getEntryNode();
 
@@ -4594,7 +4578,7 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
     Init = DAG.getNode(ISD::BUILD_PAIR, dl, StackSlotVT, AllZeros, Shiftee);
   }
   // And spill it into the stack slot.
-  Ch = DAG.getStore(Ch, dl, Init, StackPtr, StackPtrInfo, StackSlotAlignment);
+  Ch = DAG.getStore(Ch, dl, Init, StackPtr, StackPtrInfo);
 
   // Now, compute the full-byte offset into stack slot from where we can load.
   // We have shift amount, which is in bits. Offset should point to an aligned
@@ -4640,11 +4624,9 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
   AdjStackPtr = DAG.getMemBasePlusOffset(AdjStackPtr, Offset, dl);
 
   // And load it! While the load is not legal, legalizing it is obvious.
-  SDValue Res =
-      DAG.getLoad(VT, dl, Ch, AdjStackPtr,
-                  MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()),
-                  LoadStoreAlign);
-  // We've performed the shift by a CHAR_BIT * [ShAmt / LoadAlign]
+  SDValue Res = DAG.getLoad(
+      VT, dl, Ch, AdjStackPtr,
+      MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()));
 
   // If we may still have a remaining bits to shift by, do so now.
   if (!IsOneStepShift) {

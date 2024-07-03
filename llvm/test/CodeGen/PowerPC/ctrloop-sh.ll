@@ -13,22 +13,22 @@ define void @foo1(ptr %a, ptr readonly %b, ptr readonly %c) #0 {
 ; CHECK-NEXT:    stw 30, 56(1) # 4-byte Folded Spill
 ; CHECK-NEXT:    li 6, 0
 ; CHECK-NEXT:    mtctr 7
-; CHECK-NEXT:    addi 7, 1, 20
+; CHECK-NEXT:    addi 7, 1, 16
 ; CHECK-NEXT:  .LBB0_1: # %for.body
 ; CHECK-NEXT:    #
-; CHECK-NEXT:    lwz 8, 0(4)
-; CHECK-NEXT:    lwz 9, 4(4)
-; CHECK-NEXT:    lwz 10, 8(4)
-; CHECK-NEXT:    lwz 11, 12(4)
+; CHECK-NEXT:    lwz 8, 4(4)
+; CHECK-NEXT:    lwz 9, 12(4)
+; CHECK-NEXT:    lwz 10, 0(4)
+; CHECK-NEXT:    lwz 11, 8(4)
 ; CHECK-NEXT:    lwz 12, 12(5)
-; CHECK-NEXT:    stw 6, 48(1)
-; CHECK-NEXT:    stw 6, 44(1)
 ; CHECK-NEXT:    stw 6, 40(1)
+; CHECK-NEXT:    stw 6, 32(1)
+; CHECK-NEXT:    stw 6, 44(1)
 ; CHECK-NEXT:    stw 6, 36(1)
-; CHECK-NEXT:    stw 11, 32(1)
-; CHECK-NEXT:    stw 10, 28(1)
+; CHECK-NEXT:    stw 11, 24(1)
+; CHECK-NEXT:    stw 10, 16(1)
 ; CHECK-NEXT:    clrlwi 10, 12, 27
-; CHECK-NEXT:    stw 9, 24(1)
+; CHECK-NEXT:    stw 9, 28(1)
 ; CHECK-NEXT:    stw 8, 20(1)
 ; CHECK-NEXT:    rlwinm 8, 12, 29, 28, 29
 ; CHECK-NEXT:    lwzux 9, 8, 7
@@ -84,22 +84,22 @@ define void @foo2(ptr %a, ptr readonly %b, ptr readonly %c) #0 {
 ; CHECK-NEXT:    addi 6, 1, 24
 ; CHECK-NEXT:  .LBB1_1: # %for.body
 ; CHECK-NEXT:    #
-; CHECK-NEXT:    lwz 7, 0(4)
-; CHECK-NEXT:    lwz 8, 4(4)
+; CHECK-NEXT:    lwz 7, 8(4)
+; CHECK-NEXT:    lwz 8, 0(4)
 ; CHECK-NEXT:    lwz 11, 12(5)
-; CHECK-NEXT:    lwz 9, 8(4)
+; CHECK-NEXT:    lwz 9, 4(4)
 ; CHECK-NEXT:    lwz 10, 12(4)
-; CHECK-NEXT:    stw 8, 28(1)
+; CHECK-NEXT:    stw 7, 32(1)
+; CHECK-NEXT:    srawi 7, 8, 31
+; CHECK-NEXT:    stw 8, 24(1)
 ; CHECK-NEXT:    rlwinm 8, 11, 29, 28, 29
-; CHECK-NEXT:    stw 7, 24(1)
-; CHECK-NEXT:    srawi 7, 7, 31
 ; CHECK-NEXT:    stw 10, 36(1)
 ; CHECK-NEXT:    clrlwi 10, 11, 27
-; CHECK-NEXT:    stw 9, 32(1)
+; CHECK-NEXT:    stw 9, 28(1)
 ; CHECK-NEXT:    subfic 12, 10, 32
 ; CHECK-NEXT:    stw 7, 20(1)
-; CHECK-NEXT:    stw 7, 16(1)
 ; CHECK-NEXT:    stw 7, 12(1)
+; CHECK-NEXT:    stw 7, 16(1)
 ; CHECK-NEXT:    stw 7, 8(1)
 ; CHECK-NEXT:    sub 7, 6, 8
 ; CHECK-NEXT:    lwz 8, 4(7)
@@ -152,24 +152,24 @@ define void @foo3(ptr %a, ptr readonly %b, ptr readonly %c) #0 {
 ; CHECK-NEXT:    stw 30, 56(1) # 4-byte Folded Spill
 ; CHECK-NEXT:    li 6, 0
 ; CHECK-NEXT:    mtctr 7
-; CHECK-NEXT:    addi 7, 1, 36
+; CHECK-NEXT:    addi 7, 1, 32
 ; CHECK-NEXT:  .LBB2_1: # %for.body
 ; CHECK-NEXT:    #
 ; CHECK-NEXT:    lwz 8, 0(4)
 ; CHECK-NEXT:    lwz 12, 12(5)
-; CHECK-NEXT:    lwz 9, 4(4)
-; CHECK-NEXT:    lwz 10, 8(4)
+; CHECK-NEXT:    lwz 9, 8(4)
+; CHECK-NEXT:    lwz 10, 4(4)
 ; CHECK-NEXT:    lwz 11, 12(4)
-; CHECK-NEXT:    stw 8, 36(1)
+; CHECK-NEXT:    stw 8, 32(1)
 ; CHECK-NEXT:    rlwinm 8, 12, 29, 28, 29
-; CHECK-NEXT:    stw 6, 32(1)
-; CHECK-NEXT:    sub 8, 7, 8
 ; CHECK-NEXT:    stw 6, 28(1)
-; CHECK-NEXT:    stw 6, 24(1)
+; CHECK-NEXT:    sub 8, 7, 8
 ; CHECK-NEXT:    stw 6, 20(1)
-; CHECK-NEXT:    stw 11, 48(1)
+; CHECK-NEXT:    stw 6, 24(1)
+; CHECK-NEXT:    stw 6, 16(1)
+; CHECK-NEXT:    stw 11, 44(1)
 ; CHECK-NEXT:    clrlwi 11, 12, 27
-; CHECK-NEXT:    stw 10, 44(1)
+; CHECK-NEXT:    stw 10, 36(1)
 ; CHECK-NEXT:    subfic 0, 11, 32
 ; CHECK-NEXT:    stw 9, 40(1)
 ; CHECK-NEXT:    lwz 9, 4(8)
