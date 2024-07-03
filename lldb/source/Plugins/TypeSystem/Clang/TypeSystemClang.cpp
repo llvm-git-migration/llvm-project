@@ -8649,19 +8649,24 @@ static bool DumpEnumValue(const clang::QualType &qual_type, Stream &s,
   // At the same time, we're applying a heuristic to determine whether we want
   // to print this enum as a bitfield. We're likely dealing with a bitfield if
   // every enumerator is either a one bit value or a superset of the previous
-  // enumerators. Also 0 doesn't make sense when the enumerators are used as
-  // flags.
-  for (auto *enumerator : enum_decl->enumerators()) {
-    uint64_t val = enumerator->getInitVal().getSExtValue();
-    val = llvm::SignExtend64(val, 8*byte_size);
-    if (llvm::popcount(val) != 1 && (val & ~covered_bits) != 0)
-      can_be_bitfield = false;
-    covered_bits |= val;
-    ++num_enumerators;
-    if (val == enum_svalue) {
-      // Found an exact match, that's all we need to do.
-      s.PutCString(enumerator->getNameAsString());
-      return true;
+  // enumerators. Also an enumerator of 0 doesn't make sense when the
+  // enumerators are used as flags.
+  clang::EnumDecl::enumerator_range enumerators = enum_decl->enumerators();
+  if (enumerators.empty())
+    can_be_bitfield = false;
+  else {
+    for (auto *enumerator : enum_decl->enumerators()) {
+      uint64_t val = enumerator->getInitVal().getSExtValue();
+      val = llvm::SignExtend64(val, 8 * byte_size);
+      if (llvm::popcount(val) != 1 && (val & ~covered_bits) != 0)
+        can_be_bitfield = false;
+      covered_bits |= val;
+      ++num_enumerators;
+      if (val == enum_svalue) {
+        // Found an exact match, that's all we need to do.
+        s.PutCString(enumerator->getNameAsString());
+        return true;
+      }
     }
   }
 
