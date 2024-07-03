@@ -445,4 +445,21 @@ void aarch64::getAArch64TargetFeatures(const Driver &D,
 
   if (Args.getLastArg(options::OPT_mno_bti_at_return_twice))
     Features.push_back("+no-bti-at-return-twice");
+
+  // Parse AArch64 CPU Features
+  const Arg *CPUArg = Args.getLastArg(options::OPT_mcpu_EQ);
+  StringRef CPUName;
+
+  if (CPUArg) {
+    CPUName = CPUArg->getValue();
+    if (CPUName == "native") {
+      llvm::StringMap<bool> HostFeatures;
+      if (llvm::sys::getHostCPUFeatures(HostFeatures)) {
+        for (auto &F : HostFeatures) {
+          Features.push_back(
+            Args.MakeArgString((F.second ? "+" : "-") + F.first()));
+        }
+      }
+    }
+  }
 }
