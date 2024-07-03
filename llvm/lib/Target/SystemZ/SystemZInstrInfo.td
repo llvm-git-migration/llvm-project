@@ -1566,9 +1566,22 @@ let Predicates = [FeatureHighWord] in {
 // bits of the first operand.  The CC result only describes the selected bits,
 // so isn't useful for a full comparison against zero.
 let Defs = [CC] in {
-  def RNSBG : RotateSelectRIEf<"rnsbg", 0xEC54, GR64, GR64>;
-  def ROSBG : RotateSelectRIEf<"rosbg", 0xEC56, GR64, GR64>;
-  def RXSBG : RotateSelectRIEf<"rxsbg", 0xEC57, GR64, GR64>;
+  def RNSBG  : RotateSelectRIEf<"rnsbg", 0xEC54, GR64, GR64>;
+  def NHHR   : FixedRotateSelectRIEf<"nhhr", 0xEC54, GR64, GR64, 0, 31>;
+  def NHLR   : FixedRotateSelectRIEf<"nhlr", 0xEC54, GR64, GR64, 0, 31, 32>;
+  def NLHR   : FixedRotateSelectRIEf<"nlhr", 0xEC54, GR64, GR64, 32, 63, 32>;
+  def ROSBG  : RotateSelectRIEf<"rosbg", 0xEC56, GR64, GR64>;
+  def OHHR   : FixedRotateSelectRIEf<"ohhr", 0xEC56, GR64, GR64, 0, 31>;
+  def OHLR   : FixedRotateSelectRIEf<"ohlr", 0xEC56, GR64, GR64, 0, 31, 32>;
+  def OLHR   : FixedRotateSelectRIEf<"olhr", 0xEC56, GR64, GR64, 32, 63, 32>;
+  def RXSBG  : RotateSelectRIEf<"rxsbg", 0xEC57, GR64, GR64>;
+  def XHHR   : FixedRotateSelectRIEf<"xhhr", 0xEC57, GR64, GR64, 0, 31>;
+  def XHLR   : FixedRotateSelectRIEf<"xhlr", 0xEC57, GR64, GR64, 0, 31, 32>;
+  def XLHR   : FixedRotateSelectRIEf<"xlhr", 0xEC57, GR64, GR64, 32, 63, 32>;
+  // 128 on I3 sets the T bit for the instruction
+  def RNSBGT : RotateSelectRIEf<"rnsbgt", 0xEC54, GR64, GR64, 128>;
+  def ROSBGT : RotateSelectRIEf<"rosbgt", 0xEC56, GR64, GR64, 128>;
+  def RXSBGT : RotateSelectRIEf<"rxsbgt", 0xEC57, GR64, GR64, 128>;
 }
 
 //===----------------------------------------------------------------------===//

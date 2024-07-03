@@ -512,7 +512,8 @@ def : InstRW<[WLat1, FXa, NormalGr], (instregex "RISBG(N|32)?(Z)?$")>;
 def : InstRW<[WLat1, FXa, NormalGr], (instregex "RISBMux$")>;
 
 // Rotate and Select
-def : InstRW<[WLat3, WLat3, FXa2, Cracked], (instregex "R(N|O|X)SBG$")>;
+def : InstRW<[WLat3, WLat3, FXa2, Cracked], (instregex "R(N|O|X)SBG(T)?$")>;
+def : InstRW<[WLat3, WLat3, FXa2, Cracked], (instregex "(N|O|X)(L|H)(L|H)R$")>;
 
 //===----------------------------------------------------------------------===//
 // Comparison

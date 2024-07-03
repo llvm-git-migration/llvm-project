@@ -5048,6 +5048,17 @@ class RotateSelectRIEf<string mnemonic, bits<16> opcode, RegisterOperand cls1,
   let DisableEncoding = "$R1src";
 }
 
+class FixedRotateSelectRIEf<string mnemonic, bits<16> opcode, RegisterOperand cls1,
+                       RegisterOperand cls2, bits<8> I3_in, bits<8> I4_in, bits<8> I5_in = 0>
+  : InstRIEf<opcode, (outs cls1:$R1), (ins cls1:$R1src, cls2:$R2),
+             mnemonic#"\t$R1, $R2", []> {
+  let I3 = I3_in;
+  let I4 = I4_in;
+  let I5 = I5_in;
+  let Constraints = "$R1 = $R1src";
+  let DisableEncoding = "$R1src";
+}
+
 class PrefetchRXY<string mnemonic, bits<16> opcode, SDPatternOperator operator>
   : InstRXYb<opcode, (outs),
              (ins imm32zx4:$M1, (bdxaddr20only $B2, $D2, $X2):$XBD2),
