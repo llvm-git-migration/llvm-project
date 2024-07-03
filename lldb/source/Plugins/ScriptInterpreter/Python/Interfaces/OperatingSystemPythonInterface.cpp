@@ -19,11 +19,14 @@
 #include "../SWIGPythonBridge.h"
 #include "../ScriptInterpreterPythonImpl.h"
 #include "OperatingSystemPythonInterface.h"
+#include "lldb/Core/PluginManager.h"
 
 using namespace lldb;
 using namespace lldb_private;
 using namespace lldb_private::python;
 using Locker = ScriptInterpreterPythonImpl::Locker;
+
+LLDB_PLUGIN_DEFINE(OperatingSystemPythonInterface)
 
 OperatingSystemPythonInterface::OperatingSystemPythonInterface(
     ScriptInterpreterPythonImpl &interpreter)
@@ -77,6 +80,20 @@ OperatingSystemPythonInterface::GetRegisterContextForTID(lldb::tid_t tid) {
     return {};
 
   return obj->GetAsString()->GetValue().str();
+}
+
+void OperatingSystemPythonInterface::Initialize() {
+  const std::vector<llvm::StringRef> ci_usages = {
+      "settings set target.process.python-os-plugin-path <script-path>",
+      "settings set process.experimental.os-plugin-reports-all-threads [0/1]"};
+  const std::vector<llvm::StringRef> api_usages = {};
+  PluginManager::RegisterPlugin(
+      GetPluginNameStatic(), llvm::StringRef("Mock thread state"),
+      CreateInstance, eScriptLanguagePython, ci_usages, api_usages);
+}
+
+void OperatingSystemPythonInterface::Terminate() {
+  PluginManager::UnregisterPlugin(CreateInstance);
 }
 
 #endif
