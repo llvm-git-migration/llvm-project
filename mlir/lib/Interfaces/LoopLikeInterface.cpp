@@ -138,6 +138,7 @@ LoopLikeOpInterface mlir::createFused(LoopLikeOpInterface target,
   if (failed(maybeFusedLoop))
     llvm_unreachable("failed to replace loop");
   LoopLikeOpInterface fusedLoop = *maybeFusedLoop;
+  rewriter.moveOpBefore(fusedLoop, source);
 
   // Map control operands.
   IRMapping mapping;
