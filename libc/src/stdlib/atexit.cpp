@@ -13,6 +13,9 @@
 
 namespace LIBC_NAMESPACE {
 
+constinit ExitCallbackList atexit_callbacks;
+Mutex handler_list_mtx(false, false, false, false);
+
 extern "C" {
 
 int __cxa_atexit(AtExitCallback *callback, void *payload, void *) {

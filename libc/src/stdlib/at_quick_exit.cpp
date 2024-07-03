@@ -13,6 +13,8 @@
 
 namespace LIBC_NAMESPACE {
 
+constinit ExitCallbackList at_quick_exit_callbacks;
+
 LLVM_LIBC_FUNCTION(int, at_quick_exit, (__atexithandler_t callback)) {
   return add_atexit_unit(
       at_quick_exit_callbacks,
