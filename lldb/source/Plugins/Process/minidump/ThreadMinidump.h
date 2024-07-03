@@ -21,8 +21,7 @@ namespace minidump {
 class ThreadMinidump : public Thread {
 public:
   ThreadMinidump(Process &process, const minidump::Thread &td,
-                 llvm::ArrayRef<uint8_t> gpregset_data,
-                 std::optional<minidump::Exception> exception);
+                 llvm::ArrayRef<uint8_t> gpregset_data);
 
   ~ThreadMinidump() override;
 
@@ -36,7 +35,6 @@ public:
 protected:
   lldb::RegisterContextSP m_thread_reg_ctx_sp;
   llvm::ArrayRef<uint8_t> m_gpregset_data;
-  std::optional<minidump::Exception> m_exception;
 
   bool CalculateStopInfo() override;
 };

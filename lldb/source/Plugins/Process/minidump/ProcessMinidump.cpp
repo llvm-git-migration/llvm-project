@@ -395,12 +395,9 @@ bool ProcessMinidump::DoUpdateThreadList(ThreadList &old_thread_list,
   for (const minidump::Thread &thread : m_thread_list) {
     LocationDescriptor context_location = thread.Context;
 
-    std::optional<minidump::Exception> exception;
     // If the minidump contains an exception context, use it
-    if (m_exceptions_by_tid.count(thread.ThreadId) > 0) {
+    if (m_exceptions_by_tid.count(thread.ThreadId) > 0)
       context_location = m_exceptions_by_tid[thread.ThreadId].ThreadContext;
-      exception = m_exceptions_by_tid[thread.ThreadId].ExceptionRecord;
-    }
 
     llvm::ArrayRef<uint8_t> context;
     if (!m_is_wow64)
@@ -408,8 +405,7 @@ bool ProcessMinidump::DoUpdateThreadList(ThreadList &old_thread_list,
     else
       context = m_minidump_parser->GetThreadContextWow64(thread);
 
-    lldb::ThreadSP thread_sp(
-        new ThreadMinidump(*this, thread, context, exception));
+    lldb::ThreadSP thread_sp(new ThreadMinidump(*this, thread, context));
     new_thread_list.AddThread(thread_sp);
   }
   return new_thread_list.GetSize(false) > 0;
