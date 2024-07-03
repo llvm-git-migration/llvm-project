@@ -2496,15 +2496,19 @@ void PPCAIXAsmPrinter::emitTracebackTable() {
 
   uint32_t GPRSaved = 0;
 
-  // X13 is reserved under 64-bit environment.
-  unsigned GPRBegin = Subtarget->isPPC64() ? PPC::X14 : PPC::R13;
-  unsigned GPREnd = Subtarget->isPPC64() ? PPC::X31 : PPC::R31;
+  if (FI->getForceGPRSaveCount() < 0) {
+    // X13 is reserved under 64-bit environment.
+    unsigned GPRBegin = Subtarget->isPPC64() ? PPC::X14 : PPC::R13;
+    unsigned GPREnd = Subtarget->isPPC64() ? PPC::X31 : PPC::R31;
 
-  for (unsigned Reg = GPRBegin; Reg <= GPREnd; ++Reg) {
-    if (MRI.isPhysRegModified(Reg)) {
-      GPRSaved = GPREnd - Reg + 1;
-      break;
+    for (unsigned Reg = GPRBegin; Reg <= GPREnd; ++Reg) {
+      if (MRI.isPhysRegModified(Reg)) {
+        GPRSaved = GPREnd - Reg + 1;
+        break;
+      }
     }
+  } else {
+    GPRSaved = FI->getForceGPRSaveCount();
   }
 
   SecondHalfOfMandatoryField |= (GPRSaved << TracebackTable::GPRSavedShift) &

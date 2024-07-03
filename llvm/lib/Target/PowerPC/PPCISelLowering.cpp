@@ -7224,6 +7224,8 @@ SDValue PPCTargetLowering::LowerFormalArguments_AIX(
   // Reserve space for the linkage area on the stack.
   const unsigned LinkageSize = Subtarget.getFrameLowering()->getLinkageSize();
   CCInfo.AllocateStack(LinkageSize, Align(PtrByteSize));
+  uint64_t SaveStackPos = CCInfo.getStackSize();
+  bool SaveParams = MF.getFunction().hasFnAttribute("save-reg-params");
   CCInfo.AnalyzeFormalArguments(Ins, CC_AIX);
 
   SmallVector<SDValue, 8> MemOps;
@@ -7241,6 +7243,23 @@ SDValue PPCTargetLowering::LowerFormalArguments_AIX(
     // the register.
     if (VA.isMemLoc() && VA.needsCustom() && ValVT.isFloatingPoint())
       continue;
+
+    if (SaveParams && VA.isRegLoc()) {
+      const TargetRegisterClass *RegClass = getRegClassForSVT(
+          LocVT.SimpleTy, IsPPC64, Subtarget.hasP8Vector(), Subtarget.hasVSX());
+      // On PPC64, we need to use std instead of stw for GPR.
+      MVT SaveVT = RegClass == &PPC::G8RCRegClass ? MVT::i64 : LocVT;
+      const Register VReg = MF.addLiveIn(VA.getLocReg(), RegClass);
+      SDValue Parm = DAG.getRegister(VReg, SaveVT);
+      int FI = MFI.CreateFixedObject(SaveVT.getStoreSize(), SaveStackPos, true);
+      SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
+      unsigned Alignment = IsPPC64 ? 8 : 4;
+      SDValue StoreReg = DAG.getStore(Chain, dl, Parm, FIN,
+                                      MachinePointerInfo(), Align(Alignment));
+      SaveStackPos = alignTo(SaveStackPos + SaveVT.getStoreSize(), Alignment);
+      MemOps.push_back(StoreReg);
+      Chain = StoreReg;
+    }
 
     auto HandleMemLoc = [&]() {
       const unsigned LocSize = LocVT.getStoreSize();
@@ -7454,6 +7473,11 @@ SDValue PPCTargetLowering::LowerFormalArguments_AIX(
   FuncInfo->setMinReservedArea(CallerReservedArea);
 
   if (isVarArg) {
+    // Maximum number of saved GPR in traceback table is 8, for varargs,
+    // assuming eight GPRs matches XL behavior.
+    if (SaveParams)
+      FuncInfo->setForceGPRSaveCount(8);
+
     FuncInfo->setVarArgsFrameIndex(
         MFI.CreateFixedObject(PtrByteSize, CCInfo.getStackSize(), true));
     SDValue FIN = DAG.getFrameIndex(FuncInfo->getVarArgsFrameIndex(), PtrVT);
