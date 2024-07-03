@@ -204,6 +204,57 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
     Diag(Decl->getBeginLoc(), diag::note_objc_container_start) << (int)ock;
 }
 
+/// An Objective-C public name (a class name or protocol name) is
+/// expected to have a prefix as all names are in a single global
+/// namespace.
+///
+/// If the -Wobjc-prefix-length is set to N, the name must start
+/// with N+1 capital letters, which must be followed by a character
+/// that is not a capital letter.
+///
+/// For instance, for N set to 2, the following are valid:
+///
+///          NSString
+///          NSArray
+///
+///      but these are not:
+///
+///          MyString
+///          NSKString
+///          NSnotAString
+///
+/// We make a special exception for NSCF things when the prefix is set
+/// to length 2, because that's an unusual special case in the implementation
+/// of the Cocoa frameworks.
+///
+/// Names that start with underscores are exempt from this check, but
+/// are reserved for the system and should not be used by user code.
+bool Parser::isValidObjCPublicName(StringRef name) {
+  size_t nameLen = name.size();
+  size_t requiredUpperCase = getLangOpts().ObjCPrefixLength + 1;
+
+  if (name.starts_with('_'))
+    return true;
+
+  // Special case for NSCF when prefix length is 2
+  if (requiredUpperCase == 3 && nameLen > 4 && name.starts_with("NSCF") &&
+      isUppercase(name[4]) && (nameLen == 5 || !isUppercase(name[5])))
+    return true;
+
+  if (nameLen < requiredUpperCase)
+    return false;
+
+  for (size_t n = 0; n < requiredUpperCase; ++n) {
+    if (!isUppercase(name[n]))
+      return false;
+  }
+
+  if (nameLen > requiredUpperCase && isUppercase(name[requiredUpperCase]))
+    return false;
+
+  return true;
+}
+
 ///
 ///   objc-interface:
 ///     objc-class-interface-attributes[opt] objc-class-interface
@@ -319,6 +370,14 @@ Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
 
     return CategoryType;
   }
+
+  // Not a category - we are declaring a class
+  if (getLangOpts().ObjCPrefixLength &&
+      !PP.getSourceManager().isInSystemHeader(nameLoc) &&
+      !isValidObjCPublicName(nameId->getName())) {
+    Diag(nameLoc, diag::warn_objc_unprefixed_class_name);
+  }
+
   // Parse a class interface.
   IdentifierInfo *superClassId = nullptr;
   SourceLocation superClassLoc;
@@ -2080,6 +2139,12 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
   // Save the protocol name, then consume it.
   IdentifierInfo *protocolName = Tok.getIdentifierInfo();
   SourceLocation nameLoc = ConsumeToken();
+
+  if (getLangOpts().ObjCPrefixLength &&
+      !PP.getSourceManager().isInSystemHeader(nameLoc) &&
+      !isValidObjCPublicName(protocolName->getName())) {
+    Diag(nameLoc, diag::warn_objc_unprefixed_protocol_name);
+  }
 
   if (TryConsumeToken(tok::semi)) { // forward declaration of one protocol.
     IdentifierLocPair ProtoInfo(protocolName, nameLoc);
