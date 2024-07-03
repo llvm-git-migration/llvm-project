@@ -40,7 +40,7 @@ namespace {
 // indexes in SLSBLRThunks array.
 typedef uint32_t ThunksSet;
 
-struct SLSBLRThunkInserter : ThunkInserter<SLSBLRThunkInserter, ThunksSet> {
+struct SLSHardeningInserter : ThunkInserter<SLSHardeningInserter, ThunksSet> {
 public:
   const char *getThunkPrefix() { return SLSBLRNamePrefix; }
   bool mayUseThunk(const MachineFunction &MF) {
@@ -91,9 +91,9 @@ static void insertSpeculationBarrier(const AArch64Subtarget *ST,
     BuildMI(MBB, MBBI, DL, TII->get(BarrierOpc));
 }
 
-ThunksSet SLSBLRThunkInserter::insertThunks(MachineModuleInfo &MMI,
-                                            MachineFunction &MF,
-                                            ThunksSet ExistingThunks) {
+ThunksSet SLSHardeningInserter::insertThunks(MachineModuleInfo &MMI,
+                                             MachineFunction &MF,
+                                             ThunksSet ExistingThunks) {
   const AArch64Subtarget *ST = &MF.getSubtarget<AArch64Subtarget>();
 
   for (auto &MBB : MF) {
@@ -121,8 +121,8 @@ static bool isBLR(const MachineInstr &MI) {
   return false;
 }
 
-bool SLSBLRThunkInserter::hardenReturnsAndBRs(MachineModuleInfo &MMI,
-                                              MachineBasicBlock &MBB) {
+bool SLSHardeningInserter::hardenReturnsAndBRs(MachineModuleInfo &MMI,
+                                               MachineBasicBlock &MBB) {
   const AArch64Subtarget *ST =
       &MBB.getParent()->getSubtarget<AArch64Subtarget>();
   bool Modified = false;
@@ -188,7 +188,7 @@ unsigned getThunkIndex(Register Reg) {
   llvm_unreachable("Unexpected register");
 }
 
-void SLSBLRThunkInserter::populateThunk(MachineFunction &MF) {
+void SLSHardeningInserter::populateThunk(MachineFunction &MF) {
   // FIXME: How to better communicate Register number, rather than through
   // name and lookup table?
   assert(MF.getName().starts_with(getThunkPrefix()));
@@ -235,10 +235,9 @@ void SLSBLRThunkInserter::populateThunk(MachineFunction &MF) {
                            Entry->end(), DebugLoc(), true /*AlwaysUseISBDSB*/);
 }
 
-void SLSBLRThunkInserter::convertBLRToBL(MachineModuleInfo &MMI,
-                                         MachineBasicBlock &MBB,
-                                         MachineBasicBlock::instr_iterator MBBI,
-                                         ThunksSet &Thunks) {
+void SLSHardeningInserter::convertBLRToBL(
+    MachineModuleInfo &MMI, MachineBasicBlock &MBB,
+    MachineBasicBlock::instr_iterator MBBI, ThunksSet &Thunks) {
   // Transform a BLR to a BL as follows:
   // Before:
   //   |-----------------------------|
@@ -264,7 +263,6 @@ void SLSBLRThunkInserter::convertBLRToBL(MachineModuleInfo &MMI,
   //   |  barrierInsts               |
   //   |-----------------------------|
   //
-  // The __llvm_slsblr_thunk_xN thunks are created by the SLSBLRThunkInserter.
   // This function merely needs to transform BLR xN into BL
   // __llvm_slsblr_thunk_xN.
   //
@@ -346,9 +344,9 @@ void SLSBLRThunkInserter::convertBLRToBL(MachineModuleInfo &MMI,
   MBB.erase(MBBI);
 }
 
-bool SLSBLRThunkInserter::hardenBLRs(MachineModuleInfo &MMI,
-                                     MachineBasicBlock &MBB,
-                                     ThunksSet &Thunks) {
+bool SLSHardeningInserter::hardenBLRs(MachineModuleInfo &MMI,
+                                      MachineBasicBlock &MBB,
+                                      ThunksSet &Thunks) {
   bool Modified = false;
   MachineBasicBlock::instr_iterator MBBI = MBB.instr_begin(),
                                     E = MBB.instr_end();
@@ -365,7 +363,7 @@ bool SLSBLRThunkInserter::hardenBLRs(MachineModuleInfo &MMI,
 }
 
 namespace {
-class AArch64SLSHardening : public ThunkInserterPass<SLSBLRThunkInserter> {
+class AArch64SLSHardening : public ThunkInserterPass<SLSHardeningInserter> {
 public:
   static char ID;
 

@@ -3,6 +3,11 @@
 # RUN:     -stop-after aarch64-sls-hardening -o - %s \
 # RUN:   | FileCheck %s --check-prefixes=CHECK \
 # RUN:                  --implicit-check-not=__llvm_slsblr_thunk_x7
+# RUN: llc -verify-machineinstrs -mtriple=aarch64-none-linux-gnu \
+# RUN:     -start-before aarch64-sls-hardening \
+# RUN:     -asm-verbose=0 -o - %s \
+# RUN:   | FileCheck %s --check-prefixes=ASM \
+# RUN:                  --implicit-check-not=__llvm_slsblr_thunk_x7
 
 # Check that the BLR SLS hardening transforms a BLR into a BL with operands as
 # expected.
@@ -42,3 +47,13 @@ body:             |
 ...
 
 # CHECK: name: __llvm_slsblr_thunk_x8
+#
+# CHECK:       $x16 = ORRXrs $xzr, $x8, 0
+# CHECK-NEXT:  BR $x16
+# CHECK-NEXT:  SpeculationBarrierISBDSBEndBB
+
+# ASM-LABEL: __llvm_slsblr_thunk_x8:
+# ASM-NEXT:    mov x16, x8
+# ASM-NEXT:    br  x16
+# ASM-NEXT:    dsb sy
+# ASM-NEXT:    isb
