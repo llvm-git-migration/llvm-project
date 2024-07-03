@@ -1931,6 +1931,9 @@ static void getTrivialDefaultFunctionAttributes(
     if (CodeGenOpts.NullPointerIsValid)
       FuncAttrs.addAttribute(llvm::Attribute::NullPointerIsValid);
 
+    if (CodeGenOpts.SaveRegParams)
+      FuncAttrs.addAttribute("save-reg-params");
+
     if (LangOpts.getDefaultExceptionMode() == LangOptions::FPE_Ignore)
       FuncAttrs.addAttribute("no-trapping-math", "true");
 

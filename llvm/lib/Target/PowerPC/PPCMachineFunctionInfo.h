@@ -150,6 +150,9 @@ private:
   /// to use SExt/ZExt flags in later optimization.
   std::vector<std::pair<Register, ISD::ArgFlagsTy>> LiveInAttrs;
 
+  /// Set a fixed number of saved GPRs, negative if it's non-fixed.
+  int ForceGPRSaveCount = -1;
+
   /// Flags for aix-shared-lib-tls-model-opt, will be lazily initialized for
   /// each function.
   bool AIXFuncUseTLSIEForLD = false;
@@ -162,6 +165,9 @@ public:
   clone(BumpPtrAllocator &Allocator, MachineFunction &DestMF,
         const DenseMap<MachineBasicBlock *, MachineBasicBlock *> &Src2DstMBB)
       const override;
+
+  int getForceGPRSaveCount() const { return ForceGPRSaveCount; }
+  void setForceGPRSaveCount(int Num) { ForceGPRSaveCount = Num; }
 
   int getFramePointerSaveIndex() const { return FramePointerSaveIndex; }
   void setFramePointerSaveIndex(int Idx) { FramePointerSaveIndex = Idx; }
