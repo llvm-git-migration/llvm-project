@@ -10,6 +10,7 @@
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/TimeProfiler.h"
 #include <optional>
 
 namespace clang {
@@ -670,6 +671,7 @@ llvm::Error ClangDocBitcodeReader::readRecord(unsigned ID, T I) {
 
 template <>
 llvm::Error ClangDocBitcodeReader::readRecord(unsigned ID, Reference *I) {
+  llvm::TimeTraceScope("clang-doc", "readRecord Reference");
   Record R;
   llvm::StringRef Blob;
   llvm::Expected<unsigned> MaybeRecID = Stream.readRecord(ID, R, &Blob);
@@ -681,6 +683,7 @@ llvm::Error ClangDocBitcodeReader::readRecord(unsigned ID, Reference *I) {
 // Read a block of records into a single info.
 template <typename T>
 llvm::Error ClangDocBitcodeReader::readBlock(unsigned ID, T I) {
+  llvm::TimeTraceScope("clang-doc", "readBlock");
   if (llvm::Error Err = Stream.EnterSubBlock(ID))
     return Err;
 
@@ -711,6 +714,7 @@ llvm::Error ClangDocBitcodeReader::readBlock(unsigned ID, T I) {
 
 template <typename T>
 llvm::Error ClangDocBitcodeReader::readSubBlock(unsigned ID, T I) {
+  llvm::TimeTraceScope("clang-doc", "readSubBlock");
   switch (ID) {
   // Blocks can only have certain types of sub blocks.
   case BI_COMMENT_BLOCK_ID: {
@@ -817,6 +821,7 @@ llvm::Error ClangDocBitcodeReader::readSubBlock(unsigned ID, T I) {
 
 ClangDocBitcodeReader::Cursor
 ClangDocBitcodeReader::skipUntilRecordOrBlock(unsigned &BlockOrRecordID) {
+  llvm::TimeTraceScope("clang-doc", "skipUntilRecordOrBlock");
   BlockOrRecordID = 0;
 
   while (!Stream.AtEndOfStream()) {
@@ -878,6 +883,7 @@ llvm::Error ClangDocBitcodeReader::validateStream() {
 }
 
 llvm::Error ClangDocBitcodeReader::readBlockInfoBlock() {
+  llvm::TimeTraceScope("clang-doc", "readBlockInfoBlock");
   Expected<std::optional<llvm::BitstreamBlockInfo>> MaybeBlockInfo =
       Stream.ReadBlockInfoBlock();
   if (!MaybeBlockInfo)
@@ -894,6 +900,7 @@ llvm::Error ClangDocBitcodeReader::readBlockInfoBlock() {
 template <typename T>
 llvm::Expected<std::unique_ptr<Info>>
 ClangDocBitcodeReader::createInfo(unsigned ID) {
+  llvm::TimeTraceScope("clang-doc", "createInfo");
   std::unique_ptr<Info> I = std::make_unique<T>();
   if (auto Err = readBlock(ID, static_cast<T *>(I.get())))
     return std::move(Err);
@@ -902,6 +909,7 @@ ClangDocBitcodeReader::createInfo(unsigned ID) {
 
 llvm::Expected<std::unique_ptr<Info>>
 ClangDocBitcodeReader::readBlockToInfo(unsigned ID) {
+  llvm::TimeTraceScope("clang-doc", "readBlockToInfo");
   switch (ID) {
   case BI_NAMESPACE_BLOCK_ID:
     return createInfo<NamespaceInfo>(ID);
