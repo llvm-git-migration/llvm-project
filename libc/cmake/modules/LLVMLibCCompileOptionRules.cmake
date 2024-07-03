@@ -44,7 +44,7 @@ function(_get_common_compile_options output_var flags)
 
     if(LLVM_LIBC_FULL_BUILD)
       # Only add -ffreestanding flag in non-GPU full build mode.
-      if(LIBC_TARGET_OS_IS_GPU)
+      if(NOT LIBC_TARGET_OS_IS_GPU)
         list(APPEND compile_options "-ffreestanding")
       endif()
       list(APPEND compile_options "-DLIBC_FULL_BUILD")
