@@ -22,6 +22,8 @@ void MapASTVisitor::HandleTranslationUnit(ASTContext &Context) {
   if (CDCtx.FTimeTrace)
     llvm::timeTraceProfilerInitialize(CDCtx.Granularity, "clang-doc");
   TraverseDecl(Context.getTranslationUnitDecl());
+  if (CDCtx.FTimeTrace)
+    llvm::timeTraceProfilerFinishThread();
 }
 
 template <typename T> bool MapASTVisitor::mapDecl(const T *D) {
@@ -33,7 +35,7 @@ template <typename T> bool MapASTVisitor::mapDecl(const T *D) {
   if (D->getParentFunctionOrMethod())
     return true;
 
-  llvm::timeTraceProfilerBegin("clang-doc", "emit info");
+  llvm::timeTraceProfilerBegin("emit info phase", "emit info");
   llvm::SmallString<128> USR;
   // If there is an error generating a USR for the decl, skip this decl.
   if (index::generateUSRForDecl(D, USR))
@@ -46,7 +48,7 @@ template <typename T> bool MapASTVisitor::mapDecl(const T *D) {
                                IsFileInRootDir, CDCtx.PublicOnly);
   llvm::timeTraceProfilerEnd();
 
-  llvm::timeTraceProfilerBegin("clang-doc", "serialize info");
+  llvm::timeTraceProfilerBegin("serializing info", "serializing");
   // A null in place of I indicates that the serializer is skipping this decl
   // for some reason (e.g. we're only reporting public decls).
   if (I.first)
@@ -63,9 +65,7 @@ bool MapASTVisitor::VisitNamespaceDecl(const NamespaceDecl *D) {
   return mapDecl(D);
 }
 
-bool MapASTVisitor::VisitRecordDecl(const RecordDecl *D) {
-  return mapDecl(D);
-}
+bool MapASTVisitor::VisitRecordDecl(const RecordDecl *D) { return mapDecl(D); }
 
 bool MapASTVisitor::VisitEnumDecl(const EnumDecl *D) { return mapDecl(D); }
 
@@ -80,9 +80,7 @@ bool MapASTVisitor::VisitFunctionDecl(const FunctionDecl *D) {
   return mapDecl(D);
 }
 
-bool MapASTVisitor::VisitTypedefDecl(const TypedefDecl *D) {
-  return mapDecl(D);
-}
+bool MapASTVisitor::VisitTypedefDecl(const TypedefDecl *D) { return mapDecl(D);}
 
 bool MapASTVisitor::VisitTypeAliasDecl(const TypeAliasDecl *D) {
   return mapDecl(D);

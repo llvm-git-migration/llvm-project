@@ -281,7 +281,7 @@ Example usage for a project using a compile commands database:
     }
   }
 
-  llvm::timeTraceProfilerBegin("clang-doc", "mapping phase");
+  llvm::timeTraceProfilerBegin("mapping phase", "mapping");
   // Mapping phase
   llvm::outs() << "Mapping decls...\n";
   auto Err =
@@ -317,7 +317,7 @@ Example usage for a project using a compile commands database:
   llvm::StringMap<std::unique_ptr<doc::Info>> USRToInfo;
 
   // First reducing phase (reduce all decls into one info per decl).
-  llvm::timeTraceProfilerBegin("clang-doc", "reduction phase");
+  llvm::timeTraceProfilerBegin("reduction phase", "reducing");
   llvm::outs() << "Reducing " << USRToBitcode.size() << " infos...\n";
   std::atomic<bool> Error;
   Error = false;
@@ -329,7 +329,7 @@ Example usage for a project using a compile commands database:
       if (FTimeTrace)
         llvm::timeTraceProfilerInitialize(FTimeGranularity, "clang-doc");
 
-      llvm::timeTraceProfilerBegin("clang-doc", "decoding bitcode phase");
+      llvm::timeTraceProfilerBegin("decoding bitcode phase", "decoding");
       std::vector<std::unique_ptr<doc::Info>> Infos;
       for (auto &Bitcode : Group.getValue()) {
         llvm::BitstreamCursor Stream(Bitcode);
@@ -345,7 +345,7 @@ Example usage for a project using a compile commands database:
       }
       llvm::timeTraceProfilerEnd();
 
-      llvm::timeTraceProfilerBegin("clang-doc", "merging bitcode phase");
+      llvm::timeTraceProfilerBegin("merging bitcode phase", "merging");
       auto Reduced = doc::mergeInfos(Infos);
       if (!Reduced) {
         llvm::errs() << llvm::toString(Reduced.takeError());
@@ -365,6 +365,10 @@ Example usage for a project using a compile commands database:
         std::lock_guard<llvm::sys::Mutex> Guard(USRToInfoMutex);
         USRToInfo[Group.getKey()] = std::move(Reduced.get());
       }
+
+      if (CDCtx.FTimeTrace)
+        llvm::timeTraceProfilerFinishThread();
+
     });
   }
   llvm::timeTraceProfilerEnd();
@@ -374,7 +378,7 @@ Example usage for a project using a compile commands database:
   if (Error)
     return 1;
 
-  llvm::timeTraceProfilerBegin("clang-doc", "generating phase");
+  llvm::timeTraceProfilerBegin("generating phase", "generating");
   // Ensure the root output directory exists.
   if (std::error_code Err = llvm::sys::fs::create_directories(OutDirectory);
       Err != std::error_code()) {
