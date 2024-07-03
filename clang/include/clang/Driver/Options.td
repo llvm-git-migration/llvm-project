@@ -3419,11 +3419,17 @@ defm objc_exceptions : BoolFOption<"objc-exceptions",
   PosFlag<SetTrue, [], [ClangOption, CC1Option],
           "Enable Objective-C exceptions">,
   NegFlag<SetFalse>>;
+def Wobjc_prefix_EQ:
+  CommaJoined<["-"], "Wobjc-prefix=">, Group<W_value_Group>,
+  Visibility<[ClangOption, CC1Option]>,
+  MetaVarName<"<prefixes>">,
+  HelpText<"Warn if Objective-C class or protocol names do not start with any prefix in a comma separated list <prefixes>.  Takes precedence over -Wobjc-prefix-length">,
+  MarshallingInfoStringVector<LangOpts<"ObjCAllowedPrefixes">>;
 def Wobjc_prefix_length_EQ:
-  Joined<["-"], "Wobjc-prefix-length=">,
+  Joined<["-"], "Wobjc-prefix-length=">, Group<W_value_Group>,
   Visibility<[ClangOption, CC1Option]>,
   MetaVarName<"<N>">,
-  HelpText<"Warn if Objective-C class or protocol names do not start with a prefix of the specified length">,
+  HelpText<"Warn if Objective-C class or protocol names do not start with a prefix of the specified length. -Wobjc-prefix takes precedence if set">,
   MarshallingInfoInt<LangOpts<"ObjCPrefixLength">>;
 
 defm application_extension : BoolFOption<"application-extension",

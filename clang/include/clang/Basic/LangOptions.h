@@ -499,6 +499,9 @@ public:
 
   std::string ObjCConstantStringClass;
 
+  /// Allowed prefixes for ObjC classes and protocols
+  std::vector<std::string> ObjCAllowedPrefixes;
+
   /// The name of the handler function to be called when -ftrapv is
   /// specified.
   ///

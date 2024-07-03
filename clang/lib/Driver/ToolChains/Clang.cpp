@@ -6242,6 +6242,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   Args.AddAllArgs(CmdArgs, options::OPT_Wsystem_headers_in_module_EQ);
+
+  Args.AddAllArgs(CmdArgs, options::OPT_Wobjc_prefix_EQ);
   Args.AddLastArg(CmdArgs, options::OPT_Wobjc_prefix_length_EQ);
 
   if (Args.hasFlag(options::OPT_pedantic, options::OPT_no_pedantic, false))

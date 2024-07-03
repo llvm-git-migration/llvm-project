@@ -1704,6 +1704,7 @@ private:
 
   // Objective-C External Declarations
   void MaybeSkipAttributes(tok::ObjCKeywordKind Kind);
+  bool isObjCPublicNamePrefixAllowed(StringRef name);
   bool isValidObjCPublicName(StringRef name);
   DeclGroupPtrTy ParseObjCAtDirectives(ParsedAttributes &DeclAttrs,
                                        ParsedAttributes &DeclSpecAttrs);

@@ -570,6 +570,13 @@ def warn_objc_unprefixed_protocol_name : Warning<
   "un-prefixed Objective-C protocol name">,
   InGroup<ObjCPrefixLength>;
 
+def warn_objc_bad_class_name_prefix : Warning<
+  "Objective-C class name prefix not in permitted list">,
+  InGroup<ObjCPrefix>;
+def warn_objc_bad_protocol_name_prefix : Warning<
+  "Objective-C protocol name prefix not in permitted list">,
+  InGroup<ObjCPrefix>;
+
 /// Objective-C++ parser diagnostics
 def err_expected_token_instead_of_objcxx_keyword : Error<
   "expected %0; %1 is a keyword in Objective-C++">;

@@ -208,6 +208,13 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
 /// expected to have a prefix as all names are in a single global
 /// namespace.
 ///
+/// If the `-Wobjc-prefix=<list>` option is active, it specifies a list
+/// of permitted prefixes; classes and protocols must start with a
+/// prefix from that list.  Note that in this case, we check that
+/// the name matches <prefix>(<upper-case><not-upper-case>?)?, so e.g.
+/// if you specify `-Wobjc-prefix=NS`, then `NSURL` would not be valid;
+/// you would want to specify `-Wobjc-prefix=NS,NSURL` in that case.
+///
 /// If the -Wobjc-prefix-length is set to N, the name must start
 /// with N+1 capital letters, which must be followed by a character
 /// that is not a capital letter.
@@ -229,9 +236,34 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
 ///
 /// Names that start with underscores are exempt from this check, but
 /// are reserved for the system and should not be used by user code.
+bool Parser::isObjCPublicNamePrefixAllowed(StringRef name) {
+  size_t nameLen = name.size();
+
+  // If there's nothing in the list, it's allowed
+  if (getLangOpts().ObjCAllowedPrefixes.empty())
+    return true;
+
+  // Otherwise it must start with a list entry, optionally followed by
+  // an uppercase letter and then optionally by something that isn't an
+  // uppercase letter.
+  for (StringRef prefix : getLangOpts().ObjCAllowedPrefixes) {
+    size_t prefixLen = prefix.size();
+    if (nameLen >= prefixLen && name.starts_with(prefix) &&
+        (nameLen == prefixLen || isUppercase(name[prefixLen])) &&
+        (nameLen == prefixLen + 1 || !isUppercase(name[prefixLen + 1])))
+      return true;
+  }
+
+  return false;
+}
+
 bool Parser::isValidObjCPublicName(StringRef name) {
   size_t nameLen = name.size();
   size_t requiredUpperCase = getLangOpts().ObjCPrefixLength + 1;
+
+  // If ObjCPrefixLength is zero, we do no further checking
+  if (requiredUpperCase == 1)
+    return true;
 
   if (name.starts_with('_'))
     return true;
@@ -372,10 +404,11 @@ Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
   }
 
   // Not a category - we are declaring a class
-  if (getLangOpts().ObjCPrefixLength &&
-      !PP.getSourceManager().isInSystemHeader(nameLoc) &&
-      !isValidObjCPublicName(nameId->getName())) {
-    Diag(nameLoc, diag::warn_objc_unprefixed_class_name);
+  if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
+    if (!isObjCPublicNamePrefixAllowed(nameId->getName()))
+      Diag(nameLoc, diag::warn_objc_bad_class_name_prefix);
+    else if (!isValidObjCPublicName(nameId->getName()))
+      Diag(nameLoc, diag::warn_objc_unprefixed_class_name);
   }
 
   // Parse a class interface.
@@ -2140,10 +2173,11 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
   IdentifierInfo *protocolName = Tok.getIdentifierInfo();
   SourceLocation nameLoc = ConsumeToken();
 
-  if (getLangOpts().ObjCPrefixLength &&
-      !PP.getSourceManager().isInSystemHeader(nameLoc) &&
-      !isValidObjCPublicName(protocolName->getName())) {
-    Diag(nameLoc, diag::warn_objc_unprefixed_protocol_name);
+  if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
+    if (!isObjCPublicNamePrefixAllowed(protocolName->getName()))
+      Diag(nameLoc, diag::warn_objc_bad_protocol_name_prefix);
+    else if (!isValidObjCPublicName(protocolName->getName()))
+      Diag(nameLoc, diag::warn_objc_unprefixed_protocol_name);
   }
 
   if (TryConsumeToken(tok::semi)) { // forward declaration of one protocol.
