@@ -90,9 +90,6 @@ public:
   size_t GetIndexOfChildWithName(ConstString name) override;
 
 private:
-  ValueObject *m_iter_ptr = nullptr; ///< Held, not owned. Child of iterator
-                                     ///< ValueObject supplied at construction.
-
   lldb::ValueObjectSP m_pair_sp; ///< ValueObject for the key/value pair
                                  ///< that the iterator currently points
                                  ///< to.
@@ -304,7 +301,6 @@ lldb_private::formatters::LibCxxUnorderedMapIteratorSyntheticFrontEnd::
 lldb::ChildCacheState lldb_private::formatters::
     LibCxxUnorderedMapIteratorSyntheticFrontEnd::Update() {
   m_pair_sp.reset();
-  m_iter_ptr = nullptr;
 
   ValueObjectSP valobj_sp = m_backend.GetSP();
   if (!valobj_sp)
@@ -315,97 +311,55 @@ lldb::ChildCacheState lldb_private::formatters::
   if (!target_sp)
     return lldb::ChildCacheState::eRefetch;
 
-  if (!valobj_sp)
+  auto hash_iter_sp = valobj_sp->GetChildMemberWithName("__i_");
+  if (!hash_iter_sp)
     return lldb::ChildCacheState::eRefetch;
 
-  auto exprPathOptions = ValueObject::GetValueForExpressionPathOptions()
-                             .DontCheckDotVsArrowSyntax()
-                             .SetSyntheticChildrenTraversal(
-                                 ValueObject::GetValueForExpressionPathOptions::
-                                     SyntheticChildrenTraversal::None);
+  auto hash_iter_type = hash_iter_sp->GetCompilerType();
+  if (!hash_iter_type.IsValid())
+    return lldb::ChildCacheState::eRefetch;
 
-  // This must be a ValueObject* because it is a child of the ValueObject we
-  // are producing children for it if were a ValueObjectSP, we would end up
-  // with a loop (iterator -> synthetic -> child -> parent == iterator) and
-  // that would in turn leak memory by never allowing the ValueObjects to die
-  // and free their memory.
-  m_iter_ptr =
-      valobj_sp
-          ->GetValueForExpressionPath(".__i_.__node_", nullptr, nullptr,
-                                      exprPathOptions, nullptr)
-          .get();
+  auto node_pointer_type = hash_iter_type.GetTypeTemplateArgument(0);
+  if (!node_pointer_type.IsValid())
+    return lldb::ChildCacheState::eRefetch;
 
-  if (m_iter_ptr) {
-    auto iter_child(valobj_sp->GetChildMemberWithName("__i_"));
-    if (!iter_child) {
-      m_iter_ptr = nullptr;
-      return lldb::ChildCacheState::eRefetch;
+  auto hash_node_sp = hash_iter_sp->GetChildMemberWithName("__node_");
+  if (!hash_node_sp)
+    return lldb::ChildCacheState::eRefetch;
+
+  hash_node_sp = hash_iter_sp->Cast(node_pointer_type);
+  if (!hash_node_sp)
+    return lldb::ChildCacheState::eRefetch;
+
+  auto key_value_sp = hash_node_sp->GetChildMemberWithName("__value_");
+  if (!key_value_sp) {
+    key_value_sp = hash_node_sp->GetChildMemberWithName("__value_");
+    if (!key_value_sp) {
+      // clang-format off
+      // Since D101206 (ba79fb2e1f), libc++ wraps the `__value_` in an
+      // anonymous union.
+      // Child 0: __hash_node_base base class
+      // Child 1: __hash_
+      // Child 2: anonymous union
+      // clang-format on
+      auto anon_union_sp = hash_node_sp->GetChildAtIndex(2);
+      if (!anon_union_sp)
+        return lldb::ChildCacheState::eRefetch;
+
+      key_value_sp = anon_union_sp->GetChildMemberWithName("__value_");
+      if (!key_value_sp)
+        return lldb::ChildCacheState::eRefetch;
     }
-
-    CompilerType node_type(iter_child->GetCompilerType()
-                               .GetTypeTemplateArgument(0)
-                               .GetPointeeType());
-
-    CompilerType pair_type(node_type.GetTypeTemplateArgument(0));
-
-    std::string name;
-    uint64_t bit_offset_ptr;
-    uint32_t bitfield_bit_size_ptr;
-    bool is_bitfield_ptr;
-
-    pair_type = pair_type.GetFieldAtIndex(
-        0, name, &bit_offset_ptr, &bitfield_bit_size_ptr, &is_bitfield_ptr);
-    if (!pair_type) {
-      m_iter_ptr = nullptr;
-      return lldb::ChildCacheState::eRefetch;
-    }
-
-    uint64_t addr = m_iter_ptr->GetValueAsUnsigned(LLDB_INVALID_ADDRESS);
-    m_iter_ptr = nullptr;
-
-    if (addr == 0 || addr == LLDB_INVALID_ADDRESS)
-      return lldb::ChildCacheState::eRefetch;
-
-    auto ts = pair_type.GetTypeSystem();
-    auto ast_ctx = ts.dyn_cast_or_null<TypeSystemClang>();
-    if (!ast_ctx)
-      return lldb::ChildCacheState::eRefetch;
-
-    // Mimick layout of std::__hash_iterator::__node_ and read it in
-    // from process memory.
-    //
-    // The following shows the contiguous block of memory:
-    //
-    //         +-----------------------------+ class __hash_node_base
-    // __node_ | __next_pointer __next_;     |
-    //         +-----------------------------+ class __hash_node
-    //         | size_t __hash_;             |
-    //         | __node_value_type __value_; | <<< our key/value pair
-    //         +-----------------------------+
-    //
-    CompilerType tree_node_type = ast_ctx->CreateStructForIdentifier(
-        llvm::StringRef(),
-        {{"__next_",
-          ast_ctx->GetBasicType(lldb::eBasicTypeVoid).GetPointerType()},
-         {"__hash_", ast_ctx->GetBasicType(lldb::eBasicTypeUnsignedLongLong)},
-         {"__value_", pair_type}});
-    std::optional<uint64_t> size = tree_node_type.GetByteSize(nullptr);
-    if (!size)
-      return lldb::ChildCacheState::eRefetch;
-    WritableDataBufferSP buffer_sp(new DataBufferHeap(*size, 0));
-    ProcessSP process_sp(target_sp->GetProcessSP());
-    Status error;
-    process_sp->ReadMemory(addr, buffer_sp->GetBytes(),
-                           buffer_sp->GetByteSize(), error);
-    if (error.Fail())
-      return lldb::ChildCacheState::eRefetch;
-    DataExtractor extractor(buffer_sp, process_sp->GetByteOrder(),
-                            process_sp->GetAddressByteSize());
-    auto pair_sp = CreateValueObjectFromData(
-        "pair", extractor, valobj_sp->GetExecutionContextRef(), tree_node_type);
-    if (pair_sp)
-      m_pair_sp = pair_sp->GetChildAtIndex(2);
   }
+
+  auto potential_child_sp = key_value_sp->Clone(ConstString("pair"));
+  if (potential_child_sp)
+    if (potential_child_sp->GetNumChildrenIgnoringErrors() == 1)
+      if (auto child0_sp = potential_child_sp->GetChildAtIndex(0);
+          child0_sp->GetName() == "__cc_" || child0_sp->GetName() == "__cc")
+        potential_child_sp = child0_sp->Clone(ConstString("pair"));
+
+  m_pair_sp = potential_child_sp;
 
   return lldb::ChildCacheState::eRefetch;
 }
