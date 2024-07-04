@@ -209,12 +209,25 @@ def MYH  : BinaryRXF<"myh",  0xED3D, null_frag, FP64,  FP64, z_load, 8>;
 def MYL  : BinaryRXF<"myl",  0xED39, null_frag, FP64,  FP64, z_load, 8>;
 
 // Fused multiply-add (unnormalized).
-def MAYR  : TernaryRRD<"mayr",  0xB33A, null_frag, FP128, FP64>;
 def MAYHR : TernaryRRD<"mayhr", 0xB33C, null_frag, FP64,  FP64>;
 def MAYLR : TernaryRRD<"maylr", 0xB338, null_frag, FP64,  FP64>;
-def MAY   : TernaryRXF<"may",   0xED3A, null_frag, FP128, FP64, z_load, 8>;
 def MAYH  : TernaryRXF<"mayh",  0xED3C, null_frag, FP64,  FP64, z_load, 8>;
 def MAYL  : TernaryRXF<"mayl",  0xED38, null_frag, FP64,  FP64, z_load, 8>;
+
+// MAY and MAYR allow the user to specify the floating point register pair making 
+// up the FP128 register by either the lower-numbered register or the higher-numbered
+// register, in contrast to all other floating point instructions. For this
+// reason, the codegen and assembly versions of this instruction are kept separate
+// in order to allow the assembler and disassembler to accept these registers
+// without having to fundamentally change the instruction itself.
+let isCodeGenOnly = 1 in {
+  def MAY   : TernaryRXF<"may",   0xED3A, null_frag, FP128, FP64, z_load, 8>;
+  def MAYR  : TernaryRRD<"mayr",  0xB33A, null_frag, FP128, FP64>;
+}
+let hasNoSchedulingInfo = 1, OpKey = "", OpType = "", Pattern = [] <dag> in {
+  def MAY_Asm   : TernaryRXF<"may",   0xED3A, null_frag, FP64, FP64, z_load, 8>;
+  def MAYR_Asm  : TernaryRRD<"mayr",  0xB33A, null_frag, FP64, FP64>;
+}
 
 // Division.
 def DER : BinaryRR <"der", 0x3D,   null_frag, FP32,  FP32>;
