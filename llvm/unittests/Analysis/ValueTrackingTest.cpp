@@ -697,6 +697,36 @@ TEST_F(ValueTrackingTest, ComputeNumSignBits_PR32045) {
   EXPECT_EQ(ComputeNumSignBits(A, M->getDataLayout()), 32u);
 }
 
+TEST_F(ValueTrackingTest, ComputeNumSignBits_shl_ext1) {
+  parseAssembly("define i32 @test(i8 %a) {\n"
+                "  %b = ashr i8 %a, 4\n"
+                "  %c = zext i8 %b to i32\n"
+                "  %A = shl i32 %c, 24\n"
+                "  ret i32 %A\n"
+                "}\n");
+  EXPECT_EQ(ComputeNumSignBits(A, M->getDataLayout()), 5u);
+}
+
+TEST_F(ValueTrackingTest, ComputeNumSignBits_shl_ext2) {
+  parseAssembly("define i32 @test(i8 %a) {\n"
+                "  %b = ashr i8 %a, 4\n"
+                "  %c = zext i8 %b to i32\n"
+                "  %A = shl i32 %c, 26\n"
+                "  ret i32 %A\n"
+                "}\n");
+  EXPECT_EQ(ComputeNumSignBits(A, M->getDataLayout()), 3u);
+}
+
+TEST_F(ValueTrackingTest, ComputeNumSignBits_shl_ext3) {
+  parseAssembly("define i32 @test(i8 %a) {\n"
+                "  %b = ashr i8 %a, 4\n"
+                "  %c = zext i8 %b to i32\n"
+                "  %A = shl i32 %c, 30\n"
+                "  ret i32 %A\n"
+                "}\n");
+  EXPECT_EQ(ComputeNumSignBits(A, M->getDataLayout()), 1u);
+}
+
 // No guarantees for canonical IR in this analysis, so this just bails out.
 TEST_F(ValueTrackingTest, ComputeNumSignBits_Shuffle) {
   parseAssembly(
