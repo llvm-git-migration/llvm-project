@@ -327,7 +327,7 @@ struct PartialReductionChain {
   Instruction *BinOp;
   Instruction *ExtendA;
   Instruction *ExtendB;
-  
+
   Value *InputA;
   Value *InputB;
   Value *Accumulator;
@@ -469,7 +469,7 @@ public:
 
   SmallVector<PartialReductionChain> getPartialReductionChains() const {
     return PartialReductionChains;
-  } 
+  }
 
 protected:
   /// Build VPlans for power-of-2 VF's between \p MinVF and \p MaxVF inclusive,
@@ -523,9 +523,8 @@ private:
   /// epilogue, assuming the main loop is vectorized by \p VF.
   bool isCandidateForEpilogueVectorization(const ElementCount VF) const;
 
-  bool getInstructionsPartialReduction(Instruction* I, PartialReductionChain &Chain) const;
-
-  
+  bool getInstructionsPartialReduction(Instruction *I,
+                                       PartialReductionChain &Chain) const;
 };
 
 } // namespace llvm
