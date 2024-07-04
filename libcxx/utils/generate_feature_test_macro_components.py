@@ -1869,8 +1869,10 @@ Status
         f.write(doc_str)
 
 
-def get_dialect_versions(data, std_dialects, use_implemented_status):
-    """Impementation for feature_test_macros.get_(std_|)dialect_versions()."""
+def get_ftms(
+    data, std_dialects: list[str], use_implemented_status: bool
+) -> dict[str, dict[str, any]]:
+    """Impementation for FeatureTestMacros.(standard|implemented)_ftms()."""
     result = dict()
     for feature in data:
         last = None
@@ -2000,12 +2002,12 @@ class FeatureTestMacros:
     # The JSON data structure.
     __data = None
 
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         """Initializes the class with the JSON data in the file 'filename'."""
         self.__data = json.load(open(filename))
 
     @functools.cached_property
-    def std_dialects(self):
+    def std_dialects(self) -> list[str]:
         """Returns the C++ dialects avaiable.
 
         The available dialects are based on the 'c++xy' keys found the 'values'
@@ -2013,7 +2015,7 @@ class FeatureTestMacros:
         future C++ Standard this dialect will automatically be available.
 
         The return value is a sorted list with the C++ dialects used. Since FTM
-        were added in C++14 the list will not contain C++98 or C++11.
+        were added in C++14 the list will not contain C++03 or C++11.
         """
         dialects = set()
         for feature in self.__data:
@@ -2024,7 +2026,7 @@ class FeatureTestMacros:
         return sorted(list(dialects))
 
     @functools.cached_property
-    def standard_ftms(self):
+    def standard_ftms(self) -> dict[str, dict[str, any]]:
         """Returns the FTM versions per dialect in the Standard.
 
         This function does not use the 'implemented' flag. The output contains
@@ -2038,10 +2040,10 @@ class FeatureTestMacros:
           * key: The version of the C++ dialect.
           * value: The value of the feature-test macro.
         """
-        return get_dialect_versions(self.__data, self.std_dialects, False)
+        return get_ftms(self.__data, self.std_dialects, False)
 
     @functools.cached_property
-    def implemented_ftms(self):
+    def implemented_ftms(self) -> dict[str, dict[str, any]]:
         """Returns the FTM versions per dialect implemented in libc++.
 
         Unlike `get_std_dialect_versions` this function uses the 'implemented'
@@ -2055,7 +2057,7 @@ class FeatureTestMacros:
             macro is not implemented its value is None.
         """
 
-        return get_dialect_versions(self.__data, self.std_dialects, True)
+        return get_ftms(self.__data, self.std_dialects, True)
 
 
 def main():
