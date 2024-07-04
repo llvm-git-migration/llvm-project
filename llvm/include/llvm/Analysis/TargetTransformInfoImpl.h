@@ -541,10 +541,11 @@ public:
   bool enableWritePrefetching() const { return false; }
   bool shouldPrefetchAddressSpace(unsigned AS) const { return !AS; }
 
-  bool isPartialReductionSupported(const Instruction* ReductionInstr,
-      Type* InputType, unsigned ScaleFactor,
-      bool IsInputASignExtended, bool IsInputBSignExtended,
-      const Instruction* BinOp = nullptr) const {
+  bool isPartialReductionSupported(const Instruction *ReductionInstr,
+                                   Type *InputType, unsigned ScaleFactor,
+                                   bool IsInputASignExtended,
+                                   bool IsInputBSignExtended,
+                                   const Instruction *BinOp = nullptr) const {
     return false;
   }
 

@@ -259,17 +259,17 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
   State.setDebugLocFrom(getDebugLoc());
   auto &Builder = State.Builder;
 
-  switch(Opcode) {
+  switch (Opcode) {
   case Instruction::Add: {
 
     for (unsigned Part = 0; Part < State.UF; ++Part) {
-      Value* Mul = nullptr;
-      Value* Phi = nullptr;
-      SmallVector<Value*, 2> Ops;
+      Value *Mul = nullptr;
+      Value *Phi = nullptr;
+      SmallVector<Value *, 2> Ops;
       for (VPValue *VPOp : operands()) {
         auto *Op = State.get(VPOp, Part);
         Ops.push_back(Op);
-        if(isa<PHINode>(Op))
+        if (isa<PHINode>(Op))
           Phi = Op;
         else
           Mul = Op;
@@ -279,13 +279,13 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
 
       VectorType *FullTy = cast<VectorType>(Ops[0]->getType());
       auto EC = FullTy->getElementCount();
-      Type *RetTy = VectorType::get(FullTy->getScalarType(), EC.divideCoefficientBy(Scale));
+      Type *RetTy = VectorType::get(FullTy->getScalarType(),
+                                    EC.divideCoefficientBy(Scale));
 
       Intrinsic::ID PartialIntrinsic = Intrinsic::not_intrinsic;
-      switch(Opcode) {
+      switch (Opcode) {
       case Instruction::Add:
-        PartialIntrinsic =
-            Intrinsic::experimental_vector_partial_reduce_add;
+        PartialIntrinsic = Intrinsic::experimental_vector_partial_reduce_add;
         break;
       default:
         llvm_unreachable("Opcode not handled");
@@ -293,7 +293,8 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
 
       assert(PartialIntrinsic != Intrinsic::not_intrinsic);
 
-      CallInst *V = Builder.CreateIntrinsic(RetTy, PartialIntrinsic, {Phi, Mul}, nullptr, Twine("partial.reduce"));
+      CallInst *V = Builder.CreateIntrinsic(RetTy, PartialIntrinsic, {Phi, Mul},
+                                            nullptr, Twine("partial.reduce"));
 
       // Use this vector value for all users of the original instruction.
       State.set(this, V, Part);
@@ -302,7 +303,8 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
     break;
   }
   default:
-    LLVM_DEBUG(dbgs() << "LV: Found an unhandled opcode : " << Instruction::getOpcodeName(Opcode));
+    LLVM_DEBUG(dbgs() << "LV: Found an unhandled opcode : "
+                      << Instruction::getOpcodeName(Opcode));
     llvm_unreachable("Unhandled instruction!");
   }
 }
@@ -313,7 +315,7 @@ void VPPartialReductionRecipe::postInsertionOp() {
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void VPPartialReductionRecipe::print(raw_ostream &O, const Twine &Indent,
-  VPSlotTracker &SlotTracker) const {
+                                     VPSlotTracker &SlotTracker) const {
   O << Indent << "PARTIAL-REDUCE ";
   printAsOperand(O, SlotTracker);
   O << " = " << Instruction::getOpcodeName(Opcode);
@@ -2112,8 +2114,8 @@ void VPReductionPHIRecipe::execute(VPTransformState &State) {
   // stage #1: We create a new vector PHI node with no incoming edges. We'll use
   // this value when we vectorize all of the instructions that use the PHI.
   bool ScalarPHI = VF.isScalar() || IsInLoop;
-  Type *VecTy = ScalarPHI ? StartV->getType()
-                          : VectorType::get(StartV->getType(), VF);
+  Type *VecTy =
+      ScalarPHI ? StartV->getType() : VectorType::get(StartV->getType(), VF);
 
   BasicBlock *HeaderBB = State.CFG.PrevBB;
   assert(State.CurrentVectorLoop->getHeader() == HeaderBB &&
@@ -2137,8 +2139,7 @@ void VPReductionPHIRecipe::execute(VPTransformState &State) {
     } else {
       IRBuilderBase::InsertPointGuard IPBuilder(Builder);
       Builder.SetInsertPoint(VectorPH->getTerminator());
-      StartV = Iden =
-          Builder.CreateVectorSplat(VF, StartV, "minmax.ident");
+      StartV = Iden = Builder.CreateVectorSplat(VF, StartV, "minmax.ident");
     }
   } else {
     Iden = RdxDesc.getRecurrenceIdentity(RK, VecTy->getScalarType(),

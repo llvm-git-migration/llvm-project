@@ -829,7 +829,9 @@ bool TargetTransformInfo::isPartialReductionSupported(
     const Instruction *ReductionInstr, Type *InputType, unsigned ScaleFactor,
     bool IsInputASignExtended, bool IsInputBSignExtended,
     const Instruction *BinOp) const {
-  return TTIImpl->isPartialReductionSupported(ReductionInstr, InputType, ScaleFactor, IsInputASignExtended, IsInputBSignExtended, BinOp);
+  return TTIImpl->isPartialReductionSupported(ReductionInstr, InputType,
+                                              ScaleFactor, IsInputASignExtended,
+                                              IsInputBSignExtended, BinOp);
 }
 
 unsigned TargetTransformInfo::getMaxInterleaveFactor(ElementCount VF) const {

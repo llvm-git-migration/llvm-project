@@ -964,9 +964,7 @@ private:
     FastMathFlagsTy(const FastMathFlags &FMF);
   };
 
-public:
   OperationType OpType;
-private:
 
   union {
     CmpInst::Predicate CmpPredicate;
@@ -1923,7 +1921,6 @@ class VPReductionPHIRecipe : public VPHeaderPHIRecipe {
   unsigned VFScaleFactor = 1;
 
 public:
-
   /// Create a new VPReductionPHIRecipe for the reduction \p Phi described by \p
   /// RdxDesc.
   VPReductionPHIRecipe(PHINode *Phi, const RecurrenceDescriptor &RdxDesc,
@@ -1938,9 +1935,9 @@ public:
   ~VPReductionPHIRecipe() override = default;
 
   VPReductionPHIRecipe *clone() override {
-    auto *R =
-        new VPReductionPHIRecipe(cast<PHINode>(getUnderlyingInstr()), RdxDesc,
-                                 *getOperand(0), IsInLoop, IsOrdered, VFScaleFactor);
+    auto *R = new VPReductionPHIRecipe(cast<PHINode>(getUnderlyingInstr()),
+                                       RdxDesc, *getOperand(0), IsInLoop,
+                                       IsOrdered, VFScaleFactor);
     R->addOperand(getBackedgeValue());
     return R;
   }
@@ -1951,9 +1948,7 @@ public:
     return R->getVPDefID() == VPDef::VPReductionPHISC;
   }
 
-  void SetVFScaleFactor(unsigned ScaleFactor) {
-    VFScaleFactor = ScaleFactor;
-  }
+  void SetVFScaleFactor(unsigned ScaleFactor) { VFScaleFactor = ScaleFactor; }
 
   /// Generate the phi/select nodes.
   void execute(VPTransformState &State) override;
@@ -1978,15 +1973,17 @@ public:
 class VPPartialReductionRecipe : public VPRecipeWithIRFlags {
   unsigned Opcode;
   unsigned Scale;
+
 public:
   template <typename IterT>
-  VPPartialReductionRecipe(Instruction &I,
-                           iterator_range<IterT> Operands, unsigned Scale) : VPRecipeWithIRFlags(
-    VPDef::VPPartialReductionSC, Operands, I), Opcode(I.getOpcode()), Scale(Scale)
-  {}
+  VPPartialReductionRecipe(Instruction &I, iterator_range<IterT> Operands,
+                           unsigned Scale)
+      : VPRecipeWithIRFlags(VPDef::VPPartialReductionSC, Operands, I),
+        Opcode(I.getOpcode()), Scale(Scale) {}
   ~VPPartialReductionRecipe() override = default;
   VPPartialReductionRecipe *clone() override {
-    auto *R = new VPPartialReductionRecipe(*getUnderlyingInstr(), operands(), Scale);
+    auto *R =
+        new VPPartialReductionRecipe(*getUnderlyingInstr(), operands(), Scale);
     R->transferFlags(*this);
     return R;
   }
