@@ -236,55 +236,61 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
 ///
 /// Names that start with underscores are exempt from this check, but
 /// are reserved for the system and should not be used by user code.
-bool Parser::isObjCPublicNamePrefixAllowed(StringRef name) {
-  size_t nameLen = name.size();
 
-  // If there's nothing in the list, it's allowed
-  if (getLangOpts().ObjCAllowedPrefixes.empty())
-    return true;
-
-  // Otherwise it must start with a list entry, optionally followed by
-  // an uppercase letter and then optionally by something that isn't an
-  // uppercase letter.
-  for (StringRef prefix : getLangOpts().ObjCAllowedPrefixes) {
-    size_t prefixLen = prefix.size();
-    if (nameLen >= prefixLen && name.starts_with(prefix) &&
-        (nameLen == prefixLen || isUppercase(name[prefixLen])) &&
-        (nameLen == prefixLen + 1 || !isUppercase(name[prefixLen + 1])))
-      return true;
-  }
-
-  return false;
+static inline bool ObjCNameMatchesPrefix(StringRef Name, StringRef Prefix) {
+  size_t NameLen = Name.size();
+  size_t PrefixLen = Prefix.size();
+  return (NameLen >= PrefixLen && Name.starts_with(Prefix) &&
+          (NameLen == PrefixLen || isUppercase(Name[PrefixLen])) &&
+          (NameLen == PrefixLen + 1 || !isUppercase(Name[PrefixLen + 1])));
 }
 
-bool Parser::isValidObjCPublicName(StringRef name) {
-  size_t nameLen = name.size();
-  size_t requiredUpperCase = getLangOpts().ObjCPrefixLength + 1;
-
-  // If ObjCPrefixLength is zero, we do no further checking
-  if (requiredUpperCase == 1)
-    return true;
-
-  if (name.starts_with('_'))
-    return true;
-
-  // Special case for NSCF when prefix length is 2
-  if (requiredUpperCase == 3 && nameLen > 4 && name.starts_with("NSCF") &&
-      isUppercase(name[4]) && (nameLen == 5 || !isUppercase(name[5])))
-    return true;
-
-  if (nameLen < requiredUpperCase)
-    return false;
-
-  for (size_t n = 0; n < requiredUpperCase; ++n) {
-    if (!isUppercase(name[n]))
-      return false;
+Parser::ObjCPublicNameValidationResult
+Parser::ValidateObjCPublicName(StringRef Name) {
+  // Check the -Wobjc-forbidden-prefixes list
+  if (!getLangOpts().ObjCForbiddenPrefixes.empty()) {
+    for (StringRef Prefix : getLangOpts().ObjCForbiddenPrefixes) {
+      if (ObjCNameMatchesPrefix(Name, Prefix))
+        return ObjCNameForbidden;
+    }
   }
 
-  if (nameLen > requiredUpperCase && isUppercase(name[requiredUpperCase]))
-    return false;
+  // Check the -Wobjc-prefixes list
+  if (!getLangOpts().ObjCAllowedPrefixes.empty()) {
+    for (StringRef Prefix : getLangOpts().ObjCAllowedPrefixes) {
+      if (ObjCNameMatchesPrefix(Name, Prefix))
+        return ObjCNameAllowed;
+    }
 
-  return true;
+    return ObjCNameNotAllowed;
+  }
+
+  // Finally, check against the -Wobjc-prefix-length setting
+  if (getLangOpts().ObjCPrefixLength) {
+    size_t NameLen = Name.size();
+    size_t RequiredUpperCase = getLangOpts().ObjCPrefixLength + 1;
+
+    if (Name.starts_with('_'))
+      return ObjCNameAllowed;
+
+    // Special case for NSCF when prefix length is 2
+    if (RequiredUpperCase == 3 && NameLen > 4 && Name.starts_with("NSCF") &&
+        isUppercase(Name[4]) && (NameLen == 5 || !isUppercase(Name[5])))
+      return ObjCNameAllowed;
+
+    if (NameLen < RequiredUpperCase)
+      return ObjCNameUnprefixed;
+
+    for (size_t N = 0; N < RequiredUpperCase; ++N) {
+      if (!isUppercase(Name[N]))
+        return ObjCNameUnprefixed;
+    }
+
+    if (NameLen > RequiredUpperCase && isUppercase(Name[RequiredUpperCase]))
+      return ObjCNameUnprefixed;
+  }
+
+  return ObjCNameAllowed;
 }
 
 ///
@@ -405,10 +411,19 @@ Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
 
   // Not a category - we are declaring a class
   if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
-    if (!isObjCPublicNamePrefixAllowed(nameId->getName()))
-      Diag(nameLoc, diag::warn_objc_bad_class_name_prefix);
-    else if (!isValidObjCPublicName(nameId->getName()))
+    switch (ValidateObjCPublicName(nameId->getName())) {
+    case ObjCNameUnprefixed:
       Diag(nameLoc, diag::warn_objc_unprefixed_class_name);
+      break;
+    case ObjCNameNotAllowed:
+      Diag(nameLoc, diag::warn_objc_bad_class_name_prefix);
+      break;
+    case ObjCNameForbidden:
+      Diag(nameLoc, diag::warn_objc_forbidden_class_name_prefix);
+      break;
+    case ObjCNameAllowed:
+      break;
+    }
   }
 
   // Parse a class interface.
@@ -2174,10 +2189,19 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
   SourceLocation nameLoc = ConsumeToken();
 
   if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
-    if (!isObjCPublicNamePrefixAllowed(protocolName->getName()))
-      Diag(nameLoc, diag::warn_objc_bad_protocol_name_prefix);
-    else if (!isValidObjCPublicName(protocolName->getName()))
+    switch (ValidateObjCPublicName(protocolName->getName())) {
+    case ObjCNameUnprefixed:
       Diag(nameLoc, diag::warn_objc_unprefixed_protocol_name);
+      break;
+    case ObjCNameNotAllowed:
+      Diag(nameLoc, diag::warn_objc_bad_protocol_name_prefix);
+      break;
+    case ObjCNameForbidden:
+      Diag(nameLoc, diag::warn_objc_forbidden_protocol_name_prefix);
+      break;
+    case ObjCNameAllowed:
+      break;
+    }
   }
 
   if (TryConsumeToken(tok::semi)) { // forward declaration of one protocol.

@@ -572,10 +572,17 @@ def warn_objc_unprefixed_protocol_name : Warning<
 
 def warn_objc_bad_class_name_prefix : Warning<
   "Objective-C class name prefix not in permitted list">,
-  InGroup<ObjCPrefix>;
+  InGroup<ObjCPrefixes>;
 def warn_objc_bad_protocol_name_prefix : Warning<
   "Objective-C protocol name prefix not in permitted list">,
-  InGroup<ObjCPrefix>;
+  InGroup<ObjCPrefixes>;
+
+def warn_objc_forbidden_class_name_prefix : Warning<
+  "Objective-C class name prefix in forbidden list">,
+  InGroup<ObjCForbiddenPrefixes>;
+def warn_objc_forbidden_protocol_name_prefix : Warning<
+  "Objective-C protocol name prefix in forbidden list">,
+  InGroup<ObjCForbiddenPrefixes>;
 
 /// Objective-C++ parser diagnostics
 def err_expected_token_instead_of_objcxx_keyword : Error<

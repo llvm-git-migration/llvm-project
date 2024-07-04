@@ -612,7 +612,8 @@ def ObjCPointerIntrospect : DiagGroup<"deprecated-objc-pointer-introspection", [
 def ObjCMultipleMethodNames : DiagGroup<"objc-multiple-method-names">;
 def ObjCFlexibleArray : DiagGroup<"objc-flexible-array">;
 def ObjCBoxing : DiagGroup<"objc-boxing">;
-def ObjCPrefix : DiagGroup<"objc-prefix">;
+def ObjCPrefixes : DiagGroup<"objc-prefixes">;
+def ObjCForbiddenPrefixes : DiagGroup<"objc-forbidden-prefixes">;
 def ObjCPrefixLength : DiagGroup<"objc-prefix-length">;
 def CompletionHandler : DiagGroup<"completion-handler">;
 def CalledOnceParameter : DiagGroup<"called-once-parameter", [CompletionHandler]>;
