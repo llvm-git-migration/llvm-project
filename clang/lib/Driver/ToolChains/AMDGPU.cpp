@@ -306,14 +306,16 @@ RocmInstallationDetector::getInstallationPathCandidates() {
       LatestVer = Ver;
     }
   }
-  if (!LatestROCm.empty())
-    ROCmSearchDirs.emplace_back(D.SysRoot + "/opt/" + LatestROCm,
-                                /*StrictChecking=*/true);
+  if (!isWindows()) {
+    if (!LatestROCm.empty())
+      ROCmSearchDirs.emplace_back(D.SysRoot + "/opt/" + LatestROCm,
+                                  /*StrictChecking=*/true);
 
-  ROCmSearchDirs.emplace_back(D.SysRoot + "/usr/local",
-                              /*StrictChecking=*/true);
-  ROCmSearchDirs.emplace_back(D.SysRoot + "/usr",
-                              /*StrictChecking=*/true);
+    ROCmSearchDirs.emplace_back(D.SysRoot + "/usr/local",
+                                /*StrictChecking=*/true);
+    ROCmSearchDirs.emplace_back(D.SysRoot + "/usr",
+                                /*StrictChecking=*/true);
+  }
 
   DoPrintROCmSearchDirs();
   return ROCmSearchDirs;
@@ -322,7 +324,7 @@ RocmInstallationDetector::getInstallationPathCandidates() {
 RocmInstallationDetector::RocmInstallationDetector(
     const Driver &D, const llvm::Triple &HostTriple,
     const llvm::opt::ArgList &Args, bool DetectHIPRuntime, bool DetectDeviceLib)
-    : D(D) {
+    : D(D), hostTriple(HostTriple) {
   Verbose = Args.hasArg(options::OPT_v);
   RocmPathArg = Args.getLastArgValue(clang::driver::options::OPT_rocm_path_EQ);
   PrintROCmSearchDirs =
