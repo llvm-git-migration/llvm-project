@@ -111,6 +111,8 @@ private:
   // Wheter -nogpulib is specified.
   bool NoBuiltinLibs = false;
 
+  llvm::Triple hostTriple;
+
   // Paths
   SmallString<0> InstallPath;
   SmallString<0> BinPath;
@@ -192,6 +194,9 @@ public:
 
   /// Check whether we detected a valid HIP STDPAR Acceleration library.
   bool hasHIPStdParLibrary() const { return HasHIPStdParLibrary; }
+
+  /// Check whether the target triple is for Windows.
+  bool isWindows() const { return hostTriple.isOSWindows(); }
 
   /// Print information about the detected ROCm installation.
   void print(raw_ostream &OS) const;
