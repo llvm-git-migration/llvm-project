@@ -328,7 +328,11 @@ bool SIPreEmitPeephole::mustRetainExeczBranch(
 
       // These instructions are potentially expensive even if EXEC = 0.
       if (TII->isSMRD(MI) || TII->isVMEM(MI) || TII->isFLAT(MI) ||
-          TII->isDS(MI) || MI.getOpcode() == AMDGPU::S_WAITCNT)
+          TII->isDS(MI) || TII->isWaitcnt(MI.getOpcode()))
+        return true;
+
+      // Uniform bypass of barriers should be respected.
+      if (TII->isBarrierRelated(MI.getOpcode()))
         return true;
 
       ++NumInstr;
