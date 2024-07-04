@@ -344,6 +344,72 @@ declare void @func_attr_no_signed_zeros_fp_math_true() "no-signed-zeros-fp-math"
 ; CHECK-SAME: attributes {no_signed_zeros_fp_math = false}
 declare void @func_attr_no_signed_zeros_fp_math_false() "no-signed-zeros-fp-math"="false"
 
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_ieee
+; CHECK-SAME: attributes {denormal_fp_math = "ieee"}
+declare void @func_attr_denormal_fp_math_ieee() "denormal-fp-math"="ieee"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_preserve_sign
+; CHECK-SAME: attributes {denormal_fp_math = "preserve-sign"}
+declare void @func_attr_denormal_fp_math_preserve_sign() "denormal-fp-math"="preserve-sign"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_positive_zero
+; CHECK-SAME: attributes {denormal_fp_math = "positive-zero"}
+declare void @func_attr_denormal_fp_math_positive_zero() "denormal-fp-math"="positive-zero"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_dynamic
+; CHECK-SAME: attributes {denormal_fp_math = "dynamic"}
+declare void @func_attr_denormal_fp_math_dynamic() "denormal-fp-math"="dynamic"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_f32_ieee
+; CHECK-SAME: attributes {denormal_fp_math_f32 = "ieee"}
+declare void @func_attr_denormal_fp_math_f32_ieee() "denormal-fp-math-f32"="ieee"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_f32_preserve_sign
+; CHECK-SAME: attributes {denormal_fp_math_f32 = "preserve-sign"}
+declare void @func_attr_denormal_fp_math_f32_preserve_sign() "denormal-fp-math-f32"="preserve-sign"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_f32_positive_zero
+; CHECK-SAME: attributes {denormal_fp_math_f32 = "positive-zero"}
+declare void @func_attr_denormal_fp_math_f32_positive_zero() "denormal-fp-math-f32"="positive-zero"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_denormal_fp_math_f32_dynamic
+; CHECK-SAME: attributes {denormal_fp_math_f32 = "dynamic"}
+declare void @func_attr_denormal_fp_math_f32_dynamic() "denormal-fp-math-f32"="dynamic"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_fp_contract_fast
+; CHECK-SAME: attributes {fp_contract = "fast"}
+declare void @func_attr_fp_contract_fast() "fp-contract"="fast"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_fp_contract_on
+; CHECK-SAME: attributes {fp_contract = "on"}
+declare void @func_attr_fp_contract_on() "fp-contract"="on"
+
+; // -----
+
+; CHECK-LABEL: @func_attr_fp_contract_off
+; CHECK-SAME: attributes {fp_contract = "off"}
+declare void @func_attr_fp_contract_off() "fp-contract"="off"
+
 // -----
 
 ; CHECK-LABEL: @noinline_attribute
