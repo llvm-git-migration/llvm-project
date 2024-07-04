@@ -241,8 +241,8 @@ static inline bool ObjCNameMatchesPrefix(StringRef Name, StringRef Prefix) {
   size_t NameLen = Name.size();
   size_t PrefixLen = Prefix.size();
   return (NameLen >= PrefixLen && Name.starts_with(Prefix) &&
-          (NameLen == PrefixLen || isUppercase(Name[PrefixLen])) &&
-          (NameLen == PrefixLen + 1 || !isUppercase(Name[PrefixLen + 1])));
+          (NameLen <= PrefixLen || isUppercase(Name[PrefixLen])) &&
+          (NameLen <= PrefixLen + 1 || !isUppercase(Name[PrefixLen + 1])));
 }
 
 Parser::ObjCPublicNameValidationResult
