@@ -4615,12 +4615,30 @@ unsigned SelectionDAG::ComputeNumSignBits(SDValue Op, const APInt &DemandedElts,
       Tmp = std::min<uint64_t>(Tmp + *ShAmt, VTBits);
     return Tmp;
   case ISD::SHL:
-    if (std::optional<uint64_t> ShAmt =
+    if (std::optional<uint64_t> MaxShAmt =
             getValidMaximumShiftAmount(Op, DemandedElts, Depth + 1)) {
+      if (Op.getOperand(0).getOpcode() == ISD::ANY_EXTEND ||
+          Op.getOperand(0).getOpcode() == ISD::ZERO_EXTEND ||
+          Op.getOperand(0).getOpcode() == ISD::SIGN_EXTEND)
+        if (std::optional<uint64_t> MinShAmt =
+                getValidMinimumShiftAmount(Op, DemandedElts, Depth + 1)) {
+          SDValue Src = Op.getOperand(0);
+          EVT SrcVT = Src.getValueType();
+          SDValue ExtendedOp = Op.getOperand(0).getOperand(0);
+          EVT ExtendedOpVT = ExtendedOp.getValueType();
+          uint64_t ExtendedWidth =
+              SrcVT.getScalarSizeInBits() - ExtendedOpVT.getScalarSizeInBits();
+          if (ExtendedWidth <= *MinShAmt) {
+            Tmp = ComputeNumSignBits(ExtendedOp, DemandedElts, Depth + 1);
+            Tmp += ExtendedWidth;
+            if (*MaxShAmt < Tmp)
+              return Tmp - *MaxShAmt;
+          }
+        }
       // shl destroys sign bits, ensure it doesn't shift out all sign bits.
       Tmp = ComputeNumSignBits(Op.getOperand(0), DemandedElts, Depth + 1);
-      if (*ShAmt < Tmp)
-        return Tmp - *ShAmt;
+      if (*MaxShAmt < Tmp)
+        return Tmp - *MaxShAmt;
     }
     break;
   case ISD::AND:
