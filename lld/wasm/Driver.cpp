@@ -467,6 +467,9 @@ getBuildId(opt::InputArgList &args) {
 
 // Initializes Config members by the command line options.
 static void readConfigs(opt::InputArgList &args) {
+  config->allowMultipleDefinition =
+      args.hasFlag(OPT_allow_multiple_definition,
+                   OPT_no_allow_multiple_definition, false);
   config->bsymbolic = args.hasArg(OPT_Bsymbolic);
   config->checkFeatures =
       args.hasFlag(OPT_check_features, OPT_no_check_features, true);
