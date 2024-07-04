@@ -719,10 +719,9 @@ lldb_private::formatters::LibcxxUniquePtrSyntheticFrontEnd::Update() {
     if (deleter_sp)
       m_deleter_sp = deleter_sp->Clone(ConstString("deleter"));
   } else {
-    // TODO: with the new layout, deleter is always a member, so empty deleters
-    // will be displayed
     m_value_ptr_sp = ptr_sp->Clone(ConstString("pointer"));
-    m_deleter_sp = deleter_sp->Clone(ConstString("deleter"));
+    if (deleter_sp->GetNumChildrenIgnoringErrors() > 0)
+      m_deleter_sp = deleter_sp->Clone(ConstString("deleter"));
   }
 
   return lldb::ChildCacheState::eRefetch;
