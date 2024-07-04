@@ -262,6 +262,9 @@ bool SLSHardeningInserter::hardenReturnsAndBRs(MachineModuleInfo &MMI,
   return Modified;
 }
 
+// Currently, the longest possible thunk name is
+//   __llvm_slsblr_thunk_aa_xNN_xMM
+// which is 31 characters (without the '\0' character).
 static SmallString<32> createThunkName(const ThunkKind &Kind, Register Xn,
                                        Register Xm) {
   unsigned N = ThunksSet::indexOfXReg(Xn);
@@ -310,8 +313,6 @@ static const ThunkKind &parseThunkName(StringRef ThunkName, Register &Xn,
 void SLSHardeningInserter::populateThunk(MachineFunction &MF) {
   assert(MF.getFunction().hasComdat() == ComdatThunks &&
          "ComdatThunks value changed since MF creation");
-  // FIXME: How to better communicate Register number, rather than through
-  // name and lookup table?
   Register Xn, Xm;
   const ThunkKind &Kind = parseThunkName(MF.getName(), Xn, Xm);
 
