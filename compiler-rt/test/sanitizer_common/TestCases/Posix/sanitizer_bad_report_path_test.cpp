@@ -13,9 +13,32 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(__linux__)
+#  include <linux/capability.h>
+
+/* Use capget() and capset() from glibc. */
+extern "C" int capget(cap_user_header_t header, cap_user_data_t data);
+extern "C" int capset(cap_user_header_t header, const cap_user_data_t data);
+
+static void try_drop_cap_dac_override(void) {
+  struct __user_cap_header_struct hdr = {
+      .version = _LINUX_CAPABILITY_VERSION_1,
+      .pid = 0,
+  };
+  struct __user_cap_data_struct data[_LINUX_CAPABILITY_U32S_1];
+  if (!capget(&hdr, data)) {
+    data[CAP_DAC_OVERRIDE >> 5].effective &= ~(1 << (CAP_DAC_OVERRIDE & 31));
+    capset(&hdr, data);
+  }
+}
+#else
+static void try_drop_cap_dac_override(void) {}
+#endif
+
 volatile int *null = 0;
 
 int main(int argc, char **argv) {
+  try_drop_cap_dac_override();
   char buff[1000];
   sprintf(buff, "%s.report_path/report", argv[0]);
   __sanitizer_set_report_path(buff);
