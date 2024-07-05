@@ -111,6 +111,14 @@ Type *Type::getFloatingPointTy(LLVMContext &C, const fltSemantics &S) {
   return Ty;
 }
 
+bool Type::isRISCVVectorTupleTy() const {
+  if (!isTargetExtTy())
+    return false;
+
+  auto *TarExtTy = cast<TargetExtType>(this);
+  return TarExtTy->getName().starts_with("riscv_m");
+}
+
 bool Type::canLosslesslyBitCastTo(Type *Ty) const {
   // Identity cast means no change so return true
   if (this == Ty)
@@ -844,6 +852,12 @@ static TargetTypeInfo getTargetTypeInfo(const TargetExtType *Ty) {
   if (Name == "aarch64.svcount")
     return TargetTypeInfo(ScalableVectorType::get(Type::getInt1Ty(C), 16),
                           TargetExtType::HasZeroInit);
+
+  // RISCV vector tuple type.
+  // Since the scalar type info is not necessary here, always use i8
+  // to represent it.
+  if (Name.starts_with("riscv_m"))
+    return TargetTypeInfo(Type::getInt8Ty(C));
 
   return TargetTypeInfo(Type::getVoidTy(C));
 }

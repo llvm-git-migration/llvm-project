@@ -8,66 +8,66 @@
 
 #include <riscv_vector.h>
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } @test_vlsseg7e16_v_bf16mf4x7(
+// CHECK-RV64-LABEL: define dso_local target("riscv_mf4x7", i8, i8, 1, 7) @test_vlsseg7e16_v_bf16mf4x7(
 // CHECK-RV64-SAME: ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0:[0-9]+]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } @llvm.riscv.vlsseg7.nxv1bf16.i64(<vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]])
-// CHECK-RV64-NEXT:    ret { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_mf4x7", i8, i8, 1, 7) @llvm.riscv.vlsseg7.triscv_mf4x7_i8_i8_1_7t.i64(target("riscv_mf4x7", i8, i8, 1, 7) poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]], i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_mf4x7", i8, i8, 1, 7) [[TMP0]]
 //
 vbfloat16mf4x7_t test_vlsseg7e16_v_bf16mf4x7(const __bf16 *rs1, ptrdiff_t rs2,
                                              size_t vl) {
   return __riscv_vlsseg7e16_v_bf16mf4x7(rs1, rs2, vl);
 }
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } @test_vlsseg7e16_v_bf16mf2x7(
+// CHECK-RV64-LABEL: define dso_local target("riscv_mf2x7", i8, i8, 2, 7) @test_vlsseg7e16_v_bf16mf2x7(
 // CHECK-RV64-SAME: ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } @llvm.riscv.vlsseg7.nxv2bf16.i64(<vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]])
-// CHECK-RV64-NEXT:    ret { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_mf2x7", i8, i8, 2, 7) @llvm.riscv.vlsseg7.triscv_mf2x7_i8_i8_2_7t.i64(target("riscv_mf2x7", i8, i8, 2, 7) poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]], i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_mf2x7", i8, i8, 2, 7) [[TMP0]]
 //
 vbfloat16mf2x7_t test_vlsseg7e16_v_bf16mf2x7(const __bf16 *rs1, ptrdiff_t rs2,
                                              size_t vl) {
   return __riscv_vlsseg7e16_v_bf16mf2x7(rs1, rs2, vl);
 }
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } @test_vlsseg7e16_v_bf16m1x7(
+// CHECK-RV64-LABEL: define dso_local target("riscv_m1x7", i8, i8, 3, 7) @test_vlsseg7e16_v_bf16m1x7(
 // CHECK-RV64-SAME: ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } @llvm.riscv.vlsseg7.nxv4bf16.i64(<vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]])
-// CHECK-RV64-NEXT:    ret { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_m1x7", i8, i8, 3, 7) @llvm.riscv.vlsseg7.triscv_m1x7_i8_i8_3_7t.i64(target("riscv_m1x7", i8, i8, 3, 7) poison, ptr [[RS1]], i64 [[RS2]], i64 [[VL]], i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_m1x7", i8, i8, 3, 7) [[TMP0]]
 //
 vbfloat16m1x7_t test_vlsseg7e16_v_bf16m1x7(const __bf16 *rs1, ptrdiff_t rs2,
                                            size_t vl) {
   return __riscv_vlsseg7e16_v_bf16m1x7(rs1, rs2, vl);
 }
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } @test_vlsseg7e16_v_bf16mf4x7_m(
+// CHECK-RV64-LABEL: define dso_local target("riscv_mf4x7", i8, i8, 1, 7) @test_vlsseg7e16_v_bf16mf4x7_m(
 // CHECK-RV64-SAME: <vscale x 1 x i1> [[VM:%.*]], ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } @llvm.riscv.vlsseg7.mask.nxv1bf16.i64(<vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, <vscale x 1 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], <vscale x 1 x i1> [[VM]], i64 [[VL]], i64 3)
-// CHECK-RV64-NEXT:    ret { <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat>, <vscale x 1 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_mf4x7", i8, i8, 1, 7) @llvm.riscv.vlsseg7.mask.triscv_mf4x7_i8_i8_1_7t.i64.nxv1i1(target("riscv_mf4x7", i8, i8, 1, 7) poison, ptr [[RS1]], i64 [[RS2]], <vscale x 1 x i1> [[VM]], i64 [[VL]], i64 3, i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_mf4x7", i8, i8, 1, 7) [[TMP0]]
 //
 vbfloat16mf4x7_t test_vlsseg7e16_v_bf16mf4x7_m(vbool64_t vm, const __bf16 *rs1,
                                                ptrdiff_t rs2, size_t vl) {
   return __riscv_vlsseg7e16_v_bf16mf4x7_m(vm, rs1, rs2, vl);
 }
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } @test_vlsseg7e16_v_bf16mf2x7_m(
+// CHECK-RV64-LABEL: define dso_local target("riscv_mf2x7", i8, i8, 2, 7) @test_vlsseg7e16_v_bf16mf2x7_m(
 // CHECK-RV64-SAME: <vscale x 2 x i1> [[VM:%.*]], ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } @llvm.riscv.vlsseg7.mask.nxv2bf16.i64(<vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, <vscale x 2 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], <vscale x 2 x i1> [[VM]], i64 [[VL]], i64 3)
-// CHECK-RV64-NEXT:    ret { <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat>, <vscale x 2 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_mf2x7", i8, i8, 2, 7) @llvm.riscv.vlsseg7.mask.triscv_mf2x7_i8_i8_2_7t.i64.nxv2i1(target("riscv_mf2x7", i8, i8, 2, 7) poison, ptr [[RS1]], i64 [[RS2]], <vscale x 2 x i1> [[VM]], i64 [[VL]], i64 3, i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_mf2x7", i8, i8, 2, 7) [[TMP0]]
 //
 vbfloat16mf2x7_t test_vlsseg7e16_v_bf16mf2x7_m(vbool32_t vm, const __bf16 *rs1,
                                                ptrdiff_t rs2, size_t vl) {
   return __riscv_vlsseg7e16_v_bf16mf2x7_m(vm, rs1, rs2, vl);
 }
 
-// CHECK-RV64-LABEL: define dso_local { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } @test_vlsseg7e16_v_bf16m1x7_m(
+// CHECK-RV64-LABEL: define dso_local target("riscv_m1x7", i8, i8, 3, 7) @test_vlsseg7e16_v_bf16m1x7_m(
 // CHECK-RV64-SAME: <vscale x 4 x i1> [[VM:%.*]], ptr noundef [[RS1:%.*]], i64 noundef [[RS2:%.*]], i64 noundef [[VL:%.*]]) #[[ATTR0]] {
 // CHECK-RV64-NEXT:  entry:
-// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } @llvm.riscv.vlsseg7.mask.nxv4bf16.i64(<vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, <vscale x 4 x bfloat> poison, ptr [[RS1]], i64 [[RS2]], <vscale x 4 x i1> [[VM]], i64 [[VL]], i64 3)
-// CHECK-RV64-NEXT:    ret { <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat>, <vscale x 4 x bfloat> } [[TMP0]]
+// CHECK-RV64-NEXT:    [[TMP0:%.*]] = call target("riscv_m1x7", i8, i8, 3, 7) @llvm.riscv.vlsseg7.mask.triscv_m1x7_i8_i8_3_7t.i64.nxv4i1(target("riscv_m1x7", i8, i8, 3, 7) poison, ptr [[RS1]], i64 [[RS2]], <vscale x 4 x i1> [[VM]], i64 [[VL]], i64 3, i64 4)
+// CHECK-RV64-NEXT:    ret target("riscv_m1x7", i8, i8, 3, 7) [[TMP0]]
 //
 vbfloat16m1x7_t test_vlsseg7e16_v_bf16m1x7_m(vbool16_t vm, const __bf16 *rs1,
                                              ptrdiff_t rs2, size_t vl) {

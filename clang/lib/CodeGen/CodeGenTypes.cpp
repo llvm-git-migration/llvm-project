@@ -22,6 +22,8 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/CodeGen/CGFunctionInfo.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Module.h"
@@ -513,14 +515,23 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
       {
         ASTContext::BuiltinVectorTypeInfo Info =
             Context.getBuiltinVectorTypeInfo(cast<BuiltinType>(Ty));
-        // Tuple types are expressed as aggregregate types of the same scalable
-        // vector type (e.g. vint32m1x2_t is two vint32m1_t, which is {<vscale x
-        // 2 x i32>, <vscale x 2 x i32>}).
         if (Info.NumVectors != 1) {
-          llvm::Type *EltTy = llvm::ScalableVectorType::get(
-              ConvertType(Info.ElementType), Info.EC.getKnownMinValue());
-          llvm::SmallVector<llvm::Type *, 4> EltTys(Info.NumVectors, EltTy);
-          return llvm::StructType::get(getLLVMContext(), EltTys);
+          int Log2LMUL =
+              llvm::Log2_64(
+                  Info.EC.getKnownMinValue() *
+                  ConvertType(Info.ElementType)->getScalarSizeInBits()) -
+              6;
+          std::string Name = "riscv_m" +
+                             (Log2LMUL < 0 ? "f" + llvm::utostr(1 << -Log2LMUL)
+                                           : llvm::utostr(1 << Log2LMUL)) +
+                             "x" + llvm::utostr(Info.NumVectors);
+          // TargetExtType only accepts unsigned integer, so we need to encode
+          // it and decode when using.
+          return llvm::TargetExtType::get(
+              getLLVMContext(), Name,
+              {llvm::Type::getInt8Ty(getLLVMContext()),
+               llvm::Type::getInt8Ty(getLLVMContext())},
+              {3U + Log2LMUL, Info.NumVectors});
         }
         return llvm::ScalableVectorType::get(ConvertType(Info.ElementType),
                                              Info.EC.getKnownMinValue());

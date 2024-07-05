@@ -121,6 +121,7 @@
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/ModRef.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -6090,8 +6091,24 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
     Value *Idx = Call.getArgOperand(2);
     unsigned IdxN = cast<ConstantInt>(Idx)->getZExtValue();
 
-    VectorType *VecTy = cast<VectorType>(Vec->getType());
     VectorType *SubVecTy = cast<VectorType>(SubVec->getType());
+    if (auto *VecTup = dyn_cast<TargetExtType>(Vec->getType())) {
+      Check(IdxN < VecTup->getIntParameter(1),
+            "vector_insert index must be less than or equal to the NF in a "
+            "RISCV vector tuple type.");
+
+      int SubVecLog2LMUL =
+          Log2_64(SubVecTy->getElementCount().getKnownMinValue() *
+                  SubVecTy->getElementType()->getScalarSizeInBits()) -
+          6;
+
+      Check(SubVecLog2LMUL == (int)VecTup->getIntParameter(0) - 3,
+            "vector_insert element must has the same LMUL as RISCV vector "
+            "tuple type does.");
+      break;
+    }
+
+    VectorType *VecTy = cast<VectorType>(Vec->getType());
 
     ElementCount VecEC = VecTy->getElementCount();
     ElementCount SubVecEC = SubVecTy->getElementCount();
@@ -6120,6 +6137,22 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
     unsigned IdxN = cast<ConstantInt>(Idx)->getZExtValue();
 
     VectorType *ResultTy = cast<VectorType>(Call.getType());
+    if (auto *VecTup = dyn_cast<TargetExtType>(Vec->getType())) {
+      Check(IdxN < VecTup->getIntParameter(1),
+            "vector_insert index must be less than or equal to the NF in a "
+            "RISCV vector tuple type.");
+
+      int SubVecLog2LMUL =
+          Log2_64(ResultTy->getElementCount().getKnownMinValue() *
+                  ResultTy->getElementType()->getScalarSizeInBits()) -
+          6;
+
+      Check(SubVecLog2LMUL == (int)VecTup->getIntParameter(0) - 3,
+            "vector_insert element must has the same LMUL as RISCV vector "
+            "tuple type does.");
+      break;
+    }
+
     VectorType *VecTy = cast<VectorType>(Vec->getType());
 
     ElementCount VecEC = VecTy->getElementCount();
