@@ -8,9 +8,11 @@
 
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TypeSize.h"
 #include "llvm/Support/WithColor.h"
@@ -161,6 +163,14 @@ TypeSize EVT::getExtendedSizeInBits() const {
 std::string EVT::getEVTString() const {
   switch (V.SimpleTy) {
   default:
+    if (isRISCVVectorTuple()) {
+      unsigned Sz = getSizeInBits();
+      unsigned NF = getVectorMinNumElements();
+      int Log2LMUL = Log2_64(Sz / NF) - 6;
+      return "riscv_m" +
+             ((Log2LMUL < 0 ? "f" : "") + utostr(1 << std::abs(Log2LMUL))) +
+             "x" + utostr(getVectorMinNumElements());
+    }
     if (isVector())
       return (isScalableVector() ? "nxv" : "v") +
              utostr(getVectorElementCount().getKnownMinValue()) +
@@ -214,6 +224,70 @@ Type *EVT::getTypeForEVT(LLVMContext &Context) const {
   case MVT::i64x8:   return IntegerType::get(Context, 512);
   case MVT::externref: return Type::getWasm_ExternrefTy(Context);
   case MVT::funcref: return Type::getWasm_FuncrefTy(Context);
+  case MVT::riscv_mf8x2:
+    return TargetExtType::get(Context, "riscv_mf8x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 2});
+  case MVT::riscv_mf8x3:
+    return TargetExtType::get(Context, "riscv_mf8x3", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 3});
+  case MVT::riscv_mf8x4:
+    return TargetExtType::get(Context, "riscv_mf8x4", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 4});
+  case MVT::riscv_mf8x5:
+    return TargetExtType::get(Context, "riscv_mf8x5", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 5});
+  case MVT::riscv_mf8x6:
+    return TargetExtType::get(Context, "riscv_mf8x6", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 6});
+  case MVT::riscv_mf8x7:
+    return TargetExtType::get(Context, "riscv_mf8x7", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 7});
+  case MVT::riscv_mf8x8:
+    return TargetExtType::get(Context, "riscv_mf8x8", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{0, 8});
+  case MVT::riscv_mf4x2:
+    return TargetExtType::get(Context, "riscv_mf4x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 2});
+  case MVT::riscv_mf4x3:
+    return TargetExtType::get(Context, "riscv_mf4x3", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 3});
+  case MVT::riscv_mf4x4:
+    return TargetExtType::get(Context, "riscv_mf4x4", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 4});
+  case MVT::riscv_mf4x5:
+    return TargetExtType::get(Context, "riscv_mf4x5", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 5});
+  case MVT::riscv_mf4x6:
+    return TargetExtType::get(Context, "riscv_mf4x6", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 6});
+  case MVT::riscv_mf4x7:
+    return TargetExtType::get(Context, "riscv_mf4x7", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 7});
+  case MVT::riscv_mf4x8:
+    return TargetExtType::get(Context, "riscv_mf4x8", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{1, 8});
+  case MVT::riscv_mf2x2:
+    return TargetExtType::get(Context, "riscv_mf2x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 2});
+  case MVT::riscv_mf2x3:
+    return TargetExtType::get(Context, "riscv_mf2x3", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 3});
+  case MVT::riscv_mf2x4:
+    return TargetExtType::get(Context, "riscv_mf2x4", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 4});
+  case MVT::riscv_mf2x5:
+    return TargetExtType::get(Context, "riscv_mf2x5", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 5});
+  case MVT::riscv_mf2x6:
+    return TargetExtType::get(Context, "riscv_mf2x6", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 6});
+  case MVT::riscv_mf2x7:
+    return TargetExtType::get(Context, "riscv_mf2x7", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 7});
+  case MVT::riscv_mf2x8:
+    return TargetExtType::get(Context, "riscv_mf2x8", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{2, 8});
+  case MVT::riscv_m1x2:
+    return TargetExtType::get(Context, "riscv_m1x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 2});
+  case MVT::riscv_m1x3:
+    return TargetExtType::get(Context, "riscv_m1x3", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 3});
+  case MVT::riscv_m1x4:
+    return TargetExtType::get(Context, "riscv_m1x4", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 4});
+  case MVT::riscv_m1x5:
+    return TargetExtType::get(Context, "riscv_m1x5", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 5});
+  case MVT::riscv_m1x6:
+    return TargetExtType::get(Context, "riscv_m1x6", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 6});
+  case MVT::riscv_m1x7:
+    return TargetExtType::get(Context, "riscv_m1x7", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 7});
+  case MVT::riscv_m1x8:
+    return TargetExtType::get(Context, "riscv_m1x8", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{3, 8});
+  case MVT::riscv_m2x2:
+    return TargetExtType::get(Context, "riscv_m2x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{4, 2});
+  case MVT::riscv_m2x3:
+    return TargetExtType::get(Context, "riscv_m2x3", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{4, 3});
+  case MVT::riscv_m2x4:
+    return TargetExtType::get(Context, "riscv_m2x4", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{4, 4});
+  case MVT::riscv_m4x2:
+    return TargetExtType::get(Context, "riscv_m4x2", {Type::getInt8Ty(Context), Type::getInt8Ty(Context)},{5, 2});
   case MVT::Metadata: return Type::getMetadataTy(Context);
 #define GET_VT_EVT(Ty, EVT) case MVT::Ty: return EVT;
 #include "llvm/CodeGen/GenVT.inc"
@@ -249,6 +323,28 @@ MVT MVT::getVT(Type *Ty, bool HandleUnknown){
       return MVT(MVT::aarch64svcount);
     else if (TargetExtTy->getName().starts_with("spirv."))
       return MVT(MVT::spirvbuiltin);
+    if (TargetExtTy->getName().starts_with("riscv_m")) {
+      StringRef Name = TargetExtTy->getName();
+      if (Name.consume_front("riscv_m")) {
+        bool IsFracLMUL = false;
+        unsigned LMUL, NF;
+        if (Name.consume_front("f"))
+          IsFracLMUL = true;
+
+        LMUL = Name[0] - '0';
+        Name = Name.drop_front(2);
+        NF = Name[0] - '0';
+
+        llvm::dbgs() << LMUL << ' ' << NF << '\n';
+        unsigned Sz = NF * RISCV::RVVBitsPerBlock;
+        if (IsFracLMUL)
+          Sz /= LMUL;
+        else
+          Sz *= LMUL;
+
+        return MVT::getRISCVVectorTupleVT(Sz , NF);
+      }
+    }
     if (HandleUnknown)
       return MVT(MVT::Other);
     llvm_unreachable("Unknown target ext type!");
