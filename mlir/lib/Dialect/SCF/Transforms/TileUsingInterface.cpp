@@ -835,7 +835,7 @@ getUntiledProducerFromSliceSource(OpOperand *source,
 /// Implementation of fusing producer of a single slice by computing the
 /// slice of the producer in-place.
 std::optional<scf::SCFFuseProducerOfSliceResult>
-mlir::scf::tileAndFuseProducerOfSlice(
+mlir::scf::tileAndFuseProducerOfSliceImpl(
     RewriterBase &rewriter, tensor::ExtractSliceOp candidateSliceOp,
     MutableArrayRef<LoopLikeOpInterface> loops) {
   // 1. Get the producer of the source (potentially walking through
@@ -947,6 +947,135 @@ mlir::scf::tileAndFuseProducerOfSlice(
   return scf::SCFFuseProducerOfSliceResult{fusableProducer,
                                            tileAndFuseResult->tiledValues[0],
                                            tileAndFuseResult->tiledOps};
+}
+
+/// Get the Root source of target ExtractSliceOp
+/// %0 =
+/// %1 = scf.for(%arg1 = %0)
+///   %2 = extract %arg1
+///   %3 = scf.for(%arg2 = %2)
+///      %4 = extract %args2
+///      ...
+/// @param targetSliceOp: %4 = extract %args2
+/// @param extractSliceOpChain: chain of all related extract sliceOp
+/// @return Value of Root Source : %0
+static FailureOr<Value> getRootSourceOfExtractSliceOp(
+    Operation *targetSliceOp,
+    SmallVectorImpl<tensor::ExtractSliceOp> &extractSliceOpChain,
+    int curDepth = 0, int maxDepth = 5) {
+  assert(isa<tensor::ExtractSliceOp>(targetSliceOp));
+  // control recursive time in avoid of stack overflow
+  if (curDepth > maxDepth)
+    return failure();
+
+  auto extractOp = cast<tensor::ExtractSliceOp>(targetSliceOp);
+  extractSliceOpChain.push_back(extractOp);
+  Value rootSource = extractOp.getSourceMutable().get();
+
+  while (true) {
+    if (auto iterArg = dyn_cast<BlockArgument>(rootSource)) {
+      if (auto outerLoop = dyn_cast<LoopLikeOpInterface>(
+              iterArg.getOwner()->getParentOp())) {
+        rootSource = outerLoop.getTiedLoopInit(iterArg)->get();
+        continue;
+      }
+      return failure();
+    } else if (auto sliceOp =
+                   rootSource.getDefiningOp<tensor::ExtractSliceOp>()) {
+      // walk up loop to find larger candidate extractSliceOp
+      return getRootSourceOfExtractSliceOp(sliceOp, extractSliceOpChain,
+                                           curDepth + 1);
+    }
+    break;
+  }
+  return rootSource;
+}
+
+/// Recursively find the outer nest loops of given loop(included) while the
+/// predict function succeed, sorted from outer to inner.
+///
+/// @param loop: target loop, note that this loop will be also included. I.e.
+///              if no other nest loops were found, just return itself.
+/// @param pred: predict function, the termination condition of recursive
+/// process.
+/// @return Outer Nest Loops: nest loops outside given target loop(included).
+///
+/// E.g.
+///
+/// ```
+///  %0 = scf.for()
+///    %1 = scf.for()
+///      %2 = scf.for()
+/// ```
+///
+/// If `%2 = scf.for` is given without specific prediction function, this
+/// function will return three nest loops: %0 + %1 + %2.
+static SmallVector<LoopLikeOpInterface>
+getOuterNestLoopsWhile(LoopLikeOpInterface loop,
+                       std::function<LogicalResult(LoopLikeOpInterface)> pred) {
+  SmallVector<LoopLikeOpInterface> nestLoops = {loop};
+  auto outerLoop = dyn_cast<LoopLikeOpInterface>(loop->getParentOp());
+  while (outerLoop && succeeded(pred(outerLoop))) {
+    nestLoops.push_back(outerLoop);
+    outerLoop = dyn_cast<LoopLikeOpInterface>(outerLoop->getParentOp());
+  }
+  // sorted from outer to inner
+  return {nestLoops.rbegin(), nestLoops.rend()};
+}
+
+/// Enhanced version of `tileAndFuseProducerOfSliceImpl`, which can deal with
+/// multi-level `extractSliceOp`. E.g.
+///
+/// ```
+/// %0 = untiled_producer
+/// %1 = scf.for(%arg1 = %0)
+///   %2 = extract %arg1
+///   %3 = scf.for(%arg2 = %2)
+///      %4 = extract %args2
+///      %5 = tiled_consumer ins(%4)
+/// ```
+std::optional<scf::SCFFuseProducerOfSliceResult>
+mlir::scf::tileAndFuseProducerOfSlice(RewriterBase &rewriter,
+                                      Operation *candidateSliceOp) {
+  SmallVector<tensor::ExtractSliceOp> sliceOpChain;
+  if (failed(getRootSourceOfExtractSliceOp(candidateSliceOp, sliceOpChain))) {
+    return std::nullopt;
+  }
+
+  std::optional<scf::SCFFuseProducerOfSliceResult> fuseProducerResult;
+  // reverse from outer to inner
+  std::reverse(sliceOpChain.begin(), sliceOpChain.end());
+  // multiple application of `tileAndFuseProducerOfSliceImpl`
+  for (auto &&[index, sliceOp] : llvm::enumerate(sliceOpChain)) {
+    // get nest loops between next candidate sliceOp and tiled producer.
+    auto whileProducerOutOfBlock =
+        [&fuseProducerResult](LoopLikeOpInterface loop) -> LogicalResult {
+      if (fuseProducerResult) {
+        Block &body = loop->getRegion(0).front();
+        if (fuseProducerResult->tiledAndFusedProducer.getDefiningOp()
+                ->getBlock() == &body)
+          return failure();
+      }
+      return success();
+    };
+    SmallVector<LoopLikeOpInterface> outerLoops =
+        getOuterNestLoopsWhile(sliceOp->getParentOfType<LoopLikeOpInterface>(),
+                               whileProducerOutOfBlock);
+    fuseProducerResult =
+        tileAndFuseProducerOfSliceImpl(rewriter, sliceOp, outerLoops);
+    if (!fuseProducerResult) {
+      return std::nullopt;
+    }
+  }
+  return fuseProducerResult;
+}
+
+/// To be compatible with previous behavior
+std::optional<scf::SCFFuseProducerOfSliceResult>
+mlir::scf::tileAndFuseProducerOfSlice(
+    RewriterBase &rewriter, tensor::ExtractSliceOp candidateSliceOp,
+    MutableArrayRef<LoopLikeOpInterface> loops) {
+  return tileAndFuseProducerOfSliceImpl(rewriter, candidateSliceOp, loops);
 }
 
 /// Reconstruct the fused producer from within the tiled-and-fused code.
