@@ -1670,6 +1670,12 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
     if (dsp.getAllSymbolsToPrivatize().contains(&sym))
       return;
 
+    // Structure component symbols don't have bindings, and can only be
+    // explicitly mapped individually. If a member is captured implicitly
+    // we map the entirety of the derived type when we find its symbol.
+    if (sym.owner().IsDerivedType())
+      return;
+
     // if the symbol is part of an already mapped common block, do not make a
     // map for it.
     if (const Fortran::semantics::Symbol *common =
@@ -1677,16 +1683,18 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
       if (llvm::find(mapSyms, common) != mapSyms.end())
         return;
 
-    if (llvm::find(mapSyms, &sym) == mapSyms.end()) {
-      mlir::Value baseOp = converter.getSymbolAddress(sym);
-      if (!baseOp)
-        if (const auto *details =
-                sym.template detailsIf<semantics::HostAssocDetails>()) {
-          baseOp = converter.getSymbolAddress(details->symbol());
-          converter.copySymbolBinding(details->symbol(), sym);
-        }
+    // If we come across a symbol without a symbol address, we
+    // return as we cannot process it, this is intended as a
+    // catch all early exit for symbols that do not have a
+    // corresponding extended value. Such as subroutines,
+    // interfaces and named blocks.
+    if (!converter.getSymbolAddress(sym))
+      return;
 
-      if (baseOp) {
+    if (llvm::find(mapSyms, &sym) == mapSyms.end()) {
+      if (const auto *details =
+              sym.template detailsIf<semantics::HostAssocDetails>())
+        converter.copySymbolBinding(details->symbol(), sym);
         llvm::SmallVector<mlir::Value> bounds;
         std::stringstream name;
         fir::ExtendedValue dataExv = converter.getSymbolExtendedValue(sym);
@@ -1694,13 +1702,14 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
 
         lower::AddrAndBoundsInfo info = getDataOperandBaseAddr(
             converter, firOpBuilder, sym, converter.getCurrentLocation());
+        mlir::Value baseOp = info.rawInput;
         if (mlir::isa<fir::BaseBoxType>(
-                fir::unwrapRefType(info.addr.getType())))
+                fir::unwrapRefType(baseOp.getType())))
           bounds = lower::genBoundsOpsFromBox<mlir::omp::MapBoundsOp,
                                               mlir::omp::MapBoundsType>(
               firOpBuilder, converter.getCurrentLocation(), dataExv, info);
         if (mlir::isa<fir::SequenceType>(
-                fir::unwrapRefType(info.addr.getType()))) {
+                fir::unwrapRefType(baseOp.getType()))) {
           bool dataExvIsAssumedSize =
               semantics::IsAssumedSizeArray(sym.GetUltimate());
           bounds = lower::genBaseBoundsOps<mlir::omp::MapBoundsOp,
@@ -1755,7 +1764,6 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
         mapSyms.push_back(&sym);
         mapLocs.push_back(baseOp.getLoc());
         mapTypes.push_back(baseOp.getType());
-      }
     }
   };
   lower::pft::visitAllSymbols(eval, captureImplicitMap);
