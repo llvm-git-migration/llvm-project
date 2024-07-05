@@ -12391,8 +12391,8 @@ Value *BoUpSLP::vectorizeOperand(TreeEntry *E, unsigned NodeIdx,
     }
     if (IsSameVE) {
       auto FinalShuffle = [&](Value *V, ArrayRef<int> Mask) {
-        ShuffleInstructionBuilder ShuffleBuilder(
-            cast<VectorType>(V->getType())->getElementType(), Builder, *this);
+        ShuffleInstructionBuilder ShuffleBuilder(VL.front()->getType(), Builder,
+                                                 *this);
         ShuffleBuilder.add(V, Mask);
         return ShuffleBuilder.finalize(std::nullopt);
       };
