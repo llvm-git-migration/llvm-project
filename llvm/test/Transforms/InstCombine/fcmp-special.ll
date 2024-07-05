@@ -186,6 +186,24 @@ define i1 @nnan_ops_to_fcmp_uno(float %x, float %y) {
   ret i1 %cmp
 }
 
+define i1 @nan_ops_to_fcmp_ord(float nofpclass(inf zero sub norm) %x, float nofpclass(inf zero sub norm) %y) {
+; CHECK-LABEL: @nan_ops_to_fcmp_ord(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord float [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %cmp = fcmp ord float %x, %y
+  ret i1 %cmp
+}
+
+define i1 @nan_ops_to_fcmp_uno(float nofpclass(inf zero sub norm) %x, float nofpclass(inf zero sub norm) %y) {
+; CHECK-LABEL: @nan_ops_to_fcmp_uno(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp uno float [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %cmp = fcmp uno float %x, %y
+  ret i1 %cmp
+}
+
 ; TODO: For any predicate/type/FMF, comparison to -0.0 is the same as comparison to +0.0.
 
 define i1 @negative_zero_oeq(float %x) {
