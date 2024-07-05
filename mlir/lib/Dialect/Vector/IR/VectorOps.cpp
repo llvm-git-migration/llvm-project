@@ -2851,6 +2851,9 @@ public:
     Attribute vectorDestCst;
     if (!matchPattern(destVector, m_Constant(&vectorDestCst)))
       return failure();
+    auto denseDest = llvm::dyn_cast<DenseElementsAttr>(vectorDestCst);
+    if (!denseDest)
+      return failure();
 
     VectorType destTy = destVector.getType();
     if (destTy.isScalable())
@@ -2860,9 +2863,7 @@ public:
     if (destTy.getNumElements() > vectorSizeFoldThreshold &&
         !destVector.hasOneUse())
       return failure();
-
-    auto denseDest = llvm::cast<DenseElementsAttr>(vectorDestCst);
-
+  
     Value sourceValue = op.getSource();
     Attribute sourceCst;
     if (!matchPattern(sourceValue, m_Constant(&sourceCst)))
