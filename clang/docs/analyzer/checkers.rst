@@ -3011,10 +3011,10 @@ alpha.security.taint
 Checkers implementing
 `taint analysis <https://en.wikipedia.org/wiki/Taint_checking>`_.
 
-.. _alpha-security-taint-TaintPropagation:
+.. _alpha-security-taint-GenericTaint:
 
-alpha.security.taint.TaintPropagation (C, C++)
-""""""""""""""""""""""""""""""""""""""""""""""
+alpha.security.taint.GenericTaint (C, C++)
+""""""""""""""""""""""""""""""""""""""""""
 
 Taint analysis identifies potential security vulnerabilities where the
 attacker can inject malicious data to the program to execute an attack
