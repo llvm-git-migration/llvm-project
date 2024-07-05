@@ -1922,11 +1922,19 @@ void MicrosoftCXXNameMangler::mangleTemplateArgValue(QualType T,
     if (WithScalarType)
       mangleType(T, SourceRange(), QMM_Escape);
 
-    // We don't know how to mangle past-the-end pointers yet.
-    if (V.isLValueOnePastTheEnd())
-      break;
-
     APValue::LValueBase Base = V.getLValueBase();
+
+    // this might not cover every case but did cover issue 97756
+    // see test CodeGen/ms_mangler_templatearg_opte
+    if (V.isLValueOnePastTheEnd()) {
+      Out << "5E";
+      auto *VD = Base.dyn_cast<const ValueDecl *>();
+      if (VD)
+        mangle(VD);
+      Out << "@";
+      return;
+    }
+
     if (!V.hasLValuePath() || V.getLValuePath().empty()) {
       // Taking the address of a complete object has a special-case mangling.
       if (Base.isNull()) {
@@ -1938,12 +1946,23 @@ void MicrosoftCXXNameMangler::mangleTemplateArgValue(QualType T,
         mangleNumber(V.getLValueOffset().getQuantity());
       } else if (!V.hasLValuePath()) {
         // FIXME: This can only happen as an extension. Invent a mangling.
-        break;
+        DiagnosticsEngine &Diags = Context.getDiags();
+        unsigned DiagID =
+            Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                  "cannot mangle this template argument yet "
+                                  "(non-null base with null lvalue path)");
+        Diags.Report(DiagID);
+        return;
       } else if (auto *VD = Base.dyn_cast<const ValueDecl*>()) {
         Out << "E";
         mangle(VD);
       } else {
-        break;
+        DiagnosticsEngine &Diags = Context.getDiags();
+        unsigned DiagID = Diags.getCustomDiagID(
+            DiagnosticsEngine::Error,
+            "cannot mangle this template argument yet (empty lvalue path)");
+        Diags.Report(DiagID);
+        return;
       }
     } else {
       if (TAK == TplArgKind::ClassNTTP && T->isPointerType())
@@ -1988,8 +2007,14 @@ void MicrosoftCXXNameMangler::mangleTemplateArgValue(QualType T,
         Out << *I;
 
       auto *VD = Base.dyn_cast<const ValueDecl*>();
-      if (!VD)
-        break;
+      if (!VD) {
+        DiagnosticsEngine &Diags = Context.getDiags();
+        unsigned DiagID = Diags.getCustomDiagID(
+            DiagnosticsEngine::Error,
+            "cannot mangle this template argument yet (null value decl)");
+        Diags.Report(DiagID);
+        return;
+      }
       Out << (TAK == TplArgKind::ClassNTTP ? 'E' : '1');
       mangle(VD);
 
@@ -2104,15 +2129,24 @@ void MicrosoftCXXNameMangler::mangleTemplateArgValue(QualType T,
     return;
   }
 
-  case APValue::AddrLabelDiff:
-  case APValue::FixedPoint:
-    break;
+  case APValue::AddrLabelDiff: {
+    DiagnosticsEngine &Diags = Context.getDiags();
+    unsigned DiagID = Diags.getCustomDiagID(
+        DiagnosticsEngine::Error, "cannot mangle this template argument yet "
+                                  "(value type: address label diff)");
+    Diags.Report(DiagID);
+    return;
   }
 
-  DiagnosticsEngine &Diags = Context.getDiags();
-  unsigned DiagID = Diags.getCustomDiagID(
-      DiagnosticsEngine::Error, "cannot mangle this template argument yet");
-  Diags.Report(DiagID);
+  case APValue::FixedPoint: {
+    DiagnosticsEngine &Diags = Context.getDiags();
+    unsigned DiagID = Diags.getCustomDiagID(
+        DiagnosticsEngine::Error,
+        "cannot mangle this template argument yet (value type: fixed point)");
+    Diags.Report(DiagID);
+    return;
+  }
+  }
 }
 
 void MicrosoftCXXNameMangler::mangleObjCProtocol(const ObjCProtocolDecl *PD) {
