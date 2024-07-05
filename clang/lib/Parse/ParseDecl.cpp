@@ -4428,10 +4428,14 @@ void Parser::ParseDeclarationSpecifiers(
 
     // constexpr, consteval, constinit specifiers
     case tok::kw_constexpr:
-      if (getLangOpts().C23)
+      if (getLangOpts().C23) {
         Diag(Tok, diag::warn_c23_compat_keyword) << Tok.getName();
-      isInvalid = DS.SetConstexprSpec(ConstexprSpecKind::Constexpr, Loc,
-                                      PrevSpec, DiagID);
+        isInvalid = DS.SetConstexprSpec(ConstexprSpecKind::Constexpr, Loc,
+                                        PrevSpec, DiagID);
+
+        isInvalid = DS.SetStorageClassSpec(Actions, DeclSpec::SCS_static, Loc,
+                                           PrevSpec, DiagID, Policy);
+      }
       break;
     case tok::kw_consteval:
       isInvalid = DS.SetConstexprSpec(ConstexprSpecKind::Consteval, Loc,
