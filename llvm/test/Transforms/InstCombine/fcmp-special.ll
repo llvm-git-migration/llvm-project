@@ -188,8 +188,7 @@ define i1 @nnan_ops_to_fcmp_uno(float %x, float %y) {
 
 define i1 @nan_ops_to_fcmp_ord(float nofpclass(inf zero sub norm) %x, float nofpclass(inf zero sub norm) %y) {
 ; CHECK-LABEL: @nan_ops_to_fcmp_ord(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord float [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 false
 ;
   %cmp = fcmp ord float %x, %y
   ret i1 %cmp
@@ -197,8 +196,7 @@ define i1 @nan_ops_to_fcmp_ord(float nofpclass(inf zero sub norm) %x, float nofp
 
 define i1 @nan_ops_to_fcmp_uno(float nofpclass(inf zero sub norm) %x, float nofpclass(inf zero sub norm) %y) {
 ; CHECK-LABEL: @nan_ops_to_fcmp_uno(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp uno float [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    ret i1 [[CMP]]
+; CHECK-NEXT:    ret i1 true
 ;
   %cmp = fcmp uno float %x, %y
   ret i1 %cmp
