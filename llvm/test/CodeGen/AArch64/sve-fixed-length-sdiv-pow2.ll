@@ -383,4 +383,21 @@ define void @sdiv_v32i64(ptr %a) vscale_range(16,0) #0 {
   ret void
 }
 
+define i32 @sdiv_int(i32 %begin, i32 %first) #0 {
+; CHECK-LABEL: sdiv_int:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    sub w8, w0, w1
+; CHECK-NEXT:    add w9, w8, #1
+; CHECK-NEXT:    add w10, w8, #2
+; CHECK-NEXT:    cmp w9, #0
+; CHECK-NEXT:    csinc w8, w10, w8, lt
+; CHECK-NEXT:    sub w0, w0, w8, asr #1
+; CHECK-NEXT:    ret
+  %sub = add i32 %begin, 1
+  %add = sub i32 %sub, %first
+  %div.neg = sdiv i32 %add, -2
+  %sub1 = add i32 %div.neg, %begin
+  ret i32 %sub1
+}
+
 attributes #0 = { "target-features"="+sve" }
