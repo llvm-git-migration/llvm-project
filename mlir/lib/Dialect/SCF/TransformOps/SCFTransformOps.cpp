@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/SCF/TransformOps/SCFTransformOps.h"
+
+#include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -47,6 +49,11 @@ void transform::ApplySCFStructuralConversionPatternsOp::
                                   ConversionTarget &conversionTarget) {
   scf::populateSCFStructuralTypeConversionTarget(typeConverter,
                                                  conversionTarget);
+}
+
+void transform::ApplySCFToControlFlowPatternsOp::populatePatterns(
+TypeConverter &typeConverter, RewritePatternSet &patterns) {
+  populateSCFToControlFlowConversionPatterns(patterns);
 }
 
 //===----------------------------------------------------------------------===//
