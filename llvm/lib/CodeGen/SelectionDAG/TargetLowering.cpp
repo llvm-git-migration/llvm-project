@@ -6182,18 +6182,31 @@ SDValue TargetLowering::buildSDIVPow2WithCMov(
   SDLoc DL(N);
   SDValue N0 = N->getOperand(0);
   SDValue Zero = DAG.getConstant(0, DL, VT);
-  APInt Lg2Mask = APInt::getLowBitsSet(VT.getSizeInBits(), Lg2);
-  SDValue Pow2MinusOne = DAG.getConstant(Lg2Mask, DL, VT);
+  SDValue CMov;
 
-  // If N0 is negative, we need to add (Pow2 - 1) to it before shifting right.
-  EVT CCVT = getSetCCResultType(DAG.getDataLayout(), *DAG.getContext(), VT);
-  SDValue Cmp = DAG.getSetCC(DL, CCVT, N0, Zero, ISD::SETLT);
-  SDValue Add = DAG.getNode(ISD::ADD, DL, VT, N0, Pow2MinusOne);
-  SDValue CMov = DAG.getNode(ISD::SELECT, DL, VT, Cmp, Add, N0);
+  if (Lg2 == 1) {
+    // If Divisor is 2, add 1 << (BitWidth -1) to it before shifting right.
+    unsigned BitWidth = VT.getSizeInBits();
+    SDValue SignVal = DAG.getNode(ISD::SRL, DL, VT, N0,
+                                  DAG.getConstant(BitWidth - 1, DL, VT));
+    CMov = DAG.getNode(ISD::ADD, DL, VT, N0, SignVal);
 
-  Created.push_back(Cmp.getNode());
-  Created.push_back(Add.getNode());
-  Created.push_back(CMov.getNode());
+    Created.push_back(SignVal.getNode());
+    Created.push_back(CMov.getNode());
+  } else {
+    APInt Lg2Mask = APInt::getLowBitsSet(VT.getSizeInBits(), Lg2);
+    SDValue Pow2MinusOne = DAG.getConstant(Lg2Mask, DL, VT);
+
+    // If N0 is negative, we need to add (Pow2 - 1) to it before shifting right.
+    EVT CCVT = getSetCCResultType(DAG.getDataLayout(), *DAG.getContext(), VT);
+    SDValue Cmp = DAG.getSetCC(DL, CCVT, N0, Zero, ISD::SETLT);
+    SDValue Add = DAG.getNode(ISD::ADD, DL, VT, N0, Pow2MinusOne);
+    CMov = DAG.getNode(ISD::SELECT, DL, VT, Cmp, Add, N0);
+
+    Created.push_back(Cmp.getNode());
+    Created.push_back(Add.getNode());
+    Created.push_back(CMov.getNode());
+  }
 
   // Divide by pow2.
   SDValue SRA =

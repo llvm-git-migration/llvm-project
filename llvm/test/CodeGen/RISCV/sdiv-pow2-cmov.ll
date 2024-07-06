@@ -5,177 +5,95 @@
 ; RUN:   | FileCheck -check-prefixes=CHECK,SFB %s
 
 define signext i32 @sdiv2_32(i32 signext %0) {
-; NOSFB-LABEL: sdiv2_32:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srliw a1, a0, 31
-; NOSFB-NEXT:    add a0, a0, a1
-; NOSFB-NEXT:    sraiw a0, a0, 1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sdiv2_32:
-; SFB:       # %bb.0:
-; SFB-NEXT:    bgez a0, .LBB0_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a0, a0, 1
-; SFB-NEXT:  .LBB0_2:
-; SFB-NEXT:    sraiw a0, a0, 1
-; SFB-NEXT:    ret
+; CHECK-LABEL: sdiv2_32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srliw a1, a0, 31
+; CHECK-NEXT:    add a0, a0, a1
+; CHECK-NEXT:    sraiw a0, a0, 1
+; CHECK-NEXT:    ret
   %res = sdiv i32 %0, 2
   ret i32 %res
 }
 
 define signext i32 @sdivneg2_32(i32 signext %0) {
-; NOSFB-LABEL: sdivneg2_32:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srliw a1, a0, 31
-; NOSFB-NEXT:    add a0, a0, a1
-; NOSFB-NEXT:    sraiw a0, a0, 1
-; NOSFB-NEXT:    neg a0, a0
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sdivneg2_32:
-; SFB:       # %bb.0:
-; SFB-NEXT:    bgez a0, .LBB1_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a0, a0, 1
-; SFB-NEXT:  .LBB1_2:
-; SFB-NEXT:    sraiw a0, a0, 1
-; SFB-NEXT:    neg a0, a0
-; SFB-NEXT:    ret
+; CHECK-LABEL: sdivneg2_32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srliw a1, a0, 31
+; CHECK-NEXT:    add a0, a0, a1
+; CHECK-NEXT:    sraiw a0, a0, 1
+; CHECK-NEXT:    neg a0, a0
+; CHECK-NEXT:    ret
   %res = sdiv i32 %0, -2
   ret i32 %res
 }
 
 define i64 @sdiv2_64(i64 %0) {
-; NOSFB-LABEL: sdiv2_64:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srli a1, a0, 63
-; NOSFB-NEXT:    add a0, a0, a1
-; NOSFB-NEXT:    srai a0, a0, 1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sdiv2_64:
-; SFB:       # %bb.0:
-; SFB-NEXT:    bgez a0, .LBB2_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a0, a0, 1
-; SFB-NEXT:  .LBB2_2:
-; SFB-NEXT:    srai a0, a0, 1
-; SFB-NEXT:    ret
+; CHECK-LABEL: sdiv2_64:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srli a1, a0, 63
+; CHECK-NEXT:    add a0, a0, a1
+; CHECK-NEXT:    srai a0, a0, 1
+; CHECK-NEXT:    ret
   %res = sdiv i64 %0, 2
   ret i64 %res
 }
 
 define i64 @sdivneg2_64(i64 %0) {
-; NOSFB-LABEL: sdivneg2_64:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srli a1, a0, 63
-; NOSFB-NEXT:    add a0, a0, a1
-; NOSFB-NEXT:    srai a0, a0, 1
-; NOSFB-NEXT:    neg a0, a0
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sdivneg2_64:
-; SFB:       # %bb.0:
-; SFB-NEXT:    bgez a0, .LBB3_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a0, a0, 1
-; SFB-NEXT:  .LBB3_2:
-; SFB-NEXT:    srai a0, a0, 1
-; SFB-NEXT:    neg a0, a0
-; SFB-NEXT:    ret
+; CHECK-LABEL: sdivneg2_64:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srli a1, a0, 63
+; CHECK-NEXT:    add a0, a0, a1
+; CHECK-NEXT:    srai a0, a0, 1
+; CHECK-NEXT:    neg a0, a0
+; CHECK-NEXT:    ret
   %res = sdiv i64 %0, -2
   ret i64 %res
 }
 
 define signext i32 @srem2_32(i32 signext %0) {
-; NOSFB-LABEL: srem2_32:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srliw a1, a0, 31
-; NOSFB-NEXT:    add a1, a1, a0
-; NOSFB-NEXT:    andi a1, a1, -2
-; NOSFB-NEXT:    subw a0, a0, a1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: srem2_32:
-; SFB:       # %bb.0:
-; SFB-NEXT:    mv a1, a0
-; SFB-NEXT:    bgez a0, .LBB4_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a1, a0, 1
-; SFB-NEXT:  .LBB4_2:
-; SFB-NEXT:    andi a1, a1, -2
-; SFB-NEXT:    subw a0, a0, a1
-; SFB-NEXT:    ret
+; CHECK-LABEL: srem2_32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srliw a1, a0, 31
+; CHECK-NEXT:    add a1, a1, a0
+; CHECK-NEXT:    andi a1, a1, -2
+; CHECK-NEXT:    subw a0, a0, a1
+; CHECK-NEXT:    ret
   %res = srem i32 %0, 2
   ret i32 %res
 }
 
 define signext i32 @sremneg2_32(i32 signext %0) {
-; NOSFB-LABEL: sremneg2_32:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srliw a1, a0, 31
-; NOSFB-NEXT:    add a1, a1, a0
-; NOSFB-NEXT:    andi a1, a1, -2
-; NOSFB-NEXT:    subw a0, a0, a1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sremneg2_32:
-; SFB:       # %bb.0:
-; SFB-NEXT:    mv a1, a0
-; SFB-NEXT:    bgez a0, .LBB5_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a1, a0, 1
-; SFB-NEXT:  .LBB5_2:
-; SFB-NEXT:    andi a1, a1, -2
-; SFB-NEXT:    subw a0, a0, a1
-; SFB-NEXT:    ret
+; CHECK-LABEL: sremneg2_32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srliw a1, a0, 31
+; CHECK-NEXT:    add a1, a1, a0
+; CHECK-NEXT:    andi a1, a1, -2
+; CHECK-NEXT:    subw a0, a0, a1
+; CHECK-NEXT:    ret
   %res = srem i32 %0, -2
   ret i32 %res
 }
 
 define i64 @srem2_64(i64 %0) {
-; NOSFB-LABEL: srem2_64:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srli a1, a0, 63
-; NOSFB-NEXT:    add a1, a1, a0
-; NOSFB-NEXT:    andi a1, a1, -2
-; NOSFB-NEXT:    sub a0, a0, a1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: srem2_64:
-; SFB:       # %bb.0:
-; SFB-NEXT:    mv a1, a0
-; SFB-NEXT:    bgez a0, .LBB6_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a1, a0, 1
-; SFB-NEXT:  .LBB6_2:
-; SFB-NEXT:    andi a1, a1, -2
-; SFB-NEXT:    sub a0, a0, a1
-; SFB-NEXT:    ret
+; CHECK-LABEL: srem2_64:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srli a1, a0, 63
+; CHECK-NEXT:    add a1, a1, a0
+; CHECK-NEXT:    andi a1, a1, -2
+; CHECK-NEXT:    sub a0, a0, a1
+; CHECK-NEXT:    ret
   %res = srem i64 %0, 2
   ret i64 %res
 }
 
 define i64 @sremneg2_64(i64 %0) {
-; NOSFB-LABEL: sremneg2_64:
-; NOSFB:       # %bb.0:
-; NOSFB-NEXT:    srli a1, a0, 63
-; NOSFB-NEXT:    add a1, a1, a0
-; NOSFB-NEXT:    andi a1, a1, -2
-; NOSFB-NEXT:    sub a0, a0, a1
-; NOSFB-NEXT:    ret
-;
-; SFB-LABEL: sremneg2_64:
-; SFB:       # %bb.0:
-; SFB-NEXT:    mv a1, a0
-; SFB-NEXT:    bgez a0, .LBB7_2
-; SFB-NEXT:  # %bb.1:
-; SFB-NEXT:    addi a1, a0, 1
-; SFB-NEXT:  .LBB7_2:
-; SFB-NEXT:    andi a1, a1, -2
-; SFB-NEXT:    sub a0, a0, a1
-; SFB-NEXT:    ret
+; CHECK-LABEL: sremneg2_64:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    srli a1, a0, 63
+; CHECK-NEXT:    add a1, a1, a0
+; CHECK-NEXT:    andi a1, a1, -2
+; CHECK-NEXT:    sub a0, a0, a1
+; CHECK-NEXT:    ret
   %res = srem i64 %0, -2
   ret i64 %res
 }
