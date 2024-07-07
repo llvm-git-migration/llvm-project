@@ -978,13 +978,6 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
   ICmpInst::Predicate Pred = Cmp->getPredicate();
   Value *X;
   const APInt *C, *CmpC;
-  if (Pred == ICmpInst::ICMP_ULT &&
-      match(TVal, m_Add(m_Value(X), m_APInt(C))) && X == Cmp0 &&
-      match(FVal, m_AllOnes()) && match(Cmp1, m_APInt(CmpC)) && *CmpC == ~*C) {
-    // (X u< ~C) ? (X + C) : -1 --> uadd.sat(X, C)
-    return Builder.CreateBinaryIntrinsic(
-        Intrinsic::uadd_sat, X, ConstantInt::get(X->getType(), *C));
-  }
 
   // Match unsigned saturated add of 2 variables with an unnecessary 'not'.
   // There are 8 commuted variants.
@@ -995,6 +988,23 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
   }
   if (!match(TVal, m_AllOnes()))
     return nullptr;
+
+  if (Pred == ICmpInst::ICMP_UGE &&
+      match(FVal, m_Add(m_Specific(Cmp0), m_APInt(C))) &&
+      match(Cmp1, m_APInt(CmpC)) && *CmpC == ~*C) {
+    // (X u>= ~C) ? -1 : (X + C) --> uadd.sat(X, C)
+    return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, X,
+                                         ConstantInt::get(X->getType(), *C));
+  }
+
+  if (Pred == ICmpInst::ICMP_UGT &&
+      match(FVal, m_Add(m_Value(X), m_APInt(C))) && X == Cmp0 &&
+      match(TVal, m_AllOnes()) && match(Cmp1, m_APInt(CmpC)) &&
+      *CmpC == (~*C - 1)) {
+    // (X u > ~C - 1) ? -1 : (X + C) --> uadd.sat(X, C)
+    return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, X,
+                                         ConstantInt::get(X->getType(), *C));
+  }
 
   // Canonicalize predicate to less-than or less-or-equal-than.
   if (Pred == ICmpInst::ICMP_UGT || Pred == ICmpInst::ICMP_UGE) {

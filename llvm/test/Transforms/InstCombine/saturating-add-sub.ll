@@ -1395,6 +1395,18 @@ define i32 @uadd_sat(i32 %x, i32 %y) {
   %r = select i1 %c, i32 -1, i32 %a
   ret i32 %r
 }
+
+define i32 @uadd_sat_flipped(i32 %x) {
+; CHECK-LABEL: @uadd_sat_flipped(
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 9)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %cmp = icmp uge i32 %x, -10
+  %add = add i32 %x, 9
+  %cond = select i1 %cmp, i32 -1, i32 %add
+  ret i32 %cond
+}
+
 define i32 @uadd_sat_nonstrict(i32 %x, i32 %y) {
 ; CHECK-LABEL: @uadd_sat_nonstrict(
 ; CHECK-NEXT:    [[R:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 [[Y:%.*]])
