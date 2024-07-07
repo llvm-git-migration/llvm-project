@@ -985,6 +985,14 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
     return Builder.CreateBinaryIntrinsic(
         Intrinsic::uadd_sat, X, ConstantInt::get(X->getType(), *C));
   }
+  if (Pred == ICmpInst::ICMP_UGT &&
+      match(FVal, m_Add(m_Value(X), m_APInt(C))) && X == Cmp0 &&
+      match(TVal, m_AllOnes()) && match(Cmp1, m_APInt(CmpC)) &&
+      *CmpC == (~*C - 1)) {
+    // (X u > ~C - 1) ? -1, (X + C) --> uadd.sat(X, C)
+    return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, X,
+                                         ConstantInt::get(X->getType(), *C));
+  }
 
   // Match unsigned saturated add of 2 variables with an unnecessary 'not'.
   // There are 8 commuted variants.
