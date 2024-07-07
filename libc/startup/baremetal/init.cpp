@@ -16,7 +16,7 @@ extern uintptr_t __init_array_start[];
 extern uintptr_t __init_array_end[];
 }
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 using InitCallback = void(void);
 
@@ -29,4 +29,4 @@ extern "C" void __libc_init_array(void) {
     reinterpret_cast<InitCallback *>(__init_array_start[i])();
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL

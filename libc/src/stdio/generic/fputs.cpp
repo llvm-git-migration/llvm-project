@@ -13,7 +13,7 @@
 #include "src/errno/libc_errno.h"
 #include <stdio.h>
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 LLVM_LIBC_FUNCTION(int, fputs,
                    (const char *__restrict str, ::FILE *__restrict stream)) {
@@ -32,4 +32,4 @@ LLVM_LIBC_FUNCTION(int, fputs,
   return 0;
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL

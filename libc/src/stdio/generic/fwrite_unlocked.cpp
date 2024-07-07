@@ -12,7 +12,7 @@
 #include "src/errno/libc_errno.h"
 #include <stdio.h>
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 LLVM_LIBC_FUNCTION(size_t, fwrite_unlocked,
                    (const void *__restrict buffer, size_t size, size_t nmemb,
@@ -29,4 +29,4 @@ LLVM_LIBC_FUNCTION(size_t, fwrite_unlocked,
   return result.value / size;
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
