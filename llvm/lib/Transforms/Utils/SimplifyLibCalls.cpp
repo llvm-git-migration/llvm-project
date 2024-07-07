@@ -1901,7 +1901,6 @@ Value *LibCallSimplifier::optimizeCAbs(CallInst *CI, IRBuilderBase &B) {
     if (ConstReal->isZeroValue()) {
       IRBuilderBase::FastMathFlagGuard Guard(B);
       B.setFastMathFlags(CI->getFastMathFlags());
-      
       return copyFlags(
           *CI, B.CreateUnaryIntrinsic(Intrinsic::fabs, Imag, nullptr, "cabs"));
     }
