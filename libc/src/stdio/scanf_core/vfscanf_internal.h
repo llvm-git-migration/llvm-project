@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 namespace internal {
 
@@ -84,6 +84,6 @@ LIBC_INLINE int vfscanf_internal(::FILE *__restrict stream,
   return retval;
 }
 } // namespace scanf_core
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
 
 #endif // LLVM_LIBC_SRC_STDIO_SCANF_CORE_VFSCANF_INTERNAL_H

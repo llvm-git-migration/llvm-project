@@ -9,7 +9,8 @@
 #ifndef LLVM_LIBC_SRC___SUPPORT_OSUTIL_EXIT_H
 #define LLVM_LIBC_SRC___SUPPORT_OSUTIL_EXIT_H
 
-namespace LIBC_NAMESPACE::internal {
+namespace LIBC_NAMESPACE_DECL {
+namespace internal {
 
 [[noreturn]] void exit(int status);
 

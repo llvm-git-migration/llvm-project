@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 struct FileIOResult {
   size_t value;
@@ -312,6 +312,6 @@ extern File *stdin;
 extern File *stdout;
 extern File *stderr;
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
 
 #endif // LLVM_LIBC_SRC___SUPPORT_FILE_FILE_H

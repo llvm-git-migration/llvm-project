@@ -11,8 +11,10 @@
 // This is intended to be provided by the vendor.
 extern "C" [[noreturn]] void __llvm_libc_exit(int status);
 
-namespace LIBC_NAMESPACE::internal {
+namespace LIBC_NAMESPACE_DECL {
+namespace internal {
 
 [[noreturn]] void exit(int status) { __llvm_libc_exit(status); }
 
-} // namespace LIBC_NAMESPACE::internal
+} // namespace internal
+} // namespace LIBC_NAMESPACE_DECL
