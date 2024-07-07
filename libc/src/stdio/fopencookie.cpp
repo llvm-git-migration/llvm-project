@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 namespace {
 
@@ -95,4 +95,4 @@ LLVM_LIBC_FUNCTION(::FILE *, fopencookie,
   return reinterpret_cast<::FILE *>(file);
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
