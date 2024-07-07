@@ -28,6 +28,7 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineInstrBundle.h"
+#include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/Support/Allocator.h"
 #include <algorithm>
 #include <cassert>
@@ -293,7 +294,9 @@ class raw_ostream;
   /// SlotIndexes pass.
   ///
   /// This pass assigns indexes to each instruction.
-  class SlotIndexes : public MachineFunctionPass {
+  class SlotIndexes {
+    friend class SlotIndexesWrapperPass;
+
   private:
     // IndexListEntry allocator.
     BumpPtrAllocator ileAllocator;
@@ -327,16 +330,17 @@ class raw_ostream;
     void renumberIndexes(IndexList::iterator curItr);
 
   public:
-    static char ID;
+    SlotIndexes() = default;
 
-    SlotIndexes();
+    SlotIndexes(SlotIndexes &&) = default;
 
-    ~SlotIndexes() override;
+    SlotIndexes(MachineFunction &MF) { analyze(MF); }
 
-    void getAnalysisUsage(AnalysisUsage &au) const override;
-    void releaseMemory() override;
+    ~SlotIndexes();
 
-    bool runOnMachineFunction(MachineFunction &fn) override;
+    bool analyze(MachineFunction &MF);
+
+    void print(raw_ostream &OS) const;
 
     /// Dump the indexes.
     void dump() const;
@@ -627,6 +631,43 @@ class raw_ostream;
   // Specialize IntervalMapInfo for half-open slot index intervals.
   template <>
   struct IntervalMapInfo<SlotIndex> : IntervalMapHalfOpenInfo<SlotIndex> {
+  };
+
+  class SlotIndexesAnalysis : public AnalysisInfoMixin<SlotIndexesAnalysis> {
+    friend AnalysisInfoMixin<SlotIndexesAnalysis>;
+    static AnalysisKey Key;
+
+  public:
+    using Result = SlotIndexes;
+    Result run(MachineFunction &MF, MachineFunctionAnalysisManager &);
+  };
+
+  class SlotIndexesPrinterPass : public PassInfoMixin<SlotIndexesPrinterPass> {
+    raw_ostream &OS;
+
+  public:
+    explicit SlotIndexesPrinterPass(raw_ostream &OS) : OS(OS) {}
+    PreservedAnalyses run(MachineFunction &MF,
+                          MachineFunctionAnalysisManager &MFAM);
+    static bool isRequired() { return true; }
+  };
+
+  class SlotIndexesWrapperPass : public MachineFunctionPass {
+    SlotIndexes SI;
+
+  public:
+    static char ID;
+
+    SlotIndexesWrapperPass();
+
+    void getAnalysisUsage(AnalysisUsage &au) const override;
+    void releaseMemory() override;
+
+    bool runOnMachineFunction(MachineFunction &fn) override {
+      return SI.analyze(fn);
+    }
+
+    SlotIndexes &getSI() { return SI; }
   };
 
 } // end namespace llvm
