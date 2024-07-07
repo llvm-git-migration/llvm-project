@@ -19,7 +19,7 @@
 #include "aarch64/nearest_integer.h"
 #else
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 namespace fputil {
 
 // This is a fast implementation for rounding to a nearest integer that.
@@ -60,7 +60,7 @@ LIBC_INLINE double nearest_integer(double x) {
 }
 
 } // namespace fputil
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
 
 #endif
 #endif // LLVM_LIBC_SRC___SUPPORT_FPUTIL_NEAREST_INTEGER_H

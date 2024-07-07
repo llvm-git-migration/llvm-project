@@ -12,11 +12,11 @@
 
 extern "C" void __cxa_finalize(void *);
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 [[noreturn]] LLVM_LIBC_FUNCTION(void, exit, (int status)) {
   __cxa_finalize(nullptr);
   internal::exit(status);
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
