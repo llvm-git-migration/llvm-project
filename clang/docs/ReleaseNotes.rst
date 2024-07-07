@@ -348,7 +348,7 @@ C23 Feature Support
   but C23 added them to ``<float.h>`` in
   `WG14 N2848 <https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2848.pdf>`_.
 
-- Clang now diagnoses `N3006 Underspecified object declarations
+- Clang now diagnoses `N3006 Underspecified object declarations`
   <https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3006.htm>`_.
 
 Non-comprehensive list of changes in this release
