@@ -17,7 +17,7 @@ extern "C" ssize_t __llvm_libc_stdin_read(void *cookie, char *buf, size_t size);
 
 extern "C" void __llvm_libc_log_write(const char *msg, size_t len);
 
-namespace LIBC_NAMESPACE {
+namespace LIBC_NAMESPACE_DECL {
 
 ssize_t read_from_stdin(char *buf, size_t size) {
   return __llvm_libc_stdin_read(reinterpret_cast<void *>(&__llvm_libc_stdin),
@@ -28,4 +28,4 @@ void write_to_stderr(cpp::string_view msg) {
   __llvm_libc_log_write(msg.data(), msg.size());
 }
 
-} // namespace LIBC_NAMESPACE
+} // namespace LIBC_NAMESPACE_DECL
