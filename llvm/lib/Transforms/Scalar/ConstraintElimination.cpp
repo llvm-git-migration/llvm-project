@@ -1073,6 +1073,8 @@ void State::addInfoFor(BasicBlock &BB) {
     }
     // Enqueue ssub_with_overflow for simplification.
     case Intrinsic::ssub_with_overflow:
+    case Intrinsic::ucmp:
+    case Intrinsic::scmp:
       WorkList.push_back(
           FactOrCheck::getCheck(DT.getNode(&BB), cast<CallInst>(&I)));
       break;
@@ -1434,6 +1436,33 @@ static bool checkAndReplaceMinMax(MinMaxIntrinsic *MinMax, ConstraintInfo &Info,
   return false;
 }
 
+static bool checkAndReplaceCmp(IntrinsicInst *II, ConstraintInfo &Info,
+                               SmallVectorImpl<Instruction *> &ToRemove) {
+  bool IsSigned = II->getIntrinsicID() == Intrinsic::scmp;
+  Value *LHS = II->getOperand(0);
+  Value *RHS = II->getOperand(1);
+  if (checkCondition(IsSigned ? ICmpInst::ICMP_SGT : ICmpInst::ICMP_UGT, LHS,
+                     RHS, II, Info)
+          .value_or(false)) {
+    II->replaceAllUsesWith(ConstantInt::get(II->getType(), 1));
+    ToRemove.push_back(II);
+    return true;
+  }
+  if (checkCondition(IsSigned ? ICmpInst::ICMP_SLT : ICmpInst::ICMP_ULT, LHS,
+                     RHS, II, Info)
+          .value_or(false)) {
+    II->replaceAllUsesWith(ConstantInt::getSigned(II->getType(), -1));
+    ToRemove.push_back(II);
+    return true;
+  }
+  if (checkCondition(ICmpInst::ICMP_EQ, LHS, RHS, II, Info).value_or(false)) {
+    II->replaceAllUsesWith(ConstantInt::get(II->getType(), 0));
+    ToRemove.push_back(II);
+    return true;
+  }
+  return false;
+}
+
 static void
 removeEntryFromStack(const StackEntry &E, ConstraintInfo &Info,
                      Module *ReproducerModule,
@@ -1736,6 +1765,11 @@ static bool eliminateConstraints(Function &F, DominatorTree &DT, LoopInfo &LI,
         Changed |= Simplified;
       } else if (auto *MinMax = dyn_cast<MinMaxIntrinsic>(Inst)) {
         Changed |= checkAndReplaceMinMax(MinMax, Info, ToRemove);
+      } else if (auto *CmpIntrinsic = dyn_cast<IntrinsicInst>(Inst);
+                 CmpIntrinsic &&
+                 (CmpIntrinsic->getIntrinsicID() == Intrinsic::scmp ||
+                  CmpIntrinsic->getIntrinsicID() == Intrinsic::ucmp)) {
+        Changed |= checkAndReplaceCmp(CmpIntrinsic, Info, ToRemove);
       }
       continue;
     }
