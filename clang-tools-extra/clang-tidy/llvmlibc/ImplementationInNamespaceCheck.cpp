@@ -33,17 +33,17 @@ void ImplementationInNamespaceCheck::check(
   if (NS == nullptr || NS->isAnonymousNamespace()) {
     diag(MatchedDecl->getLocation(),
          "declaration must be enclosed within the '%0' namespace")
-        << RequiredNamespaceMacroName;
+        << RequiredNamespaceHiddenMacroName;
     return;
   }
   if (Result.SourceManager->isMacroBodyExpansion(NS->getLocation()) == false) {
     diag(NS->getLocation(), "the outermost namespace should be the '%0' macro")
-        << RequiredNamespaceMacroName;
+        << RequiredNamespaceHiddenMacroName;
     return;
   }
   if (NS->getName().starts_with(RequiredNamespaceStart) == false) {
     diag(NS->getLocation(), "the '%0' macro should start with '%1'")
-        << RequiredNamespaceMacroName << RequiredNamespaceStart;
+        << RequiredNamespaceHiddenMacroName << RequiredNamespaceStart;
     return;
   }
 }
