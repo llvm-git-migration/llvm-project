@@ -9,6 +9,7 @@
 #include "src/stdio/fopen.h"
 #include "src/__support/File/file.h"
 
+#include "src/__support/macros/config.h"
 #include "src/errno/libc_errno.h"
 #include <stdio.h>
 

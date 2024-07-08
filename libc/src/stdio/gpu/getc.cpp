@@ -8,6 +8,7 @@
 
 #include "src/stdio/getc.h"
 #include "file.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 
