@@ -61,6 +61,7 @@ Changes to the LLVM IR
 * Renamed ``llvm.experimental.vector.splice`` intrinsic to ``llvm.vector.splice``.
 * Renamed ``llvm.experimental.vector.interleave2`` intrinsic to ``llvm.vector.interleave2``.
 * Renamed ``llvm.experimental.vector.deinterleave2`` intrinsic to ``llvm.vector.deinterleave2``.
+* Renamed ``llvm.experimental.stepvector`` intrinsic to ``llvm.stepvector``.
 * The constant expression variants of the following instructions have been
   removed:
 

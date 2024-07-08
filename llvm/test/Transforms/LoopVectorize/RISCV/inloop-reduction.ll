@@ -142,7 +142,7 @@ define i32 @add_i16_i32(ptr nocapture readonly %x, i32 %n) {
 ; IF-EVL-NEXT:    [[TMP5:%.*]] = add i32 [[INDEX]], 0
 ; IF-EVL-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <vscale x 4 x i32> poison, i32 [[INDEX]], i64 0
 ; IF-EVL-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <vscale x 4 x i32> [[BROADCAST_SPLATINSERT]], <vscale x 4 x i32> poison, <vscale x 4 x i32> zeroinitializer
-; IF-EVL-NEXT:    [[TMP6:%.*]] = call <vscale x 4 x i32> @llvm.experimental.stepvector.nxv4i32()
+; IF-EVL-NEXT:    [[TMP6:%.*]] = call <vscale x 4 x i32> @llvm.stepvector.nxv4i32()
 ; IF-EVL-NEXT:    [[TMP7:%.*]] = add <vscale x 4 x i32> zeroinitializer, [[TMP6]]
 ; IF-EVL-NEXT:    [[VEC_IV:%.*]] = add <vscale x 4 x i32> [[BROADCAST_SPLAT]], [[TMP7]]
 ; IF-EVL-NEXT:    [[TMP8:%.*]] = icmp ule <vscale x 4 x i32> [[VEC_IV]], [[BROADCAST_SPLAT2]]
