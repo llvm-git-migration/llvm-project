@@ -217,16 +217,6 @@ add_entrypoint_object(
 )
 
 add_entrypoint_object(
-  rint
-  SRCS
-    rint.cpp
-  HDRS
-    ../rint.h
-  COMPILE_OPTIONS
-    -O2
-)
-
-add_entrypoint_object(
   rintf
   SRCS
     rintf.cpp
