@@ -1713,7 +1713,7 @@ void VPReductionRecipe::print(raw_ostream &O, const Twine &Indent,
     O << getUnderlyingInstr()->getFastMathFlags();
   O << " reduce." << Instruction::getOpcodeName(RdxDesc.getOpcode()) << " (";
   getVecOp()->printAsOperand(O, SlotTracker);
-  if (getCondOp()) {
+  if (isConditional()) {
     O << ", ";
     getCondOp()->printAsOperand(O, SlotTracker);
   }
@@ -1737,7 +1737,7 @@ void VPReductionEVLRecipe::print(raw_ostream &O, const Twine &Indent,
   getVecOp()->printAsOperand(O, SlotTracker);
   O << ", ";
   getEVL()->printAsOperand(O, SlotTracker);
-  if (getCondOp()) {
+  if (isConditional()) {
     O << ", ";
     getCondOp()->printAsOperand(O, SlotTracker);
   }
