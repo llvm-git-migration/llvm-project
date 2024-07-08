@@ -273,7 +273,7 @@ Type *VPTypeAnalysis::inferScalarType(const VPValue *V) {
           .Case<VPExpandSCEVRecipe>([](const VPExpandSCEVRecipe *R) {
             return R->getSCEV()->getType();
           })
-          .Case<VPReductionRecipe, VPReductionEVLRecipe>([this](const auto *R) {
+          .Case<VPReductionRecipe>([this](const auto *R) {
             return inferScalarType(R->getChainOp());
           });
 

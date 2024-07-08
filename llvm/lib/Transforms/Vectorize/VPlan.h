@@ -2140,7 +2140,15 @@ public:
                                  getVecOp(), getCondOp(), IsOrdered);
   }
 
-  VP_CLASSOF_IMPL(VPDef::VPReductionSC)
+  static inline bool classof(const VPRecipeBase *R) {
+    return R->getVPDefID() == VPRecipeBase::VPReductionSC ||
+           R->getVPDefID() == VPRecipeBase::VPReductionEVLSC;
+  }
+
+  static inline bool classof(const VPUser *U) {
+    auto *R = dyn_cast<VPRecipeBase>(U);
+    return R && classof(R);
+  }
 
   /// Generate the reduction in the loop
   void execute(VPTransformState &State) override;
