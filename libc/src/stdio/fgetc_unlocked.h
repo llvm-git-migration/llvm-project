@@ -9,6 +9,7 @@
 #ifndef LLVM_LIBC_SRC_STDIO_FGETC_UNLOCKED_H
 #define LLVM_LIBC_SRC_STDIO_FGETC_UNLOCKED_H
 
+#include "src/__support/macros/config.h"
 #include <stdio.h>
 
 namespace LIBC_NAMESPACE_DECL {

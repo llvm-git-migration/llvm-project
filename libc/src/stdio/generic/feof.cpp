@@ -8,6 +8,7 @@
 
 #include "src/stdio/feof.h"
 #include "src/__support/File/file.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 

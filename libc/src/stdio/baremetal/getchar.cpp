@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/stdio/getchar.h"
+#include "src/__support/macros/config.h"
 #include "src/__support/OSUtil/io.h"
 
 #include <stdio.h>

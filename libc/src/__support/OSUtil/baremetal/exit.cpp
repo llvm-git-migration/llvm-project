@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/__support/OSUtil/exit.h"
+#include "src/__support/macros/config.h"
 
 // This is intended to be provided by the vendor.
 extern "C" [[noreturn]] void __llvm_libc_exit(int status);
