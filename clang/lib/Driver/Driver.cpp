@@ -2128,7 +2128,7 @@ void Driver::HandleAutocompletions(StringRef PassedFlags) const {
   llvm::outs() << llvm::join(SuggestedCompletions, "\n") << '\n';
 }
 
-bool Driver::HandleImmediateArgs(const Compilation &C) {
+bool Driver::HandleImmediateArgs(Compilation &C) {
   // The order these options are handled in gcc is all over the place, but we
   // don't expect inconsistencies w.r.t. that to matter in practice.
 
@@ -2180,6 +2180,15 @@ bool Driver::HandleImmediateArgs(const Compilation &C) {
   }
 
   const ToolChain &TC = C.getDefaultToolChain();
+  auto initDarwinTarget = [&]() {
+    // The 'Darwin' toolchain is initialized only when its arguments are
+    // computed. Get the default arguments for OFK_None to ensure that
+    // initialization is performed before trying to access properties of
+    // the toolchain in the functions below.
+    // FIXME: Remove when darwin's toolchain is initialized during construction.
+    const llvm::Triple Triple(TC.ComputeEffectiveClangTriple(C.getArgs()));
+    C.getArgsForToolChain(&TC, Triple.getArchName(), Action::OFK_None);
+  };
 
   if (C.getArgs().hasArg(options::OPT_v))
     TC.printVerboseInfo(llvm::errs());
@@ -2230,6 +2239,7 @@ bool Driver::HandleImmediateArgs(const Compilation &C) {
   }
 
   if (C.getArgs().hasArg(options::OPT_print_runtime_dir)) {
+    initDarwinTarget();
     if (std::optional<std::string> RuntimePath = TC.getRuntimePath())
       llvm::outs() << *RuntimePath << '\n';
     else
@@ -2271,6 +2281,7 @@ bool Driver::HandleImmediateArgs(const Compilation &C) {
   if (C.getArgs().hasArg(options::OPT_print_libgcc_file_name)) {
     ToolChain::RuntimeLibType RLT = TC.GetRuntimeLibType(C.getArgs());
     const llvm::Triple Triple(TC.ComputeEffectiveClangTriple(C.getArgs()));
+    initDarwinTarget();
     RegisterEffectiveTriple TripleRAII(TC, Triple);
     switch (RLT) {
     case ToolChain::RLT_CompilerRT:
