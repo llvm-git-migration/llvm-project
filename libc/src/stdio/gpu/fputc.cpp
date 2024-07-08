@@ -6,8 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "file.h"
 #include "src/stdio/fputc.h"
+#include "file.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 
