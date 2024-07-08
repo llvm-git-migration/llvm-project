@@ -8,6 +8,7 @@
 
 #include "src/stdio/clearerr_unlocked.h"
 #include "src/__support/File/file.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 

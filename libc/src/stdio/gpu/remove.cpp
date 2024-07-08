@@ -8,6 +8,7 @@
 
 #include "src/stdio/remove.h"
 #include "file.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 
