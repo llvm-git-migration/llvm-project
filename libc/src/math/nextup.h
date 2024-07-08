@@ -9,6 +9,7 @@
 #ifndef LLVM_LIBC_SRC_MATH_NEXTUP_H
 #define LLVM_LIBC_SRC_MATH_NEXTUP_H
 
+#include "src/__support/macros/config.h"
 namespace LIBC_NAMESPACE_DECL {
 
 double nextup(double x);

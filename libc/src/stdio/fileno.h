@@ -11,6 +11,7 @@
 #define LLVM_LIBC_SRC_STDIO_FILENO_H
 
 #include "include/llvm-libc-types/FILE.h"
+#include "src/__support/macros/config.h"
 
 namespace LIBC_NAMESPACE_DECL {
 

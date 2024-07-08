@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "src/__support/macros/config.h"
 namespace LIBC_NAMESPACE_DECL {
 
 // This is initialized to the correct value by the statup code.

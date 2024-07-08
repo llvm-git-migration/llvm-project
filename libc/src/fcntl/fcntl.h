@@ -9,6 +9,7 @@
 #ifndef LLVM_LIBC_SRC_FCNTL_FCNTL_H
 #define LLVM_LIBC_SRC_FCNTL_FCNTL_H
 
+#include "src/__support/macros/config.h"
 namespace LIBC_NAMESPACE_DECL {
 
 int fcntl(int fd, int cmd, ...);
