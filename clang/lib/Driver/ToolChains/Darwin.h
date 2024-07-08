@@ -223,6 +223,11 @@ public:
     // There aren't any profiling libs for embedded targets currently.
   }
 
+  // Return the full path of the compiler-rt library on a Darwin MachO system.
+  // Those are under <resourcedir>/lib/darwin/<...>(.dylib|.a).
+  std::string getCompilerRT(const llvm::opt::ArgList &Args, StringRef Component,
+                            FileType Type = ToolChain::FT_Static) const override;
+
   /// }
   /// @name ToolChain Implementation
   /// {
@@ -356,6 +361,10 @@ public:
   void addProfileRTLibs(const llvm::opt::ArgList &Args,
                         llvm::opt::ArgStringList &CmdArgs) const override;
 
+  // Return the full path of the compiler-rt library on a Darwin MachO system.
+  // Those are under <resourcedir>/lib/darwin/<...>(.dylib|.a).
+  std::string getCompilerRT(const llvm::opt::ArgList &Args, StringRef Component,
+                            FileType Type = ToolChain::FT_Static) const override;
 protected:
   /// }
   /// @name Darwin specific Toolchain functions
