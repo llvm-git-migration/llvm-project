@@ -9,6 +9,7 @@
 #include "io.h"
 
 #include "src/__support/CPP/string_view.h"
+#include "src/__support/macros/config.h"
 
 // This is intended to be provided by the vendor.
 extern "C" void __llvm_libc_log_write(const char *msg, size_t len);

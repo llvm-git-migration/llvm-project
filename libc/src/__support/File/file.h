@@ -11,6 +11,7 @@
 
 #include "src/__support/CPP/new.h"
 #include "src/__support/error_or.h"
+#include "src/__support/macros/config.h"
 #include "src/__support/macros/properties/architectures.h"
 #include "src/__support/threads/mutex.h"
 
