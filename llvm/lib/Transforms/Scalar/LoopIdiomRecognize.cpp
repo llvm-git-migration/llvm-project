@@ -1545,12 +1545,15 @@ static Value *matchShiftULTCondition(BranchInst *BI, BasicBlock *LoopEntry,
   BasicBlock *FalseSucc = BI->getSuccessor(1);
   ICmpInst::Predicate Pred = Cond->getPredicate();
 
-  if (Pred == ICmpInst::ICMP_ULT && FalseSucc == LoopEntry) {
-    Threshold = CmpConst->getZExtValue();
-    return Cond->getOperand(0);
-  }
+  if (Pred != ICmpInst::ICMP_ULT || FalseSucc != LoopEntry)
+    return nullptr;
 
-  return nullptr;
+  std::optional<uint64_t> ValIntOpt = CmpConst->getValue().tryZExtValue();
+  if (!ValIntOpt)
+    return nullptr;
+
+  Threshold = *ValIntOpt;
+  return Cond->getOperand(0);
 }
 
 // Check if the recurrence variable `VarX` is in the right form to create
