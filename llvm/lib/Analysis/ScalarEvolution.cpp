@@ -8412,8 +8412,30 @@ void ScalarEvolution::visitAndClearUsers(
     SmallVectorImpl<const SCEV *> &ToForget) {
   while (!Worklist.empty()) {
     Instruction *I = Worklist.pop_back_val();
-    if (!isSCEVable(I->getType()))
+    if (!isSCEVable(I->getType()) && dyn_cast<WithOverflowInst>(I)) {
+      // detect if a user is matching the pattern
+      // extractvalue 0, (with-overflow-inst op1, op2))
+      for (auto *WOUser : I->users()) {
+        auto *EVO = dyn_cast<ExtractValueInst>(WOUser);
+
+        if (!EVO)
+          continue;
+
+        if (EVO->getNumIndices() != 1 || EVO->getIndices()[0] != 0)
+          continue;
+
+        ValueExprMapType::iterator It =
+            ValueExprMap.find_as(static_cast<Value *>(EVO));
+        if (It != ValueExprMap.end()) {
+          eraseValueFromMap(It->first);
+          ToForget.push_back(It->second);
+        }
+
+        PushDefUseChildren(EVO, Worklist, Visited);
+      }
+
       continue;
+    }
 
     ValueExprMapType::iterator It =
         ValueExprMap.find_as(static_cast<Value *>(I));
