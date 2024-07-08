@@ -8,6 +8,7 @@
 
 #include "src/stdio/getchar.h"
 #include "src/__support/OSUtil/io.h"
+#include "src/__support/macros/config.h"
 
 #include <stdio.h>
 

@@ -8,6 +8,7 @@
 
 #include "src/wchar/wctob.h"
 #include "src/__support/common.h"
+#include "src/__support/macros/config.h"
 #include "src/__support/wctype_utils.h"
 
 #include <stdio.h> // for EOF.
