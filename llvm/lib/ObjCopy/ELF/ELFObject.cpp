@@ -2203,6 +2203,11 @@ Error Object::removeSections(
           if (auto ToRelSec = RelSec->getSection())
             return !ToRemove(*ToRelSec);
         }
+        // Remove empty group sections.
+        if (Sec->Type == ELF::SHT_GROUP) {
+          auto GroupSec = cast<GroupSection>(Sec.get());
+          return !llvm::all_of(GroupSec->members(), ToRemove);
+        }
         return true;
       });
   if (SymbolTable != nullptr && ToRemove(*SymbolTable))
@@ -2241,14 +2246,6 @@ Error Object::removeSections(
   std::move(Iter, Sections.end(), std::back_inserter(RemovedSections));
   // Now get rid of them altogether.
   Sections.erase(Iter, std::end(Sections));
-
-  // Finally erase empty SHT_GROUP sections.
-  llvm::erase_if(Sections, [](const SecPtr &Sec) {
-    if (auto GroupSec = dyn_cast<GroupSection>(Sec.get()))
-      return GroupSec->getMembersCount() == 0;
-
-    return false;
-  });
 
   return Error::success();
 }
