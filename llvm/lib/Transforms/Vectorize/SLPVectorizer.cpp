@@ -4582,8 +4582,12 @@ BoUpSLP::LoadsState BoUpSLP::canVectorizeLoads(
     return LoadsState::Gather;
   }
 
+  // If ScalarTy is a FixedVectorType (when REVEC is enabled), it is hard for
+  // being strided load.
+  bool IsSourceScalarInstruction = !isa<FixedVectorType>(VL[0]->getType());
   Align CommonAlignment = computeCommonAlignment<LoadInst>(VL);
-  if (!IsSorted && Sz > MinProfitableStridedLoads && TTI->isTypeLegal(VecTy) &&
+  if (IsSourceScalarInstruction && !IsSorted &&
+      Sz > MinProfitableStridedLoads && TTI->isTypeLegal(VecTy) &&
       TTI->isLegalStridedLoadStore(VecTy, CommonAlignment) &&
       calculateRtStride(PointerOps, ScalarTy, *DL, *SE, Order))
     return LoadsState::StridedVectorize;
@@ -4617,12 +4621,13 @@ BoUpSLP::LoadsState BoUpSLP::canVectorizeLoads(
       // 3. The loads are ordered, or number of unordered loads <=
       // MaxProfitableUnorderedLoads, or loads are in reversed order.
       // (this check is to avoid extra costs for very expensive shuffles).
-      if (IsPossibleStrided && (((Sz > MinProfitableStridedLoads ||
-                                  (static_cast<unsigned>(std::abs(*Diff)) <=
-                                       MaxProfitableLoadStride * Sz &&
-                                   isPowerOf2_32(std::abs(*Diff)))) &&
-                                 static_cast<unsigned>(std::abs(*Diff)) > Sz) ||
-                                *Diff == -(static_cast<int>(Sz) - 1))) {
+      if (IsSourceScalarInstruction && IsPossibleStrided &&
+          (((Sz > MinProfitableStridedLoads ||
+             (static_cast<unsigned>(std::abs(*Diff)) <=
+                  MaxProfitableLoadStride * Sz &&
+              isPowerOf2_32(std::abs(*Diff)))) &&
+            static_cast<unsigned>(std::abs(*Diff)) > Sz) ||
+           *Diff == -(static_cast<int>(Sz) - 1))) {
         int Stride = *Diff / static_cast<int>(Sz - 1);
         if (*Diff == Stride * static_cast<int>(Sz - 1)) {
           Align Alignment =
