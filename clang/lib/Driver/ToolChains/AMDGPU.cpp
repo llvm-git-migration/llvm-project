@@ -633,6 +633,17 @@ void amdgpu::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   else if (Args.hasArg(options::OPT_mcpu_EQ))
     CmdArgs.push_back(Args.MakeArgString(
         "-plugin-opt=mcpu=" + Args.getLastArgValue(options::OPT_mcpu_EQ)));
+
+  // If the user's toolchain has the 'include/amdgcn-amd-amdhsa/` path, we
+  // assume it supports the standard C libraries for the GPU and include them.
+  bool HasLibC = getToolChain().getStdlibIncludePath().has_value();
+  if (!Args.hasArg(options::OPT_nogpulib) &&
+      !Args.hasArg(options::OPT_nolibc) &&
+      Args.hasFlag(options::OPT_gpulibc, options::OPT_nogpulibc, HasLibC)) {
+    CmdArgs.push_back("-lc");
+    CmdArgs.push_back("-lm");
+  }
+
   CmdArgs.push_back("-o");
   CmdArgs.push_back(Output.getFilename());
   C.addCommand(std::make_unique<Command>(

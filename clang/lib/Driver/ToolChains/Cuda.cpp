@@ -617,6 +617,16 @@ void NVPTX::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     addLTOOptions(getToolChain(), Args, CmdArgs, Output, Inputs[0],
                   C.getDriver().getLTOMode() == LTOK_Thin);
 
+  // If the user's toolchain has the 'include/nvptx64-nvidia-cuda/` path, we
+  // assume it supports the standard C libraries for the GPU and include them.
+  bool HasLibC = getToolChain().getStdlibIncludePath().has_value();
+  if (!Args.hasArg(options::OPT_nogpulib) &&
+      !Args.hasArg(options::OPT_nolibc) &&
+      Args.hasFlag(options::OPT_gpulibc, options::OPT_nogpulibc, HasLibC)) {
+    CmdArgs.push_back("-lc");
+    CmdArgs.push_back("-lm");
+  }
+
   // Add paths for the default clang library path.
   SmallString<256> DefaultLibPath =
       llvm::sys::path::parent_path(TC.getDriver().Dir);
