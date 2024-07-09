@@ -1330,7 +1330,7 @@ void RISCVInstructionSelector::emitFence(AtomicOrdering FenceOrdering,
 namespace llvm {
 InstructionSelector *
 createRISCVInstructionSelector(const RISCVTargetMachine &TM,
-                               RISCVSubtarget &Subtarget,
+                               const RISCVSubtarget &Subtarget,
                                RISCVRegisterBankInfo &RBI) {
   return new RISCVInstructionSelector(TM, Subtarget, RBI);
 }
