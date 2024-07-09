@@ -8,8 +8,9 @@
 //
 
 // UNSUPPORTED: c++03, c++11, c++14, c++17
+// ADDITIONAL_COMPILE_FLAGS: -Wno-private-header
 
-#include <stop_token>
+#include <__stop_token/intrusive_list_view.h>
 #include <cassert>
 
 #include "test_macros.h"
