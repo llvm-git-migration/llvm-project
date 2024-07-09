@@ -1385,11 +1385,13 @@ void XCOFFObjectWriter::addExceptionEntry(
 unsigned XCOFFObjectWriter::getExceptionSectionSize() {
   unsigned EntryNum = 0;
 
-  for (auto it = ExceptionSection.ExceptionTable.begin();
-       it != ExceptionSection.ExceptionTable.end(); ++it)
-    // The size() gets +1 to account for the initial entry containing the
-    // symbol table index.
-    EntryNum += it->second.Entries.size() + 1;
+  auto CountEntries =
+      [&](std::pair<const StringRef, ExceptionInfo> &ExceptionTableEntry) {
+        EntryNum += ExceptionTableEntry.second.Entries.size() + 1;
+      };
+
+  for_each(ExceptionSection.ExceptionTable.begin(),
+           ExceptionSection.ExceptionTable.end(), CountEntries);
 
   return EntryNum * (is64Bit() ? XCOFF::ExceptionSectionEntrySize64
                                : XCOFF::ExceptionSectionEntrySize32);
@@ -1397,11 +1399,12 @@ unsigned XCOFFObjectWriter::getExceptionSectionSize() {
 
 unsigned XCOFFObjectWriter::getExceptionOffset(const MCSymbol *Symbol) {
   unsigned EntryNum = 0;
-  for (auto it = ExceptionSection.ExceptionTable.begin();
-       it != ExceptionSection.ExceptionTable.end(); ++it) {
-    if (Symbol == it->second.FunctionSymbol)
+  for (auto I = ExceptionSection.ExceptionTable.begin(),
+            E = ExceptionSection.ExceptionTable.end();
+       I != E; ++I) {
+    if (Symbol == I->second.FunctionSymbol)
       break;
-    EntryNum += it->second.Entries.size() + 1;
+    EntryNum += I->second.Entries.size() + 1;
   }
   return EntryNum * (is64Bit() ? XCOFF::ExceptionSectionEntrySize64
                                : XCOFF::ExceptionSectionEntrySize32);
@@ -1667,17 +1670,18 @@ void XCOFFObjectWriter::writeSectionForDwarfSectionEntry(
 void XCOFFObjectWriter::writeSectionForExceptionSectionEntry(
     const MCAssembler &Asm, ExceptionSectionEntry &ExceptionEntry,
     uint64_t &CurrentAddressLocation) {
-  for (auto it = ExceptionEntry.ExceptionTable.begin();
-       it != ExceptionEntry.ExceptionTable.end(); it++) {
+  for (auto I = ExceptionEntry.ExceptionTable.begin(),
+            E = ExceptionEntry.ExceptionTable.end();
+       I != E; ++I) {
     // For every symbol that has exception entries, you must start the entries
     // with an initial symbol table index entry
-    W.write<uint32_t>(SymbolIndexMap[it->second.FunctionSymbol]);
+    W.write<uint32_t>(SymbolIndexMap[I->second.FunctionSymbol]);
     if (is64Bit()) {
       // 4-byte padding on 64-bit.
       W.OS.write_zeros(4);
     }
     W.OS.write_zeros(2);
-    for (auto &TrapEntry : it->second.Entries) {
+    for (auto &TrapEntry : I->second.Entries) {
       writeWord(TrapEntry.TrapAddress);
       W.write<uint8_t>(TrapEntry.Lang);
       W.write<uint8_t>(TrapEntry.Reason);
