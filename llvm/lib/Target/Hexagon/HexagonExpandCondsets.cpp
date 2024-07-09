@@ -152,8 +152,8 @@ namespace {
     StringRef getPassName() const override { return "Hexagon Expand Condsets"; }
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
-      AU.addRequired<LiveIntervals>();
-      AU.addPreserved<LiveIntervals>();
+      AU.addRequired<LiveIntervalsWrapperPass>();
+      AU.addPreserved<LiveIntervalsWrapperPass>();
       AU.addPreserved<SlotIndexesWrapperPass>();
       AU.addRequired<MachineDominatorTreeWrapperPass>();
       AU.addPreserved<MachineDominatorTreeWrapperPass>();
@@ -256,7 +256,7 @@ INITIALIZE_PASS_BEGIN(HexagonExpandCondsets, "expand-condsets",
   "Hexagon Expand Condsets", false, false)
 INITIALIZE_PASS_DEPENDENCY(MachineDominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(SlotIndexesWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(LiveIntervals)
+INITIALIZE_PASS_DEPENDENCY(LiveIntervalsWrapperPass)
 INITIALIZE_PASS_END(HexagonExpandCondsets, "expand-condsets",
   "Hexagon Expand Condsets", false, false)
 
@@ -1278,7 +1278,7 @@ bool HexagonExpandCondsets::runOnMachineFunction(MachineFunction &MF) {
   HII = static_cast<const HexagonInstrInfo*>(MF.getSubtarget().getInstrInfo());
   TRI = MF.getSubtarget().getRegisterInfo();
   MDT = &getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree();
-  LIS = &getAnalysis<LiveIntervals>();
+  LIS = &getAnalysis<LiveIntervalsWrapperPass>().getLIS();
   MRI = &MF.getRegInfo();
 
   LLVM_DEBUG(LIS->print(dbgs() << "Before expand-condsets\n",
