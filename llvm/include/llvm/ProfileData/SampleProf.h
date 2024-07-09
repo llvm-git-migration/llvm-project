@@ -1090,9 +1090,9 @@ public:
 
   /// Name suffixes which canonicalization should handle to avoid
   /// profile mismatch.
-  static constexpr const char *LLVMSuffix = ".llvm.";
-  static constexpr const char *PartSuffix = ".part.";
-  static constexpr const char *UniqSuffix = ".__uniq.";
+  static constexpr const char *LLVMSuffix = NameParticles::LLVMSuffix;
+  static constexpr const char *PartSuffix = NameParticles::PartSuffix;
+  static constexpr const char *UniqSuffix = NameParticles::UniqSuffix;
 
   static StringRef getCanonicalFnName(StringRef FnName,
                                       StringRef Attr = "selected") {

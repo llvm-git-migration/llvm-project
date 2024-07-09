@@ -160,16 +160,18 @@ std::string GlobalValue::getGlobalIdentifier(StringRef Name,
 
   std::string GlobalName;
   if (llvm::GlobalValue::isLocalLinkage(Linkage)) {
-    // For local symbols, prepend the main file name to distinguish them.
-    // Do not include the full path in the file name since there's no guarantee
-    // that it will stay the same, e.g., if the files are checked out from
-    // version control in different locations.
-    if (FileName.empty())
-      GlobalName += "<unknown>";
-    else
-      GlobalName += FileName;
+    if (Name.find(NameParticles::UniqSuffix) == StringRef::npos) {
+      // For local symbols, prepend the main file name to distinguish them.
+      // Do not include the full path in the file name since there's no
+      // guarantee that it will stay the same, e.g., if the files are checked
+      // out from version control in different locations.
+      if (FileName.empty())
+        GlobalName += "<unknown>";
+      else
+        GlobalName += FileName;
 
-    GlobalName += kGlobalIdentifierDelimiter;
+      GlobalName += kGlobalIdentifierDelimiter;
+    }
   }
   GlobalName += Name;
   return GlobalName;
