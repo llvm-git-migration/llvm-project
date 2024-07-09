@@ -1257,6 +1257,7 @@ bool tools::addOpenMPRuntime(const Compilation &C, ArgStringList &CmdArgs,
     addOpenMPDeviceLibC(C, Args, CmdArgs);
 
   addArchSpecificRPath(TC, Args, CmdArgs);
+
   addOpenMPRuntimeLibraryPath(TC, Args, CmdArgs);
 
   return true;
