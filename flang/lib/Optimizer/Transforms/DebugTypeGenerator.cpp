@@ -143,7 +143,8 @@ mlir::LLVM::DITypeAttr DebugTypeGenerator::convertBoxedSequenceType(
 
     offset += dimsSize;
     mlir::LLVM::DISubrangeAttr subrangeTy = mlir::LLVM::DISubrangeAttr::get(
-        context, nullptr, lowerAttr, countAttr, nullptr);
+        context, countAttr, lowerAttr, /*upperBound=*/nullptr,
+        /*stride=*/nullptr);
     elements.push_back(subrangeTy);
   }
   return mlir::LLVM::DICompositeTypeAttr::get(
@@ -177,7 +178,8 @@ mlir::LLVM::DITypeAttr DebugTypeGenerator::convertSequenceType(
     auto countAttr = mlir::IntegerAttr::get(intTy, llvm::APInt(64, dim));
     auto lowerAttr = mlir::IntegerAttr::get(intTy, llvm::APInt(64, 1));
     auto subrangeTy = mlir::LLVM::DISubrangeAttr::get(
-        context, countAttr, lowerAttr, nullptr, nullptr);
+        context, countAttr, lowerAttr, /*upperBound=*/nullptr,
+        /*stride=*/nullptr);
     elements.push_back(subrangeTy);
   }
   // Apart from arrays, the `DICompositeTypeAttr` is used for other things like
