@@ -739,7 +739,8 @@ public:
   _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void clear() _NOEXCEPT {
     size_type __old_size = size();
     __clear();
-    __annotate_shrink(__old_size);
+    __annotate_shrink
+    (__old_size);
   }
 
   _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void resize(size_type __sz);

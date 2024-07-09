@@ -210,11 +210,22 @@ class ClangFormatHelper(FormatHelper):
         if not cpp_files:
             return None
 
-        cf_cmd = [self.clang_fmt_path, "--diff"]
+        cf_cmd = [self.clang_fmt_path, "--verbose", "--diff"]
 
         if args.start_rev and args.end_rev:
             cf_cmd.append(args.start_rev)
             cf_cmd.append(args.end_rev)
+
+        # Gather the extension of all modified files and pass them explicitly to git-clang-format.
+        # This prevents git-clang-format from applying its own filtering rules on top of ours.
+        extensions = set()
+        for file in cpp_files:
+            _, ext = os.path.splitext(file)
+            extensions.add(
+                ext.strip(".")
+            )  # Exclude periods since git-clang-format takes extensions without them
+        cf_cmd.append("--extensions")
+        cf_cmd.append("{}".format(",".join(extensions)))
 
         cf_cmd.append("--")
         cf_cmd += cpp_files
@@ -224,6 +235,9 @@ class ClangFormatHelper(FormatHelper):
         self.cf_cmd = cf_cmd
         proc = subprocess.run(cf_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sys.stdout.write(proc.stderr.decode("utf-8"))
+
+        print("LDIONNE: return code of cmd was {}".format(proc.returncode))
+        print("LDIONNE: output of cmd was:\n{}".format(proc.stdout.decode("utf-8")))
 
         if proc.returncode != 0:
             # formatting needed, or the command otherwise failed
