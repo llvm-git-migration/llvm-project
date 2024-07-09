@@ -1407,6 +1407,39 @@ define i32 @uadd_sat_flipped(i32 %x) {
   ret i32 %cond
 }
 
+define i32 @uadd_sat_flipped2(i32 %x) {
+; CHECK-LABEL: @uadd_sat_flipped2(
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 9)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %cmp = icmp ugt i32 %x, -10
+  %add = add i32 %x, 9
+  %cond = select i1 %cmp, i32 -1, i32 %add
+  ret i32 %cond
+}
+
+define i32 @uadd_sat_flipped3(i32 %x) {
+; CHECK-LABEL: @uadd_sat_flipped3(
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 9)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %cmp = icmp ugt i32 %x, -11
+  %add = add i32 %x, 9
+  %cond = select i1 %cmp, i32 -1, i32 %add
+  ret i32 %cond
+}
+
+define i32 @uadd_sat_flipped4(i32 %x) {
+; CHECK-LABEL: @uadd_sat_flipped4(
+; CHECK-NEXT:    [[COND:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 9)
+; CHECK-NEXT:    ret i32 [[COND]]
+;
+  %cmp = icmp uge i32 %x, -9
+  %add = add i32 %x, 9
+  %cond = select i1 %cmp, i32 -1, i32 %add
+  ret i32 %cond
+}
+
 define i32 @uadd_sat_nonstrict(i32 %x, i32 %y) {
 ; CHECK-LABEL: @uadd_sat_nonstrict(
 ; CHECK-NEXT:    [[R:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X:%.*]], i32 [[Y:%.*]])
