@@ -130,7 +130,7 @@ lldb::ValueObjectSP lldb_private::formatters::
           if (!first_sp)
             return {};
 
-          compressed_pair_layout_getter(*p1_sp);
+          compressed_pair_layout_getter(*first_sp);
         } else {
           p1_sp = m_backend.GetChildAtNamePath({"__table_", "__first_node_"});
           compressed_pair_layout_getter(*p1_sp);
