@@ -321,6 +321,8 @@ bool llvm::isDereferenceableAndAlignedInLoop(LoadInst *LI, Loop *L,
       // TODO: generalize if a case found which warrants
       if (Offset->getAPInt().urem(Alignment.value()) != 0)
         return false;
+
+      bool Overflow = false;
       if (StepIsNegative) {
         // In the last iteration of the loop the address we access we will be
         // lower than the first by (TC - 1) * Step. So we need to make sure
@@ -331,13 +333,11 @@ bool llvm::isDereferenceableAndAlignedInLoop(LoadInst *LI, Loop *L,
         // We can safely use the new base because the decrementing pointer is
         // always guaranteed to be >= new base. The total access size needs to
         // take into account the start offset and the loaded element size.
-        AccessSize = Offset->getAPInt() + EltSize;
-      } else {
-        bool Overflow = false;
+        AccessSize = Offset->getAPInt().uadd_ov(EltSize, Overflow);
+      } else
         AccessSize = AccessSize.uadd_ov(Offset->getAPInt(), Overflow);
-        if (Overflow)
-          return false;
-      }
+      if (Overflow)
+        return false;
       Base = NewBase->getValue();
     }
   }
