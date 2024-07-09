@@ -44,6 +44,12 @@ static cl::opt<bool> EnableLocalReassignment(
              "may be compile time intensive"),
     cl::init(false));
 
+static cl::opt<float> MinWeightRatioNeededToEvictHint(
+    "min-weight-ratio-needed-to-evict-hint", cl::Hidden,
+    cl::desc("The minimum ration of weights needed in order for the live range with bigger weight to evict the other live range which"
+    "satisfies a hint),
+    cl::init(7.5));
+
 namespace llvm {
 cl::opt<unsigned> EvictInterferenceCutoff(
     "regalloc-eviction-max-interference-cutoff", cl::Hidden,
@@ -157,6 +163,10 @@ bool DefaultEvictionAdvisor::shouldEvict(const LiveInterval &A, bool IsHint,
     return true;
 
   if (A.weight() > B.weight()) {
+    float WeightRatio = A.weight() / B.weight();
+    if (CanSplit && !IsHint && BreaksHint &&
+        (WeightRatio < MinWeightRatioNeededToEvictHint))
+      return false;
     LLVM_DEBUG(dbgs() << "should evict: " << B << " w= " << B.weight() << '\n');
     return true;
   }
