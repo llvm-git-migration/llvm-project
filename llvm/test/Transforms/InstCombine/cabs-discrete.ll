@@ -141,7 +141,7 @@ define fp128 @fast_cabsl_neg_zero_imag(fp128 %real) {
 ; CHECK-NEXT:    [[CABS:%.*]] = tail call fp128 @llvm.fabs.f128(fp128 [[REAL:%.*]])
 ; CHECK-NEXT:    ret fp128 [[CABS]]
 ;
-  %call = tail call fp128 @cabsl(fp128 %real, fp128 0xL80000000000000000000000000000000)
+  %call = tail call fp128 @cabsl(fp128 %real, fp128 -0xL00000000000000000000000000000000)
   ret fp128 %call
 }
 
