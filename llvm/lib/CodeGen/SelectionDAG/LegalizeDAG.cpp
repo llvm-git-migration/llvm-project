@@ -261,6 +261,7 @@ public:
 
 // Helper function that generates an MMO that considers the alignment of the
 // stack, and the size of the stack object
+// Note: A copy of this function exists in LegalizeVectorTypes.cpp
 static MachineMemOperand *getStackAlignedMMO(SDValue StackPtr,
                                              MachineFunction &MF,
                                              bool isObjectScalable) {
