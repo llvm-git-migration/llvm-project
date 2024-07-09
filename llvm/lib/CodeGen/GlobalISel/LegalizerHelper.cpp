@@ -2356,6 +2356,35 @@ LegalizerHelper::widenScalarMulo(MachineInstr &MI, unsigned TypeIdx,
   return Legalized;
 }
 
+static bool extendCtlzNot(const MachineInstr &MI, MachineIRBuilder &MIRBuilder,
+                          MachineRegisterInfo &MRI, LLT WideTy) {
+  Register XorSrc;
+  Register CstReg;
+  if (!mi_match(MI.getOperand(1).getReg(), MRI,
+                m_GXor(m_Reg(XorSrc), m_Reg(CstReg))))
+    return false;
+
+  auto OptCst = getIConstantVRegValWithLookThrough(CstReg, MRI);
+  APInt Cst = OptCst->Value;
+
+  if (!Cst.isAllOnes())
+    return false;
+
+  auto AllOnes = MIRBuilder.buildConstant(
+      WideTy, APInt::getAllOnes(WideTy.getSizeInBits()));
+  auto Res = MIRBuilder.buildAnyExt(WideTy, XorSrc);
+
+  Register SrcReg = MI.getOperand(1).getReg();
+  LLT CurTy = MRI.getType(SrcReg);
+  unsigned SizeDiff = WideTy.getSizeInBits() - CurTy.getSizeInBits();
+  Res = MIRBuilder.buildShl(WideTy, Res,
+                            MIRBuilder.buildConstant(WideTy, SizeDiff));
+  Res = MIRBuilder.buildXor(WideTy, Res, AllOnes);
+  Res = MIRBuilder.buildCTLZ_ZERO_UNDEF(MI.getOperand(0), Res);
+
+  return true;
+}
+
 LegalizerHelper::LegalizeResult
 LegalizerHelper::widenScalar(MachineInstr &MI, unsigned TypeIdx, LLT WideTy) {
   switch (MI.getOpcode()) {
@@ -2449,6 +2478,13 @@ LegalizerHelper::widenScalar(MachineInstr &MI, unsigned TypeIdx, LLT WideTy) {
     auto MIBSrc = MIRBuilder.buildInstr(ExtOpc, {WideTy}, {SrcReg});
     LLT CurTy = MRI.getType(SrcReg);
     unsigned NewOpc = MI.getOpcode();
+
+    if ((MI.getOpcode() == TargetOpcode::G_CTLZ ||
+         MI.getOpcode() == TargetOpcode::G_CTLZ_ZERO_UNDEF) &&
+        extendCtlzNot(MI, MIRBuilder, MRI, WideTy)) {
+      MI.eraseFromParent();
+      return Legalized;
+    }
     if (NewOpc == TargetOpcode::G_CTTZ) {
       // The count is the same in the larger type except if the original
       // value was zero.  This can be handled by setting the bit just off

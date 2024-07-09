@@ -5049,6 +5049,40 @@ static MVT getPromotedVectorElementType(const TargetLowering &TLI,
   return MidVT;
 }
 
+// (CTLZ (XOR Op -1)) --> (TRUNCATE (CTLZ_ZERO_UNDEF
+//                                    (XOR (SHIFT (ANYEXTEND Op1)
+//                                                ShiftAmount)
+//                                         -1)))
+static bool ExtendCtlzNot(SDNode *Node, SDValue &Result, SDLoc &dl, MVT OVT,
+                          MVT NVT, SelectionDAG &DAG) {
+  SDValue NotOp = Node->getOperand(0);
+  if (NotOp.getOpcode() != ISD::XOR)
+    return false;
+
+  SDValue SrcOp = NotOp->getOperand(0);
+  SDValue CstOp = NotOp->getOperand(1);
+
+  ConstantSDNode *Cst = dyn_cast<ConstantSDNode>(CstOp);
+
+  if (!Cst || !Cst->isAllOnes())
+    return false;
+
+  auto ExtSrc = DAG.getNode(ISD::ANY_EXTEND, dl, NVT, SrcOp);
+  unsigned SHLAmount = NVT.getScalarSizeInBits() - OVT.getScalarSizeInBits();
+  auto ShiftConst =
+      DAG.getShiftAmountConstant(SHLAmount, ExtSrc.getValueType(), dl);
+  SDValue NSrcOp = DAG.getNode(ISD::SHL, dl, NVT, ExtSrc, ShiftConst);
+
+  SDValue NCstOp =
+      DAG.getConstant(APInt::getAllOnes(NVT.getScalarSizeInBits()), dl, NVT);
+
+  Result = DAG.getNode(NotOp->getOpcode(), dl, NVT, NSrcOp, NCstOp,
+                       NotOp->getFlags());
+  Result = DAG.getNode(ISD::CTLZ_ZERO_UNDEF, dl, NVT, Result);
+  Result = DAG.getNode(ISD::TRUNCATE, dl, OVT, Result);
+  return true;
+}
+
 void SelectionDAGLegalize::PromoteNode(SDNode *Node) {
   LLVM_DEBUG(dbgs() << "Trying to promote node\n");
   SmallVector<SDValue, 8> Results;
@@ -5084,6 +5118,13 @@ void SelectionDAGLegalize::PromoteNode(SDNode *Node) {
   case ISD::CTTZ_ZERO_UNDEF:
   case ISD::CTLZ:
   case ISD::CTPOP: {
+    // If the operand of CTLZ is NOT, push the extend in the NOT.
+    if (Node->getOpcode() == ISD::CTLZ &&
+        ExtendCtlzNot(Node, Tmp1, dl, OVT, NVT, DAG)) {
+      Results.push_back(Tmp1);
+      break;
+    }
+
     // Zero extend the argument unless its cttz, then use any_extend.
     if (Node->getOpcode() == ISD::CTTZ ||
         Node->getOpcode() == ISD::CTTZ_ZERO_UNDEF)
@@ -5115,6 +5156,10 @@ void SelectionDAGLegalize::PromoteNode(SDNode *Node) {
     break;
   }
   case ISD::CTLZ_ZERO_UNDEF: {
+    if (ExtendCtlzNot(Node, Tmp1, dl, OVT, NVT, DAG)) {
+      Results.push_back(Tmp1);
+      break;
+    }
     // We know that the argument is unlikely to be zero, hence we can take a
     // different approach as compared to ISD::CTLZ
 

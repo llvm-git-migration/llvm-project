@@ -2298,8 +2298,26 @@ static bool despeculateCountZeros(IntrinsicInst *CountZeros,
   if (match(CountZeros->getOperand(1), m_One()))
     return false;
 
-  // If it's cheap to speculate, there's nothing to do.
   Type *Ty = CountZeros->getType();
+  EVT VTy = TLI->getValueType(*DL, Ty);
+
+  // do not despeculate if we have (ctlz (xor -1 op)) if the operand is
+  // promoted as legalisation would later transform to:
+  //
+  // (ctlz (lshift (xor -1 (extend op))
+  //               lshiftamount))
+  //
+  // Despeculation is not only useless but also not wanted with SelectionDAG
+  // as XOR and CTLZ would be in different basic blocks.
+  if (ConstantInt * C;
+      (TLI->getTypeConversion(CountZeros->getContext(), VTy).first ==
+           TargetLowering::TypePromoteInteger ||
+       TLI->getOperationAction(ISD::CTLZ, VTy) == TargetLowering::Promote) &&
+      match(CountZeros->getOperand(0), m_Xor(m_Value(), m_ConstantInt(C))) &&
+      C->isMinusOne())
+    return false;
+
+  // If it's cheap to speculate, there's nothing to do.
   auto IntrinsicID = CountZeros->getIntrinsicID();
   if ((IntrinsicID == Intrinsic::cttz && TLI->isCheapToSpeculateCttz(Ty)) ||
       (IntrinsicID == Intrinsic::ctlz && TLI->isCheapToSpeculateCtlz(Ty)))

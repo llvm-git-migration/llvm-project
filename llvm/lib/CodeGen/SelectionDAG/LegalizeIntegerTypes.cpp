@@ -638,6 +638,37 @@ SDValue DAGTypeLegalizer::PromoteIntRes_Constant(SDNode *N) {
   return Result;
 }
 
+// (CTLZ (XOR Op -1)) --> (CTLZ_ZERO_UNDEF (XOR (SHIFT (ANYEXTEND Op1)
+//                                                     ShiftAmount)
+//                                               -1))
+static bool ExtendCtlzNot(SDNode *Node, SDValue &Result, SDLoc &dl, EVT OVT,
+                          EVT NVT, SelectionDAG &DAG) {
+  SDValue NotOp = Node->getOperand(0);
+  if (NotOp.getOpcode() != ISD::XOR)
+    return false;
+
+  SDValue SrcOp = NotOp->getOperand(0);
+  SDValue CstOp = NotOp->getOperand(1);
+
+  ConstantSDNode *Cst = dyn_cast<ConstantSDNode>(CstOp);
+  if (!Cst || !Cst->isAllOnes())
+    return false;
+
+  auto ExtSrc = DAG.getNode(ISD::ANY_EXTEND, dl, NVT, SrcOp);
+  unsigned SHLAmount = NVT.getScalarSizeInBits() - OVT.getScalarSizeInBits();
+  auto ShiftConst =
+      DAG.getShiftAmountConstant(SHLAmount, ExtSrc.getValueType(), dl);
+  SDValue NSrcOp = DAG.getNode(ISD::SHL, dl, NVT, ExtSrc, ShiftConst);
+
+  SDValue NCstOp =
+      DAG.getConstant(APInt::getAllOnes(NVT.getScalarSizeInBits()), dl, NVT);
+
+  Result = DAG.getNode(NotOp->getOpcode(), dl, NVT, NSrcOp, NCstOp,
+                       NotOp->getFlags());
+  Result = DAG.getNode(ISD::CTLZ_ZERO_UNDEF, dl, NVT, Result);
+  return true;
+}
+
 SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
   EVT OVT = N->getValueType(0);
   EVT NVT = TLI.getTypeToTransformTo(*DAG.getContext(), OVT);
@@ -656,6 +687,13 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
   }
 
   unsigned CtlzOpcode = N->getOpcode();
+  // If the operand of CTLZ is NOT, push the extend in the NOT.
+  if (SDValue Res;
+      (CtlzOpcode == ISD::CTLZ || CtlzOpcode == ISD::CTLZ_ZERO_UNDEF) &&
+      ExtendCtlzNot(N, Res, dl, OVT, NVT, DAG)) {
+    return Res;
+  }
+
   if (CtlzOpcode == ISD::CTLZ || CtlzOpcode == ISD::VP_CTLZ) {
     // Subtract off the extra leading bits in the bigger type.
     SDValue ExtractLeadingBits = DAG.getConstant(
