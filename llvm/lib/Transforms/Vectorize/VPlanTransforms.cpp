@@ -1412,9 +1412,8 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   ReversePostOrderTraversal<VPBlockDeepTraversalWrapper<VPBlockBase *>> RPOT(
       Plan.getEntry());
   DenseSet<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
-  for (VPBasicBlock *VPBB :
-       reverse(VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT))) {
-    for (VPRecipeBase &R : make_early_inc_range(reverse(*VPBB))) {
+  for (VPBasicBlock *VPBB : VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT)) {
+    for (VPRecipeBase &R : *VPBB) {
       TypeSwitch<VPRecipeBase *>(&R)
           .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
             VPValue *NewMask =
