@@ -9,7 +9,8 @@
 #include "libc_errno.h"
 #include "src/__support/CPP/atomic.h"
 
-#ifdef LIBC_TARGET_ARCH_IS_GPU
+#if defined(LIBC_TARGET_ARCH_IS_GPU) || \
+  (defined(__ELF__) && !defined(__linux__) && defined(__Fuchsia__))
 // LIBC_THREAD_LOCAL on GPU currently does nothing. So essentially this is just
 // a global errno for gpu to use for now.
 extern "C" {
