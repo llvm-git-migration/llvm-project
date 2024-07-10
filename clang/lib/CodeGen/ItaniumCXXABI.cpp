@@ -4915,7 +4915,7 @@ void XLCXXABI::registerGlobalDtor(CodeGenFunction &CGF, const VarDecl &D,
   }
 
   // Create __dtor function for the var decl.
-  llvm::Function *DtorStub = CGF.createAtExitStub(D, Dtor, Addr);
+  llvm::Constant *DtorStub = CGF.createAtExitStub(D, Dtor, Addr);
 
   // Register above __dtor with atexit().
   CGF.registerGlobalDtorWithAtExit(DtorStub);
