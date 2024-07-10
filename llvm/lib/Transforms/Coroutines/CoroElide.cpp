@@ -225,17 +225,7 @@ void CoroIdElider::elideHeapAllocations(uint64_t FrameSize, Align FrameAlign) {
   BasicBlock::iterator InsertPt =
       getFirstNonAllocaInTheEntryBlock(FEI.ContainingFunction)->getIterator();
 
-  // Replacing llvm.coro.alloc with false will suppress dynamic
-  // allocation as it is expected for the frontend to generate the code that
-  // looks like:
-  //   id = coro.id(...)
-  //   mem = coro.alloc(id) ? malloc(coro.size()) : 0;
-  //   coro.begin(id, mem)
-  auto *False = ConstantInt::getFalse(C);
-  for (auto *CA : CoroAllocs) {
-    CA->replaceAllUsesWith(False);
-    CA->eraseFromParent();
-  }
+  coro::suppressCoroAllocs(C, CoroAllocs);
 
   // FIXME: Design how to transmit alignment information for every alloca that
   // is spilled into the coroutine frame and recreate the alignment information
