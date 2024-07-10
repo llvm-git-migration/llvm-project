@@ -150,7 +150,8 @@ void RISCVISAInfo::printEnabledExtensions(
   }
 
   unsigned XLen = IsRV64 ? 64 : 32;
-  outs() << "\nISA String: " << RISCVISAInfo(XLen, FullExtMap).toString();
+  outs() << "\nISA String: "
+         << RISCVISAInfo::createFromExtMap(XLen, FullExtMap).toString();
 }
 
 static bool stripExperimentalPrefix(StringRef &Ext) {
