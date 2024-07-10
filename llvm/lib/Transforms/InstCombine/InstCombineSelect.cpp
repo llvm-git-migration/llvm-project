@@ -999,17 +999,15 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
 
   if (Pred == ICmpInst::ICMP_UGE &&
       match(FVal, m_Add(m_Specific(Cmp0), m_APInt(C))) &&
-      match(TVal, m_AllOnes()) && match(Cmp1, m_APInt(CmpC)) &&
-      *CmpC == (~*C + 1)) {
-    // (X u> ~C + 1) ? -1 : (X + C) --> uadd.sat(X, C)
+      match(TVal, m_AllOnes()) && match(Cmp1, m_SpecificInt(-*C)) {
+    // (X u> -C) ? -1 : (X + C) --> uadd.sat(X, C)
     return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, Cmp0,
                                          ConstantInt::get(Cmp0->getType(), *C));
   }
 
   if (Pred == ICmpInst::ICMP_UGT &&
       match(FVal, m_Add(m_Specific(Cmp0), m_APInt(C))) &&
-      match(TVal, m_AllOnes()) && match(Cmp1, m_APInt(CmpC)) &&
-      *CmpC == (~*C - 1)) {
+      match(TVal, m_AllOnes()) && match(Cmp1, m_SpecificInt(~*C - 1)) {
     // (X u> ~C - 1) ? -1 : (X + C) --> uadd.sat(X, C)
     return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, Cmp0,
                                          ConstantInt::get(Cmp0->getType(), *C));
