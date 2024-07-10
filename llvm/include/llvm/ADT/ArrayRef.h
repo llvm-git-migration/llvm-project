@@ -25,6 +25,7 @@
 
 namespace llvm {
   template<typename T> class [[nodiscard]] MutableArrayRef;
+  template <typename T> struct [[nodiscard]] MatrixRowView;
 
   /// ArrayRef - Represent a constant reference to an array (0 or more elements
   /// consecutively in memory), i.e. a start pointer and a length.  It allows
@@ -58,6 +59,8 @@ namespace llvm {
 
     /// The number of elements.
     size_type Length = 0;
+
+    friend MatrixRowView<T>;
 
   public:
     /// @name Constructors
