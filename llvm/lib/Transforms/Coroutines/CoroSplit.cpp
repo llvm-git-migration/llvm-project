@@ -1179,6 +1179,14 @@ static void updateAsyncFuncPointerContextSize(coro::Shape &Shape) {
   Shape.AsyncLowering.AsyncFuncPointer->setInitializer(NewFuncPtrStruct);
 }
 
+static TypeSize getFrameSizeForShape(coro::Shape &Shape) {
+  // In the same function all coro.sizes should have the same result type.
+  auto *SizeIntrin = Shape.CoroSizes.back();
+  Module *M = SizeIntrin->getModule();
+  const DataLayout &DL = M->getDataLayout();
+  return DL.getTypeAllocSize(Shape.FrameTy);
+}
+
 static void replaceFrameSizeAndAlignment(coro::Shape &Shape) {
   if (Shape.ABI == coro::ABI::Async)
     updateAsyncFuncPointerContextSize(Shape);
@@ -1194,10 +1202,8 @@ static void replaceFrameSizeAndAlignment(coro::Shape &Shape) {
 
   // In the same function all coro.sizes should have the same result type.
   auto *SizeIntrin = Shape.CoroSizes.back();
-  Module *M = SizeIntrin->getModule();
-  const DataLayout &DL = M->getDataLayout();
-  auto Size = DL.getTypeAllocSize(Shape.FrameTy);
-  auto *SizeConstant = ConstantInt::get(SizeIntrin->getType(), Size);
+  auto *SizeConstant =
+      ConstantInt::get(SizeIntrin->getType(), getFrameSizeForShape(Shape));
 
   for (CoroSizeInst *CS : Shape.CoroSizes) {
     CS->replaceAllUsesWith(SizeConstant);
@@ -1248,6 +1254,7 @@ static void handleNoSuspendCoroutine(coro::Shape &Shape) {
   }
 
   CoroBegin->eraseFromParent();
+  Shape.CoroBegin = nullptr;
 }
 
 // SimplifySuspendPoint needs to check that there is no calls between
@@ -1452,6 +1459,46 @@ struct SwitchCoroutineSplitter {
     // pointed by the last argument of @llvm.coro.info, so that CoroElide pass
     // can determined correct function to call.
     setCoroInfo(F, Shape, Clones);
+  }
+
+  static Function *createNoAllocVariant(Function &F, ValueToValueMapTy &VMap,
+                                        coro::Shape &Shape) {
+    auto *OrigFnTy = F.getFunctionType();
+    auto OldParams = OrigFnTy->params();
+
+    SmallVector<Type *> NewParams;
+    NewParams.reserve(OldParams.size() + 1);
+    NewParams.push_back(PointerType::getUnqual(Shape.FrameTy));
+    for (Type *T : OldParams) {
+      NewParams.push_back(T);
+    }
+    auto *NewFnTy = FunctionType::get(OrigFnTy->getReturnType(), NewParams,
+                                      OrigFnTy->isVarArg());
+    Function *NoAllocF =
+        Function::Create(NewFnTy, F.getLinkage(), F.getName() + ".noalloc");
+    unsigned int Idx = 1;
+    for (const auto &I : F.args()) {
+      VMap[&I] = NoAllocF->getArg(Idx++);
+    }
+    SmallVector<ReturnInst *, 4> Returns;
+    CloneFunctionInto(NoAllocF, &F, VMap,
+                      CloneFunctionChangeType::LocalChangesOnly, Returns);
+
+    if (Shape.CoroBegin) {
+      auto *NewCoroBegin =
+          cast_if_present<CoroBeginInst>(VMap[Shape.CoroBegin]);
+      auto *NewCoroId = cast<CoroIdInst>(NewCoroBegin->getId());
+      coro::replaceCoroFree(NewCoroId, /*Elide=*/true);
+      coro::suppressCoroAllocs(NewCoroId);
+      NewCoroBegin->replaceAllUsesWith(NoAllocF->getArg(0));
+      NewCoroBegin->eraseFromParent();
+    }
+
+    Module *M = F.getParent();
+    M->getFunctionList().insert(M->end(), NoAllocF);
+
+    removeUnreachableBlocks(*NoAllocF);
+    return NoAllocF;
   }
 
 private:
@@ -1970,9 +2017,17 @@ splitCoroutine(Function &F, SmallVectorImpl<Function *> &Clones,
 }
 
 /// Remove calls to llvm.coro.end in the original function.
-static void removeCoroEnds(const coro::Shape &Shape) {
-  for (auto *End : Shape.CoroEnds) {
-    replaceCoroEnd(End, Shape, Shape.FramePtr, /*in resume*/ false, nullptr);
+static void removeCoroEndsFromRampFunction(const coro::Shape &Shape) {
+  if (Shape.ABI != coro::ABI::Switch) {
+    for (auto *End : Shape.CoroEnds) {
+      replaceCoroEnd(End, Shape, Shape.FramePtr, /*in resume*/ false, nullptr);
+    }
+  } else {
+    for (llvm::AnyCoroEndInst *End : Shape.CoroEnds) {
+      auto &Context = End->getContext();
+      End->replaceAllUsesWith(ConstantInt::getFalse(Context));
+      End->eraseFromParent();
+    }
   }
 }
 
@@ -1981,18 +2036,6 @@ static void updateCallGraphAfterCoroutineSplit(
     const SmallVectorImpl<Function *> &Clones, LazyCallGraph::SCC &C,
     LazyCallGraph &CG, CGSCCAnalysisManager &AM, CGSCCUpdateResult &UR,
     FunctionAnalysisManager &FAM) {
-  if (!Shape.CoroBegin)
-    return;
-
-  if (Shape.ABI != coro::ABI::Switch)
-    removeCoroEnds(Shape);
-  else {
-    for (llvm::AnyCoroEndInst *End : Shape.CoroEnds) {
-      auto &Context = End->getContext();
-      End->replaceAllUsesWith(ConstantInt::getFalse(Context));
-      End->eraseFromParent();
-    }
-  }
 
   if (!Clones.empty()) {
     switch (Shape.ABI) {
@@ -2114,12 +2157,26 @@ PreservedAnalyses CoroSplitPass::run(LazyCallGraph::SCC &C,
     LLVM_DEBUG(dbgs() << "CoroSplit: Processing coroutine '" << F.getName()
                       << "\n");
     F.setSplittedCoroutine();
+    assert(!F.getNoAllocCoroutine());
 
     SmallVector<Function *, 4> Clones;
     auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
-    const coro::Shape Shape =
+    coro::Shape Shape =
         splitCoroutine(F, Clones, FAM.getResult<TargetIRAnalysis>(F),
                        OptimizeFrame, MaterializableCallback);
+
+    removeCoroEndsFromRampFunction(Shape);
+
+    if (Shape.ABI == coro::ABI::Switch) {
+      ValueToValueMapTy VMap;
+      auto *NoAllocF =
+          SwitchCoroutineSplitter::createNoAllocVariant(F, VMap, Shape);
+      NoAllocF->setNoAllocCoroutine(Shape.FrameSize);
+      auto &FrameArg = *(NoAllocF->arg_begin());
+      FrameArg.addAttr(Attribute::getWithAlignment(NoAllocF->getContext(),
+                                                   Shape.FrameAlign));
+    }
+
     updateCallGraphAfterCoroutineSplit(*N, Shape, Clones, C, CG, AM, UR, FAM);
 
     ORE.emit([&]() {

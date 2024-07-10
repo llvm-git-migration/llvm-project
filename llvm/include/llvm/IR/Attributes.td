@@ -339,6 +339,9 @@ def PresplitCoroutine : EnumAttr<"presplitcoroutine", [FnAttr]>;
 /// The coroutine would only be destroyed when it is complete.
 def CoroDestroyOnlyWhenComplete : EnumAttr<"coro_only_destroy_when_complete", [FnAttr]>;
 
+/// Function is a noalloc coroutine split.
+def NoAllocCoroutine : IntAttr<"noalloccoroutine", [FnAttr]>;
+
 /// Target-independent string attributes.
 def LessPreciseFPMAD : StrBoolAttr<"less-precise-fpmad">;
 def NoInfsFPMath : StrBoolAttr<"no-infs-fp-math">;

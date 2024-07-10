@@ -676,6 +676,16 @@ std::string Attribute::getAsString(bool InAttrGrp) const {
     return Result;
   }
 
+  if (hasAttribute(Attribute::NoAllocCoroutine)) {
+    const auto &AttrVal = pImpl->getValueAsInt();
+    std::string Result = "noalloccoroutine(";
+    {
+      raw_string_ostream OS(Result);
+      OS << AttrVal << ")";
+    }
+    return Result;
+  }
+
   // Convert target-dependent attributes to strings of the form:
   //
   //   "kind"
