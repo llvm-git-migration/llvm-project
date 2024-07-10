@@ -1464,7 +1464,8 @@ static MachineBasicBlock::iterator convertCalleeSaveRestoreToSPPrePostIncDec(
   // If the first store isn't right where we want SP then we can't fold the
   // update in so create a normal arithmetic instruction instead.
   if (MBBI->getOperand(MBBI->getNumOperands() - 1).getImm() != 0 ||
-      CSStackSizeInc < MinOffset || CSStackSizeInc > MaxOffset) {
+      CSStackSizeInc < MinOffset * (int64_t)Scale.getFixedValue() ||
+      CSStackSizeInc > MaxOffset * (int64_t)Scale.getFixedValue()) {
     emitFrameOffset(MBB, MBBI, DL, AArch64::SP, AArch64::SP,
                     StackOffset::getFixed(CSStackSizeInc), TII, FrameFlag,
                     false, false, nullptr, EmitCFI,
