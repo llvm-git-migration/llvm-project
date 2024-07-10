@@ -11,154 +11,77 @@
 //===----------------------------------------------------------------------===//
 
 #include "MutexModeling/MutexModelingAPI.h"
+#include "MutexModeling/MutexModelingDefs.h"
 #include "MutexModeling/MutexModelingDomain.h"
+#include "MutexModeling/MutexRegionExtractor.h"
 
 #include "clang/StaticAnalyzer/Core/Checker.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/CallDescription.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Frontend/CheckerRegistry.h"
-
-#include <variant>
+#include <memory>
 
 using namespace clang;
 using namespace ento;
 using namespace mutex_modeling;
 
 namespace {
-class CallDescriptionBasedMatcher {
-  CallDescription LockFn;
-  CallDescription UnlockFn;
 
-public:
-  CallDescriptionBasedMatcher(CallDescription &&LockFn,
-                              CallDescription &&UnlockFn)
-      : LockFn(std::move(LockFn)), UnlockFn(std::move(UnlockFn)) {}
-  [[nodiscard]] bool matches(const CallEvent &Call, bool IsLock) const {
-    if (IsLock) {
-      return LockFn.matches(Call);
+// When a lock is destroyed, in some semantics(like PthreadSemantics) we are not
+// sure if the destroy call has succeeded or failed, and the lock enters one of
+// the 'possibly destroyed' state. There is a short time frame for the
+// programmer to check the return value to see if the lock was successfully
+// destroyed. Before we model the next operation over that lock, we call this
+// function to see if the return value was checked by now and set the lock state
+// - either to destroyed state or back to its previous state.
+
+// In PthreadSemantics, pthread_mutex_destroy() returns zero if the lock is
+// successfully destroyed and it returns a non-zero value otherwise.
+ProgramStateRef resolvePossiblyDestroyedMutex(ProgramStateRef State,
+                                              const MemRegion *LockReg,
+                                              const SymbolRef *Sym) {
+  const LockStateKind *LState = State->get<LockStates>(LockReg);
+  // Existence in DestroyRetVal ensures existence in LockMap.
+  // Existence in Destroyed also ensures that the lock state for lockR is either
+  // UntouchedAndPossiblyDestroyed or UnlockedAndPossiblyDestroyed.
+  assert(LState);
+  assert(*LState == LockStateKind::UntouchedAndPossiblyDestroyed ||
+         *LState == LockStateKind::UnlockedAndPossiblyDestroyed);
+
+  ConstraintManager &CMgr = State->getConstraintManager();
+  ConditionTruthVal RetZero = CMgr.isNull(State, *Sym);
+  if (RetZero.isConstrainedFalse()) {
+    switch (*LState) {
+    case LockStateKind::UntouchedAndPossiblyDestroyed: {
+      State = State->remove<LockStates>(LockReg);
+      break;
     }
-    return UnlockFn.matches(Call);
-  }
-};
-
-class FirstArgMutexDescriptor : public CallDescriptionBasedMatcher {
-public:
-  FirstArgMutexDescriptor(CallDescription &&LockFn, CallDescription &&UnlockFn)
-      : CallDescriptionBasedMatcher(std::move(LockFn), std::move(UnlockFn)) {}
-
-  [[nodiscard]] const MemRegion *getRegion(const CallEvent &Call, bool) const {
-    return Call.getArgSVal(0).getAsRegion();
-  }
-};
-
-class MemberMutexDescriptor : public CallDescriptionBasedMatcher {
-public:
-  MemberMutexDescriptor(CallDescription &&LockFn, CallDescription &&UnlockFn)
-      : CallDescriptionBasedMatcher(std::move(LockFn), std::move(UnlockFn)) {}
-
-  [[nodiscard]] const MemRegion *getRegion(const CallEvent &Call, bool) const {
-    return cast<CXXMemberCall>(Call).getCXXThisVal().getAsRegion();
-  }
-};
-
-class RAIIMutexDescriptor {
-  mutable const IdentifierInfo *Guard{};
-  mutable bool IdentifierInfoInitialized{};
-  mutable llvm::SmallString<32> GuardName{};
-
-  void initIdentifierInfo(const CallEvent &Call) const {
-    if (!IdentifierInfoInitialized) {
-      // In case of checking C code, or when the corresponding headers are not
-      // included, we might end up query the identifier table every time when
-      // this function is called instead of early returning it. To avoid this, a
-      // bool variable (IdentifierInfoInitialized) is used and the function will
-      // be run only once.
-      const auto &ASTCtx = Call.getState()->getStateManager().getContext();
-      Guard = &ASTCtx.Idents.get(GuardName);
+    case LockStateKind::UnlockedAndPossiblyDestroyed: {
+      State = State->set<LockStates>(LockReg, LockStateKind::Unlocked);
+      break;
+    }
+    default: {
+      State = State->set<LockStates>(LockReg, LockStateKind::Destroyed);
+    }
     }
   }
 
-  template <typename T> bool matchesImpl(const CallEvent &Call) const {
-    const T *C = dyn_cast<T>(&Call);
-    if (!C)
-      return false;
-    const IdentifierInfo *II =
-        cast<CXXRecordDecl>(C->getDecl()->getParent())->getIdentifier();
-    return II == Guard;
-  }
-
-public:
-  RAIIMutexDescriptor(StringRef GuardName) : GuardName(GuardName) {}
-  [[nodiscard]] bool matches(const CallEvent &Call, bool IsLock) const {
-    initIdentifierInfo(Call);
-    if (IsLock) {
-      return matchesImpl<CXXConstructorCall>(Call);
-    }
-    return matchesImpl<CXXDestructorCall>(Call);
-  }
-  [[nodiscard]] const MemRegion *getRegion(const CallEvent &Call,
-                                           bool IsLock) const {
-    const MemRegion *MutexRegion = nullptr;
-    if (IsLock) {
-      if (std::optional<SVal> Object = Call.getReturnValueUnderConstruction()) {
-        MutexRegion = Object->getAsRegion();
-      }
-    } else {
-      MutexRegion = cast<CXXDestructorCall>(Call).getCXXThisVal().getAsRegion();
-    }
-    return MutexRegion;
-  }
-};
-
-using MutexDescriptor =
-    std::variant<FirstArgMutexDescriptor, MemberMutexDescriptor,
-                 RAIIMutexDescriptor>;
-
-const MemRegion *getRegion(const CallEvent &Call,
-                           const MutexDescriptor &Descriptor, bool IsLock) {
-  return std::visit(
-      [&Call, IsLock](auto &&Descriptor) {
-        return Descriptor.getRegion(Call, IsLock);
-      },
-      Descriptor);
+  // Removing the map entry (LockReg, sym) from DestroyRetVal as the lock
+  // state is now resolved.
+  return State->remove<DestroyedRetVals>(LockReg);
 }
 
-class MutexModeling : public Checker<check::PostCall> {
-  const std::array<MutexDescriptor, 8> MutexDescriptors{
-      MemberMutexDescriptor({/*MatchAs=*/CDM::CXXMethod,
-                             /*QualifiedName=*/{"std", "mutex", "lock"},
-                             /*RequiredArgs=*/0},
-                            {CDM::CXXMethod, {"std", "mutex", "unlock"}, 0}),
-      FirstArgMutexDescriptor({CDM::CLibrary, {"pthread_mutex_lock"}, 1},
-                              {CDM::CLibrary, {"pthread_mutex_unlock"}, 1}),
-      FirstArgMutexDescriptor({CDM::CLibrary, {"mtx_lock"}, 1},
-                              {CDM::CLibrary, {"mtx_unlock"}, 1}),
-      FirstArgMutexDescriptor({CDM::CLibrary, {"pthread_mutex_trylock"}, 1},
-                              {CDM::CLibrary, {"pthread_mutex_unlock"}, 1}),
-      FirstArgMutexDescriptor({CDM::CLibrary, {"mtx_trylock"}, 1},
-                              {CDM::CLibrary, {"mtx_unlock"}, 1}),
-      FirstArgMutexDescriptor({CDM::CLibrary, {"mtx_timedlock"}, 1},
-                              {CDM::CLibrary, {"mtx_unlock"}, 1}),
-      RAIIMutexDescriptor("lock_guard"),
-      RAIIMutexDescriptor("unique_lock")};
-  void handleLock(const MutexDescriptor &Mutex, const CallEvent &Call,
-                  CheckerContext &C) const;
+ProgramStateRef doResolvePossiblyDestroyedMutex(ProgramStateRef State,
+                                                const MemRegion *MTX) {
+  assert(MTX && "should only be called with a mutex region");
 
-  void handleUnlock(const MutexDescriptor &Mutex, const CallEvent &Call,
-                    CheckerContext &C) const;
+  if (const SymbolRef *Sym = State->get<DestroyedRetVals>(MTX))
+    return resolvePossiblyDestroyedMutex(State, MTX, Sym);
+  return State;
+}
 
-  [[nodiscard]] std::optional<MutexDescriptor>
-  checkDescriptorMatch(const CallEvent &Call, CheckerContext &C,
-                       bool IsLock) const;
-
-public:
-  void checkPostCall(const CallEvent &Call, CheckerContext &C) const;
-};
-
-void MutexModeling::handleLock(const MutexDescriptor &LockDescriptor,
-                               const CallEvent &Call, CheckerContext &C) const {
-  const MemRegion *MutexRegion =
-      getRegion(Call, LockDescriptor, /*IsLock=*/true);
+void updateCritSectionOnLock(const MutexRegionExtractor &LockDescriptor,
+                             const CallEvent &Call, CheckerContext &C) {
+  const MemRegion *MutexRegion = getRegion(LockDescriptor, Call);
   if (!MutexRegion)
     return;
 
@@ -168,11 +91,9 @@ void MutexModeling::handleLock(const MutexDescriptor &LockDescriptor,
   C.addTransition(StateWithLockEvent, CreateMutexCritSectionNote(MarkToAdd, C));
 }
 
-void MutexModeling::handleUnlock(const MutexDescriptor &UnlockDescriptor,
-                                 const CallEvent &Call,
-                                 CheckerContext &C) const {
-  const MemRegion *MutexRegion =
-      getRegion(Call, UnlockDescriptor, /*IsLock=*/false);
+void updateCriticalSectionOnUnlock(const EventDescriptor &UnlockDescriptor,
+                                   const CallEvent &Call, CheckerContext &C) {
+  const MemRegion *MutexRegion = getRegion(UnlockDescriptor.Trigger, Call);
   if (!MutexRegion)
     return;
 
@@ -194,37 +115,122 @@ void MutexModeling::handleUnlock(const MutexDescriptor &UnlockDescriptor,
       NewList = Factory.add(*It, NewList);
   }
 
-  State = State->set<CritSections>(NewList);
-  C.addTransition(State);
+  C.addTransition(State->set<CritSections>(NewList));
 }
 
-std::optional<MutexDescriptor>
-MutexModeling::checkDescriptorMatch(const CallEvent &Call, CheckerContext &C,
-                                    bool IsLock) const {
-  std::optional<MutexDescriptor> Descriptor;
-  const auto DescriptorIt =
-      llvm::find_if(MutexDescriptors, [&Call, IsLock](auto &&Descriptor) {
-        return std::visit(
-            [&Call, IsLock](auto &&DescriptorImpl) {
-              return DescriptorImpl.matches(Call, IsLock);
-            },
-            Descriptor);
-      });
-  if (DescriptorIt != MutexDescriptors.end())
-    Descriptor.emplace(*DescriptorIt);
-  return Descriptor;
+class MutexModeling : public Checker<check::PostCall> {
+  std::vector<EventDescriptor> handledEvents = getHandledEvents();
+
+public:
+  void checkPostCall(const CallEvent &Call, CheckerContext &C) const;
+
+private:
+  std::unique_ptr<BugType> BT_initlock = std::make_unique<BugType>(
+      this->getCheckerName(), "Init invalid lock", "Lock checker");
+  ProgramStateRef handleInit(const EventDescriptor &Event, const MemRegion *MTX,
+                             const Expr *MTXExpr, const CallEvent &Call,
+                             ProgramStateRef State, CheckerContext &C) const;
+  ProgramStateRef handleEvent(const EventDescriptor &Event,
+                              const MemRegion *MTX, const Expr *MTXExpr,
+                              const CallEvent &Call, ProgramStateRef State,
+                              CheckerContext &C) const;
+};
+
+} // namespace
+
+ProgramStateRef
+MutexModeling::handleInit(const EventDescriptor &Event, const MemRegion *MTX,
+                          const Expr *MTXExpr, const CallEvent &Call,
+                          ProgramStateRef State, CheckerContext &C) const {
+  assert(MTX && "should only be called with a mutex region");
+  assert(MTXExpr && "should only be called with a valid mutex expression");
+
+  State = State->add<MutexEvents>(EventMarker{
+      Event.Kind, Event.Semantics, Call.getCalleeIdentifier(), MTXExpr, MTX});
+
+  const LockStateKind *LState = State->get<LockStates>(MTX);
+  if (!LState || *LState == LockStateKind::Destroyed) {
+    return State->set<LockStates>(MTX, LockStateKind::Unlocked);
+  }
+
+  // We are here if three is an init event on a lock that is modelled, and it
+  // is not in destroyed state. The bugreporting should be done in the
+  // reporting checker and not it the modeling, but we still want to be
+  // efficient.
+  StringRef Message;
+  if (*LState == LockStateKind::Locked) {
+    Message = "This lock is still being held";
+    State =
+        State->set<LockStates>(MTX, LockStateKind::Error_DoubleInitWhileLocked);
+  } else {
+    Message = "This lock has already been initialized";
+    State = State->set<LockStates>(MTX, LockStateKind::Error_DoubleInit);
+  }
+
+  // TODO: put this part in the reporting checker
+
+  ExplodedNode *N = C.generateErrorNode();
+  if (!N)
+    return State;
+  auto Report =
+      std::make_unique<PathSensitiveBugReport>(BT_initlock.get(), Message, N);
+  Report->addRange(MTXExpr->getSourceRange());
+  C.emitReport(std::move(Report));
+
+  return State;
+}
+
+ProgramStateRef
+MutexModeling::handleEvent(const EventDescriptor &Event, const MemRegion *MTX,
+                           const Expr *MTXExpr, const CallEvent &Call,
+                           ProgramStateRef State, CheckerContext &C) const {
+  assert(MTX && "should only be called with a mutex region");
+  assert(MTXExpr && "should only be called with a valid mutex expression");
+
+  switch (Event.Kind) {
+  case EventKind::Init:
+    return handleInit(Event, MTX, MTXExpr, Call, State, C);
+    break;
+  default:
+    llvm_unreachable("Unhandled event kind!");
+#if 0
+  case EventKind::Acquire:
+    handleAcquire(Event, Call, C);
+    break;
+  case EventKind::TryAcquire:
+    handleTryAcquire(Event, Call, C);
+    break;
+  case EventKind::Release:
+    handleRelease(Event, Call, C);
+    break;
+  case EventKind::Destroy:
+    handleDestroy(Event, Call, C);
+    break;
+#endif
+  }
 }
 
 void MutexModeling::checkPostCall(const CallEvent &Call,
                                   CheckerContext &C) const {
-  if (std::optional<MutexDescriptor> LockDesc =
-          checkDescriptorMatch(Call, C, /*IsLock=*/true)) {
-    handleLock(*LockDesc, Call, C);
-  } else if (std::optional<MutexDescriptor> UnlockDesc =
-                 checkDescriptorMatch(Call, C, /*IsLock=*/false)) {
-    handleUnlock(*UnlockDesc, Call, C);
+  // FIXME: Try to handle cases when the implementation was inlined rather than
+  // just giving up.
+  if (C.wasInlined)
+    return;
+
+  ProgramStateRef State = C.getState();
+  for (auto &&Event : handledEvents) {
+    if (matches(Event.Trigger, Call)) {
+      const MemRegion *MTX = getRegion(Event.Trigger, Call);
+      if (!MTX)
+        continue;
+      const Expr *MTXExpr = Call.getOriginExpr();
+      if (!MTXExpr)
+        continue;
+      State = doResolvePossiblyDestroyedMutex(State, MTX);
+      State = handleEvent(Event, MTX, MTXExpr, Call, State, C);
+      C.addTransition(State);
+    }
   }
-}
 
 } // namespace
 
