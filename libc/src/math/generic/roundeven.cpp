@@ -13,7 +13,11 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(double, roundeven, (double x)) {
+#ifdef __LIBC_USE_BUILTIN_ROUNDEVEN
+  return __builtin_roundeven(x);
+#else
   return fputil::round_using_specific_rounding_mode(x, FP_INT_TONEAREST);
+#endif
 }
 
 } // namespace LIBC_NAMESPACE
