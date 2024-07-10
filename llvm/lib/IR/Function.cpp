@@ -70,6 +70,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <string>
 
 using namespace llvm;
@@ -850,6 +851,19 @@ void Function::copyAttributesFrom(const Function *Src) {
     setPrefixData(Src->getPrefixData());
   if (Src->hasPrologueData())
     setPrologueData(Src->getPrologueData());
+}
+
+void Function::setNoAllocCoroutine(uint64_t Size) {
+  auto Attr = Attribute::get(getContext(), Attribute::NoAllocCoroutine, Size);
+  addFnAttr(Attr);
+}
+
+std::optional<int> Function::getNoAllocCoroutine() const {
+  if (!hasFnAttribute(Attribute::NoAllocCoroutine))
+    return std::nullopt;
+
+  const auto &A = getFnAttribute(Attribute::NoAllocCoroutine);
+  return A.getValueAsInt();
 }
 
 MemoryEffects Function::getMemoryEffects() const {

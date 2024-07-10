@@ -534,6 +534,9 @@ public:
   void setPresplitCoroutine() { addFnAttr(Attribute::PresplitCoroutine); }
   void setSplittedCoroutine() { removeFnAttr(Attribute::PresplitCoroutine); }
 
+  void setNoAllocCoroutine(uint64_t Size);
+  std::optional<int> getNoAllocCoroutine() const;
+
   bool isCoroOnlyDestroyWhenComplete() const {
     return hasFnAttribute(Attribute::CoroDestroyOnlyWhenComplete);
   }

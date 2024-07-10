@@ -232,8 +232,11 @@ static LValueOrRValue emitSuspendExpression(CodeGenFunction &CGF, CGCoroData &Co
   std::optional<CodeGenFunction::OpaqueValueMapping> OperandMapping;
   if (auto *CallOV = S.getInplaceCallOpaqueValue()) {
     auto *CE = cast<CallExpr>(CallOV->getSourceExpr());
-    // TODO: don't use the intrisic coro_safe_elide in the next version.
-    LValue CallResult = CGF.EmitCallExprLValue(CE, nullptr);
+    llvm::CallBase *CallOrInvoke = nullptr;
+    LValue CallResult = CGF.EmitCallExprLValue(CE, &CallOrInvoke);
+    if (CallOrInvoke)
+      CallOrInvoke->addAnnotationMetadata("coro_must_elide");
+
     OperandMapping.emplace(CGF, CallOV, CallResult);
     llvm::Value *Value = CallResult.getPointer(CGF);
     auto SafeElide = CGF.CGM.getIntrinsic(llvm::Intrinsic::coro_safe_elide);
