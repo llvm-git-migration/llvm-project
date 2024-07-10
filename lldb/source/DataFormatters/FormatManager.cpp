@@ -46,6 +46,7 @@ static constexpr FormatInfo g_format_infos[] = {
     {eFormatHex, 'x', "hex"},
     {eFormatHexUppercase, 'X', "uppercase hex"},
     {eFormatFloat, 'f', "float"},
+    {eFormatFloat128, '\0', "float128"},
     {eFormatOctal, 'o', "octal"},
     {eFormatOSType, 'O', "OSType"},
     {eFormatUnicode16, 'U', "unicode16"},
