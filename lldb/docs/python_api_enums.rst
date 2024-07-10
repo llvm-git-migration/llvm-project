@@ -295,6 +295,7 @@ Format
 .. py:data:: eFormatHex
 .. py:data:: eFormatHexUppercase
 .. py:data:: eFormatFloat
+.. py:data:: eFormatFloat128
 .. py:data:: eFormatOctal
 .. py:data:: eFormatOSType
 .. py:data:: eFormatUnicode16
@@ -1037,6 +1038,7 @@ BasicType
 .. py:data:: eBasicTypeFloat
 .. py:data:: eBasicTypeDouble
 .. py:data:: eBasicTypeLongDouble
+.. py:data:: eBasicTypeFloat128
 .. py:data:: eBasicTypeFloatComplex
 .. py:data:: eBasicTypeDoubleComplex
 .. py:data:: eBasicTypeLongDoubleComplex

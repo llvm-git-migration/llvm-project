@@ -170,6 +170,10 @@ enum Format {
   eFormatHex,
   eFormatHexUppercase,
   eFormatFloat,
+  eFormatFloat128, //< Disambiguate between 128-bit `long double` (which uses
+                   //< `eFormatFloat`) and `__float128` (which uses
+                   //< `eFormatFloat128`). If the value being formatted is not
+                   //< 128 bits, then this is identical to `eFormatFloat`.
   eFormatOctal,
   eFormatOSType, ///< OS character codes encoded into an integer 'PICT' 'text'
                  ///< etc...
@@ -195,10 +199,10 @@ enum Format {
                          ///< character arrays that can contain non printable
                          ///< characters
   eFormatAddressInfo,    ///< Describe what an address points to (func + offset
-                      ///< with file/line, symbol + offset, data, etc)
-  eFormatHexFloat,    ///< ISO C99 hex float string
-  eFormatInstruction, ///< Disassemble an opcode
-  eFormatVoid,        ///< Do not print this
+                         ///< with file/line, symbol + offset, data, etc)
+  eFormatHexFloat,       ///< ISO C99 hex float string
+  eFormatInstruction,    ///< Disassemble an opcode
+  eFormatVoid,           ///< Do not print this
   eFormatUnicode8,
   kNumFormats
 };
@@ -819,6 +823,7 @@ enum BasicType {
   eBasicTypeFloat,
   eBasicTypeDouble,
   eBasicTypeLongDouble,
+  eBasicTypeFloat128,
   eBasicTypeFloatComplex,
   eBasicTypeDoubleComplex,
   eBasicTypeLongDoubleComplex,
