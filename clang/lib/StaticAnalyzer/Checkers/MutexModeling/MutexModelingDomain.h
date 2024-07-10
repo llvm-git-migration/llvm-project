@@ -13,6 +13,9 @@
 #ifndef LLVM_CLANG_LIB_STATICANALYZER_CHECKERS_MUTEXMODELINGDOMAIN_H
 #define LLVM_CLANG_LIB_STATICANALYZER_CHECKERS_MUTEXMODELINGDOMAIN_H
 
+#include "MutexRegionExtractor.h"
+#include "clang/Basic/IdentifierTable.h"
+
 namespace clang {
 
 class Expr;
@@ -27,46 +30,52 @@ enum class EventKind { Init, Acquire, TryAcquire, Release, Destroy };
 
 enum class SyntaxKind { FirstArg, Member, RAII };
 
-enum class LockingSemanticsKind { PthreadSemantics, XNUSemantics };
+enum class SemanticsKind { NotApplicable = 0, PthreadSemantics, XNUSemantics };
 
 enum class LockStateKind {
   Unlocked,
   Locked,
   Destroyed,
   UntouchedAndPossiblyDestroyed,
-  UnlockedAndPossiblyDestroyed
+  UnlockedAndPossiblyDestroyed,
+  Error_DoubleInit,
+  Error_DoubleInitWhileLocked,
 };
 
 struct EventDescriptor {
+  MutexRegionExtractor Trigger;
   EventKind Kind{};
-  SyntaxKind Syntax{};
-  LockingSemanticsKind Semantics{};
+  SemanticsKind Semantics{};
 
-  [[nodiscard]] constexpr bool
-  operator==(const EventDescriptor &Other) const noexcept {
-    return Kind == Other.Kind && Syntax == Other.Syntax &&
-           Semantics == Other.Semantics;
-  }
+  // TODO: Modernize to spaceship when C++20 is available.
   [[nodiscard]] constexpr bool
   operator!=(const EventDescriptor &Other) const noexcept {
-    return !(*this == Other);
+    return !(Trigger == Other.Trigger) || Kind != Other.Kind ||
+           Semantics != Other.Semantics;
+  }
+  [[nodiscard]] constexpr bool
+  operator==(const EventDescriptor &Other) const noexcept {
+    return !(*this != Other);
   }
 };
 
 struct EventMarker {
-  EventDescriptor Event{};
-  LockStateKind LockState{};
+  EventKind Kind{};
+  SemanticsKind Semantics{};
+  const IdentifierInfo *Event;
   const clang::Expr *EventExpr{};
   const clang::ento::MemRegion *MutexRegion{};
 
-  [[nodiscard]] constexpr bool
-  operator==(const EventMarker &Other) const noexcept {
-    return Event == Other.Event && LockState == Other.LockState &&
-           EventExpr == Other.EventExpr && MutexRegion == Other.MutexRegion;
-  }
+  // TODO: Modernize to spaceship when C++20 is available.
   [[nodiscard]] constexpr bool
   operator!=(const EventMarker &Other) const noexcept {
-    return !(*this == Other);
+    return Event != Other.Event || Kind != Other.Kind ||
+           Semantics != Other.Semantics || LockState != Other.LockState ||
+           EventExpr != Other.EventExpr || MutexRegion != Other.MutexRegion;
+  }
+  [[nodiscard]] constexpr bool
+  operator==(const EventMarker &Other) const noexcept {
+    return !(*this != Other);
   }
 };
 
@@ -74,13 +83,18 @@ struct CritSectionMarker {
   const clang::Expr *BeginExpr;
   const clang::ento::MemRegion *MutexRegion;
 
-  [[nodiscard]] constexpr bool
-  operator==(const CritSectionMarker &Other) const noexcept {
-    return BeginExpr == Other.BeginExpr && MutexRegion == Other.MutexRegion;
-  }
+  explicit CritSectionMarker(const clang::Expr *BeginExpr,
+                             const clang::ento::MemRegion *MutexRegion)
+      : BeginExpr(BeginExpr), MutexRegion(MutexRegion) {}
+
+  // TODO: Modernize to spaceship when C++20 is available.
   [[nodiscard]] constexpr bool
   operator!=(const CritSectionMarker &Other) const noexcept {
-    return !(*this == Other);
+    return BeginExpr != Other.BeginExpr || MutexRegion != Other.MutexRegion;
+  }
+  [[nodiscard]] constexpr bool
+  operator==(const CritSectionMarker &Other) const noexcept {
+    return !(*this != Other);
   }
 };
 
