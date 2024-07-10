@@ -1036,6 +1036,10 @@ static Value *foldLoadFromIndexedGlobal(LoadInst &LI, IRBuilderBase &Builder) {
   for (uint64_t I = 0; I < ArrayElementCount; ++I) {
     Constant *Elt = Init->getAggregateElement(I);
 
+    // bail out if the array contains undef values
+    if (isa<UndefValue>(Elt))
+      return nullptr;
+
     if (auto *It = ValueMap.find(Elt); It != ValueMap.end()) {
       if (It->second == MultiMapIdx)
         continue;

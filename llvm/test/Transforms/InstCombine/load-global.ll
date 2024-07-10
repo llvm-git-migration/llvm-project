@@ -5,6 +5,7 @@
 @arr2_mutable = global [4 x i32] [i32 0, i32 0, i32 1, i32 1], align 4
 @arr2_external = external constant [4 x i32], align 4
 @arr2_uniform = constant [2 x i32] [i32 1, i32 1], align 4
+@arr2_undef = constant [2 x i32] [i32 1, i32 undef], align 4
 @arr3 = constant [3 x i32] [i32 0, i32 1, i32 1], align 4
 @arr3_alt = constant [3 x i32] [i32 1, i32 0, i32 1], align 4
 @arr3_uniform = constant [3 x i32] [i32 1, i32 1, i32 1], align 4
@@ -199,6 +200,20 @@ define i32 @fold_arr4_multimap(i64 %x) {
 ;
 entry:
   %arrayidx = getelementptr [4 x i32], ptr @arr4_multimap, i64 0, i64 %x
+  %val = load i32, ptr %arrayidx, align 4
+  ret i32 %val
+}
+
+define i32 @fold_arr2_undef(i64 %x) {
+; CHECK-LABEL: define i32 @fold_arr2_undef(
+; CHECK-SAME: i64 [[X:%.*]]) {
+; CHECK-NEXT:  [[ENTRY:.*:]]
+; CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr [2 x i32], ptr @arr2_undef, i64 0, i64 [[X]]
+; CHECK-NEXT:    [[VAL:%.*]] = load i32, ptr [[ARRAYIDX]], align 4
+; CHECK-NEXT:    ret i32 [[VAL]]
+;
+entry:
+  %arrayidx = getelementptr [2 x i32], ptr @arr2_undef, i64 0, i64 %x
   %val = load i32, ptr %arrayidx, align 4
   ret i32 %val
 }
