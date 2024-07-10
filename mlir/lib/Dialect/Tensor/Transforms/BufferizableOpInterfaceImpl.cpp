@@ -997,6 +997,11 @@ struct ParallelInsertSliceOpInterface
     rewriter.eraseOp(op);
     return success();
   }
+
+  LogicalResult resolveConflicts(Operation *op, RewriterBase &rewriter,
+                                 const AnalysisState &state) const {
+    return success();
+  }
 };
 
 /// Bufferization of tensor.splat. Bufferizes to a new allocation that is filled
