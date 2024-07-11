@@ -1628,17 +1628,24 @@ struct ChainedReduction final : OpRewritePattern<vector::ReductionOp> {
 // future.
 static VectorType dropNonScalableUnitDimFromType(VectorType inVecTy) {
   auto inVecShape = inVecTy.getShape();
+  auto inVecScalableDims = inVecTy.getScalableDims();
   SmallVector<int64_t> newShape;
   SmallVector<bool> newScalableDims;
-  for (auto [dim, isScalable] :
-       llvm::zip_equal(inVecShape, inVecTy.getScalableDims())) {
-    if (dim == 1 && !isScalable)
-      continue;
+  if (llvm::all_of(inVecShape, [](int64_t dim) { return dim == 1; }) &&
+      llvm::none_of(inVecScalableDims,
+                    [](bool isScalable) { return isScalable; })) {
+    newShape.push_back(1);
+    newScalableDims.push_back(false);
+  } else {
+    for (auto [dim, isScalable] :
+         llvm::zip_equal(inVecShape, inVecScalableDims)) {
+      if (dim == 1 && !isScalable)
+        continue;
 
-    newShape.push_back(dim);
-    newScalableDims.push_back(isScalable);
+      newShape.push_back(dim);
+      newScalableDims.push_back(isScalable);
+    }
   }
-
   return VectorType::get(newShape, inVecTy.getElementType(), newScalableDims);
 }
 
