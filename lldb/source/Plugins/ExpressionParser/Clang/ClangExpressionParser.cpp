@@ -43,8 +43,10 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -684,6 +686,14 @@ ClangExpressionParser::ClangExpressionParser(
   // appropriate for most situations.
   SetupTargetOpts(*m_compiler, *target_sp);
 
+  if ((target_machine == llvm::Triple::riscv64 && abi == "lp64f") ||
+      (target_machine == llvm::Triple::riscv32 && abi == "ilp32f"))
+    m_compiler->getTargetOpts().FeaturesAsWritten.emplace_back("+f");
+
+  if ((target_machine == llvm::Triple::riscv64 && abi == "lp64d") ||
+      (target_machine == llvm::Triple::riscv32 && abi == "ilp32d"))
+    m_compiler->getTargetOpts().FeaturesAsWritten.emplace_back("+d");
+
   // 3. Create and install the target on the compiler.
   m_compiler->createDiagnostics();
   // Limit the number of error diagnostics we emit.
@@ -1282,6 +1292,54 @@ ClangExpressionParser::ParseInternal(DiagnosticManager &diagnostic_manager,
   return num_errors;
 }
 
+std::string
+ClangExpressionParser::GetClangTargetABI(const ArchSpec &target_arch) {
+  if (target_arch.IsMIPS()) {
+    switch (target_arch.GetFlags() & ArchSpec::eMIPSABI_mask) {
+    case ArchSpec::eMIPSABI_N64:
+      return "n64";
+    case ArchSpec::eMIPSABI_N32:
+      return "n32";
+    case ArchSpec::eMIPSABI_O32:
+      return "o32";
+    default:
+      return {};
+    }
+  }
+
+  if (target_arch.GetTriple().isRISCV64()) {
+    switch (target_arch.GetFlags() & ArchSpec::eRISCV_float_abi_mask) {
+    case ArchSpec::eRISCV_float_abi_soft:
+      return "lp64";
+    case ArchSpec::eRISCV_float_abi_single:
+      return "lp64f";
+    case ArchSpec::eRISCV_float_abi_double:
+      return "lp64d";
+    case ArchSpec::eRISCV_float_abi_quad:
+      return "lp64q";
+    default:
+      return {};
+    }
+  }
+
+  if (target_arch.GetTriple().isRISCV32()) {
+    switch (target_arch.GetFlags() & ArchSpec::eRISCV_float_abi_mask) {
+    case ArchSpec::eRISCV_float_abi_soft:
+      return "ilp32";
+    case ArchSpec::eRISCV_float_abi_single:
+      return "ilp32f";
+    case ArchSpec::eRISCV_float_abi_double:
+      return "ilp32d";
+    case ArchSpec::eRISCV_float_abi_soft | ArchSpec::eRISCV_rve:
+      return "ilp32e";
+    default:
+      return {};
+    }
+  }
+
+  return {};
+}
+
 /// Applies the given Fix-It hint to the given commit.
 static void ApplyFixIt(const FixItHint &fixit, clang::edit::Commit &commit) {
   // This is cobbed from clang::Rewrite::FixItRewriter.
@@ -1439,6 +1497,26 @@ lldb_private::Status ClangExpressionParser::DoPrepareForExecution(
               __FUNCTION__, m_expr.FunctionName());
 
     custom_passes.EarlyPasses->run(*llvm_module_up);
+  }
+
+  std::unique_ptr<llvm::legacy::PassManager> arch_passes(nullptr);
+  if (lldb::TargetSP target_sp = exe_ctx.GetTargetSP()) {
+    Architecture *arch = target_sp->GetArchitecturePlugin();
+    if (arch) {
+      arch_passes =
+          arch->GetArchitectureCustomPasses(exe_ctx, m_expr.FunctionName());
+    }
+  }
+
+  if (arch_passes)
+    arch_passes->run(*llvm_module_up);
+
+  if (llvm_module_up->getNamedMetadata(
+          Architecture::s_target_incompatibility_marker)) {
+    err = Status::FromErrorStringWithFormat(
+        "%s - Architecture passes failure on function %s\n. Function "
+        "contains unsupported function calls",
+        __FUNCTION__, m_expr.FunctionName());
   }
 
   execution_unit_sp = std::make_shared<IRExecutionUnit>(
