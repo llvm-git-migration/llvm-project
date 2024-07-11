@@ -46,7 +46,8 @@ std::unique_ptr<Pass> createLowerDeallocationsPass();
 /// Adds the conversion pattern of the `bufferization.dealloc` operation to the
 /// given pattern set for use in other transformation passes.
 void populateBufferizationDeallocLoweringPattern(
-    RewritePatternSet &patterns, func::FuncOp deallocLibraryFunc);
+    RewritePatternSet &patterns,
+    const llvm::DenseMap<Operation *, func::FuncOp> &deallocHelperFuncMap);
 
 /// Construct the library function needed for the fully generic
 /// `bufferization.dealloc` lowering implemented in the LowerDeallocations pass.
