@@ -53,7 +53,8 @@ template <typename... Args> void LogMessage(const char *msg, Args &&...args) {
 bool DirectToIndirectFCR::canBeReplaced(const llvm::CallInst *ci) {
   assert(ci);
   auto *return_value_ty = ci->getType();
-  if (!(return_value_ty->isIntegerTy() || return_value_ty->isVoidTy())) {
+  if (!(return_value_ty->isIntegerTy() || return_value_ty->isVoidTy() ||
+        return_value_ty->isPointerTy())) {
     LogMessage("DirectToIndirectFCR: function {0} has unsupported "
                "return type ({1})\n",
                ci->getCalledFunction()->getName(),
@@ -63,7 +64,7 @@ bool DirectToIndirectFCR::canBeReplaced(const llvm::CallInst *ci) {
 
   const auto *arg = llvm::find_if_not(ci->args(), [](const auto &arg) {
     const auto *type = arg->getType();
-    return type->isIntegerTy();
+    return type->isIntegerTy() || type->isPointerTy();
   });
 
   if (arg != ci->arg_end()) {
