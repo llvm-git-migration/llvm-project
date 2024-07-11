@@ -155,6 +155,9 @@ Resolutions to C++ Defect Reports
 - Allow ``void{}`` as a prvalue of type ``void``.
   (`CWG2351: void{} <https://cplusplus.github.io/CWG/issues/2351.html>`_).
 
+- Clang now correctly implements lookup for the terminal name of a member-qualified nested-name-specifier.
+  (`CWG1835: Dependent member lookup before < <https://cplusplus.github.io/CWG/issues/1835.html>`_).
+
 C Language Changes
 ------------------
 
