@@ -1696,7 +1696,7 @@ static SectionType GetSectionTypeFromName(llvm::StringRef Name) {
   return llvm::StringSwitch<SectionType>(Name)
       .Case(".ARM.exidx", eSectionTypeARMexidx)
       .Case(".ARM.extab", eSectionTypeARMextab)
-      .Cases(".bss", ".tbss", eSectionTypeZeroFill)
+      .Cases(".bss", ".tbss", ".sbss", eSectionTypeZeroFill)
       .Case(".ctf", eSectionTypeDebug)
       .Cases(".data", ".tdata", eSectionTypeData)
       .Case(".eh_frame", eSectionTypeEHFrame)
