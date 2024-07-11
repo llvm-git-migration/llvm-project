@@ -30,6 +30,7 @@
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
 #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
 #include "llvm/CodeGen/MachineCycleAnalysis.h"
+#include "llvm/CodeGen/MachineDomTreeUpdater.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -728,6 +729,8 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
   RegClassInfo.runOnMachineFunction(MF);
   TargetPassConfig *PassConfig = &getAnalysis<TargetPassConfig>();
   EnableSinkAndFold = PassConfig->getEnableSinkAndFold();
+  MachineDomTreeUpdater MDTU(DT, PDT,
+                             MachineDomTreeUpdater::UpdateStrategy::Lazy);
 
   bool EverMadeChange = false;
 
@@ -743,7 +746,8 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 
     // If we have anything we marked as toSplit, split it now.
     for (const auto &Pair : ToSplit) {
-      auto NewSucc = Pair.first->SplitCriticalEdge(Pair.second, *this);
+      auto NewSucc =
+          Pair.first->SplitCriticalEdge(Pair.second, *this, nullptr, &MDTU);
       if (NewSucc != nullptr) {
         LLVM_DEBUG(dbgs() << " *** Splitting critical edge: "
                           << printMBBReference(*Pair.first) << " -- "
