@@ -700,15 +700,17 @@ static unsigned int getCodeAddrSpace(MemSDNode *N) {
   return NVPTX::PTXLdStInstCode::GENERIC;
 }
 
-struct MemorySemantic {
-  unsigned int sem = -1;
-  unsigned int sc_fence = -1;
-  MemorySemantic(unsigned int s) : sem(s) {}
-  MemorySemantic(unsigned int s, unsigned int f) : sem(s), sc_fence(f) {}
+struct OperationOrderings {
+  NVPTX::OrderingUnderlyingType instr_ordering;
+  NVPTX::OrderingUnderlyingType fence_ordering;
+  OperationOrderings(NVPTX::Ordering o = NVPTX::Ordering::NotAtomic,
+                     NVPTX::Ordering f = NVPTX::Ordering::NotAtomic)
+      : instr_ordering(static_cast<NVPTX::OrderingUnderlyingType>(o)),
+        fence_ordering(static_cast<NVPTX::OrderingUnderlyingType>(f)) {}
 };
 
-static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
-                                            const NVPTXSubtarget *Subtarget) {
+static OperationOrderings
+getOperationOrderings(MemSDNode *N, const NVPTXSubtarget *Subtarget) {
   AtomicOrdering Ordering = N->getSuccessOrdering();
   auto CodeAddrSpace = getCodeAddrSpace(N);
 
@@ -760,7 +762,7 @@ static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
   if (CodeAddrSpace == NVPTX::PTXLdStInstCode::LOCAL ||
       CodeAddrSpace == NVPTX::PTXLdStInstCode::CONSTANT ||
       CodeAddrSpace == NVPTX::PTXLdStInstCode::PARAM) {
-    return NVPTX::PTXLdStInstCode::NotAtomic;
+    return NVPTX::Ordering::NotAtomic;
   }
 
   // [2]: Atomics with Ordering different than Relaxed are not supported on
@@ -793,17 +795,19 @@ static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
   switch (Ordering) {
   case AtomicOrdering::NotAtomic:
     return N->isVolatile() && AddrGenericOrGlobalOrShared
-               ? NVPTX::PTXLdStInstCode::Volatile
-               : NVPTX::PTXLdStInstCode::NotAtomic;
+               ? NVPTX::Ordering::Volatile
+               : NVPTX::Ordering::NotAtomic;
   case AtomicOrdering::Monotonic:
     if (N->isVolatile())
-      return UseRelaxedMMIO                ? NVPTX::PTXLdStInstCode::RelaxedMMIO
-             : AddrGenericOrGlobalOrShared ? NVPTX::PTXLdStInstCode::Volatile
-                                           : NVPTX::PTXLdStInstCode::NotAtomic;
+      return UseRelaxedMMIO                ? NVPTX::Ordering::RelaxedMMIO
+             : AddrGenericOrGlobalOrShared ? NVPTX::Ordering::Volatile
+                                           : NVPTX::Ordering::NotAtomic;
     else
-      return HasMemoryOrdering             ? NVPTX::PTXLdStInstCode::Relaxed
-             : AddrGenericOrGlobalOrShared ? NVPTX::PTXLdStInstCode::Volatile
-                                           : NVPTX::PTXLdStInstCode::NotAtomic;
+      return HasMemoryOrdering             ? NVPTX::Ordering::Relaxed
+             : AddrGenericOrGlobalOrShared ? NVPTX::Ordering::Volatile
+                                           : NVPTX::Ordering::NotAtomic;
+  // case AtomicOrdering::Consume: // If LLVM ever provides this, lower it to
+  // Acquire.
   case AtomicOrdering::Acquire:
     if (!N->readMem()) {
       SmallString<256> Msg;
@@ -813,8 +817,8 @@ static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
       N->print(OS);
       report_fatal_error(OS.str());
     }
-    return AddrGenericOrGlobalOrShared ? NVPTX::PTXLdStInstCode::Acquire
-                                       : NVPTX::PTXLdStInstCode::NotAtomic;
+    return AddrGenericOrGlobalOrShared ? NVPTX::Ordering::Acquire
+                                       : NVPTX::Ordering::NotAtomic;
   case AtomicOrdering::Release:
     if (!N->writeMem()) {
       SmallString<256> Msg;
@@ -824,22 +828,30 @@ static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
       N->print(OS);
       report_fatal_error(OS.str());
     }
-    return AddrGenericOrGlobalOrShared ? NVPTX::PTXLdStInstCode::Release
-                                       : NVPTX::PTXLdStInstCode::NotAtomic;
+    return AddrGenericOrGlobalOrShared ? NVPTX::Ordering::Release
+                                       : NVPTX::Ordering::NotAtomic;
   case AtomicOrdering::AcquireRelease: {
     SmallString<256> Msg;
     raw_svector_ostream OS(Msg);
-    OS << "PTX only supports AcquireRelease Ordering on read-modify-write: "
+    OS << "NVPTX does not support AcquireRelease Ordering on read-modify-write "
+          "yet and PTX does not support it on loads or stores: "
        << N->getOperationName();
     N->print(OS);
     report_fatal_error(OS.str());
   }
   case AtomicOrdering::SequentiallyConsistent: {
-    unsigned int sem;
+    // LLVM-IR SequentiallyConsistent atomics map to a two-instruction PTX
+    // sequence including a "fence.sc.sco" and the memory instruction with an
+    // Ordering that differs from "sc": acq, rel, or acq_rel, depending on
+    // whether the memory operation is a read, write, or read-modify-write.
+    //
+    // This sets the ordering of the fence to SequentiallyConsistent, and
+    // sets the corresponding ordering for the instruction.
+    NVPTX::Ordering ord;
     if (N->readMem()) {
-      sem = NVPTX::PTXLdStInstCode::Acquire;
+      ord = NVPTX::Ordering::Acquire;
     } else if (N->writeMem()) {
-      sem = NVPTX::PTXLdStInstCode::Release;
+      ord = NVPTX::Ordering::Release;
     } else {
       SmallString<256> Msg;
       raw_svector_ostream OS(Msg);
@@ -849,22 +861,20 @@ static MemorySemantic getCodeMemorySemantic(MemSDNode *N,
       N->print(OS);
       report_fatal_error(OS.str());
     }
-    return addrGenericOrGlobalOrShared
-               ? MemorySemantic(sem, NVPTX::PTXLdStInstCode::SeqCstFence)
-               : MemorySemantic(NVPTX::PTXLdStInstCode::NotAtomic);
+    return AddrGenericOrGlobalOrShared
+               ? OperationOrderings(ord,
+                                    NVPTX::Ordering::SequentiallyConsistent)
+               : OperationOrderings(NVPTX::Ordering::NotAtomic);
   }
   case AtomicOrdering::Unordered:
-  default: {
-    // TODO: support AcquireRelease and SequentiallyConsistent
-    SmallString<256> Msg;
-    raw_svector_ostream OS(Msg);
-    OS << "NVPTX backend does not support AtomicOrdering \""
-       << toIRString(Ordering) << "\" yet.";
-    report_fatal_error(OS.str());
-  }
+    break;
   }
 
-  report_fatal_error("unreachable");
+  SmallString<256> Msg;
+  raw_svector_ostream OS(Msg);
+  OS << "NVPTX backend does not support AtomicOrdering \""
+     << toIRString(Ordering) << "\" yet.";
+  report_fatal_error(OS.str());
 }
 
 static bool canLowerToLDG(MemSDNode *N, const NVPTXSubtarget &Subtarget,
@@ -1076,7 +1086,8 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
   }
 
   // Memory Semantic Setting
-  auto [CodeMemorySem, SeqCstFence] = getCodeMemorySemantic(LD, Subtarget);
+  auto [InstructionOrdering, FenceOrdering] =
+      getOperationOrderings(LD, Subtarget);
 
   unsigned int PointerSize =
       CurDAG->getDataLayout().getPointerSizeInBits(LD->getAddressSpace());
@@ -1121,8 +1132,8 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
                              NVPTX::LD_f32_avar, NVPTX::LD_f64_avar);
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(fromType, dl),
@@ -1137,8 +1148,8 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
                              NVPTX::LD_f32_asi, NVPTX::LD_f64_asi);
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(fromType, dl),
@@ -1160,8 +1171,8 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
                                NVPTX::LD_f32_ari, NVPTX::LD_f64_ari);
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(fromType, dl),
@@ -1182,8 +1193,8 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
                                NVPTX::LD_f32_areg, NVPTX::LD_f64_areg);
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(fromType, dl),
@@ -1227,7 +1238,8 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
       CurDAG->getDataLayout().getPointerSizeInBits(MemSD->getAddressSpace());
 
   // Memory Semantic Setting
-  auto [CodeMemorySem, SeqCstFence] = getCodeMemorySemantic(MemSD, Subtarget);
+  auto [InstructionOrdering, FenceOrdering] =
+      getOperationOrderings(MemSD, Subtarget);
 
   // Vector Setting
   MVT SimpleVT = LoadedVT.getSimpleVT();
@@ -1294,8 +1306,8 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
     }
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, DL),
-                     getI32Imm(CodeMemorySem, DL),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, DL),
+                     getI32Imm(InstructionOrdering, DL),
                      getI32Imm(CodeAddrSpace, DL),
                      getI32Imm(VecType, DL),
                      getI32Imm(FromType, DL),
@@ -1324,8 +1336,8 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
     }
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, DL),
-                     getI32Imm(CodeMemorySem, DL),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, DL),
+                     getI32Imm(InstructionOrdering, DL),
                      getI32Imm(CodeAddrSpace, DL),
                      getI32Imm(VecType, DL),
                      getI32Imm(FromType, DL),
@@ -1375,8 +1387,8 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
     }
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, DL),
-                     getI32Imm(CodeMemorySem, DL),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, DL),
+                     getI32Imm(InstructionOrdering, DL),
                      getI32Imm(CodeAddrSpace, DL),
                      getI32Imm(VecType, DL),
                      getI32Imm(FromType, DL),
@@ -1426,8 +1438,8 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
     }
     if (!Opcode)
       return false;
-    SDValue Ops[] = {getI32Imm(SeqCstFence, DL),
-                     getI32Imm(CodeMemorySem, DL),
+    SDValue Ops[] = {getI32Imm(FenceOrdering, DL),
+                     getI32Imm(InstructionOrdering, DL),
                      getI32Imm(CodeAddrSpace, DL),
                      getI32Imm(VecType, DL),
                      getI32Imm(FromType, DL),
@@ -1882,7 +1894,8 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
       CurDAG->getDataLayout().getPointerSizeInBits(ST->getAddressSpace());
 
   // Memory Semantic Setting
-  auto [CodeMemorySem, SeqCstFence] = getCodeMemorySemantic(ST, Subtarget);
+  auto [InstructionOrdering, FenceOrdering] =
+      getOperationOrderings(ST, Subtarget);
 
   // Vector Setting
   MVT SimpleVT = StoreVT.getSimpleVT();
@@ -1919,8 +1932,8 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
     if (!Opcode)
       return false;
     SDValue Ops[] = {Value,
-                     getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+                     getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(toType, dl),
@@ -1937,8 +1950,8 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
     if (!Opcode)
       return false;
     SDValue Ops[] = {Value,
-                     getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+                     getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(toType, dl),
@@ -1963,8 +1976,8 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
       return false;
 
     SDValue Ops[] = {Value,
-                     getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+                     getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(toType, dl),
@@ -1986,8 +1999,8 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
     if (!Opcode)
       return false;
     SDValue Ops[] = {Value,
-                     getI32Imm(SeqCstFence, dl),
-                     getI32Imm(CodeMemorySem, dl),
+                     getI32Imm(FenceOrdering, dl),
+                     getI32Imm(InstructionOrdering, dl),
                      getI32Imm(CodeAddrSpace, dl),
                      getI32Imm(vecType, dl),
                      getI32Imm(toType, dl),
@@ -2027,7 +2040,8 @@ bool NVPTXDAGToDAGISel::tryStoreVector(SDNode *N) {
       CurDAG->getDataLayout().getPointerSizeInBits(MemSD->getAddressSpace());
 
   // Memory Semantic Setting
-  auto [CodeMemorySem, SeqCstFence] = getCodeMemorySemantic(MemSD, Subtarget);
+  auto [InstructionOrdering, FenceOrdering] =
+      getOperationOrderings(MemSD, Subtarget);
 
   // Type Setting: toType + toTypeWidth
   // - for integer type, always use 'u'
@@ -2069,8 +2083,8 @@ bool NVPTXDAGToDAGISel::tryStoreVector(SDNode *N) {
     ToTypeWidth = 32;
   }
 
-  StOps.push_back(getI32Imm(SeqCstFence, DL));
-  StOps.push_back(getI32Imm(CodeMemorySem, DL));
+  StOps.push_back(getI32Imm(FenceOrdering, DL));
+  StOps.push_back(getI32Imm(InstructionOrdering, DL));
   StOps.push_back(getI32Imm(CodeAddrSpace, DL));
   StOps.push_back(getI32Imm(VecType, DL));
   StOps.push_back(getI32Imm(ToType, DL));
