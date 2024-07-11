@@ -59,42 +59,55 @@ public:
   NVPTXSubtarget(const Triple &TT, const std::string &CPU,
                  const std::string &FS, const NVPTXTargetMachine &TM);
 
-  const TargetFrameLowering *getFrameLowering() const override {
+  inline const TargetFrameLowering *getFrameLowering() const override {
     return &FrameLowering;
   }
-  const NVPTXInstrInfo *getInstrInfo() const override { return &InstrInfo; }
-  const NVPTXRegisterInfo *getRegisterInfo() const override {
+  inline const NVPTXInstrInfo *getInstrInfo() const override {
+    return &InstrInfo;
+  }
+  inline const NVPTXRegisterInfo *getRegisterInfo() const override {
     return &InstrInfo.getRegisterInfo();
   }
-  const NVPTXTargetLowering *getTargetLowering() const override {
+  inline const NVPTXTargetLowering *getTargetLowering() const override {
     return &TLInfo;
   }
-  const SelectionDAGTargetInfo *getSelectionDAGInfo() const override {
+  inline const SelectionDAGTargetInfo *getSelectionDAGInfo() const override {
     return &TSInfo;
   }
 
-  bool hasAtomAddF64() const { return SmVersion >= 60; }
-  bool hasAtomScope() const { return SmVersion >= 60; }
-  bool hasAtomBitwise64() const { return SmVersion >= 32; }
-  bool hasAtomMinMax64() const { return SmVersion >= 32; }
-  bool hasLDG() const { return SmVersion >= 32; }
+  inline bool hasAtomAddF64() const { return SmVersion >= 60; }
+  inline bool hasAtomScope() const { return SmVersion >= 60; }
+  inline bool hasAtomBitwise64() const { return SmVersion >= 32; }
+  inline bool hasAtomMinMax64() const { return SmVersion >= 32; }
+  inline bool hasLDG() const { return SmVersion >= 32; }
   inline bool hasHWROT32() const { return SmVersion >= 32; }
   bool hasImageHandles() const;
-  bool hasFP16Math() const { return SmVersion >= 53; }
-  bool hasBF16Math() const { return SmVersion >= 80; }
+  inline bool hasFP16Math() const { return SmVersion >= 53; }
+  inline bool hasBF16Math() const { return SmVersion >= 80; }
   bool allowFP16Math() const;
-  bool hasMaskOperator() const { return PTXVersion >= 71; }
-  bool hasNoReturn() const { return SmVersion >= 30 && PTXVersion >= 64; }
-  unsigned int getFullSmVersion() const { return FullSmVersion; }
-  unsigned int getSmVersion() const { return getFullSmVersion() / 10; }
+  inline bool hasMaskOperator() const { return PTXVersion >= 71; }
+  inline bool hasNoReturn() const {
+    return SmVersion >= 30 && PTXVersion >= 64;
+  }
+  // Does SM & PTX support memory orderings (weak and atomic: relaxed, acquire,
+  // release, acq_rel, sc) ?
+  inline bool hasMemoryOrdering() const {
+    return SmVersion >= 70 && PTXVersion >= 60;
+  }
+  // Does SM & PTX support atomic relaxed MMIO operations ?
+  inline bool hasRelaxedMMIO() const {
+    return SmVersion >= 70 && PTXVersion >= 82;
+  }
+  inline unsigned int getFullSmVersion() const { return FullSmVersion; }
+  inline unsigned int getSmVersion() const { return getFullSmVersion() / 10; }
   // GPUs with "a" suffix have include architecture-accelerated features that
   // are supported on the specified architecture only, hence such targets do not
   // follow the onion layer model. hasAAFeatures() allows distinguishing such
   // GPU variants from the base GPU architecture.
   // - 0 represents base GPU model,
   // - non-zero value identifies particular architecture-accelerated variant.
-  bool hasAAFeatures() const { return getFullSmVersion() % 10; }
-  std::string getTargetName() const { return TargetName; }
+  inline bool hasAAFeatures() const { return getFullSmVersion() % 10; }
+  inline std::string getTargetName() const { return TargetName; }
 
   // Get maximum value of required alignments among the supported data types.
   // From the PTX ISA doc, section 8.2.3:
@@ -103,9 +116,9 @@ public:
   //  of 64 bits. Memory operations with a vector data-type are modelled as a
   //  set of equivalent memory operations with a scalar data-type, executed in
   //  an unspecified order on the elements in the vector.
-  unsigned getMaxRequiredAlignment() const { return 8; }
+  inline unsigned getMaxRequiredAlignment() const { return 8; }
 
-  unsigned getPTXVersion() const { return PTXVersion; }
+  inline unsigned getPTXVersion() const { return PTXVersion; }
 
   NVPTXSubtarget &initializeSubtargetDependencies(StringRef CPU, StringRef FS);
   void ParseSubtargetFeatures(StringRef CPU, StringRef TuneCPU, StringRef FS);
