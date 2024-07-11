@@ -270,6 +270,8 @@ private:
     unsigned ToAS = ASC->getDestAddressSpace();
     return (FromAS == ToAS) || IC.isValidAddrSpaceCast(FromAS, ToAS);
   }
+  bool foundASC(const Value *Op) const;
+  bool hasConflictingAS(const SelectInst *I) const;
 
   SmallPtrSet<Instruction *, 32> ValuesToRevisit;
   SmallSetVector<Instruction *, 4> Worklist;
@@ -279,6 +281,34 @@ private:
   unsigned FromAS;
 };
 } // end anonymous namespace
+
+/// Return true iff Op is an addrspacecast whose source addrspace
+/// is that of the root.
+bool PointerReplacer::foundASC(const Value *Op) const {
+  if (auto *ASC = dyn_cast<AddrSpaceCastInst>(Op)) {
+    auto SelectOpAS = ASC->getSrcAddressSpace();
+    auto AllocaAS = Root.getType()->getPointerAddressSpace();
+    auto FoundASC = SelectOpAS == AllocaAS;
+    return FoundASC;
+  } else
+    return false;
+}
+
+/// Return true iff there is only one ASC from root's addrspace
+/// as an operand to the select.
+bool PointerReplacer::hasConflictingAS(const SelectInst *I) const {
+  auto *SI = cast<SelectInst>(I);
+  auto *TI = SI->getTrueValue();
+  auto *FI = SI->getFalseValue();
+
+  bool FoundTrueASC = foundASC(TI);
+  bool FoundFalseASC = foundASC(FI);
+
+  bool HasConflictingAS = FoundFalseASC ^ FoundTrueASC;
+  LLVM_DEBUG(dbgs() << "HasConflictingAS: " << HasConflictingAS << "{ False: "
+                    << FoundFalseASC << ", True: " << FoundTrueASC << " }: "; I->dump());
+  return HasConflictingAS;
+}
 
 bool PointerReplacer::collectUsers() {
   if (!collectUsersRecursive(Root))
@@ -290,6 +320,7 @@ bool PointerReplacer::collectUsers() {
   for (auto *Inst : ValuesToRevisit)
     if (!Worklist.contains(Inst))
       return false;
+
   return true;
 }
 
@@ -322,6 +353,8 @@ bool PointerReplacer::collectUsersRecursive(Instruction &I) {
     } else if (auto *SI = dyn_cast<SelectInst>(Inst)) {
       if (!isa<Instruction>(SI->getTrueValue()) ||
           !isa<Instruction>(SI->getFalseValue()))
+        return false;
+      if (hasConflictingAS(SI))
         return false;
 
       if (!isAvailable(cast<Instruction>(SI->getTrueValue())) ||
