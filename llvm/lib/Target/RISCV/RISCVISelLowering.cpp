@@ -295,11 +295,6 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
       }
     }
     setOperationAction(ISD::SADDO, MVT::i32, Custom);
-  } else {
-    setLibcallName(
-        {RTLIB::SHL_I128, RTLIB::SRL_I128, RTLIB::SRA_I128, RTLIB::MUL_I128},
-        nullptr);
-    setLibcallName(RTLIB::MULO_I64, nullptr);
   }
 
   if (!Subtarget.hasStdExtZmmul()) {
