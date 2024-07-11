@@ -290,6 +290,85 @@ void TargetLoweringBase::InitLibcalls(const Triple &TT) {
     setLibcallName(RTLIB::FREXP_F128, nullptr);
     setLibcallName(RTLIB::FREXP_PPCF128, nullptr);
   }
+
+  // Disable most libcalls on AMDGPU.
+  if (TT.isAMDGPU()) {
+    for (int I = 0; I < RTLIB::UNKNOWN_LIBCALL; ++I) {
+      if (I < RTLIB::ATOMIC_LOAD || I > RTLIB::ATOMIC_FETCH_NAND_16)
+        setLibcallName(static_cast<RTLIB::Libcall>(I), nullptr);
+    }
+  }
+
+  if (TT.isLoongArch()) {
+    if (!TT.isLoongArch64()) {
+      setLibcallName(RTLIB::MUL_I128, nullptr);
+      setLibcallName(RTLIB::MULO_I64, nullptr);
+    }
+
+    // The MULO libcall is not part of libgcc, only compiler-rt.
+    setLibcallName(RTLIB::MULO_I128, nullptr);
+  }
+
+  if ((TT.isAArch64() || TT.isX86() || TT.isARM() || TT.isThumb()) &&
+      TT.isOSMSVCRT()) {
+    // MSVCRT doesn't have powi; fall back to pow
+    setLibcallName(RTLIB::POWI_F32, nullptr);
+    setLibcallName(RTLIB::POWI_F64, nullptr);
+  }
+
+  if (TT.isARM() || TT.isThumb()) {
+    // These libcalls are not available in 32-bit.
+    setLibcallName(RTLIB::SHL_I128, nullptr);
+    setLibcallName(RTLIB::SRL_I128, nullptr);
+    setLibcallName(RTLIB::SRA_I128, nullptr);
+    setLibcallName(RTLIB::MUL_I128, nullptr);
+    setLibcallName(RTLIB::MULO_I64, nullptr);
+    setLibcallName(RTLIB::MULO_I128, nullptr);
+  }
+
+  if (TT.getArch() == Triple::ArchType::avr) {
+    // Division rtlib functions (not supported), use divmod functions instead
+    setLibcallName(RTLIB::SDIV_I8, nullptr);
+    setLibcallName(RTLIB::SDIV_I16, nullptr);
+    setLibcallName(RTLIB::SDIV_I32, nullptr);
+    setLibcallName(RTLIB::UDIV_I8, nullptr);
+    setLibcallName(RTLIB::UDIV_I16, nullptr);
+    setLibcallName(RTLIB::UDIV_I32, nullptr);
+
+    // Modulus rtlib functions (not supported), use divmod functions instead
+    setLibcallName(RTLIB::SREM_I8, nullptr);
+    setLibcallName(RTLIB::SREM_I16, nullptr);
+    setLibcallName(RTLIB::SREM_I32, nullptr);
+    setLibcallName(RTLIB::UREM_I8, nullptr);
+    setLibcallName(RTLIB::UREM_I16, nullptr);
+    setLibcallName(RTLIB::UREM_I32, nullptr);
+  }
+
+  if (TT.getArch() == Triple::ArchType::hexagon) {
+    // These cause problems when the shift amount is non-constant.
+    setLibcallName(RTLIB::SHL_I128, nullptr);
+    setLibcallName(RTLIB::SRL_I128, nullptr);
+    setLibcallName(RTLIB::SRA_I128, nullptr);
+  }
+
+  if (TT.isMIPS32() || TT.isPPC32() || TT.isRISCV32() || TT.isSPARC32() ||
+      TT.getArch() == Triple::ArchType::x86) {
+    // These libcalls are not available in 32-bit.
+    setLibcallName(RTLIB::SHL_I128, nullptr);
+    setLibcallName(RTLIB::SRL_I128, nullptr);
+    setLibcallName(RTLIB::SRA_I128, nullptr);
+    setLibcallName(RTLIB::MUL_I128, nullptr);
+    setLibcallName(RTLIB::MULO_I64, nullptr);
+  }
+
+  if (TT.isMIPS() || TT.isPPC() || TT.isSPARC() || TT.isX86())
+    setLibcallName(RTLIB::MULO_I128, nullptr);
+
+  if (TT.isSystemZ()) {
+    setLibcallName(RTLIB::SRL_I128, nullptr);
+    setLibcallName(RTLIB::SHL_I128, nullptr);
+    setLibcallName(RTLIB::SRA_I128, nullptr);
+  }
 }
 
 /// GetFPLibCall - Helper to return the right libcall for the given floating
