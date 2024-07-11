@@ -24,6 +24,7 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
+#include "llvm/CodeGen/MachineDomTreeUpdater.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -123,6 +124,7 @@ namespace {
     const TargetRegisterInfo *TRI = nullptr;
     const MachineFrameInfo *MFI = nullptr;
     MachineRegisterInfo *MRI = nullptr;
+    MachineDomTreeUpdater *MDTU = nullptr;
     TargetSchedModel SchedModel;
     bool PreRegAlloc = false;
     bool HasProfileData = false;
@@ -377,6 +379,10 @@ bool MachineLICMBase::runOnMachineFunction(MachineFunction &MF) {
   MLI = &getAnalysis<MachineLoopInfoWrapperPass>().getLI();
   DT = &getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree();
   AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+
+  MachineDomTreeUpdater Updater(DT,
+                                MachineDomTreeUpdater::UpdateStrategy::Lazy);
+  MDTU = &Updater;
 
   if (HoistConstLoads)
     InitializeLoadsHoistableLoops();
@@ -1704,7 +1710,8 @@ MachineLICMBase::getCurPreheader(MachineLoop *CurLoop,
         return nullptr;
       }
 
-      CurPreheader = Pred->SplitCriticalEdge(CurLoop->getHeader(), *this);
+      CurPreheader =
+          Pred->SplitCriticalEdge(CurLoop->getHeader(), *this, nullptr, MDTU);
       if (!CurPreheader) {
         CurPreheader = reinterpret_cast<MachineBasicBlock *>(-1);
         return nullptr;
