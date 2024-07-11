@@ -499,8 +499,10 @@ void replaceSymbol(Symbol *s, ArgT &&... arg) {
   assert(static_cast<Symbol *>(static_cast<T *>(nullptr)) == nullptr &&
          "Not a Symbol");
   bool canInline = s->canInline;
+  bool isUsedInRegularObj = s->isUsedInRegularObj;
   new (s) T(std::forward<ArgT>(arg)...);
   s->canInline = canInline;
+  s->isUsedInRegularObj = isUsedInRegularObj;
 }
 } // namespace coff
 
