@@ -636,7 +636,8 @@ public:
   // Generate a generic parser and printer for the enum.
   std::string qualName =
       std::string(formatv("{0}::{1}", cppNamespace, enumName));
-  emitParserPrinter(enumAttr, qualName, cppNamespace, os);
+  if (enumAttr.genParser())
+    emitParserPrinter(enumAttr, qualName, cppNamespace, os);
 
   // Emit DenseMapInfo for this enum class
   emitDenseMapInfo(qualName, underlyingType, cppNamespace, os);
