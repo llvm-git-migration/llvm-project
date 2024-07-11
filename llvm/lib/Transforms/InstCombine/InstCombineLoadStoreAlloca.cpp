@@ -270,15 +270,54 @@ private:
     unsigned ToAS = ASC->getDestAddressSpace();
     return (FromAS == ToAS) || IC.isValidAddrSpaceCast(FromAS, ToAS);
   }
+  bool FoundASC(const Value *TrueOp) const;
+  bool hasConflictingAS(const Instruction *I) const;
 
   SmallPtrSet<Instruction *, 32> ValuesToRevisit;
+  SmallPtrSet<Instruction *, 32> ValuesToRevisitAS;
   SmallSetVector<Instruction *, 4> Worklist;
   MapVector<Value *, Value *> WorkMap;
   InstCombinerImpl &IC;
   Instruction &Root;
   unsigned FromAS;
+  bool HasASC = false;
 };
 } // end anonymous namespace
+
+/// Return true iff valid addrspacecast is found on
+/// path from end of branch to root of tree.
+bool PointerReplacer::FoundASC(const Value *Op) const {
+  const Instruction *TI;
+  while ((TI = dyn_cast<Instruction>(Op)) != &Root) {
+    if (auto *ASC = dyn_cast<AddrSpaceCastInst>(Op))
+      if (isEqualOrValidAddrSpaceCast(ASC, FromAS))
+        return true;
+    if (TI && isa<Instruction>(TI->getOperand(0)))
+      Op = TI->getOperand(0);
+    else if (TI)
+      Op = TI->getOperand(1);
+    else break;
+  }
+  return false;
+}
+
+/// Return true iff valid ASCs are found on both true and false
+/// paths from the select to the root alloca.
+bool PointerReplacer::hasConflictingAS(const Instruction *I) const {
+  auto *SI = cast<SelectInst>(I);
+  auto *TI = SI->getTrueValue();
+  auto *FI = SI->getFalseValue();
+
+  bool FoundTrueASC = FoundASC(TI);
+  bool FoundFalseASC = FoundASC(FI);
+
+  bool HasConflictingAS = !FoundFalseASC || !FoundTrueASC;
+  LLVM_DEBUG(
+    dbgs() << "HasConflictingAS: " << HasConflictingAS
+           << "{ False: " << FoundFalseASC
+           << ", True: "  << FoundTrueASC << " }\n");
+  return HasConflictingAS;
+}
 
 bool PointerReplacer::collectUsers() {
   if (!collectUsersRecursive(Root))
@@ -290,6 +329,13 @@ bool PointerReplacer::collectUsers() {
   for (auto *Inst : ValuesToRevisit)
     if (!Worklist.contains(Inst))
       return false;
+  // For any select found, ensure that addrspacecast is
+  // present and valid on both branches.
+  if (HasASC)
+    for (auto *Inst : ValuesToRevisitAS)
+      if (hasConflictingAS(Inst))
+        return false;
+
   return true;
 }
 
@@ -329,6 +375,14 @@ bool PointerReplacer::collectUsersRecursive(Instruction &I) {
         ValuesToRevisit.insert(Inst);
         continue;
       }
+
+      auto *TruePtr = dyn_cast<PointerType>(SI->getTrueValue()->getType());
+      auto *FalsePtr = dyn_cast<PointerType>(SI->getFalseValue()->getType());
+      if (TruePtr && FalsePtr) {
+        if (!IC.isValidAddrSpaceCast(TruePtr->getAddressSpace(), FalsePtr->getAddressSpace()))
+          ValuesToRevisitAS.insert(SI);
+      }
+
       Worklist.insert(SI);
       if (!collectUsersRecursive(*SI))
         return false;
@@ -342,6 +396,7 @@ bool PointerReplacer::collectUsersRecursive(Instruction &I) {
       Worklist.insert(Inst);
     } else if (isEqualOrValidAddrSpaceCast(Inst, FromAS)) {
       Worklist.insert(Inst);
+      HasASC = true;
       if (!collectUsersRecursive(*Inst))
         return false;
     } else if (Inst->isLifetimeStartOrEnd()) {
