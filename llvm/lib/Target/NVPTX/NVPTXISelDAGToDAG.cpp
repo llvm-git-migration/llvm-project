@@ -701,12 +701,12 @@ static unsigned int getCodeAddrSpace(MemSDNode *N) {
 }
 
 struct OperationOrderings {
-  NVPTX::OrderingUnderlyingType instr_ordering;
-  NVPTX::OrderingUnderlyingType fence_ordering;
+  NVPTX::OrderingUnderlyingType InstrOrdering;
+  NVPTX::OrderingUnderlyingType FenceOrdering;
   OperationOrderings(NVPTX::Ordering o = NVPTX::Ordering::NotAtomic,
                      NVPTX::Ordering f = NVPTX::Ordering::NotAtomic)
-      : instr_ordering(static_cast<NVPTX::OrderingUnderlyingType>(o)),
-        fence_ordering(static_cast<NVPTX::OrderingUnderlyingType>(f)) {}
+      : InstrOrdering(static_cast<NVPTX::OrderingUnderlyingType>(o)),
+        FenceOrdering(static_cast<NVPTX::OrderingUnderlyingType>(f)) {}
 };
 
 static OperationOrderings
@@ -879,11 +879,11 @@ getOperationOrderings(MemSDNode *N, const NVPTXSubtarget *Subtarget) {
     //
     // This sets the ordering of the fence to SequentiallyConsistent, and
     // sets the corresponding ordering for the instruction.
-    NVPTX::Ordering ord;
+    NVPTX::Ordering InstrOrder;
     if (N->readMem()) {
-      ord = NVPTX::Ordering::Acquire;
+      InstrOrder = NVPTX::Ordering::Acquire;
     } else if (N->writeMem()) {
-      ord = NVPTX::Ordering::Release;
+      InstrOrder = NVPTX::Ordering::Release;
     } else {
       SmallString<256> Msg;
       raw_svector_ostream OS(Msg);
@@ -894,7 +894,7 @@ getOperationOrderings(MemSDNode *N, const NVPTXSubtarget *Subtarget) {
       report_fatal_error(OS.str());
     }
     return AddrGenericOrGlobalOrShared
-               ? OperationOrderings(ord,
+               ? OperationOrderings(InstrOrder,
                                     NVPTX::Ordering::SequentiallyConsistent)
                : OperationOrderings(NVPTX::Ordering::NotAtomic);
   }
