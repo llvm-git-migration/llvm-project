@@ -1167,12 +1167,10 @@ struct DSEState {
   }
 
   /// Returns true if \p Def is not read before returning from the function.
-  bool isWriteAtEndOfFunction(MemoryDef *Def) {
+  bool isWriteAtEndOfFunction(MemoryDef *Def, MemoryLocation DefLoc) {
     LLVM_DEBUG(dbgs() << "  Check if def " << *Def << " ("
                       << *Def->getMemoryInst()
                       << ") is at the end the function \n");
-
-    MemoryLocation DefLoc = *getLocForWrite(Def->getMemoryInst());
     SmallVector<MemoryAccess *, 4> WorkList;
     SmallPtrSet<MemoryAccess *, 8> Visited;
 
@@ -1833,7 +1831,7 @@ struct DSEState {
         if (!isInvisibleToCallerAfterRet(UO))
           continue;
 
-        if (isWriteAtEndOfFunction(Def)) {
+        if (isWriteAtEndOfFunction(Def, *DefLoc)) {
           // See through pointer-to-pointer bitcasts
           LLVM_DEBUG(dbgs() << "   ... MemoryDef is not accessed until the end "
                                "of the function\n");
