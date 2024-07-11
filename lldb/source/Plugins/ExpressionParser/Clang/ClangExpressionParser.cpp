@@ -43,8 +43,10 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -407,24 +409,50 @@ static void SetupDefaultClangDiagnostics(CompilerInstance &compiler) {
 /// \return
 ///     A string representing target ABI for the current architecture.
 static std::string GetClangTargetABI(const ArchSpec &target_arch) {
-  std::string abi;
-
   if (target_arch.IsMIPS()) {
     switch (target_arch.GetFlags() & ArchSpec::eMIPSABI_mask) {
     case ArchSpec::eMIPSABI_N64:
-      abi = "n64";
-      break;
+      return "n64";
     case ArchSpec::eMIPSABI_N32:
-      abi = "n32";
-      break;
+      return "n32";
     case ArchSpec::eMIPSABI_O32:
-      abi = "o32";
-      break;
+      return "o32";
     default:
-      break;
+      return {};
     }
   }
-  return abi;
+
+  if (target_arch.GetTriple().isRISCV64()) {
+    switch (target_arch.GetFlags() & ArchSpec::eRISCV_float_abi_mask) {
+    case ArchSpec::eRISCV_float_abi_soft:
+      return "lp64";
+    case ArchSpec::eRISCV_float_abi_single:
+      return "lp64f";
+    case ArchSpec::eRISCV_float_abi_double:
+      return "lp64d";
+    case ArchSpec::eRISCV_float_abi_quad:
+      return "lp64q";
+    default:
+      return {};
+    }
+  }
+
+  if (target_arch.GetTriple().isRISCV32()) {
+    switch (target_arch.GetFlags() & ArchSpec::eRISCV_float_abi_mask) {
+    case ArchSpec::eRISCV_float_abi_soft:
+      return "ilp32";
+    case ArchSpec::eRISCV_float_abi_single:
+      return "ilp32f";
+    case ArchSpec::eRISCV_float_abi_double:
+      return "ilp32d";
+    case ArchSpec::eRISCV_float_abi_soft | ArchSpec::eRISCV_rve:
+      return "ilp32e";
+    default:
+      return {};
+    }
+  }
+
+  return {};
 }
 
 static void SetupTargetOpts(CompilerInstance &compiler,
@@ -471,6 +499,18 @@ static void SetupTargetOpts(CompilerInstance &compiler,
   // Set the target ABI
   if (std::string abi = GetClangTargetABI(target_arch); !abi.empty())
     compiler.getTargetOpts().ABI = std::move(abi);
+
+  if ((target_machine == llvm::Triple::riscv64 &&
+       compiler.getTargetOpts().ABI == "lp64f") ||
+      (target_machine == llvm::Triple::riscv32 &&
+       compiler.getTargetOpts().ABI == "ilp32f"))
+    m_compiler->getTargetOpts().FeaturesAsWritten.emplace_back("+f");
+
+  if ((target_machine == llvm::Triple::riscv64 &&
+       compiler.getTargetOpts().ABI == "lp64d") ||
+      (target_machine == llvm::Triple::riscv32 &&
+       compiler.getTargetOpts().ABI == "ilp32d"))
+    m_compiler->getTargetOpts().FeaturesAsWritten.emplace_back("+d");
 }
 
 static void SetupLangOpts(CompilerInstance &compiler,
@@ -722,7 +762,7 @@ ClangExpressionParser::ClangExpressionParser(
   m_compiler->getCodeGenOpts().EmitDeclMetadata = true;
   m_compiler->getCodeGenOpts().InstrumentFunctions = false;
   m_compiler->getCodeGenOpts().setFramePointer(
-                                    CodeGenOptions::FramePointerKind::All);
+      CodeGenOptions::FramePointerKind::All);
   if (generate_debug_info)
     m_compiler->getCodeGenOpts().setDebugInfo(codegenoptions::FullDebugInfo);
   else
@@ -736,7 +776,7 @@ ClangExpressionParser::ClangExpressionParser(
   // FIXME: We shouldn't need to do this, the target should be immutable once
   // created. This complexity should be lifted elsewhere.
   m_compiler->getTarget().adjust(m_compiler->getDiagnostics(),
-		                 m_compiler->getLangOpts());
+                                 m_compiler->getLangOpts());
 
   // 5. Set up the diagnostic buffer for reporting errors
 
@@ -1157,8 +1197,7 @@ ClangExpressionParser::ParseInternal(DiagnosticManager &diagnostic_manager,
           if (auto fileEntry = m_compiler->getFileManager().getOptionalFileRef(
                   result_path)) {
             source_mgr.setMainFileID(source_mgr.createFileID(
-                *fileEntry,
-                SourceLocation(), SrcMgr::C_User));
+                *fileEntry, SourceLocation(), SrcMgr::C_User));
             created_main_file = true;
           }
         }
@@ -1441,6 +1480,25 @@ lldb_private::Status ClangExpressionParser::DoPrepareForExecution(
     custom_passes.EarlyPasses->run(*llvm_module_up);
   }
 
+  std::unique_ptr<llvm::legacy::PassManager> arch_passes;
+  if (lldb::TargetSP target_sp = exe_ctx.GetTargetSP()) {
+    Architecture *arch = target_sp->GetArchitecturePlugin();
+    if (arch)
+      arch_passes =
+          arch->GetArchitectureCustomPasses(exe_ctx, m_expr.FunctionName());
+  }
+
+  if (arch_passes)
+    arch_passes->run(*llvm_module_up);
+
+  if (llvm_module_up->getNamedMetadata(
+          Architecture::s_target_incompatibility_marker)) {
+    err = Status::FromErrorStringWithFormat(
+        "%s - Architecture passes failure on function %s\n. Function "
+        "contains unsupported function calls",
+        __FUNCTION__, m_expr.FunctionName());
+  }
+
   execution_unit_sp = std::make_shared<IRExecutionUnit>(
       m_llvm_context, // handed off here
       llvm_module_up, // handed off here
@@ -1506,7 +1564,8 @@ lldb_private::Status ClangExpressionParser::DoPrepareForExecution(
 
           DiagnosticManager install_diags;
           if (Error Err = dynamic_checkers->Install(install_diags, exe_ctx)) {
-            std::string ErrMsg = "couldn't install checkers: " + toString(std::move(Err));
+            std::string ErrMsg =
+                "couldn't install checkers: " + toString(std::move(Err));
             if (install_diags.Diagnostics().size())
               ErrMsg = ErrMsg + "\n" + install_diags.GetString().c_str();
             err = Status(ErrMsg);
