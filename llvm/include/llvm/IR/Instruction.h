@@ -455,6 +455,10 @@ public:
   /// !annotation metadata, append the tuple to
   /// the existing node.
   void addAnnotationMetadata(SmallVector<StringRef> Annotations);
+
+  /// Returns true if an !annotation metadata is set to this instruction.
+  bool hasAnnotationMetadata(StringRef Name) const;
+
   /// Returns the AA metadata for this instruction.
   AAMDNodes getAAMetadata() const;
 
