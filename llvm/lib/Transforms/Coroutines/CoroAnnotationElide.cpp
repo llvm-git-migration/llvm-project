@@ -1,0 +1,108 @@
+//===- CoroSplit.cpp - Converts a coroutine into a state machine ----------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+
+#include "llvm/Transforms/Coroutines/CoroAnnotationElide.h"
+
+#include "llvm/Analysis/LazyCallGraph.h"
+#include "llvm/IR/Analysis.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/InstIterator.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Module.h"
+
+#include <cassert>
+
+using namespace llvm;
+
+#define DEBUG_TYPE "coro-annotation-elide"
+
+#define CORO_MUST_ELIDE_ANNOTATION "coro_must_elide"
+
+static Instruction *getFirstNonAllocaInTheEntryBlock(Function *F) {
+  for (Instruction &I : F->getEntryBlock())
+    if (!isa<AllocaInst>(&I))
+      return &I;
+  llvm_unreachable("no terminator in the entry block");
+}
+
+static Value *allocateFrameInCaller(Function *Caller, uint64_t FrameSize,
+                                    Align FrameAlign) {
+  LLVMContext &C = Caller->getContext();
+  BasicBlock::iterator InsertPt =
+      getFirstNonAllocaInTheEntryBlock(Caller)->getIterator();
+  const DataLayout &DL = Caller->getDataLayout();
+  auto FrameTy = ArrayType::get(Type::getInt8Ty(C), FrameSize);
+  auto *Frame = new AllocaInst(FrameTy, DL.getAllocaAddrSpace(), "", InsertPt);
+  Frame->setAlignment(FrameAlign);
+  return new BitCastInst(Frame, PointerType::getUnqual(C), "vFrame", InsertPt);
+}
+
+static void processCall(CallBase *CB, Function *Caller, Function *NewCallee,
+                        uint64_t FrameSize, Align FrameAlign) {
+  auto *FramePtr = allocateFrameInCaller(Caller, FrameSize, FrameAlign);
+  CB->setCalledFunction(NewCallee->getFunctionType(), NewCallee);
+  CB->setArgOperand(0, FramePtr);
+  auto NewCBInsertPt = CB->getIterator();
+  llvm::CallBase *NewCB = nullptr;
+  SmallVector<Value *, 4> NewArgs;
+  NewArgs.push_back(FramePtr);
+  NewArgs.append(CB->arg_begin(), CB->arg_end());
+
+  // TODO: bundles?
+  if (auto *CI = dyn_cast<CallInst>(CB)) {
+    NewCB = CallInst::Create(NewCallee->getFunctionType(), NewCallee, NewArgs,
+                             "", NewCBInsertPt);
+  } else if (auto *II = dyn_cast<InvokeInst>(CB)) {
+    NewCB = InvokeInst::Create(NewCallee->getFunctionType(), NewCallee,
+                               II->getNormalDest(), II->getUnwindDest(),
+                               NewArgs, std::nullopt, "", NewCBInsertPt);
+  } else {
+    llvm_unreachable("CallBase should either be Call or Invoke!");
+  }
+
+  CB->replaceAllUsesWith(NewCB);
+  CB->eraseFromParent();
+}
+
+PreservedAnalyses CoroAnnotationElidePass::run(LazyCallGraph::SCC &C,
+                                               CGSCCAnalysisManager &AM,
+                                               LazyCallGraph &CG,
+                                               CGSCCUpdateResult &UR) {
+  // NB: One invariant of a valid LazyCallGraph::SCC is that it must contain a
+  //     non-zero number of nodes, so we assume that here and grab the first
+  //     node's function's module.
+  Module &M = *C.begin()->getFunction().getParent();
+  bool Changed = false;
+  // Find coroutines for processing.
+  SmallVector<LazyCallGraph::Node *> Coroutines;
+  for (LazyCallGraph::Node &N : C) {
+    Function *Callee = &N.getFunction();
+    Function *NewCallee = Callee->getParent()->getFunction(
+        (Callee->getName() + ".noalloc").getSingleStringRef());
+    if (!NewCallee) {
+      continue;
+    }
+
+    auto FrameSize = NewCallee->getParamDereferenceableBytes(0);
+    auto FrameAlign = NewCallee->getParamAlign(0).valueOrOne();
+
+    for (auto *U : Callee->users()) {
+      if (auto *CB = dyn_cast<CallBase>(U)) {
+        auto *Caller = CB->getFunction();
+        if (Caller && Caller->isPresplitCoroutine() &&
+            CB->hasAnnotationMetadata(CORO_MUST_ELIDE_ANNOTATION)) {
+          processCall(CB, Caller, NewCallee, FrameSize, FrameAlign);
+          Changed = true;
+        }
+      }
+    }
+  }
+  return Changed ? PreservedAnalyses::none() : PreservedAnalyses::all();
+}
