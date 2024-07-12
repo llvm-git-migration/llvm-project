@@ -14,20 +14,30 @@
 
 namespace LIBC_NAMESPACE_DECL {
 
-// An implementation of the xorshift64star pseudo random number generator. This
+// An implementation of the xorshift pseudo random number generator. This
 // is a good general purpose generator for most non-cryptographics applications.
-LLVM_LIBC_FUNCTION(int, rand, (void)) {
+static unsigned long xorshift(unsigned long a, unsigned long b, unsigned long c,
+                              unsigned long d) {
   unsigned long orig = rand_next.load(cpp::MemoryOrder::RELAXED);
   for (;;) {
     unsigned long x = orig;
-    x ^= x >> 12;
-    x ^= x << 25;
-    x ^= x >> 27;
+    x ^= x >> a;
+    x ^= x << b;
+    x ^= x >> c;
     if (rand_next.compare_exchange_strong(orig, x, cpp::MemoryOrder::ACQUIRE,
                                           cpp::MemoryOrder::RELAXED))
-      return static_cast<int>((x * 0x2545F4914F6CDD1Dul) >> 32) & RAND_MAX;
+      return x * d;
     sleep_briefly();
   }
+}
+
+LLVM_LIBC_FUNCTION(int, rand, (void)) {
+  int res;
+  if constexpr (sizeof(void *) == sizeof(uint64_t))
+    res = static_cast<int>(xorshift(12, 25, 27, 0x2545F4914F6CDD1Dul) >> 32);
+  else
+    res = static_cast<int>(xorshift(13, 17, 5, 1597334677ul));
+  return res & RAND_MAX;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
