@@ -999,8 +999,7 @@ public:
       // not be touched.
       if (count >= newOpCount)
         continue;
-      auto vecOp = dyn_cast<vector::InsertStridedSliceOp>(op);
-      if (vecOp) {
+      if (auto vecOp = dyn_cast<vector::InsertStridedSliceOp>(op)) {
         size_t unrolledInputNo = unrolledInputNums[idx];
         rewriter.modifyOpInPlace(&op, [&] {
           op.setOperand(0, newFuncOp.getArgument(unrolledInputNo));
