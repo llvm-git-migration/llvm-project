@@ -2091,15 +2091,16 @@ static Function *createNoAllocVariant(Function &F, ValueToValueMapTy &VMap,
 
   SmallVector<Type *> NewParams;
   NewParams.reserve(OldParams.size() + 1);
-  NewParams.push_back(PointerType::getUnqual(Shape.FrameTy));
   for (Type *T : OldParams) {
     NewParams.push_back(T);
   }
+  NewParams.push_back(PointerType::getUnqual(Shape.FrameTy));
+
   auto *NewFnTy = FunctionType::get(OrigFnTy->getReturnType(), NewParams,
                                     OrigFnTy->isVarArg());
   Function *NoAllocF =
       Function::Create(NewFnTy, F.getLinkage(), F.getName() + ".noalloc");
-  unsigned int Idx = 1;
+  unsigned int Idx = 0;
   for (const auto &I : F.args()) {
     VMap[&I] = NoAllocF->getArg(Idx++);
   }
@@ -2112,7 +2113,7 @@ static Function *createNoAllocVariant(Function &F, ValueToValueMapTy &VMap,
     auto *NewCoroId = cast<CoroIdInst>(NewCoroBegin->getId());
     coro::replaceCoroFree(NewCoroId, /*Elide=*/true);
     coro::suppressCoroAllocs(NewCoroId);
-    NewCoroBegin->replaceAllUsesWith(NoAllocF->getArg(0));
+    NewCoroBegin->replaceAllUsesWith(NoAllocF->getArg(Idx));
     NewCoroBegin->eraseFromParent();
   }
 
