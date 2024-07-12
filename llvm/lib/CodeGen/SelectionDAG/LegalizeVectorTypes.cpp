@@ -24,6 +24,7 @@
 #include "llvm/Analysis/MemoryLocation.h"
 #include "llvm/Analysis/VectorUtils.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TypeSize.h"
@@ -3531,7 +3532,9 @@ SDValue DAGTypeLegalizer::SplitVecOp_EXTRACT_VECTOR_ELT(SDNode *N) {
   // Store the vector to the stack.
   // In cases where the vector is illegal it will be broken down into parts
   // and stored in parts - we should use the alignment for the smallest part.
-  Align SmallestAlign = DAG.getReducedAlign(VecVT, /*UseABI=*/false);
+  Align SmallestAlign =
+      std::min(DAG.getSubtarget().getFrameLowering()->getStackAlign(),
+               DAG.getReducedAlign(VecVT, /*UseABI=*/false));
   SDValue StackPtr =
       DAG.CreateStackTemporary(VecVT.getStoreSize(), SmallestAlign);
   auto &MF = DAG.getMachineFunction();

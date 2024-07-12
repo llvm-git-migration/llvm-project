@@ -11,19 +11,13 @@ define i1 @foo(<vscale x 16 x i8> %x, i64 %y) {
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    mv a0, a2
 ; CHECK-NEXT:  .LBB0_2:
-; CHECK-NEXT:    addi sp, sp, -80
-; CHECK-NEXT:    .cfi_def_cfa_offset 80
-; CHECK-NEXT:    sd ra, 72(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    sd s0, 64(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    .cfi_offset ra, -8
-; CHECK-NEXT:    .cfi_offset s0, -16
-; CHECK-NEXT:    addi s0, sp, 80
-; CHECK-NEXT:    .cfi_def_cfa s0, 0
+; CHECK-NEXT:    addi sp, sp, -16
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    csrr a2, vlenb
 ; CHECK-NEXT:    slli a2, a2, 4
 ; CHECK-NEXT:    sub sp, sp, a2
-; CHECK-NEXT:    andi sp, sp, -64
-; CHECK-NEXT:    addi a2, sp, 64
+; CHECK-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x10, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 16 * vlenb
+; CHECK-NEXT:    addi a2, sp, 16
 ; CHECK-NEXT:    add a0, a2, a0
 ; CHECK-NEXT:    slli a1, a1, 3
 ; CHECK-NEXT:    add a1, a2, a1
@@ -36,10 +30,10 @@ define i1 @foo(<vscale x 16 x i8> %x, i64 %y) {
 ; CHECK-NEXT:    vmerge.vim v8, v16, 1, v0
 ; CHECK-NEXT:    vs8r.v v8, (a2)
 ; CHECK-NEXT:    lbu a0, 0(a0)
-; CHECK-NEXT:    addi sp, s0, -80
-; CHECK-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    addi sp, sp, 80
+; CHECK-NEXT:    csrr a1, vlenb
+; CHECK-NEXT:    slli a1, a1, 4
+; CHECK-NEXT:    add sp, sp, a1
+; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %a = bitcast <vscale x 16 x i8> %x to <vscale x 128 x i1>
   %b = extractelement <vscale x 128 x i1> %a, i64 %y

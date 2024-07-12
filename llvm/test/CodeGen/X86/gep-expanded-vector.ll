@@ -6,10 +6,7 @@
 define ptr @malloc_init_state(<64 x ptr> %tmp, i32 %ind) nounwind {
 ; CHECK-LABEL: malloc_init_state:
 ; CHECK:       # %bb.0: # %entry
-; CHECK-NEXT:    pushq %rbp
-; CHECK-NEXT:    movq %rsp, %rbp
-; CHECK-NEXT:    andq $-64, %rsp
-; CHECK-NEXT:    subq $576, %rsp # imm = 0x240
+; CHECK-NEXT:    subq $392, %rsp # imm = 0x188
 ; CHECK-NEXT:    # kill: def $edi killed $edi def $rdi
 ; CHECK-NEXT:    vpbroadcastq {{.*#+}} zmm8 = [16,16,16,16,16,16,16,16]
 ; CHECK-NEXT:    vpaddq %zmm8, %zmm0, %zmm0
@@ -20,18 +17,17 @@ define ptr @malloc_init_state(<64 x ptr> %tmp, i32 %ind) nounwind {
 ; CHECK-NEXT:    vpaddq %zmm8, %zmm5, %zmm5
 ; CHECK-NEXT:    vpaddq %zmm8, %zmm6, %zmm6
 ; CHECK-NEXT:    vpaddq %zmm8, %zmm7, %zmm7
-; CHECK-NEXT:    vmovdqa64 %zmm7, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm6, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm5, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm4, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm3, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm2, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm1, {{[0-9]+}}(%rsp)
-; CHECK-NEXT:    vmovdqa64 %zmm0, (%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm7, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm6, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm5, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm4, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm3, {{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm2, (%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm1, -{{[0-9]+}}(%rsp)
+; CHECK-NEXT:    vmovdqu64 %zmm0, -{{[0-9]+}}(%rsp)
 ; CHECK-NEXT:    andl $63, %edi
-; CHECK-NEXT:    movq (%rsp,%rdi,8), %rax
-; CHECK-NEXT:    movq %rbp, %rsp
-; CHECK-NEXT:    popq %rbp
+; CHECK-NEXT:    movq -128(%rsp,%rdi,8), %rax
+; CHECK-NEXT:    addq $392, %rsp # imm = 0x188
 ; CHECK-NEXT:    vzeroupper
 ; CHECK-NEXT:    retq
 entry:

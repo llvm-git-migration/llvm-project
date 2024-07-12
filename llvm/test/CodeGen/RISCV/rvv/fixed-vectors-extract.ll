@@ -700,61 +700,26 @@ define i32 @extractelt_v32i32_idx(ptr %x, i32 zeroext %idx) nounwind {
 }
 
 define i32 @extractelt_v64i32_idx(ptr %x, i32 zeroext %idx) nounwind {
-; RV32-LABEL: extractelt_v64i32_idx:
-; RV32:       # %bb.0:
-; RV32-NEXT:    addi sp, sp, -384
-; RV32-NEXT:    sw ra, 380(sp) # 4-byte Folded Spill
-; RV32-NEXT:    sw s0, 376(sp) # 4-byte Folded Spill
-; RV32-NEXT:    addi s0, sp, 384
-; RV32-NEXT:    andi sp, sp, -128
-; RV32-NEXT:    andi a1, a1, 63
-; RV32-NEXT:    slli a1, a1, 2
-; RV32-NEXT:    li a2, 32
-; RV32-NEXT:    addi a3, a0, 128
-; RV32-NEXT:    vsetvli zero, a2, e32, m8, ta, ma
-; RV32-NEXT:    vle32.v v8, (a3)
-; RV32-NEXT:    vle32.v v16, (a0)
-; RV32-NEXT:    mv a0, sp
-; RV32-NEXT:    add a1, a0, a1
-; RV32-NEXT:    vadd.vv v8, v8, v8
-; RV32-NEXT:    vadd.vv v16, v16, v16
-; RV32-NEXT:    vse32.v v16, (a0)
-; RV32-NEXT:    addi a0, sp, 128
-; RV32-NEXT:    vse32.v v8, (a0)
-; RV32-NEXT:    lw a0, 0(a1)
-; RV32-NEXT:    addi sp, s0, -384
-; RV32-NEXT:    lw ra, 380(sp) # 4-byte Folded Reload
-; RV32-NEXT:    lw s0, 376(sp) # 4-byte Folded Reload
-; RV32-NEXT:    addi sp, sp, 384
-; RV32-NEXT:    ret
-;
-; RV64-LABEL: extractelt_v64i32_idx:
-; RV64:       # %bb.0:
-; RV64-NEXT:    addi sp, sp, -384
-; RV64-NEXT:    sd ra, 376(sp) # 8-byte Folded Spill
-; RV64-NEXT:    sd s0, 368(sp) # 8-byte Folded Spill
-; RV64-NEXT:    addi s0, sp, 384
-; RV64-NEXT:    andi sp, sp, -128
-; RV64-NEXT:    andi a1, a1, 63
-; RV64-NEXT:    slli a1, a1, 2
-; RV64-NEXT:    li a2, 32
-; RV64-NEXT:    addi a3, a0, 128
-; RV64-NEXT:    vsetvli zero, a2, e32, m8, ta, ma
-; RV64-NEXT:    vle32.v v8, (a3)
-; RV64-NEXT:    vle32.v v16, (a0)
-; RV64-NEXT:    mv a0, sp
-; RV64-NEXT:    add a1, a0, a1
-; RV64-NEXT:    vadd.vv v8, v8, v8
-; RV64-NEXT:    vadd.vv v16, v16, v16
-; RV64-NEXT:    vse32.v v16, (a0)
-; RV64-NEXT:    addi a0, sp, 128
-; RV64-NEXT:    vse32.v v8, (a0)
-; RV64-NEXT:    lw a0, 0(a1)
-; RV64-NEXT:    addi sp, s0, -384
-; RV64-NEXT:    ld ra, 376(sp) # 8-byte Folded Reload
-; RV64-NEXT:    ld s0, 368(sp) # 8-byte Folded Reload
-; RV64-NEXT:    addi sp, sp, 384
-; RV64-NEXT:    ret
+; CHECK-LABEL: extractelt_v64i32_idx:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    addi sp, sp, -256
+; CHECK-NEXT:    andi a1, a1, 63
+; CHECK-NEXT:    slli a1, a1, 2
+; CHECK-NEXT:    li a2, 32
+; CHECK-NEXT:    addi a3, a0, 128
+; CHECK-NEXT:    vsetvli zero, a2, e32, m8, ta, ma
+; CHECK-NEXT:    vle32.v v8, (a3)
+; CHECK-NEXT:    vle32.v v16, (a0)
+; CHECK-NEXT:    mv a0, sp
+; CHECK-NEXT:    add a1, a0, a1
+; CHECK-NEXT:    vadd.vv v8, v8, v8
+; CHECK-NEXT:    vadd.vv v16, v16, v16
+; CHECK-NEXT:    vse32.v v16, (a0)
+; CHECK-NEXT:    addi a0, sp, 128
+; CHECK-NEXT:    vse32.v v8, (a0)
+; CHECK-NEXT:    lw a0, 0(a1)
+; CHECK-NEXT:    addi sp, sp, 256
+; CHECK-NEXT:    ret
   %a = load <64 x i32>, ptr %x
   %b = add <64 x i32> %a, %a
   %c = extractelement <64 x i32> %b, i32 %idx
