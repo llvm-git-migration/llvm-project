@@ -2091,15 +2091,16 @@ static Function *createNoAllocVariant(Function &F, ValueToValueMapTy &VMap,
 
   SmallVector<Type *> NewParams;
   NewParams.reserve(OldParams.size() + 1);
-  NewParams.push_back(PointerType::getUnqual(Shape.FrameTy));
   for (Type *T : OldParams) {
     NewParams.push_back(T);
   }
+  NewParams.push_back(PointerType::getUnqual(Shape.FrameTy));
+
   auto *NewFnTy = FunctionType::get(OrigFnTy->getReturnType(), NewParams,
                                     OrigFnTy->isVarArg());
   Function *NoAllocF =
       Function::Create(NewFnTy, F.getLinkage(), F.getName() + ".noalloc");
-  unsigned int Idx = 1;
+  unsigned int Idx = 0;
   for (const auto &I : F.args()) {
     VMap[&I] = NoAllocF->getArg(Idx++);
   }
@@ -2112,7 +2113,7 @@ static Function *createNoAllocVariant(Function &F, ValueToValueMapTy &VMap,
     auto *NewCoroId = cast<CoroIdInst>(NewCoroBegin->getId());
     coro::replaceCoroFree(NewCoroId, /*Elide=*/true);
     coro::suppressCoroAllocs(NewCoroId);
-    NewCoroBegin->replaceAllUsesWith(NoAllocF->getArg(0));
+    NewCoroBegin->replaceAllUsesWith(NoAllocF->getArg(Idx));
     NewCoroBegin->eraseFromParent();
   }
 
@@ -2188,9 +2189,14 @@ PreservedAnalyses CoroSplitPass::run(LazyCallGraph::SCC &C,
       auto *NoAllocF = createNoAllocVariant(F, VMap, Shape);
       NoAllocF->addFnAttr("elided-coro");
       auto NewAttrs = NoAllocF->getAttributes();
-
-      addFramePointerAttrs(NewAttrs, NoAllocF->getContext(), 0, Shape.FrameSize,
-                           Shape.FrameAlign, /*NoAlias=*/false);
+      // We just appended the frame pointer as the last argument of the new
+      // function.
+      auto FrameIdx = NoAllocF->arg_size() - 1;
+      // When we elide allocation, we read these attributes to determine the
+      // frame size and alignment.
+      addFramePointerAttrs(NewAttrs, NoAllocF->getContext(), FrameIdx,
+                           Shape.FrameSize, Shape.FrameAlign,
+                           /*NoAlias=*/false);
 
       NoAllocF->setAttributes(NewAttrs);
     }
