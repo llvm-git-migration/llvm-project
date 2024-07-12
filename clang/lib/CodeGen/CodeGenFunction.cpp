@@ -2915,9 +2915,9 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
       unsigned MaxGroupIDUsed = 0;
       llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
 
-      for (auto Feat: TargetAttrFeats)
+      for (auto Feat : TargetAttrFeats)
         CurrTargetAttrFeats.push_back(StringRef(Feat).substr(1));
-      
+
       llvm::Value *SecondCondition =
           EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
 
