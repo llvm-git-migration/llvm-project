@@ -13,18 +13,18 @@
 
 namespace LIBC_NAMESPACE {
 
-// An implementation of the xorshift64star pseudo random number generator. This
-// is a good general purpose generator for most non-cryptographics applications.
+// This multiplier was obtained from Knuth, D.E., "The Art of
+// Computer Programming," Vol 2, Seminumerical Algorithms, Third
+// Edition, Addison-Wesley, 1998, p. 106 (line 26) & p. 108 */
 LLVM_LIBC_FUNCTION(int, rand, (void)) {
   unsigned long orig = rand_next.load(cpp::MemoryOrder::RELAXED);
   for (;;) {
-    unsigned long x = orig;
-    x ^= x >> 12;
-    x ^= x << 25;
-    x ^= x >> 27;
-    if (rand_next.compare_exchange_strong(orig, x, cpp::MemoryOrder::ACQUIRE,
+    uint64_t x = orig;
+    x = static_cast<unsigned long>(6364136223846793005ULL) * x;
+    if (rand_next.compare_exchange_strong(orig, static_cast<unsigned long>(x),
+                                          cpp::MemoryOrder::ACQUIRE,
                                           cpp::MemoryOrder::RELAXED))
-      return static_cast<int>((x * 0x2545F4914F6CDD1Dul) >> 32) & RAND_MAX;
+      return static_cast<int>(x >> 32) & RAND_MAX;
     sleep_briefly();
   }
 }
