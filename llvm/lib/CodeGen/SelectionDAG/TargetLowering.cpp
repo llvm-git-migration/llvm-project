@@ -10381,14 +10381,24 @@ SDValue TargetLowering::expandCMP(SDNode *Node, SelectionDAG &DAG) const {
 
   auto LTPredicate = (Opcode == ISD::UCMP ? ISD::SETULT : ISD::SETLT);
   auto GTPredicate = (Opcode == ISD::UCMP ? ISD::SETUGT : ISD::SETGT);
-
   SDValue IsLT = DAG.getSetCC(dl, BoolVT, LHS, RHS, LTPredicate);
   SDValue IsGT = DAG.getSetCC(dl, BoolVT, LHS, RHS, GTPredicate);
-  SDValue SelectZeroOrOne =
-      DAG.getSelect(dl, ResVT, IsGT, DAG.getConstant(1, dl, ResVT),
-                    DAG.getConstant(0, dl, ResVT));
-  return DAG.getSelect(dl, ResVT, IsLT, DAG.getConstant(-1, dl, ResVT),
-                       SelectZeroOrOne);
+
+  // We can't perform arithmetic on i1 values. Extending them would
+  // probably result in worse codegen, so let's just use two selects instead.
+  // Some targets are also just better off using selects rather than subtraction
+  // because one of the conditions can be merged with one of the selects
+  EVT BoolElVT = BoolVT.isVector() ? BoolVT.getVectorElementType() : BoolVT;
+  if (shouldExpandCmpUsingSelects() || !BoolElVT.knownBitsGT(MVT::i1)) {
+    SDValue SelectZeroOrOne =
+        DAG.getSelect(dl, ResVT, IsGT, DAG.getConstant(1, dl, ResVT),
+                      DAG.getConstant(0, dl, ResVT));
+    return DAG.getSelect(dl, ResVT, IsLT, DAG.getConstant(-1, dl, ResVT),
+                         SelectZeroOrOne);
+  }
+
+  return DAG.getSExtOrTrunc(DAG.getNode(ISD::SUB, dl, BoolVT, IsGT, IsLT), dl,
+                            ResVT);
 }
 
 SDValue TargetLowering::expandShlSat(SDNode *Node, SelectionDAG &DAG) const {
