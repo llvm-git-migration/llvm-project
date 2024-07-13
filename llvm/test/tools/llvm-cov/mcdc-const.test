@@ -28,9 +28,9 @@
 // CHECKGENERALCASE-NEXT:  |  C1-Pair: covered: (1,2)
 // CHECKGENERALCASE-NEXT:  |  C2-Pair: constant folded
 // CHECKGENERALCASE-NEXT:  |  C3-Pair: constant folded
-// CHECKGENERALCASE-NEXT:  |  C4-Pair: not covered
+// CHECKGENERALCASE-NEXT:  |  C4-Pair: unreachable
 // CHECKGENERALCASE-NEXT:  |  C5-Pair: constant folded
-// CHECKGENERALCASE-NEXT:  |  MC/DC Coverage for Decision: 50.00%
+// CHECKGENERALCASE-NEXT:  |  MC/DC Coverage for Decision: 100.00%
 // CHECKGENERALCASE-NEXT:  |
 // CHECKGENERALCASE-NEXT:  ------------------
 
@@ -40,11 +40,11 @@
 
 //      CHECKFULLCASE: |  1 { C,  -  = F      }
 //      CHECKFULLCASE: |  C1-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
-//      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
+// CHECKFULLCASE-NEXT: |  C2-Pair: unreachable
+//      CHECKFULLCASE: |  MC/DC Coverage for Decision: Folded
 //      CHECKFULLCASE: |  1 { F,  C  = F      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C  = F      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { C,  F  = F      }
@@ -59,11 +59,11 @@
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 100.00%
 //      CHECKFULLCASE: |  1 { C,  -  = T      }
 //      CHECKFULLCASE: |  C1-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
-//      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
+// CHECKFULLCASE-NEXT: |  C2-Pair: unreachable
+//      CHECKFULLCASE: |  MC/DC Coverage for Decision: Folded
 //      CHECKFULLCASE: |  1 { F,  C  = T      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C  = T      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { C,  F  = F      }
@@ -78,14 +78,14 @@
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 100.00%
 //      CHECKFULLCASE: |  1 { C,  -,  -  = F      }
 //      CHECKFULLCASE: |  C1-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
-//      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
+// CHECKFULLCASE-NEXT: |  C2-Pair: unreachable
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
+//      CHECKFULLCASE: |  MC/DC Coverage for Decision: Folded
 //      CHECKFULLCASE: |  1 { F,  C,  -  = F      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C,  -  = F      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { C,  F,  -  = F      }
 // CHECKFULLCASE-NEXT: |  2 { C,  T,  F  = F      }
@@ -103,14 +103,14 @@
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 100.00%
 //      CHECKFULLCASE: |  1 { C,  -,  -  = T      }
 //      CHECKFULLCASE: |  C1-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
-//      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
+// CHECKFULLCASE-NEXT: |  C2-Pair: unreachable
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
+//      CHECKFULLCASE: |  MC/DC Coverage for Decision: Folded
 //      CHECKFULLCASE: |  1 { F,  C,  -  = T      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C,  -  = T      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { C,  F,  T  = T      }
 // CHECKFULLCASE-NEXT: |  2 { C,  T,  -  = T      }
@@ -127,15 +127,15 @@
 //      CHECKFULLCASE: |  1 { F,  -,  C  = F      }
 // CHECKFULLCASE-NEXT: |  2 { T,  F,  C  = F      }
 // CHECKFULLCASE-NEXT: |  3 { T,  T,  C  = F      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
+// CHECKFULLCASE-NEXT: |  C2-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C3-Pair: constant folded
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { F,  C,  -  = F      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C,  -  = F      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { F,  -,  C  = F      }
 // CHECKFULLCASE-NEXT: |  2 { T,  F,  C  = F      }
@@ -153,15 +153,15 @@
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 100.00%
 //      CHECKFULLCASE: |  1 { F,  T,  C  = T      }
 // CHECKFULLCASE-NEXT: |  2 { T,  -,  C  = T      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
-// CHECKFULLCASE-NEXT: |  C2-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
+// CHECKFULLCASE-NEXT: |  C2-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C3-Pair: constant folded
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { F,  C,  -  = T      }
 // CHECKFULLCASE-NEXT: |  2 { T,  C,  -  = T      }
-//      CHECKFULLCASE: |  C1-Pair: not covered
+//      CHECKFULLCASE: |  C1-Pair: uncoverable
 // CHECKFULLCASE-NEXT: |  C2-Pair: constant folded
-// CHECKFULLCASE-NEXT: |  C3-Pair: not covered
+// CHECKFULLCASE-NEXT: |  C3-Pair: unreachable
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 //      CHECKFULLCASE: |  1 { F,  T,  C  = T      }
 // CHECKFULLCASE-NEXT: |  2 { T,  -,  C  = T      }
@@ -176,31 +176,31 @@
 // CHECKFULLCASE-NEXT: |  C3-Pair: not covered
 //      CHECKFULLCASE: |  MC/DC Coverage for Decision: 0.00%
 
-//      REPORT: _Z5case0b {{.*}} 1       1   0.00%
+//      REPORT: _Z5case0b {{.*}} 0       0   0.00%
 // REPORT-NEXT: _Z5case1b {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5case2b {{.*}} 1       0 100.00%
 // REPORT-NEXT: _Z5case3b {{.*}} 1       0 100.00%
-// REPORT-NEXT: _Z5case4b {{.*}} 1       1   0.00%
+// REPORT-NEXT: _Z5case4b {{.*}} 0       0   0.00%
 // REPORT-NEXT: _Z5case5b {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5case6b {{.*}} 1       0 100.00%
 // REPORT-NEXT: _Z5case7b {{.*}} 1       0 100.00%
-// REPORT-NEXT: _Z5case8bb {{.*}} 2       2   0.00%
-// REPORT-NEXT: _Z5case9bb {{.*}} 2       2   0.00%
+// REPORT-NEXT: _Z5case8bb {{.*}} 0       0   0.00%
+// REPORT-NEXT: _Z5case9bb {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5caseabb {{.*}} 2       0 100.00%
 // REPORT-NEXT: _Z5casebbb {{.*}} 2       0 100.00%
-// REPORT-NEXT: _Z5casecbb {{.*}} 2       2   0.00%
-// REPORT-NEXT: _Z5casedbb {{.*}} 2       2   0.00%
+// REPORT-NEXT: _Z5casecbb {{.*}} 0       0   0.00%
+// REPORT-NEXT: _Z5casedbb {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5caseebb {{.*}} 2       2   0.00%
 // REPORT-NEXT: _Z5casefbb {{.*}} 2       2   0.00%
 // REPORT-NEXT: _Z5casegbb {{.*}} 2       2   0.00%
-// REPORT-NEXT: _Z5casehbb {{.*}} 2       2   0.00%
+// REPORT-NEXT: _Z5casehbb {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5caseibb {{.*}} 2       0 100.00%
 // REPORT-NEXT: _Z5casejbb {{.*}} 2       0 100.00%
 // REPORT-NEXT: _Z5casekbb {{.*}} 2       2   0.00%
-// REPORT-NEXT: _Z5caselbb {{.*}} 2       2   0.00%
+// REPORT-NEXT: _Z5caselbb {{.*}} 1       1   0.00%
 // REPORT-NEXT: _Z5casembb {{.*}} 2       2   0.00%
 // REPORT-NEXT: _Z5casenbb {{.*}} 2       2   0.00%
-//      REPORT: TOTAL {{.*}} 40      28  30.00%
+//      REPORT: TOTAL {{.*}} 30      18  40.00%
 
 Instructions for regenerating the test:
 
