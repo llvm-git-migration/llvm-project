@@ -103,14 +103,46 @@ using namespace std::placeholders;
 namespace {
 
 // Used to check correspondence between allocators and deallocators.
-enum AllocationFamily {
+enum AllocationFamilyKind {
   AF_None,
   AF_Malloc,
   AF_CXXNew,
   AF_CXXNewArray,
   AF_IfNameIndex,
   AF_Alloca,
-  AF_InnerBuffer
+  AF_InnerBuffer,
+  AF_Custom,
+};
+
+class AllocationFamily {
+public:
+  AllocationFamily(AllocationFamilyKind kind,
+                   std::optional<StringRef> name = std::nullopt)
+      : _kind(kind), _customName(name) {
+    assert(kind != AF_Custom || name != std::nullopt);
+  }
+
+  bool operator==(const AllocationFamily &Other) const {
+    if (Other.kind() == this->kind()) {
+      return this->kind() == AF_Custom ? this->_customName == Other._customName
+                                       : true;
+    } else {
+      return false;
+    }
+  }
+
+  bool operator==(const AllocationFamilyKind &kind) {
+    return this->kind() == kind;
+  }
+
+  bool operator!=(const AllocationFamilyKind &kind) { return !(*this == kind); }
+
+  std::optional<StringRef> name() const { return _customName; }
+  AllocationFamilyKind kind() const { return _kind; }
+
+private:
+  AllocationFamilyKind _kind;
+  std::optional<StringRef> _customName;
 };
 
 } // end of anonymous namespace
@@ -194,7 +226,7 @@ public:
   void Profile(llvm::FoldingSetNodeID &ID) const {
     ID.AddInteger(K);
     ID.AddPointer(S);
-    ID.AddInteger(Family);
+    ID.AddInteger(Family.kind());
   }
 
   LLVM_DUMP_METHOD void dump(raw_ostream &OS) const {
@@ -1918,26 +1950,52 @@ static bool printMemFnName(raw_ostream &os, CheckerContext &C, const Expr *E) {
 
 static void printExpectedAllocName(raw_ostream &os, AllocationFamily Family) {
 
-  switch(Family) {
-    case AF_Malloc: os << "malloc()"; return;
-    case AF_CXXNew: os << "'new'"; return;
-    case AF_CXXNewArray: os << "'new[]'"; return;
-    case AF_IfNameIndex: os << "'if_nameindex()'"; return;
-    case AF_InnerBuffer: os << "container-specific allocator"; return;
-    case AF_Alloca:
-    case AF_None: llvm_unreachable("not a deallocation expression");
+  switch (Family.kind()) {
+  case AF_Malloc:
+    os << "malloc()";
+    return;
+  case AF_CXXNew:
+    os << "'new'";
+    return;
+  case AF_CXXNewArray:
+    os << "'new[]'";
+    return;
+  case AF_IfNameIndex:
+    os << "'if_nameindex()'";
+    return;
+  case AF_InnerBuffer:
+    os << "container-specific allocator";
+    return;
+  case AF_Alloca:
+  case AF_None:
+    llvm_unreachable("not a deallocation expression");
+  case AF_Custom:
+    llvm_unreachable("not a deallocation expression");
   }
 }
 
 static void printExpectedDeallocName(raw_ostream &os, AllocationFamily Family) {
-  switch(Family) {
-    case AF_Malloc: os << "free()"; return;
-    case AF_CXXNew: os << "'delete'"; return;
-    case AF_CXXNewArray: os << "'delete[]'"; return;
-    case AF_IfNameIndex: os << "'if_freenameindex()'"; return;
-    case AF_InnerBuffer: os << "container-specific deallocator"; return;
-    case AF_Alloca:
-    case AF_None: llvm_unreachable("suspicious argument");
+  switch (Family.kind()) {
+  case AF_Malloc:
+    os << "free()";
+    return;
+  case AF_CXXNew:
+    os << "'delete'";
+    return;
+  case AF_CXXNewArray:
+    os << "'delete[]'";
+    return;
+  case AF_IfNameIndex:
+    os << "'if_freenameindex()'";
+    return;
+  case AF_InnerBuffer:
+    os << "container-specific deallocator";
+    return;
+  case AF_Alloca:
+  case AF_None:
+    llvm_unreachable("suspicious argument");
+  case AF_Custom:
+    llvm_unreachable("suspicious argument");
   }
 }
 
@@ -2119,7 +2177,7 @@ MallocChecker::FreeMemAux(CheckerContext &C, const Expr *ArgExpr,
 std::optional<MallocChecker::CheckKind>
 MallocChecker::getCheckIfTracked(AllocationFamily Family,
                                  bool IsALeakCheck) const {
-  switch (Family) {
+  switch (Family.kind()) {
   case AF_Malloc:
   case AF_Alloca:
   case AF_IfNameIndex: {
@@ -2144,6 +2202,7 @@ MallocChecker::getCheckIfTracked(AllocationFamily Family,
       return CK_InnerPointerChecker;
     return std::nullopt;
   }
+  case AF_Custom:
   case AF_None: {
     llvm_unreachable("no family");
   }
@@ -3483,53 +3542,54 @@ PathDiagnosticPieceRef MallocBugVisitor::VisitNode(const ExplodedNode *N,
           Sym, "Returned allocated memory");
     } else if (isReleased(RSCurr, RSPrev, S)) {
       const auto Family = RSCurr->getAllocationFamily();
-      switch (Family) {
-        case AF_Alloca:
-        case AF_Malloc:
-        case AF_CXXNew:
-        case AF_CXXNewArray:
-        case AF_IfNameIndex:
-          Msg = "Memory is released";
-          StackHint = std::make_unique<StackHintGeneratorForSymbol>(
-              Sym, "Returning; memory was released");
-          break;
-        case AF_InnerBuffer: {
-          const MemRegion *ObjRegion =
-              allocation_state::getContainerObjRegion(statePrev, Sym);
-          const auto *TypedRegion = cast<TypedValueRegion>(ObjRegion);
-          QualType ObjTy = TypedRegion->getValueType();
-          OS << "Inner buffer of '" << ObjTy << "' ";
+      switch (Family.kind()) {
+      case AF_Alloca:
+      case AF_Malloc:
+      case AF_CXXNew:
+      case AF_CXXNewArray:
+      case AF_IfNameIndex:
+        Msg = "Memory is released";
+        StackHint = std::make_unique<StackHintGeneratorForSymbol>(
+            Sym, "Returning; memory was released");
+        break;
+      case AF_InnerBuffer: {
+        const MemRegion *ObjRegion =
+            allocation_state::getContainerObjRegion(statePrev, Sym);
+        const auto *TypedRegion = cast<TypedValueRegion>(ObjRegion);
+        QualType ObjTy = TypedRegion->getValueType();
+        OS << "Inner buffer of '" << ObjTy << "' ";
 
-          if (N->getLocation().getKind() == ProgramPoint::PostImplicitCallKind) {
-            OS << "deallocated by call to destructor";
-            StackHint = std::make_unique<StackHintGeneratorForSymbol>(
-                Sym, "Returning; inner buffer was deallocated");
-          } else {
-            OS << "reallocated by call to '";
-            const Stmt *S = RSCurr->getStmt();
-            if (const auto *MemCallE = dyn_cast<CXXMemberCallExpr>(S)) {
-              OS << MemCallE->getMethodDecl()->getDeclName();
-            } else if (const auto *OpCallE = dyn_cast<CXXOperatorCallExpr>(S)) {
-              OS << OpCallE->getDirectCallee()->getDeclName();
-            } else if (const auto *CallE = dyn_cast<CallExpr>(S)) {
-              auto &CEMgr = BRC.getStateManager().getCallEventManager();
-              CallEventRef<> Call =
-                  CEMgr.getSimpleCall(CallE, state, CurrentLC, {nullptr, 0});
-              if (const auto *D = dyn_cast_or_null<NamedDecl>(Call->getDecl()))
-                OS << D->getDeclName();
-              else
-                OS << "unknown";
-            }
-            OS << "'";
-            StackHint = std::make_unique<StackHintGeneratorForSymbol>(
-                Sym, "Returning; inner buffer was reallocated");
+        if (N->getLocation().getKind() == ProgramPoint::PostImplicitCallKind) {
+          OS << "deallocated by call to destructor";
+          StackHint = std::make_unique<StackHintGeneratorForSymbol>(
+              Sym, "Returning; inner buffer was deallocated");
+        } else {
+          OS << "reallocated by call to '";
+          const Stmt *S = RSCurr->getStmt();
+          if (const auto *MemCallE = dyn_cast<CXXMemberCallExpr>(S)) {
+            OS << MemCallE->getMethodDecl()->getDeclName();
+          } else if (const auto *OpCallE = dyn_cast<CXXOperatorCallExpr>(S)) {
+            OS << OpCallE->getDirectCallee()->getDeclName();
+          } else if (const auto *CallE = dyn_cast<CallExpr>(S)) {
+            auto &CEMgr = BRC.getStateManager().getCallEventManager();
+            CallEventRef<> Call =
+                CEMgr.getSimpleCall(CallE, state, CurrentLC, {nullptr, 0});
+            if (const auto *D = dyn_cast_or_null<NamedDecl>(Call->getDecl()))
+              OS << D->getDeclName();
+            else
+              OS << "unknown";
           }
-          Msg = OS.str();
-          break;
+          OS << "'";
+          StackHint = std::make_unique<StackHintGeneratorForSymbol>(
+              Sym, "Returning; inner buffer was reallocated");
         }
+        Msg = OS.str();
+        break;
+        }
+        case AF_Custom:
         case AF_None:
           llvm_unreachable("Unhandled allocation family!");
-      }
+        }
 
       // See if we're releasing memory while inlining a destructor
       // (or one of its callees). This turns on various common
