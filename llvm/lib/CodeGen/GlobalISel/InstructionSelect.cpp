@@ -75,7 +75,9 @@ INITIALIZE_PASS_END(InstructionSelect, DEBUG_TYPE,
 class InstructionSelect::MIIteratorMaintainer
     : public MachineFunction::Delegate {
 #ifndef NDEBUG
-  SetVector<const MachineInstr *> CreatedInstrs;
+  SetVector<const MachineInstr *, SmallVector<const MachineInstr *, 8>,
+            DenseSet<const MachineInstr *>, 8>
+      CreatedInstrs;
 #endif
 public:
   MachineBasicBlock::reverse_iterator MII;
@@ -138,31 +140,36 @@ bool InstructionSelect::runOnMachineFunction(MachineFunction &MF) {
           MachineFunctionProperties::Property::FailedISel))
     return false;
 
-  LLVM_DEBUG(dbgs() << "Selecting function: " << MF.getName() << '\n');
-
-  const TargetPassConfig &TPC = getAnalysis<TargetPassConfig>();
   ISel = MF.getSubtarget().getInstructionSelector();
-  ISel->setTargetPassConfig(&TPC);
+  ISel->TPC = &getAnalysis<TargetPassConfig>();
 
+  // FIXME: Properly override OptLevel in TargetMachine. See OptLevelChanger
   CodeGenOptLevel OldOptLevel = OptLevel;
   auto RestoreOptLevel = make_scope_exit([=]() { OptLevel = OldOptLevel; });
   OptLevel = MF.getFunction().hasOptNone() ? CodeGenOptLevel::None
                                            : MF.getTarget().getOptLevel();
 
-  GISelKnownBits *KB = &getAnalysis<GISelKnownBitsAnalysis>().get(MF);
+  KB = &getAnalysis<GISelKnownBitsAnalysis>().get(MF);
   if (OptLevel != CodeGenOptLevel::None) {
     PSI = &getAnalysis<ProfileSummaryInfoWrapperPass>().getPSI();
     if (PSI && PSI->hasProfileSummary())
       BFI = &getAnalysis<LazyBlockFrequencyInfoPass>().getBFI();
   }
 
-  CodeGenCoverage CoverageInfo;
+  return selectMachineFunction(MF);
+}
+
+bool InstructionSelect::selectMachineFunction(MachineFunction &MF) {
+  LLVM_DEBUG(dbgs() << "Selecting function: " << MF.getName() << '\n');
   assert(ISel && "Cannot work without InstructionSelector");
+
+  const TargetPassConfig &TPC = *ISel->TPC;
+  CodeGenCoverage CoverageInfo;
   ISel->setupMF(MF, KB, &CoverageInfo, PSI, BFI);
 
   // An optimization remark emitter. Used to report failures.
   MachineOptimizationRemarkEmitter MORE(MF, /*MBFI=*/nullptr);
-  ISel->setRemarkEmitter(&MORE);
+  ISel->MORE = &MORE;
 
   // FIXME: There are many other MF/MFI fields we need to initialize.
 
@@ -206,7 +213,7 @@ bool InstructionSelect::runOnMachineFunction(MachineFunction &MF) {
         ++MIIMaintainer.MII;
 
         LLVM_DEBUG(dbgs() << "\nSelect:  " << MI);
-        if (!select(MI)) {
+        if (!selectInstr(MI)) {
           LLVM_DEBUG(dbgs() << "Selection failed!\n";
                      MIIMaintainer.reportFullyCreatedInstrs());
           reportGISelFailure(MF, TPC, MORE, "gisel-select", "cannot select",
@@ -341,7 +348,7 @@ bool InstructionSelect::runOnMachineFunction(MachineFunction &MF) {
   return true;
 }
 
-bool InstructionSelect::select(MachineInstr &MI) {
+bool InstructionSelect::selectInstr(MachineInstr &MI) {
   MachineRegisterInfo &MRI = ISel->MF->getRegInfo();
 
   // We could have folded this instruction away already, making it dead.
