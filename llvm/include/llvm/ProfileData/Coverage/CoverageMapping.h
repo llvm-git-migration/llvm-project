@@ -385,10 +385,10 @@ struct MCDCRecord {
   enum CondState { MCDC_DontCare = -1, MCDC_False = 0, MCDC_True = 1 };
 
   enum CondResult {
-    MCDC_Normal,
-    MCDC_Constant,
-    MCDC_Uncoverable,
-    MCDC_Unreachable
+    MCDC_Normal = 0x1,
+    MCDC_Constant = 0x2,
+    MCDC_Uncoverable = 0x4,
+    MCDC_Unreachable = 0x8
   };
 
   /// Emulate SmallVector<CondState> with a pair of BitVector.
@@ -527,11 +527,14 @@ public:
 
   /// Return if the decision is coverable and percent of covered conditions.
   /// Only coverable conditions are counted as denominator.
-  std::pair<bool, float> getPercentCovered() const {
+  std::pair<bool, float> getPercentCovered(int32_t CountedStates) const {
     unsigned Excluded = 0;
     unsigned Covered = 0;
+    auto IsExcluded = [&](unsigned Condition) {
+      return (getCondResult(Condition) & CountedStates) == 0;
+    };
     for (unsigned C = 0; C < getNumConditions(); C++) {
-      if (isCondFolded(C))
+      if (IsExcluded(C))
         Excluded++;
       else if (isConditionIndependencePairCovered(C))
         Covered++;
