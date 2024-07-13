@@ -357,7 +357,8 @@ static constexpr fltCategory fcNaN = APFloatBase::fcNaN;
 static constexpr fltCategory fcNormal = APFloatBase::fcNormal;
 static constexpr fltCategory fcZero = APFloatBase::fcZero;
 
-class IEEEFloat final {
+// Not final for testing purposes only.
+class IEEEFloat {
 public:
   /// \name Constructors
   /// @{
@@ -623,7 +624,11 @@ private:
 
   integerPart addSignificand(const IEEEFloat &);
   integerPart subtractSignificand(const IEEEFloat &, integerPart);
+  // Not private for testing purposes only.
+protected:
   lostFraction addOrSubtractSignificand(const IEEEFloat &, bool subtract);
+
+private:
   lostFraction multiplySignificand(const IEEEFloat &, IEEEFloat,
                                    bool ignoreAddend = false);
   lostFraction multiplySignificand(const IEEEFloat&);
@@ -727,6 +732,8 @@ private:
   void copySignificand(const IEEEFloat &);
   void freeSignificand();
 
+  // Not private for testing purposes only.
+protected:
   /// Note: this must be the first data member.
   /// The semantics that this value obeys.
   const fltSemantics *semantics;
