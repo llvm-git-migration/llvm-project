@@ -560,6 +560,81 @@ TEST(APFloatTest, FMA) {
     EXPECT_EQ(-8.85242279E-41f, f1.convertToFloat());
   }
 
+  // The `addOrSubtractSignificand` can be considered to have 9 possible cases
+  // when subtracting: all combinations of {cmpLessThan, cmpGreaterThan,
+  // cmpEqual} and {no loss, loss from lhs, loss from rhs}. Test each reachable
+  // case here.
+
+  // Regression test for failing the `assert(!carry)` in
+  // `addOrSubtractSignificand` and normalizing the exponent even when the
+  // significand is zero if there is a lost fraction.
+  // This tests cmpEqual, loss from lhs
+  {
+    APFloat f1(-1.4728589E-38f);
+    APFloat f2(3.7105144E-6f);
+    APFloat f3(5.5E-44f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(-0.0f, f1.convertToFloat());
+  }
+
+  // Test cmpGreaterThan, no loss
+  {
+    APFloat f1(2.0f);
+    APFloat f2(2.0f);
+    APFloat f3(-3.5f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(0.5f, f1.convertToFloat());
+  }
+
+  // Test cmpLessThan, no loss
+  {
+    APFloat f1(2.0f);
+    APFloat f2(2.0f);
+    APFloat f3(-4.5f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(-0.5f, f1.convertToFloat());
+  }
+
+  // Test cmpEqual, no loss
+  {
+    APFloat f1(2.0f);
+    APFloat f2(2.0f);
+    APFloat f3(-4.0f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(0.0f, f1.convertToFloat());
+  }
+
+  // Test cmpLessThan, loss from lhs
+  {
+    APFloat f1(2.0000002f);
+    APFloat f2(2.0000002f);
+    APFloat f3(-32.0f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(-27.999998f, f1.convertToFloat());
+  }
+
+  // Test cmpGreaterThan, loss from rhs
+  {
+    APFloat f1(1e10f);
+    APFloat f2(1e10f);
+    APFloat f3(-2.0000002f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(1e20f, f1.convertToFloat());
+  }
+
+  // Test cmpGreaterThan, loss from lhs
+  {
+    APFloat f1(1e-36f);
+    APFloat f2(0.0019531252f);
+    APFloat f3(-1e-45f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(1.953124e-39f, f1.convertToFloat());
+  }
+
+  // {cmpEqual, cmpLessThan} with loss from rhs can't occur for the usage in
+  // `fusedMultiplyAdd` as `multiplySignificand` normalises the MSB of lhs to
+  // one bit below the top.
+
   // Test using only a single instance of APFloat.
   {
     APFloat F(1.5);
