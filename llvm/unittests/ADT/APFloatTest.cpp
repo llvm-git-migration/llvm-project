@@ -560,6 +560,16 @@ TEST(APFloatTest, FMA) {
     EXPECT_EQ(-8.85242279E-41f, f1.convertToFloat());
   }
 
+  // Regression test for failing the `assert(!carry)` in
+  // `addOrSubtractSignificand`.
+  {
+    APFloat f1(-1.4728589E-38f);
+    APFloat f2(3.7105144E-6f);
+    APFloat f3(5.5E-44f);
+    f1.fusedMultiplyAdd(f2, f3, APFloat::rmNearestTiesToEven);
+    EXPECT_EQ(-0.0f, f1.convertToFloat());
+  }
+
   // Test using only a single instance of APFloat.
   {
     APFloat F(1.5);
