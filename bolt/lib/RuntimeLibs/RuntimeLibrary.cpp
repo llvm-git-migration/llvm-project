@@ -26,7 +26,7 @@ using namespace bolt;
 
 void RuntimeLibrary::anchor() {}
 
-std::string RuntimeLibrary::getLibPath(StringRef ToolPath,
+std::string RuntimeLibrary::getLibPathByToolPath(StringRef ToolPath,
                                        StringRef LibFileName) {
   StringRef Dir = llvm::sys::path::parent_path(ToolPath);
   SmallString<128> LibPath = llvm::sys::path::parent_path(Dir);
@@ -38,11 +38,29 @@ std::string RuntimeLibrary::getLibPath(StringRef ToolPath,
     llvm::sys::path::append(LibPath, "lib" LLVM_LIBDIR_SUFFIX);
   }
   llvm::sys::path::append(LibPath, LibFileName);
-  if (!llvm::sys::fs::exists(LibPath)) {
-    errs() << "BOLT-ERROR: library not found: " << LibPath << "\n";
-    exit(1);
-  }
   return std::string(LibPath);
+}
+
+std::string RuntimeLibrary::getLibPathByInstalled(StringRef LibFileName) {
+  SmallString<128> LibPath = llvm::sys::path::root_path(CMAKE_INSTALL_LIBDIR);
+  llvm::sys::path::append(LibPath, LibFileName);
+  return std::string(LibPath);
+}
+
+std::string RuntimeLibrary::getLibPath(StringRef ToolPath,
+                                       StringRef LibFileName) {
+  std::string ByTool = getLibPathByToolPath(ToolPath, LibFileName);
+  if (llvm::sys::fs::exists(ByTool)) {
+    return ByTool;
+  }
+
+  std::string ByInstalled = getLibPathByInstalled(LibFileName);
+  if (llvm::sys::fs::exists(ByInstalled)) {
+    return ByInstalled;
+  }
+
+  errs() << "BOLT-ERROR: library not found: " << ByTool << " or " << ByInstalled << "\n";
+  exit(1);
 }
 
 void RuntimeLibrary::loadLibrary(StringRef LibPath, BOLTLinker &Linker,
