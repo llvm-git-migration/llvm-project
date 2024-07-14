@@ -283,6 +283,9 @@ void MetadataStreamerMsgPackV4::emitKernelArg(const Argument &Arg,
   else if (Arg.hasName())
     Name = Arg.getName();
 
+  if (Name.starts_with("_hidden"))
+    return;
+
   StringRef TypeName;
   Node = Func->getMetadata("kernel_arg_type");
   if (Node && ArgNo < Node->getNumOperands())

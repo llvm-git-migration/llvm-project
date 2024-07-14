@@ -2496,6 +2496,7 @@ void SITargetLowering::allocatePreloadKernArgSGPRs(
   GCNUserSGPRUsageInfo &SGPRInfo = Info.getUserSGPRInfo();
   bool InPreloadSequence = true;
   unsigned InIdx = 0;
+  bool AlignedForImplictArgs = false;
   for (auto &Arg : F.args()) {
     if (!InPreloadSequence || !Arg.hasInRegAttr())
       break;
@@ -2517,6 +2518,19 @@ void SITargetLowering::allocatePreloadKernArgSGPRs(
       Align Alignment = commonAlignment(KernelArgBaseAlign, ArgOffset);
       unsigned NumAllocSGPRs =
           alignTo(ArgLoc.getLocVT().getFixedSizeInBits(), 32) / 32;
+
+      if (!AlignedForImplictArgs && Arg.getName().starts_with("_hidden")) {
+        unsigned OffsetBefore = LastExplicitArgOffset;
+        LastExplicitArgOffset = alignTo(
+            LastExplicitArgOffset, Subtarget->getAlignmentForImplicitArgPtr());
+        if (OffsetBefore != LastExplicitArgOffset) {
+          unsigned PaddingSGPRs =
+              alignTo(LastExplicitArgOffset - OffsetBefore, 4) / 4;
+          Info.allocateUserSGPRs(PaddingSGPRs);
+          ArgOffset += PaddingSGPRs * 4;
+        }
+        AlignedForImplictArgs = true;
+      }
 
       // Arg is preloaded into the previous SGPR.
       if (ArgLoc.getLocVT().getStoreSize() < 4 && Alignment < 4) {

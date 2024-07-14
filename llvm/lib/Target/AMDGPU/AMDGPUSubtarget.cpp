@@ -601,6 +601,8 @@ uint64_t AMDGPUSubtarget::getExplicitKernArgSize(const Function &F,
   MaxAlign = Align(1);
 
   for (const Argument &Arg : F.args()) {
+    if (Arg.getName().starts_with("_hidden"))
+      continue;
     const bool IsByRef = Arg.hasByRefAttr();
     Type *ArgTy = IsByRef ? Arg.getParamByRefType() : Arg.getType();
     Align Alignment = DL.getValueOrABITypeAlignment(
