@@ -559,11 +559,8 @@ void CodeGenFunction::FinishFunction(SourceLocation EndLoc) {
     ReturnBlock.getBlock()->eraseFromParent();
   }
   if (ReturnValue.isValid()) {
-    // This only matters when ReturnValue isn't signed. ReturnValue is possibly
-    // signed only when the return is Indirect or InAlloca. In that case, a
-    // temporary alloca to store the return value isn't created.
     auto *RetAlloca =
-        dyn_cast_or_null<llvm::AllocaInst>(ReturnValue.getPointerIfNotSigned());
+        dyn_cast<llvm::AllocaInst>(ReturnValue.emitRawPointer(*this));
     if (RetAlloca && RetAlloca->use_empty()) {
       RetAlloca->eraseFromParent();
       ReturnValue = Address::invalid();
