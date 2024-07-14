@@ -23,14 +23,18 @@ namespace printf_core {
 
 struct WriteBuffer {
   using StreamWriter = int (*)(cpp::string_view, void *);
+  using ResizeOverflowWriter = int (*)(WriteBuffer *wb,
+                                       cpp::string_view new_str);
   char *buff;
-  const size_t buff_len;
+  size_t buff_len;
   size_t buff_cur = 0;
 
   // The stream writer will be called when the buffer is full. It will be passed
   // string_views to write to the stream.
   StreamWriter stream_writer;
   void *output_target;
+
+  ResizeOverflowWriter resize_writer = nullptr;
 
   LIBC_INLINE WriteBuffer(char *Buff, size_t Buff_len, StreamWriter hook,
                           void *target)
@@ -41,41 +45,61 @@ struct WriteBuffer {
       : buff(Buff), buff_len(Buff_len), stream_writer(nullptr),
         output_target(nullptr) {}
 
+  LIBC_INLINE WriteBuffer(char *Buff, size_t Buff_len,
+                          ResizeOverflowWriter hook)
+      : buff(Buff), buff_len(Buff_len), stream_writer(nullptr),
+        output_target(nullptr), resize_writer(hook) {}
+
+  LIBC_INLINE int flush_to_stream(cpp::string_view new_str) {
+    if (buff_cur > 0) {
+      int retval = stream_writer({buff, buff_cur}, output_target);
+      if (retval < 0) {
+        return retval;
+      }
+    }
+    if (new_str.size() > 0) {
+      int retval = stream_writer(new_str, output_target);
+      if (retval < 0) {
+        return retval;
+      }
+    }
+    buff_cur = 0;
+    return WRITE_OK;
+  }
+
+  LIBC_INLINE int fill_remaining_to_buff(cpp::string_view new_str) {
+    if (buff_cur < buff_len) {
+      size_t bytes_to_write = buff_len - buff_cur;
+      if (bytes_to_write > new_str.size()) {
+        bytes_to_write = new_str.size();
+      }
+      inline_memcpy(buff + buff_cur, new_str.data(), bytes_to_write);
+      buff_cur += bytes_to_write;
+    }
+    return WRITE_OK;
+  }
+
   // The overflow_write method is intended to be called to write the contents of
-  // the buffer and new_str to the stream_writer if it exists, else it will
-  // write as much of new_str to the buffer as it can. The current position in
-  // the buffer will be reset iff stream_writer is called. Calling this with an
-  // empty string will flush the buffer if relevant.
+  // the buffer and new_str to the stream_writer if it exists. If a resizing
+  // hook is provided, it will resize the buffer and write the contents. If
+  // neither a stream_writer nor a resizing hook is provided, it will fill the
+  // remaining space in the buffer with new_str and drop the overflow. Calling
+  // this with an empty string will flush the buffer if relevant.
+
   LIBC_INLINE int overflow_write(cpp::string_view new_str) {
+    // If there is resizing hook for this buffer, resize and write
+    // contents, this can change buff, buff_len and move the curr ptr.
+    if (resize_writer != nullptr) {
+      return resize_writer(this, new_str);
+    }
     // If there is a stream_writer, write the contents of the buffer, then
     // new_str, then clear the buffer.
-    if (stream_writer != nullptr) {
-      if (buff_cur > 0) {
-        int retval = stream_writer({buff, buff_cur}, output_target);
-        if (retval < 0) {
-          return retval;
-        }
-      }
-      if (new_str.size() > 0) {
-        int retval = stream_writer(new_str, output_target);
-        if (retval < 0) {
-          return retval;
-        }
-      }
-      buff_cur = 0;
-      return WRITE_OK;
+    else if (stream_writer != nullptr) {
+      return flush_to_stream(new_str);
     } else {
       // We can't flush to the stream, so fill the rest of the buffer, then drop
       // the overflow.
-      if (buff_cur < buff_len) {
-        size_t bytes_to_write = buff_len - buff_cur;
-        if (bytes_to_write > new_str.size()) {
-          bytes_to_write = new_str.size();
-        }
-        inline_memcpy(buff + buff_cur, new_str.data(), bytes_to_write);
-        buff_cur += bytes_to_write;
-      }
-      return WRITE_OK;
+      return fill_remaining_to_buff(new_str);
     }
   }
 };

@@ -236,6 +236,15 @@ add_libc_test(
     libc.src.stdio.vprintf
 )
 
+add_libc_unittest(
+   vasprintf_test
+   SUITE
+     libc_stdio_unittests
+   SRCS
+     vasprintf_test.cpp
+   DEPENDS
+     libc.src.stdio.vasprintf
+ )
 
 if(LLVM_LIBC_FULL_BUILD)
   # In fullbuild mode, fscanf's tests use the internal FILE for other functions.

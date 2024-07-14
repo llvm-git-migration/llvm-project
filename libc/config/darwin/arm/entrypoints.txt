@@ -94,6 +94,9 @@ set(TARGET_LIBC_ENTRYPOINTS
     libc.src.stdlib.calloc
     libc.src.stdlib.realloc
     libc.src.stdlib.free
+
+    libc.src.stdio.vsprintf
+    libc.src.stdio.vasprintf
 )
 
 set(TARGET_LIBM_ENTRYPOINTS
