@@ -6156,8 +6156,6 @@ static SDValue BuildExactSDIV(const TargetLowering &TLI, SDNode *N,
 static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
                               const SDLoc &dl, SelectionDAG &DAG,
                               SmallVectorImpl<SDNode *> &Created) {
-  SDValue Op0 = N->getOperand(0);
-  SDValue Op1 = N->getOperand(1);
   EVT VT = N->getValueType(0);
   EVT SVT = VT.getScalarType();
   EVT ShVT = TLI.getShiftAmountTy(VT, DAG.getDataLayout());
@@ -6181,6 +6179,9 @@ static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
     Factors.push_back(DAG.getConstant(Factor, dl, SVT));
     return true;
   };
+
+  SDValue Op0 = N->getOperand(0);
+  SDValue Op1 = N->getOperand(1);
 
   // Collect all magic values from the build vector.
   if (!ISD::matchUnaryPredicate(Op1, BuildUDIVPattern))
