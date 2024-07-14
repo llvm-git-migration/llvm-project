@@ -6180,7 +6180,6 @@ static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
     return true;
   };
 
-  SDValue Op0 = N->getOperand(0);
   SDValue Op1 = N->getOperand(1);
 
   // Collect all magic values from the build vector.
@@ -6203,7 +6202,7 @@ static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
     Factor = Factors[0];
   }
 
-  SDValue Res = Op0;
+  SDValue Res = N->getOperand(0);
   if (UseSRL) {
     SDNodeFlags Flags;
     Flags.setExact(true);
