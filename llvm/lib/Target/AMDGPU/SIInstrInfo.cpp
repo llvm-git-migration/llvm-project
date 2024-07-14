@@ -2273,37 +2273,148 @@ bool SIInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
     MI.eraseFromParent();
     break;
   }
-  case AMDGPU::V_SET_INACTIVE_B32: {
-    unsigned NotOpc = ST.isWave32() ? AMDGPU::S_NOT_B32 : AMDGPU::S_NOT_B64;
-    unsigned Exec = ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC;
-    // FIXME: We may possibly optimize the COPY once we find ways to make LLVM
-    // optimizations (mainly Register Coalescer) aware of WWM register liveness.
-    BuildMI(MBB, MI, DL, get(AMDGPU::V_MOV_B32_e32), MI.getOperand(0).getReg())
-        .add(MI.getOperand(1));
-    auto FirstNot = BuildMI(MBB, MI, DL, get(NotOpc), Exec).addReg(Exec);
-    FirstNot->addRegisterDead(AMDGPU::SCC, TRI); // SCC is overwritten
-    BuildMI(MBB, MI, DL, get(AMDGPU::V_MOV_B32_e32), MI.getOperand(0).getReg())
-      .add(MI.getOperand(2));
-    BuildMI(MBB, MI, DL, get(NotOpc), Exec)
-      .addReg(Exec);
-    MI.eraseFromParent();
-    break;
-  }
+  case AMDGPU::V_SET_INACTIVE_B32:
   case AMDGPU::V_SET_INACTIVE_B64: {
     unsigned NotOpc = ST.isWave32() ? AMDGPU::S_NOT_B32 : AMDGPU::S_NOT_B64;
-    unsigned Exec = ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC;
-    MachineInstr *Copy = BuildMI(MBB, MI, DL, get(AMDGPU::V_MOV_B64_PSEUDO),
-                                 MI.getOperand(0).getReg())
-                             .add(MI.getOperand(1));
-    expandPostRAPseudo(*Copy);
-    auto FirstNot = BuildMI(MBB, MI, DL, get(NotOpc), Exec).addReg(Exec);
-    FirstNot->addRegisterDead(AMDGPU::SCC, TRI); // SCC is overwritten
-    Copy = BuildMI(MBB, MI, DL, get(AMDGPU::V_MOV_B64_PSEUDO),
-                   MI.getOperand(0).getReg())
-               .add(MI.getOperand(2));
-    expandPostRAPseudo(*Copy);
-    BuildMI(MBB, MI, DL, get(NotOpc), Exec)
-      .addReg(Exec);
+    unsigned MovOpc = ST.isWave32() ? AMDGPU::S_MOV_B32 : AMDGPU::S_MOV_B64;
+    unsigned VMovOpc = MI.getOpcode() == AMDGPU::V_SET_INACTIVE_B64
+                           ? AMDGPU::V_MOV_B64_PSEUDO
+                           : AMDGPU::V_MOV_B32_e32;
+    Register ExecReg = ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC;
+
+    Register DstReg = MI.getOperand(0).getReg();
+    MachineOperand &ActiveSrc = MI.getOperand(1);
+    MachineOperand &InactiveSrc = MI.getOperand(2);
+
+    bool VMov64 = VMovOpc != AMDGPU::V_MOV_B32_e32;
+
+    // Find implicit exec src if this is running in WWM.
+    Register ExecSrcReg = 0;
+    for (auto &Op : MI.implicit_operands()) {
+      if (Op.isDef() || !Op.isReg())
+        continue;
+      Register OpReg = Op.getReg();
+      if (OpReg == AMDGPU::EXEC || OpReg == AMDGPU::EXEC_LO ||
+          OpReg == AMDGPU::SCC)
+        continue;
+      ExecSrcReg = OpReg;
+      break;
+    }
+
+    // Ideally in WWM this operation is lowered to V_CNDMASK; however,
+    // constant bus constraints and the presence of literal constants
+    // present an issue.
+    // Fallback to V_MOV base lowering in all but the common cases.
+    bool InWWM = !!ExecSrcReg;
+    bool UseVCndMask = false;
+    if (InWWM) {
+      const MachineFunction *MF = MI.getParent()->getParent();
+      const MachineRegisterInfo &MRI = MF->getRegInfo();
+      const unsigned Opcode = AMDGPU::V_CNDMASK_B32_e64;
+      const MCInstrDesc &Desc = get(Opcode);
+      int Src0Idx = AMDGPU::getNamedOperandIdx(Opcode, AMDGPU::OpName::src0);
+      int Src1Idx = AMDGPU::getNamedOperandIdx(Opcode, AMDGPU::OpName::src1);
+      int ConstantBusLimit = ST.getConstantBusLimit(AMDGPU::V_CNDMASK_B32_e64);
+      int LiteralLimit = ST.hasVOP3Literal() ? 1 : 0;
+      int ConstantBusUses = 1; // Starts at one for ExecRegSrc
+      int LiteralConstants = 0;
+      ConstantBusUses +=
+          usesConstantBus(MRI, ActiveSrc, Desc.operands()[Src1Idx]) ? 1 : 0;
+      ConstantBusUses +=
+          usesConstantBus(MRI, InactiveSrc, Desc.operands()[Src0Idx]) ? 1 : 0;
+      LiteralConstants +=
+          ActiveSrc.isImm() &&
+                  !isInlineConstant(ActiveSrc, Desc.operands()[Src1Idx])
+              ? 1
+              : 0;
+      LiteralConstants +=
+          InactiveSrc.isImm() &&
+                  !isInlineConstant(InactiveSrc, Desc.operands()[Src0Idx])
+              ? 1
+              : 0;
+      UseVCndMask = ConstantBusUses <= ConstantBusLimit &&
+                    LiteralConstants <= LiteralLimit &&
+                    (!VMov64 || (ActiveSrc.isReg() && InactiveSrc.isReg()));
+    }
+
+    if (UseVCndMask && VMov64) {
+      // WWM B64; decompose to two B32 operations.
+      // Test above ensures that both sources are registers.
+      // Note: this is done to avoid falling back to V_MOV multiple times
+      // and introducing exec manipulation for each VGPR separately.
+      assert(ActiveSrc.isReg() && InactiveSrc.isReg());
+      Register ActiveLo = RI.getSubReg(ActiveSrc.getReg(), AMDGPU::sub0);
+      Register ActiveHi = RI.getSubReg(ActiveSrc.getReg(), AMDGPU::sub1);
+      Register InactiveLo = RI.getSubReg(InactiveSrc.getReg(), AMDGPU::sub0);
+      Register InactiveHi = RI.getSubReg(InactiveSrc.getReg(), AMDGPU::sub1);
+      MachineInstr *Tmp;
+      Tmp = BuildMI(MBB, MI, DL, get(AMDGPU::V_SET_INACTIVE_B32),
+                    RI.getSubReg(DstReg, AMDGPU::sub0))
+                .addReg(InactiveLo)
+                .addReg(ActiveLo)
+                .addReg(ExecSrcReg, RegState::Implicit)
+                .addReg(DstReg, RegState::ImplicitDefine);
+      expandPostRAPseudo(*Tmp);
+      Tmp = BuildMI(MBB, MI, DL, get(AMDGPU::V_SET_INACTIVE_B32),
+                    RI.getSubReg(DstReg, AMDGPU::sub1))
+                .addReg(InactiveHi, InactiveSrc.isKill() ? RegState::Kill : 0)
+                .addReg(ActiveHi, ActiveSrc.isKill() ? RegState::Kill : 0)
+                .addReg(ExecSrcReg, RegState::Implicit)
+                .addReg(DstReg, RegState::ImplicitDefine);
+      expandPostRAPseudo(*Tmp);
+    } else if (UseVCndMask) {
+      // WWM B32; use V_CNDMASK.
+      MachineInstr *VCndMask =
+          BuildMI(MBB, MI, DL, get(AMDGPU::V_CNDMASK_B32_e64), DstReg)
+              .addImm(0)
+              .add(InactiveSrc)
+              .addImm(0)
+              .add(ActiveSrc)
+              .addReg(ExecSrcReg);
+      // Copy implicit defs in case this is part of V_SET_INACTIVE_B64.
+      for (auto &Op : MI.implicit_operands()) {
+        if (!Op.isDef())
+          continue;
+        VCndMask->addOperand(Op);
+      }
+    } else {
+      // Fallback V_MOV case.
+      // Avoid unnecessary work if a src is the destination.
+      // This can happen if WWM register allocation was efficient.
+      bool SkipActive = ActiveSrc.isReg() && ActiveSrc.getReg() == DstReg;
+      bool SkipInactive = InactiveSrc.isReg() && InactiveSrc.getReg() == DstReg;
+      if (!SkipActive) {
+        if (InWWM) {
+          // Cancel WWM
+          BuildMI(MBB, MI, DL, get(MovOpc), ExecReg).addReg(ExecSrcReg);
+        }
+        // Copy active lanes
+        MachineInstr *VMov =
+            BuildMI(MBB, MI, DL, get(VMovOpc), MI.getOperand(0).getReg())
+                .add(ActiveSrc);
+        if (VMov64)
+          expandPostRAPseudo(*VMov);
+      }
+      if (!SkipInactive) {
+        // Set exec mask to inactive lanes
+        MachineInstr *ExecMI = BuildMI(MBB, MI, DL, get(NotOpc), ExecReg)
+                                   .addReg(InWWM ? ExecSrcReg : ExecReg);
+        ExecMI->addRegisterDead(AMDGPU::SCC, TRI); // SCC is overwritten
+        // Copy inactive lanes
+        MachineInstr *VMov =
+            BuildMI(MBB, MI, DL, get(VMovOpc), DstReg).add(InactiveSrc);
+        if (VMov64)
+          expandPostRAPseudo(*VMov);
+        if (!InWWM) {
+          // Restore original exec mask
+          BuildMI(MBB, MI, DL, get(NotOpc), ExecReg).addReg(ExecReg);
+        }
+      }
+      if (InWWM) {
+        // Restore WWM
+        BuildMI(MBB, MI, DL, get(MovOpc), ExecReg).addImm(-1);
+      }
+    }
     MI.eraseFromParent();
     break;
   }
