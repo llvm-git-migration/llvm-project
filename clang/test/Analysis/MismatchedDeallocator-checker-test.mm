@@ -14,6 +14,13 @@ void __attribute((ownership_returns(malloc))) *my_malloc(size_t);
 void free(void *);
 void __attribute((ownership_takes(malloc, 1))) my_free(void *);
 
+void __attribute((ownership_returns(malloc1))) *my_malloc1(size_t);
+void __attribute((ownership_takes(malloc1, 1))) my_free1(void *);
+
+void __attribute((ownership_returns(malloc2))) *my_malloc2(size_t);
+void __attribute((ownership_returns(malloc2))) *my_malloc3(size_t);
+void __attribute((ownership_takes(malloc2, 1))) __attribute((ownership_takes(malloc3, 1))) my_free23(void *);
+
 //---------------------------------------------------------------
 // Test if an allocation function matches deallocation function
 //---------------------------------------------------------------
@@ -58,6 +65,41 @@ void testMalloc7() {
 void testMalloc8() {
   int *p = (int *)malloc(sizeof(int));
   operator delete[](p); // expected-warning{{Memory allocated by malloc() should be deallocated by free(), not operator delete[]}}
+}
+
+void testMalloc9() {
+  int *p = (int *)my_malloc(sizeof(int));
+  my_free(p); // no warning
+}
+
+void testMalloc10() {
+  int *p = (int *)my_malloc1(sizeof(int));
+  my_free1(p); // no warning
+}
+
+void testMalloc11() {
+  int *p = (int *)my_malloc2(sizeof(int));
+  my_free23(p); // no warning
+}
+
+void testMalloc12() {
+  int *p = (int *)my_malloc1(sizeof(int));
+  my_free(p); // expected-warning{{Memory allocated by my_malloc1() should be deallocated by function that takes ownership of 'malloc1', not my_free(), which takes ownership of 'malloc'}}
+}
+
+void testMalloc13() {
+  int *p = (int *)my_malloc2(sizeof(int));
+  my_free1(p); // expected-warning{{Memory allocated by my_malloc2() should be deallocated by function that takes ownership of 'malloc2', not my_free1(), which takes ownership of 'malloc1'}}
+}
+
+void testMalloc14() {
+  int *p = (int *)my_malloc1(sizeof(int));
+  my_free23(p); // expected-warning{{Memory allocated by my_malloc1() should be deallocated by function that takes ownership of 'malloc1', not my_free23(), which takes ownership of 'malloc2', 'malloc3'}}
+}
+
+void testMalloc15() {
+  int *p = (int *)my_malloc1(sizeof(int));
+  free(p); // expected-warning{{Memory allocated by my_malloc1() should be deallocated by function that takes ownership of 'malloc1', not free()}}
 }
 
 void testAlloca() {
