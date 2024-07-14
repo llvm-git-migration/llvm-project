@@ -6092,6 +6092,7 @@ void TargetLowering::ComputeConstraintToUse(AsmOperandInfo &OpInfo,
 
 /// Given an exact SDIV by a constant, create a multiplication
 /// with the multiplicative inverse of the constant.
+/// From Hacker's Delight, 2nd Edition, page 242.
 static SDValue BuildExactSDIV(const TargetLowering &TLI, SDNode *N,
                               const SDLoc &dl, SelectionDAG &DAG,
                               SmallVectorImpl<SDNode *> &Created) {
@@ -6153,6 +6154,7 @@ static SDValue BuildExactSDIV(const TargetLowering &TLI, SDNode *N,
 
 /// Given an exact UDIV by a constant, create a multiplication
 /// with the multiplicative inverse of the constant.
+/// From Hacker's Delight, 2nd Edition, page 242.
 static SDValue BuildExactUDIV(const TargetLowering &TLI, SDNode *N,
                               const SDLoc &dl, SelectionDAG &DAG,
                               SmallVectorImpl<SDNode *> &Created) {
