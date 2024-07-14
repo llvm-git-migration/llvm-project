@@ -5333,10 +5333,6 @@ bool CombinerHelper::matchUDivByConst(MachineInstr &MI) {
   Register Dst = MI.getOperand(0).getReg();
   Register RHS = MI.getOperand(2).getReg();
   LLT DstTy = MRI.getType(Dst);
-  auto *RHSDef = MRI.getVRegDef(RHS);
-  if (!MI.getFlag(MachineInstr::MIFlag::IsExact) &&
-      !isConstantOrConstantVector(*RHSDef, MRI))
-    return false;
 
   auto &MF = *MI.getMF();
   AttributeList Attr = MF.getFunction().getAttributes();
@@ -5349,6 +5345,15 @@ bool CombinerHelper::matchUDivByConst(MachineInstr &MI) {
   // Don't do this for minsize because the instruction sequence is usually
   // larger.
   if (MF.getFunction().hasMinSize())
+    return false;
+
+  if (MI.getFlag(MachineInstr::MIFlag::IsExact)) {
+    return matchUnaryPredicate(
+        MRI, RHS, [](const Constant *C) { return C && !C->isNullValue(); });
+  }
+
+  auto *RHSDef = MRI.getVRegDef(RHS);
+  if (!isConstantOrConstantVector(*RHSDef, MRI))
     return false;
 
   // Don't do this if the types are not going to be legal.
