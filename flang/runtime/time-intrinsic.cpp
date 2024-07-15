@@ -144,7 +144,11 @@ template <typename Unused = void>
 count_t GetSystemClockCount(int kind, fallback_implementation) {
   struct timespec tspec;
 
+#ifdef _AIX
+  if (clock_gettime(CLOCK_REALTIME, &tspec) < 0) {
+#else
   if (timespec_get(&tspec, TIME_UTC) < 0) {
+#endif
     // Return -HUGE(COUNT) to represent failure.
     return -static_cast<count_t>(GetHUGE(kind));
   }
