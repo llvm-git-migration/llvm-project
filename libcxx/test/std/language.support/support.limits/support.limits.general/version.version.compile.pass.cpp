@@ -219,7 +219,7 @@
     __cpp_lib_submdspan                                     202306L [C++26]
     __cpp_lib_syncbuf                                       201803L [C++20]
     __cpp_lib_text_encoding                                 202306L [C++26]
-    __cpp_lib_three_way_comparison                          201711L [C++20]
+    __cpp_lib_three_way_comparison                          201907L [C++20]
     __cpp_lib_to_address                                    201711L [C++20]
     __cpp_lib_to_array                                      201907L [C++20]
     __cpp_lib_to_chars                                      201611L [C++17]
@@ -4420,8 +4420,8 @@
 # ifndef __cpp_lib_three_way_comparison
 #   error "__cpp_lib_three_way_comparison should be defined in c++20"
 # endif
-# if __cpp_lib_three_way_comparison != 201711L
-#   error "__cpp_lib_three_way_comparison should have the value 201711L in c++20"
+# if __cpp_lib_three_way_comparison != 201907L
+#   error "__cpp_lib_three_way_comparison should have the value 201907L in c++20"
 # endif
 
 # ifndef __cpp_lib_to_address
@@ -6018,8 +6018,8 @@
 # ifndef __cpp_lib_three_way_comparison
 #   error "__cpp_lib_three_way_comparison should be defined in c++23"
 # endif
-# if __cpp_lib_three_way_comparison != 201711L
-#   error "__cpp_lib_three_way_comparison should have the value 201711L in c++23"
+# if __cpp_lib_three_way_comparison != 201907L
+#   error "__cpp_lib_three_way_comparison should have the value 201907L in c++23"
 # endif
 
 # ifndef __cpp_lib_to_address
@@ -7940,8 +7940,8 @@
 # ifndef __cpp_lib_three_way_comparison
 #   error "__cpp_lib_three_way_comparison should be defined in c++26"
 # endif
-# if __cpp_lib_three_way_comparison != 201711L
-#   error "__cpp_lib_three_way_comparison should have the value 201711L in c++26"
+# if __cpp_lib_three_way_comparison != 201907L
+#   error "__cpp_lib_three_way_comparison should have the value 201907L in c++26"
 # endif
 
 # ifndef __cpp_lib_to_address
