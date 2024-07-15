@@ -8,8 +8,10 @@ define i8 @ucmp.8.8(i8 %x, i8 %y) nounwind {
 ; CHECK-NEXT:    llcr %r1, %r2
 ; CHECK-NEXT:    cr %r1, %r0
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i8 @llvm.ucmp(i8 %x, i8 %y)
   ret i8 %1
@@ -22,8 +24,10 @@ define i8 @ucmp.8.16(i16 %x, i16 %y) nounwind {
 ; CHECK-NEXT:    llhr %r1, %r2
 ; CHECK-NEXT:    cr %r1, %r0
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i8 @llvm.ucmp(i16 %x, i16 %y)
   ret i8 %1
@@ -34,8 +38,10 @@ define i8 @ucmp.8.32(i32 %x, i32 %y) nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    clr %r2, %r3
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i8 @llvm.ucmp(i32 %x, i32 %y)
   ret i8 %1
@@ -46,8 +52,10 @@ define i8 @ucmp.8.64(i64 %x, i64 %y) nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    clgr %r2, %r3
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i8 @llvm.ucmp(i64 %x, i64 %y)
   ret i8 %1
@@ -56,21 +64,23 @@ define i8 @ucmp.8.64(i64 %x, i64 %y) nounwind {
 define i8 @ucmp.8.128(i128 %x, i128 %y) nounwind {
 ; CHECK-LABEL: ucmp.8.128:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vl %v0, 0(%r3), 3
-; CHECK-NEXT:    vl %v1, 0(%r2), 3
+; CHECK-NEXT:    vl %v0, 0(%r2), 3
+; CHECK-NEXT:    vl %v1, 0(%r3), 3
 ; CHECK-NEXT:    veclg %v0, %v1
 ; CHECK-NEXT:    jlh .LBB4_2
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    vchlgs %v2, %v1, %v0
 ; CHECK-NEXT:  .LBB4_2:
-; CHECK-NEXT:    lhi %r2, 0
-; CHECK-NEXT:    lochil %r2, 1
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    veclg %v1, %v0
+; CHECK-NEXT:    lhi %r2, 0
 ; CHECK-NEXT:    jlh .LBB4_4
 ; CHECK-NEXT:  # %bb.3:
 ; CHECK-NEXT:    vchlgs %v0, %v0, %v1
 ; CHECK-NEXT:  .LBB4_4:
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    lochil %r2, 1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i8 @llvm.ucmp(i128 %x, i128 %y)
   ret i8 %1
@@ -81,8 +91,10 @@ define i32 @ucmp.32.32(i32 %x, i32 %y) nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    clr %r2, %r3
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i32 @llvm.ucmp(i32 %x, i32 %y)
   ret i32 %1
@@ -93,8 +105,10 @@ define i32 @ucmp.32.64(i64 %x, i64 %y) nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    clgr %r2, %r3
 ; CHECK-NEXT:    lhi %r2, 0
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lochil %r0, 1
 ; CHECK-NEXT:    lochih %r2, 1
-; CHECK-NEXT:    lochil %r2, -1
+; CHECK-NEXT:    sr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i32 @llvm.ucmp(i64 %x, i64 %y)
   ret i32 %1
@@ -104,9 +118,12 @@ define i64 @ucmp.64.64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: ucmp.64.64:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    clgr %r2, %r3
-; CHECK-NEXT:    lghi %r2, 0
-; CHECK-NEXT:    locghih %r2, 1
-; CHECK-NEXT:    locghil %r2, -1
+; CHECK-NEXT:    lhi %r0, 0
+; CHECK-NEXT:    lhi %r1, 0
+; CHECK-NEXT:    lochil %r1, 1
+; CHECK-NEXT:    lochih %r0, 1
+; CHECK-NEXT:    sr %r0, %r1
+; CHECK-NEXT:    lgfr %r2, %r0
 ; CHECK-NEXT:    br %r14
   %1 = call i64 @llvm.ucmp(i64 %x, i64 %y)
   ret i64 %1

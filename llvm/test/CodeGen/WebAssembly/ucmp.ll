@@ -7,21 +7,20 @@ define i8 @ucmp.8.8(i8 %x, i8 %y) nounwind {
 ; CHECK-LABEL: ucmp.8.8:
 ; CHECK:         .functype ucmp.8.8 (i32, i32) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push3=, -1
-; CHECK-NEXT:    local.get $push10=, 0
+; CHECK-NEXT:    local.get $push9=, 0
 ; CHECK-NEXT:    i32.const $push0=, 255
-; CHECK-NEXT:    i32.and $push9=, $pop10, $pop0
-; CHECK-NEXT:    local.tee $push8=, 0, $pop9
+; CHECK-NEXT:    i32.and $push8=, $pop9, $pop0
+; CHECK-NEXT:    local.tee $push7=, 0, $pop8
+; CHECK-NEXT:    local.get $push10=, 1
+; CHECK-NEXT:    i32.const $push6=, 255
+; CHECK-NEXT:    i32.and $push5=, $pop10, $pop6
+; CHECK-NEXT:    local.tee $push4=, 1, $pop5
+; CHECK-NEXT:    i32.gt_u $push2=, $pop7, $pop4
+; CHECK-NEXT:    local.get $push12=, 0
 ; CHECK-NEXT:    local.get $push11=, 1
-; CHECK-NEXT:    i32.const $push7=, 255
-; CHECK-NEXT:    i32.and $push6=, $pop11, $pop7
-; CHECK-NEXT:    local.tee $push5=, 1, $pop6
-; CHECK-NEXT:    i32.gt_u $push2=, $pop8, $pop5
-; CHECK-NEXT:    local.get $push13=, 0
-; CHECK-NEXT:    local.get $push12=, 1
-; CHECK-NEXT:    i32.lt_u $push1=, $pop13, $pop12
-; CHECK-NEXT:    i32.select $push4=, $pop3, $pop2, $pop1
-; CHECK-NEXT:    return $pop4
+; CHECK-NEXT:    i32.lt_u $push1=, $pop12, $pop11
+; CHECK-NEXT:    i32.sub $push3=, $pop2, $pop1
+; CHECK-NEXT:    return $pop3
   %1 = call i8 @llvm.ucmp(i8 %x, i8 %y)
   ret i8 %1
 }
@@ -30,21 +29,20 @@ define i8 @ucmp.8.16(i16 %x, i16 %y) nounwind {
 ; CHECK-LABEL: ucmp.8.16:
 ; CHECK:         .functype ucmp.8.16 (i32, i32) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push3=, -1
-; CHECK-NEXT:    local.get $push10=, 0
+; CHECK-NEXT:    local.get $push9=, 0
 ; CHECK-NEXT:    i32.const $push0=, 65535
-; CHECK-NEXT:    i32.and $push9=, $pop10, $pop0
-; CHECK-NEXT:    local.tee $push8=, 0, $pop9
+; CHECK-NEXT:    i32.and $push8=, $pop9, $pop0
+; CHECK-NEXT:    local.tee $push7=, 0, $pop8
+; CHECK-NEXT:    local.get $push10=, 1
+; CHECK-NEXT:    i32.const $push6=, 65535
+; CHECK-NEXT:    i32.and $push5=, $pop10, $pop6
+; CHECK-NEXT:    local.tee $push4=, 1, $pop5
+; CHECK-NEXT:    i32.gt_u $push2=, $pop7, $pop4
+; CHECK-NEXT:    local.get $push12=, 0
 ; CHECK-NEXT:    local.get $push11=, 1
-; CHECK-NEXT:    i32.const $push7=, 65535
-; CHECK-NEXT:    i32.and $push6=, $pop11, $pop7
-; CHECK-NEXT:    local.tee $push5=, 1, $pop6
-; CHECK-NEXT:    i32.gt_u $push2=, $pop8, $pop5
-; CHECK-NEXT:    local.get $push13=, 0
-; CHECK-NEXT:    local.get $push12=, 1
-; CHECK-NEXT:    i32.lt_u $push1=, $pop13, $pop12
-; CHECK-NEXT:    i32.select $push4=, $pop3, $pop2, $pop1
-; CHECK-NEXT:    return $pop4
+; CHECK-NEXT:    i32.lt_u $push1=, $pop12, $pop11
+; CHECK-NEXT:    i32.sub $push3=, $pop2, $pop1
+; CHECK-NEXT:    return $pop3
   %1 = call i8 @llvm.ucmp(i16 %x, i16 %y)
   ret i8 %1
 }
@@ -53,15 +51,14 @@ define i8 @ucmp.8.32(i32 %x, i32 %y) nounwind {
 ; CHECK-LABEL: ucmp.8.32:
 ; CHECK:         .functype ucmp.8.32 (i32, i32) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push2=, -1
-; CHECK-NEXT:    local.get $push5=, 0
-; CHECK-NEXT:    local.get $push4=, 1
-; CHECK-NEXT:    i32.gt_u $push1=, $pop5, $pop4
-; CHECK-NEXT:    local.get $push7=, 0
-; CHECK-NEXT:    local.get $push6=, 1
-; CHECK-NEXT:    i32.lt_u $push0=, $pop7, $pop6
-; CHECK-NEXT:    i32.select $push3=, $pop2, $pop1, $pop0
-; CHECK-NEXT:    return $pop3
+; CHECK-NEXT:    local.get $push4=, 0
+; CHECK-NEXT:    local.get $push3=, 1
+; CHECK-NEXT:    i32.gt_u $push1=, $pop4, $pop3
+; CHECK-NEXT:    local.get $push6=, 0
+; CHECK-NEXT:    local.get $push5=, 1
+; CHECK-NEXT:    i32.lt_u $push0=, $pop6, $pop5
+; CHECK-NEXT:    i32.sub $push2=, $pop1, $pop0
+; CHECK-NEXT:    return $pop2
   %1 = call i8 @llvm.ucmp(i32 %x, i32 %y)
   ret i8 %1
 }
@@ -70,15 +67,14 @@ define i8 @ucmp.8.64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: ucmp.8.64:
 ; CHECK:         .functype ucmp.8.64 (i64, i64) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push2=, -1
-; CHECK-NEXT:    local.get $push5=, 0
-; CHECK-NEXT:    local.get $push4=, 1
-; CHECK-NEXT:    i64.gt_u $push1=, $pop5, $pop4
-; CHECK-NEXT:    local.get $push7=, 0
-; CHECK-NEXT:    local.get $push6=, 1
-; CHECK-NEXT:    i64.lt_u $push0=, $pop7, $pop6
-; CHECK-NEXT:    i32.select $push3=, $pop2, $pop1, $pop0
-; CHECK-NEXT:    return $pop3
+; CHECK-NEXT:    local.get $push4=, 0
+; CHECK-NEXT:    local.get $push3=, 1
+; CHECK-NEXT:    i64.gt_u $push1=, $pop4, $pop3
+; CHECK-NEXT:    local.get $push6=, 0
+; CHECK-NEXT:    local.get $push5=, 1
+; CHECK-NEXT:    i64.lt_u $push0=, $pop6, $pop5
+; CHECK-NEXT:    i32.sub $push2=, $pop1, $pop0
+; CHECK-NEXT:    return $pop2
   %1 = call i8 @llvm.ucmp(i64 %x, i64 %y)
   ret i8 %1
 }
@@ -88,31 +84,27 @@ define i8 @ucmp.8.128(i128 %x, i128 %y) nounwind {
 ; CHECK:         .functype ucmp.8.128 (i64, i64, i64, i64) -> (i32)
 ; CHECK-NEXT:    .local i32
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push9=, -1
-; CHECK-NEXT:    i32.const $push7=, 1
-; CHECK-NEXT:    i32.const $push6=, 0
-; CHECK-NEXT:    local.get $push14=, 0
-; CHECK-NEXT:    local.get $push13=, 2
-; CHECK-NEXT:    i64.gt_u $push4=, $pop14, $pop13
-; CHECK-NEXT:    local.get $push16=, 1
-; CHECK-NEXT:    local.get $push15=, 3
-; CHECK-NEXT:    i64.gt_u $push3=, $pop16, $pop15
+; CHECK-NEXT:    local.get $push10=, 0
+; CHECK-NEXT:    local.get $push9=, 2
+; CHECK-NEXT:    i64.gt_u $push4=, $pop10, $pop9
+; CHECK-NEXT:    local.get $push12=, 1
+; CHECK-NEXT:    local.get $push11=, 3
+; CHECK-NEXT:    i64.gt_u $push3=, $pop12, $pop11
+; CHECK-NEXT:    local.get $push14=, 1
+; CHECK-NEXT:    local.get $push13=, 3
+; CHECK-NEXT:    i64.eq $push8=, $pop14, $pop13
+; CHECK-NEXT:    local.tee $push7=, 4, $pop8
+; CHECK-NEXT:    i32.select $push5=, $pop4, $pop3, $pop7
+; CHECK-NEXT:    local.get $push16=, 0
+; CHECK-NEXT:    local.get $push15=, 2
+; CHECK-NEXT:    i64.lt_u $push1=, $pop16, $pop15
 ; CHECK-NEXT:    local.get $push18=, 1
 ; CHECK-NEXT:    local.get $push17=, 3
-; CHECK-NEXT:    i64.eq $push12=, $pop18, $pop17
-; CHECK-NEXT:    local.tee $push11=, 4, $pop12
-; CHECK-NEXT:    i32.select $push5=, $pop4, $pop3, $pop11
-; CHECK-NEXT:    i32.select $push8=, $pop7, $pop6, $pop5
-; CHECK-NEXT:    local.get $push20=, 0
-; CHECK-NEXT:    local.get $push19=, 2
-; CHECK-NEXT:    i64.lt_u $push1=, $pop20, $pop19
-; CHECK-NEXT:    local.get $push22=, 1
-; CHECK-NEXT:    local.get $push21=, 3
-; CHECK-NEXT:    i64.lt_u $push0=, $pop22, $pop21
-; CHECK-NEXT:    local.get $push23=, 4
-; CHECK-NEXT:    i32.select $push2=, $pop1, $pop0, $pop23
-; CHECK-NEXT:    i32.select $push10=, $pop9, $pop8, $pop2
-; CHECK-NEXT:    return $pop10
+; CHECK-NEXT:    i64.lt_u $push0=, $pop18, $pop17
+; CHECK-NEXT:    local.get $push19=, 4
+; CHECK-NEXT:    i32.select $push2=, $pop1, $pop0, $pop19
+; CHECK-NEXT:    i32.sub $push6=, $pop5, $pop2
+; CHECK-NEXT:    return $pop6
   %1 = call i8 @llvm.ucmp(i128 %x, i128 %y)
   ret i8 %1
 }
@@ -121,15 +113,14 @@ define i32 @ucmp.32.32(i32 %x, i32 %y) nounwind {
 ; CHECK-LABEL: ucmp.32.32:
 ; CHECK:         .functype ucmp.32.32 (i32, i32) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push2=, -1
-; CHECK-NEXT:    local.get $push5=, 0
-; CHECK-NEXT:    local.get $push4=, 1
-; CHECK-NEXT:    i32.gt_u $push1=, $pop5, $pop4
-; CHECK-NEXT:    local.get $push7=, 0
-; CHECK-NEXT:    local.get $push6=, 1
-; CHECK-NEXT:    i32.lt_u $push0=, $pop7, $pop6
-; CHECK-NEXT:    i32.select $push3=, $pop2, $pop1, $pop0
-; CHECK-NEXT:    return $pop3
+; CHECK-NEXT:    local.get $push4=, 0
+; CHECK-NEXT:    local.get $push3=, 1
+; CHECK-NEXT:    i32.gt_u $push1=, $pop4, $pop3
+; CHECK-NEXT:    local.get $push6=, 0
+; CHECK-NEXT:    local.get $push5=, 1
+; CHECK-NEXT:    i32.lt_u $push0=, $pop6, $pop5
+; CHECK-NEXT:    i32.sub $push2=, $pop1, $pop0
+; CHECK-NEXT:    return $pop2
   %1 = call i32 @llvm.ucmp(i32 %x, i32 %y)
   ret i32 %1
 }
@@ -138,15 +129,14 @@ define i32 @ucmp.32.64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: ucmp.32.64:
 ; CHECK:         .functype ucmp.32.64 (i64, i64) -> (i32)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i32.const $push2=, -1
-; CHECK-NEXT:    local.get $push5=, 0
-; CHECK-NEXT:    local.get $push4=, 1
-; CHECK-NEXT:    i64.gt_u $push1=, $pop5, $pop4
-; CHECK-NEXT:    local.get $push7=, 0
-; CHECK-NEXT:    local.get $push6=, 1
-; CHECK-NEXT:    i64.lt_u $push0=, $pop7, $pop6
-; CHECK-NEXT:    i32.select $push3=, $pop2, $pop1, $pop0
-; CHECK-NEXT:    return $pop3
+; CHECK-NEXT:    local.get $push4=, 0
+; CHECK-NEXT:    local.get $push3=, 1
+; CHECK-NEXT:    i64.gt_u $push1=, $pop4, $pop3
+; CHECK-NEXT:    local.get $push6=, 0
+; CHECK-NEXT:    local.get $push5=, 1
+; CHECK-NEXT:    i64.lt_u $push0=, $pop6, $pop5
+; CHECK-NEXT:    i32.sub $push2=, $pop1, $pop0
+; CHECK-NEXT:    return $pop2
   %1 = call i32 @llvm.ucmp(i64 %x, i64 %y)
   ret i32 %1
 }
@@ -155,16 +145,15 @@ define i64 @ucmp.64.64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: ucmp.64.64:
 ; CHECK:         .functype ucmp.64.64 (i64, i64) -> (i64)
 ; CHECK-NEXT:  # %bb.0:
-; CHECK-NEXT:    i64.const $push3=, -1
-; CHECK-NEXT:    local.get $push6=, 0
-; CHECK-NEXT:    local.get $push5=, 1
-; CHECK-NEXT:    i64.gt_u $push1=, $pop6, $pop5
-; CHECK-NEXT:    i64.extend_i32_u $push2=, $pop1
-; CHECK-NEXT:    local.get $push8=, 0
-; CHECK-NEXT:    local.get $push7=, 1
-; CHECK-NEXT:    i64.lt_u $push0=, $pop8, $pop7
-; CHECK-NEXT:    i64.select $push4=, $pop3, $pop2, $pop0
-; CHECK-NEXT:    return $pop4
+; CHECK-NEXT:    local.get $push5=, 0
+; CHECK-NEXT:    local.get $push4=, 1
+; CHECK-NEXT:    i64.gt_u $push1=, $pop5, $pop4
+; CHECK-NEXT:    local.get $push7=, 0
+; CHECK-NEXT:    local.get $push6=, 1
+; CHECK-NEXT:    i64.lt_u $push0=, $pop7, $pop6
+; CHECK-NEXT:    i32.sub $push2=, $pop1, $pop0
+; CHECK-NEXT:    i64.extend_i32_s $push3=, $pop2
+; CHECK-NEXT:    return $pop3
   %1 = call i64 @llvm.ucmp(i64 %x, i64 %y)
   ret i64 %1
 }

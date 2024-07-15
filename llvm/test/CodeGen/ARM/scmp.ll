@@ -4,18 +4,16 @@
 define i8 @scmp_8_8(i8 %x, i8 %y) nounwind {
 ; CHECK-LABEL: scmp_8_8:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    sxtb r2, r0
-; CHECK-NEXT:    movs r0, #0
+; CHECK-NEXT:    sxtb r0, r0
 ; CHECK-NEXT:    sxtb r1, r1
-; CHECK-NEXT:    cmp r2, r1
-; CHECK-NEXT:    it gt
-; CHECK-NEXT:    movgt r0, #1
-; CHECK-NEXT:    cmp r0, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne r0, #1
-; CHECK-NEXT:    cmp r2, r1
+; CHECK-NEXT:    cmp r0, r1
+; CHECK-NEXT:    mov.w r0, #0
+; CHECK-NEXT:    mov.w r2, #0
 ; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r0, #-1
+; CHECK-NEXT:    movlt r0, #1
+; CHECK-NEXT:    it gt
+; CHECK-NEXT:    movgt r2, #1
+; CHECK-NEXT:    subs r0, r2, r0
 ; CHECK-NEXT:    bx lr
   %1 = call i8 @llvm.scmp(i8 %x, i8 %y)
   ret i8 %1
@@ -24,18 +22,16 @@ define i8 @scmp_8_8(i8 %x, i8 %y) nounwind {
 define i8 @scmp_8_16(i16 %x, i16 %y) nounwind {
 ; CHECK-LABEL: scmp_8_16:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    sxth r2, r0
-; CHECK-NEXT:    movs r0, #0
+; CHECK-NEXT:    sxth r0, r0
 ; CHECK-NEXT:    sxth r1, r1
-; CHECK-NEXT:    cmp r2, r1
-; CHECK-NEXT:    it gt
-; CHECK-NEXT:    movgt r0, #1
-; CHECK-NEXT:    cmp r0, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne r0, #1
-; CHECK-NEXT:    cmp r2, r1
+; CHECK-NEXT:    cmp r0, r1
+; CHECK-NEXT:    mov.w r0, #0
+; CHECK-NEXT:    mov.w r2, #0
 ; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r0, #-1
+; CHECK-NEXT:    movlt r0, #1
+; CHECK-NEXT:    it gt
+; CHECK-NEXT:    movgt r2, #1
+; CHECK-NEXT:    subs r0, r2, r0
 ; CHECK-NEXT:    bx lr
   %1 = call i8 @llvm.scmp(i16 %x, i16 %y)
   ret i8 %1
@@ -44,17 +40,14 @@ define i8 @scmp_8_16(i16 %x, i16 %y) nounwind {
 define i8 @scmp_8_32(i32 %x, i32 %y) nounwind {
 ; CHECK-LABEL: scmp_8_32:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    movs r2, #0
 ; CHECK-NEXT:    cmp r0, r1
+; CHECK-NEXT:    mov.w r0, #0
+; CHECK-NEXT:    mov.w r2, #0
+; CHECK-NEXT:    it lt
+; CHECK-NEXT:    movlt r0, #1
 ; CHECK-NEXT:    it gt
 ; CHECK-NEXT:    movgt r2, #1
-; CHECK-NEXT:    cmp r2, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne r2, #1
-; CHECK-NEXT:    cmp r0, r1
-; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r2, #-1
-; CHECK-NEXT:    mov r0, r2
+; CHECK-NEXT:    subs r0, r2, r0
 ; CHECK-NEXT:    bx lr
   %1 = call i8 @llvm.scmp(i32 %x, i32 %y)
   ret i8 %1
@@ -63,19 +56,17 @@ define i8 @scmp_8_32(i32 %x, i32 %y) nounwind {
 define i8 @scmp_8_64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: scmp_8_64:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    subs.w r12, r2, r0
+; CHECK-NEXT:    subs.w r12, r0, r2
 ; CHECK-NEXT:    mov.w r9, #0
-; CHECK-NEXT:    sbcs.w r12, r3, r1
+; CHECK-NEXT:    sbcs.w r12, r1, r3
+; CHECK-NEXT:    mov.w r12, #0
+; CHECK-NEXT:    it lt
+; CHECK-NEXT:    movlt.w r12, #1
+; CHECK-NEXT:    subs r0, r2, r0
+; CHECK-NEXT:    sbcs.w r0, r3, r1
 ; CHECK-NEXT:    it lt
 ; CHECK-NEXT:    movlt.w r9, #1
-; CHECK-NEXT:    cmp.w r9, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne.w r9, #1
-; CHECK-NEXT:    subs r0, r0, r2
-; CHECK-NEXT:    sbcs.w r0, r1, r3
-; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r9, #-1
-; CHECK-NEXT:    mov r0, r9
+; CHECK-NEXT:    sub.w r0, r9, r12
 ; CHECK-NEXT:    bx lr
   %1 = call i8 @llvm.scmp(i64 %x, i64 %y)
   ret i8 %1
@@ -85,25 +76,24 @@ define i8 @scmp_8_128(i128 %x, i128 %y) nounwind {
 ; CHECK-LABEL: scmp_8_128:
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    push {r4, r5, r6, lr}
-; CHECK-NEXT:    ldrd r12, lr, [sp, #16]
-; CHECK-NEXT:    mov.w r9, #0
-; CHECK-NEXT:    ldrd r4, r5, [sp, #24]
-; CHECK-NEXT:    subs.w r6, r12, r0
-; CHECK-NEXT:    sbcs.w r6, lr, r1
-; CHECK-NEXT:    sbcs.w r6, r4, r2
-; CHECK-NEXT:    sbcs.w r6, r5, r3
+; CHECK-NEXT:    add.w lr, sp, #16
+; CHECK-NEXT:    ldr r4, [sp, #28]
+; CHECK-NEXT:    movs r5, #0
+; CHECK-NEXT:    ldm.w lr, {r9, r12, lr}
+; CHECK-NEXT:    subs.w r6, r0, r9
+; CHECK-NEXT:    sbcs.w r6, r1, r12
+; CHECK-NEXT:    sbcs.w r6, r2, lr
+; CHECK-NEXT:    sbcs.w r6, r3, r4
+; CHECK-NEXT:    mov.w r6, #0
 ; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r9, #1
-; CHECK-NEXT:    cmp.w r9, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne.w r9, #1
-; CHECK-NEXT:    subs.w r0, r0, r12
-; CHECK-NEXT:    sbcs.w r0, r1, lr
-; CHECK-NEXT:    sbcs.w r0, r2, r4
-; CHECK-NEXT:    sbcs.w r0, r3, r5
+; CHECK-NEXT:    movlt r6, #1
+; CHECK-NEXT:    subs.w r0, r9, r0
+; CHECK-NEXT:    sbcs.w r0, r12, r1
+; CHECK-NEXT:    sbcs.w r0, lr, r2
+; CHECK-NEXT:    sbcs.w r0, r4, r3
 ; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r9, #-1
-; CHECK-NEXT:    mov r0, r9
+; CHECK-NEXT:    movlt r5, #1
+; CHECK-NEXT:    subs r0, r5, r6
 ; CHECK-NEXT:    pop {r4, r5, r6, pc}
   %1 = call i8 @llvm.scmp(i128 %x, i128 %y)
   ret i8 %1
@@ -112,17 +102,14 @@ define i8 @scmp_8_128(i128 %x, i128 %y) nounwind {
 define i32 @scmp_32_32(i32 %x, i32 %y) nounwind {
 ; CHECK-LABEL: scmp_32_32:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    movs r2, #0
 ; CHECK-NEXT:    cmp r0, r1
+; CHECK-NEXT:    mov.w r0, #0
+; CHECK-NEXT:    mov.w r2, #0
+; CHECK-NEXT:    it lt
+; CHECK-NEXT:    movlt r0, #1
 ; CHECK-NEXT:    it gt
 ; CHECK-NEXT:    movgt r2, #1
-; CHECK-NEXT:    cmp r2, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne r2, #1
-; CHECK-NEXT:    cmp r0, r1
-; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r2, #-1
-; CHECK-NEXT:    mov r0, r2
+; CHECK-NEXT:    subs r0, r2, r0
 ; CHECK-NEXT:    bx lr
   %1 = call i32 @llvm.scmp(i32 %x, i32 %y)
   ret i32 %1
@@ -131,19 +118,17 @@ define i32 @scmp_32_32(i32 %x, i32 %y) nounwind {
 define i32 @scmp_32_64(i64 %x, i64 %y) nounwind {
 ; CHECK-LABEL: scmp_32_64:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    subs.w r12, r2, r0
+; CHECK-NEXT:    subs.w r12, r0, r2
 ; CHECK-NEXT:    mov.w r9, #0
-; CHECK-NEXT:    sbcs.w r12, r3, r1
+; CHECK-NEXT:    sbcs.w r12, r1, r3
+; CHECK-NEXT:    mov.w r12, #0
+; CHECK-NEXT:    it lt
+; CHECK-NEXT:    movlt.w r12, #1
+; CHECK-NEXT:    subs r0, r2, r0
+; CHECK-NEXT:    sbcs.w r0, r3, r1
 ; CHECK-NEXT:    it lt
 ; CHECK-NEXT:    movlt.w r9, #1
-; CHECK-NEXT:    cmp.w r9, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne.w r9, #1
-; CHECK-NEXT:    subs r0, r0, r2
-; CHECK-NEXT:    sbcs.w r0, r1, r3
-; CHECK-NEXT:    it lt
-; CHECK-NEXT:    movlt.w r9, #-1
-; CHECK-NEXT:    mov r0, r9
+; CHECK-NEXT:    sub.w r0, r9, r12
 ; CHECK-NEXT:    bx lr
   %1 = call i32 @llvm.scmp(i64 %x, i64 %y)
   ret i32 %1
@@ -162,15 +147,8 @@ define i64 @scmp_64_64(i64 %x, i64 %y) nounwind {
 ; CHECK-NEXT:    sbcs.w r0, r3, r1
 ; CHECK-NEXT:    it lt
 ; CHECK-NEXT:    movlt.w r9, #1
-; CHECK-NEXT:    cmp.w r9, #0
-; CHECK-NEXT:    it ne
-; CHECK-NEXT:    movne.w r9, #1
-; CHECK-NEXT:    cmp.w r12, #0
-; CHECK-NEXT:    itt ne
-; CHECK-NEXT:    movne.w r9, #-1
-; CHECK-NEXT:    movne.w r12, #-1
-; CHECK-NEXT:    mov r0, r9
-; CHECK-NEXT:    mov r1, r12
+; CHECK-NEXT:    sub.w r0, r9, r12
+; CHECK-NEXT:    asrs r1, r0, #31
 ; CHECK-NEXT:    bx lr
   %1 = call i64 @llvm.scmp(i64 %x, i64 %y)
   ret i64 %1
