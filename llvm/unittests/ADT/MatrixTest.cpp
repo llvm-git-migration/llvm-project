@@ -31,16 +31,16 @@ TYPED_TEST_SUITE(MatrixTest, MatrixTestTypes, );
 TYPED_TEST(MatrixTest, Construction) {
   auto &E = this->ColumnInitMatrix;
   ASSERT_TRUE(E.empty());
-  ASSERT_EQ(E.getNumCols(), 8u);
+  EXPECT_EQ(E.getNumCols(), 8u);
   E.setNumCols(3);
-  ASSERT_EQ(E.getNumCols(), 3u);
-  ASSERT_TRUE(E.empty());
-  ASSERT_EQ(E.getNumRows(), 0u);
+  EXPECT_EQ(E.getNumCols(), 3u);
+  EXPECT_TRUE(E.empty());
+  EXPECT_EQ(E.getNumRows(), 0u);
   auto &M = this->SmallMatrix;
-  ASSERT_FALSE(M.empty());
-  ASSERT_EQ(M.size(), 4u);
-  ASSERT_EQ(M.getNumRows(), 2u);
-  ASSERT_EQ(M.getNumCols(), 2u);
+  EXPECT_FALSE(M.empty());
+  EXPECT_EQ(M.size(), 4u);
+  EXPECT_EQ(M.getNumRows(), 2u);
+  EXPECT_EQ(M.getNumCols(), 2u);
 }
 
 TYPED_TEST(MatrixTest, CopyConstruction) {
@@ -53,22 +53,22 @@ TYPED_TEST(MatrixTest, CopyConstruction) {
   ASSERT_EQ(V.getRowSpan(), 2u);
   ASSERT_EQ(V.getColSpan(0), 1u);
   ASSERT_EQ(V.getColSpan(1), 1u);
-  ASSERT_EQ(V[0][0], 1);
-  ASSERT_EQ(V[1][0], 2);
-  ASSERT_EQ(MatrixView<TypeParam>{OldMat}[0][0], 1);
-  ASSERT_EQ(MatrixView<TypeParam>{OldMat}[0][1], 2);
-  ASSERT_EQ(MatrixView<TypeParam>{OldMat}[1][0], 1);
-  ASSERT_EQ(MatrixView<TypeParam>{OldMat}[1][1], 2);
+  EXPECT_EQ(V[0][0], 1);
+  EXPECT_EQ(V[1][0], 2);
+  EXPECT_EQ(MatrixView<TypeParam>{OldMat}[0][0], 1);
+  EXPECT_EQ(MatrixView<TypeParam>{OldMat}[0][1], 2);
+  AEXPECT_EQ(MatrixView<TypeParam>{OldMat}[1][0], 1);
+  EXPECT_EQ(MatrixView<TypeParam>{OldMat}[1][1], 2);
   MatrixStorage<TypeParam> NewMat{OldMat};
   MatrixView<TypeParam> C{V, NewMat};
   ASSERT_EQ(C.getRowSpan(), 2u);
   ASSERT_EQ(C.getColSpan(0), 1u);
   ASSERT_EQ(C.getColSpan(1), 1u);
-  ASSERT_EQ(C[0][0], 1);
-  ASSERT_EQ(C[1][0], 2);
+  EXPECT_EQ(C[0][0], 1);
+  EXPECT_EQ(C[1][0], 2);
   C.addRow(this->getDummyRow(2));
-  ASSERT_EQ(C[2][0], 1);
-  ASSERT_EQ(C[2][1], 2);
+  EXPECT_EQ(C[2][0], 1);
+  EXPECT_EQ(C[2][1], 2);
 }
 
 TYPED_TEST(MatrixTest, RowOps) {
@@ -79,13 +79,13 @@ TYPED_TEST(MatrixTest, RowOps) {
   ASSERT_EQ(V.getRowSpan(), 2u);
   V[0] = this->getDummyRow(2);
   V = MatrixView<TypeParam>{M};
-  ASSERT_EQ(V[0][0], 1);
-  ASSERT_EQ(V[0][1], 2);
+  EXPECT_EQ(V[0][0], 1);
+  EXPECT_EQ(V[0][1], 2);
   ASSERT_EQ(M.getNumRows(), 2u);
   V.addRow({TypeParam(4), TypeParam(5)});
   ASSERT_EQ(M.getNumRows(), 3u);
-  ASSERT_EQ(V[2][0], 4);
-  ASSERT_EQ(V[2][1], 5);
+  EXPECT_EQ(V[2][0], 4);
+  EXPECT_EQ(V[2][1], 5);
   ASSERT_EQ(O.getNumRows(), 3u);
   MatrixView<TypeParam> W{O};
   W.addRow(V[0]);
@@ -96,16 +96,16 @@ TYPED_TEST(MatrixTest, RowOps) {
   WRow3 = WRow3.drop_back();
   ASSERT_EQ(WRow3[0], 7);
   WRow3 = WRow3.drop_back();
-  ASSERT_TRUE(WRow3.empty());
+  EXPECT_TRUE(WRow3.empty());
   ASSERT_EQ(W.getColSpan(3), 0u);
-  ASSERT_EQ(W[0][2], 0);
-  ASSERT_EQ(W[1][2], 0);
-  ASSERT_EQ(W[2][2], 0);
+  EXPECT_EQ(W[0][2], 0);
+  EXPECT_EQ(W[1][2], 0);
+  EXPECT_EQ(W[2][2], 0);
   W = MatrixView<TypeParam>{O};
-  ASSERT_EQ(W[0][2], 0);
-  ASSERT_EQ(W[1][2], 0);
-  ASSERT_EQ(W[2][2], 0);
-  ASSERT_EQ(W[3][2], 0);
+  EXPECT_EQ(W[0][2], 0);
+  EXPECT_EQ(W[1][2], 0);
+  EXPECT_EQ(W[2][2], 0);
+  EXPECT_EQ(W[3][2], 0);
 }
 
 TYPED_TEST(MatrixTest, ResizeAssign) {
@@ -117,8 +117,8 @@ TYPED_TEST(MatrixTest, ResizeAssign) {
   V[1] = this->getDummyRow(2);
   V[2] = this->getDummyRow(2);
   ASSERT_EQ(M.getNumRows(), 3u);
-  ASSERT_EQ(V[0][0], V[1][0]);
-  ASSERT_EQ(V[2][1], V[1][1]);
+  EXPECT_EQ(V[0][0], V[1][0]);
+  EXPECT_EQ(V[2][1], V[1][1]);
 }
 
 TYPED_TEST(MatrixTest, ColSlice) {
@@ -130,15 +130,15 @@ TYPED_TEST(MatrixTest, ColSlice) {
   auto W = V.colSlice(1, 2);
   ASSERT_EQ(W.getRowSpan(), 3u);
   ASSERT_EQ(W.getColSpan(0), 1u);
-  ASSERT_EQ(V[0][0], 3);
-  ASSERT_EQ(V[0][1], 7);
-  ASSERT_EQ(V[1][0], 4);
-  ASSERT_EQ(V[1][1], 5);
-  ASSERT_EQ(V[2][0], 8);
-  ASSERT_EQ(V[2][1], 9);
-  ASSERT_EQ(W[0][0], 7);
-  ASSERT_EQ(W[1][0], 5);
-  ASSERT_EQ(W[2][0], 9);
+  EXPECT_EQ(V[0][0], 3);
+  EXPECT_EQ(V[0][1], 7);
+  EXPECT_EQ(V[1][0], 4);
+  EXPECT_EQ(V[1][1], 5);
+  EXPECT_EQ(V[2][0], 8);
+  EXPECT_EQ(V[2][1], 9);
+  EXPECT_EQ(W[0][0], 7);
+  EXPECT_EQ(W[1][0], 5);
+  EXPECT_EQ(W[2][0], 9);
 }
 
 TYPED_TEST(MatrixTest, RowColSlice) {
@@ -149,16 +149,16 @@ TYPED_TEST(MatrixTest, RowColSlice) {
   auto W = V.rowSlice(0, 2).colSlice(0, 2);
   ASSERT_EQ(W.getRowSpan(), 2u);
   ASSERT_EQ(W.getColSpan(0), 2u);
-  ASSERT_EQ(V[0][0], 3);
-  ASSERT_EQ(V[0][1], 7);
-  ASSERT_EQ(V[1][0], 0);
-  ASSERT_EQ(V[1][1], 0);
-  ASSERT_EQ(V[2][0], 4);
-  ASSERT_EQ(V[2][1], 5);
-  ASSERT_EQ(W[0][0], 3);
-  ASSERT_EQ(W[0][1], 7);
-  ASSERT_EQ(W[1][0], 0);
-  ASSERT_EQ(W[1][1], 0);
+  EXPECT_EQ(V[0][0], 3);
+  EXPECT_EQ(V[0][1], 7);
+  EXPECT_EQ(V[1][0], 0);
+  EXPECT_EQ(V[1][1], 0);
+  EXPECT_EQ(V[2][0], 4);
+  EXPECT_EQ(V[2][1], 5);
+  EXPECT_EQ(W[0][0], 3);
+  EXPECT_EQ(W[0][1], 7);
+  EXPECT_EQ(W[1][0], 0);
+  EXPECT_EQ(W[1][1], 0);
 }
 
 TYPED_TEST(MatrixTest, LastRowOps) {
@@ -171,13 +171,13 @@ TYPED_TEST(MatrixTest, LastRowOps) {
   ASSERT_EQ(V.size(), 2u);
   auto W = V.lastRow();
   ASSERT_EQ(W.size(), 2u);
-  ASSERT_EQ(W[0], 3);
-  ASSERT_EQ(W[1], 7);
+  EXPECT_EQ(W[0], 3);
+  EXPECT_EQ(W[1], 7);
   V.lastRow() = {TypeParam(1), TypeParam(2)};
-  ASSERT_EQ(V.lastRow()[0], 1);
-  ASSERT_EQ(V.lastRow()[1], 2);
+  EXPECT_EQ(V.lastRow()[0], 1);
+  EXPECT_EQ(V.lastRow()[1], 2);
   V.dropLastRow();
-  ASSERT_TRUE(V.empty());
+  EXPECT_TRUE(V.empty());
 }
 
 TYPED_TEST(MatrixTest, Swap) {
@@ -186,17 +186,17 @@ TYPED_TEST(MatrixTest, Swap) {
   V[0] = {TypeParam(3), TypeParam(7)};
   V[1] = {TypeParam(4), TypeParam(5)};
   std::swap(V[0], V[1]);
-  ASSERT_EQ(V.lastRow()[0], 3);
-  ASSERT_EQ(V.lastRow()[1], 7);
-  ASSERT_EQ(V[0][0], 4);
-  ASSERT_EQ(V[0][1], 5);
-  ASSERT_EQ(V[1][0], 3);
-  ASSERT_EQ(V[1][1], 7);
+  EXPECT_EQ(V.lastRow()[0], 3);
+  EXPECT_EQ(V.lastRow()[1], 7);
+  EXPECT_EQ(V[0][0], 4);
+  EXPECT_EQ(V[0][1], 5);
+  EXPECT_EQ(V[1][0], 3);
+  EXPECT_EQ(V[1][1], 7);
   auto W = MatrixView<TypeParam>{M};
-  ASSERT_EQ(W[0][0], 3);
-  ASSERT_EQ(W[0][1], 7);
-  ASSERT_EQ(W[1][0], 4);
-  ASSERT_EQ(W[1][1], 5);
+  EXPECT_EQ(W[0][0], 3);
+  EXPECT_EQ(W[0][1], 7);
+  EXPECT_EQ(W[1][0], 4);
+  EXPECT_EQ(W[1][1], 5);
 }
 
 TYPED_TEST(MatrixTest, DropLastRow) {
@@ -211,34 +211,34 @@ TYPED_TEST(MatrixTest, DropLastRow) {
   V.addRow(V.lastRow());
   ASSERT_EQ(V.getRowSpan(), 3u);
   ASSERT_EQ(V.getColSpan(2), 3u);
-  ASSERT_EQ(V[1], V.lastRow());
+  EXPECT_EQ(V[1], V.lastRow());
   V.dropLastRow();
   ASSERT_EQ(V.getRowSpan(), 2u);
-  ASSERT_EQ(V[0], V.lastRow());
+  EXPECT_EQ(V[0], V.lastRow());
   V.addRow(this->getDummyRow(3));
   V.dropLastRow();
   V.addRow(this->getDummyRow(3));
   V.dropLastRow();
   ASSERT_EQ(V.getRowSpan(), 2u);
-  ASSERT_EQ(V[0], V.lastRow());
+  EXPECT_EQ(V[0], V.lastRow());
   V.dropLastRow();
   V.dropLastRow();
   ASSERT_TRUE(V.empty());
   V.addRow({TypeParam(9), TypeParam(7), TypeParam(3)});
   V.addRow(this->getDummyRow(3));
   ASSERT_EQ(V.getRowSpan(), 2u);
-  ASSERT_EQ(V.lastRow()[0], 1);
-  ASSERT_EQ(V.lastRow()[1], 2);
-  ASSERT_EQ(V.lastRow()[2], 3);
-  ASSERT_EQ(V[0][0], 9);
-  ASSERT_EQ(V[0][1], 7);
-  ASSERT_EQ(V[0][2], 3);
+  EXPECT_EQ(V.lastRow()[0], 1);
+  EXPECT_EQ(V.lastRow()[1], 2);
+  EXPECT_EQ(V.lastRow()[2], 3);
+  EXPECT_EQ(V[0][0], 9);
+  EXPECT_EQ(V[0][1], 7);
+  EXPECT_EQ(V[0][2], 3);
   V.dropLastRow();
   V.addRow({TypeParam(21), TypeParam(22), TypeParam(23)});
   ASSERT_EQ(V.getRowSpan(), 2u);
-  ASSERT_EQ(V.lastRow()[0], 21);
-  ASSERT_EQ(V.lastRow()[1], 22);
-  ASSERT_EQ(V.lastRow()[2], 23);
+  EXPECT_EQ(V.lastRow()[0], 21);
+  EXPECT_EQ(V.lastRow()[1], 22);
+  EXPECT_EQ(V.lastRow()[2], 23);
 }
 
 TYPED_TEST(MatrixTest, Iteration) {
@@ -248,7 +248,7 @@ TYPED_TEST(MatrixTest, Iteration) {
   for (const auto &[RowIdx, Row] : enumerate(V)) {
     V[RowIdx] = this->getDummyRow(2);
     for (const auto &[ColIdx, Col] : enumerate(Row)) {
-      ASSERT_GT(V[RowIdx][ColIdx], 0);
+      EXPECT_GT(V[RowIdx][ColIdx], 0);
     }
   }
 }
@@ -271,7 +271,7 @@ TYPED_TEST(MatrixTest, VariableLengthColumns) {
   V.dropLastRow();
   V.addRow(V.lastRow());
   ASSERT_EQ(V.getColSpan(NumRows), NumCols);
-  ASSERT_EQ(V[NumRows - 1], V[NumRows]);
+  EXPECT_EQ(V[NumRows - 1], V[NumRows]);
   V.dropLastRow();
   ASSERT_EQ(V.getRowSpan(), NumRows);
   ASSERT_EQ(M.getNumCols(), 8u);
@@ -286,20 +286,20 @@ TYPED_TEST(MatrixTest, VariableLengthColumns) {
   V[1] = V[1].drop_back().drop_back();
   ASSERT_EQ(V.getColSpan(0), NumCols - 1);
   ASSERT_EQ(V.getColSpan(1), NumCols - 2);
-  ASSERT_EQ(V[0][0], 19);
-  ASSERT_EQ(V[1][0], 1);
+  EXPECT_EQ(V[0][0], 19);
+  EXPECT_EQ(V[1][0], 1);
   ASSERT_EQ(V.getMaxColSpan(), NumCols - 1);
   V = V.colSlice(0, 1).rowSlice(0, 2);
   ASSERT_EQ(V.getColSpan(0), 1u);
   ASSERT_EQ(V.getColSpan(1), 1u);
-  ASSERT_EQ(V.getMaxColSpan(), 1u);
+  EXPECT_EQ(V.getMaxColSpan(), 1u);
   ASSERT_EQ(V.getRowSpan(), 2u);
-  ASSERT_EQ(V[0][0], 19);
-  ASSERT_EQ(V[1][0], 1);
+  EXPECT_EQ(V[0][0], 19);
+  EXPECT_EQ(V[1][0], 1);
   V.dropLastRow();
   V.dropLastRow();
-  ASSERT_TRUE(V.empty());
-  ASSERT_EQ(M.size(), 40u);
+  EXPECT_TRUE(V.empty());
+  EXPECT_EQ(M.size(), 40u);
 }
 
 TYPED_TEST(MatrixTest, LargeMatrixOps) {
@@ -312,14 +312,14 @@ TYPED_TEST(MatrixTest, LargeMatrixOps) {
           TypeParam(9),  TypeParam(1), TypeParam(1),  TypeParam(12),
           TypeParam(13), TypeParam(1), TypeParam(15), TypeParam(1)};
   V[1] = this->getDummyRow(16);
-  ASSERT_EQ(V[0][14], 15);
-  ASSERT_EQ(V[0][3], 4);
-  ASSERT_EQ(std::count(V[0].begin(), V[0].end(), 1), 8);
-  ASSERT_TRUE(
+  EXPECT_EQ(V[0][14], 15);
+  EXPECT_EQ(V[0][3], 4);
+  EXPECT_EQ(std::count(V[0].begin(), V[0].end(), 1), 8);
+  EXPECT_TRUE(
       std::all_of(V[0].begin(), V[0].end(), [](auto &El) { return El > 0; }));
   auto W = V.rowSlice(0, 1).colSlice(2, 4);
   ASSERT_EQ(W.getRowSpan(), 1u);
   ASSERT_EQ(W.getColSpan(0), 2u);
-  ASSERT_EQ(W[0][0], 1);
-  ASSERT_EQ(W[0][1], 4);
+  EXPECT_EQ(W[0][0], 1);
+  EXPECT_EQ(W[0][1], 4);
 }
