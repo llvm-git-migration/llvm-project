@@ -2115,3 +2115,8 @@ let ArchGuard = "defined(__aarch64__)", TargetGuard = "lut" in {
     def VLUTI4_BF_X2_Q   : SInst<"vluti4_laneq_x2", ".2(<U)I", "Qb">;
   }
 }
+
+let ArchGuard = "defined(__aarch64__)", TargetGuard = "faminmax" in {
+  def FAMIN : WInst<"vamin", "...", "fhQdQfQh">;
+  def FAMAX : WInst<"vamax", "...", "fhQdQfQh">;
+}
