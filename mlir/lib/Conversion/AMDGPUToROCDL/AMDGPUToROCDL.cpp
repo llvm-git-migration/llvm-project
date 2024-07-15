@@ -321,6 +321,26 @@ struct LDSBarrierOpLowering : public ConvertOpToLLVMPattern<LDSBarrierOp> {
     return success();
   }
 };
+
+struct SchedBarrierOpLowering : public ConvertOpToLLVMPattern<SchedBarrierOp> {
+  SchedBarrierOpLowering(LLVMTypeConverter &converter, Chipset chipset)
+      : ConvertOpToLLVMPattern<SchedBarrierOp>(converter), chipset(chipset) {}
+
+  Chipset chipset;
+
+  LogicalResult
+  matchAndRewrite(SchedBarrierOp op, SchedBarrierOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    uint32_t combinedOpt = 0;
+    for (Attribute opt : op.getOpts()) {
+      combinedOpt |=
+          (uint32_t)cast<amdgpu::sched_barrier_opt_enumAttr>(opt).getValue();
+    }
+    rewriter.replaceOpWithNewOp<ROCDL::SchedBarrier>(op, combinedOpt);
+    return success();
+  }
+};
+
 } // namespace
 
 /// If `input` is a vector of bytes, concatentate those bytes in little-endian
@@ -879,8 +899,8 @@ void mlir::populateAMDGPUToROCDLConversionPatterns(LLVMTypeConverter &converter,
                                ROCDL::RawPtrBufferAtomicUminOp>,
            RawBufferOpLowering<RawBufferAtomicCmpswapOp,
                                ROCDL::RawPtrBufferAtomicCmpSwap>,
-           LDSBarrierOpLowering, MFMAOpLowering, WMMAOpLowering,
-           ExtPackedFp8OpLowering, PackedTrunc2xFp8OpLowering,
+           LDSBarrierOpLowering, SchedBarrierOpLowering, MFMAOpLowering,
+           WMMAOpLowering, ExtPackedFp8OpLowering, PackedTrunc2xFp8OpLowering,
            PackedStochRoundFp8OpLowering>(converter, chipset);
 }
 
