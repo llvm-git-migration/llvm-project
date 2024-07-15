@@ -67,20 +67,17 @@ _LIBCPP_NODISCARD _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool isinf
   return false;
 }
 
-#ifdef _LIBCPP_PREFERRED_OVERLOAD
 _LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool isinf(float __x) _NOEXCEPT {
   return __builtin_isinf(__x);
 }
 
-_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI _LIBCPP_PREFERRED_OVERLOAD bool
-isinf(double __x) _NOEXCEPT {
+_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool isinf(double __x) _NOEXCEPT {
   return __builtin_isinf(__x);
 }
 
 _LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool isinf(long double __x) _NOEXCEPT {
   return __builtin_isinf(__x);
 }
-#endif
 
 // isnan
 
