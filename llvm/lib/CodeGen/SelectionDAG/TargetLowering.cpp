@@ -10387,9 +10387,11 @@ SDValue TargetLowering::expandCMP(SDNode *Node, SelectionDAG &DAG) const {
   // We can't perform arithmetic on i1 values. Extending them would
   // probably result in worse codegen, so let's just use two selects instead.
   // Some targets are also just better off using selects rather than subtraction
-  // because one of the conditions can be merged with one of the selects
-  EVT BoolElVT = BoolVT.isVector() ? BoolVT.getVectorElementType() : BoolVT;
-  if (shouldExpandCmpUsingSelects() || !BoolElVT.knownBitsGT(MVT::i1)) {
+  // because one of the conditions can be merged with one of the selects.
+  // And finally, if we don't know the contents of high bits of a boolean value
+  // we can't perform any arithmetic either.
+  if (shouldExpandCmpUsingSelects() || BoolVT.getScalarSizeInBits() == 1 ||
+      getBooleanContents(BoolVT) == UndefinedBooleanContent) {
     SDValue SelectZeroOrOne =
         DAG.getSelect(dl, ResVT, IsGT, DAG.getConstant(1, dl, ResVT),
                       DAG.getConstant(0, dl, ResVT));
@@ -10397,6 +10399,8 @@ SDValue TargetLowering::expandCMP(SDNode *Node, SelectionDAG &DAG) const {
                          SelectZeroOrOne);
   }
 
+  if (getBooleanContents(BoolVT) == ZeroOrNegativeOneBooleanContent)
+    std::swap(LHS, RHS);
   return DAG.getSExtOrTrunc(DAG.getNode(ISD::SUB, dl, BoolVT, IsGT, IsLT), dl,
                             ResVT);
 }
