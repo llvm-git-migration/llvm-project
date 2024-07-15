@@ -1686,10 +1686,12 @@ static constexpr std::array kExplicitAttributes{
     StringLiteral("no-nans-fp-math"),
     StringLiteral("no-signed-zeros-fp-math"),
     StringLiteral("noinline"),
+    StringLiteral("nounwind"),
     StringLiteral("optnone"),
     StringLiteral("target-features"),
     StringLiteral("unsafe-fp-math"),
     StringLiteral("vscale_range"),
+    StringLiteral("willreturn"),
 };
 
 static void processPassthroughAttrs(llvm::Function *func, LLVMFuncOp funcOp) {
@@ -1762,6 +1764,10 @@ void ModuleImport::processFunctionAttributes(llvm::Function *func,
     funcOp.setOptimizeNone(true);
   if (func->hasFnAttribute(llvm::Attribute::Convergent))
     funcOp.setConvergent(true);
+  if (func->hasFnAttribute(llvm::Attribute::NoUnwind))
+    funcOp.setNoUnwind(true);
+  if (func->hasFnAttribute(llvm::Attribute::WillReturn))
+    funcOp.setWillReturn(true);
 
   if (func->hasFnAttribute("aarch64_pstate_sm_enabled"))
     funcOp.setArmStreaming(true);
