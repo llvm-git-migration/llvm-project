@@ -310,4 +310,22 @@ class Incomplete {};
 Incomplete incompleteFunction() { return {}; }
 const Incomplete incompleteFunctionConst() { return {}; }
 
+// Check that the moved-from captured state is properly destroyed during
+// move construction/assignment.
+TEST(UniqueFunctionTest, MovedFromStateIsDestroyedCorrectly) {
+  static int NumOfDestructorsCalled = 0;
+  struct State {
+    State() = default;
+    State(State &&) = default;
+    State &operator=(State &&) = default;
+    ~State() { ++NumOfDestructorsCalled; }
+  };
+  {
+    unique_function<void()> CapturingFunction{[state = State{}] {}};
+    unique_function<void()> CapturingFunctionMoved{
+        std::move(CapturingFunction)};
+  }
+  EXPECT_EQ(NumOfDestructorsCalled, 4);
+}
+
 } // anonymous namespace
