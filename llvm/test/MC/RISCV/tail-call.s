@@ -12,18 +12,18 @@
 # RUN: llvm-mc -triple riscv64 < %s -show-encoding \
 # RUN:   | FileCheck -check-prefix=FIXUP %s
 
-# RUN: llvm-mc -filetype=obj -triple riscv32 -mattr=+experimental-zicfilp < %s \
+# RUN: llvm-mc -filetype=obj -triple riscv32 -mattr=+zicfilp < %s \
 # RUN:   | llvm-objdump -d - | FileCheck --check-prefix=INSTR-ZICFILP %s
-# RUN: llvm-mc -filetype=obj -triple riscv32 -mattr=+experimental-zicfilp < %s \
+# RUN: llvm-mc -filetype=obj -triple riscv32 -mattr=+zicfilp < %s \
 # RUN:   | llvm-readobj -r - | FileCheck -check-prefix=RELOC %s
-# RUN: llvm-mc -triple riscv32 -mattr=+experimental-zicfilp < %s -show-encoding \
+# RUN: llvm-mc -triple riscv32 -mattr=+zicfilp < %s -show-encoding \
 # RUN:   | FileCheck -check-prefix=FIXUP %s
 
-# RUN: llvm-mc -filetype=obj -triple riscv64 -mattr=+experimental-zicfilp < %s \
+# RUN: llvm-mc -filetype=obj -triple riscv64 -mattr=+zicfilp < %s \
 # RUN:   | llvm-objdump -d - | FileCheck --check-prefix=INSTR-ZICFILP %s
-# RUN: llvm-mc -filetype=obj -triple riscv64 -mattr=+experimental-zicfilp < %s \
+# RUN: llvm-mc -filetype=obj -triple riscv64 -mattr=+zicfilp < %s \
 # RUN:   | llvm-readobj -r - | FileCheck -check-prefix=RELOC %s
-# RUN: llvm-mc -triple riscv64 -mattr=+experimental-zicfilp < %s -show-encoding \
+# RUN: llvm-mc -triple riscv64 -mattr=+zicfilp < %s -show-encoding \
 # RUN:   | FileCheck -check-prefix=FIXUP %s
 
 .long foo

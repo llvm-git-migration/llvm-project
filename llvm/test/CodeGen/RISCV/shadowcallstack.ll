@@ -3,13 +3,13 @@
 ; RUN:   | FileCheck %s --check-prefix=RV32
 ; RUN: llc -mtriple=riscv64 -verify-machineinstrs < %s \
 ; RUN:   | FileCheck %s --check-prefix=RV64
-; RUN: llc -mtriple=riscv32 -mattr=+experimental-zicfiss < %s \
+; RUN: llc -mtriple=riscv32 -mattr=+zicfiss < %s \
 ; RUN:   -verify-machineinstrs | FileCheck %s --check-prefix=RV32-ZICFISS
-; RUN: llc -mtriple=riscv64 -mattr=+experimental-zicfiss < %s \
+; RUN: llc -mtriple=riscv64 -mattr=+zicfiss < %s \
 ; RUN:   -verify-machineinstrs | FileCheck %s --check-prefix=RV64-ZICFISS
-; RUN: llc -mtriple=riscv32 -mattr=+experimental-zicfiss,forced-sw-shadow-stack \
+; RUN: llc -mtriple=riscv32 -mattr=+zicfiss,forced-sw-shadow-stack \
 ; RUN:    -verify-machineinstrs < %s | FileCheck %s --check-prefix=RV32
-; RUN: llc -mtriple=riscv64 -mattr=+experimental-zicfiss,forced-sw-shadow-stack \
+; RUN: llc -mtriple=riscv64 -mattr=+zicfiss,forced-sw-shadow-stack \
 ; RUN:    -verify-machineinstrs < %s | FileCheck %s --check-prefix=RV64
 
 define void @f1() shadowcallstack {

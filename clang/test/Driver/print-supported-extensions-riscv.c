@@ -22,6 +22,8 @@
 // CHECK-NEXT:     ziccif               1.0       'Ziccif' (Main Memory Supports Instruction Fetch with Atomicity Requirement)
 // CHECK-NEXT:     zicclsm              1.0       'Zicclsm' (Main Memory Supports Misaligned Loads/Stores)
 // CHECK-NEXT:     ziccrse              1.0       'Ziccrse' (Main Memory Supports Forward Progress on LR/SC Sequences)
+// CHECK-NEXT:     zicfilp              1.0       'Zicfilp' (Landing pad)
+// CHECK-NEXT:     zicfiss              1.0       'Zicfiss' (Shadow stack)
 // CHECK-NEXT:     zicntr               2.0       'Zicntr' (Base Counters and Timers)
 // CHECK-NEXT:     zicond               1.0       'Zicond' (Integer Conditional Operations)
 // CHECK-NEXT:     zicsr                2.0       'zicsr' (CSRs)
@@ -169,8 +171,6 @@
 // CHECK-NEXT:     xwchc                2.2       'Xwchc' (WCH/QingKe additional compressed opcodes)
 // CHECK-EMPTY:
 // CHECK-NEXT: Experimental extensions
-// CHECK-NEXT:     zicfilp              0.4       'Zicfilp' (Landing pad)
-// CHECK-NEXT:     zicfiss              0.4       'Zicfiss' (Shadow stack)
 // CHECK-NEXT:     zalasr               0.1       'Zalasr' (Load-Acquire and Store-Release Instructions)
 // CHECK-NEXT:     smmpm                1.0       'Smmpm' (Machine-level Pointer Masking for M-mode)
 // CHECK-NEXT:     smnpm                1.0       'Smnpm' (Machine-level Pointer Masking for next lower privilege mode)
