@@ -99,37 +99,37 @@ struct [[nodiscard]] MatrixRowView : public MutableArrayRef<T> {
   using iterator = typename MutableArrayRef<T>::iterator;
   using const_iterator = typename MutableArrayRef<T>::const_iterator;
 
-  constexpr MatrixRowView() = delete;
-  constexpr MatrixRowView(pointer Data, size_t Length)
+  MatrixRowView() = delete;
+  MatrixRowView(pointer Data, size_t Length)
       : MutableArrayRef<T>(Data, Length) {}
-  constexpr MatrixRowView(iterator Begin, iterator End)
+  MatrixRowView(iterator Begin, iterator End)
       : MutableArrayRef<T>(Begin, End) {}
-  constexpr MatrixRowView(const_iterator Begin, const_iterator End)
+  MatrixRowView(const_iterator Begin, const_iterator End)
       : MutableArrayRef<T>(Begin, End) {}
-  constexpr MatrixRowView(MutableArrayRef<T> Other)
+  MatrixRowView(MutableArrayRef<T> Other)
       : MutableArrayRef<T>(Other.data(), Other.size()) {}
   MatrixRowView(const SmallVectorImpl<T> &Vec) : MutableArrayRef<T>(Vec) {}
 
   using MutableArrayRef<T>::size;
   using MutableArrayRef<T>::data;
 
-  constexpr T &back() const { return MutableArrayRef<T>::back(); }
-  constexpr T &front() const { return MutableArrayRef<T>::front(); }
-  constexpr MatrixRowView<T> drop_back(size_t N = 1) const { // NOLINT
+  T &back() const { return MutableArrayRef<T>::back(); }
+  T &front() const { return MutableArrayRef<T>::front(); }
+  MatrixRowView<T> drop_back(size_t N = 1) const { // NOLINT
     return MutableArrayRef<T>::drop_back(N);
   }
-  constexpr MatrixRowView<T> drop_front(size_t N = 1) const { // NOLINT
+  MatrixRowView<T> drop_front(size_t N = 1) const { // NOLINT
     return MutableArrayRef<T>::drop_front(N);
   }
   // This slice is different from the MutableArrayRef slice, and specifies a
   // Begin and End index, instead of a Begin and Length.
-  constexpr MatrixRowView<T> slice(size_t Begin, size_t End) {
+  MatrixRowView<T> slice(size_t Begin, size_t End) {
     return MutableArrayRef<T>::slice(Begin, End - Begin);
   }
-  constexpr void pop_back(size_t N = 1) { // NOLINT
+  void pop_back(size_t N = 1) { // NOLINT
     this->Length -= N;
   }
-  constexpr void pop_front(size_t N = 1) { // NOLINT
+  void pop_front(size_t N = 1) { // NOLINT
     this->Data += N;
     this->Length -= N;
   }
