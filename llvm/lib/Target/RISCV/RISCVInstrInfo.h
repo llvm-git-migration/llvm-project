@@ -286,6 +286,8 @@ public:
   ArrayRef<std::pair<MachineMemOperand::Flags, const char *>>
   getSerializableMachineMemOperandTargetFlags() const override;
 
+  unsigned int getTailDuplicateSize(CodeGenOptLevel OptLevel) const override;
+
   unsigned getUndefInitOpcode(unsigned RegClassID) const override {
     switch (RegClassID) {
     case RISCV::VRRegClassID:
