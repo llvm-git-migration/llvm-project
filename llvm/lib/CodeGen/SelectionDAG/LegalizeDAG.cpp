@@ -1469,12 +1469,11 @@ SDValue SelectionDAGLegalize::ExpandInsertToVectorThroughStack(SDValue Op) {
   EVT VecVT = Vec.getValueType();
   EVT PartVT = Part.getValueType();
   SDValue StackPtr = DAG.CreateStackTemporary(VecVT);
-  int FI = cast<FrameIndexSDNode>(StackPtr.getNode())->getIndex();
-  MachinePointerInfo PtrInfo =
-      MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI);
+  MachineMemOperand *AlignedMMO = getStackAlignedMMO(
+      StackPtr, DAG.getMachineFunction(), VecVT.isScalableVector());
 
   // First store the whole vector.
-  SDValue Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, PtrInfo);
+  SDValue Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, AlignedMMO);
 
   // Freeze the index so we don't poison the clamping code we're about to emit.
   Idx = DAG.getFreeze(Idx);
@@ -1485,21 +1484,24 @@ SDValue SelectionDAGLegalize::ExpandInsertToVectorThroughStack(SDValue Op) {
         TLI.getVectorSubVecPointer(DAG, StackPtr, VecVT, PartVT, Idx);
 
     // Store the subvector.
-    Ch = DAG.getStore(
-        Ch, dl, Part, SubStackPtr,
-        MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()));
+    Ch = DAG.getStore(Ch, dl, Part, SubStackPtr, AlignedMMO);
   } else {
     SDValue SubStackPtr =
         TLI.getVectorElementPointer(DAG, StackPtr, VecVT, Idx);
 
     // Store the scalar value.
-    Ch = DAG.getTruncStore(
-        Ch, dl, Part, SubStackPtr,
-        MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()),
-        VecVT.getVectorElementType());
+    Ch = DAG.getTruncStore(Ch, dl, Part, SubStackPtr,
+                           VecVT.getVectorElementType(), AlignedMMO);
   }
 
+  Align ElementAlignment =
+      std::min(cast<StoreSDNode>(Ch)->getAlign(),
+               DAG.getSubtarget().getFrameLowering()->getStackAlign());
+
   // Finally, load the updated vector.
+  int FI = cast<FrameIndexSDNode>(StackPtr.getNode())->getIndex();
+  MachinePointerInfo PtrInfo =
+      MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI);
   return DAG.getLoad(Op.getValueType(), dl, Ch, StackPtr, PtrInfo);
 }
 
