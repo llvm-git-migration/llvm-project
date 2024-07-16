@@ -699,6 +699,7 @@ void DWARFRewriter::updateDebugInfo() {
             ? std::nullopt
             : std::optional<std::string>(opts::DwarfOutputPath.c_str());
     {
+      std::lock_guard<std::mutex> Lock(AccessMutex);
       DWOName = DIEBlder->updateDWONameCompDir(
           *StrOffstsWriter, *StrWriter, *Unit, DwarfOutputPath, std::nullopt);
     }
