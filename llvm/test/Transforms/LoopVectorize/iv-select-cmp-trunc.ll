@@ -43,7 +43,7 @@ define i32 @select_icmp_const_truncated_iv_widened_exit(ptr %a, i32 %n) {
 ; CHECK-VF4IC1-NEXT:    br i1 [[CMP_N]], label [[EXIT_LOOPEXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC1:       scalar.ph:
 ; CHECK-VF4IC1-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ [[N_VEC]], [[MIDDLE_BLOCK]] ], [ 0, [[FOR_BODY_PREHEADER]] ]
-; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[FOR_BODY_PREHEADER]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[FOR_BODY_PREHEADER]] ]
 ; CHECK-VF4IC1-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC1:       for.body:
 ; CHECK-VF4IC1-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -125,7 +125,7 @@ define i32 @select_icmp_const_truncated_iv_widened_exit(ptr %a, i32 %n) {
 ; CHECK-VF4IC4-NEXT:    br i1 [[CMP_N]], label [[EXIT_LOOPEXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC4:       scalar.ph:
 ; CHECK-VF4IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ [[N_VEC]], [[MIDDLE_BLOCK]] ], [ 0, [[FOR_BODY_PREHEADER]] ]
-; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[FOR_BODY_PREHEADER]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[FOR_BODY_PREHEADER]] ]
 ; CHECK-VF4IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC4:       for.body:
 ; CHECK-VF4IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -202,7 +202,7 @@ define i32 @select_icmp_const_truncated_iv_widened_exit(ptr %a, i32 %n) {
 ; CHECK-VF1IC4-NEXT:    br i1 [[CMP_N]], label [[EXIT_LOOPEXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF1IC4:       scalar.ph:
 ; CHECK-VF1IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ [[N_VEC]], [[MIDDLE_BLOCK]] ], [ 0, [[FOR_BODY_PREHEADER]] ]
-; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[FOR_BODY_PREHEADER]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[FOR_BODY_PREHEADER]] ]
 ; CHECK-VF1IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF1IC4:       for.body:
 ; CHECK-VF1IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -277,7 +277,7 @@ define i32 @select_icmp_const_truncated_iv_const_exit(ptr %a) {
 ; CHECK-VF4IC1-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC1:       scalar.ph:
 ; CHECK-VF4IC1-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 20000, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[ENTRY]] ]
 ; CHECK-VF4IC1-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC1:       for.body:
 ; CHECK-VF4IC1-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -348,7 +348,7 @@ define i32 @select_icmp_const_truncated_iv_const_exit(ptr %a) {
 ; CHECK-VF4IC4-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC4:       scalar.ph:
 ; CHECK-VF4IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 20000, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[ENTRY]] ]
 ; CHECK-VF4IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC4:       for.body:
 ; CHECK-VF4IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -414,7 +414,7 @@ define i32 @select_icmp_const_truncated_iv_const_exit(ptr %a) {
 ; CHECK-VF1IC4-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF1IC4:       scalar.ph:
 ; CHECK-VF1IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 20000, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ 331, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ 331, [[ENTRY]] ]
 ; CHECK-VF1IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF1IC4:       for.body:
 ; CHECK-VF1IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -480,7 +480,7 @@ define i32 @select_fcmp_max_valid_const_ub(ptr %a) {
 ; CHECK-VF4IC1-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC1:       scalar.ph:
 ; CHECK-VF4IC1-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 2147483648, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ -1, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC1-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ -1, [[ENTRY]] ]
 ; CHECK-VF4IC1-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC1:       for.body:
 ; CHECK-VF4IC1-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -551,7 +551,7 @@ define i32 @select_fcmp_max_valid_const_ub(ptr %a) {
 ; CHECK-VF4IC4-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF4IC4:       scalar.ph:
 ; CHECK-VF4IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 2147483648, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ -1, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF4IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ -1, [[ENTRY]] ]
 ; CHECK-VF4IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF4IC4:       for.body:
 ; CHECK-VF4IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
@@ -617,7 +617,7 @@ define i32 @select_fcmp_max_valid_const_ub(ptr %a) {
 ; CHECK-VF1IC4-NEXT:    br i1 true, label [[EXIT:%.*]], label [[SCALAR_PH]]
 ; CHECK-VF1IC4:       scalar.ph:
 ; CHECK-VF1IC4-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ 2147483648, [[MIDDLE_BLOCK]] ], [ 0, [[ENTRY:%.*]] ]
-; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ -1, [[ENTRY]] ], [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ]
+; CHECK-VF1IC4-NEXT:    [[BC_MERGE_RDX:%.*]] = phi i32 [ [[RDX_SELECT]], [[MIDDLE_BLOCK]] ], [ -1, [[ENTRY]] ]
 ; CHECK-VF1IC4-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK-VF1IC4:       for.body:
 ; CHECK-VF1IC4-NEXT:    [[IV:%.*]] = phi i64 [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ], [ [[INC:%.*]], [[FOR_BODY]] ]
