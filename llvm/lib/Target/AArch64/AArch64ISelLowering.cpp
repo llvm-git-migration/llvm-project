@@ -1274,6 +1274,8 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
       setOperationAction(ISD::AVGCEILU, VT, Legal);
       setOperationAction(ISD::ABDS, VT, Legal);
       setOperationAction(ISD::ABDU, VT, Legal);
+      setOperationAction(ISD::TRUNCATE_SSAT, VT, Legal);
+      setOperationAction(ISD::TRUNCATE_USAT, VT, Legal);
     }
 
     // Vector reductions

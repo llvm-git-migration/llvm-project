@@ -5343,8 +5343,12 @@ def VImm8000: PatLeaf<(AArch64mvni_msl (i32 127), (i32 264))>;
 // trunc(umin(X, 255)) -> UQXTRN v8i8
 def : Pat<(v8i8 (trunc (umin (v8i16 V128:$Vn), (v8i16 VImmFF)))),
           (UQXTNv8i8 V128:$Vn)>;
+def : Pat<(v8i8 (truncusat (v8i16 V128:$Vn))),
+          (UQXTNv8i8 V128:$Vn)>;
 // trunc(umin(X, 65535)) -> UQXTRN v4i16
 def : Pat<(v4i16 (trunc (umin (v4i32 V128:$Vn), (v4i32 VImmFFFF)))),
+          (UQXTNv4i16 V128:$Vn)>;
+def : Pat<(v4i16 (truncusat (v4i32 V128:$Vn))),
           (UQXTNv4i16 V128:$Vn)>;
 // trunc(smin(smax(X, -128), 128)) -> SQXTRN
 //  with reversed min/max
@@ -5354,6 +5358,8 @@ def : Pat<(v8i8 (trunc (smin (smax (v8i16 V128:$Vn), (v8i16 VImm80)),
 def : Pat<(v8i8 (trunc (smax (smin (v8i16 V128:$Vn), (v8i16 VImm7F)),
                              (v8i16 VImm80)))),
           (SQXTNv8i8 V128:$Vn)>;
+def : Pat<(v8i8 (truncssat (v8i16 V128:$Vn))),
+          (SQXTNv8i8 V128:$Vn)>;
 // trunc(smin(smax(X, -32768), 32767)) -> SQXTRN
 //  with reversed min/max
 def : Pat<(v4i16 (trunc (smin (smax (v4i32 V128:$Vn), (v4i32 VImm8000)),
@@ -5361,6 +5367,8 @@ def : Pat<(v4i16 (trunc (smin (smax (v4i32 V128:$Vn), (v4i32 VImm8000)),
           (SQXTNv4i16 V128:$Vn)>;
 def : Pat<(v4i16 (trunc (smax (smin (v4i32 V128:$Vn), (v4i32 VImm7FFF)),
                               (v4i32 VImm8000)))),
+          (SQXTNv4i16 V128:$Vn)>;
+def : Pat<(v4i16 (truncssat (v4i32 V128:$Vn))),
           (SQXTNv4i16 V128:$Vn)>;
 
 // concat_vectors(Vd, trunc(smin(smax Vm, -128), 127) ~> SQXTN2(Vd, Vn)
@@ -5375,6 +5383,10 @@ def : Pat<(v16i8 (concat_vectors
                  (v8i8 (trunc (smax (smin (v8i16 V128:$Vn), (v8i16 VImm7F)),
                                           (v8i16 VImm80)))))),
           (SQXTNv16i8 (INSERT_SUBREG (IMPLICIT_DEF), V64:$Vd, dsub), V128:$Vn)>;
+def : Pat<(v16i8 (concat_vectors
+                 (v8i8 V64:$Vd),
+                 (v8i8 (truncssat (v8i16 V128:$Vn))))),
+          (SQXTNv16i8 (INSERT_SUBREG (IMPLICIT_DEF), V64:$Vd, dsub), V128:$Vn)>;
 
 // concat_vectors(Vd, trunc(smin(smax Vm, -32768), 32767) ~> SQXTN2(Vd, Vn)
 // with reversed min/max
@@ -5387,6 +5399,10 @@ def : Pat<(v8i16 (concat_vectors
                  (v4i16 V64:$Vd),
                  (v4i16 (trunc (smax (smin (v4i32 V128:$Vn), (v4i32 VImm7FFF)),
                                            (v4i32 VImm8000)))))),
+          (SQXTNv8i16 (INSERT_SUBREG (IMPLICIT_DEF), V64:$Vd, dsub), V128:$Vn)>;
+def : Pat<(v8i16 (concat_vectors
+                 (v4i16 V64:$Vd),
+                 (v4i16 (truncssat (v4i32 V128:$Vn))))),
           (SQXTNv8i16 (INSERT_SUBREG (IMPLICIT_DEF), V64:$Vd, dsub), V128:$Vn)>;
 
 // Select BSWAP vector instructions into REV instructions
