@@ -804,6 +804,9 @@ enum NodeType {
 
   /// TRUNCATE - Completely drop the high bits.
   TRUNCATE,
+  /// TRUNCATE_[SU]SAT - Truncate for saturated operand
+  TRUNCATE_SSAT,
+  TRUNCATE_USAT,
 
   /// [SU]INT_TO_FP - These operators convert integers (whose interpreted sign
   /// depends on the first letter) to floating point.
