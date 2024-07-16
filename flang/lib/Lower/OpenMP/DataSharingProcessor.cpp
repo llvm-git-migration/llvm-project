@@ -226,8 +226,8 @@ void DataSharingProcessor::insertLastPrivateCompare(mlir::Operation *op) {
       firOpBuilder.setInsertionPoint(lastOper);
 
       mlir::Value iv = loopOp.getIVs()[0];
-      mlir::Value ub = loopOp.getUpperBound()[0];
-      mlir::Value step = loopOp.getStep()[0];
+      mlir::Value ub = loopOp.getCollapseUpperBound()[0];
+      mlir::Value step = loopOp.getCollapseStep()[0];
 
       // v = iv + step
       // cmp = step < 0 ? v < ub : v > ub
@@ -537,7 +537,7 @@ void DataSharingProcessor::doPrivatize(const semantics::Symbol *sym,
   }();
 
   if (clauseOps) {
-    clauseOps->privatizers.push_back(mlir::SymbolRefAttr::get(privatizerOp));
+    clauseOps->privateSyms.push_back(mlir::SymbolRefAttr::get(privatizerOp));
     clauseOps->privateVars.push_back(hsb.getAddr());
   }
 
