@@ -301,7 +301,9 @@ Changes in existing checks
   calls to ``std::forward``. Fixed sequencing of designated initializers. Fixed
   sequencing of callees: In C++17 and later, the callee of a function is guaranteed
   to be sequenced before the arguments, so don't warn if the use happens in the
-  callee and the move happens in one of the arguments.
+  callee and the move happens in one of the arguments. Smart pointers are now
+  handled like any other objects allowing to detect more cases, previous behavior
+  can be restored by setting `IgnoreNonDerefSmartPtrs` option to `true`. 
 
 - Improved :doc:`cppcoreguidelines-avoid-non-const-global-variables
   <clang-tidy/checks/cppcoreguidelines/avoid-non-const-global-variables>` check
