@@ -1624,7 +1624,9 @@ void PGOUseFunc::setBranchWeights() {
 
     // We have a non-zero Branch BB.
     unsigned Size = BBCountInfo.OutEdges.size();
-    SmallVector<uint64_t, 2> EdgeCounts(Size, 0);
+    unsigned SuccessorCount = BB.getTerminator()->getNumSuccessors();
+
+    SmallVector<uint64_t, 2> EdgeCounts(SuccessorCount, 0);
     uint64_t MaxCount = 0;
     for (unsigned s = 0; s < Size; s++) {
       const PGOUseEdge *E = BBCountInfo.OutEdges[s];
