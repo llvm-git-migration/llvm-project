@@ -1722,10 +1722,12 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
     // MSVC, ICC, GCC, VisualAge C++ extension.  The generated string should be
     // of the form "Ddd Mmm dd hh::mm::ss yyyy", which is returned by asctime.
     const char *Result;
+    char TimeString[std::size("Ddd Mmm dd hh:mm:ss yyyy")];
     if (getPreprocessorOpts().SourceDateEpoch) {
       time_t TT = *getPreprocessorOpts().SourceDateEpoch;
       std::tm *TM = std::gmtime(&TT);
-      Result = asctime(TM);
+      strftime(TimeString, std::size(TimeString), "%c", TM);
+      Result = TimeString;
     } else {
       // Get the file that we are lexing out of.  If we're currently lexing from
       // a macro, dig into the include stack.
@@ -1735,13 +1737,13 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
       if (CurFile) {
         time_t TT = CurFile->getModificationTime();
         struct tm *TM = localtime(&TT);
-        Result = asctime(TM);
+        strftime(TimeString, std::size(TimeString), "%c", TM);
+        Result = TimeString;
       } else {
-        Result = "??? ??? ?? ??:??:?? ????\n";
+        Result = "??? ??? ?? ??:??:?? ????";
       }
     }
-    // Surround the string with " and strip the trailing newline.
-    OS << '"' << StringRef(Result).drop_back() << '"';
+    OS << '"' << Result << '"';
     Tok.setKind(tok::string_literal);
   } else if (II == Ident__FLT_EVAL_METHOD__) {
     // __FLT_EVAL_METHOD__ is set to the default value.
