@@ -792,7 +792,7 @@ void DWARFRewriter::updateDebugInfo() {
         processMainBinaryCU(CU, &DIEBlder, DebugLocWriter, RangesBase);
       }
       finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
-                          DIEBlder.getProcessedCUs(), *FinalAddrWriter);
+                           DIEBlder.getProcessedCUs(), *FinalAddrWriter);
     }
   } else {
     // Update unit debug info in parallel
