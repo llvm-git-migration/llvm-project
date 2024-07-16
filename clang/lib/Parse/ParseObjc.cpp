@@ -204,95 +204,6 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
     Diag(Decl->getBeginLoc(), diag::note_objc_container_start) << (int)ock;
 }
 
-/// An Objective-C public name (a class name or protocol name) is
-/// expected to have a prefix as all names are in a single global
-/// namespace.
-///
-/// If the `-Wobjc-prefix=<list>` option is active, it specifies a list
-/// of permitted prefixes; classes and protocols must start with a
-/// prefix from that list.  Note that in this case, we check that
-/// the name matches <prefix>(<upper-case><not-upper-case>?)?, so e.g.
-/// if you specify `-Wobjc-prefix=NS`, then `NSURL` would not be valid;
-/// you would want to specify `-Wobjc-prefix=NS,NSURL` in that case.
-///
-/// If the -Wobjc-prefix-length is set to N, the name must start
-/// with N+1 capital letters, which must be followed by a character
-/// that is not a capital letter.
-///
-/// For instance, for N set to 2, the following are valid:
-///
-///          NSString
-///          NSArray
-///
-///      but these are not:
-///
-///          MyString
-///          NSKString
-///          NSnotAString
-///
-/// We make a special exception for NSCF things when the prefix is set
-/// to length 2, because that's an unusual special case in the implementation
-/// of the Cocoa frameworks.
-///
-/// Names that start with underscores are exempt from this check, but
-/// are reserved for the system and should not be used by user code.
-
-static inline bool ObjCNameMatchesPrefix(StringRef Name, StringRef Prefix) {
-  size_t NameLen = Name.size();
-  size_t PrefixLen = Prefix.size();
-  return (NameLen >= PrefixLen && Name.starts_with(Prefix) &&
-          (NameLen <= PrefixLen || isUppercase(Name[PrefixLen])) &&
-          (NameLen <= PrefixLen + 1 || !isUppercase(Name[PrefixLen + 1])));
-}
-
-Parser::ObjCPublicNameValidationResult
-Parser::ValidateObjCPublicName(StringRef Name) {
-  // Check the -Wobjc-forbidden-prefixes list
-  if (!getLangOpts().ObjCForbiddenPrefixes.empty()) {
-    for (StringRef Prefix : getLangOpts().ObjCForbiddenPrefixes) {
-      if (ObjCNameMatchesPrefix(Name, Prefix))
-        return ObjCNameForbidden;
-    }
-  }
-
-  // Check the -Wobjc-prefixes list
-  if (!getLangOpts().ObjCAllowedPrefixes.empty()) {
-    for (StringRef Prefix : getLangOpts().ObjCAllowedPrefixes) {
-      if (ObjCNameMatchesPrefix(Name, Prefix))
-        return ObjCNameAllowed;
-    }
-
-    return ObjCNameNotAllowed;
-  }
-
-  // Finally, check against the -Wobjc-prefix-length setting
-  if (getLangOpts().ObjCPrefixLength) {
-    size_t NameLen = Name.size();
-    size_t RequiredUpperCase = getLangOpts().ObjCPrefixLength + 1;
-
-    if (Name.starts_with('_'))
-      return ObjCNameAllowed;
-
-    // Special case for NSCF when prefix length is 2
-    if (RequiredUpperCase == 3 && NameLen > 4 && Name.starts_with("NSCF") &&
-        isUppercase(Name[4]) && (NameLen == 5 || !isUppercase(Name[5])))
-      return ObjCNameAllowed;
-
-    if (NameLen < RequiredUpperCase)
-      return ObjCNameUnprefixed;
-
-    for (size_t N = 0; N < RequiredUpperCase; ++N) {
-      if (!isUppercase(Name[N]))
-        return ObjCNameUnprefixed;
-    }
-
-    if (NameLen > RequiredUpperCase && isUppercase(Name[RequiredUpperCase]))
-      return ObjCNameUnprefixed;
-  }
-
-  return ObjCNameAllowed;
-}
-
 ///
 ///   objc-interface:
 ///     objc-class-interface-attributes[opt] objc-class-interface
@@ -407,23 +318,6 @@ Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
     ParseObjCInterfaceDeclList(tok::objc_not_keyword, CategoryType);
 
     return CategoryType;
-  }
-
-  // Not a category - we are declaring a class
-  if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
-    switch (ValidateObjCPublicName(nameId->getName())) {
-    case ObjCNameUnprefixed:
-      Diag(nameLoc, diag::warn_objc_unprefixed_class_name);
-      break;
-    case ObjCNameNotAllowed:
-      Diag(nameLoc, diag::warn_objc_bad_class_name_prefix);
-      break;
-    case ObjCNameForbidden:
-      Diag(nameLoc, diag::warn_objc_forbidden_class_name_prefix);
-      break;
-    case ObjCNameAllowed:
-      break;
-    }
   }
 
   // Parse a class interface.
@@ -2187,22 +2081,6 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
   // Save the protocol name, then consume it.
   IdentifierInfo *protocolName = Tok.getIdentifierInfo();
   SourceLocation nameLoc = ConsumeToken();
-
-  if (!PP.getSourceManager().isInSystemHeader(nameLoc)) {
-    switch (ValidateObjCPublicName(protocolName->getName())) {
-    case ObjCNameUnprefixed:
-      Diag(nameLoc, diag::warn_objc_unprefixed_protocol_name);
-      break;
-    case ObjCNameNotAllowed:
-      Diag(nameLoc, diag::warn_objc_bad_protocol_name_prefix);
-      break;
-    case ObjCNameForbidden:
-      Diag(nameLoc, diag::warn_objc_forbidden_protocol_name_prefix);
-      break;
-    case ObjCNameAllowed:
-      break;
-    }
-  }
 
   if (TryConsumeToken(tok::semi)) { // forward declaration of one protocol.
     IdentifierLocPair ProtoInfo(protocolName, nameLoc);

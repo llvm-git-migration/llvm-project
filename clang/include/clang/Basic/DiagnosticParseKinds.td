@@ -563,27 +563,6 @@ def err_declaration_does_not_declare_param : Error<
   "declaration does not declare a parameter">;
 def err_no_matching_param : Error<"parameter named %0 is missing">;
 
-def warn_objc_unprefixed_class_name : Warning<
-  "un-prefixed Objective-C class name">,
-  InGroup<ObjCPrefixLength>;
-def warn_objc_unprefixed_protocol_name : Warning<
-  "un-prefixed Objective-C protocol name">,
-  InGroup<ObjCPrefixLength>;
-
-def warn_objc_bad_class_name_prefix : Warning<
-  "Objective-C class name prefix not in permitted list">,
-  InGroup<ObjCPrefixes>;
-def warn_objc_bad_protocol_name_prefix : Warning<
-  "Objective-C protocol name prefix not in permitted list">,
-  InGroup<ObjCPrefixes>;
-
-def warn_objc_forbidden_class_name_prefix : Warning<
-  "Objective-C class name prefix in forbidden list">,
-  InGroup<ObjCForbiddenPrefixes>;
-def warn_objc_forbidden_protocol_name_prefix : Warning<
-  "Objective-C protocol name prefix in forbidden list">,
-  InGroup<ObjCForbiddenPrefixes>;
-
 /// Objective-C++ parser diagnostics
 def err_expected_token_instead_of_objcxx_keyword : Error<
   "expected %0; %1 is a keyword in Objective-C++">;

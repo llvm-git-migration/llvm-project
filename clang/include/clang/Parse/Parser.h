@@ -1704,13 +1704,6 @@ private:
 
   // Objective-C External Declarations
   void MaybeSkipAttributes(tok::ObjCKeywordKind Kind);
-  enum ObjCPublicNameValidationResult {
-    ObjCNameUnprefixed = 0,
-    ObjCNameForbidden = -2,
-    ObjCNameNotAllowed = -1,
-    ObjCNameAllowed = 1
-  };
-  ObjCPublicNameValidationResult ValidateObjCPublicName(StringRef Name);
   DeclGroupPtrTy ParseObjCAtDirectives(ParsedAttributes &DeclAttrs,
                                        ParsedAttributes &DeclSpecAttrs);
   DeclGroupPtrTy ParseObjCAtClassDeclaration(SourceLocation atLoc);

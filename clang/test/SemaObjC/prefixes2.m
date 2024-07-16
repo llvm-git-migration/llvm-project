@@ -34,3 +34,20 @@
 
 @protocol XXFooProtocol // expected-warning {{Objective-C protocol name prefix in forbidden list}}
 @end
+
+@interface Foo (Bar)
+
+@property int flibble; // expected-warning {{Objective-C category method name prefix not in permitted list}}
+@property(getter=theFlibble) int NS_flibble; // expected-warning {{Objective-C category method name prefix not in permitted list}}
+@property(setter=setTheFlibble:) int NS_flibble2; // expected-warning {{Objective-C category method name prefix not in permitted list}}
+@property int NS_flibble3;
+@property int XX_flibble; // expected-warning {{Objective-C category method name prefix in forbidden list}}
+
+- (void)bar; // expected-warning {{Objective-C category method name prefix not in permitted list}}
+- (void)NSbar;
+- (void)NS_bar;
+- (void)NSCF_bar;
+- (void)NSXbar; // expected-warning {{Objective-C category method name prefix not in permitted list}}
+- (void)XXbar; // expected-warning {{Objective-C category method name prefix in forbidden list}}
+
+@end
