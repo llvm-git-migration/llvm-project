@@ -1,6 +1,7 @@
 // RUN: %clangxx -O0 %s -o %t
 
 // REQUIRES: glibc
+// UNSUPPORTED: target={{.*fuchsia.*}}
 
 #include <assert.h>
 #include <fcntl.h>
