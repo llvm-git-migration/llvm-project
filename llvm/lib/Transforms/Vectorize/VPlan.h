@@ -2292,7 +2292,7 @@ public:
 /// The Operands are {ChainOp, VecOp, EVL, [Condition]}.
 class VPReductionEVLRecipe : public VPReductionRecipe {
 public:
-  VPReductionEVLRecipe(VPReductionRecipe &R, VPValue &EVL, VPValue *CondOp)
+  VPReductionEVLRecipe(VPReductionRecipe &R, VPValue *CondOp, VPValue &EVL)
       : VPReductionRecipe(
             VPDef::VPReductionEVLSC, R.getRecurrenceDescriptor(),
             cast_or_null<Instruction>(R.getUnderlyingValue()),
@@ -2613,7 +2613,7 @@ struct VPWidenLoadEVLRecipe final : public VPWidenMemoryRecipe, public VPValue {
   }
 
   VPWidenLoadEVLRecipe *clone() override {
-    llvm_unreachable("VPWidenLoadEVLRecipe recipe cannot be cloned");
+    llvm_unreachable("VPWidenLoadEVLRecipe cannot be cloned");
     return nullptr;
   }
 
