@@ -14,8 +14,10 @@
 #include <__type_traits/decay.h>
 #include <__type_traits/is_same.h>
 #include <__type_traits/remove_cvref.h>
+#include <__type_traits/type_identity.h>
 #include <__type_traits/void_t.h>
 #include <__utility/declval.h>
+#include <__utility/empty.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -23,6 +25,12 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
+#if __has_builtin(__common_type)
+
+template <class... _Args>
+struct common_type : __common_type<common_type, __type_identity, __empty, _Args...> {};
+
+#else
 #if _LIBCPP_STD_VER >= 20
 // Let COND_RES(X, Y) be:
 template <class _Tp, class _Up>
@@ -91,6 +99,8 @@ struct _LIBCPP_TEMPLATE_VIS common_type<_Tp, _Up>
 template <class _Tp, class _Up, class _Vp, class... _Rest>
 struct _LIBCPP_TEMPLATE_VIS common_type<_Tp, _Up, _Vp, _Rest...>
     : __common_type_impl<__common_types<_Tp, _Up, _Vp, _Rest...> > {};
+
+#endif
 
 #if _LIBCPP_STD_VER >= 14
 template <class... _Tp>

@@ -4135,7 +4135,7 @@ void test_errors() {
 }
 }
 
-struct S {};
+struct NoCommonType {};
 template <class T> using remove_const_t = __remove_const(T);
 
 void check_remove_const() {
@@ -4157,14 +4157,14 @@ void check_remove_const() {
   static_assert(__is_same(remove_const_t<int (*const)()>, int (*)()));
   static_assert(__is_same(remove_const_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_const_t<S>, S));
-  static_assert(__is_same(remove_const_t<const S>, S));
-  static_assert(__is_same(remove_const_t<volatile S>, volatile S));
-  static_assert(__is_same(remove_const_t<S *__restrict>, S *__restrict));
-  static_assert(__is_same(remove_const_t<const volatile S>, volatile S));
-  static_assert(__is_same(remove_const_t<S *const volatile __restrict>, S *volatile __restrict));
-  static_assert(__is_same(remove_const_t<int S::*const>, int S::*));
-  static_assert(__is_same(remove_const_t<int (S::*const)()>, int(S::*)()));
+  static_assert(__is_same(remove_const_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_const_t<const NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_const_t<volatile NoCommonType>, volatile NoCommonType));
+  static_assert(__is_same(remove_const_t<NoCommonType *__restrict>, NoCommonType *__restrict));
+  static_assert(__is_same(remove_const_t<const volatile NoCommonType>, volatile NoCommonType));
+  static_assert(__is_same(remove_const_t<NoCommonType *const volatile __restrict>, NoCommonType *volatile __restrict));
+  static_assert(__is_same(remove_const_t<int NoCommonType::*const>, int NoCommonType::*));
+  static_assert(__is_same(remove_const_t<int (NoCommonType::*const)()>, int(NoCommonType::*)()));
 }
 
 template <class T> using remove_restrict_t = __remove_restrict(T);
@@ -4186,13 +4186,13 @@ void check_remove_restrict() {
   static_assert(__is_same(remove_restrict_t<int (*const volatile)()>, int (*const volatile)()));
   static_assert(__is_same(remove_restrict_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_restrict_t<S>, S));
-  static_assert(__is_same(remove_restrict_t<const S>, const S));
-  static_assert(__is_same(remove_restrict_t<volatile S>, volatile S));
-  static_assert(__is_same(remove_restrict_t<S *__restrict>, S *));
-  static_assert(__is_same(remove_restrict_t<S *const volatile __restrict>, S *const volatile));
-  static_assert(__is_same(remove_restrict_t<int S::*__restrict>, int S::*));
-  static_assert(__is_same(remove_restrict_t<int (S::*const volatile)()>, int(S::*const volatile)()));
+  static_assert(__is_same(remove_restrict_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_restrict_t<const NoCommonType>, const NoCommonType));
+  static_assert(__is_same(remove_restrict_t<volatile NoCommonType>, volatile NoCommonType));
+  static_assert(__is_same(remove_restrict_t<NoCommonType *__restrict>, NoCommonType *));
+  static_assert(__is_same(remove_restrict_t<NoCommonType *const volatile __restrict>, NoCommonType *const volatile));
+  static_assert(__is_same(remove_restrict_t<int NoCommonType::*__restrict>, int NoCommonType::*));
+  static_assert(__is_same(remove_restrict_t<int (NoCommonType::*const volatile)()>, int(NoCommonType::*const volatile)()));
 }
 
 template <class T> using remove_volatile_t = __remove_volatile(T);
@@ -4217,12 +4217,12 @@ void check_remove_volatile() {
   static_assert(__is_same(remove_volatile_t<int (*volatile)()>, int (*)()));
   static_assert(__is_same(remove_volatile_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_volatile_t<S>, S));
-  static_assert(__is_same(remove_volatile_t<const S>, const S));
-  static_assert(__is_same(remove_volatile_t<volatile S>, S));
-  static_assert(__is_same(remove_volatile_t<const volatile S>, const S));
-  static_assert(__is_same(remove_volatile_t<int S::*volatile>, int S::*));
-  static_assert(__is_same(remove_volatile_t<int (S::*volatile)()>, int(S::*)()));
+  static_assert(__is_same(remove_volatile_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_volatile_t<const NoCommonType>, const NoCommonType));
+  static_assert(__is_same(remove_volatile_t<volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_volatile_t<const volatile NoCommonType>, const NoCommonType));
+  static_assert(__is_same(remove_volatile_t<int NoCommonType::*volatile>, int NoCommonType::*));
+  static_assert(__is_same(remove_volatile_t<int (NoCommonType::*volatile)()>, int(NoCommonType::*)()));
 }
 
 template <class T> using remove_cv_t = __remove_cv(T);
@@ -4247,12 +4247,12 @@ void check_remove_cv() {
   static_assert(__is_same(remove_cv_t<int (*const volatile)()>, int (*)()));
   static_assert(__is_same(remove_cv_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_cv_t<S>, S));
-  static_assert(__is_same(remove_cv_t<const S>, S));
-  static_assert(__is_same(remove_cv_t<volatile S>, S));
-  static_assert(__is_same(remove_cv_t<const volatile S>, S));
-  static_assert(__is_same(remove_cv_t<int S::*const volatile>, int S::*));
-  static_assert(__is_same(remove_cv_t<int (S::*const volatile)()>, int(S::*)()));
+  static_assert(__is_same(remove_cv_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cv_t<const NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cv_t<volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cv_t<const volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cv_t<int NoCommonType::*const volatile>, int NoCommonType::*));
+  static_assert(__is_same(remove_cv_t<int (NoCommonType::*const volatile)()>, int(NoCommonType::*)()));
 }
 
 template <class T> using add_pointer_t = __add_pointer(T);
@@ -4273,15 +4273,15 @@ void add_pointer() {
   static_assert(__is_same(add_pointer_t<int (*)()>, int (**)()));
   static_assert(__is_same(add_pointer_t<int (&)()>, int (*)()));
 
-  static_assert(__is_same(add_pointer_t<S>, S *));
-  static_assert(__is_same(add_pointer_t<const S>, const S *));
-  static_assert(__is_same(add_pointer_t<volatile S>, volatile S *));
-  static_assert(__is_same(add_pointer_t<const volatile S>, const volatile S *));
-  static_assert(__is_same(add_pointer_t<int S::*>, int S::**));
-  static_assert(__is_same(add_pointer_t<int (S::*)()>, int(S::**)()));
+  static_assert(__is_same(add_pointer_t<NoCommonType>, NoCommonType *));
+  static_assert(__is_same(add_pointer_t<const NoCommonType>, const NoCommonType *));
+  static_assert(__is_same(add_pointer_t<volatile NoCommonType>, volatile NoCommonType *));
+  static_assert(__is_same(add_pointer_t<const volatile NoCommonType>, const volatile NoCommonType *));
+  static_assert(__is_same(add_pointer_t<int NoCommonType::*>, int NoCommonType::**));
+  static_assert(__is_same(add_pointer_t<int (NoCommonType::*)()>, int(NoCommonType::**)()));
 
   static_assert(__is_same(add_pointer_t<int __attribute__((address_space(1)))>, int __attribute__((address_space(1))) *));
-  static_assert(__is_same(add_pointer_t<S __attribute__((address_space(2)))>, S __attribute__((address_space(2))) *));
+  static_assert(__is_same(add_pointer_t<NoCommonType __attribute__((address_space(2)))>, NoCommonType __attribute__((address_space(2))) *));
 }
 
 template <class T> using remove_pointer_t = __remove_pointer(T);
@@ -4308,15 +4308,15 @@ void remove_pointer() {
   static_assert(__is_same(remove_pointer_t<int (*)()>, int()));
   static_assert(__is_same(remove_pointer_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_pointer_t<S>, S));
-  static_assert(__is_same(remove_pointer_t<const S>, const S));
-  static_assert(__is_same(remove_pointer_t<volatile S>, volatile S));
-  static_assert(__is_same(remove_pointer_t<const volatile S>, const volatile S));
-  static_assert(__is_same(remove_pointer_t<int S::*>, int S::*));
-  static_assert(__is_same(remove_pointer_t<int (S::*)()>, int(S::*)()));
+  static_assert(__is_same(remove_pointer_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_pointer_t<const NoCommonType>, const NoCommonType));
+  static_assert(__is_same(remove_pointer_t<volatile NoCommonType>, volatile NoCommonType));
+  static_assert(__is_same(remove_pointer_t<const volatile NoCommonType>, const volatile NoCommonType));
+  static_assert(__is_same(remove_pointer_t<int NoCommonType::*>, int NoCommonType::*));
+  static_assert(__is_same(remove_pointer_t<int (NoCommonType::*)()>, int(NoCommonType::*)()));
 
   static_assert(__is_same(remove_pointer_t<int __attribute__((address_space(1))) *>, int __attribute__((address_space(1)))));
-  static_assert(__is_same(remove_pointer_t<S __attribute__((address_space(2))) *>, S  __attribute__((address_space(2)))));
+  static_assert(__is_same(remove_pointer_t<NoCommonType __attribute__((address_space(2))) *>, NoCommonType  __attribute__((address_space(2)))));
 
   static_assert(__is_same(remove_pointer_t<int (^)(char)>, int (^)(char)));
 }
@@ -4339,12 +4339,12 @@ void add_lvalue_reference() {
   static_assert(__is_same(add_lvalue_reference_t<int (*)()>, int (*&)()));
   static_assert(__is_same(add_lvalue_reference_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(add_lvalue_reference_t<S>, S &));
-  static_assert(__is_same(add_lvalue_reference_t<const S>, const S &));
-  static_assert(__is_same(add_lvalue_reference_t<volatile S>, volatile S &));
-  static_assert(__is_same(add_lvalue_reference_t<const volatile S>, const volatile S &));
-  static_assert(__is_same(add_lvalue_reference_t<int S::*>, int S::*&));
-  static_assert(__is_same(add_lvalue_reference_t<int (S::*)()>, int(S::*&)()));
+  static_assert(__is_same(add_lvalue_reference_t<NoCommonType>, NoCommonType &));
+  static_assert(__is_same(add_lvalue_reference_t<const NoCommonType>, const NoCommonType &));
+  static_assert(__is_same(add_lvalue_reference_t<volatile NoCommonType>, volatile NoCommonType &));
+  static_assert(__is_same(add_lvalue_reference_t<const volatile NoCommonType>, const volatile NoCommonType &));
+  static_assert(__is_same(add_lvalue_reference_t<int NoCommonType::*>, int NoCommonType::*&));
+  static_assert(__is_same(add_lvalue_reference_t<int (NoCommonType::*)()>, int(NoCommonType::*&)()));
 }
 
 template <class T> using add_rvalue_reference_t = __add_rvalue_reference(T);
@@ -4365,12 +4365,12 @@ void add_rvalue_reference() {
   static_assert(__is_same(add_rvalue_reference_t<int (*)()>, int (*&&)()));
   static_assert(__is_same(add_rvalue_reference_t<int (&)()>, int (&)())); // reference collapsing
 
-  static_assert(__is_same(add_rvalue_reference_t<S>, S &&));
-  static_assert(__is_same(add_rvalue_reference_t<const S>, const S &&));
-  static_assert(__is_same(add_rvalue_reference_t<volatile S>, volatile S &&));
-  static_assert(__is_same(add_rvalue_reference_t<const volatile S>, const volatile S &&));
-  static_assert(__is_same(add_rvalue_reference_t<int S::*>, int S::*&&));
-  static_assert(__is_same(add_rvalue_reference_t<int (S::*)()>, int(S::* &&)()));
+  static_assert(__is_same(add_rvalue_reference_t<NoCommonType>, NoCommonType &&));
+  static_assert(__is_same(add_rvalue_reference_t<const NoCommonType>, const NoCommonType &&));
+  static_assert(__is_same(add_rvalue_reference_t<volatile NoCommonType>, volatile NoCommonType &&));
+  static_assert(__is_same(add_rvalue_reference_t<const volatile NoCommonType>, const volatile NoCommonType &&));
+  static_assert(__is_same(add_rvalue_reference_t<int NoCommonType::*>, int NoCommonType::*&&));
+  static_assert(__is_same(add_rvalue_reference_t<int (NoCommonType::*)()>, int(NoCommonType::* &&)()));
 }
 
 template <class T> using remove_reference_t = __remove_reference_t(T);
@@ -4393,21 +4393,21 @@ void check_remove_reference() {
   static_assert(__is_same(remove_reference_t<int (*const volatile)()>, int (*const volatile)()));
   static_assert(__is_same(remove_reference_t<int (&)()>, int()));
 
-  static_assert(__is_same(remove_reference_t<S>, S));
-  static_assert(__is_same(remove_reference_t<S &>, S));
-  static_assert(__is_same(remove_reference_t<S &&>, S));
-  static_assert(__is_same(remove_reference_t<const S>, const S));
-  static_assert(__is_same(remove_reference_t<const S &>, const S));
-  static_assert(__is_same(remove_reference_t<const S &&>, const S));
-  static_assert(__is_same(remove_reference_t<volatile S>, volatile S));
-  static_assert(__is_same(remove_reference_t<volatile S &>, volatile S));
-  static_assert(__is_same(remove_reference_t<volatile S &&>, volatile S));
-  static_assert(__is_same(remove_reference_t<const volatile S>, const volatile S));
-  static_assert(__is_same(remove_reference_t<const volatile S &>, const volatile S));
-  static_assert(__is_same(remove_reference_t<const volatile S &&>, const volatile S));
-  static_assert(__is_same(remove_reference_t<int S::*const volatile &>, int S::*const volatile));
-  static_assert(__is_same(remove_reference_t<int (S::*const volatile &)()>, int(S::*const volatile)()));
-  static_assert(__is_same(remove_reference_t<int (S::*const volatile &&)() &>, int(S::*const volatile)() &));
+  static_assert(__is_same(remove_reference_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_reference_t<NoCommonType &>, NoCommonType));
+  static_assert(__is_same(remove_reference_t<NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(remove_reference_t<const NoCommonType>, const NoCommonType));
+  static_assert(__is_same(remove_reference_t<const NoCommonType &>, const NoCommonType));
+  static_assert(__is_same(remove_reference_t<const NoCommonType &&>, const NoCommonType));
+  static_assert(__is_same(remove_reference_t<volatile NoCommonType>, volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<volatile NoCommonType &>, volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<volatile NoCommonType &&>, volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<const volatile NoCommonType>, const volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<const volatile NoCommonType &>, const volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<const volatile NoCommonType &&>, const volatile NoCommonType));
+  static_assert(__is_same(remove_reference_t<int NoCommonType::*const volatile &>, int NoCommonType::*const volatile));
+  static_assert(__is_same(remove_reference_t<int (NoCommonType::*const volatile &)()>, int(NoCommonType::*const volatile)()));
+  static_assert(__is_same(remove_reference_t<int (NoCommonType::*const volatile &&)() &>, int(NoCommonType::*const volatile)() &));
 }
 
 template <class T> using remove_cvref_t = __remove_cvref(T);
@@ -4432,22 +4432,22 @@ void check_remove_cvref() {
   static_assert(__is_same(remove_cvref_t<int (*const volatile)()>, int (*)()));
   static_assert(__is_same(remove_cvref_t<int (&)()>, int()));
 
-  static_assert(__is_same(remove_cvref_t<S>, S));
-  static_assert(__is_same(remove_cvref_t<S &>, S));
-  static_assert(__is_same(remove_cvref_t<S &&>, S));
-  static_assert(__is_same(remove_cvref_t<const S>, S));
-  static_assert(__is_same(remove_cvref_t<const S &>, S));
-  static_assert(__is_same(remove_cvref_t<const S &&>, S));
-  static_assert(__is_same(remove_cvref_t<volatile S>, S));
-  static_assert(__is_same(remove_cvref_t<volatile S &>, S));
-  static_assert(__is_same(remove_cvref_t<volatile S &&>, S));
-  static_assert(__is_same(remove_cvref_t<const volatile S>, S));
-  static_assert(__is_same(remove_cvref_t<const volatile S &>, S));
-  static_assert(__is_same(remove_cvref_t<const volatile S &&>, S));
-  static_assert(__is_same(remove_cvref_t<int S::*const volatile>, int S::*));
-  static_assert(__is_same(remove_cvref_t<int (S::*const volatile)()>, int(S::*)()));
-  static_assert(__is_same(remove_cvref_t<int (S::*const volatile)() &>, int(S::*)() &));
-  static_assert(__is_same(remove_cvref_t<int (S::*const volatile)() &&>, int(S::*)() &&));
+  static_assert(__is_same(remove_cvref_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<NoCommonType &>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const NoCommonType &>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<volatile NoCommonType &>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<volatile NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const volatile NoCommonType &>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<const volatile NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(remove_cvref_t<int NoCommonType::*const volatile>, int NoCommonType::*));
+  static_assert(__is_same(remove_cvref_t<int (NoCommonType::*const volatile)()>, int(NoCommonType::*)()));
+  static_assert(__is_same(remove_cvref_t<int (NoCommonType::*const volatile)() &>, int(NoCommonType::*)() &));
+  static_assert(__is_same(remove_cvref_t<int (NoCommonType::*const volatile)() &&>, int(NoCommonType::*)() &&));
 }
 
 template <class T> using decay_t = __decay(T);
@@ -4477,28 +4477,28 @@ void check_decay() {
   static_assert(__is_same(decay_t<IntAr>, int *));
   static_assert(__is_same(decay_t<IntArNB>, int *));
 
-  static_assert(__is_same(decay_t<S>, S));
-  static_assert(__is_same(decay_t<S &>, S));
-  static_assert(__is_same(decay_t<S &&>, S));
-  static_assert(__is_same(decay_t<const S>, S));
-  static_assert(__is_same(decay_t<const S &>, S));
-  static_assert(__is_same(decay_t<const S &&>, S));
-  static_assert(__is_same(decay_t<volatile S>, S));
-  static_assert(__is_same(decay_t<volatile S &>, S));
-  static_assert(__is_same(decay_t<volatile S &&>, S));
-  static_assert(__is_same(decay_t<const volatile S>, S));
-  static_assert(__is_same(decay_t<const volatile S &>, S));
-  static_assert(__is_same(decay_t<const volatile S &&>, S));
-  static_assert(__is_same(decay_t<int S::*const volatile>, int S::*));
-  static_assert(__is_same(decay_t<int (S::*const volatile)()>, int(S::*)()));
-  static_assert(__is_same(decay_t<int S::*const volatile &>, int S::*));
-  static_assert(__is_same(decay_t<int (S::*const volatile &)()>, int(S::*)()));
-  static_assert(__is_same(decay_t<int S::*const volatile &&>, int S::*));
+  static_assert(__is_same(decay_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(decay_t<NoCommonType &>, NoCommonType));
+  static_assert(__is_same(decay_t<NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(decay_t<const NoCommonType>, NoCommonType));
+  static_assert(__is_same(decay_t<const NoCommonType &>, NoCommonType));
+  static_assert(__is_same(decay_t<const NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(decay_t<volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(decay_t<volatile NoCommonType &>, NoCommonType));
+  static_assert(__is_same(decay_t<volatile NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(decay_t<const volatile NoCommonType>, NoCommonType));
+  static_assert(__is_same(decay_t<const volatile NoCommonType &>, NoCommonType));
+  static_assert(__is_same(decay_t<const volatile NoCommonType &&>, NoCommonType));
+  static_assert(__is_same(decay_t<int NoCommonType::*const volatile>, int NoCommonType::*));
+  static_assert(__is_same(decay_t<int (NoCommonType::*const volatile)()>, int(NoCommonType::*)()));
+  static_assert(__is_same(decay_t<int NoCommonType::*const volatile &>, int NoCommonType::*));
+  static_assert(__is_same(decay_t<int (NoCommonType::*const volatile &)()>, int(NoCommonType::*)()));
+  static_assert(__is_same(decay_t<int NoCommonType::*const volatile &&>, int NoCommonType::*));
 }
 
 template <class T> struct CheckAbominableFunction {};
 template <class M>
-struct CheckAbominableFunction<M S::*> {
+struct CheckAbominableFunction<M NoCommonType::*> {
   static void checks() {
     static_assert(__is_same(add_lvalue_reference_t<M>, M));
     static_assert(__is_same(add_pointer_t<M>, M));
@@ -4516,17 +4516,17 @@ struct CheckAbominableFunction<M S::*> {
 };
 
 void check_abominable_function() {
-  { CheckAbominableFunction<int (S::*)() &> x; }
-  { CheckAbominableFunction<int (S::*)() &&> x; }
-  { CheckAbominableFunction<int (S::*)() const> x; }
-  { CheckAbominableFunction<int (S::*)() const &> x; }
-  { CheckAbominableFunction<int (S::*)() const &&> x; }
-  { CheckAbominableFunction<int (S::*)() volatile> x; }
-  { CheckAbominableFunction<int (S::*)() volatile &> x; }
-  { CheckAbominableFunction<int (S::*)() volatile &&> x; }
-  { CheckAbominableFunction<int (S::*)() const volatile> x; }
-  { CheckAbominableFunction<int (S::*)() const volatile &> x; }
-  { CheckAbominableFunction<int (S::*)() const volatile &&> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() &> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() &&> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const &> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const &&> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() volatile> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() volatile &> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() volatile &&> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const volatile> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const volatile &> x; }
+  { CheckAbominableFunction<int (NoCommonType::*)() const volatile &&> x; }
 }
 
 template <class T> using make_signed_t = __make_signed(T);
@@ -4756,9 +4756,9 @@ void remove_extent() {
   static_assert(__is_same(remove_extent_t<int (*)()>, int (*)()));
   static_assert(__is_same(remove_extent_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_extent_t<S>, S));
-  static_assert(__is_same(remove_extent_t<int S::*>, int S::*));
-  static_assert(__is_same(remove_extent_t<int (S::*)()>, int(S::*)()));
+  static_assert(__is_same(remove_extent_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_extent_t<int NoCommonType::*>, int NoCommonType::*));
+  static_assert(__is_same(remove_extent_t<int (NoCommonType::*)()>, int(NoCommonType::*)()));
 
   using SomeArray = int[1][2];
   static_assert(__is_same(remove_extent_t<const SomeArray>, const int[2]));
@@ -4795,9 +4795,9 @@ void remove_all_extents() {
   static_assert(__is_same(remove_all_extents_t<int (*)()>, int (*)()));
   static_assert(__is_same(remove_all_extents_t<int (&)()>, int (&)()));
 
-  static_assert(__is_same(remove_all_extents_t<S>, S));
-  static_assert(__is_same(remove_all_extents_t<int S::*>, int S::*));
-  static_assert(__is_same(remove_all_extents_t<int (S::*)()>, int(S::*)()));
+  static_assert(__is_same(remove_all_extents_t<NoCommonType>, NoCommonType));
+  static_assert(__is_same(remove_all_extents_t<int NoCommonType::*>, int NoCommonType::*));
+  static_assert(__is_same(remove_all_extents_t<int (NoCommonType::*)()>, int(NoCommonType::*)()));
 
   using SomeArray = int[1][2];
   static_assert(__is_same(remove_all_extents_t<const SomeArray>, const int));
