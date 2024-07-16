@@ -41,6 +41,62 @@ Tracker::~Tracker() {
   assert(Changes.empty() && "You must accept or revert changes!");
 }
 
+EraseFromParent::EraseFromParent(std::unique_ptr<sandboxir::Value> &&ErasedIPtr,
+                                 Tracker &Tracker)
+    : IRChangeBase(Tracker), ErasedIPtr(std::move(ErasedIPtr)) {
+  auto *I = cast<Instruction>(this->ErasedIPtr.get());
+  auto LLVMInstrs = I->getLLVMInstrs();
+  // Iterate in reverse program order.
+  for (auto *LLVMI : reverse(LLVMInstrs)) {
+    SmallVector<InstrData::OpData> OpDataVec;
+    for (auto [OpNum, Use] : enumerate(LLVMI->operands()))
+      OpDataVec.push_back({Use.get(), static_cast<unsigned>(OpNum)});
+    InstrData.push_back({OpDataVec, LLVMI});
+  }
+#ifndef NDEBUG
+  for (auto Idx : seq<unsigned>(1, InstrData.size()))
+    assert(InstrData[Idx].LLVMI->comesBefore(InstrData[Idx - 1].LLVMI) &&
+           "Expected reverse program order!");
+#endif
+  auto *BotLLVMI = cast<llvm::Instruction>(I->Val);
+  if (BotLLVMI->getNextNode() != nullptr)
+    NextLLVMIOrBB = BotLLVMI->getNextNode();
+  else
+    NextLLVMIOrBB = BotLLVMI->getParent();
+}
+
+void EraseFromParent::accept() {
+  for (const auto &IData : InstrData)
+    IData.LLVMI->deleteValue();
+}
+
+void EraseFromParent::revert() {
+  auto [OpData, BotLLVMI] = InstrData[0];
+  if (auto *NextLLVMI = NextLLVMIOrBB.dyn_cast<llvm::Instruction *>()) {
+    BotLLVMI->insertBefore(NextLLVMI);
+  } else {
+    auto *LLVMBB = NextLLVMIOrBB.get<llvm::BasicBlock *>();
+    BotLLVMI->insertInto(LLVMBB, LLVMBB->end());
+  }
+  for (auto [Op, OpNum] : OpData)
+    BotLLVMI->setOperand(OpNum, Op);
+
+  for (auto [OpData, LLVMI] : drop_begin(InstrData)) {
+    LLVMI->insertBefore(BotLLVMI);
+    for (auto [Op, OpNum] : OpData)
+      LLVMI->setOperand(OpNum, Op);
+    BotLLVMI = LLVMI;
+  }
+  Parent.getContext().registerValue(std::move(ErasedIPtr));
+}
+
+#ifndef NDEBUG
+void EraseFromParent::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+#endif
+
 void Tracker::track(std::unique_ptr<IRChangeBase> &&Change) {
   assert(State == TrackerState::Record && "The tracker should be tracking!");
   Changes.push_back(std::move(Change));
