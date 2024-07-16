@@ -71,13 +71,10 @@ public:
   ConstraintSystem() : Constraints(6), View(Constraints) {}
 
   // This constructor is used by ConstraintElimination, inside ConstraintInfo.
-  // Unfortunately, due to calls to addFact, that adds local variables, it is
-  // impossible to know how many local variables there are in advance.
-  // ConstraintElimination has a fixed upper-bound on the number of columns,
-  // configurable as a cl::opt, so use that number, and don't add the constraint
-  // if it exceeds that number.
-  ConstraintSystem(ArrayRef<Value *> FunctionArgs, size_t NCols)
+  // ConstraintElimination upper-bounds the number of columns using a dry run.
+  ConstraintSystem(ArrayRef<Value *> FunctionArgs, size_t NRows, size_t NCols)
       : Constraints(NCols), View(Constraints) {
+    Constraints.reserve(NRows);
     NumVariables += FunctionArgs.size();
     for (auto *Arg : FunctionArgs) {
       Value2Index.insert({Arg, Value2Index.size() + 1});
@@ -109,6 +106,11 @@ public:
         continue;
       NewRow.emplace_back(C, Idx);
     }
+
+    // There is no correctness issue if we don't add a constraint.
+    if (NewRow.size() > Constraints.getNumCols())
+      return false;
+
     if (View.empty())
       NumVariables = R.size();
 
@@ -125,11 +127,6 @@ public:
     // If all variable coefficients are 0, the constraint does not provide any
     // usable information.
     if (all_of(ArrayRef(R).drop_front(1), [](int64_t C) { return C == 0; }))
-      return false;
-
-    // There is no correctness issue if we don't add a constraint, for whatever
-    // reason.
-    if (R.size() > Constraints.getNumCols())
       return false;
 
     NumVariables = std::max(R.size(), NumVariables);
