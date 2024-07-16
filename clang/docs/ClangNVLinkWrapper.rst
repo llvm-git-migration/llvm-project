@@ -10,11 +10,15 @@ Clang nvlink Wrapper
 Introduction
 ============
 
-This tools works as a wrapper around the NVIDIA ``nvlink`` linker. The purpose 
-of this wrapper is to provide an interface similar to the ``ld.lld`` linker 
-while still relying on NVIDIA's proprietary linker to produce the final output. 
-Features include, static archive (.a) linking, LTO, and accepting files ending 
-in ``.o`` without error.
+This tools works as a wrapper around the NVIDIA ``nvlink`` linker. The purpose
+of this wrapper is to provide an interface similar to the ``ld.lld`` linker
+while still relying on NVIDIA's proprietary linker to produce the final output.
+
+``nvlink`` has a number of known quirks that make it difficult to use in a
+unified offloading setting. For example, it does not accept ``.o`` files as they
+must be named ``.cubin``. Static archives do not work, so passing a ``.a`` will
+provide a linker error. ``nvlink`` also does not support link time optimization
+and ignores many standard linker arguments. This tool works around these issues.
 
 Usage
 =====
@@ -57,7 +61,9 @@ only for the linker wrapper will be forwarded to ``nvlink``.
 Example
 =======
 
-This tool is intended to be invoked when targeting the NVPTX toolchain directly. 
+This tool is intended to be invoked when targeting the NVPTX toolchain directly
+as a cross-compiling target. This can be used to create standalone GPU
+executables with normal linking semantics similar to standard compilation.
 
 .. code-block:: console
 

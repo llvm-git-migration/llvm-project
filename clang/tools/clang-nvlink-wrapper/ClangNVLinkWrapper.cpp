@@ -236,7 +236,7 @@ searchLibraryBaseName(StringRef Name, StringRef Root,
 /// `-lfoo` or `-l:libfoo.a`.
 std::optional<std::string> searchLibrary(StringRef Input, StringRef Root,
                                          ArrayRef<StringRef> SearchPaths) {
-  if (Input.starts_with(":") || Input.ends_with(".lib"))
+  if (Input.starts_with(":"))
     return findFromSearchPaths(Input.drop_front(), Root, SearchPaths);
   return searchLibraryBaseName(Input, Root, SearchPaths);
 }
@@ -246,8 +246,7 @@ void printCommands(ArrayRef<StringRef> CmdArgs) {
     return;
 
   llvm::errs() << " \"" << CmdArgs.front() << "\" ";
-  for (auto IC = std::next(CmdArgs.begin()), IE = CmdArgs.end(); IC != IE; ++IC)
-    llvm::errs() << *IC << (std::next(IC) != IE ? " " : "\n");
+  llvm::errs() << llvm::join(std::next(CmdArgs.begin(), " ") << "\n";
 }
 
 /// A minimum symbol interface that provides the necessary information to
@@ -306,9 +305,12 @@ Expected<StringRef> runPTXAs(StringRef File, const ArgList &Args) {
   SmallVector<StringRef> AssemblerArgs({*PTXAsPath, "-m64", "-c", File});
   if (Args.hasArg(OPT_verbose))
     AssemblerArgs.push_back("-v");
-  if (Args.hasArg(OPT_g))
+  if (Args.hasArg(OPT_g)) {
+    if (Args.hasArg(OPT_O))
+      WithColor::warning(errs(), Executable)
+          << "Optimized debugging not supported, overriding to '-O0'\n";
     AssemblerArgs.push_back("-O0");
-  else
+  } else
     AssemblerArgs.push_back(
         Args.MakeArgString("-O" + Args.getLastArgValue(OPT_O, "3")));
   AssemblerArgs.append({"-arch", Args.getLastArgValue(OPT_arch)});
