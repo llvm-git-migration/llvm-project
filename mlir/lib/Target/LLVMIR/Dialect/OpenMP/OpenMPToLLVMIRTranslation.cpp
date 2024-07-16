@@ -1190,7 +1190,7 @@ convertOmpWsloop(Operation &opInst, llvm::IRBuilderBase &builder,
     }
     loopInfos.push_back(ompBuilder->createCanonicalLoop(
         loc, bodyGen, lowerBound, upperBound, step,
-        /*IsSigned=*/true, loopOp.getInclusive(), computeIP));
+        /*IsSigned=*/true, loopOp.getLoopInclusive(), computeIP));
 
     if (failed(bodyGenStatus))
       return failure();

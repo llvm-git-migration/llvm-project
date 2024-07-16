@@ -560,6 +560,25 @@ class OpenMP_LinearClauseSkip<
 def OpenMP_LinearClause : OpenMP_LinearClauseSkip<>;
 
 //===----------------------------------------------------------------------===//
+// Not in the spec: Clause-like structure to hold loop related information.
+//===----------------------------------------------------------------------===//
+
+class OpenMP_LoopRelatedClauseSkip<
+    bit traits = false, bit arguments = false, bit assemblyFormat = false,
+    bit description = false, bit extraClassDeclaration = false
+  > : OpenMP_Clause</*isRequired=*/false, traits, arguments, assemblyFormat,
+                    description, extraClassDeclaration> {
+  let arguments = (ins
+    UnitAttr:$loop_inclusive
+  );
+
+  // Description and formatting integrated in the `omp.loop_nest` operation,
+  // which is the only one currently accepting this clause.
+}
+
+def OpenMP_LoopRelatedClause : OpenMP_LoopRelatedClauseSkip<>;
+
+//===----------------------------------------------------------------------===//
 // V5.2: [5.8.3] `map` clause
 //===----------------------------------------------------------------------===//
 

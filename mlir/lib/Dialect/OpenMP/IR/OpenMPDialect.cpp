@@ -2047,7 +2047,7 @@ ParseResult LoopNestOp::parse(OpAsmParser &parser, OperationState &result) {
 
   // Parse "inclusive" flag.
   if (succeeded(parser.parseOptionalKeyword("inclusive")))
-    result.addAttribute("inclusive",
+    result.addAttribute("loop_inclusive",
                         UnitAttr::get(parser.getBuilder().getContext()));
 
   // Parse step values.
@@ -2076,7 +2076,7 @@ void LoopNestOp::print(OpAsmPrinter &p) {
   auto args = region.getArguments();
   p << " (" << args << ") : " << args[0].getType() << " = ("
     << getCollapseLowerBound() << ") to (" << getCollapseUpperBound() << ") ";
-  if (getInclusive())
+  if (getLoopInclusive())
     p << "inclusive ";
   p << "step (" << getCollapseStep() << ") ";
   p.printRegion(region, /*printEntryBlockArgs=*/false);

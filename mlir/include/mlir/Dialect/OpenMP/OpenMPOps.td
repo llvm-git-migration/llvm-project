@@ -297,7 +297,7 @@ def SingleOp : OpenMP_Op<"single", traits = [
 def LoopNestOp : OpenMP_Op<"loop_nest", traits = [
     RecursiveMemoryEffects, SameVariadicOperandSize
   ], clauses = [
-    OpenMP_CollapseClause
+    OpenMP_CollapseClause, OpenMP_LoopRelatedClause
   ], singleRegion = true> {
   let summary = "rectangular loop nest";
   let description = [{
@@ -306,7 +306,7 @@ def LoopNestOp : OpenMP_Op<"loop_nest", traits = [
     lower and upper bounds, as well as a step variable, must be defined.
 
     The lower and upper bounds specify a half-open range: the range includes the
-    lower bound but does not include the upper bound. If the `inclusive`
+    lower bound but does not include the upper bound. If the `loop_inclusive`
     attribute is specified then the upper bound is also included.
 
     The body region can contain any number of blocks. The region is terminated
@@ -334,8 +334,6 @@ def LoopNestOp : OpenMP_Op<"loop_nest", traits = [
     addition of support for loop transformations, non-rectangular loops and
     non-perfectly nested loops.
   }];
-
-  let arguments = !con(clausesArgs, (ins UnitAttr:$inclusive));
 
   let builders = [
     OpBuilder<(ins CArg<"const LoopNestOperands &">:$clauses)>
