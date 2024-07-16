@@ -1155,7 +1155,7 @@ bool NVPTXDAGToDAGISel::tryLoad(SDNode *N) {
   case NVPTX::Ordering::SequentiallyConsistent: {
     unsigned Op = Subtarget->hasMemoryOrdering()
                       ? NVPTX::atomic_thread_fence_seq_cst_sys
-                      : NVPTX::atomic_thread_fence_seq_cst_sys_membar;
+                      : NVPTX::INT_MEMBAR_SYS;
     Chain = SDValue(CurDAG->getMachineNode(Op, dl, MVT::Other, Chain), 0);
     break;
   }
@@ -1318,7 +1318,7 @@ bool NVPTXDAGToDAGISel::tryLoadVector(SDNode *N) {
   case NVPTX::Ordering::SequentiallyConsistent: {
     unsigned Op = Subtarget->hasMemoryOrdering()
                       ? NVPTX::atomic_thread_fence_seq_cst_sys
-                      : NVPTX::atomic_thread_fence_seq_cst_sys_membar;
+                      : NVPTX::INT_MEMBAR_SYS;
     Chain = SDValue(CurDAG->getMachineNode(Op, DL, MVT::Other, Chain), 0);
     break;
   }
@@ -1990,7 +1990,7 @@ bool NVPTXDAGToDAGISel::tryStore(SDNode *N) {
   case NVPTX::Ordering::SequentiallyConsistent: {
     unsigned Op = Subtarget->hasMemoryOrdering()
                       ? NVPTX::atomic_thread_fence_seq_cst_sys
-                      : NVPTX::atomic_thread_fence_seq_cst_sys_membar;
+                      : NVPTX::INT_MEMBAR_SYS;
     Chain = SDValue(CurDAG->getMachineNode(Op, dl, MVT::Other, Chain), 0);
     break;
   }
@@ -2150,7 +2150,7 @@ bool NVPTXDAGToDAGISel::tryStoreVector(SDNode *N) {
   case NVPTX::Ordering::SequentiallyConsistent: {
     unsigned Op = Subtarget->hasMemoryOrdering()
                       ? NVPTX::atomic_thread_fence_seq_cst_sys
-                      : NVPTX::atomic_thread_fence_seq_cst_sys_membar;
+                      : NVPTX::INT_MEMBAR_SYS;
     Chain = SDValue(CurDAG->getMachineNode(Op, DL, MVT::Other, Chain), 0);
     break;
   }
