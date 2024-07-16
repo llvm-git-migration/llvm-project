@@ -62,30 +62,21 @@ struct TestInt {
   }
 };
 
-struct ConvertibleFloat {
-  int value;
-  ConvertibleFloat(int v) : value(v) {}
-  operator float() const { return static_cast<float>(value); }
-};
-
-struct ConvertibleDouble {
-  int value;
-  ConvertibleDouble(int v) : value(v) {}
-  operator double() const { return static_cast<double>(value); }
-};
-
-struct ConvertibleLongDouble {
-  int value;
-  ConvertibleLongDouble(int v) : value(v) {}
-  operator long double() const { return static_cast<long double>(value); }
+template <typename T>
+struct ConvertibleTo {
+  operator T() const { return T(); }
 };
 
 int main(int, char**) {
   types::for_each(types::floating_point_types(), TestFloat());
   types::for_each(types::integral_types(), TestInt());
-  assert(!std::isinf(ConvertibleFloat(0)));
-  assert(!std::isinf(ConvertibleDouble(0)));
-  assert(!std::isinf(ConvertibleLongDouble(0)));
+
+  // Make sure we can call `std::isinf` with convertible types
+  {
+    assert(!std::isinf(ConvertibleTo<float>()));
+    assert(!std::isinf(ConvertibleTo<double>()));
+    assert(!std::isinf(ConvertibleTo<long double>()));
+  }
 
   return 0;
 }
