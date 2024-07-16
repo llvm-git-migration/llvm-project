@@ -155,6 +155,12 @@ BUILTIN(__builtin_amdgcn_raw_buffer_store_b32, "viQbiiIi", "n")
 BUILTIN(__builtin_amdgcn_raw_buffer_store_b64, "vV2iQbiiIi", "n")
 BUILTIN(__builtin_amdgcn_raw_buffer_store_b96, "vV3iQbiiIi", "n")
 BUILTIN(__builtin_amdgcn_raw_buffer_store_b128, "vV4iQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b8, "cQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b16, "sQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b32, "iQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b64, "V2iQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b96, "V3iQbiiIi", "n")
+BUILTIN(__builtin_amdgcn_raw_buffer_load_b128, "V4iQbiiIi", "n")
 
 //===----------------------------------------------------------------------===//
 // Ballot builtins.
