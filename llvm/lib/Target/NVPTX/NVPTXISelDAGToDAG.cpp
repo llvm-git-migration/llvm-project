@@ -734,6 +734,8 @@ getOperationOrderings(MemSDNode *N, const NVPTXSubtarget *Subtarget) {
   // clang-format off
 
   // Lowering for Load/Store Operations (note: AcquireRelease Loads or Stores error).
+  // Note: uses of Relaxed in the Atomic column of this table refer
+  // to LLVM AtomicOrdering::Monotonic.
   //
   // | Atomic  | Volatile | Statespace         | PTX sm_60- | PTX sm_70+                   |
   // |---------|----------|--------------------|------------|------------------------------|
