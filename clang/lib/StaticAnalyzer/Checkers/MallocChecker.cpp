@@ -1952,9 +1952,12 @@ static bool printMemFnName(raw_ostream &os, CheckerContext &C, const Expr *E) {
     if (!FD)
       return false;
 
-    os << *FD;
+    os << '\'' << *FD;
+
     if (!FD->isOverloadedOperator())
       os << "()";
+
+    os << '\'';
     return true;
   }
 
@@ -1988,7 +1991,7 @@ static void printExpectedAllocName(raw_ostream &os, AllocationFamily Family) {
 
   switch (Family.Kind) {
   case AF_Malloc:
-    os << "malloc()";
+    os << "'malloc()'";
     return;
   case AF_CXXNew:
     os << "'new'";
@@ -2014,7 +2017,7 @@ static void printExpectedAllocName(raw_ostream &os, AllocationFamily Family) {
 static void printExpectedDeallocName(raw_ostream &os, AllocationFamily Family) {
   switch (Family.Kind) {
   case AF_Malloc:
-    os << "free()";
+    os << "'free()'";
     return;
   case AF_CXXNew:
     os << "'delete'";
@@ -2414,11 +2417,11 @@ void MallocChecker::HandleFreeAlloca(CheckerContext &C, SVal ArgVal,
   if (ExplodedNode *N = C.generateErrorNode()) {
     if (!BT_FreeAlloca[*CheckKind])
       BT_FreeAlloca[*CheckKind].reset(new BugType(
-          CheckNames[*CheckKind], "Free alloca()", categories::MemoryError));
+          CheckNames[*CheckKind], "Free 'alloca()'", categories::MemoryError));
 
     auto R = std::make_unique<PathSensitiveBugReport>(
         *BT_FreeAlloca[*CheckKind],
-        "Memory allocated by alloca() should not be deallocated", N);
+        "Memory allocated by 'alloca()' should not be deallocated", N);
     R->markInteresting(ArgVal.getAsRegion());
     R->addRange(Range);
     C.emitReport(std::move(R));
