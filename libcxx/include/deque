@@ -376,6 +376,7 @@ public:
     return __x.__ptr_ == __y.__ptr_;
   }
 
+#if _LIBCPP_STD_VER <= 17
   _LIBCPP_HIDE_FROM_ABI friend bool operator!=(const __deque_iterator& __x, const __deque_iterator& __y) {
     return !(__x == __y);
   }
@@ -395,6 +396,17 @@ public:
   _LIBCPP_HIDE_FROM_ABI friend bool operator>=(const __deque_iterator& __x, const __deque_iterator& __y) {
     return !(__x < __y);
   }
+#else // _LIBCPP_STD_VER <= 17
+  _LIBCPP_HIDE_FROM_ABI friend strong_ordering operator<=>(const __deque_iterator& __x, const __deque_iterator& __y) {
+    if (__x.__m_iter_ < __y.__m_iter_)
+      return strong_ordering::less;
+
+    if (__x.__m_iter_ == __y.__m_iter_)
+      return __x.__ptr_ <=> __y.__ptr_;
+
+    return strong_ordering::greater;
+  }
+#endif // _LIBCPP_STD_VER <= 17
 
 private:
   _LIBCPP_HIDE_FROM_ABI explicit __deque_iterator(__map_iterator __m, pointer __p) _NOEXCEPT
