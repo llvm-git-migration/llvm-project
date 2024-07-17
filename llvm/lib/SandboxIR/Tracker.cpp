@@ -15,7 +15,7 @@
 
 using namespace llvm::sandboxir;
 
-IRChangeBase::IRChangeBase(TrackID ID, SandboxIRTracker &Parent)
+IRChangeBase::IRChangeBase(TrackID ID, Tracker &Parent)
     : ID(ID), Parent(Parent) {
 #ifndef NDEBUG
   Idx = Parent.size();
@@ -34,11 +34,11 @@ void UseSet::dump() const {
 }
 #endif // NDEBUG
 
-SandboxIRTracker::~SandboxIRTracker() {
+Tracker::~Tracker() {
   assert(Changes.empty() && "You must accept or revert changes!");
 }
 
-void SandboxIRTracker::track(std::unique_ptr<IRChangeBase> &&Change) {
+void Tracker::track(std::unique_ptr<IRChangeBase> &&Change) {
   assert(State != TrackerState::Revert &&
          "No changes should be tracked during revert()!");
   Changes.push_back(std::move(Change));
@@ -48,9 +48,9 @@ void SandboxIRTracker::track(std::unique_ptr<IRChangeBase> &&Change) {
 #endif
 }
 
-void SandboxIRTracker::save() { State = TrackerState::Record; }
+void Tracker::save() { State = TrackerState::Record; }
 
-void SandboxIRTracker::revert() {
+void Tracker::revert() {
   assert(State == TrackerState::Record && "Forgot to save()!");
   State = TrackerState::Revert;
   for (auto &Change : reverse(Changes))
@@ -59,7 +59,7 @@ void SandboxIRTracker::revert() {
   State = TrackerState::Disabled;
 }
 
-void SandboxIRTracker::accept() {
+void Tracker::accept() {
   assert(State == TrackerState::Record && "Forgot to save()!");
   State = TrackerState::Accept;
   for (auto &Change : Changes)
@@ -69,13 +69,13 @@ void SandboxIRTracker::accept() {
 }
 
 #ifndef NDEBUG
-void SandboxIRTracker::dump(raw_ostream &OS) const {
+void Tracker::dump(raw_ostream &OS) const {
   for (const auto &ChangePtr : Changes) {
     ChangePtr->dump(OS);
     OS << "\n";
   }
 }
-void SandboxIRTracker::dump() const {
+void Tracker::dump() const {
   dump(dbgs());
   dbgs() << "\n";
 }

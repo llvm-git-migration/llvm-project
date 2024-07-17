@@ -643,7 +643,7 @@ public:
 class Context {
 protected:
   LLVMContext &LLVMCtx;
-  SandboxIRTracker IRTracker;
+  Tracker IRTracker;
 
   /// Maps LLVM Value to the corresponding sandboxir::Value. Owns all
   /// SandboxIR objects.
@@ -684,7 +684,7 @@ protected:
 public:
   Context(LLVMContext &LLVMCtx) : LLVMCtx(LLVMCtx) {}
 
-  SandboxIRTracker &getTracker() { return IRTracker; }
+  Tracker &getTracker() { return IRTracker; }
   /// Convenience function for `getTracker().save()`
   void save() { IRTracker.save(); }
   /// Convenience function for `getTracker().revert()`

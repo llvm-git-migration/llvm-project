@@ -1,4 +1,4 @@
-//===- SandboxIRTrackerTest.cpp -------------------------------------------===//
+//===- TrackerTest.cpp ----------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -17,7 +17,7 @@
 
 using namespace llvm;
 
-struct SandboxIRTrackerTest : public testing::Test {
+struct TrackerTest : public testing::Test {
   LLVMContext C;
   std::unique_ptr<Module> M;
 
@@ -25,7 +25,7 @@ struct SandboxIRTrackerTest : public testing::Test {
     SMDiagnostic Err;
     M = parseAssemblyString(IR, Err, C);
     if (!M)
-      Err.print("SandboxIRTrackerTest", errs());
+      Err.print("TrackerTest", errs());
   }
   BasicBlock *getBasicBlockByName(Function &F, StringRef Name) {
     for (BasicBlock &BB : F)
@@ -35,7 +35,7 @@ struct SandboxIRTrackerTest : public testing::Test {
   }
 };
 
-TEST_F(SandboxIRTrackerTest, SetOperand) {
+TEST_F(TrackerTest, SetOperand) {
   parseIR(C, R"IR(
 define void @foo(ptr %ptr) {
   %gep0 = getelementptr float, ptr %ptr, i32 0
@@ -72,7 +72,7 @@ define void @foo(ptr %ptr) {
   EXPECT_EQ(Ld->getOperand(0), Gep0);
 }
 
-TEST_F(SandboxIRTrackerTest, RUWIf_RAUW_RUOW) {
+TEST_F(TrackerTest, RUWIf_RAUW_RUOW) {
   parseIR(C, R"IR(
 define void @foo(ptr %ptr) {
   %ld0 = load float, ptr %ptr

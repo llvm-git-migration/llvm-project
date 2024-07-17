@@ -11,28 +11,28 @@
 //
 // Tracking changes
 // ----------------
-// The user needs to call `SandboxIRTracker::save()` to enable tracking changes
+// The user needs to call `Tracker::save()` to enable tracking changes
 // made to SandboxIR. From that point on, any change made to SandboxIR, will
 // automatically create a change tracking object and register it with the
 // tracker. IR-change objects are subclasses of `IRChangeBase` and get
-// registered with the `SandboxIRTracker::track()` function. The change objects
+// registered with the `Tracker::track()` function. The change objects
 // are saved in the order they are registered with the tracker and are stored in
-// the `SandboxIRTracker::Changes` vector. All of this is done transparently to
+// the `Tracker::Changes` vector. All of this is done transparently to
 // the user.
 //
 // Reverting changes
 // -----------------
-// Calling `SandboxIRTracker::revert()` will restore the state saved when
-// `SandboxIRTracker::save()` was called. Internally this goes through the
-// change objects in `SandboxIRTracker::Changes` in reverse order, calling their
+// Calling `Tracker::revert()` will restore the state saved when
+// `Tracker::save()` was called. Internally this goes through the
+// change objects in `Tracker::Changes` in reverse order, calling their
 // `IRChangeBase::revert()` function one by one.
 //
 // Accepting changes
 // -----------------
 // The user needs to either revert or accept changes before the tracker object
 // is destroyed. This is enforced in the tracker's destructor.
-// This is the job of `SandboxIRTracker::accept()`. Internally this will go
-// through the change objects in `SandboxIRTracker::Changes` in order, calling
+// This is the job of `Tracker::accept()`. Internally this will go
+// through the change objects in `Tracker::Changes` in order, calling
 // `IRChangeBase::accept()`.
 //
 //===----------------------------------------------------------------------===//
@@ -68,7 +68,7 @@ static const char *trackIDToStr(TrackID ID) {
 }
 #endif // NDEBUG
 
-class SandboxIRTracker;
+class Tracker;
 
 /// The base class for IR Change classes.
 class IRChangeBase {
@@ -77,10 +77,10 @@ protected:
   unsigned Idx = 0;
 #endif
   const TrackID ID;
-  SandboxIRTracker &Parent;
+  Tracker &Parent;
 
 public:
-  IRChangeBase(TrackID ID, SandboxIRTracker &Parent);
+  IRChangeBase(TrackID ID, Tracker &Parent);
   TrackID getTrackID() const { return ID; }
   /// This runs when changes get reverted.
   virtual void revert() = 0;
@@ -106,7 +106,7 @@ class UseSet : public IRChangeBase {
   Value *OrigV = nullptr;
 
 public:
-  UseSet(const Use &U, SandboxIRTracker &Tracker)
+  UseSet(const Use &U, Tracker &Tracker)
       : IRChangeBase(TrackID::UseSet, Tracker), U(U), OrigV(U.get()) {}
   // For isa<> etc.
   static bool classof(const IRChangeBase *Other) {
@@ -122,7 +122,7 @@ public:
 
 /// The tracker collects all the change objects and implements the main API for
 /// saving / reverting / accepting.
-class SandboxIRTracker {
+class Tracker {
 public:
   enum class TrackerState {
     Disabled, ///> Tracking is disabled
@@ -144,8 +144,8 @@ public:
   bool InMiddleOfCreatingChange = false;
 #endif // NDEBUG
 
-  SandboxIRTracker() = default;
-  ~SandboxIRTracker();
+  Tracker() = default;
+  ~Tracker();
   /// Record \p Change and take ownership. This is the main function used to
   /// track Sandbox IR changes.
   void track(std::unique_ptr<IRChangeBase> &&Change);
@@ -169,8 +169,8 @@ public:
   IRChangeBase *getChange(unsigned Idx) const { return Changes[Idx].get(); }
   void dump(raw_ostream &OS) const;
   LLVM_DUMP_METHOD void dump() const;
-  friend raw_ostream &operator<<(raw_ostream &OS, const SandboxIRTracker &C) {
-    C.dump(OS);
+  friend raw_ostream &operator<<(raw_ostream &OS, const Tracker &Tracker) {
+    Tracker.dump(OS);
     return OS;
   }
 #endif // NDEBUG
