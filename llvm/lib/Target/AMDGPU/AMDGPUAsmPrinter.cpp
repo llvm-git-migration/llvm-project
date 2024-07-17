@@ -521,7 +521,8 @@ bool AMDGPUAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
   if (!IsTargetStreamerInitialized)
     initTargetStreamer(*MF.getFunction().getParent());
 
-  ResourceUsage = &getAnalysis<AMDGPUResourceUsageAnalysis>();
+  if (P)
+    ResourceUsage = &P->getAnalysis<AMDGPUResourceUsageAnalysis>();
   CurrentProgramInfo.reset(MF);
 
   const AMDGPUMachineFunction *MFI = MF.getInfo<AMDGPUMachineFunction>();

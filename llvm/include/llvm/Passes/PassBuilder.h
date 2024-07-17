@@ -32,6 +32,7 @@
 
 namespace llvm {
 class StringRef;
+class AsmPrinter;
 class AAManager;
 class TargetMachine;
 class ModuleSummaryIndex;
@@ -693,6 +694,11 @@ public:
                                               StringRef OptionName,
                                               StringRef PassName);
 
+  // Create target asm printer directly, this can bypass
+  // LLVMInitializeXXXAsmPrinter.
+  std::shared_ptr<AsmPrinter>
+  getAsmPrinter(std::unique_ptr<MCStreamer> Streamer);
+
 private:
   // O1 pass pipeline
   FunctionPassManager
@@ -809,6 +815,9 @@ private:
   // Callbacks to parse `filter` parameter in register allocation passes
   SmallVector<std::function<RegClassFilterFunc(StringRef)>, 2>
       RegClassFilterParsingCallbacks;
+  // Callback to create `AsmPrinterPass`.
+  std::function<std::shared_ptr<AsmPrinter>(std::unique_ptr<MCStreamer>)>
+      AsmPrinterCreationCallback;
 };
 
 /// This utility template takes care of adding require<> and invalidate<>
