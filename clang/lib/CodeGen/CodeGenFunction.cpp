@@ -2906,6 +2906,29 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
             .parseTargetAttr(Options[Index].Conditions.Features[0])
             .Features;
 
+    // Two conditions need to be checked for the current version:
+    //
+    // 1. LengthCondition: The maximum group ID of the required extension
+    //    does not exceed the runtime object's length.
+    //    __riscv_feature_bits.length > MAX_USED_GROUPID
+    //
+    // 2. FeaturesCondition: The bitmask of the required extension has been
+    //    enabled by the runtime object.
+    //    (__riscv_feature_bits.features[i] & REQUIRED_BITMASK) ==
+    //    REQUIRED_BITMASK
+    //
+    // When both conditions are met, return this version of the function.
+    // Otherwise, try the next version.
+    //
+    // if (LengthConditionVersion1 && FeaturesConditionVersion1)
+    //     return Version1;
+    // else if (LengthConditionVersion2 && FeaturesConditionVersion2)
+    //     return Version2;
+    // else if (LengthConditionVersion3 && FeaturesConditionVersion3)
+    //     return Version3;
+    // ...
+    // else
+    //     return DefaultVersion;
     if (!TargetAttrFeats.empty()) {
       unsigned MaxGroupIDUsed = 0;
       llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
@@ -2921,7 +2944,8 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
           EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
 
       Builder.SetInsertPoint(CurBlock);
-      llvm::Value *FirstCondition = EmitRISCVFeatureBitsLength(MaxGroupIDUsed);
+      llvm::Value *MaxGroupLengthCondition =
+          EmitRISCVFeatureBitsLength(MaxGroupIDUsed);
 
       llvm::BasicBlock *RetBlock =
           createBasicBlock("resolver_return", Resolver);
@@ -2931,7 +2955,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
       llvm::BasicBlock *ElseBlock = createBasicBlock("resolver_else", Resolver);
 
       Builder.SetInsertPoint(CurBlock);
-      Builder.CreateCondBr(FirstCondition, FeatsCondBB, ElseBlock);
+      Builder.CreateCondBr(MaxGroupLengthCondition, FeatsCondBB, ElseBlock);
 
       Builder.SetInsertPoint(FeatsCondBB);
       Builder.CreateCondBr(FeatsCondition, RetBlock, ElseBlock);
