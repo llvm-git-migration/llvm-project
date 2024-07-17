@@ -122,6 +122,14 @@ struct AllocationFamily {
                             std::optional<StringRef> name = std::nullopt)
       : Kind(kind), CustomName(name) {
     assert(kind != AF_Custom || name != std::nullopt);
+
+    // Preseve previous behavior when "malloc" class means AF_Malloc
+    if (Kind == AF_Malloc && CustomName) {
+      if (CustomName.value() == "malloc")
+        CustomName = std::nullopt;
+      else
+        Kind = AF_Custom;
+    }
   }
 
   bool operator==(const AllocationFamily &Other) const {
@@ -1706,16 +1714,15 @@ MallocChecker::MallocMemReturnsAttr(CheckerContext &C, const CallEvent &Call,
   if (!State)
     return nullptr;
 
-  if (Att->getModule()->getName() != "malloc")
-    return nullptr;
+  auto attrClassName = Att->getModule()->getName();
+  auto Family = AllocationFamily(AF_Malloc, attrClassName);
 
   if (!Att->args().empty()) {
     return MallocMemAux(C, Call,
                         Call.getArgExpr(Att->args_begin()->getASTIndex()),
-                        UndefinedVal(), State, AllocationFamily(AF_Malloc));
+                        UndefinedVal(), State, Family);
   }
-  return MallocMemAux(C, Call, UnknownVal(), UndefinedVal(), State,
-                      AllocationFamily(AF_Malloc));
+  return MallocMemAux(C, Call, UnknownVal(), UndefinedVal(), State, Family);
 }
 
 ProgramStateRef MallocChecker::MallocMemAux(CheckerContext &C,
@@ -1867,14 +1874,16 @@ ProgramStateRef MallocChecker::FreeMemAttr(CheckerContext &C,
   if (!State)
     return nullptr;
 
-  if (Att->getModule()->getName() != "malloc")
-    return nullptr;
+  auto attrClassName = Att->getModule()->getName();
+  auto Family = AllocationFamily(AF_Malloc, attrClassName);
+
+  bool IsKnownToBeAllocated = false;
 
   for (const auto &Arg : Att->args()) {
     ProgramStateRef StateI =
         FreeMemAux(C, Call, State, Arg.getASTIndex(),
                    Att->getOwnKind() == OwnershipAttr::Holds,
-                   IsKnownToBeAllocated, AllocationFamily(AF_Malloc));
+                   IsKnownToBeAllocated, Family);
     if (StateI)
       State = StateI;
   }
@@ -1910,6 +1919,30 @@ static bool didPreviousFreeFail(ProgramStateRef State,
     return FreeFailed.isConstrainedTrue();
   }
   return false;
+}
+
+static void printOwnershipTakesList(raw_ostream &os, CheckerContext &C,
+                                    const Expr *E) {
+  if (const CallExpr *CE = dyn_cast<CallExpr>(E)) {
+    const FunctionDecl *FD = CE->getDirectCallee();
+    if (!FD)
+      return;
+
+    if (!FD->hasAttrs())
+      return;
+
+    // Only one ownership_takes attribute is allowed
+    for (const auto *I : FD->specific_attrs<OwnershipAttr>()) {
+      OwnershipAttr::OwnershipKind OwnKind = I->getOwnKind();
+
+      if (OwnKind != OwnershipAttr::Takes)
+        continue;
+
+      os << ", which takes ownership of "
+         << '\'' << I->getModule()->getName() << '\'';
+      break;
+    }
+  }
 }
 
 static bool printMemFnName(raw_ostream &os, CheckerContext &C, const Expr *E) {
@@ -1969,8 +2002,10 @@ static void printExpectedAllocName(raw_ostream &os, AllocationFamily Family) {
   case AF_InnerBuffer:
     os << "container-specific allocator";
     return;
-  case AF_Alloca:
   case AF_Custom:
+    os << Family.CustomName.value();
+    return;
+  case AF_Alloca:
   case AF_None:
     assert(false && "not a deallocation expression");
   }
@@ -1993,8 +2028,11 @@ static void printExpectedDeallocName(raw_ostream &os, AllocationFamily Family) {
   case AF_InnerBuffer:
     os << "container-specific deallocator";
     return;
-  case AF_Alloca:
   case AF_Custom:
+    os << "function that takes ownership of '" << Family.CustomName.value()
+       << "\'";
+    return;
+  case AF_Alloca:
   case AF_None:
     assert(false && "not a deallocation expression");
   }
@@ -2181,6 +2219,7 @@ MallocChecker::getCheckIfTracked(AllocationFamily Family,
   switch (Family.Kind) {
   case AF_Malloc:
   case AF_Alloca:
+  case AF_Custom:
   case AF_IfNameIndex: {
     if (ChecksEnabled[CK_MallocChecker])
       return CK_MallocChecker;
@@ -2203,7 +2242,6 @@ MallocChecker::getCheckIfTracked(AllocationFamily Family,
       return CK_InnerPointerChecker;
     return std::nullopt;
   }
-  case AF_Custom:
   case AF_None: {
     assert(false && "no family");
   }
@@ -2433,6 +2471,8 @@ void MallocChecker::HandleMismatchedDealloc(CheckerContext &C,
 
         if (printMemFnName(DeallocOs, C, DeallocExpr))
           os << ", not " << DeallocOs.str();
+
+        printOwnershipTakesList(os, C, DeallocExpr);
     }
 
     auto R = std::make_unique<PathSensitiveBugReport>(*BT_MismatchedDealloc,
@@ -3548,6 +3588,7 @@ PathDiagnosticPieceRef MallocBugVisitor::VisitNode(const ExplodedNode *N,
       switch (Family.Kind) {
       case AF_Alloca:
       case AF_Malloc:
+      case AF_Custom:
       case AF_CXXNew:
       case AF_CXXNewArray:
       case AF_IfNameIndex:
@@ -3589,7 +3630,6 @@ PathDiagnosticPieceRef MallocBugVisitor::VisitNode(const ExplodedNode *N,
         Msg = OS.str();
         break;
       }
-      case AF_Custom:
       case AF_None:
         assert(false && "Unhandled allocation family!");
       }
