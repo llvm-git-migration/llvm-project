@@ -949,7 +949,7 @@ getTensorExtractMemoryAccessPattern(tensor::ExtractOp extractOp,
   // 2. Assume that it's a gather load when reading _from_ a tensor for which
   // the trailing dimension is 1, e.g. `tensor<1x4x1xi32>`.
   // TODO: Relax this condition.
-  if (inputShape.getShape().back() == 1)
+  if (inputShape.getShape().back() == 1 && targetShape.back() == 1)
     return VectorMemoryAccessKind::Gather;
 
   bool leadingIdxsLoopInvariant = true;
