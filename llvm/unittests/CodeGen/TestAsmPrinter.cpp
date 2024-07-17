@@ -63,15 +63,15 @@ llvm::Error TestAsmPrinter::init(const Target *TheTarget, StringRef TripleName,
 
   MS = new StrictMock<MockMCStreamer>(MC.get());
 
-  Asm.reset(
-      TheTarget->createAsmPrinter(*TM, std::unique_ptr<MockMCStreamer>(MS)));
+  Asm.reset(TheTarget->createAsmPrinterLegacy(
+      *TM, std::unique_ptr<MockMCStreamer>(MS)));
   if (!Asm)
     return make_error<StringError>("no asm printer for target " + TripleName,
                                    inconvertibleErrorCode());
 
   // Set the DWARF version correctly on all classes that we use.
   MC->setDwarfVersion(DwarfVersion);
-  Asm->setDwarfVersion(DwarfVersion);
+  Asm->getPrinter().setDwarfVersion(DwarfVersion);
 
   // Set the DWARF format.
   MC->setDwarfFormat(DwarfFormat);
@@ -80,5 +80,5 @@ llvm::Error TestAsmPrinter::init(const Target *TheTarget, StringRef TripleName,
 }
 
 void TestAsmPrinter::setDwarfUsesRelocationsAcrossSections(bool Enable) {
-  Asm->setDwarfUsesRelocationsAcrossSections(Enable);
+  Asm->getPrinter().setDwarfUsesRelocationsAcrossSections(Enable);
 }
