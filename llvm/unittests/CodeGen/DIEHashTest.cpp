@@ -10,6 +10,7 @@
 #include "TestAsmPrinter.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/BinaryFormat/Dwarf.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/DIE.h"
 #include "llvm/CodeGen/DwarfStringPoolEntry.h"
 #include "llvm/Support/Debug.h"
