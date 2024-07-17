@@ -39,14 +39,7 @@ declare float @coshf(float) #0
 declare double @llvm.cosh.f64(double) #0
 declare float @llvm.cosh.f32(float) #0
 
-declare double @sinh(double) #0
-declare float @sinhf(float) #0
-declare double @llvm.sinh.f64(double) #0
-declare float @llvm.sinh.f32(float) #0
-
-declare double @tanh(double) #0
 declare float @tanhf(float) #0
-declare double @llvm.tanh.f64(double) #0
 declare float @llvm.tanh.f32(float) #0
 
 declare double @pow(double, double) #0
@@ -303,6 +296,10 @@ define void @tan_f64(ptr nocapture %varray) {
 ; CHECK:    [[TMP5:%.*]] = call <4 x double> @amd_vrd4_tan(<4 x double> [[TMP4:%.*]])
 ; CHECK:    ret void
 ;
+; CHECK-AVX-VF2-LABEL: @tan_f64(
+; CHECK-AVX-VF2:    [[TMP5:%.*]] = call <2 x double> @amd_vrd2_tan(<2 x double> [[TMP4:%.*]])
+; CHECK-AVX-VF2:    ret void
+;
 ; CHECK-AVX512-VF8-LABEL: @tan_f64(
 ; CHECK-AVX512-VF8:    [[TMP5:%.*]] = call <8 x double> @amd_vrd8_tan(<8 x double> [[TMP4:%.*]])
 ; CHECK-AVX512-VF8:    ret void
@@ -356,6 +353,10 @@ define void @tan_f64_intrinsic(ptr nocapture %varray) {
 ; CHECK-LABEL: @tan_f64_intrinsic(
 ; CHECK:    [[TMP5:%.*]] = call <4 x double> @amd_vrd4_tan(<4 x double> [[TMP4:%.*]])
 ; CHECK:    ret void
+;
+; CHECK-AVX-VF2-LABEL: @tan_f64_intrinsic(
+; CHECK-AVX-VF2:    [[TMP5:%.*]] = call <2 x double> @amd_vrd2_tan(<2 x double> [[TMP4:%.*]])
+; CHECK-AVX-VF2:    ret void
 ;
 ; CHECK-AVX512-VF8-LABEL: @tan_f64_intrinsic(
 ; CHECK-AVX512-VF8:    [[TMP5:%.*]] = call <8 x double> @amd_vrd8_tan(<8 x double> [[TMP4:%.*]])
@@ -565,6 +566,10 @@ define void @atan_f64(ptr nocapture %varray) {
 ; CHECK:    [[TMP5:%.*]] = call <4 x double> @amd_vrd4_atan(<4 x double> [[TMP4:%.*]])
 ; CHECK:    ret void
 ;
+; CHECK-AVX-VF2-LABEL: @atan_f64(
+; CHECK-AVX-VF2:    [[TMP5:%.*]] = call <2 x double> @amd_vrd2_atan(<2 x double> [[TMP4:%.*]])
+; CHECK-AVX-VF2:    ret void
+;
 ; CHECK-AVX512-VF8-LABEL: @atan_f64(
 ; CHECK-AVX512-VF8:    [[TMP5:%.*]] = call <8 x double> @amd_vrd8_atan(<8 x double> [[TMP4:%.*]])
 ; CHECK-AVX512-VF8:    ret void
@@ -618,6 +623,10 @@ define void @atan_f64_intrinsic(ptr nocapture %varray) {
 ; CHECK-LABEL: @atan_f64_intrinsic(
 ; CHECK:    [[TMP5:%.*]] = call <4 x double> @amd_vrd4_atan(<4 x double> [[TMP4:%.*]])
 ; CHECK:    ret void
+;
+; CHECK-AVX-VF2-LABEL: @atan_f64_intrinsic(
+; CHECK-AVX-VF2:    [[TMP5:%.*]] = call <2 x double> @amd_vrd2_atan(<2 x double> [[TMP4:%.*]])
+; CHECK-AVX-VF2:    ret void
 ;
 ; CHECK-AVX512-VF8-LABEL: @atan_f64_intrinsic(
 ; CHECK-AVX512-VF8:    [[TMP5:%.*]] = call <8 x double> @amd_vrd8_atan(<8 x double> [[TMP4:%.*]])
@@ -750,6 +759,60 @@ for.body:
   %tmp = trunc i64 %iv to i32
   %conv = sitofp i32 %tmp to float
   %call = tail call float @llvm.cosh.f32(float %conv)
+  %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
+  store float %call, ptr %arrayidx, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond = icmp eq i64 %iv.next, 1000
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:
+  ret void
+}
+
+define void @tanh_f32(ptr nocapture %varray) {
+; CHECK-LABEL: @tanh_f32(
+; CHECK:    [[TMP5:%.*]] = call <4 x float> @amd_vrs4_tanhf(<4 x float> [[TMP4:%.*]])
+; CHECK:    ret void
+;
+; CHECK-AVX512-VF16-LABEL: @tanh_f32(
+; CHECK-AVX512-VF16:    [[TMP5:%.*]] = call <16 x float> @amd_vrs16_tanhf(<16 x float> [[TMP4:%.*]])
+; CHECK-AVX512-VF16:    ret void
+;
+entry:
+  br label %for.body
+
+for.body:
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %tmp = trunc i64 %iv to i32
+  %conv = sitofp i32 %tmp to float
+  %call = tail call float @tanhf(float %conv)
+  %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
+  store float %call, ptr %arrayidx, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond = icmp eq i64 %iv.next, 1000
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:
+  ret void
+}
+
+define void @tanh_f32_intrinsic(ptr nocapture %varray) {
+; CHECK-LABEL: @tanh_f32_intrinsic(
+; CHECK:    [[TMP5:%.*]] = call <4 x float> @amd_vrs4_tanhf(<4 x float> [[TMP4:%.*]])
+; CHECK:    ret void
+;
+; CHECK-AVX512-VF16-LABEL: @tanh_f32_intrinsic(
+; CHECK-AVX512-VF16:    [[TMP5:%.*]] = call <16 x float> @amd_vrs16_tanhf(<16 x float> [[TMP4:%.*]])
+; CHECK-AVX512-VF16:    ret void
+;
+entry:
+  br label %for.body
+
+for.body:
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %tmp = trunc i64 %iv to i32
+  %conv = sitofp i32 %tmp to float
+  %call = tail call float @llvm.tanh.f32(float %conv)
   %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
   store float %call, ptr %arrayidx, align 4
   %iv.next = add nuw nsw i64 %iv, 1
