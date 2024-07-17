@@ -41,6 +41,7 @@ array algorithm
 array compare
 array concepts
 array cstddef
+array cstdint
 array cstdlib
 array initializer_list
 array iterator
@@ -425,6 +426,7 @@ istream version
 iterator compare
 iterator concepts
 iterator cstddef
+iterator cstdint
 iterator cstdlib
 iterator exception
 iterator initializer_list
@@ -759,6 +761,7 @@ source_location version
 span array
 span concepts
 span cstddef
+span cstdint
 span functional
 span initializer_list
 span iterator
