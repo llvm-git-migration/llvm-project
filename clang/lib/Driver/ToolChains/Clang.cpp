@@ -72,6 +72,16 @@ using namespace clang::driver::tools;
 using namespace clang;
 using namespace llvm::opt;
 
+static bool isTruthy(StringRef Value) {
+  return Value.equals_insensitive("on") || Value.equals_insensitive("true") ||
+         Value.equals_insensitive("1") || Value.equals_insensitive("yes");
+}
+
+static bool isFalsy(StringRef Value) {
+  return Value.equals_insensitive("off") || Value.equals_insensitive("false") ||
+         Value.equals_insensitive("0") || Value.equals_insensitive("no");
+}
+
 static void CheckPreprocessingOptions(const Driver &D, const ArgList &Args) {
   if (Arg *A = Args.getLastArg(clang::driver::options::OPT_C, options::OPT_CC,
                                options::OPT_fminimize_whitespace,
@@ -4964,6 +4974,56 @@ static void ProcessVSRuntimeLibrary(const ToolChain &TC, const ArgList &Args,
     CmdArgs.push_back("--dependent-lib=softintrin");
 }
 
+// Helper function to render the -fatomic= options.
+static void renderAtomicOptions(const ArgList &Args, const Driver &D,
+                                SmallVectorImpl<const char *> &CmdArgs) {
+  if (Arg *AtomicArg = Args.getLastArg(options::OPT_fatomic_EQ)) {
+    if (!AtomicArg->getNumValues()) {
+      D.Diag(clang::diag::warn_drv_empty_joined_argument)
+          << AtomicArg->getAsString(Args);
+      return;
+    }
+
+    bool Valid = true;
+    std::set<StringRef> Keys;
+    for (StringRef Option : AtomicArg->getValues()) {
+      SmallVector<StringRef, 2> KeyValue;
+      Option.split(KeyValue, ":");
+      // Check for valid "key:value" format.
+      if (KeyValue.size() != 2) {
+        D.Diag(diag::err_drv_invalid_atomic_option) << Option << 0 << ""
+                                                    << "";
+        Valid = false;
+        break;
+      }
+      StringRef Key = KeyValue[0];
+      StringRef Value = KeyValue[1];
+      // Validate key.
+      if (Key != "no_fine_grained_memory" && Key != "no_remote_memory" &&
+          Key != "ignore_denormal_mode") {
+        D.Diag(diag::err_drv_invalid_atomic_option) << Option << 1 << Key << "";
+        Valid = false;
+        break;
+      }
+      // Validate value.
+      if (!isTruthy(Value) && !isFalsy(Value)) {
+        D.Diag(diag::err_drv_invalid_atomic_option)
+            << Option << 2 << "" << Value;
+        Valid = false;
+        break;
+      }
+      // Check for duplicate keys.
+      if (!Keys.insert(Key).second) {
+        D.Diag(diag::err_drv_invalid_atomic_option) << Option << 3 << Key << "";
+        Valid = false;
+        break;
+      }
+    }
+    if (Valid)
+      CmdArgs.push_back(Args.MakeArgString(AtomicArg->getAsString(Args)));
+  }
+}
+
 void Clang::ConstructJob(Compilation &C, const JobAction &JA,
                          const InputInfo &Output, const InputInfoList &Inputs,
                          const ArgList &Args, const char *LinkingOutput) const {
@@ -5957,6 +6017,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fprotect-parens");
 
   RenderFloatingPointOptions(TC, D, OFastEnabled, Args, CmdArgs, JA);
+
+  renderAtomicOptions(Args, D, CmdArgs);
 
   if (Arg *A = Args.getLastArg(options::OPT_fextend_args_EQ)) {
     const llvm::Triple::ArchType Arch = TC.getArch();

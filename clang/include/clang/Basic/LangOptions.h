@@ -625,6 +625,10 @@ public:
   // WebAssembly target.
   bool NoWasmOpt = false;
 
+  /// The default atomic codegen options specified by command line in the
+  /// format of key:{on|off}.
+  std::vector<std::string> AtomicOptionsAsWritten;
+
   LangOptions();
 
   /// Set language defaults for the given input language and
@@ -1095,6 +1099,156 @@ inline FPOptionsOverride FPOptions::getChangesFrom(const FPOptions &Base) const 
 inline void FPOptions::applyChanges(FPOptionsOverride FPO) {
   *this = FPO.applyOverrides(*this);
 }
+
+enum class AtomicOptionKind {
+  NoRemoteMemory,
+  NoFineGrainedMemory,
+  IgnoreDenormalMode,
+  LANGOPT_ATOMIC_OPTION_LAST
+};
+
+struct AtomicOptions {
+  unsigned no_remote_memory : 1;
+  unsigned no_fine_grained_memory : 1;
+  unsigned ignore_denormal_mode : 1;
+
+  AtomicOptions()
+      : no_remote_memory(0), no_fine_grained_memory(0),
+        ignore_denormal_mode(0) {}
+
+  bool getOption(AtomicOptionKind Kind) const {
+    switch (Kind) {
+    case AtomicOptionKind::NoRemoteMemory:
+      return no_remote_memory;
+    case AtomicOptionKind::NoFineGrainedMemory:
+      return no_fine_grained_memory;
+    case AtomicOptionKind::IgnoreDenormalMode:
+      return ignore_denormal_mode;
+    default:
+      llvm_unreachable("Invalid AtomicOptionKind");
+    }
+  }
+
+  void setOption(AtomicOptionKind Kind, bool Value) {
+    switch (Kind) {
+    case AtomicOptionKind::NoRemoteMemory:
+      no_remote_memory = Value;
+      break;
+    case AtomicOptionKind::NoFineGrainedMemory:
+      no_fine_grained_memory = Value;
+      break;
+    case AtomicOptionKind::IgnoreDenormalMode:
+      ignore_denormal_mode = Value;
+      break;
+    default:
+      llvm_unreachable("Invalid AtomicOptionKind");
+    }
+  }
+
+  LLVM_DUMP_METHOD void dump() const {
+    llvm::errs() << "\n no_remote_memory: " << no_remote_memory
+                 << "\n no_fine_grained_memory: " << no_fine_grained_memory
+                 << "\n ignore_denormal_mode: " << ignore_denormal_mode << "\n";
+  }
+
+  static constexpr const char *OptionNames[] = {
+      "no_remote_memory", "no_fine_grained_memory", "ignore_denormal_mode"};
+};
+
+/// Represents differences (overrides) between two AtomicOptions values.
+class AtomicOptionsOverride {
+  AtomicOptions Options;
+  // Bitmask for active overrides.
+  unsigned OverrideMask;
+
+  static constexpr unsigned getMask(AtomicOptionKind Kind) {
+    return 1u << static_cast<unsigned>(Kind);
+  }
+
+public:
+  template <typename Func> static void forEachOption(Func &&func) {
+    for (unsigned I = 0; I < static_cast<unsigned>(
+                                 AtomicOptionKind::LANGOPT_ATOMIC_OPTION_LAST);
+         ++I)
+      func(static_cast<AtomicOptionKind>(I));
+  }
+
+  static constexpr unsigned DefaultMask =
+      (1u << static_cast<unsigned>(
+           AtomicOptionKind::LANGOPT_ATOMIC_OPTION_LAST)) -
+      1;
+
+  AtomicOptionsOverride() : Options(), OverrideMask(0) {}
+  AtomicOptionsOverride(const LangOptions &LO);
+  AtomicOptionsOverride(AtomicOptions AO)
+      : Options(AO), OverrideMask(DefaultMask) {}
+  AtomicOptionsOverride(AtomicOptions AO, unsigned Mask)
+      : Options(AO), OverrideMask(Mask) {}
+
+  static std::optional<AtomicOptionKind> parseAtomicOverrideKey(StringRef Key) {
+    std::optional<AtomicOptionKind> Result;
+    forEachOption([&](AtomicOptionKind Kind) {
+      if (Key == AtomicOptions::OptionNames[static_cast<unsigned>(Kind)])
+        Result = Kind;
+    });
+    return Result;
+  }
+
+  AtomicOptions applyOverrides(const AtomicOptions &Base) const {
+    AtomicOptions Result = Base;
+    forEachOption([this, &Result](AtomicOptionKind Kind) {
+      if (hasOverride(Kind))
+        Result.setOption(Kind, Options.getOption(Kind));
+    });
+    return Result;
+  }
+
+  bool operator==(const AtomicOptionsOverride &Other) const {
+    bool Equal = true;
+    forEachOption([this, &Other, &Equal](AtomicOptionKind Kind) {
+      if (Options.getOption(Kind) != Other.Options.getOption(Kind))
+        Equal = false;
+    });
+    return Equal && (OverrideMask == Other.OverrideMask);
+  }
+  bool operator!=(const AtomicOptionsOverride &Other) const {
+    return !(*this == Other);
+  }
+
+  bool hasOverride(AtomicOptionKind Kind) const {
+    return (OverrideMask & getMask(Kind)) != 0;
+  }
+
+  bool getOverride(AtomicOptionKind Kind) const {
+    assert(hasOverride(Kind));
+    return Options.getOption(Kind);
+  }
+
+  void setOverride(AtomicOptionKind Kind, bool value) {
+    Options.setOption(Kind, value);
+    OverrideMask |= getMask(Kind);
+  }
+
+  void clearOverride(AtomicOptionKind Kind) {
+    Options.setOption(Kind, false);
+    OverrideMask &= ~getMask(Kind);
+  }
+
+  LLVM_DUMP_METHOD void dump() const {
+    llvm::errs() << "\n AtomicOptionsOverride dump:";
+    forEachOption([this](AtomicOptionKind Kind) {
+      if (hasOverride(Kind))
+        llvm::errs() << "\n  "
+                     << AtomicOptions::OptionNames[static_cast<unsigned>(Kind)]
+                     << " override: " << Options.getOption(Kind);
+    });
+    llvm::errs() << "\n";
+  }
+
+  void setAtomicOverride(AtomicOptionKind Kind, bool Value) {
+    setOverride(Kind, Value);
+  }
+};
 
 /// Describes the kind of translation unit being processed.
 enum TranslationUnitKind {

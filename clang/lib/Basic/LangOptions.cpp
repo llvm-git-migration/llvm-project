@@ -240,3 +240,22 @@ LLVM_DUMP_METHOD void FPOptionsOverride::dump() {
 #include "clang/Basic/FPOptions.def"
   llvm::errs() << "\n";
 }
+
+static bool isTruthy(StringRef Value) {
+  return Value.equals_insensitive("on") || Value.equals_insensitive("true") ||
+         Value.equals_insensitive("1") || Value.equals_insensitive("yes");
+}
+
+AtomicOptionsOverride::AtomicOptionsOverride(const LangOptions &LO)
+    : Options(), OverrideMask(0) {
+  for (const auto &Setting : LO.AtomicOptionsAsWritten) {
+    SmallVector<StringRef, 2> KeyValue;
+    StringRef(Setting).split(KeyValue, ":");
+    // Assuming option string has been checked elsewhere and is valid.
+    assert(KeyValue.size() == 2 && "Invalid atomic option format");
+    if (auto Kind = parseAtomicOverrideKey(KeyValue[0])) {
+      bool IsEnabled = isTruthy(KeyValue[1]);
+      setAtomicOverride(*Kind, IsEnabled);
+    }
+  }
+}
