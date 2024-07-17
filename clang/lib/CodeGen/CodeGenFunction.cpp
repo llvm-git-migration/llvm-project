@@ -2930,7 +2930,6 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
     // else
     //     return DefaultVersion;
     if (!TargetAttrFeats.empty()) {
-      unsigned MaxGroupIDUsed = 0;
       llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
 
       for (auto Feat : TargetAttrFeats)
@@ -2940,6 +2939,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
           createBasicBlock("resovler_cond", Resolver);
 
       Builder.SetInsertPoint(FeatsCondBB);
+      unsigned MaxGroupIDUsed = 0;
       llvm::Value *FeatsCondition =
           EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
 
