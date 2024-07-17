@@ -948,6 +948,11 @@ static SmallVector<Type, 1> getCallOpResultTypes(LLVMFunctionType calleeType) {
   return results;
 }
 
+/// Gets the variadic callee type for a LLVMFunctionType.
+static TypeAttr getCallOpVarCalleeType(LLVMFunctionType calleeType) {
+  return calleeType.isVarArg() ? TypeAttr::get(calleeType) : nullptr;
+}
+
 /// Constructs a LLVMFunctionType from MLIR `results` and `args`.
 static LLVMFunctionType getLLVMFuncType(MLIRContext *context, TypeRange results,
                                         ValueRange args) {
@@ -974,8 +979,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state, TypeRange results,
                    FlatSymbolRefAttr callee, ValueRange args) {
   assert(callee && "expected non-null callee in direct call builder");
   build(builder, state, results,
-        TypeAttr::get(getLLVMFuncType(builder.getContext(), results, args)),
-        callee, args, /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
+        /*var_callee_type=*/nullptr, callee, args, /*fastmathFlags=*/nullptr,
+        /*branch_weights=*/nullptr,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
@@ -997,7 +1002,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
                    LLVMFunctionType calleeType, FlatSymbolRefAttr callee,
                    ValueRange args) {
   build(builder, state, getCallOpResultTypes(calleeType),
-        TypeAttr::get(calleeType), callee, args, /*fastmathFlags=*/nullptr,
+        getCallOpVarCalleeType(calleeType), callee, args,
+        /*fastmathFlags=*/nullptr,
         /*branch_weights=*/nullptr, /*CConv=*/nullptr,
         /*TailCallKind=*/nullptr, /*access_groups=*/nullptr,
         /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
@@ -1006,7 +1012,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
 void CallOp::build(OpBuilder &builder, OperationState &state,
                    LLVMFunctionType calleeType, ValueRange args) {
   build(builder, state, getCallOpResultTypes(calleeType),
-        TypeAttr::get(calleeType), /*callee=*/nullptr, args,
+        getCallOpVarCalleeType(calleeType),
+        /*callee=*/nullptr, args,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
@@ -1017,7 +1024,7 @@ void CallOp::build(OpBuilder &builder, OperationState &state, LLVMFuncOp func,
                    ValueRange args) {
   auto calleeType = func.getFunctionType();
   build(builder, state, getCallOpResultTypes(calleeType),
-        TypeAttr::get(calleeType), SymbolRefAttr::get(func), args,
+        getCallOpVarCalleeType(calleeType), SymbolRefAttr::get(func), args,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
@@ -1080,6 +1087,12 @@ LogicalResult CallOp::verifySymbolUses(SymbolTableCollection &symbolTable) {
   if (getNumResults() > 1)
     return emitOpError("must have 0 or 1 result");
 
+  // Verify the variadic callee type is a variadic function type.
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    if (!varCalleeType->isVarArg())
+      return emitOpError(
+          "expected var_callee_type to be a variadic function type");
+
   // Type for the callee, we'll get it differently depending if it is a direct
   // or indirect call.
   Type fnType;
@@ -1120,7 +1133,7 @@ LogicalResult CallOp::verifySymbolUses(SymbolTableCollection &symbolTable) {
   if (!funcType)
     return emitOpError("callee does not have a functional type: ") << fnType;
 
-  if (funcType.isVarArg() && !getCalleeType())
+  if (funcType.isVarArg() && !getVarCalleeType())
     return emitOpError() << "missing callee type attribute for vararg call";
 
   // Verify that the operand and result types match the callee.
@@ -1168,14 +1181,6 @@ void CallOp::print(OpAsmPrinter &p) {
   auto callee = getCallee();
   bool isDirect = callee.has_value();
 
-  LLVMFunctionType calleeType;
-  bool isVarArg = false;
-
-  if (std::optional<LLVMFunctionType> optionalCalleeType = getCalleeType()) {
-    calleeType = *optionalCalleeType;
-    isVarArg = calleeType.isVarArg();
-  }
-
   p << ' ';
 
   // Print calling convention.
@@ -1195,11 +1200,13 @@ void CallOp::print(OpAsmPrinter &p) {
   auto args = getOperands().drop_front(isDirect ? 0 : 1);
   p << '(' << args << ')';
 
-  if (isVarArg)
-    p << " vararg(" << calleeType << ")";
+  // Print the variadic callee type if the call is variadic.
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    p << " vararg(" << *varCalleeType << ")";
 
   p.printOptionalAttrDict(processFMFAttr((*this)->getAttrs()),
-                          {getCConvAttrName(), "callee", "callee_type",
+                          {getCConvAttrName(), "callee",
+                           getVarCalleeTypeAttrName(),
                            getTailCallKindAttrName()});
 
   p << " : ";
@@ -1270,11 +1277,11 @@ static ParseResult parseOptionalCallFuncPtr(
 
 // <operation> ::= `llvm.call` (cconv)? (tailcallkind)? (function-id | ssa-use)
 //                             `(` ssa-use-list `)`
-//                             ( `vararg(` var-arg-func-type `)` )?
+//                             ( `vararg(` var-callee-type `)` )?
 //                             attribute-dict? `:` (type `,`)? function-type
 ParseResult CallOp::parse(OpAsmParser &parser, OperationState &result) {
   SymbolRefAttr funcAttr;
-  TypeAttr calleeType;
+  TypeAttr varCalleeType;
   SmallVector<OpAsmParser::UnresolvedOperand> operands;
 
   // Default to C Calling Convention if no keyword is provided.
@@ -1305,8 +1312,12 @@ ParseResult CallOp::parse(OpAsmParser &parser, OperationState &result) {
 
   bool isVarArg = parser.parseOptionalKeyword("vararg").succeeded();
   if (isVarArg) {
+    StringAttr varCalleeTypeAttrName =
+        CallOp::getVarCalleeTypeAttrName(result.name);
     if (parser.parseLParen().failed() ||
-        parser.parseAttribute(calleeType, "callee_type", result.attributes)
+        parser
+            .parseAttribute(varCalleeType, varCalleeTypeAttrName,
+                            result.attributes)
             .failed() ||
         parser.parseRParen().failed())
       return failure();
@@ -1320,8 +1331,8 @@ ParseResult CallOp::parse(OpAsmParser &parser, OperationState &result) {
 }
 
 LLVMFunctionType CallOp::getCalleeFunctionType() {
-  if (getCalleeType())
-    return *getCalleeType();
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    return *varCalleeType;
   return getLLVMFuncType(getContext(), getResultTypes(), getArgOperands());
 }
 
@@ -1334,8 +1345,8 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state, LLVMFuncOp func,
                      Block *unwind, ValueRange unwindOps) {
   auto calleeType = func.getFunctionType();
   build(builder, state, getCallOpResultTypes(calleeType),
-        TypeAttr::get(calleeType), SymbolRefAttr::get(func), ops, normalOps,
-        unwindOps, nullptr, nullptr, normal, unwind);
+        getCallOpVarCalleeType(calleeType), SymbolRefAttr::get(func), ops,
+        normalOps, unwindOps, nullptr, nullptr, normal, unwind);
 }
 
 void InvokeOp::build(OpBuilder &builder, OperationState &state, TypeRange tys,
@@ -1343,8 +1354,8 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state, TypeRange tys,
                      ValueRange normalOps, Block *unwind,
                      ValueRange unwindOps) {
   build(builder, state, tys,
-        TypeAttr::get(getLLVMFuncType(builder.getContext(), tys, ops)), callee,
-        ops, normalOps, unwindOps, nullptr, nullptr, normal, unwind);
+        /*var_callee_type=*/nullptr, callee, ops, normalOps, unwindOps, nullptr,
+        nullptr, normal, unwind);
 }
 
 void InvokeOp::build(OpBuilder &builder, OperationState &state,
@@ -1352,8 +1363,8 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state,
                      ValueRange ops, Block *normal, ValueRange normalOps,
                      Block *unwind, ValueRange unwindOps) {
   build(builder, state, getCallOpResultTypes(calleeType),
-        TypeAttr::get(calleeType), callee, ops, normalOps, unwindOps, nullptr,
-        nullptr, normal, unwind);
+        getCallOpVarCalleeType(calleeType), callee, ops, normalOps, unwindOps,
+        nullptr, nullptr, normal, unwind);
 }
 
 SuccessorOperands InvokeOp::getSuccessorOperands(unsigned index) {
@@ -1393,6 +1404,12 @@ LogicalResult InvokeOp::verify() {
   if (getNumResults() > 1)
     return emitOpError("must have 0 or 1 result");
 
+  // Verify the variadic callee type is a variadic function type.
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    if (!varCalleeType->isVarArg())
+      return emitOpError(
+          "expected var_callee_type to be a variadic function type");
+
   Block *unwindDest = getUnwindDest();
   if (unwindDest->empty())
     return emitError("must have at least one operation in unwind destination");
@@ -1408,14 +1425,6 @@ LogicalResult InvokeOp::verify() {
 void InvokeOp::print(OpAsmPrinter &p) {
   auto callee = getCallee();
   bool isDirect = callee.has_value();
-
-  LLVMFunctionType calleeType;
-  bool isVarArg = false;
-
-  if (std::optional<LLVMFunctionType> optionalCalleeType = getCalleeType()) {
-    calleeType = *optionalCalleeType;
-    isVarArg = calleeType.isVarArg();
-  }
 
   p << ' ';
 
@@ -1435,12 +1444,14 @@ void InvokeOp::print(OpAsmPrinter &p) {
   p << " unwind ";
   p.printSuccessorAndUseList(getUnwindDest(), getUnwindDestOperands());
 
-  if (isVarArg)
-    p << " vararg(" << calleeType << ")";
+  // Print the variadic callee type if the invoke is variadic.
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    p << " vararg(" << *varCalleeType << ")";
 
   p.printOptionalAttrDict((*this)->getAttrs(),
                           {InvokeOp::getOperandSegmentSizeAttr(), "callee",
-                           "callee_type", InvokeOp::getCConvAttrName()});
+                           InvokeOp::getVarCalleeTypeAttrName(),
+                           InvokeOp::getCConvAttrName()});
 
   p << " : ";
   if (!isDirect)
@@ -1453,12 +1464,12 @@ void InvokeOp::print(OpAsmPrinter &p) {
 //                  `(` ssa-use-list `)`
 //                  `to` bb-id (`[` ssa-use-and-type-list `]`)?
 //                  `unwind` bb-id (`[` ssa-use-and-type-list `]`)?
-//                  ( `vararg(` var-arg-func-type `)` )?
+//                  ( `vararg(` var-callee-type `)` )?
 //                  attribute-dict? `:` (type `,`)? function-type
 ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
   SmallVector<OpAsmParser::UnresolvedOperand, 8> operands;
   SymbolRefAttr funcAttr;
-  TypeAttr calleeType;
+  TypeAttr varCalleeType;
   Block *normalDest, *unwindDest;
   SmallVector<Value, 4> normalOperands, unwindOperands;
   Builder &builder = parser.getBuilder();
@@ -1488,8 +1499,12 @@ ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
 
   bool isVarArg = parser.parseOptionalKeyword("vararg").succeeded();
   if (isVarArg) {
+    StringAttr varCalleeTypeAttrName =
+        InvokeOp::getVarCalleeTypeAttrName(result.name);
     if (parser.parseLParen().failed() ||
-        parser.parseAttribute(calleeType, "callee_type", result.attributes)
+        parser
+            .parseAttribute(varCalleeType, varCalleeTypeAttrName,
+                            result.attributes)
             .failed() ||
         parser.parseRParen().failed())
       return failure();
@@ -1515,8 +1530,8 @@ ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
 }
 
 LLVMFunctionType InvokeOp::getCalleeFunctionType() {
-  if (getCalleeType())
-    return *getCalleeType();
+  if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
+    return *varCalleeType;
   return getLLVMFuncType(getContext(), getResultTypes(), getArgOperands());
 }
 
