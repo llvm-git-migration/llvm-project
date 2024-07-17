@@ -1,4 +1,4 @@
-//===- SandboxIRTracker.h ---------------------------------------*- C++ -*-===//
+//===- Tracker.h ------------------------------------------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -30,15 +30,15 @@
 // Accepting changes
 // -----------------
 // The user needs to either revert or accept changes before the tracker object
-// is destroyed, or else the tracker destructor will cause a crash.
+// is destroyed. This is enforced in the tracker's destructor.
 // This is the job of `SandboxIRTracker::accept()`. Internally this will go
 // through the change objects in `SandboxIRTracker::Changes` in order, calling
 // `IRChangeBase::accept()`.
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_SANDBOXIR_SANDBOXIRTRACKER_H
-#define LLVM_SANDBOXIR_SANDBOXIRTRACKER_H
+#ifndef LLVM_SANDBOXIR_TRACKER_H
+#define LLVM_SANDBOXIR_TRACKER_H
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/IRBuilder.h"
@@ -93,10 +93,14 @@ public:
   }
   virtual void dump(raw_ostream &OS) const = 0;
   LLVM_DUMP_METHOD virtual void dump() const = 0;
+  friend raw_ostream &operator<<(raw_ostream &OS, const IRChangeBase &C) {
+    C.dump(OS);
+    return OS;
+  }
 #endif
 };
 
-/// Change the source Value of a sandboxir::Use.
+/// Tracks the change of the source Value of a sandboxir::Use.
 class UseSet : public IRChangeBase {
   Use U;
   Value *OrigV = nullptr;
@@ -113,10 +117,6 @@ public:
 #ifndef NDEBUG
   void dump(raw_ostream &OS) const final { dumpCommon(OS); }
   LLVM_DUMP_METHOD void dump() const final;
-  friend raw_ostream &operator<<(raw_ostream &OS, const UseSet &C) {
-    C.dump(OS);
-    return OS;
-  }
 #endif
 };
 
@@ -150,7 +150,7 @@ public:
   /// track Sandbox IR changes.
   void track(std::unique_ptr<IRChangeBase> &&Change);
   /// \Returns true if the tracker is recording changes.
-  bool tracking() const { return State == TrackerState::Record; }
+  bool isTracking() const { return State == TrackerState::Record; }
   /// \Returns the current state of the tracker.
   TrackerState getState() const { return State; }
   /// Turns on IR tracking.
@@ -178,4 +178,4 @@ public:
 
 } // namespace llvm::sandboxir
 
-#endif // LLVM_SANDBOXIR_SANDBOXIRTRACKER_H
+#endif // LLVM_SANDBOXIR_TRACKER_H

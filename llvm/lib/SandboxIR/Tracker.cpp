@@ -1,4 +1,4 @@
-//===- SandboxIRTracker.cpp -----------------------------------------------===//
+//===- Tracker.cpp --------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/SandboxIR/SandboxIRTracker.h"
+#include "llvm/SandboxIR/Tracker.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instruction.h"
@@ -22,7 +22,7 @@ IRChangeBase::IRChangeBase(TrackID ID, SandboxIRTracker &Parent)
 
   assert(!Parent.InMiddleOfCreatingChange &&
          "We are in the middle of creating another change!");
-  if (Parent.tracking())
+  if (Parent.isTracking())
     Parent.InMiddleOfCreatingChange = true;
 #endif // NDEBUG
 }
@@ -39,10 +39,8 @@ SandboxIRTracker::~SandboxIRTracker() {
 }
 
 void SandboxIRTracker::track(std::unique_ptr<IRChangeBase> &&Change) {
-#ifndef NDEBUG
   assert(State != TrackerState::Revert &&
          "No changes should be tracked during revert()!");
-#endif // NDEBUG
   Changes.push_back(std::move(Change));
 
 #ifndef NDEBUG
@@ -53,21 +51,21 @@ void SandboxIRTracker::track(std::unique_ptr<IRChangeBase> &&Change) {
 void SandboxIRTracker::save() { State = TrackerState::Record; }
 
 void SandboxIRTracker::revert() {
-  auto SavedState = State;
+  assert(State == TrackerState::Record && "Forgot to save()!");
   State = TrackerState::Revert;
   for (auto &Change : reverse(Changes))
     Change->revert();
   Changes.clear();
-  State = SavedState;
+  State = TrackerState::Disabled;
 }
 
 void SandboxIRTracker::accept() {
-  auto SavedState = State;
+  assert(State == TrackerState::Record && "Forgot to save()!");
   State = TrackerState::Accept;
   for (auto &Change : Changes)
     Change->accept();
   Changes.clear();
-  State = SavedState;
+  State = TrackerState::Disabled;
 }
 
 #ifndef NDEBUG

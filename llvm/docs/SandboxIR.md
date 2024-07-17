@@ -55,6 +55,7 @@ For example, for `sandboxir::User::setOperand(OpIdx, sandboxir::Value *Op)`:
 ## IR Change Tracking
 Sandbox IR's state can be saved and restored.
 This is done with the help of the tracker component that is tightly coupled to the public Sandbox IR API functions.
+Please note that nested saves/restores are currently not supported.
 
 To save the state and enable tracking the user needs to call `sandboxir::Context::save()`.
 From this point on any change made to the Sandbox IR state will automatically create a change object and register it with the tracker, without any intervention from the user.

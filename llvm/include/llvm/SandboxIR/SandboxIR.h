@@ -61,7 +61,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
-#include "llvm/SandboxIR/SandboxIRTracker.h"
+#include "llvm/SandboxIR/Tracker.h"
 #include "llvm/SandboxIR/Use.h"
 #include "llvm/Support/raw_ostream.h"
 #include <iterator>

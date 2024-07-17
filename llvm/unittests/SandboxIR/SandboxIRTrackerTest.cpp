@@ -145,6 +145,7 @@ define void @foo(ptr %ptr) {
   EXPECT_EQ(St0->getOperand(0), Ld0);
 
   // Check accept().
+  Ctx.save();
   St0->replaceUsesOfWith(Ld0, Ld1);
   EXPECT_EQ(Tracker.size(), 1u);
   EXPECT_EQ(St0->getOperand(0), Ld1);

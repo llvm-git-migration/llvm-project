@@ -121,7 +121,7 @@ void Value::replaceUsesWithIf(
         if (!ShouldReplace(UseToReplace))
           return false;
         auto &Tracker = Ctx.getTracker();
-        if (Tracker.tracking())
+        if (Tracker.isTracking())
           Tracker.track(std::make_unique<UseSet>(UseToReplace, Tracker));
         return true;
       });
@@ -131,7 +131,7 @@ void Value::replaceAllUsesWith(Value *Other) {
   assert(getType() == Other->getType() &&
          "Replacing with Value of different type!");
   auto &Tracker = Ctx.getTracker();
-  if (Tracker.tracking()) {
+  if (Tracker.isTracking()) {
     for (auto Use : uses())
       Tracker.track(std::make_unique<UseSet>(Use, Tracker));
   }
@@ -226,7 +226,7 @@ bool User::classof(const Value *From) {
 void User::setOperand(unsigned OperandIdx, Value *Operand) {
   assert(isa<llvm::User>(Val) && "No operands!");
   auto &Tracker = Ctx.getTracker();
-  if (Tracker.tracking())
+  if (Tracker.isTracking())
     Tracker.track(std::make_unique<UseSet>(getOperandUse(OperandIdx), Tracker));
   // We are delegating to llvm::User::setOperand().
   cast<llvm::User>(Val)->setOperand(OperandIdx, Operand->Val);
@@ -234,7 +234,7 @@ void User::setOperand(unsigned OperandIdx, Value *Operand) {
 
 bool User::replaceUsesOfWith(Value *FromV, Value *ToV) {
   auto &Tracker = Ctx.getTracker();
-  if (Tracker.tracking()) {
+  if (Tracker.isTracking()) {
     for (auto OpIdx : seq<unsigned>(0, getNumOperands())) {
       auto Use = getOperandUse(OpIdx);
       if (Use.get() == FromV)
