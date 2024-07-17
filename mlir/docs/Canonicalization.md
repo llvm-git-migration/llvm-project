@@ -33,6 +33,10 @@ together.
 
 Some important things to think about w.r.t. canonicalization patterns:
 
+*   The goal of canonicalization is to make subsequent analyses and
+    optimizations more effective. Therefore, performance improvements are not
+    necessary for canonicalization.
+
 *   Pass pipelines should not rely on the canonicalizer pass for correctness.
     They should work correctly with all instances of the canonicalization pass
     removed.
@@ -50,6 +54,61 @@ Some important things to think about w.r.t. canonicalization patterns:
 
 *   It is always good to eliminate operations entirely when possible, e.g. by
     folding known identities (like "x + 0 = x").
+
+*   Canonicalization isn't a great place to put pattens with expensive running
+    time (i.e. have O(n) complexity) or complicated cost models.
+
+*   Canonicalize shouldn't lose the semantic of original operation: the original
+    information should always be recoverable from the transformed IR.
+
+For example, a pattern that transform
+
+```
+  %0 = tensor.insert_slice %slice into
+     %x[0, 0, 0, 0, 0][1, 1, 1, 16, 32][1, 1, 1, 1, 1] :
+     tensor<16x32xf32> into tensor<1x1x1x16x32xf32>
+```
+
+to
+
+```
+  %0 = tensor.expand_shape %slice[[0,1,2,3], [4]] :
+           tensor<16x32xf32> into tensor<1x1x1x16x32xf32>
+```
+
+is not a good canonicalize pattern because it lose the destination style
+semantic.
+
+
+A pattern that transform (linalg.transpose is only use of %broadcast)
+
+```
+  %broadcast = linalg.broadcast
+      ins(%input : tensor<2x4x5xf32>)
+      outs(%init1 : tensor<1x2x3x4x5x6xf32>)
+      dimensions = [0, 2, 5]
+  %transpose = linalg.transpose
+      ins(%broadcast : tensor<1x2x3x4x5x6xf32>)
+      outs(%init2 : tensor<1x6x2x3x5x4xf32>)
+      permutation = [0, 5, 1, 2, 4, 3]
+```
+
+to
+
+```
+  %tranpose = linalg.transpose
+      ins(%input : tensor<2x4x5xf32>)
+      outs(%tmp_init : tensor<2x5x4xf32>)
+      permutation = [0, 2, 1]
+  %broadcast = linalg.broadcast
+      ins(%transpose : tensor<2x5x4xf32>)
+      outs(%init2 : tensor<1x6x2x3x5x4xf32>)
+      dimensions = [0, 3, 1]
+```
+
+is a good canonicalize pattern because this pattern always transforms the
+program towards reducing the amount of computational data and keeps the semantic
+of original operation.
 
 ## Globally Applied Rules
 
@@ -189,7 +248,7 @@ each of the operands, returning the corresponding constant attribute. These
 operands are those that implement the `ConstantLike` trait. If any of the
 operands are non-constant, a null `Attribute` value is provided instead. For
 example, if MyOp provides three operands [`a`, `b`, `c`], but only `b` is
-constant then `adaptor` will return Attribute() for `getA()` and `getC()`, 
+constant then `adaptor` will return Attribute() for `getA()` and `getC()`,
 and b-value for `getB()`.
 
 Also above, is the use of `OpFoldResult`. This class represents the possible
