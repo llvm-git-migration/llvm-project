@@ -10,6 +10,7 @@
 #define LLVM_UNITTESTS_CODEGEN_TESTASMPRINTER_H
 
 #include "llvm/BinaryFormat/Dwarf.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/MC/MCStreamer.h"
 #include "gmock/gmock.h"
 
@@ -17,6 +18,7 @@
 
 namespace llvm {
 class AsmPrinter;
+class AsmPrinterLegacy;
 class MCContext;
 class Target;
 class TargetMachine;
@@ -51,7 +53,7 @@ class TestAsmPrinter {
   std::unique_ptr<MCContext> MC;
   MockMCStreamer *MS = nullptr; // Owned by AsmPrinter
   std::unique_ptr<TargetMachine> TM;
-  std::unique_ptr<AsmPrinter> Asm;
+  std::unique_ptr<AsmPrinterLegacy> Asm;
 
   /// Private constructor; call TestAsmPrinter::create(...)
   /// to create an instance.
@@ -73,8 +75,8 @@ public:
 
   void setDwarfUsesRelocationsAcrossSections(bool Enable);
 
-  AsmPrinter *getAP() const { return Asm.get(); }
-  AsmPrinter *releaseAP() { return Asm.release(); }
+  AsmPrinter *getAP() const { return &Asm->getPrinter(); }
+  AsmPrinterLegacy *releaseAP() { return Asm.release(); }
   MCContext &getCtx() const { return *MC; }
   MockMCStreamer &getMS() const { return *MS; }
 };

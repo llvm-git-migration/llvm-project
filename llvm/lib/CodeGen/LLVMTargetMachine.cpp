@@ -138,8 +138,8 @@ bool LLVMTargetMachine::addAsmPrinter(PassManagerBase &PM,
     return true;
 
   // Create the AsmPrinter, which takes ownership of AsmStreamer if successful.
-  FunctionPass *Printer =
-      getTarget().createAsmPrinter(*this, std::move(*MCStreamerOrErr));
+  AsmPrinterLegacy *Printer =
+      getTarget().createAsmPrinterLegacy(*this, std::move(*MCStreamerOrErr));
   if (!Printer)
     return true;
 
@@ -290,7 +290,7 @@ bool LLVMTargetMachine::addPassesToEmitMC(PassManagerBase &PM, MCContext *&Ctx,
 
   // Create the AsmPrinter, which takes ownership of AsmStreamer if successful.
   FunctionPass *Printer =
-      getTarget().createAsmPrinter(*this, std::move(AsmStreamer));
+      getTarget().createAsmPrinterLegacy(*this, std::move(AsmStreamer));
   if (!Printer)
     return true;
 
