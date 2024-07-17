@@ -15,8 +15,12 @@
 
 using namespace llvm::sandboxir;
 
-IRChangeBase::IRChangeBase(TrackID ID, Tracker &Parent)
-    : ID(ID), Parent(Parent) {
+#ifndef NDEBUG
+IRChangeBase::IRChangeBase(const char *Name, Tracker &Parent)
+    : Name(Name), Parent(Parent) {
+#else
+IRChangeBase::IRChangeBase(Tracker &Parent) : Parent(Parent) {
+#endif // NDEBUG
 #ifndef NDEBUG
   Idx = Parent.size();
 

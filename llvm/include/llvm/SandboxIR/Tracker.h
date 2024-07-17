@@ -52,45 +52,32 @@
 namespace llvm::sandboxir {
 
 class BasicBlock;
-
-/// Each IR change type has an ID.
-enum class TrackID {
-  UseSet,
-};
-
-#ifndef NDEBUG
-static const char *trackIDToStr(TrackID ID) {
-  switch (ID) {
-  case TrackID::UseSet:
-    return "UseSet";
-  }
-  llvm_unreachable("Unimplemented ID");
-}
-#endif // NDEBUG
-
 class Tracker;
 
 /// The base class for IR Change classes.
 class IRChangeBase {
 protected:
 #ifndef NDEBUG
+  /// Index within the `Changes` vector, used for debugging.
   unsigned Idx = 0;
+  /// The name is only used for debugging.
+  const char *Name;
 #endif
-  const TrackID ID;
   Tracker &Parent;
 
 public:
-  IRChangeBase(TrackID ID, Tracker &Parent);
-  TrackID getTrackID() const { return ID; }
+#ifndef NDEBUG
+  IRChangeBase(const char *Name, Tracker &Parent);
+#else
+  IRChangeBase(Tracker &Parent);
+#endif
   /// This runs when changes get reverted.
   virtual void revert() = 0;
   /// This runs when changes get accepted.
   virtual void accept() = 0;
   virtual ~IRChangeBase() = default;
-#ifndef NDEBUG
-  void dumpCommon(raw_ostream &OS) const {
-    OS << Idx << ". " << trackIDToStr(ID);
-  }
+#ifndef NDEBUGn
+  void dumpCommon(raw_ostream &OS) const { OS << Idx << ". " << Name; }
   virtual void dump(raw_ostream &OS) const = 0;
   LLVM_DUMP_METHOD virtual void dump() const = 0;
   friend raw_ostream &operator<<(raw_ostream &OS, const IRChangeBase &C) {
@@ -106,12 +93,13 @@ class UseSet : public IRChangeBase {
   Value *OrigV = nullptr;
 
 public:
+#ifndef NDEBUG
   UseSet(const Use &U, Tracker &Tracker)
-      : IRChangeBase(TrackID::UseSet, Tracker), U(U), OrigV(U.get()) {}
-  // For isa<> etc.
-  static bool classof(const IRChangeBase *Other) {
-    return Other->getTrackID() == TrackID::UseSet;
-  }
+      : IRChangeBase("UseSet", Tracker), U(U), OrigV(U.get()) {}
+#else
+  UseSet(const Use &U, Tracker &Tracker)
+      : IRChangeBase(Tracker), U(U), OrigV(U.get()) {}
+#endif // NDEBUG
   void revert() final { U.set(OrigV); }
   void accept() final {}
 #ifndef NDEBUG
