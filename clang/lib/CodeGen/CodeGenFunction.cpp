@@ -2918,7 +2918,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
       for (auto Feat : TargetAttrFeats)
         CurrTargetAttrFeats.push_back(StringRef(Feat).substr(1));
 
-      llvm::Value *SecondCondition =
+      llvm::Value *FeatsCondition =
           EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
 
       Builder.SetInsertPoint(CurBlock);
@@ -2935,7 +2935,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
       Builder.CreateCondBr(FirstCondition, SecondCond, ElseBlock);
 
       Builder.SetInsertPoint(SecondCond);
-      Builder.CreateCondBr(SecondCondition, RetBlock, ElseBlock);
+      Builder.CreateCondBr(FeatsCondition, RetBlock, ElseBlock);
 
       CurBlock = ElseBlock;
     }
