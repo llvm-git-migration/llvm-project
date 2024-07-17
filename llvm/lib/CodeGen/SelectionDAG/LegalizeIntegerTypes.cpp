@@ -4530,14 +4530,16 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
   SDValue ShAmt = N->getOperand(1);
   EVT ShAmtVT = ShAmt.getValueType();
 
-  EVT LoadStoreVT = VT;
+  EVT LoadVT = VT;
   do {
-    LoadStoreVT = TLI.getTypeToTransformTo(*DAG.getContext(), LoadStoreVT);
-  } while (!TLI.isTypeLegal(LoadStoreVT));
+    LoadVT = TLI.getTypeToTransformTo(*DAG.getContext(), LoadVT);
+  } while (!TLI.isTypeLegal(LoadVT));
 
-  const unsigned ShiftUnitInBits = LoadStoreVT.getStoreSize() * 8;
+  const unsigned ShiftUnitInBits = LoadVT.getStoreSize() * 8;
+  assert(ShiftUnitInBits <= VT.getScalarSizeInBits());
   assert(isPowerOf2_32(ShiftUnitInBits) &&
          "Shifting unit is not a a power of two!");
+
   const bool IsOneStepShift =
       DAG.computeKnownBits(ShAmt).countMinTrailingZeros() >=
       Log2_32(ShiftUnitInBits);
@@ -4558,7 +4560,11 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
 
   // Get a temporary stack slot 2x the width of our VT.
   // FIXME: reuse stack slots?
-  SDValue StackPtr = DAG.CreateStackTemporary(StackSlotVT);
+  Align StackAlign = DAG.getReducedAlign(StackSlotVT, /*UseABI=*/false);
+  assert(DAG.getReducedAlign(LoadVT, /*UseABI=*/false) <= StackAlign);
+
+  SDValue StackPtr =
+      DAG.CreateStackTemporary(StackSlotVT.getStoreSize(), StackAlign);
   EVT PtrTy = StackPtr.getValueType();
   SDValue Ch = DAG.getEntryNode();
 
@@ -4624,9 +4630,10 @@ void DAGTypeLegalizer::ExpandIntRes_ShiftThroughStack(SDNode *N, SDValue &Lo,
   AdjStackPtr = DAG.getMemBasePlusOffset(AdjStackPtr, Offset, dl);
 
   // And load it! While the load is not legal, legalizing it is obvious.
-  SDValue Res = DAG.getLoad(
-      VT, dl, Ch, AdjStackPtr,
-      MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()));
+  SDValue Res =
+      DAG.getLoad(VT, dl, Ch, AdjStackPtr,
+                  MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()),
+                  DAG.getReducedAlign(LoadVT, /*UseABI=*/false));
 
   // If we may still have a remaining bits to shift by, do so now.
   if (!IsOneStepShift) {
