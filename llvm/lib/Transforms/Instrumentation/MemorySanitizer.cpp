@@ -2484,6 +2484,8 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
   using OriginCombiner = Combiner<false>;
 
   /// Propagate origin for arbitrary operation.
+  ///
+  /// Optionally skips n trailing operands.
   void setOriginForNaryOp(Instruction &I, unsigned int skipLastOperands = 0) {
     if (!MS.TrackOrigins)
       return;
@@ -2493,6 +2495,9 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
     if (skipLastOperands > 0)
       assert((I.getNumOperands() > skipLastOperands) &&
              "Insufficient number of operands to skip!");
+
+    for (unsigned int i = 0; i < I.getNumOperands() - skipLastOperands; i++)
+      OC.Add(I.getOperand(i));
 
     OC.Done(&I);
   }
