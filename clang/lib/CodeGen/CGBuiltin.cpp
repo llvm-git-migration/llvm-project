@@ -14312,7 +14312,7 @@ Value *CodeGenFunction::EmitAArch64CpuInit() {
 Value *CodeGenFunction::EmitRISCVCpuInit() {
   llvm::FunctionType *FTy = llvm::FunctionType::get(VoidTy, false);
   llvm::FunctionCallee Func =
-      CGM.CreateRuntimeFunction(FTy, "__init_riscv_features_bits");
+      CGM.CreateRuntimeFunction(FTy, "__init_riscv_feature_bits");
   cast<llvm::GlobalValue>(Func.getCallee())->setDSOLocal(true);
   cast<llvm::GlobalValue>(Func.getCallee())
       ->setDLLStorageClass(llvm::GlobalValue::DefaultStorageClass);

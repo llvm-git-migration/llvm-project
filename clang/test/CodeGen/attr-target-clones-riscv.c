@@ -38,7 +38,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo1.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 0, [[TMP0]]
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOVLER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
@@ -62,7 +62,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo2.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 0, [[TMP0]]
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOVLER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
@@ -98,7 +98,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo3.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 0, [[TMP0]]
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOVLER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
@@ -122,7 +122,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo4.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 0, [[TMP0]]
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOVLER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
@@ -146,7 +146,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo5.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    ret ptr @foo5.default
 //
 //
@@ -158,7 +158,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 // CHECK-LABEL: define weak_odr ptr @foo6.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
-// CHECK-NEXT:    call void @__init_riscv_features_bits()
+// CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 0, [[TMP0]]
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOVLER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
