@@ -15,15 +15,8 @@
 
 using namespace llvm::sandboxir;
 
-#ifndef NDEBUG
-IRChangeBase::IRChangeBase(const char *Name, Tracker &Parent)
-    : Name(Name), Parent(Parent) {
-#else
 IRChangeBase::IRChangeBase(Tracker &Parent) : Parent(Parent) {
-#endif // NDEBUG
 #ifndef NDEBUG
-  Idx = Parent.size();
-
   assert(!Parent.InMiddleOfCreatingChange &&
          "We are in the middle of creating another change!");
   if (Parent.isTracking())
@@ -32,6 +25,12 @@ IRChangeBase::IRChangeBase(Tracker &Parent) : Parent(Parent) {
 }
 
 #ifndef NDEBUG
+unsigned IRChangeBase::getIdx() const {
+  auto It =
+      find_if(Parent.Changes, [this](auto &Ptr) { return Ptr.get() == this; });
+  return It - Parent.Changes.begin();
+}
+
 void UseSet::dump() const {
   dump(dbgs());
   dbgs() << "\n";

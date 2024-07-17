@@ -57,27 +57,20 @@ class Tracker;
 /// The base class for IR Change classes.
 class IRChangeBase {
 protected:
-#ifndef NDEBUG
-  /// Index within the `Changes` vector, used for debugging.
-  unsigned Idx = 0;
-  /// The name is only used for debugging.
-  const char *Name;
-#endif
   Tracker &Parent;
 
 public:
-#ifndef NDEBUG
-  IRChangeBase(const char *Name, Tracker &Parent);
-#else
   IRChangeBase(Tracker &Parent);
-#endif
   /// This runs when changes get reverted.
   virtual void revert() = 0;
   /// This runs when changes get accepted.
   virtual void accept() = 0;
   virtual ~IRChangeBase() = default;
-#ifndef NDEBUGn
-  void dumpCommon(raw_ostream &OS) const { OS << Idx << ". " << Name; }
+#ifndef NDEBUG
+  /// \Returns the index of this change by iterating over all changes in the
+  /// tracker. This is only used for debugging.
+  unsigned getIdx() const;
+  void dumpCommon(raw_ostream &OS) const { OS << getIdx() << ". "; }
   virtual void dump(raw_ostream &OS) const = 0;
   LLVM_DUMP_METHOD virtual void dump() const = 0;
   friend raw_ostream &operator<<(raw_ostream &OS, const IRChangeBase &C) {
@@ -93,17 +86,15 @@ class UseSet : public IRChangeBase {
   Value *OrigV = nullptr;
 
 public:
-#ifndef NDEBUG
-  UseSet(const Use &U, Tracker &Tracker)
-      : IRChangeBase("UseSet", Tracker), U(U), OrigV(U.get()) {}
-#else
   UseSet(const Use &U, Tracker &Tracker)
       : IRChangeBase(Tracker), U(U), OrigV(U.get()) {}
-#endif // NDEBUG
   void revert() final { U.set(OrigV); }
   void accept() final {}
 #ifndef NDEBUG
-  void dump(raw_ostream &OS) const final { dumpCommon(OS); }
+  void dump(raw_ostream &OS) const final {
+    dumpCommon(OS);
+    OS << "UseSet";
+  }
   LLVM_DUMP_METHOD void dump() const final;
 #endif
 };
@@ -122,6 +113,9 @@ public:
 private:
   /// The list of changes that are being tracked.
   SmallVector<std::unique_ptr<IRChangeBase>> Changes;
+#ifndef NDEBUG
+  friend unsigned IRChangeBase::getIdx() const; // For accessing `Changes`.
+#endif
   /// The current state of the tracker.
   TrackerState State = TrackerState::Disabled;
 
@@ -153,8 +147,6 @@ public:
   bool empty() const { return Changes.empty(); }
 
 #ifndef NDEBUG
-  /// \Returns the \p Idx'th change. This is used for testing.
-  IRChangeBase *getChange(unsigned Idx) const { return Changes[Idx].get(); }
   void dump(raw_ostream &OS) const;
   LLVM_DUMP_METHOD void dump() const;
   friend raw_ostream &operator<<(raw_ostream &OS, const Tracker &Tracker) {

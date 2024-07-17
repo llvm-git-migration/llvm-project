@@ -68,4 +68,4 @@ To accept the changes made to the IR the user needs to call `sandboxir::Context:
 Internally this will go through the changes and run any finalization required.
 
 Please note that after a call to `revert()` or `accept()` tracking will stop.
-So the user would need to start it again if needed with a call to `save()`.
+To start tracking again, the user needs to call `save()`.
