@@ -1293,7 +1293,7 @@ void MallocChecker::checkCXXNewOrCXXDelete(const CallEvent &Call,
                        AF_CXXNewArray);
     break;
   default:
-    llvm_unreachable("not a new/delete operator");
+    assert(false && "not a new/delete operator");
   }
 
   C.addTransition(State);
@@ -1490,7 +1490,7 @@ ProgramStateRef MallocChecker::ProcessZeroAllocCheck(
       return State;
     }
   } else
-    llvm_unreachable("not a CallExpr or CXXNewExpr");
+    assert(false && "not a CallExpr or CXXNewExpr");
 
   assert(Arg);
 
@@ -1925,7 +1925,7 @@ static void printExpectedAllocName(raw_ostream &os, AllocationFamily Family) {
     case AF_IfNameIndex: os << "'if_nameindex()'"; return;
     case AF_InnerBuffer: os << "container-specific allocator"; return;
     case AF_Alloca:
-    case AF_None: llvm_unreachable("not a deallocation expression");
+    case AF_None: assert(false && "not a deallocation expression");
   }
 }
 
@@ -1937,7 +1937,7 @@ static void printExpectedDeallocName(raw_ostream &os, AllocationFamily Family) {
     case AF_IfNameIndex: os << "'if_freenameindex()'"; return;
     case AF_InnerBuffer: os << "container-specific deallocator"; return;
     case AF_Alloca:
-    case AF_None: llvm_unreachable("suspicious argument");
+    case AF_None: assert(false && "suspicious argument");
   }
 }
 
@@ -2145,10 +2145,10 @@ MallocChecker::getCheckIfTracked(AllocationFamily Family,
     return std::nullopt;
   }
   case AF_None: {
-    llvm_unreachable("no family");
+    assert(false && "no family");
   }
   }
-  llvm_unreachable("unhandled family");
+  assert(false && "unhandled family");
 }
 
 std::optional<MallocChecker::CheckKind>
@@ -3528,7 +3528,7 @@ PathDiagnosticPieceRef MallocBugVisitor::VisitNode(const ExplodedNode *N,
           break;
         }
         case AF_None:
-          llvm_unreachable("Unhandled allocation family!");
+          assert(false && "Unhandled allocation family!");
       }
 
       // See if we're releasing memory while inlining a destructor
