@@ -250,6 +250,12 @@ AMDGPUTargetInfo::AMDGPUTargetInfo(const llvm::Triple &Triple,
   WavefrontSize = (GPUFeatures & llvm::AMDGPU::FEATURE_WAVE32) ? 32 : 64;
   AllowAMDGPUUnsafeFPAtomics = Opts.AllowAMDGPUUnsafeFPAtomics;
 
+  // Set the default atomic options
+  AtomicOpts.setOption(clang::AtomicOptionKind::NoRemoteMemory, true);
+  AtomicOpts.setOption(clang::AtomicOptionKind::NoFineGrainedMemory, true);
+  AtomicOpts.setOption(clang::AtomicOptionKind::IgnoreDenormalMode,
+                       Opts.AllowAMDGPUUnsafeFPAtomics);
+
   // Set pointer width and alignment for the generic address space.
   PointerWidth = PointerAlign = getPointerWidthV(LangAS::Default);
   if (getMaxPointerWidth() == 64) {
@@ -273,6 +279,8 @@ void AMDGPUTargetInfo::adjust(DiagnosticsEngine &Diags, LangOptions &Opts) {
   // to OpenCL can be removed from the following line.
   setAddressSpaceMap((Opts.OpenCL && !Opts.OpenCLGenericAddressSpace) ||
                      !isAMDGCN(getTriple()));
+
+  AtomicOpts = AtomicOptionsOverride(Opts).applyOverrides(AtomicOpts);
 }
 
 llvm::SmallVector<Builtin::InfosShard>

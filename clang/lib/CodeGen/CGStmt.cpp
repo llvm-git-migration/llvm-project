@@ -783,6 +783,7 @@ void CodeGenFunction::EmitAttributedStmt(const AttributedStmt &S) {
   HLSLControlFlowHintAttr::Spelling flattenOrBranch =
       HLSLControlFlowHintAttr::SpellingNotCalculated;
   const CallExpr *musttail = nullptr;
+  AtomicOptionsOverride AOO;
 
   for (const auto *A : S.getAttrs()) {
     switch (A->getKind()) {
@@ -813,6 +814,9 @@ void CodeGenFunction::EmitAttributedStmt(const AttributedStmt &S) {
         Builder.CreateAssumption(AssumptionVal);
       }
     } break;
+    case attr::Atomic: {
+      AOO = cast<AtomicAttr>(A)->getAtomicOptionsOverride();
+    } break;
     case attr::HLSLControlFlowHint: {
       flattenOrBranch = cast<HLSLControlFlowHintAttr>(A)->getSemanticSpelling();
     } break;
@@ -824,6 +828,7 @@ void CodeGenFunction::EmitAttributedStmt(const AttributedStmt &S) {
   SaveAndRestore save_noconvergent(InNoConvergentAttributedStmt, noconvergent);
   SaveAndRestore save_musttail(MustTailCall, musttail);
   SaveAndRestore save_flattenOrBranch(HLSLControlFlowAttr, flattenOrBranch);
+  CGAtomicOptionsRAII AORAII(CGM, AOO);
   EmitStmt(S.getSubStmt(), S.getAttrs());
 }
 
