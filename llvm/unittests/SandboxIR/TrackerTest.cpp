@@ -57,11 +57,8 @@ define void @foo(ptr %ptr) {
   auto *Ld = &*It++;
   auto *St = &*It++;
   St->setOperand(0, Ld);
-  EXPECT_EQ(Tracker.size(), 1u);
   St->setOperand(1, Gep1);
-  EXPECT_EQ(Tracker.size(), 2u);
   Ld->setOperand(0, Gep1);
-  EXPECT_EQ(Tracker.size(), 3u);
   EXPECT_EQ(St->getOperand(0), Ld);
   EXPECT_EQ(St->getOperand(1), Gep1);
   EXPECT_EQ(Ld->getOperand(0), Gep1);
@@ -85,7 +82,6 @@ define void @foo(ptr %ptr) {
   llvm::Function &LLVMF = *M->getFunction("foo");
   sandboxir::Context Ctx(C);
   llvm::BasicBlock *LLVMBB = &*LLVMF.begin();
-  auto &Tracker = Ctx.getTracker();
   Ctx.createFunction(&LLVMF);
   auto *BB = cast<sandboxir::BasicBlock>(Ctx.getValue(LLVMBB));
   auto It = BB->begin();
@@ -96,11 +92,9 @@ define void @foo(ptr %ptr) {
   Ctx.save();
   // Check RUWIf when the lambda returns false.
   Ld0->replaceUsesWithIf(Ld1, [](const sandboxir::Use &Use) { return false; });
-  EXPECT_TRUE(Tracker.empty());
 
   // Check RUWIf when the lambda returns true.
   Ld0->replaceUsesWithIf(Ld1, [](const sandboxir::Use &Use) { return true; });
-  EXPECT_EQ(Tracker.size(), 2u);
   EXPECT_EQ(St0->getOperand(0), Ld1);
   EXPECT_EQ(St1->getOperand(0), Ld1);
   Ctx.revert();
@@ -139,7 +133,6 @@ define void @foo(ptr %ptr) {
   // Check RUOW.
   Ctx.save();
   St0->replaceUsesOfWith(Ld0, Ld1);
-  EXPECT_EQ(Tracker.size(), 1u);
   EXPECT_EQ(St0->getOperand(0), Ld1);
   Ctx.revert();
   EXPECT_EQ(St0->getOperand(0), Ld0);
@@ -147,9 +140,7 @@ define void @foo(ptr %ptr) {
   // Check accept().
   Ctx.save();
   St0->replaceUsesOfWith(Ld0, Ld1);
-  EXPECT_EQ(Tracker.size(), 1u);
   EXPECT_EQ(St0->getOperand(0), Ld1);
   Ctx.accept();
-  EXPECT_TRUE(Tracker.empty());
   EXPECT_EQ(St0->getOperand(0), Ld1);
 }

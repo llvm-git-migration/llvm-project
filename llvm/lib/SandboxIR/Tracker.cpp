@@ -42,8 +42,7 @@ Tracker::~Tracker() {
 }
 
 void Tracker::track(std::unique_ptr<IRChangeBase> &&Change) {
-  assert(State != TrackerState::Revert &&
-         "No changes should be tracked during revert()!");
+  assert(State == TrackerState::Record && "The tracker should be tracking!");
   Changes.push_back(std::move(Change));
 
 #ifndef NDEBUG
@@ -55,20 +54,18 @@ void Tracker::save() { State = TrackerState::Record; }
 
 void Tracker::revert() {
   assert(State == TrackerState::Record && "Forgot to save()!");
-  State = TrackerState::Revert;
+  State = TrackerState::Disabled;
   for (auto &Change : reverse(Changes))
     Change->revert();
   Changes.clear();
-  State = TrackerState::Disabled;
 }
 
 void Tracker::accept() {
   assert(State == TrackerState::Record && "Forgot to save()!");
-  State = TrackerState::Accept;
+  State = TrackerState::Disabled;
   for (auto &Change : Changes)
     Change->accept();
   Changes.clear();
-  State = TrackerState::Disabled;
 }
 
 #ifndef NDEBUG

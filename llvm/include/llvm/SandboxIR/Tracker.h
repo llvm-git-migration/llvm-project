@@ -106,8 +106,6 @@ public:
   enum class TrackerState {
     Disabled, ///> Tracking is disabled
     Record,   ///> Tracking changes
-    Revert,   ///> Undoing changes
-    Accept,   ///> Accepting changes
   };
 
 private:
@@ -141,10 +139,6 @@ public:
   void accept();
   /// Stops tracking and reverts to saved state.
   void revert();
-  /// \Returns the number of change entries recorded so far.
-  unsigned size() const { return Changes.size(); }
-  /// \Returns true if there are no change entries recorded so far.
-  bool empty() const { return Changes.empty(); }
 
 #ifndef NDEBUG
   void dump(raw_ostream &OS) const;
