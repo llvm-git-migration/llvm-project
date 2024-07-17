@@ -20,7 +20,8 @@
 namespace lldb_private {
 class OperatingSystemPythonInterface
     : virtual public OperatingSystemInterface,
-      virtual public ScriptedThreadPythonInterface {
+      virtual public ScriptedThreadPythonInterface,
+      public PluginInterface {
 public:
   OperatingSystemPythonInterface(ScriptInterpreterPythonImpl &interpreter);
 
@@ -41,6 +42,16 @@ public:
   StructuredData::DictionarySP GetRegisterInfo() override;
 
   std::optional<std::string> GetRegisterContextForTID(lldb::tid_t tid) override;
+
+  static void Initialize();
+
+  static void Terminate();
+
+  static llvm::StringRef GetPluginNameStatic() {
+    return "OperatingSystemPythonInterface";
+  }
+
+  llvm::StringRef GetPluginName() override { return GetPluginNameStatic(); }
 };
 } // namespace lldb_private
 
