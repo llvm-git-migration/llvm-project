@@ -20,6 +20,36 @@ declare float @tanf(float) #0
 declare double @llvm.tan.f64(double) #0
 declare float @llvm.tan.f32(float) #0
 
+declare double @acos(double) #0
+declare float @acosf(float) #0
+declare double @llvm.acos.f64(double) #0
+declare float @llvm.acos.f32(float) #0
+
+declare double @asin(double) #0
+declare float @asinf(float) #0
+declare double @llvm.asin.f64(double) #0
+declare float @llvm.asin.f32(float) #0
+
+declare double @atan(double) #0
+declare float @atanf(float) #0
+declare double @llvm.atan.f64(double) #0
+declare float @llvm.atan.f32(float) #0
+
+declare double @cosh(double) #0
+declare float @coshf(float) #0
+declare double @llvm.cosh.f64(double) #0
+declare float @llvm.cosh.f32(float) #0
+
+declare double @sinh(double) #0
+declare float @sinhf(float) #0
+declare double @llvm.sinh.f64(double) #0
+declare float @llvm.sinh.f32(float) #0
+
+declare double @tanh(double) #0
+declare float @tanhf(float) #0
+declare double @llvm.tanh.f64(double) #0
+declare float @llvm.tanh.f32(float) #0
+
 declare double @pow(double, double) #0
 declare float @powf(float, float) #0
 declare double @llvm.pow.f64(double, double) #0
@@ -367,6 +397,60 @@ for.body:
   %tmp = trunc i64 %iv to i32
   %conv = sitofp i32 %tmp to float
   %call = tail call float @llvm.tan.f32(float %conv)
+  %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
+  store float %call, ptr %arrayidx, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond = icmp eq i64 %iv.next, 1000
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:
+  ret void
+}
+
+define void @acos_f32(ptr nocapture %varray) {
+; CHECK-LABEL: @acos_f32(
+; CHECK:    [[TMP5:%.*]] = call <4 x float> @amd_vrs4_acosf(<4 x float> [[TMP4:%.*]])
+; CHECK:    ret void
+;
+; CHECK-AVX512-VF16-LABEL: @acos_f32(
+; CHECK-AVX512-VF16:    [[TMP5:%.*]] = call <16 x float> @amd_vrs16_acosf(<16 x float> [[TMP4:%.*]])
+; CHECK-AVX512-VF16:    ret void
+;
+entry:
+  br label %for.body
+
+for.body:
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %tmp = trunc i64 %iv to i32
+  %conv = sitofp i32 %tmp to float
+  %call = tail call float @acosf(float %conv)
+  %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
+  store float %call, ptr %arrayidx, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond = icmp eq i64 %iv.next, 1000
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:
+  ret void
+}
+
+define void @acos_f32_intrinsic(ptr nocapture %varray) {
+; CHECK-LABEL: @acos_f32_intrinsic(
+; CHECK:    [[TMP5:%.*]] = call <4 x float> @amd_vrs4_acosf(<4 x float> [[TMP4:%.*]])
+; CHECK:    ret void
+;
+; CHECK-AVX512-VF16-LABEL: @acos_f32_intrinsic(
+; CHECK-AVX512-VF16:    [[TMP5:%.*]] = call <16 x float> @amd_vrs16_acosf(<16 x float> [[TMP4:%.*]])
+; CHECK-AVX512-VF16:    ret void
+;
+entry:
+  br label %for.body
+
+for.body:
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %tmp = trunc i64 %iv to i32
+  %conv = sitofp i32 %tmp to float
+  %call = tail call float @llvm.acos.f32(float %conv)
   %arrayidx = getelementptr inbounds float, ptr %varray, i64 %iv
   store float %call, ptr %arrayidx, align 4
   %iv.next = add nuw nsw i64 %iv, 1
