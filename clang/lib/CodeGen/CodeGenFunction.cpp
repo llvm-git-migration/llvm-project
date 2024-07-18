@@ -2888,7 +2888,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
 
   bool SupportsIFunc = getContext().getTargetInfo().supportsIFunc();
   bool HasDefault = false;
-  int DefaultIndex = 0;
+  unsigned DefaultIndex = 0;
   // Check the each candidate function.
   for (unsigned Index = 0; Index < Options.size(); Index++) {
 
