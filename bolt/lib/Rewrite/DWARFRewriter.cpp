@@ -748,7 +748,7 @@ void DWARFRewriter::updateDebugInfo() {
   CUOffsetMap OffsetMap =
       finalizeTypeSections(DIEBlder, *Streamer, GDBIndexSection);
 
-  const bool SingleThreadedMode = opts::NoThreads;
+  const bool SingleThreadedMode = true;
   if (!SingleThreadedMode)
     DIEBlder.buildCompileUnits();
   if (SingleThreadedMode) {
