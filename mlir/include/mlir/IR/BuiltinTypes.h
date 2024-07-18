@@ -39,6 +39,11 @@ struct IntegerTypeStorage;
 struct TupleTypeStorage;
 } // namespace detail
 
+/// Type trait indicating that the type can be an operand to an elementwise op.
+template <typename ConcreteType>
+class MappableContainer
+    : public TypeTrait::TraitBase<ConcreteType, MappableContainer> {};
+
 //===----------------------------------------------------------------------===//
 // FloatType
 //===----------------------------------------------------------------------===//

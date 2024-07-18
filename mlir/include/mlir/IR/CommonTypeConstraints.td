@@ -89,6 +89,9 @@ def HasStaticShapePred :
 // Whether a type is a TupleType.
 def IsTupleTypePred : CPred<"::llvm::isa<::mlir::TupleType>($_self)">;
 
+// Whether a type has a MappableContainer trait.
+def IsMappableContainerPred : CPred<"$_self.hasTrait<MappableContainer>()">;
+
 //===----------------------------------------------------------------------===//
 // Type definitions
 //===----------------------------------------------------------------------===//
@@ -402,6 +405,10 @@ class HasRankGreaterOrEqualPred<int rank> : And<[
     HasRankPred,
     CPred<[{::llvm::cast<::mlir::ShapedType>($_self).getRank() >= }] # rank>
 ]>;
+
+// Mappable types.
+class MappableContainerOf<list<Type> allowedTypes> :
+  ShapedContainerType<allowedTypes, IsMappableContainerPred, "mapable container">;
 
 // Vector types.
 
@@ -842,10 +849,15 @@ class NestedTupleOf<list<Type> allowedTypes> :
 // Common type constraints
 //===----------------------------------------------------------------------===//
 // Type constraint for types that are "like" some type or set of types T, that is
-// they're either a T, a vector of Ts, or a tensor of Ts
+// they're either a T, a vector of Ts, or a tensor of Ts.
 class TypeOrContainer<Type allowedType, string name> : TypeConstraint<Or<[
-  allowedType.predicate, VectorOf<[allowedType]>.predicate,
-  TensorOf<[allowedType]>.predicate]>,
+  allowedType.predicate, MappableContainerOf<[allowedType]>.predicate]>,
+  name>;
+
+// Type constraint for types that are "like" some type or set of types T, that is
+// they're either a T or a mapable container of Ts.
+class TypeOrMappableContainer<Type allowedType, string name> : TypeConstraint<Or<[
+  allowedType.predicate, MappableContainerOf<[allowedType]>.predicate]>,
   name>;
 
 // Temporary constraint to allow gradual transition to supporting 0-D vectors.
@@ -864,7 +876,7 @@ def BoolLikeOfAnyRank : TypeOrContainerOfAnyRank<I1, "bool-like">;
 
 // Type constraint for signless-integer-like types: signless integers, indices,
 // vectors of signless integers or indices, tensors of signless integers.
-def SignlessIntegerLike : TypeOrContainer<AnySignlessIntegerOrIndex,
+def SignlessIntegerLike : TypeOrMappableContainer<AnySignlessIntegerOrIndex,
     "signless-integer-like">;
 
 def SignlessIntegerLikeOfAnyRank : TypeOrContainerOfAnyRank<
