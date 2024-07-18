@@ -5179,8 +5179,6 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
   LLT ShiftAmtTy = getTargetLowering().getPreferredShiftAmountTy(Ty);
   LLT ScalarShiftAmtTy = ShiftAmtTy.getScalarType();
 
-  unsigned KnownLeadingZeros =
-      KB ? KB->getKnownBits(LHS).countMinLeadingZeros() : 0;
   auto &MIB = Builder;
 
   bool UseSRL = false;
@@ -5226,6 +5224,8 @@ MachineInstr *CombinerHelper::buildUDivUsingMul(MachineInstr &MI) {
     // TODO: Use undef values for divisor of 1.
     if (!Divisor.isOne()) {
 
+      unsigned KnownLeadingZeros =
+          KB ? KB->getKnownBits(LHS).countMinLeadingZeros() : 0;
       // UnsignedDivisionByConstantInfo doesn't work correctly if leading zeros
       // in the dividend exceeds the leading zeros for the divisor.
       UnsignedDivisionByConstantInfo magics =
