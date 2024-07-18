@@ -644,7 +644,6 @@ void DWARFRewriter::updateDebugInfo() {
                 std::move(DWORangeListsSectionWriter);
           }
           AddressWritersByCU[CU.getOffset()] = std::move(AddrW);
-
         } else {
           auto AddrW =
               std::make_unique<DebugAddrWriter>(&BC, CU.getAddressByteSize());
@@ -669,18 +668,17 @@ void DWARFRewriter::updateDebugInfo() {
   DWPState State;
   if (opts::WriteDWP)
     initDWPState(State);
-  auto processSplitCU = [&](DWARFUnit *Unit, DIEBuilder *DIEBlder) {
+  auto processSplitCU = [&](DWARFUnit &Unit, DIEBuilder &DIEBlder) {
     std::optional<DWARFUnit *> SplitCU;
-    std::optional<uint64_t> RangesBase;
-    std::optional<uint64_t> DWOId = Unit->getDWOId();
+    std::optional<uint64_t> DWOId = Unit.getDWOId();
     if (DWOId)
       SplitCU = BC.getDWOCU(*DWOId);
     if (!SplitCU)
       return;
     DebugAddrWriter &AddressWriter =
-        *AddressWritersByCU[Unit->getOffset()].get();
+        *AddressWritersByCU[Unit.getOffset()].get();
     DIEBuilder DWODIEBuilder(BC, &(*SplitCU)->getContext(), DebugNamesTable,
-                             Unit);
+                             &Unit);
     DWODIEBuilder.buildDWOUnit(**SplitCU);
     std::string DWOName = "";
     std::optional<std::string> DwarfOutputPath =
@@ -689,56 +687,56 @@ void DWARFRewriter::updateDebugInfo() {
             : std::optional<std::string>(opts::DwarfOutputPath.c_str());
     {
       std::lock_guard<std::mutex> Lock(AccessMutex);
-      DWOName = DIEBlder->updateDWONameCompDir(
-          *StrOffstsWriter, *StrWriter, *Unit, DwarfOutputPath, std::nullopt);
+      DWOName = DIEBlder.updateDWONameCompDir(
+          *StrOffstsWriter, *StrWriter, Unit, DwarfOutputPath, std::nullopt);
     }
     DebugStrOffsetsWriter DWOStrOffstsWriter(BC);
     DebugStrWriter DWOStrWriter((*SplitCU)->getContext(), true);
     DWODIEBuilder.updateDWONameCompDirForTypes(
         DWOStrOffstsWriter, DWOStrWriter, **SplitCU, DwarfOutputPath, DWOName);
-    DebugLoclistWriter DebugLocDWoWriter(*Unit, Unit->getVersion(), true,
+    DebugLoclistWriter DebugLocDWoWriter(Unit, Unit.getVersion(), true,
                                          AddressWriter);
     DebugRangesSectionWriter *TempRangesSectionWriter =
-        Unit->getVersion() >= 5 ? RangeListsWritersByCU[*DWOId].get()
+        Unit.getVersion() >= 5 ? RangeListsWritersByCU[*DWOId].get()
                                 : LegacyRangesWritersByCU[*DWOId].get();
 
     updateUnitDebugInfo(*(*SplitCU), DWODIEBuilder, DebugLocDWoWriter,
                         *TempRangesSectionWriter, AddressWriter);
     DebugLocDWoWriter.finalize(DWODIEBuilder,
                                *DWODIEBuilder.getUnitDIEbyUnit(**SplitCU));
-    if (Unit->getVersion() >= 5)
+    if (Unit.getVersion() >= 5)
       TempRangesSectionWriter->finalizeSection();
 
-    emitDWOBuilder(DWOName, DWODIEBuilder, *this, **SplitCU, *Unit, State,
+    emitDWOBuilder(DWOName, DWODIEBuilder, *this, **SplitCU, Unit, State,
                    DebugLocDWoWriter, DWOStrOffstsWriter, DWOStrWriter,
                    GDBIndexSection);
   };
-  auto processMainBinaryCU = [&](DWARFUnit *Unit, DIEBuilder *DIEBlder,
-                                 DebugLocWriter *DebugLocWriter) {
+  auto processMainBinaryCU = [&](DWARFUnit &Unit, DIEBuilder &DIEBlder,
+                                 DebugLocWriter &DebugLocWriter) {
     DebugAddrWriter &AddressWriter =
-        *AddressWritersByCU[Unit->getOffset()].get();
+        *AddressWritersByCU[Unit.getOffset()].get();
     DebugRangesSectionWriter &RangesSectionWriter =
-        Unit->getVersion() >= 5 ? *RangeListsSectionWriter.get()
+        Unit.getVersion() >= 5 ? *RangeListsSectionWriter.get()
                                 : *LegacyRangesSectionWriter.get();
     std::optional<uint64_t> RangesBase;
     std::optional<DWARFUnit *> SplitCU;
-    std::optional<uint64_t> DWOId = Unit->getDWOId();
+    std::optional<uint64_t> DWOId = Unit.getDWOId();
     if (DWOId)
       SplitCU = BC.getDWOCU(*DWOId);
-    if (Unit->getVersion() >= 5) {
-      RangesBase = RangesSectionWriter->getSectionOffset() +
+    if (Unit.getVersion() >= 5) {
+      RangesBase = RangesSectionWriter.getSectionOffset() +
                    getDWARF5RngListLocListHeaderSize();
-      RangesSectionWriter->initSection(*Unit);
-      StrOffstsWriter->finalizeSection(*Unit, *DIEBlder);
+      RangesSectionWriter.initSection(Unit);
+      StrOffstsWriter->finalizeSection(Unit, DIEBlder);
     } else if (SplitCU) {
       RangesBase = LegacyRangesSectionWriter.get()->getSectionOffset();
     }
 
-    updateUnitDebugInfo(*Unit, *DIEBlder, *DebugLocWriter, RangesSectionWriter,
+    updateUnitDebugInfo(Unit, DIEBlder, DebugLocWriter, RangesSectionWriter,
                         AddressWriter, RangesBase);
-    DebugLocWriter->finalize(*DIEBlder, *DIEBlder->getUnitDIEbyUnit(*Unit));
-    if (Unit->getVersion() >= 5)
-      RangesSectionWriter->finalizeSection();
+    DebugLocWriter.finalize(DIEBlder, *DIEBlder.getUnitDIEbyUnit(Unit));
+    if (Unit.getVersion() >= 5)
+      RangesSectionWriter.finalizeSection();
   };
 
   DIEBuilder DIEBlder(BC, BC.DwCtx.get(), DebugNamesTable);
