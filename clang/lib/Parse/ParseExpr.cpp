@@ -1164,8 +1164,7 @@ ExprResult Parser::ParseCastExpression(CastParseKind ParseKind,
   case tok::annot_non_type_dependent:
   case tok::annot_non_type_undeclared: {
     CXXScopeSpec SS;
-    Token Replacement;
-    Res = tryParseCXXIdExpression(SS, isAddressOfOperand, Replacement);
+    Res = tryParseCXXIdExpression(SS, isAddressOfOperand);
     assert(!Res.isUnset() &&
            "should not perform typo correction on annotation token");
     break;
