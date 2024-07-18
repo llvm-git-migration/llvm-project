@@ -168,6 +168,27 @@ using StatementSemanticsPass2 = SemanticsVisitor<AllocateChecker,
     ReturnStmtChecker, SelectRankConstructChecker, SelectTypeChecker,
     StopChecker>;
 
+static void WarnUndefinedFunctionResult(
+    SemanticsContext &context, const Scope &scope) {
+  if (const Symbol * symbol{scope.symbol()}) {
+    if (const auto *subp{symbol->detailsIf<SubprogramDetails>()}) {
+      if (!subp->isInterface() && !subp->stmtFunction()) {
+        if (const Symbol * result{FindFunctionResult(*symbol)}) {
+          if (!context.IsSymbolDefined(*result)) {
+            context.Say(
+                symbol->name(), "Function result is never defined"_warn_en_US);
+          }
+        }
+      }
+    }
+  }
+  if (!scope.IsModuleFile()) {
+    for (const Scope &child : scope.children()) {
+      WarnUndefinedFunctionResult(context, child);
+    }
+  }
+}
+
 static bool PerformStatementSemantics(
     SemanticsContext &context, parser::Program &program) {
   ResolveNames(context, program, context.globalScope());
@@ -187,6 +208,9 @@ static bool PerformStatementSemantics(
     SemanticsVisitor<CUDAChecker>{context}.Walk(program);
   }
   if (!context.AnyFatalError()) {
+    if (context.ShouldWarn(common::UsageWarning::UndefinedFunctionResult)) {
+      WarnUndefinedFunctionResult(context, context.globalScope());
+    }
     pass2.CompileDataInitializationsIntoInitializers();
   }
   return !context.AnyFatalError();
@@ -710,6 +734,21 @@ CommonBlockList SemanticsContext::GetCommonBlocks() const {
     return commonBlockMap_->GetCommonBlocks();
   }
   return {};
+}
+
+void SemanticsContext::NoteDefinedSymbol(const Symbol &symbol) {
+  isDefined_.insert(symbol);
+  if (IsFunctionResult(symbol)) { // FUNCTION or ENTRY
+    if (const Symbol * func{symbol.owner().symbol()}) {
+      if (const Symbol * result{FindFunctionResult(*func)}) {
+        isDefined_.insert(*result);
+      }
+    }
+  }
+}
+
+bool SemanticsContext::IsSymbolDefined(const Symbol &symbol) const {
+  return isDefined_.find(symbol) != isDefined_.end();
 }
 
 } // namespace Fortran::semantics

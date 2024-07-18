@@ -30,6 +30,7 @@ ENUM_CLASS(DefinabilityFlag,
     DuplicatesAreOk, // vector subscript may have duplicates
     PointerDefinition, // a pointer is being defined, not its target
     AcceptAllocatable, // treat allocatable as if it were a pointer
+    SourcedAllocation, // ALLOCATE(a,SOURCE=)
     PolymorphicOkInPure) // don't check for polymorphic type in pure subprogram
 
 using DefinabilityFlags =
