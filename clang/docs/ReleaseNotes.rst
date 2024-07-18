@@ -535,6 +535,9 @@ Removed Compiler Flags
 
 Attribute Changes in Clang
 --------------------------
+- Clang now disallows more than one ``__attribute__((ownership_returns(class, idx)))`` with
+  different class names attached to one function.
+
 - Introduced a new function attribute ``__attribute__((amdgpu_max_num_work_groups(x, y, z)))`` or
   ``[[clang::amdgpu_max_num_work_groups(x, y, z)]]`` for the AMDGPU target. This attribute can be
   attached to HIP or OpenCL kernel function definitions to provide an optimization hint. The parameters
@@ -1283,6 +1286,11 @@ Static Analyzer
 
 New features
 ^^^^^^^^^^^^
+
+- MallocChecker now checks for ``ownership_returns(class, idx)`` and ``ownership_takes(class, idx)``
+  attributes with class names different from "malloc". Clang static analyzer now reports an error
+  if class of allocation and deallocation function mismatches.
+  `Documentation <https://clang.llvm.org/docs/analyzer/checkers.html#unix-mismatcheddeallocator-c-c>`__.
 
 - The attribute ``[[clang::suppress]]`` can now be applied to declarations.
   (#GH80371)
