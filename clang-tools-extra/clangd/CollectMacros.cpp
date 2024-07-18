@@ -26,10 +26,11 @@ Range MacroOccurrence::toRange(const SourceManager &SM) const {
 
 void CollectMainFileMacros::add(const Token &MacroNameTok, const MacroInfo *MI,
                                 bool IsDefinition, bool InIfCondition) {
-  if (!InMainFile)
-    return;
   auto Loc = MacroNameTok.getLocation();
   if (Loc.isInvalid() || Loc.isMacroID())
+    return;
+  auto FID = SM.getFileID(Loc);
+  if (FID != SM.getMainFileID())
     return;
 
   auto Name = MacroNameTok.getIdentifierInfo()->getName();
@@ -42,10 +43,8 @@ void CollectMainFileMacros::add(const Token &MacroNameTok, const MacroInfo *MI,
     Out.UnknownMacros.push_back({Start, End, IsDefinition, InIfCondition});
 }
 
-void CollectMainFileMacros::FileChanged(SourceLocation Loc, FileChangeReason,
-                                        SrcMgr::CharacteristicKind, FileID) {
-  InMainFile = isInsideMainFile(Loc, SM);
-}
+void CollectMainFileMacros::FileChanged(SourceLocation, FileChangeReason,
+                                        SrcMgr::CharacteristicKind, FileID) {}
 
 void CollectMainFileMacros::MacroExpands(const Token &MacroName,
                                          const MacroDefinition &MD,
@@ -93,7 +92,8 @@ void CollectMainFileMacros::Defined(const Token &MacroName,
 
 void CollectMainFileMacros::SourceRangeSkipped(SourceRange R,
                                                SourceLocation EndifLoc) {
-  if (!InMainFile)
+  auto FID = SM.getFileID(R.getBegin());
+  if (FID != SM.getMainFileID())
     return;
   Position Begin = sourceLocToPosition(SM, R.getBegin());
   Position End = sourceLocToPosition(SM, R.getEnd());
