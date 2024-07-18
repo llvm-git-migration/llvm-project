@@ -572,6 +572,23 @@ void LazyValueInfoImpl::solve() {
 std::optional<ValueLatticeElement>
 LazyValueInfoImpl::getBlockValue(Value *Val, BasicBlock *BB,
                                  Instruction *CxtI) {
+  if (auto *CV = dyn_cast<ConstantVector>(Val)) {
+    // Must be vector of integers. Merge these elements to create
+    // the range.
+    ValueLatticeElement Res;
+    for (unsigned i = 0, e = CV->getNumOperands(); i != e; ++i) {
+      Constant *Elem = CV->getAggregateElement(i);
+      if (isa<PoisonValue>(Elem))
+        continue;
+      std::optional<ValueLatticeElement> ElemVal =
+          getBlockValue(Elem, BB, CxtI);
+      if (!ElemVal)
+        return std::nullopt;
+      Res.mergeIn(*ElemVal);
+    }
+    return Res;
+  }
+
   // If already a constant, there is nothing to compute.
   if (Constant *VC = dyn_cast<Constant>(Val))
     return ValueLatticeElement::get(VC);
@@ -1045,33 +1062,20 @@ LazyValueInfoImpl::solveBlockValueIntrinsic(IntrinsicInst *II, BasicBlock *BB) {
 
 std::optional<ValueLatticeElement>
 LazyValueInfoImpl::solveBlockValueInsertElement(InsertElementInst *IEI,
-                                                    BasicBlock *BB) {
+                                                BasicBlock *BB) {
   std::optional<ValueLatticeElement> OptEltVal =
       getBlockValue(IEI->getOperand(1), BB, IEI);
   if (!OptEltVal)
     return std::nullopt;
-  ValueLatticeElement &EltVal = *OptEltVal;
+  ValueLatticeElement &Res = *OptEltVal;
 
-  if (auto *CV = dyn_cast<ConstantVector>(IEI->getOperand(0))) {
-    // Must be vector of integers. Merge these elements to create
-    // the range.
-    for (unsigned i = 0, e = CV->getNumOperands(); i != e; ++i) {
-      Constant *Elem = CV->getAggregateElement(i);
-      if (isa<PoisonValue>(Elem))
-        continue;
-      std::optional<ConstantRange> CR = getRangeFor(Elem, IEI, BB);
-      if (!CR)
-        return std::nullopt;
-      EltVal.mergeIn(ValueLatticeElement::getRange(*CR));
-    }
-  } else if (!isa<PoisonValue>(IEI->getOperand(0))) {
-    std::optional<ValueLatticeElement> OptVecResult =
-        solveBlockValueImpl(IEI->getOperand(0), BB);
-    if (!OptVecResult)
-      return std::nullopt;
-    EltVal.mergeIn(*OptVecResult);
-  }
-  return EltVal;
+  std::optional<ValueLatticeElement> OptVecVal =
+      getBlockValue(IEI->getOperand(0), BB, IEI);
+  if (!OptVecVal)
+    return std::nullopt;
+
+  Res.mergeIn(*OptVecVal);
+  return Res;
 }
 
 std::optional<ValueLatticeElement>
