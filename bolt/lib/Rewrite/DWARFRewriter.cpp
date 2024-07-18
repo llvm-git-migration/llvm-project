@@ -698,7 +698,7 @@ void DWARFRewriter::updateDebugInfo() {
                                          AddressWriter);
     DebugRangesSectionWriter *TempRangesSectionWriter =
         Unit.getVersion() >= 5 ? RangeListsWritersByCU[*DWOId].get()
-                                : LegacyRangesWritersByCU[*DWOId].get();
+                               : LegacyRangesWritersByCU[*DWOId].get();
 
     updateUnitDebugInfo(*(*SplitCU), DWODIEBuilder, DebugLocDWoWriter,
                         *TempRangesSectionWriter, AddressWriter);
@@ -717,7 +717,7 @@ void DWARFRewriter::updateDebugInfo() {
         *AddressWritersByCU[Unit.getOffset()].get();
     DebugRangesSectionWriter &RangesSectionWriter =
         Unit.getVersion() >= 5 ? *RangeListsSectionWriter.get()
-                                : *LegacyRangesSectionWriter.get();
+                               : *LegacyRangesSectionWriter.get();
     std::optional<uint64_t> RangesBase;
     std::optional<DWARFUnit *> SplitCU;
     std::optional<uint64_t> DWOId = Unit.getDWOId();
