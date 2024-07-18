@@ -2166,10 +2166,8 @@ public:
         Opcode(I.getOpcode()), Scale(Scale) {}
   ~VPPartialReductionRecipe() override = default;
   VPPartialReductionRecipe *clone() override {
-    auto *R =
-        new VPPartialReductionRecipe(*getUnderlyingInstr(), operands(), Scale);
-    R->transferFlags(*this);
-    return R;
+    llvm_unreachable("Partial reductions with epilogue vectorization isn't supported yet.");
+    return nullptr;
   }
   VP_CLASSOF_IMPL(VPDef::VPPartialReductionSC)
   /// Generate the reduction in the loop
