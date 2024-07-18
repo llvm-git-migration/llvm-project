@@ -1248,8 +1248,17 @@ bool InstCombinerImpl::replaceInInstruction(Value *V, Value *Old, Value *New,
     return false;
 
   auto *I = dyn_cast<Instruction>(V);
-  if (!I || !I->hasOneUse() || !isSafeToSpeculativelyExecute(I))
+  if (!I || !I->hasOneUse() || !isSafeToSpeculativelyExecuteWithoutInstrInfo(I))
     return false;
+
+  // Special handling for replacing called operand
+  if (auto *Call = dyn_cast<CallInst>(I)) {
+    if (Call->getCalledOperand() == Old) {
+      auto *Callee = dyn_cast<Function>(New);
+      if (!Callee || !Callee->isSpeculatable())
+        return false;
+    }
+  }
 
   bool Changed = false;
   for (Use &U : I->operands()) {

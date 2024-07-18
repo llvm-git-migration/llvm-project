@@ -6756,19 +6756,17 @@ bool llvm::mustSuppressSpeculation(const LoadInst &LI) {
     F.hasFnAttribute(Attribute::SanitizeHWAddress);
 }
 
-bool llvm::isSafeToSpeculativelyExecute(const Instruction *Inst,
-                                        const Instruction *CtxI,
-                                        AssumptionCache *AC,
-                                        const DominatorTree *DT,
-                                        const TargetLibraryInfo *TLI) {
+bool llvm::isSafeToSpeculativelyExecute(
+    const Instruction *Inst, const Instruction *CtxI, AssumptionCache *AC,
+    const DominatorTree *DT, const TargetLibraryInfo *TLI, bool UseInstrInfo) {
   return isSafeToSpeculativelyExecuteWithOpcode(Inst->getOpcode(), Inst, CtxI,
-                                                AC, DT, TLI);
+                                                AC, DT, TLI, UseInstrInfo);
 }
 
 bool llvm::isSafeToSpeculativelyExecuteWithOpcode(
     unsigned Opcode, const Instruction *Inst, const Instruction *CtxI,
-    AssumptionCache *AC, const DominatorTree *DT,
-    const TargetLibraryInfo *TLI) {
+    AssumptionCache *AC, const DominatorTree *DT, const TargetLibraryInfo *TLI,
+    bool UseInstrInfo) {
 #ifndef NDEBUG
   if (Inst->getOpcode() != Opcode) {
     // Check that the operands are actually compatible with the Opcode override.
@@ -6796,12 +6794,15 @@ bool llvm::isSafeToSpeculativelyExecuteWithOpcode(
   case Instruction::URem: {
     // x / y is undefined if y == 0.
     const APInt *V;
-    if (match(Inst->getOperand(1), m_APInt(V)))
+    if (UseInstrInfo && match(Inst->getOperand(1), m_APInt(V)))
       return *V != 0;
     return false;
   }
   case Instruction::SDiv:
   case Instruction::SRem: {
+    if (!UseInstrInfo)
+      return false;
+
     // x / y is undefined if y == 0 or x == INT_MIN and y == -1
     const APInt *Numerator, *Denominator;
     if (!match(Inst->getOperand(1), m_APInt(Denominator)))
@@ -6820,6 +6821,9 @@ bool llvm::isSafeToSpeculativelyExecuteWithOpcode(
     return false;
   }
   case Instruction::Load: {
+    if (!UseInstrInfo)
+      return false;
+
     const LoadInst *LI = dyn_cast<LoadInst>(Inst);
     if (!LI)
       return false;
