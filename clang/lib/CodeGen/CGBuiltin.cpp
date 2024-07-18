@@ -14431,7 +14431,7 @@ Value *CodeGenFunction::EmitRISCVFeatureBitsLength(unsigned MaxGroupIDUsed) {
 
   Value *UsedMaxGroupID = Builder.getInt64(MaxGroupIDUsed);
   Value *GroupIDResult =
-      Builder.CreateICmpULT(LoadMaxGroupID(), UsedMaxGroupID);
+      Builder.CreateICmpUGT(LoadMaxGroupID(), UsedMaxGroupID);
 
   return GroupIDResult;
 }

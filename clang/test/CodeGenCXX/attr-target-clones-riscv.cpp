@@ -40,7 +40,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 [[TMP0]], 0
+// CHECK-NEXT:    [[TMP1:%.*]] = icmp ugt i64 [[TMP0]], 0
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
@@ -64,7 +64,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 [[TMP0]], 0
+// CHECK-NEXT:    [[TMP1:%.*]] = icmp ugt i64 [[TMP0]], 0
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
@@ -76,7 +76,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    ret ptr @"_Z4foo2v.arch=+zbb"
 // CHECK:       resolver_else:
 // CHECK-NEXT:    [[TMP6:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP7:%.*]] = icmp ult i64 [[TMP6]], 0
+// CHECK-NEXT:    [[TMP7:%.*]] = icmp ugt i64 [[TMP6]], 0
 // CHECK-NEXT:    br i1 [[TMP7]], label [[RESOLVER_COND1:%.*]], label [[RESOLVER_ELSE3:%.*]]
 // CHECK:       resolver_cond1:
 // CHECK-NEXT:    [[TMP8:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
@@ -100,7 +100,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 [[TMP0]], 0
+// CHECK-NEXT:    [[TMP1:%.*]] = icmp ugt i64 [[TMP0]], 0
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
@@ -124,7 +124,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 [[TMP0]], 0
+// CHECK-NEXT:    [[TMP1:%.*]] = icmp ugt i64 [[TMP0]], 0
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
@@ -160,7 +160,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
 // CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i64 [[TMP0]], 0
+// CHECK-NEXT:    [[TMP1:%.*]] = icmp ugt i64 [[TMP0]], 0
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
