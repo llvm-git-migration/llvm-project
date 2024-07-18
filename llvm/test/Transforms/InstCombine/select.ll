@@ -4713,3 +4713,22 @@ define i8 @select_knownbits_simplify_missing_noundef(i8 %x)  {
   %res = select i1 %cmp, i8 %and, i8 0
   ret i8 %res
 }
+
+@arr = global [2 x i32] zeroinitializer, align 4
+@cst = constant ptr getelementptr (i8, ptr @arr, i64 4)
+
+define i32 @pr99436() {
+; CHECK-LABEL: @pr99436(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    store i1 true, ptr poison, align 1
+; CHECK-NEXT:    ret i32 poison
+;
+entry:
+  %alloc = alloca ptr, align 8
+  call void @llvm.memcpy.p0.p0.i64(ptr align 8 %alloc, ptr align 8 @cst, i64 8, i1 false)
+  %ptr = load ptr, ptr %alloc, align 8
+  %cmp = icmp eq ptr %ptr, null
+  %val = load i32, ptr %ptr, align 4
+  %ret = select i1 %cmp, i32 %val, i32 0
+  ret i32 %ret
+}
