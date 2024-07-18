@@ -94,14 +94,13 @@ define <4 x i32> @test_urem_even_neg100(<4 x i32> %X) nounwind {
 define <4 x i32> @test_urem_odd_undef1(<4 x i32> %X) nounwind {
 ; CHECK-LABEL: test_urem_odd_undef1:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    mov w8, #34079 // =0x851f
-; CHECK-NEXT:    movk w8, #20971, lsl #16
+; CHECK-NEXT:    mov w8, #28836 // =0x70a4
+; CHECK-NEXT:    movk w8, #2621, lsl #16
 ; CHECK-NEXT:    dup v1.4s, w8
 ; CHECK-NEXT:    umull2 v2.2d, v0.4s, v1.4s
 ; CHECK-NEXT:    umull v1.2d, v0.2s, v1.2s
 ; CHECK-NEXT:    uzp2 v1.4s, v1.4s, v2.4s
 ; CHECK-NEXT:    movi v2.4s, #25
-; CHECK-NEXT:    ushr v1.4s, v1.4s, #3
 ; CHECK-NEXT:    mls v0.4s, v1.4s, v2.4s
 ; CHECK-NEXT:    movi v1.4s, #1
 ; CHECK-NEXT:    cmeq v0.4s, v0.4s, #0
@@ -116,14 +115,16 @@ define <4 x i32> @test_urem_odd_undef1(<4 x i32> %X) nounwind {
 define <4 x i32> @test_urem_even_undef1(<4 x i32> %X) nounwind {
 ; CHECK-LABEL: test_urem_even_undef1:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    mov w8, #34079 // =0x851f
-; CHECK-NEXT:    movk w8, #20971, lsl #16
+; CHECK-NEXT:    mov w8, #49807 // =0xc28f
+; CHECK-NEXT:    movk w8, #10485, lsl #16
 ; CHECK-NEXT:    dup v1.4s, w8
 ; CHECK-NEXT:    umull2 v2.2d, v0.4s, v1.4s
 ; CHECK-NEXT:    umull v1.2d, v0.2s, v1.2s
 ; CHECK-NEXT:    uzp2 v1.4s, v1.4s, v2.4s
+; CHECK-NEXT:    sub v2.4s, v0.4s, v1.4s
+; CHECK-NEXT:    usra v1.4s, v2.4s, #1
 ; CHECK-NEXT:    movi v2.4s, #100
-; CHECK-NEXT:    ushr v1.4s, v1.4s, #5
+; CHECK-NEXT:    ushr v1.4s, v1.4s, #4
 ; CHECK-NEXT:    mls v0.4s, v1.4s, v2.4s
 ; CHECK-NEXT:    movi v1.4s, #1
 ; CHECK-NEXT:    cmeq v0.4s, v0.4s, #0
