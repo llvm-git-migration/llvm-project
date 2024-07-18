@@ -498,7 +498,7 @@ AMDGPUTargetLowering::AMDGPUTargetLowering(const TargetMachine &TM,
       MVT::i64, Custom);
 
   for (auto VT : {MVT::i8, MVT::i16})
-    setOperationAction({ISD::CTLZ, ISD::CTLZ_ZERO_UNDEF}, VT, Custom);
+    setOperationPromotedToType({ISD::CTLZ, ISD::CTLZ_ZERO_UNDEF}, VT, MVT::i32);
 
   static const MVT::SimpleValueType VectorIntTypes[] = {
       MVT::v2i32, MVT::v3i32, MVT::v4i32, MVT::v5i32, MVT::v6i32, MVT::v7i32,

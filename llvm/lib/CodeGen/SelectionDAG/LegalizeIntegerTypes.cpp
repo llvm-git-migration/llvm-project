@@ -674,6 +674,17 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
   EVT NVT = TLI.getTypeToTransformTo(*DAG.getContext(), OVT);
   SDLoc dl(N);
 
+  bool IsDefaultPromotion =
+      TLI.getOperationAction(N->getOpcode(), OVT) != TargetLowering::Promote;
+  if (!IsDefaultPromotion) {
+    EVT NVTPromote = TLI.getTypeToPromoteTo(N->getOpcode(), OVT.getSimpleVT());
+
+    if (NVT == NVTPromote)
+      IsDefaultPromotion = false;
+    else
+      NVT = NVTPromote;
+  }
+
   // If the larger CTLZ isn't supported by the target, try to expand now.
   // If we expand later we'll end up with more operations since we lost the
   // original type.
@@ -701,7 +712,10 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
 
     if (!N->isVPOpcode()) {
       // Zero extend to the promoted type and do the count there.
-      SDValue Op = ZExtPromotedInteger(N->getOperand(0));
+      SDValue Op = IsDefaultPromotion
+                       ? ZExtPromotedInteger(N->getOperand(0))
+                       : DAG.getZExtOrTrunc(N->getOperand(0), dl, NVT);
+
       return DAG.getNode(ISD::SUB, dl, NVT,
                          DAG.getNode(N->getOpcode(), dl, NVT, Op),
                          ExtractLeadingBits);
@@ -709,7 +723,10 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
     SDValue Mask = N->getOperand(1);
     SDValue EVL = N->getOperand(2);
     // Zero extend to the promoted type and do the count there.
-    SDValue Op = VPZExtPromotedInteger(N->getOperand(0), Mask, EVL);
+    SDValue Op =
+        IsDefaultPromotion
+            ? VPZExtPromotedInteger(N->getOperand(0), Mask, EVL)
+            : DAG.getVPZExtOrTrunc(dl, NVT, N->getOperand(0), Mask, EVL);
     return DAG.getNode(ISD::VP_SUB, dl, NVT,
                        DAG.getNode(N->getOpcode(), dl, NVT, Op, Mask, EVL),
                        ExtractLeadingBits, Mask, EVL);
@@ -717,7 +734,9 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
   if (CtlzOpcode == ISD::CTLZ_ZERO_UNDEF ||
       CtlzOpcode == ISD::VP_CTLZ_ZERO_UNDEF) {
     // Any Extend the argument
-    SDValue Op = GetPromotedInteger(N->getOperand(0));
+    SDValue Op = IsDefaultPromotion
+                     ? GetPromotedInteger(N->getOperand(0))
+                     : DAG.getAnyExtOrTrunc(N->getOperand(0), dl, NVT);
     // Op = Op << (sizeinbits(NVT) - sizeinbits(Old VT))
     unsigned SHLAmount = NVT.getScalarSizeInBits() - OVT.getScalarSizeInBits();
     auto ShiftConst =
