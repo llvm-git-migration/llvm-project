@@ -898,14 +898,14 @@ bool ScriptParser::readSectionDirective(OutputSection *cmd, StringRef tok1, Stri
 void ScriptParser::readSectionAddressType(OutputSection *cmd) {
   // Temporarily set inExpr to support TYPE=<value> without spaces.
   bool saved = std::exchange(inExpr, true);
-  bool isDirective = readSectionDirective(cmd, peek(), peek2());
+  bool isDirective = readSectionDirective(cmd, peek(), peek(/*ll2=*/true));
   inExpr = saved;
   if (isDirective)
     return;
 
   cmd->addrExpr = readExpr();
-  if (peek() == "(" && !readSectionDirective(cmd, "(", peek2()))
-    setError("unknown section directive: " + peek2());
+  if (peek() == "(" && !readSectionDirective(cmd, "(", peek(/*ll2=*/true)))
+    setError("unknown section directive: " + peek(/*ll2=*/true));
 }
 
 static Expr checkAlignment(Expr e, std::string &loc) {

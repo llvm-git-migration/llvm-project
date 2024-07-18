@@ -264,20 +264,14 @@ StringRef ScriptLexer::next() {
   return tokens[pos++];
 }
 
-StringRef ScriptLexer::peek() {
-  StringRef tok = next();
-  if (errorCount())
-    return "";
-  pos = pos - 1;
-  return tok;
-}
+StringRef ScriptLexer::peek(bool ll2) {
+  if (ll2)
+    skip();
 
-StringRef ScriptLexer::peek2() {
-  skip();
   StringRef tok = next();
   if (errorCount())
     return "";
-  pos = pos - 2;
+  pos = ll2 ? pos - 2 : pos - 1;
   return tok;
 }
 
