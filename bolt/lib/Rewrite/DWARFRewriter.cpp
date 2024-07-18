@@ -703,7 +703,7 @@ void DWARFRewriter::updateDebugInfo() {
       TempRangesSectionWriter = RangeListsWritersByCU[*DWOId].get();
     else
       TempRangesSectionWriter = LegacyRangesWritersByCU[*DWOId].get();
-  
+
     updateUnitDebugInfo(*(*SplitCU), DWODIEBuilder, DebugLocDWoWriter,
                         *TempRangesSectionWriter, AddressWriter);
     DebugLocDWoWriter.finalize(DWODIEBuilder,
@@ -732,10 +732,10 @@ void DWARFRewriter::updateDebugInfo() {
                    getDWARF5RngListLocListHeaderSize();
       RangesSectionWriter->initSection(*Unit);
       StrOffstsWriter->finalizeSection(*Unit, *DIEBlder);
-    } else if(SplitCU) {
+    } else if (SplitCU) {
       RangesBase = LegacyRangesSectionWriter.get()->getSectionOffset();
     }
-  
+
     updateUnitDebugInfo(*Unit, *DIEBlder, *DebugLocWriter, RangesSectionWriter,
                         AddressWriter, RangesBase);
     DebugLocWriter->finalize(*DIEBlder, *DIEBlder->getUnitDIEbyUnit(*Unit));
