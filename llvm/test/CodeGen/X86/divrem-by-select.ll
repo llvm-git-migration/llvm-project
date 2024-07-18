@@ -28,14 +28,13 @@ define <2 x i64> @udiv_identity_const(<2 x i1> %c, <2 x i64> %x) {
 ; CHECK-X64-V4-NEXT:    vpsllq $63, %xmm0, %xmm0
 ; CHECK-X64-V4-NEXT:    vpmovq2m %xmm0, %k1
 ; CHECK-X64-V4-NEXT:    vpextrq $1, %xmm1, %rdx
-; CHECK-X64-V4-NEXT:    movabsq $3353953467947191203, %rax # imm = 0x2E8BA2E8BA2E8BA3
+; CHECK-X64-V4-NEXT:    movabsq $1676976733973595602, %rax # imm = 0x1745D1745D1745D2
 ; CHECK-X64-V4-NEXT:    mulxq %rax, %rcx, %rcx
 ; CHECK-X64-V4-NEXT:    vmovq %rcx, %xmm0
 ; CHECK-X64-V4-NEXT:    vmovq %xmm1, %rdx
 ; CHECK-X64-V4-NEXT:    mulxq %rax, %rax, %rax
 ; CHECK-X64-V4-NEXT:    vmovq %rax, %xmm2
-; CHECK-X64-V4-NEXT:    vpunpcklqdq {{.*#+}} xmm0 = xmm2[0],xmm0[0]
-; CHECK-X64-V4-NEXT:    vpsrlq $1, %xmm0, %xmm1 {%k1}
+; CHECK-X64-V4-NEXT:    vpunpcklqdq {{.*#+}} xmm1 {%k1} = xmm2[0],xmm0[0]
 ; CHECK-X64-V4-NEXT:    vmovdqa %xmm1, %xmm0
 ; CHECK-X64-V4-NEXT:    retq
   %d = select <2 x i1> %c, <2 x i64> <i64 11, i64 11>, <2 x i64> <i64 1, i64 1>
@@ -70,14 +69,14 @@ define <2 x i64> @udiv_identity_const_todo_getter_nonzero(<2 x i1> %c, <2 x i64>
 ; CHECK-X64-V4-NEXT:    vpsllq $63, %xmm0, %xmm0
 ; CHECK-X64-V4-NEXT:    vpmovq2m %xmm0, %k1
 ; CHECK-X64-V4-NEXT:    vpextrq $1, %xmm1, %rdx
-; CHECK-X64-V4-NEXT:    movabsq $-3689348814741910323, %rax # imm = 0xCCCCCCCCCCCCCCCD
+; CHECK-X64-V4-NEXT:    movabsq $3689348814741910323, %rax # imm = 0x3333333333333333
 ; CHECK-X64-V4-NEXT:    mulxq %rax, %rcx, %rcx
 ; CHECK-X64-V4-NEXT:    vmovq %rcx, %xmm0
 ; CHECK-X64-V4-NEXT:    vmovq %xmm1, %rdx
 ; CHECK-X64-V4-NEXT:    mulxq %rax, %rax, %rax
 ; CHECK-X64-V4-NEXT:    vmovq %rax, %xmm2
 ; CHECK-X64-V4-NEXT:    vpunpcklqdq {{.*#+}} xmm0 = xmm2[0],xmm0[0]
-; CHECK-X64-V4-NEXT:    vpsrlq $3, %xmm0, %xmm1 {%k1}
+; CHECK-X64-V4-NEXT:    vpsrlq $1, %xmm0, %xmm1 {%k1}
 ; CHECK-X64-V4-NEXT:    vmovdqa %xmm1, %xmm0
 ; CHECK-X64-V4-NEXT:    retq
 

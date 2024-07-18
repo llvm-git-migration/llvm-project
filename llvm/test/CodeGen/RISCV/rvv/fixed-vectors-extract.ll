@@ -1016,14 +1016,12 @@ define i32 @extractelt_sdiv_v4i32(<4 x i32> %x) {
 define i32 @extractelt_udiv_v4i32(<4 x i32> %x) {
 ; RV32NOM-LABEL: extractelt_udiv_v4i32:
 ; RV32NOM:       # %bb.0:
+; RV32NOM-NEXT:    lui a0, 80660
+; RV32NOM-NEXT:    addi a0, a0, -1260
 ; RV32NOM-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
-; RV32NOM-NEXT:    vsrl.vi v8, v8, 0
-; RV32NOM-NEXT:    lui a0, 322639
-; RV32NOM-NEXT:    addi a0, a0, -945
 ; RV32NOM-NEXT:    vmulhu.vx v8, v8, a0
 ; RV32NOM-NEXT:    vslidedown.vi v8, v8, 2
 ; RV32NOM-NEXT:    vmv.x.s a0, v8
-; RV32NOM-NEXT:    srli a0, a0, 2
 ; RV32NOM-NEXT:    ret
 ;
 ; RV32M-LABEL: extractelt_udiv_v4i32:
@@ -1031,36 +1029,32 @@ define i32 @extractelt_udiv_v4i32(<4 x i32> %x) {
 ; RV32M-NEXT:    vsetivli zero, 1, e32, m1, ta, ma
 ; RV32M-NEXT:    vslidedown.vi v8, v8, 2
 ; RV32M-NEXT:    vmv.x.s a0, v8
-; RV32M-NEXT:    lui a1, 322639
-; RV32M-NEXT:    addi a1, a1, -945
+; RV32M-NEXT:    lui a1, 80660
+; RV32M-NEXT:    addi a1, a1, -1260
 ; RV32M-NEXT:    mulhu a0, a0, a1
-; RV32M-NEXT:    srli a0, a0, 2
 ; RV32M-NEXT:    ret
 ;
 ; RV64NOM-LABEL: extractelt_udiv_v4i32:
 ; RV64NOM:       # %bb.0:
+; RV64NOM-NEXT:    lui a0, 80660
+; RV64NOM-NEXT:    addi a0, a0, -1260
 ; RV64NOM-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
-; RV64NOM-NEXT:    vsrl.vi v8, v8, 0
-; RV64NOM-NEXT:    lui a0, 322639
-; RV64NOM-NEXT:    addi a0, a0, -945
 ; RV64NOM-NEXT:    vmulhu.vx v8, v8, a0
 ; RV64NOM-NEXT:    vslidedown.vi v8, v8, 2
 ; RV64NOM-NEXT:    vmv.x.s a0, v8
-; RV64NOM-NEXT:    slli a0, a0, 33
-; RV64NOM-NEXT:    srli a0, a0, 35
 ; RV64NOM-NEXT:    ret
 ;
 ; RV64M-LABEL: extractelt_udiv_v4i32:
 ; RV64M:       # %bb.0:
-; RV64M-NEXT:    lui a0, 322639
-; RV64M-NEXT:    addi a0, a0, -945
-; RV64M-NEXT:    slli a0, a0, 32
+; RV64M-NEXT:    lui a0, 20165
+; RV64M-NEXT:    addi a0, a0, -315
+; RV64M-NEXT:    slli a0, a0, 34
 ; RV64M-NEXT:    vsetivli zero, 1, e32, m1, ta, ma
 ; RV64M-NEXT:    vslidedown.vi v8, v8, 2
 ; RV64M-NEXT:    vmv.x.s a1, v8
 ; RV64M-NEXT:    slli a1, a1, 32
 ; RV64M-NEXT:    mulhu a0, a1, a0
-; RV64M-NEXT:    srli a0, a0, 34
+; RV64M-NEXT:    srli a0, a0, 32
 ; RV64M-NEXT:    ret
   %bo = udiv <4 x i32> %x, <i32 11, i32 12, i32 13, i32 14>
   %ext = extractelement <4 x i32> %bo, i32 2
