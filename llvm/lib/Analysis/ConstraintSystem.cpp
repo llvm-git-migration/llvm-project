@@ -43,9 +43,9 @@ bool ConstraintSystem::eliminateUsingFM() {
         Row1.pop_back();
       R1++;
     } else {
-      View[R1].swap(View.lastRow());
+      View[R1].writing_swap(View.lastRow());
       RemainingRowsView.addRow(View.lastRow());
-      View.dropLastRow();
+      View.eraseLastRow();
     }
   }
 
