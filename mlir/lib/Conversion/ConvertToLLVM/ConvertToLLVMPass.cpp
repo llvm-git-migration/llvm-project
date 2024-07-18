@@ -8,10 +8,12 @@
 
 #include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Conversion/ConvertToLLVM/ToLLVMPass.h"
+#include "mlir/Conversion/LLVMCommon/ConversionAttrOptions.h"
 #include "mlir/Conversion/LLVMCommon/ConversionTarget.h"
 #include "mlir/Conversion/LLVMCommon/TypeConverter.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/Interfaces/TransformsInterfaces.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Rewrite/FrozenRewritePatternSet.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -61,9 +63,8 @@ public:
 /// the injection of conversion patterns.
 class ConvertToLLVMPass
     : public impl::ConvertToLLVMPassBase<ConvertToLLVMPass> {
-  std::shared_ptr<const FrozenRewritePatternSet> patterns;
-  std::shared_ptr<const ConversionTarget> target;
-  std::shared_ptr<const LLVMTypeConverter> typeConverter;
+  std::shared_ptr<const SmallVector<ConvertToLLVMPatternInterface *>>
+      interfaces;
 
 public:
   using impl::ConvertToLLVMPassBase<ConvertToLLVMPass>::ConvertToLLVMPassBase;
@@ -73,11 +74,8 @@ public:
   }
 
   LogicalResult initialize(MLIRContext *context) final {
-    RewritePatternSet tempPatterns(context);
-    auto target = std::make_shared<ConversionTarget>(*context);
-    target->addLegalDialect<LLVM::LLVMDialect>();
-    auto typeConverter = std::make_shared<LLVMTypeConverter>(context);
-
+    auto interfaces =
+        std::make_shared<SmallVector<ConvertToLLVMPatternInterface *>>();
     if (!filterDialects.empty()) {
       // Test mode: Populate only patterns from the specified dialects. Produce
       // an error if the dialect is not loaded or does not implement the
@@ -92,8 +90,7 @@ public:
           return emitError(UnknownLoc::get(context))
                  << "dialect does not implement ConvertToLLVMPatternInterface: "
                  << dialectName << "\n";
-        iface->populateConvertToLLVMConversionPatterns(*target, *typeConverter,
-                                                       tempPatterns);
+        interfaces->push_back(iface);
       }
     } else {
       // Normal mode: Populate all patterns from all dialects that implement the
@@ -104,20 +101,33 @@ public:
         auto *iface = dyn_cast<ConvertToLLVMPatternInterface>(dialect);
         if (!iface)
           continue;
-        iface->populateConvertToLLVMConversionPatterns(*target, *typeConverter,
-                                                       tempPatterns);
+        interfaces->push_back(iface);
       }
     }
 
-    this->patterns =
-        std::make_unique<FrozenRewritePatternSet>(std::move(tempPatterns));
-    this->target = target;
-    this->typeConverter = typeConverter;
+    this->interfaces = interfaces;
     return success();
   }
 
   void runOnOperation() final {
-    if (failed(applyPartialConversion(getOperation(), *target, *patterns)))
+    MLIRContext *context = &getContext();
+    RewritePatternSet patterns(context);
+    ConversionTarget target(*context);
+    target.addLegalDialect<LLVM::LLVMDialect>();
+    LLVMTypeConverter typeConverter(context);
+
+    // Configure the conversion with dialect level interfaces.
+    for (ConvertToLLVMPatternInterface *iface : *interfaces)
+      iface->populateConvertToLLVMConversionPatterns(target, typeConverter,
+                                                     patterns);
+
+    // Configure the conversion attribute interfaces.
+    LLVMConversionPatternAttrOptions opts(target, typeConverter);
+    populateOpConversionPatterns(getOperation(), opts, patterns);
+
+    // Apply the conversion.
+    if (failed(applyPartialConversion(getOperation(), target,
+                                      std::move(patterns))))
       signalPassFailure();
   }
 };

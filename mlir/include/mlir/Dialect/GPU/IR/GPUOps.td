@@ -29,6 +29,7 @@ include "mlir/Interfaces/FunctionInterfaces.td"
 include "mlir/Interfaces/InferIntRangeInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/Interfaces/TransformsInterfaces.td"
 
 //===----------------------------------------------------------------------===//
 // GPU Dialect operations.
@@ -1347,7 +1348,8 @@ def GPU_BarrierOp : GPU_Op<"barrier"> {
 
 def GPU_GPUModuleOp : GPU_Op<"module", [
       DataLayoutOpInterface, HasDefaultDLTIDataLayout, IsolatedFromAbove,
-      SymbolTable, Symbol, SingleBlockImplicitTerminator<"ModuleEndOp">
+      DeclareOpInterfaceMethods<OpWithTransformAttrsOpInterface>, SymbolTable,
+      Symbol, SingleBlockImplicitTerminator<"ModuleEndOp">
     ]>, Arguments<(ins SymbolNameAttr:$sym_name,
           OptionalAttr<GPUNonEmptyTargetArrayAttr>:$targets,
           OptionalAttr<OffloadingTranslationAttr>:$offloadingHandler)> {

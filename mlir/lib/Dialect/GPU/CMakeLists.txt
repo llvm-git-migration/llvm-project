@@ -22,6 +22,7 @@ add_mlir_dialect_library(MLIRGPUDialect
   MLIRMemRefDialect
   MLIRSideEffectInterfaces
   MLIRSupport
+  MLIRTransformsInterfaces
   )
 
 add_mlir_dialect_library(MLIRGPUTransforms

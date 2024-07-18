@@ -36,6 +36,14 @@ mlir_tablegen(DataLayoutTypeInterface.cpp.inc -gen-type-interface-defs)
 add_public_tablegen_target(MLIRDataLayoutInterfacesIncGen)
 add_dependencies(mlir-generic-headers MLIRDataLayoutInterfacesIncGen)
 
+set(LLVM_TARGET_DEFINITIONS TransformsInterfaces.td)
+mlir_tablegen(TransformsAttrInterfaces.h.inc -gen-attr-interface-decls)
+mlir_tablegen(TransformsAttrInterfaces.cpp.inc -gen-attr-interface-defs)
+mlir_tablegen(TransformsOpInterfaces.h.inc -gen-op-interface-decls)
+mlir_tablegen(TransformsOpInterfaces.cpp.inc -gen-op-interface-defs)
+add_public_tablegen_target(MLIRTransformsInterfacesIncGen)
+add_dependencies(mlir-generic-headers MLIRTransformsInterfacesIncGen)
+
 add_mlir_doc(DataLayoutInterfaces
   DataLayoutAttrInterface
   Interfaces/

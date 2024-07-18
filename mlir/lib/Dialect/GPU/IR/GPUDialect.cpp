@@ -1832,6 +1832,17 @@ void GPUModuleOp::setTargets(ArrayRef<TargetAttrInterface> targets) {
   targetsAttr = ArrayAttr::get(getContext(), targetsVector);
 }
 
+void GPUModuleOp::getConversionPatternAttrs(
+    SmallVectorImpl<ConversionPatternsAttrInterface> &attrs) {
+  ArrayAttr targetsAttr = getTargetsAttr();
+  // Fail if there are no target attributes or there is more than one.
+  if (!targetsAttr || targetsAttr.size() != 1)
+    return;
+  if (auto patternAttr =
+          dyn_cast<ConversionPatternsAttrInterface>(targetsAttr[0]))
+    attrs.push_back(patternAttr);
+}
+
 //===----------------------------------------------------------------------===//
 // GPUBinaryOp
 //===----------------------------------------------------------------------===//

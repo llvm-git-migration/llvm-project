@@ -1,4 +1,5 @@
 add_mlir_conversion_library(MLIRLLVMCommonConversion
+  ConversionAttrOptions.cpp
   ConversionTarget.cpp
   LoweringOptions.cpp
   MemRefBuilder.cpp
@@ -16,4 +17,5 @@ add_mlir_conversion_library(MLIRLLVMCommonConversion
   MLIRLLVMDialect
   MLIRSupport
   MLIRTransforms
+  MLIRTransformsInterfaces
   )
