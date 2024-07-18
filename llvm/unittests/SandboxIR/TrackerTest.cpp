@@ -255,3 +255,54 @@ define i32 @foo(i32 %arg) {
   EXPECT_EQ(&*It++, Ret);
   EXPECT_EQ(It, BB->end());
 }
+
+// TODO: Test multi-instruction patterns.
+TEST_F(TrackerTest, MoveInstr) {
+  parseIR(C, R"IR(
+define i32 @foo(i32 %arg) {
+  %add0 = add i32 %arg, %arg
+  %add1 = add i32 %add0, %arg
+  ret i32 %add1
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+
+  auto *F = Ctx.createFunction(&LLVMF);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  sandboxir::Instruction *Add0 = &*It++;
+  sandboxir::Instruction *Add1 = &*It++;
+  sandboxir::Instruction *Ret = &*It++;
+
+  Ctx.save();
+  // Check moveBefore() with tracking enabled.
+  Add1->moveBefore(Add0);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Same for the last instruction in the block.
+  Ctx.save();
+  Ret->moveBefore(Add0);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(It, BB->end());
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+}
