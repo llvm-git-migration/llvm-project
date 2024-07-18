@@ -36,6 +36,7 @@ struct MatrixStorageBase : public SmallVectorImpl<T>, SmallVectorStorage<T, N> {
   using SmallVectorImpl<T>::append;
   using SmallVectorImpl<T>::erase;
   using SmallVectorImpl<T>::destroy_range;
+  using SmallVectorImpl<T>::isSafeToReferenceAfterResize;
 
   T *begin() const { return const_cast<T *>(SmallVectorImpl<T>::begin()); }
   T *end() const { return const_cast<T *>(SmallVectorImpl<T>::end()); }
@@ -95,6 +96,10 @@ protected:
   void eraseLastRow() {
     assert(getNumRows() > 0 && "Non-empty MatrixStorage expected");
     Base.pop_back_n(NCols);
+  }
+
+  bool willReallocateOnAddRow() const {
+    return Base.capacity() < Base.size() + NCols;
   }
 
 private:
@@ -239,6 +244,13 @@ public:
   }
 
   void addRow(const SmallVectorImpl<T> &Row) {
+    // Optimization when we know that the underying storage won't be resized.
+    if (!Mat.willReallocateOnAddRow()) {
+      Mat.addRow(Row);
+      RowView.emplace_back(Mat.rowFromIdx(Mat.getNumRows() - 1), Row.size());
+      return;
+    }
+
     // The underlying storage may be resized, performing reallocations. The
     // pointers in RowView will no longer be valid, so save and restore the
     // data. Construct RestoreData by performing pointer-arithmetic on the
