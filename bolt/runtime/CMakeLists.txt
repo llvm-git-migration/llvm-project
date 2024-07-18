@@ -23,6 +23,11 @@ add_library(bolt_rt_hugify STATIC
   )
 set_target_properties(bolt_rt_hugify PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}${LLVM_LIBDIR_SUFFIX}")
 
+if(NOT BOLT_BUILT_STANDALONE)
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/lib/libbolt_rt_instr.a" DESTINATION "${LLVM_LIBRARY_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/lib/libbolt_rt_hugify.a" DESTINATION "${LLVM_LIBRARY_DIR}")
+endif()
+
 set(BOLT_RT_FLAGS
   -ffreestanding
   -fno-exceptions
