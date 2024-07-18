@@ -14385,9 +14385,8 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
   auto LoadFeatureBit = [&](unsigned Index) {
     // Create GEP then load.
     Value *IndexVal = llvm::ConstantInt::get(Int32Ty, Index);
-    std::vector<llvm::Value *> GEPIndices = {llvm::ConstantInt::get(Int32Ty, 0),
-                                             llvm::ConstantInt::get(Int32Ty, 1),
-                                             IndexVal};
+    llvm::Value *GEPIndices[] = {Builder.getInt32(0), Builder.getInt32(1),
+                                 IndexVal};
     Value *Ptr =
         Builder.CreateInBoundsGEP(StructTy, RISCVFeaturesBits, GEPIndices);
     Value *FeaturesBit =
@@ -14422,8 +14421,7 @@ Value *CodeGenFunction::EmitRISCVFeatureBitsLength(unsigned MaxGroupIDUsed) {
   cast<llvm::GlobalValue>(RISCVFeaturesBits)->setDSOLocal(true);
 
   auto LoadMaxGroupID = [&]() {
-    std::vector<llvm::Value *> GEPIndices = {
-        llvm::ConstantInt::get(Int32Ty, 0), llvm::ConstantInt::get(Int32Ty, 0)};
+    llvm::Value *GEPIndices[] = {Builder.getInt32(0), Builder.getInt32(0)};
     llvm::Value *Ptr =
         Builder.CreateInBoundsGEP(StructTy, RISCVFeaturesBits, GEPIndices);
     Value *Length =
