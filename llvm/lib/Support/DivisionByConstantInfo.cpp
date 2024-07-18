@@ -70,10 +70,11 @@ SignedDivisionByConstantInfo SignedDivisionByConstantInfo::get(const APInt &D) {
 /// S. Warren, Jr., chapter 10.
 /// LeadingZeros can be used to simplify the calculation if the upper bits
 /// of the divided value are known zero.
-UnsignedDivisionByConstantInfo
-UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros,
-                                    bool AllowEvenDivisorOptimization) {
-  assert(!D.isZero() && !D.isOne() && "Precondition violation.");
+
+static UnsignedDivisionByConstantInfo PowerOf2Magic(const APInt &D,
+                                                    unsigned LeadingZeros) {
+  assert(!D.isZero() && !D.isOne() && D.isPowerOf2() &&
+         "Precondition violation.");
   assert(D.getBitWidth() > 1 && "Does not work at smaller bitwidths.");
 
   APInt Delta;
@@ -132,17 +133,7 @@ UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros,
   } while (P < D.getBitWidth() * 2 &&
            (Q1.ult(Delta) || (Q1 == Delta && R1.isZero())));
 
-  if (Retval.IsAdd && !D[0] && AllowEvenDivisorOptimization) {
-    unsigned PreShift = D.countr_zero();
-    APInt ShiftedD = D.lshr(PreShift);
-    Retval =
-        UnsignedDivisionByConstantInfo::get(ShiftedD, LeadingZeros + PreShift);
-    assert(Retval.IsAdd == 0 && Retval.PreShift == 0);
-    Retval.PreShift = PreShift;
-    return Retval;
-  }
-
-  Retval.Magic = std::move(Q2);             // resulting magic number
+  Retval.Magic = std::move(Q2); // resulting magic number
   ++Retval.Magic;
   Retval.PostShift = P - D.getBitWidth(); // resulting shift
   // Reduce shift amount for IsAdd.
@@ -151,5 +142,80 @@ UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros,
     Retval.PostShift -= 1;
   }
   Retval.PreShift = 0;
+  return Retval;
+}
+
+/// Calculate the magic numbers required to implement an unsigned integer
+/// division by a constant as a sequence of multiplies, adds and shifts.
+/// Requires that the divisor not be 0.
+
+UnsignedDivisionByConstantInfo
+UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros) {
+  assert(!D.isZero() && !D.isOne() && "Precondition violation.");
+  assert(D.getBitWidth() > 1 && "Does not work at smaller bitwidths.");
+
+  if (D.isPowerOf2())
+    return PowerOf2Magic(D, LeadingZeros);
+  struct UnsignedDivisionByConstantInfo Retval;
+  APInt SignedMax = APInt::getSignedMaxValue(D.getBitWidth());
+
+  // Calculate NC, the largest dividend such that NC.urem(D) == D-1.
+  APInt Q, R;
+  // initialize Q = (2P-1)/D; R2 = rem((2P-1),D)
+  APInt::udivrem(SignedMax, D, Q, R);
+
+  APInt MultiplierRoundDown = APInt::getZero(D.getBitWidth());
+  unsigned ExponentRoundDown = 0;
+  bool HasMagicDown = false;
+
+  unsigned Log2D = D.ceilLogBase2();
+  unsigned Exponent = 0;
+
+  for (;; Exponent++) {
+    if (R.uge(D - R)) {
+      Q <<= 1;
+      ++Q;
+      R <<= 1;
+      R -= D;
+    } else {
+      Q <<= 1;
+      R <<= 1;
+    }
+
+    APInt Ule = APInt::getOneBitSet(D.getBitWidth(), Exponent + LeadingZeros);
+
+    if (Exponent + LeadingZeros >= Log2D || (D - R).ule(Ule))
+      break;
+
+    // Set magic_down if we have not set it yet and this exponent works for the
+    // round_down algorithm
+    if (!HasMagicDown && R.ule(Ule)) {
+      HasMagicDown = true;
+      MultiplierRoundDown = Q;
+      ExponentRoundDown = Exponent;
+    }
+  }
+
+  if (Exponent < Log2D) {
+    // Do the normal values
+    Retval.Magic = Q;
+    ++Retval.Magic;
+    Retval.PreShift = 0;
+    Retval.PostShift = Exponent;
+    Retval.IsAdd = false;
+  } else if (D[0]) {
+    Retval.Magic = MultiplierRoundDown;
+    Retval.PreShift = 0;
+    Retval.PostShift = ExponentRoundDown;
+    Retval.IsAdd = true;
+  } else {
+    unsigned PreShift = D.countr_zero();
+    APInt ShiftedD = D.lshr(PreShift);
+    Retval =
+        UnsignedDivisionByConstantInfo::get(ShiftedD, LeadingZeros + PreShift);
+    assert(Retval.IsAdd == 0 && Retval.PreShift == 0);
+    Retval.PreShift = PreShift;
+  }
+
   return Retval;
 }
