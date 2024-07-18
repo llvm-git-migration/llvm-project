@@ -1811,6 +1811,8 @@ bool Parser::checkPotentialAngleBracketDelimiter(
   }
 
   if (OpToken.is(tok::greater) && Tok.is(tok::coloncolon)) {
+    Sema::DisableTypoCorrectionRAII DTC(Actions);
+
     SourceLocation StartLoc = Tok.getLocation();
     CXXScopeSpec SS;
     ParseOptionalCXXScopeSpecifier(SS, /*ObjectType=*/nullptr,
@@ -1818,8 +1820,6 @@ bool Parser::checkPotentialAngleBracketDelimiter(
                                    /*EnteringContext=*/false);
     ExprResult Result =
         tryParseCXXIdExpression(SS, /*isAddressOfOperand=*/false);
-    bool Invalid = !Result.isUsable() || Result.get()->containsErrors();
-    Result = Actions.CorrectDelayedTyposInExpr(Result);
 
     if (PP.isBacktrackEnabled())
       PP.RevertCachedTokens(1);
@@ -1833,7 +1833,7 @@ bool Parser::checkPotentialAngleBracketDelimiter(
     Tok.setAnnotationEndLoc(EndLoc);
     PP.AnnotateCachedTokens(Tok);
 
-    if (Invalid) {
+    if (Result.isInvalid()) {
       Actions.diagnoseExprIntendedAsTemplateName(
           getCurScope(), LAngle.TemplateName, LAngle.LessLoc,
           OpToken.getLocation());
