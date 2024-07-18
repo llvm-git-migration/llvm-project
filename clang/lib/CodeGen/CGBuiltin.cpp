@@ -14395,7 +14395,7 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
     return FeaturesBit;
   };
 
-  SmallVector<unsigned long long> RequireFeatureBits =
+  SmallVector<uint64_t> RequireFeatureBits =
       llvm::RISCV::getRequireFeatureBitMask(FeaturesStrs);
   Value *Result = Builder.getTrue();
   for (unsigned i = 0; i < RequireFeatureBits.size(); i++) {

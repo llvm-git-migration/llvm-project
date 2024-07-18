@@ -156,9 +156,8 @@ getExtensionBitmask(StringRef ExtName) {
   return createStringError("Unsupport extension");
 }
 
-llvm::SmallVector<unsigned long long>
-getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
-  llvm::SmallVector<unsigned long long> BitMasks(RISCV::RISCVFeatureBitSize);
+llvm::SmallVector<uint64_t> getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
+  llvm::SmallVector<uint64_t> BitMasks(RISCV::RISCVFeatureBitSize);
 
   for (auto Ext : Exts) {
     Expected<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmask =
