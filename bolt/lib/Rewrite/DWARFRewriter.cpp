@@ -753,8 +753,7 @@ void DWARFRewriter::updateDebugInfo() {
     DIEBlder.buildCompileUnits(Vec);
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
       processUnitDIE(CU, &DIEBlder);
-    finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
-                         DIEBlder.getProcessedCUs(), *FinalAddrWriter);
+    finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap, DIEBlder.getProcessedCUs(), *FinalAddrWriter);
   }
 
   DebugNamesTable.emitAccelTable();
