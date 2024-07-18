@@ -80,8 +80,9 @@ endif
 # Also reset BUILDDIR value because "pwd" returns cygwin or msys path
 # which needs to be converted to windows path.
 #----------------------------------------------------------------------
-ifeq "$(OS)" "Windows_NT"
-	SHELL = $(WINDIR)\system32\cmd.exe
+ifeq "$(HOST_OS)" "Windows_NT"
+	# Windows 10 and later has the lower-case 'windir' env variable.
+	SHELL := $(or $(windir),$(WINDIR),C:\WINDOWS)\system32\cmd.exe
 	BUILDDIR := $(shell echo %cd%)
 endif
 
