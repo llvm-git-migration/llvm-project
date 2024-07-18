@@ -1967,7 +1967,7 @@ private:
   //===--------------------------------------------------------------------===//
   // C++ Expressions
   ExprResult tryParseCXXIdExpression(CXXScopeSpec &SS, bool isAddressOfOperand,
-                                     Token &Replacement);
+                                     Token *Replacement = nullptr);
 
   ExprResult tryParseCXXPackIndexingExpression(ExprResult PackIdExpression);
   ExprResult ParseCXXPackIndexingExpression(ExprResult PackIdExpression);
