@@ -2,12 +2,12 @@
 // REQUIRES: amdgpu-registered-target
 // RUN: %clang_cc1 -triple amdgcn-unknown-unknown -target-cpu verde -emit-llvm -o - %s | FileCheck %s
 
-typedef char i8;
-typedef short i16;
-typedef int i32;
-typedef int i64 __attribute__((ext_vector_type(2)));
-typedef int i96 __attribute__((ext_vector_type(3)));
-typedef int i128 __attribute__((ext_vector_type(4)));
+typedef unsigned char i8;
+typedef unsigned short i16;
+typedef unsigned int i32;
+typedef unsigned int i64 __attribute__((ext_vector_type(2)));
+typedef unsigned int i96 __attribute__((ext_vector_type(3)));
+typedef unsigned int i128 __attribute__((ext_vector_type(4)));
 
 // CHECK-LABEL: @test_amdgcn_raw_ptr_buffer_store_b8(
 // CHECK-NEXT:  entry:
