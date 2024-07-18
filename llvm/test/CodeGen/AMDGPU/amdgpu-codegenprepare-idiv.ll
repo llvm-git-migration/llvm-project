@@ -5399,14 +5399,11 @@ define amdgpu_kernel void @udiv_i32_oddk_denom(ptr addrspace(1) %out, i32 %x) {
 ; GFX6:       ; %bb.0:
 ; GFX6-NEXT:    s_load_dword s4, s[2:3], 0xb
 ; GFX6-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x9
-; GFX6-NEXT:    v_mov_b32_e32 v0, 0xb2a50881
+; GFX6-NEXT:    v_mov_b32_e32 v0, 0xd952843f
 ; GFX6-NEXT:    s_mov_b32 s3, 0xf000
 ; GFX6-NEXT:    s_mov_b32 s2, -1
 ; GFX6-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX6-NEXT:    v_mul_hi_u32 v0, s4, v0
-; GFX6-NEXT:    v_sub_i32_e32 v1, vcc, s4, v0
-; GFX6-NEXT:    v_lshrrev_b32_e32 v1, 1, v1
-; GFX6-NEXT:    v_add_i32_e32 v0, vcc, v1, v0
 ; GFX6-NEXT:    v_lshrrev_b32_e32 v0, 20, v0
 ; GFX6-NEXT:    buffer_store_dword v0, off, s[0:3], 0
 ; GFX6-NEXT:    s_endpgm
@@ -5417,11 +5414,8 @@ define amdgpu_kernel void @udiv_i32_oddk_denom(ptr addrspace(1) %out, i32 %x) {
 ; GFX9-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x24
 ; GFX9-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    s_mul_hi_u32 s2, s4, 0xb2a50881
-; GFX9-NEXT:    s_sub_i32 s3, s4, s2
-; GFX9-NEXT:    s_lshr_b32 s3, s3, 1
-; GFX9-NEXT:    s_add_i32 s3, s3, s2
-; GFX9-NEXT:    s_lshr_b32 s2, s3, 20
+; GFX9-NEXT:    s_mul_hi_u32 s2, s4, 0xd952843f
+; GFX9-NEXT:    s_lshr_b32 s2, s2, 20
 ; GFX9-NEXT:    v_mov_b32_e32 v1, s2
 ; GFX9-NEXT:    global_store_dword v0, v1, s[0:1]
 ; GFX9-NEXT:    s_endpgm
@@ -5560,14 +5554,10 @@ define amdgpu_kernel void @udiv_v2i32_mixed_pow2k_denom(ptr addrspace(1) %out, <
 ; GFX6-NEXT:    s_mov_b32 s7, 0xf000
 ; GFX6-NEXT:    s_mov_b32 s6, -1
 ; GFX6-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX6-NEXT:    v_mul_hi_u32 v0, s3, v0
+; GFX6-NEXT:    v_mul_hi_u32 v1, s3, v0
 ; GFX6-NEXT:    s_mov_b32 s4, s0
 ; GFX6-NEXT:    s_lshr_b32 s0, s2, 12
 ; GFX6-NEXT:    s_mov_b32 s5, s1
-; GFX6-NEXT:    v_sub_i32_e32 v1, vcc, s3, v0
-; GFX6-NEXT:    v_lshrrev_b32_e32 v1, 1, v1
-; GFX6-NEXT:    v_add_i32_e32 v0, vcc, v1, v0
-; GFX6-NEXT:    v_lshrrev_b32_e32 v1, 11, v0
 ; GFX6-NEXT:    v_mov_b32_e32 v0, s0
 ; GFX6-NEXT:    buffer_store_dwordx2 v[0:1], off, s[4:7], 0
 ; GFX6-NEXT:    s_endpgm
@@ -5577,12 +5567,8 @@ define amdgpu_kernel void @udiv_v2i32_mixed_pow2k_denom(ptr addrspace(1) %out, <
 ; GFX9-NEXT:    s_load_dwordx4 s[0:3], s[2:3], 0x24
 ; GFX9-NEXT:    v_mov_b32_e32 v2, 0
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    s_mul_hi_u32 s4, s3, 0x100101
-; GFX9-NEXT:    s_sub_i32 s3, s3, s4
-; GFX9-NEXT:    s_lshr_b32 s3, s3, 1
-; GFX9-NEXT:    s_add_i32 s3, s3, s4
 ; GFX9-NEXT:    s_lshr_b32 s2, s2, 12
-; GFX9-NEXT:    s_lshr_b32 s3, s3, 11
+; GFX9-NEXT:    s_mul_hi_u32 s3, s3, 0x100101
 ; GFX9-NEXT:    v_mov_b32_e32 v0, s2
 ; GFX9-NEXT:    v_mov_b32_e32 v1, s3
 ; GFX9-NEXT:    global_store_dwordx2 v2, v[0:1], s[0:1]
@@ -5786,14 +5772,11 @@ define amdgpu_kernel void @urem_i32_oddk_denom(ptr addrspace(1) %out, i32 %x) {
 ; GFX6:       ; %bb.0:
 ; GFX6-NEXT:    s_load_dword s4, s[2:3], 0xb
 ; GFX6-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x9
-; GFX6-NEXT:    v_mov_b32_e32 v0, 0xb2a50881
+; GFX6-NEXT:    v_mov_b32_e32 v0, 0xd952843f
 ; GFX6-NEXT:    s_mov_b32 s2, 0x12d8fb
 ; GFX6-NEXT:    s_mov_b32 s3, 0xf000
 ; GFX6-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX6-NEXT:    v_mul_hi_u32 v0, s4, v0
-; GFX6-NEXT:    v_sub_i32_e32 v1, vcc, s4, v0
-; GFX6-NEXT:    v_lshrrev_b32_e32 v1, 1, v1
-; GFX6-NEXT:    v_add_i32_e32 v0, vcc, v1, v0
 ; GFX6-NEXT:    v_lshrrev_b32_e32 v0, 20, v0
 ; GFX6-NEXT:    v_mul_lo_u32 v0, v0, s2
 ; GFX6-NEXT:    s_mov_b32 s2, -1
@@ -5807,11 +5790,8 @@ define amdgpu_kernel void @urem_i32_oddk_denom(ptr addrspace(1) %out, i32 %x) {
 ; GFX9-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x24
 ; GFX9-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:    s_mul_hi_u32 s2, s4, 0xb2a50881
-; GFX9-NEXT:    s_sub_i32 s3, s4, s2
-; GFX9-NEXT:    s_lshr_b32 s3, s3, 1
-; GFX9-NEXT:    s_add_i32 s3, s3, s2
-; GFX9-NEXT:    s_lshr_b32 s2, s3, 20
+; GFX9-NEXT:    s_mul_hi_u32 s2, s4, 0xd952843f
+; GFX9-NEXT:    s_lshr_b32 s2, s2, 20
 ; GFX9-NEXT:    s_mul_i32 s2, s2, 0x12d8fb
 ; GFX9-NEXT:    s_sub_i32 s2, s4, s2
 ; GFX9-NEXT:    v_mov_b32_e32 v1, s2
