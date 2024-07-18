@@ -36,6 +36,7 @@
 namespace llvm {
 
 class AsmPrinter;
+class AsmPrinterLegacy;
 class MCAsmBackend;
 class MCAsmInfo;
 class MCAsmParser;
@@ -57,6 +58,8 @@ class MCTargetStreamer;
 class raw_ostream;
 class TargetMachine;
 class TargetOptions;
+
+AsmPrinterLegacy *createAsmPrinterLegacy(std::unique_ptr<AsmPrinter> AP);
 namespace mca {
 class CustomBehaviour;
 class InstrPostProcess;
@@ -170,8 +173,12 @@ public:
   // If it weren't for layering issues (this header is in llvm/Support, but
   // depends on MC?) this should take the Streamer by value rather than rvalue
   // reference.
-  using AsmPrinterCtorTy = AsmPrinter *(*)(
-      TargetMachine &TM, std::unique_ptr<MCStreamer> &&Streamer);
+  using AsmPrinterLegacyCtorTy =
+      AsmPrinterLegacy *(*)(TargetMachine &TM,
+                            std::unique_ptr<MCStreamer> &&Streamer);
+  using AsmPrinterCtorTy =
+      AsmPrinter *(*)(TargetMachine &TM,
+                      std::unique_ptr<MCStreamer> &&Streamer);
   using MCAsmBackendCtorTy = MCAsmBackend *(*)(const Target &T,
                                                const MCSubtargetInfo &STI,
                                                const MCRegisterInfo &MRI,
@@ -314,6 +321,7 @@ private:
 
   /// AsmPrinterCtorFn - Construction function for this target's AsmPrinter,
   /// if registered.
+  AsmPrinterLegacyCtorTy AsmPrinterLegacyCtorFn;
   AsmPrinterCtorTy AsmPrinterCtorFn;
 
   /// MCDisassemblerCtorFn - Construction function for this target's
@@ -517,6 +525,16 @@ public:
 
   /// createAsmPrinter - Create a target specific assembly printer pass.  This
   /// takes ownership of the MCStreamer object.
+  AsmPrinterLegacy *
+  createAsmPrinterLegacy(TargetMachine &TM,
+                         std::unique_ptr<MCStreamer> &&Streamer) const {
+    if (!AsmPrinterLegacyCtorFn)
+      return nullptr;
+    return AsmPrinterLegacyCtorFn(TM, std::move(Streamer));
+  }
+
+  /// Same as `createAsmPrinter`, but only create AsmPrinter, for new pass
+  /// manager.
   AsmPrinter *createAsmPrinter(TargetMachine &TM,
                                std::unique_ptr<MCStreamer> &&Streamer) const {
     if (!AsmPrinterCtorFn)
@@ -963,6 +981,9 @@ struct TargetRegistry {
   ///
   /// @param T - The target being registered.
   /// @param Fn - A function to construct an AsmPrinter for the target.
+  static void RegisterAsmPrinter(Target &T, Target::AsmPrinterLegacyCtorTy Fn) {
+    T.AsmPrinterLegacyCtorFn = Fn;
+  }
   static void RegisterAsmPrinter(Target &T, Target::AsmPrinterCtorTy Fn) {
     T.AsmPrinterCtorFn = Fn;
   }
@@ -1428,9 +1449,16 @@ private:
 template <class AsmPrinterImpl> struct RegisterAsmPrinter {
   RegisterAsmPrinter(Target &T) {
     TargetRegistry::RegisterAsmPrinter(T, &Allocator);
+    TargetRegistry::RegisterAsmPrinter(T, &AllocatorLegacy);
   }
 
 private:
+  static AsmPrinterLegacy *
+  AllocatorLegacy(TargetMachine &TM, std::unique_ptr<MCStreamer> &&Streamer) {
+    auto *P = new AsmPrinterImpl(TM, std::move(Streamer));
+    return createAsmPrinterLegacy(std::unique_ptr<AsmPrinter>(P));
+  }
+
   static AsmPrinter *Allocator(TargetMachine &TM,
                                std::unique_ptr<MCStreamer> &&Streamer) {
     return new AsmPrinterImpl(TM, std::move(Streamer));
