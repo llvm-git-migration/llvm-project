@@ -71,7 +71,7 @@ LIBC_INLINE void report_assertion_failure(const char *assertion,
 
 #define LIBC_ASSERT(COND)                                                      \
   do {                                                                         \
-    if (!(COND)) {                                                             \
+    if (LIBC_UNLIKELY(!(COND))) {                                              \
       LIBC_NAMESPACE::write_to_stderr(__FILE__ ":" __LIBC_LINE_STR__           \
                                                ": Assertion failed: '" #COND   \
                                                "' in function: '");            \
