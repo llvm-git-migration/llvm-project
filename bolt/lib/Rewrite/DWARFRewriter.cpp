@@ -748,10 +748,6 @@ void DWARFRewriter::updateDebugInfo() {
   CUOffsetMap OffsetMap =
       finalizeTypeSections(DIEBlder, *Streamer, GDBIndexSection);
 
-  const bool SingleThreadedMode = true;
-  if (!SingleThreadedMode)
-    DIEBlder.buildCompileUnits();
-  if (SingleThreadedMode) {
     CUPartitionVector PartVec = partitionCUs(*BC.DwCtx);
     for (std::vector<DWARFUnit *> &Vec : PartVec) {
       DIEBlder.buildCompileUnits(Vec);
@@ -759,13 +755,6 @@ void DWARFRewriter::updateDebugInfo() {
         processUnitDIE(CU, &DIEBlder);
       finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
                            DIEBlder.getProcessedCUs(), *FinalAddrWriter);
-    }
-  } else {
-    // Update unit debug info in parallel
-    ThreadPoolInterface &ThreadPool = ParallelUtilities::getThreadPool();
-    for (std::unique_ptr<DWARFUnit> &CU : BC.DwCtx->compile_units())
-      ThreadPool.async(processUnitDIE, CU.get(), &DIEBlder);
-    ThreadPool.wait();
   }
 
   DebugNamesTable.emitAccelTable();
