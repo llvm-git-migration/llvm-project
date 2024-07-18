@@ -275,8 +275,8 @@ define i32 @foo(i32 %arg) {
   sandboxir::Instruction *Add1 = &*It++;
   sandboxir::Instruction *Ret = &*It++;
 
+  // Check moveBefore(Instruction *) with tracking enabled.
   Ctx.save();
-  // Check moveBefore() with tracking enabled.
   Add1->moveBefore(Add0);
   It = BB->begin();
   EXPECT_EQ(&*It++, Add1);
@@ -297,6 +297,68 @@ define i32 @foo(i32 %arg) {
   It = BB->begin();
   EXPECT_EQ(&*It++, Ret);
   EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(It, BB->end());
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Check moveBefore(BasicBlock &, BasicBlock::iterator) with tracking enabled.
+  Ctx.save();
+  Add1->moveBefore(*BB, Add0->getIterator());
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Same for the last instruction in the block.
+  Ctx.save();
+  Ret->moveBefore(*BB, Add0->getIterator());
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(It, BB->end());
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Check moveAfter(Instruction *) with tracking enabled.
+  Ctx.save();
+  Add0->moveAfter(Add1);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Add1);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Same for the last instruction in the block.
+  Ctx.save();
+  Ret->moveAfter(Add0);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
   EXPECT_EQ(&*It++, Add1);
   EXPECT_EQ(It, BB->end());
   Ctx.revert();
