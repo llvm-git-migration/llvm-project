@@ -685,6 +685,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
   if (ErrorRecoveryLookup)
     return true;
 
+#if 0
   // If we didn't find anything during our lookup, try again with
   // ordinary name lookup, which can help us produce better error
   // messages.
@@ -692,6 +693,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
     Found.clear(LookupOrdinaryName);
     LookupName(Found, S);
   }
+#endif
 
   // In Microsoft mode, if we are within a templated function and we can't
   // resolve Identifier, then extend the SS with Identifier. This will have
@@ -733,6 +735,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
     }
   }
 
+#if 1
   if (!Found.empty()) {
     if (TypeDecl *TD = Found.getAsSingle<TypeDecl>()) {
       Diag(IdInfo.IdentifierLoc, diag::err_expected_class_or_namespace)
@@ -754,6 +757,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
   else
     Diag(IdInfo.IdentifierLoc, diag::err_undeclared_var_use)
         << IdInfo.Identifier;
+#endif
 
   return true;
 }
