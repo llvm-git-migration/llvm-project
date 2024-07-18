@@ -698,11 +698,7 @@ void DWARFRewriter::updateDebugInfo() {
         DWOStrOffstsWriter, DWOStrWriter, **SplitCU, DwarfOutputPath, DWOName);
     DebugLoclistWriter DebugLocDWoWriter(*Unit, Unit->getVersion(), true,
                                          AddressWriter);
-    DebugRangesSectionWriter *TempRangesSectionWriter;
-    if (Unit->getVersion() >= 5)
-      TempRangesSectionWriter = RangeListsWritersByCU[*DWOId].get();
-    else
-      TempRangesSectionWriter = LegacyRangesWritersByCU[*DWOId].get();
+    DebugRangesSectionWriter *TempRangesSectionWriter = Unit->getVersion() >= 5 ? RangeListsWritersByCU[*DWOId].get() : LegacyRangesWritersByCU[*DWOId].get();
 
     updateUnitDebugInfo(*(*SplitCU), DWODIEBuilder, DebugLocDWoWriter,
                         *TempRangesSectionWriter, AddressWriter);
