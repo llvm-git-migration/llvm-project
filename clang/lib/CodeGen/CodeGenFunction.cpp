@@ -2937,7 +2937,7 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
     for (auto Feat : TargetAttrFeats)
       CurrTargetAttrFeats.push_back(StringRef(Feat).substr(1));
 
-    llvm::BasicBlock *FeatsCondBB = createBasicBlock("resovler_cond", Resolver);
+    llvm::BasicBlock *FeatsCondBB = createBasicBlock("resolver_cond", Resolver);
 
     Builder.SetInsertPoint(FeatsCondBB);
     unsigned MaxGroupIDUsed = 0;
