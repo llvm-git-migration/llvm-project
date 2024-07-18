@@ -748,13 +748,12 @@ void DWARFRewriter::updateDebugInfo() {
   CUOffsetMap OffsetMap =
       finalizeTypeSections(DIEBlder, *Streamer, GDBIndexSection);
 
-    CUPartitionVector PartVec = partitionCUs(*BC.DwCtx);
-    for (std::vector<DWARFUnit *> &Vec : PartVec) {
-      DIEBlder.buildCompileUnits(Vec);
-      for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
-        processUnitDIE(CU, &DIEBlder);
-      finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
-                           DIEBlder.getProcessedCUs(), *FinalAddrWriter);
+  CUPartitionVector PartVec = partitionCUs(*BC.DwCtx);
+  for (std::vector<DWARFUnit *> &Vec : PartVec) {
+    DIEBlder.buildCompileUnits(Vec);
+    for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
+      processUnitDIE(CU, &DIEBlder);
+    finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap, DIEBlder.getProcessedCUs(), *FinalAddrWriter);
   }
 
   DebugNamesTable.emitAccelTable();
