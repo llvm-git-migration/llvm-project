@@ -177,7 +177,7 @@ public:
     return Result;
   }
 
-  void popLastConstraint() { View.dropLastRow(); }
+  void popLastConstraint() { View.eraseLastRow(); }
   void popLastNVariables(unsigned N) {
     assert(NumVariables > N);
     NumVariables -= N;
