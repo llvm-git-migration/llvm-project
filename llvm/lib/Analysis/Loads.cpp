@@ -293,40 +293,9 @@ bool llvm::isDereferenceableAndAlignedInLoop(LoadInst *LI, Loop *L,
 
   // TODO: Handle overlapping accesses.
   // We should be computing AccessSize as (TC - 1) * Step + EltSize.
-  if (EltSize.sgt(Step->getAPInt()))
-    return false;
-
-  // Compute the total access size for access patterns with unit stride and
-  // patterns with gaps. For patterns with unit stride, Step and EltSize are the
-  // same.
-  // For patterns with gaps (i.e. non unit stride), we are
-  // accessing EltSize bytes at every Step.
-  APInt AccessSize = TC * Step->getAPInt();
-
-  assert(SE.isLoopInvariant(AddRec->getStart(), L) &&
-         "implied by addrec definition");
-  Value *Base = nullptr;
-  if (auto *StartS = dyn_cast<SCEVUnknown>(AddRec->getStart())) {
-    Base = StartS->getValue();
-  } else if (auto *StartS = dyn_cast<SCEVAddExpr>(AddRec->getStart())) {
-    // Handle (NewBase + offset) as start value.
-    const auto *Offset = dyn_cast<SCEVConstant>(StartS->getOperand(0));
-    const auto *NewBase = dyn_cast<SCEVUnknown>(StartS->getOperand(1));
-    if (StartS->getNumOperands() == 2 && Offset && NewBase) {
-      // For the moment, restrict ourselves to the case where the offset is a
-      // multiple of the requested alignment and the base is aligned.
-      // TODO: generalize if a case found which warrants
-      if (Offset->getAPInt().urem(Alignment.value()) != 0)
-        return false;
-      Base = NewBase->getValue();
-      bool Overflow = false;
-      AccessSize = AccessSize.uadd_ov(Offset->getAPInt(), Overflow);
-      if (Overflow)
-        return false;
-    }
-  }
-
-  if (!Base)
+  bool StepIsNegative = Step->getAPInt().isNegative();
+  APInt AbsStep = Step->getAPInt().abs();
+  if (EltSize.ugt(AbsStep))
     return false;
 
   // For the moment, restrict ourselves to the case where the access size is a
@@ -334,6 +303,68 @@ bool llvm::isDereferenceableAndAlignedInLoop(LoadInst *LI, Loop *L,
   // TODO: generalize if a case found which warrants
   if (EltSize.urem(Alignment.value()) != 0)
     return false;
+
+  // Compute the total access size for access patterns with unit stride and
+  // patterns with gaps. For patterns with unit stride, Step and EltSize are the
+  // same.
+  // For patterns with gaps (i.e. non unit stride), we are
+  // accessing EltSize bytes at every Step.
+  APInt AccessSize = TC * AbsStep;
+
+  assert(SE.isLoopInvariant(AddRec->getStart(), L) &&
+         "implied by addrec definition");
+  Value *Base = nullptr;
+  if (auto *StartS = dyn_cast<SCEVUnknown>(AddRec->getStart())) {
+    if (StepIsNegative)
+      return false;
+    Base = StartS->getValue();
+  } else if (auto *StartS = dyn_cast<SCEVAddExpr>(AddRec->getStart())) {
+    const SCEV *End = AddRec->evaluateAtIteration(
+        SE.getConstant(StartS->getType(), TC - 1), SE);
+
+    // The step recurrence could be negative so it's necessary to find the min
+    // and max accessed addresses in the loop.
+    const SCEV *Min = SE.getUMinExpr(StartS, End);
+    const SCEV *Max = SE.getUMaxExpr(StartS, End);
+    if (isa<SCEVCouldNotCompute>(Min) || isa<SCEVCouldNotCompute>(Max))
+      return false;
+
+    // Now calculate the total access size, which is (max - min) + element_size.
+    const SCEV *Diff = SE.getMinusSCEV(Max, Min);
+    if (isa<SCEVCouldNotCompute>(Diff))
+      return false;
+
+    const SCEV *AS = SE.getAddExpr(
+        Diff, SE.getConstant(Diff->getType(), EltSize.getZExtValue()));
+    auto *ASC = dyn_cast<SCEVConstant>(AS);
+    if (!ASC)
+      return false;
+
+    if (const SCEVUnknown *NewBase = dyn_cast<SCEVUnknown>(Min)) {
+      Base = NewBase->getValue();
+      AccessSize = ASC->getAPInt();
+    } else if (auto *MinAddRec = dyn_cast<SCEVAddExpr>(Min)) {
+      if (MinAddRec->getNumOperands() != 2)
+        return false;
+
+      const auto *Offset = dyn_cast<SCEVConstant>(MinAddRec->getOperand(0));
+      const auto *NewBase = dyn_cast<SCEVUnknown>(MinAddRec->getOperand(1));
+      if (!Offset || !NewBase)
+        return false;
+
+      // For the moment, restrict ourselves to the case where the offset is a
+      // multiple of the requested alignment and the base is aligned.
+      // TODO: generalize if a case found which warrants
+      if (Offset->getAPInt().urem(Alignment.value()) != 0)
+        return false;
+
+      AccessSize = ASC->getAPInt() + Offset->getAPInt();
+      Base = NewBase->getValue();
+    } else
+      return false;
+  } else
+    return false;
+
   return isDereferenceableAndAlignedPointer(Base, Alignment, AccessSize, DL,
                                             HeaderFirstNonPHI, AC, &DT);
 }
