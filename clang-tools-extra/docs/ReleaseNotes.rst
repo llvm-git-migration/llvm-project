@@ -172,6 +172,11 @@ New checks
   Detects variables and functions that can be marked as static or moved into
   an anonymous namespace to enforce internal linkage.
 
+- New :doc:`modernize-use-cpp-style-comments
+  <clang-tidy/checks/modernize/use-cpp-style-comments>` check.
+
+  Find C Style comments and suggests to use C++ style comments instead
+
 - New :doc:`modernize-min-max-use-initializer-list
   <clang-tidy/checks/modernize/min-max-use-initializer-list>` check.
 
