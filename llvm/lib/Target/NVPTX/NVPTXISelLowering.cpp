@@ -871,7 +871,7 @@ NVPTXTargetLowering::NVPTXTargetLowering(const NVPTXTargetMachine &TM,
   // actions
   computeRegisterProperties(STI.getRegisterInfo());
 
-  setMinCmpXchgSizeInBits(32);
+  setMinCmpXchgSizeInBits(16);
   setMaxAtomicSizeInBitsSupported(64);
   setMaxDivRemBitWidthSupported(64);
 }
