@@ -3,7 +3,7 @@
 ; PR2581
 
 define i32 @test1(i1 %C) {
-; CHECK-LABEL: define i32 @test1
+; CHECK-LABEL: define range(i32 10, 12) i32 @test1
 ; CHECK-SAME: (i1 [[C:%.*]]) {
 ; CHECK-NEXT:    br i1 [[C]], label [[EXIT:%.*]], label [[BODY:%.*]]
 ; CHECK:       body:
@@ -82,7 +82,7 @@ bb2:
 
 ; PR1757
 define i32 @test4(i32) {
-; CHECK-LABEL: define i32 @test4
+; CHECK-LABEL: define range(i32 0, 3) i32 @test4
 ; CHECK-SAME: (i32 [[TMP0:%.*]]) {
 ; CHECK-NEXT:  EntryBlock:
 ; CHECK-NEXT:    [[DOTDEMORGAN:%.*]] = icmp sgt i32 [[TMP0]], 2
@@ -210,7 +210,7 @@ return:
 }
 
 define i32 @switch1(i32 %s) {
-; CHECK-LABEL: define i32 @switch1
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch1
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i32 [[S]], 0
@@ -250,7 +250,7 @@ next:
 }
 
 define i32 @switch2(i32 %s) {
-; CHECK-LABEL: define i32 @switch2
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch2
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[S]], 0
@@ -284,7 +284,7 @@ next:
 }
 
 define i32 @switch3(i32 %s) {
-; CHECK-LABEL: define i32 @switch3
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch3
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[S]], 0
@@ -451,7 +451,7 @@ unreachable:
 }
 
 define i32 @switch_range(i32 %cond) {
-; CHECK-LABEL: define i32 @switch_range
+; CHECK-LABEL: define range(i32 1, 3) i32 @switch_range
 ; CHECK-SAME: (i32 [[COND:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[S:%.*]] = urem i32 [[COND]], 3
@@ -491,7 +491,7 @@ unreachable:
 ; switch condition, we should not change the default.
 
 define i32 @switch_range_not_full(i32 %cond) {
-; CHECK-LABEL: define i32 @switch_range_not_full
+; CHECK-LABEL: define range(i32 0, 3) i32 @switch_range_not_full
 ; CHECK-SAME: (i32 [[COND:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[S:%.*]] = urem i32 [[COND]], 3
@@ -526,7 +526,7 @@ unreachable:
 ; PR51531
 
 define i8 @switch_defaultdest_multipleuse(i8 %t0) {
-; CHECK-LABEL: define i8 @switch_defaultdest_multipleuse
+; CHECK-LABEL: define range(i8 0, 1) i8 @switch_defaultdest_multipleuse
 ; CHECK-SAME: (i8 [[T0:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[O:%.*]] = or i8 [[T0]], 1
@@ -550,7 +550,7 @@ exit:
 }
 
 define i1 @arg_attribute(ptr nonnull %a) {
-; CHECK-LABEL: define i1 @arg_attribute
+; CHECK-LABEL: define range(i1 0, -1) i1 @arg_attribute
 ; CHECK-SAME: (ptr nonnull [[A:%.*]]) {
 ; CHECK-NEXT:    ret i1 false
 ;
@@ -560,7 +560,7 @@ define i1 @arg_attribute(ptr nonnull %a) {
 
 declare nonnull ptr @return_nonnull()
 define i1 @call_attribute() {
-; CHECK-LABEL: define i1 @call_attribute() {
+; CHECK-LABEL: define range(i1 0, -1) i1 @call_attribute() {
 ; CHECK-NEXT:    [[A:%.*]] = call ptr @return_nonnull()
 ; CHECK-NEXT:    ret i1 false
 ;
@@ -570,7 +570,7 @@ define i1 @call_attribute() {
 }
 
 define i1 @umin(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @umin
+; CHECK-LABEL: define range(i1 0, -1) i1 @umin
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i32 [[A]], 5
@@ -603,7 +603,7 @@ out:
 }
 
 define i1 @smin(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @smin
+; CHECK-LABEL: define range(i1 0, -1) i1 @smin
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i32 [[A]], 5
@@ -636,7 +636,7 @@ out:
 }
 
 define i1 @smax(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @smax
+; CHECK-LABEL: define range(i1 0, -1) i1 @smax
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[A]], 5
@@ -669,7 +669,7 @@ out:
 }
 
 define i1 @umax(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @umax
+; CHECK-LABEL: define range(i1 0, -1) i1 @umax
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[A]], 5
@@ -702,7 +702,7 @@ out:
 }
 
 define i1 @umin_lhs_overdefined_rhs_const(i32 %a) {
-; CHECK-LABEL: define i1 @umin_lhs_overdefined_rhs_const
+; CHECK-LABEL: define range(i1 -1, 0) i1 @umin_lhs_overdefined_rhs_const
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp ult i32 [[A]], 42
 ; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[CMP]], i32 [[A]], i32 42
@@ -715,7 +715,7 @@ define i1 @umin_lhs_overdefined_rhs_const(i32 %a) {
 }
 
 define i1 @umin_rhs_overdefined_lhs_const(i32 %a) {
-; CHECK-LABEL: define i1 @umin_rhs_overdefined_lhs_const
+; CHECK-LABEL: define range(i1 -1, 0) i1 @umin_rhs_overdefined_lhs_const
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp uge i32 [[A]], 42
 ; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[CMP]], i32 42, i32 [[A]]
@@ -728,7 +728,7 @@ define i1 @umin_rhs_overdefined_lhs_const(i32 %a) {
 }
 
 define i1 @umin_lhs_overdefined_rhs_range(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @umin_lhs_overdefined_rhs_range
+; CHECK-LABEL: define range(i1 -1, 0) i1 @umin_lhs_overdefined_rhs_range
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:    [[ASSUME:%.*]] = icmp ult i32 [[B]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[ASSUME]])
@@ -745,7 +745,7 @@ define i1 @umin_lhs_overdefined_rhs_range(i32 %a, i32 %b) {
 }
 
 define i1 @umin_rhs_overdefined_lhs_range(i32 %a, i32 %b) {
-; CHECK-LABEL: define i1 @umin_rhs_overdefined_lhs_range
+; CHECK-LABEL: define range(i1 -1, 0) i1 @umin_rhs_overdefined_lhs_range
 ; CHECK-SAME: (i32 [[A:%.*]], i32 [[B:%.*]]) {
 ; CHECK-NEXT:    [[ASSUME:%.*]] = icmp ult i32 [[B]], 42
 ; CHECK-NEXT:    call void @llvm.assume(i1 [[ASSUME]])
@@ -762,7 +762,7 @@ define i1 @umin_rhs_overdefined_lhs_range(i32 %a, i32 %b) {
 }
 
 define i1 @clamp_low1(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_low1
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_low1
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i32 [[A]], 5
@@ -790,7 +790,7 @@ out:
 }
 
 define i1 @clamp_low2(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_low2
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_low2
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i32 [[A]], 5
@@ -818,7 +818,7 @@ out:
 }
 
 define i1 @clamp_low3(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_low3
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_low3
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i32 [[A]], 5
@@ -846,7 +846,7 @@ out:
 }
 
 define i1 @clamp_low4(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_low4
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_low4
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sge i32 [[A]], 5
@@ -874,7 +874,7 @@ out:
 }
 
 define i1 @clamp_high1(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high1
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high1
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -902,7 +902,7 @@ out:
 }
 
 define i1 @clamp_high1_or(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high1_or
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high1_or
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -930,7 +930,7 @@ out:
 }
 
 define i1 @clamp_high2(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high2
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high2
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -959,7 +959,7 @@ out:
 
 
 define i1 @clamp_high2_or_disjoint(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high2_or_disjoint
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high2_or_disjoint
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -988,7 +988,7 @@ out:
 
 
 define i1 @clamp_high3(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high3
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high3
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -1016,7 +1016,7 @@ out:
 }
 
 define i1 @clamp_high4(i32 noundef %a) {
-; CHECK-LABEL: define i1 @clamp_high4
+; CHECK-LABEL: define range(i1 0, -1) i1 @clamp_high4
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -1045,7 +1045,7 @@ out:
 
 ; Just showing arbitrary constants work, not really a clamp
 define i1 @not_clamp_high(i32 noundef %a) {
-; CHECK-LABEL: define i1 @not_clamp_high
+; CHECK-LABEL: define range(i1 0, -1) i1 @not_clamp_high
 ; CHECK-SAME: (i32 noundef [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sle i32 [[A]], 5
@@ -1257,7 +1257,7 @@ exit:
 }
 
 define i1 @zext_unknown(i8 %a) {
-; CHECK-LABEL: define i1 @zext_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @zext_unknown
 ; CHECK-SAME: (i8 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[A32:%.*]] = zext i8 [[A]] to i32
@@ -1270,7 +1270,7 @@ entry:
 }
 
 define i1 @trunc_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @trunc_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @trunc_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[A8:%.*]] = trunc i32 [[A]] to i8
@@ -1420,7 +1420,7 @@ entry:
 
 
 define i1 @and_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @and_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @and_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[AND:%.*]] = and i32 [[A]], 128
@@ -1433,7 +1433,7 @@ entry:
 }
 
 define i1 @lshr_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @lshr_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @lshr_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[AND:%.*]] = lshr i32 [[A]], 30
@@ -1446,7 +1446,7 @@ entry:
 }
 
 define i1 @urem_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @urem_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @urem_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[UREM:%.*]] = urem i32 [[A]], 30
@@ -1459,7 +1459,7 @@ entry:
 }
 
 define i1 @srem_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @srem_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @srem_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[SREM:%.*]] = srem i32 [[A]], 30
@@ -1481,7 +1481,7 @@ exit2:
 }
 
 define i1 @sdiv_unknown(i32 %a) {
-; CHECK-LABEL: define i1 @sdiv_unknown
+; CHECK-LABEL: define range(i1 -1, 0) i1 @sdiv_unknown
 ; CHECK-SAME: (i32 [[A:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[SREM:%.*]] = sdiv i32 [[A]], 123
@@ -2037,7 +2037,7 @@ exit:
 }
 
 define i1 @binop_eval_order(i32 %x) {
-; CHECK-LABEL: define i1 @binop_eval_order
+; CHECK-LABEL: define range(i1 -1, 0) i1 @binop_eval_order
 ; CHECK-SAME: (i32 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = add nuw nsw i32 [[X]], 1
 ; CHECK-NEXT:    [[B:%.*]] = add nuw nsw i32 [[A]], 1
@@ -2052,7 +2052,7 @@ define i1 @binop_eval_order(i32 %x) {
 }
 
 define range(i32 0, 1024) i32 @range_larger(i8 %x) {
-; CHECK-LABEL: define range(i32 0, 1024) i32 @range_larger
+; CHECK-LABEL: define range(i32 0, 256) i32 @range_larger
 ; CHECK-SAME: (i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext i8 [[X]] to i32
 ; CHECK-NEXT:    ret i32 [[ZEXT]]
@@ -2072,7 +2072,7 @@ define range(i32 0, 128) i32 @range_smaller(i8 %x) {
 }
 
 define range(i32 128, 512) i32 @range_intersect(i8 %x) {
-; CHECK-LABEL: define range(i32 128, 512) i32 @range_intersect
+; CHECK-LABEL: define range(i32 128, 256) i32 @range_intersect
 ; CHECK-SAME: (i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext i8 [[X]] to i32
 ; CHECK-NEXT:    ret i32 [[ZEXT]]
