@@ -326,12 +326,6 @@ static cl::opt<bool> KeepARanges(
         "keep or generate .debug_aranges section if .gdb_index is written"),
     cl::Hidden, cl::cat(BoltCategory));
 
-static cl::opt<bool> DeterministicDebugInfo(
-    "deterministic-debuginfo",
-    cl::desc("disables parallel execution of tasks that may produce "
-             "nondeterministic debug info"),
-    cl::init(true), cl::cat(BoltCategory));
-
 static cl::opt<std::string> DwarfOutputPath(
     "dwarf-output-path",
     cl::desc("Path to where .dwo files or dwp file will be written out to."),
@@ -607,11 +601,6 @@ void DWARFRewriter::updateDebugInfo() {
   StrWriter = std::make_unique<DebugStrWriter>(*BC.DwCtx, false);
   StrOffstsWriter = std::make_unique<DebugStrOffsetsWriter>(BC);
 
-  if (!opts::DeterministicDebugInfo) {
-    opts::DeterministicDebugInfo = true;
-    errs() << "BOLT-WARNING: --deterministic-debuginfo is being deprecated\n";
-  }
-
   /// Stores and serializes information that will be put into the
   /// .debug_addr DWARF section.
   std::unique_ptr<DebugAddrWriter> FinalAddrWriter;
@@ -765,8 +754,16 @@ void DWARFRewriter::updateDebugInfo() {
   CUPartitionVector PartVec = partitionCUs(*BC.DwCtx);
   for (std::vector<DWARFUnit *> &Vec : PartVec) {
     DIEBlder.buildCompileUnits(Vec);
-    for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
-      processUnitDIE(CU, &DIEBlder);
+    llvm::DenseMap<uint64_t, uint64_t> LocListWritersIndexByCU;
+    for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
+      createRangeLocListAddressWriters(*CU, LocListWritersIndexByCU);
+      processSplitCU(*CU, DIEBlder);
+    }
+    for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
+      DebugLocWriter *DebugLocWriter =
+          LocListWritersByCU[LocListWritersIndexByCU[CU->getOffset()]].get();
+      processMainBinaryCU(*CU, DIEBlder, *DebugLocWriter);
+    }
     finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
                          DIEBlder.getProcessedCUs(), *FinalAddrWriter);
   }
