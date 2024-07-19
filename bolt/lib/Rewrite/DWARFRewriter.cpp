@@ -632,8 +632,7 @@ void DWARFRewriter::updateDebugInfo() {
   std::mutex AccessMutex;
   // Needs to be invoked in the same order as CUs are processed.
   llvm::DenseMap<uint64_t, uint64_t> LocListWritersIndexByCU;
-  auto createRangeLocListAddressWriters =
-      [&](DWARFUnit &CU) {
+  auto createRangeLocListAddressWriters = [&](DWARFUnit &CU) {
         std::lock_guard<std::mutex> Lock(AccessMutex);
 
         const uint16_t DwarfVersion = CU.getVersion();
