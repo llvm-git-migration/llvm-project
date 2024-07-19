@@ -976,7 +976,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state, TypeRange results,
   build(builder, state, results,
         TypeAttr::get(getLLVMFuncType(builder.getContext(), results, args)),
         callee, args, /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
-        /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
+        /*CConv=*/nullptr, /*TailCallKind=*/nullptr, /*memory=*/nullptr,
+        /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -999,7 +1000,9 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
   build(builder, state, getCallOpResultTypes(calleeType),
         TypeAttr::get(calleeType), callee, args, /*fastmathFlags=*/nullptr,
         /*branch_weights=*/nullptr, /*CConv=*/nullptr,
-        /*TailCallKind=*/nullptr, /*access_groups=*/nullptr,
+        /*TailCallKind=*/nullptr, /*memory=*/nullptr, /*convergent=*/nullptr,
+        /*no_unwind=*/nullptr, /*will_return=*/nullptr,
+        /*access_groups=*/nullptr,
         /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
 
@@ -1008,7 +1011,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
   build(builder, state, getCallOpResultTypes(calleeType),
         TypeAttr::get(calleeType), /*callee=*/nullptr, args,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
-        /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
+        /*CConv=*/nullptr, /*TailCallKind=*/nullptr, /*memory=*/nullptr,
+        /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -1019,7 +1023,8 @@ void CallOp::build(OpBuilder &builder, OperationState &state, LLVMFuncOp func,
   build(builder, state, getCallOpResultTypes(calleeType),
         TypeAttr::get(calleeType), SymbolRefAttr::get(func), args,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
-        /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
+        /*CConv=*/nullptr, /*TailCallKind=*/nullptr, /*memory=*/nullptr,
+        /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
