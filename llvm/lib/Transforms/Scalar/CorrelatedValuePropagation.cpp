@@ -1283,6 +1283,18 @@ static bool runImpl(Function &F, LazyValueInfo *LVI, DominatorTree *DT,
         RI->replaceUsesOfWith(RetVal, C);
         BBChanged = true;
       }
+      // Infer range attribute on return value.
+      if (RetVal->getType()->isIntOrIntVectorTy()) {
+        ConstantRange CR = LVI->getConstantRange(RetVal, RI,
+                                                 /*UndefAllowed=*/false);
+        if (!CR.isFullSet()) {
+          Attribute RangeAttr = F.getRetAttribute(Attribute::Range);
+          if (RangeAttr.isValid())
+            CR = CR.intersectWith(RangeAttr.getRange());
+          if (!CR.isEmptySet())
+            F.addRangeRetAttr(CR);
+        }
+      }
     }
     }
 

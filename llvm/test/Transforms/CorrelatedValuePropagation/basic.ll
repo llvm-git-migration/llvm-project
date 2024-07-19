@@ -210,7 +210,7 @@ return:
 }
 
 define i32 @switch1(i32 %s) {
-; CHECK-LABEL: define i32 @switch1
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch1
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i32 [[S]], 0
@@ -250,7 +250,7 @@ next:
 }
 
 define i32 @switch2(i32 %s) {
-; CHECK-LABEL: define i32 @switch2
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch2
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[S]], 0
@@ -284,7 +284,7 @@ next:
 }
 
 define i32 @switch3(i32 %s) {
-; CHECK-LABEL: define i32 @switch3
+; CHECK-LABEL: define range(i32 -1, 2) i32 @switch3
 ; CHECK-SAME: (i32 [[S:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i32 [[S]], 0
@@ -2052,7 +2052,7 @@ define i1 @binop_eval_order(i32 %x) {
 }
 
 define range(i32 0, 1024) i32 @range_larger(i8 %x) {
-; CHECK-LABEL: define range(i32 0, 1024) i32 @range_larger
+; CHECK-LABEL: define range(i32 0, 256) i32 @range_larger
 ; CHECK-SAME: (i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext i8 [[X]] to i32
 ; CHECK-NEXT:    ret i32 [[ZEXT]]
@@ -2072,7 +2072,7 @@ define range(i32 0, 128) i32 @range_smaller(i8 %x) {
 }
 
 define range(i32 128, 512) i32 @range_intersect(i8 %x) {
-; CHECK-LABEL: define range(i32 128, 512) i32 @range_intersect
+; CHECK-LABEL: define range(i32 128, 256) i32 @range_intersect
 ; CHECK-SAME: (i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext i8 [[X]] to i32
 ; CHECK-NEXT:    ret i32 [[ZEXT]]
