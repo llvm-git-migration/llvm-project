@@ -264,12 +264,14 @@ public:
                          llvm::function_ref<bool(const Use &)> ShouldReplace);
   void replaceAllUsesWith(Value *Other);
 
+  /// \Returns the LLVM IR name of the bottom-most LLVM value.
+  StringRef getName() const { return Val->getName(); }
+
 #ifndef NDEBUG
   /// Should crash if there is something wrong with the instruction.
   virtual void verify() const = 0;
   /// Returns the unique id in the form 'SB<number>.' like 'SB1.'
   std::string getUid() const;
-  StringRef getName() const { return Val->getName(); }
   virtual void dumpCommonHeader(raw_ostream &OS) const;
   void dumpCommonFooter(raw_ostream &OS) const;
   void dumpCommonPrefix(raw_ostream &OS) const;
