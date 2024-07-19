@@ -160,6 +160,8 @@ public:
 
   lldb::SBError Continue();
 
+  lldb::SBError ReverseContinue();
+
   lldb::SBError Stop();
 
   lldb::SBError Kill();

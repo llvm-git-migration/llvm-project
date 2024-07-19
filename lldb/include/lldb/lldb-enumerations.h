@@ -135,6 +135,9 @@ FLAGS_ENUM(LaunchFlags){
 /// Thread Run Modes.
 enum RunMode { eOnlyThisThread, eAllThreads, eOnlyDuringStepping };
 
+/// Execution directions
+enum RunDirection { eRunForward, eRunReverse };
+
 /// Byte ordering definitions.
 enum ByteOrder {
   eByteOrderInvalid = 0,
@@ -253,6 +256,7 @@ enum StopReason {
   eStopReasonFork,
   eStopReasonVFork,
   eStopReasonVForkDone,
+  eStopReasonHistoryBoundary,
 };
 
 /// Command Return Status Types.

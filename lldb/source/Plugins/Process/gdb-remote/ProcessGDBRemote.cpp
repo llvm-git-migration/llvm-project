@@ -1395,6 +1395,91 @@ Status ProcessGDBRemote::DoResume() {
   return error;
 }
 
+Status ProcessGDBRemote::DoResumeReverse() {
+  Status error;
+  Log *log = GetLog(GDBRLog::Process);
+  LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse()");
+
+  ListenerSP listener_sp(
+      Listener::MakeListener("gdb-remote.resume-packet-sent"));
+  if (listener_sp->StartListeningForEvents(
+          &m_gdb_comm, GDBRemoteClientBase::eBroadcastBitRunPacketSent)) {
+    listener_sp->StartListeningForEvents(
+        &m_async_broadcaster,
+        ProcessGDBRemote::eBroadcastBitAsyncThreadDidExit);
+
+    const size_t num_threads = GetThreadList().GetSize();
+
+    StreamString continue_packet;
+
+    const size_t num_continue_C_tids = m_continue_C_tids.size();
+    const size_t num_continue_s_tids = m_continue_s_tids.size();
+    const size_t num_continue_S_tids = m_continue_S_tids.size();
+    // We can only `bc` to reverse-continue all threads,
+    // or `bs` to reverse-step the current thread (which may also
+    // reverse-continue other threads by some amount).
+    // These packets do not support delivering signals.
+    if (num_continue_C_tids > 0 || num_continue_S_tids > 0) {
+      error.SetErrorString("can't deliver signals while running in reverse");
+      LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: Signals not supported");
+      return error;
+    }
+
+    if (num_continue_s_tids > 0) {
+      if (num_continue_s_tids > 1) {
+        error.SetErrorString("can't step multiple threads while reverse-stepping");
+        LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: can't step multiple threads");
+        return error;
+      }
+
+      if (!m_gdb_comm.GetReverseStepSupported()) {
+        error.SetErrorString("target does not support reverse-stepping");
+        LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: target does not support reverse-stepping");
+        return error;
+      }
+
+      m_gdb_comm.SetCurrentThreadForRun(m_continue_s_tids.front());
+      continue_packet.PutCString("bs");
+    } else {
+      if (!m_gdb_comm.GetReverseContinueSupported()) {
+        error.SetErrorString("target does not support reverse-continue");
+        LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: target does not support reverse-continue");
+        return error;
+      }
+
+      // All threads continue whether requested or not ---
+      // we can't change how threads ran in the past.
+      continue_packet.PutCString("bc");
+    }
+
+    EventSP event_sp;
+    if (!m_async_thread.IsJoinable()) {
+      error.SetErrorString("Trying to resume but the async thread is dead.");
+      LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: Trying to resume but the "
+                     "async thread is dead.");
+      return error;
+    }
+
+    auto data_sp =
+        std::make_shared<EventDataBytes>(continue_packet.GetString());
+    m_async_broadcaster.BroadcastEvent(eBroadcastBitAsyncContinue, data_sp);
+
+    if (!listener_sp->GetEvent(event_sp, std::chrono::seconds(5))) {
+      error.SetErrorString("Resume timed out.");
+      LLDB_LOGF(log, "ProcessGDBRemote::DoResumeReverse: Resume timed out.");
+    } else if (event_sp->BroadcasterIs(&m_async_broadcaster)) {
+      error.SetErrorString("Broadcast continue, but the async thread was "
+                           "killed before we got an ack back.");
+      LLDB_LOGF(log,
+                "ProcessGDBRemote::DoResumeReverse: Broadcast continue, but the "
+                "async thread was killed before we got an ack back.");
+      return error;
+    }
+  }
+
+  return error;
+}
+
 void ProcessGDBRemote::ClearThreadIDList() {
   std::lock_guard<std::recursive_mutex> guard(m_thread_list_real.GetMutex());
   m_thread_ids.clear();
@@ -1851,6 +1936,10 @@ ThreadSP ProcessGDBRemote::SetThreadStopInfo(
           thread_sp->SetStopInfo(StopInfo::CreateStopReasonWithException(
               *thread_sp, description.c_str()));
           handled = true;
+        } else if (reason == "replaylog") {
+          thread_sp->SetStopInfo(StopInfo::CreateStopReasonHistoryBoundary(
+              *thread_sp, description.c_str()));
+          handled = true;
         } else if (reason == "exec") {
           did_exec = true;
           thread_sp->SetStopInfo(
@@ -1881,18 +1970,24 @@ ThreadSP ProcessGDBRemote::SetThreadStopInfo(
           handled = true;
         }
       } else if (!signo) {
-        addr_t pc = thread_sp->GetRegisterContext()->GetPC();
-        lldb::BreakpointSiteSP bp_site_sp =
-            thread_sp->GetProcess()->GetBreakpointSiteList().FindByAddress(pc);
-
-        // If a thread is stopped at a breakpoint site, set that as the stop
-        // reason even if it hasn't executed the breakpoint instruction yet.
-        // We will silently step over the breakpoint when we resume execution
-        // and miss the fact that this thread hit the breakpoint.
-        if (bp_site_sp && bp_site_sp->ValidForThisThread(*thread_sp)) {
-          thread_sp->SetStopInfo(StopInfo::CreateStopReasonWithBreakpointSiteID(
-              *thread_sp, bp_site_sp->GetID()));
+        if (m_last_run_direction == eRunReverse) {
+          thread_sp->SetStopInfo(StopInfo::CreateStopReasonHistoryBoundary(
+              *thread_sp, description.c_str()));
           handled = true;
+        } else {
+          addr_t pc = thread_sp->GetRegisterContext()->GetPC();
+          lldb::BreakpointSiteSP bp_site_sp =
+              thread_sp->GetProcess()->GetBreakpointSiteList().FindByAddress(pc);
+
+          // If a thread is stopped at a breakpoint site, set that as the stop
+          // reason even if it hasn't executed the breakpoint instruction yet.
+          // We will silently step over the breakpoint when we resume execution
+          // and miss the fact that this thread hit the breakpoint.
+          if (bp_site_sp && bp_site_sp->ValidForThisThread(*thread_sp)) {
+            thread_sp->SetStopInfo(StopInfo::CreateStopReasonWithBreakpointSiteID(
+                *thread_sp, bp_site_sp->GetID()));
+            handled = true;
+          }
         }
       }
 
@@ -2275,6 +2370,8 @@ StateType ProcessGDBRemote::SetThreadStopInfo(StringExtractor &stop_packet) {
         StreamString ostr;
         ostr.Printf("%" PRIu64, wp_addr);
         description = std::string(ostr.GetString());
+      } else if (key.compare("replaylog") == 0) {
+        reason = "replaylog";
       } else if (key.compare("library") == 0) {
         auto error = LoadModules();
         if (error) {

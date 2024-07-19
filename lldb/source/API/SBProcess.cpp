@@ -582,6 +582,26 @@ SBError SBProcess::Continue() {
   return sb_error;
 }
 
+SBError SBProcess::ReverseContinue() {
+  LLDB_INSTRUMENT_VA(this);
+
+  SBError sb_error;
+  ProcessSP process_sp(GetSP());
+
+  if (process_sp) {
+    std::lock_guard<std::recursive_mutex> guard(
+        process_sp->GetTarget().GetAPIMutex());
+
+    if (process_sp->GetTarget().GetDebugger().GetAsyncExecution())
+      sb_error.ref() = process_sp->Resume(RunDirection::eRunReverse);
+    else
+      sb_error.ref() = process_sp->ResumeSynchronous(nullptr, RunDirection::eRunReverse);
+  } else
+    sb_error.SetErrorString("SBProcess is invalid");
+
+  return sb_error;
+}
+
 SBError SBProcess::Destroy() {
   LLDB_INSTRUMENT_VA(this);
 
