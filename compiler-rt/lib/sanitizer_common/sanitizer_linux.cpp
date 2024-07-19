@@ -2180,20 +2180,20 @@ static const char *RegNumToRegName(int reg) {
   return NULL;
 }
 
-#if SANITIZER_LINUX
+#  if SANITIZER_LINUX
 UNUSED
 static void DumpSingleReg(ucontext_t *ctx, int RegNum) {
   const char *RegName = RegNumToRegName(RegNum);
-#  if defined(__x86_64__)
+#    if defined(__x86_64__)
   Printf("%s%s = 0x%016llx  ", internal_strlen(RegName) == 2 ? " " : "",
          RegName, ctx->uc_mcontext.gregs[RegNum]);
-#  elif defined(__i386__)
+#    elif defined(__i386__)
   Printf("%s = 0x%08x  ", RegName, ctx->uc_mcontext.gregs[RegNum]);
-#  else
+#    else
   (void)RegName;
-#  endif
+#    endif
 }
-#endif
+#  endif
 
 void SignalContext::DumpAllRegisters(void *context) {
   ucontext_t *ucontext = (ucontext_t *)context;
