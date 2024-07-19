@@ -348,6 +348,7 @@ functional cstddef
 functional cstdint
 functional cstdlib
 functional cstring
+functional cwchar
 functional exception
 functional initializer_list
 functional iosfwd
@@ -669,10 +670,13 @@ random concepts
 random cstddef
 random cstdint
 random cstdlib
+random cwchar
 random initializer_list
 random iosfwd
 random limits
+random new
 random numeric
+random stdexcept
 random string
 random type_traits
 random vector
