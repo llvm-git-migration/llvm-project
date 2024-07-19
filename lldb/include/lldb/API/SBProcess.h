@@ -158,7 +158,7 @@ public:
 
   lldb::SBError Destroy();
 
-  lldb::SBError Continue();
+  lldb::SBError Continue(RunDirection direction = RunDirection::eRunForward);
 
   lldb::SBError Stop();
 
