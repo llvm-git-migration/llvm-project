@@ -2507,6 +2507,7 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
   bool Crel = false, ExperimentalCrel = false;
   bool UseRelaxRelocations = C.getDefaultToolChain().useRelaxRelocations();
   bool UseNoExecStack = false;
+  bool Msa = false;
   const char *MipsTargetFeature = nullptr;
   StringRef ImplicitIt;
   for (const Arg *A :
@@ -2630,6 +2631,10 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
         CmdArgs.push_back("-massembler-no-warn");
       } else if (Value == "--noexecstack") {
         UseNoExecStack = true;
+      } else if (Value == "-mmsa") {
+        Msa = true;
+      } else if (Value == "-mno-msa") {
+        Msa = false;
       } else if (Value.starts_with("-compress-debug-sections") ||
                  Value.starts_with("--compress-debug-sections") ||
                  Value == "-nocompress-debug-sections" ||
@@ -2716,6 +2721,8 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
           << "-Wa,--crel" << D.getTargetTriple();
     }
   }
+  if (Msa)
+    CmdArgs.push_back("-mmsa");
   if (!UseRelaxRelocations)
     CmdArgs.push_back("-mrelax-relocations=no");
   if (UseNoExecStack)
