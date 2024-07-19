@@ -826,6 +826,8 @@ public:
   /// \returns an iterator pointing to the element after the erased one
   iplist<VPRecipeBase>::iterator eraseFromParent();
 
+  /// Run any required modifications to the recipe after it has been inserted
+  /// into the plan.
   virtual void postInsertionOp() {}
 
   /// Method to support type inquiry through isa, cast, and dyn_cast.
