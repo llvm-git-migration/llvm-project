@@ -6404,9 +6404,20 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
     case llvm::Triple::CUDA:
       TC = std::make_unique<toolchains::NVPTXToolChain>(*this, Target, Args);
       break;
-    case llvm::Triple::AMDHSA:
-      TC = std::make_unique<toolchains::ROCMToolChain>(*this, Target, Args);
+    case llvm::Triple::AMDHSA: {
+      bool IsOpenCL = llvm::any_of(
+          Args.filtered(options::OPT_INPUT, options::OPT_x), [](auto &Arg) {
+            if (Arg->getOption().matches(options::OPT_INPUT))
+              return StringRef(Arg->getValue()).ends_with(".cl");
+            return StringRef(Arg->getValue()).ends_with("cl");
+          });
+      TC =
+          IsOpenCL
+              ? std::make_unique<toolchains::ROCMToolChain>(*this, Target, Args)
+              : std::make_unique<toolchains::AMDGPUToolChain>(*this, Target,
+                                                              Args);
       break;
+    }
     case llvm::Triple::AMDPAL:
     case llvm::Triple::Mesa3D:
       TC = std::make_unique<toolchains::AMDGPUToolChain>(*this, Target, Args);
