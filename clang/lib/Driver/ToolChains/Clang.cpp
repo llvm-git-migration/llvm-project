@@ -2507,6 +2507,8 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
   bool Crel = false, ExperimentalCrel = false;
   bool UseRelaxRelocations = C.getDefaultToolChain().useRelaxRelocations();
   bool UseNoExecStack = false;
+  bool Msa = false;
+  bool NoMsa = false;
   const char *MipsTargetFeature = nullptr;
   StringRef ImplicitIt;
   for (const Arg *A :
@@ -2630,6 +2632,10 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
         CmdArgs.push_back("-massembler-no-warn");
       } else if (Value == "--noexecstack") {
         UseNoExecStack = true;
+      } else if (Value == "-mmsa") {
+        Msa = true;
+      } else if (Value == "-mno-msa") {
+        NoMsa = true;
       } else if (Value.starts_with("-compress-debug-sections") ||
                  Value.starts_with("--compress-debug-sections") ||
                  Value == "-nocompress-debug-sections" ||
@@ -2714,6 +2720,16 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
     } else {
       D.Diag(diag::err_drv_unsupported_opt_for_target)
           << "-Wa,--crel" << D.getTargetTriple();
+    }
+  }
+  if (Msa) {
+    if (NoMsa)
+      D.Diag(diag::err_drv_msa_and_nomsa);
+    else if (Triple.isMIPS())
+      CmdArgs.push_back("-mmsa");
+    else {
+      D.Diag(diag::err_drv_unsupported_opt_for_target)
+          << "-Wa,-mmsa" << D.getTargetTriple();
     }
   }
   if (!UseRelaxRelocations)
