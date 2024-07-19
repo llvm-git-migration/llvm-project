@@ -168,9 +168,9 @@ UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros) {
   // initialize Q = (2P-1)/D; R2 = rem((2P-1),D)
   APInt::udivrem(SignedMax, D, Q2, R2);
 
-  APInt down_multiplier = APInt::getZero(D.getBitWidth());
-  unsigned down_exponent = 0;
-  bool hasMagicDown = false;
+  APInt MultiplierRoundDown = APInt::getZero(D.getBitWidth());
+  unsigned ExponentRoundDown = 0;
+  bool HasMagicDown = false;
 
   unsigned Log2D = D.ceilLogBase2();
   unsigned Exponent = 0;
@@ -193,10 +193,10 @@ UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros) {
 
     // Set magic_down if we have not set it yet and this exponent works for the
     // round_down algorithm
-    if (!hasMagicDown && R2.ule(Ule)) {
-      hasMagicDown = true;
-      down_multiplier = Q2;
-      down_exponent = Exponent;
+    if (!HasMagicDown && R2.ule(Ule)) {
+      HasMagicDown = true;
+      MultiplierRoundDown = Q2;
+      ExponentRoundDown = Exponent;
     }
   }
 
@@ -208,9 +208,9 @@ UnsignedDivisionByConstantInfo::get(const APInt &D, unsigned LeadingZeros) {
     Retval.IsAdd = false;
   } else if (!D[0]) {
     // 
-    Retval.Magic = down_multiplier;
+    Retval.Magic = MultiplierRoundDown;
     Retval.PreShift = 0;
-    Retval.PostShift = down_exponent;
+    Retval.PostShift = ExponentRoundDown;
     Retval.IsAdd = true;
   } else {
     unsigned PreShift = D.countr_zero();
