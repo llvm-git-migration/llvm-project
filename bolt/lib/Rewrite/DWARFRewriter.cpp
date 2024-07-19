@@ -326,12 +326,6 @@ static cl::opt<bool> KeepARanges(
         "keep or generate .debug_aranges section if .gdb_index is written"),
     cl::Hidden, cl::cat(BoltCategory));
 
-static cl::opt<bool> DeterministicDebugInfo(
-    "deterministic-debuginfo",
-    cl::desc("disables parallel execution of tasks that may produce "
-             "nondeterministic debug info"),
-    cl::init(true), cl::cat(BoltCategory));
-
 static cl::opt<std::string> DwarfOutputPath(
     "dwarf-output-path",
     cl::desc("Path to where .dwo files or dwp file will be written out to."),
@@ -606,11 +600,6 @@ void DWARFRewriter::updateDebugInfo() {
   ARangesSectionWriter = std::make_unique<DebugARangesSectionWriter>();
   StrWriter = std::make_unique<DebugStrWriter>(*BC.DwCtx, false);
   StrOffstsWriter = std::make_unique<DebugStrOffsetsWriter>(BC);
-
-  if (!opts::DeterministicDebugInfo) {
-    opts::DeterministicDebugInfo = true;
-    errs() << "BOLT-WARNING: --deterministic-debuginfo is being deprecated\n";
-  }
 
   /// Stores and serializes information that will be put into the
   /// .debug_addr DWARF section.
