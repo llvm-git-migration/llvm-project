@@ -31,6 +31,20 @@ class Builtin_Type<string name, string typeMnemonic, list<Trait> traits = [],
 }
 
 //===----------------------------------------------------------------------===//
+// Traits
+//===----------------------------------------------------------------------===//
+
+/// Type trait indicating that the type can be an operand to an elementwise op.
+def MappableContainer : NativeTypeTrait<"MappableContainer"> {
+  let cppNamespace = "::mlir";
+}
+
+/// Type trait indicating that the type has value semantics.
+def ValueSemantics : NativeTypeTrait<"ValueSemantics"> {
+  let cppNamespace = "::mlir";
+}
+
+//===----------------------------------------------------------------------===//
 // ComplexType
 //===----------------------------------------------------------------------===//
 
@@ -745,7 +759,7 @@ def Builtin_Opaque : Builtin_Type<"Opaque", "opaque"> {
 //===----------------------------------------------------------------------===//
 
 def Builtin_RankedTensor : Builtin_Type<"RankedTensor", "tensor", [
-    ShapedTypeInterface
+    MappableContainer, ShapedTypeInterface, ValueSemantics
   ], "TensorType"> {
   let summary = "Multi-dimensional array with a fixed number of dimensions";
   let description = [{
@@ -1049,7 +1063,8 @@ def Builtin_UnrankedTensor : Builtin_Type<"UnrankedTensor", "unranked_tensor", [
 // VectorType
 //===----------------------------------------------------------------------===//
 
-def Builtin_Vector : Builtin_Type<"Vector", "vector", [ShapedTypeInterface], "Type"> {
+def Builtin_Vector : Builtin_Type<"Vector", "vector",
+    [MappableContainer, ShapedTypeInterface, ValueSemantics], "Type"> {
   let summary = "Multi-dimensional SIMD vector type";
   let description = [{
     Syntax:
