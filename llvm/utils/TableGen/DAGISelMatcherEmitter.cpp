@@ -339,7 +339,8 @@ unsigned MatcherTableEmitter::SizeMatcher(Matcher *N, raw_ostream &OS) {
         Size += 2; // Count the child's opcode.
       } else {
         Child = cast<SwitchTypeMatcher>(N)->getCaseMatcher(i);
-        ++Size; // Count the child's type.
+        Size += GetVBRSize(cast<SwitchTypeMatcher>(N)->getCaseType(
+            i)); // Count the child's type.
       }
       const unsigned ChildSize = SizeMatcherList(Child, OS);
       assert(ChildSize != 0 && "Matcher cannot have child of size 0");
@@ -599,7 +600,8 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
         IdxSize = 2; // size of opcode in table is 2 bytes.
       } else {
         Child = cast<SwitchTypeMatcher>(N)->getCaseMatcher(i);
-        IdxSize = 1; // size of type in table is 1 byte.
+        IdxSize = GetVBRSize(cast<SwitchTypeMatcher>(N)->getCaseType(
+            i)); // size of type in table is sizeof(MVT) byte.
       }
 
       if (i != 0) {
@@ -616,7 +618,8 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
       if (const SwitchOpcodeMatcher *SOM = dyn_cast<SwitchOpcodeMatcher>(N))
         OS << "TARGET_VAL(" << SOM->getCaseOpcode(i).getEnumName() << "),";
       else
-        OS << getEnumName(cast<SwitchTypeMatcher>(N)->getCaseType(i)) << ',';
+        EmitVBRValue(cast<SwitchTypeMatcher>(N)->getCaseType(i),
+                     OS); // size of type in table is sizeof(MVT) byte.
       if (!OmitComments)
         OS << "// ->" << CurrentIdx + ChildSize;
       OS << '\n';
@@ -639,7 +642,7 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
     return CurrentIdx - StartIdx + 1;
   }
 
-  case Matcher::CheckType:
+  case Matcher::CheckType: {
     if (cast<CheckTypeMatcher>(N)->getResNo() == 0) {
       MVT::SimpleValueType VT = cast<CheckTypeMatcher>(N)->getType();
       switch (VT) {
@@ -648,13 +651,17 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
         OS << "OPC_CheckTypeI" << MVT(VT).getSizeInBits() << ",\n";
         return 1;
       default:
-        OS << "OPC_CheckType, " << getEnumName(VT) << ",\n";
-        return 2;
+        OS << "OPC_CheckType, ";
+        unsigned NumBytes = EmitVBRValue(VT, OS);
+        OS << "\n";
+        return NumBytes + 1;
       }
     }
-    OS << "OPC_CheckTypeRes, " << cast<CheckTypeMatcher>(N)->getResNo() << ", "
-       << getEnumName(cast<CheckTypeMatcher>(N)->getType()) << ",\n";
-    return 3;
+    OS << "OPC_CheckTypeRes, " << cast<CheckTypeMatcher>(N)->getResNo() << ", ";
+    unsigned NumBytes = EmitVBRValue(cast<CheckTypeMatcher>(N)->getType(), OS);
+    OS << "\n";
+    return NumBytes + 2;
+  }
 
   case Matcher::CheckChildType: {
     MVT::SimpleValueType VT = cast<CheckChildTypeMatcher>(N)->getType();
@@ -666,8 +673,10 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
       return 1;
     default:
       OS << "OPC_CheckChild" << cast<CheckChildTypeMatcher>(N)->getChildNo()
-         << "Type, " << getEnumName(VT) << ",\n";
-      return 2;
+         << "Type, ";
+      unsigned NumBytes = EmitVBRValue(VT, OS);
+      OS << "\n";
+      return NumBytes + 1;
     }
   }
 
@@ -696,10 +705,13 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
        << cast<CheckChild2CondCodeMatcher>(N)->getCondCodeName() << ",\n";
     return 2;
 
-  case Matcher::CheckValueType:
-    OS << "OPC_CheckValueType, "
-       << getEnumName(cast<CheckValueTypeMatcher>(N)->getVT()) << ",\n";
-    return 2;
+  case Matcher::CheckValueType: {
+    OS << "OPC_CheckValueType, ";
+    unsigned NumBytes =
+        EmitVBRValue(cast<CheckValueTypeMatcher>(N)->getVT(), OS);
+    OS << "\n";
+    return NumBytes + 1;
+  }
 
   case Matcher::CheckComplexPat: {
     const CheckComplexPatMatcher *CCPM = cast<CheckComplexPatMatcher>(N);
@@ -766,8 +778,8 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
       OS << "OPC_EmitInteger" << MVT(VT).getSizeInBits() << ", ";
       break;
     default:
-      OpBytes = 2;
-      OS << "OPC_EmitInteger, " << getEnumName(VT) << ", ";
+      OS << "OPC_EmitInteger, ";
+      OpBytes = EmitVBRValue(VT, OS) + 1;
       break;
     }
     unsigned Bytes = OpBytes + EmitSignedVBRValue(Val, OS);
@@ -785,8 +797,8 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
       OS << "OPC_EmitStringInteger" << MVT(VT).getSizeInBits() << ", ";
       break;
     default:
-      OpBytes = 2;
-      OS << "OPC_EmitStringInteger, " << getEnumName(VT) << ", ";
+      OS << "OPC_EmitStringInteger, ";
+      OpBytes = EmitVBRValue(VT, OS) + 1;
       break;
     }
     OS << Val << ",\n";
@@ -797,14 +809,15 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
     const EmitRegisterMatcher *Matcher = cast<EmitRegisterMatcher>(N);
     const CodeGenRegister *Reg = Matcher->getReg();
     MVT::SimpleValueType VT = Matcher->getVT();
+    unsigned OpBytes;
     // If the enum value of the register is larger than one byte can handle,
     // use EmitRegister2.
     if (Reg && Reg->EnumValue > 255) {
-      OS << "OPC_EmitRegister2, " << getEnumName(VT) << ", ";
+      OS << "OPC_EmitRegister2, ";
+      OpBytes = EmitVBRValue(VT, OS);
       OS << "TARGET_VAL(" << getQualifiedName(Reg->TheDef) << "),\n";
-      return 4;
+      return OpBytes + 3;
     }
-    unsigned OpBytes;
     switch (VT) {
     case MVT::i32:
     case MVT::i64:
@@ -812,8 +825,8 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
       OS << "OPC_EmitRegisterI" << MVT(VT).getSizeInBits() << ", ";
       break;
     default:
-      OpBytes = 2;
-      OS << "OPC_EmitRegister, " << getEnumName(VT) << ", ";
+      OS << "OPC_EmitRegister, ";
+      OpBytes = EmitVBRValue(VT, OS) + 1;
       break;
     }
     if (Reg) {
@@ -958,8 +971,9 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
         OS << "/*#VTs*/";
       OS << ", ";
     }
+    unsigned NumTypeBytes = 0;
     for (unsigned i = 0, e = EN->getNumVTs(); i != e; ++i)
-      OS << getEnumName(EN->getVT(i)) << ", ";
+      NumTypeBytes += EmitVBRValue(EN->getVT(i), OS);
 
     OS << EN->getNumOperands();
     if (!OmitComments)
@@ -992,7 +1006,7 @@ unsigned MatcherTableEmitter::EmitMatcher(const Matcher *N,
     } else
       OS << '\n';
 
-    return 4 + !CompressVTs + !CompressNodeInfo + EN->getNumVTs() +
+    return 4 + !CompressVTs + !CompressNodeInfo + NumTypeBytes +
            NumOperandBytes + NumCoveredBytes;
   }
   case Matcher::CompleteMatch: {

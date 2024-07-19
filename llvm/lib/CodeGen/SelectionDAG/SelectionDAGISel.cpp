@@ -2896,8 +2896,10 @@ CheckChild2CondCode(const unsigned char *MatcherTable, unsigned &MatcherIndex,
 LLVM_ATTRIBUTE_ALWAYS_INLINE static bool
 CheckValueType(const unsigned char *MatcherTable, unsigned &MatcherIndex,
                SDValue N, const TargetLowering *TLI, const DataLayout &DL) {
-  MVT::SimpleValueType VT =
-      static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+  unsigned SimpleVT = MatcherTable[MatcherIndex++];
+  if (SimpleVT & 128)
+    SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+  MVT::SimpleValueType VT = static_cast<MVT::SimpleValueType>(SimpleVT);
   if (cast<VTSDNode>(N)->getVT() == VT)
     return true;
 
@@ -3027,7 +3029,10 @@ static unsigned IsPredicateKnownToFail(const unsigned char *Table,
       VT = MVT::i64;
       break;
     default:
-      VT = static_cast<MVT::SimpleValueType>(Table[Index++]);
+      unsigned SimpleVT = Table[Index++];
+      if (SimpleVT & 128)
+        SimpleVT = GetVBR(SimpleVT, Table, Index);
+      VT = static_cast<MVT::SimpleValueType>(SimpleVT);
       break;
     }
     Result = !::CheckType(VT, N, SDISel.TLI, SDISel.CurDAG->getDataLayout());
@@ -3035,7 +3040,10 @@ static unsigned IsPredicateKnownToFail(const unsigned char *Table,
   }
   case SelectionDAGISel::OPC_CheckTypeRes: {
     unsigned Res = Table[Index++];
-    Result = !::CheckType(static_cast<MVT::SimpleValueType>(Table[Index++]),
+    unsigned SimpleVT = Table[Index++];
+    if (SimpleVT & 128)
+      SimpleVT = GetVBR(SimpleVT, Table, Index);
+    Result = !::CheckType(static_cast<MVT::SimpleValueType>(SimpleVT),
                           N.getValue(Res), SDISel.TLI,
                           SDISel.CurDAG->getDataLayout());
     return Index;
@@ -3075,7 +3083,10 @@ static unsigned IsPredicateKnownToFail(const unsigned char *Table,
       VT = MVT::i64;
       ChildNo = Opcode - SelectionDAGISel::OPC_CheckChild0TypeI64;
     } else {
-      VT = static_cast<MVT::SimpleValueType>(Table[Index++]);
+      unsigned SimpleVT = Table[Index++];
+      if (SimpleVT & 128)
+        SimpleVT = GetVBR(SimpleVT, Table, Index);
+      VT = static_cast<MVT::SimpleValueType>(SimpleVT);
       ChildNo = Opcode - SelectionDAGISel::OPC_CheckChild0Type;
     }
     Result = !::CheckChildType(VT, N, SDISel.TLI,
@@ -3579,7 +3590,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
         VT = MVT::i64;
         break;
       default:
-        VT = static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        unsigned SimpleVT = MatcherTable[MatcherIndex++];
+        if (SimpleVT & 128)
+          SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+        VT = static_cast<MVT::SimpleValueType>(SimpleVT);
         break;
       }
       if (!::CheckType(VT, N, TLI, CurDAG->getDataLayout()))
@@ -3588,9 +3602,11 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
 
     case OPC_CheckTypeRes: {
       unsigned Res = MatcherTable[MatcherIndex++];
-      if (!::CheckType(
-              static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]),
-              N.getValue(Res), TLI, CurDAG->getDataLayout()))
+      unsigned SimpleVT = MatcherTable[MatcherIndex++];
+      if (SimpleVT & 128)
+        SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+      if (!::CheckType(static_cast<MVT::SimpleValueType>(SimpleVT),
+                       N.getValue(Res), TLI, CurDAG->getDataLayout()))
         break;
       continue;
     }
@@ -3629,7 +3645,7 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
     case OPC_SwitchType: {
       MVT CurNodeVT = N.getSimpleValueType();
       unsigned SwitchStart = MatcherIndex-1; (void)SwitchStart;
-      unsigned CaseSize;
+      unsigned CaseSize, CaseSimpleVT;
       while (true) {
         // Get the size of this case.
         CaseSize = MatcherTable[MatcherIndex++];
@@ -3637,8 +3653,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
           CaseSize = GetVBR(CaseSize, MatcherTable, MatcherIndex);
         if (CaseSize == 0) break;
 
-        MVT CaseVT =
-            static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        CaseSimpleVT = MatcherTable[MatcherIndex++];
+        if (CaseSimpleVT & 128)
+          CaseSimpleVT = GetVBR(CaseSimpleVT, MatcherTable, MatcherIndex);
+        MVT CaseVT = static_cast<MVT::SimpleValueType>(CaseSimpleVT);
         if (CaseVT == MVT::iPTR)
           CaseVT = TLI->getPointerTy(CurDAG->getDataLayout());
 
@@ -3694,7 +3712,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
         VT = MVT::i64;
         ChildNo = Opcode - SelectionDAGISel::OPC_CheckChild0TypeI64;
       } else {
-        VT = static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        unsigned SimpleVT = MatcherTable[MatcherIndex++];
+        if (SimpleVT & 128)
+          SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+        VT = static_cast<MVT::SimpleValueType>(SimpleVT);
         ChildNo = Opcode - SelectionDAGISel::OPC_CheckChild0Type;
       }
       if (!::CheckChildType(VT, N, TLI, CurDAG->getDataLayout(), ChildNo))
@@ -3788,7 +3809,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
         VT = MVT::i64;
         break;
       default:
-        VT = static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        unsigned SimpleVT = MatcherTable[MatcherIndex++];
+        if (SimpleVT & 128)
+          SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+        VT = static_cast<MVT::SimpleValueType>(SimpleVT);
         break;
       }
       int64_t Val = MatcherTable[MatcherIndex++];
@@ -3812,7 +3836,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
         VT = MVT::i64;
         break;
       default:
-        VT = static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        unsigned SimpleVT = MatcherTable[MatcherIndex++];
+        if (SimpleVT & 128)
+          SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+        VT = static_cast<MVT::SimpleValueType>(SimpleVT);
         break;
       }
       unsigned RegNo = MatcherTable[MatcherIndex++];
@@ -3824,8 +3851,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
       // For targets w/ more than 256 register names, the register enum
       // values are stored in two bytes in the matcher table (just like
       // opcodes).
-      MVT::SimpleValueType VT =
-          static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+      unsigned SimpleVT = MatcherTable[MatcherIndex++];
+      if (SimpleVT & 128)
+        SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+      MVT::SimpleValueType VT = static_cast<MVT::SimpleValueType>(SimpleVT);
       unsigned RegNo = MatcherTable[MatcherIndex++];
       RegNo |= MatcherTable[MatcherIndex++] << 8;
       RecordedNodes.push_back(std::pair<SDValue, SDNode*>(
@@ -4063,8 +4092,10 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
         NumVTs = MatcherTable[MatcherIndex++];
       SmallVector<EVT, 4> VTs;
       for (unsigned i = 0; i != NumVTs; ++i) {
-        MVT::SimpleValueType VT =
-            static_cast<MVT::SimpleValueType>(MatcherTable[MatcherIndex++]);
+        unsigned SimpleVT = MatcherTable[MatcherIndex++];
+        if (SimpleVT & 128)
+          SimpleVT = GetVBR(SimpleVT, MatcherTable, MatcherIndex);
+        MVT::SimpleValueType VT = static_cast<MVT::SimpleValueType>(SimpleVT);
         if (VT == MVT::iPTR)
           VT = TLI->getPointerTy(CurDAG->getDataLayout()).SimpleTy;
         VTs.push_back(VT);
