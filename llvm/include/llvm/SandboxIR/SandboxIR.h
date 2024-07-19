@@ -557,7 +557,7 @@ public:
 #endif
 };
 
-class LoadInst : public Instruction {
+class LoadInst final : public Instruction {
   /// Use Context::createLoadInst(). Don't call the
   /// constructor directly.
   LoadInst(llvm::LoadInst *LI, Context &Ctx)
