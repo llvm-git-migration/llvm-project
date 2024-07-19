@@ -3,27 +3,28 @@
 
 target triple = "x86_64-redhat-linux-gnu"
 
+; Should not get vectorized.
 define void @test(ptr %arg, i64 %arg1, i64 %arg2) {
 ; CHECK-LABEL: define void @test(
 ; CHECK-SAME: ptr [[ARG:%.*]], i64 [[ARG1:%.*]], i64 [[ARG2:%.*]]) {
-; CHECK-NEXT:  [[ENTRY:.*]]:
-; CHECK-NEXT:    br label %[[LOOP1:.*]]
-; CHECK:       [[LOOP1]]:
-; CHECK-NEXT:    [[I:%.*]] = phi ptr [ [[I21:%.*]], %[[BB20:.*]] ], [ null, %[[ENTRY]] ]
+; CHECK-NEXT:  [[_PREHEADER48_PREHEADER:.*]]:
+; CHECK-NEXT:    br label %[[DOTLOOPEXIT49:.*]]
+; CHECK:       [[DOTLOOPEXIT49]]:
+; CHECK-NEXT:    [[I:%.*]] = phi ptr [ [[I21:%.*]], %[[BB20:.*]] ], [ null, %[[_PREHEADER48_PREHEADER]] ]
 ; CHECK-NEXT:    br i1 false, label %[[BB22:.*]], label %[[DOTPREHEADER48_PREHEADER:.*]]
-; CHECK:       [[_PREHEADER48_PREHEADER:.*:]]
-; CHECK-NEXT:    br [[DOTLOOPEXIT49:label %.*]]
-; CHECK:       [[DEAD:.*]]:
-; CHECK-NEXT:    br [[DOTLOOPEXIT49]]
-; CHECK:       [[_LOOPEXIT49:.*:]]
-; CHECK-NEXT:    [[I5:%.*]] = phi ptr [ [[I]], %[[DEAD]] ], [ [[I]], %[[DOTPREHEADER48_PREHEADER]] ]
-; CHECK-NEXT:    br label %[[DOTPREHEADER48_PREHEADER_1:.*]]
+; CHECK:       [[_PREHEADER48_PREHEADER1:.*:]]
+; CHECK-NEXT:    br [[DOTLOOPEXIT50:label %.*]]
+; CHECK:       [[_LOOPEXIT49:.*]]:
+; CHECK-NEXT:    br [[DOTLOOPEXIT50]]
 ; CHECK:       [[_PREHEADER48_PREHEADER_1:.*:]]
-; CHECK-NEXT:    br [[DOTLOOPEXIT49_1:label %.*]]
+; CHECK-NEXT:    [[I5:%.*]] = phi ptr [ [[I]], %[[_LOOPEXIT49]] ], [ [[I]], %[[DOTPREHEADER48_PREHEADER]] ]
+; CHECK-NEXT:    br label %[[DOTLOOPEXIT49_1:.*]]
 ; CHECK:       [[_LOOPEXIT42_1:.*:]]
-; CHECK-NEXT:    br i1 false, [[DOTLOOPEXIT49_1]], label %[[BB20]]
+; CHECK-NEXT:    br [[DOTLOOPEXIT49_2:label %.*]]
 ; CHECK:       [[_LOOPEXIT49_1:.*:]]
-; CHECK-NEXT:    [[I6:%.*]] = phi ptr [ [[I5]], [[DOTLOOPEXIT42_1:%.*]] ], [ [[I5]], %[[DOTPREHEADER48_PREHEADER_1]] ]
+; CHECK-NEXT:    br i1 false, [[DOTLOOPEXIT49_2]], label %[[BB20]]
+; CHECK:       [[_LOOPEXIT49_2:.*:]]
+; CHECK-NEXT:    [[I6:%.*]] = phi ptr [ [[I5]], [[DOTLOOPEXIT42_1:%.*]] ], [ [[I5]], %[[DOTLOOPEXIT49_1]] ]
 ; CHECK-NEXT:    [[I7:%.*]] = getelementptr inbounds i8, ptr [[I6]], i64 [[ARG1]]
 ; CHECK-NEXT:    br label %[[BB8:.*]]
 ; CHECK:       [[BB8]]:
@@ -36,13 +37,16 @@ define void @test(ptr %arg, i64 %arg1, i64 %arg2) {
 ; CHECK:       [[BB13]]:
 ; CHECK-NEXT:    [[I14:%.*]] = phi ptr [ [[ARG]], %[[BB13]] ], [ [[I11]], %[[BB10]] ]
 ; CHECK-NEXT:    [[I15:%.*]] = phi ptr [ null, %[[BB13]] ], [ [[I6]], %[[BB10]] ]
-; CHECK-NEXT:    [[TMP0:%.*]] = load <2 x i64>, ptr [[I14]], align 1
-; CHECK-NEXT:    [[TMP1:%.*]] = shufflevector <2 x i64> [[TMP0]], <2 x i64> poison, <2 x i32> <i32 1, i32 0>
-; CHECK-NEXT:    store <2 x i64> [[TMP1]], ptr [[I15]], align 1
+; CHECK-NEXT:    [[I16:%.*]] = getelementptr inbounds i8, ptr [[I14]], i64 8
+; CHECK-NEXT:    [[I17:%.*]] = load i64, ptr [[I16]], align 1
+; CHECK-NEXT:    store i64 [[I17]], ptr [[I15]], align 1
+; CHECK-NEXT:    [[I18:%.*]] = getelementptr inbounds i8, ptr [[I15]], i64 8
+; CHECK-NEXT:    [[I19:%.*]] = load i64, ptr [[I14]], align 1
+; CHECK-NEXT:    store i64 [[I19]], ptr [[I18]], align 1
 ; CHECK-NEXT:    br i1 false, label %[[BB13]], label %[[BB20]]
 ; CHECK:       [[BB20]]:
 ; CHECK-NEXT:    [[I21]] = phi ptr [ [[I5]], [[DOTLOOPEXIT42_1]] ], [ [[I6]], %[[BB13]] ]
-; CHECK-NEXT:    br label %[[LOOP1]]
+; CHECK-NEXT:    br label %[[DOTLOOPEXIT49]]
 ; CHECK:       [[BB22]]:
 ; CHECK-NEXT:    [[I23:%.*]] = getelementptr inbounds i8, ptr [[I]], i64 [[ARG2]]
 ; CHECK-NEXT:    [[I25:%.*]] = getelementptr inbounds i8, ptr [[I23]], i64 8
