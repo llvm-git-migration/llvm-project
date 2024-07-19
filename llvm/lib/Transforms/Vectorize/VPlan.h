@@ -2196,6 +2196,10 @@ public:
   bool isInLoop() const { return IsInLoop; }
 };
 
+/// A recipe for forming partial reductions. In the loop, an accumulator and
+/// vector operand are added together and passed to the next iteration as the
+/// next accumulator. After the loop body, the accumulator is reduced to a
+/// scalar value.
 class VPPartialReductionRecipe : public VPRecipeWithIRFlags {
   unsigned Opcode;
   unsigned Scale;
