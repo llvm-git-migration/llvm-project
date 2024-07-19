@@ -508,7 +508,7 @@ void ThreadList::DiscardThreadPlans() {
     (*pos)->DiscardThreadPlans(true);
 }
 
-bool ThreadList::WillResume() {
+bool ThreadList::WillResume(RunDirection &direction) {
   // Run through the threads and perform their momentary actions. But we only
   // do this for threads that are running, user suspended threads stay where
   // they are.
@@ -546,7 +546,7 @@ bool ThreadList::WillResume() {
 
       if (thread_sp == GetSelectedThread())
         thread_to_run = thread_sp;
-        
+
       if (thread_sp->ShouldRunBeforePublicStop()) {
         // This takes precedence, so if we find one of these, service it:
         thread_to_run = thread_sp;
@@ -566,6 +566,12 @@ bool ThreadList::WillResume() {
     }
   }
 
+  if (thread_to_run) {
+    direction = thread_to_run->GetCurrentPlan()->GetDirection();
+  } else {
+    direction = m_process.GetBaseDirection();
+  }
+
   // Give all the threads that are likely to run a last chance to set up their
   // state before we negotiate who is actually going to get a chance to run...
   // Don't set to resume suspended threads, and if any thread wanted to stop
@@ -573,9 +579,9 @@ bool ThreadList::WillResume() {
   bool wants_solo_run = run_me_only_list.GetSize(false) > 0;
   for (pos = m_threads.begin(); pos != end; ++pos) {
     ThreadSP thread_sp(*pos);
-    // See if any thread wants to run stopping others.  If it does, then we won't
-    // setup the other threads for resume, since they aren't going to get a
-    // chance to run.  This is necessary because the SetupForResume might add
+    // See if any thread wants to run stopping others.  If it does, then we
+    // won't setup the other threads for resume, since they aren't going to get
+    // a chance to run.  This is necessary because the SetupForResume might add
     // "StopOthers" plans which would then get to be part of the who-gets-to-run
     // negotiation, but they're coming in after the fact, and the threads that
     // are already set up should take priority.
@@ -584,7 +590,12 @@ bool ThreadList::WillResume() {
       if (thread_sp->IsOperatingSystemPluginThread() &&
           !thread_sp->GetBackingThread())
         continue;
-      if (thread_sp->SetupForResume()) {
+      if (thread_sp->SetupToStepOverBreakpointIfNeeded(direction)) {
+        // We only need to step over breakpoints when running forward, and the
+        // step-over-breakpoint plan itself wants to run forward, so this
+        // can't change our desired direction.
+        assert(direction == RunDirection::eRunForward &&
+               thread_sp->GetCurrentPlan()->GetDirection() == direction);
         // You can't say "stop others" and also want yourself to be suspended.
         assert(thread_sp->GetCurrentPlan()->RunState() != eStateSuspended);
         run_me_only_list.AddThread(thread_sp);
@@ -630,6 +641,17 @@ bool ThreadList::WillResume() {
         run_state = eStateSuspended;
       if (!thread_sp->ShouldResume(run_state))
         need_to_resume = false;
+    }
+    if (need_to_resume) {
+      // Ensure all threads are running in the same direction
+      for (pos = m_threads.begin(); pos != end; ++pos) {
+        ThreadSP thread_sp(*pos);
+        while (thread_sp->GetCurrentPlan()->GetDirection() != direction) {
+          // This can't discard the base plan because its direction is
+          // m_process.GetBaseDirection() i.e. `direction`.
+          thread_sp->DiscardPlan();
+        }
+      }
     }
   } else {
     for (pos = m_threads.begin(); pos != end; ++pos) {
