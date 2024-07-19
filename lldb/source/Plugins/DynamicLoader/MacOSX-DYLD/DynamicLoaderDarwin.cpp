@@ -609,6 +609,21 @@ void DynamicLoaderDarwin::UpdateDYLDImageInfoFromNewImageInfo(
   }
 }
 
+llvm::Expected<lldb_private::Symbol> DynamicLoaderDarwin::GetStartSymbol() {
+  ModuleSP dyld_sp = GetDYLDModule();
+  if (!dyld_sp)
+    return llvm::createStringError(
+        "Couldn't retrieve DYLD module. Cannot get `start` symbol.");
+
+  const Symbol *symbol =
+      dyld_sp->FindFirstSymbolWithNameAndType(ConstString("_dyld_start"));
+  if (!symbol)
+    return llvm::createStringError(
+        "Cannot find `start` symbol in DYLD module.");
+
+  return *symbol;
+}
+
 void DynamicLoaderDarwin::SetDYLDModule(lldb::ModuleSP &dyld_module_sp) {
   m_dyld_module_wp = dyld_module_sp;
 }

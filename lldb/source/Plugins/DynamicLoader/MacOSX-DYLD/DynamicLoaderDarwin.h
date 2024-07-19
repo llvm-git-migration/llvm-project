@@ -67,6 +67,8 @@ protected:
   // Clear method for classes derived from this one
   virtual void DoClear() = 0;
 
+  llvm::Expected<lldb_private::Symbol> GetStartSymbol() override;
+
   void SetDYLDModule(lldb::ModuleSP &dyld_module_sp);
 
   lldb::ModuleSP GetDYLDModule();
