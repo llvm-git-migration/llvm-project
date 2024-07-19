@@ -705,14 +705,9 @@ void DAGTypeLegalizer::ReplaceValueWith(SDValue From, SDValue To) {
 }
 
 void DAGTypeLegalizer::SetPromotedInteger(SDValue Op, SDValue Result) {
-  assert(
-      Result.getValueType() ==
-          ((TLI.getOperationAction(Op.getOpcode(), Op.getValueType()) !=
-            TargetLowering::Promote)
-               ? TLI.getTypeToTransformTo(*DAG.getContext(), Op.getValueType())
-               : TLI.getTypeToPromoteTo(Op.getOpcode(),
-                                        Op.getSimpleValueType())) &&
-      "Invalid type for promoted integer");
+  assert(Result.getValueType() ==
+         TLI.getTypeToTransformTo(*DAG.getContext(), Op.getValueType()) &&
+         "Invalid type for promoted integer");
   AnalyzeNewValue(Result);
 
   auto &OpIdEntry = PromotedIntegers[getTableId(Op)];
