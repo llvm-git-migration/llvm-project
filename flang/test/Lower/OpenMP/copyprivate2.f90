@@ -1,7 +1,5 @@
 ! Test lowering of COPYPRIVATE with allocatable/pointer variables.
-! RUN: %flang_fc1 -emit-hlfir -fopenmp \
-! RUN:   -mmlir --openmp-enable-delayed-privatization=false \
-! RUN:   -o - %s 2>&1 | FileCheck %s
+! RUN: %flang_fc1 -emit-hlfir -fopenmp -o - %s 2>&1 | FileCheck %s
 
 !CHECK-LABEL: func private @_copy_box_ptr_i32(
 !CHECK-SAME:                  %[[ARG0:.*]]: !fir.ref<!fir.box<!fir.ptr<i32>>>,
@@ -36,7 +34,7 @@
 !CHECK-NEXT:  }
 
 !CHECK-LABEL: func @_QPtest_alloc_ptr
-!CHECK:         omp.parallel {
+!CHECK:         omp.parallel {{.*}} {
 !CHECK:           %[[A:.*]]:2 = hlfir.declare %{{.*}} {fortran_attrs = #fir.var_attrs<allocatable>,
 !CHECK-SAME:        uniq_name = "_QFtest_alloc_ptrEa"} : (!fir.ref<!fir.box<!fir.heap<!fir.array<?xi32>>>>) ->
 !CHECK-SAME:        (!fir.ref<!fir.box<!fir.heap<!fir.array<?xi32>>>>, !fir.ref<!fir.box<!fir.heap<!fir.array<?xi32>>>>)
