@@ -774,9 +774,8 @@ void DWARFRewriter::updateDebugInfo() {
       processSplitCU(*CU, **SplitCU, DIEBlder, *TempRangesSectionWriter,
                      AddressWriter);
     }
-    for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
+    for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
       processMainBinaryCU(*CU, DIEBlder);
-    }
     finalizeCompileUnits(DIEBlder, *Streamer, OffsetMap,
                          DIEBlder.getProcessedCUs(), *FinalAddrWriter);
   }
