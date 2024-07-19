@@ -2175,7 +2175,8 @@ public:
         Opcode(I.getOpcode()), Scale(Scale) {}
   ~VPPartialReductionRecipe() override = default;
   VPPartialReductionRecipe *clone() override {
-    llvm_unreachable("Partial reductions with epilogue vectorization isn't supported yet.");
+    llvm_unreachable(
+        "Partial reductions with epilogue vectorization isn't supported yet.");
     return nullptr;
   }
   VP_CLASSOF_IMPL(VPDef::VPPartialReductionSC)
