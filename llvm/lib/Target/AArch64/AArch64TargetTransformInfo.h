@@ -392,6 +392,8 @@ public:
     return ST->hasSVE();
   }
 
+  bool hasVectorMatch(VectorType *VT, unsigned SegSize) const;
+
   InstructionCost getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
                                              std::optional<FastMathFlags> FMF,
                                              TTI::TargetCostKind CostKind);

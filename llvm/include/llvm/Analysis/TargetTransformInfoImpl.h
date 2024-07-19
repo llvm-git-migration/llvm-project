@@ -972,6 +972,8 @@ public:
     return false;
   }
 
+  bool hasVectorMatch(VectorType *VT, unsigned SegSize) const { return false; }
+
   TargetTransformInfo::VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const {
     return TargetTransformInfo::VPLegalization(
