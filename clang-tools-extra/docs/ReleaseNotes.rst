@@ -178,6 +178,11 @@ New checks
   Replaces nested ``std::min`` and ``std::max`` calls with an initializer list
   where applicable.
 
+- New :doc:`modernize-use-cpp-style-comments
+  <clang-tidy/checks/modernize/use-cpp-style-comments>` check.
+
+  Detects C Style comments and suggests to use C++ style comments instead.
+
 - New :doc:`modernize-use-designated-initializers
   <clang-tidy/checks/modernize/use-designated-initializers>` check.
 
