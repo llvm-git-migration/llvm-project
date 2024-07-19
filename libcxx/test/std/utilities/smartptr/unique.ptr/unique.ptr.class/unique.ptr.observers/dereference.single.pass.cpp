@@ -12,8 +12,9 @@
 
 // test op*()
 
-#include <memory>
 #include <cassert>
+#include <memory>
+#include <utility>
 
 #include "test_macros.h"
 
