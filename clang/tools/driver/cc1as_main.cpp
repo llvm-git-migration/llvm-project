@@ -168,6 +168,10 @@ struct AssemblerInvocation {
 
   LLVM_PREFERRED_TYPE(bool)
   unsigned Crel : 1;
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned Msa : 1;
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned NoMsa : 1;
 
   /// The name of the relocation model to use.
   std::string RelocationModel;
@@ -211,6 +215,8 @@ public:
     EmitDwarfUnwind = EmitDwarfUnwindType::Default;
     EmitCompactUnwindNonCanonical = false;
     Crel = false;
+    Msa = 0;
+    NoMsa = 0;
   }
 
   static bool CreateFromArgs(AssemblerInvocation &Res,
@@ -382,6 +388,8 @@ bool AssemblerInvocation::CreateFromArgs(AssemblerInvocation &Opts,
   Opts.EmitCompactUnwindNonCanonical =
       Args.hasArg(OPT_femit_compact_unwind_non_canonical);
   Opts.Crel = Args.hasArg(OPT_crel);
+  Opts.Msa = Args.hasArg(OPT_mmsa);
+  Opts.NoMsa = Args.hasArg(OPT_mno_msa);
 
   Opts.AsSecureLogFile = Args.getLastArgValue(OPT_as_secure_log_file);
 
@@ -444,6 +452,8 @@ static bool ExecuteAssemblerImpl(AssemblerInvocation &Opts,
   MCOptions.X86Sse2Avx = Opts.SSE2AVX;
   MCOptions.CompressDebugSections = Opts.CompressDebugSections;
   MCOptions.AsSecureLogFile = Opts.AsSecureLogFile;
+  MCOptions.MCMsa = Opts.Msa;
+  MCOptions.MCNoMsa = Opts.NoMsa;
 
   std::unique_ptr<MCAsmInfo> MAI(
       TheTarget->createMCAsmInfo(*MRI, Opts.Triple, MCOptions));

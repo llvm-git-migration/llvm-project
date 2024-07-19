@@ -2630,6 +2630,10 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
         CmdArgs.push_back("-massembler-no-warn");
       } else if (Value == "--noexecstack") {
         UseNoExecStack = true;
+      } else if (Value == "-mmsa") {
+        CmdArgs.push_back("-mmsa");
+      } else if (Value == "-mno-msa") {
+        CmdArgs.push_back("-mno-msa");
       } else if (Value.starts_with("-compress-debug-sections") ||
                  Value.starts_with("--compress-debug-sections") ||
                  Value == "-nocompress-debug-sections" ||

@@ -463,6 +463,8 @@ static bool initTargetOptions(DiagnosticsEngine &Diags,
           ? llvm::MCTargetOptions::DisableDwarfDirectory
           : llvm::MCTargetOptions::EnableDwarfDirectory;
   Options.MCOptions.MCNoExecStack = CodeGenOpts.NoExecStack;
+  Options.MCOptions.MCMsa = CodeGenOpts.Msa;
+  Options.MCOptions.MCNoMsa = CodeGenOpts.NoMsa;
   Options.MCOptions.MCIncrementalLinkerCompatible =
       CodeGenOpts.IncrementalLinkerCompatible;
   Options.MCOptions.MCFatalWarnings = CodeGenOpts.FatalWarnings;
