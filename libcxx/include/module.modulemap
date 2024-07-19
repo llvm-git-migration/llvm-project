@@ -2133,3 +2133,15 @@ module std_private_utility_unreachable             [system] { header "__utility/
 module std_private_variant_monostate               [system] { header "__variant/monostate.h" }
 
 module std_private_vector_fwd                      [system] { header "__fwd/vector.h" }
+module std_private_vector_comparison               [system] { header "__vector/comparison.h" }
+module std_private_vector_erase                    [system] { header "__vector/erase.h" }
+module std_private_vector_formatter                [system] { header "__vector/formatter.h" }
+module std_private_vector_pmr                      [system] { header "__vector/pmr.h" }
+module std_private_vector_swap                     [system] { header "__vector/swap.h" }
+module std_private_vector_vector_bool              [system] { header "__vector/vector_bool.h" }
+module std_private_vector_vector                   [system] {
+  header "__vector/vector.h"
+  export std_private_bit_reference
+  export std_private_iterator_wrap_iter
+  export std_private_vector_fwd
+}
