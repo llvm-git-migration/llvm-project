@@ -113,6 +113,8 @@ public:
 
   Status DoResume() override;
 
+  Status DoResumeReverse() override;
+
   Status DoHalt(bool &caused_stop) override;
 
   Status DoDetach(bool keep_stopped) override;
