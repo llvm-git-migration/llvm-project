@@ -518,6 +518,10 @@ Changes in existing checks
   usages of ``std::string_view::compare``. Added a `StringLikeClasses` option
   to detect usages of ``compare`` method in custom string-like classes.
 
+- Improved :doc:`exception-escape <clang-tidy/checks/bugprone/exception-escape>`
+  check to correctly detect exception handler of type `CV void *` as catching all 
+  `CV` compatible pointer types.
+
 Removed checks
 ^^^^^^^^^^^^^^
 
