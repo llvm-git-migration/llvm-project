@@ -113,9 +113,6 @@ class MachineModuleInfo {
   // -g. At this moment, there's no way to specify that some CFI directives
   // go into .eh_frame only, while others go into .debug_frame only.
 
-  /// True if debugging information is available in this module.
-  bool DbgInfoAvailable = false;
-
   /// True if this module is being built for windows/msvc, and uses floating
   /// point.  This is used to emit an undefined reference to _fltused.
   bool UsesMSVCFloatingPoint = false;
@@ -185,9 +182,6 @@ public:
   const Ty &getObjFileInfo() const {
     return const_cast<MachineModuleInfo*>(this)->getObjFileInfo<Ty>();
   }
-
-  /// Returns true if valid debug info is present.
-  bool hasDebugInfo() const { return DbgInfoAvailable; }
 
   bool usesMSVCFloatingPoint() const { return UsesMSVCFloatingPoint; }
 
