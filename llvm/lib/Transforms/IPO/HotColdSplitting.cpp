@@ -43,6 +43,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/EHPersonalities.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/ProfDataUtils.h"
 #include "llvm/IR/User.h"
@@ -168,10 +169,24 @@ static bool mayExtractBlock(const BasicBlock &BB) {
   //
   // Resumes that are not reachable from a cleanup landing pad are considered to
   // be unreachable. It’s not safe to split them out either.
+
   if (BB.hasAddressTaken() || BB.isEHPad())
     return false;
   auto Term = BB.getTerminator();
-  return !isa<InvokeInst>(Term) && !isa<ResumeInst>(Term);
+  if (isa<InvokeInst>(Term) || isa<ResumeInst>(Term))
+    return false;
+
+  // Do not outline basic blocks that have token type instructions. e.g.,
+  // exception:
+  // %0 = cleanuppad within none []
+  // call void @"?terminate@@YAXXZ"() [ "funclet"(token %0) ]
+  // br label %continue-exception
+  if (llvm::any_of(
+          BB, [](const Instruction &I) { return I.getType()->isTokenTy(); })) {
+    return false;
+  }
+
+  return true;
 }
 
 /// Mark \p F cold. Based on this assumption, also optimize it for minimum size.
@@ -257,6 +272,12 @@ bool HotColdSplitting::shouldOutlineFrom(const Function &F) const {
       F.hasFnAttribute(Attribute::SanitizeThread) ||
       F.hasFnAttribute(Attribute::SanitizeMemory))
     return false;
+
+  // Support for outlining WinEH code has not been tested sufficiently. It may
+  // trigger verifier failures or miscompiles (see llvm.org/PR40710).
+  if (F.hasPersonalityFn())
+    if (isScopedEHPersonality(classifyEHPersonality(F.getPersonalityFn())))
+      return false;
 
   return true;
 }
