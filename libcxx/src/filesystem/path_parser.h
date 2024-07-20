@@ -174,10 +174,7 @@ public:
     case PS_AtEnd:
       return PATHSTR("");
     case PS_InRootDir:
-      if (RawEntry[0] == '\\')
-        return PATHSTR("\\");
-      else
-        return PATHSTR("/");
+      return PATHSTR("/");
     case PS_InTrailingSep:
       return PATHSTR("");
     case PS_InRootName:
