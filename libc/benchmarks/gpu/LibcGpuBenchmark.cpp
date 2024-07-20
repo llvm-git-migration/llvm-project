@@ -107,6 +107,9 @@ void print_results(Benchmark *b) {
 
 void Benchmark::run_benchmarks() {
   uint64_t id = gpu::get_thread_id();
+  if (id == 0) {
+    LIBC_NAMESPACE::benchmarks::init_random_input();
+  }
   gpu::sync_threads();
 
   for (Benchmark *b : benchmarks) {
