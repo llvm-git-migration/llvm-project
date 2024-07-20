@@ -3363,6 +3363,7 @@ static void encodeTypeForFunctionPointerAuth(const ASTContext &Ctx,
 #include "clang/Basic/RISCVVTypes.def"
       llvm_unreachable("not yet implemented");
     }
+    break;
   }
   case Type::Record: {
     const RecordDecl *RD = T->getAs<RecordType>()->getDecl();
