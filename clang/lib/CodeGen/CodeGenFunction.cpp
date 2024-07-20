@@ -2934,8 +2934,12 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
     //     return DefaultVersion;
     llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
 
-    for (auto Feat : TargetAttrFeats)
-      CurrTargetAttrFeats.push_back(StringRef(Feat).substr(1));
+    for (auto Feat : TargetAttrFeats) {
+      StringRef CurrFeat = Feat;
+      if (!CurrFeat.starts_with("+"))
+        continue;
+      CurrTargetAttrFeats.push_back(CurrFeat.substr(1));
+    }
 
     llvm::BasicBlock *FeatsCondBB = createBasicBlock("resolver_cond", Resolver);
 
