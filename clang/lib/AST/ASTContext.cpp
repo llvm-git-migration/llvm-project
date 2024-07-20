@@ -3285,6 +3285,8 @@ static void encodeTypeForFunctionPointerAuth(const ASTContext &Ctx,
   case Type::Builtin: {
     const auto *BTy = T->getAs<BuiltinType>();
     switch (BTy->getKind()) {
+    default:
+      llvm_unreachable("not yet implemented");
 #define SIGNED_TYPE(Id, SingletonId)                                           \
   case BuiltinType::Id:                                                        \
     OS << "i";                                                                 \
