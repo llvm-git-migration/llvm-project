@@ -86,7 +86,19 @@ void RISCVABIInfo::appendAttributeMangling(StringRef AttrStr,
   }
 
   Out << '.';
-  Out << AttrStr;
+
+  SmallVector<StringRef, 8> Features;
+  AttrStr.consume_front("arch=");
+  AttrStr.split(Features, ",");
+
+  llvm::sort(Features, [](const StringRef LHS, const StringRef RHS) {
+    return LHS.compare(RHS) < 0;
+  });
+
+  for (auto Feat : Features) {
+    Feat.consume_front("+");
+    Out << "_" << Feat;
+  }
 }
 
 void RISCVABIInfo::computeInfo(CGFunctionInfo &FI) const {

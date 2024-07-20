@@ -36,6 +36,12 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    ret i32 1
 //
 //
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo1v._m(
+// CHECK-SAME: ) #[[ATTR0]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 1
+//
+//
 // CHECK-LABEL: define weak_odr ptr @_Z4foo1v.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
@@ -49,12 +55,24 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
-// CHECK-NEXT:    ret ptr @"_Z4foo1v.arch=+m"
+// CHECK-NEXT:    ret ptr @_Z4foo1v._m
 // CHECK:       resolver_else:
 // CHECK-NEXT:    ret ptr @_Z4foo1v.default
 //
 //
 // CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo2v.default(
+// CHECK-SAME: ) #[[ATTR0]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 2
+//
+//
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo2v._zbb(
+// CHECK-SAME: ) #[[ATTR1:[0-9]+]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 2
+//
+//
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo2v._m(
 // CHECK-SAME: ) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 2
@@ -73,7 +91,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
-// CHECK-NEXT:    ret ptr @"_Z4foo2v.arch=+zbb"
+// CHECK-NEXT:    ret ptr @_Z4foo2v._zbb
 // CHECK:       resolver_else:
 // CHECK-NEXT:    [[TMP6:%.*]] = load i64, ptr @__riscv_feature_bits, align 8
 // CHECK-NEXT:    [[TMP7:%.*]] = icmp ugt i64 [[TMP6]], 0
@@ -85,13 +103,19 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP11:%.*]] = and i1 true, [[TMP10]]
 // CHECK-NEXT:    br i1 [[TMP11]], label [[RESOLVER_RETURN2:%.*]], label [[RESOLVER_ELSE3]]
 // CHECK:       resolver_return2:
-// CHECK-NEXT:    ret ptr @"_Z4foo2v.arch=+m"
+// CHECK-NEXT:    ret ptr @_Z4foo2v._m
 // CHECK:       resolver_else3:
 // CHECK-NEXT:    ret ptr @_Z4foo2v.default
 //
 //
 // CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo3v.default(
 // CHECK-SAME: ) #[[ATTR0]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 3
+//
+//
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo3v._c_zbb(
+// CHECK-SAME: ) #[[ATTR2:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 3
 //
@@ -109,13 +133,19 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
-// CHECK-NEXT:    ret ptr @"_Z4foo3v.arch=+zbb,+c"
+// CHECK-NEXT:    ret ptr @_Z4foo3v._c_zbb
 // CHECK:       resolver_else:
 // CHECK-NEXT:    ret ptr @_Z4foo3v.default
 //
 //
 // CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo4v.default(
 // CHECK-SAME: ) #[[ATTR0]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 4
+//
+//
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo4v._v_zbb(
+// CHECK-SAME: ) #[[ATTR3:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret i32 4
 //
@@ -133,7 +163,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
-// CHECK-NEXT:    ret ptr @"_Z4foo4v.arch=+zbb,+v"
+// CHECK-NEXT:    ret ptr @_Z4foo4v._v_zbb
 // CHECK:       resolver_else:
 // CHECK-NEXT:    ret ptr @_Z4foo4v.default
 //
@@ -156,6 +186,12 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    ret i32 2
 //
 //
+// CHECK-LABEL: define dso_local noundef signext i32 @_Z4foo6v._zvkt(
+// CHECK-SAME: ) #[[ATTR4:[0-9]+]] {
+// CHECK-NEXT:  entry:
+// CHECK-NEXT:    ret i32 2
+//
+//
 // CHECK-LABEL: define weak_odr ptr @_Z4foo6v.resolver() comdat {
 // CHECK-NEXT:  resolver_entry:
 // CHECK-NEXT:    call void @__init_riscv_feature_bits()
@@ -169,7 +205,7 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
-// CHECK-NEXT:    ret ptr @"_Z4foo6v.arch=+zvkt"
+// CHECK-NEXT:    ret ptr @_Z4foo6v._zvkt
 // CHECK:       resolver_else:
 // CHECK-NEXT:    ret ptr @_Z4foo6v.default
 //
@@ -190,10 +226,10 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 //
 //.
 // CHECK: attributes #[[ATTR0]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+i,+m,+zmmul" }
-// CHECK: attributes #[[ATTR1:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+i,+m,+zbb,+zmmul" }
-// CHECK: attributes #[[ATTR2:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+c,+i,+m,+zbb,+zmmul" }
-// CHECK: attributes #[[ATTR3:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+d,+f,+i,+m,+v,+zbb,+zicsr,+zmmul,+zve32f,+zve32x,+zve64d,+zve64f,+zve64x,+zvl128b,+zvl32b,+zvl64b" }
-// CHECK: attributes #[[ATTR4:[0-9]+]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+i,+m,+zmmul,+zvkt" }
+// CHECK: attributes #[[ATTR1]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+i,+m,+zbb,+zmmul" }
+// CHECK: attributes #[[ATTR2]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+c,+i,+m,+zbb,+zmmul" }
+// CHECK: attributes #[[ATTR3]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+d,+f,+i,+m,+v,+zbb,+zicsr,+zmmul,+zve32f,+zve32x,+zve64d,+zve64f,+zve64x,+zvl128b,+zvl32b,+zvl64b" }
+// CHECK: attributes #[[ATTR4]] = { mustprogress noinline nounwind optnone "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-features"="+64bit,+i,+m,+zmmul,+zvkt" }
 //.
 // CHECK: [[META0:![0-9]+]] = !{i32 1, !"wchar_size", i32 4}
 // CHECK: [[META1:![0-9]+]] = !{i32 1, !"target-abi", !"lp64"}
