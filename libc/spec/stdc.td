@@ -971,7 +971,7 @@ def StdC : StandardSpec<"stdc"> {
               "vasprintf",
               RetValSpec<IntType>,
               [ArgSpec<CharRestrictedPtrPtr>,
-               ArgSpec<ConstCharPtr>,
+               ArgSpec<ConstCharRestrictedPtr>,
                ArgSpec<VaListType>]
           >,
       ],
