@@ -12,9 +12,10 @@
 
 // class iterator
 
-#include <string_view>
 #include <cassert>
+#include <concepts>
 #include <iterator>
+#include <string_view>
 
 #include "test_macros.h"
 #include "make_string.h"
