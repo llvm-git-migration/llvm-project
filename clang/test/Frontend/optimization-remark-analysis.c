@@ -1,7 +1,7 @@
 // RUN: %clang -O1 -fvectorize -target x86_64-unknown-unknown -emit-llvm -Rpass-analysis -S %s -o - 2>&1 | FileCheck %s --check-prefix=RPASS
 // RUN: %clang -O1 -fvectorize -target x86_64-unknown-unknown -emit-llvm -S %s -o - 2>&1 | FileCheck %s
 
-// RPASS: {{.*}}:12:5: remark: loop not vectorized: loop contains a switch statement
+// RPASS-NOT: {{.*}}:12:5: remark: loop not vectorized
 // CHECK-NOT: remark: loop not vectorized: loop contains a switch statement
 
 double foo(int N, int *Array) {
