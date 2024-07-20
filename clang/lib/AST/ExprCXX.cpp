@@ -1016,12 +1016,14 @@ CXXDefaultArgExpr *CXXDefaultArgExpr::CreateEmpty(const ASTContext &C,
 CXXDefaultArgExpr *CXXDefaultArgExpr::Create(const ASTContext &C,
                                              SourceLocation Loc,
                                              ParmVarDecl *Param,
+                                             DeclContext *UsedContext,
                                              Expr *RewrittenExpr,
-                                             DeclContext *UsedContext) {
+                                             bool HasRewrittenInit) {
   size_t Size = totalSizeToAlloc<Expr *>(RewrittenExpr != nullptr);
   auto *Mem = C.Allocate(Size, alignof(CXXDefaultArgExpr));
-  return new (Mem) CXXDefaultArgExpr(CXXDefaultArgExprClass, Loc, Param,
-                                     RewrittenExpr, UsedContext);
+  return new (Mem)
+      CXXDefaultArgExpr(CXXDefaultArgExprClass, Loc, Param, UsedContext,
+                        RewrittenExpr, HasRewrittenInit);
 }
 
 Expr *CXXDefaultArgExpr::getExpr() {
@@ -1042,7 +1044,8 @@ Expr *CXXDefaultArgExpr::getAdjustedRewrittenExpr() {
 CXXDefaultInitExpr::CXXDefaultInitExpr(const ASTContext &Ctx,
                                        SourceLocation Loc, FieldDecl *Field,
                                        QualType Ty, DeclContext *UsedContext,
-                                       Expr *RewrittenInitExpr)
+                                       Expr *InitExpr,
+                                       bool HasRewrittenInit)
     : Expr(CXXDefaultInitExprClass, Ty.getNonLValueExprType(Ctx),
            Ty->isLValueReferenceType()   ? VK_LValue
            : Ty->isRValueReferenceType() ? VK_XValue
@@ -1050,10 +1053,10 @@ CXXDefaultInitExpr::CXXDefaultInitExpr(const ASTContext &Ctx,
            /*FIXME*/ OK_Ordinary),
       Field(Field), UsedContext(UsedContext) {
   CXXDefaultInitExprBits.Loc = Loc;
-  CXXDefaultInitExprBits.HasRewrittenInit = RewrittenInitExpr != nullptr;
+  CXXDefaultInitExprBits.HasRewrittenInit = HasRewrittenInit;
 
   if (CXXDefaultInitExprBits.HasRewrittenInit)
-    *getTrailingObjects<Expr *>() = RewrittenInitExpr;
+    *getTrailingObjects<Expr *>() = InitExpr;
 
   assert(Field->hasInClassInitializer());
 
@@ -1071,12 +1074,13 @@ CXXDefaultInitExpr *CXXDefaultInitExpr::Create(const ASTContext &Ctx,
                                                SourceLocation Loc,
                                                FieldDecl *Field,
                                                DeclContext *UsedContext,
-                                               Expr *RewrittenInitExpr) {
+                                               Expr *InitExpr,
+                                               bool HasRewrittenInit) {
 
-  size_t Size = totalSizeToAlloc<Expr *>(RewrittenInitExpr != nullptr);
+  size_t Size = totalSizeToAlloc<Expr *>(InitExpr != nullptr);
   auto *Mem = Ctx.Allocate(Size, alignof(CXXDefaultInitExpr));
   return new (Mem) CXXDefaultInitExpr(Ctx, Loc, Field, Field->getType(),
-                                      UsedContext, RewrittenInitExpr);
+                                      UsedContext, InitExpr, HasRewrittenInit);
 }
 
 Expr *CXXDefaultInitExpr::getExpr() {
