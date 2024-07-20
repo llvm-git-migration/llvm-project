@@ -2277,6 +2277,44 @@ void SignalContext::DumpAllRegisters(void *context) {
 #    else
   (void)ucontext;
 #    endif
+#  elif SANITIZER_NETBSD
+#    if defined(__x86_64__)
+  Report("Register values:\n");
+  Printf("rax = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RAX]);
+  Printf("rbx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RBX]);
+  Printf("rcx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RCX]);
+  Printf("rdx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RDX]);
+  Printf("\n");
+  Printf("rdi = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RDI]);
+  Printf("rsi = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RSI]);
+  Printf("rbp = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RBP]);
+  Printf("rsp = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RSP]);
+  Printf("\n");
+  Printf(" r8 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R8]);
+  Printf(" r9 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R9]);
+  Printf("r10 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R10]);
+  Printf("r11 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R11]);
+  Printf("\n");
+  Printf("r12 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R12]);
+  Printf("r13 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R13]);
+  Printf("r14 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R14]);
+  Printf("r15 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R15]);
+  Printf("\n");
+#    elif defined(__i386__)
+  Report("Register values:\n");
+  Printf("eax = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EAX]);
+  Printf("ebx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EBX]);
+  Printf("ecx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ECX]);
+  Printf("edx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EDX]);
+  Printf("\n");
+  Printf("edi = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EDI]);
+  Printf("esi = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ESI]);
+  Printf("ebp = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EBP]);
+  Printf("esp = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ESP]);
+  Printf("\n");
+#    else
+  (void)ucontext;
+#    endif
 #  endif
   // FIXME: Implement this for other OSes and architectures.
 }
