@@ -3959,7 +3959,7 @@ verifyTransferOp(VectorTransferOpInterface op, ShapedType shapedType,
            << AffineMapAttr::get(permutationMap)
            << " vs inBounds of size: " << inBounds.size();
   for (unsigned int i = 0, e = permutationMap.getNumResults(); i < e; ++i)
-    if (isa<AffineConstantExpr>(permutationMap.getResult(i)) && inBounds[i])
+    if (isa<AffineConstantExpr>(permutationMap.getResult(i)) && !inBounds[i])
       return op->emitOpError("requires broadcast dimensions to be in-bounds");
 
   return success();
@@ -4042,6 +4042,14 @@ ParseResult TransferReadOp::parse(OpAsmParser &parser, OperationState &result) {
     result.addAttribute(inBoundsAttrName,
                         builder.getDenseBoolArrayAttr(
                             SmallVector<bool>(permMap.getNumResults(), false)));
+  } else {
+    SmallVector<bool> inBoundsVec;
+    for (auto el : llvm::cast<ArrayAttr>(inBoundsAttr).getValue()) {
+      inBoundsVec.emplace_back(llvm::cast<BoolAttr>(el).getValue());
+    }
+    result.attributes.erase(inBoundsAttrName);
+    result.addAttribute(inBoundsAttrName,
+                        builder.getDenseBoolArrayAttr(inBoundsVec));
   }
   if (parser.resolveOperand(sourceInfo, shapedType, result.operands) ||
       parser.resolveOperands(indexInfo, indexType, result.operands) ||
@@ -4423,7 +4431,16 @@ ParseResult TransferWriteOp::parse(OpAsmParser &parser,
     result.addAttribute(inBoundsAttrName,
                         builder.getDenseBoolArrayAttr(
                             SmallVector<bool>(permMap.getNumResults(), false)));
+  } else {
+    SmallVector<bool> inBoundsVec;
+    for (auto el : llvm::cast<ArrayAttr>(inBoundsAttr).getValue()) {
+      inBoundsVec.emplace_back(llvm::cast<BoolAttr>(el).getValue());
+    }
+    result.attributes.erase(inBoundsAttrName);
+    result.addAttribute(inBoundsAttrName,
+                        builder.getDenseBoolArrayAttr(inBoundsVec));
   }
+
   if (parser.resolveOperand(vectorInfo, vectorType, result.operands) ||
       parser.resolveOperand(sourceInfo, shapedType, result.operands) ||
       parser.resolveOperands(indexInfo, indexType, result.operands))
