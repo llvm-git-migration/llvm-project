@@ -12,8 +12,9 @@
 
 // class iterator
 
-#include <span>
 #include <cassert>
+#include <concepts>
+#include <span>
 #include <string>
 #include <version> // __cpp_lib_ranges_as_const is not defined in span.
 
