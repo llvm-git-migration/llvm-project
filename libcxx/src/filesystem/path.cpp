@@ -55,7 +55,7 @@ string_view_t path::__root_directory() const {
   if (PP.State_ == PathParser::PS_InRootName)
     ++PP;
   if (PP.State_ == PathParser::PS_InRootDir)
-    return *PP;
+    return PP.RawEntry;
   return {};
 }
 
