@@ -21,6 +21,9 @@ void __attribute__((target_clones("default", "+c"))) invaildVersion() {}
 // expected-warning@+1 {{unsupported 'arch=rv64g' in the 'target_clones' attribute string; 'target_clones' attribute ignored}}
 void __attribute__((target_clones("default", "arch=rv64g"))) fullArchString() {}
 
+// expected-warning@+1 {{unsupported 'arch=+zicsr' in the 'target_clones' attribute string; 'target_clones' attribute ignored}}
+void __attribute__((target_clones("default", "arch=+zicsr"))) UnsupportBitMaskExt() {}
+
 
 void lambda() {
   // expected-error@+1 {{attribute 'target_clones' multiversioned functions do not yet support lambdas}}

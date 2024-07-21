@@ -1486,6 +1486,19 @@ bool SemaRISCV::isAliasValid(unsigned BuiltinID, StringRef AliasName) {
          BuiltinID <= RISCV::LastRVVBuiltin;
 }
 
+bool SemaRISCV::isValidFMVExtension(StringRef Ext) {
+  if (Ext.empty())
+    return false;
+
+  Ext.consume_front("+");
+  auto ExtBitmask = llvm::RISCV::getExtensionBitmask(Ext);
+
+  if (Ext.equals_insensitive(ExtBitmask.Name))
+    return true;
+
+  return false;
+}
+
 SemaRISCV::SemaRISCV(Sema &S) : SemaBase(S) {}
 
 } // namespace clang

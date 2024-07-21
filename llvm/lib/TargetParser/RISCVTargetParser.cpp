@@ -14,6 +14,7 @@
 #include "llvm/TargetParser/RISCVTargetParser.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Support/Error.h"
 #include "llvm/TargetParser/RISCVISAInfo.h"
 #include "llvm/TargetParser/Triple.h"
 
@@ -144,26 +145,30 @@ struct LessExtName {
 };
 } // namespace
 
-static Expected<RISCVExtensionBitmaskTable::RISCVExtensionBitmask>
+RISCVExtensionBitmaskTable::RISCVExtensionBitmask
 getExtensionBitmask(StringRef ExtName) {
   ArrayRef<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmasks =
       RISCVExtensionBitmaskTable::ExtensionBitmask;
-  auto *I = llvm::lower_bound(ExtBitmasks, ExtName, LessExtName());
 
-  if (I != ExtBitmasks.end())
-    return *I;
+  for (auto ExtBitmask : ExtBitmasks) {
+    if (ExtName.equals_insensitive(ExtBitmask.Name)) {
+      return ExtBitmask;
+    }
+  }
 
-  return createStringError("Unsupport extension");
+  return RISCVExtensionBitmaskTable::RISCVExtensionBitmask();
 }
 
-llvm::SmallVector<uint64_t> getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
+Expected<llvm::SmallVector<uint64_t>>
+getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
   llvm::SmallVector<uint64_t> BitMasks(RISCV::RISCVFeatureBitSize);
 
   for (auto Ext : Exts) {
-    Expected<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmask =
+    RISCVExtensionBitmaskTable::RISCVExtensionBitmask ExtBitmask =
         getExtensionBitmask(Ext);
-    assert(ExtBitmask && "This extension doesn't has bitmask.");
-    BitMasks[ExtBitmask->GroupID] |= (1ULL << ExtBitmask->BitPosition);
+    if (!Ext.equals_insensitive(ExtBitmask.Name))
+      return createStringError("Unsupport bitmask");
+    BitMasks[ExtBitmask.GroupID] |= (1ULL << ExtBitmask.BitPosition);
   }
 
   return BitMasks;

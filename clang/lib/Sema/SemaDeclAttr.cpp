@@ -3140,7 +3140,11 @@ bool Sema::checkTargetClonesAttrString(
 
         ParsedTargetAttr TargetAttr =
             Context.getTargetInfo().parseTargetAttr(Str);
-        if (TargetAttr.Features.empty())
+
+        if (TargetAttr.Features.empty() ||
+            llvm::any_of(TargetAttr.Features, [&](const StringRef Ext) {
+              return !RISCV().isValidFMVExtension(Ext);
+            }))
           return Diag(CurLoc, diag::warn_unsupported_target_attribute)
                  << Unsupported << None << Str << TargetClones;
       } else if (Str == "default") {

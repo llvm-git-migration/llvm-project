@@ -14394,14 +14394,22 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
     return FeaturesBit;
   };
 
-  SmallVector<uint64_t> RequireFeatureBits =
+  Expected<SmallVector<uint64_t>> RequireFeatureBits =
       llvm::RISCV::getRequireFeatureBitMask(FeaturesStrs);
+
+  // Should guard by Sema part, but if we got the extension without bitmask.
+  // Return false for it.
+  if (!RequireFeatureBits) {
+    consumeError(RequireFeatureBits.takeError());
+    return Builder.getFalse();
+  }
+
   Value *Result = Builder.getTrue();
-  for (unsigned i = 0; i < RequireFeatureBits.size(); i++) {
-    if (!RequireFeatureBits[i])
+  for (unsigned i = 0; i < RequireFeatureBits.get().size(); i++) {
+    if (!RequireFeatureBits.get()[i])
       continue;
     MaxGroupIDUsed = i;
-    Value *Mask = Builder.getInt64(RequireFeatureBits[i]);
+    Value *Mask = Builder.getInt64(RequireFeatureBits.get()[i]);
     Value *Bitset = Builder.CreateAnd(LoadFeatureBit(i), Mask);
     Value *Cmp = Builder.CreateICmpEQ(Bitset, Mask);
     Result = Builder.CreateAnd(Result, Cmp);
