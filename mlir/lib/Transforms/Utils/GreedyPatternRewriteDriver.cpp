@@ -586,7 +586,8 @@ bool GreedyPatternRewriteDriver::processWorklist() {
     };
     function_ref<void(const Pattern &)> onFailure = onFailureCallback;
     auto onSuccessCallback = [&](const Pattern &pattern) {
-      LLVM_DEBUG(logResult("success", "pattern applied successfully"));
+      LLVM_DEBUG(logResult("success", "pattern applied successfully: " +
+                                          pattern.getDebugName()));
       if (config.listener)
         config.listener->notifyPatternEnd(pattern, success());
       return success();
@@ -612,7 +613,7 @@ bool GreedyPatternRewriteDriver::processWorklist() {
 #endif // MLIR_ENABLE_EXPENSIVE_PATTERN_API_CHECKS
 
     LogicalResult matchResult =
-        matcher.matchAndRewrite(op, rewriter, canApply, onFailure, onSuccess);
+        matcher.matchAndRewrite(op, rewriter, nullptr, nullptr, onSuccess);
 
     if (succeeded(matchResult)) {
       LLVM_DEBUG(logResultWithLine("success", "pattern matched"));
