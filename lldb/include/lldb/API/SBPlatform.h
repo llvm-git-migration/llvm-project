@@ -17,7 +17,6 @@
 
 struct PlatformConnectOptions;
 struct PlatformShellCommand;
-class ProcessInstanceInfoMatch;
 
 namespace lldb {
 
@@ -99,6 +98,9 @@ public:
   SBPlatform();
 
   SBPlatform(const char *platform_name);
+
+  SBPlatform(const char *platform_name, const SBDebugger &debugger,
+             const char *script_name, const SBStructuredData &dict);
 
   SBPlatform(const SBPlatform &rhs);
 
