@@ -43,7 +43,6 @@
 // iterator begin() const;
 // iterator end() const;
 
-
 #include <filesystem>
 #include <algorithm>
 #include <cassert>
@@ -59,96 +58,90 @@
 namespace fs = std::filesystem;
 
 struct ComparePathExact {
-  bool operator()(fs::path const& LHS, std::string const& RHS) const {
-    return LHS.string() == RHS;
-  }
+  bool operator()(fs::path const& LHS, std::string const& RHS) const { return LHS.string() == RHS; }
 };
 
-struct PathDecomposeTestcase
-{
-    std::string raw;
-    std::vector<std::string> elements;
-    std::string root_path;
-    std::string root_name;
-    std::string root_directory;
-    std::string relative_path;
-    std::string parent_path;
-    std::string filename;
+struct PathDecomposeTestcase {
+  std::string raw;
+  std::vector<std::string> elements;
+  std::string root_path;
+  std::string root_name;
+  std::string root_directory;
+  std::string relative_path;
+  std::string parent_path;
+  std::string filename;
 };
 
-const PathDecomposeTestcase PathTestCases[] =
-  {
-      {"", {}, "", "", "", "", "", ""}
-    , {".", {"."}, "", "", "", ".", "", "."}
-    , {"..", {".."}, "", "", "", "..", "", ".."}
-    , {"foo", {"foo"}, "", "", "", "foo", "", "foo"}
-    , {"/", {"/"}, "/", "", "/", "", "/", ""}
-    , {"/foo", {"/", "foo"}, "/", "", "/", "foo", "/", "foo"}
-    , {"foo/", {"foo", ""}, "", "", "", "foo/", "foo", ""}
-    , {"/foo/", {"/", "foo", ""}, "/", "", "/", "foo/", "/foo", ""}
-    , {"foo/bar", {"foo","bar"}, "",  "", "",  "foo/bar", "foo", "bar"}
-    , {"/foo//bar", {"/","foo","bar"}, "/", "", "/", "foo/bar", "/foo", "bar"}
+const PathDecomposeTestcase PathTestCases[] = {
+    {"", {}, "", "", "", "", "", ""},
+    {".", {"."}, "", "", "", ".", "", "."},
+    {"..", {".."}, "", "", "", "..", "", ".."},
+    {"foo", {"foo"}, "", "", "", "foo", "", "foo"},
+    {"/", {"/"}, "/", "", "/", "", "/", ""},
+    {"/foo", {"/", "foo"}, "/", "", "/", "foo", "/", "foo"},
+    {"foo/", {"foo", ""}, "", "", "", "foo/", "foo", ""},
+    {"/foo/", {"/", "foo", ""}, "/", "", "/", "foo/", "/foo", ""},
+    {"foo/bar", {"foo", "bar"}, "", "", "", "foo/bar", "foo", "bar"},
+    {"/foo//bar", {"/", "foo", "bar"}, "/", "", "/", "foo/bar", "/foo", "bar"},
 #ifdef _WIN32
-    , {"//net", {"//net"}, "//net", "//net", "", "", "//net", ""}
-    , {"//net/", {"//net", "/"}, "//net/", "//net", "/", "", "//net/", ""}
-    , {"//net/foo", {"//net", "/", "foo"}, "//net/", "//net", "/", "foo", "//net/", "foo"}
+    {"//net", {"//net"}, "//net", "//net", "", "", "//net", ""},
+    {"//net/", {"//net", "/"}, "//net/", "//net", "/", "", "//net/", ""},
+    {"//net/foo", {"//net", "/", "foo"}, "//net/", "//net", "/", "foo", "//net/", "foo"},
 #else
-    , {"//net", {"/", "net"}, "/", "", "/", "net", "/", "net"}
-    , {"//net/", {"/", "net", ""}, "/", "", "/", "net/", "//net", ""}
-    , {"//net/foo", {"/", "net", "foo"}, "/", "", "/", "net/foo", "/net", "foo"}
+    {"//net", {"/", "net"}, "/", "", "/", "net", "/", "net"},
+    {"//net/", {"/", "net", ""}, "/", "", "/", "net/", "//net", ""},
+    {"//net/foo", {"/", "net", "foo"}, "/", "", "/", "net/foo", "/net", "foo"},
 #endif
-    , {"///foo///", {"/", "foo", ""}, "/", "", "/", "foo///", "///foo", ""}
-    , {"///foo///bar", {"/", "foo", "bar"}, "/", "", "/", "foo///bar", "///foo", "bar"}
-    , {"/.", {"/", "."}, "/", "", "/", ".", "/", "."}
-    , {"./", {".", ""}, "", "", "", "./", ".", ""}
-    , {"/..", {"/", ".."}, "/", "", "/", "..", "/", ".."}
-    , {"../", {"..", ""}, "", "", "", "../", "..", ""}
-    , {"foo/.", {"foo", "."}, "", "", "", "foo/.", "foo", "."}
-    , {"foo/..", {"foo", ".."}, "", "", "", "foo/..", "foo", ".."}
-    , {"foo/./", {"foo", ".", ""}, "", "", "", "foo/./", "foo/.", ""}
-    , {"foo/./bar", {"foo", ".", "bar"}, "", "", "", "foo/./bar", "foo/.", "bar"}
-    , {"foo/../", {"foo", "..", ""}, "", "", "", "foo/../", "foo/..", ""}
-    , {"foo/../bar", {"foo", "..", "bar"}, "", "", "", "foo/../bar", "foo/..", "bar"}
+    {"///foo///", {"/", "foo", ""}, "/", "", "/", "foo///", "///foo", ""},
+    {"///foo///bar", {"/", "foo", "bar"}, "/", "", "/", "foo///bar", "///foo", "bar"},
+    {"/.", {"/", "."}, "/", "", "/", ".", "/", "."},
+    {"./", {".", ""}, "", "", "", "./", ".", ""},
+    {"/..", {"/", ".."}, "/", "", "/", "..", "/", ".."},
+    {"../", {"..", ""}, "", "", "", "../", "..", ""},
+    {"foo/.", {"foo", "."}, "", "", "", "foo/.", "foo", "."},
+    {"foo/..", {"foo", ".."}, "", "", "", "foo/..", "foo", ".."},
+    {"foo/./", {"foo", ".", ""}, "", "", "", "foo/./", "foo/.", ""},
+    {"foo/./bar", {"foo", ".", "bar"}, "", "", "", "foo/./bar", "foo/.", "bar"},
+    {"foo/../", {"foo", "..", ""}, "", "", "", "foo/../", "foo/..", ""},
+    {"foo/../bar", {"foo", "..", "bar"}, "", "", "", "foo/../bar", "foo/..", "bar"},
 #ifdef _WIN32
-    , {"c:", {"c:"}, "c:", "c:", "", "", "c:", ""}
-    , {"c:/", {"c:", "/"}, "c:/", "c:", "/", "", "c:/", ""}
-    , {"c:foo", {"c:", "foo"}, "c:", "c:", "", "foo", "c:", "foo"}
-    , {"c:/foo", {"c:", "/", "foo"}, "c:/", "c:", "/", "foo", "c:/", "foo"}
-    , {"c:foo/", {"c:", "foo", ""}, "c:", "c:", "", "foo/", "c:foo", ""}
-    , {"c:/foo/", {"c:", "/", "foo", ""}, "c:/", "c:", "/", "foo/",  "c:/foo", ""}
-    , {"c:/foo/bar", {"c:", "/", "foo", "bar"}, "c:/", "c:", "/", "foo/bar", "c:/foo", "bar"}
+    {"c:", {"c:"}, "c:", "c:", "", "", "c:", ""},
+    {"c:/", {"c:", "/"}, "c:/", "c:", "/", "", "c:/", ""},
+    {"c:foo", {"c:", "foo"}, "c:", "c:", "", "foo", "c:", "foo"},
+    {"c:/foo", {"c:", "/", "foo"}, "c:/", "c:", "/", "foo", "c:/", "foo"},
+    {"c:foo/", {"c:", "foo", ""}, "c:", "c:", "", "foo/", "c:foo", ""},
+    {"c:/foo/", {"c:", "/", "foo", ""}, "c:/", "c:", "/", "foo/", "c:/foo", ""},
+    {"c:/foo/bar", {"c:", "/", "foo", "bar"}, "c:/", "c:", "/", "foo/bar", "c:/foo", "bar"},
 #else
-    , {"c:", {"c:"}, "", "", "", "c:", "", "c:"}
-    , {"c:/", {"c:", ""}, "", "", "", "c:/", "c:", ""}
-    , {"c:foo", {"c:foo"}, "", "", "", "c:foo", "", "c:foo"}
-    , {"c:/foo", {"c:", "foo"}, "", "", "", "c:/foo", "c:", "foo"}
-    , {"c:foo/", {"c:foo", ""}, "", "", "", "c:foo/", "c:foo", ""}
-    , {"c:/foo/", {"c:", "foo", ""}, "", "", "", "c:/foo/",  "c:/foo", ""}
-    , {"c:/foo/bar", {"c:", "foo", "bar"}, "", "", "", "c:/foo/bar", "c:/foo", "bar"}
+    {"c:", {"c:"}, "", "", "", "c:", "", "c:"},
+    {"c:/", {"c:", ""}, "", "", "", "c:/", "c:", ""},
+    {"c:foo", {"c:foo"}, "", "", "", "c:foo", "", "c:foo"},
+    {"c:/foo", {"c:", "foo"}, "", "", "", "c:/foo", "c:", "foo"},
+    {"c:foo/", {"c:foo", ""}, "", "", "", "c:foo/", "c:foo", ""},
+    {"c:/foo/", {"c:", "foo", ""}, "", "", "", "c:/foo/", "c:/foo", ""},
+    {"c:/foo/bar", {"c:", "foo", "bar"}, "", "", "", "c:/foo/bar", "c:/foo", "bar"},
 #endif
-    , {"prn:", {"prn:"}, "", "", "", "prn:", "", "prn:"}
+    {"prn:", {"prn:"}, "", "", "", "prn:", "", "prn:"},
 #ifdef _WIN32
-    , {"c:\\", {"c:", "/"}, "c:\\", "c:", "\\", "", "c:\\", ""}
-    , {"c:\\foo", {"c:", "/", "foo"}, "c:\\", "c:", "\\", "foo", "c:\\", "foo"}
-    , {"c:foo\\", {"c:", "foo", ""}, "c:", "c:", "", "foo\\", "c:foo", ""}
-    , {"c:\\foo\\", {"c:", "/", "foo", ""}, "c:\\", "c:", "\\", "foo\\", "c:\\foo", ""}
-    , {"c:\\foo/",  {"c:", "/", "foo", ""}, "c:\\", "c:", "\\", "foo/", "c:\\foo", ""}
-    , {"c:/foo\\bar", {"c:", "/", "foo", "bar"}, "c:\\", "c:", "\\", "foo\\bar", "c:/foo", "bar"}
+    {"c:\\", {"c:", "/"}, "c:\\", "c:", "\\", "", "c:\\", ""},
+    {"c:\\foo", {"c:", "/", "foo"}, "c:\\", "c:", "\\", "foo", "c:\\", "foo"},
+    {"c:foo\\", {"c:", "foo", ""}, "c:", "c:", "", "foo\\", "c:foo", ""},
+    {"c:\\foo\\", {"c:", "/", "foo", ""}, "c:\\", "c:", "\\", "foo\\", "c:\\foo", ""},
+    {"c:\\foo/", {"c:", "/", "foo", ""}, "c:\\", "c:", "\\", "foo/", "c:\\foo", ""},
+    {"c:/foo\\bar", {"c:", "/", "foo", "bar"}, "c:\\", "c:", "\\", "foo\\bar", "c:/foo", "bar"},
 #else
-    , {"c:\\", {"c:\\"}, "", "", "", "c:\\", "", "c:\\"}
-    , {"c:\\foo", {"c:\\foo"}, "", "", "", "c:\\foo", "", "c:\\foo"}
-    , {"c:foo\\", {"c:foo\\"}, "", "", "", "c:foo\\", "", "c:foo\\"}
-    , {"c:\\foo\\", {"c:\\foo\\"}, "", "", "", "c:\\foo\\", "", "c:\\foo\\"}
-    , {"c:\\foo/",  {"c:\\foo", ""}, "", "", "", "c:\\foo/", "c:\\foo", ""}
-    , {"c:/foo\\bar", {"c:", "foo\\bar"}, "", "", "", "c:/foo\\bar", "c:", "foo\\bar"}
+    {"c:\\", {"c:\\"}, "", "", "", "c:\\", "", "c:\\"},
+    {"c:\\foo", {"c:\\foo"}, "", "", "", "c:\\foo", "", "c:\\foo"},
+    {"c:foo\\", {"c:foo\\"}, "", "", "", "c:foo\\", "", "c:foo\\"},
+    {"c:\\foo\\", {"c:\\foo\\"}, "", "", "", "c:\\foo\\", "", "c:\\foo\\"},
+    {"c:\\foo/", {"c:\\foo", ""}, "", "", "", "c:\\foo/", "c:\\foo", ""},
+    {"c:/foo\\bar", {"c:", "foo\\bar"}, "", "", "", "c:/foo\\bar", "c:", "foo\\bar"},
 #endif
-    , {"//", {"/"}, "/", "", "/", "", "/", ""}
-  };
+    {"//", {"/"}, "/", "", "/", "", "/", ""}};
 
-void decompPathTest()
-{
+void decompPathTest() {
   using namespace fs;
-  for (auto const & TC : PathTestCases) {
+  for (auto const& TC : PathTestCases) {
     fs::path p(TC.raw);
     assert(p == TC.raw);
 
@@ -204,40 +197,34 @@ void decompPathTest()
 
     // check backwards
     std::vector<fs::path> Parts;
-    for (auto it = p.end(); it != p.begin(); )
+    for (auto it = p.end(); it != p.begin();)
       Parts.push_back(*--it);
     assert(static_cast<std::size_t>(std::distance(Parts.begin(), Parts.end())) == TC.elements.size());
     assert(std::equal(Parts.begin(), Parts.end(), TC.elements.rbegin(), ComparePathExact()));
   }
 }
 
-
-struct FilenameDecompTestcase
-{
+struct FilenameDecompTestcase {
   std::string raw;
   std::string filename;
   std::string stem;
   std::string extension;
 };
 
-const FilenameDecompTestcase FilenameTestCases[] =
-{
-    {"", "", "", ""}
-  , {".", ".", ".", ""}
-  , {"..", "..", "..", ""}
-  , {"/", "", "", ""}
-  , {"foo", "foo", "foo", ""}
-  , {"/foo/bar.txt", "bar.txt", "bar", ".txt"}
-  , {"foo..txt", "foo..txt", "foo.", ".txt"}
-  , {".profile", ".profile", ".profile", ""}
-  , {".profile.txt", ".profile.txt", ".profile", ".txt"}
-};
+const FilenameDecompTestcase FilenameTestCases[] = {
+    {"", "", "", ""},
+    {".", ".", ".", ""},
+    {"..", "..", "..", ""},
+    {"/", "", "", ""},
+    {"foo", "foo", "foo", ""},
+    {"/foo/bar.txt", "bar.txt", "bar", ".txt"},
+    {"foo..txt", "foo..txt", "foo.", ".txt"},
+    {".profile", ".profile", ".profile", ""},
+    {".profile.txt", ".profile.txt", ".profile", ".txt"}};
 
-
-void decompFilenameTest()
-{
+void decompFilenameTest() {
   using namespace fs;
-  for (auto const & TC : FilenameTestCases) {
+  for (auto const& TC : FilenameTestCases) {
     fs::path p(TC.raw);
     assert(p == TC.raw);
     ASSERT_NOEXCEPT(p.empty());
@@ -253,8 +240,7 @@ void decompFilenameTest()
   }
 }
 
-int main(int, char**)
-{
+int main(int, char**) {
   decompPathTest();
   decompFilenameTest();
 
