@@ -1333,6 +1333,15 @@ def Experimental
    : SubtargetFeature<"experimental", "HasExperimental",
                       "true", "Experimental intrinsics">;
 
+def FeatureABIVLen32B
+  : SubtargetFeature<"abi-vlen-32b", "ABIVLen", "32", "ABI_VLEN desc">;
+
+foreach i = { 6-16 } in {
+  defvar I = !shl(1, i);
+  def FeatureABIVLen # I # B
+    : SubtargetFeature<"abi-vlen-"#I#"b", "ABIVLen", !cast<string>(I), "ABI_VLEN desc">;
+}
+
 // Some vector hardware implementations do not process all VLEN bits in parallel
 // and instead split over multiple cycles. DLEN refers to the datapath width
 // that can be done in parallel.

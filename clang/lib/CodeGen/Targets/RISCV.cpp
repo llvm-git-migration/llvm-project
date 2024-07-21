@@ -8,6 +8,7 @@
 
 #include "ABIInfoImpl.h"
 #include "TargetInfo.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 
 using namespace clang;
 using namespace clang::CodeGen;
@@ -45,8 +46,8 @@ public:
   void computeInfo(CGFunctionInfo &FI) const override;
 
   ABIArgInfo classifyArgumentType(QualType Ty, bool IsFixed, int &ArgGPRsLeft,
-                                  int &ArgFPRsLeft) const;
-  ABIArgInfo classifyReturnType(QualType RetTy) const;
+                                  int &ArgFPRsLeft, unsigned ABIVLen) const;
+  ABIArgInfo classifyReturnType(QualType RetTy, unsigned ABIVLen) const;
 
   RValue EmitVAArg(CodeGenFunction &CGF, Address VAListAddr, QualType Ty,
                    AggValueSlot Slot) const override;
@@ -62,14 +63,23 @@ public:
                                                llvm::Type *Field2Ty,
                                                CharUnits Field2Off) const;
 
-  ABIArgInfo coerceVLSVector(QualType Ty) const;
+  ABIArgInfo coerceVLSVector(QualType Ty, unsigned ABIVLen = 0) const;
 };
 } // end anonymous namespace
 
 void RISCVABIInfo::computeInfo(CGFunctionInfo &FI) const {
+  unsigned ABIVLen = 1 << FI.getExtInfo().getLog2RISCVABIVLen();
+  if (ABIVLen == 1)
+    // No riscv_vls_cc in the function, check if there's one passed from
+    // compiler options.
+    for (unsigned i = 5; i <= 16; ++i)
+      if (getContext().getTargetInfo().getTargetOpts().FeatureMap.contains(
+              "abi-vlen-" + llvm::utostr(1 << i) + "b"))
+        ABIVLen = 1 << i;
+
   QualType RetTy = FI.getReturnType();
   if (!getCXXABI().classifyReturnType(FI))
-    FI.getReturnInfo() = classifyReturnType(RetTy);
+    FI.getReturnInfo() = classifyReturnType(RetTy, ABIVLen);
 
   // IsRetIndirect is true if classifyArgumentType indicated the value should
   // be passed indirect, or if the type size is a scalar greater than 2*XLen
@@ -96,7 +106,7 @@ void RISCVABIInfo::computeInfo(CGFunctionInfo &FI) const {
   for (auto &ArgInfo : FI.arguments()) {
     bool IsFixed = ArgNum < NumFixedArgs;
     ArgInfo.info =
-        classifyArgumentType(ArgInfo.type, IsFixed, ArgGPRsLeft, ArgFPRsLeft);
+        classifyArgumentType(ArgInfo.type, IsFixed, ArgGPRsLeft, ArgFPRsLeft, ABIVLen);
     ArgNum++;
   }
 }
@@ -317,38 +327,44 @@ ABIArgInfo RISCVABIInfo::coerceAndExpandFPCCEligibleStruct(
 
 // Fixed-length RVV vectors are represented as scalable vectors in function
 // args/return and must be coerced from fixed vectors.
-ABIArgInfo RISCVABIInfo::coerceVLSVector(QualType Ty) const {
+ABIArgInfo RISCVABIInfo::coerceVLSVector(QualType Ty, unsigned ABIVLen) const {
   assert(Ty->isVectorType() && "expected vector type!");
 
   const auto *VT = Ty->castAs<VectorType>();
   assert(VT->getElementType()->isBuiltinType() && "expected builtin type!");
 
-  auto VScale =
-      getContext().getTargetInfo().getVScaleRange(getContext().getLangOpts());
-
   unsigned NumElts = VT->getNumElements();
-  llvm::Type *EltType;
-  if (VT->getVectorKind() == VectorKind::RVVFixedLengthMask) {
-    NumElts *= 8;
-    EltType = llvm::Type::getInt1Ty(getVMContext());
+  llvm::ScalableVectorType *ResType;
+  llvm::Type *EltType = CGT.ConvertType(VT->getElementType());;
+
+  if (ABIVLen == 0) {
+    // RVV fixed-length vector
+    auto VScale =
+        getContext().getTargetInfo().getVScaleRange(getContext().getLangOpts());
+
+    if (VT->getVectorKind() == VectorKind::RVVFixedLengthMask) {
+      NumElts *= 8;
+      EltType = llvm::Type::getInt1Ty(getVMContext());
+    }
+
+    // The MinNumElts is simplified from equation:
+    // NumElts / VScale =
+    //  (EltSize * NumElts / (VScale * RVVBitsPerBlock))
+    //    * (RVVBitsPerBlock / EltSize)
+    ResType = llvm::ScalableVectorType::get(EltType, NumElts / VScale->first);
   } else {
-    assert(VT->getVectorKind() == VectorKind::RVVFixedLengthData &&
-           "Unexpected vector kind");
-    EltType = CGT.ConvertType(VT->getElementType());
+    // Generic vector
+    ResType = llvm::ScalableVectorType::get(
+        EltType, NumElts * llvm::RISCV::RVVBitsPerBlock / ABIVLen);
   }
 
-  // The MinNumElts is simplified from equation:
-  // NumElts / VScale =
-  //  (EltSize * NumElts / (VScale * RVVBitsPerBlock))
-  //    * (RVVBitsPerBlock / EltSize)
-  llvm::ScalableVectorType *ResType =
-      llvm::ScalableVectorType::get(EltType, NumElts / VScale->first);
   return ABIArgInfo::getDirect(ResType);
 }
 
 ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
                                               int &ArgGPRsLeft,
-                                              int &ArgFPRsLeft) const {
+                                              int &ArgFPRsLeft,
+                                              unsigned ABIVLen) const {
   assert(ArgGPRsLeft <= NumArgGPRs && "Arg GPR tracking underflow");
   Ty = useFirstFieldIfTransparentUnion(Ty);
 
@@ -451,10 +467,15 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
     return Info;
   }
 
-  if (const VectorType *VT = Ty->getAs<VectorType>())
+  if (const VectorType *VT = Ty->getAs<VectorType>()) {
     if (VT->getVectorKind() == VectorKind::RVVFixedLengthData ||
         VT->getVectorKind() == VectorKind::RVVFixedLengthMask)
       return coerceVLSVector(Ty);
+    if (VT->getVectorKind() == VectorKind::Generic && ABIVLen != 1)
+      // Generic vector without riscv_vls_cc should fall through and pass by
+      // reference.
+      return coerceVLSVector(Ty, ABIVLen);
+  }
 
   // Aggregates which are <= 2*XLen will be passed in registers if possible,
   // so coerce to integers.
@@ -477,7 +498,7 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
   return getNaturalAlignIndirect(Ty, /*ByVal=*/false);
 }
 
-ABIArgInfo RISCVABIInfo::classifyReturnType(QualType RetTy) const {
+ABIArgInfo RISCVABIInfo::classifyReturnType(QualType RetTy, unsigned ABIVLen) const {
   if (RetTy->isVoidType())
     return ABIArgInfo::getIgnore();
 
@@ -487,7 +508,7 @@ ABIArgInfo RISCVABIInfo::classifyReturnType(QualType RetTy) const {
   // The rules for return and argument types are the same, so defer to
   // classifyArgumentType.
   return classifyArgumentType(RetTy, /*IsFixed=*/true, ArgGPRsLeft,
-                              ArgFPRsLeft);
+                              ArgFPRsLeft, ABIVLen);
 }
 
 RValue RISCVABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,

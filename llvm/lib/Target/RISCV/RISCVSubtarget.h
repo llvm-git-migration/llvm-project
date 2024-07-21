@@ -75,6 +75,7 @@ private:
 #include "RISCVGenSubtargetInfo.inc"
 
   unsigned ZvlLen = 0;
+  unsigned ABIVLen = 0;
   unsigned RVVVectorBitsMin;
   unsigned RVVVectorBitsMax;
   uint8_t MaxInterleaveFactor = 2;
