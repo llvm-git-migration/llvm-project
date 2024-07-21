@@ -128,8 +128,8 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
-// CHECK-NEXT:    [[TMP3:%.*]] = and i64 [[TMP2]], 12
-// CHECK-NEXT:    [[TMP4:%.*]] = icmp eq i64 [[TMP3]], 12
+// CHECK-NEXT:    [[TMP3:%.*]] = and i64 [[TMP2]], 268435460
+// CHECK-NEXT:    [[TMP4:%.*]] = icmp eq i64 [[TMP3]], 268435460
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
@@ -158,8 +158,8 @@ int bar() { return foo1() + foo2() + foo3() + foo4() + foo5(); }
 // CHECK-NEXT:    br i1 [[TMP1]], label [[RESOLVER_COND:%.*]], label [[RESOLVER_ELSE:%.*]]
 // CHECK:       resolver_cond:
 // CHECK-NEXT:    [[TMP2:%.*]] = load i64, ptr getelementptr inbounds ({ i32, [1 x i64] }, ptr @__riscv_feature_bits, i32 0, i32 1, i32 0), align 8
-// CHECK-NEXT:    [[TMP3:%.*]] = and i64 [[TMP2]], 69206016
-// CHECK-NEXT:    [[TMP4:%.*]] = icmp eq i64 [[TMP3]], 69206016
+// CHECK-NEXT:    [[TMP3:%.*]] = and i64 [[TMP2]], 270532608
+// CHECK-NEXT:    [[TMP4:%.*]] = icmp eq i64 [[TMP3]], 270532608
 // CHECK-NEXT:    [[TMP5:%.*]] = and i1 true, [[TMP4]]
 // CHECK-NEXT:    br i1 [[TMP5]], label [[RESOLVER_RETURN:%.*]], label [[RESOLVER_ELSE]]
 // CHECK:       resolver_return:
