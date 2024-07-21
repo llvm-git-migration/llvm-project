@@ -14371,8 +14371,7 @@ CodeGenFunction::EmitAArch64CpuSupports(ArrayRef<StringRef> FeaturesStrs) {
   return Result;
 }
 
-Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
-                                             unsigned &MaxGroupIDUsed) {
+Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs) {
 
   const unsigned FeatureBitSize = llvm::RISCV::RISCVFeatureBitSize;
   llvm::ArrayType *ArrayOfInt64Ty =
@@ -14408,7 +14407,6 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
   for (unsigned i = 0; i < RequireFeatureBits.get().size(); i++) {
     if (!RequireFeatureBits.get()[i])
       continue;
-    MaxGroupIDUsed = i;
     Value *Mask = Builder.getInt64(RequireFeatureBits.get()[i]);
     Value *Bitset = Builder.CreateAnd(LoadFeatureBit(i), Mask);
     Value *Cmp = Builder.CreateICmpEQ(Bitset, Mask);
@@ -14416,32 +14414,6 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs,
   }
 
   return Result;
-}
-
-Value *CodeGenFunction::EmitRISCVFeatureBitsLength(unsigned MaxGroupIDUsed) {
-
-  const unsigned FeatureBitSize = llvm::RISCV::RISCVFeatureBitSize;
-  llvm::ArrayType *ArrayOfInt64Ty =
-      llvm::ArrayType::get(Int64Ty, FeatureBitSize);
-  llvm::Type *StructTy = llvm::StructType::get(Int32Ty, ArrayOfInt64Ty);
-  llvm::Constant *RISCVFeaturesBits =
-      CGM.CreateRuntimeVariable(StructTy, "__riscv_feature_bits");
-  cast<llvm::GlobalValue>(RISCVFeaturesBits)->setDSOLocal(true);
-
-  auto LoadMaxGroupID = [&]() {
-    llvm::Value *GEPIndices[] = {Builder.getInt32(0), Builder.getInt32(0)};
-    llvm::Value *Ptr =
-        Builder.CreateInBoundsGEP(StructTy, RISCVFeaturesBits, GEPIndices);
-    Value *Length =
-        Builder.CreateAlignedLoad(Int64Ty, Ptr, CharUnits::fromQuantity(8));
-    return Length;
-  };
-
-  Value *UsedMaxGroupID = Builder.getInt64(MaxGroupIDUsed);
-  Value *GroupIDResult =
-      Builder.CreateICmpUGT(LoadMaxGroupID(), UsedMaxGroupID);
-
-  return GroupIDResult;
 }
 
 Value *CodeGenFunction::EmitX86BuiltinExpr(unsigned BuiltinID,

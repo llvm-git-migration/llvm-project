@@ -2909,29 +2909,29 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
     if (TargetAttrFeats.empty())
       continue;
 
-    // Two conditions need to be checked for the current version:
-    //
-    // 1. LengthCondition: The maximum group ID of the required extension
-    //    does not exceed the runtime object's length.
-    //    __riscv_feature_bits.length > MAX_USED_GROUPID
+    // Only one conditions need to be checked for the current version:
     //
     // 2. FeaturesCondition: The bitmask of the required extension has been
     //    enabled by the runtime object.
     //    (__riscv_feature_bits.features[i] & REQUIRED_BITMASK) ==
     //    REQUIRED_BITMASK
     //
-    // When both conditions are met, return this version of the function.
+    // When condition is met, return this version of the function.
     // Otherwise, try the next version.
     //
-    // if (LengthConditionVersion1 && FeaturesConditionVersion1)
+    // if (FeaturesConditionVersion1)
     //     return Version1;
-    // else if (LengthConditionVersion2 && FeaturesConditionVersion2)
+    // else if (FeaturesConditionVersion2)
     //     return Version2;
-    // else if (LengthConditionVersion3 && FeaturesConditionVersion3)
+    // else if (FeaturesConditionVersion3)
     //     return Version3;
     // ...
     // else
     //     return DefaultVersion;
+
+    // TODO: Add a condition to check the length due to runtime library version
+    // constraints. Without checking the length before access, it may result in
+    // accessing an incorrect memory address. Currently, the length must be 1.
     llvm::SmallVector<StringRef, 8> CurrTargetAttrFeats;
 
     for (auto &Feat : TargetAttrFeats) {
@@ -2941,16 +2941,8 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
       CurrTargetAttrFeats.push_back(CurrFeat.substr(1));
     }
 
-    llvm::BasicBlock *FeatsCondBB = createBasicBlock("resolver_cond", Resolver);
-
-    Builder.SetInsertPoint(FeatsCondBB);
-    unsigned MaxGroupIDUsed = 0;
-    llvm::Value *FeatsCondition =
-        EmitRISCVCpuSupports(CurrTargetAttrFeats, MaxGroupIDUsed);
-
     Builder.SetInsertPoint(CurBlock);
-    llvm::Value *MaxGroupLengthCondition =
-        EmitRISCVFeatureBitsLength(MaxGroupIDUsed);
+    llvm::Value *FeatsCondition = EmitRISCVCpuSupports(CurrTargetAttrFeats);
 
     llvm::BasicBlock *RetBlock = createBasicBlock("resolver_return", Resolver);
     CGBuilderTy RetBuilder(*this, RetBlock);
@@ -2959,9 +2951,6 @@ void CodeGenFunction::EmitRISCVMultiVersionResolver(
     llvm::BasicBlock *ElseBlock = createBasicBlock("resolver_else", Resolver);
 
     Builder.SetInsertPoint(CurBlock);
-    Builder.CreateCondBr(MaxGroupLengthCondition, FeatsCondBB, ElseBlock);
-
-    Builder.SetInsertPoint(FeatsCondBB);
     Builder.CreateCondBr(FeatsCondition, RetBlock, ElseBlock);
 
     CurBlock = ElseBlock;

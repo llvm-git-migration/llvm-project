@@ -5342,9 +5342,7 @@ private:
   llvm::Value *EmitAArch64CpuSupports(const CallExpr *E);
   llvm::Value *EmitAArch64CpuSupports(ArrayRef<StringRef> FeatureStrs);
   llvm::Value *EmitRISCVCpuInit();
-  llvm::Value *EmitRISCVCpuSupports(ArrayRef<StringRef> FeatureStrs,
-                                    unsigned &MaxGroupIDUsed);
-  llvm::Value *EmitRISCVFeatureBitsLength(unsigned MaxGroupIDUsed);
+  llvm::Value *EmitRISCVCpuSupports(ArrayRef<StringRef> FeatureStrs);
 };
 
 inline DominatingLLVMValue::saved_type
