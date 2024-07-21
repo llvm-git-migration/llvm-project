@@ -116,6 +116,8 @@ struct VPlanTransforms {
       const SmallPtrSetImpl<const InterleaveGroup<Instruction> *>
           &InterleaveGroups,
       VPRecipeBuilder &RecipeBuilder, bool ScalarEpilogueAllowed);
+
+  static bool narrowInterleaveGroups(VPlan &Plan, ElementCount VF);
 };
 
 } // namespace llvm

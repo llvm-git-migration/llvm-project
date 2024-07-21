@@ -7487,6 +7487,9 @@ LoopVectorizationPlanner::executePlan(
 
   VPlanTransforms::optimizeForVFAndUF(BestVPlan, BestVF, BestUF, PSE);
 
+  if (VPlanTransforms::narrowInterleaveGroups(BestVPlan, BestVF)) {
+    LLVM_DEBUG(dbgs() << "Narrowed interleave\n");
+  }
   LLVM_DEBUG(dbgs() << "Executing best plan with VF=" << BestVF
                     << ", UF=" << BestUF << '\n');
   BestVPlan.setName("Final VPlan");
