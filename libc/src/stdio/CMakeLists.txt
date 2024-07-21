@@ -164,6 +164,21 @@ add_entrypoint_object(
 )
 
 add_entrypoint_object(
+  asprintf
+  SRCS
+    asprintf.cpp
+  HDRS
+    asprintf.h
+  DEPENDS
+    libc.src.__support.arg_list
+    libc.src.stdio.printf_core.printf_main
+    libc.src.stdio.printf_core.writer
+    libc.src.stdio.vasprintf
+    libc.src.stdlib.malloc
+    libc.src.stdlib.realloc
+)
+
+add_entrypoint_object(
   vsprintf
   SRCS
     vsprintf.cpp

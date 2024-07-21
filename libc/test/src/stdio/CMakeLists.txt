@@ -191,6 +191,19 @@ add_libc_test(
     libc.src.stdio.printf
 )
 
+add_libc_test(
+   asprintf_test
+   SUITE
+     libc_stdio_unittests
+   SRCS
+     asprintf_test.cpp
+   DEPENDS
+     libc.src.stdio.asprintf
+     libc.src.string.memset
+     libc.include.stdlib
+     libc.src.stdio.sprintf
+ )
+
 add_fp_unittest(
   vsprintf_test
   UNIT_TEST_ONLY
