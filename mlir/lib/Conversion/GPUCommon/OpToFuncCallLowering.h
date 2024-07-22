@@ -31,9 +31,9 @@ template <typename SourceOp>
 struct OpToFuncCallLowering : public ConvertOpToLLVMPattern<SourceOp> {
 public:
   explicit OpToFuncCallLowering(LLVMTypeConverter &lowering, StringRef f32Func,
-                                StringRef f64Func)
+                                StringRef f64Func, StringRef f32FastFunc)
       : ConvertOpToLLVMPattern<SourceOp>(lowering), f32Func(f32Func),
-        f64Func(f64Func) {}
+        f64Func(f64Func), f32FastFunc(f32FastFunc) {}
 
   LogicalResult
   matchAndRewrite(SourceOp op, typename SourceOp::Adaptor adaptor,
@@ -55,7 +55,7 @@ public:
     Type resultType = castedOperands.front().getType();
     Type funcType = getFunctionType(resultType, castedOperands);
     StringRef funcName =
-        getFunctionName(cast<LLVM::LLVMFunctionType>(funcType).getReturnType());
+        getFunctionName(cast<LLVM::LLVMFunctionType>(funcType).getReturnType(), op.getFastmath());
     if (funcName.empty())
       return failure();
 
@@ -90,9 +90,13 @@ private:
     return LLVM::LLVMFunctionType::get(resultType, operandTypes);
   }
 
-  StringRef getFunctionName(Type type) const {
-    if (isa<Float32Type>(type))
-      return f32Func;
+  StringRef getFunctionName(Type type, arith::FastMathFlags flag) const {
+    if (isa<Float32Type>(type)) {
+      if (arith::FastMathFlags::fast == flag && !f32FastFunc.empty())
+        return f32FastFunc;
+      else
+        return f32Func;
+    }
     if (isa<Float64Type>(type))
       return f64Func;
     return "";
@@ -113,6 +117,7 @@ private:
 
   const std::string f32Func;
   const std::string f64Func;
+  const std::string f32FastFunc;
 };
 
 } // namespace mlir
