@@ -616,7 +616,7 @@ SmallVector<SectionCommand *, 0> ScriptParser::readOverlay() {
 SectionClassDesc *ScriptParser::readSectionClassDescription() {
   StringRef name = readSectionClassName();
   SectionClassDesc *desc = make<SectionClassDesc>(name);
-  if (!script->sectionClasses.insert({name, desc}).second)
+  if (!script->sectionClasses.insert({CachedHashStringRef(name), desc}).second)
     setError("section class '" + name + "' already defined");
   expect("{");
   while (!errorCount() && !consume("}")) {
@@ -636,7 +636,7 @@ SectionClassDesc *ScriptParser::readSectionClassDescription() {
 
 StringRef ScriptParser::readSectionClassName() {
   expect("(");
-  StringRef name = next();
+  StringRef name = unquote(next());
   expect(")");
   return name;
 }
