@@ -149,12 +149,10 @@ RISCVExtensionBitmaskTable::RISCVExtensionBitmask
 getExtensionBitmask(StringRef ExtName) {
   ArrayRef<RISCVExtensionBitmaskTable::RISCVExtensionBitmask> ExtBitmasks =
       RISCVExtensionBitmaskTable::ExtensionBitmask;
+  auto *I = llvm::lower_bound(ExtBitmasks, ExtName, LessExtName());
 
-  for (auto ExtBitmask : ExtBitmasks) {
-    if (ExtName.equals_insensitive(ExtBitmask.Name)) {
-      return ExtBitmask;
-    }
-  }
+  if (I != ExtBitmasks.end() && ExtName.equals_insensitive(I->Name))
+    return *I;
 
   return RISCVExtensionBitmaskTable::RISCVExtensionBitmask();
 }
