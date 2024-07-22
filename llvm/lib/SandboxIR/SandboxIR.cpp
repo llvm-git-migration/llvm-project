@@ -455,6 +455,50 @@ void Instruction::dump() const {
 }
 #endif // NDEBUG
 
+Value *SelectInst::create(Value *Cond, Value *True, Value *False,
+                          Instruction *InsertBefore, Context &Ctx,
+                          const Twine &Name) {
+  llvm::Instruction *BeforeIR = InsertBefore->getTopmostLLVMInstruction();
+  auto &Builder = Ctx.getLLVMIRBuilder();
+  Builder.SetInsertPoint(BeforeIR);
+  llvm::Value *NewV =
+      Builder.CreateSelect(Cond->Val, True->Val, False->Val, Name);
+  if (auto *NewSI = dyn_cast<llvm::SelectInst>(NewV))
+    return Ctx.createSelectInst(NewSI);
+  assert(isa<llvm::Constant>(NewV) && "Expected constant");
+  return Ctx.getOrCreateConstant(cast<llvm::Constant>(NewV));
+}
+
+Value *SelectInst::create(Value *Cond, Value *True, Value *False,
+                          BasicBlock *InsertAtEnd, Context &Ctx,
+                          const Twine &Name) {
+  auto *IRInsertAtEnd = cast<llvm::BasicBlock>(InsertAtEnd->Val);
+  auto &Builder = Ctx.getLLVMIRBuilder();
+  Builder.SetInsertPoint(IRInsertAtEnd);
+  llvm::Value *NewV =
+      Builder.CreateSelect(Cond->Val, True->Val, False->Val, Name);
+  if (auto *NewSI = dyn_cast<llvm::SelectInst>(NewV))
+    return Ctx.createSelectInst(NewSI);
+  assert(isa<llvm::Constant>(NewV) && "Expected constant");
+  return Ctx.getOrCreateConstant(cast<llvm::Constant>(NewV));
+}
+
+bool SelectInst::classof(const Value *From) {
+  return From->getSubclassID() == ClassID::Select;
+}
+
+#ifndef NDEBUG
+void SelectInst::dump(raw_ostream &OS) const {
+  dumpCommonPrefix(OS);
+  dumpCommonSuffix(OS);
+}
+
+void SelectInst::dump() const {
+  dump(dbgs());
+  dbgs() << "\n";
+}
+#endif // NDEBUG
+
 LoadInst *LoadInst::create(Type *Ty, Value *Ptr, MaybeAlign Align,
                            Instruction *InsertBefore, Context &Ctx,
                            const Twine &Name) {
@@ -700,6 +744,11 @@ Value *Context::getOrCreateValueInternal(llvm::Value *LLVMV, llvm::User *U) {
   assert(isa<llvm::Instruction>(LLVMV) && "Expected Instruction");
 
   switch (cast<llvm::Instruction>(LLVMV)->getOpcode()) {
+  case llvm::Instruction::Select: {
+    auto *LLVMSel = cast<llvm::SelectInst>(LLVMV);
+    It->second = std::unique_ptr<SelectInst>(new SelectInst(LLVMSel, *this));
+    return It->second.get();
+  }
   case llvm::Instruction::Load: {
     auto *LLVMLd = cast<llvm::LoadInst>(LLVMV);
     It->second = std::unique_ptr<LoadInst>(new LoadInst(LLVMLd, *this));
@@ -731,6 +780,11 @@ BasicBlock *Context::createBasicBlock(llvm::BasicBlock *LLVMBB) {
   // Create SandboxIR for BB's body.
   BB->buildBasicBlockFromLLVMIR(LLVMBB);
   return BB;
+}
+
+SelectInst *Context::createSelectInst(llvm::SelectInst *SI) {
+  auto NewPtr = std::unique_ptr<SelectInst>(new SelectInst(SI, *this));
+  return cast<SelectInst>(registerValue(std::move(NewPtr)));
 }
 
 LoadInst *Context::createLoadInst(llvm::LoadInst *LI) {

@@ -561,6 +561,41 @@ define void @foo(i8 %v1) {
   EXPECT_EQ(I0->getNextNode(), Ret);
 }
 
+TEST_F(SandboxIRTest, SelectInst) {
+  parseIR(C, R"IR(
+define void @foo(i1 %c0, i8 %v0, i8 %v1, i1 %c1) {
+  %sel = select i1 %c0, i8 %v0, i8 %v1
+  ret void
+}
+)IR");
+  llvm::Function *LLVMF = &*M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+  sandboxir::Function *F = Ctx.createFunction(LLVMF);
+  auto *Cond0 = F->getArg(0);
+  auto *V0 = F->getArg(1);
+  auto *V1 = F->getArg(2);
+  auto *Cond1 = F->getArg(3);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto *Select = cast<sandboxir::SelectInst>(&*It++);
+
+  // Check getCondition().
+  EXPECT_EQ(Select->getCondition(), Cond0);
+  // Check getTrueValue().
+  EXPECT_EQ(Select->getTrueValue(), V0);
+  // Check getFalseValue().
+  EXPECT_EQ(Select->getFalseValue(), V1);
+  // Check setCondition().
+  Select->setCondition(Cond1);
+  EXPECT_EQ(Select->getCondition(), Cond1);
+  // Check setTrueValue().
+  Select->setTrueValue(V1);
+  EXPECT_EQ(Select->getTrueValue(), V1);
+  // Check setFalseValue().
+  Select->setFalseValue(V0);
+  EXPECT_EQ(Select->getFalseValue(), V0);
+}
+
 TEST_F(SandboxIRTest, LoadInst) {
   parseIR(C, R"IR(
 define void @foo(ptr %arg0, ptr %arg1) {

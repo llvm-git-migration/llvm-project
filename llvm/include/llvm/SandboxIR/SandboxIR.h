@@ -177,6 +177,7 @@ protected:
   friend class Context;    // For getting `Val`.
   friend class User;       // For getting `Val`.
   friend class Use;        // For getting `Val`.
+  friend class SelectInst; // For getting `Val`.
   friend class LoadInst;   // For getting `Val`.
   friend class StoreInst;  // For getting `Val`.
   friend class ReturnInst; // For getting `Val`.
@@ -499,6 +500,7 @@ protected:
   /// A SandboxIR Instruction may map to multiple LLVM IR Instruction. This
   /// returns its topmost LLVM IR instruction.
   llvm::Instruction *getTopmostLLVMInstruction() const;
+  friend class SelectInst; // For getTopmostLLVMInstruction().
   friend class LoadInst;   // For getTopmostLLVMInstruction().
   friend class StoreInst;  // For getTopmostLLVMInstruction().
   friend class ReturnInst; // For getTopmostLLVMInstruction().
@@ -560,6 +562,49 @@ public:
                                  const sandboxir::Instruction &SBI) {
     SBI.dump(OS);
     return OS;
+  }
+  void dump(raw_ostream &OS) const override;
+  LLVM_DUMP_METHOD void dump() const override;
+#endif
+};
+
+class SelectInst : public Instruction {
+  /// Use Context::createSelectInst(). Don't call the
+  /// constructor directly.
+  SelectInst(llvm::SelectInst *CI, Context &Ctx)
+      : Instruction(ClassID::Select, Opcode::Select, CI, Ctx) {}
+  friend Context; // for SelectInst()
+  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
+    return getOperandUseDefault(OpIdx, Verify);
+  }
+  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
+    return {cast<llvm::Instruction>(Val)};
+  }
+
+public:
+  unsigned getUseOperandNo(const Use &Use) const final {
+    return getUseOperandNoDefault(Use);
+  }
+  unsigned getNumOfIRInstrs() const final { return 1u; }
+  static Value *create(Value *Cond, Value *True, Value *False,
+                       Instruction *InsertBefore, Context &Ctx,
+                       const Twine &Name = "");
+  static Value *create(Value *Cond, Value *True, Value *False,
+                       BasicBlock *InsertAtEnd, Context &Ctx,
+                       const Twine &Name = "");
+  Value *getCondition() { return getOperand(0); }
+  Value *getTrueValue() { return getOperand(1); }
+  Value *getFalseValue() { return getOperand(2); }
+
+  void setCondition(Value *New) { setOperand(0, New); }
+  void setTrueValue(Value *New) { setOperand(1, New); }
+  void setFalseValue(Value *New) { setOperand(2, New); }
+  void swapValues() { cast<llvm::SelectInst>(Val)->swapValues(); }
+  /// For isa/dyn_cast.
+  static bool classof(const Value *From);
+#ifndef NDEBUG
+  void verify() const final {
+    assert(isa<llvm::SelectInst>(Val) && "Expected SelectInst!");
   }
   void dump(raw_ostream &OS) const override;
   LLVM_DUMP_METHOD void dump() const override;
@@ -803,6 +848,10 @@ protected:
   Value *getOrCreateValue(llvm::Value *LLVMV) {
     return getOrCreateValueInternal(LLVMV, 0);
   }
+  /// Get or create a sandboxir::Constant from an existing LLVM IR \p LLVMC.
+  Constant *getOrCreateConstant(llvm::Constant *LLVMC) {
+    return cast<Constant>(getOrCreateValueInternal(LLVMC, 0));
+  }
   /// Create a sandboxir::BasicBlock for an existing LLVM IR \p BB. This will
   /// also create all contents of the block.
   BasicBlock *createBasicBlock(llvm::BasicBlock *BB);
@@ -812,6 +861,8 @@ protected:
   IRBuilder<ConstantFolder> LLVMIRBuilder;
   auto &getLLVMIRBuilder() { return LLVMIRBuilder; }
 
+  SelectInst *createSelectInst(llvm::SelectInst *SI);
+  friend SelectInst; // For createSelectInst()
   LoadInst *createLoadInst(llvm::LoadInst *LI);
   friend LoadInst; // For createLoadInst()
   StoreInst *createStoreInst(llvm::StoreInst *SI);
