@@ -607,7 +607,11 @@ size_t PageSize() {
 }
 
 void SetThreadName(std::thread &thread, const std::string &name) {
-  // TODO ?
+  if (name.size() > 31) {
+    name.resize(31); 
+  } 
+  (void)zx_object_set_property(thread.native_handle(), ZX_PROP_NAME,
+                               name.c_str(), name.size());
 }
 
 } // namespace fuzzer
