@@ -156,21 +156,6 @@ getExtensionBitmask(StringRef ExtName) {
 
   return RISCVExtensionBitmaskTable::RISCVExtensionBitmask();
 }
-
-Expected<llvm::SmallVector<uint64_t>>
-getRequireFeatureBitMask(ArrayRef<StringRef> Exts) {
-  llvm::SmallVector<uint64_t> BitMasks(RISCV::RISCVFeatureBitSize);
-
-  for (auto Ext : Exts) {
-    RISCVExtensionBitmaskTable::RISCVExtensionBitmask ExtBitmask =
-        getExtensionBitmask(Ext);
-    if (!Ext.equals_insensitive(ExtBitmask.Name))
-      return createStringError("Unsupport bitmask");
-    BitMasks[ExtBitmask.GroupID] |= (1ULL << ExtBitmask.BitPosition);
-  }
-
-  return BitMasks;
-}
 } // namespace RISCV
 
 namespace RISCVVType {

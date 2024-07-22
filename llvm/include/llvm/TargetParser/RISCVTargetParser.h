@@ -47,8 +47,6 @@ void fillValidCPUArchList(SmallVectorImpl<StringRef> &Values, bool IsRV64);
 void fillValidTuneCPUArchList(SmallVectorImpl<StringRef> &Values, bool IsRV64);
 bool hasFastScalarUnalignedAccess(StringRef CPU);
 bool hasFastVectorUnalignedAccess(StringRef CPU);
-Expected<llvm::SmallVector<uint64_t>>
-    getRequireFeatureBitMask(ArrayRef<StringRef>);
 RISCVExtensionBitmaskTable::RISCVExtensionBitmask
 getExtensionBitmask(StringRef ExtName);
 

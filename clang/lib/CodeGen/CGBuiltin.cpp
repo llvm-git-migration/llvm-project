@@ -14406,21 +14406,22 @@ Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs) {
     return FeaturesBit;
   };
 
-  Expected<SmallVector<uint64_t>> RequireFeatureBits =
-      llvm::RISCV::getRequireFeatureBitMask(FeaturesStrs);
+  SmallVector<uint64_t> RequireBitMaskForEachGroup(
+      llvm::RISCV::RISCVFeatureBitSize);
 
-  // Should guard by Sema part, but if we got the extension without bitmask.
-  // Return false for it.
-  if (!RequireFeatureBits) {
-    consumeError(RequireFeatureBits.takeError());
-    return Builder.getFalse();
+  for (auto Feat : FeaturesStrs) {
+    auto ExtBitMask = llvm::RISCV::getExtensionBitmask(Feat);
+    if (!Feat.equals_insensitive(ExtBitMask.Name))
+      return Builder.getFalse();
+    RequireBitMaskForEachGroup[ExtBitMask.GroupID] |=
+        (1ULL << ExtBitMask.BitPosition);
   }
 
   Value *Result = Builder.getTrue();
-  for (unsigned i = 0; i < RequireFeatureBits.get().size(); i++) {
-    if (!RequireFeatureBits.get()[i])
+  for (unsigned i = 0; i < RequireBitMaskForEachGroup.size(); i++) {
+    if (!RequireBitMaskForEachGroup[i])
       continue;
-    Value *Mask = Builder.getInt64(RequireFeatureBits.get()[i]);
+    Value *Mask = Builder.getInt64(RequireBitMaskForEachGroup[i]);
     Value *Bitset = Builder.CreateAnd(LoadFeatureBit(i), Mask);
     Value *Cmp = Builder.CreateICmpEQ(Bitset, Mask);
     Result = Builder.CreateAnd(Result, Cmp);
