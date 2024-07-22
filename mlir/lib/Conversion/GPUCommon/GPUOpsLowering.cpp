@@ -9,6 +9,7 @@
 #include "GPUOpsLowering.h"
 
 #include "mlir/Conversion/GPUCommon/GPUCommonPass.h"
+#include "mlir/Conversion/LLVMCommon/TypeConverter.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -53,9 +54,9 @@ GPUFuncOpLowering::matchAndRewrite(gpu::GPUFuncOp gpuFuncOp, OpAdaptor adaptor,
   // Remap proper input types.
   TypeConverter::SignatureConversion signatureConversion(
       gpuFuncOp.front().getNumArguments());
-
+  auto argsPassingMode = getTypeConverter()->getArgumentsPassingMode(gpuFuncOp);
   Type funcType = getTypeConverter()->convertFunctionSignature(
-      gpuFuncOp.getFunctionType(), /*isVariadic=*/false,
+      gpuFuncOp.getFunctionType(), argsPassingMode, /*isVariadic=*/false,
       getTypeConverter()->getOptions().useBarePtrCallConv, signatureConversion);
   if (!funcType) {
     return rewriter.notifyMatchFailure(gpuFuncOp, [&](Diagnostic &diag) {

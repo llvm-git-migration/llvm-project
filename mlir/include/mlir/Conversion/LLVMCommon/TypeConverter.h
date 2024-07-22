@@ -16,6 +16,7 @@
 
 #include "mlir/Conversion/LLVMCommon/LoweringOptions.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Interfaces/FunctionInterfaces.h"
 #include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
@@ -40,6 +41,16 @@ class LLVMTypeConverter : public TypeConverter {
 public:
   using TypeConverter::convertType;
 
+  /// Encodes the passing mode for function arguments annotated with
+  /// `llvm.byval` and `llvm.byref` attributes:
+  ///   * BYVAL: The argument has an `llvm.byval` attribute and, therefore,
+  ///            it's passed by value.
+  ///   * BYREF: The argument has an `llvm.byref` attribute and, therefore,
+  ///            it's passed by reference.
+  ///   * UNKNOWN: The argument doesn't have either `llvm.byval` or
+  ///              `llvm.byref` attributes so its passing mode is unknown.
+  enum class ArgumentPassingMode { BYVAL, BYREF, UNKNOWN };
+
   /// Create an LLVMTypeConverter using the default LowerToLLVMOptions.
   /// Optionally takes a data layout analysis to use in conversions.
   LLVMTypeConverter(MLIRContext *ctx,
@@ -50,11 +61,17 @@ public:
   LLVMTypeConverter(MLIRContext *ctx, const LowerToLLVMOptions &options,
                     const DataLayoutAnalysis *analysis = nullptr);
 
+  /// Returns the passing mode for function arguments annotated with
+  /// `llvm.byval` and `llvm.byref` attributes.
+  SmallVector<ArgumentPassingMode>
+  getArgumentsPassingMode(FunctionOpInterface funcOp) const;
+
   /// Convert a function type.  The arguments and results are converted one by
   /// one and results are packed into a wrapped LLVM IR structure type. `result`
   /// is populated with argument mapping.
-  Type convertFunctionSignature(FunctionType funcTy, bool isVariadic,
-                                bool useBarePtrCallConv,
+  Type convertFunctionSignature(FunctionType funcTy,
+                                ArrayRef<ArgumentPassingMode> argsPassingMode,
+                                bool isVariadic, bool useBarePtrCallConv,
                                 SignatureConversion &result) const;
 
   /// Convert a non-empty list of types to be returned from a function into an

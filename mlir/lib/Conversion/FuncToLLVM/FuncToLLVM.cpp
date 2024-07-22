@@ -20,6 +20,7 @@
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/LLVMCommon/ConversionTarget.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
+#include "mlir/Conversion/LLVMCommon/TypeConverter.h"
 #include "mlir/Conversion/LLVMCommon/VectorPattern.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/FunctionCallUtils.h"
@@ -279,10 +280,11 @@ mlir::convertFuncOpToLLVMFuncOp(FunctionOpInterface funcOp,
 
   // Convert the original function arguments. They are converted using the
   // LLVMTypeConverter provided to this legalization pattern.
+  auto argsPassingMode = converter.getArgumentsPassingMode(funcOp);
   auto varargsAttr = funcOp->getAttrOfType<BoolAttr>(varargsAttrName);
   TypeConverter::SignatureConversion result(funcOp.getNumArguments());
   auto llvmType = converter.convertFunctionSignature(
-      funcTy, varargsAttr && varargsAttr.getValue(),
+      funcTy, argsPassingMode, varargsAttr && varargsAttr.getValue(),
       shouldUseBarePtrCallConv(funcOp, &converter), result);
   if (!llvmType)
     return rewriter.notifyMatchFailure(funcOp, "signature conversion failed");

@@ -1410,9 +1410,10 @@ public:
     auto funcType = funcOp.getFunctionType();
     TypeConverter::SignatureConversion signatureConverter(
         funcType.getNumInputs());
+    auto argsPassingMode = typeConverter.getArgumentsPassingMode(funcOp);
     auto llvmType = typeConverter.convertFunctionSignature(
-        funcType, /*isVariadic=*/false, /*useBarePtrCallConv=*/false,
-        signatureConverter);
+        funcType, argsPassingMode, /*isVariadic=*/false,
+        /*useBarePtrCallConv=*/false, signatureConverter);
     if (!llvmType)
       return failure();
 

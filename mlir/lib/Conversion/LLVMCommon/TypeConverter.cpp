@@ -269,23 +269,55 @@ Type LLVMTypeConverter::convertFunctionType(FunctionType type) const {
   return LLVM::LLVMPointerType::get(type.getContext());
 }
 
+SmallVector<LLVMTypeConverter::ArgumentPassingMode>
+LLVMTypeConverter::getArgumentsPassingMode(FunctionOpInterface funcOp) const {
+  SmallVector<ArgumentPassingMode> argsPassingMode(
+      funcOp.getNumArguments(), ArgumentPassingMode::UNKNOWN);
+
+  for (int argIdx : llvm::seq(funcOp.getNumArguments())) {
+    for (NamedAttribute namedAttr : funcOp.getArgAttrs(argIdx)) {
+      if (namedAttr.getName() == LLVM::LLVMDialect::getByValAttrName()) {
+        argsPassingMode[argIdx] = ArgumentPassingMode::BYVAL;
+        break;
+      }
+      if (namedAttr.getName() == LLVM::LLVMDialect::getByRefAttrName()) {
+        argsPassingMode[argIdx] = ArgumentPassingMode::BYREF;
+        break;
+      }
+    }
+  }
+
+  return argsPassingMode;
+}
+
 // Function types are converted to LLVM Function types by recursively converting
 // argument and result types.  If MLIR Function has zero results, the LLVM
 // Function has one VoidType result.  If MLIR Function has more than one result,
 // they are into an LLVM StructType in their order of appearance.
 Type LLVMTypeConverter::convertFunctionSignature(
-    FunctionType funcTy, bool isVariadic, bool useBarePtrCallConv,
+    FunctionType funcTy, ArrayRef<ArgumentPassingMode> argsPassingMode,
+    bool isVariadic, bool useBarePtrCallConv,
     LLVMTypeConverter::SignatureConversion &result) const {
   // Select the argument converter depending on the calling convention.
   useBarePtrCallConv = useBarePtrCallConv || options.useBarePtrCallConv;
   auto funcArgConverter = useBarePtrCallConv ? barePtrFuncArgTypeConverter
                                              : structFuncArgTypeConverter;
   // Convert argument types one by one and check for errors.
+  MLIRContext *ctx = funcTy.getContext();
   for (auto [idx, type] : llvm::enumerate(funcTy.getInputs())) {
-    SmallVector<Type, 8> converted;
-    if (failed(funcArgConverter(*this, type, converted)))
+    SmallVector<Type, 8> convertedTypes;
+    if (failed(funcArgConverter(*this, type, convertedTypes)))
       return {};
-    result.addInputs(idx, converted);
+    // Type converter can't differenciate between converting an argument type or
+    // any other type. If a converted argument has the `llvm.byval` attribute,
+    // we replace the type with an LLVM pointer so that the `llvm.byval`
+    // convention is correct.
+    ArgumentPassingMode argPassMode = argsPassingMode[idx];
+    for (Type &convertedTy : convertedTypes) {
+      if (argPassMode == ArgumentPassingMode::BYVAL)
+        convertedTy = LLVM::LLVMPointerType::get(ctx);
+    }
+    result.addInputs(idx, convertedTypes);
   }
 
   // If function does not return anything, create the void result type,
