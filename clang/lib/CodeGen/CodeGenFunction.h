@@ -5343,6 +5343,7 @@ private:
   llvm::Value *EmitAArch64CpuSupports(ArrayRef<StringRef> FeatureStrs);
   llvm::Value *EmitRISCVCpuInit();
   llvm::Value *EmitRISCVCpuSupports(ArrayRef<StringRef> FeatureStrs);
+  llvm::Value *EmitRISCVFeatureLength();
 };
 
 inline DominatingLLVMValue::saved_type

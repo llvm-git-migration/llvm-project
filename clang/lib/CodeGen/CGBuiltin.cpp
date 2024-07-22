@@ -14371,23 +14371,36 @@ CodeGenFunction::EmitAArch64CpuSupports(ArrayRef<StringRef> FeaturesStrs) {
   return Result;
 }
 
-Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs) {
-
-  const unsigned FeatureBitSize = llvm::RISCV::RISCVFeatureBitSize;
+static llvm::Type *getTypeOfRISCVFeatureBits(CodeGenModule &CGM,
+                                             llvm::LLVMContext &Context) {
+  llvm::Type *Int32Ty = llvm::Type::getInt32Ty(Context);
+  llvm::Type *Int64Ty = llvm::Type::getInt64Ty(Context);
   llvm::ArrayType *ArrayOfInt64Ty =
-      llvm::ArrayType::get(Int64Ty, FeatureBitSize);
+      llvm::ArrayType::get(Int64Ty, llvm::RISCV::RISCVFeatureBitSize);
   llvm::Type *StructTy = llvm::StructType::get(Int32Ty, ArrayOfInt64Ty);
-  llvm::Constant *RISCVFeaturesBits =
-      CGM.CreateRuntimeVariable(StructTy, "__riscv_feature_bits");
+  return StructTy;
+}
+
+static llvm::Constant *setupRISCVFeatureBits(CodeGenModule &CGM,
+                                             llvm::LLVMContext &Context) {
+  llvm::Constant *RISCVFeaturesBits = CGM.CreateRuntimeVariable(
+      getTypeOfRISCVFeatureBits(CGM, Context), "__riscv_feature_bits");
   cast<llvm::GlobalValue>(RISCVFeaturesBits)->setDSOLocal(true);
+  return RISCVFeaturesBits;
+}
+
+Value *CodeGenFunction::EmitRISCVCpuSupports(ArrayRef<StringRef> FeaturesStrs) {
+  llvm::Constant *RISCVFeaturesBits =
+      setupRISCVFeatureBits(CGM, getLLVMContext());
 
   auto LoadFeatureBit = [&](unsigned Index) {
     // Create GEP then load.
     Value *IndexVal = llvm::ConstantInt::get(Int32Ty, Index);
     llvm::Value *GEPIndices[] = {Builder.getInt32(0), Builder.getInt32(1),
                                  IndexVal};
-    Value *Ptr =
-        Builder.CreateInBoundsGEP(StructTy, RISCVFeaturesBits, GEPIndices);
+    Value *Ptr = Builder.CreateInBoundsGEP(
+        getTypeOfRISCVFeatureBits(CGM, getLLVMContext()), RISCVFeaturesBits,
+        GEPIndices);
     Value *FeaturesBit =
         Builder.CreateAlignedLoad(Int64Ty, Ptr, CharUnits::fromQuantity(8));
     return FeaturesBit;
