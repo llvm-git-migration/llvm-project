@@ -1510,9 +1510,8 @@ CXXDependentScopeMemberExpr::CXXDependentScopeMemberExpr(
     new (getTrailingObjects<NestedNameSpecifierLoc>())
         NestedNameSpecifierLoc(QualifierLoc);
 
-  std::uninitialized_copy_n(UnqualifiedLookups.data(),
-                            UnqualifiedLookups.size(),
-                            getTrailingObjects<DeclAccessPair>());
+  std::uninitialized_copy(UnqualifiedLookups.begin(), UnqualifiedLookups.end(),
+                          getTrailingObjects<DeclAccessPair>());
 
   if (TemplateArgs) {
     auto Deps = TemplateArgumentDependence::None;
