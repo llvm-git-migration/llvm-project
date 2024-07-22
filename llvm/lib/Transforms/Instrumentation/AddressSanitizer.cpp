@@ -1249,17 +1249,11 @@ AddressSanitizerPass::AddressSanitizerPass(
       UseOdrIndicator(UseOdrIndicator), DestructorKind(DestructorKind),
       ConstructorKind(ConstructorKind) {}
 
-static bool hasAsanModuleCtor(Module &M) {
-  if (M.getFunction(kAsanModuleCtorName))
-    return true;
-  return false;
-}
-
 PreservedAnalyses AddressSanitizerPass::run(Module &M,
                                             ModuleAnalysisManager &MAM) {
-  // Return early if asan.module_ctor is already present in the module.
+  // Return early if nosanitize module flag is present for the module.
   // This implies that asan pass has already run before.
-  if (hasAsanModuleCtor(M))
+  if (M.getModuleFlag("nosanitize"))
     return PreservedAnalyses::all();
 
   ModuleAddressSanitizer ModuleSanitizer(
@@ -1278,6 +1272,8 @@ PreservedAnalyses AddressSanitizerPass::run(Module &M,
     Modified |= FunctionSanitizer.instrumentFunction(F, &TLI);
   }
   Modified |= ModuleSanitizer.instrumentModule(M);
+  if (Modified)
+    M.addModuleFlag(Module::ModFlagBehavior::Override, "nosanitize", 1);
   if (!Modified)
     return PreservedAnalyses::all();
 
