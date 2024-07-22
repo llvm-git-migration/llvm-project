@@ -147,6 +147,12 @@ New checks
   Detects error-prone Curiously Recurring Template Pattern usage, when the CRTP
   can be constructed outside itself and the derived class.
 
+- New :doc:`bugprone-incorrect-iterators
+  <clang-tidy/checks/bugprone/incorrect-iterators>` check.
+
+  Detects calls to iterator algorithms where they are called with potentially
+  invalid arguments.
+
 - New :doc:`bugprone-pointer-arithmetic-on-polymorphic-object
   <clang-tidy/checks/bugprone/pointer-arithmetic-on-polymorphic-object>` check.
 
