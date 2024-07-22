@@ -2751,7 +2751,10 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
 
       if (RequiresCast) {
         unsigned Size = getContext().getTypeSize(QTy);
-        Ty = llvm::IntegerType::get(getLLVMContext(), Size);
+        if (Size)
+          Ty = llvm::IntegerType::get(getLLVMContext(), Size);
+        else
+          CGM.Error(S.getAsmLoc(), "Output operand is sizeless!");
       }
       ResultRegTypes.push_back(Ty);
       // If this output is tied to an input, and if the input is larger, then
