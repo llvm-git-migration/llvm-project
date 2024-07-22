@@ -69,6 +69,34 @@ define void @foo(ptr %ptr) {
   EXPECT_EQ(Ld->getOperand(0), Gep0);
 }
 
+TEST_F(TrackerTest, SetUse) {
+  parseIR(C, R"IR(
+define void @foo(ptr %ptr, i8 %arg) {
+  %ld = load i8, ptr %ptr
+  %add = add i8 %ld, %arg
+  ret void
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+  auto *F = Ctx.createFunction(&LLVMF);
+  unsigned ArgIdx = 0;
+  auto *Arg0 = F->getArg(ArgIdx++);
+  auto *BB = &*F->begin();
+  auto &Tracker = Ctx.getTracker();
+  Tracker.save();
+  auto It = BB->begin();
+  auto *Ld = &*It++;
+  auto *Add = &*It++;
+
+  Ctx.save();
+  sandboxir::Use Use = Add->getOperandUse(0);
+  Use.set(Arg0);
+  EXPECT_EQ(Add->getOperand(0), Arg0);
+  Ctx.revert();
+  EXPECT_EQ(Add->getOperand(0), Ld);
+}
+
 TEST_F(TrackerTest, SwapOperands) {
   parseIR(C, R"IR(
 define void @foo(i1 %cond) {
@@ -412,4 +440,150 @@ define i32 @foo(i32 %arg) {
   EXPECT_EQ(&*It++, Add1);
   EXPECT_EQ(&*It++, Ret);
   EXPECT_EQ(It, BB->end());
+}
+
+// TODO: Test multi-instruction patterns.
+TEST_F(TrackerTest, InsertIntoBB) {
+  parseIR(C, R"IR(
+define void @foo(i32 %arg) {
+  %add0 = add i32 %arg, %arg
+  ret void
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+
+  auto *F = Ctx.createFunction(&LLVMF);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  sandboxir::Instruction *Add0 = &*It++;
+  sandboxir::Instruction *Ret = &*It++;
+  // Detach `Add0` before we save.
+  Add0->removeFromParent();
+
+  // Check insertBefore(Instruction *) with tracking enabled.
+  Ctx.save();
+  Add0->insertBefore(Ret);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Check insertAfter(Instruction *) with tracking enabled.
+  Ctx.save();
+  Add0->insertAfter(Ret);
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // Check insertInto(BasicBlock *, BasicBlock::iterator) with tracking enabled.
+  Ctx.save();
+  Add0->insertInto(BB, Ret->getIterator());
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Add0);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+
+  // To make sure we don't leak memory insert `Add0` back into the BB before the
+  // end of the test.
+  Add0->insertBefore(Ret);
+}
+
+// TODO: Test multi-instruction patterns.
+TEST_F(TrackerTest, CreateAndInsertInst) {
+  parseIR(C, R"IR(
+define void @foo(ptr %ptr) {
+  %ld = load i8, ptr %ptr, align 64
+  ret void
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+
+  auto *F = Ctx.createFunction(&LLVMF);
+  auto *Ptr = F->getArg(0);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto *Ld = cast<sandboxir::LoadInst>(&*It++);
+  auto *Ret = &*It++;
+
+  Ctx.save();
+  // Check create(InsertBefore) with tracking enabled.
+  sandboxir::LoadInst *NewLd =
+      sandboxir::LoadInst::create(Ld->getType(), Ptr, Align(8),
+                                  /*InsertBefore=*/Ld, Ctx, "NewLd");
+  It = BB->begin();
+  EXPECT_EQ(&*It++, NewLd);
+  EXPECT_EQ(&*It++, Ld);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+  // Check revert().
+  Ctx.revert();
+  It = BB->begin();
+  EXPECT_EQ(&*It++, Ld);
+  EXPECT_EQ(&*It++, Ret);
+  EXPECT_EQ(It, BB->end());
+}
+
+TEST_F(TrackerTest, CallBaseSetters) {
+  parseIR(C, R"IR(
+declare void @bar1(i8)
+declare void @bar2(i8)
+
+define void @foo(i8 %arg0, i8 %arg1) {
+  call void @bar1(i8 %arg0)
+  ret void
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+
+  auto *F = Ctx.createFunction(&LLVMF);
+  unsigned ArgIdx = 0;
+  auto *Arg0 = F->getArg(ArgIdx++);
+  auto *Arg1 = F->getArg(ArgIdx++);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto *Call = cast<sandboxir::CallBase>(&*It++);
+  [[maybe_unused]] auto *Ret = cast<sandboxir::ReturnInst>(&*It++);
+
+  // Check setArgOperand().
+  Ctx.save();
+  Call->setArgOperand(0, Arg1);
+  EXPECT_EQ(Call->getArgOperand(0), Arg1);
+  Ctx.revert();
+  EXPECT_EQ(Call->getArgOperand(0), Arg0);
+
+  auto *Bar1F = Call->getCalledFunction();
+  auto *Bar2F = Ctx.createFunction(M->getFunction("bar2"));
+
+  // Check setCalledOperand().
+  Ctx.save();
+  Call->setCalledOperand(Bar2F);
+  EXPECT_EQ(Call->getCalledOperand(), Bar2F);
+  Ctx.revert();
+  EXPECT_EQ(Call->getCalledOperand(), Bar1F);
+
+  // Check setCalledFunction().
+  Ctx.save();
+  Call->setCalledFunction(Bar2F);
+  EXPECT_EQ(Call->getCalledFunction(), Bar2F);
+  Ctx.revert();
+  EXPECT_EQ(Call->getCalledFunction(), Bar1F);
 }
