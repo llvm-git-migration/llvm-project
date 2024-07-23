@@ -98,6 +98,12 @@ Improvements to clang-tidy
 New checks
 ^^^^^^^^^^
 
+- New :doc:`bugprone-incorrect-iterators
+  <clang-tidy/checks/bugprone/incorrect-iterators>` check.
+
+  Detects calls to iterator algorithms where they are called with potentially
+  invalid arguments.
+
 New check aliases
 ^^^^^^^^^^^^^^^^^
 
