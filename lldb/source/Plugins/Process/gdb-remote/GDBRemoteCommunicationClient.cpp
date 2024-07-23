@@ -3064,22 +3064,41 @@ static int gdb_errno_to_system(int err) {
 
 static uint64_t ParseHostIOPacketResponse(StringExtractorGDBRemote &response,
                                           uint64_t fail_result, Status &error) {
+  // The packet is expected to have the following format:
+  // 'F<retcode>,<errno>'
+
   response.SetFilePos(0);
   if (response.GetChar() != 'F')
     return fail_result;
+
   int32_t result = response.GetS32(-2, 16);
   if (result == -2)
     return fail_result;
-  if (response.GetChar() == ',') {
-    int result_errno = gdb_errno_to_system(response.GetS32(-1, 16));
-    if (result_errno != -1)
-      error = Status(result_errno, eErrorTypePOSIX);
-    else
-      error = Status(-1, eErrorTypeGeneric);
-  } else
+
+  if (response.GetChar() != ',') {
     error.Clear();
+    return result;
+  }
+
+  // Response packet should contain a error code at the end. This code
+  // corresponds either to the gdb IOFile error code, or to the posix errno.
+  int32_t result_errno = response.GetS32(-1, 16);
+  if (result_errno == -1) {
+    error = Status(-1, eErrorTypeGeneric);
+    return result;
+  }
+
+  int rsp_errno = gdb_errno_to_system(result_errno);
+  if (rsp_errno != -1) {
+    error = Status(rsp_errno, eErrorTypePOSIX);
+    return result;
+  }
+
+  // Have received a system error that isn't described in gdb rsp protocol
+  error = Status(result_errno, eErrorTypePOSIX);
   return result;
 }
+
 lldb::user_id_t
 GDBRemoteCommunicationClient::OpenFile(const lldb_private::FileSpec &file_spec,
                                        File::OpenOptions flags, mode_t mode,
