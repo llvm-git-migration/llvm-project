@@ -2,9 +2,9 @@
 Test address breakpoints set with shared library of SBAddress work correctly.
 """
 
-
 import lldb
 import lldbsuite.test.lldbutil as lldbutil
+from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 
 
@@ -16,6 +16,7 @@ class AddressBreakpointTestCase(TestBase):
         self.build()
         self.address_breakpoints()
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def address_breakpoints(self):
         """Test address breakpoints set with shared library of SBAddress work correctly."""
         target = self.createTestTarget()

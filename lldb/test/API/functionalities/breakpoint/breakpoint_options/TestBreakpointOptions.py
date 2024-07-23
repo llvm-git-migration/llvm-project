@@ -2,13 +2,14 @@
 Test breakpoint command for different options.
 """
 
-
 import lldb
+from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 import lldbsuite.test.lldbutil as lldbutil
 
 
 class BreakpointOptionsTestCase(TestBase):
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test(self):
         """Test breakpoint command for different options."""
         self.build()

@@ -2,7 +2,6 @@
 Test that a binary can be slid to different load addresses correctly
 """
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -12,6 +11,7 @@ from lldbsuite.test import lldbutil
 class MultipleSlidesTestCase(TestBase):
     NO_DEBUG_INFO_TESTCASE = True
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_mulitple_slides(self):
         """Test that a binary can be slid multiple times correctly."""
         self.build()

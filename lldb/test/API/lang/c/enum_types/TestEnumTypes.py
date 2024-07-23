@@ -1,6 +1,5 @@
 """Look up enum type information and check for correct display."""
 
-
 import lldb
 from lldbsuite.test.lldbtest import *
 import lldbsuite.test.lldbutil as lldbutil
@@ -14,6 +13,7 @@ class EnumTypesTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.c", "// Set break point at this line.")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_command_line(self):
         """Test 'image lookup -t enum_test_days' and check for correct display and enum value printing."""
         self.build()

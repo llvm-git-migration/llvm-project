@@ -13,6 +13,7 @@ class PythonBreakpointCommandSettingTestCase(TestBase):
     NO_DEBUG_INFO_TESTCASE = True
 
     @add_test_categories(["pyapi"])
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_step_out_python(self):
         """Test stepping out using a python breakpoint command."""
         self.build()

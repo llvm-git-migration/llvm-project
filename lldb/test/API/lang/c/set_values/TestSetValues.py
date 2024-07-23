@@ -1,6 +1,5 @@
 """Test settings and readings of program variables."""
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -18,6 +17,7 @@ class SetValuesTestCase(TestBase):
         self.line4 = line_number("main.c", "// Set break point #4.")
         self.line5 = line_number("main.c", "// Set break point #5.")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test(self):
         """Test settings and readings of program variables."""
         self.build()

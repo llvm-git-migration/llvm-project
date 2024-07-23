@@ -39,13 +39,23 @@ class UniqueTypesTestCase4(TestBase):
         self.expect_expr("ns::FooDouble::value", result_type="double", result_value="0")
         self.expect_expr("ns::FooInt::value", result_type="int", result_value="0")
 
-    @skipIfWindows  # https://github.com/llvm/llvm-project/issues/75936
+    @expectedFailureAll(
+        oslist=["windows"],
+        # When this issue is fixed, please add `archs=["x86_64"]` as we do not run 
+        # tests on x86_64 Windows in CI and it may remain broken.
+        bugnumber="https://github.com/llvm/llvm-project/issues/75936",
+    )
     @skipIf(compiler=no_match("clang"))
     @skipIf(compiler_version=["<", "15.0"])
     def test_simple_template_names(self):
         self.do_test(dict(CFLAGS_EXTRAS="-gsimple-template-names"))
 
-    @skipIfWindows  # https://github.com/llvm/llvm-project/issues/75936
+    @expectedFailureAll(
+        oslist=["windows"],
+        # When this issue is fixed, please add `archs=["x86_64"]` as we do not run 
+        # tests on x86_64 Windows in CI and it may remain broken.
+        bugnumber="https://github.com/llvm/llvm-project/issues/75936",
+    )
     @skipIf(compiler=no_match("clang"))
     @skipIf(compiler_version=["<", "15.0"])
     def test_no_simple_template_names(self):

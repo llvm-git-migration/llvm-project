@@ -2,8 +2,8 @@
 Test that an alias can reference other aliases without crashing.
 """
 
-
 import lldb
+from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 import lldbsuite.test.lldbutil as lldbutil
 
@@ -17,6 +17,7 @@ class NestedAliasTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.cpp", "// break here")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_nested_alias(self):
         """Test that an alias can reference other aliases without crashing."""
         self.build()

@@ -1,6 +1,5 @@
 """Test breakpoint on a class constructor; and variable list the this object."""
 
-
 import os
 import lldb
 from lldbsuite.test.decorators import *
@@ -15,6 +14,7 @@ class ClassTypesTestCase(TestBase):
         # Find the line number to break for main.cpp.
         self.line = line_number("main.cpp", "// Set break point at this line.")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_with_run_command(self):
         """Test 'frame variable this' when stopped on a class constructor."""
         self.build()
@@ -119,6 +119,7 @@ class ClassTypesTestCase(TestBase):
 
         process.Continue()
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_with_expr_parser(self):
         """Test 'frame variable this' and 'expr this' when stopped inside a constructor."""
         self.build()

@@ -39,6 +39,7 @@ class MemoryWriteTestCase(TestBase):
         lldbutil.check_breakpoint(self, bpno=1, expected_hit_count=1)
 
     @no_debug_info_test
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_memory_write(self):
         """Test the 'memory write' command for writing values and file contents."""
         self.build_run_stop()

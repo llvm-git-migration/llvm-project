@@ -15,6 +15,7 @@ class ThreadAPITestCase(TestBase):
         self.build()
         self.get_process()
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_get_stop_description(self):
         """Test Python SBThread.GetStopDescription() API."""
         self.build()

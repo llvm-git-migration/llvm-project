@@ -18,6 +18,7 @@ class RegisterVariableTestCase(TestBase):
         compiler="gcc", compiler_version=[">=", "4.8.2"], archs=["i386"]
     )
     @expectedFailureAll(compiler="gcc", compiler_version=["<", "4.9"], archs=["x86_64"])
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_and_run_command(self):
         """Test expressions on register values."""
 

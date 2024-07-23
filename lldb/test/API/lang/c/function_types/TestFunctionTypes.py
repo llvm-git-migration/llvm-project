@@ -1,6 +1,5 @@
 """Test variable with function ptr type and that break on the function works."""
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -14,6 +13,7 @@ class FunctionTypesTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.c", "// Set break point at this line.")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test(self):
         """Test 'callback' has function ptr type, then break on the function."""
         self.build()

@@ -1,6 +1,5 @@
 """Test that forward declaration of a data structure gets resolved correctly."""
 
-
 import lldb
 from lldbsuite.test.lldbtest import *
 from lldbsuite.test.decorators import *
@@ -46,6 +45,7 @@ class ForwardDeclarationTestCase(TestBase):
             substrs=["(bar)", "(int) a = 1", "(int) b = 2"],
         )
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test(self):
         self.do_test()
 

@@ -2,7 +2,6 @@
 Test the 'memory find' command.
 """
 
-
 import lldb
 from lldbsuite.test.lldbtest import *
 import lldbsuite.test.lldbutil as lldbutil
@@ -16,6 +15,7 @@ class MemoryFindTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.cpp", "// break here")
 
+    @expectedFailureAll(triple="x86_64-.*-windows.*")
     def test_memory_find(self):
         """Test the 'memory find' command."""
         self.build()
