@@ -2298,8 +2298,8 @@ static bool despeculateCountZeros(IntrinsicInst *CountZeros,
   if (match(CountZeros->getOperand(1), m_One()))
     return false;
 
-  // If it's cheap to speculate, there's nothing to do.
   Type *Ty = CountZeros->getType();
+  // If it's cheap to speculate, there's nothing to do.
   auto IntrinsicID = CountZeros->getIntrinsicID();
   if ((IntrinsicID == Intrinsic::cttz && TLI->isCheapToSpeculateCttz(Ty)) ||
       (IntrinsicID == Intrinsic::ctlz && TLI->isCheapToSpeculateCtlz(Ty)))
@@ -2308,6 +2308,21 @@ static bool despeculateCountZeros(IntrinsicInst *CountZeros,
   // Only handle legal scalar cases. Anything else requires too much work.
   unsigned SizeInBits = Ty->getScalarSizeInBits();
   if (Ty->isVectorTy() || SizeInBits > DL->getLargestLegalIntTypeSizeInBits())
+    return false;
+
+  // do not despeculate if we have (ctlz (xor op -1)) if the operand is
+  // promoted as legalisation would later transform to:
+  //
+  // (ctlz (lshift (xor (extend op) -1)
+  //               lshiftamount))
+  //
+  // Despeculation is not only useless but also not wanted with SelectionDAG
+  // as XOR and CTLZ would be in different basic blocks.
+  EVT VTy = TLI->getValueType(*DL, Ty);
+  if (match(CountZeros->getOperand(0), m_Not(m_Value())) &&
+      (TLI->getTypeAction(CountZeros->getContext(), VTy) ==
+           TargetLowering::TypePromoteInteger ||
+       TLI->getOperationAction(ISD::CTLZ, VTy) == TargetLowering::Promote))
     return false;
 
   // Bail if the value is never zero.
