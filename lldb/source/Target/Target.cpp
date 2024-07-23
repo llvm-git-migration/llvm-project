@@ -76,6 +76,106 @@
 using namespace lldb;
 using namespace lldb_private;
 
+namespace {
+
+struct ExecutableInstaller {
+
+  ExecutableInstaller(PlatformSP platform, ModuleSP module)
+      : m_platform{platform}, m_module{module},
+        m_local_file{m_module->GetFileSpec()},
+        m_remote_file{m_module->GetRemoteInstallFileSpec()} {}
+
+  void setRemoteFile() const { m_module->SetPlatformFileSpec(m_remote_file); }
+
+  PlatformSP m_platform;
+  ModuleSP m_module;
+  const FileSpec m_local_file;
+  const FileSpec m_remote_file;
+};
+
+struct MainExecutableInstaller {
+
+  MainExecutableInstaller(PlatformSP platform, TargetSP target, ModuleSP module,
+                          ProcessLaunchInfo *launch_info)
+      : m_platform{platform}, m_target{target}, m_module{module},
+        m_local_file{m_module->GetFileSpec()},
+        m_remote_file{
+            getRemoteFileSpec(m_platform, m_target, m_module, m_local_file)},
+        m_launch_info{launch_info} {}
+
+  void setRemoteFile() const {
+    m_module->SetPlatformFileSpec(m_remote_file);
+    m_launch_info->SetExecutableFile(m_remote_file,
+                                     false /*add_exe_file_as_first_arg*/);
+    m_platform->SetFilePermissions(m_remote_file, 0700 /*-rwx------*/);
+  }
+
+  PlatformSP m_platform;
+  TargetSP m_target;
+  ModuleSP m_module;
+  const FileSpec m_local_file;
+  const FileSpec m_remote_file;
+  ProcessLaunchInfo *m_launch_info;
+
+private:
+  // Creates a filename "<local_file_name>_<local_file_md5_hash>" for a file
+  // on a remote target. This is needed to check existance of the file on a
+  // remote machine and then install it if the file is missing.
+  static std::optional<std::string>
+  getRemoteFileName(const FileSpec &local_file) {
+    auto local_md5 = llvm::sys::fs::md5_contents(local_file.GetPath());
+    if (!local_md5)
+      return std::nullopt;
+
+    auto [high, low] = local_md5->words();
+
+    std::stringstream ss;
+    ss << local_file.GetFilename().GetCString() << "_" << high << low;
+    return ss.str();
+  }
+
+  static FileSpec getRemoteFileSpec(PlatformSP platform, TargetSP target,
+                                    ModuleSP module,
+                                    const FileSpec &local_file) {
+    FileSpec remote_file = module->GetRemoteInstallFileSpec();
+    if (remote_file || !target->GetAutoInstallMainExecutable())
+      return remote_file;
+
+    if (!local_file)
+      return {};
+
+    auto remote_filename = getRemoteFileName(local_file);
+    if (!remote_filename)
+      return {};
+
+    remote_file = platform->GetRemoteWorkingDirectory();
+    remote_file.AppendPathComponent(remote_filename.value());
+
+    return remote_file;
+  }
+};
+} // namespace
+
+template <typename Installer>
+static Status installExecutable(const Installer &installer) {
+  // Firstly check is the file already exists on a remote machine
+  if (installer.m_platform->GetFileExists(installer.m_remote_file)) {
+    installer.setRemoteFile();
+    return Status();
+  }
+
+  if (!installer.m_local_file)
+    return Status();
+
+  Status error = installer.m_platform->Install(installer.m_local_file,
+                                               installer.m_remote_file);
+  if (error.Fail())
+    return error;
+
+  installer.setRemoteFile();
+  return Status();
+}
+
 constexpr std::chrono::milliseconds EvaluateExpressionOptions::default_timeout;
 
 Target::Arch::Arch(const ArchSpec &spec)
@@ -3076,48 +3176,33 @@ TargetProperties &Target::GetGlobalProperties() {
 Status Target::Install(ProcessLaunchInfo *launch_info) {
   Status error;
   PlatformSP platform_sp(GetPlatform());
-  if (platform_sp) {
-    if (platform_sp->IsRemote()) {
-      if (platform_sp->IsConnected()) {
-        // Install all files that have an install path when connected to a
-        // remote platform. If target.auto-install-main-executable is set then
-        // also install the main executable even if it does not have an explicit
-        // install path specified.
-        const ModuleList &modules = GetImages();
-        const size_t num_images = modules.GetSize();
-        for (size_t idx = 0; idx < num_images; ++idx) {
-          ModuleSP module_sp(modules.GetModuleAtIndex(idx));
-          if (module_sp) {
-            const bool is_main_executable = module_sp == GetExecutableModule();
-            FileSpec local_file(module_sp->GetFileSpec());
-            if (local_file) {
-              FileSpec remote_file(module_sp->GetRemoteInstallFileSpec());
-              if (!remote_file) {
-                if (is_main_executable && GetAutoInstallMainExecutable()) {
-                  // Automatically install the main executable.
-                  remote_file = platform_sp->GetRemoteWorkingDirectory();
-                  remote_file.AppendPathComponent(
-                      module_sp->GetFileSpec().GetFilename().GetCString());
-                }
-              }
-              if (remote_file) {
-                error = platform_sp->Install(local_file, remote_file);
-                if (error.Success()) {
-                  module_sp->SetPlatformFileSpec(remote_file);
-                  if (is_main_executable) {
-                    platform_sp->SetFilePermissions(remote_file, 0700);
-                    if (launch_info)
-                      launch_info->SetExecutableFile(remote_file, false);
-                  }
-                } else
-                  break;
-              }
-            }
-          }
-        }
-      }
+  if (!platform_sp || !platform_sp->IsRemote() || !platform_sp->IsConnected())
+    return error;
+
+  // Install all files that have an install path when connected to a
+  // remote platform. If target.auto-install-main-executable is set then
+  // also install the main executable even if it does not have an explicit
+  // install path specified.
+
+  for (auto module_sp : GetImages().Modules()) {
+    if (module_sp == GetExecutableModule()) {
+      MainExecutableInstaller installer{platform_sp, shared_from_this(),
+                                        module_sp, launch_info};
+      if (installer.m_remote_file)
+        error = installExecutable(installer);
+      else if (GetAutoInstallMainExecutable())
+        error.SetErrorStringWithFormatv("Target::{0}() can't get a remote file",
+                                        __FUNCTION__);
+    } else {
+      ExecutableInstaller installer{platform_sp, module_sp};
+      if (installer.m_remote_file)
+        error = installExecutable(installer);
     }
+
+    if (error.Fail())
+      return error;
   }
+
   return error;
 }
 
