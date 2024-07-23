@@ -8,7 +8,7 @@
 ; RUN: %clang %cflags -gdwarf-5 -gsplit-dwarf=split main.o helper1.o helper2.o -o main.exe
 ; RUN: llvm-dwarfdump --show-form --verbose --debug-info main.dwo | FileCheck -check-prefix=PRE-BOLT %s
 ; RUN: llvm-dwarfdump --show-form --verbose --debug-info helper2.o | FileCheck -check-prefix=PRE-BOLT2 %s
-; RUN: llvm-bolt main.exe -o main.exe.bolt --update-debug-sections --write-dwp
+; RUN: llvm-bolt main.exe -o main.exe.bolt --update-debug-sections --write-dwp --debug-thread-count=72
 ; RUN: llvm-dwarfdump --show-form --verbose --debug-info -r 0 main.exe.bolt.dwp | FileCheck -check-prefix=BOLT %s
 ; RUN: llvm-dwarfdump --show-form --verbose --debug-tu-index main.exe.bolt.dwp | FileCheck -check-prefix=BOLT-DWP-TU-INDEX %s
 ; RUN: llvm-dwarfdump --show-form --verbose --debug-cu-index main.exe.bolt.dwp | FileCheck -check-prefix=BOLT-DWP-CU-INDEX %s
