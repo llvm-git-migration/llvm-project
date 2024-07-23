@@ -62,7 +62,7 @@ static LLVM::LLVMFuncOp lookupOrCreateSPIRVFn(Operation *symbolTable,
       auto memAttr = b.getAttr<LLVM::MemoryEffectsAttr>(
           /*other=*/noModRef,
           /*argMem=*/noModRef, /*inaccessibleMem=*/noModRef);
-      func.setMemoryAttr(memAttr);
+      func.setMemoryEffectsAttr(memAttr);
     }
 
     func.setConvergent(isConvergent);

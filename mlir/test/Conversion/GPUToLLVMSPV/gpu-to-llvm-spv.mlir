@@ -6,35 +6,35 @@
 gpu.module @builtins {
   // CHECK-64:        llvm.func spir_funccc @_Z14get_num_groupsj(i32) -> i64 attributes {
   // CHECK-32:        llvm.func spir_funccc @_Z14get_num_groupsj(i32) -> i32 attributes {
-  // CHECK-SAME-DAG:  memory = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
+  // CHECK-SAME-DAG:  memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  will_return
   // CHECK-NOT:       convergent
   // CHECK-SAME:      }
   // CHECK-64:        llvm.func spir_funccc @_Z12get_local_idj(i32) -> i64 attributes {
   // CHECK-32:        llvm.func spir_funccc @_Z12get_local_idj(i32) -> i32 attributes {
-  // CHECK-SAME-DAG:  memory = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
+  // CHECK-SAME-DAG:  memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  will_return
   // CHECK-NOT:       convergent
   // CHECK-SAME:      }
   // CHECK-64:        llvm.func spir_funccc @_Z14get_local_sizej(i32) -> i64 attributes {
   // CHECK-32:        llvm.func spir_funccc @_Z14get_local_sizej(i32) -> i32 attributes {
-  // CHECK-SAME-DAG:  memory = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
+  // CHECK-SAME-DAG:  memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  will_return
   // CHECK-NOT:       convergent
   // CHECK-SAME:      }
   // CHECK-64:        llvm.func spir_funccc @_Z13get_global_idj(i32) -> i64 attributes {
   // CHECK-32:        llvm.func spir_funccc @_Z13get_global_idj(i32) -> i32 attributes {
-  // CHECK-SAME-DAG:  memory = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
+  // CHECK-SAME-DAG:  memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  will_return
   // CHECK-NOT:       convergent
   // CHECK-SAME:      }
   // CHECK-64:        llvm.func spir_funccc @_Z12get_group_idj(i32) -> i64 attributes {
   // CHECK-32:        llvm.func spir_funccc @_Z12get_group_idj(i32) -> i32 attributes {
-  // CHECK-SAME-DAG:  memory = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
+  // CHECK-SAME-DAG:  memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none>
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  will_return
   // CHECK-NOT:       convergent
@@ -133,7 +133,7 @@ gpu.module @barriers {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
 
   // CHECK-LABEL: gpu_barrier
@@ -154,25 +154,25 @@ gpu.module @shuffles {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z20sub_group_shuffle_upfj(f32, i32) -> f32 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z21sub_group_shuffle_xorlj(i64, i32) -> i64 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z17sub_group_shuffleij(i32, i32) -> i32 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
 
   // CHECK-LABEL: gpu_shuffles
@@ -209,25 +209,25 @@ gpu.module @shuffles attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z20sub_group_shuffle_upfj(f32, i32) -> f32 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z21sub_group_shuffle_xorlj(i64, i32) -> i64 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
   // CHECK:           llvm.func spir_funccc @_Z17sub_group_shuffleij(i32, i32) -> i32 attributes {
   // CHECK-SAME-DAG:  no_unwind
   // CHECK-SAME-DAG:  convergent
   // CHECK-SAME-DAG:  will_return
-  // CHECK-NOT:       memory = #llvm.memory_effects
+  // CHECK-NOT:       memory_effects = #llvm.memory_effects
   // CHECK-SAME:      }
 
   // CHECK-LABEL: gpu_shuffles
