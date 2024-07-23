@@ -329,6 +329,12 @@ static cl::opt<bool> KeepARanges(
         "keep or generate .debug_aranges section if .gdb_index is written"),
     cl::Hidden, cl::cat(BoltCategory));
 
+static cl::opt<int>
+    DebugThreadCount("debug-thread-count",
+                     cl::desc("specifies thread count for the multithreading "
+                              "for updating DWO debug info"),
+                     cl::init(1), cl::cat(BoltCategory));
+
 static cl::opt<std::string> DwarfOutputPath(
     "dwarf-output-path",
     cl::desc("Path to where .dwo files will be written out to."), cl::init(""),
@@ -719,6 +725,8 @@ void DWARFRewriter::updateDebugInfo() {
   for (std::vector<DWARFUnit *> &Vec : PartVec) {
     DIEBlder.buildCompileUnits(Vec);
     llvm::SmallVector<std::unique_ptr<DIEBuilder>, 72> DWODIEBuildersByCU;
+    ThreadPoolInterface &ThreadPool =
+        ParallelUtilities::getThreadPool(opts::DebugThreadCount);
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
       createRangeLocListAddressWriters(*CU);
       std::optional<DWARFUnit *> SplitCU;
@@ -744,9 +752,12 @@ void DWARFRewriter::updateDebugInfo() {
           *DWODIEBuildersByCU.emplace_back(std::move(DWODIEBuilderPtr)).get();
       if (CU->getVersion() >= 5)
         StrOffstsWriter->finalizeSection(*CU, DIEBlder);
-      processSplitCU(*CU, **SplitCU, DIEBlder, *TempRangesSectionWriter,
-                     AddressWriter, DWOName, DwarfOutputPath, DWODIEBuilder);
+      ThreadPool.async([&, DwarfOutputPath, DWOName] {
+        processSplitCU(*CU, **SplitCU, DIEBlder, *TempRangesSectionWriter,
+                       AddressWriter, DWOName, DwarfOutputPath, DWODIEBuilder);
+      });
     }
+    ThreadPool.wait();
     for (std::unique_ptr<DIEBuilder> &DWODIEBuilderPtr : DWODIEBuildersByCU)
       DWODIEBuilderPtr->updateDebugNamesTable();
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs())

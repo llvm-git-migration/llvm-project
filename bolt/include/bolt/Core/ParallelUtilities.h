@@ -50,7 +50,7 @@ enum SchedulingPolicy {
 };
 
 /// Return the managed thread pool and initialize it if not initialized.
-ThreadPoolInterface &getThreadPool();
+ThreadPoolInterface &getThreadPool(const int ThreadsCount = opts::ThreadCount);
 
 /// Perform the work on each BinaryFunction except those that are accepted
 /// by SkipPredicate, scheduling heuristic is based on SchedPolicy.
