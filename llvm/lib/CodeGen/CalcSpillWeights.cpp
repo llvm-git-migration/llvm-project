@@ -257,7 +257,9 @@ float VirtRegAuxInfo::weightCalcHelper(LiveInterval &LI, SlotIndex *Start,
       return -1.0f;
     }
 
-    float Weight = 1.0f;
+    // Force Weight onto the stack so that x86 doesn't add hidden precision,
+    // similar to HWeight below.
+    volatile float Weight = 1.0f;
     if (IsSpillable) {
       // Get loop info for mi.
       if (MI->getParent() != MBB) {
