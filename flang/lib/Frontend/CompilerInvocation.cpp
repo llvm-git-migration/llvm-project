@@ -894,6 +894,7 @@ static bool parseDiagArgs(CompilerInvocation &res, llvm::opt::ArgList &args,
 /// options accordingly. Returns false if new errors are generated.
 static bool parseDialectArgs(CompilerInvocation &res, llvm::opt::ArgList &args,
                              clang::DiagnosticsEngine &diags) {
+  llvm::Triple t(res.getTargetOpts().triple);
   unsigned numErrorsBefore = diags.getNumErrors();
 
   // -fdefault* family
@@ -1011,6 +1012,40 @@ static bool parseDialectArgs(CompilerInvocation &res, llvm::opt::ArgList &args,
     default:
       res.getLangOpts().OpenMPIsGPU = 0;
       break;
+    }
+
+    // Get the OpenMP target triples if any.
+    if (auto *arg =
+            args.getLastArg(clang::driver::options::OPT_fopenmp_targets_EQ)) {
+      enum ArchPtrSize { Arch16Bit, Arch32Bit, Arch64Bit };
+      auto getArchPtrSize = [](const llvm::Triple &triple) {
+        if (triple.isArch16Bit())
+          return Arch16Bit;
+        if (triple.isArch32Bit())
+          return Arch32Bit;
+        assert(triple.isArch64Bit() && "Expected 64-bit architecture");
+        return Arch64Bit;
+      };
+
+      for (unsigned i = 0; i < arg->getNumValues(); ++i) {
+        llvm::Triple tt(arg->getValue(i));
+
+        if (tt.getArch() == llvm::Triple::UnknownArch ||
+            !(tt.getArch() == llvm::Triple::aarch64 || tt.isPPC() ||
+              tt.getArch() == llvm::Triple::systemz ||
+              tt.getArch() == llvm::Triple::nvptx ||
+              tt.getArch() == llvm::Triple::nvptx64 ||
+              tt.getArch() == llvm::Triple::amdgcn ||
+              tt.getArch() == llvm::Triple::x86 ||
+              tt.getArch() == llvm::Triple::x86_64))
+          diags.Report(clang::diag::err_drv_invalid_omp_target)
+              << arg->getValue(i);
+        else if (getArchPtrSize(t) != getArchPtrSize(tt))
+          diags.Report(clang::diag::err_drv_incompatible_omp_arch)
+              << arg->getValue(i) << t.str();
+        else
+          res.getLangOpts().OMPTargetTriples.push_back(tt);
+      }
     }
   }
 
