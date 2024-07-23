@@ -23,6 +23,17 @@ class BreakpointConditionsTestCase(TestBase):
     def test_breakpoint_condition_and_python_api(self):
         """Use Python APIs to set breakpoint conditions."""
         self.build()
+        self.breakpoint_conditions_python(set_breakpoint_on_location=False)
+
+    @add_test_categories(["pyapi"])
+    @expectedFailureAll(
+        oslist=["windows"],
+        archs=["x86_64"],
+        bugnumber="https://github.com/llvm/llvm-project/issues/100486",
+    )
+    def test_breakpoint_condition_on_location_and_python_api(self):
+        """Use Python APIs to set breakpoint conditions."""
+        self.build()
         self.breakpoint_conditions_python()
 
     @add_test_categories(["pyapi"])
@@ -124,7 +135,7 @@ class BreakpointConditionsTestCase(TestBase):
 
         self.runCmd("process kill")
 
-    def breakpoint_conditions_python(self):
+    def breakpoint_conditions_python(self, set_breakpoint_on_location=True):
         """Use Python APIs to set breakpoint conditions."""
         target = self.createTestTarget()
 
@@ -158,10 +169,14 @@ class BreakpointConditionsTestCase(TestBase):
         # Get the breakpoint location from breakpoint after we verified that,
         # indeed, it has one location.
         location = breakpoint.GetLocationAtIndex(0)
-        self.assertTrue(location and location.IsEnabled(), VALID_BREAKPOINT_LOCATION)
 
-        # Set the condition on the breakpoint location.
-        location.SetCondition("val == 3")
+        # Set the condition.
+        if set_breakpoint_on_location:
+            location.SetCondition("val == 3")
+        else:
+            breakpoint.SetCondition("val == 3")
+
+        self.assertTrue(location and location.IsEnabled(), VALID_BREAKPOINT_LOCATION)
         self.expect(location.GetCondition(), exe=False, startstr="val == 3")
 
         # Now launch the process, and do not stop at entry point.
