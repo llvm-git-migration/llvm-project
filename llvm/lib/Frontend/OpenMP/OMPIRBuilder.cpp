@@ -6769,7 +6769,7 @@ static Function *emitTargetTaskProxyFunction(OpenMPIRBuilder &OMPBuilder,
   return ProxyFn;
 }
 static void emitTargetOutlinedFunction(
-    OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder,
+    OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder, bool IsOffloadEntry,
     TargetRegionEntryInfo &EntryInfo, Function *&OutlinedFn,
     Constant *&OutlinedFnID, SmallVectorImpl<Value *> &Inputs,
     OpenMPIRBuilder::TargetBodyGenCallbackTy &CBFunc,
@@ -6782,8 +6782,8 @@ static void emitTargetOutlinedFunction(
                                       CBFunc, ArgAccessorFuncCB);
       };
 
-  OMPBuilder.emitTargetRegionFunction(EntryInfo, GenerateOutlinedFunction, true,
-                                      OutlinedFn, OutlinedFnID);
+  OMPBuilder.emitTargetRegionFunction(EntryInfo, GenerateOutlinedFunction,
+                                      IsOffloadEntry, OutlinedFn, OutlinedFnID);
 }
 OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::emitTargetTask(
     Function *OutlinedFn, Value *OutlinedFnID,
@@ -7053,6 +7053,7 @@ OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::emitTargetTask(
                     << "\n");
   return Builder.saveIP();
 }
+
 static void emitTargetCall(
     OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder,
     OpenMPIRBuilder::InsertPointTy AllocaIP, Function *OutlinedFn,
@@ -7060,6 +7061,20 @@ static void emitTargetCall(
     SmallVectorImpl<Value *> &Args,
     OpenMPIRBuilder::GenMapInfoCallbackTy GenMapInfoCB,
     SmallVector<llvm::OpenMPIRBuilder::DependData> Dependencies = {}) {
+  //  emitKernelLaunch
+  auto &&EmitTargetCallFallbackCB =
+      [&](OpenMPIRBuilder::InsertPointTy IP) -> OpenMPIRBuilder::InsertPointTy {
+    Builder.restoreIP(IP);
+    Builder.CreateCall(OutlinedFn, Args);
+    return Builder.saveIP();
+  };
+
+  // If we don't have an ID for the target region, it means an offload entry
+  // wasn't created. In this case we just run the host fallback directly.
+  if (!OutlinedFnID) {
+    Builder.restoreIP(EmitTargetCallFallbackCB(Builder.saveIP()));
+    return;
+  }
 
   OpenMPIRBuilder::TargetDataInfo Info(
       /*RequiresDevicePointerInfo=*/false,
@@ -7072,14 +7087,6 @@ static void emitTargetCall(
   OpenMPIRBuilder::TargetDataRTArgs RTArgs;
   OMPBuilder.emitOffloadingArraysArgument(Builder, RTArgs, Info,
                                           !MapInfo.Names.empty());
-
-  //  emitKernelLaunch
-  auto &&EmitTargetCallFallbackCB =
-      [&](OpenMPIRBuilder::InsertPointTy IP) -> OpenMPIRBuilder::InsertPointTy {
-    Builder.restoreIP(IP);
-    Builder.CreateCall(OutlinedFn, Args);
-    return Builder.saveIP();
-  };
 
   unsigned NumTargetItems = MapInfo.BasePointers.size();
   // TODO: Use correct device ID
@@ -7116,7 +7123,7 @@ static void emitTargetCall(
   }
 }
 OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createTarget(
-    const LocationDescription &Loc, InsertPointTy AllocaIP,
+    const LocationDescription &Loc, bool IsOffloadEntry, InsertPointTy AllocaIP,
     InsertPointTy CodeGenIP, TargetRegionEntryInfo &EntryInfo, int32_t NumTeams,
     int32_t NumThreads, SmallVectorImpl<Value *> &Args,
     GenMapInfoCallbackTy GenMapInfoCB,
@@ -7130,12 +7137,13 @@ OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createTarget(
   Builder.restoreIP(CodeGenIP);
 
   Function *OutlinedFn;
-  Constant *OutlinedFnID;
+  Constant *OutlinedFnID = nullptr;
   // The target region is outlined into its own function. The LLVM IR for
   // the target region itself is generated using the callbacks CBFunc
   // and ArgAccessorFuncCB
-  emitTargetOutlinedFunction(*this, Builder, EntryInfo, OutlinedFn,
-                             OutlinedFnID, Args, CBFunc, ArgAccessorFuncCB);
+  emitTargetOutlinedFunction(*this, Builder, IsOffloadEntry, EntryInfo,
+                             OutlinedFn, OutlinedFnID, Args, CBFunc,
+                             ArgAccessorFuncCB);
 
   // If we are not on the target device, then we need to generate code
   // to make a remote call (offload) to the previously outlined function
