@@ -29,7 +29,7 @@
 // RUN:   FileCheck -match-full-lines -check-prefixes=OUT %s
 
 // Check plugin, -p, and remarks.
-// RUN: clang-linker-wrapper -o a.out --embed-bitcode --dry-run \
+// RUN: clang-linker-wrapper -o a.out --embed-bitcode \
 // RUN:     --linker-path=/usr/bin/true %t/host-x86_64-unknown-linux-gnu.o \
 // RUN:     %offload-opt-loadbye --offload-opt=-wave-goodbye \
 // RUN:     --offload-opt=-p="function(goodbye),module(inline)" \
