@@ -20148,7 +20148,8 @@ Sema::FunctionEmissionStatus Sema::getEmissionStatus(const FunctionDecl *FD,
     // be emitted, because (say) the definition could include "inline".
     const FunctionDecl *Def = FD->getDefinition();
 
-    return Def && !isDiscardableGVALinkage(
+    // We can't compute linkage when we skip function bodies.
+    return Def && !Def->hasSkippedBody() && !isDiscardableGVALinkage(
                       getASTContext().GetGVALinkageForFunction(Def));
   };
 
