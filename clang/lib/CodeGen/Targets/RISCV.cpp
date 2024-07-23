@@ -327,10 +327,13 @@ ABIArgInfo RISCVABIInfo::coerceVLSVector(QualType Ty) const {
       getContext().getTargetInfo().getVScaleRange(getContext().getLangOpts());
 
   unsigned NumElts = VT->getNumElements();
-  llvm::Type *EltType;
+  llvm::Type *EltType = llvm::Type::getInt1Ty(getVMContext());
   if (VT->getVectorKind() == VectorKind::RVVFixedLengthMask) {
     NumElts *= 8;
-    EltType = llvm::Type::getInt1Ty(getVMContext());
+  } else if (VT->getVectorKind() == VectorKind::RVVFixedLengthMask_2) {
+    NumElts *= 2;
+  } else if (VT->getVectorKind() == VectorKind::RVVFixedLengthMask_4) {
+    NumElts *= 4;
   } else {
     assert(VT->getVectorKind() == VectorKind::RVVFixedLengthData &&
            "Unexpected vector kind");
@@ -453,7 +456,10 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
 
   if (const VectorType *VT = Ty->getAs<VectorType>())
     if (VT->getVectorKind() == VectorKind::RVVFixedLengthData ||
-        VT->getVectorKind() == VectorKind::RVVFixedLengthMask)
+        VT->getVectorKind() == VectorKind::RVVFixedLengthMask ||
+        VT->getVectorKind() == VectorKind::RVVFixedLengthMask_1 ||
+        VT->getVectorKind() == VectorKind::RVVFixedLengthMask_2 ||
+        VT->getVectorKind() == VectorKind::RVVFixedLengthMask_4)
       return coerceVLSVector(Ty);
 
   // Aggregates which are <= 2*XLen will be passed in registers if possible,
