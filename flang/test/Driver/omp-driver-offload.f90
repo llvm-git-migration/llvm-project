@@ -227,3 +227,20 @@
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
 ! FORCE-USM-OFFLOAD-NEXT: "{{[^"]*}}flang-new" "-fc1" "-triple" "amdgcn-amd-amdhsa"
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
+
+! RUN: %flang -S -### %s -o %t 2>&1 \
+! RUN: -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa \
+! RUN: --target=aarch64-unknown-linux-gnu \
+! RUN: | FileCheck %s --check-prefix=OFFLOAD-TARGETS
+
+! RUN: %flang -S -### %s -o %t 2>&1 \
+! RUN: -fopenmp --offload-arch=gfx90a \
+! RUN: --target=aarch64-unknown-linux-gnu \
+! RUN: | FileCheck %s --check-prefix=OFFLOAD-TARGETS
+
+! OFFLOAD-TARGETS: "{{[^"]*}}flang-new" "-fc1" "-triple" "aarch64-unknown-linux-gnu"
+! OFFLOAD-TARGETS-SAME: "-fopenmp-targets=amdgcn-amd-amdhsa"
+! OFFLOAD-TARGETS-NEXT: "{{[^"]*}}flang-new" "-fc1" "-triple" "amdgcn-amd-amdhsa"
+! OFFLOAD-TARGETS-NOT: -fopenmp-targets
+! OFFLOAD-TARGETS: "{{[^"]*}}flang-new" "-fc1" "-triple" "aarch64-unknown-linux-gnu"
+! OFFLOAD-TARGETS-SAME: "-fopenmp-targets=amdgcn-amd-amdhsa"
