@@ -1036,3 +1036,59 @@ define i8 @foo(i8 %arg) {
     EXPECT_EQ(Call->getArgOperand(0), Arg0);
   }
 }
+
+TEST_F(SandboxIRTest, InvokeInst) {
+  parseIR(C, R"IR(
+define void @foo(i8 %arg) {
+ bb0:
+   invoke i8 @foo(i8 %arg) to label %normal_bb
+                       unwind label %exception_bb
+ normal_bb:
+   ret void
+ exception_bb:
+   %lpad = landingpad { ptr, i32}
+           cleanup
+   ret void
+ other_bb:
+   ret void
+}
+)IR");
+  Function &LLVMF = *M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+  [[maybe_unused]] auto &F = *Ctx.createFunction(&LLVMF);
+  auto *BB0 = cast<sandboxir::BasicBlock>(
+      Ctx.getValue(getBasicBlockByName(LLVMF, "bb0")));
+  auto *NormalBB = cast<sandboxir::BasicBlock>(
+      Ctx.getValue(getBasicBlockByName(LLVMF, "normal_bb")));
+  auto *ExceptionBB = cast<sandboxir::BasicBlock>(
+      Ctx.getValue(getBasicBlockByName(LLVMF, "exception_bb")));
+  auto *LandingPad = &*ExceptionBB->begin();
+  auto *OtherBB = cast<sandboxir::BasicBlock>(
+      Ctx.getValue(getBasicBlockByName(LLVMF, "other_bb")));
+  auto It = BB0->begin();
+  // Check classof(Instruction *).
+  auto *Invoke = cast<sandboxir::InvokeInst>(&*It++);
+
+  // Check getNormalDest().
+  EXPECT_EQ(Invoke->getNormalDest(), NormalBB);
+  // Check getUnwindDest().
+  EXPECT_EQ(Invoke->getUnwindDest(), ExceptionBB);
+  // Check getSuccessor().
+  EXPECT_EQ(Invoke->getSuccessor(0), NormalBB);
+  EXPECT_EQ(Invoke->getSuccessor(1), ExceptionBB);
+  // Check setNormalDest().
+  Invoke->setNormalDest(OtherBB);
+  EXPECT_EQ(Invoke->getNormalDest(), OtherBB);
+  EXPECT_EQ(Invoke->getUnwindDest(), ExceptionBB);
+  // Check setUnwindDest().
+  Invoke->setUnwindDest(OtherBB);
+  EXPECT_EQ(Invoke->getNormalDest(), OtherBB);
+  EXPECT_EQ(Invoke->getUnwindDest(), OtherBB);
+  // Check setSuccessor().
+  Invoke->setSuccessor(0, NormalBB);
+  EXPECT_EQ(Invoke->getNormalDest(), NormalBB);
+  Invoke->setSuccessor(1, ExceptionBB);
+  EXPECT_EQ(Invoke->getUnwindDest(), ExceptionBB);
+  // Check getLandingPadInst().
+  EXPECT_EQ(Invoke->getLandingPadInst(), LandingPad);
+}
