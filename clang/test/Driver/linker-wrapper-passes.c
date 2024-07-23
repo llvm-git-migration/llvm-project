@@ -42,7 +42,7 @@
 // RUN:     -check-prefixes=YML %s
 
 // Check handling of bad plugin.
-// RUN: not clang-linker-wrapper --dry-run \
+// RUN: not clang-linker-wrapper \
 // RUN:     --offload-opt=-load-pass-plugin=%t/nonexistent.so 2>&1 | \
 // RUN:   FileCheck -match-full-lines -check-prefixes=BAD-PLUGIN %s
 
