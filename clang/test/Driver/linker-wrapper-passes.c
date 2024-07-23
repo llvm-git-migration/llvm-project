@@ -22,7 +22,7 @@
 // RUN:     %t/host-x86_64-unknown-linux-gnu.s
 
 // Check plugin, -passes, and no remarks.
-// RUN: clang-linker-wrapper -o a.out --embed-bitcode --dry-run \
+// RUN: clang-linker-wrapper -o a.out --embed-bitcode \
 // RUN:     --linker-path=/usr/bin/true %t/host-x86_64-unknown-linux-gnu.o \
 // RUN:     %offload-opt-loadbye --offload-opt=-wave-goodbye \
 // RUN:     --offload-opt=-passes="function(goodbye),module(inline)" 2>&1 | \
