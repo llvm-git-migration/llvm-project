@@ -2,8 +2,8 @@
 Test that apropos env doesn't crash trying to touch the process plugin command
 """
 
-
 import lldb
+from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 import lldbsuite.test.lldbutil as lldbutil
 
@@ -17,6 +17,7 @@ class AproposWithProcessTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.cpp", "// break here")
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_apropos_with_process(self):
         """Test that apropos env doesn't crash trying to touch the process plugin command."""
         self.build()

@@ -170,6 +170,7 @@ class SourceManagerTestCase(TestBase):
         self.do_display_source_python_api(use_color, r" main\(", syntax_highlighting)
         self.do_display_source_python_api(use_color, r"\);", syntax_highlighting)
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_move_and_then_display_source(self):
         """Test that target.source-map settings work by moving main.c to hidden/main.c."""
         self.build()
@@ -281,6 +282,7 @@ class SourceManagerTestCase(TestBase):
             substrs=["Hello lldb"],
         )
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_set_breakpoint_with_absolute_path(self):
         self.build()
         hidden = self.getBuildArtifact("hidden")

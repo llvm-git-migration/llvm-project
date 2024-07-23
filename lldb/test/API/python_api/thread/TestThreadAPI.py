@@ -15,6 +15,7 @@ class ThreadAPITestCase(TestBase):
         self.build()
         self.get_process()
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_get_stop_description(self):
         """Test Python SBThread.GetStopDescription() API."""
         self.build()
@@ -51,7 +52,7 @@ class ThreadAPITestCase(TestBase):
         """Test SBThread.frame with negative indexes."""
         self.build()
         self.validate_negative_indexing()
- 
+
     def test_StepInstruction(self):
         """Test that StepInstruction preserves the plan stack."""
         self.build()

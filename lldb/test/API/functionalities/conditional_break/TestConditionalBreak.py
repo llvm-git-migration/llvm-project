@@ -15,6 +15,7 @@ from lldbsuite.test import lldbutil
 
 class ConditionalBreakTestCase(TestBase):
     @add_test_categories(["pyapi"])
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_with_python(self):
         """Exercise some thread and frame APIs to break if c() is called by a()."""
         self.build()

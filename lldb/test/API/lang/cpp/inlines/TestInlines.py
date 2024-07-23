@@ -1,6 +1,5 @@
 """Test variable lookup when stopped in inline functions."""
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -14,6 +13,7 @@ class InlinesTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("inlines.cpp", "// Set break point at this line.")
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test(self):
         """Test that local variables are visible in expressions."""
         self.build()

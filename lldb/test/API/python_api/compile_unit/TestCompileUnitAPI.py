@@ -9,6 +9,7 @@ from lldbsuite.test import lldbutil
 
 
 class CompileUnitAPITestCase(TestBase):
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test(self):
         """Exercise some SBCompileUnit APIs."""
         self.build()

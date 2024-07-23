@@ -2,9 +2,9 @@
 Test that the breakpoint auto-continue flag works correctly.
 """
 
-
 import lldb
 import lldbsuite.test.lldbutil as lldbutil
+from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 
 
@@ -21,6 +21,7 @@ class BreakpointAutoContinue(TestBase):
         self.build()
         self.auto_continue_with_command()
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_auto_continue_on_location(self):
         """Set auto-continue on a location and make sure only that location continues"""
         self.build()

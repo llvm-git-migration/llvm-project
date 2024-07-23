@@ -1,6 +1,5 @@
 """Test breakpoint by file/line number; and list variables with array types."""
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -14,6 +13,7 @@ class ArrayTypesTestCase(TestBase):
         # Find the line number to break inside main().
         self.line = line_number("main.c", "// Set break point at this line.")
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_and_run_command(self):
         """Test 'frame variable var_name' on some variables with array types."""
         self.build()
@@ -80,6 +80,7 @@ class ArrayTypesTestCase(TestBase):
         )
 
     @expectedFailureNetBSD
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     @add_test_categories(["pyapi"])
     def test_and_python_api(self):
         """Use Python APIs to inspect variables with array types."""

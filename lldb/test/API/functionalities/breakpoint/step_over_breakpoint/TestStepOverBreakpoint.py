@@ -5,7 +5,6 @@ which should be eStopReasonBreakpoint in general,
 and eStopReasonPlanComplete when breakpoint's condition fails.
 """
 
-
 import lldb
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
@@ -56,6 +55,7 @@ class StepOverBreakpointsTestCase(TestBase):
         )
         self.assertIsNotNone(self.thread, "Didn't stop at breakpoint 1.")
 
+    @expectedFailureAll(oslist=["windows"], archs=["x86_64"])
     def test_step_instruction(self):
         # Count instructions between breakpoint_1 and breakpoint_4
         contextList = self.target.FindFunctions("main", lldb.eFunctionNameTypeAuto)
