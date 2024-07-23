@@ -147,6 +147,7 @@ operator!=(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter2>& __y) _NOEX
 }
 #endif
 
+// TODO(mordante) disable these overloads in the LLVM 20 release.
 template <class _Iter1>
 _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR bool
 operator>(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter1>& __y) _NOEXCEPT {
@@ -184,7 +185,7 @@ operator<=(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter2>& __y) _NOEX
 }
 
 #if _LIBCPP_STD_VER >= 20
-
+#  if 0
 template <class _Iter1>
 _LIBCPP_HIDE_FROM_ABI constexpr strong_ordering
 operator<=>(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter1>& __y) noexcept {
@@ -200,7 +201,7 @@ operator<=>(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter1>& __y) noex
     return strong_ordering::greater;
   }
 }
-
+#  endif
 template <class _Iter1, class _Iter2>
 _LIBCPP_HIDE_FROM_ABI constexpr strong_ordering
 operator<=>(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter2>& __y) noexcept {
