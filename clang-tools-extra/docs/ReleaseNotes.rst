@@ -498,6 +498,10 @@ Changes in existing checks
   false-positives when type of the member does not match the type of the
   initializer.
 
+- Improved :doc:`readability-redundant-smartptr-get
+  <clang-tidy/checks/readability/redundant-smartptr-get>` check to
+  remove '->' when reduntant get() is removed.
+
 - Improved :doc:`readability-static-accessed-through-instance
   <clang-tidy/checks/readability/static-accessed-through-instance>` check to
   support calls to overloaded operators as base expression and provide fixes to
