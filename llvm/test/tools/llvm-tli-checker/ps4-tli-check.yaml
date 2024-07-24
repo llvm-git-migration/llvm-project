@@ -53,8 +53,8 @@
 ## the exact count first; the two directives should add up to that.
 ## Yes, this means additions to TLI will fail this test, but the argument
 ## to -COUNT can't be an expression.
-# AVAIL: TLI knows 486 symbols, 253 available
-# AVAIL-COUNT-253: {{^}} available
+# AVAIL: TLI knows 489 symbols, 256 available
+# AVAIL-COUNT-256: {{^}} available
 # AVAIL-NOT:       {{^}} available
 # UNAVAIL-COUNT-233: not available
 # UNAVAIL-NOT:       not available
