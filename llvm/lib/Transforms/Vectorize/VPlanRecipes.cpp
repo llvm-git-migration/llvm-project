@@ -1149,7 +1149,6 @@ void VPWidenEVLRecipe::execute(VPTransformState &State) {
                           "explicit vector length.");
   VPValue *Op0 = getOperand(0);
 
-  // If it's scalar operation, hand translation over to VPWidenRecipe
   assert(State.get(Op0, 0)->getType()->isVectorTy() &&
          "VPWidenEVLRecipe should not be used for scalars");
 
@@ -1176,9 +1175,8 @@ void VPWidenEVLRecipe::execute(VPTransformState &State) {
     VPInst = Builder.createVectorInstruction(Opcode, Ops[0]->getType(), Ops,
                                              "vp.op");
 
-    if (I)
-      if (auto *VecOp = dyn_cast<Instruction>(VPInst))
-        VecOp->copyIRFlags(I);
+    if (auto *VecOp = dyn_cast_or_null<Instruction>(VPInst))
+      VecOp->copyIRFlags(I);
   } else {
     llvm_unreachable("Unsupported opcode in VPWidenEVLRecipe::execute");
   }
