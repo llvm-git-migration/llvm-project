@@ -725,9 +725,7 @@ void DWARFRewriter::updateDebugInfo() {
   for (std::vector<DWARFUnit *> &Vec : PartVec) {
     DIEBlder.buildCompileUnits(Vec);
     llvm::SmallVector<std::unique_ptr<DIEBuilder>, 72> DWODIEBuildersByCU;
-    const int ThreadCount = (opts::DebugThreadCount < opts::ThreadCount)
-                                ? opts::DebugThreadCount
-                                : opts::ThreadCount;
+    const int ThreadCount = std::min(opts::DebugThreadCount, opts::ThreadCount);
     ThreadPoolInterface &ThreadPool =
         ParallelUtilities::getThreadPool(ThreadCount);
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
