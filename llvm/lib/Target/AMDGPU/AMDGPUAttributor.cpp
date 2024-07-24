@@ -1064,7 +1064,6 @@ static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM,
   AC.Allowed = &Allowed;
   AC.IsModulePass = true;
   AC.DefaultInitializeLiveInternals = false;
-  errs() << "HasWholeProgramVisibility " << HasWholeProgramVisibility << "\n";
   AC.IsClosedWorldModule = HasWholeProgramVisibility;
   AC.IndirectCalleeSpecializationCallback =
       IndirectCalleeSpecializationCallback;
