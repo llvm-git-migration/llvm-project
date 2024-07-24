@@ -140,11 +140,13 @@ namespace test2 {
   template<typename T> struct Const { typedef void const type; };
 
   template<typename T> void f(T, typename Const<T>::type*);
+  // expected-note@-1 {{candidate function}}
   template<typename T> void f(T, void const *);
+  // expected-note@-1 {{candidate function}}
 
   void test() {
     void *p = 0;
-    f(0, p);
+    f(0, p); // expected-error {{call to 'f' is ambiguous}}
   }
 }
 
