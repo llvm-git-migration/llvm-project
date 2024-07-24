@@ -228,6 +228,8 @@
 ! FORCE-USM-OFFLOAD-NEXT: "{{[^"]*}}flang-new" "-fc1" "-triple" "amdgcn-amd-amdhsa"
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
 
+! Test that the -fopenmp-targets option is added to host compilation invocations
+! when --offload-arch is set.
 ! RUN: %flang -S -### %s -o %t 2>&1 \
 ! RUN: -fopenmp --offload-arch=gfx90a \
 ! RUN: --target=x86_64-unknown-linux-gnu \
