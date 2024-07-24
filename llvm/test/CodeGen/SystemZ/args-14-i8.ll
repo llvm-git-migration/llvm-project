@@ -7,4 +7,4 @@ define i8 @callee_MissingRetAttr() {
   ret i8 -1
 }
 
-; CHECK: Narrow integer argument must have a valid extension type
+; CHECK: Narrow integer argument must have a valid extension type.

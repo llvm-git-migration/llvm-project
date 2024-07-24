@@ -2173,8 +2173,6 @@ static Attribute::AttrKind getAttrFromCode(uint64_t Code) {
     return Attribute::ByRef;
   case bitc::ATTR_KIND_MUSTPROGRESS:
     return Attribute::MustProgress;
-  case bitc::ATTR_KIND_NO_EXT:
-    return Attribute::NoExt;
   case bitc::ATTR_KIND_HOT:
     return Attribute::Hot;
   case bitc::ATTR_KIND_PRESPLIT_COROUTINE:
@@ -2189,6 +2187,8 @@ static Attribute::AttrKind getAttrFromCode(uint64_t Code) {
     return Attribute::Range;
   case bitc::ATTR_KIND_INITIALIZES:
     return Attribute::Initializes;
+  case bitc::ATTR_KIND_NO_EXT:
+    return Attribute::NoExt;
   }
 }
 

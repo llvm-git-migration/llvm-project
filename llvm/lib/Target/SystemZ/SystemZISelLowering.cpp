@@ -34,10 +34,10 @@ using namespace llvm;
 
 #define DEBUG_TYPE "systemz-lower"
 
-static cl::opt<bool> VerifyIntArgExtensions(
-    "int-arg-ext-ver", cl::init(true),
-    cl::desc("Verify that narrow int args are properly extended per the ABI."),
-    cl::Hidden);
+static cl::opt<bool> DisableIntArgExtCheck(
+    "no-argext-abi-check", cl::init(false),
+    cl::desc("Do not verify that narrow int args are properly extended per the "
+             "SystemZ ABI."));
 
 namespace {
 // Represents information about a comparison.
@@ -1489,13 +1489,13 @@ static void VerifyIntegerArg(MVT VT, ISD::ArgFlagsTy Flags) {
            "Unexpected integer argument VT.");
     assert((VT != MVT::i32 ||
             (Flags.isSExt() || Flags.isZExt() || Flags.isNoExt())) &&
-           "Narrow integer without valid extension type! [-int-arg-ext-ver]");
+           "Narrow integer argument must have a valid extension type.");
   }
 }
 
 // Verify that narrow integer arguments are extended as required by the ABI.
 static void CheckNarrowIntegerArgs(SmallVectorImpl<ISD::OutputArg> &Outs) {
-  if (VerifyIntArgExtensions) {
+  if (!DisableIntArgExtCheck) {
     for (unsigned i = 0; i < Outs.size(); ++i)
       VerifyIntegerArg(Outs[i].VT, Outs[i].Flags);
     return;
