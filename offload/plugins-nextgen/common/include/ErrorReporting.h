@@ -12,13 +12,17 @@
 #define OPENMP_LIBOMPTARGET_PLUGINS_NEXTGEN_COMMON_ERROR_REPORTING_H
 
 #include "PluginInterface.h"
+#include "Shared/EnvironmentVar.h"
 
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ErrorHandling.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
+#include <optional>
 #include <string>
 
 namespace llvm {
@@ -84,10 +88,23 @@ class ErrorReporter {
 
   /// Print \p Format, instantiated with \p Args to stderr.
   /// TODO: Allow redirection into a file stream.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgcc-compat"
+#pragma clang diagnostic ignored "-Wformat-security"
   template <typename... ArgsTy>
-  static void print(const char *Format, ArgsTy &&...Args) {
+  [[gnu::format(__printf__, 1, 2)]] static void print(const char *Format,
+                                                      ArgsTy &&...Args) {
     fprintf(stderr, Format, std::forward<ArgsTy>(Args)...);
   }
+
+  /// Report an error.
+  template <typename... ArgsTy>
+  [[gnu::format(__printf__, 1, 2)]] static void reportError(const char *Format,
+                                                            ArgsTy &&...Args) {
+    print(getCString("%s%s%s\n%s", Red(), ErrorBanner, Format, Default()),
+          Args...);
+  }
+#pragma clang diagnostic pop
 
   /// Pretty print a stack trace.
   static void reportStackTrace(StringRef StackTrace) {
@@ -100,6 +117,7 @@ class ErrorReporter {
     for (int I = Start, E = Lines.size(); I < E; ++I) {
       auto Line = Lines[I];
       Parts.clear();
+      Line = Line.drop_while([](char C) { return std::isspace(C); });
       Line.split(Parts, " ", /*MaxSplit=*/2);
       if (Parts.size() != 3 || Parts[0].size() < 2 || Parts[0][0] != '#') {
         print("%s\n", Line.str().c_str());
@@ -116,19 +134,13 @@ class ErrorReporter {
     printf("\n");
   }
 
-  /// Report an error.
-  static void reportError(const char *Message, StringRef StackTrace) {
-    print("%s%s%s\n%s", Red(), ErrorBanner, Message, Default());
-    reportStackTrace(StackTrace);
-  }
-
   /// Report information about an allocation associated with \p ATI.
   static void reportAllocationInfo(AllocationTraceInfoTy *ATI) {
     if (!ATI)
       return;
 
     if (!ATI->DeallocationTrace.empty()) {
-      print("%s%s%s\n%s", Cyan(), "Last deallocation:", Default());
+      print("%s%s\n%s", Cyan(), "Last deallocation:", Default());
       reportStackTrace(ATI->DeallocationTrace);
     }
 
@@ -166,7 +178,8 @@ public:
                                 TargetAllocTy Kind, AllocationTraceInfoTy *ATI,
                                 std::string &StackTrace) {
 #define DEALLOCATION_ERROR(Format, ...)                                        \
-  reportError(getCString(Format, __VA_ARGS__), StackTrace);                    \
+  reportError(Format, __VA_ARGS__);                                            \
+  reportStackTrace(StackTrace);                                                \
   reportAllocationInfo(ATI);                                                   \
   abort();
 
@@ -189,6 +202,86 @@ public:
     ATI->DeallocationTrace = StackTrace;
 
 #undef DEALLOCATION_ERROR
+  }
+
+  /// Report that a kernel encountered a trap instruction.
+  static void reportTrapInKernel(
+      GenericDeviceTy &Device, KernelTraceInfoRecordTy &KTIR,
+      std::function<bool(__tgt_async_info &)> AsyncInfoWrapperMatcher) {
+    assert(AsyncInfoWrapperMatcher && "A matcher is required");
+
+    uint32_t Idx = 0;
+    for (uint32_t I = 0, E = KTIR.size(); I < E; ++I) {
+      auto KTI = KTIR.getKernelTraceInfo(I);
+      if (KTI.Kernel == nullptr)
+        break;
+      // Skip kernels issued in other queues.
+      if (KTI.AsyncInfo && !(AsyncInfoWrapperMatcher(*KTI.AsyncInfo)))
+        continue;
+      Idx = I;
+      break;
+    }
+
+    auto KTI = KTIR.getKernelTraceInfo(Idx);
+    if (KTI.AsyncInfo && (AsyncInfoWrapperMatcher(*KTI.AsyncInfo)))
+      reportError("Kernel '%s'", KTI.Kernel->getName());
+    reportError("execution interrupted by hardware trap instruction");
+    if (KTI.AsyncInfo && (AsyncInfoWrapperMatcher(*KTI.AsyncInfo)))
+      reportStackTrace(KTI.LaunchTrace);
+    abort();
+  }
+
+  /// Report the kernel traces taken from \p KTIR, up to
+  /// OFFLOAD_TRACK_NUM_KERNEL_LAUNCH_TRACES many.
+  static void reportKernelTraces(GenericDeviceTy &Device,
+                                 KernelTraceInfoRecordTy &KTIR) {
+    uint32_t NumKTIs = 0;
+    for (uint32_t I = 0, E = KTIR.size(); I < E; ++I) {
+      auto KTI = KTIR.getKernelTraceInfo(I);
+      if (KTI.Kernel == nullptr)
+        break;
+      ++NumKTIs;
+    }
+    if (NumKTIs == 0) {
+      print("%sNo kernel launches known\n%s", Red(), Default());
+      return;
+    }
+
+    uint32_t TracesToShow =
+        std::min(Device.OMPX_TrackNumKernelLaunches.get(), NumKTIs);
+    if (TracesToShow == 0) {
+      if (NumKTIs == 1) {
+        print("%sDisplay only launched kernel:\n%s", Cyan(), Default());
+      } else {
+        print("%sDisplay last %u kernels launched:\n%s", Cyan(), NumKTIs,
+              Default());
+      }
+    } else {
+      if (NumKTIs == 1) {
+        print("%sDisplay kernel launch trace:\n%s", Cyan(), Default());
+      } else {
+        print("%sDisplay %u of the %u last kernel launch traces:\n%s", Cyan(),
+              TracesToShow, NumKTIs, Default());
+      }
+    }
+
+    for (uint32_t Idx = 0, I = 0; I < NumKTIs; ++Idx) {
+      auto KTI = KTIR.getKernelTraceInfo(Idx);
+      if (NumKTIs == 1) {
+        print("%sKernel '%s'\n%s", Magenta(), KTI.Kernel->getName(), Default());
+      } else {
+        print("%sKernel %d: '%s'\n%s", Magenta(), I, KTI.Kernel->getName(),
+              Default());
+      }
+      reportStackTrace(KTI.LaunchTrace);
+      ++I;
+    }
+
+    if (NumKTIs != 1) {
+      print("Use '%s=<num>' to adjust the number of shown traces (up to %zu)\n",
+            Device.OMPX_TrackNumKernelLaunches.getName().data(), KTIR.size());
+    }
+    // TODO: Let users know how to serialize kernels
   }
 };
 

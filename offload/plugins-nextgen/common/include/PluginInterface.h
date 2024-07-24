@@ -32,6 +32,7 @@
 #include "MemoryManager.h"
 #include "RPC.h"
 #include "omptarget.h"
+#include "llvm/ADT/iterator_range.h"
 
 #ifdef OMPT_SUPPORT
 #include "omp-tools.h"
@@ -76,6 +77,9 @@ struct AsyncInfoWrapperTy {
   /// Indicate whether there is queue.
   bool hasQueue() const { return (AsyncInfoPtr->Queue != nullptr); }
 
+  /// Indicate whether there was an error during finalization.
+  bool encounteredError() const { return EncounteredError; }
+
   /// Get the queue.
   template <typename Ty> Ty getQueueAs() {
     static_assert(sizeof(Ty) == sizeof(AsyncInfoPtr->Queue),
@@ -109,6 +113,7 @@ private:
   GenericDeviceTy &Device;
   __tgt_async_info LocalAsyncInfo;
   __tgt_async_info *AsyncInfoPtr;
+  bool EncounteredError = false;
 };
 
 /// The information level represents the level of a key-value property in the
@@ -407,6 +412,44 @@ struct AllocationTraceInfoTy {
 
   /// Information about the last allocation at this address, if any.
   AllocationTraceInfoTy *LastAllocationInfo = nullptr;
+};
+
+/// Information about an allocation, when it has been allocated, and when/if it
+/// has been deallocated, for error reporting purposes.
+struct KernelTraceInfoTy {
+
+  /// The launched kernel.
+  GenericKernelTy *Kernel;
+
+  /// The stack trace of the launch itself.
+  std::string LaunchTrace;
+
+  /// The async info the kernel was launched in.
+  __tgt_async_info *AsyncInfo;
+};
+
+struct KernelTraceInfoRecordTy {
+  KernelTraceInfoRecordTy() { KTIs.fill({}); }
+
+  /// Return the (maximal) record size.
+  auto size() const { return KTIs.size(); }
+
+  /// Create a new kernel trace info and add it into the record.
+  void emplace(GenericKernelTy *Kernel, const std::string &&StackTrace,
+               __tgt_async_info *AsyncInfo) {
+    KTIs[Idx] = {Kernel, std::move(StackTrace), AsyncInfo};
+    Idx = (Idx + 1) % size();
+  }
+
+  /// Return the \p I'th last kernel trace info.
+  auto getKernelTraceInfo(int32_t I) const {
+    // Note that kernel trace infos "grow forward", so lookup is backwards.
+    return KTIs[(Idx - I - 1 + size()) % size()];
+  }
+
+private:
+  std::array<KernelTraceInfoTy, 8> KTIs;
+  unsigned Idx = 0;
 };
 
 /// Class representing a map of host pinned allocations. We track these pinned
@@ -896,6 +939,14 @@ struct GenericDeviceTy : public DeviceAllocatorTy {
   /// Map to record when allocations have been performed, and when they have
   /// been deallocated, both for error reporting purposes.
   ProtectedObj<DenseMap<void *, AllocationTraceInfoTy *>> AllocationTraces;
+
+  /// Map to record kernel have been launchedl, for error reporting purposes.
+  ProtectedObj<KernelTraceInfoRecordTy> KernelLaunchTraces;
+
+  /// Environment variable to determine if stack traces for kernel launches are
+  /// tracked.
+  UInt32Envar OMPX_TrackNumKernelLaunches =
+      UInt32Envar("OFFLOAD_TRACK_NUM_KERNEL_LAUNCH_TRACES", 0);
 
 private:
   /// Get and set the stack size and heap size for the device. If not used, the
