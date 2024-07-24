@@ -36,7 +36,6 @@ MachineModuleInfoImpl::~MachineModuleInfoImpl() = default;
 
 void MachineModuleInfo::initialize() {
   ObjFileMMI = nullptr;
-  CurCallSite = 0;
   NextFnNum = 0;
 }
 
@@ -55,7 +54,6 @@ MachineModuleInfo::MachineModuleInfo(MachineModuleInfo &&MMI)
       MachineFunctions(std::move(MMI.MachineFunctions)) {
   Context.setObjectFileInfo(TM.getObjFileLowering());
   ObjFileMMI = MMI.ObjFileMMI;
-  CurCallSite = MMI.CurCallSite;
   ExternalContext = MMI.ExternalContext;
   TheModule = MMI.TheModule;
 }
