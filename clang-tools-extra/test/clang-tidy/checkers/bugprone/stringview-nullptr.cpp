@@ -30,97 +30,26 @@ public:
   constexpr basic_string_view &operator=(const basic_string_view &) {}
 };
 
-template <typename CharT>
-constexpr bool operator<(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator<(type_identity_t<basic_string_view<CharT>>,
-                         basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator<(basic_string_view<CharT>,
-                         type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
-template <typename CharT>
-constexpr bool operator<=(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator<=(type_identity_t<basic_string_view<CharT>>,
-                          basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator<=(basic_string_view<CharT>,
-                          type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
-template <typename CharT>
-constexpr bool operator>(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator>(type_identity_t<basic_string_view<CharT>>,
-                         basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator>(basic_string_view<CharT>,
-                         type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
-template <typename CharT>
-constexpr bool operator>=(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator>=(type_identity_t<basic_string_view<CharT>>,
-                          basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator>=(basic_string_view<CharT>,
-                          type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
-template <typename CharT>
-constexpr bool operator==(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator==(type_identity_t<basic_string_view<CharT>>,
-                          basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator==(basic_string_view<CharT>,
-                          type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
-template <typename CharT>
-constexpr bool operator!=(basic_string_view<CharT>, basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator!=(type_identity_t<basic_string_view<CharT>>,
-                          basic_string_view<CharT>) {
-  return {};
-}
-template <typename CharT>
-constexpr bool operator!=(basic_string_view<CharT>,
-                          type_identity_t<basic_string_view<CharT>>) {
-  return {};
-}
-
 using string_view = basic_string_view<char>;
+
+constexpr bool operator<(string_view, string_view) {
+  return {};
+}
+constexpr bool operator<=(string_view, string_view) {
+  return {};
+}
+constexpr bool operator>(string_view, string_view) {
+  return {};
+}
+constexpr bool operator>=(string_view, string_view) {
+  return {};
+}
+constexpr bool operator==(string_view, string_view) {
+  return {};
+}
+constexpr bool operator!=(string_view, string_view) {
+  return {};
+}
 
 } // namespace std
 
