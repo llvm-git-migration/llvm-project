@@ -326,7 +326,7 @@ static cl::opt<bool> KeepARanges(
         "keep or generate .debug_aranges section if .gdb_index is written"),
     cl::Hidden, cl::cat(BoltCategory));
 
-static cl::opt<int>
+static cl::opt<unsigned>
     DebugThreadCount("debug-thread-count",
                      cl::desc("specifies thread count for the multithreading "
                               "for updating DWO debug info"),
@@ -744,8 +744,11 @@ void DWARFRewriter::updateDebugInfo() {
   CUPartitionVector PartVec = partitionCUs(*BC.DwCtx);
   for (std::vector<DWARFUnit *> &Vec : PartVec) {
     DIEBlder.buildCompileUnits(Vec);
+    const int ThreadCount = (opts::DebugThreadCount < opts::ThreadCount)
+                                ? opts::DebugThreadCount
+                                : opts::ThreadCount;
     ThreadPoolInterface &ThreadPool =
-        ParallelUtilities::getThreadPool(opts::DebugThreadCount);
+        ParallelUtilities::getThreadPool(ThreadCount);
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs()) {
       createRangeLocListAddressWriters(*CU);
       std::optional<DWARFUnit *> SplitCU;
