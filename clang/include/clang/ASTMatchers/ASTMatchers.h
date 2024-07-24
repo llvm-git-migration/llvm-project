@@ -3076,6 +3076,22 @@ inline internal::BindableMatcher<Stmt> sizeOfExpr(
 /// \code
 ///   namespace a { namespace b { class X; } }
 /// \endcode
+///
+/// Qualified names in templated classes can be matched explicitly or implicity
+/// by specifying the template type or using empty angle brackets to match any
+/// template.
+///
+/// Example matches:
+///   - callExpr(callee(functionDecl(hasName("Foo<int>::Bar"))))
+///   - callExpr(callee(functionDecl(hasName("Foo<>::Bar"))))
+/// \code
+///   template<typename T> class Foo{
+///     static void Bar();
+///   };
+///   void Func() {
+///     Foo<int>::Bar();
+///   }
+/// \endcode
 inline internal::Matcher<NamedDecl> hasName(StringRef Name) {
   return internal::Matcher<NamedDecl>(
       new internal::HasNameMatcher({std::string(Name)}));
