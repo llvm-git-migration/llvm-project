@@ -76,11 +76,6 @@ void AMDGPUInstPrinter::printU4ImmDecOperand(const MCInst *MI, unsigned OpNo,
   O << formatDec(MI->getOperand(OpNo).getImm() & 0xf);
 }
 
-void AMDGPUInstPrinter::printU8ImmDecOperand(const MCInst *MI, unsigned OpNo,
-                                             raw_ostream &O) {
-  O << formatDec(MI->getOperand(OpNo).getImm() & 0xff);
-}
-
 void AMDGPUInstPrinter::printU16ImmDecOperand(const MCInst *MI, unsigned OpNo,
                                               raw_ostream &O) {
   O << formatDec(MI->getOperand(OpNo).getImm() & 0xffff);
@@ -135,24 +130,6 @@ void AMDGPUInstPrinter::printFlatOffset(const MCInst *MI, unsigned OpNo,
   }
 }
 
-void AMDGPUInstPrinter::printOffset0(const MCInst *MI, unsigned OpNo,
-                                     const MCSubtargetInfo &STI,
-                                     raw_ostream &O) {
-  if (MI->getOperand(OpNo).getImm()) {
-    O << " offset0:";
-    printU8ImmDecOperand(MI, OpNo, O);
-  }
-}
-
-void AMDGPUInstPrinter::printOffset1(const MCInst *MI, unsigned OpNo,
-                                     const MCSubtargetInfo &STI,
-                                     raw_ostream &O) {
-  if (MI->getOperand(OpNo).getImm()) {
-    O << " offset1:";
-    printU8ImmDecOperand(MI, OpNo, O);
-  }
-}
-
 void AMDGPUInstPrinter::printSMRDOffset8(const MCInst *MI, unsigned OpNo,
                                         const MCSubtargetInfo &STI,
                                         raw_ostream &O) {
@@ -163,13 +140,6 @@ void AMDGPUInstPrinter::printSMEMOffset(const MCInst *MI, unsigned OpNo,
                                         const MCSubtargetInfo &STI,
                                         raw_ostream &O) {
   O << formatHex(MI->getOperand(OpNo).getImm());
-}
-
-void AMDGPUInstPrinter::printSMEMOffsetMod(const MCInst *MI, unsigned OpNo,
-                                           const MCSubtargetInfo &STI,
-                                           raw_ostream &O) {
-  O << " offset:";
-  printSMEMOffset(MI, OpNo, STI, O);
 }
 
 void AMDGPUInstPrinter::printSMRDLiteralOffset(const MCInst *MI, unsigned OpNo,
@@ -698,26 +668,6 @@ void AMDGPUInstPrinter::printBLGP(const MCInst *MI, unsigned OpNo,
   O << " blgp:" << Imm;
 }
 
-void AMDGPUInstPrinter::printCBSZ(const MCInst *MI, unsigned OpNo,
-                                  const MCSubtargetInfo &STI,
-                                  raw_ostream &O) {
-  unsigned Imm = MI->getOperand(OpNo).getImm();
-  if (!Imm)
-    return;
-
-  O << " cbsz:" << Imm;
-}
-
-void AMDGPUInstPrinter::printABID(const MCInst *MI, unsigned OpNo,
-                                  const MCSubtargetInfo &STI,
-                                  raw_ostream &O) {
-  unsigned Imm = MI->getOperand(OpNo).getImm();
-  if (!Imm)
-    return;
-
-  O << " abid:" << Imm;
-}
-
 void AMDGPUInstPrinter::printDefaultVccOperand(bool FirstOperand,
                                                const MCSubtargetInfo &STI,
                                                raw_ostream &O) {
@@ -729,34 +679,6 @@ void AMDGPUInstPrinter::printDefaultVccOperand(bool FirstOperand,
                   O, MRI);
   if (FirstOperand)
     O << ", ";
-}
-
-void AMDGPUInstPrinter::printWaitVDST(const MCInst *MI, unsigned OpNo,
-                                      const MCSubtargetInfo &STI,
-                                      raw_ostream &O) {
-  O << " wait_vdst:";
-  printU4ImmDecOperand(MI, OpNo, O);
-}
-
-void AMDGPUInstPrinter::printWaitVAVDst(const MCInst *MI, unsigned OpNo,
-                                        const MCSubtargetInfo &STI,
-                                        raw_ostream &O) {
-  O << " wait_va_vdst:";
-  printU4ImmDecOperand(MI, OpNo, O);
-}
-
-void AMDGPUInstPrinter::printWaitVMVSrc(const MCInst *MI, unsigned OpNo,
-                                        const MCSubtargetInfo &STI,
-                                        raw_ostream &O) {
-  O << " wait_vm_vsrc:";
-  printU4ImmDecOperand(MI, OpNo, O);
-}
-
-void AMDGPUInstPrinter::printWaitEXP(const MCInst *MI, unsigned OpNo,
-                                    const MCSubtargetInfo &STI,
-                                    raw_ostream &O) {
-  O << " wait_exp:";
-  printU4ImmDecOperand(MI, OpNo, O);
 }
 
 bool AMDGPUInstPrinter::needsImpliedVcc(const MCInstrDesc &Desc,
@@ -1152,29 +1074,6 @@ void AMDGPUInstPrinter::printDPPCtrl(const MCInst *MI, unsigned OpNo,
     printU4ImmDecOperand(MI, OpNo, O);
   } else {
     O << "/* Invalid dpp_ctrl value */";
-  }
-}
-
-void AMDGPUInstPrinter::printDppRowMask(const MCInst *MI, unsigned OpNo,
-                                        const MCSubtargetInfo &STI,
-                                        raw_ostream &O) {
-  O << " row_mask:";
-  printU4ImmOperand(MI, OpNo, STI, O);
-}
-
-void AMDGPUInstPrinter::printDppBankMask(const MCInst *MI, unsigned OpNo,
-                                         const MCSubtargetInfo &STI,
-                                         raw_ostream &O) {
-  O << " bank_mask:";
-  printU4ImmOperand(MI, OpNo, STI, O);
-}
-
-void AMDGPUInstPrinter::printDppBoundCtrl(const MCInst *MI, unsigned OpNo,
-                                          const MCSubtargetInfo &STI,
-                                          raw_ostream &O) {
-  unsigned Imm = MI->getOperand(OpNo).getImm();
-  if (Imm) {
-    O << " bound_ctrl:1";
   }
 }
 
@@ -1812,14 +1711,18 @@ void AMDGPUInstPrinter::printEndpgm(const MCInst *MI, unsigned OpNo,
   O << ' ' << formatDec(Imm);
 }
 
-void AMDGPUInstPrinter::printByteSel(const MCInst *MI, unsigned OpNo,
-                                     const MCSubtargetInfo &STI,
-                                     raw_ostream &O) {
-  uint8_t Imm = MI->getOperand(OpNo).getImm();
-  if (!Imm)
-    return;
+void AMDGPUInstPrinter::printNamedInt(const MCInst *MI, unsigned OpNo,
+                                      const MCSubtargetInfo &STI,
+                                      raw_ostream &O, StringRef Prefix,
+                                      unsigned Width, bool PrintInHex,
+                                      bool AlwaysPrint) {
+  int64_t V = MI->getOperand(OpNo).getImm();
+  if (AlwaysPrint || V != 0) {
+    if (Width)
+      V &= maxUIntN(Width);
 
-  O << " byte_sel:" << formatDec(Imm);
+    O << ' ' << Prefix << ':' << (PrintInHex ? formatHex(V) : formatDec(V));
+  }
 }
 
 #include "AMDGPUGenAsmWriter.inc"
