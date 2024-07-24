@@ -5,6 +5,7 @@
 ; RUN: opt -passes=loop-vectorize -mtriple=arm64-apple-macos -mcpu=apple-a14 -S %s | FileCheck --check-prefix=INTERLEAVE-4 %s
 ; RUN: opt -passes=loop-vectorize -mtriple=arm64-apple-macos -mcpu=apple-a15 -S %s | FileCheck --check-prefix=INTERLEAVE-4 %s
 ; RUN: opt -passes=loop-vectorize -mtriple=arm64-apple-macos -mcpu=apple-a16 -S %s | FileCheck --check-prefix=INTERLEAVE-4 %s
+; RUN: opt -passes=loop-vectorize -mtriple=arm64 -mcpu=neoverse-v2 -S %s | FileCheck --check-prefix=INTERLEAVE-4 %s
 
 ; Tests for selecting interleave counts for loops with loads and stores.
 
