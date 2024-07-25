@@ -3473,6 +3473,9 @@ void DFSanVisitor::visitPHINode(PHINode &PN) {
 
 PreservedAnalyses DataFlowSanitizerPass::run(Module &M,
                                              ModuleAnalysisManager &AM) {
+  // Return early if nosanitize module flag is present for the module.
+  if (M.getModuleFlag("nosanitize"))
+    return PreservedAnalyses::all();
   auto GetTLI = [&](Function &F) -> TargetLibraryInfo & {
     auto &FAM =
         AM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
@@ -3486,5 +3489,6 @@ PreservedAnalyses DataFlowSanitizerPass::run(Module &M,
   // explicitly invalidated; PreservedAnalyses::none() is not enough. Sanitizers
   // make changes that require GlobalsAA to be invalidated.
   PA.abandon<GlobalsAA>();
+  M.addModuleFlag(Module::ModFlagBehavior::Override, "nosanitize", 1);
   return PA;
 }

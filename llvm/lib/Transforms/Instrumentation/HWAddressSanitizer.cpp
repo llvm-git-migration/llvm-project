@@ -455,6 +455,9 @@ private:
 
 PreservedAnalyses HWAddressSanitizerPass::run(Module &M,
                                               ModuleAnalysisManager &MAM) {
+  // Return early if nosanitize module flag is present for the module.
+  if (M.getModuleFlag("nosanitize"))
+    return PreservedAnalyses::all();
   const StackSafetyGlobalInfo *SSI = nullptr;
   auto TargetTriple = llvm::Triple(M.getTargetTriple());
   if (shouldUseStackSafetyAnalysis(TargetTriple, Options.DisableOptimization))
@@ -476,6 +479,7 @@ PreservedAnalyses HWAddressSanitizerPass::run(Module &M,
   // explicitly invalidated; PreservedAnalyses::none() is not enough. Sanitizers
   // make changes that require GlobalsAA to be invalidated.
   PA.abandon<GlobalsAA>();
+  M.addModuleFlag(Module::ModFlagBehavior::Override, "nosanitize", 1);
   return PA;
 }
 void HWAddressSanitizerPass::printPipeline(

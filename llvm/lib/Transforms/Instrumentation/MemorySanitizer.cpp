@@ -706,6 +706,9 @@ MemorySanitizerOptions::MemorySanitizerOptions(int TO, bool R, bool K,
 
 PreservedAnalyses MemorySanitizerPass::run(Module &M,
                                            ModuleAnalysisManager &AM) {
+  // Return early if nosanitize module flag is present for the module.
+  if (M.getModuleFlag("nosanitize"))
+    return PreservedAnalyses::all();
   bool Modified = false;
   if (!Options.Kernel) {
     insertModuleCtor(M);
@@ -721,6 +724,8 @@ PreservedAnalyses MemorySanitizerPass::run(Module &M,
         Msan.sanitizeFunction(F, FAM.getResult<TargetLibraryAnalysis>(F));
   }
 
+  if (Modified)
+    M.addModuleFlag(Module::ModFlagBehavior::Override, "nosanitize", 1);
   if (!Modified)
     return PreservedAnalyses::all();
 
