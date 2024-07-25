@@ -2323,14 +2323,17 @@ public:
       return (LT.first * 2);
     }
 
-    // If we can't lower fmuladd into an FMA estimate the cost as a floating
-    // point mul followed by an add.
-    if (IID == Intrinsic::fmuladd)
+    switch (IID) {
+    case Intrinsic::fmuladd: {
+      // If we can't lower fmuladd into an FMA estimate the cost as a floating
+      // point mul followed by an add.
+
       return thisT()->getArithmeticInstrCost(BinaryOperator::FMul, RetTy,
                                              CostKind) +
              thisT()->getArithmeticInstrCost(BinaryOperator::FAdd, RetTy,
                                              CostKind);
-    if (IID == Intrinsic::experimental_constrained_fmuladd) {
+    }
+    case Intrinsic::experimental_constrained_fmuladd: {
       IntrinsicCostAttributes FMulAttrs(
         Intrinsic::experimental_constrained_fmul, RetTy, Tys);
       IntrinsicCostAttributes FAddAttrs(
@@ -2338,8 +2341,8 @@ public:
       return thisT()->getIntrinsicInstrCost(FMulAttrs, CostKind) +
              thisT()->getIntrinsicInstrCost(FAddAttrs, CostKind);
     }
-
-    if (IID == Intrinsic::sadd_sat || IID == Intrinsic::ssub_sat) {
+    case Intrinsic::sadd_sat:
+    case Intrinsic::ssub_sat: {
       // Assume a default expansion.
       Type *CondTy = RetTy->getWithNewBitWidth(1);
 
@@ -2361,8 +2364,8 @@ public:
                                               CondTy, Pred, CostKind);
       return Cost;
     }
-
-    if (IID == Intrinsic::uadd_sat || IID == Intrinsic::usub_sat) {
+    case Intrinsic::uadd_sat:
+    case Intrinsic::usub_sat: {
       Type *CondTy = RetTy->getWithNewBitWidth(1);
 
       Type *OpTy = StructType::create({RetTy, CondTy});
@@ -2378,6 +2381,9 @@ public:
           thisT()->getCmpSelInstrCost(BinaryOperator::Select, RetTy, CondTy,
                                       CmpInst::BAD_ICMP_PREDICATE, CostKind);
       return Cost;
+    }
+    default:
+      break;
     }
 
     // Else, assume that we need to scalarize this intrinsic. For math builtins
