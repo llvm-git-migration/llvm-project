@@ -19,8 +19,8 @@
 #  include <string_view>
 
 #  include "benchmark/benchmark.h"
-
 #  include "make_string.h"
+#  include "test_macros.h"
 
 #  define SV(S) MAKE_STRING_VIEW(CharT, S)
 
@@ -288,11 +288,13 @@ BENCHMARK(BM_cyrillic_escaped<char>);
 BENCHMARK(BM_japanese_escaped<char>);
 BENCHMARK(BM_emoji_escaped<char>);
 
+#  ifndef TEST_HAS_NO_WIDE_CHARACTERS
 BENCHMARK(BM_ascii_escaped<wchar_t>);
 BENCHMARK(BM_unicode_escaped<wchar_t>);
 BENCHMARK(BM_cyrillic_escaped<wchar_t>);
 BENCHMARK(BM_japanese_escaped<wchar_t>);
 BENCHMARK(BM_emoji_escaped<wchar_t>);
+#  endif
 
 BENCHMARK_MAIN();
 
