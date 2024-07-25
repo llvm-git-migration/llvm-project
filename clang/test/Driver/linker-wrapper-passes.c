@@ -27,6 +27,7 @@
 // RUN:     --linker-path=/usr/bin/true %t/host-x86_64-unknown-linux-gnu.o \
 // RUN:     %offload-opt-loadbye --offload-opt=-wave-goodbye \
 // RUN:     --offload-opt=-passes="function(goodbye),module(inline)" 2>&1 | \
+// RUN:   grep -v "warning: argument unused during compilation: '--no-default-config'" | \
 // RUN:   FileCheck -match-full-lines -check-prefixes=OUT %s
 
 // Check plugin, -p, and remarks.
@@ -38,6 +39,7 @@
 // RUN:     --offload-opt=-pass-remarks-output=%t/remarks.yml \
 // RUN:     --offload-opt=-pass-remarks-filter=inline \
 // RUN:     --offload-opt=-pass-remarks-format=yaml 2>&1 | \
+// RUN:   grep -v "warning: argument unused during compilation: '--no-default-config'" | \
 // RUN:   FileCheck -match-full-lines -check-prefixes=OUT,REM %s
 // RUN: FileCheck -input-file=%t/remarks.yml -match-full-lines \
 // RUN:     -check-prefixes=YML %s
@@ -50,7 +52,7 @@
 //  OUT-NOT: {{.}}
 //      OUT: Bye: f
 // OUT-NEXT: Bye: test
-// REM-NEXT: remark: {{.*}} 'f' inlined into 'test' {{.*}}
+// REM-NEXT: {{.*}} 'f' inlined into 'test' {{.*}}
 //  OUT-NOT: {{.}}
 
 //  YML-NOT: {{.}}

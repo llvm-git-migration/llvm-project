@@ -527,9 +527,56 @@ Expected<StringRef> clang(ArrayRef<StringRef> InputFiles, const ArgList &Args) {
 
   // Forward all of the `--offload-opt` and similar options to the device.
   if (linkerSupportsLTO(Args)) {
-    for (auto &Arg : Args.filtered(OPT_offload_opt_eq_minus, OPT_mllvm))
-      CmdArgs.push_back(
-          Args.MakeArgString("-Wl,--plugin-opt=" + StringRef(Arg->getValue())));
+    for (auto &Arg : Args.filtered(OPT_offload_opt_eq_minus, OPT_mllvm)) {
+      StringRef Val = Arg->getValue();
+      // --help documents them with "--" but option parsing accepts them with
+      // "-" too, so either could arrive here.
+      auto consumeOpt = [](StringRef &Val, StringRef Opt) {
+        assert(Opt.starts_with("--"));
+        return Val.consume_front(Opt) || Val.consume_front(Opt.substr(1));
+      };
+      // Use -Xlinker not -Wl, which doesn't treat commas as plain text.
+      if (consumeOpt(Val, "--pass-remarks-with-hotness=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--opt-remarks-with-hotness"));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString(Val));
+      } else if (consumeOpt(Val, "--pass-remarks-hotness-threshold=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--opt-remarks-hotness-threshold"));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString(Val));
+      } else if (consumeOpt(Val, "--pass-remarks-output=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--opt-remarks-filename"));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString(Val));
+      } else if (consumeOpt(Val, "--pass-remarks-filter=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--opt-remarks-passes"));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString(Val));
+      } else if (consumeOpt(Val, "--pass-remarks-format=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--opt-remarks-format"));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString(Val));
+      } else if (consumeOpt(Val, "--load-pass-plugin=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--load-pass-plugin=" + Val));
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("-mllvm=-load=" + Val));
+      } else if (consumeOpt(Val, "--passes=") || Val.consume_front("-p=")) {
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(Args.MakeArgString("--lto-newpm-passes=" + Val));
+      } else {
+        // This is needed for at least -pass-remarks and options defined by any
+        // loaded plugins (e.g., -wave-goodbye defined by Bye.so).
+        CmdArgs.push_back(Args.MakeArgString("-Xlinker"));
+        CmdArgs.push_back(
+            Args.MakeArgString("-mllvm=" + StringRef(Arg->getValue())));
+      }
+    }
   }
 
   if (!Triple.isNVPTX())
