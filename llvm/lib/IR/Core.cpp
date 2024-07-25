@@ -191,11 +191,11 @@ LLVMAttributeRef LLVMCreateConstantRangeAttribute(LLVMContextRef C,
                                                   const uint64_t UpperWords[]) {
   auto &Ctx = *unwrap(C);
   auto AttrKind = (Attribute::AttrKind)KindID;
+  assert(AttrKind == Attribute::Range && "Unhandled ConstantRangeAttribute");
   unsigned NumWords = divideCeil(NumBits, 64);
-  return wrap(Attribute::get(
-      Ctx, AttrKind,
-      ConstantRange(APInt(NumBits, ArrayRef(LowerWords, NumWords)),
-                    APInt(NumBits, ArrayRef(UpperWords, NumWords)))));
+  return wrap(Attribute::getWithRange(
+      Ctx, ConstantRange(APInt(NumBits, ArrayRef(LowerWords, NumWords)),
+                         APInt(NumBits, ArrayRef(UpperWords, NumWords)))));
 }
 
 LLVMAttributeRef LLVMCreateStringAttribute(LLVMContextRef C,

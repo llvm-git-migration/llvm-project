@@ -286,6 +286,13 @@ Attribute Attribute::getWithNoFPClass(LLVMContext &Context,
   return get(Context, NoFPClass, ClassMask);
 }
 
+Attribute Attribute::getWithRange(LLVMContext &Context,
+                                  const ConstantRange &CR) {
+  assert(!CR.isEmptySet() && "Range must not be empty!");
+  assert(!CR.isFullSet() && "Range must not be full!");
+  return get(Context, Range, CR);
+}
+
 Attribute
 Attribute::getWithAllocSizeArgs(LLVMContext &Context, unsigned ElemSizeArg,
                                 const std::optional<unsigned> &NumElemsArg) {
@@ -2024,7 +2031,7 @@ AttrBuilder &AttrBuilder::addConstantRangeAttr(Attribute::AttrKind Kind,
 }
 
 AttrBuilder &AttrBuilder::addRangeAttr(const ConstantRange &CR) {
-  return addConstantRangeAttr(Attribute::Range, CR);
+  return addAttribute(Attribute::getWithRange(Ctx, CR));
 }
 
 AttrBuilder &
