@@ -523,6 +523,7 @@ void DataSharingProcessor::doPrivatize(const semantics::Symbol *sym,
     fir::ExtendedValue symExV = converter.getSymbolExtendedValue(*sym);
 
     symTable->pushScope();
+    mlir::Type yieldedType;
 
     // Populate the `alloc` region.
     {
@@ -542,9 +543,10 @@ void DataSharingProcessor::doPrivatize(const semantics::Symbol *sym,
       symTable->addSymbol(*sym, localExV);
       symTable->pushScope();
       cloneSymbol(sym);
-      firOpBuilder.create<mlir::omp::YieldOp>(
+      auto yieldOp = firOpBuilder.create<mlir::omp::YieldOp>(
           hsb.getAddr().getLoc(),
           symTable->shallowLookupSymbol(*sym).getAddr());
+      yieldedType = yieldOp.getOperand(0).getType();
       symTable->popScope();
     }
 
@@ -554,7 +556,7 @@ void DataSharingProcessor::doPrivatize(const semantics::Symbol *sym,
       // First block argument corresponding to the original/host value while
       // second block argument corresponding to the privatized value.
       mlir::Block *copyEntryBlock = firOpBuilder.createBlock(
-          &copyRegion, /*insertPt=*/{}, {symType, symType}, {symLoc, symLoc});
+          &copyRegion, /*insertPt=*/{}, {symType, yieldedType}, {symLoc, symLoc});
       firOpBuilder.setInsertionPointToEnd(copyEntryBlock);
 
       auto addSymbol = [&](unsigned argIdx, bool force = false) {

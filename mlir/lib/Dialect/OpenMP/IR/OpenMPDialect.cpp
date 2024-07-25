@@ -2505,7 +2505,11 @@ LogicalResult PrivateClauseOp::verify() {
              << "Did not expect any values to be yielded.";
     }
 
-    if (yieldedTypes.size() == 1 && yieldedTypes.front() == symType)
+    // TODO How can we check that 2 types are compatible without leaking
+    // dialect-specific (e.g. FIR) information? The problem is that in some
+    // cases, we would get the input type of the symbol as, e.g. `fir.ptr<i32>`
+    // while the allocated private memory is of type `fir.ref<i32>`.
+    if (yieldedTypes.size() == 1 /*&& yieldedTypes.front() == symType*/)
       return success();
 
     auto error = mlir::emitError(yieldOp.getLoc())
