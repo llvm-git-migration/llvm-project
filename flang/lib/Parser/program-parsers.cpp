@@ -532,15 +532,17 @@ TYPE_CONTEXT_PARSER("FUNCTION subprogram"_en_US,
 //         [prefix] FUNCTION function-name ( [dummy-arg-name-list] ) [suffix]
 // R1526 prefix -> prefix-spec [prefix-spec]...
 // R1531 dummy-arg-name -> name
-TYPE_CONTEXT_PARSER("FUNCTION statement"_en_US,
-    construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
-        parenthesized(optionalList(name)), maybe(suffix)) ||
-        extension<LanguageFeature::OmitFunctionDummies>(
-            "nonstandard usage: FUNCTION statement without dummy argument list"_port_en_US,
-            construct<FunctionStmt>( // PGI & Intel accept "FUNCTION F"
-                many(prefixSpec), "FUNCTION" >> name,
-                construct<std::list<Name>>(),
-                construct<std::optional<Suffix>>())))
+TYPE_PARSER(
+    (construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
+         // PGI & Intel accept "FUNCTION F"
+         !"("_tok >>
+             extension<LanguageFeature::OmitFunctionDummies>(
+                 "nonstandard usage: FUNCTION statement without dummy argument list"_port_en_US,
+                 pure<std::list<Name>>()),
+         pure<std::optional<Suffix>>()) ||
+        construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
+            defaulted(parenthesized(optionalList(name))), maybe(suffix))) /
+    checkEndOfKnownStmt)
 
 // R1532 suffix ->
 //         proc-language-binding-spec [RESULT ( result-name )] |
@@ -566,11 +568,13 @@ TYPE_CONTEXT_PARSER("SUBROUTINE subprogram"_en_US,
 //         [prefix] SUBROUTINE subroutine-name [( [dummy-arg-list] )
 //         [proc-language-binding-spec]]
 TYPE_PARSER(
-    construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
-        parenthesized(optionalList(dummyArg)), maybe(languageBindingSpec)) ||
-    construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
-        pure<std::list<DummyArg>>(),
-        pure<std::optional<LanguageBindingSpec>>()))
+    (construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
+         defaulted(parenthesized(optionalList(dummyArg))),
+         maybe(languageBindingSpec)) ||
+        construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
+            !"("_tok >> pure<std::list<DummyArg>>(),
+            pure<std::optional<LanguageBindingSpec>>())) /
+    checkEndOfKnownStmt)
 
 // R1536 dummy-arg -> dummy-arg-name | *
 TYPE_PARSER(construct<DummyArg>(name) || construct<DummyArg>(star))
