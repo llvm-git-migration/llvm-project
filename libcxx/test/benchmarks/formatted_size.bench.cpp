@@ -14,6 +14,7 @@
 
 #include "benchmark/benchmark.h"
 #include "make_string.h"
+#include "test_macros.h"
 
 #define CSTR(S) MAKE_CSTRING(CharT, S)
 
@@ -28,6 +29,8 @@ static void BM_formatted_size_string(benchmark::State& state) {
   state.SetBytesProcessed(state.iterations() * size * sizeof(CharT));
 }
 BENCHMARK(BM_formatted_size_string<char>)->RangeMultiplier(2)->Range(1, 1 << 20);
+#ifndef TEST_HAS_NO_WIDE_CHARACTERS
 BENCHMARK(BM_formatted_size_string<wchar_t>)->RangeMultiplier(2)->Range(1, 1 << 20);
+#endif
 
 BENCHMARK_MAIN();
