@@ -10,13 +10,19 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Demangle/Demangle.h"
+#include "llvm/Frontend/OpenMP/OMPIRBuilder.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/StringSaver.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <iterator>
+#include <string>
 #include <type_traits>
 
 using namespace llvm;
@@ -185,5 +191,56 @@ bool isCombinedConstruct(Directive D) {
   // OpenMP Spec 5.2: [17.3, 9-10]
   // Otherwise directive-name is a combined construct.
   return !getLeafConstructs(D).empty() && !isCompositeConstruct(D);
+}
+
+std::string prettifyFunctionName(StringRef FunctionName) {
+  // Internalized functions have the right name, but simply a suffix.
+  if (FunctionName.ends_with(".internalized"))
+    return FunctionName.drop_back(sizeof("internalized")).str() +
+           " (internalized)";
+  unsigned LineNo = 0;
+  auto ParentName = deconstructOpenMPKernelName(FunctionName, LineNo);
+  if (LineNo == 0)
+    return FunctionName.str();
+  return ("omp target in " + ParentName + " @ " + std::to_string(LineNo) +
+          " (" + FunctionName + ")")
+      .str();
+}
+
+std::string deconstructOpenMPKernelName(StringRef KernelName,
+                                        unsigned &LineNo) {
+
+  // Only handle functions with an OpenMP kernel prefix for now. Naming scheme:
+  // __omp_offloading_<hex_hash1>_<hex_hash2>_<name>_l<line>_[<count>_]<suffix>
+  if (!KernelName.starts_with(TargetRegionEntryInfo::KernelNamePrefix))
+    return "";
+  auto SkipAfterNext = [](StringRef S, char Tgt, int &Remaining) {
+    return S.drop_while([&](char C) {
+      if (!Remaining)
+        return false;
+      Remaining -= (C == Tgt);
+      return true;
+    });
+  };
+  auto PrettyName = KernelName.drop_front(
+      sizeof(TargetRegionEntryInfo::KernelNamePrefix) - /*'\0'*/ 1);
+  int Remaining = 3;
+  PrettyName = SkipAfterNext(PrettyName, '_', Remaining);
+  if (Remaining)
+    return "";
+
+  // Look for the last '_l<line>'.
+  size_t LineIdx = PrettyName.find("_l");
+  if (LineIdx == StringRef::npos)
+    return "";
+  while (true) {
+    size_t NewLineIdx = PrettyName.find("_l", LineIdx + 2);
+    if (NewLineIdx == StringRef::npos)
+      break;
+    LineIdx = NewLineIdx;
+  }
+  if (PrettyName.drop_front(LineIdx + 2).consumeInteger(10, LineNo))
+    return "";
+  return demangle(PrettyName.take_front(LineIdx));
 }
 } // namespace llvm::omp
