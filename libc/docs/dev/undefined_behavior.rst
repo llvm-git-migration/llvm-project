@@ -116,3 +116,12 @@ inherited from parent process triggered inside the instruction window between ``
 and ``exec*``. As libc failed to maintain its internal states correctly, even though the
 functions used inside the signal handlers are marked as ``async-signal-safe`` (such as
 ``getpid``), they will still return wrong values or lead to other even worse situations.
+
+PThread SpinLock Destroy
+------------------------
+POSIX.1 Issue 7 updates the spinlock destroy behavior description such that the return code for
+uninitialized spinlock and invalid spinlock is left undefined. We follow the recommendation as in
+POSIX.1-2024, where EINVAL is returned if the spinlock is invalid (here we only check for null pointers) or
+EBUSY is returned if the spinlock is currently locked. The lock is poisoned after a successful destroy. That is,
+subsequent operations on the lock object without any reinitialization will return EINVAL.
+
