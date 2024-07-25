@@ -229,9 +229,13 @@
 ! FORCE-USM-OFFLOAD-SAME: "-fopenmp" "-fopenmp-force-usm"
 
 ! Test that the -fopenmp-targets option is added to host compilation invocations
-! when --offload-arch is set.
+! when --offload-arch or -fopenmp-targets are set.
 ! RUN: %flang -S -### %s -o %t 2>&1 \
 ! RUN: -fopenmp --offload-arch=gfx90a \
+! RUN: --target=x86_64-unknown-linux-gnu \
+! RUN: | FileCheck %s --check-prefix=OFFLOAD-TARGETS
+! RUN: %flang -S -### %s -o %t 2>&1 \
+! RUN: -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa --offload-arch=gfx90a \
 ! RUN: --target=x86_64-unknown-linux-gnu \
 ! RUN: | FileCheck %s --check-prefix=OFFLOAD-TARGETS
 
