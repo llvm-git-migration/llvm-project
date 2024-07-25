@@ -34,12 +34,27 @@ namespace Fortran::parser {
 // for several productions; giving the "module" production priority here is a
 // cleaner solution, though regrettably subtle.
 // Enforcing C1547 is done in semantics.
+static constexpr auto notATopLevelFunctionStmt{
+    // REAL FUNCTIONF at the top level is the first declaration of a main
+    // program
+    // REAL FUNCTION is too
+    // REAL FUNCTION F(10) is too
+    // REAL FUNCTION F/1./ is too
+    // REAL FUNCTION F,G is too
+    // REAL FUNCTION F(X) is a FunctionStmt
+    // REAL FUNCTION F can be a FunctionStmt
+    declarationTypeSpec >> "FUNCTION"_sptok >>
+    (!lookAhead(letter || underscore) >> name >> atEndOfStmt || !name ||
+        !(name >>
+            (extension<LanguageFeature::OmitFunctionDummies>(atEndOfStmt) ||
+                parenthesized(optionalList(name)) >> ok)))};
 static constexpr auto programUnit{
     construct<ProgramUnit>(indirect(Parser<Module>{})) ||
-    construct<ProgramUnit>(indirect(functionSubprogram)) ||
     construct<ProgramUnit>(indirect(subroutineSubprogram)) ||
     construct<ProgramUnit>(indirect(Parser<Submodule>{})) ||
     construct<ProgramUnit>(indirect(Parser<BlockData>{})) ||
+    !notATopLevelFunctionStmt >>
+        construct<ProgramUnit>(indirect(functionSubprogram)) ||
     construct<ProgramUnit>(indirect(Parser<MainProgram>{}))};
 static constexpr auto normalProgramUnit{StartNewSubprogram{} >> programUnit /
         skipMany(";"_tok) / space / recovery(endOfLine, SkipPast<'\n'>{})};
@@ -532,15 +547,20 @@ TYPE_CONTEXT_PARSER("FUNCTION subprogram"_en_US,
 //         [prefix] FUNCTION function-name ( [dummy-arg-name-list] ) [suffix]
 // R1526 prefix -> prefix-spec [prefix-spec]...
 // R1531 dummy-arg-name -> name
-TYPE_CONTEXT_PARSER("FUNCTION statement"_en_US,
-    construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
-        parenthesized(optionalList(name)), maybe(suffix)) ||
+
+TYPE_PARSER(construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
+                parenthesized(optionalList(name)), maybe(suffix)) /
+        atEndOfStmt ||
+    construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name / atEndOfStmt,
+        // PGI & Intel accept "FUNCTION F"
         extension<LanguageFeature::OmitFunctionDummies>(
             "nonstandard usage: FUNCTION statement without dummy argument list"_port_en_US,
-            construct<FunctionStmt>( // PGI & Intel accept "FUNCTION F"
-                many(prefixSpec), "FUNCTION" >> name,
-                construct<std::list<Name>>(),
-                construct<std::optional<Suffix>>())))
+            pure<std::list<Name>>()),
+        pure<std::optional<Suffix>>()) ||
+    // error recovery
+    construct<FunctionStmt>(many(prefixSpec), "FUNCTION" >> name,
+        defaulted(parenthesized(optionalList(name))), maybe(suffix)) /
+        checkEndOfKnownStmt)
 
 // R1532 suffix ->
 //         proc-language-binding-spec [RESULT ( result-name )] |
@@ -566,11 +586,13 @@ TYPE_CONTEXT_PARSER("SUBROUTINE subprogram"_en_US,
 //         [prefix] SUBROUTINE subroutine-name [( [dummy-arg-list] )
 //         [proc-language-binding-spec]]
 TYPE_PARSER(
-    construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
-        parenthesized(optionalList(dummyArg)), maybe(languageBindingSpec)) ||
-    construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
-        pure<std::list<DummyArg>>(),
-        pure<std::optional<LanguageBindingSpec>>()))
+    (construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
+         !"("_tok >> pure<std::list<DummyArg>>(),
+         pure<std::optional<LanguageBindingSpec>>()) ||
+        construct<SubroutineStmt>(many(prefixSpec), "SUBROUTINE" >> name,
+            defaulted(parenthesized(optionalList(dummyArg))),
+            maybe(languageBindingSpec))) /
+    checkEndOfKnownStmt)
 
 // R1536 dummy-arg -> dummy-arg-name | *
 TYPE_PARSER(construct<DummyArg>(name) || construct<DummyArg>(star))
