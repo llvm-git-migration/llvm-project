@@ -180,11 +180,6 @@ function check-abi-list() {
     )
 }
 
-function check-cxx-benchmarks() {
-    echo "--- Running the benchmarks"
-    ${NINJA} -vC "${BUILD_DIR}" check-cxx-benchmarks
-}
-
 function test-armv7m-picolibc() {
     clean
 
@@ -604,11 +599,6 @@ apple-system-backdeployment-*)
                    -DLIBUNWIND_TEST_PARAMS="${PARAMS}"
 
     check-runtimes
-;;
-benchmarks)
-    clean
-    generate-cmake
-    check-cxx-benchmarks
 ;;
 aarch64)
     clean
