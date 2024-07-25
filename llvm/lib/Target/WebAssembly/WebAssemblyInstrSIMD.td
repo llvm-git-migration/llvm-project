@@ -273,13 +273,13 @@ defm : LoadPat<vec.vt, loadpat, inst>;
 multiclass SIMDLoadZero<Vec vec, bits<32> simdop> {
   defvar name = "v128.load"#vec.lane_bits#"_zero";
   let mayLoad = 1, UseNamedOperandTable = 1 in {
-  defm LOAD_ZERO_#vec#_A32 :
+  defm LOAD_ZERO_#vec.lane_bits#_A32 :
     SIMD_I<(outs V128:$dst),
            (ins P2Align:$p2align, offset32_op:$off, I32:$addr),
            (outs), (ins P2Align:$p2align, offset32_op:$off), [],
            name#"\t$dst, ${off}(${addr})$p2align",
            name#"\t$off$p2align", simdop>;
-  defm LOAD_ZERO_#vec#_A64 :
+  defm LOAD_ZERO_#vec.lane_bits#_A64 :
     SIMD_I<(outs V128:$dst),
            (ins P2Align:$p2align, offset64_op:$off, I64:$addr),
            (outs), (ins P2Align:$p2align, offset64_op:$off), [],
@@ -293,15 +293,15 @@ defm "" : SIMDLoadZero<I64x2, 0x5d>;
 
 // Use load_zero to load scalars into vectors as well where possible.
 // TODO: i16, and i8 scalars
-foreach vec = [I32x4, I64x2] in {
-  defvar inst = "LOAD_ZERO_"#vec;
+foreach vec = [I32x4, I64x2, F32x4, F64x2] in {
+  defvar inst = "LOAD_ZERO_"#vec.lane_bits;
   defvar pat = PatFrag<(ops node:$addr), (scalar_to_vector (vec.lane_vt (load $addr)))>;
   defm : LoadPat<vec.vt, pat, inst>;
 }
 
 // TODO: f32x4 and f64x2 as well
 foreach vec = [I32x4, I64x2] in {
-  defvar inst = "LOAD_ZERO_"#vec;
+  defvar inst = "LOAD_ZERO_"#vec.lane_bits;
   defvar pat = PatFrag<(ops node:$ptr),
     (vector_insert (vec.splat (vec.lane_vt 0)), (vec.lane_vt (load $ptr)), 0)>;
   defm : LoadPat<vec.vt, pat, inst>;
@@ -1463,10 +1463,10 @@ def extloadv2f32 : PatFrag<(ops node:$ptr), (extload node:$ptr)> {
 // Adapted from the body of LoadPatNoOffset
 // TODO: other addressing patterns
 def : Pat<(v2f64 (extloadv2f32 (i32 I32:$addr))),
-          (promote_low_F64x2 (LOAD_ZERO_I64x2_A32 0, 0, I32:$addr))>,
+          (promote_low_F64x2 (LOAD_ZERO_64_A32 0, 0, I32:$addr))>,
       Requires<[HasAddr32]>;
 def : Pat<(v2f64 (extloadv2f32 (i64 I64:$addr))),
-          (promote_low_F64x2 (LOAD_ZERO_I64x2_A64 0, 0, I64:$addr))>,
+          (promote_low_F64x2 (LOAD_ZERO_64_A64 0, 0, I64:$addr))>,
       Requires<[HasAddr64]>;
 
 //===----------------------------------------------------------------------===//
