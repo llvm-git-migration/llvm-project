@@ -26,6 +26,16 @@ function(add_startup_object name)
     PROPERTIES
       OUTPUT_NAME ${name}.o
   )
+
+  # Make an executable target of relocatable bitcode for clang if needed.
+  if(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR)
+    add_executable(${fq_target_name}.exe $<TARGET_OBJECTS:${fq_target_name}>)
+    set_target_properties(${fq_target_name}.exe PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${LIBC_LIBRARY_DIR}
+      RUNTIME_OUTPUT_NAME ${name}.o)
+    target_link_options(${fq_target_name}.exe PRIVATE 
+                        "-flto" "-Wl,--lto-emit-llvm" "-march=sm_90")
+  endif()
 endfunction()
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIBC_TARGET_ARCHITECTURE})
@@ -44,6 +54,7 @@ set(startup_components crt1)
 foreach(target IN LISTS startup_components)
   set(fq_target_name libc.startup.gpu.${target})
   add_dependencies(libc-startup ${fq_target_name})
+
   install(FILES $<TARGET_OBJECTS:${fq_target_name}>
           DESTINATION ${LIBC_INSTALL_LIBRARY_DIR}
           RENAME $<TARGET_PROPERTY:${fq_target_name},OUTPUT_NAME>
