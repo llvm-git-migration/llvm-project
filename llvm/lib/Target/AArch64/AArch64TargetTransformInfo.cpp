@@ -3424,7 +3424,15 @@ InstructionCost AArch64TTIImpl::getGatherScatterOpCost(
   // Add on an overhead cost for using gathers/scatters.
   // TODO: At the moment this is applied unilaterally for all CPUs, but at some
   // point we may want a per-CPU overhead.
-  MemOpCost *= getSVEGatherScatterOverhead(Opcode);
+  unsigned OpCost = 1;
+  if (ST->getProcFamily() == AArch64Subtarget::NeoverseV2) {
+     // Specialize overhead of scatter instructions on Neoverse-V2
+    if (Opcode == Instruction::Store)
+      OpCost = 13;
+  } else {
+    OpCost = getSVEGatherScatterOverhead(Opcode);
+  }
+  MemOpCost *= OpCost;
   return LT.first * MemOpCost * getMaxNumElements(LegalVF);
 }
 
