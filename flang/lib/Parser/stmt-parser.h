@@ -30,6 +30,11 @@ inline constexpr auto unterminatedStatement(const PA &p) {
           maybe(label), space >> p));
 }
 
+constexpr auto checkEndOfKnownStmt{
+    recovery(withMessage("expected end of statement"_err_en_US,
+                 space >> lookAhead(";\n"_ch)),
+        SkipTo<'\n'>{})};
+
 constexpr auto endOfLine{
     "\n"_ch >> ok || fail("expected end of line"_err_en_US)};
 
