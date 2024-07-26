@@ -77,7 +77,8 @@ static void addStringHelper(DebugStrOffsetsWriter &StrOffstsWriter,
                             DIEValue &DIEAttrInfo, StringRef Str) {
   uint32_t NewOffset = StrWriter.addString(Str);
   if (Unit.getVersion() >= 5) {
-    assert(!Unit.isDebugStrOffsetFinalized() && "debug_str_offsets was already finalized.");
+    assert(!Unit.isDebugStrOffsetFinalized() &&
+           "debug_str_offsets was already finalized.");
     StrOffstsWriter.updateAddressMap(DIEAttrInfo.getDIEInteger().getValue(),
                                      NewOffset);
     return;

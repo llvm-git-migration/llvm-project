@@ -757,8 +757,10 @@ void DWARFRewriter::updateDebugInfo() {
               : std::optional<std::string>(opts::DwarfOutputPath.c_str());
       std::string DWOName = DIEBlder.updateDWONameCompDir(
           *StrOffstsWriter, *StrWriter, *CU, DwarfOutputPath, std::nullopt);
+      if (CU->getVersion() >= 5)
+        StrOffstsWriter->finalizeSection(*CU, DIEBlder);
       processSplitCU(*CU, **SplitCU, DIEBlder, *TempRangesSectionWriter,
-                     AddressWriter, DWOName, DwarfOutputPath);
+                      AddressWriter, DWOName, DwarfOutputPath);
     }
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
       processMainBinaryCU(*CU, DIEBlder);
