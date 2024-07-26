@@ -335,6 +335,48 @@ def INT_FENCE_SC_CLUSTER:
        MEMBAR<"fence.sc.cluster;", int_nvvm_fence_sc_cluster>,
        Requires<[hasPTX<78>, hasSM<90>]>;
 
+// Proxy fence (uni-directional)
+// fence.proxy.tensormap.release variants
+
+class FENCE_PROXY_TENSORMAP_RELEASE<string Scope, Intrinsic Intr> :
+        NVPTXInst<(outs), (ins),
+                  "fence.proxy.tensormap::generic.release." # Scope # ";", [(Intr)]>,
+        Requires<[hasPTX<83>, hasSM<90>]>;
+
+def INT_FENCE_PROXY_TENSORMAP_RELEASE_CTA:
+      FENCE_PROXY_TENSORMAP_RELEASE<"cta",
+        int_nvvm_fence_proxy_tensormap_release_cta>;
+def INT_FENCE_PROXY_TENSORMAP_RELEASE_CLUSTER:
+      FENCE_PROXY_TENSORMAP_RELEASE<"cluster",
+        int_nvvm_fence_proxy_tensormap_release_cluster>;
+def INT_FENCE_PROXY_TENSORMAP_RELEASE_GPU:
+      FENCE_PROXY_TENSORMAP_RELEASE<"gpu",
+        int_nvvm_fence_proxy_tensormap_release_gpu>;
+def INT_FENCE_PROXY_TENSORMAP_RELEASE_SYS:
+      FENCE_PROXY_TENSORMAP_RELEASE<"sys",
+        int_nvvm_fence_proxy_tensormap_release_sys>;
+
+// fence.proxy.tensormap.acquire variants
+
+class FENCE_PROXY_TENSORMAP_ACQUIRE<string Scope, Intrinsic Intr> :
+        NVPTXInst<(outs), (ins Int64Regs:$addr, i32imm:$size),
+                  "fence.proxy.tensormap::generic.acquire." # Scope # " [$addr], $size;",
+                  [(Intr Int64Regs:$addr, timm:$size)]>,
+        Requires<[hasPTX<83>, hasSM<90>]>;
+
+def INT_FENCE_PROXY_TENSORMAP_ACQUIRE_CTA :
+      FENCE_PROXY_TENSORMAP_ACQUIRE<"cta",
+        int_nvvm_fence_proxy_tensormap_acquire_cta>;
+def INT_FENCE_PROXY_TENSORMAP_ACQUIRE_CLUSTER :
+      FENCE_PROXY_TENSORMAP_ACQUIRE<"cluster",
+        int_nvvm_fence_proxy_tensormap_acquire_cluster>;
+def INT_FENCE_PROXY_TENSORMAP_ACQUIRE_GPU :
+      FENCE_PROXY_TENSORMAP_ACQUIRE<"gpu",
+        int_nvvm_fence_proxy_tensormap_acquire_gpu>;
+def INT_FENCE_PROXY_TENSORMAP_ACQUIRE_SYS :
+      FENCE_PROXY_TENSORMAP_ACQUIRE<"sys",
+        int_nvvm_fence_proxy_tensormap_acquire_sys>;
+
 //-----------------------------------
 // Async Copy Functions
 //-----------------------------------
