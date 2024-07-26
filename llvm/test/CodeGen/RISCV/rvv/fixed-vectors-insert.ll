@@ -109,63 +109,24 @@ define <64 x i32> @insertelt_v64i32_63(<64 x i32> %a, i32 %y) {
 }
 
 define <64 x i32> @insertelt_v64i32_idx(<64 x i32> %a, i32 %y, i32 zeroext %idx) {
-; RV32-LABEL: insertelt_v64i32_idx:
-; RV32:       # %bb.0:
-; RV32-NEXT:    addi sp, sp, -384
-; RV32-NEXT:    .cfi_def_cfa_offset 384
-; RV32-NEXT:    sw ra, 380(sp) # 4-byte Folded Spill
-; RV32-NEXT:    sw s0, 376(sp) # 4-byte Folded Spill
-; RV32-NEXT:    .cfi_offset ra, -4
-; RV32-NEXT:    .cfi_offset s0, -8
-; RV32-NEXT:    addi s0, sp, 384
-; RV32-NEXT:    .cfi_def_cfa s0, 0
-; RV32-NEXT:    andi sp, sp, -128
-; RV32-NEXT:    andi a1, a1, 63
-; RV32-NEXT:    slli a1, a1, 2
-; RV32-NEXT:    mv a2, sp
-; RV32-NEXT:    add a1, a2, a1
-; RV32-NEXT:    addi a3, sp, 128
-; RV32-NEXT:    li a4, 32
-; RV32-NEXT:    vsetvli zero, a4, e32, m8, ta, ma
-; RV32-NEXT:    vse32.v v16, (a3)
-; RV32-NEXT:    vse32.v v8, (a2)
-; RV32-NEXT:    sw a0, 0(a1)
-; RV32-NEXT:    vle32.v v8, (a2)
-; RV32-NEXT:    vle32.v v16, (a3)
-; RV32-NEXT:    addi sp, s0, -384
-; RV32-NEXT:    lw ra, 380(sp) # 4-byte Folded Reload
-; RV32-NEXT:    lw s0, 376(sp) # 4-byte Folded Reload
-; RV32-NEXT:    addi sp, sp, 384
-; RV32-NEXT:    ret
-;
-; RV64-LABEL: insertelt_v64i32_idx:
-; RV64:       # %bb.0:
-; RV64-NEXT:    addi sp, sp, -384
-; RV64-NEXT:    .cfi_def_cfa_offset 384
-; RV64-NEXT:    sd ra, 376(sp) # 8-byte Folded Spill
-; RV64-NEXT:    sd s0, 368(sp) # 8-byte Folded Spill
-; RV64-NEXT:    .cfi_offset ra, -8
-; RV64-NEXT:    .cfi_offset s0, -16
-; RV64-NEXT:    addi s0, sp, 384
-; RV64-NEXT:    .cfi_def_cfa s0, 0
-; RV64-NEXT:    andi sp, sp, -128
-; RV64-NEXT:    andi a1, a1, 63
-; RV64-NEXT:    slli a1, a1, 2
-; RV64-NEXT:    mv a2, sp
-; RV64-NEXT:    add a1, a2, a1
-; RV64-NEXT:    addi a3, sp, 128
-; RV64-NEXT:    li a4, 32
-; RV64-NEXT:    vsetvli zero, a4, e32, m8, ta, ma
-; RV64-NEXT:    vse32.v v16, (a3)
-; RV64-NEXT:    vse32.v v8, (a2)
-; RV64-NEXT:    sw a0, 0(a1)
-; RV64-NEXT:    vle32.v v8, (a2)
-; RV64-NEXT:    vle32.v v16, (a3)
-; RV64-NEXT:    addi sp, s0, -384
-; RV64-NEXT:    ld ra, 376(sp) # 8-byte Folded Reload
-; RV64-NEXT:    ld s0, 368(sp) # 8-byte Folded Reload
-; RV64-NEXT:    addi sp, sp, 384
-; RV64-NEXT:    ret
+; CHECK-LABEL: insertelt_v64i32_idx:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    addi sp, sp, -256
+; CHECK-NEXT:    .cfi_def_cfa_offset 256
+; CHECK-NEXT:    andi a1, a1, 63
+; CHECK-NEXT:    slli a1, a1, 2
+; CHECK-NEXT:    mv a2, sp
+; CHECK-NEXT:    add a1, a2, a1
+; CHECK-NEXT:    addi a3, sp, 128
+; CHECK-NEXT:    li a4, 32
+; CHECK-NEXT:    vsetvli zero, a4, e32, m8, ta, ma
+; CHECK-NEXT:    vse32.v v16, (a3)
+; CHECK-NEXT:    vse32.v v8, (a2)
+; CHECK-NEXT:    sw a0, 0(a1)
+; CHECK-NEXT:    vle32.v v8, (a2)
+; CHECK-NEXT:    vle32.v v16, (a3)
+; CHECK-NEXT:    addi sp, sp, 256
+; CHECK-NEXT:    ret
   %b = insertelement <64 x i32> %a, i32 %y, i32 %idx
   ret <64 x i32> %b
 }

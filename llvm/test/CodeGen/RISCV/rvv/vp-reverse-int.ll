@@ -495,19 +495,13 @@ define <vscale x 128 x i8> @test_vp_reverse_nxv128i8(<vscale x 128 x i8> %src, i
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    mv a2, a1
 ; CHECK-NEXT:  .LBB32_2:
-; CHECK-NEXT:    addi sp, sp, -80
-; CHECK-NEXT:    .cfi_def_cfa_offset 80
-; CHECK-NEXT:    sd ra, 72(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    sd s0, 64(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    .cfi_offset ra, -8
-; CHECK-NEXT:    .cfi_offset s0, -16
-; CHECK-NEXT:    addi s0, sp, 80
-; CHECK-NEXT:    .cfi_def_cfa s0, 0
+; CHECK-NEXT:    addi sp, sp, -16
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    csrr a3, vlenb
 ; CHECK-NEXT:    slli a3, a3, 4
 ; CHECK-NEXT:    sub sp, sp, a3
-; CHECK-NEXT:    andi sp, sp, -64
-; CHECK-NEXT:    addi a3, sp, 64
+; CHECK-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x10, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 16 * vlenb
+; CHECK-NEXT:    addi a3, sp, 16
 ; CHECK-NEXT:    add a4, a0, a3
 ; CHECK-NEXT:    addi a4, a4, -1
 ; CHECK-NEXT:    li a5, -1
@@ -524,10 +518,10 @@ define <vscale x 128 x i8> @test_vp_reverse_nxv128i8(<vscale x 128 x i8> %src, i
 ; CHECK-NEXT:    vle8.v v16, (a1)
 ; CHECK-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-NEXT:    vle8.v v8, (a3)
-; CHECK-NEXT:    addi sp, s0, -80
-; CHECK-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    addi sp, sp, 80
+; CHECK-NEXT:    csrr a0, vlenb
+; CHECK-NEXT:    slli a0, a0, 4
+; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
 
   %dst = call <vscale x 128 x i8> @llvm.experimental.vp.reverse.nxv128i8(<vscale x 128 x i8> %src, <vscale x 128 x i1> splat (i1 1), i32 %evl)

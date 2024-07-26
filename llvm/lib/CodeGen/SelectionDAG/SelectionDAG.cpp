@@ -2481,6 +2481,8 @@ Align SelectionDAG::getReducedAlign(EVT VT, bool UseABI) {
     Align RedAlign2 = UseABI ? DL.getABITypeAlign(Ty) : DL.getPrefTypeAlign(Ty);
     if (RedAlign2 < RedAlign)
       RedAlign = RedAlign2;
+    // If RedAlign is still greater than StackAlign, clamp it down to StackAlign
+    RedAlign = std::min(RedAlign, StackAlign);
   }
 
   return RedAlign;
