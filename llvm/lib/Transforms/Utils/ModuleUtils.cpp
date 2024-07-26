@@ -163,6 +163,14 @@ void llvm::appendToCompilerUsed(Module &M, ArrayRef<GlobalValue *> Values) {
   appendToUsedList(M, "llvm.compiler.used", Values);
 }
 
+StringRef llvm::getTargetABIMD(Module &M) {
+  StringRef TargetABI = "";
+  if (auto *TargetABIMD =
+          dyn_cast_or_null<MDString>(M.getModuleFlag("target-abi")))
+    TargetABI = TargetABIMD->getString();
+  return TargetABI;
+}
+
 static void removeFromUsedList(Module &M, StringRef Name,
                                function_ref<bool(Constant *)> ShouldRemove) {
   GlobalVariable *GV = M.getNamedGlobal(Name);
