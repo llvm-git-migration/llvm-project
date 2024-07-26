@@ -1787,7 +1787,7 @@ void Parser::checkPotentialAngleBracket(ExprResult &PotentialTemplateName) {
                     Priority);
 }
 
-bool Parser::isMissingTemplateKeywordBeforeScope() {
+bool Parser::isMissingTemplateKeywordBeforeScope(bool AnnotateInvalid) {
   assert(Tok.is(tok::coloncolon));
   Sema::DisableTypoCorrectionRAII DTC(Actions);
   ColonProtectionRAIIObject ColonProtection(*this);
@@ -1803,14 +1803,21 @@ bool Parser::isMissingTemplateKeywordBeforeScope() {
                                  /*EnteringContext=*/false);
   ExprResult Result = tryParseCXXIdExpression(SS, /*isAddressOfOperand=*/false);
 
-  if (PP.isBacktrackEnabled())
+  if (!AnnotateInvalid && Result.isInvalid())
+    return true;
+
+  SourceLocation EndLoc = Tok.getLocation();
+  if (PP.isBacktrackEnabled()) {
     PP.RevertCachedTokens(1);
-  else
+    if (Result.isInvalid())
+      EndLoc = PP.getLastCachedTokenLocation();
+  } else {
     PP.EnterToken(Tok, /*IsReinject=*/true);
+  }
 
   Tok.setKind(tok::annot_primary_expr);
   setExprAnnotation(Tok, Result);
-  Tok.setAnnotationEndLoc(Tok.getLocation());
+  Tok.setAnnotationEndLoc(EndLoc);
   Tok.setLocation(StartLoc);
   PP.AnnotateCachedTokens(Tok);
   return Result.isInvalid();
@@ -1841,7 +1848,7 @@ bool Parser::checkPotentialAngleBracketDelimiter(
 
   if (OpToken.is(tok::greater) && Tok.is(tok::coloncolon) &&
       !NextToken().isOneOf(tok::kw_new, tok::kw_delete) &&
-      isMissingTemplateKeywordBeforeScope()) {
+      isMissingTemplateKeywordBeforeScope(/*AnnotateInvalid=*/true)) {
     Actions.diagnoseExprIntendedAsTemplateName(
         getCurScope(), LAngle.TemplateName, LAngle.LessLoc,
         OpToken.getLocation());
