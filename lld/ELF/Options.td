@@ -610,6 +610,8 @@ def lto: JJ<"lto=">, HelpText<"Set LTO backend">,
                  MetaVarName<"[full,thin]">;
 def lto_aa_pipeline: JJ<"lto-aa-pipeline=">,
   HelpText<"AA pipeline to run during LTO. Used in conjunction with -lto-newpm-passes">;
+def lto_print_pipeline_passes: FF<"lto-print-pipeline-passes">,
+  HelpText<"Print a '-passes' compatible string describing the LTO pipeline (best-effort only).">;
 def lto_debug_pass_manager: FF<"lto-debug-pass-manager">,
   HelpText<"Debug new pass manager">;
 def lto_emit_asm: FF<"lto-emit-asm">,

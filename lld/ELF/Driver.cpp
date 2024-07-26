@@ -1313,6 +1313,7 @@ static void readConfigs(opt::InputArgList &args) {
   config->ltoCSProfileFile = args.getLastArgValue(OPT_lto_cs_profile_file);
   config->ltoPGOWarnMismatch = args.hasFlag(OPT_lto_pgo_warn_mismatch,
                                             OPT_no_lto_pgo_warn_mismatch, true);
+  config->ltoPrintPipelinePasses = args.hasArg(OPT_lto_print_pipeline_passes);
   config->ltoDebugPassManager = args.hasArg(OPT_lto_debug_pass_manager);
   config->ltoEmitAsm = args.hasArg(OPT_lto_emit_asm);
   config->ltoNewPmPasses = args.getLastArgValue(OPT_lto_newpm_passes);

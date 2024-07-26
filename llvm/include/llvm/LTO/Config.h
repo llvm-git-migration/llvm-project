@@ -165,6 +165,9 @@ struct Config {
   /// Whether to emit the pass manager debuggging informations.
   bool DebugPassManager = false;
 
+  /// Print a '-passes' compatible string describing the pipeline (best-effort only).
+  bool PrintPipelinePasses = false;
+
   /// Statistics output file path.
   std::string StatsFile;
 

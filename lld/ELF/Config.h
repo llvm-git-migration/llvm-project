@@ -260,6 +260,7 @@ struct Config {
   bool ignoreFunctionAddressEquality;
   bool ltoCSProfileGenerate;
   bool ltoPGOWarnMismatch;
+  bool ltoPrintPipelinePasses;
   bool ltoDebugPassManager;
   bool ltoEmitAsm;
   bool ltoUniqueBasicBlockSectionNames;
