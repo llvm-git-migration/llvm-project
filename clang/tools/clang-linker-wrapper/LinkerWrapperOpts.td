@@ -107,6 +107,8 @@ def lto_in_process : Flag<["--"], "lto-in-process">,
   Flags<[WrapperOnlyOption]>, HelpText<"Use in-process LTO even if linker supports LTO">;
 def lto_debug_pass_manager : Flag<["--"], "lto-debug-pass-manager">,
   Flags<[WrapperOnlyOption]>, HelpText<"Prints debug information for the new pass manager during LTO">;
+def lto_print_pipeline_passes : Flag<["--"], "lto-print-pipeline-passes">,
+  Flags<[WrapperOnlyOption]>, HelpText<"Print a '-passes' compatible string describing the LTO pipeline (best-effort only).">;
 
 // Standard linker flags also used by the linker wrapper.
 def sysroot_EQ : Joined<["--"], "sysroot=">, HelpText<"Set the system root">;

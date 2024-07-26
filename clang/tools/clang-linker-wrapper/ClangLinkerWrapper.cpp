@@ -578,6 +578,8 @@ Expected<StringRef> clang(ArrayRef<StringRef> InputFiles, const ArgList &Args) {
       CmdArgs.push_back("-Wl,--save-temps");
     if (Args.hasArg(OPT_lto_debug_pass_manager))
       CmdArgs.push_back("-Wl,--lto-debug-pass-manager");
+    if (Args.hasArg(OPT_lto_print_pipeline_passes))
+      CmdArgs.push_back("-Wl,--lto-print-pipeline-passes");
   }
 
   if (Args.hasArg(OPT_embed_bitcode))
@@ -764,6 +766,7 @@ std::unique_ptr<lto::LTO> createLTO(
   Conf.HasWholeProgramVisibility = Args.hasArg(OPT_whole_program);
 
   Conf.DebugPassManager = Args.hasArg(OPT_lto_debug_pass_manager);
+  Conf.PrintPipelinePasses = Args.hasArg(OPT_lto_print_pipeline_passes);
 
   return std::make_unique<lto::LTO>(std::move(Conf), Backend);
 }
