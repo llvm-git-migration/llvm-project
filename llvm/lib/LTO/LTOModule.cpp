@@ -213,7 +213,7 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
 
   // construct LTOModule, hand over ownership of module and target
   SubtargetFeatures Features;
-  Features.getDefaultSubtargetFeatures(Triple);
+  Features.getDefaultSubtargetFeatures(*M.get());
   std::string FeatureStr = Features.getString();
   // Set a default CPU for Darwin triples.
   std::string CPU;
