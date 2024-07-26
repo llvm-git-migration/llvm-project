@@ -2121,8 +2121,26 @@ bool SignalContext::IsTrueFaultingAddress() const {
 UNUSED
 static const char *RegNumToRegName(int reg) {
   switch (reg) {
-#  if SANITIZER_LINUX
+#  if SANITIZER_LINUX || SANITIZER_NETBSD
 #    if defined(__x86_64__)
+#      if SANITIZER_NETBSD
+#        define REG_RAX _REG_RAX
+#        define REG_RBX _REG_RBX
+#        define REG_RCX _REG_RCX
+#        define REG_RDX _REG_RDX
+#        define REG_RDI _REG_RDI
+#        define REG_RSI _REG_RSI
+#        define REG_RBP _REG_RBP
+#        define REG_RSP _REG_RSP
+#        define REG_R8 _REG_R8
+#        define REG_R9 _REG_R9
+#        define REG_R10 _REG_R10
+#        define REG_R11 _REG_R11
+#        define REG_R12 _REG_R12
+#        define REG_R13 _REG_R13
+#        define REG_R14 _REG_R14
+#        define REG_R15 _REG_R15
+#      endif
     case REG_RAX:
       return "rax";
     case REG_RBX:
@@ -2156,6 +2174,16 @@ static const char *RegNumToRegName(int reg) {
     case REG_R15:
       return "r15";
 #    elif defined(__i386__)
+#      if SANITIZER_NETBSD
+#        define REG_EAX _REG_EAX
+#        define REG_EBX _REG_EBX
+#        define REG_ECX _REG_ECX
+#        define REG_EDX _REG_EDX
+#        define REG_EDI _REG_EDI
+#        define REG_ESI _REG_ESI
+#        define REG_EBP _REG_EBP
+#        define REG_ESP _REG_ESP
+#      endif
     case REG_EAX:
       return "eax";
     case REG_EBX:
@@ -2294,11 +2322,23 @@ static uptr GetArmRegister(ucontext_t *ctx, int RegNum) {
 UNUSED
 static void DumpSingleReg(ucontext_t *ctx, int RegNum) {
   const char *RegName = RegNumToRegName(RegNum);
-#    if defined(__x86_64__)
+#  if defined(__x86_64__)
   Printf("%s%s = 0x%016llx  ", internal_strlen(RegName) == 2 ? " " : "",
-         RegName, ctx->uc_mcontext.gregs[RegNum]);
-#    elif defined(__i386__)
-  Printf("%s = 0x%08x  ", RegName, ctx->uc_mcontext.gregs[RegNum]);
+         RegName,
+#    if SANITIZER_LINUX
+         ctx->uc_mcontext.gregs[RegNum]
+#    elif SANITIZER_NETBSD
+         ctx->uc_mcontext.__gregs[RegNum]
+#    endif
+  );
+#  elif defined(__i386__)
+  Printf("%s = 0x%08x  ", RegName,
+#    if SANITIZER_LINUX
+         ctx->uc_mcontext.gregs[RegNum]
+#    elif SANITIZER_NETBSD
+         ctx->uc_mcontext.__gregs[RegNum]
+#    endif
+  );
 #  elif defined(__arm__)
   Printf("%s%s = 0x%08zx  ", internal_strlen(RegName) == 2 ? " " : "", RegName,
          GetArmRegister(ctx, RegNum));
@@ -2312,7 +2352,7 @@ static void DumpSingleReg(ucontext_t *ctx, int RegNum) {
 
 void SignalContext::DumpAllRegisters(void *context) {
   ucontext_t *ucontext = (ucontext_t *)context;
-#  if SANITIZER_LINUX
+#  if SANITIZER_LINUX || SANITIZER_NETBSD
 #    if defined(__x86_64__)
   Report("Register values:\n");
   DumpSingleReg(ucontext, REG_RAX);
@@ -2351,7 +2391,7 @@ void SignalContext::DumpAllRegisters(void *context) {
   DumpSingleReg(ucontext, REG_EBP);
   DumpSingleReg(ucontext, REG_ESP);
   Printf("\n");
-#    elif defined(__arm__)
+#    elif defined(__arm__) && !SANITIZER_NETBSD
   Report("Register values:\n");
   DumpSingleReg(ucontext, REG_R0);
   DumpSingleReg(ucontext, REG_R1);
@@ -2373,7 +2413,7 @@ void SignalContext::DumpAllRegisters(void *context) {
   DumpSingleReg(ucontext, REG_R14);
   DumpSingleReg(ucontext, REG_R15);
   Printf("\n");
-#    elif defined(__aarch64__)
+#    elif defined(__aarch64__) && !SANITIZER_NETBSD
   Report("Register values:\n");
   for (int i = 0; i <= 31; ++i) {
     DumpSingleReg(ucontext, i);
@@ -2417,44 +2457,6 @@ void SignalContext::DumpAllRegisters(void *context) {
   Printf("esi = 0x%08x  ", ucontext->uc_mcontext.mc_esi);
   Printf("ebp = 0x%08x  ", ucontext->uc_mcontext.mc_ebp);
   Printf("esp = 0x%08x  ", ucontext->uc_mcontext.mc_esp);
-  Printf("\n");
-#    else
-  (void)ucontext;
-#    endif
-#  elif SANITIZER_NETBSD
-#    if defined(__x86_64__)
-  Report("Register values:\n");
-  Printf("rax = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RAX]);
-  Printf("rbx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RBX]);
-  Printf("rcx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RCX]);
-  Printf("rdx = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RDX]);
-  Printf("\n");
-  Printf("rdi = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RDI]);
-  Printf("rsi = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RSI]);
-  Printf("rbp = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RBP]);
-  Printf("rsp = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_RSP]);
-  Printf("\n");
-  Printf(" r8 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R8]);
-  Printf(" r9 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R9]);
-  Printf("r10 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R10]);
-  Printf("r11 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R11]);
-  Printf("\n");
-  Printf("r12 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R12]);
-  Printf("r13 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R13]);
-  Printf("r14 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R14]);
-  Printf("r15 = 0x%016llx  ", ucontext->uc_mcontext.__gregs[_REG_R15]);
-  Printf("\n");
-#    elif defined(__i386__)
-  Report("Register values:\n");
-  Printf("eax = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EAX]);
-  Printf("ebx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EBX]);
-  Printf("ecx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ECX]);
-  Printf("edx = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EDX]);
-  Printf("\n");
-  Printf("edi = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EDI]);
-  Printf("esi = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ESI]);
-  Printf("ebp = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_EBP]);
-  Printf("esp = 0x%08x  ", ucontext->uc_mcontext.__gregs[_REG_ESP]);
   Printf("\n");
 #    else
   (void)ucontext;
