@@ -955,13 +955,13 @@ void RewriteInstance::discoverFileObjects() {
     uint64_t SymbolSize = ELFSymbolRef(Symbol).getSize();
     uint64_t SymbolAlignment = Symbol.getAlignment();
 
-    auto registerName = [&](uint64_t FinalSize) {
+    auto registerName = [&](uint64_t FinalSize, BinarySection *Section = NULL) {
       // Register names even if it's not a function, e.g. for an entry point.
       BC->registerNameAtAddress(UniqueName, SymbolAddress, FinalSize,
-                                SymbolAlignment, SymbolFlags);
+                                SymbolAlignment, SymbolFlags, Section);
       if (!AlternativeName.empty())
         BC->registerNameAtAddress(AlternativeName, SymbolAddress, FinalSize,
-                                  SymbolAlignment, SymbolFlags);
+                                  SymbolAlignment, SymbolFlags, Section);
     };
 
     section_iterator Section =
@@ -986,12 +986,25 @@ void RewriteInstance::discoverFileObjects() {
                       << " for function\n");
 
     if (SymbolAddress == Section->getAddress() + Section->getSize()) {
+      ErrorOr<BinarySection &> SectionOrError =
+          BC->getSectionForAddress(Section->getAddress());
+
+      // Skip symbols from invalid sections
+      if (!SectionOrError) {
+        BC->errs() << "BOLT-WARNING: " << UniqueName << " (0x"
+                   << Twine::utohexstr(SymbolAddress)
+                   << ") does not have any section\n";
+        continue;
+      }
+
       assert(SymbolSize == 0 &&
              "unexpect non-zero sized symbol at end of section");
-      LLVM_DEBUG(
-          dbgs()
-          << "BOLT-DEBUG: rejecting as symbol points to end of its section\n");
-      registerName(SymbolSize);
+      LLVM_DEBUG({
+        dbgs() << "BOLT-DEBUG: rejecting as symbol " << UniqueName
+               << " points to end of " << SectionOrError->getName()
+               << " section\n";
+      });
+      registerName(SymbolSize, &SectionOrError.get());
       continue;
     }
 
@@ -2558,6 +2571,16 @@ void RewriteInstance::handleRelocation(const SectionRef &RelocatedSection,
              << formatv("{0:x}; type name = {1}\n", Rel.getOffset(), TypeName);
     });
     return;
+  }
+
+  if (Relocation::isGOT(RType) && !Relocation::isTLS(RType)) {
+    BinaryData *BD = BC->getBinaryDataByName(SymbolName);
+    if (BD && BD->getAddress() == BD->getSection().getEndAddress()) {
+      BC->errs() << "BOLT-ERROR: GOT table contains currently unsupported "
+                    "section end symbol "
+                 << BD->getName() << "\n";
+      exit(1);
+    }
   }
 
   const uint64_t Address = SymbolAddress + Addend;
