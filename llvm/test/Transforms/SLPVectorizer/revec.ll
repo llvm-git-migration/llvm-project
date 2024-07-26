@@ -124,3 +124,20 @@ entry:
   store <8 x i1> %6, ptr %7, align 1
   ret void
 }
+
+define void @test5() {
+entry:
+  br i1 false, label %for.cond.cleanup.loopexit.unr-lcssa, label %for.body
+
+for.cond.cleanup.loopexit.unr-lcssa:              ; preds = %for.body, %entry
+  %0 = phi <2 x float> [ zeroinitializer, %entry ], [ %4, %for.body ]
+  %1 = phi <2 x float> [ zeroinitializer, %entry ], [ %5, %for.body ]
+  %2 = phi <2 x float> [ zeroinitializer, %entry ], [ %4, %for.body ]
+  %3 = phi <2 x float> [ zeroinitializer, %entry ], [ %5, %for.body ]
+  ret void
+
+for.body:                                         ; preds = %for.body, %entry
+  %4 = phi <2 x float> [ %4, %for.body ], [ zeroinitializer, %entry ]
+  %5 = phi <2 x float> [ %5, %for.body ], [ zeroinitializer, %entry ]
+  br i1 false, label %for.cond.cleanup.loopexit.unr-lcssa, label %for.body
+}
