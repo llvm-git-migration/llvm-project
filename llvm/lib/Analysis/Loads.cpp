@@ -375,6 +375,9 @@ bool llvm::isSafeToLoadUnconditionally(Value *V, Align Alignment, const APInt &S
                                        AssumptionCache *AC,
                                        const DominatorTree *DT,
                                        const TargetLibraryInfo *TLI) {
+  if (ScanFrom && suppressSpeculativeLoadForSanitizers(*ScanFrom))
+    return false;
+
   // If DT is not specified we can't make context-sensitive query
   const Instruction* CtxI = DT ? ScanFrom : nullptr;
   if (isDereferenceableAndAlignedPointer(V, Alignment, Size, DL, CtxI, AC, DT,
