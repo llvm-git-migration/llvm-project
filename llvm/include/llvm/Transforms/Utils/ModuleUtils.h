@@ -97,6 +97,9 @@ void appendToUsed(Module &M, ArrayRef<GlobalValue *> Values);
 /// Adds global values to the llvm.compiler.used list.
 void appendToCompilerUsed(Module &M, ArrayRef<GlobalValue *> Values);
 
+/// Returns the TargetABI Metadata if present, empty StringRef otherwise.
+StringRef getTargetABIFromMD(Module &M);
+
 /// Removes global values from the llvm.used and llvm.compiler.used arrays. \p
 /// ShouldRemove should return true for any initializer field that should not be
 /// included in the replacement global.

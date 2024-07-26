@@ -27,9 +27,9 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
-#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LLVMRemarkStreamer.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/IR/PassTimingInfo.h"
 #include "llvm/IR/Verifier.h"
@@ -61,6 +61,7 @@
 #include "llvm/Transforms/IPO/WholeProgramDevirt.h"
 #include "llvm/Transforms/ObjCARC.h"
 #include "llvm/Transforms/Utils/FunctionImportUtils.h"
+#include "llvm/Transforms/Utils/ModuleUtils.h"
 
 #include <numeric>
 
@@ -578,7 +579,8 @@ void ThinLTOCodeGenerator::crossReferenceSymbol(StringRef Name) {
 }
 
 // TargetMachine factory
-std::unique_ptr<TargetMachine> TargetMachineBuilder::create() const {
+std::unique_ptr<TargetMachine>
+TargetMachineBuilder::create(const StringRef TargetABI) const {
   std::string ErrMsg;
   const Target *TheTarget =
       TargetRegistry::lookupTarget(TheTriple.str(), ErrMsg);
@@ -588,7 +590,7 @@ std::unique_ptr<TargetMachine> TargetMachineBuilder::create() const {
 
   // Use MAttr as the default set of features.
   SubtargetFeatures Features(MAttr);
-  Features.getDefaultSubtargetFeatures(TheTriple);
+  Features.getDefaultSubtargetFeatures(TheTriple, TargetABI);
   std::string FeatureStr = Features.getString();
 
   std::unique_ptr<TargetMachine> TM(
@@ -914,10 +916,10 @@ void ThinLTOCodeGenerator::internalize(Module &TheModule,
  */
 void ThinLTOCodeGenerator::optimize(Module &TheModule) {
   initTMBuilder(TMBuilder, Triple(TheModule.getTargetTriple()));
-
+  StringRef TargetABI = llvm::getTargetABIFromMD(TheModule);
   // Optimize now
-  optimizeModule(TheModule, *TMBuilder.create(), OptLevel, Freestanding,
-                 DebugPassManager, nullptr);
+  optimizeModule(TheModule, *TMBuilder.create(TargetABI), OptLevel,
+                 Freestanding, DebugPassManager, nullptr);
 }
 
 /// Write out the generated object file, either from CacheEntryPath or from
@@ -992,8 +994,10 @@ void ThinLTOCodeGenerator::run() {
         auto TheModule = loadModuleFromInput(Mod.get(), Context, false,
                                              /*IsImporting*/ false);
 
+        StringRef TargetABI = llvm::getTargetABIFromMD(*TheModule);
         // CodeGen
-        auto OutputBuffer = codegenModule(*TheModule, *TMBuilder.create());
+        auto OutputBuffer =
+            codegenModule(*TheModule, *TMBuilder.create(TargetABI));
         if (SavedObjectsDirectoryPath.empty())
           ProducedBinaries[count] = std::move(OutputBuffer);
         else
@@ -1181,10 +1185,11 @@ void ThinLTOCodeGenerator::run() {
         saveTempBitcode(*TheModule, SaveTempsDir, count, ".0.original.bc");
 
         auto &ImportList = ImportLists[ModuleIdentifier];
+        StringRef TargetABI = llvm::getTargetABIFromMD(*TheModule);
         // Run the main process now, and generates a binary
         auto OutputBuffer = ProcessThinLTOModule(
-            *TheModule, *Index, ModuleMap, *TMBuilder.create(), ImportList,
-            ExportList, GUIDPreservedSymbols,
+            *TheModule, *Index, ModuleMap, *TMBuilder.create(TargetABI),
+            ImportList, ExportList, GUIDPreservedSymbols,
             ModuleToDefinedGVSummaries[ModuleIdentifier], CacheOptions,
             DisableCodeGen, SaveTempsDir, Freestanding, OptLevel, count,
             DebugPassManager);
