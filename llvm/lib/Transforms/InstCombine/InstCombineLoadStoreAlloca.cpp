@@ -1042,8 +1042,8 @@ Instruction *InstCombinerImpl::visitLoadInst(LoadInst &LI) {
   }
 
   // None of the following transforms are legal for volatile/ordered atomic
-  // loads.  Most of them do apply for unordered atomics.
-  if (!LI.isUnordered()) return nullptr;
+  // loads and sanitizers.  Most of them do apply for unordered atomics.
+  if (mustSuppressSpeculation(LI)) return nullptr;
 
   // load(gep null, ...) -> unreachable
   // load null/undef -> unreachable
