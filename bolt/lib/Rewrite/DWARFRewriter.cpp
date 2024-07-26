@@ -760,7 +760,7 @@ void DWARFRewriter::updateDebugInfo() {
       if (CU->getVersion() >= 5)
         StrOffstsWriter->finalizeSection(*CU, DIEBlder);
       processSplitCU(*CU, **SplitCU, DIEBlder, *TempRangesSectionWriter,
-                      AddressWriter, DWOName, DwarfOutputPath);
+                     AddressWriter, DWOName, DwarfOutputPath);
     }
     for (DWARFUnit *CU : DIEBlder.getProcessedCUs())
       processMainBinaryCU(*CU, DIEBlder);
