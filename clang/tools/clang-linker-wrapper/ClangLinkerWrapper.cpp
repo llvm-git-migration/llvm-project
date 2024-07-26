@@ -580,6 +580,10 @@ Expected<StringRef> clang(ArrayRef<StringRef> InputFiles, const ArgList &Args) {
       CmdArgs.push_back("-Wl,--lto-debug-pass-manager");
     if (Args.hasArg(OPT_lto_print_pipeline_passes))
       CmdArgs.push_back("-Wl,--lto-print-pipeline-passes");
+    for (const opt::Arg *Arg : Args.filtered(OPT_offload_opt_eq_minus)) {
+      CmdArgs.push_back(
+          Args.MakeArgString("-Wl,--mllvm=" + StringRef(Arg->getValue())));
+    }
   }
 
   if (Args.hasArg(OPT_embed_bitcode))
