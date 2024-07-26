@@ -201,7 +201,9 @@ static std::unique_ptr<TargetMachine>
 createTargetMachine(const Config &Conf, const Target *TheTarget, Module &M) {
   StringRef TheTriple = M.getTargetTriple();
   SubtargetFeatures Features;
-  Features.getDefaultSubtargetFeatures(Triple(TheTriple));
+  StringRef TargetABI = llvm::getTargetABIMD(M);
+
+  Features.getDefaultSubtargetFeatures(Triple(TheTriple), TargetABI);
   for (const std::string &A : Conf.MAttrs)
     Features.AddFeature(A);
 
