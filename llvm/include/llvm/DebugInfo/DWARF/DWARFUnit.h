@@ -230,6 +230,7 @@ class DWARFUnit {
   std::optional<uint64_t> AddrOffsetSectionBase;
   bool IsLittleEndian;
   bool IsDWO;
+  bool IsDebugStrOffsetFinalized;
   const DWARFUnitVector &UnitVector;
 
   /// Start, length, and DWARF format of the unit's contribution to the string
@@ -310,12 +311,15 @@ public:
             const DWARFSection *RS, const DWARFSection *LocSection,
             StringRef SS, const DWARFSection &SOS, const DWARFSection *AOS,
             const DWARFSection &LS, bool LE, bool IsDWO,
-            const DWARFUnitVector &UnitVector);
+            const DWARFUnitVector &UnitVector,
+            bool IsDebugStrOffsetFinalized = false);
 
   virtual ~DWARFUnit();
 
   bool isLittleEndian() const { return IsLittleEndian; }
   bool isDWOUnit() const { return IsDWO; }
+  bool isDebugStrOffsetFinalized() const { return IsDebugStrOffsetFinalized; }
+  void setDebugStrOffsetFinalized() { IsDebugStrOffsetFinalized = true; }
   DWARFContext& getContext() const { return Context; }
   const DWARFSection &getInfoSection() const { return InfoSection; }
   uint64_t getOffset() const { return Header.getOffset(); }

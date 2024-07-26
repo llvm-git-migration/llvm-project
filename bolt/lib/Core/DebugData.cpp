@@ -906,6 +906,7 @@ void DebugStrOffsetsWriter::finalizeSection(DWARFUnit &Unit,
   }
 
   StrOffsetSectionWasModified = false;
+  Unit.setDebugStrOffsetFinalized();
   clear();
 }
 

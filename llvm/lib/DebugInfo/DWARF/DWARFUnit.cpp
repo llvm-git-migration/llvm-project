@@ -196,11 +196,13 @@ DWARFUnit::DWARFUnit(DWARFContext &DC, const DWARFSection &Section,
                      const DWARFSection *RS, const DWARFSection *LocSection,
                      StringRef SS, const DWARFSection &SOS,
                      const DWARFSection *AOS, const DWARFSection &LS, bool LE,
-                     bool IsDWO, const DWARFUnitVector &UnitVector)
+                     bool IsDWO, const DWARFUnitVector &UnitVector,
+                     bool IsDebugStrOffsetFinalized)
     : Context(DC), InfoSection(Section), Header(Header), Abbrev(DA),
       RangeSection(RS), LineSection(LS), StringSection(SS),
       StringOffsetSection(SOS), AddrOffsetSection(AOS), IsLittleEndian(LE),
-      IsDWO(IsDWO), UnitVector(UnitVector) {
+      IsDWO(IsDWO), IsDebugStrOffsetFinalized(IsDebugStrOffsetFinalized),
+      UnitVector(UnitVector) {
   clear();
 }
 
