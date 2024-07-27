@@ -20,6 +20,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/MathExtras.h"
 #include <array>
 #include <initializer_list>
@@ -195,7 +196,7 @@ public:
   void dump() const;
 
   /// Adds the default features for the specified target triple.
-  void getDefaultSubtargetFeatures(const Triple& Triple);
+  void getDefaultSubtargetFeatures(const Module &M);
 
   /// Determine if a feature has a flag; '+' or '-'
   static bool hasFlag(StringRef Feature) {

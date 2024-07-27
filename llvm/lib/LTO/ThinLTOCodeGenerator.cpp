@@ -582,7 +582,8 @@ void ThinLTOCodeGenerator::crossReferenceSymbol(StringRef Name) {
 }
 
 // TargetMachine factory
-std::unique_ptr<TargetMachine> TargetMachineBuilder::create() const {
+std::unique_ptr<TargetMachine>
+TargetMachineBuilder::create(const Module &M) const {
   std::string ErrMsg;
   const Target *TheTarget =
       TargetRegistry::lookupTarget(TheTriple.str(), ErrMsg);
@@ -592,7 +593,7 @@ std::unique_ptr<TargetMachine> TargetMachineBuilder::create() const {
 
   // Use MAttr as the default set of features.
   SubtargetFeatures Features(MAttr);
-  Features.getDefaultSubtargetFeatures(TheTriple);
+  Features.getDefaultSubtargetFeatures(M);
   std::string FeatureStr = Features.getString();
 
   std::unique_ptr<TargetMachine> TM(
@@ -920,8 +921,8 @@ void ThinLTOCodeGenerator::optimize(Module &TheModule) {
   initTMBuilder(TMBuilder, Triple(TheModule.getTargetTriple()));
 
   // Optimize now
-  optimizeModule(TheModule, *TMBuilder.create(), OptLevel, Freestanding,
-                 DebugPassManager, nullptr);
+  optimizeModule(TheModule, *TMBuilder.create(TheModule), OptLevel,
+                 Freestanding, DebugPassManager, nullptr);
 }
 
 /// Write out the generated object file, either from CacheEntryPath or from
@@ -997,7 +998,8 @@ void ThinLTOCodeGenerator::run() {
                                              /*IsImporting*/ false);
 
         // CodeGen
-        auto OutputBuffer = codegenModule(*TheModule, *TMBuilder.create());
+        TargetMachine &TM = *TMBuilder.create(*TheModule);
+        auto OutputBuffer = codegenModule(*TheModule, TM);
         if (SavedObjectsDirectoryPath.empty())
           ProducedBinaries[count] = std::move(OutputBuffer);
         else
@@ -1185,13 +1187,13 @@ void ThinLTOCodeGenerator::run() {
         saveTempBitcode(*TheModule, SaveTempsDir, count, ".0.original.bc");
 
         auto &ImportList = ImportLists[ModuleIdentifier];
+        TargetMachine &TM = *TMBuilder.create(*TheModule);
         // Run the main process now, and generates a binary
         auto OutputBuffer = ProcessThinLTOModule(
-            *TheModule, *Index, ModuleMap, *TMBuilder.create(), ImportList,
-            ExportList, GUIDPreservedSymbols,
-            ModuleToDefinedGVSummaries[ModuleIdentifier], CacheOptions,
-            DisableCodeGen, SaveTempsDir, Freestanding, OptLevel, count,
-            DebugPassManager);
+            *TheModule, *Index, ModuleMap, TM, ImportList, ExportList,
+            GUIDPreservedSymbols, ModuleToDefinedGVSummaries[ModuleIdentifier],
+            CacheOptions, DisableCodeGen, SaveTempsDir, Freestanding, OptLevel,
+            count, DebugPassManager);
 
         // Commit to the cache (if enabled)
         CacheEntry.write(*OutputBuffer);

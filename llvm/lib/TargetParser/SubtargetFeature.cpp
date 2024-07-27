@@ -68,7 +68,8 @@ LLVM_DUMP_METHOD void SubtargetFeatures::dump() const {
 }
 #endif
 
-void SubtargetFeatures::getDefaultSubtargetFeatures(const Triple& Triple) {
+void SubtargetFeatures::getDefaultSubtargetFeatures(const Module &M) {
+  llvm::Triple Triple(M.getTargetTriple());
   // FIXME: This is an inelegant way of specifying the features of a
   // subtarget. It would be better if we could encode this information
   // into the IR.
