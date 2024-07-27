@@ -1260,5 +1260,20 @@ def EmitC_SubscriptOp : EmitC_Op<"subscript", []> {
   let assemblyFormat = "$value `[` $indices `]` attr-dict `:` functional-type(operands, results)";
 }
 
+def EmitC_InstantiateFunctionTemplateOp : EmitC_Op<"instantiate_function_template", []> {
+  let summary = "Instantiate template operation";
+  let description = [{
+    Instantiate a function template with a given set of types
+    (given by the values as argument to this operation) to obtain
+    a function pointer.
+  }];
+  let arguments = (ins
+    Arg<StrAttr, "the C++ function to instantiate">:$callee,
+    Variadic<EmitCType>:$args
+  );
+  let results = (outs EmitC_PointerType);
+  let assemblyFormat = "$callee `(` $args `)` attr-dict `:` functional-type($args, results)";
+}
+
 
 #endif // MLIR_DIALECT_EMITC_IR_EMITC
