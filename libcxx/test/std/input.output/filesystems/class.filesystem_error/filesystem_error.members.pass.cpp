@@ -33,13 +33,13 @@ namespace fs = std::filesystem;
 void test_constructors() {
   using namespace fs;
 
-  // The string returned by "filesystem_error::what() must contain runtime_error::what()
-  const std::string what_arg = "Hello World";
+  // The string returned by "filesystem_error::what() must contain runtime_error::what().c_str()
+  const std::string what_arg = "Hello World\0with embedded NUL";
   const std::string what_contains = std::runtime_error(what_arg).what();
   assert(what_contains.find(what_arg) != std::string::npos);
   auto CheckWhat = [what_contains](filesystem_error const& e) {
     std::string s = e.what();
-    assert(s.find(what_contains) != std::string::npos);
+    assert(s.find(what_contains.c_str()) != std::string::npos);
   };
 
   std::error_code ec = std::make_error_code(std::errc::file_exists);

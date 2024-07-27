@@ -21,12 +21,13 @@
 #include "test_macros.h"
 
 int main(int, char**) {
-    std::string what_arg("test message");
+    std::string what_arg("test message\0With embedded NUL");
     std::system_error se(static_cast<int>(std::errc::not_a_directory),
                          std::generic_category(), what_arg);
     assert(se.code() == std::make_error_code(std::errc::not_a_directory));
     std::string what_message(se.what());
     assert(what_message.find(what_arg) != std::string::npos);
+    assert(what_message.find(what_arg.c_str()) != std::string::npos);
     assert(what_message.find("Not a directory") != std::string::npos);
 
     return 0;
