@@ -233,6 +233,21 @@ enum EdgeKind_aarch64 : Edge::Kind {
   ///     out-of-range error will be returned.
   PageOffset12,
 
+  /// The 15-bit offset of the GOT entry from the GOT table.
+  ///
+  /// Used for load/store instructions addressing a GOT entry.
+  ///
+  /// Fixup expression:
+  ///
+  ///   Fixup <- ((Target + Addend - Page(GOT))) & 0x7fff) >> 3 : uint12
+  ///
+  /// Errors:
+  ///   - The result of the unshifted part of the fixup expression must be
+  ///     aligned otherwise an alignment error will be returned.
+  ///   - The result of the fixup expression must fit into a uint12 otherwise an
+  ///     out-of-range error will be returned.
+  GotPageOffset15,
+
   /// A GOT entry getter/constructor, transformed to Page21 pointing at the GOT
   /// entry for the original target.
   ///
@@ -272,6 +287,23 @@ enum EdgeKind_aarch64 : Edge::Kind {
   ///     phase will result in an assert/unreachable during the fixup phase.
   ///
   RequestGOTAndTransformToPageOffset12,
+
+  /// A GOT entry getter/constructor, transformed to Pageoffset15 pointing at
+  /// the GOT entry for the original target.
+  ///
+  /// Indicates that this edge should be transformed into a GotPageOffset15
+  /// targeting the GOT entry for the edge's current target, maintaining the
+  /// same addend. A GOT entry for the target should be created if one does not
+  /// already exist.
+  ///
+  /// Fixup expression:
+  ///   NONE
+  ///
+  /// Errors:
+  ///   - *ASSERTION* Failure to handle edges of this kind prior to the fixup
+  ///     phase will result in an assert/unreachable during the fixup phase.
+  ///
+  RequestGOTAndTransformToPageOffset15,
 
   /// A GOT entry getter/constructor, transformed to Delta32 pointing at the GOT
   /// entry for the original target.
@@ -428,6 +460,138 @@ inline unsigned getMoveWide16Shift(uint32_t Instr) {
 
   return 0;
 }
+
+/// aarch64 pointer size.
+constexpr uint64_t PointerSize = 8;
+
+/// AArch64 null pointer content.
+extern const char NullPointerContent[PointerSize];
+
+/// AArch64 pointer jump stub content.
+///
+/// Contains the instruction sequence for an indirect jump via an in-memory
+/// pointer:
+///   ADRP x16, ptr@page21
+///   LDR  x16, [x16, ptr@pageoff12]
+///   BR   x16
+extern const char PointerJumpStubContent[12];
+
+/// Creates a new pointer block in the given section and returns an
+/// Anonymous symbol pointing to it.
+///
+/// If InitialTarget is given then an Pointer64 relocation will be added to the
+/// block pointing at InitialTarget.
+///
+/// The pointer block will have the following default values:
+///   alignment: 64-bit
+///   alignment-offset: 0
+///   address: highest allowable (~7U)
+inline Symbol &createAnonymousPointer(LinkGraph &G, Section &PointerSection,
+                                      Symbol *InitialTarget = nullptr,
+                                      uint64_t InitialAddend = 0) {
+  auto &B = G.createContentBlock(PointerSection, NullPointerContent,
+                                 orc::ExecutorAddr(~uint64_t(7)), 8, 0);
+  if (InitialTarget)
+    B.addEdge(Pointer64, 0, *InitialTarget, InitialAddend);
+  return G.addAnonymousSymbol(B, 0, 8, false, false);
+}
+
+/// Create a jump stub block that jumps via the pointer at the given symbol.
+///
+/// The stub block will have the following default values:
+///   alignment: 32-bit
+///   alignment-offset: 0
+///   address: highest allowable: (~11U)
+inline Block &createPointerJumpStubBlock(LinkGraph &G, Section &StubSection,
+                                         Symbol &PointerSymbol) {
+  auto &B = G.createContentBlock(StubSection, PointerJumpStubContent,
+                                 orc::ExecutorAddr(~uint64_t(11)), 4, 0);
+  B.addEdge(Page21, 0, PointerSymbol, 0);
+  B.addEdge(PageOffset12, 4, PointerSymbol, 0);
+  return B;
+}
+
+/// Create a jump stub that jumps via the pointer at the given symbol and
+/// an anonymous symbol pointing to it. Return the anonymous symbol.
+///
+/// The stub block will be created by createPointerJumpStubBlock.
+inline Symbol &createAnonymousPointerJumpStub(LinkGraph &G,
+                                              Section &StubSection,
+                                              Symbol &PointerSymbol) {
+  return G.addAnonymousSymbol(
+      createPointerJumpStubBlock(G, StubSection, PointerSymbol), 0,
+      sizeof(PointerJumpStubContent), true, false);
+}
+
+/// Global Offset Table Builder.
+class GOTTableManager : public TableManager<GOTTableManager> {
+public:
+  static StringRef getSectionName() { return "$__GOT"; }
+
+  bool visitEdge(LinkGraph &G, Block *B, Edge &E) {
+    Edge::Kind KindToSet = Edge::Invalid;
+    const char *BlockWorkingMem = B->getContent().data();
+    const char *FixupPtr = BlockWorkingMem + E.getOffset();
+
+    switch (E.getKind()) {
+    case aarch64::RequestGOTAndTransformToPage21:
+    case aarch64::RequestTLVPAndTransformToPage21: {
+      KindToSet = aarch64::Page21;
+      break;
+    }
+    case aarch64::RequestGOTAndTransformToPageOffset12:
+    case aarch64::RequestTLVPAndTransformToPageOffset12: {
+      KindToSet = aarch64::PageOffset12;
+      uint32_t RawInstr = *(const support::ulittle32_t *)FixupPtr;
+      (void)RawInstr;
+      assert(E.getAddend() == 0 &&
+             "GOTPageOffset12/TLVPageOffset12 with non-zero addend");
+      assert((RawInstr & 0xfffffc00) == 0xf9400000 &&
+             "RawInstr isn't a 64-bit LDR immediate");
+      break;
+    }
+    case aarch64::RequestGOTAndTransformToPageOffset15: {
+      KindToSet = aarch64::GotPageOffset15;
+      uint32_t RawInstr = *(const support::ulittle32_t *)FixupPtr;
+      (void)RawInstr;
+      assert(E.getAddend() == 0 && "GOTPageOffset15 with non-zero addend");
+      assert((RawInstr & 0xfffffc00) == 0xf9400000 &&
+             "RawInstr isn't a 64-bit LDR immediate");
+      break;
+    }
+    case aarch64::RequestGOTAndTransformToDelta32: {
+      KindToSet = aarch64::Delta32;
+      break;
+    }
+    default:
+      return false;
+    }
+    assert(KindToSet != Edge::Invalid &&
+           "Fell through switch, but no new kind to set");
+    DEBUG_WITH_TYPE("jitlink", {
+      dbgs() << "  Fixing " << G.getEdgeKindName(E.getKind()) << " edge at "
+             << B->getFixupAddress(E) << " (" << B->getAddress() << " + "
+             << formatv("{0:x}", E.getOffset()) << ")\n";
+    });
+    E.setKind(KindToSet);
+    E.setTarget(getEntryForTarget(G, E.getTarget()));
+    return true;
+  }
+
+  Symbol &createEntry(LinkGraph &G, Symbol &Target) {
+    return createAnonymousPointer(G, getGOTSection(G), &Target);
+  }
+
+private:
+  Section &getGOTSection(LinkGraph &G) {
+    if (!GOTSection)
+      GOTSection = &G.createSection(getSectionName(),
+                                    orc::MemProt::Read | orc::MemProt::Exec);
+    return *GOTSection;
+  }
+
+  Section *GOTSection = nullptr;
+};
 
 /// Apply fixup expression for edge to block content.
 inline Error applyFixup(LinkGraph &G, Block &B, const Edge &E) {
@@ -603,6 +767,26 @@ inline Error applyFixup(LinkGraph &G, Block &B, const Edge &E) {
     *(ulittle32_t *)FixupPtr = FixedInstr;
     break;
   }
+  case GotPageOffset15: {
+    Section *GOTSection =
+        G.findSectionByName(aarch64::GOTTableManager::getSectionName());
+    assert(GOTSection && "GOT section not found");
+    uint64_t TargetOffset =
+        (E.getTarget().getAddress() + E.getAddend()).getValue() -
+        (GOTSection->getAddress() & ~static_cast<uint64_t>(4096 - 1));
+    if (TargetOffset > 0x7fff)
+      return make_error<JITLinkError>("PAGEOFF15 target is out of range");
+
+    uint32_t RawInstr = *(ulittle32_t *)FixupPtr;
+    const unsigned ImmShift = 3;
+    if (TargetOffset & ((1 << ImmShift) - 1))
+      return make_error<JITLinkError>("PAGEOFF15 target is not aligned");
+
+    uint32_t EncodedImm = (TargetOffset >> ImmShift) << 10;
+    uint32_t FixedInstr = RawInstr | EncodedImm;
+    *(ulittle32_t *)FixupPtr = FixedInstr;
+    break;
+  }
   default:
     return make_error<JITLinkError>(
         "In graph " + G.getName() + ", section " + B.getSection().getName() +
@@ -611,129 +795,6 @@ inline Error applyFixup(LinkGraph &G, Block &B, const Edge &E) {
 
   return Error::success();
 }
-
-/// aarch64 pointer size.
-constexpr uint64_t PointerSize = 8;
-
-/// AArch64 null pointer content.
-extern const char NullPointerContent[PointerSize];
-
-/// AArch64 pointer jump stub content.
-///
-/// Contains the instruction sequence for an indirect jump via an in-memory
-/// pointer:
-///   ADRP x16, ptr@page21
-///   LDR  x16, [x16, ptr@pageoff12]
-///   BR   x16
-extern const char PointerJumpStubContent[12];
-
-/// Creates a new pointer block in the given section and returns an
-/// Anonymous symbol pointing to it.
-///
-/// If InitialTarget is given then an Pointer64 relocation will be added to the
-/// block pointing at InitialTarget.
-///
-/// The pointer block will have the following default values:
-///   alignment: 64-bit
-///   alignment-offset: 0
-///   address: highest allowable (~7U)
-inline Symbol &createAnonymousPointer(LinkGraph &G, Section &PointerSection,
-                                      Symbol *InitialTarget = nullptr,
-                                      uint64_t InitialAddend = 0) {
-  auto &B = G.createContentBlock(PointerSection, NullPointerContent,
-                                 orc::ExecutorAddr(~uint64_t(7)), 8, 0);
-  if (InitialTarget)
-    B.addEdge(Pointer64, 0, *InitialTarget, InitialAddend);
-  return G.addAnonymousSymbol(B, 0, 8, false, false);
-}
-
-/// Create a jump stub block that jumps via the pointer at the given symbol.
-///
-/// The stub block will have the following default values:
-///   alignment: 32-bit
-///   alignment-offset: 0
-///   address: highest allowable: (~11U)
-inline Block &createPointerJumpStubBlock(LinkGraph &G, Section &StubSection,
-                                         Symbol &PointerSymbol) {
-  auto &B = G.createContentBlock(StubSection, PointerJumpStubContent,
-                                 orc::ExecutorAddr(~uint64_t(11)), 4, 0);
-  B.addEdge(Page21, 0, PointerSymbol, 0);
-  B.addEdge(PageOffset12, 4, PointerSymbol, 0);
-  return B;
-}
-
-/// Create a jump stub that jumps via the pointer at the given symbol and
-/// an anonymous symbol pointing to it. Return the anonymous symbol.
-///
-/// The stub block will be created by createPointerJumpStubBlock.
-inline Symbol &createAnonymousPointerJumpStub(LinkGraph &G,
-                                              Section &StubSection,
-                                              Symbol &PointerSymbol) {
-  return G.addAnonymousSymbol(
-      createPointerJumpStubBlock(G, StubSection, PointerSymbol), 0,
-      sizeof(PointerJumpStubContent), true, false);
-}
-
-/// Global Offset Table Builder.
-class GOTTableManager : public TableManager<GOTTableManager> {
-public:
-  static StringRef getSectionName() { return "$__GOT"; }
-
-  bool visitEdge(LinkGraph &G, Block *B, Edge &E) {
-    Edge::Kind KindToSet = Edge::Invalid;
-    const char *BlockWorkingMem = B->getContent().data();
-    const char *FixupPtr = BlockWorkingMem + E.getOffset();
-
-    switch (E.getKind()) {
-    case aarch64::RequestGOTAndTransformToPage21:
-    case aarch64::RequestTLVPAndTransformToPage21: {
-      KindToSet = aarch64::Page21;
-      break;
-    }
-    case aarch64::RequestGOTAndTransformToPageOffset12:
-    case aarch64::RequestTLVPAndTransformToPageOffset12: {
-      KindToSet = aarch64::PageOffset12;
-      uint32_t RawInstr = *(const support::ulittle32_t *)FixupPtr;
-      (void)RawInstr;
-      assert(E.getAddend() == 0 &&
-             "GOTPageOffset12/TLVPageOffset12 with non-zero addend");
-      assert((RawInstr & 0xfffffc00) == 0xf9400000 &&
-             "RawInstr isn't a 64-bit LDR immediate");
-      break;
-    }
-    case aarch64::RequestGOTAndTransformToDelta32: {
-      KindToSet = aarch64::Delta32;
-      break;
-    }
-    default:
-      return false;
-    }
-    assert(KindToSet != Edge::Invalid &&
-           "Fell through switch, but no new kind to set");
-    DEBUG_WITH_TYPE("jitlink", {
-      dbgs() << "  Fixing " << G.getEdgeKindName(E.getKind()) << " edge at "
-             << B->getFixupAddress(E) << " (" << B->getAddress() << " + "
-             << formatv("{0:x}", E.getOffset()) << ")\n";
-    });
-    E.setKind(KindToSet);
-    E.setTarget(getEntryForTarget(G, E.getTarget()));
-    return true;
-  }
-
-  Symbol &createEntry(LinkGraph &G, Symbol &Target) {
-    return createAnonymousPointer(G, getGOTSection(G), &Target);
-  }
-
-private:
-  Section &getGOTSection(LinkGraph &G) {
-    if (!GOTSection)
-      GOTSection = &G.createSection(getSectionName(),
-                                    orc::MemProt::Read | orc::MemProt::Exec);
-    return *GOTSection;
-  }
-
-  Section *GOTSection = nullptr;
-};
 
 /// Procedure Linkage Table Builder.
 class PLTTableManager : public TableManager<PLTTableManager> {

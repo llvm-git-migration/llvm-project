@@ -758,6 +758,12 @@ public:
     return make_range(Symbols.begin(), Symbols.end());
   }
 
+  /// Returns address of the section
+  uint64_t getAddress() const {
+    assert(Symbols.size() && "Section has no symbols");
+    return (*Symbols.begin())->getAddress().getValue();
+  }
+
   /// Return the number of symbols in this section.
   SymbolSet::size_type symbols_size() const { return Symbols.size(); }
 

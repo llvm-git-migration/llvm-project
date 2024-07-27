@@ -70,6 +70,7 @@ private:
     ELFPrel64,
     ELFAdrGOTPage21,
     ELFLd64GOTLo12,
+    ELFLd64GOTPAGELo15,
     ELFTLSDescAdrPage21,
     ELFTLSDescAddLo12,
     ELFTLSDescLd64Lo12,
@@ -125,6 +126,8 @@ private:
       return ELFAdrGOTPage21;
     case ELF::R_AARCH64_LD64_GOT_LO12_NC:
       return ELFLd64GOTLo12;
+    case ELF::R_AARCH64_LD64_GOTPAGE_LO15:
+      return ELFLd64GOTPAGELo15;
     case ELF::R_AARCH64_TLSDESC_ADR_PAGE21:
       return ELFTLSDescAdrPage21;
     case ELF::R_AARCH64_TLSDESC_ADD_LO12:
@@ -362,6 +365,10 @@ private:
       Kind = aarch64::RequestGOTAndTransformToPageOffset12;
       break;
     }
+    case ELFLd64GOTPAGELo15: {
+      Kind = aarch64::RequestGOTAndTransformToPageOffset15;
+      break;
+    }
     case ELFTLSDescAdrPage21: {
       Kind = aarch64::RequestTLSDescEntryAndTransformToPage21;
       break;
@@ -427,6 +434,8 @@ private:
       return "ELFAdrGOTPage21";
     case ELFLd64GOTLo12:
       return "ELFLd64GOTLo12";
+    case ELFLd64GOTPAGELo15:
+      return "ELFLd64GOTPAGELo15";
     case ELFTLSDescAdrPage21:
       return "ELFTLSDescAdrPage21";
     case ELFTLSDescAddLo12:
