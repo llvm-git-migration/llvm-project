@@ -1024,7 +1024,8 @@ static void addPreloadKernArgHint(Function &F, TargetMachine &TM) {
   }
 }
 
-static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM) {
+static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM,
+                    bool HasWholeProgramVisibility) {
   SetVector<Function *> Functions;
   for (Function &F : M) {
     if (!F.isIntrinsic())
@@ -1042,6 +1043,7 @@ static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM) {
        &AAUnderlyingObjects::ID, &AAIndirectCallInfo::ID, &AAInstanceInfo::ID});
 
   AttributorConfig AC(CGUpdater);
+  AC.IsClosedWorldModule = HasWholeProgramVisibility;
   AC.Allowed = &Allowed;
   AC.IsModulePass = true;
   AC.DefaultInitializeLiveInternals = false;
@@ -1100,7 +1102,7 @@ public:
 
   bool runOnModule(Module &M) override {
     AnalysisGetter AG(this);
-    return runImpl(M, AG, *TM);
+    return runImpl(M, AG, *TM, /*HasWholeProgramVisibility=*/false);
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
@@ -1121,8 +1123,9 @@ PreservedAnalyses llvm::AMDGPUAttributorPass::run(Module &M,
   AnalysisGetter AG(FAM);
 
   // TODO: Probably preserves CFG
-  return runImpl(M, AG, TM) ? PreservedAnalyses::none()
-                            : PreservedAnalyses::all();
+  return runImpl(M, AG, TM, HasWholeProgramVisibility)
+             ? PreservedAnalyses::none()
+             : PreservedAnalyses::all();
 }
 
 char AMDGPUAttributorLegacy::ID = 0;

@@ -365,9 +365,10 @@ void PassBuilder::invokeOptimizerEarlyEPCallbacks(ModulePassManager &MPM,
     C(MPM, Level);
 }
 void PassBuilder::invokeOptimizerLastEPCallbacks(ModulePassManager &MPM,
-                                                 OptimizationLevel Level) {
+                                                 OptimizationLevel Level,
+                                                 ThinOrFullLTOPhase Phase) {
   for (auto &C : OptimizerLastEPCallbacks)
-    C(MPM, Level);
+    C(MPM, Level, Phase);
 }
 void PassBuilder::invokeFullLinkTimeOptimizationEarlyEPCallbacks(
     ModulePassManager &MPM, OptimizationLevel Level) {
@@ -1527,7 +1528,7 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(OptimizePM),
                                                 PTO.EagerlyInvalidateAnalyses));
 
-  invokeOptimizerLastEPCallbacks(MPM, Level);
+  invokeOptimizerLastEPCallbacks(MPM, Level, LTOPhase);
 
   // Split out cold code. Splitting is done late to avoid hiding context from
   // other optimizations and inadvertently regressing performance. The tradeoff
@@ -1569,9 +1570,9 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
 
 ModulePassManager
 PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
-                                           bool LTOPreLink) {
+                                           ThinOrFullLTOPhase Phase) {
   if (Level == OptimizationLevel::O0)
-    return buildO0DefaultPipeline(Level, LTOPreLink);
+    return buildO0DefaultPipeline(Level, Phase);
 
   ModulePassManager MPM;
 
@@ -1587,14 +1588,11 @@ PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
   // Apply module pipeline start EP callback.
   invokePipelineStartEPCallbacks(MPM, Level);
 
-  const ThinOrFullLTOPhase LTOPhase = LTOPreLink
-                                          ? ThinOrFullLTOPhase::FullLTOPreLink
-                                          : ThinOrFullLTOPhase::None;
   // Add the core simplification pipeline.
-  MPM.addPass(buildModuleSimplificationPipeline(Level, LTOPhase));
+  MPM.addPass(buildModuleSimplificationPipeline(Level, Phase));
 
   // Now add the optimization pipeline.
-  MPM.addPass(buildModuleOptimizationPipeline(Level, LTOPhase));
+  MPM.addPass(buildModuleOptimizationPipeline(Level, Phase));
 
   if (PGOOpt && PGOOpt->PseudoProbeForProfiling &&
       PGOOpt->Action == PGOOptions::SampleUse)
@@ -1603,7 +1601,7 @@ PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
   // Emit annotation remarks.
   addAnnotationRemarksPass(MPM);
 
-  if (LTOPreLink)
+  if (isLTOPreLink(Phase))
     addRequiredLTOPreLinkPasses(MPM);
   return MPM;
 }
@@ -1634,7 +1632,7 @@ PassBuilder::buildFatLTODefaultPipeline(OptimizationLevel Level, bool ThinLTO,
 ModulePassManager
 PassBuilder::buildThinLTOPreLinkDefaultPipeline(OptimizationLevel Level) {
   if (Level == OptimizationLevel::O0)
-    return buildO0DefaultPipeline(Level, /*LTOPreLink*/true);
+    return buildO0DefaultPipeline(Level, ThinOrFullLTOPhase::ThinLTOPreLink);
 
   ModulePassManager MPM;
 
@@ -1674,7 +1672,8 @@ PassBuilder::buildThinLTOPreLinkDefaultPipeline(OptimizationLevel Level) {
   // optimization is going to be done in PostLink stage, but clang can't add
   // callbacks there in case of in-process ThinLTO called by linker.
   invokeOptimizerEarlyEPCallbacks(MPM, Level);
-  invokeOptimizerLastEPCallbacks(MPM, Level);
+  invokeOptimizerLastEPCallbacks(MPM, Level,
+                                 ThinOrFullLTOPhase::ThinLTOPreLink);
 
   // Emit annotation remarks.
   addAnnotationRemarksPass(MPM);
@@ -1743,7 +1742,7 @@ ModulePassManager
 PassBuilder::buildLTOPreLinkDefaultPipeline(OptimizationLevel Level) {
   // FIXME: We should use a customized pre-link pipeline!
   return buildPerModuleDefaultPipeline(Level,
-                                       /* LTOPreLink */ true);
+                                       ThinOrFullLTOPhase::FullLTOPreLink);
 }
 
 ModulePassManager
@@ -2068,8 +2067,9 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
   return MPM;
 }
 
-ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
-                                                      bool LTOPreLink) {
+ModulePassManager
+PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
+                                    ThinOrFullLTOPhase Phase) {
   assert(Level == OptimizationLevel::O0 &&
          "buildO0DefaultPipeline should only be used with O0");
 
@@ -2162,9 +2162,9 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
   CoroPM.addPass(GlobalDCEPass());
   MPM.addPass(CoroConditionalWrapper(std::move(CoroPM)));
 
-  invokeOptimizerLastEPCallbacks(MPM, Level);
+  invokeOptimizerLastEPCallbacks(MPM, Level, Phase);
 
-  if (LTOPreLink)
+  if (isLTOPreLink(Phase))
     addRequiredLTOPreLinkPasses(MPM);
 
   MPM.addPass(createModuleToFunctionPassAdaptor(AnnotationRemarksPass()));
