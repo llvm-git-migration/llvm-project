@@ -65,8 +65,8 @@
 #define LLVM_SANDBOXIR_SANDBOXIR_H
 
 #include "llvm/IR/Function.h"
-#include "llvm/IR/Instruction.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/SandboxIR/Tracker.h"
@@ -774,8 +774,15 @@ public:
                           Instruction *InsertBefore, Context &Ctx,
                           const Twine &Name = "");
   static LoadInst *create(Type *Ty, Value *Ptr, MaybeAlign Align,
+                          Instruction *InsertBefore, bool IsVolatile,
+                          Context &Ctx, const Twine &Name = "");
+  static LoadInst *create(Type *Ty, Value *Ptr, MaybeAlign Align,
                           BasicBlock *InsertAtEnd, Context &Ctx,
                           const Twine &Name = "");
+  static LoadInst *create(Type *Ty, Value *Ptr, MaybeAlign Align,
+                          BasicBlock *InsertAtEnd, bool IsVolatile,
+                          Context &Ctx, const Twine &Name = "");
+
   /// For isa/dyn_cast.
   static bool classof(const Value *From);
   Value *getPointerOperand() const;
