@@ -384,15 +384,15 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; MIPS-NEXT:    .cfi_def_cfa_offset 32
 ; MIPS-NEXT:    sra $1, $4, 31
 ; MIPS-NEXT:    sw $7, 28($sp)
-; MIPS-NEXT:    sw $5, 20($sp)
-; MIPS-NEXT:    sw $1, 12($sp)
-; MIPS-NEXT:    sw $1, 4($sp)
-; MIPS-NEXT:    addiu $2, $sp, 0
 ; MIPS-NEXT:    sw $6, 24($sp)
+; MIPS-NEXT:    sw $5, 20($sp)
 ; MIPS-NEXT:    sw $4, 16($sp)
+; MIPS-NEXT:    sw $1, 12($sp)
 ; MIPS-NEXT:    sw $1, 8($sp)
+; MIPS-NEXT:    sw $1, 4($sp)
 ; MIPS-NEXT:    sw $1, 0($sp)
-; MIPS-NEXT:    addiu $1, $2, 16
+; MIPS-NEXT:    addiu $1, $sp, 0
+; MIPS-NEXT:    addiu $1, $1, 16
 ; MIPS-NEXT:    lw $2, 60($sp)
 ; MIPS-NEXT:    srl $3, $2, 3
 ; MIPS-NEXT:    andi $3, $3, 12
@@ -425,15 +425,15 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; MIPS32-NEXT:    .cfi_def_cfa_offset 32
 ; MIPS32-NEXT:    sra $1, $4, 31
 ; MIPS32-NEXT:    sw $7, 28($sp)
-; MIPS32-NEXT:    sw $5, 20($sp)
-; MIPS32-NEXT:    sw $1, 12($sp)
-; MIPS32-NEXT:    sw $1, 4($sp)
-; MIPS32-NEXT:    addiu $2, $sp, 0
 ; MIPS32-NEXT:    sw $6, 24($sp)
+; MIPS32-NEXT:    sw $5, 20($sp)
 ; MIPS32-NEXT:    sw $4, 16($sp)
+; MIPS32-NEXT:    sw $1, 12($sp)
 ; MIPS32-NEXT:    sw $1, 8($sp)
+; MIPS32-NEXT:    sw $1, 4($sp)
 ; MIPS32-NEXT:    sw $1, 0($sp)
-; MIPS32-NEXT:    addiu $1, $2, 16
+; MIPS32-NEXT:    addiu $1, $sp, 0
+; MIPS32-NEXT:    addiu $1, $1, 16
 ; MIPS32-NEXT:    lw $2, 60($sp)
 ; MIPS32-NEXT:    srl $3, $2, 3
 ; MIPS32-NEXT:    andi $3, $3, 12
@@ -466,15 +466,15 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; 32R2-NEXT:    .cfi_def_cfa_offset 32
 ; 32R2-NEXT:    sra $1, $4, 31
 ; 32R2-NEXT:    sw $7, 28($sp)
-; 32R2-NEXT:    sw $5, 20($sp)
-; 32R2-NEXT:    sw $1, 12($sp)
-; 32R2-NEXT:    sw $1, 4($sp)
-; 32R2-NEXT:    addiu $2, $sp, 0
 ; 32R2-NEXT:    sw $6, 24($sp)
+; 32R2-NEXT:    sw $5, 20($sp)
 ; 32R2-NEXT:    sw $4, 16($sp)
+; 32R2-NEXT:    sw $1, 12($sp)
 ; 32R2-NEXT:    sw $1, 8($sp)
+; 32R2-NEXT:    sw $1, 4($sp)
 ; 32R2-NEXT:    sw $1, 0($sp)
-; 32R2-NEXT:    addiu $1, $2, 16
+; 32R2-NEXT:    addiu $1, $sp, 0
+; 32R2-NEXT:    addiu $1, $1, 16
 ; 32R2-NEXT:    lw $2, 60($sp)
 ; 32R2-NEXT:    srl $3, $2, 3
 ; 32R2-NEXT:    andi $3, $3, 12
@@ -507,15 +507,15 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; 32R6-NEXT:    .cfi_def_cfa_offset 32
 ; 32R6-NEXT:    sra $1, $4, 31
 ; 32R6-NEXT:    sw $7, 28($sp)
-; 32R6-NEXT:    sw $5, 20($sp)
-; 32R6-NEXT:    sw $1, 12($sp)
-; 32R6-NEXT:    sw $1, 4($sp)
-; 32R6-NEXT:    addiu $2, $sp, 0
 ; 32R6-NEXT:    sw $6, 24($sp)
+; 32R6-NEXT:    sw $5, 20($sp)
 ; 32R6-NEXT:    sw $4, 16($sp)
+; 32R6-NEXT:    sw $1, 12($sp)
 ; 32R6-NEXT:    sw $1, 8($sp)
+; 32R6-NEXT:    sw $1, 4($sp)
 ; 32R6-NEXT:    sw $1, 0($sp)
-; 32R6-NEXT:    addiu $1, $2, 16
+; 32R6-NEXT:    addiu $1, $sp, 0
+; 32R6-NEXT:    addiu $1, $1, 16
 ; 32R6-NEXT:    lw $2, 60($sp)
 ; 32R6-NEXT:    srl $3, $2, 3
 ; 32R6-NEXT:    andi $3, $3, 12
@@ -619,15 +619,13 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; MMR3-NEXT:    .cfi_offset 17, -4
 ; MMR3-NEXT:    .cfi_offset 16, -8
 ; MMR3-NEXT:    sra $1, $4, 31
-; MMR3-NEXT:    sw $7, 28($sp)
-; MMR3-NEXT:    sw $5, 20($sp)
+; MMR3-NEXT:    swp $6, 24($sp)
+; MMR3-NEXT:    swp $4, 16($sp)
 ; MMR3-NEXT:    sw $1, 12($sp)
-; MMR3-NEXT:    sw $1, 4($sp)
-; MMR3-NEXT:    addiur1sp $2, 0
-; MMR3-NEXT:    sw $6, 24($sp)
-; MMR3-NEXT:    sw $4, 16($sp)
 ; MMR3-NEXT:    sw $1, 8($sp)
+; MMR3-NEXT:    sw $1, 4($sp)
 ; MMR3-NEXT:    sw $1, 0($sp)
+; MMR3-NEXT:    addiur1sp $2, 0
 ; MMR3-NEXT:    addiur2 $2, $2, 16
 ; MMR3-NEXT:    lw $3, 68($sp)
 ; MMR3-NEXT:    srl16 $4, $3, 3
@@ -663,14 +661,14 @@ define signext i128 @ashr_i128(i128 signext %a, i128 signext %b) {
 ; MMR6-NEXT:    .cfi_offset 16, -4
 ; MMR6-NEXT:    sra $1, $4, 31
 ; MMR6-NEXT:    sw $7, 28($sp)
-; MMR6-NEXT:    sw $5, 20($sp)
-; MMR6-NEXT:    sw $1, 12($sp)
-; MMR6-NEXT:    sw $1, 4($sp)
-; MMR6-NEXT:    addiu $2, $sp, 0
 ; MMR6-NEXT:    sw $6, 24($sp)
+; MMR6-NEXT:    sw $5, 20($sp)
 ; MMR6-NEXT:    sw $4, 16($sp)
+; MMR6-NEXT:    sw $1, 12($sp)
 ; MMR6-NEXT:    sw $1, 8($sp)
+; MMR6-NEXT:    sw $1, 4($sp)
 ; MMR6-NEXT:    sw $1, 0($sp)
+; MMR6-NEXT:    addiu $2, $sp, 0
 ; MMR6-NEXT:    addiur2 $2, $2, 16
 ; MMR6-NEXT:    lw $3, 68($sp)
 ; MMR6-NEXT:    srl16 $4, $3, 3

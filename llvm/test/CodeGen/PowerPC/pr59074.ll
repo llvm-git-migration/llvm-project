@@ -36,10 +36,10 @@ define void @pr59074(ptr %0) {
 ; LE32-NEXT:    addi 4, 4, -12
 ; LE32-NEXT:    rlwinm 9, 4, 29, 28, 29
 ; LE32-NEXT:    stxvd2x 0, 0, 5
-; LE32-NEXT:    stw 7, 40(1)
-; LE32-NEXT:    stw 8, 16(1)
 ; LE32-NEXT:    stw 7, 44(1)
+; LE32-NEXT:    stw 7, 40(1)
 ; LE32-NEXT:    stw 7, 36(1)
+; LE32-NEXT:    stw 8, 16(1)
 ; LE32-NEXT:    clrlwi 4, 4, 27
 ; LE32-NEXT:    lwzux 5, 9, 6
 ; LE32-NEXT:    lwz 6, 8(9)
@@ -91,8 +91,8 @@ define void @pr59074(ptr %0) {
 ; BE32-NEXT:    stxvw4x 0, 0, 5
 ; BE32-NEXT:    stw 6, -36(1)
 ; BE32-NEXT:    addi 4, 4, -12
-; BE32-NEXT:    stw 7, -44(1)
 ; BE32-NEXT:    stw 7, -40(1)
+; BE32-NEXT:    stw 7, -44(1)
 ; BE32-NEXT:    stw 7, -48(1)
 ; BE32-NEXT:    rlwinm 9, 4, 29, 28, 29
 ; BE32-NEXT:    clrlwi 4, 4, 27
