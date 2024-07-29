@@ -471,12 +471,6 @@ public:
     return true;
   }
 
-  /// Return true if the @llvm.experimental.vector.partial.reduce.* intrinsic
-  /// should be expanded using generic code in SelectionDAGBuilder.
-  virtual bool shouldExpandPartialReductionIntrinsic(const CallInst *I) const {
-    return true;
-  }
-
   /// Return true if the @llvm.experimental.cttz.elts intrinsic should be
   /// expanded using generic code in SelectionDAGBuilder.
   virtual bool shouldExpandCttzElements(EVT VT) const { return true; }
