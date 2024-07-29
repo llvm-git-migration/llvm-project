@@ -495,10 +495,12 @@ New Compiler Flags
 Deprecated Compiler Flags
 -------------------------
 
-- The ``-Ofast`` command-line option has been deprecated. This option both
-  enables the ``-O3`` optimization-level, as well as enabling non-standard
-  ``-ffast-math`` behaviors. As such, it is somewhat misleading as an
-  "optimization level". Users are advised to switch to ``-O3 -ffast-math`` if
+- The ``-Ofast`` command-line option has been deprecated, but there is no
+  timeline for removal yet. Thus, the main effect of emitting a deprecation
+  warning message is to discourage its usage due to the problems of ``-Ofast``:
+  it enables both the ``-O3`` optimization-level as well as non-standard
+  ``-ffast-math`` behaviors and as such it is perceived to be misleading as an
+  optimization level.  Users are advised to switch to ``-O3 -ffast-math`` if
   the use of non-standard math behavior is intended, and ``-O3`` otherwise.
   See `RFC <https://discourse.llvm.org/t/rfc-deprecate-ofast/78687>`_ for details.
 
