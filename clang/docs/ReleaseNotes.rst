@@ -138,6 +138,8 @@ Bug Fixes to Attribute Support
 Bug Fixes to C++ Support
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Clang now correctly parses potentially declarative nested-name-specifiers in pointer-to-member declarators.
+
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
