@@ -21,7 +21,7 @@
 
 #include <wchar.h>
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX && defined(__GLIBC__)
 extern "C" int mallopt(int param, int value);
 #endif
 
@@ -210,7 +210,7 @@ void __nsan::InitializeInterceptors() {
   CHECK(!initialized);
 
   // Instruct libc malloc to consume less memory.
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX && defined(__GLIBC__)
   mallopt(1, 0);          // M_MXFAST
   mallopt(-3, 32 * 1024); // M_MMAP_THRESHOLD
 #endif
