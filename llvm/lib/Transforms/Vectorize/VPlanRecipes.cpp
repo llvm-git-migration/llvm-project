@@ -1145,6 +1145,7 @@ void VPWidenRecipe::execute(VPTransformState &State) {
 }
 
 void VPWidenEVLRecipe::execute(VPTransformState &State) {
+  State.setDebugLocFrom(getDebugLoc());
   assert(State.UF == 1 && "Expected only UF == 1 when vectorizing with "
                           "explicit vector length.");
   VPValue *Op0 = getOperand(0);
