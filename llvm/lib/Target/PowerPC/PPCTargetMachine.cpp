@@ -500,7 +500,10 @@ void PPCPassConfig::addIRPasses() {
 }
 
 bool PPCPassConfig::addPreISel() {
-  if (EnableGlobalMerge)
+  if ((EnableGlobalMerge.getNumOccurrences() > 0)
+          ? EnableGlobalMerge
+          : (TM->getTargetTriple().isOSAIX() &&
+             getOptLevel() != CodeGenOptLevel::None))
     addPass(createGlobalMergePass(TM, GlobalMergeMaxOffset, false, false, true,
                                   true));
 
