@@ -1099,37 +1099,50 @@ FormatDiagnostic(const char *DiagStr, const char *DiagEnd,
       const char *FirstDollar = ScanFormat(Argument, ArgumentEnd, '$');
       const char *SecondDollar = ScanFormat(FirstDollar + 1, ArgumentEnd, '$');
 
+      // Get first type text
+      TDT.PrintTree = false;
+      TDT.PrintFromType = true;
+      SmallString<64> FromTypeStr, ToTypeStr;
+      getDiags()->ConvertArgToString(Kind, val,
+                                     StringRef(Modifier, ModifierLen),
+                                     StringRef(Argument, ArgumentLen),
+                                     FormattedArgs, FromTypeStr, QualTypeVals);
+      if (!TDT.TemplateDiffUsed)
+        FormattedArgs.push_back(
+            std::make_pair(DiagnosticsEngine::ak_qualtype, TDT.FromType));
+
+      // Get second type text
+      TDT.PrintFromType = false;
+      getDiags()->ConvertArgToString(Kind, val,
+                                     StringRef(Modifier, ModifierLen),
+                                     StringRef(Argument, ArgumentLen),
+                                     FormattedArgs, ToTypeStr, QualTypeVals);
+      if (!TDT.TemplateDiffUsed)
+        FormattedArgs.push_back(
+            std::make_pair(DiagnosticsEngine::ak_qualtype, TDT.ToType));
+
       // Append before text
       FormatDiagnostic(Argument, FirstDollar, OutStr);
 
       // Append first type
-      TDT.PrintTree = false;
-      TDT.PrintFromType = true;
-      getDiags()->ConvertArgToString(Kind, val,
-                                     StringRef(Modifier, ModifierLen),
-                                     StringRef(Argument, ArgumentLen),
-                                     FormattedArgs,
-                                     OutStr, QualTypeVals);
-      if (!TDT.TemplateDiffUsed)
-        FormattedArgs.push_back(std::make_pair(DiagnosticsEngine::ak_qualtype,
-                                               TDT.FromType));
+      OutStr.append(FromTypeStr);
 
       // Append middle text
       FormatDiagnostic(FirstDollar + 1, SecondDollar, OutStr);
 
       // Append second type
-      TDT.PrintFromType = false;
-      getDiags()->ConvertArgToString(Kind, val,
-                                     StringRef(Modifier, ModifierLen),
-                                     StringRef(Argument, ArgumentLen),
-                                     FormattedArgs,
-                                     OutStr, QualTypeVals);
-      if (!TDT.TemplateDiffUsed)
-        FormattedArgs.push_back(std::make_pair(DiagnosticsEngine::ak_qualtype,
-                                               TDT.ToType));
+      OutStr.append(ToTypeStr);
 
       // Append end text
       FormatDiagnostic(SecondDollar + 1, Pipe, OutStr);
+
+      if (FromTypeStr == ToTypeStr) {
+        SmallString<88> IncompatibleVLADiag(
+            "; consider using a typedef to use the same variable-length array "
+            "type for both operands");
+        OutStr.append(IncompatibleVLADiag);
+      }
+
       break;
     }
     }
