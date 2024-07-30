@@ -65,6 +65,12 @@ namespace std {
   constexpr from_chars_result from_chars(const char* first, const char* last,
                                see below& value, int base = 10);                         // constexpr since C++23
 
+  constexpr from_chars_result from_chars(const char* first, const char* last,
+                               float& value, chars_format fmt);
+
+  constexpr from_chars_result from_chars(const char* first, const char* last,
+                               double& value, chars_format fmt);
+
 } // namespace std
 
 */

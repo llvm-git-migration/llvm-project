@@ -9,9 +9,6 @@
 #ifndef _LIBCPP_SRC_INCLUDE_FROM_CHARS_FLOATING_POINT_H
 #define _LIBCPP_SRC_INCLUDE_FROM_CHARS_FLOATING_POINT_H
 
-// NEVER DO THIS FOR REAL, this is just for demonstration purposes.
-#define LIBC_NAMESPACE libc_namespace_in_libcxx
-
 // This header is in the shared LLVM-libc header library.
 #include "shared/str_to_float.h"
 

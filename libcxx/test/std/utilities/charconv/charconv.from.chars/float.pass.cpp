@@ -10,8 +10,8 @@
 
 // <charconv>
 
-// constexpr from_chars_result from_chars(const char* first, const char* last,
-//                                        Float& value, chars_format fmt = chars_format::general)
+// from_chars_result from_chars(const char* first, const char* last,
+//                              Float& value, chars_format fmt = chars_format::general)
 
 #include <charconv>
 #include "test_macros.h"
@@ -57,14 +57,8 @@ struct test_basics {
   }
 };
 
-bool test() {
-  run<test_basics>(all_floats);
-
-  return true;
-}
-
 int main(int, char**) {
-  test();
+  run<test_basics>(all_floats);
 
   return 0;
 }
