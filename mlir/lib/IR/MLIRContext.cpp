@@ -410,9 +410,10 @@ void MLIRContext::appendDialectRegistry(const DialectRegistry &registry) {
   if (registry.isSubsetOf(impl->dialectsRegistry))
     return;
 
-  assert(impl->multiThreadedExecutionContext == 0 &&
-         "appending to the MLIRContext dialect registry while in a "
-         "multi-threaded execution context");
+  assert(!impl->threadingIsEnabled ||
+         impl->multiThreadedExecutionContext == 0 &&
+             "appending to the MLIRContext dialect registry while in a "
+             "multi-threaded execution context");
   registry.appendTo(impl->dialectsRegistry);
 
   // For the already loaded dialects, apply any possible extensions immediately.
