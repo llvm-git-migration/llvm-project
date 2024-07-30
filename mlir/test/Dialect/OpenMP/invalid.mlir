@@ -2207,14 +2207,13 @@ func.func @omp_distribute_unconstrained_order() -> () {
   }
   return
 }
-
-// Disabled for now. See relevant TODO in PrivateClauseOp::verify().
-//omp.private {type = private} @x.privatizer : i32 alloc {
-//^bb0(%arg0: i32):
-//  %0 = arith.constant 0.0 : f32
-//  // _expected-error_ @below {{Invalid yielded value. Expected type: 'i32', got: 'f32'}}
-//  omp.yield(%0 : f32)
-//}
+// -----
+omp.private {type = private} @x.privatizer : i32 alloc {
+^bb0(%arg0: i32):
+  %0 = arith.constant 0.0 : f32
+  // expected-error @below {{Invalid yielded value. Expected type: 'i32', got: 'f32'}}
+  omp.yield(%0 : f32)
+}
 
 // -----
 

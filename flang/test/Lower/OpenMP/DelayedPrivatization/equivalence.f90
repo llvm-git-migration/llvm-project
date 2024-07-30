@@ -17,12 +17,13 @@ end subroutine
 ! CHECK:  ^bb0(%{{.*}}: ![[X_TYPE]]):
 ! CHECK:    %[[PRIV_ALLOC:.*]] = fir.alloca f32 {bindc_name = "x", {{.*}}}
 ! CHECK:    %[[PRIV_DECL:.*]]:2 = hlfir.declare %[[PRIV_ALLOC]] {{{.*}}} : (![[PRIV_TYPE:fir.ref<f32>]]) -> ({{.*}})
-! CHECK:    omp.yield(%[[PRIV_DECL]]#0 : ![[PRIV_TYPE]])
+! CHECK:    %[[PRIV_CONV:.*]] = fir.convert %[[PRIV_DECL]]#0 : (![[PRIV_TYPE]]) -> ![[X_TYPE]]
+! CHECK:    omp.yield(%[[PRIV_CONV]] : ![[X_TYPE]])
 ! CHECK:  } copy {
-! CHECK:  ^bb0(%[[ORIG_PTR:.*]]: ![[X_TYPE]], %[[PRIV_REF:.*]]: ![[PRIV_TYPE]]):
+! CHECK:  ^bb0(%[[ORIG_PTR:.*]]: ![[X_TYPE]], %[[PRIV_REF:.*]]: ![[X_TYPE]]):
 ! CHECK:    %[[ORIG_VAL:.*]] = fir.load %[[ORIG_PTR]] : !fir.ptr<f32>
-! CHECK:    hlfir.assign %[[ORIG_VAL]] to %[[PRIV_REF]] temporary_lhs : f32, ![[PRIV_TYPE]]
-! CHECK:    omp.yield(%[[PRIV_REF]] : ![[PRIV_TYPE]])
+! CHECK:    hlfir.assign %[[ORIG_VAL]] to %[[PRIV_REF]] temporary_lhs : f32, ![[X_TYPE]]
+! CHECK:    omp.yield(%[[PRIV_REF]] : ![[X_TYPE]])
 ! CHECK:  }
 
 ! CHECK:  func.func @_QPprivate_common() {
