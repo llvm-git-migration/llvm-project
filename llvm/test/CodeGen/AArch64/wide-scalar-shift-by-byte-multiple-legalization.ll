@@ -203,6 +203,35 @@ define void @lshr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i256 %res, ptr %dst, align 1
   ret void
 }
+
+define void @lshr_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; ALL-LABEL: lshr_32bytes_dwordOff:
+; ALL:       // %bb.0:
+; ALL-NEXT:    sub sp, sp, #64
+; ALL-NEXT:    ldp x9, x8, [x0, #16]
+; ALL-NEXT:    movi v0.2d, #0000000000000000
+; ALL-NEXT:    ldr x10, [x1]
+; ALL-NEXT:    ldr q1, [x0]
+; ALL-NEXT:    stp x9, x8, [sp, #16]
+; ALL-NEXT:    ubfiz x8, x10, #3, #2
+; ALL-NEXT:    mov x9, sp
+; ALL-NEXT:    str q1, [sp]
+; ALL-NEXT:    stp q0, q0, [sp, #32]
+; ALL-NEXT:    add x8, x9, x8
+; ALL-NEXT:    ldp x10, x9, [x8, #16]
+; ALL-NEXT:    ldr q0, [x8]
+; ALL-NEXT:    str q0, [x2]
+; ALL-NEXT:    stp x10, x9, [x2, #16]
+; ALL-NEXT:    add sp, sp, #64
+; ALL-NEXT:    ret
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
+  %res = lshr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
 define void @shl_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; ALL-LABEL: shl_32bytes:
 ; ALL:       // %bb.0:
@@ -231,6 +260,36 @@ define void @shl_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i256 %res, ptr %dst, align 1
   ret void
 }
+
+define void @shl_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; ALL-LABEL: shl_32bytes_dwordOff:
+; ALL:       // %bb.0:
+; ALL-NEXT:    sub sp, sp, #64
+; ALL-NEXT:    ldp x9, x8, [x0, #16]
+; ALL-NEXT:    movi v0.2d, #0000000000000000
+; ALL-NEXT:    ldr x10, [x1]
+; ALL-NEXT:    ldr q1, [x0]
+; ALL-NEXT:    stp x9, x8, [sp, #48]
+; ALL-NEXT:    mov x8, sp
+; ALL-NEXT:    ubfiz x9, x10, #3, #2
+; ALL-NEXT:    add x8, x8, #32
+; ALL-NEXT:    stp q0, q1, [sp, #16]
+; ALL-NEXT:    str q0, [sp]
+; ALL-NEXT:    sub x8, x8, x9
+; ALL-NEXT:    ldp x9, x10, [x8, #16]
+; ALL-NEXT:    ldr q0, [x8]
+; ALL-NEXT:    str q0, [x2]
+; ALL-NEXT:    stp x9, x10, [x2, #16]
+; ALL-NEXT:    add sp, sp, #64
+; ALL-NEXT:    ret
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
+  %res = shl i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
 define void @ashr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; ALL-LABEL: ashr_32bytes:
 ; ALL:       // %bb.0:
@@ -255,6 +314,35 @@ define void @ashr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   %src = load i256, ptr %src.ptr, align 1
   %byteOff = load i256, ptr %byteOff.ptr, align 1
   %bitOff = shl i256 %byteOff, 3
+  %res = ashr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+define void @ashr_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; ALL-LABEL: ashr_32bytes_dwordOff:
+; ALL:       // %bb.0:
+; ALL-NEXT:    sub sp, sp, #64
+; ALL-NEXT:    ldp x9, x8, [x0, #16]
+; ALL-NEXT:    ldr x10, [x1]
+; ALL-NEXT:    ldr q0, [x0]
+; ALL-NEXT:    stp x9, x8, [sp, #16]
+; ALL-NEXT:    asr x8, x8, #63
+; ALL-NEXT:    ubfiz x9, x10, #3, #2
+; ALL-NEXT:    mov x10, sp
+; ALL-NEXT:    str q0, [sp]
+; ALL-NEXT:    stp x8, x8, [sp, #48]
+; ALL-NEXT:    stp x8, x8, [sp, #32]
+; ALL-NEXT:    add x8, x10, x9
+; ALL-NEXT:    ldp x10, x9, [x8, #16]
+; ALL-NEXT:    ldr q0, [x8]
+; ALL-NEXT:    str q0, [x2]
+; ALL-NEXT:    stp x10, x9, [x2, #16]
+; ALL-NEXT:    add sp, sp, #64
+; ALL-NEXT:    ret
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
   %res = ashr i256 %src, %bitOff
   store i256 %res, ptr %dst, align 1
   ret void

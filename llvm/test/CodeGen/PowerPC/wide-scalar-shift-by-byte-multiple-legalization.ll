@@ -261,6 +261,82 @@ define void @lshr_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i128 %res, ptr %dst, align 1
   ret void
 }
+
+define void @lshr_16bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: lshr_16bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    lwz 4, 0(4)
+; LE-64BIT-NEXT:    ld 6, 8(3)
+; LE-64BIT-NEXT:    ld 3, 0(3)
+; LE-64BIT-NEXT:    slwi 4, 4, 5
+; LE-64BIT-NEXT:    subfic 7, 4, 64
+; LE-64BIT-NEXT:    srd 3, 3, 4
+; LE-64BIT-NEXT:    sld 7, 6, 7
+; LE-64BIT-NEXT:    or 3, 3, 7
+; LE-64BIT-NEXT:    addi 7, 4, -64
+; LE-64BIT-NEXT:    srd 4, 6, 4
+; LE-64BIT-NEXT:    srd 7, 6, 7
+; LE-64BIT-NEXT:    std 4, 8(5)
+; LE-64BIT-NEXT:    or 3, 3, 7
+; LE-64BIT-NEXT:    std 3, 0(5)
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: lshr_16bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    lwz 4, 12(4)
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    ld 3, 8(3)
+; BE-NEXT:    slwi 4, 4, 5
+; BE-NEXT:    subfic 7, 4, 64
+; BE-NEXT:    srd 3, 3, 4
+; BE-NEXT:    sld 7, 6, 7
+; BE-NEXT:    addi 8, 4, -64
+; BE-NEXT:    or 3, 3, 7
+; BE-NEXT:    srd 7, 6, 8
+; BE-NEXT:    srd 4, 6, 4
+; BE-NEXT:    or 3, 3, 7
+; BE-NEXT:    std 4, 0(5)
+; BE-NEXT:    std 3, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: lshr_16bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -48(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 3, 12(3)
+; LE-32BIT-NEXT:    lwz 4, 12(4)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    addi 3, 1, 32
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 28, 29
+; LE-32BIT-NEXT:    stw 6, 28(1)
+; LE-32BIT-NEXT:    sub 3, 3, 4
+; LE-32BIT-NEXT:    stw 6, 24(1)
+; LE-32BIT-NEXT:    stw 6, 20(1)
+; LE-32BIT-NEXT:    stw 6, 16(1)
+; LE-32BIT-NEXT:    stw 9, 40(1)
+; LE-32BIT-NEXT:    stw 8, 36(1)
+; LE-32BIT-NEXT:    stw 7, 32(1)
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 8(3)
+; LE-32BIT-NEXT:    lwz 3, 12(3)
+; LE-32BIT-NEXT:    stw 7, 8(5)
+; LE-32BIT-NEXT:    stw 3, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 48
+; LE-32BIT-NEXT:    blr
+  %src = load i128, ptr %src.ptr, align 1
+  %wordOff = load i128, ptr %wordOff.ptr, align 1
+  %bitOff = shl i128 %wordOff, 5
+  %res = lshr i128 %src, %bitOff
+  store i128 %res, ptr %dst, align 1
+  ret void
+}
+
 define void @shl_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; LE-64BIT-LABEL: shl_16bytes:
 ; LE-64BIT:       # %bb.0:
@@ -334,6 +410,81 @@ define void @shl_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i128 %res, ptr %dst, align 1
   ret void
 }
+
+define void @shl_16bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: shl_16bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    lwz 4, 0(4)
+; LE-64BIT-NEXT:    ld 6, 0(3)
+; LE-64BIT-NEXT:    ld 3, 8(3)
+; LE-64BIT-NEXT:    slwi 4, 4, 5
+; LE-64BIT-NEXT:    subfic 7, 4, 64
+; LE-64BIT-NEXT:    sld 3, 3, 4
+; LE-64BIT-NEXT:    srd 7, 6, 7
+; LE-64BIT-NEXT:    or 3, 3, 7
+; LE-64BIT-NEXT:    addi 7, 4, -64
+; LE-64BIT-NEXT:    sld 4, 6, 4
+; LE-64BIT-NEXT:    sld 7, 6, 7
+; LE-64BIT-NEXT:    std 4, 0(5)
+; LE-64BIT-NEXT:    or 3, 3, 7
+; LE-64BIT-NEXT:    std 3, 8(5)
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: shl_16bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    lwz 4, 12(4)
+; BE-NEXT:    ld 6, 8(3)
+; BE-NEXT:    ld 3, 0(3)
+; BE-NEXT:    slwi 4, 4, 5
+; BE-NEXT:    subfic 7, 4, 64
+; BE-NEXT:    sld 3, 3, 4
+; BE-NEXT:    srd 7, 6, 7
+; BE-NEXT:    addi 8, 4, -64
+; BE-NEXT:    or 3, 3, 7
+; BE-NEXT:    sld 7, 6, 8
+; BE-NEXT:    sld 4, 6, 4
+; BE-NEXT:    or 3, 3, 7
+; BE-NEXT:    std 4, 8(5)
+; BE-NEXT:    std 3, 0(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: shl_16bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -48(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 3, 12(3)
+; LE-32BIT-NEXT:    lwz 4, 12(4)
+; LE-32BIT-NEXT:    stw 6, 44(1)
+; LE-32BIT-NEXT:    stw 6, 40(1)
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 28, 29
+; LE-32BIT-NEXT:    stw 6, 36(1)
+; LE-32BIT-NEXT:    stw 6, 32(1)
+; LE-32BIT-NEXT:    stw 3, 28(1)
+; LE-32BIT-NEXT:    addi 3, 1, 16
+; LE-32BIT-NEXT:    stw 9, 24(1)
+; LE-32BIT-NEXT:    stw 8, 20(1)
+; LE-32BIT-NEXT:    stw 7, 16(1)
+; LE-32BIT-NEXT:    lwzux 3, 4, 3
+; LE-32BIT-NEXT:    lwz 6, 4(4)
+; LE-32BIT-NEXT:    lwz 7, 12(4)
+; LE-32BIT-NEXT:    lwz 4, 8(4)
+; LE-32BIT-NEXT:    stw 3, 0(5)
+; LE-32BIT-NEXT:    stw 4, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 48
+; LE-32BIT-NEXT:    blr
+  %src = load i128, ptr %src.ptr, align 1
+  %wordOff = load i128, ptr %wordOff.ptr, align 1
+  %bitOff = shl i128 %wordOff, 5
+  %res = shl i128 %src, %bitOff
+  store i128 %res, ptr %dst, align 1
+  ret void
+}
+
 define void @ashr_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; LE-64BIT-LABEL: ashr_16bytes:
 ; LE-64BIT:       # %bb.0:
@@ -361,17 +512,17 @@ define void @ashr_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; BE-NEXT:    slwi 4, 4, 3
 ; BE-NEXT:    addi 7, 4, -64
 ; BE-NEXT:    cmpwi 7, 1
-; BE-NEXT:    blt 0, .LBB8_2
+; BE-NEXT:    blt 0, .LBB10_2
 ; BE-NEXT:  # %bb.1:
 ; BE-NEXT:    srad 3, 6, 7
-; BE-NEXT:    b .LBB8_3
-; BE-NEXT:  .LBB8_2:
+; BE-NEXT:    b .LBB10_3
+; BE-NEXT:  .LBB10_2:
 ; BE-NEXT:    ld 3, 8(3)
 ; BE-NEXT:    subfic 7, 4, 64
 ; BE-NEXT:    sld 7, 6, 7
 ; BE-NEXT:    srd 3, 3, 4
 ; BE-NEXT:    or 3, 3, 7
-; BE-NEXT:  .LBB8_3:
+; BE-NEXT:  .LBB10_3:
 ; BE-NEXT:    srad 4, 6, 4
 ; BE-NEXT:    std 3, 8(5)
 ; BE-NEXT:    std 4, 0(5)
@@ -410,6 +561,87 @@ define void @ashr_16bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   %src = load i128, ptr %src.ptr, align 1
   %byteOff = load i128, ptr %byteOff.ptr, align 1
   %bitOff = shl i128 %byteOff, 3
+  %res = ashr i128 %src, %bitOff
+  store i128 %res, ptr %dst, align 1
+  ret void
+}
+
+define void @ashr_16bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: ashr_16bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    lwz 4, 0(4)
+; LE-64BIT-NEXT:    ld 6, 8(3)
+; LE-64BIT-NEXT:    ld 3, 0(3)
+; LE-64BIT-NEXT:    slwi 4, 4, 5
+; LE-64BIT-NEXT:    subfic 7, 4, 64
+; LE-64BIT-NEXT:    srd 3, 3, 4
+; LE-64BIT-NEXT:    sld 7, 6, 7
+; LE-64BIT-NEXT:    or 3, 3, 7
+; LE-64BIT-NEXT:    addi 7, 4, -64
+; LE-64BIT-NEXT:    srad 4, 6, 4
+; LE-64BIT-NEXT:    cmpwi 7, 1
+; LE-64BIT-NEXT:    srad 8, 6, 7
+; LE-64BIT-NEXT:    std 4, 8(5)
+; LE-64BIT-NEXT:    isellt 3, 3, 8
+; LE-64BIT-NEXT:    std 3, 0(5)
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: ashr_16bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    lwz 4, 12(4)
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    slwi 4, 4, 5
+; BE-NEXT:    addi 7, 4, -64
+; BE-NEXT:    cmpwi 7, 1
+; BE-NEXT:    blt 0, .LBB11_2
+; BE-NEXT:  # %bb.1:
+; BE-NEXT:    srad 3, 6, 7
+; BE-NEXT:    b .LBB11_3
+; BE-NEXT:  .LBB11_2:
+; BE-NEXT:    ld 3, 8(3)
+; BE-NEXT:    subfic 7, 4, 64
+; BE-NEXT:    sld 7, 6, 7
+; BE-NEXT:    srd 3, 3, 4
+; BE-NEXT:    or 3, 3, 7
+; BE-NEXT:  .LBB11_3:
+; BE-NEXT:    srad 4, 6, 4
+; BE-NEXT:    std 3, 8(5)
+; BE-NEXT:    std 4, 0(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: ashr_16bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -48(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    addi 6, 1, 32
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 3, 12(3)
+; LE-32BIT-NEXT:    lwz 4, 12(4)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    srawi 3, 7, 31
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 28, 29
+; LE-32BIT-NEXT:    stw 9, 40(1)
+; LE-32BIT-NEXT:    stw 8, 36(1)
+; LE-32BIT-NEXT:    stw 7, 32(1)
+; LE-32BIT-NEXT:    stw 3, 28(1)
+; LE-32BIT-NEXT:    stw 3, 24(1)
+; LE-32BIT-NEXT:    stw 3, 20(1)
+; LE-32BIT-NEXT:    stw 3, 16(1)
+; LE-32BIT-NEXT:    sub 3, 6, 4
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 8(3)
+; LE-32BIT-NEXT:    lwz 3, 12(3)
+; LE-32BIT-NEXT:    stw 7, 8(5)
+; LE-32BIT-NEXT:    stw 3, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 48
+; LE-32BIT-NEXT:    blr
+  %src = load i128, ptr %src.ptr, align 1
+  %wordOff = load i128, ptr %wordOff.ptr, align 1
+  %bitOff = shl i128 %wordOff, 5
   %res = ashr i128 %src, %bitOff
   store i128 %res, ptr %dst, align 1
   ret void
@@ -526,6 +758,231 @@ define void @lshr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i256 %res, ptr %dst, align 1
   ret void
 }
+
+define void @lshr_32bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: lshr_32bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    li 6, 16
+; LE-64BIT-NEXT:    lxvd2x 1, 0, 3
+; LE-64BIT-NEXT:    xxlxor 2, 2, 2
+; LE-64BIT-NEXT:    addi 7, 1, -64
+; LE-64BIT-NEXT:    lxvd2x 0, 3, 6
+; LE-64BIT-NEXT:    lwz 3, 0(4)
+; LE-64BIT-NEXT:    li 4, 48
+; LE-64BIT-NEXT:    stxvd2x 2, 7, 4
+; LE-64BIT-NEXT:    li 4, 32
+; LE-64BIT-NEXT:    rlwinm 3, 3, 2, 27, 29
+; LE-64BIT-NEXT:    stxvd2x 2, 7, 4
+; LE-64BIT-NEXT:    stxvd2x 0, 7, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 0, 7
+; LE-64BIT-NEXT:    lxvd2x 0, 7, 3
+; LE-64BIT-NEXT:    add 3, 7, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 6
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: lshr_32bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    ld 7, 8(3)
+; BE-NEXT:    ld 8, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 9, 1, -64
+; BE-NEXT:    li 10, 0
+; BE-NEXT:    std 10, 24(9)
+; BE-NEXT:    std 10, 16(9)
+; BE-NEXT:    std 10, 8(9)
+; BE-NEXT:    std 10, -64(1)
+; BE-NEXT:    std 3, 56(9)
+; BE-NEXT:    rlwinm 3, 4, 2, 27, 29
+; BE-NEXT:    neg 3, 3
+; BE-NEXT:    std 8, 48(9)
+; BE-NEXT:    std 7, 40(9)
+; BE-NEXT:    std 6, 32(9)
+; BE-NEXT:    extsw 3, 3
+; BE-NEXT:    addi 4, 1, -32
+; BE-NEXT:    ldux 3, 4, 3
+; BE-NEXT:    ld 6, 8(4)
+; BE-NEXT:    ld 7, 24(4)
+; BE-NEXT:    ld 4, 16(4)
+; BE-NEXT:    std 3, 0(5)
+; BE-NEXT:    std 4, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: lshr_32bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 3, 76(1)
+; LE-32BIT-NEXT:    addi 3, 1, 48
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 27, 29
+; LE-32BIT-NEXT:    stw 6, 44(1)
+; LE-32BIT-NEXT:    sub 3, 3, 4
+; LE-32BIT-NEXT:    stw 6, 40(1)
+; LE-32BIT-NEXT:    stw 6, 36(1)
+; LE-32BIT-NEXT:    stw 6, 32(1)
+; LE-32BIT-NEXT:    stw 6, 28(1)
+; LE-32BIT-NEXT:    stw 6, 24(1)
+; LE-32BIT-NEXT:    stw 6, 20(1)
+; LE-32BIT-NEXT:    stw 6, 16(1)
+; LE-32BIT-NEXT:    stw 0, 72(1)
+; LE-32BIT-NEXT:    stw 12, 68(1)
+; LE-32BIT-NEXT:    stw 11, 64(1)
+; LE-32BIT-NEXT:    stw 10, 60(1)
+; LE-32BIT-NEXT:    stw 9, 56(1)
+; LE-32BIT-NEXT:    stw 8, 52(1)
+; LE-32BIT-NEXT:    stw 7, 48(1)
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 12(3)
+; LE-32BIT-NEXT:    lwz 8, 8(3)
+; LE-32BIT-NEXT:    lwz 9, 20(3)
+; LE-32BIT-NEXT:    lwz 10, 16(3)
+; LE-32BIT-NEXT:    lwz 11, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    stw 11, 24(5)
+; LE-32BIT-NEXT:    stw 3, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %wordOff = load i256, ptr %wordOff.ptr, align 1
+  %bitOff = shl i256 %wordOff, 5
+  %res = lshr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+define void @lshr_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: lshr_32bytes_dwordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    li 6, 16
+; LE-64BIT-NEXT:    lxvd2x 1, 0, 3
+; LE-64BIT-NEXT:    xxlxor 2, 2, 2
+; LE-64BIT-NEXT:    addi 7, 1, -64
+; LE-64BIT-NEXT:    lxvd2x 0, 3, 6
+; LE-64BIT-NEXT:    lwz 3, 0(4)
+; LE-64BIT-NEXT:    li 4, 48
+; LE-64BIT-NEXT:    stxvd2x 2, 7, 4
+; LE-64BIT-NEXT:    li 4, 32
+; LE-64BIT-NEXT:    rlwinm 3, 3, 3, 27, 28
+; LE-64BIT-NEXT:    stxvd2x 2, 7, 4
+; LE-64BIT-NEXT:    stxvd2x 0, 7, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 0, 7
+; LE-64BIT-NEXT:    lxvd2x 0, 7, 3
+; LE-64BIT-NEXT:    add 3, 7, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 6
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: lshr_32bytes_dwordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    ld 7, 8(3)
+; BE-NEXT:    ld 8, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 9, 1, -64
+; BE-NEXT:    li 10, 0
+; BE-NEXT:    std 10, 24(9)
+; BE-NEXT:    std 10, 16(9)
+; BE-NEXT:    std 10, 8(9)
+; BE-NEXT:    std 10, -64(1)
+; BE-NEXT:    std 3, 56(9)
+; BE-NEXT:    rlwinm 3, 4, 3, 27, 28
+; BE-NEXT:    neg 3, 3
+; BE-NEXT:    std 8, 48(9)
+; BE-NEXT:    std 7, 40(9)
+; BE-NEXT:    std 6, 32(9)
+; BE-NEXT:    extsw 3, 3
+; BE-NEXT:    addi 4, 1, -32
+; BE-NEXT:    ldux 3, 4, 3
+; BE-NEXT:    ld 6, 8(4)
+; BE-NEXT:    ld 7, 24(4)
+; BE-NEXT:    ld 4, 16(4)
+; BE-NEXT:    std 3, 0(5)
+; BE-NEXT:    std 4, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: lshr_32bytes_dwordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 3, 76(1)
+; LE-32BIT-NEXT:    addi 3, 1, 48
+; LE-32BIT-NEXT:    rlwinm 4, 4, 3, 27, 28
+; LE-32BIT-NEXT:    stw 6, 44(1)
+; LE-32BIT-NEXT:    sub 3, 3, 4
+; LE-32BIT-NEXT:    stw 6, 40(1)
+; LE-32BIT-NEXT:    stw 6, 36(1)
+; LE-32BIT-NEXT:    stw 6, 32(1)
+; LE-32BIT-NEXT:    stw 6, 28(1)
+; LE-32BIT-NEXT:    stw 6, 24(1)
+; LE-32BIT-NEXT:    stw 6, 20(1)
+; LE-32BIT-NEXT:    stw 6, 16(1)
+; LE-32BIT-NEXT:    stw 0, 72(1)
+; LE-32BIT-NEXT:    stw 12, 68(1)
+; LE-32BIT-NEXT:    stw 11, 64(1)
+; LE-32BIT-NEXT:    stw 10, 60(1)
+; LE-32BIT-NEXT:    stw 9, 56(1)
+; LE-32BIT-NEXT:    stw 8, 52(1)
+; LE-32BIT-NEXT:    stw 7, 48(1)
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 12(3)
+; LE-32BIT-NEXT:    lwz 8, 8(3)
+; LE-32BIT-NEXT:    lwz 9, 20(3)
+; LE-32BIT-NEXT:    lwz 10, 16(3)
+; LE-32BIT-NEXT:    lwz 11, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    stw 11, 24(5)
+; LE-32BIT-NEXT:    stw 3, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
+  %res = lshr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
 define void @shl_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; LE-64BIT-LABEL: shl_32bytes:
 ; LE-64BIT:       # %bb.0:
@@ -636,6 +1093,230 @@ define void @shl_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i256 %res, ptr %dst, align 1
   ret void
 }
+
+define void @shl_32bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: shl_32bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    li 6, 16
+; LE-64BIT-NEXT:    lxvd2x 1, 0, 3
+; LE-64BIT-NEXT:    xxlxor 2, 2, 2
+; LE-64BIT-NEXT:    li 7, 48
+; LE-64BIT-NEXT:    lxvd2x 0, 3, 6
+; LE-64BIT-NEXT:    lwz 3, 0(4)
+; LE-64BIT-NEXT:    addi 4, 1, -64
+; LE-64BIT-NEXT:    stxvd2x 2, 4, 6
+; LE-64BIT-NEXT:    rlwinm 3, 3, 2, 27, 29
+; LE-64BIT-NEXT:    stxvd2x 0, 4, 7
+; LE-64BIT-NEXT:    li 7, 32
+; LE-64BIT-NEXT:    neg 3, 3
+; LE-64BIT-NEXT:    stxvd2x 1, 4, 7
+; LE-64BIT-NEXT:    stxvd2x 2, 0, 4
+; LE-64BIT-NEXT:    extsw 3, 3
+; LE-64BIT-NEXT:    addi 4, 1, -32
+; LE-64BIT-NEXT:    lxvd2x 0, 4, 3
+; LE-64BIT-NEXT:    add 3, 4, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 6
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: shl_32bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    ld 7, 8(3)
+; BE-NEXT:    ld 8, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 9, 1, -64
+; BE-NEXT:    li 10, 0
+; BE-NEXT:    std 10, 56(9)
+; BE-NEXT:    std 10, 48(9)
+; BE-NEXT:    std 10, 40(9)
+; BE-NEXT:    std 10, 32(9)
+; BE-NEXT:    std 3, 24(9)
+; BE-NEXT:    std 8, 16(9)
+; BE-NEXT:    std 7, 8(9)
+; BE-NEXT:    std 6, -64(1)
+; BE-NEXT:    rlwinm 3, 4, 2, 27, 29
+; BE-NEXT:    ldux 4, 3, 9
+; BE-NEXT:    ld 6, 8(3)
+; BE-NEXT:    ld 7, 24(3)
+; BE-NEXT:    ld 3, 16(3)
+; BE-NEXT:    std 4, 0(5)
+; BE-NEXT:    std 3, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: shl_32bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 6, 76(1)
+; LE-32BIT-NEXT:    stw 6, 72(1)
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 27, 29
+; LE-32BIT-NEXT:    stw 6, 68(1)
+; LE-32BIT-NEXT:    stw 6, 64(1)
+; LE-32BIT-NEXT:    stw 6, 60(1)
+; LE-32BIT-NEXT:    stw 6, 56(1)
+; LE-32BIT-NEXT:    stw 6, 52(1)
+; LE-32BIT-NEXT:    stw 6, 48(1)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    addi 3, 1, 16
+; LE-32BIT-NEXT:    stw 0, 40(1)
+; LE-32BIT-NEXT:    stw 12, 36(1)
+; LE-32BIT-NEXT:    stw 11, 32(1)
+; LE-32BIT-NEXT:    stw 10, 28(1)
+; LE-32BIT-NEXT:    stw 9, 24(1)
+; LE-32BIT-NEXT:    stw 8, 20(1)
+; LE-32BIT-NEXT:    stw 7, 16(1)
+; LE-32BIT-NEXT:    lwzux 3, 4, 3
+; LE-32BIT-NEXT:    lwz 6, 4(4)
+; LE-32BIT-NEXT:    lwz 7, 12(4)
+; LE-32BIT-NEXT:    lwz 8, 8(4)
+; LE-32BIT-NEXT:    lwz 9, 20(4)
+; LE-32BIT-NEXT:    lwz 10, 16(4)
+; LE-32BIT-NEXT:    lwz 11, 28(4)
+; LE-32BIT-NEXT:    lwz 4, 24(4)
+; LE-32BIT-NEXT:    stw 3, 0(5)
+; LE-32BIT-NEXT:    stw 4, 24(5)
+; LE-32BIT-NEXT:    stw 11, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %wordOff = load i256, ptr %wordOff.ptr, align 1
+  %bitOff = shl i256 %wordOff, 5
+  %res = shl i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+define void @shl_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: shl_32bytes_dwordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    li 6, 16
+; LE-64BIT-NEXT:    lxvd2x 1, 0, 3
+; LE-64BIT-NEXT:    xxlxor 2, 2, 2
+; LE-64BIT-NEXT:    li 7, 48
+; LE-64BIT-NEXT:    lxvd2x 0, 3, 6
+; LE-64BIT-NEXT:    lwz 3, 0(4)
+; LE-64BIT-NEXT:    addi 4, 1, -64
+; LE-64BIT-NEXT:    stxvd2x 2, 4, 6
+; LE-64BIT-NEXT:    rlwinm 3, 3, 3, 27, 28
+; LE-64BIT-NEXT:    stxvd2x 0, 4, 7
+; LE-64BIT-NEXT:    li 7, 32
+; LE-64BIT-NEXT:    neg 3, 3
+; LE-64BIT-NEXT:    stxvd2x 1, 4, 7
+; LE-64BIT-NEXT:    stxvd2x 2, 0, 4
+; LE-64BIT-NEXT:    extsw 3, 3
+; LE-64BIT-NEXT:    addi 4, 1, -32
+; LE-64BIT-NEXT:    lxvd2x 0, 4, 3
+; LE-64BIT-NEXT:    add 3, 4, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 6
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 6
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: shl_32bytes_dwordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 6, 0(3)
+; BE-NEXT:    ld 7, 8(3)
+; BE-NEXT:    ld 8, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 9, 1, -64
+; BE-NEXT:    li 10, 0
+; BE-NEXT:    std 10, 56(9)
+; BE-NEXT:    std 10, 48(9)
+; BE-NEXT:    std 10, 40(9)
+; BE-NEXT:    std 10, 32(9)
+; BE-NEXT:    std 3, 24(9)
+; BE-NEXT:    std 8, 16(9)
+; BE-NEXT:    std 7, 8(9)
+; BE-NEXT:    std 6, -64(1)
+; BE-NEXT:    rlwinm 3, 4, 3, 27, 28
+; BE-NEXT:    ldux 4, 3, 9
+; BE-NEXT:    ld 6, 8(3)
+; BE-NEXT:    ld 7, 24(3)
+; BE-NEXT:    ld 3, 16(3)
+; BE-NEXT:    std 4, 0(5)
+; BE-NEXT:    std 3, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: shl_32bytes_dwordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    li 6, 0
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 6, 76(1)
+; LE-32BIT-NEXT:    stw 6, 72(1)
+; LE-32BIT-NEXT:    rlwinm 4, 4, 3, 27, 28
+; LE-32BIT-NEXT:    stw 6, 68(1)
+; LE-32BIT-NEXT:    stw 6, 64(1)
+; LE-32BIT-NEXT:    stw 6, 60(1)
+; LE-32BIT-NEXT:    stw 6, 56(1)
+; LE-32BIT-NEXT:    stw 6, 52(1)
+; LE-32BIT-NEXT:    stw 6, 48(1)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    addi 3, 1, 16
+; LE-32BIT-NEXT:    stw 0, 40(1)
+; LE-32BIT-NEXT:    stw 12, 36(1)
+; LE-32BIT-NEXT:    stw 11, 32(1)
+; LE-32BIT-NEXT:    stw 10, 28(1)
+; LE-32BIT-NEXT:    stw 9, 24(1)
+; LE-32BIT-NEXT:    stw 8, 20(1)
+; LE-32BIT-NEXT:    stw 7, 16(1)
+; LE-32BIT-NEXT:    lwzux 3, 4, 3
+; LE-32BIT-NEXT:    lwz 6, 4(4)
+; LE-32BIT-NEXT:    lwz 7, 12(4)
+; LE-32BIT-NEXT:    lwz 8, 8(4)
+; LE-32BIT-NEXT:    lwz 9, 20(4)
+; LE-32BIT-NEXT:    lwz 10, 16(4)
+; LE-32BIT-NEXT:    lwz 11, 28(4)
+; LE-32BIT-NEXT:    lwz 4, 24(4)
+; LE-32BIT-NEXT:    stw 3, 0(5)
+; LE-32BIT-NEXT:    stw 4, 24(5)
+; LE-32BIT-NEXT:    stw 11, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
+  %res = shl i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+
 define void @ashr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
 ; LE-64BIT-LABEL: ashr_32bytes:
 ; LE-64BIT:       # %bb.0:
@@ -749,5 +1430,235 @@ define void @ashr_32bytes(ptr %src.ptr, ptr %byteOff.ptr, ptr %dst) nounwind {
   store i256 %res, ptr %dst, align 1
   ret void
 }
+
+define void @ashr_32bytes_wordOff(ptr %src.ptr, ptr %wordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: ashr_32bytes_wordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    lxvd2x 0, 0, 3
+; LE-64BIT-NEXT:    ld 6, 16(3)
+; LE-64BIT-NEXT:    ld 3, 24(3)
+; LE-64BIT-NEXT:    addi 7, 1, -64
+; LE-64BIT-NEXT:    lwz 4, 0(4)
+; LE-64BIT-NEXT:    li 8, 16
+; LE-64BIT-NEXT:    std 3, 24(7)
+; LE-64BIT-NEXT:    sradi 3, 3, 63
+; LE-64BIT-NEXT:    std 6, 16(7)
+; LE-64BIT-NEXT:    std 3, 56(7)
+; LE-64BIT-NEXT:    std 3, 48(7)
+; LE-64BIT-NEXT:    std 3, 40(7)
+; LE-64BIT-NEXT:    std 3, 32(7)
+; LE-64BIT-NEXT:    rlwinm 3, 4, 2, 27, 29
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 7
+; LE-64BIT-NEXT:    lxvd2x 0, 7, 3
+; LE-64BIT-NEXT:    add 3, 7, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 8
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 8
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: ashr_32bytes_wordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 7, 0(3)
+; BE-NEXT:    ld 8, 8(3)
+; BE-NEXT:    ld 9, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 6, 1, -64
+; BE-NEXT:    std 3, 56(6)
+; BE-NEXT:    sradi 3, 7, 63
+; BE-NEXT:    rlwinm 4, 4, 2, 27, 29
+; BE-NEXT:    std 3, 24(6)
+; BE-NEXT:    std 3, 16(6)
+; BE-NEXT:    std 3, 8(6)
+; BE-NEXT:    std 3, -64(1)
+; BE-NEXT:    neg 3, 4
+; BE-NEXT:    std 9, 48(6)
+; BE-NEXT:    std 8, 40(6)
+; BE-NEXT:    std 7, 32(6)
+; BE-NEXT:    extsw 3, 3
+; BE-NEXT:    addi 4, 1, -32
+; BE-NEXT:    ldux 3, 4, 3
+; BE-NEXT:    ld 6, 8(4)
+; BE-NEXT:    ld 7, 24(4)
+; BE-NEXT:    ld 4, 16(4)
+; BE-NEXT:    std 3, 0(5)
+; BE-NEXT:    std 4, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: ashr_32bytes_wordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    addi 6, 1, 48
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 3, 76(1)
+; LE-32BIT-NEXT:    srawi 3, 7, 31
+; LE-32BIT-NEXT:    rlwinm 4, 4, 2, 27, 29
+; LE-32BIT-NEXT:    stw 0, 72(1)
+; LE-32BIT-NEXT:    stw 12, 68(1)
+; LE-32BIT-NEXT:    stw 11, 64(1)
+; LE-32BIT-NEXT:    stw 10, 60(1)
+; LE-32BIT-NEXT:    stw 9, 56(1)
+; LE-32BIT-NEXT:    stw 8, 52(1)
+; LE-32BIT-NEXT:    stw 7, 48(1)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    stw 3, 40(1)
+; LE-32BIT-NEXT:    stw 3, 36(1)
+; LE-32BIT-NEXT:    stw 3, 32(1)
+; LE-32BIT-NEXT:    stw 3, 28(1)
+; LE-32BIT-NEXT:    stw 3, 24(1)
+; LE-32BIT-NEXT:    stw 3, 20(1)
+; LE-32BIT-NEXT:    stw 3, 16(1)
+; LE-32BIT-NEXT:    sub 3, 6, 4
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 12(3)
+; LE-32BIT-NEXT:    lwz 8, 8(3)
+; LE-32BIT-NEXT:    lwz 9, 20(3)
+; LE-32BIT-NEXT:    lwz 10, 16(3)
+; LE-32BIT-NEXT:    lwz 11, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    stw 11, 24(5)
+; LE-32BIT-NEXT:    stw 3, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %wordOff = load i256, ptr %wordOff.ptr, align 1
+  %bitOff = shl i256 %wordOff, 5
+  %res = ashr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+define void @ashr_32bytes_dwordOff(ptr %src.ptr, ptr %dwordOff.ptr, ptr %dst) nounwind {
+; LE-64BIT-LABEL: ashr_32bytes_dwordOff:
+; LE-64BIT:       # %bb.0:
+; LE-64BIT-NEXT:    lxvd2x 0, 0, 3
+; LE-64BIT-NEXT:    ld 6, 16(3)
+; LE-64BIT-NEXT:    ld 3, 24(3)
+; LE-64BIT-NEXT:    addi 7, 1, -64
+; LE-64BIT-NEXT:    lwz 4, 0(4)
+; LE-64BIT-NEXT:    li 8, 16
+; LE-64BIT-NEXT:    std 3, 24(7)
+; LE-64BIT-NEXT:    sradi 3, 3, 63
+; LE-64BIT-NEXT:    std 6, 16(7)
+; LE-64BIT-NEXT:    std 3, 56(7)
+; LE-64BIT-NEXT:    std 3, 48(7)
+; LE-64BIT-NEXT:    std 3, 40(7)
+; LE-64BIT-NEXT:    std 3, 32(7)
+; LE-64BIT-NEXT:    rlwinm 3, 4, 3, 27, 28
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 7
+; LE-64BIT-NEXT:    lxvd2x 0, 7, 3
+; LE-64BIT-NEXT:    add 3, 7, 3
+; LE-64BIT-NEXT:    lxvd2x 1, 3, 8
+; LE-64BIT-NEXT:    stxvd2x 1, 5, 8
+; LE-64BIT-NEXT:    stxvd2x 0, 0, 5
+; LE-64BIT-NEXT:    blr
+;
+; BE-LABEL: ashr_32bytes_dwordOff:
+; BE:       # %bb.0:
+; BE-NEXT:    ld 7, 0(3)
+; BE-NEXT:    ld 8, 8(3)
+; BE-NEXT:    ld 9, 16(3)
+; BE-NEXT:    ld 3, 24(3)
+; BE-NEXT:    lwz 4, 28(4)
+; BE-NEXT:    addi 6, 1, -64
+; BE-NEXT:    std 3, 56(6)
+; BE-NEXT:    sradi 3, 7, 63
+; BE-NEXT:    rlwinm 4, 4, 3, 27, 28
+; BE-NEXT:    std 3, 24(6)
+; BE-NEXT:    std 3, 16(6)
+; BE-NEXT:    std 3, 8(6)
+; BE-NEXT:    std 3, -64(1)
+; BE-NEXT:    neg 3, 4
+; BE-NEXT:    std 9, 48(6)
+; BE-NEXT:    std 8, 40(6)
+; BE-NEXT:    std 7, 32(6)
+; BE-NEXT:    extsw 3, 3
+; BE-NEXT:    addi 4, 1, -32
+; BE-NEXT:    ldux 3, 4, 3
+; BE-NEXT:    ld 6, 8(4)
+; BE-NEXT:    ld 7, 24(4)
+; BE-NEXT:    ld 4, 16(4)
+; BE-NEXT:    std 3, 0(5)
+; BE-NEXT:    std 4, 16(5)
+; BE-NEXT:    std 7, 24(5)
+; BE-NEXT:    std 6, 8(5)
+; BE-NEXT:    blr
+;
+; LE-32BIT-LABEL: ashr_32bytes_dwordOff:
+; LE-32BIT:       # %bb.0:
+; LE-32BIT-NEXT:    stwu 1, -80(1)
+; LE-32BIT-NEXT:    lwz 7, 0(3)
+; LE-32BIT-NEXT:    addi 6, 1, 48
+; LE-32BIT-NEXT:    lwz 8, 4(3)
+; LE-32BIT-NEXT:    lwz 9, 8(3)
+; LE-32BIT-NEXT:    lwz 10, 12(3)
+; LE-32BIT-NEXT:    lwz 11, 16(3)
+; LE-32BIT-NEXT:    lwz 12, 20(3)
+; LE-32BIT-NEXT:    lwz 0, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    lwz 4, 28(4)
+; LE-32BIT-NEXT:    stw 3, 76(1)
+; LE-32BIT-NEXT:    srawi 3, 7, 31
+; LE-32BIT-NEXT:    rlwinm 4, 4, 3, 27, 28
+; LE-32BIT-NEXT:    stw 0, 72(1)
+; LE-32BIT-NEXT:    stw 12, 68(1)
+; LE-32BIT-NEXT:    stw 11, 64(1)
+; LE-32BIT-NEXT:    stw 10, 60(1)
+; LE-32BIT-NEXT:    stw 9, 56(1)
+; LE-32BIT-NEXT:    stw 8, 52(1)
+; LE-32BIT-NEXT:    stw 7, 48(1)
+; LE-32BIT-NEXT:    stw 3, 44(1)
+; LE-32BIT-NEXT:    stw 3, 40(1)
+; LE-32BIT-NEXT:    stw 3, 36(1)
+; LE-32BIT-NEXT:    stw 3, 32(1)
+; LE-32BIT-NEXT:    stw 3, 28(1)
+; LE-32BIT-NEXT:    stw 3, 24(1)
+; LE-32BIT-NEXT:    stw 3, 20(1)
+; LE-32BIT-NEXT:    stw 3, 16(1)
+; LE-32BIT-NEXT:    sub 3, 6, 4
+; LE-32BIT-NEXT:    lwz 4, 4(3)
+; LE-32BIT-NEXT:    lwz 6, 0(3)
+; LE-32BIT-NEXT:    lwz 7, 12(3)
+; LE-32BIT-NEXT:    lwz 8, 8(3)
+; LE-32BIT-NEXT:    lwz 9, 20(3)
+; LE-32BIT-NEXT:    lwz 10, 16(3)
+; LE-32BIT-NEXT:    lwz 11, 24(3)
+; LE-32BIT-NEXT:    lwz 3, 28(3)
+; LE-32BIT-NEXT:    stw 11, 24(5)
+; LE-32BIT-NEXT:    stw 3, 28(5)
+; LE-32BIT-NEXT:    stw 10, 16(5)
+; LE-32BIT-NEXT:    stw 9, 20(5)
+; LE-32BIT-NEXT:    stw 8, 8(5)
+; LE-32BIT-NEXT:    stw 7, 12(5)
+; LE-32BIT-NEXT:    stw 6, 0(5)
+; LE-32BIT-NEXT:    stw 4, 4(5)
+; LE-32BIT-NEXT:    addi 1, 1, 80
+; LE-32BIT-NEXT:    blr
+  %src = load i256, ptr %src.ptr, align 1
+  %dwordOff = load i256, ptr %dwordOff.ptr, align 1
+  %bitOff = shl i256 %dwordOff, 6
+  %res = ashr i256 %src, %bitOff
+  store i256 %res, ptr %dst, align 1
+  ret void
+}
+
+
 ;; NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
 ; LE: {{.*}}
