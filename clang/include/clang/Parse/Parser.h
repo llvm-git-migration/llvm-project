@@ -2765,6 +2765,7 @@ private:
   TPResult TryParseTypeofSpecifier();
   TPResult TryParseProtocolQualifiers();
   TPResult TryParsePtrOperatorSeq();
+  TPResult TryParseNonConversionOperatorId();
   TPResult TryParseOperatorId();
   TPResult TryParseInitDeclaratorList(bool MayHaveTrailingReturnType = false);
   TPResult TryParseDeclarator(bool mayBeAbstract, bool mayHaveIdentifier = true,
