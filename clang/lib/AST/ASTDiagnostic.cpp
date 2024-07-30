@@ -422,8 +422,30 @@ void clang::FormatASTNodeDiagnosticArgument(
       // Attempting to do a template diff on non-templates.  Set the variables
       // and continue with regular type printing of the appropriate type.
       Val = TDT.PrintFromType ? TDT.FromType : TDT.ToType;
+
       Modifier = StringRef();
       Argument = StringRef();
+
+      if ((FromType->isVariableArrayType() || FromType->isPointerType()) &&
+          (ToType->isVariableArrayType() || ToType->isPointerType()) &&
+          ConvertTypeToDiagnosticString(Context, FromType, PrevArgs,
+                                        QualTypeVals) ==
+              ConvertTypeToDiagnosticString(Context, ToType, PrevArgs,
+                                            QualTypeVals)) {
+        assert(Modifier.empty() && Argument.empty() &&
+               "Invalid modifier for QualType argument");
+
+        QualType Ty(QualType::getFromOpaquePtr(reinterpret_cast<void *>(Val)));
+        OS << ConvertTypeToDiagnosticString(Context, Ty, PrevArgs,
+                                            QualTypeVals);
+        NeedQuotes = false;
+
+        if (!TDT.PrintFromType)
+          OS << "; VLA types differ despite using the same array size "
+                "expression";
+
+        break;
+      }
       // Fall through
       [[fallthrough]];
     }
