@@ -1791,9 +1791,6 @@ bool Parser::isMissingTemplateKeywordBeforeScope(bool AnnotateInvalid) {
   assert(Tok.is(tok::coloncolon));
   Sema::DisableTypoCorrectionRAII DTC(Actions);
   ColonProtectionRAIIObject ColonProtection(*this);
-  std::optional<Sema::TentativeAnalysisScope> TAS;
-  if (!AnnotateInvalid)
-    TAS.emplace(Actions);
 
   SourceLocation StartLoc = Tok.getLocation();
   if (TryAnnotateTypeOrScopeToken())
