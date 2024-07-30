@@ -185,19 +185,21 @@ TEST(HTMLGeneratorTest, emitRecordHTML) {
   <div id="main-content" class="col-xs-12 col-sm-9 col-md-8 main-content">
     <h1>class r</h1>
     <p>
-      Defined at line 
+      Defined at line
       <a href="http://www.repository.com/dir/test.cpp#10">10</a>
-       of file 
+       of file
       <a href="http://www.repository.com/dir/test.cpp">test.cpp</a>
     </p>
     <p>
-      Inherits from 
+      Inherits from
       <a href="../../../path/to/F.html">F</a>
       , G
     </p>
     <h2 id="Members">Members</h2>
     <ul>
-      <li>private int X</li>
+      <li>
+        <li>private int X</li>
+      </li>
     </ul>
     <h2 id="Records">Records</h2>
     <ul>
