@@ -357,3 +357,7 @@ void infsNaNs() {
   constexpr double db5 = LD_SNAN; // expected-error {{constexpr initializer evaluates to nan which is not exactly representable in type 'const double'}}
   constexpr double db6 = INF;
 }
+
+constexpr struct S9 s9 = {  }; // expected-error {{constexpr variable cannot have non-literal type 'const struct S9'}} \
+                               // expected-note {{incomplete type 'const struct S9' is not a literal type}} \
+                               // expected-note {{forward declaration of 'struct S9'}}
