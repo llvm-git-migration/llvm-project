@@ -7,28 +7,28 @@
 #include <stdint.h>
 
 char *s1 = "1234";
-// LA32: @.str{{.*}} ={{.*}} constant [5 x i8] c"1234\00", align 1
-// LA64: @.str{{.*}} ={{.*}} constant [5 x i8] c"1234\00", align 1
+// LA32: @.str{{.*}} ={{.*}} constant [5 x i8] c"1234\00", align 4
+// LA64: @.str{{.*}} ={{.*}} constant [5 x i8] c"1234\00", align 4
 
 char *s2 = "12345678abcd";
-// LA32: @.str{{.*}} ={{.*}} constant [13 x i8] c"12345678abcd\00", align 1
-// LA64: @.str{{.*}} ={{.*}} constant [13 x i8] c"12345678abcd\00", align 1
+// LA32: @.str{{.*}} ={{.*}} constant [13 x i8] c"12345678abcd\00", align 8
+// LA64: @.str{{.*}} ={{.*}} constant [13 x i8] c"12345678abcd\00", align 8
 
 char *s3 = "123456789012345678901234567890ab";
-// LA32: @.str{{.*}} ={{.*}} constant [33 x i8] c"1234{{.*}}ab\00", align 1
-// LA64: @.str{{.*}} ={{.*}} constant [33 x i8] c"1234{{.*}}ab\00", align 1
+// LA32: @.str{{.*}} ={{.*}} constant [33 x i8] c"1234{{.*}}ab\00", align 16
+// LA64: @.str{{.*}} ={{.*}} constant [33 x i8] c"1234{{.*}}ab\00", align 16
 
 char *s4 = "123456789012345678901234567890123456789012345678901234567890abcdef";
-// LA32: @.str{{.*}} ={{.*}} constant [67 x i8] c"1234{{.*}}cdef\00", align 1
-// LA64: @.str{{.*}} ={{.*}} constant [67 x i8] c"1234{{.*}}cdef\00", align 1
+// LA32: @.str{{.*}} ={{.*}} constant [67 x i8] c"1234{{.*}}cdef\00", align 32
+// LA64: @.str{{.*}} ={{.*}} constant [67 x i8] c"1234{{.*}}cdef\00", align 32
 
 int8_t a;
 // LA32: @a ={{.*}} global i8 0, align 1
 // LA64: @a ={{.*}} global i8 0, align 1
 
 int16_t b;
-// LA32: @b ={{.*}} global i16 0, align 2
-// LA64: @b ={{.*}} global i16 0, align 2
+// LA32: @b ={{.*}} global i16 0, align 4
+// LA64: @b ={{.*}} global i16 0, align 4
 
 int32_t c;
 // LA32: @c ={{.*}} global i32 0, align 4

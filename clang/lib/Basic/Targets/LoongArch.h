@@ -82,6 +82,9 @@ public:
 
   ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override;
 
+  unsigned getMinGlobalAlign(uint64_t TypeSize,
+                             bool HasNonWeakDef) const override;
+
   bool validateAsmConstraint(const char *&Name,
                              TargetInfo::ConstraintInfo &Info) const override;
   std::string convertConstraint(const char *&Constraint) const override;

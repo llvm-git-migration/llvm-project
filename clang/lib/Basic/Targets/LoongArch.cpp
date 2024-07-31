@@ -118,6 +118,23 @@ LoongArchTargetInfo::getGCCRegAliases() const {
   return llvm::ArrayRef(GCCRegAliases);
 }
 
+unsigned LoongArchTargetInfo::getMinGlobalAlign(uint64_t TypeSize,
+                                                bool HasNonWeakDef) const {
+  unsigned Align = TargetInfo::getMinGlobalAlign(TypeSize, HasNonWeakDef);
+
+  if (HasFeatureLASX && TypeSize >= 512) {       // TypeSize >= 64 bytes
+    Align = std::max(Align, 256u);               // align type at least 32 bytes
+  } else if (HasFeatureLSX && TypeSize >= 256) { // TypeSize >= 32 bytes
+    Align = std::max(Align, 128u);               // align type at least 16 bytes
+  } else if (TypeSize >= 64) {                   // TypeSize >= 8 bytes
+    Align = std::max(Align, 64u);                // align type at least 8 butes
+  } else if (TypeSize >= 16) {                   // TypeSize >= 2 bytes
+    Align = std::max(Align, 32u);                // align type at least 4 bytes
+  }
+
+  return Align;
+}
+
 bool LoongArchTargetInfo::validateAsmConstraint(
     const char *&Name, TargetInfo::ConstraintInfo &Info) const {
   // See the GCC definitions here:
