@@ -159,6 +159,40 @@ GDBRemoteCommunicationServerPlatform::GDBRemoteCommunicationServerPlatform(
 GDBRemoteCommunicationServerPlatform::~GDBRemoteCommunicationServerPlatform() =
     default;
 
+void GDBRemoteCommunicationServerPlatform::Proc(
+    const lldb_private::Args &args) {
+  if (!IsConnected())
+    return;
+
+  if (args.GetArgumentCount() > 0) {
+    lldb::pid_t pid = LLDB_INVALID_PROCESS_ID;
+    std::optional<uint16_t> port;
+    std::string socket_name;
+    Status error = LaunchGDBServer(args,
+                                   "", // hostname
+                                   pid, port, socket_name);
+    if (error.Success())
+      SetPendingGdbServer(pid, *port, socket_name);
+  }
+
+  bool interrupt = false;
+  bool done = false;
+  Status error;
+  while (!interrupt && !done) {
+    if (GetPacketAndSendResponse(std::nullopt, error, interrupt, done) !=
+        GDBRemoteCommunication::PacketResult::Success)
+      break;
+  }
+
+  if (error.Fail()) {
+    Log *log = GetLog(LLDBLog::Platform);
+    LLDB_LOGF(log,
+              "GDBRemoteCommunicationServerPlatform::%s() "
+              "GetPacketAndSendResponse: %s",
+              __FUNCTION__, error.AsCString());
+  }
+}
+
 Status GDBRemoteCommunicationServerPlatform::LaunchGDBServer(
     const lldb_private::Args &args, std::string hostname, lldb::pid_t &pid,
     std::optional<uint16_t> &port, std::string &socket_name) {

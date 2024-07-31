@@ -58,7 +58,10 @@ PipeWindows::PipeWindows(pipe_t read, pipe_t write)
   }
 
   ZeroMemory(&m_read_overlapped, sizeof(m_read_overlapped));
+  m_read_overlapped.hEvent = ::CreateEventA(nullptr, TRUE, FALSE, nullptr);
+
   ZeroMemory(&m_write_overlapped, sizeof(m_write_overlapped));
+  m_write_overlapped.hEvent = ::CreateEventA(nullptr, TRUE, FALSE, nullptr);
 }
 
 PipeWindows::~PipeWindows() { Close(); }
@@ -77,6 +80,7 @@ Status PipeWindows::CreateNew(bool child_process_inherit) {
 
   m_write_fd = _open_osfhandle((intptr_t)m_write, _O_WRONLY);
   ZeroMemory(&m_write_overlapped, sizeof(m_write_overlapped));
+  m_write_overlapped.hEvent = ::CreateEventA(nullptr, TRUE, FALSE, nullptr);
 
   return Status();
 }
@@ -202,6 +206,7 @@ Status PipeWindows::OpenNamedPipe(llvm::StringRef name,
     m_write_fd = _open_osfhandle((intptr_t)m_write, _O_WRONLY);
 
     ZeroMemory(&m_write_overlapped, sizeof(m_write_overlapped));
+    m_write_overlapped.hEvent = ::CreateEventA(nullptr, TRUE, FALSE, nullptr);
   }
 
   return Status();
@@ -228,6 +233,8 @@ int PipeWindows::ReleaseWriteFileDescriptor() {
     return PipeWindows::kInvalidDescriptor;
   int result = m_write_fd;
   m_write_fd = PipeWindows::kInvalidDescriptor;
+  if (m_write_overlapped.hEvent)
+    ::CloseHandle(m_write_overlapped.hEvent);
   m_write = INVALID_HANDLE_VALUE;
   ZeroMemory(&m_write_overlapped, sizeof(m_write_overlapped));
   return result;
@@ -249,6 +256,9 @@ void PipeWindows::CloseReadFileDescriptor() {
 void PipeWindows::CloseWriteFileDescriptor() {
   if (!CanWrite())
     return;
+
+  if (m_write_overlapped.hEvent)
+    ::CloseHandle(m_write_overlapped.hEvent);
 
   _close(m_write_fd);
   m_write = INVALID_HANDLE_VALUE;
@@ -283,7 +293,12 @@ Status PipeWindows::ReadWithTimeout(void *buf, size_t size,
   DWORD sys_bytes_read = size;
   BOOL result = ::ReadFile(m_read, buf, sys_bytes_read, &sys_bytes_read,
                            &m_read_overlapped);
-  if (!result && GetLastError() != ERROR_IO_PENDING)
+  if (result) {
+    bytes_read = sys_bytes_read;
+    return Status();
+  }
+
+  if (GetLastError() != ERROR_IO_PENDING)
     return Status(::GetLastError(), eErrorTypeWin32);
 
   DWORD timeout = (duration == std::chrono::microseconds::zero())
@@ -319,18 +334,56 @@ Status PipeWindows::ReadWithTimeout(void *buf, size_t size,
 
 Status PipeWindows::Write(const void *buf, size_t num_bytes,
                           size_t &bytes_written) {
+  return WriteWithTimeout(buf, num_bytes, std::chrono::microseconds::zero(),
+                          bytes_written);
+}
+
+Status PipeWindows::WriteWithTimeout(const void *buf, size_t size,
+                                     const std::chrono::microseconds &duration,
+                                     size_t &bytes_written) {
   if (!CanWrite())
     return Status(ERROR_INVALID_HANDLE, eErrorTypeWin32);
 
-  DWORD sys_bytes_written = 0;
-  BOOL write_result = ::WriteFile(m_write, buf, num_bytes, &sys_bytes_written,
-                                  &m_write_overlapped);
-  if (!write_result && GetLastError() != ERROR_IO_PENDING)
+  bytes_written = 0;
+  DWORD sys_bytes_write = size;
+  BOOL result = ::WriteFile(m_write, buf, sys_bytes_write, &sys_bytes_write,
+                            &m_write_overlapped);
+  if (result) {
+    bytes_written = sys_bytes_write;
+    return Status();
+  }
+
+  if (GetLastError() != ERROR_IO_PENDING)
     return Status(::GetLastError(), eErrorTypeWin32);
 
-  BOOL result = GetOverlappedResult(m_write, &m_write_overlapped,
-                                    &sys_bytes_written, TRUE);
-  if (!result)
+  DWORD timeout = (duration == std::chrono::microseconds::zero())
+                      ? INFINITE
+                      : duration.count() * 1000;
+  DWORD wait_result = ::WaitForSingleObject(m_write_overlapped.hEvent, timeout);
+  if (wait_result != WAIT_OBJECT_0) {
+    // The operation probably failed.  However, if it timed out, we need to
+    // cancel the I/O. Between the time we returned from WaitForSingleObject
+    // and the time we call CancelIoEx, the operation may complete.  If that
+    // hapens, CancelIoEx will fail and return ERROR_NOT_FOUND. If that
+    // happens, the original operation should be considered to have been
+    // successful.
+    bool failed = true;
+    DWORD failure_error = ::GetLastError();
+    if (wait_result == WAIT_TIMEOUT) {
+      BOOL cancel_result = CancelIoEx(m_write, &m_write_overlapped);
+      if (!cancel_result && GetLastError() == ERROR_NOT_FOUND)
+        failed = false;
+    }
+    if (failed)
+      return Status(failure_error, eErrorTypeWin32);
+  }
+
+  // Now we call GetOverlappedResult setting bWait to false, since we've
+  // already waited as long as we're willing to.
+  if (!GetOverlappedResult(m_write, &m_write_overlapped, &sys_bytes_write,
+                           FALSE))
     return Status(::GetLastError(), eErrorTypeWin32);
+
+  bytes_written = sys_bytes_write;
   return Status();
 }
