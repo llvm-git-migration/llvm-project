@@ -32,6 +32,11 @@ std::size_t IoStatementBase::GetNextInputBytes(const char *&p) {
   return 0;
 }
 
+std::size_t IoStatementBase::GetPreviousInputBytes(const char *&p) {
+  p = nullptr;
+  return 0;
+}
+
 bool IoStatementBase::AdvanceRecord(int) { return false; }
 
 void IoStatementBase::BackspaceRecord() {}
@@ -104,6 +109,8 @@ template <Direction DIR>
 std::size_t InternalIoStatementState<DIR>::GetNextInputBytes(const char *&p) {
   return unit_.GetNextInputBytes(p, *this);
 }
+
+// InternalIoStatementState<DIR>::GetPreviousInputBytes() not needed or defined
 
 template <Direction DIR>
 bool InternalIoStatementState<DIR>::AdvanceRecord(int n) {
@@ -411,6 +418,12 @@ bool ExternalIoStatementState<DIR>::Emit(
 template <Direction DIR>
 std::size_t ExternalIoStatementState<DIR>::GetNextInputBytes(const char *&p) {
   return unit().GetNextInputBytes(p, *this);
+}
+
+template <Direction DIR>
+std::size_t ExternalIoStatementState<DIR>::GetPreviousInputBytes(
+    const char *&p) {
+  return unit().GetPreviousInputBytes(p, *this);
 }
 
 template <Direction DIR>

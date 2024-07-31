@@ -134,7 +134,8 @@ bool ExternalFileUnit::Receive(char *data, std::size_t bytes,
 
 std::size_t ExternalFileUnit::GetNextInputBytes(
     const char *&p, IoErrorHandler &handler) {
-  RUNTIME_CHECK(handler, direction_ == Direction::Input);
+  // Don't require that the current direction be Input; this is also needed
+  // for relative tabbing on output to UTF-8.
   std::size_t length{1};
   if (auto recl{EffectiveRecordLength()}) {
     if (positionInRecord < *recl) {
@@ -146,6 +147,17 @@ std::size_t ExternalFileUnit::GetNextInputBytes(
   }
   p = FrameNextInput(handler, length);
   return p ? length : 0;
+}
+
+std::size_t ExternalFileUnit::GetPreviousInputBytes(
+    const char *&p, IoErrorHandler &handler) {
+  RUNTIME_CHECK(handler, direction_ == Direction::Input);
+  if (positionInRecord <= recordLength.value_or(positionInRecord)) {
+    p = Frame() + recordOffsetInFrame_ + positionInRecord;
+  } else {
+    p = nullptr;
+  }
+  return positionInRecord - leftTabLimit.value_or(0);
 }
 
 const char *ExternalFileUnit::FrameNextInput(
