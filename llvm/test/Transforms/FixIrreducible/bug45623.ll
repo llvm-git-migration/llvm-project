@@ -13,7 +13,7 @@ define dso_local void @tre_tnfa_run_backtrack() {
 ; CHECK:       if.then250:
 ; CHECK-NEXT:    br label [[FOR_COND264:%.*]]
 ; CHECK:       for.cond264:
-; CHECK-NEXT:    br i1 undef, label [[FOR_BODY267:%.*]], label [[IRR_GUARD]]
+; CHECK-NEXT:    br i1 undef, label [[FOR_BODY267:%.*]], label [[BACKTRACK:%.*]]
 ; CHECK:       for.body267:
 ; CHECK-NEXT:    br label [[FOR_COND264]]
 ; CHECK:       if.end275:
@@ -23,7 +23,7 @@ define dso_local void @tre_tnfa_run_backtrack() {
 ; CHECK:       for.body345:
 ; CHECK-NEXT:    br label [[FOR_COND342]]
 ; CHECK:       for.end580:
-; CHECK-NEXT:    br label [[IRR_GUARD]]
+; CHECK-NEXT:    br label [[BACKTRACK]]
 ; CHECK:       backtrack:
 ; CHECK-NEXT:    br i1 undef, label [[IF_THEN595:%.*]], label [[IF_ELSE629:%.*]]
 ; CHECK:       if.then595:
@@ -37,8 +37,8 @@ define dso_local void @tre_tnfa_run_backtrack() {
 ; CHECK:       if.else629:
 ; CHECK-NEXT:    br label [[RETRY]]
 ; CHECK:       irr.guard:
-; CHECK-NEXT:    [[GUARD_BACKTRACK:%.*]] = phi i1 [ true, [[FOR_END580]] ], [ true, [[FOR_COND264]] ], [ undef, [[RETRY]] ], [ false, [[FOR_END626]] ]
-; CHECK-NEXT:    br i1 [[GUARD_BACKTRACK]], label [[BACKTRACK:%.*]], label [[WHILE_BODY248:%.*]]
+; CHECK-NEXT:    [[GUARD_BACKTRACK:%.*]] = phi i1 [ false, [[FOR_END626]] ], [ undef, [[RETRY]] ]
+; CHECK-NEXT:    br i1 [[GUARD_BACKTRACK]], label [[BACKTRACK]], label [[WHILE_BODY248:%.*]]
 ;
 entry:
   br label %retry
