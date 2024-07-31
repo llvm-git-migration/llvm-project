@@ -2186,7 +2186,7 @@ public:
     /// The number of iterations
     Value *NumIterations;
     /// The number of teams.
-    Value *NumTeams;
+    ArrayRef<Value *> NumTeams;
     /// The number of threads.
     Value *NumThreads;
     /// The size of the dynamic shared memory.
@@ -2196,8 +2196,8 @@ public:
 
     /// Constructor for TargetKernelArgs
     TargetKernelArgs(unsigned NumTargetItems, TargetDataRTArgs RTArgs,
-                     Value *NumIterations, Value *NumTeams, Value *NumThreads,
-                     Value *DynCGGroupMem, bool HasNoWait)
+                     Value *NumIterations, ArrayRef<Value *> NumTeams,
+                     Value *NumThreads, Value *DynCGGroupMem, bool HasNoWait)
         : NumTargetItems(NumTargetItems), RTArgs(RTArgs),
           NumIterations(NumIterations), NumTeams(NumTeams),
           NumThreads(NumThreads), DynCGGroupMem(DynCGGroupMem),
@@ -2846,8 +2846,8 @@ public:
   InsertPointTy createTarget(const LocationDescription &Loc,
                              OpenMPIRBuilder::InsertPointTy AllocaIP,
                              OpenMPIRBuilder::InsertPointTy CodeGenIP,
-                             TargetRegionEntryInfo &EntryInfo, int32_t NumTeams,
-                             int32_t NumThreads,
+                             TargetRegionEntryInfo &EntryInfo,
+                             ArrayRef<int32_t> NumTeams, int32_t NumThreads,
                              SmallVectorImpl<Value *> &Inputs,
                              GenMapInfoCallbackTy GenMapInfoCB,
                              TargetBodyGenCallbackTy BodyGenCB,
