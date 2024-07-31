@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// UNSUPPORTED: c++03, c++11, c++14, c++17, c++20
+
 // This test formats a larger piece of text in "escaped" mode. It uses several
 // datasets to give an impression how the amount of multibyte UTF-8 sequences
 // and larger grapheme clusters affect the performance.
