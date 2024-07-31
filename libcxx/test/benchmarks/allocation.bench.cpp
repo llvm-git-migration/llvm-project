@@ -6,9 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+// REQUIRES: -fsized-deallocation
+// ADDITIONAL_COMPILE_FLAGS: -fsized-deallocation
+
 #include "benchmark/benchmark.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <new>
 #include <vector>
 
