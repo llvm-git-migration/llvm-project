@@ -233,7 +233,7 @@ def SwitchOp : CF_Op<"switch",
      Pure, Terminator]> {
   let summary = "switch operation";
   let description = [{
-    The `switch` terminator operation represents a switch on a signless integer
+    The `cf.switch` terminator operation represents a switch on a signless integer
     value. If the flag matches one of the specified cases, then the
     corresponding destination is jumped to. If the flag does not match any of
     the cases, the default destination is jumped to. The count and types of
@@ -242,7 +242,7 @@ def SwitchOp : CF_Op<"switch",
     Example:
 
     ```mlir
-    switch %flag : i32, [
+    cf.switch %flag : i32, [
       default: ^bb1(%a : i32),
       42: ^bb1(%b : i32),
       43: ^bb3(%c : i32)
